@@ -17,6 +17,6 @@ test.js:8:10,15: number
 
 test.js:8:19,24: number
 This type is incompatible with
-test.js:8:3,38: some incompatible instantiation of X
+test.js:8:3,38: some incompatible instantiation of `X`
 
 Found 5 errors

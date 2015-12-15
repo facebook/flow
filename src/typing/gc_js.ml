@@ -131,6 +131,14 @@ let rec gc cx state = function
       gc cx state t;
       ts |> List.iter (gc cx state)
 
+  | ThisClassT t ->
+      gc cx state t
+
+  | ThisTypeAppT (t, this, ts) ->
+      gc cx state t;
+      gc cx state this;
+      List.iter (gc cx state) ts
+
   | BoundT typeparam ->
       gc_typeparam cx state typeparam
 
@@ -272,6 +280,13 @@ let rec gc cx state = function
   | SpecializeT (_, _, ts, t) ->
       ts |> List.iter (gc cx state);
       gc cx state t
+
+  | ThisSpecializeT (_, this, t) ->
+      gc cx state this;
+      gc cx state t
+
+  | VarianceCheckT (_, ts, _) ->
+      List.iter (gc cx state) ts
 
   | LookupT (_, _, ts, _, t) ->
       ts |> List.iter (gc cx state);

@@ -15,10 +15,6 @@ test.js:7:3,5: property `qux`
 Property not found in
 test.js:7:1,1: statics of A
 
-test.js:9:7,7: B
-This type is incompatible with
-test.js:25:23,28: number
-
 test.js:10:13,18: string
 This type is incompatible with
 test.js:2:13,18: number
@@ -50,6 +46,12 @@ test.js:5:17,22: string
 test.js:19:7,9: property `qux`
 Property not found in
 test.js:19:5,5: statics of B
+
+test.js:26:12,21: constructor call
+Error:
+test.js:9:7,7: B
+This type is incompatible with
+test.js:25:23,28: number
 
 test.js:40:7,9: property `foo`
 Property not found in

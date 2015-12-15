@@ -1,0 +1,137 @@
+
+contra.js:4:9,12: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:15:10,13: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+contra.js:19:10,13: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+contra.js:25:22,25: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:26:21,24: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:27:22,25: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:29:22,25: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:30:21,24: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:31:22,25: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:38:18,21: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:39:17,20: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:40:18,21: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:44:25,28: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+contra.js:45:26,29: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:48:41,44: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+contra.js:52:29,32: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+contra.js:52:34,37: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+contra.js:53:30,33: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:53:35,38: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+contra.js:53:40,43: `this` type
+invariant position (expected `this` to occur only covariantly)
+
+generics.js:8:2,25: number
+This type is incompatible with
+generics.js:8:28,33: string
+
+import.js:8:10,11: B1
+This type is incompatible with
+export.js:2:10,13: some incompatible instantiation of `this`
+
+import.js:14:10,14: B3
+This type is incompatible with
+export.js:7:10,13: some incompatible instantiation of `this`
+
+import.js:18:2,16: call of method `qux`
+Error:
+import.js:18:2,16: number
+This type is incompatible with
+import.js:18:19,24: string
+
+import.js:21:22,27: string
+This type is incompatible with
+import.js:21:35,40: number
+
+import.js:21:35,40: number
+This type is incompatible with
+import.js:21:22,27: string
+
+import.js:22:3,30: call of method `qux`
+Error:
+import.js:22:3,30: number
+This type is incompatible with
+import.js:22:33,38: string
+
+self.js:4:24,36: call of method `foo`
+Error:
+self.js:4:24,36: A
+This type is incompatible with
+self.js:4:10,13: some incompatible instantiation of `this`
+
+test.js:23:2,20: Base
+This type is incompatible with
+test.js:23:23,29: Inherit
+
+test.js:23:2,20: Override
+This type is incompatible with
+test.js:23:23,29: Inherit
+
+test.js:29:2,35: Base
+This type is incompatible with
+test.js:29:38,52: InheritOverride
+
+test.js:29:2,35: Override
+This type is incompatible with
+test.js:29:38,52: InheritOverride
+
+test.js:41:15,18: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+test.js:42:16,20: Base2
+This type is incompatible with
+test.js:56:16,19: Override2
+
+test.js:42:16,20: Base2
+This type is incompatible with
+test.js:56:16,19: some incompatible instantiation of `this`
+
+test.js:51:10,18: Override2
+This type is incompatible with
+test.js:38:10,13: some incompatible instantiation of `this`
+
+test.js:54:15,18: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+test.js:56:16,19: `this` type
+contravariant position (expected `this` to occur only covariantly)
+
+Found 38 errors

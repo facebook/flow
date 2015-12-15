@@ -51,6 +51,8 @@ val subst: Context.t -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
 val generate_tests: Context.t -> reason -> Type.typeparam list -> (Type.t SMap.t -> unit)
   -> unit
 
+val check_polarity: Context.t -> Type.polarity -> Type.t -> unit
+
 (* property maps *)
 
 val mk_propmap : Context.t -> Type.t SMap.t -> int

@@ -79,6 +79,14 @@ class ['a] t = object(self)
     let acc = self#list (self#type_ cx) acc ts in
     acc
 
+  | ThisClassT t -> self#type_ cx acc t
+
+  | ThisTypeAppT (t, this, ts) ->
+    let acc = self#type_ cx acc t in
+    let acc = self#type_ cx acc this in
+    let acc = self#list (self#type_ cx) acc ts in
+    acc
+
   | BoundT typeparam -> self#type_param cx acc typeparam
 
   | ExistsT _ -> acc
@@ -147,6 +155,8 @@ class ['a] t = object(self)
   | OrT (_, _, _)
   | NotT (_, _)
   | SpecializeT (_, _, _, _)
+  | ThisSpecializeT (_, _, _)
+  | VarianceCheckT (_, _, _)
   | LookupT (_, _, _, _, _)
   | ObjAssignT (_, _, _, _, _)
   | ObjFreezeT (_, _)

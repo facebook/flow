@@ -502,9 +502,7 @@ let rec convert cx type_params_map = Ast.Type.(function
       Flow_js.flow cx (m, GetPropT (reason, (reason, name), t));
     ) in
     let typeParameters = extract_type_param_instantiations typeParameters in
-    let params = if typeParameters = []
-      then None else Some typeParameters in
-    mk_nominal_type cx reason type_params_map (t, params)
+    mk_nominal_type cx reason type_params_map (t, typeParameters)
 
   (* type applications: name < params > *)
   | loc, Generic {
@@ -599,6 +597,16 @@ let rec convert cx type_params_map = Ast.Type.(function
           AbstractT(convert cx type_params_map (List.hd typeParameters))
         )
 
+      | "this" when SMap.mem "this" type_params_map ->
+        (* We model a this type like a type parameter. The bound on a this type
+           reflects the interface of `this` exposed in the current
+           environment. Currently, we only support this types in a class
+           environment: a this type in class C is bounded by C. *)
+        check_type_param_arity cx loc typeParameters 0 (fun () ->
+          let reason = mk_reason "`this` type" loc in
+          Flow_js.reposition cx reason (SMap.find_unsafe "this" type_params_map)
+        )
+
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
@@ -673,10 +681,8 @@ let rec convert cx type_params_map = Ast.Type.(function
       (* other applications with id as head expr *)
       | _ ->
         let reason = mk_reason name loc in
-        let params = if typeParameters = []
-          then None else Some typeParameters in
         let c = identifier ~lookup_mode:ForType cx name loc in
-        mk_nominal_type cx reason type_params_map (c, params)
+        mk_nominal_type cx reason type_params_map (c, typeParameters)
     )
 
   | loc, Function { Function.params; returnType; rest; typeParameters } ->
@@ -865,12 +871,11 @@ and mk_singleton_boolean reason b =
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
 (** See comment on Flow_js.mk_instance for what the for_type flag means. **)
 and mk_nominal_type ?(for_type=true) cx reason type_params_map (c, targs) =
-  match targs with
-  | Some ts ->
-      let tparams = List.map (convert cx type_params_map) ts in
-      TypeAppT (c, tparams)
-  | None ->
-      Flow_js.mk_instance cx reason ~for_type c
+  if targs = [] then
+    Flow_js.mk_instance cx reason ~for_type c
+  else
+    let tparams = List.map (convert cx type_params_map) targs in
+    TypeAppT (c, tparams)
 
 and void_ loc =
   VoidT.at loc
@@ -1474,9 +1479,10 @@ and statement cx type_params_map = Ast.Statement.(
   } =
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
+    let c = Flow_js.mk_tvar cx reason in
 
     (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
-    let typeparams, map =
+    let typeparams, type_params_map =
       if (iname = "Promise" || iname = "PromisePolyfill") &&
         List.length (extract_type_param_declarations typeParameters) = 1
       then mk_type_param_declarations cx type_params_map typeParameters
@@ -1486,6 +1492,28 @@ and statement cx type_params_map = Ast.Statement.(
       then mk_type_param_declarations cx type_params_map typeParameters
         ~polarities:[Positive; Positive; Negative]
       else mk_type_param_declarations cx type_params_map typeParameters in
+
+    let rec_instance_type =
+      begin match typeparams with
+      | [] ->
+        Flow_js.mk_instance cx reason c
+      | _ ->
+        let tparams = List.map (fun tp -> BoundT tp) typeparams in
+        TypeAppT (c, tparams)
+      end in
+    let this_tp = {
+      name = "this";
+      reason = replace_reason "`this` type" reason;
+      bound = rec_instance_type;
+      polarity = Positive
+    } in
+    (* Add the type of `this` to the end of the list of type
+       parameters. Remember, order is important, since we don't have recursive
+       bounds (aka F-bounds): the bound of This refers to all the other type
+       parameters! *)
+    let typeparams, type_params_map =
+      typeparams@[this_tp],
+      SMap.add "this" (BoundT this_tp) type_params_map in
 
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
       fun (sfmap_, smmap_, fmap_, mmap_)
@@ -1503,7 +1531,7 @@ and statement cx type_params_map = Ast.Statement.(
             (sfmap_, smmap_, fmap_, mmap_)
 
         | Identifier (loc, { Ast.Identifier.name; _ }) ->
-          let t = convert cx map value in
+          let t = convert cx type_params_map value in
           let t = if optional then OptionalT t else t in
           (* check for overloads in static and instance method maps *)
           let map_ = if static then smmap_ else mmap_ in
@@ -1527,15 +1555,15 @@ and statement cx type_params_map = Ast.Statement.(
     let fmap = Ast.Type.Object.Indexer.(match indexers with
       | [] -> fmap
       | [(_, { key; value; _; })] ->
-        let keyt = convert cx map key in
-        let valuet = convert cx map value in
+        let keyt = convert cx type_params_map key in
+        let valuet = convert cx type_params_map value in
         fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
     (* TODO *)
       | _ -> failwith "Unimplemented: multiple indexers")
     in
     let calls = callProperties |> List.map (function
       | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
-        (static, convert cx map (loc, Ast.Type.Function ft))
+        (static, convert cx type_params_map (loc, Ast.Type.Function ft))
     ) in
     let scalls, calls = List.partition fst calls in
     let smmap = match scalls with
@@ -1568,10 +1596,11 @@ and statement cx type_params_map = Ast.Statement.(
       | Some _ ->
         mmap
     in
-    let i = mk_interface cx reason typeparams map
+    let i = mk_interface cx reason typeparams type_params_map
       (sfmap, smmap, fmap, mmap) extends mixins structural in
     Hashtbl.replace (Context.type_table cx) loc i;
     (* interface is a type alias, declare class is a var *)
+    Flow_js.unify cx c i;
     Env_js.(if structural then init_type else init_var ~has_anno:false)
       cx iname i reason
   in
@@ -2483,7 +2512,9 @@ and statement cx type_params_map = Ast.Statement.(
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = mk_reason name name_loc in
       Env_js.declare_implicit_let Scope.Entry.ClassNameBinding cx name reason;
-      let cls_type = mk_class cx type_params_map class_loc reason c in
+      let cls = Flow_js.mk_tvar cx reason in
+      let cls_type = mk_class ~cls cx type_params_map class_loc reason c in
+      Flow_js.unify cx cls cls_type;
       Hashtbl.replace (Context.type_table cx) class_loc cls_type;
       Env_js.init_implicit_let
         Scope.Entry.ClassNameBinding
@@ -4838,9 +4869,8 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
   Flow_js.flow cx (super_static, override_statics);
   static := clone_object cx static_reason !static super_static;
 
-  let id = Flow_js.mk_nominal cx in
   let itype = {
-    class_id = id;
+    class_id = 0;
     type_args = SMap.empty;
     arg_polarities = SMap.empty;
     fields_tmap = Flow_js.mk_propmap cx fmap;
@@ -5339,25 +5369,43 @@ and mk_extends cx type_params_map = function
       root
   | (None, _) ->
       assert false (* type args with no head expr *)
-  | (Some c, targs) ->
-      let params = match targs with
-      | None -> None
-      | Some (_, { Ast.Type.ParameterInstantiation.params; }) -> Some params in
-      mk_nominal_type ~for_type:false cx (reason_of_t c) type_params_map (c, params)
+  | (Some e, targs) ->
+      let c = expression cx type_params_map e in
+      mk_super cx type_params_map c targs
 
-and mk_interface_super cx structural reason_c map = function
-  | (Some id, targs) ->
-      let desc = if structural then "extends" else "mixins" in
-      let lookup_mode = if structural then ForType else ForValue in
-      let i = convert_qualification ~lookup_mode cx desc id in
-      let reason = reason_of_t i in
-      let params = match targs with
-      | None -> None
-      | Some (_, { Ast.Type.ParameterInstantiation.params; }) -> Some params in
-      mk_nominal_type cx reason map (i, params)
-  | _ ->
+and mk_interface_super cx structural reason_i map = function
+  | (None, None) ->
       let root = MixedT (reason_of_string "Object") in
       root
+  | (None, _) ->
+      assert false (* type args with no head expr *)
+  | (Some id, targs) ->
+      let desc, lookup_mode =
+        if structural then "extends", ForType
+        else "mixins", ForValue in
+      let i = convert_qualification ~lookup_mode cx desc id in
+      if structural then
+        let params = extract_type_param_instantiations targs in
+        mk_nominal_type cx reason_i map (i, params)
+      else mk_super cx map i targs
+
+and mk_super cx type_params_map c targs =
+    (* A super class must be parameterized by This, so that it can be
+       specialized to this class and its subclasses when properties are looked
+       up on their instances. *)
+    let params = extract_type_param_instantiations targs in
+    let this = SMap.find_unsafe "this" type_params_map in
+    if params = [] then
+      (* No type params, but `c` could still be a polymorphic class that must be
+         implicitly instantiated. We need to do this before we try to
+         this-specialize `c`. *)
+      let reason = reason_of_t c in
+      let c = Flow_js.mk_tvar_derivable_where cx reason (fun tvar ->
+        Flow_js.flow cx (c, SpecializeT (reason, false, [], tvar))
+      ) in
+      ThisTypeAppT (c, this, [])
+    else
+      ThisTypeAppT (c, this, List.map (convert cx type_params_map) params)
 
 and body_loc = Ast.Statement.FunctionDeclaration.(function
   | BodyBlock (loc, _) -> loc
@@ -5365,27 +5413,28 @@ and body_loc = Ast.Statement.FunctionDeclaration.(function
 )
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_class_signature cx reason_c type_params_map superClass body = Ast.Class.(
+and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
   (* In case there is no constructor, pick up a default one. *)
-  let default_methods = match superClass with
-    | None ->
-        (* Parent class constructors simply return new instances, which is
-           indicated by the VoidT return type *)
-        SMap.singleton "constructor" {
-          meth_reason = replace_reason "default constructor" reason_c;
-          meth_tparams = [];
-          meth_tparams_map = SMap.empty;
-          meth_params = FuncParams.empty;
-          meth_return_type = VoidT.t;
-        }
-    | Some _ ->
-        (* Subclass default constructors are technically of the form
-           (...args) => { super(...args) }, but we can approximate that using
-           flow's existing inheritance machinery. *)
-        (* TODO: Does this distinction matter for the type checker? *)
-        SMap.empty
+  let default_methods =
+    if is_derived
+    then
+      (* Subclass default constructors are technically of the form (...args) =>
+         { super(...args) }, but we can approximate that using flow's existing
+         inheritance machinery. *)
+      (* TODO: Does this distinction matter for the type checker? *)
+      SMap.empty
+    else
+      (* Parent class constructors simply return new instances, which is
+         indicated by the VoidT return type *)
+      SMap.singleton "constructor" {
+        meth_reason = replace_reason "default constructor" reason_c;
+        meth_tparams = [];
+        meth_tparams_map = SMap.empty;
+        meth_params = FuncParams.empty;
+        meth_return_type = VoidT.t;
+      }
   in
 
   let default_sfields =
@@ -5738,7 +5787,7 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
    static members. The static members can be thought of as instance members of a
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
-and mk_class = Ast.Class.(
+and mk_class ?cls = Ast.Class.(
   let merge_getters_and_setters cx getters setters =
     SMap.fold
       (fun name setter_type getters_and_setters ->
@@ -5775,20 +5824,46 @@ and mk_class = Ast.Class.(
   let typeparams, type_params_map =
     mk_type_param_declarations cx type_params_map typeParameters in
 
+  (* We haven't computed the instance type yet, but we can still capture a
+     reference to it using the class name (as long as the class has a name). We
+     need this reference to constrain the `this` in the class. *)
+  let rec_instance_type = match cls with
+    | None -> AnyT.t
+    | Some c ->
+      begin match typeparams with
+      | [] ->
+        Flow_js.mk_instance cx reason_c c
+      | _ ->
+        let tparams = List.map (fun tp -> BoundT tp) typeparams in
+        TypeAppT (c, tparams)
+      end in
+  let this_tp = {
+    name = "this";
+    reason = replace_reason "`this` type" reason_c;
+    bound = rec_instance_type;
+    polarity = Positive
+  } in
+  (* Add the type of `this` to the end of the list of type parameters. Remember,
+     order is important, since we don't have recursive bounds (aka F-bounds):
+     the bound of This refers to all the other type parameters! *)
+  let typeparams, type_params_map =
+    typeparams@[this_tp],
+    SMap.add "this" (BoundT this_tp) type_params_map in
+
   let arg_polarities = List.fold_left (fun acc tp ->
     SMap.add tp.name tp.polarity acc
   ) SMap.empty typeparams in
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
+  let is_derived = superClass <> None in
   let (static_sig, inst_sig) =
-    mk_class_signature cx reason_c type_params_map superClass body
+    mk_class_signature cx reason_c type_params_map is_derived body
   in
 
   let id = Flow_js.mk_nominal cx in
 
   (* super: D<X> *)
-  let extends = opt_map (expression cx type_params_map) superClass, superTypeParameters in
-  let super = mk_extends cx type_params_map extends in
+  let super = mk_extends cx type_params_map (superClass, superTypeParameters) in
   let super_static = ClassT (super) in
 
   let static_reason = prefix_reason "statics of " reason_c in
@@ -5861,12 +5936,6 @@ and mk_class = Ast.Class.(
       structural = false;
     } in
     Flow_js.flow cx (super_static, SuperT(reason_c, static_instance));
-    let static = InstanceT (
-      static_reason,
-      MixedT.t,
-      super_static,
-      static_instance
-    ) in
 
     let instance = {
       class_id = id;
@@ -5878,11 +5947,13 @@ and mk_class = Ast.Class.(
       structural = false;
     } in
     Flow_js.flow cx (super, SuperT(reason_c, instance));
-    let this = InstanceT (reason_c,static,super,instance) in
+
+    let this = SMap.find_unsafe "this" map_ in
+    let static = ClassT this in
 
     mk_class_elements cx
       (this, super, inst_sig_substituted)
-      (ClassT this, super_static, static_sig_substituted)
+      (static, super_static, static_sig_substituted)
       map_
       body;
   );
@@ -5912,6 +5983,10 @@ and mk_class = Ast.Class.(
   let sfields = SMap.fold SMap.add sgetters_and_setters static_sig.sig_fields in
   let fields = SMap.fold SMap.add getters_and_setters inst_sig.sig_fields in
 
+  let typeparams, type_params_map =
+    List.rev (List.tl (List.rev typeparams)),
+    SMap.remove "this" type_params_map in
+
   let static_instance = {
     class_id = 0;
     type_args = type_params_map;
@@ -5937,13 +6012,14 @@ and mk_class = Ast.Class.(
     mixins = false;
     structural = false;
   } in
+
   let this = InstanceT (reason_c, static, super, instance) in
 
-  if (typeparams = [])
-  then
-    ClassT this
-  else
-    PolyT(typeparams, ClassT this)
+  (* check polarity of all type parameters appearing in the class *)
+  Flow_js.check_polarity cx Positive this;
+
+  let cls_body = ThisClassT this in
+  if (typeparams = []) then cls_body else PolyT(typeparams, cls_body)
 )
 
 and extract_extends cx structural = function
@@ -5982,7 +6058,7 @@ and mk_interface cx reason_i typeparams type_params_map
   (* mixins override extends *)
   let interface_supers =
     List.map (mk_interface_super cx false super_reason type_params_map) mixins @
-    List.map (mk_interface_super cx true super_reason type_params_map) extends
+    List.map (mk_interface_super cx structural super_reason type_params_map) extends
   in
   let super = match interface_supers with
     | [] -> AnyT.t
@@ -6029,6 +6105,10 @@ and mk_interface cx reason_i typeparams type_params_map
     Flow_js.flow cx (super, SuperT(reason_i, instance));
   );
 
+  let typeparams, type_params_map =
+    List.rev (List.tl (List.rev typeparams)),
+    SMap.remove "this" type_params_map in
+
   let static_instance = {
     class_id = 0;
     type_args = type_params_map;
@@ -6055,9 +6135,8 @@ and mk_interface cx reason_i typeparams type_params_map
   } in
   let this = InstanceT (reason_i, static, super, instance) in
 
-  if typeparams = []
-  then ClassT(this)
-  else PolyT (typeparams, ClassT(this))
+  let cls_body = ThisClassT this in
+  if typeparams = [] then cls_body else PolyT (typeparams, cls_body)
 
 (* Given a function declaration and types for `this` and `super`, extract a
    signature consisting of type parameters, parameter types, parameter names,

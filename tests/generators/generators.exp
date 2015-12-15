@@ -21,35 +21,39 @@ class.js:101:41,41: number
 This type is incompatible with
 class.js:101:45,50: string
 
-class.js:103:23,51: call of method `next`
+class.js:109:23,51: call of method `next`
 Error:
-class.js:103:50,50: number
+class.js:113:4,18: string
 This type is incompatible with
-class.js:28:13,19: boolean
+class.js:113:22,28: boolean
 
-class.js:103:23,51: call of method `next`
-Error:
-class.js:107:4,18: string
-This type is incompatible with
-class.js:107:22,28: boolean
-
-class.js:122:41,42: string
+class.js:128:41,42: string
 This type is incompatible with
 class.js:50:15,20: number
 
-class.js:125:4,4: string
+class.js:131:4,4: string
 This type is incompatible with
-class.js:125:8,13: number
+class.js:131:8,13: number
 
-class.js:128:1,44: call of method `next`
+class.js:134:1,44: call of method `next`
 Error:
-class.js:128:42,43: string
+class.js:134:42,43: string
 This type is incompatible with
 [LIB] core.js:346:37,40: undefined
 
-class.js:131:4,4: number
+class.js:137:4,4: number
 This type is incompatible with
-class.js:131:8,13: string
+class.js:137:8,13: string
+
+class_failure.js:12:41,41: number
+This type is incompatible with
+class_failure.js:12:45,50: string
+
+class_failure.js:14:23,51: call of method `next`
+Error:
+class_failure.js:22:4,18: string
+This type is incompatible with
+class_failure.js:22:22,28: boolean
 
 generators.js:3:9,10: string
 This type is incompatible with
@@ -125,4 +129,4 @@ throw.js:24:4,21: number
 This type is incompatible with
 throw.js:24:24,29: string
 
-Found 27 errors
+Found 28 errors

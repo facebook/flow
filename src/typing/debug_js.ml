@@ -136,6 +136,16 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | ThisClassT t -> [
+      "type", _json_of_t json_cx t
+    ]
+
+  | ThisTypeAppT (t, this, targs) -> [
+      "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
+      "thisArg", _json_of_t json_cx this;
+      "type", _json_of_t json_cx t
+    ]
+
   | BoundT tparam -> [
       "typeParam", json_of_typeparam json_cx tparam
     ]
@@ -302,6 +312,16 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "cache", JSON_Bool cache;
       "types", JSON_Array (List.map (_json_of_t json_cx) targs);
       "tvar", _json_of_t json_cx tvar
+    ]
+
+  | ThisSpecializeT (_, this, tvar) -> [
+      "type", _json_of_t json_cx this;
+      "tvar", _json_of_t json_cx tvar
+    ]
+
+  | VarianceCheckT (_, targs, polarity) -> [
+      "types", JSON_Array (List.map (_json_of_t json_cx) targs);
+      "polarity", json_of_polarity json_cx polarity
     ]
 
   | LookupT (_, rstrict, _, name, t) ->

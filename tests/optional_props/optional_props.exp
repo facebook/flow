@@ -21,4 +21,12 @@ test2.js:10:34,37: null
 This type is incompatible with
 test2.js:10:16,21: string
 
-Found 5 errors
+test3.js:54:16,16: property `b`
+Property not found in
+test3.js:54:9,14: object literal
+
+test3_failure.js:7:14,14: property `b`
+Property not found in
+test3_failure.js:7:5,12: object literal
+
+Found 7 errors

@@ -99,6 +99,10 @@ type t =
   | PolyT of typeparam list * t
   (* type application *)
   | TypeAppT of t * t list
+  (* this-abstracted class *)
+  | ThisClassT of t
+  (* this instantiation *)
+  | ThisTypeAppT of t * t * t list
   (* bound type variable *)
   | BoundT of typeparam
   (* existential type variable *)
@@ -257,6 +261,10 @@ type t =
       the polymorphic type, unifying the type arguments with those
       instantiations if such exist. **)
   | SpecializeT of reason * bool * t list * t
+  (* operation on this-abstracted classes *)
+  | ThisSpecializeT of reason * t * t
+  (* variance check on polymorphic types *)
+  | VarianceCheckT of reason * t list * polarity
 
   (* operation on prototypes *)
   (** LookupT(_, strict, try_ts_on_failure, x, tresult) looks for property x in
@@ -548,6 +556,8 @@ let is_use = function
   | PredicateT _
   | EqT _
   | SpecializeT _
+  | ThisSpecializeT _
+  | VarianceCheckT _
   | LookupT _
   | ObjAssignT _
   | ObjFreezeT _
@@ -605,6 +615,8 @@ let rec reason_of_t = function
 
   | PolyT (_,t) ->
       prefix_reason "polymorphic type: " (reason_of_t t)
+  | ThisClassT t ->
+      prefix_reason "class type: " (reason_of_t t)
   | BoundT typeparam ->
       typeparam.reason
   | ExistsT reason ->
@@ -671,8 +683,17 @@ let rec reason_of_t = function
   | SpecializeT(reason,_,_,_)
       -> reason
 
+  | ThisSpecializeT(reason,_,_)
+      -> reason
+
+  | VarianceCheckT(reason,_,_)
+      -> reason
+
   | TypeAppT(t,_)
       -> prefix_reason "type application of " (reason_of_t t)
+
+  | ThisTypeAppT(t,_,_)
+      -> prefix_reason "this instantiation of " (reason_of_t t)
 
   | MaybeT t ->
       prefix_reason "?" (reason_of_t t)
@@ -809,6 +830,7 @@ let rec mod_reason_of_t f = function
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
+  | ThisClassT t -> ThisClassT (mod_reason_of_t f t)
   | BoundT { reason; name; bound; polarity } ->
     BoundT { reason = f reason; name; bound; polarity }
   | ExistsT reason -> ExistsT (f reason)
@@ -860,7 +882,13 @@ let rec mod_reason_of_t f = function
 
   | SpecializeT(reason, cache, ts, t) -> SpecializeT (f reason, cache, ts, t)
 
+  | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
+
+  | VarianceCheckT(reason, ts, polarity) -> VarianceCheckT (f reason, ts, polarity)
+
   | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
+
+  | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
 
   | MaybeT t -> MaybeT (mod_reason_of_t f t)
 
@@ -950,6 +978,7 @@ let string_of_ctor = function
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
   | PolyT _ -> "PolyT"
+  | ThisClassT _ -> "ThisClassT"
   | BoundT _ -> "BoundT"
   | ExistsT _ -> "ExistsT"
   | ObjT _ -> "ObjT"
@@ -984,7 +1013,10 @@ let string_of_ctor = function
   | OrT _ -> "OrT"
   | NotT _ -> "NotT"
   | SpecializeT _ -> "SpecializeT"
+  | ThisSpecializeT _ -> "ThisSpecializeT"
+  | VarianceCheckT _ -> "VarianceCheckT"
   | TypeAppT _ -> "TypeAppT"
+  | ThisTypeAppT _ -> "ThisTypeAppT"
   | MaybeT _ -> "MaybeT"
   | TaintT _ -> "TaintT"
   | IntersectionT _ -> "IntersectionT"
@@ -1059,3 +1091,31 @@ let rec string_of_predicate = function
 
   (* Array.isArray *)
   | ArrP -> "array"
+
+module Polarity = struct
+  (* Subtype relation for polarities, interpreting neutral as positive &
+     negative: whenever compat(p1,p2) holds, things that have polarity p1 can
+     appear in positions that have polarity p2. *)
+  let compat = function
+    | Positive, Positive
+    | Negative, Negative
+    | Neutral, _ -> true
+    | _ -> false
+
+  let inv = function
+    | Positive -> Negative
+    | Negative -> Positive
+    | Neutral -> Neutral
+
+  let mult = function
+    | Positive, Positive -> Positive
+    | Negative, Negative -> Positive
+    | Neutral, _ | _, Neutral -> Neutral
+    | _ -> Negative
+
+  (* printer *)
+  let string = function
+    | Positive -> "covariant"
+    | Negative -> "contravariant"
+    | Neutral -> "invariant"
+end

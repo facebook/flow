@@ -43,7 +43,13 @@ x.b = 1;
 class A {
     x: { a: number, b?: string };
     foo() {
-        // similarly here.
+        // Something similar should happen here, but doesn't: the problem is
+        // made explicit by adding generics (see test3_failure.js introduced by
+        // D2747512). There is a race between writing b on the object literal
+        // type and adding b as an optional property to it, since in general we
+        // cannot guarantee that the flow from the object literal to the
+        // annotation will be processed before the flow involving the
+        // access. Here we lose the race and get an error on the write.
         this.x = { a: 123 };
         this.x.b = 'hello';
     }

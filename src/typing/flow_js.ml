@@ -780,6 +780,9 @@ and ground_type_impl cx ids t = match t with
   | ClassT t ->
       ClassT (ground_type_impl cx ids t)
 
+  | ThisClassT t ->
+      ClassT (ground_type_impl cx ids t)
+
   | TypeT (_, t) ->
       TypeT (reason_of_string "type",
              ground_type_impl cx ids t)
@@ -797,6 +800,12 @@ and ground_type_impl cx ids t = match t with
       let c = ground_type_impl cx ids c in
       let ts = List.map (ground_type_impl cx ids) ts in
       TypeAppT (c, ts)
+
+  | ThisTypeAppT (c, this, ts) ->
+      let c = ground_type_impl cx ids c in
+      let this = ground_type_impl cx ids this in
+      let ts = List.map (ground_type_impl cx ids) ts in
+      ThisTypeAppT (c, this, ts)
 
   | IntersectionT (_, ts) ->
       IntersectionT (
@@ -927,6 +936,13 @@ let rec normalize_type cx t =
   | TypeAppT (c, ts) ->
       TypeAppT (
         normalize_type cx c,
+        List.map (normalize_type cx) ts
+      )
+
+  | ThisTypeAppT (c, this, ts) ->
+      ThisTypeAppT (
+        normalize_type cx c,
+        normalize_type cx this,
         List.map (normalize_type cx) ts
       )
 
@@ -1096,6 +1112,13 @@ let rec printify_type cx t =
   | TypeAppT (c, ts) ->
       TypeAppT (
         printify_type cx c,
+        List.map (printify_type cx) ts
+      )
+
+  | ThisTypeAppT (c, this, ts) ->
+      ThisTypeAppT (
+        printify_type cx c,
+        printify_type cx this,
         List.map (printify_type cx) ts
       )
 
@@ -1579,12 +1602,6 @@ let rec __flow cx (l, u) trace =
     | _, BecomeT (reason, t) ->
       rec_unify cx trace (reposition ~trace cx reason l) t
 
-    (************************************************)
-    (* bound variables are equal only to themselves *)
-    (************************************************)
-    | (BoundT _, _) | (_, BoundT _) when l = u ->
-      ()
-
     (***********************)
     (* guarded unification *)
     (***********************)
@@ -1606,8 +1623,20 @@ let rec __flow cx (l, u) trace =
     | (ClassT(inst), ImportTypeT(reason, t)) ->
       rec_flow cx trace (TypeT(reason, inst), t)
 
+    (* fix this-abstracted class when used as a type *)
+    | (ThisClassT i, ImportTypeT(reason, _)) ->
+      rec_flow cx trace
+        (fix_this_class cx trace reason i, u)
+
     | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, t)) ->
       rec_flow cx trace (PolyT(typeparams, TypeT(reason, inst)), t)
+
+    (* TODO: ideally we would delay fixing a polymorphic this-abstracted class
+       until it was specialized, but treating it similarly to the
+       non-polymorphic case is easier; might need to revisit *)
+    | (PolyT(typeparams, ThisClassT i), ImportTypeT(reason, _)) ->
+      rec_flow cx trace
+        (PolyT(typeparams, fix_this_class cx trace reason i), u)
 
     | (FunT(_, _, prototype, _), ImportTypeT(reason, t)) ->
       rec_flow cx trace (TypeT(reason, prototype), t)
@@ -2044,6 +2073,18 @@ let rec __flow cx (l, u) trace =
        because substitution of type parameters in def types does not affect
        their reasons, so we'd trivially lose precision. *)
 
+    | (ThisTypeAppT(c,this,ts), _) ->
+      let reason = reason_of_t u in
+      let tc = specialize_class cx trace reason c ts in
+      let c = instantiate_this_class cx trace reason tc this in
+      rec_flow cx trace (mk_instance cx reason ~for_type:false c, u)
+
+    | (_, ThisTypeAppT(c,this,ts)) ->
+      let reason = reason_of_t l in
+      let tc = specialize_class cx trace reason c ts in
+      let c = instantiate_this_class cx trace reason tc this in
+      rec_flow cx trace (l, mk_instance cx reason ~for_type:false c)
+
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_t u in
         let t = mk_typeapp_instance cx reason_op ~cache:true c ts in
@@ -2341,15 +2382,41 @@ let rec __flow cx (l, u) trace =
        arguments. Use the instantiation cache if directed to do so by the
        operation. (SpecializeT operations are created when processing TypeAppT
        types, so the decision to cache or not originates there.) *)
-    | (PolyT (ids,t), SpecializeT(reason,cache,ts,tvar)) ->
+
+    (* NOTE: we consider empty targs specialization for polymorphic definitions
+       to be the same as implicit specialization, which is handled by a
+       fall-through case below. *)
+    | (PolyT (ids,t), SpecializeT(reason,cache,ts,tvar)) when ts <> [] ->
       let t_ = instantiate_poly_with_targs cx trace reason ~cache (ids,t) ts in
       rec_flow cx trace (t_, tvar)
+
+    | PolyT (tps, _), VarianceCheckT(_, ts, polarity) ->
+      variance_check cx polarity (tps, ts)
+
+    (* empty targs specialization of non-polymorphic classes is a no-op *)
+    | (ClassT _ | ThisClassT _), SpecializeT(_,_,[],tvar) ->
+      rec_flow cx trace (l, tvar)
+
+    (* this-specialize a this-abstracted class by substituting This *)
+    | ThisClassT i, ThisSpecializeT(reason,this,tvar) ->
+      let i = subst cx (SMap.singleton "this" this) i in
+      rec_flow cx trace (ClassT i, tvar)
+
+    (* this-specialization of non-this-abstracted classes is a no-op *)
+    | ClassT i, ThisSpecializeT(reason,this,tvar) ->
+      (* TODO: check that this is a subtype of i? *)
+      rec_flow cx trace (ClassT i, tvar)
 
     (* PolyT doesn't have a position since it takes on the position of the upper
        bound, so it doesn't need to be repositioned. This case is necessary to
        prevent the wildcard (PolyT, _) below from firing too early. *)
     | (PolyT _, ReposLowerT (_, u)) ->
       rec_flow cx trace (l, u)
+
+    (* get this out of the way too, as above, except that repositioning does
+       make sense *)
+    | (ThisClassT _, ReposLowerT (reason_op, u)) ->
+      rec_flow cx trace (reposition cx reason_op l, u)
 
     (* When do we consider a polymorphic type <X:U> T to be a subtype of another
        polymorphic type <X:U'> T'? This is the subject of a long line of
@@ -2386,6 +2453,13 @@ let rec __flow cx (l, u) trace =
         generate_tests cx (reason_of_t l) ids (fun map_ ->
           rec_flow cx trace (l, subst cx map_ t)
         )
+
+    (* TODO: ideally we'd do the same when lower bounds flow to a
+       this-abstracted class, but fixing the class is easier; might need to
+       revisit *)
+    | (_, ThisClassT i) ->
+      let r = reason_of_t l in
+      rec_flow cx trace (l, fix_this_class cx trace r i)
 
     | (PolyT (ids,t), _) ->
       (* Some observed cases of u are listed below. These look legit, as common
@@ -2431,6 +2505,11 @@ let rec __flow cx (l, u) trace =
       let reason = reason_of_t u in
       let t_ = instantiate_poly ~weak cx trace reason (ids,t) in
       rec_flow cx trace (t_, u)
+
+    (* when a this-abstracted class flows to upper bounds, fix the class *)
+    | (ThisClassT i, _) ->
+      let r = reason_of_t u in
+      rec_flow cx trace (fix_this_class cx trace r i, u)
 
     (***********************************************)
     (* function types deconstruct into their parts *)
@@ -2642,7 +2721,6 @@ let rec __flow cx (l, u) trace =
 
     | (InstanceT (_,_,super,instance),
        ExtendsT(_, _, InstanceT (_,_,_,instance_super))) ->
-
       if instance.class_id = instance_super.class_id
       then
         flow_type_args cx trace instance instance_super
@@ -3832,6 +3910,8 @@ and err_operation = function
   | ArrRestT _ -> "Expected array instead of"
   | SuperT _ -> "Cannot inherit"
   | SpecializeT _ -> "Expected polymorphic type instead of"
+  | ThisSpecializeT _ -> "Expected class instead of"
+  | VarianceCheckT _ -> "Expected polymorphic type instead of"
   | LookupT _ -> "Property not found in"
   | GetKeysT _ -> "Expected object instead of"
   | HasOwnPropT _ -> "Property not found in"
@@ -3967,7 +4047,7 @@ and result_of_taint_op = function
 and generate_tests cx reason typeparams each =
   (* generate 2^|typeparams| maps *)
   let maps = List.fold_left (fun list {name; bound; _ } ->
-    let xreason = replace_reason name reason in
+    let xreason = replace_reason (spf "`%s`" name) reason in
     let bot = EmptyT (
       prefix_reason "some incompatible instantiation of " xreason
     ) in
@@ -4078,9 +4158,14 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   if SMap.is_empty map then t
   else match t with
   | BoundT typeparam ->
-    (match SMap.get typeparam.name map with
+    begin match SMap.get typeparam.name map with
     | None -> t
-    | Some t -> t)
+    | Some t ->
+      (* opportunistically reposition This substitutions; in general
+         repositioning may lead to non-termination *)
+      if typeparam.name = "this" then reposition cx typeparam.reason t
+      else t
+    end
 
   | ExistsT reason ->
     if force then mk_tvar cx reason
@@ -4126,6 +4211,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       SMap.remove typeparam.name map
     ) ([], map) xs in
     PolyT (List.rev xs, subst cx ~force:false map t)
+
+  | ThisClassT t ->
+    let map = SMap.remove "this" map in
+    ThisClassT (subst cx ~force map t)
 
   | ObjT (reason, {
     flags;
@@ -4181,6 +4270,12 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       let c = subst cx ~force map c in
       let ts = List.map (subst cx ~force map) ts in
       TypeAppT(c, ts)
+
+  | ThisTypeAppT(c, this, ts) ->
+      let c = subst cx ~force map c in
+      let this = subst cx ~force map this in
+      let ts = List.map (subst cx ~force map) ts in
+      ThisTypeAppT(c, this, ts)
 
   | MaybeT(t) ->
     MaybeT(subst cx ~force map t)
@@ -4263,8 +4358,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | SetPropT _
   | SpecializeT _
   | SuperT _
+  | ThisSpecializeT _
   | UnaryMinusT _
   | UnifyT _
+  | VarianceCheckT _
     ->
       failwith (spf "Unexpected use type in subst: %s" (string_of_ctor t))
 
@@ -4279,9 +4376,116 @@ and subst_propmap cx force map id =
   if pmap_ = pmap then id
   else mk_propmap cx pmap_
 
+(* TODO: flesh this out *)
+and check_polarity cx polarity = function
+  (* base case *)
+  | BoundT tp ->
+    if not (Polarity.compat (tp.polarity, polarity))
+    then polarity_mismatch cx polarity tp
+
+  | OpenT _
+  | NumT _
+  | StrT _
+  | BoolT _
+  | EmptyT _
+  | MixedT _
+  | AnyT _
+  | NullT _
+  | VoidT _
+  | TaintT _
+  | ExistsT _
+  | AnyObjT _
+  | AnyFunT _
+  | SingletonStrT _
+  | SingletonNumT _
+  | SingletonBoolT _
+    -> ()
+
+  | OptionalT t
+  | RestT t
+  | AbstractT t
+  | MaybeT t
+  | UpperBoundT t
+  | LowerBoundT t
+    -> check_polarity cx polarity t
+
+  | ClassT t
+    -> check_polarity cx Neutral t
+
+  | TypeT (_, t)
+    -> check_polarity cx Neutral t
+
+  | InstanceT (_, _, _, instance) ->
+    check_polarity_propmap cx Neutral instance.fields_tmap;
+    check_polarity_propmap cx polarity instance.methods_tmap
+
+  | FunT (_, _, _, func) ->
+    List.iter (check_polarity cx (Polarity.inv polarity)) func.params_tlist;
+    check_polarity cx polarity func.return_t
+
+  | ArrT (_, t, _) ->
+    check_polarity cx Neutral t
+
+  | ObjT (_, obj) ->
+    check_polarity_propmap cx Neutral obj.props_tmap
+
+  | UnionT(_, ts) ->
+    List.iter (check_polarity cx polarity) ts
+
+  | IntersectionT(_, ts) ->
+    List.iter (check_polarity cx polarity) ts
+
+  | PolyT (xs, t) ->
+    List.iter (check_polarity_typeparam cx (Polarity.inv polarity)) xs;
+    check_polarity cx polarity t
+
+  | ThisTypeAppT (c, _, ts)
+  | TypeAppT (c, ts)
+    ->
+    check_polarity_typeapp cx polarity c ts
+
+  | ThisClassT _
+  | ModuleT _
+  | AnnotT _
+  | ShapeT _
+  | DiffT _
+  | SpeculativeMatchT _
+  | KeysT _
+  | FunProtoT _
+    -> () (* TODO *)
+
+  | t -> failwith (string_of_reason (reason_of_t t)) (* use types *)
+
+and check_polarity_propmap cx polarity id =
+  let pmap = find_props cx id in
+  SMap.iter (fun _ -> check_polarity cx polarity) pmap
+
+and check_polarity_typeparam cx polarity tp =
+  check_polarity cx polarity tp.bound
+
+and check_polarity_typeapp cx polarity c ts =
+  let reason = prefix_reason "variance check: " (reason_of_t c) in
+  flow_opt cx (c, VarianceCheckT(reason, ts, polarity))
+
+and variance_check cx polarity = function
+  | [], _ | _, [] ->
+    (* ignore typeapp arity mismatch, since it's handled elsewhere *)
+    ()
+  | tp::tps, t::ts ->
+    check_polarity cx (Polarity.mult (polarity, tp.polarity)) t;
+    variance_check cx polarity (tps, ts)
+
+and polarity_mismatch cx polarity tp =
+  let msg = spf
+    "%s position (expected `%s` to occur only %sly)"
+    (Polarity.string polarity)
+    tp.name
+    (Polarity.string tp.polarity) in
+  add_error cx [tp.reason, msg]
+
 and typeapp_arity_mismatch cx expected_num reason =
   let msg = spf "wrong number of type arguments (expected %d)" expected_num in
-  add_error cx [reason, msg];
+  add_error cx [reason, msg]
 
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
@@ -4322,6 +4526,31 @@ and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
   )
   in
   instantiate_poly_with_targs cx trace reason_op (xs,t) ts
+
+(* Fix a this-abstracted instance type by tying a "knot": assume that the
+   fixpoint is some `this`, substitute it as This in the instance type, and
+   finally unify it with the instance type. Return the class type wrapping the
+   instance type. *)
+and fix_this_class cx trace reason i =
+  let this = mk_tvar cx reason in
+  let i = subst cx (SMap.singleton "this" this) i in
+  rec_unify cx trace this i;
+  ClassT(i)
+
+(* Specialize This in a class. Eventually this causes substitution. *)
+and instantiate_this_class cx trace reason tc this =
+  mk_tvar_where cx reason (fun tvar ->
+    rec_flow cx trace (tc, ThisSpecializeT (reason, this, tvar))
+  )
+
+(* Specialize targs in a class. This is somewhat different from
+   mk_typeapp_instance, in that it returns the specialized class type, not the
+   specialized instance type. *)
+and specialize_class cx trace reason c ts =
+  if ts = [] then c
+  else mk_tvar_where cx reason (fun tvar ->
+    rec_flow cx trace (c, SpecializeT (reason, false, ts, tvar))
+  )
 
 and mk_object_with_proto cx reason proto =
   mk_object_with_map_proto cx reason SMap.empty proto
@@ -5676,7 +5905,7 @@ and instantiate_poly_t cx t types =
 
 and instantiate_type t =
   match t with
-  | ClassT t -> t
+  | ThisClassT t | ClassT t -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
 
 and static_method_call cx name reason reason_prop m argts =
@@ -5856,6 +6085,7 @@ end = struct
         let prot_members = extract_members_as_map cx proto_t in
         let members = find_props cx flds in
         Success (SMap.union prot_members members)
+    | ThisTypeAppT (c, _, ts)
     | TypeAppT (c, ts) ->
         let c = resolve_type cx c in
         let inst_t = instantiate_poly_t cx c ts in
@@ -5864,6 +6094,7 @@ end = struct
     | PolyT (type_params, sub_type) ->
         (* TODO: replace type parameters with stable/proper names? *)
         extract_members cx sub_type
+    | ThisClassT (InstanceT (_, static, _, _))
     | ClassT (InstanceT (_, static, _, _)) ->
         let static_t = resolve_type cx static in
         extract_members cx static_t
@@ -5970,6 +6201,9 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | PolyT (xs,t) ->
       assert_ground cx skip ids t
 
+  | ThisClassT t ->
+      assert_ground cx skip ids t
+
   | ObjT (reason, { props_tmap = id; proto_t; _ }) ->
       unify cx proto_t AnyT.t;
       iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
@@ -5998,6 +6232,11 @@ let rec assert_ground ?(infer=false) cx skip ids = function
 
   | TypeAppT(c,ts) ->
       assert_ground ~infer:true cx skip ids c;
+      List.iter (assert_ground cx skip ids) ts
+
+  | ThisTypeAppT(c,this,ts) ->
+      assert_ground ~infer:true cx skip ids c;
+      assert_ground ~infer:true cx skip ids this;
       List.iter (assert_ground cx skip ids) ts
 
   | MaybeT(t) -> assert_ground cx skip ids t

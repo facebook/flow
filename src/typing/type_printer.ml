@@ -322,6 +322,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | TypeT (_, t)
   | LowerBoundT t
   | UpperBoundT t
+  | ThisClassT t
   | ClassT t
     when weak
     ->
@@ -334,6 +335,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   (* This gives really ugly output, but would need to figure out a better way
      to print these types otherwise, maybe substitute on printing? *)
+  | ThisTypeAppT (t, _, ts)
   | TypeAppT (t, ts)
     when weak
     ->

@@ -1,4 +1,6 @@
 
+test.js:10:12,39: constructor call
+Error:
 test.js:1:7,7: A
 This type is incompatible with
 test.js:9:15,20: number

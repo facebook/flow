@@ -185,11 +185,11 @@ generic_class.js:18:20,25: string
 
 generic_class.js:26:16,17: number
 This type is incompatible with
-generic_class.js:25:7,29: some incompatible instantiation of T
+generic_class.js:25:7,29: some incompatible instantiation of `T`
 
 generic_class.js:29:23,24: number
 This type is incompatible with
-generic_class.js:25:7,29: some incompatible instantiation of T
+generic_class.js:25:7,29: some incompatible instantiation of `T`
 
 scoping.js:24:2,16: number
 This type is incompatible with
