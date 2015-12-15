@@ -11,6 +11,6 @@ arrows.js:7:14,60: call of method `sort`
 Error:
 arrows.js:7:36,59: string
 This type is incompatible with
-[LIB] core.js:155:38,43: number
+[LIB] core.js:159:38,43: number
 
 Found 3 errors

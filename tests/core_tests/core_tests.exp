@@ -13,7 +13,7 @@ map.js:29:6,17: call of method `get`
 Error:
 map.js:29:20,26: boolean
 This type is incompatible with
-[LIB] core.js:373:22,25: undefined
+[LIB] core.js:381:22,25: undefined
 
 map.js:30:5,14: call of method `get`
 Error:
@@ -25,13 +25,13 @@ regexp.js:26:5,22: function call
 Error:
 regexp.js:26:19,21: string
 This type is incompatible with
-[LIB] core.js:230:47,58: union type
+[LIB] core.js:237:47,58: union type
 
 regexp.js:27:5,26: constructor call
 Error:
 regexp.js:27:23,25: string
 This type is incompatible with
-[LIB] core.js:231:51,62: union type
+[LIB] core.js:238:51,62: union type
 
 weakset.js:19:11,32: constructor call
 Function cannot be called on
