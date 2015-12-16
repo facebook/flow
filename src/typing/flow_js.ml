@@ -2365,6 +2365,29 @@ let rec __flow cx (l, u) trace =
     | (IntersectionT (r,ts), _) ->
       concretize_parts cx trace l u [] (parts_to_concretize cx u)
 
+    (* singleton lower bounds are equivalent to the corresponding
+       primitive with a literal constraint. These conversions are
+       low precedence to allow equality exploits above, such as
+       the UnionT membership check, to fire.
+       TODO we can move to a single representation for singletons -
+       either SingletonFooT or (FooT <literal foo>) - if we can
+       ensure that their meaning as upper bounds is unambiguous.
+       Currently a SingletonFooT means the constrained type,
+       but the literal in (FooT <literal>) is a no-op.
+       Abstractly it should be totally possible to scrub literals
+       from the latter kind of flow, but it's unclear how difficult
+       it would be in practice.
+     *)
+
+    | SingletonStrT (reason, key), _ ->
+      rec_flow cx trace (StrT (reason, Literal key), u)
+
+    | SingletonNumT (reason, lit), _ ->
+      rec_flow cx trace (NumT (reason, Literal lit), u)
+
+    | SingletonBoolT (reason, b), _ ->
+      rec_flow cx trace (BoolT (reason, Some b), u)
+
     (***************************************)
     (* generic function may be specialized *)
     (***************************************)
@@ -3758,29 +3781,6 @@ let rec __flow cx (l, u) trace =
     | FunProtoBindT reason, _
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
-
-    (* singleton lower bounds are equivalent to the corresponding
-       primitive with a literal constraint. These conversions are
-       low precedence to allow equality exploits above, such as
-       the UnionT membership check, to fire.
-       TODO we can move to a single representation for singletons -
-       either SingletonFooT or (FooT <literal foo>) - if we can
-       ensure that their meaning as upper bounds is unambiguous.
-       Currently a SingletonFooT means the constrained type,
-       but the literal in (FooT <literal>) is a no-op.
-       Abstractly it should be totally possible to scrub literals
-       from the latter kind of flow, but it's unclear how difficult
-       it would be in practice.
-     *)
-
-    | SingletonStrT (reason, key), _ ->
-      rec_flow cx trace (StrT (reason, Literal key), u)
-
-    | SingletonNumT (reason, lit), _ ->
-      rec_flow cx trace (NumT (reason, Literal lit), u)
-
-    | SingletonBoolT (reason, b), _ ->
-      rec_flow cx trace (BoolT (reason, Some b), u)
 
     (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or other
        non-object-ish things), then use `reason_prop`, which represents the
