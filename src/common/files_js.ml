@@ -217,9 +217,10 @@ let is_lib_file p =
 
 let lib_module = ""
 
-let dir_sep = Str.regexp_string Filename.dir_sep
+let dir_sep = Str.regexp "[/\\\\]"
 let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
+let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:\\)"
 
 let wanted config =
   let is_excluded = FlowConfig.is_excluded config in
@@ -238,6 +239,14 @@ let make_next_files root =
   make_next_files_following_symlinks
     ~path_filter ~realpath_filter (root::others)
 
+let is_windows_root root =
+  Sys.win32 &&
+  String.length root = 2 &&
+  root.[1] = ':' &&
+  match root.[0] with
+    | 'a'..'z' | 'A'..'Z' -> true
+    | _ -> false
+
 let rec normalize_path dir file =
   normalize_path_ dir (Str.split_delim dir_sep file)
 
@@ -252,6 +261,9 @@ and normalize_path_ dir names =
   | ""::names when names <> [] ->
       (* /<names> => /<names> *)
       construct_path Filename.dir_sep names
+  | root::names when is_windows_root root ->
+      (* C:\<names> => C:\<names> *)
+      construct_path (root ^ Filename.dir_sep) names
   | _ ->
       (* <names> => dir/<names> *)
       construct_path dir names
@@ -288,5 +300,8 @@ let relative_path =
         List.fold_left (fun path _ -> Filename.parent_dir_name::path) file root
   in
   fun root file ->
+    (* This functions is only used for displaying error location.
+       We use '/' as file separator even on Windows. This simplify
+       the test-suite script... *)
     make_relative (split_path root, split_path file)
-    |> String.concat Filename.dir_sep
+    |> String.concat "/"
