@@ -260,7 +260,7 @@ end = struct
     end;
     FlowEventLogger.init_server root;
     Relative_path.set_path_prefix Relative_path.Root root;
-    Program.preinit ();
+    Program.preinit options;
     let handle = SharedMem.(init default_config shm_dir) in
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
@@ -351,7 +351,7 @@ end = struct
       (new_entry_point ())
       (fun (options, config) (ic, waiting_channel) ->
         ignore(Sys_utils.setsid());
-        Timeout.close_in (Daemon.cast_in ic);
+        close_in (Daemon.cast_in ic);
         FlowConfig.restore config;
         main ~waiting_channel options)
 
