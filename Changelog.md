@@ -1,3 +1,33 @@
+###v0.20.0
+
+New features:
+- Initial support for a `this` return type for class methods
+- Big improvements on error messages for unions and intersections
+- `import typeof * as` now allows for concise access to the type of the ModuleNamespace object
+- Flow now understands how to `require()`/`import` a .json file
+
+Bug fixes:
+- Fixed an issue where nested unions and intersections might not typecheck as expected
+- Fixed issue where `declare type` wouldn't work in a `declare module` that has an `exports` entry
+- Fixed an issue where the error formatter could fatal in some rare cases
+- Fixed a bug where `Function.prototype.bind` would lose the types of the params on the function it output
+- Fixed some variance bugs in the built-in Array.prototype library definitions
+- Fixed a bug where using a list that doesn't contain ".js" in `module.file_ext` would cause internal flow libs to be ignored
+- Fixed autocomplete to work better with general `Function` types
+- Fixed some issues with const refinement
+- Fixed various issues with `export * from` (it should work fully now)
+- Fixed a bug where Flow might crash when an export has a wildcard typeparam
+
+Misc:
+- Some improvements to DOM and Node libdefs
+- Various error position relevancy improvements
+- Significantly improved general understanding of special functions like `Function.prototype.{bind,call,apply}`
+- Improved error messages for `import` statements where the remote exports don't exist (or may be typo'd)
+- Improvements to understanding of deferred initialization of `let` variables 
+- `flow get-def` will now hop through lvalues in variable assignments for more fine-grained "hop-tracing" of a variable back to its definition
+- Objects with a `callable` signature can now be passed in to type positions that expect a function with a matching signature
+- Significant improvements to efficiency/perf when recalculating types based on a change to a file with an already-running Flow server
+
 ###v0.19.0
 
 Likely to cause new Flow errors:
