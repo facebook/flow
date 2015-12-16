@@ -1,4 +1,4 @@
-(**
+/**
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
@@ -6,10 +6,14 @@
  * LICENSE file in the "hack" directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *)
+ */
 
-val make_genv:
-  ServerArgs.options -> ServerConfig.t -> ServerLocalConfig.t ->
-  SharedMem.handle -> ServerEnv.genv
+#include <caml/mlvalues.h>
+#include <caml/unixsupport.h>
 
-val make_env: ServerConfig.t -> ServerEnv.env
+#ifdef _WIN32
+#define Val_handle(fd) (win_alloc_handle(fd))
+#else
+#define Handle_val(fd) (Long_val(fd))
+#define Val_handle(fd) (Val_long(fd))
+#endif

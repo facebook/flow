@@ -33,3 +33,7 @@ let tmp_dir =
   with _ ->
     Path.to_string @@
     Path.concat Path.temp_dir_name "hh_server"
+
+let shm_dir =
+  try Sys.getenv "HH_SHMDIR"
+  with _ -> "/dev/shm"

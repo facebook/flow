@@ -45,7 +45,7 @@ let check_exit_status proc_stat typechecker =
   | _ ->
     let exit_kind, exit_code = Exit_status.unpack proc_stat in
     match typechecker.log_mode with
-    | Daemon.Log_file ->
+    | Daemon.Log_file | Daemon.Log_append ->
       let oc = open_out_gen [Open_creat; Open_append; Open_binary] 0o666
         typechecker.log_file in
       Printf.fprintf oc "hh_server %s with exit code %d\n"

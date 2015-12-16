@@ -18,8 +18,13 @@ type ('in_, 'out) handle = {
   pid : int;
 }
 
+(* Windows: ensure thar the serialize/desarialize functions
+   for the custom block of "Unix.file_descr" are registred. *)
+let () = Lazy.force Handle.init
+
 type log_mode =
 | Log_file
+| Log_append
 | Parent_streams
 
 let to_channel :
@@ -95,13 +100,16 @@ end = struct
         "Unknown entry point %S" name
 
   let set_context entry param (ic, oc) =
-    let data =
-      (Handle.get_handle ic,
-       Handle.get_handle oc,
-       param) in
-    let data_str = String.escaped (Marshal.to_string data []) in
+    let data = (ic, oc, param) in
     Unix.putenv "HH_SERVER_DAEMON" entry;
-    Unix.putenv "HH_SERVER_DAEMON_PARAM" data_str
+    let file, oc =
+      Filename.open_temp_file
+        ~mode:[Open_binary]
+        ~temp_dir:(Path.to_string Path.temp_dir_name)
+        "daemon_param" ".bin" in
+    output_value oc data;
+    close_out oc;
+    Unix.putenv "HH_SERVER_DAEMON_PARAM" file
 
   (* How this works on Unix: It may appear like we are passing file descriptors
    * from one process to another here, but in_handle / out_handle are actually
@@ -115,12 +123,17 @@ end = struct
     let entry = Unix.getenv "HH_SERVER_DAEMON" in
     let (in_handle, out_handle, param) =
       try
-        let raw = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
-        Marshal.from_string (Scanf.unescaped raw) 0
-      with _ -> failwith "Can't find daemon parameters." in
+        let file = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
+        let ic = Sys_utils.open_in_bin_no_fail file in
+        let res = Marshal.from_channel ic in
+        Sys_utils.close_in_no_fail "Daemon.get_context" ic;
+        Sys.remove file;
+        res
+      with exn ->
+        failwith "Can't find daemon parameters." in
     (entry, param,
-     (Unix.in_channel_of_descr (Handle.wrap_handle in_handle),
-      Unix.out_channel_of_descr (Handle.wrap_handle out_handle)))
+     (Unix.in_channel_of_descr in_handle,
+      Unix.out_channel_of_descr out_handle))
 
 end
 
@@ -212,7 +225,7 @@ let spawn
     Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
   let out_fd, err_fd =
     match log_mode with
-    | Log_file ->
+    | Log_file | Log_append ->
       let out_path =
         Option.value_map log_file
           ~default:null_path
@@ -220,8 +233,23 @@ let spawn
               Sys_utils.mkdir_no_fail (Filename.dirname fn);
               fn)  in
       let out_fd =
-        Unix.openfile out_path [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC]
-        0o666 in
+        match log_mode with
+        | Log_file ->
+          Unix.openfile out_path [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC]
+            0o666
+        | Log_append ->
+          (* Used for slave's on Windows, where `O_APPEND` is ignored.
+             See [Worker.register_entry_point]. *)
+          if Sys.file_exists out_path then begin
+            let fd = Unix.openfile out_path [Unix.O_WRONLY] 0o666 in
+            ignore (Unix.lseek fd 0 Unix.SEEK_END) ;
+            fd
+          end else begin
+            Unix.openfile out_path [Unix.O_WRONLY; Unix.O_CREAT]
+              0o666
+          end
+        | Parent_streams -> assert false
+      in
       out_fd, out_fd
     | Parent_streams ->
       Unix.stdout, Unix.stderr
@@ -261,3 +289,6 @@ let close { channels = (ic, oc); _ } =
 let kill h =
   close h;
   Unix.kill h.pid Sys.sigkill
+
+let cast_in x = x
+let cast_out x = x

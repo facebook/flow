@@ -40,6 +40,9 @@ let parse fn =
 
 module Getters = struct
 
+  let string_ key ~default config =
+    Option.value (SMap.get key config) ~default
+
   let int_ key ~default config =
     Option.value_map (SMap.get key config) ~default ~f:int_of_string
 

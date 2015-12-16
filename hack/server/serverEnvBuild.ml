@@ -16,19 +16,13 @@ open ServerEnv
 
 module SLC = ServerLocalConfig
 
-let make_genv options config local_config =
+let make_genv options config local_config handle =
   let root = ServerArgs.root options in
   let check_mode   = ServerArgs.check_mode options in
-  let gc_control   = ServerConfig.gc_control config in
   Typing_deps.trace :=
     not check_mode || ServerArgs.convert options <> None ||
     ServerArgs.save_filename options <> None;
-  let nbr_procs = GlobalConfig.nbr_procs in
-  let workers =
-    if Sys.win32 then
-      None (* No parallelism on Windows yet, Work-in-progress *)
-    else
-      Some (Worker.make nbr_procs gc_control) in
+  let workers = ServerWorker.make options config handle in
   let watchman =
     if check_mode || not local_config.SLC.use_watchman
     then None

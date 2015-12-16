@@ -43,7 +43,7 @@ let open_in_bin_no_fail fn =
   try open_in_bin fn
   with e ->
     let e = Printexc.to_string e in
-    Printf.fprintf stderr "Could not open_in: '%s' (%s)\n" fn e;
+    Printf.fprintf stderr "Could not open_in_bin: '%s' (%s)\n" fn e;
     exit 3
 
 let close_in_no_fail fn ic =
@@ -57,6 +57,13 @@ let open_out_no_fail fn =
   with e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_out: '%s' (%s)\n" fn e;
+    exit 3
+
+let open_out_bin_no_fail fn =
+  try open_out_bin fn
+  with e ->
+    let e = Printexc.to_string e in
+    Printf.fprintf stderr "Could not open_out_bin: '%s' (%s)\n" fn e;
     exit 3
 
 let close_out_no_fail fn oc =

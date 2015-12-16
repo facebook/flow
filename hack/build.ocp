@@ -26,6 +26,8 @@ if have_lz4 then {
   ccopt += [ "-DNO_LZ4" ]
 }
 
+ccopt += [ "-Isrc/utils" ]
+
 requires = [ "unix" "str" "threads" ]
 
 begin library "hh-third-party"
@@ -180,7 +182,7 @@ begin library "hh-find"
 end
 
 begin library "hh-heap"
-  requires += [ "hh-third-party"  "hh-utils" "hh-stubs" ]
+  requires += [ "hh-third-party"  "hh-utils" "hh-stubs" "hh-globals" ]
 
   files = [
     "heap/prefix.ml"

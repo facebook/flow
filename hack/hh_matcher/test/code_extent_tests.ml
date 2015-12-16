@@ -173,7 +173,7 @@ let run_test file : unit =
 let _ =
   begin
   let fname = Sys.argv.(1) in
-  SharedMem.(init default_config);
+  let _handle = SharedMem.init_default () in
   Hhi.set_hhi_root_for_unit_test (Path.make "/tmp/hhi");
   run_test (Relative_path.create Relative_path.Dummy fname);
   end

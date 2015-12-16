@@ -8,5 +8,4 @@
  *
  *)
 
-val daemon_main: ServerArgs.options ->
-  Unix.file_descr -> Unix.file_descr -> unit
+val typechecker_entry: (ServerArgs.options, char, char) Daemon.entry
