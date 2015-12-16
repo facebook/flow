@@ -116,7 +116,7 @@ let debug_directory dir =
   let path = Path.make dir in
   let next = compose
     (List.map ~f:Path.make)
-    (Find.make_next_files FindUtils.is_php path) in
+    (Find.make_next_files ~filter:FindUtils.is_php path) in
   let workers = Worker.make GlobalConfig.nbr_procs GlobalConfig.gc_control in
   MultiWorker.call
     (Some workers)
@@ -218,7 +218,7 @@ let directory modes dir =
   let path = Path.make dir in
   let next = compose
     (List.map ~f:Path.make)
-    (Find.make_next_files FindUtils.is_php path) in
+    (Find.make_next_files ~filter:FindUtils.is_php path) in
   let workers = Worker.make GlobalConfig.nbr_procs GlobalConfig.gc_control in
   let messages =
     MultiWorker.call

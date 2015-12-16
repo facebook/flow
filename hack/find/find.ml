@@ -11,71 +11,73 @@
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-(*
- * For the initialization of the server we use the plain 'find' command
- * to find the list of files to analyze.
- *)
 
 open Core
 
-let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
+let fold_files (type t)
+    ?max_depth ?(filter=(fun _ -> true)) ?(file_only = false)
+    (paths: Path.t list) (action: string -> t -> t) (init: t) =
+  let rec fold depth acc dir =
+    let acc = if not file_only && filter dir then action dir acc else acc in
+    if max_depth = Some depth then
+      acc
+    else
+      let files = Sys.readdir dir in
+      Array.fold_left
+        (fun acc file ->
+           let open Unix in
+           let file = Filename.concat dir file in
+           match (lstat file).st_kind with
+           | S_REG when filter file -> action file acc
+           | S_DIR -> fold (depth+1) acc file
+           | _ -> acc)
+        acc files in
+  let paths = List.map paths Path.to_string in
+  List.fold_left paths ~init ~f:(fold 0)
 
-let paths_to_path_string paths =
-  let stringed_paths = List.map paths Path.to_string in
-  let escaped_paths =  List.map stringed_paths escape_spaces in
-  String.concat " " escaped_paths
+let iter_files ?max_depth ?filter ?file_only paths action =
+  fold_files ?max_depth ?filter ?file_only paths (fun file _ -> action file) ()
 
-let find_with_name paths pattern =
-  let paths = paths_to_path_string paths in
-  let cmd = Utils.spf "find %s -name \"%s\"" paths pattern in
-  let ic = Unix.open_process_in cmd in
-  let buf = Buffer.create 16 in
-  (try
-    while true do
-      Buffer.add_channel buf ic 1
-    done
-  with End_of_file -> ());
-  (try ignore (Unix.close_process_in ic) with _ -> ());
-  Str.split (Str.regexp "\n") (Buffer.contents buf)
+let find ?max_depth ?filter ?file_only paths =
+  fold_files ?max_depth ?filter ?file_only paths List.cons []
+
+let find_with_name ?max_depth ?file_only paths name =
+  find ?max_depth ?file_only ~filter:(fun x -> x = name) paths
 
 (*****************************************************************************)
 (* Main entry point *)
 (*****************************************************************************)
 
-let make_next_files ?(name="") filter ?(others=[]) root =
-  let paths = paths_to_path_string (root::others) in
-  let ic = Unix.open_process_in ("find "^paths^" -type f") in
-  let done_ = ref false in
-  let time_taken = ref 0.0 in
-  (* This is subtle, but to optimize latency, we open the process and
-   * then return a closure immediately. That way 'find' gets started
-   * in parallel and will be ready when we need to get the list of
-   * files (although it will be stopped very soon as the pipe buffer
-   * will get full very quickly).
-   *)
-  fun () ->
-    if !done_
-    (* see multiWorker.mli, this is the protocol for nextfunc *)
-    then []
+type stack =
+  | Nil
+  | Dir of string list * string * stack
+
+let max_files = 1000
+
+let make_next_files ?name:_ ?(filter = fun _ -> true) ?(others=[]) root =
+  let rec process sz acc files dir stack =
+    if sz >= max_files then
+      (acc, Dir (files, dir, stack))
     else
-      let t = Unix.gettimeofday () in
-      let result = ref [] in
-      let i = ref 0 in
-      try
-        while !i < 1000 do
-          let path = input_line ic in
-          if filter path
-          then begin
-            result := path :: !result;
-            incr i;
-          end
-        done;
-        let result = List.rev !result in
-        time_taken := !time_taken +. (Unix.gettimeofday () -. t);
-        result
-      with End_of_file ->
-        done_ := true;
-        EventLogger.find_done ~time_taken:!time_taken ~name;
-        Hh_logger.log "Spent %.2fs indexing %s files" !time_taken name;
-        (try ignore (Unix.close_process_in ic) with _ -> ());
-        !result
+      match files with
+      | [] -> process_stack sz acc stack
+      | file :: files ->
+          let file = if dir = "" then file else Filename.concat dir file in
+          let open Unix in
+          match (lstat file).st_kind with
+          | S_REG when filter file ->
+              process (sz+1) (file :: acc) files dir stack
+          | S_DIR ->
+              let dirfiles = Array.to_list @@ Sys.readdir file in
+              process sz acc dirfiles file (Dir (files, dir, stack))
+          | _ -> process sz acc files dir stack
+  and process_stack sz acc = function
+    | Nil -> (acc, Nil)
+    | Dir (files, dir, stack) -> process sz acc files dir stack in
+  let state =
+    ref (Dir (Path.to_string root ::
+              List.map ~f:Path.to_string others, "", Nil)) in
+  fun () ->
+    let res, st = process_stack 0 [] !state in
+    state := st;
+    res

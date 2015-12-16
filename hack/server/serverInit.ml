@@ -55,7 +55,8 @@ let make_next_files genv : Relative_path.t MultiWorker.nextlist =
   let hhi_root = Hhi.get_hhi_root () in
   let next_files_hhi = compose
     (List.map ~f:(Relative_path.(create Hhi)))
-    (Find.make_next_files ~name:"hhi" FindUtils.is_php hhi_root) in
+    (Find.make_next_files
+       ~name:"hhi" ~filter:FindUtils.is_php hhi_root) in
   fun () ->
     match next_files_hhi () with
     | [] -> next_files_root ()

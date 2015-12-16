@@ -58,7 +58,7 @@ let rec wait_for_typechecker_exit typechecker start_t =
 
 let setup_handler_for_signals handler signals =
   List.iter begin fun signal ->
-    Sys.set_signal signal (Sys.Signal_handle handler)
+    Sys_utils.set_signal signal (Sys.Signal_handle handler)
   end signals
 
 let setup_autokill_typechecker_on_exit typechecker =
@@ -260,7 +260,7 @@ let monitor_daemon_main (options: ServerArgs.options) typechecker_entry
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init_monitor (ServerArgs.root options)
       (Unix.gettimeofday ());
-  if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+  Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
   let www_root = (ServerArgs.root options) in
   ignore @@ Sys_utils.setsid ();
   (** Make sure to lock the lockfile before doing *anything*, especially
