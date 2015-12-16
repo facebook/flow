@@ -1876,7 +1876,7 @@ and match_expr
         LM.match_option match_expr t_eopt p_eopt]
        env
   | Class_get (t_id, t_pstr), Class_get (p_id, p_pstr)
-  | Class_const (t_id, t_pstr), Class_get (p_id, p_pstr) ->
+  | Class_const (t_id, t_pstr), Class_const (p_id, p_pstr) ->
      LM.match_attributes
        [match_id_res t_id p_id;
         match_id_res t_pstr p_pstr]
