@@ -34,11 +34,10 @@ struct
 
   let parse_options = OptionParser.parse
 
-  let preinit () =
+  let preinit flow_options =
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. Finding lib files is one
      * example *)
-    let flow_options = OptionParser.parse () in
     Types_js.init_modes flow_options;
     ignore (Flow_js.master_cx ());
     Parsing_service_js.call_on_success SearchService_js.update

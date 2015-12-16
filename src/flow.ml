@@ -57,8 +57,6 @@ end = struct
   let commands = ShellCommand.command :: commands
 
   let main () =
-    Daemon.check_entry_point (); (* this call might not return *)
-
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let default_command = DefaultCommand.command in
     let argv = Array.to_list Sys.argv in
@@ -83,6 +81,8 @@ end = struct
 
 end
 
-let _ = FlowShell.main ()
-(* If we haven't exited yet, let's exit now for logging's sake *)
-let _ = FlowExitStatus.(exit Ok)
+let () =
+  Daemon.check_entry_point (); (* this call might not return *)
+  FlowShell.main ();
+  (* If we haven't exited yet, let's exit now for logging's sake *)
+  FlowExitStatus.(exit Ok)
