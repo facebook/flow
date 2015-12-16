@@ -25,4 +25,8 @@ union.js:9:19,19: D
 This type is incompatible with
 union.js:9:19,19: C
 
-Found 6 errors
+yuge.js:27:6,14: type `ErrorCode`
+*** Recursion limit exceeded ***
+yuge.js:27:6,14: type `ErrorCode`
+
+Found 7 errors

@@ -2129,9 +2129,9 @@ let rec __flow cx (l, u) trace =
         necessity we allow all string types to flow to StrT (whereas only
         exactly matching string literal types may flow to SingletonStrT).  **)
 
-    (**********************)
-    (* string singletons *)
-    (**********************)
+    (*********************************)
+    (* string singleton upper bounds *)
+    (*********************************)
 
     | (StrT (_, Literal x), SingletonStrT (_, key)) ->
         if x <> key then
@@ -2141,12 +2141,9 @@ let rec __flow cx (l, u) trace =
     | (StrT (_, (Truthy | Falsy | AnyLiteral)), SingletonStrT (_, key)) ->
       prerr_flow cx trace (spf "Expected string literal `%s`" key) l u
 
-    | (SingletonStrT (reason, key), _) ->
-      rec_flow cx trace (StrT(reason, Literal key), u)
-
-    (*********************)
-    (* number singletons *)
-    (*********************)
+    (*********************************)
+    (* number singleton upper bounds *)
+    (*********************************)
 
     (** Similar to SingletonStrT, SingletonNumT models a type annotation that
         looks like a single number literal. This contrasts with
@@ -2161,12 +2158,9 @@ let rec __flow cx (l, u) trace =
     | (NumT (_, (Truthy | Falsy | AnyLiteral)), SingletonNumT (_, (y, _))) ->
       prerr_flow cx trace (spf "Expected number literal `%.16g`" y) l u
 
-    | (SingletonNumT (reason, lit), _) ->
-      rec_flow cx trace (NumT(reason, Literal lit), u)
-
-    (**********************)
-    (* boolean singletons *)
-    (**********************)
+    (**********************************)
+    (* boolean singleton upper bounds *)
+    (**********************************)
 
     (** Similar to SingletonStrT, SingletonBoolT models a type annotation that
         looks like a specific boolean literal (either true or false, but not
@@ -2180,9 +2174,6 @@ let rec __flow cx (l, u) trace =
 
     | (BoolT (_, None), SingletonBoolT (_, y)) ->
       prerr_flow cx trace (spf "Expected boolean literal `%b`" y) l u
-
-    | (SingletonBoolT (reason, b), _) ->
-      rec_flow cx trace (BoolT(reason, Some b), u)
 
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
@@ -3767,6 +3758,29 @@ let rec __flow cx (l, u) trace =
     | FunProtoBindT reason, _
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
+
+    (* singleton lower bounds are equivalent to the corresponding
+       primitive with a literal constraint. These conversions are
+       low precedence to allow equality exploits above, such as
+       the UnionT membership check, to fire.
+       TODO we can move to a single representation for singletons -
+       either SingletonFooT or (FooT <literal foo>) - if we can
+       ensure that their meaning as upper bounds is unambiguous.
+       Currently a SingletonFooT means the constrained type,
+       but the literal in (FooT <literal>) is a no-op.
+       Abstractly it should be totally possible to scrub literals
+       from the latter kind of flow, but it's unclear how difficult
+       it would be in practice.
+     *)
+
+    | SingletonStrT (reason, key), _ ->
+      rec_flow cx trace (StrT (reason, Literal key), u)
+
+    | SingletonNumT (reason, lit), _ ->
+      rec_flow cx trace (NumT (reason, Literal lit), u)
+
+    | SingletonBoolT (reason, b), _ ->
+      rec_flow cx trace (BoolT (reason, Some b), u)
 
     (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or other
        non-object-ish things), then use `reason_prop`, which represents the
