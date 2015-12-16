@@ -16,4 +16,4 @@ type error =
 
 val server_exists : Path.t -> bool
 
-val connect_once : Path.t -> (in_channel * out_channel, error) Result.t
+val connect_once : Path.t -> (Timeout.in_channel * out_channel, error) Result.t

@@ -123,23 +123,20 @@ let print_wait_msg_and_sleep start_time tail_env =
 (** Sleeps until the server says hello. While waiting, prints out spinner and
  * useful messages by tailing the server logs. *)
 let rec wait_for_server_hello ic env retries start_time tail_env first_call =
-  let readable, _, _  = Unix.select
-    [Unix.descr_of_in_channel ic] [] [Unix.descr_of_in_channel ic]
-    (** Select with timeout so that the client gets "hello" message ASAP
-     * and doesn't unnecessarily display the busy spinner for 1 second.
-     *
-     * Subsequent calls select here with no timeout. Sleeping happens
-     * inside print_wait_msg_and_sleep so that the "busy" spinner doesn't
-     * blink.
-     * *)
-    (if first_call then 1.0 else 0.0) in
-  if readable = [] then (
+  (** Select with timeout so that the client gets "hello" message ASAP
+   * and doesn't unnecessarily display the busy spinner for 1 second.
+   *
+   * Subsequent calls select here with no timeout. Sleeping happens
+   * inside print_wait_msg_and_sleep so that the "busy" spinner doesn't
+   * blink.
+   * *)
+  if not (Timeout.wait_for_input ic (if first_call then 1.0 else 0.0)) then (
     print_wait_msg_and_sleep start_time tail_env;
     wait_for_server_hello ic env (Option.map retries (fun x -> x - 1))
       start_time tail_env false
   ) else
     try
-      (match input_line ic with
+      (match Timeout.input_line ic with
       | "Hello" ->
         ()
       | _ ->
@@ -153,7 +150,7 @@ let rec wait_for_server_hello ic env retries start_time tail_env first_call =
       raise Server_hung_up
 
 let consume_prehandoff_messages ic =
-  let msg: ServerUtils.prehandoff_msg = Marshal.from_channel ic in
+  let msg: ServerUtils.prehandoff_msg = Timeout.input_value ic in
   match msg with
   | ServerUtils.Prehandoff_sentinel -> ()
   | ServerUtils.Prehandoff_aborting str ->

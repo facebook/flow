@@ -8,7 +8,7 @@
  *
  *)
 
-type 'a in_channel = Pervasives.in_channel
+type 'a in_channel = Timeout.in_channel
 type 'a out_channel = Pervasives.out_channel
 
 type ('in_, 'out) channel_pair = 'in_ in_channel * 'out out_channel
@@ -29,13 +29,13 @@ let to_channel :
     Marshal.to_channel oc v flags;
     if should_flush then flush oc
 
-let from_channel : 'a in_channel -> 'a = fun ic ->
-  Marshal.from_channel ic
+let from_channel : ?timeout:Timeout.t -> 'a in_channel -> 'a =
+  Timeout.input_value
 
 let flush : 'a out_channel -> unit = Pervasives.flush
 
 let descr_of_in_channel : 'a in_channel -> Unix.file_descr =
-  Unix.descr_of_in_channel
+  Timeout.descr_of_in_channel
 
 let descr_of_out_channel : 'a out_channel -> Unix.file_descr =
   Unix.descr_of_out_channel
@@ -119,7 +119,7 @@ end = struct
         Marshal.from_string (Scanf.unescaped raw) 0
       with _ -> failwith "Can't find daemon parameters." in
     (entry, param,
-     (Unix.in_channel_of_descr (Handle.wrap_handle in_handle),
+     (Timeout.in_channel_of_descr (Handle.wrap_handle in_handle),
       Unix.out_channel_of_descr (Handle.wrap_handle out_handle)))
 
 end
@@ -143,7 +143,7 @@ let make_pipe () =
   (* close descriptors on exec so they are not leaked *)
   Unix.set_close_on_exec descr_in;
   Unix.set_close_on_exec descr_out;
-  let ic = Unix.in_channel_of_descr descr_in in
+  let ic = Timeout.in_channel_of_descr descr_in in
   let oc = Unix.out_channel_of_descr descr_out in
   ic, oc
 
@@ -157,8 +157,8 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
   | -1 -> failwith "Go get yourself a real computer"
   | 0 -> (* child *)
     (try
-      ignore(Unix.setsid());
-      close_in parent_in;
+      ignore(Sys_utils.setsid());
+      Timeout.close_in parent_in;
       close_out parent_out;
       Sys_utils.with_umask 0o111 begin fun () ->
         let fd =
@@ -182,9 +182,9 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
     with _ ->
       exit 1)
   | pid -> (* parent *)
-    close_in child_in;
-    close_out child_out;
-    { channels = parent_in, parent_out; pid }
+      Timeout.close_in child_in;
+      close_out child_out;
+      { channels = parent_in, parent_out; pid }
 
 let setup_channels channel_mode =
   match channel_mode with
@@ -197,6 +197,8 @@ let setup_channels channel_mode =
     (parent_in, child_out), (child_in, parent_out)
   | `socket ->
     let parent_fd, child_fd = Unix.socketpair Unix.PF_UNIX Unix.SOCK_STREAM 0 in
+    (* Close descriptors on exec so they are not leaked. *)
+    Unix.set_close_on_exec parent_fd;
     (** FD's on sockets are bi-directional. *)
     (parent_fd, child_fd), (child_fd, parent_fd)
 
@@ -238,14 +240,14 @@ let spawn
     Unix.close child_in);
   Unix.close out_fd;
   Unix.close null_fd;
-  { channels = Unix.in_channel_of_descr parent_in,
+  { channels = Timeout.in_channel_of_descr parent_in,
                Unix.out_channel_of_descr parent_out;
     pid }
 
 (* for testing code *)
 let devnull () =
-  let ic = open_in "/dev/null" in
-  let oc = open_out "/dev/null" in
+  let ic = Timeout.open_in Path.(to_string null_path) in
+  let oc = open_out Path.(to_string null_path) in
   {channels = ic, oc; pid = 0}
 
 let check_entry_point () =
@@ -255,9 +257,9 @@ let check_entry_point () =
   with Not_found -> ()
 
 let close { channels = (ic, oc); _ } =
-  close_in ic;
+  Timeout.close_in ic;
   close_out oc
 
 let kill h =
   close h;
-  Unix.kill h.pid Sys.sigkill
+  Sys_utils.terminate_process h.pid

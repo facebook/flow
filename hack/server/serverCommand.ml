@@ -26,11 +26,11 @@ exception Read_command_timeout
 (****************************************************************************)
 (* Called by the client *)
 (****************************************************************************)
-let rpc : type a. in_channel * out_channel -> a ServerRpc.t -> a
+let rpc : type a. Timeout.in_channel * out_channel -> a ServerRpc.t -> a
 = fun (ic, oc) cmd ->
   Marshal.to_channel oc (Rpc cmd) [];
   flush oc;
-  Marshal.from_channel ic
+  Timeout.input_value ic
 
 let stream_request oc cmd =
   Marshal.to_channel oc (Stream cmd) [];
@@ -154,9 +154,9 @@ let from_channel : type a. in_channel -> a command = Marshal.from_channel
 
 let handle genv env (ic, oc) =
   let msg =
-    Sys_utils.with_timeout 1
+    Timeout.with_timeout ~timeout:1
       ~on_timeout: (fun _ -> raise Read_command_timeout)
-      ~do_: (fun () -> from_channel ic)
+      ~do_: (fun t -> Timeout.input_value ~timeout:t ic)
   in
   match msg with
   | Rpc cmd ->

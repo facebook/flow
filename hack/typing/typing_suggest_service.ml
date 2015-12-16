@@ -20,22 +20,6 @@ open Utils
 module Env = Typing_env
 module SN = Naming_special_names
 
-exception Timeout
-let timeout secs f =
-  let old_handler =
-    Sys.signal Sys.sigalrm (Sys.Signal_handle (fun _ -> raise Timeout)) in
-  begin try
-    ignore (Unix.alarm secs);
-    f ();
-    ignore (Unix.alarm 0)
-  with Timeout ->
-    ()
-  end;
-  Sys.set_signal Sys.sigalrm old_handler
-
-let timeout secs f =
-  if Sys.win32 then f () (* TODO *) else timeout secs f
-
 module TypingSuggestFastStore = GlobalStorage.Make(struct
   type t = FileInfo.fast
 end)
@@ -61,7 +45,11 @@ let resolve_types acc collated_values =
    * hour on a beefy machine to resolve all the types. *)
   let t = 60 in
   List.iter collated_values begin fun ((fn, line, kind), envl_tyl) ->
-  timeout t begin fun () ->
+  Timeout.with_timeout
+    ~timeout:t
+    ~on_timeout:(fun () -> raise Timeout.Timeout)
+    ~do_:begin fun t ->
+    let open Timeout in
     let env, tyl = List.fold_right ~f:begin fun (env, ty) (env_acc, tyl) ->
       (* This is a pretty hacky environment merge, potentially merging envs from
        * completely separate contexts. It relies on type variables being
@@ -71,6 +59,9 @@ let resolve_types acc collated_values =
        * most up-to-date mappings at the end of the day). And hey, even if this
        * isn't 100% sound, if we screw it up we will just skip a suggestion we
        * otherwise could have made, not the end of the world. *)
+      (* Extra check on Windows to check to see if Timeout is reached.
+         On Linux, nothing is done, see Timeout module. *)
+      check_timeout t;
       let merged_tenv = IMap.union env.Env.tenv env_acc.Env.tenv in
       let merged_subst = IMap.union env.Env.subst env_acc.Env.subst in
       {env_acc with Env.tenv = merged_tenv; Env.subst = merged_subst}, ty::tyl
@@ -102,6 +93,8 @@ let resolve_types acc collated_values =
         let rec guess_super env tyl = function
           | [] -> raise Not_found
           | guess :: guesses ->
+            (* Extra check on Windows to check to see if Timeout is reached. *)
+            check_timeout t;
             try
               Errors.try_ begin fun () ->
                 List.fold_left tyl ~f:(sub guess) ~init:env, guess

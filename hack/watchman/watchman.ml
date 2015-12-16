@@ -22,7 +22,6 @@ open Utils
  *)
 
 exception Watchman_error of string
-exception Timeout
 
 let debug = false
 
@@ -31,7 +30,7 @@ let crash_marker_path root =
   Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
 
 type env = {
-  socket: in_channel * out_channel;
+  socket: Timeout.in_channel * out_channel;
   root: Path.t;
   watch_root: string;
   relative_path: string;
@@ -144,11 +143,11 @@ let capability_check ?(optional=[]) required =
   end
 
 let read_with_timeout timeout ic =
-  Sys_utils.with_timeout timeout
-    ~do_:(fun () -> input_line ic)
+  Timeout.with_timeout ~timeout
+    ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
     ~on_timeout:begin fun _ ->
       EventLogger.watchman_timeout ();
-      raise Timeout
+      raise Timeout.Timeout
     end
 
 let exec ?(timeout=120) (ic, oc) json =
@@ -191,9 +190,10 @@ let get_changes env =
   set_of_list @@ extract_file_names env response
 
 let get_sockname timeout =
-  let ic = Unix.open_process_in "watchman get-sockname --no-pretty" in
+  let ic =
+    Timeout.open_process_in "watchman" [|"get-sockname"; "--no-pretty" |] in
   let output = read_with_timeout timeout ic in
-  assert (Unix.close_process_in ic = Unix.WEXITED 0);
+  assert (Timeout.close_process_in ic = Unix.WEXITED 0);
   let json = Hh_json.json_of_string output in
   J.get_string_val "sockname" json
 
@@ -201,7 +201,7 @@ let init timeout root =
   with_crash_record_opt root "init" @@ fun () ->
   let root_s = Path.to_string root in
   let sockname = get_sockname timeout in
-  let socket = Unix.(open_connection (ADDR_UNIX sockname)) in
+  let socket = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
   ignore @@ exec socket (capability_check ["relative_root"]);
   let response = exec socket (watch_project root_s) in
   let watch_root = J.get_string_val "watch" response in
