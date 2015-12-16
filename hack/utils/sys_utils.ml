@@ -343,3 +343,10 @@ let nbr_procs = nproc ()
 
 external set_priorities : cpu_priority:int -> io_priority:int -> unit =
   "hh_set_priorities"
+
+external win_float_of_string: string -> float = "hh_float_of_string"
+
+let float_of_string =
+  if Sys.win32
+  then win_float_of_string
+  else float_of_string
