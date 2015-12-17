@@ -2422,7 +2422,7 @@ end = struct
         then begin
           strict_error env Error.StrictOctalLiteral;
           float (int_of_string ("0o"^value))
-        end else float_of_string value in
+        end else Sys_utils.float_of_string value in
       Expect.token env (T_NUMBER number_type);
       value
 
