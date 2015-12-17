@@ -26,13 +26,24 @@ let extract path data =
   touch_root path;
   true
 
+let extract_win32_res tmpdir =
+  match Hhi_win32res.read_index () with
+  | None -> false
+  | Some idx ->
+    Hhi_win32res.dump_files tmpdir idx;
+    touch_root tmpdir;
+    true
+
 let extract_flowlib dir =
-  match get_embedded_flowlib_data (Sys_utils.executable_path ()) with
-  | Some data -> extract dir data
-  | None ->
+  if Sys.win32 then
+    extract_win32_res dir
+  else
+    match get_embedded_flowlib_data (Sys_utils.executable_path ()) with
+    | Some data -> extract dir data
+    | None ->
     (* Look for the flowlib.tar.gz in the place where it normally resides, so
      * that we support debugging binaries that don't have the section embedded,
      * such as bytecode builds. *)
-    let exe_dir = Filename.dirname (Sys_utils.executable_path ()) in
-    let path = exe_dir ^ "/flowlib.tar.gz" in
-    if Sys.file_exists path then extract dir (Sys_utils.cat path) else false
+      let exe_dir = Filename.dirname (Sys_utils.executable_path ()) in
+      let path = exe_dir ^ "/flowlib.tar.gz" in
+      if Sys.file_exists path then extract dir (Sys_utils.cat path) else false
