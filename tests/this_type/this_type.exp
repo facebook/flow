@@ -1,4 +1,16 @@
 
+[LIB] lib/decl.js:6:11,14: Library type error:
+[LIB] lib/decl.js:6:11,14: 
+Unexpected use of `this` type
+
+[LIB] lib/decl.js:9:11,14: Library type error:
+[LIB] lib/decl.js:9:11,14: 
+Unexpected use of `this` type
+
+[LIB] lib/decl.js:14:28,31: Library type error:
+[LIB] lib/decl.js:14:28,31: 
+Unexpected use of `this` type
+
 contra.js:4:9,12: `this` type
 invariant position (expected `this` to occur only covariantly)
 
@@ -97,6 +109,10 @@ self.js:4:24,36: A
 This type is incompatible with
 self.js:4:10,13: some incompatible instantiation of `this`
 
+statics.js:17:2,9: A
+This type is incompatible with
+statics.js:17:12,12: B
+
 test.js:23:2,20: Base
 This type is incompatible with
 test.js:23:23,29: Inherit
@@ -134,4 +150,4 @@ contravariant position (expected `this` to occur only covariantly)
 test.js:56:16,19: `this` type
 contravariant position (expected `this` to occur only covariantly)
 
-Found 38 errors
+Found 42 errors

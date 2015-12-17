@@ -1631,12 +1631,11 @@ let rec __flow cx (l, u) trace =
     | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, t)) ->
       rec_flow cx trace (PolyT(typeparams, TypeT(reason, inst)), t)
 
-    (* TODO: ideally we would delay fixing a polymorphic this-abstracted class
-       until it was specialized, but treating it similarly to the
-       non-polymorphic case is easier; might need to revisit *)
+    (* delay fixing a polymorphic this-abstracted class until it is specialized,
+       by transforming the instance type to a type application *)
     | (PolyT(typeparams, ThisClassT i), ImportTypeT(reason, _)) ->
-      rec_flow cx trace
-        (PolyT(typeparams, fix_this_class cx trace reason i), u)
+      let targs = List.map (fun tp -> BoundT tp) typeparams in
+      rec_flow cx trace (PolyT(typeparams, ClassT (TypeAppT(l, targs))), u)
 
     | (FunT(_, _, prototype, _), ImportTypeT(reason, t)) ->
       rec_flow cx trace (TypeT(reason, prototype), t)

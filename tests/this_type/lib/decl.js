@@ -1,3 +1,7 @@
+// The following declare classes use `this` types effectively to avoid type
+// errors in ../lib_client.js, but support for `this` types in declare classes
+// is currently disabled for perf reasons, so we get warnings instead.
+
 declare class LinkedList {
   next(): this;
 }
