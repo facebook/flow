@@ -1,6 +1,7 @@
 *TAGS
 _build
-_obuild
+/_obuild
+/.ocp
 .DS_STORE
 docs/_site/
 bin
