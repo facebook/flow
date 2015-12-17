@@ -86,7 +86,13 @@ let load_state_ root cmd =
       (Filename.quote Build_id.build_id_ohai) in
   Hh_logger.log "Running load_mini script: %s\n%!" cmd;
   let ic = Unix.open_process_in cmd in
-  let json = Hh_json.json_of_string @@ Sys_utils.read_all ic in
+  let output = Sys_utils.read_all ic in
+  let json =
+    try Hh_json.json_of_string output
+    with Hh_json.Syntax_error _ as e ->
+      Hh_logger.log "Failed to parse script output: %s" output;
+      raise e
+  in
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   let kv = Hh_json.get_object_exn json in
   (match List.Assoc.find kv "error" with

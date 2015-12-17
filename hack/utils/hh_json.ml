@@ -51,11 +51,11 @@ let is_digit = function '0' .. '9' -> true | _ -> false
 
 let is_whitespace = function ' ' | '\n' | '\r' | '\t' -> true | _ -> false
 
-type env =
-  { allow_trailing_comma : bool;
-    data : string;
-    mutable pos : int;
-  }
+type env = {
+  allow_trailing_comma : bool;
+  data : string;
+  mutable pos : int;
+}
 
 exception Syntax_error of string
 
