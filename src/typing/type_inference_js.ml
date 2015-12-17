@@ -30,7 +30,7 @@ open Env_js.LookupMode
    classes. Currently, supporting this type for declare classes causes some perf
    regression due to our monolithic handling of libraries. *)
 module ThisConfig = struct
-  let support_declare_class = false
+  let support_declare_class = true
 end
 
 (*************)

@@ -1,16 +1,4 @@
 
-[LIB] lib/decl.js:6:11,14: Library type error:
-[LIB] lib/decl.js:6:11,14: 
-Unexpected use of `this` type
-
-[LIB] lib/decl.js:9:11,14: Library type error:
-[LIB] lib/decl.js:9:11,14: 
-Unexpected use of `this` type
-
-[LIB] lib/decl.js:14:28,31: Library type error:
-[LIB] lib/decl.js:14:28,31: 
-Unexpected use of `this` type
-
 contra.js:4:9,12: `this` type
 invariant position (expected `this` to occur only covariantly)
 
@@ -150,4 +138,4 @@ contravariant position (expected `this` to occur only covariantly)
 test.js:56:16,19: `this` type
 contravariant position (expected `this` to occur only covariantly)
 
-Found 42 errors
+Found 39 errors
