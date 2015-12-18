@@ -9,7 +9,8 @@
  *)
 
 open Core
-module CCS = ClientConnectSimple
+module MC = MonitorConnection
+module SMUtils = ServerMonitorUtils
 
 exception FailedToKill
 
@@ -20,7 +21,7 @@ type env = {
 let wait_for_death root secs =
   let i = ref 0 in
   try
-    while CCS.server_exists root do
+    while MC.server_exists (ServerFiles.lock_file root) do
       incr i;
       if !i < secs then ignore @@ Unix.sleep 1
       else raise Exit
@@ -95,18 +96,18 @@ let mean_kill env =
 
 let do_kill env =
   let root_s = Path.to_string env.root in
-  match CCS.connect_once env.root with
+  match ServerUtils.connect_to_monitor env.root with
   | Result.Ok conn ->
       begin
         try nice_kill conn env with FailedToKill ->
           try mean_kill env with FailedToKill ->
             raise Exit_status.(Exit_with Kill_error)
       end
-  | Result.Error CCS.Server_missing ->
+  | Result.Error SMUtils.Server_missing ->
       Printf.eprintf "Error: no server to kill for %s\n%!" root_s
-  | Result.Error CCS.Build_id_mismatch ->
+  | Result.Error SMUtils.Build_id_mismatched ->
       Printf.eprintf "Successfully killed server for %s\n%!" root_s
-  | Result.Error (CCS.Server_busy | CCS.Server_initializing) ->
+  | Result.Error (SMUtils.Server_busy) ->
       try mean_kill env
       with FailedToKill ->
         raise Exit_status.(Exit_with Kill_error)

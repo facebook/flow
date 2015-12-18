@@ -43,9 +43,6 @@ module MainInit : sig
     (unit -> env) ->    (* init function to run while we have init lock *)
     env
 end = struct
-  let grab_init_complete_lock root =
-    ignore(Lock.grab (ServerFiles.init_complete_file root))
-
   let wakeup_client oc msg =
     Option.iter oc begin fun oc ->
       try
@@ -79,7 +76,6 @@ end = struct
     let init_id = Random_id.short_string () in
     Hh_logger.log "Init id: %s" init_id;
     let env = HackEventLogger.with_id ~stage:`Init init_id init_fun in
-    grab_init_complete_lock root;
     Hh_logger.log "Server is READY";
     (** TODO: Send "ready" signal to the monitor. *)
     wakeup_client waiting_channel "ready";

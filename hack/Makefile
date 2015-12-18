@@ -61,6 +61,7 @@ MODULES=\
   third-party/core\
   typing\
   utils\
+  monitor\
   watchman\
   $(FSNOTIFY)\
   $(INOTIFY)

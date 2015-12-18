@@ -6,14 +6,7 @@
  * LICENSE file in the "hack" directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *)
+*)
 
-type error =
-  | Server_missing
-  | Server_initializing
-  | Server_busy
-  | Build_id_mismatch
-
-val server_exists : Path.t -> bool
-
-val connect_once : Path.t -> (in_channel * out_channel, error) Result.t
+val start_monitoring: ServerMonitorUtils.monitor_config ->
+  (unit -> ServerProcess.process_data) -> 'a

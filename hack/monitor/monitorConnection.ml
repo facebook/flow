@@ -8,16 +8,9 @@
  *
  *)
 
-type error =
-  | Server_missing
-  | Server_initializing
-  | Server_busy
-  | Build_id_mismatch
+open ServerMonitorUtils
 
-exception Server_shutting_down
-
-let server_exists root = not (Lock.check
-  (ServerFiles.lock_file root))
+let server_exists lock_file = not (Lock.check lock_file)
 
 let wait_on_server_restart ic =
   try
@@ -39,8 +32,8 @@ let send_build_id_ohai oc =
   ()
 
 
-let establish_connection root =
-  let sock_name = Socket.get_path (ServerFiles.socket_file root) in
+let establish_connection config =
+  let sock_name = Socket.get_path config.socket_file in
   let sockaddr =
     if Sys.win32 then
       let ic = open_in_bin sock_name in
@@ -54,7 +47,7 @@ let establish_connection root =
 let get_cstate (ic, oc) =
   try
     send_build_id_ohai oc;
-    let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
+    let cstate : connection_state = Marshal.from_channel ic in
     Result.Ok (ic, oc, cstate)
   with e ->
     Unix.shutdown_connection ic;
@@ -62,8 +55,8 @@ let get_cstate (ic, oc) =
     raise e
 
 let verify_cstate ic = function
-  | ServerUtils.Connection_ok -> Result.Ok ()
-  | ServerUtils.Build_id_mismatch ->
+  | Connection_ok -> Result.Ok ()
+  | Build_id_mismatch ->
       (* The server is out of date and is going to exit. Subsequent calls
        * to connect on the Unix Domain Socket might succeed, connecting to
        * the server that is about to die, and eventually we will be hung
@@ -77,7 +70,7 @@ let verify_cstate ic = function
        *)
       wait_on_server_restart ic;
       close_in_noerr ic;
-      Result.Error Build_id_mismatch
+      Result.Error Build_id_mismatched
 
 (** Consume sequence of Prehandoff messages. *)
 let consume_prehandoff_messages ic =
@@ -86,29 +79,28 @@ let consume_prehandoff_messages ic =
   match m with
   | Sentinel -> ()
   | Shutting_down ->
-    Printf.eprintf "Last typechecker exited. A new will be started.\n%!";
+    Printf.eprintf "Last server exited. A new will be started.\n%!";
     wait_on_server_restart ic;
     raise Server_shutting_down
-  | Typechecker_died {status; was_oom} ->
+  | Server_died {status; was_oom} ->
     (match was_oom, status with
     | true, _ ->
-      Printf.eprintf "Last typechecker killed by OOM Manager.\n%!";
+      Printf.eprintf "Last server killed by OOM Manager.\n%!";
     | false, Unix.WEXITED exit_code ->
-      Printf.eprintf "Last typechecker exited with code: %d.\n%!" exit_code
+      Printf.eprintf "Last server exited with code: %d.\n%!" exit_code
     | false, Unix.WSIGNALED signal ->
-      Printf.eprintf "Last typechecker killed by signal: %d.\n%!" signal
+      Printf.eprintf "Last server killed by signal: %d.\n%!" signal
     | false, Unix.WSTOPPED signal ->
-      Printf.eprintf "Last typechecker stopped by signal: %d.\n%!" signal);
-    Printf.eprintf "Run hh again to spin up a new typechecker.\n%!";
-    raise Exit_status.(Exit_with No_server_running)
+      Printf.eprintf "Last server stopped by signal: %d.\n%!" signal);
+    raise Last_server_died
 
-let connect_once root =
+let connect_once config =
   let open Result in
   try
     Sys_utils.with_timeout 1
       ~on_timeout:(fun _ -> raise Exit)
       ~do_:begin fun () ->
-        establish_connection root >>= fun (ic, oc) ->
+        establish_connection config >>= fun (ic, oc) ->
         get_cstate (ic, oc)
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
@@ -118,8 +110,7 @@ let connect_once root =
   | Exit_status.Exit_with _  as e -> raise e
   | Server_shutting_down ->
     Result.Error Server_missing
+  | Last_server_died as e -> raise e
   | _ ->
-    if not (server_exists root) then Result.Error Server_missing
-    else if not (Lock.check (ServerFiles.init_complete_file root))
-    then Result.Error Server_busy
-    else Result.Error Server_initializing
+    if not (server_exists config.lock_file) then Result.Error Server_missing
+    else Result.Error Server_busy

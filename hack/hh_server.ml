@@ -49,4 +49,4 @@
  *      signatures are correct).
  *)
 
-let () = ServerMonitor.start ()
+let () = HhServerMonitor.start ()

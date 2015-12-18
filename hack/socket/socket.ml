@@ -77,5 +77,5 @@ let get_path path =
     end else root_part in
   Filename.concat dir (Printf.sprintf "%s%s" root_part extension)
 
-let init_unix_socket www_root_path =
-  unix_socket (get_path www_root_path)
+let init_unix_socket socket_file =
+  unix_socket (get_path socket_file)

@@ -8,7 +8,7 @@
  *
  *)
 
-module CCS = ClientConnectSimple
+module SMUtils = ServerMonitorUtils
 
 exception Server_hung_up
 
@@ -174,7 +174,11 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
     raise Exit_status.(Exit_with Out_of_time)
   end;
   let connect_once_start_t = Unix.time () in
-  let conn = CCS.connect_once env.root in
+  let conn = try ServerUtils.connect_to_monitor env.root with
+    | SMUtils.Last_server_died ->
+      Printf.eprintf "Run hh again to spin up a new typechecker.\n%!";
+      Exit_status.exit Exit_status.No_server_running
+  in
   HackEventLogger.client_connect_once connect_once_start_t;
   let _, tail_msg = open_and_get_tail_msg start_time tail_env in
   match conn with
@@ -191,7 +195,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
       Printf.eprintf
         "For more detailed logs, try `tail -f $(hh_client --logname)`\n";
     match e with
-    | CCS.Server_missing ->
+    | SMUtils.Server_missing ->
       if env.autostart then begin
         ClientStart.start_server { ClientStart.
           root = env.root;
@@ -206,7 +210,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
         end;
         raise Exit_status.(Exit_with No_server_running)
       end
-    | CCS.Server_busy ->
+    | SMUtils.Server_busy ->
       (** This should only happen during the transition from old-world to
       * new-world.
       *
@@ -220,7 +224,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
         (Tty.spinner());
       HackEventLogger.client_connect_once_busy start_time;
       connect env (Option.map retries (fun x -> x - 1)) start_time tail_env
-    | CCS.Build_id_mismatch ->
+    | SMUtils.Build_id_mismatched ->
       Printf.eprintf begin
         "hh_server's version doesn't match the client's, "^^
         "so it will exit.\n%!"
@@ -238,17 +242,6 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
           Tail.close_env tail_env;
           connect env retries start_time tail_env
         end else raise Exit_status.(Exit_with Build_id_mismatch)
-    | CCS.Server_initializing ->
-      if Tty.spinner_used () then Tty.print_clear_line stderr;
-      Printf.eprintf
-        "hh_server still initializing; this can take some time.%!";
-      if env.retry_if_init then begin
-        Tty.eprintf " %s %s%!" tail_msg (Tty.spinner());
-        connect env retries start_time tail_env
-      end else begin
-        Printf.eprintf " Not retrying since --retry-if-init is false.\n%!";
-        raise Exit_status.(Exit_with Server_initializing)
-      end
 
 let connect env =
   let link_file = ServerFiles.log_link env.root in

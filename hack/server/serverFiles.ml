@@ -39,10 +39,6 @@ let make_link_of_timestamped linkname =
   Sys_utils.symlink filename linkname;
   filename
 
-(**
- * Lock on this file will be held after the server has finished initializing.
- * *)
-let init_complete_file root = path_of_root root "init_complete"
 let lock_file root = path_of_root root "lock"
 let log_link root = path_of_root root "log"
 let pids_file root = path_of_root root "pids"

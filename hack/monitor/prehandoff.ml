@@ -20,5 +20,5 @@ type msg =
    * This is rare - happens when client establishes connection to a monitor
    * that hasn't discovered its typechecker exited by an RPC Kill command. *)
   | Shutting_down
-  (** Typchecker process died. Connect another client to start another one. *)
-  | Typechecker_died of exit_status
+  (** Server process died. Connect another client to start another one. *)
+  | Server_died of exit_status
