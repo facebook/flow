@@ -15,6 +15,7 @@ type error_kind =
   | ParseError
   | InferError
   | InferWarning
+  | InternalError
 type error = {
   kind: error_kind;
   messages: message list;

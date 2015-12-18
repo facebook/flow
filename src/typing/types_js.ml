@@ -255,6 +255,26 @@ let logtime opts msg f =
 let showtime msg f =
   time (fun _ -> true) (fun t -> spf "%s: %f" msg t) f
 
+let internal_error filename msg =
+  let position = Loc.({
+    line = 1;
+    column = 0;
+    offset = 0;
+  }) in
+  let loc = Loc.({
+    source = Some filename;
+    start = position;
+    _end = position;
+  }) in
+  let open Errors_js in
+  let message = BlameM (loc, msg) in
+  {
+    kind = InternalError;
+    messages = [ message; ];
+    op = None;
+    trace = [];
+  }
+
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
@@ -291,9 +311,13 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         cx_file :: inferred, errs :: errsets, suppressions :: errsuppressions
       )
     with exc ->
+      let errorset = Errors_js.ErrorSet.singleton
+        (internal_error file ("infer_job exception: "^(fmt_exc exc))) in
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
-      inferred, errsets, errsuppressions
+      file::inferred,
+        errorset::errsets,
+        Errors_js.ErrorSuppressions.empty::errsuppressions
   ) (inferred, errsets, errsuppressions) files
 
 let rev_append_pair (x1, y1) (x2, y2) =
@@ -303,7 +327,7 @@ let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
   (List.rev_append x1 x2, List.rev_append y1 y2, List.rev_append z1 z2)
 
 (* local type inference pass.
-   Returns a set of sucessfully inferred files.
+   Returns a set of successfully inferred files.
    Creates contexts for inferred files, with errors in cx.errors *)
 let infer workers files opts =
   let files = FilenameSet.elements files in
@@ -574,18 +598,6 @@ let typecheck_contents ?verbose contents filename =
   | Err errors ->
       timing, None, errors, parse_result
 
-type merge_job_status =
-| MergeSuccess of filename
-| MergeFailure of filename
-
-let filename_of_merge_job_status = function
-  | MergeSuccess fn -> fn
-  | MergeFailure fn -> fn
-
-let add_successful_filename merge_job_status fns = match merge_job_status with
-  | MergeSuccess fn -> fn::fns
-  | MergeFailure fn -> fns
-
 let merge_strict_job opts (merged, errsets) (components: filename list list) =
   init_modes opts;
   List.fold_left (fun (merged, errsets) (component: filename list) ->
@@ -598,12 +610,15 @@ let merge_strict_job opts (merged, errsets) (components: filename list list) =
       (fun () ->
         (*prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) file;*)
         let file, errors = merge_strict_component component in
-        MergeSuccess(file) :: merged, errors :: errsets
+        file :: merged, errors :: errsets
       )
     with exc ->
+      let file = List.hd component in
+      let errorset = Errors_js.ErrorSet.singleton
+        (internal_error file ("merge_strict_job exception: "^(fmt_exc exc))) in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
-      (MergeFailure(List.hd component) :: merged, errsets)
+      List.hd component :: merged, errorset::errsets
   ) (merged, errsets) components
 
 (* Custom bucketing scheme for dynamically growing and shrinking workloads when
@@ -721,7 +736,7 @@ module MergeStream = struct
     in
     fun res acc ->
       let leader_fs, _ = res in
-      push (List.map filename_of_merge_job_status leader_fs);
+      push leader_fs;
       rev_append_pair res acc
 
 end
@@ -759,13 +774,12 @@ let merge_strict workers dependency_graph partition opts =
     (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
       (* returns parallel lists of filenames and errorsets *)
-      let (statuses, errsets) = MultiWorker.call_dynamic
+      let (files, errsets) = MultiWorker.call_dynamic
         workers
         ~job: (merge_strict_job opts)
         ~neutral: ([], [])
         ~merge: MergeStream.join
         ~next: (MergeStream.make dependency_graph leader_map component_map) in
-      let files = List.fold_right add_successful_filename statuses [] in
       (* collect master context errors *)
       let (files, errsets) = (
         Context.file master_cx :: files,

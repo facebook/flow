@@ -17,6 +17,7 @@ type error_kind =
   | ParseError
   | InferError
   | InferWarning
+  | InternalError
 type error = {
   kind: error_kind;
   messages: message list;
@@ -51,16 +52,23 @@ let message_of_reason reason =
 let message_of_string s =
   CommentM s
 
+let internal_error_prefix = "Internal error (see logs): "
+
 let prepend_kind_message messages kind =
-  match List.hd messages with
-  | BlameM ({Loc.source = Some Loc.LibFile _; _} as loc, _) ->
+  match kind, messages with
+  | _, BlameM ({Loc.source = Some Loc.LibFile _; _} as loc, _) :: _ ->
       let header = match kind with
       | ParseError -> "Library parse error:"
       | InferError -> "Library type error:"
       (* TODO: we don't publicly distinguish warnings vs errors right now *)
       | InferWarning -> "Library type error:"
+      | InternalError -> internal_error_prefix
       in
       BlameM (loc, header) :: messages
+  | InternalError, BlameM (loc, msg) :: messages ->
+      BlameM (loc, internal_error_prefix^msg) :: messages
+  | InternalError, CommentM msg :: messages ->
+      CommentM (internal_error_prefix^msg) :: messages
   | _ -> messages
 
 let prepend_op_reason messages = function
@@ -492,6 +500,7 @@ let json_of_error (error : error) = Hh_json.(
   | ParseError -> "parse", "error"
   | InferError -> "infer", "error"
   | InferWarning -> "infer", "warning"
+  | InternalError -> "internal", "error"
   in
   let messages = append_trace_reasons messages trace in
   let elts = List.map (fun message ->
