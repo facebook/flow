@@ -79,7 +79,7 @@ val add_unparsed_info: force_check:bool -> filename -> unit
 val remove_files: FilenameSet.t -> NameSet.t
 val clear_infos: FilenameSet.t -> unit
 
-val add_package: string -> Errors_js.ErrorSet.t option
+val add_package: string -> Spider_monkey_ast.program -> unit
 
 (***************************************************)
 

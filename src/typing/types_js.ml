@@ -1219,6 +1219,17 @@ let full_check workers parse_next opts =
     ) in
   save_errors parse_errors error_files errors;
 
+  Flow_logger.log "Building package heap";
+  let timing, () = with_timer ~opts "PackageHeap" timing (fun () ->
+    FilenameSet.iter (fun filename ->
+      match filename with
+      | Loc.JsonFile str when Filename.basename str = "package.json" ->
+        let ast = Parsing_service_js.get_ast_unsafe filename in
+        Module_js.add_package str ast
+      | _ -> ()
+    ) parsed;
+  ) in
+
   let timing, checked = typecheck
     workers
     parsed
@@ -1271,14 +1282,6 @@ let print_errors options errors =
 let server_init genv env =
   let options = genv.ServerEnv.options in
   let root = Options.root options in
-
-  Files_js.package_json root |> SSet.iter (fun package ->
-    let errors = Module_js.add_package package in
-    match errors with
-    | None -> ()
-    | Some error ->
-      save_errors infer_errors [Loc.JsonFile package] [error]
-  );
 
   let get_next_raw = Files_js.make_next_files root in
   let get_next = fun () ->

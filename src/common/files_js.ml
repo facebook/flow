@@ -270,27 +270,6 @@ and normalize_path_ dir names =
 
 and construct_path = List.fold_left Filename.concat
 
-(* return a list of all file paths ending in 'package.json'
-   under root or includes *)
-let package_json root =
-  let config = FlowConfig.get root in
-  let sroot = Path.to_string root in
-  let want = wanted config in
-  let realpath_filter path =
-    (Filename.basename path) = "package.json" && want path
-  in
-  let path_filter path =
-    (str_starts_with path sroot || FlowConfig.is_included config path)
-    && realpath_filter path
-  in
-  let others = config.FlowConfig.include_stems in
-  let get_next = make_next_files_following_symlinks
-    ~path_filter
-    ~realpath_filter
-    (root::others)
-  in
-  get_all get_next
-
 (* helper: make relative path from root to file *)
 let relative_path =
   let split_path = Str.split dir_sep in

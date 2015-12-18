@@ -182,19 +182,44 @@ let get_key key tokens = Ast.(
   | _ -> None
 )
 
-let add_package package =
-  let json = cat package in
-  let tokens, errors = FlowJSON.parse_object json (Loc.JsonFile package) in
+let get_package_keys filename ast =
+  let open Ast in
+  let open Expression.Object in
+  let statement = match ast with
+  | (_, [statement], _) -> statement
+  | _ -> assert_false (spf "Expected %s to have a single statement." filename)
+  in
+  let obj = match statement with
+  | _, Statement.Expression { Statement.Expression.
+     expression = _, Expression.Assignment { Expression.Assignment.
+       operator = Expression.Assignment.Assign;
+       left = _;
+       right = obj;
+     }
+   } -> obj
+  | _ -> assert_false (spf "Expected %s to be an assignment" filename)
+  in
+  let properties = match obj with
+  | (_, Expression.Object {properties}) -> properties
+  | _ -> assert_false (spf "Expected %s to have an object literal" filename)
+  in
+  let extract_property map = function
+    | Property(_, {
+        Property.key = Property.Literal(_, {Literal.raw; _;});
+        value;
+        _;
+      }) -> SMap.add raw value map
+    | _ -> SMap.empty
+  in
+  List.fold_left extract_property SMap.empty properties
+
+let add_package package ast =
+  let tokens = get_package_keys package ast in
   PackageHeap.add package tokens;
-  (match get_key "name" tokens with
+  match get_key "name" tokens with
   | Some name ->
     ReversePackageHeap.add name (Filename.dirname package)
-  | None -> ());
-  if List.length errors = 0 then None else
-    let fold_error e_set error =
-      Errors_js.(ErrorSet.add (parse_error_to_flow_error error) e_set)
-    in
-    Some(List.fold_left fold_error Errors_js.ErrorSet.empty errors)
+  | None -> ()
 
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)
