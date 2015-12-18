@@ -1,4 +1,10 @@
 
+class_expr.js:6:5,10: assignment of property `x`
+Error:
+class_expr.js:6:10,10: property `x`
+Property not found in
+class_expr.js:4:15,8:1: class expr `Thing`
+
 contra.js:4:9,12: `this` type
 invariant position (expected `this` to occur only covariantly)
 
@@ -138,4 +144,4 @@ contravariant position (expected `this` to occur only covariantly)
 test.js:56:16,19: `this` type
 contravariant position (expected `this` to occur only covariantly)
 
-Found 39 errors
+Found 40 errors

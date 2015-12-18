@@ -1491,7 +1491,7 @@ and statement cx type_params_map = Ast.Statement.(
   } =
     let _, { Ast.Identifier.name = iname; _ } = id in
     let reason = mk_reason iname loc in
-    let cls = Flow_js.mk_tvar cx reason in
+    let self = Flow_js.mk_tvar cx reason in
 
     (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
     let typeparams, type_params_map =
@@ -1506,7 +1506,7 @@ and statement cx type_params_map = Ast.Statement.(
       else mk_type_param_declarations cx type_params_map typeParameters in
 
     let typeparams, type_params_map =
-      add_this ~cls ThisConfig.support_declare_class cx reason typeparams type_params_map in
+      add_this self ThisConfig.support_declare_class cx reason typeparams type_params_map in
 
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
       fun (sfmap_, smmap_, fmap_, mmap_)
@@ -1589,13 +1589,13 @@ and statement cx type_params_map = Ast.Statement.(
       | Some _ ->
         mmap
     in
-    let i = mk_interface cx reason typeparams type_params_map
+    let interface_t = mk_interface cx reason typeparams type_params_map
       (sfmap, smmap, fmap, mmap) extends mixins structural in
-    Flow_js.unify cx cls i;
-    Hashtbl.replace (Context.type_table cx) loc i;
+    Flow_js.unify cx self interface_t;
+    Hashtbl.replace (Context.type_table cx) loc interface_t;
     (* interface is a type alias, declare class is a var *)
     Env_js.(if structural then init_type else init_var ~has_anno:false)
-      cx iname i reason
+      cx iname interface_t reason
   in
 
   let catch_clause cx { Try.CatchClause.param; guard; body = (_, b) } =
@@ -2505,16 +2505,14 @@ and statement cx type_params_map = Ast.Statement.(
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = mk_reason name name_loc in
       Env_js.declare_implicit_let Scope.Entry.ClassNameBinding cx name reason;
-      let cls = Flow_js.mk_tvar cx reason in
-      let cls_type = mk_class ~cls cx type_params_map class_loc reason c in
-      Flow_js.unify cx cls cls_type;
-      Hashtbl.replace (Context.type_table cx) class_loc cls_type;
+      let class_t = mk_class cx type_params_map class_loc reason c in
+      Hashtbl.replace (Context.type_table cx) class_loc class_t;
       Env_js.init_implicit_let
         Scope.Entry.ClassNameBinding
         cx
         name
         ~has_anno:false
-        cls_type
+        class_t
         reason
 
   | (loc, DeclareClass decl) ->
@@ -5780,7 +5778,7 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
    static members. The static members can be thought of as instance members of a
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
-and mk_class ?cls = Ast.Class.(
+and mk_class = Ast.Class.(
   let merge_getters_and_setters cx getters setters =
     SMap.fold
       (fun name setter_type getters_and_setters ->
@@ -5802,6 +5800,7 @@ and mk_class ?cls = Ast.Class.(
     superTypeParameters;
     implements;
   } ->
+  let self = Flow_js.mk_tvar cx reason_c in
 
   (* As a running example, let's say the class declaration is:
      class C<X> extends D<X> { f: X; m<Y: X>(x: Y): X { ... } }
@@ -5818,7 +5817,7 @@ and mk_class ?cls = Ast.Class.(
     mk_type_param_declarations cx type_params_map typeParameters in
 
   let typeparams, type_params_map =
-    add_this ?cls true cx reason_c typeparams type_params_map in
+    add_this self true cx reason_c typeparams type_params_map in
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let is_derived = superClass <> None in
@@ -5989,8 +5988,11 @@ and mk_class ?cls = Ast.Class.(
   (* check polarity of all type parameters appearing in the class *)
   Flow_js.check_polarity cx Positive this;
 
-  let cls_body = ThisClassT this in
-  if (typeparams = []) then cls_body else PolyT(typeparams, cls_body)
+  let class_t =
+    let cls_body = ThisClassT this in
+    if (typeparams = []) then cls_body else PolyT(typeparams, cls_body) in
+  Flow_js.unify cx self class_t;
+  class_t
 )
 
 and extract_extends cx structural = function
@@ -6111,22 +6113,20 @@ and mk_interface cx reason_i typeparams type_params_map
     else ThisClassT this in
   if typeparams = [] then cls_body else PolyT (typeparams, cls_body)
 
-and add_this ?cls this_supported cx reason_c typeparams type_params_map =
+and add_this self this_supported cx reason_c typeparams type_params_map =
   if not this_supported then typeparams, type_params_map
   else
     (* We haven't computed the instance type yet, but we can still capture a
        reference to it using the class name (as long as the class has a name). We
        need this reference to constrain the `this` in the class. *)
-    let rec_instance_type = match cls with
-      | None -> AnyT.t
-      | Some c ->
-        begin match typeparams with
-        | [] ->
-          Flow_js.mk_instance cx reason_c c
-        | _ ->
-          let tparams = List.map (fun tp -> BoundT tp) typeparams in
-          TypeAppT (c, tparams)
-        end in
+    let rec_instance_type =
+      match typeparams with
+      | [] ->
+        Flow_js.mk_instance cx reason_c self
+      | _ ->
+        let tparams = List.map (fun tp -> BoundT tp) typeparams in
+        TypeAppT (self, tparams)
+    in
     let this_tp = {
       name = "this";
       reason = replace_reason "`this` type" reason_c;
