@@ -1,3 +1,11 @@
+###v0.20.1
+
+Bug fixes:
+- Ironed out some issues with the `this` type
+
+Misc:
+- find package.json using normal parsing phase
+
 ###v0.20.0
 
 New features:
