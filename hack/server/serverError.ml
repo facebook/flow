@@ -29,9 +29,8 @@ let print_errorl_json oc el =
                     "version", Hh_json.JSON_String Build_id.build_id_ohai;
                   ]
   in
-  (* N.B. json output always goes on stderr *)
-  output_string stderr (Hh_json.json_to_string res);
-  flush stderr
+  output_string oc (Hh_json.json_to_string res);
+  flush oc
 
 let print_errorl use_json el oc =
   if use_json then

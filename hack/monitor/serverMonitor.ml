@@ -21,6 +21,7 @@
    *    its fate to the next client.
 *)
 
+open Core
 open ServerProcess
 open ServerProcessTools
 open ServerMonitorUtils
@@ -43,8 +44,8 @@ let kill_server process =
     Unix.kill process.pid Sys.sigkill
 
 let rec wait_for_server_exit process start_t =
-  match Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED]
-    process.pid with
+  let exit_status = Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
+  match exit_status with
   | 0, _ ->
     Unix.sleep 1;
     wait_for_server_exit process start_t
@@ -54,9 +55,9 @@ let rec wait_for_server_exit process start_t =
         "%s has exited. Time since sigterm: " process.name) start_t)
 
 let setup_handler_for_signals handler signals =
-  List.iter begin fun signal ->
+  List.iter signals begin fun signal ->
     Sys.set_signal signal (Sys.Signal_handle handler)
-  end signals
+  end
 
 let setup_autokill_server_on_exit process =
   try
