@@ -138,7 +138,7 @@ let autocomplete_method is_static class_ id env cid ~is_method =
       else SMap.union class_.tc_methods class_.tc_props
     in
     let results = SMap.filter begin fun _ x ->
-      Typing.is_visible env x.ce_visibility cid
+      Typing.is_visible env x.ce_visibility cid class_
     end results in
     SMap.iter begin fun x class_elt ->
         add_result x (Phase.decl class_elt.ce_type)

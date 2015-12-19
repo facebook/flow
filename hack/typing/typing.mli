@@ -52,4 +52,5 @@ val get_self_from_c:
 val is_visible:
   Typing_env.env ->
   Typing_defs.visibility ->
-  Nast.class_id option -> bool
+  Nast.class_id option ->
+  Typing_defs.class_type -> bool

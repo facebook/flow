@@ -2810,7 +2810,8 @@ and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cid cty
                 smember_not_found p ~is_const ~is_method class_ mid;
                 env, (Reason.Rnone, Tany)
               | Some {ce_visibility = vis; ce_type = (r, Tfun ft); _} ->
-                check_visibility_for_class p env (Reason.to_pos r, vis) cid;
+                let p_vis = Reason.to_pos r in
+                check_visibility_for_class p env (p_vis, vis) cid class_;
                 let ety_env =
                   { ety_env with
                     substs = TSubst.make class_.tc_tparams paraml } in
@@ -2823,7 +2824,7 @@ and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cid cty
               | _ -> assert false)
           | Some { ce_visibility = vis; ce_type = method_; _ } ->
             check_visibility_for_class p env
-              (Reason.to_pos (fst method_), vis) cid;
+              (Reason.to_pos (fst method_), vis) cid class_;
             let ety_env =
               { ety_env with
                 substs = TSubst.make class_.tc_tparams paraml } in
@@ -3229,7 +3230,7 @@ and call_construct p env class_ params el uel cid =
       let env, m = Phase.localize ~ety_env env m in
       fst (call p env m el uel)
 
-and is_visible_for_protected env x self_id =
+and is_protected_visible env x self_id =
   if x = self_id then None else
   let my_class = Env.get_class env self_id in
   let their_class = Env.get_class env x in
@@ -3249,7 +3250,7 @@ and is_visible_for_protected env x self_id =
     )
   | _, _ -> None
 
-and is_private_visible_for_class env x self_id cid =
+and is_private_visible_for_class env x self_id cid class_ =
   match cid with
   | CIstatic ->
     let my_class = Env.get_class env self_id in
@@ -3270,21 +3271,10 @@ and is_private_visible_for_class env x self_id cid =
        ^" using the trait's name (did you mean to use self::?)")
      | _ ->
        Some "You cannot access this member")
-  | CIexpr e ->
-    let env, ty = expr env e in
-    let _, ty = Env.expand_type env ty in
-    (match TUtils.get_base_type ty with
-     | _, Tclass ((_, c), _) ->
-       (match Env.get_class env c with
-       | Some {tc_final = true; _} -> None
-       | _ -> Some
-         ("Private members cannot be accessed dynamically. "
-            ^"Did you mean to use 'self::'?"))
-     | _, (Tany | Tmixed | Tarraykind _ | Toption _
-       | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
-       | Tanon (_, _) | Tunresolved _ | Tobject
-       | Tshape _) ->
-         assert false)
+  | CIexpr _ ->
+    if class_.tc_final then None
+    else Some "Private members cannot be accessed dynamically. \
+               Did you mean to use 'self::'?"
 
 and is_visible_for_obj env vis =
   let self_id = Env.get_self_id env in
@@ -3296,26 +3286,26 @@ and is_visible_for_obj env vis =
     if x = self_id then None else
     Some "You cannot access this member"
   | Vprotected x ->
-    is_visible_for_protected env x self_id
+    is_protected_visible env x self_id
 
-and is_visible_for_class env vis cid =
+and is_visible_for_class env vis cid class_ =
   let self_id = Env.get_self_id env in
   match vis with
   | Vpublic -> None
   | (Vprivate _ | Vprotected _) when Env.is_outside_class env ->
     Some "You cannot access this member"
-  | Vprivate x -> is_private_visible_for_class env x self_id cid
+  | Vprivate x -> is_private_visible_for_class env x self_id cid class_
   | Vprotected x ->
     let their_class = Env.get_class env x in
     (match cid, their_class with
      | CI _, Some {tc_kind = Ast.Ctrait; _} ->
        Some ("You cannot access protected members"
        ^" using the trait's name (did you mean to use static:: or self::?)")
-     | _ -> is_visible_for_protected env x self_id)
+     | _ -> is_protected_visible env x self_id)
 
-and is_visible env vis cid =
+and is_visible env vis cid class_ =
   let msg_opt = match cid with
-    | Some cid -> is_visible_for_class env vis cid
+    | Some cid -> is_visible_for_class env vis cid class_
     | None -> is_visible_for_obj env vis
   in
   Option.is_none msg_opt
@@ -3331,8 +3321,8 @@ and check_visibility_for_obj p env (p_vis, vis) =
   | Some msg ->
     visibility_error p msg (p_vis, vis)
 
-and check_visibility_for_class p env (p_vis, vis) cid =
-  match is_visible_for_class env vis cid with
+and check_visibility_for_class p env (p_vis, vis) cid class_ =
+  match is_visible_for_class env vis cid class_ with
   | None -> ()
   | Some msg ->
     visibility_error p msg (p_vis, vis)
