@@ -265,7 +265,7 @@ and check_and_run_loop_ server
        server)
 
 let start_monitoring monitor_config server_daemon_starter =
-    let socket = Socket.init_unix_socket monitor_config.socket_file in
-    let server_process = server_daemon_starter () in
-    setup_autokill_server_on_exit server_process;
-    check_and_run_loop (Alive server_process) monitor_config.lock_file socket
+  let socket = Socket.init_unix_socket monitor_config.socket_file in
+  let server_process = server_daemon_starter () in
+  setup_autokill_server_on_exit server_process;
+  check_and_run_loop (Alive server_process) monitor_config.lock_file socket

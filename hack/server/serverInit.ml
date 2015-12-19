@@ -120,7 +120,7 @@ let mk_state_future timeout root cmd =
   let start_time = Unix.gettimeofday () in
   Result.try_with @@ fun () ->
   let log_file =
-    ServerFiles.make_link_of_timestamped (ServerFiles.load_log root) in
+    Sys_utils.make_link_of_timestamped (ServerFiles.load_log root) in
   let {Daemon.channels = (ic, _oc); pid} as daemon =
     Daemon.fork ~log_file (load_state root cmd) in
   fun () ->

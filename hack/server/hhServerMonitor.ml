@@ -30,7 +30,7 @@ let start_hh_server options =
     if ServerArgs.should_detach options then
       let log_link = ServerFiles.log_link (ServerArgs.root options) in
       (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
-      let log_file = ServerFiles.make_link_of_timestamped log_link in
+      let log_file = Sys_utils.make_link_of_timestamped log_link in
       Hh_logger.log "About to spawn typechecker daemon. Logs will go to %s\n%!"
         (if Sys.win32 then log_file else log_link);
       log_file, Daemon.Log_file
@@ -98,7 +98,7 @@ let daemon_starter options =
   let root = ServerArgs.root options in
   let log_link = ServerFiles.server_monitor_log_link root in
   (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
-  let log_file_path = ServerFiles.make_link_of_timestamped log_link in
+  let log_file_path = Sys_utils.make_link_of_timestamped log_link in
   let {Daemon.pid; _} =
     Daemon.spawn ~log_file:log_file_path daemon_entry options in
   Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;

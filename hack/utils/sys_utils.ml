@@ -334,6 +334,26 @@ let symlink =
   let win32_symlink source dest = write_file ~file:dest source in
   if Sys.win32 then win32_symlink else Unix.symlink
 
+(* Creates a symlink at <dir>/<linkname.ext> to
+ * <dir>/<pluralized ext>/<linkname>-<timestamp>.<ext> *)
+let make_link_of_timestamped linkname =
+  let open Unix in
+  let dir = Filename.dirname linkname in
+  mkdir_no_fail dir;
+  let base = Filename.basename linkname in
+  let base, ext = splitext base in
+  let dir = Filename.concat dir (Printf.sprintf "%ss" ext) in
+  mkdir_no_fail dir;
+  let tm = localtime (time ()) in
+  let year = tm.tm_year + 1900 in
+  let time_str = Printf.sprintf "%d-%02d-%02d-%02d-%02d-%02d"
+    year (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec in
+  let filename = Filename.concat dir
+    (Printf.sprintf "%s-%s.%s" base time_str ext) in
+  unlink_no_fail linkname;
+  symlink filename linkname;
+  filename
+
 let setsid =
   (* Not implemented on Windows. Let's just return the pid *)
   if Sys.win32 then Unix.getpid else Unix.setsid
