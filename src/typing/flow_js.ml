@@ -4064,9 +4064,17 @@ and generate_tests cx reason typeparams each =
     let bot = EmptyT (
       prefix_reason "some incompatible instantiation of " xreason
     ) in
-    List.rev_append
-      (List.map (fun map -> SMap.add name (subst cx map bound) map) list)
-      (List.map (SMap.add name bot) list)
+    (* NOTE: Since the same AST is traversed by each generated test, the order
+       of generated tests is important for the proper functioning of hooks that
+       record information on the side as ASTs are traversed. Adopting the
+       convention that the last traversal "wins" (which would happen, e.g, when
+       the recorded information at a location is replaced every time that
+       location is encountered), we want the last generated test to always be
+       the one where all type parameters are substituted by their bounds
+       (instead of Bottom), so that the recorded information is the same as if
+       all type parameters were indeed erased and replaced by theirs bounds. *)
+    (List.map (SMap.add name bot) list) @
+    (List.map (fun map -> SMap.add name (subst cx map bound) map) list)
   ) [SMap.empty] typeparams in
   match maps with
   | [map] -> each map (* no typeparams, so reuse current test_id *)

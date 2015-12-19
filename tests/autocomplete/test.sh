@@ -32,3 +32,9 @@ $FLOW autocomplete --strip-root --json function_builtins.js 4 5 < function_built
 
 printf "fun.js = "
 $FLOW autocomplete --strip-root --json fun.js 4 5 < fun.js
+
+printf "this.js = "
+$FLOW autocomplete --strip-root --json fun.js 8 10 < this.js
+
+printf "typeparams.js = "
+$FLOW autocomplete --strip-root --json fun.js 6 16 < typeparams.js
