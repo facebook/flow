@@ -32,6 +32,6 @@ let check_exit_status proc_stat process =
   | _ ->
     let exit_kind, exit_code = Exit_status.unpack proc_stat in
     Hh_logger.log "%s %s with exit code %d\n" process.name exit_kind exit_code;
-    let is_oom = check_dmesg_for_oom process in
+    let is_oom = try check_dmesg_for_oom process with _ -> false in
     let time_taken = Unix.time () -. process.start_t in
     HackEventLogger.bad_exit time_taken proc_stat ~is_oom
