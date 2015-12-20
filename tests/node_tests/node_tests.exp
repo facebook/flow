@@ -1,4 +1,8 @@
 
+child_process/execSync.js:8:2,33: function call
+Function cannot be called on
+child_process/execSync.js:8:2,9: intersection: function type(s)
+
 json_file/test.js:4:2,9: object literal
 This type is incompatible with
 json_file/test.js:4:12,15: undefined
@@ -29,4 +33,4 @@ json_file/test.js:12:13,16: undefined
 
 invalid_package_file/package.json: Unexpected end of input
 
-Found 8 errors
+Found 9 errors
