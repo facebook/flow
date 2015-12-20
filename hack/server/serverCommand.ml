@@ -62,15 +62,15 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       output_string oc "starting\n";
       SharedMem.invalidate_caches();
       let qual_name = if name.[0] = '\\' then name else ("\\"^name) in
-      let nenv = env.ServerEnv.nenv in
+      let _, nenv = env.ServerEnv.nenv in
       output_string oc "class:\n";
-      let canon_name = Naming.canon_key qual_name in
+      let canon_name = NamingGlobal.canon_key qual_name in
       let class_name = (
-        match SMap.get canon_name (snd nenv.Naming.iclasses) with
+        match SMap.get canon_name (snd nenv.NamingGlobal.iclasses) with
         | None ->
           let () = output_string oc "Missing from naming env\n" in qual_name
         | Some canon ->
-          let p, _ = SMap.find_unsafe canon (fst nenv.Naming.iclasses) in
+          let p, _ = SMap.find_unsafe canon (fst nenv.NamingGlobal.iclasses) in
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
       ) in
@@ -83,11 +83,11 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       );
       output_string oc "\nfunction:\n";
       let fun_name =
-      (match SMap.get (Naming.canon_key qual_name) (snd nenv.Naming.ifuns) with
+      (match SMap.get (NamingGlobal.canon_key qual_name) (snd nenv.NamingGlobal.ifuns) with
         | None ->
           let () = output_string oc "Missing from naming env\n" in qual_name
         | Some canon ->
-          let p, _ = SMap.find_unsafe canon (fst nenv.Naming.ifuns) in
+          let p, _ = SMap.find_unsafe canon (fst nenv.NamingGlobal.ifuns) in
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
       ) in
@@ -100,7 +100,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
           output_string oc (fun_str^"\n")
       );
       output_string oc "\nglobal const:\n";
-      (match SMap.get qual_name nenv.Naming.iconsts with
+      (match SMap.get qual_name nenv.NamingGlobal.iconsts with
       | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
       | None -> output_string oc "Missing from naming env\n");
       let gconst_ty = Typing_env.GConsts.get qual_name in
@@ -111,7 +111,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
           output_string oc ("ty: "^gconst_str^"\n")
       );
       output_string oc "typedef:\n";
-      (match SMap.get qual_name nenv.Naming.itypedefs with
+      (match SMap.get qual_name nenv.NamingGlobal.itypedefs with
       | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
       | None -> output_string oc "Missing from naming env\n");
       let tdef = Typing_env.Typedefs.get qual_name in

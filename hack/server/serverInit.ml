@@ -187,9 +187,10 @@ let update_files genv files_info t =
 let naming env t =
   let env =
     Relative_path.Map.fold begin fun k v env ->
-      let errorl, failed, nenv = Naming.ndecl_file k v env.nenv in
+      let tcopt, nenv = env.nenv in
+      let errorl, failed, nenv = NamingGlobal.ndecl_file k v nenv in
       { env with
-        nenv;
+        nenv = tcopt, nenv;
         errorl = List.rev_append errorl env.errorl;
         failed_parsing = Relative_path.Set.union env.failed_parsing failed;
       }

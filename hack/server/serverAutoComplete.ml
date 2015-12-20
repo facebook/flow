@@ -20,18 +20,18 @@ let auto_complete nenv content =
   let dummy_pos = Pos.none, Ident.foo in
   let ifuns =
     SSet.fold begin fun x (funmap, canon_names) ->
-      SMap.add x dummy_pos funmap, SMap.add (Naming.canon_key x) x canon_names
-    end funs nenv.Naming.ifuns
+      SMap.add x dummy_pos funmap, SMap.add (NamingGlobal.canon_key x) x canon_names
+    end funs nenv.NamingGlobal.ifuns
   in
   let iclasses =
     SSet.fold begin fun x (classmap, canon_names) ->
-      SMap.add x dummy_pos classmap, SMap.add (Naming.canon_key x) x canon_names
-    end classes nenv.Naming.iclasses
+      SMap.add x dummy_pos classmap, SMap.add (NamingGlobal.canon_key x) x canon_names
+    end classes nenv.NamingGlobal.iclasses
   in
-  let nenv = { nenv with Naming.ifuns = ifuns; Naming.iclasses = iclasses } in
+  let nenv = { nenv with NamingGlobal.ifuns = ifuns; NamingGlobal.iclasses = iclasses } in
   ServerIdeUtils.fix_file_and_def Relative_path.default content;
-  let fun_names = SMap.keys (fst nenv.Naming.ifuns) in
-  let class_names = SMap.keys (fst nenv.Naming.iclasses) in
+  let fun_names = SMap.keys (fst nenv.NamingGlobal.ifuns) in
+  let class_names = SMap.keys (fst nenv.NamingGlobal.iclasses) in
   let result = AutocompleteService.get_results fun_names class_names in
   ServerIdeUtils.revive funs classes;
   AutocompleteService.detach_hooks();

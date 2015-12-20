@@ -335,7 +335,7 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
   | Ai _ -> ()
   | Autocomplete ->
       let file = cat (Relative_path.to_absolute filename) in
-      let result = ServerAutoComplete.auto_complete nenv file in
+      let result = ServerAutoComplete.auto_complete (snd nenv) file in
       List.iter ~f: begin fun r ->
         let open AutocompleteService in
         Printf.printf "%s %s\n" r.res_name r.res_ty

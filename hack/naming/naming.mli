@@ -10,47 +10,23 @@
 
 
 (** Module "naming" a program.
- * The naming phase consists in several things
- * 1- get all the global names
- * 2- transform all the local names into a unique identifier
- *
-*)
-open Utils
-
-(* The environment needed to do the naming. The key of the SMap corresponds
- * to the original name of the entity, e.g. "foo", that is then
- * mapped here in ifuns to a freshly created unique integer identifier.
+ * Transform all the local names into a unique identifier
  *)
-type env = {
-  itcopt    : TypecheckerOptions.t;
-  iclasses  : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
-  ifuns     : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
-  itypedefs : (Pos.t * Ident.t) SMap.t;
-  iconsts   : (Pos.t * Ident.t) SMap.t;
-}
 
-(* Canonicalizes a key *)
-val canon_key: String.t -> String.t
+type env = TypecheckerOptions.t * NamingGlobal.env
 
 (* The empty naming environment *)
 val empty: TypecheckerOptions.t -> env
 
-(* Function building the original naming environment.
- * This pass "declares" all the global names. The only checks done
- * here are whether an entity name was already bound (e.g. when
- * two files define the same function).
- * It takes an old environment and add all the entities
- * passed as parameters to this old environment.
-*)
+(* Access the typechecker options from the env *)
+val typechecker_options: env -> TypecheckerOptions.t
+
 val make_env:
     env ->
       funs:Ast.id list ->
       classes:Ast.id list ->
       typedefs:Ast.id list ->
       consts:Ast.id list -> env
-
-(* Access the typechecker options from the env *)
-val typechecker_options: env -> TypecheckerOptions.t
 
 (* Solves the local names within a function *)
 val fun_: env -> Ast.fun_ -> Nast.fun_
@@ -74,18 +50,3 @@ val typedef: env -> Ast.typedef -> Nast.typedef
 
 (* Solves the local names in a global constant definition *)
 val global_const: env -> Ast.gconst -> Nast.gconst
-
-type fun_set = SSet.t
-type class_set = SSet.t
-type typedef_set = SSet.t
-type const_set = SSet.t
-type decl_set = fun_set * class_set * typedef_set * const_set
-
-(* Removing declarations *)
-val remove_decls: env -> decl_set -> env
-
-val get_classes: env -> string list
-
-val ndecl_file:
-  Relative_path.t -> FileInfo.t -> env ->
-  Errors.t * Relative_path.Set.t * env

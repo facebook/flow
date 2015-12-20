@@ -94,7 +94,7 @@ let reparse_infos files_info fast =
 (*****************************************************************************)
 
 let remove_decls env fast_parsed =
-  let nenv = env.nenv in
+  let (tcopt, nenv) = env.nenv in
   let nenv =
     Relative_path.Map.fold begin fun fn _ nenv ->
       match Relative_path.Map.get fn env.files_info with
@@ -112,12 +112,12 @@ let remove_decls env fast_parsed =
         let classes = set_of_idl classel in
         let typedefs = set_of_idl typel in
         let consts = set_of_idl constl in
-        let nenv = Naming.remove_decls nenv
+        let nenv = NamingGlobal.remove_decls nenv
             (funs, classes, typedefs, consts) in
         nenv
     end fast_parsed nenv
   in
-  { env with nenv = nenv }
+  { env with nenv = tcopt, nenv }
 
 (*****************************************************************************)
 (* Removes the files that failed *)
@@ -159,16 +159,17 @@ let update_file_info env fast_parsed =
 
 let declare_names env files_info fast_parsed =
   let env = remove_decls env fast_parsed in
+  let tcopt, nenv = env.nenv in
   let errorl, failed_naming, nenv =
-    Relative_path.Map.fold begin fun k v (errorl, failed, nenv)  ->
-      let errorl', failed', nenv = Naming.ndecl_file k v nenv in
+    Relative_path.Map.fold begin fun k v (errorl, failed, nenv) ->
+      let errorl', failed', nenv = NamingGlobal.ndecl_file k v nenv in
       let errorl = List.rev_append errorl' errorl in
       let failed = Relative_path.Set.union failed' failed in
       errorl, failed, nenv
-    end fast_parsed ([], Relative_path.Set.empty, env.nenv) in
+    end fast_parsed ([], Relative_path.Set.empty, nenv) in
   let fast = remove_failed fast_parsed failed_naming in
   let fast = FileInfo.simplify_fast fast in
-  let env = { env with nenv = nenv } in
+  let env = { env with nenv = tcopt, nenv } in
   env, errorl, failed_naming, fast
 
 (*****************************************************************************)

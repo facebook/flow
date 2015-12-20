@@ -46,7 +46,7 @@ let handle : type a. genv -> env -> a t -> a =
     | INFER_TYPE (fn, line, char) ->
         ServerInferType.go env (fn, line, char)
     | AUTOCOMPLETE content ->
-        ServerAutoComplete.auto_complete env.nenv content
+        ServerAutoComplete.auto_complete (snd env.nenv) content
     | IDENTIFY_FUNCTION (content, line, char) ->
         ServerIdentifyFunction.go content line char
     | OUTLINE content ->
