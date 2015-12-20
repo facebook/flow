@@ -51,7 +51,6 @@ let start_hh_server options =
       in_fd = Daemon.descr_of_in_channel ic;
       out_fd = Daemon.descr_of_out_channel oc;
       log_file = log_file;
-      log_mode = log_mode;
       start_t = start_t;
       last_request_handoff = ref (Unix.time());
     }) in
@@ -96,7 +95,7 @@ let daemon_entry =
  * isn't running by first checking the liveness lock file.) *)
 let daemon_starter options =
   let root = ServerArgs.root options in
-  let log_link = ServerFiles.server_monitor_log_link root in
+  let log_link = ServerFiles.monitor_log_link root in
   (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
   let log_file_path = Sys_utils.make_link_of_timestamped log_link in
   let {Daemon.pid; _} =

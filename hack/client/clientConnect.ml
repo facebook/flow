@@ -193,7 +193,8 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
   | Result.Error e ->
     if first_attempt then
       Printf.eprintf
-        "For more detailed logs, try `tail -f $(hh_client --logname)`\n";
+        "For more detailed logs, try `tail -f $(hh_client --monitor-logname) \
+        $(hh_client --logname)`\n";
     match e with
     | SMUtils.Server_missing ->
       if env.autostart then begin

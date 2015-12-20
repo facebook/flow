@@ -64,6 +64,7 @@ let parse_check_args cmd =
   let autostart = ref true in
   let from = ref "" in
   let version = ref false in
+  let monitor_logname = ref false in
   let logname = ref false in
 
   (* custom behaviors *)
@@ -184,6 +185,8 @@ let parse_check_args cmd =
       " (mode) find all occurrences of lint with the given error code";
     "--version", Arg.Set version,
       " (mode) show version and exit\n";
+    "--monitor-logname", Arg.Set monitor_logname,
+      " (mode) show monitor log filename and exit\n";
     "--logname", Arg.Set logname,
       " (mode) show log filename and exit\n";
     (* Create a checkpoint which can be used to retrieve changed files later *)
@@ -249,9 +252,15 @@ let parse_check_args cmd =
         exit 1;
   in
 
+  if !monitor_logname then begin
+    let monitor_log_link = ServerFiles.monitor_log_link root in
+    Printf.printf "%s\n%!" monitor_log_link;
+    exit 0;
+  end;
+
   if !logname then begin
     let log_link = ServerFiles.log_link root in
-    print_endline log_link;
+    Printf.printf "%s\n%!" log_link;
     exit 0;
   end;
 

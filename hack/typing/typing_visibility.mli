@@ -18,5 +18,4 @@ val check_obj_access:
   Pos.t -> Typing_env.env -> (Pos.t * visibility) -> unit
 
 val is_visible:
-  Typing_env.env -> Typing_defs.visibility -> Nast.class_id option ->
-  class_type -> bool
+  Typing_env.env -> visibility -> Nast.class_id option -> class_type -> bool

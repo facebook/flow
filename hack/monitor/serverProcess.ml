@@ -19,7 +19,6 @@ type process_data =
     (** Send client's File Descriptors to the typechecker over this. *)
     out_fd : Unix.file_descr;
     log_file: string;
-    log_mode : Daemon.log_mode;
     last_request_handoff : float ref;
   }
 
