@@ -8,11 +8,12 @@
  *
  *)
 
-let go content line char =
+let go nenv content line char =
   let result = ref None in
   IdentifySymbolService.attach_hooks result line char;
-  let funs, classes = ServerIdeUtils.declare Relative_path.default content in
-  ServerIdeUtils.fix_file_and_def Relative_path.default content;
+  let funs, classes, nenv =
+    ServerIdeUtils.declare nenv Relative_path.default content in
+  ServerIdeUtils.fix_file_and_def nenv funs classes;
   ServerIdeUtils.revive funs classes;
   IdentifySymbolService.detach_hooks ();
   match !result with

@@ -22,6 +22,8 @@ module N = Nast
 module ShapeMap = N.ShapeMap
 module SN = Naming_special_names
 
+module GEnv = NamingGlobal.GEnv
+
 (*****************************************************************************)
 (* The types *)
 (*****************************************************************************)
@@ -31,8 +33,6 @@ module SN = Naming_special_names
  *)
 type positioned_ident = (Pos.t * Ident.t)
 type map = positioned_ident SMap.t
-type canon_names_map = string SMap.t
-let canon_key = NamingGlobal.canon_key
 
 (* <T as A>, A is a type constraint *)
 type type_constraint = (Ast.constraint_kind * Ast.hint) option
@@ -61,17 +61,7 @@ type genv = {
    *)
   type_paraml: Ast.id list;
 
-  (* Set of class names defined, and their positions *)
-  classes: (map * canon_names_map);
-
-  (* Set of function names defined, and their positions *)
-  funs: (map * canon_names_map);
-
-  (* Set of typedef names defined, and their position *)
-  typedefs: map;
-
-  (* Set of constant names defined, and their position *)
-  gconsts: map;
+  globals: GEnv.t;
 
   (* The current class, None if we are in a function *)
   current_cls: (Ast.id * Ast.class_kind) option;
@@ -147,7 +137,7 @@ type lenv = {
 (* Empty (initial) environments *)
 (*****************************************************************************)
 
-type env = TypecheckerOptions.t * NamingGlobal.env
+type env = TypecheckerOptions.t * NamingGlobal.GEnv.t
 
 let empty tcopt = tcopt, NamingGlobal.empty
 
@@ -169,7 +159,7 @@ module Env = struct
   }
 
   let make_class_genv
-      (tcopt, nenv) params mode tparams (cid, ckind) namespace = {
+      (tcopt, globals) params mode tparams (cid, ckind) namespace = {
     in_mode       =
       (if !Autocomplete.auto_complete then FileInfo.Mpartial else mode);
     tcopt;
@@ -177,10 +167,7 @@ module Env = struct
     in_instance_method = false;
     type_params   = params;
     type_paraml   = tparams;
-    classes       = nenv.NamingGlobal.iclasses;
-    funs          = nenv.NamingGlobal.ifuns;
-    typedefs      = nenv.NamingGlobal.itypedefs;
-    gconsts       = nenv.NamingGlobal.iconsts;
+    globals;
     current_cls   = Some (cid, ckind);
     droot         = Some (Typing_deps.Dep.Class (snd cid));
     namespace;
@@ -194,17 +181,14 @@ module Env = struct
     let env  = genv, lenv in
     env
 
-  let make_typedef_genv (tcopt, nenv) cstrs tdef = {
+  let make_typedef_genv (tcopt, globals) cstrs tdef = {
     in_mode       = FileInfo.(if !Ide.is_ide_mode then Mpartial else Mstrict);
     tcopt;
     in_try        = false;
     in_instance_method = false;
     type_params   = cstrs;
     type_paraml   = List.map tdef.t_tparams (fun (_, x, _) -> x);
-    classes       = nenv.NamingGlobal.iclasses;
-    funs          = nenv.NamingGlobal.ifuns;
-    typedefs      = nenv.NamingGlobal.itypedefs;
-    gconsts       = nenv.NamingGlobal.iconsts;
+    globals;
     current_cls   = None;
     droot         = None;
     namespace     = tdef.t_namespace;
@@ -216,17 +200,14 @@ module Env = struct
     let env  = genv, lenv in
     env
 
-  let make_fun_genv (tcopt, nenv) params f_mode f_name f_namespace = {
+  let make_fun_genv (tcopt, globals) params f_mode f_name f_namespace = {
     in_mode       = f_mode;
     tcopt;
     in_try        = false;
     in_instance_method = false;
     type_params   = params;
     type_paraml   = [];
-    classes       = nenv.NamingGlobal.iclasses;
-    funs          = nenv.NamingGlobal.ifuns;
-    typedefs      = nenv.NamingGlobal.itypedefs;
-    gconsts       = nenv.NamingGlobal.iconsts;
+    globals;
     current_cls   = None;
     droot         = Some (Typing_deps.Dep.Fun f_name);
     namespace     = f_namespace;
@@ -235,17 +216,14 @@ module Env = struct
   let make_fun_decl_genv nenv params f =
     make_fun_genv nenv params f.f_mode (snd f.f_name) f.f_namespace
 
-  let make_const_genv (tcopt, nenv) cst = {
+  let make_const_genv (tcopt, globals) cst = {
     in_mode       = cst.cst_mode;
     tcopt;
     in_try        = false;
     in_instance_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
-    classes       = nenv.NamingGlobal.iclasses;
-    funs          = nenv.NamingGlobal.ifuns;
-    typedefs      = nenv.NamingGlobal.itypedefs;
-    gconsts       = nenv.NamingGlobal.iconsts;
+    globals;
     current_cls   = None;
     droot         = Some (Typing_deps.Dep.GConst (snd cst.cst_name));
     namespace     = cst.cst_namespace;
@@ -268,7 +246,7 @@ module Env = struct
     y
 
   let lookup genv env (p, x) =
-    let v = SMap.get x env in
+    let v = env x in
     match v with
     | None ->
       (match genv.in_mode with
@@ -287,15 +265,16 @@ module Env = struct
     if List.mem tparaml name then Errors.generic_at_runtime p;
     ()
 
-  let canonicalize genv env_and_names (p, name) kind =
-    let env, canon_names = env_and_names in
-    if SMap.mem name env then (p, name)
-    else (
-      let name_key = canon_key name in
-      match SMap.get name_key canon_names with
+  let canonicalize genv get_pos get_canon (p, name) kind =
+    match get_pos name with
+    | Some _ -> p, name
+    | None ->
+      begin match get_canon name with
         | Some canonical ->
-          let p_canon, _ = SMap.find_unsafe canonical env in
-          Errors.did_you_mean_naming p name p_canon canonical;
+          canonical
+          |> get_pos
+          |> Option.iter ~f:(fun (p_canon, _) ->
+            Errors.did_you_mean_naming p name p_canon canonical);
           (* Recovering from the capitalization error means
            * returning the name in its canonical form *)
           p, canonical
@@ -309,7 +288,7 @@ module Env = struct
                 Errors.unbound_name p name kind
           );
           p, name
-    )
+      end
 
   let check_variable_scoping env (p, x) =
     match SMap.get x !(env.all_locals) with
@@ -377,12 +356,12 @@ module Env = struct
     lookup genv namespace x; x
 
   (* For dealing with namespace fallback on constants *)
-  let elaborate_and_get_name_with_fallback mk_dep genv genv_sect x =
+  let elaborate_and_get_name_with_fallback mk_dep genv get_pos  x =
+    let get_name x = get_name genv get_pos x in
     let fq_x = Namespaces.elaborate_id genv.namespace NSConst x in
     let need_fallback =
       genv.namespace.Namespace_env.ns_name <> None &&
       not (String.contains (snd x) '\\') in
-    let pos_map = genv_sect in
     if need_fallback then begin
       let global_x = (fst x, "\\" ^ (snd x)) in
       (* Explicitly add dependencies on both of the consts we could be
@@ -396,24 +375,26 @@ module Env = struct
        * action-at-a-distance. *)
       Typing_deps.add_idep genv.droot (mk_dep (snd fq_x));
       Typing_deps.add_idep genv.droot (mk_dep (snd global_x));
-      let mem (_, s) = SMap.mem s pos_map in
+      let mem (_, s) = get_pos s in
       match mem fq_x, mem global_x with
       (* Found in the current namespace *)
-      | true, _ -> get_name genv pos_map fq_x
+      | Some _, _ -> get_name fq_x
       (* Found in the global namespace *)
-      | _, true -> get_name genv pos_map global_x
+      | _, Some _ -> get_name global_x
       (* Not found. Pick the more specific one to error on. *)
-      | false, false -> get_name genv pos_map fq_x
+      | None, None -> get_name fq_x
     end else
-      get_name genv pos_map fq_x
+      get_name fq_x
 
   (* For dealing with namespace fallback on functions *)
-  let elaborate_and_get_name_with_canonicalized_fallback mk_dep genv genv_sect x =
+  let elaborate_and_get_name_with_canonicalized_fallback
+      mk_dep genv get_pos get_canon x =
+    let get_name x = get_name genv get_pos x in
+    let canonicalize = canonicalize genv get_pos get_canon in
     let fq_x = Namespaces.elaborate_id genv.namespace NSFun x in
     let need_fallback =
       genv.namespace.Namespace_env.ns_name <> None &&
       not (String.contains (snd x) '\\') in
-    let pos_map, canon_map = genv_sect in
     if need_fallback then begin
       let global_x = (fst x, "\\" ^ (snd x)) in
       (* Explicitly add dependencies on both of the functions we could be
@@ -427,34 +408,36 @@ module Env = struct
       Typing_deps.add_idep genv.droot (mk_dep (snd fq_x));
       Typing_deps.add_idep genv.droot (mk_dep (snd global_x));
       (* canonicalize the names being searched *)
-      let mem (_, nm) = SMap.mem (canon_key nm) (canon_map) in
+      let mem (_, nm) = get_canon nm in
       match mem fq_x, mem global_x with
-      | true, _ -> (* Found in the current namespace *)
-        let fq_x = canonicalize genv genv_sect fq_x `func in
-        get_name genv pos_map fq_x
-      | _, true -> (* Found in the global namespace *)
-        let global_x = canonicalize genv genv_sect global_x `func in
-        get_name genv pos_map global_x
-      | false, false ->
+      | Some _, _ -> (* Found in the current namespace *)
+        let fq_x = canonicalize fq_x `func in
+        get_name fq_x
+      | _, Some _ -> (* Found in the global namespace *)
+        let global_x = canonicalize global_x `func in
+        get_name global_x
+      | None, None ->
         (* Not found. Pick the more specific one to error on. *)
-        get_name genv pos_map fq_x
+        get_name fq_x
     end else
-      let fq_x = canonicalize genv genv_sect fq_x `func in
-      get_name genv pos_map fq_x
+      let fq_x = canonicalize fq_x `func in
+      get_name fq_x
 
   let global_const (genv, env) x  =
     elaborate_and_get_name_with_fallback
       (* Same idea as Dep.FunName, see below. *)
       (fun x -> Typing_deps.Dep.GConstName x)
       genv
-      genv.gconsts
+      (GEnv.gconst_id genv.globals)
       x
 
   let class_name (genv, _) x =
     (* Generic names are not allowed to shadow class names *)
     check_no_runtime_generic genv x;
     let x = Namespaces.elaborate_id genv.namespace NSClass x in
-    let pos, name = canonicalize genv genv.classes x `cls in
+    let pos, name = canonicalize genv
+        (GEnv.class_id genv.globals)
+        (GEnv.class_canon_name genv.globals) x `cls in
     (* Don't let people use strictly internal classes
      * (except when they are being declared in .hhi files) *)
     if name = SN.Classes.cHH_BuiltinEnum &&
@@ -471,7 +454,8 @@ module Env = struct
        * to retypecheck. *)
       (fun x -> Typing_deps.Dep.FunName x)
       genv
-      genv.funs
+      (GEnv.fun_id genv.globals)
+      (GEnv.fun_canon_name genv.globals)
       x
 
   let new_const (genv, env) x =
@@ -525,10 +509,9 @@ let check_repetition s param =
 (* Check that a name is not a typedef *)
 let no_typedef (genv, _) cid =
   let (pos, name) = Namespaces.elaborate_id genv.namespace NSClass cid in
-  if SMap.mem name genv.typedefs
-  then
-    let def_pos, _ = SMap.find_unsafe name genv.typedefs in
-    Errors.unexpected_typedef pos def_pos
+  name
+  |> GEnv.typedef_id genv.globals
+  |> Option.iter ~f:(fun (def_pos, _) -> Errors.unexpected_typedef pos def_pos)
 
 let hint_no_typedef env = function
   | _, Happly (x, _) -> no_typedef env x
@@ -1679,7 +1662,7 @@ and expr_ env = function
   | Class_const (x1, x2) ->
       let (genv, _) = env in
       let (_, name) = Namespaces.elaborate_id genv.namespace NSClass x1 in
-      if SMap.mem name genv.typedefs && (snd x2) = "class" then
+      if GEnv.typedef_id genv.globals name <> None && (snd x2) = "class" then
         N.Typename (Env.class_name env x1)
       else
         N.Class_const (make_class_id env x1, x2)

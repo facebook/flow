@@ -51,13 +51,38 @@ type genv = {
   gconsts: map ref;
 }
 
-(* The environment VISIBLE to the outside world. *)
 type env = {
   iclasses: map * canon_names_map;
   ifuns: map * canon_names_map;
   itypedefs: map;
   iconsts: map;
 }
+
+module GEnv = struct
+
+  type t = env
+
+  let class_id env name =
+    let classes, _ = env.iclasses in
+    SMap.get name classes
+
+  let class_canon_name env name =
+    let _, classes = env.iclasses in
+    SMap.get (canon_key name) classes
+
+  let fun_id env name =
+    let funs, _ = env.ifuns in
+    SMap.get name funs
+
+  let fun_canon_name env name =
+    let _, funs = env.ifuns in
+    SMap.get (canon_key name) funs
+
+  let typedef_id env name =
+    SMap.get name env.itypedefs
+  let gconst_id env name =
+    SMap.get name env.iconsts
+end
 
 (*****************************************************************************)
 (* Empty (initial) environments *)

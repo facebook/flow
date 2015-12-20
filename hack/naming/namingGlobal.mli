@@ -18,15 +18,20 @@ open Utils
  * to the original name of the entity, e.g. "foo", that is then
  * mapped here in ifuns to a freshly created unique integer identifier.
  *)
-type env = {
-  iclasses  : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
-  ifuns     : ((Pos.t * Ident.t) SMap.t) * (String.t SMap.t);
-  itypedefs : (Pos.t * Ident.t) SMap.t;
-  iconsts   : (Pos.t * Ident.t) SMap.t;
-}
+module GEnv: sig
+  type t
+  val class_id: t -> string -> (Pos.t * Ident.t) option
+  val class_canon_name: t -> string -> string option
 
-(* The empty naming environment *)
-val empty: env
+  val fun_id: t -> string -> (Pos.t * Ident.t) option
+  val fun_canon_name: t -> string -> string option
+
+  val typedef_id: t -> string -> (Pos.t * Ident.t) option
+
+  val gconst_id: t -> string -> (Pos.t * Ident.t) option
+end
+
+val empty: GEnv.t
 
 (* Canonicalizes a key *)
 val canon_key: String.t -> String.t
@@ -39,11 +44,11 @@ val canon_key: String.t -> String.t
  * passed as parameters to this old environment.
 *)
 val make_env:
-    env ->
+    GEnv.t ->
       funs:Ast.id list ->
       classes:Ast.id list ->
       typedefs:Ast.id list ->
-      consts:Ast.id list -> env
+      consts:Ast.id list -> GEnv.t
 
 type fun_set = SSet.t
 type class_set = SSet.t
@@ -52,8 +57,8 @@ type const_set = SSet.t
 type decl_set = fun_set * class_set * typedef_set * const_set
 
 (* Removing declarations *)
-val remove_decls: env -> decl_set -> env
+val remove_decls: GEnv.t -> decl_set -> GEnv.t
 
 val ndecl_file:
-  Relative_path.t -> FileInfo.t -> env ->
-  Errors.t * Relative_path.Set.t * env
+  Relative_path.t -> FileInfo.t -> GEnv.t ->
+  Errors.t * Relative_path.Set.t * GEnv.t

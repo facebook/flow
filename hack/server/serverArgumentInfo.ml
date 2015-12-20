@@ -10,10 +10,11 @@
 
 type result = int * (string option * string) list
 
-let go genv env content line char =
+let go nenv content line char =
   ArgumentInfoService.attach_hooks (line, char);
-  let funs, classes = ServerIdeUtils.declare Relative_path.default content in
-  ServerIdeUtils.fix_file_and_def Relative_path.default content;
+  let funs, classes, nenv =
+    ServerIdeUtils.declare nenv Relative_path.default content in
+  ServerIdeUtils.fix_file_and_def nenv funs classes;
   let pos, expected =
     match ArgumentInfoService.get_result() with
     | Some (pos, expected) -> pos, expected

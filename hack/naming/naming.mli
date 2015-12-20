@@ -13,7 +13,7 @@
  * Transform all the local names into a unique identifier
  *)
 
-type env = TypecheckerOptions.t * NamingGlobal.env
+type env = TypecheckerOptions.t * NamingGlobal.GEnv.t
 
 (* The empty naming environment *)
 val empty: TypecheckerOptions.t -> env
