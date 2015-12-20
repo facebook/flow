@@ -21,7 +21,7 @@ let print_patch filename (line, kind, type_) =
   let kind = Typing_suggest.string_of_kind kind in
   let tenv = Typing_env.empty TypecheckerOptions.permissive filename in
   let type_ = Typing_print.full tenv type_ in
-  Printf.printf "File: %s, line: %s, kind: %s, type: %s\n" 
+  Printf.printf "File: %s, line: %s, kind: %s, type: %s\n"
     (Relative_path.to_absolute filename) line kind type_
 
 (*****************************************************************************)
@@ -261,7 +261,7 @@ let add_member name patch_line type_ fn content =
 (*****************************************************************************)
 (* Section adding parameter types. *)
 (*****************************************************************************)
- 
+
 let add_soft_param name patch_line type_ _ content =
   (* As it turns out, the core logic for adding member vars works for parameters
    * too. *)
@@ -298,11 +298,11 @@ let select_files env dirname =
 let infer_types genv env dirname =
   let fast = select_files env dirname in
   let fast = FileInfo.simplify_fast fast in
-  Typing_suggest_service.go genv.workers env.nenv fast
+  Typing_suggest_service.go genv.workers fast
 
 (* Tries to apply the patches one by one, rolls back if it failed. *)
 let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
-  let tcopt = ServerEnv.typechecker_options !env in
+  let tcopt = (!env).tcopt in
   let tenv = Typing_env.empty tcopt Relative_path.default in
   file_data := Relative_path.Map.empty;
   Relative_path.Map.iter begin fun fn patchl ->

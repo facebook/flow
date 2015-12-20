@@ -40,15 +40,13 @@ type genv = {
  *)
 type env = {
     files_info     : FileInfo.t Relative_path.Map.t;
-    nenv           : Naming.env;
+    tcopt          : TypecheckerOptions.t;
     errorl         : Errors.t;
     (* the strings in those sets represent filenames *)
     failed_parsing : Relative_path.Set.t;
     failed_decl    : Relative_path.Set.t;
     failed_check   : Relative_path.Set.t;
   }
-
-let typechecker_options env = (Naming.typechecker_options env.nenv)
 
 let file_filter f =
   (FindUtils.is_php f && not (FilesToIgnore.should_ignore f))

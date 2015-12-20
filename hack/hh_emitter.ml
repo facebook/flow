@@ -87,13 +87,13 @@ let emit_file { filename; read_stdin; is_test } () =
   in
 
   (* Build a naming environment and run naming *)
-  let nenv = Naming.empty TypecheckerOptions.default in
-  let nenv = Naming.make_env nenv ~funs ~classes ~typedefs ~consts in
+  let tcopt = TypecheckerOptions.default in
+  NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
   (* Naming is driven by Typing_decl... *)
-  Typing_decl.make_env nenv all_classes filename;
+  Typing_decl.make_env tcopt all_classes filename;
 
   (* Actually emit. *)
-  Emitter.emit_file ~is_test nenv filename ast file_info
+  Emitter.emit_file ~is_test tcopt filename ast file_info
 
 
 let main_hack options =

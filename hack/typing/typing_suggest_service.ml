@@ -194,23 +194,23 @@ let collate_types fast all_types =
   end;
   tbl
 
-let type_fun nenv fn x =
+let type_fun fn x =
   try
     let tcopt = TypecheckerOptions.permissive in
     let tenv = Env.empty tcopt fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tenv nenv x fun_;
+    Typing.fun_def tenv x fun_;
   with Not_found ->
     ()
 
-let type_class nenv fn x =
+let type_class fn x =
   try
     let tcopt = TypecheckerOptions.permissive in
     let tenv = Env.empty tcopt fn in
     let class_ = Naming_heap.ClassHeap.get x in
     (match class_ with
     | None -> ()
-    | Some class_ -> Typing.class_def tenv nenv x class_
+    | Some class_ -> Typing.class_def tenv x class_
     )
   with Not_found ->
     ()
@@ -219,7 +219,7 @@ let keys map = Relative_path.Map.fold (fun x _ y -> x :: y) map []
 
 (* Typecheck a part of the codebase, in order to record the type suggestions in
  * Type_suggest.types. *)
-let suggest_files nenv fast fnl =
+let suggest_files fast fnl =
   SharedMem.invalidate_caches();
   Typing_defs.is_suggest_mode := true;
   Typing_suggest.types := [];
@@ -227,8 +227,8 @@ let suggest_files nenv fast fnl =
   List.iter fnl begin fun fn ->
     let { FileInfo.n_funs; n_classes; _ } =
       Relative_path.Map.find_unsafe fn fast in
-    SSet.iter (type_fun nenv fn) n_funs;
-    SSet.iter (type_class nenv fn) n_classes;
+    SSet.iter (type_fun fn) n_funs;
+    SSet.iter (type_class fn) n_classes;
   end;
   let result = !Typing_suggest.types in
   Typing_defs.is_suggest_mode := false;
@@ -236,18 +236,18 @@ let suggest_files nenv fast fnl =
   Typing_suggest.initialized_members := SMap.empty;
   result
 
-let suggest_files_worker nenv acc fnl =
+let suggest_files_worker acc fnl =
   let fast = TypingSuggestFastStore.load() in
-  let types = suggest_files nenv fast fnl in
+  let types = suggest_files fast fnl in
   List.rev_append types acc
 
-let parallel_suggest_files workers nenv fast =
+let parallel_suggest_files workers fast =
   let fnl = keys fast in
   TypingSuggestFastStore.store fast;
   let result =
     MultiWorker.call
       workers
-      ~job:(suggest_files_worker nenv)
+      ~job:suggest_files_worker
       ~neutral:[]
       ~merge:(List.rev_append)
       ~next:(Bucket.make fnl)
@@ -259,13 +259,13 @@ let parallel_suggest_files workers nenv fast =
 (* Let's go! That's where the action is *)
 (*****************************************************************************)
 
-let go workers nenv fast =
+let go workers fast =
   let trace = !Typing_deps.trace in
   Typing_deps.trace := false;
   let types =
     match workers with
-    | Some _ -> parallel_suggest_files workers nenv fast
-    | None -> suggest_files nenv fast (keys fast) in
+    | Some _ -> parallel_suggest_files workers fast
+    | None -> suggest_files fast (keys fast) in
   let collated = collate_types fast types in
   let resolved =
     match workers with

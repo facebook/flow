@@ -244,7 +244,7 @@ let parse_options () =
     mode = !mode;
   }
 
-let suggest_and_print nenv fn { FileInfo.funs; classes; typedefs; consts; _ } =
+let suggest_and_print fn { FileInfo.funs; classes; typedefs; consts; _ } =
   let make_set =
     List.fold_left ~f: (fun acc (_, x) -> SSet.add x acc) ~init: SSet.empty in
   let n_funs = make_set funs in
@@ -253,7 +253,7 @@ let suggest_and_print nenv fn { FileInfo.funs; classes; typedefs; consts; _ } =
   let n_consts = make_set consts in
   let names = { FileInfo.n_funs; n_classes; n_types; n_consts } in
   let fast = Relative_path.Map.add fn names Relative_path.Map.empty in
-  let patch_map = Typing_suggest_service.go None nenv fast in
+  let patch_map = Typing_suggest_service.go None fast in
   match Relative_path.Map.get fn patch_map with
     | None -> ()
     | Some l -> begin
@@ -330,13 +330,13 @@ let print_coverage fn type_acc =
   let counts = ServerCoverageMetric.count_exprs fn type_acc in
   ClientCoverageMetric.go ~json:false (Some (Leaf counts))
 
-let handle_mode mode filename nenv files_contents files_info errors ai_results =
+let handle_mode mode filename tcopt files_contents files_info errors ai_results =
   match mode with
   | Ai _ -> ()
   | Autocomplete ->
       let file = cat (Relative_path.to_absolute filename) in
       let result =
-        ServerAutoComplete.auto_complete files_info (snd nenv) file in
+        ServerAutoComplete.auto_complete files_info file in
       List.iter ~f: begin fun r ->
         let open AutocompleteService in
         Printf.printf "%s %s\n" r.res_name r.res_ty
@@ -345,7 +345,7 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
       Relative_path.Map.iter begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
           let result = ServerColorFile.get_level_list begin fun () ->
-            ignore @@ Typing_check_utils.check_defs nenv fileinfo;
+            ignore @@ Typing_check_utils.check_defs tcopt fileinfo;
             fn
           end in
           print_colored fn result;
@@ -389,10 +389,10 @@ let handle_mode mode filename nenv files_contents files_info errors ai_results =
   | NoBuiltins
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
-        errors @ Typing_check_utils.check_defs nenv fileinfo
+        errors @ Typing_check_utils.check_defs tcopt fileinfo
       end files_info errors in
       if mode = Suggest
-      then Relative_path.Map.iter (suggest_and_print nenv) files_info;
+      then Relative_path.Map.iter suggest_and_print files_info;
       if errors <> []
       then (error (List.hd_exn errors); exit 2)
       else Printf.printf "No errors\n"
@@ -421,7 +421,9 @@ let main_hack { filename; mode; } =
   let builtins = what_builtins mode in
   let filename = Relative_path.create Relative_path.Dummy filename in
   let files_contents = file_to_files filename in
-  let ai_results, (errors, (nenv, files_info)) =
+  let tcopt = TypecheckerOptions.default in
+
+  let ai_results, (errors, files_info) =
     outer_do begin fun () ->
       Errors.do_ begin fun () ->
         let parsed_files =
@@ -441,11 +443,10 @@ let main_hack { filename; mode; } =
               consider_names_just_for_autoload = false }
           end parsed_files in
 
-        (* Note that nenv.Naming.itcopt remains TypecheckerOptions.default *)
-        let nenv = Relative_path.Map.fold begin fun fn fileinfo nenv ->
+        Relative_path.Map.iter begin fun fn fileinfo ->
           let {FileInfo.funs; classes; typedefs; consts; _} = fileinfo in
-          Naming.make_env nenv ~funs ~classes ~typedefs ~consts
-        end files_info (Naming.empty TypecheckerOptions.default) in
+          NamingGlobal.make_env ~funs ~classes ~typedefs ~consts
+        end files_info;
 
         let all_classes =
           Relative_path.Map.fold begin fun fn {FileInfo.classes; _} acc ->
@@ -455,13 +456,13 @@ let main_hack { filename; mode; } =
           end files_info SMap.empty in
 
         Relative_path.Map.iter begin fun fn _ ->
-          Typing_decl.make_env nenv all_classes fn
+          Typing_decl.make_env tcopt all_classes fn
         end files_info;
 
-        nenv, files_info
+        files_info
       end
     end in
-  handle_mode mode filename nenv files_contents files_info errors ai_results
+  handle_mode mode filename tcopt files_contents files_info errors ai_results
 
 (* command line driver *)
 let _ =

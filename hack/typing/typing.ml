@@ -244,8 +244,7 @@ let make_param_local_ty env param =
     ~var_args:(fun r tv -> r, Tarraykind (AKvec tv))
     env param
 
-let rec fun_decl nenv f =
-  let tcopt = Naming.typechecker_options nenv in
+let rec fun_decl tcopt f =
   let env = Env.empty tcopt (Pos.filename (fst f.f_name)) in
   let env = Env.set_mode env f.f_mode in
   let env = Env.set_root env (Dep.Fun (snd f.f_name)) in
@@ -452,11 +451,11 @@ and check_memoizable env param (pname, ty) =
 (*****************************************************************************)
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
-and fun_def env nenv _ f =
+and fun_def env _ f =
   (* reset the expression dependent display ids for each function body *)
   Reason.expr_display_id_map := IMap.empty;
   Typing_hooks.dispatch_enter_fun_def_hook f;
-  let nb = Naming.func_body nenv f in
+  let nb = Naming.func_body (Env.get_options env) f in
   NastCheck.fun_ env f nb;
   (* Fresh type environment is actually unnecessary, but I prefer to
    * have a guarantee that we are using a clean typing environment. *)
@@ -3909,8 +3908,8 @@ and check_parent_abstract position parent_type class_type =
       ~is_final position class_type.tc_typeconsts;
   end else ()
 
-and class_def env_up nenv _ c =
-  let c = Naming.class_meth_bodies nenv c in
+and class_def env_up _ c =
+  let c = Naming.class_meth_bodies (Env.get_options env_up) c in
   if not !auto_complete then begin
     NastCheck.class_ env_up c;
     NastInitCheck.class_ env_up c;

@@ -62,14 +62,13 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       output_string oc "starting\n";
       SharedMem.invalidate_caches();
       let qual_name = if name.[0] = '\\' then name else ("\\"^name) in
-      let _, nenv = env.ServerEnv.nenv in
       output_string oc "class:\n";
       let class_name =
-        match NamingGlobal.GEnv.class_canon_name nenv qual_name with
+        match NamingGlobal.GEnv.class_canon_name qual_name with
         | None ->
           let () = output_string oc "Missing from naming env\n" in qual_name
         | Some canon ->
-          let p, _ = unsafe_opt @@ NamingGlobal.GEnv.class_id nenv canon in
+          let p, _ = unsafe_opt @@ NamingGlobal.GEnv.class_id canon in
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
       in
@@ -82,11 +81,11 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       );
       output_string oc "\nfunction:\n";
       let fun_name =
-        match NamingGlobal.GEnv.fun_canon_name nenv qual_name with
+        match NamingGlobal.GEnv.fun_canon_name qual_name with
         | None ->
           let () = output_string oc "Missing from naming env\n" in qual_name
         | Some canon ->
-          let p, _ = unsafe_opt @@ NamingGlobal.GEnv.fun_id nenv canon in
+          let p, _ = unsafe_opt @@ NamingGlobal.GEnv.fun_id canon in
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
       in
@@ -99,7 +98,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
           output_string oc (fun_str^"\n")
       );
       output_string oc "\nglobal const:\n";
-      (match NamingGlobal.GEnv.gconst_id nenv qual_name with
+      (match NamingGlobal.GEnv.gconst_id qual_name with
       | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
       | None -> output_string oc "Missing from naming env\n");
       let gconst_ty = Typing_env.GConsts.get qual_name in
@@ -110,7 +109,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
           output_string oc ("ty: "^gconst_str^"\n")
       );
       output_string oc "typedef:\n";
-      (match NamingGlobal.GEnv.typedef_id nenv qual_name with
+      (match NamingGlobal.GEnv.typedef_id qual_name with
       | Some (p, _) -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
       | None -> output_string oc "Missing from naming env\n");
       let tdef = Typing_env.Typedefs.get qual_name in

@@ -61,8 +61,6 @@ type genv = {
    *)
   type_paraml: Ast.id list;
 
-  globals: GEnv.t;
-
   (* The current class, None if we are in a function *)
   current_cls: (Ast.id * Ast.class_kind) option;
 
@@ -137,15 +135,6 @@ type lenv = {
 (* Empty (initial) environments *)
 (*****************************************************************************)
 
-type env = TypecheckerOptions.t * NamingGlobal.GEnv.t
-
-let empty tcopt = tcopt, NamingGlobal.empty
-
-let typechecker_options (tcopt, _) = tcopt
-
-let make_env (tcopt, old_genv) ~funs ~classes ~typedefs ~consts =
-  tcopt, NamingGlobal.make_env old_genv ~funs ~classes ~typedefs ~consts
-
 (* The primitives to manipulate the naming environment *)
 module Env = struct
 
@@ -158,8 +147,7 @@ module Env = struct
     has_unsafe = ref false;
   }
 
-  let make_class_genv
-      (tcopt, globals) params mode tparams (cid, ckind) namespace = {
+  let make_class_genv tcopt params mode tparams (cid, ckind) namespace = {
     in_mode       =
       (if !Autocomplete.auto_complete then FileInfo.Mpartial else mode);
     tcopt;
@@ -167,7 +155,6 @@ module Env = struct
     in_instance_method = false;
     type_params   = params;
     type_paraml   = tparams;
-    globals;
     current_cls   = Some (cid, ckind);
     droot         = Some (Typing_deps.Dep.Class (snd cid));
     namespace;
@@ -181,14 +168,13 @@ module Env = struct
     let env  = genv, lenv in
     env
 
-  let make_typedef_genv (tcopt, globals) cstrs tdef = {
+  let make_typedef_genv tcopt cstrs tdef = {
     in_mode       = FileInfo.(if !Ide.is_ide_mode then Mpartial else Mstrict);
     tcopt;
     in_try        = false;
     in_instance_method = false;
     type_params   = cstrs;
     type_paraml   = List.map tdef.t_tparams (fun (_, x, _) -> x);
-    globals;
     current_cls   = None;
     droot         = None;
     namespace     = tdef.t_namespace;
@@ -200,14 +186,13 @@ module Env = struct
     let env  = genv, lenv in
     env
 
-  let make_fun_genv (tcopt, globals) params f_mode f_name f_namespace = {
+  let make_fun_genv tcopt params f_mode f_name f_namespace = {
     in_mode       = f_mode;
     tcopt;
     in_try        = false;
     in_instance_method = false;
     type_params   = params;
     type_paraml   = [];
-    globals;
     current_cls   = None;
     droot         = Some (Typing_deps.Dep.Fun f_name);
     namespace     = f_namespace;
@@ -216,14 +201,13 @@ module Env = struct
   let make_fun_decl_genv nenv params f =
     make_fun_genv nenv params f.f_mode (snd f.f_name) f.f_namespace
 
-  let make_const_genv (tcopt, globals) cst = {
+  let make_const_genv tcopt cst = {
     in_mode       = cst.cst_mode;
     tcopt;
     in_try        = false;
     in_instance_method = false;
     type_params   = SMap.empty;
     type_paraml   = [];
-    globals;
     current_cls   = None;
     droot         = Some (Typing_deps.Dep.GConst (snd cst.cst_name));
     namespace     = cst.cst_namespace;
@@ -428,7 +412,7 @@ module Env = struct
       (* Same idea as Dep.FunName, see below. *)
       (fun x -> Typing_deps.Dep.GConstName x)
       genv
-      (GEnv.gconst_id genv.globals)
+      GEnv.gconst_id
       x
 
   let class_name (genv, _) x =
@@ -436,8 +420,8 @@ module Env = struct
     check_no_runtime_generic genv x;
     let x = Namespaces.elaborate_id genv.namespace NSClass x in
     let pos, name = canonicalize genv
-        (GEnv.class_id genv.globals)
-        (GEnv.class_canon_name genv.globals) x `cls in
+        GEnv.class_id
+        GEnv.class_canon_name x `cls in
     (* Don't let people use strictly internal classes
      * (except when they are being declared in .hhi files) *)
     if name = SN.Classes.cHH_BuiltinEnum &&
@@ -454,8 +438,8 @@ module Env = struct
        * to retypecheck. *)
       (fun x -> Typing_deps.Dep.FunName x)
       genv
-      (GEnv.fun_id genv.globals)
-      (GEnv.fun_canon_name genv.globals)
+      GEnv.fun_id
+      GEnv.fun_canon_name
       x
 
   let new_const (genv, env) x =
@@ -510,7 +494,7 @@ let check_repetition s param =
 let no_typedef (genv, _) cid =
   let (pos, name) = Namespaces.elaborate_id genv.namespace NSClass cid in
   name
-  |> GEnv.typedef_id genv.globals
+  |> GEnv.typedef_id
   |> Option.iter ~f:(fun (def_pos, _) -> Errors.unexpected_typedef pos def_pos)
 
 let hint_no_typedef env = function
@@ -1343,7 +1327,7 @@ and uselist_lambda f =
     p, Ident.tmp()
   in
   let tcopt = TypecheckerOptions.permissive in
-  let genv = Env.make_fun_decl_genv (empty tcopt) SMap.empty f in
+  let genv = Env.make_fun_decl_genv tcopt SMap.empty f in
   let lenv = Env.empty_local () in
   let lenv = { lenv with unbound_mode = UBMFunc handle_unbound } in
   let env = genv, lenv in
@@ -1662,7 +1646,7 @@ and expr_ env = function
   | Class_const (x1, x2) ->
       let (genv, _) = env in
       let (_, name) = Namespaces.elaborate_id genv.namespace NSClass x1 in
-      if GEnv.typedef_id genv.globals name <> None && (snd x2) = "class" then
+      if GEnv.typedef_id name <> None && (snd x2) = "class" then
         N.Typename (Env.class_name env x1)
       else
         N.Class_const (make_class_id env x1, x2)

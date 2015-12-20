@@ -187,10 +187,8 @@ let update_files genv files_info t =
 let naming env t =
   let env =
     Relative_path.Map.fold begin fun k v env ->
-      let tcopt, nenv = env.nenv in
-      let errorl, failed, nenv = NamingGlobal.ndecl_file k v nenv in
+      let errorl, failed = NamingGlobal.ndecl_file k v in
       { env with
-        nenv = tcopt, nenv;
         errorl = List.rev_append errorl env.errorl;
         failed_parsing = Relative_path.Set.union env.failed_parsing failed;
       }
@@ -201,7 +199,7 @@ let naming env t =
 let type_decl genv env fast t =
   let bucket_size = genv.local_config.SLC.type_decl_bucket_size in
   let errorl, failed_decl =
-    Typing_decl_service.go ~bucket_size genv.workers env.nenv fast in
+    Typing_decl_service.go ~bucket_size genv.workers env.tcopt fast in
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
   Stats.(stats.init_heap_size <- hs);
@@ -218,7 +216,7 @@ let type_check genv env fast t =
   if ServerArgs.ai_mode genv.options = None || not (is_check_mode genv.options)
   then begin
     let count = Relative_path.Map.cardinal fast in
-    let errorl, failed = Typing_check_service.go genv.workers env.nenv fast in
+    let errorl, failed = Typing_check_service.go genv.workers env.tcopt fast in
     HackEventLogger.type_check_end count t;
     let env = { env with
       errorl = List.rev_append errorl env.errorl;
@@ -281,7 +279,7 @@ let ai_check genv files_info env t =
       Exit_status.exit Exit_status.CantRunAI
     end;
     let errorl, failed = Ai.go
-      Typing_check_utils.check_defs genv.workers files_info env.nenv ai_opt in
+      Typing_check_utils.check_defs genv.workers files_info env.tcopt ai_opt in
     let env = { env with
       errorl = List.rev_append errorl env.errorl;
       failed_check = Relative_path.Set.union failed env.failed_check;

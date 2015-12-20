@@ -16,6 +16,7 @@
  *)
 open Core
 open Utils
+open Naming_heap
 
 module SN = Naming_special_names
 
@@ -23,94 +24,40 @@ module SN = Naming_special_names
 (* The types *)
 (*****************************************************************************)
 
-type fun_set = Utils.SSet.t
-type class_set = Utils.SSet.t
-type typedef_set = Utils.SSet.t
-type const_set = Utils.SSet.t
-type decl_set = fun_set * class_set * typedef_set * const_set
-
-(* We want to keep the positions of names that have been
- * replaced by identifiers.
- *)
-type positioned_ident = (Pos.t * Ident.t)
-type map = positioned_ident SMap.t
-type canon_names_map = string SMap.t
 let canon_key = String.lowercase
-
-type genv = {
-  (* Set of class names defined, and their positions *)
-  classes: (map * canon_names_map) ref;
-
-  (* Set of function names defined, and their positions *)
-  funs: (map * canon_names_map) ref;
-
-  (* Set of typedef names defined, and their position *)
-  typedefs: map ref;
-
-  (* Set of constant names defined, and their position *)
-  gconsts: map ref;
-}
-
-type env = {
-  iclasses: map * canon_names_map;
-  ifuns: map * canon_names_map;
-  itypedefs: map;
-  iconsts: map;
-}
 
 module GEnv = struct
 
-  type t = env
+  let class_id name = ClassIdHeap.get name
 
-  let class_id env name =
-    let classes, _ = env.iclasses in
-    SMap.get name classes
+  let class_canon_name name = ClassCanonHeap.get (canon_key name)
 
-  let class_canon_name env name =
-    let _, classes = env.iclasses in
-    SMap.get (canon_key name) classes
+  let fun_id name = FunIdHeap.get name
 
-  let fun_id env name =
-    let funs, _ = env.ifuns in
-    SMap.get name funs
+  let fun_canon_name name = FunCanonHeap.get (canon_key name)
 
-  let fun_canon_name env name =
-    let _, funs = env.ifuns in
-    SMap.get (canon_key name) funs
+  let typedef_id name = TypedefIdHeap.get name
 
-  let typedef_id env name =
-    SMap.get name env.itypedefs
-  let gconst_id env name =
-    SMap.get name env.iconsts
+  let gconst_id name = ConstIdHeap.get name
+
 end
-
-(*****************************************************************************)
-(* Empty (initial) environments *)
-(*****************************************************************************)
-
-let empty = {
-  iclasses  = SMap.empty, SMap.empty;
-  ifuns     = SMap.empty, SMap.empty;
-  itypedefs = SMap.empty;
-  iconsts   = SMap.empty;
-}
 
 (* The primitives to manipulate the naming environment *)
 module Env = struct
+  let classes =
+    (module ClassIdHeap : IdHeap), (module ClassCanonHeap : CanonHeap)
 
-  let empty_global nenv = {
-    classes       = ref nenv.iclasses;
-    funs          = ref nenv.ifuns;
-    typedefs      = ref nenv.itypedefs;
-    gconsts       = ref nenv.iconsts;
-  }
+  let funs = (module FunIdHeap : IdHeap), (module FunCanonHeap : CanonHeap)
 
-  let resilient_new_canon_var env_and_names (p, name) =
-    let env, canon_names = !env_and_names in
+  let gconsts = (module ConstIdHeap : IdHeap)
+
+  let resilient_new_canon_var (id_heap, canon_heap) (p, name) =
+    let module Ids = (val id_heap : IdHeap) in
+    let module Canons = (val canon_heap : CanonHeap) in
     let name_key = canon_key name in
-    match SMap.get name_key canon_names with
+    match Canons.get name_key with
       | Some canonical ->
-        let p', id = SMap.find_unsafe canonical env in
+        let p', id = Ids.find_unsafe canonical in
         if Pos.compare p p' = 0 then (p, id)
         else begin
           Errors.error_name_already_bound name canonical p p';
@@ -118,8 +65,8 @@ module Env = struct
         end
       | None ->
         let pos_and_id = p, Ident.make name in
-        env_and_names :=
-          SMap.add name pos_and_id env, SMap.add name_key name canon_names;
+        Ids.add name pos_and_id;
+        Canons.add name_key name;
         pos_and_id
 
   let check_not_typehint (p, name) =
@@ -144,118 +91,90 @@ module Env = struct
       ) -> Errors.name_is_reserved name p; false
     | _ -> true
 
-  let resilient_new_var env (p, x) =
-    if SMap.mem x !env
-    then begin
-      let p', y = SMap.find_unsafe x !env in
+  let resilient_new_var id_heap (p, x) =
+    let module Ids = (val id_heap : IdHeap) in
+    match Ids.get x with
+    | Some (p', y) ->
       if Pos.compare p p' = 0 then (p, y)
       else begin
         Errors.error_name_already_bound x x p p';
         p', y
       end
-    end
-    else
+   | None ->
       let y = p, Ident.make x in
-      env := SMap.add x y !env;
+      Ids.add x y;
       y
 
-  let new_fun_id genv x =
-    ignore (resilient_new_canon_var genv.funs x)
+  let new_fun_id x =
+    ignore (resilient_new_canon_var funs x)
 
-  let new_class_id genv x =
-    if check_not_typehint x then ignore (resilient_new_canon_var genv.classes x)
+  let new_class_id x =
+    if check_not_typehint x then ignore (resilient_new_canon_var classes x)
     else ()
 
-  let new_typedef_id genv x =
+  let new_typedef_id x =
     if check_not_typehint x
-    then begin
-      let v = resilient_new_canon_var genv.classes x in
-      genv.typedefs := SMap.add (snd x) v !(genv.typedefs);
-      ()
-    end
+    then
+      let v = resilient_new_canon_var classes x in
+      TypedefIdHeap.add (snd x) v
     else ()
 
-  let new_global_const_id genv x =
-    let v = resilient_new_var genv.gconsts x in
-    genv.gconsts := SMap.add (snd x) v !(genv.gconsts);
-    ()
+  let new_global_const_id x =
+    let v = resilient_new_var gconsts x in
+    ConstIdHeap.add (snd x) v
 end
 
 (*****************************************************************************)
 (* Updating the environment *)
 (*****************************************************************************)
-let remove_decls env (funs, classes, typedefs, consts) =
+let remove_decls ~funs ~classes ~typedefs ~consts =
   let canonicalize_set = (fun elt acc -> SSet.add (canon_key elt) acc) in
+
   let class_namekeys = SSet.fold canonicalize_set classes SSet.empty in
-  let typedef_namekeys = SSet.fold canonicalize_set typedefs SSet.empty in
+  let class_namekeys = SSet.fold canonicalize_set typedefs class_namekeys in
+  ClassCanonHeap.remove_batch class_namekeys;
+  ClassIdHeap.remove_batch classes;
+
   let fun_namekeys = SSet.fold canonicalize_set funs SSet.empty in
-  let iclassmap, iclassnames = env.iclasses in
-  let iclassmap, iclassnames =
-    SSet.fold SMap.remove classes iclassmap,
-    SSet.fold SMap.remove class_namekeys iclassnames
-  in
-  let iclassmap, iclassnames =
-    SSet.fold SMap.remove typedefs iclassmap,
-    SSet.fold SMap.remove typedef_namekeys iclassnames
-  in
-  let ifunmap, ifunnames = env.ifuns in
-  let ifunmap, ifunnames =
-    SSet.fold SMap.remove funs ifunmap,
-    SSet.fold SMap.remove fun_namekeys ifunnames
-  in
-  let itypedefs = SSet.fold SMap.remove typedefs env.itypedefs in
-  let iconsts = SSet.fold SMap.remove consts env.iconsts in
-  {
-    ifuns     = ifunmap, ifunnames;
-    iclasses  = iclassmap, iclassnames;
-    itypedefs = itypedefs;
-    iconsts   = iconsts;
-  }
+  FunCanonHeap.remove_batch fun_namekeys;
+  FunIdHeap.remove_batch funs;
+
+  TypedefIdHeap.remove_batch typedefs;
+  ConstIdHeap.remove_batch consts
 
 (*****************************************************************************)
 (* The entry point to build the naming environment *)
 (*****************************************************************************)
 
-let make_env old_env ~funs ~classes ~typedefs ~consts =
-  let genv = Env.empty_global old_env in
-  List.iter funs (Env.new_fun_id genv);
-  List.iter classes (Env.new_class_id genv);
-  List.iter typedefs (Env.new_typedef_id genv);
-  List.iter consts (Env.new_global_const_id genv);
-  let new_env = {
-    iclasses = !(genv.classes);
-    ifuns = !(genv.funs);
-    itypedefs = !(genv.typedefs);
-    iconsts = !(genv.gconsts);
-  } in
-  new_env
+let make_env ~funs ~classes ~typedefs ~consts =
+  List.iter funs Env.new_fun_id;
+  List.iter classes Env.new_class_id;
+  List.iter typedefs Env.new_typedef_id ;
+  List.iter consts Env.new_global_const_id
 
 (*****************************************************************************)
 (* Declaring the names in a list of files *)
 (*****************************************************************************)
 
-let add_files_to_rename nenv failed defl defs_in_env =
+let add_files_to_rename failed defl defs_in_env =
   List.fold_left ~f:begin fun failed (_, def) ->
-    match SMap.get def defs_in_env with
+    match defs_in_env def with
     | None -> failed
     | Some (previous_definition_position, _) ->
       let filename = Pos.filename previous_definition_position in
       Relative_path.Set.add filename failed
   end ~init:failed defl
 
-let ndecl_file fn
-    {FileInfo.file_mode; funs;
-     classes; typedefs; consts; consider_names_just_for_autoload; comments}
-    nenv =
-  let errors, nenv = Errors.do_ begin fun () ->
+let ndecl_file fn { FileInfo.file_mode; funs; classes; typedefs; consts;
+                    consider_names_just_for_autoload; comments } =
+  let errors, _ = Errors.do_ begin fun () ->
     dn ("Naming decl: "^Relative_path.to_absolute fn);
-    if consider_names_just_for_autoload
-    then nenv
-    else make_env nenv ~funs ~classes ~typedefs ~consts
+    if not consider_names_just_for_autoload then
+      make_env ~funs ~classes ~typedefs ~consts
   end
   in
   match errors with
-  | [] -> [], Relative_path.Set.empty, nenv
+  | [] -> [], Relative_path.Set.empty
   | l ->
   (* IMPORTANT:
    * If a file has name collisions, we MUST add the list of files that
@@ -285,8 +204,8 @@ let ndecl_file fn
    * and the naming environment is in a sane state.
    *)
   let failed = Relative_path.Set.singleton fn in
-  let failed = add_files_to_rename nenv failed funs (fst nenv.ifuns) in
-  let failed = add_files_to_rename nenv failed classes (fst nenv.iclasses) in
-  let failed = add_files_to_rename nenv failed typedefs nenv.itypedefs in
-  let failed = add_files_to_rename nenv failed consts nenv.iconsts in
-  l, failed, nenv
+  let failed = add_files_to_rename failed funs FunIdHeap.get in
+  let failed = add_files_to_rename failed classes ClassIdHeap.get in
+  let failed = add_files_to_rename failed typedefs TypedefIdHeap.get in
+  let failed = add_files_to_rename failed consts ConstIdHeap.get in
+  l, failed

@@ -64,19 +64,19 @@ let error el =
 
 (*****************************************************************************)
 
-let type_fun nenv x fn =
+let type_fun tcopt x fn =
   try
-    let tenv = Typing_env.empty (Naming.typechecker_options nenv) fn in
+    let tenv = Typing_env.empty tcopt fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tenv nenv x fun_;
+    Typing.fun_def tenv x fun_;
   with Not_found ->
     ()
 
-let type_class nenv x fn =
+let type_class tcopt x fn =
   try
-    let tenv = Typing_env.empty (Naming.typechecker_options nenv) fn in
+    let tenv = Typing_env.empty tcopt fn in
     let class_ = Naming_heap.ClassHeap.find_unsafe x in
-    Typing.class_def tenv nenv x class_
+    Typing.class_def tenv x class_
   with Not_found ->
     ()
 
@@ -112,10 +112,14 @@ let declare_file fn content =
     with Not_found -> true, [], []
   in
   List.iter old_funs begin fun (_, fname) ->
+    Naming_heap.FunIdHeap.remove fname;
+    Naming_heap.FunCanonHeap.remove (NamingGlobal.canon_key fname);
     Naming_heap.FunHeap.remove fname;
     Typing_env.Funs.remove fname;
   end;
   List.iter old_classes begin fun (_, cname) ->
+    Naming_heap.ClassIdHeap.remove cname;
+    Naming_heap.ClassCanonHeap.remove (NamingGlobal.canon_key cname);
     Naming_heap.ClassHeap.remove cname;
     Typing_env.Classes.remove cname;
   end;
@@ -130,17 +134,17 @@ let declare_file fn content =
     then begin
       let funs, classes, typedefs, consts = make_funs_classes ast in
       Hashtbl.replace globals fn (is_php, funs, classes);
-      let nenv = Naming.empty TypecheckerOptions.permissive in
-      let nenv = Naming.make_env nenv ~funs ~classes ~typedefs ~consts in
+      let tcopt = TypecheckerOptions.permissive in
+      NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
       let all_classes = List.fold_right classes ~f:begin fun (_, cname) acc ->
         SMap.add cname (Relative_path.Set.singleton fn) acc
       end ~init:SMap.empty in
-      Typing_decl.make_env nenv all_classes fn;
+      Typing_decl.make_env tcopt all_classes fn;
       let sub_classes = get_sub_classes all_classes in
       SSet.iter begin fun cname ->
         match Naming_heap.ClassHeap.get cname with
         | None -> ()
-        | Some c -> Typing_decl.class_decl (Naming.typechecker_options nenv) c
+        | Some c -> Typing_decl.class_decl tcopt c
       end sub_classes
     end
     else Hashtbl.replace globals fn (false, [], [])
@@ -188,14 +192,14 @@ let hh_check fn =
         begin fun () ->
         let ast = Parser_heap.ParserHeap.find_unsafe fn in
         let funs, classes, typedefs, consts = make_funs_classes ast in
-        let nenv = Naming.empty TypecheckerOptions.permissive in
-        let nenv = Naming.make_env nenv ~funs ~classes ~typedefs ~consts in
+        let tcopt = TypecheckerOptions.permissive in
+        NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
         let all_classes = List.fold_right classes ~f:begin fun (_, cname) acc ->
           SMap.add cname (Relative_path.Set.singleton fn) acc
         end ~init:SMap.empty in
-        Typing_decl.make_env nenv all_classes fn;
-        List.iter funs (fun (_, fname) -> type_fun nenv fname fn);
-        List.iter classes (fun (_, cname) -> type_class nenv cname fn);
+        Typing_decl.make_env tcopt all_classes fn;
+        List.iter funs (fun (_, fname) -> type_fun tcopt fname fn);
+        List.iter classes (fun (_, cname) -> type_class tcopt cname fn);
         error []
         end
         begin fun l ->
@@ -212,9 +216,7 @@ let hh_check_syntax fn content =
 
 let permissive_empty_envs fn =
   let tcopt = TypecheckerOptions.permissive in
-  let nenv = Naming.empty tcopt in
-  let tenv = Typing_env.empty tcopt fn in
-  (nenv, tenv)
+  tcopt, Typing_env.empty tcopt fn
 
 let hh_auto_complete fn =
   let fn = Relative_path.create Relative_path.Root fn in
@@ -225,15 +227,14 @@ let hh_auto_complete fn =
       List.iter ast begin fun def ->
         match def with
         | Ast.Fun f ->
-            let nenv, tenv = permissive_empty_envs fn in
-            let f = Naming.fun_ nenv f in
-            Typing.fun_def tenv nenv (snd f.Nast.f_name) f
+            let tcopt, tenv = permissive_empty_envs fn in
+            let f = Naming.fun_ tcopt f in
+            Typing.fun_def tenv (snd f.Nast.f_name) f
         | Ast.Class c ->
-            let nenv, tenv = permissive_empty_envs fn in
-            let tcopt = Naming.typechecker_options nenv in
-            let c = Naming.class_ nenv c in
+            let tcopt, tenv = permissive_empty_envs fn in
+            let c = Naming.class_ tcopt c in
             Typing_decl.class_decl tcopt c;
-            let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
+            let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
       end;
@@ -271,13 +272,13 @@ let hh_get_method_at_position fn line char =
       List.iter ast begin fun def ->
         match def with
         | Ast.Fun f ->
-            let nenv, tenv = permissive_empty_envs fn in
-            let f = Naming.fun_ nenv f in
-            Typing.fun_def tenv nenv (snd f.Nast.f_name) f
+            let tcopt, tenv = permissive_empty_envs fn in
+            let f = Naming.fun_ tcopt f in
+            Typing.fun_def tenv (snd f.Nast.f_name) f
         | Ast.Class c ->
-            let nenv, tenv = permissive_empty_envs fn in
-            let c = Naming.class_ nenv c in
-            let res = Typing.class_def tenv nenv (snd c.Nast.c_name) c in
+            let tcopt, tenv = permissive_empty_envs fn in
+            let c = Naming.class_ tcopt c in
+            let res = Typing.class_def tenv (snd c.Nast.c_name) c in
             res
         | _ -> ()
       end;
@@ -451,14 +452,14 @@ let hh_arg_info fn line char =
   let _, funs, classes = Hashtbl.find globals fn in
   Errors.ignore_ begin fun () ->
     List.iter funs begin fun (_, f_name) ->
-      let nenv, tenv = permissive_empty_envs fn in
+      let _tcopt, tenv = permissive_empty_envs fn in
       let f = Naming_heap.FunHeap.find_unsafe f_name in
-      Typing.fun_def tenv nenv f_name f
+      Typing.fun_def tenv f_name f
     end;
     List.iter classes begin fun (_, c_name) ->
-      let nenv, tenv = permissive_empty_envs fn in
+      let _tcopt, tenv = permissive_empty_envs fn in
       let c = Naming_heap.ClassHeap.find_unsafe c_name in
-      Typing.class_def tenv nenv c_name c
+      Typing.class_def tenv c_name c
     end;
   end;
   let result = ArgumentInfoService.get_result() in

@@ -46,9 +46,9 @@ let handle : type a. genv -> env -> a t -> a =
     | INFER_TYPE (fn, line, char) ->
         ServerInferType.go env (fn, line, char)
     | AUTOCOMPLETE content ->
-        ServerAutoComplete.auto_complete env.files_info (snd env.nenv) content
+        ServerAutoComplete.auto_complete env.files_info content
     | IDENTIFY_FUNCTION (content, line, char) ->
-        ServerIdentifyFunction.go (snd env.nenv) content line char
+        ServerIdentifyFunction.go content line char
     | OUTLINE content ->
         FileOutline.outline content
     | METHOD_JUMP (class_, find_children) ->
@@ -63,9 +63,9 @@ let handle : type a. genv -> env -> a t -> a =
         SymbolInfoService.go genv.workers file_list env
     | DUMP_AI_INFO file_list ->
         Ai.InfoService.go (Typing_check_utils.check_defs) genv.workers
-          file_list (ServerArgs.ai_mode genv.options) env.nenv
+          file_list (ServerArgs.ai_mode genv.options) env.tcopt
     | ARGUMENT_INFO (contents, line, col) ->
-        ServerArgumentInfo.go (snd env.nenv) contents line col
+        ServerArgumentInfo.go contents line col
     | SEARCH (query, type_) -> ServerSearch.go query type_
     | COVERAGE_COUNTS path -> ServerCoverageMetric.go path genv env
     | LINT fnl -> ServerLint.go genv fnl

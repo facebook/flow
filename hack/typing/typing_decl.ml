@@ -280,11 +280,11 @@ let get_class_requirements env class_nast impls =
 (* Section declaring the type of a function *)
 (*****************************************************************************)
 
-let ifun_decl nenv (f: Ast.fun_) =
-  let f = Naming.fun_ nenv f in
+let ifun_decl tcopt (f: Ast.fun_) =
+  let f = Naming.fun_ tcopt f in
   let cid = snd f.f_name in
   Naming_heap.FunHeap.add cid f;
-  Typing.fun_decl nenv f;
+  Typing.fun_decl tcopt f;
   ()
 
 (*****************************************************************************)
@@ -292,7 +292,7 @@ let ifun_decl nenv (f: Ast.fun_) =
 (*****************************************************************************)
 
 type class_env = {
-  nenv: Naming.env;
+  tcopt: TypecheckerOptions.t;
   stack: SSet.t;
   all_classes: Relative_path.Set.t SMap.t;
 }
@@ -319,9 +319,9 @@ and class_decl_if_missing class_env c =
 
 and class_naming_and_decl (class_env:class_env) cid c =
   let class_env = { class_env with stack = SSet.add cid class_env.stack } in
-  let c = Naming.class_ class_env.nenv c in
+  let c = Naming.class_ class_env.tcopt c in
   class_parents_decl class_env c;
-  class_decl (Naming.typechecker_options class_env.nenv) c;
+  class_decl class_env.tcopt c;
   (* It is important to add the "named" ast (nast.ml) only
    * AFTER we are done declaring the type type of the class.
    * Otherwise there is a subtle race condition.
@@ -821,23 +821,22 @@ and method_check_trait_overrides c id method_ce =
 (* Dealing with typedefs *)
 (*****************************************************************************)
 
-let rec type_typedef_decl_if_missing nenv typedef =
+let rec type_typedef_decl_if_missing tcopt typedef =
   let _, tid = typedef.Ast.t_id in
   if Naming_heap.TypedefHeap.mem tid
   then ()
   else
-    type_typedef_naming_and_decl nenv typedef
+    type_typedef_naming_and_decl tcopt typedef
 
-and type_typedef_naming_and_decl nenv tdef =
+and type_typedef_naming_and_decl tcopt tdef =
   let pos, tid = tdef.Ast.t_id in
   let {
     t_tparams = params;
     t_constraint = tcstr;
     t_kind = concrete_type;
     t_user_attributes = _;
-  } as decl = Naming.typedef nenv tdef in
+  } as decl = Naming.typedef tcopt tdef in
   let filename = Pos.filename pos in
-  let tcopt = Naming.typechecker_options nenv in
   let env = Typing_env.empty tcopt filename in
   let env = Typing_env.set_mode env tdef.Ast.t_mode in
   let env = Env.set_root env (Typing_deps.Dep.Class tid) in
@@ -864,38 +863,38 @@ and type_typedef_naming_and_decl nenv tdef =
 (* Global constants *)
 (*****************************************************************************)
 
-let iconst_decl nenv cst =
-  let cst = Naming.global_const nenv cst in
+let iconst_decl tcopt cst =
+  let cst = Naming.global_const tcopt cst in
   let _cst_pos, cst_name = cst.cst_name in
   Naming_heap.ConstHeap.add cst_name cst;
-  Typing.gconst_decl (Naming.typechecker_options nenv) cst;
+  Typing.gconst_decl tcopt cst;
   ()
 
 (*****************************************************************************)
 
-let name_and_declare_types_program nenv all_classes prog =
+let name_and_declare_types_program tcopt all_classes prog =
   List.iter prog begin fun def ->
     match def with
     | Ast.Namespace _
     | Ast.NamespaceUse _ -> assert false
-    | Ast.Fun f -> ifun_decl nenv f
+    | Ast.Fun f -> ifun_decl tcopt f
     | Ast.Class c ->
       let class_env = {
-        nenv = nenv;
+        tcopt;
         stack = SSet.empty;
         all_classes = all_classes;
       } in
       class_decl_if_missing class_env c
     | Ast.Typedef typedef ->
-      type_typedef_decl_if_missing nenv typedef
+      type_typedef_decl_if_missing tcopt typedef
     | Ast.Stmt _ -> ()
     | Ast.Constant cst ->
-        iconst_decl nenv cst
+        iconst_decl tcopt cst
   end
 
-let make_env nenv all_classes fn =
+let make_env tcopt all_classes fn =
   match Parser_heap.ParserHeap.get fn with
   | None -> ()
   | Some prog ->
       Typing_decl_deps.add prog;
-      name_and_declare_types_program nenv all_classes prog
+      name_and_declare_types_program tcopt all_classes prog

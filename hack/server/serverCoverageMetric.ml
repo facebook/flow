@@ -44,8 +44,8 @@ let accumulate_types defs =
     Option.iter expr_kind_opt (fun kind ->
       Hashtbl.replace type_acc (p, kind) ty))
     (fun () ->
-      let nenv = Naming.empty (TypecheckerOptions.permissive) in
-      ignore (Typing_check_utils.check_defs nenv defs));
+      let tcopt = TypecheckerOptions.permissive in
+      ignore (Typing_check_utils.check_defs tcopt defs));
   type_acc
 
 let combine v1 v2 =

@@ -19,19 +19,16 @@ open Utils
  * mapped here in ifuns to a freshly created unique integer identifier.
  *)
 module GEnv: sig
-  type t
-  val class_id: t -> string -> (Pos.t * Ident.t) option
-  val class_canon_name: t -> string -> string option
+  val class_id: string -> (Pos.t * Ident.t) option
+  val class_canon_name: string -> string option
 
-  val fun_id: t -> string -> (Pos.t * Ident.t) option
-  val fun_canon_name: t -> string -> string option
+  val fun_id: string -> (Pos.t * Ident.t) option
+  val fun_canon_name: string -> string option
 
-  val typedef_id: t -> string -> (Pos.t * Ident.t) option
+  val typedef_id: string -> (Pos.t * Ident.t) option
 
-  val gconst_id: t -> string -> (Pos.t * Ident.t) option
+  val gconst_id: string -> (Pos.t * Ident.t) option
 end
-
-val empty: GEnv.t
 
 (* Canonicalizes a key *)
 val canon_key: String.t -> String.t
@@ -44,21 +41,18 @@ val canon_key: String.t -> String.t
  * passed as parameters to this old environment.
 *)
 val make_env:
-    GEnv.t ->
       funs:Ast.id list ->
       classes:Ast.id list ->
       typedefs:Ast.id list ->
-      consts:Ast.id list -> GEnv.t
-
-type fun_set = SSet.t
-type class_set = SSet.t
-type typedef_set = SSet.t
-type const_set = SSet.t
-type decl_set = fun_set * class_set * typedef_set * const_set
+      consts:Ast.id list -> unit
 
 (* Removing declarations *)
-val remove_decls: GEnv.t -> decl_set -> GEnv.t
+val remove_decls:
+      funs: SSet.t ->
+      classes: SSet.t ->
+      typedefs: SSet.t ->
+      consts: SSet.t -> unit
 
 val ndecl_file:
-  Relative_path.t -> FileInfo.t -> GEnv.t ->
-  Errors.t * Relative_path.Set.t * GEnv.t
+  Relative_path.t -> FileInfo.t ->
+  Errors.t * Relative_path.Set.t

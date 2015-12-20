@@ -15,15 +15,15 @@ val debug_print_last_pos:
   'a -> unit
 
 val fun_decl:
-  Naming.env -> Nast.fun_ -> unit
+  TypecheckerOptions.t -> Nast.fun_ -> unit
 
 val gconst_decl:
   TypecheckerOptions.t -> Nast.gconst -> unit
 
 val fun_def:
-  Typing_env.env -> Naming.env -> 'a -> Nast.fun_ -> unit
+  Typing_env.env -> 'a -> Nast.fun_ -> unit
 val class_def:
-  Typing_env.env -> Naming.env -> 'a -> Nast.class_ -> unit
+  Typing_env.env -> 'a -> Nast.class_ -> unit
 val typedef_def:
   Typing_env.env -> Nast.typedef -> unit
 

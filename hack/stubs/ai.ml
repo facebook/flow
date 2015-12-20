@@ -9,7 +9,7 @@
  *)
 
 let do_ _ _ _ =
-  [], ([], (Naming.empty TypecheckerOptions.default, Relative_path.Map.empty))
+  [], ([], Relative_path.Map.empty)
 let go _ _ _ _ _ = [], Relative_path.Set.empty
 let go_incremental _ _ _ _ _ =  [], Relative_path.Set.empty
 let modify_shared_mem_sizes global_size heap_size _ =

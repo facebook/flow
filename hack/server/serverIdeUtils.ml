@@ -15,6 +15,12 @@ open Utils
 (* Error. *)
 (*****************************************************************************)
 
+let canon_set names =
+  names
+  |> SSet.elements
+  |> List.map ~f:NamingGlobal.canon_key
+  |> List.fold_right ~f:SSet.add ~init:SSet.empty
+
 let report_error exn =
   let exn_str = Printexc.to_string exn in
   Printf.printf "Could not auto-complete because of errors: %s\n" exn_str;
@@ -22,11 +28,15 @@ let report_error exn =
   ()
 
 let oldify_funs names =
+  Naming_heap.FunIdHeap.oldify_batch names;
+  Naming_heap.FunCanonHeap.oldify_batch @@ canon_set names;
   Naming_heap.FunHeap.oldify_batch names;
   Typing_env.Funs.oldify_batch names;
   ()
 
 let oldify_classes names =
+  Naming_heap.ClassIdHeap.oldify_batch names;
+  Naming_heap.ClassCanonHeap.oldify_batch @@ canon_set names;
   Naming_heap.ClassHeap.oldify_batch names;
   Typing_env.Classes.oldify_batch names;
   ()
@@ -34,11 +44,15 @@ let oldify_classes names =
 let revive funs classes =
   Naming_heap.FunHeap.revive_batch funs;
   Typing_env.Funs.revive_batch funs;
+  Naming_heap.FunIdHeap.revive_batch funs;
+  Naming_heap.FunCanonHeap.revive_batch @@ canon_set funs;
+
   Naming_heap.ClassHeap.revive_batch classes;
   Typing_env.Classes.revive_batch classes;
-  ()
+  Naming_heap.ClassIdHeap.revive_batch classes;
+  Naming_heap.ClassCanonHeap.revive_batch @@ canon_set classes
 
-let declare nenv path content =
+let declare path content =
   let tcopt = TypecheckerOptions.permissive in
   Autocomplete.auto_complete := false;
   Autocomplete.auto_complete_for_global := "";
@@ -59,33 +73,29 @@ let declare nenv path content =
             funs, c_name::classes
           | _ -> funs, classes
       end ~init:([], []) in
-      let nenv =
-        NamingGlobal.make_env nenv ~funs ~classes ~typedefs:[] ~consts:[] in
       oldify_funs !declared_funs;
       oldify_classes !declared_classes;
+      NamingGlobal.make_env ~funs ~classes ~typedefs:[] ~consts:[];
       List.iter ast begin fun def ->
         match def with
         | Ast.Fun f ->
-            let nenv = tcopt, nenv in
-            let f = Naming.fun_ nenv f in
+            let f = Naming.fun_ tcopt f in
             Naming_heap.FunHeap.add (snd f.Nast.f_name) f;
-            Typing.fun_decl nenv f;
+            Typing.fun_decl tcopt f;
         | Ast.Class c ->
-            let nenv = tcopt, nenv in
-            let c = Naming.class_ nenv c in
+            let c = Naming.class_ tcopt c in
             Naming_heap.ClassHeap.add (snd c.Nast.c_name) c;
             Typing_decl.class_decl tcopt c;
         | _ -> ()
       end;
-      !declared_funs, !declared_classes, nenv
+      !declared_funs, !declared_classes
     end
   with e ->
     report_error e;
-    SSet.empty, SSet.empty, nenv
+    SSet.empty, SSet.empty
 
-let fix_file_and_def nenv funs classes = try
+let fix_file_and_def funs classes = try
     let tcopt = TypecheckerOptions.permissive in
-    let nenv = tcopt, nenv in
     Errors.ignore_ begin fun () ->
       SSet.iter begin fun name ->
         match Naming_heap.FunHeap.get name with
@@ -93,7 +103,7 @@ let fix_file_and_def nenv funs classes = try
         | Some f ->
           let filename = Pos.filename (fst f.Nast.f_name) in
           let tenv = Typing_env.empty tcopt filename in
-          Typing.fun_def tenv nenv (snd f.Nast.f_name) f
+          Typing.fun_def tenv (snd f.Nast.f_name) f
       end funs;
       SSet.iter begin fun name ->
         match Naming_heap.ClassHeap.get name with
@@ -101,29 +111,29 @@ let fix_file_and_def nenv funs classes = try
         | Some c ->
           let filename = Pos.filename (fst c.Nast.c_name) in
           let tenv = Typing_env.empty tcopt filename in
-          Typing.class_def tenv nenv (snd c.Nast.c_name) c
+          Typing.class_def tenv (snd c.Nast.c_name) c
       end classes;
     end
   with e ->
     report_error e
 
-let recheck nenv fileinfo_l =
+let recheck tcopt fileinfo_l =
   SharedMem.invalidate_caches();
   List.iter fileinfo_l begin fun defs ->
-    ignore @@ Typing_check_utils.check_defs nenv defs
+    ignore @@ Typing_check_utils.check_defs tcopt defs
   end
 
-let check_file_input nenv files_info fi =
+let check_file_input tcopt files_info fi =
   match fi with
   | ServerUtils.FileContent content ->
       let path = Relative_path.default in
-      let funs, classes, nenv = declare (snd nenv) path content in
-      fix_file_and_def nenv funs classes;
+      let funs, classes = declare path content in
+      fix_file_and_def funs classes;
       revive funs classes;
       path
   | ServerUtils.FileName fn ->
       let path = Relative_path.create Relative_path.Root fn in
       let () = match Relative_path.Map.get path files_info with
-      | Some fileinfo -> recheck nenv [fileinfo]
+      | Some fileinfo -> recheck tcopt [fileinfo]
       | None -> () in
       path

@@ -20,11 +20,11 @@ open Utils
  * in Typing_env.Class, Typing_env.Fun, and Typing_env.Typedef.
  *)
 val name_and_declare_types_program:
-  Naming.env -> Relative_path.Set.t SMap.t (* set of classes in all files *) ->
+  TypecheckerOptions.t -> Relative_path.Set.t SMap.t (* set of classes in all files *) ->
   Ast.program -> unit
 
 val make_env:
-  Naming.env -> Relative_path.Set.t SMap.t ->
+  TypecheckerOptions.t -> Relative_path.Set.t SMap.t ->
   Relative_path.t -> unit
 
 val class_decl:

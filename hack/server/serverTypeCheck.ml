@@ -94,30 +94,25 @@ let reparse_infos files_info fast =
 (*****************************************************************************)
 
 let remove_decls env fast_parsed =
-  let (tcopt, nenv) = env.nenv in
-  let nenv =
-    Relative_path.Map.fold begin fun fn _ nenv ->
-      match Relative_path.Map.get fn env.files_info with
-      | Some {FileInfo.consider_names_just_for_autoload = true; _}
-      | None -> nenv
-      | Some {FileInfo.
-              funs = funl;
-              classes = classel;
-              typedefs = typel;
-              consts = constl;
-              file_mode;
-              comments;
-              consider_names_just_for_autoload} ->
-        let funs = set_of_idl funl in
-        let classes = set_of_idl classel in
-        let typedefs = set_of_idl typel in
-        let consts = set_of_idl constl in
-        let nenv = NamingGlobal.remove_decls nenv
-            (funs, classes, typedefs, consts) in
-        nenv
-    end fast_parsed nenv
-  in
-  { env with nenv = tcopt, nenv }
+  Relative_path.Map.iter begin fun fn _ ->
+    match Relative_path.Map.get fn env.files_info with
+    | Some {FileInfo.consider_names_just_for_autoload = true; _}
+    | None -> ()
+    | Some {FileInfo.
+             funs = funl;
+             classes = classel;
+             typedefs = typel;
+             consts = constl;
+             file_mode;
+             comments;
+             consider_names_just_for_autoload} ->
+      let funs = set_of_idl funl in
+      let classes = set_of_idl classel in
+      let typedefs = set_of_idl typel in
+      let consts = set_of_idl constl in
+      NamingGlobal.remove_decls ~funs ~classes ~typedefs ~consts
+  end fast_parsed;
+  env
 
 (*****************************************************************************)
 (* Removes the files that failed *)
@@ -159,17 +154,15 @@ let update_file_info env fast_parsed =
 
 let declare_names env files_info fast_parsed =
   let env = remove_decls env fast_parsed in
-  let tcopt, nenv = env.nenv in
-  let errorl, failed_naming, nenv =
-    Relative_path.Map.fold begin fun k v (errorl, failed, nenv) ->
-      let errorl', failed', nenv = NamingGlobal.ndecl_file k v nenv in
+  let errorl, failed_naming =
+    Relative_path.Map.fold begin fun k v (errorl, failed) ->
+      let errorl', failed'= NamingGlobal.ndecl_file k v in
       let errorl = List.rev_append errorl' errorl in
       let failed = Relative_path.Set.union failed' failed in
-      errorl, failed, nenv
-    end fast_parsed ([], Relative_path.Set.empty, nenv) in
+      errorl, failed
+    end fast_parsed ([], Relative_path.Set.empty) in
   let fast = remove_failed fast_parsed failed_naming in
   let fast = FileInfo.simplify_fast fast in
-  let env = { env with nenv = tcopt, nenv } in
   env, errorl, failed_naming, fast
 
 (*****************************************************************************)
@@ -224,7 +217,7 @@ let type_check genv env =
   let bucket_size = genv.local_config.SLC.type_decl_bucket_size in
   let _, _, to_redecl_phase2, to_recheck1 =
     Typing_redecl_service.redo_type_decl
-      ~bucket_size genv.workers env.nenv fast in
+      ~bucket_size genv.workers env.tcopt fast in
   let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
   let to_recheck1 = Typing_deps.get_files to_recheck1 in
   let hs = SharedMem.heap_size () in
@@ -237,7 +230,7 @@ let type_check genv env =
   (* DECLARING TYPES: Phase2 *)
   let errorl', failed_decl, _to_redecl2, to_recheck2 =
     Typing_redecl_service.redo_type_decl
-      ~bucket_size genv.workers env.nenv fast_redecl_phase2 in
+      ~bucket_size genv.workers env.tcopt fast_redecl_phase2 in
   let to_recheck2 = Typing_deps.get_files to_recheck2 in
   let errorl = List.rev_append errorl' errorl in
 
@@ -257,14 +250,14 @@ let type_check genv env =
   let fast = extend_fast fast files_info to_recheck in
   ServerCheckpoint.process_updates fast;
   let errorl', failed_check =
-    Typing_check_service.go genv.workers env.nenv fast in
+    Typing_check_service.go genv.workers env.tcopt fast in
   let errorl', failed_check = match ServerArgs.ai_mode genv.options with
     | None -> errorl', failed_check
     | Some ai_opt ->
       let fast_infos = reparse_infos files_info fast in
       let ae, af = Ai.go_incremental
         Typing_check_utils.check_defs
-        genv.workers fast_infos env.nenv ai_opt in
+        genv.workers fast_infos env.tcopt ai_opt in
       (List.rev_append errorl' ae),
       (Relative_path.Set.union af failed_check)
   in
@@ -278,7 +271,7 @@ let type_check genv env =
   (* Done, that's the new environment *)
   let new_env = {
     files_info;
-    nenv = env.nenv;
+    tcopt = env.tcopt;
     errorl = errorl;
     failed_parsing = Relative_path.Set.union failed_naming failed_parsing;
     failed_decl = failed_decl;

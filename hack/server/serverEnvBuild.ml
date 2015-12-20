@@ -81,8 +81,7 @@ let make_genv options config local_config =
   }
 
 let make_env config =
-  let nenv = Naming.empty (ServerConfig.typechecker_options config) in
-  { nenv;
+  { tcopt          = ServerConfig.typechecker_options config;
     files_info     = Relative_path.Map.empty;
     errorl         = [];
     failed_parsing = Relative_path.Set.empty;

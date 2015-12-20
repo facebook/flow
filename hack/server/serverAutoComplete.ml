@@ -15,11 +15,11 @@
 open Core
 open Utils
 
-let auto_complete files_info nenv content =
+let auto_complete files_info content =
   AutocompleteService.attach_hooks();
-  let funs, classes, nenv =
-    ServerIdeUtils.declare nenv Relative_path.default content in
-  ServerIdeUtils.fix_file_and_def nenv funs classes;
+  let funs, classes =
+    ServerIdeUtils.declare Relative_path.default content in
+  ServerIdeUtils.fix_file_and_def funs classes;
   let fun_names, class_names =
     files_info
     |> Relative_path.Map.values

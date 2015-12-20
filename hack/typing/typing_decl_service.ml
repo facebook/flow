@@ -28,7 +28,7 @@ type result = Errors.t * failed
 
 module TypeDeclarationStore = GlobalStorage.Make(struct
   type classes = Relative_path.Set.t SMap.t
-  type t = classes * Naming.env
+  type t = classes * TypecheckerOptions.t
 end)
 
 (*****************************************************************************)
@@ -39,10 +39,10 @@ end)
 (* The job that will be run on the workers *)
 (*****************************************************************************)
 
-let decl_file all_classes nenv (errorl, failed) fn =
+let decl_file all_classes tcopt (errorl, failed) fn =
   let errorl', () = Errors.do_ begin fun () ->
     d ("Typing decl: "^Relative_path.to_absolute fn);
-    Typing_decl.make_env nenv all_classes fn;
+    Typing_decl.make_env tcopt all_classes fn;
     dn "OK";
   end
   in
@@ -53,8 +53,8 @@ let decl_file all_classes nenv (errorl, failed) fn =
   errorl, failed
 
 let decl_files (errors, failed) fnl =
-  let all_classes, nenv = TypeDeclarationStore.load() in
-  List.fold_left fnl ~f:(decl_file all_classes nenv) ~init:(errors, failed)
+  let all_classes, tcopt = TypeDeclarationStore.load() in
+  List.fold_left fnl ~f:(decl_file all_classes tcopt) ~init:(errors, failed)
 
 (*****************************************************************************)
 (* Merges the results (used by the master) *)
@@ -88,9 +88,9 @@ let get_classes fast =
 (* Let's go! That's where the action is *)
 (*****************************************************************************)
 
-let go (workers:Worker.t list option) ~bucket_size nenv fast =
+let go (workers:Worker.t list option) ~bucket_size tcopt fast =
   let all_classes = get_classes fast in
-  TypeDeclarationStore.store (all_classes, nenv);
+  TypeDeclarationStore.store (all_classes, tcopt);
   let fast_l = Relative_path.Map.fold (fun x _ y -> x :: y) fast [] in
   let neutral = [], Relative_path.Set.empty in
   dn "Declaring the types";

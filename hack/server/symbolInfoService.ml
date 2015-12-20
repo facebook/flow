@@ -26,12 +26,10 @@ let recheck_naming filename_l =
           (* We only need to name to find references to locals *)
           List.iter ast begin function
             | Ast.Fun f ->
-                let nenv = Naming.empty tcopt in
-                let _ = Naming.fun_ nenv f in
+                let _ = Naming.fun_ tcopt f in
                 ()
             | Ast.Class c ->
-                let nenv = Naming.empty tcopt in
-                let _ = Naming.class_ nenv c in
+                let _ = Naming.class_ tcopt c in
                 ()
             | _ -> ()
           end
@@ -41,8 +39,8 @@ let recheck_naming filename_l =
   end
 
 let recheck_typing fileinfo_l =
-  let nenv = Naming.empty (TypecheckerOptions.permissive) in
-  ignore(ServerIdeUtils.recheck nenv fileinfo_l)
+  let tcopt = TypecheckerOptions.permissive in
+  ignore(ServerIdeUtils.recheck tcopt fileinfo_l)
 
 let helper acc filetuple_l =
   let fun_call_map = ref Pos.Map.empty in
