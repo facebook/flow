@@ -16,7 +16,7 @@ open Utils
 (*****************************************************************************)
 
 module TypeCheckStore = GlobalStorage.Make(struct
-  type t = FileInfo.fast * TypecheckerOptions.t
+  type t = TypecheckerOptions.t
 end)
 
 let neutral = [], Relative_path.Set.empty
@@ -79,69 +79,60 @@ let check_const x =
   with Not_found ->
     ()
 
-let check_file tcopt fast (errors, failed) fn =
-
+let check_file tcopt (errors, failed) (fn, file_infos) =
+  let { FileInfo.n_funs; n_classes; n_types; n_consts } = file_infos in
   let errors', () = Errors.do_
     begin fun () ->
-      match Relative_path.Map.get fn fast with
-      | None -> ()
-      | Some { FileInfo.n_funs; n_classes; n_types; n_consts } ->
-        SSet.iter (type_fun tcopt) n_funs;
-        SSet.iter (type_class tcopt) n_classes;
-        SSet.iter check_typedef n_types;
-        SSet.iter check_const n_consts;
+      SSet.iter (type_fun tcopt) n_funs;
+      SSet.iter (type_class tcopt) n_classes;
+      SSet.iter check_typedef n_types;
+      SSet.iter check_const n_consts;
     end  in
   let failed =
     if errors' <> [] then Relative_path.Set.add fn failed else failed in
   List.rev_append errors' errors, failed
 
-let check_files tcopt fast (errors, failed) fnl =
+let check_files tcopt (errors, failed) fnl =
   SharedMem.invalidate_caches();
   let check_file =
     if !Utils.profile
-    then (fun fast acc fn ->
+    then (fun acc fn ->
       let t = Unix.gettimeofday () in
-      let result = check_file tcopt fast acc fn in
+      let result = check_file tcopt acc fn in
       let t' = Unix.gettimeofday () in
       let msg =
-        Printf.sprintf "%f %s [type-check]" (t' -. t) (Relative_path.suffix fn) in
+        Printf.sprintf "%f %s [type-check]" (t' -. t)
+          (Relative_path.suffix (fst fn)) in
       !Utils.log msg;
       result)
     else check_file tcopt in
   let errors, failed = List.fold_left fnl
-    ~f:(check_file fast) ~init:(errors, failed) in
+    ~f:check_file ~init:(errors, failed) in
   errors, failed
 
 let load_and_check_files acc fnl =
-  let fast, tcopt = TypeCheckStore.load() in
-  check_files tcopt fast acc fnl
+  let tcopt = TypeCheckStore.load() in
+  check_files tcopt acc fnl
 
 (*****************************************************************************)
 (* Let's go! That's where the action is *)
 (*****************************************************************************)
 
-let parallel_check workers tcopt fast fnl =
-  TypeCheckStore.store (fast, tcopt);
-  (* If there are many workers (> 16) it is more memory efficent to use fewer
-   * workers with larger buckets.
-   *)
-  let workers, max_size = match workers with
-    | Some w when List.length w > 16 ->
-      Some (List.take w @@ List.length w / 2), 2000
-    | _ -> workers, 500 in
+let parallel_check workers tcopt fnl =
+  TypeCheckStore.store tcopt;
   let result =
     MultiWorker.call
       workers
       ~job:load_and_check_files
       ~neutral
       ~merge:Typing_decl_service.merge_decl
-      ~next:(Bucket.make ~max_size fnl)
+      ~next:(Bucket.make fnl)
   in
   TypeCheckStore.clear();
   result
 
 let go workers tcopt fast =
-  let fnl = Relative_path.Map.fold (fun x _ y -> x :: y) fast [] in
+  let fnl = Relative_path.Map.elements fast in
   if List.length fnl < 10
-  then check_files tcopt fast neutral fnl
-  else parallel_check workers tcopt fast fnl
+  then check_files tcopt neutral fnl
+  else parallel_check workers tcopt fnl

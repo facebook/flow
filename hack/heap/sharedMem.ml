@@ -601,7 +601,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   module ConfValue = struct
     type value = Value.t
-    let capacity = 10000
+    let capacity = 1000
   end
 
   module Key = KeyFunctor (UserKeyType)
