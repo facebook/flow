@@ -45,8 +45,8 @@ let query_type cx loc =
       let d = Reason_js.diff_range range in
       if d < !diff then (
         diff := d;
-        Flow_js.suggested_type_cache := IMap.empty;
-        let ground_t = Flow_js.printified_type cx t in
+        Type_normalizer.suggested_type_cache := IMap.empty;
+        let ground_t = Type_normalizer.printified_type cx t in
         let possible_ts = Flow_js.possible_types_of_type cx t in
         result := if Type_printer.is_printed_type_parsable cx ground_t
           then (range, Some ground_t, possible_ts)
@@ -57,9 +57,9 @@ let query_type cx loc =
   !result
 
 let dump_types printer raw_printer cx =
-  Flow_js.suggested_type_cache := IMap.empty;
+  Type_normalizer.suggested_type_cache := IMap.empty;
   let lst = Hashtbl.fold (fun loc t list ->
-    let ground_t = Flow_js.printified_type cx t in
+    let ground_t = Type_normalizer.printified_type cx t in
     let possible_ts = Flow_js.possible_types_of_type cx t in
     let possible_reasons = possible_ts
       |> List.map Type.reason_of_t
@@ -78,11 +78,11 @@ let dump_types printer raw_printer cx =
 (********)
 
 let fill_types cx =
-  Flow_js.suggested_type_cache := IMap.empty;
+  Type_normalizer.suggested_type_cache := IMap.empty;
   Hashtbl.fold Loc.(fun loc t list ->
     let line = loc._end.line in
     let end_ = loc._end.column in
-    let t = Flow_js.printified_type cx t in
+    let t = Type_normalizer.printified_type cx t in
     if Type_printer.is_printed_type_parsable cx t then
       (line, end_, spf ": %s" (Type_printer.string_of_t cx t))::list
     else list

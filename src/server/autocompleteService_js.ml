@@ -159,7 +159,7 @@ let autocomplete_member
   let result_map = autocomplete_filter_members result_map in
   let result_map = SMap.mapi (fun name t ->
       let loc = Type.loc_of_t t in
-      let gt = printified_type cx t in
+      let gt = Type_normalizer.printified_type cx t in
       autocomplete_create_result cx name gt loc
     ) result_map in
   error, List.rev (SMap.values result_map)
@@ -185,7 +185,7 @@ let autocomplete_id cx env =
       in
 
       let type_ = Scope.Entry.actual_type entry in
-      let type_ = Flow_js.printified_type cx type_ in
+      let type_ = Type_normalizer.printified_type cx type_ in
       let result =
         autocomplete_create_result cx name type_ loc in
       result :: acc
@@ -195,7 +195,7 @@ let autocomplete_id cx env =
 
 let autocomplete_get_results timing client_logging_context cx state parse_result =
   (* FIXME: See #5375467 *)
-  Flow_js.suggested_type_cache := IMap.empty;
+  Type_normalizer.suggested_type_cache := IMap.empty;
   match !state with
   | Some { ac_type = Acid (env); _; } ->
       autocomplete_id cx env

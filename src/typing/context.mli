@@ -70,3 +70,6 @@ val set_graph: t -> Constraint_js.node IMap.t -> unit
 val set_module_exports_type: t -> module_exports_type -> unit
 val set_property_maps: t -> Type.properties IMap.t -> unit
 val set_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit
+
+(* constructors *)
+val make_property_map: t -> Type.properties -> Constraint_js.ident

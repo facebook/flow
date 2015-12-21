@@ -148,3 +148,9 @@ let set_property_maps cx property_maps =
   cx.property_maps <- property_maps
 let set_tvar cx id node =
   cx.graph <- IMap.add id node cx.graph
+
+(* constructors *)
+let make_property_map cx pmap =
+  let id = Reason_js.mk_id () in
+  add_property_map cx id pmap;
+  id

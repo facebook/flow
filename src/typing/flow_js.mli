@@ -120,18 +120,10 @@ val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 (* strict *)
 val check_types: Context.t -> Constraint_js.ident -> (Type.t -> bool) -> bool
 val enforce_strict: Context.t -> Constraint_js.ident -> unit
-val suggested_type_cache: Type.t IMap.t ref
 val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
 val resolve_type: Context.t -> Type.t -> Type.t
 val possible_types: Context.t -> Constraint_js.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
-
-val ground_type: Context.t -> Type.t -> Type.t
-val normalize_type: Context.t -> Type.t -> Type.t
-(* this optimizes a normalized type for printability *)
-val printify_type: Context.t -> Type.t -> Type.t
-(* returns a grounded(, normalized) and printified version of the type *)
-val printified_type: Context.t -> Type.t -> Type.t
 
 module Autocomplete : sig
   type member_result =
