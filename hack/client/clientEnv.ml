@@ -23,7 +23,7 @@ type client_mode =
 | MODE_OUTLINE
 | MODE_METHOD_JUMP_CHILDREN of string
 | MODE_METHOD_JUMP_ANCESTORS of string
-| MODE_REFACTOR
+| MODE_REFACTOR of string * string * string
 | MODE_FIND_CLASS_REFS of string
 | MODE_ARGUMENT_INFO of string
 (* TODO figure out why we can't reference FuzzySearchService from here *)
@@ -63,7 +63,7 @@ let mode_to_string = function
   | MODE_OUTLINE -> "MODE_OUTLINE"
   | MODE_METHOD_JUMP_CHILDREN _ -> "MODE_METHOD_JUMP_CHILDREN"
   | MODE_METHOD_JUMP_ANCESTORS _ -> "MODE_METHOD_JUMP_ANCESTORS"
-  | MODE_REFACTOR -> "MODE_REFACTOR"
+  | MODE_REFACTOR _ -> "MODE_REFACTOR"
   | MODE_FIND_CLASS_REFS _ -> "MODE_FIND_CLASS_REFS"
   | MODE_ARGUMENT_INFO _ -> "MODE_ARGUMENT_INFO"
   | MODE_SEARCH _ -> "MODE_SEARCH"

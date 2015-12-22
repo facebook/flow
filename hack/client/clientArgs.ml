@@ -66,6 +66,8 @@ let parse_check_args cmd =
   let version = ref false in
   let monitor_logname = ref false in
   let logname = ref false in
+  let refactor_mode = ref "" in
+  let refactor_before = ref "" in
 
   (* custom behaviors *)
   let set_from x () = from := x in
@@ -146,8 +148,16 @@ let parse_check_args cmd =
         "";
     "--identify-function", Arg.String (fun x -> set_mode (MODE_IDENTIFY_FUNCTION x) ()),
       " (mode) print the full function name at the position [line:character] of the text on stdin";
-    "--refactor", Arg.Unit (set_mode MODE_REFACTOR),
-      "";
+    "--refactor", Arg.Tuple ([
+        Arg.Symbol (
+          ["Class"; "Function"; "Method"],
+          (fun x -> refactor_mode := x));
+        Arg.String (fun x -> refactor_before := x);
+        Arg.String (fun x ->
+          set_mode (MODE_REFACTOR (!refactor_mode, !refactor_before, x)) ())
+      ]),
+      " (mode) rename a symbol, Usage: --refactor " ^
+      "[\"Class\", \"Function\", \"Method\"] <Current Name> <New Name>";
     "--search", Arg.String (fun x -> set_mode (MODE_SEARCH (x, "")) ()),
       " (mode) fuzzy search symbol definitions";
     "--search-class",
