@@ -3,6 +3,6 @@ D2172778-tainted.js:8:7,23: assignment of property `location`
 Error:
 D2172778-tainted.js:8:27,38: taint
 This type is incompatible with
-[LIB] dom.js:319:15,22: Location
+[LIB] dom.js:320:15,22: Location
 
 Found 1 error
