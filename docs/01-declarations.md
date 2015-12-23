@@ -11,7 +11,7 @@ Take the following code snippet:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var M = require('M');
+const M = require('M');
 M.foo(new C());
 {% endhighlight %}
 
@@ -71,7 +71,7 @@ available in the file on which it is checking.
 Assuming we have the declarations above, now when running Flow against this code:
 
 {% highlight javascript linenos=table %}
-var M = require('M');
+const M = require('M');
 M.foo(new C());
 {% endhighlight %}
 
@@ -84,7 +84,7 @@ No errors!
 A module declaration can also use a string literal to describe the path used to refer to that module in `require` statements.
 Thus, when you have:
 {% highlight javascript linenos=table %}
-var M = require('path/to/M');
+const M = require('path/to/M');
 ...
 {% endhighlight %}
 

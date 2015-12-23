@@ -18,7 +18,7 @@ Here is a simple example:
 {% highlight javascript linenos=table %}
 /* @flow */
 type T = number;
-var x: T = 0;
+const x: T = 0;
 {% endhighlight %}
 
 We declare the new type `T` is an alias for the built-in type `number`. 
@@ -32,7 +32,7 @@ Aliases are type checked the same way as any other type.
 {% highlight javascript linenos=table %}
 /* @flow */
 type T = Array<string>;
-var x: T = [];
+const x: T = [];
 x["Hi"] = 2;
 {% endhighlight %}
 
@@ -56,7 +56,7 @@ work:
 {% highlight javascript linenos=table %}
 /* @flow */
 type T = Array<string>;
-var x: T = [];
+const x: T = [];
 x[2] = "Hi";
 {% endhighlight %}
 
@@ -75,8 +75,8 @@ type F<U, V> = (x: U) => V;
 
 // The function foo applies a given function f to a given argument x
 function foo<X, Y>(f: F<X, Y>, x: X): Y { return f(x); }
-var b: boolean = true;
-var result: string = foo (function(x) { return b; }, 0);
+const b: boolean = true;
+const result: string = foo (function(x) { return b; }, 0);
 {% endhighlight %}
 
 We alias a function (via the `=>` syntax), to `F<U, V>`. So whenever `F<U, V>` 

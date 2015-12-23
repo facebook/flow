@@ -12,8 +12,8 @@ data type of an expression. Here is a simple example:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var index: number = 10;
-var result: string = typeof index;
+const index: number = 10;
+const result: string = typeof index;
 // result: 'number'
 {% endhighlight %}
 
@@ -27,8 +27,8 @@ Take the following code example:
 {% highlight javascript linenos=table %}
 /* @flow */
 class X {}
-var a = X; // a infers its type from X
-var b: typeof X; // b has the same type as X. It is the same as a
+const a = X; // a infers its type from X
+const b: typeof X; // b has the same type as X. It is the same as a
 {% endhighlight %}
 
 There is no real advantage of using `typeof` for variable typing in the above 
@@ -43,9 +43,9 @@ class X {
     return 'Hi';
   }
 }
-var a: X = new X();
+const a: X = new X();
 a.bar(); // Type error
-var b: typeof X = X;
+const b: typeof X = X;
 b.bar(); // Good
 {% endhighlight %}
 
@@ -71,7 +71,7 @@ whether that is a class, module or some other construct.
 /* @flow */
 class Foo { }
 // b ends up being a Foo type, since f evaluates to Foo
-var b: { f : typeof Foo } = { f : Foo };
+const b: { f : typeof Foo } = { f : Foo };
 // Since f is Foo, and b is of a Foo type, we can instantiate b as Foo 
 new b.f();
 {% endhighlight %}
@@ -82,8 +82,8 @@ Let's see an example where we use `typeof` and Flow will catch a typing error:
 /* @flow */
 class Foo { }
 class Bar { }
-var b: { f : typeof Foo } = { f : Foo };
-var c: { g : typeof Bar } = { g : Bar };
+const b: { f : typeof Foo } = { f : Foo };
+const c: { g : typeof Bar } = { g : Bar };
 // b is of type Foo, not of type Bar (g is a Bar )
 new b.g();
 {% endhighlight %}

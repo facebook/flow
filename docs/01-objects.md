@@ -12,7 +12,7 @@ based on their initializers.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var o = {
+const o = {
   x: 42,
   foo(x) { this.x = x; }
 };
@@ -43,7 +43,7 @@ Here is an example of declaring an object type:
 {% highlight javascript linenos=table %}
 /* @flow */
 class Foo {}
-var obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Foo()}
+const obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Foo()}
 {% endhighlight %}
 
 Here is an example of Flow catching a problem with your object type:
@@ -52,7 +52,7 @@ Here is an example of Flow catching a problem with your object type:
 /* @flow */
 class Foo {}
 class Bar {}
-var obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Bar()}
+const obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Bar()}
 {% endhighlight %}
 
 ```bbcode
@@ -73,7 +73,7 @@ function sayHello(data: MyType) {
   console.log(data.message);
 }
 
-var mySampleData: MyType = {message: 'Hello World', isAwesome: true};
+const mySampleData: MyType = {message: 'Hello World', isAwesome: true};
 sayHello(mySampleData);
 sayHello({message: 'Hi', isAwesome: false});
 {% endhighlight %}
@@ -85,7 +85,7 @@ optional properties allow objects with missing properties to be typed.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var obj: { a: string; b?: number } = { a: "hello" };
+const obj: { a: string; b?: number } = { a: "hello" };
 {% endhighlight %}
 
 When optional properties are accessed, Flow tracks the fact that they could
@@ -93,7 +93,7 @@ be `undefined`, and reports errors when they are used as is.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var obj: { a: string; b?: number } = { a: "hello" };
+const obj: { a: string; b?: number } = { a: "hello" };
 obj.b * 10 // error: undefined is incompatible with number
 {% endhighlight %}
 
@@ -117,8 +117,8 @@ prototype chaining.
 function Foo(x) { this.x = x; }
 Foo.prototype.f = function() { return this.x; }
 
-var o = new Foo(42);
-var x: number = o.f();
+const o = new Foo(42);
+const x: number = o.f();
 {% endhighlight %}
 
 In this code, a `new` object is created by `new Foo(42)`; this object has a
@@ -133,7 +133,7 @@ based on class inheritance.) This means that the following code typechecks:
 
 {% highlight javascript linenos=table %}
 ...
-var o: Foo = new Foo(42);
+const o: Foo = new Foo(42);
 {% endhighlight %}
 
 ## Adding properties
@@ -162,7 +162,7 @@ For example, the following code typechecks:
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
 
-var o = { };
+const o = { };
 o.f = function() { return this.x; };
 
 bar(o);
@@ -179,11 +179,11 @@ Fortunately, though, the following code does not typecheck:
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
 
-var o = { };
+const o = { };
 o.f = function() { return this.x; };
 
 foo(o);
-var x: string = bar(o);
+const x: string = bar(o);
 {% endhighlight %}
 
 ```bbcode

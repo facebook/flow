@@ -12,15 +12,15 @@ you to extract data from structured values. Here is a simple example:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var arr = [1, '', true];
-var [a, b, c] = arr;
+const arr = [1, '', true];
+const [a, b, c] = arr;
 // a: number (1), b: string (''), c : boolean (true)
 {% endhighlight %}
 
 The canonical example of destructuring is swapping:
 
 {% highlight javascript linenos=table %}
-var a = 1, b = 2;
+let a = 1, b = 2;
 [a, b] = [b, a];
 // a = 2, b = 1
 {% endhighlight %}
@@ -31,12 +31,12 @@ Flow can verify that any destructuring in your code is type-safe.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var arr = [1, '', 'Hello', true];
+const arr = [1, '', 'Hello', true];
 // If you only care about some of the return values, you can skip some
 // elements with , ,
-var [a, b, ,c] = arr;
+const [a, b, ,c] = arr;
 // a: number (1), b: string (''), c : boolean (true)
-var z: number = a * c;
+const z: number = a * c;
 {% endhighlight %} 
 
 Above we have a four (4) element array `arr` (actually a 
@@ -57,9 +57,9 @@ Found 1 error
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var {x, y, ...o} = {x: '', y: 3, o: {z: false} }
+const {x, y, ...o} = {x: '', y: 3, o: {z: false} }
 // x: string, y: number, o: {z: boolean}
-var z: number = o;
+const z: number = o;
 {% endhighlight %}
 
 ```bbcode

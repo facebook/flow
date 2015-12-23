@@ -50,11 +50,11 @@ class MyClass {
 function MyConstructorFunc() {}
 MyConstructorFunc.prototype.myMethod = function() { return 42; };
 
-var a: MyClass = new MyClass(); // Valid!
-var b: number = a.myMethod(); // Valid!
+const a: MyClass = new MyClass(); // Valid!
+const b: number = a.myMethod(); // Valid!
 
-var c: MyConstructorFunc = new MyConstructorFunc(); // Valid!
-var d: number = c.myMethod(); // Valid!
+const c: MyConstructorFunc = new MyConstructorFunc(); // Valid!
+const d: number = c.myMethod(); // Valid!
 ```
 
 ## Notes And Caveats
@@ -75,12 +75,12 @@ Using this "backdoor" is dangerous and not recommended, but it is sometimes nece
 Example:
 
 ```javascript
-var a: any = 'some string'; // Valid!
-var b: any = undefined; // Valid!
-var c: any = 42; // Valid!
+const a: any = 'some string'; // Valid!
+const b: any = undefined; // Valid!
+const c: any = 42; // Valid!
 
 function foo(): any { return 42; }
-var d: string = foo(); // Valid! ('any' may flow into any other type!)
+const d: string = foo(); // Valid! ('any' may flow into any other type!)
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -92,12 +92,12 @@ For arrays that have a fixed size and/or elements whose types aren't homogenous,
 Example:
 
 ```javascript
-var a: Array<number> = [42]; // Valid!
-var b: Array<number> = ['some string']; // Type error!
-var c: Array<number> = [42, 'some string']; // Type error!
+const a: Array<number> = [42]; // Valid!
+const b: Array<number> = ['some string']; // Type error!
+const c: Array<number> = [42, 'some string']; // Type error!
 
-var myNumbers: Array<number> = [42];
-var d: number = myNumbers[0]; // Valid!
+const myNumbers: Array<number> = [42];
+const d: number = myNumbers[0]; // Valid!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -109,9 +109,9 @@ Note that there are many implicit conversions to `boolean` in JavaScript. Flow u
 Example:
 
 ```javascript
-var a: boolean = true; // Valid!
-var b: boolean = false; // Valid!
-var c: boolean = 42; // Type error!
+const a: boolean = true; // Valid!
+const b: boolean = false; // Valid!
+const c: boolean = 42; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -121,8 +121,8 @@ This type describes objects created from JavaScript's built-in `Boolean` constru
 Example:
 
 ```javascript
-var a: Boolean = new Boolean(true); // Valid!
-var b: Boolean = true; // Type error!
+const a: Boolean = new Boolean(true); // Valid!
+const b: Boolean = true; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -140,13 +140,13 @@ class MyClass {
   myMethod() { return 42; }
 }
 
-var a: Class<MyClass> = MyClass; // Valid!
-var b: MyClass = new a(); // Valid!
+const a: Class<MyClass> = MyClass; // Valid!
+const b: MyClass = new a(); // Valid!
 
-var c: Class<MyClass> = new MyClass(); // Type error!
+const c: Class<MyClass> = new MyClass(); // Type error!
 
-var d = 42;
-var e: Class<d> = Number; // Error! 'd' is a runtime value, not a type!
+const d = 42;
+const e: Class<d> = Number; // Error! 'd' is a runtime value, not a type!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -156,15 +156,15 @@ This type describes *any* function. Any kind of function may flow into it, and a
 Example:
 
 ```javascript
-var a: Function = function() {}; // Valid!
-var b: Function = p => p; // Valid!
-var c: Function = 42; // Type error!
+const a: Function = function() {}; // Valid!
+const b: Function = p => p; // Valid!
+const c: Function = 42; // Type error!
 
 // Valid! (`Function` may flow into any function type)
 function foo(): Function { 
   return function(x: number): number { return x; }
 }
-var d: (str: string) => string = foo(); // Valid!
+const d: (str: string) => string = foo(); // Valid!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -176,12 +176,12 @@ Beware of the difference between `mixed` and `any`; `mixed` is a taint that ensu
 Example:
 
 ```javascript
-var a: mixed = 'some string'; // Valid!
-var b: mixed = undefined; // Valid!
-var c: mixed = 42; // Valid!
+const a: mixed = 'some string'; // Valid!
+const b: mixed = undefined; // Valid!
+const c: mixed = 42; // Valid!
 
 function foo(): mixed { return 42; }
-var d: string = foo(); // Error! ('mixed' may not flow to any other type!)
+const d: string = foo(); // Error! ('mixed' may not flow to any other type!)
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -191,8 +191,8 @@ This type describes a number in JavaScript.
 Example:
 
 ```javascript
-var a: number = 42; // Valid!
-var b: number = 'str'; // Type error!
+const a: number = 42; // Valid!
+const b: number = 'str'; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -202,8 +202,8 @@ This type describes objects created from JavaScript's built-in `Number` construc
 Example:
 
 ```javascript
-var a: Number = new Number(42); // Valid!
-var b: Number = 42; // Type error!
+const a: Number = new Number(42); // Valid!
+const b: Number = 42; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -213,12 +213,12 @@ This type describes *any* object. Any kind of object may flow into it, and any i
 Example:
 
 ```javascript
-var a: Object = {}; // Valid!
-var b: Object = new RegExp(); // Valid!
-var d: Object = 42; // Type error!
+const a: Object = {}; // Valid!
+const b: Object = new RegExp(); // Valid!
+const d: Object = 42; // Type error!
 
 function foo(): Object { return {}; }
-var e: MyClass = foo(); // Valid! (`Object` may flow into any object type)
+const e: MyClass = foo(); // Valid! (`Object` may flow into any object type)
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -228,8 +228,8 @@ This type describes a string in JavaScript.
 Example:
 
 ```javascript
-var a: string = 'some string'; // Valid!
-var b: string = 42; // Type error!
+const a: string = 'some string'; // Valid!
+const b: string = 42; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -239,8 +239,8 @@ This type describes objects created from JavaScript's built-in `String` construc
 Example:
 
 ```javascript
-var a: String = new String('hai!'); // Valid!
-var b: String = 'hai!'; // Type error!
+const a: String = new String('hai!'); // Valid!
+const b: String = 'hai!'; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -252,8 +252,8 @@ Normally you only want to use this type to describe the return type of functions
 Example:
 
 ```javascript
-var a: void = undefined; // Valid!
-var b: void = 42; // Type error!
+const a: void = undefined; // Valid!
+const b: void = 42; // Type error!
 ```
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
@@ -264,18 +264,18 @@ Example:
 
 ```javascript
 // Valid!
-var a: {prop1: number, prop2: string} = {
+const a: {prop1: number, prop2: string} = {
   prop1: 42,
   prop2: 'asdf',
 };
 
 // Type error! Missing a `prop2` property
-var b: {prop1: number, prop2: string} = {
+const b: {prop1: number, prop2: string} = {
   prop1: 42,
 };
 
 // Type error! `prop2 property types don't match!
-var c: {prop1: number, prop2: string} = {
+const c: {prop1: number, prop2: string} = {
   prop1: 42,
   prop2: 42, // Type error!
 };
@@ -289,12 +289,12 @@ Example:
 
 ```javascript
 // Valid!
-var add: ((num1: number, num2: number) => number) = function(num1, num2) {
+const add: ((num1: number, num2: number) => number) = function(num1, num2) {
   return num1 + num2;
 };
 
 // Type error! Parameter types don't match!
-var badTypeAnnotation: ((num1: number, num2: number) => number) =
+const badTypeAnnotation: ((num1: number, num2: number) => number) =
   function(str1: string, str2: string) {
     return str1.length + str2.length;
   };
@@ -309,7 +309,7 @@ Example:
 ```javascript
 // Valid!
 function getStrProcessor(token: string): { (str: string): string, token: string} {
-  var processor = function(str) {
+  const processor = function(str) {
     return str.replace(token, '<<PROCESSED>>');
   };
   processor.token = token;
