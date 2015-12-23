@@ -24,14 +24,18 @@ let name_suffix_of_t = function
 let parameter_name cx n t =
   (name_prefix_of_t t) ^ n ^ (name_suffix_of_t t)
 
+let prop_name cx n t =
+  n ^ (name_suffix_of_t t)
+
 type enclosure_t =
-    EnclosureNone
+  | EnclosureNone
   | EnclosureUnion
   | EnclosureIntersect
   | EnclosureParam
   | EnclosureMaybe
   | EnclosureAppT
   | EnclosureRet
+  | EnclosureProp
 
 let parenthesize t_str enclosure triggers =
   if List.mem enclosure triggers
@@ -67,10 +71,8 @@ let rec type_printer override fallback enclosure cx t =
           | None -> List.map (fun _ -> "_") ts in
         let type_s = spf "(%s) => %s"
           (List.map2 (fun n t ->
-              (parameter_name cx n t) ^
-              ": "
-              ^ (pp EnclosureParam cx t)
-            ) pns ts
+             (parameter_name cx n t) ^ ": " ^ (pp EnclosureParam cx t))
+             pns ts
            |> String.concat ", "
           )
           (pp EnclosureNone cx t) in
@@ -83,15 +85,16 @@ let rec type_printer override fallback enclosure cx t =
           |> SMap.elements
           |> List.filter (fun (x,_) -> not (Reason_js.is_internal_name x))
           |> List.rev
-          |> List.map (fun (x,t) -> x ^ ": " ^ (pp EnclosureNone cx t) ^ ",")
-          |> String.concat " "
+          |> List.map (fun (x,t) ->
+               (prop_name cx x t) ^ ": " ^ (pp EnclosureProp cx t))
+          |> String.concat ", "
         in
         let indexer =
           (match dict_t with
           | Some { dict_name; key; value } ->
               let indexer_prefix =
                 if props <> ""
-                then " "
+                then ", "
                 else ""
               in
               let dict_name = match dict_name with
@@ -162,6 +165,13 @@ let rec type_printer override fallback enclosure cx t =
           ) in
         parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
 
+    | OptionalT t ->
+        let type_s = pp EnclosureNone cx t in
+        begin match enclosure with
+        | EnclosureParam | EnclosureProp -> type_s
+        | _ -> "void | " ^ type_s
+        end
+
     (* The following types are not syntax-supported in all cases *)
     | RestT t ->
         let type_s =
@@ -169,12 +179,6 @@ let rec type_printer override fallback enclosure cx t =
         if enclosure == EnclosureParam
         then type_s
         else "..." ^ type_s
-
-    | OptionalT t ->
-        let type_s = pp EnclosureNone cx t in
-        if enclosure == EnclosureParam
-        then type_s
-        else "=" ^ type_s
 
     | AnnotT (_, t) -> pp EnclosureNone cx t
     | KeysT (_, t) -> spf "$Keys<%s>" (pp EnclosureNone cx t)
@@ -275,10 +279,14 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
           is_printed_type_list_parsable weak cx EnclosureNone t*)
 
   | RestT t
-  | OptionalT t
     when (enclosure == EnclosureParam)
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
+
+  | OptionalT t ->
+      is_printed_type_parsable_impl weak cx EnclosureNone t
+
+  | VoidT _ -> true
 
   | FunT (_, _, _, { params_tlist; return_t; _ })
     ->
@@ -333,7 +341,6 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   (* these are types which are not really parsable, but they make sense to a
      human user in cases of autocompletion *)
-  | OptionalT t
   | RestT t
   | TypeT (_, t)
   | LowerBoundT t
@@ -343,11 +350,6 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     when weak
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
-
-  | VoidT _
-    when weak
-    ->
-      true
 
   | _
     ->

@@ -41,3 +41,6 @@ $FLOW autocomplete --strip-root --json typeparams.js 6 16 < typeparams.js
 
 printf "generics.js = "
 $FLOW autocomplete --strip-root --json generics.js 6 5 < generics.js
+
+printf "optional.js = "
+$FLOW autocomplete --strip-root --json optional.js 4 14 < optional.js

@@ -7,3 +7,9 @@
 {"type":"F<number>","reasons":[],"path":"generics.js","line":18,"endline":18,"start":1,"end":2}
 {"type":"O<number>","reasons":[],"path":"generics.js","line":22,"endline":22,"start":1,"end":2}
 {"type":"(unknown)","reasons":[],"path":"generics.js","line":26,"endline":26,"start":1,"end":2}
+{"type":"void | string","reasons":[],"path":"optional.js","line":4,"endline":4,"start":10,"end":10}
+{"type":"(x?: string) => void | string","reasons":[],"path":"optional.js","line":7,"endline":7,"start":1,"end":3}
+{"type":"void | string","reasons":[{"desc":"undefined","path":"optional.js","line":7,"endline":7,"start":1,"end":5},{"desc":"string","path":"optional.js","line":7,"endline":7,"start":1,"end":5}],"path":"optional.js","line":7,"endline":7,"start":1,"end":5}
+{"type":"{x?: string}","reasons":[],"path":"optional.js","line":10,"endline":10,"start":10,"end":12}
+{"type":"void | string","reasons":[{"desc":"undefined","path":"optional.js","line":10,"endline":10,"start":10,"end":14},{"desc":"string","path":"optional.js","line":10,"endline":10,"start":10,"end":14}],"path":"optional.js","line":10,"endline":10,"start":10,"end":14}
+{"type":"(unknown)","reasons":[],"path":"optional.js","line":14,"endline":14,"start":10,"end":10}

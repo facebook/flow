@@ -23,13 +23,14 @@ val is_printed_param_type_parsable:
  *)
 
 type enclosure_t =
-    EnclosureNone
+  | EnclosureNone
   | EnclosureUnion
   | EnclosureIntersect
   | EnclosureParam
   | EnclosureMaybe
   | EnclosureAppT
   | EnclosureRet
+  | EnclosureProp
 
 val type_printer:
   (Context.t -> Type.t -> string option) ->
