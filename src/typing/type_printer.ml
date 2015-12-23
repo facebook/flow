@@ -119,12 +119,12 @@ let rec type_printer override fallback enclosure cx t =
         end
 
     | InstanceT (reason,static,super,instance) ->
-        desc_of_reason reason (* nominal type *)
+        DescFormat.name_of_instance_reason reason
 
     | TypeAppT (c,ts) ->
         let type_s =
-          spf "%s <%s>"
-            (pp EnclosureAppT cx c)
+          spf "%s<%s>"
+            (instance_of_poly_type_printer override fallback EnclosureAppT cx c)
             (ts
               |> List.map (pp EnclosureNone cx)
               |> String.concat ", "
@@ -205,6 +205,16 @@ let rec type_printer override fallback enclosure cx t =
 
     | t ->
         fallback t
+
+and instance_of_poly_type_printer override fallback enclosure cx = function
+  | PolyT (_, ThisClassT t)
+  | PolyT (_, ClassT t)
+    -> type_printer override fallback enclosure cx t
+
+  | PolyT (_, TypeT (reason, t))
+    -> DescFormat.name_of_type_reason reason
+
+  | _ -> failwith "expected polymorphic type"
 
 (* pretty printer *)
 let string_of_t_ =
@@ -313,6 +323,12 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | AnyObjT _ -> true
   | AnyFunT _ -> true
 
+  | ThisTypeAppT (t, _, ts)
+  | TypeAppT (t, ts)
+    ->
+      (is_instantiable_poly_type weak cx EnclosureAppT t) &&
+      (is_printed_type_list_parsable weak cx EnclosureNone ts)
+
   (* weak mode *)
 
   (* these are types which are not really parsable, but they make sense to a
@@ -333,18 +349,19 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  (* This gives really ugly output, but would need to figure out a better way
-     to print these types otherwise, maybe substitute on printing? *)
-  | ThisTypeAppT (t, _, ts)
-  | TypeAppT (t, ts)
-    when weak
-    ->
-      (is_printed_type_parsable_impl weak cx EnclosureAppT t) &&
-      (is_printed_type_list_parsable weak cx EnclosureNone ts)
-
   | _
     ->
       false
+
+and is_instantiable_poly_type weak cx enclosure = function
+  | PolyT (_, ThisClassT t)
+  | PolyT (_, ClassT t)
+    -> is_printed_type_parsable_impl weak cx enclosure t
+
+  | PolyT (_, TypeT _)
+    -> true
+
+  | _ -> false
 
 and is_printed_type_list_parsable weak cx enclosure ts =
   List.fold_left (fun acc t ->

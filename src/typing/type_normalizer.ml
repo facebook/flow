@@ -130,9 +130,9 @@ let rec ground_type_impl cx ids t = match t with
   | ThisClassT t ->
       ClassT (ground_type_impl cx ids t)
 
-  | TypeT (_, t) ->
-      TypeT (reason_of_string "type",
-             ground_type_impl cx ids t)
+  | TypeT (reason, t) ->
+      let reason = reason_of_string (desc_of_reason reason) in
+      TypeT (reason, ground_type_impl cx ids t)
 
   | InstanceT (_, static, super, it) ->
       t (* nominal type *)

@@ -1,3 +1,9 @@
 {"type":"number","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
 {"raw_type":"{\n  \"reason\":{\n    \"pos\":{\"file\":\"\",\"start\":{\"line\":0,\"col\":0},\"end\":{\"line\":0,\"col\":0}},\n    \"desc\":\"number\"\n  },\n  \"kind\":\"NumT\"\n}","type":"number","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
 {"type":"[number, string]","reasons":[],"path":"test.js","line":8,"endline":8,"start":7,"end":13}
+{"type":"C<number>","reasons":[],"path":"generics.js","line":5,"endline":5,"start":1,"end":2}
+{"type":"C<number>","reasons":[],"path":"generics.js","line":10,"endline":10,"start":1,"end":2}
+{"type":"E<number>","reasons":[],"path":"generics.js","line":14,"endline":14,"start":1,"end":2}
+{"type":"F<number>","reasons":[],"path":"generics.js","line":18,"endline":18,"start":1,"end":2}
+{"type":"O<number>","reasons":[],"path":"generics.js","line":22,"endline":22,"start":1,"end":2}
+{"type":"(unknown)","reasons":[],"path":"generics.js","line":26,"endline":26,"start":1,"end":2}

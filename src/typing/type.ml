@@ -960,6 +960,26 @@ let reasonless_compare =
     if t == t' then 0 else
     compare t (swap_reason t' (reason_of_t t))
 
+(* Printing some types in parseable form relies on particular formats in
+   corresponding reason descriptions. The following module formalizes the
+   relevant conventions.
+
+   TODO: Encoding formats in strings instead of ADTs is not ideal, obviously. *)
+
+module DescFormat = struct
+  (* InstanceT reasons have desc = name *)
+  let instance_reason name loc =
+    mk_reason name loc
+  let name_of_instance_reason r =
+    desc_of_reason r
+
+  (* TypeT reasons have desc = type `name` *)
+  let type_reason name loc =
+    mk_reason (spf "type `%s`" name) loc
+  let name_of_type_reason r =
+    Str.global_replace (Str.regexp "type `\\(.*\\)`") "\\1" (desc_of_reason r)
+
+end
 
 (* printing *)
 let string_of_ctor = function

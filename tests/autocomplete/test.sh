@@ -34,7 +34,10 @@ printf "fun.js = "
 $FLOW autocomplete --strip-root --json fun.js 4 5 < fun.js
 
 printf "this.js = "
-$FLOW autocomplete --strip-root --json fun.js 8 10 < this.js
+$FLOW autocomplete --strip-root --json this.js 8 10 < this.js
 
 printf "typeparams.js = "
-$FLOW autocomplete --strip-root --json fun.js 6 16 < typeparams.js
+$FLOW autocomplete --strip-root --json typeparams.js 6 16 < typeparams.js
+
+printf "generics.js = "
+$FLOW autocomplete --strip-root --json generics.js 6 5 < generics.js
