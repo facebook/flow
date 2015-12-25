@@ -44,3 +44,9 @@ $FLOW autocomplete --strip-root --json generics.js 6 5 < generics.js
 
 printf "optional.js = "
 $FLOW autocomplete --strip-root --json optional.js 4 14 < optional.js
+
+printf "jsx1.js = "
+$FLOW autocomplete --strip-root --json jsx1.js 8 4 < jsx1.js
+
+printf "jsx2.js = "
+$FLOW autocomplete --strip-root --json jsx2.js 8 11 < jsx2.js

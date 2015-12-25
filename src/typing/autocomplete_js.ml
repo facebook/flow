@@ -9,8 +9,9 @@
  *)
 
 type autocomplete_type =
-| Acid of (Scope.Entry.t Utils.SMap.t)
-| Acmem of (Type.t)
+| Acid of Scope.Entry.t Utils.SMap.t
+| Acmem of Type.t
+| Acjsx of Type.t
 
 type autocomplete_state = {
   ac_name: string;
@@ -49,10 +50,23 @@ let autocomplete_member state cx ac_name ac_loc this_t =
   ) else
     false
 
+let autocomplete_jsx state cx ac_name ac_loc class_t =
+  if is_autocomplete ac_name
+  then (
+    state := Some ({
+      ac_name;
+      ac_loc;
+      ac_type = Acjsx (class_t);
+    });
+    true
+  ) else
+    false
+
 let autocomplete_set_hooks () =
   let state = ref None in
   Type_inference_hooks_js.set_id_hook (autocomplete_id state);
   Type_inference_hooks_js.set_member_hook (autocomplete_member state);
+  Type_inference_hooks_js.set_jsx_hook (autocomplete_jsx state);
   state
 
 let autocomplete_unset_hooks () =

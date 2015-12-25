@@ -4345,6 +4345,8 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
               name = Attribute.Identifier (_, { Identifier.name = aname });
               value
             }) ->
+          if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
+          then
             let atype = (match value with
               | Some (Attribute.Literal (loc, lit)) ->
                   literal cx loc lit

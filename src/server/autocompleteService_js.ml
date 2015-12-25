@@ -193,6 +193,29 @@ let autocomplete_id cx env =
   ) env []
   |> Utils_js.command_result_success
 
+(* Similar to autocomplete_member, except that we're not directly given an
+   object type whose members we want to enumerate: instead, we are given a
+   component class and we want to enumerate the members of its declared props
+   type, so we need to extract that and then route to autocomplete_member. *)
+let autocomplete_jsx
+  timing
+  client_logging_context
+  cx
+  cls
+  ac_name
+  ac_loc
+  parse_result = Flow_js.(
+    let reason = Reason_js.mk_reason ac_name ac_loc in
+    let component_instance = mk_instance cx reason cls in
+    let props_object = mk_tvar_where cx reason (fun tvar ->
+      flow cx (
+        component_instance,
+        Type.GetPropT (reason, (reason, "props"), tvar))
+    ) in
+    autocomplete_member
+      timing client_logging_context cx props_object ac_name ac_loc parse_result
+  )
+
 let autocomplete_get_results timing client_logging_context cx state parse_result =
   (* FIXME: See #5375467 *)
   Type_normalizer.suggested_type_cache := IMap.empty;
@@ -200,5 +223,8 @@ let autocomplete_get_results timing client_logging_context cx state parse_result
   | Some { ac_type = Acid (env); _; } ->
       autocomplete_id cx env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-      autocomplete_member timing client_logging_context cx this ac_name ac_loc parse_result
-  | _ -> Utils_js.command_result_success []
+      autocomplete_member timing client_logging_context cx this ac_name ac_loc
+  parse_result
+  | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
+      autocomplete_jsx timing client_logging_context cx cls ac_name ac_loc parse_result
+  | None -> Utils_js.command_result_success []
