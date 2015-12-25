@@ -122,31 +122,40 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t2 in
     acc
 
-  | BecomeT (_, t) -> self#type_ cx acc t
-  | ReposLowerT (_, t) -> self#type_ cx acc t
-
   | SpeculativeMatchT (_, t1, t2) ->
     let acc = self#type_ cx acc t1 in
-    let acc = self#type_ cx acc t2 in
+    let acc = self#use_type_ cx acc t2 in
     acc
 
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
 
+  | ReposUpperT (_, t) ->
+    self#type_ cx acc t
+
+  | ExtendsT (ts, t1, t2) ->
+    let acc = self#list (self#type_ cx) acc ts in
+    let acc = self#type_ cx acc t1 in
+    let acc = self#type_ cx acc t2 in
+    acc
+
+  method private use_type_ cx acc = function
+  | T t ->
+    self#type_ cx acc t
   (* Currently not walking use types. This will change in an upcoming diff. *)
   | SummarizeT (_, _)
   | ApplyT (_, _, _)
   | BindT (_, _)
   | CallT (_, _)
   | MethodT (_, _, _)
-  | ReposUpperT (_, _)
+  | BecomeT (_, _)
+  | ReposLowerT (_, _)
   | SetPropT (_, _, _)
   | GetPropT (_, _, _)
   | SetElemT (_, _, _)
   | GetElemT (_, _, _)
   | ConstructorT (_, _, _)
   | SuperT (_, _)
-  | ExtendsT (_, _, _)
   | AdderT (_, _, _)
   | ComparatorT (_, _)
   | PredicateT (_, _)

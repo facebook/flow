@@ -589,7 +589,7 @@ let declare_const = declare_value_entry Entry.Const
    foo(x);
 *)
 let force_general_type cx ({ Entry.general; _ } as value_binding) = Entry.(
-  Flow_js.flow cx (general, general);
+  Flow_js.flow_t cx (general, general);
   { value_binding with specific = general }
 )
 
@@ -606,7 +606,7 @@ let init_value_entry kind cx name ~has_anno specific reason =
     | Const, Value ({ kind = Const;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.(add_var_change (scope.id, name, Write));
-      Flow_js.flow cx (specific, v.general);
+      Flow_js.flow_t cx (specific, v.general);
       let value_binding = { v with value_state = State.Initialized; specific } in
       (* if binding is annotated, flow annotated type like initializer *)
       let new_entry = Value (
@@ -635,7 +635,7 @@ let init_type cx name _type reason =
     let scope, entry = find_entry cx name reason in
     match entry with
     | Type ({ type_state = State.Declared; _ } as t)->
-      Flow_js.flow cx (_type, t._type);
+      Flow_js.flow_t cx (_type, t._type);
       let new_entry = Type { t with type_state = State.Initialized; _type } in
       Scope.add_entry name new_entry scope
     | _ ->
@@ -790,7 +790,7 @@ let update_var op cx name specific reason =
   | Value ({ kind = Let _ | Var; _ } as v) ->
     Changeset.(add_var_change (scope.id, name, op));
 
-    Flow_js.flow cx (specific, v.general);
+    Flow_js.flow_t cx (specific, v.general);
     (* add updated entry *)
     let update = Entry.Value {
       v with
@@ -823,7 +823,7 @@ let refine_const cx name specific reason =
 
   | Value v when v.kind = Const ->
     Changeset.(add_var_change (scope.id, name, Refine));
-    Flow_js.flow cx (specific, v.general);
+    Flow_js.flow_t cx (specific, v.general);
     let update = Entry.Value {
       v with value_state = State.Initialized; specific
     } in
@@ -879,8 +879,8 @@ let merge_env =
 
   let create_union cx reason l1 l2 =
     Flow_js.mk_tvar_where cx reason (fun tvar ->
-      Flow_js.flow cx (l1, tvar);
-      Flow_js.flow cx (l2, tvar);
+      Flow_js.flow_t cx (l1, tvar);
+      Flow_js.flow_t cx (l2, tvar);
     )
   in
 
@@ -896,7 +896,7 @@ let merge_env =
     else
       let reason = replace_reason name reason in
       let tvar = create_union cx reason specific1 specific2 in
-      Flow_js.flow cx (tvar, general0);
+      Flow_js.flow_t cx (tvar, general0);
       tvar, general0
   in
 
@@ -1028,7 +1028,7 @@ let copy_env =
     (* for values, flow env2's specific type into env1's specific type *)
     | Some Value v1, Some Value v2 ->
       (* flow child2's specific type to child1 in place *)
-      Flow_js.flow cx (v2.specific, v1.specific);
+      Flow_js.flow_t cx (v2.specific, v1.specific);
       (* udpate state *)
       if v1.value_state < State.Initialized
         && v2.value_state >= State.MaybeInitialized
@@ -1075,7 +1075,7 @@ let copy_env =
     match get scope0, get scope1 with
     (* flow child refi's type back to parent *)
     | Some { refined = t1; _ }, Some { refined = t2; _ } ->
-      Flow_js.flow cx (t2, t1)
+      Flow_js.flow_t cx (t2, t1)
     (* uneven cases imply refi was added after splitting: remove *)
     | _ ->
       ()
@@ -1103,8 +1103,8 @@ let widen_env =
     else
       let reason = replace_reason name reason in
       let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.flow cx (specific, tvar);
-      Flow_js.flow cx (tvar, general);
+      Flow_js.flow_t cx (specific, tvar);
+      Flow_js.flow_t cx (tvar, general);
       Some tvar
   in
 

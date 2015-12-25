@@ -44,7 +44,7 @@ open Type
    (The formatting we do in reasons_of_trace recovers the graph
    structure for readability.)
  *)
-type step = Type.t * Type.t * parent * int
+type step = Type.t * Type.use_t * parent * int
 and t = step list
 and parent = Parent of t
 
@@ -134,7 +134,7 @@ let pos_len r =
 let max_pos_len_and_depth limit trace =
   let rec f (len, depth) (lower, upper, parent, _) =
     let len = max len (pos_len (reason_of_t lower)) in
-    let len = max len (pos_len (reason_of_t upper)) in
+    let len = max len (pos_len (reason_of_use_t upper)) in
     if depth > limit then len, depth
     else (
       match parent with
@@ -174,17 +174,17 @@ let reasons_of_trace ?(level=0) trace =
 
   let tmap, imap = index_trace level trace in
 
-  let print_step steps i (lower, upper, Parent parent, _) =
+  let print_step (steps: step list) i (lower, upper, Parent parent, _) =
     (* omit lower if it's a pipelined tvar *)
     (if i > 0 &&
-      lower = (match List.nth steps (i - 1) with (_, upper, _, _) -> upper)
+      T lower = (match List.nth steps (i - 1) with (_, upper, _, _) -> upper)
     then []
     else [pretty_r max_pos_len (reason_of_t_add_id lower)
       (spf "%s " (string_of_ctor lower)) ""]
     )
     @
-    [pretty_r max_pos_len (reason_of_t_add_id upper)
-      (spf "~> %s " (string_of_ctor upper))
+    [pretty_r max_pos_len (reason_of_use_t_add_id upper)
+      (spf "~> %s " (string_of_use_ctor upper))
       (if parent = []
         then ""
         else match TraceMap.get parent tmap with
@@ -194,7 +194,7 @@ let reasons_of_trace ?(level=0) trace =
     ]
   in
 
-  let print_path i steps =
+  let print_path i (steps: step list) =
     (reason_of_string (spf "* path %d:" (i + 1))) ::
     List.concat (List.mapi (print_step steps) steps)
   in

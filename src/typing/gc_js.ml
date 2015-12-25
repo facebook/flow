@@ -187,7 +187,7 @@ let rec gc cx state = function
 
   | SpeculativeMatchT (_, t1, t2) ->
       gc cx state t1;
-      gc cx state t2
+      gc_use cx state t2
 
   | ModuleT (_, {exports_tmap; cjs_export}) ->
       Flow_js.iter_props cx exports_tmap (fun _ -> gc cx state);
@@ -197,6 +197,16 @@ let rec gc cx state = function
       )
 
   | ReposUpperT (_, t) ->
+      gc cx state t
+
+  | ExtendsT (ts, t1, t2) ->
+      ts |> List.iter (gc cx state);
+      gc cx state t1;
+      gc cx state t2
+
+and gc_use cx state = function
+
+  | T t ->
       gc cx state t
 
   (** use types **)
@@ -246,11 +256,6 @@ let rec gc cx state = function
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
       Flow_js.iter_props cx instance.fields_tmap (fun _ -> gc cx state);
       Flow_js.iter_props cx instance.methods_tmap (fun _ -> gc cx state)
-
-  | ExtendsT (ts, t1, t2) ->
-      ts |> List.iter (gc cx state);
-      gc cx state t1;
-      gc cx state t2
 
   | AdderT(_, t1, t2) ->
       gc cx state t1;
@@ -326,10 +331,10 @@ let rec gc cx state = function
       gc cx state t1;
       ts1 |> List.iter (gc cx state);
       ts2 |> List.iter (gc cx state);
-      gc cx state t2
+      gc_use cx state t2
 
   | ConcreteT (t) ->
-      gc cx state t
+      gc_use cx state t
 
   | GetKeysT (_, t) ->
       gc cx state t
@@ -369,7 +374,7 @@ and gc_id cx state id =
       | Resolved t -> gc cx state t
       | Unresolved bounds ->
           bounds.lower |> TypeMap.iter (fun t _ -> gc cx state t);
-          bounds.upper |> TypeMap.iter (fun t _ -> gc cx state t);
+          bounds.upper |> UseTypeMap.iter (fun t _ -> gc_use cx state t);
     )
   );
   state#mark root_id |> ignore

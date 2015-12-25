@@ -80,7 +80,7 @@ and constraints =
 **)
 and bounds = {
   mutable lower: Trace.t TypeMap.t;
-  mutable upper: Trace.t TypeMap.t;
+  mutable upper: Trace.t UseTypeMap.t;
   mutable lowertvars: Trace.t IMap.t;
   mutable uppertvars: Trace.t IMap.t;
 }
@@ -97,7 +97,7 @@ let bounds_of_unresolved_root node =
 
 let new_bounds () = {
   lower = TypeMap.empty;
-  upper = TypeMap.empty;
+  upper = UseTypeMap.empty;
   lowertvars = IMap.empty;
   uppertvars = IMap.empty;
 }

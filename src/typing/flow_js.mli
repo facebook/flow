@@ -24,7 +24,11 @@ val find_constraints:
 val find_graph: Context.t -> Constraint_js.ident -> Constraint_js.constraints
 
 (* propagates sources to sinks following a subtype relation *)
-val flow: Context.t -> (Type.t * Type.t) -> unit
+val flow: Context.t -> (Type.t * Type.use_t) -> unit
+val flow_t: Context.t -> (Type.t * Type.t) -> unit
+
+(* given a use type, return a tvar constrained by the use type *)
+val constrain: Context.t -> Type.use_t -> Type.t
 
 val unify: Context.t -> Type.t -> Type.t -> unit
 

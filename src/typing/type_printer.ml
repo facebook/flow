@@ -192,9 +192,6 @@ let rec type_printer override fallback enclosure cx t =
     | TypeT (_, t) ->
         spf "[type: %s]" (pp EnclosureNone cx t)
 
-    | BecomeT (_, t) ->
-        spf "[become: %s]" (pp EnclosureNone cx t)
-
     | LowerBoundT t ->
         spf "$Subtype<%s>" (pp EnclosureNone cx t)
 

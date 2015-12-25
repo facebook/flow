@@ -205,13 +205,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "assume", _json_of_t json_cx t2
     ]
 
-  | BecomeT (_, t) -> [
-      "result", _json_of_t json_cx t
-    ]
-
   | SpeculativeMatchT (_, attempt, target) -> [
       "attemptType", _json_of_t json_cx attempt;
-      "targetType", _json_of_t json_cx target
+      "targetType", _json_of_use_t json_cx target
     ]
 
   | ModuleT (_, {exports_tmap; cjs_export;}) ->
@@ -226,6 +222,32 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "cjsExport", cjs_export;
     ]
 
+  | ReposUpperT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
+  | ExtendsT (_, t1, t2) -> [
+      "type1", _json_of_t json_cx t1;
+      "type2", _json_of_t json_cx t2
+    ]
+  )
+)
+
+and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
+and _json_of_use_t_impl json_cx t = Hh_json.(
+  JSON_Object ([
+    "reason", json_of_reason (reason_of_use_t t);
+    "kind", JSON_String (string_of_use_ctor t)
+  ] @
+  match t with
+  | T t -> [
+      "type", _json_of_t json_cx t
+    ]
+
+  | BecomeT (_, t) -> [
+      "result", _json_of_t json_cx t
+    ]
+
   | SummarizeT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -236,7 +258,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | ApplyT (_, l, funtype) -> [
-      "lower", _json_of_t json_cx t;
+      "lower", _json_of_t json_cx l;
       "funType", json_of_funtype json_cx funtype
     ]
 
@@ -245,8 +267,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
-  | ReposLowerT (_, t)
-  | ReposUpperT (_, t) -> [
+  | ReposLowerT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -269,11 +290,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | SuperT (_, instance) -> [
       "instance", json_of_insttype json_cx instance
-    ]
-
-  | ExtendsT (_, t1, t2) -> [
-      "type1", _json_of_t json_cx t1;
-      "type2", _json_of_t json_cx t2
     ]
 
   | AdderT (_, l, r) -> [
@@ -372,10 +388,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "inType", _json_of_t json_cx l;
       "todoTypes", JSON_Array (List.map (_json_of_t json_cx) todo_list);
       "doneTypes", JSON_Array (List.map (_json_of_t json_cx) done_list);
-      "absType", _json_of_t json_cx u
+      "absType", _json_of_use_t json_cx u
     ]
 
-  | ConcreteT t
+  | ConcreteT t -> [
+      "type", _json_of_use_t json_cx t
+    ]
   | GetKeysT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -411,8 +429,9 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | SetStarExportsT (_, target_module_t, t_out) -> [
     "target_module_t", _json_of_t json_cx target_module_t;
     "t_out", _json_of_t json_cx t_out;
-  ]
-))
+    ]
+  )
+)
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
 and json_of_polarity_impl json_cx polarity =
@@ -659,7 +678,7 @@ and json_of_bounds_impl json_cx bounds = Hh_json.(
   match bounds with
   | { Constraint_js.lower; upper; lowertvars; uppertvars; } -> JSON_Object ([
       "lower", json_of_tkeys json_cx lower;
-      "upper", json_of_tkeys json_cx upper;
+      "upper", json_of_use_tkeys json_cx upper;
       "lowertvars", json_of_tvarkeys json_cx lowertvars;
       "uppertvars", json_of_tvarkeys json_cx uppertvars;
     ])
@@ -668,6 +687,11 @@ and json_of_bounds_impl json_cx bounds = Hh_json.(
 and json_of_tkeys json_cx = check_depth json_of_tkeys_impl json_cx
 and json_of_tkeys_impl json_cx tmap = Hh_json.(
   JSON_Array (TypeMap.fold (fun t _ acc -> _json_of_t json_cx t :: acc) tmap [])
+)
+
+and json_of_use_tkeys json_cx = check_depth json_of_use_tkeys_impl json_cx
+and json_of_use_tkeys_impl json_cx tmap = Hh_json.(
+  JSON_Array (UseTypeMap.fold (fun t _ acc -> _json_of_use_t json_cx t :: acc) tmap [])
 )
 
 and json_of_tvarkeys json_cx = check_depth json_of_tvarkeys_impl json_cx
@@ -800,19 +824,25 @@ and dump_t_ =
     | MixedT _
     | AnyT _
     | NullT _ -> Some (string_of_ctor t)
-    | SetPropT (_, (_, n), t) ->
-        Some (spf "SetPropT(%s: %s)" n (dump_t_ stack cx t))
-    | GetPropT (_, (_, n), t) ->
-        Some (spf "GetPropT(%s: %s)" n (dump_t_ stack cx t))
-    | LookupT (_, _, ts, n, t) ->
-        Some (spf "LookupT(%s: %s)" n (dump_t_ stack cx t))
-    | PredicateT (p, t) -> Some (spf "PredicateT(%s | %s)"
-        (string_of_predicate p) (dump_t_ stack cx t))
     | _ -> None
   in
   fun stack cx t -> Type_printer.(
     type_printer (override stack) string_of_ctor EnclosureNone cx t
   )
+
+and dump_use_t_ stack cx t = match t with
+  | T t -> dump_t_ stack cx t
+
+  | SetPropT (_, (_, n), t) ->
+      spf "SetPropT(%s: %s)" n (dump_t_ stack cx t)
+  | GetPropT (_, (_, n), t) ->
+      spf "GetPropT(%s: %s)" n (dump_t_ stack cx t)
+  | LookupT (_, _, ts, n, t) ->
+      spf "LookupT(%s: %s)" n (dump_t_ stack cx t)
+  | PredicateT (p, t) -> spf "PredicateT(%s | %s)"
+      (string_of_predicate p) (dump_t_ stack cx t)
+  | _ -> "" (* TODO *)
+
 
 (* type variable dumper. abbreviates a few simple cases for readability.
    note: if we turn the tvar record into a datatype, these will give a
@@ -834,17 +864,17 @@ and dump_tvar stack cx r id = Constraint_js.(
 
 and dump_bounds stack cx id bounds = Constraint_js.(match bounds with
   | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = TypeMap.empty
+      when lower = TypeMap.empty && upper = UseTypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* no inflows or outflows *)
       "(free)"
   | { lower; upper; lowertvars; uppertvars; }
-      when upper = TypeMap.empty
+      when upper = UseTypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete inflows *)
       spf "L %s" (dump_tkeys stack cx lower)
   | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = TypeMap.empty
+      when lower = TypeMap.empty && upper = UseTypeMap.empty
       && IMap.cardinal uppertvars = 1 ->
       (* only tvar inflows *)
       spf "LV %s" (dump_tvarkeys cx id lowertvars)
@@ -852,9 +882,9 @@ and dump_bounds stack cx id bounds = Constraint_js.(match bounds with
       when lower = TypeMap.empty
       && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete outflows *)
-      spf "U %s" (dump_tkeys stack cx upper)
+      spf "U %s" (dump_use_tkeys stack cx upper)
   | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = TypeMap.empty
+      when lower = TypeMap.empty && upper = UseTypeMap.empty
       && IMap.cardinal lowertvars = 1 ->
       (* only tvar outflows *)
       spf "UV %s" (dump_tvarkeys cx id uppertvars)
@@ -862,14 +892,14 @@ and dump_bounds stack cx id bounds = Constraint_js.(match bounds with
       when IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
       (* only concrete inflows/outflows *)
       let l = dump_tkeys stack cx lower in
-      let u = dump_tkeys stack cx upper in
+      let u = dump_use_tkeys stack cx upper in
       if l = u then "= " ^ l
       else "L " ^ l ^ " U " ^ u
   | { lower; upper; lowertvars; uppertvars; } ->
     let slower = if lower = TypeMap.empty then "" else
       spf " lower = %s;" (dump_tkeys stack cx lower) in
-    let supper = if upper = TypeMap.empty then "" else
-      spf " upper = %s;" (dump_tkeys stack cx upper) in
+    let supper = if upper = UseTypeMap.empty then "" else
+      spf " upper = %s;" (dump_use_tkeys stack cx upper) in
     let sltvars = if IMap.cardinal lowertvars <= 1 then "" else
       spf " lowertvars = %s;" (dump_tvarkeys cx id lowertvars) in
     let sutvars = if IMap.cardinal uppertvars <= 1 then "" else
@@ -884,6 +914,17 @@ and dump_tkeys stack cx tmap =
       List.rev (
         TypeMap.fold (
           fun t _ acc -> dump_t_ stack cx t :: acc
+        ) tmap []
+      )
+    )
+  ) ^ "]"
+
+and dump_use_tkeys stack cx tmap =
+  "[" ^ (
+    String.concat "," (
+      List.rev (
+        UseTypeMap.fold (
+          fun t _ acc -> dump_use_t_ stack cx t :: acc
         ) tmap []
       )
     )

@@ -13,8 +13,8 @@ type t
 val compare: t -> t -> int
 
 val trace_depth: t -> int
-val unit_trace: Type.t -> Type.t -> t
-val rec_trace: Type.t -> Type.t -> t -> t
+val unit_trace: Type.t -> Type.use_t -> t
+val rec_trace: Type.t -> Type.use_t -> t -> t
 val concat_trace: t list -> t
 
 val reasons_of_trace: ?level:int -> t -> Reason_js.reason list

@@ -29,7 +29,7 @@ and constraints =
 
 and bounds = {
   mutable lower: Trace.t Type.TypeMap.t;
-  mutable upper: Trace.t Type.TypeMap.t;
+  mutable upper: Trace.t Type.UseTypeMap.t;
   mutable lowertvars: Trace.t IMap.t;
   mutable uppertvars: Trace.t IMap.t;
 }

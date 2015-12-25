@@ -104,7 +104,7 @@ let init ~verbose save_parse_errors save_infer_errors save_suppressions =
   let master_cx = Flow_js.master_cx () in
   let reason = Reason_js.builtin_reason "module" in
   let builtin_module = Infer.mk_object master_cx reason in
-  Flow_js.flow master_cx (builtin_module, Flow_js.builtins master_cx);
+  Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
   Flow_js.ContextOptimizer.sig_context [master_cx];
 
   result
