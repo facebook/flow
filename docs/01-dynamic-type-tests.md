@@ -27,9 +27,9 @@ at runtime, and incorporates that knowledge into its static analysis.
 
 function foo(x: ?string): string {
   if (x == null) {
-    return x;
-  } else {
     return "null or undefined";
+  } else {
+    return x;
   }
 }
 
