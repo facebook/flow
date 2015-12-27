@@ -152,7 +152,19 @@ function test_section(runTest, section_name, section) {
     var test = section.tests[i];
     var name = escape_content(test.content);
     process.stdout.write("RUNNING".yellow + " " + name + "\r");
-    var options = Object.assign({}, section.options, test.options);
+
+    var options = {};
+    for (var key in section.options) {
+      if (section.options.hasOwnProperty(key)) {
+        options[key] = section.options[key];
+      }
+    }
+    for (var key in test.options) {
+      if (test.options.hasOwnProperty(key)) {
+        options[key] = test.options[key];
+      }
+    }
+
     var result = runTest(test, options, cli_options);
     if (result.passed) {
       console.log('%s: "%s"', 'PASSED'.green, name);
