@@ -32,10 +32,9 @@ function success(e) {
 
 function parse_file(filename, data) {
   var result;
-    var ast = flow.parse(data);
   try {
     process.stdout.write(filename + " : ... ");
-    var ast = flow.parse(data);
+    var ast = flow.parse(data, {});
     if (ast.errors.length > 0) {
       result = error("Parse errors!", ast.errors);
       return;
