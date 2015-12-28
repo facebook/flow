@@ -64,7 +64,7 @@ let monitor_daemon_main (options: ServerArgs.options) =
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init_monitor (ServerArgs.root options)
       (Unix.gettimeofday ());
-  if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+  Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
   let www_root = (ServerArgs.root options) in
   ignore @@ Sys_utils.setsid ();
   (** Make sure to lock the lockfile before doing *anything*, especially

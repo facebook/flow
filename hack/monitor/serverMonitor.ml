@@ -56,7 +56,7 @@ let rec wait_for_server_exit process start_t =
 
 let setup_handler_for_signals handler signals =
   List.iter signals begin fun signal ->
-    Sys.set_signal signal (Sys.Signal_handle handler)
+    Sys_utils.set_signal signal (Sys.Signal_handle handler)
   end
 
 let setup_autokill_server_on_exit process =
