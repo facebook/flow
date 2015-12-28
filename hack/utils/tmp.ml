@@ -21,5 +21,5 @@ let temp_dir parent_dir prefix  =
     Filename.concat
       parent_dir
       (Printf.sprintf "%s_%06x" prefix (Random.bits ())) in
-  Unix.mkdir tmpdir 0o755;
+  Sys_utils.mkdir_no_fail tmpdir;
   tmpdir

@@ -92,15 +92,13 @@ module Program =
       (* Force hhi files to be extracted and their location saved before workers
        * fork, so everyone can know about the same hhi path. *)
       ignore (Hhi.get_hhi_root());
-      if not Sys.win32 then
-        (Sys.set_signal Sys.sigusr1
-          (Sys.Signal_handle Typing.debug_print_last_pos);
-        Sys.set_signal Sys.sigusr2
-          (Sys.Signal_handle (fun _ -> (
-            Hh_logger.log "Got sigusr2 signal. Going to shut down.";
-            Exit_status.exit Exit_status.Server_shutting_down
-          )));
-        )
+      Sys_utils.set_signal Sys.sigusr1
+        (Sys.Signal_handle Typing.debug_print_last_pos);
+      Sys_utils.set_signal Sys.sigusr2
+        (Sys.Signal_handle (fun _ -> (
+             Hh_logger.log "Got sigusr2 signal. Going to shut down.";
+             Exit_status.exit Exit_status.Server_shutting_down
+           )))
 
     let run_once_and_exit genv env =
       ServerError.print_errorl
@@ -452,7 +450,7 @@ let setup_server options =
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
    * someone C-c the client.
    *)
-  if not Sys.win32 then Sys.set_signal Sys.sigpipe Sys.Signal_ignore;
+  Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
   ServerEnvBuild.make_genv options config local_config

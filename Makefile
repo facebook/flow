@@ -77,6 +77,7 @@ NATIVE_OBJECT_FILES=\
   hack/utils/realpath.o\
   hack/utils/sysinfo.o\
   hack/utils/priorities.o\
+  hack/utils/win32_support.o\
   hack/hhi/hhi_win32res_stubs.o\
   src/embedded/flowlib_elf.o
 
