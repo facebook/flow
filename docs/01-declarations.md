@@ -94,3 +94,13 @@ declare module "path/to/M" {
   ...
 }
 {% endhighlight %}
+
+## Modules that export single function
+
+Some JavaScript modules by default export a function (e.g. [glob](https://www.npmjs.com/package/glob)). Use the following trick to specify interface declaration for such modules:
+
+{% highlight javascript linenos=table %}
+declare module 'glob' {
+　declare function exports(globStr: string): Array<string>;
+}
+{% endhighlight %}
