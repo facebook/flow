@@ -102,7 +102,7 @@ runtest() {
         return $RUNTEST_SKIP
     elif [[ -z $filter || $name =~ $filter ]]
     then
-        if ([ ! -e "$exp_file" ] || [ ! -e ".flowconfig" ])
+        if ([ ! -e "$exp_file" ] || [[ ! -e ".flowconfig" && ! -e ".testconfig" ]])
         then
             cd ../.. || exit 1
             if [ "$name" = "auxiliary" ] ||

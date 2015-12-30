@@ -451,8 +451,10 @@ end)
 *)
 let merge_strict_context cache component_cxs =
   let required = List.fold_left (fun required cx ->
+    let require_locs = Context.require_loc cx in
     SSet.fold (fun r ->
-      let resolved_r = Module_js.find_resolved_module (Context.file cx) r in
+      let loc = SMap.find_unsafe r require_locs in
+      let resolved_r = Module_js.find_resolved_module cx loc r in
       check_require (r, resolved_r, cx);
       add_decl (r, resolved_r, cx)
     ) (Context.required cx) required

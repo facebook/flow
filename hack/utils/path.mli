@@ -32,3 +32,5 @@ val cat: t -> string
 
 val slash_escaped_string_of_path: t -> string
 val path_of_slash_escaped_string: string -> t
+
+val is_parent_of: t -> t -> bool

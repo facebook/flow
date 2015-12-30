@@ -335,7 +335,17 @@ struct
 
   let find_module (moduleref, filename) oc =
     let file = Loc.SourceFile filename in
-    let module_name = Module_js.imported_module file moduleref in
+    let cx =
+      Context.make Context.({
+        checked = false;
+        weak = false;
+        munge_underscores = false;
+        verbose = None;
+        is_declaration_file = false;
+      }) file (Modulename.Filename file)
+    in
+    let loc = {Loc.none with Loc.source = Some file;} in
+    let module_name = Module_js.imported_module cx loc moduleref in
     let response: filename option = Module_js.get_module_file module_name in
     Marshal.to_channel oc response [];
     flush oc

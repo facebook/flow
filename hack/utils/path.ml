@@ -86,3 +86,47 @@ let path_of_slash_escaped_string str =
       consume next_i
   in consume 0;
   make (Buffer.contents buf)
+
+exception IntBreakEarly of int
+let is_parent_of =
+  let dir_sep = Filename.dir_sep in
+  let dir_sep_re = Str.regexp_string dir_sep in
+  let split_on_dir_sep = Str.split_delim dir_sep_re in
+  fun child parent ->
+    if child.[0] <> dir_sep.[0] || parent.[0] <> dir_sep.[0] then (
+      invalid_arg "Can only compare path ancestry of two absolute paths!"
+    );
+
+    if child = parent then 
+      false 
+    else if (String.length child) < (String.length parent) then 
+      false
+    else (
+      let child_elems = split_on_dir_sep child in
+      let child_elems_len = List.length child_elems in
+
+      let parent_elems = split_on_dir_sep parent in
+      let parent_elems_len = List.length parent_elems in
+
+      if child_elems_len < parent_elems_len then 
+        false
+      else (
+        let (common_ancestors, _) = 
+          try 
+            List.fold_left (fun (common_ancestors, child_elems) p ->
+              let (c, cs) = match child_elems with
+                | c::cs -> (c, cs)
+                (* Should never happen because we compare child_elems and
+                 * parent_elems cardinality above *)
+                | [] -> failwith "Path.is_parent_of: This should never happen!"
+              in
+
+              if c = p
+              then (1 + common_ancestors, cs)
+              else raise (IntBreakEarly common_ancestors)
+            ) (0, child_elems) parent_elems
+          with IntBreakEarly common_ancestors -> (common_ancestors, [])
+        in
+        common_ancestors = parent_elems_len
+      )
+    )
