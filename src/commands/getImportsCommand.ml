@@ -44,7 +44,7 @@ let main option_values root json strip_root modules () =
   let ic, oc = connect option_values root in
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTS modules);
-  let requirements_map, non_flow = Marshal.from_channel ic in
+  let requirements_map, non_flow = Timeout.input_value ic in
   let requirements_map = Utils.SMap.fold
     begin fun module_name (requires, req_locs) map ->
       let requirements = Module_js.NameSet.fold (fun req assoc ->

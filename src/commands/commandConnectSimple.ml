@@ -23,7 +23,7 @@ let server_exists ~tmp_dir root =
 let wait_on_server_restart ic =
   try
     while true do
-      let _ = input_char ic in
+      let _ = Timeout.input_char ic in
       ()
     done
   with
@@ -44,11 +44,11 @@ end)
  * connection, since there's nothing wrong with it.
  *)
 let connections = ref SockMap.empty
-let open_connection sockaddr =
+let open_connection ~timeout sockaddr =
   match SockMap.get sockaddr !connections with
   | Some conn -> conn
   | None ->
-      let conn = Unix.open_connection sockaddr in
+      let conn = Timeout.open_connection ~timeout sockaddr in
       connections := SockMap.add sockaddr conn !connections;
       (* It's important that we only write this once per connection *)
       Printf.fprintf (snd conn) "%s\n%!" Build_id.build_id_ohai;
@@ -59,10 +59,10 @@ let close_connection sockaddr =
   | None -> ()
   | Some (ic, _) ->
       connections := SockMap.remove sockaddr !connections;
-      Unix.shutdown_connection ic;
-      close_in_noerr ic
+      Timeout.shutdown_connection ic;
+      Timeout.close_in_noerr ic
 
-let establish_connection ~tmp_dir root =
+let establish_connection ~timeout ~tmp_dir root =
   let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
   let sockaddr =
     if Sys.win32 then
@@ -72,11 +72,12 @@ let establish_connection ~tmp_dir root =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Result.Ok (sockaddr, open_connection sockaddr)
+  Result.Ok (sockaddr, open_connection ~timeout sockaddr)
 
-let get_cstate sockaddr ic oc =
+let get_cstate ~timeout sockaddr ic oc =
   try
-    let cstate : ServerUtils.connection_state = Marshal.from_channel ic in
+    let cstate : ServerUtils.connection_state =
+      Timeout.input_value ~timeout ic in
     Result.Ok (ic, oc, cstate)
   with
   | ConnectTimeout as e ->
@@ -100,7 +101,7 @@ let verify_cstate ic = function
        * has exited and the OS has cleaned up after it, then we try again.
        *)
       wait_on_server_restart ic;
-      close_in_noerr ic;
+      Timeout.close_in_noerr ic;
       Result.Error Build_id_mismatch
 
 (* Connects to the server via a socket. As soon as the server starts up,
@@ -109,11 +110,12 @@ let verify_cstate ic = function
 let connect_once ~tmp_dir root =
   let open Result in
   try
-    Sys_utils.with_timeout 1
+    Timeout.with_timeout
+      ~timeout:1
       ~on_timeout:(fun _ -> raise ConnectTimeout)
-      ~do_:begin fun () ->
-        establish_connection ~tmp_dir root >>= fun (sockaddr, (ic, oc)) ->
-        get_cstate sockaddr ic oc
+      ~do_:begin fun timeout ->
+        establish_connection ~timeout ~tmp_dir root >>= fun (sockaddr, (ic, oc)) ->
+        get_cstate ~timeout sockaddr ic oc
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
       Ok (ic, oc)

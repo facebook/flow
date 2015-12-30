@@ -43,7 +43,7 @@ let main option_values root files () =
   let ic, oc = connect option_values root in
   let files = List.map expand_path files in
   ServerProt.cmd_to_channel oc (ServerProt.PORT files);
-  let patch_map = Marshal.from_channel ic in
+  let patch_map = Timeout.input_value ic in
   Utils.SMap.iter (fun file patches ->
     Printf.printf "%s\n%s" file patches
   ) patch_map;

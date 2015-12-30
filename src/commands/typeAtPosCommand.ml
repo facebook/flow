@@ -126,7 +126,7 @@ let main option_values root json strip_root path include_raw args () =
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column, include_raw));
-  match (Marshal.from_channel ic) with
+  match (Timeout.input_value ic) with
   | (Some err, None) -> handle_error err json (relativize strip_root root)
   | (None, Some resp) -> handle_response resp json (relativize strip_root root)
   | (_, _) -> failwith "Oops"

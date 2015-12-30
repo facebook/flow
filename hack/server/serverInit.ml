@@ -126,15 +126,16 @@ let mk_state_future timeout root cmd =
     Daemon.fork ~log_file (load_state root cmd) in
   fun () ->
     Result.join @@ Result.try_with @@ fun () ->
-    Sys_utils.with_timeout timeout
+    Timeout.with_timeout
+      ~timeout
       ~on_timeout:(fun _ ->
         (* Do a best-effort attempt to kill the daemon, since we no longer
          * need its result. The call may fail if e.g. the daemon exited just
          * after the timeout but before the kill signal goes through *)
         (try Daemon.kill daemon with e -> Hh_logger.exc e);
         raise Loader_timeout)
-      ~do_:begin fun () ->
-        Daemon.from_channel ic
+      ~do_:begin fun t ->
+        Daemon.from_channel ~timeout:t ic
         >>| fun (fn, dirty_files, is_cached, end_time) ->
         HackEventLogger.load_mini_worker_end ~is_cached start_time end_time;
         let time_taken = end_time -. start_time in

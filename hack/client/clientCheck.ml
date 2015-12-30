@@ -21,7 +21,7 @@ let get_list_files conn (args:client_check_env): string list =
   let res = ref [] in
   try
     while true do
-      res := (input_line ic) :: !res
+      res := (Timeout.input_line ic) :: !res
     done;
     assert false
   with End_of_file -> !res
@@ -29,7 +29,7 @@ let get_list_files conn (args:client_check_env): string list =
 let print_all ic =
   try
     while true do
-      Printf.printf "%s\n" (input_line ic);
+      Printf.printf "%s\n" (Timeout.input_line ic);
     done
   with End_of_file -> ()
 
@@ -68,7 +68,7 @@ let main args =
       let ic, oc = conn in
       Cmd.(stream_request oc LIST_MODES);
       begin try
-        while true do print_endline (input_line ic) done;
+        while true do print_endline (Timeout.input_line ic) done;
       with End_of_file -> () end;
       Exit_status.Ok
     | MODE_COLORING file ->

@@ -125,6 +125,7 @@ begin library "hh-utils-common"
     "utils/tail.ml"
     "utils/handle.ml"
     "utils/random_id.ml"
+    "utils/timeout.ml"
   ]
 end
 

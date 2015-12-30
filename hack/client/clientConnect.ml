@@ -130,7 +130,7 @@ let rec wait_for_server_hello ic env retries start_time tail_env first_call =
   | Some _
   | None -> ();
   let readable, _, _  = Unix.select
-    [Unix.descr_of_in_channel ic] [] [Unix.descr_of_in_channel ic]
+    [Timeout.descr_of_in_channel ic] [] [Timeout.descr_of_in_channel ic]
     (** Select with timeout so that the client gets "hello" message ASAP
      * and doesn't unnecessarily display the busy spinner for 1 second.
      *
@@ -145,7 +145,7 @@ let rec wait_for_server_hello ic env retries start_time tail_env first_call =
       start_time tail_env false
   ) else
     try
-      (match input_line ic with
+      (match Timeout.input_line ic with
       | "Hello" ->
         ()
       | _ ->

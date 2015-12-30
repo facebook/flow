@@ -15,4 +15,4 @@ type t
 val init : ?log_file:string -> (string * Path.t list) -> t
 val wait_until_ready : t -> unit
 val pid : t -> int
-val get_changes : t -> SSet.t
+val get_changes : ?timeout:Timeout.t -> t -> SSet.t

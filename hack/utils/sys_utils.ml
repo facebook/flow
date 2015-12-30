@@ -139,24 +139,6 @@ let with_umask umask f =
 let with_umask umask f =
   if Sys.win32 then f () else with_umask umask f
 
-let with_timeout timeout ~on_timeout ~do_ =
-  let old_handler = ref Sys.Signal_default in
-  let old_timeout = ref 0 in
-  Utils.with_context
-    ~enter:(fun () ->
-        old_handler := Sys.signal Sys.sigalrm (Sys.Signal_handle on_timeout);
-        old_timeout := Unix.alarm timeout)
-    ~exit:(fun () ->
-        ignore (Unix.alarm !old_timeout);
-        Sys.set_signal Sys.sigalrm !old_handler)
-    ~do_
-
-let with_timeout timeout ~on_timeout ~do_ =
-  if Sys.win32 then
-    do_ () (* TODO *)
-  else
-    with_timeout timeout ~on_timeout ~do_
-
 let read_stdin_to_string () =
   let buf = Buffer.create 4096 in
   try
