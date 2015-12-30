@@ -81,6 +81,10 @@ The `[options]` heading in a `.flowconfig` file can contain several key-value pa
     and suppress the error. If there is no error on the next line (the suppresion is unnecessary), an "Unused suppression" error will be shown instead.
   
     **Note:** you can specify `suppress_comment` multiple times. We recommend defining something like `$FlowFixMe` (for type errors that need to be fixed) in addition to `$FlowIssue` (to suppress errors caused by bugs in Flow).
+    
+- `esproposal.class_static_fields` ('enable'|'ignore'|'warn'): set this to `enable` to indicate that Flow should interpret static [class fields](https://github.com/jeffmo/es-class-fields-and-static-properties) per the pending spec. You may also set this to `ignore` to indicate that Flow should simply ignore the syntax (i.e. Flow will not use this syntax to indicate the presence of a static property on the class). The default value of this option is `warn`, which gives a warning on use since this proposal is still very early-stage.
+    
+- `esproposal.class_instance_fields` ('enable'|'ignore'|'warn'): set this to `enable` to indicate that Flow should interpret instance [class fields](https://github.com/jeffmo/es-class-fields-and-static-properties) per the pending spec. You may also set this to `ignore` to indicate that Flow should simply ignore the syntax (i.e. Flow will not use this syntax to indicate the presence of a property on instances of the class). The default value of this option is `warn`, which gives a warning on use since this proposal is still very early-stage.
 
 ### Example
 
