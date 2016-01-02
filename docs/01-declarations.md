@@ -94,3 +94,13 @@ declare module "path/to/M" {
   ...
 }
 {% endhighlight %}
+
+## CommonJS modules with a single export
+
+Some CommonJS modules provide a single export by overwriting `module.exports` with some specific class/function/etc (e.g. [glob](https://www.npmjs.com/package/glob)). Use the following trick to specify interface declaration for such modules:
+
+{% highlight javascript linenos=table %}
+declare module 'glob' {
+　declare function exports(globStr: string): Array<string>;
+}
+{% endhighlight %}
