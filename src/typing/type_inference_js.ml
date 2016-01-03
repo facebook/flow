@@ -43,6 +43,8 @@ module TypeExSet = Set.Make(struct
   let compare = reasonless_compare
 end)
 
+let ident_name ident = (snd ident).Ast.Identifier.name
+
 let mk_object cx reason =
   Flow_js.mk_object_with_proto cx reason (MixedT reason)
 
@@ -1346,82 +1348,63 @@ and statement_decl cx type_params_map = Ast.Statement.(
           "declaration or expression!"
         )
     )
-  | (loc, ImportDeclaration {
-      ImportDeclaration.default;
-      ImportDeclaration.importKind;
-      ImportDeclaration.source;
-      ImportDeclaration.specifier;
-    }) ->
-      let (source_loc, source_literal) = source in
+  | (loc, ImportDeclaration import_decl) ->
+      let open ImportDeclaration in
+
       let module_name = (
+        let (source_loc, source_literal) = import_decl.source in
         match source_literal.Ast.Literal.value with
         | Ast.Literal.String(value) -> value
         | _ -> failwith  (
             "Parser error: Invalid source type! Must be a string literal."
           )
       ) in
+
       let (import_str, isType) = (
-        match importKind with
-        | ImportDeclaration.ImportType -> "import type", true
-        | ImportDeclaration.ImportTypeof -> "import typeof", true
-        | ImportDeclaration.ImportValue -> "import", false
+        match import_decl.importKind with
+        | ImportType -> "import type", true
+        | ImportTypeof -> "import typeof", true
+        | ImportValue -> "import", false
       ) in
 
-      (match default with
-        | Some(_, local_ident) ->
-          let local_name = local_ident.Ast.Identifier.name in
-          let reason_str =
-            (spf "%s %s from \"%s\"" import_str local_name module_name)
-          in
-          let reason = mk_reason reason_str loc in
-          let tvar = Flow_js.mk_tvar cx reason in
-          let state = Scope.State.Initialized in
-          if isType
-          then Env_js.bind_type ~state cx local_name tvar reason
-          else Env_js.bind_var ~state cx local_name tvar reason
-        | None -> ()
-      );
-
-      (match specifier with
-        | Some (ImportDeclaration.Named (_, named_specifiers)) ->
-          let init_specifier (specifier_loc, specifier) = (
-            let loc, remote_ident =
-              specifier.ImportDeclaration.NamedSpecifier.id
-            in
-            let remote_name = remote_ident.Ast.Identifier.name in
-            let local_name, reason = (
-              match specifier.ImportDeclaration.NamedSpecifier.name with
-              | Some (_, { Ast.Identifier.name = local_name; _ }) ->
-                let reason_str =
+      import_decl.specifiers |> List.iter (fun specifier ->
+        let (local_name, reason) = (match specifier with
+          | ImportNamedSpecifier {local; remote;} ->
+            let remote_name = ident_name remote in
+            let (local_name, reason) = (
+              match local with
+              | Some local -> 
+                let local_name = ident_name local in
+                let reason_str = 
                   spf "%s { %s as %s }" import_str remote_name local_name
                 in
-                local_name, (mk_reason reason_str loc)
+                let loc = Loc.btwn (fst remote) (fst local) in
+                (local_name, mk_reason reason_str loc)
               | None ->
                 let reason_str = spf "%s { %s }" import_str remote_name in
-                remote_name, (mk_reason reason_str loc)
+                (remote_name, mk_reason reason_str (fst remote))
             ) in
-            let tvar = Flow_js.mk_tvar cx reason in
-            let spec_reason = repos_reason specifier_loc reason in
-            let state = Scope.State.Initialized in
-            if isType
-            then Env_js.bind_type ~state cx local_name tvar spec_reason
-            else Env_js.bind_var ~state cx local_name tvar spec_reason
-          ) in
-
-          List.iter init_specifier named_specifiers
-
-        | Some (ImportDeclaration.NameSpace (_, (loc, local_ident))) ->
-          let local_name = local_ident.Ast.Identifier.name in
-          let reason =
-            mk_reason (spf "%s * as %s" import_str local_name) loc
-          in
-          let tvar = Flow_js.mk_tvar cx reason in
-          let state = Scope.State.Initialized in
-          if isType
-          then Env_js.bind_type ~state cx local_name tvar reason
-          else Env_js.bind_var ~state cx local_name tvar reason
-
-        | None -> ()
+            (local_name, reason)
+          | ImportDefaultSpecifier local ->
+            let local_name = ident_name local in
+            let reason_str =
+              spf "%s %s from %S" import_str local_name module_name
+            in
+            let reason = mk_reason reason_str (fst local) in
+            (local_name, reason)
+          | ImportNamespaceSpecifier (star_as_loc, local) ->
+            let local_name = ident_name local in
+            let reason_str = 
+              spf "%s * as %s from %S" import_str local_name module_name
+            in
+            let reason = mk_reason reason_str (fst local) in
+            (local_name, reason)
+        ) in
+        let tvar = Flow_js.mk_tvar cx reason in
+        let state = Scope.State.Initialized in
+        if isType
+        then Env_js.bind_type ~state cx local_name tvar reason
+        else Env_js.bind_var ~state cx local_name tvar reason
       )
 )
 
@@ -2684,148 +2667,144 @@ and statement cx type_params_map = Ast.Statement.(
 
       export_statement cx type_params_map loc
         default export_info specifiers source exportKind
-  | (import_loc, ImportDeclaration({
-      ImportDeclaration.default;
-      ImportDeclaration.importKind;
-      ImportDeclaration.source;
-      ImportDeclaration.specifier;
-    })) ->
-      let (source_loc, source_literal) = source in
-      let module_name = (
-        match source_literal.Ast.Literal.value with
-        | Ast.Literal.String(value) -> value
-        | _ -> failwith  (
-            "Parser error: Invalid source type! Must be a string literal."
-          )
-      ) in
-      let (import_str, isType) = (
-        match importKind with
-        | ImportDeclaration.ImportType -> "import type", true
-        | ImportDeclaration.ImportTypeof -> "import typeof", true
-        | ImportDeclaration.ImportValue -> "import", false
-      ) in
 
-      let import_reason = mk_reason
-        (spf "exports of \"%s\"" module_name)
-        source_loc
-      in
-
-      let module_t = import cx module_name source_loc in
-
-      let get_imported_t get_reason set_reason remote_export_name local_name =
-        let imported_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
-          let import_type =
-            if remote_export_name = "default"
-            then ImportDefaultT(get_reason, (local_name, module_name), t)
-            else ImportNamedT(get_reason, remote_export_name, t)
-          in
-          Flow_js.flow cx (module_t, import_type)
-        ) in
-        (match importKind with
-          | ImportDeclaration.ImportType ->
-              Flow_js.mk_tvar_where cx set_reason (fun t ->
-                Flow_js.flow cx (imported_t, ImportTypeT(set_reason, t))
-              )
-          | ImportDeclaration.ImportTypeof ->
-              Flow_js.mk_tvar_where cx set_reason (fun t ->
-                Flow_js.flow cx (imported_t, ImportTypeofT(set_reason, t))
-              )
-          | ImportDeclaration.ImportValue -> imported_t
+  | (import_loc, ImportDeclaration import_decl) -> 
+    let open ImportDeclaration in
+    
+    let module_name = (
+      match (snd import_decl.source).Ast.Literal.value with
+      | Ast.Literal.String value -> value
+      | _ -> failwith (
+          "Internal Parser Error: Invalid import source type! Must be a string " ^
+          "literal."
         )
-      in
+    ) in
 
-      let set_imported_binding reason local_name t =
-        let t_generic =
-          let lookup_mode = if isType then ForType else ForValue in
-          Env_js.get_var_declared_type ~lookup_mode cx local_name reason
+    let (import_str, isType) = (
+      match import_decl.importKind with
+      | ImportType -> "import type", true
+      | ImportTypeof -> "import typeof", true
+      | ImportValue -> "import", false
+    ) in
+
+    let module_t = import cx module_name (fst import_decl.source) in
+
+    let get_imported_t get_reason set_reason remote_export_name local_name =
+      let imported_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
+        let import_type =
+          if remote_export_name = "default"
+          then ImportDefaultT(get_reason, (local_name, module_name), t)
+          else ImportNamedT(get_reason, remote_export_name, t)
         in
-        Flow_js.unify cx t t_generic
-      in
-
-      (match default with
-        | Some(local_ident_loc, local_ident) ->
-          let local_name = local_ident.Ast.Identifier.name in
-
-          let reason = mk_reason
-            (spf "Default import from `%s`" module_name)
-            local_ident_loc
-          in
-          let imported_t = get_imported_t reason reason "default" local_name in
-
-          let reason = mk_reason
-            (spf "%s %s from \"%s\"" import_str local_name module_name)
-            import_loc
-          in
-          set_imported_binding reason local_name imported_t
-        | None -> ()
-      );
-
-      (match specifier with
-        | Some(ImportDeclaration.Named(_, named_specifiers)) ->
-          let import_specifier (specifier_loc, specifier) = (
-            let (remote_ident_loc, remote_ident) =
-              specifier.ImportDeclaration.NamedSpecifier.id
-            in
-            let remote_name = remote_ident.Ast.Identifier.name in
-
-            let get_reason_str =
-              spf "Named import from module `%s`" module_name
-            in
-
-            let (local_name, get_reason, set_reason) = (
-              match specifier.ImportDeclaration.NamedSpecifier.name with
-              | Some(local_ident_loc, { Ast.Identifier.name = local_name; _; }) ->
-                let get_reason = mk_reason get_reason_str remote_ident_loc in
-                let set_reason = mk_reason
-                  (spf "%s { %s as %s }" import_str remote_name local_name)
-                  specifier_loc
-                in
-                (local_name, get_reason, set_reason)
-              | None ->
-                let get_reason = mk_reason get_reason_str specifier_loc in
-                let set_reason = mk_reason
-                  (spf "%s { %s }" import_str remote_name)
-                  specifier_loc
-                in
-                (remote_name, get_reason, set_reason)
-            ) in
-            let imported_t = get_imported_t get_reason set_reason remote_name local_name in
-
-            set_imported_binding get_reason local_name imported_t
-          ) in
-          List.iter import_specifier named_specifiers
-        | Some(ImportDeclaration.NameSpace(_, (ident_loc, local_ident))) ->
-          let local_name = local_ident.Ast.Identifier.name in
-          let reason = mk_reason
-            (spf "%s * as %s" import_str local_name)
-            ident_loc
-          in
-          (match importKind with
-            | ImportDeclaration.ImportType ->
-              let msg = spf (
-                "This is invalid syntax. Maybe you meant: " ^^
-                "`import type %s from \"%s\"`?"
-              ) local_name module_name in
-              let reason = repos_reason import_loc reason in
-              Flow_js.add_error cx [(reason, msg)]
-            | ImportDeclaration.ImportTypeof ->
-              let set_reason = repos_reason import_loc reason in
-              let module_ns_tvar = import_ns cx import_reason module_name source_loc in
-              let module_ns_typeof = Flow_js.mk_tvar_where cx set_reason (fun t ->
-                Flow_js.flow cx (module_ns_tvar, ImportTypeofT(reason, t))
-              ) in
-              let get_reason =
-                mk_reason
-                  (spf "import typeof * as %s from %S" local_name module_name)
-                  import_loc
-              in
-              set_imported_binding get_reason local_name module_ns_typeof
-            | ImportDeclaration.ImportValue ->
-              let module_ns_tvar = import_ns cx import_reason module_name source_loc in
-              set_imported_binding reason local_name module_ns_tvar
-          )
-        | None -> ()
+        Flow_js.flow cx (module_t, import_type)
+      ) in
+      (match import_decl.importKind with
+        | ImportType ->
+            Flow_js.mk_tvar_where cx set_reason (fun t ->
+              Flow_js.flow cx (imported_t, ImportTypeT(set_reason, t))
+            )
+        | ImportTypeof ->
+            Flow_js.mk_tvar_where cx set_reason (fun t ->
+              Flow_js.flow cx (imported_t, ImportTypeofT(set_reason, t))
+            )
+        | ImportValue -> imported_t
       )
+    in
+
+    import_decl.specifiers |> List.iter (fun specifier ->
+      let (reason, local_name, t) = (
+        match specifier with
+        | ImportNamedSpecifier {local; remote;} ->
+          let remote_name = ident_name remote in
+
+          let import_reason_str = 
+            spf "Named import from module `%s`" module_name
+          in
+
+          let (local_name, import_reason, bind_reason) = (
+            match local with
+            | Some local -> 
+              let local_name = ident_name local in
+              let import_reason = mk_reason import_reason_str (fst remote) in
+              let bind_reason_str =
+                spf "%s { %s as %s }" import_str remote_name local_name
+              in
+              let bind_loc = Loc.btwn (fst remote) (fst local) in
+              let bind_reason = mk_reason bind_reason_str bind_loc in
+              (local_name, import_reason, bind_reason)
+            | None ->
+              let import_reason = mk_reason import_reason_str (fst remote) in
+              let bind_reason_str = spf "%s { %s }" import_str remote_name in
+              let bind_reason = mk_reason bind_reason_str (fst remote) in
+              (remote_name, import_reason, bind_reason)
+          ) in
+          let imported_t = 
+            get_imported_t import_reason bind_reason remote_name local_name
+          in
+          (bind_reason, local_name, imported_t)
+
+        | ImportDefaultSpecifier local ->
+          let local_name = ident_name local in
+
+          let import_reason_str = spf "Default import from `%s`" module_name in
+          let import_reason = mk_reason import_reason_str (fst local) in
+
+          let bind_reason_str = 
+            spf "%s %s from %S" import_str local_name module_name 
+          in
+          let bind_reason = mk_reason bind_reason_str (fst local) in
+
+          let imported_t = 
+            get_imported_t import_reason bind_reason "default" local_name 
+          in
+          (bind_reason, local_name, imported_t)
+
+        | ImportNamespaceSpecifier (star_as_loc, local) ->
+          let local_name = ident_name local in
+
+          let import_reason_str = spf "%s * as %s" import_str local_name in
+          let import_reason = mk_reason import_reason_str import_loc in
+
+          (match import_decl.importKind with
+            | ImportType ->
+              let msg = 
+                spf 
+                  ("This is invalid syntax. Maybe you meant: `import type " ^^
+                   "%s from %S`?")
+                  local_name
+                  module_name
+              in
+              Flow_js.add_error cx [(import_reason, msg)];
+              (import_reason, local_name, AnyT.why import_reason)
+            | ImportTypeof ->
+              let bind_reason = repos_reason (fst local) import_reason in
+              let module_ns_t = 
+                import_ns cx import_reason module_name (fst import_decl.source)
+              in
+              let module_ns_typeof = 
+                Flow_js.mk_tvar_where cx bind_reason (fun t ->
+                  Flow_js.flow cx (module_ns_t, ImportTypeofT(bind_reason, t))
+                )
+              in
+              (import_reason, local_name, module_ns_typeof)
+            | ImportValue ->
+              let reason = 
+                mk_reason (spf "exports of %S" module_name) import_loc 
+              in
+              let module_ns_t = 
+                import_ns cx reason module_name (fst import_decl.source)
+              in
+              let bind_reason = mk_reason import_reason_str (fst local) in
+              (bind_reason, local_name, module_ns_t)
+          )
+      ) in
+
+      let t_generic =
+        let lookup_mode = if isType then ForType else ForValue in
+        Env_js.get_var_declared_type ~lookup_mode cx local_name reason
+      in
+      Flow_js.unify cx t t_generic
+    );
 )
 
 

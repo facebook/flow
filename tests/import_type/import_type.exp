@@ -5,7 +5,7 @@ import_type.js:13:9,14: number
 
 import_type.js:14:5,13: ClassFoo1
 type referenced from value position
-import_type.js:9:1,51: type ClassFoo1
+import_type.js:9:13,21: type ClassFoo1
 
 import_type.js:24:18,25: ClassFoo2
 This type is incompatible with
@@ -17,7 +17,7 @@ import_type.js:20:14,22: type ClassFoo2
 
 import_type.js:34:5,14: ClassFoo3T
 type referenced from value position
-import_type.js:31:1,55: type ClassFoo3T
+import_type.js:31:13,22: type ClassFoo3T
 
 import_type.js:44:18,25: ClassFoo4
 This type is incompatible with
@@ -46,6 +46,6 @@ import_type.js:71:14,21: import type { numValue }
 
 import_type.js:81:3,11: ClassFoo6
 type referenced from value position
-import_type.js:79:1,41: type ClassFoo6
+import_type.js:79:13,21: type ClassFoo6
 
 Found 12 errors

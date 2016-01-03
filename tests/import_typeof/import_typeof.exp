@@ -7,7 +7,7 @@ import_typeof.js:13:9,18: class type: ClassFoo1
 
 import_typeof.js:14:5,14: ClassFoo1T
 type referenced from value position
-import_typeof.js:9:1,54: type ClassFoo1T
+import_typeof.js:9:15,24: type ClassFoo1T
 
 import_typeof.js:24:22,36: constructor call
 Error:
