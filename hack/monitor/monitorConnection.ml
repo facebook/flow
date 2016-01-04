@@ -34,6 +34,8 @@ let send_build_id_ohai oc =
   let _ = Unix.write (Unix.descr_of_out_channel oc) "\n" 0 1 in
   ()
 
+let send_server_name (server_name : string) oc =
+  Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc) server_name
 
 let establish_connection ~timeout config =
   let sock_name = Socket.get_path config.socket_file in
@@ -81,6 +83,10 @@ let consume_prehandoff_messages ic =
   let m: msg = from_channel_without_buffering ic in
   match m with
   | Sentinel -> ()
+  | Server_name_not_found ->
+    Printf.eprintf
+      "Requested server name not found. This is probably a bug in Hack.";
+    raise (Exit_status.Exit_with (Exit_status.Server_name_not_found));
   | Shutting_down ->
     Printf.eprintf "Last server exited. A new will be started.\n%!";
     wait_on_server_restart ic;
@@ -97,7 +103,7 @@ let consume_prehandoff_messages ic =
       Printf.eprintf "Last server stopped by signal: %d.\n%!" signal);
     raise Last_server_died
 
-let connect_once config =
+let connect_once config server_name =
   let open Result in
   try
     Timeout.with_timeout
@@ -108,6 +114,7 @@ let connect_once config =
         get_cstate (ic, oc)
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
+      send_server_name server_name oc;
       consume_prehandoff_messages ic;
       Ok (ic, oc)
   with

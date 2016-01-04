@@ -97,7 +97,8 @@ let mean_kill env =
 
 let do_kill env =
   let root_s = Path.to_string env.root in
-  match ServerUtils.connect_to_monitor env.root with
+  match ServerUtils.connect_to_monitor
+    env.root HhServerMonitorConfig.Program.name with
   | Result.Ok conn ->
       begin
         try nice_kill conn env with FailedToKill ->

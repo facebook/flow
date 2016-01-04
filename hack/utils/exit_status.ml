@@ -36,6 +36,7 @@ type t =
   | Hhconfig_deleted
   | Hhconfig_changed
   | Server_shutting_down
+  | Server_name_not_found
 
 exception Exit_with of t
 
@@ -67,6 +68,7 @@ let ec t = match t with
   | Watchman_failed -> 103
   | Hhconfig_deleted -> 104
   | Hhconfig_changed -> 4
+  | Server_name_not_found -> 105
 
 let exit t =
   let code = ec t in
@@ -100,6 +102,7 @@ let to_string = function
   | Watchman_failed -> "Watchman_failed"
   | Hhconfig_deleted -> "Hhconfig_deleted"
   | Hhconfig_changed -> "Hhconfig_changed"
+  | Server_name_not_found -> "Server_name_not_found"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n

@@ -20,5 +20,7 @@ type msg =
    * This is rare - happens when client establishes connection to a monitor
    * that hasn't discovered its typechecker exited by an RPC Kill command. *)
   | Shutting_down
+  (* Client sent a malformed request asking for a server that doesn't exist *)
+  | Server_name_not_found
   (** Server process died. Connect another client to start another one. *)
   | Server_died of exit_status

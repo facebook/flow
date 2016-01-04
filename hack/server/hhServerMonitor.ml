@@ -19,11 +19,8 @@
       hh_server (detached mode).
 *)
 
+open HhServerMonitorConfig
 module SP = ServerProcess
-
-module Program = struct
-    let name = "hh_server"
-end
 
 let start_hh_server options =
   let log_file, log_mode =
@@ -80,7 +77,7 @@ let monitor_daemon_main (options: ServerArgs.options) =
     ServerMonitor.start_monitoring ServerMonitorUtils.({
       socket_file = ServerFiles.socket_file www_root;
       lock_file = ServerFiles.lock_file www_root;
-    }) server_daemon_starter
+    }) [server_daemon_starter]
 
 let daemon_entry =
   Daemon.register_entry_point

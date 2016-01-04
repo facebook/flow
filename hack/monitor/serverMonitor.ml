@@ -22,11 +22,13 @@
 *)
 
 open Core
+open Utils
 open ServerProcess
 open ServerProcessTools
 open ServerMonitorUtils
 
 exception Malformed_build_id
+exception Misconfigured_monitor
 exception Send_fd_failure of int
 
 let fd_to_int (x: Unix.file_descr) : int = Obj.magic x
@@ -42,9 +44,10 @@ let kill_server process =
   try Unix.kill process.pid Sys.sigusr2 with
   | _ ->
     Hh_logger.log
-      "Failed to send Sig_build_id_mismatch signal to server process. Trying \
+      "Failed to send sigusr2 signal to server process. Trying \
        violently";
-    Unix.kill process.pid Sys.sigkill
+    try Unix.kill process.pid Sys.sigkill with e ->
+      Hh_logger.exc ~prefix: "Failed to violently kill server process: " e
 
 let rec wait_for_server_exit process start_t =
   let exit_status = Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
@@ -62,11 +65,11 @@ let setup_handler_for_signals handler signals =
     Sys_utils.set_signal signal (Sys.Signal_handle handler)
   end
 
-let setup_autokill_server_on_exit process =
+let setup_autokill_servers_on_exit processes =
   try
     setup_handler_for_signals begin fun _ ->
       Hh_logger.log "Got an exit signal. Killing server and exiting.";
-      kill_server process;
+      List.iter processes ~f:kill_server;
       Exit_status.exit Exit_status.Interrupted
     end [Sys.sigint; Sys.sigquit; Sys.sigterm; Sys.sighup];
   with
@@ -80,7 +83,7 @@ let sleep_and_check socket =
 (** Kill command from client is handled by server server, so the monitor
  * needs to check liveness of the server process to know whether
  * to stop itself. *)
-let update_status (server: ServerProcess.server_process)
+let update_status_ (server: ServerProcess.server_process)
 ~has_client =
   match server with
   | Alive process ->
@@ -104,6 +107,9 @@ let update_status (server: ServerProcess.server_process)
         Died_unexpectedly (proc_stat, (check_dmesg_for_oom process)))
   | _ -> server
 
+let update_status (servers: ServerProcess.server_process SMap.t) ~has_client =
+   SMap.map (update_status_ ~has_client) servers
+
 let read_build_id_ohai fd =
   let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
   let newline_byte = String.create 1 in
@@ -112,6 +118,9 @@ let read_build_id_ohai fd =
     (Hh_logger.log "Did not find newline character after build_id ohai";
      raise Malformed_build_id);
   client_build_id
+
+let read_requested_server_name fd : string =
+  Marshal_tools.from_fd_with_preamble fd
 
 let hand_off_client_connection server client_fd =
   let status = Libancillary.ancil_send_fd server.out_fd client_fd in
@@ -151,63 +160,69 @@ let client_out_of_date_ client_fd =
   msg_to_channel client_fd Build_id_mismatch;
   HackEventLogger.out_of_date ()
 
-(** Kills server, sends build ID mismatch message to client, and exits.
+(** Kills servers, sends build ID mismatch message to client, and exits.
  *
- * Does not return. Exits after waiting for server process to exit. So
+ * Does not return. Exits after waiting for server processes to exit. So
  * the client can wait for socket closure as indication that both the monitor
  * and server have exited.
 *)
-let client_out_of_date server client_fd =
-  (match server with
-  | Alive server ->
+let client_out_of_date servers client_fd =
+  SMap.iter begin fun _ server -> match server with
+    | Alive server ->
     kill_server server
-  | _ -> ());
+    | _ -> ()
+  end servers;
   let kill_signal_time = Unix.gettimeofday () in
   (** If we detect out of date client, should always kill server and exit
    * monitor, even if messaging to channel or event logger fails. *)
   (try client_out_of_date_ client_fd with
    | e -> Hh_logger.log
        "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
-  (match server with
-  | Alive server ->
-    wait_for_server_exit server kill_signal_time
-  | _ -> ());
+  SMap.iter begin fun _ server -> match server with
+    | Alive server ->
+      wait_for_server_exit server kill_signal_time
+    | _ -> ()
+  end servers;
   Exit_status.exit Exit_status.Build_id_mismatch
 
 (** Send (possibly empty) sequences of messages before handing off to
  * server. *)
-let client_prehandoff server client_fd =
+let client_prehandoff servers server_name client_fd =
   let open Prehandoff in
-  match server with
-  | Killed_intentionally ->
+  match SMap.get server_name servers with
+  | None ->
+    msg_to_channel client_fd Server_name_not_found;
+    servers
+  | Some Killed_intentionally ->
     msg_to_channel client_fd Shutting_down;
     Exit_status.exit Exit_status.Ok
-  | Alive server ->
+  | Some (Alive server) ->
     let since_last_request =
       (Unix.time ()) -. !(server.last_request_handoff) in
     (** TODO: Send this to client so it is visible. *)
-    Hh_logger.log "Got request. Prior request %.1f seconds ago"
-      since_last_request;
+    Hh_logger.log "Got request for %s. Prior request %.1f seconds ago"
+      server_name since_last_request;
     msg_to_channel client_fd Sentinel;
     hand_off_client_connection_with_retries server 8 client_fd;
     HackEventLogger.client_connection_sent ();
     server.last_request_handoff := Unix.time ();
-    Alive server
-  | Died_unexpectedly (status, was_oom) ->
+    SMap.add server_name (Alive server) servers
+  | Some (Died_unexpectedly (status, was_oom)) ->
     (** Server has died; notify the client *)
     msg_to_channel client_fd (Server_died {status; was_oom});
     (** Next client to connect starts a new server. *)
     Exit_status.exit Exit_status.Ok
 
-let ack_and_handoff_client server client_fd =
+let ack_and_handoff_client servers client_fd =
   try
     let client_build_id = read_build_id_ohai client_fd in
     if client_build_id <> Build_id.build_id_ohai
     then
-      client_out_of_date server client_fd
+      client_out_of_date servers client_fd
     else (
       msg_to_channel client_fd Connection_ok;
-      client_prehandoff server client_fd
+      let requested_server_name = read_requested_server_name client_fd in
+      client_prehandoff servers requested_server_name client_fd
     )
   with
   | Marshal_tools.Malformed_Preamble_Exception ->
@@ -215,55 +230,71 @@ let ack_and_handoff_client server client_fd =
     (Hh_logger.log "
         Marshal tools read malformed preamble, interpreting as version change.
         ";
-     client_out_of_date server client_fd)
+     client_out_of_date servers client_fd)
   | Malformed_build_id as e ->
     HackEventLogger.malformed_build_id ();
     Hh_logger.log "Malformed Build ID";
     raise e
 
-let rec check_and_run_loop server
+let rec check_and_run_loop servers
     (lock_file: string) (socket: Unix.file_descr) =
-  let server = try check_and_run_loop_ server lock_file socket with
+  let servers = try check_and_run_loop_ servers lock_file socket with
   | e ->
     Hh_logger.log "check_and_run_loop_ threw with exception: %s"
       (Printexc.to_string e);
-    server
+    servers
   in
-    check_and_run_loop server lock_file socket
+    check_and_run_loop servers lock_file socket
 
-and check_and_run_loop_ server
+and check_and_run_loop_ servers
     (lock_file: string) (socket: Unix.file_descr) =
-  let server = update_status server ~has_client:false in
+  let servers = update_status servers ~has_client:false in
   if not (Lock.grab lock_file) then
     (Hh_logger.log "Lost lock; terminating.\n%!";
      HackEventLogger.lock_stolen lock_file;
      Exit_status.(exit Lock_stolen));
   let has_client = sleep_and_check socket in
-  let server = update_status server ~has_client in
+  let servers = update_status servers ~has_client in
   if (not has_client) then
-    server
+    servers
   else
   try
     let fd, _ = Unix.accept socket in
     try
       HackEventLogger.accepted_client_fd (fd_to_int fd);
-      ack_and_handoff_client server fd
+      ack_and_handoff_client servers fd
     with
     | e ->
       (HackEventLogger.ack_and_handoff_exception e;
        Hh_logger.log
          "Handling client connection failed. Ignoring connection attempt.";
        Unix.close fd;
-       server)
+       servers)
   with
   | e ->
     (HackEventLogger.accepting_on_socket_exception e;
      Hh_logger.log
        "Accepting on socket failed. Ignoring client connection attempt.";
-       server)
+       servers)
 
-let start_monitoring monitor_config server_daemon_starter =
+let start_servers server_daemon_starters =
+  let server_processes, errors = List.partition_map server_daemon_starters
+    ~f:begin fun server_daemon_starter ->
+      try `Fst (server_daemon_starter ()) with e -> `Snd e
+    end in
+  setup_autokill_servers_on_exit server_processes;
+  if errors <> [] then raise (List.hd_exn errors);
+  List.fold_left server_processes ~init:SMap.empty
+    ~f:begin fun acc x -> match SMap.get x.name acc with
+      | None -> SMap.add x.name (Alive x) acc
+      | Some _ ->
+        Hh_logger.log
+          "Monitored server names must be unique. Got %s more than once."
+          x.name;
+        raise Misconfigured_monitor
+    end
+
+let start_monitoring monitor_config server_daemon_starters =
   let socket = Socket.init_unix_socket monitor_config.socket_file in
-  let server_process = server_daemon_starter () in
-  setup_autokill_server_on_exit server_process;
-  check_and_run_loop (Alive server_process) monitor_config.lock_file socket
+  let server_processes = start_servers server_daemon_starters in
+  check_and_run_loop server_processes monitor_config.lock_file socket

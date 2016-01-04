@@ -76,7 +76,8 @@ let start_server env =
 
 let should_start env =
   let root_s = Path.to_string env.root in
-  match ServerUtils.connect_to_monitor env.root with
+  match ServerUtils.connect_to_monitor
+    env.root HhServerMonitorConfig.Program.name with
   | Result.Ok _conn -> false
   | Result.Error SMUtils.Server_missing
   | Result.Error SMUtils.Build_id_mismatched -> true

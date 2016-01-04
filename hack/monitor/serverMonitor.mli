@@ -9,4 +9,4 @@
 *)
 
 val start_monitoring: ServerMonitorUtils.monitor_config ->
-  (unit -> ServerProcess.process_data) -> 'a
+  (unit -> ServerProcess.process_data) list -> 'a
