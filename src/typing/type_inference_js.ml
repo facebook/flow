@@ -4975,19 +4975,30 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   (* inspect a sentinel property test *)
-  let sentinel_prop_test loc op e key value =
+  let sentinel_prop_test loc prop_loc op e key value =
+    (* use `expression` instead of `refinable_lvalue` because `e` is the object
+       in a member expression; if it itself is a member expression, it must
+       exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
+       `e = foo.bar`, `key = baz`, and `bar` must obviously exist. *)
+    let obj_t = expression cx type_params_map e in
     let val_t = expression cx type_params_map value in
-    let refinement = match refinable_lvalue e with
-    | None, t -> None
-    | Some name, t ->
+
+    (* ensure the property (`foo.bar.baz` in the example above) exists. *)
+    let reason = mk_reason (spf "property `%s`" key) prop_loc in
+    Flow_js.flow cx (obj_t, HasPropT (reason, None, key));
+
+    (* refine the object (`foo.bar` in the example) based on the prop. *)
+    let refinement = match Refinement.key e with
+    | None -> None
+    | Some name ->
         match op with
         | Binary.StrictEqual | Binary.StrictNotEqual ->
             let pred = LeftP (SentinelProp key, val_t) in
-            Some (name, t, pred, op = Binary.StrictEqual)
+            Some (name, pred, op = Binary.StrictEqual)
         | _ -> None
     in
     match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
+    | Some (name, p, sense) -> result (BoolT.at loc) name obj_t p sense
     | None -> empty_result (BoolT.at loc)
   in
 
@@ -5172,12 +5183,12 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       operator = (Binary.StrictEqual | Binary.StrictNotEqual) as op;
       left = _, Member {
         Member._object;
-        property = Member.PropertyIdentifier (_,
+        property = Member.PropertyIdentifier (prop_loc,
           { Identifier.name; _ });
         _ };
       right;
     } ->
-      sentinel_prop_test loc op _object name right
+      sentinel_prop_test loc prop_loc op _object name right
 
   (* value ===/!== expr.name *)
   | loc, Binary { Binary.
@@ -5185,11 +5196,11 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       left;
       right = _, Member {
         Member._object;
-        property = Member.PropertyIdentifier (_,
+        property = Member.PropertyIdentifier (prop_loc,
           { Identifier.name; _ });
         _ }
     } ->
-      sentinel_prop_test loc op _object name left
+      sentinel_prop_test loc prop_loc op _object name left
 
   (* Array.isArray(expr) *)
   | _, Call {

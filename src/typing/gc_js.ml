@@ -340,6 +340,7 @@ and gc_use cx state = function
       gc cx state t
 
   | HasOwnPropT _ -> ()
+  | HasPropT _ -> ()
 
   | ElemT (_, t1, t2) ->
       gc cx state t1;

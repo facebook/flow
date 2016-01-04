@@ -83,9 +83,40 @@ function nationality(x: Citizen | NonCitizen) {
 }
 
 let tests = [
+  // non-existent props
+  function test7(x: A) {
+    if (x.kindTypo === 1) {} // error, kindTypo doesn't exist on A
+  },
+
+  // nested objects
+  function test8(x: {foo: {bar: 1}}) {
+    if (x.foo.bar === 1) {}
+    if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
+  },
+
   // invalid RHS
   function(x: A) {
     if (x.kind === (null).toString()) {} // error, method on null
     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
+  },
+
+  // non-objects on LHS
+  function(
+    x: Array<string>, y: string, z: number, q: boolean,
+    r: Object, s: Function, t: () => void
+  ) {
+    if (x.length === 0) {}
+    if (x.legnth === 0) {} // error, typo
+    if (y.length === 0) {}
+    if (y.legnth === 0) {} // error, typo
+    if (z.toString === 0) {}
+    if (z.toStirng === 0) {} // error, typo
+    if (q.valueOf === 0) {}
+    if (q.valeuOf === 0) {} // error, typo
+    if (r.toStirng === 0) {} // ok, AnyObjT
+    if (s.call === 0) {}
+    if (s.calll === 0) {} // error, typo
+    if (t.call === 0) {}
+    if (t.calll === 0) {} // error, typo
   },
 ];

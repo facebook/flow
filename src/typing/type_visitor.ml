@@ -179,6 +179,7 @@ class ['a] t = object(self)
   | ConcreteT _
   | GetKeysT (_, _)
   | HasOwnPropT (_, _)
+  | HasPropT (_, _, _)
   | ElemT (_, _, _)
   | CJSRequireT (_, _)
   | ImportModuleNsT (_, _)

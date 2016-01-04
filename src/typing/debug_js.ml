@@ -402,6 +402,14 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "key", JSON_String key
     ]
 
+  | HasPropT (_, strict, key) ->
+    (match strict with
+      | None -> []
+      | Some r -> ["strictReason", json_of_reason r]
+    ) @ [
+      "key", JSON_String key;
+    ]
+
   | ElemT (_, base, elem) -> [
       "baseType", _json_of_t json_cx base;
       "elemType", _json_of_t json_cx elem

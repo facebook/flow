@@ -309,6 +309,7 @@ and use_t =
   (* Keys *)
   | GetKeysT of reason * t
   | HasOwnPropT of reason * string
+  | HasPropT of reason * reason option * string
 
   (* Element access *)
   | ElemT of reason * t * t
@@ -728,6 +729,7 @@ and reason_of_use_t = function
 
   | GetKeysT (reason, _) -> reason
   | HasOwnPropT (reason, _) -> reason
+  | HasPropT (reason, _, _) -> reason
 
   | ElemT (reason, _, _) -> reason
 
@@ -916,6 +918,7 @@ and mod_reason_of_use_t f = function
   | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
   | HasOwnPropT (reason, t) -> HasOwnPropT (f reason, t)
+  | HasPropT (reason, strict, t) -> HasPropT (f reason, strict, t)
 
   | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
 
@@ -1052,6 +1055,7 @@ let string_of_use_ctor = function
   | UnaryMinusT _ -> "UnaryMinusT"
   | GetKeysT _ -> "GetKeysT"
   | HasOwnPropT _ -> "HasOwnPropT"
+  | HasPropT _ -> "HasPropT"
   | ElemT _ -> "ElemT"
   | ConcretizeT _ -> "ConcretizeT"
   | ConcreteT _ -> "ConcreteT"

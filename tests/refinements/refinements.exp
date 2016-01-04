@@ -307,13 +307,45 @@ tagged_union.js:82:17,27: property `nationality`
 Property not found in
 tagged_union.js:82:15,15: object type
 
-tagged_union.js:88:21,36: call of method `toString`
-Method cannot be called on possibly null value
-tagged_union.js:88:21,24: null
+tagged_union.js:88:11,18: property `kindTypo`
+Property not found in
+tagged_union.js:88:9,9: object type
 
-tagged_union.js:89:29,44: call of method `toString`
+tagged_union.js:94:11,17: property `fooTypo`
+Property not found in
+tagged_union.js:94:9,9: object type
+
+tagged_union.js:99:21,36: call of method `toString`
 Method cannot be called on possibly null value
-tagged_union.js:89:29,32: null
+tagged_union.js:99:21,24: null
+
+tagged_union.js:100:29,44: call of method `toString`
+Method cannot be called on possibly null value
+tagged_union.js:100:29,32: null
+
+tagged_union.js:109:11,16: property `legnth`
+Property not found in
+tagged_union.js:109:9,9: Array
+
+tagged_union.js:111:11,16: property `legnth`
+Property not found in
+tagged_union.js:111:9,9: String
+
+tagged_union.js:113:11,18: property `toStirng`
+Property not found in
+tagged_union.js:113:9,9: Number
+
+tagged_union.js:115:11,17: property `valeuOf`
+Property not found in
+tagged_union.js:115:9,9: Boolean
+
+tagged_union.js:118:11,15: property `calll`
+Property not found in
+tagged_union.js:118:9,9: function type
+
+tagged_union.js:120:11,15: property `calll`
+Property not found in
+tagged_union.js:120:9,9: statics of function type
 
 typeof.js:5:5,8: access of computed property/element
 Computed property/element cannot be accessed on
@@ -426,4 +458,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 100 errors
+Found 108 errors

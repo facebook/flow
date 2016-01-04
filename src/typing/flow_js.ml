@@ -1476,7 +1476,8 @@ let rec __flow cx (l, u) trace =
     | AnyFunT reason, GetPropT (_, (_, x), _)
     | AnyFunT reason, SetPropT (_, (_, x), _)
     | AnyFunT reason, LookupT (_, _, _, x, _)
-    | AnyFunT reason, MethodT (_, (_, x), _) when is_function_prototype x ->
+    | AnyFunT reason, MethodT (_, (_, x), _)
+    | AnyFunT reason, HasPropT (_, _, x) when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, T u) when function_like u -> ()
     | (AnyFunT _, T u) when object_like u -> ()
@@ -1740,6 +1741,16 @@ let rec __flow cx (l, u) trace =
       if has_prop cx mapr x then ()
       else prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
 
+    | ObjT (reason_o, { props_tmap = mapr; proto_t = proto; _ }),
+      HasPropT (reason_op, strict, x) ->
+      if has_prop cx mapr x then ()
+      else
+        let strict = match strict with
+        | Some r -> Some r
+        | None -> Some reason_o
+        in
+        rec_flow cx trace (proto, HasPropT (reason_op, strict, x))
+
     | (InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, x)) ->
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
@@ -1749,8 +1760,24 @@ let rec __flow cx (l, u) trace =
       | None -> prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
       )
 
+    | InstanceT (reason_o, _, super, instance),
+      HasPropT (reason_op, strict, x) ->
+      let fields_tmap = find_props cx instance.fields_tmap in
+      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields = SMap.union fields_tmap methods_tmap in
+      (match SMap.get x fields with
+      | Some tx -> ()
+      | None ->
+          let strict = match strict with
+          | Some r -> Some r
+          | None -> Some reason_o
+          in
+          rec_flow cx trace (super, HasPropT (reason_op, strict, x))
+      )
+
     (* AnyObjT has every prop *)
-    | (AnyObjT _, HasOwnPropT _) -> ()
+    | AnyObjT _, HasOwnPropT _
+    | AnyObjT _, HasPropT _ -> ()
 
     | (ObjT (reason, { flags; props_tmap = mapr; _ }), GetKeysT(_,key)) ->
       (match flags.sealed with
@@ -3128,6 +3155,10 @@ let rec __flow cx (l, u) trace =
     (* Array library call *)
     (**********************)
 
+    | (ArrT (reason, t, _), HasPropT _) ->
+      let arrt = get_builtin_typeapp cx reason "Array" [t] in
+      rec_flow cx trace (arrt, u)
+
     | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       let reason = reason_of_use_t u in
       let arrt = get_builtin_typeapp cx reason "Array" [t] in
@@ -3137,36 +3168,36 @@ let rec __flow cx (l, u) trace =
     (* String library call *)
     (***********************)
 
-    | (StrT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
+    | (StrT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "String",u)
 
     (***********************)
     (* Number library call *)
     (***********************)
 
-    | (NumT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
+    | (NumT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Number",u)
 
     (***********************)
     (* Boolean library call *)
     (***********************)
 
-    | (BoolT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
+    | (BoolT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
 
     (*************************)
     (* Function library call *)
     (*************************)
 
-    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
+    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
       rec_flow cx trace (get_builtin_type cx reason "Function",u)
 
     (*********************)
     (* functions statics *)
     (*********************)
 
-    | (FunT (_,static,_,_), _) when object_like_op u ->
-      rec_flow cx trace (static, u)
+    | (FunT (reason, static, _, _), _) when object_like_op u ->
+      rec_flow cx trace (static, ReposLowerT (reason, constrain cx u))
 
     (*****************)
     (* class statics *)
@@ -3288,6 +3319,9 @@ let rec __flow cx (l, u) trace =
 
     (* LookupT is a non-strict lookup, never fired *)
     | (MixedT _, LookupT _) -> ()
+
+    | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
+        prmsg_flow_prop_not_found cx trace (reason_op, reason_strict)
 
     (* SuperT only involves non-strict lookups *)
     | (MixedT _, SuperT _) -> ()
@@ -3475,6 +3509,7 @@ and err_operation = function
   | LookupT _ -> "Property not found in"
   | GetKeysT _ -> "Expected object instead of"
   | HasOwnPropT _ -> "Property not found in"
+  | HasPropT _ -> "Property not found in"
   | UnaryMinusT _ -> "Expected number instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
@@ -3538,7 +3573,7 @@ and object_like = function
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | SuperT _
-  | GetKeysT _ | HasOwnPropT _
+  | GetKeysT _ | HasOwnPropT _ | HasPropT _
   | ObjAssignT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | T (AnyObjT _) -> true
