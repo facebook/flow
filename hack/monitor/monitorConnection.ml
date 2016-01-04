@@ -12,6 +12,9 @@ open ServerMonitorUtils
 
 let server_exists lock_file = not (Lock.check lock_file)
 
+let from_channel_without_buffering tic =
+  Marshal_tools.from_fd_with_preamble (Timeout.descr_of_in_channel tic)
+
 let wait_on_server_restart ic =
   try
     while true do
@@ -44,10 +47,10 @@ let establish_connection ~timeout config =
       Unix.ADDR_UNIX sock_name in
   Result.Ok (Timeout.open_connection ~timeout sockaddr)
 
-let get_cstate ~timeout (ic, oc) =
+let get_cstate (ic, oc) =
   try
     send_build_id_ohai oc;
-    let cstate : connection_state = Timeout.input_value ~timeout ic in
+    let cstate : connection_state = from_channel_without_buffering ic in
     Result.Ok (ic, oc, cstate)
   with e ->
     Timeout.shutdown_connection ic;
@@ -75,7 +78,7 @@ let verify_cstate ic = function
 (** Consume sequence of Prehandoff messages. *)
 let consume_prehandoff_messages ic =
   let open Prehandoff in
-  let m: msg = Timeout.input_value ic in
+  let m: msg = from_channel_without_buffering ic in
   match m with
   | Sentinel -> ()
   | Shutting_down ->
@@ -102,7 +105,7 @@ let connect_once config =
       ~on_timeout:(fun _ -> raise Exit)
       ~do_:begin fun timeout ->
         establish_connection ~timeout config >>= fun (ic, oc) ->
-        get_cstate ~timeout (ic, oc)
+        get_cstate (ic, oc)
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
       consume_prehandoff_messages ic;

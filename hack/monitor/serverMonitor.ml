@@ -31,9 +31,12 @@ exception Send_fd_failure of int
 
 let fd_to_int (x: Unix.file_descr) : int = Obj.magic x
 
-let msg_to_channel oc msg =
-  Marshal.to_channel oc msg [];
-  flush oc
+let msg_to_channel fd msg =
+  (* This FD will be passed to a server process, so avoid using Ocaml's
+   * channels which have built-in buffering. Even though we are only writing
+   * to the FD here, it seems using Ocaml's channels also causes read buffering
+   * to happen here, so the server process doesn't get what was meant for it. *)
+  Marshal_tools.to_fd_with_preamble fd msg
 
 let kill_server process =
   try Unix.kill process.pid Sys.sigusr2 with
@@ -144,8 +147,8 @@ let rec hand_off_client_connection_with_retries server retries client_fd =
        "server socket not yet ready. No more retries. Ignoring request.")
 
 (** Does not return. *)
-let client_out_of_date_ client_channel =
-  msg_to_channel client_channel Build_id_mismatch;
+let client_out_of_date_ client_fd =
+  msg_to_channel client_fd Build_id_mismatch;
   HackEventLogger.out_of_date ()
 
 (** Kills server, sends build ID mismatch message to client, and exits.
@@ -154,7 +157,7 @@ let client_out_of_date_ client_channel =
  * the client can wait for socket closure as indication that both the monitor
  * and server have exited.
 *)
-let client_out_of_date server client_channel =
+let client_out_of_date server client_fd =
   (match server with
   | Alive server ->
     kill_server server
@@ -162,7 +165,7 @@ let client_out_of_date server client_channel =
   let kill_signal_time = Unix.gettimeofday () in
   (** If we detect out of date client, should always kill server and exit
    * monitor, even if messaging to channel or event logger fails. *)
-  (try client_out_of_date_ client_channel with
+  (try client_out_of_date_ client_fd with
    | e -> Hh_logger.log
        "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
   (match server with
@@ -173,12 +176,11 @@ let client_out_of_date server client_channel =
 
 (** Send (possibly empty) sequences of messages before handing off to
  * server. *)
-let client_prehandoff server fd =
-  let oc = Unix.out_channel_of_descr fd in
+let client_prehandoff server client_fd =
   let open Prehandoff in
   match server with
   | Killed_intentionally ->
-    msg_to_channel oc Shutting_down;
+    msg_to_channel client_fd Shutting_down;
     Exit_status.exit Exit_status.Ok
   | Alive server ->
     let since_last_request =
@@ -186,31 +188,26 @@ let client_prehandoff server fd =
     (** TODO: Send this to client so it is visible. *)
     Hh_logger.log "Got request. Prior request %.1f seconds ago"
       since_last_request;
-    msg_to_channel (Unix.out_channel_of_descr fd)
-      Sentinel;
-    hand_off_client_connection_with_retries server 8 fd;
+    msg_to_channel client_fd Sentinel;
+    hand_off_client_connection_with_retries server 8 client_fd;
     HackEventLogger.client_connection_sent ();
     server.last_request_handoff := Unix.time ();
     Alive server
   | Died_unexpectedly (status, was_oom) ->
     (** Server has died; notify the client *)
-    msg_to_channel (Unix.out_channel_of_descr fd)
-      (Server_died {status; was_oom});
+    msg_to_channel client_fd (Server_died {status; was_oom});
     (** Next client to connect starts a new server. *)
     Exit_status.exit Exit_status.Ok
 
-let ack_and_handoff_client server fd =
-  (** Output back to the client can be safely done with Ocaml channels, but
-   * not input. See also Marshal_tools.ml. *)
-  let channel = Unix.out_channel_of_descr fd in
+let ack_and_handoff_client server client_fd =
   try
-    let client_build_id = read_build_id_ohai fd in
+    let client_build_id = read_build_id_ohai client_fd in
     if client_build_id <> Build_id.build_id_ohai
     then
-      client_out_of_date server channel
+      client_out_of_date server client_fd
     else (
-      msg_to_channel channel Connection_ok;
-      client_prehandoff server fd
+      msg_to_channel client_fd Connection_ok;
+      client_prehandoff server client_fd
     )
   with
   | Marshal_tools.Malformed_Preamble_Exception ->
@@ -218,7 +215,7 @@ let ack_and_handoff_client server fd =
     (Hh_logger.log "
         Marshal tools read malformed preamble, interpreting as version change.
         ";
-     client_out_of_date server channel)
+     client_out_of_date server client_fd)
   | Malformed_build_id as e ->
     HackEventLogger.malformed_build_id ();
     Hh_logger.log "Malformed Build ID";
