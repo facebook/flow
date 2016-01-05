@@ -36,6 +36,7 @@ class ['a] t = object(self)
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | CustomFunT _
     -> acc
 
   | FunT (_, static, prototype, funtype) ->

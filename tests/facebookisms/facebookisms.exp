@@ -1,0 +1,20 @@
+
+copyProperties.js:6:6,19: identifier `copyProperties`
+Could not resolve name
+
+copyProperties.js:31:28,30: string
+This type is incompatible with
+copyProperties.js:31:43,48: number
+
+mergeInto.js:6:6,14: identifier `mergeInto`
+Could not resolve name
+
+test.js:6:21,26: number
+This type is incompatible with
+test.js:6:12,17: string
+
+test.js:7:10,10: property `y`
+Property not found in
+test.js:4:7,9: Foo
+
+Found 5 errors

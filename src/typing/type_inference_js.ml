@@ -430,6 +430,12 @@ let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
       ]
 ))
 
+let mk_custom_fun cx loc typeParameters kind =
+  check_type_param_arity cx loc typeParameters 0 (fun () ->
+    let reason = mk_reason "function type" loc in
+    CustomFunT (reason, kind)
+  )
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -661,6 +667,19 @@ let rec convert cx type_params_map = Ast.Type.(function
           let reason = Reason_js.repos_reason loc (reason_of_t t) in
           UnionT (reason, [t; TaintT (mk_reason "taint" loc)])
         )
+
+      | "$Facebookism$ClassWithMixins" ->
+          mk_custom_fun cx loc typeParameters ClassWithMixins
+      | "$Facebookism$CopyProperties" ->
+          mk_custom_fun cx loc typeParameters CopyProperties
+      | "$Facebookism$Merge" ->
+          mk_custom_fun cx loc typeParameters Merge
+      | "$Facebookism$MergeDeepInto" ->
+          mk_custom_fun cx loc typeParameters MergeDeepInto
+      | "$Facebookism$MergeInto" ->
+          mk_custom_fun cx loc typeParameters MergeInto
+      | "$Facebookism$Mixin" ->
+          mk_custom_fun cx loc typeParameters Mixin
 
 
       (* You can specify in the .flowconfig the names of types that should be
@@ -3681,63 +3700,6 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       );
       void_ loc
 
-  | Call {
-      Call.callee = _, Identifier (_,
-        { Ast.Identifier.name = "copyProperties"; _ });
-      arguments
-    } ->
-      (* TODO: require *)
-      let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      let reason = mk_reason "object extension" loc in
-      chain_objects cx reason (List.hd argts) (List.tl argts)
-
-  | Call {
-      Call.callee = _, Identifier (_,
-        { Ast.Identifier.name = "mergeInto"; _ });
-      arguments
-    } ->
-      (* TODO: require *)
-      let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      let reason = mk_reason "object extension" loc in
-      ignore (chain_objects cx reason (List.hd argts) (List.tl argts));
-      void_ loc
-
-  | Call {
-      Call.callee = _, Identifier (_,
-        { Ast.Identifier.name = "mergeDeepInto"; _ });
-      arguments
-    } ->
-      (* TODO: require *)
-      let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      ignore argts; (* TODO *)
-      void_ loc
-
-  | Call {
-      Call.callee = _, Identifier (_, { Ast.Identifier.name = "merge"; _ });
-      arguments
-    } ->
-      (* TODO: require *)
-      let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      let reason = mk_reason "object" loc in
-      spread_objects cx reason argts
-
-  | Call {
-      Call.callee = _, Identifier (_, { Ast.Identifier.name = "mixin"; _ });
-      arguments
-    } ->
-      (* TODO: require *)
-      let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      let reason = mk_reason "object" loc in
-      ClassT (spread_objects cx reason argts)
-
-  | Call {
-      Call.callee = _, Identifier (_,
-        { Ast.Identifier.name = "classWithMixins"; _ });
-      arguments
-    } ->
-    (* TODO *)
-    AnyT.t
-
   | Call { Call.callee; arguments } ->
       let f = expression cx type_params_map callee in
       let reason = mk_reason "function call" loc in
@@ -4288,21 +4250,6 @@ and assignment cx type_params_map loc = Ast.Expression.(function
       lhs_t
 )
 
-(* Object assignment patterns. In the `copyProperties` model (chain_objects), an
-   existing object receives properties from other objects. This pattern suffers
-   from "races" in the type checker, since the object supposed to receive
-   properties is available even when the other objects supplying the properties
-   are not yet available. In the `mergeProperties` model (spread_objects), a new
-   object receives properties from other objects and is returned, but the new
-   object is made available only when the properties have actually been
-   received. Similarly, clone_object makes the receiving object available only
-   when the properties have actually been received. These patterns are useful
-   when merging properties across modules, e.g., and should eventually replace
-   other patterns wherever they are potentially racy. *)
-
-and spread_objects cx reason those =
-  chain_objects cx reason (mk_object cx reason) those
-
 and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->
     let t = Flow_js.constrain cx (ObjRestT(reason, excludes, tvar)) in
@@ -4315,12 +4262,6 @@ and clone_object_with_excludes cx reason this that excludes =
 and clone_object cx reason this that =
   clone_object_with_excludes cx reason this that []
 
-and chain_objects cx reason this those =
-  List.fold_left (fun result that ->
-    Flow_js.mk_tvar_where cx reason (fun t ->
-      Flow_js.flow cx (result, ObjAssignT(reason, that, t, [], true));
-    )
-  ) this those
 
 and react_ignored_attributes = [ "key"; "ref"; ]
 
@@ -5349,7 +5290,7 @@ and static_method_call_Object cx type_params_map loc prop_loc m args_ = Ast.Expr
   | ("assign", (Expression e)::others) ->
     let this = expression cx type_params_map e in
     let those = List.map (expression_or_spread cx type_params_map) others in
-    chain_objects cx reason this those
+    Flow_js.chain_objects cx reason this those
 
   (* Freezing an object literal is supported since there's no way it could
      have been mutated elsewhere *)

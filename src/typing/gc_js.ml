@@ -80,6 +80,7 @@ let rec gc cx state = function
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | CustomFunT _
       -> ()
 
   | FunT(_, static, prototype, funtype) ->

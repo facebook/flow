@@ -219,6 +219,10 @@ type t =
   (* util for deciding subclassing relations *)
   | ExtendsT of t list * t * t
 
+  (* Sigil representing functions that the type system is not expressive enough
+     to annotate, so we customize their behavior internally. *)
+  | CustomFunT of reason * custom_fun_kind
+
 and use_t =
   | T of t
 
@@ -462,6 +466,14 @@ and properties = t SMap.t
 
 and t_out = t
 
+and custom_fun_kind =
+  | ClassWithMixins
+  | CopyProperties
+  | Merge
+  | MergeDeepInto
+  | MergeInto
+  | Mixin
+
 let compare = Pervasives.compare
 
 let open_tvar tvar =
@@ -664,6 +676,8 @@ let rec reason_of_t = function
 
   | ModuleT (reason, _) -> reason
 
+  | CustomFunT (reason, _) -> reason
+
   | ExtendsT (_,_,t) ->
       prefix_reason "extends " (reason_of_t t)
 
@@ -865,6 +879,8 @@ let rec mod_reason_of_t f = function
 
   | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
 
+  | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
+
 and mod_reason_of_use_t f = function
   | T t -> T (mod_reason_of_t f t)
 
@@ -1017,6 +1033,7 @@ let string_of_ctor = function
   | SingletonBoolT _ -> "SingletonBoolT"
   | ModuleT _ -> "ModuleT"
   | ExtendsT _ -> "ExtendsT"
+  | CustomFunT _ -> "CustomFunT"
 
 let string_of_use_ctor = function
   | T t -> string_of_ctor t

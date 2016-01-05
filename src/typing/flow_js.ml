@@ -1018,7 +1018,7 @@ let not_expect_use_bound t =
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
-let rec __flow cx (l, u) trace =
+let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
   begin match Context.verbose cx with
   | Some num_indent ->
     let indent = String.make ((Trace.trace_depth trace - 1) * num_indent) ' ' in
@@ -2139,6 +2139,44 @@ let rec __flow cx (l, u) trace =
       rec_flow_t cx trace (any, this_t);
       multiflow cx trace reason_op (params_tlist, [RestT any]);
       rec_flow_t cx trace (AnyT.why reason_op, return_t);
+
+
+    (* Facebookisms are special Facebook-specific functions that are not
+       expressable with our current type syntax, so we've hacked in special
+       handling. Terminate with extreme prejudice. *)
+
+    | CustomFunT (reason, CopyProperties),
+      CallT (reason_op, { params_tlist = dest_t::ts; return_t; _ }) ->
+      let t = chain_objects cx ~trace reason_op dest_t ts in
+      rec_flow_t cx trace (t, return_t)
+
+    | CustomFunT (reason, MergeInto),
+      CallT (reason_op, { params_tlist = dest_t::ts; return_t; _ }) ->
+      ignore (chain_objects cx ~trace reason_op dest_t ts);
+      rec_flow_t cx trace (VoidT.why reason_op, return_t)
+
+    | CustomFunT (reason, MergeDeepInto),
+      CallT (reason_op, { return_t; _ }) ->
+      (* TODO *)
+      rec_flow_t cx trace (VoidT.why reason_op, return_t)
+
+    | CustomFunT (reason, Merge),
+      CallT (reason_op, { params_tlist; return_t; _ }) ->
+      rec_flow_t cx trace (spread_objects cx reason_op params_tlist, return_t)
+
+    | CustomFunT (reason, Mixin),
+      CallT (reason_op, { params_tlist; return_t; _ }) ->
+      let t = ClassT (spread_objects cx reason_op params_tlist) in
+      rec_flow_t cx trace (t, return_t)
+
+    | CustomFunT (reason, ClassWithMixins),
+      CallT (reason_op, { return_t; _ }) ->
+      (* TODO *)
+      rec_flow_t cx trace (AnyT.why reason_op, return_t)
+
+    | CustomFunT (reason, _), _ when function_like_op u ->
+      rec_flow cx trace (AnyFunT reason, u)
+
 
     (*********************************************)
     (* object types deconstruct into their parts *)
@@ -3785,6 +3823,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | CustomFunT _
     ->
     t
 
@@ -4112,6 +4151,31 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   in
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
+
+
+(* Object assignment patterns. In the `copyProperties` model (chain_objects), an
+   existing object receives properties from other objects. This pattern suffers
+   from "races" in the type checker, since the object supposed to receive
+   properties is available even when the other objects supplying the properties
+   are not yet available. In the `mergeProperties` model (spread_objects), a new
+   object receives properties from other objects and is returned, but the new
+   object is made available only when the properties have actually been
+   received. Similarly, clone_object makes the receiving object available only
+   when the properties have actually been received. These patterns are useful
+   when merging properties across modules, e.g., and should eventually replace
+   other patterns wherever they are potentially racy. *)
+
+and spread_objects cx reason those =
+  let obj = mk_object_with_proto cx reason (MixedT reason) in
+  chain_objects cx reason obj those
+
+and chain_objects cx ?trace reason this those =
+  List.fold_left (fun result that ->
+    mk_tvar_where cx reason (fun t ->
+      flow_opt cx ?trace (result, ObjAssignT(reason, that, t, [], true));
+    )
+  ) this those
+
 
 (* Speculatively match types, returning success. *)
 and speculative_match cx trace l u =

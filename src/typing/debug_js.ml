@@ -230,6 +230,17 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
     ]
+
+  | CustomFunT (_, kind) -> [
+      "kind", JSON_String (match kind with
+      | ClassWithMixins -> "classWithMixins"
+      | CopyProperties -> "copyProperties"
+      | Merge -> "merge"
+      | MergeDeepInto -> "mergeDeepInto"
+      | MergeInto -> "mergeInto"
+      | Mixin -> "mixin"
+      );
+    ]
   )
 )
 
@@ -435,8 +446,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out;
     ]
   | SetStarExportsT (_, target_module_t, t_out) -> [
-    "target_module_t", _json_of_t json_cx target_module_t;
-    "t_out", _json_of_t json_cx t_out;
+      "target_module_t", _json_of_t json_cx target_module_t;
+      "t_out", _json_of_t json_cx t_out;
     ]
   )
 )
