@@ -79,19 +79,19 @@ let verify_cstate ic = function
 
 (** Consume sequence of Prehandoff messages. *)
 let consume_prehandoff_messages ic =
-  let open Prehandoff in
-  let m: msg = from_channel_without_buffering ic in
+  let module PH = Prehandoff in
+  let m: PH.msg = from_channel_without_buffering ic in
   match m with
-  | Sentinel -> ()
-  | Server_name_not_found ->
+  | PH.Sentinel -> ()
+  | PH.Server_name_not_found ->
     Printf.eprintf
       "Requested server name not found. This is probably a bug in Hack.";
     raise (Exit_status.Exit_with (Exit_status.Server_name_not_found));
-  | Shutting_down ->
+  | PH.Shutting_down ->
     Printf.eprintf "Last server exited. A new will be started.\n%!";
     wait_on_server_restart ic;
     raise Server_shutting_down
-  | Server_died {status; was_oom} ->
+  | PH.Server_died {PH.status; PH.was_oom} ->
     (match was_oom, status with
     | true, _ ->
       Printf.eprintf "Last server killed by OOM Manager.\n%!";
@@ -121,7 +121,8 @@ let connect_once config server_name =
   | Exit_status.Exit_with _  as e -> raise e
   | Server_shutting_down ->
     Result.Error Server_missing
-  | Last_server_died as e -> raise e
+  | Last_server_died ->
+    Result.Error Server_died
   | _ ->
     if not (server_exists config.lock_file) then Result.Error Server_missing
     else Result.Error Server_busy

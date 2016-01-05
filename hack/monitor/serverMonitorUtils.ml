@@ -19,6 +19,7 @@ type monitor_config =
 type connection_error =
   | Server_missing
   | Server_busy
+  | Server_died
   | Build_id_mismatched
 
 type connection_state =

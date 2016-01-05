@@ -79,12 +79,15 @@ let should_start env =
   match ServerUtils.connect_to_monitor
     env.root HhServerMonitorConfig.Program.name with
   | Result.Ok _conn -> false
-  | Result.Error SMUtils.Server_missing
-  | Result.Error SMUtils.Build_id_mismatched -> true
+  | Result.Error
+      ( SMUtils.Server_missing
+      | SMUtils.Build_id_mismatched
+      | SMUtils.Server_died
+      ) -> true
   | Result.Error SMUtils.Server_busy ->
-      Printf.eprintf "Replacing unresponsive server for %s\n%!" root_s;
-      ClientStop.kill_server env.root;
-      true
+    Printf.eprintf "Replacing unresponsive server for %s\n%!" root_s;
+    ClientStop.kill_server env.root;
+    true
 
 let main env =
   HackEventLogger.client_start ();

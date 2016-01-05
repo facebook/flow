@@ -105,7 +105,7 @@ let do_kill env =
           try mean_kill env with FailedToKill ->
             raise Exit_status.(Exit_with Kill_error)
       end
-  | Result.Error SMUtils.Server_missing ->
+  | Result.Error (SMUtils.Server_missing | SMUtils.Server_died) ->
       Printf.eprintf "Error: no server to kill for %s\n%!" root_s
   | Result.Error SMUtils.Build_id_mismatched ->
       Printf.eprintf "Successfully killed server for %s\n%!" root_s

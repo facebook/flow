@@ -188,13 +188,13 @@ let client_out_of_date servers client_fd =
 (** Send (possibly empty) sequences of messages before handing off to
  * server. *)
 let client_prehandoff servers server_name client_fd =
-  let open Prehandoff in
+  let module PH = Prehandoff in
   match SMap.get server_name servers with
   | None ->
-    msg_to_channel client_fd Server_name_not_found;
+    msg_to_channel client_fd PH.Server_name_not_found;
     servers
   | Some Killed_intentionally ->
-    msg_to_channel client_fd Shutting_down;
+    msg_to_channel client_fd PH.Shutting_down;
     Exit_status.exit Exit_status.Ok
   | Some (Alive server) ->
     let since_last_request =
@@ -202,14 +202,14 @@ let client_prehandoff servers server_name client_fd =
     (** TODO: Send this to client so it is visible. *)
     Hh_logger.log "Got request for %s. Prior request %.1f seconds ago"
       server_name since_last_request;
-    msg_to_channel client_fd Sentinel;
+    msg_to_channel client_fd PH.Sentinel;
     hand_off_client_connection_with_retries server 8 client_fd;
     HackEventLogger.client_connection_sent ();
     server.last_request_handoff := Unix.time ();
     SMap.add server_name (Alive server) servers
   | Some (Died_unexpectedly (status, was_oom)) ->
     (** Server has died; notify the client *)
-    msg_to_channel client_fd (Server_died {status; was_oom});
+    msg_to_channel client_fd (PH.Server_died {PH.status; PH.was_oom});
     (** Next client to connect starts a new server. *)
     Exit_status.exit Exit_status.Ok
 
