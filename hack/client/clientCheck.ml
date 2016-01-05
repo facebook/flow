@@ -194,8 +194,12 @@ let main args =
     | MODE_STATUS ->
       let error_list = Cmd.rpc conn Rpc.STATUS in
       if args.output_json || args.from <> "" || error_list = []
-      then ServerError.print_errorl args.output_json error_list stdout
-      else List.iter error_list ClientCheckStatus.print_error_color;
+      then begin
+        (* this should really go to stdout but we need to adapt the various
+         * IDE plugins first *)
+        let oc = if args.output_json then stderr else stdout in
+        ServerError.print_errorl args.output_json error_list oc
+      end else List.iter error_list ClientCheckStatus.print_error_color;
       if error_list = [] then Exit_status.Ok else Exit_status.Type_error
     | MODE_SHOW classname ->
       let ic, oc = conn in
