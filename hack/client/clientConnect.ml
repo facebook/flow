@@ -111,14 +111,15 @@ let open_and_get_tail_msg start_time tail_env =
   let tail_msg = msg_of_tail tail_env in
   load_state_not_found, tail_msg
 
-let print_wait_msg_and_sleep start_time tail_env =
+let print_wait_msg ?(first_call=false) start_time tail_env =
+  if (not first_call) && Tty.spinner_used () then
+    Tty.print_clear_line stderr;
   let load_state_not_found, tail_msg =
     open_and_get_tail_msg start_time tail_env in
   if load_state_not_found then
     Printf.eprintf "%s\n%!" ClientMessages.load_state_not_found_msg;
   Tty.eprintf "hh_server is busy: %s %s%!" tail_msg (Tty.spinner());
-  Unix.sleep 1;
-  if Tty.spinner_used () then Tty.print_clear_line stderr
+  ()
 
 (** Sleeps until the server says hello. While waiting, prints out spinner and
  * useful messages by tailing the server logs. *)
@@ -131,16 +132,9 @@ let rec wait_for_server_hello ic env retries start_time tail_env first_call =
   | None -> ();
   let readable, _, _  = Unix.select
     [Timeout.descr_of_in_channel ic] [] [Timeout.descr_of_in_channel ic]
-    (** Select with timeout so that the client gets "hello" message ASAP
-     * and doesn't unnecessarily display the busy spinner for 1 second.
-     *
-     * Subsequent calls select here with no timeout. Sleeping happens
-     * inside print_wait_msg_and_sleep so that the "busy" spinner doesn't
-     * blink.
-     * *)
-    (if first_call then 1.0 else 0.0) in
+      (if first_call then 0.0 else 1.0) in
   if readable = [] then (
-    print_wait_msg_and_sleep start_time tail_env;
+    print_wait_msg ~first_call start_time tail_env;
     wait_for_server_hello ic env (Option.map retries (fun x -> x - 1))
       start_time tail_env false
   ) else
@@ -149,7 +143,7 @@ let rec wait_for_server_hello ic env retries start_time tail_env first_call =
       | "Hello" ->
         ()
       | _ ->
-        print_wait_msg_and_sleep start_time tail_env;
+        print_wait_msg ~first_call start_time tail_env;
         wait_for_server_hello ic env (Option.map retries (fun x -> x - 1))
           start_time tail_env false
       )
