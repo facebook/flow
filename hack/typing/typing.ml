@@ -3185,7 +3185,7 @@ and static_class_id p env = function
         end env class_.tc_tparams in
         env, (Reason.Rwitness (fst c), Tclass (c, params))
     )
-  | CIexpr e ->
+  | CIexpr (p, _ as e) ->
       let env, ty = expr env e in
       let rec resolve_ety ty =
         let env, ty = TUtils.fold_unresolved env ty in
