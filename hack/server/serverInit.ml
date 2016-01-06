@@ -73,80 +73,104 @@ let save_state env fn =
   SharedMem.save_dep_table (fn^".deptable");
   ignore @@ Hh_logger.log_duration "Saving" t
 
+let read_json_line ic =
+  let output = input_line ic in
+  try Hh_json.json_of_string output
+  with Hh_json.Syntax_error _ as e ->
+    Hh_logger.log "Failed to parse JSON: %s" output;
+    raise e
+
+let check_json_obj_error kv =
+  match List.Assoc.find kv "error" with
+  | Some (Hh_json.JSON_String s) -> failwith s
+  | _ -> ()
+
 (* Expected output from script:
- * The first line indicates the path to the state file
- * The remaining lines indicate the files that have changed since that file
+ * Two lines of JSON.
+ * The first line indicates the path to the state file plus some metadata
+ * The second line is a list of the files that have changed since the state
  * was built
  *)
-let load_state_ root cmd =
-  let cmd =
-    Printf.sprintf
-      "%s %s %s"
-      (Filename.quote (Path.to_string cmd))
-      (Filename.quote (Path.to_string root))
-      (Filename.quote Build_id.build_id_ohai) in
-  Hh_logger.log "Running load_mini script: %s\n%!" cmd;
-  let ic = Unix.open_process_in cmd in
-  let output = Sys_utils.read_all ic in
-  let json =
-    try Hh_json.json_of_string output
-    with Hh_json.Syntax_error _ as e ->
-      Hh_logger.log "Failed to parse script output: %s" output;
-      raise e
-  in
-  assert (Unix.close_process_in ic = Unix.WEXITED 0);
-  let kv = Hh_json.get_object_exn json in
-  (match List.Assoc.find kv "error" with
-   | Some (Hh_json.JSON_String s) -> failwith s
-   | _ -> ());
-  let state_fn = Hh_json.get_string_exn @@ List.Assoc.find_exn kv "state" in
-  let is_cached = Hh_json.get_bool_exn @@ List.Assoc.find_exn kv "is_cached" in
-  let deptable_fn =
-    Hh_json.get_string_exn @@ List.Assoc.find_exn kv "deptable" in
-  let to_recheck = Hh_json.get_array_exn @@ List.Assoc.find_exn kv "changes" in
-  let to_recheck = List.map to_recheck Hh_json.get_string_exn in
-  SharedMem.load_dep_table deptable_fn;
-  let end_time = Unix.gettimeofday () in
-  state_fn, to_recheck, is_cached, end_time
-
 let load_state root cmd (_ic, oc) =
-  let result = Result.try_with (fun () -> load_state_ root cmd) in
-  Daemon.to_channel oc result
+  try
+    let cmd =
+      Printf.sprintf
+        "%s %s %s"
+        (Filename.quote (Path.to_string cmd))
+        (Filename.quote (Path.to_string root))
+        (Filename.quote Build_id.build_id_ohai) in
+    Hh_logger.log "Running load_mini script: %s\n%!" cmd;
+    let ic = Unix.open_process_in cmd in
+    let json = read_json_line ic in
+    let kv = Hh_json.get_object_exn json in
+    check_json_obj_error kv;
+    let state_fn = Hh_json.get_string_exn @@ List.Assoc.find_exn kv "state" in
+    let is_cached =
+      Hh_json.get_bool_exn @@ List.Assoc.find_exn kv "is_cached" in
+    let deptable_fn =
+      Hh_json.get_string_exn @@ List.Assoc.find_exn kv "deptable" in
+    SharedMem.load_dep_table deptable_fn;
+    let end_time = Unix.gettimeofday () in
+    Daemon.to_channel oc @@ Ok (`Fst (state_fn, is_cached, end_time));
+    let json = read_json_line ic in
+    assert (Unix.close_process_in ic = Unix.WEXITED 0);
+    let kv = Hh_json.get_object_exn json in
+    check_json_obj_error kv;
+    let to_recheck =
+      Hh_json.get_array_exn @@ List.Assoc.find_exn kv "changes" in
+    let to_recheck = List.map to_recheck Hh_json.get_string_exn in
+    Daemon.to_channel oc @@ Ok (`Snd to_recheck)
+  with e ->
+    Daemon.to_channel oc @@ Error e
 
-(* This runs the load script to download state and figure out which files have
- * changed, then loads the downloaded dependency table into shared memory. It
- * must not run concurrently with any operations that might write to the
- * deptable. *)
-let mk_state_future timeout root cmd =
+let with_loader_timeout timeout f =
+  Result.try_with @@ fun () ->
+  Timeout.with_timeout ~timeout ~do_:f
+    ~on_timeout:(fun _ -> raise Loader_timeout)
+
+(* This generator-like function first runs the load script to download state
+ * and loads the downloaded dependency table into shared memory. It then
+ * waits for the load script to send it the list of files that have changed
+ * since the state was downloaded.
+ *
+ * The loading of the dependency table must not run concurrently with any
+ * operations that might write to the deptable. *)
+let mk_state_future root cmd =
   let start_time = Unix.gettimeofday () in
   Result.try_with @@ fun () ->
   let log_file =
     Sys_utils.make_link_of_timestamped (ServerFiles.load_log root) in
   let {Daemon.channels = (ic, _oc); pid} as daemon =
-    Daemon.fork ~log_file (load_state root cmd) in
-  fun () ->
-    Result.join @@ Result.try_with @@ fun () ->
-    Timeout.with_timeout
-      ~timeout
-      ~on_timeout:(fun _ ->
-        (* Do a best-effort attempt to kill the daemon, since we no longer
-         * need its result. The call may fail if e.g. the daemon exited just
-         * after the timeout but before the kill signal goes through *)
-        (try Daemon.kill daemon with e -> Hh_logger.exc e);
-        raise Loader_timeout)
-      ~do_:begin fun t ->
-        Daemon.from_channel ~timeout:t ic
-        >>| fun (fn, dirty_files, is_cached, end_time) ->
+    Daemon.fork ~log_file (load_state root cmd)
+  in fun `Wait_for_state ->
+  let fn =
+    try
+      Daemon.from_channel ic >>| function
+      | `Snd _ -> assert false
+      | `Fst (fn, is_cached, end_time) ->
         HackEventLogger.load_mini_worker_end ~is_cached start_time end_time;
         let time_taken = end_time -. start_time in
-        Hh_logger.log "Mini-state loading worker took %.2fs" time_taken;
-        let _, status = Unix.waitpid [] pid in
-        assert (status = Unix.WEXITED 0);
-        let chan = open_in fn in
-        let old_fast = Marshal.from_channel chan in
-        let dirty_files = List.map dirty_files Relative_path.(concat Root) in
-        Relative_path.set_of_list dirty_files, old_fast
-      end
+        Hh_logger.log "Loading mini-state took %.2fs" time_taken;
+        fn
+    with e ->
+      (* We have failed to load the saved state in the allotted time. Kill
+       * the daemon so it doesn't write to shared memory while the type-decl
+       * / type-check phases are running. The kill may fail if e.g. the
+       * daemon exited just after the timeout but before the kill signal goes
+       * through *)
+      (try Daemon.kill daemon with e -> Hh_logger.exc e);
+      raise e
+  in fun `Wait_for_changes ->
+  fn >>= fun fn ->
+  Daemon.from_channel ic >>| function
+  | `Fst _ -> assert false
+  | `Snd dirty_files ->
+    let _, status = Unix.waitpid [] pid in
+    assert (status = Unix.WEXITED 0);
+    let chan = open_in fn in
+    let old_fast = Marshal.from_channel chan in
+    let dirty_files = List.map dirty_files Relative_path.(concat Root) in
+    Relative_path.set_of_list dirty_files, old_fast
 
 let is_check_mode options =
   ServerArgs.check_mode options &&
@@ -316,14 +340,27 @@ let init ?load_mini_script genv =
    * in the Result monad provides a convenient way to locate the error
    * handling code in one place. *)
   let load_mini_script = Result.of_option load_mini_script ~error:No_loader in
-  let timeout = genv.local_config.SLC.load_mini_script_timeout in
-  let state_future = load_mini_script >>= (mk_state_future timeout root) in
+  let state_future = load_mini_script >>= mk_state_future root in
 
   let get_next, t = indexing genv in
   let env, t = parsing genv env ~get_next t in
 
+  let timeout = genv.local_config.SLC.load_mini_script_timeout in
+  let state_future = state_future >>= fun f ->
+    with_loader_timeout timeout (fun _ -> f `Wait_for_state)
+  in
+  HackEventLogger.load_mini_state_end t;
+  let t = Hh_logger.log_duration "Loading mini-state" t in
+
+  let t = update_files genv env.files_info t in
+  let env, t = naming env t in
+  let fast = FileInfo.simplify_fast env.files_info in
+  let fast = Relative_path.(Set.fold Map.remove) env.failed_parsing fast in
+  let env, t = type_decl genv env fast t in
+
   let state = state_future >>= fun f ->
-    f () >>= fun (dirty_files, old_fast) ->
+    with_loader_timeout timeout (fun _ -> f `Wait_for_changes)
+    |> Result.join >>= fun (dirty_files, old_fast) ->
     genv.wait_until_ready ();
     let root = Path.to_string root in
     let updates = genv.notifier () in
@@ -337,18 +374,13 @@ let init ?load_mini_script genv =
       Relative_path.Set.union dirty_files (get_build_targets ()) in
     Ok (dirty_files, changed_while_parsing, old_fast)
   in
-  HackEventLogger.load_mini_state_end t;
-  let t = Hh_logger.log_duration "Loading mini state" t in
-
-  let t = update_files genv env.files_info t in
-  let env, t = naming env t in
-  let fast = FileInfo.simplify_fast env.files_info in
-  let fast = Relative_path.(Set.fold Map.remove) env.failed_parsing fast in
-  let env, t = type_decl genv env fast t in
+  HackEventLogger.vcs_changed_files_end t;
+  let t = Hh_logger.log_duration "Finding changed files" t in
 
   let env, t =
     match state with
     | Ok (dirty_files, changed_while_parsing, old_fast) ->
+      Hh_logger.log "Successfully loaded mini-state";
       (* If a file has changed while we were parsing, we may have parsed the
        * new version, so we must treat it as possibly creating new type
        * errors. *)
