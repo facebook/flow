@@ -426,18 +426,34 @@ and Statement : sig
         name: Identifier.t option;
       }
     end
+    type named_specifier = {
+      local: Identifier.t option;
+      remote: Identifier.t;
+    }
     type specifier =
+      | ImportNamedSpecifier of named_specifier
+      | ImportDefaultSpecifier of Identifier.t
+      | ImportNamespaceSpecifier of (Loc.t * Identifier.t)
+
+      (*
       | Named of Loc.t * (NamedSpecifier.t list)
       | NameSpace of (Loc.t * Identifier.t)
+      *)
     type importKind =
       | ImportType
       | ImportTypeof
       | ImportValue
     type t = {
+      importKind: importKind;
+      source: (Loc.t * Literal.t); (* Always a string literal *)
+      specifiers: specifier list;
+
+      (*
       default: Identifier.t option;
       specifier: specifier option;
       source: (Loc.t * Literal.t ); (* String literal *)
       importKind: importKind;
+      *)
     }
   end
   module Expression : sig
