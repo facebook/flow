@@ -14,7 +14,7 @@ Has this ever happened to you:
 // @flow
 
 // Post-transformation lint error: Unused variable 'URI'
-var URI = require('URI');
+import URI from "URI";
 
 // But if you delete the require you get a Flow error: 
 // identifier URI - Unknown global name
@@ -34,7 +34,7 @@ So instead of the above code, you can now write this:
 ```JavaScript
 // @flow
 
-import type * as URI from 'URI';
+import type URI from 'URI';
 module.exports = function(x: URI): URI { 
   return x; 
 };
