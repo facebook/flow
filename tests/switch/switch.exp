@@ -7,24 +7,44 @@ switch.js:28:15,15: string
 This type is incompatible with
 switch.js:28:13,15: number
 
-switch_default_fallthrough.js:9:13,13: number
+switch_default_fallthrough.js:16:6,6: number
 This type is incompatible with
-switch_default_fallthrough.js:5:13,14: string
+switch_default_fallthrough.js:16:10,15: string
 
-switch_default_fallthrough.js:11:13,13: number
+switch_default_fallthrough.js:17:6,6: string
 This type is incompatible with
-switch_default_fallthrough.js:6:13,14: string
+switch_default_fallthrough.js:17:10,15: number
 
-switch_default_fallthrough.js:32:6,6: number
+switch_default_fallthrough.js:21:12,12: number
 This type is incompatible with
-switch_default_fallthrough.js:32:10,15: string
+switch_default_fallthrough.js:4:26,31: string
 
-switch_default_fallthrough.js:33:6,6: number
+switch_default_fallthrough.js:39:6,6: number
 This type is incompatible with
-switch_default_fallthrough.js:33:10,15: string
+switch_default_fallthrough.js:39:10,15: string
 
-switch_default_fallthrough.js:35:12,14: string
+switch_default_fallthrough.js:40:6,6: string
 This type is incompatible with
-switch_default_fallthrough.js:17:25,30: number
+switch_default_fallthrough.js:40:10,15: number
 
-Found 7 errors
+switch_default_fallthrough.js:43:6,6: number
+This type is incompatible with
+switch_default_fallthrough.js:43:10,15: string
+
+switch_default_fallthrough.js:44:6,6: string
+This type is incompatible with
+switch_default_fallthrough.js:44:10,15: number
+
+switch_default_fallthrough.js:46:12,14: string
+This type is incompatible with
+switch_default_fallthrough.js:24:25,30: number
+
+trailing_cases.js:23:18,18: string
+This type is incompatible with
+trailing_cases.js:23:9,14: number
+
+trailing_cases.js:39:18,18: possibly uninitialized variable
+This type is incompatible with
+trailing_cases.js:39:9,14: number
+
+Found 12 errors

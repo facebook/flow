@@ -871,7 +871,7 @@ let rec find_scope cx reason envs scope_id =
  changeset keys from the derivations into the original. *)
 let merge_env =
 
-  (* find sscope triple in env triple *)
+  (* find scope triple in env triple *)
   let find_scope_triple cx reason (env0, env1, env2) id =
     let lst = find_scope cx reason [env0; env1; env2] id in
     List.(nth lst 0, nth lst 1, nth lst 2)

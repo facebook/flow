@@ -4,14 +4,21 @@
 function foo(x : mixed): string {
     var a = "";
     var b = "";
+
     switch (x) {
       case "foo":
         a = 0;
       default:
         b = 0;
     }
-    (a : string);
-    return b;
+
+    // a is now string | number
+    (a : string); // error, string | number ~/> string
+    (a : number); // error, string | number ~/> number
+
+    // b is now number
+    (b : number); // ok
+    return b; // error, number ~/> string
 }
 
 function baz(x: mixed): number {
@@ -26,11 +33,15 @@ function baz(x: mixed): number {
         a = "";
       default:
         b = 0;
-
     }
 
-    (a : string);
-    (b : string);
+    // a is now string | number
+    (a : string); // error, string | number ~/> string
+    (a : number); // error, string | number ~/> number
 
-    return a+b;
+    // b is now string | number
+    (b : string); // error, string | number ~/> string
+    (b : number); // error, string | number ~/> number
+
+    return a+b; // error, string ~/> number
 }

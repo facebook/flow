@@ -25,7 +25,7 @@ function self_init() {
   let y:number = y; // error, uninitialized ~/> number
 }
 
-// use of let after partial init gives undefined
+// use of let after partial init (non-exhaustive if) gives undefined
 function if_partial_post_init(b) {
   let x:number;
   if (b) {
@@ -34,7 +34,7 @@ function if_partial_post_init(b) {
   var y:number = x; // error, possibly uninitialized
 }
 
-// use of let after guaranteed init is ok
+// use of let after guaranteed init (exhaustive if) is ok
 function if_post_init(b) {
   let x:number;
   if (b) {
@@ -43,6 +43,36 @@ function if_post_init(b) {
     x = 1;
   }
   var y:number = x;
+}
+
+// use of let after partial init (non-exhaustive switch) gives undefined
+function switch_partial_post_init(i) {
+  let x:number;
+  switch (i) {
+    case 0:
+      x = 0;
+      break;
+    case 1:
+      x = 1;
+      break;
+  }
+  var y:number = x; // error, possibly uninitialized
+}
+
+// use of let after guaranteed init (exhaustive switch) is ok
+function switch_post_init(i) {
+  let x:number;
+  switch (i) {
+    case 0:
+      x = 0;
+      break;
+    case 1:
+      x = 1;
+      break;
+    default:
+      x = 2;
+  }
+  var y:number = x; // error, possibly uninitialized
 }
 
 // use in a switch after a skipped decl is an error

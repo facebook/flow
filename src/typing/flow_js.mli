@@ -16,6 +16,7 @@ val new_error: (reason * string) list -> Errors_js.error
 
 val add_warning: Context.t -> ?trace:Trace.t -> (reason * string) list -> unit
 val add_error: Context.t -> ?trace:Trace.t -> (reason * string) list -> unit
+val add_internal_error: Context.t -> (reason * string) list -> unit
 
 val find_constraints:
   Context.t ->

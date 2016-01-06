@@ -479,6 +479,9 @@ let new_error list = Errors_js.({
 let add_error cx ?trace list =
   add_msg cx ?trace Errors_js.InferError list
 
+let add_internal_error cx list =
+  add_msg cx Errors_js.InternalError list
+
 (********************************************************************)
 
 (* Since type maps use the built-in compare function to compare types,

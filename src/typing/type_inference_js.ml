@@ -1805,119 +1805,159 @@ and statement cx type_params_map = Ast.Statement.(
       Hashtbl.replace (Context.type_table cx) loc type_;
       Env_js.init_type cx name type_ r
 
-  | (loc, Switch { Switch.discriminant; cases; lexical }) ->
-      ignore (expression cx type_params_map discriminant);
+  (*******************************************************)
 
-      Env_js.in_lex_scope cx (fun () ->
+  | (switch_loc, Switch { Switch.discriminant; cases; lexical }) ->
 
-        (* initialize switch scope bindings in a single pass *)
-        List.iter (fun (loc, { Switch.Case.test; consequent }) ->
-          toplevel_decls cx type_params_map consequent
-        ) cases;
+    (* typecheck discriminant *)
+    ignore (expression cx type_params_map discriminant);
 
-        let save_break_exn = Abnormal.(swap (Break None) false) in
-        let default = ref false in
-        let env =  Env_js.peek_env () in
-        let last_env = ref None in
-        let fallthrough_env = ref env in
-        let oldset = Changeset.clear () in
+    (* add default if absent *)
+    let cases =
+      let empty_default loc =
+        loc, { Switch.Case.test = None; consequent = [] }
+      in
+      let has_default = List.exists (
+        fun (_, { Switch.Case.test; _ }) -> test = None)
+      in
+      if has_default cases then cases
+      else cases @ [empty_default switch_loc]
+    in
 
-        let merge_with_last_env cx reason env changeset =
-          match !last_env with
-          | Some x ->
-            Env_js.merge_env cx reason (env, env, x) changeset
-          | None -> ()
+    (* entire switch is a single lexical scope *)
+    Env_js.in_lex_scope cx (fun () ->
+
+      (* set up all bindings *)
+      List.iter (fun (loc, { Switch.Case.test; consequent }) ->
+        toplevel_decls cx type_params_map consequent
+      ) cases;
+
+      (* initialize traversal state *)
+      let save_break_exn = Abnormal.(swap (Break None) false) in
+      let cursor_env = Env_js.peek_env () in
+      let switch_env = ref None in
+      let prev_case_env = ref None in
+      let oldset = Changeset.clear () in
+
+      (* traverse case list, get list of control flow exits *)
+      let exits = List.map (fun (loc, { Switch.Case.test; consequent }) ->
+
+        (* compute predicates implied by case expr *)
+        let is_default, (_, preds, not_preds, xtypes) = match test with
+        | None ->
+          true,
+          (EmptyT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
+            Scope.KeyMap.empty)
+        | Some expr ->
+          let fake_ast = loc, Ast.Expression.(Binary {
+            Binary.operator = Binary.StrictEqual;
+            left = discriminant;
+            right = expr;
+          }) in
+          false,
+          predicates_of_condition cx type_params_map fake_ast
         in
 
-        let exceptions = List.rev_map (
-          fun (loc, {Switch.Case.test; consequent}) ->
-            if !default then None (* TODO: error when case follows default *)
-            else (
-              let reason = mk_reason "case" loc in
-              let _, preds, not_preds, xtypes = match test with
-              | None ->
-                  default := true;
-                  EmptyT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
-                    Scope.KeyMap.empty
-              | Some expr ->
-                  let fake_ast = loc, Ast.Expression.(Binary {
-                    Binary.operator = Binary.StrictEqual;
-                    left = discriminant;
-                    right = expr;
-                  }) in
-                  predicates_of_condition cx type_params_map fake_ast
-              in
+        (* case's env is cursor env (incoming env negative refis from all
+           failed tests) plus positive refi from current test... *)
+        let case_env = Env_js.clone_env cursor_env in
+        let desc = if is_default then "default" else "case" in
+        let reason = mk_reason desc loc in
+        Env_js.update_env cx reason case_env;
+        Env_js.refine_with_preds cx reason preds xtypes;
 
-              (* env of new case inherits background accumulation... *)
-              let case_env = Env_js.clone_env !fallthrough_env in
-              Env_js.update_env cx reason case_env;
-              (* ...and adds test refinement... *)
-              Env_js.refine_with_preds cx reason preds xtypes;
-              (* ...and merges with previous case, which will have been
-                 cleared if it exited the switch *)
-              merge_with_last_env cx reason case_env (Changeset.peek ());
+        (* ...plus effects from previous case (if it broke or
+           exited, specific types will be cleared) *)
+        (match !prev_case_env with
+        | Some prev ->
+          Env_js.merge_env cx reason (case_env, case_env, prev)
+            (Changeset.peek ())
+        | None -> ());
 
-              let case_exception = Abnormal.catch_control_flow_exception (
-                fun () -> toplevels cx type_params_map consequent
-              ) in
+        (* process statements, collect any abnormal control flow exit *)
+        let exit = Abnormal.catch_control_flow_exception (
+          fun () -> toplevels cx type_params_map consequent
+        ) in
 
-              (* swap in background env and add negatives of this case's preds *)
-              Env_js.update_env cx reason !fallthrough_env;
-              Env_js.refine_with_preds cx reason not_preds xtypes;
+        (* save env for next case merge *)
+        prev_case_env := Some case_env;
 
-              last_env := Some case_env;
+        (* add effects into merged env *)
+        (match !switch_env with
+        | None -> switch_env := Some case_env
+        | Some sw_env ->
+          Env_js.merge_env cx reason (sw_env, sw_env, case_env)
+            (Changeset.peek ()));
 
-              case_exception
-            )
-          ) cases
-        in
+        (* add negative refis of this case's test to cursor *)
+        Env_js.update_env cx reason cursor_env;
+        Env_js.refine_with_preds cx reason not_preds xtypes;
 
-        let newset = Changeset.merge oldset in
+        exit
+      ) cases in
 
-        (* if there's no default clause, pretend there is and it's empty *)
-        if not !default
-        then (
-          let default_env = Env_js.clone_env !fallthrough_env in
-          let reason = mk_reason "default" loc in
-          Env_js.update_env cx reason default_env;
-          merge_with_last_env cx reason default_env newset
-        );
+    (* if we broke at all, case has multiple exits - swap in accumulated
+       effects and havoc now *)
+    let did_break = Abnormal.(swap (Break None) save_break_exn) in
+    (if did_break then (
+      (match !switch_env with
+      | Some env ->
+        let reason = mk_reason "switch env" switch_loc in
+        Env_js.update_env cx reason env
+      | None ->
+        let msg = "internal error: switch env missing" in
+        Flow_js.add_internal_error cx [mk_reason "" switch_loc, msg]
+      );
+      let newset = Changeset.merge oldset in
+      Env_js.havoc_vars newset
+    ));
 
-        let did_break = Abnormal.(swap (Break None) save_break_exn) in
-        if did_break then Env_js.havoc_vars newset;
+    (* if every case exits abnormally the same way (or falls through to a
+       case that does), then the switch as a whole exits that way.
+       (as with if/else, we merge `throw` into `return` when both appear) *)
+    let uniform_switch_exit case_exits =
+      let rec loop = function
+      | acc, fallthrough, [] ->
+        (* end of cases: if nothing is falling through, we made it *)
+        if fallthrough then None else acc
+      | _, _, Some (Abnormal.Break _) :: _ ->
+        (* break wrecks everything *)
+        None
+      | acc, _, None :: exits ->
+        (* begin or continue to fall through *)
+        loop (acc, true, exits)
+      | acc, _, exit :: exits when exit = acc ->
+        (* current case exits the same way as prior cases *)
+        loop (acc, acc = None, exits)
+      | Some Abnormal.Throw, _, Some Abnormal.Return :: exits
+      | Some Abnormal.Return, _, Some Abnormal.Throw :: exits ->
+        (* fuzz throw into return *)
+        loop (Some Abnormal.Return, false, exits)
+      | None, _, exit :: exits ->
+        (* terminate an initial sequence of fall-thruugh cases *)
+        (* (later sequences will have acc = Some _ ) *)
+        loop (exit, false, exits)
+      | _, _, _ ->
+        (* the new case exits differently from previous ones - fail *)
+        None
+      in loop (None, false, case_exits)
+    in
+    (match uniform_switch_exit exits with
+    | None -> ()
+    | Some exn -> Abnormal.throw_control_flow_exception exn
+    );
 
-        (* if the default clause exits abnormally and other cases either fall
-           through or exit abnormally the same way, then the switch exits
-           abnormally that way *)
-        if !default
-        then (
-          match List.hd exceptions with
-          | Some (Abnormal.Break None) | None -> ()
-          | Some exn ->
-              if List.tl exceptions |> List.for_all (function
-                | None
-                | Some Abnormal.Throw
-                | Some Abnormal.Return -> true
-                | _ -> false
-              )
-              then Abnormal.throw_control_flow_exception exn
-        );
+    (* if we didn't break or otherwise exit, make last env current *)
+    if not did_break then match !prev_case_env with
+    | Some env ->
+      let reason = mk_reason "final case env" switch_loc in
+      Env_js.update_env cx reason env
+    | None ->
+      let msg = "internal error: final case env not found" in
+      Flow_js.add_internal_error cx [mk_reason "" switch_loc, msg]
+  )
 
-        (* in the case where we did have a default but never encountered a break,
-           the changeset accumulated from all of the cases is lost in the
-           Changeset.merge call and the variables are never havoc'd,
-           so we need to carry these changes forward *)
-        if !default && not did_break
-        then (
-          let reason = mk_reason "switch fallthrough" loc in
-          let last_env = match !last_env with
-            | Some x -> x
-            | None -> !fallthrough_env
-          in
-          Env_js.copy_env cx reason (env,last_env) newset
-        )
-        else ()
-      )
+  (*******************************************************)
 
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason "return" loc in

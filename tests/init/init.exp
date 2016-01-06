@@ -35,53 +35,61 @@ hoisted2.js:50:18,18: possibly uninitialized variable
 This type is incompatible with
 hoisted2.js:50:9,14: number
 
-hoisted2.js:74:18,18: uninitialized variable
+hoisted2.js:69:18,18: possibly uninitialized variable
 This type is incompatible with
-hoisted2.js:74:9,14: number
+hoisted2.js:69:9,14: number
 
-hoisted2.js:87:18,18: possibly uninitialized variable
+hoisted2.js:94:18,18: possibly uninitialized variable
 This type is incompatible with
-hoisted2.js:87:9,14: number
+hoisted2.js:94:9,14: number
 
-hoisted2.js:96:22,22: possibly uninitialized variable
+hoisted2.js:124:18,18: uninitialized variable
 This type is incompatible with
-hoisted2.js:96:13,18: number
+hoisted2.js:124:9,14: number
 
-hoisted2.js:110:18,18: uninitialized variable
+hoisted2.js:137:18,18: possibly uninitialized variable
 This type is incompatible with
-hoisted2.js:110:9,14: number
+hoisted2.js:137:9,14: number
 
-hoisted2.js:121:18,18: possibly uninitialized variable
+hoisted2.js:146:22,22: possibly uninitialized variable
 This type is incompatible with
-hoisted2.js:121:9,14: number
+hoisted2.js:146:13,18: number
 
-hoisted2.js:134:18,18: uninitialized variable
+hoisted2.js:160:18,18: uninitialized variable
 This type is incompatible with
-hoisted2.js:134:9,14: number
+hoisted2.js:160:9,14: number
 
-hoisted2.js:158:18,18: uninitialized variable
+hoisted2.js:171:18,18: possibly uninitialized variable
 This type is incompatible with
-hoisted2.js:158:9,14: number
+hoisted2.js:171:9,14: number
 
-hoisted2.js:169:18,18: uninitialized variable
+hoisted2.js:184:18,18: uninitialized variable
 This type is incompatible with
-hoisted2.js:169:9,14: number
+hoisted2.js:184:9,14: number
 
-hoisted2.js:182:18,18: uninitialized variable
+hoisted2.js:208:18,18: uninitialized variable
 This type is incompatible with
-hoisted2.js:182:9,14: number
+hoisted2.js:208:9,14: number
 
-hoisted2.js:193:18,18: possibly uninitialized variable
+hoisted2.js:219:18,18: uninitialized variable
 This type is incompatible with
-hoisted2.js:193:9,14: number
+hoisted2.js:219:9,14: number
 
-hoisted2.js:206:18,18: uninitialized variable
+hoisted2.js:232:18,18: uninitialized variable
 This type is incompatible with
-hoisted2.js:206:9,14: number
+hoisted2.js:232:9,14: number
 
-hoisted2.js:217:18,18: possibly uninitialized variable
+hoisted2.js:243:18,18: possibly uninitialized variable
 This type is incompatible with
-hoisted2.js:217:9,14: number
+hoisted2.js:243:9,14: number
+
+hoisted2.js:256:18,18: uninitialized variable
+This type is incompatible with
+hoisted2.js:256:9,14: number
+
+hoisted2.js:267:18,18: possibly uninitialized variable
+This type is incompatible with
+hoisted2.js:267:9,14: number
 
 let.js:17:18,18: uninitialized variable
 This type is incompatible with
@@ -95,20 +103,24 @@ let.js:34:18,18: possibly uninitialized variable
 This type is incompatible with
 let.js:34:9,14: number
 
-let.js:54:22,22: x
+let.js:59:18,18: possibly uninitialized variable
+This type is incompatible with
+let.js:59:9,14: number
+
+let.js:84:22,22: x
 let referenced before declaration, or after skipped declaration
-let.js:52:11,18: let x
+let.js:82:11,18: let x
 
-let.js:64:18,18: possibly uninitialized variable
+let.js:94:18,18: possibly uninitialized variable
 This type is incompatible with
-let.js:64:9,14: number
+let.js:94:9,14: number
 
-let.js:82:18,18: possibly uninitialized variable
+let.js:112:18,18: possibly uninitialized variable
 This type is incompatible with
-let.js:82:9,14: number
+let.js:112:9,14: number
 
-let.js:91:18,18: possibly uninitialized variable
+let.js:121:18,18: possibly uninitialized variable
 This type is incompatible with
-let.js:91:9,14: number
+let.js:121:9,14: number
 
-Found 28 errors
+Found 31 errors

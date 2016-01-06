@@ -60,6 +60,56 @@ function if_post_init(b) {
   var y:number = x;
 }
 
+// use of var after partial init (non-exhaustive if) gives undefined
+function if_partial_post_init(b) {
+  var x:number;
+  if (b) {
+    x = 0;
+  }
+  var y:number = x; // error, possibly uninitialized
+}
+
+// use of var after guaranteed init (exhaustive if) is ok
+function if_post_init(b) {
+  var x:number;
+  if (b) {
+    x = 0;
+  } else {
+    x = 1;
+  }
+  var y:number = x;
+}
+
+// use of var after partial init (non-exhaustive switch) gives undefined
+function switch_partial_post_init(i) {
+  var x:number;
+  switch (i) {
+    case 0:
+      x = 0;
+      break;
+    case 1:
+      x = 1;
+      break;
+  }
+  var y:number = x; // error, possibly uninitialized
+}
+
+// use of var after guaranteed init (exhaustive switch) is ok
+function switch_post_init(i) {
+  var x:number;
+  switch (i) {
+    case 0:
+      x = 0;
+      break;
+    case 1:
+      x = 1;
+      break;
+    default:
+      x = 2;
+  }
+  var y:number = x; // error, possibly uninitialized
+}
+
 // local use of annotated var in switch is ok
 function switch_scoped_init_1(i) {
   switch (i) {
