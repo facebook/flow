@@ -271,20 +271,23 @@ end with type t = Impl.t) = struct
         |]
       )
     | loc, ImportDeclaration import -> ImportDeclaration.(
-        let specifiers = (match import.default with
-        | None -> []
-        | Some default -> [import_default_specifier default]) in
-        let specifiers = (match import.specifier with
-        | Some (NameSpace ns) -> import_namespace_specifier ns :: specifiers
-        | Some (Named (_, sl)) -> (List.rev (List.map import_specifier sl)) @ specifiers
-        | None -> specifiers) in
+        let specifiers = import.specifiers |> List.map (function
+          | ImportDefaultSpecifier id ->
+              import_default_specifier id
+          | ImportNamedSpecifier {local; remote;} ->
+              import_named_specifier local remote
+          | ImportNamespaceSpecifier id ->
+              import_namespace_specifier id
+        ) in
+
         let import_kind = match import.importKind with
         | ImportType -> "type"
         | ImportTypeof -> "typeof"
         | ImportValue -> "value"
         in
+
         node "ImportDeclaration" loc [|
-          "specifiers", array (Array.of_list (List.rev specifiers));
+          "specifiers", array (Array.of_list specifiers);
           "source", literal import.source;
           "importKind", string (import_kind);
         |]
@@ -1156,12 +1159,16 @@ end with type t = Impl.t) = struct
       "id", identifier id;
     |]
 
-  and import_specifier (loc, specifier) = Statement.ImportDeclaration.NamedSpecifier.(
-    node "ImportSpecifier" loc [|
-      "id", identifier specifier.id;
-      "name", option identifier specifier.name;
+  and import_named_specifier local_id remote_id =
+    let span_loc =
+      match local_id with
+      | Some local_id -> Loc.btwn (fst remote_id) (fst local_id)
+      | None -> fst remote_id
+    in
+    node "ImportSpecifier" span_loc [|
+      "id", identifier remote_id;
+      "name", option identifier local_id;
     |]
-  )
 
   and comment_list comments = array_of_list comment comments
 

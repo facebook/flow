@@ -3104,7 +3104,6 @@ end = struct
         Loc.btwn start_loc (fst body),
         Statement.(DeclareModule DeclareModule.({ id; body; }))
 
-
     and declare ?(in_module=false) env =
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeDeclaration;
@@ -3426,6 +3425,8 @@ end = struct
         )
 
       and import_declaration =
+        let open Statement.ImportDeclaration in
+
         let source env =
           Expect.contextual env "from";
           match Peek.token env with
@@ -3447,42 +3448,34 @@ end = struct
           | T_EOF
           | T_RCURLY -> List.rev acc
           | _ ->
-              let id, err = Parse.identifier_or_reserved_keyword env in
-              let end_loc, name = if Peek.value env = "as"
-              then begin
-                Expect.contextual env "as";
-                let name = Parse.identifier env in
-                fst name, Some name
-              end else begin
-                (match err with
-                | Some err -> error_at env err
-                | None -> ());
-                fst id, None
-              end in
-              let loc = Loc.btwn (fst id) end_loc in
+              let remote, err = Parse.identifier_or_reserved_keyword env in
               let specifier =
-                loc, Statement.ImportDeclaration.NamedSpecifier.({
-                  id;
-                  name;
-                }) in
+                if Peek.value env = "as" then begin
+                  Expect.contextual env "as";
+                  let local = Some (Parse.identifier env) in
+                  ImportNamedSpecifier { local; remote; }
+                end else begin
+                  (match err with Some err -> error_at env err | None -> ());
+                  ImportNamedSpecifier { local = None; remote; }
+                end
+              in
               if Peek.token env = T_COMMA
               then Expect.token env T_COMMA;
               specifier_list env (specifier::acc)
 
-        in let specifier env =
+        in let named_or_namespace_specifier env =
           let start_loc = Peek.loc env in
           match Peek.token env with
           | T_MULT ->
               Expect.token env T_MULT;
               Expect.contextual env "as";
               let id = Parse.identifier env in
-              Statement.ImportDeclaration.NameSpace (Loc.btwn start_loc (fst id), id)
+              [ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)]
           | _ ->
               Expect.token env T_LCURLY;
               let specifiers = specifier_list env [] in
-              let end_loc = Peek.loc env in
               Expect.token env T_RCURLY;
-              Statement.ImportDeclaration.Named (Loc.btwn start_loc end_loc, specifiers)
+              specifiers
 
         in fun env ->
           let env = env |> with_strict true in
@@ -3490,7 +3483,7 @@ end = struct
           Expect.token env T_IMPORT;
           (* It might turn out that we need to treat this "type" token as an
            * identifier, like import type from "module" *)
-          let importKind, type_ident = Statement.ImportDeclaration.(
+          let importKind, type_ident =
             match Peek.token env with
             | T_TYPE ->
               if not (should_parse_types env)
@@ -3502,73 +3495,71 @@ end = struct
               Expect.token env T_TYPEOF;
               ImportTypeof, None
             | _ -> ImportValue, None
-          ) in
-          Statement.ImportDeclaration.(
-            match Peek.token env, Peek.identifier env with
-            | T_STRING (str_loc, value, raw, octal), _
+          in
+          match Peek.token env, Peek.identifier env with
+          (* import "ModuleName"; *)
+          | T_STRING (str_loc, value, raw, octal), _
               when importKind = ImportValue ->
-                (* import "ModuleSpecifier"; *)
-                if octal then strict_error env Error.StrictOctalLiteral;
-                Expect.token env (T_STRING (str_loc, value, raw, octal));
-                let value = Literal.String value in
-                let source = (str_loc, { Literal.value; raw; }) in
-                let end_loc = match Peek.semicolon_loc env with
-                | Some loc -> loc
-                | None -> str_loc in
-                Eat.semicolon env;
-                Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
-                  default = None;
-                  specifier = None;
-                  source;
-                  importKind;
-                }
-            | T_COMMA, _
-            | _, true ->
-                (* import defaultspecifier ... *)
-                let importKind, default = (
-                  match type_ident, Peek.token env, Peek.value env with
-                  | Some _, T_COMMA, _
-                  | Some _, T_IDENTIFIER, "from" ->
-                      (* import type, ... *)
-                      (* import type from ... *)
-                      Statement.ImportDeclaration.ImportValue, type_ident
-                  | _ ->
-                      (* import type foo ...
-                      * import foo ... *)
-                      importKind, Some (Parse.identifier env)
-                ) in
-                let specifier = (match Peek.token env with
-                  | T_COMMA ->
-                      Expect.token env T_COMMA;
-                      Some (specifier env)
-                  | _ -> None) in
-                  let source = source env in
-                  let end_loc = match Peek.semicolon_loc env with
-                  | Some loc -> loc
-                  | None -> fst source in
-                  let source = source in
-                  Eat.semicolon env;
-                  Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
-                    default;
-                    specifier;
-                    source;
-                    importKind;
-                  }
-            | _ ->
-                let specifier = Some (specifier env) in
-                let source = source env in
-                let end_loc = match Peek.semicolon_loc env with
-                | Some loc -> loc
-                | None -> fst source in
-                let source = source in
-                Eat.semicolon env;
-                Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
-                  default = None;
-                  specifier;
-                  source;
-                  importKind;
-                }
-          )
+            if octal then strict_error env Error.StrictOctalLiteral;
+            Expect.token env (T_STRING (str_loc, value, raw, octal));
+            let value = Literal.String value in
+            let source = (str_loc, { Literal.value; raw; }) in
+            let end_loc = match Peek.semicolon_loc env with
+            | Some loc -> loc
+            | None -> str_loc in
+            Eat.semicolon env;
+            Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+              importKind;
+              source;
+              specifiers = [];
+            }
+
+          (* import [type] SomeDefault ... *)
+          | T_COMMA, _ (* `import type, ...` *)
+          | _, true -> (* `import type Foo` or `import type from` *)
+              let importKind, default_specifier = (
+                match type_ident, Peek.token env, Peek.value env with
+                | Some type_ident, T_COMMA, _ (* `import type,` *)
+                | Some type_ident, T_IDENTIFIER, "from" -> (* `import type from` *)
+                  ImportValue, ImportDefaultSpecifier type_ident
+                | _ -> (* Either `import type Foo` or `import Foo` *)
+                  importKind, ImportDefaultSpecifier (Parse.identifier env)
+              ) in
+
+              let additional_specifiers = (
+                match Peek.token env with
+                | T_COMMA -> (* `import Foo, ...` *)
+                    Expect.token env T_COMMA;
+                    named_or_namespace_specifier env
+                | _ -> []
+              ) in
+
+              let source = source env in
+              let end_loc = match Peek.semicolon_loc env with
+              | Some loc -> loc
+              | None -> fst source in
+              let source = source in
+              Eat.semicolon env;
+              Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+                importKind;
+                source;
+                specifiers = default_specifier::additional_specifiers;
+              }
+
+          (* `import [type] { ... } ...` or `import [typeof] * as ...` *)
+          | _ ->
+              let specifiers = named_or_namespace_specifier env in
+              let source = source env in
+              let end_loc = match Peek.semicolon_loc env with
+              | Some loc -> loc
+              | None -> fst source in
+              let source = source in
+              Eat.semicolon env;
+              Loc.btwn start_loc end_loc, Statement.ImportDeclaration {
+                importKind;
+                source;
+                specifiers;
+              }
   end
 
   module Pattern = struct
