@@ -37,29 +37,30 @@ let nice_kill (ic, oc) env =
     [Timeout.descr_of_in_channel ic] [] [Timeout.descr_of_in_channel ic] 1.0 in
   (match readable with
   | [_fd] ->
+    (** input_line can timeout. *)
+    let hello_msg = Timeout.with_timeout
+      ~timeout:1
+      ~on_timeout: begin fun _ ->
+        Printf.eprintf "Server is busy, can't nicely kill";
+        raise FailedToKill
+      end
+      ~do_:begin fun timeout ->
+        Timeout.input_line ~timeout ic
+      end
+    in
     begin
-      (** input_line can timeout. *)
-      let hello_msg = Timeout.with_timeout
-        ~timeout:1
-        ~on_timeout: begin fun _ ->
-          Printf.eprintf "Server is busy, can't nicely kill";
-          raise FailedToKill end
-        ~do_:begin fun timeout ->
-          Timeout.input_line ~timeout ic
-        end
-      in
-      match hello_msg with
-      | "Hello" ->
-        let _response = ServerCommand.rpc (ic, oc) ServerRpc.KILL in
-        let success = wait_for_death env.root 5 in
-        if not success then begin
-          Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
-          raise FailedToKill;
-        end else
-          Printf.eprintf "Successfully killed server for %s\n%!" root_s
-      | _ ->
-          Printf.eprintf "Server response invalid, can't nicely kill";
-          raise FailedToKill
+    match hello_msg with
+    | "Hello" ->
+      let _response = ServerCommand.rpc (ic, oc) ServerRpc.KILL in
+      let success = wait_for_death env.root 5 in
+      if not success then begin
+        Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
+        raise FailedToKill;
+      end else
+        Printf.eprintf "Successfully killed server for %s\n%!" root_s
+    | _ ->
+        Printf.eprintf "Server response invalid, can't nicely kill";
+        raise FailedToKill
     end
   | _ ->
       Printf.eprintf "Server is busy, can't nicely kill";
