@@ -177,7 +177,12 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
   let _, tail_msg = open_and_get_tail_msg start_time tail_env in
   match conn with
   | Result.Ok (ic, oc) ->
-      (try wait_for_server_hello ic env retries start_time tail_env true with
+      (try begin
+        wait_for_server_hello ic env retries start_time tail_env true;
+        if Tty.spinner_used () then
+          Tty.print_clear_line stderr
+      end
+      with
       | Server_hung_up ->
         (Printf.eprintf "hh_server died unexpectedly. Maybe you recently \
         launched a different version of hh_server. Now exiting hh_client.";
