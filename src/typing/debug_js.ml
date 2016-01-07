@@ -251,7 +251,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     "kind", JSON_String (string_of_use_ctor t)
   ] @
   match t with
-  | T t -> [
+  | UseT t -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -850,7 +850,7 @@ and dump_t_ =
   )
 
 and dump_use_t_ stack cx t = match t with
-  | T t -> dump_t_ stack cx t
+  | UseT t -> dump_t_ stack cx t
 
   | SetPropT (_, (_, n), t) ->
       spf "SetPropT(%s: %s)" n (dump_t_ stack cx t)

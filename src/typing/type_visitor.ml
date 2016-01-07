@@ -141,7 +141,7 @@ class ['a] t = object(self)
     acc
 
   method private use_type_ cx acc = function
-  | T t ->
+  | UseT t ->
     self#type_ cx acc t
   (* Currently not walking use types. This will change in an upcoming diff. *)
   | SummarizeT (_, _)

@@ -224,7 +224,8 @@ type t =
   | CustomFunT of reason * custom_fun_kind
 
 and use_t =
-  | T of t
+  (* def types can be used as upper bounds *)
+  | UseT of t
 
   (*************)
   (* use types *)
@@ -567,12 +568,12 @@ end)
 
 (* lift an operation on Type.t to an operation on Type.use_t *)
 let lift_to_use f = function
-  | T t -> f t
+  | UseT t -> f t
   | _ -> ()
 
 (* def types vs. use types *)
 let is_use = function
-  | T _ -> false
+  | UseT _ -> false
   | _ -> true
 
 (* Usually types carry enough information about the "reason" for their
@@ -682,7 +683,7 @@ let rec reason_of_t = function
       prefix_reason "extends " (reason_of_t t)
 
 and reason_of_use_t = function
-  | T t -> reason_of_t t
+  | UseT t -> reason_of_t t
 
   | SuperT (reason,_)
 
@@ -882,7 +883,7 @@ let rec mod_reason_of_t f = function
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
 
 and mod_reason_of_use_t f = function
-  | T t -> T (mod_reason_of_t f t)
+  | UseT t -> UseT (mod_reason_of_t f t)
 
   | SuperT (reason, inst) -> SuperT (f reason, inst)
 
@@ -1036,7 +1037,7 @@ let string_of_ctor = function
   | CustomFunT _ -> "CustomFunT"
 
 let string_of_use_ctor = function
-  | T t -> string_of_ctor t
+  | UseT t -> string_of_ctor t
 
   | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"

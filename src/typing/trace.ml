@@ -177,7 +177,7 @@ let reasons_of_trace ?(level=0) trace =
   let print_step (steps: step list) i (lower, upper, Parent parent, _) =
     (* omit lower if it's a pipelined tvar *)
     (if i > 0 &&
-      T lower = (match List.nth steps (i - 1) with (_, upper, _, _) -> upper)
+      UseT lower = (match List.nth steps (i - 1) with (_, upper, _, _) -> upper)
     then []
     else [pretty_r max_pos_len (reason_of_t_add_id lower)
       (spf "%s " (string_of_ctor lower)) ""]

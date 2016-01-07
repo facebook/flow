@@ -207,7 +207,7 @@ let rec gc cx state = function
 
 and gc_use cx state = function
 
-  | T t ->
+  | UseT t ->
       gc cx state t
 
   (** use types **)
