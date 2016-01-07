@@ -29,6 +29,10 @@ object_keys.js:18:14,16: key of object type
 This type is incompatible with
 object_keys.js:18:26,31: number
 
+object_missing.js:5:12,23: property `doesNotExist`
+Property not found in
+object_missing.js:5:5,10: statics of Object
+
 object_prototype.js:38:26,35: function type
 This type is incompatible with
 object_prototype.js:38:17,22: number
@@ -101,4 +105,4 @@ object_prototype.js:155:32,47: function type
 This type is incompatible with
 object_prototype.js:155:23,28: number
 
-Found 25 errors
+Found 26 errors

@@ -3591,16 +3591,18 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       new_call cx loc class_ argts
 
   | Call {
-      Call.callee = _, Member {
-        Member._object = _, Identifier (_,
-          { Ast.Identifier.name = "Object"; _ });
+      Call.callee = (_, Member {
+        Member._object = (_, Identifier (_,
+          { Ast.Identifier.name = "Object"; _ }) as obj);
         property = Member.PropertyIdentifier (prop_loc,
           { Ast.Identifier.name; _ });
         _
-      };
+      } as expr);
       arguments
     } ->
-      static_method_call_Object cx type_params_map loc prop_loc name arguments
+      let obj_t = expression cx type_params_map obj in
+      static_method_call_Object
+        cx type_params_map loc prop_loc expr obj_t name arguments
 
   | Call {
       Call.callee = _, Member {
@@ -3637,7 +3639,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
   | Call {
       Call.callee = (_, Member {
         Member._object;
-        property = Member.PropertyIdentifier (ploc,
+        property = Member.PropertyIdentifier (prop_loc,
           { Ast.Identifier.name; _ });
         _
       }) as callee;
@@ -3645,32 +3647,8 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
     } ->
       (* method call *)
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
-      let reason = mk_reason (spf "call of method `%s`" name) loc in
       let ot = expression cx type_params_map _object in
-      Type_inference_hooks_js.dispatch_call_hook cx name ploc ot;
-      (match Refinement.get cx callee reason with
-      | Some f ->
-          (* note: the current state of affairs is that we understand
-             member expressions as having refined types, rather than
-             understanding receiver objects as carrying refined properties.
-             generalizing this properly is a todo, and will deliver goodness.
-             meanwhile, here we must hijack the property selection normally
-             performed by the flow algorithm itself. *)
-          Env_js.havoc_heap_refinements ();
-          Flow_js.mk_tvar_where cx reason (fun t ->
-            let frame = Env_js.peek_frame () in
-            let app = Flow_js.mk_methodtype2 ot argts t frame in
-            Flow_js.flow cx (f, CallT (reason, app));
-          )
-      | None ->
-          Env_js.havoc_heap_refinements ();
-          Flow_js.mk_tvar_where cx reason (fun t ->
-            let frame = Env_js.peek_frame () in
-            let reason_prop = mk_reason (spf "property `%s`" name) ploc in
-            let app = Flow_js.mk_methodtype2 ot argts t frame in
-            Flow_js.flow cx (ot, MethodT(reason, (reason_prop, name), app))
-          )
-      )
+      method_call cx loc prop_loc (callee, ot, name) argts
 
   | Call {
       Call.callee = _, Identifier (ploc, { Ast.Identifier.name = "super"; _ });
@@ -3924,6 +3902,33 @@ and func_call cx reason func_t argts =
     let frame = Env_js.peek_frame () in
     let app = Flow_js.mk_functiontype2 argts t frame in
     Flow_js.flow cx (func_t, CallT(reason, app))
+  )
+
+and method_call cx loc prop_loc (expr, obj_t, name) argts =
+  let reason = mk_reason (spf "call of method `%s`" name) loc in
+  Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
+  (match Refinement.get cx expr reason with
+  | Some f ->
+      (* note: the current state of affairs is that we understand
+         member expressions as having refined types, rather than
+         understanding receiver objects as carrying refined properties.
+         generalizing this properly is a todo, and will deliver goodness.
+         meanwhile, here we must hijack the property selection normally
+         performed by the flow algorithm itself. *)
+      Env_js.havoc_heap_refinements ();
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        let frame = Env_js.peek_frame () in
+        let app = Flow_js.mk_methodtype2 obj_t argts t frame in
+        Flow_js.flow cx (f, CallT (reason, app));
+      )
+  | None ->
+      Env_js.havoc_heap_refinements ();
+      Flow_js.mk_tvar_where cx reason (fun t ->
+        let frame = Env_js.peek_frame () in
+        let reason_prop = mk_reason (spf "property `%s`" name) prop_loc in
+        let app = Flow_js.mk_methodtype2 obj_t argts t frame in
+        Flow_js.flow cx (obj_t, MethodT(reason, (reason_prop, name), app))
+      )
   )
 
 (* traverse a literal expression, return result type *)
@@ -5246,7 +5251,7 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
   )
 
 (* TODO: switch to TypeScript specification of Object *)
-and static_method_call_Object cx type_params_map loc prop_loc m args_ = Ast.Expression.(
+and static_method_call_Object cx type_params_map loc prop_loc expr obj_t m args_ = Ast.Expression.(
   let reason = mk_reason (spf "Object.%s" m) loc in
   match (m, args_) with
   | ("create", [ Expression e ]) ->
@@ -5313,21 +5318,20 @@ and static_method_call_Object cx type_params_map loc prop_loc m args_ = Ast.Expr
 
   (* Freezing an object literal is supported since there's no way it could
      have been mutated elsewhere *)
-  | ("freeze", [Expression ((_, Object _) as e)]) ->
-    let t = Flow_js.mk_tvar_where cx reason (fun tvar ->
-      Flow_js.flow cx (expression cx type_params_map e, ObjFreezeT (reason, tvar));
+  | ("freeze", [Expression ((arg_loc, Object _) as e)]) ->
+    let arg_t = expression cx type_params_map e in
+
+    let reason_arg = mk_reason "frozen object" arg_loc in
+    let arg_t = Flow_js.mk_tvar_where cx reason_arg (fun tvar ->
+      Flow_js.flow cx (arg_t, ObjFreezeT (reason_arg, tvar));
     ) in
-    let reason_prop = mk_reason "property `freeze`" prop_loc in
-    Flow_js.static_method_call cx "Object" reason reason_prop m [t]
+
+    method_call cx loc prop_loc (expr, obj_t, m) [arg_t]
 
   (* TODO *)
-  | (("seal" | "preventExtensions"), args)
-  | ("freeze", args)
-
   | (_, args) ->
-      let reason_prop = mk_reason (spf "property `%s`" m) prop_loc in
-      let argts = List.map (expression_or_spread cx type_params_map) args in
-      Flow_js.static_method_call cx "Object" reason reason_prop m argts
+    let argts = List.map (expression_or_spread cx type_params_map) args in
+    method_call cx loc prop_loc (expr, obj_t, m) argts
 )
 
 and mk_extends cx type_params_map = function

@@ -99,9 +99,6 @@ val mk_object_with_map_proto : Context.t -> reason ->
 val chain_objects :
   Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t list -> Type.t
 
-val static_method_call: Context.t -> string -> reason -> reason -> string
-  -> Type.t list -> Type.t
-
 (* ... *)
 
 val mk_nominal: Context.t -> int

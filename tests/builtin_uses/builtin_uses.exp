@@ -1,5 +1,5 @@
 
-test.js:1:9,33: Object.freeze
+test.js:1:9,33: call of method `freeze`
 Error:
 test.js:2:2,6: number
 This type is incompatible with

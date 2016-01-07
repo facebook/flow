@@ -5524,13 +5524,6 @@ and instantiate_type t =
   | ThisClassT t | ClassT t -> t
   | _ -> AnyT.why (reason_of_t t) (* ideally, assert false *)
 
-and static_method_call cx name reason reason_prop m argts =
-  let cls = get_builtin cx name reason in
-  mk_tvar_where cx reason (fun tvar ->
-    let funtype = mk_methodtype cls argts tvar in
-    flow_opt cx (cls, MethodT(reason, (reason_prop, m), funtype))
-  )
-
 (** TODO: this should rather be moved close to ground_type_impl/resolve_type
     etc. but Ocaml name resolution rules make that require a lot more moving
     code around. **)
