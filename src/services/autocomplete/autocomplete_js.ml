@@ -26,7 +26,7 @@ let is_autocomplete x =
   let suffix = String.sub x (String.length x - suffix_len) suffix_len in
   suffix = autocomplete_suffix
 
-let autocomplete_id state cx ac_name ac_loc =
+let autocomplete_id state _cx ac_name ac_loc =
   if is_autocomplete ac_name
   then (
     state := Some ({
@@ -38,7 +38,7 @@ let autocomplete_id state cx ac_name ac_loc =
   ) else
     false
 
-let autocomplete_member state cx ac_name ac_loc this_t =
+let autocomplete_member state _cx ac_name ac_loc this_t =
   if is_autocomplete ac_name
   then (
     state := Some ({
@@ -50,7 +50,7 @@ let autocomplete_member state cx ac_name ac_loc this_t =
   ) else
     false
 
-let autocomplete_jsx state cx ac_name ac_loc class_t =
+let autocomplete_jsx state _cx ac_name ac_loc class_t =
   if is_autocomplete ac_name
   then (
     state := Some ({
