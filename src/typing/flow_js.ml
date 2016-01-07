@@ -2409,11 +2409,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let prop_t = mk_tvar_where cx get_reason (fun t ->
         rec_flow cx trace (l, GetPropT(get_reason, (prop_reason, name), t))
       ) in
-      rec_flow cx trace (TypeT (type_reason, mk_typeof_annotation cx ~trace prop_t), T t_out)
+      rec_flow cx trace (TypeT (type_reason, mk_typeof_annotation cx ~trace prop_t), UseT t_out)
 
     | (TypeT(_, l), ReifyTypeT(_, t_out)) ->
       (* Extract the type denoted by the type expression *)
-      rec_flow cx trace (l, T t_out)
+      rec_flow cx trace (l, UseT t_out)
 
     (* non-class/function values used in annotations are errors *)
     | _, UseT TypeT _ ->
