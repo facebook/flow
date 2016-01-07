@@ -19,6 +19,7 @@ module Opts : sig
     esproposal_class_instance_fields: esproposal_feature_mode;
     esproposal_class_static_fields: esproposal_feature_mode;
     esproposal_decorators: esproposal_feature_mode;
+    facebook_ignore_fbt: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;

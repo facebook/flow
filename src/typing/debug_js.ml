@@ -340,6 +340,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | ReifyTypeT (_, t_out) -> [
+      "t_out", _json_of_t json_cx t_out
+    ]
+
   | SpecializeT (_, cache, targs, tvar) -> [
       "cache", JSON_Bool cache;
       "types", JSON_Array (List.map (_json_of_t json_cx) targs);
@@ -454,6 +458,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "target_module_t", _json_of_t json_cx target_module_t;
       "t_out", _json_of_t json_cx t_out;
     ]
+  | DebugPrintT _reason -> []
   )
 )
 
@@ -743,8 +748,15 @@ let json_of_t ?(depth=1000) cx t =
   let json_cx = { cx; depth; stack = ISet.empty; } in
   _json_of_t json_cx t
 
+let json_of_use_t ?(depth=1000) cx use_t =
+  let json_cx = { cx; depth; stack = ISet.empty; } in
+  _json_of_use_t json_cx use_t
+
 let jstr_of_t ?(depth=1000) cx t =
   Hh_json.json_to_multiline (json_of_t ~depth cx t)
+
+let jstr_of_use_t ?(depth=1000) cx use_t =
+  Hh_json.json_to_multiline (json_of_use_t ~depth cx use_t)
 
 let json_of_graph ?(depth=1000) cx = Hh_json.(
   let entries = IMap.fold (fun id _ entries ->

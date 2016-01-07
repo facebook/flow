@@ -269,6 +269,16 @@ and use_t =
   | OrT of reason * t * t
   | NotT of reason * t
 
+  (**
+   * A special (internal-only) type used to "reify" a TypeT back down to it's
+   * value-space type. One way to think of this is as the inverse of `typeof`.
+   *
+   * Note that there is no syntax for specifying this type. To surface such a
+   * type would result in code that cannot be compiled without extensive type
+   * info (or possibly at all!).
+   *)
+  | ReifyTypeT of reason * t_out
+
   (* operation on polymorphic types *)
   (** SpecializeT(_, cache, targs, tresult) instantiates a polymorphic type with
       type arguments targs, and flows the result into tresult. If cache is set,
@@ -336,6 +346,8 @@ and use_t =
       * (* 't_out' to receive the resolved ModuleT *) t_out
   | SetNamedExportsT of reason * t SMap.t * t_out
   | SetStarExportsT of reason * t * t_out
+
+  | DebugPrintT of reason
 
   (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
       round pegs in the square holes. **)
@@ -718,6 +730,7 @@ and reason_of_use_t = function
   | AndT (reason, _, _)
   | OrT (reason, _, _)
   | NotT (reason, _)
+  | ReifyTypeT (reason, _)
   | BecomeT (reason, _)
   | ReposLowerT (reason, _)
       -> reason
@@ -773,6 +786,7 @@ and reason_of_use_t = function
   | CJSExtractNamedExportsT (reason, _, _) -> reason
   | SetNamedExportsT (reason, _, _) -> reason
   | SetStarExportsT (reason, _, _) -> reason
+  | DebugPrintT reason -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -928,6 +942,8 @@ and mod_reason_of_use_t f = function
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | NotT (reason, t) -> NotT (f reason, t)
 
+  | ReifyTypeT (reason, t_out) -> ReifyTypeT (f reason, t_out)
+
   | SpecializeT(reason, cache, ts, t) -> SpecializeT (f reason, cache, ts, t)
 
   | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
@@ -968,6 +984,7 @@ and mod_reason_of_use_t f = function
   | CJSExtractNamedExportsT (reason, t1, t2) -> CJSExtractNamedExportsT (f reason, t1, t2)
   | SetNamedExportsT (reason, tmap, t_out) -> SetNamedExportsT(f reason, tmap, t_out)
   | SetStarExportsT (reason, target_module_t, t_out) -> SetStarExportsT(f reason, target_module_t, t_out)
+  | DebugPrintT reason -> DebugPrintT (f reason)
 
 
 (* type comparison mod reason *)
@@ -1073,6 +1090,7 @@ let string_of_use_ctor = function
   | AndT _ -> "AndT"
   | OrT _ -> "OrT"
   | NotT _ -> "NotT"
+  | ReifyTypeT _ -> "ReifyTypeT"
   | SpecializeT _ -> "SpecializeT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | VarianceCheckT _ -> "VarianceCheckT"
@@ -1100,6 +1118,7 @@ let string_of_use_ctor = function
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | SetNamedExportsT _ -> "SetNamedExportsT"
   | SetStarExportsT _ -> "SetStarExportsT"
+  | DebugPrintT _ -> "DebugPrintT"
 
 let string_of_binary_test = function
   | Instanceof -> "instanceof"

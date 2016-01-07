@@ -45,6 +45,7 @@ module Opts = struct
     esproposal_class_instance_fields: esproposal_feature_mode;
     esproposal_class_static_fields: esproposal_feature_mode;
     esproposal_decorators: esproposal_feature_mode;
+    facebook_ignore_fbt: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
@@ -111,6 +112,7 @@ module Opts = struct
     esproposal_class_instance_fields = ESPROPOSAL_WARN;
     esproposal_class_static_fields = ESPROPOSAL_WARN;
     esproposal_decorators = ESPROPOSAL_WARN;
+    facebook_ignore_fbt = false;
     ignore_non_literal_requires = false;
     moduleSystem = Node;
     module_name_mappers = [];
@@ -490,54 +492,64 @@ let parse_excludes config lines =
 
 let file_extension = Str.regexp "^\\(\\.[^ \t]+\\)+$"
 
-let parse_options config lines = Opts.(
-  let options = Opts.parse config.options lines
-    |> Opts.define_opt "esproposal.class_instance_fields" Opts.({
+let parse_options config lines =
+  let open Opts in
+  let options = parse config.options lines
+    |> define_opt "esproposal.class_instance_fields" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> {
         opts with esproposal_class_instance_fields = v;
       });
-    })
+    }
 
-    |> Opts.define_opt "esproposal.class_static_fields" Opts.({
+    |> define_opt "esproposal.class_static_fields" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_esproposal_feature_flag ~allow_enable:true;
       setter = (fun opts v -> {
         opts with esproposal_class_static_fields = v;
       });
-    })
+    }
 
-    |> Opts.define_opt "esproposal.decorators" Opts.({
+    |> define_opt "esproposal.decorators" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_esproposal_feature_flag;
       setter = (fun opts v -> {
         opts with esproposal_decorators = v;
       });
-    })
+    }
 
-    |> Opts.define_opt "log.file" Opts.({
+    |> define_opt "facebook.ignore_fbt" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v -> {
+        opts with facebook_ignore_fbt = v;
+      });
+    }
+
+    |> define_opt "log.file" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_filepath;
       setter = (fun opts v -> {
         opts with log_file = Some v;
       });
-    })
+    }
 
-    |> Opts.define_opt "module.ignore_non_literal_requires" Opts.({
+    |> define_opt "module.ignore_non_literal_requires" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with ignore_non_literal_requires = v;}
       );
-    })
+    }
 
-    |> Opts.define_opt "module.file_ext" Opts.({
+    |> define_opt "module.file_ext" {
       _initializer = INIT_FN (fun opts -> {
         opts with module_file_exts = SSet.empty;
       });
@@ -555,9 +567,9 @@ let parse_options config lines = Opts.(
         let module_file_exts = SSet.add v opts.module_file_exts in
         {opts with module_file_exts;}
       );
-    })
+    }
 
-    |> Opts.define_opt "module.name_mapper" Opts.({
+    |> define_opt "module.name_mapper" {
       _initializer = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = (fun str ->
@@ -580,9 +592,9 @@ let parse_options config lines = Opts.(
         let module_name_mappers = v :: opts.module_name_mappers in
         {opts with module_name_mappers;}
       );
-    })
+    }
 
-    |> Opts.define_opt "module.system" Opts.({
+    |> define_opt "module.system" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_enum [
@@ -592,9 +604,9 @@ let parse_options config lines = Opts.(
       setter = (fun opts v -> {
         opts with moduleSystem = v;
       });
-    })
+    }
 
-    |> Opts.define_opt "module.system.node.resolve_dirname" Opts.({
+    |> define_opt "module.system.node.resolve_dirname" {
       _initializer = INIT_FN (fun opts -> {
         opts with node_resolver_dirnames = [];
       });
@@ -604,84 +616,83 @@ let parse_options config lines = Opts.(
         let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
         {opts with node_resolver_dirnames;}
       );
-    })
+    }
 
-    |> Opts.define_opt "munge_underscores" Opts.({
+    |> define_opt "munge_underscores" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with munge_underscores = v;}
       );
-    })
+    }
 
-    |> Opts.define_opt "server.max_workers" Opts.({
+    |> define_opt "server.max_workers" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts v ->
         {opts with max_workers = v;}
       );
-    })
+    }
 
-    |> Opts.define_opt "strip_root" Opts.({
+    |> define_opt "strip_root" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with strip_root = v;}
       );
-    })
+    }
 
-    |> Opts.define_opt "suppress_comment" Opts.({
+    |> define_opt "suppress_comment" {
       _initializer = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_regexp;
       setter = (fun opts v -> {
         opts with suppress_comments = v::(opts.suppress_comments);
       });
-    })
+    }
 
-    |> Opts.define_opt "suppress_type" Opts.({
+    |> define_opt "suppress_type" {
       _initializer = USE_DEFAULT;
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v -> {
         opts with suppress_types = SSet.add v opts.suppress_types;
       });
-    })
+    }
 
-    |> Opts.define_opt "temp_dir" Opts.({
+    |> define_opt "temp_dir" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_filepath;
       setter = (fun opts v -> {
         opts with temp_dir = v;
       });
-    })
+    }
 
-    |> Opts.define_opt "traces" Opts.({
+    |> define_opt "traces" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_uint;
       setter = (fun opts v ->
         {opts with traces = v;}
       );
-    })
+    }
 
-    |> Opts.define_opt "unsafe.enable_getters_and_setters" Opts.({
+    |> define_opt "unsafe.enable_getters_and_setters" {
       _initializer = USE_DEFAULT;
       flags = [];
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with enable_unsafe_getters_and_setters = v;}
       );
-    })
+    }
 
     |> get_defined_opts
   in
   {config with options}
-)
 
 let assert_version (ln, line) =
   try

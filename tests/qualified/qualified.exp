@@ -3,4 +3,8 @@ qualified.js:4:13,13: number
 This type is incompatible with
 qualified.js:4:7,9: C
 
-Found 1 error
+qualified.js:10:14,19: string
+This type is incompatible with
+qualified.js:10:8,10: number
+
+Found 2 errors

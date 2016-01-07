@@ -287,6 +287,9 @@ and gc_use cx state = function
   | NotT (_, t) ->
       gc cx state t
 
+  | ReifyTypeT (_, t_out) ->
+      gc cx state t_out
+
   | SpecializeT (_, _, ts, t) ->
       ts |> List.iter (gc cx state);
       gc cx state t
@@ -372,6 +375,8 @@ and gc_use cx state = function
   | SetStarExportsT (_, target_module, t_out) ->
       gc cx state target_module;
       gc cx state t_out;
+
+  | DebugPrintT _ -> ()
 
 and gc_id cx state id =
   let root_id, constraints = Flow_js.find_constraints cx id in (

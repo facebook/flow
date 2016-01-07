@@ -1,0 +1,10 @@
+
+main.js:6:10,8:3: property `prop`
+Property not found in
+main.js:12:26,40: object type
+
+main.js:12:26,40: property `prop1`
+Property not found in
+main.js:6:10,8:3: object type
+
+Found 2 errors

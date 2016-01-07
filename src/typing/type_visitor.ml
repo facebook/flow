@@ -175,6 +175,7 @@ class ['a] t = object(self)
   | AndT (_, _, _)
   | OrT (_, _, _)
   | NotT (_, _)
+  | ReifyTypeT (_, _)
   | SpecializeT (_, _, _, _)
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _)
@@ -202,6 +203,7 @@ class ['a] t = object(self)
   | CJSExtractNamedExportsT (_, _, _)
   | SetNamedExportsT (_, _, _)
   | SetStarExportsT (_, _, _)
+  | DebugPrintT (_)
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

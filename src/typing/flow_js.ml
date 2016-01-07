@@ -1114,6 +1114,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | l, UseT DestructuringT (reason, t, s) ->
       rec_flow_t cx trace (l, eval_selector cx reason t s)
 
+    (*************)
+    (* Debugging *)
+    (*************)
+
+    | (_, DebugPrintT (reason)) ->
+      let msg = (spf "!!! DebugPrintT: %s" (Debug_js.jstr_of_t cx l)) in
+      add_error cx [reason, msg];
+
     (************)
     (* tainting *)
     (************)
@@ -2393,6 +2401,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (TypeT(_,l), UseT TypeT(_,u)) ->
       rec_unify cx trace l u
 
+    | (TypeT(type_reason, l), GetPropT(get_reason, (prop_reason, name), t_out)) ->
+      (**
+       * Reify the type, extract the prop from that, then wrap that result in a
+       * TypeT again.
+       *)
+      let prop_t = mk_tvar_where cx get_reason (fun t ->
+        rec_flow cx trace (l, GetPropT(get_reason, (prop_reason, name), t))
+      ) in
+      rec_flow cx trace (TypeT (type_reason, mk_typeof_annotation cx ~trace prop_t), T t_out)
+
+    | (TypeT(_, l), ReifyTypeT(_, t_out)) ->
+      (* Extract the type denoted by the type expression *)
+      rec_flow cx trace (l, T t_out)
+
     (* non-class/function values used in annotations are errors *)
     | _, UseT TypeT _ ->
       prerr_flow cx trace
@@ -3563,6 +3585,7 @@ and err_operation = function
   | HasOwnPropT _ -> "Property not found in"
   | HasPropT _ -> "Property not found in"
   | UnaryMinusT _ -> "Expected number instead of"
+  | ReifyTypeT _ -> "Internal Error: Invalid type applied to ReifyTypeT!"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
      to throw on a use type, so mark the error instead *)

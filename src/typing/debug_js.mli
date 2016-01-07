@@ -10,6 +10,8 @@
 
 val json_of_t: ?depth:int -> Context.t -> Type.t -> Hh_json.json
 val jstr_of_t: ?depth:int -> Context.t -> Type.t -> string
+val json_of_use_t: ?depth:int -> Context.t -> Type.use_t -> Hh_json.json
+val jstr_of_use_t: ?depth:int -> Context.t -> Type.use_t -> string
 val json_of_graph: ?depth:int -> Context.t -> Hh_json.json
 val jstr_of_graph: ?depth:int -> Context.t -> string
 val json_of_scope: ?depth:int -> Context.t -> Scope.t -> Hh_json.json

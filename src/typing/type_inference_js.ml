@@ -4307,7 +4307,13 @@ and jsx cx type_params_map = Ast.JSX.(function { openingElement; closingElement;
 
 and jsx_title cx type_params_map openingElement children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
+  let facebook_ignore_fbt =
+    FlowConfig.((get_unsafe ()).options.Opts.facebook_ignore_fbt)
+  in
   match name with
+  | Identifier (_, { Identifier.name })
+      when name = "fbt" && facebook_ignore_fbt ->
+    AnyT.why (mk_reason "<fbt />" eloc)
 
   | Identifier (_, { Identifier.name }) when name = String.capitalize name ->
       let reason = mk_reason (spf "React element `%s`" name) eloc in
@@ -4366,12 +4372,60 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
       )
 
   | Identifier (_, { Identifier.name }) ->
+      (**
+       * For JSX intrinsics, we assume a built-in global
+       * object type: $JSXIntrinsics. The keys of this object type correspond to
+       * each JSX intrinsic name, and the type of the value for that key is the
+       * type signature of the intrinsic ReactComponent.
+       *
+       * We use a single object type for this (rather than several individual
+       * globals) to allow for a default `type $JSXIntrinsics = Object;` that
+       * ships with lib/core.js. This allows JSX to work out of the box where
+       * all intrinsics are typed as `any`. Users can then refine the set of
+       * intrinsics their application uses with a more specific libdef.
+       *)
+      let jsx_intrinsics =
+        Env_js.get_var
+          ~lookup_mode:Env_js.LookupMode.ForType
+          cx
+          "$JSXIntrinsics"
+          (mk_reason "JSX Intrinsics lookup" eloc)
+      in
+
+      (**
+       * Because $JSXIntrinsics is a type alias, extracting a property off of it
+       * will result in a TypeT as well. This presents a problem because we need
+       * a value type that can be passed in to React.creatElement; So we first
+       * reify the TypeT into it's value, then pass this along.
+       *
+       * This is a bit strange but it's fallout from the decision to model
+       * $JSXIntrinsics using a type alias rather than a "value". Modeling with
+       * a value would be disingenous because no such value really exists (JSX
+       * intrinsics are just React components that are implicitly defined
+       * dynamically in library code such as `React.createElement`)
+       *)
+      let component_t_reason =
+        mk_reason (spf "JSX Intrinsic: `%s`" name) eloc
+      in
+      let component_t = Flow_js.mk_tvar_where cx component_t_reason (fun t ->
+        let prop_t = get_prop
+          ~is_cond:false
+          cx
+          component_t_reason
+          jsx_intrinsics
+          (component_t_reason, name)
+        in
+        Flow_js.flow cx (prop_t, ReifyTypeT(component_t_reason, t))
+      ) in
+
+      let attr_map = ref SMap.empty in
+      let spread = ref None in
       attributes |> List.iter (function
         | Opening.Attribute (aloc, { Attribute.
-              name = Attribute.Identifier (_, { Identifier.name = aname });
-              value
-            }) ->
-            ignore (match value with
+            name = Attribute.Identifier (_, { Identifier.name = aname });
+            value
+          }) ->
+            let attr_type = (match value with
               | Some (Attribute.Literal (loc, lit)) ->
                   literal cx loc lit
               | Some (Attribute.ExpressionContainer (_, {
@@ -4381,16 +4435,40 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
               | _ ->
                   (* empty or nonexistent attribute values *)
                   EmptyT.at aloc
-            )
+            ) in
+
+            if not (react_ignore_attribute aname)
+            then attr_map := !attr_map |> SMap.add aname attr_type
 
         | Opening.Attribute _ ->
             () (* TODO: attributes with namespaced names *)
 
         | Opening.SpreadAttribute (aloc, { SpreadAttribute.argument }) ->
-            () (* TODO: spread attributes *)
+            let spread_t = expression cx type_params_map argument in
+            spread := Some spread_t
       );
 
-      AnyT.t
+      let reason_props = prefix_reason "props of " component_t_reason in
+      let o = Flow_js.mk_object_with_map_proto cx reason_props
+        !attr_map (MixedT reason_props)
+      in
+      let o = match !spread with
+        | None -> o
+        | Some ex_t ->
+            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
+            clone_object_with_excludes cx reason_prop o ex_t react_ignored_attributes
+      in
+      (* TODO: children *)
+      let react = require cx "react" eloc in
+      let reason = mk_reason (spf "React element: `%s`" name) eloc in
+      Flow_js.mk_tvar_where cx reason (fun tvar ->
+        let reason_createElement = mk_reason "property `createElement`" eloc in
+        Flow_js.flow cx (react, MethodT(
+          reason,
+          (reason_createElement, "createElement"),
+          Flow_js.mk_methodtype react [component_t;o] tvar
+        ))
+      )
 
   | _ ->
       (* TODO? covers namespaced names, member expressions as element names *)
