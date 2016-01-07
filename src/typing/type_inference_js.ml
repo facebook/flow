@@ -247,6 +247,15 @@ let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
    to perform at the leaves. A type for the pattern is passed, which is taken
    apart as the visitor goes deeper. *)
 
+(** NOTE: Since the type of the pattern may contain (unsubstituted) type
+    parameters, it is important that this visitor does not emit constraints:
+    otherwise, we may end up with (unsubstituted) type parameters appearing as
+    lower or upper bounds of constraints, which would violate a core
+    invariant. So, instead we model the operation of destructuring with a
+    wrapper constructor, `DestructuringT` (with lazy evaluation rules that
+    trigger whenever a result is needed, e.g., to interact in flows with other
+    lower and upper bounds). **)
+
 let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(function
   | loc, Array { Array.elements; _; } -> Array.(
       elements |> List.iteri (fun i -> function
@@ -271,16 +280,12 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
             ) in
             let (parent_pattern_t, tvar) = (match refinement with
             | Some refined_t -> (refined_t, refined_t)
-            | None ->
-              (curr_t, Flow_js.mk_tvar_where cx reason (fun tvar ->
-                Flow_js.flow cx (curr_t, GetElemT(reason, key, tvar))
-              ))
+            | None -> curr_t, DestructuringT (reason, curr_t, Elem key)
             ) in
             destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
         | Some (Spread (loc, { SpreadElement.argument })) ->
             let reason = mk_reason "rest of array pattern" loc in
-            let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.flow cx (curr_t, ArrRestT(reason, i, tvar));
+            let tvar = DestructuringT (reason, curr_t, ArrRest i) in
             destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
         | None ->
             ()
@@ -312,9 +317,7 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
                   (* use the same reason for the prop name and the lookup.
                      given `var {foo} = ...`, `foo` is both. compare to `a.foo`
                      where `foo` is the name and `a.foo` is the lookup. *)
-                  (curr_t, Flow_js.mk_tvar_where cx reason (fun tvar ->
-                    Flow_js.flow cx (curr_t, GetPropT(reason, (reason, x), tvar))
-                  ))
+                  curr_t, DestructuringT (reason, curr_t, Prop x)
                 ) in
                 destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
             | _ ->
@@ -322,8 +325,7 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
           )
         | SpreadProperty (loc, { SpreadProperty.argument }) ->
             let reason = mk_reason "object pattern spread property" loc in
-            let tvar = Flow_js.mk_tvar cx reason in
-            Flow_js.flow cx (curr_t, ObjRestT(reason,!xs,tvar));
+            let tvar = DestructuringT (reason, curr_t, ObjRest !xs) in
             destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
       )
     )
@@ -850,20 +852,26 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     Env_js.get_var ~lookup_mode cx name reason
 )
 
+(** Like `destructuring`, the following function operates on types that might
+    contain unsubstituted type parameters, so we must be careful not to emit
+    constraints in the general case. In fact, there does not seem to be any need
+    at all to allow general types to appear as annotations of a rest parameter,
+    we can make our lives simpler by disallowing them. **)
 and mk_rest cx = function
   | ArrT (_, t, []) -> RestT t
   | AnyT _ as t -> RestT t
-  | ArrT (r, t, _) ->
-      let msg = "rest parameters should be an array type, got a tuple type instead" in
-      Flow_js.add_warning cx [r,msg];
-      RestT t
-  | t ->
+  | OpenT _ as t ->
       (* unify t with Array<e>, return (RestT e) *)
       let reason = prefix_reason "element of " (reason_of_t t) in
       let tvar = Flow_js.mk_tvar cx reason in
       let arrt = ArrT(reason, tvar, []) in
       Flow_js.unify cx t arrt;
       RestT tvar
+  | t ->
+      let r = reason_of_t t in
+      let msg = "rest parameter should have an explicit array type (or type `any`)" in
+      Flow_js.add_warning cx [r,msg];
+      RestT (AnyT.why r)
 
 and mk_type cx type_params_map reason = function
   | None ->
@@ -1127,9 +1135,11 @@ let rec variable_decl cx type_params_map loc entry = Ast.Statement.(
       let t = mk_type_annotation cx type_params_map r typeAnnotation in
       Hashtbl.replace (Context.type_table cx) loc t;
       bind cx name t r
-    | p ->
+    | (loc, _) as p ->
+      let pattern_name = internal_pattern_name loc in
       let r = mk_reason (spf "%s _" str_of_kind) loc in
       let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
+      bind cx pattern_name t r;
       p |> destructuring cx t None (fun cx loc name t ->
         Hashtbl.replace (Context.type_table cx) loc t;
         bind cx name t r
@@ -3247,11 +3257,10 @@ and variable cx type_params_map kind
         )
     | loc, _ ->
         (* compound lvalue *)
+        let pattern_name = internal_pattern_name loc in
         let reason = mk_reason (spf "%s _" str_of_kind) loc in
         let typeAnnotation = type_of_pattern id in
         let has_anno = not (typeAnnotation = None) in
-        let t_ = typeAnnotation
-          |> mk_type_annotation cx type_params_map reason in
         let t = match init with
           | Some expr -> expression cx type_params_map expr
           | None -> (
@@ -3260,7 +3269,7 @@ and variable cx type_params_map kind
             | None -> void_ loc
           )
         in
-        Flow_js.flow_t cx (t, t_);
+        init_var cx pattern_name ~has_anno t reason;
         destructuring cx t init (fun cx loc name t ->
           let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
           init_var cx name ~has_anno t reason

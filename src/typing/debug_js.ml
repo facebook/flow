@@ -126,6 +126,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | DestructuringT (_, t, s) -> [
+      "type", _json_of_t json_cx t;
+      "selector", json_of_selector json_cx s
+    ]
+
   | PolyT (tparams, t) -> [
       "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) tparams);
       "type", _json_of_t json_cx t
@@ -584,6 +589,22 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
     "mixins", JSON_Bool insttype.mixins;
     "structural", JSON_Bool insttype.structural;
   ]
+)
+
+and json_of_selector json_cx = check_depth json_of_selector_impl json_cx
+and json_of_selector_impl json_cx = Hh_json.(function
+  | Prop x -> JSON_Object [
+      "propName", JSON_String x;
+    ]
+  | Elem key -> JSON_Object [
+      "keyType", _json_of_t json_cx key;
+    ]
+  | ObjRest excludes -> JSON_Object [
+      "excludedProps", JSON_Array (List.map (fun s -> JSON_String s) excludes);
+    ]
+  | ArrRest i -> JSON_Object [
+      "index", JSON_Number (string_of_int i);
+    ]
 )
 
 and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx

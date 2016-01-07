@@ -13,8 +13,7 @@ function rest_any(...xs: any): any {
   return xs[0];
 }
 
-/* TODO -- mk_rest unifies T with Array<tvar>, but T is BoundT
+// Warn, arbitrary subtypes of an array type don't represent rest params
 function rest_t<U, T: Array<U>>(...xs: T): U {
   return xs[0];
 }
-*/

@@ -1104,6 +1104,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow_t cx trace (t1, t2)
       );
 
+    (*****************)
+    (* destructuring *)
+    (*****************)
+
+    | DestructuringT (reason, t, s), u ->
+      rec_flow cx trace (eval_selector cx reason t s, u)
+
+    | l, UseT DestructuringT (reason, t, s) ->
+      rec_flow_t cx trace (l, eval_selector cx reason t s)
+
     (************)
     (* tainting *)
     (************)
@@ -3909,6 +3919,11 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
 
   | AbstractT (t) -> AbstractT (subst cx ~force map t)
 
+  | DestructuringT (reason, t, s) ->
+      let t = subst cx ~force map t in
+      let s = subst_selector cx force map s in
+      DestructuringT (reason, t, s)
+
   | TypeAppT(c, ts) ->
       let c = subst cx ~force map c in
       let ts = List.map (subst cx ~force map) ts in
@@ -3958,11 +3973,27 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ->
       failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
+and eval_selector cx reason curr_t s =
+  mk_tvar_where cx reason (fun tvar ->
+    flow_opt cx (curr_t, match s with
+    | Prop x -> GetPropT(reason, (reason, x), tvar)
+    | Elem key -> GetElemT(reason, key, tvar)
+    | ObjRest xs -> ObjRestT(reason, xs, tvar)
+    | ArrRest i -> ArrRestT(reason, i, tvar)
+    )
+  )
+
 and subst_propmap cx force map id =
   let pmap = find_props cx id in
   let pmap_ = SMap.map (subst cx ~force map) pmap in
   if pmap_ = pmap then id
   else mk_propmap cx pmap_
+
+and subst_selector cx force map = function
+  | Prop x -> Prop x
+  | Elem key -> Elem (subst cx ~force map key)
+  | ObjRest xs -> ObjRest xs
+  | ArrRest i -> ArrRest i
 
 (* TODO: flesh this out *)
 and check_polarity cx polarity = function
@@ -4040,9 +4071,14 @@ and check_polarity cx polarity = function
   | SpeculativeMatchT _
   | KeysT _
   | FunProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
+  | DestructuringT _
+  | ReposUpperT _
+  | ExtendsT _
+  | CustomFunT _
     -> () (* TODO *)
-
-  | t -> failwith (string_of_reason (reason_of_t t)) (* use types *)
 
 and check_polarity_propmap cx polarity id =
   let pmap = find_props cx id in
@@ -5520,6 +5556,16 @@ and reposition cx ?trace reason t =
         flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
       )
     end
+  | DestructuringT _ ->
+      (* Modifying the reason of `DestructuringT`, as we do for other types, is
+         not enough, since it will only affect the reason of the resulting tvar.
+         Instead, repositioning a `DestructuringT` should simulate repositioning
+         the resulting tvar, i.e., flowing repositioned *lower bounds* to the
+         resulting tvar. (Another way of thinking about this is that a
+         `DestructuringT` is just as transparent as its resulting tvar.) *)
+      mk_tvar_where cx reason (fun tvar ->
+        flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
+      )
   | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
 
 and reposition_use cx ?trace reason t = match t with
@@ -5947,7 +5993,17 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | ExistsT _ ->
       ()
 
-  | t -> failwith (string_of_reason (reason_of_t t)) (** TODO **)
+  | FunProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
+  | AbstractT _
+  | DestructuringT _
+  | SpeculativeMatchT _
+  | ReposUpperT _
+  | ExtendsT _
+  | CustomFunT _
+    -> () (* TODO *)
 
 and assert_ground_id cx skip ids id =
   if not (ISet.mem id !ids)

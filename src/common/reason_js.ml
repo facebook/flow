@@ -204,6 +204,9 @@ let internal_module_name name =
 let is_internal_module_name name =
   Str.string_match (Str.regexp "\\$module__.*") name 0
 
+let internal_pattern_name loc =
+  spf "$pattern__%s" (string_of_loc loc)
+
 let is_derivable_reason r =
   r.derivable
 

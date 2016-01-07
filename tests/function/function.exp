@@ -194,6 +194,9 @@ This type is incompatible with
 [LIB] core.js:69:11,16: string
 
 rest.js:8:31,33: tuple type
-rest parameters should be an array type, got a tuple type instead
+rest parameter should have an explicit array type (or type `any`)
 
-Found 39 errors
+rest.js:17:20,30: T
+rest parameter should have an explicit array type (or type `any`)
+
+Found 40 errors

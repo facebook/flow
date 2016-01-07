@@ -81,6 +81,8 @@ type t =
   (* type of a rest parameter *)
   | RestT of t
   | AbstractT of t
+  (* type of a variable / parameter / property extracted from a pattern *)
+  | DestructuringT of reason * t * selector
 
   (** A polymorphic type is like a type-level "function" that, when applied to
       lists of type arguments, generates types. Just like a function, a
@@ -457,6 +459,12 @@ and typeparam = {
   polarity: polarity
 }
 
+and selector =
+| Prop of string
+| Elem of t
+| ObjRest of string list
+| ArrRest of int
+
 and prototype = t
 
 and super = t
@@ -635,6 +643,9 @@ let rec reason_of_t = function
 
   | AbstractT t ->
       prefix_reason "abstract " (reason_of_t t)
+
+  | DestructuringT (reason, _, _) ->
+      reason
 
   | TypeAppT(t,_)
       -> prefix_reason "type application of " (reason_of_t t)
@@ -847,6 +858,8 @@ let rec mod_reason_of_t f = function
 
   | AbstractT t -> AbstractT (mod_reason_of_t f t)
 
+  | DestructuringT (reason, t, s) -> DestructuringT (f reason, t, s)
+
   | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
 
   | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
@@ -1015,6 +1028,7 @@ let string_of_ctor = function
   | OptionalT _ -> "OptionalT"
   | RestT _ -> "RestT"
   | AbstractT _ -> "AbstractT"
+  | DestructuringT _ -> "DestructuringT"
   | TypeAppT _ -> "TypeAppT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
   | MaybeT _ -> "MaybeT"

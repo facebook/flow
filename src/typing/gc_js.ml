@@ -124,6 +124,10 @@ let rec gc cx state = function
   | AbstractT t ->
       gc cx state t
 
+  | DestructuringT (_, t, s) ->
+      gc cx state t;
+      gc_selector cx state s
+
   | PolyT (typeparams, t) ->
       typeparams |> List.iter (gc_typeparam cx state);
       gc cx state t
@@ -383,6 +387,12 @@ and gc_id cx state id =
 
 and gc_typeparam cx state typeparam =
   gc cx state typeparam.bound
+
+and gc_selector cx state = function
+  | Prop x -> ()
+  | Elem key -> gc cx state key
+  | ObjRest xs -> ()
+  | ArrRest i -> ()
 
 and gc_pred cx state = function
 

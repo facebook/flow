@@ -36,6 +36,8 @@ val internal_name: string -> string
 val is_internal_module_name: string -> bool
 val internal_module_name: string -> string
 
+val internal_pattern_name: Loc.t -> string
+
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool
 

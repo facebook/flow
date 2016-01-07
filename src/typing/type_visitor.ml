@@ -70,6 +70,11 @@ class ['a] t = object(self)
 
   | AbstractT t -> self#type_ cx acc t
 
+  | DestructuringT (_, t, s) ->
+    let acc = self#type_ cx acc t in
+    let acc = self#selector cx acc s in
+    acc
+
   | PolyT (typeparams, t) ->
     let acc = self#list (self#type_param cx) acc typeparams in
     let acc = self#type_ cx acc t in
@@ -139,6 +144,12 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in
     acc
+
+  method private selector cx acc = function
+  | Prop x -> acc
+  | Elem key -> self#type_ cx acc key
+  | ObjRest xs -> acc
+  | ArrRest i -> acc
 
   method private use_type_ cx acc = function
   | UseT t ->
