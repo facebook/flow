@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
+ * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -122,8 +122,8 @@ module type S = sig
   val mem: key -> bool
 
   (* This function takes the elements present in the set and keep the "old"
-   * version in a separate heap. This is useful when we want to compare 
-   * what has changed. We will be in a situation for type-checking 
+   * version in a separate heap. This is useful when we want to compare
+   * what has changed. We will be in a situation for type-checking
    * (cf typing/typing_redecl_service.ml) where we want to compare the type
    * of a class in the previous environment vs the current type.
    *)
