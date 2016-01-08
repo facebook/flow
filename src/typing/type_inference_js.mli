@@ -11,11 +11,6 @@
 open Reason_js
 open Utils_js
 
-val apply_docblock_overrides:
-  Context.metadata ->
-  Docblock.t ->
-  Context.metadata
-
 val infer_ast:
   ?gc: bool ->
   metadata: Context.metadata ->
@@ -23,8 +18,6 @@ val infer_ast:
   module_name: Modulename.t ->
   Spider_monkey_ast.program ->
   Context.t
-
-val infer_module: metadata: Context.metadata -> filename -> Context.t
 
 val merge_component_strict: Context.t list ->
   Context.t list -> (Context.t * string * Modulename.t * Context.t) list ->

@@ -275,6 +275,31 @@ let internal_error filename msg =
     trace = [];
   }
 
+let apply_docblock_overrides metadata docblock_info =
+  (* TODO: Facebook uses a @preventMunge annotation to force `munge_underscores`
+   * off on a per-file basis. We should parse the comments like we do above. *)
+  Context.(match Docblock.flow docblock_info with
+  | None -> metadata
+  | Some Docblock.OptIn -> { metadata with checked = true; }
+  | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
+
+  (* --all (which sets metadata.checked = true) overrides @noflow, so there are
+     currently no scenarios where we'd change checked = true to false. in the
+     future, there may be a case where checked defaults to true (but is not
+     forced to be true ala --all), but for now we do *not* want to force
+     checked = false here. *)
+  | Some Docblock.OptOut -> metadata
+  )
+
+(* Given a filename, retrieve the parsed AST, derive a module name,
+   and invoke the local (infer) pass. This will build and return a
+   fresh context object for the module. *)
+let infer_module ~metadata filename =
+  let ast, info = Parsing_service_js.get_ast_and_info_unsafe filename in
+  let module_name = Module_js.exported_module filename info in
+  let metadata = apply_docblock_overrides metadata info in
+  TI.infer_ast ~metadata ~filename ~module_name ast
+
 (* local inference job:
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
@@ -294,7 +319,7 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
 
         (* infer produces a context for this module *)
-        let cx = TI.infer_module ~metadata file in
+        let cx = infer_module ~metadata file in
         (* register module info *)
         Module_js.add_module_info cx;
         (* note: save and clear errors and error suppressions before storing
@@ -582,7 +607,7 @@ let typecheck_contents ?verbose contents filename =
         is_declaration_file = false;
       } in
       (* apply overrides from the docblock *)
-      let metadata = TI.apply_docblock_overrides metadata info in
+      let metadata = apply_docblock_overrides metadata info in
 
       let timing, cx = with_timer "Infer" timing (fun () ->
         TI.infer_ast

@@ -6644,31 +6644,6 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
 
   cx
 
-let apply_docblock_overrides metadata docblock_info =
-  (* TODO: Facebook uses a @preventMunge annotation to force `munge_underscores`
-   * off on a per-file basis. We should parse the comments like we do above. *)
-  Context.(match Docblock.flow docblock_info with
-  | None -> metadata
-  | Some Docblock.OptIn -> { metadata with checked = true; }
-  | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
-
-  (* --all (which sets metadata.checked = true) overrides @noflow, so there are
-     currently no scenarios where we'd change checked = true to false. in the
-     future, there may be a case where checked defaults to true (but is not
-     forced to be true ala --all), but for now we do *not* want to force
-     checked = false here. *)
-  | Some Docblock.OptOut -> metadata
-  )
-
-(* Given a filename, retrieve the parsed AST, derive a module name,
-   and invoke the local (infer) pass. This will build and return a
-   fresh context object for the module. *)
-let infer_module ~metadata filename =
-  let ast, info = Parsing_service_js.get_ast_and_info_unsafe filename in
-  let module_name = Module_js.exported_module filename info in
-  let metadata = apply_docblock_overrides metadata info in
-  infer_ast ~metadata ~filename ~module_name ast
-
 (* Map.union: which is faster, union M N or union N M when M > N?
    union X Y = fold add X Y which means iterate over X, adding to Y
    So running time is roughly X * log Y.
