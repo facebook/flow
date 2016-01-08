@@ -831,7 +831,7 @@ let debug_count =
     prerr_endlinef "[%d] %s" !count (f())
 
 let debug_flow (l,u) =
-  spf "%s ~> %s" (string_of_ctor l) (string_of_ctor u)
+  spf "%s ~> %s" (string_of_ctor l) (string_of_use_ctor u)
 
 (***********************)
 (* instantiation utils *)
@@ -908,26 +908,56 @@ end = struct
     list |> List.map f |> String.concat sep
 
   (* show entries in the stack *)
+  let show_entry (c, tss) =
+    spf "%s<%s>" (desc_of_t c) (
+      string_of_list tss "," (fun ts ->
+        spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t)
+      ))
+
   let dump_stack () =
-    string_of_list !stack "\n" (fun (c, tss) ->
-      spf "%s<%s>" (desc_of_t c) (
-        string_of_list tss "," (fun ts ->
-          spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t)
-        )))
+    string_of_list !stack "\n" show_entry
 
   (* Detect whether pushing would cause a loop. Push only if no loop is
      detected, and return whether push happened. *)
+
   let push_unless_loop =
-    let contains ts1 ts2 =
-      not (TypeSet.is_empty ts1) && TypeSet.subset ts1 ts2
-    in
-    fun cx (c, ts) ->
+
+    (* Say that targs are possibly expanding when, given previous targs and
+       current targs, each previously non-empty targ is contained in the
+       corresponding current targ. *)
+    let possibly_expanding_targs prev_tss tss =
+      (* The following helper carries around a bit that indicates whether
+         prev_tss contains at least one non-empty set. *)
+      let rec loop seen_nonempty_prev_ts = function
+        | prev_ts::prev_tss, ts::tss ->
+          (* if prev_ts is not a subset of ts, we have found a counterexample
+             and we can bail out *)
+          TypeSet.subset prev_ts ts &&
+            (* otherwise, we recurse on the remaining targs, updating the bit *)
+            loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts))
+              (prev_tss, tss)
+        | [], [] ->
+          (* we have found no counterexamples, so it comes down to whether we've
+             seen any non-empty prev_ts *)
+          seen_nonempty_prev_ts
+        | [], _ | _, [] ->
+          (* something's wrong around arities, but that's not our problem, so
+             bail out *)
+          false
+      in loop false (prev_tss, tss)
+
+    in fun cx (c, ts) ->
       let tss = List.map (collect_roots cx) ts in
       let loop = !stack |> List.exists (fun (prev_c, prev_tss) ->
-        c = prev_c && (List.for_all2 contains prev_tss tss)
+        c = prev_c && possibly_expanding_targs prev_tss tss
       ) in
       if loop then false
-      else (stack := (c, tss) :: !stack; true)
+      else begin
+        stack := (c, tss) :: !stack;
+        if Context.is_verbose cx then
+          prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
+        true
+      end
 
   let pop () = stack := List.tl !stack
   let get () = !stack
