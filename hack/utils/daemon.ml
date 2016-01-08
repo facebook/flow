@@ -67,9 +67,11 @@ module Entry : sig
     'param ->
     ('input, 'output) channel_pair -> unit
   val set_context:
-    ('param, 'input, 'output) t -> 'param ->
+    ('param, 'input, 'output) t ->
     Unix.file_descr * Unix.file_descr ->
     unit
+  val send_param:
+    'param -> Unix.file_descr -> unit
   val get_context:
     unit ->
     (('param, 'input, 'output) t * 'param * ('input, 'output) channel_pair)
@@ -94,14 +96,17 @@ end = struct
       Printf.ksprintf failwith
         "Unknown entry point %S" name
 
-  let set_context entry param (ic, oc) =
+  let set_context entry (ic, oc) =
     let data =
       (Handle.get_handle ic,
-       Handle.get_handle oc,
-       param) in
+       Handle.get_handle oc) in
     let data_str = String.escaped (Marshal.to_string data []) in
     Unix.putenv "HH_SERVER_DAEMON" entry;
     Unix.putenv "HH_SERVER_DAEMON_PARAM" data_str
+
+  let send_param param fd =
+    let _, _, _ = Unix.select [] [fd] [] (-1.0) in
+    Marshal_tools.to_fd_with_preamble fd param
 
   (* How this works on Unix: It may appear like we are passing file descriptors
    * from one process to another here, but in_handle / out_handle are actually
@@ -116,7 +121,13 @@ end = struct
     let (in_handle, out_handle, param) =
       try
         let raw = Sys.getenv "HH_SERVER_DAEMON_PARAM" in
-        Marshal.from_string (Scanf.unescaped raw) 0
+        let (in_handle, out_handle) =
+          Marshal.from_string (Scanf.unescaped raw) 0 in
+        let _ = Unix.select
+          [(Handle.wrap_handle in_handle)] [] [] (-1.0) in
+        let param = Marshal_tools.from_fd_with_preamble
+          (Handle.wrap_handle in_handle) in
+        in_handle, out_handle, param
       with _ -> failwith "Can't find daemon parameters." in
     (entry, param,
      (Timeout.in_channel_of_descr (Handle.wrap_handle in_handle),
@@ -207,7 +218,7 @@ let spawn
     (param: param) : (output, input) handle =
   let (parent_in, child_out), (child_in, parent_out) =
     setup_channels channel_mode in
-  Entry.set_context entry param (child_in, child_out);
+  Entry.set_context entry (child_in, child_out);
   let null_fd =
     Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
   let out_fd, err_fd =
@@ -238,6 +249,7 @@ let spawn
     Unix.close child_in);
   Unix.close out_fd;
   Unix.close null_fd;
+  Entry.send_param param parent_out;
   { channels = Timeout.in_channel_of_descr parent_in,
                Unix.out_channel_of_descr parent_out;
     pid }
