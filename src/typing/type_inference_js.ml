@@ -710,7 +710,8 @@ let rec convert cx type_params_map = Ast.Type.(function
       (* in-scope type vars *)
       | _ when SMap.mem name type_params_map ->
         check_type_param_arity cx loc typeParameters 0 (fun () ->
-          SMap.find_unsafe name type_params_map
+          Flow_js.reposition cx (mk_reason name loc)
+            (SMap.find_unsafe name type_params_map)
         )
 
       (* other applications with id as head expr *)
@@ -928,10 +929,8 @@ and null_ loc =
    do semantic checking and create types for them. *)
 (* note: polarities arg is temporary -
    full support will put them in the typeParameter AST *)
-and mk_type_param_declarations cx type_params_map
-  ?(polarities=[]) typeParameters
-  =
-  let add_type_param (typeparams, smap) (loc, t) polarity =
+and mk_type_param_declarations cx type_params_map typeParameters =
+  let add_type_param (typeparams, smap) (polarity, (loc, t)) =
     let name = t.Ast.Identifier.name in
     let reason = mk_reason name loc in
     let bound = match t.Ast.Identifier.typeAnnotation with
@@ -950,14 +949,10 @@ and mk_type_param_declarations cx type_params_map
     (typeparam :: typeparams,
      SMap.add name (BoundT typeparam) smap)
   in
-  let (types:Ast.Identifier.t list) =
-    extract_type_param_declarations typeParameters
-  in
-  let polarities = if polarities != [] then polarities
-    else make_list (fun () -> Neutral) (List.length types)
-  in
+  let types_with_polarities =
+    extract_type_param_declarations typeParameters in
   let typeparams, smap =
-    List.fold_left2 add_type_param ([], SMap.empty) types polarities
+    List.fold_left add_type_param ([], SMap.empty) types_with_polarities
   in
   List.rev typeparams, SMap.union smap type_params_map
 
@@ -974,13 +969,22 @@ and identifier ?(lookup_mode=ForValue) cx name loc =
     )
   )
 
-and extract_type_param_declarations = function
+and extract_type_param_declarations = Ast.Type.ParameterDeclaration.(function
   | None -> []
-  | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterDeclaration.params
+  | Some (_, typeParameters) ->
+      typeParameters.params |> List.map TypeParam.(fun tp ->
+        let polarity = match tp.variance with
+          | Some Variance.Plus -> Positive
+          | Some Variance.Minus -> Negative
+          | None -> Neutral in
+        polarity, tp.identifier
+      )
+)
 
 and extract_type_param_instantiations = function
   | None -> []
-  | Some (_, typeParameters) -> typeParameters.Ast.Type.ParameterInstantiation.params
+  | Some (_, typeParameters) ->
+      typeParameters.Ast.Type.ParameterInstantiation.params
 
 (* Function parameters get passed around and manipulated all over the
    place. Instead of passing around the raw data in several pieces,
@@ -1505,17 +1509,8 @@ and statement cx type_params_map = Ast.Statement.(
     let reason = DescFormat.instance_reason iname loc in
     let self = Flow_js.mk_tvar cx reason in
 
-    (* TODO excise the Promise/PromisePolyfill special-case ASAP *)
     let typeparams, type_params_map =
-      if (iname = "Promise" || iname = "PromisePolyfill") &&
-        List.length (extract_type_param_declarations typeParameters) = 1
-      then mk_type_param_declarations cx type_params_map typeParameters
-        ~polarities:[Positive]
-      else if (iname = "Generator") &&
-        List.length (extract_type_param_declarations typeParameters) = 3
-      then mk_type_param_declarations cx type_params_map typeParameters
-        ~polarities:[Positive; Positive; Negative]
-      else mk_type_param_declarations cx type_params_map typeParameters in
+      mk_type_param_declarations cx type_params_map typeParameters in
 
     let typeparams, type_params_map =
       add_this self ThisConfig.support_declare_class cx reason typeparams type_params_map in

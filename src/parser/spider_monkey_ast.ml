@@ -165,9 +165,18 @@ and Type : sig
   and annotation = Loc.t * t
 
   module ParameterDeclaration : sig
+    module TypeParam : sig
+      module Variance : sig
+        type t = Plus | Minus
+      end
+      type t = {
+        variance: Variance.t option;
+        identifier: Identifier.t;
+      }
+    end
     type t = Loc.t * t'
     and t' = {
-      params: Identifier.t list;
+      params: TypeParam.t list;
     }
   end
   module ParameterInstantiation : sig

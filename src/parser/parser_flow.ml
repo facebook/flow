@@ -663,15 +663,20 @@ end = struct
         })
 
     and type_parameter_declaration =
-      let rec params env acc =
-        let acc = (Parse.identifier_with_type env Error.StrictParamName)::acc in
+      let rec params env acc = Type.ParameterDeclaration.TypeParam.(
+        let variance = match Peek.token env with
+          | T_PLUS -> Eat.token env; Some Variance.Plus
+          | T_MINUS -> Eat.token env; Some Variance.Minus
+          | _ -> None in
+        let identifier = Parse.identifier_with_type env Error.StrictParamName in
+        let acc = { variance; identifier }::acc in
         match Peek.token env with
         | T_EOF
         | T_GREATER_THAN -> List.rev acc
         | _ ->
           Expect.token env T_COMMA;
           params env acc
-
+      )
       in fun env ->
           let start_loc = Peek.loc env in
           if Peek.token env = T_LESS_THAN

@@ -1025,8 +1025,15 @@ end with type t = Impl.t) = struct
 
   and type_parameter_declaration (loc, params) = Type.ParameterDeclaration.(
     node "TypeParameterDeclaration" loc [|
-      "params", array_of_list identifier params.params;
+      "params", array_of_list type_param params.params;
     |]
+  )
+
+  (* TODO: backward compatible translation that ignores the structure of
+     TypeParam.t, keeping only the value of the `identifier` field (and dropping
+     the `variance` field altogether). *)
+  and type_param tp = Type.ParameterDeclaration.TypeParam.(
+    identifier tp.identifier
   )
 
   and type_parameter_instantiation (loc, params) = Type.ParameterInstantiation.(

@@ -1,0 +1,16 @@
+
+test.js:2:10,12: Out
+contravariant position (expected `Out` to occur only covariantly)
+
+test.js:3:15,16: In
+covariant position (expected `In` to occur only contravariantly)
+
+test.js:10:16,16: A
+This type is incompatible with
+test.js:13:17,17: B
+
+test.js:13:19,19: A
+This type is incompatible with
+test.js:10:18,18: B
+
+Found 4 errors

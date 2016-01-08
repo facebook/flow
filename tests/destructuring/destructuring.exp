@@ -130,7 +130,7 @@ destructuring_init.js:1:5,9: Destructuring assignment must be initialized
 
 destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
 
-poly.js:15:27,27: T
+poly.js:15:36,36: T
 rest parameter should have an explicit array type (or type `any`)
 
 unannotated.js:8:5,7: property `bar`

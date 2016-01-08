@@ -546,6 +546,19 @@ module.exports = {
           },
         ],
       },
+      // type param variances are not carried in the translated AST yet
+      'class Foo<+T1,-T2> {}': {
+        'body.0.typeParameters.params': [
+          {
+            'type': 'Identifier',
+            'name': 'T1',
+          },
+          {
+            'type': 'Identifier',
+            'name': 'T2',
+          },
+        ],
+      },
       'var {x}: {x: string; } = { x: "hello" };': {
         'body.0.declarations.0.id': {
           'type': 'ObjectPattern',
@@ -1134,8 +1147,8 @@ module.exports = {
       },
       'export interface foo {p: number}': {
         'body.0.declaration': {
-	        'type': 'InterfaceDeclaration',
-   	    }
+          'type': 'InterfaceDeclaration',
+        }
       }
     },
     'Declare Statements': {

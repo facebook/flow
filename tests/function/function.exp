@@ -196,7 +196,7 @@ This type is incompatible with
 rest.js:8:31,33: tuple type
 rest parameter should have an explicit array type (or type `any`)
 
-rest.js:17:20,30: T
+rest.js:17:40,40: T
 rest parameter should have an explicit array type (or type `any`)
 
 Found 40 errors
