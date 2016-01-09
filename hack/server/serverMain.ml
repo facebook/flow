@@ -398,7 +398,9 @@ let program_init genv =
           env, if did_load then "mini_load" else "mini_load_fail"
     else
       match ServerConfig.load_script genv.config with
-      | Some load_script when not (ServerArgs.no_load genv.options) ->
+      | Some load_script
+        when ServerArgs.save_filename genv.options = None &&
+        not (ServerArgs.no_load genv.options) ->
           run_load_script genv load_script
       | _ ->
           let env, _ = ServerInit.init genv in
