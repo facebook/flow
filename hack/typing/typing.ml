@@ -3212,9 +3212,9 @@ and static_class_id p env = function
         | _, (Tany | Tmixed | Tarraykind _ | Toption _
                  | Tprim _ | Tfun _ | Ttuple _
                  | Tabstract ((AKenum _ | AKdependent _ | AKnewtype _), _)
-                 | Tanon (_, _) | Tobject | Tshape _
+                 | Tanon (_, _) | Tobject | Tshape _ as ty
         ) ->
-          Errors.dynamic_class p;
+          Errors.expected_class ~suffix:(", but got "^Typing_print.error ty) p;
           Reason.Rnone, Tany
       in env, resolve_ety ISet.empty ty
 

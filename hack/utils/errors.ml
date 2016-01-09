@@ -331,7 +331,7 @@ module Typing                               = struct
   (* DEPRECATED unset_in_strict             = 4122 *)
   let strict_members_not_known              = 4123 (* DONT MODIFY!!!! *)
   let generic_at_runtime                    = 4124 (* DONT MODIFY!!!! *)
-  let dynamic_class                         = 4125 (* DONT MODIFY!!!! *)
+  (*let dynamic_class                       = 4125 *)
   let attribute_too_many_arguments          = 4126 (* DONT MODIFY!!!! *)
   let attribute_param_type                  = 4127 (* DONT MODIFY!!!! *)
   let deprecated_use                        = 4128 (* DONT MODIFY!!!! *)
@@ -663,10 +663,6 @@ let genva_arity pos =
 let gen_array_rec_arity pos =
   add Naming.gen_array_rec_arity pos
     "gen_array_rec() expects exactly 1 argument"
-
-let dynamic_class pos =
-  add Typing.dynamic_class pos
-    "Don't use dynamic classes"
 
 let uninstantiable_class usage_pos decl_pos name reason_msgl =
   let name = strip_ns name in
@@ -1342,10 +1338,7 @@ let const_mutation pos1 pos2 ty =
      then [(pos2, "This is " ^ ty)]
      else [])
 
-let expected_class ?suffix:(suffix="") pos =
-  let suffix = match suffix with
-  | "" -> ""
-  | str -> " "^str in
+let expected_class ?(suffix="") pos =
   add Typing.expected_class pos ("Was expecting a class"^suffix)
 
 let snot_found_hint = function
