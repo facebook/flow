@@ -209,7 +209,7 @@ class virtual tvar_expanding_type_mapper = object(this)
 end
 
 (* Mixin that maps across the type inside the typevar, and then changes
- * it's value to the result. *)
+ * its value to the result. *)
 class virtual tvar_substituting_type_mapper = object(this)
   method on_tvar ((env, seen) : env) (r : Reason.t) n =
     let env, ty = Env.get_type env r n in

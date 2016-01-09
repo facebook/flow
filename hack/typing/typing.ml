@@ -2775,7 +2775,15 @@ and class_get ~is_method ~is_const ?(incl_tc=false) env cty (p, mid) cid =
 
 and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cid cty
 (p, mid) =
+  let env, cty = Env.expand_type env cty in
   match cty with
+  | _, Tany -> env, (Reason.Rnone, Tany)
+  | _, Tunresolved tyl ->
+      let env, tyl = lmap begin fun env ty ->
+        class_get_ ~is_method ~is_const ~ety_env ~incl_tc env cid ty (p, mid)
+      end env tyl in
+      let env, method_ = TUtils.in_var env (fst cty, Tunresolved tyl) in
+      env, method_
   | _, Tabstract (_, Some cty) ->
       class_get_ ~is_method ~is_const ~ety_env ~incl_tc env cid cty (p, mid)
   | _, Tclass ((_, c), paraml) ->
@@ -2832,16 +2840,10 @@ and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cid cty
               Phase.localize ~ety_env env method_ in
             env, method_)
       )
-  | _, (Tany | Tabstract _) ->
-      (match Env.get_mode env with
-      | FileInfo.Mstrict -> Errors.expected_class p
-      | FileInfo.Mdecl | FileInfo.Mpartial -> ()
-      );
-      env, (Reason.Rnone, Tany)
-  | _, (Tmixed | Tarraykind _ | Toption _ | Tprim _ | Tvar _
-    | Tfun _ | Ttuple _ | Tanon (_, _) | Tunresolved _
-    | Tobject | Tshape _) ->
-      Errors.expected_class p;
+  | _, (Tabstract (_, None) | Tmixed | Tarraykind _ | Toption _
+        | Tprim _ | Tvar _ | Tfun _ | Ttuple _ | Tanon (_, _) | Tobject
+        | Tshape _) ->
+      (* should never happen; static_class_id takes care of these *)
       env, (Reason.Rnone, Tany)
 
 and smember_not_found pos ~is_const ~is_method class_ member_name =
@@ -3187,24 +3189,34 @@ and static_class_id p env = function
     )
   | CIexpr (p, _ as e) ->
       let env, ty = expr env e in
-      let rec resolve_ety ty =
+      let rec resolve_ety seen ty =
         let env, ty = TUtils.fold_unresolved env ty in
         let _, ty = Env.expand_type env ty in
         match TUtils.get_base_type ty with
-          | _, Tabstract (AKnewtype (classname, [the_cls]), _) when
-              classname = SN.Classes.cClassname ->
-            resolve_ety the_cls
-          | _, Tabstract (AKgeneric _, _)
-          | _, Tclass _ -> ty
-          | _, (Tany | Tmixed | Tarraykind _ | Toption _
-                   | Tprim _ | Tvar _ | Tfun _ | Ttuple _
-                   | Tabstract ((AKenum _ | AKdependent _ | AKnewtype _), _)
-                   | Tanon (_, _) | Tunresolved _ | Tobject | Tshape _
-          ) ->
-            if Env.get_mode env = FileInfo.Mstrict
-            then Errors.dynamic_class p;
-            Reason.Rnone, Tany
-      in env, resolve_ety ty
+        | _, Tabstract (AKnewtype (classname, [the_cls]), _) when
+            classname = SN.Classes.cClassname ->
+          resolve_ety seen the_cls
+        | _, Tabstract (AKgeneric _, _)
+        | _, Tclass _ -> ty
+        | r, Tunresolved tyl -> r, Tunresolved (List.map tyl (resolve_ety seen))
+        | _, Tvar n as ty ->
+          if ISet.mem n seen
+          then Reason.Rnone, Tany
+          else begin
+            let seen = ISet.add n seen in
+            resolve_ety seen ty
+          end
+        | _, (Tany | Tprim Tstring | Tabstract (_, None) | Tmixed | Tobject)
+              when not (Env.is_strict env) ->
+          Reason.Rnone, Tany
+        | _, (Tany | Tmixed | Tarraykind _ | Toption _
+                 | Tprim _ | Tfun _ | Ttuple _
+                 | Tabstract ((AKenum _ | AKdependent _ | AKnewtype _), _)
+                 | Tanon (_, _) | Tobject | Tshape _
+        ) ->
+          Errors.dynamic_class p;
+          Reason.Rnone, Tany
+      in env, resolve_ety ISet.empty ty
 
 and call_construct p env class_ params el uel cid =
   let cstr = Env.get_construct env class_ in
@@ -3712,14 +3724,16 @@ and condition env tparamet =
   | p, InstanceOf (ivar, cid) when tparamet && is_instance_var ivar ->
       let env, (ivar_pos, x) = get_instance_var env ivar in
       let env, x_ty = Env.get_local env x in
-      let env, x_ty = Env.expand_type env x_ty in (* We don't want to modify x *)
       (* XXX the position p here is not really correct... it's the position
        * of the instanceof expression, not the class id. But we don't store
        * position data for the latter. *)
       let env, obj_ty = static_class_id p env cid in
-      (match obj_ty with
+      let rec resolve_obj env obj_ty =
+        (* Expand so that we don't modify x *)
+        let env, obj_ty = Env.expand_type env obj_ty in
+        match obj_ty with
         | _, Tabstract (AKgeneric _, _) ->
-          Env.set_local env x obj_ty
+          env, obj_ty
         | _, Tabstract (AKdependent (`this, []), Some (_, Tclass _)) ->
           let obj_ty =
             (* Technically instanceof static is not strong enough to prove
@@ -3733,12 +3747,13 @@ and condition env tparamet =
               ExprDepTy.make env CIstatic obj_ty
             else
               obj_ty in
-          let env = Env.set_local env x obj_ty in
-          env
+          env, obj_ty
+        | _, Tabstract ((AKdependent _ | AKnewtype _), Some ty) ->
+          resolve_obj env ty
         | _, Tclass ((_, cid as _c), _) ->
           let class_ = Env.get_class env cid in
           (match class_ with
-            | None -> Env.set_local env x (Reason.Rwitness ivar_pos, Tobject)
+            | None -> env, (Reason.Rwitness ivar_pos, Tobject)
             | Some _class ->
               if SubType.is_sub_type env obj_ty x_ty
               then
@@ -3754,14 +3769,19 @@ and condition env tparamet =
                  * the invariant that removing annotations gets rid
                  * of typing errors in partial mode (See also
                  * t3216948).  *)
-                env
-              else Env.set_local env x obj_ty
+                env, x_ty
+              else env, obj_ty
           )
-        | _, (Tany | Tmixed | Tarraykind _ | Toption _
-          | Tprim _ | Tvar _ | Tfun _ | Tabstract (_, _) | Ttuple _
-          | Tanon (_, _) | Tunresolved _ | Tobject
-          | Tshape _) -> Env.set_local env x (Reason.Rwitness ivar_pos, Tobject)
-      )
+        | r, Tunresolved tyl ->
+          let env, tyl = lmap resolve_obj env tyl in
+          env, (r, Tunresolved tyl)
+        | _, (Tany | Tmixed | Tarraykind _ | Tprim _ | Tvar _ | Tfun _
+            | Tabstract ((AKenum _ | AKnewtype _ | AKdependent _), _)
+            | Ttuple _ | Tanon (_, _) | Toption _ | Tobject | Tshape _) ->
+          env, (Reason.Rwitness ivar_pos, Tobject)
+      in
+      let env, x_ty = resolve_obj env obj_ty in
+      Env.set_local env x x_ty
   | _, Binop ((Ast.Eqeq | Ast.EQeqeq), e, (_, Null))
   | _, Binop ((Ast.Eqeq | Ast.EQeqeq), (_, Null), e) ->
       let env, _ = expr env e in
