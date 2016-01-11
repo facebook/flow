@@ -218,7 +218,7 @@ and emit_assignment env obop e1 e2 =
       let env, lval = emit_lval env lhs in
       env, (lval, path)
     in
-    let env, assignments = lmap emit_lhs env assignments in
+    let env, assignments = List.map_env env assignments emit_lhs in
 
     (* Store off the rhs to a (maybe temporary) local *)
     let env, opt_faultlet, id = match rhs_tag with

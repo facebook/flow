@@ -8,9 +8,9 @@
  *
  *)
 
+open Core
 open Nast
 open Typing_defs
-open Utils
 
 module Env          = Typing_env
 module Reason       = Typing_reason
@@ -37,7 +37,7 @@ let rec shrink_shape pos field_name env shape =
       let result = Reason.Rwitness pos, Tshape (fields_known, fields) in
       env, result
   | _, Tunresolved tyl ->
-      let env, tyl = lfold (shrink_shape pos field_name) env tyl in
+      let env, tyl = List.map_env env tyl(shrink_shape pos field_name) in
       let result = Reason.Rwitness pos, Tunresolved tyl in
       env, result
   | x ->
@@ -85,8 +85,9 @@ let to_array env shape_ty res =
       match fields_known with
       | FieldsFullyKnown ->
         let env, values =
-          lmap (Typing_utils.unresolved) env (ShapeMap.values fdm) in
-        let env, keys = lmap begin fun env key ->
+          List.map_env env (ShapeMap.values fdm) (Typing_utils.unresolved) in
+        let keys = ShapeMap.keys fdm in
+        let env, keys = List.map_env env keys begin fun env key ->
           let env, ty = match key with
           | SFlit (p, _) -> env, (Reason.Rwitness p, Tprim Tstring)
           | SFclass_const ((_, cid), (_, mid)) ->
@@ -99,7 +100,7 @@ let to_array env shape_ty res =
               | None -> env, (Reason.Rnone, Tany)
             end in
           Typing_utils.unresolved env ty
-        end env (ShapeMap.keys fdm) in
+        end in
         let env, key =
           Typing_arrays.array_type_list_to_single_type env keys in
         let env, value =

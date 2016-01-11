@@ -155,14 +155,6 @@ let opt_fold f env = function
   | None -> env
   | Some x -> f env x
 
-let rec lmap f env l =
-  match l with
-  | [] -> env, []
-  | x :: rl ->
-      let env, x = f env x in
-      let env, rl = lmap f env rl in
-      env, x :: rl
-
 let smap_inter m1 m2 =
   SMap.fold (
   fun x y acc ->
@@ -192,53 +184,12 @@ let imap_inter_list = function
   | x :: rl ->
       List.fold_left rl ~f:imap_inter ~init:x
 
-(* This is a significant misnomer... you may want fold_left_env instead. *)
-let lfold = lmap
-
-let rec lfold2 f env l1 l2 =
-  match l1, l2 with
-  | [], [] -> env, []
-  | [], _ | _, [] -> raise (Invalid_argument "lfold2")
-  | x1 :: rl1, x2 :: rl2 ->
-      let env, x = f env x1 x2 in
-      let env, rl = lfold2 f env rl1 rl2 in
-      env, x :: rl
-
-let wlfold2 f env l1 l2 =
-  match l1, l2 with
-  | [], [] -> env, []
-  | [], l | l, [] -> env, l
-  | x1 :: rl1, x2 :: rl2 ->
-      let env, x = f env x1 x2 in
-      let env, rl = lfold2 f env rl1 rl2 in
-      env, x :: rl
-
 let rec wfold_left2 f env l1 l2 =
   match l1, l2 with
   | [], _ | _, [] -> env
   | x1 :: rl1, x2 :: rl2 ->
       let env = f env x1 x2 in
       wfold_left2 f env rl1 rl2
-
-let apply_for_env_fold f env acc x =
-  let env, x = f env x in
-  env, x :: acc
-
-let rec fold_left_env f env acc l =
-  match l with
-  | [] -> env, acc
-  | x :: rl ->
-      let env, acc = f env acc x in
-      fold_left_env f env acc rl
-
-let rec make_list f n =
-  if n = 0
-  then []
-  else f() :: make_list f (n-1)
-
-let safe_ios p s =
-  try Some (int_of_string s)
-  with _ -> None
 
 let sl l =
   List.fold_right l ~f:(^) ~init:""

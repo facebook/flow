@@ -155,7 +155,7 @@ end = struct
     else
       let visited = SMap.add k 0 visited in
       let kl = AliasMap.get k aliases in
-      let visited, depth_l = lfold (key aliases) visited kl in
+      let visited, depth_l = List.map_env visited kl (key aliases) in
       let my_depth = 1 + List.fold_left ~f:max ~init:0 depth_l in
       SMap.add k my_depth visited, my_depth
 

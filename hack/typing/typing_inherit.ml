@@ -319,7 +319,7 @@ let inherit_hack_xhp_attrs_only env p class_name class_type argl =
 let from_class c env hint =
   let pos, class_name, class_params =
     TUtils.unwrap_class_or_interface_hint hint in
-  let env, class_params = lfold Typing_hint.hint env class_params in
+  let env, class_params = List.map_env env class_params Typing_hint.hint in
   let class_type = Env.get_class_dep env class_name in
   match class_type with
   | None ->
@@ -333,7 +333,7 @@ let from_class c env hint =
 let from_class_constants_only env hint =
   let pos, class_name, class_params =
     TUtils.unwrap_class_or_interface_hint hint in
-  let env, class_params = lfold Typing_hint.hint env class_params in
+  let env, class_params = List.map_env env class_params Typing_hint.hint in
   let class_type = Env.get_class_dep env class_name in
   match class_type with
   | None ->
@@ -346,7 +346,7 @@ let from_class_constants_only env hint =
 let from_class_xhp_attrs_only env hint =
   let pos, class_name, class_params =
     TUtils.unwrap_class_or_interface_hint hint in
-  let env, class_params = lfold Typing_hint.hint env class_params in
+  let env, class_params = List.map_env env class_params Typing_hint.hint in
   let class_type = Env.get_class_dep env class_name in
   match class_type with
   | None ->
@@ -367,7 +367,7 @@ let from_parent env c =
       | Ast.Ctrait -> c.c_implements @ c.c_extends @ c.c_req_implements
       | _ -> c.c_extends
   in
-  let env, inherited_l = lfold (from_class c) env extends in
+  let env, inherited_l = List.map_env env extends (from_class c) in
   env, List.fold_right ~f:add_inherited inherited_l ~init:empty
 
 let from_requirements c (env, acc) reqs =

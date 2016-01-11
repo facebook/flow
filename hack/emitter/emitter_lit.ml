@@ -40,7 +40,7 @@ let rec fmt_lit_exn (_, e) =
         i,
         fmt_lit_exn ek ^ fmt_lit_exn ev
     in
-    let _, fields = lmap fmt_afield 0 afields in
+    let _, fields = List.map_env 0 afields fmt_afield in
     "a:" ^ string_of_int (List.length afields) ^
       ":{" ^ String.concat "" fields ^ "}"
 

@@ -155,7 +155,7 @@ let merge_parent_class_reqs class_nast impls
     (env, req_ancestors, req_ancestors_extends) parent_hint =
   let parent_pos, parent_name, parent_params =
     TUtils.unwrap_class_or_interface_hint parent_hint in
-  let env, parent_params = lfold Typing_hint.hint env parent_params in
+  let env, parent_params = List.map_env env parent_params Typing_hint.hint in
   let parent_type = Env.get_class_dep env parent_name in
 
   match parent_type with
@@ -202,7 +202,7 @@ let declared_class_req class_nast impls (env, requirements, req_extends) hint =
   let env, req_ty = Typing_hint.hint env hint in
   let req_pos, req_name, req_params =
     TUtils.unwrap_class_or_interface_hint hint in
-  let env, _ = lfold Typing_hint.hint env req_params in
+  let env, _ = List.map_env env req_params Typing_hint.hint in
   let req_type = Env.get_class_dep env req_name in
 
   (* for concrete classes, check required ancestors against actual
@@ -408,7 +408,7 @@ and class_decl tcopt c =
     | Some {ce_type = (_, Tfun ({ft_abstract = true; _})); _} -> false
     | _ -> true in
   let impl = c.c_extends @ c.c_implements @ c.c_uses in
-  let env, impl = lmap Typing_hint.hint env impl in
+  let env, impl = List.map_env env impl Typing_hint.hint in
   let impl = match SMap.get SN.Members.__toString m with
     | Some {ce_type = (_, Tfun ft); _} when cls_name <> SN.Classes.cStringish ->
       (* HHVM implicitly adds Stringish interface for every class/iface/trait
@@ -418,7 +418,7 @@ and class_decl tcopt c =
       ty :: impl
     | _ -> impl
   in
-  let env, impl = lfold get_implements env impl in
+  let env, impl = List.map_env env impl get_implements in
   let impl = List.fold_right impl ~f:(SMap.fold SMap.add) ~init:SMap.empty in
   let env, extends, ext_strict = get_class_parents_and_traits env c in
   let extends = if c.c_is_xhp
@@ -456,7 +456,7 @@ and class_decl tcopt c =
     Errors.strict_members_not_known p name
   else ();
   let ext_strict = if not_strict_because_xhp then false else ext_strict in
-  let env, tparams = lfold Typing.type_param env (fst c.c_tparams) in
+  let env, tparams = List.map_env env (fst c.c_tparams) Typing.type_param in
   let env, enum = match c.c_enum with
     | None -> env, None
     | Some e ->
@@ -763,7 +763,7 @@ and method_decl env m =
     | FVellipsis    -> env, Fellipsis arity_min
     | FVnonVariadic -> env, Fstandard (arity_min, List.length m.m_params)
   in
-  let env, tparams = lfold Typing.type_param env m.m_tparams in
+  let env, tparams = List.map_env env m.m_tparams Typing.type_param in
   let ft = {
     ft_pos      = fst m.m_name;
     ft_deprecated =
@@ -840,7 +840,7 @@ and type_typedef_naming_and_decl tcopt tdef =
   let env = Typing_env.empty tcopt filename in
   let env = Typing_env.set_mode env tdef.Ast.t_mode in
   let env = Env.set_root env (Typing_deps.Dep.Class tid) in
-  let env, params = lfold Typing.type_param env params in
+  let env, params = List.map_env env params Typing.type_param in
   let env, concrete_type = Typing_hint.hint env concrete_type in
   let _env, tcstr =
     match tcstr with

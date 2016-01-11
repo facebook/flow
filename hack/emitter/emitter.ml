@@ -419,14 +419,15 @@ let emit_class nenv env (_, x) =
   (* Emit all of the main content parts of the class *)
   let env = opt_fold (emit_enum ~cls) env cls.c_enum in
   let env = List.fold_left ~f:emit_use ~init:env cls.c_uses in
-  let env, uninit_vars = lmap (emit_var ~is_static:false) env cls.c_vars in
+  let env, uninit_vars =
+    List.map_env env cls.c_vars (emit_var ~is_static:false) in
   let env, uninit_svars =
-    lmap (emit_var ~is_static:true) env cls.c_static_vars in
+    List.map_env env cls.c_static_vars (emit_var ~is_static:true) in
   let env = List.fold_left ~f:(emit_method ~is_static:false ~cls) ~init:env
     cls.c_methods in
   let env = List.fold_left ~f:(emit_method ~is_static:true ~cls) ~init:env
     cls.c_static_methods in
-  let env, uninit_consts = lmap emit_const env cls.c_consts in
+  let env, uninit_consts = List.map_env env cls.c_consts emit_const in
   let env = List.fold_left ~f:emit_tconst ~init:env cls.c_typeconsts in
 
   let uninit_vars = List.filter_opt uninit_vars in

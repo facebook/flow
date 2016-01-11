@@ -585,7 +585,7 @@ let rec lost_info fake_name stack env ty =
           env, ty
       )
   | r, Tunresolved tyl ->
-      let env, tyl = lfold (lost_info fake_name stack) env tyl in
+      let env, tyl = List.map_env env tyl (lost_info fake_name stack) in
       env, (info r, Tunresolved tyl)
   | r, ty ->
       env, (info r, ty)
@@ -679,7 +679,7 @@ let rec unbind seen env ty =
     let seen = ty :: seen in
     match ty with
     | r, Tunresolved tyl ->
-        let env, tyl = lfold (unbind seen) env tyl in
+        let env, tyl = List.map_env env tyl (unbind seen) in
         env, (r, Tunresolved tyl)
     | ty -> env, ty
 

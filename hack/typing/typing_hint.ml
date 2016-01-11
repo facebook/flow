@@ -205,7 +205,7 @@ and hint_ p env = function
       let env, h = hint env h in
       env, Toption h
   | Hfun (hl, b, h) ->
-      let env, paraml = lfold hint env hl in
+      let env, paraml = List.map_env env hl hint in
       let paraml = List.map paraml (fun x -> None, x) in
       let env, ret = hint env h in
       let arity_min = List.length paraml in
@@ -229,13 +229,13 @@ and hint_ p env = function
   | Happly (((_p, c) as id), argl) ->
       Typing_hooks.dispatch_class_id_hook id None;
       Env.add_wclass env c;
-      let env, argl = lfold hint env argl in
+      let env, argl = List.map_env env argl hint in
       env, Tapply (id, argl)
   | Haccess (root_ty, ids) ->
       let env, root_ty = hint env root_ty in
       env, Taccess (root_ty, ids)
   | Htuple hl ->
-      let env, tyl = lfold hint env hl in
+      let env, tyl = List.map_env env hl hint in
       env, Ttuple tyl
   | Hshape fdm ->
       let env, fdm = ShapeMap.map_env hint env fdm in

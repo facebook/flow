@@ -168,7 +168,8 @@ let fully_integrate env (parent_fake_members, parent_locals) =
             env, IMap.add local_id lcl locals
       else
         let eid = if child_eid = parent_eid then child_eid else Ident.tmp() in
-        let env, child_all_types = lfold TUtils.unresolved env child_all_types in
+        let env, child_all_types =
+          List.map_env env child_all_types TUtils.unresolved in
         let env, ty =
           match child_all_types with
           | [] -> assert false

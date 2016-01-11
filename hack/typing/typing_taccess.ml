@@ -104,10 +104,10 @@ and expand_ env (root_reason, root_ty as root) =
               dep_tys = (root_reason, dep_ty)::env.dep_tys } in
           expand_ env ty
       | Tunresolved tyl ->
-          let env, tyl = lfold begin fun prev_env ty ->
+          let env, tyl = List.map_env env tyl begin fun prev_env ty ->
             let env, ty = expand_ env ty in
             { prev_env with tenv = env.tenv }, ty
-          end env tyl in
+          end in
           env, (root_reason, Tunresolved tyl)
       | Tvar _ ->
           let tenv, seen, ty =

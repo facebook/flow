@@ -163,7 +163,7 @@ and unify_ env r1 ty1 r2 ty2 =
           env, Tany
         end
         else
-          let env, argl = lfold2 unify env argl1 argl2 in
+          let env, argl = List.map2_env env argl1 argl2 unify in
           env, Tclass (id, argl)
   | Tabstract (AKnewtype (x1, argl1), tcstr1),
     Tabstract (AKnewtype (x2, argl2), tcstr2) when String.compare x1 x2 = 0 ->
@@ -185,7 +185,7 @@ and unify_ env r1 ty1 r2 ty2 =
                 env, Some x
             | _ -> assert false
           in
-          let env, argl = lfold2 unify env argl1 argl2 in
+          let env, argl = List.map2_env env argl1 argl2 unify in
           env, Tabstract (AKnewtype (x1, argl), tcstr)
   | Tabstract (AKgeneric (x1, Some super1), tcstr1),
     Tabstract (AKgeneric (x2, Some super2), tcstr2)
@@ -249,7 +249,7 @@ and unify_ env r1 ty1 r2 ty2 =
         Errors.tuple_arity_mismatch p1 n1 p2 n2;
         env, Tany
       else
-        let env, tyl = lfold2 unify env tyl1 tyl2 in
+        let env, tyl = List.map2_env env tyl1 tyl2 unify in
         env, Ttuple tyl
   | Tmixed, Tmixed -> env, Tmixed
   | Tanon (_, id1), Tanon (_, id2) when id1 = id2 -> env, ty1

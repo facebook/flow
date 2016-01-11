@@ -63,20 +63,20 @@ let array_type_list_to_single_type env values =
     | Some (r, _) -> env, (r, Tany)
     | None ->
       let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      fold_left_env TUtils.unify env value values
+      List.fold_left_env env values ~init:value ~f:TUtils.unify
 
 let downcast_akshape_to_akmap_ env r fdm =
   let keys, values = List.unzip (ShapeMap.values fdm) in
-  let env, values = lmap Typing_env.unbind env values in
+  let env, values = List.map_env env values Typing_env.unbind in
   let env, value = array_type_list_to_single_type env values in
-  let env, keys = lmap Typing_env.unbind env keys in
+  let env, keys = List.map_env env keys Typing_env.unbind in
   let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-  let env, key =  fold_left_env TUtils.unify env key keys in
+  let env, key = List.fold_left_env env keys ~init:key ~f:TUtils.unify in
   env, (r, Tarraykind (AKmap (key, value)))
 
 let downcast_aktuple_to_akvec_ env r fields =
   let tyl = List.rev (IMap.values fields) in
-  let env, tyl = lmap Typing_env.unbind env tyl in
+  let env, tyl = List.map_env env tyl Typing_env.unbind in
   let env, value = array_type_list_to_single_type env tyl in
   env, (r, Tarraykind (AKvec (value)))
 

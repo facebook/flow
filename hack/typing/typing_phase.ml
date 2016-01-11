@@ -155,7 +155,7 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
       let env, ft = localize_ft ~ety_env env ft in
       env, (ety_env, (r, Tfun ft))
   | r, Tapply ((_, x), argl) when Env.is_typedef x ->
-      let env, argl = lfold (localize ~ety_env) env argl in
+      let env, argl = List.map_env env argl (localize ~ety_env) in
       TUtils.expand_typedef ety_env env r x argl
   | r, Tapply ((p, x), _argl) when Env.is_enum x ->
       (* if argl <> [], nastInitCheck would have raised an error *)
@@ -170,10 +170,10 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
         env, (ety_env, (r, Tabstract (AKenum x, cstr)))
       end
   | r, Tapply (cls, tyl) ->
-      let env, tyl = lfold (localize ~ety_env) env tyl in
+      let env, tyl = List.map_env env tyl (localize ~ety_env) in
       env, (ety_env, (r, Tclass (cls, tyl)))
   | r, Ttuple tyl ->
-      let env, tyl = lfold (localize ~ety_env) env tyl in
+      let env, tyl = List.map_env env tyl (localize ~ety_env) in
       env, (ety_env, (r, Ttuple tyl))
   | r, Taccess (root_ty, ids) ->
       let env, root_ty = localize ~ety_env env root_ty in
@@ -198,17 +198,18 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
    *)
   let env, substs =
     if instantiate_tparams
-    then let env, tvarl = lfold TUtils.unresolved_tparam env ft.ft_tparams in
-         let ft_subst = TSubst.make ft.ft_tparams tvarl in
-         env, SMap.union ft_subst ety_env.substs
+    then let env, tvarl =
+      List.map_env env ft.ft_tparams TUtils.unresolved_tparam in
+      let ft_subst = TSubst.make ft.ft_tparams tvarl in
+      env, SMap.union ft_subst ety_env.substs
     else env, List.fold_left ft.ft_tparams ~f:begin fun subst (_, (_, x), _) ->
       SMap.remove x subst
     end ~init:ety_env.substs in
   let ety_env = {ety_env with substs = substs} in
-  let env, params = lfold begin fun env (name, param) ->
+  let env, params = List.map_env env ft.ft_params begin fun env (name, param) ->
     let env, param = localize ~ety_env env param in
     env, (name, param)
-  end env ft.ft_params in
+  end in
   let env, arity = match ft.ft_arity with
     | Fvariadic (min, (name, var_ty)) ->
        let env, var_ty = localize ~ety_env env var_ty in

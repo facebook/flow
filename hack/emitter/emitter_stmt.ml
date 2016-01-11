@@ -224,7 +224,9 @@ and emit_stmt env stmt =
 
   | N.Try (try_body, catches, finally_body) ->
     let env, target = fresh_label env in
-    let env, catch_labels = lmap (fun env _ -> fresh_catch env) env catches in
+    let env, catch_labels = List.map_env env catches begin fun env _ ->
+      fresh_catch env
+    end in
     let catches = List.zip_exn catch_labels catches in
 
     let fmt_catch_hdr (label, ((_, cls), _, _)) =
@@ -332,7 +334,7 @@ and emit_stmt env stmt =
         !had_continue, env.nonlocal.continue_action;
         !had_ret, env.nonlocal.return_action ~has_value:(!had_value)
       ] in
-      let env, targets = lmap assign_label env targets in
+      let env, targets = List.map_env env targets assign_label in
       let active_targets = List.filter ~f:(fun (_, (had, _)) -> had) targets in
 
       (* Which of break/return/continue are actually used? *)
@@ -382,8 +384,8 @@ and emit_stmt env stmt =
     let env = opt_fold emit_fault_enter env opt_faultlet in
 
     let env, end_label = fresh_label env in
-    let env, cases = lmap assign_label env cases in
-    let env, defaults = lmap assign_label env defaults in
+    let env, cases = List.map_env env cases assign_label in
+    let env, defaults = List.map_env env defaults assign_label in
 
     (* emit the compare/jmp sequence *)
     let emit_compare env (label, (expr, _)) =

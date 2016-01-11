@@ -1973,7 +1973,7 @@ and make_class_id env (p, x as cid) =
     | _ -> N.CI (Env.class_name env cid)
 
 and casel env l =
-  lfold (case env) SMap.empty l
+  List.map_env SMap.empty l (case env)
 
 and case env acc = function
   | Default b ->
@@ -1988,7 +1988,7 @@ and case env acc = function
     let acc = SMap.union all_locals acc in
     acc, N.Case (e, b)
 
-and catchl env l = lfold (catch env) SMap.empty l
+and catchl env l = List.map_env SMap.empty l (catch env)
 and catch env acc (x1, x2, b) =
   Env.scope env (
   fun env ->
