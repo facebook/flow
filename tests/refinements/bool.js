@@ -28,3 +28,19 @@ function baz(x: ?bool) {
     return;
   }
 }
+
+let tests = [
+  function(x: { done: true, result: string } | { done: false }) {
+    if (x.done === true) {
+      return x.result;
+    }
+    return x.result; // error
+  },
+
+  function(x: { done: true, result: string } | { done: false }) {
+    if (true === x.done) {
+      return x.result;
+    }
+    return x.result; // error
+  },
+];

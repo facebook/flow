@@ -5011,7 +5011,19 @@ and sentinel_prop_test key cx trace result = function
             rec_flow_t cx trace (obj, result)
       )
 
-  (* TODO: refine based on boolean values (currently those go to bool_test) *)
+  (* obj.key ===/!== boolean value *)
+  | (sense, (ObjT (_, { props_tmap; _}) as obj), BoolT (_, Some value)) ->
+      (match read_prop_opt cx props_tmap key with
+        | Some (SingletonBoolT (_, v))
+        | Some (BoolT (_, Some v)) when (value = v) != sense ->
+            (* provably unreachable, so prune *)
+            ()
+        | _ ->
+            (* not enough info to refine: either the property exists but is
+               something else that we cannot use as a refinement, or the
+               property doesn't exist at all *)
+            rec_flow_t cx trace (obj, result)
+      )
 
   | (_, obj, _) -> (* not enough info to refine *)
     rec_flow_t cx trace (obj, result)

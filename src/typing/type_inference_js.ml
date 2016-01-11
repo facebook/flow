@@ -4953,22 +4953,26 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     Refinement.key e, condition cx type_params_map e
   in
 
-  (* package result quad from test type, refi key, unrefined type,
-     predicate, and predicate's truth sense *)
-  let result test_t key unrefined_t pred sense =
+  (* package empty result (no refinements derived) from test type *)
+  let empty_result test_t =
+    Scope.(test_t, KeyMap.empty, KeyMap.empty, KeyMap.empty)
+  in
+
+  let add_predicate key unrefined_t pred sense (test_t, ps, notps, tmap) =
     let p, notp = if sense
       then pred, NotP pred
       else NotP pred, pred
     in
     (test_t,
-      Scope.KeyMap.singleton key p,
-      Scope.KeyMap.singleton key notp,
-      Scope.KeyMap.singleton key unrefined_t)
+      Scope.KeyMap.add key p ps,
+      Scope.KeyMap.add key notp notps,
+      Scope.KeyMap.add key unrefined_t tmap)
   in
 
-  (* package empty result (no refinements derived) from test type *)
-  let empty_result test_t =
-    Scope.(test_t, KeyMap.empty, KeyMap.empty, KeyMap.empty)
+  (* package result quad from test type, refi key, unrefined type,
+     predicate, and predicate's truth sense *)
+  let result test_t key unrefined_t pred sense =
+    empty_result test_t |> add_predicate key unrefined_t pred sense
   in
 
   (* inspect a null equality test *)
@@ -5005,48 +5009,71 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     | None -> empty_result (BoolT.at loc)
   in
 
-  let bool_test loc op e right =
-    let refinement = match refinable_lvalue e with
-    | None, t -> None
-    | Some name, t ->
+  (* a wrapper around `condition` (which is a wrapper around `expression`) that
+     evaluates `expr`. if this is a sentinel property check (determined by
+     a strict equality check against a member expression `_object.prop_name`),
+     then also returns the refinement of `_object`.
+
+     this is used by other tests such as `bool_test` such that if given
+     `foo.bar === false`, `foo.bar` is refined to be `false` (by `bool_test`)
+     and `foo` is refined to eliminate branches that don't have a `false` bar
+     property (by this function). *)
+  let condition_of_maybe_sentinel cx type_params_map op expr val_t =
+    match op, expr with
+    | (Binary.StrictEqual | Binary.StrictNotEqual),
+      (expr_loc, Member {
+        Member._object;
+        property = Member.PropertyIdentifier (prop_loc,
+          { Identifier.name = prop_name; _ });
+        _
+      }) ->
+
+      (* use `expression` instead of `condition` because `_object` is the object
+         in a member expression; if it itself is a member expression, it must
+         exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
+         `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
+      let obj_t = expression cx type_params_map _object in
+
+      let prop_reason = mk_reason (spf "property `%s`" prop_name) prop_loc in
+      Flow_js.flow cx (obj_t, HasPropT (prop_reason, None, prop_name));
+
+      let expr_reason = mk_reason (spf "property `%s`" prop_name) expr_loc in
+      let prop_t =
+        get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name) in
+
+      (* refine the object (`foo.bar` in the example) based on the prop. *)
+      let refinement = match Refinement.key _object with
+      | None -> None
+      | Some name ->
+          let pred = LeftP (SentinelProp prop_name, val_t) in
+          Some (name, obj_t, pred, op = Binary.StrictEqual)
+      in
+      prop_t, refinement
+    | _ ->
+      condition cx type_params_map expr, None
+  in
+
+  let bool_test loc value_loc op expr value =
+    let val_t = BoolT (mk_reason "boolean" value_loc, Some value) in
+    let t, sentinel_refinement =
+      condition_of_maybe_sentinel cx type_params_map op expr val_t in
+    let refinement = match Refinement.key expr with
+      | None -> None
+      | Some name ->
         match op with
         (* TODO support == *)
         | Binary.StrictEqual | Binary.StrictNotEqual ->
-            let pred = if right then TrueP else FalseP in
-            Some (name, t, pred, op = Binary.StrictEqual)
-        | _ -> None
-    in
-    match refinement with
-    | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
-    | None -> empty_result (BoolT.at loc)
-  in
-
-  (* inspect a sentinel property test *)
-  let sentinel_prop_test loc prop_loc op e key value =
-    (* use `expression` instead of `refinable_lvalue` because `e` is the object
-       in a member expression; if it itself is a member expression, it must
-       exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
-       `e = foo.bar`, `key = baz`, and `bar` must obviously exist. *)
-    let obj_t = expression cx type_params_map e in
-    let val_t = expression cx type_params_map value in
-
-    (* ensure the property (`foo.bar.baz` in the example above) exists. *)
-    let reason = mk_reason (spf "property `%s`" key) prop_loc in
-    Flow_js.flow cx (obj_t, HasPropT (reason, None, key));
-
-    (* refine the object (`foo.bar` in the example) based on the prop. *)
-    let refinement = match Refinement.key e with
-    | None -> None
-    | Some name ->
-        match op with
-        | Binary.StrictEqual | Binary.StrictNotEqual ->
-            let pred = LeftP (SentinelProp key, val_t) in
+            let pred = if value then TrueP else FalseP in
             Some (name, pred, op = Binary.StrictEqual)
         | _ -> None
     in
-    match refinement with
-    | Some (name, p, sense) -> result (BoolT.at loc) name obj_t p sense
+    let out = match refinement with
+    | Some (name, p, sense) -> result (BoolT.at loc) name t p sense
     | None -> empty_result (BoolT.at loc)
+    in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
   in
 
   (* inspect a typeof equality test *)
@@ -5072,6 +5099,39 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         end
     | None, t -> empty_result (BoolT.at loc)
   in
+
+  let sentinel_prop_test loc op expr val_t =
+    let _, sentinel_refinement =
+      condition_of_maybe_sentinel cx type_params_map op expr val_t in
+    let out = empty_result (BoolT.at loc) in
+    match sentinel_refinement with
+    | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
+    | None -> out
+  in
+
+  let eq_test loc op left right = Ast.Expression.(
+    match left, right with
+    (* special case equality relations involving booleans *)
+    | (lloc, Expression.Literal { Literal.value = Literal.Boolean lit; _}), expr
+    | expr, (lloc, Expression.Literal { Literal.value = Literal.Boolean lit; _})
+      ->
+        bool_test loc lloc op expr lit
+
+    (* TODO: add Type.predicate variants that test string and number equality *)
+
+    (* fallback case for equality relations involving sentinels (this should be
+       lower priority since it refines the object but not the property) *)
+    | (_, Member _ as expr), value
+    | value, (_, Member _ as expr)
+      ->
+        sentinel_prop_test loc op expr (expression cx type_params_map value)
+
+    (* for all other cases, walk the AST but always return bool *)
+    | expr, value ->
+        ignore (expression cx type_params_map expr);
+        ignore (expression cx type_params_map value);
+        empty_result (BoolT.at loc)
+  ) in
 
   let mk_and map1 map2 = Scope.KeyMap.merge
     (fun x -> fun p1 p2 -> match (p1,p2) with
@@ -5179,24 +5239,6 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       ignore (expression cx type_params_map void_arg);
       undef_test loc op right
 
-  (* expr op true; expr op false *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left;
-      right = _, Literal { Literal.value = Literal.Boolean value; _ }
-    } ->
-      bool_test loc op left value
-
-  (* true op expr; false op expr *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left = _, Literal { Literal.value = Literal.Boolean value; _ };
-      right
-    } ->
-      bool_test loc op right value
-
   (* typeof expr ==/=== string *)
   | loc, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
       left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
@@ -5225,29 +5267,13 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     } ->
       typeof_test loc false argument s str_loc
 
-  (* expr.name ===/!== value *)
+  (* expr op expr *)
   | loc, Binary { Binary.
-      operator = (Binary.StrictEqual | Binary.StrictNotEqual) as op;
-      left = _, Member {
-        Member._object;
-        property = Member.PropertyIdentifier (prop_loc,
-          { Identifier.name; _ });
-        _ };
-      right;
+      operator = (Binary.Equal | Binary.StrictEqual |
+                  Binary.NotEqual | Binary.StrictNotEqual) as op;
+      left; right;
     } ->
-      sentinel_prop_test loc prop_loc op _object name right
-
-  (* value ===/!== expr.name *)
-  | loc, Binary { Binary.
-      operator = (Binary.StrictEqual | Binary.StrictNotEqual) as op;
-      left;
-      right = _, Member {
-        Member._object;
-        property = Member.PropertyIdentifier (prop_loc,
-          { Identifier.name; _ });
-        _ }
-    } ->
-      sentinel_prop_test loc prop_loc op _object name left
+      eq_test loc op left right
 
   (* Array.isArray(expr) *)
   | _, Call {

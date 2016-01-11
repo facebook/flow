@@ -39,6 +39,14 @@ bool.js:27:7,11: boolean
 This type is incompatible with
 bool.js:27:7,17: number
 
+bool.js:37:14,19: property `result`
+Property not found in
+bool.js:37:12,12: object type
+
+bool.js:44:14,19: property `result`
+Property not found in
+bool.js:44:12,12: object type
+
 cond_prop.js:11:10,37: function call
 Error:
 cond_prop.js:11:25,36: object type
@@ -458,4 +466,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 108 errors
+Found 110 errors
