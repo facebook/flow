@@ -1104,21 +1104,29 @@ let recheck genv env modified =
     Files_js.wanted config (string_of_filename file)
   ) modified in
 
-  let n = FilenameSet.cardinal modified in
-    if n > 0
-    then prerr_endlinef "recheck %d files:" n;
-
-  let _ = FilenameSet.fold (fun f i ->
-    if n > 0 then prerr_endlinef "%d/%d: %s" i n (string_of_filename f);
-    i + 1
-  ) modified 1 in
-
   (* track deleted files, remove from modified set *)
   let deleted = FilenameSet.filter (fun f ->
     not (Sys.file_exists (string_of_filename f))
   ) modified in
   let deleted_count = FilenameSet.cardinal deleted in
   let modified = FilenameSet.diff modified deleted in
+  let modified_count = FilenameSet.cardinal modified in
+
+  (* log modified and deleted files *)
+  if deleted_count + modified_count > 0 then (
+    prerr_endlinef "recheck %d modified, %d deleted files"
+      modified_count deleted_count;
+    let log_files files msg n =
+      prerr_endlinef "%s files:" msg;
+      let _ = FilenameSet.fold (fun f i ->
+        prerr_endlinef "%d/%d: %s" i n (string_of_filename f);
+        i + 1
+      ) files 1
+      in ()
+    in
+    if modified_count > 0 then log_files modified "modified" modified_count;
+    if deleted_count > 0 then log_files deleted "deleted" deleted_count
+  );
 
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_asts deleted;
@@ -1139,9 +1147,10 @@ let recheck genv env modified =
     ) in
   let modified_count = FilenameSet.cardinal modified in
 
-  (* clear errors for modified files and master *)
+  (* clear errors for modified files, deleted files and master *)
   let master_cx = Flow_js.master_cx () in
   clear_errors ~debug (Context.file master_cx :: FilenameSet.elements modified);
+  clear_errors ~debug (FilenameSet.elements deleted);
 
   (* record reparse errors *)
   save_errors parse_errors freshparse_fail freshparse_errors;

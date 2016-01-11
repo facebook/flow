@@ -1,0 +1,5 @@
+[ignore]
+.*/tmp*
+
+[options]
+strip_root=true
