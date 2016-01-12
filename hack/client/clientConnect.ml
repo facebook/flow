@@ -131,11 +131,7 @@ let rec wait_for_server_hello ic env retries start_time tail_env first_call =
   | Some _
   | None -> ();
   let readable, _, _  = Unix.select
-    [Timeout.descr_of_in_channel ic] [] [Timeout.descr_of_in_channel ic]
-      (** If server is not busy, it still takes a miniscule bit of time for
-       * the server to get the channel from the monitor and print out the
-       * Hello message. Give it 1/60th of a second on the first attempt. *)
-      (if first_call then 0.016 else 1.0) in
+    [Timeout.descr_of_in_channel ic] [] [Timeout.descr_of_in_channel ic] 1.0 in
   if readable = [] then (
     print_wait_msg ~first_call start_time tail_env;
     wait_for_server_hello ic env (Option.map retries (fun x -> x - 1))
