@@ -247,6 +247,6 @@ state4.js:10:18,27: object literal
 
 state5.js:5:23,23: property `x`
 Property cannot be accessed on possibly undefined value
-state5.js:5:12,21: undefined. Did you forget to declare type parameter `State` of class type: property `Component`?
+state5.js:5:12,21: undefined. Did you forget to declare type parameter `State` of property `Component`?
 
 Found 54 errors
