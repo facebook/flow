@@ -17,7 +17,7 @@ let pretty_print_test_output
     "%s\n\n=====\n\n"
     (Ast_code_extent.lexing_slice_to_string range code)
 
-(* This allows to fake having multiple files in one file. This
+(* This allows one to fake having multiple files in one file. This
  * is used only in unit test files.
  * This is necessary because we have to test matching a pattern
  * against a source file or patching a source file with a

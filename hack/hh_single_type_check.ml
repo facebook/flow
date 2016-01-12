@@ -263,7 +263,7 @@ let suggest_and_print fn { FileInfo.funs; classes; typedefs; consts; _ } =
       List.iter ~f: (ServerConvert.print_patch fn) l
     end
 
-(* This allows to fake having multiple files in one file. This
+(* This allows one to fake having multiple files in one file. This
  * is used only in unit test files.
  * Indeed, there are some features that require mutliple files to be tested.
  * For example, newtype has a different meaning depending on the file.
