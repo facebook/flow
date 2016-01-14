@@ -5641,11 +5641,15 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
           | None -> ()
           | Some value -> FlowConfig.(Opts.(
             let opts = (FlowConfig.get_unsafe ()).options in
-            let (config_setting, reason_subject) =
+            let (config_setting, reason_subject, config_key) =
               if static then
-                (opts.esproposal_class_static_fields, "class static field")
+                (opts.esproposal_class_static_fields,
+                 "class static field",
+                 "class_static_fields")
               else
-                (opts.esproposal_class_instance_fields, "class instance field")
+                (opts.esproposal_class_instance_fields,
+                 "class instance field",
+                  "class_instance_fields")
             in
             match config_setting with
             | ESPROPOSAL_ENABLE
@@ -5656,11 +5660,11 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
                 in
                 let msg = (spf
                   ("%ss are an active early stage feature proposal that may " ^^
-                  "change. Additionally, Flow does not yet typecheck the " ^^
-                  "right-hand side of field initializers. Support for this " ^^
-                  "is being tracked in " ^^
-                  "https://github.com/facebook/flow/issues/850")
+                  "change. You may opt-in to using them anyway in Flow by " ^^
+                  "putting `esproposal.%s=enable` into the [options] " ^^
+                  "section of your .flowconfig.")
                   (String.capitalize reason_subject)
+                  config_key
                 ) in
                 Flow_js.add_warning cx [reason, msg]
           ))
