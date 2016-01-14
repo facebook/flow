@@ -1,8 +1,8 @@
 
 test.js:5:3,20: Experimental class instance field usage
-Class instance fields are an active early stage feature proposal that may change. Additionally, Flow does not yet typecheck the right-hand side of field initializers. Support for this is being tracked in https://github.com/facebook/flow/issues/850
+Class instance fields are an active early stage feature proposal that may change. You may opt-in to using them anyway in Flow by putting `esproposal.class_instance_fields=enable` into the [options] section of your .flowconfig.
 
 test.js:6:3,38: Experimental class instance field usage
-Class instance fields are an active early stage feature proposal that may change. Additionally, Flow does not yet typecheck the right-hand side of field initializers. Support for this is being tracked in https://github.com/facebook/flow/issues/850
+Class instance fields are an active early stage feature proposal that may change. You may opt-in to using them anyway in Flow by putting `esproposal.class_instance_fields=enable` into the [options] section of your .flowconfig.
 
 Found 2 errors
