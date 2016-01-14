@@ -890,10 +890,26 @@ and class_param_list env =
   | Tcomma ->
       if !(env.errors) != error_state
       then [cst]
-      else cst :: class_param_list env
+      else cst :: class_param_list_remain env
   | _ ->
       error_expect env ">";
       [cst]
+
+and class_param_list_remain env =
+  match L.gt_or_comma env.file env.lb with
+  | Tgt -> []
+  | _ ->
+      L.back env.lb;
+      let error_state = !(env.errors) in
+      let cst = class_param env in
+      match L.gt_or_comma env.file env.lb with
+      | Tgt ->
+          [cst]
+      | Tcomma ->
+          if !(env.errors) != error_state
+          then [cst]
+          else cst :: class_param_list_remain env
+      | _ -> error_expect env ">"; [cst]
 
 and class_param env =
   match L.token env.file env.lb with
@@ -959,9 +975,25 @@ and class_hint_param_list env =
   | Tcomma ->
       if !(env.errors) != error_state
       then [h]
-      else h :: class_hint_param_list env
+      else h :: class_hint_param_list_remain env
   | _ ->
       error_expect env ">"; [h]
+
+and class_hint_param_list_remain env =
+  match L.gt_or_comma env.file env.lb with
+  | Tgt -> []
+  | _ ->
+      L.back env.lb;
+      let error_state = !(env.errors) in
+      let h = hint env in
+      match L.gt_or_comma env.file env.lb with
+      | Tgt ->
+          [h]
+      | Tcomma ->
+          if !(env.errors) != error_state
+          then [h]
+          else h :: class_hint_param_list_remain env
+      | _ -> error_expect env ">"; [h]
 
 (*****************************************************************************)
 (* Type hints: int, ?int, A<T>, array<...> etc ... *)
