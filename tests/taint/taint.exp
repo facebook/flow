@@ -83,7 +83,7 @@ globals.js:6:5,21: assignment of property `location`
 Error:
 globals.js:6:25,25: taint
 This type is incompatible with
-[LIB] dom.js:334:15,22: Location
+[LIB] dom.js:335:15,22: Location
 
 taint2.js:8:5,37: call of method `assign`
 Error:
