@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
+ * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,7 +12,7 @@
 (*****************************************************************************)
 (* Module building workers.
  * A worker is a subprocess executing an arbitrary function.
- * You should first create a fixed amount of workers and then use those 
+ * You should first create a fixed amount of workers and then use those
  * because the amount of workers is limited and to make the load-balancing
  * of tasks better (cf multiWorker.ml).
  *)

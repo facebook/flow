@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
+ * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -35,9 +35,9 @@ let return x = Some x
 let handle_file_exn path = function
   | Fsnotify.Error (reason, 2) -> ()
       (* The file got deleted in the mean time ... we don't care *)
-  | Fsnotify.Error (reason, errno) -> 
+  | Fsnotify.Error (reason, errno) ->
       (* This is bad ... *)
-      Printf.fprintf !log 
+      Printf.fprintf !log
         "Error: could not add watch to %s [%s, %d]\n" path reason errno
   | e when Sys.file_exists path ->
       (* Logging this makes the system very noisy. There are too many
@@ -47,7 +47,7 @@ let handle_file_exn path = function
   | _ -> ()
 
 (* Calls (f path), never fails, logs the nasty exceptions *)
-let call f path = 
+let call f path =
   try f path
   with e -> handle_file_exn path e; None
 

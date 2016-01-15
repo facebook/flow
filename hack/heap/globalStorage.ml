@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
+ * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -10,7 +10,7 @@
 
 (*****************************************************************************)
 (* Module implementing a global storage system, an efficient way for the
- * master to communicate data with the workers (cf hh_shared.c for the 
+ * master to communicate data with the workers (cf hh_shared.c for the
  * underlying C implementation).
  *
  * The master can store data in the global storage, after that, the data

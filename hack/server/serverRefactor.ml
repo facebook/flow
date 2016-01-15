@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2015, Facebook, Inc.
+ * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -34,7 +34,7 @@ let go action genv env =
         ServerFindRefs.Method (class_name, old_name), new_name
     | FunctionRename (old_name, new_name) ->
         ServerFindRefs.Function old_name, new_name in
-  
+
   let refs = ServerFindRefs.get_refs_with_defs find_refs_action genv env in
   let changes = List.fold_left refs ~f:begin fun acc x ->
     let replacement = {
