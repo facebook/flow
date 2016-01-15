@@ -350,6 +350,7 @@ let parse_build_args () =
       Generates build files\n"
       Sys.argv.(0) in
   let steps = ref None in
+  let ignore_killswitch = ref false in
   let no_steps = ref None in
   let verbose = ref false in
   let serial = ref false in
@@ -367,6 +368,8 @@ let parse_build_args () =
     "--steps", Arg.String (fun x ->
       steps := Some (Str.split (Str.regexp ",") x)),
     " comma-separated list of build steps to run";
+    "--ignore-killswitch", Arg.Set ignore_killswitch,
+    " run all steps (including kill-switched ones) except steps in --no-steps";
     "--no-steps", Arg.String (fun x ->
       no_steps := Some (Str.split (Str.regexp ",") x)),
     " comma-separated list of build steps not to run";
@@ -406,6 +409,7 @@ let parse_build_args () =
     wait = !wait;
     build_opts = { ServerBuild.
       steps = !steps;
+      ignore_killswitch = !ignore_killswitch;
       no_steps = !no_steps;
       run_scripts = !run_scripts;
       serial = !serial;

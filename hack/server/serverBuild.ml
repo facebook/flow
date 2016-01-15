@@ -12,7 +12,8 @@ let svnrev_path = "scripts/build/artifacts/SVN_REVISION"
 
 type build_opts = {
   steps: string list option; (* steps for hack build to run.
-                         None means 'all' *)
+                         None means 'all except kill-switched' *)
+  ignore_killswitch: bool; (* when true, also build kill-switched steps *)
   no_steps: string list option; (* ...but don't run these steps *)
   run_scripts: bool; (* when true, run remaining arc build steps
                      that we haven't figured out how to port yet*)
