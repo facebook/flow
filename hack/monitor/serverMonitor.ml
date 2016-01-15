@@ -239,6 +239,10 @@ let ack_and_handoff_client servers client_fd =
 let rec check_and_run_loop servers
     (lock_file: string) (socket: Unix.file_descr) =
   let servers = try check_and_run_loop_ servers lock_file socket with
+  | Unix.Unix_error (Unix.ECHILD, _, _) ->
+    ignore (Hh_logger.log
+      "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
+    Exit_status.exit Exit_status.No_server_running
   | e ->
     Hh_logger.log "check_and_run_loop_ threw with exception: %s"
       (Printexc.to_string e);
