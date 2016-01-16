@@ -99,9 +99,18 @@ let update_status_ (server: ServerProcess.server_process)
         if has_client then Killed_intentionally
         else Exit_status.(exit Ok)
       | _, Unix.WEXITED c
-      when c = (Exit_status.ec Exit_status.Hhconfig_changed) ->
+        when c = (Exit_status.ec Exit_status.Hhconfig_changed) ->
         if has_client then Killed_intentionally
         else Exit_status.(exit Ok)
+      | _, Unix.WEXITED c
+        when c = Exit_status.(ec Watchman_failed) ->
+        let max_retries = 3 in
+        if process.retries < max_retries then begin
+          Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
+            (process.retries + 1);
+          let new_process = process.starter () in
+          Alive {new_process with retries = process.retries + 1}
+        end else Died_unexpectedly (proc_stat, false)
       | _, _ ->
         ServerProcessTools.check_exit_status proc_stat process;
         Died_unexpectedly (proc_stat, (check_dmesg_for_oom process)))

@@ -22,7 +22,7 @@
 open HhServerMonitorConfig
 module SP = ServerProcess
 
-let start_hh_server options =
+let rec start_hh_server options =
   let log_file, log_mode =
     if ServerArgs.should_detach options then
       let log_link = ServerFiles.log_link (ServerArgs.root options) in
@@ -50,6 +50,8 @@ let start_hh_server options =
       log_file = log_file;
       start_t = start_t;
       last_request_handoff = ref (Unix.time());
+      starter = (fun () -> start_hh_server options);
+      retries = 0;
     }) in
   typechecker
 
