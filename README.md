@@ -60,6 +60,7 @@ brew install flow
 You can also build and install flow via the OCaml [OPAM](https://opam.ocaml.org) package manager with one command:
 
 ```
+apt-get install libelf-dev # (required for gelf.h)
 opam install flowtype
 ```
 
