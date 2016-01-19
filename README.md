@@ -57,10 +57,11 @@ brew install flow
 
 ### Using OPAM
 
-You can also build and install flow via the OCaml [OPAM](https://opam.ocaml.org) package manager with one command:
+You can also build and install flow via the OCaml [OPAM](https://opam.ocaml.org) package manager. Since Flow has some non-ocaml dependencies, you need to use the [`depext`](https://opam.ocaml.org/doc/FAQ.html#Somepackagefailduringcompilationcomplainingaboutmissingdependenciesquotm4quotquotlibgtkquotetc) package like so:
 
 ```
-opam install flowtype
+opam install depext
+opam depext --install flowtype
 ```
 
 If you don't have a new enough version of OCaml to compile Flow, you can also use OPAM to bootstrap a modern version.  Install OPAM via the [binary packages](http://opam.ocaml.org/doc/Install.html#InstallOPAMin2minutes) for your operating system and run:
