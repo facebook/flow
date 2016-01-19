@@ -80,13 +80,10 @@ let diff_range loc = Loc.(
   (line2 - line1, end_ - start)
 )
 
-let in_range loc1 loc2 = Loc.(
-  let loc1_line = loc1.start.line in
-  let loc1_start, loc1_end = loc1.start.column, loc1._end.column in
-  let loc2_line1, loc2_line2 = loc2.start.line, loc2._end.line in
-  let loc2_start, loc2_end  = loc2.start.column, loc2._end.column in
-  loc2_line1 <= loc1_line && loc1_line <= loc2_line2 &&
-    loc2_start <= loc1_start && loc1_end <= loc2_end
+let in_range loc range = Loc.(
+  let line, line1, line2 = loc.start.line, range.start.line, range._end.line in
+  (line1 < line || (line = line1 && range.start.column <= loc.start.column)) &&
+  (line < line2 || (line = line2 && loc._end.column <= range._end.column))
 )
 
 let rec patch ll offset lines = function
