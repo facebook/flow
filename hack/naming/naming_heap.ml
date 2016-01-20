@@ -47,30 +47,27 @@ module FunCanonHeap : CanonHeap = SharedMem.NoCache (String) (struct
   let prefix = Prefix.make()
 end)
 
-(* We want to keep the positions of names that have been
- * replaced by identifiers.
- *)
-module type IdHeap =
-  SharedMem.S with type t = Pos.t * Ident.t
+module type PosHeap =
+  SharedMem.S with type t = Pos.t
                and type key = string
                and module KeySet = Set.Make (String)
 
-module ClassIdHeap : IdHeap = SharedMem.NoCache (String) (struct
-  type t = Pos.t * Ident.t
+module ClassPosHeap : PosHeap = SharedMem.NoCache (String) (struct
+  type t = Pos.t
   let prefix = Prefix.make()
 end)
 
-module FunIdHeap : IdHeap = SharedMem.NoCache (String) (struct
-  type t = Pos.t * Ident.t
+module FunPosHeap : PosHeap = SharedMem.NoCache (String) (struct
+  type t = Pos.t
   let prefix = Prefix.make()
 end)
 
-module TypedefIdHeap : IdHeap = SharedMem.NoCache (String) (struct
-  type t = Pos.t * Ident.t
+module TypedefPosHeap : PosHeap = SharedMem.NoCache (String) (struct
+  type t = Pos.t
   let prefix = Prefix.make()
 end)
 
-module ConstIdHeap : IdHeap = SharedMem.NoCache (String) (struct
-  type t = Pos.t * Ident.t
+module ConstPosHeap : PosHeap = SharedMem.NoCache (String) (struct
+  type t = Pos.t
   let prefix = Prefix.make()
 end)

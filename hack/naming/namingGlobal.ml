@@ -28,46 +28,44 @@ let canon_key = String.lowercase
 
 module GEnv = struct
 
-  let class_id name = ClassIdHeap.get name
+  let class_pos name = ClassPosHeap.get name
 
   let class_canon_name name = ClassCanonHeap.get (canon_key name)
 
-  let fun_id name = FunIdHeap.get name
+  let fun_pos name = FunPosHeap.get name
 
   let fun_canon_name name = FunCanonHeap.get (canon_key name)
 
-  let typedef_id name = TypedefIdHeap.get name
+  let typedef_pos name = TypedefPosHeap.get name
 
-  let gconst_id name = ConstIdHeap.get name
+  let gconst_pos name = ConstPosHeap.get name
 
 end
 
 (* The primitives to manipulate the naming environment *)
 module Env = struct
   let classes =
-    (module ClassIdHeap : IdHeap), (module ClassCanonHeap : CanonHeap)
+    (module ClassPosHeap : PosHeap), (module ClassCanonHeap : CanonHeap)
 
-  let funs = (module FunIdHeap : IdHeap), (module FunCanonHeap : CanonHeap)
+  let funs = (module FunPosHeap : PosHeap), (module FunCanonHeap : CanonHeap)
 
-  let gconsts = (module ConstIdHeap : IdHeap)
+  let gconsts = (module ConstPosHeap : PosHeap)
 
-  let resilient_new_canon_var (id_heap, canon_heap) (p, name) =
-    let module Ids = (val id_heap : IdHeap) in
-    let module Canons = (val canon_heap : CanonHeap) in
+  let resilient_new_canon_var
+      ((module Positions : PosHeap), (module Canons : CanonHeap)) (p, name) =
     let name_key = canon_key name in
     match Canons.get name_key with
-      | Some canonical ->
-        let p', id = Ids.find_unsafe canonical in
-        if Pos.compare p p' = 0 then (p, id)
-        else begin
-          Errors.error_name_already_bound name canonical p p';
-          p', id
-        end
-      | None ->
-        let pos_and_id = p, Ident.make name in
-        Ids.add name pos_and_id;
-        Canons.add name_key name;
-        pos_and_id
+    | Some canonical ->
+      let p' = Positions.find_unsafe canonical in
+      if Pos.compare p p' = 0 then p
+      else begin
+        Errors.error_name_already_bound name canonical p p';
+        p'
+      end
+    | None ->
+      Positions.add name p;
+      Canons.add name_key name;
+      p
 
   let check_not_typehint (p, name) =
     let x = canon_key (Utils.strip_all_ns name) in
@@ -91,37 +89,35 @@ module Env = struct
       ) -> Errors.name_is_reserved name p; false
     | _ -> true
 
-  let resilient_new_var id_heap (p, x) =
-    let module Ids = (val id_heap : IdHeap) in
-    match Ids.get x with
-    | Some (p', y) ->
-      if Pos.compare p p' = 0 then (p, y)
+  let resilient_new_var (module Positions : PosHeap) (p, x) =
+    match Positions.get x with
+    | Some p' ->
+      if Pos.compare p p' = 0 then p
       else begin
         Errors.error_name_already_bound x x p p';
-        p', y
+        p'
       end
-   | None ->
-      let y = p, Ident.make x in
-      Ids.add x y;
-      y
+    | None ->
+      Positions.add x p;
+      p
 
-  let new_fun_id x =
+  let new_fun x =
     ignore (resilient_new_canon_var funs x)
 
-  let new_class_id x =
+  let new_class x =
     if check_not_typehint x then ignore (resilient_new_canon_var classes x)
     else ()
 
-  let new_typedef_id x =
+  let new_typedef x =
     if check_not_typehint x
     then
       let v = resilient_new_canon_var classes x in
-      TypedefIdHeap.add (snd x) v
+      TypedefPosHeap.add (snd x) v
     else ()
 
-  let new_global_const_id x =
+  let new_global_const x =
     let v = resilient_new_var gconsts x in
-    ConstIdHeap.add (snd x) v
+    ConstPosHeap.add (snd x) v
 end
 
 (*****************************************************************************)
@@ -133,24 +129,24 @@ let remove_decls ~funs ~classes ~typedefs ~consts =
   let class_namekeys = SSet.fold canonicalize_set classes SSet.empty in
   let class_namekeys = SSet.fold canonicalize_set typedefs class_namekeys in
   ClassCanonHeap.remove_batch class_namekeys;
-  ClassIdHeap.remove_batch classes;
+  ClassPosHeap.remove_batch classes;
 
   let fun_namekeys = SSet.fold canonicalize_set funs SSet.empty in
   FunCanonHeap.remove_batch fun_namekeys;
-  FunIdHeap.remove_batch funs;
+  FunPosHeap.remove_batch funs;
 
-  TypedefIdHeap.remove_batch typedefs;
-  ConstIdHeap.remove_batch consts
+  TypedefPosHeap.remove_batch typedefs;
+  ConstPosHeap.remove_batch consts
 
 (*****************************************************************************)
 (* The entry point to build the naming environment *)
 (*****************************************************************************)
 
 let make_env ~funs ~classes ~typedefs ~consts =
-  List.iter funs Env.new_fun_id;
-  List.iter classes Env.new_class_id;
-  List.iter typedefs Env.new_typedef_id ;
-  List.iter consts Env.new_global_const_id
+  List.iter funs Env.new_fun;
+  List.iter classes Env.new_class;
+  List.iter typedefs Env.new_typedef;
+  List.iter consts Env.new_global_const
 
 (*****************************************************************************)
 (* Declaring the names in a list of files *)
@@ -160,7 +156,7 @@ let add_files_to_rename failed defl defs_in_env =
   List.fold_left ~f:begin fun failed (_, def) ->
     match defs_in_env def with
     | None -> failed
-    | Some (previous_definition_position, _) ->
+    | Some previous_definition_position ->
       let filename = Pos.filename previous_definition_position in
       Relative_path.Set.add filename failed
   end ~init:failed defl
@@ -204,8 +200,8 @@ let ndecl_file fn { FileInfo.file_mode; funs; classes; typedefs; consts;
    * and the naming environment is in a sane state.
    *)
   let failed = Relative_path.Set.singleton fn in
-  let failed = add_files_to_rename failed funs FunIdHeap.get in
-  let failed = add_files_to_rename failed classes ClassIdHeap.get in
-  let failed = add_files_to_rename failed typedefs TypedefIdHeap.get in
-  let failed = add_files_to_rename failed consts ConstIdHeap.get in
+  let failed = add_files_to_rename failed funs FunPosHeap.get in
+  let failed = add_files_to_rename failed classes ClassPosHeap.get in
+  let failed = add_files_to_rename failed typedefs TypedefPosHeap.get in
+  let failed = add_files_to_rename failed consts ConstPosHeap.get in
   l, failed

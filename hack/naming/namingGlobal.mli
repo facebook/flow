@@ -14,20 +14,16 @@
  *)
 open Utils
 
-(* The environment needed to do the naming. The key of the SMap corresponds
- * to the original name of the entity, e.g. "foo", that is then
- * mapped here in ifuns to a freshly created unique integer identifier.
- *)
 module GEnv: sig
-  val class_id: string -> (Pos.t * Ident.t) option
+  val class_pos: string -> Pos.t option
   val class_canon_name: string -> string option
 
-  val fun_id: string -> (Pos.t * Ident.t) option
+  val fun_pos: string -> Pos.t option
   val fun_canon_name: string -> string option
 
-  val typedef_id: string -> (Pos.t * Ident.t) option
+  val typedef_pos: string -> Pos.t option
 
-  val gconst_id: string -> (Pos.t * Ident.t) option
+  val gconst_pos: string -> Pos.t option
 end
 
 (* Canonicalizes a key *)
@@ -37,8 +33,7 @@ val canon_key: String.t -> String.t
  * This pass "declares" all the global names. The only checks done
  * here are whether an entity name was already bound (e.g. when
  * two files define the same function).
- * It takes an old environment and add all the entities
- * passed as parameters to this old environment.
+ * It all the entities passed as parameters and adds them to the shared heap.
 *)
 val make_env:
       funs:Ast.id list ->

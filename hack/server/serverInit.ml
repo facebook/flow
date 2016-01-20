@@ -219,6 +219,8 @@ let naming env t =
       }
     end env.files_info env
   in
+  let hs = SharedMem.heap_size () in
+  Hh_logger.log "Heap size: %d" hs;
   env, (Hh_logger.log_duration "Naming" t)
 
 let type_decl genv env fast t =

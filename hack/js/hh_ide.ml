@@ -112,13 +112,13 @@ let declare_file fn content =
     with Not_found -> true, [], []
   in
   List.iter old_funs begin fun (_, fname) ->
-    Naming_heap.FunIdHeap.remove fname;
+    Naming_heap.FunPosHeap.remove fname;
     Naming_heap.FunCanonHeap.remove (NamingGlobal.canon_key fname);
     Naming_heap.FunHeap.remove fname;
     Typing_env.Funs.remove fname;
   end;
   List.iter old_classes begin fun (_, cname) ->
-    Naming_heap.ClassIdHeap.remove cname;
+    Naming_heap.ClassPosHeap.remove cname;
     Naming_heap.ClassCanonHeap.remove (NamingGlobal.canon_key cname);
     Naming_heap.ClassHeap.remove cname;
     Typing_env.Classes.remove cname;

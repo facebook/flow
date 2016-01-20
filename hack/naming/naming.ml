@@ -257,7 +257,7 @@ module Env = struct
         | Some canonical ->
           canonical
           |> get_pos
-          |> Option.iter ~f:(fun (p_canon, _) ->
+          |> Option.iter ~f:(fun p_canon ->
             Errors.did_you_mean_naming p name p_canon canonical);
           (* Recovering from the capitalization error means
            * returning the name in its canonical form *)
@@ -340,7 +340,7 @@ module Env = struct
     lookup genv namespace x; x
 
   (* For dealing with namespace fallback on constants *)
-  let elaborate_and_get_name_with_fallback mk_dep genv get_pos  x =
+  let elaborate_and_get_name_with_fallback mk_dep genv get_pos x =
     let get_name x = get_name genv get_pos x in
     let fq_x = Namespaces.elaborate_id genv.namespace NSConst x in
     let need_fallback =
@@ -412,7 +412,7 @@ module Env = struct
       (* Same idea as Dep.FunName, see below. *)
       (fun x -> Typing_deps.Dep.GConstName x)
       genv
-      GEnv.gconst_id
+      GEnv.gconst_pos
       x
 
   let class_name (genv, _) x =
@@ -420,8 +420,8 @@ module Env = struct
     check_no_runtime_generic genv x;
     let x = Namespaces.elaborate_id genv.namespace NSClass x in
     let pos, name = canonicalize genv
-        GEnv.class_id
-        GEnv.class_canon_name x `cls in
+      GEnv.class_pos
+      GEnv.class_canon_name x `cls in
     (* Don't let people use strictly internal classes
      * (except when they are being declared in .hhi files) *)
     if name = SN.Classes.cHH_BuiltinEnum &&
@@ -438,7 +438,7 @@ module Env = struct
        * to retypecheck. *)
       (fun x -> Typing_deps.Dep.FunName x)
       genv
-      GEnv.fun_id
+      GEnv.fun_pos
       GEnv.fun_canon_name
       x
 
@@ -494,8 +494,8 @@ let check_repetition s param =
 let no_typedef (genv, _) cid =
   let (pos, name) = Namespaces.elaborate_id genv.namespace NSClass cid in
   name
-  |> GEnv.typedef_id
-  |> Option.iter ~f:(fun (def_pos, _) -> Errors.unexpected_typedef pos def_pos)
+  |> GEnv.typedef_pos
+  |> Option.iter ~f:(fun def_pos -> Errors.unexpected_typedef pos def_pos)
 
 let hint_no_typedef env = function
   | _, Happly (x, _) -> no_typedef env x
@@ -1646,7 +1646,7 @@ and expr_ env = function
   | Class_const (x1, x2) ->
       let (genv, _) = env in
       let (_, name) = Namespaces.elaborate_id genv.namespace NSClass x1 in
-      if GEnv.typedef_id name <> None && (snd x2) = "class" then
+      if GEnv.typedef_pos name <> None && (snd x2) = "class" then
         N.Typename (Env.class_name env x1)
       else
         N.Class_const (make_class_id env x1, x2)
