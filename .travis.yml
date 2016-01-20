@@ -1,5 +1,5 @@
 language: c
-script: bash -ex .travis-ci.sh
+script: ./.travis-ci.sh
 sudo: false
 
 os:
