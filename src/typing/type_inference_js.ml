@@ -3671,9 +3671,10 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       define_internal cx reason "this";
       define_internal cx reason "super";
 
+      let this = this_ cx reason in
       let super = super_ cx super_reason in
       Flow_js.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow_js.mk_methodtype super argts t in
+        let funtype = Flow_js.mk_methodtype this argts t in
         Flow_js.flow cx (super,
           MethodT(reason, (super_reason, "constructor"), funtype))
       )

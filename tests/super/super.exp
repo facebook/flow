@@ -33,21 +33,29 @@ constructor.js:83:17,26: call of method `foo`
 Method cannot be called on possibly undefined value
 constructor.js:81:7,7: uninitialized this (expected super constructor call)
 
-super.js:9:5,12: super(...)
+super.js:10:5,12: super(...)
 Error:
-super.js:9:11,11: string
+super.js:10:11,11: string
 This type is incompatible with
 super.js:3:17,22: number
 
-super.js:12:5,14: super.f(...)
-Error:
-super.js:12:13,13: number
+super.js:14:6,30: string
 This type is incompatible with
-super.js:4:7,12: string
+super.js:14:33,38: number
 
-super.js:13:18,18: property `g`
+super.js:15:12,22: property `doesntExist`
 Property not found in
-super.js:7:17,17: A
+super.js:8:17,17: statics of A
+
+super.js:19:5,14: super.f(...)
+Error:
+super.js:19:13,13: number
+This type is incompatible with
+super.js:5:7,12: string
+
+super.js:20:18,18: property `g`
+Property not found in
+super.js:8:17,17: A
 
 test.js:3:16,16: return
 Missing annotation
@@ -55,4 +63,4 @@ Missing annotation
 test.js:4:8,8: return
 Missing annotation
 
-Found 12 errors
+Found 14 errors

@@ -103,3 +103,52 @@ class K extends K_ {
     this.closure_leaking_this();
   }
 }
+
+// even though super() calls the parent's constructor(), it does not do the same
+// conversion on non-objects. so `new L_()` returns an instance of `L_` because
+// the constructor returns false (a non-object), but `super()` returns false,
+// which then similarly causes `new L()` to return an instance of `L`.
+class L_ {
+  constructor() {
+    return false;
+  }
+}
+class L extends L_ {
+  constructor() {
+    let x: boolean = super();
+    return x;
+  }
+}
+(new L_(): L_);
+(new L(): L);
+
+// similarly, the converse is true: if the parent's constructor returns an
+// object, then the child does too.
+class M_ {
+  constructor() {
+    return {foo: 'foo'};
+  }
+}
+class M extends M_ {
+  constructor() {
+    return super();
+  }
+}
+(new M_(): {foo: string});
+(new M(): {foo: string});
+
+// however! super() calls the parent constructor with the subclass as its `this`
+// value (essentially `super.constructor.call(this)`).
+class N_ {
+  constructor(): this {
+    let x = this;
+    return x;
+  }
+}
+class N extends N_ {
+  constructor() {
+    return super();
+  }
+}
+(new N_(): N_);
+(new N(): N);
