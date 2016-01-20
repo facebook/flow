@@ -250,6 +250,7 @@ and use_t =
   (* operations on runtime types, such as classes and functions *)
   | ConstructorT of reason * t list * t
   | SuperT of reason * insttype
+  | MixinT of reason * t
 
   (* overloaded +, could be subsumed by general overloading *)
   | AdderT of reason * t * t
@@ -708,8 +709,6 @@ let rec reason_of_t = function
 and reason_of_use_t = function
   | UseT t -> reason_of_t t
 
-  | SuperT (reason,_)
-
   | BindT (reason, _)
   | ApplyT (reason, _, _)
   | CallT (reason, _)
@@ -722,6 +721,9 @@ and reason_of_use_t = function
   | GetElemT (reason,_,_)
 
   | ConstructorT (reason,_,_)
+
+  | SuperT (reason,_)
+  | MixinT (reason, _)
 
   | AdderT (reason,_,_)
   | ComparatorT (reason,_)
@@ -913,6 +915,7 @@ and mod_reason_of_use_t f = function
   | UseT t -> UseT (mod_reason_of_t f t)
 
   | SuperT (reason, inst) -> SuperT (f reason, inst)
+  | MixinT (reason, inst) -> MixinT (f reason, inst)
 
   | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
   | BindT (reason, ft) -> BindT (f reason, ft)
@@ -1072,6 +1075,7 @@ let string_of_use_ctor = function
 
   | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"
+  | MixinT _ -> "MixinT"
   | ApplyT _ -> "ApplyT"
   | BindT _ -> "BindT"
   | CallT _ -> "CallT"

@@ -308,6 +308,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "instance", json_of_insttype json_cx instance
     ]
 
+  | MixinT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | AdderT (_, l, r) -> [
       "leftType", _json_of_t json_cx l;
       "rightType", _json_of_t json_cx r

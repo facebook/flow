@@ -262,6 +262,9 @@ and gc_use cx state = function
       Flow_js.iter_props cx instance.fields_tmap (fun _ -> gc cx state);
       Flow_js.iter_props cx instance.methods_tmap (fun _ -> gc cx state)
 
+  | MixinT (_, t) ->
+      gc cx state t
+
   | AdderT(_, t1, t2) ->
       gc cx state t1;
       gc cx state t2

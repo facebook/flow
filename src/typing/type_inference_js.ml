@@ -26,13 +26,6 @@ open Type
 
 open Env_js.LookupMode
 
-(* Temporary config option to enable/disable this type support for declare
-   classes. Currently, supporting this type for declare classes causes some perf
-   regression due to our monolithic handling of libraries. *)
-module ThisConfig = struct
-  let support_declare_class = true
-end
-
 (*************)
 (* Utilities *)
 (*************)
@@ -1513,7 +1506,7 @@ and statement cx type_params_map = Ast.Statement.(
       mk_type_param_declarations cx type_params_map typeParameters in
 
     let typeparams, type_params_map =
-      add_this self ThisConfig.support_declare_class cx reason typeparams type_params_map in
+      add_this self cx reason typeparams type_params_map in
 
     let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
       fun (sfmap_, smmap_, fmap_, mmap_)
@@ -5460,14 +5453,24 @@ and mk_interface_super cx structural reason_i map = function
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some id, targs) ->
-      let desc, lookup_mode =
-        if structural then "extends", ForType
-        else "mixins", ForValue in
-      let i = convert_qualification ~lookup_mode cx desc id in
-      if structural || not ThisConfig.support_declare_class then
+      let i = convert_qualification cx "extends" id in
+      if structural then
         let params = extract_type_param_instantiations targs in
         mk_nominal_type cx reason_i map (i, params)
       else mk_super cx map i targs
+
+and mk_mixins cx reason_i map = function
+  | (None, None) ->
+      let root = MixedT (reason_of_string "Object") in
+      root
+  | (None, _) ->
+      assert false (* type args with no head expr *)
+  | (Some id, targs) ->
+      let i = convert_qualification ~lookup_mode:ForValue cx "mixins" id in
+      let props_bag = Flow_js.mk_tvar_derivable_where cx reason_i (fun tvar ->
+        Flow_js.flow cx (i, MixinT(reason_i, tvar))
+      ) in
+      mk_super cx map props_bag targs
 
 and mk_super cx type_params_map c targs =
     (* A super class must be parameterized by This, so that it can be
@@ -5910,7 +5913,7 @@ and mk_class = Ast.Class.(
     mk_type_param_declarations cx type_params_map typeParameters in
 
   let typeparams, type_params_map =
-    add_this self true cx reason_c typeparams type_params_map in
+    add_this self cx reason_c typeparams type_params_map in
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let is_derived = superClass <> None in
@@ -6048,7 +6051,7 @@ and mk_class = Ast.Class.(
   let fields = SMap.fold SMap.add getters_and_setters inst_sig.sig_fields in
 
   let typeparams, type_params_map =
-    remove_this true typeparams type_params_map in
+    remove_this typeparams type_params_map in
 
   let static_instance = {
     class_id = 0;
@@ -6123,7 +6126,7 @@ and mk_interface cx reason_i typeparams type_params_map
   let super_reason = prefix_reason "super of " reason_i in
   (* mixins override extends *)
   let interface_supers =
-    List.map (mk_interface_super cx false super_reason type_params_map) mixins @
+    List.map (mk_mixins cx super_reason type_params_map) mixins @
     List.map (mk_interface_super cx structural super_reason type_params_map) extends
   in
   let super = match interface_supers with
@@ -6173,7 +6176,7 @@ and mk_interface cx reason_i typeparams type_params_map
   );
 
   let typeparams, type_params_map =
-    remove_this ThisConfig.support_declare_class typeparams type_params_map in
+    remove_this typeparams type_params_map in
 
   let static_instance = {
     class_id = 0;
@@ -6201,14 +6204,12 @@ and mk_interface cx reason_i typeparams type_params_map
   } in
   let this = InstanceT (reason_i, static, super, instance) in
 
-  let cls_body = if structural || not ThisConfig.support_declare_class
+  let cls_body = if structural
     then ClassT this
     else ThisClassT this in
   if typeparams = [] then cls_body else PolyT (typeparams, cls_body)
 
-and add_this self this_supported cx reason_c typeparams type_params_map =
-  if not this_supported then typeparams, type_params_map
-  else
+and add_this self cx reason_c typeparams type_params_map =
     (* We haven't computed the instance type yet, but we can still capture a
        reference to it using the class name (as long as the class has a name). We
        need this reference to constrain the `this` in the class. *)
@@ -6233,9 +6234,7 @@ and add_this self this_supported cx reason_c typeparams type_params_map =
     typeparams@[this_tp],
     SMap.add "this" (BoundT this_tp) type_params_map
 
-and remove_this this_supported typeparams type_params_map =
-  if not this_supported then typeparams, type_params_map
-  else
+and remove_this typeparams type_params_map =
     List.rev (List.tl (List.rev typeparams)),
     SMap.remove "this" type_params_map
 

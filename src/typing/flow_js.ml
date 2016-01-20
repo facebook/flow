@@ -2010,6 +2010,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | SingletonBoolT (reason, b), _ ->
       rec_flow cx trace (BoolT (reason, Some b), u)
 
+    (********************)
+    (* mixin conversion *)
+    (********************)
+
+    (* A class can be viewed as a mixin by extracting its immediate properties,
+       and "erasing" its static and super *)
+
+    | ThisClassT (InstanceT (_, _, _, instance)), MixinT (r, tvar) ->
+      rec_flow cx trace (
+        ThisClassT (InstanceT (r, MixedT r, MixedT r, instance)),
+        UseT tvar
+      )
+
+    | PolyT (xs, ThisClassT (InstanceT (_, _, _, instance))), MixinT (r, tvar) ->
+      rec_flow cx trace (
+        PolyT (xs, ThisClassT (InstanceT (r, MixedT r, MixedT r, instance))),
+        UseT tvar
+      )
+
+    (* TODO: it is conceivable that other things (e.g. functions) could also be
+       viewed as mixins (e.g. by extracting properties in their prototypes), but
+       such enhancements are left as future work. *)
+
     (***************************************)
     (* generic function may be specialized *)
     (***************************************)
@@ -3607,6 +3630,7 @@ and err_operation = function
   | ObjSealT _ -> "Expected object instead of"
   | ArrRestT _ -> "Expected array instead of"
   | SuperT _ -> "Cannot inherit"
+  | MixinT _ -> "Expected class instead of"
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | ThisSpecializeT _ -> "Expected class instead of"
   | VarianceCheckT _ -> "Expected polymorphic type instead of"
