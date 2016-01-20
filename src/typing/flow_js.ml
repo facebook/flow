@@ -272,12 +272,12 @@ let not_linked (id1, bounds1) (id2, bounds2) =
 let havoc_call_env = Scope.(
 
   let overlapped_call_scopes func_env call_env =
-    let rec loop = Scope.(function
+    let rec loop = function
       | func_scope :: func_scopes, call_scope :: call_scopes
           when func_scope.id = call_scope.id ->
         call_scope :: loop (func_scopes, call_scopes)
       | _ -> []
-    ) in
+    in
     loop (List.rev func_env, List.rev call_env)
   in
 
@@ -4893,7 +4893,7 @@ and predicate cx trace t (l,p) = match (l,p) with
 and binary_predicate cx trace sense test left right result =
   let handler =
     match test with
-    | Instanceof -> instanceof_test
+    | InstanceofTest -> instanceof_test
     | SentinelProp key -> sentinel_prop_test key
   in
   handler cx trace result (sense, left, right)
@@ -4909,13 +4909,14 @@ and instanceof_test cx trace result = function
 
     let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-    rec_flow cx trace (arrt, PredicateT(LeftP(Instanceof, right), result))
+    rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
 
   | (false, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
 
     let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
-    rec_flow cx trace (arrt, PredicateT(NotP(LeftP(Instanceof, right)), result))
+    let pred = NotP(LeftP(InstanceofTest, right)) in
+    rec_flow cx trace (arrt, PredicateT (pred, result))
 
   (** An object is considered `instanceof` a function F when it is constructed
       by F. Note that this is incomplete with respect to the runtime semantics,
@@ -4939,7 +4940,7 @@ and instanceof_test cx trace result = function
   | (true, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
 
     predicate cx trace result
-      (ClassT(ExtendsT([], c, a)), RightP(Instanceof, c))
+      (ClassT(ExtendsT([], c, a)), RightP(InstanceofTest, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
@@ -4952,7 +4953,8 @@ and instanceof_test cx trace result = function
     then rec_flow_t cx trace (c, result)
     else
       (** Recursively check whether super(C) extends A, with enough context. **)
-      rec_flow cx trace (super_c, PredicateT(LeftP(Instanceof, right), result))
+      let pred = LeftP(InstanceofTest, right) in
+      rec_flow cx trace (super_c, PredicateT(pred, result))
 
   | (true, MixedT _, ClassT(ExtendsT (_, _, a)))
     ->
@@ -4975,7 +4977,7 @@ and instanceof_test cx trace result = function
   | (false, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
 
     predicate cx trace result
-      (ClassT(ExtendsT([], c, a)), NotP(RightP(Instanceof, c)))
+      (ClassT(ExtendsT([], c, a)), NotP(RightP(InstanceofTest, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)
@@ -4986,7 +4988,7 @@ and instanceof_test cx trace result = function
     if instance_a.class_id = instance_c.class_id
     then ()
     else rec_flow cx trace
-      (super_c, PredicateT(NotP(LeftP(Instanceof, right)), result))
+      (super_c, PredicateT(NotP(LeftP(InstanceofTest, right)), result))
 
   | (false, MixedT _, ClassT(ExtendsT(_, c, _)))
     ->

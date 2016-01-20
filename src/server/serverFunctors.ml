@@ -124,7 +124,7 @@ end = struct
         FlowEventLogger.out_of_date ();
         Printf.eprintf "Status: Error\n";
         Printf.eprintf "%s is out of date. Exiting.\n" Program.name;
-        FlowExitStatus.(exit Build_id_mismatch)
+        FlowExitStatus.exit FlowExitStatus.Build_id_mismatch
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
       Program.handle_client genv env client

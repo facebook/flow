@@ -177,22 +177,22 @@ let nameify_default_export_decl decl = Ast.Statement.(
     if func_decl.FunctionDeclaration.id <> None then decl else
       loc, FunctionDeclaration(FunctionDeclaration.({
         func_decl with
-          id = Some(Ast.Identifier.(loc, {
-            name = internal_name "*default*";
+          id = Some (loc, {
+            Ast.Identifier.name = internal_name "*default*";
             typeAnnotation = None;
             optional = false;
-          }));
+          });
       }))
 
   | loc, ClassDeclaration(class_decl) ->
     if class_decl.Ast.Class.id <> None then decl else
       loc, ClassDeclaration(Ast.Class.({
         class_decl with
-          id = Some(Ast.Identifier.(loc, {
-            name = internal_name "*default*";
+          id = Some (loc, {
+            Ast.Identifier.name = internal_name "*default*";
             typeAnnotation = None;
             optional = false;
-          }));
+          });
       }))
 
   | _ -> decl
@@ -261,10 +261,13 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
             let expr = Option.map expr (fun expr ->
               loc, Ast.Expression.(Member Member.({
                 _object = expr;
-                property = PropertyExpression (loc, Literal Ast.Literal.({
-                  value = Number (float i);
-                  raw = string_of_int i;
-                }));
+                property = PropertyExpression (
+                  loc,
+                  Ast.Expression.Literal { Ast.Literal.
+                    value = Ast.Literal.Number (float i);
+                    raw = string_of_int i;
+                  }
+                );
                 computed = true;
               }))
             ) in
@@ -288,9 +291,9 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
   | loc, Object { Object.properties; _; } -> Object.(
       let xs = ref [] in
       properties |> List.iter (function
-        | Property (loc, prop) -> Property.(
-            match prop with
-            | { key = Identifier (loc, id); pattern = p; } ->
+        | Property (loc, prop) ->
+            begin match prop with
+            | { Property.key = Property.Identifier (loc, id); pattern = p; } ->
                 let x = id.Ast.Identifier.name in
                 let reason = mk_reason (spf "property `%s`" x) loc in
                 xs := x :: !xs;
@@ -315,7 +318,8 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
                 destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
             | _ ->
               error_destructuring cx loc
-          )
+            end
+
         | SpreadProperty (loc, { SpreadProperty.argument }) ->
             let reason = mk_reason "object pattern spread property" loc in
             let tvar = DestructuringT (reason, curr_t, ObjRest !xs) in
@@ -757,8 +761,8 @@ let rec convert cx type_params_map = Ast.Type.(function
     if (typeparams = []) then ft else PolyT(typeparams, ft)
 
   | loc, Object { Object.properties; indexers; callProperties; } ->
-    let props_map = List.fold_left (fun props_map ->
-      Object.Property.(fun (loc, { key; value; optional; _ }) ->
+    let props_map = List.fold_left (
+      fun props_map (loc, { Object.Property.key; value; optional; _ }) ->
         (match key with
           | Ast.Expression.Object.Property.Literal
               (_, { Ast.Literal.value = Ast.Literal.String name; _ })
@@ -776,7 +780,6 @@ let rec convert cx type_params_map = Ast.Type.(function
             let msg = "Unsupported key in object type" in
             Flow_js.add_error cx [mk_reason "" loc, msg];
             props_map
-        )
       )
     ) SMap.empty properties
     in
@@ -793,9 +796,12 @@ let rec convert cx type_params_map = Ast.Type.(function
           SMap.add "$call" (IntersectionT (callable_reason, fts)) props_map
     in
     (* Seal an object type unless it specifies an indexer. *)
-    let sealed, dict = Object.Indexer.(
+    let sealed, dict =
       match indexers with
-      | [(_, { id = (_, { Ast.Identifier.name; _ }); key; value; _; })] ->
+      | [
+          _,
+          { Object.Indexer.id = (_, { Ast.Identifier.name; _ }); key; value; _;}
+        ] ->
           let keyt = convert cx type_params_map key in
           let valuet = convert cx type_params_map value in
           false,
@@ -809,7 +815,7 @@ let rec convert cx type_params_map = Ast.Type.(function
           None
       (* TODO *)
       | _ -> failwith "Unimplemented: multiple indexers"
-    ) in
+    in
     let pmap = Flow_js.mk_propmap cx props_map in
     let proto = MixedT (reason_of_string "Object") in
     let flags = {
@@ -1508,22 +1514,22 @@ and statement cx type_params_map = Ast.Statement.(
     let typeparams, type_params_map =
       add_this self cx reason typeparams type_params_map in
 
-    let sfmap, smmap, fmap, mmap = List.fold_left Ast.Type.Object.Property.(
+    let sfmap, smmap, fmap, mmap = List.fold_left (
       fun (sfmap_, smmap_, fmap_, mmap_)
-        (loc, { key; value; static; _method; optional }) ->
+        (loc, { Ast.Type.Object.Property.key; value; static; _method; optional }) ->
         if optional && _method
         then begin
           let msg = "optional methods are not supported" in
           Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg]
         end;
-        Ast.Expression.Object.Property.(match key with
-        | Literal (loc, _)
-        | Computed (loc, _) ->
+        Ast.Expression.Object.(match key with
+        | Property.Literal (loc, _)
+        | Property.Computed (loc, _) ->
           let msg = "illegal name" in
             Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
             (sfmap_, smmap_, fmap_, mmap_)
 
-        | Identifier (loc, { Ast.Identifier.name; _ }) ->
+        | Property.Identifier (loc, { Ast.Identifier.name; _ }) ->
           let t = convert cx type_params_map value in
           let t = if optional then OptionalT t else t in
           (* check for overloads in static and instance method maps *)
@@ -1545,14 +1551,14 @@ and statement cx type_params_map = Ast.Statement.(
         )
     ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
     in
-    let fmap = Ast.Type.Object.Indexer.(match indexers with
+    let fmap = match indexers with
       | [] -> fmap
-      | [(_, { key; value; _; })] ->
+      | [(_, { Ast.Type.Object.Indexer.key; value; _; })] ->
         let keyt = convert cx type_params_map key in
         let valuet = convert cx type_params_map value in
         fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
     (* TODO *)
-      | _ -> failwith "Unimplemented: multiple indexers")
+      | _ -> failwith "Unimplemented: multiple indexers"
     in
     let calls = callProperties |> List.map (function
       | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
@@ -1711,16 +1717,16 @@ and statement cx type_params_map = Ast.Statement.(
       Env_js.update_env cx reason end_env;
 
       (* handle control flow in cases where we've thrown from both sides *)
-      Abnormal.(match exception_then, exception_else with
-      | Some Throw, Some Return
-      | Some Return, Some Throw ->
-        throw_control_flow_exception Return;
+      begin match exception_then, exception_else with
+      | Some Abnormal.Throw, Some Abnormal.Return
+      | Some Abnormal.Return, Some Abnormal.Throw ->
+        Abnormal.throw_control_flow_exception Abnormal.Return;
 
       | Some then_exn, Some else_exn when then_exn = else_exn ->
-        throw_control_flow_exception then_exn
+        Abnormal.throw_control_flow_exception then_exn
 
       | _ -> ()
-      )
+      end
 
   | (loc, Labeled { Labeled.label = _, { Ast.Identifier.name; _ }; body }) ->
       (match body with
@@ -1732,8 +1738,8 @@ and statement cx type_params_map = Ast.Statement.(
         let reason = mk_reason "label" loc in
         let oldset = Changeset.clear () in
         let label = Some name in
-        let save_break_exn = Abnormal.(swap (Break label) false) in
-        let save_continue_exn = Abnormal.(swap (Continue label) false) in
+        let save_break_exn = Abnormal.swap (Abnormal.Break label) false in
+        let save_continue_exn = Abnormal.swap (Abnormal.Continue label) false in
 
         let env = Env_js.peek_env () in
         Env_js.widen_env cx reason;
@@ -1747,17 +1753,17 @@ and statement cx type_params_map = Ast.Statement.(
               fun () -> statement cx type_params_map body)));
 
         let newset = Changeset.merge oldset in
-        if Abnormal.(swap (Continue label) save_continue_exn)
+        if Abnormal.swap (Abnormal.Continue label) save_continue_exn
         then Env_js.havoc_vars newset;
         Env_js.copy_env cx reason (env,loop_env) newset;
 
-        if Abnormal.(swap (Break label) save_break_exn)
+        if Abnormal.swap (Abnormal.Break label) save_break_exn
         then Env_js.havoc_vars newset
 
       | _ ->
         let oldset = Changeset.clear () in
         let label = Some name in
-        let save_break_exn = Abnormal.(swap (Break label) false) in
+        let save_break_exn = Abnormal.swap (Abnormal.Break label) false in
 
         Abnormal.(
           check_control_flow_exception (
@@ -1765,7 +1771,7 @@ and statement cx type_params_map = Ast.Statement.(
               fun () -> statement cx type_params_map body)));
 
         let newset = Changeset.merge oldset in
-        if Abnormal.(swap (Break label) save_break_exn)
+        if Abnormal.swap (Abnormal.Break label) save_break_exn
         then Env_js.havoc_vars newset
       )
 
@@ -1775,7 +1781,7 @@ and statement cx type_params_map = Ast.Statement.(
         | Some (_, { Ast.Identifier.name; _ }) -> Some name
       in
       Env_js.reset_current_activation (mk_reason "break" loc);
-      Abnormal.(set (Break label_opt))
+      Abnormal.set (Abnormal.Break label_opt)
 
   | (loc, Continue { Continue.label }) ->
       let label_opt = match label with
@@ -1783,7 +1789,7 @@ and statement cx type_params_map = Ast.Statement.(
         | Some (_, { Ast.Identifier.name; _ }) -> Some name
       in
       Env_js.reset_current_activation (mk_reason "continue" loc);
-      Abnormal.(set (Continue label_opt))
+      Abnormal.set (Abnormal.Continue label_opt)
 
   | (loc, With _) ->
       (* TODO or disallow? *)
@@ -1831,7 +1837,7 @@ and statement cx type_params_map = Ast.Statement.(
       ) cases;
 
       (* initialize traversal state *)
-      let save_break_exn = Abnormal.(swap (Break None) false) in
+      let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
       let cursor_env = Env_js.peek_env () in
       let switch_env = ref None in
       let prev_case_env = ref None in
@@ -1896,7 +1902,7 @@ and statement cx type_params_map = Ast.Statement.(
 
     (* if we broke at all, case has multiple exits - swap in accumulated
        effects and havoc now *)
-    let did_break = Abnormal.(swap (Break None) save_break_exn) in
+    let did_break = Abnormal.swap (Abnormal.Break None) save_break_exn in
     (if did_break then (
       (match !switch_env with
       | Some env ->
@@ -1991,13 +1997,13 @@ and statement cx type_params_map = Ast.Statement.(
       in
       Flow_js.flow_t cx (t, ret);
       Env_js.reset_current_activation reason;
-      Abnormal.(set Return)
+      Abnormal.set Abnormal.Return
 
   | (loc, Throw { Throw.argument }) ->
       let reason = mk_reason "throw" loc in
       ignore (expression cx type_params_map argument);
       Env_js.reset_current_activation reason;
-      Abnormal.(set Throw)
+      Abnormal.set Abnormal.Throw
 
   (***************************************************************************)
   (* Try-catch-finally statements have a lot of control flow possibilities. (To
@@ -2162,15 +2168,16 @@ and statement cx type_params_map = Ast.Statement.(
       Abnormal.check_control_flow_exception exception_finally;
 
       (* other ways we throw due to try/catch abends *)
-      Abnormal.(match exception_try, exception_catch with
-      | Some (Throw as try_exn), Some Throw
-      | Some (Return as try_exn), Some _ ->
-          throw_control_flow_exception try_exn
+      begin match exception_try, exception_catch with
+      | Some (Abnormal.Throw as try_exn), Some Abnormal.Throw
+      | Some (Abnormal.Return as try_exn), Some _ ->
+          Abnormal.throw_control_flow_exception try_exn
 
-      | Some Throw, Some (Return as catch_exn) ->
-          throw_control_flow_exception catch_exn
+      | Some Abnormal.Throw, Some (Abnormal.Return as catch_exn) ->
+          Abnormal.throw_control_flow_exception catch_exn
 
-      | _ -> ())
+      | _ -> ()
+      end
 
 
   (***************************************************************************)
@@ -2186,8 +2193,8 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, While { While.test; body }) ->
 
       let reason = mk_reason "while" loc in
-      let save_break_exn = Abnormal.(swap (Break None) false) in
-      let save_continue_exn = Abnormal.(swap (Continue None) false) in
+      let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
+      let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
 
       (* generate loop test preds and their complements *)
       let _, preds, not_preds, orig_types =
@@ -2219,7 +2226,7 @@ and statement cx type_params_map = Ast.Statement.(
       let newset = Changeset.merge oldset in
 
       (* if we continued out of the loop, havoc vars changed by loop body *)
-      if Abnormal.(swap (Continue None) save_continue_exn)
+      if Abnormal.swap (Abnormal.Continue None) save_continue_exn
       then Env_js.havoc_vars newset;
 
       (* widen start_env with new specifics from body_env
@@ -2232,7 +2239,7 @@ and statement cx type_params_map = Ast.Statement.(
       );
 
       (* if we broke out of the loop, havoc vars changed by loop body *)
-      if Abnormal.(swap (Break None) save_break_exn)
+      if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_vars newset
 
   (***************************************************************************)
@@ -2247,8 +2254,8 @@ and statement cx type_params_map = Ast.Statement.(
   (***************************************************************************)
   | (loc, DoWhile { DoWhile.body; test }) ->
       let reason = mk_reason "do-while" loc in
-      let save_break_exn = Abnormal.(swap (Break None) false) in
-      let save_continue_exn = Abnormal.(swap (Continue None) false) in
+      let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
+      let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
       let env =  Env_js.peek_env () in
       let oldset = Changeset.clear () in
       (* env = Pre *)
@@ -2267,7 +2274,7 @@ and statement cx type_params_map = Ast.Statement.(
           fun () -> statement cx type_params_map body)
       ) in
 
-      if Abnormal.(swap (Continue None) save_continue_exn)
+      if Abnormal.swap (Abnormal.Continue None) save_continue_exn
       then Env_js.havoc_vars (Changeset.peek ());
 
       let _, preds, not_preds, xtypes =
@@ -2286,7 +2293,7 @@ and statement cx type_params_map = Ast.Statement.(
 
       Env_js.update_env cx reason done_env;
       Env_js.refine_with_preds cx reason not_preds xtypes;
-      if Abnormal.(swap (Break None) save_break_exn)
+      if Abnormal.swap (Abnormal.Break None) save_break_exn
       then Env_js.havoc_vars newset;
       (* ENV = [done_env] *)
       (* done_env = Post' & ~c *)
@@ -2309,8 +2316,8 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, For { For.init; test; update; body }) ->
       Env_js.in_lex_scope cx (fun () ->
         let reason = mk_reason "for" loc in
-        let save_break_exn = Abnormal.(swap (Break None) false) in
-        let save_continue_exn = Abnormal.(swap (Continue None) false) in
+        let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
+        let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
         (match init with
           | None -> ()
           | Some (For.InitDeclaration (loc, decl)) ->
@@ -2342,7 +2349,7 @@ and statement cx type_params_map = Ast.Statement.(
         ignore (Abnormal.catch_control_flow_exception
           (fun () -> statement cx type_params_map body));
 
-        if Abnormal.(swap (Continue None) save_continue_exn)
+        if Abnormal.swap (Abnormal.Continue None) save_continue_exn
         then Env_js.havoc_vars (Changeset.peek ());
 
         (match update with
@@ -2356,7 +2363,7 @@ and statement cx type_params_map = Ast.Statement.(
 
         Env_js.update_env cx reason do_env;
         Env_js.refine_with_preds cx reason not_preds xtypes;
-        if Abnormal.(swap (Break None) save_break_exn)
+        if Abnormal.swap (Abnormal.Break None) save_break_exn
         then Env_js.havoc_vars newset
       )
 
@@ -2373,8 +2380,8 @@ and statement cx type_params_map = Ast.Statement.(
   (***************************************************************************)
   | (loc, ForIn { ForIn.left; right; body; each }) ->
       let reason = mk_reason "for-in" loc in
-      let save_break_exn = Abnormal.(swap (Break None) false) in
-      let save_continue_exn = Abnormal.(swap (Continue None) false) in
+      let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
+      let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
       let t = expression cx type_params_map right in
       let o = mk_object cx (mk_reason "iteration expected on object" loc) in
       Flow_js.flow_t cx (t, MaybeT o); (* null/undefined are allowed *)
@@ -2414,19 +2421,19 @@ and statement cx type_params_map = Ast.Statement.(
 
         let newset = Changeset.merge oldset in
 
-        if Abnormal.(swap (Continue None) save_continue_exn)
+        if Abnormal.swap (Abnormal.Continue None) save_continue_exn
         then Env_js.havoc_vars newset;
         Env_js.copy_env cx reason (env,body_env) newset;
 
         Env_js.update_env cx reason env;
-        if Abnormal.(swap (Break None) save_break_exn)
+        if Abnormal.swap (Abnormal.Break None) save_break_exn
         then Env_js.havoc_vars newset
       )
 
   | (loc, ForOf { ForOf.left; right; body; }) ->
       let reason = mk_reason "for-of" loc in
-      let save_break_exn = Abnormal.(swap (Break None) false) in
-      let save_continue_exn = Abnormal.(swap (Continue None) false) in
+      let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
+      let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
       let t = expression cx type_params_map right in
 
       let element_tvar = Flow_js.mk_tvar cx reason in
@@ -2476,12 +2483,12 @@ and statement cx type_params_map = Ast.Statement.(
 
         let newset = Changeset.merge oldset in
 
-        if Abnormal.(swap (Continue None) save_continue_exn)
+        if Abnormal.swap (Abnormal.Continue None) save_continue_exn
         then Env_js.havoc_vars newset;
         Env_js.copy_env cx reason (env,body_env) newset;
 
         Env_js.update_env cx reason env;
-        if Abnormal.(swap (Break None) save_break_exn)
+        if Abnormal.swap (Abnormal.Break None) save_break_exn
         then Env_js.havoc_vars newset
       )
 
@@ -2638,18 +2645,17 @@ and statement cx type_params_map = Ast.Statement.(
       DeclareExportDeclaration.source;
     }) ->
       let open DeclareExportDeclaration in
-      let open Ast.Identifier in
       let export_info = match declaration with
       | Some (Variable (loc, v)) ->
-          let { DeclareVariable.id = (_, { name; _; }) } = v in
+          let { DeclareVariable.id = (_, { Ast.Identifier.name; _; }) } = v in
           statement cx type_params_map (loc, DeclareVariable v);
           [(spf "var %s" name, loc, name, None)]
       | Some (Function (loc, f)) ->
-          let { DeclareFunction.id = (_, { name; _; }) } = f in
+          let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }) } = f in
           statement cx type_params_map (loc, DeclareFunction f);
           [(spf "function %s() {}" name, loc, name, None)]
       | Some (Class (loc, c)) ->
-          let { Interface.id = (name_loc, { name; _; }); _; } = c in
+          let { Interface.id = (name_loc, { Ast.Identifier.name; _; }); _; } = c in
           statement cx type_params_map (loc, DeclareClass c);
           [(spf "class %s {}" name, name_loc, name, None)]
       | Some (DefaultType (loc, t)) ->
@@ -2669,9 +2675,8 @@ and statement cx type_params_map = Ast.Statement.(
       ExportDeclaration.source;
       ExportDeclaration.exportKind;
     }) ->
-      let open ExportDeclaration in
       let export_info = match declaration with
-      | Some (Declaration decl) ->
+      | Some (ExportDeclaration.Declaration decl) ->
           let decl = if default then nameify_default_export_decl decl else decl in
           statement cx type_params_map decl;
           (match decl with
@@ -2712,7 +2717,7 @@ and statement cx type_params_map = Ast.Statement.(
             [(spf "interface %s = ..." name, loc, name, None)]
           | _ -> failwith "Parser Error: Invalid export-declaration type!")
 
-      | Some (Expression expr) ->
+      | Some (ExportDeclaration.Expression expr) ->
           if not default then failwith (
             "Parser Error: Exporting an expression is only possible for " ^
             "`export default`!"
@@ -2912,14 +2917,19 @@ and export_statement cx type_params_map loc
   (match (declaration_export_info, specifiers) with
     (* [declare] export [type] {foo, bar} [from ...]; *)
     | ([], Some(ExportSpecifiers(specifiers))) ->
-      let export_specifier specifier = Specifier.(
+      let export_specifier specifier = (
         let (reason, local_name, remote_name) = (
           match specifier with
-          | loc, {id = (_, {Ast.Identifier.name=id; _;}); name=None;} ->
+          | loc, {
+              id = (_, {Ast.Identifier.name=id; _;});
+              Specifier.name=None;
+            } ->
             let reason = mk_reason (spf "export {%s}" id) loc in
             (reason, id, id)
-          | loc, {id=(_, {Ast.Identifier.name=id; _;});
-                  name=Some(_, {Ast.Identifier.name; _;})} ->
+          | loc, { Specifier.
+              id=(_, {Ast.Identifier.name=id; _;});
+              name=Some(_, {Ast.Identifier.name; _;})
+            } ->
             let reason =
               mk_reason (spf "export {%s as %s}" id name) loc
             in
@@ -3323,7 +3333,7 @@ and set_module_exports cx reason t =
 
 and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
 
-  | Literal lit ->
+  | Ast.Expression.Literal lit ->
       literal cx loc lit
 
   | Identifier (_, { Ast.Identifier.name; _ }) -> identifier cx name loc
@@ -3474,7 +3484,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       arguments
     } when not (Env_js.local_scope_entry_exists cx "require") -> (
       match arguments with
-      | [ Expression (_, Literal {
+      | [ Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
         }) ] ->
         require cx module_name loc
@@ -3512,7 +3522,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
          *)
 
         let element_to_module_tvar tvars = (function
-          | Some(Expression(_, Literal({
+          | Some(Expression(_, Ast.Expression.Literal({
               Ast.Literal.value = Ast.Literal.String module_name;
               _;
             }))) ->
@@ -3677,7 +3687,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       (* TODO: require *)
       let reason = mk_reason "invariant" loc in
       (match arguments with
-      | (Expression (_, Literal {
+      | (Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.Boolean false; _;
         }))::arguments ->
         (* invariant(false, ...) is treated like a throw *)
@@ -3747,13 +3757,13 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       _
     } ->
       let kind = function_kind ~async ~generator in
-      let desc = Scope.(match kind with
-      | Ordinary -> "function"
-      | Async -> "async function"
-      | Generator -> "generator function"
-      | Module -> assert_false "module scope as function activation"
-      | Global -> assert_false "global scope as function activation"
-      ) in
+      let desc = match kind with
+      | Scope.Ordinary -> "function"
+      | Scope.Async -> "async function"
+      | Scope.Generator -> "generator function"
+      | Scope.Module -> assert_false "module scope as function activation"
+      | Scope.Global -> assert_false "global scope as function activation"
+      in
       let reason = mk_reason desc loc in
       let this = Flow_js.mk_tvar cx (replace_reason "this" reason) in
       mk_function id cx type_params_map reason ~kind
@@ -3769,13 +3779,13 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       _
     } ->
       let kind = function_kind ~async ~generator:false in
-      let desc = Scope.(match kind with
-      | Ordinary -> "arrow function"
-      | Async -> "async arrow function"
-      | Generator -> assert_false "generator arrow function"
-      | Module -> assert_false "module scope as arrow function activation"
-      | Global -> assert_false "global scope as arrow function activation"
-      ) in
+      let desc = match kind with
+      | Scope.Ordinary -> "arrow function"
+      | Scope.Async -> "async arrow function"
+      | Scope.Generator -> assert_false "generator arrow function"
+      | Scope.Module -> assert_false "module scope as arrow function activation"
+      | Scope.Global -> assert_false "global scope as arrow function activation"
+      in
       let reason = mk_reason desc loc in
       let this = this_ cx reason in
       let super = super_ cx reason in
@@ -3929,7 +3939,7 @@ and method_call cx loc prop_loc (expr, obj_t, name) argts =
   )
 
 (* traverse a literal expression, return result type *)
-and literal cx loc lit = Ast.Literal.(match lit.value with
+and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
       StrT (mk_reason "string" loc, Literal s)
 
@@ -4597,7 +4607,7 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
       arguments = [Expression (_, Array { Array.elements })]
     } ->
       let rec string_literals lits es = match (es) with
-        | Some (Expression (loc, Literal { Ast.Literal.
+        | Some (Expression (loc, Ast.Expression.Literal { Ast.Literal.
             value = Ast.Literal.String lit; _
           })) :: tl ->
             string_literals (lit :: lits) tl
@@ -5103,7 +5113,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     | None -> out
   in
 
-  let eq_test loc op left right = Ast.Expression.(
+  let eq_test loc op left right =
     match left, right with
     (* special case equality relations involving booleans *)
     | (lloc, Expression.Literal { Literal.value = Literal.Boolean lit; _}), expr
@@ -5115,8 +5125,8 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
 
     (* fallback case for equality relations involving sentinels (this should be
        lower priority since it refines the object but not the property) *)
-    | (_, Member _ as expr), value
-    | value, (_, Member _ as expr)
+    | (_, Expression.Member _ as expr), value
+    | value, (_, Expression.Member _ as expr)
       ->
         sentinel_prop_test loc op expr (expression cx type_params_map value)
 
@@ -5125,7 +5135,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         ignore (expression cx type_params_map expr);
         ignore (expression cx type_params_map value);
         empty_result (BoolT.at loc)
-  ) in
+  in
 
   let mk_and map1 map2 = Scope.KeyMap.merge
     (fun x -> fun p1 p2 -> match (p1,p2) with
@@ -5171,7 +5181,8 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   | _, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
       match refinable_lvalue left with
       | Some name, t ->
-          let pred = LeftP (Instanceof, expression cx type_params_map right) in
+          let right_t = expression cx type_params_map right in
+          let pred = LeftP (InstanceofTest, right_t) in
           result BoolT.t name t pred true
       | None, t ->
           empty_result BoolT.t
@@ -5182,7 +5193,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       operator = (Binary.Equal | Binary.StrictEqual |
                   Binary.NotEqual | Binary.StrictNotEqual) as op;
       left;
-      right = _, Literal { Literal.value = Literal.Null; _ }
+      right = _, Expression.Literal { Literal.value = Literal.Null; _ }
     } ->
       null_test loc op left
 
@@ -5190,7 +5201,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   | loc, Binary { Binary.
       operator = (Binary.Equal | Binary.StrictEqual |
                   Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left = _, Literal { Literal.value = Literal.Null; _ };
+      left = _, Expression.Literal { Literal.value = Literal.Null; _ };
       right
     } ->
       null_test loc op right
@@ -5236,27 +5247,39 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   (* typeof expr ==/=== string *)
   | loc, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
       left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
-      right = str_loc, Literal { Literal.value = Literal.String s; _ }
+      right = str_loc, Expression.Literal {
+        Literal.value = Literal.String s;
+        _
+      };
     } ->
       typeof_test loc true argument s str_loc
 
   (* typeof expr !=/!== string *)
   | loc, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
       left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
-      right = str_loc, Literal { Literal.value = Literal.String s; _ }
+      right = str_loc, Expression.Literal {
+        Literal.value = Literal.String s;
+        _
+      };
     } ->
       typeof_test loc false argument s str_loc
 
   (* string ==/=== typeof expr *)
   | loc, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
-      left = str_loc, Literal { Literal.value = Literal.String s; _ };
+      left = str_loc, Expression.Literal {
+        Literal.value = Literal.String s;
+        _
+      };
       right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
     } ->
       typeof_test loc true argument s str_loc
 
   (* string !=/!== typeof expr *)
   | loc, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
-      left = str_loc, Literal { Literal.value = Literal.String s; _ };
+      left = str_loc, Expression.Literal {
+        Literal.value = Literal.String s;
+        _
+      };
       right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
     } ->
       typeof_test loc false argument s str_loc
@@ -5390,7 +5413,7 @@ and static_method_call_Object cx type_params_map loc prop_loc expr obj_t m args_
     )
 
   | ("defineProperty", [ Expression e;
-                         Expression (ploc, Literal
+                         Expression (ploc, Ast.Expression.Literal
                            { Ast.Literal.value = Ast.Literal.String x; _ });
                          Expression config ]) ->
     let o = expression cx type_params_map e in

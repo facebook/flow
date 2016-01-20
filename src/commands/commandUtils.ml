@@ -207,18 +207,16 @@ let connect server_flags root =
   let expiry = match server_flags.timeout with
   | 0 -> None
   | n -> Some (Unix.time () +. float n) in
-  CommandConnect.(
-    let env = {
-      root;
-      autostart = not server_flags.no_auto_start;
-      retries;
-      retry_if_init;
-      expiry;
-      tmp_dir;
-      log_file;
-    } in
-    connect env
-  )
+  let env = { CommandConnect.
+    root;
+    autostart = not server_flags.no_auto_start;
+    retries;
+    retry_if_init;
+    expiry;
+    tmp_dir;
+    log_file;
+  } in
+  CommandConnect.connect env
 
 let rec search_for_root config start recursion_limit : Path.t option =
   if start = Path.parent start then None (* Reach fs root, nothing to do. *)

@@ -420,7 +420,7 @@ let bind_entry cx name entry reason =
      binding is found, or realize a binding error *)
   let rec loop = function
     | [] -> assert_false "empty scope list"
-    | scope::scopes -> Scope.(
+    | scope::scopes ->
       match get_entry name scope with
 
       (* if no entry already exists, this might be our scope *)
@@ -428,8 +428,8 @@ let bind_entry cx name entry reason =
         match scope.Scope.kind, entry with
         (* lex scopes can only hold let/const bindings *)
         (* var scope can hold all binding types *)
-        | LexScope, Value { kind = Let _; _ }
-        | LexScope, Value { kind = Const; _ }
+        | LexScope, Value { Entry.kind = Let _; _ }
+        | LexScope, Value { Entry.kind = Const; _ }
         | VarScope _, _ ->
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
@@ -451,14 +451,16 @@ let bind_entry cx name entry reason =
           in
           match entry, prev with
           (* good shadowing leaves existing entry, unifies with new *)
-          | Value e, Value p when can_shadow (e.kind, p.kind) ->
+          | Value e, Value p
+              when can_shadow (Entry.kind_of_value e, Entry.kind_of_value p) ->
             (* TODO currently we don't step on specific. shouldn't we? *)
-            Flow_js.unify cx p.general e.general
+            Flow_js.unify cx
+              (Entry.general_of_value p) (Entry.general_of_value e)
           (* bad shadowing is a binding error *)
           | _ -> already_bound_error cx name prev reason)
 
         (* shadowing in a lex scope is always an error *)
-        | LexScope -> already_bound_error cx name prev reason)
+        | LexScope -> already_bound_error cx name prev reason
   in
   if not (is_excluded name) then loop !scopes
 
@@ -518,7 +520,7 @@ let bind_declare_fun =
       | Some prev ->
         Entry.(match prev with
 
-        | Value v when v.kind = Var ->
+        | Value v when (Entry.kind_of_value v) = Var ->
           let entry = Value { v with
             value_state = State.Initialized;
             specific = update_type v.specific t;
@@ -542,7 +544,9 @@ let declare_value_entry kind cx name reason =
   then Entry.(
     let scope, entry = find_entry cx name reason in
     match entry with
-    | Value v when v.kind = kind && v.value_state = State.Undeclared ->
+    | Value v when
+        Entry.kind_of_value v = kind &&
+        Entry.state_of_value v = State.Undeclared ->
       let new_entry = Value { v with value_state = State.Declared } in
       Scope.add_entry name new_entry scope
     | _ ->
@@ -600,13 +604,13 @@ let init_value_entry kind cx name ~has_anno specific reason =
   then Entry.(
     let scope, entry = find_entry cx name reason in
     match kind, entry with
-    | Var, Value ({ kind = Var; _ } as v)
-    | Let _, Value ({ kind = Let _;
+    | Var, Value ({ Entry.kind = Var; _ } as v)
+    | Let _, Value ({ Entry.kind = Let _;
         value_state = State.Undeclared | State.Declared; _ } as v)
-    | Const, Value ({ kind = Const;
+    | Const, Value ({ Entry.kind = Const;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.(add_var_change (scope.id, name, Write));
-      Flow_js.flow_t cx (specific, v.general);
+      Flow_js.flow_t cx (specific, Entry.general_of_value v);
       let value_binding = { v with value_state = State.Initialized; specific } in
       (* if binding is annotated, flow annotated type like initializer *)
       let new_entry = Value (
@@ -687,7 +691,7 @@ let same_activation target =
 let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
   (* from value positions, a same-activation ref to var or an explicit let
      before initialization yields undefined. *)
-| { kind = Var | Let None;
+| { Entry.kind = Var | Let None;
     value_state = State.Declared | State.MaybeInitialized as state;
     value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
@@ -737,7 +741,7 @@ let read_entry ~lookup_mode ~specific cx name reason =
 
   | Value v ->
     match v with
-    | { kind; value_state = State.Undeclared; value_declare_loc; _ }
+    | { Entry.kind; value_state = State.Undeclared; value_declare_loc; _ }
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
       tdz_error cx name reason v;
@@ -783,17 +787,18 @@ let update_var op cx name specific reason =
   let value_assign_loc = loc_of_reason reason in
   Entry.(match entry with
 
-  | Value ({ kind = (Let _ as kind); value_state = State.Undeclared; _ } as v)
-    when not (allow_forward_ref kind) && same_activation scope ->
+  | Value ({
+      Entry.kind = (Let _ as kind); value_state = State.Undeclared; _
+    } as v) when not (allow_forward_ref kind) && same_activation scope ->
     tdz_error cx name reason v
 
-  | Value ({ kind = Let _ | Var; _ } as v) ->
+  | Value ({ Entry.kind = Let _ | Var; _ } as v) ->
     Changeset.(add_var_change (scope.id, name, op));
 
-    Flow_js.flow_t cx (specific, v.general);
+    Flow_js.flow_t cx (specific, Entry.general_of_value v);
     (* add updated entry *)
     let update = Entry.Value {
-      v with
+      v with Entry.
       value_state = State.Initialized;
       specific;
       value_assign_loc;
@@ -801,7 +806,7 @@ let update_var op cx name specific reason =
 
     Scope.add_entry name update scope
 
-  | Value { kind = Const; _ } ->
+  | Value { Entry.kind = Const; _ } ->
     let msg = "const cannot be reassigned" in
     binding_error msg cx name entry reason
 
@@ -821,17 +826,17 @@ let refine_const cx name specific reason =
   let scope, entry = find_entry cx name reason in
   Entry.(match entry with
 
-  | Value v when v.kind = Const ->
+  | Value v when Entry.kind_of_value v = Const ->
     Changeset.(add_var_change (scope.id, name, Refine));
-    Flow_js.flow_t cx (specific, v.general);
-    let update = Entry.Value {
+    Flow_js.flow_t cx (specific, Entry.general_of_value v);
+    let update = Value {
       v with value_state = State.Initialized; specific
     } in
     Scope.add_entry name update scope
 
   | _ ->
     assert_false (spf "refine_const called on %s %s"
-      (string_of_kind entry) name)
+      (Entry.string_of_kind entry) name)
   )
 
 (* given a list of envs (scope lists), return true iff all envs are
@@ -931,7 +936,7 @@ let merge_env =
       let { specific = s2; _ } = child2 in
       let specific, general = merge_types cx reason name (s0, g0) s1 s2 in
       let value_state = merge_states orig child1 child2 in
-      let e = Entry.(Value { orig with specific; general; value_state }) in
+      let e = Entry.Value { orig with Entry.specific; general; value_state } in
       add_entry name e scope0
     (* type aliases can't be refined or reassigned, shouldn't be here *)
     | Some Type _, Some Type _, Some Type _ ->
@@ -1249,7 +1254,7 @@ let refine_with_preds cx reason preds orig_types =
           get_var cx name get_reason
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
-        let refine = match v.kind with
+        let refine = match Entry.kind_of_value v with
           | Const -> refine_const
           | _ -> refine_var
         in

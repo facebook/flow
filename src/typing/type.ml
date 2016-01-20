@@ -384,7 +384,7 @@ and predicate =
 
 and binary_test =
   (* e1 instanceof e2 *)
-  | Instanceof
+  | InstanceofTest
   (* e1.key === e2 *)
   | SentinelProp of string
 
@@ -1125,7 +1125,7 @@ let string_of_use_ctor = function
   | DebugPrintT _ -> "DebugPrintT"
 
 let string_of_binary_test = function
-  | Instanceof -> "instanceof"
+  | InstanceofTest -> "instanceof"
   | SentinelProp key -> "sentinel prop " ^ key
 
 

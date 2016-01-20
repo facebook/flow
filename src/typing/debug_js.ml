@@ -32,7 +32,7 @@ let string_of_pred_ctor = function
   | ArrP -> "ArrP"
 
 let string_of_binary_test_ctor = function
-  | Instanceof -> "Instanceof"
+  | InstanceofTest -> "InstanceofTest"
   | SentinelProp _ -> "SentinelProp"
 
 type json_cx = {
@@ -683,7 +683,7 @@ and json_of_binary_test_impl json_cx b = Hh_json.(
     "kind", JSON_String (string_of_binary_test_ctor b)
   ] @
   match b with
-  | Instanceof -> []
+  | InstanceofTest -> []
   | SentinelProp s -> ["key", JSON_String s]
 ))
 

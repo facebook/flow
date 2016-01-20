@@ -138,6 +138,10 @@ module Entry = struct
   | Value v -> string_of_value_kind v.kind
   | Type _ -> "type"
 
+  let kind_of_value (value: value_binding) = value.kind
+  let general_of_value (value: value_binding) = value.general
+  let state_of_value (value: value_binding) = value.value_state
+
   (* Given a name, an entry, and a function for making a new
      specific type from a Var entry's current general type,
      return a new Value entry with specific type replaced for
