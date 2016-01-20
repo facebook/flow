@@ -31,7 +31,7 @@ let make_genv ~multicore options watch_paths =
     dfind;
   }
 
-let make_env options =
+let make_env () =
   { files_info     = ServerEnv.PathMap.empty;
     errorl         = [];
   }

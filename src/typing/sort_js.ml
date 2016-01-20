@@ -158,7 +158,7 @@ let reverse files =
       ) files
 
 let log =
-  IMap.iter (fun h mcs ->
+  IMap.iter (fun _ mcs ->
     List.iter (fun mc ->
       (* Show cycles, which are components with more than one node. *)
       if List.length mc > 1

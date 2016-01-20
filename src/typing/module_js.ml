@@ -313,7 +313,7 @@ let lazy_seq: 'a option Lazy.t list -> 'a option =
 (*******************************)
 
 module Node = struct
-  let exported_module file info =
+  let exported_module file _ =
     if Loc.check_suffix file FlowConfig.flow_ext
     then Modulename.Filename (Loc.chop_suffix file FlowConfig.flow_ext)
     else Modulename.Filename file
@@ -440,12 +440,6 @@ end
 (****************** Haste module system *********************)
 
 module Haste: MODULE_SYSTEM = struct
-  let module_name_of file =
-    try Filename.chop_extension file
-    (* TODO: Think of what we should do when we got a filename without
-     an extension *)
-    with _ -> file
-
   let short_module_name_of = function
     | Loc.Builtins -> assert false
     | Loc.LibFile file | Loc.SourceFile file | Loc.JsonFile file ->

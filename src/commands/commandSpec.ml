@@ -41,7 +41,7 @@ module ArgSpec = struct
   (* Partially applies [fn] with the values from [values]. Uses [spec] to
      figure out the order of the arguments and how to parse each value *)
   let apply spec values fn =
-    let (values, main) = spec.f (values, fn) in
+    let (_, main) = spec.f (values, fn) in
     main
 
   let apply_arg name arg_type f (values, main) =
@@ -285,7 +285,7 @@ and parse_anon values spec arg args =
   | Some (name, _, ArgSpec.Arg_Rest) ->
     let values = SMap.add name args values in
     parse values spec []
-  | Some (name, _, ArgSpec.No_Arg) ->
+  | Some (_, _, ArgSpec.No_Arg) ->
     assert false
   | None ->
     raise (Failed_to_parse (Utils.spf
@@ -314,7 +314,7 @@ let usage spec =
 
 let main spec fn argv =
   match argv with
-  | cmd::subcmd::args when subcmd = spec.name ->
+  | _cmd::subcmd::args when subcmd = spec.name ->
     let values = parse SMap.empty spec.args args in
     let main = ArgSpec.apply spec.args values fn in
     main ()

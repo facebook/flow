@@ -55,7 +55,7 @@ let handle_error (loc, err) json strip =
 let handle_response types json strip =
   if json
   then (
-    let lst = types |> List.map (fun (loc, ctor, str, raw_t, reasons) ->
+    let lst = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
       let loc = strip loc in
       let json_assoc = (
         ("type", Hh_json.JSON_String str) ::
@@ -77,7 +77,7 @@ let handle_response types json strip =
     output_string stdout (json^"\n")
   ) else (
     let out = types
-      |> List.map (fun (loc, ctor, str, _, reasons) ->
+      |> List.map (fun (loc, _, str, _, _) ->
         let loc = strip loc in
         (Utils.spf "%s: %s" (Reason_js.string_of_loc loc) str)
       )

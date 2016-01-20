@@ -120,7 +120,7 @@ let connect_once ~tmp_dir root =
       verify_cstate ic cstate >>= fun () ->
       Ok (ic, oc)
   with
-  | e ->
+  | _ ->
     if not (server_exists ~tmp_dir root) then Result.Error Server_missing
     else if not (Lock.check (FlowConfig.init_file ~tmp_dir root))
     then Result.Error Server_initializing

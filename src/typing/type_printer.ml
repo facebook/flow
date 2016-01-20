@@ -21,10 +21,10 @@ let name_suffix_of_t = function
   | OptionalT _ -> "?"
   | _ -> ""
 
-let parameter_name cx n t =
+let parameter_name _cx n t =
   (name_prefix_of_t t) ^ n ^ (name_suffix_of_t t)
 
-let prop_name cx n t =
+let prop_name _cx n t =
   n ^ (name_suffix_of_t t)
 
 type enclosure_t =
@@ -121,7 +121,7 @@ let rec type_printer override fallback enclosure cx t =
           |> spf "[%s]"
         end
 
-    | InstanceT (reason,static,super,instance) ->
+    | InstanceT (reason, _, _, _) ->
         DescFormat.name_of_instance_reason reason
 
     | TypeAppT (c,ts) ->
@@ -212,15 +212,15 @@ and instance_of_poly_type_printer override fallback enclosure cx = function
   | PolyT (_, ClassT t)
     -> type_printer override fallback enclosure cx t
 
-  | PolyT (_, TypeT (reason, t))
+  | PolyT (_, TypeT (reason, _))
     -> DescFormat.name_of_type_reason reason
 
   | _ -> failwith "expected polymorphic type"
 
 (* pretty printer *)
 let string_of_t_ =
-  let override cx t = match t with
-    | OpenT (r, id) -> Some (spf "TYPE_%d" id)
+  let override _cx t = match t with
+    | OpenT (_, id) -> Some (spf "TYPE_%d" id)
     | NumT _
     | StrT _
     | BoolT _
@@ -268,7 +268,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | ArrT (_, t, ts)
+  | ArrT (_, t, _ts)
     ->
       (*(match ts with
       | [] -> *)is_printed_type_parsable_impl weak cx EnclosureNone t

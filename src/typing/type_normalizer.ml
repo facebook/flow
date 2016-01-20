@@ -18,7 +18,7 @@ let suggested_type_cache = ref IMap.empty
    from the old ground_type behavior. *)
 let rec ground_type_impl cx ids t = match t with
   | BoundT _ -> t
-  | OpenT (reason, id) ->
+  | OpenT (_, id) ->
       lookup_type cx ids id
 
   | NumT _ -> NumT.t
@@ -134,7 +134,7 @@ let rec ground_type_impl cx ids t = match t with
       let reason = reason_of_string (desc_of_reason reason) in
       TypeT (reason, ground_type_impl cx ids t)
 
-  | InstanceT (_, static, super, it) ->
+  | InstanceT _ ->
       t (* nominal type *)
 
   | RestT t ->
@@ -367,8 +367,6 @@ and collect_intersection_members ts =
           TypeSet.add x acc
     ) TypeSet.empty ts
 
-let ground_type cx type_ =
-  ground_type_impl cx ISet.empty type_
 
 let rec printify_type cx t =
   match t with

@@ -448,7 +448,7 @@ module ErrorSuppressions = struct
     unused = SpanMap.union a.unused b.unused;
   }
 
-  let check_loc ((result, { suppressions; unused; }) as acc) loc =
+  let check_loc ((_result, { suppressions; unused; }) as acc) loc =
     (* We only want to check the starting position of the reason *)
     let loc = Loc.({ loc with _end = loc.start; }) in
     if SpanMap.mem loc suppressions

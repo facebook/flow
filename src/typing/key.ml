@@ -22,7 +22,7 @@ let rec string_of_key (base, projs) =
     ))
 
 (* true if the given key uses the given property name *)
-let rec uses_propname propname (base, proj) =
+let rec uses_propname propname (_base, proj) =
   proj_uses_propname propname proj
 
 (* true if the given projection list uses the given property name *)

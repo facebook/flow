@@ -50,11 +50,11 @@ let lib_files = ref None
 
 let get_lib_files () = match !lib_files with
 | None -> []
-| Some (files, fileset) -> files
+| Some (files, _) -> files
 
 let get_lib_fileset () = match !lib_files with
 | None -> SSet.empty
-| Some (files, fileset) -> fileset
+| Some (_, fileset) -> fileset
 
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
@@ -84,8 +84,6 @@ let kind_of_path path = Unix.(
     Printf.eprintf "%s %s\n%!" path (Unix.error_message e);
     Other
 )
-
-let escape_spaces = Str.global_replace (Str.regexp " ") "\\ "
 
 type stack =
   | S_Nil
@@ -184,7 +182,7 @@ let get_all =
 
 let init ~include_default_libs ~tmp_dir libs =
   match !lib_files with
-  | Some (files, fileset) -> ()
+  | Some _ -> ()
   | None -> (
     config_options := Some FlowConfig.((get_unsafe ()).options);
     let libs, filter = if not include_default_libs

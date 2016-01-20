@@ -15,7 +15,7 @@ type getdef_type =
 | Gdmem of (string * Type.t)
 | Gdrequire of string
 
-let getdef_id (state, loc1) cx name loc2 =
+let getdef_id (state, loc1) _cx name loc2 =
   if Reason_js.in_range loc1 loc2
   then (
     let env = Env_js.all_entries () in
@@ -38,20 +38,20 @@ let getdef_lval (state, loc1) cx name loc2 rhs =
       ()
   )
 
-let getdef_member (state, loc1) cx name loc2 this_t =
+let getdef_member (state, loc1) _cx name loc2 this_t =
   if (Reason_js.in_range loc1 loc2)
   then (
     state := Some (Gdmem (name, this_t))
   );
   false
 
-let getdef_call (state, loc1) cx name loc2 this_t =
+let getdef_call (state, loc1) _cx name loc2 this_t =
   if (Reason_js.in_range loc1 loc2)
   then (
     state := Some (Gdmem (name, this_t))
   )
 
-let getdef_require (state, loc1) cx name loc2 =
+let getdef_require (state, loc1) _cx name loc2 =
   if (Reason_js.in_range loc1 loc2)
   then (
     state := Some (Gdrequire (name))

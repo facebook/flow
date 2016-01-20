@@ -159,10 +159,6 @@ let meta_fun cmap loc =
   ) SMap.empty annos in
   cmap, tmap
 
-let insert_before loc t = Loc.(
-  loc.start.line, loc.start.column, spf ": %s" t
-)
-
 let insert_before_with_suffix loc t suffix = Loc.(
   loc.start.line, loc.start.column, spf ": %s%s" t suffix
 )
@@ -177,8 +173,6 @@ let skip loc = Loc.(
     else loc._end.column - loc.start.column in
   loc.start.line, loc.start.column, string_of_int n
 )
-
-let concat_map f list = List.concat (List.map f list)
 
 (* concat_map with an accumulator *)
 let concat_fold f acc items =
@@ -244,31 +238,30 @@ and meta_fbody cmap loc params body =
   ]
 
 and meta_expression cmap = Ast.Expression.(function
-  | loc, Object { Object.properties } ->
+  | _, Object { Object.properties } ->
       concat_fold (fun cmap -> function
         | Object.Property (loc, {
-            Object.Property.value = (vloc, Function {
+            Object.Property.value = (_, Function {
               Function.params; body; _
             });
-            key = Ast.Expression.Object.Property.Identifier
-              (_, { Ast.Identifier.name; _ });
+            key = Ast.Expression.Object.Property.Identifier _;
             _
           }) ->
             meta_fbody cmap loc params body
 
-        | Object.Property (loc, { Object.Property.value = v ; _ }) ->
+        | Object.Property (_, { Object.Property.value = v ; _ }) ->
             meta_expression cmap v
 
         | _ -> cmap, [] (* TODO? *)
       ) cmap properties
 
-  | loc, Array { Array.elements } ->
+  | _, Array { Array.elements } ->
       concat_fold meta_array_element cmap elements
 
-  | loc, Call { Call.arguments; _ } ->
+  | _, Call { Call.arguments; _ } ->
       concat_fold meta_expression_or_spread cmap arguments
 
-  | loc, Assignment { Assignment.right; _ } ->
+  | _, Assignment { Assignment.right; _ } ->
       meta_expression cmap right
 
   | loc, Function { Function.params; body; _ }
@@ -278,26 +271,25 @@ and meta_expression cmap = Ast.Expression.(function
   | _ -> cmap, []
 )
 
-and meta_variable cmap (loc, vdecl) = Ast.Statement.VariableDeclaration.(
-  let { Declarator.id; init } = vdecl in
+and meta_variable cmap (_, vdecl) = Ast.Statement.VariableDeclaration.(
+  let { Declarator.init; _ } = vdecl in
   match init with
   | Some expr -> meta_expression cmap expr
   | None -> cmap, []
 )
 
 and meta_statement cmap = Ast.Statement.(function
-  | loc, VariableDeclaration { VariableDeclaration.declarations; _ } ->
+  | _, VariableDeclaration { VariableDeclaration.declarations; _ } ->
       concat_fold meta_variable cmap declarations
 
-  | loc, Expression { Expression.expression = e } ->
+  | _, Expression { Expression.expression = e } ->
       meta_expression cmap e
 
-  | loc, ClassDeclaration { Ast.Class.body; _ } ->
+  | _, ClassDeclaration { Ast.Class.body; _ } ->
       let _, { Ast.Class.Body.body = elements; _ } = body in
       concat_fold Ast.Class.(fun cmap -> function
         | Body.Method (loc, {
-            Method.key = Ast.Expression.Object.Property.Identifier (_,
-              { Ast.Identifier.name; _ });
+            Method.key = Ast.Expression.Object.Property.Identifier _;
             value = _, { Ast.Expression.Function.params; body; _ };
             kind = Method.Method | Method.Constructor;
             static = false;
@@ -315,7 +307,7 @@ and meta_statement cmap = Ast.Statement.(function
 
 and meta_body body cmap = Ast.Statement.(
   match body with
-    | FunctionDeclaration.BodyBlock (loc, { Block.body }) ->
+    | FunctionDeclaration.BodyBlock (_, { Block.body }) ->
         meta_statements cmap body
     | FunctionDeclaration.BodyExpression expr ->
         meta_expression cmap expr

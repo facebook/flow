@@ -155,7 +155,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "typeParam", json_of_typeparam json_cx tparam
     ]
 
-  | ExistsT tparam ->
+  | ExistsT _ ->
     []
 
   | MaybeT t -> [
@@ -467,7 +467,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 )
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
-and json_of_polarity_impl json_cx polarity =
+and json_of_polarity_impl _json_cx polarity =
   Hh_json.JSON_String (match polarity with
   | Negative -> "Negative"
   | Neutral -> "Neutral"
@@ -512,7 +512,7 @@ and json_of_dicttype_impl json_cx dicttype = Hh_json.(
 )
 
 and json_of_flags json_cx = check_depth json_of_flags_impl json_cx
-and json_of_flags_impl json_cx flags = Hh_json.(
+and json_of_flags_impl _json_cx flags = Hh_json.(
   JSON_Object [
     "frozen", JSON_Bool flags.frozen;
     "sealed", JSON_Bool (match flags.sealed with
@@ -523,7 +523,7 @@ and json_of_flags_impl json_cx flags = Hh_json.(
 )
 
 and json_of_changeset json_cx = check_depth json_of_changeset_impl json_cx
-and json_of_changeset_impl json_cx = Hh_json.(
+and json_of_changeset_impl _json_cx = Hh_json.(
 
   let json_of_entry_ref (scope_id, name, op) =
     JSON_Object [
@@ -625,7 +625,7 @@ and json_of_polarity_map_impl json_cx pmap = Hh_json.(
 )
 
 and json_of_propname json_cx = check_depth json_of_propname_impl json_cx
-and json_of_propname_impl json_cx (reason, literal) = Hh_json.(
+and json_of_propname_impl _json_cx (reason, literal) = Hh_json.(
   JSON_Object [
     "reason", json_of_reason reason;
     "literal", JSON_String literal;
@@ -678,7 +678,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
 ))
 
 and json_of_binary_test json_cx = check_depth json_of_binary_test_impl json_cx
-and json_of_binary_test_impl json_cx b = Hh_json.(
+and json_of_binary_test_impl _json_cx b = Hh_json.(
   JSON_Object ([
     "kind", JSON_String (string_of_binary_test_ctor b)
   ] @
@@ -744,7 +744,7 @@ and json_of_use_tkeys_impl json_cx tmap = Hh_json.(
 )
 
 and json_of_tvarkeys json_cx = check_depth json_of_tvarkeys_impl json_cx
-and json_of_tvarkeys_impl json_cx imap = Hh_json.(
+and json_of_tvarkeys_impl _json_cx imap = Hh_json.(
   JSON_Array (IMap.fold (fun i _ acc -> ((int_ i) :: acc)) imap [])
 )
 
@@ -863,17 +863,17 @@ and dump_t_ =
   (* we'll want to add more here *)
   let override stack cx t = match t with
     | OpenT (r, id) -> Some (dump_tvar stack cx r id)
-    | NumT (r, lit) -> Some (match lit with
+    | NumT (_, lit) -> Some (match lit with
         | Literal (_, raw) -> spf "NumT(%s)" raw
         | Truthy -> spf "NumT(truthy)"
         | Falsy -> spf "NumT(0)"
         | AnyLiteral -> "NumT")
-    | StrT (r, c) -> Some (match c with
+    | StrT (_, c) -> Some (match c with
         | Literal s -> spf "StrT(%S)" s
         | Truthy -> spf "StrT(truthy)"
         | Falsy -> spf "StrT(falsy)"
         | AnyLiteral -> "StrT")
-    | BoolT (r, c) -> Some (match c with
+    | BoolT (_, c) -> Some (match c with
         | Some b -> spf "BoolT(%B)" b
         | None -> "BoolT")
     | EmptyT _
@@ -893,7 +893,7 @@ and dump_use_t_ stack cx t = match t with
       spf "SetPropT(%s: %s)" n (dump_t_ stack cx t)
   | GetPropT (_, (_, n), t) ->
       spf "GetPropT(%s: %s)" n (dump_t_ stack cx t)
-  | LookupT (_, _, ts, n, t) ->
+  | LookupT (_, _, _, n, t) ->
       spf "LookupT(%s: %s)" n (dump_t_ stack cx t)
   | PredicateT (p, t) -> spf "PredicateT(%s | %s)"
       (string_of_predicate p) (dump_t_ stack cx t)
@@ -903,7 +903,7 @@ and dump_use_t_ stack cx t = match t with
 (* type variable dumper. abbreviates a few simple cases for readability.
    note: if we turn the tvar record into a datatype, these will give a
    sense of some of the obvious data constructors *)
-and dump_tvar stack cx r id = Constraint_js.(
+and dump_tvar stack cx _r id = Constraint_js.(
   let sbounds = if ISet.mem id stack then "(...)" else (
     let stack = ISet.add id stack in
     match IMap.find_unsafe id (Context.graph cx) with
@@ -987,7 +987,7 @@ and dump_use_tkeys stack cx tmap =
   ) ^ "]"
 
 (* dump the keys of a tvar map as a list *)
-and dump_tvarkeys cx self imap =
+and dump_tvarkeys _cx self imap =
   "[" ^ (
     String.concat "," (
       List.rev (
@@ -1062,3 +1062,12 @@ let string_of_scope cx scope = Scope.(
     (string_of_scope_entries cx scope.entries)
     (string_of_scope_refis cx scope.refis)
 )
+
+let debug_flow (l,u) =
+  spf "%s ~> %s" (string_of_ctor l) (string_of_use_ctor u)
+
+let debug_count =
+  let count = ref 0 in
+  fun f ->
+    incr count;
+    prerr_endlinef "[%d] %s" !count (f())

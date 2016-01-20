@@ -76,7 +76,7 @@ let scopes: Scope.t stack = ref []
  *)
 let exclude_symbols: SSet.t ref = ref SSet.empty
 
-let set_exclude_symbols cx syms =
+let set_exclude_symbols syms =
   exclude_symbols := syms
 
 let is_excluded name =
@@ -260,7 +260,7 @@ let trunc_env =
 
 (* initialize a new environment (once per module) *)
 let init_env ?(exclude_syms=SSet.empty) cx module_scope =
-  set_exclude_symbols cx exclude_syms;
+  set_exclude_symbols exclude_syms;
   havoc_current_activation ();
   let global_scope = Scope.fresh ~var_scope_kind:Global () in
   push_var_scope cx global_scope;
@@ -331,12 +331,12 @@ let cache_global cx name reason global_scope =
   Context.add_global cx name;
   global_scope, entry
 
-let local_scope_entry_exists cx name =
+let local_scope_entry_exists name =
   let rec loop = function
     | [] -> assert_false "empty scope list"
     | scope::scopes ->
         match Scope.get_entry name scope with
-        | Some entry -> true
+        | Some _ -> true
         | None ->
             match scopes with
             | [] -> false
@@ -672,7 +672,7 @@ let pseudo_init_declared_type cx name reason =
 let same_activation target =
   let rec loop target = function
   | [] -> assert_false "target scope not found"
-  | scope :: scopes when scope.id = target.id ->
+  | scope :: _ when scope.id = target.id ->
     (* target is nearer than (or actually is) nearest VarScope *)
     true
   | scope :: scopes ->
@@ -731,7 +731,7 @@ let read_entry ~lookup_mode ~specific cx name reason =
   let scope, entry = find_entry cx name reason in
   Entry.(match entry with
 
-  | Type { type_loc; _ } when lookup_mode != ForType ->
+  | Type _ when lookup_mode != ForType ->
     let msg = "type referenced from value position" in
     binding_error msg cx name entry reason;
     AnyT.at (Entry.loc entry)
@@ -862,7 +862,7 @@ let envs_congruent envs =
    envs are assumed congruent amd assumed to contain scope id *)
 let rec find_scope cx reason envs scope_id =
   match envs with
-  | (scope0 :: tail0) :: _ ->
+  | (scope0 :: _) :: _ ->
     if scope0.id = scope_id
     then List.(map hd envs)
     else find_scope cx reason List.(map tl envs) scope_id
@@ -1160,7 +1160,7 @@ let reset_current_activation reason =
 let havoc_vars = Scope.(
 
   (* clear specific info for (topmost binding of) given var in env *)
-  let havoc_entry (scope_id, name, _) =
+  let havoc_entry (_, name, _) =
     let rec loop = function
     | [] -> ()
     | scope :: scopes ->
@@ -1174,12 +1174,12 @@ let havoc_vars = Scope.(
   in
 
   (* clear refinement for (topmost binding of) given key in env *)
-  let havoc_refi (scope_id, key, _) =
+  let havoc_refi (_, key, _) =
     let rec loop = function
     | [] -> ()
     | scope :: scopes ->
       match get_refi key scope with
-      | Some binding ->
+      | Some _ ->
         remove_refi key scope
       | None ->
         loop scopes
@@ -1214,7 +1214,7 @@ let havoc_heap_refinements_with_propname name =
    (broadly, assignment of function values) may provoke havoc_ctx
    into clearing the refinement we're in the process of installing.
  *)
-let add_heap_refinement op cx key reason refined original =
+let add_heap_refinement op key reason refined original =
   let refi_loc = loc_of_reason reason in
   let refi = { refi_loc; refined; original } in
   let base, _ = key in
@@ -1274,7 +1274,7 @@ let refine_with_preds cx reason preds orig_types =
       in
       let orig_type = KeyMap.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
-      refine_expr cx key refi_reason refi_type orig_type
+      refine_expr key refi_reason refi_type orig_type
 
   in
   preds |> KeyMap.iter refine_with_pred

@@ -54,7 +54,7 @@ and get_identifier_id = function
 (* returns argument of a require expression *)
 and get_identifier_require = Expression.(function
   | _, Call {Call. arguments; _ } -> get_identifier_arguments arguments
-  | loc, _ -> None
+  | _, _ -> None
 )
 
 (* return argument from a singleton list of arguments *)
@@ -78,12 +78,6 @@ and get_identifier_let = Expression.(function
 
 and get_identifier_literal = function
   | {Literal. raw; _ } -> Some raw
-
-let same_name x y =
-  let x = get_identifier x in
-  let y = get_identifier y in
-  if x = None || y = None then false
-  else x = y
 
 (* returns body of an interface or type of a variable in object form.
    returns None for anything else. *)
@@ -382,7 +376,7 @@ and module_used_statement acc = Statement.(function
         "Only single declarator handled currently"
     )
   (* This case means that the child modules are imported by default.*)
-  | _, ModuleDeclaration { Module.id; body; } ->
+  | _, ModuleDeclaration { Module.id; _ } ->
     SSet.add (get_name [] id) acc
   (* This case check for possible module references in export
        assignments. Note this does not look for object notation. Eg.,
@@ -466,10 +460,7 @@ and module_used_generic acc = Type.(function
 )
 
 and module_used_ids acc = function
-  | [x] -> acc
-  | x :: xs ->  ( match x with
-    | _, {Identifier. name; _ } -> SSet.add name acc
-  )
+  | (_, {Identifier. name; _ })::_ -> SSet.add name acc
   | _ -> acc
 
 (* This is for checking module use within an object body *)
@@ -592,7 +583,7 @@ and collect_names_statement acc = Statement.(function
     collect_names_id acc id
   | _, InterfaceDeclaration { Interface. id; _ } ->
     collect_names_id acc id
-  | _, EnumDeclaration { Enum. name; members } ->
+  | _, EnumDeclaration { Enum.name; _ } ->
     collect_names_id acc name
   | _ -> acc
 )
@@ -640,7 +631,7 @@ let rec program fmt (_, stmts, _) =
           somewhat hidden.
     *)
     (list_ ~sep:"" (import_module true)) list_modules_used
-    (statements true scope prefix) not_modules
+    (statements true scope) not_modules
 
 (*
   print_modules calls print_module in a DFS order. It can easily be
@@ -691,7 +682,7 @@ and print_dfs_module prefix imports scope fmt x =
     let name, names = collect_names x in
     let set_names = Utils.set_of_list names in
     let imports =
-      List.filter (fun (x, y) -> not (SSet.mem x set_names)) imports in
+      List.filter (fun (x, _) -> not (SSet.mem x set_names)) imports in
     let name_names = List.map (fun x -> x, name) names in
     let expanded_imports = List.rev_append name_names imports in
     let new_prefix, new_scope, child_modules =
@@ -731,7 +722,7 @@ and print_module scope imports prefix fmt = Statement.(function
       (spf "// Module declared on line %d in .d.ts file" (get_line_number loc))
       (generate_mangled_name name prefix)
       print_header ()
-      (statements false new_scope new_prefix) (filter_not_modules body)
+      (statements false new_scope) (filter_not_modules body)
 
   | loc, ExportModuleDeclaration { ExportModule.name; body; } ->
     (* ExportModuleDeclaration is allowed only in global scope, that
@@ -754,7 +745,7 @@ and print_module scope imports prefix fmt = Statement.(function
           (get_line_number loc))
         name
         print_header ()
-        (statements false scope prefix) (filter_not_modules body)
+        (statements false scope) (filter_not_modules body)
 
   | loc, _ -> failwith_location loc "Module declaration expected here"
 )
@@ -765,7 +756,7 @@ and print_module scope imports prefix fmt = Statement.(function
   "if_true is_global scope" retuns "scope" iff current scope is global.
 *)
 
-and squash x y is_global scope prefix fmt =
+and squash x y is_global scope fmt =
   Statement.(match x, y with
   | (_, InterfaceDeclaration {
       Interface.id; extends; typeParameters; _
@@ -783,16 +774,16 @@ and squash x y is_global scope prefix fmt =
     "Unsupported elements with same name."
   )
 
-and statements is_global scope prefix =
-  look_ahead ~sep:"" (statement is_global scope prefix)
+and statements is_global scope =
+  look_ahead ~sep:"" (statement is_global scope)
 
-and statement is_global scope prefix fmt =
+and statement is_global scope fmt =
   Statement.(function
   (* This case sqashes a variable with the following interface
      with same name, or vice versa *)
   | ((_, VariableDeclaration _) as y), Some x
   | ((_, InterfaceDeclaration _) as x), Some y ->
-    squash x y is_global scope prefix fmt
+    squash x y is_global scope fmt
 
   | (_, VariableDeclaration { VariableDeclaration.
       declarations; _
@@ -873,7 +864,7 @@ and statement is_global scope prefix fmt =
 
      TODO: handle other import notations as well.
   *)
-  | (loc, ImportDeclaration {Import. id; entity; _} ), _ ->
+  | (_, ImportDeclaration {Import. id; entity; _} ), _ ->
       (import_module false) fmt (
         contents (get_identifier_id id),
         strip_quotes (contents (get_identifier_require entity))
@@ -881,7 +872,7 @@ and statement is_global scope prefix fmt =
   (* The following handles type aliases.
      Eg. : type T = number | string;
   *)
-  | (loc, TypeAlias {TypeAlias.left; right } ), _ ->
+  | (_, TypeAlias {TypeAlias.left; right } ), _ ->
     let scope = (if_true is_global scope) in
     fprintf fmt "@[<hv>declare type %a = %a;@]"
       (generic_type []) (snd left)
@@ -1019,7 +1010,7 @@ and extends_interface scope fmt = function
 
 (* implements_class currently does nothing, uncomment the commented
    lines when "implements" is supported on the flow side *)
-and implements_class scope fmt = function
+and implements_class _scope _fmt = function
 (*  | [] -> ()
   | [_, t] ->
       fprintf fmt "@[ implements %a@]"

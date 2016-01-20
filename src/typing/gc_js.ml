@@ -397,10 +397,10 @@ and gc_typeparam cx state typeparam =
   gc cx state typeparam.bound
 
 and gc_selector cx state = function
-  | Prop x -> ()
+  | Prop _ -> ()
   | Elem key -> gc cx state key
-  | ObjRest xs -> ()
-  | ArrRest i -> ()
+  | ObjRest _ -> ()
+  | ArrRest _ -> ()
 
 and gc_pred cx state = function
 

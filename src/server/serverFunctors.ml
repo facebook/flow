@@ -19,17 +19,17 @@ exception State_not_found
 module type SERVER_PROGRAM = sig
   val preinit : unit -> unit
   val init : genv -> env -> (FlowEventLogger.Timing.t * env)
-  val run_once_and_exit : genv -> env -> unit
+  val run_once_and_exit : env -> unit
   val should_recheck : Path.t -> bool
   (* filter and relativize updated file paths *)
-  val process_updates : genv -> env -> SSet.t -> ServerEnv.PathSet.t
+  val process_updates : genv -> SSet.t -> ServerEnv.PathSet.t
   val recheck: genv -> env -> ServerEnv.PathSet.t -> env
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
   val name: string
   val config_path : Path.t -> Path.t
   val validate_config : genv -> bool
-  val handle_client : genv -> env -> client -> unit
+  val handle_client : genv -> client -> unit
 end
 
 let grab_lock ~tmp_dir root =
@@ -87,8 +87,7 @@ end = struct
     Flow_logger.log "Initializing Server (This might take some time)";
     grab_init_lock ~tmp_dir root;
     wakeup_client waiting_channel "starting";
-    (* note: we only run periodical tasks on the root, not extras *)
-    ServerPeriodical.init root;
+    ServerPeriodical.init ();
     let env = init_fun () in
     release_init_lock ~tmp_dir root;
     wakeup_client waiting_channel "ready";
@@ -110,7 +109,7 @@ end = struct
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
     ready_socket_l <> []
 
-  let handle_connection_ genv env socket =
+  let handle_connection_ genv socket =
     let cli, _ = Unix.accept socket in
     let ic = Unix.in_channel_of_descr cli in
     let oc = Unix.out_channel_of_descr cli in
@@ -127,7 +126,7 @@ end = struct
         FlowExitStatus.exit FlowExitStatus.Build_id_mismatch
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
-      Program.handle_client genv env client
+      Program.handle_client genv client
     with
     | Sys_error("Broken pipe") ->
       shutdown_client (ic, oc)
@@ -138,9 +137,9 @@ end = struct
       Printexc.print_backtrace stderr;
       shutdown_client (ic, oc)
 
-  let handle_connection genv env socket =
+  let handle_connection genv socket =
     ServerPeriodical.stamp_connection ();
-    try handle_connection_ genv env socket
+    try handle_connection_ genv socket
     with
     | Unix.Unix_error (e, _, _) ->
         Printf.fprintf stderr "Unix error: %s\n" (Unix.error_message e);
@@ -181,7 +180,7 @@ end = struct
   let rec recheck_loop i rechecked_count genv env =
     let raw_updates = DfindLib.get_changes (unsafe_opt genv.dfind) in
     if SSet.is_empty raw_updates then i, rechecked_count, env else begin
-      let updates = Program.process_updates genv env raw_updates in
+      let updates = Program.process_updates genv raw_updates in
       let env, rechecked = recheck genv env updates in
       let rechecked_count = rechecked_count +
         (ServerEnv.PathSet.cardinal rechecked) in
@@ -207,9 +206,9 @@ end = struct
       end;
       ServerPeriodical.call_before_sleeping();
       let has_client = sleep_and_check socket in
-      let loop_count, rechecked_count, new_env = recheck_loop genv !env in
+      let _, _, new_env = recheck_loop genv !env in
       env := new_env;
-      if has_client then handle_connection genv !env socket;
+      if has_client then handle_connection genv socket;
       ServerEnv.invoke_async_queue ();
       EventLogger.flush ();
     done
@@ -248,11 +247,11 @@ end = struct
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
       ServerEnvBuild.make_genv ~multicore:true options watch_paths in
-    let env = ServerEnvBuild.make_env options in
+    let env = ServerEnvBuild.make_env () in
     let program_init = create_program_init genv env in
     if is_check_mode then
       let env = program_init () in
-      Program.run_once_and_exit genv env
+      Program.run_once_and_exit env
     else
       (* Open up a server on the socket before we go into MainInit -- the client
       * will try to connect to the socket as soon as we lock the init lock. We

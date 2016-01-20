@@ -197,19 +197,22 @@ module Check = struct
   module OptionParser = OptionParser (struct let mode = Check end)
   module Main = Main (OptionParser)
   let spec = OptionParser.spec
-  let command = CommandSpec.raw_command spec (fun argv -> Main.start ())
+  (* ignores argv because OptionParser grabs it directly *)
+  let command = CommandSpec.raw_command spec (fun _ -> Main.start ())
 end
 
 module Server = struct
   module OptionParser = OptionParser (struct let mode = Server end)
   module Main = Main (OptionParser)
   let spec = OptionParser.spec
-  let command = CommandSpec.raw_command spec (fun argv -> Main.start ())
+  (* ignores argv because OptionParser grabs it directly *)
+  let command = CommandSpec.raw_command spec (fun _ -> Main.start ())
 end
 
 module Start = struct
   module OptionParser = OptionParser (struct let mode = Detach end)
   module Main = Main (OptionParser)
   let spec = OptionParser.spec
-  let command = CommandSpec.raw_command spec (fun argv -> Main.start ())
+  (* ignores argv because OptionParser grabs it directly *)
+  let command = CommandSpec.raw_command spec (fun _ -> Main.start ())
 end

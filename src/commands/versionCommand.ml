@@ -33,7 +33,7 @@ let spec = {
   )
 }
 
-let main json from root () =
+let main json from _root () =
   FlowEventLogger.set_from from;
   if json
   then begin

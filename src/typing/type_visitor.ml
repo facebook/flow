@@ -146,10 +146,10 @@ class ['a] t = object(self)
     acc
 
   method private selector cx acc = function
-  | Prop x -> acc
+  | Prop _ -> acc
   | Elem key -> self#type_ cx acc key
-  | ObjRest xs -> acc
-  | ArrRest i -> acc
+  | ObjRest _ -> acc
+  | ArrRest _ -> acc
 
   method private use_type_ cx acc = function
   | UseT t ->
@@ -209,7 +209,7 @@ class ['a] t = object(self)
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,
      handle Resolved and Unresolved cases, etc. *)
-  method id_ cx acc id = acc
+  method id_ _cx acc _id = acc
 
   method private dict_ cx acc { key; value; _ } =
     let acc = self#type_ cx acc key in
@@ -241,7 +241,7 @@ class ['a] t = object(self)
     let acc = self#opt (self#type_ cx) acc cjs_export in
     acc
 
-  method private __TODO__ cx acc = acc
+  method private __TODO__ _cx acc = acc
 
   method private list: 't. ('a -> 't -> 'a) -> 'a -> 't list -> 'a =
     List.fold_left

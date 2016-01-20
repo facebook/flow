@@ -646,7 +646,7 @@ end = struct
                   (intersection_with env
                     (postfix_with env (fst name, t)))
               ))
-      | t ->
+      | _ ->
           (* All params start with an identifier or ... *)
           Type (_type env)
       in
@@ -2473,7 +2473,7 @@ end = struct
       | _ when Peek.identifier env ->
           let id = Parse.identifier env in
           Expr (fst id, Expression.Identifier id)
-      | t ->
+      | _ ->
           error_unexpected env;
           (* Let's get rid of the bad token *)
           (* if t = T_ERROR

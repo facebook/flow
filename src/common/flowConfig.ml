@@ -92,7 +92,7 @@ module Opts = struct
         SMap.elements raw_opts
         |> List.map (fun (k, v) ->
           let msg = spf "Unsupported option specified! (%s)" k in
-          List.map (fun (line_num, value) -> (line_num, msg)) v
+          List.map (fun (line_num, _) -> (line_num, msg)) v
         )
         |> List.flatten
         |> List.rev
@@ -145,7 +145,7 @@ module Opts = struct
     fun config lines ->
       let lines = lines
         |> List.map (fun (ln, line) -> ln, String.trim line)
-        |> List.filter (fun (ln, s) -> s <> "")
+        |> List.filter (fun (_, s) -> s <> "")
       in
       let raw_options = List.fold_left parse_line SMap.empty lines in
       (raw_options, config)
@@ -407,7 +407,7 @@ let fixup_path p =
         loop revbase t
     | h :: t when h = Filename.parent_dir_name -> (
         match revbase with
-        | rh :: rt -> loop rt t
+        | _ :: rt -> loop rt t
         | _ -> loop (h :: revbase) t
       )
     | h :: t -> loop (h :: revbase) t
@@ -428,7 +428,7 @@ let make_path_absolute config path =
    include_map (a map from stems to (spec, regex) pairs *)
 let parse_includes config lines =
   let includes = lines
-    |> List.map (fun (ln, line) -> String.trim line)
+    |> List.map (fun (_, line) -> String.trim line)
     |> List.filter (fun s -> s <> "")
     |> List.map (make_path_absolute config)
     |> List.map fixup_path
@@ -452,13 +452,13 @@ let parse_includes config lines =
 let rec find_prefix f = function
 | [] -> None
 | h :: _ when str_starts_with f (Path.to_string h) -> Some h
-| h :: t -> find_prefix f t
+| _ :: t -> find_prefix f t
 
 (* find a match for f in a list of patterns, or none *)
 let rec match_patt f = function
 | [] -> None
 | (path, patt) :: _ when Str.string_match patt f 0 -> Some path
-| (path, patt) :: t -> match_patt f t
+| (_, _) :: t -> match_patt f t
 
 (* try to find a match for f in our include paths *)
 let is_included config f =
@@ -475,22 +475,20 @@ let is_excluded config =
 
 let parse_libs config lines =
   let libs = lines
-  |> List.map (fun (ln, line) -> String.trim line)
+  |> List.map (fun (_, line) -> String.trim line)
   |> List.filter (fun s -> s <> "")
   |> List.map (make_path_absolute config) in
   { config with libs; }
 
 let parse_excludes config lines =
   let excludes = lines
-  |> List.map (fun (ln, line) -> String.trim line)
+  |> List.map (fun (_, line) -> String.trim line)
   |> List.filter (fun s -> s <> "")
   |> List.map (fun s ->
     (* On Windows, we have to take care about '\'. *)
     let reg = Str.regexp (Str.global_replace (Str.regexp "/") "[/\\]" s) in
     (s, reg)) in
   { config with excludes; }
-
-let file_extension = Str.regexp "^\\(\\.[^ \t]+\\)+$"
 
 let parse_options config lines =
   let open Opts in
@@ -588,7 +586,7 @@ let parse_options config lines =
         ((Str.regexp pattern, template), str)
       );
       setter = (fun opts v ->
-        let (v, str) = v in
+        let (v, _) = v in
         let module_name_mappers = v :: opts.module_name_mappers in
         {opts with module_name_mappers;}
       );
@@ -713,14 +711,14 @@ let assert_version (ln, line) =
 let parse_version config lines =
   lines
     |> List.map (fun (ln, line) -> ln, String.trim line)
-    |> List.filter (fun (ln, s) -> s <> "")
+    |> List.filter (fun (_, s) -> s <> "")
     |> List.iter assert_version;
   config
 
 let parse_section config ((section_ln, section), lines) =
   match section, lines with
   | "", [] when section_ln = 0 -> config
-  | "", (ln, line)::lines when section_ln = 0 ->
+  | "", (ln, _)::_ when section_ln = 0 ->
       error ln "Unexpected config line not in any section"
   | "include", _ -> parse_includes config lines
   | "ignore", _ -> parse_excludes config lines

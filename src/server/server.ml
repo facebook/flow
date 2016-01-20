@@ -56,7 +56,7 @@ struct
     SearchService_js.update_from_master files;
     timing, env
 
-  let run_once_and_exit genv env =
+  let run_once_and_exit env =
     match env.ServerEnv.errorl with
       | [] -> FlowExitStatus.(exit Ok)
       | _ -> FlowExitStatus.(exit Type_error)
@@ -68,8 +68,8 @@ struct
     Flow_logger.log     "%s is out of date. Exiting." name;
     FlowExitStatus.(exit Server_out_of_date)
 
-  let status_log env =
-    if List.length (Types_js.get_errors ()) = 0
+  let status_log errors =
+    if List.length errors = 0
     then Flow_logger.log "Status: OK"
     else Flow_logger.log "Status: Error";
     flush stdout
@@ -83,7 +83,7 @@ struct
     end;
     flush oc
 
-  let print_status genv env client_root oc =
+  let print_status genv client_root oc =
     let server_root = Options.root genv.options in
     if server_root <> client_root
     then begin
@@ -101,9 +101,9 @@ struct
       FlowExitStatus.(exit Server_client_directory_mismatch)
     end;
     flush stdout;
-    (* TODO: check status.directory *)
-    status_log env;
     let errors = Types_js.get_errors () in
+    (* TODO: check status.directory *)
+    status_log errors;
     FlowEventLogger.status_response (Errors_js.json_of_errors errors);
     send_errorl errors oc
 
@@ -409,16 +409,12 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let not_supported oc =
-    output_string oc "Not supported\n";
-    flush oc
-
   let search query oc =
     let results = SearchService_js.query query in
     Marshal.to_channel oc results [];
     flush oc
 
-  let respond genv env ~client ~msg =
+  let respond genv ~client ~msg =
     let oc = client.oc in
     let { ServerProt.client_logging_context; command; } = msg in
     match command with
@@ -449,13 +445,13 @@ struct
     | ServerProt.SEARCH query ->
         search query oc
     | ServerProt.STATUS client_root ->
-        print_status genv env client_root oc
+        print_status genv client_root oc
     | ServerProt.SUGGEST (files) ->
         suggest files oc
 
-  let handle_client genv env client =
+  let handle_client genv client =
     let msg = ServerProt.cmd_from_channel client.ic in
-    respond genv env ~client ~msg;
+    respond genv ~client ~msg;
     client.close ()
 
   let get_watch_paths options =
@@ -465,7 +461,7 @@ struct
   (* filter a set of updates coming from dfind and return
      a ServerEnv.PathSet. updates may be coming in from
      the root, or an include path. *)
-  let process_updates genv env updates =
+  let process_updates genv updates =
     let root = Options.root (genv.ServerEnv.options) in
     let config = FlowConfig.get root in
     let is_flow_file =

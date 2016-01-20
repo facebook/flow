@@ -94,7 +94,7 @@ module LookupMode: sig
   type t = ForValue | ForType | ForTypeof
 end
 
-val local_scope_entry_exists: Context.t -> string -> bool
+val local_scope_entry_exists: string -> bool
 
 val get_var:
   ?lookup_mode:LookupMode.t ->
@@ -119,7 +119,7 @@ val var_ref:
 
 val set_var: Context.t -> string -> Type.t -> reason -> unit
 
-val set_expr: Context.t -> Key.t -> reason -> Type.t -> Type.t -> unit
+val set_expr: Key.t -> reason -> Type.t -> Type.t -> unit
 
 val refine_with_preds:
   Context.t ->

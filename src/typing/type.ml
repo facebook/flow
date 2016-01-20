@@ -737,9 +737,9 @@ and reason_of_use_t = function
   | ReposLowerT (reason, _)
       -> reason
 
-  | PredicateT (pred,t) -> reason_of_t t
+  | PredicateT (_, t) -> reason_of_t t
 
-  | EqT (reason, t) ->
+  | EqT (reason, _) ->
       reason
 
   | SpecializeT(reason,_,_,_)
@@ -777,7 +777,7 @@ and reason_of_use_t = function
   | ConcretizeT (t, _, _, _) -> reason_of_t t
   | ConcreteT (t) -> reason_of_use_t t
 
-  | SummarizeT (reason, t) -> reason
+  | SummarizeT (reason, _) -> reason
 
   | CJSRequireT (reason, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
@@ -806,8 +806,8 @@ let desc_of_t t = desc_of_reason (reason_of_t t)
 let loc_of_t t = loc_of_reason (reason_of_t t)
 
 let rec loc_of_predicate = function
-  | AndP (p1,p2)
-  | OrP (p1,p2)
+  | AndP (p1, _)
+  | OrP (p1, _)
     -> loc_of_predicate p1
 
   | NotP p

@@ -30,3 +30,6 @@ val string_of_scope_refis:
 val string_of_scope: Context.t -> Scope.t -> string
 
 val dump_t: Context.t -> Type.t -> string
+
+val debug_flow: Type.t * Type.use_t -> string
+val debug_count: (unit -> string) -> unit

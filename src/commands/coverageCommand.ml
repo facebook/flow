@@ -57,7 +57,7 @@ let handle_error ~json (loc, err) strip =
 
 let is_covered ctor = ctor <> "AnyT" && ctor <> "UndefT"
 
-let accum_coverage (covered, total) (loc, ctor, str, reasons) =
+let accum_coverage (covered, total) (_loc, ctor, _str, _reasons) =
   if is_covered ctor
   then (covered + 1, total + 1)
   else (covered, total + 1)
@@ -68,7 +68,7 @@ let colorize content from_offset to_offset color accum =
     (Tty.Normal color, substr)::accum, to_offset
   else accum, from_offset
 
-let debug_range (loc, ctor, str, reasons) = Loc.(
+let debug_range (loc, ctor, str, _reasons) = Loc.(
   Utils.prerr_endlinef "%d:%d,%d:%d: %s (%s)"
     loc.start.line loc.start.column
     loc._end.line loc._end.column
@@ -78,7 +78,7 @@ let debug_range (loc, ctor, str, reasons) = Loc.(
 
 let rec colorize_file content last_offset accum = Loc.(function
   | [] -> colorize content last_offset (String.length content) Tty.Default accum
-  | (loc, ctor, str, reasons)::rest ->
+  | (loc, ctor, _str, _reasons)::rest ->
     let offset, end_offset = loc.start.offset, loc._end.offset in
 
     (* catch up to the start of this range *)
@@ -152,7 +152,7 @@ let rec split_overlapping_ranges accum = Loc.(function
       split_overlapping_ranges accum todo
 )
 
-let handle_response ~json ~color ~debug types content strip =
+let handle_response ~json ~color ~debug types content =
   if debug then List.iter debug_range types;
 
   begin if color then
@@ -193,9 +193,7 @@ let main option_values root json color debug strip_root path filename () =
   | (Some err, None) -> handle_error ~json err (relativize strip_root root)
   | (None, Some resp) ->
       let content = ServerProt.file_input_get_content file in
-      handle_response
-        ~json ~color ~debug
-        resp content (relativize strip_root root)
+      handle_response ~json ~color ~debug resp content
   | (_, _) -> assert false
 
 let command = CommandSpec.command spec main

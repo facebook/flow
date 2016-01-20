@@ -51,9 +51,9 @@ let summarize cx t = match t with
      optimization in that they avoid creation of fresh type
      variables. Semantically, we could have the above case fire unconditionally,
      since the fresh type variable is unified in all cases. *)
-  | StrT (reason, AnyLiteral) -> t
+  | StrT (_, AnyLiteral) -> t
   | StrT (reason, _) -> StrT.why reason
-  | NumT (reason, AnyLiteral) -> t
+  | NumT (_, AnyLiteral) -> t
   | NumT (reason, _) -> NumT.why reason
   | _ -> t
 
@@ -250,7 +250,7 @@ let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
     lower and upper bounds). **)
 
 let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(function
-  | loc, Array { Array.elements; _; } -> Array.(
+  | _, Array { Array.elements; _; } -> Array.(
       elements |> List.iteri (fun i -> function
         | Some (Element ((loc, _) as p)) ->
             let key = NumT (
@@ -288,7 +288,7 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
       )
     )
 
-  | loc, Object { Object.properties; _; } -> Object.(
+  | _, Object { Object.properties; _; } -> Object.(
       let xs = ref [] in
       properties |> List.iter (function
         | Property (loc, prop) ->
@@ -363,13 +363,13 @@ and error_destructuring cx loc =
   Flow_js.add_error cx [mk_reason "" loc, msg]
 
 and type_of_pattern = Ast.Pattern.(function
-  | loc, Array { Array.typeAnnotation; _; } -> typeAnnotation
+  | _, Array { Array.typeAnnotation; _; } -> typeAnnotation
 
-  | loc, Object { Object.typeAnnotation; _; } -> typeAnnotation
+  | _, Object { Object.typeAnnotation; _; } -> typeAnnotation
 
-  | loc, Identifier (_, { Ast.Identifier.typeAnnotation; _; }) -> typeAnnotation
+  | _, Identifier (_, { Ast.Identifier.typeAnnotation; _; }) -> typeAnnotation
 
-  | loc, _ -> None
+  | _, _ -> None
 )
 
 (* instantiate pattern visitor for assignments *)
@@ -456,7 +456,7 @@ let rec convert cx type_params_map = Ast.Type.(function
 
   | loc, Boolean -> BoolT.at loc
 
-  | loc, Nullable t -> MaybeT (convert cx type_params_map t)
+  | _, Nullable t -> MaybeT (convert cx type_params_map t)
 
   | loc, Union ts ->
       let ts = List.map (convert cx type_params_map) ts in
@@ -468,7 +468,7 @@ let rec convert cx type_params_map = Ast.Type.(function
 
   | loc, Typeof x ->
       (match x with
-      | (loc, Generic {
+      | (_, Generic {
           Generic.id = qualification;
           typeParameters = None
         }) ->
@@ -888,7 +888,7 @@ and mk_type cx type_params_map reason = function
 
 and mk_type_annotation cx type_params_map reason = function
   | None -> mk_type cx type_params_map reason None
-  | Some (loc, typeAnnotation) -> mk_type cx type_params_map reason (Some typeAnnotation)
+  | Some (_, typeAnnotation) -> mk_type cx type_params_map reason (Some typeAnnotation)
 
 (* Model a set of keys as the union of their singleton types. *)
 and mk_keys_type reason keys =
@@ -1081,7 +1081,7 @@ end = struct
     params.list |> List.rev |> List.iter (function
       | Simple (_, b)
       | Rest (_, b) -> f b
-      | Complex (t, bs) -> List.iter f bs)
+      | Complex (_, bs) -> List.iter f bs)
 
   let with_default name f params =
     match SMap.get name params.defaults with
@@ -1123,7 +1123,7 @@ type class_signature = {
  * in prep for main pass
  ********************************************************************)
 
-let rec variable_decl cx type_params_map loc entry = Ast.Statement.(
+let rec variable_decl cx type_params_map entry = Ast.Statement.(
   let value_kind, bind = match entry.VariableDeclaration.kind with
     | VariableDeclaration.Const -> Scope.Entry.Const, Env_js.bind_const
     | VariableDeclaration.Let -> Scope.Entry.Let None, Env_js.bind_let
@@ -1132,7 +1132,7 @@ let rec variable_decl cx type_params_map loc entry = Ast.Statement.(
 
   let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
 
-  let declarator loc = Ast.(function
+  let declarator = Ast.(function
     | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
       let r = mk_reason (spf "%s `%s`" str_of_kind name) loc in
       let t = mk_type_annotation cx type_params_map r typeAnnotation in
@@ -1150,7 +1150,7 @@ let rec variable_decl cx type_params_map loc entry = Ast.Statement.(
   ) in
 
   VariableDeclaration.(entry.declarations |> List.iter (function
-    | (loc, { Declarator.id; _; }) -> declarator loc id
+    | (_, { Declarator.id; _; }) -> declarator id
   ));
 )
 
@@ -1172,57 +1172,57 @@ and statement_decl cx type_params_map = Ast.Statement.(
 
   function
 
-  | (loc, Empty) -> ()
+  | (_, Empty) -> ()
 
-  | (loc, Block b) ->
+  | (_, Block b) ->
       block_body cx b
 
-  | (loc, Expression _) -> ()
+  | (_, Expression _) -> ()
 
-  | (loc, If { If.test; consequent; alternate }) ->
+  | (_, If { If.consequent; alternate; _ }) ->
       statement_decl cx type_params_map consequent;
       (match alternate with
         | None -> ()
         | Some st -> statement_decl cx type_params_map st
       )
 
-  | (loc, Labeled { Labeled.label; body }) ->
+  | (_, Labeled { Labeled.body; _ }) ->
       statement_decl cx type_params_map body
 
-  | (loc, Break _) -> ()
+  | (_, Break _) -> ()
 
-  | (loc, Continue _) -> ()
+  | (_, Continue _) -> ()
 
-  | (loc, With _) ->
+  | (_, With _) ->
       (* TODO disallow or push vars into env? *)
       ()
-  | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
+  | (_, TypeAlias { TypeAlias.id; _ } ) ->
       let name_loc, { Ast.Identifier.name; _ } = id in
       let r = DescFormat.type_reason name name_loc in
       let tvar = Flow_js.mk_tvar cx r in
       Env_js.bind_type cx name tvar r
 
-  | (loc, Switch { Switch.discriminant; cases; lexical }) ->
+  | (_, Switch { Switch.cases; _ }) ->
       (* TODO: ensure that default is last *)
       Env_js.in_lex_scope cx (fun () ->
-        List.iter (fun (loc, { Switch.Case.test; consequent }) ->
+        List.iter (fun (_, { Switch.Case.consequent; _ }) ->
           toplevel_decls cx type_params_map consequent
         ) cases
       )
 
-  | (loc, Return _) -> ()
+  | (_, Return _) -> ()
 
-  | (loc, Throw _) -> ()
+  | (_, Throw _) -> ()
 
-  | (loc, Try { Try.block = (_, b); handler; guardedHandlers; finalizer }) ->
+  | (_, Try { Try.block = (_, b); handler; guardedHandlers; finalizer }) ->
       block_body cx b;
 
       (match handler with
         | None -> ()
-        | Some (loc, h) -> catch_clause cx h
+        | Some (_, h) -> catch_clause cx h
       );
 
-      List.iter (fun (loc, h) ->
+      List.iter (fun (_, h) ->
         catch_clause cx h
       ) guardedHandlers;
 
@@ -1231,47 +1231,47 @@ and statement_decl cx type_params_map = Ast.Statement.(
         | Some (_, b) -> block_body cx b
       )
 
-  | (loc, While { While.test; body }) ->
+  | (_, While { While.body; _ }) ->
       statement_decl cx type_params_map body
 
-  | (loc, DoWhile { DoWhile.body; test }) ->
+  | (_, DoWhile { DoWhile.body; _ }) ->
       statement_decl cx type_params_map body
 
-  | (loc, For { For.init; test; update; body }) ->
+  | (_, For { For.init; body; _ }) ->
       Env_js.in_lex_scope cx (fun () ->
         (match init with
-          | Some (For.InitDeclaration (loc, decl)) ->
-              variable_decl cx type_params_map loc decl
+          | Some (For.InitDeclaration (_, decl)) ->
+              variable_decl cx type_params_map decl
           | _ -> ()
         );
         statement_decl cx type_params_map body
       )
 
-  | (loc, ForIn { ForIn.left; right; body; each }) ->
+  | (_, ForIn { ForIn.left; body; _ }) ->
       Env_js.in_lex_scope cx (fun () ->
         (match left with
-          | ForIn.LeftDeclaration (loc, decl) ->
-              variable_decl cx type_params_map loc decl
+          | ForIn.LeftDeclaration (_, decl) ->
+              variable_decl cx type_params_map decl
           | _ -> ()
         );
         statement_decl cx type_params_map body
       )
 
-  | (loc, ForOf { ForOf.left; right; body; }) ->
+  | (_, ForOf { ForOf.left; body; _ }) ->
       Env_js.in_lex_scope cx (fun () ->
         (match left with
-          | ForOf.LeftDeclaration (loc, decl) ->
-              variable_decl cx type_params_map loc decl
+          | ForOf.LeftDeclaration (_, decl) ->
+              variable_decl cx type_params_map decl
           | _ -> ()
         );
         statement_decl cx type_params_map body
       )
 
-  | (loc, Let _) ->
+  | (_, Let _) ->
       (* TODO *)
       ()
 
-  | (loc, Debugger) -> ()
+  | (_, Debugger) -> ()
 
   | (loc, FunctionDeclaration { FunctionDeclaration.id; async; _ }) -> (
       match id with
@@ -1301,10 +1301,10 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Hashtbl.replace (Context.type_table cx) loc t;
       Env_js.bind_declare_fun cx name t r
 
-  | (loc, VariableDeclaration decl) ->
-      variable_decl cx type_params_map loc decl
+  | (_, VariableDeclaration decl) ->
+      variable_decl cx type_params_map decl
 
-  | (loc, ClassDeclaration { Ast.Class.id; _ }) -> (
+  | (_, ClassDeclaration { Ast.Class.id; _ }) -> (
       match id with
       | Some id ->
         let name_loc, { Ast.Identifier.name; _ } = id in
@@ -1340,12 +1340,10 @@ and statement_decl cx type_params_map = Ast.Statement.(
       Hashtbl.replace (Context.type_table cx) loc t;
       Env_js.bind_declare_var cx (internal_module_name name) t r
 
-  | (loc, DeclareExportDeclaration {
-      DeclareExportDeclaration.default;
-      DeclareExportDeclaration.declaration;
-      DeclareExportDeclaration.specifiers;
-      DeclareExportDeclaration.source;
-      }) ->
+  | _,
+    DeclareExportDeclaration {
+      DeclareExportDeclaration.default; declaration; _
+    } ->
         DeclareExportDeclaration.(match declaration with
         | Some (Variable (loc, v)) ->
             statement_decl cx type_params_map (loc, DeclareVariable v)
@@ -1353,7 +1351,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
             statement_decl cx type_params_map (loc, DeclareFunction f)
         | Some (Class (loc, c)) ->
             statement_decl cx type_params_map (loc, DeclareClass c)
-        | Some (DefaultType t) -> ()
+        | Some (DefaultType _) -> ()
         | None ->
             if not default
             then ()
@@ -1363,13 +1361,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
             )
         )
 
-  | (_, ExportDeclaration {
-      ExportDeclaration.default;
-      ExportDeclaration.declaration;
-      ExportDeclaration.specifiers;
-      ExportDeclaration.source;
-      ExportDeclaration.exportKind=_;
-    }) -> (
+  | (_, ExportDeclaration { ExportDeclaration.default; declaration; _ }) -> (
       match declaration with
       | Some(ExportDeclaration.Declaration(stmt)) ->
         let stmt = if default then nameify_default_export_decl stmt else stmt in
@@ -1380,11 +1372,11 @@ and statement_decl cx type_params_map = Ast.Statement.(
           "declaration or expression!"
         )
     )
-  | (loc, ImportDeclaration import_decl) ->
+  | (_, ImportDeclaration import_decl) ->
       let open ImportDeclaration in
 
       let module_name = (
-        let (source_loc, source_literal) = import_decl.source in
+        let (_, source_literal) = import_decl.source in
         match source_literal.Ast.Literal.value with
         | Ast.Literal.String(value) -> value
         | _ -> failwith  (
@@ -1424,7 +1416,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
             in
             let reason = mk_reason reason_str (fst local) in
             (local_name, reason)
-          | ImportNamespaceSpecifier (star_as_loc, local) ->
+          | ImportNamespaceSpecifier (_, local) ->
             let local_name = ident_name local in
             let reason_str =
               spf "%s * as %s from %S" import_str local_name module_name
@@ -1447,7 +1439,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
 
 and toplevels cx type_params_map stmts =
   let stmts = List.filter Ast.Statement.(function
-    | (loc, Empty) -> false
+    | (_, Empty) -> false
     | _ -> true
   ) stmts
   in
@@ -1493,7 +1485,7 @@ and toplevels cx type_params_map stmts =
 
 and statement cx type_params_map = Ast.Statement.(
 
-  let variables cx loc { VariableDeclaration.declarations; kind } =
+  let variables cx { VariableDeclaration.declarations; kind } =
     List.iter (variable cx type_params_map kind) declarations
   in
 
@@ -1606,9 +1598,9 @@ and statement cx type_params_map = Ast.Statement.(
       cx iname interface_t reason
   in
 
-  let catch_clause cx { Try.CatchClause.param; guard; body = (_, b) } =
+  let catch_clause cx { Try.CatchClause.param; guard = _; body = (_, b) } =
     Ast.Pattern.(match param with
-      | loc, Identifier (name_loc, {
+      | loc, Identifier (_, {
           Ast.Identifier.name; typeAnnotation = None; _
         }) ->
           let r = mk_reason "catch" loc in
@@ -1627,7 +1619,7 @@ and statement cx type_params_map = Ast.Statement.(
           | None -> ()
           )
 
-      | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
+      | loc, Identifier _ ->
           let msg = "type annotations for catch params not yet supported" in
           Flow_js.add_error cx [mk_reason "" loc, msg]
 
@@ -1639,15 +1631,15 @@ and statement cx type_params_map = Ast.Statement.(
 
   function
 
-  | (loc, Empty) -> ()
+  | (_, Empty) -> ()
 
-  | (loc, Block { Block.body }) ->
+  | (_, Block { Block.body }) ->
       Env_js.in_lex_scope cx (fun () ->
         toplevel_decls cx type_params_map body;
         toplevels cx type_params_map body
       )
 
-  | (loc, Expression { Expression.expression = e }) ->
+  | (_, Expression { Expression.expression = e }) ->
       ignore (expression cx type_params_map e)
 
   (* Refinements for `if` are derived by the following Hoare logic rule:
@@ -1730,7 +1722,7 @@ and statement cx type_params_map = Ast.Statement.(
       | _ -> ()
       end
 
-  | (loc, Labeled { Labeled.label = _, { Ast.Identifier.name; _ }; body }) ->
+  | (_, Labeled { Labeled.label = _, { Ast.Identifier.name; _ }; body }) ->
       (match body with
       | (loc, While _)
       | (loc, DoWhile _)
@@ -1793,7 +1785,7 @@ and statement cx type_params_map = Ast.Statement.(
       Env_js.reset_current_activation (mk_reason "continue" loc);
       Abnormal.set (Abnormal.Continue label_opt)
 
-  | (loc, With _) ->
+  | (_, With _) ->
       (* TODO or disallow? *)
       ()
 
@@ -1813,7 +1805,7 @@ and statement cx type_params_map = Ast.Statement.(
 
   (*******************************************************)
 
-  | (switch_loc, Switch { Switch.discriminant; cases; lexical }) ->
+  | (switch_loc, Switch { Switch.discriminant; cases; _ }) ->
 
     (* typecheck discriminant *)
     ignore (expression cx type_params_map discriminant);
@@ -1834,7 +1826,7 @@ and statement cx type_params_map = Ast.Statement.(
     Env_js.in_lex_scope cx (fun () ->
 
       (* set up all bindings *)
-      List.iter (fun (loc, { Switch.Case.test; consequent }) ->
+      List.iter (fun (_, { Switch.Case.consequent; _ }) ->
         toplevel_decls cx type_params_map consequent
       ) cases;
 
@@ -2322,9 +2314,9 @@ and statement cx type_params_map = Ast.Statement.(
         let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
         (match init with
           | None -> ()
-          | Some (For.InitDeclaration (loc, decl)) ->
-              variable_decl cx type_params_map loc decl;
-              variables cx loc decl
+          | Some (For.InitDeclaration (_, decl)) ->
+              variable_decl cx type_params_map decl;
+              variables cx decl
           | Some (For.InitExpression expr) ->
               ignore (expression cx type_params_map expr)
         );
@@ -2380,7 +2372,7 @@ and statement cx type_params_map = Ast.Statement.(
      [Pre] for (i in o) S [Post]
   *)
   (***************************************************************************)
-  | (loc, ForIn { ForIn.left; right; body; each }) ->
+  | (loc, ForIn { ForIn.left; right; body; _ }) ->
       let reason = mk_reason "for-in" loc in
       let save_break_exn = Abnormal.swap (Abnormal.Break None) false in
       let save_continue_exn = Abnormal.swap (Abnormal.Continue None) false in
@@ -2402,10 +2394,10 @@ and statement cx type_params_map = Ast.Statement.(
         Env_js.refine_with_preds cx reason preds xtypes;
 
         (match left with
-          | ForIn.LeftDeclaration (loc, ({ VariableDeclaration.
+          | ForIn.LeftDeclaration (_, ({ VariableDeclaration.
               kind; declarations = [vdecl]
             } as decl)) ->
-              variable_decl cx type_params_map loc decl;
+              variable_decl cx type_params_map decl;
               variable cx type_params_map kind ~if_uninitialized:StrT.at vdecl
 
           | ForIn.LeftExpression (loc, Ast.Expression.Identifier ident) ->
@@ -2461,13 +2453,13 @@ and statement cx type_params_map = Ast.Statement.(
         Env_js.refine_with_preds cx reason preds xtypes;
 
         (match left with
-          | ForOf.LeftDeclaration (loc, ({ VariableDeclaration.
+          | ForOf.LeftDeclaration (_, ({ VariableDeclaration.
               kind; declarations = [vdecl]
             } as decl)) ->
               let repos_tvar loc =
                 Flow_js.reposition cx (repos_reason loc reason) element_tvar
               in
-              variable_decl cx type_params_map loc decl;
+              variable_decl cx type_params_map decl;
               variable cx type_params_map kind ~if_uninitialized:repos_tvar vdecl
 
           | ForOf.LeftExpression (loc, Ast.Expression.Identifier ident) ->
@@ -2494,11 +2486,11 @@ and statement cx type_params_map = Ast.Statement.(
         then Env_js.havoc_vars newset
       )
 
-  | (loc, Let _) ->
+  | (_, Let _) ->
       (* TODO *)
       ()
 
-  | (loc, Debugger) ->
+  | (_, Debugger) ->
       ()
 
   | (loc, FunctionDeclaration {
@@ -2544,11 +2536,11 @@ and statement cx type_params_map = Ast.Statement.(
         Env_js.init_fun cx name fn_type reason
       | None -> ())
 
-  | (loc, DeclareVariable { DeclareVariable.id; })
-  | (loc, DeclareFunction { DeclareFunction.id; }) -> ()
+  | (_, DeclareVariable _)
+  | (_, DeclareFunction _) -> ()
 
-  | (loc, VariableDeclaration decl) ->
-      variables cx loc decl
+  | (_, VariableDeclaration decl) ->
+      variables cx decl
 
   | (class_loc, ClassDeclaration c) ->
       let (name_loc, name) = extract_class_name class_loc c in
@@ -2699,11 +2691,11 @@ and statement cx type_params_map = Ast.Statement.(
               "Parser Error: Immediate exports of nameless classes can " ^
               "only exist for default exports"
             )
-          | loc, ClassDeclaration({Ast.Class.id=Some ident; _;}) ->
+          | _, ClassDeclaration({Ast.Class.id=Some ident; _;}) ->
             let name = ident_name ident in
             [(spf "class %s {}" name, (fst ident), name, None)]
           | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
-            let decl_to_bindings accum (loc, decl) =
+            let decl_to_bindings accum (_, decl) =
               let id = snd decl.VariableDeclaration.Declarator.id in
               List.rev (extract_destructured_bindings accum id)
             in
@@ -2823,7 +2815,7 @@ and statement cx type_params_map = Ast.Statement.(
           in
           (bind_reason, local_name, imported_t)
 
-        | ImportNamespaceSpecifier (star_as_loc, local) ->
+        | ImportNamespaceSpecifier (_, local) ->
           let local_name = ident_name local in
 
           let import_reason_str = spf "%s * as %s" import_str local_name in
@@ -2872,7 +2864,7 @@ and statement cx type_params_map = Ast.Statement.(
 )
 
 
-and export_statement cx type_params_map loc
+and export_statement cx _type_params_map loc
   default declaration_export_info specifiers source exportKind =
 
   let open Ast.Statement in
@@ -2996,7 +2988,7 @@ and export_statement cx type_params_map loc
     | ([], Some(ExportBatchSpecifier(_))) ->
       let source_module_name = (
         match source with
-        | Some(src_loc, {
+        | Some(_, {
             Ast.Literal.value = Ast.Literal.String(module_name);
             _;
           }) ->
@@ -3040,9 +3032,9 @@ and export_statement cx type_params_map loc
 
 and object_prop cx type_params_map map = Ast.Expression.Object.(function
   (* name = function expr *)
-  | Property (loc, { Property.kind = Property.Init;
+  | Property (_, { Property.kind = Property.Init;
                      key = Property.Identifier (_, {
-                       Ast.Identifier.name; typeAnnotation; _ });
+                       Ast.Identifier.name; _ });
                      value = (vloc, Ast.Expression.Function func);
                      _ }) ->
       Ast.Expression.Function.(
@@ -3060,7 +3052,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       )
 
   (* name = non-function expr *)
-  | Property (loc, { Property.kind = Property.Init;
+  | Property (_, { Property.kind = Property.Init;
       key =
         Property.Identifier (_, { Ast.Identifier.name; _ }) |
         Property.Literal (_, {
@@ -3092,9 +3084,9 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (loc, {
+  | Property (_, {
       Property.kind = Property.Get;
-      key = Property.Identifier (_, { Ast.Identifier.name; typeAnnotation; _ });
+      key = Property.Identifier (_, { Ast.Identifier.name; _ });
       value = (vloc, Ast.Expression.Function func);
       _ })
     when are_getters_and_setters_enabled () ->
@@ -3117,9 +3109,9 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
     )
 
   (* unsafe setter property *)
-  | Property (loc, {
+  | Property (_, {
     Property.kind = Property.Set;
-      key = Property.Identifier (_, { Ast.Identifier.name; typeAnnotation; _ });
+      key = Property.Identifier (_, { Ast.Identifier.name; _ });
       value = (vloc, Ast.Expression.Function func);
       _ })
     when are_getters_and_setters_enabled () ->
@@ -3147,11 +3139,11 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
     map
 
   (* computed LHS *)
-  | Property (loc, { Property.key = Property.Computed _; _ }) ->
+  | Property (_, { Property.key = Property.Computed _; _ }) ->
     map
 
   (* spread prop *)
-  | SpreadProperty (loc, { SpreadProperty.argument }) ->
+  | SpreadProperty _ ->
     map
 )
 
@@ -3195,12 +3187,12 @@ and object_ cx type_params_map reason ?(allow_sealed=true) props =
 
   let sealed, map, result = List.fold_left (fun (sealed, map, result) t ->
     match t with
-    | SpreadProperty (loc, { SpreadProperty.argument }) ->
+    | SpreadProperty (_, { SpreadProperty.argument }) ->
         let spread = expression cx type_params_map argument in
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
         false, SMap.empty, Some result
-    | Property (loc, { Property.key = Property.Computed k; value = v; _ }) ->
+    | Property (_, { Property.key = Property.Computed k; value = v; _ }) ->
         let k = expression cx type_params_map k in
         let v = expression cx type_params_map v in
         let obj = eval_object (map, result) in
@@ -3213,14 +3205,14 @@ and object_ cx type_params_map reason ?(allow_sealed=true) props =
   ) (allow_sealed, SMap.empty, None) props in
 
   let sealed = match result with
-    | Some result -> sealed
+    | Some _ -> sealed
     | None -> sealed && not (SMap.is_empty map)
   in
   eval_object ~sealed (map, result)
 )
 
 and variable cx type_params_map kind
-  ?if_uninitialized (loc, vdecl) = Ast.Statement.(
+  ?if_uninitialized (_, vdecl) = Ast.Statement.(
   let value_kind, init_var, declare_var = match kind with
     | VariableDeclaration.Const ->
       Scope.Entry.Const, Env_js.init_const, Env_js.declare_const
@@ -3460,7 +3452,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         (* tup is true if no spreads *)
         (* tset is set of distinct (mod reason) elem types *)
         (* tlist is reverse list of element types if tup, else [] *)
-        let tup, tset, tlist = List.fold_left (fun (tup, tset, tlist) elem ->
+        let _, tset, tlist = List.fold_left (fun (tup, tset, tlist) elem ->
           let elemt = array_element cx type_params_map loc elem in
 
           let tup = match elem with Some (Spread _) -> false | _ -> tup in
@@ -3484,7 +3476,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         _
       });
       arguments
-    } when not (Env_js.local_scope_entry_exists cx "require") -> (
+    } when not (Env_js.local_scope_entry_exists "require") -> (
       match arguments with
       | [ Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
@@ -3699,7 +3691,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         Abnormal.(set Throw)
       | (Expression cond)::arguments ->
         ignore (List.map (expression_or_spread cx type_params_map) arguments);
-        let _, preds, not_preds, xtypes = predicates_of_condition cx type_params_map cond in
+        let _, preds, _, xtypes = predicates_of_condition cx type_params_map cond in
         Env_js.refine_with_preds cx reason preds xtypes
       | _ ->
         let msg = "unsupported arguments in call to invariant()" in
@@ -3745,9 +3737,10 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       assignment cx type_params_map loc (left, operator, right)
 
   | Sequence { Sequence.expressions } ->
-      List.fold_left (fun t e ->
-        expression cx type_params_map e) (void_ loc
-      ) expressions
+      List.fold_left
+        (fun _ e -> expression cx type_params_map e)
+        (void_ loc)
+        expressions
 
   | Function {
       Function.id;
@@ -3798,7 +3791,8 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
   | TaggedTemplate {
       TaggedTemplate.tag = _, Identifier (_,
         { Ast.Identifier.name = "query"; _ });
-      quasi = _, { TemplateLiteral.quasis; expressions }
+      (* TODO: walk quasis? *)
+      quasi = _, { TemplateLiteral.quasis = _; expressions }
     } ->
     List.iter (fun e -> ignore (expression cx type_params_map e)) expressions;
     (*parse_graphql cx encaps;*)
@@ -3806,7 +3800,8 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
 
   | TaggedTemplate {
       TaggedTemplate.tag;
-      quasi = _, { TemplateLiteral.quasis; expressions }
+      (* TODO: walk quasis? *)
+      quasi = _, { TemplateLiteral.quasis = _; expressions }
     } ->
       List.iter (fun e -> ignore (expression cx type_params_map e)) expressions;
       let t = expression cx type_params_map tag in
@@ -3822,7 +3817,8 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       ret
 
   | TemplateLiteral {
-      TemplateLiteral.quasis;
+      (* TODO: walk quasis? *)
+      TemplateLiteral.quasis = _;
       expressions
     } ->
       List.iter (fun e -> ignore (expression cx type_params_map e)) expressions;
@@ -3835,7 +3831,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       let (name_loc, name) = extract_class_name loc c in
       let reason = mk_reason (spf "class expr `%s`" name) loc in
       (match c.Ast.Class.id with
-      | Some id ->
+      | Some _ ->
           let tvar = Flow_js.mk_tvar cx reason in
           let scope = Scope.fresh () in
           Scope.(
@@ -3955,7 +3951,7 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | Number f ->
       NumT (mk_reason "number" loc, Literal (f, lit.raw))
 
-  | RegExp rx ->
+  | RegExp _ ->
       Flow_js.get_builtin_type cx (mk_reason "regexp" loc) "RegExp"
 )
 
@@ -4209,7 +4205,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
                    object and refinement types - `o` and `t` here - are
                    fully resolved.
                  *)
-                Env_js.set_expr cx key reason t t
+                Env_js.set_expr key reason t t
               | None ->
                 ()
             )
@@ -4302,11 +4298,11 @@ and react_ignored_attributes = [ "key"; "ref"; ]
 and react_ignore_attribute aname =
   List.mem aname react_ignored_attributes
 
-and jsx cx type_params_map = Ast.JSX.(function { openingElement; closingElement; children } ->
+and jsx cx type_params_map = Ast.JSX.(function { openingElement; children; _ } ->
   jsx_title cx type_params_map openingElement (List.map (jsx_body cx type_params_map) children)
 )
 
-and jsx_title cx type_params_map openingElement children = Ast.JSX.(
+and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   let facebook_ignore_fbt =
     FlowConfig.((get_unsafe ()).options.Opts.facebook_ignore_fbt)
@@ -4346,7 +4342,7 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
         | Opening.Attribute _ ->
             () (* TODO: attributes with namespaced names *)
 
-        | Opening.SpreadAttribute (aloc, { SpreadAttribute.argument }) ->
+        | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
             let ex_t = expression cx type_params_map argument in
             spread := Some (ex_t)
       );
@@ -4444,7 +4440,7 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
         | Opening.Attribute _ ->
             () (* TODO: attributes with namespaced names *)
 
-        | Opening.SpreadAttribute (aloc, { SpreadAttribute.argument }) ->
+        | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
             let spread_t = expression cx type_params_map argument in
             spread := Some spread_t
       );
@@ -4477,14 +4473,14 @@ and jsx_title cx type_params_map openingElement children = Ast.JSX.(
 )
 
 and jsx_body cx type_params_map = Ast.JSX.(function
-  | loc, Element e -> jsx cx type_params_map e
+  | _, Element e -> jsx cx type_params_map e
   | loc, ExpressionContainer ec -> (
       let { ExpressionContainer.expression = ex } = ec in
       match ex with
         | Some (loc, e) -> expression cx type_params_map (loc, e)
         | None -> EmptyT (mk_reason "empty jsx body" loc)
     )
-  | loc, Text s -> StrT.at loc
+  | loc, Text _ -> StrT.at loc (* TODO: create StrT (..., Literal ...)) *)
 )
 
 (* Native support for React.PropTypes validation functions, which are
@@ -4494,7 +4490,7 @@ and jsx_body cx type_params_map = Ast.JSX.(function
    production. *)
 
 and mk_proptype cx type_params_map = Ast.Expression.(function
-  | vloc, Member { Member.
+  | _, Member { Member.
       property = Member.PropertyIdentifier
         (_, {Ast.Identifier.name = "isRequired"; _ });
       _object = e;
@@ -4610,7 +4606,7 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
       arguments = [Expression (_, Array { Array.elements })]
     } ->
       let rec string_literals lits es = match (es) with
-        | Some (Expression (loc, Ast.Expression.Literal { Ast.Literal.
+        | Some (Expression (_, Ast.Expression.Literal { Ast.Literal.
             value = Ast.Literal.String lit; _
           })) :: tl ->
             string_literals (lit :: lits) tl
@@ -4671,11 +4667,11 @@ and mk_proptypes cx type_params_map props = Ast.Expression.Object.(
   List.fold_left (fun (amap, omap, dict) -> function
 
     (* required prop *)
-    | Property (loc, { Property.
+    | Property (_, { Property.
         kind = Property.Init;
         key = Property.Identifier (_, {
           Ast.Identifier.name; _ });
-        value = (vloc, Ast.Expression.Member {
+        value = (_, Ast.Expression.Member {
           Ast.Expression.Member.
           property = Ast.Expression.Member.PropertyIdentifier (_, {
             Ast.Identifier.name = "isRequired"; _ });
@@ -4689,7 +4685,7 @@ and mk_proptypes cx type_params_map props = Ast.Expression.Object.(
         dict
 
     (* other prop *)
-    | Property (loc, { Property.kind = Property.Init;
+    | Property (_, { Property.kind = Property.Init;
         key =
           Property.Identifier (_, { Ast.Identifier.name; _ }) |
           Property.Literal (_, {
@@ -4704,7 +4700,7 @@ and mk_proptypes cx type_params_map props = Ast.Expression.Object.(
         dict
 
     (* spread prop *)
-    | SpreadProperty (loc, { SpreadProperty.argument }) ->
+    | SpreadProperty _ ->
       (* Instead of modeling the spread precisely, we instead make the propTypes
          extensible. This has the effect of loosening the check for properties
          added by the spread, while leaving the checking of other properties as
@@ -4756,7 +4752,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
     List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
 
       (* mixins *)
-      | Property (loc, { Property.kind = Property.Init;
+      | Property (_, { Property.kind = Property.Init;
           key =
             Property.Identifier (_, { Ast.Identifier.name = "mixins"; _ });
           value = aloc, Array { Array.elements };
@@ -4765,7 +4761,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         fmap, mmap
 
       (* statics *)
-      | Property (loc, { Property.kind = Property.Init;
+      | Property (_, { Property.kind = Property.Init;
             key = Property.Identifier (nloc, {
             Ast.Identifier.name = "statics"; _ });
           value = _, Object { Object.properties };
@@ -4775,7 +4771,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         fmap, mmap
 
       (* propTypes *)
-      | Property (loc, { Property.kind = Property.Init;
+      | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (nloc, {
             Ast.Identifier.name = "propTypes"; _ });
           value = _, Object { Object.properties } as value;
@@ -4791,15 +4787,13 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         fmap, mmap
 
       (* getDefaultProps *)
-      | Property (loc, { Property.kind = Property.Init;
+      | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
             Ast.Identifier.name = "getDefaultProps"; _ });
           value = (vloc, Ast.Expression.Function func);
           _ }) ->
         Ast.Expression.Function.(
-          let { params; defaults; rest; body;
-            returnType; typeParameters; _ } = func
-          in
+          let { params; defaults; rest; body; returnType; _ } = func in
           let reason = mk_reason "defaultProps" vloc in
           let t = mk_method cx type_params_map reason (params, defaults, rest)
             returnType body this (MixedT reason)
@@ -4822,15 +4816,13 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         )
 
       (* getInitialState *)
-      | Property (loc, { Property.kind = Property.Init;
+      | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
             Ast.Identifier.name = "getInitialState"; _ });
           value = (vloc, Ast.Expression.Function func);
           _ }) ->
         Ast.Expression.Function.(
-          let { params; defaults; rest; body;
-            returnType; typeParameters; _ } = func
-          in
+          let { params; defaults; rest; body; returnType; _ } = func in
           let reason = mk_reason "initial state of React component" vloc in
           let t = mk_method cx type_params_map reason (params, defaults, rest)
             returnType body this (MixedT reason)
@@ -4856,14 +4848,14 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         )
 
       (* name = function expr *)
-      | Property (loc, { Property.kind = Property.Init;
+      | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
             Ast.Identifier.name; _ });
           value = (vloc, Ast.Expression.Function func);
           _ }) ->
         Ast.Expression.Function.(
           let { params; defaults; rest; body;
-            returnType; typeParameters; async; generator; _ } = func
+            returnType; async; generator; _ } = func
           in
           let kind = function_kind ~async ~generator in
           let reason = mk_reason "function" vloc in
@@ -4874,7 +4866,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         )
 
       (* name = non-function expr *)
-      | Property (loc, { Property.kind = Property.Init;
+      | Property (_, { Property.kind = Property.Init;
           key =
             Property.Identifier (_, { Ast.Identifier.name; _ }) |
             Property.Literal (_, {
@@ -4985,7 +4977,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   (* inspect a null equality test *)
   let null_test loc op e =
     let refinement = match refinable_lvalue e with
-    | None, t -> None
+    | None, _ -> None
     | Some name, t ->
         match op with
         | Binary.Equal | Binary.NotEqual ->
@@ -5002,7 +4994,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   (* inspect an undefined equality test *)
   let undef_test loc op e =
     let refinement = match refinable_lvalue e with
-    | None, t -> None
+    | None, _ -> None
     | Some name, t ->
         match op with
         | Binary.Equal | Binary.NotEqual ->
@@ -5104,7 +5096,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
           Flow_js.add_warning cx [reason, err];
           empty_result (BoolT.at loc)
         end
-    | None, t -> empty_result (BoolT.at loc)
+    | None, _ -> empty_result (BoolT.at loc)
   in
 
   let sentinel_prop_test loc op expr val_t =
@@ -5141,7 +5133,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   let mk_and map1 map2 = Scope.KeyMap.merge
-    (fun x -> fun p1 p2 -> match (p1,p2) with
+    (fun _ p1 p2 -> match (p1,p2) with
       | (None, None) -> None
       | (Some p, None)
       | (None, Some p) -> Some p
@@ -5151,10 +5143,10 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   let mk_or map1 map2 = Scope.KeyMap.merge
-    (fun x -> fun p1 p2 -> match (p1,p2) with
+    (fun _ p1 p2 -> match (p1,p2) with
       | (None, None) -> None
-      | (Some p, None)
-      | (None, Some p) -> None
+      | (Some _, None)
+      | (None, Some _) -> None
       | (Some p1, Some p2) -> Some (OrP(p1,p2))
     )
     map1 map2
@@ -5187,7 +5179,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
           let right_t = expression cx type_params_map right in
           let pred = LeftP (InstanceofTest, right_t) in
           result BoolT.t name t pred true
-      | None, t ->
+      | None, _ ->
           empty_result BoolT.t
     )
 
@@ -5308,7 +5300,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       match refinable_lvalue arg with
       | Some name, t ->
           result BoolT.t name t ArrP true
-      | None, t ->
+      | None, _ ->
           empty_result BoolT.t
     )
 
@@ -5346,7 +5338,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
 
   (* !test *)
   | loc, Unary { Unary.operator = Unary.Not; argument; _ } ->
-      let (t, map, not_map, xts) = predicates_of_condition cx type_params_map argument in
+      let (_, map, not_map, xts) = predicates_of_condition cx type_params_map argument in
       (BoolT.at loc, not_map, map, xts)
 
   (* fallthrough case: evaluate test expr, no refinements *)
@@ -5519,11 +5511,6 @@ and mk_super cx type_params_map c targs =
     else
       ThisTypeAppT (c, this, List.map (convert cx type_params_map) params)
 
-and body_loc = Ast.Statement.FunctionDeclaration.(function
-  | BodyBlock (loc, _) -> loc
-  | BodyExpression (loc, _) -> loc
-)
-
 (* Makes signatures for fields and methods in a class. *)
 and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
   let _, { Body.body = elements } = body in
@@ -5671,7 +5658,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       }) ->
         (match value with
           | None -> ()
-          | Some value -> FlowConfig.(Opts.(
+          | Some _ -> FlowConfig.(Opts.(
             let opts = (FlowConfig.get_unsafe ()).options in
             let (config_setting, reason_subject, config_key) =
               if static then
@@ -5761,11 +5748,10 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
     (opts.esproposal_class_static_fields, opts.esproposal_class_instance_fields)
   )) in
   List.iter (function
-    | Body.Method (loc, {
+    | Body.Method (_, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
-        value = _, { Ast.Expression.Function.params; defaults; rest;
-          returnType; typeParameters; body; async; generator; _ };
+        value = _, { Ast.Expression.Function.body; async; generator; _ };
         static;
         kind;
         decorators;
@@ -6122,7 +6108,7 @@ and mk_class = Ast.Class.(
 
 and extract_extends cx structural = function
   | [] -> [None,None]
-  | [loc, {Ast.Type.Generic.id; typeParameters}] ->
+  | [_, {Ast.Type.Generic.id; typeParameters}] ->
       [Some id, typeParameters]
   | (loc, {Ast.Type.Generic.id; typeParameters})::others ->
       if structural
@@ -6132,8 +6118,8 @@ and extract_extends cx structural = function
         Flow_js.add_error cx [mk_reason "" loc, msg];
         []
 
-and extract_mixins cx =
-  List.map (fun (loc, {Ast.Type.Generic.id; typeParameters}) ->
+and extract_mixins _cx =
+  List.map (fun (_, {Ast.Type.Generic.id; typeParameters}) ->
     (Some id, typeParameters)
   )
 
@@ -6553,26 +6539,10 @@ and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
 (* Driver *)
 (**********)
 
-(* cross-module GC toggle *)
-let xmgc_enabled = ref true
-
-(**************************************)
-
-let cross_module_gc =
-  let require_set = ref SSet.empty in
-  fun cx ms reqs ->
-    if !xmgc_enabled then (
-      reqs |> SSet.iter (fun r -> require_set := SSet.add r !require_set);
-      ms |> SSet.iter (fun m -> require_set := SSet.remove m !require_set);
-
-      let ins = SSet.elements !require_set in
-      Gc_js.do_gc cx ins
-    )
-
 let force_annotations cx =
   let m = Modulename.to_string (Context.module_name cx) in
   let tvar = Flow_js.lookup_module cx m in
-  let reason, id = open_tvar tvar in
+  let _, id = open_tvar tvar in
   let before = Errors_js.ErrorSet.cardinal (Context.errors cx) in
   Flow_js.enforce_strict cx id;
   let after = Errors_js.ErrorSet.cardinal (Context.errors cx) in
@@ -6622,7 +6592,7 @@ let scan_for_suppressions =
 let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
   Flow_js.Cache.clear();
 
-  let loc, statements, comments = ast in
+  let _, statements, comments = ast in
 
   let cx = Flow_js.fresh_context metadata filename module_name in
   let checked = Context.is_checked cx in

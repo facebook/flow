@@ -22,13 +22,6 @@ open Modes_js
 
 module TI = Type_inference_js
 
-(* per-file error info is a filename and an error list *)
-type file_errors = string * Errors_js.error list
-
-(* set of successful files, list of failed files,
- * and parallel list of error lists. *)
-type results = SSet.t * string list * Errors_js.error list list
-
 let init_modes opts = Options.(
   modes.traces <- opts.opt_traces;
   modes.strip_root <- opts.opt_strip_root;
@@ -134,7 +127,7 @@ let save_suppressions mapref files errsups = Errors_js.(
    based on position info contained in error, not incoming key *)
 let distrib_errs = Errors_js.(
 
-  let distrib_error orig_file error error_map =
+  let distrib_error _orig_file error error_map =
     let file = match Loc.source (loc_of_error error) with
     | Some x -> x
     | None ->
@@ -175,7 +168,7 @@ let filter_suppressed_errors emap = Errors_js.(
 
   let emap = emap
     |> FilenameMap.map (ErrorSet.filter filter_suppressed_error)
-    |> FilenameMap.filter (fun k v -> not (ErrorSet.is_empty v)) in
+    |> FilenameMap.filter (fun _ v -> not (ErrorSet.is_empty v)) in
 
   (* For each unused suppression, create an error *)
   let unused_suppression_errors = List.fold_left
@@ -232,7 +225,7 @@ let filter_unchecked_unused errmap = Module_js.(
 
 (* relocate errors to their reported positions,
    combine in single error map *)
-let collate_errors files =
+let collate_errors () =
   let all = filter_unchecked_unused !parse_errors in
   let all = FilenameMap.fold distrib_errs !infer_errors all in
   let all = FilenameMap.fold distrib_errs !merge_errors all in
@@ -251,9 +244,6 @@ let checktime opts limit msg f =
 
 let logtime opts msg f =
   wraptime opts (fun _ -> true) msg f
-
-let showtime msg f =
-  time (fun _ -> true) (fun t -> spf "%s: %f" msg t) f
 
 let internal_error filename msg =
   let position = Loc.({
@@ -862,7 +852,7 @@ let heap_check files = Module_js.(
   nh |> Hashtbl.iter (fun m f ->
     assert (get_module_name f = m);
   );
-  ih |> Hashtbl.iter (fun file info ->
+  ih |> Hashtbl.iter (fun _ info ->
     let parsed = info.Module_js.parsed in
     let checked = info.Module_js.checked in
     let required = info.Module_js.required in
@@ -943,13 +933,13 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
       timing
     in
     (* collate errors by origin *)
-    collate_errors to_merge;
-    timing, to_merge
+    collate_errors ();
+    timing
 
-  | false, to_collate, _ ->
+  | false, _, _ ->
     (* collate errors by origin *)
-    collate_errors to_collate;
-    timing, []
+    collate_errors ();
+    timing
 
 (* sketch of baseline incremental alg:
 
@@ -1182,7 +1172,7 @@ let recheck genv env modified =
   let dependent_file_count = ref 0 in
 
   (* recheck *)
-  let timing, _ = typecheck
+  let timing = typecheck
     genv.ServerEnv.workers
     freshparsed
     removed_modules
@@ -1278,7 +1268,7 @@ let full_check workers parse_next opts =
     ) parsed;
   ) in
 
-  let timing, checked = typecheck
+  let timing = typecheck
     workers
     parsed
     Module_js.NameSet.empty
@@ -1306,7 +1296,7 @@ let full_check workers parse_next opts =
       else true, inferred, FilenameSet.empty
   ) in
 
-  (timing, parsed, checked)
+  (timing, parsed)
 
 (* helper - print errors. used in check-and-die runs *)
 let print_errors options errors =
@@ -1339,7 +1329,7 @@ let server_init genv env =
       else Loc.SourceFile file
     )
   in
-  let (timing, parsed, checked) =
+  let (timing, parsed) =
     full_check genv.ServerEnv.workers get_next options in
 
   (* for now we populate file_infos with empty def lists *)
