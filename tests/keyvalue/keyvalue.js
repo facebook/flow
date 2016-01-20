@@ -1,2 +1,7 @@
-var files = new FileList();
-var x: number = files[""];
+// @flow
+
+let tests = [
+  function(x: { [key: number]: string }) {
+    (x[""]: number);
+  }
+];

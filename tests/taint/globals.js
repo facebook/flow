@@ -1,12 +1,12 @@
 // @flow
 
 class A {
-  f(x : $Tainted<Location>) {
-    // Should be an error.
-    document.location = x;
+  f(x : $Tainted<FakeLocation>) {
+    fakeDocument.location = x; // error
+    doStuff(x); // ok
   }
-  f1(x : $Tainted<Location>) {
+  f1(x : $Tainted<FakeLocation>) {
     // TODO(rcastano): should cause an error.
-    window.location = x;
+    window.fakeLocation = x;
   }
 }
