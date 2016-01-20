@@ -50,6 +50,9 @@ type ('a, 'b) builder_t = {
 
 type t
 
+exception Show_help
+exception Failed_to_parse of string
+
 val main : ('a, unit -> unit) builder_t -> 'a -> string list -> unit
 val usage : ('a, 'b) builder_t -> unit
 
@@ -61,3 +64,4 @@ val run : t -> string list -> unit
 val name : t -> string
 val doc : t -> string
 val flags : t -> ArgSpec.flag_metadata Utils.SMap.t
+val string_of_usage : t -> string

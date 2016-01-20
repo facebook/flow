@@ -79,8 +79,19 @@ end = struct
     let command_string = CommandSpec.name command in
     FlowEventLogger.set_command (Some command_string);
     FlowEventLogger.init_flow_command ~version:FlowConfig.version;
-    CommandSpec.run command argv
-
+    try
+      CommandSpec.run command argv
+    with
+    | CommandSpec.Show_help ->
+        FlowExitStatus.(exit ~msg:(CommandSpec.string_of_usage command) Ok)
+    | CommandSpec.Failed_to_parse msg ->
+        let msg = Utils.spf
+          "%s: %s\n%s"
+          (Filename.basename Sys.executable_name)
+          msg
+          (CommandSpec.string_of_usage command)
+        in
+        FlowExitStatus.(exit ~msg Commandline_usage_error)
 end
 
 let _ = FlowShell.main ()

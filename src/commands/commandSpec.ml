@@ -199,6 +199,7 @@ type t = {
   cmdname : string;
   cmddoc : string;
   flags : ArgSpec.flag_metadata SMap.t;
+  string_of_usage : unit -> string;
   main : string list -> unit;
 }
 
@@ -312,29 +313,18 @@ let usage spec =
   print_endline (usage_string spec)
 
 let main spec fn argv =
-  try
-    match argv with
-    | cmd::subcmd::args when subcmd = spec.name ->
-      let values = parse SMap.empty spec.args args in
-      let main = ArgSpec.apply spec.args values fn in
-      main ()
-    | _ -> failwith "Missing subcommand"
-  with
-  | Show_help ->
-      FlowExitStatus.(exit ~msg:(usage_string spec) Ok)
-  | Failed_to_parse msg ->
-      let msg = Utils.spf
-        "%s: %s\n%s"
-        (Filename.basename Sys.executable_name)
-        msg
-        (usage_string spec)
-      in
-      FlowExitStatus.(exit ~msg Commandline_usage_error)
+  match argv with
+  | cmd::subcmd::args when subcmd = spec.name ->
+    let values = parse SMap.empty spec.args args in
+    let main = ArgSpec.apply spec.args values fn in
+    main ()
+  | _ -> failwith "Missing subcommand"
 
 let raw_command spec main = {
   cmdname = spec.name;
   cmddoc = spec.doc;
   flags = spec.args.ArgSpec.flags;
+  string_of_usage = (fun () -> usage_string spec);
   main;
 }
 
@@ -344,3 +334,4 @@ let run command = command.main
 let name command = command.cmdname
 let doc command = command.cmddoc
 let flags command = command.flags
+let string_of_usage command = command.string_of_usage ()
