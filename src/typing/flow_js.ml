@@ -523,7 +523,7 @@ let iter_props cx id f =
   find_props cx id
   |> SMap.iter f
 
-let iter_props_ cx id f =
+let iter_real_props cx id f =
   find_props cx id
   |> SMap.filter (fun x _ -> not (is_internal_name x))
   |> SMap.iter f
@@ -2257,87 +2257,110 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* object types deconstruct into their parts *)
     (*********************************************)
 
-    | (ObjT (reason1, {props_tmap = flds1; proto_t; flags; dict_t = dict1; _ }),
-       UseT ObjT (reason2, {props_tmap = flds2; proto_t = u_; dict_t = dict2; _ }))
-      ->
+    (* ObjT -> ObjT *)
+
+    | ObjT (lreason, {
+        props_tmap = lflds;
+        proto_t = lproto;
+        flags = lflags;
+        dict_t = ldict; _ }),
+      UseT ObjT (ureason, {
+        props_tmap = uflds;
+        proto_t = uproto;
+        dict_t = udict; _ }) ->
+
       (* if inflowing type is literal (thus guaranteed to be
          unaliased), propertywise subtyping is sound *)
-      let desc1 = (desc_of_reason reason1) in
+      let ldesc = desc_of_reason lreason in
       let lit =
-        (desc1 = "object literal")
-        || (desc1 = "function")
-        || (desc1 = "arrow function")
-        || (desc1 = "frozen object literal")
-        || (Str.string_match (Str.regexp ".*React") desc1 0)
+        ldesc = "object literal"
+        || ldesc = "function"
+        || ldesc = "arrow function"
+        || ldesc = "frozen object literal"
+        || Str.string_match (Str.regexp ".*React") ldesc 0
       in
 
       (* If both are dictionaries, ensure the keys and values are compatible
          with each other. *)
-      (match dict1, dict2 with
-        | Some {key = k1; value = v1; _}, Some {key = k2; value = v2; _} ->
-            dictionary cx trace k1 v1 dict2;
-            dictionary cx trace k2 v2 dict1
+      (match ldict, udict with
+        | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
+            dictionary cx trace lk lv udict;
+            dictionary cx trace uk uv ldict
         | _ -> ());
 
       (* Properties in u must either exist in l, or match l's indexer. *)
-      iter_props_ cx flds2
-        (fun s t2 ->
-          if not (has_prop cx flds1 s)
-          then
-            (* property doesn't exist in inflowing type *)
-            let reason2 = replace_reason (spf "property `%s`" s) reason2 in
-            match t2 with
-            | OptionalT t1 when flags.exact ->
-              (* if property is marked optional or otherwise has a maybe type,
-                 and if inflowing type is exact (i.e., it is not an
-                 annotation), then we add it to the inflowing type as
-                 an optional property, as well as ensuring compatibility
-                 with dictionary constraints if present *)
-              dictionary cx trace (string_key s reason2) t1 dict1;
-              write_prop cx flds1 s t2;
-            | _ ->
-              (* otherwise, we ensure compatibility with dictionary constraints
-                 if present, and look up the property in the prototype *)
-              dictionary cx trace (string_key s reason2) t2 dict1;
-              (* if l is NOT a dictionary, then do a strict lookup *)
-              let strict = if dict1 = None then Some reason1 else None in
-              rec_flow cx trace (proto_t, LookupT (reason2, strict, [], s, t2))
+      iter_real_props cx uflds (fun s ut ->
+        match read_prop_opt cx lflds s with
+        | Some lt ->
+          if lit then (
+            (* prop from unaliased LB: check <:, then make exact *)
+            rec_flow_t cx trace (lt, ut);
+            write_prop cx lflds s ut
+          ) else (
+            (* prop from aliased LB must be exact *)
+            rec_unify cx trace lt ut
+          )
+        | None ->
+          (* property doesn't exist in inflowing type *)
+          let ureason = replace_reason (spf "property `%s`" s) ureason in
+          match ut with
+          | OptionalT t when lflags.exact ->
+            (* if property is marked optional or otherwise has a maybe type,
+               and if inflowing type is exact (i.e., it is not an
+               annotation), then we add it to the inflowing type as
+               an optional property, as well as ensuring compatibility
+               with dictionary constraints if present *)
+            dictionary cx trace (string_key s ureason) t ldict;
+            write_prop cx lflds s ut;
+          | _ ->
+            (* otherwise, we ensure compatibility with dictionary constraints
+               if present, and look up the property in the prototype *)
+            dictionary cx trace (string_key s ureason) ut ldict;
+            (* if l is NOT a dictionary, then do a strict lookup *)
+            let strict = if ldict = None then Some lreason else None in
+            rec_flow cx trace (lproto, LookupT (ureason, strict, [], s, ut))
           (* TODO: instead, consider extending inflowing type with s:t2 when it
              is not sealed *)
-          else
-            let t1 = read_prop cx flds1 s in
-            flow_to_mutable_child cx trace lit t1 t2);
-      (* Any properties in l but not u must match indexer *)
-      iter_props_ cx flds1
-        (fun s t1 ->
-          if (not(has_prop cx flds2 s))
-          then dictionary cx trace (string_key s reason1) t1 dict2
-        );
-      rec_flow_t cx trace (l, u_)
+      );
 
-    | (InstanceT (reason1, _, super, { fields_tmap; methods_tmap; _ }),
-       UseT ObjT (reason2, {props_tmap = flds2; proto_t = u_; _ }))
-      ->
-      let fields_tmap = find_props cx fields_tmap in
-      let methods_tmap = find_props cx methods_tmap in
-      let flds1 = SMap.union fields_tmap methods_tmap in
-      iter_props_ cx flds2
-        (fun s -> fun t2 ->
-          if (not(SMap.mem s flds1))
-          then
-            let reason2 = replace_reason (spf "property `%s`" s) reason2 in
-            match t2 with
-            | OptionalT t1 ->
-                rec_flow cx trace
-                  (l, LookupT (reason2, None, [], s, t1))
-            | _ ->
-                rec_flow cx trace
-                  (super, LookupT (reason2, Some reason1, [], s, t2))
-          else
-            let t1 = SMap.find_unsafe s flds1 in
-            rec_unify cx trace t1 t2
-        );
-      rec_flow_t cx trace (l, u_)
+      (* Any properties in l but not u must match indexer *)
+      iter_real_props cx lflds (fun s lt ->
+        if not (has_prop cx uflds s)
+        then dictionary cx trace (string_key s lreason) lt udict
+      );
+
+      rec_flow_t cx trace (l, uproto)
+
+    (* InstanceT -> ObjT *)
+
+    | InstanceT (lreason, _, super, {
+        fields_tmap = lflds;
+        methods_tmap = lmethods; _ }),
+      UseT ObjT (ureason, {
+        props_tmap = uflds;
+        proto_t = uproto; _ }) ->
+
+      let lflds =
+        let fields_tmap = find_props cx lflds in
+        let methods_tmap = find_props cx lmethods in
+        SMap.union fields_tmap methods_tmap
+      in
+
+      iter_real_props cx uflds (fun s ut ->
+        match SMap.get s lflds with
+        | Some lt ->
+          rec_unify cx trace lt ut
+        | None ->
+          let ureason = replace_reason (spf "property `%s`" s) ureason in
+          match ut with
+          | OptionalT t ->
+            rec_flow cx trace (l, LookupT (ureason, None, [], s, t))
+          | _ ->
+            rec_flow cx trace
+              (super, LookupT (ureason, Some lreason, [], s, ut))
+      );
+
+      rec_flow_t cx trace (l, uproto)
 
     (* TODO Try and remove this. We're not sure why this case should exist but
      * it does seem to be triggered in www. *)
@@ -2839,14 +2862,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
-    | (ObjT (reason_o, {
-      flags;
-      props_tmap = mapr;
-      proto_t = proto;
-      dict_t;
-    }),
-       SetPropT(reason_op, (reason_prop, x), tin))
-      ->
+    | ObjT (reason_o, {
+        flags;
+        props_tmap = mapr;
+        proto_t = proto;
+        dict_t }),
+      SetPropT (reason_op, (reason_prop, x), tin) ->
       if flags.frozen then
         prerr_flow cx trace "Mutation not allowed on" l u
       else
@@ -2855,7 +2876,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let t = ensure_prop_for_write cx trace strict_reason mapr x proto
           reason_op reason_prop in
         dictionary cx trace (string_key x reason_op) t dict_t;
-        rec_flow_t cx trace (tin,t)
+        rec_flow_t cx trace (tin, t)
 
     (* Since we don't know the type of the prop, use AnyT. *)
     | (AnyObjT _, SetPropT (reason_op, _, t)) ->
@@ -5346,49 +5367,49 @@ and rec_unify cx trace t1 t2 =
 
   not_expect_bound t1; not_expect_bound t2;
 
-  match (t1,t2) with
-  | (OpenT (_,id1), OpenT (_,id2)) ->
+  match t1, t2 with
+  | OpenT (_, id1), OpenT (_, id2) ->
     merge_ids cx trace id1 id2
 
-  | (OpenT (_, id), t) | (t, OpenT (_, id)) when ok_unify t ->
+  | OpenT (_, id), t | t, OpenT (_, id) when ok_unify t ->
     resolve_id cx trace id t
 
-  | (ArrT (_, t1, ts1), ArrT (_, t2, ts2)) ->
-    array_unify cx trace (ts1,t1, ts2,t2)
+  | ArrT (_, t1, ts1), ArrT (_, t2, ts2) ->
+    array_unify cx trace (ts1, t1, ts2, t2)
 
-  | (ObjT (reason1, {props_tmap = flds1; dict_t = dict1; _}),
-     ObjT (reason2, {props_tmap = flds2; dict_t = dict2; _})) ->
+  | ObjT (lreason, { props_tmap = lflds; dict_t = ldict; _ }),
+    ObjT (ureason, { props_tmap = uflds; dict_t = udict; _ }) ->
 
     (* ensure the keys and values are compatible with each other. *)
-    begin match dict1, dict2 with
-    | Some {key = k1; value = v1; _}, Some {key = k2; value = v2; _} ->
-        dictionary cx trace k1 v1 dict2;
-        dictionary cx trace k2 v2 dict1
+    begin match ldict, udict with
+    | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
+        dictionary cx trace lk lv udict;
+        dictionary cx trace uk uv ldict
     | Some _, None ->
-        let reason1 = replace_reason "some property" reason1 in
-        add_warning cx [reason1, "Property not found in"; reason2, ""] ~trace
+        let lreason = replace_reason "some property" lreason in
+        add_warning cx [lreason, "Property not found in"; ureason, ""] ~trace
     | None, Some _ ->
-        let reason2 = replace_reason "some property" reason2 in
-        add_warning cx [reason2, "Property not found in"; reason1, ""] ~trace
+        let ureason = replace_reason "some property" ureason in
+        add_warning cx [ureason, "Property not found in"; lreason, ""] ~trace
     | None, None -> ()
     end;
 
-    let pmap1, pmap2 = find_props cx flds1, find_props cx flds2 in
-    SMap.merge (fun x t1 t2 ->
+    let lpmap, upmap = find_props cx lflds, find_props cx uflds in
+    SMap.merge (fun x lt ut ->
       if not (is_internal_name x)
-      then (match t1, t2 with
+      then (match lt, ut with
       | Some t1, Some t2 -> rec_unify cx trace t1 t2
       | Some t1, None ->
           (* x exists in obj1 but not obj2; if obj2 is a dictionary make sure
              t1 is allowed, otherwise error *)
-          flow_prop_to_dict cx trace x t1 dict2 reason1 reason2
+          flow_prop_to_dict cx trace x t1 udict lreason ureason
       | None, Some t2 ->
           (* x exists in obj2 but not obj1; if obj1 is a dictionary make sure
              t2 is allowed, otherwise error *)
-          flow_prop_to_dict cx trace x t2 dict1 reason2 reason1
+          flow_prop_to_dict cx trace x t2 ldict ureason lreason
       | None, None -> ());
       None
-    ) pmap1 pmap2 |> ignore
+    ) lpmap upmap |> ignore
 
   | _ ->
     naive_unify cx trace t1 t2
@@ -5424,33 +5445,38 @@ and flow_to_mutable_child cx trace fresh t1 t2 =
   else rec_unify cx trace t1 t2
 
 and array_flow cx trace lit = function
-  | ([],e1, _,e2) -> (* general element1 = general element2 *)
+  | [], e1, _, e2 ->
+    (* general element1 = general element2 *)
     flow_to_mutable_child cx trace lit e1 e2
 
-  | (_,e1, [],e2) -> (* specific element1 < general element2 *)
+  | _, e1, [], e2 ->
+    (* specific element1 < general element2 *)
     rec_flow_t cx trace (e1, e2)
 
-  | ([t1],_, t2::_,_) -> (* specific element1 = specific element2 *)
+  | [t1], _, t2 :: _, _ ->
+    (* specific element1 = specific element2 *)
     flow_to_mutable_child cx trace lit t1 t2
 
-  | (t1::ts1,e1, t2::ts2,e2) -> (* specific element1 = specific element2 *)
+  | t1 :: ts1, e1, t2 :: ts2, e2 ->
+    (* specific element1 = specific element2 *)
     flow_to_mutable_child cx trace lit t1 t2;
     array_flow cx trace lit (ts1,e1, ts2,e2)
 
 (* array helper *)
 and array_unify cx trace = function
-  | ([],e1, [],e2) -> (* general element1 = general element2 *)
+  | [], e1, [], e2 ->
+    (* general element1 = general element2 *)
     rec_unify cx trace e1 e2
 
-  | (ts1,_, [],e2)
-  | ([],e2, ts1,_) -> (* specific element1 < general element2 *)
-    List.iter (fun t1 ->
-      rec_unify cx trace t1 e2;
-    ) ts1
+  | ts1, _, [], e2
+  | [], e2, ts1, _ ->
+    (* specific element1 < general element2 *)
+    List.iter (fun t1 -> rec_unify cx trace t1 e2) ts1
 
-  | (t1::ts1,e1, t2::ts2,e2) -> (* specific element1 = specific element2 *)
+  | t1 :: ts1, e1, t2 :: ts2, e2 ->
+    (* specific element1 = specific element2 *)
     rec_unify cx trace t1 t2;
-    array_unify cx trace (ts1,e1, ts2,e2)
+    array_unify cx trace (ts1, e1, ts2, e2)
 
 
 (*******************************************************************)
@@ -5716,9 +5742,6 @@ and set_builtin cx x t =
   let reason = builtin_reason x in
   flow_opt cx (builtins cx, SetPropT(reason, (reason, x), t))
 
-(* cast operation on Type.t, Type.use_t to operation on Type.t, Type.t *)
-and cast_from_use f (t1, t2) = f (t1, UseT t2)
-
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)
 
@@ -5737,8 +5760,8 @@ and join_flow cx ts (t1, t2) =
 and rec_flow cx trace (t1, t2) =
   __flow cx (t1, t2) (Trace.rec_trace t1 t2 trace)
 
-and rec_flow_t cx trace =
-  cast_from_use (rec_flow cx trace)
+and rec_flow_t cx trace (t1, t2) =
+  rec_flow cx trace (t1, UseT t2)
 
 (* Ideally this function would not be required: either we call `flow` from
    outside without a trace (see below), or we call one of the functions above
@@ -5751,8 +5774,8 @@ and flow_opt cx ?trace (t1, t2) =
     | Some trace -> Trace.rec_trace t1 t2 trace in
   __flow cx (t1, t2) trace
 
-and flow_opt_t cx ?trace =
-  cast_from_use (flow_opt cx ?trace)
+and flow_opt_t cx ?trace (t1, t2) =
+  flow_opt cx ?trace (t1, UseT t2)
 
 (* Externally visible function for subtyping. *)
 (* Calls internal entry point and traps runaway recursion. *)
@@ -5768,8 +5791,8 @@ and flow cx (lower, upper) =
     (* rethrow *)
     raise ex
 
-and flow_t cx =
-  cast_from_use (flow cx)
+and flow_t cx (t1, t2) =
+  flow cx (t1, UseT t2)
 
 and constrain cx u =
   let reason = reason_of_use_t u in

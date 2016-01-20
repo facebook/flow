@@ -39,4 +39,8 @@ objects.js:17:2,20: function type
 This type is incompatible with
 objects.js:17:23,28: string
 
-Found 10 errors
+unaliased_assign.js:18:26,31: number
+This type is incompatible with
+unaliased_assign.js:15:16,21: string
+
+Found 11 errors
