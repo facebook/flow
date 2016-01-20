@@ -1512,7 +1512,9 @@ and statement cx type_params_map = Ast.Statement.(
       mk_type_param_declarations cx type_params_map typeParameters in
 
     let typeparams, type_params_map =
-      add_this self cx reason typeparams type_params_map in
+      if not structural
+      then add_this self cx reason typeparams type_params_map
+      else typeparams, type_params_map in
 
     let sfmap, smmap, fmap, mmap = List.fold_left (
       fun (sfmap_, smmap_, fmap_, mmap_)
@@ -5476,7 +5478,10 @@ and mk_interface_super cx structural reason_i map = function
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some id, targs) ->
-      let i = convert_qualification cx "extends" id in
+      let desc, lookup_mode =
+        if structural then "extends", ForType
+        else "mixins", ForValue in
+      let i = convert_qualification ~lookup_mode cx desc id in
       if structural then
         let params = extract_type_param_instantiations targs in
         mk_nominal_type cx reason_i map (i, params)
@@ -6199,7 +6204,9 @@ and mk_interface cx reason_i typeparams type_params_map
   );
 
   let typeparams, type_params_map =
-    remove_this typeparams type_params_map in
+    if not structural
+    then remove_this typeparams type_params_map
+    else typeparams, type_params_map in
 
   let static_instance = {
     class_id = 0;

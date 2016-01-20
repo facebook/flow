@@ -97,6 +97,9 @@ import.js:22:3,30: number
 This type is incompatible with
 import.js:22:33,38: string
 
+interface.js:1:25,28: 
+Unexpected use of `this` type
+
 self.js:4:24,36: call of method `foo`
 Error:
 self.js:4:24,36: A
@@ -144,4 +147,4 @@ contravariant position (expected `this` to occur only covariantly)
 test.js:56:16,19: `this` type
 contravariant position (expected `this` to occur only covariantly)
 
-Found 40 errors
+Found 41 errors
