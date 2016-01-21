@@ -23,8 +23,8 @@ cache:
 
 before_cache:
   - rm -f $HOME/.flow/opam/*/config
-  - rm -f $HOME/.flow/opam/*/log
-  - rm -f $HOME/.flow/opam/*/opam-init
+  - rm -rf $HOME/.flow/opam/*/log
+  - rm -rf $HOME/.flow/opam/*/opam-init
 
 notifications:
   email:
