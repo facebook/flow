@@ -447,15 +447,8 @@ let main_hack { filename; mode; } =
           NamingGlobal.make_env ~funs ~classes ~typedefs ~consts
         end files_info;
 
-        let all_classes =
-          Relative_path.Map.fold begin fun fn {FileInfo.classes; _} acc ->
-            List.fold_left ~f: begin fun acc (_, cname) ->
-              SMap.add cname (Relative_path.Set.singleton fn) acc
-            end ~init: acc classes
-          end files_info SMap.empty in
-
         Relative_path.Map.iter begin fun fn _ ->
-          Typing_decl.make_env tcopt all_classes fn
+          Typing_decl.make_env tcopt fn
         end files_info;
 
         files_info

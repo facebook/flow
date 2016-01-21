@@ -294,7 +294,6 @@ let ifun_decl tcopt (f: Ast.fun_) =
 type class_env = {
   tcopt: TypecheckerOptions.t;
   stack: SSet.t;
-  all_classes: Relative_path.Set.t SMap.t;
 }
 
 let check_if_cyclic class_env (pos, cid) =
@@ -304,11 +303,7 @@ let check_if_cyclic class_env (pos, cid) =
   then Errors.cyclic_class_def stack pos;
   is_cyclic
 
-let rec class_decl_if_missing_opt class_env = function
-  | None -> ()
-  | Some c -> class_decl_if_missing class_env c
-
-and class_decl_if_missing class_env c =
+let rec class_decl_if_missing class_env c =
   let _, cid as c_name = c.Ast.c_name in
   if check_if_cyclic class_env c_name
   then ()
@@ -354,18 +349,18 @@ and class_parents_decl class_env c =
 
 and class_hint_decl class_env hint =
   match hint with
-    | _, Happly ((_, cid), _)
-    when SMap.mem cid class_env.all_classes &&
-    not (Naming_heap.ClassHeap.mem cid) ->
-      (* We are supposed to redeclare the class *)
-      let files = SMap.find_unsafe cid class_env.all_classes in
-      Relative_path.Set.iter begin fun fn ->
+  | _, Happly ((_, cid), _) ->
+    begin match Naming_heap.ClassPosHeap.get cid with
+      | Some p when not (Naming_heap.ClassHeap.mem cid) ->
+        (* We are supposed to redeclare the class *)
+        let fn = Pos.filename p in
         let class_opt = Parser_heap.find_class_in_file fn cid in
-        class_decl_if_missing_opt class_env class_opt
-      end files
-    | _ ->
-      (* This class lives in PHP land *)
-      ()
+        Option.iter class_opt (class_decl_if_missing class_env)
+      | _ -> ()
+    end
+  | _ ->
+    (* This class lives in PHP land *)
+    ()
 
 and class_is_abstract c =
   match c.c_kind with
@@ -872,7 +867,7 @@ let iconst_decl tcopt cst =
 
 (*****************************************************************************)
 
-let name_and_declare_types_program tcopt all_classes prog =
+let name_and_declare_types_program tcopt prog =
   List.iter prog begin fun def ->
     match def with
     | Ast.Namespace _
@@ -882,7 +877,6 @@ let name_and_declare_types_program tcopt all_classes prog =
       let class_env = {
         tcopt;
         stack = SSet.empty;
-        all_classes = all_classes;
       } in
       class_decl_if_missing class_env c
     | Ast.Typedef typedef ->
@@ -892,9 +886,9 @@ let name_and_declare_types_program tcopt all_classes prog =
         iconst_decl tcopt cst
   end
 
-let make_env tcopt all_classes fn =
+let make_env tcopt fn =
   match Parser_heap.ParserHeap.get fn with
   | None -> ()
   | Some prog ->
       Typing_decl_deps.add prog;
-      name_and_declare_types_program tcopt all_classes prog
+      name_and_declare_types_program tcopt prog

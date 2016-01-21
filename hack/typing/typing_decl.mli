@@ -7,7 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Utils
 
 (*
  * This function works by side effects. It is adding in the
@@ -20,12 +19,9 @@ open Utils
  * in Typing_env.Class, Typing_env.Fun, and Typing_env.Typedef.
  *)
 val name_and_declare_types_program:
-  TypecheckerOptions.t -> Relative_path.Set.t SMap.t (* set of classes in all files *) ->
-  Ast.program -> unit
+  TypecheckerOptions.t -> Ast.program -> unit
 
-val make_env:
-  TypecheckerOptions.t -> Relative_path.Set.t SMap.t ->
-  Relative_path.t -> unit
+val make_env: TypecheckerOptions.t -> Relative_path.t -> unit
 
 val class_decl:
   TypecheckerOptions.t -> Nast.class_ -> unit

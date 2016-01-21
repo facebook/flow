@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 (*****************************************************************************)
 (* Types, constants *)
 (*****************************************************************************)
@@ -80,17 +78,11 @@ let emit_file { filename; read_stdin; is_test } () =
 
   Parser_heap.ParserHeap.add filename ast;
 
-  let all_classes =
-    List.fold_left begin fun acc (_, cname) ->
-      SMap.add cname (Relative_path.Set.singleton filename) acc
-    end SMap.empty classes
-  in
-
   (* Build a naming environment and run naming *)
   let tcopt = TypecheckerOptions.default in
   NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
   (* Naming is driven by Typing_decl... *)
-  Typing_decl.make_env tcopt all_classes filename;
+  Typing_decl.make_env tcopt filename;
 
   (* Actually emit. *)
   Emitter.emit_file ~is_test tcopt filename ast file_info

@@ -27,8 +27,7 @@ type result = Errors.t * failed
 (*****************************************************************************)
 
 module TypeDeclarationStore = GlobalStorage.Make(struct
-  type classes = Relative_path.Set.t SMap.t
-  type t = classes * TypecheckerOptions.t
+  type t = TypecheckerOptions.t
 end)
 
 (*****************************************************************************)
@@ -39,10 +38,10 @@ end)
 (* The job that will be run on the workers *)
 (*****************************************************************************)
 
-let decl_file all_classes tcopt (errorl, failed) fn =
+let decl_file tcopt (errorl, failed) fn =
   let errorl', () = Errors.do_ begin fun () ->
     d ("Typing decl: "^Relative_path.to_absolute fn);
-    Typing_decl.make_env tcopt all_classes fn;
+    Typing_decl.make_env tcopt fn;
     dn "OK";
   end
   in
@@ -53,8 +52,8 @@ let decl_file all_classes tcopt (errorl, failed) fn =
   errorl, failed
 
 let decl_files (errors, failed) fnl =
-  let all_classes, tcopt = TypeDeclarationStore.load() in
-  List.fold_left fnl ~f:(decl_file all_classes tcopt) ~init:(errors, failed)
+  let tcopt = TypeDeclarationStore.load() in
+  List.fold_left fnl ~f:(decl_file tcopt) ~init:(errors, failed)
 
 (*****************************************************************************)
 (* Merges the results (used by the master) *)
@@ -65,32 +64,11 @@ let merge_decl (errors1, failed1) (errors2, failed2) =
   Relative_path.Set.union failed1 failed2
 
 (*****************************************************************************)
-(* We need to know all the classes defined, because we want to declare
- * the types in their topological order.
- * We keep the files in which the classes are defined, sometimes there
- * can be more that one file when there are name collisions.
- *)
-(*****************************************************************************)
-
-let get_classes fast =
-  Relative_path.Map.fold begin fun fn {FileInfo.n_classes = classes; _} acc ->
-    SSet.fold begin fun c_name acc ->
-      let files =
-        try SMap.find_unsafe c_name acc
-        with Not_found -> Relative_path.Set.empty
-      in
-      let files = Relative_path.Set.add fn files in
-      SMap.add c_name files acc
-    end classes acc
-  end fast SMap.empty
-
-(*****************************************************************************)
 (* Let's go! That's where the action is *)
 (*****************************************************************************)
 
 let go (workers:Worker.t list option) ~bucket_size tcopt fast =
-  let all_classes = get_classes fast in
-  TypeDeclarationStore.store (all_classes, tcopt);
+  TypeDeclarationStore.store tcopt;
   let fast_l = Relative_path.Map.fold (fun x _ y -> x :: y) fast [] in
   let neutral = [], Relative_path.Set.empty in
   dn "Declaring the types";

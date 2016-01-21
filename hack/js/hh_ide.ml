@@ -139,7 +139,7 @@ let declare_file fn content =
       let all_classes = List.fold_right classes ~f:begin fun (_, cname) acc ->
         SMap.add cname (Relative_path.Set.singleton fn) acc
       end ~init:SMap.empty in
-      Typing_decl.make_env tcopt all_classes fn;
+      Typing_decl.make_env tcopt fn;
       let sub_classes = get_sub_classes all_classes in
       SSet.iter begin fun cname ->
         match Naming_heap.ClassHeap.get cname with
@@ -194,10 +194,7 @@ let hh_check fn =
         let funs, classes, typedefs, consts = make_funs_classes ast in
         let tcopt = TypecheckerOptions.permissive in
         NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
-        let all_classes = List.fold_right classes ~f:begin fun (_, cname) acc ->
-          SMap.add cname (Relative_path.Set.singleton fn) acc
-        end ~init:SMap.empty in
-        Typing_decl.make_env tcopt all_classes fn;
+        Typing_decl.make_env tcopt fn;
         List.iter funs (fun (_, fname) -> type_fun tcopt fname fn);
         List.iter classes (fun (_, cname) -> type_class tcopt cname fn);
         error []

@@ -18,7 +18,6 @@
 (*****************************************************************************)
 open Core
 open Typing_deps
-open Utils
 
 (*****************************************************************************)
 (* The neutral element of declaration (cf procs/multiWorker.mli) *)
@@ -36,17 +35,15 @@ let compute_deps_neutral = DepSet.empty, DepSet.empty
  *)
 (*****************************************************************************)
 
-type classes = Relative_path.Set.t SMap.t
-
 module OnTheFlyStore = GlobalStorage.Make(struct
-  type t = TypecheckerOptions.t * classes * FileInfo.fast
+  type t = TypecheckerOptions.t * FileInfo.fast
 end)
 
 (*****************************************************************************)
 (* Re-declaring the types in a file *)
 (*****************************************************************************)
 
-let on_the_fly_decl_file tcopt all_classes (errors, failed) fn =
+let on_the_fly_decl_file tcopt (errors, failed) fn =
   let decl_errors, () = Errors.do_
     begin fun () ->
     (* We start "recording" dependencies.
@@ -59,7 +56,7 @@ let on_the_fly_decl_file tcopt all_classes (errors, failed) fn =
      * If a new dependency shows up, it will end-up in Typing_deps.record_acc.
      * Sending only the difference is a drastic improvement in perf.
      *)
-      Typing_decl.make_env tcopt all_classes fn
+      Typing_decl.make_env tcopt fn
     end
   in
   List.fold_left decl_errors ~f:begin fun (errors, failed) error ->
@@ -135,15 +132,15 @@ let compute_gconsts_deps old_gconsts (to_redecl, to_recheck) gconsts =
  *)
 (*****************************************************************************)
 
-let redeclare_files tcopt all_classes filel =
+let redeclare_files tcopt filel =
   List.fold_left filel
-    ~f:(on_the_fly_decl_file tcopt all_classes)
+    ~f:(on_the_fly_decl_file tcopt)
     ~init:([], Relative_path.Set.empty)
 
-let otf_decl_files tcopt all_classes filel =
+let otf_decl_files tcopt filel =
   SharedMem.invalidate_caches();
   (* Redeclaring the files *)
-  let errors, failed = redeclare_files tcopt all_classes filel in
+  let errors, failed = redeclare_files tcopt filel in
   errors, failed
 
 let compute_deps fast filel =
@@ -176,8 +173,8 @@ let compute_deps fast filel =
 
 let load_and_otf_decl_files _ filel =
   try
-    let tcopt, all_classes, _ = OnTheFlyStore.load() in
-    otf_decl_files tcopt all_classes filel
+    let tcopt, _ = OnTheFlyStore.load() in
+    otf_decl_files tcopt filel
   with e ->
     Printf.printf "Error: %s\n" (Printexc.to_string e);
     flush stdout;
@@ -185,7 +182,7 @@ let load_and_otf_decl_files _ filel =
 
 let load_and_compute_deps _acc filel =
   try
-    let _, _, fast = OnTheFlyStore.load() in
+    let _, fast = OnTheFlyStore.load() in
     compute_deps fast filel
   with e ->
     Printf.printf "Error: %s\n" (Printexc.to_string e);
@@ -206,8 +203,8 @@ let merge_compute_deps (to_redecl1, to_recheck1) (to_redecl2, to_recheck2) =
 (* The parallel worker *)
 (*****************************************************************************)
 
-let parallel_otf_decl workers bucket_size tcopt all_classes fast fnl =
-  OnTheFlyStore.store (tcopt, all_classes, fast);
+let parallel_otf_decl workers bucket_size tcopt fast fnl =
+  OnTheFlyStore.store (tcopt, fast);
   let errors, failed =
     MultiWorker.call
       workers
@@ -262,17 +259,16 @@ let get_defs fast =
 
 let redo_type_decl workers ~bucket_size tcopt fast =
   let fnl = Relative_path.Map.keys fast in
-  let all_classes = Typing_decl_service.get_classes fast in
   let defs = get_defs fast in
   invalidate_heap defs;
   (* If there aren't enough files, let's do this ourselves ... it's faster! *)
   let result =
     if List.length fnl < 10
     then
-      let errors, failed = otf_decl_files tcopt all_classes fnl in
+      let errors, failed = otf_decl_files tcopt fnl in
       let to_redecl, to_recheck = compute_deps fast fnl in
       errors, failed, to_redecl, to_recheck
-    else parallel_otf_decl workers bucket_size tcopt all_classes fast fnl
+    else parallel_otf_decl workers bucket_size tcopt fast fnl
   in
   remove_old_defs defs;
   result
