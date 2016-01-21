@@ -21,6 +21,11 @@ cache:
   directories:
     - $HOME/.flow
 
+before_cache:
+  - rm -f $HOME/.flow/opam/*/config
+  - rm -f $HOME/.flow/opam/*/log
+  - rm -f $HOME/.flow/opam/*/opam-init
+
 notifications:
   email:
     recipients:
