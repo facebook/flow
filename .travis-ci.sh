@@ -22,7 +22,7 @@ getopam() {
 
 install_opam () {
   printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" "$OCAML_VERSION" "$OPAM_VERSION"
-  export PREFIX="./usr"
+  export PREFIX="$HOME/.flow"
   export BINDIR="$PREFIX/bin"
   export PATH="$BINDIR:$PATH"
 
@@ -37,11 +37,20 @@ install_opam () {
 
   OPAM="$BINDIR/opam"
 
+  # Use version-specific opam cache directories
+  export OPAMROOT="$PREFIX/opam/$OPAM_VERSION"
+  mkdir -p "$OPAMROOT" 2>/dev/null || true
+
   export OPAMYES=1
   export OPAMVERBOSE=1
   "$OPAM" init -a -y -k local flow resources/opam --comp "$OCAML_VERSION"
   if ! "$OPAM" repository list -s | grep "\<default\>" > /dev/null; then
-    "$OPAM" repository add default https://opam.ocaml.org --priority=-1 >/dev/null
+    if [[ "$OPAM_VERSION" == "1.1."* ]]; then
+      REPO="https://opam.ocaml.org/1.1"
+    else
+      REPO="https://opam.ocaml.org"
+    fi
+    "$OPAM" repository add default $REPO --priority=-1 >/dev/null
   fi
   "$OPAM" switch "$OCAML_VERSION"
   # TODO: Install js_of_ocaml and test the parser
