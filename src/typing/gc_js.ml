@@ -416,8 +416,6 @@ and gc_pred cx state = function
   | NotP (p) ->
       gc_pred cx state p
 
-  | TrueP
-  | FalseP
   | ExistsP
   | NullP
   | MaybeP
@@ -428,6 +426,8 @@ and gc_pred cx state = function
   | StrP
   | VoidP
   | ArrP
+  | SingletonBoolP _
+  | SingletonStrP _
       -> ()
 
 (* Keep a reachable type variable around. *)

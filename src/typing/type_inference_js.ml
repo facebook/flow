@@ -5052,8 +5052,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       condition cx type_params_map expr, None
   in
 
-  let bool_test loc value_loc op expr value =
-    let val_t = BoolT (mk_reason "boolean" value_loc, Some value) in
+  let literal_test loc op expr val_t pred =
     let t, sentinel_refinement =
       condition_of_maybe_sentinel cx type_params_map op expr val_t in
     let refinement = match Refinement.key expr with
@@ -5062,12 +5061,11 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         match op with
         (* TODO support == *)
         | Binary.StrictEqual | Binary.StrictNotEqual ->
-            let pred = if value then TrueP else FalseP in
-            Some (name, pred, op = Binary.StrictEqual)
+            Some (name, op = Binary.StrictEqual)
         | _ -> None
     in
     let out = match refinement with
-    | Some (name, p, sense) -> result (BoolT.at loc) name t p sense
+    | Some (name, sense) -> result (BoolT.at loc) name t pred sense
     | None -> empty_result (BoolT.at loc)
     in
     match sentinel_refinement with
@@ -5111,12 +5109,20 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   let eq_test loc op left right =
     match left, right with
     (* special case equality relations involving booleans *)
-    | (lloc, Expression.Literal { Literal.value = Literal.Boolean lit; _}), expr
-    | expr, (lloc, Expression.Literal { Literal.value = Literal.Boolean lit; _})
+    | (_, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value, expr
+    | expr, ((_, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value)
       ->
-        bool_test loc lloc op expr lit
+        let val_t = expression cx type_params_map value in
+        literal_test loc op expr val_t (SingletonBoolP lit)
 
-    (* TODO: add Type.predicate variants that test string and number equality *)
+    (* special case equality relations involving strings *)
+    | (_, Expression.Literal { Literal.value = Literal.String lit; _}) as value, expr
+    | expr, ((_, Expression.Literal { Literal.value = Literal.String lit; _}) as value)
+      ->
+        let val_t = expression cx type_params_map value in
+        literal_test loc op expr val_t (SingletonStrP lit)
+
+    (* TODO: add Type.predicate variant that tests number equality *)
 
     (* fallback case for equality relations involving sentinels (this should be
        lower priority since it refines the object but not the property) *)

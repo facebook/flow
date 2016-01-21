@@ -19,8 +19,6 @@ let string_of_pred_ctor = function
   | LeftP _ -> "LeftP"
   | RightP _ -> "RightP"
   | ExistsP -> "ExistsP"
-  | TrueP -> "TrueP"
-  | FalseP -> "FalseP"
   | VoidP -> "VoidP"
   | NullP -> "NullP"
   | MaybeP -> "MaybeP"
@@ -30,6 +28,8 @@ let string_of_pred_ctor = function
   | FunP -> "FunP"
   | ObjP -> "ObjP"
   | ArrP -> "ArrP"
+  | SingletonBoolP _ -> "SingletonBoolP"
+  | SingletonStrP _ -> "SingletonStrP"
 
 let string_of_binary_test_ctor = function
   | InstanceofTest -> "InstanceofTest"
@@ -662,8 +662,10 @@ and json_of_pred_impl json_cx p = Hh_json.(
       "binaryTest", json_of_binary_test json_cx b;
       "type", _json_of_t json_cx t
     ]
-  | TrueP
-  | FalseP
+
+  | SingletonBoolP value -> ["value", JSON_Bool value]
+  | SingletonStrP str -> ["value", JSON_String str]
+
   | ExistsP
   | VoidP
   | NullP

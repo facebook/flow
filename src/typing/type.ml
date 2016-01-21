@@ -368,10 +368,11 @@ and predicate =
   | RightP of binary_test * t
 
   | ExistsP (* truthy *)
-  | TrueP (* true *)
-  | FalseP (* false *)
   | NullP (* null *)
   | MaybeP (* null or undefined *)
+
+  | SingletonBoolP of bool (* true or false *)
+  | SingletonStrP of string (* string literal *)
 
   | BoolP (* boolean *)
   | FunP (* function *)
@@ -818,10 +819,11 @@ let rec loc_of_predicate = function
     -> loc_of_t t
 
   | ExistsP
-  | TrueP
-  | FalseP
   | NullP
   | MaybeP
+
+  | SingletonBoolP _
+  | SingletonStrP _
 
   | BoolP
   | FunP
@@ -1142,10 +1144,12 @@ let rec string_of_predicate = function
       spf "right operand of %s with left operand = %s"
         (string_of_binary_test b) (desc_of_t t)
   | ExistsP -> "truthy"
-  | TrueP -> "true"
-  | FalseP -> "false"
   | NullP -> "null"
   | MaybeP -> "null or undefined"
+
+  | SingletonBoolP false -> "false"
+  | SingletonBoolP true -> "true"
+  | SingletonStrP str -> spf "string `%s`" str
 
   (* typeof *)
   | VoidP -> "undefined"

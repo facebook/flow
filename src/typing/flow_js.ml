@@ -4609,6 +4609,19 @@ and filter_not_undefined = function
   | VoidT r -> EmptyT r
   | t -> t
 
+and filter_string_literal expected t = match t with
+  | StrT (_, Literal actual) when actual = expected -> t
+  | StrT (r, Truthy) when expected <> "" -> StrT (r, Literal expected)
+  | StrT (_, Falsy) when expected = "" -> t
+  | StrT (r, AnyLiteral) -> StrT (r, Literal expected)
+  | MixedT r -> StrT (r, Literal expected)
+  | _ -> EmptyT (reason_of_t t)
+
+and filter_not_string_literal expected = function
+  | StrT (r, Literal actual) when actual = expected -> EmptyT r
+  | StrT (r, Falsy) when expected = "" -> EmptyT r
+  | t -> t
+
 and filter_true = function
   | BoolT (r, Some true)
   | BoolT (r, None) -> BoolT (r, Some true)
@@ -4699,6 +4712,16 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(StrP)) ->
     filter cx trace t l (not_ is_string)
 
+  (*********************)
+  (* _ ~ "some string" *)
+  (*********************)
+
+  | (_, SingletonStrP lit) ->
+    rec_flow_t cx trace (filter_string_literal lit l, t)
+
+  | (_, NotP(SingletonStrP lit)) ->
+    rec_flow_t cx trace (filter_not_string_literal lit l, t)
+
   (***********************)
   (* typeof _ ~ "number" *)
   (***********************)
@@ -4788,20 +4811,20 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* true *)
   (********)
 
-  | (_, TrueP) ->
+  | (_, SingletonBoolP true) ->
     rec_flow_t cx trace (filter_true l, t)
 
-  | (_, NotP(TrueP)) ->
+  | (_, NotP(SingletonBoolP true)) ->
     rec_flow_t cx trace (filter_not_true l, t)
 
   (*********)
   (* false *)
   (*********)
 
-  | (_, FalseP) ->
+  | (_, SingletonBoolP false) ->
     rec_flow_t cx trace (filter_false l, t)
 
-  | (_, NotP(FalseP)) ->
+  | (_, NotP(SingletonBoolP false)) ->
     rec_flow_t cx trace (filter_not_false l, t)
 
   (************************)
