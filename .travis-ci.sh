@@ -26,16 +26,18 @@ install_opam () {
   export BINDIR="$PREFIX/bin"
   export PATH="$BINDIR:$PATH"
 
-  file="opam-$OPAM_VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
+  OPAM="$BINDIR/opam-$OPAM_VERSION"
 
-  echo Downloading OPAM...
-  getopam "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION" "$file"
-
-  mkdir -p "$BINDIR" 2>/dev/null || true
-  install -m 755 "$TMP/$file" "$BINDIR/opam"
-  rm -f "$TMP/$file"
-
-  OPAM="$BINDIR/opam"
+  if [ ! -f "$OPAM" ]; then
+    file="opam-$OPAM_VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
+    echo Downloading OPAM...
+    getopam "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION" "$file"
+    mkdir -p "$BINDIR" 2>/dev/null || true
+    install -m 755 "$TMP/$file" "$OPAM"
+    rm -f "$TMP/$file"
+  else
+    echo "OPAM already installed"
+  fi
 
   # Use version-specific opam cache directories
   export OPAMROOT="$PREFIX/opam/$OPAM_VERSION"
