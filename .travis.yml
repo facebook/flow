@@ -17,6 +17,10 @@ addons:
     packages:
     - libelf-dev
 
+cache:
+  directories:
+    - $HOME/.flow
+
 notifications:
   email:
     recipients:
