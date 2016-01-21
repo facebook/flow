@@ -43,26 +43,33 @@ end
 module Entry = struct
 
   type value_kind =
-    | Const
+    (* consts are either explicit bindings or e.g. const params *)
+    | Const of const_binding_kind
     (* Some let bindings are explicit (like you wrote let x = 123) and some
      * are implicit (like class declarations). For implicit lets, we should
      * track why this is a let binding for better error messages *)
-    | Let of implicit_let_kinds option
+    | Let of let_binding_kind
     | Var
 
-  and implicit_let_kinds =
+  and const_binding_kind =
+    | ConstVarBinding
+    | ConstParamBinding
+
+  and let_binding_kind =
+    | LetVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
     | ParamBinding
 
   let string_of_value_kind = function
-  | Const -> "const"
-  | Let None -> "let"
-  | Let (Some ClassNameBinding) -> "class"
-  | Let (Some CatchParamBinding) -> "catch"
-  | Let (Some FunctionBinding) -> "function"
-  | Let (Some ParamBinding) -> "param"
+  | Const ConstVarBinding -> "const"
+  | Const ConstParamBinding -> "const param"
+  | Let LetVarBinding -> "let"
+  | Let ClassNameBinding -> "class"
+  | Let CatchParamBinding -> "catch"
+  | Let FunctionBinding -> "function"
+  | Let ParamBinding -> "param"
   | Var -> "var"
 
   type value_binding = {
@@ -100,11 +107,11 @@ module Entry = struct
       general
     }
 
-  let new_const ~loc ?(state=State.Undeclared) t =
-    new_value Const state t t loc
+  let new_const ~loc ?(state=State.Undeclared) ?(kind=ConstVarBinding) t =
+    new_value (Const kind) state t t loc
 
-  let new_let ~loc ?(state=State.Undeclared) ?implicit t =
-    new_value (Let implicit) state t t loc
+  let new_let ~loc ?(state=State.Undeclared) ?(kind=LetVarBinding) t =
+    new_value (Let kind) state t t loc
 
   let new_var ~loc ?(state=State.Undeclared) ?specific general =
     let specific = match specific with Some t -> t | None -> general in
@@ -159,7 +166,7 @@ module Entry = struct
   let havoc ?(consts=false) make_specific name entry =
     match entry with
     | Type _ -> entry
-    | Value { kind = Const; _ } when not consts ->
+    | Value { kind = Const _; _ } when not consts ->
       entry
     | Value v ->
       if Reason_js.is_internal_name name
@@ -170,7 +177,7 @@ module Entry = struct
     | Type _ -> false
     | Value v ->
       match v.kind with
-      | Const -> true
+      | Const _ -> true
       | Let _ -> true
       | _ -> false
 end

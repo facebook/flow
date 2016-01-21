@@ -1,0 +1,6 @@
+
+test.js:17:3,3: x
+const param cannot be reassigned (see experimental.const_params=true in .flowconfig)
+test.js:16:26,34: const param x
+
+Found 1 error

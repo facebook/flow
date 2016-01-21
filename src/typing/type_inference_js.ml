@@ -1125,8 +1125,10 @@ type class_signature = {
 
 let rec variable_decl cx type_params_map entry = Ast.Statement.(
   let value_kind, bind = match entry.VariableDeclaration.kind with
-    | VariableDeclaration.Const -> Scope.Entry.Const, Env_js.bind_const
-    | VariableDeclaration.Let -> Scope.Entry.Let None, Env_js.bind_let
+    | VariableDeclaration.Const ->
+      Scope.Entry.(Const ConstVarBinding), Env_js.bind_const
+    | VariableDeclaration.Let ->
+      Scope.(Entry.Let Entry.LetVarBinding), Env_js.bind_let
     | VariableDeclaration.Var -> Scope.Entry.Var, Env_js.bind_var
   in
 
@@ -3213,14 +3215,14 @@ and object_ cx type_params_map reason ?(allow_sealed=true) props =
 
 and variable cx type_params_map kind
   ?if_uninitialized (_, vdecl) = Ast.Statement.(
-  let value_kind, init_var, declare_var = match kind with
+  let value_kind, init_var, declare_var = Env_js.(match kind with
     | VariableDeclaration.Const ->
-      Scope.Entry.Const, Env_js.init_const, Env_js.declare_const
+      Scope.Entry.(Const ConstVarBinding), init_const, declare_const
     | VariableDeclaration.Let ->
-      Scope.Entry.Let None, Env_js.init_let, Env_js.declare_let
+      Scope.(Entry.Let Entry.LetVarBinding), init_let, declare_let
     | VariableDeclaration.Var ->
-      Scope.Entry.Var, Env_js.init_var, (fun _ _ _ -> ())
-  in
+      Scope.Entry.Var, init_var, (fun _ _ _ -> ())
+  ) in
   let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
   let { VariableDeclaration.Declarator.id; init } = vdecl in
   match id with
@@ -3835,9 +3837,9 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
           let tvar = Flow_js.mk_tvar cx reason in
           let scope = Scope.fresh () in
           Scope.(
-            let implicit = Entry.ClassNameBinding in
+            let kind = Entry.ClassNameBinding in
             let entry = Entry.(
-              new_let tvar ~loc:name_loc ~state:State.Declared ~implicit
+              new_let tvar ~loc:name_loc ~state:State.Declared ~kind
             ) in
             add_entry name entry scope
           );
@@ -6367,6 +6369,10 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
   Env_js.push_var_scope cx function_scope;
 
   (* add param bindings *)
+  let const_params = FlowConfig.(
+    let config = get_unsafe () in
+    config.options.Opts.enable_const_params
+  ) in
   params |> FuncParams.iter Scope.(fun (name, t, loc) ->
     (* add default value as lower bound, if provided *)
     FuncParams.with_default name (fun expr ->
@@ -6375,8 +6381,12 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     ) params;
     (* add to scope *)
     let reason = mk_reason (spf "param `%s`" name) loc in
-    Env_js.bind_implicit_let ~state:State.Initialized
-      Entry.ParamBinding cx name t reason);
+    if const_params
+    then Env_js.bind_implicit_const ~state:State.Initialized
+      Entry.ConstParamBinding cx name t reason
+    else Env_js.bind_implicit_let ~state:State.Initialized
+      Entry.ParamBinding cx name t reason
+  );
 
   (* early-add our own name binding for recursive calls *)
   (match id with

@@ -15,6 +15,7 @@ module Opts : sig
     | ESPROPOSAL_WARN
   type moduleSystem = Node | Haste
   type t = {
+    enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
     esproposal_class_instance_fields: esproposal_feature_mode;
     esproposal_class_static_fields: esproposal_feature_mode;

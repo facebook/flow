@@ -429,7 +429,7 @@ let bind_entry cx name entry reason =
         (* lex scopes can only hold let/const bindings *)
         (* var scope can hold all binding types *)
         | LexScope, Value { Entry.kind = Let _; _ }
-        | LexScope, Value { Entry.kind = Const; _ }
+        | LexScope, Value { Entry.kind = Const _; _ }
         | VarScope _, _ ->
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
@@ -443,10 +443,11 @@ let bind_entry cx name entry reason =
         | VarScope _ -> Entry.(
           let can_shadow = function
             (* funcs/vars can shadow other funcs/vars -- only in var scope *)
-            | (Var | Let (Some FunctionBinding)),
-              (Var | Let (Some FunctionBinding)) -> true
+            | (Var | Let FunctionBinding),
+              (Var | Let FunctionBinding) -> true
             (* vars can shadow function params *)
-            | Var, Let (Some ParamBinding) -> true
+            | Var, Let ParamBinding -> true
+            | Var, Const ConstParamBinding -> true
             | _ -> false
           in
           match entry, prev with
@@ -475,9 +476,9 @@ let bind_let ?(state=State.Undeclared) cx name t r =
   bind_entry cx name (Entry.new_let t ~loc ~state) r
 
 (* bind implicit let entry *)
-let bind_implicit_let ?(state=State.Undeclared) implicit cx name t r =
+let bind_implicit_let ?(state=State.Undeclared) kind cx name t r =
   let loc = loc_of_reason r in
-  bind_entry cx name (Entry.new_let t ~implicit ~loc ~state) r
+  bind_entry cx name (Entry.new_let t ~kind ~loc ~state) r
 
 let bind_fun ?(state=State.Declared) =
   bind_implicit_let ~state Entry.FunctionBinding
@@ -486,6 +487,11 @@ let bind_fun ?(state=State.Declared) =
 let bind_const ?(state=State.Undeclared) cx name t r =
   let loc = loc_of_reason r in
   bind_entry cx name (Entry.new_const t ~loc ~state) r
+
+(* bind implicit const entry *)
+let bind_implicit_const ?(state=State.Undeclared) kind cx name t r =
+  let loc = loc_of_reason r in
+  bind_entry cx name (Entry.new_const t ~kind ~loc ~state) r
 
 (* bind type entry *)
 let bind_type ?(state=State.Declared) cx name t r =
@@ -553,10 +559,10 @@ let declare_value_entry kind cx name reason =
       already_bound_error cx name entry reason
   )
 
-let declare_let = declare_value_entry (Entry.Let None)
-let declare_implicit_let implicit =
-  declare_value_entry (Entry.Let (Some implicit))
-let declare_const = declare_value_entry Entry.Const
+let declare_let = declare_value_entry Entry.(Let LetVarBinding)
+let declare_implicit_let kind =
+  declare_value_entry (Entry.Let kind)
+let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 (* Used to adjust state based on whether there is an annotation.
 
@@ -607,7 +613,7 @@ let init_value_entry kind cx name ~has_anno specific reason =
     | Var, Value ({ Entry.kind = Var; _ } as v)
     | Let _, Value ({ Entry.kind = Let _;
         value_state = State.Undeclared | State.Declared; _ } as v)
-    | Const, Value ({ Entry.kind = Const;
+    | Const _, Value ({ Entry.kind = Const _;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.(add_var_change (scope.id, name, Write));
       Flow_js.flow_t cx (specific, Entry.general_of_value v);
@@ -627,10 +633,10 @@ let init_value_entry kind cx name ~has_anno specific reason =
     )
 
 let init_var = init_value_entry Entry.Var
-let init_let = init_value_entry (Entry.Let None)
-let init_implicit_let implicit = init_value_entry (Entry.Let (Some implicit))
+let init_let = init_value_entry Entry.(Let LetVarBinding)
+let init_implicit_let kind = init_value_entry (Entry.Let kind)
 let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
-let init_const = init_value_entry Entry.Const
+let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
 (* update type alias to reflect initialization in code *)
 let init_type cx name _type reason =
@@ -691,7 +697,7 @@ let same_activation target =
 let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
   (* from value positions, a same-activation ref to var or an explicit let
      before initialization yields undefined. *)
-| { Entry.kind = Var | Let None;
+| { Entry.kind = Var | Let LetVarBinding;
     value_state = State.Declared | State.MaybeInitialized as state;
     value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
@@ -722,7 +728,7 @@ let tdz_error cx name reason v = Entry.(
 (* helper for read/write tdz checks *)
 (* functions are block-scoped, but also hoisted. forward ref ok *)
 let allow_forward_ref = Scope.Entry.(function
-  | Var | Let (Some FunctionBinding) -> true
+  | Var | Let FunctionBinding -> true
   | _ -> false
 )
 
@@ -806,8 +812,16 @@ let update_var op cx name specific reason =
 
     Scope.add_entry name update scope
 
-  | Value { Entry.kind = Const; _ } ->
-    let msg = "const cannot be reassigned" in
+  | Value ({ Entry.kind = Const ConstVarBinding; _ } as v) ->
+    let msg = spf "%s cannot be reassigned"
+      Entry.(string_of_value_kind (kind_of_value v)) in
+    binding_error msg cx name entry reason
+
+  | Value ({ Entry.kind = Const ConstParamBinding; _ } as v) ->
+    (* TODO: remove extra info when surface syntax is added *)
+    let msg = spf "%s cannot be reassigned \
+      (see experimental.const_params=true in .flowconfig)"
+      Entry.(string_of_value_kind (kind_of_value v)) in
     binding_error msg cx name entry reason
 
   | Type _ ->
@@ -826,7 +840,7 @@ let refine_const cx name specific reason =
   let scope, entry = find_entry cx name reason in
   Entry.(match entry with
 
-  | Value v when Entry.kind_of_value v = Const ->
+  | Value ({ Entry.kind = Const _; _ } as v) ->
     Changeset.(add_var_change (scope.id, name, Refine));
     Flow_js.flow_t cx (specific, Entry.general_of_value v);
     let update = Value {
@@ -1255,7 +1269,7 @@ let refine_with_preds cx reason preds orig_types =
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
         let refine = match Entry.kind_of_value v with
-          | Const -> refine_const
+          | Const _ -> refine_const
           | _ -> refine_var
         in
         refine cx name refi_type refi_reason

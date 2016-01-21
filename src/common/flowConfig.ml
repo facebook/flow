@@ -41,6 +41,7 @@ module Opts = struct
     | ESPROPOSAL_WARN
 
   type t = {
+    enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
     esproposal_class_instance_fields: esproposal_feature_mode;
     esproposal_class_static_fields: esproposal_feature_mode;
@@ -108,6 +109,7 @@ module Opts = struct
         |> SSet.add ".json"
 
   let default_options = {
+    enable_const_params = false;
     enable_unsafe_getters_and_setters = false;
     esproposal_class_instance_fields = ESPROPOSAL_WARN;
     esproposal_class_static_fields = ESPROPOSAL_WARN;
@@ -685,6 +687,15 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with enable_unsafe_getters_and_setters = v;}
+      );
+    }
+
+    |> define_opt "experimental.const_params" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with enable_const_params = v;}
       );
     }
 
