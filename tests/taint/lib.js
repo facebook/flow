@@ -1,4 +1,6 @@
-declare class FakeLocation {}
+declare class FakeLocation {
+  assign(url: string): void;
+}
 
 declare class FakeDocument {
   location: FakeLocation;

@@ -83,13 +83,13 @@ globals.js:5:5,25: assignment of property `location`
 Error:
 globals.js:5:29,29: taint
 This type is incompatible with
-[LIB] lib.js:4:13,24: FakeLocation
+[LIB] lib.js:6:13,24: FakeLocation
 
-taint2.js:8:5,37: call of method `assign`
+taint2.js:8:5,41: call of method `assign`
 Error:
-taint2.js:8:30,36: taint
+taint2.js:8:34,40: taint
 This type is incompatible with
-[LIB] bom.js:142:17,22: string
+[LIB] lib.js:2:15,20: string
 
 taint3.js:10:24,27: taint
 This type is incompatible with
