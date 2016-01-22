@@ -4977,16 +4977,12 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   (* inspect a null equality test *)
-  let null_test loc op e =
+  let null_test loc ~sense ~strict e =
     let refinement = match refinable_lvalue e with
     | None, _ -> None
     | Some name, t ->
-        match op with
-        | Binary.Equal | Binary.NotEqual ->
-            Some (name, t, MaybeP, op = Binary.Equal)
-        | Binary.StrictEqual | Binary.StrictNotEqual ->
-            Some (name, t, NullP, op = Binary.StrictEqual)
-        | _ -> None
+        let pred = if strict then NullP else MaybeP in
+        Some (name, t, pred, sense)
     in
     match refinement with
     | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
@@ -4994,16 +4990,12 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   (* inspect an undefined equality test *)
-  let undef_test loc op e =
+  let undef_test loc ~sense ~strict e =
     let refinement = match refinable_lvalue e with
     | None, _ -> None
     | Some name, t ->
-        match op with
-        | Binary.Equal | Binary.NotEqual ->
-            Some (name, t, MaybeP, op = Binary.Equal)
-        | Binary.StrictEqual | Binary.StrictNotEqual ->
-            Some (name, t, VoidP, op = Binary.StrictEqual)
-        | _ -> None
+        let pred = if strict then VoidP else MaybeP in
+        Some (name, t, pred, sense)
     in
     match refinement with
     | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
@@ -5019,9 +5011,9 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
      `foo.bar === false`, `foo.bar` is refined to be `false` (by `bool_test`)
      and `foo` is refined to eliminate branches that don't have a `false` bar
      property (by this function). *)
-  let condition_of_maybe_sentinel cx type_params_map op expr val_t =
-    match op, expr with
-    | (Binary.StrictEqual | Binary.StrictNotEqual),
+  let condition_of_maybe_sentinel cx type_params_map ~sense ~strict expr val_t =
+    match strict, expr with
+    | true,
       (expr_loc, Member {
         Member._object;
         property = Member.PropertyIdentifier (prop_loc,
@@ -5039,35 +5031,30 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       Flow_js.flow cx (obj_t, HasPropT (prop_reason, None, prop_name));
 
       let expr_reason = mk_reason (spf "property `%s`" prop_name) expr_loc in
-      let prop_t =
-        get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name) in
+      let prop_t = match Refinement.get cx expr expr_reason with
+      | Some t -> t
+      | None ->
+          get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
+      in
 
       (* refine the object (`foo.bar` in the example) based on the prop. *)
       let refinement = match Refinement.key _object with
       | None -> None
       | Some name ->
           let pred = LeftP (SentinelProp prop_name, val_t) in
-          Some (name, obj_t, pred, op = Binary.StrictEqual)
+          Some (name, obj_t, pred, sense)
       in
       prop_t, refinement
     | _ ->
       condition cx type_params_map expr, None
   in
 
-  let literal_test loc op expr val_t pred =
+  let literal_test loc ~strict ~sense expr val_t pred =
     let t, sentinel_refinement =
-      condition_of_maybe_sentinel cx type_params_map op expr val_t in
-    let refinement = match Refinement.key expr with
-      | None -> None
-      | Some name ->
-        match op with
-        (* TODO support == *)
-        | Binary.StrictEqual | Binary.StrictNotEqual ->
-            Some (name, op = Binary.StrictEqual)
-        | _ -> None
-    in
+      condition_of_maybe_sentinel cx type_params_map ~sense ~strict expr val_t in
+    let refinement = if strict then Refinement.key expr else None in
     let out = match refinement with
-    | Some (name, sense) -> result (BoolT.at loc) name t pred sense
+    | Some name -> result (BoolT.at loc) name t pred sense
     | None -> empty_result (BoolT.at loc)
     in
     match sentinel_refinement with
@@ -5099,39 +5086,69 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     | None, _ -> empty_result (BoolT.at loc)
   in
 
-  let sentinel_prop_test loc op expr val_t =
-    let _, sentinel_refinement =
-      condition_of_maybe_sentinel cx type_params_map op expr val_t in
+  let sentinel_prop_test loc ~sense ~strict expr val_t =
+    let _, sentinel_refinement = condition_of_maybe_sentinel
+      cx type_params_map ~sense ~strict expr val_t in
     let out = empty_result (BoolT.at loc) in
     match sentinel_refinement with
     | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
     | None -> out
   in
 
-  let eq_test loc op left right =
+  let eq_test loc ~sense ~strict left right =
     match left, right with
+    (* typeof expr ==/=== string *)
+    (* this must happen before the case below involving Literal.String in order
+       to match anything. *)
+    | (_, Expression.Unary { Unary.operator = Unary.Typeof; argument; _ }),
+      (str_loc, Expression.Literal { Literal.value = Literal.String s; _ })
+    | (str_loc, Expression.Literal { Literal.value = Literal.String s; _ }),
+      (_, Expression.Unary { Unary.operator = Unary.Typeof; argument; _ })
+      ->
+        typeof_test loc sense argument s str_loc
+
     (* special case equality relations involving booleans *)
     | (_, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value, expr
     | expr, ((_, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value)
       ->
         let val_t = expression cx type_params_map value in
-        literal_test loc op expr val_t (SingletonBoolP lit)
+        literal_test loc ~sense ~strict expr val_t (SingletonBoolP lit)
 
     (* special case equality relations involving strings *)
     | (_, Expression.Literal { Literal.value = Literal.String lit; _}) as value, expr
     | expr, ((_, Expression.Literal { Literal.value = Literal.String lit; _}) as value)
       ->
         let val_t = expression cx type_params_map value in
-        literal_test loc op expr val_t (SingletonStrP lit)
+        literal_test loc ~sense ~strict expr val_t (SingletonStrP lit)
 
     (* TODO: add Type.predicate variant that tests number equality *)
+
+    (* expr op null *)
+    | (_, Expression.Literal { Literal.value = Literal.Null; _ }), expr
+    | expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })
+      ->
+        null_test loc ~sense ~strict expr
+
+    (* expr op undefined *)
+    | (_, Identifier (_, { Identifier.name = "undefined"; _ })), expr
+    | expr, (_, Identifier (_, { Identifier.name = "undefined"; _ }))
+      ->
+        undef_test loc ~sense ~strict expr
+
+    (* expr op void(...) *)
+    | (_, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg), expr
+    | expr, (_, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg)
+      ->
+        ignore (expression cx type_params_map void_arg);
+        undef_test loc ~sense ~strict expr
 
     (* fallback case for equality relations involving sentinels (this should be
        lower priority since it refines the object but not the property) *)
     | (_, Expression.Member _ as expr), value
     | value, (_, Expression.Member _ as expr)
       ->
-        sentinel_prop_test loc op expr (expression cx type_params_map value)
+        let value_t = expression cx type_params_map value in
+        sentinel_prop_test loc ~sense ~strict expr value_t
 
     (* for all other cases, walk the AST but always return bool *)
     | expr, value ->
@@ -5191,109 +5208,15 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
           empty_result BoolT.t
     )
 
-  (* expr op null *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left;
-      right = _, Expression.Literal { Literal.value = Literal.Null; _ }
-    } ->
-      null_test loc op left
-
-  (* null op expr *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left = _, Expression.Literal { Literal.value = Literal.Null; _ };
-      right
-    } ->
-      null_test loc op right
-
-  (* expr op undefined *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left;
-      right = _, Identifier (_, { Identifier.name = "undefined"; _ })
-    } ->
-      undef_test loc op left
-
-  (* undefined op expr *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left = _, Identifier (_, { Identifier.name = "undefined"; _ });
-      right
-    } ->
-      undef_test loc op right
-
-  (* expr op void(...) *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left;
-      right = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg
-    } ->
-      ignore (expression cx type_params_map void_arg);
-      undef_test loc op left
-
-  (* void(...) op expr *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left = _, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg;
-      right
-    } ->
-      ignore (expression cx type_params_map void_arg);
-      undef_test loc op right
-
-  (* typeof expr ==/=== string *)
-  | loc, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
-      left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
-      right = str_loc, Expression.Literal {
-        Literal.value = Literal.String s;
-        _
-      };
-    } ->
-      typeof_test loc true argument s str_loc
-
-  (* typeof expr !=/!== string *)
-  | loc, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
-      left = _, Unary { Unary.operator = Unary.Typeof; argument; _ };
-      right = str_loc, Expression.Literal {
-        Literal.value = Literal.String s;
-        _
-      };
-    } ->
-      typeof_test loc false argument s str_loc
-
-  (* string ==/=== typeof expr *)
-  | loc, Binary { Binary.operator = Binary.Equal | Binary.StrictEqual;
-      left = str_loc, Expression.Literal {
-        Literal.value = Literal.String s;
-        _
-      };
-      right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
-    } ->
-      typeof_test loc true argument s str_loc
-
-  (* string !=/!== typeof expr *)
-  | loc, Binary { Binary.operator = Binary.NotEqual | Binary.StrictNotEqual;
-      left = str_loc, Expression.Literal {
-        Literal.value = Literal.String s;
-        _
-      };
-      right = _, Unary { Unary.operator = Unary.Typeof; argument; _ }
-    } ->
-      typeof_test loc false argument s str_loc
-
   (* expr op expr *)
-  | loc, Binary { Binary.
-      operator = (Binary.Equal | Binary.StrictEqual |
-                  Binary.NotEqual | Binary.StrictNotEqual) as op;
-      left; right;
-    } ->
-      eq_test loc op left right
+  | loc, Binary { Binary.operator = Binary.Equal; left; right; } ->
+      eq_test loc ~sense:true ~strict:false left right
+  | loc, Binary { Binary.operator = Binary.StrictEqual; left; right; } ->
+      eq_test loc ~sense:true ~strict:true left right
+  | loc, Binary { Binary.operator = Binary.NotEqual; left; right; } ->
+      eq_test loc ~sense:false ~strict:false left right
+  | loc, Binary { Binary.operator = Binary.StrictNotEqual; left; right; } ->
+      eq_test loc ~sense:false ~strict:true left right
 
   (* Array.isArray(expr) *)
   | _, Call {
