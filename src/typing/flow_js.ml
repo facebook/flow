@@ -4505,8 +4505,11 @@ and filter_exists = function
   (* falsy things get removed *)
   | NullT r
   | VoidT r
+  | SingletonBoolT (r, false)
   | BoolT (r, Some false)
+  | SingletonStrT (r, "")
   | StrT (r, (Literal "" | Falsy))
+  | SingletonNumT (r, (0., _))
   | NumT (r, (Literal (0., _) | Falsy)) -> EmptyT r
 
   (* unknown things become truthy *)
@@ -4523,12 +4526,17 @@ and filter_not_exists t = match t with
   (* falsy things pass through *)
   | NullT _
   | VoidT _
+  | SingletonBoolT (_, false)
   | BoolT (_, Some false)
+  | SingletonStrT (_, "")
   | StrT (_, (Literal "" | Falsy))
+  | SingletonNumT (_, (0., _))
   | NumT (_, (Literal (0., _) | Falsy)) -> t
 
   (* truthy things get removed *)
+  | SingletonBoolT (r, _)
   | BoolT (r, Some _)
+  | SingletonStrT (r, _)
   | StrT (r, (Literal _ | Truthy))
   | ArrT (r, _, _)
   | ObjT (r, _)
@@ -4536,6 +4544,7 @@ and filter_not_exists t = match t with
   | AnyObjT r
   | FunT (r, _, _, _)
   | AnyFunT r
+  | SingletonNumT (r, _)
   | NumT (r, (Literal _ | Truthy)) -> EmptyT r
 
   | ClassT t -> EmptyT (reason_of_t t)
@@ -4837,11 +4846,33 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP(ExistsP)) ->
     rec_flow_t cx trace (filter_not_exists l, t)
 
+  | (_, PropExistsP key) ->
+    prop_exists_test cx trace key true l t
+
+  | (_, NotP (PropExistsP key)) ->
+    prop_exists_test cx trace key false l t
+
   (* unreachable *)
   | (_, NotP (NotP _))
   | (_, NotP (AndP _))
   | (_, NotP (OrP _)) ->
     assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
+
+and prop_exists_test cx trace key sense obj result =
+  match obj with
+  | ObjT (_, { props_tmap; _}) ->
+      begin match read_prop_opt cx props_tmap key with
+      | Some t ->
+        let filter = if sense then filter_exists else filter_not_exists in
+        begin match filter t with
+        | EmptyT _ -> () (* provably unreachable, so prune *)
+        | _ -> rec_flow_t cx trace (obj, result)
+        end
+      | None ->
+        rec_flow_t cx trace (obj, result)
+      end
+  | _ ->
+    rec_flow_t cx trace (obj, result)
 
 and binary_predicate cx trace sense test left right result =
   let handler =

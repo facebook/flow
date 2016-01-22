@@ -79,7 +79,7 @@ type Citizen = { citizen: true };
 type NonCitizen = { citizen: false, nationality: string }
 function nationality(x: Citizen | NonCitizen) {
   if (x.citizen) return "Shire"
-  else return x.nationality; // TODO: currently error, but should be OK
+  else return x.nationality;
 }
 
 let tests = [

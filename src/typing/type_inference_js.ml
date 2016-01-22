@@ -5180,14 +5180,39 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   (* main *)
   match e with
 
-  (* ids, member expressions *)
-  | _, This
-  | _, Identifier _
-  | _, Member _ -> (
-      match refinable_lvalue e with
-      | Some name, t -> result t name t ExistsP true
-      | None, t -> empty_result t
-    )
+  (* member expressions *)
+  | loc, Member {
+      Member._object;
+      property = Member.PropertyIdentifier (prop_loc,
+        { Identifier.name = prop_name; _ });
+        _
+      }
+    ->
+
+      (* use `expression` instead of `condition` because `_object` is the object
+         in a member expression; if it itself is a member expression, it must
+         exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
+         `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
+      let obj_t = expression cx type_params_map _object in
+
+      let expr_reason = mk_reason (spf "foo property `%s`" prop_name) loc in
+      let prop_reason = mk_reason (spf "bar property `%s`" prop_name) prop_loc in
+      let t = match Refinement.get cx e expr_reason with
+      | Some t -> t
+      | None ->
+          get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
+      in
+
+      let out = match Refinement.key e with
+      | Some name -> result t name t ExistsP true
+      | None -> empty_result t
+      in
+
+      (* refine the object (`foo.bar` in the example) based on the prop. *)
+      begin match Refinement.key _object with
+      | Some name -> out |> add_predicate name obj_t (PropExistsP prop_name) true
+      | None -> out
+      end
 
   (* assignments *)
   | _, Assignment { Assignment.left = loc, Ast.Pattern.Identifier id; _ } -> (
@@ -5271,6 +5296,15 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   | loc, Unary { Unary.operator = Unary.Not; argument; _ } ->
       let (_, map, not_map, xts) = predicates_of_condition cx type_params_map argument in
       (BoolT.at loc, not_map, map, xts)
+
+  (* ids *)
+  | _, This
+  | _, Identifier _
+  | _, Member _ -> (
+      match refinable_lvalue e with
+      | Some name, t -> result t name t ExistsP true
+      | None, t -> empty_result t
+    )
 
   (* fallthrough case: evaluate test expr, no refinements *)
   | e ->

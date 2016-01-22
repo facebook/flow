@@ -30,6 +30,7 @@ let string_of_pred_ctor = function
   | ArrP -> "ArrP"
   | SingletonBoolP _ -> "SingletonBoolP"
   | SingletonStrP _ -> "SingletonStrP"
+  | PropExistsP _ -> "PropExistsP"
 
 let string_of_binary_test_ctor = function
   | InstanceofTest -> "InstanceofTest"
@@ -665,6 +666,8 @@ and json_of_pred_impl json_cx p = Hh_json.(
 
   | SingletonBoolP value -> ["value", JSON_Bool value]
   | SingletonStrP str -> ["value", JSON_String str]
+
+  | PropExistsP key -> ["propName", JSON_String key]
 
   | ExistsP
   | VoidP

@@ -428,6 +428,7 @@ and gc_pred cx state = function
   | ArrP
   | SingletonBoolP _
   | SingletonStrP _
+  | PropExistsP _
       -> ()
 
 (* Keep a reachable type variable around. *)

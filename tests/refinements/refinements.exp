@@ -53,6 +53,30 @@ cond_prop.js:11:25,36: object type
 This type is incompatible with
 cond_prop.js:9:34,37: union: Name | ListType | NonNullType
 
+cond_prop.js:19:14,19: property `result`
+Property not found in
+cond_prop.js:19:12,12: object type
+
+cond_prop.js:24:16,21: property `result`
+Property not found in
+cond_prop.js:24:14,14: object type
+
+cond_prop.js:26:14,19: property `result`
+Property not found in
+cond_prop.js:26:12,12: object type
+
+cond_prop.js:36:12,14: property `bar`
+Property not found in
+cond_prop.js:36:10,10: object type
+
+cond_prop.js:46:12,14: property `foo`
+Property not found in
+cond_prop.js:46:10,10: object type
+
+cond_prop.js:48:12,15: property `quux`
+Property not found in
+cond_prop.js:48:10,10: object type
+
 hasOwnProperty.js:4:3,7: call of method `y`
 Function cannot be called on possibly undefined value
 hasOwnProperty.js:3:20,29: undefined
@@ -343,10 +367,6 @@ tagged_union.js:72:21,21: property `A`
 Property not found in
 tagged_union.js:72:19,19: object type
 
-tagged_union.js:82:17,27: property `nationality`
-Property not found in
-tagged_union.js:82:15,15: object type
-
 tagged_union.js:88:11,18: property `kindTypo`
 Property not found in
 tagged_union.js:88:9,9: object type
@@ -498,4 +518,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 118 errors
+Found 123 errors

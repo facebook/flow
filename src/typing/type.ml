@@ -383,6 +383,9 @@ and predicate =
 
   | ArrP (* Array.isArray *)
 
+  (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP "b", tout))` *)
+  | PropExistsP of string
+
 and binary_test =
   (* e1 instanceof e2 *)
   | InstanceofTest
@@ -833,6 +836,7 @@ let rec loc_of_predicate = function
   | VoidP
 
   | ArrP
+  | PropExistsP _
     -> Loc.none (* TODO!!!!!!!!!!!! *)
 
 
@@ -1161,6 +1165,8 @@ let rec string_of_predicate = function
 
   (* Array.isArray *)
   | ArrP -> "array"
+
+  | PropExistsP key -> spf "prop `%s` is truthy" key
 
 module Polarity = struct
   (* Subtype relation for polarities, interpreting neutral as positive &
