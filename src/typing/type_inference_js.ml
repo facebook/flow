@@ -798,10 +798,19 @@ let rec convert cx type_params_map = Ast.Type.(function
     (* Seal an object type unless it specifies an indexer. *)
     let sealed, dict =
       match indexers with
-      | [
+      | [] ->
+          true,
+          None
+      | (
           _,
           { Object.Indexer.id = (_, { Ast.Identifier.name; _ }); key; value; _;}
-        ] ->
+        )::rest ->
+          (* TODO *)
+          List.iter (fun (indexer_loc, _) ->
+            let msg = "multiple indexers are not supported" in
+            Flow_js.add_error cx [mk_reason "" indexer_loc, msg];
+          ) rest;
+
           let keyt = convert cx type_params_map key in
           let valuet = convert cx type_params_map value in
           false,
@@ -810,11 +819,6 @@ let rec convert cx type_params_map = Ast.Type.(function
             key = keyt;
             value = valuet
           }
-      | [] ->
-          true,
-          None
-      (* TODO *)
-      | _ -> failwith "Unimplemented: multiple indexers"
     in
     let pmap = Flow_js.mk_propmap cx props_map in
     let proto = MixedT (reason_of_string "Object") in
@@ -1549,12 +1553,16 @@ and statement cx type_params_map = Ast.Statement.(
     in
     let fmap = match indexers with
       | [] -> fmap
-      | [(_, { Ast.Type.Object.Indexer.key; value; _; })] ->
+      | (_, { Ast.Type.Object.Indexer.key; value; _; })::rest ->
+        (* TODO *)
+        List.iter (fun (indexer_loc, _) ->
+          let msg = "multiple indexers are not supported" in
+          Flow_js.add_error cx [mk_reason "" indexer_loc, msg];
+        ) rest;
+
         let keyt = convert cx type_params_map key in
         let valuet = convert cx type_params_map value in
         fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
-    (* TODO *)
-      | _ -> failwith "Unimplemented: multiple indexers"
     in
     let calls = callProperties |> List.map (function
       | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->

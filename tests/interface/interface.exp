@@ -1,4 +1,7 @@
 
+indexer.js:9:3,22: 
+multiple indexers are not supported
+
 interface.js:3:17,25: number
 This type is incompatible with
 interface.js:3:8,13: string
@@ -66,4 +69,4 @@ test3.js:6:4,6: string
 This type is incompatible with
 test3.js:6:9,14: number
 
-Found 17 errors
+Found 18 errors
