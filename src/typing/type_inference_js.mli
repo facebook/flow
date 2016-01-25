@@ -19,22 +19,12 @@ val infer_ast:
   Spider_monkey_ast.program ->
   Context.t
 
-val merge_component_strict: Context.t list ->
-  Context.t list -> (Context.t * string * Modulename.t * Context.t) list ->
-  (string * Modulename.t * Context.t) list -> Context.t ->
-  unit
-
-val restore: Context.t ->
-  Context.t list -> Context.t -> unit
-
 val mk_object: Context.t -> reason -> Type.t
 
-val load_lib_file:
+val infer_lib_file:
   verbose: int option ->
   exclude_syms:Utils.SSet.t ->
   filename ->
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->
-  (filename -> Errors_js.ErrorSet.t -> unit) ->
-  (filename -> Errors_js.ErrorSuppressions.t -> unit) ->
-  string list
+  Context.t * string list

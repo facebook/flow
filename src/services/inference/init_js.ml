@@ -62,15 +62,12 @@ let load_lib_files files ~verbose
       match parse_lib_file save_parse_errors file with
       | lib_file, Some (_, statements, comments) ->
 
-        let syms = Infer.load_lib_file
-          ~verbose
-          ~exclude_syms
-          lib_file
-          statements
-          comments
-          save_infer_errors
-          save_suppressions
+        let cx, syms = Infer.infer_lib_file
+          ~verbose ~exclude_syms
+          lib_file statements comments
         in
+
+        Merge_js.merge_lib_file cx save_infer_errors save_suppressions;
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"

@@ -514,8 +514,9 @@ let merge_strict_context cache component_cxs =
 
   let orig_master_cx, master_cx = sig_cache#read Loc.Builtins in
 
-  TI.merge_component_strict component_cxs sig_cxs impls decls master_cx;
-  TI.restore cx orig_sig_cxs orig_master_cx;
+  Merge_js.merge_component_strict
+    component_cxs sig_cxs impls decls master_cx;
+  Merge_js.restore cx orig_sig_cxs orig_master_cx;
 
   ()
 

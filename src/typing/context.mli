@@ -51,6 +51,7 @@ val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> int option
 
 val copy_of_context: t -> t
+val merge_into: t -> t -> unit
 
 (* mutators *)
 val add_env: t -> int -> env -> unit
