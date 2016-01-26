@@ -39,6 +39,16 @@ let is_lib_file f = match f with
 | Loc.LibFile _ -> true
 | _ -> false
 
+let empty_file_info : FileInfo.t = {
+  file_mode = None;
+  FileInfo.funs = [];
+  classes = [];
+  typedefs = [];
+  consts = [];
+  comments = [];
+  consider_names_just_for_autoload = false;
+}
+
 (****************** shared context heap *********************)
 
 (* map from file names to contexts *)
@@ -1227,7 +1237,7 @@ let recheck genv env modified =
   let parsed = FilenameSet.union freshparsed unmodified_parsed in
   let files_info = FilenameSet.fold (fun file info ->
     let file = Path.make (string_of_filename file) in
-    ServerEnv.PathMap.add file Parsing_service.empty_file_info info
+    ServerEnv.PathMap.add file empty_file_info info
   ) parsed ServerEnv.PathMap.empty in
 
   (* NOTE: unused fields are left in their initial empty state *)
@@ -1332,7 +1342,7 @@ let server_init genv env =
   (* for now we populate file_infos with empty def lists *)
   let files_info = FilenameSet.fold (fun file info ->
     let file = Path.make (string_of_filename file) in
-    ServerEnv.PathMap.add file Parsing_service.empty_file_info info
+    ServerEnv.PathMap.add file empty_file_info info
   ) parsed ServerEnv.PathMap.empty in
 
   (* We ensure an invariant required by recheck, namely that the keyset of
