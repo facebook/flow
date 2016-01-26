@@ -5196,12 +5196,15 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         _
       }
     ->
-
-      (* use `expression` instead of `condition` because `_object` is the object
-         in a member expression; if it itself is a member expression, it must
-         exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
-         `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
-      let obj_t = expression cx type_params_map _object in
+      let obj_t = match _object with
+      | _, Identifier ( super_loc, { Ast.Identifier.name = "super"; _ }) ->
+          super_ cx (mk_reason (spf "property `%s`" prop_name) super_loc)
+      | _ ->
+          (* use `expression` instead of `condition` because `_object` is the
+             object in a member expression; if it itself is a member expression,
+             it must exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here
+             as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
+          expression cx type_params_map _object in
 
       let expr_reason = mk_reason (spf "foo property `%s`" prop_name) loc in
       let prop_reason = mk_reason (spf "bar property `%s`" prop_name) prop_loc in
