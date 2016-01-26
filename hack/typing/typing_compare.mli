@@ -19,7 +19,7 @@ val get_classes_deps : Classes.t option SMap.t -> Classes.t option SMap.t ->
 
 val get_funs_deps : Funs.t option SMap.t -> SSet.t -> DepSet.t * DepSet.t
 
-val get_types_deps : Typedef.tdef_or_error option SMap.t -> SSet.t -> DepSet.t
+val get_types_deps : Typedef.t option SMap.t -> SSet.t -> DepSet.t
 
 val get_gconsts_deps : GConsts.t option SMap.t -> SSet.t -> DepSet.t * DepSet.t
 

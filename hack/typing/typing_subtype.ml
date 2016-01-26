@@ -564,14 +564,13 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
     (_, Tabstract (AKnewtype (name_sub, tyl_sub), _))
     when name_super = name_sub ->
       let td = Env.get_typedef env name_super in
-      (match td with
-      | Some (DefsDB.Typedef.Ok (_, tparams, _, _, _)) ->
+      begin match td with
+        | Some (_, tparams, _, _, _) ->
           let variancel =
-            List.map tparams (fun (variance, _, _) -> variance)
-          in
+            List.map tparams (fun (variance, _, _) -> variance) in
           subtype_tparams env name_super variancel tyl_super tyl_sub
-      | _ -> env
-      )
+        | _ -> env
+      end
   | _, (_, Tabstract ((AKnewtype (_, _) | AKenum _), Some x)) ->
       Errors.try_
         (fun () ->

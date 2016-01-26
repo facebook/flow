@@ -22,7 +22,7 @@ module TUtils = Typing_utils
 
 let make_ts env ty =
   match Env.get_typedef env SN.FB.cTypeStructure with
-  | Some (Typing_heap.Typedef.Ok (_, tparaml, _, _, _)) ->
+  | Some (_, tparaml, _, _, _) ->
       let params = List.map ~f:begin fun (_, (p, x), cstr) ->
         Reason.Rwitness p, Tgeneric (x, cstr)
       end tparaml in

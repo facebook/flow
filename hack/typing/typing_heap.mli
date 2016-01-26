@@ -16,11 +16,9 @@ module Fun : sig type t = decl fun_type val prefix : Prefix.t end
 module Typedef :
   sig
     type visibility = Public | Private
-    type tdef =
+    type t =
         visibility * tparam list * decl ty option *
         decl ty * Pos.t
-    type tdef_or_error = Error | Ok of tdef
-    type t = tdef_or_error
     val prefix : Prefix.t
   end
 module GConst : sig type t = decl ty val prefix : Prefix.t end

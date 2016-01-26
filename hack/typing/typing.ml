@@ -1299,7 +1299,7 @@ and expr_
   | NullCoalesce (e1, e2) -> eif env ~coalesce:true ~in_cond p e1 None e2
   | Typename sid ->
       begin match Env.get_typedef env (snd sid) with
-        | Some (Typing_heap.Typedef.Ok (_, tparaml, _, _, _)) ->
+        | Some (_, tparaml, _, _, _) ->
             let params = List.map ~f:begin fun (_, (p, x), cstr) ->
               Reason.Rwitness p, Tgeneric (x, cstr)
             end tparaml in

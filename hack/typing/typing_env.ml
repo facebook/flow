@@ -315,7 +315,7 @@ let add_class x y =
   Classes.add x y
 
 let add_typedef x y =
-  Typedefs.add x (Typing_heap.Typedef.Ok y)
+  Typedefs.add x y
 
 let is_typedef x =
   match Typedefs.get x with
@@ -336,9 +336,6 @@ let get_enum_constraint x =
     match tc.tc_enum_type with
       | None -> None
       | Some e -> e.te_constraint
-
-let add_typedef_error x =
-  Typedefs.add x Typing_heap.Typedef.Error
 
 (* Adds a new function (global) *)
 let add_fun x ft =

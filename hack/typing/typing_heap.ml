@@ -37,14 +37,9 @@ module Typedef = struct
     | Public
     | Private
 
-  type tdef =
+  type t =
     visibility * Typing_defs.tparam list * decl ty option * decl ty * Pos.t
 
-  type tdef_or_error =
-    | Error
-    | Ok of tdef
-
-  type t = tdef_or_error
   let prefix = Prefix.make()
 end
 
