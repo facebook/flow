@@ -766,23 +766,19 @@ let merge_strict workers dependency_graph partition opts =
   SigContextHeap.add Loc.Builtins master_cx;
   (* make a map from component leaders to components *)
   let component_map =
-    let result = ref FilenameMap.empty in
-    IMap.iter (fun _ components ->
-      List.iter (fun component ->
-        result := FilenameMap.add (List.hd component) component !result;
-      ) components;
-    ) partition;
-    !result
+    IMap.fold (fun _ components acc ->
+      List.fold_left (fun acc component ->
+        FilenameMap.add (List.hd component) component acc
+      ) acc components
+    ) partition FilenameMap.empty
   in
   (* make a map from files to their component leaders *)
   let leader_map =
-    let result = ref FilenameMap.empty in
-    component_map |> FilenameMap.iter (fun file component ->
-      component |> List.iter (fun file_ ->
-        result := FilenameMap.add file_ file !result
-      );
-    );
-    !result
+    FilenameMap.fold (fun file component acc ->
+      List.fold_left (fun acc file_ ->
+        FilenameMap.add file_ file acc
+      ) acc component
+    ) component_map FilenameMap.empty
   in
   (* store leaders to a heap; used when rechecking *)
   leader_map |> FilenameMap.iter LeaderHeap.add;
