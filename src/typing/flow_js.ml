@@ -762,24 +762,6 @@ let fresh_context metadata file module_name =
   mk_builtins cx;
   cx
 
-(* created in the master process (see Server.preinit), populated and saved to
-   ContextHeap. forked workers will have an empty replica from the master, but
-   it's useless. should only be accessed through ContextHeap. *)
-let master_cx =
-  let cx_ = ref None in
-  fun () -> match !cx_ with
-  | None ->
-    let cx = fresh_context { Context.
-      checked = false;
-      weak = false;
-      munge_underscores = false;
-      verbose = None;
-      is_declaration_file = false;
-    } Loc.Builtins (Modulename.String Files_js.lib_module) in
-    cx_ := Some cx;
-    cx
-  | Some cx -> cx
-
 (***********************)
 (* instantiation utils *)
 (***********************)

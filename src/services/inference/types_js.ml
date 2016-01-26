@@ -759,7 +759,7 @@ end
 
 let merge_strict workers dependency_graph partition opts =
   (* NOTE: master_cx will only be saved once per server lifetime *)
-  let master_cx = Flow_js.master_cx () in
+  let master_cx = Init_js.get_master_cx () in
   (* TODO: we probably don't need to save master_cx in ContextHeap *)
   ContextHeap.add Loc.Builtins master_cx;
   (* store master signature context to heap *)
@@ -1139,7 +1139,7 @@ let recheck genv env modified =
   let modified_count = FilenameSet.cardinal modified in
 
   (* clear errors for modified files, deleted files and master *)
-  let master_cx = Flow_js.master_cx () in
+  let master_cx = Init_js.get_master_cx () in
   clear_errors ~debug (Context.file master_cx :: FilenameSet.elements modified);
   clear_errors ~debug (FilenameSet.elements deleted);
 

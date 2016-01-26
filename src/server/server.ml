@@ -40,7 +40,7 @@ struct
      * example *)
     let flow_options = OptionParser.parse () in
     Types_js.init_modes flow_options;
-    ignore (Flow_js.master_cx ());
+    ignore (Init_js.get_master_cx ());
     Parsing_service_js.call_on_success SearchService_js.update
 
   let init genv env =

@@ -8,6 +8,8 @@
  *
  *)
 
+val get_master_cx: unit -> Context.t
+
 (* called to initialize library code on initial full pass.
    params are functions to save errors and suppressions:
    circular deps in Ocaml prevent direct calls from here

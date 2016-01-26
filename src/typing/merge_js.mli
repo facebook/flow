@@ -19,6 +19,7 @@ val restore: Context.t ->
 
 val merge_lib_file:
   Context.t ->
+  Context.t ->
   (filename -> Errors_js.ErrorSet.t -> unit) ->
   (filename -> Errors_js.ErrorSuppressions.t -> unit) ->
   unit

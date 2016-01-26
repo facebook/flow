@@ -111,8 +111,7 @@ let restore cx dep_cxs master_cx =
   Context.merge_into cx master_cx
 
 
-let merge_lib_file cx save_errors save_suppressions =
-  let master_cx = Flow_js.master_cx () in
+let merge_lib_file cx master_cx save_errors save_suppressions =
   Context.merge_into master_cx cx;
   implicit_require_strict master_cx master_cx cx;
 

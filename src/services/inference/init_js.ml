@@ -24,6 +24,24 @@ module Files = Files_js
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
+(* created in the master process (see Server.preinit), populated and saved to
+   ContextHeap. forked workers will have an empty replica from the master, but
+   it's useless. should only be accessed through ContextHeap. *)
+let get_master_cx =
+  let cx_ = ref None in
+  fun () -> match !cx_ with
+  | None ->
+    let cx = Flow_js.fresh_context { Context.
+      checked = false;
+      weak = false;
+      munge_underscores = false;
+      verbose = None;
+      is_declaration_file = false;
+    } Loc.Builtins (Modulename.String Files_js.lib_module) in
+    cx_ := Some cx;
+    cx
+  | Some cx -> cx
+
 let parse_lib_file save_parse_errors file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
@@ -67,7 +85,8 @@ let load_lib_files files ~verbose
           lib_file statements comments
         in
 
-        Merge_js.merge_lib_file cx save_infer_errors save_suppressions;
+        let master_cx = get_master_cx () in
+        Merge_js.merge_lib_file cx master_cx save_infer_errors save_suppressions;
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -98,7 +117,7 @@ let init ~verbose save_parse_errors save_infer_errors save_suppressions =
     save_parse_errors save_infer_errors save_suppressions in
 
   Flow_js.Cache.clear();
-  let master_cx = Flow_js.master_cx () in
+  let master_cx = get_master_cx () in
   let reason = Reason_js.builtin_reason "module" in
   let builtin_module = Infer.mk_object master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);

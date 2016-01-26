@@ -35,8 +35,6 @@ val unify: Context.t -> Type.t -> Type.t -> unit
 
 val reposition: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
-val master_cx: unit -> Context.t
-
 (* constraint utils *)
 val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
