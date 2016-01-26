@@ -32,37 +32,37 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
     Errors.cyclic_typedef pos;
     env, (ety_env, (r, Tany))
   end else begin
-    let tdef = unsafe_opt @@ Typing_env.get_typedef env x in
-    let visibility, tparaml, tcstr, expanded_ty, tdef_pos = tdef in
+    let {td_pos; td_vis; td_tparams; td_type; td_constraint} =
+      unsafe_opt @@ Typing_env.get_typedef env x in
     let should_expand =
       force_expand ||
-        match visibility with
-        | DefsDB.Typedef.Private ->
-          Pos.filename tdef_pos = Env.get_file env
-        | DefsDB.Typedef.Public -> true
+        match td_vis with
+        | Opaque ->
+          Pos.filename td_pos = Env.get_file env
+        | Transparent -> true
     in
-    if List.length tparaml <> List.length argl then begin
-      let n = List.length tparaml in
+    if List.length td_tparams <> List.length argl then begin
+      let n = List.length td_tparams in
       let n = string_of_int n in
       Errors.type_param_arity pos x n
     end;
     let ety_env = {
       ety_env with
-      type_expansions = (tdef_pos, x) :: ety_env.type_expansions;
-      substs = TSubst.make tparaml argl;
+      type_expansions = (td_pos, x) :: ety_env.type_expansions;
+      substs = TSubst.make td_tparams argl;
     } in
     let env, expanded_ty =
       if should_expand
-      then Phase.localize ~ety_env env expanded_ty
+      then Phase.localize ~ety_env env td_type
       else begin
-        let env, tcstr =
-          match tcstr with
+        let env, td_constraint =
+          match td_constraint with
           | None -> env, None
-          | Some tcstr ->
-            let env, tcstr = Phase.localize ~ety_env env tcstr in
-            env, Some tcstr
+          | Some cstr ->
+            let env, cstr = Phase.localize ~ety_env env cstr in
+            env, Some cstr
         in
-        env, (r, Tabstract (AKnewtype (x, argl), tcstr))
+        env, (r, Tabstract (AKnewtype (x, argl), td_constraint))
       end
     in
     if Naming_special_names.Classes.is_format_string x

@@ -824,32 +824,34 @@ let rec type_typedef_decl_if_missing tcopt typedef =
     type_typedef_naming_and_decl tcopt typedef
 
 and type_typedef_naming_and_decl tcopt tdef =
-  let pos, tid = tdef.Ast.t_id in
+  let td_pos, tid = tdef.Ast.t_id in
   let {
     t_tparams = params;
     t_constraint = tcstr;
     t_kind = concrete_type;
     t_user_attributes = _;
   } as decl = Naming.typedef tcopt tdef in
-  let filename = Pos.filename pos in
+  let filename = Pos.filename td_pos in
   let env = Typing_env.empty tcopt filename in
   let env = Typing_env.set_mode env tdef.Ast.t_mode in
   let env = Env.set_root env (Typing_deps.Dep.Class tid) in
-  let env, params = List.map_env env params Typing.type_param in
-  let env, concrete_type = Typing_hint.hint env concrete_type in
-  let _env, tcstr =
+  let env, td_tparams = List.map_env env params Typing.type_param in
+  let env, td_type = Typing_hint.hint env concrete_type in
+  let _env, td_constraint =
     match tcstr with
     | None -> env, None
     | Some constraint_type ->
       let env, constraint_type = Typing_hint.hint env constraint_type in
-      let sub_type = Typing_ops.sub_type_decl pos Reason.URnewtype_cstr in
-      let env = sub_type env constraint_type concrete_type in
+      let sub_type = Typing_ops.sub_type_decl td_pos Reason.URnewtype_cstr in
+      let env = sub_type env constraint_type td_type in
       env, Some constraint_type
   in
-  let visibility = match tdef.Ast.t_kind with
-    | Ast.Alias _ -> Typing_heap.Typedef.Public
-    | Ast.NewType _ -> Typing_heap.Typedef.Private in
-  let tdecl = visibility, params, tcstr, concrete_type, pos in
+  let td_vis = match tdef.Ast.t_kind with
+    | Ast.Alias _ -> Transparent
+    | Ast.NewType _ -> Opaque in
+  let tdecl = {
+    td_vis; td_tparams; td_constraint; td_type; td_pos;
+  } in
   Env.add_typedef tid tdecl;
   Naming_heap.TypedefHeap.add tid decl;
   ()

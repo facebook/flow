@@ -22,13 +22,13 @@ module TUtils = Typing_utils
 
 let make_ts env ty =
   match Env.get_typedef env SN.FB.cTypeStructure with
-  | Some (_, tparaml, _, _, _) ->
+  | Some {td_tparams; _} ->
       let params = List.map ~f:begin fun (_, (p, x), cstr) ->
         Reason.Rwitness p, Tgeneric (x, cstr)
-      end tparaml in
+      end td_tparams in
       let ts = fst ty, Tapply ((Pos.none, SN.FB.cTypeStructure), params) in
       let ety_env = { (Phase.env_with_self env) with
-                      substs = TSubst.make tparaml [ty] } in
+                      substs = TSubst.make td_tparams [ty] } in
       Phase.localize ~ety_env env ts
   | _ ->
       (* Should not hit this because TypeStructure should always be defined *)

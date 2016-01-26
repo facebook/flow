@@ -15,10 +15,7 @@ module Class : sig type t = class_type val prefix : Prefix.t end
 module Fun : sig type t = decl fun_type val prefix : Prefix.t end
 module Typedef :
   sig
-    type visibility = Public | Private
-    type t =
-        visibility * tparam list * decl ty option *
-        decl ty * Pos.t
+    type t = typedef_type
     val prefix : Prefix.t
   end
 module GConst : sig type t = decl ty val prefix : Prefix.t end

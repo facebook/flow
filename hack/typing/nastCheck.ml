@@ -298,9 +298,9 @@ and hint_ env p = function
       hint env h;
       ()
   | Happly ((_, x), hl) as h when Typing_env.is_typedef x ->
-      let _, params, _, _, _ = Typing_heap.Typedefs.find_unsafe x in
+      let {td_tparams; _} = Typing_heap.Typedefs.find_unsafe x in
       check_happly env.typedef_tparams env.tenv (p, h);
-      check_params env p x params hl
+      check_params env p x td_tparams hl
   | Happly ((_, x), hl) as h ->
       (match Env.get_class env.tenv x with
       | None -> ()

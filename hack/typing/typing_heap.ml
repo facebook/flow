@@ -32,14 +32,7 @@ module Fun = struct
 end
 
 module Typedef = struct
-
-  type visibility =
-    | Public
-    | Private
-
-  type t =
-    visibility * Typing_defs.tparam list * decl ty option * decl ty * Pos.t
-
+  type t = Typing_defs.typedef_type
   let prefix = Prefix.make()
 end
 

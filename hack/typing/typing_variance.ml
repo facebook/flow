@@ -324,8 +324,8 @@ let get_class_variance root (pos, class_name) =
         if Typing_heap.Typedefs.mem class_name
         then
           match Typing_heap.Typedefs.get class_name with
-          | Some (_, tparams, _, _, _) -> tparams
-          | _ -> []
+          | Some {td_tparams; _} -> td_tparams
+          | None -> []
         else
           match Typing_heap.Classes.get class_name with
           | None -> []
@@ -352,14 +352,14 @@ let rec class_ class_name class_type impl =
 
 and typedef type_name =
   match Typing_heap.Typedefs.get type_name with
-  | Some (_, tparams, _cstr, ty, _) ->
+  | Some {td_tparams; td_type; td_pos = _; td_constraint = _; td_vis = _}  ->
       let root = Typing_deps.Dep.Class type_name in
       let env = SMap.empty in
-      let pos = Reason.to_pos (fst ty) in
+      let pos = Reason.to_pos (fst td_type) in
       let reason_covariant = [pos, Rtypedef, Pcovariant] in
-      let env = type_ root (Vcovariant reason_covariant) env ty in
-      List.iter tparams (check_variance env)
-  | _ -> ()
+      let env = type_ root (Vcovariant reason_covariant) env td_type in
+      List.iter td_tparams (check_variance env)
+  | None -> ()
 
 and class_member root _member_name member env =
   match member.ce_visibility with

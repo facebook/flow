@@ -1299,7 +1299,7 @@ and expr_
   | NullCoalesce (e1, e2) -> eif env ~coalesce:true ~in_cond p e1 None e2
   | Typename sid ->
       begin match Env.get_typedef env (snd sid) with
-        | Some (_, tparaml, _, _, _) ->
+        | Some {td_tparams = tparaml; _} ->
             let params = List.map ~f:begin fun (_, (p, x), cstr) ->
               Reason.Rwitness p, Tgeneric (x, cstr)
             end tparaml in
@@ -1312,7 +1312,7 @@ and expr_
             let ety_env = { (Phase.env_with_self env) with
                             substs = TSubst.make tparaml tparams } in
             Phase.localize ~ety_env env typename
-        | _ ->
+        | None ->
             (* Should never hit this case since we only construct this AST node
              * if in the expression Foo::class, Foo is a type def.
              *)

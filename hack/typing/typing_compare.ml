@@ -415,11 +415,10 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       te_constraint = ty_opt te.te_constraint ;
     }
 
-  and typedef (is_abstract, tparams, tcstr, h, pos) =
-    let tparams = List.map tparams type_param in
-    let tcstr = ty_opt tcstr in
-    let tdef = (is_abstract, tparams, tcstr, ty h, pos) in
-    tdef
+  and typedef ({td_tparams; td_constraint; _} as tdef) =
+    let td_tparams = List.map td_tparams type_param in
+    let td_constraint = ty_opt td_constraint in
+    {tdef with td_tparams; td_constraint}
 end
 
 (*****************************************************************************)
