@@ -84,7 +84,8 @@ let should_start env =
       | SMUtils.Build_id_mismatched
       | SMUtils.Server_died
       ) -> true
-  | Result.Error SMUtils.Server_busy ->
+  | Result.Error SMUtils.Server_busy
+  | Result.Error SMUtils.Monitor_connection_failure ->
     Printf.eprintf "Replacing unresponsive server for %s\n%!" root_s;
     ClientStop.kill_server env.root;
     true

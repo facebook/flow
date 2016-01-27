@@ -22,6 +22,7 @@ type t =
   | Server_initializing
   | Type_error
   | Build_id_mismatch
+  | Monitor_connection_failure
   | Unused_server
   | Lock_stolen
   | Lost_parent_monitor
@@ -55,6 +56,7 @@ let ec t = match t with
   | Server_shutting_down -> 1
   | Type_error -> 2
   | Build_id_mismatch -> 9
+  | Monitor_connection_failure -> 9
   | Unused_server -> 5
   | Lock_stolen -> 11
   | Lost_parent_monitor -> 12
@@ -89,6 +91,7 @@ let to_string = function
   | Server_shutting_down -> "Server_shutting_down"
   | Type_error -> "Type_error"
   | Build_id_mismatch -> "Build_id_mismatch"
+  | Monitor_connection_failure -> "Monitor_connection_failure"
   | Unused_server -> "Unused_server"
   | Lock_stolen -> "Lock_stolen"
   | Lost_parent_monitor -> "Lost_parent_monitor"

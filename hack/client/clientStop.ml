@@ -29,43 +29,33 @@ let wait_for_death root secs =
     true
   with Exit -> false
 
-let nice_kill (ic, oc) env =
+let nice_kill env =
   let root_s = Path.to_string env.root in
   Printf.eprintf "Attempting to nicely kill server for %s\n%!" root_s;
-  (** Read Server's hello. See also ClientConnect.wait_for_server_hello *)
-  let readable, _, _  = Unix.select
-    [Timeout.descr_of_in_channel ic] [] [Timeout.descr_of_in_channel ic] 1.0 in
-  (match readable with
-  | [_fd] ->
-    (** input_line can timeout. *)
-    let hello_msg = Timeout.with_timeout
-      ~timeout:1
-      ~on_timeout: begin fun _ ->
-        Printf.eprintf "Server is busy, can't nicely kill";
-        raise FailedToKill
-      end
-      ~do_:begin fun timeout ->
-        Timeout.input_line ~timeout ic
-      end
-    in
-    begin
-    match hello_msg with
-    | "Hello" ->
-      let _response = ServerCommand.rpc (ic, oc) ServerRpc.KILL in
-      let success = wait_for_death env.root 5 in
-      if not success then begin
-        Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
-        raise FailedToKill;
-      end else
+  try begin
+    match ServerUtils.shut_down_server env.root with
+    | Result.Ok shutdown_result ->
+      begin match shutdown_result with
+      | SMUtils.SHUTDOWN_VERIFIED ->
         Printf.eprintf "Successfully killed server for %s\n%!" root_s
-    | _ ->
-        Printf.eprintf "Server response invalid, can't nicely kill";
+      | SMUtils.SHUTDOWN_UNVERIFIED ->
+        Printf.eprintf
+          "Failed to kill server nicely for %s (Shutdown not verified)\n%!"
+          root_s;
         raise FailedToKill
-    end
-  | _ ->
-      Printf.eprintf "Server is busy, can't nicely kill";
+      end
+    | Result.Error SMUtils.Build_id_mismatched ->
+      Printf.eprintf "Successfully killed server for %s\n%!" root_s
+    | Result.Error SMUtils.Server_missing ->
+      Printf.eprintf "No server to kill for %s\n%!" root_s
+    | Result.Error _ ->
+      Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
       raise FailedToKill
-  )
+  end
+  with
+  | _ ->
+    Printf.eprintf "Failed to kill server nicely for %s\n%!" root_s;
+    raise FailedToKill
 
 let mean_kill env =
   let root_s = Path.to_string env.root in
@@ -97,23 +87,9 @@ let mean_kill env =
   end else Printf.eprintf "Successfully killed server for %s\n%!" root_s
 
 let do_kill env =
-  let root_s = Path.to_string env.root in
-  match ServerUtils.connect_to_monitor
-    env.root HhServerMonitorConfig.Program.name with
-  | Result.Ok conn ->
-      begin
-        try nice_kill conn env with FailedToKill ->
-          try mean_kill env with FailedToKill ->
-            raise Exit_status.(Exit_with Kill_error)
-      end
-  | Result.Error (SMUtils.Server_missing | SMUtils.Server_died) ->
-      Printf.eprintf "Error: no server to kill for %s\n%!" root_s
-  | Result.Error SMUtils.Build_id_mismatched ->
-      Printf.eprintf "Successfully killed server for %s\n%!" root_s
-  | Result.Error (SMUtils.Server_busy) ->
-      try mean_kill env
-      with FailedToKill ->
-        raise Exit_status.(Exit_with Kill_error)
+  try nice_kill env with FailedToKill ->
+    try mean_kill env with FailedToKill ->
+      raise Exit_status.(Exit_with Kill_error)
 
 let main env =
   HackEventLogger.client_stop ();

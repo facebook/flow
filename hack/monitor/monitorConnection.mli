@@ -12,3 +12,7 @@ val server_exists : string -> bool
 
 val connect_once: ServerMonitorUtils.monitor_config -> string ->
   (Timeout.in_channel * out_channel, ServerMonitorUtils.connection_error) Result.t
+
+val connect_and_shut_down: ServerMonitorUtils.monitor_config ->
+  (ServerMonitorUtils.shutdown_result, ServerMonitorUtils.connection_error)
+  Result.t

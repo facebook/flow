@@ -21,10 +21,18 @@ type connection_error =
   | Server_busy
   | Server_died
   | Build_id_mismatched
+  | Monitor_connection_failure
 
 type connection_state =
   | Connection_ok
   | Build_id_mismatch
+
+(** Result of a shutdown monitor RPC. *)
+type shutdown_result =
+  (** Request sent and channel hung up, indicating the process has exited. *)
+  | SHUTDOWN_VERIFIED
+  (** Request sent, but channel hasn't hung up. *)
+  | SHUTDOWN_UNVERIFIED
 
 exception Server_shutting_down
 exception Last_server_died

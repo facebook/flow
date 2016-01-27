@@ -128,10 +128,28 @@ let read_build_id_ohai fd =
      raise Malformed_build_id);
   client_build_id
 
-let read_requested_server_name fd : string =
-  Marshal_tools.from_fd_with_preamble fd
+let rec handle_monitor_rpc servers client_fd =
+  let cmd : MonitorRpc.command =
+    Marshal_tools.from_fd_with_preamble client_fd in
+  match cmd with
+  | MonitorRpc.HANDOFF_TO_SERVER server_name ->
+    client_prehandoff servers server_name client_fd
+  | MonitorRpc.SHUT_DOWN ->
+    Hh_logger.log "Got shutdown RPC. Shutting down.";
+    let kill_signal_time = Unix.gettimeofday () in
+    SMap.iter begin fun _ server -> match server with
+      | Alive server ->
+        kill_server server
+      | _ -> ()
+    end servers;
+    SMap.iter begin fun _ server -> match server with
+      | Alive server ->
+        wait_for_server_exit server kill_signal_time
+      | _ -> ()
+    end servers;
+    Exit_status.(exit Ok)
 
-let hand_off_client_connection server client_fd =
+and hand_off_client_connection server client_fd =
   let status = Libancillary.ancil_send_fd server.out_fd client_fd in
   if (status <> 0) then
     (Hh_logger.log "Failed to handoff FD to server.";
@@ -142,7 +160,7 @@ let hand_off_client_connection server client_fd =
 
 (** Sends the client connection FD to the server process then closes the
  * FD. *)
-let rec hand_off_client_connection_with_retries server retries client_fd =
+and hand_off_client_connection_with_retries server retries client_fd =
   let _, ready_l, _ = Unix.select [] [server.out_fd] [] (0.5) in
   if ready_l <> [] then
     try hand_off_client_connection server client_fd
@@ -165,7 +183,7 @@ let rec hand_off_client_connection_with_retries server retries client_fd =
        "server socket not yet ready. No more retries. Ignoring request.")
 
 (** Does not return. *)
-let client_out_of_date_ client_fd =
+and client_out_of_date_ client_fd =
   msg_to_channel client_fd Build_id_mismatch;
   HackEventLogger.out_of_date ()
 
@@ -175,7 +193,7 @@ let client_out_of_date_ client_fd =
  * the client can wait for socket closure as indication that both the monitor
  * and server have exited.
 *)
-let client_out_of_date servers client_fd =
+and client_out_of_date servers client_fd =
   SMap.iter begin fun _ server -> match server with
     | Alive server ->
     kill_server server
@@ -196,7 +214,7 @@ let client_out_of_date servers client_fd =
 
 (** Send (possibly empty) sequences of messages before handing off to
  * server. *)
-let client_prehandoff servers server_name client_fd =
+and client_prehandoff servers server_name client_fd =
   let module PH = Prehandoff in
   match SMap.get server_name servers with
   | None ->
@@ -222,7 +240,7 @@ let client_prehandoff servers server_name client_fd =
     (** Next client to connect starts a new server. *)
     Exit_status.exit Exit_status.Ok
 
-let ack_and_handoff_client servers client_fd =
+and ack_and_handoff_client servers client_fd =
   try
     let client_build_id = read_build_id_ohai client_fd in
     if client_build_id <> Build_id.build_id_ohai
@@ -230,8 +248,7 @@ let ack_and_handoff_client servers client_fd =
       client_out_of_date servers client_fd
     else (
       msg_to_channel client_fd Connection_ok;
-      let requested_server_name = read_requested_server_name client_fd in
-      client_prehandoff servers requested_server_name client_fd
+      handle_monitor_rpc servers client_fd
     )
   with
   | Marshal_tools.Malformed_Preamble_Exception ->
@@ -277,6 +294,7 @@ and check_and_run_loop_ servers
       HackEventLogger.accepted_client_fd (fd_to_int fd);
       ack_and_handoff_client servers fd
     with
+    | Exit_status.Exit_with _ as e -> raise e
     | e ->
       (HackEventLogger.ack_and_handoff_exception e;
        Hh_logger.log
@@ -284,6 +302,7 @@ and check_and_run_loop_ servers
        Unix.close fd;
        servers)
   with
+  | Exit_status.Exit_with _ as e -> raise e
   | e ->
     (HackEventLogger.accepting_on_socket_exception e;
      Hh_logger.log

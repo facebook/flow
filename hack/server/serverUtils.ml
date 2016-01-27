@@ -26,6 +26,9 @@ let hh_monitor_config root = ServerMonitorUtils.({
   socket_file = ServerFiles.socket_file root;
 })
 
+let shut_down_server root =
+  MC.connect_and_shut_down (hh_monitor_config root)
+
 let connect_to_monitor root =
   MC.connect_once (hh_monitor_config root)
 

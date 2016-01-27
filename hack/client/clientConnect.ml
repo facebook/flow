@@ -191,7 +191,8 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
         "For more detailed logs, try `tail -f $(hh_client --monitor-logname) \
         $(hh_client --logname)`\n";
     match e with
-    | SMUtils.Server_died ->
+    | SMUtils.Server_died
+    | SMUtils.Monitor_connection_failure ->
       connect env (Option.map retries (fun x -> x - 1)) start_time tail_env
     | SMUtils.Server_missing ->
       if env.autostart then begin

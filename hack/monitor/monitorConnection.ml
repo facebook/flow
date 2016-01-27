@@ -34,8 +34,13 @@ let send_build_id_ohai oc =
   let _ = Unix.write (Unix.descr_of_out_channel oc) "\n" 0 1 in
   ()
 
-let send_server_name (server_name : string) oc =
-  Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc) server_name
+let send_server_handoff_rpc (server_name : string) oc =
+  Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
+    (MonitorRpc.HANDOFF_TO_SERVER server_name)
+
+let send_shutdown_rpc oc =
+  Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
+    MonitorRpc.SHUT_DOWN
 
 let establish_connection ~timeout config =
   let sock_name = Socket.get_path config.socket_file in
@@ -47,17 +52,22 @@ let establish_connection ~timeout config =
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
-  Result.Ok (Timeout.open_connection ~timeout sockaddr)
+  try Result.Ok (Timeout.open_connection ~timeout sockaddr) with
+    | Unix.Unix_error (Unix.ECONNREFUSED, _, _)
+    | Unix.Unix_error (Unix.ENOENT, _, _) ->
+      if not (server_exists config.lock_file) then Result.Error Server_missing
+      else Result.Error Server_busy
 
-let get_cstate (ic, oc) =
+let get_cstate config (ic, oc) =
   try
     send_build_id_ohai oc;
     let cstate : connection_state = from_channel_without_buffering ic in
     Result.Ok (ic, oc, cstate)
-  with e ->
+  with _ ->
     Timeout.shutdown_connection ic;
     Timeout.close_in_noerr ic;
-    raise e
+    if not (server_exists config.lock_file) then Result.Error Server_missing
+    else Result.Error Monitor_connection_failure
 
 let verify_cstate ic = function
   | Connection_ok -> Result.Ok ()
@@ -78,11 +88,11 @@ let verify_cstate ic = function
       Result.Error Build_id_mismatched
 
 (** Consume sequence of Prehandoff messages. *)
-let consume_prehandoff_messages ic =
+let consume_prehandoff_messages ic oc =
   let module PH = Prehandoff in
   let m: PH.msg = from_channel_without_buffering ic in
   match m with
-  | PH.Sentinel -> ()
+  | PH.Sentinel -> Result.Ok (ic, oc)
   | PH.Server_name_not_found ->
     Printf.eprintf
       "Requested server name not found. This is probably a bug in Hack.";
@@ -90,7 +100,7 @@ let consume_prehandoff_messages ic =
   | PH.Shutting_down ->
     Printf.eprintf "Last server exited. A new will be started.\n%!";
     wait_on_server_restart ic;
-    raise Server_shutting_down
+    Result.Error Server_missing
   | PH.Server_died {PH.status; PH.was_oom} ->
     (match was_oom, status with
     | true, _ ->
@@ -101,28 +111,38 @@ let consume_prehandoff_messages ic =
       Printf.eprintf "Last server killed by signal: %d.\n%!" signal
     | false, Unix.WSTOPPED signal ->
       Printf.eprintf "Last server stopped by signal: %d.\n%!" signal);
-    raise Last_server_died
+    Result.Error Server_died
+
+let connect_to_monitor config =
+  let open Result in
+  Timeout.with_timeout
+    ~timeout:1
+    ~on_timeout:(fun _ -> raise Exit)
+    ~do_:begin fun timeout ->
+      establish_connection ~timeout config >>= fun (ic, oc) ->
+      get_cstate config (ic, oc)
+    end
+
+let connect_and_shut_down config =
+  let open Result in
+  connect_to_monitor config >>= fun (ic, oc, cstate) ->
+  verify_cstate ic cstate >>= fun () ->
+  send_shutdown_rpc oc;
+  try Timeout.with_timeout
+    ~timeout:2
+    ~on_timeout:(fun _ -> Result.Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED)
+    ~do_:begin fun _ ->
+      wait_on_server_restart ic;
+      Result.Ok ServerMonitorUtils.SHUTDOWN_VERIFIED
+    end
+  with
+  | Timeout.Timeout ->
+    if not (server_exists config.lock_file) then Result.Error Server_missing
+    else Result.Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED
 
 let connect_once config server_name =
   let open Result in
-  try
-    Timeout.with_timeout
-      ~timeout:1
-      ~on_timeout:(fun _ -> raise Exit)
-      ~do_:begin fun timeout ->
-        establish_connection ~timeout config >>= fun (ic, oc) ->
-        get_cstate (ic, oc)
-      end >>= fun (ic, oc, cstate) ->
-      verify_cstate ic cstate >>= fun () ->
-      send_server_name server_name oc;
-      consume_prehandoff_messages ic;
-      Ok (ic, oc)
-  with
-  | Exit_status.Exit_with _  as e -> raise e
-  | Server_shutting_down ->
-    Result.Error Server_missing
-  | Last_server_died ->
-    Result.Error Server_died
-  | _ ->
-    if not (server_exists config.lock_file) then Result.Error Server_missing
-    else Result.Error Server_busy
+  connect_to_monitor config >>= fun (ic, oc, cstate) ->
+  verify_cstate ic cstate >>= fun () ->
+  send_server_handoff_rpc server_name oc;
+  consume_prehandoff_messages ic oc
