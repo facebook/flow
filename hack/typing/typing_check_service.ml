@@ -52,7 +52,7 @@ let check_typedef x =
      * slightly larger change than I want to deal with right now. *)
     let tenv = Typing_env.set_mode tenv FileInfo.Mdecl in
     let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class x) in
-    Typing.typedef_def tenv typedef;
+    Typing.typedef_def tenv x typedef;
     Typing_variance.typedef x
   with Not_found ->
     ()

@@ -837,15 +837,7 @@ and type_typedef_naming_and_decl tcopt tdef =
   let env = Env.set_root env (Typing_deps.Dep.Class tid) in
   let env, td_tparams = List.map_env env params Typing.type_param in
   let env, td_type = Typing_hint.hint env concrete_type in
-  let _env, td_constraint =
-    match tcstr with
-    | None -> env, None
-    | Some constraint_type ->
-      let env, constraint_type = Typing_hint.hint env constraint_type in
-      let sub_type = Typing_ops.sub_type_decl td_pos Reason.URnewtype_cstr in
-      let env = sub_type env constraint_type td_type in
-      env, Some constraint_type
-  in
+  let _env, td_constraint = opt Typing_hint.hint env tcstr in
   let td_vis = match tdef.Ast.t_kind with
     | Ast.Alias _ -> Transparent
     | Ast.NewType _ -> Opaque in

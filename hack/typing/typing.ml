@@ -4156,7 +4156,7 @@ and method_def env m =
     | Some _ -> ();
   Typing_hooks.dispatch_exit_method_def_hook m
 
-and typedef_def env_up typedef =
+and typedef_def env_up tid typedef =
   NastCheck.typedef env_up typedef;
   let {
     t_tparams = _;
@@ -4166,6 +4166,14 @@ and typedef_def env_up typedef =
   } = typedef in
   ignore (Typing_hint.hint_locl ~ensure_instantiable:true env_up hint);
   ignore (Option.map tcstr (Typing_hint.check_instantiable env_up));
+  begin match Env.get_typedef env_up tid with
+    | Some {td_constraint = Some cstr; td_type; td_pos; _} ->
+      let _env =
+        Typing_ops.sub_type_decl td_pos Reason.URnewtype_cstr env_up cstr
+          td_type in
+      ()
+    | _ -> ()
+  end;
   match hint with
   | pos, Hshape fdm ->
     ignore (check_shape_keys_validity env_up pos (ShapeMap.keys fdm))
