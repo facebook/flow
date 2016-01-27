@@ -25,13 +25,6 @@ struct
 
   let name = "flow server"
 
-  let config_path root = Path.concat root ".flowconfig"
-
-  (* This determines whether the current config file is compatible with the
-   * config that this server was initialized with. Returning false means
-   * that any change in .flowconfig results in a server restart. *)
-  let validate_config _config = false
-
   let parse_options = OptionParser.parse
 
   let preinit () =
@@ -464,12 +457,16 @@ struct
   let process_updates genv updates =
     let root = Options.root (genv.ServerEnv.options) in
     let config = FlowConfig.get root in
-    let is_flow_file =
-      let config_path = FlowConfig.fullpath root in
-      fun f -> Files_js.is_flow_file f || f = config_path
-    in
+    let config_path = FlowConfig.fullpath root in
     let sroot = Path.to_string root in
     let want = Files_js.wanted config in
+    if SSet.mem config_path updates then begin
+      Flow_logger.log
+        "%s changed in an incompatible way; please restart %s.\n"
+        config_path
+        name;
+      FlowExitStatus.(exit Server_out_of_date)
+    end;
     let modified_packages = SSet.filter (fun f ->
       (str_starts_with f sroot || FlowConfig.is_included config f)
       && (Filename.basename f) = "package.json" && want f
@@ -481,10 +478,10 @@ struct
       Flow_logger.log
         "%s is out of date. Exiting.\n%!"
         name;
-      exit 4
+      FlowExitStatus.(exit Server_out_of_date)
     end;
     SSet.fold (fun f acc ->
-      if is_flow_file f &&
+      if Files_js.is_flow_file f &&
         (* note: is_included may be expensive. check in-root match first. *)
         (str_starts_with f sroot || FlowConfig.is_included config f)
       then ServerEnv.PathSet.add (Path.make f) acc

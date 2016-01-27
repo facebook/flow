@@ -27,8 +27,6 @@ module type SERVER_PROGRAM = sig
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
   val name: string
-  val config_path : Path.t -> Path.t
-  val validate_config : genv -> bool
   val handle_client : genv -> client -> unit
 end
 
@@ -153,15 +151,6 @@ end = struct
   let recheck genv old_env updates =
     let to_recheck =
       ServerEnv.PathSet.filter Program.should_recheck updates in
-    let config = Program.config_path (Options.root genv.ServerEnv.options) in
-    if ServerEnv.PathSet.mem config updates &&
-      not (Program.validate_config genv) then begin
-      Flow_logger.log
-        "%s changed in an incompatible way; please restart %s.\n"
-        (Path.to_string config)
-        Program.name;
-      FlowExitStatus.(exit Server_out_of_date)
-    end;
 
     let root = Options.root genv.ServerEnv.options in
     let tmp_dir = Options.temp_dir genv.ServerEnv.options in
