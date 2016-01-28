@@ -23,10 +23,10 @@ let is_dot_file path =
   String.length filename > 0 && filename.[0] = '.'
 
 let is_prefix prefix =
-  let prefix = if str_ends_with prefix Filename.dir_sep
+  let prefix_with_sep = if str_ends_with prefix Filename.dir_sep
     then prefix
     else prefix ^ Filename.dir_sep
-  in fun path -> str_starts_with path prefix
+  in fun path -> path = prefix || str_starts_with path prefix_with_sep
 
 let is_json_file path = Filename.check_suffix path ".json"
 
