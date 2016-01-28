@@ -1,3 +1,4 @@
 module Program = struct
-  let name = "hh_server"
+  let hh_server = "typechecker"
+  let ide_server = "ide"
 end

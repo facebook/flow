@@ -168,7 +168,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
   end;
   let connect_once_start_t = Unix.time () in
   let conn = ServerUtils.connect_to_monitor env.root
-    HhServerMonitorConfig.Program.name in
+    HhServerMonitorConfig.Program.hh_server in
   HackEventLogger.client_connect_once connect_once_start_t;
   let _, tail_msg = open_and_get_tail_msg start_time tail_env in
   match conn with
@@ -200,6 +200,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
           root = env.root;
           wait = false;
           no_load = env.no_load;
+          silent = false;
         };
         connect env retries start_time tail_env
       end else begin

@@ -234,19 +234,12 @@ let get_client_channels parent_in_fd =
   let socket = Libancillary.ancil_recv_fd parent_in_fd in
   (Timeout.in_channel_of_descr socket), (Unix.out_channel_of_descr socket)
 
-
-let parent_is_dead () =
-  (** Cross-platform compatible way; parent PID becomes 1 when parent dies. *)
-  Unix.getppid() = 1
-
 let serve genv env in_fd _ =
   let env = ref env in
   let last_stats = ref empty_recheck_loop_stats in
   let recheck_id = ref (Random_id.short_string ()) in
   while true do
-    if parent_is_dead () then
-      (Hh_logger.log "Typechecker's parent has died; exiting.\n";
-       Exit_status.exit Exit_status.Lost_parent_monitor);
+    ServerMonitorUtils.exit_if_parent_dead ();
     let has_client = sleep_and_check in_fd in
     let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
     if not has_client && not has_parsing_hook

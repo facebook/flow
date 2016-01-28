@@ -8,12 +8,4 @@
  *
  *)
 
-type env = {
-  root: Path.t;
-  wait: bool;
-  no_load: bool;
-  silent: bool;
-}
-
-val main : env -> Exit_status.t
-val start_server : env -> unit
+ val entry: (ServerArgs.options, unit, unit) Daemon.entry

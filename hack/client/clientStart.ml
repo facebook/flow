@@ -23,6 +23,7 @@ type env = {
   root: Path.t;
   wait: bool;
   no_load : bool;
+  silent : bool;
 }
 
 let start_server env =
@@ -45,9 +46,10 @@ let start_server env =
        * it doesn't, and shouldn't, use it. *)
       [| "--waiting-client"; string_of_int (Handle.get_handle out_fd) |]
     ] in
-  Printf.eprintf "Server launched with the following command:\n\t%s\n%!"
-    (String.concat " "
-       (Array.to_list (Array.map Filename.quote hh_server_args)));
+  if not env.silent then
+    Printf.eprintf "Server launched with the following command:\n\t%s\n%!"
+      (String.concat " "
+         (Array.to_list (Array.map Filename.quote hh_server_args)));
 
   let rec wait_loop () =
     let msg = input_line ic in
@@ -77,7 +79,7 @@ let start_server env =
 let should_start env =
   let root_s = Path.to_string env.root in
   match ServerUtils.connect_to_monitor
-    env.root HhServerMonitorConfig.Program.name with
+    env.root HhServerMonitorConfig.Program.hh_server with
   | Result.Ok _conn -> false
   | Result.Error
       ( SMUtils.Server_missing

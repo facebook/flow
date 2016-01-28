@@ -28,6 +28,7 @@ let parse_command () =
   | "stop" -> CKStop
   | "restart" -> CKRestart
   | "build" -> CKBuild
+  | "ide" -> CKIde
   | _ -> CKNone
 
 let parse_without_command options usage command =
@@ -64,6 +65,7 @@ let parse_check_args cmd =
   let autostart = ref true in
   let from = ref "" in
   let version = ref false in
+  let ide_logname = ref false in
   let monitor_logname = ref false in
   let logname = ref false in
   let refactor_mode = ref "" in
@@ -195,6 +197,8 @@ let parse_check_args cmd =
       " (mode) find all occurrences of lint with the given error code";
     "--version", Arg.Set version,
       " (mode) show version and exit\n";
+    "--ide-logname", Arg.Set ide_logname,
+      " (mode) show ide server log filename and exit\n";
     "--monitor-logname", Arg.Set monitor_logname,
       " (mode) show monitor log filename and exit\n";
     "--logname", Arg.Set logname,
@@ -262,6 +266,12 @@ let parse_check_args cmd =
         exit 1;
   in
 
+  if !ide_logname then begin
+    let ide_log_link = ServerFiles.ide_log_link root in
+    Printf.printf "%s\n%!" ide_log_link;
+    exit 0;
+  end;
+
   if !monitor_logname then begin
     let monitor_log_link = ServerFiles.monitor_log_link root in
     Printf.printf "%s\n%!" monitor_log_link;
@@ -317,6 +327,7 @@ let parse_start_env command =
     root = root;
     wait = !wait;
     no_load = !no_load;
+    silent = false;
   }
 
 let parse_start_args () =
@@ -426,6 +437,23 @@ let parse_build_args () =
     }
   }
 
+let parse_ide_args () =
+  let usage =
+    Printf.sprintf
+      "Usage: %s ide [WWW-ROOT]\n"
+      Sys.argv.(0) in
+
+  let options = [] in
+  let args = parse_without_command options usage "ide" in
+  let root =
+    match args with
+    | [] -> get_root None
+    | [x] -> get_root (Some x)
+    | _ -> Printf.printf "%s\n" usage; exit 2 in
+  CIde { ClientIde.
+    root = root
+  }
+
 let parse_args () =
   match parse_command () with
     | CKNone
@@ -434,10 +462,12 @@ let parse_args () =
     | CKStop -> parse_stop_args ()
     | CKRestart -> parse_restart_args ()
     | CKBuild -> parse_build_args ()
+    | CKIde -> parse_ide_args ()
 
 let root = function
   | CBuild { ClientBuild.root; _ }
   | CCheck { ClientEnv.root; _ }
   | CStart { ClientStart.root; _ }
   | CRestart { ClientStart.root; _ }
-  | CStop { ClientStop.root; _ } -> root
+  | CStop { ClientStop.root; _ }
+  | CIde { ClientIde.root; _} -> root

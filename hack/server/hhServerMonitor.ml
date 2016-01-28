@@ -22,38 +22,45 @@
 open HhServerMonitorConfig
 module SP = ServerProcess
 
-let rec start_hh_server options =
+let rec start_server options name log_link daemon_entry =
   let log_file, log_mode =
-    if ServerArgs.should_detach options then
-      let log_link = ServerFiles.log_link (ServerArgs.root options) in
+    if ServerArgs.should_detach options then begin
       (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
       let log_file = Sys_utils.make_link_of_timestamped log_link in
-      Hh_logger.log "About to spawn typechecker daemon. Logs will go to %s\n%!"
-        (if Sys.win32 then log_file else log_link);
+      Hh_logger.log "About to spawn %s daemon. Logs will go to %s\n%!"
+        name (if Sys.win32 then log_file else log_link);
       log_file, Daemon.Log_file
-    else begin
-      Hh_logger.log "About to spawn typechecker daemon. Logs will go here.";
+    end else begin
+      Hh_logger.log "About to spawn %s daemon. Logs will go here." name;
       "", Daemon.Parent_streams
     end
   in
   let start_t = Unix.time () in
   let {Daemon.pid; Daemon.channels = (ic, oc)} =
-    Daemon.spawn ~channel_mode:`socket ~log_file ~log_mode ServerMain.entry
+    Daemon.spawn ~channel_mode:`socket ~log_file ~log_mode daemon_entry
       options in
-  Hh_logger.log "Just started typechecker server with pid: %d." pid;
-  let typechecker =
+  Hh_logger.log "Just started %s server with pid: %d." name pid;
+  let server =
     SP.({
       pid = pid;
-      name = Program.name;
+      name = name;
       in_fd = Daemon.descr_of_in_channel ic;
       out_fd = Daemon.descr_of_out_channel oc;
       log_file = log_file;
       start_t = start_t;
       last_request_handoff = ref (Unix.time());
-      starter = (fun () -> start_hh_server options);
+      starter = (fun () -> start_server options name log_link daemon_entry);
       retries = 0;
     }) in
-  typechecker
+  server
+
+let start_hh_server options =
+  let log_link = ServerFiles.log_link (ServerArgs.root options) in
+  start_server options Program.hh_server log_link ServerMain.entry
+
+let start_ide_server options =
+  let log_link = ServerFiles.ide_log_link (ServerArgs.root options) in
+  start_server options Program.ide_server log_link IdeMain.entry
 
 (** Main method of the server monitor daemon. The daemon is responsible for
  * listening to socket requests from hh_client, checking Build ID, and relaying
@@ -76,10 +83,11 @@ let monitor_daemon_main (options: ServerArgs.options) =
       (Hh_logger.log "Monitor daemon already running. Killing";
        Exit_status.exit Exit_status.Ok);
     let server_daemon_starter = fun () -> start_hh_server options in
+    let ide_daemon_starter = fun () -> start_ide_server options in
     ServerMonitor.start_monitoring ServerMonitorUtils.({
       socket_file = ServerFiles.socket_file www_root;
       lock_file = ServerFiles.lock_file www_root;
-    }) [server_daemon_starter]
+    }) [server_daemon_starter; ide_daemon_starter]
 
 let daemon_entry =
   Daemon.register_entry_point
@@ -99,7 +107,7 @@ let daemon_starter options =
   let log_file_path = Sys_utils.make_link_of_timestamped log_link in
   let {Daemon.pid; _} =
     Daemon.spawn ~log_file:log_file_path daemon_entry options in
-  Printf.eprintf "Spawned %s (child pid=%d)\n" Program.name pid;
+  Printf.eprintf "Spawned %s (child pid=%d)\n" Program.hh_server pid;
   Printf.eprintf "Logs will go to %s\n%!"
     (if Sys.win32 then log_file_path else log_link);
   Exit_status.Ok
