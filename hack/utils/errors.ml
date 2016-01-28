@@ -77,7 +77,7 @@ let error_kind error_code =
 
 let error_code_to_string error_code =
   let error_kind = error_kind error_code in
-  let error_number = string_of_int error_code in
+  let error_number = Printf.sprintf "%04d" error_code in
   error_kind^"["^error_number^"]"
 
 (*****************************************************************************)
@@ -362,6 +362,9 @@ module Typing                               = struct
   let attribute_too_few_arguments           = 4153 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
+
+let internal_error pos msg =
+  add 0 pos ("Internal error: "^msg)
 
 (*****************************************************************************)
 (* Parsing errors. *)

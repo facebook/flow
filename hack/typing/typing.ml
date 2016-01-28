@@ -1195,13 +1195,13 @@ and expr_
           env, (r, ty)
         | (r, Tfun _), Vprivate _ ->
           Errors.private_class_meth (Reason.to_pos r) p;
-            env, (r, Tany)
+          env, (r, Tany)
         | (r, Tfun _), Vprotected _ ->
           Errors.protected_class_meth (Reason.to_pos r) p;
-            env, (r, Tany)
-        | _, _ ->
-          (* If this assert fails, we have a method which isn't callable. *)
-          assert false
+          env, (r, Tany)
+        | (r, _), _ ->
+          Errors.internal_error p "We have a method which isn't callable";
+          env, (r, Tany)
         )
       )
     )
@@ -1831,14 +1831,14 @@ and assign p env e1 ty2 =
               env, (r, Tany)
           )
       | r, (Ttuple _ | Tarraykind (AKtuple _) as tuple) ->
+          let p1 = fst e1 in
+          let p2 = Reason.to_pos r in
           let tyl = match tuple with
             | Ttuple tyl -> tyl
             | Tarraykind (AKtuple fields) -> List.rev (IMap.values fields)
-            | _ -> assert false in
+            | _ -> Errors.internal_error p2 "Unexpected tuple type"; [] in
           let size1 = List.length el in
           let size2 = List.length tyl in
-          let p1 = fst e1 in
-          let p2 = Reason.to_pos r in
           if size1 <> size2
           then begin
             Errors.tuple_arity p2 size2 p1 size1;
@@ -1955,7 +1955,9 @@ and yield_field_key env = function
   | Nast.AFvalue (p, _) ->
       env, (match Env.get_fn_kind env with
         | Ast.FSync
-        | Ast.FAsync -> assert false
+        | Ast.FAsync ->
+            Errors.internal_error p "yield found in non-generator";
+            Reason.Rnone, Tany
         | Ast.FGenerator ->
             (Reason.Rwitness p, Tprim Tint)
         | Ast.FAsyncGenerator ->
@@ -3986,7 +3988,8 @@ and class_def_ env_up c tc =
     | Ast.Cinterface -> Errors.interface_final (fst c.c_name)
     | Ast.Cabstract -> ()
     | Ast.Ctrait -> Errors.trait_final (fst c.c_name)
-    | Ast.Cenum -> (* the parser won't let enums be final *) assert false
+    | Ast.Cenum ->
+      Errors.internal_error pc "The parser should not parse final on enums"
     | Ast.Cnormal -> ()
   end;
   List.iter impl (class_implements_type env c);
