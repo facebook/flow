@@ -73,6 +73,16 @@ let tests = [
     }
   },
 
+  function(str: string, obj: { foo: string }) {
+    if (str === obj.bar) { // error, no such property
+    }
+  },
+
+  function(str: string, obj: {[key: string]: string}) {
+    if (str === obj.bar) { // ok
+    }
+  },
+
   function(str: string): Mode {
     var ch = str[0];
     if (ch !== "a" && ch !== "b" && ch !== "c") {

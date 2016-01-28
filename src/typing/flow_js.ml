@@ -1722,9 +1722,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if has_prop cx mapr x then ()
       else prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
 
-    | ObjT (reason_o, { props_tmap = mapr; proto_t = proto; _ }),
+    | ObjT (reason_o, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
       HasPropT (reason_op, strict, x) ->
-      if has_prop cx mapr x then ()
+      if has_prop cx mapr x || dict_t <> None then ()
       else
         let strict = match strict with
         | Some r -> Some r
