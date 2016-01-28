@@ -22,7 +22,7 @@
 open HhServerMonitorConfig
 module SP = ServerProcess
 
-let rec start_server options name log_link daemon_entry =
+let start_server options name log_link daemon_entry =
   let log_file, log_mode =
     if ServerArgs.should_detach options then begin
       (try Sys.rename log_link (log_link ^ ".old") with _ -> ());
@@ -49,8 +49,6 @@ let rec start_server options name log_link daemon_entry =
       log_file = log_file;
       start_t = start_t;
       last_request_handoff = ref (Unix.time());
-      starter = (fun () -> start_server options name log_link daemon_entry);
-      retries = 0;
     }) in
   server
 
@@ -82,12 +80,15 @@ let monitor_daemon_main (options: ServerArgs.options) =
     if not (Lock.grab lock_file) then
       (Hh_logger.log "Monitor daemon already running. Killing";
        Exit_status.exit Exit_status.Ok);
-    let server_daemon_starter = fun () -> start_hh_server options in
-    let ide_daemon_starter = fun () -> start_ide_server options in
+    let hh_server_monitor_starter = begin fun () ->
+      let typechecker = start_hh_server options in
+      let ide = start_ide_server options in
+      [typechecker; ide]
+    end in
     ServerMonitor.start_monitoring ServerMonitorUtils.({
       socket_file = ServerFiles.socket_file www_root;
       lock_file = ServerFiles.lock_file www_root;
-    }) [server_daemon_starter; ide_daemon_starter]
+    }) hh_server_monitor_starter
 
 let daemon_entry =
   Daemon.register_entry_point

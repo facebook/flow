@@ -20,10 +20,6 @@ type process_data =
     out_fd : Unix.file_descr;
     log_file: string;
     last_request_handoff : float ref;
-    (** Invoke this to re-launch the process. *)
-    starter: unit -> process_data;
-    (** How many times have we tried to relaunch it? *)
-    retries: int;
   }
 
 type server_process =

@@ -31,6 +31,14 @@ exception Malformed_build_id
 exception Misconfigured_monitor
 exception Send_fd_failure of int
 
+type env = {
+  servers: ServerProcess.server_process SMap.t;
+  (** Invoke this to re-launch the processes. *)
+  starter: ServerMonitorUtils.monitor_starter;
+  (** How many times have we tried to relaunch it? *)
+  retries: int;
+}
+
 let fd_to_int (x: Unix.file_descr) : int = Obj.magic x
 
 let msg_to_channel fd msg =
@@ -102,22 +110,61 @@ let update_status_ (server: ServerProcess.server_process)
         when c = (Exit_status.ec Exit_status.Hhconfig_changed) ->
         if has_client then Killed_intentionally
         else Exit_status.(exit Ok)
-      | _, Unix.WEXITED c
-        when c = Exit_status.(ec Watchman_failed) ->
-        let max_retries = 3 in
-        if process.retries < max_retries then begin
-          Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
-            (process.retries + 1);
-          let new_process = process.starter () in
-          Alive {new_process with retries = process.retries + 1}
-        end else Died_unexpectedly (proc_stat, false)
       | _, _ ->
         ServerProcessTools.check_exit_status proc_stat process;
         Died_unexpectedly (proc_stat, (check_dmesg_for_oom process)))
   | _ -> server
 
-let update_status (servers: ServerProcess.server_process SMap.t) ~has_client =
-   SMap.map (update_status_ ~has_client) servers
+let start_servers monitor_starter =
+  let server_processes = monitor_starter () in
+  setup_autokill_servers_on_exit server_processes;
+  List.fold_left server_processes ~init:SMap.empty
+    ~f:begin fun acc x -> match SMap.get x.name acc with
+      | None -> SMap.add x.name (Alive x) acc
+      | Some _ ->
+        Hh_logger.log
+          "Monitored server names must be unique. Got %s more than once."
+          x.name;
+        raise Misconfigured_monitor
+    end
+
+let kill_servers servers =
+  SMap.iter begin fun _ server -> match server with
+    | Alive server ->
+      kill_server server
+    | _ -> ()
+  end servers
+
+let wait_for_servers_exit servers kill_signal_time =
+  SMap.iter begin fun _ server -> match server with
+    | Alive server ->
+      wait_for_server_exit server kill_signal_time
+    | _ -> ()
+  end servers
+
+let update_status env ~has_client =
+   let servers = SMap.map (update_status_ ~has_client) env.servers in
+
+   let watchman_failed _ status = match status with
+     | Died_unexpectedly ((Unix.WEXITED c), _)
+        when c = Exit_status.(ec Watchman_failed) -> true
+     | _ -> false in
+   if SMap.exists watchman_failed servers then
+    let max_retries = 3 in
+    if env.retries < max_retries then begin
+      Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
+        (env.retries + 1);
+      kill_servers servers;
+      let kill_signal_time = Unix.gettimeofday () in
+      wait_for_servers_exit servers kill_signal_time;
+      { env with
+        servers = start_servers env.starter;
+        retries = env.retries + 1;
+      }
+    end else
+      { env with servers = servers }
+   else
+     { env with servers = servers }
 
 let read_build_id_ohai fd =
   let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -128,25 +175,17 @@ let read_build_id_ohai fd =
      raise Malformed_build_id);
   client_build_id
 
-let rec handle_monitor_rpc servers client_fd =
+let rec handle_monitor_rpc env client_fd =
   let cmd : MonitorRpc.command =
     Marshal_tools.from_fd_with_preamble client_fd in
   match cmd with
   | MonitorRpc.HANDOFF_TO_SERVER server_name ->
-    client_prehandoff servers server_name client_fd
+    client_prehandoff env server_name client_fd
   | MonitorRpc.SHUT_DOWN ->
     Hh_logger.log "Got shutdown RPC. Shutting down.";
     let kill_signal_time = Unix.gettimeofday () in
-    SMap.iter begin fun _ server -> match server with
-      | Alive server ->
-        kill_server server
-      | _ -> ()
-    end servers;
-    SMap.iter begin fun _ server -> match server with
-      | Alive server ->
-        wait_for_server_exit server kill_signal_time
-      | _ -> ()
-    end servers;
+    kill_servers env.servers;
+    wait_for_servers_exit env.servers kill_signal_time;
     Exit_status.(exit Ok)
 
 and hand_off_client_connection server client_fd =
@@ -193,33 +232,25 @@ and client_out_of_date_ client_fd =
  * the client can wait for socket closure as indication that both the monitor
  * and server have exited.
 *)
-and client_out_of_date servers client_fd =
-  SMap.iter begin fun _ server -> match server with
-    | Alive server ->
-    kill_server server
-    | _ -> ()
-  end servers;
+and client_out_of_date env client_fd =
+  kill_servers env.servers;
   let kill_signal_time = Unix.gettimeofday () in
   (** If we detect out of date client, should always kill server and exit
    * monitor, even if messaging to channel or event logger fails. *)
   (try client_out_of_date_ client_fd with
    | e -> Hh_logger.log
        "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
-  SMap.iter begin fun _ server -> match server with
-    | Alive server ->
-      wait_for_server_exit server kill_signal_time
-    | _ -> ()
-  end servers;
+  wait_for_servers_exit env.servers kill_signal_time;
   Exit_status.exit Exit_status.Build_id_mismatch
 
 (** Send (possibly empty) sequences of messages before handing off to
  * server. *)
-and client_prehandoff servers server_name client_fd =
+and client_prehandoff env server_name client_fd =
   let module PH = Prehandoff in
-  match SMap.get server_name servers with
+  match SMap.get server_name env.servers with
   | None ->
     msg_to_channel client_fd PH.Server_name_not_found;
-    servers
+    env
   | Some Killed_intentionally ->
     msg_to_channel client_fd PH.Shutting_down;
     Exit_status.exit Exit_status.Ok
@@ -233,22 +264,22 @@ and client_prehandoff servers server_name client_fd =
     hand_off_client_connection_with_retries server 8 client_fd;
     HackEventLogger.client_connection_sent ();
     server.last_request_handoff := Unix.time ();
-    SMap.add server_name (Alive server) servers
+    { env with servers = SMap.add server_name (Alive server) env.servers }
   | Some (Died_unexpectedly (status, was_oom)) ->
     (** Server has died; notify the client *)
     msg_to_channel client_fd (PH.Server_died {PH.status; PH.was_oom});
     (** Next client to connect starts a new server. *)
     Exit_status.exit Exit_status.Ok
 
-and ack_and_handoff_client servers client_fd =
+and ack_and_handoff_client env client_fd =
   try
     let client_build_id = read_build_id_ohai client_fd in
     if client_build_id <> Build_id.build_id_ohai
     then
-      client_out_of_date servers client_fd
+      client_out_of_date env client_fd
     else (
       msg_to_channel client_fd Connection_ok;
-      handle_monitor_rpc servers client_fd
+      handle_monitor_rpc env client_fd
     )
   with
   | Marshal_tools.Malformed_Preamble_Exception ->
@@ -256,15 +287,15 @@ and ack_and_handoff_client servers client_fd =
     (Hh_logger.log "
         Marshal tools read malformed preamble, interpreting as version change.
         ";
-     client_out_of_date servers client_fd)
+     client_out_of_date env client_fd)
   | Malformed_build_id as e ->
     HackEventLogger.malformed_build_id ();
     Hh_logger.log "Malformed Build ID";
     raise e
 
-let rec check_and_run_loop servers
+let rec check_and_run_loop env
     (lock_file: string) (socket: Unix.file_descr) =
-  let servers = try check_and_run_loop_ servers lock_file socket with
+  let env = try check_and_run_loop_ env lock_file socket with
   | Unix.Unix_error (Unix.ECHILD, _, _) ->
     ignore (Hh_logger.log
       "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
@@ -272,27 +303,27 @@ let rec check_and_run_loop servers
   | e ->
     Hh_logger.log "check_and_run_loop_ threw with exception: %s"
       (Printexc.to_string e);
-    servers
+    env
   in
-    check_and_run_loop servers lock_file socket
+    check_and_run_loop env lock_file socket
 
-and check_and_run_loop_ servers
+and check_and_run_loop_ env
     (lock_file: string) (socket: Unix.file_descr) =
-  let servers = update_status servers ~has_client:false in
+  let env = update_status env ~has_client:false in
   if not (Lock.grab lock_file) then
     (Hh_logger.log "Lost lock; terminating.\n%!";
      HackEventLogger.lock_stolen lock_file;
      Exit_status.(exit Lock_stolen));
   let has_client = sleep_and_check socket in
-  let servers = update_status servers ~has_client in
+  let env = update_status env ~has_client in
   if (not has_client) then
-    servers
+    env
   else
   try
     let fd, _ = Unix.accept socket in
     try
       HackEventLogger.accepted_client_fd (fd_to_int fd);
-      ack_and_handoff_client servers fd
+      ack_and_handoff_client env fd
     with
     | Exit_status.Exit_with _ as e -> raise e
     | e ->
@@ -300,33 +331,21 @@ and check_and_run_loop_ servers
        Hh_logger.log
          "Handling client connection failed. Ignoring connection attempt.";
        Unix.close fd;
-       servers)
+       env)
   with
   | Exit_status.Exit_with _ as e -> raise e
   | e ->
     (HackEventLogger.accepting_on_socket_exception e;
      Hh_logger.log
        "Accepting on socket failed. Ignoring client connection attempt.";
-       servers)
+       env)
 
-let start_servers server_daemon_starters =
-  let server_processes, errors = List.partition_map server_daemon_starters
-    ~f:begin fun server_daemon_starter ->
-      try `Fst (server_daemon_starter ()) with e -> `Snd e
-    end in
-  setup_autokill_servers_on_exit server_processes;
-  if errors <> [] then raise (List.hd_exn errors);
-  List.fold_left server_processes ~init:SMap.empty
-    ~f:begin fun acc x -> match SMap.get x.name acc with
-      | None -> SMap.add x.name (Alive x) acc
-      | Some _ ->
-        Hh_logger.log
-          "Monitored server names must be unique. Got %s more than once."
-          x.name;
-        raise Misconfigured_monitor
-    end
-
-let start_monitoring monitor_config server_daemon_starters =
+let start_monitoring monitor_config monitor_starter =
   let socket = Socket.init_unix_socket monitor_config.socket_file in
-  let server_processes = start_servers server_daemon_starters in
-  check_and_run_loop server_processes monitor_config.lock_file socket
+  let server_processes = start_servers monitor_starter in
+  let env = {
+    servers = server_processes;
+    starter = monitor_starter;
+    retries = 0;
+  } in
+  check_and_run_loop env monitor_config.lock_file socket

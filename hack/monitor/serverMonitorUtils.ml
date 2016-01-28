@@ -16,6 +16,13 @@ type monitor_config =
     lock_file: string;
   }
 
+(**
+ * Function that initializes the common state and returns a list of individual
+ * processes starters.
+ *)
+type monitor_starter =
+   (unit -> (ServerProcess.process_data list))
+
 type connection_error =
   | Server_missing
   | Server_busy
