@@ -208,8 +208,6 @@ let unsafe_opt_note note = function
 
 let unsafe_opt x = unsafe_opt_note "unsafe_opt got None" x
 
-let liter f env l = List.iter l (f env)
-
 let inter_list = function
   | [] -> SSet.empty
   | x :: rl ->

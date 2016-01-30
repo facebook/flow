@@ -71,7 +71,7 @@ module CheckFunctionType = struct
         block f_type b;
         ()
     | _, Switch (_, cl) ->
-        liter case f_type cl;
+        List.iter cl (case f_type);
         ()
     | (Ast.FSync | Ast.FGenerator), Foreach (_, (Await_as_v (p, _) | Await_as_kv (p, _, _)), _) ->
         Errors.await_in_sync_function p;
@@ -81,12 +81,12 @@ module CheckFunctionType = struct
         ()
     | _, Try (b, cl, fb) ->
         block f_type b;
-        liter catch f_type cl;
+        List.iter cl (catch f_type);
         block f_type fb;
         ()
 
   and block f_type stl =
-    liter stmt f_type stl
+    List.iter stl (stmt f_type)
 
   and case f_type = function
     | Default b -> block f_type b
@@ -122,13 +122,13 @@ module CheckFunctionType = struct
     | _, Lvar _
     | _, Lplaceholder _ -> ()
     | _, Array afl ->
-        liter afield f_type afl;
+        List.iter afl (afield f_type);
         ()
     | _, ValCollection (_, el) ->
-        liter expr f_type el;
+        List.iter el (expr f_type);
         ()
     | _, KeyValCollection (_, fdl) ->
-        liter expr2 f_type fdl;
+        List.iter fdl (expr2 f_type);
         ()
     | _, Clone e -> expr f_type e; ()
     | _, Obj_get (e, (_, Id _s), _) ->
@@ -143,22 +143,22 @@ module CheckFunctionType = struct
         ()
     | _, Call (_, e, el, uel) ->
         expr f_type e;
-        liter expr f_type el;
-        liter expr f_type uel;
+        List.iter el (expr f_type);
+        List.iter uel (expr f_type);
         ()
     | _, True | _, False | _, Int _
     | _, Float _ | _, Null | _, String _ -> ()
     | _, String2 el ->
-        liter expr f_type el;
+        List.iter el (expr f_type);
         ()
     | _, List el ->
-        liter expr f_type el;
+        List.iter el (expr f_type);
         ()
     | _, Pair (e1, e2) ->
         expr2 f_type (e1, e2);
         ()
     | _, Expr_list el ->
-        liter expr f_type el;
+        List.iter el (expr f_type);
         ()
     | _, Unop (_, e) -> expr f_type e
     | _, Binop (_, e1, e2) ->
@@ -168,14 +168,14 @@ module CheckFunctionType = struct
         expr2 f_type (e1, e3);
         ()
     | _, Eif (e1, Some e2, e3) ->
-        liter expr f_type [e1; e2; e3];
+        List.iter [e1; e2; e3] (expr f_type);
         ()
     | _, NullCoalesce (e1, e2) ->
-        liter expr f_type [e1; e2];
+        List.iter [e1; e2] (expr f_type);
         ()
     | _, New (_, el, uel) ->
-      liter expr f_type el;
-      liter expr f_type uel;
+      List.iter el (expr f_type);
+      List.iter uel (expr f_type);
       ()
     | _, InstanceOf (e, _) ->
         expr f_type e;
@@ -207,11 +207,11 @@ module CheckFunctionType = struct
         (match func with
           | Gena e
           | Gen_array_rec e -> expr f_type e
-          | Genva el -> liter expr f_type el);
+          | Genva el -> List.iter el (expr f_type));
         ()
     | _, Xml (_, attrl, el) ->
         List.iter attrl (fun (_, e) -> expr f_type e);
-        liter expr f_type el;
+        List.iter el (expr f_type);
         ()
     | _, Assert (AE_assert e) ->
         expr f_type e;
@@ -397,18 +397,19 @@ and class_ tenv c =
     maybe method_ (env, true) c.c_constructor;
   end;
   List.iter (fst c.c_tparams) (tparam env);
-  liter hint env c.c_extends;
-  liter hint env c.c_implements;
-  liter class_const env c.c_consts;
-  liter typeconst (env, (fst c.c_tparams)) c.c_typeconsts;
-  liter class_var env c.c_static_vars;
-  liter class_var env c.c_vars;
-  liter method_ (env, true) c.c_static_methods;
-  liter method_ (env, false) c.c_methods;
-  liter check_is_interface (env, "implement") c.c_implements;
-  liter check_is_interface (env, "require implementation of") c.c_req_implements;
-  liter check_is_class env c.c_req_extends;
-  liter check_is_trait env c.c_uses;
+  List.iter c.c_extends (hint env);
+  List.iter c.c_implements (hint env);
+  List.iter c.c_consts (class_const env);
+  List.iter c.c_typeconsts (typeconst (env, (fst c.c_tparams)));
+  List.iter c.c_static_vars (class_var env);
+  List.iter c.c_vars (class_var env);
+  List.iter c.c_static_methods (method_ (env, true));
+  List.iter c.c_methods (method_ (env, false));
+  List.iter c.c_implements (check_is_interface (env, "implement"));
+  List.iter c.c_req_implements
+    (check_is_interface (env, "require implementation of"));
+  List.iter c.c_req_extends (check_is_class env);
+  List.iter c.c_uses (check_is_trait env);
   end;
   ()
 
@@ -635,7 +636,7 @@ and check__toString m is_static =
 and method_ (env, is_static) m =
   let named_body = assert_named_body m.m_body in
   check__toString m is_static;
-  liter fun_param env m.m_params;
+  List.iter m.m_params (fun_param env);
   block env named_body.fnb_nast;
   maybe hint env m.m_ret;
   CheckFunctionType.block m.m_fun_kind named_body.fnb_nast;
@@ -684,7 +685,7 @@ and stmt env = function
   | Expr e | Throw (_, e) ->
     expr env e
   | Static_var el ->
-    liter expr env el
+    List.iter el (expr env)
   | If (e, b1, b2) ->
     expr env e;
     block env b1;
@@ -706,7 +707,7 @@ and stmt env = function
       ()
   | Switch (e, cl) ->
       expr env e;
-      liter case { env with imm_ctrl_ctx = SwitchContext } cl;
+      List.iter cl (case { env with imm_ctrl_ctx = SwitchContext });
       ()
   | Foreach (e1, ae, b) ->
       expr env e1;
@@ -715,7 +716,7 @@ and stmt env = function
       ()
   | Try (b, cl, fb) ->
       block env b;
-      liter catch env cl;
+      List.iter cl (catch env);
       block { env with t_is_finally = true } fb;
       ()
 
@@ -733,7 +734,7 @@ and afield env = function
   | AFkvalue (e1, e2) -> expr env e1; expr env e2;
 
 and block env stl =
-  liter stmt env stl
+  List.iter stl (stmt env)
 
 and expr env (_, e) =
   expr_ env e
@@ -762,13 +763,13 @@ and expr_ env = function
             | _ -> Errors.illegal_TRAIT pos);
       ()
   | Array afl ->
-      liter afield env afl;
+      List.iter afl (afield env);
       ()
   | ValCollection (_, el) ->
-      liter expr env el;
+      List.iter el (expr env);
       ()
   | KeyValCollection (_, fdl) ->
-      liter field env fdl;
+      List.iter fdl (field env);
       ()
   | Clone e -> expr env e; ()
   | Obj_get (e, (_, Id s), _) ->
@@ -786,13 +787,13 @@ and expr_ env = function
       ()
   | Call (_, e, el, uel) ->
       expr env e;
-      liter expr env el;
-      liter expr env uel;
+      List.iter el (expr env);
+      List.iter uel (expr env);
       ()
   | True | False | Int _
   | Float _ | Null | String _ -> ()
   | String2 el ->
-      liter expr env el;
+      List.iter el (expr env);
       ()
   | Unop (_, e) -> expr env e
   | Yield_break -> ()
@@ -802,7 +803,7 @@ and expr_ env = function
         | Gen_array_rec e ->
           expr env e
         | Genva el ->
-          liter expr env el);
+          List.iter el (expr env));
       ()
   | Yield e ->
       afield env e;
@@ -811,14 +812,14 @@ and expr_ env = function
       expr env e;
       ()
   | List el ->
-      liter expr env el;
+      List.iter el (expr env);
       ()
   | Pair (e1, e2) ->
     expr env e1;
     expr env e2;
     ()
   | Expr_list el ->
-      liter expr env el;
+      List.iter el (expr env);
       ()
   | Cast (h, e) ->
       hint env h;
@@ -846,16 +847,16 @@ and expr_ env = function
       expr env e;
       ()
   | New (_, el, uel) ->
-      liter expr env el;
-      liter expr env uel;
+      List.iter el (expr env);
+      List.iter uel (expr env);
       ()
   | Efun (f, _) ->
       let env = { env with imm_ctrl_ctx = Toplevel } in
       let body = Nast.assert_named_body f.f_body in
       func env f body; ()
   | Xml (_, attrl, el) ->
-      liter attribute env attrl;
-      liter expr env el;
+      List.iter attrl (attribute env);
+      List.iter el (expr env);
       ()
   | Shape fdm ->
       ShapeMap.iter (fun _ v -> expr env v) fdm
