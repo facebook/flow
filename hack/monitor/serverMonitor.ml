@@ -91,25 +91,13 @@ let sleep_and_check socket =
 (** Kill command from client is handled by server server, so the monitor
  * needs to check liveness of the server process to know whether
  * to stop itself. *)
-let update_status_ (server: ServerProcess.server_process)
-~has_client =
-  match server with
+let update_status_ (server: ServerProcess.server_process) = match server with
   | Alive process ->
     let pid, proc_stat =
       Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
     (match pid, proc_stat with
       | 0, _ ->
         server
-      | _, Unix.WEXITED 0 ->
-        (** This is rare - server stopped by RPC kill command and another
-         * client connected within the same 1-second check loop. This monitor
-         * will exit, but has to notify the client that's already connected. *)
-        if has_client then Killed_intentionally
-        else Exit_status.(exit Ok)
-      | _, Unix.WEXITED c
-        when c = (Exit_status.ec Exit_status.Hhconfig_changed) ->
-        if has_client then Killed_intentionally
-        else Exit_status.(exit Ok)
       | _, _ ->
         ServerProcessTools.check_exit_status proc_stat process;
         Died_unexpectedly (proc_stat, (check_dmesg_for_oom process)))
@@ -142,27 +130,38 @@ let wait_for_servers_exit servers kill_signal_time =
     | _ -> ()
   end servers
 
-let update_status env ~has_client =
-   let servers = SMap.map (update_status_ ~has_client) env.servers in
+let restart_servers env =
+  kill_servers env.servers;
+  let kill_signal_time = Unix.gettimeofday () in
+  wait_for_servers_exit env.servers kill_signal_time;
+  let new_servers = start_servers env.starter in
+  { env with
+    servers = new_servers;
+    retries = env.retries + 1;
+  }
 
+let update_status env =
+   let servers = SMap.map update_status_ env.servers in
+   let env = { env with servers = servers } in
    let watchman_failed _ status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
         when c = Exit_status.(ec Watchman_failed) -> true
      | _ -> false in
-   if SMap.exists watchman_failed servers then
-    let max_retries = 3 in
-    if env.retries < max_retries then begin
-      Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
-        (env.retries + 1);
-      kill_servers servers;
-      let kill_signal_time = Unix.gettimeofday () in
-      wait_for_servers_exit servers kill_signal_time;
-      { env with
-        servers = start_servers env.starter;
-        retries = env.retries + 1;
-      }
-    end else
-      { env with servers = servers }
+   let config_changed _ status = match status with
+     | Died_unexpectedly ((Unix.WEXITED c), _)
+        when c = Exit_status.(ec Hhconfig_changed) -> true
+     | _ -> false in
+   let max_watchman_retries = 3 in
+   if (SMap.exists watchman_failed servers)
+     && (env.retries < max_watchman_retries) then begin
+     Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
+       (env.retries + 1);
+     restart_servers env
+   end
+   else if SMap.exists config_changed servers then begin
+     Hh_logger.log "hh_server died from hh config change. Restarting";
+     restart_servers env
+   end
    else
      { env with servers = servers }
 
@@ -251,9 +250,6 @@ and client_prehandoff env server_name client_fd =
   | None ->
     msg_to_channel client_fd PH.Server_name_not_found;
     env
-  | Some Killed_intentionally ->
-    msg_to_channel client_fd PH.Shutting_down;
-    Exit_status.exit Exit_status.Ok
   | Some (Alive server) ->
     let since_last_request =
       (Unix.time ()) -. !(server.last_request_handoff) in
@@ -309,13 +305,12 @@ let rec check_and_run_loop env
 
 and check_and_run_loop_ env
     (lock_file: string) (socket: Unix.file_descr) =
-  let env = update_status env ~has_client:false in
   if not (Lock.grab lock_file) then
     (Hh_logger.log "Lost lock; terminating.\n%!";
      HackEventLogger.lock_stolen lock_file;
      Exit_status.(exit Lock_stolen));
   let has_client = sleep_and_check socket in
-  let env = update_status env ~has_client in
+  let env = update_status env in
   if (not has_client) then
     env
   else

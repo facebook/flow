@@ -24,6 +24,4 @@ type process_data =
 
 type server_process =
   | Alive of process_data
-  (** Typechecker exited because of an RPC kill command. *)
-  | Killed_intentionally
   | Died_unexpectedly of Unix.process_status * bool

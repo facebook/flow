@@ -16,10 +16,6 @@ type exit_status = {
 type msg =
   (** Last of the prehandoff messages. *)
   | Sentinel
-  (** Client has connected to a monitor whose typechecker exited normally.
-   * This is rare - happens when client establishes connection to a monitor
-   * that hasn't discovered its typechecker exited by an RPC Kill command. *)
-  | Shutting_down
   (* Client sent a malformed request asking for a server that doesn't exist *)
   | Server_name_not_found
   (** Server process died. Connect another client to start another one. *)
