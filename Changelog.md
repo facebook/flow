@@ -1,3 +1,31 @@
+###v0.21.0
+
+Likely to cause new Flow errors:
+- ES6 react classes without state should now `extends React.Component<DefaultProps, Props, void>` (previously it was `extends React.Component<DefaultProps, Props, {}>)`
+- ES6 react classes with state should declare `state: State;`
+
+New features:
+- Autocomplete for jsx properties
+- [Typed JSX intrinsics](https://github.com/facebook/flow/commit/e0e44d392d6fa2bff36ea6aee87f965c66ee5b7e). This means you can list which jsx intrinsics exist (like `div`, `span`, etc) and specify which properties they have.
+- Syntax for declaring variance at definition. For example, `interface Generator<+Yield,+Return,-Next> {...}`. Still pending transpiler support though.
+- Refining `string` and union types with string equality now properly refines the types.
+- Support for `export * as` from @leebyron's [Stage1 proposal](https://github.com/leebyron/ecmascript-more-export-from). Babel support [here](http://babeljs.io/docs/plugins/transform-export-extensions/)
+
+Notable bug fixes: 
+- Fixed bug with class expressions due to `this` type
+- Fixed autocomplete for `this`
+- Recognizes exhaustiveness in `switch` statements with `default` case.
+- Fixed "Did not expect BoundT" errors
+- Fixed infinite loop in certain recursive types
+- Fixed an incremental mode issue with deleted files
+- Fixed an incorrect refinement when assigning an object to a variable.
+
+Misc:
+- Some internal errors now will be made user visibile instead of silently failing. They generally mean that Flow has some bug or is making an untrue assumption/assertion. If you see these please report them!
+- Improvements to how we report certain types (type application, optional types) via our APIs
+- Various sentinel improvements, including boolean sentinels
+- Various improvements to the buildin flow libraries (thanks everyone for the pull requests!)
+
 ###v0.20.1
 
 Bug fixes:
