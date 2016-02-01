@@ -25,6 +25,7 @@ type module_exports_type =
   | ESModule
 
 val make: metadata -> Loc.filename -> Modulename.t -> t
+val make_simple: ?metadata:metadata -> Loc.filename -> t
 
 (* accessors *)
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t

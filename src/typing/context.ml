@@ -82,6 +82,15 @@ let make metadata file module_name = {
   annot_table = Hashtbl.create 0;
 }
 
+let make_simple ?(metadata = {
+    checked = false;
+    weak = false;
+    munge_underscores = false;
+    verbose = None;
+    is_declaration_file = false;
+  }) (filename:Loc.filename) =
+  make metadata filename (Modulename.Filename filename)
+
 (* accessors *)
 let annot_table cx = cx.annot_table
 let envs cx = cx.envs

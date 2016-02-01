@@ -37,9 +37,9 @@ val init: Options.options -> unit
 
 (* export and import functions for the module system *)
 val exported_module: filename -> Docblock.t -> Modulename.t
-val imported_module: ?path_acc: SSet.t ref -> filename -> string -> Modulename.t
+val imported_module: Context.t -> Loc.t -> ?path_acc: SSet.t ref -> string -> Modulename.t
 
-val find_resolved_module: filename -> string -> Modulename.t
+val find_resolved_module: Context.t -> Loc.t -> string -> Modulename.t
 
 val module_exists: Modulename.t -> bool
 

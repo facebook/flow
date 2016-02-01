@@ -48,3 +48,5 @@ val normalize_path: string -> string -> string
 val construct_path: string -> string list -> string
 
 val relative_path: string -> string -> string
+
+val is_prefix: string -> string -> bool

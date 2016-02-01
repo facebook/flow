@@ -13,7 +13,7 @@ open Utils
 type getdef_type =
 | Gdloc of Loc.t
 | Gdmem of (string * Type.t)
-| Gdrequire of string
+| Gdrequire of string * Loc.t
 
 let getdef_id (state, loc1) _cx name loc2 =
   if Reason_js.in_range loc1 loc2
@@ -51,10 +51,10 @@ let getdef_call (state, loc1) _cx name loc2 this_t =
     state := Some (Gdmem (name, this_t))
   )
 
-let getdef_require (state, loc1) _cx name loc2 =
-  if (Reason_js.in_range loc1 loc2)
+let getdef_require (state, user_requested_loc) _cx name require_loc =
+  if (Reason_js.in_range user_requested_loc require_loc)
   then (
-    state := Some (Gdrequire (name))
+    state := Some (Gdrequire (name, require_loc))
   )
 
 let getdef_get_result cx state =
@@ -70,8 +70,8 @@ let getdef_get_result cx state =
           Type.loc_of_t t
       | None ->
           Loc.none)
-  | Some Gdrequire name ->
-      let module_name = Module_js.imported_module (Context.file cx) name in
+  | Some Gdrequire (name, loc) ->
+      let module_name = Module_js.imported_module cx loc name in
       let f = Module_js.get_module_file module_name in
       (match f with
       | Some file -> Loc.({ none with source = Some file })

@@ -230,7 +230,7 @@ module type MODULE_SYSTEM = sig
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
      record paths that were looked up but not found during resolution. *)
-  val imported_module: ?path_acc:SSet.t ref -> filename -> string -> Modulename.t
+  val imported_module: Context.t -> Loc.t -> ?path_acc:SSet.t ref -> string -> Modulename.t
 
   (* for a given module name, choose a provider from among a set of
     files with that exported name. also check for duplicates and
@@ -340,7 +340,7 @@ module Node = struct
       lazy (path_if_exists path_acc (path ^ ext))
     ))
 
-  let parse_main path_acc package =
+  let parse_main cx loc path_acc package =
     let package = resolve_symlinks package in
     if not (file_exists package) ||
       FlowConfig.(is_excluded (get_unsafe ()) package)
@@ -348,8 +348,34 @@ module Node = struct
     else
       let tokens = match PackageHeap.get package with
       | Some tokens -> tokens
-      | None -> failwith (spf
-          "internal error: package %s not found in PackageHeap" package)
+      | None ->
+          let reason = Reason.mk_reason "" loc in
+
+          let project_root = FlowConfig.((get_unsafe ()).root) in
+          let msg =
+            if Files_js.is_prefix (Path.to_string project_root) package then (
+              "Internal Error! This package not found in PackageHeap. " ^
+              "Please report this error to the Flow team."
+            ) else (
+              let project_root_str = Path.to_string project_root in
+              let package_relative_to_root =
+                spf
+                  "<<PROJECT_ROOT>>%s%s"
+                  (Filename.dir_sep)
+                  (Files_js.relative_path project_root_str package)
+              in
+              spf (
+                "This module resolves to %S, which is not being watched by " ^^
+                "Flow. Flow watches files that sit under the root directory " ^^
+                "marked by the .flowconfig. Flow also watches files that " ^^
+                "are explicitly included by the .flowconfig. Flow does not " ^^
+                "watch files that are explicitly ignored by the .flowconfig."
+              ) package_relative_to_root
+            )
+          in
+
+          Flow_js.add_error cx [(reason, msg)];
+          SMap.empty
       in
       let dir = Filename.dirname package in
       match get_key "main" tokens with
@@ -366,7 +392,7 @@ module Node = struct
           lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
         ]
 
-  let resolve_relative ?path_acc root_path rel_path =
+  let resolve_relative cx loc ?path_acc root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
     let opts = get_config_options () in
     if Files_js.is_flow_file path
@@ -377,24 +403,24 @@ module Node = struct
 
       lazy_seq ([
         lazy (path_if_exists_with_file_exts path_acc path file_exts);
-        lazy (parse_main path_acc (Filename.concat path "package.json"));
+        lazy (parse_main cx loc path_acc (Filename.concat path "package.json"));
         lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
       ])
     )
 
-  let rec node_module path_acc dir r =
+  let rec node_module cx loc path_acc dir r =
     let opts = get_config_options () in
     lazy_seq [
       lazy (
         lazy_seq (opts.FlowConfig.Opts.node_resolver_dirnames |> List.map (fun dirname ->
-          lazy (resolve_relative ?path_acc dir (spf "%s%s%s" dirname Filename.dir_sep r))
+          lazy (resolve_relative cx loc ?path_acc dir (spf "%s%s%s" dirname Filename.dir_sep r))
         ))
       );
 
       lazy (
         let parent_dir = Filename.dirname dir in
         if dir = parent_dir then None
-        else node_module path_acc (Filename.dirname dir) r
+        else node_module cx loc path_acc (Filename.dirname dir) r
       );
     ]
 
@@ -405,20 +431,20 @@ module Node = struct
     Str.string_match Files_js.current_dir_name r 0
     || Str.string_match Files_js.parent_dir_name r 0
 
-  let resolve_import ?path_acc file import_str =
+  let resolve_import cx loc ?path_acc import_str =
+    let file = string_of_filename (Context.file cx) in
     let dir = Filename.dirname file in
     if explicitly_relative import_str || absolute import_str
-    then resolve_relative ?path_acc dir import_str
-    else node_module path_acc dir import_str
+    then resolve_relative cx loc ?path_acc dir import_str
+    else node_module cx loc path_acc dir import_str
 
-  let imported_module ?path_acc file import_str =
-    let file = string_of_filename file in
+  let imported_module cx loc ?path_acc import_str =
     let candidates = module_name_candidates import_str in
 
     let rec choose_candidate = function
       | [] -> None
       | candidate :: candidates ->
-        match resolve_import ?path_acc file candidate with
+        match resolve_import cx loc ?path_acc candidate with
         | None -> choose_candidate candidates
         | Some _ as result -> result
     in
@@ -482,17 +508,17 @@ module Haste: MODULE_SYSTEM = struct
         )
 
   (* similar to Node resolution, with possible special cases *)
-  let resolve_import ?path_acc file r =
-    let file = string_of_filename file in
+  let resolve_import cx loc ?path_acc r =
+    let file = string_of_filename (Context.file cx) in
     lazy_seq [
-      lazy (Node.resolve_import ?path_acc file r);
+      lazy (Node.resolve_import cx loc ?path_acc r);
       lazy (match expanded_name r with
-        | Some r -> Node.resolve_relative ?path_acc (Filename.dirname file) r
+        | Some r -> Node.resolve_relative cx loc ?path_acc (Filename.dirname file) r
         | None -> None
       );
     ]
 
-  let imported_module ?path_acc file imported_name =
+  let imported_module cx loc ?path_acc imported_name =
     let candidates = module_name_candidates imported_name in
 
     (**
@@ -507,7 +533,7 @@ module Haste: MODULE_SYSTEM = struct
      *)
     let chosen_candidate = List.hd candidates in
 
-    match resolve_import ?path_acc file chosen_candidate with
+    match resolve_import cx loc ?path_acc chosen_candidate with
     | Some(name) -> Modulename.Filename (Loc.SourceFile name)
     | None -> Modulename.String chosen_candidate
 
@@ -551,17 +577,20 @@ let exported_module file info =
   let module M = (val !module_system) in
   M.exported_module file info
 
-let imported_module ?path_acc file r =
+let imported_module cx loc ?path_acc r =
   let module M = (val !module_system) in
-  M.imported_module ?path_acc file r
+  M.imported_module cx loc ?path_acc r
 
-let imported_modules file reqs =
-  (* Resolve all reqs relative to file. Accumulate dependent paths in
+let imported_modules cx =
+  (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
      path_acc. Return the map of reqs to their resolved names, and the set
      containing the resolved names. *)
+  let reqs = Context.required cx in
+  let req_locs = Context.require_loc cx in
   let path_acc = ref SSet.empty in
   let set, map = SSet.fold (fun r (set, map) ->
-    let resolved_r = imported_module ~path_acc file r in
+    let loc = SMap.find_unsafe r req_locs in
+    let resolved_r = imported_module cx loc ~path_acc r in
     NameSet.add resolved_r set, SMap.add r resolved_r map
   ) reqs (NameSet.empty, SMap.empty) in
   set, map, !path_acc
@@ -573,10 +602,11 @@ let cached_resolved_module file r =
   | None -> None
 
 (* Optimized module resolution function that goes through cache. *)
-let find_resolved_module file r =
-  match cached_resolved_module file r with
+let find_resolved_module cx loc r =
+  let context_file = Context.file cx in
+  match cached_resolved_module context_file r with
   | Some resolved_r -> resolved_r
-  | None -> imported_module file r
+  | None -> imported_module cx loc r
 
 let choose_provider m files errmap =
   let module M = (val !module_system) in
@@ -683,16 +713,14 @@ let get_reverse_imports module_name =
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
 let info_of cx =
-  let file = Context.file cx in
-  let required, resolved_modules, phantom_dependents =
-    imported_modules file (Context.required cx) in
+  let required, resolved_modules, phantom_dependents = imported_modules cx in
   let require_loc = SMap.fold
     (fun r loc require_loc ->
       let resolved_r = SMap.find_unsafe r resolved_modules in
       SMap.add (Modulename.to_string resolved_r) loc require_loc)
     (Context.require_loc cx) SMap.empty in
   {
-    file;
+    file = Context.file cx;
     _module = Context.module_name cx;
     required;
     require_loc;

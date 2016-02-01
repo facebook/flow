@@ -1,0 +1,11 @@
+
+index.js:3:1,35: module_completely_absent
+Required module not found
+
+index.js:7:1,33: 
+This module resolves to "<<PROJECT_ROOT>>/../node_modules/module_outside_of_root/package.json", which is not being watched by Flow. Flow watches files that sit under the root directory marked by the .flowconfig. Flow also watches files that are explicitly included by the .flowconfig. Flow does not watch files that are explicitly ignored by the .flowconfig.
+
+index.js:7:1,33: module_outside_of_root
+Required module not found
+
+Found 3 errors
