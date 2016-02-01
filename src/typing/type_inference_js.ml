@@ -1865,6 +1865,7 @@ and statement cx type_params_map = Ast.Statement.(
       let cursor_env = Env_js.peek_env () in
       let switch_env = ref None in
       let prev_case_env = ref None in
+      let prev_case_chg = ref Changeset.empty in
       let oldset = Changeset.clear () in
 
       (* traverse case list, get list of control flow exits *)
@@ -1888,6 +1889,7 @@ and statement cx type_params_map = Ast.Statement.(
 
         (* case's env is cursor env (incoming env negative refis from all
            failed tests) plus positive refi from current test... *)
+        let initial_chg = Changeset.peek () in
         let case_env = Env_js.clone_env cursor_env in
         let desc = if is_default then "default" else "case" in
         let reason = mk_reason desc loc in
@@ -1899,7 +1901,7 @@ and statement cx type_params_map = Ast.Statement.(
         (match !prev_case_env with
         | Some prev ->
           Env_js.merge_env cx reason (case_env, case_env, prev)
-            (Changeset.peek ())
+            !prev_case_chg
         | None -> ());
 
         (* process statements, collect any abnormal control flow exit *)
@@ -1907,15 +1909,21 @@ and statement cx type_params_map = Ast.Statement.(
           fun () -> toplevels cx type_params_map consequent
         ) in
 
+        (* changes made by this case *)
+        let case_chg = Changeset.(diff (peek ()) initial_chg) in
+
         (* save env for next case merge *)
         prev_case_env := Some case_env;
+        prev_case_chg := (match exit with
+          | None -> Changeset.union !prev_case_chg case_chg
+          | Some _ -> case_chg);
 
         (* add effects into merged env *)
         (match !switch_env with
         | None -> switch_env := Some case_env
         | Some sw_env ->
-          Env_js.merge_env cx reason (sw_env, sw_env, case_env)
-            (Changeset.peek ()));
+          let chg = if is_default then Changeset.peek () else case_chg in
+          Env_js.merge_env cx reason (sw_env, sw_env, case_env) chg);
 
         (* add negative refis of this case's test to cursor *)
         Env_js.update_env cx reason cursor_env;

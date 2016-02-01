@@ -77,6 +77,14 @@ let is_empty (vars, refis) =
   vars = EntryRefSet.empty &&
   refis = RefiRefSet.empty
 
+let union (vars1, refis1) (vars2, refis2) =
+  EntryRefSet.union vars1 vars2,
+  RefiRefSet.union refis1 refis2
+
+let diff (vars1, refis1) (vars2, refis2) =
+  EntryRefSet.diff vars1 vars2,
+  RefiRefSet.diff refis1 refis2
+
 let string_of_entry_ref (scope_id, name, op) =
   spf "(%d, %s, %s)"
     scope_id
