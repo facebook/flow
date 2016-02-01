@@ -160,12 +160,12 @@ For example, the following code typechecks:
 {% highlight javascript linenos=table %}
 /* @flow */
 function foo(p) { p.x = 42; }
-function bar(q) { q.f(); }
+function bar(q) { return q.f(); }
 
 var o = { };
 o.f = function() { return this.x; };
 
-bar(o);
+var x: number = bar(o);
 foo(o);
 {% endhighlight %}
 
@@ -177,17 +177,17 @@ Fortunately, though, the following code does not typecheck:
 {% highlight javascript linenos=table %}
 /* @flow */
 function foo(p) { p.x = 42; }
-function bar(q) { q.f(); }
+function bar(q) { return q.f(); }
 
 var o = { };
 o.f = function() { return this.x; };
 
-foo(o);
 var x: string = bar(o);
+foo(o);
 {% endhighlight %}
 
 ```bbcode
-file.js:3:16,16: undefined
+file.js:3:16,16: number
 This type is incompatible with
   file.js:8:7,12: string
 ```
