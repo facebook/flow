@@ -247,7 +247,8 @@ let spawn
   | `socket ->
     (** the in and out FD's are the same. Close only once. *)
     Unix.close child_in);
-  Unix.close out_fd;
+  if log_mode <> Parent_streams then
+    Unix.close out_fd;
   Unix.close null_fd;
   Entry.send_param param parent_out;
   { channels = Timeout.in_channel_of_descr parent_in,
