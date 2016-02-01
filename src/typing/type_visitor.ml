@@ -70,9 +70,10 @@ class ['a] t = object(self)
 
   | AbstractT t -> self#type_ cx acc t
 
-  | DestructuringT (_, t, s) ->
+  | EvalT (t, defer_use_t, id) ->
     let acc = self#type_ cx acc t in
-    let acc = self#selector cx acc s in
+    let acc = self#defer_use_type cx acc defer_use_t in
+    let acc = self#eval_id cx acc id in
     acc
 
   | PolyT (typeparams, t) ->
@@ -144,6 +145,9 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t1 in
     let acc = self#type_ cx acc t2 in
     acc
+
+  method private defer_use_type cx acc = function
+  | DestructuringT (_, s) -> self#selector cx acc s
 
   method private selector cx acc = function
   | Prop _ -> acc
@@ -220,6 +224,11 @@ class ['a] t = object(self)
     Context.property_maps cx
     |> IMap.find_unsafe id
     |> self#smap (self#type_ cx) acc
+
+  method private eval_id cx acc id =
+    match IMap.get id (Context.evaluated cx) with
+    | None -> acc
+    | Some t -> self#type_ cx acc t
 
   method private type_param cx acc { bound; _ } =
     self#type_ cx acc bound

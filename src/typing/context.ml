@@ -37,6 +37,9 @@ type t = {
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.properties IMap.t;
 
+  (* map from evaluation ids to types *)
+  mutable evaluated: Type.t IMap.t;
+
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;
 
@@ -71,6 +74,7 @@ let make metadata file module_name = {
   graph = IMap.empty;
   envs = IMap.empty;
   property_maps = IMap.empty;
+  evaluated = IMap.empty;
   modulemap = SMap.empty;
 
   errors = Errors_js.ErrorSet.empty;
@@ -96,6 +100,7 @@ let annot_table cx = cx.annot_table
 let envs cx = cx.envs
 let errors cx = cx.errors
 let error_suppressions cx = cx.error_suppressions
+let evaluated cx = cx.evaluated
 let file cx = cx.file
 let find_props cx id = IMap.find_unsafe id cx.property_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
@@ -147,6 +152,8 @@ let remove_tvar cx id =
   cx.graph <- IMap.remove id cx.graph
 let set_envs cx envs =
   cx.envs <- envs
+let set_evaluated cx evaluated =
+  cx.evaluated <- evaluated
 let set_globals cx globals =
   cx.globals <- globals
 let set_graph cx graph =
@@ -175,5 +182,6 @@ let merge_into cx cx_other =
   *)
   set_envs cx (IMap.union (envs cx_other) (envs cx));
   set_property_maps cx (IMap.union (property_maps cx_other) (property_maps cx));
+  set_evaluated cx (IMap.union (evaluated cx_other) (evaluated cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx))

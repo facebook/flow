@@ -124,9 +124,10 @@ let rec gc cx state = function
   | AbstractT t ->
       gc cx state t
 
-  | DestructuringT (_, t, s) ->
+  | EvalT (t, defer_use_t, id) ->
       gc cx state t;
-      gc_selector cx state s
+      gc_defer_use cx state defer_use_t;
+      Flow_js.visit_eval_id cx id (gc cx state)
 
   | PolyT (typeparams, t) ->
       typeparams |> List.iter (gc_typeparam cx state);
@@ -208,6 +209,9 @@ let rec gc cx state = function
       ts |> List.iter (gc cx state);
       gc cx state t1;
       gc cx state t2
+
+and gc_defer_use cx state = function
+  | DestructuringT (_, s) -> gc_selector cx state s
 
 and gc_use cx state = function
 

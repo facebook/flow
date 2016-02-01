@@ -127,10 +127,15 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DestructuringT (_, t, s) -> [
+  | EvalT (t, defer_use_t, id) -> [
       "type", _json_of_t json_cx t;
-      "selector", json_of_selector json_cx s
-    ]
+      "defer_use_type", json_of_defer_use_t json_cx defer_use_t
+    ] @
+      let evaluated = Context.evaluated json_cx.cx in
+      begin match IMap.get id evaluated with
+      | None -> []
+      | Some t -> [ "result", _json_of_t json_cx t ]
+      end
 
   | PolyT (tparams, t) -> [
       "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) tparams);
@@ -639,6 +644,13 @@ and json_of_tmap_impl json_cx bindings = Hh_json.(
     json_of_type_binding json_cx (name, t) :: acc
   ) bindings [] in
   JSON_Array (List.rev lst)
+)
+
+and json_of_defer_use_t json_cx = check_depth json_of_defer_use_t_impl json_cx
+and json_of_defer_use_t_impl json_cx = Hh_json.(function
+  | DestructuringT (_, s) -> JSON_Object [
+      "selector", json_of_selector json_cx s
+    ]
 )
 
 and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx

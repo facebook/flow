@@ -13,3 +13,8 @@ const bar = (i: number) => {
 foo = (i: number) => {
   return bar(i);
 };
+
+// Also make sure that the following doesn't loop
+
+declare var o;
+var { x: o } = o;

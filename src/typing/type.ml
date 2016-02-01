@@ -81,8 +81,19 @@ type t =
   (* type of a rest parameter *)
   | RestT of t
   | AbstractT of t
-  (* type of a variable / parameter / property extracted from a pattern *)
-  | DestructuringT of reason * t * selector
+
+  (* type expression whose evaluation is deferred *)
+  (* Usually a type expression is evaluated by splitting it into a def type and
+     a use type, and flowing the former to the latter: the def type is the
+     "main" argument, and the use type contains the type operation, other
+     arguments, and a tvar to hold the result. However, sometimes a type
+     expression may need to be kept in explicit form, with the type operation
+     and other arguments split out into a "deferred" use type `defer_use_t`,
+     whose evaluation state is tracked in the context by an identifier id: When
+     defer_use_t is evaluated, id points to a tvar containing the result of
+     evaluation. The explicit form simplifies other tasks, like substitution,
+     but otherwise works in much the same way as usual. **)
+  | EvalT of t * defer_use_t * int
 
   (** A polymorphic type is like a type-level "function" that, when applied to
       lists of type arguments, generates types. Just like a function, a
@@ -224,6 +235,10 @@ type t =
   (* Sigil representing functions that the type system is not expressive enough
      to annotate, so we customize their behavior internally. *)
   | CustomFunT of reason * custom_fun_kind
+
+and defer_use_t =
+  (* type of a variable / parameter / property extracted from a pattern *)
+  | DestructuringT of reason * selector
 
 and use_t =
   (* def types can be used as upper bounds *)
@@ -661,8 +676,8 @@ let rec reason_of_t = function
   | AbstractT t ->
       prefix_reason "abstract " (reason_of_t t)
 
-  | DestructuringT (reason, _, _) ->
-      reason
+  | EvalT (_, defer_use_t, _) ->
+      reason_of_defer_use_t defer_use_t
 
   | TypeAppT(t,_)
       -> prefix_reason "type application of " (reason_of_t t)
@@ -709,6 +724,10 @@ let rec reason_of_t = function
 
   | ExtendsT (_,_,t) ->
       prefix_reason "extends " (reason_of_t t)
+
+and reason_of_defer_use_t = function
+  | DestructuringT (reason, _) ->
+      reason
 
 and reason_of_use_t = function
   | UseT t -> reason_of_t t
@@ -880,7 +899,7 @@ let rec mod_reason_of_t f = function
 
   | AbstractT t -> AbstractT (mod_reason_of_t f t)
 
-  | DestructuringT (reason, t, s) -> DestructuringT (f reason, t, s)
+  | EvalT (t, defer_use_t, id) -> EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
 
   | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
 
@@ -916,6 +935,9 @@ let rec mod_reason_of_t f = function
   | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
 
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
+
+and mod_reason_of_defer_use_t f = function
+  | DestructuringT (reason, s) -> DestructuringT (f reason, s)
 
 and mod_reason_of_use_t f = function
   | UseT t -> UseT (mod_reason_of_t f t)
@@ -1025,6 +1047,9 @@ module DescFormat = struct
 end
 
 (* printing *)
+let string_of_defer_use_ctor = function
+  | DestructuringT _ -> "DestructuringT"
+
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
   | NumT _ -> "NumT"
@@ -1054,7 +1079,7 @@ let string_of_ctor = function
   | OptionalT _ -> "OptionalT"
   | RestT _ -> "RestT"
   | AbstractT _ -> "AbstractT"
-  | DestructuringT _ -> "DestructuringT"
+  | EvalT (_, defer_use_t, _) -> string_of_defer_use_ctor defer_use_t
   | TypeAppT _ -> "TypeAppT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
   | MaybeT _ -> "MaybeT"

@@ -281,12 +281,14 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
             ) in
             let (parent_pattern_t, tvar) = (match refinement with
             | Some refined_t -> (refined_t, refined_t)
-            | None -> curr_t, DestructuringT (reason, curr_t, Elem key)
+            | None ->
+              curr_t, EvalT (curr_t, DestructuringT (reason, Elem key), mk_id())
             ) in
             destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
         | Some (Spread (loc, { SpreadElement.argument })) ->
             let reason = mk_reason "rest of array pattern" loc in
-            let tvar = DestructuringT (reason, curr_t, ArrRest i) in
+            let tvar =
+              EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id()) in
             destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
         | None ->
             ()
@@ -318,7 +320,7 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
                   (* use the same reason for the prop name and the lookup.
                      given `var {foo} = ...`, `foo` is both. compare to `a.foo`
                      where `foo` is the name and `a.foo` is the lookup. *)
-                  curr_t, DestructuringT (reason, curr_t, Prop x)
+                  curr_t, EvalT (curr_t, DestructuringT (reason, Prop x), mk_id())
                 ) in
                 destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
             | _ ->
@@ -327,7 +329,8 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
 
         | SpreadProperty (loc, { SpreadProperty.argument }) ->
             let reason = mk_reason "object pattern spread property" loc in
-            let tvar = DestructuringT (reason, curr_t, ObjRest !xs) in
+            let tvar =
+              EvalT (curr_t, DestructuringT (reason, ObjRest !xs), mk_id()) in
             destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
       )
     )

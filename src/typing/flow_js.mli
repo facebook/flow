@@ -68,6 +68,8 @@ val write_prop : Context.t -> int -> SMap.key -> Type.t -> unit
 
 val iter_props : Context.t -> int -> (string -> Type.t -> unit) -> unit
 
+val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
+
 (* object/method types *)
 
 val mk_methodtype : Type.t -> Type.t list -> ?params_names:string list ->

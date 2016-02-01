@@ -32,6 +32,7 @@ val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
 val envs: t -> env IMap.t
 val errors: t -> Errors_js.ErrorSet.t
 val error_suppressions: t -> Errors_js.ErrorSuppressions.t
+val evaluated: t -> Type.t IMap.t
 val file: t -> Loc.filename
 val find_props: t -> Constraint_js.ident -> Type.properties
 val find_module: t -> string -> Type.t
@@ -67,6 +68,7 @@ val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_tvar: t -> Constraint_js.ident -> unit
 val set_envs: t -> env IMap.t -> unit
+val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint_js.node IMap.t -> unit
 val set_module_exports_type: t -> module_exports_type -> unit

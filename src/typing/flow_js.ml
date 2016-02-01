@@ -520,6 +520,12 @@ let iter_real_props cx id f =
   |> SMap.filter (fun x _ -> not (is_internal_name x))
   |> SMap.iter f
 
+(* visit an optional evaluated type at an evaluation id *)
+let visit_eval_id cx id f =
+  match IMap.get id (Context.evaluated cx) with
+  | None -> ()
+  | Some t -> f t
+
 (***************)
 (* strict mode *)
 (***************)
@@ -1067,11 +1073,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* destructuring *)
     (*****************)
 
-    | DestructuringT (reason, t, s), u ->
-      rec_flow cx trace (eval_selector cx reason t s, u)
+    | EvalT (t, DestructuringT (reason, s), i), _ ->
+      rec_flow cx trace (eval_selector cx reason t s i, u)
 
-    | l, UseT DestructuringT (reason, t, s) ->
-      rec_flow_t cx trace (l, eval_selector cx reason t s)
+    | _, UseT EvalT (t, DestructuringT (reason, s), i) ->
+      rec_flow_t cx trace (l, eval_selector cx reason t s i)
 
     (*************)
     (* Debugging *)
@@ -3929,10 +3935,13 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
 
   | AbstractT (t) -> AbstractT (subst cx ~force map t)
 
-  | DestructuringT (reason, t, s) ->
-      let t = subst cx ~force map t in
-      let s = subst_selector cx force map s in
-      DestructuringT (reason, t, s)
+  | EvalT (t, defer_use_t, id) ->
+      let result_t = subst cx ~force map t in
+      let result_defer_use_t = subst_defer_use_t cx ~force map defer_use_t in
+      let result_id =
+        if t = result_t && defer_use_t = result_defer_use_t
+        then id else mk_id () in
+      EvalT (result_t, result_defer_use_t, result_id)
 
   | TypeAppT(c, ts) ->
       let c = subst cx ~force map c in
@@ -3983,15 +3992,25 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ->
       failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
-and eval_selector cx reason curr_t s =
-  mk_tvar_where cx reason (fun tvar ->
-    flow_opt cx (curr_t, match s with
-    | Prop x -> GetPropT(reason, (reason, x), tvar)
-    | Elem key -> GetElemT(reason, key, tvar)
-    | ObjRest xs -> ObjRestT(reason, xs, tvar)
-    | ArrRest i -> ArrRestT(reason, i, tvar)
+and subst_defer_use_t cx ~force map = function
+  | DestructuringT (reason, s) ->
+      DestructuringT (reason, subst_selector cx force map s)
+
+and eval_selector cx reason curr_t s i =
+  let evaluated = Context.evaluated cx in
+  match IMap.get i evaluated with
+  | None ->
+    mk_tvar_where cx reason (fun tvar ->
+      Context.set_evaluated cx (IMap.add i tvar evaluated);
+      flow_opt cx (curr_t, match s with
+      | Prop x -> GetPropT(reason, (reason, x), tvar)
+      | Elem key -> GetElemT(reason, key, tvar)
+      | ObjRest xs -> ObjRestT(reason, xs, tvar)
+      | ArrRest i -> ArrRestT(reason, i, tvar)
+      )
     )
-  )
+  | Some it ->
+    it
 
 and subst_propmap cx force map id =
   let pmap = find_props cx id in
@@ -4084,7 +4103,7 @@ and check_polarity cx polarity = function
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
-  | DestructuringT _
+  | EvalT _
   | ReposUpperT _
   | ExtendsT _
   | CustomFunT _
@@ -5639,13 +5658,13 @@ and reposition cx ?trace reason t =
         flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
       )
     end
-  | DestructuringT _ ->
-      (* Modifying the reason of `DestructuringT`, as we do for other types, is
-         not enough, since it will only affect the reason of the resulting tvar.
-         Instead, repositioning a `DestructuringT` should simulate repositioning
-         the resulting tvar, i.e., flowing repositioned *lower bounds* to the
-         resulting tvar. (Another way of thinking about this is that a
-         `DestructuringT` is just as transparent as its resulting tvar.) *)
+  | EvalT _ ->
+      (* Modifying the reason of `EvalT`, as we do for other types, is not
+         enough, since it will only affect the reason of the resulting tvar.
+         Instead, repositioning a `EvalT` should simulate repositioning the
+         resulting tvar, i.e., flowing repositioned *lower bounds* to the
+         resulting tvar. (Another way of thinking about this is that a `EvalT`
+         is just as transparent as its resulting tvar.) *)
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, tvar))
       )
@@ -6078,7 +6097,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | FunProtoBindT _
   | FunProtoCallT _
   | AbstractT _
-  | DestructuringT _
+  | EvalT _
   | SpeculativeMatchT _
   | ReposUpperT _
   | ExtendsT _
