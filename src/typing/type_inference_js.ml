@@ -4819,7 +4819,8 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
   let state = ref (mk_object cx reason_state) in
 
   let props_reason = prefix_reason "props of " reason_component in
-  let props = ref (mk_object cx props_reason) in
+  (* TODO - this probably should be the empty object AND we should enforce it *)
+  let props = ref (AnyObjT props_reason) in
 
   let (fmap, mmap) =
     List.fold_left Ast.Expression.Object.(fun (fmap, mmap) -> function
