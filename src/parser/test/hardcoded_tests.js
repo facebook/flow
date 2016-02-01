@@ -1149,6 +1149,18 @@ module.exports = {
         'body.0.declaration': {
           'type': 'InterfaceDeclaration',
         }
+      },
+      'export * as foo from "bar"': {
+        '%parse_options%': {
+          "esproposal_export_star_as": true
+        },
+        'body.0.specifiers': [{
+          'type': 'ExportBatchSpecifier',
+          'name': {
+            'type': 'Identifier',
+            'name': 'foo'
+          },
+        }]
       }
     },
     'Declare Statements': {

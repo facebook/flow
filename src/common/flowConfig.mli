@@ -20,6 +20,7 @@ module Opts : sig
     esproposal_class_instance_fields: esproposal_feature_mode;
     esproposal_class_static_fields: esproposal_feature_mode;
     esproposal_decorators: esproposal_feature_mode;
+    esproposal_export_star_as: esproposal_feature_mode;
     facebook_ignore_fbt: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;

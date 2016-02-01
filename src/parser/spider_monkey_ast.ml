@@ -395,7 +395,7 @@ and Statement : sig
       | Expression of Expression.t
     type specifier =
       | ExportSpecifiers of Specifier.t list
-      | ExportBatchSpecifier of Loc.t
+      | ExportBatchSpecifier of Loc.t * Identifier.t option
     type exportKind =
       | ExportType
       | ExportValue

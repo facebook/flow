@@ -114,6 +114,7 @@ let main include_tokens pretty from filename () =
         esproposal_class_instance_fields = true;
         esproposal_class_static_fields = true;
         esproposal_decorators = true;
+        esproposal_export_star_as = true;
         types = true;
       }) in
 

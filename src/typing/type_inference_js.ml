@@ -105,10 +105,15 @@ let require cx m_name loc =
     )
   )
 
-let import cx m_name loc =
+let import ?reason cx m_name loc =
   Context.add_require cx m_name loc;
   Type_inference_hooks_js.dispatch_import_hook cx m_name loc;
-  get_module_t cx m_name (mk_reason m_name loc)
+  let reason =
+    match reason with
+    | Some r -> r
+    | None -> mk_reason m_name loc
+  in
+  get_module_t cx m_name reason
 
 let import_ns cx reason module_name loc =
   Context.add_require cx module_name loc;
@@ -429,6 +434,21 @@ let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
         "Additionally, Flow does not account for the type implications of " ^
         "decorators at this time."
       ]
+))
+
+let warn_or_ignore_export_star_as cx name = FlowConfig.(Opts.(
+  if name = None then () else
+  match ((get_unsafe ()).options.esproposal_export_star_as, name) with
+  | ESPROPOSAL_WARN, Some(loc, _) ->
+    let reason = mk_reason "Experimental `export * as` usage" loc in
+    Flow_js.add_warning cx [
+      reason,
+      "`export * as` is an active early stage feature proposal that may " ^
+      "change. You may opt-in to using it anyway by putting " ^
+      "`esproposal.export_star_as=enable` into the [options] section of your " ^
+      ".flowconfig"
+    ]
+  | _ -> ()
 ))
 
 let mk_custom_fun cx loc typeParameters kind =
@@ -2995,30 +3015,65 @@ and export_statement cx _type_params_map loc
       List.iter export_specifier specifiers
 
     (* [declare] export [type] * from "source"; *)
-    | ([], Some(ExportBatchSpecifier(_))) ->
+    | ([], Some(ExportBatchSpecifier(batch_loc, star_as_name))) ->
       let source_module_name = (
         match source with
         | Some(_, {
             Ast.Literal.value = Ast.Literal.String(module_name);
             _;
-          }) ->
-            Context.add_require cx module_name loc;
-            Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
-            module_name
-        | _
-          -> failwith (
-            "Parser Error: `export * from` must specify a string " ^
-            "literal for the source module name!"
-          )
+          }) -> module_name
+        | _ -> failwith (
+          "Parser Error: `export * from` must specify a string " ^
+          "literal for the source module name!"
+        )
       ) in
 
+      warn_or_ignore_export_star_as cx star_as_name;
 
-      let reason = mk_reason (spf "export * from \"%s\"" source_module_name) loc in
-      mark_exports_type cx reason Context.ESModule;
-      set_module_t cx reason (fun t ->
-        Flow_js.flow cx (
-          get_module_t cx source_module_name reason,
-          SetStarExportsT(reason, exports cx, t)
+      let parse_export_star_as =
+        FlowConfig.(Opts.((get_unsafe ()).options.esproposal_export_star_as))
+      in
+      (match star_as_name with
+      | Some ident ->
+        let (_, {Ast.Identifier.name; _;}) = ident in
+        let reason =
+          mk_reason
+            (spf "export * as %s from %S" name source_module_name)
+            loc
+        in
+        mark_exports_type cx reason Context.ESModule;
+
+        let remote_namespace_t =
+          if parse_export_star_as = FlowConfig.Opts.ESPROPOSAL_ENABLE
+          then import_ns cx reason source_module_name batch_loc
+          else AnyT.why (
+            let config_value =
+              if parse_export_star_as = FlowConfig.Opts.ESPROPOSAL_IGNORE
+              then "ignore"
+              else "warn"
+            in
+            mk_reason
+              (spf "flowconfig: esproposal.export_star_as=%s" config_value)
+              batch_loc
+          )
+        in
+        set_module_t cx reason (fun t ->
+          Flow_js.flow cx (
+            exports cx,
+            SetNamedExportsT(reason, SMap.singleton name remote_namespace_t, t)
+          )
+        )
+      | None ->
+        let reason =
+          mk_reason (spf "export * from %S" source_module_name) loc
+        in
+        mark_exports_type cx reason Context.ESModule;
+
+        set_module_t cx reason (fun t ->
+          Flow_js.flow cx (
+            import ~reason cx source_module_name loc,
+            SetStarExportsT(reason, exports cx, t)
+          )
         )
       )
 

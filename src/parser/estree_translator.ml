@@ -583,8 +583,12 @@ end with type t = Impl.t) = struct
   and export_specifiers = Statement.ExportDeclaration.(function
     | Some (ExportSpecifiers specifiers) ->
         array_of_list export_specifier specifiers
-    | Some (ExportBatchSpecifier loc) ->
-        array [| node "ExportBatchSpecifier" loc [||] |]
+    | Some (ExportBatchSpecifier (loc, name)) ->
+        array [|
+          node "ExportBatchSpecifier" loc [|
+            "name", option identifier name
+          |]
+        |]
     | None ->
         array [||]
   )

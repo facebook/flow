@@ -129,12 +129,14 @@ type parse_options = {
   esproposal_class_instance_fields: bool;
   esproposal_class_static_fields: bool;
   esproposal_decorators: bool;
+  esproposal_export_star_as: bool;
   types: bool;
 }
 let default_parse_options = {
   esproposal_class_instance_fields = false;
   esproposal_class_static_fields = false;
   esproposal_decorators = false;
+  esproposal_export_star_as = false;
   types = true;
 }
 

@@ -46,6 +46,7 @@ module Opts = struct
     esproposal_class_instance_fields: esproposal_feature_mode;
     esproposal_class_static_fields: esproposal_feature_mode;
     esproposal_decorators: esproposal_feature_mode;
+    esproposal_export_star_as: esproposal_feature_mode;
     facebook_ignore_fbt: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
@@ -114,6 +115,7 @@ module Opts = struct
     esproposal_class_instance_fields = ESPROPOSAL_WARN;
     esproposal_class_static_fields = ESPROPOSAL_WARN;
     esproposal_decorators = ESPROPOSAL_WARN;
+    esproposal_export_star_as = ESPROPOSAL_WARN;
     facebook_ignore_fbt = false;
     ignore_non_literal_requires = false;
     moduleSystem = Node;
@@ -519,6 +521,15 @@ let parse_options config lines =
       optparser = optparse_esproposal_feature_flag;
       setter = (fun opts v -> {
         opts with esproposal_decorators = v;
+      });
+    }
+
+    |> define_opt "esproposal.export_star_as" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
+      setter = (fun opts v -> {
+        opts with esproposal_export_star_as = v;
       });
     }
 

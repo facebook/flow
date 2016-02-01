@@ -3265,8 +3265,22 @@ end = struct
             }
         | T_MULT ->
             let loc = Peek.loc env in
-            let specifiers = Some (ExportBatchSpecifier loc) in
             Expect.token env T_MULT;
+            let local_name =
+              let parse_export_star_as =
+                (parse_options env).esproposal_export_star_as
+              in
+              if Peek.value env = "as"
+              then (
+                Expect.contextual env "as";
+                if parse_export_star_as
+                then Some (Parse.identifier env)
+                else (error env Error.UnexpectedTypeDeclaration; None)
+              ) else None
+            in
+            let specifiers =
+              Some (ExportBatchSpecifier (loc, local_name))
+            in
             let source = export_source env in
             let end_loc = match Peek.semicolon_loc env with
             | Some loc -> loc
@@ -3383,8 +3397,22 @@ end = struct
         | T_MULT ->
             (* declare export * from 'foo' *)
             let loc = Peek.loc env in
-            let specifiers = Some (Statement.ExportDeclaration.ExportBatchSpecifier loc) in
             Expect.token env T_MULT;
+            let parse_export_star_as =
+              (parse_options env).esproposal_export_star_as
+            in
+            let local_name =
+              if Peek.value env = "as"
+              then (
+                Expect.contextual env "as";
+                if parse_export_star_as
+                then Some (Parse.identifier env)
+                else (error env Error.UnexpectedTypeDeclaration; None)
+              ) else None
+            in
+            let specifiers = Statement.ExportDeclaration.(
+              Some (ExportBatchSpecifier (loc, local_name))
+            ) in
             let source = export_source env in
             let end_loc = match Peek.semicolon_loc env with
             | Some loc -> loc

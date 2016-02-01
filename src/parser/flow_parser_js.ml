@@ -67,6 +67,11 @@ let parse_options jsopts = Parser_env.(
     then { opts with esproposal_class_static_fields = Js.to_bool class_static_fields; }
     else opts in
 
+  let export_star_as = Js.Unsafe.get jsopts "esproposal_export_star_as" in
+  let opts = if Js.Optdef.test export_star_as
+    then { opts with esproposal_export_star_as = Js.to_bool export_star_as; }
+    else opts in
+
   let types = Js.Unsafe.get jsopts "types" in
   let opts = if Js.Optdef.test types
     then { opts with types = Js.to_bool types; }

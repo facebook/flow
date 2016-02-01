@@ -69,6 +69,7 @@ let parse_source_file ~fail ~types_mode content file =
     esproposal_class_instance_fields = true;
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
+    esproposal_export_star_as = true;
 
     (* Allow types based on `types_mode`, using the @flow annotation in the
        file header if possible. *)
@@ -95,6 +96,7 @@ let parse_json_file ~fail content file =
     esproposal_class_instance_fields = false;
     esproposal_class_static_fields = false;
     esproposal_decorators = false;
+    esproposal_export_star_as = false;
     types = true;
   }) in
   let info = Docblock.default_info in

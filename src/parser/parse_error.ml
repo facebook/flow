@@ -69,6 +69,7 @@ type t =
   | DeclareExportConst
   | DeclareExportType
   | DeclareExportInterface
+  | UnexpectedExportStarAs
 
 exception Error of (Loc.t * t) list
 
@@ -148,4 +149,7 @@ module PP =
           `export type` instead."
       | DeclareExportInterface -> "`declare export interface` is not supported. Use \
           `export interface` instead."
+      | UnexpectedExportStarAs -> "`export * as` is an early-stage proposal \
+          and is not enabled by default. To enable support in the parser, use \
+          the `esproposal_export_star_as` option"
   end

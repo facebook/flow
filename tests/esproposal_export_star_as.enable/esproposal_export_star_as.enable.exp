@@ -1,0 +1,10 @@
+
+dest.js:6:17,26: number
+This type is incompatible with
+dest.js:6:8,13: string
+
+dest.js:9:17,26: string
+This type is incompatible with
+dest.js:9:8,13: number
+
+Found 2 errors
