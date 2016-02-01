@@ -49,13 +49,11 @@ MODULES=\
   src/services/inference\
   src/stubs\
   src/typing\
-  hack/deps\
   hack/dfind\
   hack/find\
   hack/globals\
   hack/heap\
   hack/hhi\
-  hack/parsing\
   hack/procs\
   hack/search\
   hack/socket\

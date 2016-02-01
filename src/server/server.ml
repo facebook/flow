@@ -42,11 +42,7 @@ struct
     Flow_logger.log "version=%s" FlowConfig.version;
     (* start the server *)
     let timing, env = Types_js.server_init genv env in
-    let files =
-      ServerEnv.PathMap.fold (fun fn _ acc ->
-        ServerEnv.PathSet.add fn acc
-      ) env.ServerEnv.files_info ServerEnv.PathSet.empty in
-    SearchService_js.update_from_master files;
+    SearchService_js.update_from_master env.ServerEnv.files;
     timing, env
 
   let run_once_and_exit env =
@@ -454,7 +450,7 @@ struct
     config.FlowConfig.include_stems
 
   (* filter a set of updates coming from dfind and return
-     a ServerEnv.PathSet. updates may be coming in from
+     a FilenameSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv updates =
     let root = Options.root (genv.ServerEnv.options) in
@@ -482,13 +478,20 @@ struct
         name;
       FlowExitStatus.(exit Server_out_of_date)
     end;
+    let all_libs = Files_js.get_lib_fileset () in
     SSet.fold (fun f acc ->
       if Files_js.is_flow_file f &&
         (* note: is_included may be expensive. check in-root match first. *)
         (str_starts_with f sroot || FlowConfig.is_included config f)
-      then ServerEnv.PathSet.add (Path.make f) acc
+      (* TODO: is SourceFile accurate? *)
+      then
+        let f = if SSet.mem f all_libs
+          then Loc.LibFile f
+          else Loc.SourceFile f
+        in
+        FilenameSet.add f acc
       else acc
-    ) updates ServerEnv.PathSet.empty
+    ) updates FilenameSet.empty
 
   (* XXX: can some of the logic in process_updates be moved here? *)
   let should_recheck _update = true
@@ -496,15 +499,14 @@ struct
   (* on notification, execute client commands or recheck files *)
   let recheck genv env updates =
     let diff_js = updates in
-    if ServerEnv.PathSet.is_empty diff_js
+    if FilenameSet.is_empty diff_js
     then env
     else begin
       SearchService_js.clear updates;
-      let all_libs = Files_js.get_lib_fileset () in
-      let libs, files = ServerEnv.PathSet.fold (fun x (libs, files) ->
-        let file = Path.to_string x in
-        if SSet.mem file all_libs then SSet.add file libs, files
-        else libs, FilenameSet.add (Loc.SourceFile file) files
+      let libs, files = FilenameSet.fold (fun x (libs, files) ->
+        match x with
+        | Loc.LibFile filename -> SSet.add filename libs, files
+        | _ -> libs, FilenameSet.add x files
       ) diff_js (SSet.empty, FilenameSet.empty) in
       (* TEMP: if library files change, stop the server *)
       if not (SSet.is_empty libs)

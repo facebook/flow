@@ -8,9 +8,6 @@
  *
  *)
 
-module PathSet = Set.Make(Path)
-module PathMap = Utils.MyMap(Path)
-
 (*****************************************************************************)
 (* The "static" environment, initialized first and then doesn't change *)
 (*****************************************************************************)
@@ -32,8 +29,8 @@ type genv = {
  *)
 
 type env = {
-    files_info     : FileInfo.t PathMap.t;
-    errorl         : Errors_js.error list;
+    files: Utils_js.FilenameSet.t;
+    errorl: Errors_js.error list;
   }
 
 let async_queue : (unit -> unit) list ref = ref []

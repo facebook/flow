@@ -12,8 +12,6 @@
 (*****************************************************************************)
 (* Building the environment *)
 (*****************************************************************************)
-open ServerEnv
-
 let make_genv ~multicore options watch_paths =
   let check_mode   = Options.is_check_mode options in
   let gc_control   = GlobalConfig.gc_control in
@@ -26,12 +24,10 @@ let make_genv ~multicore options watch_paths =
   let dfind =
     if check_mode then None
     else Some (DfindLib.init ("flow_server_events", watch_paths)) in
-  { options;
-    workers;
-    dfind;
-  }
+  { ServerEnv.options; workers; dfind; }
 
 let make_env () =
-  { files_info     = ServerEnv.PathMap.empty;
-    errorl         = [];
+  { ServerEnv.
+    files = Utils_js.FilenameSet.empty;
+    errorl = [];
   }

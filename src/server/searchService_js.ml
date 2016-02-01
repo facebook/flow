@@ -114,16 +114,16 @@ let query input =
 
 let update_from_master files =
   (* hack's search service operates on Relative_paths, so we have to convert *)
-  let files = ServerEnv.PathSet.fold (fun p acc ->
-    let p = Path.to_string p in
+  let files = FilenameSet.fold (fun p acc ->
+    let p = string_of_filename p in
     Relative_path.Set.add (Relative_path.create Relative_path.Dummy p) acc
   ) files Relative_path.Set.empty in
   SS.MasterApi.update_search_index files
 
 let clear paths =
   (* hack's search service operates on Relative_paths, so we have to convert *)
-  let paths = ServerEnv.PathSet.fold (fun p acc ->
-    let p = Path.to_string p in
+  let paths = FilenameSet.fold (fun p acc ->
+    let p = string_of_filename p in
     Relative_path.Set.add (Relative_path.create Relative_path.Dummy p) acc
   ) paths Relative_path.Set.empty in
   SS.MasterApi.clear_shared_memory paths

@@ -39,16 +39,6 @@ let is_lib_file f = match f with
 | Loc.LibFile _ -> true
 | _ -> false
 
-let empty_file_info : FileInfo.t = {
-  file_mode = None;
-  FileInfo.funs = [];
-  classes = [];
-  typedefs = [];
-  consts = [];
-  comments = [];
-  consider_names_just_for_autoload = false;
-}
-
 (****************** shared context heap *********************)
 
 (* map from file names to contexts *)
@@ -1075,8 +1065,8 @@ let dependent_files workers unmodified_files inferred_files touched_modules =
   dep_closure reverse_deps direct_deps,
   direct_deps
 
-(* We maintain the following invariant across rechecks: The keyset of
-   `files_info` contains files that parsed successfully in the previous
+(* We maintain the following invariant across rechecks: The set of
+   `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
 let recheck genv env modified =
@@ -1155,9 +1145,7 @@ let recheck genv env modified =
   save_errors parse_errors freshparse_fail freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
-  let old_parsed = ServerEnv.PathMap.fold (fun k _ a ->
-    FilenameSet.add (Loc.SourceFile (Path.to_string k)) a
-  ) env.ServerEnv.files_info FilenameSet.empty in
+  let old_parsed = env.ServerEnv.files in
   let undeleted_parsed = FilenameSet.diff old_parsed deleted in
   let unmodified_parsed = FilenameSet.diff undeleted_parsed modified in
 
@@ -1235,15 +1223,10 @@ let recheck genv env modified =
     ~dependent_file_count:!dependent_file_count
     ~timing;
 
-  (* for now we populate file_infos with empty def lists *)
   let parsed = FilenameSet.union freshparsed unmodified_parsed in
-  let files_info = FilenameSet.fold (fun file info ->
-    let file = Path.make (string_of_filename file) in
-    ServerEnv.PathMap.add file empty_file_info info
-  ) parsed ServerEnv.PathMap.empty in
 
   (* NOTE: unused fields are left in their initial empty state *)
-  { env with ServerEnv.files_info = files_info; }
+  { env with ServerEnv.files = parsed; }
 
 (* full typecheck *)
 let full_check workers parse_next opts =
@@ -1341,16 +1324,10 @@ let server_init genv env =
   let (timing, parsed) =
     full_check genv.ServerEnv.workers get_next options in
 
-  (* for now we populate file_infos with empty def lists *)
-  let files_info = FilenameSet.fold (fun file info ->
-    let file = Path.make (string_of_filename file) in
-    ServerEnv.PathMap.add file empty_file_info info
-  ) parsed ServerEnv.PathMap.empty in
-
-  (* We ensure an invariant required by recheck, namely that the keyset of
-     `files_info` contains files that parsed successfully. *)
+  (* We ensure an invariant required by recheck, namely that
+     `files` contains files that parsed successfully. *)
   (* NOTE: unused fields are left in their initial empty state *)
-  let env = { env with ServerEnv.files_info = files_info; } in
+  let env = { env with ServerEnv.files = parsed; } in
 
   SharedMem.init_done();
 

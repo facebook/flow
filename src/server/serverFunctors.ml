@@ -12,6 +12,7 @@ open Sys_utils
 open ServerEnv
 open ServerUtils
 open Utils
+open Utils_js
 module List = Core_list
 
 exception State_not_found
@@ -20,10 +21,10 @@ module type SERVER_PROGRAM = sig
   val preinit : unit -> unit
   val init : genv -> env -> (FlowEventLogger.Timing.t * env)
   val run_once_and_exit : env -> unit
-  val should_recheck : Path.t -> bool
+  val should_recheck : Loc.filename -> bool
   (* filter and relativize updated file paths *)
-  val process_updates : genv -> SSet.t -> ServerEnv.PathSet.t
-  val recheck: genv -> env -> ServerEnv.PathSet.t -> env
+  val process_updates : genv -> SSet.t -> FilenameSet.t
+  val recheck: genv -> env -> FilenameSet.t -> env
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
   val name: string
@@ -150,7 +151,7 @@ end = struct
 
   let recheck genv old_env updates =
     let to_recheck =
-      ServerEnv.PathSet.filter Program.should_recheck updates in
+      FilenameSet.filter Program.should_recheck updates in
 
     let root = Options.root genv.ServerEnv.options in
     let tmp_dir = Options.temp_dir genv.ServerEnv.options in
@@ -172,7 +173,7 @@ end = struct
       let updates = Program.process_updates genv raw_updates in
       let env, rechecked = recheck genv env updates in
       let rechecked_count = rechecked_count +
-        (ServerEnv.PathSet.cardinal rechecked) in
+        (FilenameSet.cardinal rechecked) in
       recheck_loop (i + 1) rechecked_count genv env
     end
 
