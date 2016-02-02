@@ -30,16 +30,17 @@ val resolution_path_dependency: FilenameSet.t -> FilenameSet.t -> filename ->
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
-val module_name_candidates: string -> string list
-
-(* initialize to a module system, given the name of the module system *)
-val init: Options.options -> unit
-
 (* export and import functions for the module system *)
-val exported_module: filename -> Docblock.t -> Modulename.t
-val imported_module: Context.t -> Loc.t -> ?path_acc: SSet.t ref -> string -> Modulename.t
+val exported_module:
+  options: Options.options ->
+  filename -> Docblock.t -> Modulename.t
+val imported_module:
+  options: Options.options ->
+  Context.t -> Loc.t -> ?path_acc: SSet.t ref -> string -> Modulename.t
 
-val find_resolved_module: Context.t -> Loc.t -> string -> Modulename.t
+val find_resolved_module:
+  options: Options.options ->
+  Context.t -> Loc.t -> string -> Modulename.t
 
 val module_exists: Modulename.t -> bool
 
@@ -62,16 +63,16 @@ val get_reverse_imports: Modulename.t -> NameSet.t option
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:
-  ?debug: bool ->
+  options: Options.options ->
   filename list ->                    (* inferred modules *)
   NameSet.t ->                           (* removed files *)
   Errors_js.ErrorSet.t FilenameMap.t  (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
-val add_module_info: Context.t -> unit
+val add_module_info: options:Options.options -> Context.t -> unit
 
 (* add info for unparsed file to module info store *)
-val add_unparsed_info: force_check:bool -> filename -> unit
+val add_unparsed_info: options:Options.options -> filename -> unit
 
 (* remove module info being tracked for given file set;
    returns the set of modules removed

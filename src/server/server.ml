@@ -107,7 +107,7 @@ struct
     );
     die ()
 
-  let autocomplete command_context file_input oc =
+  let autocomplete ~options command_context file_input oc =
     let path, content = match file_input with
       | ServerProt.FileName _ -> failwith "Not implemented"
       | ServerProt.FileContent (_, content) ->
@@ -117,9 +117,10 @@ struct
     let results =
       try
         let path = Loc.SourceFile path in
-        let timing, cx, parse_result = (match Types_js.typecheck_contents content path with
+        let timing, cx, parse_result =
+          match Types_js.typecheck_contents ~options content path with
           | timing, Some cx, _, parse_result -> timing, cx, parse_result
-          | _  -> failwith "Couldn't parse file")
+          | _  -> failwith "Couldn't parse file"
         in
         AutocompleteService_js.autocomplete_get_results
           timing
@@ -135,13 +136,13 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let check_file file_input verbose oc =
+  let check_file ~options file_input verbose oc =
     let file = ServerProt.file_input_get_filename file_input in
     let errors = match file_input with
     | ServerProt.FileName _ -> failwith "Not implemented"
     | ServerProt.FileContent (_, content) ->
         let file = Loc.SourceFile file in
-        (match Types_js.typecheck_contents ?verbose content file with
+        (match Types_js.typecheck_contents ~options ?verbose content file with
         | _, _, errors, _ -> errors)
     in
     send_errorl (Errors_js.to_list errors) oc
@@ -154,13 +155,13 @@ struct
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type (file_input, line, col, include_raw) oc =
+  let infer_type ~options (file_input, line, col, include_raw) oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let (err, resp) =
     (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents content file with
+      let cx = match Types_js.typecheck_contents ~options content file with
       | _, Some cx, _, _ -> cx
       | _  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
@@ -190,7 +191,7 @@ struct
     Marshal.to_channel oc (err, resp) [];
     flush oc
 
-  let dump_types file_input include_raw oc =
+  let dump_types ~options file_input include_raw oc =
     (* Print type using Flow type syntax *)
     let printer = Type_printer.string_of_t in
     (* Print raw representation of types as json; as it turns out, the
@@ -206,7 +207,7 @@ struct
     let (err, resp) =
     (try
        let content = ServerProt.file_input_get_content file_input in
-       let cx = match Types_js.typecheck_contents content file with
+       let cx = match Types_js.typecheck_contents ~options content file with
        | _, Some cx, _, _ -> cx
        | _  -> failwith "Couldn't parse file" in
       (None, Some (Query_types.dump_types printer raw_printer cx))
@@ -251,14 +252,15 @@ struct
 
   (* NOTE: currently, not only returns list of annotations, but also rewrites
      file with annotations *)
-  let suggest =
+  let suggest ~options =
     let suggest_for_file result_map file =
       (try
          let (file, region) = parse_suggest_cmd file in
          let file = Path.to_string (Path.make file) in
          let content = cat file in
          let file_loc = Loc.SourceFile file in
-         let cx = match Types_js.typecheck_contents content file_loc with
+         let cx =
+           match Types_js.typecheck_contents ~options content file_loc with
            | _, Some cx, _, _ -> cx
            | _  -> failwith "Couldn't parse file" in
          let lines = Str.split_delim (Str.regexp "\n") content in
@@ -322,27 +324,27 @@ struct
       Marshal.to_channel oc patches [];
       flush oc
 
-  let find_module (moduleref, filename) oc =
+  let find_module ~options (moduleref, filename) oc =
     let file = Loc.SourceFile filename in
     let cx = Context.make_simple file in
     let loc = {Loc.none with Loc.source = Some file;} in
-    let module_name = Module_js.imported_module cx loc moduleref in
+    let module_name = Module_js.imported_module ~options cx loc moduleref in
     let response: filename option = Module_js.get_module_file module_name in
     Marshal.to_channel oc response [];
     flush oc
 
-  let get_def (file_input, line, col) oc =
+  let get_def ~options (file_input, line, col) oc =
     let filename = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile filename in
     let loc = mk_loc file line col in
     let state = GetDef_js.getdef_set_hooks loc in
     (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents content file with
+      let cx = match Types_js.typecheck_contents ~options content file with
         | _, Some cx, _, _ -> cx
         | _  -> failwith "Couldn't parse file"
       in
-      let result = GetDef_js.getdef_get_result cx state in
+      let result = GetDef_js.getdef_get_result ~options cx state in
       Marshal.to_channel oc result []
     with exn ->
       Flow_logger.log
@@ -412,23 +414,23 @@ struct
     let { ServerProt.client_logging_context; command; } = msg in
     match command with
     | ServerProt.AUTOCOMPLETE fn ->
-        autocomplete client_logging_context fn oc
+        autocomplete ~options client_logging_context fn oc
     | ServerProt.CHECK_FILE (fn, verbose) ->
-        check_file fn verbose oc
+        check_file ~options fn verbose oc
     | ServerProt.DUMP_TYPES (fn, format) ->
-        dump_types fn format oc
+        dump_types ~options fn format oc
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
     | ServerProt.FIND_MODULE (moduleref, filename) ->
-        find_module (moduleref, filename) oc
+        find_module ~options (moduleref, filename) oc
     | ServerProt.GET_DEF (fn, line, char) ->
-        get_def (fn, line, char) oc
+        get_def ~options (fn, line, char) oc
     | ServerProt.GET_IMPORTERS module_names ->
         get_importers ~options module_names oc
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names oc
     | ServerProt.INFER_TYPE (fn, line, char, include_raw) ->
-        infer_type (fn, line, char, include_raw) oc
+        infer_type ~options (fn, line, char, include_raw) oc
     | ServerProt.KILL ->
         die_nicely genv oc
     | ServerProt.PING ->
@@ -440,7 +442,7 @@ struct
     | ServerProt.STATUS client_root ->
         print_status genv client_root oc
     | ServerProt.SUGGEST (files) ->
-        suggest files oc
+        suggest ~options files oc
 
   let handle_client genv client =
     let msg = ServerProt.cmd_from_channel client.ic in

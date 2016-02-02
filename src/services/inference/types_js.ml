@@ -28,7 +28,6 @@ let init_modes opts = Options.(
   modes.quiet <- opts.opt_quiet;
   modes.profile <- opts.opt_profile;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
-  Module_js.init opts;
   Files_js.init opts;
 )
 
@@ -281,9 +280,9 @@ let apply_docblock_overrides metadata docblock_info =
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)
-let infer_module ~metadata filename =
+let infer_module ~options ~metadata filename =
   let ast, info = Parsing_service_js.get_ast_and_info_unsafe filename in
-  let module_name = Module_js.exported_module filename info in
+  let module_name = Module_js.exported_module ~options filename info in
   let metadata = apply_docblock_overrides metadata info in
   TI.infer_ast ~metadata ~filename ~module_name ast
 
@@ -306,9 +305,9 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
 
         (* infer produces a context for this module *)
-        let cx = infer_module ~metadata file in
+        let cx = infer_module ~options:opts ~metadata file in
         (* register module info *)
-        Module_js.add_module_info cx;
+        Module_js.add_module_info ~options:opts cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
@@ -461,12 +460,12 @@ end)
    The arguments (b), (c), (d) are passed to `merge_component_strict`, and
    argument (a) is passed to `restore`.
 *)
-let merge_strict_context cache component_cxs =
+let merge_strict_context ~options cache component_cxs =
   let required = List.fold_left (fun required cx ->
     let require_locs = Context.require_loc cx in
     SSet.fold (fun r ->
       let loc = SMap.find_unsafe r require_locs in
-      let resolved_r = Module_js.find_resolved_module cx loc r in
+      let resolved_r = Module_js.find_resolved_module ~options cx loc r in
       check_require (r, resolved_r, cx);
       add_decl (r, resolved_r, cx)
     ) (Context.required cx) required
@@ -520,7 +519,7 @@ let merge_strict_context cache component_cxs =
   ()
 
 (* Entry point for merging a component *)
-let merge_strict_component (component: filename list) =
+let merge_strict_component ~options (component: filename list) =
   (* A component may have several files: there's always at least one, and
      multiple files indicate a cycle. *)
 
@@ -543,7 +542,7 @@ let merge_strict_component (component: filename list) =
     let cache = new context_cache in
     let component_cxs = List.map cache#read component in
 
-    merge_strict_context cache component_cxs;
+    merge_strict_context ~options cache component_cxs;
 
     Flow_js.ContextOptimizer.sig_context component_cxs;
     let cx = List.hd component_cxs in
@@ -576,7 +575,7 @@ let with_timer ?opts timer timing f =
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents ?verbose contents filename =
+let typecheck_contents ~options ?verbose contents filename =
   let timing = FlowEventLogger.Timing.create () in
 
   (* always enable types when checking an individual file *)
@@ -606,7 +605,7 @@ let typecheck_contents ?verbose contents filename =
 
       let cache = new context_cache in
       let timing, () = with_timer "Merge" timing (fun () ->
-        merge_strict_context cache [cx]
+        merge_strict_context ~options cache [cx]
       ) in
       timing, Some cx, Context.errors cx, parse_result
 
@@ -624,7 +623,7 @@ let merge_strict_job opts (merged, errsets) (components: filename list list) =
       (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
       (fun () ->
         (*prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) file;*)
-        let file, errors = merge_strict_component component in
+        let file, errors = merge_strict_component ~options:opts component in
         file :: merged, errors :: errsets
       )
     with exc ->
@@ -826,8 +825,8 @@ let calc_dependencies workers files =
     FilenameSet.filter (fun f -> FilenameMap.mem f deps))
 
 (* commit newly inferred and removed modules, collect errors. *)
-let commit_modules ?(debug=false) inferred removed =
-  let errmap = Module_js.commit_modules ~debug inferred removed in
+let commit_modules ~options inferred removed =
+  let errmap = Module_js.commit_modules ~options inferred removed in
   save_errormap module_errors errmap
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
@@ -859,7 +858,6 @@ let heap_check files = Module_js.(
 
 (* helper *)
 let typecheck workers files removed unparsed opts timing make_merge_input =
-  let debug = Options.is_debug_mode opts in
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
@@ -868,12 +866,11 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
     with_timer ~opts "Infer" timing (fun () -> infer workers files opts) in
 
   (* add tracking modules for unparsed files *)
-  let force_check = Options.all opts in
-  List.iter (Module_js.add_unparsed_info ~force_check) unparsed;
+  List.iter (Module_js.add_unparsed_info ~options:opts) unparsed;
 
   (* create module dependency graph, warn on dupes etc. *)
   let timing, () = with_timer ~opts "CommitModules" timing (fun () ->
-    commit_modules ~debug inferred removed
+    commit_modules ~options:opts inferred removed
   ) in
 
   (* call supplied function to calculate closure of modules to merge *)
@@ -905,9 +902,9 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
       Module_js.clear_infos direct_deps;
       FilenameSet.iter (fun f ->
         let cx = ContextHeap.find_unsafe f in
-        Module_js.add_module_info cx
+        Module_js.add_module_info ~options:opts cx
       ) direct_deps;
-      if debug then heap_check to_merge;
+      if Options.is_debug_mode opts then heap_check to_merge;
     ) in
     Flow_logger.log "Calculating dependencies";
     let timing, dependency_graph =

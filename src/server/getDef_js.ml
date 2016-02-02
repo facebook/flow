@@ -57,7 +57,7 @@ let getdef_require (state, user_requested_loc) _cx name require_loc =
     state := Some (Gdrequire (name, require_loc))
   )
 
-let getdef_get_result cx state =
+let getdef_get_result ~options cx state =
   match !state with
   | Some Gdloc (loc) -> loc
   | Some Gdmem (name, this) ->
@@ -71,7 +71,7 @@ let getdef_get_result cx state =
       | None ->
           Loc.none)
   | Some Gdrequire (name, loc) ->
-      let module_name = Module_js.imported_module cx loc name in
+      let module_name = Module_js.imported_module ~options cx loc name in
       let f = Module_js.get_module_file module_name in
       (match f with
       | Some file -> Loc.({ none with source = Some file })

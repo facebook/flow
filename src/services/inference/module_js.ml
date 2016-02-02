@@ -22,7 +22,6 @@ open Sys_utils
 
 module Ast = Spider_monkey_ast
 module Flow = Flow_js
-module Modes = Modes_js
 module Reason = Reason_js
 module ErrorSet = Errors_js.ErrorSet
 
@@ -47,15 +46,6 @@ type info = {
 }
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
-
-let flow_options : Options.options option ref = ref None (*Options.default_options*)
-
-let get_flow_options () =
-  match !flow_options with
-  | Some opts -> opts
-  | None ->
-     assert_false ("Attempted to use flow_options before " ^
-                  "Modules_js was initialized.")
 
 let replace_name_mapper_template_tokens =
   let project_root_token = Str.regexp_string "<PROJECT_ROOT>" in
@@ -114,14 +104,13 @@ let choose_provider_and_warn_about_duplicates =
  * choose candidates that match the string *and* are a valid, resolvable path.
  *)
 let module_name_candidates_cache = Hashtbl.create 50
-let module_name_candidates name =
+let module_name_candidates ~options name =
   if Hashtbl.mem module_name_candidates_cache name then (
     Hashtbl.find module_name_candidates_cache name
   ) else (
-    let flow_options = get_flow_options () in
-    let mappers = Options.module_name_mappers flow_options in
+    let mappers = Options.module_name_mappers options in
     let map_name mapped_names (regexp, template) =
-      let template = replace_name_mapper_template_tokens flow_options template in
+      let template = replace_name_mapper_template_tokens options template in
       let new_name = Str.global_replace regexp template name in
       if new_name = name then mapped_names else new_name::mapped_names
     in
@@ -225,7 +214,11 @@ module type MODULE_SYSTEM = sig
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
      record paths that were looked up but not found during resolution. *)
-  val imported_module: Context.t -> Loc.t -> ?path_acc:SSet.t ref -> string -> Modulename.t
+  val imported_module:
+    options: Options.options ->
+    Context.t -> Loc.t ->
+    ?path_acc:SSet.t ref ->
+    string -> Modulename.t
 
   (* for a given module name, choose a provider from among a set of
     files with that exported name. also check for duplicates and
@@ -385,9 +378,8 @@ module Node = struct
           lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
         ]
 
-  let resolve_relative cx loc ?path_acc root_path rel_path =
+  let resolve_relative ~options cx loc ?path_acc root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
-    let options = get_flow_options () in
     if Files_js.is_flow_file ~options path
     then path_if_exists path_acc path
     else (
@@ -401,19 +393,21 @@ module Node = struct
       ])
     )
 
-  let rec node_module cx loc path_acc dir r =
-    let opts = get_flow_options () in
+  let rec node_module ~options cx loc path_acc dir r =
     lazy_seq [
       lazy (
-        lazy_seq (Options.node_resolver_dirnames opts |> List.map (fun dirname ->
-          lazy (resolve_relative cx loc ?path_acc dir (spf "%s%s%s" dirname Filename.dir_sep r))
+        lazy_seq (Options.node_resolver_dirnames options |> List.map (fun dirname ->
+          lazy (resolve_relative
+            ~options
+            cx loc ?path_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
+          )
         ))
       );
 
       lazy (
         let parent_dir = Filename.dirname dir in
         if dir = parent_dir then None
-        else node_module cx loc path_acc (Filename.dirname dir) r
+        else node_module ~options cx loc path_acc (Filename.dirname dir) r
       );
     ]
 
@@ -424,20 +418,20 @@ module Node = struct
     Str.string_match Files_js.current_dir_name r 0
     || Str.string_match Files_js.parent_dir_name r 0
 
-  let resolve_import cx loc ?path_acc import_str =
+  let resolve_import ~options cx loc ?path_acc import_str =
     let file = string_of_filename (Context.file cx) in
     let dir = Filename.dirname file in
     if explicitly_relative import_str || absolute import_str
-    then resolve_relative cx loc ?path_acc dir import_str
-    else node_module cx loc path_acc dir import_str
+    then resolve_relative ~options cx loc ?path_acc dir import_str
+    else node_module ~options cx loc path_acc dir import_str
 
-  let imported_module cx loc ?path_acc import_str =
-    let candidates = module_name_candidates import_str in
+  let imported_module ~options cx loc ?path_acc import_str =
+    let candidates = module_name_candidates ~options import_str in
 
     let rec choose_candidate = function
       | [] -> None
       | candidate :: candidates ->
-        match resolve_import cx loc ?path_acc candidate with
+        match resolve_import ~options cx loc ?path_acc candidate with
         | None -> choose_candidate candidates
         | Some _ as result -> result
     in
@@ -501,18 +495,19 @@ module Haste: MODULE_SYSTEM = struct
         )
 
   (* similar to Node resolution, with possible special cases *)
-  let resolve_import cx loc ?path_acc r =
+  let resolve_import ~options cx loc ?path_acc r =
     let file = string_of_filename (Context.file cx) in
     lazy_seq [
-      lazy (Node.resolve_import cx loc ?path_acc r);
+      lazy (Node.resolve_import ~options cx loc ?path_acc r);
       lazy (match expanded_name r with
-        | Some r -> Node.resolve_relative cx loc ?path_acc (Filename.dirname file) r
+        | Some r ->
+          Node.resolve_relative ~options cx loc ?path_acc (Filename.dirname file) r
         | None -> None
       );
     ]
 
-  let imported_module cx loc ?path_acc imported_name =
-    let candidates = module_name_candidates imported_name in
+  let imported_module ~options cx loc ?path_acc imported_name =
+    let candidates = module_name_candidates ~options imported_name in
 
     (**
      * In Haste, we don't have an autoritative list of all valid module names
@@ -526,7 +521,7 @@ module Haste: MODULE_SYSTEM = struct
      *)
     let chosen_candidate = List.hd candidates in
 
-    match resolve_import cx loc ?path_acc chosen_candidate with
+    match resolve_import ~options cx loc ?path_acc chosen_candidate with
     | Some(name) -> Modulename.Filename (Loc.SourceFile name)
     | None -> Modulename.String chosen_candidate
 
@@ -560,21 +555,27 @@ let module_system_table =
   Hashtbl.add table "haste" (module Haste: MODULE_SYSTEM);
   table
 
-let module_system = ref (module Node: MODULE_SYSTEM)
+let module_system = ref None
 
-let init opts =
-  flow_options := Some(opts);
-  module_system := Hashtbl.find module_system_table opts.Options.opt_module
+(* TODO: is it premature optimization to memoize this? how bad is doing the
+   Hashtbl.find each time? *)
+let get_module_system opts =
+  match !module_system with
+  | Some system -> system
+  | None ->
+    let system = Hashtbl.find module_system_table opts.Options.opt_module in
+    module_system := Some system;
+    system
 
-let exported_module file info =
-  let module M = (val !module_system) in
+let exported_module ~options file info =
+  let module M = (val (get_module_system options)) in
   M.exported_module file info
 
-let imported_module cx loc ?path_acc r =
-  let module M = (val !module_system) in
-  M.imported_module cx loc ?path_acc r
+let imported_module ~options cx loc ?path_acc r =
+  let module M = (val (get_module_system options)) in
+  M.imported_module ~options cx loc ?path_acc r
 
-let imported_modules cx =
+let imported_modules ~options cx =
   (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
      path_acc. Return the map of reqs to their resolved names, and the set
      containing the resolved names. *)
@@ -583,7 +584,7 @@ let imported_modules cx =
   let path_acc = ref SSet.empty in
   let set, map = SSet.fold (fun r (set, map) ->
     let loc = SMap.find_unsafe r req_locs in
-    let resolved_r = imported_module cx loc ~path_acc r in
+    let resolved_r = imported_module ~options cx loc ~path_acc r in
     NameSet.add resolved_r set, SMap.add r resolved_r map
   ) reqs (NameSet.empty, SMap.empty) in
   set, map, !path_acc
@@ -595,14 +596,14 @@ let cached_resolved_module file r =
   | None -> None
 
 (* Optimized module resolution function that goes through cache. *)
-let find_resolved_module cx loc r =
+let find_resolved_module ~options cx loc r =
   let context_file = Context.file cx in
   match cached_resolved_module context_file r with
   | Some resolved_r -> resolved_r
-  | None -> imported_module cx loc r
+  | None -> imported_module ~options cx loc r
 
-let choose_provider m files errmap =
-  let module M = (val !module_system) in
+let choose_provider ~options m files errmap =
+  let module M = (val (get_module_system options)) in
   M.choose_provider m files errmap
 
 (****************** reverse import utils *********************)
@@ -705,8 +706,9 @@ let get_reverse_imports module_name =
 
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
-let info_of cx =
-  let required, resolved_modules, phantom_dependents = imported_modules cx in
+let info_of ~options cx =
+  let required, resolved_modules, phantom_dependents =
+    imported_modules ~options cx in
   let require_loc = SMap.fold
     (fun r loc require_loc ->
       let resolved_r = SMap.find_unsafe r resolved_modules in
@@ -726,8 +728,8 @@ let info_of cx =
 (* during inference, we add per-file module info to the shared heap
    from worker processes.
    Note that we wait to choose providers until inference is complete. *)
-let add_module_info cx =
-  let info = info_of cx in
+let add_module_info ~options cx =
+  let info = info_of ~options cx in
   InfoHeap.add info.file info
 
 (* We need to track files that have failed to parse. This begins with
@@ -737,14 +739,15 @@ let add_module_info cx =
    the module names of unparsed files, we're able to tell whether an
    unparsed file has been required/imported.
  *)
-let add_unparsed_info ~force_check file =
+let add_unparsed_info ~options file =
+  let force_check = Options.all options in
   let filename = Loc.(match file with
   | LibFile filename | SourceFile filename | JsonFile filename -> filename
   | Builtins -> assert false
   ) in
   let content = cat filename in
   let docblock = Docblock.extract filename content in
-  let _module = exported_module file docblock in
+  let _module = exported_module ~options file docblock in
   let checked =
     force_check ||
     Loc.source_is_lib_file file ||
@@ -834,7 +837,8 @@ let get_providers = Hashtbl.find all_providers
    4. remove the unregistered modules from NameHeap
    5. register the new providers in NameHeap
  *)
-let commit_modules ?(debug=false) inferred removed =
+let commit_modules ~options inferred removed =
+  let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
     "*** committing modules inferred %d removed %d ***"
     (List.length inferred) (NameSet.cardinal removed);
@@ -859,7 +863,8 @@ let commit_modules ?(debug=false) inferred removed =
       let errmap = FilenameSet.fold (fun f acc ->
         FilenameMap.add f ErrorSet.empty acc) ps errmap in
       (* now choose provider for m *)
-      let p, errmap = choose_provider (Modulename.to_string m) ps errmap in
+      let p, errmap = choose_provider
+        ~options (Modulename.to_string m) ps errmap in
       match NameHeap.get m with
       | Some f when f = p ->
           if debug then prerr_endlinef

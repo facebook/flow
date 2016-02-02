@@ -22,6 +22,7 @@ val server_init:
 val get_errors: unit -> Errors_js.error list
 
 val typecheck_contents:
+  options: Options.options ->
   ?verbose: int ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
