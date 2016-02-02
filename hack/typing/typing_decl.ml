@@ -91,7 +91,7 @@ let add_grand_parents_or_traits parent_pos class_nast acc parent_type =
   env, extends, parent_type.tc_members_fully_known && is_complete, is_trait
 
 let get_class_parent_or_trait class_nast (env, parents, is_complete, is_trait) hint =
-  let parent_pos, parent, _ = TUtils.unwrap_class_or_interface_hint hint in
+  let parent_pos, parent, _ = TUtils.unwrap_class_hint hint in
   let parents = SSet.add parent parents in
   let parent_type = Env.get_class_dep env parent in
   match parent_type with
@@ -154,7 +154,7 @@ let merge_single_req env subst inc_req_ty existing_req_opt
 let merge_parent_class_reqs class_nast impls
     (env, req_ancestors, req_ancestors_extends) parent_hint =
   let parent_pos, parent_name, parent_params =
-    TUtils.unwrap_class_or_interface_hint parent_hint in
+    TUtils.unwrap_class_hint parent_hint in
   let env, parent_params = List.map_env env parent_params Typing_hint.hint in
   let parent_type = Env.get_class_dep env parent_name in
 
@@ -200,8 +200,7 @@ let merge_parent_class_reqs class_nast impls
 
 let declared_class_req class_nast impls (env, requirements, req_extends) hint =
   let env, req_ty = Typing_hint.hint env hint in
-  let req_pos, req_name, req_params =
-    TUtils.unwrap_class_or_interface_hint hint in
+  let req_pos, req_name, req_params = TUtils.unwrap_class_hint hint in
   let env, _ = List.map_env env req_params Typing_hint.hint in
   let req_type = Env.get_class_dep env req_name in
 
@@ -499,7 +498,7 @@ and class_decl tcopt c =
   Env.add_class (snd c.c_name) tc
 
 and get_implements (env: Env.env) ht =
-  let _r, (_p, c), paraml = Typing_hint.open_class_hint ht in
+  let _r, (_p, c), paraml = TUtils.unwrap_class_type ht in
   let class_ = Env.get_class_dep env c in
   match class_ with
   | None ->
@@ -744,7 +743,7 @@ and typeconst_decl c (env, acc, acc2) {
       env, acc, acc2
 
 and method_decl env m =
-  let env, arity_min, params = Typing.make_params env true 0 m.m_params in
+  let env, arity_min, params = Typing.make_params env m.m_params in
   let env, ret = match m.m_ret with
     | None -> env, Typing.ret_from_fun_kind (fst m.m_name) m.m_fun_kind
     | Some ret -> Typing_hint.hint env ret in

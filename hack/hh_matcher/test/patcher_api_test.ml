@@ -11,7 +11,7 @@
 open Hh_match_utils
 
 class replace_with_self_stmt_visitor (src:string) =
-object inherit [patch list] AstVisitor.ast_visitor as super
+object inherit [patch list] Ast_visitor.ast_visitor as super
   val src = src
   method! on_stmt acc s =
     begin
@@ -27,7 +27,7 @@ object inherit [patch list] AstVisitor.ast_visitor as super
 end
 
 class replace_with_self_expr_visitor (src:string) =
-object inherit [patch list] AstVisitor.ast_visitor as super
+object inherit [patch list] Ast_visitor.ast_visitor as super
   val src = src
   method! on_expr acc e =
     begin

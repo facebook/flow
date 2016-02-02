@@ -288,7 +288,7 @@ let unresolved env ty =
   | _, Tunresolved _ -> in_var env ety
   | _ -> in_var env (fst ty, Tunresolved [ty])
 
-let unwrap_class_or_interface_hint = function
+let unwrap_class_hint = function
   | (_, N.Happly ((pos, class_name), type_parameters)) ->
       pos, class_name, type_parameters
   | p, N.Habstr(_, _) ->
@@ -298,26 +298,11 @@ let unwrap_class_or_interface_hint = function
       Errors.expected_class ~suffix:" or interface" p;
       Pos.none, "", []
 
-(*****************************************************************************)
-(* Keep the most restrictive visibility (private < protected < public).
- * This is useful when dealing with unresolved types.
- * When there are several candidates for a given visibility we need to be
- * conservative and consider the most restrictive one.
- *)
-(*****************************************************************************)
-
-let min_vis vis1 vis2 =
-  match vis1, vis2 with
-  | x, Vpublic | Vpublic, x -> x
-  | Vprotected _, x | x, Vprotected _ -> x
-  | Vprivate _ as vis, Vprivate _ -> vis
-
-let min_vis_opt vis_opt1 vis_opt2 =
-  match vis_opt1, vis_opt2 with
-  | None, x | x, None -> x
-  | Some (pos1, x), Some (pos2, y) ->
-      let pos = if pos1 = Pos.none then pos2 else pos1 in
-      Some (pos, min_vis x y)
+let unwrap_class_type = function
+  | r, Tapply (name, tparaml) -> r, name, tparaml
+  | _, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_,_) | Toption _ | Tprim _
+  | Tfun _ | Ttuple _ | Tshape _ | Taccess (_, _) | Tthis) ->
+    assert false
 
 (*****************************************************************************)
 (* Check if a type is not fully constrained *)
@@ -332,7 +317,7 @@ end = struct
 
   let visitor =
     object(this)
-      inherit [Reason.t option] TypeVisitor.type_visitor
+      inherit [Reason.t option] Type_visitor.type_visitor
       method! on_tany _ r = Some r
       method! on_tarray acc r ty1_opt ty2_opt =
         (* Check for array without its type parameters specified *)

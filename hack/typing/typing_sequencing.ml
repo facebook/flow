@@ -89,7 +89,7 @@ let get_lvar = function
  * when doing our sequencing checks. *)
 let used_variables_visitor =
   object(this)
-  inherit [ISet.t] NastVisitor.nast_visitor as parent
+  inherit [ISet.t] Nast_visitor.nast_visitor as parent
 
   method! on_lvar acc (_, id) = ISet.add id acc
   (* We have to handle expressions just enough to avoid counting
@@ -170,7 +170,7 @@ let sequence_visitor ~require_used used_vars =
 
   (* And now the actual visitor object *)
   object(this)
-  inherit [env] NastVisitor.nast_visitor as parent
+  inherit [env] Nast_visitor.nast_visitor as parent
 
   method check_unsequenced_exprs env e1 e2 =
     let env1 = this#on_expr tracking_env e1 in

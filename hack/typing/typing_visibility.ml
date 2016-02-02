@@ -111,3 +111,23 @@ let check_class_access p env (p_vis, vis) cid class_ =
   | None -> ()
   | Some msg ->
     visibility_error p msg (p_vis, vis)
+
+(*****************************************************************************)
+(* Keep the most restrictive visibility (private < protected < public).
+ * This is useful when dealing with unresolved types.
+ * When there are several candidates for a given visibility we need to be
+ * conservative and consider the most restrictive one.
+ *)
+(*****************************************************************************)
+
+let min_vis vis1 vis2 =
+  match vis1, vis2 with
+  | x, Vpublic | Vpublic, x -> x
+  | Vprotected _, x | x, Vprotected _ -> x
+  | Vprivate _ as vis, Vprivate _ -> vis
+
+let min_vis_opt vis_opt1 vis_opt2 =
+  Option.merge vis_opt1 vis_opt2 begin fun (pos1, x) (pos2, y) ->
+    let pos = if pos1 = Pos.none then pos2 else pos1 in
+    pos, min_vis x y
+  end

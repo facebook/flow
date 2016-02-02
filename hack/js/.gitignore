@@ -17,7 +17,7 @@ naming_heap.ml
 nast.ml
 nastCheck.ml
 nastInitCheck.ml
-nastVisitor.ml
+nast_visitor.ml
 parser.ml
 parser_hack.ml
 parser_heap.ml

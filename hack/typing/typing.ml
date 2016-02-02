@@ -267,8 +267,7 @@ and ret_from_fun_kind pos kind =
     | Ast.FSync -> ty_any
 
 and fun_decl_in_env env f =
-  let mandatory_init = true in
-  let env, arity_min, params = make_params env mandatory_init 0 f.f_params in
+  let env, arity_min, params = make_params env f.f_params in
   let env, ret_ty = match f.f_ret with
     | None -> env, ret_from_fun_kind (fst f.f_name) f.f_fun_kind
     | Some ty -> Typing_hint.hint env ty in
@@ -323,13 +322,16 @@ and make_param env mandatory arity param =
   let arity = if mandatory then arity + 1 else arity in
   env, arity, mandatory, ty
 
-and make_params env mandatory arity paraml =
-  match paraml with
-  | [] -> env, arity, []
-  | param :: rl ->
-      let env, arity, mandatory, ty = make_param env mandatory arity param in
-      let env, arity, rest = make_params env mandatory arity rl in
-      env, arity, ty :: rest
+and make_params env paraml =
+  let rec loop env mandatory arity paraml =
+    match paraml with
+    | [] -> env, arity, []
+    | param :: rl ->
+        let env, arity, mandatory, ty = make_param env mandatory arity param in
+        let env, arity, rest = loop env mandatory arity rl in
+        env, arity, ty :: rest
+  in
+  loop env true 0 paraml
 
 (* In strict mode, we force you to give a type declaration on a parameter *)
 (* But the type checker is nice: it makes a suggestion :-) *)
@@ -635,7 +637,7 @@ and stmt env = function
         end
       end in
       let env =
-        if NastVisitor.HasContinue.block b
+        if Nast_visitor.HasContinue.block b
         then LEnv.fully_integrate env parent_lenv
         else
           let env = LEnv.integrate env parent_lenv env.Env.lenv in
@@ -1284,7 +1286,7 @@ and expr_
     when Env.is_strict env && (bop = Ast.EQeqeq || bop = Ast.Diff2) ->
       let _, ty = raw_expr in_cond env e in
       if not in_cond
-      then TypingEqualityCheck.assert_nullable p bop env ty;
+      then Typing_equality_check.assert_nullable p bop env ty;
       env, (Reason.Rcomp p, Tprim Tbool)
   | Binop (bop, e1, e2) ->
       let env, ty1 = raw_expr in_cond env e1 in
@@ -2932,7 +2934,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
            * we encountered (position + visibility), to be able to
            * special case inst_meth.
            *)
-          let vis = TUtils.min_vis_opt vis vis' in
+          let vis = TVis.min_vis_opt vis vis' in
           (env, vis), ty
         end in
       let env, method_ = TUtils.in_var env (fst ety1, Tunresolved (tyl)) in
@@ -3556,9 +3558,9 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
       env, (Reason.Rcomp p, Tprim Tbool)
   | Ast.EQeqeq | Ast.Diff2 ->
       if not in_cond
-      then TypingEqualityCheck.assert_nontrivial p bop env ty1 ty2;
+      then Typing_equality_check.assert_nontrivial p bop env ty1 ty2;
       env, (Reason.Rcomp p, Tprim Tbool)
-  | Ast.Lt | Ast.Lte  | Ast.Gt  | Ast.Gte  ->
+  | Ast.Lt | Ast.Lte | Ast.Gt | Ast.Gte ->
       let ty_num = (Reason.Rcomp p, Tprim Nast.Tnum) in
       let ty_string = (Reason.Rcomp p, Tprim Nast.Tstring) in
       let ty_datetime =
@@ -3579,7 +3581,7 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
   | Ast.AMpamp
   | Ast.BArbar ->
       env, (Reason.Rlogic_ret p, Tprim Tbool)
-  | Ast.Amp  | Ast.Bar  | Ast.Ltlt  | Ast.Gtgt ->
+  | Ast.Amp | Ast.Bar | Ast.Ltlt | Ast.Gtgt ->
       let env = Type.sub_type p Reason.URnone env (Reason.Rbitwise p1, Tprim Tint) ty1 in
       let env = Type.sub_type p Reason.URnone env (Reason.Rbitwise p2, Tprim Tint) ty2 in
       env, (Reason.Rbitwise_ret p, Tprim Tint)
@@ -3864,7 +3866,7 @@ and string2 env idl =
  * to check that the arguments provided are consistent with the constraints on
  * the type parameters. *)
 and check_implements_tparaml (env: Env.env) ht =
-  let _r, (p, c), paraml = Typing_hint.open_class_hint ht in
+  let _r, (p, c), paraml = TUtils.unwrap_class_type ht in
   let class_ = Env.get_class_dep env c in
   match class_ with
   | None ->
@@ -3993,14 +3995,14 @@ and class_def_ env_up c tc =
     | Ast.Cnormal -> ()
   end;
   List.iter impl (class_implements_type env c);
-  List.iter c.c_vars (class_var_def env false c);
+  List.iter c.c_vars (class_var_def env ~is_static:false c);
   List.iter c.c_methods (method_def env);
   List.iter c.c_typeconsts (typeconst_def env);
   let const_types = List.map c.c_consts (class_const_def env) in
   let env = Typing_enum.enum_class_check env tc c.c_consts const_types in
   class_constr_def env c;
   let env = Env.set_static env in
-  List.iter c.c_static_vars (class_var_def env true c);
+  List.iter c.c_static_vars (class_var_def env ~is_static:true c);
   List.iter c.c_static_methods (method_def env);
   Typing_hooks.dispatch_exit_class_def_hook c tc
 
@@ -4079,7 +4081,7 @@ and class_implements_type env c1 ctype2 =
   Typing_extends.check_implements env ctype2 ctype1;
   ()
 
-and class_var_def env is_static c cv =
+and class_var_def env ~is_static c cv =
   let env, ty =
     match cv.cv_expr with
     | None -> env, Env.fresh_type()
@@ -4186,8 +4188,8 @@ and typedef_def env_up tid typedef =
  * return value type *)
 and overload_function p env class_id method_id el uel f =
   let env, ty = static_class_id p env class_id in
-  let env, fty = class_get ~is_method:true ~is_const:false env ty
-  method_id class_id in
+  let env, fty =
+    class_get ~is_method:true ~is_const:false env ty method_id class_id in
   (* call the function as declared to validate arity and input types,
      but ignore the result and overwrite with custom one *)
    let (env, res), has_error = Errors.try_with_error

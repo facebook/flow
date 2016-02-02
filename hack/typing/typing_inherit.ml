@@ -317,8 +317,7 @@ let inherit_hack_xhp_attrs_only env p class_name class_type argl =
 (*****************************************************************************)
 
 let from_class c env hint =
-  let pos, class_name, class_params =
-    TUtils.unwrap_class_or_interface_hint hint in
+  let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
   let env, class_params = List.map_env env class_params Typing_hint.hint in
   let class_type = Env.get_class_dep env class_name in
   match class_type with
@@ -331,8 +330,7 @@ let from_class c env hint =
 
 (* mostly copy paste of from_class *)
 let from_class_constants_only env hint =
-  let pos, class_name, class_params =
-    TUtils.unwrap_class_or_interface_hint hint in
+  let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
   let env, class_params = List.map_env env class_params Typing_hint.hint in
   let class_type = Env.get_class_dep env class_name in
   match class_type with
@@ -344,8 +342,7 @@ let from_class_constants_only env hint =
     inherit_hack_class_constants_only env pos class_name class_ class_params
 
 let from_class_xhp_attrs_only env hint =
-  let pos, class_name, class_params =
-    TUtils.unwrap_class_or_interface_hint hint in
+  let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
   let env, class_params = List.map_env env class_params Typing_hint.hint in
   let class_type = Env.get_class_dep env class_name in
   match class_type with

@@ -38,7 +38,7 @@ val make_param_ty:
   Typing_env.env * (string option * Typing_defs.decl Typing_defs.ty)
 
 val make_params:
-  Typing_env.env -> bool -> int -> Nast.fun_param list ->
+  Typing_env.env -> Nast.fun_param list ->
   Typing_env.env * int * Typing_defs.decl Typing_defs.fun_params
 
 val type_param:

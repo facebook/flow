@@ -19,3 +19,7 @@ val check_obj_access:
 
 val is_visible:
   Typing_env.env -> visibility -> Nast.class_id option -> class_type -> bool
+
+val min_vis_opt:
+  (Pos.t * visibility) option -> (Pos.t * visibility) option ->
+  (Pos.t * visibility) option

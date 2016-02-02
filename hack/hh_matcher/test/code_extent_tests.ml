@@ -16,7 +16,7 @@ class code_extent_test_visitor
         (file : Relative_path.t)
         (content : string) =
 object
-  inherit [unit] AstVisitor.ast_visitor as super
+  inherit [unit] Ast_visitor.ast_visitor as super
 
   val file = file;
   val content = content;

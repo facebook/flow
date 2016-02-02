@@ -248,11 +248,3 @@ and hint_ p env = function
 let hint_locl ?(ensure_instantiable=false) env h =
   let env, h = hint ~ensure_instantiable env h in
   Typing_phase.localize_with_self env h
-
-(*****************************************************************************)
-
-let open_class_hint = function
-  | r, Tapply (name, tparaml) -> r, name, tparaml
-  | _, (Tany | Tmixed | Tarray (_, _) | Tgeneric (_,_) | Toption _ | Tprim _
-  | Tfun _ | Ttuple _ | Tshape _ | Taccess (_, _) | Tthis) ->
-      assert false

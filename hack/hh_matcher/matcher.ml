@@ -461,7 +461,7 @@ type block_accum = block list
    i.e. order is last :: 2nd last :: ... :: block given *)
 class block_finding_visitor () =
 object
-  inherit [block_accum] AstVisitor.ast_visitor as super
+  inherit [block_accum] Ast_visitor.ast_visitor as super
 
   method! on_block acc block =
     begin
@@ -473,7 +473,7 @@ end
 (* used to get (in reverse order) all expressions in a file *)
 class expr_finding_visitor () =
 object
-  inherit [expr list] AstVisitor.ast_visitor as super
+  inherit [expr list] Ast_visitor.ast_visitor as super
 
   method! on_expr acc exp =
     begin

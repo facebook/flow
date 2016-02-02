@@ -39,7 +39,7 @@ SRC = \
   typing_utils.ml\
   typing_exts.ml\
   typing_instantiate.ml\
-  nastVisitor.ml\
+  nast_visitor.ml\
   typing_alias.ml\
   typing_tdef.ml\
   typing_unify.ml\
@@ -67,9 +67,9 @@ SRC = \
   fileOutline.ml\
   format_hack.ml\
   hh_ide.ml\
-  typeVisitor.ml\
+  type_visitor.ml\
   coverage_level.ml\
-  typingEqualityCheck.ml\
+  typing_equality_check.ml\
   typing_taccess.ml\
 
 INCLUDEDIRS=$(shell ocamlfind -query js_of_ocaml)
@@ -159,7 +159,7 @@ typing_suggest.ml: $(TOP)/typing/typing_suggest.ml
 typing_utils.ml: $(TOP)/typing/typing_utils.ml
 	cp $< .
 
-typeVisitor.ml: $(TOP)/typing/typeVisitor.ml
+type_visitor.ml: $(TOP)/typing/type_visitor.ml
 	cp $< .
 
 coverage_level.ml: $(TOP)/typing/coverage_level.ml
@@ -204,7 +204,7 @@ typing_inherit.ml: $(TOP)/typing/typing_inherit.ml
 nast.ml: $(TOP)/naming/nast.ml
 	cp $< .
 
-nastVisitor.ml: $(TOP)/naming/nastVisitor.ml
+nast_visitor.ml: $(TOP)/naming/nast_visitor.ml
 	cp $< .
 
 nastCheck.ml: $(TOP)/typing/nastCheck.ml
@@ -301,7 +301,7 @@ clean::
 	rm -f typing_inherit.ml
 	rm -f typing_lenv.ml
 	rm -f nast.ml
-	rm -f nastVisitor.ml
+	rm -f nast_visitor.ml
 	rm -f nastCheck.ml
 	rm -f nastInitCheck.ml
 	rm -f naming_heap.ml

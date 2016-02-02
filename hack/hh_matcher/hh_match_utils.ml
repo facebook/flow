@@ -106,7 +106,7 @@ module NastToAst = struct
             (target : Pos.t)
             (target_tag : stmt_tag) =
     object (this)
-      inherit [transform_acc] AstVisitor.ast_visitor as super
+      inherit [transform_acc] Ast_visitor.ast_visitor as super
 
       val content = content;
       val tgt_tag = target_tag;

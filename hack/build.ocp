@@ -226,7 +226,7 @@ begin library "hh-parsing"
     "parsing/parsing_hooks.ml"
     "parsing/ast_utils.ml"
     "parsing/parsing_service.ml"
-    "parsing/astVisitor.ml"
+    "parsing/ast_visitor.ml"
   ]
 end
 
@@ -271,7 +271,7 @@ begin library "hh-naming"
     "naming/naming_heap.ml"
     "naming/nast_eval.ml"
     "naming/attributes.ml"
-    "naming/nastVisitor.ml"
+    "naming/nast_visitor.ml"
   ]
 end
 
@@ -299,7 +299,7 @@ begin library "hh-typing"
     "typing/typing_subtype.ml"
     "typing/typing_ops.ml"
     "typing/typing_suggest.ml"
-    "typing/typingEqualityCheck.ml"
+    "typing/typing_equality_check.ml"
     "typing/typing_alias.ml"
     "typing/typing_async.ml"
     "typing/typing_enum.ml"

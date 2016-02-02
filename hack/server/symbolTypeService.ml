@@ -57,11 +57,11 @@ let find_match_pos_in_list match_pos types_list =
 (* Given all the idents for this file, make a rekeying map which *)
 (* makes a new identifier which is consistent *)
 let gen_ident_rekeying_map ident_list =
-  let _, map =  List.fold_right ident_list ~init:(0, IdentMap.empty)
+  let _, map = List.fold_right ident_list ~init:(0, IdentMap.empty)
     ~f:begin fun ident (index, ident_map) ->
       if IdentMap.mem ident ident_map then (index, ident_map)
       else (index + 1, IdentMap.add ident index ident_map)
-      end in
+    end in
   map
 
 let lvar_list_map lvar_map =

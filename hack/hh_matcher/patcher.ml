@@ -173,7 +173,7 @@ let command_of_comment (comment : string) =
    the accumulator should be in reversed pre-order traversal order *)
 class line_numbering_visitor (file : Relative_path.t) (source : string) =
 object
-  inherit [pat_acc] AstVisitor.ast_visitor as super
+  inherit [pat_acc] Ast_visitor.ast_visitor as super
 
   method! on_stmt acc stmt =
     begin

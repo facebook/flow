@@ -359,8 +359,8 @@ let check_class_implements env parent_class class_ =
 
 let check_implements env parent_type type_ =
   let parent_r, parent_name, parent_tparaml =
-    Typing_hint.open_class_hint parent_type in
-  let r, name, tparaml = Typing_hint.open_class_hint type_ in
+    TUtils.unwrap_class_type parent_type in
+  let r, name, tparaml = TUtils.unwrap_class_type type_ in
   let parent_class = Env.get_class env (snd parent_name) in
   let class_ = Env.get_class env (snd name) in
   match parent_class, class_ with
