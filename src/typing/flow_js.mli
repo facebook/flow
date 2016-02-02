@@ -141,7 +141,3 @@ module Autocomplete : sig
 
   val extract_members: Context.t -> Type.t -> member_result
 end
-
-module ContextOptimizer: sig
-  val sig_context : Context.t list -> unit
-end

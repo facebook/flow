@@ -534,7 +534,7 @@ let merge_strict_component ~options (component: filename list) =
 
     merge_strict_context ~options cache component_cxs;
 
-    Flow_js.ContextOptimizer.sig_context component_cxs;
+    Merge_js.ContextOptimizer.sig_context component_cxs;
     let cx = List.hd component_cxs in
     let errors = Context.errors cx in
     Context.remove_all_errors cx;

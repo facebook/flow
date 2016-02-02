@@ -655,7 +655,7 @@ and resolve_type cx = function
       (* The list of types returned by possible_types is often empty, and the
          most common reason is that we don't have enough type coverage to
          resolve id. Thus, we take the unit of merging to be `any`. (Something
-         similar happens when summarizing exports in ContextOptimizer below.)
+         similar happens when summarizing exports in ContextOptimizer.)
 
          In the future, we might report errors in some cases where
          possible_types returns an empty list: e.g., when we detect unreachable
@@ -6136,109 +6136,3 @@ let enforce_strict cx id =
      walking the graph starting from id. Typically, id corresponds to
      exports. *)
   assert_ground_id cx !skip_ids (ref ISet.empty) id
-
-(****************** signature contexts *********************)
-
-(* Once a context is merged with other contexts it depends on, it is ready to be
-   optimized for use by contexts that in turn depend on it. The only interesting
-   part of the context for such use is its exports. Thus, we call a context
-   optimized for such use a "signature context."
-
-   A signature context should contain only descriptions of its exports. Anything
-   that does not contribute to those descriptions are redundant and should be
-   discarded: otherwise, we would end up paying significant hidden costs, in
-   terms of memory (storing in the heap) and time (serializing / deserializing
-   from the heap, garbage collection pauses).
-
-   As it turns out, it is not always possible or even desirable to describe the
-   exports in "closed form" as types: instead, the descriptions take the form of
-   a (mutually) recursive system of "equations" relating type variables to
-   "solved" types, and the types themselves may contain these type variables
-   inside. As indicated above, such descriptions are both necessary (due to
-   recursive types) and desirable (due to sharing, and for cyclically depending
-   contexts, due to the need to deal with the exports of all such contexts at
-   once). This form is quite adequate for type checking (indeed, it can be
-   thought of as merely a condensed form of usual contexts, which already
-   exhibit this "interlinked" behavior).
-
-   Unsurprisingly, since types also make references to some other maps in a
-   context (property maps, envs), these references need to be carried around
-   as well for the descriptions to be complete.
-
-   We can collect compact and complete descriptions of exports by using a custom
-   type visitor that marks relevant things that need to be carried over as it
-   walks the context from its exports. Once the walk is done, we can replace the
-   corresponding parts of the context (graph, property maps, envs) by their
-   reduced forms.
-*)
-module ContextOptimizer = struct
-  type quotient = {
-    reduced_graph : node IMap.t;
-    reduced_property_maps : Type.t SMap.t IMap.t;
-    reduced_envs : Context.env IMap.t
-  }
-
-  let empty = {
-    reduced_graph = IMap.empty;
-    reduced_property_maps = IMap.empty;
-    reduced_envs = IMap.empty;
-  }
-
-  class context_optimizer = object
-    inherit [quotient] Type_visitor.t as super
-
-    method! id_ cx quotient id =
-      let { reduced_graph; _ } = quotient in
-      if (IMap.mem id reduced_graph) then quotient
-      else
-        let types = possible_types cx id in
-        let t = match types with
-          | [t] -> t
-          | t::_ -> UnionT (reason_of_t t, types)
-          | [] -> AnyT.t in
-        let node = Root { rank = 0; constraints = Resolved t } in
-        let reduced_graph = IMap.add id node reduced_graph in
-        super#type_ cx { quotient with reduced_graph } t
-
-    method! props cx quotient id =
-      let { reduced_property_maps; _ } = quotient in
-      if (IMap.mem id reduced_property_maps) then quotient
-      else
-        let pmap = IMap.find_unsafe id (Context.property_maps cx) in
-        let reduced_property_maps = IMap.add id pmap reduced_property_maps in
-        super#props cx { quotient with reduced_property_maps } id
-
-    method! fun_type cx quotient funtype =
-      let id = funtype.closure_t in
-      if id = 0 then super#fun_type cx quotient funtype
-      else
-        let { reduced_envs; _ } = quotient in
-        let closure = IMap.find_unsafe id (Context.envs cx) in
-        let reduced_envs = IMap.add id closure reduced_envs in
-        super#fun_type cx { quotient with reduced_envs } funtype
-
-  end
-
-  (* walk a context from a list of exports *)
-  let reduce_context cx exports =
-    let reducer = new context_optimizer in
-    List.fold_left (reducer#type_ cx) empty exports
-
-  let export cx =
-    let m = Modulename.to_string (Context.module_name cx) in
-    lookup_module cx m
-
-  (* reduce a context to a "signature context" *)
-  let sig_context component_cxs =
-    let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
-    let exports = List.map export component_cxs in
-    let quotient = reduce_context cx exports in
-    Context.set_graph cx quotient.reduced_graph;
-    Context.set_property_maps cx quotient.reduced_property_maps;
-    Context.set_envs cx quotient.reduced_envs;
-    other_cxs |> List.iter (fun other_cx ->
-      let m = Modulename.to_string (Context.module_name other_cx) in
-      Context.add_module cx m (export other_cx)
-    )
-
-end

@@ -23,3 +23,7 @@ val merge_lib_file:
   (filename -> Errors_js.ErrorSet.t -> unit) ->
   (filename -> Errors_js.ErrorSuppressions.t -> unit) ->
   unit
+
+module ContextOptimizer: sig
+  val sig_context : Context.t list -> unit
+end
