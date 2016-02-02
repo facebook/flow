@@ -192,7 +192,7 @@ let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =
 
 (***************************** public ********************************)
 
-let parse ~types_mode workers next init_modes =
+let parse ~types_mode ~profile workers next init_modes =
   let t = Unix.gettimeofday () in
   let ok, fail, errors = MultiWorker.call
     workers
@@ -201,7 +201,7 @@ let parse ~types_mode workers next init_modes =
     ~merge: merge
     ~next: next in
 
-  if Modes_js.(modes.profile) && not Modes_js.(modes.quiet) then
+  if profile then
     let t2 = Unix.gettimeofday () in
     prerr_endlinef "parsed %d + %d files in %f"
       (FilenameSet.cardinal ok) (List.length fail) (t2 -. t)
@@ -209,11 +209,11 @@ let parse ~types_mode workers next init_modes =
 
   (ok, fail, errors)
 
-let reparse ~types_mode workers files init_modes =
+let reparse ~types_mode ~profile workers files init_modes =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
   let next = Bucket.make (FilenameSet.elements files) in
-  let ok, fails, errors = parse ~types_mode workers next init_modes in
+  let ok, fails, errors = parse ~types_mode ~profile workers next init_modes in
   let modified =
     List.fold_left (fun acc fail -> FilenameSet.add fail acc) ok fails in
   (* discard old parsing info for modified files *)

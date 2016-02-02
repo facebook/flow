@@ -60,6 +60,7 @@ let is_debug_mode opts = opts.opt_debug
 let is_server_mode opts = opts.opt_server_mode
 let lib_paths opts = opts.opt_libs
 let log_file opts = opts.opt_log_file
+let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
 let module_file_exts opts = opts.opt_module_file_exts
 let module_name_mappers opts = opts.opt_module_name_mappers

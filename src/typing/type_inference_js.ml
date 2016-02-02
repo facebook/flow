@@ -6727,7 +6727,12 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file ~verbose ~exclude_syms file statements comments =
+let infer_lib_file
+    ~max_trace_depth
+    ~verbose
+    ~strip_root
+    ~exclude_syms
+    file statements comments =
   Flow_js.Cache.clear();
 
   let cx = Flow_js.fresh_context { Context.
@@ -6735,6 +6740,8 @@ let infer_lib_file ~verbose ~exclude_syms file statements comments =
     weak = false;
     munge_underscores = false; (* no sense supporting private props in libs *)
     verbose;
+    strip_root;
+    max_trace_depth;
     is_declaration_file = false;
   } file (Modulename.String Files_js.lib_module) in
 

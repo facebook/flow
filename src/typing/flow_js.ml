@@ -23,7 +23,6 @@
 
 open Utils
 open Utils_js
-open Modes_js
 open Reason_js
 open Constraint_js
 open Type
@@ -389,15 +388,17 @@ let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
 
 (* format a trace into list of (reason, desc) pairs used
    downstream for obscure reasons *)
-let make_trace_reasons trace =
-  if modes.traces = 0 then [] else
-    Trace.reasons_of_trace ~level:modes.traces trace
+let make_trace_reasons cx trace =
+  let strip_root = Context.should_strip_root cx in
+  let max_trace_depth = Context.max_trace_depth cx in
+  if max_trace_depth = 0 then [] else
+    Trace.reasons_of_trace ~strip_root ~level:max_trace_depth trace
     |> List.map Errors_js.message_of_reason
 
 (* format an error or warning and add it to flow's output.
    here we gate trace output on global settings *)
 let prmsg_flow cx level trace msg (r1, r2) =
-  let trace_reasons = make_trace_reasons trace in
+  let trace_reasons = make_trace_reasons cx trace in
   prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2)
 
 let prmsg_flow_prop_not_found cx trace (r1, r2) =
@@ -414,8 +415,10 @@ let prmsg_flow_prop_not_found cx trace (r1, r2) =
    restriction here.
 *)
 let prerr_flow_full_trace cx trace msg l u =
+  let depth = Trace.trace_depth trace + 1 in
+  let strip_root = Context.should_strip_root cx in
   let trace_reasons =
-    Trace.reasons_of_trace ~level:(Trace.trace_depth trace + 1) trace
+    Trace.reasons_of_trace ~strip_root ~level:depth trace
     |> List.map Errors_js.message_of_reason
   in
   prmsg_flow_trace_reasons cx
@@ -446,7 +449,7 @@ let tweak_output list =
 
 let add_msg cx ?trace level list =
   let trace_reasons = match trace with
-  | Some trace -> Some (make_trace_reasons trace)
+  | Some trace -> Some (make_trace_reasons cx trace)
   | None -> None
   in
   add_output cx level ?trace_reasons (tweak_output list)
@@ -5745,7 +5748,8 @@ and join_flow cx ts (t1, t2) =
    an error and walk back, we can know why the particular constraints that
    caused the immediate error were generated. *)
 and rec_flow cx trace (t1, t2) =
-  __flow cx (t1, t2) (Trace.rec_trace t1 t2 trace)
+  let max = Context.max_trace_depth cx in
+  __flow cx (t1, t2) (Trace.rec_trace ~max t1 t2 trace)
 
 and rec_flow_t cx trace (t1, t2) =
   rec_flow cx trace (t1, UseT t2)
@@ -5758,7 +5762,9 @@ and rec_flow_t cx trace (t1, t2) =
 and flow_opt cx ?trace (t1, t2) =
   let trace = match trace with
     | None -> Trace.unit_trace t1 t2
-    | Some trace -> Trace.rec_trace t1 t2 trace in
+    | Some trace ->
+        let max = Context.max_trace_depth cx in
+        Trace.rec_trace ~max t1 t2 trace in
   __flow cx (t1, t2) trace
 
 and flow_opt_t cx ?trace (t1, t2) =

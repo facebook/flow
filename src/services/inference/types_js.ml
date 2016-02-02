@@ -18,18 +18,10 @@
 
 open Utils
 open Utils_js
-open Modes_js
 
 module TI = Type_inference_js
 
-let init_modes opts = Options.(
-  modes.traces <- opts.opt_traces;
-  modes.strip_root <- opts.opt_strip_root;
-  modes.quiet <- opts.opt_quiet;
-  modes.profile <- opts.opt_profile;
-  (* TODO: confirm that only master uses strip_root, otherwise set it! *)
-  Files_js.init opts;
-)
+let init_modes opts = Files_js.init opts
 
 let is_lib_file f = match f with
 | Loc.LibFile _ -> true
@@ -294,8 +286,10 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
   let metadata = { Context.
     checked = Options.all opts;
     weak = Options.weak_by_default opts;
+    max_trace_depth = Options.max_trace_depth opts;
     munge_underscores = Options.should_munge_underscores opts;
     verbose = Options.verbose opts;
+    strip_root = Options.should_strip_root opts;
     is_declaration_file = false;
   } in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
@@ -585,14 +579,19 @@ let typecheck_contents ~options ?verbose contents filename =
       ~fail:false ~types_mode
       contents filename
   ) in
+
+  let strip_root = Options.should_strip_root options in
+
   match parse_result with
   | OK (ast, info) ->
       (* defaults *)
       let metadata = { Context.
         checked = true;
         weak = false;
+        max_trace_depth = 0;
         munge_underscores = false; (* TODO: read from .flowconfig? *)
         verbose;
+        strip_root;
         is_declaration_file = false;
       } in
       (* apply overrides from the docblock *)
@@ -1125,7 +1124,10 @@ let recheck genv env modified =
      unchanged files *)
   let timing, (modified, (freshparsed, freshparse_fail, freshparse_errors)) =
     with_timer ~opts:options "Parsing" timing (fun () ->
-      Parsing_service_js.reparse ~types_mode genv.ServerEnv.workers modified
+      let profile = profile_and_not_quiet options in
+      Parsing_service_js.reparse
+        ~types_mode ~profile
+        genv.ServerEnv.workers modified
         (fun () -> init_modes options)
     ) in
   let modified_count = FilenameSet.cardinal modified in
@@ -1235,10 +1237,14 @@ let full_check workers parse_next opts =
     if Options.all opts then TypesAllowed else TypesForbiddenByDefault
   ) in
 
+  let profile = profile_and_not_quiet opts in
+  let strip_root = Options.should_strip_root opts in
+  let max_trace_depth = Options.max_trace_depth opts in
+
   Flow_logger.log "Parsing";
   let timing, (parsed, error_files, errors) =
     with_timer ~opts "Parsing" timing (fun () ->
-      Parsing_service_js.parse ~types_mode workers parse_next
+      Parsing_service_js.parse ~types_mode ~profile workers parse_next
         (fun () -> init_modes opts)
     ) in
   save_errors parse_errors error_files errors;
@@ -1265,6 +1271,8 @@ let full_check workers parse_next opts =
       (* after local inference and before merge, bring in libraries *)
       (* if any fail to parse, our return value will suppress merge *)
       let lib_files = Init_js.init
+        ~max_trace_depth
+        ~strip_root
         ~verbose
         (fun file errs -> save_errors parse_errors [file] [errs])
         (fun file errs -> save_errors infer_errors [file] [errs])

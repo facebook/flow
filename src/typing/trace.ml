@@ -69,9 +69,9 @@ let unit_trace lower upper =
    Optimization: only embed when modes.trace > 0,
    because otherwise we're not going to see any traces anyway.
 *)
-let rec_trace lower upper parent =
+let rec_trace ~max lower upper parent =
   let parent_depth = trace_depth parent in
-  let parent = if Modes_js.(modes.traces) > 0 then parent else [] in
+  let parent = if max > 0 then parent else [] in
   [lower, upper, Parent parent, parent_depth + 1]
 
 (* join a list of traces *)
@@ -111,8 +111,8 @@ let index_trace =
 let spaces n = String.make n ' '
 
 
-let prep_path r =
-  if not Modes_js.(modes.strip_root) then r
+let prep_path ~strip_root r =
+  if not strip_root then r
   else
     let path = FlowConfig.((get_unsafe ()).root) in
     Reason_js.strip_root path r
@@ -120,8 +120,8 @@ let prep_path r =
 
 (* string length of printed position, as it would
    appear in an error *)
-let pos_len r =
-  let r = prep_path r in
+let pos_len ~strip_root r =
+  let r = prep_path ~strip_root r in
   let loc = loc_of_reason r in
   let fmt = Errors_js.(format_reason_color (BlameM (loc, ""))) in
   let str = String.concat "" (List.map snd fmt) in
@@ -131,10 +131,10 @@ let pos_len r =
 (* scan a trace tree, return maximum position length
    of reasons at or above the given depth limit, and
    min of that limit and actual max depth *)
-let max_pos_len_and_depth limit trace =
+let max_pos_len_and_depth ~strip_root limit trace =
   let rec f (len, depth) (lower, upper, parent, _) =
-    let len = max len (pos_len (reason_of_t lower)) in
-    let len = max len (pos_len (reason_of_use_t upper)) in
+    let len = max len (pos_len ~strip_root (reason_of_t lower)) in
+    let len = max len (pos_len ~strip_root (reason_of_use_t upper)) in
     if depth > limit then len, depth
     else (
       match parent with
@@ -149,8 +149,8 @@ let max_pos_len_and_depth limit trace =
    - the given prefix and suffix: if either is nonempty,
      "desc" becomes "prefix[desc]suffix"
   *)
-let pretty_r margin r prefix suffix =
-  let len = pos_len r in
+let pretty_r ~strip_root margin r prefix suffix =
+  let len = pos_len ~strip_root r in
   let ind = if margin > len then spaces (margin - len) else "" in
   if prefix = "" && suffix = ""
   then prefix_reason ind r
@@ -168,8 +168,8 @@ let pretty_r margin r prefix suffix =
      if the step was derived from another path, we append a note
      to that effect.
  *)
-let reasons_of_trace ?(level=0) trace =
-  let max_pos_len, max_depth = max_pos_len_and_depth level trace in
+let reasons_of_trace ~strip_root ?(level=0) trace =
+  let max_pos_len, max_depth = max_pos_len_and_depth ~strip_root level trace in
   let level = min level max_depth in
 
   let tmap, imap = index_trace level trace in
@@ -179,11 +179,11 @@ let reasons_of_trace ?(level=0) trace =
     (if i > 0 &&
       UseT lower = (match List.nth steps (i - 1) with (_, upper, _, _) -> upper)
     then []
-    else [pretty_r max_pos_len (reason_of_t_add_id lower)
+    else [pretty_r ~strip_root max_pos_len (reason_of_t_add_id lower)
       (spf "%s " (string_of_ctor lower)) ""]
     )
     @
-    [pretty_r max_pos_len (reason_of_use_t_add_id upper)
+    [pretty_r ~strip_root max_pos_len (reason_of_use_t_add_id upper)
       (spf "~> %s " (string_of_use_ctor upper))
       (if parent = []
         then ""

@@ -18,6 +18,8 @@ type metadata = {
   weak: bool;
   munge_underscores: bool;
   verbose: int option;
+  strip_root: bool;
+  max_trace_depth: int;
   is_declaration_file: bool;
 }
 type module_exports_type =
@@ -42,6 +44,7 @@ val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
 val is_declaration_file: t -> bool
+val max_trace_depth: t -> int
 val module_exports_type: t -> module_exports_type
 val module_map: t -> Type.t SMap.t
 val module_name: t -> Modulename.t
@@ -49,6 +52,7 @@ val property_maps: t -> Type.properties IMap.t
 val required: t -> SSet.t
 val require_loc: t -> Loc.t SMap.t
 val should_munge_underscores: t -> bool
+val should_strip_root: t -> bool
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> int option
 

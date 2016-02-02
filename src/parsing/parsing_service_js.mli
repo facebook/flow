@@ -25,6 +25,7 @@ type results =
  * asts are made available via get_ast_unsafe. *)
 val parse:
   types_mode: types_mode ->
+  profile: bool ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
   (unit -> filename list) ->    (* delivers buckets of filenames *)
   (unit -> unit) ->
@@ -33,6 +34,7 @@ val parse:
 (* for non-initial passes: updates asts for passed file set. *)
 val reparse:
   types_mode: types_mode ->
+  profile: bool ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
   (unit -> unit) ->

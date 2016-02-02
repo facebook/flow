@@ -36,6 +36,8 @@ let get_master_cx =
       weak = false;
       munge_underscores = false;
       verbose = None;
+      strip_root = false;
+      max_trace_depth = 0;
       is_declaration_file = false;
     } Loc.Builtins (Modulename.String Files_js.lib_module) in
     cx_ := Some cx;
@@ -69,7 +71,7 @@ let parse_lib_file save_parse_errors file =
 
    returns list of (filename, success) pairs
  *)
-let load_lib_files files ~verbose
+let load_lib_files files ~max_trace_depth ~verbose ~strip_root
   save_parse_errors save_infer_errors save_suppressions =
 
   (* iterate in reverse override order *)
@@ -81,7 +83,7 @@ let load_lib_files files ~verbose
       | lib_file, Some (_, statements, comments) ->
 
         let cx, syms = Infer.infer_lib_file
-          ~verbose ~exclude_syms
+          ~max_trace_depth ~verbose ~strip_root ~exclude_syms
           lib_file statements comments
         in
 
@@ -110,10 +112,12 @@ let load_lib_files files ~verbose
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
-let init ~verbose save_parse_errors save_infer_errors save_suppressions =
+let init ~max_trace_depth ~verbose ~strip_root
+    save_parse_errors save_infer_errors save_suppressions =
 
   let lib_files = Files.get_lib_files () in
-  let result = load_lib_files lib_files ~verbose
+  let result = load_lib_files lib_files
+    ~max_trace_depth ~verbose ~strip_root
     save_parse_errors save_infer_errors save_suppressions in
 
   Flow_js.Cache.clear();

@@ -16,7 +16,9 @@ val get_master_cx: unit -> Context.t
    to Types_js, where error management stuff lives.
  *)
 val init :
+  max_trace_depth: int ->
   verbose: int option ->
+  strip_root: bool ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSuppressions.t -> unit) ->
