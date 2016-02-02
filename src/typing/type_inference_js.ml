@@ -6742,7 +6742,6 @@ let infer_lib_file
     verbose;
     strip_root;
     max_trace_depth;
-    is_declaration_file = false;
   } file (Modulename.String Files_js.lib_module) in
 
   let module_scope = Scope.fresh () in

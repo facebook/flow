@@ -287,7 +287,6 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
     munge_underscores = Options.should_munge_underscores opts;
     verbose = Options.verbose opts;
     strip_root = Options.should_strip_root opts;
-    is_declaration_file = false;
   } in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
@@ -589,7 +588,6 @@ let typecheck_contents ~options ?verbose contents filename =
         munge_underscores = false; (* TODO: read from .flowconfig? *)
         verbose;
         strip_root;
-        is_declaration_file = false;
       } in
       (* apply overrides from the docblock *)
       let metadata = apply_docblock_overrides metadata info in

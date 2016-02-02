@@ -20,7 +20,6 @@ type metadata = {
   verbose: int option;
   strip_root: bool;
   max_trace_depth: int;
-  is_declaration_file: bool;
 }
 type module_exports_type =
   | CommonJSModule of Loc.t option
@@ -43,7 +42,6 @@ val graph: t -> Constraint_js.node IMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
-val is_declaration_file: t -> bool
 val max_trace_depth: t -> int
 val module_exports_type: t -> module_exports_type
 val module_map: t -> Type.t SMap.t

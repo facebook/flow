@@ -38,7 +38,6 @@ let get_master_cx =
       verbose = None;
       strip_root = false;
       max_trace_depth = 0;
-      is_declaration_file = false;
     } Loc.Builtins (Modulename.String Files_js.lib_module) in
     cx_ := Some cx;
     cx

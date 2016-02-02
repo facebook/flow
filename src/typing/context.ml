@@ -19,7 +19,6 @@ type metadata = {
   verbose: int option;
   strip_root: bool;
   max_trace_depth: int;
-  is_declaration_file: bool;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)
@@ -93,7 +92,6 @@ let make_simple ?(metadata = {
     weak = false;
     munge_underscores = false;
     verbose = None;
-    is_declaration_file = false;
     strip_root = false;
     max_trace_depth = 0;
   }) (filename:Loc.filename) =
@@ -113,7 +111,6 @@ let graph cx = cx.graph
 let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
-let is_declaration_file cx = cx.metadata.is_declaration_file
 let max_trace_depth cx = cx.metadata.max_trace_depth
 let module_exports_type cx = cx.module_exports_type
 let module_map cx = cx.modulemap
