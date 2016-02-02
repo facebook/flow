@@ -21,8 +21,6 @@ open Utils_js
 
 module TI = Type_inference_js
 
-let init_modes opts = Files_js.init opts
-
 let is_lib_file f = match f with
 | Loc.LibFile _ -> true
 | _ -> false
@@ -282,7 +280,6 @@ let infer_module ~options ~metadata filename =
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
 let infer_job opts (inferred, errsets, errsuppressions) files =
-  init_modes opts;
   let metadata = { Context.
     checked = Options.all opts;
     weak = Options.weak_by_default opts;
@@ -612,7 +609,6 @@ let typecheck_contents ~options ?verbose contents filename =
       timing, None, errors, parse_result
 
 let merge_strict_job opts (merged, errsets) (components: filename list list) =
-  init_modes opts;
   List.fold_left (fun (merged, errsets) (component: filename list) ->
     let files = component
     |> List.map string_of_filename
@@ -1066,9 +1062,6 @@ let recheck genv env modified =
   let options = genv.ServerEnv.options in
   let debug = Options.is_debug_mode options in
 
-  let root = Options.root options in
-  let config = FlowConfig.get root in
-
   (* If foo.js is modified and foo.js.flow exists, then mark foo.js.flow as
    * modified too. This is because sometimes we decide what foo.js.flow
    * provides based on the existence of foo.js *)
@@ -1080,11 +1073,6 @@ let recheck genv env modified =
   ) modified modified in
 
   let timing = FlowEventLogger.Timing.create () in
-
-  (* filter modified files *)
-  let modified = FilenameSet.filter (fun file ->
-    Files_js.wanted config (string_of_filename file)
-  ) modified in
 
   (* track deleted files, remove from modified set *)
   let deleted = FilenameSet.filter (fun f ->
@@ -1128,7 +1116,6 @@ let recheck genv env modified =
       Parsing_service_js.reparse
         ~types_mode ~profile
         genv.ServerEnv.workers modified
-        (fun () -> init_modes options)
     ) in
   let modified_count = FilenameSet.cardinal modified in
 
@@ -1225,8 +1212,7 @@ let recheck genv env modified =
   { env with ServerEnv.files = parsed; }
 
 (* full typecheck *)
-let full_check workers parse_next opts =
-  init_modes opts;
+let full_check workers ~ordered_libs parse_next opts =
   let verbose = Options.verbose opts in
 
   let timing = FlowEventLogger.Timing.create () in
@@ -1245,7 +1231,6 @@ let full_check workers parse_next opts =
   let timing, (parsed, error_files, errors) =
     with_timer ~opts "Parsing" timing (fun () ->
       Parsing_service_js.parse ~types_mode ~profile workers parse_next
-        (fun () -> init_modes opts)
     ) in
   save_errors parse_errors error_files errors;
 
@@ -1274,6 +1259,7 @@ let full_check workers parse_next opts =
         ~max_trace_depth
         ~strip_root
         ~verbose
+        ordered_libs
         (fun file errs -> save_errors parse_errors [file] [errs])
         (fun file errs -> save_errors infer_errors [file] [errs])
         (fun file sups ->
@@ -1314,7 +1300,9 @@ let print_errors options errors =
 let server_init genv env =
   let options = genv.ServerEnv.options in
 
-  let get_next_raw = Files_js.make_next_files ~options in
+  let ordered_libs, libs = Files_js.init options in
+
+  let get_next_raw = Files_js.make_next_files ~options ~libs in
   let get_next = fun () ->
     get_next_raw () |> List.map (fun file ->
       if Files_js.is_json_file file
@@ -1323,12 +1311,15 @@ let server_init genv env =
     )
   in
   let (timing, parsed) =
-    full_check genv.ServerEnv.workers get_next options in
+    full_check genv.ServerEnv.workers ~ordered_libs get_next options in
 
   (* We ensure an invariant required by recheck, namely that
      `files` contains files that parsed successfully. *)
   (* NOTE: unused fields are left in their initial empty state *)
-  let env = { env with ServerEnv.files = parsed; } in
+  let env = { env with ServerEnv.
+    files = parsed;
+    libs;
+  } in
 
   SharedMem.init_done();
 

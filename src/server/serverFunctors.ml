@@ -21,9 +21,8 @@ module type SERVER_PROGRAM = sig
   val preinit : unit -> unit
   val init : genv -> env -> (FlowEventLogger.Timing.t * env)
   val run_once_and_exit : env -> unit
-  val should_recheck : Loc.filename -> bool
   (* filter and relativize updated file paths *)
-  val process_updates : genv -> SSet.t -> FilenameSet.t
+  val process_updates : genv -> env -> SSet.t -> FilenameSet.t
   val recheck: genv -> env -> FilenameSet.t -> env
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
@@ -150,16 +149,13 @@ end = struct
         flush stderr
 
   let recheck genv old_env updates =
-    let to_recheck =
-      FilenameSet.filter Program.should_recheck updates in
-
     let root = Options.root genv.ServerEnv.options in
     let tmp_dir = Options.temp_dir genv.ServerEnv.options in
 
     ignore(Lock.grab (FlowConfig.recheck_file ~tmp_dir root));
-    let env = Program.recheck genv old_env to_recheck in
+    let env = Program.recheck genv old_env updates in
     ignore(Lock.release (FlowConfig.recheck_file ~tmp_dir root));
-    env, to_recheck
+    env, updates
 
   (* When a rebase occurs, dfind takes a while to give us the full list of
    * updates, and it often comes in batches. To get an accurate measurement
@@ -170,7 +166,7 @@ end = struct
   let rec recheck_loop i rechecked_count genv env =
     let raw_updates = DfindLib.get_changes (unsafe_opt genv.dfind) in
     if SSet.is_empty raw_updates then i, rechecked_count, env else begin
-      let updates = Program.process_updates genv raw_updates in
+      let updates = Program.process_updates genv env raw_updates in
       let env, rechecked = recheck genv env updates in
       let rechecked_count = rechecked_count +
         (FilenameSet.cardinal rechecked) in

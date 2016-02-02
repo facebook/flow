@@ -10,8 +10,6 @@
 
 open Utils_js
 
-val init_modes: Options.options -> unit
-
 (* incremental typecheck entry point *)
 val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
 

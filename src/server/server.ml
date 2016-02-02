@@ -29,10 +29,7 @@ struct
 
   let preinit () =
     (* Do some initialization before creating workers, so that each worker is
-     * forked with this information already available. Finding lib files is one
-     * example *)
-    let flow_options = OptionParser.parse () in
-    Types_js.init_modes flow_options;
+     * forked with this information already available. *)
     ignore (Init_js.get_master_cx ());
     Parsing_service_js.call_on_success SearchService_js.update
 
@@ -456,13 +453,16 @@ struct
   (* filter a set of updates coming from dfind and return
      a FilenameSet. updates may be coming in from
      the root, or an include path. *)
-  let process_updates genv updates =
+  let process_updates genv env updates =
+    let all_libs = env.ServerEnv.libs in
     let options = genv.ServerEnv.options in
     let root = Options.root options in
     let config = FlowConfig.get root in
     let config_path = FlowConfig.fullpath root in
     let sroot = Path.to_string root in
-    let want = Files_js.wanted config in
+    let want = Files_js.wanted config all_libs in
+
+    (* Die if the .flowconfig changed *)
     if SSet.mem config_path updates then begin
       Flow_logger.log
         "%s changed in an incompatible way; please restart %s.\n"
@@ -470,6 +470,8 @@ struct
         name;
       FlowExitStatus.(exit Server_out_of_date)
     end;
+
+    (* Die if a package.json changed *)
     let modified_packages = SSet.filter (fun f ->
       (str_starts_with f sroot || FlowConfig.is_included config f)
       && (Filename.basename f) = "package.json" && want f
@@ -483,47 +485,38 @@ struct
         name;
       FlowExitStatus.(exit Server_out_of_date)
     end;
-    let all_libs = Files_js.get_lib_fileset () in
+
+    (* Die if a lib file changed *)
+    let libs = SSet.filter (fun x -> SSet.mem x all_libs) updates in
+    if not (SSet.is_empty libs)
+    then begin
+      Flow_logger.log "Status: Error";
+      SSet.iter (Flow_logger.log "Modified lib file: %s") libs;
+      Flow_logger.log
+        "%s is out of date. Exiting.\n%!"
+        name;
+      FlowExitStatus.(exit Server_out_of_date)
+    end;
+
     SSet.fold (fun f acc ->
       if Files_js.is_flow_file ~options f &&
         (* note: is_included may be expensive. check in-root match first. *)
-        (str_starts_with f sroot || FlowConfig.is_included config f)
-      (* TODO: is SourceFile accurate? *)
+        (str_starts_with f sroot || FlowConfig.is_included config f) &&
+        (* removes excluded and lib files. the latter are already filtered *)
+        want f
       then
-        let f = if SSet.mem f all_libs
-          then Loc.LibFile f
-          else Loc.SourceFile f
-        in
-        FilenameSet.add f acc
+        (* TODO: is SourceFile always accurate? e.g. .json files *)
+        FilenameSet.add (Loc.SourceFile f) acc
       else acc
     ) updates FilenameSet.empty
 
-  (* XXX: can some of the logic in process_updates be moved here? *)
-  let should_recheck _update = true
-
   (* on notification, execute client commands or recheck files *)
   let recheck genv env updates =
-    let diff_js = updates in
-    if FilenameSet.is_empty diff_js
+    if FilenameSet.is_empty updates
     then env
     else begin
       SearchService_js.clear updates;
-      let libs, files = FilenameSet.fold (fun x (libs, files) ->
-        match x with
-        | Loc.LibFile filename -> SSet.add filename libs, files
-        | _ -> libs, FilenameSet.add x files
-      ) diff_js (SSet.empty, FilenameSet.empty) in
-      (* TEMP: if library files change, stop the server *)
-      if not (SSet.is_empty libs)
-      then begin
-        Flow_logger.log "Status: Error";
-        SSet.iter (Flow_logger.log "Modified lib file: %s") libs;
-        Flow_logger.log
-          "%s is out of date. Exiting.\n%!"
-          name;
-        FlowExitStatus.(exit Server_out_of_date)
-      end;
-      let server_env = Types_js.recheck genv env files in
+      let server_env = Types_js.recheck genv env updates in
       SearchService_js.update_from_master updates;
       server_env
     end

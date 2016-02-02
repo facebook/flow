@@ -28,7 +28,6 @@ val parse:
   profile: bool ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
   (unit -> filename list) ->    (* delivers buckets of filenames *)
-  (unit -> unit) ->
   results                       (* job results, not asts *)
 
 (* for non-initial passes: updates asts for passed file set. *)
@@ -37,7 +36,6 @@ val reparse:
   profile: bool ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
-  (unit -> unit) ->
   FilenameSet.t * results   (* modified files and job results *)
 
 val has_ast: filename -> bool

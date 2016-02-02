@@ -112,10 +112,9 @@ let load_lib_files files ~max_trace_depth ~verbose ~strip_root
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
-let init ~max_trace_depth ~verbose ~strip_root
+let init ~max_trace_depth ~verbose ~strip_root lib_files
     save_parse_errors save_infer_errors save_suppressions =
 
-  let lib_files = Files.get_lib_files () in
   let result = load_lib_files lib_files
     ~max_trace_depth ~verbose ~strip_root
     save_parse_errors save_infer_errors save_suppressions in

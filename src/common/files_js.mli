@@ -15,13 +15,7 @@ val global_file_name: string
 val is_json_file: string -> bool
 val is_flow_file: options: Options.options -> string -> bool
 
-val init: Options.options -> unit
-
-(* names of library files defining builtins: *)
-(* in override order *)
-val get_lib_files: unit -> string list
-(* as set *)
-val get_lib_fileset: unit -> Utils.SSet.t
+val init: Options.options -> string list * Utils.SSet.t
 
 val lib_module: string
 
@@ -32,10 +26,16 @@ val parent_dir_name: Str.regexp
 val absolute_path: Str.regexp
 
 (* given a root, make a filter for file names *)
-val wanted: FlowConfig.config -> string -> bool
+val wanted:
+  FlowConfig.config ->
+  Utils.SSet.t ->
+  string -> bool
 
 (* given a root, make a next_files function for MultiWorker *)
-val make_next_files: options: Options.options -> unit -> string list
+val make_next_files:
+  options: Options.options ->
+  libs: Utils.SSet.t ->
+  unit -> string list
 
 (* given a base directory and a relative path, return an absolute path *)
 val normalize_path: string -> string -> string

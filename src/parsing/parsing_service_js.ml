@@ -164,8 +164,7 @@ let do_parse ?(fail=true) ~types_mode content file =
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
-let reducer ~types_mode init_modes (ok, fails, errors) file =
-  init_modes ();
+let reducer ~types_mode (ok, fails, errors) file =
   let content = cat (string_of_filename file) in
   match (do_parse ~types_mode content file) with
   | OK (ast, info) ->
@@ -192,11 +191,11 @@ let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =
 
 (***************************** public ********************************)
 
-let parse ~types_mode ~profile workers next init_modes =
+let parse ~types_mode ~profile workers next =
   let t = Unix.gettimeofday () in
   let ok, fail, errors = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode init_modes ))
+    ~job: (List.fold_left (reducer ~types_mode ))
     ~neutral: (FilenameSet.empty, [], [])
     ~merge: merge
     ~next: next in
@@ -209,11 +208,11 @@ let parse ~types_mode ~profile workers next init_modes =
 
   (ok, fail, errors)
 
-let reparse ~types_mode ~profile workers files init_modes =
+let reparse ~types_mode ~profile workers files =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
   let next = Bucket.make (FilenameSet.elements files) in
-  let ok, fails, errors = parse ~types_mode ~profile workers next init_modes in
+  let ok, fails, errors = parse ~types_mode ~profile workers next in
   let modified =
     List.fold_left (fun acc fail -> FilenameSet.add fail acc) ok fails in
   (* discard old parsing info for modified files *)

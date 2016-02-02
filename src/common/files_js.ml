@@ -43,18 +43,6 @@ let is_valid_path ~options =
 let is_flow_file ~options path =
   is_valid_path ~options path && not (is_directory path)
 
-(* This is initialized early, before we work all the workers, so that each
- * worker isn't forced to find all the lib files themselves *)
-let lib_files = ref None
-
-let get_lib_files () = match !lib_files with
-| None -> []
-| Some (files, _) -> files
-
-let get_lib_fileset () = match !lib_files with
-| None -> SSet.empty
-| Some (_, fileset) -> fileset
-
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
 | None -> path (* perhaps this should error? *)
@@ -181,44 +169,38 @@ let get_all =
   fun next -> get_all_rec next SSet.empty
 
 let init options =
-  match !lib_files with
-  | Some _ -> ()
-  | None -> (
-    let tmp_dir = Options.temp_dir options in
-    let include_default_libs = Options.include_default_libs options in
-    let libs = Options.lib_paths options in
-    let libs, filter = if not include_default_libs
-      then libs, is_valid_path ~options
-      else
-        let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
-        let is_in_flowlib = is_prefix (Path.to_string root) in
-        let filter path = is_in_flowlib path || is_valid_path ~options path in
-        if Flowlib.extract_flowlib root
-        then root::libs, filter
-        else begin
-          let msg = "Could not locate flowlib files" in
-          FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
-        end
-    in
-    (* preserve enumeration order *)
-    let libs = if libs = []
-      then []
-      else
-        let get_next = make_next_files_following_symlinks
-          ~path_filter:filter
-          ~realpath_filter:filter
-        in
-        let exp_list = libs |> List.map (fun lib ->
-          let expanded = SSet.elements (get_all (get_next [lib])) in
-          expanded
-        ) in
-        List.flatten exp_list
-    in
-    lib_files := Some (libs, set_of_list libs)
-  )
+  let tmp_dir = Options.temp_dir options in
+  let include_default_libs = Options.include_default_libs options in
+  let libs = Options.lib_paths options in
+  let libs, filter = if not include_default_libs
+    then libs, is_valid_path ~options
+    else
+      let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
+      let is_in_flowlib = is_prefix (Path.to_string root) in
+      let filter path = is_in_flowlib path || is_valid_path ~options path in
+      if Flowlib.extract_flowlib root
+      then root::libs, filter
+      else begin
+        let msg = "Could not locate flowlib files" in
+        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+      end
+  in
+  (* preserve enumeration order *)
+  let libs = if libs = []
+    then []
+    else
+      let get_next = make_next_files_following_symlinks
+        ~path_filter:filter
+        ~realpath_filter:filter
+      in
+      let exp_list = libs |> List.map (fun lib ->
+        let expanded = SSet.elements (get_all (get_next [lib])) in
+        expanded
+      ) in
+      List.flatten exp_list
+  in
+  (libs, set_of_list libs)
 
-let is_lib_file p =
-  SSet.mem p (get_lib_fileset ())
 
 let lib_module = ""
 
@@ -227,14 +209,14 @@ let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
 let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:\\)"
 
-let wanted config =
+let wanted config lib_fileset =
   let is_excluded = FlowConfig.is_excluded config in
-  fun path -> not (is_excluded path) && not (is_lib_file path)
+  fun path -> not (is_excluded path) && not (SSet.mem path lib_fileset)
 
-let make_next_files ~options =
+let make_next_files ~options ~libs =
   let root = Options.root options in
   let config = FlowConfig.get root in
-  let filter = wanted config in
+  let filter = wanted config libs in
   let others = config.FlowConfig.include_stems in
   let sroot = Path.to_string root in
   let realpath_filter path = is_valid_path ~options path && filter path in

@@ -19,6 +19,7 @@ val init :
   max_trace_depth: int ->
   verbose: int option ->
   strip_root: bool ->
+  string list ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSuppressions.t -> unit) ->
