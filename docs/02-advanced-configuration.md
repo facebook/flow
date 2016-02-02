@@ -57,9 +57,11 @@ The `[options]` heading in a `.flowconfig` file can contain several key-value pa
   
     (**note:** you can specify `module.name_mapper` multiple times)
 
-- `module.system` (`node` | `haste`): the module system to use to resolve `import` and `require`
+- `module.system` (`node` | `haste`): the module system to use to resolve `import` and `require`. [Haste](https://github.com/facebook/node-haste) is used in React-Native.
 
 - `munge_underscores` (boolean): set this to `true` to have Flow treat underscore-prefixed class properties and methods as private. This should be used in conjunction with [`jstransform`'s ES6 class transform](https://github.com/facebook/jstransform/blob/master/visitors/es6-class-visitors.js), which enforces the same privacy at runtime.
+
+- `server.max_workers` (integer): The maximum number of workers the Flow server can start. By default, the server will use all available cores.
 
 - `traces` (integer): enables traces on all error output (showing additional details about the flow of types through the system), to the depth specified. This can be very expensive, so is disabled by default.
 
