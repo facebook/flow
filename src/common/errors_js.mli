@@ -26,16 +26,7 @@ type error = {
 type pp_message = Loc.t * string
 val to_pp : message -> pp_message
 
-type flags = {
-  color: Tty.color_mode;
-  one_line: bool;
-  show_all_errors: bool;
-  old_output_format: bool;
-}
-
 type stdin_file = (string * string) option
-
-val default_flags : flags
 
 val message_of_reason: Reason_js.reason -> message
 val message_of_string: string -> message
@@ -94,7 +85,7 @@ val print_error_json : out_channel -> error list -> unit
 
 (* Human readable output *)
 val print_error_summary:
-  flags:flags ->
+  flags:Options.error_flags ->
   ?stdin_file:stdin_file ->
   root: Path.t ->
   error list ->

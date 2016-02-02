@@ -72,7 +72,7 @@ module OptionParser(Config : CONFIG) = struct
     )
   | Server -> CommandSpec.ArgSpec.(
       empty
-      |> dummy Errors_js.default_flags (* error_flags *)
+      |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* json *)
       |> dummy false (* profile *)
       |> dummy false (* quiet *)
@@ -82,7 +82,7 @@ module OptionParser(Config : CONFIG) = struct
     )
   | Detach -> CommandSpec.ArgSpec.(
       empty
-      |> dummy Errors_js.default_flags (* error_flags *)
+      |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* json *)
       |> dummy false (* profile *)
       |> dummy false (* quiet *)
@@ -167,8 +167,14 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_traces;
       Options.opt_json = json;
       Options.opt_quiet = quiet || json;
+      Options.opt_module_file_exts = FlowConfig.(
+        flowconfig.options.Opts.module_file_exts
+      );
       Options.opt_module_name_mappers = FlowConfig.(
         flowconfig.options.Opts.module_name_mappers
+      );
+      Options.opt_node_resolver_dirnames = FlowConfig.(
+        flowconfig.options.Opts.node_resolver_dirnames
       );
       Options.opt_profile = profile;
       Options.opt_strip_root;

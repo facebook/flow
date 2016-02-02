@@ -29,10 +29,7 @@ let init_modes opts = Options.(
   modes.profile <- opts.opt_profile;
   (* TODO: confirm that only master uses strip_root, otherwise set it! *)
   Module_js.init opts;
-  Files_js.init
-    ~tmp_dir:(Options.temp_dir opts)
-    ~include_default_libs:(not opts.opt_no_flowlib)
-    opts.opt_libs
+  Files_js.init opts;
 )
 
 let is_lib_file f = match f with
@@ -1311,9 +1308,8 @@ let print_errors options errors =
 (* initialize flow server state, including full check *)
 let server_init genv env =
   let options = genv.ServerEnv.options in
-  let root = Options.root options in
 
-  let get_next_raw = Files_js.make_next_files root in
+  let get_next_raw = Files_js.make_next_files ~options in
   let get_next = fun () ->
     get_next_raw () |> List.map (fun file ->
       if Files_js.is_json_file file

@@ -353,14 +353,15 @@ struct
     GetDef_js.getdef_unset_hooks ();
     flush oc
 
-  let module_name_of_string module_name_str =
+  let module_name_of_string ~options module_name_str =
     let path = Path.to_string (Path.make module_name_str) in
-    if Files_js.is_flow_file path then Modulename.Filename (Loc.SourceFile path)
+    if Files_js.is_flow_file ~options path
+    then Modulename.Filename (Loc.SourceFile path)
     else Modulename.String module_name_str
 
-  let get_importers module_names oc =
+  let get_importers ~options module_names oc =
     let add_to_results map module_name_str =
-      let module_name = module_name_of_string module_name_str in
+      let module_name = module_name_of_string ~options module_name_str in
       match Module_js.get_reverse_imports module_name with
       | Some references ->
           SMap.add module_name_str references map
@@ -371,9 +372,9 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let get_imports module_names oc =
+  let get_imports ~options module_names oc =
     let add_to_results (map, non_flow) module_name_str =
-      let module_name = module_name_of_string module_name_str in
+      let module_name = module_name_of_string ~options module_name_str in
       match Module_js.get_module_file module_name with
       | Some file ->
         (* We do not process all modules which are stored in our module
@@ -407,6 +408,7 @@ struct
 
   let respond genv ~client ~msg =
     let oc = client.oc in
+    let options = genv.ServerEnv.options in
     let { ServerProt.client_logging_context; command; } = msg in
     match command with
     | ServerProt.AUTOCOMPLETE fn ->
@@ -422,9 +424,9 @@ struct
     | ServerProt.GET_DEF (fn, line, char) ->
         get_def (fn, line, char) oc
     | ServerProt.GET_IMPORTERS module_names ->
-        get_importers module_names oc
+        get_importers ~options module_names oc
     | ServerProt.GET_IMPORTS module_names ->
-        get_imports module_names oc
+        get_imports ~options module_names oc
     | ServerProt.INFER_TYPE (fn, line, char, include_raw) ->
         infer_type (fn, line, char, include_raw) oc
     | ServerProt.KILL ->
@@ -453,7 +455,8 @@ struct
      a FilenameSet. updates may be coming in from
      the root, or an include path. *)
   let process_updates genv updates =
-    let root = Options.root (genv.ServerEnv.options) in
+    let options = genv.ServerEnv.options in
+    let root = Options.root options in
     let config = FlowConfig.get root in
     let config_path = FlowConfig.fullpath root in
     let sroot = Path.to_string root in
@@ -480,7 +483,7 @@ struct
     end;
     let all_libs = Files_js.get_lib_fileset () in
     SSet.fold (fun f acc ->
-      if Files_js.is_flow_file f &&
+      if Files_js.is_flow_file ~options f &&
         (* note: is_included may be expensive. check in-root match first. *)
         (str_starts_with f sroot || FlowConfig.is_included config f)
       (* TODO: is SourceFile accurate? *)

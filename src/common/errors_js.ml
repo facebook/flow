@@ -30,21 +30,7 @@ let to_pp = function
   | BlameM (loc, s) -> loc, s
   | CommentM s -> Loc.none, s
 
-type flags = {
-  color: Tty.color_mode;
-  one_line: bool;
-  show_all_errors: bool;
-  old_output_format: bool;
-}
-
 type stdin_file = (string * string) option
-
-let default_flags = {
-  color = Tty.Color_Auto;
-  one_line = false;
-  show_all_errors = false;
-  old_output_format = false;
-}
 
 let message_of_reason reason =
   Reason_js.(BlameM (loc_of_reason reason, desc_of_reason reason))
@@ -601,10 +587,10 @@ let print_error_deprecated =
 (* Human readable output *)
 let print_error_summary ~flags ?stdin_file:(stdin_file=None) ~root errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
-  let truncate = not (flags.show_all_errors) in
-  let one_line = flags.one_line in
-  let color = flags.color in
-  let print_error_color = if flags.old_output_format
+  let truncate = not (flags.Options.show_all_errors) in
+  let one_line = flags.Options.one_line in
+  let color = flags.Options.color in
+  let print_error_color = if flags.Options.old_output_format
     then print_error_color_old
     else print_error_color_new ~stdin_file:stdin_file ~root
   in

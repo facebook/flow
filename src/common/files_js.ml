@@ -14,8 +14,6 @@ open Utils
 
 let global_file_name = "(global)"
 
-let config_options : FlowConfig.Opts.t option ref = ref None
-
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
 let is_dot_file path =
@@ -30,9 +28,9 @@ let is_prefix prefix =
 
 let is_json_file path = Filename.check_suffix path ".json"
 
-let is_valid_path =
+let is_valid_path ~options =
+  let file_exts = Options.module_file_exts options in
   let is_valid_path_helper path =
-    let file_exts = FlowConfig.((get_unsafe ()).options.Opts.module_file_exts) in
     not (is_dot_file path) &&
     SSet.exists (Filename.check_suffix path) file_exts
 
@@ -42,7 +40,8 @@ let is_valid_path =
     then is_valid_path_helper (Filename.chop_suffix path FlowConfig.flow_ext)
     else is_valid_path_helper path
 
-let is_flow_file path = is_valid_path path && not (is_directory path)
+let is_flow_file ~options path =
+  is_valid_path ~options path && not (is_directory path)
 
 (* This is initialized early, before we work all the workers, so that each
  * worker isn't forced to find all the lib files themselves *)
@@ -181,17 +180,19 @@ let get_all =
   in
   fun next -> get_all_rec next SSet.empty
 
-let init ~include_default_libs ~tmp_dir libs =
+let init options =
   match !lib_files with
   | Some _ -> ()
   | None -> (
-    config_options := Some FlowConfig.((get_unsafe ()).options);
+    let tmp_dir = Options.temp_dir options in
+    let include_default_libs = Options.include_default_libs options in
+    let libs = Options.lib_paths options in
     let libs, filter = if not include_default_libs
-      then libs, is_valid_path
+      then libs, is_valid_path ~options
       else
         let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
         let is_in_flowlib = is_prefix (Path.to_string root) in
-        let filter path = is_in_flowlib path || is_valid_path path in
+        let filter path = is_in_flowlib path || is_valid_path ~options path in
         if Flowlib.extract_flowlib root
         then root::libs, filter
         else begin
@@ -230,12 +231,13 @@ let wanted config =
   let is_excluded = FlowConfig.is_excluded config in
   fun path -> not (is_excluded path) && not (is_lib_file path)
 
-let make_next_files root =
+let make_next_files ~options =
+  let root = Options.root options in
   let config = FlowConfig.get root in
   let filter = wanted config in
   let others = config.FlowConfig.include_stems in
   let sroot = Path.to_string root in
-  let realpath_filter path = is_valid_path path && filter path in
+  let realpath_filter path = is_valid_path ~options path && filter path in
   let path_filter path =
     (str_starts_with path sroot || FlowConfig.is_included config path)
     && realpath_filter path

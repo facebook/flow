@@ -57,11 +57,6 @@ let get_flow_options () =
      assert_false ("Attempted to use flow_options before " ^
                   "Modules_js was initialized.")
 
-let get_config_options () =
-  let root = (get_flow_options ()).Options.opt_root in
-  let config = FlowConfig.get root in
-  FlowConfig.(config.options)
-
 let replace_name_mapper_template_tokens =
   let project_root_token = Str.regexp_string "<PROJECT_ROOT>" in
 
@@ -124,7 +119,7 @@ let module_name_candidates name =
     Hashtbl.find module_name_candidates_cache name
   ) else (
     let flow_options = get_flow_options () in
-    let mappers = flow_options.Options.opt_module_name_mappers in
+    let mappers = Options.module_name_mappers flow_options in
     let map_name mapped_names (regexp, template) =
       let template = replace_name_mapper_template_tokens flow_options template in
       let new_name = Str.global_replace regexp template name in
@@ -340,7 +335,7 @@ module Node = struct
       lazy (path_if_exists path_acc (path ^ ext))
     ))
 
-  let parse_main cx loc path_acc package =
+  let parse_main cx loc path_acc package file_exts =
     let package = resolve_symlinks package in
     if not (file_exists package) ||
       FlowConfig.(is_excluded (get_unsafe ()) package)
@@ -381,10 +376,8 @@ module Node = struct
       match get_key "main" tokens with
       | None -> None
       | Some file ->
-        let opts = get_config_options () in
         let path = Files_js.normalize_path dir file in
         let path_w_index = Filename.concat path "index" in
-        let file_exts = SSet.elements opts.FlowConfig.Opts.module_file_exts in
 
         lazy_seq [
           lazy (path_if_exists path_acc path);
@@ -394,25 +387,25 @@ module Node = struct
 
   let resolve_relative cx loc ?path_acc root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
-    let opts = get_config_options () in
-    if Files_js.is_flow_file path
+    let options = get_flow_options () in
+    if Files_js.is_flow_file ~options path
     then path_if_exists path_acc path
     else (
       let path_w_index = Filename.concat path "index" in
-      let file_exts = SSet.elements opts.FlowConfig.Opts.module_file_exts in
+      let file_exts = SSet.elements (Options.module_file_exts options) in
 
       lazy_seq ([
         lazy (path_if_exists_with_file_exts path_acc path file_exts);
-        lazy (parse_main cx loc path_acc (Filename.concat path "package.json"));
+        lazy (parse_main cx loc path_acc (Filename.concat path "package.json") file_exts);
         lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
       ])
     )
 
   let rec node_module cx loc path_acc dir r =
-    let opts = get_config_options () in
+    let opts = get_flow_options () in
     lazy_seq [
       lazy (
-        lazy_seq (opts.FlowConfig.Opts.node_resolver_dirnames |> List.map (fun dirname ->
+        lazy_seq (Options.node_resolver_dirnames opts |> List.map (fun dirname ->
           lazy (resolve_relative cx loc ?path_acc dir (spf "%s%s%s" dirname Filename.dir_sep r))
         ))
       );

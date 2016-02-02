@@ -90,7 +90,7 @@ let collect_error_flags main color one_line show_all_errors old_output_format =
   | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
   in
-  main { Errors_js.color; one_line; show_all_errors; old_output_format; }
+  main { Options.color; one_line; show_all_errors; old_output_format; }
 
 let error_flags prev = CommandSpec.ArgSpec.(
   prev

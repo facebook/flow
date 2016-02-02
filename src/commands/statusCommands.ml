@@ -93,7 +93,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     root: Path.t;
     from: string;
     output_json: bool;
-    error_flags: Errors_js.flags;
+    error_flags: Options.error_flags;
     strip_root: bool;
   }
 
