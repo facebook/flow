@@ -73,13 +73,12 @@ let kind_of_path path = Unix.(
   | S_REG -> Reg path
   | S_LNK ->
     (* TODO: can stat return a symlink? if yes, match S_LNK and recurse? *)
-    begin match (stat path).st_kind with
-    (* Don't spew errors on broken symlinks *)
-    | exception Unix_error (ENOENT, _, _) -> Other
+    (try begin match (stat path).st_kind with
     | S_REG -> Reg (realpath path)
     | S_DIR -> Dir (realpath path, true)
     | _ -> assert false
-    end
+    (* Don't spew errors on broken symlinks *)
+    end with Unix_error (ENOENT, _, _) -> Other)
   | S_DIR -> Dir (path, false)
   | _ -> Other
   with Unix_error (e, _, _) ->
