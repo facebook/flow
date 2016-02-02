@@ -18,10 +18,6 @@ type ('in_, 'out) handle = {
   pid : int;
 }
 
-type log_mode =
-  | Log_file
-  | Parent_streams
-
 let to_channel :
   'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bool ->
   'a -> unit =
@@ -158,10 +154,20 @@ let make_pipe () =
   let oc = Unix.out_channel_of_descr descr_out in
   ic, oc
 
+let fd_of_path path =
+  Sys_utils.with_umask 0o111 begin fun () ->
+    Sys_utils.mkdir_no_fail (Filename.dirname path);
+    Unix.openfile path [Unix.O_RDWR; Unix.O_CREAT; Unix.O_TRUNC] 0o666
+  end
+
+let null_fd () = fd_of_path null_path
+
 (* This only works on Unix, and should be avoided as far as possible. Use
  * Daemon.spawn instead. *)
-let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
-    ('b, 'a) handle =
+let fork
+    (type param)
+    (log_stdout, log_stderr) (f : param -> ('a, 'b) channel_pair -> unit)
+    (param : param) : ('b, 'a) handle =
   let parent_in, child_out = make_pipe () in
   let child_in, parent_out = make_pipe () in
   match Fork.fork () with
@@ -172,23 +178,16 @@ let fork ?log_file (f : ('a, 'b) channel_pair -> unit) :
       Timeout.close_in parent_in;
       close_out parent_out;
       Sys_utils.with_umask 0o111 begin fun () ->
-        let fd =
-          Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
+        let fd = null_fd () in
         Unix.dup2 fd Unix.stdin;
         Unix.close fd;
-        let fn = Option.value_map log_file ~default:null_path ~f:
-          begin fun fn ->
-            Sys_utils.mkdir_no_fail (Filename.dirname fn);
-            fn
-          end in
-        let fd =
-          Unix.openfile fn
-            [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
-        Unix.dup2 fd Unix.stdout;
-        Unix.dup2 fd Unix.stderr;
-        Unix.close fd;
       end;
-      f (child_in, child_out);
+      Unix.dup2 log_stdout Unix.stdout;
+      Unix.dup2 log_stderr Unix.stderr;
+      if log_stdout <> Unix.stdout then Unix.close log_stdout;
+      if log_stderr <> Unix.stderr && log_stderr <> log_stdout then
+        Unix.close log_stderr;
+      f param (child_in, child_out);
       exit 0
     with _ ->
       exit 1)
@@ -213,33 +212,15 @@ let setup_channels channel_mode =
 
 let spawn
     (type param) (type input) (type output)
-    ?reason ?log_file ?(channel_mode = `pipe) ?(log_mode = Log_file)
+    ?(channel_mode = `pipe) (log_stdout, log_stderr)
     (entry: (param, input, output) entry)
     (param: param) : (output, input) handle =
   let (parent_in, child_out), (child_in, parent_out) =
     setup_channels channel_mode in
   Entry.set_context entry (child_in, child_out);
-  let null_fd =
-    Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
-  let out_fd, err_fd =
-    match log_mode with
-    | Log_file ->
-      let out_path =
-        Option.value_map log_file
-          ~default:null_path
-          ~f:(fun fn ->
-              Sys_utils.mkdir_no_fail (Filename.dirname fn);
-              fn)  in
-      let out_fd =
-        Unix.openfile out_path [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC]
-        0o666 in
-      out_fd, out_fd
-    | Parent_streams ->
-      Unix.stdout, Unix.stderr
-  in
+  let in_fd = null_fd () in
   let exe = Sys_utils.executable_path () in
-  let pid = Unix.create_process exe [|exe|] null_fd out_fd err_fd in
-  Option.iter reason ~f:(fun reason -> PidLog.log ~reason pid);
+  let pid = Unix.create_process exe [|exe|] in_fd log_stdout log_stderr in
   (match channel_mode with
   | `pipe ->
     Unix.close child_in;
@@ -247,9 +228,10 @@ let spawn
   | `socket ->
     (** the in and out FD's are the same. Close only once. *)
     Unix.close child_in);
-  if log_mode <> Parent_streams then
-    Unix.close out_fd;
-  Unix.close null_fd;
+  if log_stdout <> Unix.stdout then Unix.close log_stdout;
+  if log_stderr <> Unix.stderr && log_stderr <> log_stdout then
+    Unix.close log_stderr;
+  Unix.close in_fd;
   Entry.send_param param parent_out;
   { channels = Timeout.in_channel_of_descr parent_in,
                Unix.out_channel_of_descr parent_out;

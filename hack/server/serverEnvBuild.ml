@@ -51,8 +51,9 @@ let make_genv options config local_config =
       let indexer filter = Find.make_next_files ~name:"root" ~filter root in
       let log_link = ServerFiles.dfind_log root in
       let log_file = Sys_utils.make_link_of_timestamped log_link in
-      let dfind =
-        DfindLib.init ~log_file (GlobalConfig.scuba_table_name, [root]) in
+      let log_fd = Daemon.fd_of_path log_file in
+      let dfind = DfindLib.init
+        (log_fd, log_fd) (GlobalConfig.scuba_table_name, [root]) in
       let notifier () =
         begin try
           Timeout.with_timeout ~timeout:120

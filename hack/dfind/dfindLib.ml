@@ -12,8 +12,8 @@ open Utils
 
 type t = (DfindServer.msg, unit) Daemon.handle
 
-let init ?log_file (scuba_table, roots) =
-  Daemon.spawn ?log_file DfindServer.entry_point (scuba_table, roots)
+let init log_fds (scuba_table, roots) =
+  Daemon.spawn log_fds DfindServer.entry_point (scuba_table, roots)
 
 let pid handle = handle.Daemon.pid
 

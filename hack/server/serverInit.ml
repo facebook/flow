@@ -140,8 +140,9 @@ let mk_state_future root cmd =
   Result.try_with @@ fun () ->
   let log_file =
     Sys_utils.make_link_of_timestamped (ServerFiles.load_log root) in
+  let log_fd = Daemon.fd_of_path log_file in
   let {Daemon.channels = (ic, _oc); pid} as daemon =
-    Daemon.fork ~log_file (load_state root cmd)
+    Daemon.fork (log_fd, log_fd) (load_state root) cmd
   in fun `Wait_for_state ->
   let fn =
     try

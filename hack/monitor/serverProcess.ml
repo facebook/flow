@@ -18,7 +18,6 @@ type process_data =
     in_fd: Unix.file_descr;
     (** Send client's File Descriptors to the typechecker over this. *)
     out_fd : Unix.file_descr;
-    log_file: string;
     last_request_handoff : float ref;
   }
 
