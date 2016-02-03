@@ -122,8 +122,8 @@ function test(x: boolean) {
 type NestedArray<T> = Array<T|NestedArray<T>>
 
 function flatten<T>(xs: NestedArray<T>): Array<T> {
-  var result = [];
-  for (var i = 0; i < xs.length; i++) {
+  let result = [];
+  for (let i = 0; i < xs.length; i++) {
     if (Array.isArray(xs[i])) {
       result = result.concat(flatten(xs[i]));
     } else {
@@ -225,7 +225,7 @@ declare function something(): void;
 
 function foo(x: { y: ?string }): string {
   if (x.y) {
-    var y = x.y;
+    const y = x.y;
     something();
     return y; // OK: something couldn't have changed y
   } else {

@@ -14,8 +14,8 @@ the type `Array<T>` describes arrays whose elements are of type `T`.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var a = [1, 2, 3];
-var b: Array<number> = a.map(function(x) { return x + 1; });
+const a = [1, 2, 3];
+const b: Array<number> = a.map(function(x) { return x + 1; });
 {% endhighlight %}
 
 In this code, we create an array with the literal `[1, 2, 3]`, and call a method map on it, getting another array whose type we annotate as `Array<number>`.
@@ -30,8 +30,8 @@ For example:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var a = [];
-for (var i = 0; i < 10; ++i) {
+const a = [];
+for (let i = 0; i < 10; ++i) {
   if (i % 2 == 0) {
     a[i] = 0;
   } else {
@@ -90,8 +90,8 @@ for that particular index will be returned.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var tup = ["1", 1, true, "positive"];
-var b = tup[1] * tup[3];
+const tup = ["1", 1, true, "positive"];
+const b = tup[1] * tup[3];
 {% endhighlight %} 
 
 ```

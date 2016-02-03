@@ -15,8 +15,8 @@ you can, if you so choose (e.g. for documentation purposes).
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var x: number = 0;
-var y: any = 4;
+const x: number = 0;
+const y: any = 4;
 {% endhighlight %}
 
 The actual type of a variable can change over its lifetime; at any point, the

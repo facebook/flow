@@ -15,7 +15,7 @@ JavaScript code:
 function add(num1, num2) {
   return num1 + num2;
 }
-var x = add(3, '0');
+const x = add(3, '0');
 console.log(x);
 {% endhighlight %}
 
@@ -32,7 +32,7 @@ function parameters, function return types and variable declarations. e.g.,
 
 {% highlight javascript linenos=table %}
 function foo(a: string, b: number): void { ... }
-var x: boolean = someBool;
+const x: boolean = someBool;
 class Bar {
   y: string;
   someMethod(a: number): string { ... }
@@ -49,7 +49,7 @@ annotation `@flow` at the top in a comment block:
 function add(num1, num2) {
   return num1 + num2;
 }
-var x = add(3, '0');
+const x = add(3, '0');
 console.log(x);
 {% endhighlight %}
 
@@ -62,7 +62,7 @@ specify that the parameters to `add` must be `number`s.
 function add(num1: number, num2: number): number {
   return num1 + num2;
 }
-var x: number = add(3, '0');
+const x: number = add(3, '0');
 console.log(x);
 {% endhighlight %}
 
@@ -91,7 +91,7 @@ deduce all that is necessary to type check your code.
 function multPI(num1, num2) {
   return Math.PI * num1 * num2;
 }
-var x = multPI(3, '0');
+const x = multPI(3, '0');
 console.log(x);
 {% endhighlight %}
 
@@ -125,8 +125,8 @@ module.exports = size;
  * UseSize.js
  * @flow
  */
-var size = require('./Size');
-var result = size(null);
+const size = require('./Size');
+const result = size(null);
 {% endhighlight %}
 
 Type annotations are required for the `size` function in `Size.js` because `UseSize.js` imports it and thus crosses the module boundary and isn't inferred.

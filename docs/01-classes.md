@@ -42,7 +42,7 @@ subtyping, i.e., the following code type checks:
 
 {% highlight javascript linenos=table %}
 ...
-var c: C = new D();
+const c: C = new D();
 {% endhighlight %}
 
 ## Propagation
@@ -53,9 +53,9 @@ based on the example above, the following does not typecheck:
 
 {% highlight javascript linenos=table %}
 ...
-var c: C = D.qux();
+const c: C = D.qux();
 c.foo(0);
-var x: string = c.bar();
+const x: string = c.bar();
 {% endhighlight %}
 
 ```bbcode

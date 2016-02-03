@@ -15,7 +15,7 @@ any other type. For example, the following code does not typecheck:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var o = null;
+const o = null;
 print(o.x);
 {% endhighlight %}
 
@@ -32,7 +32,7 @@ is a maybe type that describes `null` (or `undefined`) or the set of values of `
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var o: ?string = null;
+const o: ?string = null;
 print(o.length);
 {% endhighlight %}
 
@@ -49,7 +49,7 @@ as follows:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var o: ?string = null;
+let o: ?string = null;
 if (o == null) {
   o = 'hello';
 }

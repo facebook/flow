@@ -14,7 +14,7 @@ Functions are ubiquitous in JavaScript. As expected, Flow propagates types throu
 {% highlight javascript linenos=table %}
 /* @flow */
 function foo(x: string): string { return x; }
-var x: number = foo('');
+const x: number = foo('');
 {% endhighlight %}
 
 Running Flow produces the following error:
@@ -36,8 +36,8 @@ as well. For example, the following code does not typecheck:
 {% highlight javascript linenos=table %}
 /* @flow */
 function foo(x) { return this.x; }
-var o = { x: 42, f: foo };
-var x: string = o.f();
+const o = { x: 42, f: foo };
+const x: string = o.f();
 {% endhighlight %}
 
 ```bbcode
@@ -103,8 +103,8 @@ Functions can be polymorphic, just like polymorphic classes.
 /* @flow */
 function foo<X>(x: X): X { return x; }
 
-var x: number = foo(0);
-var y: string = foo('');
+const x: number = foo(0);
+const y: string = foo('');
 {% endhighlight %}
 
 Furthermore, you may have polymorphic methods in polymorphic classes. For

@@ -12,7 +12,7 @@ for a value to be one of the input types.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var x: number | string = 0;
+const x: number | string = 0;
 {% endhighlight %}
 
 `x` can be either a `number` or a `string`. A default value can even be 
@@ -20,7 +20,7 @@ provided of one of those two types.
 
 {% highlight javascript linenos=table %}
 /* @flow */
-declare var f: ((x: number) => void) & ((x: string) => void);
+declare const f: ((x: number) => void) & ((x: string) => void);
 f('');
 {% endhighlight %}
 
@@ -52,7 +52,7 @@ class A {}
 class B {}
 class C {}
 
-var x: A | B | number | C = new C();
+const x: A | B | number | C = new C();
 x = 3;
 x = new B();
 x = true; // Flow will error here
@@ -85,7 +85,7 @@ This type is incompatible with
 /* @flow */
 class Foo {}
 class Bar {}
-declare var f: ((x: Foo) => void) & ((x: Bar) => void);
+declare const f: ((x: Foo) => void) & ((x: Bar) => void);
 f(new Foo());
 f(true); // Flow will error here.
 {% endhighlight %}
