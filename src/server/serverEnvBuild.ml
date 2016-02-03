@@ -23,7 +23,9 @@ let make_genv ~multicore options watch_paths =
   in
   let dfind =
     if check_mode then None
-    else Some (DfindLib.init ("flow_server_events", watch_paths)) in
+    else
+      Some (DfindLib.init Daemon.(null_fd (), null_fd ())
+        ("flow_server_events", watch_paths)) in
   { ServerEnv.options; workers; dfind; }
 
 let make_env () =
