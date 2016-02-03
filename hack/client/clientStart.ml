@@ -21,7 +21,6 @@ let get_hhserver () =
 
 type env = {
   root: Path.t;
-  wait: bool;
   no_load : bool;
   silent : bool;
 }
@@ -51,10 +50,6 @@ let start_server env =
       (String.concat " "
          (Array.to_list (Array.map Filename.quote hh_server_args)));
 
-  let rec wait_loop () =
-    let msg = input_line ic in
-    if env.wait && msg <> "ready" then wait_loop () in
-
   try
     let server_pid =
       Unix.(create_process hh_server hh_server_args stdin stdout stderr) in
@@ -62,17 +57,17 @@ let start_server env =
 
     match Unix.waitpid [] server_pid with
     | _, Unix.WEXITED 0 ->
-        wait_loop ();
-        close_in ic
+      assert (input_line ic = ServerMonitorUtils.ready);
+      close_in ic
     | _, Unix.WEXITED i ->
-        Printf.fprintf stderr
-          "Starting hh_server failed. Exited with status code: %d!\n" i;
-        exit 77
+      Printf.eprintf
+        "Starting hh_server failed. Exited with status code: %d!\n" i;
+      exit 77
     | _ ->
-        Printf.fprintf stderr "Could not start hh_server!\n";
-        exit 77
+      Printf.eprintf "Could not start hh_server!\n";
+      exit 77
   with _ ->
-    Printf.fprintf stderr "Could not start hh_server!\n";
+    Printf.eprintf "Could not start hh_server!\n";
     exit 77
 
 

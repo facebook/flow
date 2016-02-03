@@ -9,5 +9,6 @@
 *)
 
 val start_monitoring:
+  waiting_client:int option ->
   ServerMonitorUtils.monitor_config ->
   ServerMonitorUtils.monitor_starter -> 'a

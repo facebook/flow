@@ -292,15 +292,15 @@ and ack_and_handoff_client env client_fd =
 let rec check_and_run_loop env
     (lock_file: string) (socket: Unix.file_descr) =
   let env = try check_and_run_loop_ env lock_file socket with
-  | Unix.Unix_error (Unix.ECHILD, _, _) ->
-    ignore (Hh_logger.log
-      "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
-    Exit_status.exit Exit_status.No_server_running
-  | e ->
-    Hh_logger.log "check_and_run_loop_ threw with exception: %s"
-      (Printexc.to_string e);
-    env
-  in
+    | Unix.Unix_error (Unix.ECHILD, _, _) ->
+      ignore (Hh_logger.log
+        "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
+      Exit_status.exit Exit_status.No_server_running
+    | e ->
+      Hh_logger.log "check_and_run_loop_ threw with exception: %s"
+        (Printexc.to_string e);
+      env
+    in
     check_and_run_loop env lock_file socket
 
 and check_and_run_loop_ env
@@ -335,8 +335,22 @@ and check_and_run_loop_ env
        "Accepting on socket failed. Ignoring client connection attempt.";
        env)
 
-let start_monitoring monitor_config monitor_starter =
+let start_monitoring ~waiting_client monitor_config monitor_starter =
   let socket = Socket.init_unix_socket monitor_config.socket_file in
+  (* If the client started the server, it opened an FD before forking, so it
+   * can be notified when the monitor socket is ready. The FD number was passed
+   * in program args. *)
+  Option.iter waiting_client begin fun fd ->
+    let oc = Handle.to_out_channel fd in
+    try
+      output_string oc (ServerMonitorUtils.ready^"\n");
+      close_out oc;
+    with
+    | Sys_error _
+    | Unix.Unix_error _ as e ->
+      Printf.eprintf "Caught exception while waking client: %s\n%!"
+        (Printexc.to_string e)
+  end;
   let server_processes = start_servers monitor_starter in
   let env = {
     servers = server_processes;

@@ -306,11 +306,13 @@ let parse_start_env command =
       %s a Hack server\n\n\
       WWW-ROOT is assumed to be current directory if unspecified\n"
       Sys.argv.(0) command (String.capitalize command) in
-  let wait = ref false in
   let no_load = ref false in
+  let wait_deprecation_msg () = Printf.eprintf
+    "WARNING: --wait is deprecated, does nothing, and will be going away \
+     soon!\n%!" in
   let options = [
-    "--wait", Arg.Set wait,
-    " wait for the server to finish initializing (default: false)";
+    "--wait", Arg.Unit wait_deprecation_msg,
+    " this flag is deprecated and does nothing!";
     "--no-load", Arg.Set no_load,
     " start from a fresh state"
   ] in
@@ -325,7 +327,6 @@ let parse_start_env command =
         exit 1 in
   { ClientStart.
     root = root;
-    wait = !wait;
     no_load = !no_load;
     silent = false;
   }

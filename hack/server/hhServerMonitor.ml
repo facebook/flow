@@ -70,12 +70,12 @@ let monitor_daemon_main (options: ServerArgs.options) =
   Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
   let www_root = (ServerArgs.root options) in
   ignore @@ Sys_utils.setsid ();
-  (** Make sure to lock the lockfile before doing *anything*, especially
-   * opening the socket. *)
-  let lock_file = ServerFiles.lock_file www_root in
   if ServerArgs.check_mode options then
     ServerMain.run_once options
   else
+    (** Make sure to lock the lockfile before doing *anything*, especially
+     * opening the socket. *)
+    let lock_file = ServerFiles.lock_file www_root in
     if not (Lock.grab lock_file) then
       (Hh_logger.log "Monitor daemon already running. Killing";
        Exit_status.exit Exit_status.Ok);
@@ -84,7 +84,8 @@ let monitor_daemon_main (options: ServerArgs.options) =
       let ide = start_ide_server options in
       [typechecker; ide]
     end in
-    ServerMonitor.start_monitoring ServerMonitorUtils.({
+    let waiting_client = ServerArgs.waiting_client options in
+    ServerMonitor.start_monitoring ~waiting_client ServerMonitorUtils.({
       socket_file = ServerFiles.socket_file www_root;
       lock_file = ServerFiles.lock_file www_root;
     }) hh_server_monitor_starter

@@ -10,7 +10,6 @@
 
 type env = {
   root: Path.t;
-  wait: bool;
   no_load: bool;
   silent: bool;
 }

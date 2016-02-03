@@ -44,6 +44,9 @@ type shutdown_result =
 exception Server_shutting_down
 exception Last_server_died
 
+(* Message we send to the --waiting-client *)
+let ready = "ready"
+
 let exit_if_parent_dead () =
 (** Cross-platform compatible way; parent PID becomes 1 when parent dies. *)
   if Unix.getppid() = 1 then

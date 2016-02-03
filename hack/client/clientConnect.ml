@@ -198,7 +198,6 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
       if env.autostart then begin
         ClientStart.start_server { ClientStart.
           root = env.root;
-          wait = false;
           no_load = env.no_load;
           silent = false;
         };
