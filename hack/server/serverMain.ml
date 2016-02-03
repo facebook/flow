@@ -429,11 +429,23 @@ let setup_server options =
   Gc.set {gc_control with Gc.max_overhead = 200};
   Relative_path.set_path_prefix Relative_path.Root root;
   let config = ServerConfig.(load filename options) in
-  let {ServerLocalConfig.cpu_priority; io_priority; _} as local_config =
-    ServerLocalConfig.load () in
+  let {ServerLocalConfig.
+    cpu_priority;
+    io_priority;
+    enable_on_nfs;
+    _
+  } as local_config = ServerLocalConfig.load () in
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init root (Unix.gettimeofday ());
+
+  let root_s = Path.to_string root in
+  if Sys_utils.is_nfs root_s && not enable_on_nfs then begin
+    Hh_logger.log "Refusing to run on %s: root is on NFS!" root_s;
+    HackEventLogger.nfs_root ();
+    Exit_status.(exit Nfs_root);
+  end;
+
   Option.iter
     (ServerArgs.waiting_client options)
     ~f:(fun handle ->

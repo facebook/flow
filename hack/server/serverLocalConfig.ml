@@ -16,6 +16,7 @@ type t = {
   use_mini_state: bool;
   load_mini_script_timeout: int; (* in seconds *)
   type_decl_bucket_size: int;
+  enable_on_nfs: bool;
   io_priority: int;
   cpu_priority: int;
 }
@@ -26,6 +27,7 @@ let default = {
   use_mini_state = false;
   load_mini_script_timeout = 20;
   type_decl_bucket_size = 1000;
+  enable_on_nfs = false;
   io_priority = 7;
   cpu_priority = 10;
 }
@@ -42,6 +44,7 @@ let load_ fn =
   let config = Config_file.parse_contents contents in
   let use_watchman = bool_ "use_watchman" ~default:false config in
   let use_mini_state = bool_ "use_mini_state" ~default:false config in
+  let enable_on_nfs = bool_ "enable_on_nfs" ~default:false config in
   let load_mini_script_timeout =
     int_ "load_mini_script_timeout" ~default:20 config in
   let type_decl_bucket_size =
@@ -57,6 +60,7 @@ let load_ fn =
     use_mini_state;
     load_mini_script_timeout;
     type_decl_bucket_size;
+    enable_on_nfs;
     io_priority;
     cpu_priority;
   }

@@ -11,6 +11,7 @@
 open Core
 
 external realpath: string -> string option = "hh_realpath"
+external is_nfs: string -> bool = "hh_is_nfs"
 
 let getenv_user () =
   let user_var = if Sys.win32 then "USERNAME" else "USER" in

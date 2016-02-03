@@ -53,10 +53,10 @@ let establish_connection ~timeout config =
     else
       Unix.ADDR_UNIX sock_name in
   try Result.Ok (Timeout.open_connection ~timeout sockaddr) with
-    | Unix.Unix_error (Unix.ECONNREFUSED, _, _)
-    | Unix.Unix_error (Unix.ENOENT, _, _) ->
-      if not (server_exists config.lock_file) then Result.Error Server_missing
-      else Result.Error Server_busy
+  | Unix.Unix_error (Unix.ECONNREFUSED, _, _)
+  | Unix.Unix_error (Unix.ENOENT, _, _) ->
+    if not (server_exists config.lock_file) then Result.Error Server_missing
+    else Result.Error Server_busy
 
 let get_cstate config (ic, oc) =
   try
