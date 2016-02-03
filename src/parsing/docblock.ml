@@ -41,6 +41,8 @@ let extract =
         parse_attributes { acc with flow = Some OptOut } xs
     | "@providesModule" :: m :: xs ->
         parse_attributes { acc with providesModule = Some m } xs
+    | "@preventMunge" :: xs ->
+        parse_attributes { acc with preventMunge = Some true } xs
     | _ :: xs ->
         parse_attributes acc xs
     | [] -> acc
