@@ -154,7 +154,7 @@ and og_null_flavor =
   | OG_nullthrows
   | OG_nullsafe
 
-(* id without $ *)
+(* id is stored without the $ *)
 and class_var = id * expr option
 
 and method_ = {
