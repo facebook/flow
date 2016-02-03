@@ -21,11 +21,11 @@ val gconst_decl:
   TypecheckerOptions.t -> Nast.gconst -> unit
 
 val fun_def:
-  Typing_env.env -> 'a -> Nast.fun_ -> unit
+  TypecheckerOptions.t -> 'a -> Nast.fun_ -> unit
 val class_def:
-  Typing_env.env -> 'a -> Nast.class_ -> unit
+  TypecheckerOptions.t -> 'a -> Nast.class_ -> unit
 val typedef_def:
-  Typing_env.env -> Typing_env.Typedefs.key -> Nast.typedef -> unit
+  Typing_env.Typedefs.key -> Nast.typedef -> unit
 
 val expr:
   Typing_env.env -> Nast.expr ->

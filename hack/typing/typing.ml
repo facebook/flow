@@ -107,15 +107,15 @@ let unbound_name env (pos, name)=
 (*****************************************************************************)
 
 let gconst_decl tcopt cst =
-   let env = Env.empty tcopt (Pos.filename (fst cst.cst_name)) in
-   let env = Env.set_mode env cst.cst_mode in
-   let env = Env.set_root env (Dep.GConst (snd cst.cst_name)) in
-   let _, hint_ty =
-     match cst.cst_type with
-     | None -> env, (Reason.Rnone, Tany)
-     | Some h -> Typing_hint.hint env h
-   in
-   Env.GConsts.add (snd cst.cst_name) hint_ty
+  let dep = Dep.GConst (snd cst.cst_name) in
+  let env = Env.empty tcopt (Pos.filename (fst cst.cst_name)) (Some dep) in
+  let env = Env.set_mode env cst.cst_mode in
+  let _, hint_ty =
+    match cst.cst_type with
+    | None -> env, (Reason.Rnone, Tany)
+    | Some h -> Typing_hint.hint env h
+  in
+  Env.GConsts.add (snd cst.cst_name) hint_ty
 
 (*****************************************************************************)
 (* Handling function/method arguments *)
@@ -245,9 +245,9 @@ let make_param_local_ty env param =
     env param
 
 let rec fun_decl tcopt f =
-  let env = Env.empty tcopt (Pos.filename (fst f.f_name)) in
+  let dep = Dep.Fun (snd f.f_name) in
+  let env = Env.empty tcopt (Pos.filename (fst f.f_name)) (Some dep) in
   let env = Env.set_mode env f.f_mode in
-  let env = Env.set_root env (Dep.Fun (snd f.f_name)) in
   let _, ft = fun_decl_in_env env f in
   Env.add_fun (snd f.f_name) ft;
   ()
@@ -453,11 +453,13 @@ and check_memoizable env param (pname, ty) =
 (*****************************************************************************)
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
-and fun_def env _ f =
+and fun_def tcopt _ f =
   (* reset the expression dependent display ids for each function body *)
   Reason.expr_display_id_map := IMap.empty;
   Typing_hooks.dispatch_enter_fun_def_hook f;
-  let nb = Naming.func_body (Env.get_options env) f in
+  let nb = Naming.func_body tcopt f in
+  let dep = Typing_deps.Dep.Fun (snd f.f_name) in
+  let env = Env.empty tcopt (Pos.filename (fst f.f_name)) (Some dep) in
   NastCheck.fun_ env f nb;
   (* Fresh type environment is actually unnecessary, but I prefer to
    * have a guarantee that we are using a clean typing environment. *)
@@ -465,7 +467,6 @@ and fun_def env _ f =
     fun env_up ->
       let env = { env_up with Env.lenv = Env.empty_local } in
       let env = Env.set_mode env f.f_mode in
-      let env = Env.set_root env (Dep.Fun (snd f.f_name)) in
       let env, hret =
         match f.f_ret with
           | None -> env, (Reason.Rwitness (fst f.f_name), Tany)
@@ -3930,20 +3931,22 @@ and check_parent_abstract position parent_type class_type =
       ~is_final position class_type.tc_typeconsts;
   end else ()
 
-and class_def env_up _ c =
-  let c = Naming.class_meth_bodies (Env.get_options env_up) c in
+and class_def tcopt _ c =
+  let filename = Pos.filename (fst c.Nast.c_name) in
+  let dep = Dep.Class (snd c.c_name) in
+  let env = Env.empty tcopt filename (Some dep) in
+  let c = Naming.class_meth_bodies tcopt c in
   if not !auto_complete then begin
-    NastCheck.class_ env_up c;
-    NastInitCheck.class_ env_up c;
+    NastCheck.class_ env c;
+    NastInitCheck.class_ env c;
   end;
-  let env_tmp = Env.set_root env_up (Dep.Class (snd c.c_name)) in
-  let tc = Env.get_class env_tmp (snd c.c_name) in
+  let tc = Env.get_class env (snd c.c_name) in
   match tc with
   | None ->
       (* This can happen if there was an error during the declaration
        * of the class. *)
       ()
-  | Some tc -> class_def_ env_up c tc
+  | Some tc -> class_def_ env c tc
 
 and get_self_from_c env c =
   let _, tparams = List.map_env env (fst c.c_tparams) type_param in
@@ -3953,11 +3956,10 @@ and get_self_from_c env c =
   let ret = Reason.Rwitness (fst c.c_name), Tapply (c.c_name, tparams) in
   ret
 
-and class_def_ env_up c tc =
+and class_def_ env c tc =
   Typing_hooks.dispatch_enter_class_def_hook c tc;
-  let env = Env.set_self_id env_up (snd c.c_name) in
+  let env = Env.set_self_id env (snd c.c_name) in
   let env = Env.set_mode env c.c_mode in
-  let env = Env.set_root env (Dep.Class (snd c.c_name)) in
   let pc, _ = c.c_name in
   let env, impl = List.map_env
     env (c.c_extends @ c.c_implements @ c.c_uses) Typing_hint.hint in
@@ -4161,27 +4163,37 @@ and method_def env m =
     | Some _ -> ();
   Typing_hooks.dispatch_exit_method_def_hook m
 
-and typedef_def env_up tid typedef =
-  NastCheck.typedef env_up typedef;
+and typedef_def tid typedef =
+  let filename = Pos.filename (fst typedef.t_kind) in
+  let dep = Typing_deps.Dep.Class tid in
+  let env =
+    Typing_env.empty TypecheckerOptions.permissive filename (Some dep) in
+  (* Mode for typedefs themselves doesn't really matter right now, but
+   * they can expand hints, so make it loose so that the typedef doesn't
+   * fail. (The hint will get re-checked with the proper mode anyways.)
+   * Ideally the typedef would carry the right mode with it, but it's a
+   * slightly larger change than I want to deal with right now. *)
+  let env = Typing_env.set_mode env FileInfo.Mdecl in
+  NastCheck.typedef env typedef;
   let {
     t_tparams = _;
     t_constraint = tcstr;
     t_kind = hint;
     t_user_attributes = _;
   } = typedef in
-  ignore (Typing_hint.hint_locl ~ensure_instantiable:true env_up hint);
-  ignore (Option.map tcstr (Typing_hint.check_instantiable env_up));
-  begin match Env.get_typedef env_up tid with
+  ignore (Typing_hint.hint_locl ~ensure_instantiable:true env hint);
+  ignore (Option.map tcstr (Typing_hint.check_instantiable env));
+  begin match Env.get_typedef env tid with
     | Some {td_constraint = Some cstr; td_type; td_pos; _} ->
       let _env =
-        Typing_ops.sub_type_decl td_pos Reason.URnewtype_cstr env_up cstr
+        Typing_ops.sub_type_decl td_pos Reason.URnewtype_cstr env cstr
           td_type in
       ()
     | _ -> ()
   end;
   match hint with
   | pos, Hshape fdm ->
-    ignore (check_shape_keys_validity env_up pos (ShapeMap.keys fdm))
+    ignore (check_shape_keys_validity env pos (ShapeMap.keys fdm))
   | _ -> ()
 
 (* Calls the method of a class, but allows the f callback to override the

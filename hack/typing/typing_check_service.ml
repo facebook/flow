@@ -11,6 +11,8 @@
 open Core
 open Utils
 
+module Env = Typing_env
+
 (*****************************************************************************)
 (* The place where we store the shared data in cache *)
 (*****************************************************************************)
@@ -28,31 +30,19 @@ let neutral = [], Relative_path.Set.empty
 let type_fun tcopt x =
   try
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    let tenv = Typing_env.empty tcopt (Pos.filename (fst fun_.Nast.f_name)) in
-    Typing.fun_def tenv x fun_;
+    Typing.fun_def tcopt x fun_;
   with Not_found -> ()
 
 let type_class tcopt x =
   try
     let class_ = Naming_heap.ClassHeap.find_unsafe x in
-    let filename = Pos.filename (fst class_.Nast.c_name) in
-    let tenv = Typing_env.empty tcopt filename in
-    Typing.class_def tenv x class_
+    Typing.class_def tcopt x class_
   with Not_found -> ()
 
 let check_typedef x =
   try
     let typedef = Naming_heap.TypedefHeap.find_unsafe x in
-    let filename = Pos.filename Nast.(fst typedef.t_kind) in
-    let tenv = Typing_env.empty TypecheckerOptions.permissive filename in
-    (* Mode for typedefs themselves doesn't really matter right now, but
-     * they can expand hints, so make it loose so that the typedef doesn't
-     * fail. (The hint will get re-checked with the proper mode anyways.)
-     * Ideally the typedef would carry the right mode with it, but it's a
-     * slightly larger change than I want to deal with right now. *)
-    let tenv = Typing_env.set_mode tenv FileInfo.Mdecl in
-    let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class x) in
-    Typing.typedef_def tenv x typedef;
+    Typing.typedef_def x typedef;
     Typing_variance.typedef x
   with Not_found ->
     ()
@@ -66,10 +56,10 @@ let check_const x =
         match cst.Nast.cst_value with
         | Some v -> begin
           let filename = Pos.filename (fst cst.Nast.cst_name) in
-          let env = Typing_env.empty TypecheckerOptions.default filename in
+          let dep = Typing_deps.Dep.GConst (snd cst.Nast.cst_name) in
+          let env =
+            Typing_env.empty TypecheckerOptions.default filename (Some dep) in
           let env = Typing_env.set_mode env cst.Nast.cst_mode in
-          let root = Typing_deps.Dep.GConst (snd cst.Nast.cst_name) in
-          let env = Typing_env.set_root env root in
           let env, value_type = Typing.expr env v in
           let env, dty = Typing_phase.localize_with_self env declared_type in
           let _env = Typing_utils.sub_type env dty value_type in

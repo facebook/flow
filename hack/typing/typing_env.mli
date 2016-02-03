@@ -53,7 +53,8 @@ val debugl : ISet.t -> env -> locl ty list -> unit
 val debug : env -> locl ty -> unit
 val empty_fake_members : fake_members
 val empty_local : local_env
-val empty : TypecheckerOptions.t -> Relative_path.t -> env
+val empty : TypecheckerOptions.t -> Relative_path.t ->
+  droot: Typing_deps.Dep.variant option -> env
 val add_class : Classes.key -> Classes.t -> unit
 val add_typedef : Typedefs.key -> Typing_heap.Typedef.t -> unit
 val is_typedef : Typedefs.key -> bool
@@ -102,7 +103,6 @@ val set_parent_id : env -> string -> env
 val set_parent : env -> decl ty -> env
 val set_static : env -> env
 val set_mode : env -> FileInfo.mode -> env
-val set_root : env -> Typing_deps.Dep.variant -> env
 val get_mode : env -> FileInfo.mode
 val is_strict : env -> bool
 val is_decl : env -> bool

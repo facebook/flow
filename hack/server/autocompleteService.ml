@@ -354,7 +354,7 @@ let get_results funs classes =
       | Some e -> e
       | None ->
         let tcopt = TypecheckerOptions.permissive in
-        Typing_env.empty tcopt Relative_path.default
+        Typing_env.empty tcopt Relative_path.default ~droot:None
     in
     let results = List.map results begin fun x ->
       let env, ty = match x.ty with

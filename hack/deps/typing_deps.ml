@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 (**********************************)
 (* Handling dependencies *)
@@ -89,15 +88,7 @@ end
 let trace = ref true
 
 let add_idep root obj =
-  if !trace
-  then
-    let root =
-      match root with
-      | None -> assert_false_log_backtrace ()
-      | Some x -> x
-    in
-    Graph.add (Dep.make obj) (Dep.make root)
-  else ()
+  if !trace then Graph.add (Dep.make obj) (Dep.make root)
 
 let get_ideps_from_hash x =
   Graph.get x

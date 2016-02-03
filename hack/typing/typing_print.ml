@@ -328,7 +328,9 @@ module Full = struct
     Buffer.contents buf
 
   let to_string_decl (x: decl ty) =
-    let env = Typing_env.empty TypecheckerOptions.default Relative_path.default in
+    let env =
+      Typing_env.empty TypecheckerOptions.default Relative_path.default
+        ~droot:None in
     to_string env x
 end
 

@@ -65,8 +65,8 @@ type genv = {
   current_cls: (Ast.id * Ast.class_kind) option;
 
   (* Normally we don't need to add dependencies at this stage, but there
-   * are edge cases when we do.  *)
-  droot: Typing_deps.Dep.variant option;
+   * are edge cases when we do. *)
+  droot: Typing_deps.Dep.variant;
 
   (* Namespace environment, e.g., what namespace we're in and what use
    * declarations are in play. *)
@@ -156,7 +156,7 @@ module Env = struct
     type_params   = params;
     type_paraml   = tparams;
     current_cls   = Some (cid, ckind);
-    droot         = Some (Typing_deps.Dep.Class (snd cid));
+    droot         = Typing_deps.Dep.Class (snd cid);
     namespace;
   }
 
@@ -176,7 +176,7 @@ module Env = struct
     type_params   = cstrs;
     type_paraml   = List.map tdef.t_tparams (fun (_, x, _) -> x);
     current_cls   = None;
-    droot         = None;
+    droot         = Typing_deps.Dep.Class (snd tdef.t_id);
     namespace     = tdef.t_namespace;
   }
 
@@ -194,7 +194,7 @@ module Env = struct
     type_params   = params;
     type_paraml   = [];
     current_cls   = None;
-    droot         = Some (Typing_deps.Dep.Fun f_name);
+    droot         = Typing_deps.Dep.Fun f_name;
     namespace     = f_namespace;
   }
 
@@ -209,7 +209,7 @@ module Env = struct
     type_params   = SMap.empty;
     type_paraml   = [];
     current_cls   = None;
-    droot         = Some (Typing_deps.Dep.GConst (snd cst.cst_name));
+    droot         = Typing_deps.Dep.GConst (snd cst.cst_name);
     namespace     = cst.cst_namespace;
   }
 

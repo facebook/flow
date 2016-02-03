@@ -50,6 +50,7 @@ let resolve_types acc collated_values =
     ~on_timeout:(fun () -> raise Timeout.Timeout)
     ~do_:begin fun t ->
     let open Timeout in
+    let env = Env.empty TypecheckerOptions.default fn ~droot:None in
     let env, tyl = List.fold_right ~f:begin fun (env, ty) (env_acc, tyl) ->
       (* This is a pretty hacky environment merge, potentially merging envs from
        * completely separate contexts. It relies on type variables being
@@ -65,7 +66,7 @@ let resolve_types acc collated_values =
       let merged_tenv = IMap.union env.Env.tenv env_acc.Env.tenv in
       let merged_subst = IMap.union env.Env.subst env_acc.Env.subst in
       {env_acc with Env.tenv = merged_tenv; Env.subst = merged_subst}, ty::tyl
-    end envl_tyl ~init:(Env.empty TypecheckerOptions.default fn, []) in
+    end ~init:(env, []) envl_tyl in
     let reason = Typing_reason.Rnone in
     let ureason = Typing_reason.URnone in
     let any = reason, Typing_defs.Tany in
@@ -187,23 +188,21 @@ let collate_types fast all_types =
   end;
   tbl
 
-let type_fun fn x =
+let type_fun x =
   try
     let tcopt = TypecheckerOptions.permissive in
-    let tenv = Env.empty tcopt fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tenv x fun_;
+    Typing.fun_def tcopt x fun_;
   with Not_found ->
     ()
 
-let type_class fn x =
+let type_class x =
   try
     let tcopt = TypecheckerOptions.permissive in
-    let tenv = Env.empty tcopt fn in
     let class_ = Naming_heap.ClassHeap.get x in
     (match class_ with
     | None -> ()
-    | Some class_ -> Typing.class_def tenv x class_
+    | Some class_ -> Typing.class_def tcopt x class_
     )
   with Not_found ->
     ()
@@ -220,8 +219,8 @@ let suggest_files fast fnl =
   List.iter fnl begin fun fn ->
     let { FileInfo.n_funs; n_classes; _ } =
       Relative_path.Map.find_unsafe fn fast in
-    SSet.iter (type_fun fn) n_funs;
-    SSet.iter (type_class fn) n_classes;
+    SSet.iter type_fun n_funs;
+    SSet.iter type_class n_classes;
   end;
   let result = !Typing_suggest.types in
   Typing_defs.is_suggest_mode := false;

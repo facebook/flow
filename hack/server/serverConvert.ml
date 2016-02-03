@@ -19,7 +19,8 @@ open Utils
 let print_patch filename (line, kind, type_) =
   let line = string_of_int line in
   let kind = Typing_suggest.string_of_kind kind in
-  let tenv = Typing_env.empty TypecheckerOptions.permissive filename in
+  let tenv =
+    Typing_env.empty TypecheckerOptions.permissive filename ~droot:None in
   let type_ = Typing_print.full tenv type_ in
   Printf.printf "File: %s, line: %s, kind: %s, type: %s\n"
     (Relative_path.to_absolute filename) line kind type_
@@ -303,7 +304,7 @@ let infer_types genv env dirname =
 (* Tries to apply the patches one by one, rolls back if it failed. *)
 let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
   let tcopt = (!env).tcopt in
-  let tenv = Typing_env.empty tcopt Relative_path.default in
+  let tenv = Typing_env.empty tcopt Relative_path.default ~droot:None in
   file_data := Relative_path.Map.empty;
   Relative_path.Map.iter begin fun fn patchl ->
     List.iter patchl begin fun (line, k, type_ as patch) ->

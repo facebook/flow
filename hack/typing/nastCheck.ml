@@ -26,7 +26,6 @@ open Autocomplete
 open Core
 open Nast
 open Typing_defs
-open Typing_deps
 open Utils
 
 module Env = Typing_env
@@ -251,7 +250,6 @@ let is_magic =
 let rec fun_ tenv f named_body =
   if !auto_complete then ()
   else begin
-    let tenv = Typing_env.set_root tenv (Dep.Fun (snd f.f_name)) in
     let env = { t_is_finally = false;
                 class_name = None; class_kind = None;
                 imm_ctrl_ctx = Toplevel;
@@ -382,7 +380,6 @@ and check_happly unchecked_tparams env h =
 and class_ tenv c =
   if !auto_complete then () else begin
   let cname = Some (snd c.c_name) in
-  let tenv = Typing_env.set_root tenv (Dep.Class (snd c.c_name)) in
   let env = { t_is_finally = false;
               class_name = cname;
               class_kind = Some c.c_kind;

@@ -319,7 +319,7 @@ let get_class_variance root (pos, class_name) =
       [Vcovariant [pos, Rtype_argument (Utils.strip_ns name), Pcovariant]]
   | _ ->
       let dep = Typing_deps.Dep.Class class_name in
-      Typing_deps.add_idep (Some root) dep;
+      Typing_deps.add_idep root dep;
       let tparams =
         if Typing_heap.Typedefs.mem class_name
         then

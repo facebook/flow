@@ -98,20 +98,12 @@ let fix_file_and_def funs classes = try
     let tcopt = TypecheckerOptions.permissive in
     Errors.ignore_ begin fun () ->
       SSet.iter begin fun name ->
-        match Naming_heap.FunHeap.get name with
-        | None -> ()
-        | Some f ->
-          let filename = Pos.filename (fst f.Nast.f_name) in
-          let tenv = Typing_env.empty tcopt filename in
-          Typing.fun_def tenv (snd f.Nast.f_name) f
+        Option.iter (Naming_heap.FunHeap.get name)
+          (fun f -> Typing.fun_def tcopt (snd f.Nast.f_name) f)
       end funs;
       SSet.iter begin fun name ->
-        match Naming_heap.ClassHeap.get name with
-        | None -> ()
-        | Some c ->
-          let filename = Pos.filename (fst c.Nast.c_name) in
-          let tenv = Typing_env.empty tcopt filename in
-          Typing.class_def tenv (snd c.Nast.c_name) c
+        Option.iter (Naming_heap.ClassHeap.get name)
+          (fun c -> Typing.class_def tcopt (snd c.Nast.c_name) c)
       end classes;
     end
   with e ->

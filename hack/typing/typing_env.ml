@@ -287,7 +287,7 @@ let empty_fake_members = {
 
 let empty_local = empty_fake_members, IMap.empty
 
-let empty tcopt file = {
+let empty tcopt file ~droot = {
   pos     = Pos.none;
   tenv    = IMap.empty;
   subst   = IMap.empty;
@@ -306,7 +306,7 @@ let empty tcopt file = {
     parent  = Reason.none, Tany;
     fun_kind = Ast.FSync;
     anons   = IMap.empty;
-    droot   = None;
+    droot   = droot;
     file    = file;
   }
 }
@@ -343,7 +343,7 @@ let add_fun x ft =
 
 let add_wclass env x =
   let dep = Dep.Class x in
-  Typing_deps.add_idep env.genv.droot dep;
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   ()
 
 (* When we want to type something with a fresh typing environment *)
@@ -360,9 +360,11 @@ let get_typedef env x =
   Typedefs.get x
 
 let add_extends_dependency env x =
-  let dep = Dep.Class x in
-  Typing_deps.add_idep env.genv.droot dep;
-  Typing_deps.add_idep env.genv.droot (Dep.Extends x);
+  Option.iter env.genv.droot begin fun root ->
+    let dep = Dep.Class x in
+    Typing_deps.add_idep root (Dep.Extends x);
+    Typing_deps.add_idep root dep;
+  end;
   ()
 
 let get_class_dep env x =
@@ -373,28 +375,29 @@ let get_class_dep env x =
 let get_typeconst env class_ mid =
   add_wclass env class_.tc_name;
   let dep = Dep.Const (class_.tc_name, mid) in
-  Typing_deps.add_idep env.genv.droot dep;
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   SMap.get mid class_.tc_typeconsts
 
 (* Used to access class constants. *)
 let get_const env class_ mid =
   add_wclass env class_.tc_name;
   let dep = Dep.Const (class_.tc_name, mid) in
-  Typing_deps.add_idep env.genv.droot dep;
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   SMap.get mid class_.tc_consts
 
 (* Used to access "global constants". That is constants that were
  * introduced with "const X = ...;" at topelevel, or "define('X', ...);"
  *)
 let get_gconst env cst_name =
-  Typing_deps.add_idep env.genv.droot (Dep.GConst cst_name);
+  let dep = Dep.GConst cst_name in
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   GConsts.get cst_name
 
 let get_static_member is_method env class_ mid =
   add_wclass env class_.tc_name;
   let dep = if is_method then Dep.SMethod (class_.tc_name, mid)
   else Dep.SProp (class_.tc_name, mid) in
-  Typing_deps.add_idep env.genv.droot dep;
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   if is_method then SMap.get mid class_.tc_smethods
   else SMap.get mid class_.tc_sprops
 
@@ -415,7 +418,7 @@ let get_member is_method env class_ mid =
   add_wclass env class_.tc_name;
   let dep = if is_method then Dep.Method (class_.tc_name, mid)
   else Dep.Prop (class_.tc_name, mid) in
-  Typing_deps.add_idep env.genv.droot dep;
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   if is_method then (SMap.get mid class_.tc_methods)
   else SMap.get mid class_.tc_props
 
@@ -427,7 +430,7 @@ let suggest_member is_method class_ mid =
 let get_construct env class_ =
   add_wclass env class_.tc_name;
   let dep = Dep.Cstr (class_.tc_name) in
-  Typing_deps.add_idep env.genv.droot dep;
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   class_.tc_construct
 
 let get_todo env =
@@ -469,7 +472,7 @@ let get_file env = env.genv.file
 
 let get_fun env x =
   let dep = Dep.Fun x in
-  Typing_deps.add_idep env.genv.droot dep;
+  Option.iter env.genv.droot (fun root -> Typing_deps.add_idep root dep);
   Funs.get x
 
 let set_fn_kind env fn_type =
@@ -522,11 +525,6 @@ let set_static env =
 let set_mode env mode =
   let genv = env.genv in
   let genv = { genv with mode = mode } in
-  { env with genv = genv }
-
-let set_root env root =
-  let genv = env.genv in
-  let genv = { genv with droot = Some root } in
   { env with genv = genv }
 
 let get_mode env = env.genv.mode

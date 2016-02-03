@@ -122,7 +122,6 @@ module Env = struct
   (* return a tuple of the private init-requiring props of the class
    * and the other init-requiring props of the class and its ancestors *)
   let classify_props_for_decl tenv c =
-    let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
     let adder = begin fun cv (private_props, hierarchy_props) ->
       let cname = snd cv.cv_id in
       if cv.cv_visibility = Private then
@@ -138,7 +137,6 @@ module Env = struct
     priv_props, props
 
   let rec make tenv c =
-    let tenv = Typing_env.set_root tenv (Typing_deps.Dep.Class (snd c.c_name)) in
     let tenv = Typing_env.set_self_id tenv (snd c.c_name) in
     let tenv = match parent_id c with
       | None -> tenv

@@ -17,7 +17,7 @@ open Utils
 
 let compare_types x y =
   let tcopt = TypecheckerOptions.permissive in
-  let tenv = Typing_env.empty tcopt Relative_path.default in
+  let tenv = Typing_env.empty tcopt Relative_path.default ~droot:None in
   String.compare
     (Typing_print.full tenv x) (Typing_print.full tenv y)
 
@@ -42,13 +42,15 @@ let (types: (Env.env * Pos.t * hint_kind * locl ty) list ref) = ref []
 let (initialized_members: (SSet.t SMap.t) ref) = ref SMap.empty
 
 let add_type env pos k type_ =
+  let new_env =
+    Env.empty
+      TypecheckerOptions.permissive Relative_path.default ~droot:None in
   let new_type = (
     (* Some stuff in env isn't serializable, which we need so that we can infer
      * types part of the codebase at a time in worker threads. Fortunately we
      * don't actually need the whole env, so just keep the parts we do need for
      * typing, which *are* serializable. *)
-    {(Env.empty TypecheckerOptions.permissive Relative_path.default) with
-     Env.tenv = env.Env.tenv; Env.subst = env.Env.subst},
+    {new_env with Env.tenv = env.Env.tenv; Env.subst = env.Env.subst},
     pos,
     k,
     type_

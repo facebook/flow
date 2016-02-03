@@ -42,5 +42,5 @@ and class_def root = function
 and hint root (_, h) =
   match h with
   | Happly ((_, parent), _) ->
-      Typing_deps.add_idep (Some (Dep.Class root)) (Dep.Extends parent)
+    Typing_deps.add_idep (Dep.Class root) (Dep.Extends parent)
   | Hoption _ | Hfun _ | Htuple _ | Hshape _ | Haccess _ -> ()

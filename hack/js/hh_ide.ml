@@ -66,17 +66,15 @@ let error el =
 
 let type_fun tcopt x fn =
   try
-    let tenv = Typing_env.empty tcopt fn in
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tenv x fun_;
+    Typing.fun_def tcopt x fun_;
   with Not_found ->
     ()
 
 let type_class tcopt x fn =
   try
-    let tenv = Typing_env.empty tcopt fn in
     let class_ = Naming_heap.ClassHeap.find_unsafe x in
-    Typing.class_def tenv x class_
+    Typing.class_def tcopt x class_
   with Not_found ->
     ()
 
@@ -210,11 +208,6 @@ let hh_check_syntax fn content =
   end in
   error errors
 
-
-let permissive_empty_envs fn =
-  let tcopt = TypecheckerOptions.permissive in
-  tcopt, Typing_env.empty tcopt fn
-
 let hh_auto_complete fn =
   let fn = Relative_path.create Relative_path.Root fn in
   AutocompleteService.attach_hooks();
@@ -222,17 +215,15 @@ let hh_auto_complete fn =
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
       List.iter ast begin fun def ->
+        let tcopt = TypecheckerOptions.permissive in
         match def with
         | Ast.Fun f ->
-            let tcopt, tenv = permissive_empty_envs fn in
-            let f = Naming.fun_ tcopt f in
-            Typing.fun_def tenv (snd f.Nast.f_name) f
+          let f = Naming.fun_ tcopt f in
+          Typing.fun_def tcopt (snd f.Nast.f_name) f
         | Ast.Class c ->
-            let tcopt, tenv = permissive_empty_envs fn in
-            let c = Naming.class_ tcopt c in
-            Typing_decl.class_decl tcopt c;
-            let res = Typing.class_def tenv (snd c.Nast.c_name) c in
-            res
+          let c = Naming.class_ tcopt c in
+          Typing_decl.class_decl tcopt c;
+          Typing.class_def tcopt (snd c.Nast.c_name) c
         | _ -> ()
       end;
     end;
@@ -267,16 +258,14 @@ let hh_get_method_at_position fn line char =
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
       List.iter ast begin fun def ->
+        let tcopt = TypecheckerOptions.permissive in
         match def with
         | Ast.Fun f ->
-            let tcopt, tenv = permissive_empty_envs fn in
-            let f = Naming.fun_ tcopt f in
-            Typing.fun_def tenv (snd f.Nast.f_name) f
+          let f = Naming.fun_ tcopt f in
+          Typing.fun_def tcopt (snd f.Nast.f_name) f
         | Ast.Class c ->
-            let tcopt, tenv = permissive_empty_envs fn in
-            let c = Naming.class_ tcopt c in
-            let res = Typing.class_def tenv (snd c.Nast.c_name) c in
-            res
+          let c = Naming.class_ tcopt c in
+          Typing.class_def tcopt (snd c.Nast.c_name) c
         | _ -> ()
       end;
     end;
@@ -449,14 +438,12 @@ let hh_arg_info fn line char =
   let _, funs, classes = Hashtbl.find globals fn in
   Errors.ignore_ begin fun () ->
     List.iter funs begin fun (_, f_name) ->
-      let _tcopt, tenv = permissive_empty_envs fn in
       let f = Naming_heap.FunHeap.find_unsafe f_name in
-      Typing.fun_def tenv f_name f
+      Typing.fun_def TypecheckerOptions.permissive f_name f
     end;
     List.iter classes begin fun (_, c_name) ->
-      let _tcopt, tenv = permissive_empty_envs fn in
       let c = Naming_heap.ClassHeap.find_unsafe c_name in
-      Typing.class_def tenv c_name c
+      Typing.class_def TypecheckerOptions.permissive c_name c
     end;
   end;
   let result = ArgumentInfoService.get_result() in

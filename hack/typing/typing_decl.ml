@@ -369,10 +369,9 @@ and class_is_abstract c =
 and class_decl tcopt c =
   let is_abstract = class_is_abstract c in
   let cls_pos, cls_name = c.c_name in
-  let env = Typing_env.empty tcopt (Pos.filename cls_pos) in
-  let env = Env.set_mode env c.c_mode in
   let class_dep = Dep.Class cls_name in
-  let env = Env.set_root env class_dep in
+  let env = Env.empty tcopt (Pos.filename cls_pos) (Some class_dep) in
+  let env = Env.set_mode env c.c_mode in
   let env, inherited = Typing_inherit.make env c in
   let props = inherited.Typing_inherit.ih_props in
   let env, props =
@@ -493,7 +492,7 @@ and class_decl tcopt c =
     end
   else ();
   SMap.iter begin fun x _ ->
-    Typing_deps.add_idep (Some class_dep) (Dep.Class x)
+    Typing_deps.add_idep class_dep (Dep.Class x)
   end impl;
   Env.add_class (snd c.c_name) tc
 
@@ -831,9 +830,9 @@ and type_typedef_naming_and_decl tcopt tdef =
     t_user_attributes = _;
   } as decl = Naming.typedef tcopt tdef in
   let filename = Pos.filename td_pos in
-  let env = Typing_env.empty tcopt filename in
-  let env = Typing_env.set_mode env tdef.Ast.t_mode in
-  let env = Env.set_root env (Typing_deps.Dep.Class tid) in
+  let dep = Typing_deps.Dep.Class tid in
+  let env = Env.empty tcopt filename (Some dep) in
+  let env = Env.set_mode env tdef.Ast.t_mode in
   let env, td_tparams = List.map_env env params Typing.type_param in
   let env, td_type = Typing_hint.hint env concrete_type in
   let _env, td_constraint = opt Typing_hint.hint env tcstr in
@@ -875,8 +874,7 @@ let name_and_declare_types_program tcopt prog =
     | Ast.Typedef typedef ->
       type_typedef_decl_if_missing tcopt typedef
     | Ast.Stmt _ -> ()
-    | Ast.Constant cst ->
-        iconst_decl tcopt cst
+    | Ast.Constant cst -> iconst_decl tcopt cst
   end
 
 let make_env tcopt fn =
