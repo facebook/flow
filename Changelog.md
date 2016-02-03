@@ -3,6 +3,7 @@
 Likely to cause new Flow errors:
 - ES6 react classes without state should now `extends React.Component<DefaultProps, Props, void>` (previously it was `extends React.Component<DefaultProps, Props, {}>)`
 - ES6 react classes with state should declare `state: State;`
+- Before, it was possible to test for properties in objects which did not exist (`if (o.noSuchP === foo) { ... }`). These kinds of checks will now cause a type error.
 
 New features:
 - Autocomplete for jsx properties
