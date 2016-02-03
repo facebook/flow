@@ -329,41 +329,44 @@ module Node = struct
     ))
 
   let parse_main cx loc path_acc package file_exts =
+    let config = FlowConfig.get_unsafe () in
     let package = resolve_symlinks package in
-    if not (file_exists package) ||
-      FlowConfig.(is_excluded (get_unsafe ()) package)
+    if not (file_exists package) || (FlowConfig.is_excluded config package)
     then None
     else
       let tokens = match PackageHeap.get package with
       | Some tokens -> tokens
       | None ->
-          let reason = Reason.mk_reason "" loc in
-
-          let project_root = FlowConfig.((get_unsafe ()).root) in
-          let msg =
-            if Files_js.is_prefix (Path.to_string project_root) package then (
-              "Internal Error! This package not found in PackageHeap. " ^
-              "Please report this error to the Flow team."
-            ) else (
-              let project_root_str = Path.to_string project_root in
-              let package_relative_to_root =
-                spf
-                  "<<PROJECT_ROOT>>%s%s"
-                  (Filename.dir_sep)
-                  (Files_js.relative_path project_root_str package)
-              in
-              spf (
-                "This module resolves to %S, which is not being watched by " ^^
-                "Flow. Flow watches files that sit under the root directory " ^^
-                "marked by the .flowconfig. Flow also watches files that " ^^
-                "are explicitly included by the .flowconfig. Flow does not " ^^
-                "watch files that are explicitly ignored by the .flowconfig."
-              ) package_relative_to_root
-            )
+        let project_root = config.FlowConfig.root in
+        let msg =
+          let is_included = FlowConfig.is_included config package in
+          let project_root_str = Path.to_string project_root in
+          let is_contained_in_root =
+            Files_js.is_prefix project_root_str package
           in
-
-          Flow_js.add_error cx [(reason, msg)];
-          SMap.empty
+          let package_relative_to_root =
+            spf "<<PROJECT_ROOT>>%s%s"
+              (Filename.dir_sep)
+              (Files_js.relative_path project_root_str package)
+          in
+          if is_included || is_contained_in_root then (
+            spf
+              ("Internal Error! Package %S was not found in the PackageHeap! " ^^
+               "Please report this error to the Flow team.")
+              package_relative_to_root
+          ) else (
+            spf
+              ("This modules resolves to %S, which is outside both your " ^^
+               "root directory and all of the entries in the [includes] " ^^
+               "section of your .flowconfig. You should either add this " ^^
+               "directory to the [includes] section of your .flowconfig, " ^^
+               "move your .flowconfig file higher in the project directory " ^^
+               "tree, or move this package under your Flow root directory.")
+              package_relative_to_root
+          )
+        in
+        Flow_js.add_error cx [(Reason.mk_reason "" loc, msg)];
+        SMap.empty
       in
       let dir = Filename.dirname package in
       match get_key "main" tokens with
