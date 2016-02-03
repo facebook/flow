@@ -36,6 +36,11 @@ module String = struct
   let to_string x = x
 end
 
+module Int = struct
+  type t = int
+  let compare = (-)
+end
+
 module type MapSig = sig
   type +'a t
   type key
@@ -84,14 +89,8 @@ module MyMap: functor (Ord: Map.OrderedType)
     let union x y =
       fold add x y
 
-    let cardinal m = fold (fun _ _ acc -> 1 + acc) m 0
     let compare x y = compare Pervasives.compare x y
     let equal x y = compare x y = 0
-
-    let filter f m =
-      fold begin fun x y acc ->
-        if f x y then add x y acc else acc
-      end m empty
 
     let keys m = fold (fun k v acc -> k :: acc) m []
     let values m = fold (fun k v acc -> v :: acc) m []
@@ -107,8 +106,8 @@ module MyMap: functor (Ord: Map.OrderedType)
   end
 
 module SMap = MyMap(String)
-module IMap = MyMap(Ident)
-module ISet = Set.Make(Ident)
+module IMap = MyMap(Int)
+module ISet = Set.Make(Int)
 module SSet = Set.Make(String)
 module CSet = Set.Make(Char)
 module Map = struct end
@@ -170,9 +169,6 @@ let imap_inter m1 m2 =
     then IMap.add x y acc
     else acc
  ) m1 IMap.empty
-
-let smap_union m1 m2 = SMap.fold SMap.add m1 m2
-let imap_union m1 m2 = IMap.fold IMap.add m1 m2
 
 let smap_inter_list = function
   | [] -> SMap.empty
