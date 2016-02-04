@@ -941,6 +941,22 @@ module.exports = {
           },
         ],
       },
+   	 'type union = | A | B | C': {
+        'body': [
+          {
+            'type': 'TypeAlias',
+            'id.name': 'union',
+            'right': {
+              'type': 'UnionTypeAnnotation',
+              'types': [
+                {'type': 'GenericTypeAnnotation', 'id.name': 'A'},
+                {'type': 'GenericTypeAnnotation', 'id.name': 'B'},
+                {'type': 'GenericTypeAnnotation', 'id.name': 'C'},
+              ]
+            },
+          },
+        ],
+      },
     },
     'Interfaces': {
       'interface A {}': {
