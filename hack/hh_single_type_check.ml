@@ -22,23 +22,23 @@ type mode =
   | Autocomplete
   | Color
   | Coverage
-  | DumpSymbolInfo
+  | Dump_symbol_info
   | Errors
   | Lint
   | Suggest
-  | NoBuiltins
+  | Dump_deps
 
 type options = {
   filename : string;
   mode : mode;
+  no_builtins : bool;
 }
 
 let builtins_filename =
   Relative_path.create Relative_path.Dummy "builtins.hhi"
 
-let what_builtins mode = match mode with
-  NoBuiltins -> ""
-  | _ -> "<?hh // decl\n"^
+let builtins =
+  "<?hh // decl\n"^
   "interface Traversable<+Tv> {}\n"^
   "interface Container<+Tv> extends Traversable<Tv> {}\n"^
   "interface Iterator<+Tv> extends Traversable<Tv> {}\n"^
@@ -202,6 +202,7 @@ let parse_options () =
   let fn_ref = ref None in
   let usage = Printf.sprintf "Usage: %s filename\n" Sys.argv.(0) in
   let mode = ref Errors in
+  let no_builtins = ref false in
   let set_mode x () =
     if !mode <> Errors
     then raise (Arg.Bad "only a single mode should be specified")
@@ -224,7 +225,7 @@ let parse_options () =
       Arg.Unit (set_mode Coverage),
       "Produce coverage output";
     "--dump-symbol-info",
-      Arg.Unit (set_mode DumpSymbolInfo),
+      Arg.Unit (set_mode Dump_symbol_info),
       "Dump all symbol information";
     "--lint",
       Arg.Unit (set_mode Lint),
@@ -233,15 +234,20 @@ let parse_options () =
       Arg.Unit (set_mode Suggest),
       "Suggest missing typehints";
     "--no-builtins",
-      Arg.Unit (set_mode NoBuiltins),
+      Arg.Set no_builtins,
       "Don't use builtins (e.g. ConstSet)";
+    "--dump-deps",
+      Arg.Unit (set_mode Dump_deps),
+      "Print dependencies";
   ] in
+  let options = Arg.align options in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
   let fn = match !fn_ref with
     | Some fn -> fn
     | None -> die usage in
   { filename = fn;
     mode = !mode;
+    no_builtins = !no_builtins;
   }
 
 let suggest_and_print fn { FileInfo.funs; classes; typedefs; consts; _ } =
@@ -358,7 +364,7 @@ let handle_mode mode filename tcopt files_contents files_info errors ai_results 
           print_coverage fn type_acc;
         end
       end files_info
-  | DumpSymbolInfo ->
+  | Dump_symbol_info ->
       begin match Relative_path.Map.get filename files_info with
         | Some fileinfo ->
             let raw_result =
@@ -385,8 +391,8 @@ let handle_mode mode filename tcopt files_contents files_info errors ai_results 
         exit 2
       end
       else Printf.printf "No lint errors\n"
+  | Dump_deps -> Typing_deps.dump_deps stdout
   | Suggest
-  | NoBuiltins
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
         errors @ Typing_check_utils.check_defs tcopt fileinfo
@@ -401,11 +407,12 @@ let handle_mode mode filename tcopt files_contents files_info errors ai_results 
 (* Main entry point *)
 (*****************************************************************************)
 
-let main_hack { filename; mode; } =
+let main_hack { filename; mode; no_builtins; } =
   Sys_utils.signal Sys.sigusr1
     (Sys.Signal_handle Typing.debug_print_last_pos);
   EventLogger.init (Daemon.devnull ()) 0.0;
   SharedMem.(init default_config);
+  if mode = Dump_deps then Typing_deps.debug_trace := true;
   let tmp_hhi = Path.concat Path.temp_dir_name "hhi" in
   Hhi.set_hhi_root_for_unit_test tmp_hhi;
   let outer_do f = match mode with
@@ -417,7 +424,7 @@ let main_hack { filename; mode; } =
         let inner_results = f () in
         [], inner_results
   in
-  let builtins = what_builtins mode in
+  let builtins = if no_builtins then "" else builtins in
   let filename = Relative_path.create Relative_path.Dummy filename in
   let files_contents = file_to_files filename in
   let tcopt = TypecheckerOptions.default in

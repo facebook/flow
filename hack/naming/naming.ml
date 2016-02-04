@@ -648,7 +648,7 @@ and hint_id ~forbid_this ~allow_retonly env is_static_var (p, x as id) hl =
         Errors.tparam_with_tparam p x;
         N.Habstr (x, get_constraint env x)
     | _ ->
-       let name = Env.class_name env id in
+        let name = Env.class_name env id in
         N.Happly (name, hintl ~forbid_this ~allow_retonly:true env hl)
   end
 
