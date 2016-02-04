@@ -692,8 +692,6 @@ let rec convert cx type_params_map = Ast.Type.(function
           UnionT (reason, UnionRep.make [t; TaintT (mk_reason "taint" loc)])
         )
 
-      | "$Facebookism$ClassWithMixins" ->
-          mk_custom_fun cx loc typeParameters ClassWithMixins
       | "$Facebookism$CopyProperties" ->
           mk_custom_fun cx loc typeParameters CopyProperties
       | "$Facebookism$Merge" ->

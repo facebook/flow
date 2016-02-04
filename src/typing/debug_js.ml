@@ -248,7 +248,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | CustomFunT (_, kind) -> [
       "kind", JSON_String (match kind with
-      | ClassWithMixins -> "classWithMixins"
       | CopyProperties -> "copyProperties"
       | Merge -> "merge"
       | MergeDeepInto -> "mergeDeepInto"

@@ -50,3 +50,6 @@ $FLOW autocomplete --strip-root --json jsx1.js 8 4 < jsx1.js
 
 printf "jsx2.js = "
 $FLOW autocomplete --strip-root --json jsx2.js 8 11 < jsx2.js
+
+printf "customfun.js = "
+$FLOW autocomplete --strip-root --json customfun.js 9 2 < customfun.js

@@ -2185,11 +2185,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let t = ClassT (spread_objects cx reason_op params_tlist) in
       rec_flow_t cx trace (t, return_t)
 
-    | CustomFunT (_, ClassWithMixins),
-      CallT (reason_op, { return_t; _ }) ->
-      (* TODO *)
-      rec_flow_t cx trace (AnyT.why reason_op, return_t)
-
     | CustomFunT (reason, _), _ when function_like_op u ->
       rec_flow cx trace (AnyFunT reason, u)
 

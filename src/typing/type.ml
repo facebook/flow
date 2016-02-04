@@ -510,7 +510,6 @@ module rec TypeTerm : sig
   and t_out = t
 
   and custom_fun_kind =
-  | ClassWithMixins
   | CopyProperties
   | Merge
   | MergeDeepInto

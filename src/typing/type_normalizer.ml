@@ -13,6 +13,15 @@ open Utils
 
 let suggested_type_cache = ref IMap.empty
 
+let fake_fun params_names param_ts ret_t =
+  let reason = reason_of_string "function" in
+  FunT (
+    reason,
+    Flow_js.dummy_static reason,
+    Flow_js.dummy_prototype,
+    Flow_js.mk_functiontype param_ts ?params_names ret_t
+  )
+
 (* This function does not only resolve every OpenT recursively, but also
    replaces the reasons of types with a uniform ones. It is a left-over bit
    from the old normalize_type_impl behavior. *)
@@ -57,13 +66,7 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (reason_of_string "any") in
       let tins = [any; OptionalT any] in
       let params_names = Some ["thisArg"; "argArray"] in
-      let reason = reason_of_string "function" in
-      FunT (
-        reason,
-        Flow_js.dummy_static reason,
-        Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype tins ?params_names any
-      )
+      fake_fun params_names tins any
 
   (* Fake the signature of Function.prototype.bind: *)
   (* (thisArg: any, ...argArray: Array<any>): any *)
@@ -71,13 +74,7 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (reason_of_string "any") in
       let tins = [any; RestT any] in
       let params_names = Some ["thisArg"; "argArray"] in
-      let reason = reason_of_string "function" in
-      FunT (
-        reason,
-        Flow_js.dummy_static reason,
-        Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype tins ?params_names any
-      )
+      fake_fun params_names tins any
 
   (* Fake the signature of Function.prototype.call: *)
   (* (thisArg: any, ...argArray: Array<any>): any *)
@@ -85,13 +82,50 @@ let rec normalize_type_impl cx ids t = match t with
       let any = AnyT (reason_of_string "any") in
       let tins = [any; RestT any] in
       let params_names = Some ["thisArg"; "argArray"] in
-      let reason = reason_of_string "function" in
-      FunT (
-        reason,
-        Flow_js.dummy_static reason,
-        Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype tins ?params_names any
-      )
+      fake_fun params_names tins any
+
+  (* Fake the signature of $Facebookism$CopyProperties: *)
+  (* (target: Object, ...objects: Array<Object>): Object *)
+  | CustomFunT (_, CopyProperties) ->
+      let obj = AnyObjT (reason_of_string "object type") in
+      let tins = [obj; RestT obj] in
+      let params_names = Some ["target"; "objects"] in
+      fake_fun params_names tins obj
+
+  (* Fake the signature of $Facebookism$Merge: *)
+  (* (...objects: Array<Object>): Object *)
+  | CustomFunT (_, Merge) ->
+      let obj = AnyObjT (reason_of_string "object type") in
+      let tins = [RestT obj] in
+      let params_names = Some ["objects"] in
+      fake_fun params_names tins obj
+
+  (* Fake the signature of $Facebookism$MergeDeepInto: *)
+  (* (target: Object, ...objects: Array<Object>): void *)
+  | CustomFunT (_, MergeDeepInto) ->
+      let obj = AnyObjT (reason_of_string "object type") in
+      let void = VoidT (reason_of_string "void") in
+      let tins = [obj; RestT obj] in
+      let params_names = Some ["target"; "objects"] in
+      fake_fun params_names tins void
+
+  (* Fake the signature of $Facebookism$MergeInto: *)
+  (* (target: Object, ...objects: Array<Object>): void *)
+  | CustomFunT (_, MergeInto) ->
+      let obj = AnyObjT (reason_of_string "object type") in
+      let void = VoidT (reason_of_string "void") in
+      let tins = [obj; RestT obj] in
+      let params_names = Some ["target"; "objects"] in
+      fake_fun params_names tins void
+
+  (* Fake the signature of $Facebookism$Mixin: *)
+  (* (...objects: Array<Object>): Class *)
+  | CustomFunT (_, Mixin) ->
+      let obj = AnyObjT (reason_of_string "object type") in
+      let tout = ClassT obj in
+      let tins = [RestT obj] in
+      let params_names = Some ["objects"] in
+      fake_fun params_names tins tout
 
   | ObjT (_, ot) ->
       let dict = match ot.dict_t with
@@ -187,7 +221,14 @@ let rec normalize_type_impl cx ids t = match t with
   | KeysT (_, t) ->
       KeysT (reason_of_string "key set", normalize_type_impl cx ids t)
 
-  | _ ->
+  | FunProtoT _
+  | AbstractT _
+  | EvalT (_, _, _)
+  | ExistsT _
+  | ModuleT (_, _)
+  | SpeculativeMatchT (_, _, _)
+  | ReposUpperT (_, _)
+  | ExtendsT (_, _, _) ->
     (** TODO **)
     failwith (spf "Unsupported type in normalize_type_impl: %s" (string_of_ctor t))
 
