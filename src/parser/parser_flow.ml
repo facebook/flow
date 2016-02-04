@@ -792,7 +792,7 @@ end = struct
         | Array arr -> _array check_env arr
         | Identifier id -> identifier check_env id
         | Expression _ -> (
-            error_at env (loc, Error.InvalidLHSInFormalsList);
+            error_at env (loc, Error.ExpectedPatternFoundExpression);
             check_env
           )
       )

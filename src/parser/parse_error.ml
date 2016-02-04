@@ -30,7 +30,7 @@ type t =
   | InvalidLHSInAssignment
   | InvalidLHSInForIn
   | InvalidLHSInForOf
-  | InvalidLHSInFormalsList
+  | ExpectedPatternFoundExpression
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
   | UnknownLabel of string
@@ -106,7 +106,10 @@ module PP =
       | InvalidLHSInAssignment ->  "Invalid left-hand side in assignment"
       | InvalidLHSInForIn ->  "Invalid left-hand side in for-in"
       | InvalidLHSInForOf ->  "Invalid left-hand side in for-of"
-      | InvalidLHSInFormalsList -> "Invalid left-hand side in formals list"
+      | ExpectedPatternFoundExpression -> (
+          "Expected an object pattern, array pattern, or an identifier but " ^
+          "found an expression instead"
+        )
       | MultipleDefaultsInSwitch -> "More than one default clause in switch statement"
       | NoCatchOrFinally ->  "Missing catch or finally after try"
       | UnknownLabel label -> "Undefined label '"^label^"'"
