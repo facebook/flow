@@ -1126,8 +1126,13 @@ module.exports = {
     },
     'ES6: Modules': {
       'export class {}': {
+        'errors': [
+          {'message': 'When exporting a class as a named export, you must specify a class name. Did you mean `export default class ...`?'}
+        ]
+      },
+      'export class Foo {}': {
         'body.0.declaration': {
-          'type': 'ClassExpression',
+          'type': 'ClassDeclaration'
         }
       },
       'export default class {}': {
@@ -1161,6 +1166,67 @@ module.exports = {
             'name': 'foo'
           },
         }]
+      },
+
+      // Duplicate exports are an early/parse error
+      'export let foo = 1; export const foo = 2;': {
+        'errors': [
+          {'message': 'Duplicate export for `foo`'}
+        ]
+      },
+      'export const foo = 1; export var foo = 2;': {
+        'errors': [
+          {'message': 'Duplicate export for `foo`'}
+        ]
+      },
+      'export var foo = 1; export let foo = 2;': {
+        'errors': [
+          {'message': 'Duplicate export for `foo`'}
+        ]
+      },
+      'export function foo() {}; export var foo = 1;': {
+        'errors': [
+          {'message': 'Duplicate export for `foo`'}
+        ]
+      },
+      'export function foo() {}; export async function foo() {};': {
+        'errors': [
+          {'message': 'Duplicate export for `foo`'}
+        ]
+      },
+      'export function foo() {}; export class foo {};': {
+        'errors': [
+          {'message': 'Duplicate export for `foo`'}
+        ]
+      },
+      'export {foo}; export {foo};': {
+        'errors': [
+          {'message': 'Duplicate export for `foo`'}
+        ]
+      },
+      'export {foo as bar}; export {bar};': {
+        'errors': [
+          {'message': 'Duplicate export for `bar`'}
+        ]
+      },
+      'export default 42; export default 43;': {
+        'errors': [
+          {'message': 'Duplicate export for `default`'}
+        ]
+      },
+      'export function foo() { var foo = 42; }': {
+        'errors': []
+      },
+
+      // Not errors (but easily mistaken as one via bug)
+      'export {foo as bar}; export {foo};': {
+        'errors': []
+      },
+      'export default (foo = 42); export let foo = 43;': {
+        'errors': []
+      },
+      'export let bar = 43; export let foo = (bar = 43)': {
+        'errors': []
       }
     },
     'Declare Statements': {

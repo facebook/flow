@@ -144,6 +144,7 @@ type env = {
   errors            : (Loc.t * Error.t) list ref;
   comments          : Comment.t list ref;
   labels            : SSet.t;
+  exports           : SSet.t ref;
   (* the lex buffer in the state after a single lookahead *)
   lb                : Lexing.lexbuf;
   single_lookahead  : lex_result ref;
@@ -186,6 +187,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source lb =
     errors            = ref [];
     comments          = ref [];
     labels            = SSet.empty;
+    exports           = ref SSet.empty;
     lb                = lb;
     single_lookahead  = ref lookahead;
     last              = ref None;
@@ -240,6 +242,11 @@ let error_at env (loc, e) =
 let comment_list env =
   List.iter (fun c -> env.comments := c :: !(env.comments))
 let set_lex_env env lex_env = env.lex_env := lex_env
+let record_export env (loc, export_name) =
+  let exports = !(env.exports) in
+  if SSet.mem export_name exports
+  then error_at env (loc, Error.DuplicateExport export_name)
+  else env.exports := SSet.add export_name !(env.exports)
 
 (* lookahead: *)
 let lookahead ?(i=0) env =

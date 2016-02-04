@@ -86,6 +86,7 @@ val push_lex_mode : env -> lex_mode -> unit
 val pop_lex_mode : env -> unit
 val double_pop_lex_mode : env -> unit
 val set_lex_env : env -> lex_env -> unit
+val record_export: env -> Loc.t * string -> unit
 val clear_lookahead_errors : env -> unit
 
 (* functional operations -- these return shallow copies, so future mutations to

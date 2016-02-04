@@ -70,6 +70,9 @@ type t =
   | DeclareExportType
   | DeclareExportInterface
   | UnexpectedExportStarAs
+  | DuplicateExport of string
+  | ExportNamelessClass
+  | ExportNamelessFunction
 
 exception Error of (Loc.t * t) list
 
@@ -152,4 +155,11 @@ module PP =
       | UnexpectedExportStarAs -> "`export * as` is an early-stage proposal \
           and is not enabled by default. To enable support in the parser, use \
           the `esproposal_export_star_as` option"
+      | DuplicateExport export -> (Printf.sprintf "Duplicate export for `%s`" export)
+      | ExportNamelessClass -> "When exporting a class as a named export, \
+          you must specify a class name. Did you mean \
+          `export default class ...`?"
+      | ExportNamelessFunction -> "When exporting a function as a named export, \
+          you must specify a function name. Did you mean \
+          `export default function ...`?"
   end
