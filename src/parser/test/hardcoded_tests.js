@@ -941,6 +941,37 @@ module.exports = {
           },
         ],
       },
+      'type union = | A | B | C': {
+        'body': [
+          {
+            'type': 'TypeAlias',
+            'id.name': 'union',
+            'right': {
+              'type': 'UnionTypeAnnotation',
+              'types': [
+                {'type': 'GenericTypeAnnotation', 'id.name': 'A'},
+                {'type': 'GenericTypeAnnotation', 'id.name': 'B'},
+                {'type': 'GenericTypeAnnotation', 'id.name': 'C'},
+              ]
+            },
+          },
+        ],
+      },
+      'type overloads = & ((x: string) => number) & ((x: number) => string);': {
+        'body': [
+          {
+            'type': 'TypeAlias',
+            'id.name': 'overloads',
+            'right': {
+              'type': 'IntersectionTypeAnnotation',
+              'types': [
+                {'type': 'FunctionTypeAnnotation'},
+                {'type': 'FunctionTypeAnnotation'}
+              ]
+            },
+          },
+        ],
+      }
     },
     'Interfaces': {
       'interface A {}': {

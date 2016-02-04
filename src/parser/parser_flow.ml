@@ -2943,6 +2943,9 @@ end = struct
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration env in
       Expect.token env T_ASSIGN;
+      (match Peek.token env with
+      | T_BIT_OR | T_BIT_AND -> Eat.token env
+      | _ -> ());
       let right = Type._type env in
       let end_loc = match Peek.semicolon_loc env with
       | None -> fst right
