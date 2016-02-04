@@ -215,7 +215,14 @@ and instance_of_poly_type_printer override fallback enclosure cx = function
   | PolyT (_, TypeT (reason, _))
     -> DescFormat.name_of_type_reason reason
 
-  | _ -> failwith "expected polymorphic type"
+  (* NOTE: t = FunT is legit, others probably mean upstream errors *)
+  | PolyT (_, t)
+    -> type_printer override fallback enclosure cx t
+
+  (* since we're called with args that aren't statically guaranteed
+     to be `PolyT`s, fall back here instead of blowing up *)
+  | t
+    -> type_printer override fallback enclosure cx t
 
 (* pretty printer *)
 let string_of_t_ =

@@ -39,19 +39,6 @@ let spec = {
   )
 }
 
-let handle_error (loc, err) json strip =
-  let loc = strip loc in
-  if json
-  then (
-    let loc = Errors_js.json_of_loc loc in
-    let json = Hh_json.JSON_Object (("error", Hh_json.JSON_String err) :: loc) in
-    output_string stderr ((Hh_json.json_to_string json)^"\n");
-  ) else (
-    let loc = Reason_js.string_of_loc loc in
-    output_string stderr (Utils.spf "%s:\n%s\n" loc err);
-  );
-  flush stderr
-
 let handle_response types json strip =
   if json
   then (
@@ -86,6 +73,21 @@ let handle_response types json strip =
     output_string stdout (out^"\n")
   );
   flush stdout
+
+let handle_error (loc, err) json strip =
+  let loc = strip loc in
+  if json
+  then (
+    let loc = Errors_js.json_of_loc loc in
+    let json = Hh_json.JSON_Object (("error", Hh_json.JSON_String err) :: loc) in
+    output_string stderr ((Hh_json.json_to_string json)^"\n");
+    (* also output an empty array on stdout, for JSON parsers *)
+    handle_response [] true strip
+  ) else (
+    let loc = Reason_js.string_of_loc loc in
+    output_string stderr (Utils.spf "%s:\n%s\n" loc err);
+  );
+  flush stderr
 
 let main option_values root json strip_root path include_raw filename () =
   let json = json || include_raw in
