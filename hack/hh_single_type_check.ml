@@ -336,7 +336,7 @@ let print_coverage fn type_acc =
   let counts = ServerCoverageMetric.count_exprs fn type_acc in
   ClientCoverageMetric.go ~json:false (Some (Leaf counts))
 
-let handle_mode mode filename tcopt files_contents files_info errors ai_results =
+let handle_mode mode filename tcopt files_contents files_info errors =
   match mode with
   | Ai _ -> ()
   | Autocomplete ->
@@ -407,61 +407,56 @@ let handle_mode mode filename tcopt files_contents files_info errors ai_results 
 (* Main entry point *)
 (*****************************************************************************)
 
-let main_hack { filename; mode; no_builtins; } =
-  Sys_utils.signal Sys.sigusr1
-    (Sys.Signal_handle Typing.debug_print_last_pos);
-  EventLogger.init (Daemon.devnull ()) 0.0;
-  SharedMem.(init default_config);
+let decl_and_run_mode {filename; mode; no_builtins} =
   if mode = Dump_deps then Typing_deps.debug_trace := true;
-  let tmp_hhi = Path.concat Path.temp_dir_name "hhi" in
-  Hhi.set_hhi_root_for_unit_test tmp_hhi;
-  let outer_do f = match mode with
-    | Ai ai_options ->
-        let ai_results, inner_results =
-          Ai.do_ Typing_check_utils.check_defs filename ai_options in
-        ai_results, inner_results
-    | _ ->
-        let inner_results = f () in
-        [], inner_results
-  in
   let builtins = if no_builtins then "" else builtins in
   let filename = Relative_path.create Relative_path.Dummy filename in
   let files_contents = file_to_files filename in
   let tcopt = TypecheckerOptions.default in
 
-  let ai_results, (errors, files_info) =
-    outer_do begin fun () ->
-      Errors.do_ begin fun () ->
-        let parsed_files =
-          Relative_path.Map.mapi Parser_hack.program files_contents in
-        let parsed_builtins = Parser_hack.program builtins_filename builtins in
-        let parsed_files =
-          Relative_path.Map.add builtins_filename parsed_builtins parsed_files
-        in
+  let errors, files_info = Errors.do_ begin fun () ->
+    let parsed_files =
+      Relative_path.Map.mapi Parser_hack.program files_contents in
+    let parsed_builtins = Parser_hack.program builtins_filename builtins in
+    let parsed_files =
+      Relative_path.Map.add builtins_filename parsed_builtins parsed_files
+    in
 
-        let files_info =
-          Relative_path.Map.mapi begin fun fn parsed_file ->
-            let {Parser_hack.file_mode; comments; ast} = parsed_file in
-            Parser_heap.ParserHeap.add fn ast;
-            let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
-            { FileInfo.
-              file_mode; funs; classes; typedefs; consts; comments;
-              consider_names_just_for_autoload = false }
-          end parsed_files in
+    let files_info =
+      Relative_path.Map.mapi begin fun fn parsed_file ->
+        let {Parser_hack.file_mode; comments; ast} = parsed_file in
+        Parser_heap.ParserHeap.add fn ast;
+        let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
+        { FileInfo.
+          file_mode; funs; classes; typedefs; consts; comments;
+          consider_names_just_for_autoload = false }
+      end parsed_files in
 
-        Relative_path.Map.iter begin fun fn fileinfo ->
-          let {FileInfo.funs; classes; typedefs; consts; _} = fileinfo in
-          NamingGlobal.make_env ~funs ~classes ~typedefs ~consts
-        end files_info;
+    Relative_path.Map.iter begin fun fn fileinfo ->
+      let {FileInfo.funs; classes; typedefs; consts; _} = fileinfo in
+      NamingGlobal.make_env ~funs ~classes ~typedefs ~consts
+    end files_info;
 
-        Relative_path.Map.iter begin fun fn _ ->
-          Typing_decl.make_env tcopt fn
-        end files_info;
+    Relative_path.Map.iter begin fun fn _ ->
+      Typing_decl.make_env tcopt fn
+    end files_info;
 
-        files_info
-      end
-    end in
-  handle_mode mode filename tcopt files_contents files_info errors ai_results
+    files_info
+  end in
+  handle_mode mode filename tcopt files_contents files_info errors
+
+let main_hack ({filename; mode; no_builtins;} as opts) =
+  Sys_utils.signal Sys.sigusr1
+    (Sys.Signal_handle Typing.debug_print_last_pos);
+  EventLogger.init (Daemon.devnull ()) 0.0;
+  SharedMem.(init default_config);
+  let tmp_hhi = Path.concat Path.temp_dir_name "hhi" in
+  Hhi.set_hhi_root_for_unit_test tmp_hhi;
+  match mode with
+  | Ai ai_options ->
+    Ai.do_ Typing_check_utils.check_defs filename ai_options
+  | _ ->
+    decl_and_run_mode opts
 
 (* command line driver *)
 let _ =
