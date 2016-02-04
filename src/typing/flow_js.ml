@@ -551,10 +551,8 @@ let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
   | ([],_) | (_,[]) -> []
   | (t1::ts1,t2::ts2) -> (f (t1,t2)):: (list_map2 f ts1 ts2)
 
-module TypeSet = Set.Make(Type)
-
 let create_union ts =
-  UnionT (reason_of_string "union", ts)
+  UnionT (reason_of_string "union", UnionRep.make ts)
 
 let rec merge_type cx = function
   | (NumT _, (NumT _ as t))
@@ -636,12 +634,13 @@ let rec merge_type cx = function
   | (t1, MaybeT t2) ->
       MaybeT (merge_type cx (t1, t2))
 
-  | (UnionT (_, ts1), UnionT (_, ts2)) ->
+  | UnionT (_, rep1), UnionT (_, rep2) ->
+      let ts1, ts2 = UnionRep.members rep1, UnionRep.members rep2 in
       create_union (List.rev_append ts1 ts2)
 
-  | (UnionT (_, ts), t)
-  | (t, UnionT (_, ts)) ->
-      create_union (t :: ts)
+  | (UnionT (_, rep), t)
+  | (t, UnionT (_, rep)) ->
+      create_union (t :: UnionRep.members rep)
 
   (* TODO: do we need to do anything special for merging Null with Void,
      Optional with other types, etc.? *)
@@ -1810,8 +1809,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* cases where there is no loss of precision *)
 
-    | (UnionT(_,ts), _) ->
-      ts |> List.iter (fun t -> rec_flow cx trace (t,u))
+    | UnionT (_, rep), _ ->
+      UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
 
     | (_, UseT IntersectionT(_,ts)) ->
       ts |> List.iter (fun t -> rec_flow_t cx trace (l,t))
@@ -1833,8 +1832,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        inclusion is significantly faster that splitting for proving simple
        inequalities (O(n) instead of O(n^2) for n cases).  *)
 
-    | _, UseT UnionT(_,ts) when List.mem l ts -> ()
-
     | IntersectionT(_,ts), UseT u when List.mem u ts -> ()
 
     (** To check that the concrete type l may flow to UnionT(_, ts), we try each
@@ -1845,14 +1842,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         it is always sound to pick the first type in ts that matches the type
         l. *)
 
-    | (SpeculativeMatchT(_, t1, t), t2) ->
-      (* Reached when trying to match t1 with t2|t. We speculatively match t1
-         with t2, and on failure, (recursively) try to match t1 with t. *)
-      if not (speculative_match cx trace t1 t2)
-      then rec_flow cx trace (t1, t)
+    | SpeculativeMatchT(_, l, next_u), first_u ->
+      if not (speculative_match cx trace l first_u)
+      then rec_flow cx trace (l, next_u)
 
-    | (_, UseT UnionT(r,ts)) ->
-      try_union cx trace l r ts
+    | _, UseT UnionT (r, rep) -> (
+      match UnionRep.quick_mem l rep with
+      | Some true -> ()
+      | Some false ->
+        let r = match UnionRep.enum_base rep with
+          | None -> r
+          | Some base -> replace_reason (desc_of_t base) r
+        in
+        rec_flow cx trace (l, UseT (EmptyT r))
+      | None ->
+        try_union cx trace l r (UnionRep.members rep)
+    )
 
     (* maybe and optional types are just special union types *)
 
@@ -3963,8 +3968,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | IntersectionT(reason, ts) ->
     IntersectionT(reason, List.map (subst cx ~force map) ts)
 
-  | UnionT(reason, ts) ->
-    UnionT(reason, List.map (subst cx ~force map) ts)
+  | UnionT (reason, rep) ->
+    UnionT (reason, UnionRep.map (subst cx ~force map) rep)
 
   | UpperBoundT(t) ->
     UpperBoundT(subst cx ~force map t)
@@ -4080,8 +4085,8 @@ and check_polarity cx polarity = function
   | ObjT (_, obj) ->
     check_polarity_propmap cx Neutral obj.props_tmap
 
-  | UnionT(_, ts) ->
-    List.iter (check_polarity cx polarity) ts
+  | UnionT (_, rep) ->
+    List.iter (check_polarity cx polarity) (UnionRep.members rep)
 
   | IntersectionT(_, ts) ->
     List.iter (check_polarity cx polarity) ts
@@ -4275,7 +4280,7 @@ and speculative_match cx trace l u =
 and try_union cx trace l reason = function
   | [] -> (* fail: bottom is the unit of unions *)
     rec_flow_t cx trace (l, EmptyT reason)
-  | t::ts ->
+  | t :: ts ->
     (* embed reasons of consituent types into outer reason *)
     let rdesc = desc_of_reason reason in
     let tdesc = desc_of_reason (reason_of_t t) in
@@ -4294,7 +4299,7 @@ and try_union cx trace l reason = function
     let r = replace_reason udesc reason in
     (* try first type, falling back to union of the rest *)
     rec_flow_t cx trace
-      (SpeculativeMatchT(r, l, UseT (UnionT(r, ts))),
+      (SpeculativeMatchT(r, l, UseT (UnionT (r, UnionRep.make ts))),
        t)
 
 (* try each branch of an intersection in turn *)
@@ -4503,7 +4508,7 @@ and recurse_into_union filter_fn (r, ts) =
   match new_ts with
   | [] -> EmptyT r
   | [t] -> t
-  | _ -> UnionT (r, new_ts)
+  | _ -> UnionT (r, UnionRep.make new_ts)
 
 and filter_exists = function
   (* falsy things get removed *)
@@ -4556,7 +4561,7 @@ and filter_not_exists t = match t with
   (* unknown boolies become falsy *)
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, [NullT.why reason; VoidT.why reason])
+    UnionT (reason, UnionRep.make [NullT.why reason; VoidT.why reason])
   | BoolT (r, None) -> BoolT (r, Some false)
   | StrT (r, AnyLiteral) -> StrT (r, Falsy)
   | NumT (r, AnyLiteral) -> NumT (r, Falsy)
@@ -4567,8 +4572,8 @@ and filter_not_exists t = match t with
 and filter_maybe = function
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, [NullT.why reason; VoidT.why reason])
-  | MixedT r -> UnionT (r, [NullT.why r; VoidT.why r])
+    UnionT (reason, UnionRep.make [NullT.why reason; VoidT.why reason])
+  | MixedT r -> UnionT (r, UnionRep.make [NullT.why r; VoidT.why r])
   | NullT r -> NullT r
   | VoidT r -> VoidT r
   | OptionalT t ->
@@ -4596,9 +4601,10 @@ and filter_null = function
 and filter_not_null = function
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, [VoidT.why reason; t])
+    UnionT (reason, UnionRep.make [VoidT.why reason; t])
   | OptionalT t -> OptionalT (filter_not_null t)
-  | UnionT (r, ts) -> recurse_into_union filter_not_null (r, ts)
+  | UnionT (r, rep) ->
+    recurse_into_union filter_not_null (r, UnionRep.members rep)
   | NullT r -> EmptyT r
   | t -> t
 
@@ -4616,9 +4622,10 @@ and filter_undefined = function
 and filter_not_undefined = function
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, [NullT.why reason; t])
+    UnionT (reason, UnionRep.make [NullT.why reason; t])
   | OptionalT t -> filter_not_undefined t
-  | UnionT (r, ts) -> recurse_into_union filter_not_undefined (r, ts)
+  | UnionT (r, rep) ->
+    recurse_into_union filter_not_undefined (r, UnionRep.members rep)
   | VoidT r -> EmptyT r
   | t -> t
 
@@ -5920,10 +5927,10 @@ end = struct
         let ts = List.map (resolve_type cx) ts in
         let members = List.map (extract_members_as_map cx) ts in
         Success (List.fold_left SMap.union SMap.empty members)
-    | UnionT (_, ts) ->
+    | UnionT (_, rep) ->
         (* Union type should autocomplete for only the properties that are in
         * every type in the intersection *)
-        let ts = List.map (resolve_type cx) ts in
+        let ts = List.map (resolve_type cx) (UnionRep.members rep) in
         let members = ts
           (* Although we'll ignore the any-ish members of the union *)
           |> List.filter (function AnyT _ | AnyObjT _ | AnyFunT _ -> false | _ -> true)
@@ -6054,8 +6061,8 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | IntersectionT(_, ts) ->
       List.iter (assert_ground cx skip ids) ts
 
-  | UnionT(_, ts) ->
-      List.iter (assert_ground cx skip ids) ts
+  | UnionT(_, rep) ->
+      List.iter (assert_ground cx skip ids) (UnionRep.members rep)
 
   | UpperBoundT(t) ->
       assert_ground cx skip ids t

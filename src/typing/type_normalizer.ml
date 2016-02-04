@@ -160,10 +160,10 @@ let rec ground_type_impl cx ids t = match t with
         List.map (ground_type_impl cx ids) ts
       )
 
-  | UnionT (_, ts) ->
+  | UnionT (_, rep) ->
       UnionT (
         reason_of_string "union",
-        List.map (ground_type_impl cx ids) ts
+        UnionRep.map (ground_type_impl cx ids) rep
       )
 
   | LowerBoundT t ->
@@ -245,8 +245,8 @@ let rec normalize_type cx t =
           proto_t = normalize_type cx ot.proto_t;
           props_tmap = pmap; })
 
-  | UnionT (r, ts) ->
-      normalize_union cx r ts
+  | UnionT (r, rep) ->
+      normalize_union cx r rep
 
   | IntersectionT (r, ts) ->
       normalize_intersection cx r ts
@@ -300,13 +300,15 @@ let rec normalize_type cx t =
    For example, we might want to get rid of AnyT in the union similar to how
    merge_type gets rid of AnyT. Decide on rules like these and implement them
    if required. *)
-and normalize_union cx r ts =
+and normalize_union cx r rep =
+  let ts = UnionRep.members rep in
   let ts = List.map (normalize_type cx) ts in
   let ts = collect_union_members ts in
   let (ts, has_void, has_null) =
     TypeSet.fold (fun t (ts, has_void, has_null) ->
       match t with
-      | MaybeT (UnionT (_, tlist)) ->
+      | MaybeT (UnionT (_, rep)) ->
+          let tlist = UnionRep.members rep in
           let ts = List.fold_left (fun acc t -> TypeSet.add t acc) ts tlist in
           (ts, true, true)
       | MaybeT t -> (TypeSet.add t ts, true, true)
@@ -334,7 +336,7 @@ and normalize_union cx r ts =
   let t =
     match ts with
     | [t] -> t
-    | _ -> UnionT (r, ts)
+    | _ -> UnionT (r, UnionRep.make ts)
   in
   if has_void && has_null
   then MaybeT t
@@ -343,8 +345,11 @@ and normalize_union cx r ts =
 and collect_union_members ts =
   List.fold_left (fun acc x ->
       match x with
-      | UnionT (_, ts) -> TypeSet.union (collect_union_members ts) acc
-      | _ -> TypeSet.add x acc
+      | UnionT (_, rep) ->
+        let ts = UnionRep.members rep in
+        TypeSet.union (collect_union_members ts) acc
+      | _ ->
+        TypeSet.add x acc
     ) TypeSet.empty ts
 
 (* TODO: This does not do any real normalization yet, it only flattens the
@@ -398,8 +403,9 @@ let rec printify_type cx t =
           proto_t = printify_type cx ot.proto_t;
           props_tmap = pmap; })
 
-  | UnionT (r, ts) ->
+  | UnionT (r, rep) ->
       let (ts, add_maybe) =
+        let ts = UnionRep.members rep in
         List.fold_left (fun (ts, add_maybe) t ->
             let t = printify_type cx t in
             match t with
@@ -413,7 +419,7 @@ let rec printify_type cx t =
       let t =
         match ts with
         | [t] -> t
-        | _ -> UnionT (r, ts)
+        | _ -> UnionT (r, UnionRep.make ts)
       in
       if add_maybe
       then MaybeT t

@@ -38,482 +38,623 @@ open Utils
 type ident = int
 type name = string
 
-type t =
-  (* open type variable *)
-  (* A type variable (tvar) is an OpenT(reason, id) where id is an int index
-     into a context's graph: a context's graph is a map from tvar ids to nodes
-     (see below). *)
-  (** Note: ids are globally unique. tvars are "owned" by a single context, but
-      that context and its tvars may later be merged into other contexts. **)
-  | OpenT of reason * ident
-
-  (*************)
-  (* def types *)
-  (*************)
-
-  (* TODO: constant types *)
-
-  | NumT of reason * number_literal literal
-  | StrT of reason * string literal
-  | BoolT of reason * bool option
-  | EmptyT of reason
-  | MixedT of reason
-  | AnyT of reason
-  | NullT of reason
-  | VoidT of reason
-
-  | FunT of reason * static * prototype * funtype
-  | FunProtoT of reason       (* Function.prototype *)
-  | FunProtoApplyT of reason  (* Function.prototype.apply *)
-  | FunProtoBindT of reason   (* Function.prototype.bind *)
-  | FunProtoCallT of reason   (* Function.prototype.call *)
-
-  | ObjT of reason * objtype
-  | ArrT of reason * t * t list
-
-  (* type of a class *)
-  | ClassT of t
-  (* type of an instance of a class *)
-  | InstanceT of reason * static * super * insttype
-
-  (* type of an optional parameter *)
-  | OptionalT of t
-  (* type of a rest parameter *)
-  | RestT of t
-  | AbstractT of t
-
-  (* type expression whose evaluation is deferred *)
-  (* Usually a type expression is evaluated by splitting it into a def type and
-     a use type, and flowing the former to the latter: the def type is the
-     "main" argument, and the use type contains the type operation, other
-     arguments, and a tvar to hold the result. However, sometimes a type
-     expression may need to be kept in explicit form, with the type operation
-     and other arguments split out into a "deferred" use type `defer_use_t`,
-     whose evaluation state is tracked in the context by an identifier id: When
-     defer_use_t is evaluated, id points to a tvar containing the result of
-     evaluation. The explicit form simplifies other tasks, like substitution,
-     but otherwise works in much the same way as usual. **)
-  | EvalT of t * defer_use_t * int
-
-  (** A polymorphic type is like a type-level "function" that, when applied to
-      lists of type arguments, generates types. Just like a function, a
-      polymorphic type has a list of type parameters, represented as bound type
-      variables. We say that type parameters are "universally quantified" (or
-      "universal"): every substitution of type arguments for type parameters
-      generates a type. Dually, we have "existentially quantified" (or
-      "existential") type variables: such a type variable denotes some, possibly
-      unknown, type. Universal type parameters may specify subtype constraints
-      ("bounds"), which must be satisfied by any types they may be substituted
-      by. Evaluation of existential types, which involves generating fresh type
-      variables, never happens under polymorphic types; it is forced only when
-      polymorphic types are applied. **)
-
-  (* polymorphic type *)
-  | PolyT of typeparam list * t
-  (* type application *)
-  | TypeAppT of t * t list
-  (* this-abstracted class *)
-  | ThisClassT of t
-  (* this instantiation *)
-  | ThisTypeAppT of t * t * t list
-  (* bound type variable *)
-  | BoundT of typeparam
-  (* existential type variable *)
-  | ExistsT of reason
-
-  (* ? types *)
-  | MaybeT of t
-
-  | TaintT of reason
-
-  (* & types *)
-  | IntersectionT of reason * t list
-
-  (* | types *)
-  | UnionT of reason * t list
-
-  (* generalizations of AnyT *)
-  | UpperBoundT of t (* any upper bound of t *)
-  | LowerBoundT of t (* any lower bound of t *)
-
-  (* specializations of AnyT *)
-  | AnyObjT of reason (* any object *)
-  | AnyFunT of reason (* any function *)
-
-  (* constrains some properties of an object *)
-  | ShapeT of t
-  | DiffT of t * t
-
-  (* collects the keys of an object *)
-  | KeysT of reason * t
-  (* singleton string, matches exactly a given string literal *)
-  | SingletonStrT of reason * string
-  (* matches exactly a given number literal, for some definition of "exactly"
-     when it comes to floats... *)
-  | SingletonNumT of reason * number_literal
-  (* singleton bool, matches exactly a given boolean literal *)
-  | SingletonBoolT of reason * bool
-
-  (* type aliases *)
-  | TypeT of reason * t
-
-  (* annotations *)
-  (**
-      A type that annotates a storage location performs two functions:
-      * it constrains the types of values stored into the location
-      * it masks the actual type of values retrieved from the location,
-      giving instead a pro forma type which all such values are
-      considered as having.
-
-      In the former role, the annotated type behaves as an upper bound
-      interacting with inflowing lower bounds - these interactions may
-      occur e.g. as a result of values being stored to type-annotated
-      variables, or arguments flowing to type-annotated parameters.
-
-      In the latter role, the annotated type behaves as a lower bound,
-      flowing to sites where values stored in the annotated location are
-      used (such as users of a variable, or users of a parameter within
-      a function body).
-
-      When a type annotation resolves immediately to a concrete type
-      (say, number = NumT or string = StrT), this single type would
-      suffice to perform both roles. However, when an annotation has
-      not yet been resolved, we can't simply use a type variable as a
-      placeholder as we can elsewhere.
-
-      TL;DR type variables are conductors; annotated types are insulators. :)
-
-      For an annotated type, we must collect incoming lower bounds and
-      downstream upper bounds without allowing them to interact with each
-      other. If we did, the annotation would be "translucent", leaking
-      type information about incoming values - failing to perform the
-      second of the two roles noted above.
-
-      Using a single type variable would allow exactly this propagation:
-      it's essentially what type variables do.
-
-      To accomplish the desired insulation we represent an annotation with
-      a pair of type variables: a "sink" that collects lower bounds flowing
-      into the annotation, and a "source" that collects downstream uses of
-      the annotated location as upper bounds.
-
-      The source tvar is linked to the unresolved definition's tvar.
-      When that definition is resolved, the concrete type will flow
-      into the annotation's source tvar as a lower bound.
-      At that point two things will happen:
-
-      * the source tvar will (as usual) evaluate the concrete definition
-      against its accumulated upper bounds - this checks downstream use
-      sites for compatibility with the annotated type.
-
-      * a UnifyT edge, put in place at the time the AnnotT was built,
-      will trigger a unification of the source and sink tvars. Critically,
-      this will cause the concrete definition type to appear in the sink
-      as an upper bound, prompting the check of all inflowing lower bounds
-      against it.
-
-      Of course, inflowing lower bounds and downstream upper bounds may
-      continue to accumulate following this unification. As they do,
-      they'll be checked against their respective sides of the bonded pair
-      as usual.
-  **)
-  | AnnotT of t * t
-
-  (* Stores exports (and potentially other metadata) for a module *)
-  | ModuleT of reason * exporttypes
-
-  (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
-      round pegs in the square holes. **)
-
-  (* failure case for speculative matching *)
-  | SpeculativeMatchT of reason * t * use_t
-  (* repositioning uses *)
-  | ReposUpperT of reason * t
-  (* util for deciding subclassing relations *)
-  | ExtendsT of t list * t * t
-
-  (* Sigil representing functions that the type system is not expressive enough
-     to annotate, so we customize their behavior internally. *)
-  | CustomFunT of reason * custom_fun_kind
-
-and defer_use_t =
-  (* type of a variable / parameter / property extracted from a pattern *)
-  | DestructuringT of reason * selector
-
-and use_t =
-  (* def types can be used as upper bounds *)
-  | UseT of t
-
-  (*************)
-  (* use types *)
-  (*************)
-
-  (* operation on literals *)
-  | SummarizeT of reason * t
-
-  (* operations on runtime values, such as functions, objects, and arrays *)
-  | ApplyT of reason * t * funtype
-  | BindT of reason * funtype
-  | CallT of reason * funtype
-  | MethodT of reason * propname * funtype
-  | SetPropT of reason * propname * t
-  | GetPropT of reason * propname * t
-  | SetElemT of reason * t * t
-  | GetElemT of reason * t * t
-  | ReposLowerT of reason * t
-
-  (* operations on runtime types, such as classes and functions *)
-  | ConstructorT of reason * t list * t
-  | SuperT of reason * insttype
-  | MixinT of reason * t
-
-  (* overloaded +, could be subsumed by general overloading *)
-  | AdderT of reason * t * t
-  (* overloaded relational operator, could be subsumed by general overloading *)
-  | ComparatorT of reason * t
-  (* unary minus operator on numbers, allows negative number literals *)
-  | UnaryMinusT of reason * t
-
-  (* operation specifying a type refinement via a predicate *)
-  | PredicateT of predicate * t
-
-  (* == *)
-  | EqT of reason * t
-
-  (* logical operators *)
-  | AndT of reason * t * t
-  | OrT of reason * t * t
-  | NotT of reason * t
-
-  (**
-   * A special (internal-only) type used to "reify" a TypeT back down to it's
-   * value-space type. One way to think of this is as the inverse of `typeof`.
-   *
-   * Note that there is no syntax for specifying this type. To surface such a
-   * type would result in code that cannot be compiled without extensive type
-   * info (or possibly at all!).
-   *)
-  | ReifyTypeT of reason * t_out
-
-  (* operation on polymorphic types *)
-  (** SpecializeT(_, cache, targs, tresult) instantiates a polymorphic type with
-      type arguments targs, and flows the result into tresult. If cache is set,
-      it looks up a cache of existing instantiations for the type parameters of
-      the polymorphic type, unifying the type arguments with those
-      instantiations if such exist. **)
-  | SpecializeT of reason * bool * t list * t
-  (* operation on this-abstracted classes *)
-  | ThisSpecializeT of reason * t * t
-  (* variance check on polymorphic types *)
-  | VarianceCheckT of reason * t list * polarity
-
-  (* operation on prototypes *)
-  (** LookupT(_, strict, try_ts_on_failure, x, tresult) looks for property x in
-      an object type, unifying its type with tresult. When x is not found, we
-      have the following cases:
-
-      (1) try_ts_on_failure is not empty, and we try to look for property x in
-      the next object type in that list;
-
-      (2) strict = None, so no error is reported;
-
-      (3) strict = Some reason, so the position in reason is blamed.
-  **)
-  | LookupT of reason * reason option * t list * string * t
-
-  (* operations on objects *)
-  | ObjAssignT of reason * t * t * string list * bool
-  | ObjFreezeT of reason * t
-  | ObjRestT of reason * string list * t
-  | ObjSealT of reason * t
-  (** test that something is object-like, returning a default type otherwise **)
-  | ObjTestT of reason * t * t
-
-  (* assignment rest element in array pattern *)
-  | ArrRestT of reason * int * t
-
-  (* Guarded unification (bidirectional).
-     Remodel as unidirectional GuardT(l,u)? *)
-  | UnifyT of t * t
-
-  (* unifies with incoming concrete lower bound *)
-  | BecomeT of reason * t
-
-  (* Keys *)
-  | GetKeysT of reason * t
-  | HasOwnPropT of reason * string
-  | HasPropT of reason * reason option * string
-
-  (* Element access *)
-  | ElemT of reason * t * t
-
-  (* Module import handling *)
-  | CJSRequireT of reason * t
-  | ImportModuleNsT of reason * t
-  | ImportDefaultT of reason * (string * string) * t
-  | ImportNamedT of reason * string * t
-  | ImportTypeT of reason * t
-  | ImportTypeofT of reason * t
-
-  (* Module export handling *)
-  | CJSExtractNamedExportsT of
-      reason
-      * (* local ModuleT *) t
-      * (* 't_out' to receive the resolved ModuleT *) t_out
-  | SetNamedExportsT of reason * t SMap.t * t_out
-  | SetStarExportsT of reason * t * t_out
-
-  | DebugPrintT of reason
-
-  (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
-      round pegs in the square holes. **)
-
-  (* manage a worklist of types to be concretized *)
-  | ConcretizeT of t * t list * t list * use_t
-  (* sufficiently concrete type *)
-  | ConcreteT of use_t
-
-and predicate =
-  | AndP of predicate * predicate
-  | OrP of predicate * predicate
-  | NotP of predicate
-
-  (* mechanism to handle binary tests where both sides need to be evaluated *)
-  | LeftP of binary_test * t
-  | RightP of binary_test * t
-
-  | ExistsP (* truthy *)
-  | NullP (* null *)
-  | MaybeP (* null or undefined *)
-
-  | SingletonBoolP of bool (* true or false *)
-  | SingletonStrP of string (* string literal *)
-
-  | BoolP (* boolean *)
-  | FunP (* function *)
-  | NumP (* number *)
-  | ObjP (* object *)
-  | StrP (* string *)
-  | VoidP (* undefined *)
-
-  | ArrP (* Array.isArray *)
-
-  (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP "b", tout))` *)
-  | PropExistsP of string
-
-and binary_test =
-  (* e1 instanceof e2 *)
-  | InstanceofTest
-  (* e1.key === e2 *)
-  | SentinelProp of string
-
-and 'a literal =
-  | Literal of 'a
-  | Truthy
-  | Falsy
-  | AnyLiteral
-
-and number_literal = (float * string)
-
-(* used by FunT and CallT *)
-and funtype = {
-  this_t: t;
-  params_tlist: t list;
-  params_names: string list option;
-  return_t: t;
-  closure_t: int;
-  changeset: Changeset.t
-}
-
-and objtype = {
-  flags: flags;
-  dict_t: dicttype option;
-  props_tmap: int;
-  proto_t: prototype;
-}
-
-and propname = reason * name
-
-and sealtype =
-  | UnsealedInFile of Loc.filename option
-  | Sealed
-
-and flags = {
-  frozen: bool;
-  sealed: sealtype;
-  exact: bool;
-}
-
-and dicttype = {
-  dict_name: string option;
-  key: t;
-  value: t;
-}
-
-and polarity =
-  | Negative      (* contravariant *)
-  | Neutral       (* invariant *)
-  | Positive      (* covariant *)
-
-and insttype = {
-  class_id: ident;
-  type_args: t SMap.t;
-  arg_polarities: polarity SMap.t;
-  fields_tmap: int;
-  methods_tmap: int;
-  mixins: bool;
-  structural: bool;
-}
-
-and exporttypes = {
-  (**
-   * tmap used to store individual, named ES exports as generated by `export`
-   * statements in a module. Note that this includes `export type` as well.
-   *
-   * Note that CommonJS modules may also populate this tmap if their export
-   * type is an object (that object's properties become named exports) or if
-   * it has any "type" exports via `export type ...`.
-   *)
-  exports_tmap: int;
-
-  (**
-   * This stores the CommonJS export type when applicable and is used as the
-   * exact return type for calls to require(). This slot doesn't apply to pure
-   * ES modules.
-   *)
-  cjs_export: t option;
-}
-
-and typeparam = {
-  reason: reason;
-  name: string;
-  bound: t;
-  polarity: polarity
-}
-
-and selector =
-| Prop of string
-| Elem of t
-| ObjRest of string list
-| ArrRest of int
-
-and prototype = t
-
-and super = t
-
-and static = t
-
-and properties = t SMap.t
-
-and t_out = t
-
-and custom_fun_kind =
+module rec TypeTerm : sig
+
+  type t =
+    (* open type variable *)
+    (* A type variable (tvar) is an OpenT(reason, id) where id is an int index
+       into a context's graph: a context's graph is a map from tvar ids to nodes
+       (see below). *)
+    (** Note: ids are globally unique. tvars are "owned" by a single context, but
+        that context and its tvars may later be merged into other contexts. **)
+    | OpenT of reason * ident
+
+    (*************)
+    (* def types *)
+    (*************)
+
+    (* TODO: constant types *)
+
+    | NumT of reason * number_literal literal
+    | StrT of reason * string literal
+    | BoolT of reason * bool option
+    | EmptyT of reason
+    | MixedT of reason
+    | AnyT of reason
+    | NullT of reason
+    | VoidT of reason
+
+    | FunT of reason * static * prototype * funtype
+    | FunProtoT of reason       (* Function.prototype *)
+    | FunProtoApplyT of reason  (* Function.prototype.apply *)
+    | FunProtoBindT of reason   (* Function.prototype.bind *)
+    | FunProtoCallT of reason   (* Function.prototype.call *)
+
+    | ObjT of reason * objtype
+    | ArrT of reason * t * t list
+
+    (* type of a class *)
+    | ClassT of t
+    (* type of an instance of a class *)
+    | InstanceT of reason * static * super * insttype
+
+    (* type of an optional parameter *)
+    | OptionalT of t
+    (* type of a rest parameter *)
+    | RestT of t
+    | AbstractT of t
+
+    (* type expression whose evaluation is deferred *)
+    (* Usually a type expression is evaluated by splitting it into a def type and
+       a use type, and flowing the former to the latter: the def type is the
+       "main" argument, and the use type contains the type operation, other
+       arguments, and a tvar to hold the result. However, sometimes a type
+       expression may need to be kept in explicit form, with the type operation
+       and other arguments split out into a "deferred" use type `defer_use_t`,
+       whose evaluation state is tracked in the context by an identifier id: When
+       defer_use_t is evaluated, id points to a tvar containing the result of
+       evaluation. The explicit form simplifies other tasks, like substitution,
+       but otherwise works in much the same way as usual. **)
+    | EvalT of t * defer_use_t * int
+
+    (** A polymorphic type is like a type-level "function" that, when applied to
+        lists of type arguments, generates types. Just like a function, a
+        polymorphic type has a list of type parameters, represented as bound type
+        variables. We say that type parameters are "universally quantified" (or
+        "universal"): every substitution of type arguments for type parameters
+        generates a type. Dually, we have "existentially quantified" (or
+        "existential") type variables: such a type variable denotes some, possibly
+        unknown, type. Universal type parameters may specify subtype constraints
+        ("bounds"), which must be satisfied by any types they may be substituted
+        by. Evaluation of existential types, which involves generating fresh type
+        variables, never happens under polymorphic types; it is forced only when
+        polymorphic types are applied. **)
+
+    (* polymorphic type *)
+    | PolyT of typeparam list * t
+    (* type application *)
+    | TypeAppT of t * t list
+    (* this-abstracted class *)
+    | ThisClassT of t
+    (* this instantiation *)
+    | ThisTypeAppT of t * t * t list
+    (* bound type variable *)
+    | BoundT of typeparam
+    (* existential type variable *)
+    | ExistsT of reason
+
+    (* ? types *)
+    | MaybeT of t
+
+    | TaintT of reason
+
+    (* & types *)
+    | IntersectionT of reason * t list
+
+    (* | types *)
+    | UnionT of reason * UnionRep.t
+
+    (* generalizations of AnyT *)
+    | UpperBoundT of t (* any upper bound of t *)
+    | LowerBoundT of t (* any lower bound of t *)
+
+    (* specializations of AnyT *)
+    | AnyObjT of reason (* any object *)
+    | AnyFunT of reason (* any function *)
+
+    (* constrains some properties of an object *)
+    | ShapeT of t
+    | DiffT of t * t
+
+    (* collects the keys of an object *)
+    | KeysT of reason * t
+    (* singleton string, matches exactly a given string literal *)
+    | SingletonStrT of reason * string
+    (* matches exactly a given number literal, for some definition of "exactly"
+       when it comes to floats... *)
+    | SingletonNumT of reason * number_literal
+    (* singleton bool, matches exactly a given boolean literal *)
+    | SingletonBoolT of reason * bool
+
+    (* type aliases *)
+    | TypeT of reason * t
+
+    (* annotations *)
+    (**
+        A type that annotates a storage location performs two functions:
+        * it constrains the types of values stored into the location
+        * it masks the actual type of values retrieved from the location,
+        giving instead a pro forma type which all such values are
+        considered as having.
+
+        In the former role, the annotated type behaves as an upper bound
+        interacting with inflowing lower bounds - these interactions may
+        occur e.g. as a result of values being stored to type-annotated
+        variables, or arguments flowing to type-annotated parameters.
+
+        In the latter role, the annotated type behaves as a lower bound,
+        flowing to sites where values stored in the annotated location are
+        used (such as users of a variable, or users of a parameter within
+        a function body).
+
+        When a type annotation resolves immediately to a concrete type
+        (say, number = NumT or string = StrT), this single type would
+        suffice to perform both roles. However, when an annotation has
+        not yet been resolved, we can't simply use a type variable as a
+        placeholder as we can elsewhere.
+
+        TL;DR type variables are conductors; annotated types are insulators. :)
+
+        For an annotated type, we must collect incoming lower bounds and
+        downstream upper bounds without allowing them to interact with each
+        other. If we did, the annotation would be "translucent", leaking
+        type information about incoming values - failing to perform the
+        second of the two roles noted above.
+
+        Using a single type variable would allow exactly this propagation:
+        it's essentially what type variables do.
+
+        To accomplish the desired insulation we represent an annotation with
+        a pair of type variables: a "sink" that collects lower bounds flowing
+        into the annotation, and a "source" that collects downstream uses of
+        the annotated location as upper bounds.
+
+        The source tvar is linked to the unresolved definition's tvar.
+        When that definition is resolved, the concrete type will flow
+        into the annotation's source tvar as a lower bound.
+        At that point two things will happen:
+
+        * the source tvar will (as usual) evaluate the concrete definition
+        against its accumulated upper bounds - this checks downstream use
+        sites for compatibility with the annotated type.
+
+        * a UnifyT edge, put in place at the time the AnnotT was built,
+        will trigger a unification of the source and sink tvars. Critically,
+        this will cause the concrete definition type to appear in the sink
+        as an upper bound, prompting the check of all inflowing lower bounds
+        against it.
+
+        Of course, inflowing lower bounds and downstream upper bounds may
+        continue to accumulate following this unification. As they do,
+        they'll be checked against their respective sides of the bonded pair
+        as usual.
+    **)
+    | AnnotT of t * t
+
+    (* Stores exports (and potentially other metadata) for a module *)
+    | ModuleT of reason * exporttypes
+
+    (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
+        round pegs in the square holes. **)
+
+    (* failure case for speculative matching *)
+    | SpeculativeMatchT of reason * t * use_t
+    (* repositioning uses *)
+    | ReposUpperT of reason * t
+    (* util for deciding subclassing relations *)
+    | ExtendsT of t list * t * t
+
+    (* Sigil representing functions that the type system is not expressive enough
+       to annotate, so we customize their behavior internally. *)
+    | CustomFunT of reason * custom_fun_kind
+
+  and defer_use_t =
+    (* type of a variable / parameter / property extracted from a pattern *)
+    | DestructuringT of reason * selector
+
+  and use_t =
+    (* def types can be used as upper bounds *)
+    | UseT of t
+
+    (*************)
+    (* use types *)
+    (*************)
+
+    (* operation on literals *)
+    | SummarizeT of reason * t
+
+    (* operations on runtime values, such as functions, objects, and arrays *)
+    | ApplyT of reason * t * funtype
+    | BindT of reason * funtype
+    | CallT of reason * funtype
+    | MethodT of reason * propname * funtype
+    | SetPropT of reason * propname * t
+    | GetPropT of reason * propname * t
+    | SetElemT of reason * t * t
+    | GetElemT of reason * t * t
+    | ReposLowerT of reason * t
+
+    (* operations on runtime types, such as classes and functions *)
+    | ConstructorT of reason * t list * t
+    | SuperT of reason * insttype
+    | MixinT of reason * t
+
+    (* overloaded +, could be subsumed by general overloading *)
+    | AdderT of reason * t * t
+    (* overloaded relational operator, could be subsumed by general overloading *)
+    | ComparatorT of reason * t
+    (* unary minus operator on numbers, allows negative number literals *)
+    | UnaryMinusT of reason * t
+
+    (* operation specifying a type refinement via a predicate *)
+    | PredicateT of predicate * t
+
+    (* == *)
+    | EqT of reason * t
+
+    (* logical operators *)
+    | AndT of reason * t * t
+    | OrT of reason * t * t
+    | NotT of reason * t
+
+    (**
+     * A special (internal-only) type used to "reify" a TypeT back down to it's
+     * value-space type. One way to think of this is as the inverse of `typeof`.
+     *
+     * Note that there is no syntax for specifying this type. To surface such a
+     * type would result in code that cannot be compiled without extensive type
+     * info (or possibly at all!).
+     *)
+    | ReifyTypeT of reason * t_out
+
+    (* operation on polymorphic types *)
+    (** SpecializeT(_, cache, targs, tresult) instantiates a polymorphic type with
+        type arguments targs, and flows the result into tresult. If cache is set,
+        it looks up a cache of existing instantiations for the type parameters of
+        the polymorphic type, unifying the type arguments with those
+        instantiations if such exist. **)
+    | SpecializeT of reason * bool * t list * t
+    (* operation on this-abstracted classes *)
+    | ThisSpecializeT of reason * t * t
+    (* variance check on polymorphic types *)
+    | VarianceCheckT of reason * t list * polarity
+
+    (* operation on prototypes *)
+    (** LookupT(_, strict, try_ts_on_failure, x, tresult) looks for property x in
+        an object type, unifying its type with tresult. When x is not found, we
+        have the following cases:
+
+        (1) try_ts_on_failure is not empty, and we try to look for property x in
+        the next object type in that list;
+
+        (2) strict = None, so no error is reported;
+
+        (3) strict = Some reason, so the position in reason is blamed.
+    **)
+    | LookupT of reason * reason option * t list * string * t
+
+    (* operations on objects *)
+    | ObjAssignT of reason * t * t * string list * bool
+    | ObjFreezeT of reason * t
+    | ObjRestT of reason * string list * t
+    | ObjSealT of reason * t
+    (** test that something is object-like, returning a default type otherwise **)
+    | ObjTestT of reason * t * t
+
+    (* assignment rest element in array pattern *)
+    | ArrRestT of reason * int * t
+
+    (* Guarded unification (bidirectional).
+       Remodel as unidirectional GuardT(l,u)? *)
+    | UnifyT of t * t
+
+    (* unifies with incoming concrete lower bound *)
+    | BecomeT of reason * t
+
+    (* Keys *)
+    | GetKeysT of reason * t
+    | HasOwnPropT of reason * string
+    | HasPropT of reason * reason option * string
+
+    (* Element access *)
+    | ElemT of reason * t * t
+
+    (* Module import handling *)
+    | CJSRequireT of reason * t
+    | ImportModuleNsT of reason * t
+    | ImportDefaultT of reason * (string * string) * t
+    | ImportNamedT of reason * string * t
+    | ImportTypeT of reason * t
+    | ImportTypeofT of reason * t
+
+    (* Module export handling *)
+    | CJSExtractNamedExportsT of
+        reason
+        * (* local ModuleT *) t
+        * (* 't_out' to receive the resolved ModuleT *) t_out
+    | SetNamedExportsT of reason * t SMap.t * t_out
+    | SetStarExportsT of reason * t * t_out
+
+    | DebugPrintT of reason
+
+    (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
+        round pegs in the square holes. **)
+
+    (* manage a worklist of types to be concretized *)
+    | ConcretizeT of t * t list * t list * use_t
+    (* sufficiently concrete type *)
+    | ConcreteT of use_t
+
+  and predicate =
+    | AndP of predicate * predicate
+    | OrP of predicate * predicate
+    | NotP of predicate
+
+    (* mechanism to handle binary tests where both sides need to be evaluated *)
+    | LeftP of binary_test * t
+    | RightP of binary_test * t
+
+    | ExistsP (* truthy *)
+    | NullP (* null *)
+    | MaybeP (* null or undefined *)
+
+    | SingletonBoolP of bool (* true or false *)
+    | SingletonStrP of string (* string literal *)
+
+    | BoolP (* boolean *)
+    | FunP (* function *)
+    | NumP (* number *)
+    | ObjP (* object *)
+    | StrP (* string *)
+    | VoidP (* undefined *)
+
+    | ArrP (* Array.isArray *)
+
+    (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP "b", tout))` *)
+    | PropExistsP of string
+
+  and binary_test =
+    (* e1 instanceof e2 *)
+    | InstanceofTest
+    (* e1.key === e2 *)
+    | SentinelProp of string
+
+  and 'a literal =
+    | Literal of 'a
+    | Truthy
+    | Falsy
+    | AnyLiteral
+
+  and number_literal = (float * string)
+
+  (* used by FunT and CallT *)
+  and funtype = {
+    this_t: t;
+    params_tlist: t list;
+    params_names: string list option;
+    return_t: t;
+    closure_t: int;
+    changeset: Changeset.t
+  }
+
+  and objtype = {
+    flags: flags;
+    dict_t: dicttype option;
+    props_tmap: int;
+    proto_t: prototype;
+  }
+
+  and propname = reason * name
+
+  and sealtype =
+    | UnsealedInFile of Loc.filename option
+    | Sealed
+
+  and flags = {
+    frozen: bool;
+    sealed: sealtype;
+    exact: bool;
+  }
+
+  and dicttype = {
+    dict_name: string option;
+    key: t;
+    value: t;
+  }
+
+  and polarity =
+    | Negative      (* contravariant *)
+    | Neutral       (* invariant *)
+    | Positive      (* covariant *)
+
+  and insttype = {
+    class_id: ident;
+    type_args: t SMap.t;
+    arg_polarities: polarity SMap.t;
+    fields_tmap: int;
+    methods_tmap: int;
+    mixins: bool;
+    structural: bool;
+  }
+
+  and exporttypes = {
+    (**
+     * tmap used to store individual, named ES exports as generated by `export`
+     * statements in a module. Note that this includes `export type` as well.
+     *
+     * Note that CommonJS modules may also populate this tmap if their export
+     * type is an object (that object's properties become named exports) or if
+     * it has any "type" exports via `export type ...`.
+     *)
+    exports_tmap: int;
+
+    (**
+     * This stores the CommonJS export type when applicable and is used as the
+     * exact return type for calls to require(). This slot doesn't apply to pure
+     * ES modules.
+     *)
+    cjs_export: t option;
+  }
+
+  and typeparam = {
+    reason: reason;
+    name: string;
+    bound: t;
+    polarity: polarity
+  }
+
+  and selector =
+  | Prop of string
+  | Elem of t
+  | ObjRest of string list
+  | ArrRest of int
+
+  and prototype = t
+
+  and super = t
+
+  and static = t
+
+  and properties = t SMap.t
+
+  and t_out = t
+
+  and custom_fun_kind =
   | ClassWithMixins
   | CopyProperties
   | Merge
   | MergeDeepInto
   | MergeInto
   | Mixin
+
+end = TypeTerm
+
+(* We encapsulate UnionT's internal structure
+   so we can use specialized representations for
+   unions with exploitable regularity and/or
+   simplicity properties, e.g. enums.
+
+   Representations are opaque. `make` chooses a
+   representation internally, and client code which
+   needs to interact with member types directly
+   can do so via `members`, which provides access
+   via the standard list representation.
+ *)
+
+and UnionRep : sig
+  type t
+  val make: TypeTerm.t list -> t
+  val enum_base: t -> TypeTerm.t option
+  val members: t -> TypeTerm.t list
+  val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
+  val quick_mem: TypeTerm.t -> t -> bool option
+end = struct
+
+  (* canonicalize a type w.r.t. enum membership *)
+  let canon t = TypeTerm.(
+    match t with
+    | SingletonStrT _ -> t
+    | StrT (r, Literal s) -> SingletonStrT (r, s)
+    | SingletonNumT _ -> t
+    | NumT (r, Literal lit) -> SingletonNumT (r, lit)
+    | _ -> t
+  )
+
+  (* enums are stored as singleton type sets *)
+  module EnumSet : Set.S with type elt = TypeTerm.t = Set.Make(struct
+    type elt = TypeTerm.t
+    type t = elt
+    let compare x y = TypeTerm.(
+      match x, y with
+      | SingletonStrT (_, a), SingletonStrT (_, b) ->
+        Pervasives.compare a b
+      | SingletonNumT (_, (a, _)), SingletonNumT (_, (b, _)) ->
+        Pervasives.compare a b
+      | _ -> Pervasives.compare x y
+    )
+  end)
+
+  (* given a type, return corresponding enum base type if any *)
+  let base_of_t = TypeTerm.(
+    let str = Some (StrT (reason_of_string "string enum", AnyLiteral)) in
+    let num = Some (NumT (reason_of_string "number enum", AnyLiteral)) in
+    fun t ->
+      match t with
+      | SingletonStrT _ -> str
+      | SingletonNumT _ -> num
+      | _ -> None
+  )
+
+  (* union rep is:
+     - list of members in declaration order
+     - if union is an enum (set of singletons over a common base)
+       then Some (base, set)
+     (additional specializations probably to come)
+   *)
+  type t = TypeTerm.t list * (TypeTerm.t * EnumSet.t) option
+
+  (* given a list of members, build a rep.
+     specialized reps are used on compatible type lists *)
+  let make tlist =
+    let rec loop acc base = function
+    | [] -> Some (base, acc)
+    | t :: ts ->
+      match base_of_t t with
+      | Some tbase when tbase = base ->
+        loop (EnumSet.add t acc) base ts
+      | _ -> None
+    in
+    tlist,
+    match tlist with
+    | [] | [_] -> None
+    | t :: ts ->
+      match base_of_t t with
+      | Some (_ as base) ->
+        loop (EnumSet.singleton t) base ts
+      | _ -> None
+
+  (* rep's enum base type, if any *)
+  let enum_base (_, enum) =
+    match enum with
+    | None -> None
+    | Some (base, _) -> Some base
+
+  (* rep's list of members *)
+  let members (tlist, _) = tlist
+
+  (* map rep r to rep s along type mapping f *)
+  let map f rep = make (List.map f (members rep))
+
+  (* quick membership test: Some true/false or None = needs full check *)
+  let quick_mem t rep =
+    let t = canon t in
+    match rep with
+    | tlist, None ->
+      if List.mem t tlist then Some true else None
+    | _, Some (base, tset) ->
+      match base_of_t t with
+      | Some tbase when tbase = base ->
+        Some (EnumSet.mem t tset)
+      | _ -> Some false
+end
+
+(* The typechecking algorithm often needs to maintain sets of types, or more
+   generally, maps of types (for logging we need to associate some provenanced
+   information to types).
+   Type terms may also contain internal sets or maps.
+*)
+
+and TypeSet : Set.S with type elt = TypeTerm.t = Set.Make(struct
+  type elt = TypeTerm.t
+  type t = elt
+  let compare = Pervasives.compare
+end)
+
+and TypeMap : MapSig with type key = TypeTerm.t = MyMap(struct
+  type key = TypeTerm.t
+  type t = key
+  let compare = Pervasives.compare
+end)
+
+and UseTypeMap : MapSig with type key = TypeTerm.use_t = MyMap(struct
+  type key = TypeTerm.use_t
+  type t = key
+  let compare = Pervasives.compare
+end)
+
+include TypeTerm
+
+(*********************************************************)
 
 let compare = Pervasives.compare
 
@@ -582,28 +723,6 @@ end)
 module NullT = Primitive (struct
   let desc = "null"
   let make r = NullT r
-end)
-
-(* The typechecking algorithm often needs to maintain sets of types, or more
-   generally, maps of types (for logging we need to associate some provenanced
-   information to types). *)
-
-module TypeSet : Set.S with type elt = t = Set.Make(struct
-  type elt = t
-  type t = elt
-  let compare = compare
-end)
-
-module TypeMap : MapSig with type key = t = MyMap(struct
-  type key = t
-  type t = key
-  let compare = compare
-end)
-
-module UseTypeMap : MapSig with type key = use_t = MyMap(struct
-  type key = use_t
-  type t = key
-  let compare = compare
 end)
 
 (* lift an operation on Type.t to an operation on Type.use_t *)

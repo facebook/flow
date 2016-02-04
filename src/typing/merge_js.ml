@@ -183,7 +183,7 @@ module ContextOptimizer = struct
         let types = Flow_js.possible_types cx id in
         let t = match types with
           | [t] -> t
-          | t::_ -> UnionT (reason_of_t t, types)
+          | t::_ -> UnionT (reason_of_t t, UnionRep.make types)
           | [] -> AnyT.t in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in

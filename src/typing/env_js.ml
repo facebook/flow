@@ -708,7 +708,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
       else (* State.MaybeInitialized *)
         let desc = "possibly uninitialized variable" in
         let ts = [uninit desc; specific] in
-        UnionT (mk_reason desc value_declare_loc, ts)
+        UnionT (mk_reason desc value_declare_loc, UnionRep.make ts)
     in
     specific, general
 
@@ -778,7 +778,9 @@ let get_var_declared_type ?(lookup_mode=ForValue) =
 let var_ref ?(lookup_mode=ForValue) cx name reason =
   let repos = Flow_js.reposition cx reason in
   match get_var ~lookup_mode cx name reason with
-  | UnionT (r, ts) -> repos (UnionT (r, List.map repos ts))
+  | UnionT (r, rep) ->
+    let ts = UnionRep.members rep in
+    repos (UnionT (r, UnionRep.make (List.map repos ts)))
   | t -> repos t
 
 (* get refinement entry *)

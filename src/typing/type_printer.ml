@@ -157,9 +157,9 @@ let rec type_printer override fallback enclosure cx t =
           ) in
         parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe]
 
-    | UnionT (_, ts) ->
+    | UnionT (_, rep) ->
         let type_s =
-          (ts
+          (UnionRep.members rep
             |> List.map (pp EnclosureUnion cx)
             |> String.concat " | "
           ) in
@@ -324,8 +324,9 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       is_printed_type_list_parsable weak cx EnclosureIntersect ts
 
-  | UnionT (_, ts)
+  | UnionT (_, rep)
     ->
+      let ts = UnionRep.members rep in
       is_printed_type_list_parsable weak cx EnclosureUnion ts
 
   | PolyT (_, t)

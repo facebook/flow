@@ -156,8 +156,8 @@ let rec gc cx state = function
   | IntersectionT (_, ts) ->
       ts |> List.iter (gc cx state)
 
-  | UnionT (_, ts) ->
-      ts |> List.iter (gc cx state)
+  | UnionT (_, rep) ->
+      UnionRep.members rep |> List.iter (gc cx state)
 
   | UpperBoundT (t) ->
       gc cx state t

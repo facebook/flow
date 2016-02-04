@@ -483,7 +483,7 @@ let rec convert cx type_params_map = Ast.Type.(function
 
   | loc, Union ts ->
       let ts = List.map (convert cx type_params_map) ts in
-      UnionT (mk_reason "union type" loc, ts)
+      UnionT (mk_reason "union type" loc, UnionRep.make ts)
 
   | loc, Intersection ts ->
       let ts = List.map (convert cx type_params_map) ts in
@@ -508,7 +508,7 @@ let rec convert cx type_params_map = Ast.Type.(function
       let tx =
         if ts = []
         then Flow_js.mk_tvar cx element_reason
-        else UnionT (element_reason, elts) in
+        else UnionT (element_reason, UnionRep.make elts) in
       ArrT (reason, tx, elts)
 
   | loc, Array t ->
@@ -567,7 +567,7 @@ let rec convert cx type_params_map = Ast.Type.(function
       (* $Either<...T> is the union of types ...T *)
       | "$Either" ->
         let ts = List.map (convert cx type_params_map) typeParameters in
-        UnionT (mk_reason "union type" loc, ts)
+        UnionT (mk_reason "union type" loc, UnionRep.make ts)
 
       (* $All<...T> is the intersection of types ...T *)
       | "$All" ->
@@ -689,7 +689,7 @@ let rec convert cx type_params_map = Ast.Type.(function
         check_type_param_arity cx loc typeParameters 1 (fun () ->
           let t = convert cx type_params_map (List.hd typeParameters) in
           let reason = Reason_js.repos_reason loc (reason_of_t t) in
-          UnionT (reason, [t; TaintT (mk_reason "taint" loc)])
+          UnionT (reason, UnionRep.make [t; TaintT (mk_reason "taint" loc)])
         )
 
       | "$Facebookism$ClassWithMixins" ->
@@ -921,7 +921,8 @@ and mk_type_annotation cx type_params_map reason = function
 and mk_keys_type reason keys =
   match keys with
   | [key] -> mk_singleton_string reason key
-  | _ -> UnionT (reason, List.map (mk_singleton_string reason) keys)
+  | _ -> UnionT (reason,
+      UnionRep.make (List.map (mk_singleton_string reason) keys))
 
 and mk_singleton_string reason key =
   let reason = replace_reason (spf "string literal `%s`" key) reason in
@@ -3541,7 +3542,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         (* composite elem type is union *)
         let elemt = match TypeExSet.elements tset with
         | [t] -> t
-        | list -> UnionT (element_reason, list)
+        | list -> UnionT (element_reason, UnionRep.make list)
         in
         ArrT (reason, elemt, List.rev tlist)
     )
@@ -4117,10 +4118,10 @@ and binary cx type_params_map loc = Ast.Expression.Binary.(function
       let t2 = expression cx type_params_map right in
       let reason1 = mk_reason "LHS of `in` operator" loc1 in
       let reason2 = mk_reason "RHS of `in` operator" loc2 in
-      let lhs = UnionT (reason1, [StrT.why reason1; NumT.why reason1]) in
+      let lhs = UnionT (reason1, UnionRep.make [StrT.why reason1; NumT.why reason1]) in
       let rhs =
         let elemt = Flow_js.mk_tvar cx reason2 in
-        UnionT (reason2, [AnyObjT reason2; ArrT (reason2, elemt, [])])
+        UnionT (reason2, UnionRep.make [AnyObjT reason2; ArrT (reason2, elemt, [])])
       in
       Flow_js.flow_t cx (t1, lhs);
       Flow_js.flow_t cx (t2, rhs);
@@ -4709,7 +4710,7 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
         | _ -> None in
       let reason = mk_reason "oneOfType" vloc in
       (match proptype_elements [] elements with
-        | Some ts -> UnionT (reason, ts)
+        | Some ts -> UnionT (reason, UnionRep.make ts)
         | None -> AnyT.at vloc)
 
   | vloc, Call { Call.

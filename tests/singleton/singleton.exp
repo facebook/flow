@@ -35,6 +35,6 @@ number.js:19:1,6: function call
 Error:
 number.js:19:5,5: number
 This type is incompatible with
-number.js:13:19,21: union: number literal `1` | number literal `2`
+number.js:13:19,21: number enum
 
 Found 7 errors

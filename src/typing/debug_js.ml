@@ -168,8 +168,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | IntersectionT (_, ts)
-  | UnionT (_, ts) -> [
+  | IntersectionT (_, ts) -> [
+      "types", JSON_Array (List.map (_json_of_t json_cx) ts)
+    ]
+
+  | UnionT (_, rep) -> [
+      let ts = UnionRep.members rep in
       "types", JSON_Array (List.map (_json_of_t json_cx) ts)
     ]
 
@@ -902,6 +906,9 @@ and dump_t_ =
   fun stack cx t -> Type_printer.(
     type_printer (override stack) string_of_ctor EnclosureNone cx t
   )
+
+and dump_use_t cx t =
+  dump_use_t_ ISet.empty cx t
 
 and dump_use_t_ stack cx t = match t with
   | UseT t -> dump_t_ stack cx t
