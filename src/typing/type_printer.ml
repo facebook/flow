@@ -256,6 +256,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | StrT _
   | BoolT _
   | AnyT _
+  | NullT _
     ->
       true
 

@@ -10,6 +10,6 @@
 open Utils
 
 (* returns a grounded(, normalized) and printified version of the type *)
-val printified_type: Context.t -> Type.t -> Type.t
+val normalize_type: Context.t -> Type.t -> Type.t
 
 val suggested_type_cache: Type.t IMap.t ref
