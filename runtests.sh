@@ -34,7 +34,7 @@ print_failure() {
     name=${name##*/}
 
     printf "%b[✗] FAIL:%b %s%b\n" \
-      $COLOR_RED_BOLD $COLOR_DEFAULT "$1" $COLOR_RESET
+      "$COLOR_RED_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
 
     diff_file="${dir}${name}.diff"
     err_file="${dir}${name}.err"
@@ -53,21 +53,23 @@ print_skip() {
     name=${name%*/}
     name=${name##*/}
     printf "%b[-] SKIP:%b %s%b\n" \
-      $COLOR_YELLOW_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
+      "$COLOR_YELLOW_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
 }
 print_success() {
     name=$1
     name=${name%*/}
     name=${name##*/}
     printf "%b[✓] PASS:%b %s%b\n" \
-      $COLOR_GREEN_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
+      "$COLOR_GREEN_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
 }
 print_run() {
-    name=$1
-    name=${name%*/}
-    name=${name##*/}
-    printf "%b[ ] RUN:%b  %s%b\r" \
-      $COLOR_DEFAULT_BOLD $COLOR_DEFAULT "$name" $COLOR_RESET
+    if [ -t 1 ]; then
+      name=$1
+      name=${name%*/}
+      name=${name##*/}
+      printf "%b[ ] RUN:%b  %s%b\r" \
+        "$COLOR_DEFAULT_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+    fi
 }
 kill_server() {
   trap - SIGINT SIGTERM
@@ -284,12 +286,12 @@ done
 echo
 if [ $failed -eq 0 ]; then
   printf "%bPassed: %d, Failed: %d, Skipped: %d%b\n" \
-    $COLOR_DEFAULT_BOLD $passed $failed $skipped $COLOR_RESET
+    "$COLOR_DEFAULT_BOLD" "$passed" "$failed" "$skipped" "$COLOR_RESET"
 else
   printf "%bPassed: %d, %bFailed: %d%b, Skipped: %d%b\n" \
-    $COLOR_DEFAULT_BOLD $passed \
-    $COLOR_WHITE_ON_RED_BOLD $failed \
-    $COLOR_DEFAULT_BOLD $skipped \
-    $COLOR_RESET
+    "$COLOR_DEFAULT_BOLD" "$passed" \
+    "$COLOR_WHITE_ON_RED_BOLD" "$failed" \
+    "$COLOR_DEFAULT_BOLD" "$skipped" \
+    "$COLOR_RESET"
 fi
 exit ${failed}
