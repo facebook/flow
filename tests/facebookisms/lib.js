@@ -1,5 +1,5 @@
 declare module "copyProperties" {
-  declare var exports: $Facebookism$CopyProperties;
+  declare var exports: Object$Assign;
 }
 
 declare module "mergeInto" {

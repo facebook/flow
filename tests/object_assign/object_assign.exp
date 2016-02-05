@@ -5,6 +5,8 @@ A.js:13:19,27: string
 This type is incompatible with
 A.js:13:10,15: number
 
+A.js:21:20,29: call of method `foo`
+Error:
 A.js:21:20,29: string
 This type is incompatible with
 A.js:21:11,16: number
@@ -41,7 +43,7 @@ non_objects.js:4:1,30: property `a` of object literal
 Property cannot be assigned on
 non_objects.js:4:15,17: number
 
-non_objects.js:5:1,30: Object.assign
+non_objects.js:5:1,30: call of method `assign`
 Expected object instead of
 non_objects.js:5:27,29: number
 

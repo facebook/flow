@@ -692,8 +692,9 @@ let rec convert cx type_params_map = Ast.Type.(function
           UnionT (reason, UnionRep.make [t; TaintT (mk_reason "taint" loc)])
         )
 
-      | "$Facebookism$CopyProperties" ->
-          mk_custom_fun cx loc typeParameters CopyProperties
+      | "Object$Assign" ->
+          mk_custom_fun cx loc typeParameters ObjectAssign
+
       | "$Facebookism$Merge" ->
           mk_custom_fun cx loc typeParameters Merge
       | "$Facebookism$MergeDeepInto" ->
@@ -5472,11 +5473,6 @@ and static_method_call_Object cx type_params_map loc prop_loc expr obj_t m args_
       Flow_js.flow cx (o, SetPropT (reason, (reason, x), tvar));
     );
     o
-
-  | ("assign", (Expression e)::others) ->
-    let this = expression cx type_params_map e in
-    let those = List.map (expression_or_spread cx type_params_map) others in
-    Flow_js.chain_objects cx reason this those
 
   (* Freezing an object literal is supported since there's no way it could
      have been mutated elsewhere *)

@@ -7,7 +7,7 @@ let tests = [
   },
 
   // annotation
-  function(copyProperties: $Facebookism$CopyProperties) {
+  function(copyProperties: Object$Assign) {
     let result = {};
     result.baz = false;
     (copyProperties(
@@ -26,13 +26,13 @@ let tests = [
   },
 
   // too few args
-  function(copyProperties: $Facebookism$CopyProperties) {
+  function(copyProperties: Object$Assign) {
     copyProperties();
     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
   },
 
   // passed as a function
-  function(copyProperties: $Facebookism$CopyProperties) {
+  function(copyProperties: Object$Assign) {
     function x(cb: Function) {}
     x(copyProperties);
   }

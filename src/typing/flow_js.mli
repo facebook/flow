@@ -96,8 +96,6 @@ val mk_object_with_map_proto : Context.t -> reason ->
   ?sealed:bool ->
   ?frozen:bool ->
   ?dict:Type.dicttype -> (Type.t SMap.t) -> Type.t -> Type.t
-val chain_objects :
-  Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t list -> Type.t
 
 (* ... *)
 

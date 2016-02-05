@@ -2157,14 +2157,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, return_t);
 
 
-    (* Facebookisms are special Facebook-specific functions that are not
-       expressable with our current type syntax, so we've hacked in special
-       handling. Terminate with extreme prejudice. *)
+    (* Special handlers for builtin functions *)
 
-    | CustomFunT (_, CopyProperties),
+    | CustomFunT (_, ObjectAssign),
       CallT (reason_op, { params_tlist = dest_t::ts; return_t; _ }) ->
       let t = chain_objects cx ~trace reason_op dest_t ts in
       rec_flow_t cx trace (t, return_t)
+
+
+    (* Facebookisms are special Facebook-specific functions that are not
+       expressable with our current type syntax, so we've hacked in special
+       handling. Terminate with extreme prejudice. *)
 
     | CustomFunT (_, MergeInto),
       CallT (reason_op, { params_tlist = dest_t::ts; return_t; _ }) ->
@@ -3658,6 +3661,7 @@ and object_like_op = function
 
 and function_like = function
   | ClassT _
+  | CustomFunT _
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
@@ -4225,7 +4229,7 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
 
-(* Object assignment patterns. In the `copyProperties` model (chain_objects), an
+(* Object assignment patterns. In the `Object.assign` model (chain_objects), an
    existing object receives properties from other objects. This pattern suffers
    from "races" in the type checker, since the object supposed to receive
    properties is available even when the other objects supplying the properties

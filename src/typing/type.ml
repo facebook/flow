@@ -510,7 +510,10 @@ module rec TypeTerm : sig
   and t_out = t
 
   and custom_fun_kind =
-  | CopyProperties
+  (* special builtins *)
+  | ObjectAssign
+
+  (* Facebookisms *)
   | Merge
   | MergeDeepInto
   | MergeInto

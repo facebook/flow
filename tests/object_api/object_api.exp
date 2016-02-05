@@ -3,12 +3,8 @@ c.js:5:3,5: property `foo`
 Property not found in
 c.js:5:1,1: object literal
 
-object_assign.js:4:19,23: parameter `param`
-Missing annotation
-
-object_assign.js:4:25,25: return
-Missing annotation
-
+object_assign.js:7:44,69: call of method `assign`
+Error:
 object_assign.js:7:19,40: property `bar`
 Property not found in
 object_assign.js:7:44,69: object literal
@@ -105,4 +101,4 @@ object_prototype.js:155:32,47: function type
 This type is incompatible with
 object_prototype.js:155:23,28: number
 
-Found 26 errors
+Found 24 errors

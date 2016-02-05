@@ -84,14 +84,6 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["thisArg"; "argArray"] in
       fake_fun params_names tins any
 
-  (* Fake the signature of $Facebookism$CopyProperties: *)
-  (* (target: Object, ...objects: Array<Object>): Object *)
-  | CustomFunT (_, CopyProperties) ->
-      let obj = AnyObjT (reason_of_string "object type") in
-      let tins = [obj; RestT obj] in
-      let params_names = Some ["target"; "objects"] in
-      fake_fun params_names tins obj
-
   (* Fake the signature of $Facebookism$Merge: *)
   (* (...objects: Array<Object>): Object *)
   | CustomFunT (_, Merge) ->
@@ -126,6 +118,14 @@ let rec normalize_type_impl cx ids t = match t with
       let tins = [RestT obj] in
       let params_names = Some ["objects"] in
       fake_fun params_names tins tout
+
+  (* Fake the signature of Object.assign:
+     (target: any, ...sources: Array<any>): any *)
+  | CustomFunT (_, ObjectAssign) ->
+      let any = AnyT (reason_of_string "any") in
+      let tins = [any; RestT any] in
+      let params_names = Some ["target"; "sources"] in
+      fake_fun params_names tins any
 
   | ObjT (_, ot) ->
       let dict = match ot.dict_t with
