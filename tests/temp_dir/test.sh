@@ -1,17 +1,17 @@
 #!/bin/sh
 FLOW=$1
 $FLOW stop 2> /dev/null > /dev/null
-mkdir -p tmp/flow
-$FLOW start --wait --temp-dir tmp/flow
+DIR=$(mktemp -d /tmp/flow.XXXXX)
+$FLOW start --wait --temp-dir "$DIR"
 if [[ "$OSTYPE" == "msys"* ]]; then
-    [ -f tmp/flow/*.sock ]    && echo "sock file exists"
+    [ -f "$DIR"/*.sock ]    && echo "sock file exists"
 else
-    [ -S tmp/flow/*.sock ]    && echo "sock file exists"
+    [ -S "$DIR"/*.sock ]    && echo "sock file exists"
 fi
-[ -d tmp/flow/flowlib_* ] && echo "flowlib exists"
-[ -f tmp/flow/*.init ]    && echo "init file exists"
-[ -f tmp/flow/*.lock ]    && echo "lock file exists"
-[ -f tmp/flow/*.log ]     && echo "log file exists"
+[ -d "$DIR"/flowlib_* ] && echo "flowlib exists"
+[ -f "$DIR"/*.init ]    && echo "init file exists"
+[ -f "$DIR"/*.lock ]    && echo "lock file exists"
+[ -f "$DIR"/*.log ]     && echo "log file exists"
 # Stop the server before removing the tmp dir
-$FLOW stop 2> /dev/null > /dev/null
-rm -rf tmp
+$FLOW stop --temp-dir "$DIR" 2> /dev/null > /dev/null
+rm -rf "$DIR"
