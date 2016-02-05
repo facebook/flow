@@ -123,7 +123,10 @@ end = struct
           (name, tree)
         end
     | Property (loc, _) ->
-      prerr_endline ("ERROR: unexpected spec format at " ^ (Loc.string loc));
+      prerr_endlinef
+        "ERROR: unexpected spec format at %d:%d"
+        loc.start.line
+        loc.start.column;
       exit 1
     | _ -> prerr_endline "ERROR: unexpected spec format"; exit 1
   )
@@ -202,12 +205,10 @@ end = struct
                 List.fold_left parse_parseopt Parser_env.default_parse_options properties
               )
             | (loc, _) ->
-              let msg =
-                Printf.sprintf
-                  "ERROR: Unexpected %%parse_option%% format: %s"
-                  (Loc.string loc);
-              in
-              prerr_endline msg;
+              prerr_endlinef
+                "ERROR: Unexpected %%parse_option%% format at %d:%d"
+                loc.start.line
+                loc.start.column;
               exit 1
           )
         ) in

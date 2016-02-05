@@ -357,7 +357,10 @@ let check_loc env =
   let loc = Peek.loc env in
   match !save_loc with
   | Some l when l = loc ->
-      Printf.printf "LOOP %s\n%!" (Loc.string loc);
+      let open Loc in
+      Printf.printf "LOOP %s:%d%d\n%!"
+        (match source loc with Some src -> string_of_filename src | None -> "")
+        loc.start.line loc.start.column;
       assert false
   | _ -> save_loc := Some loc
 
