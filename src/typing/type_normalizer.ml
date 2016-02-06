@@ -127,6 +127,14 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["target"; "sources"] in
       fake_fun params_names tins any
 
+  (* Fake the signature of Object.getPrototypeOf:
+     (o: any): any *)
+  | CustomFunT (_, ObjectGetPrototypeOf) ->
+      let any = AnyT (reason_of_string "any") in
+      let tins = [any] in
+      let params_names = Some ["o"] in
+      fake_fun params_names tins any
+
   | ObjT (_, ot) ->
       let dict = match ot.dict_t with
         | None -> None

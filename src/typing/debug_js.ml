@@ -249,6 +249,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | CustomFunT (_, kind) -> [
       "kind", JSON_String (match kind with
       | ObjectAssign -> "Object.assign"
+      | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
       | Merge -> "merge"
       | MergeDeepInto -> "mergeDeepInto"
       | MergeInto -> "mergeInto"

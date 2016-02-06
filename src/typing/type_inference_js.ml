@@ -694,6 +694,8 @@ let rec convert cx type_params_map = Ast.Type.(function
 
       | "Object$Assign" ->
           mk_custom_fun cx loc typeParameters ObjectAssign
+      | "Object$GetPrototypeOf" ->
+          mk_custom_fun cx loc typeParameters ObjectGetPrototypeOf
 
       | "$Facebookism$Merge" ->
           mk_custom_fun cx loc typeParameters Merge
@@ -5432,12 +5434,6 @@ and static_method_call_Object cx type_params_map loc prop_loc expr obj_t m args_
       )
     ) in
     Flow_js.mk_object_with_map_proto cx reason map proto
-
-  | ("getPrototypeOf", [ Expression e ]) ->
-    let o = expression cx type_params_map e in
-    Flow_js.mk_tvar_where cx reason (fun tvar ->
-      Flow_js.flow cx (o, GetPropT(reason, (reason, "__proto__"), tvar));
-    )
 
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
     let arr_reason = mk_reason "array type" loc in

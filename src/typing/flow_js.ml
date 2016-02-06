@@ -2164,6 +2164,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let t = chain_objects cx ~trace reason_op dest_t ts in
       rec_flow_t cx trace (t, return_t)
 
+    | CustomFunT (_, ObjectGetPrototypeOf),
+      CallT (reason_op, { params_tlist = obj::_; return_t; _ }) ->
+      rec_flow cx trace (
+        obj,
+        GetPropT(reason_op, (reason_op, "__proto__"), return_t)
+      );
+
 
     (* Facebookisms are special Facebook-specific functions that are not
        expressable with our current type syntax, so we've hacked in special

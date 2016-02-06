@@ -512,6 +512,7 @@ module rec TypeTerm : sig
   and custom_fun_kind =
   (* special builtins *)
   | ObjectAssign
+  | ObjectGetPrototypeOf
 
   (* Facebookisms *)
   | Merge
