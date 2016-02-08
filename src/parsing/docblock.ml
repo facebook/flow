@@ -55,7 +55,7 @@ let extract =
      * more context). At some point this should change back to consuming only
      * the first token. *)
     let lb = Lexing.from_string content in
-    let env = Lexer_flow.new_lex_env None lb in
+    let env = Lexer_flow.new_lex_env None lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
         let env, lexer_result = Lexer_flow.token env in

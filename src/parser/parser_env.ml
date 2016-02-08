@@ -181,7 +181,8 @@ let init_env ?(token_sink=None) ?(parse_options=None) source lb =
     | Some opts -> opts
     | None -> default_parse_options
   in
-  let lex_env = new_lex_env source lb in
+  let enable_types_in_comments = parse_options.types in
+  let lex_env = new_lex_env source lb ~enable_types_in_comments in
   let lex_env, lookahead = lex lex_env NORMAL_LEX in
   {
     errors            = ref [];

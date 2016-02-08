@@ -286,6 +286,7 @@
     lex_source            : Loc.filename option;
     lex_lb                : Lexing.lexbuf;
     lex_in_comment_syntax : bool;
+    lex_enable_comment_syntax: bool;
     lex_state             : lex_state ref;
   }
 
@@ -299,10 +300,11 @@
     lex_comments_acc = [];
   }
 
-  let new_lex_env lex_source lex_lb = {
+  let new_lex_env lex_source lex_lb ~enable_types_in_comments = {
     lex_source;
     lex_lb;
     lex_in_comment_syntax = false;
+    lex_enable_comment_syntax = enable_types_in_comments;
     lex_state = ref empty_lex_state;
   }
 
@@ -591,22 +593,33 @@ rule token env = parse
                          unicode_fix_cols lexbuf;
                          token env lexbuf }
   | "/*"               {
-                            let start = lb_to_loc env.lex_source lexbuf in
-                            let buf = Buffer.create 127 in
-                            let _end = comment env buf lexbuf in
-                            save_comment env start _end buf true;
+                         let start = lb_to_loc env.lex_source lexbuf in
+                         let buf = Buffer.create 127 in
+                         let _end = comment env buf lexbuf in
+                         save_comment env start _end buf true;
                          token env lexbuf
                        }
-  | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
+  | "/*" (whitespace* as sp) (":" | "::" | "flow-include" as escape_type) as pattern
                        {
-                         let () = if env.lex_in_comment_syntax then
-                           let loc = lb_to_loc env.lex_source lexbuf in
-                           unexpected_error env loc pattern
-                         in
-                         let env = { env with lex_in_comment_syntax = true } in
-                         match escape_type with
-                         | ":" -> env, T_COLON
-                         | _ -> token env lexbuf
+                         if not env.lex_enable_comment_syntax then
+                           let start = lb_to_loc env.lex_source lexbuf in
+                           let buf = Buffer.create 127 in
+                           Buffer.add_string buf sp;
+                           Buffer.add_string buf escape_type;
+                           let _end = comment env buf lexbuf in
+                           save_comment env start _end buf true;
+                           token env lexbuf
+                         else
+                           let () = if env.lex_in_comment_syntax then
+                             let loc = lb_to_loc env.lex_source lexbuf in
+                             unexpected_error env loc pattern
+                           in
+                           let env = {
+                             env with lex_in_comment_syntax = true
+                           } in
+                           match escape_type with
+                           | ":" -> env, T_COLON
+                           | _ -> token env lexbuf
                        }
   | "*/"               {
                          let () = if not env.lex_in_comment_syntax then
@@ -752,16 +765,27 @@ and type_token env = parse
                             save_comment env start _end buf true;
                          type_token env lexbuf
                        }
-  | "/*" whitespace* (":" | "::" | "flow-include" as escape_type) as pattern
+  | "/*" (whitespace* as sp) (":" | "::" | "flow-include" as escape_type) as pattern
                        {
-                         let () = if env.lex_in_comment_syntax then
-                           let loc = lb_to_loc env.lex_source lexbuf in
-                           unexpected_error env loc pattern
-                         in
-                         let env = { env with lex_in_comment_syntax = true } in
-                         match escape_type with
-                         | ":" -> env, T_COLON
-                         | _ -> type_token env lexbuf
+                         if not env.lex_enable_comment_syntax then
+                           let start = lb_to_loc env.lex_source lexbuf in
+                           let buf = Buffer.create 127 in
+                           Buffer.add_string buf sp;
+                           Buffer.add_string buf escape_type;
+                           let _end = comment env buf lexbuf in
+                           save_comment env start _end buf true;
+                           type_token env lexbuf
+                         else
+                           let () = if env.lex_in_comment_syntax then
+                             let loc = lb_to_loc env.lex_source lexbuf in
+                             unexpected_error env loc pattern
+                           in
+                           let env = { env with
+                             lex_in_comment_syntax = true;
+                           } in
+                           match escape_type with
+                           | ":" -> env, T_COLON
+                           | _ -> type_token env lexbuf
                        }
   | "*/"               {
                          let () = if not env.lex_in_comment_syntax then

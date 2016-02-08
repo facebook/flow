@@ -2539,6 +2539,43 @@ module.exports = {
         }
       },
     },
+    'Type Annotations in Comments With Types Disabled': {
+      'function foo(numVal/*  : number */){}': {
+        '%parse_options%': {
+          'types': false,
+        },
+        'body.0.params.0': {
+          'name': 'numVal',
+          'typeAnnotation': null,
+          'loc.start.column': 13,
+          'loc.end.column': 19
+        },
+        'comments': [{
+          'type': 'Block',
+          'value': '  : number ',
+          'loc.start.column': 19,
+          'loc.end.column': 34
+        }]
+      },
+      'type Foo = /*:: number */': {
+        '%parse_options%': {
+          'types': false,
+        },
+        'errors': [
+          {
+            'message': 'Type aliases are not allowed in untyped mode',
+            'loc.start.line': 1,
+            'loc.start.column': 0,
+          },
+        ],
+        'comments': [{
+          'type': 'Block',
+          'value': ':: number ',
+          'loc.start.column': 11,
+          'loc.end.column': 25
+        }]
+      }
+    },
     'Trailing commas': {
       'Math.max(a, b, c,)': {},
       'var exp = function(a, b,) { return a + b; };': {},
