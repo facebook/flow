@@ -85,7 +85,7 @@ type unbound_mode =
 module Env : sig
 
   type lenv
-  val empty_local : unit -> lenv
+  val empty_local : unbound_mode -> lenv
   val make_class_genv :
     TypecheckerOptions.t ->
     type_constraint SMap.t ->
@@ -108,7 +108,6 @@ module Env : sig
 
   val has_unsafe : genv * lenv -> bool
   val set_unsafe : genv * lenv -> bool -> unit
-  val set_unbound_mode : lenv -> unbound_mode -> lenv
 
   val add_lvar : genv * lenv -> Ast.id -> positioned_ident -> unit
   val new_lvar : genv * lenv -> Ast.id -> positioned_ident
@@ -180,12 +179,12 @@ end = struct
     has_unsafe: bool ref;
   }
 
-  let empty_local() = {
+  let empty_local unbound_mode = {
     locals     = ref SMap.empty;
     consts     = ref SMap.empty;
     all_locals = ref SMap.empty;
     pending_locals = ref SMap.empty;
-    unbound_mode = UBMErr;
+    unbound_mode;
     has_unsafe = ref false;
   }
 
@@ -206,7 +205,7 @@ end = struct
     let tparams = List.map c.c_tparams (fun (_, x, _) -> x) in
     let genv = make_class_genv tcopt params c.c_mode
       tparams (c.c_name, c.c_kind) c.c_namespace in
-    let lenv = empty_local () in
+    let lenv = empty_local UBMErr in
     let env  = genv, lenv in
     env
 
@@ -224,7 +223,7 @@ end = struct
 
   let make_typedef_env genv cstrs tdef =
     let genv = make_typedef_genv genv cstrs tdef in
-    let lenv = empty_local () in
+    let lenv = empty_local UBMErr in
     let env  = genv, lenv in
     env
 
@@ -257,14 +256,13 @@ end = struct
 
   let make_const_env nenv cst =
     let genv = make_const_genv nenv cst in
-    let lenv = empty_local () in
+    let lenv = empty_local UBMErr in
     let env  = genv, lenv in
     env
 
   let has_unsafe (_genv, lenv) = !(lenv.has_unsafe)
   let set_unsafe (_genv, lenv) x =
     lenv.has_unsafe := x
-  let set_unbound_mode lenv unbound_mode = {lenv with unbound_mode}
 
   let new_var env (p, x) =
     if SMap.mem x !env
@@ -1286,7 +1284,7 @@ and func_body_had_unsafe env = Env.has_unsafe env
 
 and method_ genv m =
   let genv = extend_params genv m.m_tparams in
-  let env = genv, Env.empty_local() in
+  let env = genv, Env.empty_local UBMErr in
   (* Cannot use 'this' if it is a public instance method *)
   let variadicity, paraml = fun_paraml env m.m_params in
   let name = Env.new_const env m.m_name in
@@ -1385,8 +1383,7 @@ and uselist_lambda f =
   in
   let tcopt = TypecheckerOptions.permissive in
   let genv = Env.make_fun_decl_genv tcopt SMap.empty f in
-  let lenv = Env.empty_local () in
-  let lenv = Env.set_unbound_mode lenv @@ UBMFunc handle_unbound in
+  let lenv = Env.empty_local @@ UBMFunc handle_unbound in
   let env = genv, lenv in
   ignore (expr_lambda env f);
   List.dedup !to_capture
@@ -1394,7 +1391,7 @@ and uselist_lambda f =
 and fun_ nenv f =
   let tparams = make_constraints f.f_tparams in
   let genv = Env.make_fun_decl_genv nenv tparams f in
-  let lenv = Env.empty_local () in
+  let lenv = Env.empty_local UBMErr in
   let env = genv, lenv in
   let h = Option.map f.f_ret (hint ~allow_retonly:true env) in
   let variadicity, paraml = fun_paraml env f.f_params in
@@ -1944,7 +1941,7 @@ and expr_ env = function
       let idl = List.filter idl
         (function (_, x) -> (x <> SN.SpecialIdents.this)) in
       let idl' = List.map idl (Env.lvar env) in
-      let env = (fst env, Env.empty_local ()) in
+      let env = (fst env, Env.empty_local UBMErr) in
       List.iter2_exn idl idl' (Env.add_lvar env);
       let f = expr_lambda env f in
       N.Efun (f, idl')
@@ -1960,8 +1957,7 @@ and expr_ env = function
         to_capture := cap :: !to_capture;
         cap
       in
-      let lenv = Env.empty_local () in
-      let lenv = Env.set_unbound_mode lenv @@ UBMFunc handle_unbound in
+      let lenv = Env.empty_local @@ UBMFunc handle_unbound in
       let env = (fst env, lenv) in
       let f = expr_lambda env f in
       N.Efun (f, !to_capture)
@@ -2090,7 +2086,7 @@ let func_body nenv f =
       let genv = Env.make_fun_genv nenv
         SMap.empty f.N.f_mode (snd f.N.f_name) fub_namespace in
       let genv = extend_params genv fub_tparams in
-      let lenv = Env.empty_local () in
+      let lenv = Env.empty_local UBMErr in
       let env = genv, lenv in
       (* Reuse the ids issued by the naming pass over the params
        * in the declaration *)
@@ -2117,7 +2113,7 @@ let meth_body genv m =
     | N.UnnamedBody {N.fub_ast; N.fub_tparams; N.fub_namespace; _} ->
       let genv = {genv with namespace = fub_namespace} in
       let genv = extend_params genv fub_tparams in
-      let env = genv, Env.empty_local() in
+      let env = genv, Env.empty_local UBMErr in
 
       (* Reuse the ids issued by the naming pass over the params
        * in the declaration *)
