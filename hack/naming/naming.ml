@@ -1530,8 +1530,7 @@ and foreach_stmt env e aw ae b =
   let e = expr env e in
   Env.scope env begin fun env ->
     let ae = as_expr env aw ae in
-    let all_locals, b = branch env b in
-    Env.extend_all_locals env all_locals;
+    let b = block env b in
     N.Foreach (e, ae, b)
   end
 
