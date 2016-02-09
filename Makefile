@@ -61,6 +61,7 @@ MODULES=\
   hack/third-party/avl\
   hack/third-party/core\
   hack/utils\
+  hack/utils/collections\
   hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
 
