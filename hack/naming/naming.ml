@@ -120,12 +120,11 @@ module Env : sig
   val new_const : genv * lenv -> Ast.id -> Ast.id
 
   val scope : genv * lenv -> (genv * lenv -> 'a) -> 'a
+  val scope_all : genv * lenv -> (genv * lenv -> 'a) -> Pos.t SMap.t * 'a
+
   val get_all_locals : lenv -> Pos.t SMap.t
   val set_all_locals : lenv -> Pos.t SMap.t -> unit
-  val get_locals : lenv -> map
-  val set_locals : lenv -> map -> unit
-  val get_pending_locals : lenv -> map
-  val set_pending_locals : lenv -> map -> unit
+  val extend_all_locals : genv * lenv -> Pos.t SMap.t -> unit
 
 end = struct
 
@@ -493,9 +492,9 @@ end = struct
       | FileInfo.Mstrict -> raise exn
       | FileInfo.Mpartial | FileInfo.Mdecl -> x
 
-(* Scope, keep the locals, go and name the body, and leave the
- * local environment intact
- *)
+  (* Scope, keep the locals, go and name the body, and leave the
+   * local environment intact
+   *)
   let scope env f =
     let genv, lenv = env in
     let lenv_copy = !(lenv.locals) in
@@ -505,15 +504,19 @@ end = struct
     lenv.pending_locals := lenv_pending_copy;
     res
 
+  let scope_all env f =
+    let genv, lenv = env in
+    let lenv_all_locals_copy = !(lenv.all_locals) in
+    let res = scope env f in
+    let lenv_all_locals = !(lenv.all_locals) in
+    lenv.all_locals := lenv_all_locals_copy;
+    lenv_all_locals, res
+
   let get_all_locals lenv = !(lenv.all_locals)
   let set_all_locals lenv all_locals =
     lenv.all_locals := all_locals
-  let get_locals lenv = !(lenv.locals)
-  let set_locals lenv locals =
-    lenv.locals := locals
-  let get_pending_locals lenv = !(lenv.pending_locals)
-  let set_pending_locals lenv pending_locals =
-    lenv.pending_locals := pending_locals
+  let extend_all_locals (_genv, lenv) more_locals =
+    lenv.all_locals := SMap.union more_locals !(lenv.all_locals)
 
 end
 
@@ -1488,12 +1491,10 @@ and if_stmt env st e b1 b2 =
   SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
   let result = Env.scope env (
   fun env ->
-    let _, lenv = env in
-    let all_locals_copy = Env.get_all_locals lenv in
     let all1, b1 = branch env b1 in
     let all2, b2 = branch env b2 in
-    let all_locals = SMap.union all1 all2 in
-    Env.set_all_locals lenv @@ SMap.union all_locals all_locals_copy;
+    Env.extend_all_locals env all2;
+    Env.extend_all_locals env all1;
     N.If (e, b1, b2)
  ) in
  Env.promote_pending env;
@@ -1522,28 +1523,22 @@ and switch_stmt env st e cl =
   let nsenv = (fst env).namespace in
   let _, vars = Naming_ast_helpers.GetLocals.stmt (nsenv, SMap.empty) st in
   SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
-  let result = Env.scope env (
-  fun env ->
-    let _, lenv = env in
-    let all_locals_copy = Env.get_all_locals lenv in
+  let result = Env.scope env begin fun env ->
     let all_locals, cl = casel env cl in
-    Env.set_all_locals lenv @@ SMap.union all_locals all_locals_copy;
+    Env.extend_all_locals env all_locals;
     N.Switch (e, cl)
- ) in
- Env.promote_pending env;
- result
+  end in
+  Env.promote_pending env;
+  result
 
 and foreach_stmt env e aw ae b =
   let e = expr env e in
-  Env.scope env (
-  fun env ->
-    let _, lenv = env in
-    let all_locals_copy = Env.get_all_locals lenv in
+  Env.scope env begin fun env ->
     let ae = as_expr env aw ae in
     let all_locals, b = branch env b in
-    Env.set_all_locals lenv @@ SMap.union all_locals all_locals_copy;
+    Env.extend_all_locals env all_locals;
     N.Foreach (e, ae, b)
- )
+  end
 
 and as_expr env aw = function
   | As_v ev ->
@@ -1582,13 +1577,12 @@ and try_stmt env st b cl fb =
     (* isolate finally from the rest of the try-catch: if the first
      * statement of the try is an uncaught exception, finally will
      * still be executed *)
-    let all_finally, fb = branch (genv, lenv) fb in
+    let all_finally, fb = branch env fb in
     Env.set_all_locals lenv all_locals_copy;
-    let all_locals_copy = Env.get_all_locals lenv in
-    let all1, b = branch ({ genv with in_try = true}, lenv) b in
+    let all1, b = branch ({genv with in_try = true}, lenv) b in
     let all_locals, cl = catchl env cl in
-    let all_locals = SMap.union all1 all_locals in
-    Env.set_all_locals lenv @@ SMap.union all_locals all_locals_copy;
+    Env.extend_all_locals env all_locals;
+    Env.extend_all_locals env all1;
     N.Try (b, cl, fb)
   ) in
   Env.promote_pending env;
@@ -1605,16 +1599,9 @@ and block ?(new_scope=true) env stl =
 
 and branch env stmt_l =
   let stmt_l = cut_and_flatten env stmt_l in
-  let genv, lenv = env in
-  let lenv_copy = Env.get_locals lenv in
-  let lenv_all_locals_copy = Env.get_all_locals lenv in
-  let lenv_pending_copy = Env.get_pending_locals lenv in
-  let res = List.map stmt_l (stmt env) in
-  Env.set_locals lenv lenv_copy;
-  let lenv_all_locals = Env.get_all_locals lenv in
-  Env.set_all_locals lenv lenv_all_locals_copy;
-  Env.set_pending_locals lenv lenv_pending_copy;
-  lenv_all_locals, res
+  Env.scope_all env begin fun env ->
+    List.map stmt_l (stmt env)
+  end
 
 and static_varl env l = List.map l (static_var env)
 and static_var env = function
