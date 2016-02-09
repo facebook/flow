@@ -125,8 +125,8 @@ end = struct
     | Property (loc, _) ->
       prerr_endlinef
         "ERROR: unexpected spec format at %d:%d"
-        loc.start.line
-        loc.start.column;
+        Loc.(loc.start.line)
+        Loc.(loc.start.column);
       exit 1
     | _ -> prerr_endline "ERROR: unexpected spec format"; exit 1
   )
@@ -207,8 +207,8 @@ end = struct
             | (loc, _) ->
               prerr_endlinef
                 "ERROR: Unexpected %%parse_option%% format at %d:%d"
-                loc.start.line
-                loc.start.column;
+                Loc.(loc.start.line)
+                Loc.(loc.start.column);
               exit 1
           )
         ) in
