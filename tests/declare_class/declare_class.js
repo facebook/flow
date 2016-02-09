@@ -5,3 +5,6 @@ declare class C {
 
 C.x = "";
 C.foo("");
+
+(C.name: string);
+(C.name: number); // error, it's a string

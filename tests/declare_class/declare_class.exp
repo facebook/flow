@@ -17,4 +17,8 @@ declare_class.js:7:7,8: string
 This type is incompatible with
 declare_class.js:3:19,24: number
 
-Found 3 errors
+declare_class.js:10:2,7: string
+This type is incompatible with
+declare_class.js:10:10,15: number
+
+Found 4 errors

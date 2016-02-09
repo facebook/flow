@@ -10,6 +10,10 @@ interface.js:7:13,13: I
 type referenced from value position
 interface.js:5:1,26: type I
 
+interface.js:10:6,9: property `name`
+Property not found in
+interface.js:10:4,4: I
+
 test.js:2:19,24: number
 This type is incompatible with
 test.js:6:17,18: string
@@ -69,4 +73,4 @@ test3.js:6:4,6: string
 This type is incompatible with
 test3.js:6:9,14: number
 
-Found 18 errors
+Found 19 errors

@@ -1542,6 +1542,11 @@ and statement cx type_params_map = Ast.Statement.(
       then add_this self cx reason typeparams type_params_map
       else typeparams, type_params_map in
 
+    let default_sfmap =
+      let reason = prefix_reason "`name` property of" reason in
+      SMap.singleton "name" (StrT.why reason)
+    in
+
     let sfmap, smmap, fmap, mmap = List.fold_left (
       fun (sfmap_, smmap_, fmap_, mmap_)
         (loc, { Ast.Type.Object.Property.key; value; static; _method; optional }) ->
@@ -1577,7 +1582,7 @@ and statement cx type_params_map = Ast.Statement.(
             | false, false -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
             )
         )
-    ) (SMap.empty, SMap.empty, SMap.empty, SMap.empty) properties
+    ) (default_sfmap, SMap.empty, SMap.empty, SMap.empty) properties
     in
     let fmap = match indexers with
       | [] -> fmap
