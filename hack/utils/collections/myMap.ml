@@ -57,8 +57,8 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
   let compare x y = compare Pervasives.compare x y
   let equal x y = compare x y = 0
 
-  let keys m = fold (fun k v acc -> k :: acc) m []
-  let values m = fold (fun k v acc -> v :: acc) m []
+  let keys m = fold (fun k _ acc -> k :: acc) m []
+  let values m = fold (fun _ v acc -> v :: acc) m []
   let elements m = fold (fun k v acc -> (k,v)::acc) m []
 
   let map_env f env m =
