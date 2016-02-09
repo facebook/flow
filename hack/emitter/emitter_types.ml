@@ -11,7 +11,6 @@
 (* Formatting for type information *)
 
 open Core
-open Utils
 
 module N = Nast
 module T = Typing_defs

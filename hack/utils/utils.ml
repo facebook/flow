@@ -31,12 +31,13 @@ let dn s =
     flush stdout;
   end
 
-module String = struct
-  include String
+module StringKey = struct
+  type t = string
+  let compare = String.compare
   let to_string x = x
 end
 
-module Int = struct
+module IntKey = struct
   type t = int
   let compare = (-)
 end
@@ -105,10 +106,10 @@ module MyMap: functor (Ord: Map.OrderedType)
 
   end
 
-module SMap = MyMap(String)
-module IMap = MyMap(Int)
-module ISet = Set.Make(Int)
-module SSet = Set.Make(String)
+module SMap = MyMap(StringKey)
+module IMap = MyMap(IntKey)
+module ISet = Set.Make(IntKey)
+module SSet = Set.Make(StringKey)
 module CSet = Set.Make(Char)
 module Map = struct end
 

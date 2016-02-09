@@ -148,13 +148,13 @@ let resolution_path_dependency files acc f =
 (** module systems **)
 
 (* shared heap for package.json tokens by filename *)
-module PackageHeap = SharedMem.WithCache (String) (struct
+module PackageHeap = SharedMem.WithCache (StringKey) (struct
     type t = Ast.Expression.t SMap.t
     let prefix = Prefix.make()
   end)
 
 (* shared heap for package.json directories by package name *)
-module ReversePackageHeap = SharedMem.WithCache (String) (struct
+module ReversePackageHeap = SharedMem.WithCache (StringKey) (struct
     type t = string
     let prefix = Prefix.make()
   end)

@@ -12,7 +12,6 @@
 
 open Core
 open Nast
-open Utils
 
 module C = Emitter_core
 

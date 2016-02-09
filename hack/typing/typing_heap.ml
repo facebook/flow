@@ -41,10 +41,10 @@ module GConst = struct
   let prefix = Prefix.make()
 end
 
-module Funs = SharedMem.WithCache (String) (Fun)
-module Classes = SharedMem.WithCache (String) (Class)
-module Typedefs = SharedMem.WithCache (String) (Typedef)
-module GConsts = SharedMem.WithCache (String) (GConst)
+module Funs = SharedMem.WithCache (StringKey) (Fun)
+module Classes = SharedMem.WithCache (StringKey) (Class)
+module Typedefs = SharedMem.WithCache (StringKey) (Typedef)
+module GConsts = SharedMem.WithCache (StringKey) (GConst)
 
 module FuncTerminality = struct
 

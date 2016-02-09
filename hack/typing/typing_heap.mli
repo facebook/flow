@@ -20,10 +20,10 @@ module Typedef :
   end
 module GConst : sig type t = decl ty val prefix : Prefix.t end
 
-module Funs : module type of SharedMem.WithCache (String) (Fun)
-module Classes : module type of SharedMem.WithCache (String) (Class)
-module Typedefs : module type of SharedMem.WithCache (String) (Typedef)
-module GConsts : module type of SharedMem.WithCache (String) (GConst)
+module Funs : module type of SharedMem.WithCache (StringKey) (Fun)
+module Classes : module type of SharedMem.WithCache (StringKey) (Class)
+module Typedefs : module type of SharedMem.WithCache (StringKey) (Typedef)
+module GConsts : module type of SharedMem.WithCache (StringKey) (GConst)
 
 module FuncTerminality : sig
   val get_fun : string -> Fun.t option

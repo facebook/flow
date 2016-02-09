@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-open Utils
+
 open Sys_utils
 
 let format_file_pos (pos : File_pos.t) : string =

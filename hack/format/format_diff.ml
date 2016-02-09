@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 (*****************************************************************************)
 (* Helper function, splits the content of a file into a list of lines.  *)
