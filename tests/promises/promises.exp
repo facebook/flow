@@ -1,4 +1,36 @@
 
+all.js:13:4,4: string
+This type is incompatible with
+all.js:13:7,12: number
+
+all.js:14:4,4: number
+This type is incompatible with
+all.js:14:7,13: boolean
+
+all.js:15:4,4: boolean
+This type is incompatible with
+all.js:15:7,12: string
+
+all.js:19:6,6: boolean
+This type is incompatible with
+all.js:19:9,12: undefined
+
+all.js:19:6,6: number
+This type is incompatible with
+all.js:19:9,12: undefined
+
+all.js:19:6,6: string
+This type is incompatible with
+all.js:19:9,12: undefined
+
+all.js:24:1,13: call of method `all`
+Expected array instead of possibly undefined value
+all.js:24:1,13: undefined (too few arguments)
+
+all.js:27:1,14: call of method `all`
+Expected array instead of
+all.js:27:13,13: number
+
 promise.js:10:1,17:2: call of method `then`
 Error:
 promise.js:11:11,11: number
@@ -97,4 +129,4 @@ resolve_global.js:40:3,11: Promise
 Expected polymorphic type instead of
 resolve_global.js:39:23,37: class type: Promise
 
-Found 17 errors
+Found 25 errors

@@ -2171,6 +2171,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         GetPropT(reason_op, (reason_op, "__proto__"), return_t)
       );
 
+    | CustomFunT (_, PromiseAll),
+      CallT (reason_op, { params_tlist; return_t; _ }) ->
+      let param = match params_tlist with
+      | [] ->
+        (* e.g., Promise.all()
+         * The VoidT type leads to a use type error below, as TupleMapT
+         * expects an ArrT as its lower bound. *)
+        VoidT (replace_reason "undefined (too few arguments)" reason_op)
+      | t::_ ->
+        (* e.g., Promise.all(arr, ...)
+         * Like all functions, extra arguments are ignored. If this isn't
+         * an ArrT, we will realize a use type error in the TupleMapT flow. *)
+        t
+      in
+      (* Build an array holding the unwrapped values of the array parameter
+       * and wrap back up into a promise to return. *)
+      let t = mk_tvar_where cx reason_op (fun t ->
+        let funt = get_builtin cx "$await" reason_op in
+        rec_flow cx trace (param, TupleMapT (reason_op, funt, t))
+      ) in
+      let promise = get_builtin_typeapp cx reason_op "Promise" [t] in
+      rec_flow_t cx trace (promise, return_t)
+
 
     (* Facebookisms are special Facebook-specific functions that are not
        expressable with our current type syntax, so we've hacked in special
@@ -2984,6 +3007,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let a = ArrT (reason, t, Core_list.drop ts i) in
       rec_flow_t cx trace (a, tout)
 
+    (**************************************************)
+    (* function types can be mapped over a tuple      *)
+    (**************************************************)
+
+    | ArrT (_, t, ts), TupleMapT (reason, funt, tout) ->
+      let f x = mk_tvar_where cx reason (fun t ->
+        rec_flow cx trace (funt, CallT (reason, mk_functiontype [x] t))
+      ) in
+      rec_flow_t cx trace (ArrT (reason, f t, List.map f ts), tout)
+
     (***********************************************)
     (* functions may have their prototypes written *)
     (***********************************************)
@@ -3598,6 +3631,7 @@ and err_operation = function
   | HasPropT _ -> "Property not found in"
   | UnaryMinusT _ -> "Expected number instead of"
   | ReifyTypeT _ -> "Internal Error: Invalid type applied to ReifyTypeT!"
+  | TupleMapT _ -> "Expected array instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
      to throw on a use type, so mark the error instead *)

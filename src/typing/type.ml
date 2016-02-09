@@ -357,6 +357,9 @@ module rec TypeTerm : sig
     | ImportTypeT of reason * t
     | ImportTypeofT of reason * t
 
+    (* Map a FunT over each element in a tuple *)
+    | TupleMapT of reason * t * t_out
+
     (* Module export handling *)
     | CJSExtractNamedExportsT of
         reason
@@ -513,6 +516,7 @@ module rec TypeTerm : sig
   (* special builtins *)
   | ObjectAssign
   | ObjectGetPrototypeOf
+  | PromiseAll
 
   (* Facebookisms *)
   | Merge
@@ -761,8 +765,8 @@ let rec reason_of_t = function
   | FunProtoT reason
   | FunProtoApplyT reason
   | FunProtoBindT reason
-  | FunProtoCallT reason
-      -> reason
+  | FunProtoCallT reason ->
+      reason
 
   | PolyT (_,t) ->
       prefix_reason "polymorphic type: " (reason_of_t t)
@@ -934,6 +938,7 @@ and reason_of_use_t = function
   | SetNamedExportsT (reason, _, _) -> reason
   | SetStarExportsT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
+  | TupleMapT (reason, _, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1138,6 +1143,7 @@ and mod_reason_of_use_t f = function
   | SetNamedExportsT (reason, tmap, t_out) -> SetNamedExportsT(f reason, tmap, t_out)
   | SetStarExportsT (reason, target_module_t, t_out) -> SetStarExportsT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
+  | TupleMapT (reason, t, tout) -> TupleMapT (f reason, t, tout)
 
 
 (* type comparison mod reason *)
@@ -1276,6 +1282,7 @@ let string_of_use_ctor = function
   | SetNamedExportsT _ -> "SetNamedExportsT"
   | SetStarExportsT _ -> "SetStarExportsT"
   | DebugPrintT _ -> "DebugPrintT"
+  | TupleMapT _ -> "TupleMapT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

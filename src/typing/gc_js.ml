@@ -385,6 +385,10 @@ and gc_use cx state = function
 
   | DebugPrintT _ -> ()
 
+  | TupleMapT (_, t, t_out) ->
+      gc cx state t;
+      gc cx state t_out;
+
 and gc_id cx state id =
   let root_id, constraints = Flow_js.find_constraints cx id in (
     if state#mark id then (

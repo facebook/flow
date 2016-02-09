@@ -22,6 +22,23 @@ let fake_fun params_names param_ts ret_t =
     Flow_js.mk_functiontype param_ts ?params_names ret_t
   )
 
+let fake_instance name =
+  let insttype = {
+    class_id = 0;
+    type_args = SMap.empty;
+    arg_polarities = SMap.empty;
+    fields_tmap = 0;
+    methods_tmap = 0;
+    mixins = false;
+    structural = false;
+  } in
+  InstanceT (
+    reason_of_string name,
+    MixedT (reason_of_string "dummy static"),
+    MixedT (reason_of_string "dummy super"),
+    insttype
+  )
+
 (* This function does not only resolve every OpenT recursively, but also
    replaces the reasons of types with a uniform ones. It is a left-over bit
    from the old normalize_type_impl behavior. *)
@@ -134,6 +151,18 @@ let rec normalize_type_impl cx ids t = match t with
       let tins = [any] in
       let params_names = Some ["o"] in
       fake_fun params_names tins any
+
+  (* Fake the signature of Promise.all:
+     (promises: Array<Promise>): Promise *)
+  | CustomFunT (_, PromiseAll) ->
+      let param_names = Some ["promises"] in
+      let promise = fake_instance "Promise" in
+      let promises = ArrT (
+        reason_of_string "promises",
+        promise,
+        []
+      ) in
+      fake_fun param_names [promises] promise
 
   | ObjT (_, ot) ->
       let dict = match ot.dict_t with

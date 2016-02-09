@@ -250,6 +250,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String (match kind with
       | ObjectAssign -> "Object.assign"
       | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
+      | PromiseAll -> "Promise.all"
       | Merge -> "merge"
       | MergeDeepInto -> "mergeDeepInto"
       | MergeInto -> "mergeInto"
@@ -473,6 +474,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out;
     ]
   | DebugPrintT _reason -> []
+  | TupleMapT (_, t, t_out) -> [
+      "t", _json_of_t json_cx t;
+      "t_out", _json_of_t json_cx t_out;
+    ]
   )
 )
 

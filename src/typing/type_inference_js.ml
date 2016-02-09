@@ -697,6 +697,9 @@ let rec convert cx type_params_map = Ast.Type.(function
       | "Object$GetPrototypeOf" ->
           mk_custom_fun cx loc typeParameters ObjectGetPrototypeOf
 
+      | "Promise$All" ->
+          mk_custom_fun cx loc typeParameters PromiseAll
+
       | "$Facebookism$Merge" ->
           mk_custom_fun cx loc typeParameters Merge
       | "$Facebookism$MergeDeepInto" ->
