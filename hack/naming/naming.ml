@@ -32,7 +32,6 @@ module GEnv = NamingGlobal.GEnv
  * replaced by identifiers.
  *)
 type positioned_ident = (Pos.t * Ident.t)
-type map = positioned_ident SMap.t
 
 (* <T as A>, A is a type constraint *)
 type type_constraint = (Ast.constraint_kind * Ast.hint) option
@@ -121,12 +120,11 @@ module Env : sig
 
   val scope : genv * lenv -> (genv * lenv -> 'a) -> 'a
   val scope_all : genv * lenv -> (genv * lenv -> 'a) -> Pos.t SMap.t * 'a
-
-  val get_all_locals : lenv -> Pos.t SMap.t
-  val set_all_locals : lenv -> Pos.t SMap.t -> unit
   val extend_all_locals : genv * lenv -> Pos.t SMap.t -> unit
 
 end = struct
+
+  type map = positioned_ident SMap.t
 
   (* The local environment *)
   type lenv = {
@@ -512,9 +510,6 @@ end = struct
     lenv.all_locals := lenv_all_locals_copy;
     lenv_all_locals, res
 
-  let get_all_locals lenv = !(lenv.all_locals)
-  let set_all_locals lenv all_locals =
-    lenv.all_locals := all_locals
   let extend_all_locals (_genv, lenv) more_locals =
     lenv.all_locals := SMap.union more_locals !(lenv.all_locals)
 
@@ -1573,12 +1568,10 @@ and try_stmt env st b cl fb =
   let result = Env.scope env (
   fun env ->
     let genv, lenv = env in
-    let all_locals_copy = Env.get_all_locals lenv in
     (* isolate finally from the rest of the try-catch: if the first
      * statement of the try is an uncaught exception, finally will
      * still be executed *)
     let all_finally, fb = branch env fb in
-    Env.set_all_locals lenv all_locals_copy;
     let all1, b = branch ({genv with in_try = true}, lenv) b in
     let all_locals, cl = catchl env cl in
     Env.extend_all_locals env all_locals;
