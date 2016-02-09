@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 (* A "unification environment" to track certain metadata about the unification
  * or subtyping of a type that isn't captured by the type itself. This is
  * currently managed manually by unify and sub_type, but TODO we should probably

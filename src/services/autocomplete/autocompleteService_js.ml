@@ -10,7 +10,6 @@
 
 open Autocomplete_js
 open Type_printer
-open Utils
 
 (* Details about functions to be added in json output *)
 type func_param_result = {
@@ -167,7 +166,7 @@ let autocomplete_member
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id cx env =
-  Utils.SMap.fold (fun name entry acc ->
+  SMap.fold (fun name entry acc ->
     (* Filter out internal environment variables except for this and
        super. *)
     let is_this = name = (Reason_js.internal_name "this") in

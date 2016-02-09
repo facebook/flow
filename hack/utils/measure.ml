@@ -80,8 +80,7 @@
  *)
 
 module List = Core.List
-module SMap = Utils.SMap
-module FloatMap = Utils.MyMap(struct type t = float let compare = compare end)
+module FloatMap = MyMap.Make(struct type t = float let compare = compare end)
 
 type distribution = {
   bucket_size: float;

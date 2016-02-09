@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 type result = {
   orig_name: string;

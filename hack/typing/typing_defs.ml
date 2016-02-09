@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 module Reason = Typing_reason
 module SN = Naming_special_names

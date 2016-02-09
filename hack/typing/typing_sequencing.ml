@@ -42,7 +42,6 @@
 
 open Core
 open Nast
-open Utils
 
 type env = {
   (* tracking will be set when we are under an unsequenced operation

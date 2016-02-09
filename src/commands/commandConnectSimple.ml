@@ -32,7 +32,7 @@ let wait_on_server_restart ic =
      (* Server has exited and hung up on us *)
      ()
 
-module SockMap = Utils.MyMap(struct
+module SockMap = MyMap.Make (struct
   type t = Unix.sockaddr
   let compare = Pervasives.compare
 end)

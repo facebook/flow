@@ -10,7 +10,6 @@
 
 open Core
 open ClientEnv
-open Utils
 
 let compare_pos pos1 pos2 =
   let char_start1, char_end1 = Pos.info_raw pos1 in

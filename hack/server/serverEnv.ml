@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 (*****************************************************************************)
 (* The "static" environment, initialized first and then doesn't change *)

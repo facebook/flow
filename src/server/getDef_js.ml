@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type getdef_type =
 | Gdloc of Loc.t
 | Gdmem of (string * Type.t)

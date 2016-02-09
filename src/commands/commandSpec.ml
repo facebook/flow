@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 exception Show_help
 exception Failed_to_parse of string
 

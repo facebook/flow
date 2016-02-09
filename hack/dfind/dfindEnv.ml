@@ -13,8 +13,6 @@
 (* The environment shared by everyone *)
 (*****************************************************************************)
 
-open Utils
-
 module Time = struct
   type t = int
 

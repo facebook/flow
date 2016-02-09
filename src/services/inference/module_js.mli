@@ -8,11 +8,10 @@
  *
  *)
 
-open Utils
 open Utils_js
 
 module NameSet: Set.S with type elt = Modulename.t
-module NameMap: Utils.MapSig with type key = Modulename.t
+module NameMap: MyMap.S with type key = Modulename.t
 
 type info = {
   file: filename;           (* file name *)

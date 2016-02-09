@@ -79,7 +79,7 @@ let concat_trace = List.concat
 
 
 (* used to index trace nodes *)
-module TraceMap : MapSig with type key = t = MyMap(struct
+module TraceMap : MyMap.S with type key = t = MyMap.Make (struct
   type key = t
   type t = key
   let compare = compare

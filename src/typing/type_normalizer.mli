@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open Utils
-
 (* returns a grounded(, normalized) and printified version of the type *)
 val normalize_type: Context.t -> Type.t -> Type.t
 

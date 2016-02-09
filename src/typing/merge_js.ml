@@ -7,8 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open Utils
-
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =

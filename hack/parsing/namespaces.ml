@@ -12,9 +12,6 @@ open Ast
 open Core
 open Namespace_env
 
-module SMap = Utils.SMap
-module SSet = Utils.SSet
-
 (* When dealing with an <?hh file, HHVM automatically imports a few
  * "core" classes into every namespace, mostly collections. Their
  * unqualified names always refer to this global version.

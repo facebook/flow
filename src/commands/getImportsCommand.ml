@@ -36,7 +36,7 @@ let spec = {
   )
 }
 
-let extract_location req req_locs = Utils.SMap.find_unsafe req req_locs
+let extract_location req req_locs = SMap.find_unsafe req req_locs
 
 let main option_values root json strip_root modules () =
   let root = guess_root root in
@@ -45,7 +45,7 @@ let main option_values root json strip_root modules () =
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTS modules);
   let requirements_map, non_flow = Timeout.input_value ic in
-  let requirements_map = Utils.SMap.fold
+  let requirements_map = SMap.fold
     begin fun module_name (requires, req_locs) map ->
       let requirements = Module_js.NameSet.fold (fun req assoc ->
         let loc = extract_location (Modulename.to_string req) req_locs in
@@ -59,20 +59,20 @@ let main option_values root json strip_root modules () =
         let loc = relativize strip_root root loc in
         (req, loc)::assoc
       ) requires [] in
-      Utils.SMap.add module_name requirements map
+      SMap.add module_name requirements map
     end
-    requirements_map Utils.SMap.empty in
+    requirements_map SMap.empty in
   if json
   then (
     let json_non_flow =
-      Utils.SSet.fold (fun module_name json_list ->
+      SSet.fold (fun module_name json_list ->
           (module_name, Hh_json.JSON_Object [
                           "not_flow", Hh_json.JSON_Bool true;
                           "requirements", Hh_json.JSON_Array []
                           ]) :: json_list
         ) non_flow [] in
     let json_imports =
-      Utils.SMap.fold (fun module_name assoc json_list ->
+      SMap.fold (fun module_name assoc json_list ->
           let requirements =
             List.map (fun (req, loc) ->
               Hh_json.JSON_Object (
@@ -90,14 +90,14 @@ let main option_values root json strip_root modules () =
     flush stdout
   ) else (
     let print_imports module_name =
-      if (Utils.SMap.mem module_name requirements_map)
+      if (SMap.mem module_name requirements_map)
       then begin
-        let requirements = Utils.SMap.find_unsafe module_name requirements_map in
+        let requirements = SMap.find_unsafe module_name requirements_map in
         Printf.printf "Imports for module '%s':\n" module_name;
         List.iter (fun (req, loc) ->
           Printf.printf "\t%s@%s\n" req (range_string_of_loc loc)
         ) requirements
-      end else if (Utils.SSet.mem module_name non_flow)
+      end else if (SSet.mem module_name non_flow)
       then
         Printf.printf "Cannot obtain imports for module '%s' because is not\
                        \ marked for processing by flow!\n" module_name

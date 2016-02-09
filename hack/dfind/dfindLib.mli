@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type t
 
 val init : (Unix.file_descr * Unix.file_descr) -> (string * Path.t list) -> t

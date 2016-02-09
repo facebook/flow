@@ -10,7 +10,6 @@
 
 open Core
 open Config_file.Getters
-open Utils
 
 type t = {
   load_script      : Path.t option;

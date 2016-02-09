@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 let checkpoints = ref SMap.empty
 

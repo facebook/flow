@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 let lock_fds = ref SMap.empty
 
 (**

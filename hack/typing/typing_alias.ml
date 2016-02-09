@@ -34,7 +34,6 @@
 
 open Core
 open Nast
-open Utils
 
 module Env = Typing_env
 

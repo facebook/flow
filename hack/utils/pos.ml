@@ -9,7 +9,6 @@
  *)
 
 open Lexing
-open Utils
 
 (* Note: While Pos.string prints out positions as closed intervals, pos_start
  * and pos_end actually form a half-open interval (i.e. pos_end points to the
@@ -131,7 +130,7 @@ let destruct_range (p : 'a pos) : (int * int * int * int) =
 let make_from_file_pos ~pos_file ~pos_start ~pos_end =
   { pos_file; pos_start; pos_end }
 
-module Map = MyMap (struct
+module Map = MyMap.Make (struct
   type path = t
   (* The definition below needs to refer to the t in the outer scope, but MyMap
    * expects a module with a type of name t, so we define t in a second step *)

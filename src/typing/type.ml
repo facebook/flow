@@ -647,13 +647,13 @@ and TypeSet : Set.S with type elt = TypeTerm.t = Set.Make(struct
   let compare = Pervasives.compare
 end)
 
-and TypeMap : MapSig with type key = TypeTerm.t = MyMap(struct
+and TypeMap : MyMap.S with type key = TypeTerm.t = MyMap.Make (struct
   type key = TypeTerm.t
   type t = key
   let compare = Pervasives.compare
 end)
 
-and UseTypeMap : MapSig with type key = TypeTerm.use_t = MyMap(struct
+and UseTypeMap : MyMap.S with type key = TypeTerm.use_t = MyMap.Make (struct
   type key = TypeTerm.use_t
   type t = key
   let compare = Pervasives.compare

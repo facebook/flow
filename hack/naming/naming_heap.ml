@@ -9,8 +9,6 @@
  *)
 
 
-open Utils
-
 module ClassHeap = SharedMem.NoCache (StringKey) (struct
   type t = Nast.class_
   let prefix = Prefix.make()

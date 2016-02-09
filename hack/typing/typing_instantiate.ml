@@ -10,7 +10,6 @@
 
 open Core
 open Typing_defs
-open Utils
 
 module SN     = Naming_special_names
 module TSubst = Typing_subst

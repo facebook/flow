@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 let (hint_hooks: (Pos.t * string -> unit) list ref) = ref []
 

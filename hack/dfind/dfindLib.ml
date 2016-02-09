@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type t = (DfindServer.msg, unit) Daemon.handle
 
 let init log_fds (scuba_table, roots) =

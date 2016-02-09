@@ -242,7 +242,7 @@ module Opts = struct
     Path.make str
 end
 
-module PathMap : MapSig with type key = Path.t = MyMap(struct
+module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
   type t = Path.t
   let compare p1 p2 =
     String.compare (Path.to_string p1) (Path.to_string p2)

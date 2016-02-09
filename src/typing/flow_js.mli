@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Reason_js
 
 val new_warning: (reason * string) list -> Errors_js.error

@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 module PosSet = Set.Make(Pos)
 
 let handle_lvar target_ident ident_refs line char_pos ident id _ =

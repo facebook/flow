@@ -10,7 +10,6 @@
 
 open Core
 open Typing_defs
-open Utils
 
 module TUtils = Typing_utils
 module N = Nast

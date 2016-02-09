@@ -17,7 +17,7 @@ open Core
 (*****************************************************************************)
 
 module HH_FIXMES = SharedMem.WithCache (Relative_path.S) (struct
-  type t = Pos.t Utils.IMap.t Utils.IMap.t
+  type t = Pos.t IMap.t IMap.t
   let prefix = Prefix.make()
 end)
 
@@ -38,10 +38,10 @@ let () =
     match HH_FIXMES.get filename with
     | None -> false
     | Some fixme_map ->
-        match Utils.IMap.get line fixme_map with
+        match IMap.get line fixme_map with
         | None -> false
         | Some code_map ->
-            Utils.IMap.mem err_code code_map
+            IMap.mem err_code code_map
   end
 
 (*****************************************************************************)

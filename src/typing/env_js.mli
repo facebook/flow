@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Reason_js
 open Scope
 
@@ -38,7 +37,7 @@ val env_depth: unit -> int
 val trunc_env: int -> unit
 
 val init_env:
-  ?exclude_syms:Utils.SSet.t ->
+  ?exclude_syms:SSet.t ->
   Context.t ->
   Scope.t ->
   unit

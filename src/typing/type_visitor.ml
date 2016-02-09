@@ -9,7 +9,6 @@
  *)
 
 open Type
-open Utils
 
 (* We walk types in a lot of places for all kinds of things, but often most of
    the code is boilerplate. The following visitor class for types aims to

@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Typing_defs
 
 module Funs : module type of Typing_heap.Funs

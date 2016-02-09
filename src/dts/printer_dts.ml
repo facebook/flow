@@ -2,8 +2,6 @@ open Format
 open Dts_ast
 open Utils
 
-module SSet = Utils.SSet
-
 (* get_line_number returns a line number corresponding to a
    location *)
 

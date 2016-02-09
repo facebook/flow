@@ -31,7 +31,7 @@ let string_of_level = function
   | Partial   -> "partial"
   | Unchecked -> "unchecked"
 
-module CLMap = MyMap(struct
+module CLMap = MyMap.Make (struct
   type t = level
   let compare x y = Pervasives.compare x y
 end)

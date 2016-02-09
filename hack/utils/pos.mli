@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 (* Note: While Pos.string prints out positions as closed intervals, pos_start
  * and pos_end actually form a half-open interval (i.e. pos_end points to the
  * character *after* the last character of the relevant lexeme.) *)
@@ -69,4 +67,4 @@ val make_from_file_pos :
   pos_file:Relative_path.t -> pos_start:File_pos.t ->
     pos_end:File_pos.t -> t
 
-module Map : MapSig with type key = t
+module Map : MyMap.S with type key = t

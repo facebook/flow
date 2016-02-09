@@ -1,0 +1,23 @@
+(**
+ * Copyright (c) 2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
+(* HashSet is just a HashTable where the keys are actually the values, and we
+ * ignore the actual values inside the HashTable. *)
+type 'a t
+
+val create: int -> 'a t
+val clear: 'a t -> unit
+val copy: 'a t -> 'a t
+val add: 'a t -> 'a -> unit
+val mem: 'a t -> 'a -> bool
+val remove: 'a t -> 'a -> unit
+val iter: ('a -> unit) -> 'a t -> unit
+val fold: ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+val length: 'a t -> int

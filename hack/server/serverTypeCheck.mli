@@ -21,5 +21,5 @@ val hook_after_parsing: (ServerEnv.genv -> (* old *) ServerEnv.env ->
 (****************************************************************************)
 
 val print_defs: string -> ('a * string) list -> unit
-val print_fast_pos: (('a * string) list * ('b * string) list) Utils.SMap.t -> unit
-val print_fast: (Utils.SSet.t * Utils.SSet.t) Utils.SMap.t -> unit
+val print_fast_pos: (('a * string) list * ('b * string) list) SMap.t -> unit
+val print_fast: (SSet.t * SSet.t) SMap.t -> unit

@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Typing_deps
 open Typing_heap
 

@@ -15,7 +15,6 @@
 open Core
 open DfindEnv
 open DfindMaybe
-open Utils
 
 (*****************************************************************************)
 (* helpers *)

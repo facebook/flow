@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 module SN = Naming_special_names
 
 type id = Pos.t * Ident.t
@@ -41,7 +39,7 @@ module ShapeField = struct
 
 end
 
-module ShapeMap = MyMap(ShapeField)
+module ShapeMap = MyMap.Make (ShapeField)
 
 type hint = Pos.t * hint_
 and hint_ =

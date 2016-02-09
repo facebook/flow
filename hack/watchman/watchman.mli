@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type env
 
 val crash_marker_path: Path.t -> string

@@ -15,7 +15,6 @@
 (*****************************************************************************)
 
 open Core
-open Utils
 
 module Env = Typing_env
 module SN = Naming_special_names

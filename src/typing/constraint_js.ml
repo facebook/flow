@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Type
 
 type ident = int

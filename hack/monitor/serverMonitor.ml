@@ -22,7 +22,6 @@
 *)
 
 open Core
-open Utils
 open ServerProcess
 open ServerProcessTools
 open ServerMonitorUtils

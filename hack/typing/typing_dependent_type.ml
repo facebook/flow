@@ -10,7 +10,6 @@
 
 open Core
 open Typing_defs
-open Utils
 
 module ExprDepTy = struct
   module N = Nast

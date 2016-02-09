@@ -9,7 +9,6 @@
 
 open Constraint_js
 open Type
-open Utils
 
 (** Garbage collection (GC) for graphs refers to the act of "marking" reachable
     type variables from a given set of "roots," by following links between type

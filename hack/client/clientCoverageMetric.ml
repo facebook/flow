@@ -11,7 +11,6 @@
 open Core
 open Coverage_level
 open Hh_json
-open Utils
 
 let result_to_json r = JSON_Object begin
   List.map (SMap.elements r) begin fun (kind, counts) ->

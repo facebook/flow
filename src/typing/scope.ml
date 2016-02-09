@@ -182,8 +182,7 @@ module Entry = struct
       | _ -> false
 end
 
-module KeyMap : MapSig with type key = Key.t
-= MyMap(Key)
+module KeyMap : MyMap.S with type key = Key.t = MyMap.Make (Key)
 
 type var_scope_kind =
   | Ordinary        (* function or module *)

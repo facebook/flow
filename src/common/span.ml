@@ -52,4 +52,4 @@ module Span = struct
   )
 end
 
-module SpanMap = MyMap(Span)
+module SpanMap = MyMap.Make (Span)

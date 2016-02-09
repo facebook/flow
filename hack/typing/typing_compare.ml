@@ -23,7 +23,6 @@
 open Core
 open Typing_defs
 open Typing_deps
-open Utils
 
 module Env = Typing_env
 module ShapeMap = Nast.ShapeMap

@@ -64,7 +64,7 @@ module S = struct
 end
 
 module Set = Set.Make(S)
-module Map = Utils.MyMap(S)
+module Map = MyMap.Make(S)
 
 let to_absolute (p, rest) = path_of_prefix p ^ rest
 

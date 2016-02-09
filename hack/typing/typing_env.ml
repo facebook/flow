@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 open Typing_defs
 open Nast
 

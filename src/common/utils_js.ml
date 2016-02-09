@@ -34,7 +34,7 @@ module FilenameSet = struct
   let of_list = List.fold_left (fun s f -> add f s) empty
 end
 
-module FilenameMap = Utils.MyMap(Loc.FilenameKey)
+module FilenameMap = MyMap.Make (Loc.FilenameKey)
 
 (* ok-or-error type *)
 type ('a,'b) ok_or_err = OK of 'a | Err of 'b

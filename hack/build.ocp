@@ -96,6 +96,15 @@ begin library "hh-utils-core"
   files = [ "utils/core.ml" ]
 end
 
+begin library "hh-utils-collections"
+  files = [
+    "utils/collections/hashSet.mli"
+    "utils/collections/hashSet.ml"
+    "utils/collections/myMap.mli"
+    "utils/collections/myMap.ml"
+  ]
+end
+
 begin library "hh-utils-common"
   requires += [ "hh-third-party" "hh-utils-core" "hh-fsnotify" ]
   ccopt += "-DOSS_SMALL_HH_TABLE_POWS"
@@ -153,7 +162,7 @@ begin library "hh-utils"
 end
 
 begin library "hh-deps"
-  requires += [ "hh-third-party" "hh-utils" ]
+  requires += [ "hh-third-party" "hh-utils" "hh-utils-collections" ]
   files = [
     "deps/fileInfo.ml"
     "deps/typing_deps.ml"
@@ -231,7 +240,7 @@ begin library "hh-parsing"
 end
 
 begin library "hh-typing-base"
-  requires += [ "hh-utils" "hh-parsing" ]
+  requires += [ "hh-utils" "hh-parsing" "hh-utils-collections" ]
   files = [
     "naming/naming_special_names.ml"
     "typing/typing_reason.ml"
@@ -329,7 +338,7 @@ begin library "hh-typing"
 end
 
 begin library "hh-search"
-  requires += [ "hh-utils" "hh-heap"  "hh-parsing" ]
+  requires += [ "hh-utils" "hh-heap"  "hh-parsing" "hh-utils-collections" ]
   files = [
     "search/searchUtils.ml"
     "search/fuzzySearchService.ml"

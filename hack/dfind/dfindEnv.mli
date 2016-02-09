@@ -12,8 +12,6 @@
 (* The environment shared by everyone *)
 (*****************************************************************************)
 
-open Utils
-
 (* This is in fact a fake time module, we don't want to use the "real"
  * unix timestamps, because we would run into atomicity problems.
  * Problems like, what happens if the file was modified between the moment

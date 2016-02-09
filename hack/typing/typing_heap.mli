@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Typing_defs
 
 module Class : sig type t = class_type val prefix : Prefix.t end

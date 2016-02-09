@@ -61,6 +61,7 @@ MODULES=\
   third-party/core\
   typing\
   utils\
+  utils/collections\
   monitor\
   watchman\
   $(FSNOTIFY)\

@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-module PathMap : Utils.MapSig with type key = Path.t
+module PathMap : MyMap.S with type key = Path.t
 module Opts : sig
   type esproposal_feature_mode =
     | ESPROPOSAL_ENABLE
@@ -27,9 +27,9 @@ module Opts : sig
     module_name_mappers: (Str.regexp * string) list;
     node_resolver_dirnames: string list;
     munge_underscores: bool;
-    module_file_exts: Utils.SSet.t;
+    module_file_exts: SSet.t;
     suppress_comments: Str.regexp list;
-    suppress_types: Utils.SSet.t;
+    suppress_types: SSet.t;
     traces: int;
     strip_root: bool;
     log_file: Path.t option;

@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 module Make(S : SearchUtils.Searchable) = struct
 
@@ -19,7 +18,7 @@ type search_result_type = S.t
 
 let all_types = S.fuzzy_types
 
-module TMap = MyMap(struct
+module TMap = MyMap.Make (struct
   type t = search_result_type
   let compare = S.compare_result_type
 end)

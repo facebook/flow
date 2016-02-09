@@ -10,7 +10,6 @@
 
 open Core
 open Sys_utils
-open Utils
 
 type t = string SMap.t
 

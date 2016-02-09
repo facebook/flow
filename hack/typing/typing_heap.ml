@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Typing_defs
 
 (* The following classes are used to make sure we make no typing
@@ -56,7 +55,7 @@ module FuncTerminality = struct
     match Classes.get cls_name with
       | None -> None
       | Some { Typing_defs.tc_smethods ; _ } ->
-        begin match Utils.SMap.get meth_name tc_smethods with
+        begin match SMap.get meth_name tc_smethods with
           | None -> None
           | Some { Typing_defs.ce_type = (_r, Typing_defs.Tfun fty) ; _} ->
             Some fty

@@ -43,7 +43,7 @@ let main option_values root json strip_root modules () =
 
   ServerProt.cmd_to_channel oc (ServerProt.GET_IMPORTERS modules);
   let importers_map = Timeout.input_value ic in
-  let importers_map = Utils.SMap.fold (fun module_name importers map ->
+  let importers_map = SMap.fold (fun module_name importers map ->
     let importer_list = List.map (function
       | Modulename.String s -> s
       | Modulename.Filename f ->
@@ -51,12 +51,12 @@ let main option_values root json strip_root modules () =
         if strip_root then Files_js.relative_path (Path.to_string root) f
         else f
     ) (Module_js.NameSet.elements importers) in
-    Utils.SMap.add module_name importer_list map
-  ) importers_map Utils.SMap.empty in
+    SMap.add module_name importer_list map
+  ) importers_map SMap.empty in
   if json
   then (
     let json_list =
-      Utils.SMap.fold (fun module_name importer_list json_list ->
+      SMap.fold (fun module_name importer_list json_list ->
         let importer_list = List.map (fun entry ->
           Hh_json.JSON_String entry
         ) importer_list in
@@ -67,10 +67,10 @@ let main option_values root json strip_root modules () =
     flush stdout
   ) else (
     List.iter (fun module_name ->
-      if (Utils.SMap.mem module_name importers_map)
+      if (SMap.mem module_name importers_map)
       then begin
         let importer_list =
-          Utils.SMap.find_unsafe module_name importers_map in
+          SMap.find_unsafe module_name importers_map in
         Printf.printf "Modules importing module '%s':\n" module_name;
         List.iter (fun entry ->
           Printf.printf "\t%s\n" entry

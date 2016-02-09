@@ -422,14 +422,14 @@ let ref_param env =
 
 let rec program ?(elaborate_namespaces = true) file content =
   L.comment_list := [];
-  L.fixmes := Utils.IMap.empty;
+  L.fixmes := IMap.empty;
   let lb = Lexing.from_string content in
   let env = init_env file lb in
   let ast, file_mode = header env in
   let comments = !L.comment_list in
   let fixmes = !L.fixmes in
   L.comment_list := [];
-  L.fixmes := Utils.IMap.empty;
+  L.fixmes := IMap.empty;
   Parser_heap.HH_FIXMES.add env.file fixmes;
   Option.iter (List.last !(env.errors)) Errors.parsing_error;
   let ast = if elaborate_namespaces

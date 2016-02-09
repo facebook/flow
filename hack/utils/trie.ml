@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 (* Utility functions *)
 

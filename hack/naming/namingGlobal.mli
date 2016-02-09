@@ -12,7 +12,6 @@
 (** Module "naming" a program.
  * Get all the global names
  *)
-open Utils
 
 module GEnv: sig
   val class_pos: string -> Pos.t option

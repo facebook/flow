@@ -31,6 +31,6 @@ let make_genv ~multicore options watch_paths =
 let make_env () =
   { ServerEnv.
     files = Utils_js.FilenameSet.empty;
-    libs = Utils.SSet.empty;
+    libs = SSet.empty;
     errorl = [];
   }

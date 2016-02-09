@@ -19,7 +19,6 @@
 open Core
 open Nast
 open Typing_defs
-open Utils
 
 module Env = Typing_env
 module Inst = Typing_instantiate

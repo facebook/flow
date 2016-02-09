@@ -96,8 +96,6 @@ module Members = struct
     (Utils.str_starts_with s ":data-") || (Utils.str_starts_with s ":aria-")
 end
 
-open Utils
-
 module UserAttributes = struct
 
   let uaOverride            = "__Override"

@@ -30,7 +30,7 @@ type genv = {
 
 type env = {
     files: Utils_js.FilenameSet.t;
-    libs: Utils.SSet.t; (* a subset of `files` *)
+    libs: SSet.t; (* a subset of `files` *)
     errorl: Errors_js.error list;
   }
 

@@ -38,7 +38,7 @@ module Command(CommandList : COMMAND_LIST) = struct
     if not (is_partial_flag key)
     then None
     else try
-      let metadata = Utils.SMap.find_unsafe key flags in
+      let metadata = SMap.find_unsafe key flags in
       Some metadata.CommandSpec.ArgSpec.arg_count
     with Not_found -> None
 
@@ -51,7 +51,7 @@ module Command(CommandList : COMMAND_LIST) = struct
           if (current < List.length rest &&
               is_partial_flag (List.nth rest current))
           then (
-            let flags = Utils.SMap.keys flags in
+            let flags = SMap.keys flags in
             String.concat " " flags
           ) else (
             "FILE"

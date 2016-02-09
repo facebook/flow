@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 let process_fun_id results_acc target_fun id =
   if target_fun = (snd id)

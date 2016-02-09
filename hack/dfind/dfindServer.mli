@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type msg =
   | Ready
   | Updates of SSet.t

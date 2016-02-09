@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 module Env = Typing_env
 module TUtils = Typing_utils

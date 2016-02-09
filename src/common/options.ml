@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type error_flags = {
   color: Tty.color_mode;
   one_line: bool;

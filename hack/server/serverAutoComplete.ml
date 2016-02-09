@@ -13,7 +13,6 @@
 (* Code for auto-completion *)
 (*****************************************************************************)
 open Core
-open Utils
 
 let auto_complete files_info content =
   AutocompleteService.attach_hooks();

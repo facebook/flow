@@ -16,7 +16,6 @@
  * to use a functor.
  *)
 (*****************************************************************************)
-open Utils
 
 type config = {
   global_size: int;
@@ -100,7 +99,7 @@ module type S = sig
   type key
   type t
   module KeySet : Set.S with type elt = key
-  module KeyMap : MapSig with type key = key
+  module KeyMap : MyMap.S with type key = key
 
   (* Safe for concurrent writes, the first writer wins, the second write
    * is dismissed.
@@ -122,8 +121,8 @@ module type S = sig
   val mem: key -> bool
 
   (* This function takes the elements present in the set and keep the "old"
-   * version in a separate heap. This is useful when we want to compare 
-   * what has changed. We will be in a situation for type-checking 
+   * version in a separate heap. This is useful when we want to compare
+   * what has changed. We will be in a situation for type-checking
    * (cf typing/typing_redecl_service.ml) where we want to compare the type
    * of a class in the previous environment vs the current type.
    *)
@@ -144,7 +143,7 @@ module NoCache :
   S with type t = Value.t
     and type key = UserKeyType.t
     and module KeySet = Set.Make (UserKeyType)
-    and module KeyMap = MyMap (UserKeyType)
+    and module KeyMap = MyMap.Make (UserKeyType)
 
 module WithCache :
   functor (UserKeyType : UserKeyType) ->
@@ -152,4 +151,4 @@ module WithCache :
   S with type t = Value.t
     and type key = UserKeyType.t
     and module KeySet = Set.Make (UserKeyType)
-    and module KeyMap = MyMap (UserKeyType)
+    and module KeyMap = MyMap.Make (UserKeyType)

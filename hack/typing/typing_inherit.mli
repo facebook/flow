@@ -15,7 +15,7 @@
  * types that where inherited from their parents.
  *)
 (*****************************************************************************)
-open Utils
+
 open Typing_defs
 type env = Typing_env.env
 

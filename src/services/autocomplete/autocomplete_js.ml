@@ -9,7 +9,7 @@
  *)
 
 type autocomplete_type =
-| Acid of Scope.Entry.t Utils.SMap.t
+| Acid of Scope.Entry.t SMap.t
 | Acmem of Type.t
 | Acjsx of Type.t
 

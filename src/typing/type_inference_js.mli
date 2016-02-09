@@ -25,7 +25,7 @@ val infer_lib_file:
   max_trace_depth: int ->
   verbose: int option ->
   strip_root: bool ->
-  exclude_syms:Utils.SSet.t ->
+  exclude_syms:SSet.t ->
   filename ->
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->

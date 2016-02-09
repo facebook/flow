@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 type config = {
   global_size: int;
@@ -330,7 +329,7 @@ module type S = sig
   type key
   type t
   module KeySet : Set.S with type elt = key
-  module KeyMap : MapSig with type key = key
+  module KeyMap : MyMap.S with type key = key
 
   val add              : key -> t -> unit
   val get              : key -> t option
@@ -365,7 +364,7 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
   module KeySet = Set.Make (UserKeyType)
-  module KeyMap = MyMap (UserKeyType)
+  module KeyMap = MyMap.Make (UserKeyType)
 
   type key = UserKeyType.t
   type t = Value.t
@@ -614,7 +613,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
   module KeySet = Set.Make (UserKeyType)
-  module KeyMap = MyMap (UserKeyType)
+  module KeyMap = MyMap.Make (UserKeyType)
 
   module Direct = NoCache (UserKeyType) (Value)
 

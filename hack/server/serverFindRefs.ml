@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 type action = Ai.ServerFindRefs.action =
   | Class of string

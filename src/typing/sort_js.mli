@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Utils_js
 
 (* given a map from keys to dependencies, returns whether the dependencies are

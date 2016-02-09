@@ -5,4 +5,4 @@ val make_span:
 
 val string_of_span: Loc.t -> string
 
-module SpanMap : Utils.MapSig with type key = Loc.t
+module SpanMap : MyMap.S with type key = Loc.t

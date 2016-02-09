@@ -15,7 +15,6 @@
 
 open Core
 open DfindEnv
-open Utils
 
 type msg =
   | Ready

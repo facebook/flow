@@ -16,7 +16,7 @@ module S = struct
   let compare = Pervasives.compare
 end
 
-module LineMap = Utils.MyMap(S)
+module LineMap = MyMap.Make(S)
 
 let get_key pos =
   let line, _, _ = Pos.info_pos pos in

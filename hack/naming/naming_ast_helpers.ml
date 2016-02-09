@@ -86,12 +86,12 @@ let is_terminal nsenv stl =
 *)
 module GetLocals = struct
 
-  let smap_union ((nsenv:Namespace_env.env), (m1:Pos.t Utils.SMap.t))
-      (m2:Pos.t Utils.SMap.t) =
+  let smap_union ((nsenv:Namespace_env.env), (m1:Pos.t SMap.t))
+      (m2:Pos.t SMap.t) =
     let m_combined = SMap.fold SMap.add m1 m2 in
     nsenv, m_combined
 
-  let rec lvalue (acc:(Namespace_env.env * Pos.t Utils.SMap.t)) = function
+  let rec lvalue (acc:(Namespace_env.env * Pos.t SMap.t)) = function
     | (p, Lvar (_, x)) ->
       let nsenv, m = acc in
       nsenv, SMap.add x p m
@@ -102,7 +102,7 @@ module GetLocals = struct
       nsenv, SMap.add x p m
     | _ -> acc
 
-  let rec stmt (acc:(Namespace_env.env * Pos.t Utils.SMap.t)) st =
+  let rec stmt (acc:(Namespace_env.env * Pos.t SMap.t)) st =
     let nsenv = fst acc in
     match st with
     | Expr (_, Binop (Eq None, lv, rv))
@@ -131,7 +131,7 @@ module GetLocals = struct
       else begin
         let _, m1 = block (nsenv, SMap.empty) b1 in
         let _, m2 = block (nsenv, SMap.empty) b2 in
-        let (m:Pos.t Utils.SMap.t) = (smap_inter m1 m2) in
+        let (m:Pos.t SMap.t) = (smap_inter m1 m2) in
         smap_union acc m
       end
     | Switch (e, cl) ->

@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 external hh_counter_next : unit -> int = "hh_counter_next"
 
 type t = int

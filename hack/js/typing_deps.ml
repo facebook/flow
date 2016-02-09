@@ -21,7 +21,6 @@
  *)
 
 open Core
-open Utils
 
 (* If we're currently adding a dependency. This should be false if we're adding
  * a file we want to typecheck or autocomplete in. It should be true if it's
@@ -67,7 +66,7 @@ module Dep = struct
 end
 
 module DSet = Set.Make(Dep)
-module DMap = MyMap(Dep)
+module DMap = MyMap.Make(Dep)
 
 (*
 let print_deps deps =

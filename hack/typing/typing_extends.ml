@@ -16,7 +16,6 @@
 open Core
 open Typing_defs
 open Typing_ops
-open Utils
 
 module Env = Typing_env
 module TUtils = Typing_utils

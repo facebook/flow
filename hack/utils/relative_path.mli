@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type prefix =
   | Root
   | Hhi
@@ -36,7 +34,7 @@ val suffix : t -> string
 val to_absolute : t -> string
 
 module Set : module type of Set.Make (S)
-module Map : module type of MyMap (S)
+module Map : module type of MyMap.Make (S)
 
-val relativize_set : prefix -> Utils.SSet.t -> Set.t
+val relativize_set : prefix -> SSet.t -> Set.t
 val set_of_list : t list -> Set.t

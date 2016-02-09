@@ -8,8 +8,6 @@
  *
  *)
 
-open Utils
-
 type env = Scope.t list
 
 type t
