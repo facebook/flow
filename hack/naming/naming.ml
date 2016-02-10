@@ -83,7 +83,9 @@ type unbound_mode =
 (* The primitives to manipulate the naming environment *)
 module Env : sig
 
+  type all_locals
   type lenv
+
   val empty_local : unbound_mode -> lenv
   val make_class_genv :
     TypecheckerOptions.t ->
@@ -119,12 +121,13 @@ module Env : sig
   val new_const : genv * lenv -> Ast.id -> Ast.id
 
   val scope : genv * lenv -> (genv * lenv -> 'a) -> 'a
-  val scope_all : genv * lenv -> (genv * lenv -> 'a) -> Pos.t SMap.t * 'a
-  val extend_all_locals : genv * lenv -> Pos.t SMap.t -> unit
+  val scope_all : genv * lenv -> (genv * lenv -> 'a) -> all_locals * 'a
+  val extend_all_locals : genv * lenv -> all_locals -> unit
 
 end = struct
 
   type map = positioned_ident SMap.t
+  type all_locals = Pos.t SMap.t
 
   (* The local environment *)
   type lenv = {
@@ -145,7 +148,7 @@ end = struct
      * But it is much better to keep it somewhere, so that you can
      * say it is bound, but in a different scope.
      *)
-    all_locals: Pos.t SMap.t ref;
+    all_locals: all_locals ref;
 
     (* Some statements can define new variables afterwards, e.g.,
      * if (...) {
@@ -1519,8 +1522,8 @@ and switch_stmt env st e cl =
   let _, vars = Naming_ast_helpers.GetLocals.stmt (nsenv, SMap.empty) st in
   SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
   let result = Env.scope env begin fun env ->
-    let all_locals, cl = casel env cl in
-    Env.extend_all_locals env all_locals;
+    let all_locals_l, cl = casel env cl in
+    List.iter all_locals_l (Env.extend_all_locals env);
     N.Switch (e, cl)
   end in
   Env.promote_pending env;
@@ -1571,10 +1574,10 @@ and try_stmt env st b cl fb =
      * statement of the try is an uncaught exception, finally will
      * still be executed *)
     let all_finally, fb = branch env fb in
-    let all1, b = branch ({genv with in_try = true}, lenv) b in
-    let all_locals, cl = catchl env cl in
-    Env.extend_all_locals env all_locals;
-    Env.extend_all_locals env all1;
+    let all_locals_b, b = branch ({genv with in_try = true}, lenv) b in
+    let all_locals_cl, cl = catchl env cl in
+    List.iter all_locals_cl (Env.extend_all_locals env);
+    Env.extend_all_locals env all_locals_b;
     N.Try (b, cl, fb)
   ) in
   Env.promote_pending env;
@@ -2005,29 +2008,26 @@ and make_class_id env (p, x as cid) =
     | _ -> N.CI (Env.class_name env cid)
 
 and casel env l =
-  List.map_env SMap.empty l (case env)
+  List.map_env [] l (case env)
 
 and case env acc = function
   | Default b ->
     let b = cut_and_flatten ~replacement:Fallthrough env b in
     let all_locals, b = branch env b in
-    let acc = SMap.union all_locals acc in
-    acc, N.Default b
+    all_locals :: acc, N.Default b
   | Case (e, b) ->
     let e = expr env e in
     let b = cut_and_flatten ~replacement:Fallthrough env b in
     let all_locals, b = branch env b in
-    let acc = SMap.union all_locals acc in
-    acc, N.Case (e, b)
+    all_locals :: acc, N.Case (e, b)
 
-and catchl env l = List.map_env SMap.empty l (catch env)
+and catchl env l = List.map_env [] l (catch env)
 and catch env acc (x1, x2, b) =
   Env.scope env (
   fun env ->
     let x2 = Env.new_lvar env x2 in
     let all_locals, b = branch env b in
-    let acc = SMap.union all_locals acc in
-    acc, (Env.class_name env x1, x2, b)
+    all_locals :: acc, (Env.class_name env x1, x2, b)
   )
 
 and afield env = function
