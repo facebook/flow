@@ -3,13 +3,13 @@ CanvasRenderingContext2D.js:11:5,24: call of method `moveTo`
 Error:
 CanvasRenderingContext2D.js:11:16,18: string
 This type is incompatible with
-[LIB] dom.js:713:15,20: number
+[LIB] dom.js:727:15,20: number
 
 CanvasRenderingContext2D.js:11:5,24: call of method `moveTo`
 Error:
 CanvasRenderingContext2D.js:11:21,23: string
 This type is incompatible with
-[LIB] dom.js:713:26,31: number
+[LIB] dom.js:727:26,31: number
 
 eventtarget.js:9:6,40: call of method `attachEvent`
 Function cannot be called on possibly undefined value
@@ -23,16 +23,12 @@ path2d.js:9:6,40: call of method `arcTo`
 Function cannot be called on
 path2d.js:9:6,40: intersection: function type(s)
 
-traversal.js:38:5,54: call of method `createNodeIterator`
-Error:
-traversal.js:38:52,53: object literal
-This type is incompatible with
-[LIB] dom.js:353:65,83: union: NodeFilterCallback | object type
+traversal.js:125:5,54: call of method `createNodeIterator`
+Function cannot be called on
+traversal.js:125:5,54: intersection: function type(s)
 
-traversal.js:46:5,52: call of method `createTreeWalker`
-Error:
-traversal.js:46:50,51: object literal
-This type is incompatible with
-[LIB] dom.js:354:63,81: union: NodeFilterCallback | object type
+traversal.js:130:5,52: call of method `createTreeWalker`
+Function cannot be called on
+traversal.js:130:5,52: intersection: function type(s)
 
 Found 7 errors
