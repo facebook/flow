@@ -2,11 +2,11 @@
 
 let tests = [
   function() {
-    // document.createNodeIterator() should exist
-    (document.createNodeIterator(document.body): NodeIterator);
+    const i: NodeIterator = document.createNodeIterator(document.body);
+    const filter: NodeFilter = i.filter;
   },
   function() {
-    // document.createTreeWalker() should exist
-    (document.createTreeWalker(document.body): TreeWalker);
+    const w: TreeWalker = document.createTreeWalker(document.body);
+    const filter: NodeFilter = w.filter;
   },
 ];
