@@ -23,16 +23,16 @@ path2d.js:9:6,40: call of method `arcTo`
 Function cannot be called on
 path2d.js:9:6,40: intersection: function type(s)
 
-traversal.js:22:5,61: call of method `createNodeIterator`
+traversal.js:38:5,54: call of method `createNodeIterator`
 Error:
-traversal.js:22:59,60: object literal
+traversal.js:38:52,53: object literal
 This type is incompatible with
-[LIB] dom.js:353:62,80: union: NodeFilterCallback | object type
+[LIB] dom.js:353:65,83: union: NodeFilterCallback | object type
 
-traversal.js:30:5,59: call of method `createTreeWalker`
+traversal.js:46:5,52: call of method `createTreeWalker`
 Error:
-traversal.js:30:57,58: object literal
+traversal.js:46:50,51: object literal
 This type is incompatible with
-[LIB] dom.js:354:60,78: union: NodeFilterCallback | object type
+[LIB] dom.js:354:63,81: union: NodeFilterCallback | object type
 
 Found 7 errors
