@@ -41,8 +41,8 @@ import_type.js:57:16,24: AliasFoo3
 type referenced from value position
 import_type.js:53:14,22: type AliasFoo3
 
-import_type.js:71:14,21: import type { numValue }
-`import type` only works on exported classes, functions, and type aliases!
+import_type.js:71:14,21: Named import from module `./ExportsANumber`
+The `numValue` export is a value, but not a type. `import type` only works on type exports like type aliases, interfaces, and classes. If you inteded to import the type *of* a value, please use `import typeof` instead.
 
 import_type.js:81:3,11: ClassFoo6
 type referenced from value position

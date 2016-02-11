@@ -2,7 +2,7 @@
  * @flow
  */
 
-import type A from "./A.js";
+import typeof A from "./A.js";
 import type {Foo, Bar as Baz} from "./A.js";
 
 type duck = {

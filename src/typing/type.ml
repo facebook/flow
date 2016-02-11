@@ -352,21 +352,22 @@ module rec TypeTerm : sig
     (* Module import handling *)
     | CJSRequireT of reason * t
     | ImportModuleNsT of reason * t
-    | ImportDefaultT of reason * (string * string) * t
-    | ImportNamedT of reason * string * t
-    | ImportTypeT of reason * t
-    | ImportTypeofT of reason * t
-
-    (* Map a FunT over each element in a tuple *)
-    | TupleMapT of reason * t * t_out
+    | ImportDefaultT of reason * import_kind * (string * string) * t
+    | ImportNamedT of reason * import_kind * string * t
+    | ImportTypeT of reason * string * t
+    | ImportTypeofT of reason * string * t
+    | AssertImportIsValueT of reason * string
 
     (* Module export handling *)
     | CJSExtractNamedExportsT of
         reason
         * (* local ModuleT *) t
         * (* 't_out' to receive the resolved ModuleT *) t_out
-    | SetNamedExportsT of reason * t SMap.t * t_out
-    | SetStarExportsT of reason * t * t_out
+    | ExportNamedT of reason * t SMap.t * t_out
+    | ExportStarFromT of reason * t * t_out
+
+    (* Map a FunT over each element in a tuple *)
+    | TupleMapT of reason * t * t_out
 
     | DebugPrintT of reason
 
@@ -488,6 +489,11 @@ module rec TypeTerm : sig
      *)
     cjs_export: t option;
   }
+
+  and import_kind =
+    | ImportType
+    | ImportTypeof
+    | ImportValue
 
   and typeparam = {
     reason: reason;
@@ -930,13 +936,14 @@ and reason_of_use_t = function
 
   | CJSRequireT (reason, _) -> reason
   | ImportModuleNsT (reason, _) -> reason
-  | ImportDefaultT (reason, _, _) -> reason
-  | ImportNamedT (reason, _, _) -> reason
-  | ImportTypeT (reason, _) -> reason
-  | ImportTypeofT (reason, _) -> reason
+  | ImportDefaultT (reason, _, _, _) -> reason
+  | ImportNamedT (reason, _, _, _) -> reason
+  | ImportTypeT (reason, _, _) -> reason
+  | ImportTypeofT (reason, _, _) -> reason
+  | AssertImportIsValueT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
-  | SetNamedExportsT (reason, _, _) -> reason
-  | SetStarExportsT (reason, _, _) -> reason
+  | ExportNamedT (reason, _, _) -> reason
+  | ExportStarFromT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
   | TupleMapT (reason, _, _) -> reason
 
@@ -1134,14 +1141,15 @@ and mod_reason_of_use_t f = function
 
   | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
   | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
-  | ImportDefaultT (reason, name, t) -> ImportDefaultT (f reason, name, t)
-  | ImportNamedT (reason, name, t) -> ImportNamedT (f reason, name, t)
-  | ImportTypeT (reason, t) -> ImportTypeT (f reason, t)
-  | ImportTypeofT (reason, t) -> ImportTypeofT (f reason, t)
+  | ImportDefaultT (reason, import_kind, name, t) -> ImportDefaultT (f reason, import_kind, name, t)
+  | ImportNamedT (reason, import_kind, name, t) -> ImportNamedT (f reason, import_kind, name, t)
+  | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
+  | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
+  | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
 
   | CJSExtractNamedExportsT (reason, t1, t2) -> CJSExtractNamedExportsT (f reason, t1, t2)
-  | SetNamedExportsT (reason, tmap, t_out) -> SetNamedExportsT(f reason, tmap, t_out)
-  | SetStarExportsT (reason, target_module_t, t_out) -> SetStarExportsT(f reason, target_module_t, t_out)
+  | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
+  | ExportStarFromT (reason, target_module_t, t_out) -> ExportStarFromT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
   | TupleMapT (reason, t, tout) -> TupleMapT (f reason, t, tout)
 
@@ -1277,10 +1285,11 @@ let string_of_use_ctor = function
   | ImportNamedT _ -> "ImportNamedT"
   | ImportTypeT _ -> "ImportTypeT"
   | ImportTypeofT _ -> "ImportTypeofT"
+  | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | CJSRequireT _ -> "CJSRequireT"
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
-  | SetNamedExportsT _ -> "SetNamedExportsT"
-  | SetStarExportsT _ -> "SetStarExportsT"
+  | ExportNamedT _ -> "ExportNamedT"
+  | ExportStarFromT _ -> "ExportStarFromT"
   | DebugPrintT _ -> "DebugPrintT"
   | TupleMapT _ -> "TupleMapT"
 

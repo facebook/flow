@@ -289,3 +289,8 @@ var at2: string = numberValue8; // Error: number ~> string
 
 var at3: number = numberValue9;
 var at4: string = numberValue9; // Error: number ~> string
+
+/////////////////////////////////////////////////////////////
+// == Vanilla `import` cannot import a type-only export == //
+/////////////////////////////////////////////////////////////
+import {typeAlias} from "./ExportType"; // Error: Cannot vanilla-import a type alias!

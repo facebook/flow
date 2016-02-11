@@ -31,8 +31,8 @@ import_typeof.js:45:22,36: ClassFoo4
 This type is incompatible with
 import_typeof.js:45:9,18: class type: ClassFoo4
 
-import_typeof.js:51:16,24: import typeof { AliasFoo3 }
-`import typeof` can not be used on type-only exports! If you intended to import a type alias, please use `import type` instead.
+import_typeof.js:51:16,24: Named import from module `./ExportNamed_Alias`
+The `AliasFoo3` export is a type, but not a value. `import typeof` only works on value exports like classes, vars, lets, etc. If you intended to import a type alias or interface, please use `import type` instead.
 
 import_typeof.js:68:23,28: string
 This type is incompatible with

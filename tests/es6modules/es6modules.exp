@@ -309,6 +309,9 @@ es6modules.js:291:19,30: number
 This type is incompatible with
 es6modules.js:291:10,15: string
 
+es6modules.js:296:9,17: Named import from module `./ExportType`
+`typeAlias` is a type, but not a value. In order to import it, please use `import type`.
+
 test_imports_are_frozen.js:9:1,21: assignment of property `numberValue1`
 Mutation not allowed on
 test_imports_are_frozen.js:9:1,8: exports of "A"
@@ -341,4 +344,4 @@ test_imports_are_frozen.js:51:3,35: assignment of property `numberValue1`
 Mutation not allowed on
 test_imports_are_frozen.js:51:3,22: frozen object literal
 
-Found 81 errors
+Found 82 errors

@@ -713,8 +713,8 @@ let rec assume_ground cx ids = function
 
   | ImportModuleNsT(_,t)
   | CJSRequireT(_,t)
-  | ImportTypeT(_,t)
-  | ImportTypeofT(_,t)
+  | ImportTypeT(_,_,t)
+  | ImportTypeofT(_,_,t)
   | ReposLowerT (_, t)
 
   (* Other common operations that might happen immediately after extracting
@@ -1153,15 +1153,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `import type` creates a properly-parameterized type alias for the *)
     (* remote type -- but only for particular, valid remote types.       *)
     (*********************************************************************)
-    | (ClassT(inst), ImportTypeT(reason, t)) ->
+    | (ClassT(inst), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (TypeT(reason, inst), t)
 
     (* fix this-abstracted class when used as a type *)
-    | (ThisClassT i, ImportTypeT(reason, _)) ->
+    | (ThisClassT i, ImportTypeT(reason, _, _)) ->
       rec_flow cx trace
         (fix_this_class cx trace reason i, u)
 
-    | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, t)) ->
+    | (PolyT(typeparams, ClassT(inst)), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, inst)), t)
 
     (* delay fixing a polymorphic this-abstracted class until it is specialized,
@@ -1170,14 +1170,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let targs = List.map (fun tp -> BoundT tp) typeparams in
       rec_flow cx trace (PolyT(typeparams, ClassT (TypeAppT(l, targs))), u)
 
-    | (FunT(_, _, prototype, _), ImportTypeT(reason, t)) ->
+    | (FunT(_, _, prototype, _), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (TypeT(reason, prototype), t)
 
-    | (PolyT(typeparams, FunT(_, _, prototype, _)), ImportTypeT(reason, t)) ->
+    | (PolyT(typeparams, FunT(_, _, prototype, _)), ImportTypeT(reason, _, t)) ->
       rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, prototype)), t)
 
-    | (TypeT _, ImportTypeT(_, t))
-    | (PolyT(_, TypeT _), ImportTypeT(_, t))
+    | (TypeT _, ImportTypeT(_, _, t))
+    | (PolyT(_, TypeT _), ImportTypeT(_, _, t))
       -> rec_flow_t cx trace (l, t)
 
     (**
@@ -1186,31 +1186,46 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *
      *       TODO(jeffmo) Task(6860853)
      *)
-    | (ObjT _, ImportTypeT(_, t)) ->
+    | (ObjT _, ImportTypeT(_, "default", t)) ->
       rec_flow_t cx trace (l, t)
 
-    | (_, ImportTypeT(reason, _)) ->
+    | (_, ImportTypeT(reason, export_name, _)) ->
+      let msg_export =
+        if export_name = "default" then "default" else spf "`%s`" export_name
+      in
       add_error cx [
         reason,
-        "`import type` only works on exported classes, functions, and type aliases!"
+        spf
+          ("The %s export is a value, but not a type. `import type` only " ^^
+           "works on type exports like type aliases, interfaces, and " ^^
+           "classes. If you inteded to import the type *of* a value, please " ^^
+           "use `import typeof` instead.")
+          msg_export
       ]
 
     (************************************************************************)
     (* `import typeof` creates a properly-parameterized type alias for the  *)
     (* "typeof" the remote export.                                          *)
     (************************************************************************)
-    | (PolyT(typeparams, ((ClassT _ | FunT _) as lower_t)), ImportTypeofT(reason, t)) ->
+    | (PolyT(typeparams, ((ClassT _ | FunT _) as lower_t)), ImportTypeofT(reason, _, t)) ->
       let typeof_t = mk_typeof_annotation cx ~trace lower_t in
       rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, typeof_t)), t)
 
-    | ((TypeT _ | PolyT(_, TypeT _)), ImportTypeofT(reason, _)) ->
+    | ((TypeT _ | PolyT(_, TypeT _)), ImportTypeofT(reason, export_name, _)) ->
+      let msg_export =
+        if export_name = "default" then "default" else spf "`%s`" export_name
+      in
       add_error cx [
         reason,
-        "`import typeof` can not be used on type-only exports! If you " ^
-        "intended to import a type alias, please use `import type` instead."
+        spf
+          ("The %s export is a type, but not a value. `import typeof` only " ^^
+           "works on value exports like classes, vars, lets, etc. If you " ^^
+           "intended to import a type alias or interface, please use " ^^
+           "`import type` instead.")
+          msg_export
       ]
 
-    | (_, ImportTypeofT(reason, t)) ->
+    | (_, ImportTypeofT(reason, _, t)) ->
       let typeof_t = mk_typeof_annotation cx ~trace l in
       rec_flow_t cx trace (TypeT(reason, typeof_t), t)
 
@@ -1266,16 +1281,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************************************************)
 
     (* ES exports *)
-    | (ModuleT(_, exports), SetNamedExportsT(_, tmap, t_out)) ->
+    | (ModuleT(_, exports), ExportNamedT(_, tmap, t_out)) ->
       SMap.iter (write_prop cx exports.exports_tmap) tmap;
       rec_flow_t cx trace (l, t_out)
 
     (* export * from *)
-    | (ModuleT(_, source_exports), SetStarExportsT(reason, target_module_t, t_out)) ->
+    | (ModuleT(_, source_exports), ExportStarFromT(reason, target_module_t, t_out)) ->
       let source_tmap = find_props cx source_exports.exports_tmap in
       rec_flow cx trace (
         target_module_t,
-        SetNamedExportsT(reason, source_tmap, t_out)
+        ExportNamedT(reason, source_tmap, t_out)
       )
 
     (**
@@ -1291,7 +1306,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
 
       (* Copy own props *)
-      rec_flow cx trace (module_t, SetNamedExportsT(
+      rec_flow cx trace (module_t, ExportNamedT(
         reason,
         find_props cx props_tmap,
         t_out
@@ -1306,7 +1321,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       (* Copy fields *)
       let module_t = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (module_t, SetNamedExportsT(
+        rec_flow cx trace (module_t, ExportNamedT(
           reason,
           find_props cx fields_tmap,
           t
@@ -1314,7 +1329,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
 
       (* Copy methods *)
-      rec_flow cx trace (module_t, SetNamedExportsT(
+      rec_flow cx trace (module_t, ExportNamedT(
         reason,
         find_props cx methods_tmap,
         t_out
@@ -1377,7 +1392,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (ns_obj, t)
 
     (* import [type] X from 'SomeModule'; *)
-    | (ModuleT(_, exports), ImportDefaultT(reason, (local_name, module_name), t)) ->
+    | (ModuleT(_, exports), ImportDefaultT(reason, import_kind, (local_name, module_name), t)) ->
       let export_t = match exports.cjs_export with
         | Some t -> t
         | None ->
@@ -1409,33 +1424,74 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                 add_error cx [(reason, msg)];
                 AnyT.t
       in
-      rec_flow_t cx trace (export_t, t)
+
+      let import_t = (
+        match import_kind with
+        | ImportType ->
+          mk_tvar_where cx reason (fun tvar ->
+            rec_flow cx trace (export_t, ImportTypeT(reason, "default", tvar))
+          )
+        | ImportTypeof ->
+          mk_tvar_where cx reason (fun tvar ->
+            rec_flow cx trace (export_t, ImportTypeofT(reason, "default", tvar))
+          )
+        | ImportValue ->
+          rec_flow cx trace (export_t, AssertImportIsValueT(reason, "default"));
+          export_t
+      ) in
+      rec_flow_t cx trace (import_t, t)
 
     (* import {X} from 'SomeModule'; *)
-    | (ModuleT(_, exports), ImportNamedT(reason, export_name, t)) ->
-        let exports_tmap = find_props cx exports.exports_tmap in
+    | (ModuleT(_, exports), ImportNamedT(reason, import_kind, export_name, t)) ->
+        (**
+         * When importing from a CommonJS module, we shadow any potential named
+         * exports called "default" with a pointer to the raw `module.exports`
+         * object
+         *)
         let exports_tmap = (
+          let exports_tmap = find_props cx exports.exports_tmap in
           match exports.cjs_export with
           | Some t -> SMap.add "default" t exports_tmap
           | None -> exports_tmap
         ) in
-        let export_t = (
-          match SMap.get export_name exports_tmap with
-          | Some t -> t
-          | None ->
-              let msg =
-                spf "This module has no named export called `%s`." export_name
-              in
+        let import_t = (
+          match (import_kind, SMap.get export_name exports_tmap) with
+          | (ImportType, Some t) ->
+            mk_tvar_where cx reason (fun tvar ->
+              rec_flow cx trace (t, ImportTypeT(reason, export_name, tvar))
+            )
+          | (ImportTypeof, Some t) ->
+            mk_tvar_where cx reason (fun tvar ->
+              rec_flow cx trace (t, ImportTypeofT(reason, export_name, tvar))
+            )
+          | (ImportValue, Some t) ->
+            rec_flow cx trace (t, AssertImportIsValueT(reason, export_name));
+            t
+          | (_, None) ->
+            let msg =
+              spf "This module has no named export called `%s`." export_name
+            in
 
-              let known_exports = SMap.keys exports_tmap in
-              let suggestions = typo_suggestions known_exports export_name in
-              let msg = if List.length suggestions = 0 then msg else msg ^ (
-                spf " Did you mean `%s`?" (List.hd suggestions)
-              ) in
-              add_error cx [(reason, msg)];
-              AnyT.t
+            let known_exports = SMap.keys exports_tmap in
+            let suggestions = typo_suggestions known_exports export_name in
+            let msg = if List.length suggestions = 0 then msg else msg ^ (
+              spf " Did you mean `%s`?" (List.hd suggestions)
+            ) in
+            add_error cx [(reason, msg)];
+            AnyT.why reason
         ) in
-        rec_flow_t cx trace (export_t, t)
+        rec_flow_t cx trace (import_t, t)
+
+    | ((PolyT (_, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
+      add_error cx [
+        reason,
+        spf
+          ("`%s` is a type, but not a value. In order to import it, please " ^^
+           "use `import type`.")
+          name
+      ]
+
+    | (_, AssertImportIsValueT(_, _)) -> ()
 
     (********************************************)
     (* summary types forget literal information *)

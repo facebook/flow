@@ -1420,9 +1420,9 @@ and statement_decl cx type_params_map = Ast.Statement.(
 
       let (import_str, isType) = (
         match import_decl.importKind with
-        | ImportType -> "import type", true
-        | ImportTypeof -> "import typeof", true
-        | ImportValue -> "import", false
+        | ImportDeclaration.ImportType -> "import type", true
+        | ImportDeclaration.ImportTypeof -> "import typeof", true
+        | ImportDeclaration.ImportValue -> "import", false
       ) in
 
       import_decl.specifiers |> List.iter (fun specifier ->
@@ -2670,7 +2670,7 @@ and statement cx type_params_map = Ast.Statement.(
     let module_t = Flow_js.mk_tvar_where cx reason (fun t ->
       Flow_js.flow cx (
         module_t,
-        SetNamedExportsT(
+        ExportNamedT(
           reason,
           SMap.map Scope.Entry.(
             function
@@ -2787,34 +2787,23 @@ and statement cx type_params_map = Ast.Statement.(
         )
     ) in
 
-    let (import_str, isType) = (
+    let (import_str, import_kind) = (
       match import_decl.importKind with
-      | ImportType -> "import type", true
-      | ImportTypeof -> "import typeof", true
-      | ImportValue -> "import", false
+      | ImportDeclaration.ImportType -> "import type", Type.ImportType
+      | ImportDeclaration.ImportTypeof -> "import typeof", Type.ImportTypeof
+      | ImportDeclaration.ImportValue -> "import", Type.ImportValue
     ) in
 
     let module_t = import cx module_name (fst import_decl.source) in
 
-    let get_imported_t get_reason set_reason remote_export_name local_name =
-      let imported_t = Flow_js.mk_tvar_where cx get_reason (fun t ->
+    let get_imported_t get_reason remote_export_name local_name =
+      Flow_js.mk_tvar_where cx get_reason (fun t ->
         let import_type =
           if remote_export_name = "default"
-          then ImportDefaultT(get_reason, (local_name, module_name), t)
-          else ImportNamedT(get_reason, remote_export_name, t)
+          then ImportDefaultT(get_reason, import_kind, (local_name, module_name), t)
+          else ImportNamedT(get_reason, import_kind, remote_export_name, t)
         in
         Flow_js.flow cx (module_t, import_type)
-      ) in
-      (match import_decl.importKind with
-        | ImportType ->
-            Flow_js.mk_tvar_where cx set_reason (fun t ->
-              Flow_js.flow cx (imported_t, ImportTypeT(set_reason, t))
-            )
-        | ImportTypeof ->
-            Flow_js.mk_tvar_where cx set_reason (fun t ->
-              Flow_js.flow cx (imported_t, ImportTypeofT(set_reason, t))
-            )
-        | ImportValue -> imported_t
       )
     in
 
@@ -2834,26 +2823,37 @@ and statement cx type_params_map = Ast.Statement.(
               let local_name = ident_name local in
               let import_reason = mk_reason import_reason_str (fst remote) in
               let bind_reason_str =
-                spf "%s { %s as %s }" import_str remote_name local_name
+                spf "%s { %s as %s } from %S"
+                  import_str
+                  remote_name
+                  local_name
+                  module_name
               in
               let bind_loc = Loc.btwn (fst remote) (fst local) in
               let bind_reason = mk_reason bind_reason_str bind_loc in
               (local_name, import_reason, bind_reason)
             | None ->
               let import_reason = mk_reason import_reason_str (fst remote) in
-              let bind_reason_str = spf "%s { %s }" import_str remote_name in
+              let bind_reason_str =
+                spf "%s { %s } from %S"
+                  import_str
+                  remote_name
+                  module_name
+              in
               let bind_reason = mk_reason bind_reason_str (fst remote) in
               (remote_name, import_reason, bind_reason)
           ) in
           let imported_t =
-            get_imported_t import_reason bind_reason remote_name local_name
+            get_imported_t import_reason remote_name local_name
           in
           (bind_reason, local_name, imported_t)
 
         | ImportDefaultSpecifier local ->
           let local_name = ident_name local in
 
-          let import_reason_str = spf "Default import from `%s`" module_name in
+          let import_reason_str =
+            spf "Default import from `%s`" module_name
+          in
           let import_reason = mk_reason import_reason_str (fst local) in
 
           let bind_reason_str =
@@ -2862,7 +2862,7 @@ and statement cx type_params_map = Ast.Statement.(
           let bind_reason = mk_reason bind_reason_str (fst local) in
 
           let imported_t =
-            get_imported_t import_reason bind_reason "default" local_name
+            get_imported_t import_reason "default" local_name
           in
           (bind_reason, local_name, imported_t)
 
@@ -2872,8 +2872,8 @@ and statement cx type_params_map = Ast.Statement.(
           let import_reason_str = spf "%s * as %s" import_str local_name in
           let import_reason = mk_reason import_reason_str import_loc in
 
-          (match import_decl.importKind with
-            | ImportType ->
+          (match import_kind with
+            | Type.ImportType ->
               let msg =
                 spf
                   ("This is invalid syntax. Maybe you meant: `import type " ^^
@@ -2883,18 +2883,18 @@ and statement cx type_params_map = Ast.Statement.(
               in
               Flow_js.add_error cx [(import_reason, msg)];
               (import_reason, local_name, AnyT.why import_reason)
-            | ImportTypeof ->
+            | Type.ImportTypeof ->
               let bind_reason = repos_reason (fst local) import_reason in
               let module_ns_t =
                 import_ns cx import_reason module_name (fst import_decl.source)
               in
               let module_ns_typeof =
                 Flow_js.mk_tvar_where cx bind_reason (fun t ->
-                  Flow_js.flow cx (module_ns_t, ImportTypeofT(bind_reason, t))
+                  Flow_js.flow cx (module_ns_t, ImportTypeofT(bind_reason, "*", t))
                 )
               in
               (import_reason, local_name, module_ns_typeof)
-            | ImportValue ->
+            | Type.ImportValue ->
               let reason =
                 mk_reason (spf "exports of %S" module_name) import_loc
               in
@@ -2907,7 +2907,11 @@ and statement cx type_params_map = Ast.Statement.(
       ) in
 
       let t_generic =
-        let lookup_mode = if isType then ForType else ForValue in
+        let lookup_mode =
+          match import_kind with
+          | Type.ImportType | Type.ImportTypeof -> ForType
+          | Type.ImportValue -> ForValue
+        in
         Env_js.get_var_declared_type ~lookup_mode cx local_name reason
       in
       Flow_js.unify cx t t_generic
@@ -2954,7 +2958,7 @@ and export_statement cx _type_params_map loc
     set_module_t cx reason (fun t ->
       Flow_js.flow cx (
         exports cx,
-        SetNamedExportsT(reason, SMap.singleton local_name local_tvar, t)
+        ExportNamedT(reason, SMap.singleton local_name local_tvar, t)
       )
     )
   ) in
@@ -3029,7 +3033,7 @@ and export_statement cx _type_params_map loc
         set_module_t cx reason (fun t ->
           Flow_js.flow cx (
             exports cx,
-            SetNamedExportsT(reason, SMap.singleton remote_name local_tvar, t)
+            ExportNamedT(reason, SMap.singleton remote_name local_tvar, t)
           )
         )
       ) in
@@ -3081,7 +3085,7 @@ and export_statement cx _type_params_map loc
         set_module_t cx reason (fun t ->
           Flow_js.flow cx (
             exports cx,
-            SetNamedExportsT(reason, SMap.singleton name remote_namespace_t, t)
+            ExportNamedT(reason, SMap.singleton name remote_namespace_t, t)
           )
         )
       | None ->
@@ -3093,7 +3097,7 @@ and export_statement cx _type_params_map loc
         set_module_t cx reason (fun t ->
           Flow_js.flow cx (
             import ~reason cx source_module_name loc,
-            SetStarExportsT(reason, exports cx, t)
+            ExportStarFromT(reason, exports cx, t)
           )
         )
       )

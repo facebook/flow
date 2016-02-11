@@ -260,6 +260,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
   )
 )
 
+and _json_of_import_kind = Hh_json.(function
+  | ImportType -> JSON_String "ImportType"
+  | ImportTypeof -> JSON_String "ImportTypeof"
+  | ImportValue -> JSON_String "ImportValue"
+)
+
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
 and _json_of_use_t_impl json_cx t = Hh_json.(
   JSON_Object ([
@@ -454,22 +460,38 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "export",
       _json_of_t json_cx export
     ]
-  | ImportModuleNsT (_, t)
-  | ImportDefaultT (_, _, t)
-  | ImportNamedT (_, _, t)
-  | ImportTypeT (_, t)
-  | ImportTypeofT (_, t)
-    -> ["type", _json_of_t json_cx t]
+  | ImportModuleNsT (_, t) -> [
+      "t_out", _json_of_t json_cx t
+    ]
+  | ImportDefaultT (_, import_kind, (local_name, module_name), t) -> [
+      "import_kind", _json_of_import_kind import_kind;
+      "local_name", JSON_String local_name;
+      "module_name", JSON_String module_name;
+      "t_out", _json_of_t json_cx t;
+    ]
+  | ImportNamedT (_, import_kind, export_name, t) -> [
+      "import_kind", _json_of_import_kind import_kind;
+      "export_name", JSON_String export_name;
+      "t_out", _json_of_t json_cx t;
+    ]
+  | ImportTypeT (_, export_name, t)
+  | ImportTypeofT (_, export_name, t) -> [
+      "export_name", JSON_String export_name;
+      "t_out", _json_of_t json_cx t;
+    ]
+  | AssertImportIsValueT (_, name) -> [
+      "name", JSON_String name;
+    ]
 
   | CJSExtractNamedExportsT (_, module_t, t_out) -> [
       "module", _json_of_t json_cx module_t;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | SetNamedExportsT (_, tmap, t_out) -> [
+  | ExportNamedT (_, tmap, t_out) -> [
       "tmap", json_of_tmap json_cx tmap;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | SetStarExportsT (_, target_module_t, t_out) -> [
+  | ExportStarFromT (_, target_module_t, t_out) -> [
       "target_module_t", _json_of_t json_cx target_module_t;
       "t_out", _json_of_t json_cx t_out;
     ]

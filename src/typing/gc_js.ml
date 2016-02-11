@@ -361,11 +361,12 @@ and gc_use cx state = function
       gc cx state t2
 
   | ImportModuleNsT (_, t)
-  | ImportDefaultT (_, _, t)
-  | ImportNamedT (_, _, t)
-  | ImportTypeT (_, t)
-  | ImportTypeofT (_, t) ->
+  | ImportDefaultT (_, _, _, t)
+  | ImportNamedT (_, _, _, t)
+  | ImportTypeT (_, _, t)
+  | ImportTypeofT (_, _, t) ->
       gc cx state t
+  | AssertImportIsValueT _ -> ()
 
   | CJSRequireT (_, t) ->
       gc cx state t
@@ -374,11 +375,11 @@ and gc_use cx state = function
       gc cx state t;
       gc cx state t_out
 
-  | SetNamedExportsT (_, t_smap, t_out) ->
+  | ExportNamedT (_, t_smap, t_out) ->
       List.iter (gc cx state) (SMap.values t_smap);
       gc cx state t_out
 
-  | SetStarExportsT (_, target_module, t_out) ->
+  | ExportStarFromT (_, target_module, t_out) ->
       gc cx state target_module;
       gc cx state t_out;
 
