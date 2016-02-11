@@ -12,6 +12,15 @@ let tests = [
     const filter: NodeFilter = w.filter;
     const response: typeof NodeFilter.FILTER_ACCEPT | typeof NodeFilter.FILTER_REJECT | typeof NodeFilter.FILTER_SKIP = filter.acceptNode(document.body);
   },
+  // rootNode must be a Node
+  function() {
+    document.createNodeIterator(document.body); // valid
+    document.createNodeIterator({}); // invalid
+  },
+  function() {
+    document.createTreeWalker(document.body);
+    document.createTreeWalker({}); // invalid
+  },
   // WhatToShowT
   function() {
     const i = document.createNodeIterator(document.body, NodeFilter.SHOW_ELEMENT);

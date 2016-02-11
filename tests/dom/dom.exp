@@ -23,12 +23,20 @@ path2d.js:9:6,40: call of method `arcTo`
 Function cannot be called on
 path2d.js:9:6,40: intersection: function type(s)
 
-traversal.js:125:5,54: call of method `createNodeIterator`
+traversal.js:18:5,35: call of method `createNodeIterator`
 Function cannot be called on
-traversal.js:125:5,54: intersection: function type(s)
+traversal.js:18:5,35: intersection: function type(s)
 
-traversal.js:130:5,52: call of method `createTreeWalker`
+traversal.js:22:5,33: call of method `createTreeWalker`
 Function cannot be called on
-traversal.js:130:5,52: intersection: function type(s)
+traversal.js:22:5,33: intersection: function type(s)
 
-Found 7 errors
+traversal.js:134:5,54: call of method `createNodeIterator`
+Function cannot be called on
+traversal.js:134:5,54: intersection: function type(s)
+
+traversal.js:139:5,52: call of method `createTreeWalker`
+Function cannot be called on
+traversal.js:139:5,52: intersection: function type(s)
+
+Found 9 errors
