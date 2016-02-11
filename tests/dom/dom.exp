@@ -3,13 +3,13 @@ CanvasRenderingContext2D.js:11:5,24: call of method `moveTo`
 Error:
 CanvasRenderingContext2D.js:11:16,18: string
 This type is incompatible with
-[LIB] dom.js:708:15,20: number
+[LIB] dom.js:713:15,20: number
 
 CanvasRenderingContext2D.js:11:5,24: call of method `moveTo`
 Error:
 CanvasRenderingContext2D.js:11:21,23: string
 This type is incompatible with
-[LIB] dom.js:708:26,31: number
+[LIB] dom.js:713:26,31: number
 
 eventtarget.js:9:6,40: call of method `attachEvent`
 Function cannot be called on possibly undefined value
