@@ -47,18 +47,10 @@ type genv = {
   (* are we in the body of a try statement? *)
   in_try: bool;
 
-  (* are we in the body of a non-static member function? *)
-  in_instance_method: bool;
-
   (* In function foo<T1, ..., Tn> or class<T1, ..., Tn>, the field
    * type_params knows T1 .. Tn. It is able to find out about the
    * constraint on these parameters. *)
   type_params: type_constraint SMap.t;
-
-  (* The parameters is their original order
-   * Necessary to type "this".
-   *)
-  type_paraml: Ast.id list;
 
   (* The current class, None if we are in a function *)
   current_cls: (Ast.id * Ast.class_kind) option;
@@ -193,9 +185,7 @@ end = struct
       (if !Autocomplete.auto_complete then FileInfo.Mpartial else mode);
     tcopt;
     in_try        = false;
-    in_instance_method = false;
     type_params   = params;
-    type_paraml   = tparams;
     current_cls   = Some (cid, ckind);
     droot         = Typing_deps.Dep.Class (snd cid);
     namespace;
@@ -213,9 +203,7 @@ end = struct
     in_mode       = FileInfo.(if !Ide.is_ide_mode then Mpartial else Mstrict);
     tcopt;
     in_try        = false;
-    in_instance_method = false;
     type_params   = cstrs;
-    type_paraml   = List.map tdef.t_tparams (fun (_, x, _) -> x);
     current_cls   = None;
     droot         = Typing_deps.Dep.Class (snd tdef.t_id);
     namespace     = tdef.t_namespace;
@@ -231,9 +219,7 @@ end = struct
     in_mode       = f_mode;
     tcopt;
     in_try        = false;
-    in_instance_method = false;
     type_params   = params;
-    type_paraml   = [];
     current_cls   = None;
     droot         = Typing_deps.Dep.Fun f_name;
     namespace     = f_namespace;
@@ -246,9 +232,7 @@ end = struct
     in_mode       = cst.cst_mode;
     tcopt;
     in_try        = false;
-    in_instance_method = false;
     type_params   = SMap.empty;
-    type_paraml   = [];
     current_cls   = None;
     droot         = Typing_deps.Dep.GConst (snd cst.cst_name);
     namespace     = cst.cst_namespace;
@@ -1170,8 +1154,8 @@ and class_method env sids cv_ids x acc =
   | XhpCategory _ -> acc
   | Method m when snd m.m_name = SN.Members.__construct -> acc
   | Method m when not (List.mem m.m_kind Static) ->
-      let genv = fst env in
-      method_ { genv with in_instance_method = true } m :: acc
+    let genv = fst env in
+    method_ genv m :: acc
   | Method _ -> acc
   | TypeConst _ -> acc
 
@@ -2122,13 +2106,11 @@ let class_meth_bodies nenv nc =
   let genv  = Env.make_class_genv nenv cstrs
     nc.N.c_mode tparams (nc.N.c_name, nc.N.c_kind) Namespace_env.empty
   in
-  let inst_genv = {genv with in_instance_method = true} in
-  let inst_meths = List.map nc.N.c_methods (meth_body inst_genv) in
+  let inst_meths = List.map nc.N.c_methods (meth_body genv) in
   let opt_constructor = match nc.N.c_constructor with
     | None -> None
-    | Some c -> Some (meth_body inst_genv c) in
-  let static_genv = {genv with in_instance_method = false} in
-  let static_meths = List.map nc.N.c_static_methods (meth_body static_genv) in
+    | Some c -> Some (meth_body genv c) in
+  let static_meths = List.map nc.N.c_static_methods (meth_body genv) in
   { nc with
     N.c_methods        = inst_meths;
     N.c_static_methods = static_meths ;
