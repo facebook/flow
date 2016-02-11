@@ -4979,7 +4979,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
   let super_reason = prefix_reason "super of " reason_component in
   let super =
     Flow_js.get_builtin_typeapp cx super_reason
-      "ReactComponent" type_args
+      "LegacyReactComponent" type_args
   in
 
   let extract_map (from_map,to_map) name =

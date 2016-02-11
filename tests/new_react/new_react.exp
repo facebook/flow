@@ -15,65 +15,63 @@ bad_default_props.js:24:34,35: undefined. Did you forget to declare T2?
 This type is incompatible with
 bad_default_props.js:24:34,35: object type
 
-classes.js:5:19,24: number
-This type is incompatible with
-classes.js:20:27,32: string
-
 classes.js:17:21,32: number
 This type is incompatible with
 classes.js:17:12,17: string
 
-classes.js:20:27,32: string
+classes.js:22:5,14: assignment of property `state`
+Error:
+classes.js:22:23,24: string
 This type is incompatible with
 classes.js:5:19,24: number
 
-classes.js:24:15,28: property `y_`
+classes.js:25:15,28: property `y_`
 Property not found in
 classes.js:9:10,14: object type
 
-classes.js:39:1,16: assignment of property `defaultProps`
+classes.js:40:1,16: assignment of property `defaultProps`
 Error:
-classes.js:39:20,20: number
+classes.js:40:20,20: number
 This type is incompatible with
 classes.js:10:24,35: object type
 
-classes.js:40:15,20: number
+classes.js:41:15,20: number
 This type is incompatible with
 [LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
 
-classes.js:40:25,30: React element `Foo`
+classes.js:41:25,30: React element `Foo`
 Error:
 classes.js:8:10,14: property `x`
 Property not found in
-classes.js:40:25,30: type parameter `Props` of React element `Foo`
+classes.js:41:25,30: type parameter `Props` of React element `Foo`
 
-classes.js:40:25,30: React element `Foo`
+classes.js:41:25,30: React element `Foo`
 Error:
-classes.js:40:15,20: number
+classes.js:41:15,20: number
 This type is incompatible with
 [LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
 
-classes.js:58:21,32: number
+classes.js:59:21,32: number
 This type is incompatible with
-classes.js:58:12,17: string
+classes.js:59:12,17: string
 
-classes.js:65:15,28: property `y_`
+classes.js:66:15,28: property `y_`
 Property not found in
-classes.js:61:22,34: object type
+classes.js:62:22,34: object type
 
-classes.js:80:22,27: number
+classes.js:81:22,27: number
 This type is incompatible with
 [LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
 
-classes.js:80:32,43: React element `FooLegacy`
+classes.js:81:32,43: React element `FooLegacy`
 Error:
-classes.js:47:3,11: property `x`
+classes.js:48:3,11: property `x`
 Property not found in
-classes.js:80:32,43: type parameter `Props` of React element `FooLegacy`
+classes.js:81:32,43: type parameter `Props` of React element `FooLegacy`
 
-classes.js:80:32,43: React element `FooLegacy`
+classes.js:81:32,43: React element `FooLegacy`
 Error:
-classes.js:80:22,27: number
+classes.js:81:22,27: number
 This type is incompatible with
 [LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
 
@@ -249,4 +247,4 @@ state5.js:5:23,23: property `x`
 Property cannot be accessed on possibly undefined value
 state5.js:5:12,21: undefined. Did you forget to declare type parameter `State` of property `Component`?
 
-Found 54 errors
+Found 53 errors
