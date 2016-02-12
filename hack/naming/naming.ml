@@ -55,6 +55,10 @@ type genv = {
   (* The current class, None if we are in a function *)
   current_cls: (Ast.id * Ast.class_kind) option;
 
+  class_consts: (string, Pos.t) Hashtbl.t;
+
+  class_props: (string, Pos.t) Hashtbl.t;
+
   (* Normally we don't need to add dependencies at this stage, but there
    * are edge cases when we do. *)
   droot: Typing_deps.Dep.variant;
@@ -110,7 +114,8 @@ module Env : sig
   val global_const : genv * lenv -> Ast.id -> Ast.id
   val class_name : genv * lenv -> Ast.id -> Ast.id
   val fun_id : genv * lenv -> Ast.id -> Ast.id
-  val new_const : genv * lenv -> Ast.id -> Ast.id
+  val bind_class_const : genv * lenv -> Ast.id -> unit
+  val bind_prop : genv * lenv -> Ast.id -> unit
 
   val scope : genv * lenv -> (genv * lenv -> 'a) -> 'a
   val scope_all : genv * lenv -> (genv * lenv -> 'a) -> all_locals * 'a
@@ -126,9 +131,6 @@ end = struct
 
     (* The set of locals *)
     locals: map ref;
-
-    (* The set of constants *)
-    consts: map ref;
 
     (* We keep all the locals, even if we are in a different scope
      * to provide better error messages.
@@ -173,7 +175,6 @@ end = struct
 
   let empty_local unbound_mode = {
     locals     = ref SMap.empty;
-    consts     = ref SMap.empty;
     all_locals = ref SMap.empty;
     pending_locals = ref SMap.empty;
     unbound_mode;
@@ -187,6 +188,8 @@ end = struct
     in_try        = false;
     type_params   = params;
     current_cls   = Some (cid, ckind);
+    class_consts = Hashtbl.create 0;
+    class_props = Hashtbl.create 0;
     droot         = Typing_deps.Dep.Class (snd cid);
     namespace;
   }
@@ -205,6 +208,8 @@ end = struct
     in_try        = false;
     type_params   = cstrs;
     current_cls   = None;
+    class_consts = Hashtbl.create 0;
+    class_props = Hashtbl.create 0;
     droot         = Typing_deps.Dep.Class (snd tdef.t_id);
     namespace     = tdef.t_namespace;
   }
@@ -221,6 +226,8 @@ end = struct
     in_try        = false;
     type_params   = params;
     current_cls   = None;
+    class_consts = Hashtbl.create 0;
+    class_props = Hashtbl.create 0;
     droot         = Typing_deps.Dep.Fun f_name;
     namespace     = f_namespace;
   }
@@ -234,6 +241,8 @@ end = struct
     in_try        = false;
     type_params   = SMap.empty;
     current_cls   = None;
+    class_consts = Hashtbl.create 0;
+    class_props = Hashtbl.create 0;
     droot         = Typing_deps.Dep.GConst (snd cst.cst_name);
     namespace     = cst.cst_namespace;
   }
@@ -247,16 +256,6 @@ end = struct
   let has_unsafe (_genv, lenv) = !(lenv.has_unsafe)
   let set_unsafe (_genv, lenv) x =
     lenv.has_unsafe := x
-
-  let new_var env (p, x) =
-    if SMap.mem x !env
-    then begin
-      let p', _ = SMap.find_unsafe x !env in
-      Errors.error_name_already_bound x x p p'
-    end;
-    let y = p, Ident.make x in
-    env := SMap.add x y !env;
-    y
 
   let lookup genv env (p, x) =
     let v = env x in
@@ -471,11 +470,18 @@ end = struct
       GEnv.fun_canon_name
       x
 
-  let new_const (genv, env) x =
-    try ignore (new_var env.consts x); x with exn ->
-      match genv.in_mode with
-      | FileInfo.Mstrict -> raise exn
-      | FileInfo.Mpartial | FileInfo.Mdecl -> x
+  let bind_class_member tbl (p, x) =
+    try
+      let p' = Hashtbl.find tbl x in
+      Errors.error_name_already_bound x x p p'
+    with Not_found ->
+      Hashtbl.replace tbl x p
+
+  let bind_class_const (genv, _env) x =
+    bind_class_member genv.class_consts x
+
+  let bind_prop (genv, _env) x =
+    bind_class_member genv.class_props x
 
   (* Scope, keep the locals, go and name the body, and leave the
    * local environment intact
@@ -1197,17 +1203,17 @@ and check_constant_expr (pos, e) =
 and const_defl h env l = List.map l (const_def h env)
 and const_def h env (x, e) =
   check_constant_expr e;
-  let new_const = Env.new_const env x in
+  Env.bind_class_const env x;
   let h = Option.map h (hint env) in
-  h, new_const, Some (expr env e)
+  h, x, Some (expr env e)
 
 and abs_const_def env h x =
-  let new_const = Env.new_const env x in
+  Env.bind_class_const env x;
   let h = Option.map h (hint env) in
-  h, new_const, None
+  h, x, None
 
 and class_prop_ env (x, e) =
-  let id = Env.new_const env x in
+  Env.bind_prop env x;
   let e = Option.map e (expr env) in
   (* If the user has not provided a value, we initialize the member variable
    * ourselves to a value of type Tany. Classes might inherit from our decl
@@ -1217,14 +1223,14 @@ and class_prop_ env (x, e) =
    * we're covered. *)
   let e =
     if (fst env).in_mode = FileInfo.Mdecl && e = None
-    then Some (fst id, N.Any)
+    then Some (fst x, N.Any)
     else e
   in
   N.({ cv_final = false;
        cv_is_xhp = ((String.sub (snd x) 0 1) = ":");
        cv_visibility = Public;
        cv_type = None;
-       cv_id = id;
+       cv_id = x;
        cv_expr = e;
      })
 
@@ -1247,20 +1253,20 @@ and typeconst env t =
   (* We use the same namespace as constants within the class so we cannot have
    * a const and type const with the same name
    *)
-  let name = Env.new_const env t.tconst_name in
+  Env.bind_class_const env t.tconst_name;
   let constr = Option.map t.tconst_constraint (hint env) in
   let hint_ =
     match t.tconst_type with
     | None when not t.tconst_abstract ->
-        Errors.not_abstract_without_typeconst name;
+        Errors.not_abstract_without_typeconst t.tconst_name;
         t.tconst_constraint
     | Some h when t.tconst_abstract ->
-        Errors.abstract_with_typeconst name;
+        Errors.abstract_with_typeconst t.tconst_name;
         None
     | h -> h
   in
   let type_ = Option.map hint_ (hint env) in
-  N.({ c_tconst_name = name;
+  N.({ c_tconst_name = t.tconst_name;
        c_tconst_constraint = constr;
        c_tconst_type = type_;
      })
@@ -1272,7 +1278,6 @@ and method_ genv m =
   let env = genv, Env.empty_local UBMErr in
   (* Cannot use 'this' if it is a public instance method *)
   let variadicity, paraml = fun_paraml env m.m_params in
-  let name = Env.new_const env m.m_name in
   let acc = false, false, N.Public in
   let final, abs, vis = List.fold_left ~f:kind ~init:acc m.m_kind in
   List.iter m.m_tparams check_constraint;
@@ -1296,7 +1301,7 @@ and method_ genv m =
   N.({ m_final           = final       ;
        m_visibility      = vis         ;
        m_abstract        = abs         ;
-       m_name            = name        ;
+       m_name            = m.Ast.m_name;
        m_tparams         = tparam_l    ;
        m_params          = paraml      ;
        m_body            = body        ;
