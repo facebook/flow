@@ -180,12 +180,16 @@ let tests = [
   // NodeFilterInterface
   function() {
     document.createNodeIterator(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
-    document.createNodeIterator(document.body, -1, {accept: node => NodeFilter.FILTER_ACCEPT}); // valid
+    document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
+    document.createNodeIterator(document.body, -1, { accept: node => NodeFilter.FILTER_ACCEPT }); // valid
+    document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
     document.createNodeIterator(document.body, -1, {}); // invalid
   },
   function() {
     document.createTreeWalker(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
-    document.createTreeWalker(document.body, -1, {accept: node => NodeFilter.FILTER_ACCEPT}); // valid
+    document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
+    document.createTreeWalker(document.body, -1, { accept: node => NodeFilter.FILTER_ACCEPT }); // valid
+    document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
     document.createTreeWalker(document.body, -1, {}); // invalid
   },
 ];

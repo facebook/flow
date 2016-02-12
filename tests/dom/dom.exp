@@ -31,12 +31,28 @@ traversal.js:30:5,33: call of method `createTreeWalker`
 Function cannot be called on
 traversal.js:30:5,33: intersection: polymorphic type: function type(s)
 
-traversal.js:184:5,54: call of method `createNodeIterator`
+traversal.js:183:5,68: call of method `createNodeIterator`
 Function cannot be called on
-traversal.js:184:5,54: intersection: polymorphic type: function type(s)
+traversal.js:183:5,68: intersection: polymorphic type: function type(s)
 
-traversal.js:189:5,52: call of method `createTreeWalker`
+traversal.js:185:5,80: call of method `createNodeIterator`
 Function cannot be called on
-traversal.js:189:5,52: intersection: polymorphic type: function type(s)
+traversal.js:185:5,80: intersection: polymorphic type: function type(s)
 
-Found 9 errors
+traversal.js:186:5,54: call of method `createNodeIterator`
+Function cannot be called on
+traversal.js:186:5,54: intersection: polymorphic type: function type(s)
+
+traversal.js:190:5,66: call of method `createTreeWalker`
+Function cannot be called on
+traversal.js:190:5,66: intersection: polymorphic type: function type(s)
+
+traversal.js:192:5,78: call of method `createTreeWalker`
+Function cannot be called on
+traversal.js:192:5,78: intersection: polymorphic type: function type(s)
+
+traversal.js:193:5,52: call of method `createTreeWalker`
+Function cannot be called on
+traversal.js:193:5,52: intersection: polymorphic type: function type(s)
+
+Found 13 errors
