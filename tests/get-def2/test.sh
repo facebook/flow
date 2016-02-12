@@ -14,3 +14,12 @@ $FLOW get-def --strip-root main.js 12 14
 
 # Trace `ParentFoo3` back to its def
 $FLOW get-def --strip-root main.js 17 1
+
+# Trace `Parent` back to its def
+$FLOW get-def --strip-root main.js 3 5
+$FLOW get-def --strip-root main.js 3 14
+
+# Trace `NonDestructuredFoo` back to its def
+$FLOW get-def --strip-root main.js 21 2
+$FLOW get-def --strip-root main.js 20 5
+$FLOW get-def --strip-root main.js 20 41

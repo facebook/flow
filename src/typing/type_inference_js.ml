@@ -3325,9 +3325,27 @@ and variable cx type_params_map kind
             declare_var cx name reason; (* prepare for self-refs *)
             let rhs_reason = mk_reason (spf "assignment of var `%s`" name) rhs_loc in
             let rhs = expression cx type_params_map expr in
+            let hook_loc = Ast.Expression.(
+              match expr with
+              (**
+               * It's common to do `var Foo = require('Bar').Foo`. In these
+               * cases, we should point to the property of the member expression
+               * during `get-def`. This lets us hop *in* to the property on the
+               * module.exports object returned by require() rather than hopping
+               * directly to the `module.exports` object itself.
+               *)
+              | (_, Member {Member.property; _;}) -> (
+                  match property with
+                  | Member.PropertyIdentifier (loc, _) -> loc
+                  | Member.PropertyExpression (loc, _) -> loc
+                )
+              | (loc, _) -> loc
+            ) in
+            Type_inference_hooks_js.dispatch_lval_hook cx name loc (Type_inference_hooks_js.RHSLoc hook_loc);
             let rhs = Flow_js.reposition cx rhs_reason rhs in
             init_var cx name ~has_anno rhs reason
           | None ->
+            Type_inference_hooks_js.dispatch_lval_hook cx name loc (Type_inference_hooks_js.NoRHS);
             match if_uninitialized with
             | Some f ->
               if not optional

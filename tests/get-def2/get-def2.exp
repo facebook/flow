@@ -5,3 +5,8 @@ main.js:12:1,12:10
 main.js:12:14,12:19
 main.js:3:5,3:10
 main.js:16:5,16:14
+main.js:3:14,3:32
+Parent.js:4:18,4:28
+main.js:20:5,20:7
+main.js:20:41,20:43
+Parent.js:3:23,3:27

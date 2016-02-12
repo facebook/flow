@@ -57,25 +57,43 @@ let getdef_require (state, user_requested_loc) _cx name require_loc =
 
 let getdef_get_result ~options cx state =
   match !state with
-  | Some Gdloc (loc) -> loc
+  | Some Gdloc loc -> loc
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let member_result = Flow_js.Autocomplete.extract_members cx this_t in
       let _, result_map =
         Flow_js.Autocomplete.command_result_of_member_result member_result in
       (match SMap.get name result_map with
-      | Some t ->
-          Type.loc_of_t t
-      | None ->
-          Loc.none)
-  | Some Gdrequire (name, loc) ->
-      let module_name = Module_js.imported_module ~options cx loc name in
-      let f = Module_js.get_module_file module_name in
-      (match f with
-      | Some file -> Loc.({ none with source = Some file })
+      | Some t -> Type.loc_of_t t
       | None -> Loc.none)
-  | _ ->
-      Loc.none
+  | Some Gdrequire (name, require_loc) ->
+      let module_t = Flow_js.resolve_type cx (
+        SMap.find_unsafe name (Context.module_map cx)
+      ) in
+      Type.(match module_t with
+      | ModuleT(_, {cjs_export = Some t; _; }) -> loc_of_t t
+
+      (**
+       * TODO: Specialized `import` hooks so that get-defs on named
+       *       imports point to their actual remote def location.
+       *)
+      | ModuleT(_, {cjs_export = None; _; })
+      | AnyT _
+        ->
+          let filename = Module_js.get_module_file (
+            Module_js.imported_module ~options cx require_loc name
+          ) in
+          (match filename with
+          | Some file -> Loc.({none with source = Some file;})
+          | None -> Loc.none)
+
+      | _ -> failwith (
+        spf "Internal Flow Error: Expected ModuleT for %S, but got %S!"
+          name
+          (string_of_ctor module_t)
+        )
+      )
+  | None -> Loc.none
 
 let getdef_set_hooks pos =
   let state = ref None in

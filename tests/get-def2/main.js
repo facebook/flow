@@ -15,3 +15,7 @@ ParentFoo2; // Points to LHS of line above this
 // Follows assignment with declaration
 let ParentFoo3 = Parent;
 ParentFoo3; // Points to LHS of line above this
+
+// Follows non-destructured property access of `require('Parent')`
+let foo = require('./Parent').ParentFoo.foo;
+foo;
