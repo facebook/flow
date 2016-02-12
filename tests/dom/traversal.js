@@ -5,12 +5,20 @@ let tests = [
   function() {
     const i: NodeIterator = document.createNodeIterator(document.body);
     const filter: NodeFilter = i.filter;
-    const response: typeof NodeFilter.FILTER_ACCEPT | typeof NodeFilter.FILTER_REJECT | typeof NodeFilter.FILTER_SKIP = filter.acceptNode(document.body);
+    const response:
+      typeof NodeFilter.FILTER_ACCEPT |
+      typeof NodeFilter.FILTER_REJECT |
+      typeof NodeFilter.FILTER_SKIP =
+      filter.acceptNode(document.body);
   },
   function() {
     const w: TreeWalker = document.createTreeWalker(document.body);
     const filter: NodeFilter = w.filter;
-    const response: typeof NodeFilter.FILTER_ACCEPT | typeof NodeFilter.FILTER_REJECT | typeof NodeFilter.FILTER_SKIP = filter.acceptNode(document.body);
+    const response:
+      typeof NodeFilter.FILTER_ACCEPT |
+      typeof NodeFilter.FILTER_REJECT |
+      typeof NodeFilter.FILTER_SKIP =
+      filter.acceptNode(document.body);
   },
   // rootNode must be a Node
   function() {
@@ -70,14 +78,14 @@ let tests = [
     const previousNode: DocumentFragment | null = i.previousNode();
     const nextNode: DocumentFragment | null = i.nextNode();
   },
-  // function() {
-  //   const _root = document.body;
-  //   const i = document.createNodeIterator(_root, NodeFilter.SHOW_ALL);
-  //   const root: typeof _root = i.root;
-  //   const referenceNode: typeof _root | Node = i.referenceNode;
-  //   const previousNode: Node | null = i.previousNode();
-  //   const nextNode: Node | null = i.nextNode();
-  // },
+  function() {
+    const _root = document.body;
+    const i = document.createNodeIterator(_root, NodeFilter.SHOW_ALL);
+    const root: typeof _root = i.root;
+    const referenceNode: typeof _root | Node = i.referenceNode;
+    const previousNode: Node | null = i.previousNode();
+    const nextNode: Node | null = i.nextNode();
+  },
   function() {
     const _root = document.body;
     const w = document.createTreeWalker(_root, NodeFilter.SHOW_ELEMENT);
@@ -156,19 +164,19 @@ let tests = [
     const previousNode: DocumentFragment | null = w.previousNode();
     const nextNode: DocumentFragment | null = w.nextNode();
   },
-  // function() {
-  //   const _root = document.body;
-  //   const w = document.createTreeWalker(_root, NodeFilter.SHOW_ALL);
-  //   const root: typeof _root = w.root;
-  //   const currentNode: typeof _root | Node = w.currentNode;
-  //   const parentNode: Node | null = w.parentNode();
-  //   const firstChild: Node | null = w.firstChild();
-  //   const lastChild: Node | null = w.lastChild();
-  //   const previousSibling: Node | null = w.previousSibling();
-  //   const nextSibling: Node | null = w.nextSibling();
-  //   const previousNode: Node | null = w.previousNode();
-  //   const nextNode: Node | null = w.nextNode();
-  // },
+  function() {
+    const _root = document.body;
+    const w = document.createTreeWalker(_root, NodeFilter.SHOW_ALL);
+    const root: typeof _root = w.root;
+    const currentNode: typeof _root | Node = w.currentNode;
+    const parentNode: Node | null = w.parentNode();
+    const firstChild: Node | null = w.firstChild();
+    const lastChild: Node | null = w.lastChild();
+    const previousSibling: Node | null = w.previousSibling();
+    const nextSibling: Node | null = w.nextSibling();
+    const previousNode: Node | null = w.previousNode();
+    const nextNode: Node | null = w.nextNode();
+  },
   // NodeFilterInterface
   function() {
     document.createNodeIterator(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
