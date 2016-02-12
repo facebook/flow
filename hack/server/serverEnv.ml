@@ -26,6 +26,7 @@ type genv = {
     notifier         : unit -> SSet.t;
     (* If daemons are spawned as part of the init process, wait for them here *)
     wait_until_ready : unit -> unit;
+    ide_process      : IdeProcessPipe.to_ide option;
   }
 
 (*****************************************************************************)

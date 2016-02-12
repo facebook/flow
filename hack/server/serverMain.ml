@@ -207,13 +207,29 @@ let get_client_channels parent_in_fd =
   let socket = Libancillary.ancil_recv_fd parent_in_fd in
   (Timeout.in_channel_of_descr socket), (Unix.out_channel_of_descr socket)
 
+let run_ide_process ide_process =
+  Option.iter ide_process begin fun x ->
+    IdeProcessPipe.send x IdeProcessMessage.RunIdeCommands;
+  end
+
+let join_ide_process ide_process =
+  Option.iter ide_process begin fun x ->
+    IdeProcessPipe.send x IdeProcessMessage.StopIdeCommands;
+    match IdeProcessPipe.recv x with
+    | IdeProcessMessage.IdeCommandsDone -> ();
+  end
+
 let serve genv env in_fd _ =
   let env = ref env in
   let last_stats = ref empty_recheck_loop_stats in
   let recheck_id = ref (Random_id.short_string ()) in
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
+    run_ide_process genv.ide_process;
     let has_client = sleep_and_check in_fd in
+    (* For now we only run IDE commands in idle loop, with plan to vet more
+     * places where it's safe to do so in parallel. *)
+    join_ide_process genv.ide_process;
     let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
     if not has_client && not has_parsing_hook
     then begin
@@ -394,7 +410,7 @@ let save _genv env (kind, fn) =
   | ServerArgs.Complete -> save_complete env fn
   | ServerArgs.Mini -> ServerInit.save_state env fn
 
-let setup_server options =
+let setup_server options ide_process =
   let root = ServerArgs.root options in
   (* The OCaml default is 500, but we care about minimizing the memory
    * overhead *)
@@ -428,10 +444,10 @@ let setup_server options =
   Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
   PidLog.init (ServerFiles.pids_file root);
   PidLog.log ~reason:"main" (Unix.getpid());
-  ServerEnvBuild.make_genv options config local_config
+  ServerEnvBuild.make_genv options config local_config ide_process
 
 let run_once options =
-  let genv = setup_server options in
+  let genv = setup_server options None in
   if not (ServerArgs.check_mode genv.options) then
     (Hh_logger.log "ServerMain run_once only supported in check mode.";
     Exit_status.(exit Input_error));
@@ -445,12 +461,13 @@ let run_once options =
  * via ic.
  *)
 let daemon_main options (ic, oc) =
-  let genv = setup_server options in
+  let in_fd = Daemon.descr_of_in_channel ic in
+  let out_fd = Daemon.descr_of_out_channel oc in
+  let ide_process = IdeProcessPipeInit.typechecker_recv in_fd in
+  let genv = setup_server options (Some ide_process) in
   if ServerArgs.check_mode genv.options then
     (Hh_logger.log "Invalid program args - can't run daemon in check mode.";
     Exit_status.(exit Input_error));
-  let in_fd = Daemon.descr_of_in_channel ic in
-  let out_fd = Daemon.descr_of_out_channel oc in
   let env = MainInit.go options (fun () -> program_init genv) in
   serve genv env in_fd out_fd
 

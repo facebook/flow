@@ -82,6 +82,8 @@ let monitor_daemon_main (options: ServerArgs.options) =
     let hh_server_monitor_starter = begin fun () ->
       let typechecker = start_hh_server options in
       let ide = start_ide_server options in
+      IdeProcessPipeInit.monitor_make_and_send
+        typechecker.SP.out_fd ide.SP.out_fd;
       [typechecker; ide]
     end in
     let waiting_client = ServerArgs.waiting_client options in

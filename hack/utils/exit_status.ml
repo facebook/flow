@@ -42,6 +42,7 @@ type t =
   | IDE_no_server
   | IDE_out_of_retries
   | Nfs_root
+  | IDE_init_failure
 
 exception Exit_with of t
 
@@ -79,6 +80,7 @@ let ec t = match t with
   | IDE_no_server -> 202
   | IDE_out_of_retries -> 203
   | Nfs_root -> 204
+  | IDE_init_failure -> 205
 
 let exit t =
   let code = ec t in
@@ -118,6 +120,7 @@ let to_string = function
   | IDE_no_server -> "IDE_no_server"
   | IDE_out_of_retries -> "IDE_out_of_retries"
   | Nfs_root -> "Nfs_root"
+  | IDE_init_failure -> "IDE_init_failure"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n
