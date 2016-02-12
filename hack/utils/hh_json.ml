@@ -132,6 +132,19 @@ let js_null  env = js_literal env "null" JSON_Null
 let buf_eat buf env c = (eat env c; Buffer.add_char buf c)
 let buf_eat_all buf env c = (eat_ws env c; Buffer.add_char buf c)
 
+let char_code env =
+  let rec char_code_ (acc : int) env len =
+    if len = 0 then acc
+    else begin
+      env.pos <- env.pos + 1;
+      let c = peek env in
+      if not (is_digit c) then syntax_error env "expected digit";
+      let i = (Char.code c) - (Char.code '0') in
+      char_code_ (10*acc + i) env (len-1)
+    end
+  in
+  char_code_ 0 env 4
+
 let js_string env =
   let buf = Buffer.create 128 in
   let rec loop env =
@@ -141,6 +154,15 @@ let js_string env =
     | '\\' ->
         env.pos <- env.pos + 1;
         let c' = peek env in
+        let c' = match c' with
+          | 'n' -> '\n'
+          | 'r' -> '\r'
+          | 't' -> '\t'
+          | 'u' ->
+            let code = char_code env in
+            Char.chr code
+          | x -> x in
+
         env.pos <- env.pos + 1;
         Buffer.add_char buf c';
         loop env
