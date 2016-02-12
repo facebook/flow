@@ -420,7 +420,11 @@ let ref_param env =
 (* Entry point *)
 (*****************************************************************************)
 
-let rec program ?(elaborate_namespaces = true) file content =
+let rec program
+    ?(elaborate_namespaces = true)
+    ?(include_line_comments = false)
+    file content =
+  L.include_line_comments := include_line_comments;
   L.comment_list := [];
   L.fixmes := IMap.empty;
   let lb = Lexing.from_string content in
