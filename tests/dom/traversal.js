@@ -31,7 +31,7 @@ let tests = [
     const nextNode: Element | null = i.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document.body.attributes[0];
     const i = document.createNodeIterator(_root, NodeFilter.SHOW_ATTRIBUTE);
     const root: typeof _root = i.root;
     const referenceNode: typeof _root | Attr = i.referenceNode
@@ -47,7 +47,7 @@ let tests = [
     const nextNode: Text | null = i.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document;
     const i = document.createNodeIterator(_root, NodeFilter.SHOW_DOCUMENT);
     const root: typeof _root = i.root;
     const referenceNode: typeof _root | Document = i.referenceNode;
@@ -55,7 +55,7 @@ let tests = [
     const nextNode: Document | null = i.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document;
     const i = document.createNodeIterator(_root, NodeFilter.SHOW_DOCUMENT_TYPE);
     const root: typeof _root = i.root;
     const referenceNode: typeof _root | DocumentType = i.referenceNode;
@@ -63,21 +63,21 @@ let tests = [
     const nextNode: DocumentType | null = i.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document.createDocumentFragment();
     const i = document.createNodeIterator(_root, NodeFilter.SHOW_DOCUMENT_FRAGMENT);
     const root: typeof _root = i.root;
     const referenceNode: typeof _root | DocumentFragment = i.referenceNode;
     const previousNode: DocumentFragment | null = i.previousNode();
     const nextNode: DocumentFragment | null = i.nextNode();
   },
-  function() {
-    const _root = document.body;
-    const i = document.createNodeIterator(_root, NodeFilter.SHOW_ALL);
-    const root: typeof _root = i.root;
-    const referenceNode: typeof _root | Node = i.referenceNode;
-    const previousNode: Node | null = i.previousNode();
-    const nextNode: Node | null = i.nextNode();
-  },
+  // function() {
+  //   const _root = document.body;
+  //   const i = document.createNodeIterator(_root, NodeFilter.SHOW_ALL);
+  //   const root: typeof _root = i.root;
+  //   const referenceNode: typeof _root | Node = i.referenceNode;
+  //   const previousNode: Node | null = i.previousNode();
+  //   const nextNode: Node | null = i.nextNode();
+  // },
   function() {
     const _root = document.body;
     const w = document.createTreeWalker(_root, NodeFilter.SHOW_ELEMENT);
@@ -92,7 +92,7 @@ let tests = [
     const nextNode: Element | null = w.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document.body.attributes[0];
     const w = document.createTreeWalker(_root, NodeFilter.SHOW_ATTRIBUTE);
     const root: typeof _root = w.root;
     const currentNode: typeof _root | Attr = w.currentNode;
@@ -118,7 +118,7 @@ let tests = [
     const nextNode: Text | null = w.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document;
     const w = document.createTreeWalker(_root, NodeFilter.SHOW_DOCUMENT);
     const root: typeof _root = w.root;
     const currentNode: typeof _root | Document = w.currentNode;
@@ -131,7 +131,7 @@ let tests = [
     const nextNode: Document | null = w.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document;
     const w = document.createTreeWalker(_root, NodeFilter.SHOW_DOCUMENT_TYPE);
     const root: typeof _root = w.root;
     const currentNode: typeof _root | DocumentType = w.currentNode;
@@ -144,7 +144,7 @@ let tests = [
     const nextNode: DocumentType | null = w.nextNode();
   },
   function() {
-    const _root = document.body;
+    const _root = document.createDocumentFragment();
     const w = document.createTreeWalker(_root, NodeFilter.SHOW_DOCUMENT_FRAGMENT);
     const root: typeof _root = w.root;
     const currentNode: typeof _root | DocumentFragment = w.currentNode;
@@ -156,19 +156,19 @@ let tests = [
     const previousNode: DocumentFragment | null = w.previousNode();
     const nextNode: DocumentFragment | null = w.nextNode();
   },
-  function() {
-    const _root = document.body;
-    const w = document.createTreeWalker(_root, NodeFilter.SHOW_ALL);
-    const root: typeof _root = w.root;
-    const currentNode: typeof _root | Node = w.currentNode;
-    const parentNode: Node | null = w.parentNode();
-    const firstChild: Node | null = w.firstChild();
-    const lastChild: Node | null = w.lastChild();
-    const previousSibling: Node | null = w.previousSibling();
-    const nextSibling: Node | null = w.nextSibling();
-    const previousNode: Node | null = w.previousNode();
-    const nextNode: Node | null = w.nextNode();
-  },
+  // function() {
+  //   const _root = document.body;
+  //   const w = document.createTreeWalker(_root, NodeFilter.SHOW_ALL);
+  //   const root: typeof _root = w.root;
+  //   const currentNode: typeof _root | Node = w.currentNode;
+  //   const parentNode: Node | null = w.parentNode();
+  //   const firstChild: Node | null = w.firstChild();
+  //   const lastChild: Node | null = w.lastChild();
+  //   const previousSibling: Node | null = w.previousSibling();
+  //   const nextSibling: Node | null = w.nextSibling();
+  //   const previousNode: Node | null = w.previousNode();
+  //   const nextNode: Node | null = w.nextNode();
+  // },
   // NodeFilterInterface
   function() {
     document.createNodeIterator(document.body, -1, node => NodeFilter.FILTER_ACCEPT); // valid
