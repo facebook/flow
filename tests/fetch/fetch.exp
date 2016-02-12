@@ -148,64 +148,127 @@ This type is incompatible with
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:407:13,21: Library type error:
-[LIB] bom.js:407:13,21: undefined
+[LIB] bom.js:407:14,22: Library type error:
+[LIB] bom.js:407:14,22: null
 This type is incompatible with
 [LIB] bom.js:454:12,20: string enum
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:408:19,33: Library type error:
-[LIB] bom.js:408:19,33: undefined
+[LIB] bom.js:407:14,22: Library type error:
+[LIB] bom.js:407:14,22: undefined
+This type is incompatible with
+[LIB] bom.js:454:12,20: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:408:20,34: Library type error:
+[LIB] bom.js:408:20,34: null
 This type is incompatible with
 [LIB] bom.js:455:18,32: string enum
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:409:15,25: Library type error:
-[LIB] bom.js:409:15,25: undefined
+[LIB] bom.js:408:20,34: Library type error:
+[LIB] bom.js:408:20,34: undefined
+This type is incompatible with
+[LIB] bom.js:455:18,32: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:409:16,26: Library type error:
+[LIB] bom.js:409:16,26: null
 This type is incompatible with
 [LIB] bom.js:456:14,20: Headers
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:410:17,22: Library type error:
-[LIB] bom.js:410:17,22: undefined
+[LIB] bom.js:409:16,26: Library type error:
+[LIB] bom.js:409:16,26: undefined
+This type is incompatible with
+[LIB] bom.js:456:14,20: Headers
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:410:18,23: Library type error:
+[LIB] bom.js:410:18,23: null
 This type is incompatible with
 [LIB] bom.js:457:16,21: string
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:411:14,23: Library type error:
-[LIB] bom.js:411:14,23: undefined
+[LIB] bom.js:410:18,23: Library type error:
+[LIB] bom.js:410:18,23: undefined
+This type is incompatible with
+[LIB] bom.js:457:16,21: string
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:411:15,24: Library type error:
+[LIB] bom.js:411:15,24: null
 This type is incompatible with
 [LIB] bom.js:458:13,22: string enum
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:412:12,19: Library type error:
-[LIB] bom.js:412:12,19: undefined
+[LIB] bom.js:411:15,24: Library type error:
+[LIB] bom.js:411:15,24: undefined
+This type is incompatible with
+[LIB] bom.js:458:13,22: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:412:13,20: Library type error:
+[LIB] bom.js:412:13,20: null
 This type is incompatible with
 [LIB] bom.js:459:11,18: string enum
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:413:16,27: Library type error:
-[LIB] bom.js:413:16,27: undefined
+[LIB] bom.js:412:13,20: Library type error:
+[LIB] bom.js:412:13,20: undefined
+This type is incompatible with
+[LIB] bom.js:459:11,18: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:413:17,28: Library type error:
+[LIB] bom.js:413:17,28: null
 This type is incompatible with
 [LIB] bom.js:460:15,26: string enum
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:414:16,21: Library type error:
-[LIB] bom.js:414:16,21: undefined
+[LIB] bom.js:413:17,28: Library type error:
+[LIB] bom.js:413:17,28: undefined
+This type is incompatible with
+[LIB] bom.js:460:15,26: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:414:17,22: Library type error:
+[LIB] bom.js:414:17,22: null
 This type is incompatible with
 [LIB] bom.js:461:15,20: string
 
 request.js:6:20,36: constructor call
 Error:
-[LIB] bom.js:415:22,39: Library type error:
-[LIB] bom.js:415:22,39: undefined
+[LIB] bom.js:414:17,22: Library type error:
+[LIB] bom.js:414:17,22: undefined
+This type is incompatible with
+[LIB] bom.js:461:15,20: string
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:415:23,40: Library type error:
+[LIB] bom.js:415:23,40: null
+This type is incompatible with
+[LIB] bom.js:462:21,38: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:415:23,40: Library type error:
+[LIB] bom.js:415:23,40: undefined
 This type is incompatible with
 [LIB] bom.js:462:21,38: string enum
 
@@ -219,13 +282,13 @@ request.js:30:20,35:2: constructor call
 Error:
 request.js:32:12,37: string
 This type is incompatible with
-[LIB] bom.js:409:15,25: union: Headers | object type
+[LIB] bom.js:409:16,26: union: Headers | object type
 
 request.js:37:20,44:2: constructor call
 Error:
 request.js:38:11,19: string
 This type is incompatible with
-[LIB] bom.js:411:14,23: string enum
+[LIB] bom.js:411:15,24: string enum
 
 request.js:49:1,31: call of method `then`
 Error:
@@ -244,13 +307,13 @@ response.js:10:21,12:2: constructor call
 Error:
 response.js:11:13,17: string
 This type is incompatible with
-[LIB] bom.js:419:14,19: number
+[LIB] bom.js:419:15,20: number
 
 response.js:14:21,17:2: constructor call
 Error:
 response.js:16:14,43: string
 This type is incompatible with
-[LIB] bom.js:421:15,25: union: Headers | object type
+[LIB] bom.js:421:16,26: union: Headers | object type
 
 response.js:33:21,38:2: constructor call
 Error:
@@ -329,4 +392,4 @@ urlsearchparams.js:18:19,31: string
 This type is incompatible with
 urlsearchparams.js:18:10,15: number
 
-Found 52 errors
+Found 61 errors
