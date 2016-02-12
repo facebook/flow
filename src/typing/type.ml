@@ -596,24 +596,23 @@ end = struct
    *)
   type t = TypeTerm.t list * (TypeTerm.t * EnumSet.t) option
 
-  (* given a list of members, build a rep.
-     specialized reps are used on compatible type lists *)
+  (* helper: add t to enum set if base matches *)
+  let acc_enum (base, tset) t =
+    match base_of_t t with
+    | Some tbase when tbase = base ->
+      Some (base, EnumSet.add t tset)
+    | _ -> None
+
+(* given a list of members, build a rep.
+   specialized reps are used on compatible type lists *)
   let make tlist =
-    let rec loop acc base = function
-    | [] -> Some (base, acc)
-    | t :: ts ->
-      match base_of_t t with
-      | Some tbase when tbase = base ->
-        loop (EnumSet.add t acc) base ts
-      | _ -> None
-    in
     tlist,
     match tlist with
     | [] | [_] -> None
     | t :: ts ->
       match base_of_t t with
       | Some (_ as base) ->
-        loop (EnumSet.singleton t) base ts
+        Utils_js.fold_left_opt acc_enum (base, EnumSet.singleton t) ts
       | _ -> None
 
   (* rep's enum base type, if any *)
