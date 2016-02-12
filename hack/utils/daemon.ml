@@ -145,15 +145,6 @@ let register_entry_point = Entry.register
 
 let null_path = Path.to_string Path.null_path
 
-let make_pipe () =
-  let descr_in, descr_out = Unix.pipe () in
-  (* close descriptors on exec so they are not leaked *)
-  Unix.set_close_on_exec descr_in;
-  Unix.set_close_on_exec descr_out;
-  let ic = Timeout.in_channel_of_descr descr_in in
-  let oc = Unix.out_channel_of_descr descr_out in
-  ic, oc
-
 let fd_of_path path =
   Sys_utils.with_umask 0o111 begin fun () ->
     Sys_utils.mkdir_no_fail (Filename.dirname path);
@@ -162,21 +153,51 @@ let fd_of_path path =
 
 let null_fd () = fd_of_path null_path
 
+let setup_channels channel_mode =
+  match channel_mode with
+  | `pipe ->
+    let parent_in, child_out = Unix.pipe () in
+    let child_in, parent_out = Unix.pipe () in
+    (* Close descriptors on exec so they are not leaked. *)
+    Unix.set_close_on_exec parent_in;
+    Unix.set_close_on_exec parent_out;
+    (parent_in, child_out), (child_in, parent_out)
+  | `socket ->
+    let parent_fd, child_fd = Unix.socketpair Unix.PF_UNIX Unix.SOCK_STREAM 0 in
+    (** FD's on sockets are bi-directional. *)
+    (parent_fd, child_fd), (child_fd, parent_fd)
+
+let make_pipe (descr_in, descr_out)  =
+  let ic = Timeout.in_channel_of_descr descr_in in
+  let oc = Unix.out_channel_of_descr descr_out in
+  ic, oc
+
+let close_pipe channel_mode (ch_in, ch_out) =
+  match channel_mode with
+  | `pipe ->
+    Timeout.close_in ch_in;
+    close_out ch_out
+  | `socket ->
+    (** the in and out FD's are the same. Close only once. *)
+    Timeout.close_in ch_in
+
 (* This only works on Unix, and should be avoided as far as possible. Use
  * Daemon.spawn instead. *)
 let fork
+    ?(channel_mode = `pipe)
     (type param)
     (log_stdout, log_stderr) (f : param -> ('a, 'b) channel_pair -> unit)
     (param : param) : ('b, 'a) handle =
-  let parent_in, child_out = make_pipe () in
-  let child_in, parent_out = make_pipe () in
+  let (parent_in, child_out), (child_in, parent_out)
+      = setup_channels channel_mode in
+    let (parent_in, child_out) = make_pipe (parent_in, child_out) in
+    let (child_in, parent_out) = make_pipe (child_in, parent_out) in
   match Fork.fork () with
   | -1 -> failwith "Go get yourself a real computer"
   | 0 -> (* child *)
     (try
       ignore(Unix.setsid());
-      Timeout.close_in parent_in;
-      close_out parent_out;
+      close_pipe channel_mode (parent_in, parent_out);
       Sys_utils.with_umask 0o111 begin fun () ->
         let fd = null_fd () in
         Unix.dup2 fd Unix.stdin;
@@ -192,23 +213,8 @@ let fork
     with _ ->
       exit 1)
   | pid -> (* parent *)
-    Timeout.close_in child_in;
-    close_out child_out;
+    close_pipe channel_mode (child_in, child_out);
     { channels = parent_in, parent_out; pid }
-
-let setup_channels channel_mode =
-  match channel_mode with
-  | `pipe ->
-    let parent_in, child_out = Unix.pipe () in
-    let child_in, parent_out = Unix.pipe () in
-    (* Close descriptors on exec so they are not leaked. *)
-    Unix.set_close_on_exec parent_in;
-    Unix.set_close_on_exec parent_out;
-    (parent_in, child_out), (child_in, parent_out)
-  | `socket ->
-    let parent_fd, child_fd = Unix.socketpair Unix.PF_UNIX Unix.SOCK_STREAM 0 in
-    (** FD's on sockets are bi-directional. *)
-    (parent_fd, child_fd), (child_fd, parent_fd)
 
 let spawn
     (type param) (type input) (type output)

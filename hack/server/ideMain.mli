@@ -8,4 +8,7 @@
  *
  *)
 
- val entry: (ServerArgs.options, unit, unit) Daemon.entry
+val entry: (ServerArgs.options, unit, unit) Daemon.entry
+
+val daemon_main:
+  ServerArgs.options -> ('a Daemon.in_channel * 'b Daemon.out_channel) -> unit

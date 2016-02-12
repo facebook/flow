@@ -15,3 +15,6 @@
 val entry: (ServerArgs.options, unit, unit) Daemon.entry
 
 val run_once: ServerArgs.options -> 'a
+
+val daemon_main:
+  ServerArgs.options -> ('a Daemon.in_channel * 'b Daemon.out_channel) -> unit
