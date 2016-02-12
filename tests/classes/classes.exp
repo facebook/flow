@@ -69,4 +69,16 @@ loc.js:5:7,9: Foo
 name is already bound
 loc.js:3:6,8: type Foo
 
-Found 18 errors
+statics.js:4:13,18: string
+This type is incompatible with
+statics.js:10:8,13: number
+
+statics.js:10:8,13: number
+This type is incompatible with
+statics.js:4:13,18: string
+
+statics.js:13:2,2: object type
+This type is incompatible with
+statics.js:13:11,11: class type: C
+
+Found 21 errors

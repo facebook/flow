@@ -3377,7 +3377,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* class statics *)
     (*****************)
 
-    | (ClassT instance, _) when object_like_op u ->
+    | (ClassT instance, _) when object_use u || object_like_op u ->
       let reason = prefix_reason "statics of " (reason_of_t instance) in
       let tvar = mk_tvar cx reason in
       rec_flow cx trace (instance, GetPropT(reason, (reason, "statics"), tvar));
@@ -3746,6 +3746,10 @@ and numeric = function
 and object_like = function
   | ObjT _ | InstanceT _ -> true
   | t -> function_like t
+
+and object_use = function
+  | UseT ObjT _ -> true
+  | _ -> false
 
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
