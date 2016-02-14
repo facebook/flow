@@ -1,11 +1,11 @@
 
 async.js:12:10,10: number
 This type is incompatible with
-[LIB] core.js:430:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
 
 async.js:31:10,16: number
 This type is incompatible with
-[LIB] core.js:430:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
 
 async.js:45:22,25: Promise
 This type is incompatible with
