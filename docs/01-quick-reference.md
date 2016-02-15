@@ -20,7 +20,7 @@ next: type-annotations.html
 
 • [**`Array<T>`**](#the-array-t-constructor) - Describes `Array` objects with elements of type `T`<br />
 • [**`Boolean`**](#the-boolean-constructor) - Describes `Boolean` objects (but not `boolean` literal values!)<br />
-• [**`Class<T>`**](#the-class-t-constructor) - Describes the type of the class object that would instantiate an instance of `T`<br />
+• [**`Class<T>`**](#the-class-t-constructor) - Describes the type of the class object that would instantiate an instance of class `T`<br />
 • [**`Function`**](#the-function-constructor) - Describes *any* function<br />
 • [**`Number`**](#the-number-constructor) - Describes `Number` objects (but not `number` literal values!)<br />
 • [**`Object`**](#the-object-constructor) - Describes *any* object<br /> 
@@ -127,7 +127,7 @@ var b: Boolean = true; // Type error!
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
 ## • The `Class<T>` constructor
-This type describes the type of the class object that one would use to instantiate an instance of `T`.
+This type describes the type of the class object that one would use to instantiate an instance of class `T`.
 
 Normally when you specify the name of a class in a type annotation, this would refer to the type of **instances** of that class. However, sometimes it's useful to describe the type of the class object iself; So this type allows you to do this.
 
