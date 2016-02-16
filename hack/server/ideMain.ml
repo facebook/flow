@@ -97,6 +97,7 @@ let handle_gone_client env =
 
 let daemon_main _ (parent_ic, _parent_oc) =
   Printexc.record_backtrace true;
+  SharedMem.enable_local_writes ();
   let parent_in_fd = Daemon.descr_of_in_channel parent_ic in
   let typechecker_process = IdeProcessPipeInit.ide_recv parent_in_fd in
   let env = ref empty_env in

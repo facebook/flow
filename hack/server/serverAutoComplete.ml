@@ -18,7 +18,7 @@ let auto_complete files_info content =
   AutocompleteService.attach_hooks();
   let content_funs, content_classes =
     ServerIdeUtils.declare Relative_path.default content in
-  ServerIdeUtils.fix_file_and_def content_funs content_classes;
+  ServerIdeUtils.typecheck content_funs content_classes;
   let fun_names, class_names =
     files_info
     |> Relative_path.Map.values

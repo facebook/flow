@@ -14,7 +14,7 @@ let go content line char =
   ArgumentInfoService.attach_hooks (line, char);
   let funs, classes =
     ServerIdeUtils.declare Relative_path.default content in
-  ServerIdeUtils.fix_file_and_def funs classes;
+  ServerIdeUtils.typecheck funs classes;
   let pos, expected =
     match ArgumentInfoService.get_result() with
     | Some (pos, expected) -> pos, expected

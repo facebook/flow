@@ -13,7 +13,7 @@ let go content line char =
   IdentifySymbolService.attach_hooks result line char;
   let funs, classes =
     ServerIdeUtils.declare Relative_path.default content in
-  ServerIdeUtils.fix_file_and_def funs classes;
+  ServerIdeUtils.typecheck funs classes;
   ServerIdeUtils.revive funs classes;
   IdentifySymbolService.detach_hooks ();
   match !result with
