@@ -1,5 +1,5 @@
 language: c
-script: bash -ex .travis-ci.sh
+script: ./.travis-ci.sh
 sudo: false
 
 os:
@@ -12,17 +12,19 @@ env:
   - OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
   - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
 
-matrix:
-  exclude:
-    - os: osx
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
-    - os: osx
-      env: OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
-
 addons:
   apt:
     packages:
     - libelf-dev
+
+cache:
+  directories:
+    - $HOME/.flow
+
+before_cache:
+  - rm -f $HOME/.flow/opam/*/config
+  - rm -rf $HOME/.flow/opam/*/log
+  - rm -rf $HOME/.flow/opam/*/opam-init
 
 notifications:
   email:
