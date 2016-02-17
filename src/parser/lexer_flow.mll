@@ -1414,8 +1414,8 @@ and jsx_text env mode buf raw = parse
                         | "rceil" -> Some 0x2309
                         | "lfloor" -> Some 0x230A
                         | "rfloor" -> Some 0x230B
-                        | "lang" -> Some 0x2329
-                        | "rang" -> Some 0x232A
+                        | "lang" -> Some 0x27E8 (* 0x2329 in HTML4 *)
+                        | "rang" -> Some 0x27E9 (* 0x232A in HTML4 *)
                         | "loz" -> Some 0x25CA
                         | "spades" -> Some 0x2660
                         | "clubs" -> Some 0x2663
