@@ -391,7 +391,11 @@ let handle_mode mode filename tcopt files_contents files_info errors =
         exit 2
       end
       else Printf.printf "No lint errors\n"
-  | Dump_deps -> Typing_deps.dump_deps stdout
+  | Dump_deps ->
+    Relative_path.Map.iter begin fun _ fileinfo ->
+      ignore @@ Typing_check_utils.check_defs tcopt fileinfo
+    end files_info;
+    Typing_deps.dump_deps stdout
   | Suggest
   | Errors ->
       let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
