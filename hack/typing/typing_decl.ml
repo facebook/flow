@@ -881,5 +881,4 @@ let make_env tcopt fn =
   match Parser_heap.ParserHeap.get fn with
   | None -> ()
   | Some prog ->
-      Typing_decl_deps.add prog;
-      name_and_declare_types_program tcopt prog
+    name_and_declare_types_program tcopt prog
