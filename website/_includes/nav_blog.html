@@ -1,0 +1,20 @@
+<nav class='toc'>
+  <section>
+    <h3>Recent Posts</h3>
+    <ul>
+      {% for i in (0..9) %}
+      {% assign post = site.posts[i] %}
+        <li>
+          <a 
+            {% if (post.title == page.title) %} class="active" {% endif %}
+            href="{{ site.baseurl }}{{ post.url }}">
+            {{ post.title }}
+          </a>
+        </li>
+      {% endfor %}
+      <li><a 
+        {% if (page.id == 'all') %} class="active" {% endif %}
+        href="/blog/all.html">All posts ...</a></li>
+    </ul>
+  <section>
+</nav>
