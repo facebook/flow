@@ -1,7 +1,4 @@
 
-Client.js:8:9,29: ./Imported
-Required module not found
+ParseError.js:3:18,18: Unexpected token ILLEGAL
 
-Imported.js:6:17,17: Unexpected token ILLEGAL
-
-Found 2 errors
+Found 1 error

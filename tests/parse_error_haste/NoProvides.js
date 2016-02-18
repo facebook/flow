@@ -1,7 +1,6 @@
 /**
  * Parse errors, imported, not in flow, no provides module.
- * Should see a parse error in this file, and module
- * not found in client.
+ * No parse errors are raised because it is ignored by flow.
  */
 function f(s) { ### // illegal token
   return s;

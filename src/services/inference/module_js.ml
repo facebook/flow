@@ -18,7 +18,6 @@
 
 open Utils
 open Utils_js
-open Sys_utils
 
 module Ast = Spider_monkey_ast
 module Flow = Flow_js
@@ -742,14 +741,8 @@ let add_module_info ~options cx =
    the module names of unparsed files, we're able to tell whether an
    unparsed file has been required/imported.
  *)
-let add_unparsed_info ~options file =
+let add_unparsed_info ~options file docblock =
   let force_check = Options.all options in
-  let filename = Loc.(match file with
-  | LibFile filename | SourceFile filename | JsonFile filename -> filename
-  | Builtins -> assert false
-  ) in
-  let content = cat filename in
-  let docblock = Docblock.extract filename content in
   let _module = exported_module ~options file docblock in
   let checked =
     force_check ||

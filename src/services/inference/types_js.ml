@@ -21,6 +21,8 @@ open Utils_js
 
 module TI = Type_inference_js
 
+exception Key_not_found of (* message *) string * (* key *) string
+
 let is_lib_file f = match f with
 | Loc.LibFile _ -> true
 | _ -> false
@@ -192,31 +194,14 @@ let get_errors () =
   in
   List.rev_append revlist_libs (List.rev revlist_others)
 
-(* we report parse errors if a file is either a lib file,
-   a checked module, or an unchecked file that's used as a
-   module by a checked file
- *)
-let filter_unchecked_unused errmap = Module_js.(
-  let is_imported m = match get_reverse_imports m with
-  | Some set -> NameSet.cardinal set > 0
-  | None -> false
-  in
-  FilenameMap.filter (fun file _ ->
-    is_lib_file file || (
-      let info = get_module_info file in
-      info.checked || is_imported info._module
-    )
-  ) errmap
-)
-
 (* relocate errors to their reported positions,
    combine in single error map *)
 let collate_errors () =
-  let all = filter_unchecked_unused !parse_errors in
-  let all = FilenameMap.fold distrib_errs !infer_errors all in
-  let all = FilenameMap.fold distrib_errs !merge_errors all in
-  let all = FilenameMap.fold distrib_errs !module_errors all in
-  all_errors := all
+  all_errors :=
+    !parse_errors
+    |> FilenameMap.fold distrib_errs !infer_errors
+    |> FilenameMap.fold distrib_errs !merge_errors
+    |> FilenameMap.fold distrib_errs !module_errors
 
 let profile_and_not_quiet opts =
   Options.(opts.opt_profile && not opts.opt_quiet)
@@ -372,7 +357,10 @@ let implementation_file r = Module_js.(
 let check_require (r, resolved_r, cx) =
   if not (Module_js.module_exists resolved_r)
   then
-    let loc = SMap.find_unsafe r (Context.require_loc cx) in
+    let loc =
+      try SMap.find_unsafe r (Context.require_loc cx)
+      with Not_found -> raise (Key_not_found ("Context.require_loc", r))
+    in
     let reason = Reason_js.mk_reason r loc in
 
     let m_name = Modulename.to_string resolved_r in
@@ -396,7 +384,12 @@ class context_cache = object
 
   (* read a context from shared memory, copy its graph, and cache the context *)
   method read file =
-    let cx = Context.copy_of_context (ContextHeap.find_unsafe file) in
+    let orig_cx =
+      try ContextHeap.find_unsafe file
+      with Not_found ->
+        raise (Key_not_found ("ContextHeap", (string_of_filename file)))
+    in
+    let cx = Context.copy_of_context orig_cx in
     Hashtbl.add cached_infer_contexts file cx;
     cx
 end
@@ -414,7 +407,11 @@ class sig_context_cache = object
 
   (* read a context from shared memory, copy its graph, and cache the context *)
   method read file =
-    let orig_cx = SigContextHeap.find_unsafe file in
+    let orig_cx =
+      try SigContextHeap.find_unsafe file
+      with Not_found ->
+        raise (Key_not_found ("SigContextHeap", (string_of_filename file)))
+    in
     let cx = Context.copy_of_context orig_cx in
     Hashtbl.add cached_merge_contexts file cx;
     orig_cx, cx
@@ -458,7 +455,10 @@ let merge_strict_context ~options cache component_cxs =
   let required = List.fold_left (fun required cx ->
     let require_locs = Context.require_loc cx in
     SSet.fold (fun r ->
-      let loc = SMap.find_unsafe r require_locs in
+      let loc =
+        try SMap.find_unsafe r require_locs
+        with Not_found -> raise (Key_not_found ("require_locs", r))
+      in
       let resolved_r = Module_js.find_resolved_module ~options cx loc r in
       check_require (r, resolved_r, cx);
       add_decl (r, resolved_r, cx)
@@ -474,7 +474,7 @@ let merge_strict_context ~options cache component_cxs =
       Module_js.(match get_module_file resolved_r with
       | Some file ->
           let info = get_module_info file in
-          if info.checked then
+          if info.checked && info.parsed then
             (* checked implementation exists *)
             let impl sig_cx = sig_cx, r, info._module, cx_to in
             begin match cache#find file with
@@ -482,7 +482,11 @@ let merge_strict_context ~options cache component_cxs =
                 orig_sig_cxs, sig_cxs,
                 (impl sig_cx) :: impls, decls
             | None ->
-                let file = LeaderHeap.find_unsafe file in
+                let file =
+                  try LeaderHeap.find_unsafe file
+                  with Not_found ->
+                    raise (Key_not_found ("LeaderHeap", (string_of_filename file)))
+                in
                 begin match sig_cache#find file with
                 | Some sig_cx ->
                     orig_sig_cxs, sig_cxs,
@@ -574,16 +578,19 @@ let typecheck_contents ~options ?verbose contents filename =
 
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
-  let timing, parse_result = with_timer "Parsing" timing (fun () ->
-    Parsing_service_js.do_parse
-      ~fail:false ~types_mode
+  let timing, (parse_result, info) = with_timer "Parsing" timing (fun () ->
+    let info = Docblock.extract (string_of_filename filename) contents in
+    let parse_result = Parsing_service_js.do_parse
+      ~fail:false ~types_mode ~info
       contents filename
+    in
+    parse_result, info
   ) in
 
   let strip_root = Options.should_strip_root options in
 
   match parse_result with
-  | OK (ast, info) ->
+  | Parsing_service_js.Parse_ok ast ->
       (* defaults *)
       let metadata = { Context.
         checked = true;
@@ -605,10 +612,14 @@ let typecheck_contents ~options ?verbose contents filename =
       let timing, () = with_timer "Merge" timing (fun () ->
         merge_strict_context ~options cache [cx]
       ) in
-      timing, Some cx, Context.errors cx, parse_result
+      timing, Some cx, Context.errors cx, info
 
-  | Err errors ->
-      timing, None, errors, parse_result
+  | Parsing_service_js.Parse_err errors ->
+      timing, None, errors, info
+
+  | Parsing_service_js.Parse_skip ->
+      (* should never happen *)
+      timing, None, Errors_js.ErrorSet.empty, info
 
 let merge_strict_job opts (merged, errsets) (components: filename list list) =
   List.fold_left (fun (merged, errsets) (component: filename list) ->
@@ -863,11 +874,16 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
     with_timer ~opts "Infer" timing (fun () -> infer workers files opts) in
 
   (* add tracking modules for unparsed files *)
-  List.iter (Module_js.add_unparsed_info ~options:opts) unparsed;
+  List.iter (fun (filename, docblock) ->
+    Module_js.add_unparsed_info ~options:opts filename docblock
+  ) unparsed;
 
   (* create module dependency graph, warn on dupes etc. *)
   let timing, () = with_timer ~opts "CommitModules" timing (fun () ->
-    commit_modules ~options:opts inferred removed
+    let filenames = List.fold_left (fun acc (filename, _) ->
+      filename::acc
+    ) inferred unparsed in
+    commit_modules ~options:opts filenames removed
   ) in
 
   (* call supplied function to calculate closure of modules to merge *)
@@ -1112,7 +1128,7 @@ let recheck genv env modified =
   Flow_logger.log "Parsing";
   (* reparse modified and added files, updating modified to reflect removal of
      unchanged files *)
-  let timing, (modified, (freshparsed, freshparse_fail, freshparse_errors)) =
+  let timing, (modified, (freshparsed, freshparse_skips, freshparse_fail, freshparse_errors)) =
     with_timer ~opts:options "Parsing" timing (fun () ->
       let profile = profile_and_not_quiet options in
       Parsing_service_js.reparse
@@ -1127,7 +1143,8 @@ let recheck genv env modified =
   clear_errors ~debug (FilenameSet.elements deleted);
 
   (* record reparse errors *)
-  save_errors parse_errors freshparse_fail freshparse_errors;
+  let failed_filenames = List.map (fun (file, _) -> file) freshparse_fail in
+  save_errors parse_errors failed_filenames freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
   let old_parsed = env.ServerEnv.files in
@@ -1158,7 +1175,7 @@ let recheck genv env modified =
     genv.ServerEnv.workers
     freshparsed
     removed_modules
-    freshparse_fail
+    (List.rev_append freshparse_fail freshparse_skips)
     options
     timing
     (fun inferred ->
@@ -1230,11 +1247,12 @@ let full_check workers ~ordered_libs parse_next opts =
   let max_trace_depth = Options.max_trace_depth opts in
 
   Flow_logger.log "Parsing";
-  let timing, (parsed, error_files, errors) =
+  let timing, (parsed, skipped_files, error_files, errors) =
     with_timer ~opts "Parsing" timing (fun () ->
       Parsing_service_js.parse ~types_mode ~profile workers parse_next
     ) in
-  save_errors parse_errors error_files errors;
+  let error_filenames = List.map (fun (file, _) -> file) error_files in
+  save_errors parse_errors error_filenames errors;
 
   Flow_logger.log "Building package heap";
   let timing, () = with_timer ~opts "PackageHeap" timing (fun () ->
@@ -1251,7 +1269,7 @@ let full_check workers ~ordered_libs parse_next opts =
     workers
     parsed
     Module_js.NameSet.empty
-    error_files
+    (List.rev_append error_files skipped_files)
     opts
     timing
     (fun inferred ->

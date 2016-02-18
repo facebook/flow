@@ -14,11 +14,17 @@ open Sys_utils
 module Reason = Reason_js
 module Ast = Spider_monkey_ast
 
+type result =
+  | Parse_ok of Spider_monkey_ast.program
+  | Parse_err of Errors_js.ErrorSet.t
+  | Parse_skip
+
 (* results of parse job, returned by parse and reparse *)
 type results =
-  FilenameSet.t *           (* successfully parsed files *)
-  filename list *           (* list of failed files *)
-  Errors_js.ErrorSet.t list (* parallel list of error sets *)
+  FilenameSet.t *                (* successfully parsed files *)
+  (filename * Docblock.t) list * (* list of skipped files *)
+  (filename * Docblock.t) list * (* list of failed files *)
+  Errors_js.ErrorSet.t list      (* parallel list of error sets *)
 
 (**************************** internal *********************************)
 
@@ -57,9 +63,7 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
-let parse_source_file ~fail ~types_mode content file =
-  let filename = string_of_filename file in
-  let info = Docblock.extract filename content in
+let parse_source_file ~fail ~types content file =
   let parse_options = Some Parser_env.({
     (**
      * Always parse ES proposal syntax. The user-facing config option to
@@ -70,26 +74,12 @@ let parse_source_file ~fail ~types_mode content file =
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
     esproposal_export_star_as = true;
-
-    (* Allow types based on `types_mode`, using the @flow annotation in the
-       file header if possible. *)
-    types =
-      match types_mode with
-      | TypesAllowed -> true
-      | TypesForbiddenByDefault ->
-          Docblock.isDeclarationFile info ||
-            begin match Docblock.flow info with
-            | None -> false
-            | Some Docblock.OptIn
-            | Some Docblock.OptInWeak -> true
-            (* parse types even in @noflow mode; they just don't get checked *)
-            | Some Docblock.OptOut -> true
-            end;
+    types = types
   }) in
   let ast, parse_errors =
     Parser_flow.program_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
-  ast, info
+  ast
 
 let parse_json_file ~fail content file =
   let parse_options = Some Parser_env.({
@@ -99,7 +89,6 @@ let parse_json_file ~fail content file =
     esproposal_export_star_as = false;
     types = true;
   }) in
-  let info = Docblock.default_info in
 
   (* parse the file as JSON, then munge the AST to convert from an object
      into a `module.exports = {...}` statement *)
@@ -134,22 +123,45 @@ let parse_json_file ~fail content file =
     }
   in
   let comments = ([]: Comment.t list) in
-  (loc, [statement], comments), info
+  (loc, [statement], comments)
 
-let do_parse ?(fail=true) ~types_mode content file =
+let get_docblock file content =
+  match file with
+  | Loc.JsonFile _ -> Docblock.default_info
+  | _ ->
+    let filename = string_of_filename file in
+    Docblock.extract filename content
+
+let do_parse ?(fail=true) ~types_mode ~info content file =
   try (
     match file with
     | Loc.JsonFile _ ->
-      OK (parse_json_file ~fail content file)
+      Parse_ok (parse_json_file ~fail content file)
     | _ ->
-      OK (parse_source_file ~fail ~types_mode content file)
+      (* Allow types based on `types_mode`, using the @flow annotation in the
+       file header if possible. *)
+      let types = match types_mode with
+      | TypesAllowed -> true
+      | TypesForbiddenByDefault ->
+          Docblock.isDeclarationFile info ||
+            begin match Docblock.flow info with
+            | None
+            | Some Docblock.OptOut -> false
+            | Some Docblock.OptIn
+            | Some Docblock.OptInWeak -> true
+            end
+      in
+      (* don't bother to parse if types are disabled *)
+      if types
+      then Parse_ok (parse_source_file ~fail ~types content file)
+      else Parse_skip
   )
   with
   | Parse_error.Error parse_errors ->
     let converted = List.fold_left (fun acc err ->
       Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
     ) Errors_js.ErrorSet.empty parse_errors in
-    Err converted
+    Parse_err converted
   | e ->
     let s = Printexc.to_string e in
     let msg = spf "unexpected parsing exception: %s" s in
@@ -160,14 +172,15 @@ let do_parse ?(fail=true) ~types_mode content file =
       op = None;
       trace = []
     }) in
-    Err (Errors_js.ErrorSet.singleton err)
+    Parse_err (Errors_js.ErrorSet.singleton err)
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
-let reducer ~types_mode (ok, fails, errors) file =
+let reducer ~types_mode (ok, skips, fails, errors) file =
   let content = cat (string_of_filename file) in
-  match (do_parse ~types_mode content file) with
-  | OK (ast, info) ->
+  let info = get_docblock file content in
+  match (do_parse ~types_mode ~info content file) with
+  | Parse_ok ast ->
       (* Consider the file unchanged if its reparsing info is the same as its
          old parsing info. A complication is that we don't want to drop a .flow
          file, even if it is unchanged, since it might have been added to the
@@ -175,53 +188,65 @@ let reducer ~types_mode (ok, fails, errors) file =
          also added. *)
       if not (Loc.check_suffix file FlowConfig.flow_ext)
         && ParserHeap.get_old file = Some (ast, info)
-      then (ok, fails, errors)
+      then (ok, skips, fails, errors)
       else begin
         ParserHeap.add file (ast, info);
         execute_hook file (Some ast);
-        (FilenameSet.add file ok, fails, errors)
+        (FilenameSet.add file ok, skips, fails, errors)
       end
-  | Err converted ->
+  | Parse_err converted ->
       execute_hook file None;
-      (ok, file :: fails, converted :: errors)
+      (ok, skips, (file, info) :: fails, converted :: errors)
+  | Parse_skip ->
+      execute_hook file None;
+      (ok, (file, info) :: skips, fails, errors)
 
 (* merge is just memberwise union/concat of results *)
-let merge (ok1, fail1, errors1) (ok2, fail2, errors2) =
-  (FilenameSet.union ok1 ok2, fail1 @ fail2, errors1 @ errors2)
+let merge (ok1, skip1, fail1, errors1) (ok2, skip2, fail2, errors2) =
+  (FilenameSet.union ok1 ok2, skip1 @ skip2, fail1 @ fail2, errors1 @ errors2)
 
 (***************************** public ********************************)
 
 let parse ~types_mode ~profile workers next =
   let t = Unix.gettimeofday () in
-  let ok, fail, errors = MultiWorker.call
+  let ok, skip, fail, errors = MultiWorker.call
     workers
     ~job: (List.fold_left (reducer ~types_mode ))
-    ~neutral: (FilenameSet.empty, [], [])
+    ~neutral: (FilenameSet.empty, [], [], [])
     ~merge: merge
     ~next: next in
 
   if profile then
     let t2 = Unix.gettimeofday () in
-    prerr_endlinef "parsed %d + %d files in %f"
-      (FilenameSet.cardinal ok) (List.length fail) (t2 -. t)
+    let ok_count = FilenameSet.cardinal ok in
+    let skip_count = List.length skip in
+    let fail_count = List.length fail in
+    prerr_endlinef "parsed %d files (%d ok, %d skipped, %d failed) in %f"
+      (ok_count + skip_count + fail_count)
+      ok_count skip_count fail_count
+      (t2 -. t)
   else ();
 
-  (ok, fail, errors)
+  (ok, skip, fail, errors)
 
 let reparse ~types_mode ~profile workers files =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
   let next = Bucket.make (FilenameSet.elements files) in
-  let ok, fails, errors = parse ~types_mode ~profile workers next in
-  let modified =
-    List.fold_left (fun acc fail -> FilenameSet.add fail acc) ok fails in
+  let ok, skips, fails, errors = parse ~types_mode ~profile workers next in
+  let modified = List.fold_left (fun acc (fail, _) ->
+    FilenameSet.add fail acc
+  ) ok fails in
+  let modified = List.fold_left (fun acc (skip, _) ->
+    FilenameSet.add skip acc
+  ) modified skips in
   (* discard old parsing info for modified files *)
   ParserHeap.remove_old_batch modified;
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   ParserHeap.revive_batch unchanged;
   SharedMem.collect `gentle;
-  modified, (ok, fails, errors)
+  modified, (ok, skips, fails, errors)
 
 let has_ast file =
   ParserHeap.mem file

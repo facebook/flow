@@ -14,12 +14,18 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
+(* result of individual parse *)
+type result =
+  | Parse_ok of Spider_monkey_ast.program
+  | Parse_err of Errors_js.ErrorSet.t
+  | Parse_skip
+
 (* results of parse job, returned by parse and reparse *)
-(* NOTE: same as Types_js.results, should factor to common upstream *)
 type results =
-  FilenameSet.t *           (* successfully parsed files *)
-  filename list *           (* list of failed files *)
-  Errors_js.ErrorSet.t list (* parallel list of error sets *)
+  FilenameSet.t *                 (* successfully parsed files *)
+  (filename * Docblock.t) list *  (* list of skipped files *)
+  (filename * Docblock.t) list *  (* list of failed files *)
+  Errors_js.ErrorSet.t list       (* parallel list of error sets *)
 
 (* initial parsing pass: success/failure info is returned,
  * asts are made available via get_ast_unsafe. *)
@@ -57,6 +63,7 @@ val call_on_success: (filename -> Spider_monkey_ast.program -> unit) -> unit
 val do_parse:
   ?fail:bool ->
   types_mode: types_mode ->
+  info: Docblock.t ->
   string ->                 (* contents of the file *)
   filename ->               (* filename *)
-  (Spider_monkey_ast.program * Docblock.t, Errors_js.ErrorSet.t) ok_or_err
+  result

@@ -1,12 +1,4 @@
 
-Client.js:8:9,22: Foo
-Required module not found
+ParseError.js:3:18,18: Unexpected token ILLEGAL
 
-Client.js:9:9,31: ./NoProvides
-Required module not found
-
-NoProvides.js:6:17,17: Unexpected token ILLEGAL
-
-Provides.js:8:33,33: Unexpected token ILLEGAL
-
-Found 4 errors
+Found 1 error

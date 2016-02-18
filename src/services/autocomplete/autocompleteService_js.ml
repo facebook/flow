@@ -118,7 +118,7 @@ let autocomplete_member
   this
   ac_name
   ac_loc
-  parse_result = Flow_js.(
+  docblock = Flow_js.(
 
   let this_t = resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
@@ -128,14 +128,10 @@ let autocomplete_member
 
   let open Hh_json in
 
-  let docblock = match parse_result with
-  | Utils_js.OK (_, info) -> Docblock.json_of_docblock info
-  | Utils_js.Err _ -> JSON_Null in
-
   let json_data_list = [
     "ac_name", JSON_String ac_name;
     "ac_loc", JSON_Object (Errors_js.json_of_loc ac_loc);
-    "docblock", docblock;
+    "docblock", Docblock.json_of_docblock docblock;
   ] in
 
   let result_str, t = Autocomplete.(match result with

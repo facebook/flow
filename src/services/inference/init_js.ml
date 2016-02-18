@@ -17,7 +17,6 @@
    future. *)
 
 open Utils
-open Utils_js
 open Sys_utils
 
 module Files = Files_js
@@ -49,11 +48,15 @@ let parse_lib_file save_parse_errors file =
   try Parsing.(
     let lib_content = cat file in
     let lib_file = Loc.LibFile file in
-    lib_file, match do_parse ~types_mode lib_content lib_file with
-    | OK (ast, _) ->
+    let info = Docblock.extract file lib_content in
+    lib_file, match do_parse ~types_mode ~info lib_content lib_file with
+    | Parse_ok ast ->
       Some ast
-    | Err errors ->
+    | Parse_err errors ->
       save_parse_errors lib_file errors;
+      None
+    | Parse_skip ->
+      (* should never happen *)
       None
   )
   with _ -> failwith (

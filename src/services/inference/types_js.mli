@@ -27,4 +27,4 @@ val typecheck_contents:
   FlowEventLogger.Timing.t *
     Context.t option *
     Errors_js.ErrorSet.t *
-    (Spider_monkey_ast.program * Docblock.t, Errors_js.ErrorSet.t) ok_or_err
+    Docblock.t

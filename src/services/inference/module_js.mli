@@ -71,7 +71,11 @@ val commit_modules:
 val add_module_info: options:Options.options -> Context.t -> unit
 
 (* add info for unparsed file to module info store *)
-val add_unparsed_info: options:Options.options -> filename -> unit
+val add_unparsed_info:
+  options:Options.options ->
+  filename ->
+  Docblock.t ->
+  unit
 
 (* remove module info being tracked for given file set;
    returns the set of modules removed
