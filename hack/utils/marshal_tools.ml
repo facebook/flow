@@ -47,7 +47,7 @@ let get_preamble_core (size : int) =
   if size >= maximum_payload_size then
     raise Payload_Size_Too_Large_Exception;
   let rec loop i (remainder: int) acc =
-    if i <= 0 then acc
+    if i < 0 then acc
     else loop (i - 1) (remainder / 256)
       (String.set acc i (Char.chr (remainder mod 256)); acc) in
   loop (preamble_core_size - 1) size (String.create preamble_core_size)
@@ -82,6 +82,14 @@ let to_fd_with_preamble fd obj =
     raise Writing_Payload_Exception;
   ()
 
+let rec read_payload fd buffer offset to_read =
+  if to_read = 0 then offset else begin
+    let bytes_read = Unix.read fd buffer offset to_read in
+    if bytes_read = 0 then offset else begin
+      read_payload fd buffer (offset+bytes_read) (to_read-bytes_read)
+    end
+  end
+
 let from_fd_with_preamble fd =
   let preamble = String.create expected_preamble_size in
   let bytes_read = Unix.read fd preamble 0 expected_preamble_size in
@@ -90,7 +98,7 @@ let from_fd_with_preamble fd =
     raise Reading_Preamble_Exception);
   let payload_size = parse_preamble preamble in
   let payload = String.create payload_size in
-  let payload_size_read = Unix.read fd payload 0 payload_size in
+  let payload_size_read = read_payload fd payload 0 payload_size in
   if (payload_size_read <> payload_size) then
     raise Reading_Payload_Exception;
   Marshal.from_string payload 0
