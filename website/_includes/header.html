@@ -4,6 +4,7 @@
     <meta charset='utf-8'>
     <title>Flow | {{ page.title }}</title>
     <link rel='stylesheet' href='/static/flow.css' type='text/css'/>
+    <link rel='stylesheet' href='/static/syntax.css' type='text/css'/>
     <link rel="stylesheet" href='/static/pygments.css' type='text/css'/>
     <link rel='shortcut icon' href='/static/favicon.png'>
     <meta name='viewport' content='width=480'>
@@ -52,8 +53,8 @@
           Support
       </a></li>
       <li><a href="/blog"
-          {% if (page.id == 'blog' or page.id == 'all' or page.is_post) %} 
-            class="active" 
+          {% if (page.id == 'blog' or page.id == 'all' or page.is_post) %}
+            class="active"
           {% endif %}>
           Blog
       </a></li>

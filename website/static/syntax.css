@@ -1,0 +1,76 @@
+pre, .errmsg, .doc code {
+  font-family: Droid Sans Mono, Menlo, monospace;
+}
+
+pre.code {
+  overflow-x: scroll;
+  display: block;
+  font-size: 13px;
+  margin: 1em 0;
+  border-left: 4px solid rgb(214, 139, 0);
+  padding: 5px 10px;
+  box-sizing: border-box;
+  border-radius: 0;
+  background-color: rgba(226, 141, 49, 0.1);
+}
+
+.T_VAR, .T_CONST, .T_LET, .T_FUNCTION, .T_RETURN, .T_THIS, .T_TYPE, .T_DECLARE, .T_CLASS, .T_NEW {
+  font-weight: bold;
+  color: #881280;
+}
+
+.T_NUMBER, .T_TRUE, .T_FALSE {
+  color: blue;
+}
+
+.T_STRING, .T_JSX_TEXT {
+  color: #E9AD19;
+}
+
+.type {
+  opacity: 0.5;
+}
+
+.comment {
+  color: #ccc;
+}
+
+.doc {
+  color: #336699;
+  white-space: normal;
+  font-family: Helvetica Neue, Georgia;
+}
+
+.doc p {
+  font-family: Georgia;
+  line-height: 1.35em;
+  letter-spacing: 0.01em;
+}
+
+.doc code {
+  font-size: 13px;
+  background-color: rgba(40, 90, 120, 0.1);
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+.error {
+  border-bottom: solid 1px rgba(255, 100, 100, 0.3);
+  /*color: red;*/
+}
+
+.selected {
+  background-color: rgba(255, 100, 100, 0.2);
+}
+
+.main-selected {
+  background-color: rgba(255, 100, 100, 0.3);
+  border-bottom: none;
+}
+
+.errmsg {
+  position: absolute;
+  width: 200px;
+  text-align: right;
+  font-size: 12px;
+}

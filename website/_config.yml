@@ -7,12 +7,14 @@ markdown: redcarpet
 description: A static type checker for JavaScript
 timezone: America/Los_Angeles
 
-safe: true
 lsi: false
 highlighter: pygments
 
 paginate: 5
 paginate_path: "/blog/page:num/"
+
+flow:
+  path: 'flow'
 
 defaults:
   -
