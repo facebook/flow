@@ -901,24 +901,31 @@ end = struct
   let set _stack = stack := _stack
 end
 
+(**
+  *)
 module Cache = struct
   (* Cache that remembers pairs of types that are passed to __flow__. *)
   module FlowConstraint = struct
     let cache = Hashtbl.create 0
 
-    let mem (l,u) = match l,u with
+    (* attempt to read LB/UB pair from cache, add if absent *)
+    let get cx (l, u) = match l, u with
       (* Don't cache constraints involving type variables, since the
          corresponding typing rules are already sufficiently robust. *)
       | OpenT _, _ | _, UseT OpenT _ -> false
       | _ ->
         begin
           try
-            Hashtbl.find cache (l,u);
+            Hashtbl.find cache (l, u);
+            if Context.is_verbose cx
+            then prerr_endlinef "[%d] FlowConstraint cache hit on (%s, %s)"
+              (Unix.getpid ()) (string_of_ctor l) (string_of_use_ctor u);
             true
           with _ ->
-            Hashtbl.add cache (l,u) ();
+            Hashtbl.add cache (l, u) ();
             false
         end
+
   end
 
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
@@ -1003,7 +1010,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
   | None -> ()
   end;
 
-  if not (ground_subtype (l,u) || Cache.FlowConstraint.mem (l,u)) then (
+  if not (ground_subtype (l, u) || Cache.FlowConstraint.get cx (l, u)) then (
     (* limit recursion depth *)
     RecursionCheck.check trace;
 
@@ -1070,6 +1077,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Resolved t2 ->
           rec_flow_t cx trace (t1, t2)
       );
+
+    (******************)
+    (* concretization *)
+    (******************)
+
+    (** pairs emitted by in-progress concretize_parts *)
+    | t, ConcretizeLowerT (l, todo_ts, done_ts, u) ->
+      concretize_lower_parts cx trace l u (t :: done_ts) todo_ts
+
+    (** pairs emitted by in-progress concretize_parts *)
+    | t, ConcretizeUpperT (l, todo_ts, done_ts, u) ->
+      concretize_upper_parts cx trace l u (t :: done_ts) todo_ts
 
     (*****************)
     (* destructuring *)
@@ -1898,9 +1917,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         it is always sound to pick the first type in ts that matches the type
         l. *)
 
-    | SpeculativeMatchT(_, l, next_u), first_u ->
-      if not (speculative_match cx trace l first_u)
-      then rec_flow cx trace (l, next_u)
+    | SpeculativeMatchT(_, l, tail_u), head_u ->
+      if not (speculative_match cx trace l head_u)
+      then rec_flow cx trace (l, tail_u)
 
     | _, UseT UnionT (r, rep) -> (
       match UnionRep.quick_mem l rep with
@@ -1933,22 +1952,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         so we must suffiently concretize parts of u to make the disjointness
         evident when the different branches are tried; see below. *)
 
-    | (t1, UseT SpeculativeMatchT(_, t, t2)) ->
-      (* Reached when trying to match t1&t with t2. We speculatively match t1
-         with t2, and on failure, (recursively) try to match t with t2. *)
-      if not (speculative_match cx trace t1 t2)
-      then rec_flow cx trace (t, t2)
+    (** pairs emitted by try_intersection:
+        IntersectionT has been partitioned into head_l (head member)
+        and tail_l (intersection of tail members) *)
+    | head_l, UseT SpeculativeMatchT (_, tail_l, u) ->
+      if not (speculative_match cx trace head_l u)
+      then rec_flow cx trace (tail_l, u)
 
-    | (IntersectionT (r,ts), ConcreteT u) ->
-      try_intersection cx trace u r ts
-
-    | (t, ConcretizeT (l, ts1, ts2, u)) ->
-      concretize_parts cx trace l u (t::ts2) ts1
-
-    (* special treatment for some operations on intersections *)
+    (** special treatment for some operations on intersections: these
+        rules fire for particular UBs whose constraints can (or must)
+        be resolved against intersection LBs as a whole, instead of
+        by decomposing the intersection into its parts.
+      *)
 
     (** lookup of properties **)
-
     | (IntersectionT (_,ts),
        LookupT (reason, strict, try_ts_on_failure, s, t)) ->
       assert (ts <> []);
@@ -1971,20 +1988,62 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          ExtendsT ((List.tl ts) @ try_ts_on_failure, l, u))
 
     (** consistent override of properties **)
-
     | (IntersectionT (_,ts), SuperT _) ->
       List.iter (fun t -> rec_flow cx trace (t, u)) ts
 
-    (* all other constraints on intersections *)
+    (** object types: an intersection may satisfy an object UB without
+        any particular member of the intersection doing so completely.
+        Here we trap object UBs with more than one property, and
+        decompose them into singletons.
+        Note: should be able to do this with LookupT rather than
+        slices, but that approach behaves in nonobvious ways. TODO why?
+      *)
+    | IntersectionT _,
+      UseT ObjT (r, { flags; props_tmap; proto_t; dict_t })
+      when SMap.cardinal (find_props cx props_tmap) > 1 ->
+      iter_real_props cx props_tmap (fun prop_name prop_type ->
+        let slice = mk_propmap cx (SMap.singleton prop_name prop_type) in
+        let obj = mk_objecttype ~flags dict_t slice MixedT.t in
+        rec_flow cx trace (l, UseT (ObjT (r, obj)))
+      );
+      rec_flow_t cx trace (l, proto_t)
 
-    (* This duplicates the (_, ReposLowerT u) near the end of this pattern match
-       but has to appear here to preempt the (IntersectionT, _) in between so
-       that we reposition the entire intersection. *)
-    | (IntersectionT _, ReposLowerT (reason_op, u)) ->
+    (** predicates: prevent a predicate UB from prematurely
+        decomposing an intersection LB *)
+    | IntersectionT _, PredicateT (pred, tout) ->
+      predicate cx trace tout (l, pred)
+
+    (** ObjAssignT copies multiple properties from its incoming LB.
+        Here we simulate a merged object type by iterating over the
+        entire intersection. *)
+    | IntersectionT (_, ts), ObjAssignT (_, _, _, _, false) ->
+      ts |> List.iter (fun t -> rec_flow cx trace (t, u))
+
+    (** This duplicates the (_, ReposLowerT u) near the end of this pattern
+        match but has to appear here to preempt the (IntersectionT, _) in
+        between so that we reposition the entire intersection. *)
+    | IntersectionT _, ReposLowerT (reason_op, u) ->
       rec_flow_t cx trace (reposition cx reason_op l, u)
 
-    | (IntersectionT _, _) ->
-      concretize_parts cx trace l u [] (parts_to_concretize u)
+    (** All other pairs with an intersection LB come here.
+        Before processing, we ensure that both the UB target and
+        the intersection LB are concretized. Each of these steps
+        is a recursion, and the concretization may result in other
+        rules (eg the special cases above) firing. If none do, then
+        we'll wind up back here with a fully concretized pair, at
+        which point we begin the speculative match process via
+        try_intersection. *)
+
+    | IntersectionT (r, ts), u ->
+      let upper_parts = upper_parts_to_concretize cx u in
+      if upper_parts <> []
+      then concretize_upper_parts cx trace l u [] upper_parts
+      else (
+        let lower_parts = lower_parts_to_concretize cx l in
+        if lower_parts <> []
+        then concretize_lower_parts cx trace l u [] lower_parts
+        else try_intersection cx trace u r ts
+      )
 
     (* singleton lower bounds are equivalent to the corresponding
        primitive with a literal constraint. These conversions are
@@ -4434,53 +4493,153 @@ and try_intersection cx trace u reason = function
    early (and other branches are tried): otherwise, those failures may remain
    latent, and cause spurious errors to be reported. *)
 
-(** TODO: Concretization is a general pattern that could be useful elsewhere as
-    well. For example, we often have constraints that model "binary" operations,
-    where both arguments need to be concretized for an operation to proceed
-    (e.g., see rules involving AdderT, ComparatorT, ObjAssignT); in those cases,
-    we effectively concretize the first argument, then the second argument by
-    pushing the concretized first argument back into the constraint, and
-    signaling that we are done afterwards. A general solution would have to do
-    the following: specify parts of a constraint to be concretized, concretize
-    those parts, replace the constraint with the concrete parts, and signal that
-    we are done. The specification and replacement can be carried out generically
-    using type substitution (see rules involving SpecializeT). The signaling
-    could be done either by wrapping with ConcreteT, or by generically checking
-    that the specified parts to be concretized have indeed been replaced with
-    concrete parts. **)
+(** TODO: switch to concretization for other types that need multiple parts
+    to be concretized, e.g. AdderT, ComparatorT, ObjAssignT... *)
 
-(* The set of type patterns that currently need to be concretized appear
-   below. This set needs to be kept in sync across parts_to_concretize and
-   replace_with_concrete parts. *)
+(** Upper and lower bounds have disjoint concretization processes, and we
+    look for different types to concretize in each case. But the processes
+    have the same general shape:
 
-and parts_to_concretize = function
-  (* call of overloaded function *)
-  | CallT (_, callt) -> callt.params_tlist
-  (* selection of overloaded function *)
-  | UseT FunT (_, _, _, callt) -> callt.params_tlist
+    1. A particular rule needs an UB (resp. LB) to be fully concrete to
+    proceed, so it calls upper/lower_parts_to_concretize. If the type is fully
+    concrete already, an empty list is returned, otherwise the list contains
+    component types to be concretized. (The caller should treat this list as
+    an opaque value, apart from testing its emptiness.)
+
+    2. If the list from step 1 is non-empty, concretization is needed, and
+    the rule calls concretize_upper/lower_parts, passing the the (LB, UB)
+    pair along with the concretization list. This kicks off the concretization
+    process, which uses ConcretizeLower/UpperT to work through the list of
+    types without further intervention.
+
+    (Note that concretization is not quite a simple recursive traversal of
+    the concretization list: when a tvar is exposed for concretization, the
+    edge from that tvar to the ConcretizeLower/UpperT holding the snapshot
+    of the corresponding concretization state persists in the graph: many
+    concrete LBs may flow through a tvar, and each induces a different
+    overall concretization.)
+
+    3. When the concretization process reaches the end of the todo list,
+    replace_upper/lower_concrete_types will build a fresh type using the
+    concretized parts, and feed the resulting LB/UB pair back into the flow
+    function.
+
+    There's no fundamental need for the finished type to be structurally
+    similar to the original: in addition to concretizing, the final step
+    can do arbitrary transforms.
+
+    But note the importance of guaranteeing termination: for the typechecker
+    not to loop[1], a type must eventually yield an empty concretization list
+    if passed repeatedly through this process. Every use-case so far will in
+    fact yield an empty list in one step, and there's no reason to think
+    that multiple steps will ever be needed.
+
+    But care should be taken to avoid simply returning an incoming type as a
+    concretized result when there's nothing to do: instead these types should
+    return an empty concretization list (concretization is partial, not
+    idempotent).
+
+    [1] The FlowConstraint cache will prevent the typechecker from actually
+    looping, but the circuit breaker will also prevent further typechecking
+    from taking place, making the error silent. To help trap this situation
+    we emit an explicit internal error when this equality is detected.
+  *)
+
+(** Concretize an upper bound.
+
+    Currently we only need to concretize FunT and CallT UBs, to support
+    overloaded function selection. Here we'll request concretization
+    for any such type with tvars in its param list.
+
+    Note: we expose the outflow tvars from AnnotT. There may be other
+    wrapper types that need similar treatment.
+  *)
+and upper_parts_to_concretize _cx u =
+  let expose_tvars = List.map (function AnnotT (_, t) | t -> t) in
+  let has_tvar = List.exists (function OpenT _ -> true | _ -> false) in
+  match u with
+  | CallT (_, callt)              (* call of overloaded function *)
+  | UseT FunT (_, _, _, callt) -> (* selection of overloaded function *)
+    let ts = expose_tvars callt.params_tlist in
+    if has_tvar ts then ts else []
   | _ -> []
 
-and replace_with_concrete_parts ts = function
-  | CallT (reason, callt) ->
-      CallT (reason, { callt with params_tlist = ts })
-  | UseT FunT (reason, static, prototype, callt) ->
-      UseT (FunT (reason, static, prototype, { callt with params_tlist = ts }))
-  | u -> u
+and replace_upper_concrete_parts ts = function
+| CallT (reason, callt) ->
+  CallT (reason, { callt with params_tlist = ts })
+| UseT FunT (reason, static, prototype, callt) ->
+  UseT (FunT (reason, static, prototype, { callt with params_tlist = ts }))
+| u -> u
 
-(* Take a todo_list of types and recursively concretize them, moving the
-   concretized types to a done_list. Types in the todo_list, e.g. t, may be type
-   variables, and here we simply set up the requirement that they be
-   concretized; when they hit the rule for ConcretizeT, they are concrete, and
-   therefore ready to be moved to the done_list. *)
-and concretize_parts cx trace l u done_list = function
-  | [] ->
-      (* items were moved from todo_list to done_list in LIFO order *)
-      let done_list = List.rev done_list in
-      rec_flow cx trace
-        (l, ConcreteT(replace_with_concrete_parts done_list u))
-  | t::todo_list ->
-      rec_flow cx trace
-        (t, ConcretizeT(l, todo_list, done_list, u))
+(** move a newly concretized type from the todo list (final param) to
+    the done list, and either continue concretizing or call flow on
+    the original LB and the fully concretized UB
+  *)
+and concretize_upper_parts cx trace l u done_list = function
+| [] ->
+  let done_list = List.rev done_list in
+  let concrete_u = replace_upper_concrete_parts done_list u in
+
+  if u = concrete_u then prerr_flow cx trace
+    "Internal error: concretization leaves upper bound unchanged" l u;
+
+  rec_flow cx trace (l, concrete_u)
+| t :: todo_list ->
+  rec_flow cx trace (t, ConcretizeUpperT (l, todo_list, done_list, u))
+
+(** Concretize a lower bound.
+
+    Currently we concretize intersection LBs, so they can be manipulated
+    and checked in various ways. See replace_lower_concrete_parts.
+  *)
+and lower_parts_to_concretize _cx = function
+| IntersectionT (_, ts) ->
+  (** trap intersections that contain, or might contain, function types
+      which share a return type.
+      TODO: similarly we'll want to trap intersections that contain,
+      or might contain, incompatible object types.
+      Note also that we extract outflow tvars from AnnotT.
+    *)
+  let tvar,   (* true if tvars present *)
+    fpart,    (* funtypes partitioned by return value *)
+    ts =      (* concretization list *)
+    List.fold_left (fun (tvar, fpart, acc) -> function
+      | AnnotT (_, t) | (OpenT _ as t) ->
+        true, fpart, t :: acc
+      | FunT _ as t ->  tvar, Partition.add t fpart, t :: acc
+      | t -> tvar, fpart, t :: acc
+    ) (false, FunType.return_type_partition [], []) ts in
+  if tvar || not (Partition.is_discrete fpart)
+  then List.rev ts
+  else []
+| _ -> []
+
+(** Note: here we may normalize or otherwise transform the result LB,
+    based on the concretized type list.
+  *)
+and replace_lower_concrete_parts ts = function
+| IntersectionT (r, _) -> (
+  match FunType.merge_funtypes_by_return_type ts with
+  | [t] -> t
+  | ts -> IntersectionT (r, ts)
+)
+| l -> l
+
+(** move a newly concretized type from the todo list (final param) to
+    the done list, and either continue concretizing or call flow on
+    the fully concretized LB and the original UB
+  *)
+and concretize_lower_parts cx trace l u done_list = function
+| [] ->
+  let done_list = List.rev done_list in
+  let concrete_l = replace_lower_concrete_parts done_list l in
+
+  if l = concrete_l then prerr_flow cx trace
+    "Internal error: concretization leaves lower bound unchanged" l u;
+
+  rec_flow cx trace (concrete_l, u)
+| t :: todo_list ->
+  rec_flow cx trace (t, ConcretizeLowerT (l, todo_list, done_list, u))
 
 (* property lookup functions in objects and instances *)
 
@@ -4494,7 +4653,8 @@ and is_munged_prop_name cx name =
   && name.[0] = '_'
   && name.[1] <> '_'
 
-and ensure_prop_for_read cx strict mapr x proto dict_t reason_obj reason_op trace =
+and ensure_prop_for_read cx strict mapr x proto dict_t
+  reason_obj reason_op trace =
   let ops = Ops.clear () in
   let t = match (read_prop_opt cx mapr x, dict_t) with
   | Some t, _ -> Some t

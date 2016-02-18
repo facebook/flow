@@ -80,45 +80,6 @@ let opt_map f = function
   | None -> None
   | Some x -> Some (f x)
 
-(** like List.fold_left, but f returns an option and so do we.
-    f acc v = Some acc proceeds as usual; None stops the fold.
-    Eg
-      let f x y = if y > 0 then Some (x + y) else None in
-      fold_left_opt f 0 [1; 2; 3; 4; 5] => Some 15
-      fold_left_opt f 0 [1; 2; -3; 4; 5] => None
-
-    Useful in situations where failure rules out List.fold_left.
-  *)
-let rec fold_left_opt f acc = function
-| [] -> Some acc
-| v :: vs ->
-  match f acc v with
-  | None -> None
-  | Some acc -> fold_left_opt f acc vs
-
-(** like List.fold_left, but f returns a stop flag as well as a result.
-    f acc v = true, acc proceeds as usual; false, acc stops the fold.
-    Eg
-      let f x y = if y > 0 then true, (x + y) else false, x in
-      fold_left_until f 0 [1; 2; 3; 4; 5] => 15
-      fold_left_until f 0 [1; 2; -3; 4; 5] => 3
-
-    Useful in situations where shortcutting makes List.fold_left a bad fit.
-  *)
-let rec fold_left_until f acc = function
-| [] -> acc
-| v :: vs ->
-  match f acc v with
-  | false, acc -> acc
-  | true, acc -> fold_left_until f acc vs
-
-(** unique list items, in order of first appearance *)
-let rec uniq = function
-  | [] -> []
-  | [x] -> [x]
-  | x :: (y :: _ as l) when x = y -> uniq l
-  | x :: rl -> x :: uniq rl
-
 (**
  * Useful for various places where a user might have typoed a string and the
  * set of possible intended strings is known (i.e. variable names).

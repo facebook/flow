@@ -375,9 +375,8 @@ module rec TypeTerm : sig
         round pegs in the square holes. **)
 
     (* manage a worklist of types to be concretized *)
-    | ConcretizeT of t * t list * t list * use_t
-    (* sufficiently concrete type *)
-    | ConcreteT of use_t
+    | ConcretizeLowerT of t * t list * t list * use_t
+    | ConcretizeUpperT of t * t list * t list * use_t
 
   and predicate =
     | AndP of predicate * predicate
@@ -612,7 +611,7 @@ end = struct
     | t :: ts ->
       match base_of_t t with
       | Some (_ as base) ->
-        Utils_js.fold_left_opt acc_enum (base, EnumSet.singleton t) ts
+        ListUtils.fold_left_opt acc_enum (base, EnumSet.singleton t) ts
       | _ -> None
 
   (* rep's enum base type, if any *)
@@ -928,8 +927,8 @@ and reason_of_use_t = function
 
   | ElemT (reason, _, _) -> reason
 
-  | ConcretizeT (t, _, _, _) -> reason_of_t t
-  | ConcreteT (t) -> reason_of_use_t t
+  | ConcretizeLowerT (t, _, _, _) -> reason_of_t t
+  | ConcretizeUpperT (_, _, _, t) -> reason_of_use_t t
 
   | SummarizeT (reason, _) -> reason
 
@@ -1132,9 +1131,10 @@ and mod_reason_of_use_t f = function
 
   | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
 
-  | ConcretizeT (t1, ts1, ts2, t2) ->
-      ConcretizeT (mod_reason_of_t f t1, ts1, ts2, t2)
-  | ConcreteT t -> ConcreteT (mod_reason_of_use_t f t)
+  | ConcretizeLowerT (t1, ts1, ts2, t2) ->
+      ConcretizeLowerT (mod_reason_of_t f t1, ts1, ts2, t2)
+  | ConcretizeUpperT (t1, ts1, ts2, t2) ->
+      ConcretizeUpperT (t1, ts1, ts2, mod_reason_of_use_t f t2)
 
   | SummarizeT (reason, t) -> SummarizeT (f reason, t)
 
@@ -1277,8 +1277,8 @@ let string_of_use_ctor = function
   | HasOwnPropT _ -> "HasOwnPropT"
   | HasPropT _ -> "HasPropT"
   | ElemT _ -> "ElemT"
-  | ConcretizeT _ -> "ConcretizeT"
-  | ConcreteT _ -> "ConcreteT"
+  | ConcretizeLowerT _ -> "ConcretizeLowerT"
+  | ConcretizeUpperT _ -> "ConcretizeUpperT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportNamedT _ -> "ImportNamedT"

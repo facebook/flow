@@ -573,7 +573,7 @@ let print_error_deprecated =
   in
   fun oc el ->
     let sl = List.map to_string el in
-    let sl = Utils_js.uniq (List.sort String.compare sl) in
+    let sl = ListUtils.uniq (List.sort String.compare sl) in
     List.iter begin fun s ->
       if !Utils.debug then begin
         output_string stdout s;

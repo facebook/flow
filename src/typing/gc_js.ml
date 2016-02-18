@@ -341,14 +341,12 @@ and gc_use cx state = function
   | BecomeT (_, t) ->
       gc cx state t
 
-  | ConcretizeT (t1, ts1, ts2, t2) ->
+  | ConcretizeLowerT (t1, ts1, ts2, t2)
+  | ConcretizeUpperT (t1, ts1, ts2, t2) ->
       gc cx state t1;
       ts1 |> List.iter (gc cx state);
       ts2 |> List.iter (gc cx state);
       gc_use cx state t2
-
-  | ConcreteT (t) ->
-      gc_use cx state t
 
   | GetKeysT (_, t) ->
       gc cx state t

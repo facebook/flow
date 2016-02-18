@@ -20,7 +20,9 @@ Function cannot be called on possibly undefined value
 eventtarget.js:16:6,40: undefined
 
 path2d.js:9:6,40: call of method `arcTo`
-Function cannot be called on
-path2d.js:9:6,40: intersection: function type(s)
+Error:
+path2d.js:9:33,36: string
+This type is incompatible with
+[LIB] dom.js:583:85,90: union: number | undefined
 
 Found 5 errors

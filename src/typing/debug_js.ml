@@ -425,16 +425,14 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type2", _json_of_t json_cx t2
     ]
 
-  | ConcretizeT (l, todo_list, done_list, u) -> [
-      "inType", _json_of_t json_cx l;
+  | ConcretizeLowerT (l, todo_list, done_list, u)
+  | ConcretizeUpperT (l, todo_list, done_list, u) -> [
+      "lowerType", _json_of_t json_cx l;
       "todoTypes", JSON_Array (List.map (_json_of_t json_cx) todo_list);
       "doneTypes", JSON_Array (List.map (_json_of_t json_cx) done_list);
-      "absType", _json_of_use_t json_cx u
+      "upperType", _json_of_use_t json_cx u
     ]
 
-  | ConcreteT t -> [
-      "type", _json_of_use_t json_cx t
-    ]
   | GetKeysT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
