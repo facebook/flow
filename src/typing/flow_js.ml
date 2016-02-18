@@ -2849,6 +2849,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (MixedT _, ObjAssignT (_, proto, t, _, false)) ->
       rec_flow_t cx trace (proto, t)
 
+    (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
+    | RestT l, ObjAssignT (_, _, _, _, false) ->
+      rec_flow cx trace (l, u)
+
     | (_, ObjAssignT(reason, o, t, xs, true)) ->
       rec_flow cx trace (o, ObjAssignT(reason, l, t, xs, false))
 
