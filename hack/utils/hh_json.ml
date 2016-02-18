@@ -59,11 +59,6 @@ type env = {
 
 exception Syntax_error of string
 
-let syntax_error env msg =
-  let err_msg =
-    Printf.sprintf "%s at char[%d]=%c" msg env.pos env.data.[env.pos] in
-  raise (Syntax_error err_msg)
-
 (* Ignore whitespace in peek/eat/next/has_more to make code that uses them
    cleaner
  *)
@@ -71,6 +66,14 @@ let syntax_error env msg =
 let peek env = String.get env.data env.pos
 
 let has_more env = String.length env.data > env.pos
+
+let syntax_error env msg =
+  let err_msg =
+    if has_more env then
+      Printf.sprintf "%s at char[%d]=%c" msg env.pos env.data.[env.pos]
+    else
+      Printf.sprintf "%s after the last character" msg in
+  raise (Syntax_error err_msg)
 
 (* skip all blank and new line characters *)
 let skip_blank_chars env =
@@ -216,17 +219,22 @@ let js_number env =
 
 (* The recursive rules *)
 let rec js_value env =
-  match peek env with
-  | '{' -> js_object env
-  | '[' -> js_array env
-  | '"' -> js_string env
-  | c when is_digit c || c = '-' -> js_number env
-  | 't' -> js_true env
-  | 'f' -> js_false env
-  | 'n' -> js_null env
-  | _ ->
+  let js_value_syntax_error () =
     let err_msg = "expected '{[\"0123456789' or {t,f,n}" in
-    syntax_error env err_msg
+    syntax_error env err_msg in
+
+  if not (has_more env) then
+    js_value_syntax_error ()
+  else
+    match peek env with
+    | '{' -> js_object env
+    | '[' -> js_array env
+    | '"' -> js_string env
+    | c when is_digit c || c = '-' -> js_number env
+    | 't' -> js_true env
+    | 'f' -> js_false env
+    | 'n' -> js_null env
+    | _   -> js_value_syntax_error ()
 and js_object env =
   let rec loop members =
     let p = js_pair env in
