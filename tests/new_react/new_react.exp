@@ -43,7 +43,7 @@ classes.js:41:25,30: React element `Foo`
 Error:
 classes.js:8:10,14: property `x`
 Property not found in
-classes.js:41:25,30: type parameter `Props` of React element `Foo`
+classes.js:41:25,30: props of React element `Foo`
 
 classes.js:41:25,30: React element `Foo`
 Error:
@@ -67,7 +67,7 @@ classes.js:81:32,43: React element `FooLegacy`
 Error:
 classes.js:48:3,11: property `x`
 Property not found in
-classes.js:81:32,43: type parameter `Props` of React element `FooLegacy`
+classes.js:81:32,43: props of React element `FooLegacy`
 
 classes.js:81:32,43: React element `FooLegacy`
 Error:
@@ -79,7 +79,7 @@ new_react.js:17:27,36: number
 This type is incompatible with
 new_react.js:17:18,23: string
 
-new_react.js:18:27,36: propTypes
+new_react.js:18:27,36: propTypes of React component
 This type is incompatible with
 new_react.js:18:18,23: string
 
@@ -109,7 +109,7 @@ new_react.js:30:16,19: React element `C`
 Error:
 new_react.js:5:5,13: property `x`
 Property not found in
-new_react.js:30:16,19: type parameter `Props` of React element `C`
+new_react.js:30:16,19: props of React element `C`
 
 new_react.js:32:17,29: string
 This type is incompatible with
@@ -127,19 +127,11 @@ propTypes.js:19:3,4: object literal
 
 props.js:4:5,13: property `x`
 Property not found in
-props.js:25:5,13: propTypes
+props.js:25:5,13: propTypes of React component
 
 props.js:4:5,13: property `z`
 Property not found in
-props.js:25:5,13: propTypes
-
-props.js:9:33,11:5: property `x`
-Property not found in
-props.js:24:16,26:2: default props of React component
-
-props.js:9:33,11:5: property `y`
-Property not found in
-props.js:24:16,26:2: default props of React component
+props.js:25:5,13: propTypes of React component
 
 props.js:14:25,36: string
 This type is incompatible with
@@ -157,13 +149,19 @@ props.js:16:25,36: undefined
 This type is incompatible with
 props.js:16:16,21: string
 
-props.js:20:15,57: type parameter `Props` of React element `TestProps`
+props.js:20:15,57: React element `TestProps`
+Error:
+props.js:20:29,33: boolean
+This type is incompatible with
+props.js:5:12,33: string
+
+props.js:20:15,57: props of React element `TestProps`
 Error:
 props.js:20:29,33: boolean
 This type is incompatible with
 props.js:10:20,21: string
 
-props.js:20:15,57: type parameter `Props` of React element `TestProps`
+props.js:20:15,57: props of React element `TestProps`
 Error:
 props.js:20:39,43: boolean
 This type is incompatible with
@@ -177,7 +175,7 @@ props.js:6:12,33: number
 
 props.js:25:5,13: property `w`
 Property not found in
-props.js:4:5,13: propTypes
+props.js:4:5,13: propTypes of React component
 
 props2.js:14:25,38: number
 This type is incompatible with
@@ -213,7 +211,7 @@ props4.js:24:3,23: React element `Example`
 Error:
 props4.js:16:10,24: property `bar`
 Property not found in
-props4.js:24:3,23: type parameter `Props` of React element `Example`
+props4.js:24:3,23: props of React element `Example`
 
 state.js:19:33,35: property `qux`
 Property cannot be accessed on possibly null value
@@ -247,4 +245,4 @@ state5.js:5:23,23: property `x`
 Property cannot be accessed on possibly undefined value
 state5.js:5:12,21: undefined. Did you forget to declare type parameter `State` of property `Component`?
 
-Found 53 errors
+Found 52 errors

@@ -1,10 +1,20 @@
 
+main.js:12:50,80: React element `CustomComponent`
+Error:
 main.js:6:10,8:3: property `prop`
 Property not found in
 main.js:12:26,40: object type
 
+main.js:12:50,80: React element `CustomComponent`
+Error:
 main.js:12:26,40: property `prop1`
 Property not found in
-main.js:6:10,8:3: object type
+main.js:12:50,80: props of React element `CustomComponent`
 
-Found 2 errors
+main.js:19:56,85: React element: `div`
+Error:
+main.js:19:26,46: property `doesntmatch`
+Property not found in
+main.js:19:56,85: props of JSX Intrinsic: `div`
+
+Found 3 errors

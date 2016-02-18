@@ -11,7 +11,7 @@ App.react.js:36:14,14: number
 This type is incompatible with
 App.react.js:10:16,21: string
 
-JSX.js:8:3,14: type parameter `Props` of React element `App`
+JSX.js:8:3,14: props of React element `App`
 Error:
 JSX.js:8:11,12: number
 This type is incompatible with
@@ -21,6 +21,6 @@ propTypes.js:15:1,18:2: React element `D`
 Error:
 propTypes.js:9:3,11: property `name`
 Property not found in
-propTypes.js:15:1,18:2: type parameter `Props` of React element `D`
+propTypes.js:15:1,18:2: props of React element `D`
 
 Found 5 errors

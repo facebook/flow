@@ -4886,7 +4886,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           value = _, Object { Object.properties } as value;
           _ }) ->
         ignore (expression cx type_params_map value);
-        let reason = mk_reason "propTypes" nloc in
+        let reason = mk_reason "propTypes of React component" nloc in
         let amap, omap, dict = mk_proptypes cx type_params_map properties in
         let map = SMap.fold (fun k v map ->
           SMap.add k (OptionalT v) map

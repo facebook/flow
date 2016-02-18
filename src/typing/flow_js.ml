@@ -2301,7 +2301,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ldesc = "object literal"
         || ldesc = "function"
         || ldesc = "arrow function"
-        || ldesc = "frozen object literal"
+        || lflags.frozen
         || Str.string_match (Str.regexp ".*React") ldesc 0
       in
 
@@ -2443,8 +2443,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (l, ObjAssignT(reason, o, AnyT.t, [], false))
 
     | (_, UseT DiffT (o1, o2)) ->
-        let reason = reason_of_use_t u in
+        let reason = reason_of_t l in
         let t2 = mk_tvar cx reason in
+        (* prerr_endline (string_of_reason reason); *)
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
         rec_flow cx trace (l, ObjAssignT(reason, t2, o1, [], false))
 
