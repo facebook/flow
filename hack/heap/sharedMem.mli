@@ -31,6 +31,13 @@ val default_config : config
 val init: config -> unit
 
 (*****************************************************************************)
+(* Resets the initialized and used memory to the state right after
+ * initialization.
+ *)
+(*****************************************************************************)
+val reset: unit -> unit
+
+(*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we
  * free data (cf hh_shared.c for the underlying C implementation).
  *)

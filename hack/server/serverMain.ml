@@ -437,7 +437,6 @@ let setup_server options ide_process =
 
   Program.preinit ();
   Sys_utils.set_priorities ~cpu_priority ~io_priority;
-  SharedMem.init (ServerConfig.sharedmem_config config);
   (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
    * someone C-c the client.
    *)

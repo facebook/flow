@@ -72,6 +72,12 @@ let monitor_daemon_main (options: ServerArgs.options) =
   Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
   let www_root = (ServerArgs.root options) in
   ignore @@ Sys_utils.setsid ();
+
+  Relative_path.set_path_prefix Relative_path.Root www_root;
+  let config = ServerConfig.(sharedmem_config (load filename options)) in
+  SharedMem.init config;
+  let first_init = ref true in
+
   if ServerArgs.check_mode options then
     ServerMain.run_once options
   else
@@ -82,6 +88,13 @@ let monitor_daemon_main (options: ServerArgs.options) =
       (Hh_logger.log "Monitor daemon already running. Killing";
        Exit_status.exit Exit_status.Ok);
     let hh_server_monitor_starter = begin fun () ->
+
+      if !first_init then begin
+        first_init := false
+      end else begin
+        SharedMem.reset ()
+      end;
+
       let typechecker = start_hh_server options in
       let ide = start_ide_server options in
       IdeProcessPipeInit.monitor_make_and_send

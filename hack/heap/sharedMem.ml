@@ -30,6 +30,8 @@ let init config =
     ~global_size:config.global_size
     ~heap_size:config.heap_size
 
+external reset: unit -> unit = "hh_shared_reset"
+
 (*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we
  * free data (cf hh_shared.c for the underlying C implementation).

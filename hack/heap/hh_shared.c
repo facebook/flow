@@ -192,6 +192,12 @@ typedef struct {
 /* Globals */
 /*****************************************************************************/
 
+/* Total size of allocated shared memory */
+static size_t shared_mem_size;
+
+/* Beginning of shared memory */
+static char* shared_mem = 0;
+
 /* ENCODING: The first element is the size stored in bytes, the rest is
  * the data. The size is set to zero when the storage is empty.
  */
@@ -344,13 +350,11 @@ value hh_shared_init(
   global_size_b = Long_val(global_size_val);
   heap_size = Long_val(heap_size_val);
 
-  char* shared_mem;
-
   size_t page_size = getpagesize();
 
   /* The total size of the shared memory.  Most of it is going to remain
    * virtual. */
-  size_t shared_mem_size =
+  shared_mem_size =
     global_size_b + 2 * DEP_SIZE_B + HASHTBL_SIZE_B +
     heap_size + page_size;
 
@@ -448,6 +452,15 @@ value hh_shared_init(
 #endif
 
   CAMLreturn(Val_unit);
+}
+
+void hh_shared_reset() {
+#ifndef _WIN32
+  assert(shared_mem);
+  early_counter = 1;
+  memset(shared_mem, 0, heap_init - shared_mem);
+  init_shared_globals(shared_mem);
+#endif
 }
 
 /* Must be called by every worker before any operation is performed */
