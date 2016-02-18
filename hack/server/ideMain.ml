@@ -8,6 +8,8 @@
  *
 *)
 
+open IdeJson
+
 type env = {
   client : (in_channel * out_channel) option;
   (* When this is true, we are between points when typechecker process
@@ -66,22 +68,29 @@ let handle_new_client env parent_ic =
     Hh_logger.log "Rejected a client";
     handle_already_has_client oc; env
 
+let get_call_response env id call =
+  if not env.run_ide_commands then
+    IdeJsonUtils.json_string_of_server_busy id
+  else
+    IdeServerCall.get_call_response id call
+
 let handle_client_request env (ic, oc) =
   Hh_logger.log "Handling client request";
   let request = Marshal.from_channel ic in
-  let response = Hh_json.(json_to_string (
-    JSON_Object [
-      ("type", JSON_String "response");
-      ("success", JSON_Bool false);
-      ("message", JSON_String (
-         "Server busy: " ^ (if env.run_ide_commands then "false" else "true") ^
-         ", request: " ^ request
-      ));
-    ]
-  )) in
-  Marshal.to_channel oc response [];
-  flush oc;
-  env
+  match IdeJsonUtils.call_of_string request with
+  | ParsingError e ->
+    Hh_logger.log "Received malformed request: %s" e;
+    env
+  | InvalidCall (id, e) ->
+    let response = IdeJsonUtils.json_string_of_invalid_call id e in
+    Marshal.to_channel oc response [];
+    flush oc;
+    env
+  | Call (id, call) ->
+    let response = get_call_response env id call in
+    Marshal.to_channel oc response [];
+    flush oc;
+    env
 
 let handle_typechecker_message env typechecker_process =
   match IdeProcessPipe.recv typechecker_process with
