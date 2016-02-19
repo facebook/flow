@@ -3,7 +3,6 @@
 
 REPO="https://${GH_BOT_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
 PAGES_CHECKOUT="$HOME/gh-pages"
-GEM_DIR=$(rvm gemdir)
 
 printf "travis_fold:start:clone_gh_pages\nCloning gh-pages\n"
 mkdir -p "$PAGES_CHECKOUT"
@@ -14,7 +13,8 @@ git -C "$PAGES_CHECKOUT" pull -q --depth 20 "$REPO" gh-pages
 printf "travis_fold:end:clone_gh_pages\n"
 
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
-PATH="${TRAVIS_BUILD_DIR}/bin:${GEM_DIR}/bin:$PATH" jekyll build -s website/ -d "$PAGES_CHECKOUT"
+PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
+  rvm "$TRAVIS_RUBY_VERSION" do jekyll build -s website/ -d "$PAGES_CHECKOUT"
 printf "travis_fold:end:jekyll_build\n"
 
 printf "travis_fold:start:push_gh_pages\nPushing gh-pages\n"
