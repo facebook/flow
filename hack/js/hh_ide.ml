@@ -116,8 +116,8 @@ let declare_file fn content =
     Typing_env.Funs.remove fname;
   end;
   List.iter old_classes begin fun (_, cname) ->
-    Naming_heap.ClassPosHeap.remove cname;
-    Naming_heap.ClassCanonHeap.remove (NamingGlobal.canon_key cname);
+    Naming_heap.TypeIdHeap.remove cname;
+    Naming_heap.TypeCanonHeap.remove (NamingGlobal.canon_key cname);
     Naming_heap.ClassHeap.remove cname;
     Typing_env.Classes.remove cname;
   end;

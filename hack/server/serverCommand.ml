@@ -64,11 +64,11 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       let qual_name = if name.[0] = '\\' then name else ("\\"^name) in
       output_string oc "class:\n";
       let class_name =
-        match NamingGlobal.GEnv.class_canon_name qual_name with
+        match NamingGlobal.GEnv.type_canon_name qual_name with
         | None ->
           let () = output_string oc "Missing from naming env\n" in qual_name
         | Some canon ->
-          let p = unsafe_opt @@ NamingGlobal.GEnv.class_pos canon in
+          let p = unsafe_opt @@ NamingGlobal.GEnv.type_pos canon in
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
       in

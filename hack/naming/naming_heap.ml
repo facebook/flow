@@ -35,7 +35,7 @@ module type CanonHeap =
                and type key = string
                and module KeySet = Set.Make (StringKey)
 
-module ClassCanonHeap : CanonHeap = SharedMem.NoCache (StringKey) (struct
+module TypeCanonHeap : CanonHeap = SharedMem.NoCache (StringKey) (struct
   type t = string
   let prefix = Prefix.make()
 end)
@@ -45,27 +45,20 @@ module FunCanonHeap : CanonHeap = SharedMem.NoCache (StringKey) (struct
   let prefix = Prefix.make()
 end)
 
-module type PosHeap =
-  SharedMem.S with type t = Pos.t
-               and type key = string
-               and module KeySet = Set.Make (StringKey)
+(* TypeIdHeap records both class names and typedefs since they live in the
+ * same namespace. That is, one cannot both define a class Foo and a typedef
+ * Foo (or FOO or fOo, due to case insensitivity). *)
+module TypeIdHeap = SharedMem.NoCache (StringKey) (struct
+  type t = Pos.t * [`Class | `Typedef]
+  let prefix = Prefix.make ()
+end)
 
-module ClassPosHeap : PosHeap = SharedMem.NoCache (StringKey) (struct
+module FunPosHeap = SharedMem.NoCache (StringKey) (struct
   type t = Pos.t
   let prefix = Prefix.make()
 end)
 
-module FunPosHeap : PosHeap = SharedMem.NoCache (StringKey) (struct
-  type t = Pos.t
-  let prefix = Prefix.make()
-end)
-
-module TypedefPosHeap : PosHeap = SharedMem.NoCache (StringKey) (struct
-  type t = Pos.t
-  let prefix = Prefix.make()
-end)
-
-module ConstPosHeap : PosHeap = SharedMem.NoCache (StringKey) (struct
+module ConstPosHeap = SharedMem.NoCache (StringKey) (struct
   type t = Pos.t
   let prefix = Prefix.make()
 end)

@@ -14,8 +14,9 @@
  *)
 
 module GEnv: sig
-  val class_pos: string -> Pos.t option
-  val class_canon_name: string -> string option
+  val type_pos: string -> Pos.t option
+  val type_canon_name: string -> string option
+  val type_info: string -> (Pos.t * [`Class | `Typedef]) option
 
   val fun_pos: string -> Pos.t option
   val fun_canon_name: string -> string option

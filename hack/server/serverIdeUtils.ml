@@ -34,8 +34,8 @@ let oldify_funs names =
   ()
 
 let oldify_classes names =
-  Naming_heap.ClassPosHeap.oldify_batch names;
-  Naming_heap.ClassCanonHeap.oldify_batch @@ canon_set names;
+  Naming_heap.TypeIdHeap.oldify_batch names;
+  Naming_heap.TypeCanonHeap.oldify_batch @@ canon_set names;
   Naming_heap.ClassHeap.oldify_batch names;
   Typing_env.Classes.oldify_batch names;
   ()
@@ -48,8 +48,8 @@ let revive funs classes =
 
   Naming_heap.ClassHeap.revive_batch classes;
   Typing_env.Classes.revive_batch classes;
-  Naming_heap.ClassPosHeap.revive_batch classes;
-  Naming_heap.ClassCanonHeap.revive_batch @@ canon_set classes
+  Naming_heap.TypeIdHeap.revive_batch classes;
+  Naming_heap.TypeCanonHeap.revive_batch @@ canon_set classes
 
 (* This will parse, name and declare all functions and classes in content
  * buffer.

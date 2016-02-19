@@ -328,8 +328,8 @@ and class_parents_decl class_env c =
 and class_hint_decl class_env hint =
   match hint with
   | _, Happly ((_, cid), _) ->
-    begin match Naming_heap.ClassPosHeap.get cid with
-      | Some p when not (Naming_heap.ClassHeap.mem cid) ->
+    begin match Naming_heap.TypeIdHeap.get cid with
+      | Some (p, `Class) when not (Naming_heap.ClassHeap.mem cid) ->
         (* We are supposed to redeclare the class *)
         let fn = Pos.filename p in
         let class_opt = Parser_heap.find_class_in_file fn cid in
