@@ -111,12 +111,14 @@ module Env = struct
 
   let parent_props tenv acc c =
     List.fold_left (c.c_extends @ c.c_uses) ~f:begin fun acc parent ->
-      match parent with _, Happly ((_, parent), _) ->
+      match parent with
+      | _, Happly ((_, parent), _) ->
         let tc = Typing_env.get_class tenv parent in
         (match tc with
           | None -> acc
-          | Some { tc_deferred_init_members = members; _ } -> SSet.union members acc)
-        | _ -> acc
+          | Some { tc_deferred_init_members = members; _ } ->
+            SSet.union members acc)
+      | _ -> acc
     end ~init:acc
 
   (* return a tuple of the private init-requiring props of the class

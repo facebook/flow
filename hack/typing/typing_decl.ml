@@ -729,8 +729,7 @@ and method_decl env m =
     | FVvariadicArg param ->
       assert param.param_is_variadic;
       assert (param.param_expr = None);
-      let r = Reason.Rvar_param (fst param.param_id) in
-      let env, (p_name, p_ty) = Typing.make_param_ty env r param in
+      let env, (p_name, p_ty) = Typing.make_param_ty env param in
       env, Fvariadic (arity_min, (p_name, p_ty))
     | FVellipsis    -> env, Fellipsis arity_min
     | FVnonVariadic -> env, Fstandard (arity_min, List.length m.m_params)

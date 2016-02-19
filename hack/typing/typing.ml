@@ -93,7 +93,7 @@ let compare_field_kinds x y =
 let check_consistent_fields x l =
   List.for_all l (compare_field_kinds x)
 
-let unbound_name env (pos, name)=
+let unbound_name env (pos, name) =
   (match Env.get_mode env with
   | FileInfo.Mstrict ->
       Errors.unbound_name_typing pos name
@@ -132,6 +132,25 @@ let rec wfold_left_default f (env, def1) l1 l2 =
     let env = f env x1 x2 in
     wfold_left_default f (env, def1) rl1 rl2
 
+let make_param_ty env param =
+  let param_pos = (fst param.param_id) in
+  let env, ty = match param.param_hint with
+    | None ->
+      let r = Reason.Rwitness param_pos in
+      env, (r, Tany)
+    | Some x ->
+      Typing_hint.hint env x
+  in
+  let ty = match ty with
+    | _, t when param.param_is_variadic ->
+      (* When checking a call f($a, $b) to a function f(C ...$args),
+       * both $a and $b must be of type C *)
+      Reason.Rvar_param param_pos, t
+    | x -> x
+  in
+  Typing_hooks.dispatch_infer_ty_hook (Phase.decl ty) param_pos env;
+  env, (Some param.param_name, ty)
+
 (* This function is used to determine the type of an argument.
  * When we want to type-check the body of a function, we need to
  * introduce the type of the arguments of the function in the environment
@@ -143,69 +162,9 @@ let rec wfold_left_default f (env, def1) l1 l2 =
  *
  *   return $x; // in the environment $x is an int, the code is correct
  * }
- *)
-let make_param_type_ ~phase ~for_body ~default ~localize ~var_args env param =
-  let param_pos = (fst param.param_id) in
-  let env, ty =
-    match param.param_hint with
-      | None ->
-        (* if the type is missing, use the default one (an unbound
-         * type variable) *)
-        let _r, ty = default() in
-        let r = Reason.Rwitness param_pos in
-        env, (r, ty)
-      (* if the code is strict, use the type-hint *)
-      | Some x when Env.is_strict env ->
-         let env, ty = Typing_hint.hint env x in
-         localize env ty
-      (* This code is there because we used to be more tolerant in
-       * partial-mode we use to allow (A $x = null) as an argument
-       * instead of (?A $x = null) for the transition, we give this error
-       * message, that explains what's going on, that despite the the (=
-       * null) users are now required to use the optional type (write ?A
-       * instead of A).  *)
-      | Some (_, (Hoption _ | Hmixed) as x) ->
-         let env, ty = Typing_hint.hint env x in
-         localize env ty
-      | Some x ->
-        match (param.param_expr) with
-          | Some (null_pos, Null) ->
-            Errors.nullable_parameter (fst x);
-            let env, ty = Typing_hint.hint env x in
-            let env, ty = localize env ty in
-            env, (Reason.Rwitness null_pos, Toption ty)
-          | Some _ | None ->
-            let env, ty = Typing_hint.hint env x in
-            localize env ty
-  in
-  let ty = match ty with
-    | _, t when param.param_is_variadic && for_body ->
-      (* when checking the body of a function with a variadic
-       * argument, "f(C ...$args)", $args is an array<C> ... *)
-      let r = Reason.Rvar_param param_pos in
-      let arr_values = r, t in
-      var_args r arr_values
-    | _, t when param.param_is_variadic ->
-      (* ... but when checking a call to such a function: "f($a, $b)",
-       * both $a and $b must be of type C *)
-      Reason.Rvar_param param_pos, t
-    | x -> x
-  in
-  Typing_hooks.dispatch_infer_ty_hook (phase ty) param_pos env;
-  env, (Some param.param_name, ty)
-
-(* externally exposed convenience wrapper *)
-let make_param_ty env reason param =
-  make_param_type_
-    ~phase:Phase.decl
-    ~for_body:false
-    ~default:(fun() -> reason, Tany)
-    ~var_args:(fun r tv -> r, Tarray (Some tv, None))
-    ~localize:(fun env ty -> env, ty)
-    env param
-
-(* For params we want to resolve to "static" or "$this" depending on the
- * context. Even though we are passing in CIstatic, resolve_with_class_id
+ *
+ * When we localize, we want to resolve to "static" or "$this" depending on
+ * the context. Even though we are passing in CIstatic, resolve_with_class_id
  * is smart enough to know what to do. Why do this? Consider the following
  *
  * abstract class C {
@@ -234,15 +193,30 @@ let make_param_ty env reason param =
  *)
 let make_param_local_ty env param =
   let ety_env =
-    { (Phase.env_with_self env) with
-      from_class = Some CIstatic; } in
-  make_param_type_
-    ~phase:Phase.locl
-    ~for_body:true
-    ~default:Env.fresh_type
-    ~localize:(Phase.localize ~ety_env)
-    ~var_args:(fun r tv -> r, Tarraykind (AKvec tv))
-    env param
+    { (Phase.env_with_self env) with from_class = Some CIstatic; } in
+  let param_pos = (fst param.param_id) in
+  let env, ty =
+    match param.param_hint with
+    | None ->
+      (* if the type is missing, use an unbound type variable *)
+      let _r, ty = Env.fresh_type () in
+      let r = Reason.Rwitness param_pos in
+      env, (r, ty)
+    | Some x ->
+      let env, ty = Typing_hint.hint env x in
+      Phase.localize ~ety_env env ty
+  in
+  let ty = match ty with
+    | _, t when param.param_is_variadic ->
+      (* when checking the body of a function with a variadic
+       * argument, "f(C ...$args)", $args is an array<C> *)
+      let r = Reason.Rvar_param param_pos in
+      let arr_values = r, t in
+      r, Tarraykind (AKvec arr_values)
+    | x -> x
+  in
+  Typing_hooks.dispatch_infer_ty_hook (Phase.locl ty) param_pos env;
+  env, (Some param.param_name, ty)
 
 let rec fun_decl tcopt f =
   let dep = Dep.Fun (snd f.f_name) in
@@ -275,7 +249,7 @@ and fun_decl_in_env env f =
     | FVvariadicArg param ->
       assert param.param_is_variadic;
       assert (param.param_expr = None);
-      let env, (p_name, p_ty) = make_param_ty env Reason.Rnone param in
+      let env, (p_name, p_ty) = make_param_ty env param in
       env, Fvariadic (arity_min, (p_name, p_ty))
     | FVellipsis    -> env, Fellipsis (arity_min)
     | FVnonVariadic -> env, Fstandard (arity_min, List.length f.f_params)
@@ -309,7 +283,7 @@ and check_default pos mandatory e =
 (* Functions building the types for the parameters of a function *)
 (* It's not completely trivial because of optional arguments  *)
 and make_param env mandatory arity param =
-  let env, ty = make_param_ty env Reason.Rnone param in
+  let env, ty = make_param_ty env param in
   let mandatory =
     if param.param_is_variadic then begin
       assert(param.param_expr = None);

@@ -273,7 +273,7 @@ module Typing                               = struct
   let non_object_member                     = 4062 (* DONT MODIFY!!!! *)
   let null_container                        = 4063 (* DONT MODIFY!!!! *)
   let null_member                           = 4064 (* DONT MODIFY!!!! *)
-  let nullable_parameter                    = 4065 (* DONT MODIFY!!!! *)
+  (*let nullable_parameter                    = 4065 *)
   let option_return_only_typehint           = 4066 (* DONT MODIFY!!!! *)
   let object_string                         = 4067 (* DONT MODIFY!!!! *)
   let option_mixed                          = 4068 (* DONT MODIFY!!!! *)
@@ -1175,10 +1175,6 @@ let unexpected_type_arguments p =
 let too_many_type_arguments p =
   add Naming.too_many_type_arguments p
     ("Too many type arguments for this type")
-
-let nullable_parameter pos =
-  add Typing.nullable_parameter pos
-    "Please add a ?, this argument can be null"
 
 let return_in_void pos1 pos2 =
   add_list Typing.return_in_void [

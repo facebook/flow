@@ -105,7 +105,6 @@ val field_kinds : Pos.t -> Pos.t -> unit
 val unbound_name_typing : Pos.t -> string -> unit
 val did_you_mean_naming : Pos.t -> string -> Pos.t -> string -> unit
 val previous_default : Pos.t -> unit
-val nullable_parameter: Pos.t -> unit
 val return_only_typehint : Pos.t -> [< `void | `noreturn ] -> unit
 val unexpected_type_arguments : Pos.t -> unit
 val too_many_type_arguments : Pos.t -> unit
