@@ -10,6 +10,8 @@
 
 open Sys_utils
 
+let non_empty list = not (Core.List.is_empty list)
+
 let format_file_pos (pos : File_pos.t) : string =
   let line, bol, offset = File_pos.line_beg_offset pos in
   let file = "" in
@@ -37,7 +39,7 @@ let parse_file file =
 (* required keywords we want to stop before *)
 let hack_keywords =
   ["function"; "case"; "catch"; "const"; "class"; "do";
-   "else"; "elseif"; "foreach"; "for"; "if"; "goto";
+   "else"; "elseif"; "enum"; "foreach"; "for"; "if"; "goto";
    "include"; "interface"; "namespace"; "new"; "newtype"; "switch";
    "throw"; "type"; "while"; "try"; "var"; "yield"]
 
@@ -300,6 +302,8 @@ type range_accum = {
     seen_first_id : bool;
     unmatched_lcb : File_pos.t list;
     unmatched_lp : File_pos.t list;
+    (* for accurate function/class/method attributes ranges *)
+    last_ltlt : File_pos.t;
     (* this is so that we can correctly ignore keywords in situations where we
        don't want to be stopping on the last keyword before our target *)
     ignore_keywords : bool;
@@ -315,6 +319,7 @@ let default_range_accum =
     seen_first_id = false;
     unmatched_lcb = [];
     unmatched_lp = [];
+    last_ltlt = File_pos.dummy;
     ignore_keywords = false;
     lex_env = default_lex_env;
   }
@@ -324,8 +329,10 @@ let default_range_accum =
    fst = the position corresponding to the start
    of the construct at the position specified
    (sensitive to keywords)
-   snd = pair of: list (stack) of unmatched left curly braces,
-           list (stack) of unmatched left parentheses
+   snd = tuple of:
+           list (stack) of unmatched left curly braces,
+           list (stack) of unmatched left parentheses,
+           position of the last << token
    (for matching delimiters)
    3rd = whether or not we need the leading opening parenthesis if it
    exists (to fix an off-by-one)
@@ -336,24 +343,26 @@ let advance_lexbuf_to_pos
       ~(goal_test : Pos.t -> bool)
       ~(unmatched_lcb : File_pos.t list)
       ~(unmatched_lp : File_pos.t list)
+      ~(last_ltlt : File_pos.t)
       ~(ignore_keywords : bool)
       ~(lex_env : lex_env) :
       (File_pos.t *
-         (File_pos.t list * File_pos.t list) *
+         (File_pos.t list * File_pos.t list * File_pos.t) *
            lex_env) =
   (* make sure not to consume tokens if already at/past goal *)
   let curpos = Pos.make file lexbuf in
   if goal_test curpos
-  then (File_pos.dummy, (unmatched_lcb, unmatched_lp), lex_env)
+  then (File_pos.dummy, (unmatched_lcb, unmatched_lp, last_ltlt), lex_env)
   else
   let rec advance_until
             (leftmost_modifier : File_pos.t)
             (seen_keyword : bool)
             (unmatched_lcb : File_pos.t list)
             (unmatched_lp : File_pos.t list)
+            (last_ltlt : File_pos.t)
             (lex_env : lex_env) :
             (File_pos.t *
-               (File_pos.t list * File_pos.t list) *
+               (File_pos.t list * File_pos.t list * File_pos.t) *
                  lex_env) =
     let (token,pos), lex_env = token_from_lb file lexbuf lex_env in
     (* update the delimiters we've seen *)
@@ -373,15 +382,20 @@ let advance_lexbuf_to_pos
       | Lexer_hack.Tlp -> Pos.pos_start pos :: unmatched_lp
       | Lexer_hack.Trp -> pop_hd unmatched_lp
       | _ -> unmatched_lp in
+    let last_ltlt =
+      match token with
+      | Lexer_hack.Tltlt -> Pos.pos_start pos
+      | _ -> last_ltlt in
     let cur_lexeme = Lexing.lexeme lexbuf in
     if token = Lexer_hack.Teof
-    then Pos.pos_end pos, (unmatched_lcb, unmatched_lp), lex_env
+    then Pos.pos_end pos, (unmatched_lcb, unmatched_lp, last_ltlt), lex_env
     else
     if goal_test pos
     then
-      if not (File_pos.is_dummy leftmost_modifier)
-      then (leftmost_modifier, (unmatched_lcb, unmatched_lp), lex_env)
-      else (Pos.pos_start pos, (unmatched_lcb, unmatched_lp), lex_env)
+      if not (File_pos.is_dummy leftmost_modifier) then
+        (leftmost_modifier, (unmatched_lcb, unmatched_lp, last_ltlt), lex_env)
+      else
+        (Pos.pos_start pos, (unmatched_lcb, unmatched_lp, last_ltlt), lex_env)
     else
       (* these are to make sure we include modifiers and keywords in the
          code extent we return for the AST node because the first identifier
@@ -403,15 +417,20 @@ let advance_lexbuf_to_pos
         then
           advance_until
             (Pos.pos_start pos)
-            cur_is_keyword unmatched_lcb unmatched_lp lex_env
+            cur_is_keyword unmatched_lcb unmatched_lp last_ltlt lex_env
         else
           advance_until
-            leftmost_modifier true unmatched_lcb unmatched_lp lex_env
+            leftmost_modifier true unmatched_lcb unmatched_lp last_ltlt lex_env
       else
         if cur_is_keyword
         then
           advance_until
-            (Pos.pos_start pos) true unmatched_lcb unmatched_lp lex_env
+            (Pos.pos_start pos)
+            true
+            unmatched_lcb
+            unmatched_lp
+            last_ltlt
+            lex_env
         else
           if cur_is_modifier
           then
@@ -422,11 +441,18 @@ let advance_lexbuf_to_pos
               false
               unmatched_lcb
               unmatched_lp
+              last_ltlt
               lex_env
           else
             advance_until
-              File_pos.dummy false unmatched_lcb unmatched_lp lex_env in
-  advance_until File_pos.dummy false unmatched_lcb unmatched_lp lex_env
+              File_pos.dummy
+              false
+              unmatched_lcb
+              unmatched_lp
+              last_ltlt
+              lex_env in
+  advance_until
+    File_pos.dummy false unmatched_lcb unmatched_lp last_ltlt lex_env
 
 (* skips to necessary number of right curly braces
    and any semicolons after that *)
@@ -513,13 +539,14 @@ object (this)
     begin
       let goal_test_left cur_pos =
         (Pos.pos_start cur_pos) >= (Pos.pos_start pos) in
-      let (start, (unmatched_lcb, unmatched_lp), new_env) =
+      let (start, (unmatched_lcb, unmatched_lp, last_ltlt), new_env) =
         advance_lexbuf_to_pos
           ~file:file
           ~lexbuf:lexbuf
           ~goal_test:goal_test_left
           ~unmatched_lcb:acc.unmatched_lcb
           ~unmatched_lp:acc.unmatched_lp
+          ~last_ltlt:acc.last_ltlt
           ~ignore_keywords:acc.ignore_keywords
           ~lex_env:acc.lex_env in
       let acc = { acc with lex_env = new_env } in
@@ -557,11 +584,13 @@ object (this)
         { acc with
           seen_first_id = true;
           unmatched_lcb = unmatched_lcb;
-          unmatched_lp = unmatched_lp }
+          unmatched_lp = unmatched_lp;
+          last_ltlt = last_ltlt }
       else
         { acc with
           unmatched_lcb = unmatched_lcb;
-          unmatched_lp = unmatched_lp }
+          unmatched_lp = unmatched_lp;
+          last_ltlt = last_ltlt }
     end
 
 
@@ -569,19 +598,21 @@ object (this)
     begin
       let goal_test_right cur_pos =
         Pos.pos_end cur_pos >= Pos.pos_end pos in
-      let (_start, (new_unmatched_lcb, new_unmatched_lp), new_env) =
+      let (_start, (unmatched_lcb, unmatched_lp, last_ltlt), new_env) =
         advance_lexbuf_to_pos
           ~file:file
           ~lexbuf:lexbuf
           ~goal_test:goal_test_right
           ~unmatched_lcb:acc.unmatched_lcb
           ~unmatched_lp:acc.unmatched_lp
+          ~last_ltlt:acc.last_ltlt
           ~ignore_keywords:acc.ignore_keywords
           ~lex_env:acc.lex_env in
       let acc =
         { acc with
-          unmatched_lcb = new_unmatched_lcb;
-          unmatched_lp = new_unmatched_lp;
+          unmatched_lcb = unmatched_lcb;
+          unmatched_lp = unmatched_lp;
+          last_ltlt = last_ltlt;
           lex_env = new_env } in
       let acc = update_to_enclosing acc (Pos.pos_end pos) in
       acc
@@ -644,6 +675,15 @@ object (this)
       let acc = super#on_return acc p eopt in
       let acc = this#advance_lexbuf_and_update_right acc p in
       acc
+    end
+
+  (* Expand the range to match the opening << token. *)
+  method! on_user_attribute acc p =
+    begin
+      let acc = super#on_user_attribute acc p in
+      (* last_ltlt should always be defined here, but it may not be the earliest
+         token (e.g. if this is the attribute of a method in a class) *)
+      { acc with left = position_min acc.left acc.last_ltlt }
     end
 end
 
@@ -818,22 +858,9 @@ let source_extent_while file source e b =
 
 let source_extent_class_ file source c =
   let visitor = new range_find_visitor file source in
-  let accum = visitor#on_class_ default_range_accum c in
-  let right = skip_trailing_delims
-                (visitor#get_lexbuf ())
-                accum.unmatched_lcb
-                accum.unmatched_lp
-                file accum.lex_env in
-  (accum.left, right)
-
-
-let source_extent_def
-      (file:Relative_path.t)
-      (source:string)
-      (def:Ast.def) :
-      (File_pos.t * File_pos.t) =
-  let visitor = new range_find_visitor file source in
-  let accum = visitor#on_def default_range_accum def in
+  let accum = visitor#on_class_
+    { default_range_accum with
+        ignore_keywords = non_empty c.Ast.c_user_attributes } c in
   let right = skip_trailing_delims
                 (visitor#get_lexbuf ())
                 accum.unmatched_lcb
@@ -843,7 +870,9 @@ let source_extent_def
 
 let source_extent_fun_ file source f =
   let visitor = new range_find_visitor file source in
-  let accum = visitor#on_fun_ default_range_accum f in
+  let accum = visitor#on_fun_
+    { default_range_accum with
+        ignore_keywords = non_empty f.Ast.f_user_attributes } f in
   let right = skip_trailing_delims
                 (visitor#get_lexbuf ())
                 accum.unmatched_lcb
@@ -851,9 +880,30 @@ let source_extent_fun_ file source f =
                 file accum.lex_env in
   (accum.left, right)
 
+let source_extent_def
+      (file:Relative_path.t)
+      (source:string)
+      (def:Ast.def) :
+      (File_pos.t * File_pos.t) =
+  match def with
+  | Ast.Fun f -> source_extent_fun_ file source f
+  | Ast.Class c -> source_extent_class_ file source c
+  | Ast.Stmt s -> source_extent_stmt file source s
+  | _ ->
+    let visitor = new range_find_visitor file source in
+    let accum = visitor#on_def default_range_accum def in
+    let right = skip_trailing_delims
+                  (visitor#get_lexbuf ())
+                  accum.unmatched_lcb
+                  accum.unmatched_lp
+                  file accum.lex_env in
+    (accum.left, right)
+
 let source_extent_method_ file source m = begin
   let visitor = new range_find_visitor file source in
-  let accum = visitor#on_method_ default_range_accum m in
+  let accum = visitor#on_method_
+    { default_range_accum with
+        ignore_keywords = non_empty m.Ast.m_user_attributes } m in
   let right = skip_trailing_delims
                 (visitor#get_lexbuf ())
                 accum.unmatched_lcb

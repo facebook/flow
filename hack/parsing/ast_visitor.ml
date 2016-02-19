@@ -440,6 +440,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
 
 
   method on_fun_ acc f =
+    let acc = List.fold_left this#on_user_attribute acc f.f_user_attributes in
     let acc = this#on_id acc f.f_name in
     let acc = List.fold_left this#on_tparam acc f.f_tparams in
     let acc = List.fold_left this#on_fun_param acc f.f_params in
@@ -465,6 +466,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
 
 
   method on_class_ acc c =
+    let acc = List.fold_left this#on_user_attribute acc c.c_user_attributes in
     let acc = this#on_id acc c.c_name in
     let acc = List.fold_left this#on_tparam acc c.c_tparams in
     let acc = List.fold_left this#on_hint acc c.c_extends in
