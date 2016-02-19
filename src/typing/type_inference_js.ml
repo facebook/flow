@@ -261,7 +261,7 @@ and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
     trigger whenever a result is needed, e.g., to interact in flows with other
     lower and upper bounds). **)
 
-let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(function
+let rec destructuring ?parent_pattern_t cx curr_t init default f = Ast.Pattern.(function
   | _, Array { Array.elements; _; } -> Array.(
       elements |> List.iteri (fun i -> function
         | Some (Element ((loc, _) as p)) ->
@@ -270,7 +270,7 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
               Literal (float i, string_of_int i)
             ) in
             let reason = mk_reason (spf "element %d" i) loc in
-            let expr = Option.map expr (fun expr ->
+            let init = Option.map init (fun expr ->
               loc, Ast.Expression.(Member Member.({
                 _object = expr;
                 property = PropertyExpression (
@@ -283,20 +283,24 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
                 computed = true;
               }))
             ) in
-            let refinement = Option.bind expr (fun expr ->
+            let refinement = Option.bind init (fun expr ->
               Refinement.get cx expr reason
             ) in
-            let (parent_pattern_t, tvar) = (match refinement with
-            | Some refined_t -> (refined_t, refined_t)
+            let parent_pattern_t, tvar = (match refinement with
+            | Some refined_t -> refined_t, refined_t
             | None ->
-              curr_t, EvalT (curr_t, DestructuringT (reason, Elem key), mk_id())
+                curr_t,
+                EvalT (curr_t, DestructuringT (reason, Elem key), mk_id())
             ) in
-            destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
-        | Some (Spread (loc, { SpreadElement.argument })) ->
+            let default = Option.map default (Default.elem key reason) in
+            destructuring ~parent_pattern_t cx tvar init default f p
+        | Some (Spread (loc, { SpreadElement.argument = p })) ->
             let reason = mk_reason "rest of array pattern" loc in
             let tvar =
-              EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id()) in
-            destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
+              EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id())
+            in
+            let default = Option.map default (Default.arr_rest i reason) in
+            destructuring ~parent_pattern_t:curr_t cx tvar init default f p
         | None ->
             ()
       )
@@ -311,40 +315,44 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
                 let x = id.Ast.Identifier.name in
                 let reason = mk_reason (spf "property `%s`" x) loc in
                 xs := x :: !xs;
-                let expr = Option.map expr (fun expr ->
+                let init = Option.map init (fun expr ->
                   loc, Ast.Expression.(Member Member.({
                     _object = expr;
                     property = PropertyIdentifier (loc, id);
                     computed = false;
                   }))
                 ) in
-                let refinement = Option.bind expr (fun expr ->
+                let refinement = Option.bind init (fun expr ->
                   Refinement.get cx expr reason
                 ) in
-                let (parent_pattern_t, tvar) = (match refinement with
-                | Some refined_t -> (refined_t, refined_t)
+                let parent_pattern_t, tvar = (match refinement with
+                | Some refined_t -> refined_t, refined_t
                 | None ->
                   (* use the same reason for the prop name and the lookup.
                      given `var {foo} = ...`, `foo` is both. compare to `a.foo`
                      where `foo` is the name and `a.foo` is the lookup. *)
-                  curr_t, EvalT (curr_t, DestructuringT (reason, Prop x), mk_id())
+                    curr_t,
+                    EvalT (curr_t, DestructuringT (reason, Prop x), mk_id())
                 ) in
-                destructuring ~parent_pattern_t:(Some parent_pattern_t) cx tvar expr f p
+                let default = Option.map default (Default.prop x reason) in
+                destructuring ~parent_pattern_t cx tvar init default f p
             | _ ->
               error_destructuring cx loc
             end
 
-        | SpreadProperty (loc, { SpreadProperty.argument }) ->
+        | SpreadProperty (loc, { SpreadProperty.argument = p }) ->
             let reason = mk_reason "object pattern spread property" loc in
             let tvar =
-              EvalT (curr_t, DestructuringT (reason, ObjRest !xs), mk_id()) in
-            destructuring ~parent_pattern_t:(Some curr_t) cx tvar expr f argument
+              EvalT (curr_t, DestructuringT (reason, ObjRest !xs), mk_id())
+            in
+            let default = Option.map default (Default.obj_rest !xs reason) in
+            destructuring ~parent_pattern_t:curr_t cx tvar init default f p
       )
     )
 
   | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
       Type_inference_hooks_js.dispatch_lval_hook cx name loc (
-        match (parent_pattern_t, expr) with
+        match (parent_pattern_t, init) with
         (**
          * If there was a parent_pattern, we must be within a destructuring
          * pattern and a `get-def` on this identifier should point at the "def"
@@ -368,7 +376,11 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
          *)
         | (None, None) -> Type_inference_hooks_js.NoRHS
       );
-      f cx loc name curr_t
+      f cx loc name default curr_t
+
+  | _, Assignment { Assignment.left; right } ->
+      let default = Some (Default.expr ?default right) in
+      destructuring ?parent_pattern_t cx curr_t init default f left
 
   | loc, _ -> error_destructuring cx loc
 )
@@ -377,7 +389,7 @@ and error_destructuring cx loc =
   let msg = "unsupported destructuring" in
   Flow_js.add_error cx [mk_reason "" loc, msg]
 
-and type_of_pattern = Ast.Pattern.(function
+let type_of_pattern = Ast.Pattern.(function
   | _, Array { Array.typeAnnotation; _; } -> typeAnnotation
 
   | _, Object { Object.typeAnnotation; _; } -> typeAnnotation
@@ -388,8 +400,9 @@ and type_of_pattern = Ast.Pattern.(function
 )
 
 (* instantiate pattern visitor for assignments *)
-let destructuring_assignment cx rhs_t expr =
-  destructuring cx rhs_t (Some expr) (fun cx loc name t ->
+let destructuring_assignment cx rhs_t init =
+  destructuring cx rhs_t (Some init) None (fun cx loc name _default t ->
+    (* TODO destructuring+defaults unsupported in assignment expressions *)
     let reason = mk_reason (spf "assignment of identifier `%s`" name) loc in
     Env_js.set_var cx name t reason
   )
@@ -1047,7 +1060,7 @@ module FuncParams : sig
   val iter: (string * Type.t * Loc.t -> unit) -> t -> unit
 
   (* if there is a default for this binding, run provided function *)
-  val with_default: string -> (Ast.Expression.t -> unit) -> t -> unit
+  val with_default: string -> (Ast.Expression.t Default.t -> unit) -> t -> unit
 
   val subst: Context.t -> (Type.t SMap.t) -> t -> t
 end = struct
@@ -1058,7 +1071,7 @@ end = struct
     | Rest of Type.t * binding
   type t = {
     list: param list;
-    defaults: Ast.Expression.t SMap.t;
+    defaults: Ast.Expression.t Default.t SMap.t;
   }
 
   let empty = {
@@ -1086,17 +1099,27 @@ end = struct
         (* TODO: assert (not optional) *)
         let binding = name, t, loc in
         { list = Simple (OptionalT t, binding) :: params.list;
-          defaults = SMap.add name expr params.defaults })
+          defaults = SMap.add name (Default.Expr expr) params.defaults })
     | loc, _ ->
       let reason = mk_reason "destructuring" loc in
       let t = type_of_pattern pattern
         |> mk_type_annotation cx type_params_map reason in
+      let default = Option.map default Default.expr in
       let bindings = ref [] in
-      pattern |> destructuring cx t None (fun _ loc name t ->
+      let defaults = ref params.defaults in
+      pattern |> destructuring cx t None default (fun _ loc name default t ->
         Hashtbl.replace (Context.type_table cx) loc t;
-        bindings := (name, t, loc) :: !bindings
+        bindings := (name, t, loc) :: !bindings;
+        Option.iter default ~f:(fun default ->
+          defaults := SMap.add name default !defaults
+        )
       );
-      { params with list = Complex (t, !bindings) :: params.list })
+      let t = match default with
+        | Some _ -> OptionalT t
+        | None -> t (* TODO: assert (not optional) *)
+      in
+      { list = Complex (t, !bindings) :: params.list;
+        defaults = !defaults })
 
   let add_rest cx type_params_map params =
     function loc, { Ast.Identifier.name; typeAnnotation; _ } ->
@@ -1184,7 +1207,7 @@ let rec variable_decl cx type_params_map entry = Ast.Statement.(
       let r = mk_reason (spf "%s _" str_of_kind) loc in
       let t = type_of_pattern p |> mk_type_annotation cx type_params_map r in
       bind cx pattern_name t r;
-      p |> destructuring cx t None (fun cx loc name t ->
+      p |> destructuring cx t None None (fun cx loc name _default t ->
         Hashtbl.replace (Context.type_table cx) loc t;
         bind cx name t r
       )
@@ -3377,8 +3400,12 @@ and variable cx type_params_map kind
           )
         in
         init_var cx pattern_name ~has_anno t reason;
-        destructuring cx t init (fun cx loc name t ->
+        destructuring cx t init None (fun cx loc name default t ->
           let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
+          Option.iter default (fun default ->
+            let default_t = mk_default cx type_params_map reason default in
+            Flow_js.flow_t cx (default_t, t)
+          );
           init_var cx name ~has_anno t reason
         ) id
 )
@@ -6437,13 +6464,13 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     config.options.Opts.enable_const_params
   ) in
   params |> FuncParams.iter Scope.(fun (name, t, loc) ->
+    let reason = mk_reason (spf "param `%s`" name) loc in
     (* add default value as lower bound, if provided *)
-    FuncParams.with_default name (fun expr ->
-      let te = expression cx type_params_map expr in
-      Flow_js.flow_t cx (te, t)
+    FuncParams.with_default name (fun default ->
+      let default_t = mk_default cx type_params_map reason default in
+      Flow_js.flow_t cx (default_t, t)
     ) params;
     (* add to scope *)
-    let reason = mk_reason (spf "param `%s`" name) loc in
     if const_params
     then Env_js.bind_implicit_const ~state:State.Initialized
       Entry.ConstParamBinding cx name t reason
@@ -6613,6 +6640,15 @@ and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
     Flow_js.mk_functiontype2 params_tlist ?params_names ret frame
   )
 
+and mk_default cx type_params_map reason = Default.fold
+  ~expr:(expression cx type_params_map)
+  ~cons:Flow_js.(fun t1 t2 ->
+    mk_tvar_where cx reason (fun tvar ->
+      flow_t cx (t1, tvar);
+      flow_t cx (t2, tvar)))
+  ~selector:(fun r t sel ->
+    let id = mk_id () in
+    Flow_js.eval_selector cx r t sel id)
 
 (**********)
 (* Driver *)

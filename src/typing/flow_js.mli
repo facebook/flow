@@ -55,6 +55,10 @@ val generate_tests: Context.t -> reason -> Type.typeparam list -> (Type.t SMap.t
 
 val check_polarity: Context.t -> Type.polarity -> Type.t -> unit
 
+(* selectors *)
+
+val eval_selector: Context.t -> reason -> Type.t -> Type.TypeTerm.selector -> int -> Type.t
+
 (* property maps *)
 
 val mk_propmap : Context.t -> Type.t SMap.t -> int

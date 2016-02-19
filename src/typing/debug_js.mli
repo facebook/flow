@@ -29,6 +29,9 @@ val string_of_scope_refis:
   string
 val string_of_scope: Context.t -> Scope.t -> string
 
+val string_of_selector: Type.TypeTerm.selector -> string
+val string_of_default: Spider_monkey_ast.Expression.t Default.t -> string
+
 val dump_t: Context.t -> Type.t -> string
 val dump_use_t: Context.t -> Type.use_t -> string
 

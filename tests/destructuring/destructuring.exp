@@ -27,6 +27,96 @@ array_rest.js:12:6,9: rest of array pattern
 Expected array instead of
 array_rest.js:12:14,14: number
 
+defaults.js:9:4,4: boolean
+This type is incompatible with
+defaults.js:9:6,9: undefined
+
+defaults.js:9:4,4: number
+This type is incompatible with
+defaults.js:9:6,9: undefined
+
+defaults.js:9:4,4: string
+This type is incompatible with
+defaults.js:9:6,9: undefined
+
+defaults.js:14:1,26: function call
+Error:
+defaults.js:9:4,4: null
+This type is incompatible with
+defaults.js:9:6,9: undefined
+
+defaults.js:23:4,4: boolean
+This type is incompatible with
+defaults.js:23:6,9: undefined
+
+defaults.js:23:4,4: number
+This type is incompatible with
+defaults.js:23:6,9: undefined
+
+defaults.js:23:4,4: string
+This type is incompatible with
+defaults.js:23:6,9: undefined
+
+defaults.js:28:1,26: function call
+Error:
+defaults.js:23:4,4: null
+This type is incompatible with
+defaults.js:23:6,9: undefined
+
+defaults.js:35:4,6: number
+This type is incompatible with
+defaults.js:35:8,11: undefined
+
+defaults.js:35:4,6: string
+This type is incompatible with
+defaults.js:35:8,11: undefined
+
+defaults.js:40:1,26: function call
+Error:
+defaults.js:35:4,6: null
+This type is incompatible with
+defaults.js:35:8,11: undefined
+
+defaults.js:49:4,4: boolean
+This type is incompatible with
+defaults.js:49:6,9: undefined
+
+defaults.js:49:4,4: number
+This type is incompatible with
+defaults.js:49:6,9: undefined
+
+defaults.js:49:4,4: string
+This type is incompatible with
+defaults.js:49:6,9: undefined
+
+defaults.js:57:6,6: number
+This type is incompatible with
+defaults.js:55:6,11: string
+
+defaults.js:58:2,2: boolean
+This type is incompatible with
+defaults.js:58:4,7: undefined
+
+defaults.js:58:2,2: string
+This type is incompatible with
+defaults.js:58:4,7: undefined
+
+defaults.js:60:24,24: property `x`
+Property cannot be accessed on possibly null value
+defaults.js:60:31,34: null
+
+defaults.js:61:24,27: object pattern spread property
+Expected object instead of
+defaults.js:61:30,30: number
+
+defaults.js:62:24,24: element 0
+Computed property/element cannot be accessed on possibly null value
+defaults.js:62:27,30: null
+
+defaults.js:63:24,27: rest of array pattern
+Expected array instead of possibly null value
+defaults.js:63:30,33: null
+
 destructuring.js:4:3,4: number
 This type is incompatible with
 destructuring.js:1:15,20: string
@@ -137,4 +227,4 @@ unannotated.js:8:5,7: property `bar`
 Property not found in
 unannotated.js:8:3,3: object literal
 
-Found 34 errors
+Found 55 errors

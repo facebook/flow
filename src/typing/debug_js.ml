@@ -1112,6 +1112,20 @@ let string_of_scope cx scope = Scope.(
     (string_of_scope_refis cx scope.refis)
 )
 
+let string_of_selector = function
+  | Elem _ -> "Elem _" (* TODO print info about the key *)
+  | Prop x -> spf "Prop %s" x
+  | ArrRest i -> spf "ArrRest %i" i
+  | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
+
+let string_of_default = Default.fold
+  ~expr:(fun (loc, _) ->
+    spf "Expr %s" (string_of_loc loc))
+  ~selector:(fun _ str sel ->
+    spf "Selector (%s) (%s)" str (string_of_selector sel))
+  ~cons:(fun str default ->
+    spf "Cons (%s) (%s)" str default)
+
 let debug_flow (l,u) =
   spf "%s ~> %s" (string_of_ctor l) (string_of_use_ctor u)
 
