@@ -1,16 +1,12 @@
 #!/bin/bash -e
-# do not set -x or you may expose the secure token in the logs!
 
-if [[ "$TRAVIS_PULL_REQUEST" != "false" ||
-      "$TRAVIS_BRANCH" != "master" ||
-      "$OCAML_VERSION" != "4.02.1" ||
-      "$OPAM_VERSION" != "1.2.0" ]]; then
-  exit 0
-fi
+# make sure -x (debugging) is off so we don't print the token in the logs
+set +x
 
 PAGES_CHECKOUT="$HOME/gh-pages"
 
 printf "travis_fold:start:installing_ruby\nInstalling Ruby\n"
+source "$HOME/.rvm/scripts/rvm"
 rvm use 2.2 --install --binary
 printf "travis_fold:end:installing_ruby\n"
 

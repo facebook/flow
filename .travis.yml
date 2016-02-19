@@ -28,7 +28,13 @@ addons:
     - libelf-dev
 
 script: bash -ex .travis-ci.sh
-after_success: resources/travis/deploy.sh
+
+deploy:
+  provider: script
+  repo: facebook/flow
+  script: bash -e resources/travis/deploy.sh
+  skip_cleanup: true
+  condition: "$OCAML_VERSION = 4.02.1 && $OPAM_VERSION = 1.2.0"
 
 notifications:
   email:
