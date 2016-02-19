@@ -3,7 +3,7 @@
 
 REPO="https://${GH_BOT_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
 PAGES_CHECKOUT="$HOME/gh-pages"
-GEM_DIR=$(ruby -rubygems -e 'puts Gem.user_dir')
+GEM_DIR=$(rvm gemdir)
 
 printf "travis_fold:start:clone_gh_pages\nCloning gh-pages\n"
 mkdir -p "$PAGES_CHECKOUT"
