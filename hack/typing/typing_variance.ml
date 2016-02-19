@@ -416,8 +416,7 @@ and type_ root variance env (reason, ty) =
       (* `this` constraints are bivariant (otherwise any class that used the
        * `this` type would not be able to use covariant type params) *)
       env
-  | Tgeneric (_, Some cstr) -> constraint_ root env cstr
-  | Tgeneric (name, None) ->
+  | Tgeneric (name, cstr_opt) ->
       let pos = Reason.to_pos reason in
       (* This section makes the position more precise.
        * Say we find a return type that is a tuple (int, int, T).
@@ -436,7 +435,10 @@ and type_ root variance env (reason, ty) =
         | x -> x
       in
       let env = add_variance env name variance in
-      env
+      begin match cstr_opt with
+        | None -> env
+        | Some cstr -> constraint_ root env cstr
+      end
   | Toption ty ->
       type_ root variance env ty
   | Tprim _ -> env
