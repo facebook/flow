@@ -1,4 +1,5 @@
 #!/bin/sh -e
+# do not set -x or you may expose the secure token in the logs!
 
 REPO="https://${GH_BOT_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git"
 PAGES_CHECKOUT="$HOME/gh-pages"

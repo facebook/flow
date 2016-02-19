@@ -1,11 +1,6 @@
 language: c
 sudo: false
 
-before_install:
-- rvm use 2.2 --install --binary # for Jekyll
-- gem install --no-rdoc --no-ri github-pages
-script: bash -ex .travis-ci.sh
-
 os:
 - linux
 - osx
@@ -32,6 +27,19 @@ addons:
     packages:
     - libelf-dev
 
+script: bash -ex .travis-ci.sh
+
+before_deploy:
+- rvm use 2.2 --install --binary # for Jekyll
+- gem install --no-rdoc --no-ri github-pages
+
+deploy:
+  provider: script
+  repo: facebook/flow
+  script: resources/travis/deploy.sh
+  skip_cleanup: true
+  condition: "$OCAML_VERSION = 4.02.1 && $OPAM_VERSION = 1.2.0"
+
 notifications:
   email:
     recipients:
@@ -40,10 +48,3 @@ notifications:
     channels:
       - "chat.freenode.net#flowtype"
     on_success: change
-
-deploy:
-  provider: script
-  repo: facebook/flow
-  script: resources/travis/deploy.sh
-  skip_cleanup: true
-  condition: "$OCAML_VERSION = 4.02.1 && $OPAM_VERSION = 1.2.0"
