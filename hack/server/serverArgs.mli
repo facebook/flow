@@ -21,13 +21,9 @@ type options = {
   should_detach    : bool;
   convert          : Path.t option;
   no_load          : bool;
-  save_filename    : (state_kind * string) option;
+  save_filename    : string option;
   waiting_client   : Handle.handle option;
 }
-
-and state_kind =
-  | Complete
-  | Mini
 
 val parse_options: unit -> options
 val default_options: root:string -> options
@@ -43,5 +39,5 @@ val root                : options -> Path.t
 val should_detach       : options -> bool
 val convert             : options -> Path.t option
 val no_load             : options -> bool
-val save_filename       : options -> (state_kind * string) option
+val save_filename       : options -> string option
 val waiting_client      : options -> Handle.handle option

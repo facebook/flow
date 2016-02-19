@@ -149,10 +149,6 @@ let get_bazooka x =
 
 let (ifiles: (Dep.t, Relative_path.Set.t) Hashtbl.t ref) = ref (Hashtbl.create 23)
 
-let marshal chan = Marshal.to_channel chan !ifiles []
-
-let unmarshal chan = ifiles := Marshal.from_channel chan
-
 let get_files deps =
   DepSet.fold begin fun dep acc ->
     try

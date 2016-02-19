@@ -9,13 +9,9 @@
  *)
 
 open Core
-open Sys_utils
 open ServerEnv
 open ServerUtils
 open Utils
-
-exception State_not_found
-exception Load_state_disabled
 
 type recheck_loop_stats = {
   rechecked_batches : int;
@@ -101,16 +97,6 @@ module Program =
         ServerStamp.touch_stamp_errors old_env.errorl new_env.errorl;
         new_env, total_rechecked
       end
-
-    (* This is a hack for us to save / restore the global state that is not
-     * already captured by ServerEnv *)
-    let marshal chan =
-      Typing_deps.marshal chan;
-      HackSearchService.SS.MasterApi.marshal chan
-
-    let unmarshal chan =
-      Typing_deps.unmarshal chan;
-      HackSearchService.SS.MasterApi.unmarshal chan
 
   end
 
@@ -276,117 +262,23 @@ let serve genv env in_fd _ =
        ;
   done
 
-let load genv filename to_recheck =
-  let t = Unix.gettimeofday () in
-  let chan = open_in filename in
-  let env = Marshal.from_channel chan in
-  Program.unmarshal chan;
-  close_in chan;
-  SharedMem.load (filename^".sharedmem");
-  HackEventLogger.load_read_end t filename;
-  let t = Hh_logger.log_duration "Loading saved state" t in
-
-  let to_recheck =
-    List.rev_append (BuildMain.get_all_targets ()) to_recheck in
-  let paths_to_recheck =
-    List.map to_recheck (Relative_path.concat Relative_path.Root) in
-  let updates = Relative_path.set_of_list paths_to_recheck in
-  let env, rechecked, total_rechecked = recheck genv env updates in
-  let rechecked_count = Relative_path.Set.cardinal rechecked in
-  HackEventLogger.load_recheck_end t rechecked_count total_rechecked;
-  let _t = Hh_logger.log_duration "Post-load rechecking" t in
-  env
-
-let run_load_script genv cmd =
-  try
-    let t = Unix.gettimeofday () in
-    let cmd = Path.to_string cmd in
-    let root_arg =
-      Path.to_string (ServerArgs.root genv.options) in
-    let build_id_arg = Build_id.build_id_ohai in
-    Hh_logger.log
-      "Running load script: %s %s %s\n%!"
-      (Filename.quote cmd)
-      (Filename.quote root_arg)
-      (Filename.quote build_id_arg);
-    let state_fn, to_recheck =
-      let reader timeout ic _oc =
-        let state_fn =
-          try Timeout.input_line ~timeout ic
-          with End_of_file -> raise State_not_found
-        in
-        if state_fn = "DISABLED" then raise Load_state_disabled;
-        let to_recheck = ref [] in
-        begin
-          try
-            while true do
-              to_recheck := Timeout.input_line ~timeout ic :: !to_recheck
-            done
-          with End_of_file -> ()
-        end;
-        let rc = Timeout.close_process_in ic in
-        assert (rc = Unix.WEXITED 0);
-        state_fn, !to_recheck
-      in
-      Timeout.read_process
-        ~timeout:(ServerConfig.load_script_timeout genv.config)
-        ~on_timeout:(fun _ -> failwith "Load script timed out")
-        ~reader
-        cmd [| cmd; root_arg; build_id_arg; |] in
-    Hh_logger.log
-      "Load state found at %s. %d files to recheck\n%!"
-      state_fn (List.length to_recheck);
-    HackEventLogger.load_script_done t;
-    let init_type = "load" in
-    let env = HackEventLogger.with_init_type init_type begin fun () ->
-      load genv state_fn to_recheck
-    end in
-    env, init_type
-  with e -> begin
-    let init_type = match e with
-      | State_not_found ->
-        Hh_logger.log "Load state not found!";
-        Hh_logger.log "Starting from a fresh state instead...";
-        "load_state_not_found"
-      | Load_state_disabled ->
-        Hh_logger.log "Load state disabled!";
-        "load_state_disabled"
-      | e ->
-        let msg = Printexc.to_string e in
-        Hh_logger.log "Load error: %s" msg;
-        Printexc.print_backtrace stderr;
-        Hh_logger.log "Starting from a fresh state instead...";
-        HackEventLogger.load_failed msg;
-        "load_error"
-    in
-    let env, _ = HackEventLogger.with_init_type init_type begin fun () ->
-      ServerInit.init genv
-    end in
-    env, init_type
-  end
-
 let program_init genv =
   let env, init_type =
     (* If we are saving, always start from a fresh state -- just in case
      * incremental mode introduces any errors. *)
     if genv.local_config.ServerLocalConfig.use_mini_state &&
+      not (ServerArgs.no_load genv.options) &&
       ServerArgs.save_filename genv.options = None then
       match ServerConfig.load_mini_script genv.config with
       | None ->
-          let env, _ = ServerInit.init genv in
-          env, "fresh"
+        let env, _ = ServerInit.init genv in
+        env, "fresh"
       | Some load_mini_script ->
-          let env, did_load = ServerInit.init ~load_mini_script genv in
-          env, if did_load then "mini_load" else "mini_load_fail"
+        let env, did_load = ServerInit.init ~load_mini_script genv in
+        env, if did_load then "mini_load" else "mini_load_fail"
     else
-      match ServerConfig.load_script genv.config with
-      | Some load_script
-        when ServerArgs.save_filename genv.options = None &&
-        not (ServerArgs.no_load genv.options) ->
-          run_load_script genv load_script
-      | _ ->
-          let env, _ = ServerInit.init genv in
-          env, "fresh"
+      let env, _ = ServerInit.init genv in
+      env, "fresh"
   in
   HackEventLogger.init_end init_type;
   Hh_logger.log "Waiting for daemon(s) to be ready...";
@@ -394,21 +286,6 @@ let program_init genv =
   ServerStamp.touch_stamp ();
   HackEventLogger.init_really_end init_type;
   env
-
-let save_complete env fn =
-  let chan = open_out_no_fail fn in
-  Marshal.to_channel chan env [];
-  Program.marshal chan;
-  close_out_no_fail fn chan;
-  (* We cannot save the shared memory to `chan` because the OCaml runtime
-   * does not expose the underlying file descriptor to C code; so we use
-   * a separate ".sharedmem" file. *)
-  SharedMem.save (fn^".sharedmem")
-
-let save _genv env (kind, fn) =
-  match kind with
-  | ServerArgs.Complete -> save_complete env fn
-  | ServerArgs.Mini -> ServerInit.save_state env fn
 
 let setup_server options ide_process =
   let root = ServerArgs.root options in
@@ -451,7 +328,8 @@ let run_once options =
     (Hh_logger.log "ServerMain run_once only supported in check mode.";
     Exit_status.(exit Input_error));
   let env = program_init genv in
-  Option.iter (ServerArgs.save_filename genv.options) (save genv env);
+  Option.iter (ServerArgs.save_filename genv.options)
+    (ServerInit.save_state env);
   Hh_logger.log "Running in check mode";
   Program.run_once_and_exit genv env
 

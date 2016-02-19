@@ -88,16 +88,6 @@ module Make(S : SearchUtils.Searchable) = struct
     (* trie used to store ONLY KEYS to give a typeahead feeling for searching *)
     let trie = ref (Trie.create ())
 
-    let marshal chan =
-      Marshal.to_channel chan !removal_index [];
-      Marshal.to_channel chan !main_index [];
-      Marshal.to_channel chan !trie []
-
-    let unmarshal chan =
-      removal_index := Marshal.from_channel chan;
-      main_index := Marshal.from_channel chan;
-      trie := Marshal.from_channel chan
-
     let lookup str =
      try
        Hashtbl.find !main_index str

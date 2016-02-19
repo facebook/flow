@@ -91,7 +91,6 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
-#include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -921,18 +920,6 @@ void hh_remove(value key) {
 /*****************************************************************************/
 
 #ifdef NO_LZ4
-void hh_save(value out_filename) {
-  CAMLparam1(out_filename);
-  caml_failwith("Program not linked with lz4, so saving is not supported!");
-  CAMLreturn0;
-}
-
-void hh_load(value in_filename) {
-  CAMLparam1(in_filename);
-  caml_failwith("Program not linked with lz4, so loading is not supported!");
-  CAMLreturn0;
-}
-
 void hh_save_dep_table(value out_filename) {
   CAMLparam1(out_filename);
   caml_failwith("Program not linked with lz4, so saving is not supported!");
@@ -966,13 +953,6 @@ static void read_all(int fd, void* start, size_t size) {
   } while (total_read < size);
 }
 
-/* The global section is always reset after each typechecking phase, so we
- * don't need to save it. (Resetting is done by setting the count of used bytes
- * of the global section to zero.) */
-static char* save_start() {
-  return (char*)SHARED_MEM_INIT + global_size_b;
-}
-
 static void fwrite_header(FILE* fp) {
   fwrite_no_fail(&MAGIC_CONSTANT, sizeof MAGIC_CONSTANT, 1, fp);
 
@@ -993,125 +973,6 @@ static void fread_header(FILE* fp) {
     read_all(fileno(fp), (void*)revision, revlen * sizeof(char));
     assert(strncmp(revision, BuildInfo_kRevision, revlen) == 0);
   }
-}
-
-void hh_save(value out_filename) {
-  CAMLparam1(out_filename);
-  FILE* fp = fopen(String_val(out_filename), "wb");
-
-  fwrite_header(fp);
-
-  fwrite_no_fail(&heap_init_size, sizeof heap_init_size, 1, fp);
-
-  /*
-   * Format of the compressed shared memory:
-   * LZ4 can only work in chunks of 2GB, so we compress each chunk individually,
-   * and write out each one as
-   * [compressed size of chunk][uncompressed size of chunk][chunk]
-   * A compressed size of zero indicates the end of the compressed section.
-   */
-  char* chunk_start = save_start();
-  int compressed_size = 0;
-  while (chunk_start < *heap) {
-    uintptr_t remaining = *heap - chunk_start;
-    uintptr_t chunk_size = LZ4_MAX_INPUT_SIZE < remaining ?
-      LZ4_MAX_INPUT_SIZE : remaining;
-
-    char* compressed = malloc(chunk_size * sizeof(char));
-    assert(compressed != NULL);
-
-    compressed_size = LZ4_compressHC(chunk_start, compressed,
-      chunk_size);
-    assert(compressed_size > 0);
-
-    fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
-    fwrite_no_fail(&chunk_size, sizeof chunk_size, 1, fp);
-    fwrite_no_fail((void*)compressed, 1, compressed_size, fp);
-
-    chunk_start += chunk_size;
-    free(compressed);
-  }
-  compressed_size = 0;
-  fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
-
-  fclose(fp);
-  CAMLreturn0;
-}
-
-typedef struct {
-  char* compressed;
-  char* decompress_start;
-  int compressed_size;
-  int decompressed_size;
-} decompress_args;
-
-/* Return value must be an intptr_t instead of an int because pthread returns
- * a void*-sized value */
-static intptr_t decompress(const decompress_args* args) {
-  int actual_compressed_size = LZ4_decompress_fast(
-      args->compressed,
-      args->decompress_start,
-      args->decompressed_size);
-  return args->compressed_size == actual_compressed_size;
-}
-
-void hh_load(value in_filename) {
-  CAMLparam1(in_filename);
-  FILE* fp = fopen(String_val(in_filename), "rb");
-
-  if (fp == NULL) {
-    unix_error(errno, "fopen", in_filename);
-  }
-
-  fread_header(fp);
-
-  read_all(fileno(fp), (void*)&heap_init_size, sizeof heap_init_size);
-
-  int compressed_size = 0;
-  read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
-  char* chunk_start = save_start();
-
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  pthread_t thread;
-  decompress_args args;
-  int thread_started = 0;
-
-  // see hh_save for a description of what we are parsing here.
-  while (compressed_size > 0) {
-    char* compressed = malloc(compressed_size * sizeof(char));
-    assert(compressed != NULL);
-    uintptr_t chunk_size = 0;
-    read_all(fileno(fp), (void*)&chunk_size, sizeof chunk_size);
-    read_all(fileno(fp), compressed, compressed_size * sizeof(char));
-    if (thread_started) {
-      intptr_t success = 0;
-      int rc = pthread_join(thread, (void*)&success);
-      free(args.compressed);
-      assert(rc == 0);
-      assert(success);
-    }
-    args.compressed = compressed;
-    args.compressed_size = compressed_size;
-    args.decompress_start = chunk_start;
-    args.decompressed_size = chunk_size;
-    pthread_create(&thread, &attr, (void* (*)(void*))decompress, &args);
-    thread_started = 1;
-    chunk_start += chunk_size;
-    read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
-  }
-
-  if (thread_started) {
-    int success;
-    int rc = pthread_join(thread, (void*)&success);
-    free(args.compressed);
-    assert(rc == 0);
-    assert(success);
-  }
-
-  fclose(fp);
-  CAMLreturn0;
 }
 
 void hh_save_dep_table(value out_filename) {

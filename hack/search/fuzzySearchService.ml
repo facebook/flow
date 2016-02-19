@@ -111,16 +111,6 @@ let old_search_terms = ref (Hashtbl.create 160000)
  *)
 let term_lookup = ref (Hashtbl.create 250000)
 
-let marshal chan =
-  Marshal.to_channel chan !term_indexes [];
-  Marshal.to_channel chan !old_search_terms [];
-  Marshal.to_channel chan !term_lookup []
-
-let unmarshal chan =
-  term_indexes := Marshal.from_channel chan;
-  old_search_terms := Marshal.from_channel chan;
-  term_lookup := Marshal.from_channel chan
-
 (* We take out special characters from the string for the query - they aren't
  * useful during searches *)
 let key_regex = Str.regexp "[^a-zA-Z_:]"

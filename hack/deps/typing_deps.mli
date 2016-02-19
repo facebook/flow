@@ -41,7 +41,5 @@ val add_idep : Dep.variant -> Dep.variant -> unit
 val get_ideps_from_hash : Dep.t -> DepSet.t
 val get_ideps : Dep.variant -> DepSet.t
 val get_bazooka : Dep.variant -> DepSet.t
-val marshal : out_channel -> unit
-val unmarshal : in_channel -> unit
 val get_files : DepSet.t -> Relative_path.Set.t
 val update_files : FileInfo.t Relative_path.Map.t -> unit
