@@ -8,7 +8,9 @@ description: A static type checker for JavaScript
 timezone: America/Los_Angeles
 
 lsi: false
-highlighter: pygments
+highlighter: rouge
+
+gems: [jekyll-paginate]
 
 paginate: 5
 paginate_path: "/blog/page:num/"

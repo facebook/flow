@@ -1,16 +1,24 @@
 language: c
-script: bash -ex .travis-ci.sh
 sudo: false
+
+before_install:
+- rvm use 2.2 --install --binary # for Jekyll
+- gem install --no-rdoc --no-ri github-pages
+script: bash -ex .travis-ci.sh
 
 os:
 - linux
 - osx
 
 env:
+  matrix:
   - OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
   - OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
   - OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
   - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
+  global:
+    # GH_BOT_TOKEN
+    secure: I1W8xlf8Ojxkc92n8Rb9AGX7kdCk0DeWEPd6PKRrGQO0FtyCkcvxNo+wp6ApQI7+NqkuFRVngHVOQOd3AqR57IFiSjZ+Cj/BJyg6WOo92olkAAP0OWihmCj53d2xDpp7LaM99srPbZXYE5vSTTKBX/5Soz9UghzsI5Q1ECmV5fU=
 
 matrix:
   exclude:
@@ -32,3 +40,10 @@ notifications:
     channels:
       - "chat.freenode.net#flowtype"
     on_success: change
+
+deploy:
+  provider: script
+  repo: facebook/flow
+  script: resources/travis/deploy.sh
+  skip_cleanup: true
+  condition: "$OCAML_VERSION = 4.02.1 && $OPAM_VERSION = 1.2.0"
