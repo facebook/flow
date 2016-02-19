@@ -1,0 +1,1 @@
+cmd: check --old-output-format --strip-root

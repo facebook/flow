@@ -500,7 +500,9 @@ let merge_strict_context ~options cache component_cxs =
             end
           else
             (* unchecked implementation exists *)
-            orig_sig_cxs, sig_cxs, impls, (r, info._module, cx_to) :: decls
+            (* use required name as resolved name, for lib lookups *)
+            let fake_resolved = Modulename.String r in
+            orig_sig_cxs, sig_cxs, impls, (r, fake_resolved, cx_to) :: decls
       | None ->
           (* implementation doesn't exist *)
           orig_sig_cxs, sig_cxs, impls, (r, resolved_r, cx_to) :: decls

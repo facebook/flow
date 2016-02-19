@@ -1,14 +1,12 @@
 
-test.js:13:17,40: number
+test.js:12:18,41: number
 This type is incompatible with
-test.js:13:8,13: string
+test.js:12:8,14: boolean
 
-test.js:18:18,42: number
-This type is incompatible with
-test.js:18:9,14: string
+test.js:22:15,33: ./buffer
+Required module not found
 
-test.js:22:18,42: number
-This type is incompatible with
-test.js:22:9,14: string
+test.js:25:15,36: ./buffer.js
+Required module not found
 
 Found 3 errors

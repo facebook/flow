@@ -1,22 +1,26 @@
 /**
- * Copyright 2004-present Facebook. All Rights Reserved.
+ * Test resolution precedence in node:
+ * checked module > lib def > unchecked module
+ *
  * @flow
  */
 
-/* 'buffer' is the name of both an unchecked module in this directory,
- * and a module declared in library file node.js.
- * If the require below resolves to the unchecked module, the mistyping
- * that follows will cause no errors, but if we resolve to the library
- * instead, we'll get the desired error.
- */
+// node_modules/buffer/index.js is unchecked,
+// so we shouldn't pick up its boolean redefinition of INSPECT_MAX_BYTES
+//
 var buffer = require("buffer");
-var x: string = buffer.INSPECT_MAX_BYTES; // error, number ~/> string
+var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
 
-/* same test, but with a name specified as a path. we have to be able
-   to find the library from the basename. */
+// node_modules/crypto/index.js is checked,
+// so we should pick up its boolean redefinition of DEFAULT_ENCODING
+//
+var crypto = require("crypto");
+var b: boolean = crypto.DEFAULT_ENCODING; // no error, we've overridden
+
+// names that are explicit paths shouldn't fall back to lib defs
+//
 var buffer2 = require("./buffer");
-var x2: string = buffer2.INSPECT_MAX_BYTES; // error, number ~/> string
+var x2: string = buffer2.INSPECT_MAX_BYTES; // error, module not found
 
-/* another variation */
 var buffer3 = require("./buffer.js");
-var x3: string = buffer3.INSPECT_MAX_BYTES; // error, number ~/> string
+var x3: string = buffer3.INSPECT_MAX_BYTES; // error, module not found
