@@ -210,32 +210,39 @@ let nameify_default_export_decl decl = Ast.Statement.(
  *)
 let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
   match pattern with
-  | Identifier(loc, n) ->
+  | Identifier (loc, n) ->
     let name = n.Ast.Identifier.name in
     (loc, name)::accum
 
-  | Object(n) ->
+  | Object n ->
     let props = n.Object.properties in
     List.fold_left extract_obj_prop_pattern_bindings accum props
 
-  | Array(n) ->
+  | Array n ->
     let elems = n.Array.elements in
     List.fold_left extract_arr_elem_pattern_bindings accum elems
 
-  | Expression(_) ->
+  | Assignment a ->
+    extract_destructured_bindings accum (snd a.Assignment.left)
+
+  | Expression _ ->
     failwith "Parser Error: Expression patterns don't exist in JS."
-) and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
-  | Object.Property(_, prop) ->
+)
+
+and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
+  | Object.Property (_, prop) ->
     let (_, rhs_pattern) = prop.Object.Property.pattern in
     extract_destructured_bindings accum rhs_pattern
 
-  | Object.SpreadProperty(_) ->
+  | Object.SpreadProperty _ ->
     failwith "Unsupported: Destructuring object spread properties"
-) and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
-  | Some(Array.Element(_, pattern)) ->
+)
+
+and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
+  | Some (Array.Element (_, pattern)) ->
     extract_destructured_bindings accum pattern
 
-  | Some(Array.Spread(_, {Array.SpreadElement.argument = (_, pattern)})) ->
+  | Some (Array.Spread (_, {Array.SpreadElement.argument = (_, pattern)})) ->
     extract_destructured_bindings accum pattern
 
   | None -> accum
@@ -300,7 +307,7 @@ let rec destructuring ?(parent_pattern_t=None) cx curr_t expr f = Ast.Pattern.(f
       properties |> List.iter (function
         | Property (loc, prop) ->
             begin match prop with
-            | { Property.key = Property.Identifier (loc, id); pattern = p; } ->
+            | { Property.key = Property.Identifier (loc, id); pattern = p; _; } ->
                 let x = id.Ast.Identifier.name in
                 let reason = mk_reason (spf "property `%s`" x) loc in
                 xs := x :: !xs;

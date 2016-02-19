@@ -3135,6 +3135,109 @@ module.exports = {
       'yield*;': {
         'errors.0.message': 'Unexpected token ;'
       }
+    },
+    'Destructuring with default values': {
+      'let {x=y} = {}': {
+        'body.0.declarations.0.id.properties': [{
+          'type': 'PropertyPattern',
+          'key': {
+            'type': 'Identifier',
+            'name': 'x',
+          },
+          'pattern': {
+            'type': 'AssignmentPattern',
+            'left': {
+              'type': 'Identifier',
+              'name': 'x',
+            },
+            'right': {
+              'type': 'Identifier',
+              'name': 'y',
+            }
+          },
+          'shorthand': true
+        }]
+      },
+      'let {x:y=z} = {}': {
+        'errors.length': 0,
+        'body.0.declarations.0.id.properties': [{
+          'type': 'PropertyPattern',
+          'key': {
+            'type': 'Identifier',
+            'name': 'x',
+          },
+          'pattern': {
+            'type': 'AssignmentPattern',
+            'left': {
+              'type': 'Identifier',
+              'name': 'y',
+            },
+            'right': {
+              'type': 'Identifier',
+              'name': 'z',
+            }
+          },
+          'shorthand': false
+        }]
+      },
+      'let {p:{q=0,...o}={r:0}} = {p:{r:""}}': {
+        'errors.length': 0,
+        'body.0.declarations.0.id.properties': [{
+          'type': 'PropertyPattern',
+          'key': {
+            'type': 'Identifier',
+            'name': 'p'
+          },
+          'pattern': {
+            'type': 'AssignmentPattern',
+            'left': {
+              'type': 'ObjectPattern',
+              'properties': [{
+                'type': 'PropertyPattern',
+                'key': {
+                  'type': 'Identifier',
+                  'name': 'q'
+                },
+                'pattern': {
+                  'type': 'AssignmentPattern',
+                  'left': {
+                    'type': 'Identifier',
+                    'name': 'q'
+                  },
+                  'right': {
+                    'type': 'Literal',
+                    'value':0,
+                    'raw': '0'
+                  }
+                },
+                'shorthand':true
+              }, {
+                'type': 'SpreadPropertyPattern',
+                'argument': {
+                  'type': 'Identifier',
+                  'name': 'o'
+                }
+              }]
+            },
+            'right': {'type': 'ObjectExpression'}
+          },
+          'shorthand':false
+        }]
+      },
+      'let [x=y] = []': {
+        'errors.length': 0,
+        'body.0.declarations.0.id.elements': [{
+          'type': 'AssignmentPattern',
+          'left': {
+            'type': 'Identifier',
+            'name': 'x',
+          },
+          'right': {
+            'type': 'Identifier',
+            'name': 'y',
+          }
+        }]
+      }
     }
   }
 };

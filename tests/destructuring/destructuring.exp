@@ -39,10 +39,10 @@ destructuring.js:4:30,30: number
 This type is incompatible with
 destructuring.js:3:15,20: string
 
-destructuring.js:10:9,13: 
+destructuring.js:10:6,10: 
 unsupported destructuring
 
-destructuring.js:11:6,10: 
+destructuring.js:11:2,6: 
 unsupported destructuring
 
 destructuring.js:15:9,9: identifier `z`

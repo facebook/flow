@@ -896,6 +896,7 @@ and Pattern : sig
       and t' = {
         key: key;
         pattern: Pattern.t;
+        shorthand: bool;
       }
     end
     module SpreadProperty : sig
@@ -927,10 +928,17 @@ and Pattern : sig
       typeAnnotation: Type.annotation option;
     }
   end
+  module Assignment : sig
+    type t = {
+      left: Pattern.t;
+      right: Expression.t;
+    }
+  end
   type t = Loc.t * t'
   and t' =
     | Object of Object.t
     | Array of Array.t
+    | Assignment of Assignment.t
     | Identifier of Identifier.t
     | Expression of Expression.t
 end = Pattern
