@@ -37,7 +37,7 @@ classes.js:10:24,35: object type
 
 classes.js:41:15,20: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
+[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
 
 classes.js:41:25,30: React element `Foo`
 Error:
@@ -49,7 +49,7 @@ classes.js:41:25,30: React element `Foo`
 Error:
 classes.js:41:15,20: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
+[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
 
 classes.js:59:21,32: number
 This type is incompatible with
@@ -61,7 +61,7 @@ classes.js:62:22,34: object type
 
 classes.js:81:22,27: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
+[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
 
 classes.js:81:32,43: React element `FooLegacy`
 Error:
@@ -73,7 +73,7 @@ classes.js:81:32,43: React element `FooLegacy`
 Error:
 classes.js:81:22,27: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:28,48: ReactComponent
+[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
 
 new_react.js:17:27,36: number
 This type is incompatible with
@@ -125,14 +125,6 @@ propTypes.js:18:18,48: property `label`
 Property not found in
 propTypes.js:19:3,4: object literal
 
-props.js:4:5,13: property `x`
-Property not found in
-props.js:25:5,13: propTypes of React component
-
-props.js:4:5,13: property `z`
-Property not found in
-props.js:25:5,13: propTypes of React component
-
 props.js:14:25,36: string
 This type is incompatible with
 props.js:14:16,21: number
@@ -148,12 +140,6 @@ props.js:16:16,21: string
 props.js:16:25,36: undefined
 This type is incompatible with
 props.js:16:16,21: string
-
-props.js:20:15,57: React element `TestProps`
-Error:
-props.js:20:29,33: boolean
-This type is incompatible with
-props.js:5:12,33: string
 
 props.js:20:15,57: props of React element `TestProps`
 Error:
@@ -173,9 +159,11 @@ props.js:20:49,53: boolean
 This type is incompatible with
 props.js:6:12,33: number
 
+props.js:20:15,57: React element `TestProps`
+Error:
 props.js:25:5,13: property `w`
 Property not found in
-props.js:4:5,13: propTypes of React component
+props.js:20:15,57: props of React element `TestProps`
 
 props2.js:14:25,38: number
 This type is incompatible with
@@ -245,4 +233,4 @@ state5.js:5:23,23: property `x`
 Property cannot be accessed on possibly undefined value
 state5.js:5:12,21: undefined. Did you forget to declare type parameter `State` of property `Component`?
 
-Found 52 errors
+Found 49 errors

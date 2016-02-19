@@ -97,7 +97,7 @@ Traces2.js:6:3,11:       ~> LookupT [property `foo`] (from path 2)
 * path 2:
 Traces2.js:17:12,25:     ObjT [props of React element `B`]
 Traces2.js:17:12,25:     ~> OpenT [props of React element `B`] (from path 3)
-[LIB] react.js:94:93,93: ~> OpenT [existential] (from [not shown])
+[LIB] react.js:94:42,42: ~> OpenT [existential] (from [not shown])
 * path 3:
 Traces2.js:5:9,7:2:      ObjT [default props of React component]
 Traces2.js:17:12,25:     ~> ObjRestT [props of React element `B`] (from [not shown])
@@ -114,7 +114,7 @@ Traces2.js:10:3,11:      ~> LookupT [property `bar`] (from path 2)
 * path 2:
 Traces2.js:15:12,25:     ObjT [props of React element `A`]
 Traces2.js:15:12,25:     ~> OpenT [props of React element `A`] (from path 3)
-[LIB] react.js:94:93,93: ~> OpenT [existential] (from [not shown])
+[LIB] react.js:94:42,42: ~> OpenT [existential] (from [not shown])
 * path 3:
 Traces2.js:9:9,11:2:     ObjT [default props of React component]
 Traces2.js:15:12,25:     ~> ObjRestT [props of React element `A`] (from [not shown])

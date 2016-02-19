@@ -31,7 +31,7 @@ var FeedUFI = React.createClass({
     );
   },
 
-  render: function(): ?ReactElement<any, any, any> {
+  render: function(): ?ReactElement<any> {
     return (
       <div/>
     );
