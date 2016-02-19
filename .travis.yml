@@ -29,10 +29,6 @@ addons:
 
 script: bash -ex .travis-ci.sh
 
-before_deploy:
-- rvm use 2.2 --install --binary # for Jekyll
-- gem install --no-rdoc --no-ri github-pages
-
 deploy:
   provider: script
   repo: facebook/flow
