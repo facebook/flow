@@ -37,7 +37,7 @@ classes.js:10:24,35: object type
 
 classes.js:41:15,20: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
+[LIB] fakelib/type_aliases.js:5:80,121: React$Component
 
 classes.js:41:25,30: React element `Foo`
 Error:
@@ -49,7 +49,7 @@ classes.js:41:25,30: React element `Foo`
 Error:
 classes.js:41:15,20: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
+[LIB] fakelib/type_aliases.js:5:80,121: React$Component
 
 classes.js:59:21,32: number
 This type is incompatible with
@@ -61,7 +61,7 @@ classes.js:62:22,34: object type
 
 classes.js:81:22,27: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
+[LIB] fakelib/type_aliases.js:5:80,121: React$Component
 
 classes.js:81:32,43: React element `FooLegacy`
 Error:
@@ -73,7 +73,7 @@ classes.js:81:32,43: React element `FooLegacy`
 Error:
 classes.js:81:22,27: number
 This type is incompatible with
-[LIB] fakelib/type_aliases.js:4:44,66: ReactComponent
+[LIB] fakelib/type_aliases.js:5:80,121: React$Component
 
 new_react.js:17:27,36: number
 This type is incompatible with

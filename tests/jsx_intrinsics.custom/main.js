@@ -8,10 +8,10 @@ class CustomComponent extends React.Component {
   };
 }
 
-var a: ReactElement<{prop: string}> = <CustomComponent prop="asdf" />;
-var b: ReactElement<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+var a: React.Element<{prop: string}> = <CustomComponent prop="asdf" />;
+var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
 
 <div id="asdf" />;
 <div id={42} />; // Error: (`id` prop) number ~> string
-var c: ReactElement<{id: string}> = <div id="asdf" />;
-var d: ReactElement<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+var c: React.Element<{id: string}> = <div id="asdf" />;
+var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>

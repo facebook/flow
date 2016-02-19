@@ -1,38 +1,38 @@
 
-main.js:12:40,70: React element `CustomComponent`
+main.js:12:41,71: React element `CustomComponent`
 Error:
 main.js:6:10,8:3: property `prop`
 Property not found in
-main.js:12:21,35: object type
+main.js:12:22,36: object type
 
-main.js:12:40,70: React element `CustomComponent`
+main.js:12:41,71: React element `CustomComponent`
 Error:
-main.js:12:21,35: property `prop1`
+main.js:12:22,36: property `prop1`
 Property not found in
-main.js:12:40,70: props of React element `CustomComponent`
+main.js:12:41,71: props of React element `CustomComponent`
 
-main.js:15:1,15: props of JSX Intrinsic: `div`
+main.js:15:1,15: React element: `div`
 Error:
 main.js:15:10,11: number
 This type is incompatible with
-[LIB] lib/jsx.js:4:27,32: string
+[LIB] lib/jsx.js:5:27,32: string
 
-main.js:17:21,32: object type
+main.js:17:38,54: React element: `div`
 Error:
-main.js:17:26,31: number
+main.js:17:27,32: number
 This type is incompatible with
-[LIB] lib/jsx.js:4:27,32: string
+[LIB] lib/jsx.js:5:27,32: string
 
-main.js:17:37,53: React element: `div`
+main.js:17:38,54: React element: `div`
 Error:
-main.js:17:26,31: number
+main.js:17:27,32: number
 This type is incompatible with
-main.js:17:45,50: string
+main.js:17:46,51: string
 
-main.js:17:37,53: React element: `div`
+main.js:17:38,54: React element: `div`
 Error:
-main.js:17:45,50: string
+main.js:17:46,51: string
 This type is incompatible with
-main.js:17:26,31: number
+main.js:17:27,32: number
 
 Found 6 errors

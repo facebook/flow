@@ -1,7 +1,7 @@
 
 import_react.js:7:17,37: constructor call
 Error:
-import_react.js:7:17,37: ReactComponent
+import_react.js:7:17,37: React$Component
 This type is incompatible with
 import_react.js:7:8,13: number
 

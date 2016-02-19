@@ -1,11 +1,11 @@
 
 API.react.js:4:5,12: property `setProps`
 Property not found in
-API.react.js:4:1,3: ReactElement
+API.react.js:4:1,3: React$Element
 
 API.react.js:5:5,12: property `setState`
 Property not found in
-API.react.js:5:1,3: ReactElement
+API.react.js:5:1,3: React$Element
 
 App.react.js:36:14,14: number
 This type is incompatible with
