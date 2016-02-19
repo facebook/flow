@@ -4,7 +4,7 @@
 PAGES_CHECKOUT="$HOME/gh-pages"
 
 printf "travis_fold:start:installing_ruby\nInstalling Ruby\n"
-. "$HOME/.rvm/scripts/rvm"
+. "$HOME/.bashrc"
 rvm use 2.2 --install --binary
 printf "travis_fold:end:installing_ruby\n"
 
