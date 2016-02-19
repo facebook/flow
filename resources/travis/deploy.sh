@@ -1,10 +1,10 @@
-#!/bin/sh -e
+#!/bin/bash -e
 # do not set -x or you may expose the secure token in the logs!
 
 PAGES_CHECKOUT="$HOME/gh-pages"
 
 printf "travis_fold:start:installing_ruby\nInstalling Ruby\n"
-. "$HOME/.bashrc"
+source "$HOME/.bashrc"
 rvm use 2.2 --install --binary
 printf "travis_fold:end:installing_ruby\n"
 
