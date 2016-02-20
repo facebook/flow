@@ -1,7 +1,6 @@
 ---
 id: functions
 title: Functions
-layout: docs
 permalink: /docs/functions.html
 prev: objects.html
 next: nullable-types.html

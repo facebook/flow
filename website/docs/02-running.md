@@ -1,7 +1,6 @@
 ---
 id: running
 title: Running Flow code
-layout: docs
 permalink: /docs/running.html
 prev: third-party.html
 next: troubleshooting.html

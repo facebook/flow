@@ -1,7 +1,6 @@
 ---
 id: typeof
 title: Typeof
-layout: docs
 permalink: /docs/typeof.html
 prev: type-aliases.html
 next: operators.html

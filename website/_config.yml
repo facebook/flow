@@ -27,6 +27,12 @@ defaults:
     values:
       layout: post
       is_post: true
+  - scope:
+      path: docs
+      type: pages
+    values:
+      layout: docs
+      section: docs
 
 exclude:
   - README.md

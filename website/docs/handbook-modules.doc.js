@@ -3,7 +3,6 @@
 ---
 id: handbook/modules
 title: Modules
-layout: docs
 permalink: /docs/handbook/modules.html
 ---
 */

@@ -1,7 +1,6 @@
 ---
 id: existing
 title: Running Flow on existing code
-layout: docs
 permalink: /docs/existing.html
 prev: new-project.html
 next: third-party.html

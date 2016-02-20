@@ -1,6 +1,7 @@
 ---
 id: support
 title: Need help?
+section: support
 layout: default
 permalink: /support.html
 ---

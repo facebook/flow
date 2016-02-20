@@ -1,7 +1,6 @@
 ---
 id: declarations
 title: Declarations
-layout: docs
 permalink: /docs/declarations.html
 prev: primitives.html
 next: cli.html

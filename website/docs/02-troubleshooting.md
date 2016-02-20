@@ -1,7 +1,6 @@
 ---
 id: troubleshooting
 title: Troubleshooting
-layout: docs
 permalink: /docs/troubleshooting.html
 prev: running.html
 next: advanced-configuration.html

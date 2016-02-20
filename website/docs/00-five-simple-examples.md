@@ -1,7 +1,6 @@
 ---
 id: five-simple-examples
 title: Five simple examples
-layout: docs
 permalink: /docs/five-simple-examples.html
 prev: getting-started.html
 next: new-project.html
@@ -40,7 +39,7 @@ function foo(x) {
 foo('Hello, world!');
 {% endhighlight %}
 
-We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. One fix for this example would be to call `foo` with an integer instead: 
+We're calling a function that clearly expects a number with a string. Flow detects that and returns an error. One fix for this example would be to call `foo` with an integer instead:
 
 {% highlight javascript linenos=table %}
 /* @flow */

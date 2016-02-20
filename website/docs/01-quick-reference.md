@@ -1,7 +1,6 @@
 ---
 id: quick-reference
 title: Quick Reference
-layout: docs
 permalink: /docs/quick-reference.html
 prev: coming-soon.html
 next: type-annotations.html

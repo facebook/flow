@@ -1,7 +1,6 @@
 ---
 id: type-aliases
 title: Type Aliases
-layout: docs
 permalink: /docs/type-aliases.html
 prev: union-intersection-types.html
 next: typeof.html

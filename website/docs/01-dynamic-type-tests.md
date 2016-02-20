@@ -1,7 +1,6 @@
 ---
 id: dynamic-type-tests
 title: Dynamic Type Tests
-layout: docs
 permalink: /docs/dynamic-type-tests.html
 prev: operators.html
 next: primitives.html

@@ -1,7 +1,6 @@
 ---
 id: variables
 title: Variables
-layout: docs
 permalink: /docs/variables.html
 prev: type-annotations.html
 next: arrays.html

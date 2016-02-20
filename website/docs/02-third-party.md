@@ -1,7 +1,6 @@
 ---
 id: third-party
 title: Checking third-party code
-layout: docs
 permalink: /docs/third-party.html
 prev: existing.html
 next: running.html

@@ -1,7 +1,6 @@
 ---
 id: union-intersection-types
 title: Union and Intersection Types
-layout: docs
 permalink: /docs/union-intersection-types.html
 prev: destructuring.html
 next: type-aliases.html

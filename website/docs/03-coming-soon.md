@@ -1,7 +1,6 @@
 ---
 id: coming-soon
 title: Future Plans
-layout: docs
 permalink: /docs/coming-soon.html
 prev: underscore.html
 next: quick-reference.html

@@ -1,7 +1,6 @@
 ---
 id: operators
 title: Operators
-layout: docs
 permalink: /docs/operators.html
 prev: typeof.html
 next: dynamic-type-tests.html

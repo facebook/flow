@@ -1,7 +1,6 @@
 ---
 id: destructuring
 title: Destructuring
-layout: docs
 permalink: /docs/destructuring.html
 prev: nullable-types.html
 next: union-intersection-types.html

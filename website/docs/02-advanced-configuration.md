@@ -1,7 +1,6 @@
 ---
 id: advanced-configuration
 title: Advanced Configuration
-layout: docs
 permalink: /docs/advanced-configuration.html
 prev: troubleshooting.html
 next: react-example.html

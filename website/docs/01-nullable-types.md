@@ -1,7 +1,6 @@
 ---
 id: nullable-types
 title: Maybe Types
-layout: docs
 permalink: /docs/nullable-types.html
 prev: functions.html
 next: destructuring.html

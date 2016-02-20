@@ -1,7 +1,6 @@
 ---
 id: primitives
 title: Primitives
-layout: docs
 permalink: /docs/primitives.html
 prev: dynamic-type-tests.html
 next: declarations.html

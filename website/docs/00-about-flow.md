@@ -1,7 +1,7 @@
 ---
 id: about-flow
 title: About Flow
-layout: docs
+section: about
 permalink: /docs/about-flow.html
 next: getting-started.html
 ---

@@ -1,7 +1,6 @@
 ---
 id: cli
 title: Using the CLI
-layout: docs
 permalink: /docs/cli.html
 prev: declarations.html
 ---

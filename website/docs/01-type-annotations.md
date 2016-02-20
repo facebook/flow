@@ -1,7 +1,6 @@
 ---
 id: type-annotations
 title: Type Annotations
-layout: docs
 permalink: /docs/type-annotations.html
 prev: quick-reference.html
 next: variables.html
