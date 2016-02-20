@@ -415,7 +415,6 @@ module rec TypeTerm : sig
   and 'a literal =
     | Literal of 'a
     | Truthy
-    | Falsy
     | AnyLiteral
 
   and number_literal = (float * string)

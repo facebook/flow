@@ -67,7 +67,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
     begin match lit with
     | Literal (_, raw) -> ["literal", JSON_String raw]
     | Truthy -> ["refinement", JSON_String "Truthy"]
-    | Falsy -> ["refinement", JSON_String "Falsy"]
     | AnyLiteral -> []
     end
 
@@ -75,7 +74,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
     begin match lit with
     | Literal s -> ["literal", JSON_String s]
     | Truthy -> ["refinement", JSON_String "Truthy"]
-    | Falsy -> ["refinement", JSON_String "Falsy"]
     | AnyLiteral -> []
     end
 
@@ -912,12 +910,10 @@ and dump_t_ =
     | NumT (_, lit) -> Some (match lit with
         | Literal (_, raw) -> spf "NumT(%s)" raw
         | Truthy -> spf "NumT(truthy)"
-        | Falsy -> spf "NumT(0)"
         | AnyLiteral -> "NumT")
     | StrT (_, c) -> Some (match c with
         | Literal s -> spf "StrT(%S)" s
         | Truthy -> spf "StrT(truthy)"
-        | Falsy -> spf "StrT(falsy)"
         | AnyLiteral -> "StrT")
     | BoolT (_, c) -> Some (match c with
         | Some b -> spf "BoolT(%B)" b

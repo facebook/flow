@@ -111,4 +111,12 @@ let tests = [
         break;
     }
   },
+
+  function(x: string): "" {
+    if (x) {
+      return x; // error
+    } else {
+      return x; // no error, inferred to be ""
+    }
+  }
 ];

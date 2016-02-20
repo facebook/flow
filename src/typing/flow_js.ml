@@ -1516,10 +1516,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* summary types forget literal information *)
     (********************************************)
 
-    | (StrT (_, (Literal _ | Truthy | Falsy)), SummarizeT (reason, t)) ->
+    | (StrT (_, (Literal _ | Truthy)), SummarizeT (reason, t)) ->
       rec_unify cx trace (StrT.why reason) t
 
-    | (NumT (_, (Literal _ | Truthy | Falsy)), SummarizeT (reason, t)) ->
+    | (NumT (_, (Literal _ | Truthy)), SummarizeT (reason, t)) ->
       rec_unify cx trace (NumT.why reason) t
 
     | (_, SummarizeT (_, t)) ->
@@ -1746,7 +1746,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let msg = spf "Expected string literal `%s`, got `%s` instead" key x in
           prerr_flow cx trace msg l u
 
-    | (StrT (_, (Truthy | Falsy | AnyLiteral)), UseT SingletonStrT (_, key)) ->
+    | (StrT (_, (Truthy | AnyLiteral)), UseT SingletonStrT (_, key)) ->
       prerr_flow cx trace (spf "Expected string literal `%s`" key) l u
 
     (*********************************)
@@ -1763,7 +1763,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let msg = spf "Expected number literal `%.16g`, got `%.16g` instead" y x in
           prerr_flow cx trace msg l u
 
-    | (NumT (_, (Truthy | Falsy | AnyLiteral)), UseT SingletonNumT (_, (y, _))) ->
+    | (NumT (_, (Truthy | AnyLiteral)), UseT SingletonNumT (_, (y, _))) ->
       prerr_flow cx trace (spf "Expected number literal `%.16g`" y) l u
 
     (**********************************)
@@ -1792,7 +1792,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* check that o has key x *)
       rec_flow cx trace (o, HasOwnPropT(reason_op,x))
 
-    | (StrT (_, (Truthy | Falsy | AnyLiteral)), UseT KeysT _) ->
+    | (StrT (_, (Truthy | AnyLiteral)), UseT KeysT _) ->
       prerr_flow cx trace "Expected string literal" l u
 
     | (KeysT (reason1, o1), _) ->
@@ -3376,8 +3376,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         NumT (reason_op, Literal (~-. value, raw))
       | AnyLiteral
-      | Truthy
-      | Falsy ->
+      | Truthy ->
         l
       in
       rec_flow_t cx trace (num, t_out)
@@ -4782,9 +4781,9 @@ and filter_exists = function
   | SingletonBoolT (r, false)
   | BoolT (r, Some false)
   | SingletonStrT (r, "")
-  | StrT (r, (Literal "" | Falsy))
+  | StrT (r, Literal "")
   | SingletonNumT (r, (0., _))
-  | NumT (r, (Literal (0., _) | Falsy)) -> EmptyT r
+  | NumT (r, Literal (0., _)) -> EmptyT r
 
   (* unknown things become truthy *)
   | MaybeT t -> t
@@ -4803,9 +4802,9 @@ and filter_not_exists t = match t with
   | SingletonBoolT (_, false)
   | BoolT (_, Some false)
   | SingletonStrT (_, "")
-  | StrT (_, (Literal "" | Falsy))
+  | StrT (_, Literal "")
   | SingletonNumT (_, (0., _))
-  | NumT (_, (Literal (0., _) | Falsy)) -> t
+  | NumT (_, Literal (0., _)) -> t
 
   (* truthy things get removed *)
   | SingletonBoolT (r, _)
@@ -4828,8 +4827,8 @@ and filter_not_exists t = match t with
     let reason = reason_of_t t in
     UnionT (reason, UnionRep.make [NullT.why reason; VoidT.why reason])
   | BoolT (r, None) -> BoolT (r, Some false)
-  | StrT (r, AnyLiteral) -> StrT (r, Falsy)
-  | NumT (r, AnyLiteral) -> NumT (r, Falsy)
+  | StrT (r, AnyLiteral) -> StrT (r, Literal "")
+  | NumT (r, AnyLiteral) -> NumT (r, Literal (0., "0"))
 
   (* things that don't track truthiness pass through *)
   | t -> t
@@ -4897,14 +4896,12 @@ and filter_not_undefined = function
 and filter_string_literal expected t = match t with
   | StrT (_, Literal actual) when actual = expected -> t
   | StrT (r, Truthy) when expected <> "" -> StrT (r, Literal expected)
-  | StrT (_, Falsy) when expected = "" -> t
   | StrT (r, AnyLiteral) -> StrT (r, Literal expected)
   | MixedT r -> StrT (r, Literal expected)
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_string_literal expected = function
   | StrT (r, Literal actual) when actual = expected -> EmptyT r
-  | StrT (r, Falsy) when expected = "" -> EmptyT r
   | t -> t
 
 and filter_true = function
