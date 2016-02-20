@@ -34,7 +34,11 @@ deploy:
   repo: facebook/flow
   script: bash -e resources/travis/deploy.sh
   skip_cleanup: true
-  condition: "$TRAVIS_OS_NAME = linux && $OCAML_VERSION = 4.02.1 && $OPAM_VERSION = 1.2.0"
+  on:
+    condition:
+    - $TRAVIS_OS_NAME = linux
+    - $OCAML_VERSION = 4.02.1
+    - $OPAM_VERSION = 1.2.0
 
 notifications:
   email:
