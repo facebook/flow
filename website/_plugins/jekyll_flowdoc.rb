@@ -90,7 +90,7 @@ module Jekyll
           }
         else
           {
-            :value => @markdown.convert(value.strip.gsub(/^\s+/m, '')),
+            :value => @markdown.convert(value.strip.gsub(/^[ \t]+/, '')),
             :range => range
           }
         end
@@ -205,6 +205,7 @@ module Jekyll
     end
 
     def convert(content)
+      content = content.lines.reject { |l| l =~ /^\s*\/\/\s*\$ExpectError/ }.join
       tokens = get_tokens(content)
       errors_json = get_error_json(content)
       errors = get_errors(errors_json)
