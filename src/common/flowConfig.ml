@@ -11,7 +11,7 @@
 open Utils
 open Sys_utils
 
-let version = "0.21.0"
+let version = "0.22.0"
 let flow_ext = ".flow"
 
 let default_temp_dir =

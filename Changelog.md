@@ -1,3 +1,36 @@
+###v0.22.0
+
+Likely to cause new Flow errors:
+- Several updates to Flow's understanding of React's APIs. Some of these updates remove old/deprecated React APIs.
+
+New features:
+- Flow now gives precedence to library definitions over non-@flow implementation files. This means that it should no longer be necessary to specify a `node_modules` dependency in the `[ignore]` section of your `.flowconfig` if you have a library definition defined for that dependency.
+- Significant improvements to `Promise.all`: We now preserve the type of each item in the array passed to `Promise.all()` so that it may be propogated through to the resulting `.then()` handler.
+- We no longer try to parse files that are not marked with an `@flow` pragma. We anticipate this will improve performance for projects with large, non-Flow node_modules directories.
+- Classes with static members are now subtype-compatible with structural object types
+- It is now possible to specify a leading `|` or `&` for type aliases of long unions/intersections. This is useful, as one example, for disjoint unions with a large number of members (where each member sits on a new line):
+
+```javascript
+type MyDisjointUnion =
+  | {type: 'TypeOne', ...}
+  | {type: 'TypeTwo', ...}
+  | {type: 'TypeThree', ...}
+  ...
+;
+```
+
+Bug fixes:
+- Fixed an issue where an intersection of two object types did not always properly combine to match objects with members on both sides (https://github.com/facebook/flow/issues/1327)
+- Fixed an issue where an object of some intersection type could not be used with the spread operator (https://github.com/facebook/flow/issues/1329)
+- Fixed an issue where refinement-testing on an object of an intersection type wouldn't always work (https://github.com/facebook/flow/issues/1366)
+- Fixed an issue where an intersection of function types with a common return type should type check against function types with union of param types
+- Fixed an issue where refining `obj['abc']` didn't behave quite the same as refining `obj.abc`
+- Fixed an issue where usage of `flow get-def` on the left-hand side of a `require()` wouldn't hop through the `require()` and to the actual location of the definition
+- Fixed an issue where Flow would not give a clear error when trying to use `import type` to get a non-type export
+- Fixed an issue `flow dump-types --json` was not as robust as it could be against outputting valid JSON in the event of certain kinds of errors
+- Fixed an issue where Flow would not give a parse error if multiple ES exports with the same name are exported from a single ES module
+- `declare class` declarations now properly define a built-in `name` property (like real class declarations do)
+
 ###v0.21.0
 
 Likely to cause new Flow errors:
