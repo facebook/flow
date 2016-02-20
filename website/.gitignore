@@ -1,7 +1,5 @@
 .DS_STORE
 _site/
-Gemfile
-Gemfile.lock
 *.swo
 *.swp
 .jekyll-metadata

@@ -10,7 +10,8 @@ timezone: America/Los_Angeles
 lsi: false
 highlighter: rouge
 
-gems: [jekyll-paginate]
+gems:
+- jekyll-paginate
 
 paginate: 5
 paginate_path: "/blog/page:num/"
@@ -26,3 +27,9 @@ defaults:
     values:
       layout: post
       is_post: true
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor
