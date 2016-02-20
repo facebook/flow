@@ -12,7 +12,7 @@ env:
   - OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
   - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
   global:
-    # GH_BOT_TOKEN
+    # GH_BOT_TOKEN (facebook-github-bot-0)
     secure: I1W8xlf8Ojxkc92n8Rb9AGX7kdCk0DeWEPd6PKRrGQO0FtyCkcvxNo+wp6ApQI7+NqkuFRVngHVOQOd3AqR57IFiSjZ+Cj/BJyg6WOo92olkAAP0OWihmCj53d2xDpp7LaM99srPbZXYE5vSTTKBX/5Soz9UghzsI5Q1ECmV5fU=
 
 matrix:
@@ -29,13 +29,33 @@ addons:
 
 script: bash -ex .travis-ci.sh
 
+before_deploy: bash -e resources/travis/zip_release.sh
+
 deploy:
-  provider: script
+# upload releases to github, from both Mac and Linux
+- provider: releases
+  api_key:
+    # facebook-github-bot-0
+    secure: I1W8xlf8Ojxkc92n8Rb9AGX7kdCk0DeWEPd6PKRrGQO0FtyCkcvxNo+wp6ApQI7+NqkuFRVngHVOQOd3AqR57IFiSjZ+Cj/BJyg6WOo92olkAAP0OWihmCj53d2xDpp7LaM99srPbZXYE5vSTTKBX/5Soz9UghzsI5Q1ECmV5fU=
+  repo: facebook/flow
+  skip_cleanup: true
+  file_glob: true
+  file: flow-*.zip
+  on:
+    tags: true
+    condition:
+    - $OCAML_VERSION = 4.02.1
+    - $OPAM_VERSION = 1.2.0
+
+# Deploy the website
+- provider: script
   repo: facebook/flow
   script: bash -e resources/travis/deploy.sh
   skip_cleanup: true
   on:
+    all_branches: true
     condition:
+    - $TRAVIS_TAG != "" || $TRAVIS_BRANCH = "master"
     - $TRAVIS_OS_NAME = linux
     - $OCAML_VERSION = 4.02.1
     - $OPAM_VERSION = 1.2.0
