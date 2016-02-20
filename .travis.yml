@@ -27,7 +27,9 @@ addons:
     packages:
     - libelf-dev
 
-script: bash -ex .travis-ci.sh
+install: bash -e resources/travis/install_deps.sh
+
+script: bash -e .travis-ci.sh
 
 before_deploy: bash -e resources/travis/zip_release.sh
 
