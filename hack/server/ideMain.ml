@@ -16,11 +16,15 @@ type env = {
    * sent us RunIdeCommands and StopIdeCommands, and it's safe to use
    * data from shared heap. *)
   run_ide_commands : bool;
+  (* IDE process's version of ServerEnv.file_info, synchronized periodically
+   * from typechecker process. *)
+  files_info : FileInfo.t Relative_path.Map.t;
 }
 
 let empty_env = {
   client = None;
   run_ide_commands = false;
+  files_info = Relative_path.Map.empty;
 }
 
 let get_ready_channel monitor_ic client typechecker =
@@ -72,7 +76,7 @@ let get_call_response env id call =
   if not env.run_ide_commands then
     IdeJsonUtils.json_string_of_server_busy id
   else
-    IdeServerCall.get_call_response id call
+    IdeServerCall.get_call_response id call env.files_info
 
 let handle_client_request env (ic, oc) =
   Hh_logger.log "Handling client request";
@@ -99,6 +103,15 @@ let handle_typechecker_message env typechecker_process =
   | IdeProcessMessage.StopIdeCommands ->
     IdeProcessPipe.send typechecker_process IdeProcessMessage.IdeCommandsDone;
     { env with run_ide_commands = false }
+  | IdeProcessMessage.SyncFileInfo updated_files_info ->
+    Hh_logger.log "Received file info updates for %d files"
+      (Relative_path.Map.cardinal updated_files_info);
+    let new_files_info = Relative_path.Map.merge begin fun _ x y ->
+        Option.merge x y (fun _ y -> y)
+      end
+      env.files_info
+      updated_files_info in
+    { env with files_info = new_files_info }
 
 let handle_gone_client env =
   Hh_logger.log "Client went away";

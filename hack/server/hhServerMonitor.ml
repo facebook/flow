@@ -73,6 +73,10 @@ let monitor_daemon_main (options: ServerArgs.options) =
   let www_root = (ServerArgs.root options) in
   ignore @@ Sys_utils.setsid ();
 
+  (* Force hhi files to be extracted and their location saved before workers
+   * fork, so everyone can know about the same hhi path. *)
+  ignore (Hhi.get_hhi_root());
+
   Relative_path.set_path_prefix Relative_path.Root www_root;
   let config = ServerConfig.(sharedmem_config (load filename options)) in
   SharedMem.init config;

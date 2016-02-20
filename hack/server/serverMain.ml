@@ -18,12 +18,14 @@ type recheck_loop_stats = {
   rechecked_count : int;
   (* includes dependencies *)
   total_rechecked_count : int;
+  reparsed_files : Relative_path.Set.t;
 }
 
 let empty_recheck_loop_stats = {
   rechecked_batches = 0;
   rechecked_count = 0;
   total_rechecked_count = 0;
+  reparsed_files = Relative_path.Set.empty;
 }
 
 (*****************************************************************************)
@@ -56,9 +58,6 @@ module Program =
   struct
     let preinit () =
       HackSearchService.attach_hooks ();
-      (* Force hhi files to be extracted and their location saved before workers
-       * fork, so everyone can know about the same hhi path. *)
-      ignore (Hhi.get_hhi_root());
       Sys_utils.set_signal Sys.sigusr1
         (Sys.Signal_handle Typing.debug_print_last_pos);
       Sys_utils.set_signal Sys.sigusr2
@@ -178,15 +177,12 @@ let rec recheck_loop acc genv env =
       rechecked_count =
         acc.rechecked_count + Relative_path.Set.cardinal rechecked;
       total_rechecked_count = acc.total_rechecked_count + total_rechecked;
+      reparsed_files = Relative_path.Set.union updates acc.reparsed_files;
     } in
     recheck_loop acc genv env
   end
 
-let recheck_loop = recheck_loop {
-  rechecked_batches = 0;
-  rechecked_count = 0;
-  total_rechecked_count = 0;
-}
+let recheck_loop = recheck_loop empty_recheck_loop_stats
 
 (** Retrieve channels to client from monitor process. *)
 let get_client_channels parent_in_fd =
@@ -205,10 +201,28 @@ let join_ide_process ide_process =
     | IdeProcessMessage.IdeCommandsDone -> ();
   end
 
+let ide_sync_files_info ide_process files_info =
+  Option.iter ide_process begin fun x ->
+    IdeProcessPipe.send x (IdeProcessMessage.SyncFileInfo files_info);
+  end
+
+let ide_update_files_info ide_process files_info updated_files_info =
+  Option.iter ide_process begin fun x ->
+    let updated_files_info = Relative_path.Set.fold begin fun path acc ->
+        match Relative_path.Map.get path files_info with
+        | Some file_info -> Relative_path.Map.add path file_info acc
+        | None -> acc
+      end
+      updated_files_info
+      Relative_path.Map.empty in
+    IdeProcessPipe.send x (IdeProcessMessage.SyncFileInfo updated_files_info);
+  end
+
 let serve genv env in_fd _ =
   let env = ref env in
   let last_stats = ref empty_recheck_loop_stats in
   let recheck_id = ref (Random_id.short_string ()) in
+  ide_sync_files_info genv.ide_process !env.files_info;
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
     run_ide_process genv.ide_process;
@@ -240,7 +254,9 @@ let serve genv env in_fd _ =
         stats.rechecked_batches
         stats.rechecked_count
         stats.total_rechecked_count;
-      Hh_logger.log "Recheck id: %s" !recheck_id
+      Hh_logger.log "Recheck id: %s" !recheck_id;
+      ide_update_files_info
+        genv.ide_process !env.files_info stats.reparsed_files
     end;
     last_stats := stats;
     if has_client then
@@ -293,7 +309,6 @@ let setup_server options ide_process =
    * overhead *)
   let gc_control = Gc.get () in
   Gc.set {gc_control with Gc.max_overhead = 200};
-  Relative_path.set_path_prefix Relative_path.Root root;
   let config = ServerConfig.(load filename options) in
   let {ServerLocalConfig.
     cpu_priority;

@@ -10,4 +10,8 @@
 
 open IdeJson
 
-val get_call_response: call_id -> call_type -> string
+val get_call_response:
+  call_id ->
+  call_type ->
+  FileInfo.t Relative_path.Map.t ->
+  string
