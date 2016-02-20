@@ -8,6 +8,10 @@ case "$TRAVIS_OS_NAME" in
     export PATH="$HOME/usr/bin:$PATH"
     eval "$(opam config env)"
     printf "Using ocaml %s and opam %s\n" "$(ocaml -vnum)" "$(opam --version)"
+
+    # For some reason the Linux containers start killing the tests if too many
+    # tests are run in parallel. Luckily we can easily configure that here
+    export FLOW_RUNTESTS_PARALLELISM=4
     ;;
 esac
 
