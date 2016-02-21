@@ -2,9 +2,17 @@ require 'octokit'
 
 module Jekyll
   class FlowGitHubGenerator < Jekyll::Generator
+    def self.latest_release(repo)
+      @releases ||= Hash.new do |hash, key|
+        Jekyll.logger.info "GitHub Query:", "latest releases for #{key}"
+        hash[key] = Octokit.latest_release(key)
+      end
+      @releases[repo]
+    end
+
     def generate(site)
       repo = site.config['repository']
-      release = Octokit.latest_release(repo)
+      release = self.class.latest_release(repo)
       tag = release.tag_name
 
       # we generate these URLs manually instead of using
