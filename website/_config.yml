@@ -10,6 +10,8 @@ timezone: America/Los_Angeles
 lsi: false
 highlighter: rouge
 
+repository: facebook/flow
+
 gems:
 - jekyll-paginate
 
