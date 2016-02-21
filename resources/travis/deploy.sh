@@ -22,8 +22,8 @@ mkdir -p "$PAGES_CHECKOUT"
 # doesn't use `clone` to avoid writing the token to disk
 git -C "$PAGES_CHECKOUT" init
 git -C "$PAGES_CHECKOUT" checkout -b gh-pages
-git -C "$PAGES_CHECKOUT" config user.name "facebook-github-bot-0"
-git -C "$PAGES_CHECKOUT" config user.email "githubbot+0@fb.com"
+git -C "$PAGES_CHECKOUT" config user.name "flow-bot"
+git -C "$PAGES_CHECKOUT" config user.email "flow-bot+docs@fb.com"
 git -C "$PAGES_CHECKOUT" pull -q --depth 20 "https://github.com/${TRAVIS_REPO_SLUG}.git" gh-pages
 printf "travis_fold:end:clone_gh_pages\n"
 
