@@ -95,8 +95,9 @@ module Jekyll
     end
 
     def unindent(str)
-      indent = str.scan(/^ \t*/).min_by { |l| l.length }
-      str.gsub(/^#{indent}/, "")
+      str = str.gsub(/\A\n|\n\z/m, '')
+      indent = str.gsub(/\n+/m, "\n").scan(/^[ \t]*/).min_by { |l| l.length }
+      str.gsub!(/^#{indent}/, "")
     end
 
     def convert_comment(comment)
