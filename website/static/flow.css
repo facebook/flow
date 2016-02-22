@@ -85,15 +85,13 @@ code {
     border-radius: 3px;
 }
 
+.highlight {
+  margin: 20px 0;
+}
+
 .highlight pre {
     font-size: 13px;
     line-height: 20px;
-    padding: 0 0 20px 20px;
-}
-
-.highlighttable {
-    margin-left: 20px;
-    margin-bottom: 20px;
 }
 
 .highlighttable .highlight pre {
@@ -112,7 +110,7 @@ code {
 }
 
 .highlight pre code, .highlighttable {
-    overflow-x: scroll;
+    overflow-x: auto;
     display: block;
     padding: 0;
     font-size: 13px;
@@ -128,6 +126,11 @@ code {
     white-space: pre;
 }
 
+
+.highlight .gutter,
+.highlight .code {
+  padding: 0 0 0 20px;
+}
 
 .lineno {
     color: rgb(214, 139, 0);
@@ -149,6 +152,7 @@ code {
     background-color: hsla(8, 75%, 54%, 0.1);
 }
 
+pre.code + .highlight + .highlight,
 .highlight + .highlight + .highlight,
 .highlighttable + .highlight + .highlight {
     margin-top: -20px;

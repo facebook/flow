@@ -3,10 +3,10 @@ pre, .errmsg, .doc code {
 }
 
 pre.code {
-  overflow-x: scroll;
+  overflow-x: auto;
   display: block;
   font-size: 13px;
-  margin: 1em 0;
+  margin: 20px 0;
   border-left: 4px solid rgb(214, 139, 0);
   padding: 5px 10px;
   box-sizing: border-box;
@@ -31,8 +31,10 @@ pre.code {
   opacity: 0.5;
 }
 
+.cm, /* pygments Comment.Multiline */
 .comment {
-  color: #ccc;
+  color: #666666;
+  font-style: italic
 }
 
 .doc {
@@ -64,13 +66,15 @@ pre.code {
 }
 
 .main-selected {
-  background-color: rgba(255, 100, 100, 0.3);
+  background-color: rgba(255, 100, 100, 0.6);
   border-bottom: none;
 }
 
 .errmsg {
   position: absolute;
   width: 200px;
-  text-align: right;
   font-size: 12px;
+  padding: 7px 10px;
+  border: 1px solid hsl(19, 100%, 42%);
+  background-color: #FAEBE6; /* hsla(8, 75%, 54%, 0.1) over white */
 }

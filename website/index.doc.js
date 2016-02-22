@@ -1,49 +1,54 @@
+/* @flow */
+/*
 ---
 layout: default
 title: Flow | A static type checker for JavaScript
 id: home
 hero: true
 ---
+*/
 
-##What is Flow?
+/*
+## What is Flow?
 
 Flow is a static type checker, designed to find type errors in JavaScript programs:
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
+// @flow
 function foo(x) {
   return x * 10;
 }
 foo('Hello, world!');
-{% endhighlight %}
 
+/*
 ```bash
 $> flow
 ```
 ```bbcode
-hello.js:5:5,19: string
-This type is incompatible with
-  hello.js:3:10,15: number
+  3:   return x * 10;
+              ^ string. This type is incompatible with
+  3:   return x * 10;
+              ^^^^^^ number
 ```
 
 Flow also lets you gradually evolve JavaScript code into typed code:
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
-function foo(x: string, y: number): string {
+// @flow
+function bar(x: string, y: number): string {
   return x.length * y;
 }
-foo('Hello', 42);
-{% endhighlight %}
+bar('Hello', 42);
 
+/*
 ```bash
 $> flow
 ```
-
 ```bbcode
-hello.js:3:10,21: number
-This type is incompatible with
-  hello.js:2:37,42: string
+  3:   return x.length * y;
+              ^^^^^^^^^^^^ number. This type is incompatible with
+  2: function bar(x: string, y: number): string {
+                                         ^^^^^^ string
 ```
 
 Typed Flow code easily transforms down to regular JavaScript, so it runs anywhere.
@@ -65,3 +70,4 @@ We first introduced Flow at the <a href="https://www.facebook.com/atscale2014">@
 Start with our <a href="/docs/getting-started.html">Getting Started</a> guide to download and try Flow yourself. Flow is open-source, so you can also start with the code on the <a href="https://github.com/facebook/flow">GitHub repo</a>.
 
 Flow is still evolving: it is already used within Facebook, and we want to continue to develop it in the open. We hope it will be useful for other JavaScript projects, so please try it out, join the community and give us feedback!
+*/

@@ -1,17 +1,20 @@
 function highlightErrors(errors) {
   var errorMessage = $('<div class="errmsg"></div>');
-  $(document.body).append(errorMessage);
+  var timeout;
+  var hoverStack = [];
 
-  $('.error').mouseenter(function() {
-    var eID = $(this).attr('data-error-id');
-    var mID = $(this).attr('data-message-id');
+  var onenter = function(elem) {
+    clearTimeout(timeout);
+    var offset = elem.offset();
+    var eID = elem.attr('data-error-id');
+    var mID = elem.attr('data-message-id');
 
-    errorMessage.css({top: $(this).offset().top});
+    errorMessage.css({top: offset.top + 25, left: offset.left});
     $('.selected').removeClass('selected');
     $('.main-selected').removeClass('main-selected');
 
     $('[data-error-id=' + eID +']').addClass('selected');
-    $(this).addClass('main-selected');
+    elem.addClass('main-selected');
 
     errors.forEach(function(error) {
       if (error.id === eID) {
@@ -29,10 +32,28 @@ function highlightErrors(errors) {
         });
       }
     });
+    errorMessage.show();
+  }
+
+  $(document.body).append(errorMessage);
+
+  $('.error')
+  .mouseover(function() {
+    var elem = $(this);
+    hoverStack.push(elem);
+    onenter(hoverStack[0]);
   })
-  .mouseleave(function() {
-    $('.selected').removeClass('selected');
-    $('.main-selected').removeClass('main-selected');
-    errorMessage.empty();
+  .mouseout(function() {
+    hoverStack.pop();
+    if (hoverStack.length > 0) {
+      onenter(hoverStack[0]);
+    } else {
+      timeout = setTimeout(function() {
+        $('.selected').removeClass('selected');
+        $('.main-selected').removeClass('main-selected');
+        errorMessage.empty();
+        errorMessage.hide()
+      }, 100);
+    }
   });
 }

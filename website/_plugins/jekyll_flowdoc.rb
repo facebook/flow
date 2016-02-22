@@ -73,30 +73,47 @@ module Jekyll
 
     def convert_token(token)
       type, range, context = token.values_at('type', 'range', 'context')
-      {
-        :start => "<span class=\"#{context} #{type}\">",
-        :end => "</span>",
-        :range => range
-      }
+      if type == 'T_EOF'
+        {
+          :value => "",
+          :range => range
+        }
+      else
+        {
+          :start => "<span class=\"#{context} #{type}\">",
+          :end => "</span>",
+          :range => range
+        }
+      end
+    end
+
+    def is_ignored_comment(comment)
+      type, loc, value = comment.values_at('type', 'loc', 'value')
+      start = loc['start']
+      type == 'Block' && start['column'] == 0 &&
+        ((start['line'] == 1 && value.strip == "@flow") || value =~ YAML_REGEX)
+    end
+
+    def unindent(str)
+      indent = str.scan(/^ \t*/).min_by { |l| l.length }
+      str.gsub(/^#{indent}/, "")
     end
 
     def convert_comment(comment)
       type, loc, value, range = comment.values_at('type', 'loc', 'value', 'range')
-      if type == 'Block' && loc['start']['column'] == 0
-        if value == " @flow " || value =~ YAML_REGEX
-          {
-            :value => "",
-            :range => range
-          }
-        else
-          {
-            :value => @markdown.convert(value.strip.gsub(/^[ \t]+/, '')),
-            :range => range
-          }
-        end
+      if is_ignored_comment(comment)
+        {
+          :value => "",
+          :range => range
+        }
+      elsif type == 'Block' && loc['start']['column'] == 0
+        {
+          :value => @markdown.convert(unindent(value)),
+          :range => range
+        }
       else
         {
-          :start => '<span class="comment">',
+          :start => '<span class="comment %s">' % [type.downcase],
           :end => '</span>',
           :range => range
         }
@@ -192,7 +209,8 @@ module Jekyll
                 "data-error-id=\"#{e_id}\" " +
                 "data-message-id=\"#{message['id']}\">",
             :end => '',
-            :range => [start_offset, start_offset]
+            :range => [start_offset, start_offset],
+            :length => end_offset - start_offset
           })
           errors.push({
             :start => '',
@@ -209,20 +227,31 @@ module Jekyll
       tokens = get_tokens(content)
       errors_json = get_error_json(content)
       errors = get_errors(errors_json)
-      items = (tokens + errors).sort_by {|item| item[:range]}
+      items = (tokens + errors).sort_by {|item|
+        # sort by position, then by :length (longest to shortest), which sorts
+        # the opening <span> tags on errors.
+        [item[:range], -1 * (item[:length] || 0)
+      ]}
+      sections = []
       out = ""
       last_loc = 0
       in_code = false
       items.each do |item|
         start_loc, end_loc = item[:range]
         is_markdown = item.has_key?(:value)
-        out += '</pre>' if in_code && is_markdown
+        if in_code && is_markdown
+          sections.push([:code, out])
+          out = ""
+        end
         out += content.slice(last_loc, start_loc - last_loc)
         if is_markdown
           out += item[:value]
           in_code = false
         else
-          out += '<pre class="code">' if not in_code
+          if not in_code
+            sections.push([:html, out])
+            out = ""
+          end
           out += item[:start]
           out += content.slice(start_loc, end_loc - start_loc)
           out += item[:end]
@@ -231,7 +260,27 @@ module Jekyll
         last_loc = end_loc
       end
       out += content.slice(last_loc, content.length - last_loc)
-      out += '</pre>' if in_code
+      sections.push([in_code ? :code : :html, out])
+
+      outs = sections.map do |type, content|
+        if type == :code
+          lines = content.lines.count
+          '<figure class="highlight">' +
+            '<table class="highlighttable" style="border-spacing: 0"><tbody><tr>' +
+              '<td class="gutter gl" style="text-align: right">' +
+                '<pre class="lineno">' +
+                  (1..lines).to_a.join("\n") +
+                '</pre>' +
+              '</td>' +
+              '<td class="code"><pre>' + content + '</pre></td>' +
+            '</tr></tbody></table>' +
+          '</figure>'
+        else
+          content
+        end
+      end
+
+      out = outs.join
       out += '<script src="//code.jquery.com/jquery-git2.min.js"></script>'
       out += '<script src="/static/dhtml.js"></script>'
       out += "<script>highlightErrors(#{JSON.generate(errors_json)})</script>"
