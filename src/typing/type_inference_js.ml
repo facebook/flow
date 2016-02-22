@@ -4470,7 +4470,8 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
               | Some (Attribute.Literal (loc, lit)) ->
                   literal cx loc lit
               | Some (Attribute.ExpressionContainer (_, {
-                  ExpressionContainer.expression = Some (loc, e)
+                  ExpressionContainer.expression =
+                    ExpressionContainer.Expression (loc, e)
                 })) ->
                   expression cx type_params_map (loc, e)
               | _ ->
@@ -4568,7 +4569,8 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
               | Some (Attribute.Literal (loc, lit)) ->
                   literal cx loc lit
               | Some (Attribute.ExpressionContainer (_, {
-                  ExpressionContainer.expression = Some (loc, e)
+                  ExpressionContainer.expression =
+                    ExpressionContainer.Expression (loc, e)
                 })) ->
                   expression cx type_params_map (loc, e)
               | _ ->
@@ -4616,11 +4618,12 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
 
 and jsx_body cx type_params_map = Ast.JSX.(function
   | _, Element e -> jsx cx type_params_map e
-  | loc, ExpressionContainer ec -> (
-      let { ExpressionContainer.expression = ex } = ec in
+  | _, ExpressionContainer ec -> (
+      let open ExpressionContainer in
+      let { expression = ex } = ec in
       match ex with
-        | Some (loc, e) -> expression cx type_params_map (loc, e)
-        | None -> EmptyT (mk_reason "empty jsx body" loc)
+        | Expression (loc, e) -> expression cx type_params_map (loc, e)
+        | EmptyExpression loc -> EmptyT (mk_reason "empty jsx body" loc)
     )
   | loc, Text _ -> StrT.at loc (* TODO: create StrT (..., Literal ...)) *)
 )

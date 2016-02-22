@@ -3881,8 +3881,10 @@ end = struct
       let start_loc = Peek.loc env in
       Expect.token env T_LCURLY;
       let expression = if Peek.token env = T_RCURLY
-        then None
-        else Some (Parse.expression env) in
+        then
+          let empty_loc = Loc.btwn_exclusive start_loc (Peek.loc env) in
+          JSX.ExpressionContainer.EmptyExpression empty_loc
+        else JSX.ExpressionContainer.Expression (Parse.expression env) in
       let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
       Eat.pop_lex_mode env;
@@ -3958,8 +3960,13 @@ end = struct
           match Peek.token env with
           | T_LCURLY ->
               let loc, expression_container = expression_container env in
-              if expression_container.JSX.ExpressionContainer.expression = None
-              then error env Error.JSXAttributeValueEmptyExpression;
+              begin
+                let open JSX.ExpressionContainer in
+                match expression_container.expression with
+                | EmptyExpression _ ->
+                    error env Error.JSXAttributeValueEmptyExpression;
+                | _ -> ()
+              end;
               loc, Some (JSX.Attribute.ExpressionContainer (loc, expression_container))
           | T_JSX_TEXT (loc, value, raw) as token ->
               Expect.token env token;

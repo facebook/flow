@@ -67,6 +67,12 @@ let btwn loc1 loc2 = {
   _end = loc2._end;
 }
 
+let btwn_exclusive loc1 loc2 = {
+  source = loc1.source;
+  start = loc1._end;
+  _end = loc2.start;
+}
+
 (* Returns true if loc1 entirely overlaps loc2 *)
 let contains loc1 loc2 =
   loc1.source = loc2.source &&

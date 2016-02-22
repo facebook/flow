@@ -803,8 +803,11 @@ and JSX : sig
 
   module ExpressionContainer : sig
     type t = {
-      expression: Expression.t option;
+      expression: expression;
     }
+    and expression =
+    | Expression of Expression.t
+    | EmptyExpression of Loc.t
   end
 
   module Text : sig

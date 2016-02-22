@@ -1115,13 +1115,9 @@ end with type t = Impl.t) = struct
 
   and jsx_expression_container (loc, expr) = JSX.ExpressionContainer.(
     let expression = match expr.expression with
-    | Some expr -> expression expr
-    | None ->
-        (* I think the JSXEmptyExpression is a little stupid...I think null
-         * would be a better choice but oh well. Anyway, the location for an
-         * empty expression doesn't really make sense, so this is as good a
-         * choice as any *)
-        node "JSXEmptyExpression" loc [||]
+    | Expression expr -> expression expr
+    | EmptyExpression empty_loc ->
+        node "JSXEmptyExpression" empty_loc [||]
     in
     node "JSXExpressionContainer" loc [|
       "expression", expression;

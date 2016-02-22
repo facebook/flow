@@ -1856,6 +1856,56 @@ module.exports = {
         }
       },
     },
+    'JSX Syntax': {
+      '(<div>{}</div>)': {
+        'body.0.expression.children': [
+          {
+            'type': 'JSXExpressionContainer',
+            'loc.start.column': 6,
+            'loc.end.column': 8,
+            'range': [6, 8],
+            'expression': {
+              'type': 'JSXEmptyExpression',
+              'loc.start.column': 7,
+              'loc.end.column': 7,
+              'range': [7, 7]
+            }
+          }
+        ]
+      },
+      '(<div>{ }</div>)': {
+        'body.0.expression.children': [
+          {
+            'type': 'JSXExpressionContainer',
+            'loc.start.column': 6,
+            'loc.end.column': 9,
+            'range': [6, 9],
+            'expression': {
+              'type': 'JSXEmptyExpression',
+              'loc.start.column': 7,
+              'loc.end.column': 8,
+              'range': [7, 8]
+            }
+          }
+        ]
+      },
+      '(<div>{\n\n}</div>)': {
+        'body.0.expression.children': [
+          {
+            'type': 'JSXExpressionContainer',
+            'loc.start.column': 6,
+            'loc.end.column': 1,
+            'range': [6, 10],
+            'expression': {
+              'type': 'JSXEmptyExpression',
+              'loc.start.column': 7,
+              'loc.end.column': 0,
+              'range': [7, 9]
+            }
+          }
+        ]
+      }
+    },
     'Invalid JSX Syntax': {
       '(<div />) < x;': {
         'errors': {
