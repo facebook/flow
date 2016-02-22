@@ -1,5 +1,7 @@
 function highlightErrors(errors) {
   var errorMessage = $('<div class="errmsg"></div>');
+  errorMessage.hide();
+
   var timeout;
   var hoverStack = [];
 
@@ -9,7 +11,7 @@ function highlightErrors(errors) {
     var eID = elem.attr('data-error-id');
     var mID = elem.attr('data-message-id');
 
-    errorMessage.css({top: offset.top + 25, left: offset.left});
+    errorMessage.css({top: offset.top + elem.height() + 5, left: offset.left});
     $('.selected').removeClass('selected');
     $('.main-selected').removeClass('main-selected');
 

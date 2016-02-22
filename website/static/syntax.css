@@ -72,7 +72,7 @@ pre.code {
 
 .errmsg {
   position: absolute;
-  width: 200px;
+  max-width: 450px;
   font-size: 12px;
   padding: 7px 10px;
   border: 1px solid hsl(19, 100%, 42%);
