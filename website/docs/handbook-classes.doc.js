@@ -114,7 +114,7 @@ class E {
 }
 
 // $ExpectError
-var c: C = new E("hi"); // nope, E is incompatible with C
+var eAsC: C = new E("hi"); // nope, E is incompatible with C
 
 /*
   However, [Object](../object.html#_) and [Interface](../interface.html#_) types
@@ -261,6 +261,7 @@ var readOnlyMapOfA: ReadOnlyMap<string, A> = readOnlyMapOfB;
 */
 
 class ThisA {
+  // $ExpectError
   x: this;                            // error: input/output position
   foo(): this { return this; }        // ok
   // $ExpectError
