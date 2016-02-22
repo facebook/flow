@@ -4,8 +4,11 @@ module Jekyll
   class FlowGitHubGenerator < Jekyll::Generator
     def self.latest_release(repo)
       @releases ||= Hash.new do |hash, key|
-        Jekyll.logger.info "GitHub Query:", "latest releases for #{key}"
-        hash[key] = Octokit.latest_release(key)
+        access_token = ENV['GH_BOT_TOKEN']
+        authed = access_token.nil? ? "" : " (with auth)"
+        Jekyll.logger.info "GitHub Query:", "latest release for #{key}#{authed}"
+        client = Octokit::Client.new(:access_token => access_token)
+        hash[key] = client.latest_release(key)
       end
       @releases[repo]
     end
