@@ -608,7 +608,7 @@ let rec convert cx type_params_map = Ast.Type.(function
       (* $Subtype<T> acts as any over subtypes of T *)
       | "$Subtype" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
-          LowerBoundT (convert cx type_params_map (List.hd typeParameters))
+          AnyWithUpperBoundT (convert cx type_params_map (List.hd typeParameters))
         )
 
       (* $Shape<T> matches the shape of T *)
@@ -5476,7 +5476,7 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
   Flow_js.mk_tvar_where cx reason (fun t ->
     let get_prop_u =
       if is_cond
-      then LookupT (reason, None, [], name, LowerBoundT t)
+      then LookupT (reason, None, [], name, AnyWithUpperBoundT t)
       else GetPropT (reason, (prop_reason, name), t)
     in
     Flow_js.flow cx (tobj, get_prop_u)

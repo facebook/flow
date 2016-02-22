@@ -161,7 +161,7 @@ let rec gc cx state = function
   | UpperBoundT (t) ->
       gc cx state t
 
-  | LowerBoundT (t) ->
+  | AnyWithUpperBoundT (t) ->
       gc cx state t
 
   | AnyObjT _

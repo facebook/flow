@@ -1636,15 +1636,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* upper and lower any types *)
     (*****************************)
 
-    (** UpperBoundT and LowerBoundT are very useful types that concisely model
-        subtyping constraints without introducing unwanted effects: they can
-        appear on both sides of a type, but only have effects in one of those
-        sides. In some sense, they are liked bounded AnyT: indeed, AnyT has the
-        same behavior as UpperBoundT(EmptyT) and LowerBoundT(MixedT). Thus,
-        these types can be used instead of AnyT when some precise typechecking
-        is required without overconstraining the system. A completely static
-        alternative would be achieved with bounded type variables, which Flow
-        does not support yet. **)
+    (** UpperBoundT and AnyWithUpperBoundT are very useful types that concisely
+        model subtyping constraints without introducing unwanted effects: they
+        can appear on both sides of a type, but only have effects in one of
+        those sides. In some sense, they are liked bounded AnyT: indeed, AnyT
+        has the same behavior as UpperBoundT(EmptyT) and
+        AnyWithUpperBoundT(MixedT). Thus, these types can be used instead of
+        AnyT when some precise typechecking is required without overconstraining
+        the system. A completely static alternative would be achieved with
+        bounded type variables, which Flow does not support yet. **)
 
     | (UpperBoundT t, _) ->
       rec_flow cx trace (t,u)
@@ -1652,10 +1652,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, UseT UpperBoundT _) ->
       ()
 
-    | (LowerBoundT _, _) ->
+    | (AnyWithUpperBoundT _, _) ->
       ()
 
-    | (_, UseT LowerBoundT t) ->
+    | (_, UseT AnyWithUpperBoundT t) ->
       rec_flow_t cx trace (l, t)
 
     (*********************)
@@ -2668,9 +2668,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let pmap = match strict, t with
         (* t = UpperBoundT _ means that the lookup is trying to write t, rather
            than read t. Existing places that play a role here are set_prop and
-           get_prop, which use UpperBoundT and LowerBoundT, respectively. The
-           general pattern has been used previously, e.g. to distinguish element
-           writes from reads.
+           get_prop, which use UpperBoundT and AnyWithUpperBoundT, respectively.
+           The general pattern has been used previously, e.g. to distinguish
+           element writes from reads.
 
            strict = Some _ means that we want to throw errors when x is not
            found. Some lookups are non-strict (e.g. when we want to enforce
@@ -3043,7 +3043,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjT _, GetElemT(reason_op,key,tout))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
+      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithUpperBoundT tout))
 
     (* Since we don't know the type of the element, flow it to `AnyT`. This
        could go through `ElemT` like `ObjT` does, but this is a shortcut. *)
@@ -3066,19 +3066,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ArrT (_, _, []), GetElemT(reason_op, key,tout))
       ->
       let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT(reason_op, l, LowerBoundT tout));
+      rec_flow cx trace (num, ElemT(reason_op, l, AnyWithUpperBoundT tout));
       rec_flow_t cx trace (key, num)
 
     | (ArrT _, GetElemT(reason_op, key,tout))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, LowerBoundT tout))
+      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithUpperBoundT tout))
 
     | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t)) ->
       let reason_x = replace_reason (spf "property `%s`" x) reason_x in
       (match t with
       | UpperBoundT tin ->
           rec_flow cx trace (o, SetPropT(reason_op, (reason_x, x), tin))
-      | LowerBoundT tout ->
+      | AnyWithUpperBoundT tout ->
           rec_flow cx trace (o, GetPropT(reason_op, (reason_x, x), tout))
       | _ -> assert false)
 
@@ -3109,7 +3109,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       (match t with
       | UpperBoundT tin -> rec_flow_t cx trace (tin, value)
-      | LowerBoundT tout -> rec_flow_t cx trace (value, tout)
+      | AnyWithUpperBoundT tout -> rec_flow_t cx trace (value, tout)
       | _ -> assert false)
 
     | (ArrT _, GetPropT(reason_op, (_, "constructor"), tout)) ->
@@ -3731,8 +3731,8 @@ and err_operation = function
   | ConstructorT _ -> "Constructor cannot be called on"
   | GetElemT _ -> "Computed property/element cannot be accessed on"
   | SetElemT _ -> "Computed property/element cannot be assigned on"
-  | ElemT (_, ObjT _, LowerBoundT _) -> "Computed property cannot be accessed with"
-  | ElemT (_, ArrT _, LowerBoundT _) -> "Element cannot be accessed with"
+  | ElemT (_, ObjT _, AnyWithUpperBoundT _) -> "Computed property cannot be accessed with"
+  | ElemT (_, ArrT _, AnyWithUpperBoundT _) -> "Element cannot be accessed with"
   | ElemT (_, ObjT _, UpperBoundT _) -> "Computed property cannot be assigned with"
   | ElemT (_, ArrT _, UpperBoundT _) -> "Element cannot be assigned with"
   | ObjAssignT _ -> "Expected object instead of"
@@ -3980,7 +3980,7 @@ and structural_subtype cx trace lower reason_struct
         prefix_reason (spf "property `%s` of " s) reason_struct in
       rec_flow cx trace
         (lower,
-         LookupT (lookup_reason, Some lower_reason, [], s, LowerBoundT (t2)))
+         LookupT (lookup_reason, Some lower_reason, [], s, AnyWithUpperBoundT (t2)))
   );
   rec_flow_t cx trace (lower, super)
 
@@ -4137,8 +4137,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | UpperBoundT(t) ->
     UpperBoundT(subst cx ~force map t)
 
-  | LowerBoundT(t) ->
-    LowerBoundT(subst cx ~force map t)
+  | AnyWithUpperBoundT(t) ->
+    AnyWithUpperBoundT(subst cx ~force map t)
 
   | AnyObjT _ -> t
   | AnyFunT _ -> t
@@ -4225,7 +4225,7 @@ and check_polarity cx polarity = function
   | AbstractT t
   | MaybeT t
   | UpperBoundT t
-  | LowerBoundT t
+  | AnyWithUpperBoundT t
     -> check_polarity cx polarity t
 
   | ClassT t
@@ -4345,8 +4345,11 @@ and cache_instantiate cx trace cache (typeparam, reason_op) t =
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
 and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
-    if weak then AnyT.why reason_op
-    else ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
+    if weak then (
+      match typeparam.bound with
+      | MixedT _ -> AnyT.why reason_op
+      | other_bound -> AnyWithUpperBoundT (other_bound)
+    ) else ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
   )
   in
   instantiate_poly_with_targs cx trace reason_op (xs,t) ts
@@ -4722,7 +4725,7 @@ and get_prop cx trace reason_prop reason_op strict super x map tout =
   then
     rec_flow_t cx trace (SMap.find_unsafe x map, tout)
   else
-    lookup_prop cx trace super reason_prop strict x (LowerBoundT tout)
+    lookup_prop cx trace super reason_prop strict x (AnyWithUpperBoundT tout)
   end;
   Ops.set ops
 
@@ -5614,10 +5617,10 @@ and resolve_id cx trace id t =
 
    However, unifying with any-like types is sometimes desirable /
    intentional. Thus, we limit the set of types on which unification is banned
-   to just LowerBoundT and UpperBoundT, which are internal types.
+   to just AnyWithUpperBoundT and UpperBoundT, which are internal types.
 *)
 and ok_unify = function
-  | LowerBoundT _ | UpperBoundT _ -> false
+  | AnyWithUpperBoundT _ | UpperBoundT _ -> false
   | _ -> true
 
 and rec_unify cx trace t1 t2 =
@@ -6329,7 +6332,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | UpperBoundT(t) ->
       assert_ground cx skip ids t
 
-  | LowerBoundT(t) ->
+  | AnyWithUpperBoundT(t) ->
       assert_ground cx skip ids t
 
   | AnyObjT _ -> ()

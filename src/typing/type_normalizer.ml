@@ -238,8 +238,8 @@ let rec normalize_type_impl cx ids t = match t with
       let rep = UnionRep.map (normalize_type_impl cx ids) rep in
       normalize_union reason rep
 
-  | LowerBoundT t ->
-      LowerBoundT (normalize_type_impl cx ids t)
+  | AnyWithUpperBoundT t ->
+      AnyWithUpperBoundT (normalize_type_impl cx ids t)
 
   | UpperBoundT t ->
       UpperBoundT (normalize_type_impl cx ids t)

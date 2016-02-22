@@ -105,7 +105,7 @@ class ['a] t = object(self)
     self#list (self#type_ cx) acc (UnionRep.members rep)
 
   | UpperBoundT t
-  | LowerBoundT t -> self#type_ cx acc t
+  | AnyWithUpperBoundT t -> self#type_ cx acc t
 
   | AnyObjT _
   | AnyFunT _ -> acc

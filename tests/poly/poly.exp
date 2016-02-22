@@ -3,6 +3,18 @@ annot.js:10:38,48: property `x`
 Property not found in
 annot.js:10:20,21: object type
 
+implicit_bounded_instantiation.js:18:1,10: call of method `meth`
+Error:
+implicit_bounded_instantiation.js:18:8,9: number
+This type is incompatible with
+implicit_bounded_instantiation.js:7:12,17: Middle
+
+implicit_bounded_instantiation.js:19:1,18: call of method `meth`
+Error:
+implicit_bounded_instantiation.js:19:8,17: Base
+This type is incompatible with
+implicit_bounded_instantiation.js:7:12,17: Middle
+
 poly.js:17:16,20: number
 This type is incompatible with
 poly.js:17:7,12: string
@@ -19,4 +31,4 @@ test.js:8:19,24: number
 This type is incompatible with
 test.js:8:3,38: some incompatible instantiation of `X`
 
-Found 5 errors
+Found 7 errors

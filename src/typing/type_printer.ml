@@ -192,7 +192,7 @@ let rec type_printer override fallback enclosure cx t =
     | TypeT (_, t) ->
         spf "[type: %s]" (pp EnclosureNone cx t)
 
-    | LowerBoundT t ->
+    | AnyWithUpperBoundT t ->
         spf "$Subtype<%s>" (pp EnclosureNone cx t)
 
     | UpperBoundT t ->
@@ -349,7 +349,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
      human user in cases of autocompletion *)
   | RestT t
   | TypeT (_, t)
-  | LowerBoundT t
+  | AnyWithUpperBoundT t
   | UpperBoundT t
   | ThisClassT t
   | ClassT t

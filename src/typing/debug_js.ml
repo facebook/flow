@@ -176,7 +176,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | UpperBoundT t
-  | LowerBoundT t -> [
+  | AnyWithUpperBoundT t -> [
       "type", _json_of_t json_cx t
     ]
 
