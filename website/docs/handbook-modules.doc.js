@@ -8,64 +8,378 @@ permalink: /docs/handbook/modules.html
 */
 
 /*
-  A JavaScript project is usually composed of encapsulated "modules," which can
-  interact with each other only via explicit "exports" and "imports." Such a
-  module system needs two mechanisms to work: (1) a syntax for expressing
-  exports and imports of modules; (2) an algorithm to resolve module names to
-  files that contain their code.
+  JavaScript projects in Flow are composed of "modules" which are just single
+  files that encapsulate some logic. A module can "**export**"
+  variables/functions/classes so that other modules can make use of them.
+  Additionally they can "**import**" variables/functions/classes from other
+  modules.
+
+  Flow supports both **ES modules (recommended)** and **CommonJS modules**. For
+  an excellent explanation of how ES modules (sometimes referred to as
+  "ES6 Modules") work, check out
+  [the modules chapter](http://exploringjs.com/es6/ch_modules.html) of
+  [http://exploringjs.com/](Exploring JS).
+
+  ## ES Modules
+  Here's a succinct example of ES modules in action:
+
+*/
+
+// == `Math.js` == //
+
+// This function is exported, so it's available for other modules to import
+export function add(num1: number, num2: number): number {
+  return num1 + num2;
+};
+
+// This function isn't exported, so it's only available in the local scope
+// of this module
+function sub(num1, num2) {
+  return num1 - num2;
+}
+
+// Note that we can use both exported and non-exported items within this
+// module
+var two: number = add(1, 2);
+var one: number = sub(2, 1);
+
+/*
+  Here we've defined a module by writing a file (`Math.js`). Both functions
+  defined within this module are available for use within this file, but only
+  `add()` can be imported by *other* modules (because it was exported).
+
+*/
+
+// == `Calculator.js` == //
+
+import {add} from "./Math.js";
+// $ExpectError
+import {sub} from "./Math.js"; // Error! `sub` is not an export of Math.js
+
+var four: number = add(2, 2);
+
+/*
+  Because `Math.js` exports its `add()` function, we are able to import it using
+  an `import` statement. Similarly, because `Math.js` does *not* export its
+  `sub()` function, attempting to import it from another module will result in
+  an error. If we wish to import `sub()` into `Calculator.js`, we must export it
+  from `Math.js` using the `export` keyword. Note that it is possible to export
+  multiple things from one module by just using the `export` keyword on multiple
+  things.
+
+  ## CommonJS Modules
+
+  Flow also supports CommonJS modules as well. If you're not familiar with
+  CommonJS modules, you can read about them
+  [here](https://addyosmani.com/writing-modular-js/) -- but note that we
+  recommend using [ES modules](http://exploringjs.com/es6/ch_modules.html)
+  if you need to choose between the two options.
+
+  Here's the CommonJS version of the example given above for ES modules:
+*/
+
+// == `Math_CommonJS.js` == //
+
+function add(num1: number, num2: number): number {
+  return num1 + num2;
+};
+// This is how we export the `add()` function in CommonJS
+exports.add = add;
+
+function sub(num1, num2) {
+  return num1 - num2;
+}
+
+var two: number = add(1, 2);
+var one: number = sub(2, 1);
+
+/*
+
+*/
+// == Calculator_CommonJS.js == //
+
+var Math = require('./Math_CommonJS.js');
+
+var four: number = Math.add(2, 2);
+
+// Error! `sub` is not exported from Math_CommonJS.js
+// $ExpectError
+var one: number = Math.sub(2, 1);
+
+/*
+  ### ES Module <-> CommonJS Interoperability
+
+  Some projects start out as CommonJS and wish to migrate to ES modules
+  incrementally (or just need to pull in legacy code that uses CommonJS).
+  Because of this, Flow supports a set of interoperability semantics between
+  the two kinds of module systems. Note that this interop strategy is
+  compatible with the strategy employed by Babel 6.
+
+  #### **Importing from CommonJS -> ES Module**
+
+  Say we have the following CommonJS module:
+*/
+
+// == CJSModule.js == //
+
+class MyClass {}
+module.exports = MyClass;
+
+/*
+  If you wish to import `MyClass` in to an ES module, Flow models this as a
+  **default** export from `CJSModule.js`:
+*/
+import MyClass from "./CJSModule.js";
+/*
+  (Note the lack of curly braces -- showing that this a **"default"** import
+   rather than a **"named"** import)
+
+  Now consider a different common pattern that is used in CommonJS modules:
+*/
+
+// == CJSModule_MultExports.js == //
+function util1() {}
+function util2() {}
+
+exports.util1 = util1;
+exports.util2 = util2;
+
+/*
+  If you wish to import 1 or both of the functions exported by
+  `CJSModule_MultExports.js`, you can do so using named import(s):
+*/
+import {util1, util2} from "./CJSModule_MultExports.js";
+/*
+  If instead you wish to receive an object with `util1` and `util2` properties
+  similar to what you might receive from a call to `require()`, you can do so
+  via `import * as`:
+*/
+import * as MultExports from "./CJSModule_MultExports.js";
+/*
+  #### **Importing from ES Module -> CommonJS**
+
+  Sometimes you're in the middle of converting your project to use ES modules
+  and you need to make a change to a legacy module that hasn't been converted
+  yet. For this, Flow supports using `require()` to import from an ES module.
+
+  Say we have an ES module with **"named"** exports:
+*/
+// == ES_NamedExports.js == //
+export function util1() {}
+export function util2() {}
+/*
+  You can `require()` this ES module from a CommonJS module as follows:
+*/
+const ES_NamedExports = require('./ES_NamedExports.js');
+
+ES_NamedExports.util1();
+ES_NamedExports.util2();
+/*
+  If you have an ES module that has a **"default"** export:
+*/
+// == ES_DefaultExport.js == //
+export default function() {}
+/*
+  You can `require()` the function as follows:
+*/
+const ES_DefaultExport = require('./ES_DefaultExport.js');
+
+// Note that the default-export is stored as a property named `default`
+ES_DefaultExport.default();
+/*
+  The one rough edge to this CommonJS <-> ES Module interoperability is the fact
+  that **"default"** exports from an ES Module will show up as a `default`
+  property on the object returned from `require()`.
+
+  This is because, in ES modules, a **"default"** export is essentially just
+  sugar for a **"named"** export whose name is `default`.
+
+  ---
+  ---
+  ---
+  ## Module Resolution
+
+  For both ES modules and CommonJS modules, Flow needs to understand how to look
+  up the name of a module on disk. For this, Flow uses the same [module
+  resolution rules as Node.js](https://nodejs.org/api/modules.html). In other
+  words, you most likely don't have to learn or switch to a new module
+  resolution system in order to use Flow.
+
+  ### Aliasing Module Names
+
+  In general we recommend against deviating too far from the standard module
+  resolution algorithm, but in some advanced environments it is useful to alias
+  a module name with some other string before Flow performs the resolution.
+
+  For this we have the **`module.name_mapper`** config option that allows you to
+  specify a regular expression template string and a replacement pattern that
+  will be run on all `import`s and `require()`s in your project before trying to
+  look things up on disk. We call these aliases "name mappers".
+
+  The simplest example of a name mapper is one that will convert all references
+  of the `"Foo"` module to references of the `"Bar"` module:
+
+  **`.flowconfig`**
+
+  ```
+  [options]
+  module.name_mapper='^Foo$' -> 'Bar'
+  ```
+
+  **`main.js`**
+
+  ```javascript
+  // @flow
+
+  // Because the string "Foo" matches the name mapper above, Flow will look
+  // for a module named "Bar" rather than "Foo" here.
+  import {something} from "Foo";
+  ```
+
+  A more common (and less trivial) example here is to configure Flow to
+  understand [CSS Modules](https://github.com/css-modules/css-modules):
+
+  **`.flowconfig`**
+
+  ```
+  [options]
+  module.name_mapper='^\(.*\)\.css$' -> '<PROJECT_ROOT>/CSSModule.js.flow'
+  ```
+
+  **`CSSModule.js.flow`**
+
+  ```javascript
+  // @flow
+
+  // CSS modules have a `className` export which is a string
+  declare export let className: string;
+  ```
+
+  **`main.js`**
+  ```javascript
+  // @flow
+
+  import {className} from "./SomeCSSFile.css"; // Works!
+  ```
+
+  Note that the **`module.name_mapper`** config option uses the regular
+  expression syntax as documented
+  [here](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
 */
 
 /*
-  For (1), Flow supports the standard ES6 module export/import syntax, as well
-  as the popular CommonJS module export/import syntax. For (2), Flow supports
-  the popular Node.js module resolution algorithm. In other words, you most
-  probably don't have to learn or switch to a new module system just to
-  typecheck your JavaScript project with Flow.
+  ---
+  ---
+  ---
+  ## Type Imports & Exports
+
+  In addition to importing and exporting runtime variables between modules, it
+  can also be useful to import and export types as well. For this, Flow has
+  extended the ES module `import` and `export` syntax in a couple of ways:
+
+  ### `export type`
+
+  If you wish to define a type alias or interface in a module that other modules
+  will need access to as well, you can export it from the module using
+  `export type`:
+
 */
+
+// == User.js == //
+
+export type UserID = number;
+export type User = {
+  id: UserID,
+  name: string,
+};
+
+type GuitarT = {
+  type: string,
+  color: string,
+};
+
+export let jimiGuitar: GuitarT = {
+  type: "Stratocaster",
+  color: "White",
+};
+
+export function getUser(id: UserID): User {
+  return {
+    id: id,
+    name: "Jimi Hendrix",
+    guitar: GuitarT,
+  };
+}
 
 /*
-  In addition, Flow supports module "declarations" that can be used in lieu of
-  actual code for typechecking other parts of a project that depend on them.
-  Usually, modules are declared when we don't want to typecheck the code itself,
-  or the code is not available for typechecking.
+  Here we've defined `UserID` and `User` as types in `User.js` that are exported
+  for other modules to access.
+
+  ### `import type`
+
+  In order for another module to import these types, it must use `import type`:
+
 */
+
+import type {UserID, User} from "./User.js";
 
 /*
-  ## ES6 module export/import syntax
+  When you use `import type` in a module, you are creating a local type alias to
+  the type that you are importing from the other module. `import type` will work
+  on type aliases, interfaces, and classes. It will not work on other kinds of
+  variables like let/const/var because these do not represent types (they only
+  represent values).
 
-  TODO: link
+  ### `import typeof`
+
+  If you have a value that you'd like to import the type *of*, the most
+  straightforward option would be to import the value and then use `typeof` to
+  get it's type:
 */
+
+import {jimiguitar} from "./User.js";
+
+type GuitarT = typeof jimiguitar;
+
+var myGuitar: GuitarT = {
+  type: "Gibson",
+  color: "Black",
+};
 
 /*
-  ## CommonJS module export/import syntax
-
-  TODO: link
+  Alternatively, you can also use the `import typeof` short-hand to make things
+  simpler:
 */
+
+import typeof {jimiguitar as GuitarT} from "./User.js";
+
+var myGuitar: GuitarT = {
+  type: "Gibson",
+  color: "Black",
+};
 
 /*
-  ## Node.js module resolution algorithm
+  ---
+  ---
+  ---
+  ## Missing/Required Annotations
 
-  TODO: link
+  Flow is able to infer most types in your program for you, but there is one
+  restriction imposed on this rule: You must annotate the exports of a module
+  explicitly.
+
+  Flow requires this for 2 reasons:
+
+  1) Placing a type annotation at the boundaries of a module reduces the amount
+     of work Flow needs to do to infer the types that span modules across your
+     project. This, in turn, removes a performance barrier from Flow's internal
+     engine while typechecking your project and makes Flow much faster.
+
+  2) In general, we've found that explicitly annotating module boundaries is
+     a good habit to adopt because it helps document the ways in which the
+     exports of a module are intended to be used.
+
+  Because of this restriction, you may occasionally see an error from Flow that
+  states that you are `Missing an annotation`. To resolve this error, simply add
+  type annotations for the export the error points at.
 */
-
-/*
-  ## Module declarations
-
-  TODO: syntax, precedence rules, link to information on general declarations
-  (e.g., `.flowconfig` setup)
-*/
-
-/*
-  ## Module declarations
-
-  TODO: declare module syntax, .js.flow, precedence rules, link to information
-  on general declarations (e.g., `.flowconfig` setup),
-*/
-
-/*
-  ## Missing annotations
-
-  TODO: examples
-*/
-
-function example() { }

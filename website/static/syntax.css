@@ -14,7 +14,7 @@ pre.code {
   background-color: rgba(226, 141, 49, 0.1);
 }
 
-.T_VAR, .T_CONST, .T_LET, .T_FUNCTION, .T_RETURN, .T_THIS, .T_TYPE, .T_DECLARE, .T_CLASS, .T_NEW {
+.T_VAR, .T_CONST, .T_LET, .T_FUNCTION, .T_RETURN, .T_THIS, .T_TYPE, .T_DECLARE, .T_CLASS, .T_NEW, .T_EXPORT, .T_IMPORT, .T_TYPEOF {
   font-weight: bold;
   color: #881280;
 }
