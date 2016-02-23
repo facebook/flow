@@ -248,26 +248,32 @@ var readOnlyMapOfA: ReadOnlyMap<string, A> = readOnlyMapOfB;
   in annotations. `this` can improve the precision of certain types
   in the presence of inheritance.
 
-  Intuitively, the meaning of the `this` type is as follows: given a class `C`,
-  and a class `D` extending `C`, at runtime, the value of `this` for methods
-  of `C` will sometimes be instances of `C`, and sometimes instances of `D`.
+  Intuitively, the meaning of the `this` type is as follows: consider a class `C`,
+  and a class `D` extending `C`. At runtime, the value of `this` within methods
+  of `C` will sometimes be an instance of `C`, and sometimes an instance of `D`.
 
   Within the body of `C`, then, the `this` type denotes *both* `C` and `D`.
   More generally, the `this` type behaves exactly like a type parameter on
   a class, ranging over that class and all of its subclasses.
 
   An immediate consequence is that `this` may only appear in output
-  (positive) positions, if subtyping is to be preserved:
+  (aka covariant, "positive") positions, if subtyping is to be preserved.
+
+  The payoff comes in the form of improved precision in the types of superclass
+  methods *from the perspective of subclasses*: for example, a method of `C` that
+  returns a value of type `this` can safely be viewed as returning `D` when
+  invoked on an instance of `D` - instead of being locked to the less accurate
+  (and no safer) type `C`, simply by virtue of having been defined in `C`.
 */
 
 class ThisA {
   // $ExpectError
   x: this;                            // error: input/output position
-  foo(): this { return this; }        // ok
+  foo(): this { return this; }        // ok: output position
   // $ExpectError
-  bar(x: this): void { this.x = x; }  // error: output position
+  bar(x: this): void { this.x = x; }  // error: input position
 }
 
-class ThisB extends ThisA {}
+class ThisB extends ThisA { }
 
 var b: ThisB = (new ThisB).foo(); // ok: foo() on a ThisB returns a ThisB
