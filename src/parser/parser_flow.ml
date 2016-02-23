@@ -4355,7 +4355,7 @@ end
 (*****************************************************************************)
 (* Entry points *)
 (*****************************************************************************)
-let do_parse parser fail ?(token_sink=None) ?(parse_options=None) filename content =
+let mk_parse_env ?(token_sink=None) ?(parse_options=None) filename content =
   let lb = Lexing.from_string content in
   (match filename with
     | None
@@ -4366,13 +4366,17 @@ let do_parse parser fail ?(token_sink=None) ?(parse_options=None) filename conte
       lb.Lexing.lex_curr_p <- {
         lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
       });
-  let env = init_env ~token_sink ~parse_options filename lb in
+  init_env ~token_sink ~parse_options filename lb
+
+let do_parse env parser fail =
   let ast = parser env in
   if fail && (errors env) <> []
   then raise (Error.Error (filter_duplicate_errors [] (errors env)));
   ast, List.rev (errors env)
 
-let parse_program = do_parse Parse.program
+let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
+  let env = mk_parse_env ~token_sink ~parse_options filename content in
+  do_parse env Parse.program fail
 
 let program ?(fail=true) ?(token_sink=None) ?(parse_options=None) content =
   parse_program fail ~token_sink ~parse_options None content
@@ -4380,5 +4384,16 @@ let program ?(fail=true) ?(token_sink=None) ?(parse_options=None) content =
 let program_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
   parse_program fail ~token_sink ~parse_options filename content
 
+type json_file =
+  | JSONArray of Loc.t * Ast.Expression.Array.t
+  | JSONObject of Loc.t * Ast.Expression.Object.t
+
 let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
-  do_parse Parse.object_initializer fail ~token_sink ~parse_options filename content
+  let env = mk_parse_env ~token_sink ~parse_options filename content in
+  match Peek.token env with
+  | T_LBRACKET ->
+    let ((ast_loc, ast), errs) = do_parse env Parse.array_initializer fail in
+    (JSONArray (ast_loc, ast), errs)
+  | _T_LCURLY ->
+    let ((ast_loc, ast), errs) = do_parse env Parse.object_initializer fail in
+    (JSONObject (ast_loc, ast), errs)

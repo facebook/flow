@@ -31,6 +31,10 @@ json_file/test.js:12:2,10: number
 This type is incompatible with
 json_file/test.js:12:13,16: undefined
 
+json_file/test.js:16:2,6: array literal
+This type is incompatible with
+json_file/test.js:16:9,12: undefined
+
 invalid_package_file/package.json: Unexpected end of input
 
-Found 9 errors
+Found 10 errors
