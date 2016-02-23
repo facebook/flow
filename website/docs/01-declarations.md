@@ -2,7 +2,7 @@
 id: declarations
 title: Declarations
 permalink: /docs/declarations.html
-prev: primitives.html
+prev: modules.html
 next: cli.html
 ---
 
@@ -14,7 +14,7 @@ var M = require('M');
 M.foo(new C());
 {% endhighlight %}
 
-As is evident, the above code could be fraught with problems. Where is the `M` 
+As is evident, the above code could be fraught with problems. Where is the `M`
 module? Where is `C` defined?
 
 Running Flow on the above code yields:
@@ -29,9 +29,9 @@ Unknown global name
 
 ## Declarations
 
-Flow supports 
-[declarations](third-party.html#example) 
-via the `declare` keyword to allow the interface of code to be defined and 
+Flow supports
+[declarations](third-party.html#example)
+via the `declare` keyword to allow the interface of code to be defined and
 then used in modules and other JavaScript code.
 
 {% highlight javascript linenos=table %}
@@ -52,7 +52,7 @@ example, should not be known by Flow: just the types it exposes is enough.
 
 > NOTE
 >
-> The interfaces can be declared in any file you choose, as long as they are in a directory 
+> The interfaces can be declared in any file you choose, as long as they are in a directory
 outside the paths monitored by `.flowconfig`.
 
 To use code in declared files, tell the Flow server about it. Assuming the code above is defined in `/lib/flow/`, you can issue the following command:
@@ -64,7 +64,7 @@ flow start --lib /lib/flow/
 It is also possible to specify multiple library paths, separated by commas.
 Furthermore, you can specify the libs in `.flowconfig` with the `[libs]` option. Within the specified folders, Flow will treat any file ending in `.js` as an interface.
 
-Now Flow knows to check `/lib/flow/` for any code that is not immediately 
+Now Flow knows to check `/lib/flow/` for any code that is not immediately
 available in the file on which it is checking.
 
 Assuming we have the declarations above, now when running Flow against this code:

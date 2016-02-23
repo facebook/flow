@@ -62,6 +62,8 @@
     title: Dynamic Type Tests
   - id: primitives
     title: Primitives
+  - id: modules
+    title: Modules
   - id: declarations
     title: Declarations
 - title: CLI

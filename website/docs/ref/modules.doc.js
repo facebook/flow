@@ -1,9 +1,11 @@
 /* @flow */
 /*
 ---
-id: handbook/modules
+id: modules
 title: Modules
-permalink: /docs/handbook/modules.html
+permalink: /docs/modules.html
+prev: primitives.html
+next: declarations.html
 ---
 */
 
