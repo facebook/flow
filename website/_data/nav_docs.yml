@@ -66,6 +66,8 @@
     title: Modules
   - id: declarations
     title: Declarations
+  - id: react
+    title: React
 - title: CLI
   items:
   - id: cli

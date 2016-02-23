@@ -3,7 +3,7 @@ id: declarations
 title: Declarations
 permalink: /docs/declarations.html
 prev: modules.html
-next: cli.html
+next: react.html
 ---
 
 Take the following code snippet:

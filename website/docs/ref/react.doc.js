@@ -1,9 +1,11 @@
 /* @flow */
 /*
 ---
-id: handbook/react
+id: react
 title: React
-permalink: /docs/handbook/react.html
+permalink: /docs/react.html
+prev: declarations.html
+next: cli.html
 ---
 */
 
