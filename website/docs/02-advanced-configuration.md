@@ -74,7 +74,7 @@ This `[ignore]` section will ignore
 
 1. Any file or directory under a directory named `__tests__`
 2. Any file or directory under `.*/src/foo` or under `.*/src/bar`
-3. Any file that ends with the extension `.ignore.js
+3. Any file that ends with the extension `.ignore.js`
 
 ### `[libs]`
 
