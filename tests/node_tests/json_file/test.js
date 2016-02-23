@@ -10,3 +10,7 @@ let data2 = require('./package');
 
 let data3 = require('./package2');
 (data3.foo: void); // error, should be number (not string! index.js wins)
+
+let data4 = require('./json_array');
+(data4: Array<number>);
+(data4: void); // error, should be Array<number>

@@ -98,8 +98,6 @@ let parse_json_file ~fail content file =
 
   let open Parser_flow.Ast in
   let loc_none = Loc.none in
-  let loc = fst ast in
-  let expr = loc, (Expression.Object (snd ast)) in
   let module_exports = loc_none, Expression.(Member { Member.
     _object = loc_none, Identifier (loc_none, { Identifier.
       name = "module";
@@ -113,6 +111,12 @@ let parse_json_file ~fail content file =
     });
     computed = false;
   }) in
+  let expr =
+    match ast with
+    | Parser_flow.JSONArray (loc, arr) -> (loc, Expression.Array arr)
+    | Parser_flow.JSONObject (loc, obj) -> (loc, Expression.Object obj)
+  in
+  let loc = fst expr in
   let statement =
     loc, Statement.Expression { Statement.Expression.
       expression = loc, Expression.Assignment { Expression.Assignment.
