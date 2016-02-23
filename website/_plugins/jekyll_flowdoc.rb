@@ -223,6 +223,10 @@ module Jekyll
       end
     end
 
+    def escape(str)
+      CGI.escapeHTML(str).untaint
+    end
+
     def convert(content)
       content = content.lines.reject { |l| l =~ /^\s*\/\/\s*\$ExpectError/ }.join
       tokens = get_tokens(content)
@@ -244,7 +248,7 @@ module Jekyll
           sections.push([:code, out])
           out = ""
         end
-        out += content.slice(last_loc, start_loc - last_loc)
+        out += escape(content.slice(last_loc, start_loc - last_loc))
         if is_markdown
           out += item[:value]
           in_code = false
@@ -254,13 +258,13 @@ module Jekyll
             out = ""
           end
           out += item[:start]
-          out += content.slice(start_loc, end_loc - start_loc)
+          out += escape(content.slice(start_loc, end_loc - start_loc))
           out += item[:end]
           in_code = true
         end
         last_loc = end_loc
       end
-      out += content.slice(last_loc, content.length - last_loc)
+      out += escape(content.slice(last_loc, content.length - last_loc))
       sections.push([in_code ? :code : :html, out])
 
       outs = sections.map do |type, content|

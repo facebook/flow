@@ -1,9 +1,11 @@
 /* @flow */
 /*
 ---
-id: handbook/refinements
-title: Refinements
-permalink: /docs/handbook/refinements.html
+id: dynamic-type-tests
+title: Dynamic Type Tests
+permalink: /docs/dynamic-type-tests.html
+prev: operators.html
+next: primitives.html
 ---
 */
 
@@ -53,7 +55,7 @@ function null_undefined_tests(x: ?string): string {
 /*
   Read more about <a href="/docs/nullable-types.html">Maybe Types</a>.
 
-  ### Truthiness and Existance
+  ### Truthiness and Existence
 */
 
 function boolean_truthiness(x: boolean): true {
