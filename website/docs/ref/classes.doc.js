@@ -1,9 +1,11 @@
 /* @flow */
 /*
 ---
-id: handbook/classes
+id: classes
 title: Classes
-permalink: /docs/handbook/classes.html
+permalink: /docs/classes.html
+prev: arrays.html
+next: objects.html
 ---
 */
 
@@ -117,7 +119,7 @@ class E {
 var eAsC: C = new E("hi"); // nope, E is incompatible with C
 
 /*
-  However, [Object](../object.html#_) and [Interface](../interface.html#_) types
+  However, [Object](/docs/objects.html) and Interface types
   are structural. Classes implement interfaces, and satisfy object shapes,
   on a structural basis:
 */
@@ -186,7 +188,7 @@ class InstanceD extends PolyC<string> {
   Type parameters can optionally specify constraints that are enforced on
   instantiation. Such constraints can be assumed to hold in the body of a
   polymorphic class definition. See
-  [this blog post on bounded polymorphism](http://flowtype.org/blog/2015/03/12/Bounded-Polymorphism.html)
+  [this blog post on bounded polymorphism]({% post_url 2015-03-12-Bounded-Polymorphism %})
   for details.
 
   ## Polymorphism and Type Parameter Variance
