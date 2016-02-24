@@ -1,7 +1,7 @@
 ###v0.22.0
 
 Likely to cause new Flow errors:
-- Several updates to Flow's understanding of React's APIs. Some of these updates remove old/deprecated React APIs.
+- Overhaul of Flow's understanding of React APIs. Some of these updates remove old/deprecated React APIs. Check out the [new React docs](http://flowtype.org/docs/react.html) for an overview of how things work.
 
 New features:
 - Flow now gives precedence to library definitions over non-@flow implementation files. This means that it should no longer be necessary to specify a `node_modules` dependency in the `[ignore]` section of your `.flowconfig` if you have a library definition defined for that dependency.
