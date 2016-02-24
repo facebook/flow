@@ -33,6 +33,7 @@ let client_build_finish
 let client_check_finish _ _ _ = ()
 let client_bad_exit _ = ()
 let monitor_dead_but_typechecker_alive () = ()
+let client_connect_to_monitor_timeout () = ()
 let client_established_connection _ = ()
 let client_establish_connection_exception _ = ()
 let client_connect_once _ = ()
