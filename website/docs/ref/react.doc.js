@@ -5,7 +5,6 @@ id: react
 title: React
 permalink: /docs/react.html
 prev: declarations.html
-next: cli.html
 ---
 */
 

@@ -2,7 +2,7 @@
 id: quick-reference
 title: Quick Reference
 permalink: /docs/quick-reference.html
-prev: coming-soon.html
+prev: underscore.html
 next: type-annotations.html
 ---
 
@@ -22,7 +22,7 @@ next: type-annotations.html
 • [**`Class<T>`**](#the-class-t-constructor) - Describes the type of the class object that would instantiate an instance of class `T`<br />
 • [**`Function`**](#the-function-constructor) - Describes *any* function<br />
 • [**`Number`**](#the-number-constructor) - Describes `Number` objects (but not `number` literal values!)<br />
-• [**`Object`**](#the-object-constructor) - Describes *any* object<br /> 
+• [**`Object`**](#the-object-constructor) - Describes *any* object<br />
 • [**`String`**](#the-string-constructor) - Describes `String` objects (but not `string` literal values!)<br />
 
 ### Built-in Syntactic Types
@@ -160,7 +160,7 @@ var b: Function = p => p; // Valid!
 var c: Function = 42; // Type error!
 
 // Valid! (`Function` may flow into any function type)
-function foo(): Function { 
+function foo(): Function {
   return function(x: number): number { return x; }
 }
 var d: (str: string) => string = foo(); // Valid!
@@ -244,7 +244,7 @@ var b: String = 'hai!'; // Type error!
 <sub><a href="#built-in-primitive-types">Back To Top</a></sub>
 
 ## • The `void` primitive type
-This type describes an `undefined` value in JavaScript. 
+This type describes an `undefined` value in JavaScript.
 
 Normally you only want to use this type to describe the return type of functions that return nothing. The only values that have type `void` are `undefined` and the results of the `void()` operator in JavaScript. Flow is fairly strict about things that `void` may flow into.
 

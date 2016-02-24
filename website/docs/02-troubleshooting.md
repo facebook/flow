@@ -3,7 +3,7 @@ id: troubleshooting
 title: Troubleshooting
 permalink: /docs/troubleshooting.html
 prev: running.html
-next: advanced-configuration.html
+next: cli.html
 ---
 
 ## Common errors and how to fix them
@@ -90,10 +90,10 @@ foo();
 
 Some operations only make sense when they're performed on a particular set of values. (They may still work on other values, but may have unintended consequences).
 
-For example, multiplication (`*`) should be performed only on numbers even though it may happen to work when you pass strings (though usually they're usually converted to `NaN`). 
+For example, multiplication (`*`) should be performed only on numbers even though it may happen to work when you pass strings (though usually they're usually converted to `NaN`).
 
-Iteration using `for-in` should be performed only on objects even though it may still work on arrays (the keys are converted to strings and other, often unexpected, properties are also included). 
+Iteration using `for-in` should be performed only on objects even though it may still work on arrays (the keys are converted to strings and other, often unexpected, properties are also included).
 
-Non-strict equality `==` should be performed only on values that have the same type (otherwise, some sequence of type conversions are tried). 
+Non-strict equality `==` should be performed only on values that have the same type (otherwise, some sequence of type conversions are tried).
 
 Flow will error on many of these operations because they tend to be hazardous. Usually there is a safer way to express the intent of the code in these cases: e.g., use `Array.forEach` and `===` in the latter two cases or use `Number(...)` in the former case).

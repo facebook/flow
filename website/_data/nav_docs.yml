@@ -18,6 +18,8 @@
     title: Running Flow code
   - id: troubleshooting
     title: Troubleshooting
+  - id: cli
+    title: Using the CLI
   - id: advanced-configuration
     title: Advanced Configuration
 - title: Walkthroughs
@@ -26,10 +28,6 @@
     title: A Flux & React demo
   - id: underscore
     title: Flow, meet Underscore
-- title: Coming Soon
-  items:
-  - id: coming-soon
-    title: Future plans
 - title: Language Reference
   items:
   - id: quick-reference
@@ -68,7 +66,3 @@
     title: Declarations
   - id: react
     title: React
-- title: CLI
-  items:
-  - id: cli
-    title: Using the CLI

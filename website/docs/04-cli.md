@@ -2,7 +2,8 @@
 id: cli
 title: Using the CLI
 permalink: /docs/cli.html
-prev: react.html
+prev: troubleshooting.html
+next: advanced-configuration.html
 ---
 
 The flow command line tool is made to be easy-to-use for the simple case.
