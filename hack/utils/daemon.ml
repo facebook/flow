@@ -210,7 +210,9 @@ let fork
         Unix.close log_stderr;
       f param (child_in, child_out);
       exit 0
-    with _ ->
+    with e ->
+      prerr_endline (Printexc.to_string e);
+      Printexc.print_backtrace stderr;
       exit 1)
   | pid -> (* parent *)
     close_pipe channel_mode (child_in, child_out);
