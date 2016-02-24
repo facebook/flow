@@ -90,6 +90,27 @@ let compare loc1 loc2 =
     (loc2.source, loc2.start.line, loc2.start.column,
      loc2._end.line, loc2._end.column)
 
+(**
+ * This is mostly useful for debugging purposes.
+ * Please don't dead-code delete this!
+ *)
+let to_string ?(include_source=false) loc =
+  let source =
+    if include_source
+    then Printf.sprintf "%S: " (
+      match loc.source with
+      | Some src -> string_of_filename src
+      | None -> "<NONE>"
+    ) else ""
+  in
+  let pos = Printf.sprintf "(%d, %d) to (%d, %d)"
+    loc.start.line
+    loc.start.column
+    loc._end.line
+    loc._end.column
+  in
+  source ^ pos
+
 let source loc = loc.source
 
 let source_is_lib_file = function

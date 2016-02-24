@@ -55,7 +55,7 @@ var one: number = sub(2, 1);
 // == `Calculator.js` == //
 
 import {add} from "./Math.js";
-// $ExpectError
+// $DocIssue(should eventually be converted to an $ExpectError)
 import {sub} from "./Math.js"; // Error! `sub` is not an export of Math.js
 
 var four: number = add(2, 2);
@@ -100,12 +100,13 @@ var one: number = sub(2, 1);
 */
 // == Calculator_CommonJS.js == //
 
+// $DocIssue
 var Math = require('./Math_CommonJS.js');
 
 var four: number = Math.add(2, 2);
 
 // Error! `sub` is not exported from Math_CommonJS.js
-// $ExpectError
+// $DocIssue $ExpectError: This is an $ExpectError, but the error doesn't show due to a $DocIssue
 var one: number = Math.sub(2, 1);
 
 /*
@@ -124,13 +125,16 @@ var one: number = Math.sub(2, 1);
 
 // == CJSModule.js == //
 
+// $DocIssue
 class MyClass {}
+// $DocIssue
 module.exports = MyClass;
 
 /*
   If you wish to import `MyClass` in to an ES module, Flow models this as a
   **default** export from `CJSModule.js`:
 */
+// $DocIssue
 import MyClass from "./CJSModule.js";
 /*
   (Note the lack of curly braces -- showing that this a **"default"** import
@@ -156,6 +160,7 @@ import {util1, util2} from "./CJSModule_MultExports.js";
   similar to what you might receive from a call to `require()`, you can do so
   via `import * as`:
 */
+// $DocIssue
 import * as MultExports from "./CJSModule_MultExports.js";
 /*
   #### **Importing from ES Module -> CommonJS**
@@ -167,11 +172,13 @@ import * as MultExports from "./CJSModule_MultExports.js";
   Say we have an ES module with **"named"** exports:
 */
 // == ES_NamedExports.js == //
+// $DocIssue
 export function util1() {}
 export function util2() {}
 /*
   You can `require()` this ES module from a CommonJS module as follows:
 */
+// $DocIssue
 const ES_NamedExports = require('./ES_NamedExports.js');
 
 ES_NamedExports.util1();
@@ -184,6 +191,7 @@ export default function() {}
 /*
   You can `require()` the function as follows:
 */
+// $DocIssue
 const ES_DefaultExport = require('./ES_DefaultExport.js');
 
 // Note that the default-export is stored as a property named `default`
@@ -309,7 +317,7 @@ export function getUser(id: UserID): User {
   return {
     id: id,
     name: "Jimi Hendrix",
-    guitar: GuitarT,
+    guitar: jimiGuitar,
   };
 }
 
@@ -323,6 +331,7 @@ export function getUser(id: UserID): User {
 
 */
 
+// $DocIssue
 import type {UserID, User} from "./User.js";
 
 /*
@@ -341,6 +350,7 @@ import type {UserID, User} from "./User.js";
 
 import {jimiguitar} from "./User.js";
 
+// $DocIssue
 type GuitarT = typeof jimiguitar;
 
 var myGuitar: GuitarT = {
@@ -353,6 +363,7 @@ var myGuitar: GuitarT = {
   simpler:
 */
 
+// $DocIssue
 import typeof {jimiguitar as GuitarT} from "./User.js";
 
 var myGuitar: GuitarT = {

@@ -614,7 +614,14 @@ let typecheck_contents ~options ?verbose contents filename =
       let timing, () = with_timer "Merge" timing (fun () ->
         merge_strict_context ~options cache [cx]
       ) in
-      timing, Some cx, Context.errors cx, info
+
+      (* Filter out suppressed errors *)
+      let error_suppressions = Context.error_suppressions cx in
+      let errors = (Context.errors cx) |> Errors_js.ErrorSet.filter (fun err ->
+        not (fst (Errors_js.ErrorSuppressions.check err error_suppressions))
+      ) in
+
+      timing, Some cx, errors, info
 
   | Parsing_service_js.Parse_err errors ->
       timing, None, errors, info

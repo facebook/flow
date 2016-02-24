@@ -1,4 +1,5 @@
 [options]
-suppress_comment=\\(.\\|\n\\)*\\$ExpectError
+suppress_comment=^\\( \\|\n\\)*\\$ExpectError\\(([^)]*)\\)?$
+suppress_comment=^\\( \\|\n\\)*\\$DocIssue\\(([^)]*)\\)?$
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable

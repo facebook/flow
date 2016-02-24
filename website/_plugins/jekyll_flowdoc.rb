@@ -228,7 +228,7 @@ module Jekyll
     end
 
     def convert(content)
-      content = content.lines.reject { |l| l =~ /^\s*\/\/\s*\$ExpectError/ }.join
+      content = content.lines.reject { |l| l =~ /^\s*\/\/\s*\$ExpectError(\([^)]*\))?$/ }.join
       tokens = get_tokens(content)
       errors_json = get_error_json(content)
       errors = get_errors(errors_json)
@@ -269,6 +269,7 @@ module Jekyll
 
       outs = sections.map do |type, content|
         if type == :code
+          content = content.lines.reject { |l| l =~ /\/\/\s*\$DocIssue/ }.join
           lines = content.lines.count
           '<figure class="highlight">' +
             '<table class="highlighttable" style="border-spacing: 0"><tbody><tr>' +
@@ -295,7 +296,9 @@ module Jekyll
 
   Hooks.register :site, :pre_render do |site|
     FlowdocConverter.tempdir = Dir.mktmpdir
-    FileUtils.touch(File.join(FlowdocConverter.tempdir, '.flowconfig'))
+    File.open(File.join(FlowdocConverter.tempdir, '.flowconfig'), 'w') {|f|
+      f.write("[options]\nsuppress_comment=\\\\(.\\\\|\\n\\\\)*\\\\$DocIssue\n")
+    }
   end
 
   Hooks.register :site, :post_render do |site|
