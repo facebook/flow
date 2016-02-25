@@ -12,6 +12,8 @@
     title: Starting a new Flow project
   - id: existing
     title: Running Flow on existing code
+  - id: type-annotations
+    title: Adding Type Annotations
   - id: third-party
     title: Checking third-party code
   - id: running
@@ -32,8 +34,6 @@
   items:
   - id: quick-reference
     title: Quick Reference
-  - id: type-annotations
-    title: Type Annotations
   - id: variables
     title: Variables
   - id: arrays

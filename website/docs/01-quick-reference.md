@@ -3,7 +3,7 @@ id: quick-reference
 title: Quick Reference
 permalink: /docs/quick-reference.html
 prev: underscore.html
-next: type-annotations.html
+next: variables.html
 ---
 
 ### Built-in Primitive Types

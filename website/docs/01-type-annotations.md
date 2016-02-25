@@ -2,8 +2,8 @@
 id: type-annotations
 title: Type Annotations
 permalink: /docs/type-annotations.html
-prev: quick-reference.html
-next: variables.html
+prev: existing.html
+next: third-party.html
 ---
 
 JavaScript is inherently a dynamically-typed language. As such, explicitly
@@ -146,6 +146,6 @@ in your way, but you know your program is correct.
 ## Bottom Line
 
 You can type annotate all your code. That would be the most expressive and
-self-documenting approach. However, Flow does a lot of type inference for you to 
-alleviate this requirement when it becomes a burden. The only place that you must 
+self-documenting approach. However, Flow does a lot of type inference for you to
+alleviate this requirement when it becomes a burden. The only place that you must
 annotate types is where those types go across module boundaries.

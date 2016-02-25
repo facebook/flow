@@ -2,7 +2,7 @@
 id: third-party
 title: Checking third-party code
 permalink: /docs/third-party.html
-prev: existing.html
+prev: type-annotations.html
 next: running.html
 ---
 
