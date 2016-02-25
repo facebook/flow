@@ -163,35 +163,35 @@ function.js:43:14,17: undefined
 
 function.js:48:16,20: string
 This type is incompatible with
-[LIB] core.js:68:13,18: number
+[LIB] core.js:70:13,18: number
 
 function.js:49:5,12: assignment of property `length`
 Error:
 function.js:49:16,20: string
 This type is incompatible with
-[LIB] core.js:68:13,18: number
+[LIB] core.js:70:13,18: number
 
 function.js:50:5,12: assignment of property `length`
 Error:
 function.js:50:16,20: string
 This type is incompatible with
-[LIB] core.js:68:13,18: number
+[LIB] core.js:70:13,18: number
 
 function.js:52:14,16: number
 This type is incompatible with
-[LIB] core.js:69:11,16: string
+[LIB] core.js:71:11,16: string
 
 function.js:53:5,10: assignment of property `name`
 Error:
 function.js:53:14,16: number
 This type is incompatible with
-[LIB] core.js:69:11,16: string
+[LIB] core.js:71:11,16: string
 
 function.js:54:5,10: assignment of property `name`
 Error:
 function.js:54:14,16: number
 This type is incompatible with
-[LIB] core.js:69:11,16: string
+[LIB] core.js:71:11,16: string
 
 rest.js:8:31,33: tuple type
 rest parameter should have an explicit array type (or type `any`)

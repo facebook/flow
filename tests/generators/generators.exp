@@ -39,7 +39,7 @@ class.js:134:1,44: call of method `next`
 Error:
 class.js:134:42,43: string
 This type is incompatible with
-[LIB] core.js:346:37,40: undefined
+[LIB] core.js:348:37,40: undefined
 
 class.js:137:4,4: number
 This type is incompatible with
@@ -99,7 +99,7 @@ generators.js:95:1,35: call of method `next`
 Error:
 generators.js:95:33,34: string
 This type is incompatible with
-[LIB] core.js:346:37,40: undefined
+[LIB] core.js:348:37,40: undefined
 
 generators.js:101:4,4: number
 This type is incompatible with
