@@ -14,3 +14,9 @@ let data3 = require('./package2');
 let data4 = require('./json_array');
 (data4: Array<number>);
 (data4: void); // error, should be Array<number>
+
+(require('./json_string'): void); // error, should be string
+(require('./json_number'): void); // error, should be number
+(require('./json_true'): void); // error, should be true
+(require('./json_false'): void); // error, should be false
+(require('./json_null'): void); // error, should be null

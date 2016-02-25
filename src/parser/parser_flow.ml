@@ -4384,16 +4384,19 @@ let program ?(fail=true) ?(token_sink=None) ?(parse_options=None) content =
 let program_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
   parse_program fail ~token_sink ~parse_options filename content
 
-type json_file =
-  | JSONArray of Loc.t * Ast.Expression.Array.t
-  | JSONObject of Loc.t * Ast.Expression.Object.t
-
+(* even if fail=false, still raises an error on a totally invalid token, since
+   there's no legitimate fallback. *)
 let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
   let env = mk_parse_env ~token_sink ~parse_options filename content in
   match Peek.token env with
-  | T_LBRACKET ->
-    let ((ast_loc, ast), errs) = do_parse env Parse.array_initializer fail in
-    (JSONArray (ast_loc, ast), errs)
-  | _T_LCURLY ->
-    let ((ast_loc, ast), errs) = do_parse env Parse.object_initializer fail in
-    (JSONObject (ast_loc, ast), errs)
+  | T_LBRACKET
+  | T_LCURLY
+  | T_STRING _
+  | T_NUMBER _
+  | T_TRUE
+  | T_FALSE
+  | T_NULL ->
+    do_parse env Parse.expression fail
+  | _ ->
+    error_unexpected env;
+    raise (Error.Error (errors env))
