@@ -14,6 +14,7 @@ hero: true
 Flow is a static type checker, designed to find type errors in JavaScript programs:
 */
 
+// $WithLineNums
 // @flow
 function foo(x) {
   return x * 10;
@@ -35,6 +36,7 @@ $> flow
 Flow also lets you gradually evolve JavaScript code into typed code:
 */
 
+// $WithLineNums
 // @flow
 function bar(x: string, y: number): string {
   // $ExpectError

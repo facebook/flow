@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'json'
 require 'open3'
+require 'set'
 require 'tmpdir'
 
 module Jekyll
@@ -56,6 +57,11 @@ module Jekyll
   class FlowdocConverter < Converter
     class << self
       attr_accessor :tempdir
+
+      def valid_pragma?(str)
+        @pragmas ||= Set.new ['$WithLineNums']
+        @pragmas.include? str
+      end
     end
 
     def initialize(config = {})
@@ -87,11 +93,20 @@ module Jekyll
       end
     end
 
+    def is_block_comment(comment)
+      comment['type'] == 'Block' && comment['loc']['start']['column'] == 0
+    end
+
     def is_ignored_comment(comment)
-      type, loc, value = comment.values_at('type', 'loc', 'value')
+      loc, value = comment.values_at('loc', 'value')
       start = loc['start']
-      type == 'Block' && start['column'] == 0 &&
+      is_block_comment(comment) &&
         ((start['line'] == 1 && value.strip == "@flow") || value =~ YAML_REGEX)
+    end
+
+    def is_pragma(comment)
+      comment['loc']['start']['column'] == 0 &&
+        self.class.valid_pragma?(comment['value'].strip)
     end
 
     def unindent(str)
@@ -107,7 +122,12 @@ module Jekyll
           :value => "",
           :range => range
         }
-      elsif type == 'Block' && loc['start']['column'] == 0
+      elsif is_pragma(comment)
+        {
+          :pragma => value.strip,
+          :range => range
+        }
+      elsif is_block_comment(comment)
         {
           :value => @markdown.convert(unindent(value)),
           :range => range
@@ -239,37 +259,52 @@ module Jekyll
       ]}
       sections = []
       out = ""
+      pragmas = Set.new
       last_loc = 0
-      in_code = false
+      last_was_code = false
       items.each do |item|
         start_loc, end_loc = item[:range]
-        is_markdown = item.has_key?(:value)
-        if in_code && is_markdown
-          sections.push([:code, out])
+        is_code = !item.has_key?(:value)
+        if last_was_code && !is_code
+          sections.push([
+            pragmas.include?('$WithLineNums') ? :code_with_nums : :code,
+            out.sub(/\A\n+|\n+\z/m, '')
+          ])
           out = ""
+          pragmas.clear()
+        elsif !last_was_code && is_code
+          sections.push([:html, out])
+          out = ""
+          pragmas.clear()
         end
+
+        if item.has_key?(:pragma)
+          pragmas.add(item[:pragma])
+          last_loc = end_loc # skip the pragma
+          last_was_code = true
+          next
+        end
+
+        # Catch up over whitespace
         out += escape(content.slice(last_loc, start_loc - last_loc))
-        if is_markdown
+
+        if !is_code
           out += item[:value]
-          in_code = false
+          last_was_code = false
         else
-          if not in_code
-            sections.push([:html, out])
-            out = ""
-          end
           out += item[:start]
           out += escape(content.slice(start_loc, end_loc - start_loc))
           out += item[:end]
-          in_code = true
+          last_was_code = true
         end
         last_loc = end_loc
       end
       out += escape(content.slice(last_loc, content.length - last_loc))
-      sections.push([in_code ? :code : :html, out])
+      sections.push([last_was_code ? :code : :html, out])
 
       outs = sections.map do |type, content|
-        if type == :code
-          content = content.lines.reject { |l| l =~ /\/\/\s*\$DocIssue/ }.join
+        content = content.lines.reject { |l| l =~ /\/\/\s*\$DocIssue/ }.join
+        if type == :code_with_nums
           lines = content.lines.count
           '<figure class="highlight">' +
             '<table class="highlighttable" style="border-spacing: 0"><tbody><tr>' +
@@ -280,6 +315,10 @@ module Jekyll
               '</td>' +
               '<td class="code"><pre>' + content + '</pre></td>' +
             '</tr></tbody></table>' +
+          '</figure>'
+        elsif type == :code
+          '<figure class="highlight">' +
+            '<pre><code>' + content + '</code></pre>' +
           '</figure>'
         else
           content

@@ -31,7 +31,7 @@ initialized with a `number`. The method call `foo()` on the object writes
 
 Object types are of the form:
 
-{% highlight javascript linenos=table %}
+{% highlight javascript %}
 { x1: T1; x2: T2; x3: T3;}
 {% endhighlight %}
 
@@ -103,6 +103,7 @@ by all objects created from that constructor function by a process known as
 prototype chaining.
 */
 
+// $WithLineNums
 // @flow
 function FuncBasedClass(x) { this.x = x; }
 FuncBasedClass.prototype.f = function() { return this.x; }
