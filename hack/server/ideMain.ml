@@ -78,23 +78,33 @@ let get_call_response env id call =
   else
     IdeServerCall.get_call_response id call env.files_info
 
+let handle_gone_client env =
+  Hh_logger.log "Client went away";
+  { env with client = None }
+
 let handle_client_request env (ic, oc) =
   Hh_logger.log "Handling client request";
-  let request = Marshal.from_channel ic in
-  match IdeJsonUtils.call_of_string request with
-  | ParsingError e ->
-    Hh_logger.log "Received malformed request: %s" e;
-    env
-  | InvalidCall (id, e) ->
-    let response = IdeJsonUtils.json_string_of_invalid_call id e in
-    Marshal.to_channel oc response [];
-    flush oc;
-    env
-  | Call (id, call) ->
-    let response = get_call_response env id call in
-    Marshal.to_channel oc response [];
-    flush oc;
-    env
+  try
+    let request = Marshal.from_channel ic in
+    match IdeJsonUtils.call_of_string request with
+    | ParsingError e ->
+      Hh_logger.log "Received malformed request: %s" e;
+      env
+    | InvalidCall (id, e) ->
+      let response = IdeJsonUtils.json_string_of_invalid_call id e in
+      Marshal.to_channel oc response [];
+      flush oc;
+      env
+    | Call (id, call) ->
+      let response = get_call_response env id call in
+      Marshal.to_channel oc response [];
+      flush oc;
+      env
+  with
+  | End_of_file
+  | Sys_error _ ->
+    (* client went away in the meantime *)
+    handle_gone_client env
 
 let handle_typechecker_message env typechecker_process =
   match IdeProcessPipe.recv typechecker_process with
@@ -113,10 +123,6 @@ let handle_typechecker_message env typechecker_process =
       updated_files_info in
     { env with files_info = new_files_info }
 
-let handle_gone_client env =
-  Hh_logger.log "Client went away";
-  { env with client = None }
-
 let daemon_main _ (parent_ic, _parent_oc) =
   Printexc.record_backtrace true;
   SharedMem.enable_local_writes ();
@@ -132,10 +138,9 @@ let daemon_main _ (parent_ic, _parent_oc) =
         | `Monitor -> handle_new_client !env parent_ic
         | `Client c -> handle_client_request !env c
       with
-      | End_of_file
-      | Sys_error _ ->
-        (* client went away in the meantime *)
-        handle_gone_client !env
+      | IdeProcessPipe.IdeProcessPipeBroken ->
+        Hh_logger.log "Typechecker has died, exiting too.";
+        Exit_status.(exit IDE_typechecker_died);
     in
     env := new_env
   done
