@@ -35,6 +35,28 @@ json_file/test.js:16:2,6: array literal
 This type is incompatible with
 json_file/test.js:16:9,12: undefined
 
+json_file/test.js:18:2,25: string
+This type is incompatible with
+json_file/test.js:18:28,31: undefined
+
+json_file/test.js:19:2,25: number
+This type is incompatible with
+json_file/test.js:19:28,31: undefined
+
+json_file/test.js:20:2,23: boolean
+This type is incompatible with
+json_file/test.js:20:26,29: undefined
+
+json_file/test.js:21:2,24: boolean
+This type is incompatible with
+json_file/test.js:21:27,30: undefined
+
+json_file/test.js:22:2,23: null
+This type is incompatible with
+json_file/test.js:22:26,29: undefined
+
 invalid_package_file/package.json: Unexpected end of input
 
-Found 10 errors
+json_file/json_invalid.json:1:1,1: Unexpected token :
+
+Found 16 errors

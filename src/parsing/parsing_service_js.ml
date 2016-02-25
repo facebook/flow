@@ -92,7 +92,7 @@ let parse_json_file ~fail content file =
 
   (* parse the file as JSON, then munge the AST to convert from an object
      into a `module.exports = {...}` statement *)
-  let ast, parse_errors =
+  let expr, parse_errors =
     Parser_flow.json_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
 
@@ -111,11 +111,6 @@ let parse_json_file ~fail content file =
     });
     computed = false;
   }) in
-  let expr =
-    match ast with
-    | Parser_flow.JSONArray (loc, arr) -> (loc, Expression.Array arr)
-    | Parser_flow.JSONObject (loc, obj) -> (loc, Expression.Object obj)
-  in
   let loc = fst expr in
   let statement =
     loc, Statement.Expression { Statement.Expression.
