@@ -1852,8 +1852,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow_t cx trace (t, key)
         );
       | _ ->
-        let t = StrT (prefix_reason "key of " reason, AnyLiteral) in
-        rec_flow_t cx trace (t, key))
+        rec_flow_t cx trace (StrT.why reason, key))
 
     | (InstanceT (reason, _, _, instance), GetKeysT(_,key)) ->
       let fields_tmap = find_props cx instance.fields_tmap in
@@ -1865,8 +1864,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       )
 
     | ((AnyObjT reason | AnyFunT reason), GetKeysT (_, key)) ->
-      let t = StrT (prefix_reason "key of " reason, AnyLiteral) in
-      rec_flow_t cx trace (t, key)
+      rec_flow_t cx trace (StrT.why reason, key)
 
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try

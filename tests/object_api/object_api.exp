@@ -13,15 +13,15 @@ object_keys.js:5:2,20: array type
 This type is incompatible with
 object_keys.js:5:23,26: undefined
 
-object_keys.js:9:4,4: key of object literal
+object_keys.js:9:4,4: string
 This type is incompatible with
 object_keys.js:9:8,13: number
 
-object_keys.js:14:4,4: key of object type
+object_keys.js:14:4,4: string
 This type is incompatible with
 object_keys.js:14:8,13: number
 
-object_keys.js:18:14,16: key of object type
+object_keys.js:18:14,16: string
 This type is incompatible with
 object_keys.js:18:26,31: number
 

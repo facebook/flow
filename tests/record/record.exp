@@ -15,7 +15,7 @@ test.js:20:6,34: string literal `qux`
 Property not found in
 test.js:19:19,44: object type
 
-test.js:23:21,26: key of object type
+test.js:23:21,26: string
 Expected string literal
 test.js:24:16,21: key set
 
