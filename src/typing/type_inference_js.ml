@@ -5342,8 +5342,8 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
              as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
           expression cx type_params_map _object in
 
-      let expr_reason = mk_reason (spf "foo property `%s`" prop_name) loc in
-      let prop_reason = mk_reason (spf "bar property `%s`" prop_name) prop_loc in
+      let expr_reason = mk_reason (spf "property `%s`" prop_name) loc in
+      let prop_reason = mk_reason (spf "property `%s`" prop_name) prop_loc in
       let t = match Refinement.get cx e expr_reason with
       | Some t -> t
       | None ->
