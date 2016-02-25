@@ -16,8 +16,15 @@ let get_autocomplete_response content files_info =
     List.map AutocompleteService.autocomplete_result_to_json res
   ))
 
+let get_identify_function_response content line char =
+  IdentifyFunctionResponse (
+    ServerIdentifyFunction.go content line char
+  )
+
 let get_call_response id call files_info =
   let response = match call with
     | AutoCompleteCall content ->
-      get_autocomplete_response content files_info in
+      get_autocomplete_response content files_info
+    | IdentifyFunctionCall (content, line, char) ->
+      get_identify_function_response content line char in
   IdeJsonUtils.json_string_of_response id response

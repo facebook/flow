@@ -138,7 +138,7 @@ let daemon_main _ (parent_ic, _parent_oc) =
         | `Monitor -> handle_new_client !env parent_ic
         | `Client c -> handle_client_request !env c
       with
-      | IdeProcessPipe.IdeProcessPipeBroken ->
+      | IdeProcessPipe.IDE_process_pipe_broken ->
         Hh_logger.log "Typechecker has died, exiting too.";
         Exit_status.(exit IDE_typechecker_died);
     in

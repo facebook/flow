@@ -10,7 +10,7 @@
 
 open IdeProcessMessage
 
-exception IdeProcessPipeBroken
+exception IDE_process_pipe_broken
 
 type ('a, 'b) pipe = {
   in_fd : Unix.file_descr;
@@ -27,7 +27,7 @@ let convert_exception f =
     f ()
   with e ->
     Hh_logger.exc e;
-    raise IdeProcessPipeBroken
+    raise IDE_process_pipe_broken
 
 let send pipe msg =
   convert_exception (

@@ -36,6 +36,16 @@ let invalid_call_error_code = 2
 let args_to_call = function
   | [JSON_String "--auto-complete"; JSON_String content] ->
     AutoCompleteCall content
+  | [JSON_String "--identify-function"; JSON_String pos; JSON_String content] ->
+    let tpos = Str.split (Str.regexp ":") pos in
+    let line, char =
+      try
+         match tpos with
+         | [line; char] ->
+             int_of_string line, int_of_string char
+         | _ -> raise Not_found
+      with _ -> raise Not_found in
+    IdentifyFunctionCall (content, line, char)
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -70,12 +80,18 @@ let call_of_string s =
     end
     | None -> Error `No_type in
 
+  (* Client sometimes asks for JSON version, but in persistent connection mode
+   * that's the only version, so filter it out *)
+  let strip_json_args args = List.filter args begin function
+    | JSON_String "--json" -> false
+    | _ -> true end in
+
   let get_call id fields =
     match get_field fields "args" with
     | Some (JSON_Array args) ->
       begin
         try
-          Ok (Call (id, args_to_call args))
+          Ok (Call (id, args_to_call (strip_json_args args)))
         with Not_found -> Error (`Call_not_recognized id)
       end
     | Some _ -> Error (`Args_not_an_array id)
@@ -103,13 +119,18 @@ let call_of_string s =
     InvalidCall (id, "Args field must be an array")
   | Error `Call_not_recognized id -> InvalidCall (id, "Call not recognized")
 
-let json_string_of_response id = function
-  | AutoCompleteResponse r ->
-    json_to_string (JSON_Object [
-      ("type", JSON_String "response");
-      ("id", JSON_Number (string_of_int id));
-      ("result", r);
-    ])
+let build_response_json id result_field =
+  JSON_Object [
+    ("type", JSON_String "response");
+    ("id", JSON_Number (string_of_int id));
+    ("result", result_field);
+  ]
+
+let json_string_of_response id response =
+  let result_field = match response with
+    | AutoCompleteResponse r -> r
+    | IdentifyFunctionResponse s -> JSON_String s in
+  json_to_string (build_response_json id result_field)
 
 let json_string_of_error id error_code error_message  =
   json_to_string (JSON_Object [
