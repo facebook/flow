@@ -2,25 +2,25 @@
 id: advanced-configuration
 title: Advanced Configuration
 permalink: /docs/advanced-configuration.html
-prev: troubleshooting.html
+prev: cli.html
 next: react-example.html
 ---
 
-This section discusses some of the advanced configuration options available 
+This section discusses some of the advanced configuration options available
 for customizing how `flow` runs.
 
 ## `.flowconfig`
 
-Many times it is enough to create an empty `.flowconfig` file via `flow init` 
-and just have `.flowconfig` simply be the token that tells flow to "start type 
+Many times it is enough to create an empty `.flowconfig` file via `flow init`
+and just have `.flowconfig` simply be the token that tells flow to "start type
 checking here".
 
-However, `.flowconfig` does provide some configuration options that can be 
+However, `.flowconfig` does provide some configuration options that can be
 used to customize what files `flow` accesses and what files it ignores.
 
 ### `[include]`
 
-The `[include]` heading in a `.flowconfig` file tells `flow` to include the 
+The `[include]` heading in a `.flowconfig` file tells `flow` to include the
 specified files or directories when type checking your code. Including a
 directory includes all the files under that directory. Each line in the
 include section is a path to include. These paths can be relative to the root
@@ -97,13 +97,13 @@ can be overridden with command line flags.
 - `module.name_mapper` (regex -> string): specify a regular expression to match against module names, and a replacement value, separated by a `->`.
 
     For example:
-    
+
     ```
     module.name_mapper= '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
     ```
-  
+
     makes Flow treat `require('image!foo.jpg')` as if it was `require('ImageStub')`.
-  
+
     (**note:** you can specify `module.name_mapper` multiple times)
 
 - `module.system` (`node` | `haste`): the module system to use to resolve
@@ -157,26 +157,26 @@ can be overridden with command line flags.
   flag `--strip-root`.
 
 - `suppress_comment` (regex): defines a magical comment that suppresses any Flow errors on the following line. For example:
-    
+
     ```
     suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
     ```
-    
+
     will match a comment like this:
-  
+
     ```
     // $FlowFixMe: suppressing this error until we can refactor
     var x : string = 123;
     ```
-    
+
     and suppress the error. If there is no error on the next line (the suppression is unnecessary), an "Unused suppression" error will be shown instead.
-  
+
     **Note:** you can specify `suppress_comment` multiple times. We recommend defining something like `$FlowFixMe` (for type errors that need to be fixed) in addition to `$FlowIssue` (to suppress errors caused by bugs in Flow).
 
 - `temp_dir` (string): Tell Flow which directory to use as a temp directory.
   Defaults to `/tmp/flow`. Can be overridden with the commandline flag
   `--temp-dir`.
-    
+
 - `esproposal.class_static_fields` (`enable`|`ignore`|`warn`): set this to
   `enable` to indicate that Flow should interpret static [class
   fields](https://github.com/jeffmo/es-class-fields-and-static-properties) per
@@ -185,7 +185,7 @@ can be overridden with command line flags.
   indicate the presence of a static property on the class). The default value
   of this option is `warn`, which gives a warning on use since this proposal is
   still very early-stage.
-    
+
 - `esproposal.class_instance_fields` (`enable`|`ignore`|`warn`): set this to
   `enable` to indicate that Flow should interpret instance [class
   fields](https://github.com/jeffmo/es-class-fields-and-static-properties) per
@@ -207,7 +207,7 @@ can be overridden with command line flags.
   should simply ignore the syntax. The default value of this option is `warn`,
   which gives a warning on use since this proposal is still very early-stage.
 
-### [version] 
+### [version]
 
 You can specify in the `.flowconfig` which version of Flow you expect to use.
 You do this with the `[version]` section. If this section is omitted or left
@@ -238,13 +238,13 @@ So far, we support the following ways to specify supported versions
 
 ### Example
 
-Say you have the following directory structure, with your `.flowconfig` in 
+Say you have the following directory structure, with your `.flowconfig` in
 `mydir`:
 
 ```bbcode
 otherdir
 └── src
-    ├── othercode.js 
+    ├── othercode.js
 mydir
 ├── .flowconfig
 ├── build
@@ -259,7 +259,7 @@ mydir
     └── shim.js
 ```
 
-Here is an example of how you could use the `.flowconfig` directives. 
+Here is an example of how you could use the `.flowconfig` directives.
 
 ```bbcode
 [include]
@@ -272,5 +272,5 @@ Here is an example of how you could use the `.flowconfig` directives.
 ./lib
 ```
 
-Now `flow` will include a directory outside the `.flowconfig` path in its 
+Now `flow` will include a directory outside the `.flowconfig` path in its
 check, ignore the `build` directory and use the declarations in  `lib`.

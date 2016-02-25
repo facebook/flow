@@ -83,7 +83,8 @@ end = struct
       CommandSpec.run command argv
     with
     | CommandSpec.Show_help ->
-        FlowExitStatus.(exit ~msg:(CommandSpec.string_of_usage command) Ok)
+        print_endline (CommandSpec.string_of_usage command);
+        FlowExitStatus.(exit Ok)
     | CommandSpec.Failed_to_parse msg ->
         let msg = Utils.spf
           "%s: %s\n%s"

@@ -3,7 +3,7 @@ id: underscore
 title: Flow, meet Underscore
 permalink: /docs/underscore.html
 prev: react-example.html
-next: coming-soon.html
+next: quick-reference.html
 ---
 
 ## Introduction

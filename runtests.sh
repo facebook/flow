@@ -117,9 +117,21 @@ runtest() {
             fi
         fi
 
+        # Each test should write its output to a unique directory so that
+        # parallel runs of the same test don't stomp on each other (Facebook
+        # internally runs a stress test to look for flaky tests). If a test
+        # fails, we'll then copy the files back to the source directory.
+        OUT_DIR=$(mktemp -d /tmp/flow_test.XXXXX)
+
+        # deletes the temp directory
+        function cleanup {
+          rm -rf "$OUT_DIR"
+        }
+        trap cleanup EXIT
+
         # check this dir
-        out_file="${name}.out"
-        err_file="${name}.err"
+        out_file="${OUT_DIR}/${name}.out"
+        err_file="${OUT_DIR}/${name}.err"
 
         # get config flags.
         # for now this is kind of ad-hoc:
@@ -211,15 +223,19 @@ runtest() {
 
             trap - SIGINT SIGTERM
         fi
-        diff_file="${name}.diff"
+        diff_file="${OUT_DIR}/${name}.diff"
         diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
         if [ -s "$diff_file" ]
         then
+            mv "$out_file" .
+            mv "$err_file" .
+            mv "$diff_file" .
             return_status=$RUNTEST_FAILURE
         else
-            rm -f "$out_file"
-            rm -f "$err_file"
-            rm -f "$diff_file"
+            rm -rf "$OUT_DIR"
+            rm -f "$(basename "$out_file")"
+            rm -f "$(basename "$err_file")"
+            rm -f "$(basename "$diff_file")"
             return_status=$RUNTEST_SUCCESS
         fi
     else

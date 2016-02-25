@@ -1,3 +1,5 @@
+/* @flow */
+/*
 ---
 id: objects
 title: Objects
@@ -5,68 +7,58 @@ permalink: /docs/objects.html
 prev: classes.html
 next: functions.html
 ---
+*/
 
+/*
 Objects can be created with object literals. The types of properties are fixed
 based on their initializers.
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
+// @flow
 var o = {
   x: 42,
   foo(x) { this.x = x; }
 };
+// $ExpectError
 o.foo('hello');
-{% endhighlight %}
 
+/*
 Flow infers the type of property `x` of the object to be number since it is
 initialized with a `number`. The method call `foo()` on the object writes
-`string` to that property. As expected, running Flow produces the following
-error:
-
-```bbcode
-file.js:6:7,13: string
-This type is incompatible with
-  file.js:3:6,7: number
-```
+`string` to that property. As expected, running Flow produces an error.
 
 ## Object Types
 
 Object types are of the form:
 
-{% highlight javascript linenos=table %}
-{ x1: T1; x2: T2; ... x3: T3;}
+{% highlight javascript %}
+{ x1: T1; x2: T2; x3: T3;}
 {% endhighlight %}
 
 Here is an example of declaring an object type:
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
+// @flow
 class Foo {}
 var obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Foo()}
-{% endhighlight %}
 
+/*
 Here is an example of Flow catching a problem with your object type:
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
-class Foo {}
+// @flow
 class Bar {}
-var obj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Bar()}
-{% endhighlight %}
+// $ExpectError
+var badObj: {a: boolean; b: string; c: Foo} = {a: true, b: "Hi", c: new Bar()}
 
-```bbcode
-/tmp/flow/f.js:4:70,72: Bar
-This type is incompatible with
-  /tmp/flow/f.js:2:7,9: Foo
-```
-
+/*
 ## Reusable Object Types
 
 Object types can be made reusable through the use of
 [type aliases](type-aliases.html):
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
+// @flow
 type MyType = {message: string; isAwesome: boolean};
 function sayHello(data: MyType) {
   console.log(data.message);
@@ -75,27 +67,26 @@ function sayHello(data: MyType) {
 var mySampleData: MyType = {message: 'Hello World', isAwesome: true};
 sayHello(mySampleData);
 sayHello({message: 'Hi', isAwesome: false});
-{% endhighlight %}
 
+/*
 ## Optional properties
 
 Object types can have optional properties. The following code shows how
 optional properties allow objects with missing properties to be typed.
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
-var obj: { a: string; b?: number } = { a: "hello" };
-{% endhighlight %}
+// @flow
+var optObj: { a: string; b?: number } = { a: "hello" };
 
+/*
 When optional properties are accessed, Flow tracks the fact that they could
 be `undefined`, and reports errors when they are used as is.
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
-var obj: { a: string; b?: number } = { a: "hello" };
-obj.b * 10 // error: undefined is incompatible with number
-{% endhighlight %}
+// $ExpectError
+optObj.b * 10 // error: undefined is incompatible with number
 
+/*
 One way to avoid errors is to dynamically check that an optional property exists
 before using it. See [nullable types](http://flowtype.org/docs/nullable-types.html#_) for details.
 
@@ -110,31 +101,31 @@ Additionally, a constructor function may set various properties on its
 `prototype` object. These properties are typically methods, and are inherited
 by all objects created from that constructor function by a process known as
 prototype chaining.
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
-function Foo(x) { this.x = x; }
-Foo.prototype.f = function() { return this.x; }
+// $WithLineNums
+// @flow
+function FuncBasedClass(x) { this.x = x; }
+FuncBasedClass.prototype.f = function() { return this.x; }
 
-var o = new Foo(42);
-var x: number = o.f();
-{% endhighlight %}
+var y = new FuncBasedClass(42);
+var z: number = y.f();
 
+/*
 In this code, a `new` object is created by `new Foo(42)`; this object has a
 property `x` initialized by `Foo` with the `number` passed to it. The object
 also responds to the `f` method defined in `Foo.prototype`, so `o.f()` reads
 `o.x` and returns it. This fits with the expectation of a `number` as
-expressed by the annotation at line 7, so this code typechecks.
+expressed by the annotation at line 6, so this code typechecks.
 
 Furthermore, Flow ensures that an object's type can always be viewed as a
 subtype of its constructor's `prototype type`. (This is analogous to subtyping
 based on class inheritance.) This means that the following code typechecks:
+*/
 
-{% highlight javascript linenos=table %}
-...
-var o: Foo = new Foo(42);
-{% endhighlight %}
+var anObj: FuncBasedClass = new FuncBasedClass(42);
 
+/*
 ## Adding properties
 
 It is a common idiom in JavaScript to add properties to objects after they are
@@ -155,9 +146,9 @@ complicate the analysis; this is a well-known fact (in technical terms, Flow's
 analysis is heap-insensitive for strong updates).
 
 For example, the following code typechecks:
+*/
 
-{% highlight javascript linenos=table %}
-/* @flow */
+// @flow
 function foo(p) { p.x = 42; }
 function bar(q) { q.f(); }
 
@@ -166,31 +157,19 @@ o.f = function() { return this.x; };
 
 bar(o);
 foo(o);
-{% endhighlight %}
 
+/*
 In this code, when `bar(o)` is called, `o.x` is undefined; only later is it
 initialized by `foo(o)`, but it is hard to track this fact statically.
 
 Fortunately, though, the following code does not typecheck:
-
-{% highlight javascript linenos=table %}
-/* @flow */
-function foo(p) { p.x = 42; }
-function bar(q) { q.f(); }
-
-var o = { };
-o.f = function() { return this.x; };
+*/
 
 foo(o);
+// $ExpectError
 var x: string = bar(o);
-{% endhighlight %}
 
-```bbcode
-file.js:3:16,16: undefined
-This type is incompatible with
-  file.js:8:7,12: string
-```
-
+/*
 In other words, Flow knows enough to infer that whenever the `x` property of
 `o` does exist, it is a number, so a `string` should not be expected.
 
@@ -237,4 +216,4 @@ for such an object, the value type of the map does not interfere with the
 types of the properties of the record. This is potentially unsound, but we
 admit it because a sound design would necessarily lead to severe imprecision
 in the types of properties.
-
+*/

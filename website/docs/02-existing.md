@@ -3,12 +3,12 @@ id: existing
 title: Running Flow on existing code
 permalink: /docs/existing.html
 prev: new-project.html
-next: third-party.html
+next: type-annotations.html
 ---
 
 ## A word of warning
 
-Making previously-untyped code typecheck with Flow may take some time and work - and sometimes it may not be worth the effort in the short term. Flow supports *interface files* so you can use libraries in a typed way without having to run Flow on them at all. If your project just depends on third party libraries, check out our [guide](third-party.html) on using Flow with external dependencies and consider using an interface file for the libraries. 
+Making previously-untyped code typecheck with Flow may take some time and work - and sometimes it may not be worth the effort in the short term. Flow supports *interface files* so you can use libraries in a typed way without having to run Flow on them at all. If your project just depends on third party libraries, check out our [guide](third-party.html) on using Flow with external dependencies and consider using an interface file for the libraries.
 
 Why is typechecking existing code so hard? Libraries not written with types in mind often contain complex, highly dynamic code that confuses analysers such as Flow. The code may also have been written in a style that Flow deliberately chooses not to support in order to give the programmer more help. Some typical examples are:
 

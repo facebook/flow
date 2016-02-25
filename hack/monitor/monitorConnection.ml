@@ -125,7 +125,8 @@ let connect_to_monitor config =
     (* It looks like the socket is not always immediately released after
      * process dies, and subsequent calls to it hang *)
     HackEventLogger.client_connect_to_monitor_timeout ();
-    Result.Error Server_missing
+    if not (server_exists config.lock_file) then Result.Error Server_missing
+    else Result.Error ServerMonitorUtils.Server_busy
 
 let connect_and_shut_down config =
   let open Result in

@@ -70,7 +70,18 @@ let monitor_daemon_main (options: ServerArgs.options) =
   else HackEventLogger.init_monitor (ServerArgs.root options)
       (Unix.gettimeofday ());
   Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
+
   let www_root = (ServerArgs.root options) in
+
+  if not (ServerArgs.check_mode options) then begin
+    (** Make sure to lock the lockfile before doing *anything*, especially
+     * opening the socket. *)
+    let lock_file = ServerFiles.lock_file www_root in
+    if not (Lock.grab lock_file) then
+      (Hh_logger.log "Monitor daemon already running. Killing";
+       Exit_status.exit Exit_status.Ok);
+  end;
+
   ignore @@ Sys_utils.setsid ();
 
   (* Force hhi files to be extracted and their location saved before workers
@@ -85,12 +96,6 @@ let monitor_daemon_main (options: ServerArgs.options) =
   if ServerArgs.check_mode options then
     ServerMain.run_once options
   else
-    (** Make sure to lock the lockfile before doing *anything*, especially
-     * opening the socket. *)
-    let lock_file = ServerFiles.lock_file www_root in
-    if not (Lock.grab lock_file) then
-      (Hh_logger.log "Monitor daemon already running. Killing";
-       Exit_status.exit Exit_status.Ok);
     let hh_server_monitor_starter = begin fun () ->
 
       if !first_init then begin
