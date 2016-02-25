@@ -15,7 +15,6 @@ open Utils_js
 (* conversion *)
 
 let dts_ext = ".d.ts"
-let dts_ext_find_pattern = "*.d.ts"
 
 let convert_file error_flags outpath file =
   let base = Filename.chop_suffix (Filename.basename file) dts_ext in
@@ -55,7 +54,7 @@ let convert_file error_flags outpath file =
   (* Printer_dts.program *)
 
 let find_files_recursive path =
-  Find.find_with_name [Path.make path] dts_ext_find_pattern
+  Find.find ~filter:(fun x -> Filename.check_suffix x dts_ext) [Path.make path]
 
 let find_files path =
   Array.fold_left (fun acc f ->
