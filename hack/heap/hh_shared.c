@@ -195,7 +195,7 @@ typedef struct {
 static size_t shared_mem_size;
 
 /* Beginning of shared memory */
-static char* shared_mem = 0;
+static char* shared_mem = NULL;
 
 /* ENCODING: The first element is the size stored in bytes, the rest is
  * the data. The size is set to zero when the storage is empty.
@@ -232,17 +232,17 @@ static char* heap_init;
 /* This should only be used by the master */
 static size_t heap_init_size = 0;
 
-static size_t used_heap_size() {
+static size_t used_heap_size(void) {
   return *heap - heap_init;
 }
 
 /* Expose so we can display diagnostics */
-value hh_heap_size() {
+CAMLprim value hh_heap_size(void) {
   CAMLparam0();
   CAMLreturn(Val_long(used_heap_size()));
 }
 
-value hh_hash_used_slots() {
+CAMLprim value hh_hash_used_slots(void) {
   CAMLparam0();
   uint64_t count = 0;
   uintptr_t i = 0;
@@ -254,7 +254,7 @@ value hh_hash_used_slots() {
   CAMLreturn(Val_long(count));
 }
 
-value hh_hash_slots() {
+CAMLprim value hh_hash_slots(void) {
   CAMLparam0();
   CAMLreturn(Val_long(HASHTBL_SIZE));
 }
@@ -339,7 +339,7 @@ static void init_shared_globals(char* mem) {
 /* Must be called by the master BEFORE forking the workers! */
 /*****************************************************************************/
 
-value hh_shared_init(
+CAMLprim value hh_shared_init(
   value global_size_val,
   value heap_size_val
 ) {
@@ -481,7 +481,7 @@ void hh_worker_init() {
  */
 /*****************************************************************************/
 
-value hh_counter_next() {
+CAMLprim value hh_counter_next(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
@@ -501,6 +501,7 @@ value hh_counter_next() {
 /*****************************************************************************/
 
 void hh_shared_store(value data) {
+  CAMLparam1(data);
   size_t size = caml_string_length(data);
 
   assert(my_pid == master_pid);                  // only the master can store
@@ -519,7 +520,7 @@ void hh_shared_store(value data) {
  */
 /*****************************************************************************/
 
-value hh_shared_load() {
+CAMLprim value hh_shared_load(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
@@ -531,7 +532,7 @@ value hh_shared_load() {
   CAMLreturn(result);
 }
 
-void hh_shared_clear() {
+void hh_shared_clear(void) {
   assert(my_pid == master_pid);
   global_storage[0] = 0;
 }
@@ -582,6 +583,7 @@ static int htable_add(uint64_t* table, unsigned long hash, uint64_t value) {
 }
 
 void hh_add_dep(value ocaml_dep) {
+  CAMLparam1(ocaml_dep);
   uint64_t dep = Long_val(ocaml_dep);
   unsigned long hash = (dep >> 31) * (dep & ((1ul << 31) - 1));
 
@@ -592,7 +594,7 @@ void hh_add_dep(value ocaml_dep) {
   htable_add(deptbl, dep >> 31, dep);
 }
 
-value hh_dep_used_slots() {
+CAMLprim value hh_dep_used_slots(void) {
   CAMLparam0();
   uint64_t count = 0;
   uintptr_t slot = 0;
@@ -604,13 +606,13 @@ value hh_dep_used_slots() {
   CAMLreturn(Val_long(count));
 }
 
-value hh_dep_slots() {
+CAMLprim value hh_dep_slots(void) {
   CAMLparam0();
   CAMLreturn(Val_long(DEP_SIZE));
 }
 
 /* Given a key, returns the list of values bound to it. */
-value hh_get_dep(value dep) {
+CAMLprim value hh_get_dep(value dep) {
   CAMLparam1(dep);
   CAMLlocal2(result, cell);
 
