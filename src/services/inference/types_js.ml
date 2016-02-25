@@ -8,13 +8,7 @@
  *
  *)
 
-(* This module drives the type checker. Currently the typechecker is hooked up
-   to Hack's "single_typecheck mode"; integration with "server mode" is in the
-   works. What this means in practical terms is that currently Flow does a
-   whole-program analysis for a set of files, reports errors,
-   and...exits. In the near future, we should be able to do modular
-   analysis, remember results, recompute them when necessary, etc.---essentially
-   mimic all the sweet ways Hack scales. *)
+(* This module drives the type checker *)
 
 open Utils
 open Utils_js
@@ -49,12 +43,7 @@ end)
 (* errors are stored by phase,
    in maps from file path to error set
  *)
-(* errors encountered during parsing.
-   Note: both @flow and non-@flow files are parsed,
-   and their errors are retained. However, only
-   files referenced as modules from @flow files
-   have their parse errors reported. collate_errors
-   does the filtering *)
+(* errors encountered during parsing *)
 let parse_errors = ref FilenameMap.empty
 (* errors encountered during local inference *)
 let infer_errors = ref FilenameMap.empty
