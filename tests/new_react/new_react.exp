@@ -75,6 +75,10 @@ classes.js:81:22,27: number
 This type is incompatible with
 [LIB] fakelib/type_aliases.js:5:80,121: React$Component
 
+import-react.js:18:21,23: number
+This type is incompatible with
+import-react.js:15:18,23: string
+
 new_react.js:17:27,36: number
 This type is incompatible with
 new_react.js:17:18,23: string
@@ -233,4 +237,4 @@ state5.js:5:23,23: property `x`
 Property cannot be accessed on possibly undefined value
 state5.js:5:12,21: undefined. Did you forget to declare type parameter `State` of property `Component`?
 
-Found 49 errors
+Found 50 errors

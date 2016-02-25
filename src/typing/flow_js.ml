@@ -2506,7 +2506,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let t2 = mk_tvar cx reason in
         (* prerr_endline (string_of_reason reason); *)
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
-        rec_flow cx trace (l, ObjAssignT(reason, t2, o1, [], false))
+        rec_flow cx trace (t2, ObjAssignT(reason, l, o1, [], true))
 
     (********************************************)
     (* array types deconstruct into their parts *)
