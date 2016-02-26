@@ -15,6 +15,11 @@ val global_file_name: string
 val is_json_file: string -> bool
 val is_flow_file: options: Options.options -> string -> bool
 
+(* true if a file path matches an [ignore] entry in config *)
+val is_ignored: Options.options -> string -> bool
+(* true if a file path matches an [include] path in config *)
+val is_included: Options.options -> string -> bool
+
 val init: Options.options -> string list * SSet.t
 
 val lib_module: string
@@ -27,7 +32,7 @@ val absolute_path: Str.regexp
 
 (* given a root, make a filter for file names *)
 val wanted:
-  FlowConfig.config ->
+  options: Options.options ->
   SSet.t ->
   string -> bool
 

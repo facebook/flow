@@ -20,6 +20,8 @@ type options = {
   opt_check_mode: bool;
   opt_debug : bool;
   opt_error_flags: error_flags;
+  opt_ignores: (string * Str.regexp) list;
+  opt_includes: Path_matcher.t;
   opt_json : bool;
   opt_libs: Path.t list;
   opt_log_file: Path.t;
@@ -52,7 +54,9 @@ let default_error_flags = {
 
 let all opts = opts.opt_all
 let error_flags opts = opts.opt_error_flags
+let ignores opts = opts.opt_ignores
 let include_default_libs opts = not opts.opt_no_flowlib
+let includes opts = opts.opt_includes
 let is_check_mode opts = opts.opt_check_mode
 let is_debug_mode opts = opts.opt_debug
 let is_server_mode opts = opts.opt_server_mode

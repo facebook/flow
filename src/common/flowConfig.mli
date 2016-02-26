@@ -40,9 +40,9 @@ end
 
 type config = {
   (* file blacklist *)
-  excludes: (string * Str.regexp) list;
+  ignores: string list;
   (* non-root include paths *)
-  includes: Path_matcher.t;
+  includes: Path.t list;
   (* library paths. no wildcards *)
   libs: Path.t list;
   (* config options *)
@@ -68,9 +68,3 @@ val init: Path.t -> string list -> unit
 
 val version: string
 val flow_ext: string
-
-(* true if a file path matches an include path in config *)
-val is_included: config -> string -> bool
-
-(* true if a file path matches an exclude (ignore) entry in config *)
-val is_excluded: config -> string -> bool

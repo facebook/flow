@@ -309,35 +309,34 @@ module Node = struct
     | Some paths -> paths := SSet.add path !paths
 
   let path_if_exists =
-    let path_exists path =
+    let path_exists ~options path =
       (file_exists path) &&
-        not FlowConfig.(is_excluded (get_unsafe ()) path) &&
+        not (Files_js.is_ignored options path) &&
         not (dir_exists path)
-    in fun path_acc path ->
+    in fun ~options path_acc path ->
       let path = resolve_symlinks path in
       let declaration_path = path ^ FlowConfig.flow_ext in
-      if path_exists declaration_path ||
-        path_exists path
+      if path_exists ~options declaration_path ||
+        path_exists ~options path
       then Some path
       else (record_path path path_acc; None)
 
-  let path_if_exists_with_file_exts path_acc path (file_exts: string list) =
+  let path_if_exists_with_file_exts ~options path_acc path file_exts =
     lazy_seq (file_exts |> List.map (fun ext ->
-      lazy (path_if_exists path_acc (path ^ ext))
+      lazy (path_if_exists ~options path_acc (path ^ ext))
     ))
 
-  let parse_main cx loc path_acc package file_exts =
-    let config = FlowConfig.get_unsafe () in
+  let parse_main ~options cx loc path_acc package file_exts =
     let package = resolve_symlinks package in
-    if not (file_exists package) || (FlowConfig.is_excluded config package)
+    if not (file_exists package) || (Files_js.is_ignored options package)
     then None
     else
       let tokens = match PackageHeap.get package with
       | Some tokens -> tokens
       | None ->
-        let project_root = config.FlowConfig.root in
+        let project_root = Options.root options in
         let msg =
-          let is_included = FlowConfig.is_included config package in
+          let is_included = Files_js.is_included options package in
           let project_root_str = Path.to_string project_root in
           let is_contained_in_root =
             Files_js.is_prefix project_root_str package
@@ -355,9 +354,9 @@ module Node = struct
           ) else (
             spf
               ("This modules resolves to %S, which is outside both your " ^^
-               "root directory and all of the entries in the [includes] " ^^
+               "root directory and all of the entries in the [include] " ^^
                "section of your .flowconfig. You should either add this " ^^
-               "directory to the [includes] section of your .flowconfig, " ^^
+               "directory to the [include] section of your .flowconfig, " ^^
                "move your .flowconfig file higher in the project directory " ^^
                "tree, or move this package under your Flow root directory.")
               package_relative_to_root
@@ -374,23 +373,23 @@ module Node = struct
         let path_w_index = Filename.concat path "index" in
 
         lazy_seq [
-          lazy (path_if_exists path_acc path);
-          lazy (path_if_exists_with_file_exts path_acc path file_exts);
-          lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
+          lazy (path_if_exists ~options path_acc path);
+          lazy (path_if_exists_with_file_exts ~options path_acc path file_exts);
+          lazy (path_if_exists_with_file_exts ~options path_acc path_w_index file_exts);
         ]
 
   let resolve_relative ~options cx loc ?path_acc root_path rel_path =
     let path = Files_js.normalize_path root_path rel_path in
     if Files_js.is_flow_file ~options path
-    then path_if_exists path_acc path
+    then path_if_exists ~options path_acc path
     else (
       let path_w_index = Filename.concat path "index" in
       let file_exts = SSet.elements (Options.module_file_exts options) in
 
       lazy_seq ([
-        lazy (path_if_exists_with_file_exts path_acc path file_exts);
-        lazy (parse_main cx loc path_acc (Filename.concat path "package.json") file_exts);
-        lazy (path_if_exists_with_file_exts path_acc path_w_index file_exts);
+        lazy (path_if_exists_with_file_exts ~options path_acc path file_exts);
+        lazy (parse_main ~options cx loc path_acc (Filename.concat path "package.json") file_exts);
+        lazy (path_if_exists_with_file_exts ~options path_acc path_w_index file_exts);
       ])
     )
 

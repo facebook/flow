@@ -445,9 +445,7 @@ struct
     respond genv ~client ~msg;
     client.close ()
 
-  let get_watch_paths options =
-    let config = FlowConfig.get (Options.root options) in
-    Path_matcher.stems config.FlowConfig.includes
+  let get_watch_paths options = Path_matcher.stems (Options.includes options)
 
   (* filter a set of updates coming from dfind and return
      a FilenameSet. updates may be coming in from
@@ -456,10 +454,9 @@ struct
     let all_libs = env.ServerEnv.libs in
     let options = genv.ServerEnv.options in
     let root = Options.root options in
-    let config = FlowConfig.get root in
     let config_path = FlowConfig.fullpath root in
     let sroot = Path.to_string root in
-    let want = Files_js.wanted config all_libs in
+    let want = Files_js.wanted ~options all_libs in
 
     (* Die if the .flowconfig changed *)
     if SSet.mem config_path updates then begin
@@ -472,7 +469,7 @@ struct
 
     (* Die if a package.json changed *)
     let modified_packages = SSet.filter (fun f ->
-      (Utils.str_starts_with f sroot || FlowConfig.is_included config f)
+      (Utils.str_starts_with f sroot || Files_js.is_included options f)
       && (Filename.basename f) = "package.json" && want f
     ) updates in
     if not (SSet.is_empty modified_packages)
@@ -500,7 +497,7 @@ struct
     SSet.fold (fun f acc ->
       if Files_js.is_flow_file ~options f &&
         (* note: is_included may be expensive. check in-root match first. *)
-        (Utils.str_starts_with f sroot || FlowConfig.is_included config f) &&
+        (Utils.str_starts_with f sroot || Files_js.is_included options f) &&
         (* removes excluded and lib files. the latter are already filtered *)
         want f
       then

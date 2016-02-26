@@ -43,6 +43,10 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Outline an error path up to a specified level"
     |> flag "--lib" (optional string)
         ~doc:"Specify one or more library paths, comma separated"
+    |> flag "--ignore" (optional string)
+        ~doc:"Specify one or more ignore patterns, comma separated"
+    |> flag "--include" (optional string)
+        ~doc:"Specify one or more include patterns, comma separated"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
     |> flag "--munge-underscore-members" no_arg
@@ -107,10 +111,29 @@ module OptionParser(Config : CONFIG) = struct
         exe_name cmdname cmddoc;
   }
 
+  let list_of_string_arg arg_str =
+    match arg_str with
+    | None -> []
+    | Some arg_str -> Str.split (Str.regexp ",") arg_str
+
+  let ignores_of_arg patterns arg_str =
+    let extras = list_of_string_arg arg_str in
+    let patterns = List.rev_append extras patterns in
+    List.map (fun s ->
+      (* On Windows, we have to take care about '\'. *)
+      let reg = Str.regexp (Str.global_replace (Str.regexp "/") "[/\\]" s) in
+      (s, reg)
+    ) patterns
+
+  let includes_of_arg paths arg_str =
+    let extras = List.map Path.make (list_of_string_arg arg_str) in
+    let paths = List.rev_append extras paths in
+    List.fold_left Path_matcher.add Path_matcher.empty paths
+
   let result = ref None
   let main error_flags json profile quiet log_file wait debug
-           all weak traces lib no_flowlib munge_underscore_members max_workers
-           verbose strip_root temp_dir from
+           all weak traces lib ignore include_ no_flowlib
+           munge_underscore_members max_workers verbose strip_root temp_dir from
            root () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
@@ -126,6 +149,10 @@ module OptionParser(Config : CONFIG) = struct
         |> List.map Path.make in
         flowconfig.libs @ libs
     ) in
+    let opt_ignores =
+      ignores_of_arg flowconfig.FlowConfig.ignores ignore in
+    let opt_includes =
+      includes_of_arg flowconfig.FlowConfig.includes include_ in
     let opt_traces = match traces with
       | Some level -> level
       | None -> FlowConfig.(flowconfig.options.Opts.traces) in
@@ -184,6 +211,8 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_munge_underscores = opt_munge_underscores;
       Options.opt_temp_dir;
       Options.opt_max_workers;
+      Options.opt_ignores;
+      Options.opt_includes;
     };
     ()
 

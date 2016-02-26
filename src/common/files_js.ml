@@ -206,19 +206,26 @@ let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
 let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:\\)"
 
-let wanted config lib_fileset =
-  let is_excluded = FlowConfig.is_excluded config in
-  fun path -> not (is_excluded path) && not (SSet.mem path lib_fileset)
+(* true if a file path matches an [ignore] entry in config *)
+let is_ignored options =
+  let list = List.map snd (Options.ignores options) in
+  fun path -> List.exists (fun rx -> Str.string_match rx path 0) list
+
+(* true if a file path matches an [include] path in config *)
+let is_included options f = Path_matcher.matches (Options.includes options) f
+
+let wanted ~options lib_fileset =
+  let is_ignored_ = is_ignored options in
+  fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
 let make_next_files ~options ~libs =
   let root = Options.root options in
-  let config = FlowConfig.get root in
-  let filter = wanted config libs in
-  let others = Path_matcher.stems config.FlowConfig.includes in
+  let filter = wanted ~options libs in
+  let others = Path_matcher.stems (Options.includes options) in
   let sroot = Path.to_string root in
   let realpath_filter path = is_valid_path ~options path && filter path in
   let path_filter path =
-    (Utils.str_starts_with path sroot || FlowConfig.is_included config path)
+    (Utils.str_starts_with path sroot || is_included options path)
     && realpath_filter path
   in
   make_next_files_following_symlinks

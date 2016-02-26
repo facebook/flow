@@ -244,9 +244,9 @@ end
 
 type config = {
   (* file blacklist *)
-  excludes: (string * Str.regexp) list;
+  ignores: string list;
   (* non-root include paths *)
-  includes: Path_matcher.t;
+  includes: Path.t list;
   (* library paths. no wildcards *)
   libs: Path.t list;
   (* config options *)
@@ -286,8 +286,8 @@ end = struct
   let section_header o section =
     fprintf o "[%s]\n" section
 
-  let excludes o excludes =
-    List.iter (fun ex -> (fprintf o "%s\n" (fst ex))) excludes
+  let ignores o ignores =
+    List.iter (fun ex -> (fprintf o "%s\n" ex)) ignores
 
   let includes o includes =
     List.iter (fun inc -> (fprintf o "%s\n" (Path.to_string inc))) includes
@@ -310,10 +310,10 @@ end = struct
 
   let config o config =
     section_header o "ignore";
-    excludes o config.excludes;
+    ignores o config.ignores;
     fprintf o "\n";
     section_header o "include";
-    includes o (Path_matcher.paths config.includes);
+    includes o config.includes;
     fprintf o "\n";
     section_header o "libs";
     libs o config.libs;
@@ -323,8 +323,8 @@ end = struct
 end
 
 let empty_config root = {
-  excludes = [];
-  includes = Path_matcher.empty;
+  ignores = [];
+  includes = [];
   libs = [];
   options = Opts.default_options;
   root;
@@ -387,22 +387,11 @@ let parse_path_matcher config lines =
   |> List.filter (fun s -> s <> "")
   |> List.map (make_path_absolute config)
   |> List.map fixup_path
-  |> List.fold_left Path_matcher.add Path_matcher.empty
 
-(* parse include lines and set config's
-   includes (a list of path specs) and
-   include_map (a map from stems to (spec, regex) pairs *)
+(* parse [include] lines *)
 let parse_includes config lines =
   let includes = parse_path_matcher config lines in
   { config with includes; }
-
-(* try to find a match for f in our include paths *)
-let is_included config f = Path_matcher.matches config.includes f
-
-(* true if path matches one of our excludes *)
-let is_excluded config =
-  let list = List.map snd config.excludes in
-  fun path -> List.exists (fun rx -> Str.string_match rx path 0) list
 
 let parse_libs config lines =
   let libs = lines
@@ -411,15 +400,11 @@ let parse_libs config lines =
   |> List.map (make_path_absolute config) in
   { config with libs; }
 
-let parse_excludes config lines =
-  let excludes = lines
+let parse_ignores config lines =
+  let ignores = lines
   |> List.map (fun (_, line) -> String.trim line)
-  |> List.filter (fun s -> s <> "")
-  |> List.map (fun s ->
-    (* On Windows, we have to take care about '\'. *)
-    let reg = Str.regexp (Str.global_replace (Str.regexp "/") "[/\\]" s) in
-    (s, reg)) in
-  { config with excludes; }
+  |> List.filter (fun s -> s <> "") in
+  { config with ignores; }
 
 let parse_options config lines =
   let open Opts in
@@ -670,7 +655,7 @@ let parse_section config ((section_ln, section), lines) =
   | "", (ln, _)::_ when section_ln = 0 ->
       error ln "Unexpected config line not in any section"
   | "include", _ -> parse_includes config lines
-  | "ignore", _ -> parse_excludes config lines
+  | "ignore", _ -> parse_ignores config lines
   | "libs", _ -> parse_libs config lines
   | "options", _ -> parse_options config lines
   | "version", _ -> parse_version config lines
