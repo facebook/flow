@@ -157,12 +157,17 @@ module ReversePackageHeap = SharedMem.WithCache (StringKey) (struct
     let prefix = Prefix.make()
   end)
 
-let get_key key tokens = Ast.(
+let get_key' key tokens = Ast.(
   match SMap.get (spf "\"%s\"" key) tokens with
   | Some (_, Expression.Literal { Literal.value = Literal.String name; _ }) ->
       Some name
   | _ -> None
 )
+
+let get_key key tokens =
+  match get_key' (spf "\"flow:%s\"" key) tokens with
+  | Some x -> Some x
+  | _ -> get_key' (spf "\"%s\"" key) tokens
 
 let get_package_keys filename ast =
   let open Ast in

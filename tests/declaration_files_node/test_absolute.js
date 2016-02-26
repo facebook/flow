@@ -19,3 +19,12 @@ var E = require('package_with_no_package_json');
 
 var F = require('package_with_dir_main');
 (F.fun(): string); // Error number ~> string
+
+var G = require('package_with_full_flow_main');
+(C.fun(): string); // Error number ~> string
+
+var H = require('package_with_partial_flow_main');
+(D.fun(): string); // Error number ~> string
+
+var I = require('package_with_dir_flow_main');
+(F.fun(): string); // Error number ~> string
