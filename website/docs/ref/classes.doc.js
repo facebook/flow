@@ -279,3 +279,17 @@ class ThisA {
 class ThisB extends ThisA { }
 
 var b: ThisB = (new ThisB).foo(); // ok: foo() on a ThisB returns a ThisB
+
+/*
+  ## `Class<T>` type
+
+  The name of a class, used as a type annotation, represents instances of that
+  class, not the class itself. It is often useful, however, to refer to the
+  types of classes.
+
+  Given a type `T` representing instances of a class `C`, the type `Class<T>` is
+  the type of the class `C`.
+*/
+
+var theClass: Class<C> = C;
+var anInstance = new C("foo");

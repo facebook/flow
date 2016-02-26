@@ -201,13 +201,14 @@ boundaries).
 
 ## Objects as Maps
 
-An object can be viewed as a map from `string` to some value type by setting
-and getting its properties via bracket notation (i.e. dynamic accessors),
-instead of dot notation. Flow infers a precise value type for the map: in
-other words, if you only write `number` values to a map, you will read `number`values back (rather than, say, `any`).
+An object can be viewed as a map from `string` to some value type by setting and
+getting its properties via bracket notation (i.e. dynamic accessors), instead of
+dot notation. Flow infers a precise value type for the map: in other words, if
+you only write `number` values to a map, you will read `number` values back
+(rather than, say, `any`).
 
-Such a map can be given a type of the form `{ [key: string]: number }` where `string` is the key type and `number` is the
-value type of the map.
+Such a map can be given a type of the form `{ [key: string]: number }` where
+`string` is the key type and `number` is the value type of the map.
 
 ### Maps as Records
 
@@ -216,4 +217,34 @@ for such an object, the value type of the map does not interfere with the
 types of the properties of the record. This is potentially unsound, but we
 admit it because a sound design would necessarily lead to severe imprecision
 in the types of properties.
+
+### The `Object` type
+
+This type describes "any object" and you can think of it like an
+`any`-flavored version of an object type.
+
+In JavaScript, everything is an object. Flow is a bit stricter and does not
+consider primitive types to be subtypes of `Object`.)
 */
+
+// $ExpectError
+(0: Object);
+// $ExpectError
+("": Object);
+// $ExpectError
+(true: Object);
+// $ExpectError
+(null: Object);
+// $ExpectError
+(undefined: Object);
+
+/*
+Many other types can be treated as objects, however. Naturally objects are
+compatible with `Object`, but so are functions and classes.
+*/
+
+({foo: "foo"}: Object);
+(function() {}: Object);
+(class {}: Object);
+// $ExpectError
+([]: Object); // Flow does not treat arrays as objects (likely to change)
