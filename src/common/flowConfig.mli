@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
-module PathMap : MyMap.S with type key = Path.t
+
 module Opts : sig
   type esproposal_feature_mode =
     | ESPROPOSAL_ENABLE
@@ -41,12 +41,8 @@ end
 type config = {
   (* file blacklist *)
   excludes: (string * Str.regexp) list;
-  (* user-specified non-root include paths. may contain wildcards *)
-  includes: Path.t list;
-  (* stems extracted from includes *)
-  include_stems: Path.t list;
-  (* map from include_stems to list of (original path, regexified path) *)
-  include_map: ((string * Str.regexp) list) PathMap.t;
+  (* non-root include paths *)
+  includes: Path_matcher.t;
   (* library paths. no wildcards *)
   libs: Path.t list;
   (* config options *)

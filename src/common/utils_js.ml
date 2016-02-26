@@ -49,6 +49,12 @@ end
 
 module FilenameMap = MyMap.Make (Loc.FilenameKey)
 
+module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
+  type t = Path.t
+  let compare p1 p2 =
+    String.compare (Path.to_string p1) (Path.to_string p2)
+end)
+
 (* ok-or-error type *)
 type ('a,'b) ok_or_err = OK of 'a | Err of 'b
 
