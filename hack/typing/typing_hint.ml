@@ -119,8 +119,21 @@ module CheckInstantiability = struct
         Errors.invalid_classname p
 
   let visitor =
-  object
+  object(this)
     inherit [Env.env] hint_visitor as super
+
+    (* A type constant may appear inside an abstract final class, i.e.
+     *
+     *   abstract final class Foo { const type T = int; }
+     *
+     * Even though the type `Foo` is not instantiable, the type `Foo::T` is.
+     * Thus for type checking the Taccess type, we skip the instantiability
+     * for the root of the Taccess.
+     *)
+    method! on_access env h ids = match h with
+      | _, Happly (_, hl) ->
+          List.fold_left ~f:this#on_hint ~init:env hl
+      | _ -> super#on_access env h ids
 
     method! on_apply env (usage_pos, n) hl =
       let () = (match Typing_env.Classes.get n with
