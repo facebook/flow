@@ -19,7 +19,7 @@
    quite detailed dependening on how far apart the "source" and "sink" are and
    how convoluted the flow between them is. *)
 
-open Utils
+open Utils_js
 module Ast = Spider_monkey_ast
 
 let mk_id () = Ident.make ""

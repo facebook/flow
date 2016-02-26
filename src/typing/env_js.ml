@@ -13,7 +13,6 @@
    and "lookup" operations to find, read, and write variables and their
    associated type information. *)
 
-open Utils
 open Utils_js
 open Reason_js
 open Type

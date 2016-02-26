@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 open Sys_utils
 
 let version = "0.22.0"
@@ -455,7 +455,7 @@ let parse_includes config lines =
 (* find a prefix for f in a list of paths, or none *)
 let rec find_prefix f = function
 | [] -> None
-| h :: _ when str_starts_with f (Path.to_string h) -> Some h
+| h :: _ when Utils.str_starts_with f (Path.to_string h) -> Some h
 | _ :: t -> find_prefix f t
 
 (* find a match for f in a list of patterns, or none *)
@@ -567,7 +567,7 @@ let parse_options config lines =
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v ->
-        if str_ends_with v flow_ext
+        if Utils.str_ends_with v flow_ext
         then raise (Opts.UserError (
           "Cannot use file extension '" ^
           v ^

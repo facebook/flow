@@ -10,7 +10,7 @@
 
 open Reason_js
 open Type
-open Utils
+open Utils_js
 
 let string_of_pred_ctor = function
   | AndP _ -> "AndP"

@@ -34,7 +34,7 @@
    necessary.
 *)
 
-open Utils
+open Utils_js
 
 let query_type cx loc =
   let result = ref (Loc.none, None, []) in

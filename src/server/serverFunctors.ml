@@ -3,7 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  *)
@@ -11,7 +11,6 @@
 open Sys_utils
 open ServerEnv
 open ServerUtils
-open Utils
 open Utils_js
 module List = Core_list
 
@@ -164,7 +163,7 @@ end = struct
    * rebase, and we don't log the recheck_end event until the update list
    * is no longer getting populated. *)
   let rec recheck_loop i rechecked_count genv env =
-    let raw_updates = DfindLib.get_changes (unsafe_opt genv.dfind) in
+    let raw_updates = DfindLib.get_changes (Utils.unsafe_opt genv.dfind) in
     if SSet.is_empty raw_updates then i, rechecked_count, env else begin
       let updates = Program.process_updates genv env raw_updates in
       let env, rechecked = recheck genv env updates in
@@ -247,7 +246,7 @@ end = struct
       * no server on the other end is an immediate error. *)
       let socket = Socket.init_unix_socket (FlowConfig.socket_file ~tmp_dir root) in
       let env = MainInit.go options program_init waiting_channel in
-      DfindLib.wait_until_ready (unsafe_opt genv.dfind);
+      DfindLib.wait_until_ready (Utils.unsafe_opt genv.dfind);
       serve genv env socket
 
   (* The server can communicate with the process that forked it over a pipe.

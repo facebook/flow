@@ -10,7 +10,6 @@
 
 (* This module drives the type checker *)
 
-open Utils
 open Utils_js
 
 module TI = Type_inference_js

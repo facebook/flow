@@ -8,8 +8,7 @@
  *
  *)
 
-open Utils
-open Utils_js (* assert_false *)
+open Utils_js
 open Reason_js (* mk_id *)
 
 (******************************************************************************)

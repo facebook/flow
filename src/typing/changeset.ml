@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 
 (* operations on vars and refis.
    refine is a read that results in a type update *)
@@ -99,21 +99,21 @@ let string_of_refi_ref (scope_id, key, op) =
 
 let string_of_changeset =
   let string_of_changed_vars changed_vars =
-    Utils.spf "{ %s }"
+    spf "{ %s }"
       (let entry_refs = EntryRefSet.fold (fun entry_ref acc ->
           string_of_entry_ref entry_ref :: acc
         ) changed_vars [] in
         String.concat "; " (List.rev entry_refs))
   in
   let string_of_changed_refis changed_refis =
-    Utils.spf "{ %s }"
+    spf "{ %s }"
       (let refi_refs = RefiRefSet.fold (fun refi_ref acc ->
           string_of_refi_ref refi_ref :: acc
         ) changed_refis [] in
         String.concat "; " (List.rev refi_refs))
   in
   fun (changed_vars, changed_refis) ->
-    Utils.spf "%s, %s"
+    spf "%s, %s"
       (string_of_changed_vars changed_vars)
       (string_of_changed_refis changed_refis)
 

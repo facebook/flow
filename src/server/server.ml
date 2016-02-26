@@ -17,7 +17,6 @@ module Server = ServerFunctors
 
 module FlowProgram (OptionParser : OPTION_PARSER) : Server.SERVER_PROGRAM =
 struct
-  open Utils
   open Utils_js
   open Sys_utils
   open ServerEnv
@@ -473,7 +472,7 @@ struct
 
     (* Die if a package.json changed *)
     let modified_packages = SSet.filter (fun f ->
-      (str_starts_with f sroot || FlowConfig.is_included config f)
+      (Utils.str_starts_with f sroot || FlowConfig.is_included config f)
       && (Filename.basename f) = "package.json" && want f
     ) updates in
     if not (SSet.is_empty modified_packages)
@@ -501,7 +500,7 @@ struct
     SSet.fold (fun f acc ->
       if Files_js.is_flow_file ~options f &&
         (* note: is_included may be expensive. check in-root match first. *)
-        (str_starts_with f sroot || FlowConfig.is_included config f) &&
+        (Utils.str_starts_with f sroot || FlowConfig.is_included config f) &&
         (* removes excluded and lib files. the latter are already filtered *)
         want f
       then

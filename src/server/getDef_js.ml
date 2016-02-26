@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 
 type getdef_type =
 | Gdloc of Loc.t

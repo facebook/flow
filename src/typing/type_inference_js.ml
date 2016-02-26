@@ -16,7 +16,6 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
-open Utils
 open Utils_js
 
 module Ast = Spider_monkey_ast
@@ -992,8 +991,8 @@ and mk_type_param_declarations cx type_params_map typeParameters =
        we have proper annotations, in case of emergency :) *)
     let polarity =
       if polarity != Neutral then polarity
-      else if str_starts_with name "$Covariant$" then Positive
-      else if str_starts_with name "$Contravariant$" then Negative
+      else if Utils.str_starts_with name "$Covariant$" then Positive
+      else if Utils.str_starts_with name "$Contravariant$" then Negative
       else Neutral
     in
     let typeparam = { reason; name; bound; polarity } in

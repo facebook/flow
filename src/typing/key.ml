@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 
 (* keys for refinements *)
 type proj = Prop of string | Elem of t

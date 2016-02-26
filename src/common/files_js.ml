@@ -10,8 +10,6 @@
 
 (************** file filter utils ***************)
 
-open Utils
-
 let global_file_name = "(global)"
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
@@ -21,10 +19,10 @@ let is_dot_file path =
   String.length filename > 0 && filename.[0] = '.'
 
 let is_prefix prefix =
-  let prefix_with_sep = if str_ends_with prefix Filename.dir_sep
+  let prefix_with_sep = if Utils.str_ends_with prefix Filename.dir_sep
     then prefix
     else prefix ^ Filename.dir_sep
-  in fun path -> path = prefix || str_starts_with path prefix_with_sep
+  in fun path -> path = prefix || Utils.str_starts_with path prefix_with_sep
 
 let is_json_file path = Filename.check_suffix path ".json"
 
@@ -198,7 +196,7 @@ let init options =
       ) in
       List.flatten exp_list
   in
-  (libs, set_of_list libs)
+  (libs, Utils.set_of_list libs)
 
 
 let lib_module = ""
@@ -220,7 +218,7 @@ let make_next_files ~options ~libs =
   let sroot = Path.to_string root in
   let realpath_filter path = is_valid_path ~options path && filter path in
   let path_filter path =
-    (str_starts_with path sroot || FlowConfig.is_included config path)
+    (Utils.str_starts_with path sroot || FlowConfig.is_included config path)
     && realpath_filter path
   in
   make_next_files_following_symlinks

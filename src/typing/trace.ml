@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 open Reason_js
 open Type
 

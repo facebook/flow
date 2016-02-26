@@ -19,7 +19,6 @@ type t =
 
 exception Exn of t
 
-open Utils
 open Utils_js
 
 (* called from traversal. value indicates control flow directive encountered *)

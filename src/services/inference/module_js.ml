@@ -16,7 +16,6 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
-open Utils
 open Utils_js
 
 module Ast = Spider_monkey_ast
@@ -276,7 +275,7 @@ and file_exists path =
     | None ->
         let files =
           if dir_exists dir
-          then set_of_list (Array.to_list (Sys.readdir dir))
+          then Utils.set_of_list (Array.to_list (Sys.readdir dir))
           else SSet.empty in
         files_in_dir := SMap.add dir files !files_in_dir;
         files

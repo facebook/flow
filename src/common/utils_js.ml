@@ -20,9 +20,10 @@
  * consider re-instating the following line and using Utils_js as a direct
  * extension of utils.ml.
  *)
-(* include Utils *)
 
-open Utils
+let spf = Printf.sprintf
+let print_endlinef fmt = Printf.ksprintf print_endline fmt
+let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 (* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
    instead of `open Loc`, which pollutes too much. *)

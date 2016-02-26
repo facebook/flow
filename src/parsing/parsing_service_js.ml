@@ -8,7 +8,6 @@
  *
  *)
 
-open Utils
 open Utils_js
 open Sys_utils
 module Reason = Reason_js

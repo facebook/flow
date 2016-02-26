@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils
+open Utils_js
 
 (** This is a simple module that just prints messages to stderr. The nice thing
  * about it is that it can be disabled using some global state. This way the

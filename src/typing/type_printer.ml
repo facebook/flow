@@ -10,7 +10,6 @@
 
 open Reason_js
 open Type
-open Utils
 open Utils_js
 
 let name_prefix_of_t = function

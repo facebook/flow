@@ -21,7 +21,6 @@
    subtyping. This process continues till a fixpoint is reached---which itself
    is guaranteed to exist, and is usually reached in very few steps. *)
 
-open Utils
 open Utils_js
 open Reason_js
 open Constraint_js
@@ -4448,15 +4447,15 @@ and try_union cx trace l reason = function
     (* embed reasons of consituent types into outer reason *)
     let rdesc = desc_of_reason reason in
     let tdesc = desc_of_reason (reason_of_t t) in
-    let udesc = if not (str_starts_with rdesc "union:")
+    let udesc = if not (Utils.str_starts_with rdesc "union:")
       then spf "union: %s" tdesc
-      else if str_ends_with rdesc "..."
+      else if Utils.str_ends_with rdesc "..."
       then rdesc
-      else if str_ends_with rdesc (tdesc ^ "(s)")
+      else if Utils.str_ends_with rdesc (tdesc ^ "(s)")
       then rdesc
       else if String.length rdesc >= 256
       then spf "%s | ..." rdesc
-      else if str_ends_with rdesc tdesc
+      else if Utils.str_ends_with rdesc tdesc
       then spf "%s(s)" rdesc
       else spf "%s | %s" rdesc tdesc
       in
@@ -4474,15 +4473,15 @@ and try_intersection cx trace u reason = function
     (* embed reasons of consituent types into outer reason *)
     let rdesc = desc_of_reason reason in
     let tdesc = desc_of_reason (reason_of_t t) in
-    let idesc = if not (str_starts_with rdesc "intersection:")
+    let idesc = if not (Utils.str_starts_with rdesc "intersection:")
       then spf "intersection: %s" tdesc
-      else if str_ends_with rdesc "..."
+      else if Utils.str_ends_with rdesc "..."
       then rdesc
-      else if str_ends_with rdesc (tdesc ^ "(s)")
+      else if Utils.str_ends_with rdesc (tdesc ^ "(s)")
       then rdesc
       else if String.length rdesc >= 256
       then spf "%s & ..." rdesc
-      else if str_ends_with rdesc tdesc
+      else if Utils.str_ends_with rdesc tdesc
       then spf "%s(s)" rdesc
       else spf "%s & %s" rdesc tdesc
       in

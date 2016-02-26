@@ -9,7 +9,7 @@
 
 open Reason_js
 open Type
-open Utils
+open Utils_js
 
 let suggested_type_cache = ref IMap.empty
 

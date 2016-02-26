@@ -40,7 +40,7 @@
   pre-release/build identifiers ("1.2.3-beta.1"), will be added as necessary.
  **)
 
-open Utils
+open Utils_js
 
 exception Parse_error of string
 
