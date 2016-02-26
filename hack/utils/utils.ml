@@ -160,13 +160,6 @@ let str_ends_with long short =
   with Invalid_argument _ ->
     false
 
-let string_of_float_trunc x =
-  let result = string_of_float x in
-  if String.get result (String.length result - 1) = '.' then
-    String.sub result 0 (String.length result - 1)
-  else
-    result
-
 (* Return a copy of the string with prefixing string removed.
  * The function is a no-op if it s does not start with prefix.
  * Modeled after Python's string.lstrip.

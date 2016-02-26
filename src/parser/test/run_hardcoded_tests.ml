@@ -72,7 +72,7 @@ end = struct
     | (_, Literal { Ast.Literal.value = Ast.Literal.String name; _ }) ->
         JSON_String name
     | (_, Literal { Ast.Literal.value = Ast.Literal.Number num; _ }) ->
-        JSON_Number (Utils.string_of_float_trunc num)
+        JSON_Number (string_of_float_trunc num)
     | (_, Literal { Ast.Literal.value = Ast.Literal.Boolean value; _ }) ->
         JSON_Bool value
     | (_, Literal { Ast.Literal.value = Ast.Literal.Null; _ }) ->
@@ -83,7 +83,7 @@ end = struct
                     Ast.Literal.value = Ast.Literal.Number num; _
                   });
                 }) ->
-        JSON_Number (Utils.string_of_float_trunc  (~-. num))
+        JSON_Number (string_of_float_trunc  (~-. num))
     | (_, Binary { Binary.operator = Binary.Plus; left; right; }) ->
         let left_json = parse_spec_value left in
         let right_json = parse_spec_value right in

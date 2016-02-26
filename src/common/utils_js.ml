@@ -25,6 +25,18 @@ let spf = Printf.sprintf
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
+(* JSON numbers must not end in a `.`, but string_of_float returns things like
+   `1.` instead of `1.0`, so we want to truncate the `.` *)
+(* TODO: ocaml's string_of_float in general differs from JavaScript's. once
+   we fix that (e.g. by pulling in double-conversion or dtoa), we can use that
+   when printing JSON. *)
+let string_of_float_trunc x =
+  let result = string_of_float x in
+  if String.get result (String.length result - 1) = '.' then
+    String.sub result 0 (String.length result - 1)
+  else
+    result
+
 (* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
    instead of `open Loc`, which pollutes too much. *)
 type filename = Loc.filename
