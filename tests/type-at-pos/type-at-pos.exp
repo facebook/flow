@@ -1,6 +1,9 @@
 {"type":"number","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
 {"raw_type":"{\n  \"reason\":{\n    \"pos\":{\"file\":\"\",\"start\":{\"line\":0,\"col\":0},\"end\":{\"line\":0,\"col\":0}},\n    \"desc\":\"number\"\n  },\n  \"kind\":\"NumT\"\n}","type":"number","reasons":[{"desc":"number","path":"test.js","line":5,"endline":5,"start":1,"end":3}],"path":"test.js","line":5,"endline":5,"start":1,"end":3}
 {"type":"[number, string]","reasons":[],"path":"test.js","line":8,"endline":8,"start":7,"end":13}
+{"type":"'cool'","reasons":[],"path":"test.js","line":10,"endline":10,"start":7,"end":13}
+{"type":"true","reasons":[],"path":"test.js","line":12,"endline":12,"start":7,"end":14}
+{"type":"42","reasons":[],"path":"test.js","line":14,"endline":14,"start":7,"end":13}
 {"type":"C<number>","reasons":[],"path":"generics.js","line":5,"endline":5,"start":1,"end":2}
 {"type":"C<number>","reasons":[],"path":"generics.js","line":10,"endline":10,"start":1,"end":2}
 {"type":"E<number>","reasons":[],"path":"generics.js","line":14,"endline":14,"start":1,"end":2}
