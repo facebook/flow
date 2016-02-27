@@ -20,3 +20,4 @@ let data4 = require('./json_array');
 (require('./json_true'): void); // error, should be true
 (require('./json_false'): void); // error, should be false
 (require('./json_null'): void); // error, should be null
+(require('./json_negative_number'): -1); // ok

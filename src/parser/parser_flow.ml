@@ -4397,6 +4397,13 @@ let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content file
   | T_FALSE
   | T_NULL ->
     do_parse env Parse.expression fail
+  | T_MINUS ->
+    (match Peek.token ~i:1 env with
+    | T_NUMBER _ ->
+      do_parse env Parse.expression fail
+    | _ ->
+      error_unexpected env;
+      raise (Error.Error (errors env)))
   | _ ->
     error_unexpected env;
     raise (Error.Error (errors env))
