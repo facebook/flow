@@ -28,6 +28,7 @@ class type ['a] ast_visitor_type = object
   method on_as_expr : 'a -> as_expr -> 'a
   method on_await : 'a -> expr -> 'a
   method on_binop : 'a -> bop -> expr -> expr -> 'a
+  method on_pipe : 'a -> expr -> expr -> 'a
   method on_block : 'a -> block -> 'a
   method on_break : 'a -> Pos.t -> 'a
   method on_call : 'a -> expr -> expr list -> expr list -> 'a
@@ -64,6 +65,7 @@ class type ['a] ast_visitor_type = object
   method on_lfun: 'a -> fun_ -> 'a
   method on_list : 'a -> expr list -> 'a
   method on_lvar : 'a -> id -> 'a
+  method on_dollardollar : 'a -> 'a
   method on_new : 'a -> expr -> expr list -> expr list -> 'a
   method on_noop : 'a -> 'a
   method on_null : 'a -> 'a
@@ -256,6 +258,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
    | String s    -> this#on_string acc s
    | Id id       -> this#on_id acc id
    | Lvar id     -> this#on_lvar acc id
+   | Dollardollar -> this#on_dollardollar acc
    | Yield_break -> this#on_yield_break acc
    | Yield e     -> this#on_yield acc e
    | Await e     -> this#on_await acc e
@@ -271,6 +274,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
    | Cast        (hint, e)   -> this#on_cast acc hint e
    | Unop        (uop, e)         -> this#on_unop acc uop e
    | Binop       (bop, e1, e2)    -> this#on_binop acc bop e1 e2
+   | Pipe        (e1, e2)    -> this#on_pipe acc e1 e2
    | Eif         (e1, e2, e3)     -> this#on_eif acc e1 e2 e3
    | NullCoalesce (e1, e2)     -> this#on_nullCoalesce acc e1 e2
    | InstanceOf  (e1, e2)         -> this#on_instanceOf acc e1 e2
@@ -290,6 +294,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
 
   method on_id acc _ = acc
   method on_lvar acc _ = acc
+  method on_dollardollar acc = acc
 
   method on_obj_get acc e1 e2 =
     let acc = this#on_expr acc e1 in
@@ -323,6 +328,7 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
 
   method on_true acc = acc
   method on_false acc = acc
+
   method on_int acc pstr =
     let acc = this#on_pstring acc pstr in
     acc
@@ -358,6 +364,11 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
   method on_unop acc _ e = this#on_expr acc e
 
   method on_binop acc _ e1 e2 =
+    let acc = this#on_expr acc e1 in
+    let acc = this#on_expr acc e2 in
+    acc
+
+  method on_pipe acc e1 e2 =
     let acc = this#on_expr acc e1 in
     let acc = this#on_expr acc e2 in
     acc

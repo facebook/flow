@@ -52,6 +52,7 @@ class type ['a] nast_visitor_type = object
   method on_this : 'a -> 'a
   method on_id : 'a -> sid -> 'a
   method on_lvar : 'a -> id -> 'a
+  method on_dollardollar : 'a -> id -> 'a
   method on_fun_id : 'a -> sid -> 'a
   method on_method_id : 'a -> expr -> pstring -> 'a
   method on_smethod_id : 'a -> sid -> pstring -> 'a
@@ -78,6 +79,7 @@ class type ['a] nast_visitor_type = object
   method on_cast : 'a -> hint -> expr -> 'a
   method on_unop : 'a -> Ast.uop -> expr -> 'a
   method on_binop : 'a -> Ast.bop -> expr -> expr -> 'a
+  method on_pipe : 'a -> id -> expr -> expr -> 'a
   method on_eif : 'a -> expr -> expr option -> expr -> 'a
   method on_nullCoalesce : 'a -> expr -> expr -> 'a
   method on_typename : 'a -> sid -> 'a
@@ -214,6 +216,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
    | This        -> this#on_this acc
    | Id sid      -> this#on_id acc sid
    | Lplaceholder _pos -> acc
+   | Dollardollar id -> this#on_dollardollar acc id
    | Lvar id     -> this#on_lvar acc id
    | Fun_id sid  -> this#on_fun_id acc sid
    | Method_id (expr, pstr) -> this#on_method_id acc expr pstr
@@ -237,6 +240,7 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
    | Cast        (hint, e)   -> this#on_cast acc hint e
    | Unop        (uop, e)         -> this#on_unop acc uop e
    | Binop       (bop, e1, e2)    -> this#on_binop acc bop e1 e2
+   | Pipe        (id, e1, e2)         -> this#on_pipe acc id e1 e2
    | Eif         (e1, e2, e3)     -> this#on_eif acc e1 e2 e3
    | NullCoalesce (e1, e2)     -> this#on_nullCoalesce acc e1 e2
    | InstanceOf  (e1, e2)         -> this#on_instanceOf acc e1 e2
@@ -267,6 +271,9 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
   method on_this acc = acc
   method on_id acc _ = acc
   method on_lvar acc _ = acc
+  method on_dollardollar acc id =
+    this#on_lvar acc id
+
   method on_fun_id acc _ = acc
   method on_method_id acc _ _ = acc
   method on_smethod_id acc _ _ = acc
@@ -331,6 +338,11 @@ class virtual ['a] nast_visitor: ['a] nast_visitor_type = object(this)
   method on_unop acc _ e = this#on_expr acc e
 
   method on_binop acc _ e1 e2 =
+    let acc = this#on_expr acc e1 in
+    let acc = this#on_expr acc e2 in
+    acc
+
+  method on_pipe acc _id e1 e2 =
     let acc = this#on_expr acc e1 in
     let acc = this#on_expr acc e2 in
     acc

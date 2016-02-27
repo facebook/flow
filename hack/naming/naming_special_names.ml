@@ -137,6 +137,7 @@ module SpecialIdents = struct
 
   let this = "$this"
   let placeholder = "$_"
+  let dollardollar = "$$"
 
 end
 

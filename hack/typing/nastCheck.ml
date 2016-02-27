@@ -119,7 +119,9 @@ module CheckFunctionType = struct
     | _, Class_const _
     | _, Typename _
     | _, Lvar _
-    | _, Lplaceholder _ -> ()
+    | _, Lplaceholder _
+    | _, Pipe _
+    | _, Dollardollar _ -> ()
     | _, Array afl ->
         List.iter afl (afield f_type);
         ()
@@ -487,7 +489,7 @@ and check_class_property_initialization prop =
       match (snd e) with
       | Any | Shape _ | Typename _
       | Id _ | Class_const _ | True | False | Int _ | Float _
-      | Null | String _ ->
+      | Null | String _ | Pipe _ ->
         ()
       | Array field_list ->
         List.iter field_list begin function
@@ -522,7 +524,7 @@ and check_class_property_initialization prop =
       | NullCoalesce (expr1, expr2) ->
         rec_assert_static_literal expr1;
         rec_assert_static_literal expr2;
-      | This | Lvar _ | Lplaceholder _ | Fun_id _ | Method_id _
+      | This | Lvar _ | Lplaceholder _ | Dollardollar _ | Fun_id _ | Method_id _
       | Method_caller _ | Smethod_id _ | Obj_get _ | Array_get _ | Class_get _
       | Call _ | Special_func _ | Yield_break | Yield _
       | Await _ | InstanceOf _ | New _ | Efun _ | Xml _ | Assert _ | Clone _ ->
@@ -746,7 +748,10 @@ and expr_ env = function
   | Class_get _
   | Class_const _
   | Typename _
-  | Lvar _ | Lplaceholder _ -> ()
+  | Lvar _ | Lplaceholder _ | Dollardollar _ -> ()
+  | Pipe (_, e1, e2) ->
+      expr env e1;
+      expr env e2
   (* Check that __CLASS__ and __TRAIT__ are used appropriately *)
   | Id (pos, const) ->
       if SN.PseudoConsts.is_pseudo_const const then

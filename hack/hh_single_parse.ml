@@ -10,9 +10,22 @@
 
 let usage = Printf.sprintf "Usage: %s filename\n" Sys.argv.(0)
 
+let print_error error = error
+  |> Errors.to_absolute
+  |> Errors.to_string
+  |> output_string stderr
+
 let parse_and_print filename =
   let file = Relative_path.create Relative_path.Dummy filename in
-  let result = Parser_hack.from_file file in
+  let errorl, result =
+    Errors.do_ begin fun () ->
+      Parser_hack.from_file file
+    end
+  in
+  if List.length errorl > 0 then begin
+    List.iter print_error errorl;
+    exit 1
+  end;
   let str = Debug.dump_ast (Ast.AProgram result.Parser_hack.ast) in
   Printf.printf "%s" str
 

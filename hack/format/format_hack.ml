@@ -1339,7 +1339,7 @@ and taccess_loop env = wrap env begin function
 end
 
 and hint env = wrap env begin function
-  | Tplus | Tminus | Tqm | Tat | Tbslash ->
+  | Tplus | Tminus | Tqm | Tat | Tbslash | Tpipe ->
       last_token env;
       hint env
   | Tpercent | Tcolon ->
@@ -2083,7 +2083,7 @@ and stmt_word ~is_toplevel env word =
       last_token env;
       if wrap_would_consume env expr
       then rhs_assign env;
-      semi_colon env
+      semi_colon env;
   | "static" when next_token env <> Tcolcol ->
       seq env [last_token; space];
       Try.one_line env
@@ -2474,7 +2474,7 @@ and expr_remain lowest env =
       expr_remain lowest env
   | Tnewline | Tspace  ->
       expr_remain lowest env
-  | Tplus | Tminus | Tstar | Tslash | Tstarstar
+  | Tplus | Tminus | Tstar | Tslash | Tstarstar | Tpipe
   | Teqeqeq | Tpercent
   | Teqeq | Tampamp | Tbarbar
   | Tdiff | Tlt | Tdiff2 | Tgte
@@ -2612,6 +2612,8 @@ and expr_atomic env =
  | Tword ->
       let word = !(env.last_str) in
       expr_atomic_word env last (String.lowercase word)
+ | Tdollardollar ->
+     last_token env;
  | Tlb ->
      last_token env;
      right env array_body;

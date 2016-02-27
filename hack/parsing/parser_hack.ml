@@ -241,7 +241,7 @@ let rec check_lvalue env = function
   | String _ | String2 _ | Yield _ | Yield_break
   | Await _ | Expr_list _ | Cast _ | Unop _
   | Binop _ | Eif _ | NullCoalesce _ | InstanceOf _ | New _ | Efun _ | Lfun _
-  | Xml _ | Import _) ->
+  | Xml _ | Import _ | Pipe _ | Dollardollar) ->
       error_at env pos "Invalid lvalue"
 
 (* The bound variable of a foreach can be a reference (but not inside
@@ -275,6 +275,7 @@ let priorities = [
   (Left, [Timport; Teval;]);
   (Left, [Tcomma]);
   (Right, [Tprint]);
+  (Left, [Tpipe]);
   (Left, [Tqm; Tcolon]);
   (Right, [Tqmqm]);
   (Left, [Tbarbar]);
@@ -395,7 +396,7 @@ let identifier env =
 (* $variable *)
 let variable env =
   match L.token env.file env.lb with
-  | Tlvar ->
+  | Tlvar | Tdollardollar ->
       Pos.make env.file env.lb, Lexing.lexeme env.lb
   | _ ->
       error_expect env "variable";
@@ -2486,6 +2487,8 @@ and expr_remain env e1 =
       expr_binop env Tgtgt Gtgt e1
   | Txor ->
       expr_binop env Txor Xor e1
+  | Tpipe ->
+      expr_pipe env e1 Tpipe
   | Tincr | Tdecr as uop  ->
       expr_postfix_unary env uop e1
   | Tarrow | Tnsarrow as tok ->
@@ -2686,8 +2689,10 @@ and expr_atomic ~allow_class ~class_const env =
   | Tdquote ->
       expr_encapsed env pos
   | Tlvar ->
+      (** We store the variable-variable $$foo as $foo. Hackhackhack.
+       * TODO: t10209852*)
       let tok_value = Lexing.lexeme env.lb in
-      let var_id = (pos, tok_value) in
+      let var_id = (pos, strip_variablevariable tok_value) in
       pos, if peek env = Tlambda
         then lambda_single_arg ~sync:FDeclSync env var_id
         else Lvar var_id
@@ -2722,9 +2727,11 @@ and expr_atomic ~allow_class ~class_const env =
   | Theredoc ->
       expr_heredoc env
   | Tdollar ->
-      error env ("A valid variable name starts with a letter or underscore,"^
-        "followed by any number of letters, numbers, or underscores");
-      expr env
+    error env ("A valid variable name starts with a letter or underscore,"^
+      "followed by any number of letters, numbers, or underscores");
+    expr env
+  | Tdollardollar ->
+      pos, Dollardollar
   | Tunsafeexpr ->
       let e = expr env in
       let end_ = Pos.make env.file env.lb in
@@ -2788,6 +2795,13 @@ and expr_atomic_word ~allow_class ~class_const env pos = function
   | x ->
       pos, Id (pos, x)
 
+and strip_variablevariable token =
+  if (token.[0] = '$') && (token.[1] = '$') then
+    strip_variablevariable (String.sub token 1 ((String.length token) - 1))
+  else
+    token
+
+
 (*****************************************************************************)
 (* Expressions in parens. *)
 (*****************************************************************************)
@@ -2819,6 +2833,17 @@ and expr_binop env bop ast_bop e1 =
   reduce env e1 bop begin fun e1 env ->
     let e2 = expr env in
     btw e1 e2, Binop (ast_bop, e1, e2)
+  end
+
+(*****************************************************************************)
+(* Pipe operator |> *)
+(*****************************************************************************)
+
+and expr_pipe env e1 tok =
+  reduce env e1 tok begin fun e1 env ->
+    let e2 = expr env in
+    let pos = btw e1 e2 in
+    pos, Pipe (e1, e2)
   end
 
 (*****************************************************************************)

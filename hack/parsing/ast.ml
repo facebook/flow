@@ -280,6 +280,7 @@ and expr_ =
   | False
   | Id of id
   | Lvar of id
+  | Dollardollar
   | Clone of expr
   | Obj_get of expr * expr * og_null_flavor
   | Array_get of expr * expr option
@@ -298,6 +299,7 @@ and expr_ =
   | Cast of hint * expr
   | Unop of uop * expr
   | Binop of bop * expr * expr
+  | Pipe of expr * expr
   | Eif of expr * expr option * expr
   | NullCoalesce of expr * expr
   | InstanceOf of expr * expr

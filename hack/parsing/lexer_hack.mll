@@ -123,7 +123,9 @@ type token =
   | Trequired
   | Tellipsis
   | Tdollar
+  | Tdollardollar
   | Tpercent
+  | Tpipe
   | Teof
   | Tquote
   | Tdquote
@@ -237,7 +239,9 @@ let token_to_string = function
   | Tunderscore   -> "_"
   | Tellipsis     -> "..."
   | Tdollar       -> "$"
+  | Tdollardollar -> "$$"
   | Tpercent      -> "%"
+  | Tpipe         -> "|>"
   | Tquote        -> "'"
   | Tdquote       -> "\""
   | Tclose_php    -> "?>"
@@ -288,7 +292,8 @@ let word = ('\\' | word_part)+ (* Namespaces *)
 let xhpname = ('%')? varname ([':' '-'] varname)*
 let otag = '<' ['a'-'z''A'-'Z'] (alphanumeric | ':' | '-')*
 let ctag = '<' '/' (alphanumeric | ':' | '-')+ '>'
-let lvar = '$' varname
+(** More than one $ is PHP's variable variable feature. *)
+let lvar = ['$']+ varname
 let ws = [' ' '\t' '\r' '\x0c']
 let hex = digit | ['a'-'f''A'-'F']
 let hex_number = '0' 'x' hex+
@@ -343,6 +348,7 @@ rule token file = parse
   | word               { Tword        }
   | lvar               { Tlvar        }
   | '$'                { Tdollar      }
+  | "$$"               { Tdollardollar }
   | '`'                { Tbacktick    }
   | "<?php"            { Tphp         }
   | "<?hh"             { Thh          }
@@ -378,6 +384,7 @@ rule token file = parse
   | '/'                { Tslash       }
   | '^'                { Txor         }
   | '%'                { Tpercent     }
+  | "|>"               { Tpipe        }
   | '{'                { Tlcb         }
   | '}'                { Trcb         }
   | '['                { Tlb          }
@@ -668,6 +675,7 @@ and format_token = parse
   | word_part          { Tword         }
   | lvar               { Tlvar         }
   | '$'                { Tdollar       }
+  | "$$"               { Tdollardollar }
   | '`'                { Tbacktick     }
   | "<?php"            { Tphp          }
   | "<?hh"             { Thh           }
@@ -704,6 +712,7 @@ and format_token = parse
   | '\\'               { Tbslash       }
   | '^'                { Txor          }
   | '%'                { Tpercent      }
+  | "|>"               { Tpipe         }
   | '{'                { Tlcb          }
   | '}'                { Trcb          }
   | '['                { Tlb           }

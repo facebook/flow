@@ -17,11 +17,17 @@ open Nast
 open Emitter_core
 module SN = Naming_special_names
 
+let not_supported msg =
+  Printf.eprintf "Not supported: %s" msg;
+  exit 1
+
 let is_xhp_prop = function | _, Id (_, s) -> s.[0] = ':' | _ -> false
 
 let is_lval expr =
   match expr with
   | Lvar _  | Array_get _ | Class_get _ | Lplaceholder _ -> true
+  | Pipe _ ->
+    not_supported "Pipe operator"
   | Obj_get (_, prop, _) -> not (is_xhp_prop prop)
   | _ -> false
 
@@ -461,13 +467,15 @@ and emit_expr env (pos, expr_ as expr) =
 
   (* N.B: duplicate with is_lval but we want to exhaustiveness check  *)
   | Lplaceholder _
+  | Dollardollar _
   | Lvar _
   | Obj_get _
   | Array_get _
   | Class_get _ ->
     let env, lval = emit_lval env expr in
     emit_CGet env lval
-
+  | Pipe _ ->
+    not_supported "Pipe operator"
   (* Assignment is technically a binop, although it is weird. *)
   | Binop (Ast.Eq obop, e1, e2) -> emit_assignment env obop e1 e2
 

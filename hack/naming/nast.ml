@@ -285,6 +285,7 @@ and expr_ =
   | Id of sid
   | Lvar of id
   | Lplaceholder of Pos.t
+  | Dollardollar of id
   | Fun_id of sid
   | Method_id of expr * pstring
   (* meth_caller('Class name', 'method name') *)
@@ -315,6 +316,8 @@ and expr_ =
   | Cast of hint * expr
   | Unop of Ast.uop * expr
   | Binop of Ast.bop * expr * expr
+  (** The ID of the $$ that is implicitly declared by this pipe. *)
+  | Pipe of id * expr * expr
   | Eif of expr * expr option * expr
   | NullCoalesce of expr * expr
   | InstanceOf of expr * class_id

@@ -21,6 +21,7 @@ val make_error : int -> (Pos.t * string) list -> error
 val error_code_to_string : int -> string
 
 val internal_error : Pos.t -> string -> unit
+val unimplemented_feature : Pos.t -> string -> unit
 
 val call_time_pass_by_reference : Pos.t -> unit
 val fixme_format : Pos.t -> unit
@@ -38,6 +39,7 @@ val unterminated_comment : Pos.t -> unit
 val unterminated_xhp_comment : Pos.t -> unit
 val name_already_bound : string -> Pos.t -> Pos.t -> unit
 val name_is_reserved : string -> Pos.t -> unit
+val dollardollar_unused : Pos.t -> unit
 val method_name_already_bound : Pos.t -> string -> unit
 val error_name_already_bound : string -> string -> Pos.t -> Pos.t -> unit
 val unbound_name : Pos.t -> string -> [< `cls | `func | `const ] -> unit

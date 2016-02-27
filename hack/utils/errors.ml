@@ -169,6 +169,7 @@ module Naming                               = struct
   let classname_param                       = 2066 (* DONT MODIFY!!!! *)
   let invalid_instanceof                    = 2067 (* DONT MODIFY!!!! *)
   let name_is_reserved                      = 2068 (* DONT MODIFY!!!! *)
+  let dollardollar_unused                   = 2069 (* DONT MODIFY!!!! *)
 
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
@@ -366,6 +367,9 @@ end
 let internal_error pos msg =
   add 0 pos ("Internal error: "^msg)
 
+let unimplemented_feature pos msg =
+  add 0 pos ("Feature not implemented: " ^ msg)
+
 (*****************************************************************************)
 (* Parsing errors. *)
 (*****************************************************************************)
@@ -430,6 +434,11 @@ let name_is_reserved name pos =
   add Naming.name_is_reserved pos (
   name^" cannot be used as it is reserved."
  )
+
+let dollardollar_unused pos =
+  add Naming.dollardollar_unused pos ("This expression does not contain a "^
+    "usage of the special pipe variable. Did you forget to use the ($$) "^
+    "variable?")
 
 let method_name_already_bound pos name =
   add Naming.method_name_already_bound pos (

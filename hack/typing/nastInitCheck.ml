@@ -347,7 +347,7 @@ and expr_ env acc p e =
   | Method_caller _
   | Typename _
   | Id _ -> acc
-  | Lvar _ | Lplaceholder _ -> acc
+  | Lvar _ | Lplaceholder _ | Dollardollar _ -> acc
   | Obj_get ((_, This), (_, Id (_, vx as v)), _) ->
       if SSet.mem vx env.props && not (SSet.mem vx acc)
       then (Errors.read_before_write v; acc)
@@ -426,6 +426,9 @@ and expr_ env acc p e =
   | Binop (Ast.BArbar, e, _) ->
       expr acc e
   | Binop (_, e1, e2) ->
+      let acc = expr acc e1 in
+      expr acc e2
+  | Pipe (_, e1, e2) ->
       let acc = expr acc e1 in
       expr acc e2
   | Eif (e1, None, e3) ->

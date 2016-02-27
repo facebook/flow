@@ -1186,6 +1186,8 @@ and expr_
     let r = Reason.Rplaceholder p in
     let ty = r, Tprim Tvoid in
     env, ty
+  | Dollardollar (_, x) ->
+      Env.get_local env x
   | Lvar ((_, x) as id) ->
       Typing_hooks.dispatch_lvar_hook id env;
       let env, x = Env.get_local env x in
@@ -1269,6 +1271,25 @@ and expr_
       let env, ty = binop in_cond p env bop (fst e1) ty1 (fst e2) ty2 in
       Typing_hooks.dispatch_binop_hook p bop ty1 ty2;
       env, ty
+  | Pipe ((_, id), e1, e2) ->
+      let env, ty = expr env e1 in
+      (** id is the ID of the $$ that is implicitly declared by the pipe.
+       * Set the local type for the $$ in the RHS. *)
+      let env = Env.set_local env id ty in
+      let env, ty2 = expr env e2 in
+      (**
+       * Return ty2 since the type of the pipe expression is the type of the
+       * RHS.
+       *
+       * Note: env does have the type of this Pipe's $$, but it doesn't
+       * override the outer one since they have different ID's.
+       *
+       * For example:
+       *   a() |> ( inner1($$) |> inner2($$) ) + $$
+       *
+       *   The rightmost $$ refers to the result of a()
+       *)
+      env, ty2
   | Unop (uop, e) ->
       let env, ty = raw_expr in_cond env e in
       unop p env uop ty

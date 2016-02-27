@@ -147,6 +147,7 @@ object(this)
    | String s    -> String (this#on_pstring env s)
    | Id id       -> Id (this#on_id env id)
    | Lvar id     -> Lvar (this#on_id env id)
+   | Dollardollar -> Dollardollar
    | Yield af    -> Yield (this#on_afield env af)
    | Await e     -> Await (list_to_single this#on_expr env e)
    | List el     -> List (handle_list_list this#on_expr env el)
@@ -174,6 +175,9 @@ object(this)
    | Binop       (bop, e1, e2)    ->
       Binop (bop, list_to_single this#on_expr env e1,
              list_to_single this#on_expr env e2)
+   | Pipe (e1, e2)    ->
+      Pipe (list_to_single this#on_expr env e1,
+        list_to_single this#on_expr env e2)
    | Eif         (e1, e2o, e3)     ->
       Eif (list_to_single this#on_expr env e1,
            handle_option (list_to_single @@ this#on_expr) env e2o,
