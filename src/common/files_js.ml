@@ -166,21 +166,13 @@ let get_all =
   fun next -> get_all_rec next SSet.empty
 
 let init options =
-  let tmp_dir = Options.temp_dir options in
-  let include_default_libs = Options.include_default_libs options in
   let libs = Options.lib_paths options in
-  let libs, filter = if not include_default_libs
-    then libs, is_valid_path ~options
-    else
-      let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
+  let libs, filter = match Options.default_lib_dir options with
+    | None -> libs, is_valid_path ~options
+    | Some root ->
       let is_in_flowlib = is_prefix (Path.to_string root) in
       let filter path = is_in_flowlib path || is_valid_path ~options path in
-      if Flowlib.extract_flowlib root
-      then root::libs, filter
-      else begin
-        let msg = "Could not locate flowlib files" in
-        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
-      end
+      root::libs, filter
   in
   (* preserve enumeration order *)
   let libs = if libs = []

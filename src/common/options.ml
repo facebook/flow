@@ -19,6 +19,7 @@ type options = {
   opt_all : bool;
   opt_check_mode: bool;
   opt_debug : bool;
+  opt_default_lib_dir: Path.t option;
   opt_error_flags: error_flags;
   opt_ignores: (string * Str.regexp) list;
   opt_includes: Path_matcher.t;
@@ -31,7 +32,6 @@ type options = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_munge_underscores: bool;
   opt_node_resolver_dirnames: string list;
-  opt_no_flowlib: bool;
   opt_profile : bool;
   opt_quiet : bool;
   opt_root : Path.t;
@@ -53,9 +53,9 @@ let default_error_flags = {
 }
 
 let all opts = opts.opt_all
+let default_lib_dir opts = opts.opt_default_lib_dir
 let error_flags opts = opts.opt_error_flags
 let ignores opts = opts.opt_ignores
-let include_default_libs opts = not opts.opt_no_flowlib
 let includes opts = opts.opt_includes
 let is_check_mode opts = opts.opt_check_mode
 let is_debug_mode opts = opts.opt_debug

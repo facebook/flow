@@ -130,6 +130,15 @@ module OptionParser(Config : CONFIG) = struct
     let paths = List.rev_append extras paths in
     List.fold_left Path_matcher.add Path_matcher.empty paths
 
+  let default_lib_dir tmp_dir =
+    let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
+    if Flowlib.extract_flowlib root
+    then root
+    else begin
+      let msg = "Could not locate flowlib files" in
+      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    end
+
   let result = ref None
   let main error_flags json profile quiet log_file wait debug
            all weak traces lib ignore include_ no_flowlib
@@ -164,6 +173,8 @@ module OptionParser(Config : CONFIG) = struct
     | Some x -> x
     | None -> Path.to_string (FlowConfig.(flowconfig.options.Opts.temp_dir))
     in
+    let opt_default_lib_dir =
+      if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
       | Some s ->
           let dirname = Path.make (Filename.dirname s) in
@@ -207,7 +218,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_strip_root;
       Options.opt_module;
       Options.opt_libs;
-      Options.opt_no_flowlib = no_flowlib;
+      Options.opt_default_lib_dir;
       Options.opt_munge_underscores = opt_munge_underscores;
       Options.opt_temp_dir;
       Options.opt_max_workers;
