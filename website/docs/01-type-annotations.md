@@ -69,11 +69,14 @@ Running the type checker against the above code will yield type errors
 since we have explicitly typed all parameters and variables.
 
 ```bbcode
-file.js:5:17,27: function call
-Error:
-file.js:5:24,26: string
-This type is incompatible with
-file.js:2:34,39: number
+file.js:5
+  5: var x: number = add(3, '0');
+                     ^^^^^^^^^^^ function call
+  5: var x: number = add(3, '0');
+                            ^^^ string. This type is incompatible with
+  2: function add(num1: number, num2: number): number {
+                                      ^^^^^^ number
+
 
 Found 1 error
 ```
@@ -98,9 +101,16 @@ Since the multiplication operator makes no real sense on a string, Flow is
 smart enough to deduce a problem here without explicit type annotations.
 
 ```bbcode
-file.js:5:19,21: string
-This type is incompatible with
-  file.js:3:10,30: number
+file.js:5
+  5: var x = multPI(3, '0');
+             ^^^^^^^^^^^^^^ function call
+  3:   return Math.PI * num1 * num2;
+                               ^^^^ string. This type is incompatible with
+  3:   return Math.PI * num1 * num2;
+              ^^^^^^^^^^^^^^^^^^^^^ number
+
+
+Found 1 error
 ```
 
 ### Module Boundaries
@@ -131,9 +141,16 @@ var result = size(null);
 Type annotations are required for the `size` function in `Size.js` because `UseSize.js` imports it and thus crosses the module boundary and isn't inferred.
 
 ```bbcode
-UseSize.js:6:19,22: null
-This type is incompatible with
-  Size.js:5:22,27: string
+UseSize.js:6
+  6: var result = size(null);
+                  ^^^^^^^^^^ function call
+  6: var result = size(null);
+                       ^^^^ null. This type is incompatible with
+  5: function size(input: string): number {
+                          ^^^^^^ string. See: Size.js:5
+
+
+Found 1 error
 ```
 
 ## `any` Annotations
