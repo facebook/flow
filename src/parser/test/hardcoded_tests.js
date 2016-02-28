@@ -782,6 +782,12 @@ module.exports = {
       },
       'var a: (number: any, void: any, string: any, any: any, type: any, static: any) => any;': {},
       'var a: {[type: any]: any}': {},
+      'type foo<A,B,> = bar;': {
+        'body.0.typeParameters.params': [
+          {'type': 'Identifier', 'name': 'A'},
+          {'type': 'Identifier', 'name': 'B'},
+        ]
+      },
     },
     'Tuples': {
       'var a : [] = [];': {
