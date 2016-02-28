@@ -117,11 +117,10 @@ end
 (*****************************************************************************)
 let remove_decls ~funs ~classes ~typedefs ~consts =
   let canonicalize_set = (fun elt acc -> SSet.add (canon_key elt) acc) in
-
-  let class_namekeys = SSet.fold canonicalize_set classes SSet.empty in
-  let class_namekeys = SSet.fold canonicalize_set typedefs class_namekeys in
-  TypeCanonHeap.remove_batch class_namekeys;
-  TypeIdHeap.remove_batch classes;
+  let types = SSet.union classes typedefs in
+  let canon_types = SSet.fold canonicalize_set types SSet.empty in
+  TypeCanonHeap.remove_batch canon_types;
+  TypeIdHeap.remove_batch types;
 
   let fun_namekeys = SSet.fold canonicalize_set funs SSet.empty in
   FunCanonHeap.remove_batch fun_namekeys;
