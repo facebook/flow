@@ -678,7 +678,9 @@ end = struct
         | T_GREATER_THAN -> List.rev acc
         | _ ->
           Expect.token env T_COMMA;
-          params env acc
+          if Peek.token env = T_GREATER_THAN
+          then List.rev acc
+          else params env acc
       )
       in fun env ->
           let start_loc = Peek.loc env in
