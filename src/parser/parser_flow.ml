@@ -929,14 +929,21 @@ end = struct
       let async = async env in
       Expect.token env T_FUNCTION;
       let generator = generator env async in
-      let id = (
+      let (typeParameters, id) = (
         match in_export env, Peek.token env with
-        | true, T_LPAREN -> None
-        | _ -> Some(
+        | true, T_LPAREN -> (None, None)
+        | true, T_LESS_THAN ->
+          let typeParams = Type.type_parameter_declaration env in
+          let id = if Peek.token env = T_LPAREN then None else Some (
             Parse.identifier ~restricted_error:Error.StrictFunctionName env
-          )
+          ) in
+          (typeParams, id)
+        | _ ->
+          let id =
+            Parse.identifier ~restricted_error:Error.StrictFunctionName env
+          in
+          (Type.type_parameter_declaration env, Some id)
       ) in
-      let typeParameters = Type.type_parameter_declaration env in
       let params, defaults, rest = function_params env in
       let returnType = Type.annotation_opt env in
       let _, body, strict = function_body env ~async ~generator in

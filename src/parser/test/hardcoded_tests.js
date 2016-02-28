@@ -1264,6 +1264,18 @@ module.exports = {
       },
       'export let bar = 43; export let foo = (bar = 43)': {
         'errors': []
+      },
+      'export default function<T>(arg:T):T {return arg;}': {
+        'errors': [],
+        'body.0.declaration.typeParameters.params': [
+          {'type': 'Identifier', 'name': 'T'}
+        ]
+      },
+      'export default class<T>{}': {
+        'errors': [],
+        'body.0.declaration.typeParameters.params': [
+          {'type': 'Identifier', 'name': 'T'}
+        ]
       }
     },
     'Declare Statements': {
