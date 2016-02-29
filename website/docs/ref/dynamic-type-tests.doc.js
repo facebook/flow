@@ -4,8 +4,8 @@
 id: dynamic-type-tests
 title: Dynamic Type Tests
 permalink: /docs/dynamic-type-tests.html
-prev: operators.html
-next: primitives.html
+prev: typeof.html
+next: modules.html
 ---
 */
 

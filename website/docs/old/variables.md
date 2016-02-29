@@ -2,8 +2,6 @@
 id: variables
 title: Variables
 permalink: /docs/variables.html
-prev: type-annotations.html
-next: arrays.html
 ---
 
 A variable is one of the simplest forms of code location. Usually you won't need

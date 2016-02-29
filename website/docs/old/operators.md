@@ -2,8 +2,6 @@
 id: operators
 title: Operators
 permalink: /docs/operators.html
-prev: typeof.html
-next: dynamic-type-tests.html
 ---
 
 Most of JavaScript's operators are heavily overloaded, and involve various 

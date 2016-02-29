@@ -2,8 +2,6 @@
 id: primitives
 title: Primitives
 permalink: /docs/primitives.html
-prev: dynamic-type-tests.html
-next: modules.html
 ---
 
 Primitives are global definitions (e.g., `Array`) that are automatically in

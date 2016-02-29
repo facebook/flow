@@ -3,7 +3,7 @@ id: typeof
 title: Typeof
 permalink: /docs/typeof.html
 prev: type-aliases.html
-next: operators.html
+next: dynamic-type-tests.html
 ---
 
 In vanilla JavaScript, the `typeof` operator returns a `string` specifying the 
