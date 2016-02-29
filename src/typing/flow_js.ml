@@ -5957,6 +5957,7 @@ and get_builtin_type cx reason x =
   mk_instance cx reason t
 
 and instantiate_poly_t cx t types =
+  if types = [] then (* nothing to do *) t else
   match t with
   | PolyT (type_params, t_) -> (
     try
@@ -5969,7 +5970,7 @@ and instantiate_poly_t cx t types =
       t
   )
   | _ ->
-    assert false
+    assert_false "unexpected args passed to instantiate_poly_t"
 
 and instantiate_type t =
   match t with
