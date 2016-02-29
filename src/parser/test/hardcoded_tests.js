@@ -788,6 +788,28 @@ module.exports = {
           {'type': 'Identifier', 'name': 'B'},
         ]
       },
+      'class Foo<A,B,> extends Bar<C,D,> {}': {
+        'body.0.typeParameters.params': [
+          { 'type': 'Identifier', 'name': 'A' },
+          { 'type': 'Identifier', 'name': 'B' },
+        ],
+        'body.0.superTypeParameters.params': [
+          { 'type': 'GenericTypeAnnotation', 'id.name': 'C' },
+          { 'type': 'GenericTypeAnnotation', 'id.name': 'D' },
+        ],
+      },
+      'interface Foo<A,B,> {}': {
+        'body.0.typeParameters.params': [
+          {'type': 'Identifier', 'name': 'A'},
+          {'type': 'Identifier', 'name': 'B'},
+        ]
+      },
+      'function f<A,B,>() {}': {
+        'body.0.typeParameters.params': [
+          {'type': 'Identifier', 'name': 'A'},
+          {'type': 'Identifier', 'name': 'B'},
+        ]
+      },
     },
     'Tuples': {
       'var a : [] = [];': {
