@@ -1,0 +1,5 @@
+
+test.js:4:9,19: Named import from module `./SomeCSSFile.css`
+This module has no named export called `doesntExist`.
+
+Found 1 error

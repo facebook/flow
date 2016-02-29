@@ -508,10 +508,33 @@ let parse_options config lines =
         let pattern = Str.matched_group 1 str in
         let template = Str.matched_group 2 str in
 
-        ((Str.regexp pattern, template), str)
+        (Str.regexp pattern, template)
       );
       setter = (fun opts v ->
-        let (v, _) = v in
+        let module_name_mappers = v :: opts.module_name_mappers in
+        {opts with module_name_mappers;}
+      );
+    }
+
+    |> define_opt "module.name_mapper.extension" {
+      _initializer = USE_DEFAULT;
+      flags = [ALLOW_DUPLICATE];
+      optparser = (fun str ->
+        let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
+        let regexp = Str.regexp regexp_str in
+        (if not (Str.string_match regexp str 0) then
+          raise (Opts.UserError (
+            "Expected a mapping of form: " ^
+            "'single-quoted-string' -> 'single-quoted-string'"
+          ))
+        );
+
+        let file_ext = Str.matched_group 1 str in
+        let template = Str.matched_group 2 str in
+
+        (Str.regexp ("^\\(.*\\)\\." ^ (Str.quote file_ext) ^ "$"), template)
+      );
+      setter = (fun opts v ->
         let module_name_mappers = v :: opts.module_name_mappers in
         {opts with module_name_mappers;}
       );

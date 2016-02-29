@@ -94,17 +94,31 @@ pairs. Any options that are omitted will use their default values. Some options
 can be overridden with command line flags.
 
 - `log.file` (string): the path to the log file (defaults to `/tmp/flow/<escaped root path>.log`)
-- `module.name_mapper` (regex -> string): specify a regular expression to match against module names, and a replacement value, separated by a `->`.
+- `module.name_mapper` (regex -> string): specify a regular expression to match against module names, and a replacement pattern, separated by a `->`.
 
     For example:
 
     ```
     module.name_mapper= '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
     ```
-
-    makes Flow treat `require('image!foo.jpg')` as if it was `require('ImageStub')`.
-
+  
+    makes Flow treat `require('image!foo.jpg')` as if it were `require('ImageStub')`.
+  
     (**note:** you can specify `module.name_mapper` multiple times)
+
+- `module.name_mapper.extension` (string -> string): specify a file extension to match, and a replacement module name, separated by a `->`. 
+
+    *(Note that this is just shorthand for `module.name_mapper='^\(.\*\)\.EXTENSION$' -> 'TEMPLATE'`)*
+
+    For example:
+    
+    ```
+    module.name_mapper.extension= 'css' -> '<PROJECT_ROOT>/CSSFlowStub.js.flow'
+    ```
+  
+    makes Flow treat `require('foo.css')` as if it were `require(PROJECT_ROOT + '/CSSFlowStub')`.
+  
+    (**note:** you can specify `module.name_mapper.extension` multiple times for different extensions)
 
 - `module.system` (`node` | `haste`): the module system to use to resolve
   `import` and `require`. [Haste](https://github.com/facebook/node-haste) is
