@@ -96,6 +96,13 @@ begin library "hh-utils-core"
   files = [ "utils/core.ml" ]
 end
 
+begin library "hh-utils-json"
+  files = [
+    "utils/hh_json/hh_json.mli"
+    "utils/hh_json/hh_json.ml"
+  ]
+end
+
 begin library "hh-utils-collections"
   files = [
     "utils/collections/hashSet.mli"
@@ -106,7 +113,12 @@ begin library "hh-utils-collections"
 end
 
 begin library "hh-utils-common"
-  requires += [ "hh-third-party" "hh-utils-core" "hh-fsnotify" ]
+  requires += [
+    "hh-third-party"
+    "hh-utils-core"
+    "hh-fsnotify"
+    "hh-utils-json"
+  ]
   ccopt += "-DOSS_SMALL_HH_TABLE_POWS"
   files = [
     "heap/hh_shared.c"

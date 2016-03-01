@@ -8,7 +8,6 @@
  *
  *)
 
-open Core
 open Coverage_level
 open Utils
 open Hh_json

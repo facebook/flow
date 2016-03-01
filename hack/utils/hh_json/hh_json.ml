@@ -37,7 +37,7 @@ Caveats:
  (+) Numbers are just stored as strings
  *)
 
-open Core
+module List = Core_list
 
 type json =
   | JSON_Object of (string * json) list
@@ -298,7 +298,7 @@ let string_of_file filename =
   let ic = open_in filename in
   let buf = Buffer.create 5096 in
   let rec loop () =
-    match try Some(input_line ic) with e -> None with
+    match try Some(input_line ic) with _ -> None with
     | None -> Buffer.contents buf
     | Some l ->
        begin
@@ -400,8 +400,8 @@ let json_of_string ?(strict=true) s =
   let lb = create_env strict s in
   js_value lb
 
-let json_of_file ?(strict=true) filename =
-  json_of_string (string_of_file filename)
+let json_of_file ?strict filename =
+  json_of_string ?strict (string_of_file filename)
 
 let int_ n = JSON_Number (string_of_int n)
 

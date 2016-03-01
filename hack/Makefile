@@ -61,6 +61,7 @@ MODULES=\
   typing\
   utils\
   utils/collections\
+  utils/hh_json\
   monitor\
   watchman\
   $(FSNOTIFY)\
