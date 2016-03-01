@@ -113,12 +113,121 @@ let get_class_parents_and_traits env class_nast =
 (* Section declaring the type of a function *)
 (*****************************************************************************)
 
-let ifun_decl tcopt (f: Ast.fun_) =
+let rec ifun_decl tcopt (f: Ast.fun_) =
   let f = Naming.fun_ tcopt f in
   let cid = snd f.f_name in
   Naming_heap.FunHeap.add cid f;
-  Typing.fun_decl tcopt f;
+  fun_decl tcopt f;
   ()
+
+and make_param_ty env param =
+  let param_pos = (fst param.param_id) in
+  let env, ty = match param.param_hint with
+    | None ->
+      let r = Reason.Rwitness param_pos in
+      env, (r, Tany)
+      (* if the code is strict, use the type-hint *)
+    | Some x ->
+      Typing_hint.hint env x
+  in
+  let ty = match ty with
+    | _, t when param.param_is_variadic ->
+      (* When checking a call f($a, $b) to a function f(C ...$args),
+       * both $a and $b must be of type C *)
+      Reason.Rvar_param param_pos, t
+    | x -> x
+  in
+  Typing_hooks.dispatch_infer_ty_hook (Phase.decl ty) param_pos env;
+  env, (Some param.param_name, ty)
+
+and fun_decl tcopt f =
+  let dep = Dep.Fun (snd f.f_name) in
+  let env = Env.empty tcopt (Pos.filename (fst f.f_name)) (Some dep) in
+  let env = Env.set_mode env f.f_mode in
+  let _, ft = fun_decl_in_env env f in
+  Env.add_fun (snd f.f_name) ft;
+  ()
+
+and ret_from_fun_kind pos kind =
+  let ty_any = (Reason.Rwitness pos, Tany) in
+  match kind with
+    | Ast.FGenerator ->
+      let r = Reason.Rret_fun_kind (pos, kind) in
+      r, Tapply ((pos, SN.Classes.cGenerator), [ty_any ; ty_any ; ty_any])
+    | Ast.FAsyncGenerator ->
+      let r = Reason.Rret_fun_kind (pos, kind) in
+      r, Tapply ((pos, SN.Classes.cAsyncGenerator), [ty_any ; ty_any ; ty_any])
+    | Ast.FAsync ->
+      let r = Reason.Rret_fun_kind (pos, kind) in
+      r, Tapply ((pos, SN.Classes.cAwaitable), [ty_any])
+    | Ast.FSync -> ty_any
+
+and fun_decl_in_env env f =
+  let env, arity_min, params = make_params env f.f_params in
+  let env, ret_ty = match f.f_ret with
+    | None -> env, ret_from_fun_kind (fst f.f_name) f.f_fun_kind
+    | Some ty -> Typing_hint.hint env ty in
+  let env, arity = match f.f_variadic with
+    | FVvariadicArg param ->
+      assert param.param_is_variadic;
+      assert (param.param_expr = None);
+      let env, (p_name, p_ty) = make_param_ty env param in
+      env, Fvariadic (arity_min, (p_name, p_ty))
+    | FVellipsis    -> env, Fellipsis (arity_min)
+    | FVnonVariadic -> env, Fstandard (arity_min, List.length f.f_params)
+  in
+  let env, tparams = List.map_env env f.f_tparams type_param in
+  let ft = {
+    ft_pos         = fst f.f_name;
+    ft_deprecated  =
+      Attributes.deprecated ~kind:"function" f.f_name f.f_user_attributes;
+    ft_abstract    = false;
+    ft_arity       = arity;
+    ft_tparams     = tparams;
+    ft_params      = params;
+    ft_ret         = ret_ty;
+  } in
+  env, ft
+
+and type_param env (variance, x, cstr) =
+  let env, cstr = match cstr with
+    | Some (ck, h) ->
+        let env, ty = Typing_hint.hint env h in
+        env, Some (ck, ty)
+    | None -> env, None in
+  env, (variance, x, cstr)
+
+and check_default pos mandatory e =
+  if not mandatory && e = None
+  then Errors.previous_default pos
+  else ()
+
+(* Functions building the types for the parameters of a function *)
+(* It's not completely trivial because of optional arguments  *)
+and make_param env mandatory arity param =
+  let env, ty = make_param_ty env param in
+  let mandatory =
+    if param.param_is_variadic then begin
+      assert(param.param_expr = None);
+      false
+    end else begin
+      check_default (fst param.param_id) mandatory param.param_expr;
+      mandatory && param.param_expr = None
+    end
+  in
+  let arity = if mandatory then arity + 1 else arity in
+  env, arity, mandatory, ty
+
+and make_params env paraml =
+  let rec loop env mandatory arity paraml =
+    match paraml with
+    | [] -> env, arity, []
+    | param :: rl ->
+        let env, arity, mandatory, ty = make_param env mandatory arity param in
+        let env, arity, rest = loop env mandatory arity rl in
+        env, arity, ty :: rest
+  in
+  loop env true 0 paraml
 
 (*****************************************************************************)
 (* Section declaring the type of a class *)
@@ -283,7 +392,7 @@ and class_decl tcopt c =
     Errors.strict_members_not_known p name
   else ();
   let ext_strict = if not_strict_because_xhp then false else ext_strict in
-  let env, tparams = List.map_env env (fst c.c_tparams) Typing.type_param in
+  let env, tparams = List.map_env env (fst c.c_tparams) type_param in
   let env, enum = match c.c_enum with
     | None -> env, None
     | Some e ->
@@ -576,20 +685,20 @@ and typeconst_decl c (env, acc, acc2) {
       env, acc, acc2
 
 and method_decl env m =
-  let env, arity_min, params = Typing.make_params env m.m_params in
+  let env, arity_min, params = make_params env m.m_params in
   let env, ret = match m.m_ret with
-    | None -> env, Typing.ret_from_fun_kind (fst m.m_name) m.m_fun_kind
+    | None -> env, ret_from_fun_kind (fst m.m_name) m.m_fun_kind
     | Some ret -> Typing_hint.hint env ret in
   let env, arity = match m.m_variadic with
     | FVvariadicArg param ->
       assert param.param_is_variadic;
       assert (param.param_expr = None);
-      let env, (p_name, p_ty) = Typing.make_param_ty env param in
+      let env, (p_name, p_ty) = make_param_ty env param in
       env, Fvariadic (arity_min, (p_name, p_ty))
     | FVellipsis    -> env, Fellipsis arity_min
     | FVnonVariadic -> env, Fstandard (arity_min, List.length m.m_params)
   in
-  let env, tparams = List.map_env env m.m_tparams Typing.type_param in
+  let env, tparams = List.map_env env m.m_tparams type_param in
   let ft = {
     ft_pos      = fst m.m_name;
     ft_deprecated =
@@ -666,7 +775,7 @@ and type_typedef_naming_and_decl tcopt tdef =
   let dep = Typing_deps.Dep.Class tid in
   let env = Env.empty tcopt filename (Some dep) in
   let env = Env.set_mode env tdef.Ast.t_mode in
-  let env, td_tparams = List.map_env env params Typing.type_param in
+  let env, td_tparams = List.map_env env params type_param in
   let env, td_type = Typing_hint.hint env concrete_type in
   let _env, td_constraint = opt Typing_hint.hint env tcstr in
   let td_vis = match tdef.Ast.t_kind with
@@ -687,7 +796,15 @@ let iconst_decl tcopt cst =
   let cst = Naming.global_const tcopt cst in
   let _cst_pos, cst_name = cst.cst_name in
   Naming_heap.ConstHeap.add cst_name cst;
-  Typing.gconst_decl tcopt cst;
+  let dep = Dep.GConst (snd cst.cst_name) in
+  let env = Env.empty tcopt (Pos.filename (fst cst.cst_name)) (Some dep) in
+  let env = Env.set_mode env cst.cst_mode in
+  let _, hint_ty =
+    match cst.cst_type with
+    | None -> env, (Reason.Rnone, Tany)
+    | Some h -> Typing_hint.hint env h
+  in
+  Env.GConsts.add cst_name hint_ty;
   ()
 
 (*****************************************************************************)

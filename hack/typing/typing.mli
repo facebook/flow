@@ -14,12 +14,6 @@ val with_expr_hook:
 val debug_print_last_pos:
   'a -> unit
 
-val fun_decl:
-  TypecheckerOptions.t -> Nast.fun_ -> unit
-
-val gconst_decl:
-  TypecheckerOptions.t -> Nast.gconst -> unit
-
 val fun_def:
   TypecheckerOptions.t -> 'a -> Nast.fun_ -> unit
 val class_def:
@@ -30,20 +24,6 @@ val typedef_def:
 val expr:
   Typing_env.env -> Nast.expr ->
   Typing_env.env * Typing_defs.locl Typing_defs.ty
-
-val ret_from_fun_kind: Pos.t -> Ast.fun_kind -> Typing_defs.decl Typing_defs.ty
-
-val make_param_ty:
-  Typing_env.env -> Nast.fun_param ->
-  Typing_env.env * (string option * Typing_defs.decl Typing_defs.ty)
-
-val make_params:
-  Typing_env.env -> Nast.fun_param list ->
-  Typing_env.env * int * Typing_defs.decl Typing_defs.fun_params
-
-val type_param:
-  Typing_env.env -> Nast.tparam ->
-  Typing_env.env * Typing_defs.tparam
 
 val get_self_from_c:
   Typing_env.env -> Nast.class_ ->
