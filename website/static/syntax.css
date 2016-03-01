@@ -14,29 +14,6 @@ pre.code {
   background-color: rgba(226, 141, 49, 0.1);
 }
 
-.T_VAR, .T_CONST, .T_LET, .T_FUNCTION, .T_RETURN, .T_THIS, .T_TYPE, .T_DECLARE, .T_CLASS, .T_NEW, .T_EXPORT, .T_IMPORT, .T_TYPEOF {
-  font-weight: bold;
-  color: #881280;
-}
-
-.T_NUMBER, .T_TRUE, .T_FALSE {
-  color: blue;
-}
-
-.T_STRING, .T_JSX_TEXT {
-  color: #E9AD19;
-}
-
-.type {
-  opacity: 0.5;
-}
-
-.cm, /* pygments Comment.Multiline */
-.comment {
-  color: #666666;
-  font-style: italic
-}
-
 .doc {
   color: #336699;
   white-space: normal;
