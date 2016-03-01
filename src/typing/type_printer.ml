@@ -148,9 +148,9 @@ let rec type_printer override fallback enclosure cx t =
         in
         parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 
-    | IntersectionT (_, ts) ->
+    | IntersectionT (_, rep) ->
         let type_s =
-          (ts
+          (InterRep.members rep
             |> List.map (pp EnclosureIntersect cx)
             |> String.concat " & "
           ) in
@@ -323,8 +323,9 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | IntersectionT (_, ts)
+  | IntersectionT (_, rep)
     ->
+      let ts = InterRep.members rep in
       is_printed_type_list_parsable weak cx EnclosureIntersect ts
 
   | UnionT (_, rep)

@@ -17,7 +17,6 @@ require.js:25:3,13: property `stringValue`
 Property not found in
 require.js:25:1,1: object literal
 
-require.js:30:1,10: 
-The parameter passed to require() must be a literal string.
+require.js:30:1,10: The parameter passed to require() must be a literal string.
 
 Found 6 errors

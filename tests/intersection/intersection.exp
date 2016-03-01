@@ -1,6 +1,18 @@
 
-test_obj.js:28:12,12: intersection: object type(s)
+test_obj.js:29:12,12: intersection
 This type is incompatible with
-test_obj.js:28:8,8: object type
+test_obj.js:29:8,8: object type
+Member 1:
+[LIB] lib/lib.js:33:10,34: object type
+Error:
+test_obj.js:28:27,32: string
+This type is incompatible with
+[LIB] lib/lib.js:33:27,32: number
+Member 2:
+[LIB] lib/lib.js:33:38,62: object type
+Error:
+test_obj.js:28:27,32: string
+This type is incompatible with
+[LIB] lib/lib.js:33:55,60: number
 
 Found 1 error

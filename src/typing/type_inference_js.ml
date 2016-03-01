@@ -17,13 +17,12 @@
    point inside a function (and when to narrow or widen their types). *)
 
 open Utils_js
-
-module Ast = Spider_monkey_ast
-
 open Reason_js
 open Type
-
 open Env_js.LookupMode
+
+module Ast = Spider_monkey_ast
+module FlowError = Flow_error
 
 (*************)
 (* Utilities *)
@@ -164,7 +163,7 @@ let mark_exports_type cx reason new_exports_type = Context.(
         "Unable to determine module type (CommonJS vs ES) if both an export " ^
         "statement and module.exports are used in the same module!"
       in
-      Flow_js.add_warning cx [(reason, msg)]
+      FlowError.(add_warning cx (mk_info reason [msg]))
   | _ -> ()
   );
   Context.set_module_exports_type cx new_exports_type
@@ -385,8 +384,7 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f = Ast.Pattern.(
 )
 
 and error_destructuring cx loc =
-  let msg = "unsupported destructuring" in
-  Flow_js.add_error cx [mk_reason "" loc, msg]
+  FlowError.add_error cx (loc, ["unsupported destructuring"])
 
 let type_of_pattern = Ast.Pattern.(function
   | _, Array { Array.typeAnnotation; _; } -> typeAnnotation
@@ -417,9 +415,8 @@ let function_kind ~async ~generator =
   | false, false -> Scope.Ordinary
 
 let error_type cx loc msg =
-  let reason = mk_reason "" loc in
-  Flow_js.add_error cx [reason, msg];
-  AnyT reason
+  FlowError.add_error cx (loc, [msg]);
+  AnyT.at loc
 
 let check_type_param_arity cx loc params n f =
   if List.length params = n
@@ -449,27 +446,25 @@ let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
         fst (List.nth decorators_list ((List.length decorators_list) - 1))
       in
       let loc = Loc.btwn first_loc last_loc in
-      let reason = mk_reason "Experimental decorator usage" loc in
-      Flow_js.add_warning cx [
-        reason,
+      FlowError.add_warning cx (loc, [
+        "Experimental decorator usage";
         "Decorators are an early stage proposal that may change. " ^
-        "Additionally, Flow does not account for the type implications of " ^
-        "decorators at this time."
-      ]
+          "Additionally, Flow does not account for the type implications " ^
+          "of decorators at this time."
+      ])
 ))
 
 let warn_or_ignore_export_star_as cx name = FlowConfig.(Opts.(
   if name = None then () else
   match ((get_unsafe ()).options.esproposal_export_star_as, name) with
   | ESPROPOSAL_WARN, Some(loc, _) ->
-    let reason = mk_reason "Experimental `export * as` usage" loc in
-    Flow_js.add_warning cx [
-      reason,
+    FlowError.add_warning cx (loc, [
+      "Experimental `export * as` usage";
       "`export * as` is an active early stage feature proposal that may " ^
-      "change. You may opt-in to using it anyway by putting " ^
-      "`esproposal.export_star_as=enable` into the [options] section of your " ^
-      ".flowconfig"
-    ]
+        "change. You may opt-in to using it anyway by putting " ^
+        "`esproposal.export_star_as=enable` into the [options] section " ^
+        "of your .flowconfig"
+    ])
   | _ -> ()
 ))
 
@@ -506,7 +501,8 @@ let rec convert cx type_params_map = Ast.Type.(function
 
   | loc, Intersection ts ->
       let ts = List.map (convert cx type_params_map) ts in
-      IntersectionT (mk_reason "intersection type" loc, ts)
+      let rep = InterRep.make ts in
+      IntersectionT (mk_reason "intersection type" loc, rep)
 
   | loc, Typeof x ->
       (match x with
@@ -591,7 +587,8 @@ let rec convert cx type_params_map = Ast.Type.(function
       (* $All<...T> is the intersection of types ...T *)
       | "$All" ->
         let ts = List.map (convert cx type_params_map) typeParameters in
-        IntersectionT (mk_reason "intersection type" loc, ts)
+        let rep = InterRep.make ts in
+        IntersectionT (mk_reason "intersection type" loc, rep)
 
       (* $Tuple<...T> is the tuple of types ...T *)
       | "$Tuple" ->
@@ -619,8 +616,10 @@ let rec convert cx type_params_map = Ast.Type.(function
       (* $Diff<T,S> *)
       | "$Diff" ->
         check_type_param_arity cx loc typeParameters 2 (fun () ->
-          let t1 = typeParameters |> List.hd |> convert cx type_params_map in
-          let t2 = typeParameters |> List.tl |> List.hd |> convert cx type_params_map in
+          let t1 = typeParameters |> List.hd |>
+            convert cx type_params_map in
+          let t2 = typeParameters |> List.tl |> List.hd |>
+            convert cx type_params_map in
           DiffT (t1, t2)
         )
 
@@ -663,10 +662,10 @@ let rec convert cx type_params_map = Ast.Type.(function
             let reason = mk_reason "`this` type" loc in
             Flow_js.reposition cx reason (SMap.find_unsafe "this" type_params_map)
           )
-        else
-          let msg = "Unexpected use of `this` type" in
-          Flow_js.add_warning cx [mk_reason "" loc, msg];
+        else (
+          FlowError.add_warning cx (loc, ["Unexpected use of `this` type"]);
           AnyT.t
+        )
 
       (* Class<T> is the type of the class whose instances are of type T *)
       | "Class" ->
@@ -824,7 +823,7 @@ let rec convert cx type_params_map = Ast.Type.(function
                 SMap.add name t props_map
           | _ ->
             let msg = "Unsupported key in object type" in
-            Flow_js.add_error cx [mk_reason "" loc, msg];
+            FlowError.add_error cx (loc, [msg]);
             props_map
       )
     ) SMap.empty properties
@@ -839,7 +838,8 @@ let rec convert cx type_params_map = Ast.Type.(function
                 convert cx type_params_map (loc, Ast.Type.Function ft))
             fts in
           let callable_reason = mk_reason "callable object type" loc in
-          SMap.add "$call" (IntersectionT (callable_reason, fts)) props_map
+          let rep = InterRep.make fts in
+          SMap.add "$call" (IntersectionT (callable_reason, rep)) props_map
     in
     (* Seal an object type unless it specifies an indexer. *)
     let sealed, dict =
@@ -854,7 +854,7 @@ let rec convert cx type_params_map = Ast.Type.(function
           (* TODO *)
           List.iter (fun (indexer_loc, _) ->
             let msg = "multiple indexers are not supported" in
-            Flow_js.add_error cx [mk_reason "" indexer_loc, msg];
+            FlowError.add_error cx (indexer_loc, [msg]);
           ) rest;
 
           let keyt = convert cx type_params_map key in
@@ -919,8 +919,9 @@ and mk_rest cx = function
       RestT tvar
   | t ->
       let r = reason_of_t t in
-      let msg = "rest parameter should have an explicit array type (or type `any`)" in
-      Flow_js.add_warning cx [r,msg];
+      let msg =
+        "rest parameter should have an explicit array type (or type `any`)" in
+      FlowError.(add_warning cx (mk_info r [msg]));
       RestT (AnyT.why r)
 
 and mk_type cx type_params_map reason = function
@@ -1521,8 +1522,9 @@ and toplevels cx type_params_map stmts =
     let uc = !n+1 in
     if uc < List.length stmts
     then (
-      let msg = "unreachable code" in
-      let warn_unreachable loc = Flow_js.add_warning cx [mk_reason "" loc, msg] in
+      let warn_unreachable loc = FlowError.(
+        add_warning cx (loc, ["unreachable code"])
+      ) in
       let rec drop n lst = match (n, lst) with
         | (_, []) -> []
         | (0, l) -> l
@@ -1582,14 +1584,13 @@ and statement cx type_params_map = Ast.Statement.(
         if optional && _method
         then begin
           let msg = "optional methods are not supported" in
-          Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg]
+          FlowError.add_error cx (loc, [msg])
         end;
         Ast.Expression.Object.(match key with
         | Property.Literal (loc, _)
         | Property.Computed (loc, _) ->
-          let msg = "illegal name" in
-            Flow_js.add_error cx [Reason_js.mk_reason "" loc, msg];
-            (sfmap_, smmap_, fmap_, mmap_)
+          FlowError.add_error cx (loc, ["illegal name"]);
+          (sfmap_, smmap_, fmap_, mmap_)
 
         | Property.Identifier (loc, { Ast.Identifier.name; _ }) ->
           let t = convert cx type_params_map value in
@@ -1598,10 +1599,13 @@ and statement cx type_params_map = Ast.Statement.(
           let map_ = if static then smmap_ else mmap_ in
           let t = match SMap.get name map_ with
             | None -> t
-            | Some (IntersectionT (reason, seen_ts)) ->
-                  IntersectionT (reason, seen_ts @ [t])
+            | Some (IntersectionT (reason, rep)) ->
+              let seen_ts = InterRep.members rep in
+              let rep = InterRep.make (seen_ts @ [t]) in
+              IntersectionT (reason, rep)
             | Some seen_t ->
-                  IntersectionT (Reason_js.mk_reason iname loc, [seen_t; t])
+              let rep = InterRep.make [seen_t; t] in
+              IntersectionT (Reason_js.mk_reason iname loc, rep)
           in
             (* TODO: additionally check that the four maps are disjoint *)
             (match static, _method with
@@ -1619,7 +1623,7 @@ and statement cx type_params_map = Ast.Statement.(
         (* TODO *)
         List.iter (fun (indexer_loc, _) ->
           let msg = "multiple indexers are not supported" in
-          Flow_js.add_error cx [mk_reason "" indexer_loc, msg];
+          FlowError.add_error cx (indexer_loc, [msg]);
         ) rest;
 
         let keyt = convert cx type_params_map key in
@@ -1634,17 +1638,18 @@ and statement cx type_params_map = Ast.Statement.(
     let smmap = match scalls with
       | [] -> smmap
       | [_,t] -> SMap.add "$call" t smmap
-      | _ -> let scalls = List.map snd scalls in
-             SMap.add "$call" (IntersectionT (mk_reason iname loc,
-                                              scalls)) smmap
+      | _ ->
+        let scalls = List.map snd scalls in
+        let rep = InterRep.make scalls in
+        SMap.add "$call" (IntersectionT (mk_reason iname loc, rep)) smmap
     in
     let mmap = match calls with
       | [] -> mmap
       | [_,t] -> SMap.add "$call" t mmap
       | _ ->
         let calls = List.map snd calls in
-        SMap.add "$call" (IntersectionT (mk_reason iname loc,
-                                              calls)) mmap
+        let rep = InterRep.make calls in
+        SMap.add "$call" (IntersectionT (mk_reason iname loc, rep)) mmap
     in
     let mmap = match SMap.get "constructor" mmap with
       | None ->
@@ -1693,11 +1698,11 @@ and statement cx type_params_map = Ast.Statement.(
 
       | loc, Identifier _ ->
           let msg = "type annotations for catch params not yet supported" in
-          Flow_js.add_error cx [mk_reason "" loc, msg]
+          FlowError.add_error cx (loc, [msg])
 
       | loc, _ ->
           let msg = "unsupported catch parameter declaration" in
-          Flow_js.add_error cx [mk_reason "" loc, msg]
+          FlowError.add_error cx (loc, [msg])
     )
   in
 
@@ -1984,7 +1989,7 @@ and statement cx type_params_map = Ast.Statement.(
         Env_js.update_env cx reason env
       | None ->
         let msg = "internal error: switch env missing" in
-        Flow_js.add_internal_error cx [mk_reason "" switch_loc, msg]
+        FlowError.add_internal_error cx (switch_loc, [msg])
       );
       let newset = Changeset.merge oldset in
       Env_js.havoc_vars newset
@@ -2032,7 +2037,7 @@ and statement cx type_params_map = Ast.Statement.(
       Env_js.update_env cx reason env
     | None ->
       let msg = "internal error: final case env not found" in
-      Flow_js.add_internal_error cx [mk_reason "" switch_loc, msg]
+      FlowError.add_internal_error cx (switch_loc, [msg])
   )
 
   (*******************************************************)
@@ -2487,7 +2492,7 @@ and statement cx type_params_map = Ast.Statement.(
 
           | _ ->
               let msg = "unexpected LHS in for...in" in
-              Flow_js.add_error cx [mk_reason "" loc, msg]
+              FlowError.add_error cx (loc, [msg])
         );
 
         ignore (Abnormal.catch_control_flow_exception
@@ -2549,7 +2554,7 @@ and statement cx type_params_map = Ast.Statement.(
 
           | _ ->
               let msg = "unexpected LHS in for...of" in
-              Flow_js.add_error cx [mk_reason "" loc, msg]
+              FlowError.add_error cx (loc, [msg])
         );
 
         ignore (Abnormal.catch_control_flow_exception
@@ -2910,7 +2915,7 @@ and statement cx type_params_map = Ast.Statement.(
                   local_name
                   module_name
               in
-              Flow_js.add_error cx [(import_reason, msg)];
+              FlowError.(add_error cx (mk_info import_reason [msg]));
               (import_reason, local_name, AnyT.why import_reason)
             | Type.ImportTypeof ->
               let bind_reason = repos_reason (fst local) import_reason in
@@ -3186,7 +3191,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
   (* literal LHS *)
   | Property (loc, { Property.key = Property.Literal _; _ }) ->
     let msg = "non-string literal property keys not supported" in
-    Flow_js.add_error cx [mk_reason "" loc, msg];
+    FlowError.add_error cx (loc, [msg]);
     map
 
 
@@ -3254,7 +3259,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
 
   | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
     let msg = "get/set properties not yet supported" in
-    Flow_js.add_error cx [mk_reason "" loc, msg];
+    FlowError.add_error cx (loc, [msg]);
     map
 
   (* computed LHS *)
@@ -3631,7 +3636,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
           let msg =
             "The parameter passed to require() must be a literal string."
           in
-          Flow_js.add_error cx [mk_reason "" loc, msg];
+          FlowError.add_error cx (loc, [msg]);
         );
         AnyT.at loc
     )
@@ -3668,7 +3673,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
                 "The first arg to requireLazy() must be a literal array of " ^
                 "string literals!"
               in
-              Flow_js.add_error cx [mk_reason "" loc, msg];
+              FlowError.add_error cx (loc, [msg]);
               tvars
         ) in
         let module_tvars = List.fold_left element_to_module_tvar [] elements in
@@ -3685,7 +3690,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
           "The first arg to requireLazy() must be a literal array of " ^
           "string literals!"
         in
-        Flow_js.add_error cx [mk_reason "" loc, msg];
+        FlowError.add_error cx (loc, [msg]);
 
         AnyT.at loc
     )
@@ -3722,7 +3727,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         ArrT (reason, t, [])
       | _ ->
         let msg = "Use array literal instead of new Array(..)" in
-        Flow_js.add_error cx [mk_reason "" loc, msg];
+        FlowError.add_error cx (loc, [msg]);
         EmptyT.at loc
       )
     )
@@ -3836,7 +3841,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         Env_js.refine_with_preds cx reason preds xtypes
       | _ ->
         let msg = "unsupported arguments in call to invariant()" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
+        FlowError.add_error cx (loc, [msg])
       );
       void_ loc
 
@@ -4027,7 +4032,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
   | Comprehension _
   | Generator _
   | Let _ ->
-    Flow_js.add_error cx [mk_reason "" loc, "not (sup)ported"];
+    FlowError.add_error cx (loc, ["not (sup)ported"]);
     EmptyT.at loc
 )
 
@@ -4858,19 +4863,19 @@ and mk_proptypes cx type_params_map props = Ast.Expression.Object.(
     | Property (loc, { Property.key = Property.Literal _; _ }) ->
       let msg =
         "non-string literal property keys not supported for React propTypes" in
-      Flow_js.add_error cx [mk_reason "" loc, msg];
+      FlowError.add_error cx (loc, [msg]);
       amap, omap, dict
 
     (* get/set kind *)
     | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
       let msg = "get/set properties not supported for React propTypes" in
-      Flow_js.add_error cx [mk_reason "" loc, msg];
+      FlowError.add_error cx (loc, [msg]);
       amap, omap, dict
 
     (* computed LHS *)
     | Property (loc, { Property.key = Property.Computed _; _ }) ->
       let msg = "computed property keys not supported for React propTypes" in
-      Flow_js.add_error cx [mk_reason "" loc, msg];
+      FlowError.add_error cx (loc, [msg]);
       amap, omap, dict
 
   ) (SMap.empty, SMap.empty, None) props
@@ -5024,7 +5029,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
 
       | _ ->
         let msg = "unsupported property specification in createClass" in
-        Flow_js.add_error cx [mk_reason "" loc, msg];
+        FlowError.add_error cx (loc, [msg]);
         fmap, mmap
 
     ) (SMap.empty, SMap.empty) class_props in
@@ -5221,9 +5226,10 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         begin match pred with
         | Some pred -> result BoolT.t name t pred sense
         | None ->
-          let reason = mk_reason (spf "string literal `%s`" typename) str_loc in
-          let err = "This value is not a valid `typeof` return value" in
-          Flow_js.add_warning cx [reason, err];
+          FlowError.add_warning cx (str_loc, [
+            spf "string literal `%s`" typename;
+            "This value is not a valid `typeof` return value"
+          ]);
           empty_result (BoolT.at loc)
         end
     | None, _ -> empty_result (BoolT.at loc)
@@ -5679,7 +5685,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       (match kind with
       | Method.Get | Method.Set when not (are_getters_and_setters_enabled ()) ->
         let msg = "get/set properties not yet supported" in
-        Flow_js.add_error cx [mk_reason "" loc, msg]
+        FlowError.add_error cx (loc, [msg])
       | _ -> ());
 
       let typeparams, type_params_map =
@@ -5774,18 +5780,16 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
             | ESPROPOSAL_ENABLE
             | ESPROPOSAL_IGNORE -> ()
             | ESPROPOSAL_WARN ->
-                let reason =
-                  mk_reason (spf "Experimental %s usage" reason_subject) loc
-                in
-                let msg = (spf
-                  ("%ss are an active early stage feature proposal that may " ^^
-                  "change. You may opt-in to using them anyway in Flow by " ^^
-                  "putting `esproposal.%s=enable` into the [options] " ^^
-                  "section of your .flowconfig.")
-                  (String.capitalize reason_subject)
-                  config_key
-                ) in
-                Flow_js.add_warning cx [reason, msg]
+              FlowError.add_warning cx (loc, [
+                spf "Experimental %s usage" reason_subject;
+                spf
+                ("%ss are an active early stage feature proposal that may " ^^
+                "change. You may opt-in to using them anyway in Flow by " ^^
+                "putting `esproposal.%s=enable` into the [options] " ^^
+                "section of your .flowconfig.")
+                (String.capitalize reason_subject)
+                config_key
+              ])
           ))
         );
         let r = mk_reason (spf "class property `%s`" name) loc in
@@ -5822,7 +5826,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         _
       }) ->
         let msg = "literal properties not yet supported" in
-        Flow_js.add_error cx [mk_reason "" loc, msg];
+        FlowError.add_error cx (loc, [msg]);
         (static_sig, inst_sig)
 
     (* computed LHS *)
@@ -5835,7 +5839,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         _
       }) ->
         let msg = "computed property keys not supported" in
-        Flow_js.add_error cx [mk_reason "" loc, msg];
+        FlowError.add_error cx (loc, [msg]);
         (static_sig, inst_sig)
   ) (static_sig, inst_sig) elements
 )
@@ -6020,7 +6024,7 @@ and mk_class = Ast.Class.(
   (* TODO *)
   if implements <> [] then
     let msg = "implements not supported" in
-    Flow_js.add_error cx [mk_reason "" loc, msg]
+    FlowError.add_error cx (loc, [msg])
   else ();
 
   (* type parameters: <X> *)
@@ -6215,7 +6219,7 @@ and extract_extends cx structural = function
       then (Some id, typeParameters)::(extract_extends cx structural others)
       else
         let msg = "A class cannot extend multiple classes!" in
-        Flow_js.add_error cx [mk_reason "" loc, msg];
+        FlowError.add_error cx (loc, [msg]);
         []
 
 and extract_mixins _cx =
@@ -6247,7 +6251,7 @@ and mk_interface cx reason_i typeparams type_params_map
   let super = match interface_supers with
     | [] -> AnyT.t
     | [t] -> t
-    | ts -> IntersectionT(super_reason, ts)
+    | ts -> IntersectionT (super_reason, InterRep.make ts)
   in
 
   let super_static = ClassT(super) in
@@ -6608,7 +6612,8 @@ and mk_function_type cx reason this signature =
   let proto_reason = replace_reason "prototype" reason in
   let prototype = mk_object cx proto_reason in
   let static_reason = prefix_reason "statics of " reason in
-  let static = Flow_js.mk_object_with_proto cx static_reason (FunProtoT static_reason) in
+  let static = Flow_js.mk_object_with_proto cx static_reason
+    (FunProtoT static_reason) in
 
   let funtype = {
     this_t = this;
@@ -6630,7 +6635,8 @@ and mk_function_type cx reason this signature =
 and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
   params ret body this super =
   let (_,params,ret) =
-    function_decl None cx type_params_map ~kind reason None params ret body this super
+    function_decl None cx type_params_map ~kind reason None
+      params ret body this super
   in
   let params_tlist = FuncParams.tlist params in
   let params_names = Some (FuncParams.names params) in
@@ -6674,16 +6680,14 @@ let infer_core cx type_params_map statements =
     statements |> toplevel_decls cx type_params_map;
     statements |> toplevels cx type_params_map;
   with
-    | Abnormal.Exn _ ->
-        let msg = "abnormal control flow" in
-        Flow_js.add_warning cx [mk_reason "" Loc.({
-          none with source = Some (Context.file cx)
-        }), msg]
-    | exc ->
-        let msg = fmt_exc exc in
-        Flow_js.add_warning cx [mk_reason "" Loc.({
-          none with source = Some (Context.file cx)
-        }), msg]
+  | Abnormal.Exn _ ->
+    let msg = "abnormal control flow" in
+    FlowError.add_warning cx
+      (Loc.({ none with source = Some (Context.file cx) }), [msg])
+  | exc ->
+    let msg = fmt_exc exc in
+    FlowError.add_warning cx
+      (Loc.({ none with source = Some (Context.file cx) }), [msg])
 
 (* There's a .flowconfig option to specify suppress_comments regexes. Any
  * comments that match those regexes will suppress any errors on the next line
@@ -6730,7 +6734,8 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
     add_entry (internal_name "exports")
       (Entry.new_var
         ~loc:(loc_of_reason reason_exports_module)
-        ~specific:(EmptyT (replace_reason "undefined exports" reason_exports_module))
+        ~specific:(EmptyT (
+          replace_reason "undefined exports" reason_exports_module))
         (AnyT reason_exports_module))
       scope;
 

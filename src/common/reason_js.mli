@@ -11,6 +11,7 @@
 val mk_id: unit -> int
 
 type reason
+type t = reason (* convenience *)
 
 module TestID: sig
   val run: ('a -> unit) -> 'a -> unit
@@ -41,9 +42,13 @@ val internal_pattern_name: Loc.t -> string
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool
 
-(* used in builtins *)
 val builtin_reason: string -> reason
+
+(* reason location preds *)
 val is_builtin_reason: reason -> bool
+val is_lib_reason: reason -> bool
+val is_blamable_reason: reason -> bool
+val reasons_overlap: reason -> reason -> bool
 
 val string_of_reason: reason -> string
 val json_of_reason: reason -> Hh_json.json

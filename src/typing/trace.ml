@@ -85,7 +85,6 @@ module TraceMap : MyMap.S with type key = t = MyMap.Make (struct
   let compare = compare
 end)
 
-
 (* index the nodes in a trace down to a given level.
    returns two maps, trace -> index and index -> trace
  *)
@@ -110,21 +109,18 @@ let index_trace =
 
 let spaces n = String.make n ' '
 
-
 let prep_path ~strip_root r =
   if not strip_root then r
   else
     let path = FlowConfig.((get_unsafe ()).root) in
     Reason_js.strip_root path r
 
-
 (* string length of printed position, as it would
    appear in an error *)
 let pos_len ~strip_root r =
   let r = prep_path ~strip_root r in
   let loc = loc_of_reason r in
-  let fmt = Errors_js.(format_reason_color (BlameM (loc, ""))) in
-  let str = String.concat "" (List.map snd fmt) in
+  let str = Errors_js.format_info (loc, []) in
   String.length str
 
 

@@ -19,7 +19,6 @@ A.js:38:17,21: string
 This type is incompatible with
 A.js:37:47,52: number
 
-multiple.js:7:7,26: 
-multiple indexers are not supported
+multiple.js:7:7,26: multiple indexers are not supported
 
 Found 6 errors

@@ -166,7 +166,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | IntersectionT (_, ts) -> [
+  | IntersectionT (_, rep) -> [
+      let ts = InterRep.members rep in
       "types", JSON_Array (List.map (_json_of_t json_cx) ts)
     ]
 

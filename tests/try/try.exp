@@ -31,11 +31,9 @@ init.js:153:18,18: possibly uninitialized variable
 This type is incompatible with
 init.js:153:9,14: number
 
-return.js:28:3,15: 
-unreachable code
+return.js:28:3,15: unreachable code
 
-return.js:64:3,8: 
-unreachable code
+return.js:64:3,8: unreachable code
 
 test.js:18:5,7: function call
 Function cannot be called on
@@ -45,7 +43,6 @@ test.js:19:5,7: function call
 Callable signature not found in
 test.js:19:5,5: object literal
 
-test.js:41:5,8: 
-unreachable code
+test.js:41:5,8: unreachable code
 
 Found 13 errors

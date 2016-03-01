@@ -22,6 +22,7 @@ module Ast = Spider_monkey_ast
 module Flow = Flow_js
 module Reason = Reason_js
 module ErrorSet = Errors_js.ErrorSet
+module FlowError = Flow_error
 
 module NameSet = Set.Make(Modulename)
 module NameMap = MyMap.Make(Modulename)
@@ -63,12 +64,13 @@ let choose_provider_and_warn_about_duplicates =
 
   let warn_duplicate_providers m current modules errmap =
     List.fold_left (fun acc f ->
-      let w = Flow.new_warning [
-        Reason.mk_reason m Loc.({ none with source = Some f }),
-          "Duplicate module provider";
-        Reason.mk_reason "current provider"
-          Loc.({ none with source = Some current }),
-          ""] in
+      let w = Errors_js.(mk_error ~kind:InferWarning [
+          Loc.({ none with source = Some f }), [
+            m; "Duplicate module provider"];
+          Loc.({ none with source = Some current }), [
+            "current provider"]
+        ])
+      in
       FilenameMap.add f (ErrorSet.singleton w) acc
     ) errmap modules in
 
@@ -362,7 +364,7 @@ module Node = struct
               package_relative_to_root
           )
         in
-        Flow_js.add_error cx [(Reason.mk_reason "" loc, msg)];
+        FlowError.add_error cx (loc, [msg]);
         SMap.empty
       in
       let dir = Filename.dirname package in

@@ -18,6 +18,8 @@ open Reason_js
 open Type
 open Scope
 
+module FlowError = Flow_error
+
 (* lookup modes:
 
    - ForValue is a lookup from a syntactic value location, i.e. standard
@@ -390,15 +392,12 @@ let find_refi_in_var_scope key =
   loop !scopes
 
 (* helpers *)
-let entry_reason name entry =
-  mk_reason
-    (spf "%s %s" (Entry.string_of_kind entry) name)
-    (Entry.loc entry)
 
 let binding_error msg cx name entry reason =
-  let reason1 = replace_reason name reason in
-  let reason2 = entry_reason name entry in
-  Flow_js.add_error cx [reason1, msg; reason2, ""]
+  FlowError.add_extended_error cx [
+    loc_of_reason reason, [name; msg];
+    Entry.loc entry, [spf "%s %s" (Entry.string_of_kind entry) name]
+  ]
 
 let already_bound_error =
   binding_error "name is already bound"
@@ -504,11 +503,12 @@ let bind_declare_var = bind_var ~state:State.Initialized
 let bind_declare_fun =
 
   let update_type seen_t new_t = match seen_t with
-  | IntersectionT (reason, seen_ts) ->
-    IntersectionT (reason, seen_ts @ [new_t])
+  | IntersectionT (reason, rep) ->
+    let seen_ts = InterRep.members rep in
+    IntersectionT (reason, InterRep.make (seen_ts @ [new_t]))
   | _ ->
     let reason = replace_reason "intersection type" (reason_of_t seen_t) in
-    IntersectionT (reason, [seen_t; new_t])
+    IntersectionT (reason, InterRep.make [seen_t; new_t])
   in
 
   fun cx name t reason ->

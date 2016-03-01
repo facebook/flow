@@ -8,62 +8,54 @@
  *
  *)
 
-type message =
-  | BlameM of Loc.t * string
-  | CommentM of string
 type error_kind =
   | ParseError
   | InferError
   | InferWarning
   | InternalError
-type error = {
-  kind: error_kind;
-  messages: message list;
-  op: message option;
-  trace: message list;
-}
 
-type pp_message = Loc.t * string
-val to_pp : message -> pp_message
+val string_of_kind: error_kind -> string
 
-type stdin_file = (string * string) option
+(** simple structure for callers to specify message content.
+    an info list looks like e.g.:
+    [ location1, ["number"; "Type is incompatible with"];
+      location2, ["string"] ]
+  *)
+type info = Loc.t * string list
 
-val message_of_reason: Reason_js.reason -> message
-val message_of_string: string -> message
+(** for extra info, enough structure to do simple tree-shaped output *)
+type info_tree =
+  | InfoLeaf of info list
+  | InfoNode of info list * info_tree list
 
+(* error structure *)
+
+type error
+
+val mk_error:
+  ?kind:error_kind ->
+  ?op_info:info ->
+  ?trace_infos:info list ->
+  ?extra:info_tree list ->
+  info list ->
+  error
+
+val simple_error: ?kind: error_kind -> Loc.t -> string -> error
+
+val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
 val strip_root_from_errors: Path.t -> error list -> error list
 
-val format_reason_color: ?first:bool -> ?one_line:bool -> message ->
-  (Tty.style * string) list
+val loc_of_error: error -> Loc.t
+val infos_of_error: error -> info list
+val extra_of_error: error -> info_tree list
 
-val print_reason_color:
-  first:bool ->
-  one_line:bool ->
-  color:Tty.color_mode ->
-  message ->
-  unit
-
-val print_error_color_new:
-  stdin_file:stdin_file ->
-  one_line:bool ->
-  color:Tty.color_mode ->
-  root: Path.t ->
-  error ->
-  unit
-
-val loc_of_error : error -> Loc.t
-
-val json_of_loc : Loc.t -> (string * Hh_json.json) list
-
-module Error :
-  sig
-    type t = error
-    val compare : error -> error -> int
-  end
+(* error collections *)
 
 (* we store errors in sets, currently, because distinct
    traces may share endpoints, and produce the same error *)
 module ErrorSet : Set.S with type elt = error
+
+val to_list : ErrorSet.t -> error list
 
 module ErrorSuppressions : sig
   type t
@@ -76,11 +68,21 @@ module ErrorSuppressions : sig
   val cardinal : t -> int
 end
 
-val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
+(* formatters/printers *)
 
-val to_list : ErrorSet.t -> error list
+type stdin_file = (string * string) option
 
-val json_of_errors : Error.t list -> Hh_json.json
+val print_error_color_new:
+  stdin_file:stdin_file ->
+  one_line:bool ->
+  color:Tty.color_mode ->
+  root: Path.t ->
+  error ->
+  unit
+
+val json_of_loc : Loc.t -> (string * Hh_json.json) list
+val json_of_errors : error list -> Hh_json.json
+
 val print_error_json : out_channel -> error list -> unit
 
 (* Human readable output *)
@@ -91,5 +93,9 @@ val print_error_summary:
   error list ->
   unit
 
+(* used by getDef for emacs/vim output - TODO remove or undeprecate *)
 val string_of_loc_deprecated: Loc.t -> string
 val print_error_deprecated: out_channel -> error list -> unit
+
+(* only used to get indentation info for trace formatting - TODO fumigate *)
+val format_info: info -> string

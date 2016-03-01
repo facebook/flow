@@ -1,6 +1,5 @@
 
-indexer.js:9:3,22: 
-multiple indexers are not supported
+indexer.js:9:3,22: multiple indexers are not supported
 
 interface.js:3:17,25: number
 This type is incompatible with
@@ -26,8 +25,7 @@ test.js:7:2,4: number
 This type is incompatible with
 test.js:7:7,12: string
 
-test.js:11:25,25: 
-A class cannot extend multiple classes!
+test.js:11:25,25: A class cannot extend multiple classes!
 
 test.js:19:10,15: number
 This type is incompatible with

@@ -152,8 +152,8 @@ let rec gc cx state = function
   | MaybeT t ->
       gc cx state t
 
-  | IntersectionT (_, ts) ->
-      ts |> List.iter (gc cx state)
+  | IntersectionT (_, rep) ->
+      InterRep.members rep |> List.iter (gc cx state)
 
   | UnionT (_, rep) ->
       UnionRep.members rep |> List.iter (gc cx state)

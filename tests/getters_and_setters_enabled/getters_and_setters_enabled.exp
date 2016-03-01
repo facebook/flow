@@ -113,10 +113,8 @@ object.js:60:3,46: B
 This type is incompatible with
 object.js:59:51,56: number
 
-react.js:7:5,25: 
-get/set properties not supported for React propTypes
+react.js:7:5,25: get/set properties not supported for React propTypes
 
-react.js:8:5,36: 
-get/set properties not supported for React propTypes
+react.js:8:5,36: get/set properties not supported for React propTypes
 
 Found 29 errors

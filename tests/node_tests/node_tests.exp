@@ -1,7 +1,19 @@
 
 child_process/execSync.js:8:2,33: function call
-Function cannot be called on
-child_process/execSync.js:8:2,9: intersection: function type(s)
+Function cannot be called on any member of intersection type
+child_process/execSync.js:8:2,9: intersection
+Member 1:
+[LIB] node.js:173:28,176:11: function type
+Error:
+[LIB] node.js:175:14,49: property `encoding`
+Property not found in
+child_process/execSync.js:8:17,32: object literal
+Member 2:
+[LIB] node.js:178:28,181:11: function type
+Error:
+child_process/execSync.js:8:27,31: string
+This type is incompatible with
+[LIB] node.js:104:13,18: number
 
 json_file/test.js:4:2,9: object literal
 This type is incompatible with

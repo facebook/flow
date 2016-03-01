@@ -1,54 +1,126 @@
 
-overload.js:1:18,28: call of method `match`
+overload.js:7:18,28: call of method `match`
 Error:
-overload.js:1:18,31: string
+overload.js:7:18,31: string
 This type is incompatible with
-overload.js:1:9,14: number
+overload.js:7:9,14: number
 
-overload.js:1:18,28: call of method `match`
+overload.js:7:18,28: call of method `match`
 Error:
-overload.js:1:18,31: access of computed property/element
+overload.js:7:18,31: access of computed property/element
 Computed property/element cannot be accessed on possibly null value
-overload.js:1:18,28: null
+overload.js:7:18,28: null
 
-overload.js:1:18,28: call of method `match`
+overload.js:7:18,28: call of method `match`
 Error:
-overload.js:1:18,31: access of computed property/element
+overload.js:7:18,31: access of computed property/element
 Computed property/element cannot be accessed on possibly undefined value
-overload.js:1:18,28: undefined
+overload.js:7:18,28: undefined
 
-overload.js:1:18,28: call of method `match`
+overload.js:7:18,28: call of method `match`
 Error:
-overload.js:1:27,27: number
+overload.js:7:27,27: number
 This type is incompatible with
 [LIB] core.js:218:19,33: union: string | RegExp
 
-overload.js:2:18,36: call of method `match`
+overload.js:8:18,36: call of method `match`
 Error:
-overload.js:2:18,39: string
+overload.js:8:18,39: string
 This type is incompatible with
-overload.js:2:9,14: number
+overload.js:8:9,14: number
 
-overload.js:2:18,36: call of method `match`
+overload.js:8:18,36: call of method `match`
 Error:
-overload.js:2:18,39: access of computed property/element
+overload.js:8:18,39: access of computed property/element
 Computed property/element cannot be accessed on possibly null value
-overload.js:2:18,36: null
+overload.js:8:18,36: null
 
-overload.js:2:18,36: call of method `match`
+overload.js:8:18,36: call of method `match`
 Error:
-overload.js:2:18,39: access of computed property/element
+overload.js:8:18,39: access of computed property/element
 Computed property/element cannot be accessed on possibly undefined value
-overload.js:2:18,36: undefined
+overload.js:8:18,36: undefined
 
-overload.js:4:18,36: call of method `split`
+overload.js:10:18,36: call of method `split`
 Error:
-overload.js:4:18,39: string
+overload.js:10:18,39: string
 This type is incompatible with
-overload.js:4:9,14: number
+overload.js:10:9,14: number
+
+overload.js:24:1,11: call of method `foo`
+Function cannot be called on any member of intersection type
+overload.js:24:1,11: intersection
+Member 1:
+overload.js:13:5,25: function type
+Error:
+overload.js:24:7,10: boolean
+This type is incompatible with
+overload.js:13:11,16: number
+Member 2:
+overload.js:14:5,25: function type
+Error:
+overload.js:24:7,10: boolean
+This type is incompatible with
+overload.js:14:11,16: string
+
+overload.js:28:1,18: call of method `bar`
+Function cannot be called on any member of intersection type
+overload.js:28:1,18: intersection
+Member 1:
+overload.js:16:5,33: function type
+Error:
+overload.js:28:12,15: boolean
+This type is incompatible with
+overload.js:16:17,22: number
+Member 2:
+overload.js:17:5,33: function type
+Error:
+overload.js:28:12,15: boolean
+This type is incompatible with
+overload.js:17:17,22: string
+
+overload.js:32:1,8: call of method `bar`
+Function cannot be called on any member of intersection type
+overload.js:32:1,8: intersection
+Member 1:
+overload.js:16:5,33: function type
+Error:
+overload.js:32:7,7: intersection
+This type is incompatible with
+overload.js:16:12,24: object type
+Member 1:
+overload.js:30:16,30: object type
+Error:
+overload.js:30:21,27: boolean
+This type is incompatible with
+overload.js:16:17,22: number
+Member 2:
+overload.js:30:34,46: object type
+Error:
+overload.js:16:12,24: property `a`
+Property not found in
+overload.js:30:34,46: object type
+Member 2:
+overload.js:17:5,33: function type
+Error:
+overload.js:32:7,7: intersection
+This type is incompatible with
+overload.js:17:12,24: object type
+Member 1:
+overload.js:30:16,30: object type
+Error:
+overload.js:30:21,27: boolean
+This type is incompatible with
+overload.js:17:17,22: string
+Member 2:
+overload.js:30:34,46: object type
+Error:
+overload.js:17:12,24: property `a`
+Property not found in
+overload.js:30:34,46: object type
 
 test2.js:7:2,16: string
 This type is incompatible with
 test2.js:7:19,24: number
 
-Found 9 errors
+Found 12 errors

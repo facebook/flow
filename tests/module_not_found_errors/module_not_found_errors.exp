@@ -2,8 +2,7 @@
 index.js:3:1,35: module_completely_absent
 Required module not found
 
-index.js:7:1,33: 
-This modules resolves to "<<PROJECT_ROOT>>/../node_modules/module_outside_of_root/package.json", which is outside both your root directory and all of the entries in the [include] section of your .flowconfig. You should either add this directory to the [include] section of your .flowconfig, move your .flowconfig file higher in the project directory tree, or move this package under your Flow root directory.
+index.js:7:1,33: This modules resolves to "<<PROJECT_ROOT>>/../node_modules/module_outside_of_root/package.json", which is outside both your root directory and all of the entries in the [include] section of your .flowconfig. You should either add this directory to the [include] section of your .flowconfig, move your .flowconfig file higher in the project directory tree, or move this package under your Flow root directory.
 
 index.js:7:1,33: module_outside_of_root
 Required module not found

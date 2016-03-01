@@ -1,11 +1,72 @@
 
 conversion.js:10:2,18: function call
-Function cannot be called on
-conversion.js:10:2,18: intersection: function type(s) & polymorphic type: function type
+Function cannot be called on any member of intersection type
+conversion.js:10:2,18: intersection
+Member 1:
+[LIB] core.js:28:5,30: function type
+Error:
+conversion.js:10:9,17: undefined
+This type is incompatible with
+[LIB] core.js:28:16,21: string
+Member 2:
+[LIB] core.js:29:5,30: function type
+Error:
+conversion.js:10:9,17: undefined
+This type is incompatible with
+[LIB] core.js:29:16,21: number
+Member 3:
+[LIB] core.js:30:5,32: function type
+Error:
+conversion.js:10:9,17: undefined
+This type is incompatible with
+[LIB] core.js:30:16,22: boolean
+Member 4:
+[LIB] core.js:31:5,40: function type
+Error:
+conversion.js: inconsistent use of library definitions
+[LIB] core.js:52:16,21: object type
+This type is incompatible with
+[LIB] core.js:97:16,21: number
+Member 5:
+[LIB] core.js:32:5,31: polymorphic type: function type
+Error:
+conversion.js:10:9,17: undefined
+This type is incompatible with
+[LIB] core.js:32:16,21: object type
 
 conversion.js:18:9,19: function call
-Function cannot be called on
-conversion.js:18:9,19: intersection: function type(s) & polymorphic type: function type
+Function cannot be called on any member of intersection type
+conversion.js:18:9,19: intersection
+Member 1:
+[LIB] core.js:28:5,30: function type
+Error:
+conversion.js:18:16,18: number
+This type is incompatible with
+[LIB] core.js:28:16,21: string
+Member 2:
+[LIB] core.js:29:5,30: function type
+Error:
+conversion.js:19:4,9: property `charAt`
+Property not found in
+conversion.js:19:2,2: Number
+Member 3:
+[LIB] core.js:30:5,32: function type
+Error:
+conversion.js:18:16,18: number
+This type is incompatible with
+[LIB] core.js:30:16,22: boolean
+Member 4:
+[LIB] core.js:31:5,40: function type
+Error:
+conversion.js:18:16,18: number
+This type is incompatible with
+[LIB] core.js:31:17,20: undefined
+Member 5:
+[LIB] core.js:32:5,31: polymorphic type: function type
+Error:
+conversion.js:18:16,18: number
+This type is incompatible with
+[LIB] core.js:32:16,21: object type
 
 objects.js:4:4,6: property `foo`
 Property not found in

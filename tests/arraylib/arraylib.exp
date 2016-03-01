@@ -42,11 +42,35 @@ This type is incompatible with
 [LIB] core.js:163:21,32: union: array type | type parameter `S` of call of method `concat`
 
 array_lib.js:46:3,45: call of method `reduce`
-Function cannot be called on
-array_lib.js:46:3,45: intersection: polymorphic type: function type(s)
+Function cannot be called on any member of intersection type
+array_lib.js:46:3,45: intersection
+Member 1:
+[LIB] core.js:184:5,187:8: polymorphic type: function type
+Error:
+array_lib.js:46:29,31: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+array_lib.js:46:29,44: number
+Member 2:
+[LIB] core.js:188:5,190:8: polymorphic type: function type
+Error:
+array_lib.js:46:29,31: string
+This type is incompatible with
+array_lib.js:46:29,44: number
 
 array_lib.js:47:3,50: call of method `reduceRight`
-Function cannot be called on
-array_lib.js:47:3,50: intersection: polymorphic type: function type(s)
+Function cannot be called on any member of intersection type
+array_lib.js:47:3,50: intersection
+Member 1:
+[LIB] core.js:191:5,194:8: polymorphic type: function type
+Error:
+array_lib.js:47:34,36: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+array_lib.js:47:34,49: number
+Member 2:
+[LIB] core.js:195:5,197:8: polymorphic type: function type
+Error:
+array_lib.js:47:34,36: string
+This type is incompatible with
+array_lib.js:47:34,49: number
 
 Found 9 errors

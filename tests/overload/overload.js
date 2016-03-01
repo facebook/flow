@@ -1,15 +1,35 @@
+/**
+ * tests of overload selection
+ *
+ * @flow
+ */
+
 var x1: number = "".match(0)[0];
 var x2: number = "".match(/pattern/)[0];
 var x3: string = "".replace(/pattern/,"...");
 var x4: number = "".split(/pattern/)[0];
 
 declare class C {
-    set(x:number, y:number): void;
-    set(x:string, y:number): void;
+    foo(x:number): number;
+    foo(x:string): string;
+
+    bar(x: { a: number }): number;
+    bar(x: { a: string }): string;
 }
 
 var a = new C();
-a.set(0,1);
+
+a.foo(0); // ok
+a.foo("hey"); // ok
+a.foo(true); // error, function cannot be called on intersection type
+
+a.bar({ a: 0 }); // ok
+a.bar({ a: "hey" }); // ok
+a.bar({ a: true }); // error, function cannot be called on intersection type
+
+declare var x: { a: boolean; } & { b: string };
+
+a.bar(x); // error with nested intersection info (outer for bar, inner for x)
 
 /********** tests **************
 interface Dummy<T> {

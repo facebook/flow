@@ -99,7 +99,8 @@ class ['a] t = object(self)
 
   | MaybeT t -> self#type_ cx acc t
 
-  | IntersectionT (_, ts) -> self#list (self#type_ cx) acc ts
+  | IntersectionT (_, rep) ->
+    self#list (self#type_ cx) acc (InterRep.members rep)
 
   | UnionT (_, rep) ->
     self#list (self#type_ cx) acc (UnionRep.members rep)

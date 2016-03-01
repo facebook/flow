@@ -228,10 +228,10 @@ let rec normalize_type_impl cx ids t = match t with
       let ts = List.map (normalize_type_impl cx ids) ts in
       ThisTypeAppT (c, this, ts)
 
-  | IntersectionT (_, ts) ->
+  | IntersectionT (_, rep) ->
       let reason = reason_of_string "intersection" in
-      let ts = List.map (normalize_type_impl cx ids) ts in
-      normalize_intersection reason ts
+      let rep = InterRep.map (normalize_type_impl cx ids) rep in
+      normalize_intersection reason rep
 
   | UnionT (_, rep) ->
       let reason = reason_of_string "union" in
@@ -348,20 +348,22 @@ and collect_union_members ts =
 (* TODO: This does not do any real normalization yet, it only flattens the
    intesection. Think about normalization rules and implement them when there
    is need for that. *)
-and normalize_intersection r ts =
+and normalize_intersection r rep =
+  let ts = InterRep.members rep in
   let ts = collect_intersection_members ts in
   let ts = TypeSet.elements ts in
   match ts with
   | [t] -> t
-  | _ -> IntersectionT (r, ts)
+  | _ -> IntersectionT (r, InterRep.make ts)
 
 and collect_intersection_members ts =
   List.fold_left (fun acc x ->
       match x with
-      | IntersectionT (_, ts) ->
-          TypeSet.union acc (collect_intersection_members ts)
+      | IntersectionT (_, rep) ->
+        let ts = InterRep.members rep in
+        TypeSet.union acc (collect_intersection_members ts)
       | _ ->
-          TypeSet.add x acc
+        TypeSet.add x acc
     ) TypeSet.empty ts
 
 

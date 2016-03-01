@@ -65,6 +65,8 @@ type reason = {
   loc: Loc.t;
 }
 
+type t = reason
+
 let lexpos file line col = {
   Lexing.pos_fname = file;
   Lexing.pos_lnum = line;
@@ -215,7 +217,21 @@ let builtin_reason x =
   |> derivable_reason
 
 let is_builtin_reason r =
-  r.loc.Loc.source = Some Loc.Builtins
+  Loc.(r.loc.source = Some Builtins)
+
+let is_lib_reason r =
+  Loc.(match r.loc.source with
+  | Some LibFile _ -> true
+  | Some Builtins -> true
+  | Some SourceFile _ -> false
+  | Some JsonFile _ -> false
+  | None -> false)
+
+let is_blamable_reason r =
+  not Loc.(r.loc = none || is_lib_reason r)
+
+let reasons_overlap r1 r2 =
+  Loc.(contains r1.loc r2.loc)
 
 (* reasons compare on their locations *)
 let compare r1 r2 =

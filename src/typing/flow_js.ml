@@ -25,6 +25,7 @@ open Utils_js
 open Reason_js
 open Constraint_js
 open Type
+open Flow_error
 
 (* The following functions are used as constructors for function types and
    object types, which unfortunately have many fields, not all of which are
@@ -103,75 +104,6 @@ let mk_objecttype ?(flags=default_flags) dict map proto = {
 }
 
 (**************************************************************)
-
-(* for now, we do speculative matching by setting this global.
-   it's set to true when trying the arms of intersection or
-   union types.
-   when it's true, the error-logging function throws instead
-   of logging, and the speculative harness catches.
-   TODO
- *)
-let throw_on_error = ref false
-
-(* we keep a stack of reasons representing the operations
-   taking place when flows are performed. the top op reason
-   is used in messages for errors that take place during its
-   residence.
- *)
-module Ops : sig
-  val clear : unit -> reason list
-  val push : reason -> unit
-  val pop : unit -> unit
-  val peek : unit -> reason option
-  val get : unit -> reason list
-  val set : reason list -> unit
-end = struct
-  let ops = ref []
-  let clear () = let orig = !ops in ops := []; orig
-  let push r = ops := r :: !ops
-  let pop () = ops := List.tl !ops
-  let peek () = match !ops with r :: _ -> Some r | [] -> None
-  let get () = !ops
-  let set _ops = ops := _ops
-end
-
-let silent_warnings = false
-
-exception FlowError of Errors_js.message list
-
-let add_output cx error_kind ?op ?(trace_reasons=[]) message_list =
-  if !throw_on_error
-  then (
-    raise (FlowError message_list)
-  ) else (
-    (if Context.is_verbose cx then
-      prerr_endlinef "\nadd_output cx.file = %S\n%s"
-        (string_of_filename (Context.file cx))
-        (message_list
-        |> List.map (fun message ->
-             let loc, s = Errors_js.to_pp message in
-             spf "%s: s = %S" (string_of_loc loc) s
-           )
-        |> String.concat "\n"));
-    let error = Errors_js.({
-      kind = error_kind;
-      messages = message_list;
-      op;
-      trace = trace_reasons
-    }) in
-
-    (* catch no-loc errors early, before they get into error map *)
-    Errors_js.(
-      if Loc.source (loc_of_error error) = None
-      then assert_false (spf "add_output: no source for error: %s"
-        (Hh_json.json_to_multiline (json_of_errors [error])))
-    );
-
-    if error_kind = Errors_js.ParseError ||
-       error_kind = Errors_js.InferError ||
-       not silent_warnings
-    then Context.add_error cx error
-  )
 
 (* tvars *)
 
@@ -330,152 +262,6 @@ let havoc_call_env = Scope.(
               (havoc_refi cx scope)
       )
 )
-
-(***************)
-(* print utils *)
-(***************)
-
-let lib_reason r =
-  let loc = loc_of_reason r in
-  Loc.(match loc.source with
-  | Some LibFile _ -> true
-  | Some Builtins -> true
-  | Some SourceFile _ -> false
-  | Some JsonFile _ -> false
-  | None -> false)
-
-let blamable r =
-  not (loc_of_reason r = Loc.none || lib_reason r)
-
-let ordered_reasons l u =
-  let rl = reason_of_t l in
-  let ru = reason_of_use_t u in
-  if is_use u || (blamable ru && not (blamable rl))
-  then ru, rl
-  else rl, ru
-
-let reasons_overlap r1 r2 = Loc.contains (loc_of_reason r1) (loc_of_reason r2)
-
-(* format an error or warning and add it to flow's output.
-   here preformatted trace output is passed directly as an argument *)
-let prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2) = Errors_js.(
-  let op, info = match Ops.peek () with
-  | Some r when not (reasons_overlap r r1 && reasons_overlap r r2) ->
-    (* NOTE: We include the operation's reason in the error message, unless it
-       overlaps *both* endpoints. *)
-    Some (message_of_reason r), []
-  | _ ->
-    if lib_reason r1 && lib_reason r2
-    then
-      (* Since pointing to endpoints in the library without any information on
-         the code that uses those endpoints inconsistently is useless, we point
-         to the file containing that code instead. Ideally, improvements in
-         error reporting would cause this case to never arise. *)
-      let loc = Loc.({ none with source = Some (Context.file cx) }) in
-      None, [BlameM (loc, "inconsistent use of library definitions")]
-    else
-      None, []
-  in
-  let message_list = [
-    message_of_reason r1;
-    message_of_string msg;
-    message_of_reason r2
-  ]
-  in
-  add_output cx level ?op ~trace_reasons (info @ message_list)
-)
-
-(* format a trace into list of (reason, desc) pairs used
-   downstream for obscure reasons *)
-let make_trace_reasons cx trace =
-  let strip_root = Context.should_strip_root cx in
-  let max_trace_depth = Context.max_trace_depth cx in
-  if max_trace_depth = 0 then [] else
-    Trace.reasons_of_trace ~strip_root ~level:max_trace_depth trace
-    |> List.map Errors_js.message_of_reason
-
-(* format an error or warning and add it to flow's output.
-   here we gate trace output on global settings *)
-let prmsg_flow cx level trace msg (r1, r2) =
-  let trace_reasons = make_trace_reasons cx trace in
-  prmsg_flow_trace_reasons cx level trace_reasons msg (r1, r2)
-
-let prmsg_flow_prop_not_found cx trace (r1, r2) =
-  prmsg_flow cx Errors_js.InferError trace "Property not found in" (r1, r2)
-
-(* format an error and add it to flow's output.
-   here we print the full trace, ignoring global settings.
-   Notes
-   1. since traces can be gigantic, we set the per-level
-   indentation to 0 when printing them here.
-   2. as an optimization, we never accumulate traces beyond
-   a single level if the global setting disables them.
-   Being downstream of that throttle, we are subject to that
-   restriction here.
-*)
-let prerr_flow_full_trace cx trace msg l u =
-  let depth = Trace.trace_depth trace + 1 in
-  let strip_root = Context.should_strip_root cx in
-  let trace_reasons =
-    Trace.reasons_of_trace ~strip_root ~level:depth trace
-    |> List.map Errors_js.message_of_reason
-  in
-  prmsg_flow_trace_reasons cx
-    Errors_js.InferError
-    trace_reasons
-    msg
-    (ordered_reasons l u)
-
-(* format an error and add it to flow's output *)
-let prerr_flow cx trace msg l u =
-  prmsg_flow cx
-    Errors_js.InferError
-    trace
-    msg
-    (ordered_reasons l u)
-
-(* for when a t has been extracted from a use_t *)
-let prerr_flow_use_t cx trace msg l u =
-  prerr_flow cx trace msg l (UseT u)
-
-let tweak_output list =
-  List.concat (
-    List.map (fun (reason, msg) -> Errors_js.(
-      [message_of_reason reason]
-      @ (if msg = "" then [] else [message_of_string msg])
-    )) list
-  )
-
-let add_msg cx ?trace level list =
-  let trace_reasons = match trace with
-  | Some trace -> Some (make_trace_reasons cx trace)
-  | None -> None
-  in
-  add_output cx level ?trace_reasons (tweak_output list)
-
-(* for outside calls *)
-let new_warning list = Errors_js.({
-  kind = InferWarning;
-  messages = tweak_output list;
-  op = None;
-  trace = []
-})
-
-let add_warning cx ?trace list =
-  add_msg cx ?trace Errors_js.InferWarning list
-
-let new_error list = Errors_js.({
-  kind = InferError;
-  messages = tweak_output list;
-  op = None;
-  trace = []
-})
-
-let add_error cx ?trace list =
-  add_msg cx ?trace Errors_js.InferError list
-
-let add_internal_error cx list =
-  add_msg cx Errors_js.InternalError list
 
 (********************************************************************)
 
@@ -1105,7 +891,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, DebugPrintT (reason)) ->
       let msg = (spf "!!! DebugPrintT: %s" (Debug_js.jstr_of_t cx l)) in
-      add_error cx [reason, msg];
+      add_error cx (mk_info reason [msg]);
 
     (************)
     (* tainting *)
@@ -1211,15 +997,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let msg_export =
         if export_name = "default" then "default" else spf "`%s`" export_name
       in
-      add_error cx [
-        reason,
+      add_error cx (mk_info reason [
         spf
           ("The %s export is a value, but not a type. `import type` only " ^^
            "works on type exports like type aliases, interfaces, and " ^^
            "classes. If you inteded to import the type *of* a value, please " ^^
            "use `import typeof` instead.")
           msg_export
-      ]
+      ])
 
     (************************************************************************)
     (* `import typeof` creates a properly-parameterized type alias for the  *)
@@ -1233,15 +1018,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let msg_export =
         if export_name = "default" then "default" else spf "`%s`" export_name
       in
-      add_error cx [
-        reason,
+      add_error cx (mk_info reason [
         spf
           ("The %s export is a type, but not a value. `import typeof` only " ^^
            "works on value exports like classes, vars, lets, etc. If you " ^^
            "intended to import a type alias or interface, please use " ^^
            "`import type` instead.")
           msg_export
-      ]
+      ])
 
     | (_, ImportTypeofT(reason, _, t)) ->
       let typeof_t = mk_typeof_annotation cx ~trace l in
@@ -1439,7 +1223,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                     (List.hd suggestions)
                     module_name
                 ) in
-                add_error cx [(reason, msg)];
+                add_error cx (mk_info reason [msg]);
                 AnyT.t
       in
 
@@ -1495,19 +1279,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let msg = if List.length suggestions = 0 then msg else msg ^ (
               spf " Did you mean `%s`?" (List.hd suggestions)
             ) in
-            add_error cx [(reason, msg)];
+            add_error cx (mk_info reason [msg]);
             AnyT.why reason
         ) in
         rec_flow_t cx trace (import_t, t)
 
     | ((PolyT (_, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
-      add_error cx [
-        reason,
+      add_error cx (mk_info reason [
         spf
           ("`%s` is a type, but not a value. In order to import it, please " ^^
            "use `import type`.")
           name
-      ]
+      ])
 
     | (_, AssertImportIsValueT(_, _)) -> ()
 
@@ -1743,10 +1526,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (StrT (_, Literal x), UseT SingletonStrT (_, key)) ->
         if x <> key then
           let msg = spf "Expected string literal `%s`, got `%s` instead" key x in
-          prerr_flow cx trace msg l u
+          flow_err cx trace msg l u
 
     | (StrT (_, (Truthy | AnyLiteral)), UseT SingletonStrT (_, key)) ->
-      prerr_flow cx trace (spf "Expected string literal `%s`" key) l u
+      flow_err cx trace (spf "Expected string literal `%s`" key) l u
 
     (*********************************)
     (* number singleton upper bounds *)
@@ -1760,10 +1543,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* this equality check is ok for now because we don't do arithmetic *)
         if x <> y then
           let msg = spf "Expected number literal `%.16g`, got `%.16g` instead" y x in
-          prerr_flow cx trace msg l u
+          flow_err cx trace msg l u
 
     | (NumT (_, (Truthy | AnyLiteral)), UseT SingletonNumT (_, (y, _))) ->
-      prerr_flow cx trace (spf "Expected number literal `%.16g`" y) l u
+      flow_err cx trace (spf "Expected number literal `%.16g`" y) l u
 
     (**********************************)
     (* boolean singleton upper bounds *)
@@ -1777,10 +1560,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (BoolT (_, Some x), UseT SingletonBoolT (_, y)) ->
         if x <> y then
           let msg = spf "Expected boolean literal `%b`, got `%b` instead" y x in
-          prerr_flow cx trace msg l u
+          flow_err cx trace msg l u
 
     | (BoolT (_, None), UseT SingletonBoolT (_, y)) ->
-      prerr_flow cx trace (spf "Expected boolean literal `%b`" y) l u
+      flow_err cx trace (spf "Expected boolean literal `%b`" y) l u
 
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
@@ -1792,7 +1575,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (o, HasOwnPropT(reason_op,x))
 
     | (StrT (_, (Truthy | AnyLiteral)), UseT KeysT _) ->
-      prerr_flow cx trace "Expected string literal" l u
+      flow_err cx trace "Expected string literal" l u
 
     | (KeysT (reason1, o1), _) ->
       (* flow all keys of o1 to u *)
@@ -1802,7 +1585,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjT (reason_o, { props_tmap = mapr; _ }), HasOwnPropT (reason_op, x)) ->
       if has_prop cx mapr x then ()
-      else prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
+      else flow_err_prop_not_found cx trace (reason_op, reason_o)
 
     | ObjT (reason_o, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
       HasPropT (reason_op, strict, x) ->
@@ -1820,7 +1603,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fields = SMap.union fields_tmap methods_tmap in
       (match SMap.get x fields with
       | Some _ -> ()
-      | None -> prmsg_flow_prop_not_found cx trace (reason_op, reason_o)
+      | None -> flow_err_prop_not_found cx trace (reason_op, reason_o)
       )
 
     | InstanceT (reason_o, _, super, instance),
@@ -1884,8 +1667,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | UnionT (_, rep), _ ->
       UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t,u))
 
-    | (_, UseT IntersectionT(_,ts)) ->
-      ts |> List.iter (fun t -> rec_flow_t cx trace (l,t))
+    | _, UseT IntersectionT (_, rep) ->
+      InterRep.members rep |> List.iter (fun t -> rec_flow_t cx trace (l,t))
 
     (* When a subtyping question involves a union appearing on the right or an
        intersection appearing on the left, the simplification rules are
@@ -1904,7 +1687,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        inclusion is significantly faster that splitting for proving simple
        inequalities (O(n) instead of O(n^2) for n cases).  *)
 
-    | IntersectionT(_,ts), UseT u when List.mem u ts -> ()
+    | IntersectionT (_, rep), UseT u
+      when List.mem u (InterRep.members rep) ->
+      ()
 
     (** To check that the concrete type l may flow to UnionT(_, ts), we try each
         type in ts in turn. The types in ts may be type variables, but by
@@ -1915,8 +1700,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         l. *)
 
     | SpeculativeMatchT(_, l, tail_u), head_u ->
-      if not (speculative_match cx trace l head_u)
-      then rec_flow cx trace (l, tail_u)
+      begin match speculative_match cx trace l head_u with
+      | None -> ()
+      | Some _ -> rec_flow cx trace (l, tail_u)
+      end
 
     | _, UseT UnionT (r, rep) -> (
       match UnionRep.quick_mem l rep with
@@ -1952,9 +1739,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** pairs emitted by try_intersection:
         IntersectionT has been partitioned into head_l (head member)
         and tail_l (intersection of tail members) *)
-    | head_l, UseT SpeculativeMatchT (_, tail_l, u) ->
-      if not (speculative_match cx trace head_l u)
-      then rec_flow cx trace (tail_l, u)
+    | head_l, UseT SpeculativeMatchT (_, tail_l, u) -> (
+      match speculative_match cx trace head_l u with
+      | None -> ()
+      | Some err ->
+        let tail_l = match tail_l with
+          | IntersectionT (r, rep) ->
+            (* record this error *)
+            IntersectionT (r, InterRep.record_error err rep)
+          | _ -> tail_l
+        in rec_flow cx trace (tail_l, u)
+    )
 
     (** special treatment for some operations on intersections: these
         rules fire for particular UBs whose constraints can (or must)
@@ -1963,8 +1758,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       *)
 
     (** lookup of properties **)
-    | (IntersectionT (_,ts),
-       LookupT (reason, strict, try_ts_on_failure, s, t)) ->
+    | IntersectionT (_, rep),
+      LookupT (reason, strict, try_ts_on_failure, s, t) ->
+      let ts = InterRep.members rep in
       assert (ts <> []);
       (* Since s could be in any object type in the list ts, we try to look it
          up in the first element of ts, pushing the rest into the list
@@ -1974,8 +1770,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          LookupT (reason, strict, (List.tl ts) @ try_ts_on_failure, s, t))
 
     (** extends **)
-    | (IntersectionT (_,ts),
-       UseT ExtendsT (try_ts_on_failure, l, u)) ->
+    | IntersectionT (_, rep),
+      UseT ExtendsT (try_ts_on_failure, l, u) ->
+      let ts = InterRep.members rep in
       assert (ts <> []);
       (* Since s could be in any object type in the list ts, we try to look it
          up in the first element of ts, pushing the rest into the list
@@ -1985,8 +1782,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          ExtendsT ((List.tl ts) @ try_ts_on_failure, l, u))
 
     (** consistent override of properties **)
-    | (IntersectionT (_,ts), SuperT _) ->
-      List.iter (fun t -> rec_flow cx trace (t, u)) ts
+    | IntersectionT (_, rep), SuperT _ ->
+      InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
 
     (** object types: an intersection may satisfy an object UB without
         any particular member of the intersection doing so completely.
@@ -2013,8 +1810,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ObjAssignT copies multiple properties from its incoming LB.
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
-    | IntersectionT (_, ts), ObjAssignT (_, _, _, _, false) ->
-      ts |> List.iter (fun t -> rec_flow cx trace (t, u))
+    | IntersectionT (_, rep), ObjAssignT (_, _, _, _, false) ->
+      InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
 
     (** This duplicates the (_, ReposLowerT u) near the end of this pattern
         match but has to appear here to preempt the (IntersectionT, _) in
@@ -2031,7 +1828,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         which point we begin the speculative match process via
         try_intersection. *)
 
-    | IntersectionT (r, ts), u ->
+    | IntersectionT (r, rep), u ->
       let upper_parts = upper_parts_to_concretize cx u in
       if upper_parts <> []
       then concretize_upper_parts cx trace l u [] upper_parts
@@ -2039,7 +1836,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let lower_parts = lower_parts_to_concretize cx l in
         if lower_parts <> []
         then concretize_lower_parts cx trace l u [] lower_parts
-        else try_intersection cx trace u r ts
+        else try_intersection cx trace u r rep
       )
 
     (* singleton lower bounds are equivalent to the corresponding
@@ -2574,7 +2371,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* non-class/function values used in annotations are errors *)
     | _, UseT TypeT _ ->
-      prerr_flow cx trace
+      flow_err cx trace
         "Ineligible value used in/as type annotation (did you forget 'typeof'?)"
         l u
 
@@ -2943,7 +2740,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************************************)
 
     | (ObjT (_, {flags; _}), SetPropT(_, (_, "constructor"), _)) ->
-      if flags.frozen then prerr_flow cx trace "Mutation not allowed on" l u
+      if flags.frozen then flow_err cx trace "Mutation not allowed on" l u
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
@@ -2954,7 +2751,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         dict_t }),
       SetPropT (reason_op, (reason_prop, x), tin) ->
       if flags.frozen then
-        prerr_flow cx trace "Mutation not allowed on" l u
+        flow_err cx trace "Mutation not allowed on" l u
       else
         let strict_reason = mk_strict_lookup_reason
           flags.sealed (dict_t <> None) reason_o reason_op in
@@ -3533,10 +3330,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           then "Required module not found"
           else "Could not resolve name"
         in
-        let message_list = [
-          reason_op, msg
-        ] in
-        add_warning cx message_list ~trace
+        add_error cx (mk_info reason_op [msg])
       else
         let msg =
           if x = "$call"
@@ -3545,17 +3339,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           then "Indexable signature not found in"
           else "Property not found in"
         in
-        prmsg_flow cx
-          Errors_js.InferError
-          trace
-          msg
-          (reason_op, strict_reason)
+        flow_err_reasons cx trace msg (reason_op, strict_reason)
 
     (* LookupT is a non-strict lookup, never fired *)
     | (MixedT _, LookupT _) -> ()
 
     | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
-        prmsg_flow_prop_not_found cx trace (reason_op, reason_strict)
+        flow_err_prop_not_found cx trace (reason_op, reason_strict)
 
     (* SuperT only involves non-strict lookups *)
     | (MixedT _, SuperT _) -> ()
@@ -3581,11 +3371,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (MixedT _, UseT ExtendsT ([], t, tc)) ->
       let msg = "This type is incompatible with" in
-      prmsg_flow cx
-        Errors_js.InferError
-        trace
-        msg
-        (reason_of_t t, reason_of_t tc)
+      flow_err_reasons cx trace msg (reason_of_t t, reason_of_t tc)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -3598,14 +3384,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        reason for the prop itself, not the lookup action. *)
     | (_, GetPropT (_, (reason_prop, _), _))
     | (_, SetPropT (_, (reason_prop, _), _)) ->
-      prmsg_flow cx
-        Errors_js.InferError
-        trace
-        (err_msg l u)
-        (reason_prop, reason_of_t l)
+      flow_err_reasons cx trace (err_msg l u) (reason_prop, reason_of_t l)
 
     | _ ->
-      prerr_flow cx trace (err_msg l u) l u
+      flow_err cx trace (err_msg l u) l u
   )
 
 (* some types need to be resolved before proceeding further *)
@@ -3668,7 +3450,7 @@ and flow_comparator cx trace reason l r =
   else match (l, r) with
   | (StrT _, StrT _) -> ()
   | (_, _) when numeric l && numeric r -> ()
-  | (_, _) -> prerr_flow_use_t cx trace "Cannot be compared to" l r
+  | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
 
 (**
  * == equality
@@ -3681,7 +3463,7 @@ and flow_eq cx trace reason l r =
   if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
   else match (l, r) with
   | (_, _) when equatable (l, r) -> ()
-  | (_, _) -> prerr_flow_use_t cx trace "Cannot be compared to" l r
+  | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
 
 and is_object_prototype_method = function
   | "hasOwnProperty"
@@ -3758,7 +3540,8 @@ and err_operation = function
 and err_value = function
   | NullT _ -> " possibly null value"
   | VoidT _ -> " possibly undefined value"
-  | MaybeT _ -> spf " possibly null or undefined value"
+  | MaybeT _ -> " possibly null or undefined value"
+  | IntersectionT _ -> " any member of intersection type"
   | _ -> ""
 
 and err_msg l u =
@@ -4125,8 +3908,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | MaybeT(t) ->
     MaybeT(subst cx ~force map t)
 
-  | IntersectionT(reason, ts) ->
-    IntersectionT(reason, List.map (subst cx ~force map) ts)
+  | IntersectionT (reason, rep) ->
+    IntersectionT (reason, InterRep.map (subst cx ~force map) rep)
 
   | UnionT (reason, rep) ->
     UnionT (reason, UnionRep.map (subst cx ~force map) rep)
@@ -4248,8 +4031,8 @@ and check_polarity cx polarity = function
   | UnionT (_, rep) ->
     List.iter (check_polarity cx polarity) (UnionRep.members rep)
 
-  | IntersectionT(_, ts) ->
-    List.iter (check_polarity cx polarity) ts
+  | IntersectionT (_, rep) ->
+    List.iter (check_polarity cx polarity) (InterRep.members rep)
 
   | PolyT (xs, t) ->
     List.iter (check_polarity_typeparam cx (Polarity.inv polarity)) xs;
@@ -4302,11 +4085,11 @@ and polarity_mismatch cx polarity tp =
     (Polarity.string polarity)
     tp.name
     (Polarity.string tp.polarity) in
-  add_error cx [tp.reason, msg]
+  add_error cx (mk_info tp.reason [msg])
 
 and typeapp_arity_mismatch cx expected_num reason =
   let msg = spf "wrong number of type arguments (expected %d)" expected_num in
-  add_error cx [reason, msg]
+  add_error cx (mk_info reason [msg])
 
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
@@ -4416,28 +4199,27 @@ and chain_objects cx ?trace reason this those =
     )
   ) this those
 
-
 (* Speculatively match types, returning success. *)
 and speculative_match cx trace l u =
-  (* save state *)
   let ops = Ops.get () in
   let typeapp_stack = TypeAppExpansion.get () in
-  let prev_throw_on_error = !throw_on_error in
-  (* speculate *)
-  throw_on_error := true;
-  let result =
-    try rec_flow cx trace (l, u); true
-    with
-    | FlowError _ -> false
-    | exn ->
-        throw_on_error := prev_throw_on_error;
-        raise exn
+  set_speculative ();
+  let restore () =
+    restore_speculative ();
+    TypeAppExpansion.set typeapp_stack;
+    Ops.set ops
   in
-  (* restore state *)
-  throw_on_error := prev_throw_on_error;
-  TypeAppExpansion.set typeapp_stack;
-  Ops.set ops;
-  result
+  try
+    rec_flow cx trace (l, u);
+    restore ();
+    None
+  with
+  | SpeculativeError err ->
+    restore ();
+    Some err
+  | exn ->
+    restore ();
+    raise exn
 
 (* try each branch of a union in turn *)
 and try_union cx trace l reason = function
@@ -4465,31 +4247,42 @@ and try_union cx trace l reason = function
       (SpeculativeMatchT(r, l, UseT (UnionT (r, UnionRep.make ts))),
        t)
 
-(* try each branch of an intersection in turn *)
-and try_intersection cx trace u reason = function
-  | [] -> (* fail: top is the unit of intersections *)
-    rec_flow cx trace (MixedT reason, u)
-  | t::ts ->
-    (* embed reasons of consituent types into outer reason *)
-    let rdesc = desc_of_reason reason in
-    let tdesc = desc_of_reason (reason_of_t t) in
-    let idesc = if not (Utils.str_starts_with rdesc "intersection:")
-      then spf "intersection: %s" tdesc
-      else if Utils.str_ends_with rdesc "..."
-      then rdesc
-      else if Utils.str_ends_with rdesc (tdesc ^ "(s)")
-      then rdesc
-      else if String.length rdesc >= 256
-      then spf "%s & ..." rdesc
-      else if Utils.str_ends_with rdesc tdesc
-      then spf "%s(s)" rdesc
-      else spf "%s & %s" rdesc tdesc
-      in
-    let r = replace_reason idesc reason in
-    (* try first type, falling back to intersection of the rest *)
-    rec_flow_t cx trace
-      (t,
-       SpeculativeMatchT(r, IntersectionT(r, ts), u))
+(** try the first member of an intersection, packaging the remainder
+    for subsequent attempts. Empty intersection indicates failure *)
+and try_intersection cx trace u reason rep =
+  match InterRep.members rep with
+  | t :: _ ->
+    (* try the head member, package the rest *)
+    let r = replace_reason "intersection" reason in
+    let next_attempt = IntersectionT (r, InterRep.tail rep) in
+    rec_flow_t cx trace (t, SpeculativeMatchT (reason, next_attempt, u))
+  | [] ->
+    (* fail *)
+    match InterRep.(history rep, errors rep) with
+    | [], [] ->
+      (* shouldn't happen, but... if no history, give blanket error *)
+      rec_flow cx trace (IntersectionT (reason, InterRep.empty), u)
+    | ts, errs ->
+      (* otherwise, build extra info from history *)
+      let extra = List.(rev (combine ts errs)) |> List.mapi (
+        fun i (t, err) ->
+          let header_infos = [
+            Loc.none, [spf "Member %d:" (i + 1)];
+            info_of_reason (reason_of_t t);
+            Loc.none, ["Error:"];
+          ] in
+          let error_infos, error_extra = Errors.(
+            infos_of_error err, extra_of_error err
+          ) in
+          let info_list = header_infos @ error_infos in
+          let info_tree = match error_extra with
+            | [] -> Errors.InfoLeaf (info_list)
+            | _ -> Errors.InfoNode (info_list, error_extra)
+          in
+          info_tree
+      ) in
+      let l = IntersectionT (reason, InterRep.empty) in
+      flow_err cx trace (err_msg l u) ~extra l u
 
 (* Some types need their parts to be concretized (i.e., type variables may need
    to be replaced by concrete types) so that speculation has a chance to fail
@@ -4583,7 +4376,7 @@ and concretize_upper_parts cx trace l u done_list = function
   let done_list = List.rev done_list in
   let concrete_u = replace_upper_concrete_parts done_list u in
 
-  if u = concrete_u then prerr_flow cx trace
+  if u = concrete_u then flow_err cx trace
     "Internal error: concretization leaves upper bound unchanged" l u;
 
   rec_flow cx trace (l, concrete_u)
@@ -4596,7 +4389,8 @@ and concretize_upper_parts cx trace l u done_list = function
     and checked in various ways. See replace_lower_concrete_parts.
   *)
 and lower_parts_to_concretize _cx = function
-| IntersectionT (_, ts) ->
+| IntersectionT (_, rep) ->
+  let ts = InterRep.members rep in
   (** trap intersections that contain, or might contain, function types
       which share a return type.
       TODO: similarly we'll want to trap intersections that contain,
@@ -4624,7 +4418,7 @@ and replace_lower_concrete_parts ts = function
 | IntersectionT (r, _) -> (
   match FunType.merge_funtypes_by_return_type ts with
   | [t] -> t
-  | ts -> IntersectionT (r, ts)
+  | ts -> IntersectionT (r, InterRep.make ts)
 )
 | l -> l
 
@@ -4637,7 +4431,7 @@ and concretize_lower_parts cx trace l u done_list = function
   let done_list = List.rev done_list in
   let concrete_l = replace_lower_concrete_parts done_list l in
 
-  if l = concrete_l then prerr_flow cx trace
+  if l = concrete_l then flow_err cx trace
     "Internal error: concretization leaves lower bound unchanged" l u;
 
   rec_flow cx trace (concrete_l, u)
@@ -4693,7 +4487,7 @@ and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
   | None -> (
     match strict with
     | Some reason_o ->
-      prmsg_flow_prop_not_found cx trace (reason_prop, reason_o);
+      flow_err_prop_not_found cx trace (reason_prop, reason_o);
       AnyT.t
     | None ->
       let t =
@@ -5646,10 +5440,10 @@ and rec_unify cx trace t1 t2 =
         dictionary cx trace uk uv ldict
     | Some _, None ->
         let lreason = replace_reason "some property" lreason in
-        add_warning cx [lreason, "Property not found in"; ureason, ""] ~trace
+        flow_err_prop_not_found cx trace (lreason, ureason)
     | None, Some _ ->
         let ureason = replace_reason "some property" ureason in
-        add_warning cx [ureason, "Property not found in"; lreason, ""] ~trace
+        flow_err_prop_not_found cx trace (ureason, lreason)
     | None, None -> ()
     end;
 
@@ -5687,10 +5481,7 @@ and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
     dictionary cx trace (string_key k prop_reason) v dict
   | None ->
     let prop_reason = replace_reason (spf "property `%s`" k) prop_reason in
-    add_warning cx [
-      prop_reason, "Property not found in";
-      dict_reason, ""
-    ] ~trace
+    flow_err_prop_not_found cx trace (prop_reason, dict_reason)
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value
@@ -6049,7 +5840,7 @@ and flow cx (lower, upper) =
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
     let msg = "*** Recursion limit exceeded ***" in
-    prerr_flow_full_trace cx trace msg lower upper
+    flow_err cx trace msg lower upper
   | ex ->
     (* rethrow *)
     raise ex
@@ -6139,7 +5930,7 @@ end = struct
     | AnyObjT reason ->
         extract_members cx (get_builtin_type cx reason "Object")
     | AnyFunT reason ->
-        extract_members cx (IntersectionT (reason, [
+        extract_members cx (IntersectionT (reason, InterRep.make [
           get_builtin_type cx reason "Function";
           get_builtin_type cx reason "Object";
         ]))
@@ -6158,9 +5949,10 @@ end = struct
         Success (SMap.union super_flds members)
     | ObjT (_, {props_tmap = flds; proto_t = proto; _}) ->
         let proto_reason = reason_of_t proto in
-        let proto_t = resolve_type cx (IntersectionT (proto_reason, [
-          proto;
-          get_builtin_type cx proto_reason "Object";
+        let proto_t = resolve_type cx (IntersectionT (proto_reason,
+          InterRep.make [
+            proto;
+            get_builtin_type cx proto_reason "Object";
         ])) in
         let prot_members = extract_members_as_map cx proto_t in
         let members = find_props cx flds in
@@ -6184,9 +5976,10 @@ end = struct
         let members = extract_members_as_map cx static_t in
         let prot_members = extract_members_as_map cx proto_t in
         Success (SMap.union prot_members members)
-    | IntersectionT (_, ts) ->
+    | IntersectionT (_, rep) ->
         (* Intersection type should autocomplete for every property of every type
         * in the intersection *)
+        let ts = InterRep.members rep in
         let ts = List.map (resolve_type cx) ts in
         let members = List.map (extract_members_as_map cx) ts in
         Success (List.fold_left SMap.union SMap.empty members)
@@ -6252,11 +6045,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
 
   | OpenT (reason_open, id) ->
       unify cx (OpenT (reason_open, id)) AnyT.t;
-      let message_list = Errors_js.([
-        message_of_reason reason_open;
-        message_of_string "Missing annotation"
-      ]) in
-      add_output cx Errors_js.InferWarning message_list
+      add_error cx (mk_info reason_open ["Missing annotation"])
 
   | NumT _
   | StrT _
@@ -6321,8 +6110,8 @@ let rec assert_ground ?(infer=false) cx skip ids = function
 
   | MaybeT(t) -> assert_ground cx skip ids t
 
-  | IntersectionT(_, ts) ->
-      List.iter (assert_ground cx skip ids) ts
+  | IntersectionT(_, rep) ->
+      List.iter (assert_ground cx skip ids) (InterRep.members rep)
 
   | UnionT(_, rep) ->
       List.iter (assert_ground cx skip ids) (UnionRep.members rep)

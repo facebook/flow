@@ -10,6 +10,7 @@
 
 open Reason_js
 open Utils_js
+module Errors = Errors_js
 
 (******************************************************************************)
 (* Types                                                                      *)
@@ -129,7 +130,7 @@ module rec TypeTerm : sig
     | TaintT of reason
 
     (* & types *)
-    | IntersectionT of reason * t list
+    | IntersectionT of reason * InterRep.t
 
     (* | types *)
     | UnionT of reason * UnionRep.t
@@ -636,6 +637,66 @@ end = struct
       | Some tbase when tbase = base ->
         Some (EnumSet.mem t tset)
       | _ -> Some false
+end
+
+(* We encapsulate IntersectionT's internal structure to
+   maintain error histories while speculating.
+
+   Representations are opaque. `make` chooses a
+   representation internally, and client code which
+   needs to interact with member types directly
+   can do so via `members`, which provides access
+   via the standard list representation.
+ *)
+
+and InterRep : sig
+  type t
+  val empty: t
+  val make: TypeTerm.t list -> t
+  val tail: t -> t
+  val record_error: Errors.error -> t -> t
+  val members: t -> TypeTerm.t list
+  val history: t -> TypeTerm.t list
+  val errors: t -> Errors.error list
+  val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
+end = struct
+
+  (* intersection rep is:
+     - member list in declaration order
+     - error history, used during speculation
+   *)
+  type t =
+    TypeTerm.t list *
+    TypeTerm.t list *
+    Errors.error list
+
+  let empty = [], [], []
+
+  (* given a list of members, build a rep. *)
+  let make ts = ts, [], []
+
+  (* new rep with tail members, preserving error history
+     and shifting head member to hist *)
+  let tail (ts, hist, errs) =
+    match ts with
+    | [] -> ts, hist, errs
+    | t :: ts ->  ts, t :: hist, errs
+
+  (* create a new rep with additional history *)
+  let record_error err (ts, hist, errs) = ts, hist, err :: errs
+
+  (* member ist *)
+  let members (ts, _, _) = ts
+
+  (* history list *)
+  let history (_, hist, _) = hist
+
+  (* error list *)
+  let errors (_, _, errs) = errs
+
+  (* map rep r to rep s along type mapping f. drops history *)
+  let map f rep = make (List.map f (members rep))
+
 end
 
 (* The typechecking algorithm often needs to maintain sets of types, or more

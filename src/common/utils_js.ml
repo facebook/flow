@@ -99,6 +99,10 @@ let opt_map f = function
   | None -> None
   | Some x -> Some (f x)
 
+let opt_map_default f def = function
+  | None -> def
+  | Some x -> f x
+
 (**
  * Useful for various places where a user might have typoed a string and the
  * set of possible intended strings is known (i.e. variable names).

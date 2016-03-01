@@ -13,6 +13,7 @@
 open Utils_js
 
 module TI = Type_inference_js
+module Errors = Errors_js
 
 exception Key_not_found of (* message *) string * (* key *) string
 
@@ -76,7 +77,7 @@ let clear_errors ?(debug=false) (files: filename list) =
 (* helper - save an error set into a global error map.
    clear mapping if errorset is empty *)
 let save_errset mapref file errset =
-  mapref := if Errors_js.ErrorSet.cardinal errset = 0
+  mapref := if Errors.ErrorSet.cardinal errset = 0
     then FilenameMap.remove file !mapref
     else FilenameMap.add file errset !mapref
 
@@ -91,7 +92,7 @@ let save_errormap mapref errmap =
 (* given a reference to a error suppression map (files to
    error suppressions), and two parallel lists of such,
    save the latter into the former. *)
-let save_suppressions mapref files errsups = Errors_js.(
+let save_suppressions mapref files errsups = Errors.(
   List.iter2 (fun file errsup ->
     mapref := if ErrorSuppressions.cardinal errsup = 0
       then FilenameMap.remove file !mapref
@@ -101,7 +102,7 @@ let save_suppressions mapref files errsups = Errors_js.(
 
 (* distribute errors from a set into a filename-indexed map,
    based on position info contained in error, not incoming key *)
-let distrib_errs = Errors_js.(
+let distrib_errs = Errors.(
 
   let distrib_error _orig_file error error_map =
     let file = match Loc.source (loc_of_error error) with
@@ -128,7 +129,7 @@ let distrib_errs = Errors_js.(
  * 3) Add errors for unused suppressions
  * 4) Properly distribute the new errors
  *)
-let filter_suppressed_errors emap = Errors_js.(
+let filter_suppressed_errors emap = Errors.(
   let suppressions = ref ErrorSuppressions.empty in
 
   let filter_suppressed_error error =
@@ -149,8 +150,9 @@ let filter_suppressed_errors emap = Errors_js.(
   (* For each unused suppression, create an error *)
   let unused_suppression_errors = List.fold_left
     (fun errset loc ->
-      let reason = Reason_js.mk_reason "Error suppressing comment" loc in
-      let err = Flow_js.new_error [(reason, "Unused suppression")] in
+      let err = Errors.mk_error [
+        loc, ["Error suppressing comment"; "Unused suppression"]
+      ] in
       ErrorSet.add err errset
     )
     ErrorSet.empty
@@ -171,7 +173,7 @@ let get_errors () =
 
   (* flatten to list, with lib errors bumped to top *)
   let append_errset errset errlist =
-    List.rev_append (Errors_js.ErrorSet.elements errset) errlist
+    List.rev_append (Errors.ErrorSet.elements errset) errlist
   in
   let revlist_libs, revlist_others = FilenameMap.fold (
     fun file errset (libs, others) ->
@@ -215,14 +217,7 @@ let internal_error filename msg =
     start = position;
     _end = position;
   }) in
-  let open Errors_js in
-  let message = BlameM (loc, msg) in
-  {
-    kind = InternalError;
-    messages = [ message; ];
-    op = None;
-    trace = [];
-  }
+  Errors.(simple_error ~kind:InternalError loc msg)
 
 let apply_docblock_overrides metadata docblock_info =
   let open Context in
@@ -289,13 +284,13 @@ let infer_job opts (inferred, errsets, errsuppressions) files =
         cx_file :: inferred, errs :: errsets, suppressions :: errsuppressions
       )
     with exc ->
-      let errorset = Errors_js.ErrorSet.singleton
+      let errorset = Errors.ErrorSet.singleton
         (internal_error file ("infer_job exception: "^(fmt_exc exc))) in
       prerr_endlinef "(%d) infer_job THROWS: %s"
         (Unix.getpid()) (fmt_file_exc (string_of_filename file) exc);
       file::inferred,
         errorset::errsets,
-        Errors_js.ErrorSuppressions.empty::errsuppressions
+        Errors.ErrorSuppressions.empty::errsuppressions
   ) (inferred, errsets, errsuppressions) files
 
 let rev_append_pair (x1, y1) (x2, y2) =
@@ -539,7 +534,7 @@ let merge_strict_component ~options (component: filename list) =
     SigContextHeap.add file cx;
     file, errors
   )
-  else file, Errors_js.ErrorSet.empty
+  else file, Errors.ErrorSet.empty
 
 let with_timer ?opts timer timing f =
   let timing = FlowEventLogger.Timing.start_timer ~timer timing in
@@ -605,8 +600,8 @@ let typecheck_contents ~options ?verbose contents filename =
 
       (* Filter out suppressed errors *)
       let error_suppressions = Context.error_suppressions cx in
-      let errors = (Context.errors cx) |> Errors_js.ErrorSet.filter (fun err ->
-        not (fst (Errors_js.ErrorSuppressions.check err error_suppressions))
+      let errors = (Context.errors cx) |> Errors.ErrorSet.filter (fun err ->
+        not (fst (Errors.ErrorSuppressions.check err error_suppressions))
       ) in
 
       timing, Some cx, errors, info
@@ -616,7 +611,7 @@ let typecheck_contents ~options ?verbose contents filename =
 
   | Parsing_service_js.Parse_skip ->
       (* should never happen *)
-      timing, None, Errors_js.ErrorSet.empty, info
+      timing, None, Errors.ErrorSet.empty, info
 
 let merge_strict_job opts (merged, errsets) (components: filename list list) =
   List.fold_left (fun (merged, errsets) (component: filename list) ->
@@ -633,7 +628,7 @@ let merge_strict_job opts (merged, errsets) (components: filename list list) =
       )
     with exc ->
       let file = List.hd component in
-      let errorset = Errors_js.ErrorSet.singleton
+      let errorset = Errors.ErrorSet.singleton
         (internal_error file ("merge_strict_job exception: "^(fmt_exc exc))) in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
@@ -1300,15 +1295,15 @@ let print_errors options errors =
   let errors =
     if Options.should_strip_root options then (
       let root = FlowConfig.((get_unsafe ()).root) in
-      Errors_js.strip_root_from_errors root errors
+      Errors.strip_root_from_errors root errors
     )
     else errors
   in
 
   if options.Options.opt_json
-  then Errors_js.print_error_json stdout errors
+  then Errors.print_error_json stdout errors
   else
-    Errors_js.print_error_summary
+    Errors.print_error_summary
       ~flags:(Options.error_flags options)
       ~root:(Options.root options)
       errors

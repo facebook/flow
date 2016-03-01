@@ -1,7 +1,31 @@
 
 map.js:23:13,33: constructor call
-Function cannot be called on
-map.js:23:13,33: intersection: polymorphic type: function type(s)
+Function cannot be called on any member of intersection type
+map.js:23:13,33: intersection
+Member 1:
+[LIB] core.js:380:5,53: polymorphic type: function type
+Error:
+map.js:23:21,32: array literal
+This type is incompatible with
+[LIB] core.js:380:32,35: undefined
+Member 2:
+[LIB] core.js:381:5,53: polymorphic type: function type
+Error:
+map.js:23:21,32: array literal
+This type is incompatible with
+[LIB] core.js:381:32,35: null
+Member 3:
+[LIB] core.js:382:5,75: polymorphic type: function type
+Error:
+map.js:23:29,31: number
+This type is incompatible with
+[LIB] core.js:382:45,56: tuple type
+Member 4:
+[LIB] core.js:383:5,78: polymorphic type: function type
+Error:
+map.js:23:29,31: number
+This type is incompatible with
+[LIB] core.js:383:48,59: tuple type
 
 map.js:29:6,17: call of method `get`
 Error:
@@ -34,11 +58,47 @@ This type is incompatible with
 [LIB] core.js:246:51,62: string enum
 
 weakset.js:19:11,32: constructor call
-Function cannot be called on
-weakset.js:19:11,32: intersection: polymorphic type: function type(s)
+Function cannot be called on any member of intersection type
+weakset.js:19:11,32: intersection
+Member 1:
+[LIB] core.js:418:5,47: polymorphic type: function type
+Error:
+weakset.js:19:23,31: array literal
+This type is incompatible with
+[LIB] core.js:418:31,34: undefined
+Member 2:
+[LIB] core.js:419:5,58: polymorphic type: function type
+Error:
+weakset.js:19:24,24: number
+This type is incompatible with
+[LIB] core.js:419:20,25: object type
+Member 3:
+[LIB] core.js:420:5,61: polymorphic type: function type
+Error:
+weakset.js:19:24,24: number
+This type is incompatible with
+[LIB] core.js:420:20,25: object type
 
 weakset.js:36:11,32: constructor call
-Function cannot be called on
-weakset.js:36:11,32: intersection: polymorphic type: function type(s)
+Function cannot be called on any member of intersection type
+weakset.js:36:11,32: intersection
+Member 1:
+[LIB] core.js:418:5,47: polymorphic type: function type
+Error:
+weakset.js:36:23,31: $Iterable
+This type is incompatible with
+[LIB] core.js:418:31,34: undefined
+Member 2:
+[LIB] core.js:419:5,58: polymorphic type: function type
+Error:
+weakset.js:36:23,31: $Iterable
+This type is incompatible with
+[LIB] core.js:419:38,45: array type
+Member 3:
+[LIB] core.js:420:5,61: polymorphic type: function type
+Error:
+weakset.js:29:31,36: number
+This type is incompatible with
+[LIB] core.js:420:20,25: object type
 
 Found 8 errors

@@ -8,32 +8,70 @@
  *
  *)
 
-module C = Tty
-
-type message =
-  | BlameM of Loc.t * string
-  | CommentM of string
 type error_kind =
   | ParseError
   | InferError
   | InferWarning
   | InternalError
+
+let string_of_kind = function
+| ParseError -> "ParseError"
+| InferError -> "InferError"
+| InferWarning -> "InferWarning"
+| InternalError -> "InternalError"
+
+(* internal rep for core info *)
+type message =
+  | BlameM of Loc.t * string
+  | CommentM of string
+
+(* simple structure for callers to specify error message content,
+   converted to message internally. *)
+type info = Loc.t * string list
+
+(** for extra info, enough structure to do simple tree-shaped output *)
+type info_tree =
+  | InfoLeaf of info list
+  | InfoNode of info list * info_tree list
+
+let info_to_message (loc, msgs) =
+  BlameM (loc, String.concat "" msgs)
+
 type error = {
   kind: error_kind;
   messages: message list;
   op: message option;
   trace: message list;
+  extra: info_tree list
 }
 
-type pp_message = Loc.t * string
+let info_to_messages = function
+| loc, [] -> [BlameM (loc, "")]
+| loc, msg :: msgs ->
+  BlameM (loc, msg) ::
+  (msgs |> List.map (fun msg -> CommentM msg))
+
+let infos_to_messages infos =
+  List.concat (List.map info_to_messages infos)
+
+let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =  {
+  kind;
+  messages = infos_to_messages infos;
+  op = Utils_js.opt_map info_to_message op_info;
+  trace = Utils_js.opt_map_default infos_to_messages [] trace_infos;
+  extra
+}
+
+let simple_error ?(kind=InferError) loc msg =
+  mk_error ~kind [loc, [msg]]
+
+(*******************************)
+
 let to_pp = function
   | BlameM (loc, s) -> loc, s
   | CommentM s -> Loc.none, s
 
 type stdin_file = (string * string) option
-
-let message_of_reason reason =
-  Reason_js.(BlameM (loc_of_reason reason, desc_of_reason reason))
 
 let message_of_string s =
   CommentM s
@@ -65,7 +103,44 @@ let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
   | _ ->
-    message_list @ ((message_of_string "Trace:")::trace_reasons)
+    message_list @ (BlameM (Loc.none, "Trace:") :: trace_reasons)
+
+(* note: this is used only in old output format, which is deprecated
+   except for error diffs. indenting would be hard (locs are printed
+   hard left in the old format), so we leave the tree flat. If there
+   are any use cases for humans reading the old format, will need to
+ revisit. *)
+let messages_of_extra extra =
+  let rec messages_of_info_tree tree =
+    let infos, kids = match tree with
+      | InfoLeaf infos -> infos, []
+      | InfoNode (infos, kids) -> infos, kids
+    in
+    infos_to_messages infos @
+    List.concat (List.map messages_of_info_tree kids)
+  in
+  List.concat (List.map messages_of_info_tree extra)
+
+let append_extra_info messages extra =
+  messages @ messages_of_extra extra
+
+let rec strip_root_from_info_tree root tree =
+  let strip_root_from_infos root =
+    List.map (function (loc, strs) ->
+      Reason_js.strip_root_from_loc root loc, strs
+    )
+  in
+  match tree with
+  | InfoLeaf infos ->
+    InfoLeaf (strip_root_from_infos root infos)
+  | InfoNode (infos, kids) ->
+    InfoNode (
+      strip_root_from_infos root infos,
+      List.map (strip_root_from_info_tree root) kids
+    )
+
+let strip_root_from_extra root extra =
+  List.map (strip_root_from_info_tree root) extra
 
 let strip_root_from_message root = function
   | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
@@ -75,14 +150,15 @@ let strip_root_from_reason_list root messages =
   List.map (strip_root_from_message root) messages
 
 let strip_root_from_error root error =
-  let {messages; trace; op; _} = error in
+  let { messages; trace; op; extra; _ } = error in
   let messages = strip_root_from_reason_list root messages in
   let trace = strip_root_from_reason_list root trace in
   let op = match op with
   | Some op -> Some (strip_root_from_message root op)
   | None -> None
   in
-  { error with messages; trace; op; }
+  let extra = strip_root_from_extra root extra in
+  { error with messages; trace; op; extra }
 
 let strip_root_from_errors root errors =
   (* TODO verify this is still worth doing, otherwise just List.map it *)
@@ -100,10 +176,10 @@ let format_reason_color
   let loc, s = to_pp message in
   let l0, c0 = loc.start.line, loc.start.column + 1 in
   let l1, c1 = loc._end.line, loc._end.column in
-  let err_clr  = if first then C.Normal C.Red else C.Normal C.Green in
-  let file_clr = if first then C.Bold C.Blue else C.Bold C.Magenta in
-  let line_clr = C.Normal C.Yellow in
-  let col_clr  = C.Normal C.Cyan in
+  let err_clr  = if first then Tty.Normal Tty.Red else Tty.Normal Tty.Green in
+  let file_clr = if first then Tty.Bold Tty.Blue else Tty.Bold Tty.Magenta in
+  let line_clr = Tty.Normal Tty.Yellow in
+  let col_clr  = Tty.Normal Tty.Cyan in
 
   let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
 
@@ -116,45 +192,51 @@ let format_reason_color
   let loc_format =
     source @
       (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
-        (C.Normal C.Default, ":");
+        (Tty.Normal Tty.Default, ":");
         (line_clr,           string_of_int l0);
-        (C.Normal C.Default, ":");
+        (Tty.Normal Tty.Default, ":");
         (col_clr,            string_of_int c0);
-        (C.Normal C.Default, ",")
+        (Tty.Normal Tty.Default, ",")
        ] @ (if l0 < l1 then [
         (line_clr,           string_of_int l1);
-        (C.Normal C.Default, ":")
+        (Tty.Normal Tty.Default, ":")
        ] else []) @ [
         (col_clr,            string_of_int c1)
       ] else []) in
   let s_format = [
     (err_clr,            s);
-    (C.Normal C.Default, if one_line then "\\n" else "\n");
+    (Tty.Normal Tty.Default, if one_line then "\\n" else "\n");
   ] in
   if loc_format = [] then s_format
-  else loc_format @ ((C.Normal C.Default, ": ")::s_format)
+  else loc_format @ ((Tty.Normal Tty.Default, ": ")::s_format)
 )
+
+let format_info info =
+  let msg = info_to_message info in
+  let formatted = format_reason_color msg in
+  String.concat "" (List.map snd formatted)
 
 let print_reason_color ~first ~one_line ~color (message: message) =
   let to_print = format_reason_color ~first ~one_line message in
   (if first then Printf.printf "\n");
-  C.cprint ~color_mode:color to_print
+  Tty.cprint ~color_mode:color to_print
 
 let print_error_color_old ~one_line ~color (e : error) =
-  let {kind; messages; op; trace} = e in
+  let { kind; messages; op; trace; extra } = e in
   let messages = prepend_kind_message messages kind in
   let messages = prepend_op_reason messages op in
+  let messages = append_extra_info messages extra in
   let messages = append_trace_reasons messages trace in
   print_reason_color ~first:true ~one_line ~color (List.hd messages);
   List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
 
-let file_location_style text = (C.Underline C.Default, text)
-let default_style text = (C.Normal C.Default, text)
-let source_fragment_style text = (C.Normal C.Default, text)
-let error_fragment_style text = (C.Normal C.Red, text)
-let line_number_style text = (C.Bold C.Default, text)
-let comment_style text = (C.Bold C.Default, text)
-let comment_file_style text = (C.BoldUnderline C.Default, text)
+let file_location_style text = (Tty.Underline Tty.Default, text)
+let default_style text = (Tty.Normal Tty.Default, text)
+let source_fragment_style text = (Tty.Normal Tty.Default, text)
+let error_fragment_style text = (Tty.Normal Tty.Red, text)
+let line_number_style text = (Tty.Bold Tty.Default, text)
+let comment_style text = (Tty.Bold Tty.Default, text)
+let comment_file_style text = (Tty.BoldUnderline Tty.Default, text)
 
 let relative_path filename =
   let relname = Files_js.relative_path (Sys.getcwd ()) filename in
@@ -278,8 +360,35 @@ let print_message_nice ~root stdin_file main_file message =
   let loc, s = to_pp message in
   print_file_at_location ~root stdin_file main_file loc s
 
+let print_extra_info =
+  let nonterm_newline = Str.regexp "\n\\(.\\)" in
+  let rec f ~root stdin_file main_file indent tree =
+    let infos, kids = match tree with
+      | InfoLeaf infos -> infos, []
+      | InfoNode (infos, kids) -> infos, kids
+    in
+    let lines = List.map (fun (loc, strs) ->
+      let msg = String.concat ". " strs in
+      let lines = print_file_at_location ~root stdin_file main_file loc msg in
+      match lines with
+      | [] -> []
+      | (style, str) :: lines ->
+        let nonterm_newline_plus_indent = Utils.spf "\n%s\\1" indent in
+        (style, indent ^ str) :: (List.map (
+          fun (style, s) ->
+            style,
+            Str.global_replace nonterm_newline nonterm_newline_plus_indent s
+          ) lines
+        )
+    ) infos in
+    lines @ List.concat (
+      List.map (f ~root stdin_file main_file ("  " ^ indent)) kids
+    )
+  in fun ~root stdin_file main_file tree ->
+    List.concat (f ~root stdin_file main_file "  " tree)
+
 let loc_of_error (err: error) =
-  let {messages; op; _} = err in
+  let { messages; op; _ } = err in
   let messages = prepend_op_reason messages op in
   match messages with
   | message :: _ ->
@@ -287,10 +396,22 @@ let loc_of_error (err: error) =
       loc
   | _ -> Loc.none
 
+let infos_of_error { messages; _ } =
+  let rev_infos = List.fold_left (
+    fun acc -> function
+    | BlameM (loc, str) -> (loc, [str]) :: acc
+    | CommentM str ->
+      match acc with
+      | (loc, strs) :: tail -> (loc, str :: strs) :: tail
+      | [] -> [Loc.none, [str]] (* shouldn't start with a comment *)
+    ) [] messages in
+  List.rev (List.map (fun (loc, strs) -> loc, List.rev strs) rev_infos)
+
+let extra_of_error { extra; _ } = extra
+
 let file_of_error ~root err =
   let loc = loc_of_error err in
   file_of_source ~root loc.Loc.source
-
 
 let print_error_header ~root message =
   let loc, _ = to_pp message in
@@ -321,7 +442,7 @@ let maybe_combine_message_text messages message =
     | BlameM (_, _) -> message :: messages
     | CommentM s ->
       match messages with
-      | x :: xs -> (append_comment x s) :: xs
+      | x :: xs -> append_comment x s :: xs
       | _ -> failwith "can't append comment to nonexistent blame"
 
 let merge_comments_into_blames messages =
@@ -330,20 +451,27 @@ let merge_comments_into_blames messages =
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-let print_error_color_new ~stdin_file:stdin_file ~one_line ~color ~root (error : error) =
-  let {kind; messages; op; trace} = error in
+let print_error_color_new ~stdin_file:stdin_file ~one_line ~color ~root
+  (error : error) =
+  let { kind; messages; op; trace; extra } = error in
   let messages = prepend_kind_message messages kind in
   let messages = prepend_op_reason messages op in
   let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
   let header = print_error_header ~root (List.hd messages) in
   let main_file = match file_of_error ~root error with
-  | Some filename -> filename
-  | None -> "[No file]" in
-  let formatted_messages = List.map (print_message_nice ~root stdin_file main_file) messages in
-  let to_print = header @ (List.concat formatted_messages) in
-  let to_print = if one_line then List.map remove_newlines to_print else to_print in
-  C.cprint ~color_mode:color (to_print @ [default_style "\n"])
+    | Some filename -> filename
+    | None -> "[No file]" in
+  let formatted_messages = List.concat (List.map (
+    print_message_nice ~root stdin_file main_file
+  ) messages) in
+  let formatted_extra = List.concat (List.map (
+    print_extra_info ~root stdin_file main_file
+  ) extra) in
+  let to_print = header @ formatted_messages @ formatted_extra in
+  let to_print = if one_line then List.map remove_newlines to_print
+    else to_print in
+  Tty.cprint ~color_mode:color (to_print @ [default_style "\n"])
 
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
 let json_of_loc loc = Loc.(
@@ -472,63 +600,88 @@ let parse_error_to_flow_error (loc, err) = {
   kind = ParseError;
   messages = [BlameM (loc, Parse_error.PP.error err)];
   op = None;
-  trace = []
+  trace = [];
+  extra = []
 }
 
 let to_list errors = ErrorSet.elements errors
 
 (******* Error output functionality working on Hack's error *******)
 
-(* adapted from Errors.to_json to output multi-line errors properly *)
-let json_of_error (error : error) = Hh_json.(
-  let {kind; messages; op; trace} = error in
-  let kind_str, severity_str = match kind with
-  | ParseError -> "parse", "error"
-  | InferError -> "infer", "error"
-  | InferWarning -> "infer", "warning"
-  | InternalError -> "internal", "error"
+let json_of_message message =
+  let open Hh_json in
+  let desc, loc = match message with
+    | BlameM (loc, str) when loc <> Loc.none -> str, Some loc
+    | BlameM (_, str) | CommentM str -> str, None
   in
-  let messages = append_trace_reasons messages trace in
-  let elts = List.map (fun message ->
-      let loc, w = to_pp message in
-      JSON_Object (("descr", Hh_json.JSON_String w) ::
-              ("level", Hh_json.JSON_String severity_str) ::
-              (json_of_loc loc))
-    ) messages
+  JSON_Object (
+    ("descr", JSON_String desc) ::
+    match loc with
+    | None -> []
+    | Some loc -> ["loc", JSON_Object (json_of_loc loc)]
+  )
+
+let json_of_infos infos =
+  let open Hh_json in
+  JSON_Array (List.map json_of_message (infos_to_messages infos))
+
+let rec json_of_info_tree tree =
+  let open Hh_json in
+  let infos, kids = match tree with
+    | InfoLeaf infos -> infos, None
+    | InfoNode (infos, kids) -> infos, Some kids
+  in
+  JSON_Object (
+    ("message", json_of_infos infos) ::
+    match kids with
+    | None -> []
+    | Some kids ->
+      ["children", JSON_Array (List.map json_of_info_tree kids)]
+  )
+
+(* adapted from Errors.to_json to output multi-line errors properly *)
+let json_of_error { kind; messages; op; trace; extra } =
+  let open Hh_json in
+  let kind_str, severity_str = match kind with
+    | ParseError -> "parse", "error"
+    | InferError -> "infer", "error"
+    | InferWarning -> "infer", "warning"
+    | InternalError -> "internal", "error"
   in
   let props = [
-    "message", JSON_Array elts;
     "kind", JSON_String kind_str;
+    "level", JSON_String severity_str;
+    "message", JSON_Array (List.map json_of_message messages);
   ] in
-  let props =
-    match op with
-    | Some op ->
-      let op_loc, op_desc = to_pp op in
-      ("operation", JSON_Object (
-        ("descr", Hh_json.JSON_String op_desc) ::
-        (json_of_loc op_loc)
-      )) :: props
-    | None -> props
+  (* add trace if present *)
+  let props = match trace with [] -> props | _ ->
+    ("trace", JSON_Array (List.map json_of_message trace)) :: props
+  in
+  (* add op if present *)
+  let props = match op with None -> props | Some op ->
+    let op_loc, op_desc = to_pp op in
+    ("operation", JSON_Object (
+      ("descr", JSON_String op_desc) ::
+      (json_of_loc op_loc)
+    )) :: props
+  in
+  (* add extra if present *)
+  let props = if extra = [] then props else
+    ("extra", JSON_Array (List.map json_of_info_tree extra)) :: props
   in
   JSON_Object props
-)
 
-let json_of_errors errors = Hh_json.JSON_Array (List.map json_of_error errors)
+let json_of_errors errors =
+  Hh_json.JSON_Array (List.map json_of_error errors)
 
 let print_error_json oc el =
-  let res =
-    if el = [] then
-      Hh_json.JSON_Object [ "passed", Hh_json.JSON_Bool true;
-                    "errors", Hh_json.JSON_Array [];
-                    "version", Hh_json.JSON_String Build_id.build_id_ohai;
-                  ]
-    else
-      Hh_json.JSON_Object [ "passed", Hh_json.JSON_Bool false;
-                    "errors", json_of_errors el;
-                    "version", Hh_json.JSON_String Build_id.build_id_ohai;
-                  ]
-  in
-  output_string oc (Hh_json.json_to_string res);
+  let open Hh_json in
+  let res = JSON_Object [
+    "flowVersion", JSON_String FlowConfig.version;
+    "errors", json_of_errors el;
+    "passed", JSON_Bool (el = []);
+  ] in
+  output_string oc (json_to_string res);
   flush oc
 
 (* for vim and emacs plugins *)
@@ -592,7 +745,7 @@ let print_error_summary ~flags ?stdin_file:(stdin_file=None) ~root errors =
   let color = flags.Options.color in
   let print_error_color = if flags.Options.old_output_format
     then print_error_color_old
-    else print_error_color_new ~stdin_file:stdin_file ~root
+    else print_error_color_new ~stdin_file ~root
   in
   let print_error_if_not_truncated curr e =
     (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
