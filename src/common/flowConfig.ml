@@ -262,8 +262,6 @@ let add_dir_sep dir =
   else dir ^ dir_sep
 
 let file_of_root extension ~tmp_dir root =
-  (* TODO: move this to places that write this file *)
-  mkdir_no_fail tmp_dir;
   let tmp_dir = tmp_dir |> Path.make |> Path.to_string |> add_dir_sep in
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension

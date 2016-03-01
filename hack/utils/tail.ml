@@ -18,6 +18,7 @@ type env =
 let open_in_opt filename =
   let open Unix in
   try
+    Sys_utils.mkdir_no_fail (Filename.dirname filename);
     let fd = openfile filename [O_RDONLY;O_NONBLOCK;O_CREAT] 0o777 in
     let ic = in_channel_of_descr fd in
     begin set_binary_mode_in ic false; Some(ic) end

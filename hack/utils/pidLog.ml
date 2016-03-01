@@ -19,6 +19,7 @@ let disable () = enabled := false
 let init pids_file =
   assert (!log_oc = None);
   Sys_utils.with_umask 0o111 begin fun () ->
+    Sys_utils.mkdir_no_fail (Filename.dirname pids_file);
     let oc = open_out pids_file in
     log_oc := Some oc;
     Unix.(set_close_on_exec (descr_of_out_channel oc))

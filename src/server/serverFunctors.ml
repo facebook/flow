@@ -305,6 +305,7 @@ end = struct
   let open_log_file options =
     let file = Path.to_string (Options.log_file options) in
     (try Sys.rename file (file ^ ".old") with _ -> ());
+    mkdir_no_fail (Filename.dirname file);
     Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
 
   let daemonize options =
