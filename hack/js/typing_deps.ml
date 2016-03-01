@@ -65,27 +65,27 @@ module Dep = struct
     | Extends s -> "extends:"^s
 end
 
-module DSet = Set.Make(Dep)
-module DMap = MyMap.Make(Dep)
+module DepSet = Set.Make(Dep)
+module DepMap = MyMap.Make(Dep)
 
 (*
 let print_deps deps =
   Printf.printf "Deps: ";
-  DSet.iter (fun x -> Printf.printf "%s " (Dep.to_string x)) deps;
+  DepSet.iter (fun x -> Printf.printf "%s " (Dep.to_string x)) deps;
   Printf.printf "\n"
 *)
 
 let merge_deps deps1 deps2 =
-  DMap.fold begin fun x y acc ->
-    match DMap.get x acc with
-    | None -> DMap.add x y acc
+  DepMap.fold begin fun x y acc ->
+    match DepMap.get x acc with
+    | None -> DepMap.add x y acc
     | Some y' ->
-        DMap.add x (DSet.union y y') acc
+        DepMap.add x (DepSet.union y y') acc
   end deps1 deps2
 
 let split_deps deps =
   let funs, classes = SSet.empty, SSet.empty in
-  DSet.fold begin fun x (funs, classes) ->
+  DepSet.fold begin fun x (funs, classes) ->
     match x with
     | Dep.GConst s
     | Dep.GConstName s
@@ -190,13 +190,13 @@ let update_igraph deps =
 let add_iedge obj root =
   ()
 
-let deps = ref DSet.empty
+let deps = ref DepSet.empty
 let extends_igraph = Hashtbl.create 23
 
 let add_idep root obj =
   match obj with
   | Dep.FunName _
-  | Dep.Fun _ as x -> deps := DSet.add x !deps
+  | Dep.Fun _ as x -> deps := DepSet.add x !deps
   | Dep.GConst s
   | Dep.GConstName s
   | Dep.Const (s, _)
@@ -219,7 +219,7 @@ let add_idep root obj =
          *
          * This If makes it so that FileC would not be added in this case.
          *)
-      if not !is_dep then deps := DSet.add (Dep.Class s) !deps
+      if not !is_dep then deps := DepSet.add (Dep.Class s) !deps
   | Dep.Extends s ->
       (match root with
       | Dep.Class root ->
@@ -234,13 +234,13 @@ let add_idep root obj =
           let iext = SSet.add root iext in
           Hashtbl.replace extends_igraph s iext
       | _ -> ());
-      deps := DSet.add (Dep.Class s) !deps
+      deps := DepSet.add (Dep.Class s) !deps
 
 let get_ideps x =
-  DSet.empty
+  DepSet.empty
 
 let get_bazooka x =
-  DSet.empty
+  DepSet.empty
 
 let update_files_info workers fast = raise Exit
 let update_dependencies workers deps = raise Exit

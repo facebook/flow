@@ -293,16 +293,16 @@ let hh_get_method_at_position fn line char =
                         ])
 
 let hh_get_deps =
-  let already_sent = ref Typing_deps.DSet.empty in
+  let already_sent = ref Typing_deps.DepSet.empty in
   fun () ->
     let result = ref [] in
     let deps = !(Typing_deps.deps) in
-    Typing_deps.deps := Typing_deps.DSet.empty;
-    Typing_deps.DSet.iter begin fun dep ->
-      if Typing_deps.DSet.mem dep !already_sent
+    Typing_deps.deps := Typing_deps.DepSet.empty;
+    Typing_deps.DepSet.iter begin fun dep ->
+      if Typing_deps.DepSet.mem dep !already_sent
       then ()
       else begin
-        already_sent := Typing_deps.DSet.add dep !already_sent;
+        already_sent := Typing_deps.DepSet.add dep !already_sent;
         result :=
           (match dep with
           | Typing_deps.Dep.Class s

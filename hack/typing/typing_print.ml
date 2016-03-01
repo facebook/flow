@@ -453,6 +453,11 @@ module PrintClass = struct
       | Some ce -> class_elt ce
     in ce_str^consist_str
 
+  let req_ancestors xs =
+    List.fold_left xs ~init:"" ~f:begin fun acc (_p, x) ->
+      acc ^ Full.to_string_decl x ^ ", "
+    end
+
   let class_type c =
     let tc_need_init = bool c.tc_need_init in
     let tc_members_fully_known = bool c.tc_members_fully_known in
@@ -469,7 +474,7 @@ module PrintClass = struct
     let tc_smethods = class_elt_smap_with_breaks c.tc_smethods in
     let tc_construct = constructor c.tc_construct in
     let tc_ancestors = ancestors_smap c.tc_ancestors in
-    let tc_req_ancestors = ancestors_smap c.tc_req_ancestors in
+    let tc_req_ancestors = req_ancestors c.tc_req_ancestors in
     let tc_req_ancestors_extends = sset c.tc_req_ancestors_extends in
     let tc_extends = sset c.tc_extends in
     let tc_user_attributes = user_attribute_list c.tc_user_attributes in

@@ -3076,7 +3076,8 @@ and class_id_for_new p env cid =
  * the 'require extends' must belong to the same inheritance hierarchy
  * and one of them should be the child of all the others *)
 and trait_most_concrete_req_class trait env =
-  SMap.fold (fun name ty acc ->
+  List.fold_left trait.tc_req_ancestors ~f:begin fun acc (_p, ty) ->
+    let _r, (_p, name), _paraml = TUtils.unwrap_class_type ty in
     let keep = match acc with
       | Some (c, _ty) -> SMap.mem name c.tc_ancestors
       | None -> false
@@ -3094,7 +3095,7 @@ and trait_most_concrete_req_class trait env =
           acc
         | Some c -> Some (c, ty)
       )
-  ) trait.tc_req_ancestors None
+  end ~init:None
 
 (* When invoking a method the class_id is used to determine what class we
  * lookup the method in, but the type of 'this' will be the late bound type.
@@ -3941,7 +3942,9 @@ and class_def tcopt _ c =
       (* This can happen if there was an error during the declaration
        * of the class. *)
       ()
-  | Some tc -> class_def_ env c tc
+  | Some tc ->
+    Typing_requirements.check_class env tc;
+    class_def_ env c tc
 
 and get_self_from_c env c =
   let _, tparams = List.map_env env (fst c.c_tparams) type_param in

@@ -298,7 +298,6 @@ type ureason =
   | URdynamic_yield
   | URnewtype_cstr
   | URclass_req
-  | URclass_req_merge
   | URenum
   | URenum_cstr
   | URtypeconst_cstr
@@ -340,7 +339,6 @@ let string_of_ureason = function
   | URnewtype_cstr ->
       "Invalid constraint on newtype"
   | URclass_req -> "Unable to satisfy trait/interface requirement"
-  | URclass_req_merge -> "Incompatible trait/interface requirements"
   | URenum ->
       "Constant does not match the type of the enum it is in"
   | URenum_cstr ->

@@ -1058,7 +1058,6 @@ and xhp_category env x acc =
   | Method _ -> acc
   | TypeConst _ -> acc
 
-
 and class_require env c_kind x acc =
   match x with
   | Attributes _ -> acc

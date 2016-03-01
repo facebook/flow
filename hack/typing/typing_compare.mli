@@ -28,7 +28,3 @@ val get_gconsts_deps : GConsts.t option SMap.t -> SSet.t -> DepSet.t * DepSet.t
  *)
 val get_classes_psubst : Classes.t option SMap.t ->
   Classes.t option SMap.t -> SSet.t -> (Pos.t, Pos.t) Hashtbl.t * bool
-
-module SubstPos : sig
-  val class_type : (Pos.t, Pos.t) Hashtbl.t -> Classes.t -> Classes.t
-end

@@ -381,7 +381,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
               (* a trait is never the runtime type, but it can be used
                * as a constraint if it has requirements for its using
                * classes *)
-              let _, ret = SMap.fold begin fun _ elt_type acc ->
+              let _, ret = List.fold_left ~f:begin fun acc (_p, req_type) ->
                 match acc with
                   | _, Some _ -> acc
                   | env, None ->
@@ -392,12 +392,12 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                         this_ty = ExprDepTy.apply uenv_sub.TUEnv.dep_tys ty_sub;
                         from_class = None;
                       } in
-                      let env, elt_type =
-                        Phase.localize ~ety_env env elt_type in
-                      let _, elt_ty = elt_type in
-                      env, Some (sub_type env ty_super (p_sub, elt_ty))
+                      let env, req_type =
+                        Phase.localize ~ety_env env req_type in
+                      let _, req_ty = req_type in
+                      env, Some (sub_type env ty_super (p_sub, req_ty))
                     end (fun _ -> acc)
-              end class_.tc_req_ancestors (env, None) in
+              end class_.tc_req_ancestors ~init:(env, None) in
               ret
             else None in
           (match subtype_req_ancestor with

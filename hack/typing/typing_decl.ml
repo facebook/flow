@@ -61,20 +61,6 @@ let check_extend_kind parent_pos parent_kind child_pos child_kind =
  *)
 (*****************************************************************************)
 
-(*-------------------------- begin copypasta *)
-
-let check_arity pos class_name class_type class_parameters =
-  let arity = List.length class_type.tc_tparams in
-  if List.length class_parameters <> arity
-  then Errors.class_arity pos class_type.tc_pos class_name arity;
-  ()
-
-let make_substitution pos class_name class_type class_parameters =
-  check_arity pos class_name class_type class_parameters;
-  Inst.make_subst class_type.tc_tparams class_parameters
-
-(*-------------------------- end copypasta *)
-
 (**
  * Adds the traits/classes which are part of a class' hierarchy.
  *
@@ -122,137 +108,6 @@ let get_class_parents_and_traits env class_nast =
     List.fold_left class_nast.c_xhp_attr_uses
       ~f:(get_class_parent_or_trait class_nast) ~init:acc in
   env, parents, is_complete
-
-let merge_single_req env subst inc_req_ty existing_req_opt
-    incoming_pos =
-  match existing_req_opt with
-    | Some ex_req_ty ->
-      (* If multiple uses/impls require the *exact same* ancestor, ... *)
-      let inc_req_ty = Inst.instantiate subst inc_req_ty in
-      (* ... ensure that they're compatible and select
-       * the one that's more restrictive (subtype of the other) *)
-      let env, result_ty = Errors.try_
-        (fun () ->
-          let env = Typing_ops.sub_type_decl incoming_pos
-            Reason.URclass_req_merge env ex_req_ty inc_req_ty
-          in env, inc_req_ty)
-        (fun _ ->
-          let env = Typing_ops.sub_type_decl incoming_pos
-            Reason.URclass_req_merge env inc_req_ty ex_req_ty
-          in env, ex_req_ty
-        )
-      in
-      (env : Env.env), (result_ty: decl ty)
-    | None ->
-      let inc_req_ty = Inst.instantiate subst inc_req_ty in
-      (env : Env.env), (inc_req_ty: decl ty)
-
-(* for non-traits, check that requirements inherited from
- * traits/interfaces have been satisfied; for traits/interfaces,
- * accumulate requirements so that we can successfully check the bodies
- * of trait methods *)
-let merge_parent_class_reqs class_nast impls
-    (env, req_ancestors, req_ancestors_extends) parent_hint =
-  let parent_pos, parent_name, parent_params =
-    TUtils.unwrap_class_hint parent_hint in
-  let env, parent_params = List.map_env env parent_params Typing_hint.hint in
-  let parent_type = Env.get_class_dep env parent_name in
-
-  match parent_type with
-    | None ->
-      (* The class lives in PHP *)
-      env, req_ancestors, req_ancestors_extends
-    | Some parent_type ->
-      let subst =
-        make_substitution parent_pos parent_name parent_type parent_params in
-      match class_nast.c_kind with
-        | Ast.Cnormal | Ast.Cabstract ->
-          (* Check inherited requirements and check their compatibility *)
-          let env = SMap.fold begin fun req_name req_ty env ->
-            match SMap.get req_name impls with
-              | None ->
-                let req_pos = Reason.to_pos (fst req_ty) in
-                Errors.unsatisfied_req parent_pos req_name req_pos;
-                env
-              | Some impl_ty ->
-                let req_ty = Inst.instantiate subst req_ty in
-                Typing_ops.sub_type_decl parent_pos Reason.URclass_req env req_ty impl_ty
-          end parent_type.tc_req_ancestors env
-          in
-          env, req_ancestors, req_ancestors_extends
-
-        | Ast.Ctrait | Ast.Cinterface ->
-          (* Merge together requirements and make sure they're compatible *)
-          let acc = env, req_ancestors in
-          let env, req_ancestors =
-            SMap.fold (begin fun req_name added_req_ty acc ->
-              let env, existing_reqs = acc in
-              let ex_ty_opt = SMap.get req_name existing_reqs in
-              let env, merged_ty = (merge_single_req env subst
-                added_req_ty ex_ty_opt parent_pos) in
-              env, SMap.add req_name merged_ty existing_reqs
-            end) parent_type.tc_req_ancestors acc
-          in
-          let req_ancestors_extends =
-            SSet.union parent_type.tc_req_ancestors_extends req_ancestors_extends in
-          env, req_ancestors, req_ancestors_extends
-        | Ast.Cenum -> assert false
-
-let declared_class_req (env, requirements, req_extends) hint =
-  let env, req_ty = Typing_hint.hint env hint in
-  let req_pos, req_name, req_params = TUtils.unwrap_class_hint hint in
-  let env, _ = List.map_env env req_params Typing_hint.hint in
-  let req_type = Env.get_class_dep env req_name in
-  let req_extends = SSet.add req_name req_extends in
-  match req_type with
-    | None -> (* The class lives in PHP : error?? *)
-      let requirements = SMap.add req_name req_ty requirements in
-      env, requirements, req_extends
-    | Some parent_type -> (* The parent class lives in Hack *)
-
-      (* since the req is declared on this class, we should
-       * emphatically *not* substitute: a require extends Foo<T> is
-       * going to be this class's <T> *)
-      let subst = Inst.make_subst [] [] in
-      let ex_ty_opt = SMap.get req_name requirements in
-      let env, merged = merge_single_req env subst req_ty ex_ty_opt req_pos in
-      let requirements = SMap.add req_name merged requirements in
-
-      let req_extends = SSet.union parent_type.tc_extends req_extends in
-      (* the req may be of an interface that has reqs of its own; the
-       * flattened ancestry required by *those* reqs need to be added
-       * in to, e.g., interpret accesses to protected functions inside
-       * traits *)
-      let req_extends =
-        SSet.union parent_type.tc_req_ancestors_extends req_extends in
-      env, requirements, req_extends
-
-let get_class_requirements env class_nast impls =
-  let req_ancestors = SMap.empty in
-  let req_ancestors_extends = SSet.empty in
-  let acc = (env, req_ancestors, req_ancestors_extends) in
-  let acc =
-    List.fold_left ~f:declared_class_req ~init:acc class_nast.c_req_extends in
-  let acc =
-    List.fold_left ~f:declared_class_req
-      ~init:acc class_nast.c_req_implements in
-  let acc =
-    List.fold_left ~f:(merge_parent_class_reqs class_nast impls)
-      ~init:acc class_nast.c_uses in
-  let acc =
-    List.fold_left ~f:(merge_parent_class_reqs class_nast impls)
-      ~init:acc (if class_nast.c_kind == Ast.Cinterface then
-          class_nast.c_extends else class_nast.c_implements)
-  in
-  match class_nast.c_kind with
-    | Ast.Ctrait | Ast.Cinterface ->
-      (* for a requirement-bearing construct, return the accumulated
-       * list of direct and inherited requirements *)
-      acc
-    | Ast.Cnormal | Ast.Cabstract | Ast.Cenum ->
-      (* for a non-requirement-bearing construct, requirements have
-       * been checked, nothing to save *)
-      env, SMap.empty, SSet.empty
 
 (*****************************************************************************)
 (* Section declaring the type of a function *)
@@ -398,7 +253,7 @@ and class_decl tcopt c =
     else extends
   in
   let env, req_ancestors, req_ancestors_extends =
-    get_class_requirements env c impl in
+    Typing_requirements.get_class_requirements env c in
   let env, m = if DynamicYield.is_dynamic_yield (snd c.c_name)
     then DynamicYield.clean_dynamic_yield env m
     else env, m in
