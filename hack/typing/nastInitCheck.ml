@@ -76,7 +76,7 @@ module Env = struct
   let add_parent_construct c tenv props parent_hint =
     match parent_hint with
       | (_, Happly ((_, parent), _)) ->
-        let class_ = Typing_env.get_class tenv parent in
+        let class_ = Typing_env.get_class_dep tenv parent in
         (match class_ with
           | Some class_ when
               class_.Typing_defs.tc_need_init && c.c_constructor <> None
@@ -113,7 +113,7 @@ module Env = struct
     List.fold_left (c.c_extends @ c.c_uses) ~f:begin fun acc parent ->
       match parent with
       | _, Happly ((_, parent), _) ->
-        let tc = Typing_env.get_class tenv parent in
+        let tc = Typing_env.get_class_dep tenv parent in
         (match tc with
           | None -> acc
           | Some { tc_deferred_init_members = members; _ } ->
