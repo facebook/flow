@@ -137,7 +137,6 @@ and make_param_ty env param =
       Reason.Rvar_param param_pos, t
     | x -> x
   in
-  Typing_hooks.dispatch_infer_ty_hook (Phase.decl ty) param_pos env;
   env, (Some param.param_name, ty)
 
 and fun_decl tcopt f =

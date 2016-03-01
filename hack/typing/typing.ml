@@ -280,7 +280,7 @@ let make_param_local_ty env param =
       r, Tarraykind (AKvec arr_values)
     | x -> x
   in
-  Typing_hooks.dispatch_infer_ty_hook (Phase.locl ty) param_pos env;
+  Typing_hooks.dispatch_infer_ty_hook ty param_pos env;
   env, (Some param.param_name, ty)
 
 let rec bind_param env (_, ty1) param =
@@ -756,7 +756,7 @@ and raw_expr ~in_cond ?valkind:(valkind=`other) env e =
   let () = match !expr_hook with
     | Some f -> f e (Typing_expand.fully_expand env ty)
     | None -> () in
-  Typing_hooks.dispatch_infer_ty_hook (LoclTy ty) (fst e) env;
+  Typing_hooks.dispatch_infer_ty_hook ty (fst e) env;
   env, ty
 
 and lvalue env e =

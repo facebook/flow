@@ -12,13 +12,8 @@
 let save_infer result_ty result_pos target_line target_column ty pos env =
   if Pos.inside pos target_line target_column && !result_ty = None
   then begin
-    match ty with
-    | Typing_defs.DeclTy ty ->
-       result_ty := Some (Typing_print.full_strip_ns env ty);
-       result_pos := Some (Typing_reason.to_pos (fst ty));
-    | Typing_defs.LoclTy ty ->
-       result_ty := Some (Typing_print.full_strip_ns env ty);
-       result_pos := Some (Typing_reason.to_pos (fst ty));
+    result_ty := Some (Typing_print.full_strip_ns env ty);
+    result_pos := Some (Typing_reason.to_pos (fst ty));
   end
 
 let attach_hooks line column =

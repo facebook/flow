@@ -104,7 +104,7 @@ let generate_types lvar_map type_map =
   end
 
 let process_symbol_type result_map type_ pos env =
-  let type_str = Typing_print.strip_ns env type_ in
+  let type_str = Typing_print.full_strip_ns env type_ in
   result_map := Pos.Map.add pos type_str !result_map
 
 let handle_lvar result_map ident id locals =

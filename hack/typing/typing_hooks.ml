@@ -53,7 +53,7 @@ let (constructor_hooks: (Typing_defs.class_type ->
 let (class_id_hooks: (Pos.t * string ->
                       (Pos.t * string) option -> unit) list ref) = ref []
 
-let (infer_ty_hooks: (Typing_defs.phase_ty -> Pos.t ->
+let (infer_ty_hooks: (Typing_defs.locl Typing_defs.ty -> Pos.t ->
                       Typing_env.env -> unit) list ref) = ref []
 
 let (enter_method_def_hooks: (Nast.method_ -> unit) list ref) = ref []
