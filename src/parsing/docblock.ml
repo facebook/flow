@@ -76,7 +76,7 @@ let extract =
           -> Some s
       else None in
     let info =
-      if Filename.check_suffix filename FlowConfig.flow_ext
+      if Filename.check_suffix filename Files_js.flow_ext
       then { default_info with isDeclarationFile = true; }
       else default_info in
     match get_first_comment_contents env with

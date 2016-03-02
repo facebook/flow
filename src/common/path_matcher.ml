@@ -60,8 +60,37 @@ let path_patt =
     let str = String.concat "" results in
     Str.regexp str
 
+(* helper - eliminate noncanonical entries where possible.
+   no other normalization is done *)
+let dir_sep = Str.regexp_string Filename.dir_sep
+let fixup_path p =
+  let s = Path.to_string p in
+  let is_normalized = match Sys_utils.realpath s with
+      | Some s' -> s' = s
+      | None -> false in
+  if is_normalized then p else
+  let abs = not (Filename.is_relative s) in
+  let entries = Str.split_delim dir_sep s in
+  let rec loop revbase entries =
+    match entries with
+    | h :: t when h = Filename.current_dir_name ->
+        loop revbase t
+    | h :: t when h = Filename.parent_dir_name -> (
+        match revbase with
+        | _ :: rt -> loop rt t
+        | _ -> loop (h :: revbase) t
+      )
+    | h :: t -> loop (h :: revbase) t
+    | [] -> List.rev revbase
+  in
+  let entries = loop [] entries in
+  let s = List.fold_left Filename.concat "" entries in
+  let s = if abs then Filename.dir_sep ^ s else s in
+  Path.make s
+
 (* adds `path` to the matcher, calculating the appropriate stem and pattern *)
 let add { paths; stems; stem_map; } path =
+  let path = fixup_path path in
   let stem = path_stem path in
   let patt = path_patt path in
   let pstr = Path.to_string path in

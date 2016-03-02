@@ -43,16 +43,13 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Outline an error path up to a specified level"
     |> flag "--lib" (optional string)
         ~doc:"Specify one or more library paths, comma separated"
-    |> flag "--ignore" (optional string)
-        ~doc:"Specify one or more ignore patterns, comma separated"
-    |> flag "--include" (optional string)
-        ~doc:"Specify one or more include patterns, comma separated"
     |> flag "--no-flowlib" no_arg
         ~doc:"Do not include embedded declarations"
     |> flag "--munge-underscore-members" no_arg
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
+    |> flowconfig_flags
     |> verbose_flags
     |> strip_root_flag
     |> temp_dir_flag
@@ -125,10 +122,11 @@ module OptionParser(Config : CONFIG) = struct
       (s, reg)
     ) patterns
 
-  let includes_of_arg paths arg_str =
-    let extras = List.map Path.make (list_of_string_arg arg_str) in
-    let paths = List.rev_append extras paths in
-    List.fold_left Path_matcher.add Path_matcher.empty paths
+  let includes_of_arg root paths =
+    List.fold_left (fun acc path ->
+      let path = Files_js.make_path_absolute root path in
+      Path_matcher.add acc path
+    ) Path_matcher.empty paths
 
   let default_lib_dir tmp_dir =
     let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
@@ -140,10 +138,28 @@ module OptionParser(Config : CONFIG) = struct
     end
 
   let result = ref None
-  let main error_flags json profile quiet log_file wait debug
-           all weak traces lib ignore include_ no_flowlib
-           munge_underscore_members max_workers verbose strip_root temp_dir from
-           root () =
+  let main
+      error_flags
+      json
+      profile
+      quiet
+      log_file
+      wait
+      debug
+      all
+      weak
+      traces
+      lib
+      no_flowlib
+      munge_underscore_members
+      max_workers
+      flowconfig_flags
+      verbose
+      strip_root
+      temp_dir
+      from
+      root
+      () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get root in
@@ -158,10 +174,14 @@ module OptionParser(Config : CONFIG) = struct
         |> List.map Path.make in
         flowconfig.libs @ libs
     ) in
-    let opt_ignores =
-      ignores_of_arg flowconfig.FlowConfig.ignores ignore in
+    let opt_ignores = ignores_of_arg
+      flowconfig.FlowConfig.ignores
+      flowconfig_flags.ignores in
     let opt_includes =
-      includes_of_arg flowconfig.FlowConfig.includes include_ in
+      let includes = List.rev_append
+        flowconfig.FlowConfig.includes
+        (list_of_string_arg flowconfig_flags.includes) in
+      includes_of_arg root includes in
     let opt_traces = match traces with
       | Some level -> level
       | None -> FlowConfig.(flowconfig.options.Opts.traces) in

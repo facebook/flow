@@ -11,6 +11,7 @@
 (* utilities for supported filenames *)
 
 val global_file_name: string
+val flow_ext: string
 
 val is_json_file: string -> bool
 val is_flow_file: options: Options.options -> string -> bool
@@ -49,5 +50,8 @@ val normalize_path: string -> string -> string
 val construct_path: string -> string list -> string
 
 val relative_path: string -> string -> string
+
+(* TODO: this doesn't match the signatures of the related functions above *)
+val make_path_absolute: Path.t -> string -> Path.t
 
 val is_prefix: string -> string -> bool

@@ -18,6 +18,7 @@ module Init = struct
     args = CommandSpec.ArgSpec.(
       empty
       |> CommandUtils.from_flag
+      |> CommandUtils.flowconfig_flags
       |> flag "--options" (optional string)
           ~doc:"Semicolon-delimited list of key=value pairs"
       |> anon "root" (optional string)
@@ -25,7 +26,7 @@ module Init = struct
     )
   }
 
-  let main from options root () =
+  let main from flowconfig_flags options root () =
     FlowEventLogger.set_from from;
     let root = match root with
     | None -> Sys.getcwd () |> Path.make
@@ -35,7 +36,15 @@ module Init = struct
     | None -> []
     | Some str -> Str.split (Str.regexp ";") str
     in
-    FlowConfig.init root options
+    let ignores = match flowconfig_flags.CommandUtils.ignores with
+    | None -> []
+    | Some str -> Str.split (Str.regexp ",") str
+    in
+    let includes = match flowconfig_flags.CommandUtils.includes with
+    | None -> []
+    | Some str -> Str.split (Str.regexp ",") str
+    in
+    FlowConfig.init root ignores includes options
 
   let command = CommandSpec.command spec main
 end

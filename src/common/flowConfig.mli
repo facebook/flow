@@ -42,7 +42,7 @@ type config = {
   (* file blacklist *)
   ignores: string list;
   (* non-root include paths *)
-  includes: Path.t list;
+  includes: string list;
   (* library paths. no wildcards *)
   libs: Path.t list;
   (* config options *)
@@ -64,7 +64,6 @@ val pids_file: tmp_dir:string -> Path.t -> string
 val socket_file: tmp_dir:string -> Path.t -> string
 val log_file: tmp_dir:string -> Path.t -> Opts.t -> Path.t
 
-val init: Path.t -> string list -> unit
+val init: Path.t -> string list -> string list -> string list -> unit
 
 val version: string
-val flow_ext: string

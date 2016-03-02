@@ -179,7 +179,7 @@ let reducer ~types_mode (ok, skips, fails, errors) file =
          file, even if it is unchanged, since it might have been added to the
          modified set simply because a corresponding implementation file was
          also added. *)
-      if not (Loc.check_suffix file FlowConfig.flow_ext)
+      if not (Loc.check_suffix file Files_js.flow_ext)
         && ParserHeap.get_old file = Some (ast, info)
       then (ok, skips, fails, errors)
       else begin

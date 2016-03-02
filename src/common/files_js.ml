@@ -11,6 +11,7 @@
 (************** file filter utils ***************)
 
 let global_file_name = "(global)"
+let flow_ext = ".flow"
 
 let is_directory path = try Sys.is_directory path with Sys_error _ -> false
 
@@ -33,9 +34,9 @@ let is_valid_path ~options =
     SSet.exists (Filename.check_suffix path) file_exts
 
   in fun path ->
-    if Filename.check_suffix path FlowConfig.flow_ext
+    if Filename.check_suffix path flow_ext
     (* foo.js.flow is valid if foo.js is valid *)
-    then is_valid_path_helper (Filename.chop_suffix path FlowConfig.flow_ext)
+    then is_valid_path_helper (Filename.chop_suffix path flow_ext)
     else is_valid_path_helper path
 
 let is_flow_file ~options path =
@@ -44,6 +45,11 @@ let is_flow_file ~options path =
 let realpath path = match Sys_utils.realpath path with
 | Some path -> path
 | None -> path (* perhaps this should error? *)
+
+let make_path_absolute root path =
+  if Filename.is_relative path
+  then Path.concat root path
+  else Path.make path
 
 type file_kind =
 | Reg of string

@@ -60,7 +60,7 @@ let replace_name_mapper_template_tokens =
 
 
 let choose_provider_and_warn_about_duplicates =
-  let is_flow_ext file = Loc.check_suffix file FlowConfig.flow_ext in
+  let is_flow_ext file = Loc.check_suffix file Files_js.flow_ext in
 
   let warn_duplicate_providers m current modules errmap =
     List.fold_left (fun acc f ->
@@ -302,8 +302,8 @@ let lazy_seq: 'a option Lazy.t list -> 'a option =
 
 module Node = struct
   let exported_module file _ =
-    if Loc.check_suffix file FlowConfig.flow_ext
-    then Modulename.Filename (Loc.chop_suffix file FlowConfig.flow_ext)
+    if Loc.check_suffix file Files_js.flow_ext
+    then Modulename.Filename (Loc.chop_suffix file Files_js.flow_ext)
     else Modulename.Filename file
 
   let record_path path = function
@@ -317,7 +317,7 @@ module Node = struct
         not (dir_exists path)
     in fun ~options path_acc path ->
       let path = resolve_symlinks path in
-      let declaration_path = path ^ FlowConfig.flow_ext in
+      let declaration_path = path ^ Files_js.flow_ext in
       if path_exists ~options declaration_path ||
         path_exists ~options path
       then Some path
@@ -475,9 +475,9 @@ module Haste: MODULE_SYSTEM = struct
       | None ->
           (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
            * and use its @providesModule instead *)
-          if Loc.check_suffix file FlowConfig.flow_ext
+          if Loc.check_suffix file Files_js.flow_ext
           then
-            let file_without_flow_ext = Loc.chop_suffix file FlowConfig.flow_ext in
+            let file_without_flow_ext = Loc.chop_suffix file Files_js.flow_ext in
             if Parsing_service_js.has_ast file_without_flow_ext
             then
               let _, info =

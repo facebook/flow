@@ -154,6 +154,23 @@ let root_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Project root directory containing the .flowconfig"
 )
 
+type flowconfig_params = {
+  ignores: string option;
+  includes: string option;
+}
+
+let collect_flowconfig_flags main ignores includes =
+  main { ignores; includes; }
+
+let flowconfig_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_flowconfig_flags
+  |> flag "--ignore" (optional string)
+    ~doc:"Specify one or more ignore patterns, comma separated"
+  |> flag "--include" (optional string)
+    ~doc:"Specify one or more include patterns, comma separated"
+)
+
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
   if not strip_root then loc
@@ -182,7 +199,6 @@ let collect_server_flags
     no_auto_start = no_auto_start;
     temp_dir = (default FlowConfig.default_temp_dir temp_dir);
   }
-
 
 let server_flags prev = CommandSpec.ArgSpec.(
   prev

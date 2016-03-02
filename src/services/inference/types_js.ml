@@ -836,7 +836,7 @@ let heap_check files = Module_js.(
   let nh = Hashtbl.create 0 in
   files |> List.iter (fun file ->
     let m_file = get_file (Modulename.Filename file) in
-    if not (Loc.check_suffix m_file FlowConfig.flow_ext)
+    if not (Loc.check_suffix m_file Files_js.flow_ext)
     then assert (m_file = file);
     let info = get_module_info file in
     Hashtbl.add ih file info;
@@ -1076,9 +1076,9 @@ let recheck genv env modified =
    * modified too. This is because sometimes we decide what foo.js.flow
    * provides based on the existence of foo.js *)
   let modified = FilenameSet.fold (fun file modified ->
-    if not (Loc.check_suffix file FlowConfig.flow_ext) &&
-      Parsing_service_js.has_ast (Loc.with_suffix file FlowConfig.flow_ext)
-    then FilenameSet.add (Loc.with_suffix file FlowConfig.flow_ext) modified
+    if not (Loc.check_suffix file Files_js.flow_ext) &&
+      Parsing_service_js.has_ast (Loc.with_suffix file Files_js.flow_ext)
+    then FilenameSet.add (Loc.with_suffix file Files_js.flow_ext) modified
     else modified
   ) modified modified in
 
