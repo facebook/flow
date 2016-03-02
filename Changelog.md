@@ -1,3 +1,7 @@
+###v0.22.1
+
+- Patch release to fix some JSON parsing issues that went out in v0.22.0
+
 ###v0.22.0
 
 Likely to cause new Flow errors:

@@ -11,7 +11,7 @@
 open Utils_js
 open Sys_utils
 
-let version = "0.22.0"
+let version = "0.22.1"
 
 let default_temp_dir =
   Path.to_string @@
