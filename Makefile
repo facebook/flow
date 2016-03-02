@@ -62,6 +62,7 @@ MODULES=\
   hack/third-party/core\
   hack/utils\
   hack/utils/collections\
+  hack/utils/hh_json\
   hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
 

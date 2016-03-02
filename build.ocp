@@ -63,7 +63,7 @@ end
 requires += [
   "hh-dfind" "hh-globals" "hh-stubs"
   "hh-heap" "hh-procs" "hh-parsing"
-  "hh-socket" "hh-search"
+  "hh-socket" "hh-search" "hh-utils-json"
 ]
 
 begin library "flow-parser"
