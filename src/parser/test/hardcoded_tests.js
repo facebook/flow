@@ -111,7 +111,7 @@ module.exports = {
       'function foo<T>() {}': {
         'body.0.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           }
         ]
@@ -119,11 +119,11 @@ module.exports = {
       'function foo<T,S>() {}': {
         'body.0.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           },
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'S',
           }
         ]
@@ -145,11 +145,11 @@ module.exports = {
       'a=function<T,S>() {}': {
         'body.0.expression.right.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           },
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'S',
           }
         ]
@@ -330,7 +330,7 @@ module.exports = {
               'rest': null,
               'typeParameters.params': [
                 {
-                  'type': 'Identifier',
+                  'type': 'TypeParameter',
                   'name': 'T',
                 },
               ]
@@ -425,7 +425,7 @@ module.exports = {
       'a = class Foo<T> { }': {
         'body.0.expression.right.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           }
         ]
@@ -433,7 +433,7 @@ module.exports = {
       'class Foo<T> {}': {
         'body.0.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           }
         ]
@@ -442,7 +442,7 @@ module.exports = {
         'body.0.body.body.0.value': {
           'typeParameters.params': [
             {
-              'type': 'Identifier',
+              'type': 'TypeParameter',
               'name': 'U',
             },
           ],
@@ -453,7 +453,7 @@ module.exports = {
         'body.0.body.body.0.value': {
           'typeParameters.params': [
             {
-              'type': 'Identifier',
+              'type': 'TypeParameter',
               'name': 'T',
             },
           ],
@@ -521,7 +521,7 @@ module.exports = {
       'class Foo<T> extends Bar<T> {}': {
         'body.0.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           },
         ],
@@ -535,7 +535,7 @@ module.exports = {
       'a = class Foo<T> extends Bar<T> {}': {
         'body.0.expression.right.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           },
         ],
@@ -546,16 +546,17 @@ module.exports = {
           },
         ],
       },
-      // type param variances are not carried in the translated AST yet
       'class Foo<+T1,-T2> {}': {
         'body.0.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T1',
+            'variance': 'plus',
           },
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T2',
+            'variance': 'minus',
           },
         ],
       },
@@ -784,14 +785,14 @@ module.exports = {
       'var a: {[type: any]: any}': {},
       'type foo<A,B,> = bar;': {
         'body.0.typeParameters.params': [
-          {'type': 'Identifier', 'name': 'A'},
-          {'type': 'Identifier', 'name': 'B'},
+          {'type': 'TypeParameter', 'name': 'A'},
+          {'type': 'TypeParameter', 'name': 'B'},
         ]
       },
       'class Foo<A,B,> extends Bar<C,D,> {}': {
         'body.0.typeParameters.params': [
-          { 'type': 'Identifier', 'name': 'A' },
-          { 'type': 'Identifier', 'name': 'B' },
+          { 'type': 'TypeParameter', 'name': 'A' },
+          { 'type': 'TypeParameter', 'name': 'B' },
         ],
         'body.0.superTypeParameters.params': [
           { 'type': 'GenericTypeAnnotation', 'id.name': 'C' },
@@ -800,14 +801,14 @@ module.exports = {
       },
       'interface Foo<A,B,> {}': {
         'body.0.typeParameters.params': [
-          {'type': 'Identifier', 'name': 'A'},
-          {'type': 'Identifier', 'name': 'B'},
+          {'type': 'TypeParameter', 'name': 'A'},
+          {'type': 'TypeParameter', 'name': 'B'},
         ]
       },
       'function f<A,B,>() {}': {
         'body.0.typeParameters.params': [
-          {'type': 'Identifier', 'name': 'A'},
-          {'type': 'Identifier', 'name': 'B'},
+          {'type': 'TypeParameter', 'name': 'A'},
+          {'type': 'TypeParameter', 'name': 'B'},
         ]
       },
     },
@@ -951,7 +952,7 @@ module.exports = {
             'id.name': 'Arr',
             'typeParameters.params': [
               {
-                'type': 'Identifier',
+                'type': 'TypeParameter',
                 'name': 'T',
               },
             ],
@@ -1018,11 +1019,11 @@ module.exports = {
           'id.name': 'A',
           'typeParameters.params': [
             {
-              'type': 'Identifier',
+              'type': 'TypeParameter',
               'name': 'T',
             },
             {
-              'type': 'Identifier',
+              'type': 'TypeParameter',
               'name': 'S',
             }
           ],
@@ -1064,7 +1065,7 @@ module.exports = {
           'id.name': 'A',
           'typeParameters.params': [
             {
-              'type': 'Identifier',
+              'type': 'TypeParameter',
               'name': 'T',
             },
           ],
@@ -1290,13 +1291,13 @@ module.exports = {
       'export default function<T>(arg:T):T {return arg;}': {
         'errors': [],
         'body.0.declaration.typeParameters.params': [
-          {'type': 'Identifier', 'name': 'T'}
+          {'type': 'TypeParameter', 'name': 'T'}
         ]
       },
       'export default class<T>{}': {
         'errors': [],
         'body.0.declaration.typeParameters.params': [
-          {'type': 'Identifier', 'name': 'T'}
+          {'type': 'TypeParameter', 'name': 'T'}
         ]
       }
     },
@@ -2534,7 +2535,7 @@ module.exports = {
       'function foo/*:: <T> */(x /*: T */)/*: T */ { return x; }': {
         'body.0.typeParameters.params': [
           {
-            'type': 'Identifier',
+            'type': 'TypeParameter',
             'name': 'T',
           }
         ]

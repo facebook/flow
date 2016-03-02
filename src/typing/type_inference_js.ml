@@ -978,32 +978,27 @@ and null_ loc =
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
-(* note: polarities arg is temporary -
-   full support will put them in the typeParameter AST *)
 and mk_type_param_declarations cx type_params_map typeParameters =
-  let add_type_param (typeparams, smap) (polarity, (loc, t)) =
-    let name = t.Ast.Identifier.name in
+  let open Ast.Type.ParameterDeclaration in
+  let add_type_param (typeparams, smap) = function
+  | loc, { TypeParam.name; bound; variance } ->
     let reason = mk_reason name loc in
-    let bound = match t.Ast.Identifier.typeAnnotation with
-      | None -> MixedT reason
-      | Some (_, u) -> mk_type cx (SMap.union smap type_params_map) reason (Some u)
+    let bound = match bound with
+    | None -> MixedT reason
+    | Some (_, u) ->
+        mk_type cx (SMap.union smap type_params_map) reason (Some u)
     in
-    (* leaving in this deliberately cumbersome backdoor until
-       we have proper annotations, in case of emergency :) *)
-    let polarity =
-      if polarity != Neutral then polarity
-      else if Utils.str_starts_with name "$Covariant$" then Positive
-      else if Utils.str_starts_with name "$Contravariant$" then Negative
-      else Neutral
-    in
+    let polarity = TypeParam.Variance.(match variance with
+    | Some Plus -> Positive
+    | Some Minus -> Negative
+    | None -> Neutral
+    ) in
     let typeparam = { reason; name; bound; polarity } in
     (typeparam :: typeparams,
      SMap.add name (BoundT typeparam) smap)
   in
-  let types_with_polarities =
-    extract_type_param_declarations typeParameters in
-  let typeparams, smap =
-    List.fold_left add_type_param ([], SMap.empty) types_with_polarities
+  let typeparams, smap = extract_type_param_declarations typeParameters
+    |> List.fold_left add_type_param ([], SMap.empty)
   in
   List.rev typeparams, SMap.union smap type_params_map
 
@@ -1020,22 +1015,15 @@ and identifier ?(lookup_mode=ForValue) cx name loc =
     )
   )
 
-and extract_type_param_declarations = Ast.Type.ParameterDeclaration.(function
-  | None -> []
-  | Some (_, typeParameters) ->
-      typeParameters.params |> List.map TypeParam.(fun tp ->
-        let polarity = match tp.variance with
-          | Some Variance.Plus -> Positive
-          | Some Variance.Minus -> Negative
-          | None -> Neutral in
-        polarity, tp.identifier
-      )
-)
+and extract_type_param_declarations =
+  let open Ast.Type.ParameterDeclaration in
+  let f (_, typeParameters) = typeParameters.params in
+  Option.value_map ~f ~default:[]
 
-and extract_type_param_instantiations = function
-  | None -> []
-  | Some (_, typeParameters) ->
-      typeParameters.Ast.Type.ParameterInstantiation.params
+and extract_type_param_instantiations =
+  let open Ast.Type.ParameterInstantiation in
+  let f (_, typeParameters) = typeParameters.params in
+  Option.value_map ~f ~default:[]
 
 (* Function parameters get passed around and manipulated all over the
    place. Instead of passing around the raw data in several pieces,

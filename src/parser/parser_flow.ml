@@ -671,8 +671,13 @@ end = struct
           | T_PLUS -> Eat.token env; Some Variance.Plus
           | T_MINUS -> Eat.token env; Some Variance.Minus
           | _ -> None in
-        let identifier = Parse.identifier_with_type env Error.StrictParamName in
-        let acc = { variance; identifier }::acc in
+        let loc, id = Parse.identifier_with_type env Error.StrictParamName in
+        let param = loc, {
+          name = id.Identifier.name;
+          bound = id.Identifier.typeAnnotation;
+          variance;
+        } in
+        let acc = param::acc in
         match Peek.token env with
         | T_EOF
         | T_GREATER_THAN -> List.rev acc

@@ -1039,11 +1039,16 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  (* TODO: backward compatible translation that ignores the structure of
-     TypeParam.t, keeping only the value of the `identifier` field (and dropping
-     the `variance` field altogether). *)
-  and type_param tp = Type.ParameterDeclaration.TypeParam.(
-    identifier tp.identifier
+  and type_param (loc, tp) = Type.ParameterDeclaration.TypeParam.(
+    let variance = Variance.(function
+      | Plus -> string "plus"
+      | Minus -> string "minus"
+    ) in
+    node "TypeParameter" loc [|
+      "name", string tp.name;
+      "bound", option type_annotation tp.bound;
+      "variance", option variance tp.variance;
+    |]
   )
 
   and type_parameter_instantiation (loc, params) = Type.ParameterInstantiation.(

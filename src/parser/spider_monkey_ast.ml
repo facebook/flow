@@ -169,9 +169,11 @@ and Type : sig
       module Variance : sig
         type t = Plus | Minus
       end
-      type t = {
+      type t = Loc.t * t'
+      and t' = {
+        name: string;
+        bound: Type.annotation option;
         variance: Variance.t option;
-        identifier: Identifier.t;
       }
     end
     type t = Loc.t * t'
