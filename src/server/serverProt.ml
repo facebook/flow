@@ -40,7 +40,7 @@ type command =
 | KILL
 | PING
 | PORT of string list
-| STATUS of Path.t
+| STATUS of Path.t * bool
 | SEARCH of string
 | SUGGEST of string list
 
@@ -77,6 +77,7 @@ type response =
 | ERRORS of Errors_js.error list
 | NO_ERRORS
 | PONG
+| RETRY
 | SERVER_DYING
 | SERVER_OUT_OF_DATE
 
@@ -85,6 +86,7 @@ let response_to_string = function
   | ERRORS _ -> "Some Errors"
   | NO_ERRORS -> "No Errors"
   | PONG -> "Pong"
+  | RETRY -> "Retry"
   | SERVER_DYING -> "Server Dying"
   | SERVER_OUT_OF_DATE -> "Server Out of Date"
 

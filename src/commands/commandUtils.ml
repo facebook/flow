@@ -130,6 +130,12 @@ let strip_root_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Print paths without the root"
 )
 
+let wait_for_recheck_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--wait-for-recheck" no_arg
+      ~doc:"Wait for the server to recheck some file(s)"
+)
+
 let verbose_flags =
   let collector main verbose indent =
     let opt_verbose =

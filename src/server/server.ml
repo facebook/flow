@@ -68,7 +68,8 @@ struct
     end;
     flush oc
 
-  let print_status genv client_root oc =
+  let print_status ~retry genv client_root oc =
+    if retry then ServerProt.response_to_channel oc ServerProt.RETRY else
     let server_root = Options.root genv.options in
     if server_root <> client_root
     then begin
@@ -404,7 +405,7 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let respond genv ~client ~msg =
+  let respond genv ~rechecked ~client ~msg =
     let oc = client.oc in
     let options = genv.ServerEnv.options in
     let { ServerProt.client_logging_context; command; } = msg in
@@ -435,14 +436,15 @@ struct
         port files oc
     | ServerProt.SEARCH query ->
         search query oc
-    | ServerProt.STATUS client_root ->
-        print_status genv client_root oc
+    | ServerProt.STATUS (client_root, wait_for_recheck) ->
+        print_status ~retry:(wait_for_recheck && not rechecked)
+          genv client_root oc
     | ServerProt.SUGGEST (files) ->
         suggest ~options files oc
 
-  let handle_client genv client =
+  let handle_client genv ~rechecked client =
     let msg = ServerProt.cmd_from_channel client.ic in
-    respond genv ~client ~msg;
+    respond genv ~rechecked ~client ~msg;
     client.close ()
 
   let get_watch_paths options = Path_matcher.stems (Options.includes options)
