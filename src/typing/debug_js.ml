@@ -1103,7 +1103,7 @@ let string_of_scope_refis cx refis = Scope.(
 )
 
 let string_of_scope cx scope = Scope.(
-  Utils.spf "{ kind: %s;\nentries:\n%s\nrefis:\n%s\n}"
+  spf "{ kind: %s;\nentries:\n%s\nrefis:\n%s\n}"
     (string_of_kind scope.kind)
     (string_of_scope_entries cx scope.entries)
     (string_of_scope_refis cx scope.refis)

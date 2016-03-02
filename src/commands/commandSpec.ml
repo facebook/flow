@@ -83,7 +83,7 @@ module ArgSpec = struct
     | Some [x] ->
         if List.mem x values
         then Some x
-        else raise (Failed_to_parse (Utils.spf
+        else raise (Failed_to_parse (Utils_js.spf
           "expected one of: %s"
           (String.concat ", " values)
         ))
@@ -104,7 +104,7 @@ module ArgSpec = struct
     parse = (function
     | None -> raise (Failed_to_parse "missing required arguments")
     | value -> match arg_type.parse value with
-      | None -> raise (Failed_to_parse (Utils.spf
+      | None -> raise (Failed_to_parse (Utils_js.spf
           "wrong type for required argument%s"
           (match value with Some [x] -> ": " ^ x | _ -> "")))
       | Some result -> result
@@ -126,7 +126,7 @@ module ArgSpec = struct
         Some (List.map (fun x ->
           match arg_type.parse (Some [x]) with
           | Some result -> result
-          | None -> raise (Failed_to_parse (Utils.spf
+          | None -> raise (Failed_to_parse (Utils_js.spf
               "wrong type for argument list item: %s" x))
         ) values)
     );
@@ -243,13 +243,13 @@ and parse_flag values spec arg args =
     | ArgSpec.Arg ->
       begin match args with
       | [] ->
-        raise (Failed_to_parse (Utils.spf
+        raise (Failed_to_parse (Utils_js.spf
           "option %s needs an argument."
           arg
         ))
       | value::args ->
         if is_arg value then
-          raise (Failed_to_parse (Utils.spf
+          raise (Failed_to_parse (Utils_js.spf
             "option %s needs an argument."
             arg
           ));
@@ -265,7 +265,7 @@ and parse_flag values spec arg args =
     | ArgSpec.Arg_Rest -> failwith "Not supported"
   with
   | Not_found ->
-    raise (Failed_to_parse (Utils.spf
+    raise (Failed_to_parse (Utils_js.spf
       "unknown option '%s'."
       arg
     ))
@@ -286,7 +286,7 @@ and parse_anon values spec arg args =
   | Some (_, _, ArgSpec.No_Arg) ->
     assert false
   | None ->
-    raise (Failed_to_parse (Utils.spf
+    raise (Failed_to_parse (Utils_js.spf
       "unexpected argument '%s'."
       arg
     ))
@@ -301,7 +301,7 @@ let usage_string spec =
   ) 0 in
   let flag_usage = flags
     |> List.map (fun (name, meta) ->
-          Utils.spf "  %-*s  %s" col_width name meta.ArgSpec.doc
+          Utils_js.spf "  %-*s  %s" col_width name meta.ArgSpec.doc
        )
     |> String.concat "\n"
   in

@@ -44,7 +44,7 @@ let kill (ic, oc) =
   ServerProt.response_from_channel ic
 
 let nice_kill (ic, oc) ~tmp_dir root =
-  Utils.prerr_endlinef "Attempting to nicely kill server for %s"
+  Utils_js.prerr_endlinef "Attempting to nicely kill server for %s"
     (Path.to_string root);
   let response = kill (ic, oc) in
   if is_expected response then begin
@@ -54,16 +54,16 @@ let nice_kill (ic, oc) ~tmp_dir root =
       if !i < 5 then ignore @@ Unix.sleep 1
       else raise FailedToKill
     done;
-    Utils.prerr_endlinef "Successfully killed server for %s"
+    Utils_js.prerr_endlinef "Successfully killed server for %s"
       (Path.to_string root)
   end else begin
-    Utils.prerr_endlinef "Unexpected response from the server: %s\n"
+    Utils_js.prerr_endlinef "Unexpected response from the server: %s\n"
       (ServerProt.response_to_string response);
     raise FailedToKill
   end
 
 let mean_kill ~tmp_dir root =
-  Utils.prerr_endlinef "Attempting to meanly kill server for %s"
+  Utils_js.prerr_endlinef "Attempting to meanly kill server for %s"
     (Path.to_string root);
   let pids =
     try PidLog.get_pids (FlowConfig.pids_file ~tmp_dir root)
@@ -83,7 +83,7 @@ let mean_kill ~tmp_dir root =
   ignore(Unix.sleep 1);
   if CommandConnectSimple.server_exists ~tmp_dir root
   then raise FailedToKill
-  else Utils.prerr_endlinef "Successfully killed server for %s\n%!"
+  else Utils_js.prerr_endlinef "Successfully killed server for %s\n%!"
     (Path.to_string root)
 
 let main temp_dir from root () =
@@ -95,7 +95,7 @@ let main temp_dir from root () =
   | None -> Path.to_string (FlowConfig.(config.options.Opts.temp_dir))
   in
   FlowEventLogger.set_from from;
-  Utils.prerr_endlinef
+  Utils_js.prerr_endlinef
     "Trying to connect to server for %s"
     (Path.to_string root);
   CommandConnectSimple.(
@@ -103,20 +103,20 @@ let main temp_dir from root () =
     | Result.Ok conn ->
         (try nice_kill conn ~tmp_dir root
         with FailedToKill ->
-            let msg = Utils.spf
+            let msg = Utils_js.spf
               "Failed to kill server nicely for %s\n%!"
             root_s in
             FlowExitStatus.(exit ~msg Kill_error))
     | Result.Error Server_missing ->
-        Utils.prerr_endlinef "Error: no server to kill for %s" root_s
+        Utils_js.prerr_endlinef "Error: no server to kill for %s" root_s
     | Result.Error Build_id_mismatch ->
-        Utils.prerr_endlinef "Successfully killed server for %s" root_s
+        Utils_js.prerr_endlinef "Successfully killed server for %s" root_s
     | Result.Error Server_initializing
     | Result.Error Server_rechecking
     | Result.Error Server_busy ->
         try mean_kill ~tmp_dir root
         with FailedToKill ->
-          let msg = Utils.spf
+          let msg = Utils_js.spf
             "Failed to kill server meanly for %s"
             root_s in
           FlowExitStatus.(exit ~msg Kill_error)

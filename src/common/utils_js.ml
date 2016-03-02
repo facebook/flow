@@ -8,19 +8,6 @@
  *
 *)
 
-(**
- * There seems to be a bug in OCaml 4.01 that causes `include Utils` in this
- * file to generate an interface for this file that is merged with the interface
- * for Utils -- but is somehow not type compatible with it.
- *
- * The only workaround I could find was to require that downstream users of both
- * utils.ml and utils_js.ml explicitly refer to both :(
- *
- * If at some point we are able to deprecate support for 4.01, we should
- * consider re-instating the following line and using Utils_js as a direct
- * extension of utils.ml.
- *)
-
 let spf = Printf.sprintf
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
@@ -54,6 +41,8 @@ module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
   let compare p1 p2 =
     String.compare (Path.to_string p1) (Path.to_string p2)
 end)
+
+let set_of_list = List.fold_left (fun acc x -> SSet.add x acc) SSet.empty
 
 (* ok-or-error type *)
 type ('a,'b) ok_or_err = OK of 'a | Err of 'b

@@ -67,7 +67,7 @@ let msg_of_tail tail_env =
 
 (* Starts up a flow server by literally calling flow start *)
 let start_flow_server ~tmp_dir root =
-  Utils.prerr_endlinef
+  Utils_js.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
   let from_arg = match FlowEventLogger.((get_context ()).from) with
@@ -168,7 +168,7 @@ let rec connect env retries start_time tail_env =
         Tail.close_env tail_env;
         connect env retries start_time tail_env
       end else begin
-        let msg = Utils.spf
+        let msg = Utils_js.spf
           "\nError: There is no Flow server running in '%s'."
           (Path.to_string env.root) in
         FlowExitStatus.(exit ~msg No_server_running)
@@ -188,7 +188,7 @@ let rec connect env retries start_time tail_env =
       then
         let start_time = Unix.time () in
         begin
-          Utils.prerr_endlinef "%s\nGoing to launch a new one.\n%!" msg;
+          Utils_js.prerr_endlinef "%s\nGoing to launch a new one.\n%!" msg;
           (* Don't decrement retries -- the server is definitely not running,
            * so the next time round will hit Server_missing above, *but*
            * before that will actually start the server -- we need to make

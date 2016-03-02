@@ -105,7 +105,7 @@ let to_string = function
   | Server_dying -> "Server_dying"
   | Server_start_failed status ->
       let reason, code = unpack_process_status status in
-      Utils.spf "Server_start_failed (%s, %d)" reason code
+      Utils_js.spf "Server_start_failed (%s, %d)" reason code
   | Type_error -> "Type_error"
   | Build_id_mismatch -> "Build_id_mismatch"
   | Lock_stolen -> "Lock_stolen"

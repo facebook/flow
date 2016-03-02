@@ -188,7 +188,7 @@ let init options =
       ) in
       List.flatten exp_list
   in
-  (libs, Utils.set_of_list libs)
+  (libs, Utils_js.set_of_list libs)
 
 
 let lib_module = ""

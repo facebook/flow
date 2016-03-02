@@ -8,8 +8,10 @@
  *
  *)
 
+open Utils_js
+
 let print_version () =
-  Utils.print_endlinef
+  print_endlinef
     "Flow, a static type checker for JavaScript, version %s"
     FlowConfig.version
 
@@ -231,7 +233,7 @@ let guess_root dir_or_file =
   | Some dir_or_file -> dir_or_file
   | None -> "." in
   if not (Sys.file_exists dir_or_file) then (
-    let msg = Utils.spf
+    let msg = spf
       "Could not find file or directory %s; canceling \
       search for .flowconfig.\nSee \"flow init --help\" for more info"
       dir_or_file in
@@ -245,7 +247,7 @@ let guess_root dir_or_file =
         FlowEventLogger.set_root (Some (Path.to_string root));
         root
     | None ->
-        let msg = Utils.spf
+        let msg = spf
           "Could not find a .flowconfig in %s or any \
           of its parent directories.\nSee \"flow init --help\" for more info\n%!"
           dir in
@@ -291,7 +293,7 @@ let range_string_of_loc loc = Loc.(
   in
   let l0, c0 = loc.start.line, loc.start.column + 1 in
   let l1, c1 = loc._end.line, loc._end.column in
-  Utils.spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
+  spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
 )
 
 let exe_name = Filename.basename Sys.executable_name

@@ -59,7 +59,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       (fun acc (cmd, _) -> max acc (String.length cmd)) 0 command_info in
     let cmd_usage = command_info
       |> List.map (fun (cmd, doc) ->
-            Utils.spf "  %-*s  %s" col_width cmd doc
+            Utils_js.spf "  %-*s  %s" col_width cmd doc
          )
       |> String.concat "\n"
     in
@@ -134,7 +134,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with a pong?" in
       FlowExitStatus.(exit ~msg Unknown_error)
     | ServerProt.SERVER_DYING ->
-      let msg = Utils.spf
+      let msg = Utils_js.spf
         "Server has been killed for %s"
         (Path.to_string args.root) in
       FlowExitStatus.(exit ~msg Server_dying)

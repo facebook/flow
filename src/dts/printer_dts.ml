@@ -497,7 +497,7 @@ and module_used_indexer acc = Type.Object.(function
 let get_modules_to_import scope prefix stmts =
   (* set of possible module names M that appear as M.x or M.N in body *)
   let set_possible_modules =
-    SSet.union (get_modules_used stmts) (Utils.set_of_list prefix) in
+    SSet.union (get_modules_used stmts) (set_of_list prefix) in
   (* find_module matches name of a module with all the modules in
      scope by stripping of the prefix *)
   let rec find_module name = function
@@ -688,7 +688,7 @@ and print_modules prefix imports scope fmt xs =
 
 and print_dfs_module prefix imports scope fmt x =
     let name, names = collect_names x in
-    let set_names = Utils.set_of_list names in
+    let set_names = set_of_list names in
     let imports =
       List.filter (fun (x, _) -> not (SSet.mem x set_names)) imports in
     let name_names = List.map (fun x -> x, name) names in

@@ -118,14 +118,14 @@ end = struct
     then raise (SpeculativeError error)
     else (
       if Context.is_verbose cx
-      then Utils.prerr_endlinef "\nadd_output cx.file %S loc %s"
+      then prerr_endlinef "\nadd_output cx.file %S loc %s"
         (string_of_filename (Context.file cx))
         (string_of_loc (Errors.loc_of_error error));
 
       (* catch no-loc errors early, before they get into error map *)
       Errors.(
         if Loc.source (loc_of_error error) = None
-        then assert_false (Utils.spf "add_output: no source for error: %s"
+        then assert_false (spf "add_output: no source for error: %s"
           (Hh_json.json_to_multiline (json_of_errors [error])))
       );
 

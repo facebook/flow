@@ -86,7 +86,7 @@ end = struct
         print_endline (CommandSpec.string_of_usage command);
         FlowExitStatus.(exit Ok)
     | CommandSpec.Failed_to_parse msg ->
-        let msg = Utils.spf
+        let msg = Utils_js.spf
           "%s: %s\n%s"
           (Filename.basename Sys.executable_name)
           msg

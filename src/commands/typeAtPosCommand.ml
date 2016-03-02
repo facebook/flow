@@ -85,7 +85,7 @@ let handle_response (loc, t, raw_t, reasons) json strip =
   ) else (
     let range =
       if loc = Loc.none then ""
-      else Utils.spf "\n%s" (range_string_of_loc loc)
+      else Utils_js.spf "\n%s" (range_string_of_loc loc)
     in
     let pty =
       if reasons = [] then ""
@@ -111,7 +111,7 @@ let handle_error (loc, err) json strip =
     output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
     let loc = Reason_js.string_of_loc loc in
-    output_string stderr (Utils.spf "%s:\n%s\n" loc err);
+    output_string stderr (Utils_js.spf "%s:\n%s\n" loc err);
   );
   flush stderr
 

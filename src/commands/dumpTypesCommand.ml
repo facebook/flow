@@ -66,7 +66,7 @@ let handle_response types json strip =
     let out = types
       |> List.map (fun (loc, _, str, _, _) ->
         let loc = strip loc in
-        (Utils.spf "%s: %s" (Reason_js.string_of_loc loc) str)
+        (Utils_js.spf "%s: %s" (Reason_js.string_of_loc loc) str)
       )
       |> String.concat "\n"
     in
@@ -85,7 +85,7 @@ let handle_error (loc, err) json strip =
     handle_response [] true strip
   ) else (
     let loc = Reason_js.string_of_loc loc in
-    output_string stderr (Utils.spf "%s:\n%s\n" loc err);
+    output_string stderr (Utils_js.spf "%s:\n%s\n" loc err);
   );
   flush stderr
 

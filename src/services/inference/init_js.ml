@@ -99,7 +99,7 @@ let load_lib_files files ~max_trace_depth ~verbose ~strip_root
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
-        let exclude_syms = SSet.union exclude_syms (Utils.set_of_list syms) in
+        let exclude_syms = SSet.union exclude_syms (set_of_list syms) in
         let result = (lib_file, true) :: result in
         exclude_syms, result
 

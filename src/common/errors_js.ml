@@ -696,11 +696,11 @@ let string_of_loc_deprecated loc = Loc.(
       let start = loc.start.column + 1 in
       let end_ = loc._end.column in
       if line <= 0 then
-        Utils.spf "File \"%s\", line 0" file
+        Utils_js.spf "File \"%s\", line 0" file
       else if line = loc._end.line && start - end_ = 1 then
-        Utils.spf "File \"%s\", line %d, character %d" file line start
+        Utils_js.spf "File \"%s\", line %d, character %d" file line start
       else
-        Utils.spf "File \"%s\", line %d, characters %d-%d" file line start end_
+        Utils_js.spf "File \"%s\", line %d, characters %d-%d" file line start end_
 )
 
 let print_error_deprecated =
@@ -728,10 +728,6 @@ let print_error_deprecated =
     let sl = List.map to_string el in
     let sl = ListUtils.uniq (List.sort String.compare sl) in
     List.iter begin fun s ->
-      if !Utils.debug then begin
-        output_string stdout s;
-        flush stdout;
-      end;
       output_string oc s;
       output_string oc "\n";
     end sl;

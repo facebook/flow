@@ -163,7 +163,11 @@ end = struct
    * rebase, and we don't log the recheck_end event until the update list
    * is no longer getting populated. *)
   let rec recheck_loop i rechecked_count genv env =
-    let raw_updates = DfindLib.get_changes (Utils.unsafe_opt genv.dfind) in
+    let dfind = match genv.dfind with
+    | Some dfind -> dfind
+    | None -> failwith "recheck_loop called without dfind set"
+    in
+    let raw_updates = DfindLib.get_changes dfind in
     if SSet.is_empty raw_updates then i, rechecked_count, env else begin
       let updates = Program.process_updates genv env raw_updates in
       let env, rechecked = recheck genv env updates in
@@ -246,7 +250,11 @@ end = struct
       * no server on the other end is an immediate error. *)
       let socket = Socket.init_unix_socket (FlowConfig.socket_file ~tmp_dir root) in
       let env = MainInit.go options program_init waiting_channel in
-      DfindLib.wait_until_ready (Utils.unsafe_opt genv.dfind);
+      let dfind = match genv.dfind with
+      | Some dfind -> dfind
+      | None -> failwith "dfind not set up in server mode"
+      in
+      DfindLib.wait_until_ready dfind;
       serve genv env socket
 
   (* The server can communicate with the process that forked it over a pipe.

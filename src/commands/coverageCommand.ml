@@ -13,6 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
+open Utils_js
 
 let spec = {
   CommandSpec.
@@ -51,7 +52,7 @@ let handle_error ~json (loc, err) strip =
     output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
     let loc = Reason_js.string_of_loc loc in
-    output_string stderr (Utils.spf "%s:\n%s\n" loc err);
+    output_string stderr (spf "%s:\n%s\n" loc err);
   );
   flush stderr
 
@@ -69,7 +70,7 @@ let colorize content from_offset to_offset color accum =
   else accum, from_offset
 
 let debug_range (loc, ctor, str, _reasons) = Loc.(
-  Utils.prerr_endlinef "%d:%d,%d:%d: %s (%s)"
+  prerr_endlinef "%d:%d,%d:%d: %s (%s)"
     loc.start.line loc.start.column
     loc._end.line loc._end.column
     str
@@ -176,7 +177,7 @@ let handle_response ~json ~color ~debug types content =
     |> json_to_string
     |> print_endline
   else
-    Utils.print_endlinef
+    Utils_js.print_endlinef
       "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
 let main option_values root json color debug strip_root path filename () =
