@@ -12,7 +12,7 @@ open Core
 open Nast
 open Typing_defs
 
-module Env = Typing_env
+module DeclEnv = Typing_decl_env
 module Inst = Typing_instantiate
 module Reason = Typing_reason
 module TUtils = Typing_utils
@@ -33,17 +33,18 @@ let make_substitution pos class_name class_type class_parameters =
 
 (* Accumulate requirements so that we can successfully check the bodies
  * of trait methods / check that classes satisfy these requirements *)
-let flatten_parent_class_reqs class_nast
-    (env, req_ancestors, req_ancestors_extends) parent_hint =
+let flatten_parent_class_reqs env class_nast
+    (req_ancestors, req_ancestors_extends) parent_hint =
   let parent_pos, parent_name, parent_params =
     TUtils.unwrap_class_hint parent_hint in
-  let env, parent_params = List.map_env env parent_params Typing_hint.hint in
-  let parent_type = Env.get_class_dep env parent_name in
+  let parent_params =
+    List.map parent_params (Typing_hint.hint env) in
+  let parent_type = DeclEnv.get_class_dep env parent_name in
 
   match parent_type with
   | None ->
     (* The class lives in PHP *)
-    env, req_ancestors, req_ancestors_extends
+    req_ancestors, req_ancestors_extends
   | Some parent_type ->
     let subst =
       make_substitution parent_pos parent_name parent_type parent_params in
@@ -57,18 +58,18 @@ let flatten_parent_class_reqs class_nast
     | Ast.Cnormal | Ast.Cabstract ->
       (* not necessary to accumulate req_ancestors_extends for classes --
        * it's not used *)
-      env, req_ancestors, SSet.empty
+      req_ancestors, SSet.empty
     | Ast.Ctrait | Ast.Cinterface ->
       let req_ancestors_extends = SSet.union
         parent_type.tc_req_ancestors_extends req_ancestors_extends in
-      env, req_ancestors, req_ancestors_extends
+      req_ancestors, req_ancestors_extends
     | Ast.Cenum -> assert false
 
-let declared_class_req (env, requirements, req_extends) hint =
-  let env, req_ty = Typing_hint.hint env hint in
+let declared_class_req env (requirements, req_extends) hint =
+  let req_ty = Typing_hint.hint env hint in
   let req_pos, req_name, req_params = TUtils.unwrap_class_hint hint in
-  let env, _ = List.map_env env req_params Typing_hint.hint in
-  let req_type = Env.get_class_dep env req_name in
+  let _ = List.map req_params (Typing_hint.hint env) in
+  let req_type = DeclEnv.get_class_dep env req_name in
   let req_extends = SSet.add req_name req_extends in
   (* since the req is declared on this class, we should
    * emphatically *not* substitute: a require extends Foo<T> is
@@ -76,7 +77,7 @@ let declared_class_req (env, requirements, req_extends) hint =
   let requirements = (req_pos, req_ty) :: requirements in
   match req_type with
   | None -> (* The class lives in PHP : error?? *)
-    env, requirements, req_extends
+    requirements, req_extends
   | Some parent_type -> (* The parent class lives in Hack *)
     let req_extends = SSet.union parent_type.tc_extends req_extends in
     (* the req may be of an interface that has reqs of its own; the
@@ -85,7 +86,7 @@ let declared_class_req (env, requirements, req_extends) hint =
      * traits *)
     let req_extends =
       SSet.union parent_type.tc_req_ancestors_extends req_extends in
-    env, requirements, req_extends
+    requirements, req_extends
 
 (* Cheap hack: we cannot do unification / subtyping in the decl phase because
  * the type arguments of the types that we are trying to unify may not have
@@ -122,22 +123,23 @@ let naive_dedup req_extends =
 
 let get_class_requirements env class_nast =
   let req_ancestors_extends = SSet.empty in
-  let acc = (env, [], req_ancestors_extends) in
+  let acc = ([], req_ancestors_extends) in
   let acc =
-    List.fold_left ~f:declared_class_req ~init:acc class_nast.c_req_extends in
+    List.fold_left ~f:(declared_class_req env)
+      ~init:acc class_nast.c_req_extends in
   let acc =
-    List.fold_left ~f:declared_class_req
+    List.fold_left ~f:(declared_class_req env)
       ~init:acc class_nast.c_req_implements in
   let acc =
-    List.fold_left ~f:(flatten_parent_class_reqs class_nast)
+    List.fold_left ~f:(flatten_parent_class_reqs env class_nast)
       ~init:acc class_nast.c_uses in
   let acc =
-    List.fold_left ~f:(flatten_parent_class_reqs class_nast)
+    List.fold_left ~f:(flatten_parent_class_reqs env class_nast)
       ~init:acc (if class_nast.c_kind = Ast.Cinterface then
           class_nast.c_extends else class_nast.c_implements) in
-  let env, req_extends, req_ancestors_extends = acc in
+  let req_extends, req_ancestors_extends = acc in
   let req_extends = naive_dedup req_extends in
-  env, req_extends, req_ancestors_extends
+  req_extends, req_ancestors_extends
 
 (*****************************************************************************)
 (* Called from the type-check phase *)

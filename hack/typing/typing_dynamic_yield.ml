@@ -22,15 +22,14 @@ open Typing_defs
 
 module Reason = Typing_reason
 module Type   = Typing_ops
-module Env    = Typing_env
 module SN     = Naming_special_names
 
 (* Classes that use the DynamicYield trait and implement {gen|get}Foo
  * also provide a deprecated {get|gen}Foo() via __call *)
-let rec decl env methods =
-  SMap.fold begin fun name ce (env, acc) ->
+let rec decl methods =
+  SMap.fold begin fun name ce acc ->
     (match (fst ce.ce_type) with
-      | Reason.Rdynamic_yield _ -> env, acc
+      | Reason.Rdynamic_yield _ -> acc
       | _ ->
         (match parse_gen_name name with
           | Some base ->
@@ -50,7 +49,7 @@ let rec decl env methods =
                 None
             ) in
             (match base_ty with
-              | None -> env, acc
+              | None -> acc
               | Some base_ty -> (
                 let base_p = Reason.to_pos (fst base_ty) in
                 let get_r = Reason.Rdynamic_yield (base_p, ft.ft_pos, get_name, name) in
@@ -64,12 +63,12 @@ let rec decl env methods =
                 } in
                 let ce' = {ce with ce_type = get_ty; ce_synthesized = true} in
                 let acc = add get_name ce' acc in
-                env, acc
+                acc
               ))
-          | None -> env, acc
+          | None -> acc
         )
     )
-  end methods (env, methods)
+  end methods methods
 
 and contains_dynamic_yield = SSet.mem SN.FB.cDynamicYield
 and contains_dynamic_yield_interface = SSet.mem SN.FB.cIUseDynamicYield
@@ -132,7 +131,7 @@ and add name ce acc =
     | _ ->
       acc
 
-let clean_dynamic_yield env methods =
-  env, SMap.filter begin
+let clean_dynamic_yield methods =
+  SMap.filter begin
     fun name _ -> name <> Naming_special_names.Members.__call
   end methods

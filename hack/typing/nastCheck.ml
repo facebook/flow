@@ -325,12 +325,12 @@ and check_arity env p tname arity size =
 
 and check_happly unchecked_tparams env h =
   let env = { env with Env.pos = (fst h) } in
-  let env, decl_ty = Typing_hint.hint env h in
+  let decl_ty = Typing_hint.hint env.Env.decl_env h in
   let env, unchecked_tparams =
     List.map_env env unchecked_tparams begin fun env (v, sid, cstr_opt) ->
       let env, cstr_opt = match cstr_opt with
         | Some (ck, cstr) ->
-            let env, cstr = Typing_hint.hint env cstr in
+            let cstr = Typing_hint.hint env.Env.decl_env cstr in
             env, Some (ck, cstr)
         | None -> env, None in
       env, (v, sid, cstr_opt)

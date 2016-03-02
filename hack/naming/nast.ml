@@ -205,6 +205,7 @@ and fun_ = {
 }
 
 and typedef = {
+  t_pos : Pos.t;
   t_tparams : tparam list;
   t_constraint : hint option;
   t_kind : hint;

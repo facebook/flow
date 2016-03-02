@@ -14,8 +14,8 @@
 open Core
 open Nast
 open Typing_defs
-open Utils
 
+module DeclEnv = Typing_decl_env
 module Env = Typing_env
 
 (*****************************************************************************)
@@ -118,9 +118,8 @@ module CheckInstantiability = struct
     | p, (Htuple _ | Harray _ | Hprim _ | Hoption _ | Hfun _ | Hshape _) ->
         Errors.invalid_classname p
 
-  let visitor =
-  object(this)
-    inherit [Env.env] hint_visitor as super
+  let visitor env = object(this)
+    inherit [unit] hint_visitor as super
 
     (* A type constant may appear inside an abstract final class, i.e.
      *
@@ -130,31 +129,31 @@ module CheckInstantiability = struct
      * Thus for type checking the Taccess type, we skip the instantiability
      * for the root of the Taccess.
      *)
-    method! on_access env h ids = match h with
+    method! on_access () h ids = match h with
       | _, Happly (_, hl) ->
-          List.fold_left ~f:this#on_hint ~init:env hl
-      | _ -> super#on_access env h ids
+        List.iter hl (this#on_hint ())
+      | _ -> super#on_access () h ids
 
-    method! on_apply env (usage_pos, n) hl =
-      let () = (match Typing_env.Classes.get n with
+    method! on_apply () (usage_pos, n) hl =
+      let () = (match Env.get_class env n with
         | Some {tc_kind = Ast.Cabstract; tc_final = true;
                 tc_name; tc_pos; _}
         | Some {tc_kind = Ast.Ctrait; tc_name; tc_pos; _} ->
           Errors.uninstantiable_class usage_pos tc_pos tc_name []
         | _ -> ()) in
       if n = SN.Classes.cClassname
-      then (Option.iter (List.hd hl) validate_classname; env)
-      else super#on_apply env (usage_pos, n) hl
+      then Option.iter (List.hd hl) validate_classname
+      else super#on_apply () (usage_pos, n) hl
 
-    method! on_abstr _env _ _ =
+    method! on_abstr () _ _ =
       (* there should be no need to descend into abstract params, as
        * the necessary param checks happen on the declaration of the
        * constraint *)
-      _env
+      ()
 
   end
 
-  let check env h : Env.env = visitor#on_hint env h
+  let check env h = (visitor env)#on_hint () h
 
 end
 
@@ -162,102 +161,100 @@ let check_instantiable (env:Env.env) (h:Nast.hint) =
   CheckInstantiability.check env h
 
 let check_params_instantiable (env:Env.env) (params:Nast.fun_param list)=
-  List.fold_left params ~f:begin fun env param ->
-    match (param.param_hint) with
-      | None -> env
-      | Some h -> check_instantiable env h
-  end ~init:env
+  List.iter params ~f:begin fun param ->
+    match param.param_hint with
+    | None -> ()
+    | Some h -> check_instantiable env h
+  end
 
 let check_tparams_instantiable (env:Env.env) (tparams:Nast.tparam list) =
-  List.fold_left tparams ~f:begin fun env (_variance, _sid, cstr_opt) ->
+  List.iter tparams ~f:begin fun (_variance, _sid, cstr_opt) ->
     match cstr_opt with
-      | None -> env
-      | Some (_ck, h) -> check_instantiable env h
-  end ~init:env
+    | None -> ()
+    | Some (_ck, h) -> check_instantiable env h
+  end
 
 (* Unpacking a hint for typing *)
 
-(* ensure_instantiable should only be set after the decl phase is done *)
-let rec hint ?(ensure_instantiable=false) env (p, h) =
-  let env = if not ensure_instantiable then env
-    else check_instantiable env (p, h) in
-  let env, h = hint_ p env h in
-  env, (Typing_reason.Rhint p, h)
+let rec hint env (p, h) =
+  let h = hint_ p env h in
+  Typing_reason.Rhint p, h
 
 and hint_ p env = function
-  | Hany ->
-      env, Tany
-  | Hmixed ->
-      env, Tmixed
-  | Hthis ->
-     env, Tthis
+  | Hany -> Tany
+  | Hmixed -> Tmixed
+  | Hthis -> Tthis
   | Harray (h1, h2) ->
-      if Env.is_strict env && h1 = None
-      then Errors.generic_array_strict p;
-      let env, h1 = opt hint env h1 in
-      let env, h2 = opt hint env h2 in
-      env, Tarray (h1, h2)
-  | Hprim p -> env, Tprim p
+    if env.DeclEnv.mode = FileInfo.Mstrict && h1 = None
+    then Errors.generic_array_strict p;
+    let h1 = Option.map h1 (hint env) in
+    let h2 = Option.map h2 (hint env) in
+    Tarray (h1, h2)
+  | Hprim p -> Tprim p
   | Habstr (x, cstr_opt) ->
-      let env, cstr_opt = match cstr_opt with
-        | Some (ck, h) ->
-            let env, h = hint env h in
-            env, Some (ck, h)
-        | None -> env, None in
-      env, Tgeneric (x, cstr_opt)
+    let cstr_opt = match cstr_opt with
+      | Some (ck, h) ->
+        let h = hint env h in
+        Some (ck, h)
+      | None -> None in
+    Tgeneric (x, cstr_opt)
   | Hoption (_, Hprim Tvoid) ->
-      Errors.option_return_only_typehint p `void;
-      env, Tany
+    Errors.option_return_only_typehint p `void;
+    Tany
   | Hoption (_, Hprim Tnoreturn) ->
-      Errors.option_return_only_typehint p `noreturn;
-      env, Tany
+    Errors.option_return_only_typehint p `noreturn;
+    Tany
   | Hoption (_, Hmixed) ->
-      Errors.option_mixed p;
-      env, Tany
+    Errors.option_mixed p;
+    Tany
   | Hoption h ->
-      let env, h = hint env h in
-      env, Toption h
+    let h = hint env h in
+    Toption h
   | Hfun (hl, b, h) ->
-      let env, paraml = List.map_env env hl hint in
-      let paraml = List.map paraml (fun x -> None, x) in
-      let env, ret = hint env h in
-      let arity_min = List.length paraml in
-      let arity = if b
-        then Fellipsis arity_min
-        else Fstandard (arity_min, arity_min)
-      in
-      env, Tfun {
-        ft_pos = p;
-        ft_deprecated = None;
-        ft_abstract = false;
-        ft_arity = arity;
-        ft_tparams = [];
-        ft_params = paraml;
-        ft_ret = ret;
-      }
+    let paraml = List.map hl (hint env) in
+    let paraml = List.map paraml (fun x -> None, x) in
+    let ret = hint env h in
+    let arity_min = List.length paraml in
+    let arity = if b
+      then Fellipsis arity_min
+      else Fstandard (arity_min, arity_min)
+    in
+    Tfun {
+      ft_pos = p;
+      ft_deprecated = None;
+      ft_abstract = false;
+      ft_arity = arity;
+      ft_tparams = [];
+      ft_params = paraml;
+      ft_ret = ret;
+    }
   | Happly ((p, "\\Tuple"), _)
   | Happly ((p, "\\tuple"), _) ->
-      Errors.tuple_syntax p;
-      env, Tany
+    Errors.tuple_syntax p;
+    Tany
   | Happly (((_p, c) as id), argl) ->
-      Typing_hooks.dispatch_class_id_hook id None;
-      Env.add_wclass env c;
-      let env, argl = List.map_env env argl hint in
-      env, Tapply (id, argl)
+    Typing_hooks.dispatch_class_id_hook id None;
+    DeclEnv.add_wclass env c;
+    let argl = List.map argl (hint env) in
+    Tapply (id, argl)
   | Haccess (root_ty, ids) ->
-      let env, root_ty = hint env root_ty in
-      env, Taccess (root_ty, ids)
+    let root_ty = hint env root_ty in
+    Taccess (root_ty, ids)
   | Htuple hl ->
-      let env, tyl = List.map_env env hl hint in
-      env, Ttuple tyl
+    let tyl = List.map hl (hint env) in
+    Ttuple tyl
   | Hshape fdm ->
-      let env, fdm = ShapeMap.map_env hint env fdm in
-      (* Fields are only partially known, because this shape type comes from
-       * type hint - shapes that contain listed fields can be passed here, but
-       * due to structural subtyping they can also contain other fields, that we
-       * don't know about. *)
-      env, Tshape (FieldsPartiallyKnown ShapeMap.empty, fdm)
+    let fdm = ShapeMap.map (hint env) fdm in
+    (* Fields are only partially known, because this shape type comes from
+     * type hint - shapes that contain listed fields can be passed here, but
+     * due to structural subtyping they can also contain other fields, that we
+     * don't know about. *)
+    Tshape (FieldsPartiallyKnown ShapeMap.empty, fdm)
 
-let hint_locl ?(ensure_instantiable=false) env h =
-  let env, h = hint ~ensure_instantiable env h in
+let instantiable_hint env h =
+  check_instantiable env h;
+  hint env.Env.decl_env h
+
+let hint_locl env h =
+  let h = hint env.Env.decl_env h in
   Typing_phase.localize_with_self env h

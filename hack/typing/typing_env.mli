@@ -29,6 +29,7 @@ type env = {
   subst : int IMap.t;
   lenv : local_env;
   genv : genv;
+  decl_env : Typing_decl_env.env;
   todo : tfun list;
   in_loop : bool;
   grow_super : bool;
@@ -54,18 +55,14 @@ val empty_fake_members : fake_members
 val empty_local : local_env
 val empty : TypecheckerOptions.t -> Relative_path.t ->
   droot: Typing_deps.Dep.variant option -> env
-val add_class : Classes.key -> Classes.t -> unit
-val add_typedef : Typedefs.key -> Typing_heap.Typedef.t -> unit
 val is_typedef : Typedefs.key -> bool
 val get_enum : Classes.key -> Classes.t option
 val is_enum : Classes.key -> bool
 val get_enum_constraint : Classes.key -> decl ty option
-val add_fun : Funs.key -> Funs.t -> unit
 val add_wclass : env -> string -> unit
 val fresh_tenv : env -> (env -> unit) -> unit
 val get_class : env -> Classes.key -> Classes.t option
 val get_typedef : env -> Typedefs.key -> Typedefs.t option
-val add_extends_dependency : env -> string -> unit
 val get_class_dep : env -> Classes.key -> Classes.t option
 val get_const : env -> class_type -> string -> class_elt option
 val get_typeconst : env -> class_type -> string -> typeconst_type option

@@ -8,7 +8,7 @@
  *
  *)
 
-val get_class_requirements : Typing_env.env -> Nast.class_ ->
-  Typing_env.env * Typing_defs.requirement list * SSet.t
+val get_class_requirements : Typing_decl_env.env -> Nast.class_ ->
+  Typing_defs.requirement list * SSet.t
 
 val check_class : Typing_env.env -> Typing_defs.class_type -> unit

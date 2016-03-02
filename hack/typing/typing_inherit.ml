@@ -20,12 +20,10 @@ open Core
 open Nast
 open Typing_defs
 
-module Env = Typing_env
+module DeclEnv = Typing_decl_env
 module Inst = Typing_instantiate
 module TUtils = Typing_utils
 module Phase = Typing_phase
-
-type env = Env.env
 
 (*****************************************************************************)
 (* This is what we are trying to produce for a given class. *)
@@ -255,7 +253,7 @@ let chown_privates owner = apply_fn_to_class_elts (chown_private owner)
 (* Builds the inherited type when the class lives in Hack *)
 (*****************************************************************************)
 
-let inherit_hack_class c env p class_name class_type argl =
+let inherit_hack_class env c p class_name class_type argl =
   let subst = make_substitution p class_name class_type argl in
   let instantiate = SMap.map (Inst.instantiate_ce subst) in
   let class_type =
@@ -274,7 +272,7 @@ let inherit_hack_class c env p class_name class_type argl =
   let sprops   = instantiate class_type.tc_sprops in
   let methods  = instantiate class_type.tc_methods in
   let smethods = instantiate class_type.tc_smethods in
-  let cstr     = Env.get_construct env class_type in
+  let cstr     = DeclEnv.get_construct env class_type in
   let cstr     = constructor subst cstr in
   let result = {
     ih_cstr     = cstr;
@@ -285,10 +283,10 @@ let inherit_hack_class c env p class_name class_type argl =
     ih_methods  = methods;
     ih_smethods = smethods;
   } in
-  env, result
+  result
 
 (* mostly copy paste of inherit_hack_class *)
-let inherit_hack_class_constants_only env p class_name class_type argl =
+let inherit_hack_class_constants_only p class_name class_type argl =
   let subst = make_substitution p class_name class_type argl in
   let instantiate = SMap.map (Inst.instantiate_ce subst) in
   let consts  = instantiate class_type.tc_consts in
@@ -298,11 +296,11 @@ let inherit_hack_class_constants_only env p class_name class_type argl =
     ih_consts   = consts;
     ih_typeconsts = typeconsts;
   } in
-  env, result
+  result
 
 (* This logic deals with importing XHP attributes from an XHP class
    via the "attribute :foo;" syntax. *)
-let inherit_hack_xhp_attrs_only env p class_name class_type argl =
+let inherit_hack_xhp_attrs_only p class_name class_type argl =
   let subst = make_substitution p class_name class_type argl in
   (* Filter out properties that are not XHP attributes *)
   let props =
@@ -311,46 +309,46 @@ let inherit_hack_xhp_attrs_only env p class_name class_type argl =
     end class_type.tc_props SMap.empty in
   let props = SMap.map (Inst.instantiate_ce subst) props in
   let result = { empty with ih_props = props; } in
-  env, result
+  result
 
 (*****************************************************************************)
 
-let from_class c env hint =
+let from_class env c hint =
   let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
-  let env, class_params = List.map_env env class_params Typing_hint.hint in
-  let class_type = Env.get_class_dep env class_name in
+  let class_params = List.map class_params (Typing_hint.hint env) in
+  let class_type = DeclEnv.get_class_dep env class_name in
   match class_type with
   | None ->
-      (* The class lives in PHP, we don't know anything about it *)
-      env, empty
+    (* The class lives in PHP, we don't know anything about it *)
+    empty
   | Some class_ ->
-      (* The class lives in Hack *)
-      inherit_hack_class c env pos class_name class_ class_params
+    (* The class lives in Hack *)
+    inherit_hack_class env c pos class_name class_ class_params
 
 (* mostly copy paste of from_class *)
 let from_class_constants_only env hint =
   let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
-  let env, class_params = List.map_env env class_params Typing_hint.hint in
-  let class_type = Env.get_class_dep env class_name in
+  let class_params = List.map class_params (Typing_hint.hint env) in
+  let class_type = DeclEnv.get_class_dep env class_name in
   match class_type with
   | None ->
-      (* The class lives in PHP, we don't know anything about it *)
-      env, empty
+    (* The class lives in PHP, we don't know anything about it *)
+    empty
   | Some class_ ->
-      (* The class lives in Hack *)
-    inherit_hack_class_constants_only env pos class_name class_ class_params
+    (* The class lives in Hack *)
+    inherit_hack_class_constants_only pos class_name class_ class_params
 
 let from_class_xhp_attrs_only env hint =
   let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
-  let env, class_params = List.map_env env class_params Typing_hint.hint in
-  let class_type = Env.get_class_dep env class_name in
+  let class_params = List.map class_params (Typing_hint.hint env) in
+  let class_type = DeclEnv.get_class_dep env class_name in
   match class_type with
   | None ->
-      (* The class lives in PHP, we don't know anything about it *)
-      env, empty
+    (* The class lives in PHP, we don't know anything about it *)
+    empty
   | Some class_ ->
-      (* The class lives in Hack *)
-      inherit_hack_xhp_attrs_only env pos class_name class_ class_params
+    (* The class lives in Hack *)
+    inherit_hack_xhp_attrs_only pos class_name class_ class_params
 
 let from_parent env c =
   let extends =
@@ -363,27 +361,27 @@ let from_parent env c =
       | Ast.Ctrait -> c.c_implements @ c.c_extends @ c.c_req_implements
       | _ -> c.c_extends
   in
-  let env, inherited_l = List.map_env env extends (from_class c) in
-  env, List.fold_right ~f:add_inherited inherited_l ~init:empty
+  let inherited_l = List.map extends (from_class env c) in
+  List.fold_right ~f:add_inherited inherited_l ~init:empty
 
-let from_requirements c (env, acc) reqs =
-  let env, inherited = from_class c env reqs in
+let from_requirements env c acc reqs =
+  let inherited = from_class env c reqs in
   let inherited = map_inherited
     (fun ce -> { ce with ce_synthesized = true })
     inherited in
-  env, add_inherited inherited acc
+  add_inherited inherited acc
 
-let from_trait c (env, acc) uses =
-  let env, inherited = from_class c env uses in
-  env, add_inherited inherited acc
+let from_trait env c acc uses =
+  let inherited = from_class env c uses in
+  add_inherited inherited acc
 
-let from_xhp_attr_use (env, acc) uses =
-  let env, inherited = from_class_xhp_attrs_only env uses in
-  env, add_inherited inherited acc
+let from_xhp_attr_use env acc uses =
+  let inherited = from_class_xhp_attrs_only env uses in
+  add_inherited inherited acc
 
-let from_interface_constants (env, acc) impls =
-  let env, inherited = from_class_constants_only env impls in
-  env, add_inherited inherited acc
+let from_interface_constants env acc impls =
+  let inherited = from_class_constants_only env impls in
+  add_inherited inherited acc
 
 (*****************************************************************************)
 (* The API to the outside *)
@@ -392,15 +390,17 @@ let from_interface_constants (env, acc) impls =
 let make env c =
   (* members inherited from parent class ... *)
   let acc = from_parent env c in
-  let acc = List.fold_left ~f:(from_requirements c) ~init:acc c.c_req_extends in
+  let acc = List.fold_left ~f:(from_requirements env c)
+    ~init:acc c.c_req_extends in
   (* ... are overridden with those inherited from used traits *)
-  let acc = List.fold_left ~f:(from_trait c) ~init:acc c.c_uses in
-  let acc = List.fold_left ~f:from_xhp_attr_use ~init:acc c.c_xhp_attr_uses in
+  let acc = List.fold_left ~f:(from_trait env c) ~init:acc c.c_uses in
+  let acc = List.fold_left ~f:(from_xhp_attr_use env)
+    ~init:acc c.c_xhp_attr_uses in
   (* todo: what about the same constant defined in different interfaces
    * we implement? We should forbid and say "constant already defined".
    * to julien: where is the logic that check for duplicated things?
    * todo: improve constant handling, see task #2487051
    *)
-  let acc =
-    List.fold_left ~f:from_interface_constants ~init:acc c.c_req_implements in
-  List.fold_left ~f:from_interface_constants ~init:acc c.c_implements
+  let acc = List.fold_left ~f:(from_interface_constants env)
+    ~init:acc c.c_req_implements in
+  List.fold_left ~f:(from_interface_constants env) ~init:acc c.c_implements
