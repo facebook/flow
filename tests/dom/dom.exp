@@ -24,5 +24,17 @@ Error:
 path2d.js:9:33,36: string
 This type is incompatible with
 [LIB] dom.js:584:85,90: union: number | undefined
+Member 1:
+[LIB] dom.js:584:85,90: number
+Error:
+path2d.js:9:33,36: string
+This type is incompatible with
+[LIB] dom.js:584:85,90: number
+Member 2:
+[LIB] dom.js:583:78,81: undefined
+Error:
+path2d.js:9:33,36: string
+This type is incompatible with
+[LIB] dom.js:583:78,81: undefined
 
 Found 5 errors

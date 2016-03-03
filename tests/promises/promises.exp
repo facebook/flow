@@ -36,84 +36,348 @@ Error:
 promise.js:11:11,11: number
 This type is incompatible with
 [LIB] core.js:432:25,38: union: type application of identifier `Promise` | type parameter `R` of constructor call
+Member 1:
+[LIB] core.js:432:25,34: type application of identifier `Promise`
+Error:
+promise.js:11:11,11: number
+This type is incompatible with
+[LIB] core.js:432:25,34: Promise
+Member 2:
+promise.js:10:1,12:2: type parameter `R` of constructor call
+Error:
+promise.js:16:19,21: number
+This type is incompatible with
+promise.js:16:10,15: string
 
 promise.js:20:1,26:4: call of method `then`
 Error:
 promise.js:20:42,42: number
 This type is incompatible with
 [LIB] core.js:432:25,38: union: type application of identifier `Promise` | type parameter `R` of constructor call
+Member 1:
+[LIB] core.js:432:25,34: type application of identifier `Promise`
+Error:
+promise.js:20:42,42: number
+This type is incompatible with
+[LIB] core.js:432:25,34: Promise
+Member 2:
+promise.js:20:1,44: type parameter `R` of constructor call
+Error:
+promise.js:25:21,23: number
+This type is incompatible with
+promise.js:25:12,17: string
 
 promise.js:30:11,32:4: constructor call
 Error:
 promise.js:30:11,32:4: Promise
 This type is incompatible with
 [LIB] core.js:432:25,38: union: type application of identifier `Promise` | type parameter `R` of constructor call
+Member 1:
+[LIB] core.js:432:25,34: type application of identifier `Promise`
+Error:
+promise.js:31:13,13: number
+This type is incompatible with
+[LIB] core.js:432:25,38: union: type application of identifier `Promise` | type parameter `R` of constructor call
+Member 1:
+[LIB] core.js:432:25,34: type application of identifier `Promise`
+Error:
+promise.js:31:13,13: number
+This type is incompatible with
+[LIB] core.js:432:25,34: Promise
+Member 2:
+promise.js:30:11,32:4: type parameter `R` of constructor call
+Error:
+promise.js:35:19,21: number
+This type is incompatible with
+promise.js:35:10,15: string
+Member 2:
+promise.js:29:1,33:2: type parameter `R` of constructor call
+Error:
+promise.js:34:19,21: Promise
+This type is incompatible with
+promise.js:34:10,15: number
 
 promise.js:41:13,43:6: constructor call
 Error:
 promise.js:41:13,43:6: Promise
 This type is incompatible with
 [LIB] core.js:432:25,38: union: type application of identifier `Promise` | type parameter `R` of constructor call
+Member 1:
+[LIB] core.js:432:25,34: type application of identifier `Promise`
+Error:
+promise.js:42:15,15: number
+This type is incompatible with
+[LIB] core.js:432:25,38: union: type application of identifier `Promise` | type parameter `R` of constructor call
+Member 1:
+[LIB] core.js:432:25,34: type application of identifier `Promise`
+Error:
+promise.js:42:15,15: number
+This type is incompatible with
+[LIB] core.js:432:25,34: Promise
+Member 2:
+promise.js:41:13,43:6: type parameter `R` of constructor call
+Error:
+promise.js:47:19,21: number
+This type is incompatible with
+promise.js:47:10,15: string
+Member 2:
+promise.js:40:11,44:4: type parameter `R` of constructor call
+Error:
+promise.js:46:19,21: Promise
+This type is incompatible with
+promise.js:46:10,15: number
 
 promise.js:51:1,64:2: call of method `then`
 Error:
 promise.js:53:13,14: number
 This type is incompatible with
 [LIB] core.js:432:25,38: union: type application of identifier `Promise` | type parameter `R` of constructor call
+Member 1:
+[LIB] core.js:432:25,34: type application of identifier `Promise`
+Error:
+promise.js:53:13,14: number
+This type is incompatible with
+[LIB] core.js:432:25,34: Promise
+Member 2:
+promise.js:51:1,57:2: type parameter `R` of constructor call
+Error:
+promise.js:63:19,26: number
+This type is incompatible with
+promise.js:63:10,15: string
 
 promise.js:115:1,118:2: call of method `then`
 Error:
 promise.js:115:17,17: number
 This type is incompatible with
 [LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:115:17,17: number
+This type is incompatible with
+[LIB] core.js:445:32,41: Promise
+Member 2:
+promise.js:115:1,18: type parameter `T` of call of method `resolve`
+Error:
+promise.js:117:19,21: number
+This type is incompatible with
+promise.js:117:10,15: string
 
 promise.js:121:17,34: call of method `resolve`
 Error:
 promise.js:121:17,34: Promise
 This type is incompatible with
 [LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:121:33,33: number
+This type is incompatible with
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:121:33,33: number
+This type is incompatible with
+[LIB] core.js:445:32,41: Promise
+Member 2:
+promise.js:121:17,34: type parameter `T` of call of method `resolve`
+Error:
+promise.js:123:19,21: number
+This type is incompatible with
+promise.js:123:10,15: string
+Member 2:
+promise.js:121:1,35: type parameter `T` of call of method `resolve`
+Error:
+promise.js:122:19,21: Promise
+This type is incompatible with
+promise.js:122:10,15: number
 
 promise.js:127:33,50: call of method `resolve`
 Error:
 promise.js:127:33,50: Promise
 This type is incompatible with
 [LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:127:49,49: number
+This type is incompatible with
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:127:49,49: number
+This type is incompatible with
+[LIB] core.js:445:32,41: Promise
+Member 2:
+promise.js:127:33,50: type parameter `T` of call of method `resolve`
+Error:
+promise.js:129:19,21: number
+This type is incompatible with
+promise.js:129:10,15: string
+Member 2:
+promise.js:127:17,51: type parameter `T` of call of method `resolve`
+Error:
+promise.js:128:19,21: Promise
+This type is incompatible with
+promise.js:128:10,15: number
 
 promise.js:157:1,162:4: call of method `then`
 Error:
 promise.js:158:32,37: string
 This type is incompatible with
 [LIB] core.js:437:33,46: union: type application of identifier `Promise` | type parameter `U` of call of method `then`
+Member 1:
+[LIB] core.js:437:33,42: type application of identifier `Promise`
+Error:
+promise.js:158:32,37: string
+This type is incompatible with
+[LIB] core.js:437:33,42: Promise
+Member 2:
+promise.js:157:1,158:41: type parameter `U` of call of method `then`
+Error:
+promise.js:161:21,23: string
+This type is incompatible with
+promise.js:161:12,17: number
 
 promise.js:166:32,54: call of method `resolve`
 Error:
 promise.js:166:32,54: Promise
 This type is incompatible with
 [LIB] core.js:437:33,46: union: type application of identifier `Promise` | type parameter `U` of call of method `then`
+Member 1:
+[LIB] core.js:437:33,42: type application of identifier `Promise`
+Error:
+promise.js:166:48,53: string
+This type is incompatible with
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:166:48,53: string
+This type is incompatible with
+[LIB] core.js:445:32,41: Promise
+Member 2:
+promise.js:166:32,54: type parameter `T` of call of method `resolve`
+Error:
+promise.js:169:21,23: string
+This type is incompatible with
+promise.js:169:12,17: number
+Member 2:
+promise.js:165:1,166:58: type parameter `U` of call of method `then`
+Error:
+promise.js:168:21,23: Promise
+This type is incompatible with
+promise.js:168:12,17: string
 
 promise.js:174:48,70: call of method `resolve`
 Error:
 promise.js:174:48,70: Promise
 This type is incompatible with
 [LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:174:64,69: string
+This type is incompatible with
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:174:64,69: string
+This type is incompatible with
+[LIB] core.js:445:32,41: Promise
+Member 2:
+promise.js:174:48,70: type parameter `T` of call of method `resolve`
+Error:
+promise.js:177:21,23: string
+This type is incompatible with
+promise.js:177:12,17: number
+Member 2:
+promise.js:174:32,71: type parameter `T` of call of method `resolve`
+Error:
+promise.js:176:21,23: Promise
+This type is incompatible with
+promise.js:176:12,17: string
 
 promise.js:197:1,202:4: call of method `then`
 Error:
 promise.js:198:33,38: string
 This type is incompatible with
 [LIB] core.js:442:34,48: union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`
+Member 1:
+[LIB] core.js:442:35,44: ?type application of identifier `Promise`
+Error:
+promise.js:198:33,38: string
+This type is incompatible with
+[LIB] core.js:442:35,44: Promise
+Member 2:
+promise.js:197:1,198:42: type parameter `U` of call of method `catch`
+Error:
+promise.js:201:21,23: string
+This type is incompatible with
+promise.js:201:12,17: number
 
 promise.js:206:33,55: call of method `resolve`
 Error:
 promise.js:206:33,55: Promise
 This type is incompatible with
 [LIB] core.js:442:34,48: union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`
+Member 1:
+[LIB] core.js:442:35,44: ?type application of identifier `Promise`
+Error:
+promise.js:206:49,54: string
+This type is incompatible with
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:206:49,54: string
+This type is incompatible with
+[LIB] core.js:445:32,41: Promise
+Member 2:
+promise.js:206:33,55: type parameter `T` of call of method `resolve`
+Error:
+promise.js:209:21,23: string
+This type is incompatible with
+promise.js:209:12,17: number
+Member 2:
+promise.js:205:1,206:59: type parameter `U` of call of method `catch`
+Error:
+promise.js:208:21,23: Promise
+This type is incompatible with
+promise.js:208:12,17: string
 
 promise.js:214:49,71: call of method `resolve`
 Error:
 promise.js:214:49,71: Promise
 This type is incompatible with
 [LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:214:65,70: string
+This type is incompatible with
+[LIB] core.js:445:32,45: union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`
+Member 1:
+[LIB] core.js:445:32,41: type application of identifier `Promise`
+Error:
+promise.js:214:65,70: string
+This type is incompatible with
+[LIB] core.js:445:32,41: Promise
+Member 2:
+promise.js:214:49,71: type parameter `T` of call of method `resolve`
+Error:
+promise.js:217:21,23: string
+This type is incompatible with
+promise.js:217:12,17: number
+Member 2:
+promise.js:214:33,72: type parameter `T` of call of method `resolve`
+Error:
+promise.js:216:21,23: Promise
+This type is incompatible with
+promise.js:216:12,17: string
 
 promise.js:237:10,10: string
 This type is incompatible with

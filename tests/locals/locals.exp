@@ -46,10 +46,34 @@ locals.js:12:16,19: boolean
 locals.js:12:16,19: boolean
 This type is incompatible with
 locals.js:10:16,30: union: number | string
+Member 1:
+locals.js:10:16,21: number
+Error:
+locals.js:12:16,19: boolean
+This type is incompatible with
+locals.js:10:16,21: number
+Member 2:
+locals.js:10:25,30: string
+Error:
+locals.js:12:16,19: boolean
+This type is incompatible with
+locals.js:10:25,30: string
 
 locals.js:12:23,26: boolean
 This type is incompatible with
 locals.js:10:16,30: union: number | string
+Member 1:
+locals.js:10:16,21: number
+Error:
+locals.js:12:23,26: boolean
+This type is incompatible with
+locals.js:10:16,21: number
+Member 2:
+locals.js:10:25,30: string
+Error:
+locals.js:12:23,26: boolean
+This type is incompatible with
+locals.js:10:25,30: string
 
 locals.js:14:5,10: function call
 Error:

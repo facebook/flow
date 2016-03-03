@@ -14,6 +14,42 @@ namespace.js:11:7,12: number
 namespace.js:15:14,19: array literal
 This type is incompatible with
 namespace.js:15:8,10: union: number | array type
+Member 1:
+namespace.js:13:12,17: number
+Error:
+namespace.js:15:14,19: array literal
+This type is incompatible with
+namespace.js:13:12,17: number
+Member 2:
+namespace.js:13:21,30: array type
+Error:
+namespace.js:15:15,18: array literal
+This type is incompatible with
+namespace.js:13:27,29: union: number | array type
+Member 1:
+namespace.js:13:12,17: number
+Error:
+namespace.js:15:15,18: array literal
+This type is incompatible with
+namespace.js:13:12,17: number
+Member 2:
+namespace.js:13:21,30: array type
+Error:
+namespace.js:15:16,17: string
+This type is incompatible with
+namespace.js:13:27,29: union: number | array type
+Member 1:
+namespace.js:13:12,17: number
+Error:
+namespace.js:15:16,17: string
+This type is incompatible with
+namespace.js:13:12,17: number
+Member 2:
+namespace.js:13:21,30: array type
+Error:
+namespace.js:15:16,17: string
+This type is incompatible with
+namespace.js:13:21,30: array type
 
 namespace.js:17:26,27: string
 This type is incompatible with

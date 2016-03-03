@@ -80,7 +80,9 @@ module Impl : sig
 
   (* for when a t has been extracted from a use_t *)
   val flow_err_use_t:
-    Context.t -> Trace.t -> string -> Type.t -> Type.t -> unit
+    Context.t -> Trace.t -> string -> ?extra:Errors.info_tree list ->
+    Type.t -> Type.t ->
+    unit
 
   (* add typecheck (flow) error from message and reason pair.
      reasons are not reordered *)
@@ -205,8 +207,8 @@ end = struct
     flow_err_reasons cx trace msg ?extra (r1, r2)
 
   (* for when a t has been extracted from a use_t *)
-  let flow_err_use_t cx trace msg lower upper =
-    flow_err cx trace msg lower (UseT upper)
+  let flow_err_use_t cx trace msg ?extra lower upper =
+    flow_err cx trace msg ?extra lower (UseT upper)
 
 end
 

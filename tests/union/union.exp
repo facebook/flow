@@ -4,14 +4,50 @@ Error:
 issue-198.js:5:16,28: string
 This type is incompatible with
 [LIB] core.js:437:33,46: union: type application of identifier `Promise` | type parameter `U` of call of method `then`
+Member 1:
+[LIB] core.js:437:33,42: type application of identifier `Promise`
+Error:
+issue-198.js:5:16,28: string
+This type is incompatible with
+[LIB] core.js:437:33,42: Promise
+Member 2:
+issue-198.js:1:9,6:6: type parameter `U` of call of method `then`
+Error:
+issue-198.js:9:20,26: property `toFixed`
+Property not found in
+issue-198.js:9:16,18: String
 
 issue-324.js:8:10,15: Bar
 This type is incompatible with
 issue-324.js:5:13,24: union: Foo | string
+Member 1:
+issue-324.js:5:13,15: Foo
+Error:
+issue-324.js:8:10,15: Bar
+This type is incompatible with
+issue-324.js:5:13,15: Foo
+Member 2:
+issue-324.js:5:19,24: string
+Error:
+issue-324.js:8:10,15: Bar
+This type is incompatible with
+issue-324.js:5:19,24: string
 
 union.js:2:5,5: number
 This type is incompatible with
 union.js:1:17,33: union: Document | string
+Member 1:
+union.js:1:17,24: Document
+Error:
+union.js:2:5,5: number
+This type is incompatible with
+union.js:1:17,24: Document
+Member 2:
+union.js:1:28,33: string
+Error:
+union.js:2:5,5: number
+This type is incompatible with
+union.js:1:28,33: string
 
 union.js:8:13,19: D
 This type is incompatible with

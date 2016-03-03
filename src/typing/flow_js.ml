@@ -1699,10 +1699,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         it is always sound to pick the first type in ts that matches the type
         l. *)
 
+    (** pairs emitted by try_union:
+        UnionT has been partitioned into head_u (head member)
+        and tail_u (union of tail members) *)
     | SpeculativeMatchT(_, l, tail_u), head_u ->
       begin match speculative_match cx trace l head_u with
       | None -> ()
-      | Some _ -> rec_flow cx trace (l, tail_u)
+      | Some err ->
+        (* rec_flow cx trace (l, tail_u) *)
+        let tail_u = match tail_u with
+          | UseT UnionT (r, rep) ->
+            (* record this error *)
+            UseT (UnionT (r, UnionRep.record_error err rep))
+          | _ -> tail_u
+        in rec_flow cx trace (l, tail_u)
       end
 
     | _, UseT UnionT (r, rep) -> (
@@ -1715,7 +1725,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         rec_flow cx trace (l, UseT (EmptyT r))
       | None ->
-        try_union cx trace l r (UnionRep.members rep)
+        try_union cx trace l r rep
     )
 
     (* maybe and optional types are just special union types *)
@@ -4222,10 +4232,9 @@ and speculative_match cx trace l u =
     raise exn
 
 (* try each branch of a union in turn *)
-and try_union cx trace l reason = function
-  | [] -> (* fail: bottom is the unit of unions *)
-    rec_flow_t cx trace (l, EmptyT reason)
-  | t :: ts ->
+and try_union cx trace l reason rep =
+  match UnionRep.members rep with
+  | t :: _ ->
     (* embed reasons of consituent types into outer reason *)
     let rdesc = desc_of_reason reason in
     let tdesc = desc_of_reason (reason_of_t t) in
@@ -4241,11 +4250,37 @@ and try_union cx trace l reason = function
       then spf "%s(s)" rdesc
       else spf "%s | %s" rdesc tdesc
       in
+    (* try head member, package the rest *)
     let r = replace_reason udesc reason in
-    (* try first type, falling back to union of the rest *)
-    rec_flow_t cx trace
-      (SpeculativeMatchT(r, l, UseT (UnionT (r, UnionRep.make ts))),
-       t)
+    let next_attempt = UnionT (r, UnionRep.tail rep) in
+    rec_flow_t cx trace (SpeculativeMatchT(r, l, UseT (next_attempt)), t)
+  | [] ->
+    (* fail *)
+    match UnionRep.(history rep, errors rep) with
+    | [], [] ->
+      (* shouldn't happen, but... if no history, give blanket error *)
+      rec_flow_t cx trace (l, UnionT (reason, UnionRep.empty))
+    | ts, errs ->
+      (* otherwise, build extra info from history *)
+      let extra = List.(rev (combine ts errs)) |> List.mapi (
+        fun i (t, err) ->
+          let header_infos = [
+            Loc.none, [spf "Member %d:" (i + 1)];
+            info_of_reason (reason_of_t t);
+            Loc.none, ["Error:"];
+          ] in
+          let error_infos, error_extra = Errors.(
+            infos_of_error err, extra_of_error err
+          ) in
+          let info_list = header_infos @ error_infos in
+          let info_tree = match error_extra with
+            | [] -> Errors.InfoLeaf (info_list)
+            | _ -> Errors.InfoNode (info_list, error_extra)
+          in
+          info_tree
+      ) in
+      let u = UseT (UnionT (reason, UnionRep.empty)) in
+      flow_err cx trace (err_msg l u) ~extra l u
 
 (** try the first member of an intersection, packaging the remainder
     for subsequent attempts. Empty intersection indicates failure *)

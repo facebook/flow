@@ -28,18 +28,54 @@ Error:
 array_lib.js:21:33,35: string
 This type is incompatible with
 [LIB] core.js:163:21,32: union: array type | type parameter `S` of call of method `concat`
+Member 1:
+[LIB] core.js:163:21,28: array type
+Error:
+array_lib.js:21:33,35: string
+This type is incompatible with
+[LIB] core.js:163:21,28: array type
+Member 2:
+array_lib.js:21:24,46: type parameter `S` of call of method `concat`
+Error:
+array_lib.js:21:33,35: string
+This type is incompatible with
+array_lib.js:21:14,19: number
 
 array_lib.js:21:24,46: call of method `concat`
 Error:
 array_lib.js:21:38,40: string
 This type is incompatible with
 [LIB] core.js:163:21,32: union: array type | type parameter `S` of call of method `concat`
+Member 1:
+[LIB] core.js:163:21,28: array type
+Error:
+array_lib.js:21:38,40: string
+This type is incompatible with
+[LIB] core.js:163:21,28: array type
+Member 2:
+array_lib.js:21:24,46: type parameter `S` of call of method `concat`
+Error:
+array_lib.js:21:38,40: string
+This type is incompatible with
+array_lib.js:21:14,19: number
 
 array_lib.js:21:24,46: call of method `concat`
 Error:
 array_lib.js:21:43,45: string
 This type is incompatible with
 [LIB] core.js:163:21,32: union: array type | type parameter `S` of call of method `concat`
+Member 1:
+[LIB] core.js:163:21,28: array type
+Error:
+array_lib.js:21:43,45: string
+This type is incompatible with
+[LIB] core.js:163:21,28: array type
+Member 2:
+array_lib.js:21:24,46: type parameter `S` of call of method `concat`
+Error:
+array_lib.js:21:43,45: string
+This type is incompatible with
+array_lib.js:21:14,19: number
 
 array_lib.js:46:3,45: call of method `reduce`
 Function cannot be called on any member of intersection type

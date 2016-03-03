@@ -2,45 +2,177 @@
 in.js:27:15,17: number
 This type is incompatible with
 in.js:27:15,17: union: RHS of `in` operator(s)
+Member 1:
+in.js:27:15,17: RHS of `in` operator
+Error:
+in.js:27:15,17: number
+This type is incompatible with
+in.js:27:15,17: RHS of `in` operator
+Member 2:
+in.js:27:15,17: RHS of `in` operator
+Error:
+in.js:27:15,17: number
+This type is incompatible with
+in.js:27:15,17: RHS of `in` operator
 
 in.js:28:15,19: string
 This type is incompatible with
 in.js:28:15,19: union: RHS of `in` operator(s)
+Member 1:
+in.js:28:15,19: RHS of `in` operator
+Error:
+in.js:28:15,19: string
+This type is incompatible with
+in.js:28:15,19: RHS of `in` operator
+Member 2:
+in.js:28:15,19: RHS of `in` operator
+Error:
+in.js:28:15,19: string
+This type is incompatible with
+in.js:28:15,19: RHS of `in` operator
 
 in.js:29:15,20: undefined
 This type is incompatible with
 in.js:29:15,20: union: RHS of `in` operator(s)
+Member 1:
+in.js:29:15,20: RHS of `in` operator
+Error:
+in.js:29:15,20: undefined
+This type is incompatible with
+in.js:29:15,20: RHS of `in` operator
+Member 2:
+in.js:29:15,20: RHS of `in` operator
+Error:
+in.js:29:15,20: undefined
+This type is incompatible with
+in.js:29:15,20: RHS of `in` operator
 
 in.js:30:15,18: null
 This type is incompatible with
 in.js:30:15,18: union: RHS of `in` operator(s)
+Member 1:
+in.js:30:15,18: RHS of `in` operator
+Error:
+in.js:30:15,18: null
+This type is incompatible with
+in.js:30:15,18: RHS of `in` operator
+Member 2:
+in.js:30:15,18: RHS of `in` operator
+Error:
+in.js:30:15,18: null
+This type is incompatible with
+in.js:30:15,18: RHS of `in` operator
 
 in.js:35:6,9: null
 This type is incompatible with
 in.js:35:6,9: union: string | number
+Member 1:
+in.js:35:6,9: string
+Error:
+in.js:35:6,9: null
+This type is incompatible with
+in.js:35:6,9: string
+Member 2:
+in.js:35:6,9: number
+Error:
+in.js:35:6,9: null
+This type is incompatible with
+in.js:35:6,9: number
 
 in.js:36:6,11: undefined
 This type is incompatible with
 in.js:36:6,11: union: string | number
+Member 1:
+in.js:36:6,11: string
+Error:
+in.js:36:6,11: undefined
+This type is incompatible with
+in.js:36:6,11: string
+Member 2:
+in.js:36:6,11: number
+Error:
+in.js:36:6,11: undefined
+This type is incompatible with
+in.js:36:6,11: number
 
 in.js:37:6,7: object literal
 This type is incompatible with
 in.js:37:6,7: union: string | number
+Member 1:
+in.js:37:6,7: string
+Error:
+in.js:37:6,7: object literal
+This type is incompatible with
+in.js:37:6,7: string
+Member 2:
+in.js:37:6,7: number
+Error:
+in.js:37:6,7: object literal
+This type is incompatible with
+in.js:37:6,7: number
 
 in.js:38:6,7: empty array literal
 This type is incompatible with
 in.js:38:6,7: union: string | number
+Member 1:
+in.js:38:6,7: string
+Error:
+in.js:38:6,7: empty array literal
+This type is incompatible with
+in.js:38:6,7: string
+Member 2:
+in.js:38:6,7: number
+Error:
+in.js:38:6,7: empty array literal
+This type is incompatible with
+in.js:38:6,7: number
 
 in.js:39:6,10: boolean
 This type is incompatible with
 in.js:39:6,10: union: string | number
+Member 1:
+in.js:39:6,10: string
+Error:
+in.js:39:6,10: boolean
+This type is incompatible with
+in.js:39:6,10: string
+Member 2:
+in.js:39:6,10: number
+Error:
+in.js:39:6,10: boolean
+This type is incompatible with
+in.js:39:6,10: number
 
 in.js:44:18,20: number
 This type is incompatible with
 in.js:44:18,20: union: RHS of `in` operator(s)
+Member 1:
+in.js:44:18,20: RHS of `in` operator
+Error:
+in.js:44:18,20: number
+This type is incompatible with
+in.js:44:18,20: RHS of `in` operator
+Member 2:
+in.js:44:18,20: RHS of `in` operator
+Error:
+in.js:44:18,20: number
+This type is incompatible with
+in.js:44:18,20: RHS of `in` operator
 
 in.js:45:9,14: boolean
 This type is incompatible with
 in.js:45:9,14: union: string | number
+Member 1:
+in.js:45:9,14: string
+Error:
+in.js:45:9,14: boolean
+This type is incompatible with
+in.js:45:9,14: string
+Member 2:
+in.js:45:9,14: number
+Error:
+in.js:45:9,14: boolean
+This type is incompatible with
+in.js:45:9,14: number
 
 Found 11 errors

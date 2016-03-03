@@ -10,6 +10,18 @@ Error:
 date.js:18:10,11: object literal
 This type is incompatible with
 [LIB] core.js:264:25,39: union: number | string
+Member 1:
+[LIB] core.js:264:25,30: number
+Error:
+date.js:18:10,11: object literal
+This type is incompatible with
+[LIB] core.js:264:25,30: number
+Member 2:
+[LIB] core.js:264:34,39: string
+Error:
+date.js:18:10,11: object literal
+This type is incompatible with
+[LIB] core.js:264:34,39: string
 
 date.js:19:1,19: constructor call
 Error:

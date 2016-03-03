@@ -58,5 +58,17 @@ Error:
 proptype_oneOfType.js:23:32,35: boolean
 This type is incompatible with
 proptype_oneOfType.js:6:11,9:6: union: number | string
+Member 1:
+proptype_oneOfType.js:8:7,28: number
+Error:
+proptype_oneOfType.js:23:32,35: boolean
+This type is incompatible with
+proptype_oneOfType.js:8:7,28: number
+Member 2:
+proptype_oneOfType.js:7:7,28: string
+Error:
+proptype_oneOfType.js:23:32,35: boolean
+This type is incompatible with
+proptype_oneOfType.js:7:7,28: string
 
 Found 10 errors

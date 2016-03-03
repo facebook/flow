@@ -24,6 +24,18 @@ Error:
 boolean.js:29:5,5: number
 This type is incompatible with
 boolean.js:19:17,31: union: boolean literal `true` | boolean literal `false`
+Member 1:
+boolean.js:17:24,27: boolean literal `true`
+Error:
+boolean.js:29:5,5: number
+This type is incompatible with
+boolean.js:17:24,27: boolean literal `true`
+Member 2:
+boolean.js:17:31,35: boolean literal `false`
+Error:
+boolean.js:29:5,5: number
+This type is incompatible with
+boolean.js:17:31,35: boolean literal `false`
 
 number.js:8:1,13: function call
 Error:
