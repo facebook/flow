@@ -113,10 +113,7 @@ module MasterApi = struct
   let clear_shared_memory =
     SS.MasterApi.clear_shared_memory
 
-  let update_search_index files php_files =
-    let files = List.fold_left files ~f:begin fun acc file ->
-      Relative_path.Set.add file acc
-    end ~init:php_files in
+  let update_search_index files =
     SS.MasterApi.update_search_index files
 end
 

@@ -155,7 +155,7 @@ module Make(S : SearchUtils.Searchable) = struct
       SSet.iter (Trie.remove !trie) removed_keys
 
     let index_files fns =
-      Relative_path.Set.iter process_file fns
+      List.iter fns process_file
 
     (* Note: the score should be able to compare to the scoring in
      * Fuzzy so that the results can be merged and the ordering still

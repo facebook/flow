@@ -294,7 +294,7 @@ let index_files files =
       TMap.add x (Hashtbl.create 30) acc
     end ~init:TMap.empty
   end;
-  Relative_path.Set.iter begin fun file ->
+  List.iter files begin fun file ->
     let new_terms = try SearchKeys.find_unsafe file
     with Not_found -> TMap.empty in
     let old_terms = try Hashtbl.find !old_search_terms file
@@ -315,7 +315,7 @@ let index_files files =
       remove_terms_from_index type_ removed_terms;
       add_terms_to_index type_ added_terms;
     end new_terms;
-  end files
+  end
 
 (* Looks up relevant terms in the index given a search query *)
 let get_terms needle type_ =

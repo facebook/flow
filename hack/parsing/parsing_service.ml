@@ -16,7 +16,7 @@ open Core
 
 let neutral = (
   Relative_path.Map.empty, [],
-  Relative_path.Set.empty, Relative_path.Set.empty
+  Relative_path.Set.empty
   )
 
 let empty_file_info : FileInfo.t = {
@@ -38,7 +38,7 @@ let legacy_php_file_info = ref (fun fn ->
  * errorl is a list of errors
  * error_files is Relative_path.Set.t of files that we failed to parse
  *)
-let really_parse (acc, errorl, error_files, php_files) fn =
+let really_parse (acc, errorl, error_files) fn =
   let errorl', {Parser_hack.file_mode; comments; ast} =
     Errors.do_ begin fun () ->
       Parser_hack.from_file fn
@@ -59,38 +59,36 @@ let really_parse (acc, errorl, error_files, php_files) fn =
       then error_files
       else Relative_path.Set.add fn error_files
     in
-    acc, errorl, error_files, php_files
+    acc, errorl, error_files
   end
   else begin
     let info = try !legacy_php_file_info fn with _ -> empty_file_info in
-    let acc = Relative_path.Map.add fn info acc in
-    let php_files = Relative_path.Set.add fn php_files in
     (* we also now keep in the file_info regular php files
      * as we need at least their names in hack build
      *)
-    acc, errorl, error_files, php_files
+    let acc = Relative_path.Map.add fn info acc in
+    acc, errorl, error_files
   end
 
-let parse (acc, errorl, error_files, php_files) fn =
+let parse (acc, errorl, error_files) fn =
   (* Ugly hack... hack build requires that we keep JS files in our
    * files_info map, but we don't want to actually read them from disk
    * because we don't do anything with them. See also
    * ServerMain.Program.make_next_files *)
   if FindUtils.is_php (Relative_path.suffix fn) then
-    really_parse (acc, errorl, error_files, php_files) fn
+    really_parse (acc, errorl, error_files) fn
   else
     let info = empty_file_info in
     let acc = Relative_path.Map.add fn info acc in
-    acc, errorl, error_files, php_files
+    acc, errorl, error_files
 
 (* Merging the results when the operation is done in parallel *)
 let merge_parse
-    (acc1, status1, files1, pfiles1)
-    (acc2, status2, files2, pfiles2) =
+    (acc1, status1, files1)
+    (acc2, status2, files2) =
   Relative_path.Map.fold Relative_path.Map.add acc1 acc2,
   List.rev_append status1 status2,
-  Relative_path.Set.union files1 files2,
-  Relative_path.Set.union pfiles1 pfiles2
+  Relative_path.Set.union files1 files2
 
 let parse_files acc fnl =
   let parse =
@@ -119,8 +117,8 @@ let parse_parallel workers get_next =
 (*****************************************************************************)
 
 let go workers ~get_next =
-  let fast, errorl, failed_parsing, php_files =
+  let fast, errorl, failed_parsing =
     parse_parallel workers get_next in
   Parsing_hooks.dispatch_parse_task_completed_hook
-    (Relative_path.Map.keys fast) php_files;
+    (Relative_path.Map.keys fast);
   fast, errorl, failed_parsing
