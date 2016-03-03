@@ -37,7 +37,7 @@ map.js:29:6,17: call of method `get`
 Error:
 map.js:29:20,26: boolean
 This type is incompatible with
-[LIB] core.js:388:22,25: undefined
+[LIB] core.js:391:22,25: undefined
 
 map.js:30:5,14: call of method `get`
 Error:
