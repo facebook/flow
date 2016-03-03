@@ -283,7 +283,7 @@ function typedJSON(x: mixed): JSON {
   if (typeof x === "object" && x !== null) {
     let o: JSONObject = {};
     for (let k of Object.keys(x)) {
-      o[k] = x[k];
+      o[k] = typedJSON(x[k]);
     }
     return o;
   }
