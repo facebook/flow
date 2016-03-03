@@ -198,13 +198,16 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
    *)
   let env, substs =
     if instantiate_tparams
-    then let env, tvarl =
-      List.map_env env ft.ft_tparams TUtils.unresolved_tparam in
+    then
+      let env, tvarl =
+        List.map_env env ft.ft_tparams TUtils.unresolved_tparam in
       let ft_subst = TSubst.make ft.ft_tparams tvarl in
       env, SMap.union ft_subst ety_env.substs
-    else env, List.fold_left ft.ft_tparams ~f:begin fun subst (_, (_, x), _) ->
-      SMap.remove x subst
-    end ~init:ety_env.substs in
+    else
+      env, List.fold_left ft.ft_tparams ~f:begin fun subst (_, (_, x), _) ->
+        SMap.remove x subst
+      end ~init:ety_env.substs
+  in
   let ety_env = {ety_env with substs = substs} in
   let env, params = List.map_env env ft.ft_params begin fun env (name, param) ->
     let env, param = localize ~ety_env env param in
