@@ -27,20 +27,22 @@ let empty_env = {
   files_info = Relative_path.Map.empty;
 }
 
-let get_ready_channel monitor_ic client typechecker =
+let get_ready_channel monitor_ic client typechecker ~should_block =
   let monitor_in_fd = Daemon.descr_of_in_channel monitor_ic in
   let typechecker_in_fd = typechecker.IdeProcessPipe.in_fd in
+  let wait_time = if should_block then 1.0 else 0.0 in
   match client with
   | None ->
     let readable, _, _ =
-      Unix.select [monitor_in_fd; typechecker_in_fd] [] [] 1.0 in
+      Unix.select [monitor_in_fd; typechecker_in_fd] [] [] wait_time in
     if readable = [] then `None
     else if List.mem typechecker_in_fd readable then `Typechecker
     else  `Monitor
   | Some ((client_ic, _) as client) ->
     let client_in_fd = Unix.descr_of_in_channel client_ic in
     let readable, _, _ =
-      Unix.select [monitor_in_fd; client_in_fd; typechecker_in_fd] [] [] 1.0 in
+      Unix.select [monitor_in_fd; client_in_fd; typechecker_in_fd]
+        [] [] wait_time in
     if readable = [] then `None
     else if List.mem typechecker_in_fd readable then `Typechecker
     else if List.mem client_in_fd readable then `Client client
@@ -121,7 +123,13 @@ let handle_typechecker_message env typechecker_process =
       end
       env.files_info
       updated_files_info in
+    HackSearchService.IdeProcessApi.enqueue_updates
+      (Relative_path.Map.keys updated_files_info);
     { env with files_info = new_files_info }
+
+let handle_server_idle env =
+  if env.run_ide_commands then IdeIdle.go ();
+  env
 
 let daemon_main _ (parent_ic, _parent_oc) =
   Printexc.record_backtrace true;
@@ -129,11 +137,17 @@ let daemon_main _ (parent_ic, _parent_oc) =
   let parent_in_fd = Daemon.descr_of_in_channel parent_ic in
   let typechecker_process = IdeProcessPipeInit.ide_recv parent_in_fd in
   let env = ref empty_env in
+  IdeIdle.init ();
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
+    let should_block = not (IdeIdle.has_tasks ()) in
     let new_env = try
-        match get_ready_channel parent_ic !env.client typechecker_process with
-        | `None -> !env
+        match get_ready_channel parent_ic
+          !env.client
+          typechecker_process
+          should_block
+        with
+        | `None -> handle_server_idle !env
         | `Typechecker -> handle_typechecker_message !env typechecker_process
         | `Monitor -> handle_new_client !env parent_ic
         | `Client c -> handle_client_request !env c
