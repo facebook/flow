@@ -3,7 +3,7 @@ id: advanced-configuration
 title: Advanced Configuration
 permalink: /docs/advanced-configuration.html
 prev: cli.html
-next: react-example.html
+next: quick-reference.html
 ---
 
 This section discusses some of the advanced configuration options available

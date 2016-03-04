@@ -24,12 +24,6 @@
     title: Using the CLI
   - id: advanced-configuration
     title: Advanced Configuration
-- title: Walkthroughs
-  items:
-  - id: react-example
-    title: A Flux & React demo
-  - id: underscore
-    title: Flow, meet Underscore
 - title: Language Reference
   items:
   - id: quick-reference
