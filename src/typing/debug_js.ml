@@ -299,8 +299,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
-  | ReposLowerT (_, t) -> [
-      "type", _json_of_t json_cx t
+  | ReposLowerT (_, use_t) -> [
+      "type", _json_of_use_t json_cx use_t
     ]
 
   | SetPropT (_, name, t)

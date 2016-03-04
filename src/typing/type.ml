@@ -263,7 +263,7 @@ module rec TypeTerm : sig
     | GetPropT of reason * propname * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
-    | ReposLowerT of reason * t
+    | ReposLowerT of reason * use_t
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * t list * t

@@ -4416,7 +4416,8 @@ and assignment cx type_params_map loc = Ast.Expression.(function
 
 and clone_object_with_excludes cx reason this that excludes =
   Flow_js.mk_tvar_where cx reason (fun tvar ->
-    let t = Flow_js.constrain cx (ObjRestT(reason, excludes, tvar)) in
+    let u = ObjRestT(reason, excludes, tvar) in
+    let t = Flow_js.tvar_with_constraint cx u in
     Flow_js.flow cx (
       this,
       ObjAssignT(reason, that, t, [], true)
@@ -4905,7 +4906,8 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           value = _, Object { Object.properties };
           _ }) ->
         let reason = mk_reason "statics" nloc in
-        static := object_ cx type_params_map reason ~allow_sealed:false properties;
+        static :=
+          object_ cx type_params_map reason ~allow_sealed:false properties;
         fmap, mmap
 
       (* propTypes *)
@@ -4944,7 +4946,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             ) in
           let ret_reason = repos_reason ret_loc reason in
           let default_tvar = Flow_js.mk_tvar cx (derivable_reason ret_reason) in
-          let override_default = Flow_js.constrain cx
+          let override_default = Flow_js.tvar_with_constraint cx
             (BecomeT(ret_reason, default_tvar)) in
           default := default_tvar;
           Flow_js.flow cx (t,
@@ -4976,7 +4978,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             ) in
           let ret_reason = repos_reason ret_loc reason in
           let state_tvar = Flow_js.mk_tvar cx (derivable_reason ret_reason) in
-          let override_state = Flow_js.constrain cx
+          let override_state = Flow_js.tvar_with_constraint cx
             (BecomeT (ret_reason, state_tvar)) in
           state := state_tvar;
           Flow_js.flow cx (t,
@@ -4997,7 +4999,8 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           in
           let kind = function_kind ~async ~generator in
           let reason = mk_reason "function" vloc in
-          let t = mk_method cx type_params_map reason ~kind (params, defaults, rest)
+          let t = mk_method cx type_params_map reason ~kind
+            (params, defaults, rest)
             returnType body this (MixedT reason)
           in
           fmap, SMap.add name t mmap
@@ -5501,7 +5504,7 @@ and static_method_call_Object cx type_params_map loc prop_loc expr obj_t m args_
     ArrT (arr_reason,
       Flow_js.mk_tvar_where cx arr_reason (fun tvar ->
         let keys_reason = prefix_reason "element of " reason in
-        Flow_js.flow cx (o, GetKeysT(keys_reason, tvar));
+        Flow_js.flow cx (o, GetKeysT (keys_reason, tvar));
       ),
       []
     )

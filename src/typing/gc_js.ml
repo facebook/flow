@@ -239,8 +239,8 @@ and gc_use cx state = function
       funtype.params_tlist |> List.iter (gc cx state);
       gc cx state funtype.return_t
 
-  | ReposLowerT (_, t) ->
-      gc cx state t
+  | ReposLowerT (_, u) ->
+      gc_use cx state u
 
   | SetPropT(_, _, t) ->
       gc cx state t
