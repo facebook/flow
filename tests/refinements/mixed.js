@@ -68,3 +68,12 @@ function false_(x: mixed) {
     takesString(x); // error
   }
 }
+
+function obj2(x: mixed) {
+  if (typeof x === "object") {
+    (x: { [key: string]: mixed } | null);
+    if (x !== null) {
+      (x['foo']: string); // error, mixed
+    }
+  }
+}

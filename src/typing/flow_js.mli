@@ -87,7 +87,9 @@ val dummy_prototype : Type.t
 val mk_objecttype : ?flags:Type.flags ->
   Type.dicttype option -> int -> Type.t -> Type.objtype
 
-val mk_object_with_proto : Context.t -> reason -> Type.t -> Type.t
+val mk_object_with_proto : Context.t -> reason ->
+  ?dict:Type.dicttype ->
+  Type.t -> Type.t
 val mk_object_with_map_proto : Context.t -> reason ->
   ?sealed:bool ->
   ?frozen:bool ->

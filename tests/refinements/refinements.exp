@@ -217,6 +217,10 @@ mixed.js:68:17,17: boolean
 This type is incompatible with
 mixed.js:4:25,30: string
 
+mixed.js:76:8,15: mixed
+This type is incompatible with
+mixed.js:76:18,23: string
+
 not.js:5:5,5: boolean
 This type is incompatible with
 not.js:5:5,7: number
@@ -548,4 +552,4 @@ void.js:85:7,12: undefined
 This type is incompatible with
 void.js:85:7,19: number
 
-Found 126 errors
+Found 127 errors

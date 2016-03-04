@@ -4175,8 +4175,8 @@ and specialize_class cx trace reason c ts =
     rec_flow cx trace (c, SpecializeT (reason, false, ts, tvar))
   )
 
-and mk_object_with_proto cx reason proto =
-  mk_object_with_map_proto cx reason SMap.empty proto
+and mk_object_with_proto cx reason ?dict proto =
+  mk_object_with_map_proto cx reason ?dict SMap.empty proto
 
 and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   let sealed =
@@ -4870,7 +4870,13 @@ and predicate cx trace t (l,p) = match (l,p) with
   (***********************)
 
   | (MixedT r, ObjP) ->
-    let obj = AnyObjT (replace_reason "object" r) in
+    let reason = replace_reason "object" r in
+    let dict = Some {
+      key = StrT.why r;
+      value = MixedT r;
+      dict_name = None;
+    } in
+    let obj = mk_object_with_proto cx reason ?dict (MixedT reason) in
     let union = create_union [NullT.why r; obj] in
     rec_flow_t cx trace (union, t)
 
