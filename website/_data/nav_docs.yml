@@ -30,6 +30,8 @@
     title: Quick Reference
   - id: builtins
     title: Built-in Types
+  - id: syntax
+    title: Syntax
   - id: arrays
     title: Arrays and Tuples
   - id: classes

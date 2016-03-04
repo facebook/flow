@@ -5,7 +5,7 @@ id: builtins
 title: Built-in Types
 permalink: /docs/builtins.html
 prev: quick-reference.html
-next: arrays.html
+next: syntax.html
 ---
 */
 

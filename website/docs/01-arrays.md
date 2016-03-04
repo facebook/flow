@@ -2,7 +2,7 @@
 id: arrays
 title: Arrays
 permalink: /docs/arrays.html
-prev: builtins.html
+prev: syntax.html
 next: classes.html
 ---
 
