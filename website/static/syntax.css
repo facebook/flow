@@ -34,8 +34,8 @@ pre.code {
 }
 
 .error {
-  border-bottom: solid 1px rgba(255, 100, 100, 0.3);
-  /*color: red;*/
+  background: url(/static/underline.png) bottom repeat-x;
+  padding-bottom: 4px;
 }
 
 .selected {

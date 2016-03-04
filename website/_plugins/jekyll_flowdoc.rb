@@ -181,28 +181,31 @@ module Jekyll
         messages = []
         error['message'].each_with_index do |message, m_index|
           m_id = e_id * 1000 + (m_index + 1)
-          start_line, start_col = message.values_at('line', 'start')
-          end_line, end_col = message.values_at('endline', 'end')
-
           msg_json = {
             'id' => "M#{m_id}",
             'description' => message['descr']
           }
 
-          if start_line && start_line > 0 && end_line && end_line > 0
-            start_offset = line_offsets[start_line - 1] + start_col - 1
-            end_offset = line_offsets[end_line - 1] + end_col
+          m_loc = message['loc']
+          if m_loc != nil
+            start_line, start_col = m_loc.values_at('line', 'start')
+            end_line, end_col = m_loc.values_at('endline', 'end')
 
-            msg_json['start'] = {
-              'line' => start_line,
-              'column' => start_col,
-              'offset' => start_offset
-            }
-            msg_json['end'] = {
-              'line' => end_line,
-              'column' => end_col + 1,
-              'offset' => end_offset
-            }
+            if start_line && start_line > 0 && end_line && end_line > 0
+              start_offset = line_offsets[start_line - 1] + start_col - 1
+              end_offset = line_offsets[end_line - 1] + end_col
+
+              msg_json['start'] = {
+                'line' => start_line,
+                'column' => start_col,
+                'offset' => start_offset
+              }
+              msg_json['end'] = {
+                'line' => end_line,
+                'column' => end_col + 1,
+                'offset' => end_offset
+              }
+            end
           end
 
           messages.push(msg_json)
@@ -248,7 +251,9 @@ module Jekyll
     end
 
     def convert(content)
-      content = content.lines.reject { |l| l =~ /^\s*\/\/\s*\$ExpectError(\([^)]*\))?$/ }.join
+      content = content.lines.reject { |l|
+        l =~ /^\s*\/\/\s*\$ExpectError(\([^)]*\))?$/
+      }.join
       tokens = get_tokens(content)
       errors_json = get_error_json(content)
       errors = get_errors(errors_json)
@@ -303,7 +308,9 @@ module Jekyll
       sections.push([last_was_code ? :code : :html, out])
 
       outs = sections.map do |type, content|
-        content = content.lines.reject { |l| l =~ /\/\/\s*\$DocIssue/ }.join
+        content = content.lines.reject { |l|
+          l =~ /\/\/\s*\$Doc(Issue|Hide)/
+        }.join
         if type == :code_with_nums
           lines = content.lines.count
           '<figure class="highlight">' +
