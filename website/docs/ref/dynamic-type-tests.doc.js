@@ -5,7 +5,7 @@ id: dynamic-type-tests
 title: Dynamic Type Tests
 permalink: /docs/dynamic-type-tests.html
 prev: typeof.html
-next: modules.html
+next: disjoint-unions.html
 ---
 */
 

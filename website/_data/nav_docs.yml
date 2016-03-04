@@ -52,6 +52,8 @@
     title: Typeof types
   - id: dynamic-type-tests
     title: Dynamic Type Tests
+  - id: disjoint-unions
+    title: Disjoint Unions
   - id: modules
     title: Modules
   - id: declarations

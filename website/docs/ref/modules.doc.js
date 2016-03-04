@@ -4,7 +4,7 @@
 id: modules
 title: Modules
 permalink: /docs/modules.html
-prev: dynamic-type-tests.html
+prev: disjoint-unions.html
 next: declarations.html
 ---
 */

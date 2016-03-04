@@ -307,8 +307,11 @@ function typedJSON(x: mixed): JSON {
 
   While type `boolean`, `number`, and `string` types admit `true` and `false`,
   any number, and any string, respectively, it can also be useful to specify a
-  type that admits a single value. For example, literal types can be used to
-  build enums.
+  type that admits a single value. This feature turns out to be surprisingly
+  [versatile](disjoint-unions.html): literal types can be used to build enums
+  and other disjoint unions, as well as express some common forms of method
+  overloading for which the types `boolean`, `number`, and `string` are not
+  adequate.
 */
 
 ("foo": "foo");
