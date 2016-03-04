@@ -76,6 +76,14 @@ does not complain on most uses of builtin primitives like `Array`, whose
 methods are often called with closures that take fewer parameters than
 prescribed.
 
+If you want flow to complain when too many arguments are given you can use the
+following type declaration:
+{% highlight javascript linenos=table %}
+/* @flow */
+declare class NoMoreArgs {};
+declare type FunctionWithOneArgument = (arg: any, ...rest: Array<NoMoreArgs>) => any;
+{% endhighlight %}
+
 ## Function-based type annotations
 
 Since functions are first-class values in JavaScript (meaning they can be
