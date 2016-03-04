@@ -3,13 +3,13 @@ issue-198.js:1:9,10:6: call of method `then`
 Error:
 issue-198.js:5:16,28: string
 This type is incompatible with
-[LIB] core.js:437:33,46: union: type application of identifier `Promise` | type parameter `U` of call of method `then`
+[LIB] core.js:440:33,46: union: type application of identifier `Promise` | type parameter `U` of call of method `then`
 Member 1:
-[LIB] core.js:437:33,42: type application of identifier `Promise`
+[LIB] core.js:440:33,42: type application of identifier `Promise`
 Error:
 issue-198.js:5:16,28: string
 This type is incompatible with
-[LIB] core.js:437:33,42: Promise
+[LIB] core.js:440:33,42: Promise
 Member 2:
 issue-198.js:1:9,6:6: type parameter `U` of call of method `then`
 Error:
