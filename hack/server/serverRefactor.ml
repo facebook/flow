@@ -29,12 +29,12 @@ type action =
 let go action genv env =
   let find_refs_action, new_name = match action with
     | ClassRename (old_name, new_name) ->
-        ServerFindRefs.Class old_name, new_name
+        FindRefsService.Class old_name, new_name
     | MethodRename (class_name, old_name, new_name) ->
-        ServerFindRefs.Method (class_name, old_name), new_name
+        FindRefsService.Method (class_name, old_name), new_name
     | FunctionRename (old_name, new_name) ->
-        ServerFindRefs.Function old_name, new_name in
-  
+        FindRefsService.Function old_name, new_name in
+
   let refs = ServerFindRefs.get_refs_with_defs find_refs_action genv env in
   let changes = List.fold_left refs ~f:begin fun acc x ->
     let replacement = {

@@ -8,12 +8,7 @@
  *
  *)
 
-type action = Ai.ServerFindRefs.action =
-  | Class of string
-  | Method of string * string
-  | Function of string
-
-type result = (string * Pos.absolute) list
+open FindRefsService
 
 val get_refs_with_defs : action -> ServerEnv.genv ->
   ServerEnv.env -> (Naming_heap.FunHeap.key * Pos.t) list

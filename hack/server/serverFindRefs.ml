@@ -10,13 +10,6 @@
 
 open Core
 
-type action = Ai.ServerFindRefs.action =
-  | Class of string
-  | Method of string * string
-  | Function of string
-
-type result = (string * Pos.absolute) list
-
 let add_ns name =
   if name.[0] = '\\' then name else "\\" ^ name
 
@@ -56,11 +49,11 @@ let search_class class_name include_defs genv env =
 
 let get_refs action include_defs genv env =
   match action with
-  | Method (class_name, method_name) ->
+  | FindRefsService.Method (class_name, method_name) ->
       search_method class_name method_name include_defs genv env
-  | Function function_name ->
+  | FindRefsService.Function function_name ->
       search_function function_name include_defs genv env
-  | Class class_name ->
+  | FindRefsService.Class class_name ->
       search_class class_name include_defs genv env
 
 let get_refs_with_defs action genv env =

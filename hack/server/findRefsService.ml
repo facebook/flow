@@ -10,6 +10,13 @@
 
 open Core
 
+type action = Ai.ServerFindRefs.action =
+  | Class of string
+  | Method of string * string
+  | Function of string
+
+type result = (string * Pos.absolute) list
+
 let process_fun_id results_acc target_fun id =
   if target_fun = (snd id)
   then results_acc := Pos.Map.add (fst id) (snd id) !results_acc

@@ -90,7 +90,7 @@ let main args =
       Exit_status.Ok
     | MODE_FIND_CLASS_REFS name ->
       let results =
-        Cmd.rpc conn @@ Rpc.FIND_REFS (ServerFindRefs.Class name) in
+        Cmd.rpc conn @@ Rpc.FIND_REFS (FindRefsService.Class name) in
       ClientFindRefs.go results args.output_json;
       Exit_status.Ok
     | MODE_FIND_REFS name ->
@@ -99,8 +99,8 @@ let main args =
         try
           match pieces with
           | class_name :: method_name :: _ ->
-              ServerFindRefs.Method (class_name, method_name)
-          | method_name :: _ -> ServerFindRefs.Function method_name
+              FindRefsService.Method (class_name, method_name)
+          | method_name :: _ -> FindRefsService.Function method_name
           | _ -> raise Exit
         with _ ->
           Printf.eprintf "Invalid input\n";

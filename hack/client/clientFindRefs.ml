@@ -36,7 +36,7 @@ let print_readable res =
   List.iter res print_result;
   print_endline ((string_of_int (List.length res)) ^ " total results")
 
-let go (res : ServerFindRefs.result) output_json =
+let go (res : FindRefsService.result) output_json =
   if output_json then
     print_json res
   else

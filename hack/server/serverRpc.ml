@@ -21,7 +21,7 @@ type _ t =
   | IDENTIFY_FUNCTION : string * int * int -> string t
   | OUTLINE : string -> (Pos.absolute * string * string) list t
   | METHOD_JUMP : (string * bool) -> MethodJumps.result list t
-  | FIND_REFS : ServerFindRefs.action -> ServerFindRefs.result t
+  | FIND_REFS : FindRefsService.action -> FindRefsService.result t
   | REFACTOR : ServerRefactor.action -> ServerRefactor.patch list t
   | DUMP_SYMBOL_INFO : string list -> SymbolInfoService.result t
   | DUMP_AI_INFO : string list -> Ai.InfoService.result t
