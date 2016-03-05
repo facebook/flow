@@ -15,10 +15,12 @@ type call_id = int
 type call_type =
   | AutoCompleteCall of string
   | IdentifyFunctionCall of string * int * int
+  | SearchCall of string
 
 type response_type =
   | AutoCompleteResponse of Hh_json.json
   | IdentifyFunctionResponse of string
+  | SearchCallResponse of Hh_json.json
 
 type parsing_result =
   (* ParsingError means that message was unrecoverably mangled (eg. no ID, or
