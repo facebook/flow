@@ -13,10 +13,9 @@ open IdeJson
 
 type env = {
   client : (in_channel * out_channel) option;
-  (* When this is true, we are between points when typechecker process
-   * sent us RunIdeCommands and StopIdeCommands, and it's safe to use
-   * data from shared heap. *)
-  run_ide_commands : bool;
+  (* Whether typechecker has finished full initialization. In the future, we
+   * can have more granularity here, allowing some queries to run sooner. *)
+  typechecker_init_done : bool;
   (* IDE process's version of ServerEnv.file_info, synchronized periodically
    * from typechecker process. *)
   files_info : FileInfo.t Relative_path.Map.t;
@@ -27,7 +26,7 @@ type env = {
 
 let empty_env = {
   client = None;
-  run_ide_commands = false;
+  typechecker_init_done = false;
   files_info = Relative_path.Map.empty;
   errorl = [];
 }
@@ -84,10 +83,14 @@ let handle_new_client parent_in_fd env  =
     handle_already_has_client oc; env
 
 let get_call_response env id call =
-  if not env.run_ide_commands then
-    IdeJsonUtils.json_string_of_server_busy id
-  else
+  let busy = fun () -> IdeJsonUtils.json_string_of_server_busy id in
+  if not env.typechecker_init_done then busy () else
+  let response = SharedMem.try_lock_hashtable ~do_:begin fun () ->
     IdeServerCall.get_call_response id call env.files_info env.errorl
+  end in
+  match response with
+  | Some res -> res
+  | None -> busy ()
 
 let handle_gone_client env =
   Hh_logger.log "Client went away";
@@ -119,11 +122,8 @@ let handle_client_request (ic, oc) env =
 
 let handle_typechecker_message typechecker_process env  =
   match IdeProcessPipe.recv typechecker_process with
-  | IdeProcessMessage.RunIdeCommands ->
-    { env with run_ide_commands = true }
-  | IdeProcessMessage.StopIdeCommands ->
-    IdeProcessPipe.send typechecker_process IdeProcessMessage.IdeCommandsDone;
-    { env with run_ide_commands = false }
+  | IdeProcessMessage.TypecheckerInitDone ->
+    { env with typechecker_init_done = true }
   | IdeProcessMessage.SyncFileInfo updated_files_info ->
     Hh_logger.log "Received file info updates for %d files"
       (Relative_path.Map.cardinal updated_files_info);
@@ -140,7 +140,8 @@ let handle_typechecker_message typechecker_process env  =
     { env with errorl = errorl }
 
 let handle_server_idle env =
-  if env.run_ide_commands then IdeIdle.go ();
+  if IdeIdle.has_tasks () then
+    ignore (SharedMem.try_lock_hashtable ~do_:(fun () -> IdeIdle.go ()));
   env
 
 let get_jobs typechecker parent_in_fd =

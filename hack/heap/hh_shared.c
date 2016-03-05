@@ -91,6 +91,7 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -231,6 +232,54 @@ static char* heap_init;
 /* The size of the heap after initialization of the server */
 /* This should only be used by the master */
 static size_t heap_init_size = 0;
+
+/*****************************************************************************/
+/* Locking */
+/*****************************************************************************/
+
+#ifndef _WIN32
+pthread_mutex_t hashtable_mutex;
+#endif
+
+value hh_hashtable_mutex_lock() {
+  CAMLparam0();
+#ifdef _WIN32
+  // TODO
+#elseif
+  int res = pthread_mutex_lock(&hashtable_mutex);
+  if (res != 0) {
+    caml_failwith("Error acquiring the lock");
+  }
+#endif
+  CAMLreturn(Val_unit);
+}
+
+value hh_hashtable_mutex_trylock() {
+  CAMLparam0();
+  int res = 0;
+#ifdef _WIN32
+  // TODO
+#elseif
+  res = pthread_mutex_trylock(&hashtable_mutex);
+  if ((res != 0 ) && (res != EBUSY)) {
+    caml_failwith("Error trying to acquire the lock");
+  }
+#endif
+  CAMLreturn(Val_bool(res == 0));
+}
+
+value hh_hashtable_mutex_unlock() {
+  CAMLparam0();
+#ifdef _WIN33
+  // TODO
+#elseif
+  int res = pthread_mutex_unlock(&hashtable_mutex);
+  if (res != 0) {
+    caml_failwith("Error releasing the lock");\
+  }
+#endif
+  CAMLreturn(Val_unit);
+}
 
 static size_t used_heap_size() {
   return *heap - heap_init;
@@ -417,6 +466,11 @@ value hh_shared_init(
     printf("Error initializing: %s\n", strerror(errno));
     exit(2);
   }
+
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+  pthread_mutex_init(&hashtable_mutex, &attr);
 
 #ifdef MADV_DONTDUMP
   // We are unlikely to get much useful information out of the shared heap in

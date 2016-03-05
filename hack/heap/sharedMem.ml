@@ -80,6 +80,18 @@ external dep_slots : unit -> int = "hh_dep_slots"
 (*****************************************************************************)
 external hh_init_done: unit -> unit = "hh_call_after_init"
 
+external hashtable_mutex_lock: unit -> unit = "hh_hashtable_mutex_lock"
+external hashtable_mutex_trylock: unit -> bool = "hh_hashtable_mutex_trylock"
+external hashtable_mutex_unlock: unit -> unit = "hh_hashtable_mutex_unlock"
+
+let try_lock_hashtable ~do_ =
+  if hashtable_mutex_trylock () then begin
+    Some (Utils.with_context
+      ~enter:(fun () -> ())
+      ~do_:do_
+      ~exit:hashtable_mutex_unlock)
+  end else None
+
 let init_done () =
   hh_init_done ();
   EventLogger.sharedmem_init_done (heap_size ())

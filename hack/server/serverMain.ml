@@ -189,16 +189,9 @@ let get_client_channels parent_in_fd =
   let socket = Libancillary.ancil_recv_fd parent_in_fd in
   (Timeout.in_channel_of_descr socket), (Unix.out_channel_of_descr socket)
 
-let run_ide_process ide_process =
+let ide_typechecker_init_done ide_process =
   Option.iter ide_process begin fun x ->
-    IdeProcessPipe.send x IdeProcessMessage.RunIdeCommands;
-  end
-
-let join_ide_process ide_process =
-  Option.iter ide_process begin fun x ->
-    IdeProcessPipe.send x IdeProcessMessage.StopIdeCommands;
-    match IdeProcessPipe.recv x with
-    | IdeProcessMessage.IdeCommandsDone -> ();
+    IdeProcessPipe.send x IdeProcessMessage.TypecheckerInitDone;
   end
 
 let ide_sync_files_info ide_process files_info =
@@ -241,13 +234,14 @@ let serve genv env in_fd _ =
   let recheck_id = ref (Random_id.short_string ()) in
   ide_sync_files_info genv.ide_process !env.files_info;
   ide_update_error_list genv.ide_process !env.errorl [];
+  ide_typechecker_init_done genv.ide_process;
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
-    run_ide_process genv.ide_process;
+    SharedMem.hashtable_mutex_unlock ();
     let has_client = sleep_and_check in_fd in
     (* For now we only run IDE commands in idle loop, with plan to vet more
      * places where it's safe to do so in parallel. *)
-    join_ide_process genv.ide_process;
+    SharedMem.hashtable_mutex_lock ();
     let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
     if not has_client && not has_parsing_hook
     then begin
@@ -325,6 +319,7 @@ let program_init genv =
 
 let setup_server options ide_process =
   let root = ServerArgs.root options in
+  SharedMem.hashtable_mutex_lock ();
   (* The OCaml default is 500, but we care about minimizing the memory
    * overhead *)
   let gc_control = Gc.get () in
@@ -339,7 +334,6 @@ let setup_server options ide_process =
   if Sys_utils.is_test_mode ()
   then EventLogger.init (Daemon.devnull ()) 0.0
   else HackEventLogger.init root (Unix.gettimeofday ());
-
   let root_s = Path.to_string root in
   if Sys_utils.is_nfs root_s && not enable_on_nfs then begin
     Hh_logger.log "Refusing to run on %s: root is on NFS!" root_s;
