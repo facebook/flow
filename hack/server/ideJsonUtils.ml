@@ -59,6 +59,9 @@ let args_to_call = function
     end
   | [JSON_String "--find-class-refs"; JSON_String s] ->
     FindRefsCall (FindRefsService.Class s)
+  | [JSON_String "--color"; JSON_String path]
+  | [JSON_String "--colour"; JSON_String path] ->
+    ColourCall path
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -146,6 +149,7 @@ let json_string_of_response id response =
     | SearchCallResponse r -> r
     | StatusResponse r -> r
     | FindRefsResponse r -> ServerFindRefs.to_json r
+    | ColourResponse r -> r
   in
   json_to_string (build_response_json id result_field)
 

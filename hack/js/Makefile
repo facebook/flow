@@ -249,7 +249,7 @@ typing_ops.ml: $(TOP)/typing/typing_ops.ml
 fix_file.ml: $(TOP)/parsing/fix_file.ml
 	cp $< .
 
-colorFile.ml: $(TOP)/client/colorFile.ml
+colorFile.ml: $(TOP)/server/colorFile.ml
 	cp $< .
 
 typing_instantiate.ml: $(TOP)/typing/typing_instantiate.ml

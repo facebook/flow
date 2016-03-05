@@ -18,6 +18,7 @@ type call_type =
   | SearchCall of string
   | StatusCall
   | FindRefsCall of FindRefsService.action
+  | ColourCall of string
 
 type response_type =
   | AutoCompleteResponse of Hh_json.json
@@ -25,6 +26,7 @@ type response_type =
   | SearchCallResponse of Hh_json.json
   | StatusResponse of Hh_json.json
   | FindRefsResponse of FindRefsService.result
+  | ColourResponse of Hh_json.json
 
 type parsing_result =
   (* ParsingError means that message was unrecoverably mangled (eg. no ID, or

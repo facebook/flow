@@ -13,6 +13,7 @@ open IdeJson
 
 type env = {
   typechecker : IdeProcessPipe.to_typechecker;
+  tcopt : TypecheckerOptions.t;
   client : (in_channel * out_channel) option;
   (* Whether typechecker has finished full initialization. In the future, we
    * can have more granularity here, allowing some queries to run sooner. *)
@@ -25,8 +26,9 @@ type env = {
   errorl : Errors.t
 }
 
-let build_env typechecker = {
+let build_env typechecker tcopt = {
   typechecker = typechecker;
+  tcopt = tcopt;
   client = None;
   typechecker_init_done = false;
   files_info = Relative_path.Map.empty;
@@ -107,7 +109,7 @@ let get_call_response env id call =
   let busy = fun () -> IdeJsonUtils.json_string_of_server_busy id in
   if not env.typechecker_init_done then Some (busy ()) else
   let response = SharedMem.try_lock_hashtable ~do_:begin fun () ->
-    IdeServerCall.get_call_response id call env.files_info env.errorl
+    IdeServerCall.get_call_response id call env.tcopt env.files_info env.errorl
   end in
   match response with
   | Some (IdeServerCall.DeferredToTypechecker call) ->
@@ -203,12 +205,16 @@ let get_client_job ((client_ic, _) as client) =
     }
   )
 
-let daemon_main _ (parent_ic, _parent_oc) =
+let daemon_main options (parent_ic, _parent_oc) =
   Printexc.record_backtrace true;
   SharedMem.enable_local_writes ();
   let parent_in_fd = Daemon.descr_of_in_channel parent_ic in
   let typechecker_process = IdeProcessPipeInit.ide_recv parent_in_fd in
-  let env = ref (build_env typechecker_process) in
+
+  let config = ServerConfig.(load filename options) in
+  let tcopt = ServerConfig.typechecker_options config in
+  let env = ref (build_env typechecker_process tcopt) in
+
   IdeIdle.init ();
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();

@@ -8,7 +8,22 @@
  *
  *)
 
+open Core
+open Coverage_level
+
 type result = ((int * int) * Coverage_level.level) list
+
+let to_json input =
+  let entries = List.map input begin fun (clr, text) ->
+    let color_string = match clr with
+      | Some lvl -> string_of_level lvl
+      | None -> "default"
+    in Hh_json.JSON_Object [
+      "color", Hh_json.JSON_String color_string;
+      "text",  Hh_json.JSON_String text;
+    ]
+  end in
+  Hh_json.JSON_Array entries
 
 let get_level_list check =
   let type_acc = Hashtbl.create 0 in

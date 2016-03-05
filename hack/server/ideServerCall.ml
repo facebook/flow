@@ -40,7 +40,15 @@ let get_status_reponse errorl =
   let errorl = List.map errorl Errors.to_absolute in
   StatusResponse (ServerError.get_errorl_json errorl)
 
-let get_call_response id call files_info errorl =
+let get_colour_response tcopt files_info path =
+  let check = fun () -> ServerIdeUtils.check_file_input
+    tcopt files_info ServerUtils.(FileName path) in
+  let coverage = ServerColorFile.get_level_list check in
+  let file_contents = try Sys_utils.cat path with _ -> "" in
+  let colors = ColorFile.go file_contents coverage in
+  ColourResponse (ServerColorFile.to_json colors)
+
+let get_call_response id call tcopt files_info errorl =
   match call with
   | AutoCompleteCall content ->
     Result (get_autocomplete_response content files_info)
@@ -54,3 +62,5 @@ let get_call_response id call files_info errorl =
     (* TODO: we can also lookup dependency table and fulfill requests with
      * only several dependencies in IDE process *)
     DeferredToTypechecker (FindRefsCall s)
+  | ColourCall path ->
+    Result (get_colour_response tcopt files_info path)

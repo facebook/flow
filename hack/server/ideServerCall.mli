@@ -20,6 +20,7 @@ type result =
 val get_call_response:
   call_id ->
   call_type ->
+  TypecheckerOptions.t ->
   FileInfo.t Relative_path.Map.t ->
   Errors.t ->
   result
