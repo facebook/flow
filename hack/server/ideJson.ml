@@ -24,6 +24,7 @@ type response_type =
   | IdentifyFunctionResponse of string
   | SearchCallResponse of Hh_json.json
   | StatusResponse of Hh_json.json
+  | FindRefsResponse of FindRefsService.result
 
 type parsing_result =
   (* ParsingError means that message was unrecoverably mangled (eg. no ID, or

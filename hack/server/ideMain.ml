@@ -94,6 +94,13 @@ let send_call_to_typecheker env id = function
     let msg = IdeProcessMessage.FindRefsCall (id, action) in
     IdeProcessPipe.send env.typechecker msg
 
+let send_typechecker_response_to_client env id response =
+  Option.iter env.client begin fun (_, oc) ->
+    let response = IdeJsonUtils.json_string_of_response id response in
+    Marshal.to_channel oc response [];
+    flush oc
+  end
+
 (* Will return a response for the client, or None if the response is going to
  * be computed asynchronously *)
 let get_call_response env id call =
@@ -157,8 +164,9 @@ let handle_typechecker_message typechecker_process env  =
   | IdeProcessMessage.SyncErrorList errorl ->
     Hh_logger.log "Received error list update";
     { env with errorl = errorl }
-  | IdeProcessMessage.FindRefsResponse (_id, _result) ->
-    (* TODO: output it to the client *)
+  | IdeProcessMessage.FindRefsResponse (id, response) ->
+    let response = IdeJson.FindRefsResponse response in
+    send_typechecker_response_to_client env id response;
     env
 
 let handle_server_idle env =

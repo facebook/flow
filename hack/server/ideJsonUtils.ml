@@ -48,6 +48,17 @@ let args_to_call = function
     IdentifyFunctionCall (content, line, char)
   | [JSON_String "--search"; JSON_String content] -> SearchCall content
   | [] -> StatusCall
+  | [JSON_String "--find-refs"; JSON_String s] ->
+    let open FindRefsService in
+    begin match Str.split (Str.regexp "::") s with
+      | class_name :: method_name :: _ ->
+        FindRefsCall (Method (class_name, method_name))
+      | function_name :: _ ->
+        FindRefsCall (Function function_name)
+      | _ -> raise Not_found
+    end
+  | [JSON_String "--find-class-refs"; JSON_String s] ->
+    FindRefsCall (FindRefsService.Class s)
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -134,6 +145,7 @@ let json_string_of_response id response =
     | IdentifyFunctionResponse s -> JSON_String s
     | SearchCallResponse r -> r
     | StatusResponse r -> r
+    | FindRefsResponse r -> ServerFindRefs.to_json r
   in
   json_to_string (build_response_json id result_field)
 
