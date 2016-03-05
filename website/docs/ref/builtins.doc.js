@@ -37,7 +37,7 @@ next: syntax.html
 */
 
 // $ExpectError
-(1 + 1: boolean); // Error: Numbers are not strings
+(1 + 1: string); // Error: Numbers are not strings
 ("Hello, World": string); // OK: Strings are strings
 
 class A {}
