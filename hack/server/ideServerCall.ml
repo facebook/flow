@@ -11,6 +11,13 @@
 open IdeJson
 open Core
 
+type deferred_to_typechecker =
+  | FindRefsCall of FindRefsService.action
+
+type result =
+  | Result of IdeJson.response_type
+  | DeferredToTypechecker of deferred_to_typechecker
+
 let get_autocomplete_response content files_info =
   let res = ServerAutoComplete.auto_complete files_info content in
   AutoCompleteResponse ( Hh_json.JSON_Array (
@@ -34,14 +41,16 @@ let get_status_reponse errorl =
   StatusResponse (ServerError.get_errorl_json errorl)
 
 let get_call_response id call files_info errorl =
-  let response = match call with
-    | AutoCompleteCall content ->
-      get_autocomplete_response content files_info
-    | IdentifyFunctionCall (content, line, char) ->
-      get_identify_function_response content line char
-    | SearchCall s ->
-      get_search_response s
-    | StatusCall ->
-      get_status_reponse errorl
-  in
-  IdeJsonUtils.json_string_of_response id response
+  match call with
+  | AutoCompleteCall content ->
+    Result (get_autocomplete_response content files_info)
+  | IdentifyFunctionCall (content, line, char) ->
+    Result (get_identify_function_response content line char)
+  | SearchCall s ->
+    Result (get_search_response s)
+  | StatusCall ->
+    Result( get_status_reponse errorl)
+  | IdeJson.FindRefsCall s ->
+    (* TODO: we can also lookup dependency table and fulfill requests with
+     * only several dependencies in IDE process *)
+    DeferredToTypechecker (FindRefsCall s)

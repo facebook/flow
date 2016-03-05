@@ -16,5 +16,12 @@ type typechecker_to_ide_message =
    * new ones" *)
   | SyncFileInfo of FileInfo.t Relative_path.Map.t
   | SyncErrorList of Errors.t
+  (* See comment on FindRefsCall *)
+  | FindRefsResponse of (IdeJson.call_id * FindRefsService.result)
 
-type ide_to_typechecker_message
+type ide_to_typechecker_message =
+  (* Finding all references is a heavyweight action that (in some cases)
+   * must be parallelized and will take multiple seconds anyway, so we don't
+   * want to do it in IDE process. Sending this message enqueues the request
+   * to be done by the typechecker process. *)
+  | FindRefsCall of (IdeJson.call_id * FindRefsService.action)

@@ -17,6 +17,7 @@ type call_type =
   | IdentifyFunctionCall of string * int * int
   | SearchCall of string
   | StatusCall
+  | FindRefsCall of FindRefsService.action
 
 type response_type =
   | AutoCompleteResponse of Hh_json.json

@@ -228,6 +228,23 @@ let ide_update_error_list ide_process new_error_list old_error_list =
       IdeProcessPipe.send x (IdeProcessMessage.SyncErrorList new_error_list);
   end
 
+let rec ide_recv_messages_loop ide_process genv env =
+  let ide_fd = ide_process.IdeProcessPipe.in_fd in
+  match Unix.select [ide_fd] [] [] 0.0 with
+  | [], _, _ -> ()
+  | _ ->
+    match IdeProcessPipe.recv ide_process with
+    | IdeProcessMessage.FindRefsCall (id, action) ->
+        let res = ServerFindRefs.go action genv env in
+        let msg = IdeProcessMessage.FindRefsResponse (id, res) in
+        IdeProcessPipe.send ide_process msg;
+        ide_recv_messages_loop ide_process genv env
+
+let ide_recv_messages genv env =
+  Option.iter genv.ide_process begin fun ide_process ->
+    ide_recv_messages_loop ide_process genv env
+  end
+
 let serve genv env in_fd _ =
   let env = ref env in
   let last_stats = ref empty_recheck_loop_stats in
@@ -242,6 +259,8 @@ let serve genv env in_fd _ =
     (* For now we only run IDE commands in idle loop, with plan to vet more
      * places where it's safe to do so in parallel. *)
     SharedMem.hashtable_mutex_lock ();
+    (* TODO: make waiting on IDE messages part of sleep_and_check *)
+    ide_recv_messages genv !env;
     let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
     if not has_client && not has_parsing_hook
     then begin

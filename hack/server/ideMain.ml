@@ -12,6 +12,7 @@ open Core
 open IdeJson
 
 type env = {
+  typechecker : IdeProcessPipe.to_typechecker;
   client : (in_channel * out_channel) option;
   (* Whether typechecker has finished full initialization. In the future, we
    * can have more granularity here, allowing some queries to run sooner. *)
@@ -24,7 +25,8 @@ type env = {
   errorl : Errors.t
 }
 
-let empty_env = {
+let build_env typechecker = {
+  typechecker = typechecker;
   client = None;
   typechecker_init_done = false;
   files_info = Relative_path.Map.empty;
@@ -57,6 +59,11 @@ let get_ready wait_handles =
   end in
   ready_funs @ ready_channels
 
+(* Wrapper to ensure flushing and type safety of sent type *)
+let write_string_to_channel (s : string) oc =
+  Marshal.to_channel oc s [];
+  flush oc
+
 let handle_already_has_client oc =
   let response = Hh_json.(json_to_string (
     JSON_Object [
@@ -67,7 +74,7 @@ let handle_already_has_client oc =
       );
     ]
   )) in
-  Marshal.to_channel oc response [];
+  write_string_to_channel response oc;
   close_out oc
 
 let handle_new_client parent_in_fd env  =
@@ -82,15 +89,26 @@ let handle_new_client parent_in_fd env  =
     Hh_logger.log "Rejected a client";
     handle_already_has_client oc; env
 
+let send_call_to_typecheker env id = function
+  | IdeServerCall.FindRefsCall action ->
+    let msg = IdeProcessMessage.FindRefsCall (id, action) in
+    IdeProcessPipe.send env.typechecker msg
+
+(* Will return a response for the client, or None if the response is going to
+ * be computed asynchronously *)
 let get_call_response env id call =
   let busy = fun () -> IdeJsonUtils.json_string_of_server_busy id in
-  if not env.typechecker_init_done then busy () else
+  if not env.typechecker_init_done then Some (busy ()) else
   let response = SharedMem.try_lock_hashtable ~do_:begin fun () ->
     IdeServerCall.get_call_response id call env.files_info env.errorl
   end in
   match response with
-  | Some res -> res
-  | None -> busy ()
+  | Some (IdeServerCall.DeferredToTypechecker call) ->
+      send_call_to_typecheker env id call;
+      None
+  | Some (IdeServerCall.Result response) ->
+      Some (IdeJsonUtils.json_string_of_response id response)
+  | None -> Some (busy ())
 
 let handle_gone_client env =
   Hh_logger.log "Client went away";
@@ -106,13 +124,14 @@ let handle_client_request (ic, oc) env =
       env
     | InvalidCall (id, e) ->
       let response = IdeJsonUtils.json_string_of_invalid_call id e in
-      Marshal.to_channel oc response [];
+      write_string_to_channel response oc;
       flush oc;
       env
     | Call (id, call) ->
-      let response = get_call_response env id call in
-      Marshal.to_channel oc response [];
-      flush oc;
+      begin match get_call_response env id call with
+        | Some response -> write_string_to_channel response oc
+        | None -> ()
+      end;
       env
   with
   | End_of_file
@@ -138,6 +157,9 @@ let handle_typechecker_message typechecker_process env  =
   | IdeProcessMessage.SyncErrorList errorl ->
     Hh_logger.log "Received error list update";
     { env with errorl = errorl }
+  | IdeProcessMessage.FindRefsResponse (_id, _result) ->
+    (* TODO: output it to the client *)
+    env
 
 let handle_server_idle env =
   if IdeIdle.has_tasks () then
@@ -178,7 +200,7 @@ let daemon_main _ (parent_ic, _parent_oc) =
   SharedMem.enable_local_writes ();
   let parent_in_fd = Daemon.descr_of_in_channel parent_ic in
   let typechecker_process = IdeProcessPipeInit.ide_recv parent_in_fd in
-  let env = ref empty_env in
+  let env = ref (build_env typechecker_process) in
   IdeIdle.init ();
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
