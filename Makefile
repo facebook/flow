@@ -88,6 +88,7 @@ OCAML_LIBRARIES=\
   bigarray
 
 NATIVE_LIBRARIES=\
+  pthread\
   $(ELF)
 
 FILES_TO_COPY=\
