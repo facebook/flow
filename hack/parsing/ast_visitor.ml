@@ -551,15 +551,21 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
     | XhpAttr (t,h,i,n,g) -> this#on_xhpAttr acc t h i n g
     | Method m -> this#on_method_ acc m
 
-  method on_const acc h_opt _ =
+  method on_const acc h_opt consts =
     let acc = match h_opt with
       | Some h -> this#on_hint acc h
       | None -> acc in
+    let acc = List.fold_left (fun acc (id, expr) ->
+      let acc = this#on_id acc id in
+      let acc = this#on_expr acc expr in
+      acc
+    ) acc consts in
     acc
-  method on_absConst acc h_opt _ =
+  method on_absConst acc h_opt id =
     let acc = match h_opt with
       | Some h -> this#on_hint acc h
       | None -> acc in
+    let acc = this#on_id acc id in
     acc
   method on_attributes acc _ = acc
   method on_typeConst acc t =
@@ -580,10 +586,16 @@ class virtual ['a] ast_visitor: ['a] ast_visitor_type = object(this)
   method on_classTraitRequire acc _ h =
     let acc = this#on_hint acc h in
     acc
-  method on_classVars acc _ h_opt _ =
+  method on_classVars acc _ h_opt vars =
     let acc = match h_opt with
       | Some h -> this#on_hint acc h
       | None -> acc in
+    let acc = List.fold_left (fun acc (id, opt_expr) ->
+      let acc = this#on_id acc id in
+      match opt_expr with
+      | Some expr -> this#on_expr acc expr
+      | None -> acc
+    ) acc vars in
     acc
   method on_xhpAttr acc _ h_opt _ _ _ =
     let acc = match h_opt with
