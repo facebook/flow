@@ -325,8 +325,7 @@ static void run_loop_thread(struct thread_env *thread_env) {
 /**
  * Starts up a thread running a run loop, creates the env, and then returns it
  */
-static struct env *fsevents_init()
-{
+static struct env *fsevents_init(void) {
   pthread_t loop_thread;
   struct thread_env *thread_env;
   struct env *env;
@@ -395,16 +394,17 @@ static struct event *read_events(struct env *env) {
   return to_do;
 }
 
-value stub_fsevents_init(value unit)
+CAMLprim value stub_fsevents_init(value unit)
 {
+  CAMLparam1(unit);
   // We're returning a pointer to ocaml land. This type will be opaque to them
   // and only be useful when passed back to c. This is a safe way to pass
   // pointers back to ocaml. See
   // http://caml.inria.fr/pub/docs/manual-ocaml/intfc.html#sec412
-  return (value)fsevents_init();
+  CAMLreturn((value)fsevents_init());
 }
 
-value stub_fsevents_add_watch(value env, value path)
+CAMLprim value stub_fsevents_add_watch(value env, value path)
 {
   CAMLparam2(env, path);
   CAMLlocal1(ret);
@@ -419,7 +419,7 @@ value stub_fsevents_add_watch(value env, value path)
 /**
  * This functionality is not yet implemented
  */
-value stub_fsevents_rm_watch(value env, value path)
+CAMLprim value stub_fsevents_rm_watch(value env, value path)
 {
   CAMLparam2(env, path);
   CAMLlocal1(ret);
@@ -431,19 +431,19 @@ value stub_fsevents_rm_watch(value env, value path)
   CAMLreturn(ret);
 }
 
-value stub_fsevents_get_event_fd(value env)
+CAMLprim value stub_fsevents_get_event_fd(value env)
 {
   CAMLparam1(env);
   int fd = ((struct env *)env)->read_event_fd;
   CAMLreturn(Val_int(fd));
 }
 
-value stub_fsevents_read_events(value env)
+CAMLprim value stub_fsevents_read_events(value env)
 {
   CAMLparam1(env);
+  CAMLlocal3(event_list, event, cons);
   struct event *to_free;
   struct event *events = read_events((struct env*)env);
-  CAMLlocal3(event_list, event, cons);
   event_list = Val_emptylist;
   while (events != NULL) {
     // A tuple to store the filed

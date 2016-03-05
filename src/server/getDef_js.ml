@@ -30,9 +30,9 @@ let getdef_lval (state, loc1) cx name loc2 rhs =
   if Reason_js.in_range loc1 loc2
   then (match rhs with
     | Type_inference_hooks_js.RHSLoc loc ->
-      state := Some (Gdloc loc);
+      state := Some (Gdloc loc)
     | Type_inference_hooks_js.RHSType t ->
-      state := Some (Gdmem (name, t));
+      state := Some (Gdmem (name, t))
     | Type_inference_hooks_js.NoRHS ->
       let _ = getdef_id (state, loc1) cx name loc2 in
       ()

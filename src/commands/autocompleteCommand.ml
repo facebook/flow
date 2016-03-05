@@ -108,7 +108,7 @@ let main option_values root json strip_root args () =
     List.iter (fun res ->
       let name = res.AutocompleteService_js.res_name in
       let ty = res.AutocompleteService_js.res_ty in
-      print_endline (name^" "^ty)
+      print_endline (Printf.sprintf "%s %s" name ty)
     ) completions
   )
 

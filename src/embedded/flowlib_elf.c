@@ -30,7 +30,7 @@
 
 #define NONE Val_int(0)
 
-static value SOME(value v) {
+CAMLprim static value SOME(value v) {
   CAMLparam1(v);
   CAMLlocal1(result);
 
@@ -48,7 +48,7 @@ static value SOME(value v) {
  * with -Wl,-no_pie, but it is easier to just open the binary and read it from
  * disk.
  */
-value get_embedded_flowlib_data(value filename) {
+CAMLprim value get_embedded_flowlib_data(value filename) {
   CAMLparam1(filename);
   CAMLlocal1(result);
 
@@ -79,7 +79,7 @@ fail_early:
 
 #elif defined _WIN32
 
-value get_embedded_flowlib_data(value filename) {
+CAMLprim value get_embedded_flowlib_data(value filename) {
   CAMLparam1(filename);
   CAMLreturn(NONE);
 }
@@ -90,7 +90,7 @@ value get_embedded_flowlib_data(value filename) {
  * Look for a magic "flowlib" elf section and read it out, if it exists. Most of
  * this code adapted from hphp/util/embedded-data.cpp.
  */
-value get_embedded_flowlib_data(value filename) {
+CAMLprim value get_embedded_flowlib_data(value filename) {
   CAMLparam1(filename);
   CAMLlocal1(result);
 
@@ -118,7 +118,7 @@ value get_embedded_flowlib_data(value filename) {
     goto fail_after_elf_begin;
   }
 
-  Elf_Scn *scn = 0;
+  Elf_Scn *scn = NULL;
   while ((scn = elf_nextscn(e, scn))) {
     GElf_Shdr shdr;
     if (gelf_getshdr(scn, &shdr) != &shdr) {
