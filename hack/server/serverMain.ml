@@ -218,11 +218,29 @@ let ide_update_files_info ide_process files_info updated_files_info =
     IdeProcessPipe.send x (IdeProcessMessage.SyncFileInfo updated_files_info);
   end
 
+let ide_update_error_list ide_process new_error_list old_error_list =
+  (* Compare the first few elements to catch the common case of just few errors
+   * existing, but short circuit when the list of errors is big. *)
+  let rec cheap_equals l1 l2 max_comparisons =
+    if max_comparisons = 0 then false else
+    match l1, l2 with
+      | [], [] -> true
+      | (h1::t1), (h2::t2) -> h1 = h2 && cheap_equals t1 t2 (max_comparisons-1)
+      | _ -> false
+    in
+  let cheap_equals l1 l2 = cheap_equals l1 l2 5 in
+
+  Option.iter ide_process begin fun x ->
+    if not (cheap_equals new_error_list old_error_list) then
+      IdeProcessPipe.send x (IdeProcessMessage.SyncErrorList new_error_list);
+  end
+
 let serve genv env in_fd _ =
   let env = ref env in
   let last_stats = ref empty_recheck_loop_stats in
   let recheck_id = ref (Random_id.short_string ()) in
   ide_sync_files_info genv.ide_process !env.files_info;
+  ide_update_error_list genv.ide_process !env.errorl [];
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
     run_ide_process genv.ide_process;
@@ -248,16 +266,18 @@ let serve genv env in_fd _ =
     let start_t = Unix.gettimeofday () in
     HackEventLogger.with_id ~stage:`Recheck !recheck_id @@ fun () ->
     let stats, new_env = recheck_loop genv !env in
-    env := new_env;
     if stats.rechecked_count > 0 then begin
       HackEventLogger.recheck_end start_t has_parsing_hook
         stats.rechecked_batches
         stats.rechecked_count
         stats.total_rechecked_count;
-      Hh_logger.log "Recheck id: %s" !recheck_id;
       ide_update_files_info
-        genv.ide_process !env.files_info stats.reparsed_files
+        genv.ide_process new_env.files_info stats.reparsed_files;
+      ide_update_error_list
+        genv.ide_process new_env.errorl !env.errorl;
+      Hh_logger.log "Recheck id: %s" !recheck_id;
     end;
+    env := new_env;
     last_stats := stats;
     if has_client then
       (try

@@ -20,6 +20,7 @@ type typechecker_to_ide_message =
    * updates are of the from "overwrite previous values for those paths with
    * new ones" *)
   | SyncFileInfo of FileInfo.t Relative_path.Map.t
+  | SyncErrorList of Errors.t
 
 type ide_to_typechecker_message =
   (* Let typechecker process know that we are done accessing shared heap until

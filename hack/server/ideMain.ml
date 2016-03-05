@@ -20,12 +20,16 @@ type env = {
   (* IDE process's version of ServerEnv.file_info, synchronized periodically
    * from typechecker process. *)
   files_info : FileInfo.t Relative_path.Map.t;
+  (* IDE process's version of ServerEnv.errorl, synchronized periodically
+   * from typechecker process. *)
+  errorl : Errors.t
 }
 
 let empty_env = {
   client = None;
   run_ide_commands = false;
   files_info = Relative_path.Map.empty;
+  errorl = [];
 }
 
 type job = {
@@ -83,7 +87,7 @@ let get_call_response env id call =
   if not env.run_ide_commands then
     IdeJsonUtils.json_string_of_server_busy id
   else
-    IdeServerCall.get_call_response id call env.files_info
+    IdeServerCall.get_call_response id call env.files_info env.errorl
 
 let handle_gone_client env =
   Hh_logger.log "Client went away";
@@ -131,6 +135,9 @@ let handle_typechecker_message typechecker_process env  =
     HackSearchService.IdeProcessApi.enqueue_updates
       (Relative_path.Map.keys updated_files_info);
     { env with files_info = new_files_info }
+  | IdeProcessMessage.SyncErrorList errorl ->
+    Hh_logger.log "Received error list update";
+    { env with errorl = errorl }
 
 let handle_server_idle env =
   if env.run_ide_commands then IdeIdle.go ();

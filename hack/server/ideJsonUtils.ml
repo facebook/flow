@@ -47,6 +47,7 @@ let args_to_call = function
       with _ -> raise Not_found in
     IdentifyFunctionCall (content, line, char)
   | [JSON_String "--search"; JSON_String content] -> SearchCall content
+  | [] -> StatusCall
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -132,6 +133,7 @@ let json_string_of_response id response =
     | AutoCompleteResponse r -> r
     | IdentifyFunctionResponse s -> JSON_String s
     | SearchCallResponse r -> r
+    | StatusResponse r -> r
   in
   json_to_string (build_response_json id result_field)
 

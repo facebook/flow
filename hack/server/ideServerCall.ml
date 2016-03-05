@@ -29,7 +29,11 @@ let get_search_response s =
     List.map res ServerSearch.result_to_json
   ))
 
-let get_call_response id call files_info =
+let get_status_reponse errorl =
+  let errorl = List.map errorl Errors.to_absolute in
+  StatusResponse (ServerError.get_errorl_json errorl)
+
+let get_call_response id call files_info errorl =
   let response = match call with
     | AutoCompleteCall content ->
       get_autocomplete_response content files_info
@@ -37,5 +41,7 @@ let get_call_response id call files_info =
       get_identify_function_response content line char
     | SearchCall s ->
       get_search_response s
+    | StatusCall ->
+      get_status_reponse errorl
   in
   IdeJsonUtils.json_string_of_response id response
