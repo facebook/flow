@@ -88,7 +88,7 @@ September:
 
 ##Using Flow
 
-Start out with our [Getting Started](/getting-started.html) guide and try Flow
+Start out with our [Getting Started](/docs/getting-started.html) guide and try Flow
 for yourself.
 
 [Flow is open-source](https://github.com/facebook/flow) and still evolving. It
