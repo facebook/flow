@@ -246,8 +246,19 @@ ES_DefaultExport.default();
   import {something} from "Foo";
   ```
 
+  ### CSS Modules with Webpack
+
   A more common (and less trivial) example here is to configure Flow to
   understand [CSS Modules](https://github.com/css-modules/css-modules):
+
+  **`CSSModule.js.flow`**
+
+  ```javascript
+  // @flow
+
+  // CSS modules have a `className` export which is a string
+  declare export var className: string;
+  ```
 
   **`.flowconfig`**
 
@@ -256,16 +267,13 @@ ES_DefaultExport.default();
   module.name_mapper='^\(.*\)\.css$' -> '<PROJECT_ROOT>/CSSModule.js.flow'
   ```
 
-  **`CSSModule.js.flow`**
-
-  ```javascript
-  // @flow
-
-  // CSS modules have a `className` export which is a string
-  declare export let className: string;
-  ```
+  **NOTE: You do not need to manually substitue anything for
+          "\<PROJECT\_ROOT\>".** This is a string token that Flow recognizes and
+          will automatically replace with the path to the directory of your
+          .flowconfig file.
 
   **`main.js`**
+
   ```javascript
   // @flow
 
