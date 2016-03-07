@@ -217,8 +217,10 @@ header.topbar {
 }
 
 header.topbar .logo {
+    float: left;
     height: 30px;
     margin-top: 7px;
+    margin-right: 20px;
 }
 
 .flow-header {
@@ -230,8 +232,12 @@ header.topbar .logo {
     margin-bottom: 15px;
 }
 
-header.topbar nav ul {
+header.topbar nav ul.external {
     float: right;
+}
+
+header.topbar nav ul {
+    float: left;
     text-align: right;
     padding: 0;
     margin: 0;
@@ -578,4 +584,76 @@ div.CodeMirror-lines {
         left: 0;
     }
 
+}
+
+
+/* Algolia Doc Search */
+
+@media screen and (max-width: 960px) {
+    #algolia-doc-search {
+        display: none;
+    }
+}
+
+input#algolia-doc-search {
+    background: transparent url('/static/search.png') no-repeat 10px center;
+    background-size: 16px 16px;
+
+    position: relative;
+    vertical-align: top;
+    padding: 0 10px;
+    padding-left: 35px;
+    margin-left: 10px;
+    margin-top: 10px;
+    height: 30px;
+    font-size: 16px;
+    line-height: 20px;
+    background-color: #555;
+    border-radius: 4px;
+    color: white;
+    outline: none;
+    border: none;
+    width: 170px;
+
+    transition: width .2s ease;
+}
+
+input#algolia-doc-search:focus {
+    width: 240px;
+}
+
+.algolia-autocomplete .aa-dropdown-menu {
+    margin-left: -110px;
+    margin-top: -4px;
+}
+
+.algolia-autocomplete {
+    text-transform: none;
+    vertical-align: top;
+    height: 53px;
+}
+
+.algolia-docsearch-suggestion {
+    border-bottom-color: #CC2E39;
+}
+
+.algolia-docsearch-suggestion--category-header {
+    background-color: #FBE178;
+    color: #353331;
+}
+
+.algolia-docsearch-suggestion--highlight {
+    color: #CC2E39;
+}
+
+.algolia-docsearch-suggestion--category-header .algolia-docsearch-suggestion--highlight {
+    background-color: #CC2E39;
+}
+
+.aa-cursor .algolia-docsearch-suggestion--content {
+    color: #CC2E39;
+}
+
+.aa-cursor .algolia-docsearch-suggestion {
+    background: #f1f3f5;
 }
