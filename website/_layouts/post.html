@@ -11,9 +11,9 @@ sectionid: blog
 {% include nav_blog.html %}
 
 <article class='withtoc'>
+    <a class="edit-page-link" href="https://github.com/facebook/flow/tree/gh-pages/{{ page.path }}" target="_blank">Edit on GitHub</a>
     <h1>
       {{ page.title }}
-      <a class="edit-page-link" href="https://github.com/facebook/flow/tree/gh-pages/{{ page.path }}" target="_blank">Edit on GitHub</a>
     </h1>
     <p class="meta">{{ page.date | date: "%B %e, %Y" }} by {{ author.display_name }}</p>
 

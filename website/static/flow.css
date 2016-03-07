@@ -34,6 +34,7 @@ td {
     vertical-align: top;
 }
 
+.edit-page-link + h1,
 h1:first-child, h2:first-child, h3:first-child, h4:first-child {
     margin-top: 0;
 }
@@ -384,8 +385,7 @@ section.content aside .fb-like {
 .edit-page-link {
     float: right;
     font-size: 12px;
-    font-weight: normal;
-    line-height: 20px;
+    margin-top: 13px;
     opacity: 0.6;
     transition: opacity 0.5s;
 }
