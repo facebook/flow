@@ -17,7 +17,6 @@ let dummy_path : t = ""
 let cat = Sys_utils.cat
 let compare = Pervasives.compare
 let dirname = Filename.dirname
-let expanduser = Sys_utils.expanduser
 let null_path = if Sys.win32 then "nul" else "/dev/null"
 let temp_dir_name =
   if Sys.win32 then Filename.get_temp_dir_name () else "/tmp"
@@ -34,7 +33,7 @@ let temp_dir_name =
  *   the current directory (in absolute)
  *)
 let make path =
-  match Sys_utils.realpath (expanduser path) with
+  match Sys_utils.realpath path with
   | Some path -> path
   | None -> path (* assert false? *)
 
