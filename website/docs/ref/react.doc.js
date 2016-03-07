@@ -119,6 +119,9 @@ const Counter = React.createClass({
 });
 
 /*
+
+ ![animation](flow-state.gif)
+
   ## Defining components as `React.Component` subclasses
 
   While PropTypes are great, they are quite limited. For example, it's possible
