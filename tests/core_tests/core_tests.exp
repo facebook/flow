@@ -3,29 +3,29 @@ map.js:23:13,33: constructor call
 Function cannot be called on any member of intersection type
 map.js:23:13,33: intersection
 Member 1:
-[LIB] core.js:382:5,53: polymorphic type: function type
+[LIB] core.js:385:5,53: polymorphic type: function type
 Error:
 map.js:23:21,32: array literal
 This type is incompatible with
-[LIB] core.js:382:32,35: undefined
+[LIB] core.js:385:32,35: undefined
 Member 2:
-[LIB] core.js:383:5,53: polymorphic type: function type
+[LIB] core.js:386:5,53: polymorphic type: function type
 Error:
 map.js:23:21,32: array literal
 This type is incompatible with
-[LIB] core.js:383:32,35: null
+[LIB] core.js:386:32,35: null
 Member 3:
-[LIB] core.js:384:5,75: polymorphic type: function type
+[LIB] core.js:387:5,75: polymorphic type: function type
 Error:
 map.js:23:29,31: number
 This type is incompatible with
-[LIB] core.js:384:45,56: tuple type
+[LIB] core.js:387:45,56: tuple type
 Member 4:
-[LIB] core.js:385:5,78: polymorphic type: function type
+[LIB] core.js:388:5,78: polymorphic type: function type
 Error:
 map.js:23:29,31: number
 This type is incompatible with
-[LIB] core.js:385:48,59: tuple type
+[LIB] core.js:388:48,59: tuple type
 
 map.js:29:6,17: call of method `get`
 Error:
@@ -37,7 +37,7 @@ map.js:29:6,17: call of method `get`
 Error:
 map.js:29:20,26: boolean
 This type is incompatible with
-[LIB] core.js:390:22,25: undefined
+[LIB] core.js:393:22,25: undefined
 
 map.js:30:5,14: call of method `get`
 Error:
@@ -49,56 +49,56 @@ regexp.js:26:5,22: function call
 Error:
 regexp.js:26:19,21: string
 This type is incompatible with
-[LIB] core.js:247:47,58: string enum
+[LIB] core.js:250:47,58: string enum
 
 regexp.js:27:5,26: constructor call
 Error:
 regexp.js:27:23,25: string
 This type is incompatible with
-[LIB] core.js:248:51,62: string enum
+[LIB] core.js:251:51,62: string enum
 
 weakset.js:19:11,32: constructor call
 Function cannot be called on any member of intersection type
 weakset.js:19:11,32: intersection
 Member 1:
-[LIB] core.js:420:5,47: polymorphic type: function type
+[LIB] core.js:423:5,47: polymorphic type: function type
 Error:
 weakset.js:19:23,31: array literal
 This type is incompatible with
-[LIB] core.js:420:31,34: undefined
+[LIB] core.js:423:31,34: undefined
 Member 2:
-[LIB] core.js:421:5,58: polymorphic type: function type
+[LIB] core.js:424:5,58: polymorphic type: function type
 Error:
 weakset.js:19:24,24: number
 This type is incompatible with
-[LIB] core.js:421:20,25: object type
+[LIB] core.js:424:20,25: object type
 Member 3:
-[LIB] core.js:422:5,61: polymorphic type: function type
+[LIB] core.js:425:5,61: polymorphic type: function type
 Error:
 weakset.js:19:24,24: number
 This type is incompatible with
-[LIB] core.js:422:20,25: object type
+[LIB] core.js:425:20,25: object type
 
 weakset.js:36:11,32: constructor call
 Function cannot be called on any member of intersection type
 weakset.js:36:11,32: intersection
 Member 1:
-[LIB] core.js:420:5,47: polymorphic type: function type
+[LIB] core.js:423:5,47: polymorphic type: function type
 Error:
 weakset.js:36:23,31: $Iterable
 This type is incompatible with
-[LIB] core.js:420:31,34: undefined
+[LIB] core.js:423:31,34: undefined
 Member 2:
-[LIB] core.js:421:5,58: polymorphic type: function type
+[LIB] core.js:424:5,58: polymorphic type: function type
 Error:
 weakset.js:36:23,31: $Iterable
 This type is incompatible with
-[LIB] core.js:421:38,45: array type
+[LIB] core.js:424:38,45: array type
 Member 3:
-[LIB] core.js:422:5,61: polymorphic type: function type
+[LIB] core.js:425:5,61: polymorphic type: function type
 Error:
 weakset.js:29:31,36: number
 This type is incompatible with
-[LIB] core.js:422:20,25: object type
+[LIB] core.js:425:20,25: object type
 
 Found 8 errors
