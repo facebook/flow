@@ -1797,8 +1797,10 @@ and assign p env e1 ty2 =
   | _, This ->
      Errors.this_lvalue p;
      env, (Reason.Rwitness p, Tany)
-  | _, Unop (Ast.Uref, e1') ->
+  | pref, Unop (Ast.Uref, e1') ->
     (* references can be "lvalues" in foreach bindings *)
+    if Env.is_strict env then
+      Errors.reference_expr pref;
     assign p env e1' ty2
   | _ ->
       assign_simple p env e1 ty2
@@ -3304,7 +3306,9 @@ and unop p env uop ty =
       let env = Type.sub_type p Reason.URnone env (Reason.Rarith p, Tprim Tnum) ty in
       env, ty
   | Ast.Uref ->
-      (* We basically just ignore references *)
+      (* We basically just ignore references in non-strict files *)
+      if Env.is_strict env then
+        Errors.reference_expr p;
       env, ty
 
 and binop in_cond p env bop p1 ty1 p2 ty2 =

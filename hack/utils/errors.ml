@@ -361,6 +361,7 @@ module Typing                               = struct
   let not_nullable_compare_null_trivial     = 4151 (* DONT MODIFY!!!! *)
   let class_property_only_static_literal    = 4152 (* DONT MODIFY!!!! *)
   let attribute_too_few_arguments           = 4153 (* DONT MODIFY!!!! *)
+  let reference_expr                        = 4154 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1828,6 +1829,10 @@ let class_property_only_static_literal pos =
   let msg =
     "Initialization of class property must be a static literal expression." in
   add Typing.class_property_only_static_literal pos msg
+
+let reference_expr pos =
+  let msg = "Cannot take a value by reference in strict mode." in
+  add Typing.reference_expr pos msg
 
 (*****************************************************************************)
 (* Convert relative paths to absolute. *)
