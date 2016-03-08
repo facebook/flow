@@ -46,7 +46,7 @@ let builtins =
   "interface KeyedTraversable<+Tk, +Tv> extends Traversable<Tv> {}\n"^
   "interface KeyedContainer<+Tk, +Tv> extends Container<Tv>, KeyedTraversable<Tk,Tv> {}\n"^
   "interface KeyedIterator<+Tk, +Tv> extends KeyedTraversable<Tk, Tv>, Iterator<Tv> {}\n"^
-  "interface KeyedIterable<+Tk, +Tv> extends KeyedTraversable<Tk, Tv>, Iterable<Tv> {}\n"^
+  "interface KeyedIterable<Tk, +Tv> extends KeyedTraversable<Tk, Tv>, Iterable<Tv> {}\n"^
   "interface Awaitable<+T> {"^
   "  public function getWaitHandle(): WaitHandle<T>;"^
   "}\n"^
@@ -55,7 +55,7 @@ let builtins =
   "  public function map<Tu>((function(Tv): Tu) $callback): ConstVector<Tu>;"^
   "}\n"^
   "interface ConstSet<+Tv> extends KeyedIterable<mixed, Tv>, Container<Tv>{}\n"^
-  "interface ConstMap<+Tk, +Tv> extends KeyedIterable<Tk, Tv>, KeyedContainer<Tk, Tv>{"^
+  "interface ConstMap<Tk, +Tv> extends KeyedIterable<Tk, Tv>, KeyedContainer<Tk, Tv>{"^
   "  public function map<Tu>((function(Tv): Tu) $callback): ConstMap<Tk, Tu>;"^
   "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): ConstMap<Tk, Tu>;"^
   "}\n"^
@@ -75,7 +75,7 @@ let builtins =
   "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): Map<Tk, Tu>;"^
   "  public function contains(Tk $k): bool;"^
   "}\n"^
-  "final class ImmMap<+Tk, +Tv> implements ConstMap<Tk, Tv>{"^
+  "final class ImmMap<Tk, +Tv> implements ConstMap<Tk, Tv>{"^
   "  public function map<Tu>((function(Tv): Tu) $callback): ImmMap<Tk, Tu>;"^
   "  public function mapWithKey<Tu>((function(Tk, Tv): Tu) $fn): ImmMap<Tk, Tu>;"^
   "}\n"^
@@ -89,7 +89,7 @@ let builtins =
   "  public function __construct(string $x) {}"^
   "  public function getMessage(): string;"^
   "}\n"^
-  "class Generator<+Tk, +Tv, -Ts> implements KeyedIterator<Tk, Tv> {\n"^
+  "class Generator<Tk, +Tv, -Ts> implements KeyedIterator<Tk, Tv> {\n"^
   "  public function next(): void;\n"^
   "  public function current(): Tv;\n"^
   "  public function key(): Tk;\n"^
@@ -104,7 +104,7 @@ let builtins =
   "interface Countable { public function count(): int; }\n"^
   "interface AsyncIterator<+Tv> {}\n"^
   "interface AsyncKeyedIterator<+Tk, +Tv> extends AsyncIterator<Tv> {}\n"^
-  "class AsyncGenerator<+Tk, +Tv, -Ts> implements AsyncKeyedIterator<Tk, Tv> {\n"^
+  "class AsyncGenerator<Tk, +Tv, -Ts> implements AsyncKeyedIterator<Tk, Tv> {\n"^
   "  public function next(): Awaitable<?(Tk, Tv)> {}\n"^
   "  public function send(?Ts $v): Awaitable<?(Tk, Tv)> {}\n"^
   "  public function raise(Exception $e): Awaitable<?(Tk, Tv)> {}"^
