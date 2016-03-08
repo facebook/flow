@@ -52,7 +52,7 @@ let autocomplete_result_to_json loc_preprocessor result =
     ("name", Hh_json.JSON_String name) ::
     ("type", Hh_json.JSON_String ty) ::
     ("func_details", func_details_to_json result.func_details) ::
-    (Errors_js.json_of_loc loc)
+    (Errors_js.deprecated_json_props_of_loc loc)
   )
 
 let print_type cx type_ =
@@ -130,7 +130,8 @@ let autocomplete_member
 
   let json_data_list = [
     "ac_name", JSON_String ac_name;
-    "ac_loc", JSON_Object (Errors_js.json_of_loc ac_loc);
+    "ac_loc", JSON_Object (Errors_js.deprecated_json_props_of_loc ac_loc);
+    "loc", Reason_js.json_of_loc ac_loc;
     "docblock", Docblock.json_of_docblock docblock;
   ] in
 

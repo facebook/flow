@@ -47,8 +47,11 @@ let handle_error ~json (loc, err) strip =
   let loc = strip loc in
   if json
   then (
-    let loc = Errors_js.json_of_loc loc in
-    let json = Hh_json.JSON_Object (("error", Hh_json.JSON_String err) :: loc) in
+    let json = Hh_json.JSON_Object (
+      ("error", Hh_json.JSON_String err) ::
+      ("loc", Reason_js.json_of_loc loc) ::
+      (Errors_js.deprecated_json_props_of_loc loc)
+    ) in
     output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
     let loc = Reason_js.string_of_loc loc in

@@ -80,7 +80,7 @@ val print_error_color_new:
   error ->
   unit
 
-val json_of_loc : Loc.t -> (string * Hh_json.json) list
+val deprecated_json_props_of_loc : Loc.t -> (string * Hh_json.json) list
 val json_of_errors : error list -> Hh_json.json
 
 val print_error_json : out_channel -> error list -> unit

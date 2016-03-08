@@ -78,7 +78,9 @@ let main option_values root json strip_root path args () =
   (* format output *)
   if json
   then (
-    let json = Hh_json.JSON_Object (Errors_js.json_of_loc loc) in
+    (* TODO: this format is deprecated but can't be backwards-compatible.
+       should be replaced with just `Reason_js.json_of_loc loc`. *)
+    let json = Hh_json.JSON_Object (Errors_js.deprecated_json_props_of_loc loc) in
     let json = Hh_json.json_to_string json in
     print_endline json;
   ) else

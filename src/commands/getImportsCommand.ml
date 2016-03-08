@@ -77,7 +77,8 @@ let main option_values root json strip_root modules () =
             List.map (fun (req, loc) ->
               Hh_json.JSON_Object (
                 ("import", Hh_json.JSON_String req) ::
-                  (Errors_js.json_of_loc loc)
+                ("loc", Reason_js.json_of_loc loc) ::
+                (Errors_js.deprecated_json_props_of_loc loc)
               )
             ) assoc in
           (module_name, Hh_json.JSON_Object [

@@ -474,7 +474,7 @@ let print_error_color_new ~stdin_file:stdin_file ~one_line ~color ~root
   Tty.cprint ~color_mode:color (to_print @ [default_style "\n"])
 
 (* TODO: deprecate this in favor of Reason_js.json_of_loc *)
-let json_of_loc loc = Loc.(
+let deprecated_json_props_of_loc loc = Loc.(
   let file = match loc.source with
   | Some x -> Hh_json.JSON_String (string_of_filename x)
   | None -> Hh_json.JSON_String "" (* TODO: return Hh_json.JSON_Null *)
@@ -618,7 +618,9 @@ let json_of_message message =
     ("descr", JSON_String desc) ::
     match loc with
     | None -> []
-    | Some loc -> ["loc", JSON_Object (json_of_loc loc)]
+    | Some loc ->
+      ("loc", Reason_js.json_of_loc loc) ::
+      deprecated_json_props_of_loc loc
   )
 
 let json_of_infos infos =
@@ -662,7 +664,8 @@ let json_of_error { kind; messages; op; trace; extra } =
     let op_loc, op_desc = to_pp op in
     ("operation", JSON_Object (
       ("descr", JSON_String op_desc) ::
-      (json_of_loc op_loc)
+      ("loc", Reason_js.json_of_loc op_loc) ::
+      (deprecated_json_props_of_loc op_loc)
     )) :: props
   in
   (* add extra if present *)

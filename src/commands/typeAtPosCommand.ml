@@ -63,17 +63,19 @@ let handle_response (loc, t, raw_t, reasons) json strip =
   let loc = strip loc in
   if json
   then (
-    let loc = Errors_js.json_of_loc loc in
     let json_assoc = (
         ("type", Hh_json.JSON_String ty) ::
         ("reasons", Hh_json.JSON_Array
           (List.map (fun r ->
+              let r_loc = strip (Reason_js.loc_of_reason r) in
               Hh_json.JSON_Object (
                   ("desc", Hh_json.JSON_String (Reason_js.desc_of_reason r)) ::
-                  (Errors_js.json_of_loc (strip (Reason_js.loc_of_reason r)))
+                  ("loc", Reason_js.json_of_loc r_loc) ::
+                  (Errors_js.deprecated_json_props_of_loc r_loc)
                 )
             ) reasons)) ::
-        loc
+        ("loc", Reason_js.json_of_loc loc) ::
+        (Errors_js.deprecated_json_props_of_loc loc)
       ) in
     let json_assoc = match raw_t with
       | None -> json_assoc
@@ -106,8 +108,11 @@ let handle_error (loc, err) json strip =
   let loc = strip loc in
   if json
   then (
-    let loc = Errors_js.json_of_loc loc in
-    let json = Hh_json.JSON_Object (("error", Hh_json.JSON_String err) :: loc) in
+    let json = Hh_json.JSON_Object (
+      ("error", Hh_json.JSON_String err) ::
+      ("loc", Reason_js.json_of_loc loc) ::
+      (Errors_js.deprecated_json_props_of_loc loc)
+    ) in
     output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
     let loc = Reason_js.string_of_loc loc in

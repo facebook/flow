@@ -134,16 +134,18 @@ let string_of_loc loc = Loc.(
 
 let json_of_loc loc = Hh_json.(Loc.(
   JSON_Object [
-    "file", (match loc.source with
+    "source", (match loc.source with
       | Some x -> JSON_String (string_of_filename x)
-      | None -> JSON_String ""); (* TODO: return JSON_Null *)
+      | None -> JSON_Null);
     "start", JSON_Object [
       "line", int_ loc.start.line;
-      "col", int_ loc.start.column;
+      "column", int_ (loc.start.column + 1);
+      "offset", int_ loc.start.offset;
     ];
     "end", JSON_Object [
       "line", int_ loc._end.line;
-      "col", int_ loc._end.column;
+      "column", int_ loc._end.column;
+      "offset", int_ loc._end.offset;
     ];
   ]
 ))
