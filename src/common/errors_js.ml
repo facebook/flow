@@ -617,7 +617,7 @@ let json_of_message message =
   JSON_Object (
     ("descr", JSON_String desc) ::
     match loc with
-    | None -> []
+    | None -> deprecated_json_props_of_loc Loc.none
     | Some loc ->
       ("loc", Reason_js.json_of_loc loc) ::
       deprecated_json_props_of_loc loc
