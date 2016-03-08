@@ -32,6 +32,7 @@ module Unify        = Typing_unify
 module TGen         = Typing_generic
 module SN           = Naming_special_names
 module TAccess      = Typing_taccess
+module TI           = Typing_instantiability
 module TVis         = Typing_visibility
 module TS           = Typing_structure
 module Phase        = Typing_phase
@@ -322,15 +323,15 @@ and fun_def tcopt _ f =
         match f.f_ret with
         | None -> env, (Reason.Rwitness (fst f.f_name), Tany)
         | Some ret ->
-          let ty = Typing_hint.instantiable_hint env ret in
+          let ty = TI.instantiable_hint env ret in
           Phase.localize_with_self env ty
       in
       let f_params = match f.f_variadic with
         | FVvariadicArg param -> param :: f.f_params
         | _ -> f.f_params
       in
-      Typing_hint.check_params_instantiable env f_params;
-      Typing_hint.check_tparams_instantiable env f.f_tparams;
+      TI.check_params_instantiable env f_params;
+      TI.check_tparams_instantiable env f.f_tparams;
       let env, params = List.map_env env f_params make_param_local_ty in
       let env = List.fold2_exn ~f:bind_param ~init:env params f_params in
       let env = fun_ env hret (fst f.f_name) nb f.f_fun_kind in
@@ -1271,7 +1272,7 @@ and expr_
       env, (Reason.Rwitness p, Tany)
   | Cast (ty, e) ->
       let env, _ = expr env e in
-      Typing_hint.hint_locl env ty
+      Phase.hint_locl env ty
   | InstanceOf (e, cid) ->
       let env, _ = expr env e in
       let env, _class = instantiable_cid p env cid in
@@ -1385,7 +1386,7 @@ and anon_bind_param params env (param_name, ty as pname_ty) =
       params := paraml;
       match param.param_hint with
       | Some h ->
-          let env, h = Typing_hint.hint_locl env h in
+          let env, h = Phase.hint_locl env h in
           let pos = Reason.to_pos (fst ty) in
           let env = Type.sub_type pos Reason.URparam env h ty in
           (* Closures are allowed to have explicit type-hints. When
@@ -1415,7 +1416,7 @@ and anon_check_param env param =
   match param.param_hint with
   | None -> env
   | Some hty ->
-      let env, hty = Typing_hint.hint_locl env hty in
+      let env, hty = Phase.hint_locl env hty in
       let env, paramty = Env.get_local env (snd param.param_id) in
       let hint_pos = Reason.to_pos (fst hty) in
       let env = Type.sub_type hint_pos Reason.URhint env hty paramty in
@@ -1442,7 +1443,7 @@ and anon_make tenv p f =
           match f.f_ret with
           | None -> TUtils.in_var env (Reason.Rnone, Tunresolved [])
           | Some x ->
-            let ret = Typing_hint.instantiable_hint env x in
+            let ret = TI.instantiable_hint env x in
             (* If a 'this' type appears it needs to be compatible with the
              * late static type
              *)
@@ -3849,7 +3850,7 @@ and class_def_ env c tc =
   let impl = List.map
     (c.c_extends @ c.c_implements @ c.c_uses)
     (Typing_hint.hint env.Env.decl_env) in
-  Typing_hint.check_tparams_instantiable env (fst c.c_tparams);
+  TI.check_tparams_instantiable env (fst c.c_tparams);
   Typing_variance.class_ (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
   List.iter impl (check_implements_tparaml env);
@@ -3928,8 +3929,8 @@ and typeconst_def env {
   c_tconst_constraint;
   c_tconst_type;
 } =
-  let env, cstr = opt Typing_hint.hint_locl env c_tconst_constraint in
-  let env, ty = opt Typing_hint.hint_locl env c_tconst_type in
+  let env, cstr = opt Phase.hint_locl env c_tconst_constraint in
+  let env, ty = opt Phase.hint_locl env c_tconst_type in
   ignore(
     Option.map2 cstr ty ~f:(Type.sub_type pos Reason.URtypeconst_cstr env)
   )
@@ -3939,7 +3940,7 @@ and class_const_def env (h, id, e) =
     match h with
     | None -> env, Env.fresh_type()
     | Some h ->
-       Typing_hint.hint_locl env h
+       Phase.hint_locl env h
   in
   match e with
     | Some e ->
@@ -4001,7 +4002,7 @@ and class_var_def env ~is_static c cv =
         if cv.cv_is_xhp && (Env.is_strict env)
           then Env.set_mode env FileInfo.Mpartial
           else env in
-      let cty = Typing_hint.instantiable_hint env cty in
+      let cty = TI.instantiable_hint env cty in
       let env, cty = Phase.localize_with_self env cty in
       let _ = Type.sub_type p Reason.URhint env cty ty in
       ()
@@ -4015,7 +4016,7 @@ and method_def env m =
   let env, ret = match m.m_ret with
     | None -> env, (Reason.Rwitness (fst m.m_name), Tany)
     | Some ret ->
-      let ret = Typing_hint.instantiable_hint env ret in
+      let ret = TI.instantiable_hint env ret in
       (* If a 'this' type appears it needs to be compatiable with the
        * late static type
        *)
@@ -4027,8 +4028,8 @@ and method_def env m =
     | FVvariadicArg param -> param :: m.m_params
     | _ -> m.m_params
   in
-  Typing_hint.check_params_instantiable env m_params;
-  Typing_hint.check_tparams_instantiable env m.m_tparams;
+  TI.check_params_instantiable env m_params;
+  TI.check_tparams_instantiable env m.m_tparams;
   let env, params = List.map_env env m_params make_param_local_ty in
   if Env.is_strict env then begin
     List.iter2_exn ~f:(check_param env) m_params params;
@@ -4069,11 +4070,11 @@ and typedef_def tid typedef =
     t_kind = hint;
     t_user_attributes = _;
   } = typedef in
-  let ty = Typing_hint.instantiable_hint env hint in
+  let ty = TI.instantiable_hint env hint in
   let env, ty = Phase.localize_with_self env ty in
   begin match tcstr with
     | Some tcstr ->
-      let cstr = Typing_hint.instantiable_hint env tcstr in
+      let cstr = TI.instantiable_hint env tcstr in
       let env, cstr = Phase.localize_with_self env cstr in
       ignore @@ Typing_ops.sub_type t_pos Reason.URnewtype_cstr env cstr ty
     | _ -> ()

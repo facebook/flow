@@ -235,6 +235,12 @@ let env_with_self env =
 let localize_with_self env ty =
   localize env ty ~ety_env:(env_with_self env)
 
+(* Helper functions *)
+
+let hint_locl env h =
+  let h = Typing_hint.hint env.Env.decl_env h in
+  localize_with_self env h
+
 let unify_decl env ty1 ty2 =
   let env, ty1 = localize_with_self env ty1 in
   let env, ty2 = localize_with_self env ty2 in
