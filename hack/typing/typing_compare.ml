@@ -24,7 +24,6 @@ open Core
 open Typing_defs
 open Typing_deps
 
-module Env = Typing_env
 module ShapeMap = Nast.ShapeMap
 
 (*****************************************************************************)
@@ -415,7 +414,7 @@ let get_extend_deps cid_hash to_redecl =
 *)
 (*****************************************************************************)
 let get_fun_deps old_funs fid (to_redecl, to_recheck) =
-  match SMap.find_unsafe fid old_funs, Env.Funs.get fid with
+  match SMap.find_unsafe fid old_funs, Typing_heap.Funs.get fid with
   | None, None ->
       to_redecl, to_recheck
   | None, _ | _, None ->
@@ -444,7 +443,7 @@ let get_funs_deps old_funs funs =
 *)
 (*****************************************************************************)
 let get_type_deps old_types tid to_recheck =
-  match SMap.find_unsafe tid old_types, Env.Typedefs.get tid with
+  match SMap.find_unsafe tid old_types, Typing_heap.Typedefs.get tid with
   | None, None ->
       to_recheck
   | None, _ | _, None ->
@@ -470,7 +469,9 @@ let get_types_deps old_types types =
  *)
 (*****************************************************************************)
 let get_gconst_deps old_gconsts cst_id (to_redecl, to_recheck) =
-  match SMap.find_unsafe cst_id old_gconsts, Env.GConsts.get cst_id with
+  let cst1 = SMap.find_unsafe cst_id old_gconsts in
+  let cst2 = Typing_heap.GConsts.get cst_id in
+  match cst1, cst2 with
   | None, None ->
       to_redecl, to_recheck
   | None, _ | _, None ->
