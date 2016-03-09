@@ -3,6 +3,7 @@
 <head>
     <meta charset='utf-8'>
     <title>Flow | {{ page.title }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
     <link rel='stylesheet' href='/static/flow.css' type='text/css'/>
     <link rel='stylesheet' href='/static/syntax.css' type='text/css'/>
     <link rel="stylesheet" href='/static/pygments.css' type='text/css'/>
@@ -20,6 +21,7 @@
     {% else %}
     <meta property='og:type' content='website'>
     {% endif %}
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
     <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
     <script type="text/javascript">{'try{Typekit.load();}catch(e){}'}</script>
     <link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{{ site.url }}/blog/feed.xml">
@@ -49,6 +51,11 @@
           {% endif %}>
           Blog
       </a></li>
+      <li>
+        <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+      </li>
+    </ul>
+    <ul class="external">
       <li><a href="http://github.com/facebook/flow">GitHub</a>
     </ul>
 </nav></header>
