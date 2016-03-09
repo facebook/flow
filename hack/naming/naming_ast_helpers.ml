@@ -41,7 +41,7 @@ and terminal_ nsenv ~in_try = function
   | Switch (_, cl) ->
       terminal_cl nsenv ~in_try cl
   | Block b -> terminal nsenv ~in_try b
-  | Try (b, catch_l, finb) ->
+  | Try (b, catch_l, _fb) ->
     (* return is not allowed in finally, so we can ignore fb *)
     (terminal nsenv ~in_try:true b;
      List.iter catch_l (terminal_catch nsenv ~in_try))
@@ -134,7 +134,7 @@ module GetLocals = struct
         let (m:Pos.t SMap.t) = (smap_inter m1 m2) in
         smap_union acc m
       end
-    | Switch (e, cl) ->
+    | Switch (_e, cl) ->
       let cl = List.filter cl begin function
         | Case (_, b)
         | Default b -> not (is_terminal nsenv b)
@@ -142,7 +142,7 @@ module GetLocals = struct
       let cl = casel nsenv cl in
       let c = smap_inter_list cl in
       smap_union acc c
-    | Try (b, cl, f) ->
+    | Try (b, cl, _fb) ->
       let _, c = block (nsenv, SMap.empty) b in
       let cl = List.filter cl (fun (_, _, b) -> not (is_terminal nsenv b)) in
       let lcl = List.map cl (catch nsenv) in

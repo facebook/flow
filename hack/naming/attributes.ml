@@ -25,8 +25,8 @@ let find x xs =
 let deprecated ~kind (_, name) attrs =
   let attr = find SN.UserAttributes.uaDeprecated attrs in
   match attr with
-  | Some { ua_name; ua_params = [msg] }
-  | Some { ua_name; ua_params = [msg; _] } -> begin
+  | Some { ua_name = _; ua_params = [msg] }
+  | Some { ua_name = _; ua_params = [msg; _] } -> begin
       match Nast_eval.static_string_no_consts msg with
       | Result.Ok (_p, msg) ->
           let name = strip_ns name in

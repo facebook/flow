@@ -151,8 +151,8 @@ let add_files_to_rename failed defl defs_in_env =
       Relative_path.Set.add filename failed
   end ~init:failed defl
 
-let ndecl_file fn { FileInfo.file_mode; funs; classes; typedefs; consts;
-                    consider_names_just_for_autoload; comments } =
+let ndecl_file fn { FileInfo.file_mode = _; funs; classes; typedefs; consts;
+                    consider_names_just_for_autoload; comments = _} =
   let errors, _ = Errors.do_ begin fun () ->
     dn ("Naming decl: "^Relative_path.to_absolute fn);
     if not consider_names_just_for_autoload then

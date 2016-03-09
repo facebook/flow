@@ -87,7 +87,7 @@ module Env : sig
     TypecheckerOptions.t ->
     type_constraint SMap.t ->
     FileInfo.mode ->
-    Ast.id list -> Ast.id * Ast.class_kind -> Namespace_env.env -> genv
+    Ast.id * Ast.class_kind -> Namespace_env.env -> genv
   val make_class_env :
     TypecheckerOptions.t ->
     type_constraint SMap.t -> Ast.class_ -> genv * lenv
@@ -189,12 +189,12 @@ end = struct
     inside_pipe = ref false;
   }
 
-  let make_class_genv tcopt params mode tparams (cid, ckind) namespace = {
+  let make_class_genv tcopt tparams mode (cid, ckind) namespace = {
     in_mode       =
       (if !Autocomplete.auto_complete then FileInfo.Mpartial else mode);
     tcopt;
     in_try        = false;
-    type_params   = params;
+    type_params   = tparams;
     current_cls   = Some (cid, ckind);
     class_consts = Hashtbl.create 0;
     class_props = Hashtbl.create 0;
@@ -202,10 +202,9 @@ end = struct
     namespace;
   }
 
-  let make_class_env tcopt params c =
-    let tparams = List.map c.c_tparams (fun (_, x, _) -> x) in
-    let genv = make_class_genv tcopt params c.c_mode
-      tparams (c.c_name, c.c_kind) c.c_namespace in
+  let make_class_env tcopt tparams c =
+    let genv = make_class_genv tcopt tparams c.c_mode
+      (c.c_name, c.c_kind) c.c_namespace in
     let lenv = empty_local UBMErr in
     let env  = genv, lenv in
     env
@@ -361,7 +360,7 @@ end = struct
     end !(lenv.pending_locals);
     lenv.pending_locals := SMap.empty
 
-  let handle_undefined_variable (genv, env) (p, x) =
+  let handle_undefined_variable (_genv, env) (p, x) =
     match env.unbound_mode with
     | UBMErr -> Errors.undefined p x; p, Ident.make x
     | UBMFunc f -> f (p, x)
@@ -454,7 +453,7 @@ end = struct
       let fq_x = canonicalize fq_x `func in
       get_name fq_x
 
-  let global_const (genv, env) x  =
+  let global_const (genv, _env) x  =
     elaborate_and_get_name_with_fallback
       (* Same idea as Dep.FunName, see below. *)
       (fun x -> Typing_deps.Dep.GConstName x)
@@ -467,7 +466,7 @@ end = struct
     check_no_runtime_generic genv x;
     let (pos, name) as x = Namespaces.elaborate_id genv.namespace NSClass x in
     match GEnv.type_info name with
-    | Some (def_pos, `Class) ->
+    | Some (_def_pos, `Class) ->
       (* Don't let people use strictly internal classes
        * (except when they are being declared in .hhi files) *)
       if name = SN.Classes.cHH_BuiltinEnum &&
@@ -511,7 +510,7 @@ end = struct
    * local environment intact
    *)
   let scope env f =
-    let genv, lenv = env in
+    let _genv, lenv = env in
     let lenv_copy = !(lenv.locals) in
     let lenv_pending_copy = !(lenv.pending_locals) in
     let res = f env in
@@ -520,7 +519,7 @@ end = struct
     res
 
   let scope_all env f =
-    let genv, lenv = env in
+    let _genv, lenv = env in
     let lenv_all_locals_copy = !(lenv.all_locals) in
     let res = scope env f in
     let lenv_all_locals = !(lenv.all_locals) in
@@ -632,9 +631,9 @@ let rec hint
     ?(allow_retonly=false)
     ?(allow_typedef=true)
     env (p, h) =
-  p, hint_ ~forbid_this ~allow_retonly ~allow_typedef is_static_var p env h
+  p, hint_ ~forbid_this ~allow_retonly ~allow_typedef is_static_var env h
 
-and hint_ ~forbid_this ~allow_retonly ~allow_typedef is_static_var p env x =
+and hint_ ~forbid_this ~allow_retonly ~allow_typedef is_static_var env x =
   let hint = hint ~is_static_var ~forbid_this ~allow_typedef in
   match x with
   | Htuple hl ->
@@ -645,7 +644,7 @@ and hint_ ~forbid_this ~allow_retonly ~allow_typedef is_static_var p env x =
   | Hfun (hl, opt, h) ->
     N.Hfun (List.map hl (hint env), opt,
             hint ~allow_retonly:true env h)
-  | Happly ((p, x) as id, hl) ->
+  | Happly ((p, _x) as id, hl) ->
     let hint_id =
       hint_id ~forbid_this ~allow_retonly ~allow_typedef env is_static_var id
         hl in
@@ -741,7 +740,7 @@ and hint_id ~forbid_this ~allow_retonly ~allow_typedef env is_static_var
         | None ->
           Errors.this_hint_outside_class p;
           N.Hany
-        | Some c ->
+        | Some _c ->
           N.Hthis
         )
     | x when x = SN.Typehints.this ->
@@ -884,10 +883,6 @@ and class_ nenv c =
     List.fold_right c.c_body ~init:[] ~f:(class_static_method env) in
   let sprops = List.fold_right c.c_body ~init:[] ~f:(class_prop_static env) in
   let props = List.fold_right c.c_body ~init:[] ~f:(class_prop env) in
-  let prop_names = List.map props (fun x -> snd x.N.cv_id) in
-  let prop_names = set_of_list prop_names in
-  let sm_names = List.map smethods (fun x -> snd x.N.m_name) in
-  let sm_names = set_of_list sm_names in
   let parents =
     List.map c.c_extends (hint ~allow_retonly:false ~allow_typedef:false env) in
   let parents = match c.c_kind with
@@ -901,8 +896,7 @@ and class_ nenv c =
                          [enum_type]) in
         parent::parents
     | _ -> parents in
-  let fmethod  = class_method env sm_names prop_names in
-  let methods  = List.fold_right c.c_body ~init:[] ~f:fmethod in
+  let methods  = List.fold_right c.c_body ~init:[] ~f:(class_method env) in
   let uses     = List.fold_right c.c_body ~init:[] ~f:(class_use env) in
   let xhp_attr_uses =
     List.fold_right c.c_body ~init:[] ~f:(xhp_attr_use env) in
@@ -1041,7 +1035,7 @@ and xhp_attr_use env x acc =
   | Method _ -> acc
   | TypeConst _ -> acc
 
-and xhp_category env x acc =
+and xhp_category _env x acc =
   match x with
   | Attributes _ -> acc
   | Const _ -> acc
@@ -1215,7 +1209,7 @@ and class_static_method env x acc =
   | Method _ -> acc
   | TypeConst _ -> acc
 
-and class_method env sids cv_ids x acc =
+and class_method env x acc =
   match x with
   | Attributes _ -> acc
   | ClassUse _ -> acc
@@ -1296,7 +1290,7 @@ and class_prop_ env (x, e) =
   in
   N.({ cv_final = false;
        cv_is_xhp = ((String.sub (snd x) 0 1) = ":");
-       cv_visibility = Public;
+       cv_visibility = N.Public;
        cv_type = None;
        cv_id = x;
        cv_expr = e;
@@ -1328,7 +1322,7 @@ and typeconst env t =
     | None when not t.tconst_abstract ->
         Errors.not_abstract_without_typeconst t.tconst_name;
         t.tconst_constraint
-    | Some h when t.tconst_abstract ->
+    | Some _h when t.tconst_abstract ->
         Errors.abstract_with_typeconst t.tconst_name;
         None
     | h -> h
@@ -1366,18 +1360,18 @@ and method_ genv m =
       }
   ) in
   let attrs = user_attributes env m.m_user_attributes in
-  N.({ m_final           = final       ;
-       m_visibility      = vis         ;
-       m_abstract        = abs         ;
-       m_name            = m.Ast.m_name;
-       m_tparams         = tparam_l    ;
-       m_params          = paraml      ;
-       m_body            = body        ;
-       m_fun_kind        = f_kind      ;
-       m_ret             = ret         ;
-       m_variadic        = variadicity ;
-       m_user_attributes = attrs;
-     })
+  { N.m_final           = final       ;
+    N.m_visibility      = vis         ;
+    N.m_abstract        = abs         ;
+    N.m_name            = m.Ast.m_name;
+    N.m_tparams         = tparam_l    ;
+    N.m_params          = paraml      ;
+    N.m_body            = body        ;
+    N.m_fun_kind        = f_kind      ;
+    N.m_ret             = ret         ;
+    N.m_variadic        = variadicity ;
+    N.m_user_attributes = attrs;
+  }
 
 and kind (final, abs, vis) = function
   | Final -> true, abs, vis
@@ -1630,7 +1624,7 @@ and try_stmt env st b cl fb =
     (* isolate finally from the rest of the try-catch: if the first
      * statement of the try is an uncaught exception, finally will
      * still be executed *)
-    let all_finally, fb = branch env fb in
+    let _all_finally, fb = branch env fb in
     let all_locals_b, b = branch ({genv with in_try = true}, lenv) b in
     let all_locals_cl, cl = catchl env cl in
     List.iter all_locals_cl (Env.extend_all_locals env);
@@ -1714,7 +1708,7 @@ and expr_ env p = function
   | Float s -> N.Float s
   | String s -> N.String s
   | String2 idl -> N.String2 (string2 env idl)
-  | Id (pos, const as x) -> N.Id (Env.global_const env x)
+  | Id x -> N.Id (Env.global_const env x)
   | Lvar (_, x) when x = SN.SpecialIdents.this -> N.This
   | Dollardollar ->
     N.Dollardollar (Env.found_dollardollar env p)
@@ -1722,7 +1716,7 @@ and expr_ env p = function
     N.Lplaceholder pos
   | Lvar x ->
       N.Lvar (Env.lvar env x)
-  | Obj_get (e1, (p, _ as e2), nullsafe) ->
+  | Obj_get (e1, e2, nullsafe) ->
       (* If we encounter Obj_get(_,_,true) by itself, then it means "?->"
          is being used for instance property access; see the case below for
          handling nullsafe instance method calls to see how this works *)
@@ -1758,7 +1752,7 @@ and expr_ env p = function
       arg_unpack_unexpected uel ;
       (match el with
       | [] -> Errors.naming_too_few_arguments p; N.Any
-      | [_, String (p2, s)] when String.contains s ':' ->
+      | [_, String (_p2, s)] when String.contains s ':' ->
         Errors.illegal_meth_fun p; N.Any
       | [_, String x] -> N.Fun_id (Env.fun_id env x)
       | [p, _] ->
@@ -1985,7 +1979,7 @@ and expr_ env p = function
   | New ((_, Id x), el, uel)
   | New ((_, Lvar x), el, uel) ->
     N.New (make_class_id env x, exprl env el, exprl env uel)
-  | New ((p, e_), el, uel) ->
+  | New ((p, _e), el, uel) ->
     if (fst env).in_mode = FileInfo.Mstrict
     then Errors.dynamic_new_in_strict_mode p;
     N.New (make_class_id env (p, SN.Classes.cUnknown),
@@ -2108,7 +2102,7 @@ and afield env = function
 
 and afield_value env cname = function
   | AFvalue e -> expr env e
-  | AFkvalue (e1, e2) ->
+  | AFkvalue (e1, _e2) ->
     Errors.unexpected_arrow (fst e1) cname;
     expr env e1
 
@@ -2189,10 +2183,9 @@ let meth_body genv m =
   {m with N.m_body = named_body}
 
 let class_meth_bodies nenv nc =
-  let n_tparams, cstrs = nc.N.c_tparams in
-  let tparams = List.map n_tparams (fun (_, x, _) -> x) in
+  let _n_tparams, cstrs = nc.N.c_tparams in
   let genv  = Env.make_class_genv nenv cstrs
-    nc.N.c_mode tparams (nc.N.c_name, nc.N.c_kind) Namespace_env.empty
+    nc.N.c_mode (nc.N.c_name, nc.N.c_kind) Namespace_env.empty
   in
   let inst_meths = List.map nc.N.c_methods (meth_body genv) in
   let opt_constructor = match nc.N.c_constructor with
