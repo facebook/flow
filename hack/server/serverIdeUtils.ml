@@ -30,24 +30,24 @@ let oldify_funs names =
   Naming_heap.FunPosHeap.oldify_batch names;
   Naming_heap.FunCanonHeap.oldify_batch @@ canon_set names;
   Naming_heap.FunHeap.oldify_batch names;
-  Typing_env.Funs.oldify_batch names;
+  Typing_heap.Funs.oldify_batch names;
   ()
 
 let oldify_classes names =
   Naming_heap.TypeIdHeap.oldify_batch names;
   Naming_heap.TypeCanonHeap.oldify_batch @@ canon_set names;
   Naming_heap.ClassHeap.oldify_batch names;
-  Typing_env.Classes.oldify_batch names;
+  Typing_heap.Classes.oldify_batch names;
   ()
 
 let revive funs classes =
   Naming_heap.FunHeap.revive_batch funs;
-  Typing_env.Funs.revive_batch funs;
+  Typing_heap.Funs.revive_batch funs;
   Naming_heap.FunPosHeap.revive_batch funs;
   Naming_heap.FunCanonHeap.revive_batch @@ canon_set funs;
 
   Naming_heap.ClassHeap.revive_batch classes;
-  Typing_env.Classes.revive_batch classes;
+  Typing_heap.Classes.revive_batch classes;
   Naming_heap.TypeIdHeap.revive_batch classes;
   Naming_heap.TypeCanonHeap.revive_batch @@ canon_set classes
 

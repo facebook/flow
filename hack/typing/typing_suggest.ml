@@ -142,7 +142,7 @@ let rec my_unify depth env ty1 ty2 =
  * the parameter would be too hard anyway.
  *)
 let get_implements (_, x) =
-  match Env.Classes.get x with
+  match Typing_heap.Classes.get x with
   | None -> SSet.empty
   | Some { tc_ancestors = tyl; _ } ->
       SMap.fold begin fun _ ty set ->

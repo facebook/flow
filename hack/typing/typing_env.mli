@@ -9,11 +9,7 @@
  *)
 
 open Typing_defs
-
-module Funs : module type of Typing_heap.Funs
-module Classes : module type of Typing_heap.Classes
-module Typedefs : module type of Typing_heap.Typedefs
-module GConsts : module type of Typing_heap.GConsts
+open Typing_heap
 
 type fake_members = {
   last_call : Pos.t option;

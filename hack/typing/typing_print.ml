@@ -431,7 +431,7 @@ module PrintClass = struct
      * ParentPartiallyKnown must inherit one of the ! Unknown parents, so that
      * sigil could be omitted *)
     SMap.fold begin fun field v acc ->
-      let sigil, kind = match Typing_env.Classes.get field with
+      let sigil, kind = match Typing_heap.Classes.get field with
         | None -> "!", ""
         | Some {tc_members_fully_known; tc_kind; _} ->
           (if tc_members_fully_known then " " else "~"),

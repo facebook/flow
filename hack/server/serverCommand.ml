@@ -72,7 +72,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
       in
-      let class_ = Typing_env.Classes.get class_name in
+      let class_ = Typing_heap.Classes.get class_name in
       (match class_ with
       | None -> output_string oc "Missing from typing env\n"
       | Some c ->
@@ -89,7 +89,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
           let () = output_string oc ((Pos.string (Pos.to_absolute p))^"\n") in
           canon
       in
-      let fun_ = Typing_env.Funs.get fun_name in
+      let fun_ = Typing_heap.Funs.get fun_name in
       (match fun_ with
       | None ->
           output_string oc "Missing from typing env\n"
@@ -101,7 +101,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       (match NamingGlobal.GEnv.gconst_pos qual_name with
       | Some p -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
       | None -> output_string oc "Missing from naming env\n");
-      let gconst_ty = Typing_env.GConsts.get qual_name in
+      let gconst_ty = Typing_heap.GConsts.get qual_name in
       (match gconst_ty with
       | None -> output_string oc "Missing from typing env\n"
       | Some gc ->
@@ -112,7 +112,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       (match NamingGlobal.GEnv.typedef_pos qual_name with
       | Some p -> output_string oc (Pos.string (Pos.to_absolute p)^"\n")
       | None -> output_string oc "Missing from naming env\n");
-      let tdef = Typing_env.Typedefs.get qual_name in
+      let tdef = Typing_heap.Typedefs.get qual_name in
       (match tdef with
       | None ->
           output_string oc "Missing from typing env\n"

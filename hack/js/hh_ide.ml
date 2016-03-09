@@ -112,13 +112,13 @@ let declare_file fn content =
     Naming_heap.FunPosHeap.remove fname;
     Naming_heap.FunCanonHeap.remove (NamingGlobal.canon_key fname);
     Naming_heap.FunHeap.remove fname;
-    Typing_env.Funs.remove fname;
+    Typing_heap.Funs.remove fname;
   end;
   List.iter old_classes begin fun (_, cname) ->
     Naming_heap.TypeIdHeap.remove cname;
     Naming_heap.TypeCanonHeap.remove (NamingGlobal.canon_key cname);
     Naming_heap.ClassHeap.remove cname;
-    Typing_env.Classes.remove cname;
+    Typing_heap.Classes.remove cname;
   end;
   try
     Autocomplete.auto_complete := false;
@@ -305,12 +305,12 @@ let hh_get_deps =
         result :=
           (match dep with
           | Typing_deps.Dep.Class s
-            when Typing_env.Classes.get s = None ->
+            when Typing_heap.Classes.get s = None ->
               (JSON_Object [ "name", JSON_String s;
                         "type", JSON_String "class";
                       ]) :: !result
           | Typing_deps.Dep.Fun s
-            when Typing_env.Funs.get s = None ->
+            when Typing_heap.Funs.get s = None ->
               (JSON_Object [ "name", JSON_String s;
                         "type", JSON_String "fun";
                       ]) :: !result

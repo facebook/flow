@@ -63,7 +63,7 @@ let detach_hooks () =
   Typing_hooks.remove_all_hooks ()
 
 let check_if_extends_class target_class_name class_name acc =
-  let class_ = Typing_env.Classes.get class_name in
+  let class_ = Typing_heap.Classes.get class_name in
   match class_ with
   | None -> acc
   | Some { Typing_defs.tc_ancestors = imps; _ }

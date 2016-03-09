@@ -44,7 +44,7 @@ let get_overridden_methods origin_class or_mthds dest_class is_child acc =
 
 let check_if_extends_class_and_find_methods target_class_name mthds
       target_class_pos class_name acc =
-  let class_ = Typing_env.Classes.get class_name in
+  let class_ = Typing_heap.Classes.get class_name in
   match class_ with
   | None -> acc
   | Some c
@@ -117,12 +117,12 @@ let get_child_classes_and_methods cls mthds env genv acc =
 
 (* Find ancestor classes *)
 let get_ancestor_classes_and_methods cls mthds acc =
-  let class_ = Typing_env.Classes.get cls.Typing_defs.tc_name in
+  let class_ = Typing_heap.Classes.get cls.Typing_defs.tc_name in
   match class_ with
   | None -> []
   | Some cls ->
       SMap.fold begin fun k v acc ->
-        let class_ = Typing_env.Classes.get k in
+        let class_ = Typing_heap.Classes.get k in
         match class_ with
         | None -> acc
         | Some c ->
@@ -154,7 +154,7 @@ let build_method_smap cls =
  *)
 let get_inheritance class_ find_children env genv =
   let class_ = add_ns class_ in
-  let class_ = Typing_env.Classes.get class_ in
+  let class_ = Typing_heap.Classes.get class_ in
   match class_ with
   | None -> []
   | Some c ->

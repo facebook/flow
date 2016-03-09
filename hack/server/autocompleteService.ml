@@ -217,7 +217,7 @@ let compute_complete_global funs classes =
     List.iter classes begin fun name ->
       if !result_count > 100 then raise Exit;
       if str_starts_with (strip_ns name) gname
-      then match (Typing_env.Classes.get name) with
+      then match (Typing_heap.Classes.get name) with
         | Some c
           when should_complete_class completion_type c.Typing_defs.tc_kind ->
             incr result_count;
@@ -276,7 +276,7 @@ let compute_complete_global funs classes =
           | None -> false
           | Some s -> str_starts_with stripped_name s in
         if matches_gname || matches_gname_gns
-        then match (Typing_env.Funs.get name) with
+        then match (Typing_heap.Funs.get name) with
           | Some fun_ ->
             incr result_count;
             let ty =

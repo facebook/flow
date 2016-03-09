@@ -48,7 +48,7 @@ let check_typedef x =
 
 let check_const x =
   try
-    match Typing_env.GConsts.get x with
+    match Typing_heap.GConsts.get x with
     | None -> ()
     | Some declared_type ->
         let cst = Naming_heap.ConstHeap.find_unsafe x in
