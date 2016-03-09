@@ -34,9 +34,10 @@ module SN           = Naming_special_names
 module TAccess      = Typing_taccess
 module TI           = Typing_instantiability
 module TVis         = Typing_visibility
+module TNBody       = Typing_naming_body
 module TS           = Typing_structure
 module Phase        = Typing_phase
-module Subst       = Decl_subst
+module Subst        = Decl_subst
 module ExprDepTy    = Typing_dependent_type.ExprDepTy
 
 (*****************************************************************************)
@@ -309,7 +310,7 @@ and fun_def tcopt _ f =
   (* reset the expression dependent display ids for each function body *)
   Reason.expr_display_id_map := IMap.empty;
   Typing_hooks.dispatch_enter_fun_def_hook f;
-  let nb = Naming.func_body tcopt f in
+  let nb = TNBody.func_body tcopt f in
   let dep = Typing_deps.Dep.Fun (snd f.f_name) in
   let env = Env.empty tcopt (Pos.filename (fst f.f_name)) (Some dep) in
   NastCheck.fun_ env f nb;
@@ -3814,7 +3815,7 @@ and class_def tcopt _ c =
   let filename = Pos.filename (fst c.Nast.c_name) in
   let dep = Dep.Class (snd c.c_name) in
   let env = Env.empty tcopt filename (Some dep) in
-  let c = Naming.class_meth_bodies tcopt c in
+  let c = TNBody.class_meth_bodies tcopt c in
   if not !auto_complete then begin
     NastCheck.class_ env c;
     NastInitCheck.class_ env c;

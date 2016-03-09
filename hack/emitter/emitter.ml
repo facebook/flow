@@ -17,6 +17,7 @@ open Nast
 
 open Emitter_core
 
+module TNBody = Typing_naming_body
 module SN = Naming_special_names
 
 let emit_generator_prologue env m =
@@ -206,7 +207,7 @@ let fun_to_method f =
 
 let emit_fun nenv env (_, x) =
   let f = Naming_heap.FunHeap.find_unsafe x in
-  let nb = Naming.func_body nenv f in
+  let nb = TNBody.func_body nenv f in
   let f = { f with f_body = NamedBody nb } in
   let dummy_method = fun_to_method f in
 
@@ -375,7 +376,7 @@ let handle_class_attrs env cls =
 
 let emit_class nenv env (_, x) =
   let cls = Naming_heap.ClassHeap.find_unsafe x in
-  let cls = Naming.class_meth_bodies nenv cls in
+  let cls = TNBody.class_meth_bodies nenv cls in
 
   (* make any adjustments to the class that are needed for xhp *)
   let cls = Emitter_xhp.convert_class cls in
