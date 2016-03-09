@@ -156,7 +156,6 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       tc_construct             = Option.map (fst tc.tc_construct) class_elt,
                                    (snd tc.tc_construct);
       tc_ancestors             = SMap.map ty tc.tc_ancestors          ;
-      tc_user_attributes       = tc.tc_user_attributes                ;
       tc_enum_type             = Option.map tc.tc_enum_type enum_type ;
     }
 

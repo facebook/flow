@@ -417,7 +417,6 @@ and class_decl tcopt c =
     tc_extends = extends;
     tc_req_ancestors = req_ancestors;
     tc_req_ancestors_extends = req_ancestors_extends;
-    tc_user_attributes = c.c_user_attributes;
     tc_enum_type = enum;
   } in
   if Ast.Cnormal = c.c_kind then

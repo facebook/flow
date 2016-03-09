@@ -441,11 +441,6 @@ module PrintClass = struct
       "\n"^indent^sigil^" "^ty_str^kind^acc
     end m ""
 
-  let user_attribute_list xs =
-    List.fold_left xs ~f:begin fun acc { Nast.ua_name; _ } ->
-      acc^"("^snd ua_name^": expr) "
-    end ~init:""
-
   let constructor (ce_opt, consist) =
     let consist_str = if consist then " (consistent in hierarchy)" else "" in
     let ce_str = match ce_opt with
@@ -477,7 +472,6 @@ module PrintClass = struct
     let tc_req_ancestors = req_ancestors c.tc_req_ancestors in
     let tc_req_ancestors_extends = sset c.tc_req_ancestors_extends in
     let tc_extends = sset c.tc_extends in
-    let tc_user_attributes = user_attribute_list c.tc_user_attributes in
     "tc_need_init: "^tc_need_init^"\n"^
     "tc_members_fully_known: "^tc_members_fully_known^"\n"^
     "tc_abstract: "^tc_abstract^"\n"^
@@ -496,7 +490,6 @@ module PrintClass = struct
     "tc_extends: "^tc_extends^"\n"^
     "tc_req_ancestors: "^tc_req_ancestors^"\n"^
     "tc_req_ancestors_extends: "^tc_req_ancestors_extends^"\n"^
-    "tc_user_attributes: "^tc_user_attributes^"\n"^
     ""
 end
 
