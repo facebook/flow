@@ -158,7 +158,7 @@ let rec gc cx state = function
   | UnionT (_, rep) ->
       UnionRep.members rep |> List.iter (gc cx state)
 
-  | UpperBoundT (t) ->
+  | AnyWithLowerBoundT (t) ->
       gc cx state t
 
   | AnyWithUpperBoundT (t) ->

@@ -598,7 +598,7 @@ let rec convert cx type_params_map = Ast.Type.(function
       (* $Supertype<T> acts as any over supertypes of T *)
       | "$Supertype" ->
         check_type_param_arity cx loc typeParameters 1 (fun () ->
-          UpperBoundT (convert cx type_params_map (List.hd typeParameters))
+          AnyWithLowerBoundT (convert cx type_params_map (List.hd typeParameters))
         )
 
       (* $Subtype<T> acts as any over subtypes of T *)

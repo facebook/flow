@@ -136,8 +136,8 @@ module rec TypeTerm : sig
     | UnionT of reason * UnionRep.t
 
     (* generalizations of AnyT *)
-    | UpperBoundT of t (* any upper bound of t *)
-    | AnyWithUpperBoundT of t (* any lower bound of t *)
+    | AnyWithLowerBoundT of t (* any supertype of t *)
+    | AnyWithUpperBoundT of t (* any subtype of t *)
 
     (* specializations of AnyT *)
     | AnyObjT of reason (* any object *)
@@ -944,7 +944,7 @@ let rec reason_of_t = function
   | UnionT (reason, _) ->
       reason
 
-  | UpperBoundT (t)
+  | AnyWithLowerBoundT (t)
   | AnyWithUpperBoundT (t)
       -> reason_of_t t
 
@@ -1162,7 +1162,7 @@ let rec mod_reason_of_t f = function
 
   | UnionT (reason, ts) -> UnionT (f reason, ts)
 
-  | UpperBoundT t -> UpperBoundT (mod_reason_of_t f t)
+  | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
   | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
 
   | AnyObjT reason -> AnyObjT (f reason)
@@ -1339,7 +1339,7 @@ let string_of_ctor = function
   | IntersectionT _ -> "IntersectionT"
   | UnionT _ -> "UnionT"
   | SpeculativeMatchT _ -> "SpeculativeMatchT"
-  | UpperBoundT _ -> "UpperBoundT"
+  | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
   | AnyObjT _ -> "AnyObjT"
   | AnyFunT _ -> "AnyFunT"

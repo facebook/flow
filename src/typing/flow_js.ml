@@ -1429,10 +1429,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         the system. A completely static alternative would be achieved with
         bounded type variables, which Flow does not support yet. **)
 
-    | (UpperBoundT t, _) ->
+    | (AnyWithLowerBoundT t, _) ->
       rec_flow cx trace (t,u)
 
-    | (_, UseT UpperBoundT _) ->
+    | (_, UseT AnyWithLowerBoundT _) ->
       ()
 
     | (AnyWithUpperBoundT _, _) ->
@@ -2475,19 +2475,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       let strict = if instance.mixins then None else strict in
       let pmap = match strict, t with
-        (* t = UpperBoundT _ means that the lookup is trying to write t, rather
-           than read t. Existing places that play a role here are set_prop and
-           get_prop, which use UpperBoundT and AnyWithUpperBoundT, respectively.
-           The general pattern has been used previously, e.g. to distinguish
-           element writes from reads.
+        (* t = AnyWithLowerBoundT _ means that the lookup is trying to write t,
+           rather than read t. Existing places that play a role here are
+           set_prop and get_prop, which use AnyWithLowerBoundT and
+           AnyWithUpperBoundT, respectively.  The general pattern has been used
+           previously, e.g. to distinguish element writes from reads.
 
            strict = Some _ means that we want to throw errors when x is not
            found. Some lookups are non-strict (e.g. when we want to enforce
            consistency between properties if they exist higher up in the
            inheritance chain), and for methods, we want the consistency to be
-           one-way, so we use UpperBoundT _, and we don't want methods to be
-           excluded from the lookup in that case, obviously. *)
-        | Some _, UpperBoundT _ ->
+           one-way, so we use AnyWithLowerBoundT _, and we don't want methods to
+           be excluded from the lookup in that case, obviously. *)
+        | Some _, AnyWithLowerBoundT _ ->
           let fields_tmap = find_props cx instance.fields_tmap in
           fields_tmap
         | _ ->
@@ -2848,7 +2848,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjT _, SetElemT(reason_op,key,tin))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, UpperBoundT tin))
+      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithLowerBoundT tin))
 
     | (ObjT _, GetElemT(reason_op,key,tout))
       ->
@@ -2865,12 +2865,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ArrT (_, _, []), SetElemT(reason_op, key,tin))
       ->
       let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT(reason_op, l, UpperBoundT tin));
+      rec_flow cx trace (num, ElemT(reason_op, l, AnyWithLowerBoundT tin));
       rec_flow_t cx trace (key, num)
 
     | (ArrT _, SetElemT(reason_op, key,tin))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, UpperBoundT tin))
+      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithLowerBoundT tin))
 
     | (ArrT (_, _, []), GetElemT(reason_op, key,tout))
       ->
@@ -2885,7 +2885,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t)) ->
       let reason_x = replace_reason (spf "property `%s`" x) reason_x in
       (match t with
-      | UpperBoundT tin ->
+      | AnyWithLowerBoundT tin ->
           rec_flow cx trace (o, SetPropT(reason_op, (reason_x, x), tin))
       | AnyWithUpperBoundT tout ->
           rec_flow cx trace (o, GetPropT(reason_op, (reason_x, x), tout))
@@ -2917,7 +2917,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ -> value
       in
       (match t with
-      | UpperBoundT tin -> rec_flow_t cx trace (tin, value)
+      | AnyWithLowerBoundT tin -> rec_flow_t cx trace (tin, value)
       | AnyWithUpperBoundT tout -> rec_flow_t cx trace (value, tout)
       | _ -> assert false)
 
@@ -3134,7 +3134,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if inherited_method x then
             (* we're able to do supertype compatibility in super methods because
                they're immutable *)
-            lookup_prop cx trace l reason None x (UpperBoundT t)
+            lookup_prop cx trace l reason None x (AnyWithLowerBoundT t)
         )
 
     | ObjT _, SuperT (reason, instance)
@@ -3528,8 +3528,8 @@ and err_operation = function
   | SetElemT _ -> "Computed property/element cannot be assigned on"
   | ElemT (_, ObjT _, AnyWithUpperBoundT _) -> "Computed property cannot be accessed with"
   | ElemT (_, ArrT _, AnyWithUpperBoundT _) -> "Element cannot be accessed with"
-  | ElemT (_, ObjT _, UpperBoundT _) -> "Computed property cannot be assigned with"
-  | ElemT (_, ArrT _, UpperBoundT _) -> "Element cannot be assigned with"
+  | ElemT (_, ObjT _, AnyWithLowerBoundT _) -> "Computed property cannot be assigned with"
+  | ElemT (_, ArrT _, AnyWithLowerBoundT _) -> "Element cannot be assigned with"
   | ObjAssignT _ -> "Expected object instead of"
   | ObjRestT _ -> "Expected object instead of"
   | ObjSealT _ -> "Expected object instead of"
@@ -3930,8 +3930,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | UnionT (reason, rep) ->
     UnionT (reason, UnionRep.map (subst cx ~force map) rep)
 
-  | UpperBoundT(t) ->
-    UpperBoundT(subst cx ~force map t)
+  | AnyWithLowerBoundT(t) ->
+    AnyWithLowerBoundT(subst cx ~force map t)
 
   | AnyWithUpperBoundT(t) ->
     AnyWithUpperBoundT(subst cx ~force map t)
@@ -4020,7 +4020,7 @@ and check_polarity cx polarity = function
   | RestT t
   | AbstractT t
   | MaybeT t
-  | UpperBoundT t
+  | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t
     -> check_polarity cx polarity t
 
@@ -4567,7 +4567,7 @@ and set_prop cx trace reason_op reason_c super x map tin =
   then
     rec_flow_t cx trace (tin, SMap.find_unsafe x map)
   else
-    lookup_prop cx trace super reason_op (Some reason_c) x (UpperBoundT tin)
+    lookup_prop cx trace super reason_op (Some reason_c) x (AnyWithLowerBoundT tin)
 
 and intro_prop cx reason_obj x mapr =
   let reason_prop = prefix_reason (spf ".%s of " x) reason_obj in
@@ -5455,10 +5455,10 @@ and resolve_id cx trace id t =
 
    However, unifying with any-like types is sometimes desirable /
    intentional. Thus, we limit the set of types on which unification is banned
-   to just AnyWithUpperBoundT and UpperBoundT, which are internal types.
+   to just AnyWithUpperBoundT and AnyWithLowerBoundT, which are internal types.
 *)
 and ok_unify = function
-  | AnyWithUpperBoundT _ | UpperBoundT _ -> false
+  | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ -> false
   | _ -> true
 
 and rec_unify cx trace t1 t2 =
@@ -6167,7 +6167,7 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | UnionT(_, rep) ->
       List.iter (assert_ground cx skip ids) (UnionRep.members rep)
 
-  | UpperBoundT(t) ->
+  | AnyWithLowerBoundT(t) ->
       assert_ground cx skip ids t
 
   | AnyWithUpperBoundT(t) ->

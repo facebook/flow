@@ -241,8 +241,8 @@ let rec normalize_type_impl cx ids t = match t with
   | AnyWithUpperBoundT t ->
       AnyWithUpperBoundT (normalize_type_impl cx ids t)
 
-  | UpperBoundT t ->
-      UpperBoundT (normalize_type_impl cx ids t)
+  | AnyWithLowerBoundT t ->
+      AnyWithLowerBoundT (normalize_type_impl cx ids t)
 
   | AnyObjT _ -> AnyObjT (reason_of_string "any object")
   | AnyFunT _ -> AnyFunT (reason_of_string "any function")

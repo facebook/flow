@@ -194,7 +194,7 @@ let rec type_printer override fallback enclosure cx t =
     | AnyWithUpperBoundT t ->
         spf "$Subtype<%s>" (pp EnclosureNone cx t)
 
-    | UpperBoundT t ->
+    | AnyWithLowerBoundT t ->
         spf "$Supertype<%s>" (pp EnclosureNone cx t)
 
     | AnyObjT _ ->
@@ -353,7 +353,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
   | RestT t
   | TypeT (_, t)
   | AnyWithUpperBoundT t
-  | UpperBoundT t
+  | AnyWithLowerBoundT t
   | ThisClassT t
   | ClassT t
     when weak
