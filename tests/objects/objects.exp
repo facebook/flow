@@ -24,9 +24,9 @@ Member 4:
 [LIB] core.js:31:5,40: function type
 Error:
 conversion.js: inconsistent use of library definitions
-[LIB] core.js:52:16,21: object type
+[LIB] core.js:54:16,21: object type
 This type is incompatible with
-[LIB] core.js:97:16,21: number
+[LIB] core.js:99:16,21: number
 Member 5:
 [LIB] core.js:32:5,31: polymorphic type: function type
 Error:

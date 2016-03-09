@@ -21,19 +21,19 @@ overload.js:7:18,28: call of method `match`
 Error:
 overload.js:7:27,27: number
 This type is incompatible with
-[LIB] core.js:223:19,33: union: string | RegExp
+[LIB] core.js:225:19,33: union: string | RegExp
 Member 1:
-[LIB] core.js:223:19,24: string
+[LIB] core.js:225:19,24: string
 Error:
 overload.js:7:27,27: number
 This type is incompatible with
-[LIB] core.js:223:19,24: string
+[LIB] core.js:225:19,24: string
 Member 2:
-[LIB] core.js:223:28,33: RegExp
+[LIB] core.js:225:28,33: RegExp
 Error:
 overload.js:7:27,27: number
 This type is incompatible with
-[LIB] core.js:223:28,33: RegExp
+[LIB] core.js:225:28,33: RegExp
 
 overload.js:8:18,36: call of method `match`
 Error:

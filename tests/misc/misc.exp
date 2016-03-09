@@ -57,7 +57,7 @@ G.js:6:1,8: assignment of property `length`
 Error:
 G.js:6:12,17: string
 This type is incompatible with
-[LIB] core.js:201:13,18: number
+[LIB] core.js:203:13,18: number
 
 G.js:7:1,10: call of method `length`
 Function cannot be called on

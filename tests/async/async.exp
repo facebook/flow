@@ -1,13 +1,13 @@
 
 async.js:12:10,10: number
 This type is incompatible with
-[LIB] core.js:450:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
+[LIB] core.js:452:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
 Member 1:
-[LIB] core.js:450:32,41: type application of identifier `Promise`
+[LIB] core.js:452:32,41: type application of identifier `Promise`
 Error:
 async.js:12:10,10: number
 This type is incompatible with
-[LIB] core.js:450:32,41: Promise
+[LIB] core.js:452:32,41: Promise
 Member 2:
 async.js:12:3,11: type parameter `T` of async return
 Error:
@@ -17,13 +17,13 @@ async.js:11:30,33: boolean
 
 async.js:31:10,16: number
 This type is incompatible with
-[LIB] core.js:450:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
+[LIB] core.js:452:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
 Member 1:
-[LIB] core.js:450:32,41: type application of identifier `Promise`
+[LIB] core.js:452:32,41: type application of identifier `Promise`
 Error:
 async.js:31:10,16: number
 This type is incompatible with
-[LIB] core.js:450:32,41: Promise
+[LIB] core.js:452:32,41: Promise
 Member 2:
 async.js:31:3,17: type parameter `T` of async return
 Error:

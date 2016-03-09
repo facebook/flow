@@ -19,38 +19,38 @@ iterator_result.js:23:16,48: object literal
 This type is incompatible with
 iterator_result.js:20:13,40: union: object type(s)
 Member 1:
-[LIB] core.js:354:37,357:1: object type
+[LIB] core.js:356:37,359:1: object type
 Error:
 iterator_result.js:23:31,46: string
 This type is incompatible with
 iterator_result.js:20:36,39: undefined
 Member 2:
-[LIB] core.js:357:5,360:1: object type
+[LIB] core.js:359:5,362:1: object type
 Error:
 iterator_result.js: inconsistent use of library definitions
-[LIB] core.js:355:9,12: boolean literal `true`
+[LIB] core.js:357:9,12: boolean literal `true`
 Expected boolean literal `false`, got `true` instead
-[LIB] core.js:358:9,13: boolean literal `false`
+[LIB] core.js:360:9,13: boolean literal `false`
 
 iterator_result.js:25:16,23: object literal
 This type is incompatible with
 iterator_result.js:20:13,40: union: object type(s)
 Member 1:
-[LIB] core.js:354:37,357:1: object type
+[LIB] core.js:356:37,359:1: object type
 Error:
 iterator_result.js:25:18,21: boolean
 Expected boolean literal `true`, got `false` instead
-[LIB] core.js:355:9,12: boolean literal `true`
+[LIB] core.js:357:9,12: boolean literal `true`
 Member 2:
-[LIB] core.js:357:5,360:1: object type
+[LIB] core.js:359:5,362:1: object type
 Error:
-[LIB] core.js:357:5,360:1: property `value`
+[LIB] core.js:359:5,362:1: property `value`
 Property not found in
 iterator_result.js:25:16,23: object literal
 
 map.js:13:55,60: string
 This type is incompatible with
-[LIB] core.js:384:28,33: tuple type
+[LIB] core.js:386:28,33: tuple type
 
 set.js:13:28,33: string
 This type is incompatible with
@@ -62,6 +62,6 @@ set.js:13:28,33: string
 
 string.js:5:27,32: number
 This type is incompatible with
-[LIB] core.js:213:28,33: string
+[LIB] core.js:215:28,33: string
 
 Found 10 errors

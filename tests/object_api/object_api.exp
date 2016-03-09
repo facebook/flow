@@ -35,7 +35,7 @@ object_prototype.js:38:17,22: number
 
 object_prototype.js:39:24,29: number
 This type is incompatible with
-[LIB] core.js:51:17,22: string
+[LIB] core.js:53:17,22: string
 
 object_prototype.js:43:26,35: function type
 This type is incompatible with
@@ -49,13 +49,13 @@ object_prototype.js:51:2,21: call of method `toString`
 Error:
 object_prototype.js:51:16,20: string
 This type is incompatible with
-[LIB] core.js:96:22,27: number
+[LIB] core.js:98:22,27: number
 
 object_prototype.js:52:2,20: call of method `toString`
 Error:
 object_prototype.js:52:16,19: null
 This type is incompatible with
-[LIB] core.js:96:22,27: number
+[LIB] core.js:98:22,27: number
 
 object_prototype.js:71:32,47: function type
 This type is incompatible with
@@ -63,7 +63,7 @@ object_prototype.js:71:23,28: number
 
 object_prototype.js:72:42,47: number
 This type is incompatible with
-[LIB] core.js:48:32,38: boolean
+[LIB] core.js:50:32,38: boolean
 
 object_prototype.js:76:32,47: function type
 This type is incompatible with
@@ -75,7 +75,7 @@ object_prototype.js:96:29,34: number
 
 object_prototype.js:97:48,53: number
 This type is incompatible with
-[LIB] core.js:49:38,44: boolean
+[LIB] core.js:51:38,44: boolean
 
 object_prototype.js:102:38,59: function type
 This type is incompatible with
@@ -95,7 +95,7 @@ object_prototype.js:150:23,28: number
 
 object_prototype.js:151:30,35: number
 This type is incompatible with
-[LIB] core.js:272:23,28: string
+[LIB] core.js:274:23,28: string
 
 object_prototype.js:155:32,47: function type
 This type is incompatible with
