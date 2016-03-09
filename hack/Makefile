@@ -34,6 +34,7 @@ endif
 
 MODULES=\
   client\
+  decl\
   deps\
   dfind\
   emitter\
