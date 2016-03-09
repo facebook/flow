@@ -15,7 +15,8 @@ open Utils
 
 module Env = Typing_env
 module TUtils = Typing_utils
-module TSubst = Typing_subst
+module TGenConstraint = Typing_generic_constraint
+module Subst = Decl_subst
 module ShapeMap = Nast.ShapeMap
 
 (* Here is the general problem the delayed application of the phase solves.
@@ -127,7 +128,7 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
             match cstr_opt with
             | Some (ck, ty) ->
                 let env, ty = localize ~ety_env env ty in
-                TSubst.add_check_constraint_todo env r x ck ty x_ty
+                TGenConstraint.add_check_constraint_todo env r x ck ty x_ty
             | None -> env
           in
           env, (ety_env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty))
@@ -201,7 +202,7 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
     then
       let env, tvarl =
         List.map_env env ft.ft_tparams TUtils.unresolved_tparam in
-      let ft_subst = TSubst.make ft.ft_tparams tvarl in
+      let ft_subst = Subst.make ft.ft_tparams tvarl in
       env, SMap.union ft_subst ety_env.substs
     else
       env, List.fold_left ft.ft_tparams ~f:begin fun subst (_, (_, x), _) ->
@@ -238,7 +239,7 @@ let localize_with_self env ty =
 (* Helper functions *)
 
 let hint_locl env h =
-  let h = Typing_hint.hint env.Env.decl_env h in
+  let h = Decl_hint.hint env.Env.decl_env h in
   localize_with_self env h
 
 let unify_decl env ty1 ty2 =

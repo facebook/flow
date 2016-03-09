@@ -17,7 +17,7 @@ module Reason = Typing_reason
 module Unify = Typing_unify
 module Env = Typing_env
 module DefsDB = Typing_heap
-module TSubst = Typing_subst
+module Subst = Decl_subst
 module TUtils = Typing_utils
 module TUEnv = Typing_unification_env
 module SN = Naming_special_names
@@ -426,7 +426,7 @@ and sub_type_with_uenv env (uenv_super, ty_super) (uenv_sub, ty_sub) =
                    *)
                   let ety_env = {
                     type_expansions = [];
-                    substs = TSubst.make class_.tc_tparams tyl_sub;
+                    substs = Subst.make class_.tc_tparams tyl_sub;
                     this_ty = ExprDepTy.apply uenv_sub.TUEnv.dep_tys ty_sub;
                     from_class = None;
                   } in

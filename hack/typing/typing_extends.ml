@@ -19,7 +19,7 @@ open Typing_ops
 
 module Env = Typing_env
 module TUtils = Typing_utils
-module Inst = Typing_instantiate
+module Inst = Decl_instantiate
 module Phase = Typing_phase
 module SN = Naming_special_names
 

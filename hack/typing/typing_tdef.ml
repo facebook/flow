@@ -15,8 +15,8 @@ open Utils
 module Reason = Typing_reason
 module Env    = Typing_env
 module DefsDB = Typing_heap
-module Inst   = Typing_instantiate
-module TSubst = Typing_subst
+module Inst   = Decl_instantiate
+module Subst = Decl_subst
 module TUtils = Typing_utils
 module TAccess = Typing_taccess
 module Phase  = Typing_phase
@@ -49,7 +49,7 @@ let expand_typedef_ ?force_expand:(force_expand=false) ety_env env r x argl =
     let ety_env = {
       ety_env with
       type_expansions = (td_pos, x) :: ety_env.type_expansions;
-      substs = TSubst.make td_tparams argl;
+      substs = Subst.make td_tparams argl;
     } in
     let env, expanded_ty =
       if should_expand

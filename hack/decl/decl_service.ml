@@ -41,7 +41,7 @@ end)
 let decl_file tcopt (errorl, failed) fn =
   let errorl', () = Errors.do_ begin fun () ->
     d ("Typing decl: "^Relative_path.to_absolute fn);
-    Typing_decl.make_env tcopt fn;
+    Decl.make_env tcopt fn;
     dn "OK";
   end
   in

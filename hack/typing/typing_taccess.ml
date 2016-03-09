@@ -16,7 +16,7 @@ open Utils
 module TUtils = Typing_utils
 module Reason = Typing_reason
 module Env = Typing_env
-module Inst = Typing_instantiate
+module Inst = Decl_instantiate
 module SN = Naming_special_names
 module TGen = Typing_generic
 module Phase = Typing_phase

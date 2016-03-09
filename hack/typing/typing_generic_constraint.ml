@@ -8,46 +8,12 @@
  *
  *)
 
-open Core
 open Typing_defs
 
 module TUtils = Typing_utils
 module N = Nast
-module SN = Naming_special_names
 module Reason = Typing_reason
 module Env = Typing_env
-module ShapeMap = Nast.ShapeMap
-
-(*****************************************************************************)
-(* Builds a substitution out of a list of type parameters and a list of types.
- *
- * Typical use-case:
- *   class Y<T> { ... }
- *   class X extends Y<int>
- *
- * To build the type of X, we need to replace all the occurrences of T in Y by
- * int. The function make_subst, builds the substitution (the map associating
- * types to a type parameter name), in this case, it would build the map(T =>
- * int).
- *)
-(*****************************************************************************)
-
-let make tparams tyl =
-  (* We tolerate missing types in silent_mode. When that happens, we bind
-   * all the parameters we can, and bind the remaining ones to "Tany".
-   *)
-  let make_subst_tparam subst tyl (_, (_, tparam_name), _) =
-    let ty =
-      match !tyl with
-      | [] -> Reason.Rnone, Tany
-      | ty :: rl -> tyl := rl; ty
-    in
-    subst := SMap.add tparam_name ty !subst
-  in
-  let subst = ref SMap.empty in
-  let tyl = ref tyl in
-  List.iter tparams (make_subst_tparam subst tyl);
-  !subst
 
 let check_constraint env ck cstr_ty ty =
   let env, ety = Env.expand_type env ty in

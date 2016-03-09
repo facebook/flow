@@ -131,7 +131,7 @@ let fmt_hint_inner ~tparams ~always_extended t =
 (* Format a type hint for assembly output when full type-info is wanted.
  * (TypeConstraint+"userType"). tparams is so that we can
  * distinguish between type variables and class names. We *could* try
- * get this information from Typing_decl, since it has been computed,
+ * get this information from Decl, since it has been computed,
  * but to be honest it is simpler to just do it ourselves. *)
 let fmt_hint_info ~tparams ~always_extended = function
   | None -> ""

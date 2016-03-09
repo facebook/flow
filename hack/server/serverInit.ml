@@ -227,7 +227,7 @@ let naming env t =
 let type_decl genv env fast t =
   let bucket_size = genv.local_config.SLC.type_decl_bucket_size in
   let errorl, failed_decl =
-    Typing_decl_service.go ~bucket_size genv.workers env.tcopt fast in
+    Decl_service.go ~bucket_size genv.workers env.tcopt fast in
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
   Stats.(stats.init_heap_size <- hs);

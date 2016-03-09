@@ -105,7 +105,7 @@ let simplified_uerror env ty1 ty2 =
 let process_static_find_ref cid mid =
   match cid with
   | Nast.CI c ->
-    Typing_hooks.dispatch_class_id_hook c (Some mid);
+    Decl_hooks.dispatch_class_id_hook c (Some mid);
   | _ -> ()
 
 (* Find the first defined position in a list of types *)

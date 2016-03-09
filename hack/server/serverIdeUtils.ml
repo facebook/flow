@@ -88,11 +88,11 @@ let declare path content =
         | Ast.Fun f ->
             let f = Naming.fun_ tcopt f in
             Naming_heap.FunHeap.add (snd f.Nast.f_name) f;
-            Typing_decl.fun_decl f;
+            Decl.fun_decl f;
         | Ast.Class c ->
             let c = Naming.class_ tcopt c in
             Naming_heap.ClassHeap.add (snd c.Nast.c_name) c;
-            Typing_decl.class_decl tcopt c;
+            Decl.class_decl tcopt c;
         | _ -> ()
       end;
       !declared_funs, !declared_classes

@@ -81,8 +81,8 @@ let emit_file { filename; read_stdin; is_test } () =
   (* Build a naming environment and run naming *)
   let tcopt = TypecheckerOptions.default in
   NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
-  (* Naming is driven by Typing_decl... *)
-  Typing_decl.make_env tcopt filename;
+  (* Naming is driven by Decl... *)
+  Decl.make_env tcopt filename;
 
   (* Actually emit. *)
   Emitter.emit_file ~is_test tcopt filename ast file_info

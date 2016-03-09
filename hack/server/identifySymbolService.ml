@@ -99,7 +99,7 @@ let attach_hooks result_ref line char =
   Typing_hooks.attach_constructor_hook
     (process_constructor result_ref is_target_fun);
   Typing_hooks.attach_fun_id_hook (process_fun_id result_ref is_target_fun);
-  Typing_hooks.attach_class_id_hook (process_class_id result_ref is_target_fun);
+  Decl_hooks.attach_class_id_hook (process_class_id result_ref is_target_fun);
   Naming_hooks.attach_lvar_hook (process_lvar_id result_ref is_target_fun);
   Naming_hooks.attach_class_named_hook
     (process_named_class result_ref is_target_fun);
@@ -107,5 +107,7 @@ let attach_hooks result_ref line char =
     (process_named_fun result_ref is_target_fun)
 
 let detach_hooks () =
+  Naming_hooks.remove_all_hooks ();
+  Decl_hooks.remove_all_hooks ();
   Typing_hooks.remove_all_hooks ();
-  Naming_hooks.remove_all_hooks ()
+  ()

@@ -216,7 +216,7 @@ let type_check genv env =
 
   let bucket_size = genv.local_config.SLC.type_decl_bucket_size in
   let _, _, to_redecl_phase2, to_recheck1 =
-    Typing_redecl_service.redo_type_decl
+    Decl_redecl_service.redo_type_decl
       ~bucket_size genv.workers env.tcopt fast in
   let to_redecl_phase2 = Typing_deps.get_files to_redecl_phase2 in
   let to_recheck1 = Typing_deps.get_files to_recheck1 in
@@ -229,7 +229,7 @@ let type_check genv env =
 
   (* DECLARING TYPES: Phase2 *)
   let errorl', failed_decl, _to_redecl2, to_recheck2 =
-    Typing_redecl_service.redo_type_decl
+    Decl_redecl_service.redo_type_decl
       ~bucket_size genv.workers env.tcopt fast_redecl_phase2 in
   let to_recheck2 = Typing_deps.get_files to_recheck2 in
   let errorl = List.rev_append errorl' errorl in

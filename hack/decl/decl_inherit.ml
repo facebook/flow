@@ -20,10 +20,7 @@ open Core
 open Nast
 open Typing_defs
 
-module DeclEnv = Typing_decl_env
-module Inst = Typing_instantiate
-module TUtils = Typing_utils
-module Phase = Typing_phase
+module Inst = Decl_instantiate
 
 (*****************************************************************************)
 (* This is what we are trying to produce for a given class. *)
@@ -272,7 +269,7 @@ let inherit_hack_class env c p class_name class_type argl =
   let sprops   = instantiate class_type.tc_sprops in
   let methods  = instantiate class_type.tc_methods in
   let smethods = instantiate class_type.tc_smethods in
-  let cstr     = DeclEnv.get_construct env class_type in
+  let cstr     = Decl_env.get_construct env class_type in
   let cstr     = constructor subst cstr in
   let result = {
     ih_cstr     = cstr;
@@ -314,9 +311,9 @@ let inherit_hack_xhp_attrs_only p class_name class_type argl =
 (*****************************************************************************)
 
 let from_class env c hint =
-  let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
-  let class_params = List.map class_params (Typing_hint.hint env) in
-  let class_type = DeclEnv.get_class_dep env class_name in
+  let pos, class_name, class_params = Decl_utils.unwrap_class_hint hint in
+  let class_params = List.map class_params (Decl_hint.hint env) in
+  let class_type = Decl_env.get_class_dep env class_name in
   match class_type with
   | None ->
     (* The class lives in PHP, we don't know anything about it *)
@@ -327,9 +324,9 @@ let from_class env c hint =
 
 (* mostly copy paste of from_class *)
 let from_class_constants_only env hint =
-  let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
-  let class_params = List.map class_params (Typing_hint.hint env) in
-  let class_type = DeclEnv.get_class_dep env class_name in
+  let pos, class_name, class_params = Decl_utils.unwrap_class_hint hint in
+  let class_params = List.map class_params (Decl_hint.hint env) in
+  let class_type = Decl_env.get_class_dep env class_name in
   match class_type with
   | None ->
     (* The class lives in PHP, we don't know anything about it *)
@@ -339,9 +336,9 @@ let from_class_constants_only env hint =
     inherit_hack_class_constants_only pos class_name class_ class_params
 
 let from_class_xhp_attrs_only env hint =
-  let pos, class_name, class_params = TUtils.unwrap_class_hint hint in
-  let class_params = List.map class_params (Typing_hint.hint env) in
-  let class_type = DeclEnv.get_class_dep env class_name in
+  let pos, class_name, class_params = Decl_utils.unwrap_class_hint hint in
+  let class_params = List.map class_params (Decl_hint.hint env) in
+  let class_type = Decl_env.get_class_dep env class_name in
   match class_type with
   | None ->
     (* The class lives in PHP, we don't know anything about it *)

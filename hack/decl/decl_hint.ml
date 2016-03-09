@@ -15,8 +15,6 @@ open Core
 open Nast
 open Typing_defs
 
-module DeclEnv = Typing_decl_env
-
 (* Unpacking a hint for typing *)
 
 let rec hint env (p, h) =
@@ -28,7 +26,7 @@ and hint_ p env = function
   | Hmixed -> Tmixed
   | Hthis -> Tthis
   | Harray (h1, h2) ->
-    if env.DeclEnv.mode = FileInfo.Mstrict && h1 = None
+    if env.Decl_env.mode = FileInfo.Mstrict && h1 = None
     then Errors.generic_array_strict p;
     let h1 = Option.map h1 (hint env) in
     let h2 = Option.map h2 (hint env) in
@@ -76,8 +74,8 @@ and hint_ p env = function
     Errors.tuple_syntax p;
     Tany
   | Happly (((_p, c) as id), argl) ->
-    Typing_hooks.dispatch_class_id_hook id None;
-    DeclEnv.add_wclass env c;
+    Decl_hooks.dispatch_class_id_hook id None;
+    Decl_env.add_wclass env c;
     let argl = List.map argl (hint env) in
     Tapply (id, argl)
   | Haccess (root_ty, ids) ->

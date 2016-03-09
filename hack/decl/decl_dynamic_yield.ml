@@ -21,7 +21,6 @@ open Utils
 open Typing_defs
 
 module Reason = Typing_reason
-module Type   = Typing_ops
 module SN     = Naming_special_names
 
 (* Classes that use the DynamicYield trait and implement {gen|get}Foo

@@ -114,7 +114,7 @@ let parallel_check workers tcopt fnl =
       workers
       ~job:load_and_check_files
       ~neutral
-      ~merge:Typing_decl_service.merge_decl
+      ~merge:Decl_service.merge_decl
       ~next:(Bucket.make fnl)
   in
   TypeCheckStore.clear();

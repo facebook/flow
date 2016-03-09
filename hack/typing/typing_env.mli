@@ -29,7 +29,7 @@ type env = {
   subst : int IMap.t;
   lenv : local_env;
   genv : genv;
-  decl_env : Typing_decl_env.env;
+  decl_env : Decl_env.env;
   todo : tfun list;
   in_loop : bool;
   grow_super : bool;

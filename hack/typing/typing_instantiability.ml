@@ -175,4 +175,4 @@ let check_tparams_instantiable (env:Env.env) (tparams:Nast.tparam list) =
 
 let instantiable_hint env h =
   check_instantiable env h;
-  Typing_hint.hint env.Env.decl_env h
+  Decl_hint.hint env.Env.decl_env h

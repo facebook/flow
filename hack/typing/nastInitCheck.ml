@@ -12,10 +12,9 @@
 (* module checking that all the class members are properly initialized *)
 open Core
 open Nast
-open Typing_defs
 open Utils
 
-module DeclEnv = Typing_decl_env
+module DICheck = Decl_init_check
 module SN = Naming_special_names
 
 (* Exception raised when we hit a return statement and the initialization
@@ -39,8 +38,6 @@ exception InitReturn of SSet.t
 type prop_status =
   | Vnull (* The value is still potentially null *)
   | Vinit (* Yay! it has been initialized *)
-
-let parent_init_prop = "parent::" ^ SN.Members.__construct
 
 (* Module initializing the environment
    Originally, every class member has 2 possible states,
@@ -70,74 +67,9 @@ module Env = struct
     tenv    : Typing_env.env ;
   }
 
-  (* If we need to call parent::__construct, we treat it as if it were
-   * a class variable that needs to be initialized. It's a bit hacky
-   * but it works. The idea here is that if the parent needs to be
-   * initialized, we add a phony class variable. *)
-  let add_parent_construct c decl_env props parent_hint =
-    match parent_hint with
-      | (_, Happly ((_, parent), _)) ->
-        let class_ = DeclEnv.get_class_dep decl_env parent in
-        (match class_ with
-          | Some class_ when
-              class_.Typing_defs.tc_need_init && c.c_constructor <> None
-              -> SSet.add parent_init_prop props
-          | _ -> props
-        )
-      | _ -> props
-
   let parent_id c = match c.c_extends with
     | [(_, Happly ((_, parent_id), _))] -> Some parent_id
     | _ -> None
-
-  let parent decl_env props c =
-    if c.c_mode = FileInfo.Mdecl then props
-    else
-      if c.c_kind = Ast.Ctrait
-      then List.fold_left c.c_req_extends
-        ~f:(add_parent_construct c decl_env) ~init:props
-      else match c.c_extends with
-      | [] -> props
-      | parent_hint :: _ -> add_parent_construct c decl_env props parent_hint
-
-  let prop_needs_init add_to_acc acc cv =
-    if cv.cv_is_xhp then acc else begin
-      match cv.cv_type with
-        | None
-        | Some (_, Hoption _)
-        | Some (_, Hmixed) -> acc
-        | Some _ when cv.cv_expr = None -> add_to_acc cv acc
-        | Some _ -> acc
-    end
-
-  let parent_props decl_env acc c =
-    List.fold_left (c.c_extends @ c.c_uses) ~f:begin fun acc parent ->
-      match parent with
-      | _, Happly ((_, parent), _) ->
-        let tc = DeclEnv.get_class_dep decl_env parent in
-        (match tc with
-          | None -> acc
-          | Some { tc_deferred_init_members = members; _ } ->
-            SSet.union members acc)
-      | _ -> acc
-    end ~init:acc
-
-  (* return a tuple of the private init-requiring props of the class
-   * and the other init-requiring props of the class and its ancestors *)
-  let classify_props_for_decl decl_env c =
-    let adder = begin fun cv (private_props, hierarchy_props) ->
-      let cname = snd cv.cv_id in
-      if cv.cv_visibility = Private then
-        (SSet.add cname private_props), hierarchy_props
-      else
-        private_props, (SSet.add cname hierarchy_props)
-    end in
-    let acc = (SSet.empty, SSet.empty) in
-    let priv_props, props =
-      List.fold_left ~f:(prop_needs_init adder) ~init:acc c.c_vars in
-    let props = parent_props decl_env props c in
-    let props = parent decl_env props c in
-    priv_props, props
 
   let rec make tenv c =
     let tenv = Typing_env.set_self_id tenv (snd c.c_name) in
@@ -146,10 +78,10 @@ module Env = struct
       | Some parent_id -> Typing_env.set_parent_id tenv parent_id in
     let methods = List.fold_left ~f:method_ ~init:SMap.empty c.c_methods in
     let adder = begin fun cv acc -> SSet.add (snd cv.cv_id) acc end in
-    let props =
-      List.fold_left ~f:(prop_needs_init adder) ~init:SSet.empty c.c_vars in
-    let props = parent_props tenv.Typing_env.decl_env props c in
-    let props = parent tenv.Typing_env.decl_env props c in
+    let props = List.fold_left c.c_vars
+      ~f:(DICheck.prop_needs_init adder) ~init:SSet.empty in
+    let props = DICheck.parent_props tenv.Typing_env.decl_env props c in
+    let props = DICheck.parent tenv.Typing_env.decl_env props c in
     { methods = methods; props = props; tenv = tenv }
 
   and method_ acc m =
@@ -175,19 +107,7 @@ let is_whitelisted = function
   | x when x = SN.StdlibFunctions.get_class -> true
   | _ -> false
 
-let rec class_decl ~has_own_cstr decl_env c =
-  if not has_own_cstr && (c.c_kind = Ast.Ctrait || c.c_kind = Ast.Cabstract)
-  then
-    (* private properties cannot be initialized without a constructor *)
-    let priv_props, props = Env.classify_props_for_decl decl_env c in
-    if priv_props <> SSet.empty && (c.c_kind = Ast.Cabstract) then
-      (* XXX: should priv_props be checked for a trait?
-       *  see chown_privates in typing_inherit *)
-      Errors.constructor_required c.c_name priv_props;
-    SSet.union priv_props props
-  else SSet.empty
-
-and class_ tenv c =
+let rec class_ tenv c =
   if c.c_mode = FileInfo.Mdecl then () else
   match c.c_constructor with
   | _ when c.c_kind = Ast.Cinterface -> ()
@@ -203,7 +123,7 @@ and class_ tenv c =
     let check_inits = begin fun () ->
       let uninit_props = SSet.diff env.props inits in
       if SSet.empty <> uninit_props then begin
-        if SSet.mem parent_init_prop uninit_props then
+        if SSet.mem DICheck.parent_init_prop uninit_props then
           Errors.no_construct_parent p
         else
           Errors.not_initialized (p, snd c.c_name) uninit_props
@@ -249,7 +169,7 @@ and stmt env acc st =
     | Expr (_, Call (Cnormal, (_, Class_const (CIparent, (_, m))), el, _uel))
         when m = SN.Members.__construct ->
       let acc = List.fold_left ~f:expr ~init:acc el in
-      assign env acc parent_init_prop
+      assign env acc DICheck.parent_init_prop
     | Expr e -> expr acc e
     | Break _ -> acc
     | Continue _ -> acc

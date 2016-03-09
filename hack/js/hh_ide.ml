@@ -136,12 +136,12 @@ let declare_file fn content =
       let all_classes = List.fold_right classes ~f:begin fun (_, cname) acc ->
         SMap.add cname (Relative_path.Set.singleton fn) acc
       end ~init:SMap.empty in
-      Typing_decl.make_env tcopt fn;
+      Decl.make_env tcopt fn;
       let sub_classes = get_sub_classes all_classes in
       SSet.iter begin fun cname ->
         match Naming_heap.ClassHeap.get cname with
         | None -> ()
-        | Some c -> Typing_decl.class_decl tcopt c
+        | Some c -> Decl.class_decl tcopt c
       end sub_classes
     end
     else Hashtbl.replace globals fn (false, [], [])
@@ -191,7 +191,7 @@ let hh_check fn =
         let funs, classes, typedefs, consts = make_funs_classes ast in
         let tcopt = TypecheckerOptions.permissive in
         NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
-        Typing_decl.make_env tcopt fn;
+        Decl.make_env tcopt fn;
         List.iter funs (fun (_, fname) -> type_fun tcopt fname fn);
         List.iter classes (fun (_, cname) -> type_class tcopt cname fn);
         error []
@@ -221,7 +221,7 @@ let hh_auto_complete fn =
           Typing.fun_def tcopt (snd f.Nast.f_name) f
         | Ast.Class c ->
           let c = Naming.class_ tcopt c in
-          Typing_decl.class_decl tcopt c;
+          Decl.class_decl tcopt c;
           Typing.class_def tcopt (snd c.Nast.c_name) c
         | _ -> ()
       end;

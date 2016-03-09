@@ -56,7 +56,7 @@ let on_the_fly_decl_file tcopt (errors, failed) fn =
      * If a new dependency shows up, it will end-up in Typing_deps.record_acc.
      * Sending only the difference is a drastic improvement in perf.
      *)
-      Typing_decl.make_env tcopt fn
+      Decl.make_env tcopt fn
     end
   in
   List.fold_left decl_errors ~f:begin fun (errors, failed) error ->
@@ -83,7 +83,7 @@ let on_the_fly_decl_file tcopt (errors, failed) fn =
 let compute_classes_deps old_classes new_classes acc classes =
   let to_redecl, to_recheck = acc in
   let rdd, rdc =
-    Typing_compare.get_classes_deps old_classes new_classes classes
+    Decl_compare.get_classes_deps old_classes new_classes classes
   in
   let to_redecl = DepSet.union rdd to_redecl in
   let to_recheck = DepSet.union rdc to_recheck in
@@ -96,7 +96,7 @@ let compute_classes_deps old_classes new_classes acc classes =
 (*****************************************************************************)
 
 let compute_funs_deps old_funs (to_redecl, to_recheck) funs =
-  let rdd, rdc = Typing_compare.get_funs_deps old_funs funs in
+  let rdd, rdc = Decl_compare.get_funs_deps old_funs funs in
   let to_redecl = DepSet.union rdd to_redecl in
   let to_recheck = DepSet.union rdc to_recheck in
   to_redecl, to_recheck
@@ -108,7 +108,7 @@ let compute_funs_deps old_funs (to_redecl, to_recheck) funs =
 (*****************************************************************************)
 
 let compute_types_deps old_types (to_redecl, to_recheck) types =
-  let rdc = Typing_compare.get_types_deps old_types types in
+  let rdc = Decl_compare.get_types_deps old_types types in
   let to_redecl = DepSet.union rdc to_redecl in
   let to_recheck = DepSet.union rdc to_recheck in
   to_redecl, to_recheck
@@ -120,7 +120,7 @@ let compute_types_deps old_types (to_redecl, to_recheck) types =
 (*****************************************************************************)
 
 let compute_gconsts_deps old_gconsts (to_redecl, to_recheck) gconsts =
-  let rdd, rdc = Typing_compare.get_gconsts_deps old_gconsts gconsts in
+  let rdd, rdc = Decl_compare.get_gconsts_deps old_gconsts gconsts in
   let to_redecl = DepSet.union rdd to_redecl in
   let to_recheck = DepSet.union rdc to_recheck in
   to_redecl, to_recheck

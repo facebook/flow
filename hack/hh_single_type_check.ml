@@ -442,7 +442,7 @@ let decl_and_run_mode {filename; mode; no_builtins} =
     end files_info;
 
     Relative_path.Map.iter begin fun fn _ ->
-      Typing_decl.make_env tcopt fn
+      Decl.make_env tcopt fn
     end files_info;
 
     files_info

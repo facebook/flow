@@ -19,15 +19,12 @@ open Nast
 open Typing_defs
 open Typing_deps
 
-module DeclEnv = Typing_decl_env
-module DynamicYield = Typing_dynamic_yield
+module DynamicYield = Decl_dynamic_yield
 module Reason = Typing_reason
-module Inst = Typing_instantiate
+module Inst = Decl_instantiate
 module Attrs = Attributes
-module TUtils = Typing_utils
 
 module SN = Naming_special_names
-module Phase = Typing_phase
 
 (*****************************************************************************)
 (* Checking that the kind of a class is compatible with its parent
@@ -77,9 +74,9 @@ let add_grand_parents_or_traits parent_pos class_nast acc parent_type =
 
 let get_class_parent_or_trait env class_nast (parents, is_complete, is_trait)
     hint =
-  let parent_pos, parent, _ = TUtils.unwrap_class_hint hint in
+  let parent_pos, parent, _ = Decl_utils.unwrap_class_hint hint in
   let parents = SSet.add parent parents in
-  let parent_type = DeclEnv.get_class_dep env parent in
+  let parent_type = Decl_env.get_class_dep env parent in
   match parent_type with
   | None ->
       (* The class lives in PHP *)
@@ -128,7 +125,7 @@ and make_param_ty env param =
       (r, Tany)
       (* if the code is strict, use the type-hint *)
     | Some x ->
-      Typing_hint.hint env x
+      Decl_hint.hint env x
   in
   let ty = match ty with
     | _, t when param.param_is_variadic ->
@@ -141,7 +138,7 @@ and make_param_ty env param =
 
 and fun_decl f =
   let dep = Dep.Fun (snd f.f_name) in
-  let env = {DeclEnv.mode = f.f_mode; droot = Some dep} in
+  let env = {Decl_env.mode = f.f_mode; droot = Some dep} in
   let ft = fun_decl_in_env env f in
   Typing_heap.Funs.add (snd f.f_name) ft;
   ()
@@ -164,7 +161,7 @@ and fun_decl_in_env env f =
   let arity_min, params = make_params env f.f_params in
   let ret_ty = match f.f_ret with
     | None -> ret_from_fun_kind (fst f.f_name) f.f_fun_kind
-    | Some ty -> Typing_hint.hint env ty in
+    | Some ty -> Decl_hint.hint env ty in
   let arity = match f.f_variadic with
     | FVvariadicArg param ->
       assert param.param_is_variadic;
@@ -190,7 +187,7 @@ and fun_decl_in_env env f =
 and type_param env (variance, x, cstr) =
   let cstr = match cstr with
     | Some (ck, h) ->
-        let ty = Typing_hint.hint env h in
+        let ty = Decl_hint.hint env h in
         Some (ck, ty)
     | None -> None in
   variance, x, cstr
@@ -311,36 +308,36 @@ and class_decl tcopt c =
   let is_abstract = class_is_abstract c in
   let _p, cls_name = c.c_name in
   let class_dep = Dep.Class cls_name in
-  let env = {DeclEnv.mode = c.c_mode; droot = Some class_dep} in
-  let inherited = Typing_inherit.make env c in
-  let props = inherited.Typing_inherit.ih_props in
+  let env = {Decl_env.mode = c.c_mode; droot = Some class_dep} in
+  let inherited = Decl_inherit.make env c in
+  let props = inherited.Decl_inherit.ih_props in
   let props =
     List.fold_left ~f:(class_var_decl env c) ~init:props c.c_vars in
-  let m = inherited.Typing_inherit.ih_methods in
+  let m = inherited.Decl_inherit.ih_methods in
   let m =
     List.fold_left ~f:(method_decl_acc env c) ~init:m c.c_methods in
-  let consts = inherited.Typing_inherit.ih_consts in
+  let consts = inherited.Decl_inherit.ih_consts in
   let consts = List.fold_left ~f:(class_const_decl env c)
     ~init:consts c.c_consts in
   let consts = SMap.add SN.Members.mClass (class_class_decl c.c_name) consts in
-  let typeconsts = inherited.Typing_inherit.ih_typeconsts in
+  let typeconsts = inherited.Decl_inherit.ih_typeconsts in
   let typeconsts, consts = List.fold_left c.c_typeconsts
       ~f:(typeconst_decl env c) ~init:(typeconsts, consts) in
   let sclass_var = static_class_var_decl env c in
-  let sprops = inherited.Typing_inherit.ih_sprops in
+  let sprops = inherited.Decl_inherit.ih_sprops in
   let sprops = List.fold_left c.c_static_vars ~f:sclass_var ~init:sprops in
-  let sm = inherited.Typing_inherit.ih_smethods in
+  let sm = inherited.Decl_inherit.ih_smethods in
   let sm = List.fold_left c.c_static_methods
     ~f:(method_decl_acc env c) ~init:sm in
   SMap.iter (check_static_method m) sm;
-  let parent_cstr = inherited.Typing_inherit.ih_cstr in
+  let parent_cstr = inherited.Decl_inherit.ih_cstr in
   let cstr = constructor_decl env parent_cstr c in
   let has_concrete_cstr = match (fst cstr) with
     | None
     | Some {ce_type = (_, Tfun ({ft_abstract = true; _})); _} -> false
     | _ -> true in
   let impl = c.c_extends @ c.c_implements @ c.c_uses in
-  let impl = List.map impl (Typing_hint.hint env) in
+  let impl = List.map impl (Decl_hint.hint env) in
   let impl = match SMap.get SN.Members.__toString m with
     | Some {ce_type = (_, Tfun ft); _} when cls_name <> SN.Classes.cStringish ->
       (* HHVM implicitly adds Stringish interface for every class/iface/trait
@@ -358,7 +355,7 @@ and class_decl tcopt c =
     else extends
   in
   let req_ancestors, req_ancestors_extends =
-    Typing_requirements.get_class_requirements env c in
+    Decl_requirements.get_class_requirements env c in
   let m = if DynamicYield.is_dynamic_yield (snd c.c_name)
     then DynamicYield.clean_dynamic_yield m
     else m in
@@ -381,7 +378,7 @@ and class_decl tcopt c =
   let unsafe_xhp = TypecheckerOptions.unsafe_xhp tcopt in
   let not_strict_because_xhp = unsafe_xhp && c.c_is_xhp in
   if not ext_strict && not not_strict_because_xhp &&
-      (env.DeclEnv.mode = FileInfo.Mstrict) then
+      (env.Decl_env.mode = FileInfo.Mstrict) then
     let p, name = c.c_name in
     Errors.strict_members_not_known p name
   else ();
@@ -390,15 +387,15 @@ and class_decl tcopt c =
   let enum = match c.c_enum with
     | None -> None
     | Some e ->
-      let base_hint = Typing_hint.hint env e.e_base in
+      let base_hint = Decl_hint.hint env e.e_base in
       let constraint_hint =
-        Option.map e.e_constraint (Typing_hint.hint env) in
+        Option.map e.e_constraint (Decl_hint.hint env) in
       Some
         { te_base       = base_hint;
           te_constraint = constraint_hint } in
-  let consts = Typing_enum.enum_class_decl_rewrite c.c_name enum impl consts in
+  let consts = Decl_enum.rewrite_class c.c_name enum impl consts in
   let has_own_cstr = has_concrete_cstr && (None <> c.c_constructor) in
-  let deferred_members = NastInitCheck.class_decl ~has_own_cstr env c in
+  let deferred_members = Decl_init_check.class_ ~has_own_cstr env c in
   let tc = {
     tc_final = c.c_final;
     tc_abstract = is_abstract;
@@ -435,8 +432,8 @@ and class_decl tcopt c =
   Typing_heap.Classes.add (snd c.c_name) tc
 
 and get_implements env ht =
-  let _r, (_p, c), paraml = TUtils.unwrap_class_type ht in
-  let class_ = DeclEnv.get_class_dep env c in
+  let _r, (_p, c), paraml = Decl_utils.unwrap_class_type ht in
+  let class_ = Decl_env.get_class_dep env c in
   match class_ with
   | None ->
       (* The class lives in PHP land *)
@@ -453,7 +450,7 @@ and get_implements env ht =
 and trait_exists env acc trait =
   match trait with
     | (_, Happly ((_, trait), _)) ->
-      let class_ = DeclEnv.get_class_dep env trait in
+      let class_ = Decl_env.get_class_dep env trait in
       (match class_ with
         | None -> false
         | Some _class -> acc
@@ -518,9 +515,9 @@ and class_const_decl env c acc (h, id, e) =
   let c_name = (snd c.c_name) in
   let ty =
     match h, e with
-      | Some h, Some _ -> Typing_hint.hint env h
+      | Some h, Some _ -> Decl_hint.hint env h
       | Some h, None ->
-        let h_ty = Typing_hint.hint env h in
+        let h_ty = Decl_hint.hint env h in
         let pos, name = id in
         Reason.Rwitness pos,
           Tgeneric (c_name^"::"^name, Some (Ast.Constraint_as, h_ty))
@@ -590,12 +587,12 @@ and class_var_decl env c acc cv =
          in XHP attribute declarations, so this is a temporary
          hack to support existing code for now. *)
       (* Task #5815945: Get rid of this Hack *)
-      let env = if DeclEnv.mode env = FileInfo.Mstrict
-      then { env with DeclEnv.mode = FileInfo.Mpartial }
+      let env = if Decl_env.mode env = FileInfo.Mstrict
+      then { env with Decl_env.mode = FileInfo.Mpartial }
         else env
       in
-      Typing_hint.hint env ty'
-    | Some ty' -> Typing_hint.hint env ty'
+      Decl_hint.hint env ty'
+    | Some ty' -> Decl_hint.hint env ty'
   in
   let id = snd cv.cv_id in
   let vis = visibility (snd c.c_name) cv.cv_visibility in
@@ -610,7 +607,7 @@ and class_var_decl env c acc cv =
 and static_class_var_decl env c acc cv =
   let ty = match cv.cv_type with
     | None -> Reason.Rwitness (fst cv.cv_id), Tany
-    | Some ty -> Typing_hint.hint env ty in
+    | Some ty -> Decl_hint.hint env ty in
   let id = snd cv.cv_id in
   let vis = visibility (snd c.c_name) cv.cv_visibility in
   let ce = { ce_final = true; ce_is_xhp_attr = cv.cv_is_xhp; ce_override = false;
@@ -665,8 +662,8 @@ and typeconst_decl env c (acc, acc2) {
       Errors.cannot_declare_constant kind pos c.c_name;
       acc, acc2
   | Ast.Cinterface | Ast.Cabstract | Ast.Cnormal ->
-      let constr = Option.map constr (Typing_hint.hint env) in
-      let ty = Option.map type_ (Typing_hint.hint env) in
+      let constr = Option.map constr (Decl_hint.hint env) in
+      let ty = Option.map type_ (Decl_hint.hint env) in
       let is_abstract = Option.is_none ty in
       let ts = typeconst_ty_decl pos (snd c.c_name) name ~is_abstract in
       let acc2 = SMap.add name ts acc2 in
@@ -683,7 +680,7 @@ and method_decl env m =
   let arity_min, params = make_params env m.m_params in
   let ret = match m.m_ret with
     | None -> ret_from_fun_kind (fst m.m_name) m.m_fun_kind
-    | Some ret -> Typing_hint.hint env ret in
+    | Some ret -> Decl_hint.hint env ret in
   let arity = match m.m_variadic with
     | FVvariadicArg param ->
       assert param.param_is_variadic;
@@ -768,10 +765,10 @@ and type_typedef_naming_and_decl tcopt tdef =
   } as decl = Naming.typedef tcopt tdef in
   let td_pos, tid = tdef.Ast.t_id in
   let dep = Typing_deps.Dep.Class tid in
-  let env = {DeclEnv.mode = tdef.Ast.t_mode; droot = Some dep} in
+  let env = {Decl_env.mode = tdef.Ast.t_mode; droot = Some dep} in
   let td_tparams = List.map params (type_param env) in
-  let td_type = Typing_hint.hint env concrete_type in
-  let td_constraint = Option.map tcstr (Typing_hint.hint env) in
+  let td_type = Decl_hint.hint env concrete_type in
+  let td_constraint = Option.map tcstr (Decl_hint.hint env) in
   let td_vis = match tdef.Ast.t_kind with
     | Ast.Alias _ -> Transparent
     | Ast.NewType _ -> Opaque in
@@ -791,11 +788,11 @@ let iconst_decl tcopt cst =
   let _cst_pos, cst_name = cst.cst_name in
   Naming_heap.ConstHeap.add cst_name cst;
   let dep = Dep.GConst (snd cst.cst_name) in
-  let env = {DeclEnv.mode = cst.cst_mode; droot = Some dep} in
+  let env = {Decl_env.mode = cst.cst_mode; droot = Some dep} in
   let hint_ty =
     match cst.cst_type with
     | None -> Reason.Rnone, Tany
-    | Some h -> Typing_hint.hint env h
+    | Some h -> Decl_hint.hint env h
   in
   Typing_heap.GConsts.add cst_name hint_ty;
   ()

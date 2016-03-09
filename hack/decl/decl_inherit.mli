@@ -29,4 +29,4 @@ type inherited = {
 }
 
 (* Builds the inherited type *)
-val make: Typing_decl_env.env -> Nast.class_ -> inherited
+val make: Decl_env.env -> Nast.class_ -> inherited

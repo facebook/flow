@@ -17,7 +17,7 @@ module Env = Typing_env
 module Phase = Typing_phase
 module Reason = Typing_reason
 module SN = Naming_special_names
-module TSubst = Typing_subst
+module Subst = Decl_subst
 module TUtils = Typing_utils
 
 let make_ts env ty =
@@ -28,7 +28,7 @@ let make_ts env ty =
       end td_tparams in
       let ts = fst ty, Tapply ((Pos.none, SN.FB.cTypeStructure), params) in
       let ety_env = { (Phase.env_with_self env) with
-                      substs = TSubst.make td_tparams [ty] } in
+                      substs = Subst.make td_tparams [ty] } in
       Phase.localize ~ety_env env ts
   | _ ->
       (* Should not hit this because TypeStructure should always be defined *)

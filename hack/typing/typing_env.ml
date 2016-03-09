@@ -9,7 +9,7 @@
  *)
 
 open Core
-open Typing_decl_env
+open Decl_env
 open Typing_defs
 open Nast
 
@@ -50,7 +50,7 @@ type env = {
   subst   : int IMap.t ;
   lenv    : local_env  ;
   genv    : genv       ;
-  decl_env: Typing_decl_env.env;
+  decl_env: Decl_env.env;
   todo    : tfun list  ;
   in_loop : bool       ;
   (* when encountering Tunresolved in the supertype, do we allow it to grow?
@@ -350,7 +350,7 @@ let get_typedef env x =
   add_wclass env x;
   Typedefs.get x
 
-let get_class_dep env = Typing_decl_env.get_class_dep env.decl_env
+let get_class_dep env = Decl_env.get_class_dep env.decl_env
 
 let get_typeconst env class_ mid =
   add_wclass env class_.tc_name;
@@ -407,7 +407,7 @@ let suggest_member is_method class_ mid =
   let members = if is_method then class_.tc_methods else class_.tc_props in
   suggest_member members mid
 
-let get_construct env = Typing_decl_env.get_construct env.decl_env
+let get_construct env = Decl_env.get_construct env.decl_env
 
 let get_todo env =
   env.todo

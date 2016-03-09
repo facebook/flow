@@ -21,7 +21,7 @@ open Utils
 
 module TUtils       = Typing_utils
 module Reason       = Typing_reason
-module Inst         = Typing_instantiate
+module Inst         = Decl_instantiate
 module Type         = Typing_ops
 module Env          = Typing_env
 module LEnv         = Typing_lenv
@@ -36,7 +36,7 @@ module TI           = Typing_instantiability
 module TVis         = Typing_visibility
 module TS           = Typing_structure
 module Phase        = Typing_phase
-module TSubst       = Typing_subst
+module Subst       = Decl_subst
 module ExprDepTy    = Typing_dependent_type.ExprDepTy
 
 (*****************************************************************************)
@@ -269,7 +269,7 @@ let make_param_local_ty env param =
       let r = Reason.Rwitness param_pos in
       env, (r, ty)
     | Some x ->
-      let ty = Typing_hint.hint env.Env.decl_env x in
+      let ty = Decl_hint.hint env.Env.decl_env x in
       Phase.localize ~ety_env env ty
   in
   let ty = match ty with
@@ -974,7 +974,7 @@ and expr_
         let obj_type = Reason.Rwitness p, Tapply (pos_cname, params) in
         let ety_env = {
           (Phase.env_with_self env) with
-          substs = TSubst.make class_.tc_tparams tvarl;
+          substs = Subst.make class_.tc_tparams tvarl;
         } in
         let env, local_obj_ty = Phase.localize ~ety_env env obj_type in
         let env, fty =
@@ -992,7 +992,7 @@ and expr_
               Tgeneric (class_name, Some (Ast.Constraint_as, obj_type)) in
             let ety_env = {
               ety_env with
-              substs = TSubst.make (tparam :: class_.tc_tparams) (tvar :: tvarl)
+              substs = Subst.make (tparam :: class_.tc_tparams) (tvar :: tvarl)
             } in
             let env, param = Phase.localize ~ety_env env param in
             let fty = { fty with
@@ -1188,7 +1188,7 @@ and expr_
               TUtils.in_var env (Reason.Rnone, Tunresolved [])
             end in
             let ety_env = { (Phase.env_with_self env) with
-                            substs = TSubst.make tparaml tparams } in
+                            substs = Subst.make tparaml tparams } in
             Phase.localize ~ety_env env typename
         | None ->
             (* Should never hit this case since we only construct this AST node
@@ -1278,7 +1278,7 @@ and expr_
       let env, _class = instantiable_cid p env cid in
       env, (Reason.Rwitness p, Tprim Tbool)
   | Efun (f, _idl) ->
-      let ft = Typing_decl.fun_decl_in_env env.Env.decl_env f in
+      let ft = Decl.fun_decl_in_env env.Env.decl_env f in
       (* When creating a closure, the 'this' type will mean the late bound type
        * of the current enclosing class
        *)
@@ -2702,7 +2702,7 @@ and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cid cty
                 TVis.check_class_access p env (p_vis, vis) cid class_;
                 let ety_env =
                   { ety_env with
-                    substs = TSubst.make class_.tc_tparams paraml } in
+                    substs = Subst.make class_.tc_tparams paraml } in
                 let env, ft = Phase.localize_ft ~ety_env env ft in
                 let ft = { ft with
                   ft_arity = Fellipsis 0;
@@ -2715,7 +2715,7 @@ and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cid cty
             TVis.check_class_access p env (p_vis, vis) cid class_;
             let ety_env =
               { ety_env with
-                substs = TSubst.make class_.tc_tparams paraml } in
+                substs = Subst.make class_.tc_tparams paraml } in
             let env, method_ =
               Phase.localize ~ety_env env method_ in
             env, method_)
@@ -2883,7 +2883,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
                     let ety_env = {
                       type_expansions = [];
                       this_ty = this_ty;
-                      substs = TSubst.make class_.tc_tparams paraml;
+                      substs = Subst.make class_.tc_tparams paraml;
                       from_class = Some cid;
                     } in
                     let env, ft = Phase.localize_ft ~ety_env env ft in
@@ -2910,7 +2910,7 @@ and obj_get_ ~is_method ~nullsafe env ty1 cid (p, s as id)
                 let ety_env = {
                   type_expansions = [];
                   this_ty = this_ty;
-                  substs = TSubst.make class_.tc_tparams paraml;
+                  substs = Subst.make class_.tc_tparams paraml;
                   from_class = Some cid;
                 } in
                 let env, member_ = Phase.localize ~ety_env env member_ in
@@ -3115,7 +3115,7 @@ and call_construct p env class_ params el uel cid =
       let ety_env = {
         type_expansions = [];
         this_ty = cid_ty;
-        substs = TSubst.make class_.tc_tparams params;
+        substs = Subst.make class_.tc_tparams params;
         from_class = Some cid;
       } in
       let env, m = Phase.localize ~ety_env env m in
@@ -3779,7 +3779,7 @@ and class_def_parent env class_def class_type =
       (match parent_type with
       | Some parent_type -> check_parent class_def class_type parent_type
       | None -> ());
-      let parent_ty = Typing_hint.hint env.Env.decl_env parent_ty in
+      let parent_ty = Decl_hint.hint env.Env.decl_env parent_ty in
       env, Some x, parent_ty
   (* The only case where we have more than one parent class is when
    * dealing with interfaces and interfaces cannot use parent.
@@ -3833,7 +3833,7 @@ and get_self_from_c env c =
   let tparams = List.map (fst c.c_tparams) begin fun (_, (p, s), cstr) ->
     let cstr = match cstr with
       | Some (ck, h) ->
-        let ty = Typing_hint.hint env.Env.decl_env h in
+        let ty = Decl_hint.hint env.Env.decl_env h in
         Some (ck, ty)
       | None -> None
     in
@@ -3849,7 +3849,7 @@ and class_def_ env c tc =
   let pc, _ = c.c_name in
   let impl = List.map
     (c.c_extends @ c.c_implements @ c.c_uses)
-    (Typing_hint.hint env.Env.decl_env) in
+    (Decl_hint.hint env.Env.decl_env) in
   TI.check_tparams_instantiable env (fst c.c_tparams);
   Typing_variance.class_ (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
@@ -3960,7 +3960,7 @@ and class_implements_type env c1 ctype2 =
     List.map_env env (fst c1.c_tparams) begin fun env (_, (p, s), param) ->
       let env, param = match param with
         | Some (ck, h) ->
-            let ty = Typing_hint.hint env.Env.decl_env h in
+            let ty = Decl_hint.hint env.Env.decl_env h in
             env, Some (ck, ty)
         | None -> env, None in
       env, (Reason.Rwitness p, Tgeneric (s, param))
