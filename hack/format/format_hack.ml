@@ -22,6 +22,7 @@ exception One_line
 (*****************************************************************************)
 
 let tarrow_prec = snd (Parser_hack.get_priority Tarrow)
+let tpipe_prec = snd (Parser_hack.get_priority Tpipe)
 
 (*****************************************************************************)
 (* The environment *)
@@ -83,6 +84,20 @@ type env = {
 
     (* The line number of the input *)
     lb_line    : int ref              ;
+
+    (** The number of non-whitespace tokens consumed in this input line.
+     *
+     * This is needed for pretty, optional linebreaks for the pipe operator.
+     *
+     * For example, these linebreaks between the pipes in the input
+     * are preserved in the output, despite never exceeding 80 char width:
+     *   $a = f()
+     *     |> g()
+     *     |> h()
+     *
+     * See also pipe operator tests.
+     *)
+    input_line_non_ws_token_count : int ref ;
 
     (* The precedence of the current binary operator (0 otherwise) *)
     priority   : int                  ;
@@ -209,6 +224,7 @@ let empty file lexbuf from to_ keep_source_pos no_trailing_commas = {
   file       = file                           ;
   lexbuf     = lexbuf                         ;
   lb_line    = ref 1                          ;
+  input_line_non_ws_token_count = ref 0       ;
   priority   = 0                              ;
   char_pos   = ref 0                          ;
   abs_pos    = ref 0                          ;
@@ -234,6 +250,7 @@ let empty file lexbuf from to_ keep_source_pos no_trailing_commas = {
 (* Saves all the references of the environment *)
 let save_env env =
   let { margin; last; last_token; buffer; file; lexbuf; lb_line;
+        input_line_non_ws_token_count;
         priority; char_pos; abs_pos; char_break;
         char_size; silent; one_line;
         last_str; last_out; keep_source_pos; source_pos_l;
@@ -316,8 +333,12 @@ let make_tokenizer next_token env =
   else env.last_out := str_value;
   (match tok with
   | Tnewline ->
-      env.lb_line := !(env.lb_line) + 1
-  | _ -> ()
+      env.lb_line := !(env.lb_line) + 1;
+      env.input_line_non_ws_token_count := 0
+  | Tspace -> ()
+  | _ ->
+      env.input_line_non_ws_token_count :=
+        !(env.input_line_non_ws_token_count) + 1
   );
   tok
 
@@ -338,6 +359,8 @@ let back env =
   if !(env.last_token) = Tnewline
   then env.lb_line := !(env.lb_line) - 1;
   env.last_token := Terror;
+  env.input_line_non_ws_token_count :=
+    max 0 (!(env.input_line_non_ws_token_count) - 1);
   Lexer_hack.back env.lexbuf
 
 (*****************************************************************************)
@@ -2349,7 +2372,8 @@ and rhs_assign env =
             space env;
             let lowest_pri = expr_lowest env in
             if lowest_pri > 0 &&
-               lowest_pri != tarrow_prec &&
+               (lowest_pri != tarrow_prec
+                 || lowest_pri != tpipe_prec) &&
                line <> !(env.line)
             then env.failed := 1;
           end
@@ -2371,8 +2395,17 @@ and expr_break_tarrow env =
   expr_atomic env;
   right env (fun env -> ignore (expr_remain_loop 0 env))
 
+and expr_break_tpipe env =
+  let env = { env with break_on = tpipe_prec } in
+  expr_atomic env;
+  right env (fun env -> ignore (expr_remain_loop 0 env))
+
 and expr env =
   let break_on = ref 0 in
+  (** We try to shove as much of an expression as possible onto one line. If
+   * that succeeds, good. If not, we add a linebreak at the lowest-priority
+   * operator encountered. This ensures that things of higher priority
+   * are kept on the same line.*)
   Try.outer env
     begin fun env ->
       let line = !(env.line) in
@@ -2382,9 +2415,15 @@ and expr env =
       then env.failed := max 1 (max !(env.failed) env.try_depth);
     end
     begin fun env ->
+      (** The linebreak is inserted by setting "break_on" in the env and
+       * trying the expression output again. When the operator with that
+       * "break_on" priority is encountered, that's when the break will be
+       * output. *)
       let break_on = !break_on in
       if break_on = tarrow_prec (* Operator -> is special *)
       then keep_best env ignore_expr_lowest expr_break_tarrow
+      else if break_on = tpipe_prec (* Operator |> is special *)
+      then keep_best env ignore_expr_lowest expr_break_tpipe
       else ignore_expr_lowest { env with break_on };
       ()
     end
@@ -2447,6 +2486,41 @@ and expr_binop_arrow lowest str_op tok env =
     expr_remain_loop lowest env
   end
 
+(** The pipe expression may have linebreaks inserted because that is the
+ * operator precedence we are currently adding linebreaks on
+ * (see "env.break_on"), or it may preserve linebreaks from the input that
+ * are there for "prettiness" (i.e. not to satisfy the 80-char width limit.) *)
+and expr_binop_pipe lowest str_op tok env =
+  with_priority env tok begin fun env ->
+    let pretty_newline = (!(env.input_line_non_ws_token_count) = 1)
+      && (env.priority != env.break_on) in
+    if pretty_newline
+    then begin
+      (** The pipe is the first non-ws token consumed from this line of input.
+       * Allow it to be on a newline. *)
+      right env begin function env ->
+        let env = { env with break_on = tpipe_prec } in
+        seq env [newline; out str_op; space];
+        expr_atomic env;
+        expr_remain_loop 0 env
+      end
+    end
+    else begin
+      if (env.priority = env.break_on)
+      then seq env [newline; out str_op; space]
+      else seq env [space; out str_op; space];
+      wrap env begin function
+        | _ ->
+          back env;
+          expr_atomic env
+      end;
+      let lowest =
+        if lowest = 0 then env.priority else
+        min env.priority lowest in
+      expr_remain_loop lowest env
+    end
+  end
+
 and expr_binop_dot lowest str_op env =
   with_priority env Tdot begin fun env ->
     out str_op env;
@@ -2474,13 +2548,15 @@ and expr_remain lowest env =
       expr_remain lowest env
   | Tnewline | Tspace  ->
       expr_remain lowest env
-  | Tplus | Tminus | Tstar | Tslash | Tstarstar | Tpipe
+  | Tplus | Tminus | Tstar | Tslash | Tstarstar
   | Teqeqeq | Tpercent
   | Teqeq | Tampamp | Tbarbar
   | Tdiff | Tlt | Tdiff2 | Tgte
   | Tlte | Tamp | Tbar | Tltlt
   | Tgtgt | Txor as op ->
       expr_binop lowest tok_str op env
+  | Tpipe ->
+    expr_binop_pipe lowest tok_str tok env
   | Tdot ->
       expr_binop_dot lowest tok_str env
   | Tarrow | Tnsarrow ->
@@ -2567,7 +2643,8 @@ and expr_remain lowest env =
 
 and expr_atomic env =
   let last = !(env.last_token) in
-  match token env with
+  let token = token env in
+  match token with
   | Tline_comment ->
       seq env [last_token; line_comment; newline; expr_atomic]
   | Topen_comment ->
