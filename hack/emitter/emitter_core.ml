@@ -454,9 +454,9 @@ let emit_CreateCl =       emit_op2ie  "CreateCl"
 
 let emit_Switch env labels base bound =
   emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
-let emit_IterBreak env iters label =
+let emit_IterBreak env label iters =
   let fmt_iter i = "(Iter) " ^ string_of_int i in
-  emit_op_strs env ["IterBreak"; fmt_vec fmt_iter iters; label]
+  emit_op_strs env ["IterBreak"; label; fmt_vec fmt_iter iters]
 
 let emit_bool env = function | true -> emit_op0 "True" env
                              | false -> emit_op0 "False" env

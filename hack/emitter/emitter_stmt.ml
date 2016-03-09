@@ -190,7 +190,7 @@ and emit_stmt env stmt =
     in
     let break_action ~is_initial env =
       let env = loop_exit_cleanup ~is_initial env in
-      emit_IterBreak env [iter] break_label
+      emit_IterBreak env break_label [iter]
     in
     let actions = {
       break_action = break_action;
