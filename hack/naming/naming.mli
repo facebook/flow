@@ -27,10 +27,10 @@ val global_const: TypecheckerOptions.t -> Ast.gconst -> Nast.gconst
 
 module type GetLocals = sig
   val stmt :
-    Namespace_env.env * Pos.t SMap.t ->
+    TypecheckerOptions.t -> Namespace_env.env * Pos.t SMap.t ->
       Ast.stmt -> Namespace_env.env * Pos.t SMap.t
   val lvalue :
-    Namespace_env.env * Pos.t SMap.t ->
+    TypecheckerOptions.t -> Namespace_env.env * Pos.t SMap.t ->
       Ast.expr -> Namespace_env.env * Pos.t SMap.t
 end
 

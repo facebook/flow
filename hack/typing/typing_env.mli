@@ -52,9 +52,9 @@ val empty_local : local_env
 val empty : TypecheckerOptions.t -> Relative_path.t ->
   droot: Typing_deps.Dep.variant option -> env
 val is_typedef : Typedefs.key -> bool
-val get_enum : Classes.key -> Classes.t option
-val is_enum : Classes.key -> bool
-val get_enum_constraint : Classes.key -> decl ty option
+val get_enum : env -> Classes.key -> Classes.t option
+val is_enum : env -> Classes.key -> bool
+val get_enum_constraint : env -> Classes.key -> decl ty option
 val add_wclass : env -> string -> unit
 val fresh_tenv : env -> (env -> unit) -> unit
 val get_class : env -> Classes.key -> Classes.t option

@@ -116,10 +116,10 @@ let typecheck funs classes = try
   with e ->
     report_error e
 
-let recheck tcopt fileinfo_l =
+let recheck tcopt filetuple_l =
   SharedMem.invalidate_caches();
-  List.iter fileinfo_l begin fun defs ->
-    ignore @@ Typing_check_utils.check_defs tcopt defs
+  List.iter filetuple_l begin fun (fn, defs) ->
+    ignore @@ Typing_check_utils.check_defs tcopt fn defs
   end
 
 let check_file_input tcopt files_info fi =
@@ -133,6 +133,6 @@ let check_file_input tcopt files_info fi =
   | ServerUtils.FileName fn ->
       let path = Relative_path.create Relative_path.Root fn in
       let () = match Relative_path.Map.get path files_info with
-      | Some fileinfo -> recheck tcopt [fileinfo]
+      | Some fileinfo -> recheck tcopt [(path, fileinfo)]
       | None -> () in
       path

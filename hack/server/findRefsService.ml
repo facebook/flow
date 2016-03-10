@@ -176,7 +176,7 @@ let find_references workers target_classes target_method include_defs
     files_info files =
   let fileinfo_l = Relative_path.Set.fold (fun fn acc ->
     match Relative_path.Map.get fn files_info with
-    | Some fi -> fi :: acc
+    | Some fi -> (fn, fi) :: acc
     | None -> acc) files [] in
   let results =
     if List.length fileinfo_l < 10 then

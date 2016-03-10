@@ -38,9 +38,9 @@ let recheck_naming filename_l =
     | None -> () (* Do nothing if the file is not in parser heap *)
   end
 
-let recheck_typing fileinfo_l =
+let recheck_typing filetuple_l =
   let tcopt = TypecheckerOptions.permissive in
-  ignore(ServerIdeUtils.recheck tcopt fileinfo_l)
+  ignore(ServerIdeUtils.recheck tcopt filetuple_l)
 
 let helper acc filetuple_l =
   let fun_call_map = ref Pos.Map.empty in
@@ -49,9 +49,8 @@ let helper acc filetuple_l =
   let lvar_map = ref Pos.Map.empty in
   SymbolTypeService.attach_hooks type_map lvar_map;
   let filename_l = List.rev_map filetuple_l fst in
-  let fileinfo_l = List.rev_map filetuple_l snd in
   recheck_naming filename_l;
-  recheck_typing fileinfo_l;
+  recheck_typing filetuple_l;
   SymbolFunCallService.detach_hooks ();
   SymbolTypeService.detach_hooks ();
   let fun_calls = Pos.Map.values !fun_call_map in

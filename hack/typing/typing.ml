@@ -593,7 +593,7 @@ and check_exhaustiveness env pos ty caselist =
         check_exhaustiveness env pos ty caselist
       end
     | Tabstract (AKenum id, _) ->
-      let tc = unsafe_opt @@ Env.get_enum id in
+      let tc = unsafe_opt @@ Env.get_enum env id in
       Typing_enum.check_enum_exhaustiveness pos tc caselist;
       env
     | Tany | Tmixed | Tarraykind _ | Tclass _ | Toption _ | Tprim _

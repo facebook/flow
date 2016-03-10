@@ -23,9 +23,3 @@ module Funs : module type of SharedMem.WithCache (StringKey) (Fun)
 module Classes : module type of SharedMem.WithCache (StringKey) (Class)
 module Typedefs : module type of SharedMem.WithCache (StringKey) (Typedef)
 module GConsts : module type of SharedMem.WithCache (StringKey) (GConst)
-
-module FuncTerminality : sig
-  val get_fun : string -> Fun.t option
-  val get_static_meth : string -> string -> Fun.t option
-  val raise_exit_if_terminal : Fun.t option -> unit
-end

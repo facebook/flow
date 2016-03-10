@@ -29,7 +29,7 @@ let count_exprs fn type_acc =
     SMap.add kind (incr_counter lvl (r, p, counter)) acc
   ) type_acc SMap.empty
 
-let accumulate_types defs =
+let accumulate_types fn defs =
   let type_acc = Hashtbl.create 0 in
   Typing.with_expr_hook (fun (p, e) ty ->
     let expr_kind_opt = match e with
@@ -45,7 +45,7 @@ let accumulate_types defs =
       Hashtbl.replace type_acc (p, kind) ty))
     (fun () ->
       let tcopt = TypecheckerOptions.permissive in
-      ignore (Typing_check_utils.check_defs tcopt defs));
+      ignore (Typing_check_utils.check_defs tcopt fn defs));
   type_acc
 
 let combine v1 v2 =
@@ -97,7 +97,7 @@ let get_coverage root neutral fnl =
     match Relative_path.Map.get fn files_info with
     | None -> None
     | Some defs ->
-        let type_acc = accumulate_types defs in
+        let type_acc = accumulate_types fn defs in
         let counts = count_exprs fn type_acc in
         Some (fn, counts)
   end in

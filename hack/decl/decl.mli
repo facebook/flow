@@ -30,3 +30,15 @@ val fun_decl : Nast.fun_ -> unit
 
 val fun_decl_in_env:
   Decl_env.env -> Nast.fun_ -> Typing_defs.decl Typing_defs.fun_type
+
+val declare_const_in_file:
+  TypecheckerOptions.t -> Relative_path.t -> string -> unit
+
+val declare_typedef_in_file:
+  TypecheckerOptions.t -> Relative_path.t -> string -> unit
+
+val declare_class_in_file:
+  TypecheckerOptions.t -> Relative_path.t -> string -> unit
+
+val declare_fun_in_file:
+  TypecheckerOptions.t -> Relative_path.t -> string -> unit

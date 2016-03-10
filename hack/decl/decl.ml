@@ -821,3 +821,25 @@ let make_env tcopt fn =
   | None -> ()
   | Some prog ->
     name_and_declare_types_program tcopt prog
+
+let declare_class_in_file tcopt file name =
+  match Parser_heap.find_class_in_file file name with
+  | Some cls ->
+    let class_env = { tcopt; stack = SSet.empty; } in
+    class_decl_if_missing class_env cls
+  | None -> raise Not_found
+
+let declare_fun_in_file tcopt file name =
+  match Parser_heap.find_fun_in_file file name with
+  | Some f -> ifun_decl tcopt f
+  | None -> raise Not_found
+
+let declare_typedef_in_file tcopt file name =
+  match Parser_heap.find_typedef_in_file file name with
+  | Some t -> type_typedef_naming_and_decl tcopt t
+  | None -> raise Not_found
+
+let declare_const_in_file tcopt file name =
+  match Parser_heap.find_const_in_file file name with
+  | Some cst -> iconst_decl tcopt cst
+  | None -> raise Not_found

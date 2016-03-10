@@ -57,8 +57,38 @@ let find_class_in_file file_name class_name =
   match ParserHeap.get file_name with
   | None -> None
   | Some defs ->
-      List.fold_left defs ~init:None ~f:begin fun acc def ->
-        match def with
-        | Ast.Class c when snd c.Ast.c_name = class_name -> Some c
-        | _ -> acc
-      end
+    List.fold_left defs ~init:None ~f:begin fun acc def ->
+      match def with
+      | Ast.Class c when snd c.Ast.c_name = class_name -> Some c
+      | _ -> acc
+    end
+
+let find_fun_in_file file_name fun_name =
+  match ParserHeap.get file_name with
+  | None -> None
+  | Some defs ->
+    List.fold_left defs ~init:None ~f:begin fun acc def ->
+      match def with
+      | Ast.Fun f when snd f.Ast.f_name = fun_name -> Some f
+      | _ -> acc
+    end
+
+let find_typedef_in_file file_name name =
+  match ParserHeap.get file_name with
+  | None -> None
+  | Some defs ->
+    List.fold_left defs ~init:None ~f:begin fun acc def ->
+      match def with
+      | Ast.Typedef typedef when snd typedef.Ast.t_id = name -> Some typedef
+      | _ -> acc
+    end
+
+let find_const_in_file file_name name =
+  match ParserHeap.get file_name with
+  | None -> None
+  | Some defs ->
+    List.fold_left defs ~init:None ~f:begin fun acc def ->
+      match def with
+      | Ast.Constant cst when snd cst.Ast.cst_name = name -> Some cst
+      | _ -> acc
+    end

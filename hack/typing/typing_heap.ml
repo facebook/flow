@@ -44,28 +44,3 @@ module Funs = SharedMem.WithCache (StringKey) (Fun)
 module Classes = SharedMem.WithCache (StringKey) (Class)
 module Typedefs = SharedMem.WithCache (StringKey) (Typedef)
 module GConsts = SharedMem.WithCache (StringKey) (GConst)
-
-module FuncTerminality = struct
-
-  (* Not adding a Typing_dep here because it will be added when the
-   * Nast is fully processed (by the caller of this code) *)
-  let get_fun = Funs.get
-
-  let get_static_meth (cls_name:string) (meth_name:string) =
-    match Classes.get cls_name with
-      | None -> None
-      | Some { Typing_defs.tc_smethods ; _ } ->
-        begin match SMap.get meth_name tc_smethods with
-          | None -> None
-          | Some { Typing_defs.ce_type = (_r, Typing_defs.Tfun fty) ; _} ->
-            Some fty
-          | Some _ -> None
-        end
-
-  let raise_exit_if_terminal = function
-    | None -> ()
-    | Some ({ Typing_defs.ft_ret = (_r, Typing_defs.Tprim Nast.Tnoreturn); _})
-      -> raise Exit
-    | Some _ -> ()
-
-end

@@ -13,9 +13,15 @@ open Core
 (*****************************************************************************)
 (* Usually used when we want to run typing hooks *)
 (*****************************************************************************)
-let check_defs nenv {FileInfo.funs; classes; typedefs; _} =
+let check_defs tcopt fn {FileInfo.funs; classes; typedefs; _} =
   fst (Errors.do_ (fun () ->
-    List.iter funs (fun (_, x) -> Typing_check_service.type_fun nenv x);
-    List.iter classes (fun (_, x) -> Typing_check_service.type_class nenv x);
-    List.iter typedefs (fun (_, x) -> Typing_check_service.check_typedef x);
+    List.iter funs begin fun (_, x) ->
+      Typing_check_service.type_fun tcopt fn x
+    end;
+    List.iter classes begin fun (_, x) ->
+      Typing_check_service.type_class tcopt fn x
+    end;
+    List.iter typedefs begin fun (_, x) ->
+      Typing_check_service.check_typedef tcopt fn x
+    end;
   ))

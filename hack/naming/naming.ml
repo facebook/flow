@@ -622,9 +622,9 @@ let arg_unpack_unexpected = function
   | (pos, _) :: _ -> Errors.naming_too_few_arguments pos; ()
 
 module type GetLocals = sig
-  val stmt : Namespace_env.env * Pos.t SMap.t ->
+  val stmt : TypecheckerOptions.t -> Namespace_env.env * Pos.t SMap.t ->
     Ast.stmt -> Namespace_env.env * Pos.t SMap.t
-  val lvalue : Namespace_env.env * Pos.t SMap.t ->
+  val lvalue : TypecheckerOptions.t -> Namespace_env.env * Pos.t SMap.t ->
     Ast.expr -> Namespace_env.env * Pos.t SMap.t
 end
 
@@ -1563,7 +1563,7 @@ module Make (GetLocals : GetLocals) = struct
   and if_stmt env st e b1 b2 =
     let e = expr env e in
     let nsenv = (fst env).namespace in
-    let _, vars = GetLocals.stmt (nsenv, SMap.empty) st in
+    let _, vars = GetLocals.stmt (fst env).tcopt (nsenv, SMap.empty) st in
     SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
     let result = Env.scope env (
     fun env ->
@@ -1597,7 +1597,7 @@ module Make (GetLocals : GetLocals) = struct
   and switch_stmt env st e cl =
     let e = expr env e in
     let nsenv = (fst env).namespace in
-    let _, vars = GetLocals.stmt (nsenv, SMap.empty) st in
+    let _, vars = GetLocals.stmt (fst env).tcopt (nsenv, SMap.empty) st in
     SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
     let result = Env.scope env begin fun env ->
       let all_locals_l, cl = casel env cl in
@@ -1618,7 +1618,8 @@ module Make (GetLocals : GetLocals) = struct
   and as_expr env aw = function
     | As_v ev ->
       let nsenv = (fst env).namespace in
-      let _, vars = GetLocals.lvalue (nsenv, SMap.empty) ev in
+      let _, vars =
+        GetLocals.lvalue (fst env).tcopt (nsenv, SMap.empty) ev in
       SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
       let ev = expr env ev in
       (match aw with
@@ -1627,7 +1628,8 @@ module Make (GetLocals : GetLocals) = struct
     | As_kv ((p1, Lvar k), ev) ->
       let k = p1, N.Lvar (Env.new_lvar env k) in
       let nsenv = (fst env).namespace in
-      let _, vars = GetLocals.lvalue (nsenv, SMap.empty) ev in
+      let _, vars =
+        GetLocals.lvalue (fst env).tcopt (nsenv, SMap.empty) ev in
       SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
       let ev = expr env ev in
       (match aw with
@@ -1643,7 +1645,8 @@ module Make (GetLocals : GetLocals) = struct
 
   and try_stmt env st b cl fb =
     let nsenv = (fst env).namespace in
-    let _, vars = GetLocals.stmt (nsenv, SMap.empty) st in
+    let _, vars =
+      GetLocals.stmt (fst env).tcopt (nsenv, SMap.empty) st in
     SMap.iter (fun x p -> Env.new_pending_lvar env (p, x)) vars;
     let result = Env.scope env (
     fun env ->
@@ -1951,7 +1954,8 @@ module Make (GetLocals : GetLocals) = struct
           Errors.unimplemented_feature p "Assignment within pipe expressions";
         let e2 = expr env e2 in
         let nsenv = (fst env).namespace in
-        let _, vars = GetLocals.lvalue (nsenv, SMap.empty) lv in
+        let _, vars =
+          GetLocals.lvalue (fst env).tcopt (nsenv, SMap.empty) lv in
         SMap.iter (fun x p -> ignore (Env.new_lvar env (p, x))) vars;
         N.Binop (op, expr env lv, e2)
     | Binop (Eq _ as bop, e1, e2) ->
@@ -2309,6 +2313,6 @@ module Make (GetLocals : GetLocals) = struct
 end
 
 include Make(struct
-  let stmt acc _ = acc
-  let lvalue acc _ = acc
+  let stmt _ acc _ = acc
+  let lvalue _ acc _ = acc
 end)

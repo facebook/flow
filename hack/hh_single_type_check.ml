@@ -351,7 +351,7 @@ let handle_mode mode filename tcopt files_contents files_info errors =
       Relative_path.Map.iter begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
           let result = ServerColorFile.get_level_list begin fun () ->
-            ignore @@ Typing_check_utils.check_defs tcopt fileinfo;
+            ignore @@ Typing_check_utils.check_defs tcopt fn fileinfo;
             fn
           end in
           print_colored fn result;
@@ -360,7 +360,7 @@ let handle_mode mode filename tcopt files_contents files_info errors =
   | Coverage ->
       Relative_path.Map.iter begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
-          let type_acc = ServerCoverageMetric.accumulate_types fileinfo in
+          let type_acc = ServerCoverageMetric.accumulate_types fn fileinfo in
           print_coverage fn type_acc;
         end
       end files_info
@@ -392,14 +392,14 @@ let handle_mode mode filename tcopt files_contents files_info errors =
       end
       else Printf.printf "No lint errors\n"
   | Dump_deps ->
-    Relative_path.Map.iter begin fun _ fileinfo ->
-      ignore @@ Typing_check_utils.check_defs tcopt fileinfo
+    Relative_path.Map.iter begin fun fn fileinfo ->
+      ignore @@ Typing_check_utils.check_defs tcopt fn fileinfo
     end files_info;
     Typing_deps.dump_deps stdout
   | Suggest
   | Errors ->
-      let errors = Relative_path.Map.fold begin fun _ fileinfo errors ->
-        errors @ Typing_check_utils.check_defs tcopt fileinfo
+      let errors = Relative_path.Map.fold begin fun fn fileinfo errors ->
+        errors @ Typing_check_utils.check_defs tcopt fn fileinfo
       end files_info errors in
       if mode = Suggest
       then Relative_path.Map.iter suggest_and_print files_info;

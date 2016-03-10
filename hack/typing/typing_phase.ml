@@ -158,7 +158,7 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
   | r, Tapply ((_, x), argl) when Env.is_typedef x ->
       let env, argl = List.map_env env argl (localize ~ety_env) in
       TUtils.expand_typedef ety_env env r x argl
-  | r, Tapply ((p, x), _argl) when Env.is_enum x ->
+  | r, Tapply ((p, x), _argl) when Env.is_enum env x ->
       (* if argl <> [], nastInitCheck would have raised an error *)
       if Typing_defs.has_expanded ety_env x then begin
         Errors.cyclic_enum_constraint p;
@@ -167,7 +167,7 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
         let type_expansions = (p, x) :: ety_env.type_expansions in
         let ety_env = {ety_env with type_expansions} in
         let env, cstr =
-          opt (localize ~ety_env) env (Env.get_enum_constraint x) in
+          opt (localize ~ety_env) env (Env.get_enum_constraint env x) in
         env, (ety_env, (r, Tabstract (AKenum x, cstr)))
       end
   | r, Tapply (cls, tyl) ->

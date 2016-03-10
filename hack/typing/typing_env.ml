@@ -15,19 +15,7 @@ open Nast
 
 module SN = Naming_special_names
 module Dep = Typing_deps.Dep
-
-(* The following classes are used to make sure we make no typing
- * mistake when interacting with the database. The database knows
- * how to associate a string to a string. We need to deserialize
- * the string and make sure the type is correct. By using these
- * modules, the places where there could be a typing mistake are
- * very well isolated.
-*)
-
-module Funs = Typing_heap.Funs
-module Classes = Typing_heap.Classes
-module Typedefs = Typing_heap.Typedefs
-module GConsts = Typing_heap.GConsts
+module TLazyHeap = Typing_lazy_heap
 
 type fake_members = {
   last_call : Pos.t option;
@@ -312,25 +300,31 @@ let empty tcopt file ~droot = {
   }
 }
 
+let add_wclass env x =
+  let dep = Dep.Class x in
+  Option.iter env.decl_env.droot (fun root -> Typing_deps.add_idep root dep);
+  ()
+
+let get_typedef env x =
+  add_wclass env x;
+  TLazyHeap.get_typedef env.genv.tcopt x
+
 let is_typedef x =
-  match Typedefs.get x with
-  | None -> false
-  | Some _ -> true
+  match Naming_heap.TypeIdHeap.get x with
+  | Some (_p, `Typedef) -> true
+  | _ -> false
 
-let get_enum x =
-  match Classes.get x with
-  | Some tc when tc.tc_enum_type <> None -> Some tc
-  | _ -> None
+let get_class env x =
+  add_wclass env x;
+  TLazyHeap.get_class env.genv.tcopt x
 
-let is_enum x = get_enum x <> None
-
-let get_enum_constraint x =
-  match Classes.get x with
+let get_enum_constraint env x =
+  match get_class env x with
   | None -> None
   | Some tc ->
     match tc.tc_enum_type with
-      | None -> None
-      | Some e -> e.te_constraint
+    | None -> None
+    | Some e -> e.te_constraint
 
 let add_wclass env x =
   let dep = Dep.Class x in
@@ -342,13 +336,12 @@ let fresh_tenv env f =
   let genv = env.genv in
   f { env with todo = []; tenv = IMap.empty; genv = genv; in_loop = false }
 
-let get_class env x =
-  add_wclass env x;
-  Classes.get x
+let get_enum env x =
+  match TLazyHeap.get_class env.genv.tcopt x with
+  | Some tc when tc.tc_enum_type <> None -> Some tc
+  | _ -> None
 
-let get_typedef env x =
-  add_wclass env x;
-  Typedefs.get x
+let is_enum env x = get_enum env x <> None
 
 let get_class_dep env = Decl_env.get_class_dep env.decl_env
 
@@ -371,7 +364,7 @@ let get_const env class_ mid =
 let get_gconst env cst_name =
   let dep = Dep.GConst cst_name in
   Option.iter env.decl_env.droot (fun root -> Typing_deps.add_idep root dep);
-  GConsts.get cst_name
+  TLazyHeap.get_gconst env.genv.tcopt cst_name
 
 let get_static_member is_method env class_ mid =
   add_wclass env class_.tc_name;
@@ -449,7 +442,7 @@ let get_file env = env.genv.file
 let get_fun env x =
   let dep = Dep.Fun x in
   Option.iter env.decl_env.droot (fun root -> Typing_deps.add_idep root dep);
-  Funs.get x
+  TLazyHeap.get_fun env.genv.tcopt x
 
 let set_fn_kind env fn_type =
   let genv = env.genv in

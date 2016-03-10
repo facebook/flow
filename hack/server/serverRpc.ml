@@ -62,7 +62,7 @@ let handle : type a. genv -> env -> a t -> a =
     | DUMP_SYMBOL_INFO file_list ->
         SymbolInfoService.go genv.workers file_list env
     | DUMP_AI_INFO file_list ->
-        Ai.InfoService.go (Typing_check_utils.check_defs) genv.workers
+        Ai.InfoService.go Typing_check_utils.check_defs genv.workers
           file_list (ServerArgs.ai_mode genv.options) env.tcopt
     | ARGUMENT_INFO (contents, line, col) ->
         ServerArgumentInfo.go contents line col
