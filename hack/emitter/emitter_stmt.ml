@@ -361,7 +361,7 @@ and emit_stmt env stmt =
           in
           let labels = List.map ~f:fst targets in
           let env = emit_CGetL env id in
-          let env = emit_Switch env labels 0 "Unbounded" in
+          let env = emit_Switch env "Unbounded" 0 labels in
           List.fold_left ~f:emit_target ~init:env targets
         in
         emit_label env out_label

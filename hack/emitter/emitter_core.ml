@@ -452,8 +452,8 @@ let emit_InstanceOf =     emit_op0    "InstanceOf"
 let emit_InstanceOfD =    emit_op1e   "InstanceOfD"
 let emit_CreateCl =       emit_op2ie  "CreateCl"
 
-let emit_Switch env labels base bound =
-  emit_op_strs env ["Switch"; fmt_str_vec labels; string_of_int base; bound]
+let emit_Switch env bound base labels =
+  emit_op_strs env ["Switch"; bound; string_of_int base; fmt_str_vec labels]
 let emit_IterBreak env label iters =
   let fmt_iter i = "(Iter) " ^ string_of_int i in
   emit_op_strs env ["IterBreak"; label; fmt_vec fmt_iter iters]
