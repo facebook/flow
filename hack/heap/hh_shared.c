@@ -245,7 +245,7 @@ value hh_hashtable_mutex_lock() {
   CAMLparam0();
 #ifdef _WIN32
   // TODO
-#elseif
+#else
   int res = pthread_mutex_lock(&hashtable_mutex);
   if (res != 0) {
     caml_failwith("Error acquiring the lock");
@@ -259,7 +259,7 @@ value hh_hashtable_mutex_trylock() {
   int res = 0;
 #ifdef _WIN32
   // TODO
-#elseif
+#else
   res = pthread_mutex_trylock(&hashtable_mutex);
   if ((res != 0 ) && (res != EBUSY)) {
     caml_failwith("Error trying to acquire the lock");
@@ -270,9 +270,9 @@ value hh_hashtable_mutex_trylock() {
 
 value hh_hashtable_mutex_unlock() {
   CAMLparam0();
-#ifdef _WIN33
+#ifdef _WIN32
   // TODO
-#elseif
+#else
   int res = pthread_mutex_unlock(&hashtable_mutex);
   if (res != 0) {
     caml_failwith("Error releasing the lock");\
