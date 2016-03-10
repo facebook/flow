@@ -31,7 +31,7 @@ end)
 
 (* Mapping the canonical name (lower case form) to the actual name *)
 module type CanonHeap =
-  SharedMem.S with type t = string
+  SharedMem.NoCache with type t = string
                and type key = string
                and module KeySet = Set.Make (StringKey)
 

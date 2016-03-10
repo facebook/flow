@@ -393,10 +393,10 @@ end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
 end
 
 (*****************************************************************************)
-(* The signature of what we are actually going to expose to the user *)
+(* The signatures of what we are actually going to expose to the user *)
 (*****************************************************************************)
 
-module type S = sig
+module type NoCache = sig
   type key
   type t
   module KeySet : Set.S with type elt = key
@@ -413,6 +413,11 @@ module type S = sig
   val mem              : key -> bool
   val oldify_batch     : KeySet.t -> unit
   val revive_batch     : KeySet.t -> unit
+end
+
+module type WithCache = sig
+  include NoCache
+  val write_through : key -> t -> unit
 end
 
 (*****************************************************************************)
@@ -692,6 +697,12 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     let x = Key.make Value.prefix x in
     L1.add x y;
     L2.add x y;
+    New.add x y
+
+  let write_through x y =
+    (* Note that we do not need to do any cache invalidation here because
+     * New.add is a no-op if the key already exists. *)
+    let x = Key.make Value.prefix x in
     New.add x y
 
   let get x =

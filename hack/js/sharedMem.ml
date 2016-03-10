@@ -47,7 +47,7 @@ let remove_batch x =
 (*****************************************************************************)
 (* The signature of what we are actually going to expose to the user *)
 (*****************************************************************************)
-module type S = sig
+module type NoCache = sig
   type t
   type key
   module KeySet : Set.S
@@ -81,7 +81,7 @@ end
 module type NoCache_type =
   functor (UserKeyType : UserKeyType) ->
   functor (Value : Value.Type) ->
-  S with type t = Value.t
+  NoCache with type t = Value.t
     and type key = UserKeyType.t
     and module KeySet = Set.Make (UserKeyType)
     and module KeyMap = MyMap.Make (UserKeyType)

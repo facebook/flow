@@ -48,7 +48,7 @@ let () =
 (* Table containing all the Abstract Syntax Trees (cf ast.ml) for each file.*)
 (*****************************************************************************)
 
-module ParserHeap = SharedMem.NoCache (Relative_path.S) (struct
+module ParserHeap = SharedMem.WithCache (Relative_path.S) (struct
     type t = Ast.program
     let prefix = Prefix.make()
   end)

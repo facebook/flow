@@ -47,7 +47,7 @@ let really_parse (acc, errorl, error_files) fn =
   Parsing_hooks.dispatch_file_parsed_hook fn ast;
   if file_mode <> None then begin
     let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
-    Parser_heap.ParserHeap.add fn ast;
+    Parser_heap.ParserHeap.write_through fn ast;
     let defs =
       {FileInfo.funs; classes; typedefs; consts; comments; file_mode;
        consider_names_just_for_autoload = false}

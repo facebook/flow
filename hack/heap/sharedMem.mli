@@ -123,7 +123,7 @@ val try_lock_hashtable: do_:(unit -> 'a) -> 'a option
  *)
 (*****************************************************************************)
 
-module type S = sig
+module type NoCache = sig
   type key
   type t
   module KeySet : Set.S with type elt = key
@@ -159,6 +159,11 @@ module type S = sig
   val revive_batch: KeySet.t -> unit
 end
 
+module type WithCache = sig
+  include NoCache
+  val write_through : key -> t -> unit
+end
+
 module type UserKeyType = sig
   type t
   val to_string : t -> string
@@ -168,7 +173,7 @@ end
 module NoCache :
   functor (UserKeyType : UserKeyType) ->
   functor (Value:Value.Type) ->
-  S with type t = Value.t
+  NoCache with type t = Value.t
     and type key = UserKeyType.t
     and module KeySet = Set.Make (UserKeyType)
     and module KeyMap = MyMap.Make (UserKeyType)
@@ -176,7 +181,7 @@ module NoCache :
 module WithCache :
   functor (UserKeyType : UserKeyType) ->
   functor (Value:Value.Type) ->
-  S with type t = Value.t
+  WithCache with type t = Value.t
     and type key = UserKeyType.t
     and module KeySet = Set.Make (UserKeyType)
     and module KeyMap = MyMap.Make (UserKeyType)
