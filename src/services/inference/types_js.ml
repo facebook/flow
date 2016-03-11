@@ -1312,7 +1312,7 @@ let print_errors options errors =
       errors
 
 (* initialize flow server state, including full check *)
-let server_init genv env =
+let server_init genv =
   let options = genv.ServerEnv.options in
 
   let ordered_libs, libs = Files_js.init options in

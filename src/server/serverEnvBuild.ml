@@ -27,10 +27,3 @@ let make_genv ~multicore options watch_paths =
       Some (DfindLib.init Daemon.(null_fd (), null_fd ())
         ("flow_server_events", watch_paths)) in
   { ServerEnv.options; workers; dfind; }
-
-let make_env () =
-  { ServerEnv.
-    files = Utils_js.FilenameSet.empty;
-    libs = SSet.empty;
-    errorl = [];
-  }

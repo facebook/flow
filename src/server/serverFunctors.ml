@@ -18,7 +18,7 @@ exception State_not_found
 
 module type SERVER_PROGRAM = sig
   val preinit : unit -> unit
-  val init : genv -> env -> (FlowEventLogger.Timing.t * env)
+  val init : genv -> (FlowEventLogger.Timing.t * env)
   val run_once_and_exit : env -> unit
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
@@ -207,8 +207,8 @@ end = struct
       EventLogger.flush ();
     done
 
-  let create_program_init genv env = fun () ->
-    let timing, env = Program.init genv env in
+  let create_program_init genv = fun () ->
+    let timing, env = Program.init genv in
     FlowEventLogger.init_done ~timing;
     env
 
@@ -241,8 +241,7 @@ end = struct
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
       ServerEnvBuild.make_genv ~multicore:true options watch_paths in
-    let env = ServerEnvBuild.make_env () in
-    let program_init = create_program_init genv env in
+    let program_init = create_program_init genv in
     if is_check_mode then
       let env = program_init () in
       Program.run_once_and_exit env

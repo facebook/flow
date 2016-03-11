@@ -15,7 +15,7 @@ val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
 val server_init:
-  ServerEnv.genv -> ServerEnv.env -> FlowEventLogger.Timing.t * ServerEnv.env
+  ServerEnv.genv -> FlowEventLogger.Timing.t * ServerEnv.env
 
 val typecheck_contents:
   options: Options.options ->

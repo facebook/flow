@@ -32,12 +32,12 @@ struct
     ignore (Init_js.get_master_cx ());
     Parsing_service_js.call_on_success SearchService_js.update
 
-  let init genv env =
+  let init genv =
     (* write binary path and version to server log *)
     Flow_logger.log "executable=%s" (Sys_utils.executable_path ());
     Flow_logger.log "version=%s" FlowConfig.version;
     (* start the server *)
-    let timing, env = Types_js.server_init genv env in
+    let timing, env = Types_js.server_init genv in
     SearchService_js.update_from_master env.ServerEnv.files;
     timing, env
 
