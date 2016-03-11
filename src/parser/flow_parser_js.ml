@@ -100,8 +100,8 @@ let parse content options =
     Js.Unsafe.obj [||]
 
 let exports =
-  if (Js.typeof (Js.Unsafe.variable "exports") != Js.string "undefined")
-  then Js.Unsafe.variable "exports"
+  if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")
+  then Js.Unsafe.js_expr "exports"
   else begin
     let exports = Js.Unsafe.obj [||] in
     Js.Unsafe.set Js.Unsafe.global "flow" exports;
