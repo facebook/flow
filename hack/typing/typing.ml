@@ -2389,7 +2389,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       env, (fst ety1, Tunresolved tyl)
   | Tarraykind (AKvec ty) ->
       let ty1 = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
-      let env = Type.sub_type p Reason.URarray_get env ty1 ty2 in
+      let env = Type.sub_type p Reason.index_array env ty1 ty2 in
       env, ty
   | Tclass ((_, cn) as id, argl)
     when cn = SN.Collections.cVector ->
@@ -2397,7 +2397,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
         | [ty] -> ty
         | _ -> arity_error id; Reason.Rwitness p, Tany in
       let ty1 = Reason.Ridx_vector (fst e2), Tprim Tint in
-      let env = Type.sub_type p Reason.URvector_get env ty1 ty2 in
+      let env = Type.sub_type p (Reason.index_class cn) env ty1 ty2 in
       env, ty
   | Tclass ((_, cn) as id, argl)
       when cn = SN.Collections.cMap
@@ -2410,12 +2410,22 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             any, any
       in
       let env, ty2 = TUtils.unresolved env ty2 in
-      let env, _ = Type.unify p Reason.URmap_get env k ty2 in
+      let env, _ = Type.unify p (Reason.index_class cn) env k ty2 in
       env, v
+  (* Certain container/collection types are intended to be immutable/const,
+   * thus they should never appear as a lvalue when indexing i.e.
+   *
+   *   $x[0] = 100; // ERROR
+   *   $x[0]; // OK
+   *)
   | Tclass ((_, cn) as id, argl)
-      when not is_lvalue &&
-        (cn = SN.Collections.cConstMap
-        || cn = SN.Collections.cImmMap) ->
+      when cn = SN.Collections.cConstMap
+        || cn = SN.Collections.cImmMap
+        || cn = SN.Collections.cIndexish
+        || cn = SN.Collections.cKeyedContainer ->
+    if is_lvalue then
+      error_const_mutation env p ety1
+    else
       let (k, v) = match argl with
         | [k; v] -> (k, v)
         | _ ->
@@ -2423,23 +2433,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             let any = (Reason.Rwitness p, Tany) in
             any, any
       in
-      let env = Type.sub_type p Reason.URmap_get env k ty2 in
-      env, v
-  | Tclass ((_, cn), _)
-      when is_lvalue &&
-        (cn = SN.Collections.cConstMap || cn = SN.Collections.cImmMap) ->
-    error_const_mutation env p ety1
-  | Tclass ((_, cn) as id, argl)
-      when (cn = SN.Collections.cIndexish
-           || cn = SN.Collections.cKeyedContainer) ->
-      let (k, v) = match argl with
-        | [k; v] -> (k, v)
-        | _ ->
-            arity_error id;
-            let any = (Reason.Rwitness p, Tany) in
-            any, any
-      in
-      let env = Type.sub_type p Reason.URcontainer_get env k ty2 in
+      let env = Type.sub_type p (Reason.index_class cn) env k ty2 in
       env, v
   | Tclass ((_, cn) as id, argl)
       when not is_lvalue &&
@@ -2448,11 +2442,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
         | [ty] -> ty
         | _ -> arity_error id; Reason.Rwitness p, Tany in
       let ty1 = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
-      let ur = (match cn with
-        | x when x = SN.Collections.cConstVector -> Reason.URconst_vector_get
-        | x when x = SN.Collections.cImmVector  -> Reason.URimm_vector_get
-        | _ -> failwith ("Unexpected collection name: " ^ cn)) in
-      let env, _ = Type.unify p ur env ty2 ty1 in
+      let env, _ = Type.unify p (Reason.index_class cn) env ty2 ty1 in
       env, ty
   | Tclass ((_, cn), _)
       when is_lvalue &&
@@ -2460,7 +2450,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
     error_const_mutation env p ety1
   | Tarraykind (AKmap (k, v)) ->
       let env, ty2 = TUtils.unresolved env ty2 in
-      let env, _ = Type.unify p Reason.URarray_get env k ty2 in
+      let env, _ = Type.unify p Reason.index_array env k ty2 in
       env, v
   | Tarraykind ((AKshape  _ |  AKtuple _) as akind) ->
       let key = Typing_arrays.static_array_access env (Some e2) in
@@ -2469,7 +2459,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             begin match IMap.get index fields with
               | Some ty ->
                   let ty1 = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
-                  let env = Type.sub_type p Reason.URarray_get env ty1 ty2 in
+                  let env = Type.sub_type p Reason.index_array env ty1 ty2 in
                   env, Some ty
               | None -> env, None
             end
@@ -2477,7 +2467,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             begin match Nast.ShapeMap.get field_name fdm with
               | Some (k, v) ->
                   let env, ty2 = TUtils.unresolved env ty2 in
-                  let env, _ = Type.unify p Reason.URarray_get env k ty2 in
+                  let env, _ = Type.unify p Reason.index_array env k ty2 in
                   env, Some v
               | None -> env, None
             end
@@ -2496,7 +2486,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       let ty = Reason.Rwitness p, Tprim Tstring in
       let env, ty = Type.unify p Reason.URnone env ty1 ty in
       let int = Reason.Ridx (fst e2, fst ety1), Tprim Tint in
-      let env, _ = Type.unify p Reason.URarray_get env ty2 int in
+      let env, _ = Type.unify p Reason.index_array env ty2 int in
       env, ty
   | Ttuple tyl ->
       (match e2 with
@@ -2506,7 +2496,7 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             let nth = List.nth_exn tyl idx in
             env, nth
           with _ ->
-            Errors.typing_error p (Reason.string_of_ureason Reason.URtuple_get);
+            Errors.typing_error p (Reason.string_of_ureason Reason.index_tuple);
             env, (Reason.Rwitness p, Tany)
           )
       | p, _ ->
@@ -2528,7 +2518,8 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
             let nth = List.nth_exn [ty1; ty2] idx in
             env, nth
           with _ ->
-            Errors.typing_error p (Reason.string_of_ureason Reason.URpair_get);
+            Errors.typing_error p @@
+            Reason.string_of_ureason (Reason.index_class cn);
             env, (Reason.Rwitness p, Tany)
           )
       | p, _ ->

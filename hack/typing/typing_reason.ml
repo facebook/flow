@@ -282,14 +282,7 @@ type ureason =
   | URawait
   | URyield
   | URxhp
-  | URarray_get
-  | URmap_get
-  | URvector_get
-  | URconst_vector_get
-  | URimm_vector_get
-  | URcontainer_get
-  | URtuple_get
-  | URpair_get
+  | URindex of string
   | URparam
   | URarray_value
   | URarray_key
@@ -303,6 +296,10 @@ type ureason =
   | URtypeconst_cstr
   | URsubsume_tconst_cstr
   | URsubsume_tconst_assign
+
+let index_array = URindex "array"
+let index_tuple = URindex "tuple"
+let index_class s =  URindex (strip_ns s)
 
 let string_of_ureason = function
   | URnone -> "Typing error"
@@ -319,14 +316,7 @@ let string_of_ureason = function
   | URawait -> "await can only operate on an Awaitable"
   | URyield -> "Invalid yield"
   | URxhp -> "Invalid xhp value"
-  | URarray_get -> "Invalid index type for this array"
-  | URmap_get -> "Invalid index type for this Map"
-  | URvector_get -> "Invalid index type for this Vector"
-  | URconst_vector_get -> "Invalid index type for this ConstVector"
-  | URimm_vector_get -> "Invalid index type for this ImmVector"
-  | URcontainer_get -> "Invalid index type for this container"
-  | URtuple_get -> "Invalid index for this tuple"
-  | URpair_get -> "Invalid index for this pair"
+  | URindex s -> "Invalid index type for this " ^ s
   | URparam -> "Invalid argument"
   | URarray_value -> "Incompatible field values"
   | URarray_key -> "Incompatible array keys"
