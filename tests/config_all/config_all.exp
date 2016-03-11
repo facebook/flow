@@ -1,0 +1,6 @@
+
+no_at_flow.js:1:17,30: string
+This type is incompatible with
+no_at_flow.js:1:8,13: number
+
+Found 1 error

@@ -32,6 +32,7 @@ module Opts : sig
     suppress_types: SSet.t;
     traces: int;
     strip_root: bool;
+    all: bool;
     log_file: Path.t option;
     max_workers: int;
     temp_dir: Path.t;

@@ -57,6 +57,7 @@ module Opts = struct
     suppress_types: SSet.t;
     traces: int;
     strip_root: bool;
+    all: bool;
     log_file: Path.t option;
     max_workers: int;
     temp_dir: Path.t;
@@ -126,6 +127,7 @@ module Opts = struct
     suppress_types = SSet.empty;
     traces = 0;
     strip_root = false;
+    all = false;
     log_file = None;
     max_workers = Sys_utils.nbr_procs;
     temp_dir = Path.make default_temp_dir;
@@ -302,7 +304,9 @@ end = struct
     in fun o config -> Opts.(
       let options = config.options in
       if options.moduleSystem <> default_options.moduleSystem
-      then opt o "module.system" (module_system options.moduleSystem)
+      then opt o "module.system" (module_system options.moduleSystem);
+      if options.all <> default_options.all
+      then opt o "all" (string_of_bool options.all)
     )
 
   let config o config =
@@ -546,6 +550,15 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with strip_root = v;}
+      );
+    }
+
+    |> define_opt "all" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with all = v;}
       );
     }
 
