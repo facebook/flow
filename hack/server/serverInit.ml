@@ -244,6 +244,8 @@ let type_check genv env fast t =
   then begin
     let count = Relative_path.Map.cardinal fast in
     let errorl, failed = Typing_check_service.go genv.workers env.tcopt fast in
+    let hs = SharedMem.heap_size () in
+    Hh_logger.log "Heap size: %d" hs;
     HackEventLogger.type_check_end count t;
     let env = { env with
       errorl = List.rev_append errorl env.errorl;
