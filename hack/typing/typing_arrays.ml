@@ -45,7 +45,7 @@ end
 
 (* Abstract types declared "as array<...>" permit array operations, but if
  * those operations modify the array it has to be downgraded from generic
- * to just an array .*)
+ * to just an array.*)
 class virtual downcast_tabstract_to_array_type_mapper = object(this)
   method on_tabstract env r ak cstr =
     match cstr with

@@ -184,7 +184,8 @@ let builtins =
   "const string __FUNCTION__ = '';\n"^
   "const string __METHOD__ = '';\n"^
   "const string __NAMESPACE__ = '';\n"^
-  "interface Indexish<+Tk, +Tv> extends KeyedContainer<Tk, Tv> {}\n"
+  "interface Indexish<+Tk, +Tv> extends KeyedContainer<Tk, Tv> {}\n"^
+  "abstract final class dict<+Tk as arraykey, +Tv> implements Indexish<Tk, Tv> {}\n"
 
 (*****************************************************************************)
 (* Helpers *)

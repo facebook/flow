@@ -2401,7 +2401,8 @@ and array_get is_lvalue p env ty1 ety1 e2 ty2 =
       env, ty
   | Tclass ((_, cn) as id, argl)
       when cn = SN.Collections.cMap
-      || cn = SN.Collections.cStableMap ->
+      || cn = SN.Collections.cStableMap
+      || cn = SN.Collections.cDict ->
       let (k, v) = match argl with
         | [k; v] -> (k, v)
         | _ ->
