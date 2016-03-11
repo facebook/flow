@@ -13,6 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
+open Utils_js
 
 let spec = {
   CommandSpec.
@@ -43,10 +44,18 @@ let main option_values root files () =
   let ic, oc = connect option_values root in
   let files = List.map expand_path files in
   ServerProt.cmd_to_channel oc (ServerProt.PORT files);
-  let patch_map = Timeout.input_value ic in
-  SMap.iter (fun file patches ->
-    Printf.printf "%s\n%s" file patches
+  let patch_map: ((string, exn) ok_or_err) SMap.t = Timeout.input_value ic in
+  SMap.iter (fun file patches_or_err ->
+    match patches_or_err with
+    | OK patches ->
+      Printf.printf "%s\n%s" file patches
+    | Err exn ->
+      Printf.eprintf
+        "Could not port docblock-style annotations for %s\n%s"
+        file
+        ((Printexc.to_string exn) ^ "\n" ^ (Printexc.get_backtrace ()));
   ) patch_map;
+  flush stderr;
   flush stdout
 
 let command = CommandSpec.command spec main

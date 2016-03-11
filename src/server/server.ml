@@ -216,11 +216,6 @@ struct
     Marshal.to_channel oc (err, resp) [];
     flush oc
 
-  let write_file file str =
-    let oc = open_out file in
-    output_string oc str;
-    close_out oc
-
   let parse_suggest_cmd file =
     let digits = "\\([0-9]+\\)" in
     let re = Printf.sprintf "\\(.*\\):%s:%s,%s:%s"
@@ -231,21 +226,6 @@ struct
        List.map (fun i -> Str.matched_group i file) [2;3;4;5])
     else
       (file, [])
-
-  let patch file new_content =
-    let new_file = Filename.temp_file "" "" in
-    write_file new_file new_content;
-    let patch_file = Filename.temp_file "" "" in
-    let diff_cmd =
-      if Sys.win32 then
-        spf "fc %s %s > %s"
-          file new_file patch_file
-      else
-        spf "diff -u --label old --label new %s %s > %s"
-          file new_file patch_file in
-    diff_cmd
-    |> Sys.command |> ignore;
-    cat patch_file
 
   (* NOTE: currently, not only returns list of annotations, but also rewrites
      file with annotations *)
@@ -279,7 +259,7 @@ struct
               | _ -> assert false
          in
          let new_content = Reason_js.do_patch lines insertions in
-         let patch_content = patch file new_content in
+         let patch_content = Diff.diff_of_file_and_string file new_content in
          SMap.add file patch_content result_map
        with exn ->
          Flow_logger.log
@@ -296,30 +276,10 @@ struct
 
   (* NOTE: currently, not only returns list of annotations, but also writes a
      timestamped file with annotations *)
-  let port =
-    let port_for_file result_map file =
-      (try
-        let file = Path.to_string (Path.make file) in
-        let ast = Parsing_service_js.get_ast_unsafe (Loc.SourceFile file) in
-        let content = cat file in
-        let lines = Str.split_delim (Str.regexp "\n") content in
-        let insertions = Comments_js.meta_program ast in
-        let insertions = List.sort Pervasives.compare insertions in
-        let new_content = Reason_js.do_patch lines insertions in
-        let patch_content = patch file new_content in
-        SMap.add file patch_content result_map
-      with exn ->
-        Flow_logger.log
-          "Could not port docblock-style annotations for %s\n%s"
-          file
-          ((Printexc.to_string exn) ^ "\n" ^ (Printexc.get_backtrace ()));
-        result_map
-      )
-
-    in fun files oc ->
-      let patches = List.fold_left port_for_file SMap.empty files in
-      Marshal.to_channel oc patches [];
-      flush oc
+  let port files oc =
+    let patches = Port_service_js.port_files files in
+    Marshal.to_channel oc patches [];
+    flush oc
 
   let find_module ~options (moduleref, filename) oc =
     let file = Loc.SourceFile filename in

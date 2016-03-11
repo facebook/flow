@@ -90,6 +90,7 @@ end
 begin library "flow-common"
   requires += [ "flow-parser" "flow-embedded" "flow-config"]
   files = [
+    "src/common/diff.ml"
     "src/common/modes_js.ml"
     "src/common/files_js.ml"
     "src/common/reason_js.ml"
@@ -155,7 +156,6 @@ begin library "flow-typing"
     "src/typing/refinement.ml"
     "src/typing/abnormal.ml"
     "src/typing/type_inference_js.ml"
-    "src/typing/comments_js.ml"
     "src/typing/getDef_js.ml"
     "src/typing/init_js.ml"
     "src/typing/sort_js.ml"
@@ -174,6 +174,8 @@ begin library "flow-server"
     "src/server/serverFunctors.ml"
     "src/services/autocomplete/autocompleteService_js.ml"
     "src/services/inference/query_types.ml"
+    "src/services/port/comments_js.ml"
+    "src/services/port/port_service_js.ml"
     "src/server/server.ml"
   ]
 end

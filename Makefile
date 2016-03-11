@@ -47,6 +47,7 @@ MODULES=\
   src/server\
   src/services/autocomplete\
   src/services/inference\
+  src/services/port\
   src/stubs\
   src/typing\
   hack/dfind\
