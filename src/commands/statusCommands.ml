@@ -91,7 +91,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       )
     }
 
-  type env = {
+  type args = {
     root: Path.t;
     from: string;
     output_json: bool;
@@ -100,7 +100,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     wait_for_recheck: bool;
   }
 
-  let rec check_status (args:env) server_flags =
+  let rec check_status (args:args) server_flags =
     let name = "flow" in
 
     let ic, oc = CommandUtils.connect server_flags args.root in
@@ -151,14 +151,14 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       retry (args, server_flags) 3 "The flow server will be ready in a moment"
 
 
-  and retry (env, server_flags) sleep msg =
+  and retry (args, server_flags) sleep msg =
     CommandUtils.check_timeout ();
     let retries = server_flags.CommandUtils.retries in
     if retries > 0
     then begin
       Printf.fprintf stderr "%s\n%!" msg;
       CommandUtils.sleep sleep;
-      check_status env { server_flags with CommandUtils.retries = retries - 1 }
+      check_status args { server_flags with CommandUtils.retries = retries - 1 }
     end else
       FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
@@ -177,7 +177,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let flowconfig = FlowConfig.get root in
     let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
 
-    let env = {
+    let args = {
       root;
       from = server_flags.CommandUtils.from;
       output_json = json;
@@ -185,7 +185,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       strip_root;
       wait_for_recheck;
     } in
-    check_status env server_flags
+    check_status args server_flags
 end
 
 module Status(CommandList : COMMAND_LIST) = struct
