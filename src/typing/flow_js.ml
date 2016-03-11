@@ -690,9 +690,15 @@ end
 (**
   *)
 module Cache = struct
+  module TypePairHashtbl = Hashtbl.Make(struct
+    type t = (TypeTerm.t * TypeTerm.use_t)
+    let equal x y = x = y
+    let hash x = Hashtbl.hash_param 50 100 x
+  end)
+
   (* Cache that remembers pairs of types that are passed to __flow__. *)
   module FlowConstraint = struct
-    let cache = Hashtbl.create 0
+    let cache = TypePairHashtbl.create 0
 
     (* attempt to read LB/UB pair from cache, add if absent *)
     let get cx (l, u) = match l, u with
@@ -702,13 +708,13 @@ module Cache = struct
       | _ ->
         begin
           try
-            Hashtbl.find cache (l, u);
+            TypePairHashtbl.find cache (l, u);
             if Context.is_verbose cx
             then prerr_endlinef "[%d] FlowConstraint cache hit on (%s, %s)"
               (Unix.getpid ()) (string_of_ctor l) (string_of_use_ctor u);
             true
           with _ ->
-            Hashtbl.add cache (l, u) ();
+            TypePairHashtbl.add cache (l, u) ();
             false
         end
 
@@ -735,8 +741,12 @@ module Cache = struct
   end
 
   let clear () =
-    Hashtbl.clear FlowConstraint.cache;
+    TypePairHashtbl.clear FlowConstraint.cache;
     Hashtbl.clear PolyInstantiation.cache
+
+  let stats () =
+    TypePairHashtbl.stats FlowConstraint.cache,
+    Hashtbl.stats PolyInstantiation.cache
 end
 
 (*********************************************************************)
