@@ -17,8 +17,6 @@ val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
 val server_init:
   ServerEnv.genv -> ServerEnv.env -> FlowEventLogger.Timing.t * ServerEnv.env
 
-val get_errors: unit -> Errors_js.error list
-
 val typecheck_contents:
   options: Options.options ->
   ?verbose: int ->

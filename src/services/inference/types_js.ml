@@ -1220,7 +1220,10 @@ let recheck genv env modified =
   let parsed = FilenameSet.union freshparsed unmodified_parsed in
 
   (* NOTE: unused fields are left in their initial empty state *)
-  { env with ServerEnv.files = parsed; }
+  { env with ServerEnv.
+    files = parsed;
+    errorl = get_errors ();
+  }
 
 (* full typecheck *)
 let full_check workers ~ordered_libs parse_next opts =
@@ -1325,21 +1328,17 @@ let server_init genv env =
   let (timing, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in
 
-  (* We ensure an invariant required by recheck, namely that
-     `files` contains files that parsed successfully. *)
-  (* NOTE: unused fields are left in their initial empty state *)
-  let env = { env with ServerEnv.
-    files = parsed;
-    libs;
-  } in
-
   SharedMem.init_done();
 
+  let errors = get_errors () in
   if Options.is_check_mode options
-  then (
-    let errors = get_errors () in
-    print_errors options errors;
-    timing, { env with ServerEnv.errorl = errors }
-  ) else (
-    timing, env
-  )
+  then print_errors options errors;
+
+  (* Return an env that initializes invariants required and maintained by
+     recheck, namely that `files` contains files that parsed successfully, and
+     `errorl` contains the current set of errors. *)
+  timing, { ServerEnv.
+    files = parsed;
+    libs;
+    errorl = errors;
+  }

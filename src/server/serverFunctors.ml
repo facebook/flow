@@ -26,7 +26,7 @@ module type SERVER_PROGRAM = sig
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
   val name: string
-  val handle_client : genv -> rechecked:bool -> client -> unit
+  val handle_client : genv -> env -> rechecked:bool -> client -> unit
 end
 
 let grab_lock ~tmp_dir root =
@@ -106,7 +106,7 @@ end = struct
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
     ready_socket_l <> []
 
-  let handle_connection_ genv rechecked socket =
+  let handle_connection_ genv env rechecked socket =
     let cli, _ = Unix.accept socket in
     let ic = Unix.in_channel_of_descr cli in
     let oc = Unix.out_channel_of_descr cli in
@@ -123,7 +123,7 @@ end = struct
         FlowExitStatus.exit FlowExitStatus.Build_id_mismatch
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
-      Program.handle_client genv rechecked client
+      Program.handle_client genv env rechecked client
     with
     | Sys_error("Broken pipe") ->
       shutdown_client (ic, oc)
@@ -134,9 +134,9 @@ end = struct
       Printexc.print_backtrace stderr;
       shutdown_client (ic, oc)
 
-  let handle_connection genv rechecked socket =
+  let handle_connection genv env rechecked socket =
     ServerPeriodical.stamp_connection ();
-    try handle_connection_ genv rechecked socket
+    try handle_connection_ genv env rechecked socket
     with
     | Unix.Unix_error (e, _, _) ->
         Printf.fprintf stderr "Unix error: %s\n" (Unix.error_message e);
@@ -200,7 +200,7 @@ end = struct
       env := new_env;
       rechecked := !rechecked || (rechecked_count > 0);
       if has_client then begin
-        handle_connection genv !rechecked socket;
+        handle_connection genv !env !rechecked socket;
         rechecked := false
       end;
       ServerEnv.invoke_async_queue ();

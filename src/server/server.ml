@@ -68,7 +68,7 @@ struct
     end;
     flush oc
 
-  let print_status ~retry genv client_root oc =
+  let print_status ~retry genv env client_root oc =
     if retry then ServerProt.response_to_channel oc ServerProt.RETRY else
     let server_root = Options.root genv.options in
     if server_root <> client_root
@@ -87,7 +87,7 @@ struct
       FlowExitStatus.(exit Server_client_directory_mismatch)
     end;
     flush stdout;
-    let errors = Types_js.get_errors () in
+    let errors = env.ServerEnv.errorl in
     (* TODO: check status.directory *)
     status_log errors;
     FlowEventLogger.status_response (Errors_js.json_of_errors errors);
@@ -405,7 +405,7 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let respond genv ~rechecked ~client ~msg =
+  let respond genv env ~rechecked ~client ~msg =
     let oc = client.oc in
     let options = genv.ServerEnv.options in
     let { ServerProt.client_logging_context; command; } = msg in
@@ -438,13 +438,13 @@ struct
         search query oc
     | ServerProt.STATUS (client_root, wait_for_recheck) ->
         print_status ~retry:(wait_for_recheck && not rechecked)
-          genv client_root oc
+          genv env client_root oc
     | ServerProt.SUGGEST (files) ->
         suggest ~options files oc
 
-  let handle_client genv ~rechecked client =
+  let handle_client genv env ~rechecked client =
     let msg = ServerProt.cmd_from_channel client.ic in
-    respond genv ~rechecked ~client ~msg;
+    respond genv env ~rechecked ~client ~msg;
     client.close ()
 
   let get_watch_paths options = Path_matcher.stems (Options.includes options)
