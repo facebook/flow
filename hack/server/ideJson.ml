@@ -13,26 +13,26 @@
 type call_id = int
 
 type call_type =
-  | AutoCompleteCall of string
-  | IdentifyFunctionCall of string * int * int
-  | SearchCall of string
-  | StatusCall
-  | FindRefsCall of FindRefsService.action
-  | ColourCall of string
+  | Auto_complete_call of string
+  | Identify_function_call of string * int * int
+  | Search_call of string
+  | Status_call
+  | Find_refs_call of FindRefsService.action
+  | Colour_call of string
 
 type response_type =
-  | AutoCompleteResponse of Hh_json.json
-  | IdentifyFunctionResponse of string
-  | SearchCallResponse of Hh_json.json
-  | StatusResponse of Hh_json.json
-  | FindRefsResponse of FindRefsService.result
-  | ColourResponse of Hh_json.json
+  | Auto_complete_response of Hh_json.json
+  | Identify_function_response of string
+  | Search_call_response of Hh_json.json
+  | Status_response of Hh_json.json
+  | Find_refs_response of FindRefsService.result
+  | Colour_response of Hh_json.json
 
 type parsing_result =
-  (* ParsingError means that message was unrecoverably mangled (eg. no ID, or
+  (* Parsing_error means that message was unrecoverably mangled (eg. no ID, or
    * completely invalid JSON). We will just log it, but not send anything back
    * to the client. *)
-  | ParsingError of string
-  (* InvalidCall will get an error response from the server. *)
-  | InvalidCall of call_id * string
+  | Parsing_error of string
+  (* Invalid_call will get an error response from the server. *)
+  | Invalid_call of call_id * string
   | Call of call_id * call_type

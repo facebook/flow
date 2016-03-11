@@ -191,12 +191,12 @@ let get_client_channels parent_in_fd =
 
 let ide_typechecker_init_done ide_process =
   Option.iter ide_process begin fun x ->
-    IdeProcessPipe.send x IdeProcessMessage.TypecheckerInitDone;
+    IdeProcessPipe.send x IdeProcessMessage.Typechecker_init_done;
   end
 
 let ide_sync_files_info ide_process files_info =
   Option.iter ide_process begin fun x ->
-    IdeProcessPipe.send x (IdeProcessMessage.SyncFileInfo files_info);
+    IdeProcessPipe.send x (IdeProcessMessage.Sync_file_info files_info);
   end
 
 let ide_update_files_info ide_process files_info updated_files_info =
@@ -208,7 +208,7 @@ let ide_update_files_info ide_process files_info updated_files_info =
       end
       updated_files_info
       Relative_path.Map.empty in
-    IdeProcessPipe.send x (IdeProcessMessage.SyncFileInfo updated_files_info);
+    IdeProcessPipe.send x (IdeProcessMessage.Sync_file_info updated_files_info);
   end
 
 let ide_update_error_list ide_process new_error_list old_error_list =
@@ -225,7 +225,7 @@ let ide_update_error_list ide_process new_error_list old_error_list =
 
   Option.iter ide_process begin fun x ->
     if not (cheap_equals new_error_list old_error_list) then
-      IdeProcessPipe.send x (IdeProcessMessage.SyncErrorList new_error_list);
+      IdeProcessPipe.send x (IdeProcessMessage.Sync_error_list new_error_list);
   end
 
 let rec ide_recv_messages_loop ide_process genv env =
@@ -234,9 +234,9 @@ let rec ide_recv_messages_loop ide_process genv env =
   | [], _, _ -> ()
   | _ ->
     match IdeProcessPipe.recv ide_process with
-    | IdeProcessMessage.FindRefsCall (id, action) ->
+    | IdeProcessMessage.Find_refs_call (id, action) ->
         let res = ServerFindRefs.go action genv env in
-        let msg = IdeProcessMessage.FindRefsResponse (id, res) in
+        let msg = IdeProcessMessage.Find_refs_response (id, res) in
         IdeProcessPipe.send ide_process msg;
         ide_recv_messages_loop ide_process genv env
 

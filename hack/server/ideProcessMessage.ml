@@ -9,19 +9,19 @@
 *)
 
 type typechecker_to_ide_message =
-  | TypecheckerInitDone
+  | Typechecker_init_done
   (* New FileInfo for a subset of paths. Typechecker never removes paths from
    * the map (deleted files are just updated with empty info), so all
    * updates are of the from "overwrite previous values for those paths with
    * new ones" *)
-  | SyncFileInfo of FileInfo.t Relative_path.Map.t
-  | SyncErrorList of Errors.t
-  (* See comment on FindRefsCall *)
-  | FindRefsResponse of (IdeJson.call_id * FindRefsService.result)
+  | Sync_file_info of FileInfo.t Relative_path.Map.t
+  | Sync_error_list of Errors.t
+  (* See comment on Find_refs_call *)
+  | Find_refs_response of (IdeJson.call_id * FindRefsService.result)
 
 type ide_to_typechecker_message =
   (* Finding all references is a heavyweight action that (in some cases)
    * must be parallelized and will take multiple seconds anyway, so we don't
    * want to do it in IDE process. Sending this message enqueues the request
    * to be done by the typechecker process. *)
-  | FindRefsCall of (IdeJson.call_id * FindRefsService.action)
+  | Find_refs_call of (IdeJson.call_id * FindRefsService.action)

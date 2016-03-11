@@ -92,8 +92,8 @@ let handle_new_client parent_in_fd env  =
     handle_already_has_client oc; env
 
 let send_call_to_typecheker env id = function
-  | IdeServerCall.FindRefsCall action ->
-    let msg = IdeProcessMessage.FindRefsCall (id, action) in
+  | IdeServerCall.Find_refs_call action ->
+    let msg = IdeProcessMessage.Find_refs_call (id, action) in
     IdeProcessPipe.send env.typechecker msg
 
 let send_typechecker_response_to_client env id response =
@@ -112,7 +112,7 @@ let get_call_response env id call =
     IdeServerCall.get_call_response id call env.tcopt env.files_info env.errorl
   end in
   match response with
-  | Some (IdeServerCall.DeferredToTypechecker call) ->
+  | Some (IdeServerCall.Deferred_to_typechecker call) ->
       send_call_to_typecheker env id call;
       None
   | Some (IdeServerCall.Result response) ->
@@ -128,10 +128,10 @@ let handle_client_request (ic, oc) env =
   try
     let request = Marshal.from_channel ic in
     match IdeJsonUtils.call_of_string request with
-    | ParsingError e ->
+    | Parsing_error e ->
       Hh_logger.log "Received malformed request: %s" e;
       env
-    | InvalidCall (id, e) ->
+    | Invalid_call (id, e) ->
       let response = IdeJsonUtils.json_string_of_invalid_call id e in
       write_string_to_channel response oc;
       flush oc;
@@ -150,9 +150,9 @@ let handle_client_request (ic, oc) env =
 
 let handle_typechecker_message typechecker_process env  =
   match IdeProcessPipe.recv typechecker_process with
-  | IdeProcessMessage.TypecheckerInitDone ->
+  | IdeProcessMessage.Typechecker_init_done ->
     { env with typechecker_init_done = true }
-  | IdeProcessMessage.SyncFileInfo updated_files_info ->
+  | IdeProcessMessage.Sync_file_info updated_files_info ->
     Hh_logger.log "Received file info updates for %d files"
       (Relative_path.Map.cardinal updated_files_info);
     let new_files_info = Relative_path.Map.merge begin fun _ x y ->
@@ -163,11 +163,11 @@ let handle_typechecker_message typechecker_process env  =
     HackSearchService.IdeProcessApi.enqueue_updates
       (Relative_path.Map.keys updated_files_info);
     { env with files_info = new_files_info }
-  | IdeProcessMessage.SyncErrorList errorl ->
+  | IdeProcessMessage.Sync_error_list errorl ->
     Hh_logger.log "Received error list update";
     { env with errorl = errorl }
-  | IdeProcessMessage.FindRefsResponse (id, response) ->
-    let response = IdeJson.FindRefsResponse response in
+  | IdeProcessMessage.Find_refs_response (id, response) ->
+    let response = IdeJson.Find_refs_response response in
     send_typechecker_response_to_client env id response;
     env
 

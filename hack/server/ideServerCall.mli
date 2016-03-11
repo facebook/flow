@@ -11,11 +11,11 @@
 open IdeJson
 
 type deferred_to_typechecker =
-  | FindRefsCall of FindRefsService.action
+  | Find_refs_call of FindRefsService.action
 
 type result =
   | Result of IdeJson.response_type
-  | DeferredToTypechecker of deferred_to_typechecker
+  | Deferred_to_typechecker of deferred_to_typechecker
 
 val get_call_response:
   call_id ->
