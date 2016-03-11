@@ -2255,18 +2255,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       rec_flow_t cx trace (l, uproto)
 
-    (* TODO Try and remove this. We're not sure why this case should exist but
-     * it does seem to be triggered in www. *)
-    | (ObjT _,
-       UseT InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = false;
-         _;
-       }))
-      ->
-      structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+    (* For some object `x` and constructor `C`, if `x instanceof C`, then the
+       object is a subtype. *)
+    | ObjT (lreason, { proto_t; _ }),
+      UseT InstanceT (_, _, _, { structural = false; _ }) ->
+      rec_flow cx trace (reposition cx ~trace lreason proto_t, u)
 
     (****************************************)
     (* You can cast an object to a function *)

@@ -866,14 +866,17 @@ let rec convert cx type_params_map = Ast.Type.(function
             value = valuet
           }
     in
+    (* Use the same reason for proto and the ObjT so we can walk the proto chain
+       and use the root proto reason to build an error. *)
+    let reason_desc = "object type" in
     let pmap = Flow_js.mk_propmap cx props_map in
-    let proto = MixedT (reason_of_string "Object") in
+    let proto = MixedT (reason_of_string reason_desc) in
     let flags = {
       sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
       exact = not sealed;
       frozen = false;
     } in
-    ObjT (mk_reason "object type" loc,
+    ObjT (mk_reason reason_desc loc,
       Flow_js.mk_objecttype ~flags dict pmap proto)
 
   | loc, Exists ->
@@ -3264,9 +3267,12 @@ and prop_map_of_object cx type_params_map props =
 
 and object_ cx type_params_map reason ?(allow_sealed=true) props =
   Ast.Expression.Object.(
+  (* Use the same reason for proto and the ObjT so we can walk the proto chain
+     and use the root proto reason to build an error. *)
+  let proto = MixedT reason in
   (* Return an object with specified sealing. *)
   let mk_object ?(sealed=false) map =
-    Flow_js.mk_object_with_map_proto cx reason ~sealed map (MixedT reason)
+    Flow_js.mk_object_with_map_proto cx reason ~sealed map proto
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)

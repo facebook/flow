@@ -1,2 +1,1 @@
-class Foo { x: number; }
-module.exports = Foo;
+export type Foo = { x: number; }

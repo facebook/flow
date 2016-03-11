@@ -9,6 +9,14 @@ object_assign.js:7:19,40: property `bar`
 Property not found in
 object_assign.js:7:44,69: object literal
 
+object_create.js:12:2,15: object literal
+This type is incompatible with
+object_create.js:12:18,18: C
+
+object_create.js:17:2,2: object type
+This type is incompatible with
+object_create.js:17:5,5: C
+
 object_keys.js:5:2,20: array type
 This type is incompatible with
 object_keys.js:5:23,26: undefined
@@ -101,4 +109,4 @@ object_prototype.js:155:32,47: function type
 This type is incompatible with
 object_prototype.js:155:23,28: number
 
-Found 24 errors
+Found 26 errors
