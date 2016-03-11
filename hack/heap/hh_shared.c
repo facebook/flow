@@ -238,7 +238,7 @@ static size_t heap_init_size = 0;
 /*****************************************************************************/
 
 #ifndef _WIN32
-pthread_mutex_t hashtable_mutex;
+pthread_mutex_t* hashtable_mutex;
 #endif
 
 value hh_hashtable_mutex_lock() {
@@ -246,7 +246,7 @@ value hh_hashtable_mutex_lock() {
 #ifdef _WIN32
   // TODO
 #else
-  int res = pthread_mutex_lock(&hashtable_mutex);
+  int res = pthread_mutex_lock(hashtable_mutex);
   if (res != 0) {
     caml_failwith("Error acquiring the lock");
   }
@@ -260,7 +260,7 @@ value hh_hashtable_mutex_trylock() {
 #ifdef _WIN32
   // TODO
 #else
-  res = pthread_mutex_trylock(&hashtable_mutex);
+  res = pthread_mutex_trylock(hashtable_mutex);
   if ((res != 0 ) && (res != EBUSY)) {
     caml_failwith("Error trying to acquire the lock");
   }
@@ -273,7 +273,7 @@ value hh_hashtable_mutex_unlock() {
 #ifdef _WIN32
   // TODO
 #else
-  int res = pthread_mutex_unlock(&hashtable_mutex);
+  int res = pthread_mutex_unlock(hashtable_mutex);
   if (res != 0) {
     caml_failwith("Error releasing the lock");\
   }
@@ -354,18 +354,27 @@ static void init_shared_globals(char* mem) {
    * We will atomically increment *heap every time we want to allocate.
    */
   heap = (char**)mem;
-  assert(CACHE_LINE_SIZE >= sizeof(char*));
 
   // The number of elements in the hashtable
+  assert(CACHE_LINE_SIZE >= sizeof(int));
   hcounter = (int*)(mem + CACHE_LINE_SIZE);
   *hcounter = 0;
 
+  assert (CACHE_LINE_SIZE >= sizeof(uintptr_t));
   counter = (uintptr_t*)(mem + 2*CACHE_LINE_SIZE);
   *counter = early_counter + 1;
 
+  assert (CACHE_LINE_SIZE >= sizeof(pthread_mutex_t));
+  hashtable_mutex = (pthread_mutex_t*)(mem + 3*CACHE_LINE_SIZE);
+
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+  pthread_mutex_init(hashtable_mutex, &attr);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 3*CACHE_LINE_SIZE + (int)sizeof(int));
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Dependencies */
@@ -466,11 +475,6 @@ value hh_shared_init(
     printf("Error initializing: %s\n", strerror(errno));
     exit(2);
   }
-
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-  pthread_mutex_init(&hashtable_mutex, &attr);
 
 #ifdef MADV_DONTDUMP
   // We are unlikely to get much useful information out of the shared heap in
