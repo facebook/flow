@@ -690,15 +690,17 @@ end
 (**
   *)
 module Cache = struct
-  module TypePairHashtbl = Hashtbl.Make(struct
-    type t = (TypeTerm.t * TypeTerm.use_t)
-    let equal x y = x = y
-    let hash x = Hashtbl.hash_param 50 100 x
+
+  module TypePairSet : Set.S with type elt = TypeTerm.t * TypeTerm.use_t =
+  Set.Make (struct
+    type elt = TypeTerm.t * TypeTerm.use_t
+    type t = elt
+    let compare = Pervasives.compare
   end)
 
   (* Cache that remembers pairs of types that are passed to __flow__. *)
   module FlowConstraint = struct
-    let cache = TypePairHashtbl.create 0
+    let cache = ref TypePairSet.empty
 
     (* attempt to read LB/UB pair from cache, add if absent *)
     let get cx (l, u) = match l, u with
@@ -706,18 +708,15 @@ module Cache = struct
          corresponding typing rules are already sufficiently robust. *)
       | OpenT _, _ | _, UseT OpenT _ -> false
       | _ ->
-        begin
-          try
-            TypePairHashtbl.find cache (l, u);
-            if Context.is_verbose cx
-            then prerr_endlinef "[%d] FlowConstraint cache hit on (%s, %s)"
-              (Unix.getpid ()) (string_of_ctor l) (string_of_use_ctor u);
-            true
-          with _ ->
-            TypePairHashtbl.add cache (l, u) ();
-            false
+        if TypePairSet.mem (l, u) !cache then begin
+          if Context.is_verbose cx
+          then prerr_endlinef "[%d] FlowConstraint cache hit on (%s, %s)"
+            (Unix.getpid ()) (string_of_ctor l) (string_of_use_ctor u);
+          true
+        end else begin
+          cache := TypePairSet.add (l, u) !cache;
+          false
         end
-
   end
 
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
@@ -741,12 +740,12 @@ module Cache = struct
   end
 
   let clear () =
-    TypePairHashtbl.clear FlowConstraint.cache;
+    FlowConstraint.cache := TypePairSet.empty;
     Hashtbl.clear PolyInstantiation.cache
 
   let stats () =
-    TypePairHashtbl.stats FlowConstraint.cache,
     Hashtbl.stats PolyInstantiation.cache
+
 end
 
 (*********************************************************************)
