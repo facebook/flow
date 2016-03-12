@@ -3,3 +3,4 @@ flowlib exists
 init file exists
 lock file exists
 log file exists
+.flowconfig: sock file exists

@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 FLOW=$1
 $FLOW stop 2> /dev/null > /dev/null
 DIR=$(mktemp -d /tmp/flow.XXXXX)
-$FLOW start --wait --temp-dir "$DIR"
+$FLOW start --wait --temp-dir "$DIR" 2> /dev/null > /dev/null
 if [[ "$OSTYPE" == "msys"* ]]; then
     [ -f "$DIR"/*.sock ]    && echo "sock file exists"
 else
@@ -14,4 +14,18 @@ fi
 [ -f "$DIR"/*.log ]     && echo "log file exists"
 # Stop the server before removing the tmp dir
 $FLOW stop --temp-dir "$DIR" 2> /dev/null > /dev/null
+rm -rf "$DIR"
+
+# Test a .flowconfig with temp_dir
+DIR=$(mktemp -d /tmp/flow.XXXXX)
+TEST_DIR=$(mktemp -d /tmp/flow.XXXXX)
+printf "[options]\ntemp_dir=%s" "$DIR" > "$TEST_DIR/.flowconfig"
+$FLOW status "$TEST_DIR" 2> /dev/null > /dev/null
+if [[ "$OSTYPE" == "msys"* ]]; then
+    [ -f "$DIR"/*.sock ]    && echo ".flowconfig: sock file exists"
+else
+    [ -S "$DIR"/*.sock ]    && echo ".flowconfig: sock file exists"
+fi
+$FLOW stop "$TEST_DIR" 2> /dev/null > /dev/null
+rm -rf "$TEST_DIR"
 rm -rf "$DIR"

@@ -28,6 +28,9 @@ let getenv_term () =
   try Some (Sys.getenv term_var) with Not_found -> None
 
 let path_sep = if Sys.win32 then ";" else ":"
+let null_path = if Sys.win32 then "nul" else "/dev/null"
+let temp_dir_name =
+  if Sys.win32 then Filename.get_temp_dir_name () else "/tmp"
 
 let getenv_path () =
   let path_var = "PATH" in (* Same variable on windows *)

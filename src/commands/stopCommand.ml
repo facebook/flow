@@ -92,8 +92,9 @@ let main temp_dir from root () =
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with
   | Some x -> x
-  | None -> Path.to_string (FlowConfig.(config.options.Opts.temp_dir))
+  | None -> FlowConfig.(config.options.Opts.temp_dir)
   in
+  let tmp_dir = Path.to_string (Path.make tmp_dir) in
   FlowEventLogger.set_from from;
   Utils_js.prerr_endlinef
     "Trying to connect to server for %s"

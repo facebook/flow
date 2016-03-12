@@ -188,7 +188,7 @@ type command_params = {
   retry_if_init : bool;
   timeout : int;
   no_auto_start : bool;
-  temp_dir : string;
+  temp_dir : string option;
 }
 
 let collect_server_flags
@@ -203,7 +203,7 @@ let collect_server_flags
     retry_if_init = (default true retry_if_init);
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
-    temp_dir = (default FlowConfig.default_temp_dir temp_dir);
+    temp_dir;
   }
 
 let server_flags prev = CommandSpec.ArgSpec.(
@@ -222,8 +222,12 @@ let server_flags prev = CommandSpec.ArgSpec.(
 )
 
 let connect server_flags root =
-  let tmp_dir = server_flags.temp_dir in
   let config_options = FlowConfig.((get root).options) in
+  let tmp_dir = match server_flags.temp_dir with
+  | Some dir -> dir
+  | None -> config_options.FlowConfig.Opts.temp_dir
+  in
+  let tmp_dir = Path.to_string (Path.make tmp_dir) in
   let log_file =
     Path.to_string (FlowConfig.log_file ~tmp_dir root config_options) in
   let retries = server_flags.retries in

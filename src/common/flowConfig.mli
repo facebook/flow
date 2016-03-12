@@ -35,7 +35,7 @@ module Opts : sig
     all: bool;
     log_file: Path.t option;
     max_workers: int;
-    temp_dir: Path.t;
+    temp_dir: string;
   }
 end
 
@@ -51,8 +51,6 @@ type config = {
   (* root path *)
   root: Path.t;
 }
-
-val default_temp_dir: string
 
 val get: Path.t -> config
 val get_unsafe: unit -> config

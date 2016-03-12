@@ -17,9 +17,8 @@ let dummy_path : t = ""
 let cat = Sys_utils.cat
 let compare = Pervasives.compare
 let dirname = Filename.dirname
-let null_path = if Sys.win32 then "nul" else "/dev/null"
-let temp_dir_name =
-  if Sys.win32 then Filename.get_temp_dir_name () else "/tmp"
+let null_path = Sys_utils.null_path
+let temp_dir_name = Sys_utils.temp_dir_name
 
 (**
  * Resolves a path (using realpath)

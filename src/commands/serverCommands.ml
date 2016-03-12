@@ -191,8 +191,9 @@ module OptionParser(Config : CONFIG) = struct
       FlowConfig.(flowconfig.options.Opts.munge_underscores) in
     let opt_temp_dir = match temp_dir with
     | Some x -> x
-    | None -> Path.to_string (FlowConfig.(flowconfig.options.Opts.temp_dir))
+    | None -> FlowConfig.(flowconfig.options.Opts.temp_dir)
     in
+    let opt_temp_dir = Path.to_string (Path.make opt_temp_dir) in
     let opt_default_lib_dir =
       if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
