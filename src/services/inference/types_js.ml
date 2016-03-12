@@ -825,8 +825,8 @@ let calc_dependencies workers files =
     FilenameSet.filter (fun f -> FilenameMap.mem f deps))
 
 (* commit newly inferred and removed modules, collect errors. *)
-let commit_modules ~options inferred removed =
-  let errmap = Module_js.commit_modules ~options inferred removed in
+let commit_modules workers ~options inferred removed =
+  let errmap = Module_js.commit_modules workers ~options inferred removed in
   save_errormap module_errors errmap
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
@@ -875,7 +875,7 @@ let typecheck workers files removed unparsed opts timing make_merge_input =
     let filenames = List.fold_left (fun acc (filename, _) ->
       filename::acc
     ) inferred unparsed in
-    commit_modules ~options:opts filenames removed
+    commit_modules workers ~options:opts filenames removed
   ) in
 
   (* call supplied function to calculate closure of modules to merge *)

@@ -54,14 +54,12 @@ val get_module_info: filename -> info
 (* given a filename, returns module name *)
 val get_module_name: filename -> Modulename.t
 
-(* for a list of files add all imports for reverse import tracking *)
-val add_reverse_imports: filename list -> unit
-
 (* given a module name, returns Some set of modules importing it or None *)
 val get_reverse_imports: Modulename.t -> NameSet.t option
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:
+  Worker.t list option ->
   options: Options.options ->
   filename list ->                    (* inferred modules *)
   NameSet.t ->                           (* removed files *)

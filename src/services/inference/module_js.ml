@@ -684,20 +684,29 @@ let get_module_info f =
 let get_module_name f =
   (get_module_info f)._module
 
-let add_reverse_imports filenames =
-  List.iter (fun filename ->
-    let { _module = name; required = req; _ } = get_module_info filename in
-    (* we only add requriements from actual module providers. this avoids
-       strange states when two files provide the same module. *)
-    match get_module_file name with
-    | Some file when file = filename ->
-        (* we need to make sure we are in the reverse import heap to avoid
-           confusing behavior when querying it *)
-        (if not (Hashtbl.mem reverse_imports_map name)
-        then Hashtbl.add reverse_imports_map name NameSet.empty);
-        reverse_imports_track name req
-    | _ -> ()
-  ) filenames
+let add_reverse_imports workers filenames =
+  let calc_module_reqs_assoc =
+    List.fold_left (fun module_reqs_assoc filename ->
+      let { _module = name; required = req; _ } = get_module_info filename in
+      (* we only add requriements from actual module providers. this avoids
+         strange states when two files provide the same module. *)
+      match get_module_file name with
+      | Some file when file = filename -> (name, req) :: module_reqs_assoc
+      | _ -> module_reqs_assoc
+    ) in
+  let module_reqs_assoc = MultiWorker.call
+    workers
+    ~job: calc_module_reqs_assoc
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (Bucket.make filenames) in
+  List.iter (fun (name, req) ->
+    (* we need to make sure we are in the reverse import heap to avoid
+       confusing behavior when querying it *)
+    if not (Hashtbl.mem reverse_imports_map name)
+    then Hashtbl.add reverse_imports_map name NameSet.empty;
+    reverse_imports_track name req
+  ) module_reqs_assoc
 
 let get_reverse_imports module_name =
   match module_name, reverse_imports_get module_name with
@@ -833,19 +842,31 @@ let get_providers = Hashtbl.find all_providers
    4. remove the unregistered modules from NameHeap
    5. register the new providers in NameHeap
  *)
-let commit_modules ~options inferred removed =
+let commit_modules workers ~options inferred removed =
   let debug = Options.is_debug_mode options in
   if debug then prerr_endlinef
     "*** committing modules inferred %d removed %d ***"
     (List.length inferred) (NameSet.cardinal removed);
+
   (* all removed modules must be repicked *)
   (* all modules provided by newly inferred files must be repicked *)
-  let repick = List.fold_left (fun acc f ->
-    let { _module = m; _ } = get_module_info f in
+  let calc_file_module_assoc =
+    List.fold_left (fun file_module_assoc f ->
+      let { _module = m; _ } = get_module_info f in
+      (f, m) :: file_module_assoc
+    ) in
+  let file_module_assoc = MultiWorker.call
+    workers
+    ~job: calc_file_module_assoc
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (Bucket.make inferred) in
+  let repick = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
     acc |> NameSet.add m |> NameSet.add f_module
-  ) removed inferred in
+  ) removed file_module_assoc in
+
   (* prep for registering new mappings in NameHeap *)
   let remove, replace, errmap = NameSet.fold (fun m (rem, rep, errmap) ->
     match get_providers m with
@@ -882,15 +903,25 @@ let commit_modules ~options inferred removed =
             (string_of_filename p);
           (NameSet.add m rem), ((m, p) :: rep), errmap
   ) repick (NameSet.empty, [], FilenameMap.empty) in
+
   (* update NameHeap *)
   NameHeap.remove_batch remove;
   SharedMem.collect `gentle;
-  List.iter (fun (m, p) ->
-    NameHeap.add m p;
-    NameHeap.add (Modulename.Filename p) p
-  ) replace;
+  MultiWorker.call
+    workers
+    ~job: (fun () replace ->
+      List.iter (fun (m, p) ->
+        NameHeap.add m p;
+        NameHeap.add (Modulename.Filename p) p
+      ) replace;
+    )
+    ~neutral: ()
+    ~merge: (fun () () -> ())
+    ~next: (Bucket.make replace);
+
   (* now that providers are updated, update reverse dependency info *)
-  add_reverse_imports inferred;
+  add_reverse_imports workers inferred;
+
   if debug then prerr_endlinef "*** done committing modules ***";
   errmap
 
