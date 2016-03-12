@@ -156,6 +156,7 @@ class ['a] t = object(self)
   | Elem key -> self#type_ cx acc key
   | ObjRest _ -> acc
   | ArrRest _ -> acc
+  | Default -> acc
 
   method private use_type_ cx acc = function
   | UseT t ->

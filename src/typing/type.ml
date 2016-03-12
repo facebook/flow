@@ -506,6 +506,7 @@ module rec TypeTerm : sig
   | Elem of t
   | ObjRest of string list
   | ArrRest of int
+  | Default
 
   and prototype = t
 

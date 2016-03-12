@@ -407,6 +407,7 @@ and gc_selector cx state = function
   | Elem key -> gc cx state key
   | ObjRest _ -> ()
   | ArrRest _ -> ()
+  | Default -> ()
 
 and gc_pred cx state = function
 

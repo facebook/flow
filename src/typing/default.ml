@@ -11,9 +11,9 @@
  * downstream. We can represent the default value associated with x as follows:
  *
  * Cons (
- *   0,
+ *   (Expr `0`),
  *   (Selector
- *     (Expr {x:""})
+ *     (Expr `{x:""}`)
  *     (Prop "x")))
  *
  * We can fold over the list structure of default values to "evaluate" them.

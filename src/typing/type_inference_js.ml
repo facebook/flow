@@ -376,9 +376,13 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f = Ast.Pattern.(
       );
       f cx loc name default curr_t
 
-  | _, Assignment { Assignment.left; right } ->
+  | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in
-      destructuring ?parent_pattern_t cx curr_t init default f left
+      let reason = mk_reason "default value" loc in
+      let tvar =
+        EvalT (curr_t, DestructuringT (reason, Default), mk_id())
+      in
+      destructuring ?parent_pattern_t cx tvar init default f left
 
   | loc, _ -> error_destructuring cx loc
 )

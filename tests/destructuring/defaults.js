@@ -65,3 +65,7 @@ function arr_rest_err([...a]=null) {} // error: expected array instead of null
 function gen<T>(x:T,{p=x}:{p:T}):T {
   return p;
 }
+
+// Default values in destructuring unwrap optional types
+obj_prop_fun(({} : {p?:{q?:null}})); // ok
+obj_prop_var(({} : {p?:{q?:null}})); // ok
