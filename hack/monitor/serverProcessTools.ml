@@ -13,7 +13,7 @@ open ServerProcess
 
 let find_oom_in_dmesg_output process lines =
   let re = Str.regexp (Printf.sprintf
-      "Out of memory: Kill process \\([0-9]+\\) (%s)" process.name) in
+      "Out of memory: Kill process \\([0-9]+\\) (hh_server)") in
   List.exists lines begin fun line ->
     try
       ignore @@ Str.search_forward re line 0;
