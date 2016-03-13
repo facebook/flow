@@ -169,12 +169,6 @@ module Jekyll
 
       errors_json = response['errors']
 
-      line_lengths = content.lines.map { |line| line.length }
-      line_offsets = [0]
-      line_lengths.each_with_index do |line_length, index|
-        line_offsets[index + 1] = line_offsets[index] + line_length
-      end
-
       errors = []
       errors_json.each_with_index do |error, e_index|
         e_id = e_index + 1
@@ -188,24 +182,8 @@ module Jekyll
 
           m_loc = message['loc']
           if m_loc != nil
-            start_line, start_col = m_loc.values_at('line', 'start')
-            end_line, end_col = m_loc.values_at('endline', 'end')
-
-            if start_line && start_line > 0 && end_line && end_line > 0
-              start_offset = line_offsets[start_line - 1] + start_col - 1
-              end_offset = line_offsets[end_line - 1] + end_col
-
-              msg_json['start'] = {
-                'line' => start_line,
-                'column' => start_col,
-                'offset' => start_offset
-              }
-              msg_json['end'] = {
-                'line' => end_line,
-                'column' => end_col + 1,
-                'offset' => end_offset
-              }
-            end
+            msg_json['start'] = m_loc['start']
+            msg_json['end'] = m_loc['end']
           end
 
           messages.push(msg_json)
