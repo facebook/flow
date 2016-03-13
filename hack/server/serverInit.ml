@@ -330,7 +330,7 @@ let print_hash_stats () =
 
 let get_build_targets () =
   let targets =
-    List.map (BuildMain.get_all_targets ()) (Relative_path.(concat Root)) in
+    List.map (BuildMain.get_live_targets ()) (Relative_path.(concat Root)) in
   Relative_path.set_of_list targets
 
 (* entry point *)
