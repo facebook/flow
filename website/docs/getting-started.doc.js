@@ -124,7 +124,7 @@ console.log(str);
 ### Next steps
 
   Now that we know how to set Flow up, let's take a quick look at
-  [a few examples](/five-simple-examples.html) that are
+  [a few examples](/docs/five-simple-examples.html) that are
   [included in the Flow repo](https://github.com/facebook/flow/tree/master/examples):
 
   1. [Hello Flow!](/docs/five-simple-examples.html#1-hello-flow)
