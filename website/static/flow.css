@@ -34,7 +34,6 @@ td {
     vertical-align: top;
 }
 
-.edit-page-link + h1,
 h1:first-child, h2:first-child, h3:first-child, h4:first-child {
     margin-top: 0;
 }
@@ -388,16 +387,25 @@ section.content aside .fb-like {
     left: 4px;
 }
 
+.edit-page-block {
+    display: table;
+    width: 100%;
+}
+
+.edit-page-block > * {
+    display: table-cell;
+}
+
 .edit-page-link {
-    float: right;
+    text-align: right;
     font-size: 12px;
-    margin-top: 13px;
     opacity: 0.6;
     transition: opacity 0.5s;
+    vertical-align: middle;
 }
 
 .edit-page-link:hover {
-  opacity: 1;
+    opacity: 1;
 }
 
 nav.toc {
