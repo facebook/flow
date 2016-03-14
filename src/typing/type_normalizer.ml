@@ -258,8 +258,10 @@ let rec normalize_type_impl cx ids t = match t with
   | KeysT (_, t) ->
       KeysT (reason_of_string "key set", normalize_type_impl cx ids t)
 
+  | AbstractT t ->
+      AbstractT (normalize_type_impl cx ids t)
+
   | FunProtoT _
-  | AbstractT _
   | EvalT (_, _, _)
   | ExistsT _
   | ModuleT (_, _)
