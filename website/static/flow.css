@@ -37,6 +37,7 @@ td {
 .edit-page-link + h1,
 h1:first-child, h2:first-child, h3:first-child, h4:first-child {
     margin-top: 0;
+    display: inline-block;
 }
 
 h1 {
