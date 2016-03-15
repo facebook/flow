@@ -1,5 +1,36 @@
 #!/bin/bash
 
+show_help() {
+  printf "Usage: runtests.sh [-h] [-v] FLOW_BINARY [TEST_FILTER]\n\n"
+  printf "Runs Flow's tests.\n\n"
+  echo "    FLOW_BINARY"
+  echo "        path to Flow binary"
+  echo "    TEST_FILTER"
+  echo "        optional regular expression to choose test directories to run"
+  echo "    -h"
+  echo "        display this help and exit"
+  echo "    -v"
+  echo "        verbose output (shows skipped tests)"
+}
+
+OPTIND=1
+verbose=0
+while getopts "h?v" opt; do
+  case "$opt" in
+  h|\?)
+    show_help
+    exit 0
+    ;;
+  v)
+    verbose=1
+    ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+[ "$1" = "--" ] && shift
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
   _canonicalize_file_path() {
     local dir file
@@ -52,8 +83,13 @@ print_skip() {
     name=$1
     name=${name%*/}
     name=${name##*/}
-    printf "%b[-] SKIP:%b %s%b\n" \
-      "$COLOR_YELLOW_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+    verbose=$2
+    if [[ "$verbose" -eq 1 ]]; then
+      printf "%b[-] SKIP:%b %s%b\n" \
+        "$COLOR_YELLOW_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+    else
+      printf "          %*s\r" ${#name} " "
+    fi
 }
 print_success() {
     name=$1
@@ -286,7 +322,7 @@ while (( next_test_to_reap < ${#dirs[@]} )); do
         print_failure "$testname" ;;
       $RUNTEST_SKIP )
         (( skipped++ ))
-        print_skip "$testname" ;;
+        print_skip "$testname" "$verbose" ;;
       $RUNTEST_MISSING_FILES )
         (( failed++ ))
         print_failure "$testname"
