@@ -422,10 +422,10 @@ struct
 
     (* Die if the .flowconfig changed *)
     if SSet.mem config_path updates then begin
+      Flow_logger.log "Status: Error";
       Flow_logger.log
-        "%s changed in an incompatible way; please restart %s.\n"
-        config_path
-        name;
+        "%s changed in an incompatible way. Exiting.\n%!"
+        config_path;
       FlowExitStatus.(exit Server_out_of_date)
     end;
 
@@ -439,8 +439,7 @@ struct
       Flow_logger.log "Status: Error";
       SSet.iter (Flow_logger.log "Modified package: %s") modified_packages;
       Flow_logger.log
-        "%s is out of date. Exiting.\n%!"
-        name;
+        "Packages changed in an incompatible way. Exiting.\n%!";
       FlowExitStatus.(exit Server_out_of_date)
     end;
 
@@ -451,8 +450,7 @@ struct
       Flow_logger.log "Status: Error";
       SSet.iter (Flow_logger.log "Modified lib file: %s") libs;
       Flow_logger.log
-        "%s is out of date. Exiting.\n%!"
-        name;
+        "Lib files changed in an incompatible way. Exiting.\n%!";
       FlowExitStatus.(exit Server_out_of_date)
     end;
 
