@@ -1,46 +1,68 @@
+break.js:6
+  6:         var y:number = x; // error: boolean !~> number
+                            ^ boolean. This type is incompatible with
+  6:         var y:number = x; // error: boolean !~> number
+                   ^^^^^^ number
 
-break.js:6:24,24: boolean
-This type is incompatible with
-break.js:6:15,20: number
+break.js:8
+  8:     var w:number = z; // 2 errors: ?string !~> number
+                        ^ possibly uninitialized variable. This type is incompatible with
+  8:     var w:number = z; // 2 errors: ?string !~> number
+               ^^^^^^ number
 
-break.js:8:20,20: possibly uninitialized variable
-This type is incompatible with
-break.js:8:11,16: number
+break.js:8
+  8:     var w:number = z; // 2 errors: ?string !~> number
+                        ^ string. This type is incompatible with
+  8:     var w:number = z; // 2 errors: ?string !~> number
+               ^^^^^^ number
 
-break.js:8:20,20: string
-This type is incompatible with
-break.js:8:11,16: number
+break.js:16
+ 16:         var y:number = x; // error: boolean !~> number
+                            ^ boolean. This type is incompatible with
+ 16:         var y:number = x; // error: boolean !~> number
+                   ^^^^^^ number
 
-break.js:16:24,24: boolean
-This type is incompatible with
-break.js:16:15,20: number
+break.js:19
+ 19:         var z:number = x; // 2 errors: (boolean | string) !~> number
+                            ^ boolean. This type is incompatible with
+ 19:         var z:number = x; // 2 errors: (boolean | string) !~> number
+                   ^^^^^^ number
 
-break.js:19:24,24: boolean
-This type is incompatible with
-break.js:19:15,20: number
+break.js:19
+ 19:         var z:number = x; // 2 errors: (boolean | string) !~> number
+                            ^ string. This type is incompatible with
+ 19:         var z:number = x; // 2 errors: (boolean | string) !~> number
+                   ^^^^^^ number
 
-break.js:19:24,24: string
-This type is incompatible with
-break.js:19:15,20: number
+break.js:23
+ 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+                        ^ boolean. This type is incompatible with
+ 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+               ^^^^^^ number
 
-break.js:23:20,20: boolean
-This type is incompatible with
-break.js:23:11,16: number
+break.js:23
+ 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+                        ^ null. This type is incompatible with
+ 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+               ^^^^^^ number
 
-break.js:23:20,20: null
-This type is incompatible with
-break.js:23:11,16: number
+break.js:23
+ 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+                        ^ string. This type is incompatible with
+ 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+               ^^^^^^ number
 
-break.js:23:20,20: string
-This type is incompatible with
-break.js:23:11,16: number
+break.js:29
+ 29:         var y:number = z;
+                            ^ string. This type is incompatible with
+ 29:         var y:number = z;
+                   ^^^^^^ number
 
-break.js:29:24,24: string
-This type is incompatible with
-break.js:29:15,20: number
+break.js:33
+ 33:     var w:number = z; // error: string !~> number
+                        ^ string. This type is incompatible with
+ 33:     var w:number = z; // error: string !~> number
+               ^^^^^^ number
 
-break.js:33:20,20: string
-This type is incompatible with
-break.js:33:11,16: number
 
 Found 11 errors

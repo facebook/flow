@@ -1,78 +1,116 @@
+bad_shadowing.js:13
+ 13: var A: string = "Hello";
+         ^^^^^^^^^ A. name is already bound
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-bad_shadowing.js:13:5,13: A
-name is already bound
-bad_shadowing.js:5:15,15: type A
+bad_shadowing.js:14
+ 14: var Foo: string = "Goodbye";
+         ^^^^^^^^^^^ Foo. name is already bound
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                  ^^^ type Foo
 
-bad_shadowing.js:14:5,15: Foo
-name is already bound
-bad_shadowing.js:6:14,16: type Foo
+bad_shadowing.js:15
+ 15: var Baz: string = "Go away please";
+         ^^^^^^^^^^^ Baz. name is already bound
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                       ^^^^^^^^^^ type Baz
 
-bad_shadowing.js:15:5,15: Baz
-name is already bound
-bad_shadowing.js:6:19,28: type Baz
+bad_shadowing.js:18
+ 18: var duck: string = "quack";
+         ^^^^^^^^^^^^ duck. name is already bound
+  8: type duck = {
+          ^^^^ type duck
 
-bad_shadowing.js:18:5,16: duck
-name is already bound
-bad_shadowing.js:8:6,9: type duck
+good_shadowing.js:8
+  8: var A = require('./A.js');
+         ^ A. name is already bound
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-good_shadowing.js:8:5,5: A
-name is already bound
-good_shadowing.js:5:15,15: type A
+good_shadowing.js:9
+  9: var Foo = A.Foo;
+         ^^^ Foo. name is already bound
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                  ^^^ type Foo
 
-good_shadowing.js:9:5,7: Foo
-name is already bound
-good_shadowing.js:6:14,16: type Foo
+good_shadowing.js:9
+  9: var Foo = A.Foo;
+               ^ A. type referenced from value position
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-good_shadowing.js:9:11,11: A
-type referenced from value position
-good_shadowing.js:5:15,15: type A
+good_shadowing.js:10
+ 10: var Baz = A.Bar;
+         ^^^ Baz. name is already bound
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                       ^^^^^^^^^^ type Baz
 
-good_shadowing.js:10:5,7: Baz
-name is already bound
-good_shadowing.js:6:19,28: type Baz
+good_shadowing.js:10
+ 10: var Baz = A.Bar;
+               ^ A. type referenced from value position
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-good_shadowing.js:10:11,11: A
-type referenced from value position
-good_shadowing.js:5:15,15: type A
+good_shadowing.js:13
+ 13: var m = A;
+             ^ A. type referenced from value position
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-good_shadowing.js:13:9,9: A
-type referenced from value position
-good_shadowing.js:5:15,15: type A
+good_shadowing.js:14
+ 14: var n = Foo;
+             ^^^ Foo. type referenced from value position
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                  ^^^ type Foo
 
-good_shadowing.js:14:9,11: Foo
-type referenced from value position
-good_shadowing.js:6:14,16: type Foo
+good_shadowing.js:15
+ 15: var o = Baz;
+             ^^^ Baz. type referenced from value position
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                       ^^^^^^^^^^ type Baz
 
-good_shadowing.js:15:9,11: Baz
-type referenced from value position
-good_shadowing.js:6:19,28: type Baz
+good_shadowing.js:18
+ 18: var a: Foo = new Foo();
+                      ^^^ Foo. type referenced from value position
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                  ^^^ type Foo
 
-good_shadowing.js:18:18,20: Foo
-type referenced from value position
-good_shadowing.js:6:14,16: type Foo
+good_shadowing.js:19
+ 19: var b: Foo = new A.Foo();
+                      ^ A. type referenced from value position
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-good_shadowing.js:19:18,18: A
-type referenced from value position
-good_shadowing.js:5:15,15: type A
+good_shadowing.js:20
+ 20: (new A.Bar(): Baz);
+          ^ A. type referenced from value position
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-good_shadowing.js:20:6,6: A
-type referenced from value position
-good_shadowing.js:5:15,15: type A
+import_type.js:11
+ 11: var m = A;
+             ^ A. type referenced from value position
+  5: import typeof A from "./A.js";
+                   ^ type A
 
-import_type.js:11:9,9: A
-type referenced from value position
-import_type.js:5:15,15: type A
+import_type.js:12
+ 12: var n = Foo;
+             ^^^ Foo. type referenced from value position
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                  ^^^ type Foo
 
-import_type.js:12:9,11: Foo
-type referenced from value position
-import_type.js:6:14,16: type Foo
+import_type.js:13
+ 13: var o = Baz;
+             ^^^ Baz. type referenced from value position
+  6: import type {Foo, Bar as Baz} from "./A.js";
+                       ^^^^^^^^^^ type Baz
 
-import_type.js:13:9,11: Baz
-type referenced from value position
-import_type.js:6:19,28: type Baz
+type_alias.js:8
+  8: var x = Foo;
+             ^^^ Foo. type referenced from value position
+  5: type Foo = number;
+          ^^^ type Foo
 
-type_alias.js:8:9,11: Foo
-type referenced from value position
-type_alias.js:5:6,8: type Foo
 
 Found 19 errors

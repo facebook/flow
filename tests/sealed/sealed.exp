@@ -1,28 +1,40 @@
+proto.js:3
+  3: var x:number = o.x;
+                    ^^^ string. This type is incompatible with
+  3: var x:number = o.x;
+           ^^^^^^ number
 
-proto.js:3:16,18: string
-This type is incompatible with
-proto.js:3:7,12: number
+proto.js:7
+  7: var y:number = o.m();
+                    ^^^^^ string. This type is incompatible with
+  7: var y:number = o.m();
+           ^^^^^^ number
 
-proto.js:7:16,20: string
-This type is incompatible with
-proto.js:7:7,12: number
+proto.js:7
+  7: var y:number = o.m();
+                    ^^^^^ call of method `m`
+  7: var y:number = o.m();
+                    ^^^^^ boolean. This type is incompatible with
+  7: var y:number = o.m();
+           ^^^^^^ number
 
-proto.js:7:16,20: call of method `m`
-Error:
-proto.js:7:16,20: boolean
-This type is incompatible with
-proto.js:7:7,12: number
+sealed.js:3
+  3: o.z = 0;
+       ^ property `z`. Property not found in
+  3: o.z = 0;
+     ^ object type
 
-sealed.js:3:3,3: property `z`
-Property not found in
-sealed.js:3:1,1: object type
+sealed.js:8
+  8: a.x = 123;
+       ^ property `x`. Property not found in
+  8: a.x = 123;
+     ^ new object
 
-sealed.js:8:3,3: property `x`
-Property not found in
-sealed.js:8:1,1: new object
+sealed.js:9
+  9: a.y = 'abc'; // error, needs to be declared in Bar's constructor
+       ^ property `y`. Property not found in
+  9: a.y = 'abc'; // error, needs to be declared in Bar's constructor
+     ^ new object
 
-sealed.js:9:3,3: property `y`
-Property not found in
-sealed.js:9:1,1: new object
 
 Found 6 errors

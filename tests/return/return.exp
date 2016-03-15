@@ -1,13 +1,18 @@
+function_return.js:4
+  4:     fn(x:number) { return x; }
+                     ^ return. Missing annotation
 
-function_return.js:4:17,17: return
-Missing annotation
+function_return.js:7
+  7: function f(x): number {
+                    ^^^^^^ return undefined. This type is incompatible with
+  7: function f(x): number {
+                    ^^^^^^ number
 
-function_return.js:7:16,21: return undefined
-This type is incompatible with
-function_return.js:7:16,21: number
+function_return.js:23
+ 23:   return;
+       ^^^^^^^ undefined. This type is incompatible with
+ 19: function h(x): number {
+                    ^^^^^^ number
 
-function_return.js:23:3,9: undefined
-This type is incompatible with
-function_return.js:19:16,21: number
 
 Found 3 errors

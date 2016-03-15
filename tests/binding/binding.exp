@@ -1,277 +1,412 @@
+const.js:4
+  4: x++;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:5
+  5: x--;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:6
+  6: x += 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:7
+  7: x -= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:8
+  8: x /= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:9
+  9: x %= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:10
+ 10: x <<= 0
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:11
+ 11: x >>= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:12
+ 12: x >>>= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:13
+ 13: x |= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:14
+ 14: x ^= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:15
+ 15: x &= 0;
+     ^ x. const cannot be reassigned
+  1: const x = 0;
+           ^ const x
+
+const.js:21
+ 21: (foo: number); // error: string ~> number
+      ^^^ string. This type is incompatible with
+ 21: (foo: number); // error: string ~> number
+           ^^^^^^ number
+
+const.js:22
+ 22: (bar: number); // error: string ~> number
+      ^^^ string. This type is incompatible with
+ 22: (bar: number); // error: string ~> number
+           ^^^^^^ number
+
+const.js:26
+ 26:   (baz: number); // error: string ~> number
+        ^^^ string. This type is incompatible with
+ 26:   (baz: number); // error: string ~> number
+             ^^^^^^ number
+
+rebinding.js:16
+ 16:   type A = number;  // error: name already bound
+            ^ A. name is already bound
+ 15:   type A = number;
+            ^ type A
+
+rebinding.js:21
+ 21:   class A {}        // error: name already bound
+             ^ A. name is already bound
+ 20:   type A = number;
+            ^ type A
+
+rebinding.js:26
+ 26:   let A = 0;        // error: name already bound
+           ^ A. name is already bound
+ 25:   type A = number;
+            ^ type A
+
+rebinding.js:31
+ 31:   const A = 0;     // error: name already bound
+             ^ A. name is already bound
+ 30:   type A = number;
+            ^ type A
+
+rebinding.js:36
+ 36:   var A = 0;        // error: name already bound
+           ^ A. name is already bound
+ 35:   type A = number;
+            ^ type A
+
+rebinding.js:41
+ 41:   A = 42;           // error: type alias ref'd from value pos
+       ^ A. type alias referenced from value position
+ 40:   type A = number;
+            ^ type A
+
+rebinding.js:48
+ 48:   type A = number;  // error: name already bound
+            ^ A. name is already bound
+ 47:   class A {}
+             ^ class A
+
+rebinding.js:53
+ 53:   class A {}        // error: name already bound
+             ^ A. name is already bound
+ 52:   class A {}
+             ^ class A
+
+rebinding.js:58
+ 58:   let A = 0;        // error: name already bound
+           ^ A. name is already bound
+ 57:   class A {}
+             ^ class A
+
+rebinding.js:63
+ 63:   const A = 0;     // error: name already bound
+             ^ A. name is already bound
+ 62:   class A {}
+             ^ class A
+
+rebinding.js:68
+ 68:   var A = 0;        // error: name already bound
+           ^ A. name is already bound
+ 67:   class A {}
+             ^ class A
+
+rebinding.js:75
+ 75:   type A = number;  // error: name already bound
+            ^ A. name is already bound
+ 74:   let A = 0;
+           ^ let A
+
+rebinding.js:80
+ 80:   class A {}        // error: name already bound
+             ^ A. name is already bound
+ 79:   let A = 0;
+           ^ let A
+
+rebinding.js:85
+ 85:   let A = 0;        // error: name already bound
+           ^ A. name is already bound
+ 84:   let A = 0;
+           ^ let A
+
+rebinding.js:90
+ 90:   const A = 0;     // error: name already bound
+             ^ A. name is already bound
+ 89:   let A = 0;
+           ^ let A
+
+rebinding.js:95
+ 95:   var A = 0;        // error: name already bound
+           ^ A. name is already bound
+ 94:   let A = 0;
+           ^ let A
+
+rebinding.js:102
+102:   type A = number;  // error: name already bound
+            ^ A. name is already bound
+101:   const A = 0;
+             ^ const A
+
+rebinding.js:107
+107:   class A {}        // error: name already bound
+             ^ A. name is already bound
+106:   const A = 0;
+             ^ const A
+
+rebinding.js:112
+112:   let A = 0;        // error: name already bound
+           ^ A. name is already bound
+111:   const A = 0;
+             ^ const A
+
+rebinding.js:117
+117:   const A = 0;     // error: name already bound
+             ^ A. name is already bound
+116:   const A = 0;
+             ^ const A
+
+rebinding.js:122
+122:   var A = 0;        // error: name already bound
+           ^ A. name is already bound
+121:   const A = 0;
+             ^ const A
+
+rebinding.js:127
+127:   A = 42;           // error: cannot be reassigned
+       ^ A. const cannot be reassigned
+126:   const A = 0;
+             ^ const A
+
+rebinding.js:134
+134:   type A = number;  // error: name already bound
+            ^ A. name is already bound
+133:   var A = 0;
+           ^ var A
+
+rebinding.js:139
+139:   class A {}        // error: name already bound
+             ^ A. name is already bound
+138:   var A = 0;
+           ^ var A
+
+rebinding.js:144
+144:   let A = 0;        // error: name already bound
+           ^ A. name is already bound
+143:   var A = 0;
+           ^ var A
+
+rebinding.js:149
+149:   const A = 0;      // error: name already bound
+             ^ A. name is already bound
+148:   var A = 0;
+           ^ var A
+
+rebinding.js:167
+167:     function a() {}; // error: name already bound
+         ^^^^^^^^^^^^^^^ a. name is already bound
+166:     function a() {};
+         ^^^^^^^^^^^^^^^ function a
+
+rebinding.js:177
+177:       var x = 0; // error: name already bound
+               ^ x. name is already bound
+175:     let x = 0;
+             ^ let x
+
+rebinding.js:186
+186:       type x = string; // error: name already bound
+                ^ x. name is already bound
+184:     let x = 0;
+             ^ let x
+
+rebinding.js:193
+193: function fn_params_name_clash(x, x /* error: x already bound */) {}
+                                      ^ x. name is already bound
+193: function fn_params_name_clash(x, x /* error: x already bound */) {}
+                                   ^ param x
+
+rebinding.js:195
+195:   let x = 0; // error: x already bound
+           ^ x. name is already bound
+194: function fn_params_clash_fn_binding(x,y) {
+                                         ^ param x
+
+scope.js:6
+  6:     var b = ""; // error: string ~> number
+                 ^^ string. This type is incompatible with
+  3:   var b: number = 0;
+              ^^^^^^ number
+
+scope.js:16
+ 16:       var b = ""; // error: string ~> number
+                   ^^ string. This type is incompatible with
+ 12:   var b: number = 0;
+              ^^^^^^ number
+
+scope.js:19
+ 19:       let a = ""; // error: a already bound in switch
+               ^ a. name is already bound
+ 15:       let a = ""; // ok: local to switch
+               ^ let a
+
+scope.js:30
+ 30:      a = "";     // error: assign before declaration
+          ^ a. let referenced before declaration, or after skipped declaration
+ 36:       let a = "";
+               ^ let a
+
+scope.js:33
+ 33:      var b = a;  // error: use before declaration
+                  ^ a. let referenced before declaration, or after skipped declaration
+ 36:       let a = "";
+               ^ let a
+
+scope.js:39
+ 39:       a = "";     // error: skipped initializer
+           ^ a. let referenced before declaration, or after skipped declaration
+ 36:       let a = "";
+               ^ let a
+
+scope.js:42
+ 42:       var c:string = a;  // error: skipped initializer
+                          ^ a. let referenced before declaration, or after skipped declaration
+ 36:       let a = "";
+               ^ let a
+
+scope.js:45
+ 45:   a = ""; // error: a no longer in scope
+       ^ assignment of identifier `a`. Could not resolve name
+
+scope.js:66
+ 66:   for (var a = "" /* error: string ~> number */;;) {}
+                    ^^ string. This type is incompatible with
+ 65:   var a: number = 0;
+              ^^^^^^ number
+
+scope.js:76
+ 76:   for (var a /* error: string ~> number */ in o) {}
+                ^ string. This type is incompatible with
+ 75:   var a: number = 0;
+              ^^^^^^ number
+
+scope.js:86
+ 86:   for (var a /* error: string ~> number */ of xs) {}
+                ^ string. This type is incompatible with
+ 85:   var a: number = 0;
+              ^^^^^^ number
+
+scope.js:93
+ 93:   ): number {
+          ^^^^^^ number. This type is incompatible with
+ 92:     x: () => string = f // error: number ~> string
+                  ^^^^^^ string
+
+scope.js:103
+103:     return x(); // error: string ~> number
+                ^^^ string. This type is incompatible with
+101:   function f0(x = () => a): number {
+                                 ^^^^^^ number
+
+scope.js:105
+105:   function f1(x = b /* error: cannot resolve b */): number {
+                       ^ identifier `b`. Could not resolve name
+
+tdz.js:25
+ 25:   var v = x * c;  // errors, let + const referenced before decl
+               ^ x. let referenced before declaration, or after skipped declaration
+ 26:   let x = 0;
+           ^ let x
+
+tdz.js:25
+ 25:   var v = x * c;  // errors, let + const referenced before decl
+                   ^ c. const referenced before declaration, or after skipped declaration
+ 27:   const c = 0;
+             ^ const c
+
+tdz.js:31
+ 31:   x = 10;         // error, attempt to write to let before decl
+       ^ x. let referenced before declaration, or after skipped declaration
+ 32:   let x = 0;
+           ^ let x
+
+tdz.js:34
+ 34:     y = 10;       // error, attempt to write to let before decl
+         ^ y. let referenced before declaration, or after skipped declaration
+ 35:     let y = 0;
+             ^ let y
+
+tdz.js:41
+ 41:     var v = x * c; // errors, let + const referenced before decl
+                 ^ x. let referenced before declaration, or after skipped declaration
+ 43:   let x = 0;
+           ^ let x
+
+tdz.js:41
+ 41:     var v = x * c; // errors, let + const referenced before decl
+                     ^ c. const referenced before declaration, or after skipped declaration
+ 44:   const c = 0;
+             ^ const c
+
+tdz.js:78
+ 78: var x: C;       // error: C not found (bug)
+            ^ identifier `C`. Could not resolve name
+
+tdz.js:80
+ 80: var y = new C(); // error: let ref before decl from value position
+                 ^ C. class referenced before declaration, or after skipped declaration
+ 82: class C {}
+           ^ class C
+
+tdz.js:96
+ 96: f(a); // error: undefined ~/> number
+     ^^^^ function call
+ 96: f(a); // error: undefined ~/> number
+       ^ uninitialized variable. This type is incompatible with
+ 94: function f(n: number) { return n; }
+                   ^^^^^^ number
 
-const.js:4:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:5:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:6:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:7:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:8:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:9:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:10:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:11:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:12:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:13:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:14:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:15:1,1: x
-const cannot be reassigned
-const.js:1:7,7: const x
-
-const.js:21:2,4: string
-This type is incompatible with
-const.js:21:7,12: number
-
-const.js:22:2,4: string
-This type is incompatible with
-const.js:22:7,12: number
-
-const.js:26:4,6: string
-This type is incompatible with
-const.js:26:9,14: number
-
-rebinding.js:16:8,8: A
-name is already bound
-rebinding.js:15:8,8: type A
-
-rebinding.js:21:9,9: A
-name is already bound
-rebinding.js:20:8,8: type A
-
-rebinding.js:26:7,7: A
-name is already bound
-rebinding.js:25:8,8: type A
-
-rebinding.js:31:9,9: A
-name is already bound
-rebinding.js:30:8,8: type A
-
-rebinding.js:36:7,7: A
-name is already bound
-rebinding.js:35:8,8: type A
-
-rebinding.js:41:3,3: A
-type alias referenced from value position
-rebinding.js:40:8,8: type A
-
-rebinding.js:48:8,8: A
-name is already bound
-rebinding.js:47:9,9: class A
-
-rebinding.js:53:9,9: A
-name is already bound
-rebinding.js:52:9,9: class A
-
-rebinding.js:58:7,7: A
-name is already bound
-rebinding.js:57:9,9: class A
-
-rebinding.js:63:9,9: A
-name is already bound
-rebinding.js:62:9,9: class A
-
-rebinding.js:68:7,7: A
-name is already bound
-rebinding.js:67:9,9: class A
-
-rebinding.js:75:8,8: A
-name is already bound
-rebinding.js:74:7,7: let A
-
-rebinding.js:80:9,9: A
-name is already bound
-rebinding.js:79:7,7: let A
-
-rebinding.js:85:7,7: A
-name is already bound
-rebinding.js:84:7,7: let A
-
-rebinding.js:90:9,9: A
-name is already bound
-rebinding.js:89:7,7: let A
-
-rebinding.js:95:7,7: A
-name is already bound
-rebinding.js:94:7,7: let A
-
-rebinding.js:102:8,8: A
-name is already bound
-rebinding.js:101:9,9: const A
-
-rebinding.js:107:9,9: A
-name is already bound
-rebinding.js:106:9,9: const A
-
-rebinding.js:112:7,7: A
-name is already bound
-rebinding.js:111:9,9: const A
-
-rebinding.js:117:9,9: A
-name is already bound
-rebinding.js:116:9,9: const A
-
-rebinding.js:122:7,7: A
-name is already bound
-rebinding.js:121:9,9: const A
-
-rebinding.js:127:3,3: A
-const cannot be reassigned
-rebinding.js:126:9,9: const A
-
-rebinding.js:134:8,8: A
-name is already bound
-rebinding.js:133:7,7: var A
-
-rebinding.js:139:9,9: A
-name is already bound
-rebinding.js:138:7,7: var A
-
-rebinding.js:144:7,7: A
-name is already bound
-rebinding.js:143:7,7: var A
-
-rebinding.js:149:9,9: A
-name is already bound
-rebinding.js:148:7,7: var A
-
-rebinding.js:167:5,19: a
-name is already bound
-rebinding.js:166:5,19: function a
-
-rebinding.js:177:11,11: x
-name is already bound
-rebinding.js:175:9,9: let x
-
-rebinding.js:186:12,12: x
-name is already bound
-rebinding.js:184:9,9: let x
-
-rebinding.js:193:34,34: x
-name is already bound
-rebinding.js:193:31,31: param x
-
-rebinding.js:195:7,7: x
-name is already bound
-rebinding.js:194:37,37: param x
-
-scope.js:6:13,14: string
-This type is incompatible with
-scope.js:3:10,15: number
-
-scope.js:16:15,16: string
-This type is incompatible with
-scope.js:12:10,15: number
-
-scope.js:19:11,11: a
-name is already bound
-scope.js:15:11,11: let a
-
-scope.js:30:6,6: a
-let referenced before declaration, or after skipped declaration
-scope.js:36:11,11: let a
-
-scope.js:33:14,14: a
-let referenced before declaration, or after skipped declaration
-scope.js:36:11,11: let a
-
-scope.js:39:7,7: a
-let referenced before declaration, or after skipped declaration
-scope.js:36:11,11: let a
-
-scope.js:42:22,22: a
-let referenced before declaration, or after skipped declaration
-scope.js:36:11,11: let a
-
-scope.js:45:3,3: assignment of identifier `a`
-Could not resolve name
-
-scope.js:66:16,17: string
-This type is incompatible with
-scope.js:65:10,15: number
-
-scope.js:76:12,12: string
-This type is incompatible with
-scope.js:75:10,15: number
-
-scope.js:86:12,12: string
-This type is incompatible with
-scope.js:85:10,15: number
-
-scope.js:93:6,11: number
-This type is incompatible with
-scope.js:92:14,19: string
-
-scope.js:103:12,14: string
-This type is incompatible with
-scope.js:101:29,34: number
-
-scope.js:105:19,19: identifier `b`
-Could not resolve name
-
-tdz.js:25:11,11: x
-let referenced before declaration, or after skipped declaration
-tdz.js:26:7,7: let x
-
-tdz.js:25:15,15: c
-const referenced before declaration, or after skipped declaration
-tdz.js:27:9,9: const c
-
-tdz.js:31:3,3: x
-let referenced before declaration, or after skipped declaration
-tdz.js:32:7,7: let x
-
-tdz.js:34:5,5: y
-let referenced before declaration, or after skipped declaration
-tdz.js:35:9,9: let y
-
-tdz.js:41:13,13: x
-let referenced before declaration, or after skipped declaration
-tdz.js:43:7,7: let x
-
-tdz.js:41:17,17: c
-const referenced before declaration, or after skipped declaration
-tdz.js:44:9,9: const c
-
-tdz.js:78:8,8: identifier `C`
-Could not resolve name
-
-tdz.js:80:13,13: C
-class referenced before declaration, or after skipped declaration
-tdz.js:82:7,7: class C
-
-tdz.js:96:1,4: function call
-Error:
-tdz.js:96:3,3: uninitialized variable
-This type is incompatible with
-tdz.js:94:15,20: number
 
 Found 69 errors

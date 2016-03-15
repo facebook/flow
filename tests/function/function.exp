@@ -1,202 +1,274 @@
+apply.js:2
+  2:   return this.length; // expect []/"" this
+                   ^^^^^^ property `length`. Property not found in
+  9: test.apply(0, ["", 0]); // error: lookup `length` on Number
+                ^ Number
 
-apply.js:2:15,20: property `length`
-Property not found in
-apply.js:9:12,12: Number
+apply.js:2
+  2:   return this.length; // expect []/"" this
+                   ^^^^^^ property `length`. Property not found in
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+                             ^ Number
 
-apply.js:2:15,20: property `length`
-Property not found in
-apply.js:32:25,25: Number
+apply.js:2
+  2:   return this.length; // expect []/"" this
+                   ^^^^^^ property `length`. Property not found in
+ 37: (test.bind.apply(test, [0, 123]): (b: number) => number);
+                             ^ Number
 
-apply.js:2:15,20: property `length`
-Property not found in
-apply.js:37:25,25: Number
+apply.js:12
+ 12: test.apply("", [""]); // error: string ~> number
+     ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 12: test.apply("", [""]); // error: string ~> number
+                     ^^ string. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-apply.js:12:1,20: call of method `apply`
-Error:
-apply.js:12:17,18: string
-This type is incompatible with
-apply.js:1:29,34: number
+apply.js:15
+ 15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
+     ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
+                         ^^ string. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-apply.js:15:1,24: call of method `apply`
-Error:
-apply.js:15:21,22: string
-This type is incompatible with
-apply.js:1:29,34: number
+apply.js:16
+ 16: test.apply("", [0, 0]); // error: number ~> string (1st arg)
+     ^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 16: test.apply("", [0, 0]); // error: number ~> string (1st arg)
+                     ^ number. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                      ^^^^^^ string
 
-apply.js:16:1,22: call of method `apply`
-Error:
-apply.js:16:17,17: number
-This type is incompatible with
-apply.js:1:18,23: string
+apply.js:19
+ 19: function f(args) { test.apply("", args) }
+                        ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 21: f(["", ""]); // error: string ~> number (2nd arg)
+            ^^ string. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-apply.js:19:20,39: call of method `apply`
-Error:
-apply.js:21:8,9: string
-This type is incompatible with
-apply.js:1:29,34: number
+apply.js:19
+ 19: function f(args) { test.apply("", args) }
+                        ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 22: f([0, 0]); // error: number ~> string (1st arg)
+        ^ number. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                      ^^^^^^ string
 
-apply.js:19:20,39: call of method `apply`
-Error:
-apply.js:22:4,4: number
-This type is incompatible with
-apply.js:1:18,23: string
+apply.js:25
+ 25: test.apply("", "not array"); // error: expect array of args
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`. Expected array of arguments instead of
+ 25: test.apply("", "not array"); // error: expect array of args
+                    ^^^^^^^^^^^ string
 
-apply.js:25:1,27: call of method `apply`
-Expected array of arguments instead of
-apply.js:25:16,26: string
+apply.js:32
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+                                              ^^^^ undefined
 
-apply.js:32:2,39: call of method `apply`
-Error:
-apply.js:32:2,39: number
-This type is incompatible with
-apply.js:32:42,45: undefined
+apply.js:32
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+                                ^^^ number. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                      ^^^^^^ string
 
-apply.js:32:2,39: call of method `apply`
-Error:
-apply.js:32:28,30: number
-This type is incompatible with
-apply.js:1:18,23: string
+apply.js:32
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 32: (test.call.apply(test, [0, 123, 'foo']): void);
+                                     ^^^^^ string. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-apply.js:32:2,39: call of method `apply`
-Error:
-apply.js:32:33,37: string
-This type is incompatible with
-apply.js:1:29,34: number
+apply.js:37
+ 37: (test.bind.apply(test, [0, 123]): (b: number) => number);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+ 37: (test.bind.apply(test, [0, 123]): (b: number) => number);
+                                ^^^ number. This type is incompatible with
+  1: function test(a: string, b: number): number {
+                      ^^^^^^ string
 
-apply.js:37:2,32: call of method `apply`
-Error:
-apply.js:37:28,30: number
-This type is incompatible with
-apply.js:1:18,23: string
+bind.js:7
+  7:     y(123); // error, number !~> string
+         ^^^^^^ function call
+  7:     y(123); // error, number !~> string
+           ^^^ number. This type is incompatible with
+  4:   function(x: (a: string, b: string) => void) {
+                                  ^^^^^^ string
 
-bind.js:7:5,10: function call
-Error:
-bind.js:7:7,9: number
-This type is incompatible with
-bind.js:4:30,35: string
+call.js:4
+  4:   return this.length; // expect []/"" this
+                   ^^^^^^ property `length`. Property not found in
+ 11: test.call(0, "", 0); // error: lookup `length` on Number
+               ^ Number
 
-call.js:4:15,20: property `length`
-Property not found in
-call.js:11:11,11: Number
+call.js:4
+  4:   return this.length; // expect []/"" this
+                   ^^^^^^ property `length`. Property not found in
+ 30: (test.apply.call(test, 0, [0, 'foo']): number);
+                            ^ Number
 
-call.js:4:15,20: property `length`
-Property not found in
-call.js:30:24,24: Number
+call.js:14
+ 14: test.call("", ""); // error: string ~> number
+     ^^^^^^^^^^^^^^^^^ call of method `call`
+ 14: test.call("", ""); // error: string ~> number
+     ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+  3: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-call.js:14:1,17: call of method `call`
-Error:
-call.js:14:1,17: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-call.js:3:29,34: number
+call.js:17
+ 17: test.call("", "", ""); // error: string ~> number (2nd arg)
+     ^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+ 17: test.call("", "", ""); // error: string ~> number (2nd arg)
+                       ^^ string. This type is incompatible with
+  3: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-call.js:17:1,21: call of method `call`
-Error:
-call.js:17:19,20: string
-This type is incompatible with
-call.js:3:29,34: number
+call.js:18
+ 18: test.call("", 0, 0); // error: number ~> string (1st arg)
+     ^^^^^^^^^^^^^^^^^^^ call of method `call`
+ 18: test.call("", 0, 0); // error: number ~> string (1st arg)
+                   ^ number. This type is incompatible with
+  3: function test(a: string, b: number): number {
+                      ^^^^^^ string
 
-call.js:18:1,19: call of method `call`
-Error:
-call.js:18:15,15: number
-This type is incompatible with
-call.js:3:18,23: string
+call.js:21
+ 21: function f(args) { test.call("", args[0], args[1]) }
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+ 21: function f(args) { test.call("", args[0], args[1]) }
+                                      ^^^^^^^ number. This type is incompatible with
+  3: function test(a: string, b: number): number {
+                      ^^^^^^ string
 
-call.js:21:20,50: call of method `call`
-Error:
-call.js:21:34,40: number
-This type is incompatible with
-call.js:3:18,23: string
+call.js:21
+ 21: function f(args) { test.call("", args[0], args[1]) }
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+ 21: function f(args) { test.call("", args[0], args[1]) }
+                                               ^^^^^^^ string. This type is incompatible with
+  3: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-call.js:21:20,50: call of method `call`
-Error:
-call.js:21:43,49: string
-This type is incompatible with
-call.js:3:29,34: number
+call.js:30
+ 30: (test.apply.call(test, 0, [0, 'foo']): number);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+ 30: (test.apply.call(test, 0, [0, 'foo']): number);
+                                ^ number. This type is incompatible with
+  3: function test(a: string, b: number): number {
+                      ^^^^^^ string
 
-call.js:30:2,37: call of method `call`
-Error:
-call.js:30:28,28: number
-This type is incompatible with
-call.js:3:18,23: string
+call.js:30
+ 30: (test.apply.call(test, 0, [0, 'foo']): number);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
+ 30: (test.apply.call(test, 0, [0, 'foo']): number);
+                                   ^^^^^ string. This type is incompatible with
+  3: function test(a: string, b: number): number {
+                                 ^^^^^^ number
 
-call.js:30:2,37: call of method `call`
-Error:
-call.js:30:31,35: string
-This type is incompatible with
-call.js:3:29,34: number
+function.js:29
+ 29:   var a: number = x; // Error
+                       ^ function type. This type is incompatible with
+ 29:   var a: number = x; // Error
+              ^^^^^^ number
 
-function.js:29:19,19: function type
-This type is incompatible with
-function.js:29:10,15: number
+function.js:30
+ 30:   var b: string = x; // Error
+                       ^ function type. This type is incompatible with
+ 30:   var b: string = x; // Error
+              ^^^^^^ string
 
-function.js:30:19,19: function type
-This type is incompatible with
-function.js:30:10,15: string
+function.js:31
+ 31:   var c: Function = y; // Object is not a Function
+                         ^ object type. This type is incompatible with
+ 31:   var c: Function = y; // Object is not a Function
+              ^^^^^^^^ function type
 
-function.js:31:21,21: object type
-This type is incompatible with
-function.js:31:10,17: function type
+function.js:37
+ 37:     (x.length: void); // error, it's a number
+          ^^^^^^^^ number. This type is incompatible with
+ 37:     (x.length: void); // error, it's a number
+                    ^^^^ undefined
 
-function.js:37:6,13: number
-This type is incompatible with
-function.js:37:16,19: undefined
+function.js:38
+ 38:     (y.length: void); // error, it's a number
+          ^^^^^^^^ number. This type is incompatible with
+ 38:     (y.length: void); // error, it's a number
+                    ^^^^ undefined
 
-function.js:38:6,13: number
-This type is incompatible with
-function.js:38:16,19: undefined
+function.js:39
+ 39:     (z.length: void); // error, it's a number
+          ^^^^^^^^ number. This type is incompatible with
+ 39:     (z.length: void); // error, it's a number
+                    ^^^^ undefined
 
-function.js:39:6,13: number
-This type is incompatible with
-function.js:39:16,19: undefined
+function.js:41
+ 41:     (x.name: void); // error, it's a string
+          ^^^^^^ string. This type is incompatible with
+ 41:     (x.name: void); // error, it's a string
+                  ^^^^ undefined
 
-function.js:41:6,11: string
-This type is incompatible with
-function.js:41:14,17: undefined
+function.js:42
+ 42:     (y.name: void); // error, it's a string
+          ^^^^^^ string. This type is incompatible with
+ 42:     (y.name: void); // error, it's a string
+                  ^^^^ undefined
 
-function.js:42:6,11: string
-This type is incompatible with
-function.js:42:14,17: undefined
+function.js:43
+ 43:     (z.name: void); // error, it's a string
+          ^^^^^^ string. This type is incompatible with
+ 43:     (z.name: void); // error, it's a string
+                  ^^^^ undefined
 
-function.js:43:6,11: string
-This type is incompatible with
-function.js:43:14,17: undefined
+function.js:48
+ 48:     x.length = 'foo'; // error, it's a number
+                    ^^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:85
 
-function.js:48:16,20: string
-This type is incompatible with
-[LIB] core.js:85:13,18: number
+function.js:49
+ 49:     y.length = 'foo'; // error, it's a number
+         ^^^^^^^^ assignment of property `length`
+ 49:     y.length = 'foo'; // error, it's a number
+                    ^^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:85
 
-function.js:49:5,12: assignment of property `length`
-Error:
-function.js:49:16,20: string
-This type is incompatible with
-[LIB] core.js:85:13,18: number
+function.js:50
+ 50:     z.length = 'foo'; // error, it's a number
+         ^^^^^^^^ assignment of property `length`
+ 50:     z.length = 'foo'; // error, it's a number
+                    ^^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:85
 
-function.js:50:5,12: assignment of property `length`
-Error:
-function.js:50:16,20: string
-This type is incompatible with
-[LIB] core.js:85:13,18: number
+function.js:52
+ 52:     x.name = 123; // error, it's a string
+                  ^^^ number. This type is incompatible with
+string. See: [LIB] core.js:86
 
-function.js:52:14,16: number
-This type is incompatible with
-[LIB] core.js:86:11,16: string
+function.js:53
+ 53:     y.name = 123; // error, it's a string
+         ^^^^^^ assignment of property `name`
+ 53:     y.name = 123; // error, it's a string
+                  ^^^ number. This type is incompatible with
+string. See: [LIB] core.js:86
 
-function.js:53:5,10: assignment of property `name`
-Error:
-function.js:53:14,16: number
-This type is incompatible with
-[LIB] core.js:86:11,16: string
+function.js:54
+ 54:     z.name = 123; // error, it's a string
+         ^^^^^^ assignment of property `name`
+ 54:     z.name = 123; // error, it's a string
+                  ^^^ number. This type is incompatible with
+string. See: [LIB] core.js:86
 
-function.js:54:5,10: assignment of property `name`
-Error:
-function.js:54:14,16: number
-This type is incompatible with
-[LIB] core.js:86:11,16: string
+rest.js:8
+  8: function rest_tuple<T>(...xs: [T]): T {
+                                   ^^^ tuple type. rest parameter should have an explicit array type (or type `any`)
 
-rest.js:8:31,33: tuple type
-rest parameter should have an explicit array type (or type `any`)
+rest.js:17
+ 17: function rest_t<U, T: Array<U>>(...xs: T): U {
+                                            ^ T. rest parameter should have an explicit array type (or type `any`)
 
-rest.js:17:40,40: T
-rest parameter should have an explicit array type (or type `any`)
 
 Found 40 errors

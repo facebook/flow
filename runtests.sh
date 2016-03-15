@@ -229,7 +229,7 @@ runtest() {
         if [ "$cmd" == "check" ]
         then
             # default command is check with configurable --all
-            "$FLOW" check . $all --strip-root --show-all-errors --old-output-format 1> "$out_file" 2> "$stderr_dest"
+            "$FLOW" check . $all --strip-root --show-all-errors 1> "$out_file" 2> "$stderr_dest"
         else
             # otherwise, run specified flow command, then kill the server
 

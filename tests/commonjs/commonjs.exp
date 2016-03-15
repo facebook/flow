@@ -1,8 +1,10 @@
+Rel.js:4
+  4: f(0);
+     ^^^^ function call
+  4: f(0);
+       ^ number. This type is incompatible with
+  2: function f(x:string) { }
+                  ^^^^^^ string. See: Abs.js:2
 
-Rel.js:4:1,4: function call
-Error:
-Rel.js:4:3,3: number
-This type is incompatible with
-Abs.js:2:14,19: string
 
 Found 1 error

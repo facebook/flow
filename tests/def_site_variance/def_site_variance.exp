@@ -1,16 +1,22 @@
+test.js:2
+  2:   foo(x: Out): Out { return x; }
+              ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
 
-test.js:2:10,12: Out
-contravariant position (expected `Out` to occur only covariantly)
+test.js:3
+  3:   bar(y: In): In { return y; }
+                   ^^ In. covariant position (expected `In` to occur only contravariantly)
 
-test.js:3:15,16: In
-covariant position (expected `In` to occur only contravariantly)
+test.js:10
+ 10:   v1: Variance<A,B>,
+                    ^ A. This type is incompatible with
+ 13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+                     ^ B
 
-test.js:10:16,16: A
-This type is incompatible with
-test.js:13:17,17: B
+test.js:13
+ 13:   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
+                       ^ A. This type is incompatible with
+ 10:   v1: Variance<A,B>,
+                      ^ B
 
-test.js:13:19,19: A
-This type is incompatible with
-test.js:10:18,18: B
 
 Found 4 errors

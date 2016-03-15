@@ -1,74 +1,110 @@
+incompatible.js:3
+  3: var x : {[key: string]: string} = {};
+                    ^^^^^^ string. This type is incompatible with
+  5: var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
+                    ^^^^^^ number
 
-incompatible.js:3:16,21: string
-This type is incompatible with
-incompatible.js:5:16,21: number
+incompatible.js:3
+  3: var x : {[key: string]: string} = {};
+                             ^^^^^^ string. This type is incompatible with
+  4: var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
+                             ^^^^^^ number
 
-incompatible.js:3:25,30: string
-This type is incompatible with
-incompatible.js:4:25,30: number
+incompatible.js:4
+  4: var y : {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
+                             ^^^^^^ number. This type is incompatible with
+  3: var x : {[key: string]: string} = {};
+                             ^^^^^^ string
 
-incompatible.js:4:25,30: number
-This type is incompatible with
-incompatible.js:3:25,30: string
+incompatible.js:5
+  5: var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
+                    ^^^^^^ number. This type is incompatible with
+  3: var x : {[key: string]: string} = {};
+                    ^^^^^^ string
 
-incompatible.js:5:16,21: number
-This type is incompatible with
-incompatible.js:3:16,21: string
+incompatible.js:7
+  7: var a : {[key: string]: ?string} = {};
+                              ^^^^^^ null. This type is incompatible with
+  8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
+                             ^^^^^^ string
 
-incompatible.js:7:26,31: null
-This type is incompatible with
-incompatible.js:8:25,30: string
+incompatible.js:7
+  7: var a : {[key: string]: ?string} = {};
+                              ^^^^^^ undefined. This type is incompatible with
+  8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
+                             ^^^^^^ string
 
-incompatible.js:7:26,31: undefined
-This type is incompatible with
-incompatible.js:8:25,30: string
+incompatible.js:9
+  9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
+                              ^^^^^^ null. This type is incompatible with
+  8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
+                             ^^^^^^ string
 
-incompatible.js:9:26,31: null
-This type is incompatible with
-incompatible.js:8:25,30: string
+incompatible.js:9
+  9: var c : {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
+                              ^^^^^^ undefined. This type is incompatible with
+  8: var b : {[key: string]: string} = a; // 2 errors (null & undefined)
+                             ^^^^^^ string
 
-incompatible.js:9:26,31: undefined
-This type is incompatible with
-incompatible.js:8:25,30: string
+incompatible.js:12
+ 12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                            ^^^^^^ number. This type is incompatible with
+ 12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                                                             ^^^^^^ string
 
-incompatible.js:12:40,45: number
-This type is incompatible with
-incompatible.js:12:73,78: string
+incompatible.js:12
+ 12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                                                             ^^^^^^ string. This type is incompatible with
+ 12: function foo0(x: Array<{[key: string]: number}>): Array<{[key: string]: string}> {
+                                            ^^^^^^ number
 
-incompatible.js:12:73,78: string
-This type is incompatible with
-incompatible.js:12:40,45: number
+incompatible.js:19
+ 19: ): Array<{[key: string]: number, fooBar: string}> {
+                                              ^^^^^^ string. This type is incompatible with
+ 18:   x: Array<{[key: string]: number}>
+                                ^^^^^^ number
 
-incompatible.js:19:42,47: string
-This type is incompatible with
-incompatible.js:18:28,33: number
+incompatible.js:26
+ 26:   x[0].fooBar = 123; // error, number !~> string
+                     ^^^ number. This type is incompatible with
+ 25: ): Array<{[key: string]: mixed, fooBar: string}> {
+                                             ^^^^^^ string
 
-incompatible.js:26:17,19: number
-This type is incompatible with
-incompatible.js:25:41,46: string
+incompatible.js:36
+ 36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                                                             ^^^^^^ string. This type is incompatible with
+ 36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
+                                      ^^^^^^ number
 
-incompatible.js:36:73,78: string
-This type is incompatible with
-incompatible.js:36:34,39: number
+incompatible.js:41
+ 41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+                            ^^^^^^^^^^^^^^^^^^^^^^^ some property. Property not found in
+ 41: function foo5(x: Array<{[key: string]: number}>): Array<{foo: number}> {
+                                                             ^^^^^^^^^^^^^ object type
 
-incompatible.js:41:24,46: some property
-Property not found in
-incompatible.js:41:57,69: object type
+incompatible.js:46
+ 46: function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^ some property. Property not found in
+ 46: function foo6(x: Array<{foo: number}>): Array<{[key: string]: number}> {
+                            ^^^^^^^^^^^^^ object type
 
-incompatible.js:46:47,69: some property
-Property not found in
-incompatible.js:46:24,36: object type
+incompatible.js:55
+ 55:   (x.foo: string); // error
+        ^^^^^ number. This type is incompatible with
+ 55:   (x.foo: string); // error
+               ^^^^^^ string
 
-incompatible.js:55:4,8: number
-This type is incompatible with
-incompatible.js:55:11,16: string
+test.js:6
+  6:     return params.count; // error, number ~/~ string
+                ^^^^^^^^^^^^ number. This type is incompatible with
+  2: type QueryFunction = (params: Params) => string;
+                                              ^^^^^^ string
 
-test.js:6:12,23: number
-This type is incompatible with
-test.js:2:42,47: string
+test_client.js:4
+  4:   return params.count; // error, number ~/~ string
+              ^^^^^^^^^^^^ number. This type is incompatible with
+  2: type QueryFunction = (params: Params) => string;
+                                              ^^^^^^ string. See: test.js:2
 
-test_client.js:4:10,21: number
-This type is incompatible with
-test.js:2:42,47: string
 
 Found 18 errors

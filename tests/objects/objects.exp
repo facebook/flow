@@ -1,106 +1,130 @@
+conversion.js:10
+ 10: (Object(undefined): Number); // error
+      ^^^^^^^^^^^^^^^^^ function call. Function cannot be called on any member of intersection type
+ 10: (Object(undefined): Number); // error
+      ^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  function type. See: [LIB] core.js:28
+  Error:
+   10: (Object(undefined): Number); // error
+               ^^^^^^^^^ undefined. This type is incompatible with
+  string. See: [LIB] core.js:28
+  Member 2:
+  function type. See: [LIB] core.js:29
+  Error:
+   10: (Object(undefined): Number); // error
+               ^^^^^^^^^ undefined. This type is incompatible with
+  number. See: [LIB] core.js:29
+  Member 3:
+  function type. See: [LIB] core.js:30
+  Error:
+   10: (Object(undefined): Number); // error
+               ^^^^^^^^^ undefined. This type is incompatible with
+  boolean. See: [LIB] core.js:30
+  Member 4:
+  function type. See: [LIB] core.js:31
+  Error:
+   10: (Object(undefined): Number); // error
+        ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   10: (Object(undefined): Number); // error
+                           ^^^^^^ Number
+  Member 5:
+  polymorphic type: function type. See: [LIB] core.js:32
+  Error:
+   10: (Object(undefined): Number); // error
+               ^^^^^^^^^ undefined. This type is incompatible with
+  object type. See: [LIB] core.js:32
 
-conversion.js:10:2,18: function call
-Function cannot be called on any member of intersection type
-conversion.js:10:2,18: intersection
-Member 1:
-[LIB] core.js:28:5,30: function type
-Error:
-conversion.js:10:9,17: undefined
-This type is incompatible with
-[LIB] core.js:28:16,21: string
-Member 2:
-[LIB] core.js:29:5,30: function type
-Error:
-conversion.js:10:9,17: undefined
-This type is incompatible with
-[LIB] core.js:29:16,21: number
-Member 3:
-[LIB] core.js:30:5,32: function type
-Error:
-conversion.js:10:9,17: undefined
-This type is incompatible with
-[LIB] core.js:30:16,22: boolean
-Member 4:
-[LIB] core.js:31:5,40: function type
-Error:
-conversion.js:10:2,18: object type
-This type is incompatible with
-conversion.js:10:21,26: Number
-Member 5:
-[LIB] core.js:32:5,31: polymorphic type: function type
-Error:
-conversion.js:10:9,17: undefined
-This type is incompatible with
-[LIB] core.js:32:16,21: object type
+conversion.js:18
+ 18: var z = Object(123); // error (next line makes this not match any signatures)
+             ^^^^^^^^^^^ function call. Function cannot be called on any member of intersection type
+ 18: var z = Object(123); // error (next line makes this not match any signatures)
+             ^^^^^^^^^^^ intersection
+  Member 1:
+  function type. See: [LIB] core.js:28
+  Error:
+   18: var z = Object(123); // error (next line makes this not match any signatures)
+                      ^^^ number. This type is incompatible with
+  string. See: [LIB] core.js:28
+  Member 2:
+  function type. See: [LIB] core.js:29
+  Error:
+   19: (z.charAt(0): string);
+          ^^^^^^ property `charAt`. Property not found in
+   19: (z.charAt(0): string);
+        ^ Number
+  Member 3:
+  function type. See: [LIB] core.js:30
+  Error:
+   18: var z = Object(123); // error (next line makes this not match any signatures)
+                      ^^^ number. This type is incompatible with
+  boolean. See: [LIB] core.js:30
+  Member 4:
+  function type. See: [LIB] core.js:31
+  Error:
+   18: var z = Object(123); // error (next line makes this not match any signatures)
+                      ^^^ number. This type is incompatible with
+  undefined. See: [LIB] core.js:31
+  Member 5:
+  polymorphic type: function type. See: [LIB] core.js:32
+  Error:
+   18: var z = Object(123); // error (next line makes this not match any signatures)
+                      ^^^ number. This type is incompatible with
+  object type. See: [LIB] core.js:32
 
-conversion.js:18:9,19: function call
-Function cannot be called on any member of intersection type
-conversion.js:18:9,19: intersection
-Member 1:
-[LIB] core.js:28:5,30: function type
-Error:
-conversion.js:18:16,18: number
-This type is incompatible with
-[LIB] core.js:28:16,21: string
-Member 2:
-[LIB] core.js:29:5,30: function type
-Error:
-conversion.js:19:4,9: property `charAt`
-Property not found in
-conversion.js:19:2,2: Number
-Member 3:
-[LIB] core.js:30:5,32: function type
-Error:
-conversion.js:18:16,18: number
-This type is incompatible with
-[LIB] core.js:30:16,22: boolean
-Member 4:
-[LIB] core.js:31:5,40: function type
-Error:
-conversion.js:18:16,18: number
-This type is incompatible with
-[LIB] core.js:31:17,20: undefined
-Member 5:
-[LIB] core.js:32:5,31: polymorphic type: function type
-Error:
-conversion.js:18:16,18: number
-This type is incompatible with
-[LIB] core.js:32:16,21: object type
+objects.js:4
+  4: (x.foo : string);     // error, key doesn't exist
+        ^^^ property `foo`. Property not found in
+  4: (x.foo : string);     // error, key doesn't exist
+      ^ object type
 
-objects.js:4:4,6: property `foo`
-Property not found in
-objects.js:4:2,2: object type
+objects.js:5
+  5: (x['foo'] : string);  // error, key doesn't exist
+        ^^^^^ property `foo`. Property not found in
+  5: (x['foo'] : string);  // error, key doesn't exist
+      ^ object type
 
-objects.js:5:4,8: property `foo`
-Property not found in
-objects.js:5:2,2: object type
+objects.js:7
+  7: (x.bar: boolean);     // error, string !~> boolean
+      ^^^^^ string. This type is incompatible with
+  7: (x.bar: boolean);     // error, string !~> boolean
+             ^^^^^^^ boolean
 
-objects.js:7:2,6: string
-This type is incompatible with
-objects.js:7:9,15: boolean
+objects.js:8
+  8: (x['123'] : boolean); // error, string !~> boolean
+      ^^^^^^^^ string. This type is incompatible with
+  8: (x['123'] : boolean); // error, string !~> boolean
+                 ^^^^^^^ boolean
 
-objects.js:8:2,9: string
-This type is incompatible with
-objects.js:8:13,19: boolean
+objects.js:9
+  9: x['123'] = false;     // error, boolean !~> string
+                ^^^^^ boolean. This type is incompatible with
+  3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                     ^^^^^^ string
 
-objects.js:9:12,16: boolean
-This type is incompatible with
-objects.js:3:17,22: string
+objects.js:14
+ 14: y['foo'] = 123; // error, number !~> string
+                ^^^ number. This type is incompatible with
+ 13: var y : {foo: string} = {foo: 'bar'};
+                   ^^^^^^ string
 
-objects.js:14:12,14: number
-This type is incompatible with
-objects.js:13:15,20: string
+objects.js:15
+ 15: y['bar'] = 'abc'; // error, property not found
+       ^^^^^ property `bar`. Property not found in
+ 15: y['bar'] = 'abc'; // error, property not found
+     ^ object type
 
-objects.js:15:3,7: property `bar`
-Property not found in
-objects.js:15:1,1: object type
+objects.js:17
+ 17: (y['hasOwnProperty']: string); // error, prototype method is not a string
+      ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+ 17: (y['hasOwnProperty']: string); // error, prototype method is not a string
+                           ^^^^^^ string
 
-objects.js:17:2,20: function type
-This type is incompatible with
-objects.js:17:23,28: string
+unaliased_assign.js:18
+ 18:   var obj: { x: string | number };
+                              ^^^^^^ number. This type is incompatible with
+ 15: var glob: { x: string } = { x: "hey" };
+                    ^^^^^^ string
 
-unaliased_assign.js:18:26,31: number
-This type is incompatible with
-unaliased_assign.js:15:16,21: string
 
 Found 11 errors

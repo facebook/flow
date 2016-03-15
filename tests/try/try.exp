@@ -1,48 +1,74 @@
+init.js:34
+ 34:     var y:number = x; // error
+                        ^ possibly uninitialized variable. This type is incompatible with
+ 34:     var y:number = x; // error
+               ^^^^^^ number
 
-init.js:34:20,20: possibly uninitialized variable
-This type is incompatible with
-init.js:34:11,16: number
+init.js:44
+ 44:     var y:number = x; // error
+                        ^ possibly uninitialized variable. This type is incompatible with
+ 44:     var y:number = x; // error
+               ^^^^^^ number
 
-init.js:44:20,20: possibly uninitialized variable
-This type is incompatible with
-init.js:44:11,16: number
+init.js:54
+ 54:     var y:number = x; // error
+                        ^ possibly uninitialized variable. This type is incompatible with
+ 54:     var y:number = x; // error
+               ^^^^^^ number
 
-init.js:54:20,20: possibly uninitialized variable
-This type is incompatible with
-init.js:54:11,16: number
+init.js:66
+ 66:     var y:number = x; // error
+                        ^ possibly uninitialized variable. This type is incompatible with
+ 66:     var y:number = x; // error
+               ^^^^^^ number
 
-init.js:66:20,20: possibly uninitialized variable
-This type is incompatible with
-init.js:66:11,16: number
+init.js:118
+118:   var y:number = x; // error
+                      ^ uninitialized variable. This type is incompatible with
+118:   var y:number = x; // error
+             ^^^^^^ number
 
-init.js:118:18,18: uninitialized variable
-This type is incompatible with
-init.js:118:9,14: number
+init.js:131
+131:   var y:number = x; // error
+                      ^ possibly uninitialized variable. This type is incompatible with
+131:   var y:number = x; // error
+             ^^^^^^ number
 
-init.js:131:18,18: possibly uninitialized variable
-This type is incompatible with
-init.js:131:9,14: number
+init.js:140
+140:   var y:number = x; // error
+                      ^ possibly uninitialized variable. This type is incompatible with
+140:   var y:number = x; // error
+             ^^^^^^ number
 
-init.js:140:18,18: possibly uninitialized variable
-This type is incompatible with
-init.js:140:9,14: number
+init.js:153
+153:   var y:number = x; // error
+                      ^ possibly uninitialized variable. This type is incompatible with
+153:   var y:number = x; // error
+             ^^^^^^ number
 
-init.js:153:18,18: possibly uninitialized variable
-This type is incompatible with
-init.js:153:9,14: number
+return.js:28
+ 28:   return "bar"; // unreachable
+       ^^^^^^^^^^^^^ unreachable code
 
-return.js:28:3,15: unreachable code
+return.js:64
+ 64:   bar(); // unreachable
+       ^^^^^^ unreachable code
 
-return.js:64:3,8: unreachable code
+test.js:18
+ 18:     x(); // string ~/> function call (no num or bool error)
+         ^^^ function call. Function cannot be called on
+ 18:     x(); // string ~/> function call (no num or bool error)
+         ^ string
 
-test.js:18:5,7: function call
-Function cannot be called on
-test.js:18:5,5: string
+test.js:19
+ 19:     y(); // object ~/> function call (no uninitialized error)
+         ^^^ function call. Callable signature not found in
+ 19:     y(); // object ~/> function call (no uninitialized error)
+         ^ object literal
 
-test.js:19:5,7: function call
-Callable signature not found in
-test.js:19:5,5: object literal
+test.js:41
+ 41:     x(); // unreachable
+         ^^^^ unreachable code
 
-test.js:41:5,8: unreachable code
 
 Found 13 errors

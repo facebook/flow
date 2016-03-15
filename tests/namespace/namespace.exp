@@ -1,58 +1,80 @@
+client.js:3
+  3: var bar: string = ns.foo
+                       ^^^^^^ number. This type is incompatible with
+  3: var bar: string = ns.foo
+              ^^^^^^ string
 
-client.js:3:19,24: number
-This type is incompatible with
-client.js:3:10,15: string
+namespace.js:2
+  2: type T = (x:number) => void;
+                 ^^^^^^ number. This type is incompatible with
+  3: var f: T = function(x:string): void { }
+                           ^^^^^^ string
 
-namespace.js:2:13,18: number
-This type is incompatible with
-namespace.js:3:23,28: string
+namespace.js:11
+ 11: var y:number = bar(0, x => "");
+                    ^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 11: var y:number = bar(0, x => "");
+           ^^^^^^ number
 
-namespace.js:11:16,30: string
-This type is incompatible with
-namespace.js:11:7,12: number
+namespace.js:15
+ 15: var s2:Seq = [[""]];
+                  ^^^^^^ array literal. This type is incompatible with
+ 15: var s2:Seq = [[""]];
+            ^^^ union: number | array type
+  Member 1:
+   13: type Seq = number | Array<Seq>;
+                  ^^^^^^ number
+  Error:
+   15: var s2:Seq = [[""]];
+                    ^^^^^^ array literal. This type is incompatible with
+   13: type Seq = number | Array<Seq>;
+                  ^^^^^^ number
+  Member 2:
+   13: type Seq = number | Array<Seq>;
+                           ^^^^^^^^^^ array type
+  Error:
+   15: var s2:Seq = [[""]];
+                     ^^^^ array literal. This type is incompatible with
+   13: type Seq = number | Array<Seq>;
+                                 ^^^ union: number | array type
+    Member 1:
+     13: type Seq = number | Array<Seq>;
+                    ^^^^^^ number
+    Error:
+     15: var s2:Seq = [[""]];
+                       ^^^^ array literal. This type is incompatible with
+     13: type Seq = number | Array<Seq>;
+                    ^^^^^^ number
+    Member 2:
+     13: type Seq = number | Array<Seq>;
+                             ^^^^^^^^^^ array type
+    Error:
+     15: var s2:Seq = [[""]];
+                        ^^ string. This type is incompatible with
+     13: type Seq = number | Array<Seq>;
+                                   ^^^ union: number | array type
+      Member 1:
+       13: type Seq = number | Array<Seq>;
+                      ^^^^^^ number
+      Error:
+       15: var s2:Seq = [[""]];
+                          ^^ string. This type is incompatible with
+       13: type Seq = number | Array<Seq>;
+                      ^^^^^^ number
+      Member 2:
+       13: type Seq = number | Array<Seq>;
+                               ^^^^^^^^^^ array type
+      Error:
+       15: var s2:Seq = [[""]];
+                          ^^ string. This type is incompatible with
+       13: type Seq = number | Array<Seq>;
+                               ^^^^^^^^^^ array type
 
-namespace.js:15:14,19: array literal
-This type is incompatible with
-namespace.js:15:8,10: union: number | array type
-Member 1:
-namespace.js:13:12,17: number
-Error:
-namespace.js:15:14,19: array literal
-This type is incompatible with
-namespace.js:13:12,17: number
-Member 2:
-namespace.js:13:21,30: array type
-Error:
-namespace.js:15:15,18: array literal
-This type is incompatible with
-namespace.js:13:27,29: union: number | array type
-Member 1:
-namespace.js:13:12,17: number
-Error:
-namespace.js:15:15,18: array literal
-This type is incompatible with
-namespace.js:13:12,17: number
-Member 2:
-namespace.js:13:21,30: array type
-Error:
-namespace.js:15:16,17: string
-This type is incompatible with
-namespace.js:13:27,29: union: number | array type
-Member 1:
-namespace.js:13:12,17: number
-Error:
-namespace.js:15:16,17: string
-This type is incompatible with
-namespace.js:13:12,17: number
-Member 2:
-namespace.js:13:21,30: array type
-Error:
-namespace.js:15:16,17: string
-This type is incompatible with
-namespace.js:13:21,30: array type
+namespace.js:17
+ 17: module.exports = { foo: ("": number) };
+                              ^^ string. This type is incompatible with
+ 17: module.exports = { foo: ("": number) };
+                                  ^^^^^^ number
 
-namespace.js:17:26,27: string
-This type is incompatible with
-namespace.js:17:30,35: number
 
 Found 5 errors

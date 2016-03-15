@@ -1,94 +1,134 @@
+generic.js:1
+  1: function x<T>(x: T = 0) {}
+                          ^ number. This type is incompatible with
+  1: function x<T>(x: T = 0) {}
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-generic.js:1:22,22: number
-This type is incompatible with
-generic.js:1:1,26: some incompatible instantiation of `T`
+generic.js:4
+  4:   x<T>(x: T = 0) {}
+                   ^ number. This type is incompatible with
+  4:   x<T>(x: T = 0) {}
+       ^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-generic.js:4:15,15: number
-This type is incompatible with
-generic.js:4:3,19: some incompatible instantiation of `T`
+nullable.js:17
+ 17:     x.y++; // should error
+         ^^^ null. This type is incompatible with
+ 17:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:17:5,7: null
-This type is incompatible with
-nullable.js:17:5,9: number
+nullable.js:17
+ 17:     x.y++; // should error
+         ^^^ undefined. This type is incompatible with
+ 17:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:17:5,7: undefined
-This type is incompatible with
-nullable.js:17:5,9: number
+nullable.js:23
+ 23:     x.y++; // should error
+         ^^^ null. This type is incompatible with
+ 23:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:23:5,7: null
-This type is incompatible with
-nullable.js:23:5,9: number
+nullable.js:23
+ 23:     x.y++; // should error
+         ^^^ undefined. This type is incompatible with
+ 23:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:23:5,7: undefined
-This type is incompatible with
-nullable.js:23:5,9: number
+nullable.js:29
+ 29:     x.y++; // should error
+         ^^^ null. This type is incompatible with
+ 29:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:29:5,7: null
-This type is incompatible with
-nullable.js:29:5,9: number
+nullable.js:29
+ 29:     x.y++; // should error
+         ^^^ undefined. This type is incompatible with
+ 29:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:29:5,7: undefined
-This type is incompatible with
-nullable.js:29:5,9: number
+nullable.js:35
+ 35:     x.y++; // should error
+         ^^^ null. This type is incompatible with
+ 35:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:35:5,7: null
-This type is incompatible with
-nullable.js:35:5,9: number
+nullable.js:35
+ 35:     x.y++; // should error
+         ^^^ undefined. This type is incompatible with
+ 35:     x.y++; // should error
+         ^^^^^ number
 
-nullable.js:35:5,7: undefined
-This type is incompatible with
-nullable.js:35:5,9: number
+optional.js:1
+  1: function bar(x?,y?) { x * 0; }
+                           ^ undefined. This type is incompatible with
+  1: function bar(x?,y?) { x * 0; }
+                           ^^^^^ number
 
-optional.js:1:23,23: undefined
-This type is incompatible with
-optional.js:1:23,27: number
+optional.js:7
+  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
+                  ^ parameter `x`. Missing annotation
 
-optional.js:7:14,14: parameter `x`
-Missing annotation
+optional.js:7
+  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
+                               ^ element of rest parameter `y`. Missing annotation
 
-optional.js:7:27,27: element of rest parameter `y`
-Missing annotation
+optional.js:7
+  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
+                                           ^^^^^^ function call
+  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
+                                               ^ string. This type is incompatible with
+  4: var foo:(x?:number)=>void = bar;
+                 ^^^^^^ number
 
-optional.js:7:39,44: function call
-Error:
-optional.js:7:43,43: string
-This type is incompatible with
-optional.js:4:13,18: number
+optional.js:9
+  9: qux(0,0);
+     ^^^^^^^^ function call
+  9: qux(0,0);
+           ^ number. This type is incompatible with
+  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
+                                  ^^^^^^ string
 
-optional.js:9:1,8: function call
-Error:
-optional.js:9:7,7: number
-This type is incompatible with
-optional.js:7:30,35: string
+optional.js:10
+ 10: qux(0,...["",42]);
+     ^^^^^^^^^^^^^^^^^ function call
+ 10: qux(0,...["",42]);
+                  ^^ number. This type is incompatible with
+  7: function qux(x="hello",...y):string { foo(x); return y[0]; }
+                                  ^^^^^^ string
 
-optional.js:10:1,17: function call
-Error:
-optional.js:10:14,15: number
-This type is incompatible with
-optional.js:7:30,35: string
+optional_param2.js:7
+  7: var j:I<number> = i.map(id => id);
+                                   ^^ undefined. This type is incompatible with
+  7: var j:I<number> = i.map(id => id);
+             ^^^^^^ number
 
-optional_param2.js:7:31,32: undefined
-This type is incompatible with
-optional_param2.js:7:9,14: number
+optional_param4.js:12
+ 12: foo(true); // ERROR boolean ~> number
+     ^^^^^^^^^ function call
+ 12: foo(true); // ERROR boolean ~> number
+         ^^^^ boolean. This type is incompatible with
+  3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
+                      ^^^^^^ number
 
-optional_param4.js:12:1,9: function call
-Error:
-optional_param4.js:12:5,8: boolean
-This type is incompatible with
-optional_param4.js:3:18,23: number
+optional_param4.js:13
+ 13: foo(123, true); // ERROR boolean ~> string
+     ^^^^^^^^^^^^^^ function call
+ 13: foo(123, true); // ERROR boolean ~> string
+              ^^^^ boolean. This type is incompatible with
+  3: function foo(x?: number, ...y: Array<string>): [?number, Array<string>] {
+                                          ^^^^^^ string
 
-optional_param4.js:13:1,14: function call
-Error:
-optional_param4.js:13:10,13: boolean
-This type is incompatible with
-optional_param4.js:3:38,43: string
+undefined.js:8
+  8:     return x.duck;
+                  ^^^^ property `duck`. Property cannot be accessed on possibly undefined value
+  8:     return x.duck;
+                ^ undefined
 
-undefined.js:8:14,17: property `duck`
-Property cannot be accessed on possibly undefined value
-undefined.js:8:12,12: undefined
+undefined2.js:8
+  8:     return x.duck;
+                  ^^^^ property `duck`. Property cannot be accessed on possibly undefined value
+  8:     return x.duck;
+                ^ undefined
 
-undefined2.js:8:14,17: property `duck`
-Property cannot be accessed on possibly undefined value
-undefined2.js:8:12,12: undefined
 
 Found 21 errors

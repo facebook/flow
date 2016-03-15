@@ -1,54 +1,80 @@
+builtin.js:11
+ 11: var lengthTest3: IHasLength = 123; // number doesn't have length
+                      ^^^^^^^^^^ property `length` of IHasLength. Property not found in
+ 11: var lengthTest3: IHasLength = 123; // number doesn't have length
+                                   ^^^ number
 
-builtin.js:11:18,27: property `length` of IHasLength
-Property not found in
-builtin.js:11:31,33: number
+builtin.js:12
+ 12: var lengthTest4: IHasLength = true; // bool doesn't have length
+                      ^^^^^^^^^^ property `length` of IHasLength. Property not found in
+ 12: var lengthTest4: IHasLength = true; // bool doesn't have length
+                                   ^^^^ boolean
 
-builtin.js:12:18,27: property `length` of IHasLength
-Property not found in
-builtin.js:12:31,34: boolean
+class.js:6
+  6:   x: string;
+          ^^^^^^ string. This type is incompatible with
+ 14:   x: number;
+          ^^^^^^ number
 
-class.js:6:6,11: string
-This type is incompatible with
-class.js:14:6,11: number
+class.js:14
+ 14:   x: number;
+          ^^^^^^ number. This type is incompatible with
+  6:   x: string;
+          ^^^^^^ string
 
-class.js:14:6,11: number
-This type is incompatible with
-class.js:6:6,11: string
+class.js:23
+ 23: var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
+                        ^^^^^^^^^^^ property `y` of IHasYString. Property not found in
+ 23: var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
+                                      ^^^^^^^^^^^^^^^^^^^^^^ ClassWithXString
 
-class.js:23:20,30: property `y` of IHasYString
-Property not found in
-class.js:23:34,55: ClassWithXString
+obj.js:6
+  6:   x: string;
+          ^^^^^^ string. This type is incompatible with
+ 10: var propTest2: IHasXString = { x: 123 }; // Error string != number
+                                       ^^^ number
 
-obj.js:6:6,11: string
-This type is incompatible with
-obj.js:10:35,37: number
+obj.js:6
+  6:   x: string;
+          ^^^^^^ string. This type is incompatible with
+ 18: function propTest6(y: {[key: string]: number}) {
+                                           ^^^^^^ number
 
-obj.js:6:6,11: string
-This type is incompatible with
-obj.js:18:39,44: number
+obj.js:10
+ 10: var propTest2: IHasXString = { x: 123 }; // Error string != number
+                                       ^^^ number. This type is incompatible with
+  6:   x: string;
+          ^^^^^^ string
 
-obj.js:10:35,37: number
-This type is incompatible with
-obj.js:6:6,11: string
+obj.js:11
+ 11: var propTest3: IHasXString = {}; // Property not found
+                    ^^^^^^^^^^^ property `x` of IHasXString. Property not found in
+ 11: var propTest3: IHasXString = {}; // Property not found
+                                  ^^ object literal
 
-obj.js:11:16,26: property `x` of IHasXString
-Property not found in
-obj.js:11:30,31: object literal
+obj.js:18
+ 18: function propTest6(y: {[key: string]: number}) {
+                                           ^^^^^^ number. This type is incompatible with
+  6:   x: string;
+          ^^^^^^ string
 
-obj.js:18:39,44: number
-This type is incompatible with
-obj.js:6:6,11: string
+optional.js:5
+  5:   b?: number,
+           ^^^^^^ number. This type is incompatible with
+ 12: var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
+                                               ^^^^ boolean
 
-optional.js:5:7,12: number
-This type is incompatible with
-optional.js:12:43,46: boolean
+optional.js:10
+ 10: var test2: HasOptional = {}; // Error: missing property a
+                ^^^^^^^^^^^ property `a` of HasOptional. Property not found in
+ 10: var test2: HasOptional = {}; // Error: missing property a
+                              ^^ object literal
 
-optional.js:10:12,22: property `a` of HasOptional
-Property not found in
-optional.js:10:26,27: object literal
+optional.js:12
+ 12: var test3: HasOptional = { a: "hello", b: true }; // Error: boolean ~> number
+                                               ^^^^ boolean. This type is incompatible with
+  5:   b?: number,
+           ^^^^^^ number
 
-optional.js:12:43,46: boolean
-This type is incompatible with
-optional.js:5:7,12: number
 
 Found 13 errors

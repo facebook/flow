@@ -1,32 +1,44 @@
+class_statics.js:6
+  6: C.g = function(x:string) { C.f(x); };
+       ^ property `g`. Property not found in
+  6: C.g = function(x:string) { C.f(x); };
+     ^ statics of C
 
-class_statics.js:6:3,3: property `g`
-Property not found in
-class_statics.js:6:1,1: statics of C
+class_statics.js:6
+  6: C.g = function(x:string) { C.f(x); };
+                                ^^^^^^ call of method `f`
+  6: C.g = function(x:string) { C.f(x); };
+                                    ^ string. This type is incompatible with
+  2:   static f(x:number) { }
+                  ^^^^^^ number
 
-class_statics.js:6:28,33: call of method `f`
-Error:
-class_statics.js:6:32,32: string
-This type is incompatible with
-class_statics.js:2:14,19: number
+class_statics.js:7
+  7: C.g(0);
+     ^^^^^^ call of method `g`
+  7: C.g(0);
+         ^ number. This type is incompatible with
+  6: C.g = function(x:string) { C.f(x); };
+                      ^^^^^^ string
 
-class_statics.js:7:1,6: call of method `g`
-Error:
-class_statics.js:7:5,5: number
-This type is incompatible with
-class_statics.js:6:18,23: string
+class_statics.js:9
+  9: var x:number = C.x;
+                    ^^^ string. This type is incompatible with
+  9: var x:number = C.x;
+           ^^^^^^ number
 
-class_statics.js:9:16,18: string
-This type is incompatible with
-class_statics.js:9:7,12: number
+class_statics.js:10
+ 10: C.x = 0;
+     ^^^ assignment of property `x`
+ 10: C.x = 0;
+           ^ number. This type is incompatible with
+  3:   static x:string;
+                ^^^^^^ string
 
-class_statics.js:10:1,3: assignment of property `x`
-Error:
-class_statics.js:10:7,7: number
-This type is incompatible with
-class_statics.js:3:12,17: string
+funstatics.js:5
+  5: var x:string = new C().f();
+                    ^^^^^^^^^^^ number. This type is incompatible with
+  5: var x:string = new C().f();
+           ^^^^^^ string
 
-funstatics.js:5:16,26: number
-This type is incompatible with
-funstatics.js:5:7,12: string
 
 Found 6 errors

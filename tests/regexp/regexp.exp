@@ -1,8 +1,10 @@
+regexp.js:2
+  2: var match:number = patt.test("Hello world!");
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `test`
+  2: var match:number = patt.test("Hello world!");
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
+  2: var match:number = patt.test("Hello world!");
+               ^^^^^^ number
 
-regexp.js:2:20,44: call of method `test`
-Error:
-regexp.js:2:20,44: boolean
-This type is incompatible with
-regexp.js:2:11,16: number
 
 Found 1 error

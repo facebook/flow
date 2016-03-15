@@ -1,41 +1,54 @@
+foo/bar/nested_test.js:9
+  9: var unreachable = require('annotation');
+                       ^^^^^^^^^^^^^^^^^^^^^ annotation. Required module not found
 
-foo/bar/nested_test.js:9:19,39: annotation
-Required module not found
+foo/bar/nested_test.js:11
+ 11: (docblock.fun(): string);
+      ^^^^^^^^^^^^^^ call of method `fun`
+ 11: (docblock.fun(): string);
+      ^^^^^^^^^^^^^^ number. This type is incompatible with
+ 11: (docblock.fun(): string);
+                      ^^^^^^ string
 
-foo/bar/nested_test.js:11:2,15: call of method `fun`
-Error:
-foo/bar/nested_test.js:11:2,15: number
-This type is incompatible with
-foo/bar/nested_test.js:11:18,23: string
+foo/bar/nested_test.js:12
+ 12: (min.fun(): string);
+      ^^^^^^^^^ call of method `fun`
+ 12: (min.fun(): string);
+      ^^^^^^^^^ number. This type is incompatible with
+ 12: (min.fun(): string);
+                 ^^^^^^ string
 
-foo/bar/nested_test.js:12:2,10: call of method `fun`
-Error:
-foo/bar/nested_test.js:12:2,10: number
-This type is incompatible with
-foo/bar/nested_test.js:12:13,18: string
+foo/bar/nested_test.js:13
+ 13: (corge.fun(): string);
+      ^^^^^^^^^^^ call of method `fun`
+ 13: (corge.fun(): string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+ 13: (corge.fun(): string);
+                   ^^^^^^ string
 
-foo/bar/nested_test.js:13:2,12: call of method `fun`
-Error:
-foo/bar/nested_test.js:13:2,12: number
-This type is incompatible with
-foo/bar/nested_test.js:13:15,20: string
+test.js:4
+  4: (Implicit.fun(): string);
+      ^^^^^^^^^^^^^^ call of method `fun`
+  4: (Implicit.fun(): string);
+      ^^^^^^^^^^^^^^ number. This type is incompatible with
+  4: (Implicit.fun(): string);
+                      ^^^^^^ string
 
-test.js:4:2,15: call of method `fun`
-Error:
-test.js:4:2,15: number
-This type is incompatible with
-test.js:4:18,23: string
+test.js:7
+  7: (ExplicitSameName.fun(): string);
+      ^^^^^^^^^^^^^^^^^^^^^^ call of method `fun`
+  7: (ExplicitSameName.fun(): string);
+      ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  7: (ExplicitSameName.fun(): string);
+                              ^^^^^^ string
 
-test.js:7:2,23: call of method `fun`
-Error:
-test.js:7:2,23: number
-This type is incompatible with
-test.js:7:26,31: string
+test.js:10
+ 10: (ExplicitDifferentName.fun(): string);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `fun`
+ 10: (ExplicitDifferentName.fun(): string);
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): string);
+                                   ^^^^^^ string
 
-test.js:10:2,28: call of method `fun`
-Error:
-test.js:10:2,28: number
-This type is incompatible with
-test.js:10:31,36: string
 
 Found 7 errors

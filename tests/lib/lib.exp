@@ -1,20 +1,28 @@
+libtest.js:1
+  1: var x:string = NaN
+                    ^^^ number. This type is incompatible with
+  1: var x:string = NaN
+           ^^^^^^ string
 
-libtest.js:1:16,18: number
-This type is incompatible with
-libtest.js:1:7,12: string
+libtest.js:2
+  2: var y:string = Number.MAX_VALUE;
+                    ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  2: var y:string = Number.MAX_VALUE;
+           ^^^^^^ string
 
-libtest.js:2:16,31: number
-This type is incompatible with
-libtest.js:2:7,12: string
+libtest.js:3
+  3: var z:number = new TypeError().name;
+                    ^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: var z:number = new TypeError().name;
+           ^^^^^^ number
 
-libtest.js:3:16,35: string
-This type is incompatible with
-libtest.js:3:7,12: number
+libtest.js:4
+  4: var w:string = parseInt("...");
+                    ^^^^^^^^^^^^^^^ function call
+  4: var w:string = parseInt("...");
+                    ^^^^^^^^^^^^^^^ number. This type is incompatible with
+  4: var w:string = parseInt("...");
+           ^^^^^^ string
 
-libtest.js:4:16,30: function call
-Error:
-libtest.js:4:16,30: number
-This type is incompatible with
-libtest.js:4:7,12: string
 
 Found 4 errors

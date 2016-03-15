@@ -1,6 +1,8 @@
+docblock.js:34
+ 34: C.o = {
+       ^ property `o`. Property not found in
+ 34: C.o = {
+     ^ statics of C
 
-docblock.js:34:3,3: property `o`
-Property not found in
-docblock.js:34:1,1: statics of C
 
 Found 1 error

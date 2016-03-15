@@ -1,22 +1,32 @@
+enum_client.js:6
+  6: foo("LOCATION"); // error
+         ^^^^^^^^^^ string literal `LOCATION`. Property not found in
+  1: var APIKeys = require('./enum');
+                   ^^^^^^^^^^^^^^^^^ object literal
 
-enum_client.js:6:5,14: string literal `LOCATION`
-Property not found in
-enum_client.js:1:15,31: object literal
+enum_client.js:10
+ 10: bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
+         ^^^^^^^^^^^^ string literal `name`. Property not found in
+  8: function bar(x: $Keys<{age: number}>) { }
+                           ^^^^^^^^^^^^^ object type
 
-enum_client.js:10:5,16: string literal `name`
-Property not found in
-enum_client.js:8:23,35: object type
+enum_client.js:17
+ 17: var name:number = object[APIKeys.NAME]; // error: object.name is a string
+                       ^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 17: var name:number = object[APIKeys.NAME]; // error: object.name is a string
+              ^^^^^^ number
 
-enum_client.js:17:19,38: string
-This type is incompatible with
-enum_client.js:17:10,15: number
+enum_client.js:21
+ 21: var red:string = tuple[indices.red]; // error: tuple[0] is a number
+                      ^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 21: var red:string = tuple[indices.red]; // error: tuple[0] is a number
+             ^^^^^^ string
 
-enum_client.js:21:18,35: number
-This type is incompatible with
-enum_client.js:21:9,14: string
+number.js:6
+  6:   return -x;
+              ^^ unary minus operator. Expected number instead of
+  6:   return -x;
+               ^ string
 
-number.js:6:10,11: unary minus operator
-Expected number instead of
-number.js:6:11,11: string
 
 Found 5 errors

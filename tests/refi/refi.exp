@@ -1,142 +1,212 @@
+bound.js:9
+  9:     var y : string = x;  // not ok
+                          ^ null. This type is incompatible with
+  9:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-bound.js:9:22,22: null
-This type is incompatible with
-bound.js:9:13,18: string
+bound.js:9
+  9:     var y : string = x;  // not ok
+                          ^ undefined. This type is incompatible with
+  9:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-bound.js:9:22,22: undefined
-This type is incompatible with
-bound.js:9:13,18: string
+bound.js:47
+ 47:     var y : string = x;  // not ok
+                          ^ null. This type is incompatible with
+ 47:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-bound.js:47:22,22: null
-This type is incompatible with
-bound.js:47:13,18: string
+bound.js:47
+ 47:     var y : string = x;  // not ok
+                          ^ undefined. This type is incompatible with
+ 47:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-bound.js:47:22,22: undefined
-This type is incompatible with
-bound.js:47:13,18: string
+bound.js:53
+ 53:       var y : string = x;  // not ok
+                            ^ null. This type is incompatible with
+ 53:       var y : string = x;  // not ok
+                   ^^^^^^ string
 
-bound.js:53:24,24: null
-This type is incompatible with
-bound.js:53:15,20: string
+bound.js:53
+ 53:       var y : string = x;  // not ok
+                            ^ undefined. This type is incompatible with
+ 53:       var y : string = x;  // not ok
+                   ^^^^^^ string
 
-bound.js:53:24,24: undefined
-This type is incompatible with
-bound.js:53:15,20: string
+heap.js:5
+  5:     var y : string = x.p;  // not ok
+                          ^^^ null. This type is incompatible with
+  5:     var y : string = x.p;  // not ok
+                 ^^^^^^ string
 
-heap.js:5:22,24: null
-This type is incompatible with
-heap.js:5:13,18: string
+heap.js:5
+  5:     var y : string = x.p;  // not ok
+                          ^^^ undefined. This type is incompatible with
+  5:     var y : string = x.p;  // not ok
+                 ^^^^^^ string
 
-heap.js:5:22,24: undefined
-This type is incompatible with
-heap.js:5:13,18: string
+heap.js:40
+ 40:       var y : string = x.p;  // not ok
+                            ^^^ null. This type is incompatible with
+ 40:       var y : string = x.p;  // not ok
+                   ^^^^^^ string
 
-heap.js:40:24,26: null
-This type is incompatible with
-heap.js:40:15,20: string
+heap.js:40
+ 40:       var y : string = x.p;  // not ok
+                            ^^^ undefined. This type is incompatible with
+ 40:       var y : string = x.p;  // not ok
+                   ^^^^^^ string
 
-heap.js:40:24,26: undefined
-This type is incompatible with
-heap.js:40:15,20: string
+heap.js:48
+ 48:       var y : string = x.p;  // not ok
+                            ^^^ null. This type is incompatible with
+ 48:       var y : string = x.p;  // not ok
+                   ^^^^^^ string
 
-heap.js:48:24,26: null
-This type is incompatible with
-heap.js:48:15,20: string
+heap.js:55
+ 55:     var y : string = x.p;  // not ok
+                          ^^^ null. This type is incompatible with
+ 55:     var y : string = x.p;  // not ok
+                 ^^^^^^ string
 
-heap.js:55:22,24: null
-This type is incompatible with
-heap.js:55:13,18: string
+heap.js:55
+ 55:     var y : string = x.p;  // not ok
+                          ^^^ undefined. This type is incompatible with
+ 55:     var y : string = x.p;  // not ok
+                 ^^^^^^ string
 
-heap.js:55:22,24: undefined
-This type is incompatible with
-heap.js:55:13,18: string
+heap.js:62
+ 62:       var y : string = x.p;  // not ok
+                            ^^^ null. This type is incompatible with
+ 62:       var y : string = x.p;  // not ok
+                   ^^^^^^ string
 
-heap.js:62:24,26: null
-This type is incompatible with
-heap.js:62:15,20: string
+heap.js:62
+ 62:       var y : string = x.p;  // not ok
+                            ^^^ undefined. This type is incompatible with
+ 62:       var y : string = x.p;  // not ok
+                   ^^^^^^ string
 
-heap.js:62:24,26: undefined
-This type is incompatible with
-heap.js:62:15,20: string
+heap.js:105
+105:       x.y = 123; // error
+                 ^^^ number. This type is incompatible with
+103:     var x : {y: ?string} = {y: null};
+                      ^^^^^^ string
 
-heap.js:105:13,15: number
-This type is incompatible with
-heap.js:103:18,23: string
+heap.js:107
+107:     (x.y: string); // error, this got widened to a number
+          ^^^ number. This type is incompatible with
+107:     (x.y: string); // error, this got widened to a number
+               ^^^^^^ string
 
-heap.js:107:6,8: number
-This type is incompatible with
-heap.js:107:11,16: string
+heap.js:125
+125:     (x.y : string); // error, could also be boolean
+          ^^^ boolean. This type is incompatible with
+125:     (x.y : string); // error, could also be boolean
+                ^^^^^^ string
 
-heap.js:125:6,8: boolean
-This type is incompatible with
-heap.js:125:12,17: string
+heap.js:135
+135:     (x.y : boolean); // error, string
+          ^^^ string. This type is incompatible with
+135:     (x.y : boolean); // error, string
+                ^^^^^^^ boolean
 
-heap.js:135:6,8: string
-This type is incompatible with
-heap.js:135:12,18: boolean
+heap.js:146
+146:     (x.y : string); // error
+          ^^^ null. This type is incompatible with
+146:     (x.y : string); // error
+                ^^^^^^ string
 
-heap.js:146:6,8: null
-This type is incompatible with
-heap.js:146:12,17: string
+heap.js:159
+159:     (x.y : string); // error
+          ^^^ boolean. This type is incompatible with
+159:     (x.y : string); // error
+                ^^^^^^ string
 
-heap.js:159:6,8: boolean
-This type is incompatible with
-heap.js:159:12,17: string
+heap.js:172
+172:     (x.y : string); // error
+          ^^^ boolean. This type is incompatible with
+172:     (x.y : string); // error
+                ^^^^^^ string
 
-heap.js:172:6,8: boolean
-This type is incompatible with
-heap.js:172:12,17: string
+heap.js:172
+172:     (x.y : string); // error
+          ^^^ number. This type is incompatible with
+172:     (x.y : string); // error
+                ^^^^^^ string
 
-heap.js:172:6,8: number
-This type is incompatible with
-heap.js:172:12,17: string
+lex.js:6
+  6:   (x : string); // error: number ~> string
+        ^ number. This type is incompatible with
+  6:   (x : string); // error: number ~> string
+            ^^^^^^ string
 
-lex.js:6:4,4: number
-This type is incompatible with
-lex.js:6:8,13: string
+lex.js:15
+ 15:   (x : string); // error: number ~> string
+        ^ number. This type is incompatible with
+ 15:   (x : string); // error: number ~> string
+            ^^^^^^ string
 
-lex.js:15:4,4: number
-This type is incompatible with
-lex.js:15:8,13: string
+lex.js:25
+ 25:   (x : string); // error: number ~> string
+        ^ number. This type is incompatible with
+ 25:   (x : string); // error: number ~> string
+            ^^^^^^ string
 
-lex.js:25:4,4: number
-This type is incompatible with
-lex.js:25:8,13: string
+lex.js:35
+ 35:   (x : string); // error: number ~> string
+        ^ number. This type is incompatible with
+ 35:   (x : string); // error: number ~> string
+            ^^^^^^ string
 
-lex.js:35:4,4: number
-This type is incompatible with
-lex.js:35:8,13: string
+local.js:5
+  5:     var y : string = x;  // not ok
+                          ^ null. This type is incompatible with
+  5:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-local.js:5:22,22: null
-This type is incompatible with
-local.js:5:13,18: string
+local.js:5
+  5:     var y : string = x;  // not ok
+                          ^ undefined. This type is incompatible with
+  5:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-local.js:5:22,22: undefined
-This type is incompatible with
-local.js:5:13,18: string
+local.js:47
+ 47:     var y : string = x;  // not ok
+                          ^ null. This type is incompatible with
+ 47:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-local.js:47:22,22: null
-This type is incompatible with
-local.js:47:13,18: string
+local.js:47
+ 47:     var y : string = x;  // not ok
+                          ^ undefined. This type is incompatible with
+ 47:     var y : string = x;  // not ok
+                 ^^^^^^ string
 
-local.js:47:22,22: undefined
-This type is incompatible with
-local.js:47:13,18: string
+local.js:54
+ 54:       var y : string = x;  // not ok
+                            ^ null. This type is incompatible with
+ 54:       var y : string = x;  // not ok
+                   ^^^^^^ string
 
-local.js:54:24,24: null
-This type is incompatible with
-local.js:54:15,20: string
+local.js:54
+ 54:       var y : string = x;  // not ok
+                            ^ undefined. This type is incompatible with
+ 54:       var y : string = x;  // not ok
+                   ^^^^^^ string
 
-local.js:54:24,24: undefined
-This type is incompatible with
-local.js:54:15,20: string
+null_tests.js:150
+150:       return super.p;  // not ok
+                  ^^^^^^^ null. This type is incompatible with
+147:   ensure103(): string {
+                    ^^^^^^ string
 
-null_tests.js:150:14,20: null
-This type is incompatible with
-null_tests.js:147:16,21: string
+null_tests.js:150
+150:       return super.p;  // not ok
+                  ^^^^^^^ undefined. This type is incompatible with
+147:   ensure103(): string {
+                    ^^^^^^ string
 
-null_tests.js:150:14,20: undefined
-This type is incompatible with
-null_tests.js:147:16,21: string
 
 Found 35 errors

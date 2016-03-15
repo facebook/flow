@@ -1,40 +1,56 @@
+constructors.js:3
+  3:   this.x = 0; // constructs objects with property x
+       ^^^^^^ assignment of property `x`
+  3:   this.x = 0; // constructs objects with property x
+                ^ number. This type is incompatible with
+ 17:   x: boolean; // error, should have declared x: number instead
+          ^^^^^^^ boolean
 
-constructors.js:3:3,8: assignment of property `x`
-Error:
-constructors.js:3:12,12: number
-This type is incompatible with
-constructors.js:17:6,12: boolean
+constructors.js:5
+  5: Foo.y = 0; // has static property y
+             ^ number. This type is incompatible with
+ 19:   static y: boolean; // error, should have declared static y: number instead
+                 ^^^^^^^ boolean
 
-constructors.js:5:9,9: number
-This type is incompatible with
-constructors.js:19:13,19: boolean
+test.js:2
+  2: var x: string = new Foo().x; // error, found number instead of string
+                               ^ property `x`. Property not found in
+  2: var x: string = new Foo().x; // error, found number instead of string
+                         ^^^ new object
 
-test.js:2:27,27: property `x`
-Property not found in
-test.js:2:21,23: new object
+test.js:3
+  3: var y: string = Foo.y; // error, found number instead of string
+                     ^^^^^ boolean. This type is incompatible with
+  3: var y: string = Foo.y; // error, found number instead of string
+            ^^^^^^ string
 
-test.js:3:17,21: boolean
-This type is incompatible with
-test.js:3:8,13: string
+test.js:4
+  4: var z: string = new Foo().m();
+                     ^^^^^^^^^^^^^ call of method `m`
+  4: var z: string = new Foo().m();
+                     ^^^^^^^^^^^^^ number. This type is incompatible with
+  4: var z: string = new Foo().m();
+            ^^^^^^ string
 
-test.js:4:17,29: call of method `m`
-Error:
-test.js:4:17,29: number
-This type is incompatible with
-test.js:4:8,13: string
+test.js:7
+  7: var x2: string = new Foo2().x; // error, found boolean instead of string
+                      ^^^^^^^^^^^^ boolean. This type is incompatible with
+  7: var x2: string = new Foo2().x; // error, found boolean instead of string
+             ^^^^^^ string
 
-test.js:7:18,29: boolean
-This type is incompatible with
-test.js:7:9,14: string
+test.js:8
+  8: var y2: string = Foo2.y; // error, found boolean instead of string
+                      ^^^^^^ boolean. This type is incompatible with
+  8: var y2: string = Foo2.y; // error, found boolean instead of string
+             ^^^^^^ string
 
-test.js:8:18,23: boolean
-This type is incompatible with
-test.js:8:9,14: string
+test.js:9
+  9: var z2: string = new Foo2().m();
+                      ^^^^^^^^^^^^^^ call of method `m`
+  9: var z2: string = new Foo2().m();
+                      ^^^^^^^^^^^^^^ number. This type is incompatible with
+  9: var z2: string = new Foo2().m();
+             ^^^^^^ string
 
-test.js:9:18,31: call of method `m`
-Error:
-test.js:9:18,31: number
-This type is incompatible with
-test.js:9:9,14: string
 
 Found 8 errors

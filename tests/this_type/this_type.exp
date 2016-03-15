@@ -1,149 +1,208 @@
+class_expr.js:6
+  6:     this.x = 123; // error: property not found (must be declared)
+         ^^^^^^ assignment of property `x`
+  6:     this.x = 123; // error: property not found (must be declared)
+              ^ property `x`. Property not found in
+  4: const Thing = class Thing {
+                   ^ class expr `Thing`
 
-class_expr.js:6:5,10: assignment of property `x`
-Error:
-class_expr.js:6:10,10: property `x`
-Property not found in
-class_expr.js:4:15,8:1: class expr `Thing`
+contra.js:4
+  4:   next: this; // error (see below for exploit): `this` should only appear in
+             ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:4:9,12: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:15
+ 15:   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
+              ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-contra.js:15:10,13: `this` type
-contravariant position (expected `this` to occur only covariantly)
+contra.js:19
+ 19:   foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
+              ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-contra.js:19:10,13: `this` type
-contravariant position (expected `this` to occur only covariantly)
+contra.js:25
+ 25:   out_object(): { _: this } { return { _: this }; }
+                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:25:22,25: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:26
+ 26:   in_object(_: { _: this }) { }
+                         ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:26:21,24: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:27
+ 27:   inout_object: { _: this };
+                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:27:22,25: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:29
+ 29:   out_array(): Array<this> { return [this]; }
+                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:29:22,25: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:30
+ 30:   in_array(_: Array<this>) { }
+                         ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:30:21,24: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:31
+ 31:   inout_array: Array<this>;
+                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:31:22,25: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:38
+ 38:   out_set(): Set<this> { return new Set().add(this); }
+                      ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:38:18,21: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:39
+ 39:   in_set(_: Set<this>) { }
+                     ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:39:17,20: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:40
+ 40:   inout_set: Set<this>;
+                      ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:40:18,21: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:44
+ 44:   in_promise(_: Promise<this>) { }
+                             ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-contra.js:44:25,28: `this` type
-contravariant position (expected `this` to occur only covariantly)
+contra.js:45
+ 45:   inout_promise: Promise<this>;
+                              ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:45:26,29: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:48
+ 48:   *out_generator(): Generator<this,this,this> {
+                                             ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-contra.js:48:41,44: `this` type
-contravariant position (expected `this` to occur only covariantly)
+contra.js:52
+ 52:   in_generator(_: Generator<this,this,this>) { }
+                                 ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-contra.js:52:29,32: `this` type
-contravariant position (expected `this` to occur only covariantly)
+contra.js:52
+ 52:   in_generator(_: Generator<this,this,this>) { }
+                                      ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-contra.js:52:34,37: `this` type
-contravariant position (expected `this` to occur only covariantly)
+contra.js:53
+ 53:   inout_generator: Generator<this,this,this>;
+                                  ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:53:30,33: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:53
+ 53:   inout_generator: Generator<this,this,this>;
+                                       ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:53:35,38: `this` type
-invariant position (expected `this` to occur only covariantly)
+contra.js:53
+ 53:   inout_generator: Generator<this,this,this>;
+                                            ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
 
-contra.js:53:40,43: `this` type
-invariant position (expected `this` to occur only covariantly)
+generics.js:8
+  8: (new ImplicitNumber().val: string) // error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  8: (new ImplicitNumber().val: string) // error: number ~> string
+                                ^^^^^^ string
 
-generics.js:8:2,25: number
-This type is incompatible with
-generics.js:8:28,33: string
+import.js:8
+  8:   foo(): B1 { return new B1(); } // error
+              ^^ B1. This type is incompatible with
+  2:   foo(): this { return this; }
+              ^^^^ some incompatible instantiation of `this`. See: export.js:2
 
-import.js:8:10,11: B1
-This type is incompatible with
-export.js:2:10,13: some incompatible instantiation of `this`
+import.js:14
+ 14:   foo(): B3<X> { return new B3(); } // error
+              ^^^^^ B3. This type is incompatible with
+  7:   foo(): this { return this; }
+              ^^^^ some incompatible instantiation of `this`. See: export.js:7
 
-import.js:14:10,14: B3
-This type is incompatible with
-export.js:7:10,13: some incompatible instantiation of `this`
+import.js:18
+ 18: (new B3().qux(0): string); // error
+      ^^^^^^^^^^^^^^^ call of method `qux`
+ 18: (new B3().qux(0): string); // error
+      ^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 18: (new B3().qux(0): string); // error
+                       ^^^^^^ string
 
-import.js:18:2,16: call of method `qux`
-Error:
-import.js:18:2,16: number
-This type is incompatible with
-import.js:18:19,24: string
+import.js:21
+ 21: ((new B3().bar(): B3<string>): A2<number>); // error
+                          ^^^^^^ string. This type is incompatible with
+ 21: ((new B3().bar(): B3<string>): A2<number>); // error
+                                       ^^^^^^ number
 
-import.js:21:22,27: string
-This type is incompatible with
-import.js:21:35,40: number
+import.js:21
+ 21: ((new B3().bar(): B3<string>): A2<number>); // error
+                                       ^^^^^^ number. This type is incompatible with
+ 21: ((new B3().bar(): B3<string>): A2<number>); // error
+                          ^^^^^^ string
 
-import.js:21:35,40: number
-This type is incompatible with
-import.js:21:22,27: string
+import.js:22
+ 22: ((new B3(): A2<number>).qux(0): string); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `qux`
+ 22: ((new B3(): A2<number>).qux(0): string); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 22: ((new B3(): A2<number>).qux(0): string); // error
+                                     ^^^^^^ string
 
-import.js:22:3,30: call of method `qux`
-Error:
-import.js:22:3,30: number
-This type is incompatible with
-import.js:22:33,38: string
+interface.js:1
+  1: interface I { xs: Array<this>; }
+                             ^^^^ Unexpected use of `this` type
 
-interface.js:1:25,28: Unexpected use of `this` type
+self.js:4
+  4:   bar(): this { return new A().foo(); } // same as returning : A, so error
+                            ^^^^^^^^^^^^^ call of method `foo`
+  4:   bar(): this { return new A().foo(); } // same as returning : A, so error
+                            ^^^^^^^^^^^^^ A. This type is incompatible with
+  4:   bar(): this { return new A().foo(); } // same as returning : A, so error
+              ^^^^ some incompatible instantiation of `this`
 
-self.js:4:24,36: call of method `foo`
-Error:
-self.js:4:24,36: A
-This type is incompatible with
-self.js:4:10,13: some incompatible instantiation of `this`
+statics.js:17
+ 17: (A.make(): B); // error
+      ^^^^^^^^ A. This type is incompatible with
+ 17: (A.make(): B); // error
+                ^ B
 
-statics.js:17:2,9: A
-This type is incompatible with
-statics.js:17:12,12: B
+test.js:23
+ 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+      ^^^^^^^^^^^^^^^^^^^ Base. This type is incompatible with
+ 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+                           ^^^^^^^ Inherit
 
-test.js:23:2,20: Base
-This type is incompatible with
-test.js:23:23,29: Inherit
+test.js:23
+ 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+      ^^^^^^^^^^^^^^^^^^^ Override. This type is incompatible with
+ 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
+                           ^^^^^^^ Inherit
 
-test.js:23:2,20: Override
-This type is incompatible with
-test.js:23:23,29: Inherit
+test.js:29
+ 29: (new InheritOverride().bar_caller(): InheritOverride); // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Base. This type is incompatible with
+ 29: (new InheritOverride().bar_caller(): InheritOverride); // error
+                                          ^^^^^^^^^^^^^^^ InheritOverride
 
-test.js:29:2,35: Base
-This type is incompatible with
-test.js:29:38,52: InheritOverride
+test.js:29
+ 29: (new InheritOverride().bar_caller(): InheritOverride); // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Override. This type is incompatible with
+ 29: (new InheritOverride().bar_caller(): InheritOverride); // error
+                                          ^^^^^^^^^^^^^^^ InheritOverride
 
-test.js:29:2,35: Override
-This type is incompatible with
-test.js:29:38,52: InheritOverride
+test.js:41
+ 41:   corge(that: this) { }
+                   ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-test.js:41:15,18: `this` type
-contravariant position (expected `this` to occur only covariantly)
+test.js:42
+ 42:   grault(that: Base2) { }
+                    ^^^^^ Base2. This type is incompatible with
+ 56:   grault(that: this) { } // error, too
+                    ^^^^ Override2
 
-test.js:42:16,20: Base2
-This type is incompatible with
-test.js:56:16,19: Override2
+test.js:42
+ 42:   grault(that: Base2) { }
+                    ^^^^^ Base2. This type is incompatible with
+ 56:   grault(that: this) { } // error, too
+                    ^^^^ some incompatible instantiation of `this`
 
-test.js:42:16,20: Base2
-This type is incompatible with
-test.js:56:16,19: some incompatible instantiation of `this`
+test.js:51
+ 51:   bar(): Override2 { return new Override2; } // error (cf. OK above)
+              ^^^^^^^^^ Override2. This type is incompatible with
+ 38:   bar(): this { return this; }
+              ^^^^ some incompatible instantiation of `this`
 
-test.js:51:10,18: Override2
-This type is incompatible with
-test.js:38:10,13: some incompatible instantiation of `this`
+test.js:54
+ 54:   corge(that: this) { } // error
+                   ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-test.js:54:15,18: `this` type
-contravariant position (expected `this` to occur only covariantly)
+test.js:56
+ 56:   grault(that: this) { } // error, too
+                    ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
-test.js:56:16,19: `this` type
-contravariant position (expected `this` to occur only covariantly)
 
 Found 41 errors

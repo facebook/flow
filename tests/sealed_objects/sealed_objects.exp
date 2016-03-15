@@ -1,18 +1,26 @@
+test.js:2
+  2: var s1: string = o1.y; // error
+                         ^ property `y`. Property not found in
+  2: var s1: string = o1.y; // error
+                      ^^ object literal
 
-test.js:2:21,21: property `y`
-Property not found in
-test.js:2:18,19: object literal
+test.js:7
+  7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `y`. Property not found in
+  7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-test.js:7:9,34: property `y`
-Property not found in
-test.js:7:39,68: object type
+test.js:11
+ 11: var s5: string = o5.y; // error: y may be undefined
+                      ^^^^ undefined. This type is incompatible with
+ 11: var s5: string = o5.y; // error: y may be undefined
+             ^^^^^^ string
 
-test.js:11:18,21: undefined
-This type is incompatible with
-test.js:11:9,14: string
+test.js:19
+ 19: var o5: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                              ^^^^^^ string. This type is incompatible with
+ 19: var o5: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                                                                ^^^^^^ number
 
-test.js:19:26,31: string
-This type is incompatible with
-test.js:19:76,81: number
 
 Found 4 errors

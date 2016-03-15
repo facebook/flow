@@ -1,6 +1,8 @@
+should_fail_without_weak.js:9
+  9:   return returns_a_string() * 10;
+              ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+  9:   return returns_a_string() * 10;
+              ^^^^^^^^^^^^^^^^^^^^^^^ number
 
-should_fail_without_weak.js:9:10,27: string
-This type is incompatible with
-should_fail_without_weak.js:9:10,32: number
 
 Found 1 error

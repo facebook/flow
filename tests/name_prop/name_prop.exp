@@ -1,18 +1,26 @@
+class.js:3
+  3: var test1 = A.bar; // Error bar doesn't exist
+                   ^^^ property `bar`. Property not found in
+  3: var test1 = A.bar; // Error bar doesn't exist
+                 ^ statics of A
 
-class.js:3:15,17: property `bar`
-Property not found in
-class.js:3:13,13: statics of A
+class.js:5
+  5: var test3: number = A.name; // Error string ~> number
+                         ^^^^^^ string. This type is incompatible with
+  5: var test3: number = A.name; // Error string ~> number
+                ^^^^^^ number
 
-class.js:5:21,26: string
-This type is incompatible with
-class.js:5:12,17: number
+class.js:8
+  8: var test4 = a.constructor.bar; // Error bar doesn't exist
+                               ^^^ property `bar`. Property not found in
+  8: var test4 = a.constructor.bar; // Error bar doesn't exist
+                 ^ statics of A
 
-class.js:8:27,29: property `bar`
-Property not found in
-class.js:8:13,13: statics of A
+class.js:10
+ 10: var test6: number = a.constructor.name; // Error string ~> number
+                         ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 10: var test6: number = a.constructor.name; // Error string ~> number
+                ^^^^^^ number
 
-class.js:10:21,38: string
-This type is incompatible with
-class.js:10:12,17: number
 
 Found 4 errors

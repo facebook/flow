@@ -1,18 +1,24 @@
+test_obj.js:29
+ 29: var e: E = c; // error
+                ^ intersection. This type is incompatible with
+ 29: var e: E = c; // error
+            ^ object type
+  Member 1:
+   33: type C = { [key: string]: number } & { [key: string]: number };
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: lib/lib.js:33
+  Error:
+   28: type E = { [key: string]: string };
+                                 ^^^^^^ string. This type is incompatible with
+   33: type C = { [key: string]: number } & { [key: string]: number };
+                                 ^^^^^^ number. See: lib/lib.js:33
+  Member 2:
+   33: type C = { [key: string]: number } & { [key: string]: number };
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: lib/lib.js:33
+  Error:
+   28: type E = { [key: string]: string };
+                                 ^^^^^^ string. This type is incompatible with
+   33: type C = { [key: string]: number } & { [key: string]: number };
+                                                             ^^^^^^ number. See: lib/lib.js:33
 
-test_obj.js:29:12,12: intersection
-This type is incompatible with
-test_obj.js:29:8,8: object type
-Member 1:
-[LIB] lib/lib.js:33:10,34: object type
-Error:
-test_obj.js:28:27,32: string
-This type is incompatible with
-[LIB] lib/lib.js:33:27,32: number
-Member 2:
-[LIB] lib/lib.js:33:38,62: object type
-Error:
-test_obj.js:28:27,32: string
-This type is incompatible with
-[LIB] lib/lib.js:33:55,60: number
 
 Found 1 error

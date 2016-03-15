@@ -1,34 +1,48 @@
+annot.js:10
+ 10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                                          ^^^^^^^^^^^ property `x`. Property not found in
+ 10:   return (new A: A<{}>) || (new A: A<{x: string}>);
+                        ^^ object type
 
-annot.js:10:38,48: property `x`
-Property not found in
-annot.js:10:20,21: object type
+implicit_bounded_instantiation.js:18
+ 18: a.meth(42); // Error: number ~> Middle
+     ^^^^^^^^^^ call of method `meth`
+ 18: a.meth(42); // Error: number ~> Middle
+            ^^ number. This type is incompatible with
+  7: class C<T: Middle> {
+                ^^^^^^ Middle
 
-implicit_bounded_instantiation.js:18:1,10: call of method `meth`
-Error:
-implicit_bounded_instantiation.js:18:8,9: number
-This type is incompatible with
-implicit_bounded_instantiation.js:7:12,17: Middle
+implicit_bounded_instantiation.js:19
+ 19: a.meth(new Base()); // Error: Base ~> Middle
+     ^^^^^^^^^^^^^^^^^^ call of method `meth`
+ 19: a.meth(new Base()); // Error: Base ~> Middle
+            ^^^^^^^^^^ Base. This type is incompatible with
+  7: class C<T: Middle> {
+                ^^^^^^ Middle
 
-implicit_bounded_instantiation.js:19:1,18: call of method `meth`
-Error:
-implicit_bounded_instantiation.js:19:8,17: Base
-This type is incompatible with
-implicit_bounded_instantiation.js:7:12,17: Middle
+poly.js:17
+ 17: var x:string = foo.x;
+                    ^^^^^ number. This type is incompatible with
+ 17: var x:string = foo.x;
+           ^^^^^^ string
 
-poly.js:17:16,20: number
-This type is incompatible with
-poly.js:17:7,12: string
+poly.js:18
+ 18: var z:Foo<number> = Q.bar(foo,"");
+                                   ^^ string. This type is incompatible with
+ 18: var z:Foo<number> = Q.bar(foo,"");
+               ^^^^^^ number
 
-poly.js:18:31,32: string
-This type is incompatible with
-poly.js:18:11,16: number
+test.js:2
+  2:   foo<X>(x: X): X { return x; }
+           ^ X. This type is incompatible with
+  8:   foo(x: number): number { return x; } // error (specialization, see below)
+              ^^^^^^ number
 
-test.js:2:7,7: X
-This type is incompatible with
-test.js:8:10,15: number
+test.js:8
+  8:   foo(x: number): number { return x; } // error (specialization, see below)
+                       ^^^^^^ number. This type is incompatible with
+  8:   foo(x: number): number { return x; } // error (specialization, see below)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
 
-test.js:8:19,24: number
-This type is incompatible with
-test.js:8:3,38: some incompatible instantiation of `X`
 
 Found 7 errors

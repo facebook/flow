@@ -1,6 +1,8 @@
+typecast.js:7
+  7:     var n = ("hey" : number);
+                  ^^^^^ string. This type is incompatible with
+  7:     var n = ("hey" : number);
+                          ^^^^^^ number
 
-typecast.js:7:14,18: string
-This type is incompatible with
-typecast.js:7:22,27: number
 
 Found 1 error

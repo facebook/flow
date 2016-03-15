@@ -1,8 +1,10 @@
+foo.js:2
+  2: imp(1337);
+     ^^^^^^^^^ function call
+  2: imp(1337);
+         ^^^^ number. This type is incompatible with
+  1: module.exports = function (p: string) {}
+                                   ^^^^^^ string. See: bar.jsx:1
 
-foo.js:2:1,9: function call
-Error:
-foo.js:2:5,8: number
-This type is incompatible with
-bar.jsx:1:31,36: string
 
 Found 1 error

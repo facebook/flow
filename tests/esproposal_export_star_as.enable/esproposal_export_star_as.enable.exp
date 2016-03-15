@@ -1,10 +1,14 @@
+dest.js:6
+  6: var b: string = source.num; // Error: num ~> string
+                     ^^^^^^^^^^ number. This type is incompatible with
+  6: var b: string = source.num; // Error: num ~> string
+            ^^^^^^ string
 
-dest.js:6:17,26: number
-This type is incompatible with
-dest.js:6:8,13: string
+dest.js:9
+  9: var d: number = source.str; // Error: num ~> string
+                     ^^^^^^^^^^ string. This type is incompatible with
+  9: var d: number = source.str; // Error: num ~> string
+            ^^^^^^ number
 
-dest.js:9:17,26: string
-This type is incompatible with
-dest.js:9:8,13: number
 
 Found 2 errors

@@ -1,78 +1,110 @@
+test.js:1
+  1: class A {
+           ^ A. This type is incompatible with
+ 48: (B: typeof A);
+      ^ B
 
-test.js:1:7,7: A
-This type is incompatible with
-test.js:48:2,2: B
+test.js:2
+  2:   static x: number;
+                 ^^^^^^ number. This type is incompatible with
+ 10:   static x: string; // error?
+                 ^^^^^^ string
 
-test.js:2:13,18: number
-This type is incompatible with
-test.js:10:13,18: string
+test.js:4
+  4:   static foo(x: number) { }
+                     ^^^^^^ number. This type is incompatible with
+ 11:   static foo(x: string) { } // error?
+                     ^^^^^^ string
 
-test.js:4:17,22: number
-This type is incompatible with
-test.js:11:17,22: string
+test.js:7
+  7: A.qux = function(x: string) { } // error?
+       ^^^ property `qux`. Property not found in
+  7: A.qux = function(x: string) { } // error?
+     ^ statics of A
 
-test.js:7:3,5: property `qux`
-Property not found in
-test.js:7:1,1: statics of A
+test.js:10
+ 10:   static x: string; // error?
+                 ^^^^^^ string. This type is incompatible with
+  2:   static x: number;
+                 ^^^^^^ number
 
-test.js:10:13,18: string
-This type is incompatible with
-test.js:2:13,18: number
+test.js:13
+ 13:     B.x = 0; // error
+         ^^^ assignment of property `x`
+ 13:     B.x = 0; // error
+               ^ number. This type is incompatible with
+ 10:   static x: string; // error?
+                 ^^^^^^ string
 
-test.js:13:5,7: assignment of property `x`
-Error:
-test.js:13:11,11: number
-This type is incompatible with
-test.js:10:13,18: string
+test.js:15
+ 15:     B.foo(0); // error
+         ^^^^^^^^ call of method `foo`
+ 15:     B.foo(0); // error
+               ^ number. This type is incompatible with
+ 11:   static foo(x: string) { } // error?
+                     ^^^^^^ string
 
-test.js:15:5,12: call of method `foo`
-Error:
-test.js:15:11,11: number
-This type is incompatible with
-test.js:11:17,22: string
+test.js:17
+ 17:     B.y = 0; // error
+         ^^^ assignment of property `y`
+ 17:     B.y = 0; // error
+               ^ number. This type is incompatible with
+  3:   static y: string;
+                 ^^^^^^ string
 
-test.js:17:5,7: assignment of property `y`
-Error:
-test.js:17:11,11: number
-This type is incompatible with
-test.js:3:13,18: string
+test.js:18
+ 18:     B.bar(0); // error
+         ^^^^^^^^ call of method `bar`
+ 18:     B.bar(0); // error
+               ^ number. This type is incompatible with
+  5:   static bar(y: string) { }
+                     ^^^^^^ string
 
-test.js:18:5,12: call of method `bar`
-Error:
-test.js:18:11,11: number
-This type is incompatible with
-test.js:5:17,22: string
+test.js:19
+ 19:     B.qux(0); // error
+           ^^^ property `qux`. Property not found in
+ 19:     B.qux(0); // error
+         ^ statics of B
 
-test.js:19:7,9: property `qux`
-Property not found in
-test.js:19:5,5: statics of B
+test.js:26
+ 26:     return new this(); // error B ~> number
+                ^^^^^^^^^^ constructor call
+  9: class B extends A {
+           ^ B. This type is incompatible with
+ 25:   static badCreate(): number {
+                           ^^^^^^ number
 
-test.js:26:12,21: constructor call
-Error:
-test.js:9:7,7: B
-This type is incompatible with
-test.js:25:23,28: number
+test.js:40
+ 40:     D.foo(0); // error?
+           ^^^ property `foo`. Property not found in
+ 40:     D.foo(0); // error?
+         ^ statics of D
 
-test.js:40:7,9: property `foo`
-Property not found in
-test.js:40:5,5: statics of D
+test.js:42
+ 42:     D.bar(0);
+         ^^^^^^^^ call of method `bar`
+ 42:     D.bar(0);
+               ^ number. This type is incompatible with
+ 38: class D extends C<string> {
+                       ^^^^^^ string
 
-test.js:42:5,12: call of method `bar`
-Error:
-test.js:42:11,11: number
-This type is incompatible with
-test.js:38:19,24: string
+test.js:47
+ 47: (new A: typeof A);
+          ^ A. This type is incompatible with
+  1: class A {
+           ^ class type: A
 
-test.js:47:6,6: A
-This type is incompatible with
-test.js:1:7,7: class type: A
+test.js:53
+ 53:     this.bar(); // error
+              ^^^ property `bar`. Property not found in
+ 50: class E {
+           ^ statics of E
 
-test.js:53:10,12: property `bar`
-Property not found in
-test.js:50:7,7: statics of E
+test.js:54
+ 54:     return this.x; // error
+                ^^^^^^ number. This type is incompatible with
+ 52:   static foo(): string {
+                     ^^^^^^ string
 
-test.js:54:12,17: number
-This type is incompatible with
-test.js:52:17,22: string
 
 Found 16 errors

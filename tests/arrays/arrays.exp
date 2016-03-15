@@ -1,8 +1,10 @@
+Arrays.js:10
+ 10: foo(a[1]);
+     ^^^^^^^^^ function call
+ 10: foo(a[1]);
+         ^^^^ number. This type is incompatible with
+  4: function foo(x:string) { }
+                    ^^^^^^ string
 
-Arrays.js:10:1,9: function call
-Error:
-Arrays.js:10:5,8: number
-This type is incompatible with
-Arrays.js:4:16,21: string
 
 Found 1 error

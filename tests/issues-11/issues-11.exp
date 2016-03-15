@@ -1,10 +1,14 @@
+import.js:3
+  3: var x: string = e.x;
+                     ^^^ number. This type is incompatible with
+  3: var x: string = e.x;
+            ^^^^^^ string
 
-import.js:3:17,19: number
-This type is incompatible with
-import.js:3:8,13: string
+import.js:4
+  4: var y: number = e.y;
+                     ^^^ string. This type is incompatible with
+  4: var y: number = e.y;
+            ^^^^^^ number
 
-import.js:4:17,19: string
-This type is incompatible with
-import.js:4:8,13: number
 
 Found 2 errors

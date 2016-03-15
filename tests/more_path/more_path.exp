@@ -1,26 +1,38 @@
+Sigma.js:13
+ 13:     x.c(); // error
+           ^ property `c`. Property not found in
+ 13:     x.c(); // error
+         ^ B
 
-Sigma.js:13:7,7: property `c`
-Property not found in
-Sigma.js:13:5,5: B
+Sigma.js:15
+ 15:     x++; // TODO no error? since unreachable (x: B implies x: A)
+         ^^^ number. This type is incompatible with
+ 10: function bar(x:B) {
+                    ^ B
 
-Sigma.js:15:5,7: number
-This type is incompatible with
-Sigma.js:10:16,16: B
+Sigma.js:24
+ 24:     x.d(); // error
+           ^ property `d`. Property not found in
+ 24:     x.d(); // error
+         ^ C
 
-Sigma.js:24:7,7: property `d`
-Property not found in
-Sigma.js:24:5,5: C
+Sigma.js:27
+ 27:     x.c(); // error
+           ^ property `c`. Property not found in
+ 27:     x.c(); // error
+         ^ A
 
-Sigma.js:27:7,7: property `c`
-Property not found in
-Sigma.js:27:5,5: A
+Sigma.js:35
+ 35:   if (x instanceof A) {
+                        ^ A. This type is incompatible with
+ 34: function baz(x:D) {
+                    ^ D
 
-Sigma.js:35:20,20: A
-This type is incompatible with
-Sigma.js:34:16,16: D
+test.js:11
+ 11:     return obj.childProp_TYPO; // error (obj: ChildClass)
+                    ^^^^^^^^^^^^^^ property `childProp_TYPO`. Property not found in
+ 11:     return obj.childProp_TYPO; // error (obj: ChildClass)
+                ^^^ ChildClass
 
-test.js:11:16,29: property `childProp_TYPO`
-Property not found in
-test.js:11:12,14: ChildClass
 
 Found 6 errors

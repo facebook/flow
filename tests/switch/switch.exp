@@ -1,50 +1,74 @@
+switch.js:28
+ 28:         x = x*x;
+                 ^ string. This type is incompatible with
+ 28:         x = x*x;
+                 ^^^ number
 
-switch.js:28:13,13: string
-This type is incompatible with
-switch.js:28:13,15: number
+switch.js:28
+ 28:         x = x*x;
+                   ^ string. This type is incompatible with
+ 28:         x = x*x;
+                 ^^^ number
 
-switch.js:28:15,15: string
-This type is incompatible with
-switch.js:28:13,15: number
+switch_default_fallthrough.js:16
+ 16:     (a : string); // error, string | number ~/> string
+          ^ number. This type is incompatible with
+ 16:     (a : string); // error, string | number ~/> string
+              ^^^^^^ string
 
-switch_default_fallthrough.js:16:6,6: number
-This type is incompatible with
-switch_default_fallthrough.js:16:10,15: string
+switch_default_fallthrough.js:17
+ 17:     (a : number); // error, string | number ~/> number
+          ^ string. This type is incompatible with
+ 17:     (a : number); // error, string | number ~/> number
+              ^^^^^^ number
 
-switch_default_fallthrough.js:17:6,6: string
-This type is incompatible with
-switch_default_fallthrough.js:17:10,15: number
+switch_default_fallthrough.js:21
+ 21:     return b; // error, number ~/> string
+                ^ number. This type is incompatible with
+  4: function foo(x : mixed): string {
+                              ^^^^^^ string
 
-switch_default_fallthrough.js:21:12,12: number
-This type is incompatible with
-switch_default_fallthrough.js:4:26,31: string
+switch_default_fallthrough.js:39
+ 39:     (a : string); // error, string | number ~/> string
+          ^ number. This type is incompatible with
+ 39:     (a : string); // error, string | number ~/> string
+              ^^^^^^ string
 
-switch_default_fallthrough.js:39:6,6: number
-This type is incompatible with
-switch_default_fallthrough.js:39:10,15: string
+switch_default_fallthrough.js:40
+ 40:     (a : number); // error, string | number ~/> number
+          ^ string. This type is incompatible with
+ 40:     (a : number); // error, string | number ~/> number
+              ^^^^^^ number
 
-switch_default_fallthrough.js:40:6,6: string
-This type is incompatible with
-switch_default_fallthrough.js:40:10,15: number
+switch_default_fallthrough.js:43
+ 43:     (b : string); // error, string | number ~/> string
+          ^ number. This type is incompatible with
+ 43:     (b : string); // error, string | number ~/> string
+              ^^^^^^ string
 
-switch_default_fallthrough.js:43:6,6: number
-This type is incompatible with
-switch_default_fallthrough.js:43:10,15: string
+switch_default_fallthrough.js:44
+ 44:     (b : number); // error, string | number ~/> number
+          ^ string. This type is incompatible with
+ 44:     (b : number); // error, string | number ~/> number
+              ^^^^^^ number
 
-switch_default_fallthrough.js:44:6,6: string
-This type is incompatible with
-switch_default_fallthrough.js:44:10,15: number
+switch_default_fallthrough.js:46
+ 46:     return a+b; // error, string ~/> number
+                ^^^ string. This type is incompatible with
+ 24: function baz(x: mixed): number {
+                             ^^^^^^ number
 
-switch_default_fallthrough.js:46:12,14: string
-This type is incompatible with
-switch_default_fallthrough.js:24:25,30: number
+trailing_cases.js:23
+ 23:   var y:number = x; // error, number | string ~/> number
+                      ^ string. This type is incompatible with
+ 23:   var y:number = x; // error, number | string ~/> number
+             ^^^^^^ number
 
-trailing_cases.js:23:18,18: string
-This type is incompatible with
-trailing_cases.js:23:9,14: number
+trailing_cases.js:39
+ 39:   var y:number = x; // error, number | uninitialized ~/> number
+                      ^ possibly uninitialized variable. This type is incompatible with
+ 39:   var y:number = x; // error, number | uninitialized ~/> number
+             ^^^^^^ number
 
-trailing_cases.js:39:18,18: possibly uninitialized variable
-This type is incompatible with
-trailing_cases.js:39:9,14: number
 
 Found 12 errors

@@ -1,5 +1,6 @@
+errors.js:1
+  1: if (typeof define === 'function' && define.amd) { }
+                ^^^^^^ identifier `define`. Could not resolve name
 
-errors.js:1:12,17: identifier `define`
-Could not resolve name
 
 Found 1 error

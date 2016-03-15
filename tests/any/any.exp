@@ -1,20 +1,28 @@
+any.js:6
+  6: var y:string = bar(0);
+                    ^^^^^^ mixed. This type is incompatible with
+  6: var y:string = bar(0);
+           ^^^^^^ string
 
-any.js:6:16,21: mixed
-This type is incompatible with
-any.js:6:7,12: string
+flowfixme.js:12
+ 12: function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
+                               ^^^^^^^ identifier `nnumber`. Could not resolve name
 
-flowfixme.js:12:27,33: identifier `nnumber`
-Could not resolve name
+flowfixme.js:15
+ 15: var y:string = bar(0);
+                    ^^^^^^ mixed. This type is incompatible with
+ 15: var y:string = bar(0);
+           ^^^^^^ string
 
-flowfixme.js:15:16,21: mixed
-This type is incompatible with
-flowfixme.js:15:7,12: string
+flowissue.js:12
+ 12: function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
+                               ^^^^^^^ identifier `nnumber`. Could not resolve name
 
-flowissue.js:12:27,33: identifier `nnumber`
-Could not resolve name
+flowissue.js:15
+ 15: var y:string = bar(0);
+                    ^^^^^^ mixed. This type is incompatible with
+ 15: var y:string = bar(0);
+           ^^^^^^ string
 
-flowissue.js:15:16,21: mixed
-This type is incompatible with
-flowissue.js:15:7,12: string
 
 Found 5 errors

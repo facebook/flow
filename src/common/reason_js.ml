@@ -137,6 +137,12 @@ let json_of_loc loc = Hh_json.(Loc.(
     "source", (match loc.source with
       | Some x -> JSON_String (string_of_filename x)
       | None -> JSON_Null);
+    "type", (match loc.source with
+    | Some LibFile _ -> JSON_String "LibFile"
+    | Some SourceFile _ -> JSON_String "SourceFile"
+    | Some JsonFile _ -> JSON_String "JsonFile"
+    | Some Builtins -> JSON_String "Builtins"
+    | None -> JSON_Null);
     "start", JSON_Object [
       "line", int_ loc.start.line;
       "column", int_ (loc.start.column + 1);

@@ -1,48 +1,63 @@
+This.js:29
+ 29:   return this.x
+              ^^^^^^ string. This type is incompatible with
+ 28: function f1() : number {
+                     ^^^^^^ number
 
-This.js:29:10,15: string
-This type is incompatible with
-This.js:28:17,22: number
+This.js:33
+ 33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+                         ^^^^^^^^^^^^^^^^^ function call
+ 33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+                         ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+                ^^^^^^ string
 
-This.js:33:21,37: function call
-Error:
-This.js:33:21,37: number
-This type is incompatible with
-This.js:33:12,17: string
-
-This.js:36:12,15: function call
-Error:
-This.js:29:15,15: property `x`
-Property cannot be accessed on
+This.js:36
+ 36: var f1_4 = f1();                         // error, (global object).x
+                ^^^^ function call
+ 29:   return this.x
+                   ^ property `x`. Property cannot be accessed on
 global object
 
-This.js:41:15,15: property `x`
-Property cannot be accessed on
+This.js:41
+ 41:   return this.x
+                   ^ property `x`. Property cannot be accessed on
 global object
 
-This.js:49:12,15: string
-This type is incompatible with
-This.js:47:17,22: number
+This.js:49
+ 49:     return a2()
+                ^^^^ string. This type is incompatible with
+ 47: function f2() : number {
+                     ^^^^^^ number
 
-This.js:53:21,37: function call
-Error:
-This.js:53:21,37: number
-This type is incompatible with
-This.js:53:12,17: string
+This.js:53
+ 53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+                         ^^^^^^^^^^^^^^^^^ function call
+ 53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+                         ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+                ^^^^^^ string
 
-This.js:56:12,15: function call
-Error:
-This.js:48:34,34: property `x`
-Property cannot be accessed on
+This.js:56
+ 56: var f2_4 = f2();                         // error, (global object).x
+                ^^^^ function call
+ 48:     var a2 = () => { return this.x };
+                                      ^ property `x`. Property cannot be accessed on
 global object
 
-arrows.js:16:2,2: C
-This type is incompatible with
-arrows.js:16:5,5: D
+arrows.js:16
+ 16: (j: D); // error, since return type of bar is C, not the type of `this`
+      ^ C. This type is incompatible with
+ 16: (j: D); // error, since return type of bar is C, not the type of `this`
+         ^ D
 
-arrows.js:24:7,19: super.foo(...)
-Error:
-arrows.js:24:17,18: string
-This type is incompatible with
-arrows.js:19:10,15: number
+arrows.js:24
+ 24:       super.foo(""); // find super method, error due to incorrect arg
+           ^^^^^^^^^^^^^ super.foo(...)
+ 24:       super.foo(""); // find super method, error due to incorrect arg
+                     ^^ string. This type is incompatible with
+ 19:   foo(x: number) { }
+              ^^^^^^ number
+
 
 Found 9 errors

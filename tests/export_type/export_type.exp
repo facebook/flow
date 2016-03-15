@@ -1,46 +1,68 @@
+importer.js:11
+ 11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
+                           ^^^^^^ string. This type is incompatible with
+ 11: var b: inlinedType1 = 'asdf'; // Error: string ~> number
+            ^^^^^^^^^^^^ number
 
-importer.js:11:23,28: string
-This type is incompatible with
-importer.js:11:8,19: number
+importer.js:14
+ 14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
+                              ^^^^^^ string. This type is incompatible with
+ 14: var d: standaloneType1 = 'asdf'; // Error: string ~> number
+            ^^^^^^^^^^^^^^^ number
 
-importer.js:14:26,31: string
-This type is incompatible with
-importer.js:14:8,22: number
+importer.js:17
+ 17: var f: talias1 = 'asdf'; // Error: string ~> number
+                      ^^^^^^ string. This type is incompatible with
+ 17: var f: talias1 = 'asdf'; // Error: string ~> number
+            ^^^^^^^ number
 
-importer.js:17:18,23: string
-This type is incompatible with
-importer.js:17:8,14: number
+importer.js:20
+ 20: var h: talias3 = 'asdf'; // Error: string ~> number
+                      ^^^^^^ string. This type is incompatible with
+ 20: var h: talias3 = 'asdf'; // Error: string ~> number
+            ^^^^^^^ number
 
-importer.js:20:18,23: string
-This type is incompatible with
-importer.js:20:8,14: number
+importer.js:24
+ 24: var j: talias4 = 'asdf'; // Error: string ~> number
+                      ^^^^^^ string. This type is incompatible with
+ 24: var j: talias4 = 'asdf'; // Error: string ~> number
+            ^^^^^^^ number
 
-importer.js:24:18,23: string
-This type is incompatible with
-importer.js:24:8,14: number
+importer.js:29
+ 29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+                          ^^^^^^ string. This type is incompatible with
+ 15: export interface IFoo { prop: number };
+                                   ^^^^^^ number. See: types_only.js:15
 
-importer.js:29:22,27: string
-This type is incompatible with
-types_only.js:15:31,36: number
+importer.js:32
+ 32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+                           ^^ number. This type is incompatible with
+  5: export interface IFoo2 { prop: string };
+                                    ^^^^^^ string. See: types_only2.js:5
 
-importer.js:32:23,24: number
-This type is incompatible with
-types_only2.js:5:32,37: string
+types_only.js:5
+  5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
+                           ^^^^^^ string. This type is incompatible with
+  5: var b: inlinedType1 = 'asdf'; // Error: string ~> number
+            ^^^^^^^^^^^^ number
 
-types_only.js:5:23,28: string
-This type is incompatible with
-types_only.js:5:8,19: number
+types_only.js:11
+ 11: export {standaloneType2}; // Error: Missing `type` keyword
+             ^^^^^^^^^^^^^^^ standaloneType2. type referenced from value position
+ 10: type standaloneType2 = number;
+          ^^^^^^^^^^^^^^^ type standaloneType2
 
-types_only.js:11:9,23: standaloneType2
-type referenced from value position
-types_only.js:10:6,20: type standaloneType2
+types_only.js:15
+ 15: export interface IFoo { prop: number };
+                                   ^^^^^^ number. This type is incompatible with
+ 29: var l: IFoo = {prop: 'asdf'}; // Error: {prop:string} ~> {prop:number}
+                          ^^^^^^ string. See: importer.js:29
 
-types_only.js:15:31,36: number
-This type is incompatible with
-importer.js:29:22,27: string
+types_only2.js:5
+  5: export interface IFoo2 { prop: string };
+                                    ^^^^^^ string. This type is incompatible with
+ 32: var n: IFoo2 = {prop: 42}; // Error: {prop:number} ~> {prop:string}
+                           ^^ number. See: importer.js:32
 
-types_only2.js:5:32,37: string
-This type is incompatible with
-importer.js:32:23,24: number
 
 Found 11 errors

@@ -1,10 +1,14 @@
+qualified.js:4
+  4: var x:M.C = 0;
+                 ^ number. This type is incompatible with
+  4: var x:M.C = 0;
+           ^^^ C
 
-qualified.js:4:13,13: number
-This type is incompatible with
-qualified.js:4:7,9: C
+qualified.js:10
+ 10: var b: bar = 'asdf'; // Error: string ~> number
+                  ^^^^^^ string. This type is incompatible with
+ 10: var b: bar = 'asdf'; // Error: string ~> number
+            ^^^ number
 
-qualified.js:10:14,19: string
-This type is incompatible with
-qualified.js:10:8,10: number
 
 Found 2 errors

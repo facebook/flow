@@ -1,24 +1,32 @@
+Foo.js:10
+ 10:     this.x = x;
+              ^ property `x`. Property cannot be assigned on possibly undefined value
+  7: class Foo extends Qux {
+           ^^^ uninitialized this (expected super constructor call)
 
-Foo.js:10:10,10: property `x`
-Property cannot be assigned on possibly undefined value
-Foo.js:7:7,9: uninitialized this (expected super constructor call)
+Foo.js:13
+ 13:   foo(y:string,z):number {
+                    ^ parameter `z`. Missing annotation
 
-Foo.js:13:16,16: parameter `z`
-Missing annotation
+Foo.js:16
+ 16:     var v = new Bar(y);
+                 ^^^^^^^^^^ constructor call
+ 16:     var v = new Bar(y);
+                         ^ string. This type is incompatible with
+  9:   constructor(y:number) {
+                     ^^^^^^ number. See: Bar.js:9
 
-Foo.js:16:13,22: constructor call
-Error:
-Foo.js:16:21,21: string
-This type is incompatible with
-Bar.js:9:17,22: number
+Foo.js:18
+ 18:     return v.bar(z,u);
+                ^^^^^^^^^^ call of method `bar`
+ 18:     return v.bar(z,u);
+                ^^^^^^^^^^ string. This type is incompatible with
+ 13:   foo(y:string,z):number {
+                       ^^^^^^ number
 
-Foo.js:18:12,21: call of method `bar`
-Error:
-Foo.js:18:12,21: string
-This type is incompatible with
-Foo.js:13:19,24: number
+Qux.js:7
+  7:   qux() { return this.w; }
+            ^ return. Missing annotation
 
-Qux.js:7:8,8: return
-Missing annotation
 
 Found 5 errors

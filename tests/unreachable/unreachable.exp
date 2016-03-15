@@ -1,12 +1,20 @@
+unreachable.js:5
+  5:   return bar(x) + baz(y);
+                       ^^^^^^ function call. Function cannot be called on possibly undefined value
+  5:   return bar(x) + baz(y);
+                       ^^^ uninitialized variable
 
-unreachable.js:5:19,24: function call
-Function cannot be called on possibly undefined value
-unreachable.js:5:19,21: uninitialized variable
+unreachable.js:13
+ 13:   var baz = function (why) {
+                 ^ unreachable code
 
-unreachable.js:13:13,15:3: unreachable code
+unreachable.js:22
+ 22:       u = 5,
+               ^ unreachable code
 
-unreachable.js:22:11,11: unreachable code
+unreachable.js:24
+ 24:       w = 7;
+               ^ unreachable code
 
-unreachable.js:24:11,11: unreachable code
 
 Found 4 errors

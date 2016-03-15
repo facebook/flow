@@ -1,228 +1,336 @@
+array_rest.js:7
+  7: (a: void); // error: number ~> void
+      ^ number. This type is incompatible with
+  7: (a: void); // error: number ~> void
+         ^^^^ undefined
 
-array_rest.js:7:2,2: number
-This type is incompatible with
-array_rest.js:7:5,8: undefined
+array_rest.js:8
+  8: (b: void); // error: string ~> void
+      ^ string. This type is incompatible with
+  8: (b: void); // error: string ~> void
+         ^^^^ undefined
 
-array_rest.js:8:2,2: string
-This type is incompatible with
-array_rest.js:8:5,8: undefined
+array_rest.js:9
+  9: (c: void); // error: boolean ~> void
+      ^ boolean. This type is incompatible with
+  9: (c: void); // error: boolean ~> void
+         ^^^^ undefined
 
-array_rest.js:9:2,2: boolean
-This type is incompatible with
-array_rest.js:9:5,8: undefined
+array_rest.js:10
+ 10: (d: void); // error: number|string|boolean ~> void
+      ^ boolean. This type is incompatible with
+ 10: (d: void); // error: number|string|boolean ~> void
+         ^^^^ undefined
 
-array_rest.js:10:2,2: boolean
-This type is incompatible with
-array_rest.js:10:5,8: undefined
+array_rest.js:10
+ 10: (d: void); // error: number|string|boolean ~> void
+      ^ number. This type is incompatible with
+ 10: (d: void); // error: number|string|boolean ~> void
+         ^^^^ undefined
 
-array_rest.js:10:2,2: number
-This type is incompatible with
-array_rest.js:10:5,8: undefined
+array_rest.js:10
+ 10: (d: void); // error: number|string|boolean ~> void
+      ^ string. This type is incompatible with
+ 10: (d: void); // error: number|string|boolean ~> void
+         ^^^^ undefined
 
-array_rest.js:10:2,2: string
-This type is incompatible with
-array_rest.js:10:5,8: undefined
+array_rest.js:12
+ 12: let [...e] = 0;
+          ^^^^ rest of array pattern. Expected array instead of
+ 12: let [...e] = 0;
+                  ^ number
 
-array_rest.js:12:6,9: rest of array pattern
-Expected array instead of
-array_rest.js:12:14,14: number
+defaults.js:9
+  9:   (q:void);
+        ^ boolean. This type is incompatible with
+  9:   (q:void);
+          ^^^^ undefined
 
-defaults.js:9:4,4: boolean
-This type is incompatible with
-defaults.js:9:6,9: undefined
+defaults.js:9
+  9:   (q:void);
+        ^ number. This type is incompatible with
+  9:   (q:void);
+          ^^^^ undefined
 
-defaults.js:9:4,4: number
-This type is incompatible with
-defaults.js:9:6,9: undefined
+defaults.js:9
+  9:   (q:void);
+        ^ string. This type is incompatible with
+  9:   (q:void);
+          ^^^^ undefined
 
-defaults.js:9:4,4: string
-This type is incompatible with
-defaults.js:9:6,9: undefined
+defaults.js:14
+ 14: obj_prop_fun({p:{q:null}}); // ok, provides add'l lower bound
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+  9:   (q:void);
+        ^ null. This type is incompatible with
+  9:   (q:void);
+          ^^^^ undefined
 
-defaults.js:14:1,26: function call
-Error:
-defaults.js:9:4,4: null
-This type is incompatible with
-defaults.js:9:6,9: undefined
+defaults.js:23
+ 23:   (q:void);
+        ^ boolean. This type is incompatible with
+ 23:   (q:void);
+          ^^^^ undefined
 
-defaults.js:23:4,4: boolean
-This type is incompatible with
-defaults.js:23:6,9: undefined
+defaults.js:23
+ 23:   (q:void);
+        ^ number. This type is incompatible with
+ 23:   (q:void);
+          ^^^^ undefined
 
-defaults.js:23:4,4: number
-This type is incompatible with
-defaults.js:23:6,9: undefined
+defaults.js:23
+ 23:   (q:void);
+        ^ string. This type is incompatible with
+ 23:   (q:void);
+          ^^^^ undefined
 
-defaults.js:23:4,4: string
-This type is incompatible with
-defaults.js:23:6,9: undefined
+defaults.js:28
+ 28: obj_prop_var({p:{q:null}}); // ok, provides add'l lower bound
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+ 23:   (q:void);
+        ^ null. This type is incompatible with
+ 23:   (q:void);
+          ^^^^ undefined
 
-defaults.js:28:1,26: function call
-Error:
-defaults.js:23:4,4: null
-This type is incompatible with
-defaults.js:23:6,9: undefined
+defaults.js:35
+ 35:   (o.r:void);
+        ^^^ number. This type is incompatible with
+ 35:   (o.r:void);
+            ^^^^ undefined
 
-defaults.js:35:4,6: number
-This type is incompatible with
-defaults.js:35:8,11: undefined
+defaults.js:35
+ 35:   (o.r:void);
+        ^^^ string. This type is incompatible with
+ 35:   (o.r:void);
+            ^^^^ undefined
 
-defaults.js:35:4,6: string
-This type is incompatible with
-defaults.js:35:8,11: undefined
+defaults.js:40
+ 40: obj_rest({p:{q:0,r:null}});
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+ 35:   (o.r:void);
+        ^^^ null. This type is incompatible with
+ 35:   (o.r:void);
+            ^^^^ undefined
 
-defaults.js:40:1,26: function call
-Error:
-defaults.js:35:4,6: null
-This type is incompatible with
-defaults.js:35:8,11: undefined
+defaults.js:49
+ 49:   (p:void); // error: string ~> void
+        ^ boolean. This type is incompatible with
+ 49:   (p:void); // error: string ~> void
+          ^^^^ undefined
 
-defaults.js:49:4,4: boolean
-This type is incompatible with
-defaults.js:49:6,9: undefined
+defaults.js:49
+ 49:   (p:void); // error: string ~> void
+        ^ number. This type is incompatible with
+ 49:   (p:void); // error: string ~> void
+          ^^^^ undefined
 
-defaults.js:49:4,4: number
-This type is incompatible with
-defaults.js:49:6,9: undefined
+defaults.js:49
+ 49:   (p:void); // error: string ~> void
+        ^ string. This type is incompatible with
+ 49:   (p:void); // error: string ~> void
+          ^^^^ undefined
 
-defaults.js:49:4,4: string
-This type is incompatible with
-defaults.js:49:6,9: undefined
+defaults.js:57
+ 57:   p: 0}; // error: number ~> string
+          ^ number. This type is incompatible with
+ 55:   p: string
+          ^^^^^^ string
 
-defaults.js:57:6,6: number
-This type is incompatible with
-defaults.js:55:6,11: string
+defaults.js:58
+ 58: (p:void); // error: string ~> void
+      ^ boolean. This type is incompatible with
+ 58: (p:void); // error: string ~> void
+        ^^^^ undefined
 
-defaults.js:58:2,2: boolean
-This type is incompatible with
-defaults.js:58:4,7: undefined
+defaults.js:58
+ 58: (p:void); // error: string ~> void
+      ^ string. This type is incompatible with
+ 58: (p:void); // error: string ~> void
+        ^^^^ undefined
 
-defaults.js:58:2,2: string
-This type is incompatible with
-defaults.js:58:4,7: undefined
+defaults.js:60
+ 60: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
+                            ^ property `x`. Property cannot be accessed on possibly null value
+ 60: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
+                                   ^^^^ null
 
-defaults.js:60:24,24: property `x`
-Property cannot be accessed on possibly null value
-defaults.js:60:31,34: null
+defaults.js:61
+ 61: function obj_rest_err({...o}=0) {} // error: expected object instead of number
+                            ^^^^ object pattern spread property. Expected object instead of
+ 61: function obj_rest_err({...o}=0) {} // error: expected object instead of number
+                                  ^ number
 
-defaults.js:61:24,27: object pattern spread property
-Expected object instead of
-defaults.js:61:30,30: number
+defaults.js:62
+ 62: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
+                            ^ element 0. Computed property/element cannot be accessed on possibly null value
+ 62: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
+                               ^^^^ null
 
-defaults.js:62:24,24: element 0
-Computed property/element cannot be accessed on possibly null value
-defaults.js:62:27,30: null
+defaults.js:63
+ 63: function arr_rest_err([...a]=null) {} // error: expected array instead of null
+                            ^^^^ rest of array pattern. Expected array instead of possibly null value
+ 63: function arr_rest_err([...a]=null) {} // error: expected array instead of null
+                                  ^^^^ null
 
-defaults.js:63:24,27: rest of array pattern
-Expected array instead of possibly null value
-defaults.js:63:30,33: null
+destructuring.js:4
+  4: [{a1:a, b},c] = [{a1:0, b:1},2];
+       ^^ number. This type is incompatible with
+  1: declare var a:string;
+                   ^^^^^^ string
 
-destructuring.js:4:3,4: number
-This type is incompatible with
-destructuring.js:1:15,20: string
+destructuring.js:4
+  4: [{a1:a, b},c] = [{a1:0, b:1},2];
+             ^ number. This type is incompatible with
+  2: declare var b:string;
+                   ^^^^^^ string
 
-destructuring.js:4:9,9: number
-This type is incompatible with
-destructuring.js:2:15,20: string
+destructuring.js:4
+  4: [{a1:a, b},c] = [{a1:0, b:1},2];
+                                  ^ number. This type is incompatible with
+  3: declare var c:string;
+                   ^^^^^^ string
 
-destructuring.js:4:30,30: number
-This type is incompatible with
-destructuring.js:3:15,20: string
+destructuring.js:10
+ 10: ({n: obj.x} = {n:3});
+          ^^^^^ unsupported destructuring
 
-destructuring.js:10:6,10: unsupported destructuring
+destructuring.js:11
+ 11: [obj.x] = ['foo'];
+      ^^^^^ unsupported destructuring
 
-destructuring.js:11:2,6: unsupported destructuring
+destructuring.js:15
+ 15:     b = z;
+             ^ identifier `z`. Could not resolve name
 
-destructuring.js:15:9,9: identifier `z`
-Could not resolve name
+destructuring.js:18
+ 18: foo({p:0, z:[1,2]});
+     ^^^^^^^^^^^^^^^^^^^ function call
+ 14:     a = p;
+             ^ number. This type is incompatible with
+  1: declare var a:string;
+                   ^^^^^^ string
 
-destructuring.js:18:1,19: function call
-Error:
-destructuring.js:14:9,9: number
-This type is incompatible with
-destructuring.js:1:15,20: string
+destructuring.js:18
+ 18: foo({p:0, z:[1,2]});
+     ^^^^^^^^^^^^^^^^^^^ function call
+ 16:     c = r;
+             ^ number. This type is incompatible with
+  3: declare var c:string;
+                   ^^^^^^ string
 
-destructuring.js:18:1,19: function call
-Error:
-destructuring.js:16:9,9: number
-This type is incompatible with
-destructuring.js:3:15,20: string
+destructuring.js:20
+ 20: [a,,b,...c] = [0,1,true,3];
+           ^^^^ rest of array pattern. This type is incompatible with
+  3: declare var c:string;
+                   ^^^^^^ string
 
-destructuring.js:20:7,10: rest of array pattern
-This type is incompatible with
-destructuring.js:3:15,20: string
+destructuring.js:20
+ 20: [a,,b,...c] = [0,1,true,3];
+                    ^ number. This type is incompatible with
+  1: declare var a:string;
+                   ^^^^^^ string
 
-destructuring.js:20:16,16: number
-This type is incompatible with
-destructuring.js:1:15,20: string
+destructuring.js:20
+ 20: [a,,b,...c] = [0,1,true,3];
+                        ^^^^ boolean. This type is incompatible with
+  2: declare var b:string;
+                   ^^^^^^ string
 
-destructuring.js:20:20,23: boolean
-This type is incompatible with
-destructuring.js:2:15,20: string
+destructuring.js:25
+ 25: bar({x:"",y:0});
+     ^^^^^^^^^^^^^^^ function call
+ 23:     var o:{x: string; y: number;} = z;
+               ^^^^^^^^^^^^^^^^^^^^^^^ property `x`. Property not found in
+ 23:     var o:{x: string; y: number;} = z;
+                                         ^ object pattern spread property
 
-destructuring.js:25:1,15: function call
-Error:
-destructuring.js:23:11,33: property `x`
-Property not found in
-destructuring.js:23:37,37: object pattern spread property
+destructuring.js:28
+ 28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `z`. Property not found in
+ 28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};
+                                                    ^^^^^^^^^^^^^^^^ object literal
 
-destructuring.js:28:13,44: property `z`
-Property not found in
-destructuring.js:28:48,63: object literal
+destructuring.js:31
+ 31: qux({a:""});
+     ^^^^^^^^^^^ function call
+ 31: qux({a:""});
+            ^^ string. This type is incompatible with
+ 30: function qux(_: {a:number}) { }
+                        ^^^^^^ number
 
-destructuring.js:31:1,11: function call
-Error:
-destructuring.js:31:8,9: string
-This type is incompatible with
-destructuring.js:30:20,25: number
+destructuring.js:33
+ 33: corge({b:0});
+     ^^^^^^^^^^^^ function call
+ 33: corge({b:0});
+              ^ number. This type is incompatible with
+ 32: function corge({b}: {b:string}) { }
+                            ^^^^^^ string
 
-destructuring.js:33:1,12: function call
-Error:
-destructuring.js:33:10,10: number
-This type is incompatible with
-destructuring.js:32:24,29: string
+destructuring.js:35
+ 35: var {n}:{n: number} = {n: ""}
+                               ^^ string. This type is incompatible with
+ 35: var {n}:{n: number} = {n: ""}
+                 ^^^^^^ number
 
-destructuring.js:35:27,28: string
-This type is incompatible with
-destructuring.js:35:13,18: number
+destructuring.js:38
+ 38:   var {foo} = {bar: 123}; // error on foo
+            ^^^ property `foo`. Property not found in
+ 38:   var {foo} = {bar: 123}; // error on foo
+                   ^^^^^^^^^^ object literal
 
-destructuring.js:38:8,10: property `foo`
-Property not found in
-destructuring.js:38:15,24: object literal
+destructuring.js:39
+ 39:   var {bar, baz} = {bar: 123} // error on baz
+                 ^^^ property `baz`. Property not found in
+ 39:   var {bar, baz} = {bar: 123} // error on baz
+                        ^^^^^^^^^^ object literal
 
-destructuring.js:39:13,15: property `baz`
-Property not found in
-destructuring.js:39:20,29: object literal
+destructuring.js:45
+ 45:   (x.baz: string); // error, baz doesn't exist
+          ^^^ property `baz`. Property not found in
+ 45:   (x.baz: string); // error, baz doesn't exist
+        ^ object literal
 
-destructuring.js:45:6,8: property `baz`
-Property not found in
-destructuring.js:45:4,4: object literal
+destructuring.js:64
+ 64: var bp1_err: string = baseprop1; // Error: number ~> string
+                           ^^^^^^^^^ number. This type is incompatible with
+ 64: var bp1_err: string = baseprop1; // Error: number ~> string
+                  ^^^^^^ string
 
-destructuring.js:64:23,31: number
-This type is incompatible with
-destructuring.js:64:14,19: string
+destructuring.js:66
+ 66: var bp2_err: string = others.baseprop2; // Error: number ~> string
+                           ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 66: var bp2_err: string = others.baseprop2; // Error: number ~> string
+                  ^^^^^^ string
 
-destructuring.js:66:23,38: number
-This type is incompatible with
-destructuring.js:66:14,19: string
+destructuring.js:69
+ 69: var cp1_err: string = childprop1; // Error: number ~> string
+                           ^^^^^^^^^^ number. This type is incompatible with
+ 69: var cp1_err: string = childprop1; // Error: number ~> string
+                  ^^^^^^ string
 
-destructuring.js:69:23,32: number
-This type is incompatible with
-destructuring.js:69:14,19: string
+destructuring.js:71
+ 71: var cp2_err: string = others.childprop2; // Error: number ~> string
+                           ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 71: var cp2_err: string = others.childprop2; // Error: number ~> string
+                  ^^^^^^ string
 
-destructuring.js:71:23,39: number
-This type is incompatible with
-destructuring.js:71:14,19: string
+destructuring_init.js:1
+  1: var {foo};
+         ^^^^^ Destructuring assignment must be initialized
 
-destructuring_init.js:1:5,9: Destructuring assignment must be initialized
+destructuring_param.js:5
+  5: function g(a, { a }) {
+                     ^ Strict mode function may not have duplicate parameter names
 
-destructuring_param.js:5:17,17: Strict mode function may not have duplicate parameter names
+poly.js:15
+ 15: function rest_antipattern<T>(...t: T) {} // nonsense
+                                        ^ T. rest parameter should have an explicit array type (or type `any`)
 
-poly.js:15:36,36: T
-rest parameter should have an explicit array type (or type `any`)
+unannotated.js:8
+  8:   x.bar
+         ^^^ property `bar`. Property not found in
+  8:   x.bar
+       ^ object literal
 
-unannotated.js:8:5,7: property `bar`
-Property not found in
-unannotated.js:8:3,3: object literal
 
 Found 55 errors

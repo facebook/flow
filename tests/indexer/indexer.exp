@@ -1,24 +1,36 @@
+A.js:13
+ 13:   return { foo: "bar" }
+              ^^^^^^^^^^^^^^ property `foo` is a string. This type is incompatible with
+ 12: function foo2(): {[key: number]: string} {
+                             ^^^^^^ number
 
-A.js:13:10,23: property `foo` is a string
-This type is incompatible with
-A.js:12:25,30: number
+A.js:18
+ 18:   return { foo: "bar" }
+                     ^^^^^ string. This type is incompatible with
+ 17: function foo3(): {[key: string]: number} {
+                                      ^^^^^^ number
 
-A.js:18:17,21: string
-This type is incompatible with
-A.js:17:34,39: number
+A.js:23
+ 23:   return { foo: "bar" }
+              ^^^^^^^^^^^^^^ property `foo` is a string. This type is incompatible with
+ 22: function foo4(): {[key: number]: number} {
+                             ^^^^^^ number
 
-A.js:23:10,23: property `foo` is a string
-This type is incompatible with
-A.js:22:25,30: number
+A.js:23
+ 23:   return { foo: "bar" }
+                     ^^^^^ string. This type is incompatible with
+ 22: function foo4(): {[key: number]: number} {
+                                      ^^^^^^ number
 
-A.js:23:17,21: string
-This type is incompatible with
-A.js:22:34,39: number
+A.js:38
+ 38:   return { foo: "bar" }
+                     ^^^^^ string. This type is incompatible with
+ 37: function foo7(): {[key: string]: number; foo: number} {
+                                                   ^^^^^^ number
 
-A.js:38:17,21: string
-This type is incompatible with
-A.js:37:47,52: number
+multiple.js:7
+  7:       [k2: number]: number, // error: not supported (yet)
+           ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
 
-multiple.js:7:7,26: multiple indexers are not supported
 
 Found 6 errors

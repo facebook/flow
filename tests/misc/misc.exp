@@ -1,66 +1,91 @@
+A.js:13
+ 13: A.x = A.y;
+           ^^^ string. This type is incompatible with
+  6: var A = {x:true, ...{}};
+                ^^^^ boolean
 
-A.js:13:7,9: string
-This type is incompatible with
-A.js:6:12,15: boolean
+A.js:14
+ 14: f(A.x); // A.x is now a string, by def assign
+     ^^^^^^ function call
+ 14: f(A.x); // A.x is now a string, by def assign
+       ^^^ string. This type is incompatible with
+  9: function f(x:boolean) { }
+                  ^^^^^^^ boolean
 
-A.js:14:1,6: function call
-Error:
-A.js:14:3,5: string
-This type is incompatible with
-A.js:9:14,20: boolean
+C.js:9
+  9:   f(o.b);
+           ^ property `b`. Property not found in
+  9:   f(o.b);
+         ^ new object
 
-C.js:9:7,7: property `b`
-Property not found in
-C.js:9:5,5: new object
+C.js:10
+ 10:   f(o.s);
+         ^^^ number. This type is incompatible with
+  9: function f(x:boolean) { }
+                  ^^^^^^^ boolean. See: A.js:9
 
-C.js:10:5,7: number
-This type is incompatible with
-A.js:9:14,20: boolean
+D.js:11
+ 11: var i = o.fn();
+             ^^^^^^ call of method `fn`
+  6: function g():string { return this.i; }
+                                  ^^^^^^ boolean. This type is incompatible with
+  6: function g():string { return this.i; }
+                  ^^^^^^ string
 
-D.js:11:9,14: call of method `fn`
-Error:
-D.js:6:30,35: boolean
-This type is incompatible with
-D.js:6:14,19: string
+D.js:12
+ 12: f(i);
+     ^^^^ function call
+ 12: f(i);
+       ^ string. This type is incompatible with
+  9: function f(x:boolean) { }
+                  ^^^^^^^ boolean. See: A.js:9
 
-D.js:12:1,4: function call
-Error:
-D.js:12:3,3: string
-This type is incompatible with
-A.js:9:14,20: boolean
+E.js:8
+  8: o.fn(false);
+     ^^^^^^^^^^^ call of method `fn`
+  8: o.fn(false);
+          ^^^^^ boolean. This type is incompatible with
+  4: function h(x:number) { }
+                  ^^^^^^ number
 
-E.js:8:1,11: call of method `fn`
-Error:
-E.js:8:6,10: boolean
-This type is incompatible with
-E.js:4:14,19: number
+F.js:2
+  2: fn2({length: 'hi'});
+     ^^^^^^^^^^^^^^^^^^^ function call
+  1: function fn2(x) { return x.length * 4; }
+                              ^^^^^^^^ string. This type is incompatible with
+  1: function fn2(x) { return x.length * 4; }
+                              ^^^^^^^^^^^^ number
 
-F.js:2:1,19: function call
-Error:
-F.js:1:26,33: string
-This type is incompatible with
-F.js:1:26,37: number
+F.js:5
+  5:   return x.length;
+              ^^^^^^^^ number. This type is incompatible with
+  4: function foo(x: Array<number>): string {
+                                     ^^^^^^ string
 
-F.js:5:10,17: number
-This type is incompatible with
-F.js:4:33,38: string
+G.js:2
+  2: a.length = 123;
+                ^^^ number. This type is incompatible with
+  1: var a = { length: "duck" };
+                       ^^^^^^ string
 
-G.js:2:12,14: number
-This type is incompatible with
-G.js:1:19,24: string
+G.js:3
+  3: a.length();
+     ^^^^^^^^^^ call of method `length`. Function cannot be called on
+  3: a.length();
+     ^^^^^^^^^^ number
 
-G.js:3:1,10: call of method `length`
-Function cannot be called on
-G.js:3:1,10: number
+G.js:6
+  6: b.length = "duck";
+     ^^^^^^^^ assignment of property `length`
+  6: b.length = "duck";
+                ^^^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:203
 
-G.js:6:1,8: assignment of property `length`
-Error:
-G.js:6:12,17: string
-This type is incompatible with
-[LIB] core.js:203:13,18: number
+G.js:7
+  7: b.length();
+     ^^^^^^^^^^ call of method `length`. Function cannot be called on
+  7: b.length();
+     ^^^^^^^^^^ string
 
-G.js:7:1,10: call of method `length`
-Function cannot be called on
-G.js:7:1,10: string
 
 Found 13 errors

@@ -1,112 +1,158 @@
+c.js:5
+  5: c.foo();
+       ^^^ property `foo`. Property not found in
+  5: c.foo();
+     ^ object literal
 
-c.js:5:3,5: property `foo`
-Property not found in
-c.js:5:1,1: object literal
+object_assign.js:7
+  7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `assign`
+  7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                       ^^^^^^^^^^^^^^^^^^^^^^ property `bar`. Property not found in
+  7: var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
 
-object_assign.js:7:44,69: call of method `assign`
-Error:
-object_assign.js:7:19,40: property `bar`
-Property not found in
-object_assign.js:7:44,69: object literal
+object_create.js:12
+ 12: ({ foo: "foo" }: C);
+      ^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 12: ({ foo: "foo" }: C);
+                      ^ C
 
-object_create.js:12:2,15: object literal
-This type is incompatible with
-object_create.js:12:18,18: C
+object_create.js:17
+ 17: (o: C);
+      ^ object type. This type is incompatible with
+ 17: (o: C);
+         ^ C
 
-object_create.js:17:2,2: object type
-This type is incompatible with
-object_create.js:17:5,5: C
+object_keys.js:5
+  5: (Object.keys(sealed): void); // error, Array<string>
+      ^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
+  5: (Object.keys(sealed): void); // error, Array<string>
+                           ^^^^ undefined
 
-object_keys.js:5:2,20: array type
-This type is incompatible with
-object_keys.js:5:23,26: undefined
+object_keys.js:9
+  9:   (k : number) // error: number ~> string
+        ^ string. This type is incompatible with
+  9:   (k : number) // error: number ~> string
+            ^^^^^^ number
 
-object_keys.js:9:4,4: string
-This type is incompatible with
-object_keys.js:9:8,13: number
+object_keys.js:14
+ 14:   (k : number) // error: number ~> string
+        ^ string. This type is incompatible with
+ 14:   (k : number) // error: number ~> string
+            ^^^^^^ number
 
-object_keys.js:14:4,4: string
-This type is incompatible with
-object_keys.js:14:8,13: number
+object_keys.js:18
+ 18: (Object.keys(any): Array<number>); // error, Array<string>
+                  ^^^ string. This type is incompatible with
+ 18: (Object.keys(any): Array<number>); // error, Array<string>
+                              ^^^^^^ number
 
-object_keys.js:18:14,16: string
-This type is incompatible with
-object_keys.js:18:26,31: number
+object_missing.js:5
+  5:     Object.doesNotExist();
+                ^^^^^^^^^^^^ property `doesNotExist`. Property not found in
+  5:     Object.doesNotExist();
+         ^^^^^^ statics of Object
 
-object_missing.js:5:12,23: property `doesNotExist`
-Property not found in
-object_missing.js:5:5,10: statics of Object
+object_prototype.js:38
+ 38: var xToString : number = x.toString; // error
+                              ^^^^^^^^^^ function type. This type is incompatible with
+ 38: var xToString : number = x.toString; // error
+                     ^^^^^^ number
 
-object_prototype.js:38:26,35: function type
-This type is incompatible with
-object_prototype.js:38:17,22: number
+object_prototype.js:39
+ 39: var xToString2 : () => number = x.toString; // error
+                            ^^^^^^ number. This type is incompatible with
+string. See: [LIB] core.js:53
 
-object_prototype.js:39:24,29: number
-This type is incompatible with
-[LIB] core.js:53:17,22: string
+object_prototype.js:43
+ 43: var yToString : number = y.toString; // error
+                              ^^^^^^^^^^ function type. This type is incompatible with
+ 43: var yToString : number = y.toString; // error
+                     ^^^^^^ number
 
-object_prototype.js:43:26,35: function type
-This type is incompatible with
-object_prototype.js:43:17,22: number
+object_prototype.js:49
+ 49: (123).toString = function() {}; // error
+           ^^^^^^^^ property `toString`. Property cannot be assigned on
+ 49: (123).toString = function() {}; // error
+      ^^^ number
 
-object_prototype.js:49:7,14: property `toString`
-Property cannot be assigned on
-object_prototype.js:49:2,4: number
+object_prototype.js:51
+ 51: (123).toString('foo'); // error
+      ^^^^^^^^^^^^^^^^^^^^ call of method `toString`
+ 51: (123).toString('foo'); // error
+                    ^^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:98
 
-object_prototype.js:51:2,21: call of method `toString`
-Error:
-object_prototype.js:51:16,20: string
-This type is incompatible with
-[LIB] core.js:98:22,27: number
+object_prototype.js:52
+ 52: (123).toString(null); // error
+      ^^^^^^^^^^^^^^^^^^^ call of method `toString`
+ 52: (123).toString(null); // error
+                    ^^^^ null. This type is incompatible with
+number. See: [LIB] core.js:98
 
-object_prototype.js:52:2,20: call of method `toString`
-Error:
-object_prototype.js:52:16,19: null
-This type is incompatible with
-[LIB] core.js:98:22,27: number
+object_prototype.js:71
+ 71: var xHasOwnProperty : number = x.hasOwnProperty; // error
+                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+ 71: var xHasOwnProperty : number = x.hasOwnProperty; // error
+                           ^^^^^^ number
 
-object_prototype.js:71:32,47: function type
-This type is incompatible with
-object_prototype.js:71:23,28: number
+object_prototype.js:72
+ 72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
+                                              ^^^^^^ number. This type is incompatible with
+boolean. See: [LIB] core.js:50
 
-object_prototype.js:72:42,47: number
-This type is incompatible with
-[LIB] core.js:50:32,38: boolean
+object_prototype.js:76
+ 76: var yHasOwnProperty : number = y.hasOwnProperty; // error
+                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+ 76: var yHasOwnProperty : number = y.hasOwnProperty; // error
+                           ^^^^^^ number
 
-object_prototype.js:76:32,47: function type
-This type is incompatible with
-object_prototype.js:76:23,28: number
+object_prototype.js:96
+ 96: var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                          ^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+ 96: var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
+                                 ^^^^^^ number
 
-object_prototype.js:96:38,59: function type
-This type is incompatible with
-object_prototype.js:96:29,34: number
+object_prototype.js:97
+ 97: var xPropertyIsEnumerable2 : (prop: string) => number =
+                                                    ^^^^^^ number. This type is incompatible with
+boolean. See: [LIB] core.js:51
 
-object_prototype.js:97:48,53: number
-This type is incompatible with
-[LIB] core.js:51:38,44: boolean
+object_prototype.js:102
+102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
+                                          ^^^^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
+                                 ^^^^^^ number
 
-object_prototype.js:102:38,59: function type
-This type is incompatible with
-object_prototype.js:102:29,34: number
+object_prototype.js:122
+122: var xValueOf : number = x.valueOf; // error
+                             ^^^^^^^^^ function type. This type is incompatible with
+122: var xValueOf : number = x.valueOf; // error
+                    ^^^^^^ number
 
-object_prototype.js:122:25,33: function type
-This type is incompatible with
-object_prototype.js:122:16,21: number
+object_prototype.js:126
+126: var yValueOf : number = y.valueOf; // error
+                             ^^^^^^^^^ function type. This type is incompatible with
+126: var yValueOf : number = y.valueOf; // error
+                    ^^^^^^ number
 
-object_prototype.js:126:25,33: function type
-This type is incompatible with
-object_prototype.js:126:16,21: number
+object_prototype.js:150
+150: var xToLocaleString : number = x.toLocaleString; // error
+                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+150: var xToLocaleString : number = x.toLocaleString; // error
+                           ^^^^^^ number
 
-object_prototype.js:150:32,47: function type
-This type is incompatible with
-object_prototype.js:150:23,28: number
+object_prototype.js:151
+151: var xToLocaleString2 : () => number = x.toLocaleString; // error
+                                  ^^^^^^ number. This type is incompatible with
+string. See: [LIB] core.js:274
 
-object_prototype.js:151:30,35: number
-This type is incompatible with
-[LIB] core.js:274:23,28: string
+object_prototype.js:155
+155: var yToLocaleString : number = y.toLocaleString; // error
+                                    ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
+155: var yToLocaleString : number = y.toLocaleString; // error
+                           ^^^^^^ number
 
-object_prototype.js:155:32,47: function type
-This type is incompatible with
-object_prototype.js:155:23,28: number
 
 Found 26 errors

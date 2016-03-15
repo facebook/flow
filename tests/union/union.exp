@@ -1,68 +1,91 @@
+issue-198.js:1
+  1: var p = new Promise(function(resolve, reject) {
+             ^ call of method `then`
+  5:         return num.toFixed();
+                    ^^^^^^^^^^^^^ string. This type is incompatible with
+union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See: [LIB] core.js:444
+  Member 1:
+  type application of identifier `Promise`. See: [LIB] core.js:444
+  Error:
+    5:         return num.toFixed();
+                      ^^^^^^^^^^^^^ string. This type is incompatible with
+  Promise. See: [LIB] core.js:444
+  Member 2:
+    1: var p = new Promise(function(resolve, reject) {
+               ^ type parameter `U` of call of method `then`
+  Error:
+    9:         return str.toFixed();
+                          ^^^^^^^ property `toFixed`. Property not found in
+    9:         return str.toFixed();
+                      ^^^ String
 
-issue-198.js:1:9,10:6: call of method `then`
-Error:
-issue-198.js:5:16,28: string
-This type is incompatible with
-[LIB] core.js:444:33,46: union: type application of identifier `Promise` | type parameter `U` of call of method `then`
-Member 1:
-[LIB] core.js:444:33,42: type application of identifier `Promise`
-Error:
-issue-198.js:5:16,28: string
-This type is incompatible with
-[LIB] core.js:444:33,42: Promise
-Member 2:
-issue-198.js:1:9,6:6: type parameter `U` of call of method `then`
-Error:
-issue-198.js:9:20,26: property `toFixed`
-Property not found in
-issue-198.js:9:16,18: String
+issue-324.js:8
+  8: foostr = barstr;
+              ^^^^^^ Bar. This type is incompatible with
+  5: var foostr: Foo | string = new Foo();
+                 ^^^^^^^^^^^^ union: Foo | string
+  Member 1:
+    5: var foostr: Foo | string = new Foo();
+                   ^^^ Foo
+  Error:
+    8: foostr = barstr;
+                ^^^^^^ Bar. This type is incompatible with
+    5: var foostr: Foo | string = new Foo();
+                   ^^^ Foo
+  Member 2:
+    5: var foostr: Foo | string = new Foo();
+                         ^^^^^^ string
+  Error:
+    8: foostr = barstr;
+                ^^^^^^ Bar. This type is incompatible with
+    5: var foostr: Foo | string = new Foo();
+                         ^^^^^^ string
 
-issue-324.js:8:10,15: Bar
-This type is incompatible with
-issue-324.js:5:13,24: union: Foo | string
-Member 1:
-issue-324.js:5:13,15: Foo
-Error:
-issue-324.js:8:10,15: Bar
-This type is incompatible with
-issue-324.js:5:13,15: Foo
-Member 2:
-issue-324.js:5:19,24: string
-Error:
-issue-324.js:8:10,15: Bar
-This type is incompatible with
-issue-324.js:5:19,24: string
+union.js:2
+  2: bar(0);
+         ^ number. This type is incompatible with
+  1: function bar(x: Document | string): void { }
+                     ^^^^^^^^^^^^^^^^^ union: Document | string
+  Member 1:
+    1: function bar(x: Document | string): void { }
+                       ^^^^^^^^ Document
+  Error:
+    2: bar(0);
+           ^ number. This type is incompatible with
+    1: function bar(x: Document | string): void { }
+                       ^^^^^^^^ Document
+  Member 2:
+    1: function bar(x: Document | string): void { }
+                                  ^^^^^^ string
+  Error:
+    2: bar(0);
+           ^ number. This type is incompatible with
+    1: function bar(x: Document | string): void { }
+                                  ^^^^^^ string
 
-union.js:2:5,5: number
-This type is incompatible with
-union.js:1:17,33: union: Document | string
-Member 1:
-union.js:1:17,24: Document
-Error:
-union.js:2:5,5: number
-This type is incompatible with
-union.js:1:17,24: Document
-Member 2:
-union.js:1:28,33: string
-Error:
-union.js:2:5,5: number
-This type is incompatible with
-union.js:1:28,33: string
+union.js:8
+  8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+                 ^^^^^^^ D. This type is incompatible with
+  8:   var c:C = new E(); // error, since E could be D, and D is not a subtype of C
+             ^ C
 
-union.js:8:13,19: D
-This type is incompatible with
-union.js:8:9,9: C
+union.js:9
+  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+                       ^ C. This type is incompatible with
+  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+                       ^ D
 
-union.js:9:19,19: C
-This type is incompatible with
-union.js:9:19,19: D
+union.js:9
+  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+                       ^ D. This type is incompatible with
+  9:   function qux(e: E) { } // this annotation is an error: is it C, or is it D?
+                       ^ C
 
-union.js:9:19,19: D
-This type is incompatible with
-union.js:9:19,19: C
+yuge.js:23
+ 23:     ("": ErrorCode);  // also, error pos omits this line completely
+          ^^ string. This type is incompatible with
+ 23:     ("": ErrorCode);  // also, error pos omits this line completely
+              ^^^^^^^^^ number enum
 
-yuge.js:23:6,7: string
-This type is incompatible with
-yuge.js:23:10,18: number enum
 
 Found 7 errors

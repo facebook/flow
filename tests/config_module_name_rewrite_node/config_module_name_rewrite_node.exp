@@ -1,26 +1,38 @@
+A.js:5
+  5: var a_2: string = m1.numVal; // Error: number ~> string
+                       ^^^^^^^^^ number. This type is incompatible with
+  5: var a_2: string = m1.numVal; // Error: number ~> string
+              ^^^^^^ string
 
-A.js:5:19,27: number
-This type is incompatible with
-A.js:5:10,15: string
+A.js:8
+  8: var a_4: string = numVal; // Error: number ~> string
+                       ^^^^^^ number. This type is incompatible with
+  8: var a_4: string = numVal; // Error: number ~> string
+              ^^^^^^ string
 
-A.js:8:19,24: number
-This type is incompatible with
-A.js:8:10,15: string
+A.js:14
+ 14: var b_2: string = m2.numVal; // Error: number ~> string
+                       ^^^^^^^^^ number. This type is incompatible with
+ 14: var b_2: string = m2.numVal; // Error: number ~> string
+              ^^^^^^ string
 
-A.js:14:19,27: number
-This type is incompatible with
-A.js:14:10,15: string
+A.js:17
+ 17: var b_4: string = numVal2; // Error: number ~> string
+                       ^^^^^^^ number. This type is incompatible with
+ 17: var b_4: string = numVal2; // Error: number ~> string
+              ^^^^^^ string
 
-A.js:17:19,25: number
-This type is incompatible with
-A.js:17:10,15: string
+A.js:22
+ 22: var c_2: string = m3.numVal; // Error: number ~> string
+                       ^^^^^^^^^ number. This type is incompatible with
+ 22: var c_2: string = m3.numVal; // Error: number ~> string
+              ^^^^^^ string
 
-A.js:22:19,27: number
-This type is incompatible with
-A.js:22:10,15: string
+A.js:25
+ 25: var c_4: string = numVal3; // Error: number ~> string
+                       ^^^^^^^ number. This type is incompatible with
+ 25: var c_4: string = numVal3; // Error: number ~> string
+              ^^^^^^ string
 
-A.js:25:19,25: number
-This type is incompatible with
-A.js:25:10,15: string
 
 Found 6 errors

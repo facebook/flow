@@ -1,31 +1,45 @@
+unary.js:8
+  8:   return -y; // error, we don't allow coercion here
+              ^^ unary minus operator. Expected number instead of
+  8:   return -y; // error, we don't allow coercion here
+               ^ string
 
-unary.js:8:10,11: unary minus operator
-Expected number instead of
-unary.js:8:11,11: string
+unary.js:12
+ 12:   y++; // error, we don't allow coercion here
+       ^ string. This type is incompatible with
+ 12:   y++; // error, we don't allow coercion here
+       ^^^ number
 
-unary.js:12:3,3: string
-This type is incompatible with
-unary.js:12:3,5: number
+unary.js:12
+ 12:   y++; // error, we don't allow coercion here
+       ^^^ number. This type is incompatible with
+ 11: function x2(y: string) {
+                    ^^^^^^ string
 
-unary.js:12:3,5: number
-This type is incompatible with
-unary.js:11:16,21: string
+unary.js:13
+ 13:   y--; // error, we don't allow coercion here
+       ^^^ number. This type is incompatible with
+ 11: function x2(y: string) {
+                    ^^^^^^ string
 
-unary.js:13:3,5: number
-This type is incompatible with
-unary.js:11:16,21: string
+unary.js:14
+ 14:   ++y; // error, we don't allow coercion here
+       ^^^ number. This type is incompatible with
+ 11: function x2(y: string) {
+                    ^^^^^^ string
 
-unary.js:14:3,5: number
-This type is incompatible with
-unary.js:11:16,21: string
+unary.js:15
+ 15:   --y; // error, we don't allow coercion here
+       ^^^ number. This type is incompatible with
+ 11: function x2(y: string) {
+                    ^^^^^^ string
 
-unary.js:15:3,5: number
-This type is incompatible with
-unary.js:11:16,21: string
+unary.js:19
+ 19:   return ~y;  // error, we don't allow coercion here
+               ^ string. This type is incompatible with
+ 19:   return ~y;  // error, we don't allow coercion here
+              ^^ number
 
-unary.js:19:11,11: string
-This type is incompatible with
-unary.js:19:10,11: number
 
 unary.js:26:2,3: number
 This type is incompatible with

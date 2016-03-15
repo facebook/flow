@@ -1,26 +1,38 @@
+test3.js:8
+  8: var y: number = o.y;
+                     ^^^ string. This type is incompatible with
+  8: var y: number = o.y;
+            ^^^^^^ number
 
-test3.js:8:17,19: string
-This type is incompatible with
-test3.js:8:8,13: number
+test3.js:9
+  9: var z: number = o.z;
+                     ^^^ string. This type is incompatible with
+  9: var z: number = o.z;
+            ^^^^^^ number
 
-test3.js:9:17,19: string
-This type is incompatible with
-test3.js:9:8,13: number
+test3.js:17
+ 17: var t: boolean = s.y; // error, string or number
+                      ^^^ number. This type is incompatible with
+ 17: var t: boolean = s.y; // error, string or number
+            ^^^^^^^ boolean
 
-test3.js:17:18,20: number
-This type is incompatible with
-test3.js:17:8,14: boolean
+test3.js:17
+ 17: var t: boolean = s.y; // error, string or number
+                      ^^^ string. This type is incompatible with
+ 17: var t: boolean = s.y; // error, string or number
+            ^^^^^^^ boolean
 
-test3.js:17:18,20: string
-This type is incompatible with
-test3.js:17:8,14: boolean
+test6.js:10
+ 10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `abc`. Property not found in
+ 10: (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
+      ^ object literal
 
-test6.js:10:5,30: property `abc`
-Property not found in
-test6.js:10:2,2: object literal
+test7.js:6
+  6:     ({...x}: void); // error, Object
+          ^^^^^^ object literal. This type is incompatible with
+  6:     ({...x}: void); // error, Object
+                  ^^^^ undefined
 
-test7.js:6:6,11: object literal
-This type is incompatible with
-test7.js:6:14,17: undefined
 
 Found 6 errors

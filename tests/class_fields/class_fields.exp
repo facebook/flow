@@ -1,218 +1,326 @@
+base_class.js:9
+  9:   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                  ^^^^^^ string. This type is incompatible with
+  9:   annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                         ^^^^^^ number
 
-base_class.js:9:46,51: string
-This type is incompatible with
-base_class.js:9:37,42: number
+base_class.js:16
+ 16:   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                         ^^^^^^ string. This type is incompatible with
+ 16:   static annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                ^^^^^^ number
 
-base_class.js:16:53,58: string
-This type is incompatible with
-base_class.js:16:44,49: number
+base_class.js:33
+ 33: (o.annotatedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 33: (o.annotatedField: string); // Error: number ~> string
+                        ^^^^^^ string
 
-base_class.js:33:2,17: number
-This type is incompatible with
-base_class.js:33:20,25: string
+base_class.js:35
+ 35: (Base.annotatedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 35: (Base.annotatedField: string); // Error: number ~> string
+                           ^^^^^^ string
 
-base_class.js:35:2,20: number
-This type is incompatible with
-base_class.js:35:23,28: string
+base_class.js:41
+ 41: (o.initializedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 41: (o.initializedField: string); // Error: number ~> string
+                          ^^^^^^ string
 
-base_class.js:41:2,19: number
-This type is incompatible with
-base_class.js:41:22,27: string
+base_class.js:43
+ 43: (Base.initializedField: number); // Error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 43: (Base.initializedField: number); // Error: string ~> number
+                             ^^^^^^ number
 
-base_class.js:43:2,22: string
-This type is incompatible with
-base_class.js:43:25,30: number
+base_class.js:49
+ 49: (o.initializedFieldWithThis: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 49: (o.initializedFieldWithThis: string); // Error: number ~> string
+                                  ^^^^^^ string
 
-base_class.js:49:2,27: number
-This type is incompatible with
-base_class.js:49:30,35: string
+base_class.js:51
+ 51: (Base.initializedFieldWithThis: number); // Error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 51: (Base.initializedFieldWithThis: number); // Error: string ~> number
+                                     ^^^^^^ number
 
-base_class.js:51:2,30: string
-This type is incompatible with
-base_class.js:51:33,38: number
+base_class.js:59
+ 59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+ 59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                        ^^^^^^ number
 
-base_class.js:59:2,33: null
-This type is incompatible with
-base_class.js:59:36,41: number
+base_class.js:59
+ 59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 59: (o.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                        ^^^^^^ number
 
-base_class.js:59:2,33: undefined
-This type is incompatible with
-base_class.js:59:36,41: number
+base_class.js:61
+ 61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+ 61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                           ^^^^^^ number
 
-base_class.js:61:2,36: null
-This type is incompatible with
-base_class.js:61:39,44: number
+base_class.js:61
+ 61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 61: (Base.annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                           ^^^^^^ number
 
-base_class.js:61:2,36: undefined
-This type is incompatible with
-base_class.js:61:39,44: number
+base_class.js:70
+ 70: (o.annotatedInitializedFieldInvalid: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 70: (o.annotatedInitializedFieldInvalid: string); // Error: number ~> string
+                                          ^^^^^^ string
 
-base_class.js:70:2,35: number
-This type is incompatible with
-base_class.js:70:38,43: string
+base_class.js:72
+ 72: (Base.annotatedInitializedFieldInvalid: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 72: (Base.annotatedInitializedFieldInvalid: string); // Error: number ~> string
+                                             ^^^^^^ string
 
-base_class.js:72:2,38: number
-This type is incompatible with
-base_class.js:72:41,46: string
+derived_class.js:9
+  9:   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                       ^^^^^^ string. This type is incompatible with
+  9:   base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                              ^^^^^^ number
 
-derived_class.js:9:51,56: string
-This type is incompatible with
-derived_class.js:9:42,47: number
+derived_class.js:16
+ 16:   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                              ^^^^^^ string. This type is incompatible with
+ 16:   static base_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                     ^^^^^^ number
 
-derived_class.js:16:58,63: string
-This type is incompatible with
-derived_class.js:16:49,54: number
+derived_class.js:28
+ 28:   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                        ^^^^^^ string. This type is incompatible with
+ 28:   child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                               ^^^^^^ number
 
-derived_class.js:28:52,57: string
-This type is incompatible with
-derived_class.js:28:43,48: number
+derived_class.js:35
+ 35:   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                               ^^^^^^ string. This type is incompatible with
+ 35:   static child_annotatedInitializedFieldInvalid: number = 'asdf'; // Error: string ~> number
+                                                      ^^^^^^ number
 
-derived_class.js:35:59,64: string
-This type is incompatible with
-derived_class.js:35:50,55: number
+derived_class.js:61
+ 61: (o.base_annotatedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 61: (o.base_annotatedField: string); // Error: number ~> string
+                             ^^^^^^ string
 
-derived_class.js:61:2,22: number
-This type is incompatible with
-derived_class.js:61:25,30: string
+derived_class.js:63
+ 63: (Child.base_annotatedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 63: (Child.base_annotatedField: string); // Error: number ~> string
+                                 ^^^^^^ string
 
-derived_class.js:63:2,26: number
-This type is incompatible with
-derived_class.js:63:29,34: string
+derived_class.js:66
+ 66: (o.child_annotatedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 66: (o.child_annotatedField: string); // Error: number ~> string
+                              ^^^^^^ string
 
-derived_class.js:66:2,23: number
-This type is incompatible with
-derived_class.js:66:26,31: string
+derived_class.js:68
+ 68: (Child.child_annotatedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 68: (Child.child_annotatedField: string); // Error: number ~> string
+                                  ^^^^^^ string
 
-derived_class.js:68:2,27: number
-This type is incompatible with
-derived_class.js:68:30,35: string
+derived_class.js:74
+ 74: (o.base_initializedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 74: (o.base_initializedField: string); // Error: number ~> string
+                               ^^^^^^ string
 
-derived_class.js:74:2,24: number
-This type is incompatible with
-derived_class.js:74:27,32: string
+derived_class.js:76
+ 76: (Child.base_initializedField: number); // Error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 76: (Child.base_initializedField: number); // Error: string ~> number
+                                   ^^^^^^ number
 
-derived_class.js:76:2,28: string
-This type is incompatible with
-derived_class.js:76:31,36: number
+derived_class.js:79
+ 79: (o.child_initializedField: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 79: (o.child_initializedField: string); // Error: number ~> string
+                                ^^^^^^ string
 
-derived_class.js:79:2,25: number
-This type is incompatible with
-derived_class.js:79:28,33: string
+derived_class.js:81
+ 81: (Child.child_initializedField: number); // Error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 81: (Child.child_initializedField: number); // Error: string ~> number
+                                    ^^^^^^ number
 
-derived_class.js:81:2,29: string
-This type is incompatible with
-derived_class.js:81:32,37: number
+derived_class.js:87
+ 87: (o.base_initializedFieldWithThis: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 87: (o.base_initializedFieldWithThis: string); // Error: number ~> string
+                                       ^^^^^^ string
 
-derived_class.js:87:2,32: number
-This type is incompatible with
-derived_class.js:87:35,40: string
+derived_class.js:89
+ 89: (Child.base_initializedFieldWithThis: number); // Error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 89: (Child.base_initializedFieldWithThis: number); // Error: string ~> number
+                                           ^^^^^^ number
 
-derived_class.js:89:2,36: string
-This type is incompatible with
-derived_class.js:89:39,44: number
+derived_class.js:92
+ 92: (o.child_initializedFieldWithThis: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 92: (o.child_initializedFieldWithThis: string); // Error: number ~> string
+                                        ^^^^^^ string
 
-derived_class.js:92:2,33: number
-This type is incompatible with
-derived_class.js:92:36,41: string
+derived_class.js:94
+ 94: (Child.child_initializedFieldWithThis: number); // Error: string ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 94: (Child.child_initializedFieldWithThis: number); // Error: string ~> number
+                                            ^^^^^^ number
 
-derived_class.js:94:2,37: string
-This type is incompatible with
-derived_class.js:94:40,45: number
+derived_class.js:102
+102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                             ^^^^^^ number
 
-derived_class.js:102:2,38: null
-This type is incompatible with
-derived_class.js:102:41,46: number
+derived_class.js:102
+102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+102: (o.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                             ^^^^^^ number
 
-derived_class.js:102:2,38: undefined
-This type is incompatible with
-derived_class.js:102:41,46: number
+derived_class.js:104
+104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                                 ^^^^^^ number
 
-derived_class.js:104:2,42: null
-This type is incompatible with
-derived_class.js:104:45,50: number
+derived_class.js:104
+104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+104: (Child.base_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                                 ^^^^^^ number
 
-derived_class.js:104:2,42: undefined
-This type is incompatible with
-derived_class.js:104:45,50: number
+derived_class.js:107
+107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                              ^^^^^^ number
 
-derived_class.js:107:2,39: null
-This type is incompatible with
-derived_class.js:107:42,47: number
+derived_class.js:107
+107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+107: (o.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                              ^^^^^^ number
 
-derived_class.js:107:2,39: undefined
-This type is incompatible with
-derived_class.js:107:42,47: number
+derived_class.js:109
+109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                                  ^^^^^^ number
 
-derived_class.js:109:2,43: null
-This type is incompatible with
-derived_class.js:109:46,51: number
+derived_class.js:109
+109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+109: (Child.child_annotatedInitializedFieldValid: number); // Error: ?number ~> number
+                                                  ^^^^^^ number
 
-derived_class.js:109:2,43: undefined
-This type is incompatible with
-derived_class.js:109:46,51: number
+derived_class.js:118
+118: (o.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+118: (o.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+                                               ^^^^^^ string
 
-derived_class.js:118:2,40: number
-This type is incompatible with
-derived_class.js:118:43,48: string
+derived_class.js:120
+120: (Child.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+120: (Child.base_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+                                                   ^^^^^^ string
 
-derived_class.js:120:2,44: number
-This type is incompatible with
-derived_class.js:120:47,52: string
+derived_class.js:123
+123: (o.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+123: (o.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+                                                ^^^^^^ string
 
-derived_class.js:123:2,41: number
-This type is incompatible with
-derived_class.js:123:44,49: string
+derived_class.js:125
+125: (Child.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+125: (Child.child_annotatedInitializedFieldInvalid: string); // Error: number ~> string
+                                                    ^^^^^^ string
 
-derived_class.js:125:2,45: number
-This type is incompatible with
-derived_class.js:125:48,53: string
+derived_class.js:132
+132: (o.inherited_initializer: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+132: (o.inherited_initializer: string); // Error: number ~> string
+                               ^^^^^^ string
 
-derived_class.js:132:2,24: number
-This type is incompatible with
-derived_class.js:132:27,32: string
+derived_class.js:134
+134: (Child.inherited_initializer: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+134: (Child.inherited_initializer: string); // Error: number ~> string
+                                   ^^^^^^ string
 
-derived_class.js:134:2,28: number
-This type is incompatible with
-derived_class.js:134:31,36: string
+generic_class.js:15
+ 15: (o1.p: string); // Error: number ~> string
+      ^^^^ number. This type is incompatible with
+ 15: (o1.p: string); // Error: number ~> string
+            ^^^^^^ string
 
-generic_class.js:15:2,5: number
-This type is incompatible with
-generic_class.js:15:8,13: string
+generic_class.js:18
+ 18: (ClassAnnotated.p: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 18: (ClassAnnotated.p: string); // Error: number ~> string
+                        ^^^^^^ string
 
-generic_class.js:18:2,17: number
-This type is incompatible with
-generic_class.js:18:20,25: string
+generic_class.js:26
+ 26:   invalid: T = 42; // Error: number ~> Generic<T>
+                    ^^ number. This type is incompatible with
+ 25: class ClassGenericInitialized<T, U> {
+           ^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-generic_class.js:26:16,17: number
-This type is incompatible with
-generic_class.js:25:7,29: some incompatible instantiation of `T`
+generic_class.js:29
+ 29:   static invalid: T = 42; // Error: number ~> Generic<T>
+                           ^^ number. This type is incompatible with
+ 25: class ClassGenericInitialized<T, U> {
+           ^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-generic_class.js:29:23,24: number
-This type is incompatible with
-generic_class.js:25:7,29: some incompatible instantiation of `T`
+scoping.js:24
+ 24: (new Foo().outer: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 24: (new Foo().outer: string); // Error: number ~> string
+                       ^^^^^^ string
 
-scoping.js:24:2,16: number
-This type is incompatible with
-scoping.js:24:19,24: string
+scoping.js:26
+ 26: (Foo.outer: string); // Error: number ~> string
+      ^^^^^^^^^ number. This type is incompatible with
+ 26: (Foo.outer: string); // Error: number ~> string
+                 ^^^^^^ string
 
-scoping.js:26:2,10: number
-This type is incompatible with
-scoping.js:26:13,18: string
+scoping.js:33
+ 33: (new Foo().selfTyped: number); // Error: Foo ~> number
+      ^^^^^^^^^^^^^^^^^^^ Foo. This type is incompatible with
+ 33: (new Foo().selfTyped: number); // Error: Foo ~> number
+                           ^^^^^^ number
 
-scoping.js:33:2,20: Foo
-This type is incompatible with
-scoping.js:33:23,28: number
+scoping.js:35
+ 35: (Foo.selfTyped: number); // Error: Foo ~> number
+      ^^^^^^^^^^^^^ Foo. This type is incompatible with
+ 35: (Foo.selfTyped: number); // Error: Foo ~> number
+                     ^^^^^^ number
 
-scoping.js:35:2,14: Foo
-This type is incompatible with
-scoping.js:35:17,22: number
+scoping.js:38
+ 38: (new Foo().selfTypedInit: number); // Error: Foo ~> number
+      ^^^^^^^^^^^^^^^^^^^^^^^ Foo. This type is incompatible with
+ 38: (new Foo().selfTypedInit: number); // Error: Foo ~> number
+                               ^^^^^^ number
 
-scoping.js:38:2,24: Foo
-This type is incompatible with
-scoping.js:38:27,32: number
+scoping.js:40
+ 40: (Foo.selfTypedInit: number); // Error: Foo ~> number
+      ^^^^^^^^^^^^^^^^^ Foo. This type is incompatible with
+ 40: (Foo.selfTypedInit: number); // Error: Foo ~> number
+                         ^^^^^^ number
 
-scoping.js:40:2,18: Foo
-This type is incompatible with
-scoping.js:40:21,26: number
 
 Found 54 errors

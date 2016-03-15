@@ -1,178 +1,244 @@
+in.js:27
+ 27:     ('foo' in 123); // error
+                   ^^^ number. This type is incompatible with
+ 27:     ('foo' in 123); // error
+                   ^^^ union: RHS of `in` operator(s)
+  Member 1:
+   27:     ('foo' in 123); // error
+                     ^^^ RHS of `in` operator
+  Error:
+   27:     ('foo' in 123); // error
+                     ^^^ number. This type is incompatible with
+   27:     ('foo' in 123); // error
+                     ^^^ RHS of `in` operator
+  Member 2:
+   27:     ('foo' in 123); // error
+                     ^^^ RHS of `in` operator
+  Error:
+   27:     ('foo' in 123); // error
+                     ^^^ number. This type is incompatible with
+   27:     ('foo' in 123); // error
+                     ^^^ RHS of `in` operator
 
-in.js:27:15,17: number
-This type is incompatible with
-in.js:27:15,17: union: RHS of `in` operator(s)
-Member 1:
-in.js:27:15,17: RHS of `in` operator
-Error:
-in.js:27:15,17: number
-This type is incompatible with
-in.js:27:15,17: RHS of `in` operator
-Member 2:
-in.js:27:15,17: RHS of `in` operator
-Error:
-in.js:27:15,17: number
-This type is incompatible with
-in.js:27:15,17: RHS of `in` operator
+in.js:28
+ 28:     ('foo' in 'bar'); // error
+                   ^^^^^ string. This type is incompatible with
+ 28:     ('foo' in 'bar'); // error
+                   ^^^^^ union: RHS of `in` operator(s)
+  Member 1:
+   28:     ('foo' in 'bar'); // error
+                     ^^^^^ RHS of `in` operator
+  Error:
+   28:     ('foo' in 'bar'); // error
+                     ^^^^^ string. This type is incompatible with
+   28:     ('foo' in 'bar'); // error
+                     ^^^^^ RHS of `in` operator
+  Member 2:
+   28:     ('foo' in 'bar'); // error
+                     ^^^^^ RHS of `in` operator
+  Error:
+   28:     ('foo' in 'bar'); // error
+                     ^^^^^ string. This type is incompatible with
+   28:     ('foo' in 'bar'); // error
+                     ^^^^^ RHS of `in` operator
 
-in.js:28:15,19: string
-This type is incompatible with
-in.js:28:15,19: union: RHS of `in` operator(s)
-Member 1:
-in.js:28:15,19: RHS of `in` operator
-Error:
-in.js:28:15,19: string
-This type is incompatible with
-in.js:28:15,19: RHS of `in` operator
-Member 2:
-in.js:28:15,19: RHS of `in` operator
-Error:
-in.js:28:15,19: string
-This type is incompatible with
-in.js:28:15,19: RHS of `in` operator
+in.js:29
+ 29:     ('foo' in void 0); // error
+                   ^^^^^^ undefined. This type is incompatible with
+ 29:     ('foo' in void 0); // error
+                   ^^^^^^ union: RHS of `in` operator(s)
+  Member 1:
+   29:     ('foo' in void 0); // error
+                     ^^^^^^ RHS of `in` operator
+  Error:
+   29:     ('foo' in void 0); // error
+                     ^^^^^^ undefined. This type is incompatible with
+   29:     ('foo' in void 0); // error
+                     ^^^^^^ RHS of `in` operator
+  Member 2:
+   29:     ('foo' in void 0); // error
+                     ^^^^^^ RHS of `in` operator
+  Error:
+   29:     ('foo' in void 0); // error
+                     ^^^^^^ undefined. This type is incompatible with
+   29:     ('foo' in void 0); // error
+                     ^^^^^^ RHS of `in` operator
 
-in.js:29:15,20: undefined
-This type is incompatible with
-in.js:29:15,20: union: RHS of `in` operator(s)
-Member 1:
-in.js:29:15,20: RHS of `in` operator
-Error:
-in.js:29:15,20: undefined
-This type is incompatible with
-in.js:29:15,20: RHS of `in` operator
-Member 2:
-in.js:29:15,20: RHS of `in` operator
-Error:
-in.js:29:15,20: undefined
-This type is incompatible with
-in.js:29:15,20: RHS of `in` operator
+in.js:30
+ 30:     ('foo' in null); // error
+                   ^^^^ null. This type is incompatible with
+ 30:     ('foo' in null); // error
+                   ^^^^ union: RHS of `in` operator(s)
+  Member 1:
+   30:     ('foo' in null); // error
+                     ^^^^ RHS of `in` operator
+  Error:
+   30:     ('foo' in null); // error
+                     ^^^^ null. This type is incompatible with
+   30:     ('foo' in null); // error
+                     ^^^^ RHS of `in` operator
+  Member 2:
+   30:     ('foo' in null); // error
+                     ^^^^ RHS of `in` operator
+  Error:
+   30:     ('foo' in null); // error
+                     ^^^^ null. This type is incompatible with
+   30:     ('foo' in null); // error
+                     ^^^^ RHS of `in` operator
 
-in.js:30:15,18: null
-This type is incompatible with
-in.js:30:15,18: union: RHS of `in` operator(s)
-Member 1:
-in.js:30:15,18: RHS of `in` operator
-Error:
-in.js:30:15,18: null
-This type is incompatible with
-in.js:30:15,18: RHS of `in` operator
-Member 2:
-in.js:30:15,18: RHS of `in` operator
-Error:
-in.js:30:15,18: null
-This type is incompatible with
-in.js:30:15,18: RHS of `in` operator
+in.js:35
+ 35:     (null in {}); // error
+          ^^^^ null. This type is incompatible with
+ 35:     (null in {}); // error
+          ^^^^ union: string | number
+  Member 1:
+   35:     (null in {}); // error
+            ^^^^ string
+  Error:
+   35:     (null in {}); // error
+            ^^^^ null. This type is incompatible with
+   35:     (null in {}); // error
+            ^^^^ string
+  Member 2:
+   35:     (null in {}); // error
+            ^^^^ number
+  Error:
+   35:     (null in {}); // error
+            ^^^^ null. This type is incompatible with
+   35:     (null in {}); // error
+            ^^^^ number
 
-in.js:35:6,9: null
-This type is incompatible with
-in.js:35:6,9: union: string | number
-Member 1:
-in.js:35:6,9: string
-Error:
-in.js:35:6,9: null
-This type is incompatible with
-in.js:35:6,9: string
-Member 2:
-in.js:35:6,9: number
-Error:
-in.js:35:6,9: null
-This type is incompatible with
-in.js:35:6,9: number
+in.js:36
+ 36:     (void 0 in {}); // error
+          ^^^^^^ undefined. This type is incompatible with
+ 36:     (void 0 in {}); // error
+          ^^^^^^ union: string | number
+  Member 1:
+   36:     (void 0 in {}); // error
+            ^^^^^^ string
+  Error:
+   36:     (void 0 in {}); // error
+            ^^^^^^ undefined. This type is incompatible with
+   36:     (void 0 in {}); // error
+            ^^^^^^ string
+  Member 2:
+   36:     (void 0 in {}); // error
+            ^^^^^^ number
+  Error:
+   36:     (void 0 in {}); // error
+            ^^^^^^ undefined. This type is incompatible with
+   36:     (void 0 in {}); // error
+            ^^^^^^ number
 
-in.js:36:6,11: undefined
-This type is incompatible with
-in.js:36:6,11: union: string | number
-Member 1:
-in.js:36:6,11: string
-Error:
-in.js:36:6,11: undefined
-This type is incompatible with
-in.js:36:6,11: string
-Member 2:
-in.js:36:6,11: number
-Error:
-in.js:36:6,11: undefined
-This type is incompatible with
-in.js:36:6,11: number
+in.js:37
+ 37:     ({} in {}); // error
+          ^^ object literal. This type is incompatible with
+ 37:     ({} in {}); // error
+          ^^ union: string | number
+  Member 1:
+   37:     ({} in {}); // error
+            ^^ string
+  Error:
+   37:     ({} in {}); // error
+            ^^ object literal. This type is incompatible with
+   37:     ({} in {}); // error
+            ^^ string
+  Member 2:
+   37:     ({} in {}); // error
+            ^^ number
+  Error:
+   37:     ({} in {}); // error
+            ^^ object literal. This type is incompatible with
+   37:     ({} in {}); // error
+            ^^ number
 
-in.js:37:6,7: object literal
-This type is incompatible with
-in.js:37:6,7: union: string | number
-Member 1:
-in.js:37:6,7: string
-Error:
-in.js:37:6,7: object literal
-This type is incompatible with
-in.js:37:6,7: string
-Member 2:
-in.js:37:6,7: number
-Error:
-in.js:37:6,7: object literal
-This type is incompatible with
-in.js:37:6,7: number
+in.js:38
+ 38:     ([] in {}); // error
+          ^^ empty array literal. This type is incompatible with
+ 38:     ([] in {}); // error
+          ^^ union: string | number
+  Member 1:
+   38:     ([] in {}); // error
+            ^^ string
+  Error:
+   38:     ([] in {}); // error
+            ^^ empty array literal. This type is incompatible with
+   38:     ([] in {}); // error
+            ^^ string
+  Member 2:
+   38:     ([] in {}); // error
+            ^^ number
+  Error:
+   38:     ([] in {}); // error
+            ^^ empty array literal. This type is incompatible with
+   38:     ([] in {}); // error
+            ^^ number
 
-in.js:38:6,7: empty array literal
-This type is incompatible with
-in.js:38:6,7: union: string | number
-Member 1:
-in.js:38:6,7: string
-Error:
-in.js:38:6,7: empty array literal
-This type is incompatible with
-in.js:38:6,7: string
-Member 2:
-in.js:38:6,7: number
-Error:
-in.js:38:6,7: empty array literal
-This type is incompatible with
-in.js:38:6,7: number
+in.js:39
+ 39:     (false in []); // error
+          ^^^^^ boolean. This type is incompatible with
+ 39:     (false in []); // error
+          ^^^^^ union: string | number
+  Member 1:
+   39:     (false in []); // error
+            ^^^^^ string
+  Error:
+   39:     (false in []); // error
+            ^^^^^ boolean. This type is incompatible with
+   39:     (false in []); // error
+            ^^^^^ string
+  Member 2:
+   39:     (false in []); // error
+            ^^^^^ number
+  Error:
+   39:     (false in []); // error
+            ^^^^^ boolean. This type is incompatible with
+   39:     (false in []); // error
+            ^^^^^ number
 
-in.js:39:6,10: boolean
-This type is incompatible with
-in.js:39:6,10: union: string | number
-Member 1:
-in.js:39:6,10: string
-Error:
-in.js:39:6,10: boolean
-This type is incompatible with
-in.js:39:6,10: string
-Member 2:
-in.js:39:6,10: number
-Error:
-in.js:39:6,10: boolean
-This type is incompatible with
-in.js:39:6,10: number
+in.js:44
+ 44:     if ('foo' in 123) {} // error
+                      ^^^ number. This type is incompatible with
+ 44:     if ('foo' in 123) {} // error
+                      ^^^ union: RHS of `in` operator(s)
+  Member 1:
+   44:     if ('foo' in 123) {} // error
+                        ^^^ RHS of `in` operator
+  Error:
+   44:     if ('foo' in 123) {} // error
+                        ^^^ number. This type is incompatible with
+   44:     if ('foo' in 123) {} // error
+                        ^^^ RHS of `in` operator
+  Member 2:
+   44:     if ('foo' in 123) {} // error
+                        ^^^ RHS of `in` operator
+  Error:
+   44:     if ('foo' in 123) {} // error
+                        ^^^ number. This type is incompatible with
+   44:     if ('foo' in 123) {} // error
+                        ^^^ RHS of `in` operator
 
-in.js:44:18,20: number
-This type is incompatible with
-in.js:44:18,20: union: RHS of `in` operator(s)
-Member 1:
-in.js:44:18,20: RHS of `in` operator
-Error:
-in.js:44:18,20: number
-This type is incompatible with
-in.js:44:18,20: RHS of `in` operator
-Member 2:
-in.js:44:18,20: RHS of `in` operator
-Error:
-in.js:44:18,20: number
-This type is incompatible with
-in.js:44:18,20: RHS of `in` operator
+in.js:45
+ 45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+             ^^^^^^ boolean. This type is incompatible with
+ 45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+             ^^^^^^ union: string | number
+  Member 1:
+   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^ string
+  Error:
+   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^ boolean. This type is incompatible with
+   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^ string
+  Member 2:
+   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^ number
+  Error:
+   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^ boolean. This type is incompatible with
+   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
+               ^^^^^^ number
 
-in.js:45:9,14: boolean
-This type is incompatible with
-in.js:45:9,14: union: string | number
-Member 1:
-in.js:45:9,14: string
-Error:
-in.js:45:9,14: boolean
-This type is incompatible with
-in.js:45:9,14: string
-Member 2:
-in.js:45:9,14: number
-Error:
-in.js:45:9,14: boolean
-This type is incompatible with
-in.js:45:9,14: number
 
 Found 11 errors

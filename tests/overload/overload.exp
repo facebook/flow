@@ -1,138 +1,181 @@
+overload.js:7
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ call of method `match`
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  7: var x1: number = "".match(0)[0];
+             ^^^^^^ number
 
-overload.js:7:18,28: call of method `match`
-Error:
-overload.js:7:18,31: string
-This type is incompatible with
-overload.js:7:9,14: number
+overload.js:7
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ call of method `match`
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ null
 
-overload.js:7:18,28: call of method `match`
-Error:
-overload.js:7:18,31: access of computed property/element
-Computed property/element cannot be accessed on possibly null value
-overload.js:7:18,28: null
+overload.js:7
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ call of method `match`
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ undefined
 
-overload.js:7:18,28: call of method `match`
-Error:
-overload.js:7:18,31: access of computed property/element
-Computed property/element cannot be accessed on possibly undefined value
-overload.js:7:18,28: undefined
+overload.js:7
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^ call of method `match`
+  7: var x1: number = "".match(0)[0];
+                               ^ number. This type is incompatible with
+union: string | RegExp. See: [LIB] core.js:225
+  Member 1:
+  string. See: [LIB] core.js:225
+  Error:
+    7: var x1: number = "".match(0)[0];
+                                 ^ number. This type is incompatible with
+  string. See: [LIB] core.js:225
+  Member 2:
+  RegExp. See: [LIB] core.js:225
+  Error:
+    7: var x1: number = "".match(0)[0];
+                                 ^ number. This type is incompatible with
+  RegExp. See: [LIB] core.js:225
 
-overload.js:7:18,28: call of method `match`
-Error:
-overload.js:7:27,27: number
-This type is incompatible with
-[LIB] core.js:225:19,33: union: string | RegExp
-Member 1:
-[LIB] core.js:225:19,24: string
-Error:
-overload.js:7:27,27: number
-This type is incompatible with
-[LIB] core.js:225:19,24: string
-Member 2:
-[LIB] core.js:225:28,33: RegExp
-Error:
-overload.js:7:27,27: number
-This type is incompatible with
-[LIB] core.js:225:28,33: RegExp
+overload.js:8
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^ call of method `match`
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+  8: var x2: number = "".match(/pattern/)[0];
+             ^^^^^^ number
 
-overload.js:8:18,36: call of method `match`
-Error:
-overload.js:8:18,39: string
-This type is incompatible with
-overload.js:8:9,14: number
+overload.js:8
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^ call of method `match`
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^ null
 
-overload.js:8:18,36: call of method `match`
-Error:
-overload.js:8:18,39: access of computed property/element
-Computed property/element cannot be accessed on possibly null value
-overload.js:8:18,36: null
+overload.js:8
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^ call of method `match`
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^ undefined
 
-overload.js:8:18,36: call of method `match`
-Error:
-overload.js:8:18,39: access of computed property/element
-Computed property/element cannot be accessed on possibly undefined value
-overload.js:8:18,36: undefined
+overload.js:10
+ 10: var x4: number = "".split(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^ call of method `split`
+ 10: var x4: number = "".split(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 10: var x4: number = "".split(/pattern/)[0];
+             ^^^^^^ number
 
-overload.js:10:18,36: call of method `split`
-Error:
-overload.js:10:18,39: string
-This type is incompatible with
-overload.js:10:9,14: number
+overload.js:24
+ 24: a.foo(true); // error, function cannot be called on intersection type
+     ^^^^^^^^^^^ call of method `foo`. Function cannot be called on any member of intersection type
+ 24: a.foo(true); // error, function cannot be called on intersection type
+     ^^^^^^^^^^^ intersection
+  Member 1:
+   13:     foo(x:number): number;
+           ^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   24: a.foo(true); // error, function cannot be called on intersection type
+             ^^^^ boolean. This type is incompatible with
+   13:     foo(x:number): number;
+                 ^^^^^^ number
+  Member 2:
+   14:     foo(x:string): string;
+           ^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   24: a.foo(true); // error, function cannot be called on intersection type
+             ^^^^ boolean. This type is incompatible with
+   14:     foo(x:string): string;
+                 ^^^^^^ string
 
-overload.js:24:1,11: call of method `foo`
-Function cannot be called on any member of intersection type
-overload.js:24:1,11: intersection
-Member 1:
-overload.js:13:5,25: function type
-Error:
-overload.js:24:7,10: boolean
-This type is incompatible with
-overload.js:13:11,16: number
-Member 2:
-overload.js:14:5,25: function type
-Error:
-overload.js:24:7,10: boolean
-This type is incompatible with
-overload.js:14:11,16: string
+overload.js:28
+ 28: a.bar({ a: true }); // error, function cannot be called on intersection type
+     ^^^^^^^^^^^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
+ 28: a.bar({ a: true }); // error, function cannot be called on intersection type
+     ^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+   16:     bar(x: { a: number }): number;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   28: a.bar({ a: true }); // error, function cannot be called on intersection type
+                  ^^^^ boolean. This type is incompatible with
+   16:     bar(x: { a: number }): number;
+                       ^^^^^^ number
+  Member 2:
+   17:     bar(x: { a: string }): string;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   28: a.bar({ a: true }); // error, function cannot be called on intersection type
+                  ^^^^ boolean. This type is incompatible with
+   17:     bar(x: { a: string }): string;
+                       ^^^^^^ string
 
-overload.js:28:1,18: call of method `bar`
-Function cannot be called on any member of intersection type
-overload.js:28:1,18: intersection
-Member 1:
-overload.js:16:5,33: function type
-Error:
-overload.js:28:12,15: boolean
-This type is incompatible with
-overload.js:16:17,22: number
-Member 2:
-overload.js:17:5,33: function type
-Error:
-overload.js:28:12,15: boolean
-This type is incompatible with
-overload.js:17:17,22: string
+overload.js:32
+ 32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+     ^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
+ 32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+     ^^^^^^^^ intersection
+  Member 1:
+   16:     bar(x: { a: number }): number;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+             ^ intersection. This type is incompatible with
+   16:     bar(x: { a: number }): number;
+                  ^^^^^^^^^^^^^ object type
+    Member 1:
+     30: declare var x: { a: boolean; } & { b: string };
+                        ^^^^^^^^^^^^^^^ object type
+    Error:
+     30: declare var x: { a: boolean; } & { b: string };
+                             ^^^^^^^ boolean. This type is incompatible with
+     16:     bar(x: { a: number }): number;
+                         ^^^^^^ number
+    Member 2:
+     30: declare var x: { a: boolean; } & { b: string };
+                                          ^^^^^^^^^^^^^ object type
+    Error:
+     16:     bar(x: { a: number }): number;
+                    ^^^^^^^^^^^^^ property `a`. Property not found in
+     30: declare var x: { a: boolean; } & { b: string };
+                                          ^^^^^^^^^^^^^ object type
+  Member 2:
+   17:     bar(x: { a: string }): string;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+   32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
+             ^ intersection. This type is incompatible with
+   17:     bar(x: { a: string }): string;
+                  ^^^^^^^^^^^^^ object type
+    Member 1:
+     30: declare var x: { a: boolean; } & { b: string };
+                        ^^^^^^^^^^^^^^^ object type
+    Error:
+     30: declare var x: { a: boolean; } & { b: string };
+                             ^^^^^^^ boolean. This type is incompatible with
+     17:     bar(x: { a: string }): string;
+                         ^^^^^^ string
+    Member 2:
+     30: declare var x: { a: boolean; } & { b: string };
+                                          ^^^^^^^^^^^^^ object type
+    Error:
+     17:     bar(x: { a: string }): string;
+                    ^^^^^^^^^^^^^ property `a`. Property not found in
+     30: declare var x: { a: boolean; } & { b: string };
+                                          ^^^^^^^^^^^^^ object type
 
-overload.js:32:1,8: call of method `bar`
-Function cannot be called on any member of intersection type
-overload.js:32:1,8: intersection
-Member 1:
-overload.js:16:5,33: function type
-Error:
-overload.js:32:7,7: intersection
-This type is incompatible with
-overload.js:16:12,24: object type
-Member 1:
-overload.js:30:16,30: object type
-Error:
-overload.js:30:21,27: boolean
-This type is incompatible with
-overload.js:16:17,22: number
-Member 2:
-overload.js:30:34,46: object type
-Error:
-overload.js:16:12,24: property `a`
-Property not found in
-overload.js:30:34,46: object type
-Member 2:
-overload.js:17:5,33: function type
-Error:
-overload.js:32:7,7: intersection
-This type is incompatible with
-overload.js:17:12,24: object type
-Member 1:
-overload.js:30:16,30: object type
-Error:
-overload.js:30:21,27: boolean
-This type is incompatible with
-overload.js:17:17,22: string
-Member 2:
-overload.js:30:34,46: object type
-Error:
-overload.js:17:12,24: property `a`
-Property not found in
-overload.js:30:34,46: object type
+test2.js:7
+  7: (foo.bar('hmmm'): number); // error
+      ^^^^^^^^^^^^^^^ string. This type is incompatible with
+  7: (foo.bar('hmmm'): number); // error
+                       ^^^^^^ number
 
-test2.js:7:2,16: string
-This type is incompatible with
-test2.js:7:19,24: number
 
 Found 12 errors

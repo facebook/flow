@@ -1,30 +1,42 @@
+test.js:3
+  3: N.x = M(N.x);
+           ^^^^^^ string. This type is incompatible with
+  5:     declare var x: number;
+                        ^^^^^^ number. See: lib/lib.js:5
 
-test.js:3:7,12: string
-This type is incompatible with
-[LIB] lib/lib.js:5:20,25: number
+test.js:3
+  3: N.x = M(N.x);
+             ^^^ number. This type is incompatible with
+  2:     declare function exports(x:string): string;
+                                    ^^^^^^ string. See: lib/lib.js:2
 
-test.js:3:9,11: number
-This type is incompatible with
-[LIB] lib/lib.js:2:32,37: string
+test.js:5
+  5: N.y = P(N.y);
+           ^^^^^^ string. This type is incompatible with
+  6:     declare var y: number;
+                        ^^^^^^ number. See: lib/lib.js:6
 
-test.js:5:7,12: string
-This type is incompatible with
-[LIB] lib/lib.js:6:20,25: number
+test.js:5
+  5: N.y = P(N.y);
+             ^^^ number. This type is incompatible with
+  2:     declare function exports(x:string): string;
+                                    ^^^^^^ string. See: lib/lib.js:2
 
-test.js:5:9,11: number
-This type is incompatible with
-[LIB] lib/lib.js:2:32,37: string
+test.js:7
+  7: N.z = Q(N.z);
+           ^^^^^^ function call
+  7: N.z = Q(N.z);
+           ^^^^^^ string. This type is incompatible with
+  7:     declare var z: number;
+                        ^^^^^^ number. See: lib/lib.js:7
 
-test.js:7:7,12: function call
-Error:
-test.js:7:7,12: string
-This type is incompatible with
-[LIB] lib/lib.js:7:20,25: number
+test.js:7
+  7: N.z = Q(N.z);
+           ^^^^^^ function call
+  7: N.z = Q(N.z);
+             ^^^ number. This type is incompatible with
+  2:     declare function exports(x:string): string;
+                                    ^^^^^^ string. See: lib/lib.js:2
 
-test.js:7:7,12: function call
-Error:
-test.js:7:9,11: number
-This type is incompatible with
-[LIB] lib/lib.js:2:32,37: string
 
 Found 6 errors

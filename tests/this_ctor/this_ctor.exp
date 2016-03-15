@@ -1,8 +1,10 @@
+test.js:10
+ 10:     return new this.constructor(this.n); // Error A ~> number
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+  1: class A {
+           ^ A. This type is incompatible with
+  9:   badClone(): number {
+                   ^^^^^^ number
 
-test.js:10:12,39: constructor call
-Error:
-test.js:1:7,7: A
-This type is incompatible with
-test.js:9:15,20: number
 
 Found 1 error

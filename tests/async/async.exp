@@ -1,68 +1,92 @@
+async.js:12
+ 12:   return 1;  // error, number != bool
+              ^ number. This type is incompatible with
+union: type application of identifier `Promise` | type parameter `T` of async return. See: [LIB] core.js:452
+  Member 1:
+  type application of identifier `Promise`. See: [LIB] core.js:452
+  Error:
+   12:   return 1;  // error, number != bool
+                ^ number. This type is incompatible with
+  Promise. See: [LIB] core.js:452
+  Member 2:
+   12:   return 1;  // error, number != bool
+         ^^^^^^^^^ type parameter `T` of async return
+  Error:
+   12:   return 1;  // error, number != bool
+                ^ number. This type is incompatible with
+   11: async function f1(): Promise<bool> {
+                                    ^^^^ boolean
 
-async.js:12:10,10: number
-This type is incompatible with
-[LIB] core.js:452:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
-Member 1:
-[LIB] core.js:452:32,41: type application of identifier `Promise`
-Error:
-async.js:12:10,10: number
-This type is incompatible with
-[LIB] core.js:452:32,41: Promise
-Member 2:
-async.js:12:3,11: type parameter `T` of async return
-Error:
-async.js:12:10,10: number
-This type is incompatible with
-async.js:11:30,33: boolean
+async.js:31
+ 31:   return await p; // error, number != bool
+              ^^^^^^^ number. This type is incompatible with
+union: type application of identifier `Promise` | type parameter `T` of async return. See: [LIB] core.js:452
+  Member 1:
+  type application of identifier `Promise`. See: [LIB] core.js:452
+  Error:
+   31:   return await p; // error, number != bool
+                ^^^^^^^ number. This type is incompatible with
+  Promise. See: [LIB] core.js:452
+  Member 2:
+   31:   return await p; // error, number != bool
+         ^^^^^^^^^^^^^^^ type parameter `T` of async return
+  Error:
+   31:   return await p; // error, number != bool
+                ^^^^^^^ number. This type is incompatible with
+   30: async function f4(p: Promise<number>): Promise<bool> {
+                                                      ^^^^ boolean
 
-async.js:31:10,16: number
-This type is incompatible with
-[LIB] core.js:452:32,45: union: type application of identifier `Promise` | type parameter `T` of async return
-Member 1:
-[LIB] core.js:452:32,41: type application of identifier `Promise`
-Error:
-async.js:31:10,16: number
-This type is incompatible with
-[LIB] core.js:452:32,41: Promise
-Member 2:
-async.js:31:3,17: type parameter `T` of async return
-Error:
-async.js:31:10,16: number
-This type is incompatible with
-async.js:30:48,51: boolean
+async.js:45
+ 45:   static async m(a): void { await a; } // error, void != Promise<void>
+                          ^^^^ Promise. This type is incompatible with
+ 45:   static async m(a): void { await a; } // error, void != Promise<void>
+                          ^^^^ undefined
 
-async.js:45:22,25: Promise
-This type is incompatible with
-async.js:45:22,25: undefined
+async2.js:11
+ 11:     var a = await foo();
+                 ^^^^^^^^^^^ await
+ 13:     var c: string = a; // Error: number ~> string
+                         ^ number. This type is incompatible with
+ 13:     var c: string = a; // Error: number ~> string
+                ^^^^^^ string
 
-async2.js:11:13,23: await
-Error:
-async2.js:13:21,21: number
-This type is incompatible with
-async2.js:13:12,17: string
+async2.js:26
+ 26:   async function voidoid1() {
+                                ^ Promise. This type is incompatible with
+ 32:   var voidoid3: () => void = voidoid1; // error, void != Promise<void>
+                           ^^^^ undefined
 
-async2.js:26:28,28: Promise
-This type is incompatible with
-async2.js:32:23,26: undefined
+async2.js:50
+ 50:   async function voidoid5(): void { // error, void != Promise<void>
+                                  ^^^^ Promise. This type is incompatible with
+ 50:   async function voidoid5(): void { // error, void != Promise<void>
+                                  ^^^^ undefined
 
-async2.js:50:30,33: Promise
-This type is incompatible with
-async2.js:50:30,33: undefined
+async2.js:57
+ 57:   : Promise<number> { // error, number != void
+         ^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 57:   : Promise<number> { // error, number != void
+                 ^^^^^^ number
 
-async2.js:57:5,19: undefined
-This type is incompatible with
-async2.js:57:13,18: number
+async3.js:23
+ 23:   var a = await bar();
+               ^^^^^^^^^^^ await
+ 31:   var c: string = a;
+                       ^ number. This type is incompatible with
+ 31:   var c: string = a;
+              ^^^^^^ string
 
-async3.js:23:11,21: await
-Error:
-async3.js:31:19,19: number
-This type is incompatible with
-async3.js:31:10,15: string
+await_not_in_async.js:5
+  5:   await 1;
+             ^ Unexpected number
 
-await_not_in_async.js:5:9,9: Unexpected number
+await_not_in_async2.js:6
+  6: f(await 1);
+             ^ Unexpected number
 
-await_not_in_async2.js:6:9,9: Unexpected number
+await_not_in_async3.js:6
+  6: f(await 1);
+             ^ Unexpected number
 
-await_not_in_async3.js:6:9,9: Unexpected number
 
 Found 11 errors

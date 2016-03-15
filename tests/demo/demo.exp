@@ -1,26 +1,34 @@
+1/f.js:8
+  8: f(x);
+     ^^^^ function call
+  3: function f(x) { return 42/x; }
+                               ^ null. This type is incompatible with
+  3: function f(x) { return 42/x; }
+                            ^^^^ number
 
-1/f.js:8:1,4: function call
-Error:
-1/f.js:3:27,27: null
-This type is incompatible with
-1/f.js:3:24,27: number
+2/A.js:5
+  5:   constructor(x) { this.x = x; }
+                   ^ parameter `x`. Missing annotation
 
-2/A.js:5:15,15: parameter `x`
-Missing annotation
+2/A.js:7
+  7:   getX() { return this.x; }
+             ^ return. Missing annotation
 
-2/A.js:7:9,9: return
-Missing annotation
+2/A.js:9
+  9:   onLoad(callback) {
+              ^^^^^^^^ parameter `callback`. Missing annotation
 
-2/A.js:9:10,17: parameter `callback`
-Missing annotation
+2/A.js:9
+  9:   onLoad(callback) {
+                       ^ return. Missing annotation
 
-2/A.js:9:19,19: return
-Missing annotation
+2/A.js:10
+ 10:     return callback(this.getX());
+                ^^^^^^^^^^^^^^^^^^^^^ function call
+ 10:     return callback(this.getX());
+                         ^^^^^^^^^^^ number. This type is incompatible with
+ 14: function callback(x: string) { return x.length; }
+                          ^^^^^^ string
 
-2/A.js:10:12,32: function call
-Error:
-2/A.js:10:21,31: number
-This type is incompatible with
-2/A.js:14:22,27: string
 
 Found 6 errors

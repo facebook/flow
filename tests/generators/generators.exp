@@ -1,132 +1,186 @@
+async.js:4
+  4: async function *unsupported() {}
+                     ^^^^^^^^^^^ A function may not be both async and a generator
 
-async.js:4:17,27: A function may not be both async and a generator
+class.js:4
+  4:     yield ""; // error: string ~> number
+               ^^ string. This type is incompatible with
+  2:   *stmt_yield(): Generator<number, void, void> {
+                                ^^^^^^ number
 
-class.js:4:11,12: string
-This type is incompatible with
-class.js:2:28,33: number
+class.js:15
+ 15:       (b : string); // error: number ~> string
+            ^ number. This type is incompatible with
+ 15:       (b : string); // error: number ~> string
+                ^^^^^^ string
 
-class.js:15:8,8: number
-This type is incompatible with
-class.js:15:12,17: string
+class.js:24
+ 24:     return ""; // error: string ~> number
+                ^^ string. This type is incompatible with
+ 23:   *stmt_return_err(): Generator<void, number, void> {
+                                           ^^^^^^ number
 
-class.js:24:12,13: string
-This type is incompatible with
-class.js:23:39,44: number
+class.js:68
+ 68:     var x: number = yield *inner(); // error: string ~> number
+                         ^^^^^^^^^^^^^^ string. This type is incompatible with
+ 68:     var x: number = yield *inner(); // error: string ~> number
+                ^^^^^^ number
 
-class.js:68:21,34: string
-This type is incompatible with
-class.js:68:12,17: number
+class.js:101
+101: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
+                                             ^ number. This type is incompatible with
+101: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
+                                                 ^^^^^^ string
 
-class.js:101:41,41: number
-This type is incompatible with
-class.js:101:45,50: string
+class.js:109
+109: var infer_stmt_next = examples.infer_stmt().next(0).value;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+113:   (infer_stmt_next : boolean) // error: string ~> boolean
+        ^^^^^^^^^^^^^^^ string. This type is incompatible with
+113:   (infer_stmt_next : boolean) // error: string ~> boolean
+                          ^^^^^^^ boolean
 
-class.js:109:23,51: call of method `next`
-Error:
-class.js:113:4,18: string
-This type is incompatible with
-class.js:113:22,28: boolean
+class.js:128
+128: examples.delegate_next_generator().next("");
+                                             ^^ string. This type is incompatible with
+ 50:       var x: ?number = yield; // error: string ~> number
+                   ^^^^^^ number
 
-class.js:128:41,42: string
-This type is incompatible with
-class.js:50:15,20: number
+class.js:131
+131:   (x : number) // error: string ~> number
+        ^ string. This type is incompatible with
+131:   (x : number) // error: string ~> number
+            ^^^^^^ number
 
-class.js:131:4,4: string
-This type is incompatible with
-class.js:131:8,13: number
+class.js:134
+134: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+134: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
+                                              ^^ string. This type is incompatible with
+undefined. See: [LIB] core.js:368
 
-class.js:134:1,44: call of method `next`
-Error:
-class.js:134:42,43: string
-This type is incompatible with
-[LIB] core.js:368:37,40: undefined
+class.js:137
+137:   (x : string) // error: number ~> string
+        ^ number. This type is incompatible with
+137:   (x : string) // error: number ~> string
+            ^^^^^^ string
 
-class.js:137:4,4: number
-This type is incompatible with
-class.js:137:8,13: string
+class_failure.js:12
+ 12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
+                                             ^ number. This type is incompatible with
+ 12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
+                                                 ^^^^^^ string
 
-class_failure.js:12:41,41: number
-This type is incompatible with
-class_failure.js:12:45,50: string
+class_failure.js:14
+ 14: var infer_stmt_next = examples.infer_stmt().next(0).value; // this should be an
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+ 22:   (infer_stmt_next : boolean) // error: string ~> boolean
+        ^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 22:   (infer_stmt_next : boolean) // error: string ~> boolean
+                          ^^^^^^^ boolean
 
-class_failure.js:14:23,51: call of method `next`
-Error:
-class_failure.js:22:4,18: string
-This type is incompatible with
-class_failure.js:22:22,28: boolean
+generators.js:3
+  3:   yield ""; // error: string ~> number
+             ^^ string. This type is incompatible with
+  1: function *stmt_yield(): Generator<number, void, void> {
+                                       ^^^^^^ number
 
-generators.js:3:9,10: string
-This type is incompatible with
-generators.js:1:35,40: number
+generators.js:14
+ 14:     (b : string); // error: number ~> string
+          ^ number. This type is incompatible with
+ 14:     (b : string); // error: number ~> string
+              ^^^^^^ string
 
-generators.js:14:6,6: number
-This type is incompatible with
-generators.js:14:10,15: string
+generators.js:23
+ 23:   return ""; // error: string ~> number
+              ^^ string. This type is incompatible with
+ 22: function *stmt_return_err(): Generator<void, number, void> {
+                                                  ^^^^^^ number
 
-generators.js:23:10,11: string
-This type is incompatible with
-generators.js:22:46,51: number
+generators.js:30
+ 30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
+                                    ^ number. This type is incompatible with
+ 30: for (var x of infer_stmt()) { (x : string) } // error: number ~> string
+                                        ^^^^^^ string
 
-generators.js:30:32,32: number
-This type is incompatible with
-generators.js:30:36,41: string
+generators.js:31
+ 31: var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> boolean
+                           ^^^^^^^^^^^^^^^^^^^^ call of method `next`
+ 31: var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> boolean
+                                             ^ number. This type is incompatible with
+ 27:   var x: ?boolean = yield 0;
+               ^^^^^^^ boolean
 
-generators.js:31:23,42: call of method `next`
-Error:
-generators.js:31:41,41: number
-This type is incompatible with
-generators.js:27:11,17: boolean
+generators.js:31
+ 31: var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> boolean
+                           ^^^^^^^^^^^^^^^^^^^^ call of method `next`
+ 35:   (infer_stmt_next : boolean) // error: string ~> boolean
+        ^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 35:   (infer_stmt_next : boolean) // error: string ~> boolean
+                          ^^^^^^^ boolean
 
-generators.js:31:23,42: call of method `next`
-Error:
-generators.js:35:4,18: string
-This type is incompatible with
-generators.js:35:22,28: boolean
+generators.js:70
+ 70: delegate_next_generator().next("");
+                                    ^^ string. This type is incompatible with
+ 66:     var x: ?number = yield; // error: string ~> number
+                 ^^^^^^ number
 
-generators.js:70:32,33: string
-This type is incompatible with
-generators.js:66:13,18: number
+generators.js:80
+ 80:   (x : number) // error: string ~> number
+        ^ string. This type is incompatible with
+ 80:   (x : number) // error: string ~> number
+            ^^^^^^ number
 
-generators.js:80:4,4: string
-This type is incompatible with
-generators.js:80:8,13: number
+generators.js:88
+ 88:   var x: number = yield *inner(); // error: string ~> number
+                       ^^^^^^^^^^^^^^ string. This type is incompatible with
+ 88:   var x: number = yield *inner(); // error: string ~> number
+              ^^^^^^ number
 
-generators.js:88:19,32: string
-This type is incompatible with
-generators.js:88:10,15: number
+generators.js:95
+ 95: delegate_next_iterable([]).next(""); // error: Iterator has no next value
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+ 95: delegate_next_iterable([]).next(""); // error: Iterator has no next value
+                                     ^^ string. This type is incompatible with
+undefined. See: [LIB] core.js:368
 
-generators.js:95:1,35: call of method `next`
-Error:
-generators.js:95:33,34: string
-This type is incompatible with
-[LIB] core.js:368:37,40: undefined
+generators.js:101
+101:   (x : string) // error: number ~> string
+        ^ number. This type is incompatible with
+101:   (x : string) // error: number ~> string
+            ^^^^^^ string
 
-generators.js:101:4,4: number
-This type is incompatible with
-generators.js:101:8,13: string
+return.js:4
+  4:   var ret = gen.return(123);
+                 ^^^^^^^^^^^^^^^ call of method `return`
+  5:   (ret.done: false); // Error true ~> false
+        ^^^^^^^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
+  5:   (ret.done: false); // Error true ~> false
+                  ^^^^^ boolean literal `false`
 
-return.js:4:13,27: call of method `return`
-Error:
-return.js:5:4,11: boolean literal `true`
-Expected boolean literal `false`, got `true` instead
-return.js:5:14,18: boolean literal `false`
+return.js:4
+  4:   var ret = gen.return(123);
+                 ^^^^^^^^^^^^^^^ call of method `return`
+  6:   (ret.value: 456); // Error 123 ~> 456
+        ^^^^^^^^^ number. Expected number literal `456`, got `123` instead
+  6:   (ret.value: 456); // Error 123 ~> 456
+                   ^^^ number literal `456`
 
-return.js:4:13,27: call of method `return`
-Error:
-return.js:6:4,12: number
-Expected number literal `456`, got `123` instead
-return.js:6:15,17: number literal `456`
+throw.js:9
+  9: var catch_return_value = catch_return().throw("").value;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `throw`
+ 11:   (catch_return_value : string); // error: number ~> string
+        ^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 11:   (catch_return_value : string); // error: number ~> string
+                             ^^^^^^ string
 
-throw.js:9:26,49: call of method `throw`
-Error:
-throw.js:11:4,21: number
-This type is incompatible with
-throw.js:11:25,30: string
+throw.js:22
+ 22: var yield_return_value = yield_return().throw("").value;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `throw`
+ 24:   (yield_return_value: string); // error: number ~> string
+        ^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 24:   (yield_return_value: string); // error: number ~> string
+                            ^^^^^^ string
 
-throw.js:22:26,49: call of method `throw`
-Error:
-throw.js:24:4,21: number
-This type is incompatible with
-throw.js:24:24,29: string
 
 Found 28 errors

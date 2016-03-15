@@ -1,50 +1,67 @@
+A.js:13
+ 13: var bad: number = Bad.foo();
+                       ^^^^^^^^^ call of method `foo`
+ 13: var bad: number = Bad.foo();
+                       ^^^^^^^^^ string. This type is incompatible with
+ 13: var bad: number = Bad.foo();
+              ^^^^^^ number
 
-A.js:13:19,27: call of method `foo`
-Error:
-A.js:13:19,27: string
-This type is incompatible with
-A.js:13:10,15: number
+A.js:21
+ 21: var good: number = Good.foo();
+                        ^^^^^^^^^^ call of method `foo`
+ 21: var good: number = Good.foo();
+                        ^^^^^^^^^^ string. This type is incompatible with
+ 21: var good: number = Good.foo();
+               ^^^^^^ number
 
-A.js:21:20,29: call of method `foo`
-Error:
-A.js:21:20,29: string
-This type is incompatible with
-A.js:21:11,16: number
+B.js:7
+  7: var good: number = A.Good.foo();
+                        ^^^^^^^^^^^^ call of method `foo`
+  7: var good: number = A.Good.foo();
+                        ^^^^^^^^^^^^ string. This type is incompatible with
+  7: var good: number = A.Good.foo();
+               ^^^^^^ number
 
-B.js:7:20,31: call of method `foo`
-Error:
-B.js:7:20,31: string
-This type is incompatible with
-B.js:7:11,16: number
-
-B.js:10:20,22: function call
-Error:
-A.js:13:19,21: object literal
-This type is incompatible with
+B.js:10
+ 10: var bad_: number = f(); // Calling the function is fine
+                        ^^^ function call
+ 13: var bad: number = Bad.foo();
+                       ^^^ object literal. This type is incompatible with. See: A.js:13
 global object
 
-B.js:10:20,22: function call
-Error:
-B.js:10:20,22: string
-This type is incompatible with
-B.js:10:11,16: number
+B.js:10
+ 10: var bad_: number = f(); // Calling the function is fine
+                        ^^^ function call
+ 10: var bad_: number = f(); // Calling the function is fine
+                        ^^^ string. This type is incompatible with
+ 10: var bad_: number = f(); // Calling the function is fine
+               ^^^^^^ number
 
-B.js:12:19,29: call of method `foo`
-Error:
-B.js:12:19,29: string
-This type is incompatible with
-B.js:12:10,15: number
+B.js:12
+ 12: var bad: number = A.Bad.foo(); // Method call is not fine
+                       ^^^^^^^^^^^ call of method `foo`
+ 12: var bad: number = A.Bad.foo(); // Method call is not fine
+                       ^^^^^^^^^^^ string. This type is incompatible with
+ 12: var bad: number = A.Bad.foo(); // Method call is not fine
+              ^^^^^^ number
 
-non_objects.js:3:1,32: property `a` of object literal
-Property cannot be assigned on
-non_objects.js:3:15,19: string
+non_objects.js:3
+  3: Object.assign("123", {a: "foo"});
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a` of object literal. Property cannot be assigned on
+  3: Object.assign("123", {a: "foo"});
+                   ^^^^^ string
 
-non_objects.js:4:1,30: property `a` of object literal
-Property cannot be assigned on
-non_objects.js:4:15,17: number
+non_objects.js:4
+  4: Object.assign(123, {a: "foo"});
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `a` of object literal. Property cannot be assigned on
+  4: Object.assign(123, {a: "foo"});
+                   ^^^ number
 
-non_objects.js:5:1,30: call of method `assign`
-Expected object instead of
-non_objects.js:5:27,29: number
+non_objects.js:5
+  5: Object.assign({a: "foo"}, 123);
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `assign`. Expected object instead of
+  5: Object.assign({a: "foo"}, 123);
+                               ^^^ number
+
 
 Found 9 errors

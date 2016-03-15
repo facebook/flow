@@ -1,18 +1,26 @@
+test.js:18
+ 18: ((new Foo).x: number); // error: Qux wins
+       ^^^^^^^^^^ string. This type is incompatible with
+ 18: ((new Foo).x: number); // error: Qux wins
+                   ^^^^^^ number
 
-test.js:18:3,12: string
-This type is incompatible with
-test.js:18:15,20: number
+test.js:19
+ 19: ((new Foo).y: string); // error: Bar wins
+       ^^^^^^^^^^ number. This type is incompatible with
+ 19: ((new Foo).y: string); // error: Bar wins
+                   ^^^^^^ string
 
-test.js:19:3,12: number
-This type is incompatible with
-test.js:19:15,20: string
+test.js:20
+ 20: ((new Foo).z: number); // error: Qux wins
+       ^^^^^^^^^^ string. This type is incompatible with
+ 20: ((new Foo).z: number); // error: Qux wins
+                   ^^^^^^ number
 
-test.js:20:3,12: string
-This type is incompatible with
-test.js:20:15,20: number
+test2.js:2
+  2: declare class C mixins I { }
+                            ^ I. type referenced from value position
+  1: declare interface I { }
+             ^^^^^^^^^^^^^^^ type I
 
-test2.js:2:24,24: I
-type referenced from value position
-test2.js:1:9,23: type I
 
 Found 4 errors

@@ -1,26 +1,38 @@
+chain.js:4
+  4:   _property1: number;
+                   ^^^^^^ number. This type is incompatible with
+ 20:   _property1: string;
+                   ^^^^^^ string
 
-chain.js:4:15,20: number
-This type is incompatible with
-chain.js:20:15,20: string
+chain.js:5
+  5:   static _sProperty: number;
+                          ^^^^^^ number. This type is incompatible with
+ 21:   static _sProperty: string;
+                          ^^^^^^ string
 
-chain.js:5:22,27: number
-This type is incompatible with
-chain.js:21:22,27: string
+chain.js:20
+ 20:   _property1: string;
+                   ^^^^^^ string. This type is incompatible with
+  4:   _property1: number;
+                   ^^^^^^ number
 
-chain.js:20:15,20: string
-This type is incompatible with
-chain.js:4:15,20: number
+chain.js:21
+ 21:   static _sProperty: string;
+                          ^^^^^^ string. This type is incompatible with
+  5:   static _sProperty: number;
+                          ^^^^^^ number
 
-chain.js:21:22,27: string
-This type is incompatible with
-chain.js:5:22,27: number
+chain.js:27
+ 27:   _method1(): string {
+                   ^^^^^^ string. This type is incompatible with
+ 10:   _method1(): number {
+                   ^^^^^^ number
 
-chain.js:27:15,20: string
-This type is incompatible with
-chain.js:10:15,20: number
+chain.js:30
+ 30:   static _sMethod(): number {
+                          ^^^^^^ number. This type is incompatible with
+ 13:   static _sMethod(): string {
+                          ^^^^^^ string
 
-chain.js:30:22,27: number
-This type is incompatible with
-chain.js:13:22,27: string
 
 Found 6 errors

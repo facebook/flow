@@ -1,8 +1,10 @@
+main.js:4
+  4: (<fbt />: number); // Error: ReactElement ~> number
+      ^^^^^^^ React element: `fbt`
+  4: (<fbt />: number); // Error: ReactElement ~> number
+      ^^^^^^^ React$Element. This type is incompatible with
+  4: (<fbt />: number); // Error: ReactElement ~> number
+               ^^^^^^ number
 
-main.js:4:2,8: React element: `fbt`
-Error:
-main.js:4:2,8: React$Element
-This type is incompatible with
-main.js:4:11,16: number
 
 Found 1 error

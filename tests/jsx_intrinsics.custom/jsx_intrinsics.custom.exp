@@ -1,38 +1,50 @@
+main.js:12
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
+  6:   props: {
+              ^ property `prop`. Property not found in
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                          ^^^^^^^^^^^^^^^ object type
 
-main.js:12:41,71: React element `CustomComponent`
-Error:
-main.js:6:10,8:3: property `prop`
-Property not found in
-main.js:12:22,36: object type
+main.js:12
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                          ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
 
-main.js:12:41,71: React element `CustomComponent`
-Error:
-main.js:12:22,36: property `prop1`
-Property not found in
-main.js:12:41,71: props of React element `CustomComponent`
+main.js:15
+ 15: <div id={42} />; // Error: (`id` prop) number ~> string
+     ^^^^^^^^^^^^^^^ React element: `div`
+ 15: <div id={42} />; // Error: (`id` prop) number ~> string
+              ^^ number. This type is incompatible with
+  5:   div: $JSXIntrinsic<{id: string}>,
+                               ^^^^^^ string. See: lib/jsx.js:5
 
-main.js:15:1,15: React element: `div`
-Error:
-main.js:15:10,11: number
-This type is incompatible with
-[LIB] lib/jsx.js:5:27,32: string
+main.js:17
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                          ^^^^^^^^^^^^^^^^^ React element: `div`
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                               ^^^^^^ number. This type is incompatible with
+  5:   div: $JSXIntrinsic<{id: string}>,
+                               ^^^^^^ string. See: lib/jsx.js:5
 
-main.js:17:38,54: React element: `div`
-Error:
-main.js:17:27,32: number
-This type is incompatible with
-[LIB] lib/jsx.js:5:27,32: string
+main.js:17
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                          ^^^^^^^^^^^^^^^^^ React element: `div`
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                               ^^^^^^ number. This type is incompatible with
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                                  ^^^^^^ string
 
-main.js:17:38,54: React element: `div`
-Error:
-main.js:17:27,32: number
-This type is incompatible with
-main.js:17:46,51: string
+main.js:17
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                          ^^^^^^^^^^^^^^^^^ React element: `div`
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                                                  ^^^^^^ string. This type is incompatible with
+ 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
+                               ^^^^^^ number
 
-main.js:17:38,54: React element: `div`
-Error:
-main.js:17:46,51: string
-This type is incompatible with
-main.js:17:27,32: number
 
 Found 6 errors

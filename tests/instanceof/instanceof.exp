@@ -1,28 +1,38 @@
+instanceof.js:17
+ 17:     if (g instanceof X1) g.foo = '1337';  // oops
+                              ^^^^^ assignment of property `foo`
+ 17:     if (g instanceof X1) g.foo = '1337';  // oops
+                                      ^^^^^^ string. This type is incompatible with
+  4: class X1 { foo: number; };
+                     ^^^^^^ number
 
-instanceof.js:17:26,30: assignment of property `foo`
-Error:
-instanceof.js:17:34,39: string
-This type is incompatible with
-instanceof.js:4:17,22: number
+instanceof.js:34
+ 34:     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
+                                  ^^^^^^^^^ assignment of property `foo`
+ 34:     if (g.bar instanceof X1) g.bar.foo = '1337';  // oops
+                                              ^^^^^^ string. This type is incompatible with
+  4: class X1 { foo: number; };
+                     ^^^^^^ number
 
-instanceof.js:34:30,38: assignment of property `foo`
-Error:
-instanceof.js:34:42,47: string
-This type is incompatible with
-instanceof.js:4:17,22: number
+instanceof.js:51
+ 51:     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
+                                      ^^^^^^^^^^^^^ assignment of property `foo`
+ 51:     if (g.baz.bar instanceof X1) g.baz.bar.foo = '1337';  // oops
+                                                      ^^^^^^ string. This type is incompatible with
+  4: class X1 { foo: number; };
+                     ^^^^^^ number
 
-instanceof.js:51:34,46: assignment of property `foo`
-Error:
-instanceof.js:51:50,55: string
-This type is incompatible with
-instanceof.js:4:17,22: number
+instanceof.js:83
+ 83:     x++; // error
+         ^ array type. This type is incompatible with
+ 83:     x++; // error
+         ^^^ number
 
-instanceof.js:83:5,5: array type
-This type is incompatible with
-instanceof.js:83:5,7: number
+instanceof.js:85
+ 85:     x[0] = 123; // error
+         ^^^^ assignment of computed property/element. Computed property/element cannot be assigned on
+ 85:     x[0] = 123; // error
+         ^ number
 
-instanceof.js:85:5,8: assignment of computed property/element
-Computed property/element cannot be assigned on
-instanceof.js:85:5,5: number
 
 Found 5 errors

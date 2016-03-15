@@ -1,14 +1,20 @@
+test.js:4
+  4: y[0] = ""; // error
+            ^^ string. This type is incompatible with
+  2: var b: CovArrayVerbose<number,*> = [];
+                            ^^^^^^ number
 
-test.js:4:8,9: string
-This type is incompatible with
-test.js:2:24,29: number
+test.js:12
+ 12: nv.x = [0];
+             ^ number. This type is incompatible with
+ 13: (nv.x[0]: string); // error
+               ^^^^^^ string
 
-test.js:12:9,9: number
-This type is incompatible with
-test.js:13:11,16: string
+test.js:12
+ 12: nv.x = [0];
+             ^ number. This type is incompatible with
+ 14: (nv.foo()[0]: string); // error
+                   ^^^^^^ string
 
-test.js:12:9,9: number
-This type is incompatible with
-test.js:14:15,20: string
 
 Found 3 errors

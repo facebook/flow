@@ -1,19 +1,26 @@
+annot.js:1
+  1: var A = require('./unknown_class');
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^ ./unknown_class. Required module not found
 
-annot.js:1:9,34: ./unknown_class
-Required module not found
+annot.js:5
+  5:   bar(x) { }
+           ^ parameter `x`. Missing annotation
 
-annot.js:5:7,7: parameter `x`
-Missing annotation
+fun.js:8
+  8: function f(x:number) { return x; }
+                         ^ return. Missing annotation
 
-fun.js:8:21,21: return
-Missing annotation
+fun.js:11
+ 11: var x:string = f(0);
+                    ^^^^ number. This type is incompatible with
+ 11: var x:string = f(0);
+           ^^^^^^ string
 
-fun.js:11:16,19: number
-This type is incompatible with
-fun.js:11:7,12: string
+obj.js:10
+ 10: var x:string = o.x;
+                    ^^^ number. This type is incompatible with
+ 10: var x:string = o.x;
+           ^^^^^^ string
 
-obj.js:10:16,18: number
-This type is incompatible with
-obj.js:10:7,12: string
 
 Found 5 errors

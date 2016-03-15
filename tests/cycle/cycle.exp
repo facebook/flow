@@ -1,5 +1,6 @@
+B.js:5
+  5: module.exports = B;
+                      ^ identifier `B`. Could not resolve name
 
-B.js:5:18,18: identifier `B`
-Could not resolve name
 
 Found 1 error

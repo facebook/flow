@@ -1,52 +1,70 @@
+boolean.js:8
+  8: var y : boolean = veryOptimistic(false); // error
+                       ^^^^^^^^^^^^^^^^^^^^^ function call
+  8: var y : boolean = veryOptimistic(false); // error
+                                      ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
+  3: function veryOptimistic(isThisAwesome: true): boolean {
+                                            ^^^^ boolean literal `true`
 
-boolean.js:8:19,39: function call
-Error:
-boolean.js:8:34,38: boolean
-Expected boolean literal `true`, got `false` instead
-boolean.js:3:40,43: boolean literal `true`
+boolean.js:15
+ 15: var y : boolean = veryPessimistic(false); // error
+                       ^^^^^^^^^^^^^^^^^^^^^^ function call
+ 15: var y : boolean = veryPessimistic(false); // error
+                                       ^^^^^ boolean. Expected boolean literal `true`, got `false` instead
+ 10: function veryPessimistic(isThisAwesome: true): boolean {
+                                             ^^^^ boolean literal `true`
 
-boolean.js:15:19,40: function call
-Error:
-boolean.js:15:35,39: boolean
-Expected boolean literal `true`, got `false` instead
-boolean.js:10:41,44: boolean literal `true`
+boolean.js:21
+ 21:     return x;
+                ^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
+ 19: function bar(x: MyOwnBooleanLOL): false {
+                                       ^^^^^ boolean literal `false`
 
-boolean.js:21:12,12: boolean literal `true`
-Expected boolean literal `false`, got `true` instead
-boolean.js:19:35,39: boolean literal `false`
+boolean.js:23
+ 23:     return !x;
+                ^^ boolean value `true`. Expected boolean literal `false`, got `true` instead
+ 19: function bar(x: MyOwnBooleanLOL): false {
+                                       ^^^^^ boolean literal `false`
 
-boolean.js:23:12,13: boolean value `true`
-Expected boolean literal `false`, got `true` instead
-boolean.js:19:35,39: boolean literal `false`
+boolean.js:29
+ 29: bar(1); // error
+     ^^^^^^ function call
+ 29: bar(1); // error
+         ^ number. This type is incompatible with
+ 19: function bar(x: MyOwnBooleanLOL): false {
+                     ^^^^^^^^^^^^^^^ union: boolean literal `true` | boolean literal `false`
+  Member 1:
+   17: type MyOwnBooleanLOL = true | false
+                              ^^^^ boolean literal `true`
+  Error:
+   29: bar(1); // error
+           ^ number. This type is incompatible with
+   17: type MyOwnBooleanLOL = true | false
+                              ^^^^ boolean literal `true`
+  Member 2:
+   17: type MyOwnBooleanLOL = true | false
+                                     ^^^^^ boolean literal `false`
+  Error:
+   29: bar(1); // error
+           ^ number. This type is incompatible with
+   17: type MyOwnBooleanLOL = true | false
+                                     ^^^^^ boolean literal `false`
 
-boolean.js:29:1,6: function call
-Error:
-boolean.js:29:5,5: number
-This type is incompatible with
-boolean.js:19:17,31: union: boolean literal `true` | boolean literal `false`
-Member 1:
-boolean.js:17:24,27: boolean literal `true`
-Error:
-boolean.js:29:5,5: number
-This type is incompatible with
-boolean.js:17:24,27: boolean literal `true`
-Member 2:
-boolean.js:17:31,35: boolean literal `false`
-Error:
-boolean.js:29:5,5: number
-This type is incompatible with
-boolean.js:17:31,35: boolean literal `false`
+number.js:8
+  8: highlander(2); // error
+     ^^^^^^^^^^^^^ function call
+  8: highlander(2); // error
+                ^ number. Expected number literal `1`, got `2` instead
+  3: function highlander(howMany: 1): number {
+                                  ^ number literal `1`
 
-number.js:8:1,13: function call
-Error:
-number.js:8:12,12: number
-Expected number literal `1`, got `2` instead
-number.js:3:30,30: number literal `1`
+number.js:19
+ 19: bar(3); // error
+     ^^^^^^ function call
+ 19: bar(3); // error
+         ^ number. This type is incompatible with
+ 13: function bar(num: Foo): number {
+                       ^^^ number enum
 
-number.js:19:1,6: function call
-Error:
-number.js:19:5,5: number
-This type is incompatible with
-number.js:13:19,21: number enum
 
 Found 7 errors

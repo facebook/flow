@@ -1,67 +1,86 @@
+array.js:8
+  8: var arrayTest4: Iterable<number> = ["hi"];
+                              ^^^^^^ number. This type is incompatible with
+  8: var arrayTest4: Iterable<number> = ["hi"];
+                                         ^^^^ string
 
-array.js:8:26,31: number
-This type is incompatible with
-array.js:8:37,40: string
+array.js:8
+  8: var arrayTest4: Iterable<number> = ["hi"];
+                                         ^^^^ string. This type is incompatible with
+  8: var arrayTest4: Iterable<number> = ["hi"];
+                              ^^^^^^ number
 
-array.js:8:37,40: string
-This type is incompatible with
-array.js:8:26,31: number
+array.js:10
+ 10: var arrayTest5: Iterable<string> = ["hi", 1];
+                                               ^ number. This type is incompatible with
+ 10: var arrayTest5: Iterable<string> = ["hi", 1];
+                              ^^^^^^ string
 
-array.js:10:43,43: number
-This type is incompatible with
-array.js:10:26,31: string
+caching_bug.js:21
+ 21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                               ^^^^^^ number. This type is incompatible with
+ 21: function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                                  ^^^^^^ string
 
-caching_bug.js:21:43,48: number
-This type is incompatible with
-caching_bug.js:21:62,67: string
+iterator_result.js:23
+ 23:         return { done, value: "still going..." }; // Error string ~> void
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+ 20:     next(): IteratorResult<string, void> {
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s)
+  Member 1:
+  object type. See: [LIB] core.js:356
+  Error:
+   23:         return { done, value: "still going..." }; // Error string ~> void
+                                     ^^^^^^^^^^^^^^^^ string. This type is incompatible with
+   20:     next(): IteratorResult<string, void> {
+                                          ^^^^ undefined
+  Member 2:
+  object type. See: [LIB] core.js:359
+  Error:
+    0: 
+       ^ inconsistent use of library definitions
+  boolean literal `true`. Expected boolean literal `false`, got `true` instead. See: [LIB] core.js:357
+  boolean literal `false`. See: [LIB] core.js:360
 
-iterator_result.js:23:16,48: object literal
-This type is incompatible with
-iterator_result.js:20:13,40: union: object type(s)
-Member 1:
-[LIB] core.js:356:37,359:1: object type
-Error:
-iterator_result.js:23:31,46: string
-This type is incompatible with
-iterator_result.js:20:36,39: undefined
-Member 2:
-[LIB] core.js:359:5,362:1: object type
-Error:
-iterator_result.js: inconsistent use of library definitions
-[LIB] core.js:357:9,12: boolean literal `true`
-Expected boolean literal `false`, got `true` instead
-[LIB] core.js:360:9,13: boolean literal `false`
+iterator_result.js:25
+ 25:         return { done }; // Error void ~> string
+                    ^^^^^^^^ object literal. This type is incompatible with
+ 20:     next(): IteratorResult<string, void> {
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s)
+  Member 1:
+  object type. See: [LIB] core.js:356
+  Error:
+   25:         return { done }; // Error void ~> string
+                        ^^^^ boolean. Expected boolean literal `true`, got `false` instead
+  boolean literal `true`. See: [LIB] core.js:357
+  Member 2:
+  object type. See: [LIB] core.js:359
+  Error:
+  property `value`. Property not found in. See: [LIB] core.js:359
+   25:         return { done }; // Error void ~> string
+                      ^^^^^^^^ object literal
 
-iterator_result.js:25:16,23: object literal
-This type is incompatible with
-iterator_result.js:20:13,40: union: object type(s)
-Member 1:
-[LIB] core.js:356:37,359:1: object type
-Error:
-iterator_result.js:25:18,21: boolean
-Expected boolean literal `true`, got `false` instead
-[LIB] core.js:357:9,12: boolean literal `true`
-Member 2:
-[LIB] core.js:359:5,362:1: object type
-Error:
-[LIB] core.js:359:5,362:1: property `value`
-Property not found in
-iterator_result.js:25:16,23: object literal
+map.js:13
+ 13: function mapTest4(map: Map<number, string>): Iterable<string> {
+                                                           ^^^^^^ string. This type is incompatible with
+tuple type. See: [LIB] core.js:386
 
-map.js:13:55,60: string
-This type is incompatible with
-[LIB] core.js:386:28,33: tuple type
+set.js:13
+ 13: function setTest4(set: Set<string>): Iterable<number> {
+                                ^^^^^^ string. This type is incompatible with
+ 13: function setTest4(set: Set<string>): Iterable<number> {
+                                                   ^^^^^^ number
 
-set.js:13:28,33: string
-This type is incompatible with
-set.js:13:47,52: number
+set.js:13
+ 13: function setTest4(set: Set<string>): Iterable<number> {
+                                                   ^^^^^^ number. This type is incompatible with
+ 13: function setTest4(set: Set<string>): Iterable<number> {
+                                ^^^^^^ string
 
-set.js:13:47,52: number
-This type is incompatible with
-set.js:13:28,33: string
+string.js:5
+  5: var stringTest3: Iterable<number> = "hi"; // Error - string is a Iterable<string>
+                               ^^^^^^ number. This type is incompatible with
+string. See: [LIB] core.js:215
 
-string.js:5:27,32: number
-This type is incompatible with
-[LIB] core.js:215:28,33: string
 
 Found 10 errors

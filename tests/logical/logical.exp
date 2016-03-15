@@ -1,122 +1,178 @@
+logical.js:8
+  8:     return x && '123';
+                ^ boolean. This type is incompatible with
+  6: function logical1a(): number { // expected `: boolean`
+                           ^^^^^^ number
 
-logical.js:8:12,12: boolean
-This type is incompatible with
-logical.js:6:23,28: number
+logical.js:23
+ 23:     return false && '123';
+                ^^^^^ boolean. This type is incompatible with
+ 22: function logical2a(): number { // expected `: boolean`
+                           ^^^^^^ number
 
-logical.js:23:12,16: boolean
-This type is incompatible with
-logical.js:22:23,28: number
+logical.js:101
+101:     return x != null && x > 10;
+                ^^^^^^^^^ boolean. This type is incompatible with
+ 99: function logical3a(): string { // expected `: boolean`
+                           ^^^^^^ string
 
-logical.js:101:12,20: boolean
-This type is incompatible with
-logical.js:99:23,28: string
+logical.js:101
+101:     return x != null && x > 10;
+                             ^^^^^^ boolean. This type is incompatible with
+ 99: function logical3a(): string { // expected `: boolean`
+                           ^^^^^^ string
 
-logical.js:101:25,30: boolean
-This type is incompatible with
-logical.js:99:23,28: string
+logical.js:109
+109:     return x != null && x;
+                ^^^^^^^^^ boolean. This type is incompatible with
+107: function logical3b(): number { // expected `: boolean | number`
+                           ^^^^^^ number
 
-logical.js:109:12,20: boolean
-This type is incompatible with
-logical.js:107:23,28: number
+logical.js:117
+117:     return x != undefined && x;
+                ^^^^^^^^^^^^^^ boolean. This type is incompatible with
+115: function logical3c(): ?number { // expected `: boolean | ?number`
+                            ^^^^^^ number
 
-logical.js:117:12,25: boolean
-This type is incompatible with
-logical.js:115:24,29: number
+logical.js:124
+124:     return x && '123';
+                ^ boolean. This type is incompatible with
+123: function logical4(x: boolean): string { // expected `: boolean | string`
+                                    ^^^^^^ string
 
-logical.js:124:12,12: boolean
-This type is incompatible with
-logical.js:123:32,37: string
+logical.js:148
+148:     return x || 0;
+                ^ boolean. This type is incompatible with
+146: function logical5c(): string { // expected `: boolean`
+                           ^^^^^^ string
 
-logical.js:148:12,12: boolean
-This type is incompatible with
-logical.js:146:23,28: string
+logical.js:176
+176:     return true || '123';
+                ^^^^ boolean. This type is incompatible with
+175: function logical6d(): number { // expected `: boolean`
+                           ^^^^^^ number
 
-logical.js:176:12,15: boolean
-This type is incompatible with
-logical.js:175:23,28: number
+logical.js:281
+281:     return x || (1 && 'foo');
+                ^ boolean. This type is incompatible with
+279: function logical8f(): string { // expected `: boolean`
+                           ^^^^^^ string
 
-logical.js:281:12,12: boolean
-This type is incompatible with
-logical.js:279:23,28: string
+logical.js:291
+291:     return x || y || false;
+                          ^^^^^ boolean. This type is incompatible with
+290: ): number | string { // expected `: number | string | boolean`
+        ^^^^^^^^^^^^^^^ union: number | string
+  Member 1:
+  290: ): number | string { // expected `: number | string | boolean`
+          ^^^^^^ number
+  Error:
+  291:     return x || y || false;
+                            ^^^^^ boolean. This type is incompatible with
+  290: ): number | string { // expected `: number | string | boolean`
+          ^^^^^^ number
+  Member 2:
+  290: ): number | string { // expected `: number | string | boolean`
+                   ^^^^^^ string
+  Error:
+  291:     return x || y || false;
+                            ^^^^^ boolean. This type is incompatible with
+  290: ): number | string { // expected `: number | string | boolean`
+                   ^^^^^^ string
 
-logical.js:291:22,26: boolean
-This type is incompatible with
-logical.js:290:4,18: union: number | string
-Member 1:
-logical.js:290:4,9: number
-Error:
-logical.js:291:22,26: boolean
-This type is incompatible with
-logical.js:290:4,9: number
-Member 2:
-logical.js:290:13,18: string
-Error:
-logical.js:291:22,26: boolean
-This type is incompatible with
-logical.js:290:13,18: string
+logical.js:315
+315:     return x && y && false;
+                          ^^^^^ boolean. This type is incompatible with
+314: ): number | string { // expected `: number | string | boolean`
+        ^^^^^^^^^^^^^^^ union: number | string
+  Member 1:
+  314: ): number | string { // expected `: number | string | boolean`
+          ^^^^^^ number
+  Error:
+  315:     return x && y && false;
+                            ^^^^^ boolean. This type is incompatible with
+  314: ): number | string { // expected `: number | string | boolean`
+          ^^^^^^ number
+  Member 2:
+  314: ): number | string { // expected `: number | string | boolean`
+                   ^^^^^^ string
+  Error:
+  315:     return x && y && false;
+                            ^^^^^ boolean. This type is incompatible with
+  314: ): number | string { // expected `: number | string | boolean`
+                   ^^^^^^ string
 
-logical.js:315:22,26: boolean
-This type is incompatible with
-logical.js:314:4,18: union: number | string
-Member 1:
-logical.js:314:4,9: number
-Error:
-logical.js:315:22,26: boolean
-This type is incompatible with
-logical.js:314:4,9: number
-Member 2:
-logical.js:314:13,18: string
-Error:
-logical.js:315:22,26: boolean
-This type is incompatible with
-logical.js:314:13,18: string
+logical.js:322
+322:     return false && x && y;
+                ^^^^^ boolean. This type is incompatible with
+321: function logical10b(x: number, y: string): Array<any> { // expected `: boolean`
+                                                ^^^^^^^^^^ array type
 
-logical.js:322:12,16: boolean
-This type is incompatible with
-logical.js:321:44,53: array type
+logical.js:329
+329:     return x && false && y;
+                ^ number. This type is incompatible with
+328: function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
+                                                ^^^^^^^^^^ array type
 
-logical.js:329:12,12: number
-This type is incompatible with
-logical.js:328:44,53: array type
+logical.js:329
+329:     return x && false && y;
+                     ^^^^^ boolean. This type is incompatible with
+328: function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
+                                                ^^^^^^^^^^ array type
 
-logical.js:329:17,21: boolean
-This type is incompatible with
-logical.js:328:44,53: array type
+logical.js:348
+348:         y = y || true; // expected a number
+                      ^^^^ boolean. This type is incompatible with
+346: function logical11b(y: number): number {
+                            ^^^^^^ number
 
-logical.js:348:18,21: boolean
-This type is incompatible with
-logical.js:346:24,29: number
+logical.js:363
+363:     return y;
+                ^ boolean. This type is incompatible with
+356: function logical12a(): number {
+                            ^^^^^^ number
 
-logical.js:363:12,12: boolean
-This type is incompatible with
-logical.js:356:24,29: number
+logical.js:371
+371:         y = y && true; // expected a number
+                      ^^^^ boolean. This type is incompatible with
+369: function logical12b(y: number): number {
+                            ^^^^^^ number
 
-logical.js:371:18,21: boolean
-This type is incompatible with
-logical.js:369:24,29: number
+logical.js:381
+381:         {x: x && "bar"},
+                 ^ number. This type is incompatible with
+379: function logical13(x: number): Array<{x: string}> {
+                                              ^^^^^^ string
 
-logical.js:381:13,13: number
-This type is incompatible with
-logical.js:379:42,47: string
+logical.js:383
+383:         {x: true && false},
+                         ^^^^^ boolean. This type is incompatible with
+379: function logical13(x: number): Array<{x: string}> {
+                                              ^^^^^^ string
 
-logical.js:383:21,25: boolean
-This type is incompatible with
-logical.js:379:42,47: string
+logical.js:384
+384:         {x: false && false},
+                 ^^^^^ boolean. This type is incompatible with
+379: function logical13(x: number): Array<{x: string}> {
+                                              ^^^^^^ string
 
-logical.js:384:13,17: boolean
-This type is incompatible with
-logical.js:379:42,47: string
+logical.js:397
+397:         {x: x || "bar"},
+                 ^ number. This type is incompatible with
+395: function logical14(x: number): Array<{x: string}> {
+                                              ^^^^^^ string
 
-logical.js:397:13,13: number
-This type is incompatible with
-logical.js:395:42,47: string
+logical.js:399
+399:         {x: false || true},
+                          ^^^^ boolean. This type is incompatible with
+395: function logical14(x: number): Array<{x: string}> {
+                                              ^^^^^^ string
 
-logical.js:399:22,25: boolean
-This type is incompatible with
-logical.js:395:42,47: string
+logical.js:400
+400:         {x: true || false},
+                 ^^^^ boolean. This type is incompatible with
+395: function logical14(x: number): Array<{x: string}> {
+                                              ^^^^^^ string
 
-logical.js:400:13,16: boolean
-This type is incompatible with
-logical.js:395:42,47: string
 
 Found 24 errors

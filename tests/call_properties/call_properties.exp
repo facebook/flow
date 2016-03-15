@@ -1,78 +1,114 @@
+A.js:8
+  8:   return f();
+              ^^^ string. This type is incompatible with
+  7: function b(f: { (): string }): number {
+                                    ^^^^^^ number
 
-A.js:8:10,12: string
-This type is incompatible with
-A.js:7:32,37: number
+A.js:13
+ 13:   return f("hello");
+              ^^^^^^^^^^ function call
+ 13:   return f("hello");
+                ^^^^^^^ string. This type is incompatible with
+ 12: function c(f: { (x: number): number }): number {
+                         ^^^^^^ number
 
-A.js:13:10,19: function call
-Error:
-A.js:13:12,18: string
-This type is incompatible with
-A.js:12:21,26: number
+A.js:18
+ 18:   return f();
+              ^^^ function call
+ 18:   return f();
+              ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+ 17: function d(f: { (x: number): number }): number {
+                         ^^^^^^ number
 
-A.js:18:10,12: function call
-Error:
-A.js:18:10,12: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-A.js:17:21,26: number
+A.js:23
+ 23:   return f();
+              ^^^ function call. Callable signature not found in
+ 23:   return f();
+              ^ object type
 
-A.js:23:10,12: function call
-Callable signature not found in
-A.js:23:10,10: object type
+A.js:29
+ 29:   return x();
+              ^^^ function call. Callable signature not found in
+ 29:   return x();
+              ^ object literal
 
-A.js:29:10,12: function call
-Callable signature not found in
-A.js:29:10,10: object literal
+B.js:5
+  5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                                                            ^^^^^^ string. This type is incompatible with
+  5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                           ^^^^^^ number
 
-B.js:5:56,61: string
-This type is incompatible with
-B.js:5:23,28: number
+B.js:8
+  8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                  ^^^^^^ string. This type is incompatible with
+  8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                                                   ^^^^^^ number
 
-B.js:8:14,19: string
-This type is incompatible with
-B.js:8:47,52: number
+B.js:11
+ 11: var d: { (): string } = function (x: number): string { return "hi"; };
+              ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+ 11: var d: { (): string } = function (x: number): string { return "hi"; };
+                                          ^^^^^^ number
 
-B.js:11:10,19: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-B.js:11:38,43: number
+C.js:7
+  7: function b(x: { (z: number): string }): (z: number) => number {
+                                  ^^^^^^ string. This type is incompatible with
+  7: function b(x: { (z: number): string }): (z: number) => number {
+                                                            ^^^^^^ number
 
-C.js:7:30,35: string
-This type is incompatible with
-C.js:7:56,61: number
+C.js:12
+ 12: function c(x: { (z: number): string }): (z: string) => string {
+                                                 ^^^^^^ string. This type is incompatible with
+ 12: function c(x: { (z: number): string }): (z: string) => string {
+                         ^^^^^^ number
 
-C.js:12:45,50: string
-This type is incompatible with
-C.js:12:21,26: number
+C.js:17
+ 17: function d(x: { (z: number): string }): () => string {
+                                             ^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+ 17: function d(x: { (z: number): string }): () => string {
+                         ^^^^^^ number
 
-C.js:17:41,52: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-C.js:17:21,26: number
+C.js:22
+ 22: function e(x: {}): () => string {
+                        ^^^^^^^^^^^^ function type. Callable signature not found in
+ 23:   return x;
+              ^ object type
 
-C.js:22:20,31: function type
-Callable signature not found in
-C.js:23:10,10: object type
+C.js:32
+ 32: function g(x: {}): Function {
+                        ^^^^^^^^ function type. Callable signature not found in
+ 33:   return x; // error
+              ^ object type
 
-C.js:32:20,27: function type
-Callable signature not found in
-C.js:33:10,10: object type
+D.js:11
+ 11: var c: { (): string; (x: number): string } =
+              ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+ 12:   function (x: number): string { return "hi"; };
+                    ^^^^^^ number
 
-D.js:11:10,19: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-D.js:12:16,21: number
+D.js:20
+ 20: function e(x: { (): string; (x: number): string }): () => number {
+                                              ^^^^^^ string. This type is incompatible with
+ 20: function e(x: { (): string; (x: number): string }): () => number {
+                                                               ^^^^^^ number
 
-D.js:20:42,47: string
-This type is incompatible with
-D.js:20:59,64: number
+E.js:2
+  2: var a : { someProp: number } = function () {};
+             ^^^^^^^^^^^^^^^^^^^^ property `someProp`. Property not found in
+  2: var a : { someProp: number } = function () {};
+                                    ^^^^^^^^^^^^^^ function
 
-E.js:2:9,28: property `someProp`
-Property not found in
-E.js:2:32,45: function
+F.js:6
+  6: var b: { (x: number): number } = (x) => "hi"
+                                             ^^^^ string. This type is incompatible with
+  6: var b: { (x: number): number } = (x) => "hi"
+                           ^^^^^^ number
 
-F.js:6:41,44: string
-This type is incompatible with
-F.js:6:23,28: number
+F.js:9
+  9: var c: { (x: string): string } = (x) => x.toFixed()
+                                               ^^^^^^^ property `toFixed`. Property not found in
+  9: var c: { (x: string): string } = (x) => x.toFixed()
+                                             ^ String
 
-F.js:9:43,49: property `toFixed`
-Property not found in
-F.js:9:41,41: String
 
 Found 18 errors

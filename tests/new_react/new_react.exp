@@ -1,240 +1,340 @@
+bad_default_props.js:7
+  7: class C1 extends React.Component<T1, T2, any> { // error
+                                      ^^ object type. This type is incompatible with
+  7: class C1 extends React.Component<T1, T2, any> { // error
+                                      ^^ undefined. Did you forget to declare T1?
 
-bad_default_props.js:7:34,35: object type
-This type is incompatible with
-bad_default_props.js:7:34,35: undefined. Did you forget to declare T1?
+bad_default_props.js:7
+  7: class C1 extends React.Component<T1, T2, any> { // error
+                                      ^^ undefined. Did you forget to declare T1?. This type is incompatible with
+  7: class C1 extends React.Component<T1, T2, any> { // error
+                                      ^^ object type
 
-bad_default_props.js:7:34,35: undefined. Did you forget to declare T1?
-This type is incompatible with
-bad_default_props.js:7:34,35: object type
+bad_default_props.js:24
+ 24: class C5 extends React.Component<T2, T3, any> { // error
+                                      ^^ object type. This type is incompatible with
+ 24: class C5 extends React.Component<T2, T3, any> { // error
+                                      ^^ undefined. Did you forget to declare T2?
 
-bad_default_props.js:24:34,35: object type
-This type is incompatible with
-bad_default_props.js:24:34,35: undefined. Did you forget to declare T2?
+bad_default_props.js:24
+ 24: class C5 extends React.Component<T2, T3, any> { // error
+                                      ^^ undefined. Did you forget to declare T2?. This type is incompatible with
+ 24: class C5 extends React.Component<T2, T3, any> { // error
+                                      ^^ object type
 
-bad_default_props.js:24:34,35: undefined. Did you forget to declare T2?
-This type is incompatible with
-bad_default_props.js:24:34,35: object type
+classes.js:17
+ 17:     var _: string = this.props.x;
+                         ^^^^^^^^^^^^ number. This type is incompatible with
+ 17:     var _: string = this.props.x;
+                ^^^^^^ string
 
-classes.js:17:21,32: number
-This type is incompatible with
-classes.js:17:12,17: string
+classes.js:22
+ 22:     this.state = { y: "" };
+         ^^^^^^^^^^ assignment of property `state`
+ 22:     this.state = { y: "" };
+                           ^^ string. This type is incompatible with
+  5: type State = { y: number };
+                       ^^^^^^ number
 
-classes.js:22:5,14: assignment of property `state`
-Error:
-classes.js:22:23,24: string
-This type is incompatible with
-classes.js:5:19,24: number
+classes.js:25
+ 25:   setState(o: { y_: string }): void { }
+                   ^^^^^^^^^^^^^^ property `y_`. Property not found in
+  9:   state: State;
+              ^^^^^ object type
 
-classes.js:25:15,28: property `y_`
-Property not found in
-classes.js:9:10,14: object type
+classes.js:40
+ 40: Foo.defaultProps = 0;
+     ^^^^^^^^^^^^^^^^ assignment of property `defaultProps`
+ 40: Foo.defaultProps = 0;
+                        ^ number. This type is incompatible with
+ 10:   static defaultProps: DefaultProps;
+                            ^^^^^^^^^^^^ object type
 
-classes.js:40:1,16: assignment of property `defaultProps`
-Error:
-classes.js:40:20,20: number
-This type is incompatible with
-classes.js:10:24,35: object type
+classes.js:41
+ 41: var foo: $jsx<number> = <Foo/>;
+                   ^^^^^^ number. This type is incompatible with
+  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
 
-classes.js:41:15,20: number
-This type is incompatible with
-[LIB] fakelib/type_aliases.js:5:80,121: React$Component
+classes.js:41
+ 41: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ React element `Foo`
+  8:   props: Props;
+              ^^^^^ property `x`. Property not found in
+ 41: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ props of React element `Foo`
 
-classes.js:41:25,30: React element `Foo`
-Error:
-classes.js:8:10,14: property `x`
-Property not found in
-classes.js:41:25,30: props of React element `Foo`
+classes.js:41
+ 41: var foo: $jsx<number> = <Foo/>;
+                             ^^^^^^ React element `Foo`
+ 41: var foo: $jsx<number> = <Foo/>;
+                   ^^^^^^ number. This type is incompatible with
+  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
 
-classes.js:41:25,30: React element `Foo`
-Error:
-classes.js:41:15,20: number
-This type is incompatible with
-[LIB] fakelib/type_aliases.js:5:80,121: React$Component
+classes.js:59
+ 59:     var _: string = this.props.x;
+                         ^^^^^^^^^^^^ number. This type is incompatible with
+ 59:     var _: string = this.props.x;
+                ^^^^^^ string
 
-classes.js:59:21,32: number
-This type is incompatible with
-classes.js:59:12,17: string
+classes.js:66
+ 66:   setState(o: { y_: string }): void { },
+                   ^^^^^^^^^^^^^^ property `y_`. Property not found in
+ 62:   getInitialState(): { y: string } {
+                          ^^^^^^^^^^^^^ object type
 
-classes.js:66:15,28: property `y_`
-Property not found in
-classes.js:62:22,34: object type
+classes.js:81
+ 81: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                          ^^^^^^ number. This type is incompatible with
+  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
 
-classes.js:81:22,27: number
-This type is incompatible with
-[LIB] fakelib/type_aliases.js:5:80,121: React$Component
+classes.js:81
+ 81: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ React element `FooLegacy`
+ 48:   propTypes: {
+       ^^^^^^^^^ property `x`. Property not found in
+ 81: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ props of React element `FooLegacy`
 
-classes.js:81:32,43: React element `FooLegacy`
-Error:
-classes.js:48:3,11: property `x`
-Property not found in
-classes.js:81:32,43: props of React element `FooLegacy`
+classes.js:81
+ 81: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                                    ^^^^^^^^^^^^ React element `FooLegacy`
+ 81: var foo_legacy: $jsx<number> = <FooLegacy/>;
+                          ^^^^^^ number. This type is incompatible with
+  5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
 
-classes.js:81:32,43: React element `FooLegacy`
-Error:
-classes.js:81:22,27: number
-This type is incompatible with
-[LIB] fakelib/type_aliases.js:5:80,121: React$Component
+import-react.js:18
+ 18: <HelloMessage name={007} />; // number ~/~> string error
+                         ^^^ number. This type is incompatible with
+ 15:   props: { name: string };
+                      ^^^^^^ string
 
-import-react.js:18:21,23: number
-This type is incompatible with
-import-react.js:15:18,23: string
+new_react.js:17
+ 17:         var foo: string = this.state;
+                               ^^^^^^^^^^ number. This type is incompatible with
+ 17:         var foo: string = this.state;
+                      ^^^^^^ string
 
-new_react.js:17:27,36: number
-This type is incompatible with
-new_react.js:17:18,23: string
+new_react.js:18
+ 18:         var bar: string = this.props;
+                               ^^^^^^^^^^ propTypes of React component. This type is incompatible with
+ 18:         var bar: string = this.props;
+                      ^^^^^^ string
 
-new_react.js:18:27,36: propTypes of React component
-This type is incompatible with
-new_react.js:18:18,23: string
+new_react.js:19
+ 19:         var qux: string = this.props.z;
+                               ^^^^^^^^^^^^ number. This type is incompatible with
+ 19:         var qux: string = this.props.z;
+                      ^^^^^^ string
 
-new_react.js:19:27,38: number
-This type is incompatible with
-new_react.js:19:18,23: string
+new_react.js:19
+ 19:         var qux: string = this.props.z;
+                               ^^^^^^^^^^^^ undefined. This type is incompatible with
+ 19:         var qux: string = this.props.z;
+                      ^^^^^^ string
 
-new_react.js:19:27,38: undefined
-This type is incompatible with
-new_react.js:19:18,23: string
+new_react.js:20
+ 20:         var w:number = this.props.x;
+                            ^^^^^^^^^^^^ string. This type is incompatible with
+ 20:         var w:number = this.props.x;
+                   ^^^^^^ number
 
-new_react.js:20:24,35: string
-This type is incompatible with
-new_react.js:20:15,20: number
+new_react.js:21
+ 21:         this.props.y[0];
+             ^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
+ 21:         this.props.y[0];
+             ^^^^^^^^^^^^ undefined
 
-new_react.js:21:9,23: access of computed property/element
-Computed property/element cannot be accessed on possibly undefined value
-new_react.js:21:9,20: undefined
+new_react.js:29
+ 29: var element = <C x = {0}/>;
+                   ^^^^^^^^^^^^ React element `C`
+ 29: var element = <C x = {0}/>;
+                           ^ number. This type is incompatible with
+  6:         x: React.PropTypes.string.isRequired,
+                ^^^^^^^^^^^^^^^^^^^^^^ string
 
-new_react.js:29:15,26: React element `C`
-Error:
-new_react.js:29:23,23: number
-This type is incompatible with
-new_react.js:6:12,33: string
+new_react.js:30
+ 30: var element_ = <C/>;
+                    ^^^^ React element `C`
+  5:     propTypes: {
+         ^^^^^^^^^ property `x`. Property not found in
+ 30: var element_ = <C/>;
+                    ^^^^ props of React element `C`
 
-new_react.js:30:16,19: React element `C`
-Error:
-new_react.js:5:5,13: property `x`
-Property not found in
-new_react.js:30:16,19: props of React element `C`
+new_react.js:32
+ 32: var x: number = C.displayName;
+                     ^^^^^^^^^^^^^ string. This type is incompatible with
+ 32: var x: number = C.displayName;
+            ^^^^^^ number
 
-new_react.js:32:17,29: string
-This type is incompatible with
-new_react.js:32:8,13: number
+propTypes.js:13
+ 13: <C statistics={[
+     ^ React element `C`
+  6:     statistics: PropTypes.arrayOf(PropTypes.shape({
+                                       ^ property `label`. Property not found in
+ 14:   {},
+       ^^ object literal
 
-propTypes.js:13:1,16:4: React element `C`
-Error:
-propTypes.js:6:35,9:6: property `label`
-Property not found in
-propTypes.js:14:3,4: object literal
+propTypes.js:18
+ 18: var props: Array<{label: string, value?: number}> = [
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `label`. Property not found in
+ 19:   {},
+       ^^ object literal
 
-propTypes.js:18:18,48: property `label`
-Property not found in
-propTypes.js:19:3,4: object literal
+props.js:14
+ 14:         var a: number = this.props.x; // error
+                             ^^^^^^^^^^^^ string. This type is incompatible with
+ 14:         var a: number = this.props.x; // error
+                    ^^^^^^ number
 
-props.js:14:25,36: string
-This type is incompatible with
-props.js:14:16,21: number
+props.js:14
+ 14:         var a: number = this.props.x; // error
+                             ^^^^^^^^^^^^ undefined. This type is incompatible with
+ 14:         var a: number = this.props.x; // error
+                    ^^^^^^ number
 
-props.js:14:25,36: undefined
-This type is incompatible with
-props.js:14:16,21: number
+props.js:16
+ 16:         var c: string = this.props.z; // error
+                             ^^^^^^^^^^^^ number. This type is incompatible with
+ 16:         var c: string = this.props.z; // error
+                    ^^^^^^ string
 
-props.js:16:25,36: number
-This type is incompatible with
-props.js:16:16,21: string
+props.js:16
+ 16:         var c: string = this.props.z; // error
+                             ^^^^^^^^^^^^ undefined. This type is incompatible with
+ 16:         var c: string = this.props.z; // error
+                    ^^^^^^ string
 
-props.js:16:25,36: undefined
-This type is incompatible with
-props.js:16:16,21: string
+props.js:20
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                 ^^^^^ boolean. This type is incompatible with
+ 10:         return {x: '', y: 0}
+                        ^^ string
 
-props.js:20:15,57: props of React element `TestProps`
-Error:
-props.js:20:29,33: boolean
-This type is incompatible with
-props.js:10:20,21: string
+props.js:20
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                           ^^^^^ boolean. This type is incompatible with
+ 10:         return {x: '', y: 0}
+                               ^ number
 
-props.js:20:15,57: props of React element `TestProps`
-Error:
-props.js:20:39,43: boolean
-This type is incompatible with
-props.js:10:27,27: number
+props.js:20
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `TestProps`
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                                     ^^^^^ boolean. This type is incompatible with
+  6:         z: React.PropTypes.number
+                ^^^^^^^^^^^^^^^^^^^^^^ number
 
-props.js:20:15,57: React element `TestProps`
-Error:
-props.js:20:49,53: boolean
-This type is incompatible with
-props.js:6:12,33: number
+props.js:20
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `TestProps`
+ 25:     propTypes: { w: React.PropTypes.string.isRequired }
+         ^^^^^^^^^ property `w`. Property not found in
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
 
-props.js:20:15,57: React element `TestProps`
-Error:
-props.js:25:5,13: property `w`
-Property not found in
-props.js:20:15,57: props of React element `TestProps`
+props2.js:14
+ 14:         var s: string = this.state.bar;
+                             ^^^^^^^^^^^^^^ number. This type is incompatible with
+ 14:         var s: string = this.state.bar;
+                    ^^^^^^ string
 
-props2.js:14:25,38: number
-This type is incompatible with
-props2.js:14:16,21: string
+props2.js:15
+ 15:         return <C {...this.state} foo = {0} />;
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `C`
+  9:     getInitialState: function(): { bar: number } {
+                                             ^^^^^^ number. This type is incompatible with
+  5:         bar: React.PropTypes.string.isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^ string
 
-props2.js:15:16,46: React element `C`
-Error:
-props2.js:9:41,46: number
-This type is incompatible with
-props2.js:5:14,35: string
+props2.js:15
+ 15:         return <C {...this.state} foo = {0} />;
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `C`
+ 15:         return <C {...this.state} foo = {0} />;
+                                              ^ number. This type is incompatible with
+  4:         foo: React.PropTypes.string.isRequired,
+                  ^^^^^^^^^^^^^^^^^^^^^^ string
 
-props2.js:15:16,46: React element `C`
-Error:
-props2.js:15:42,42: number
-This type is incompatible with
-props2.js:4:14,35: string
+props3.js:49
+ 49:       bad_one: React.PropTypes.imaginaryType,
+                                    ^^^^^^^^^^^^^ property `imaginaryType`. Property not found in
+ 49:       bad_one: React.PropTypes.imaginaryType,
+                    ^^^^^^^^^^^^^^^ object type
 
-props3.js:49:32,44: property `imaginaryType`
-Property not found in
-props3.js:49:16,30: object type
+props3.js:50
+ 50:       bad_two: React.PropTypes.string.inRequired,
+                                           ^^^^^^^^^^ property `inRequired`. Property not found in
+ 50:       bad_two: React.PropTypes.string.inRequired,
+                    ^^^^^^^^^^^^^^^^^^^^^^ object type
 
-props3.js:50:39,48: property `inRequired`
-Property not found in
-props3.js:50:16,37: object type
+props4.js:13
+ 13: <JDiv id={42} />;
+     ^^^^^^^^^^^^^^^^ React element `JDiv`
+ 13: <JDiv id={42} />;
+               ^^ number. This type is incompatible with
+  8:     id: string
+             ^^^^^^ string
 
-props4.js:13:1,16: React element `JDiv`
-Error:
-props4.js:13:11,12: number
-This type is incompatible with
-props4.js:8:9,14: string
+props4.js:24
+ 24:   <Example foo="foo" />,
+       ^^^^^^^^^^^^^^^^^^^^^ React element `Example`
+ 16:   props: { bar: string };
+              ^^^^^^^^^^^^^^^ property `bar`. Property not found in
+ 24:   <Example foo="foo" />,
+       ^^^^^^^^^^^^^^^^^^^^^ props of React element `Example`
 
-props4.js:24:3,23: React element `Example`
-Error:
-props4.js:16:10,24: property `bar`
-Property not found in
-props4.js:24:3,23: props of React element `Example`
+state.js:19
+ 19:                 {this.state.bar.qux}
+                                     ^^^ property `qux`. Property cannot be accessed on possibly null value
+ 19:                 {this.state.bar.qux}
+                      ^^^^^^^^^^^^^^ null
 
-state.js:19:33,35: property `qux`
-Property cannot be accessed on possibly null value
-state.js:19:18,31: null
+state.js:19
+ 19:                 {this.state.bar.qux}
+                                     ^^^ property `qux`. Property cannot be accessed on possibly undefined value
+ 19:                 {this.state.bar.qux}
+                      ^^^^^^^^^^^^^^ undefined
 
-state.js:19:33,35: property `qux`
-Property cannot be accessed on possibly undefined value
-state.js:19:18,31: undefined
+state3.js:11
+ 11:         var a: number = this.state.x; // error
+                             ^^^^^^^^^^^^ string. This type is incompatible with
+ 11:         var a: number = this.state.x; // error
+                    ^^^^^^ number
 
-state3.js:11:25,36: string
-This type is incompatible with
-state3.js:11:16,21: number
+state3.js:13
+ 13:         this.setState({
+             ^ call of method `setState`
+ 14:             x: false // error
+                    ^^^^^ boolean. This type is incompatible with
+  4:     getInitialState: function(): { x: string; } {
+                                           ^^^^^^ string
 
-state3.js:13:9,15:10: call of method `setState`
-Error:
-state3.js:14:16,20: boolean
-This type is incompatible with
-state3.js:4:39,44: string
+state4.js:9
+  9:     this.setState({ y: 0 });
+         ^^^^^^^^^^^^^^^^^^^^^^^ call of method `setState`
+  9:     this.setState({ y: 0 });
+                       ^^^^^^^^ property `y` of object literal. Property not found in
+  4:   getInitialState: function() {
+                                   ^ object literal
 
-state4.js:9:5,27: call of method `setState`
-Error:
-state4.js:9:19,26: property `y` of object literal
-Property not found in
-state4.js:4:31,6:3: object literal
+state4.js:10
+ 10:     return <div>{this.state.z}</div>
+                                 ^ property `z`. Property not found in
+ 10:     return <div>{this.state.z}</div>
+                      ^^^^^^^^^^ object literal
 
-state4.js:10:29,29: property `z`
-Property not found in
-state4.js:10:18,27: object literal
+state5.js:5
+  5:     return this.state.x; // error: need to declare type of state
+                           ^ property `x`. Property cannot be accessed on possibly undefined value
+  5:     return this.state.x; // error: need to declare type of state
+                ^^^^^^^^^^ undefined. Did you forget to declare type parameter `State` of property `Component`?
 
-state5.js:5:23,23: property `x`
-Property cannot be accessed on possibly undefined value
-state5.js:5:12,21: undefined. Did you forget to declare type parameter `State` of property `Component`?
 
 Found 50 errors

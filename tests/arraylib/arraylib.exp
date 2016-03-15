@@ -1,112 +1,137 @@
+array_lib.js:5
+  5: var b = a.map(function (x) { foo(x); return "" + x; });
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
+  5: var b = a.map(function (x) { foo(x); return "" + x; });
+                                      ^ number. This type is incompatible with
+  2: function foo(x:string) { }
+                    ^^^^^^ string
 
-array_lib.js:5:9,54: call of method `map`
-Error:
-array_lib.js:5:34,34: number
-This type is incompatible with
-array_lib.js:2:16,21: string
+array_lib.js:5
+  5: var b = a.map(function (x) { foo(x); return "" + x; });
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
+  8: var d: number = b[0];
+                     ^^^^ string. This type is incompatible with
+  8: var d: number = b[0];
+            ^^^^^^ number
 
-array_lib.js:5:9,54: call of method `map`
-Error:
-array_lib.js:8:17,20: string
-This type is incompatible with
-array_lib.js:8:8,13: number
+array_lib.js:10
+ 10: var e:Array<string> = a.reverse();
+                           ^^^^^^^^^^^ call of method `reverse`
+  4: var a = [0];
+              ^ number. This type is incompatible with
+ 10: var e:Array<string> = a.reverse();
+                 ^^^^^^ string
 
-array_lib.js:10:23,33: call of method `reverse`
-Error:
-array_lib.js:4:10,10: number
-This type is incompatible with
-array_lib.js:10:13,18: string
+array_lib.js:10
+ 10: var e:Array<string> = a.reverse();
+                           ^^^^^^^^^^^ call of method `reverse`
+ 10: var e:Array<string> = a.reverse();
+                 ^^^^^^ string. This type is incompatible with
+  4: var a = [0];
+              ^ number
 
-array_lib.js:10:23,33: call of method `reverse`
-Error:
-array_lib.js:10:13,18: string
-This type is incompatible with
-array_lib.js:4:10,10: number
+array_lib.js:21
+ 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                            ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
+ 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                     ^^^ string. This type is incompatible with
+union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:165
+  Member 1:
+  array type. See: [LIB] core.js:165
+  Error:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                       ^^^ string. This type is incompatible with
+  array type. See: [LIB] core.js:165
+  Member 2:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                              ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `S` of call of method `concat`
+  Error:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                       ^^^ string. This type is incompatible with
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ number
 
-array_lib.js:21:24,46: call of method `concat`
-Error:
-array_lib.js:21:33,35: string
-This type is incompatible with
-[LIB] core.js:165:21,32: union: array type | type parameter `S` of call of method `concat`
-Member 1:
-[LIB] core.js:165:21,28: array type
-Error:
-array_lib.js:21:33,35: string
-This type is incompatible with
-[LIB] core.js:165:21,28: array type
-Member 2:
-array_lib.js:21:24,46: type parameter `S` of call of method `concat`
-Error:
-array_lib.js:21:33,35: string
-This type is incompatible with
-array_lib.js:21:14,19: number
+array_lib.js:21
+ 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                            ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
+ 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                          ^^^ string. This type is incompatible with
+union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:165
+  Member 1:
+  array type. See: [LIB] core.js:165
+  Error:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                            ^^^ string. This type is incompatible with
+  array type. See: [LIB] core.js:165
+  Member 2:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                              ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `S` of call of method `concat`
+  Error:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                            ^^^ string. This type is incompatible with
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ number
 
-array_lib.js:21:24,46: call of method `concat`
-Error:
-array_lib.js:21:38,40: string
-This type is incompatible with
-[LIB] core.js:165:21,32: union: array type | type parameter `S` of call of method `concat`
-Member 1:
-[LIB] core.js:165:21,28: array type
-Error:
-array_lib.js:21:38,40: string
-This type is incompatible with
-[LIB] core.js:165:21,28: array type
-Member 2:
-array_lib.js:21:24,46: type parameter `S` of call of method `concat`
-Error:
-array_lib.js:21:38,40: string
-This type is incompatible with
-array_lib.js:21:14,19: number
+array_lib.js:21
+ 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                            ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
+ 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                               ^^^ string. This type is incompatible with
+union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:165
+  Member 1:
+  array type. See: [LIB] core.js:165
+  Error:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                                 ^^^ string. This type is incompatible with
+  array type. See: [LIB] core.js:165
+  Member 2:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                              ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `S` of call of method `concat`
+  Error:
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                                                 ^^^ string. This type is incompatible with
+   21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                    ^^^^^^ number
 
-array_lib.js:21:24,46: call of method `concat`
-Error:
-array_lib.js:21:43,45: string
-This type is incompatible with
-[LIB] core.js:165:21,32: union: array type | type parameter `S` of call of method `concat`
-Member 1:
-[LIB] core.js:165:21,28: array type
-Error:
-array_lib.js:21:43,45: string
-This type is incompatible with
-[LIB] core.js:165:21,28: array type
-Member 2:
-array_lib.js:21:24,46: type parameter `S` of call of method `concat`
-Error:
-array_lib.js:21:43,45: string
-This type is incompatible with
-array_lib.js:21:14,19: number
+array_lib.js:46
+ 46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `reduce`. Function cannot be called on any member of intersection type
+ 46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  polymorphic type: function type. See: [LIB] core.js:186
+  Error:
+   46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                   ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+   46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                   ^^^^^^^^^^^^^^^^ number
+  Member 2:
+  polymorphic type: function type. See: [LIB] core.js:190
+  Error:
+   46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                   ^^^ string. This type is incompatible with
+   46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                   ^^^^^^^^^^^^^^^^ number
 
-array_lib.js:46:3,45: call of method `reduce`
-Function cannot be called on any member of intersection type
-array_lib.js:46:3,45: intersection
-Member 1:
-[LIB] core.js:186:5,189:8: polymorphic type: function type
-Error:
-array_lib.js:46:29,31: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-array_lib.js:46:29,44: number
-Member 2:
-[LIB] core.js:190:5,192:8: polymorphic type: function type
-Error:
-array_lib.js:46:29,31: string
-This type is incompatible with
-array_lib.js:46:29,44: number
+array_lib.js:47
+ 47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `reduceRight`. Function cannot be called on any member of intersection type
+ 47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  polymorphic type: function type. See: [LIB] core.js:193
+  Error:
+   47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                        ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+   47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                        ^^^^^^^^^^^^^^^^ number
+  Member 2:
+  polymorphic type: function type. See: [LIB] core.js:197
+  Error:
+   47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                        ^^^ string. This type is incompatible with
+   47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                        ^^^^^^^^^^^^^^^^ number
 
-array_lib.js:47:3,50: call of method `reduceRight`
-Function cannot be called on any member of intersection type
-array_lib.js:47:3,50: intersection
-Member 1:
-[LIB] core.js:193:5,196:8: polymorphic type: function type
-Error:
-array_lib.js:47:34,36: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-array_lib.js:47:34,49: number
-Member 2:
-[LIB] core.js:197:5,199:8: polymorphic type: function type
-Error:
-array_lib.js:47:34,36: string
-This type is incompatible with
-array_lib.js:47:34,49: number
 
 Found 9 errors

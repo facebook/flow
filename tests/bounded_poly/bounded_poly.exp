@@ -1,28 +1,40 @@
+test.js:3
+  3:     var y: string = x; // error
+                         ^ number. This type is incompatible with
+  3:     var y: string = x; // error
+                ^^^^^^ string
 
-test.js:3:21,21: number
-This type is incompatible with
-test.js:3:12,17: string
+test.js:9
+  9:         return x; // error, since T: number and U: number does not imply U: T
+                    ^ number. This type is incompatible with
+  7: class C<T: number> {
+           ^ some incompatible instantiation of `T`
 
-test.js:9:16,16: number
-This type is incompatible with
-test.js:7:7,7: some incompatible instantiation of `T`
+test.js:13
+ 13:         var y: string = x; // error
+                             ^ number. This type is incompatible with
+ 13:         var y: string = x; // error
+                    ^^^^^^ string
 
-test.js:13:25,25: number
-This type is incompatible with
-test.js:13:16,21: string
+test.js:22
+ 22: var c: C<string> = new C; // error, since T = string is incompatible with number
+              ^^^^^^ string. This type is incompatible with
+  7: class C<T: number> {
+                ^^^^^^ number
 
-test.js:22:10,15: string
-This type is incompatible with
-test.js:7:12,17: number
+test.js:23
+ 23: var q: number = c.qux(0);
+                     ^^^^^^^^ string. This type is incompatible with
+ 23: var q: number = c.qux(0);
+            ^^^^^^ number
 
-test.js:23:17,24: string
-This type is incompatible with
-test.js:23:8,13: number
+test.js:23
+ 23: var q: number = c.qux(0);
+                     ^^^^^^^^ call of method `qux`
+ 23: var q: number = c.qux(0);
+                           ^ number. This type is incompatible with
+ 22: var c: C<string> = new C; // error, since T = string is incompatible with number
+              ^^^^^^ string
 
-test.js:23:17,24: call of method `qux`
-Error:
-test.js:23:23,23: number
-This type is incompatible with
-test.js:22:10,15: string
 
 Found 6 errors

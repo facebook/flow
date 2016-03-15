@@ -1,84 +1,124 @@
+A.js:2
+  2:   foo(x:number):void { }
+             ^^^^^^ number. This type is incompatible with
+  4:   foo(x:string):void { }
+             ^^^^^^ string. See: C.js:4
 
-A.js:2:9,14: number
-This type is incompatible with
-C.js:4:9,14: string
+B.js:6
+  6: (b.foo: number); // error, number !~> function
+      ^^^^^ method `foo`. This type is incompatible with
+  6: (b.foo: number); // error, number !~> function
+             ^^^^^^ number
 
-B.js:6:2,6: method `foo`
-This type is incompatible with
-B.js:6:9,14: number
+C.js:8
+  8: (c.foo: number); // error, number !~> function
+      ^^^^^ method `foo`. This type is incompatible with
+  8: (c.foo: number); // error, number !~> function
+             ^^^^^^ number
 
-C.js:8:2,6: method `foo`
-This type is incompatible with
-C.js:8:9,14: number
+D.js:3
+  3: new E().x
+             ^ property `x`. Property not found in
+  3: new E().x
+         ^ E
 
-D.js:3:9,9: property `x`
-Property not found in
-D.js:3:5,5: E
+class_shapes.js:4
+  4:   a: string;    // exists in TestClass
+          ^^^^^^ string. This type is incompatible with
+ 27:   a: number;  // conflicts with cast to Foo
+          ^^^^^^ number
 
-class_shapes.js:4:6,11: string
-This type is incompatible with
-class_shapes.js:27:6,11: number
+class_shapes.js:5
+  5:   b: string;    // doesn't exist
+          ^^^^^^ string. This type is incompatible with
+ 31:   b: number;  // conflicts with cast to Foo
+          ^^^^^^ number
 
-class_shapes.js:5:6,11: string
-This type is incompatible with
-class_shapes.js:31:6,11: number
+class_shapes.js:6
+  6:   c?: ?string;  // exists in TestClass, optional
+            ^^^^^^ string. This type is incompatible with
+ 28:   c: ?number; // conflicts with cast to Foo
+           ^^^^^^ number
 
-class_shapes.js:6:8,13: string
-This type is incompatible with
-class_shapes.js:28:7,12: number
+class_shapes.js:18
+ 18: x.b; // error, TestClass has no b
+       ^ property `b`. Property not found in
+ 18: x.b; // error, TestClass has no b
+     ^ TestClass
 
-class_shapes.js:18:3,3: property `b`
-Property not found in
-class_shapes.js:18:1,1: TestClass
+class_shapes.js:20
+ 20: x.d; // error, TestClass has no d
+       ^ property `d`. Property not found in
+ 20: x.d; // error, TestClass has no d
+     ^ TestClass
 
-class_shapes.js:20:3,3: property `d`
-Property not found in
-class_shapes.js:20:1,1: TestClass
+class_shapes.js:22
+ 22: var y : Foo = x;
+             ^^^ property `b`. Property not found in
+ 22: var y : Foo = x;
+                   ^ TestClass
 
-class_shapes.js:22:9,11: property `b`
-Property not found in
-class_shapes.js:22:15,15: TestClass
+class_shapes.js:27
+ 27:   a: number;  // conflicts with cast to Foo
+          ^^^^^^ number. This type is incompatible with
+  4:   a: string;    // exists in TestClass
+          ^^^^^^ string
 
-class_shapes.js:27:6,11: number
-This type is incompatible with
-class_shapes.js:4:6,11: string
+class_shapes.js:28
+ 28:   c: ?number; // conflicts with cast to Foo
+           ^^^^^^ number. This type is incompatible with
+  6:   c?: ?string;  // exists in TestClass, optional
+            ^^^^^^ string
 
-class_shapes.js:28:7,12: number
-This type is incompatible with
-class_shapes.js:6:8,13: string
+class_shapes.js:31
+ 31:   b: number;  // conflicts with cast to Foo
+          ^^^^^^ number. This type is incompatible with
+  5:   b: string;    // doesn't exist
+          ^^^^^^ string
 
-class_shapes.js:31:6,11: number
-This type is incompatible with
-class_shapes.js:5:6,11: string
+expr.js:14
+ 14: var b = new Baz(); // error: Baz is not a runtime binding in this scope
+                 ^^^ identifier `Baz`. Could not resolve name
 
-expr.js:14:13,15: identifier `Baz`
-Could not resolve name
+expr.js:17
+ 17: var c: Qux = new C(); // error: Qux is not a type in this scope
+            ^^^ identifier `Qux`. Could not resolve name
 
-expr.js:17:8,10: identifier `Qux`
-Could not resolve name
+expr.js:29
+ 29: var alias1: Alias = new _Alias(); // error: bad pun
+                         ^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
+ 29: var alias1: Alias = new _Alias(); // error: bad pun
+                 ^^^^^ Alias
 
-expr.js:29:21,32: class expr `Alias`
-This type is incompatible with
-expr.js:29:13,17: Alias
+expr.js:30
+ 30: var alias2: Alias = _Alias.factory(); // error: bad pun
+                         ^^^^^^^^^^^^^^^^ class expr `Alias`. This type is incompatible with
+ 30: var alias2: Alias = _Alias.factory(); // error: bad pun
+                 ^^^^^ Alias
 
-expr.js:30:21,36: class expr `Alias`
-This type is incompatible with
-expr.js:30:13,17: Alias
+loc.js:5
+  5: class Foo {} // error, shadows type Foo
+           ^^^ Foo. name is already bound
+  3: type Foo = number
+          ^^^ type Foo
 
-loc.js:5:7,9: Foo
-name is already bound
-loc.js:3:6,8: type Foo
+statics.js:4
+  4:   static p: string;
+                 ^^^^^^ string. This type is incompatible with
+ 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
+            ^^^^^^ number
 
-statics.js:4:13,18: string
-This type is incompatible with
-statics.js:10:8,13: number
+statics.js:10
+ 10: (C: {p:number}); // errors, string ~> number & vice versa (unify)
+            ^^^^^^ number. This type is incompatible with
+  4:   static p: string;
+                 ^^^^^^ string
 
-statics.js:10:8,13: number
-This type is incompatible with
-statics.js:4:13,18: string
+statics.js:13
+ 13: (o: Class<C>); // error, object type incompatible with class type
+      ^ object type. This type is incompatible with
+ 13: (o: Class<C>); // error, object type incompatible with class type
+               ^ class type: C
 
-statics.js:13:2,2: object type
-This type is incompatible with
-statics.js:13:11,11: class type: C
 
 Found 21 errors

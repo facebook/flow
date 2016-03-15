@@ -1,284 +1,406 @@
+es6modules.js:10
+ 10: var a2: string = DefaultA.numberValue1; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 10: var a2: string = DefaultA.numberValue1; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:15
+ 15: var b2: string = DefaultB.numberValue; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 15: var b2: string = DefaultB.numberValue; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:18
+ 18: import DefaultC from "C"; // Error: No such module
+                          ^^^ C. Required module not found
+
+es6modules.js:21
+ 21: import DefaultD from "./D"; // Error: No such module
+                          ^^^^^ ./D. Required module not found
+
+es6modules.js:27
+ 27: import {doesntExist} from "CommonJS_Clobbering_Lit"; // Error: Not an exported binding
+             ^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Lit`. This module has no named export called `doesntExist`.
+
+es6modules.js:31
+ 31: var c2: string = numberValue1; // Error: number ~> string
+                      ^^^^^^^^^^^^ number. This type is incompatible with
+ 31: var c2: string = numberValue1; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:35
+ 35: var d2: string = numVal1; // Error: number ~> string
+                      ^^^^^^^ number. This type is incompatible with
+ 35: var d2: string = numVal1; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:39
+ 39: var e2: string = CJS_Clobb_Lit.numberValue3; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 39: var e2: string = CJS_Clobb_Lit.numberValue3; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:40
+ 40: CJS_Clobb_Lit.doesntExist; // Error: doesntExist isn't a property
+                   ^^^^^^^^^^^ property `doesntExist`. Property not found in
+ 40: CJS_Clobb_Lit.doesntExist; // Error: doesntExist isn't a property
+     ^^^^^^^^^^^^^ object literal
+
+es6modules.js:45
+ 45: CJS_Clobb_Lit_NS.default.default; // Error: No 'default' property on the exported obj
+                              ^^^^^^^ property `default`. Property not found in
+ 45: CJS_Clobb_Lit_NS.default.default; // Error: No 'default' property on the exported obj
+     ^^^^^^^^^^^^^^^^^^^^^^^^ object literal
+
+es6modules.js:46
+ 46: var f3: string = CJS_Clobb_Lit_NS.numberValue4; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 46: var f3: string = CJS_Clobb_Lit_NS.numberValue4; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:47
+ 47: var f4: string = CJS_Clobb_Lit_NS.default.numberValue5; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 47: var f4: string = CJS_Clobb_Lit_NS.default.numberValue5; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:53
+ 53: import {doesntExist} from "CommonJS_Clobbering_Class"; // Error: Not an exported binding
+             ^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `doesntExist`.
+
+es6modules.js:59
+ 59: import {staticNumber1, baseProp, childProp} from "CommonJS_Clobbering_Class"; // Error
+             ^^^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `staticNumber1`.
+
+es6modules.js:59
+ 59: import {staticNumber1, baseProp, childProp} from "CommonJS_Clobbering_Class"; // Error
+                            ^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `baseProp`.
+
+es6modules.js:59
+ 59: import {staticNumber1, baseProp, childProp} from "CommonJS_Clobbering_Class"; // Error
+                                      ^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `childProp`.
+
+es6modules.js:63
+ 63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
+                           ^^^^^^^^^^^ property `doesntExist`. Property not found in
+ 63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
+         ^^^^^^^^^^^^^^^ Test
+
+es6modules.js:65
+ 65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `staticNumber2`
+ 65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:67
+ 67: var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `instNumber1`
+ 67: var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 67: var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:70
+ 70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
+     ^^^^^^^^^^^^^^^^^^^^^^^^ constructor call. Constructor cannot be called on
+ 70: new CJS_Clobb_Class_NS(); // Error: Namespace object isn't constructable
+         ^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:71
+ 71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
+                                         ^^^^^^^^^^^^^ property `staticNumber3`. Property not found in
+ 71: var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
+                      ^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Class"
+
+es6modules.js:73
+ 73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `instNumber2`
+ 73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:79
+ 79: import {doesntExist} from "CommonJS_Named"; // Error: Not an exported binding
+             ^^^^^^^^^^^ Named import from module `CommonJS_Named`. This module has no named export called `doesntExist`.
+
+es6modules.js:83
+ 83: var j2: string = numberValue2; // Error: number ~> string
+                      ^^^^^^^^^^^^ number. This type is incompatible with
+ 83: var j2: string = numberValue2; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:87
+ 87: var k2: string = numVal3; // Error: number ~> string
+                      ^^^^^^^ number. This type is incompatible with
+ 87: var k2: string = numVal3; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:91
+ 91: var l2: string = CJS_Named.numberValue1; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 91: var l2: string = CJS_Named.numberValue1; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:92
+ 92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
+               ^^^^^^^^^^^ property `doesntExist`. Property not found in
+ 92: CJS_Named.doesntExist; // Error: doesntExist isn't a property
+     ^^^^^^^^^ exports of "CommonJS_Named"
+
+es6modules.js:96
+ 96: var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 96: var m2: string = CJS_Named_NS.default.numberValue4; // Error: CommonJS_Named has no default export
+             ^^^^^^ string
+
+es6modules.js:97
+ 97: var m3: string = CJS_Named_NS.numberValue4; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 97: var m3: string = CJS_Named_NS.numberValue4; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:103
+103: import {doesntExist} from "ES6_Default_AnonFunction1"; // Error: Not an exported binding
+             ^^^^^^^^^^^ Named import from module `ES6_Default_AnonFunction1`. This module has no named export called `doesntExist`.
+
+es6modules.js:107
+107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^ function call
+107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:111
+111: var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^ function call
+111: var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+111: var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:119
+119: var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANum`
+119: var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+119: var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:125
+125: import doesntExist from "ES6_Named1"; // Error: Not an exported binding
+            ^^^^^^^^^^^ Default import from `ES6_Named1`. This module has no default export.
+
+es6modules.js:129
+129: var r2: string = specifierNumber1; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+129: var r2: string = specifierNumber1; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:133
+133: var s2: string = specifierNumber2Renamed; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+133: var s2: string = specifierNumber2Renamed; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:137
+137: var t2: string = specifierNumber3Renamed; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+137: var t2: string = specifierNumber3Renamed; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:142
+142: var u3: string = groupedSpecifierNumber1; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+142: var u3: string = groupedSpecifierNumber1; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:143
+143: var u4: string = groupedSpecifierNumber2; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+143: var u4: string = groupedSpecifierNumber2; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:147
+147: var v2: string = givesANumber(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^ function call
+147: var v2: string = givesANumber(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^ number. This type is incompatible with
+147: var v2: string = givesANumber(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:151
+151: var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANumber`
+151: var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+151: var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:156
+156: var x3: string = varDeclNumber1; // Error: number ~> string
+                      ^^^^^^^^^^^^^^ number. This type is incompatible with
+156: var x3: string = varDeclNumber1; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:157
+157: var x4: string = varDeclNumber2; // Error: number ~> string
+                      ^^^^^^^^^^^^^^ number. This type is incompatible with
+157: var x4: string = varDeclNumber2; // Error: number ~> string
+             ^^^^^^ string
+
+es6modules.js:169
+169: var aa2: string = numberValue4; // Error: number ~> string
+                       ^^^^^^^^^^^^ number. This type is incompatible with
+169: var aa2: string = numberValue4; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:173
+173: var ab2: string = numberValue2_renamed; // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+173: var ab2: string = numberValue2_renamed; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:177
+177: var ac2: string = numberValue5; // Error: number ~> string
+                       ^^^^^^^^^^^^ number. This type is incompatible with
+177: var ac2: string = numberValue5; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:183
+183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
+                                          ^^^^^^^^^^^ property `doesntExist`. Property not found in
+183: require('ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CommonJS exports of "ES6_Default_AnonFunction2"
+
+es6modules.js:187
+187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^ function call
+187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:191
+191: var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^ function call
+191: var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+191: var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:199
+199: var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANum`
+199: var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+199: var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:207
+207: var ah2: string = specifierNumber4; // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+207: var ah2: string = specifierNumber4; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:211
+211: var ai2: string = specifierNumber5Renamed; // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+211: var ai2: string = specifierNumber5Renamed; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:217
+217: var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+217: var aj3: string = groupedSpecifierNumber3; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:218
+218: var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+218: var aj4: string = groupedSpecifierNumber4; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:222
+222: var ak2: string = givesANumber2(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^ function call
+222: var ak2: string = givesANumber2(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^ number. This type is incompatible with
+222: var ak2: string = givesANumber2(); // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:226
+226: var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANumber`
+226: var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+226: var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:232
+232: var am3: string = varDeclNumber3; // Error: number ~> string
+                       ^^^^^^^^^^^^^^ number. This type is incompatible with
+232: var am3: string = varDeclNumber3; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:233
+233: var am4: string = varDeclNumber4; // Error: number ~> string
+                       ^^^^^^^^^^^^^^ number. This type is incompatible with
+233: var am4: string = varDeclNumber4; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:245
+245: var ap2: string = numberValue6; // Error: number ~> string
+                       ^^^^^^^^^^^^ number. This type is incompatible with
+245: var ap2: string = numberValue6; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:249
+249: var aq2: string = numberValue2_renamed2; // Error: number ~> string
+                       ^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+249: var aq2: string = numberValue2_renamed2; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:253
+253: var ar2: string = numberValue7; // Error: number ~> string
+                       ^^^^^^^^^^^^ number. This type is incompatible with
+253: var ar2: string = numberValue7; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:262
+262: var as2: string = defaultNum; // Error: number ~> string
+                       ^^^^^^^^^^ number. This type is incompatible with
+262: var as2: string = defaultNum; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:265
+265: var as4: number = namedStr; // Error: string ~> number
+                       ^^^^^^^^ string. This type is incompatible with
+265: var as4: number = namedStr; // Error: string ~> number
+              ^^^^^^ number
+
+es6modules.js:276
+276: import specifierNumber1 from "ES6_Named1"; // Error: Did you mean `import {specifierNumber1} from ...`?
+            ^^^^^^^^^^^^^^^^ Default import from `ES6_Named1`. This module has no default export. Did you mean `import {specifierNumber1} from "ES6_Named1"`?
+
+es6modules.js:277
+277: import {specifierNumber} from "ES6_Named1"; // Error: Did you mean `specifierNumber1`?
+             ^^^^^^^^^^^^^^^ Named import from module `ES6_Named1`. This module has no named export called `specifierNumber`. Did you mean `specifierNumber1`?
+
+es6modules.js:288
+288: var at2: string = numberValue8; // Error: number ~> string
+                       ^^^^^^^^^^^^ number. This type is incompatible with
+288: var at2: string = numberValue8; // Error: number ~> string
+              ^^^^^^ string
+
+es6modules.js:291
+291: var at4: string = numberValue9; // Error: number ~> string
+                       ^^^^^^^^^^^^ number. This type is incompatible with
+291: var at4: string = numberValue9; // Error: number ~> string
+              ^^^^^^ string
 
-es6modules.js:10:18,38: number
-This type is incompatible with
-es6modules.js:10:9,14: string
-
-es6modules.js:15:18,37: number
-This type is incompatible with
-es6modules.js:15:9,14: string
-
-es6modules.js:18:22,24: C
-Required module not found
-
-es6modules.js:21:22,26: ./D
-Required module not found
-
-es6modules.js:27:9,19: Named import from module `CommonJS_Clobbering_Lit`
-This module has no named export called `doesntExist`.
-
-es6modules.js:31:18,29: number
-This type is incompatible with
-es6modules.js:31:9,14: string
-
-es6modules.js:35:18,24: number
-This type is incompatible with
-es6modules.js:35:9,14: string
-
-es6modules.js:39:18,43: number
-This type is incompatible with
-es6modules.js:39:9,14: string
-
-es6modules.js:40:15,25: property `doesntExist`
-Property not found in
-es6modules.js:40:1,13: object literal
-
-es6modules.js:45:26,32: property `default`
-Property not found in
-es6modules.js:45:1,24: object literal
-
-es6modules.js:46:18,46: number
-This type is incompatible with
-es6modules.js:46:9,14: string
-
-es6modules.js:47:18,54: number
-This type is incompatible with
-es6modules.js:47:9,14: string
-
-es6modules.js:53:9,19: Named import from module `CommonJS_Clobbering_Class`
-This module has no named export called `doesntExist`.
-
-es6modules.js:59:9,21: Named import from module `CommonJS_Clobbering_Class`
-This module has no named export called `staticNumber1`.
-
-es6modules.js:59:24,31: Named import from module `CommonJS_Clobbering_Class`
-This module has no named export called `baseProp`.
-
-es6modules.js:59:34,42: Named import from module `CommonJS_Clobbering_Class`
-This module has no named export called `childProp`.
-
-es6modules.js:63:23,33: property `doesntExist`
-Property not found in
-es6modules.js:63:5,19: Test
-
-es6modules.js:65:18,48: call of method `staticNumber2`
-Error:
-es6modules.js:65:18,48: number
-This type is incompatible with
-es6modules.js:65:9,14: string
-
-es6modules.js:67:18,52: call of method `instNumber1`
-Error:
-es6modules.js:67:18,52: number
-This type is incompatible with
-es6modules.js:67:9,14: string
-
-es6modules.js:70:1,24: constructor call
-Constructor cannot be called on
-es6modules.js:70:5,22: exports of "CommonJS_Clobbering_Class"
-
-es6modules.js:71:37,49: property `staticNumber3`
-Property not found in
-es6modules.js:71:18,35: exports of "CommonJS_Clobbering_Class"
-
-es6modules.js:73:18,63: call of method `instNumber2`
-Error:
-es6modules.js:73:18,63: number
-This type is incompatible with
-es6modules.js:73:9,14: string
-
-es6modules.js:79:9,19: Named import from module `CommonJS_Named`
-This module has no named export called `doesntExist`.
-
-es6modules.js:83:18,29: number
-This type is incompatible with
-es6modules.js:83:9,14: string
-
-es6modules.js:87:18,24: number
-This type is incompatible with
-es6modules.js:87:9,14: string
-
-es6modules.js:91:18,39: number
-This type is incompatible with
-es6modules.js:91:9,14: string
-
-es6modules.js:92:11,21: property `doesntExist`
-Property not found in
-es6modules.js:92:1,9: exports of "CommonJS_Named"
-
-es6modules.js:96:18,50: number
-This type is incompatible with
-es6modules.js:96:9,14: string
-
-es6modules.js:97:18,42: number
-This type is incompatible with
-es6modules.js:97:9,14: string
-
-es6modules.js:103:9,19: Named import from module `ES6_Default_AnonFunction1`
-This module has no named export called `doesntExist`.
-
-es6modules.js:107:18,36: function call
-Error:
-es6modules.js:107:18,36: number
-This type is incompatible with
-es6modules.js:107:9,14: string
-
-es6modules.js:111:18,37: function call
-Error:
-es6modules.js:111:18,37: number
-This type is incompatible with
-es6modules.js:111:9,14: string
-
-es6modules.js:119:18,54: call of method `givesANum`
-Error:
-es6modules.js:119:18,54: number
-This type is incompatible with
-es6modules.js:119:9,14: string
-
-es6modules.js:125:8,18: Default import from `ES6_Named1`
-This module has no default export.
-
-es6modules.js:129:18,33: number
-This type is incompatible with
-es6modules.js:129:9,14: string
-
-es6modules.js:133:18,40: number
-This type is incompatible with
-es6modules.js:133:9,14: string
-
-es6modules.js:137:18,40: number
-This type is incompatible with
-es6modules.js:137:9,14: string
-
-es6modules.js:142:18,40: number
-This type is incompatible with
-es6modules.js:142:9,14: string
-
-es6modules.js:143:18,40: number
-This type is incompatible with
-es6modules.js:143:9,14: string
-
-es6modules.js:147:18,31: function call
-Error:
-es6modules.js:147:18,31: number
-This type is incompatible with
-es6modules.js:147:9,14: string
-
-es6modules.js:151:18,53: call of method `givesANumber`
-Error:
-es6modules.js:151:18,53: number
-This type is incompatible with
-es6modules.js:151:9,14: string
-
-es6modules.js:156:18,31: number
-This type is incompatible with
-es6modules.js:156:9,14: string
-
-es6modules.js:157:18,31: number
-This type is incompatible with
-es6modules.js:157:9,14: string
-
-es6modules.js:169:19,30: number
-This type is incompatible with
-es6modules.js:169:10,15: string
-
-es6modules.js:173:19,38: number
-This type is incompatible with
-es6modules.js:173:10,15: string
-
-es6modules.js:177:19,30: number
-This type is incompatible with
-es6modules.js:177:10,15: string
-
-es6modules.js:183:38,48: property `doesntExist`
-Property not found in
-es6modules.js:183:1,36: CommonJS exports of "ES6_Default_AnonFunction2"
-
-es6modules.js:187:19,37: function call
-Error:
-es6modules.js:187:19,37: number
-This type is incompatible with
-es6modules.js:187:10,15: string
-
-es6modules.js:191:19,38: function call
-Error:
-es6modules.js:191:19,38: number
-This type is incompatible with
-es6modules.js:191:10,15: string
-
-es6modules.js:199:19,55: call of method `givesANum`
-Error:
-es6modules.js:199:19,55: number
-This type is incompatible with
-es6modules.js:199:10,15: string
-
-es6modules.js:207:19,34: number
-This type is incompatible with
-es6modules.js:207:10,15: string
-
-es6modules.js:211:19,41: number
-This type is incompatible with
-es6modules.js:211:10,15: string
-
-es6modules.js:217:19,41: number
-This type is incompatible with
-es6modules.js:217:10,15: string
-
-es6modules.js:218:19,41: number
-This type is incompatible with
-es6modules.js:218:10,15: string
-
-es6modules.js:222:19,33: function call
-Error:
-es6modules.js:222:19,33: number
-This type is incompatible with
-es6modules.js:222:10,15: string
-
-es6modules.js:226:19,55: call of method `givesANumber`
-Error:
-es6modules.js:226:19,55: number
-This type is incompatible with
-es6modules.js:226:10,15: string
-
-es6modules.js:232:19,32: number
-This type is incompatible with
-es6modules.js:232:10,15: string
-
-es6modules.js:233:19,32: number
-This type is incompatible with
-es6modules.js:233:10,15: string
-
-es6modules.js:245:19,30: number
-This type is incompatible with
-es6modules.js:245:10,15: string
-
-es6modules.js:249:19,39: number
-This type is incompatible with
-es6modules.js:249:10,15: string
-
-es6modules.js:253:19,30: number
-This type is incompatible with
-es6modules.js:253:10,15: string
-
-es6modules.js:262:19,28: number
-This type is incompatible with
-es6modules.js:262:10,15: string
-
-es6modules.js:265:19,26: string
-This type is incompatible with
-es6modules.js:265:10,15: number
-
-es6modules.js:276:8,23: Default import from `ES6_Named1`
-This module has no default export. Did you mean `import {specifierNumber1} from "ES6_Named1"`?
-
-es6modules.js:277:9,23: Named import from module `ES6_Named1`
-This module has no named export called `specifierNumber`. Did you mean `specifierNumber1`?
-
-es6modules.js:288:19,30: number
-This type is incompatible with
-es6modules.js:288:10,15: string
-
-es6modules.js:291:19,30: number
-This type is incompatible with
-es6modules.js:291:10,15: string
 
 Found 67 errors

@@ -1,26 +1,36 @@
+test2.js:7
+  7: var y: I.B = new C();
+                  ^^^^^^^ constructor call
+  7: var y: I.B = new C();
+                  ^^^^^^^ C. This type is incompatible with
+  7: var y: I.B = new C();
+            ^^^ B
 
-test2.js:7:14,20: constructor call
-Error:
-test2.js:7:14,20: C
-This type is incompatible with
-test2.js:7:8,10: B
+test3.js:2
+  2: class B extends A<string, number, bool> {}
+                                       ^^^^ boolean. This type is incompatible with
+  6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
+                              ^^^^^^^^^^^ array type
 
-test3.js:2:35,38: boolean
-This type is incompatible with
-test3.js:6:26,36: array type
+test3.js:6
+  6: var a: A<string, number, Array<bool>> = c; // the third type arg is incorrect
+                              ^^^^^^^^^^^ array type. This type is incompatible with
+  2: class B extends A<string, number, bool> {}
+                                       ^^^^ boolean
 
-test3.js:6:26,36: array type
-This type is incompatible with
-test3.js:2:35,38: boolean
+test4.js:7
+  7: foo((new C: C<O>), { f_: 0 });
+                   ^ property `f`. Property not found in
+  7: foo((new C: C<O>), { f_: 0 });
+                        ^^^^^^^^^ object literal
 
-test4.js:7:15,15: property `f`
-Property not found in
-test4.js:7:20,28: object literal
+test4.js:13
+ 13: foo(new D, { f_: 0 });
+     ^^^^^^^^^^^^^^^^^^^^^ function call
+  9: class D extends C<O> {
+                       ^ property `f`. Property not found in
+ 13: foo(new D, { f_: 0 });
+                ^^^^^^^^^ object literal
 
-test4.js:13:1,21: function call
-Error:
-test4.js:9:19,19: property `f`
-Property not found in
-test4.js:13:12,20: object literal
 
 Found 5 errors

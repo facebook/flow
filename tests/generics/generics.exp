@@ -1,28 +1,44 @@
+generics.js:19
+ 19: var s:string = d.x;
+                    ^^^ number. This type is incompatible with
+ 19: var s:string = d.x;
+           ^^^^^^ string
 
-generics.js:19:16,18: number
-This type is incompatible with
-generics.js:19:7,12: string
+generics.js:20
+ 20: var n:number = o.u;
+                    ^^^ T. This type is incompatible with
+ 20: var n:number = o.u;
+           ^^^^^^ number
 
-generics.js:20:16,18: T
-This type is incompatible with
-generics.js:20:7,12: number
+generics.js:28
+ 28: var x:string = e.set(0);
+                    ^^^^^^^^ number. This type is incompatible with
+ 28: var x:string = e.set(0);
+           ^^^^^^ string
 
-generics.js:28:16,23: number
-This type is incompatible with
-generics.js:28:7,12: string
+generics.js:28
+ 28: var x:string = e.set(0);
+                    ^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+ 28: var x:string = e.set(0);
+           ^^^^^^ string
 
-generics.js:28:16,23: undefined (too few arguments, expected default/rest parameters)
-This type is incompatible with
-generics.js:28:7,12: string
+generics.js:38
+ 38: h1.foo(["..."]);
+             ^^^^^ string. This type is incompatible with
+ 39: var h2:F<Array<Array<Array<number>>>> = h1;
+                                ^^^^^^ number
 
-generics.js:38:9,13: string
-This type is incompatible with
-generics.js:39:28,33: number
+generics.js:41
+ 41: var obj : Object<string, string> = {} // error, arity 0
+               ^^^^^^^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 0)
 
-generics.js:41:11,32: Incorrect number of type parameters (expected 0)
+generics.js:42
+ 42: var fn : Function<string> = function() { return 'foo'; } // error, arity 0
+              ^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 0)
 
-generics.js:42:10,25: Incorrect number of type parameters (expected 0)
+generics.js:43
+ 43: var fn : function<string> = function() { return 'foo'; } // error, arity 0
+              ^^^^^^^^^^^^^^^^ Incorrect number of type parameters (expected 0)
 
-generics.js:43:10,25: Incorrect number of type parameters (expected 0)
 
 Found 8 errors

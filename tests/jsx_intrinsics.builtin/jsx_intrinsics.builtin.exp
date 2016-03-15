@@ -1,20 +1,26 @@
+main.js:12
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
+  6:   props: {
+              ^ property `prop`. Property not found in
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                          ^^^^^^^^^^^^^^^ object type
 
-main.js:12:41,71: React element `CustomComponent`
-Error:
-main.js:6:10,8:3: property `prop`
-Property not found in
-main.js:12:22,36: object type
+main.js:12
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                          ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
 
-main.js:12:41,71: React element `CustomComponent`
-Error:
-main.js:12:22,36: property `prop1`
-Property not found in
-main.js:12:41,71: props of React element `CustomComponent`
+main.js:19
+ 19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element: `div`
+ 19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                          ^^^^^^^^^^^^^^^^^^^^^ property `doesntmatch`. Property not found in
+ 19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of JSX Intrinsic: `div`
 
-main.js:19:47,76: React element: `div`
-Error:
-main.js:19:22,42: property `doesntmatch`
-Property not found in
-main.js:19:47,76: props of JSX Intrinsic: `div`
 
 Found 3 errors

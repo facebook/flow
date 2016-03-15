@@ -1,6 +1,8 @@
+array.js:4
+  4:     if (i % 2 == 0) { a[i] = 0; }
+                                  ^ number. This type is incompatible with
+  8: function foo(i): string { return a[i]; }
+                      ^^^^^^ string
 
-array.js:4:30,30: number
-This type is incompatible with
-array.js:8:18,23: string
 
 Found 1 error

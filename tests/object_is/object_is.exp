@@ -1,8 +1,10 @@
+object_is.js:20
+ 20: var b: string = Object.is('a', 'a');
+                     ^^^^^^^^^^^^^^^^^^^ call of method `is`
+ 20: var b: string = Object.is('a', 'a');
+                     ^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
+ 20: var b: string = Object.is('a', 'a');
+            ^^^^^^ string
 
-object_is.js:20:17,35: call of method `is`
-Error:
-object_is.js:20:17,35: boolean
-This type is incompatible with
-object_is.js:20:8,13: string
 
 Found 1 error

@@ -1,21 +1,30 @@
+import_declare_type.js:11
+ 11: var k2: baz = "shab"; // Error: string to int
+                   ^^^^^^ string. This type is incompatible with
+ 11: var k2: baz = "shab"; // Error: string to int
+             ^^^ number
 
-import_declare_type.js:11:15,20: string
-This type is incompatible with
-import_declare_type.js:11:9,11: number
+import_declare_type.js:12
+ 12: var k3: toz = foo(k1); // Error: unknown identifier toz
+             ^^^ identifier `toz`. Could not resolve name
 
-import_declare_type.js:12:9,11: identifier `toz`
-Could not resolve name
+import_declare_type.js:26
+ 26: ({toz:3} : Foo); // error : {toz : number} ~> string
+      ^^^^^^^ object literal. This type is incompatible with
+ 26: ({toz:3} : Foo); // error : {toz : number} ~> string
+                ^^^ string
 
-import_declare_type.js:26:2,8: object literal
-This type is incompatible with
-import_declare_type.js:26:12,14: string
+import_declare_type.js:28
+ 28: (3 : Bar); // error : number ~> A
+      ^ number. This type is incompatible with
+ 28: (3 : Bar); // error : number ~> A
+          ^^^ A
 
-import_declare_type.js:28:2,2: number
-This type is incompatible with
-import_declare_type.js:28:6,8: A
+import_declare_type.js:30
+ 30: ("lol" : Id<number>); // error : string ~> number
+      ^^^^^ string. This type is incompatible with
+ 30: ("lol" : Id<number>); // error : string ~> number
+              ^^^^^^^^^^ number
 
-import_declare_type.js:30:2,6: string
-This type is incompatible with
-import_declare_type.js:30:10,19: number
 
 Found 5 errors

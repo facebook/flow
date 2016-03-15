@@ -1,6 +1,8 @@
+client_object.js:3
+  3: var a:number = o.w.z.y;
+                    ^^^^^^^ string. This type is incompatible with
+  3: var a:number = o.w.z.y;
+           ^^^^^^ number
 
-client_object.js:3:16,22: string
-This type is incompatible with
-client_object.js:3:7,12: number
 
 Found 1 error

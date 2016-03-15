@@ -1,218 +1,262 @@
+map.js:23
+ 23:     let x = new Map(['foo', 123]); // error
+                 ^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+ 23:     let x = new Map(['foo', 123]); // error
+                 ^^^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  polymorphic type: function type. See: [LIB] core.js:387
+  Error:
+   23:     let x = new Map(['foo', 123]); // error
+                           ^^^^^^^^^^^^ array literal. This type is incompatible with
+  undefined. See: [LIB] core.js:387
+  Member 2:
+  polymorphic type: function type. See: [LIB] core.js:388
+  Error:
+   23:     let x = new Map(['foo', 123]); // error
+                           ^^^^^^^^^^^^ array literal. This type is incompatible with
+  null. See: [LIB] core.js:388
+  Member 3:
+  polymorphic type: function type. See: [LIB] core.js:389
+  Error:
+   23:     let x = new Map(['foo', 123]); // error
+                                   ^^^ number. This type is incompatible with
+  tuple type. See: [LIB] core.js:389
+  Member 4:
+  polymorphic type: function type. See: [LIB] core.js:390
+  Error:
+   23:     let x = new Map(['foo', 123]); // error
+                                   ^^^ number. This type is incompatible with
+  tuple type. See: [LIB] core.js:390
 
-map.js:23:13,33: constructor call
-Function cannot be called on any member of intersection type
-map.js:23:13,33: intersection
-Member 1:
-[LIB] core.js:387:5,53: polymorphic type: function type
-Error:
-map.js:23:21,32: array literal
-This type is incompatible with
-[LIB] core.js:387:32,35: undefined
-Member 2:
-[LIB] core.js:388:5,53: polymorphic type: function type
-Error:
-map.js:23:21,32: array literal
-This type is incompatible with
-[LIB] core.js:388:32,35: null
-Member 3:
-[LIB] core.js:389:5,75: polymorphic type: function type
-Error:
-map.js:23:29,31: number
-This type is incompatible with
-[LIB] core.js:389:45,56: tuple type
-Member 4:
-[LIB] core.js:390:5,78: polymorphic type: function type
-Error:
-map.js:23:29,31: number
-This type is incompatible with
-[LIB] core.js:390:48,59: tuple type
+map.js:29
+ 29:     (x.get('foo'): boolean); // error, string | void
+          ^^^^^^^^^^^^ call of method `get`
+ 28:   function(x: Map<string, number>) {
+                               ^^^^^^ number. This type is incompatible with
+ 29:     (x.get('foo'): boolean); // error, string | void
+                        ^^^^^^^ boolean
 
-map.js:29:6,17: call of method `get`
-Error:
-map.js:28:27,32: number
-This type is incompatible with
-map.js:29:20,26: boolean
+map.js:29
+ 29:     (x.get('foo'): boolean); // error, string | void
+          ^^^^^^^^^^^^ call of method `get`
+ 29:     (x.get('foo'): boolean); // error, string | void
+                        ^^^^^^^ boolean. This type is incompatible with
+undefined. See: [LIB] core.js:395
 
-map.js:29:6,17: call of method `get`
-Error:
-map.js:29:20,26: boolean
-This type is incompatible with
-[LIB] core.js:395:22,25: undefined
+map.js:30
+ 30:     x.get(123); // error, wrong key type
+         ^^^^^^^^^^ call of method `get`
+ 30:     x.get(123); // error, wrong key type
+               ^^^ number. This type is incompatible with
+ 28:   function(x: Map<string, number>) {
+                       ^^^^^^ string
 
-map.js:30:5,14: call of method `get`
-Error:
-map.js:30:11,13: number
-This type is incompatible with
-map.js:28:19,24: string
+object.js:16
+ 16: (values(a) : void);
+      ^^^^^^^^^ function call
+ 16: (values(a) : void);
+      ^^^^^^^^^ array type. This type is incompatible with
+ 16: (values(a) : void);
+                  ^^^^ undefined
 
-object.js:16:2,10: function call
-Error:
-object.js:16:2,10: array type
-This type is incompatible with
-object.js:16:14,17: undefined
+object.js:19
+ 19: (values(a) : Array<void>);
+      ^^^^^^^^^ function call
+  1: type A = { foo: string, bar: number };
+                     ^^^^^^ string. This type is incompatible with
+ 19: (values(a) : Array<void>);
+                        ^^^^ undefined
 
-object.js:19:2,10: function call
-Error:
-object.js:1:17,22: string
-This type is incompatible with
-object.js:19:20,23: undefined
+object.js:19
+ 19: (values(a) : Array<void>);
+      ^^^^^^^^^ function call
+  1: type A = { foo: string, bar: number };
+                                  ^^^^^^ number. This type is incompatible with
+ 19: (values(a) : Array<void>);
+                        ^^^^ undefined
 
-object.js:19:2,10: function call
-Error:
-object.js:1:30,35: number
-This type is incompatible with
-object.js:19:20,23: undefined
+object.js:22
+ 22: (entries(a) : Array<[string|number, string|number]>);
+      ^^^^^^^^^^ function call
+ 22: (entries(a) : Array<[string|number, string|number]>);
+                                 ^^^^^^ number. This type is incompatible with
+string. See: [LIB] core.js:48
 
-object.js:22:2,11: function call
-Error:
-object.js:22:29,34: number
-This type is incompatible with
-[LIB] core.js:48:56,61: string
+object.js:25
+ 25: (entries(a) : void);
+      ^^^^^^^^^^ function call
+ 25: (entries(a) : void);
+      ^^^^^^^^^^ array type. This type is incompatible with
+ 25: (entries(a) : void);
+                   ^^^^ undefined
 
-object.js:25:2,11: function call
-Error:
-object.js:25:2,11: array type
-This type is incompatible with
-object.js:25:15,18: undefined
+object.js:28
+ 28: (entries(a) : Array<void>);
+      ^^^^^^^^^^ function call
+ 28: (entries(a) : Array<void>);
+                         ^^^^ undefined. This type is incompatible with
+tuple type. See: [LIB] core.js:48
 
-object.js:28:2,11: function call
-Error:
-object.js:28:21,24: undefined
-This type is incompatible with
-[LIB] core.js:48:55,65: tuple type
+object.js:31
+ 31: (entries(a) : Array<[void, string|number]>);
+      ^^^^^^^^^^ function call
+ 31: (entries(a) : Array<[void, string|number]>);
+                          ^^^^ undefined. This type is incompatible with
+string. See: [LIB] core.js:48
 
-object.js:31:2,11: function call
-Error:
-object.js:31:22,25: undefined
-This type is incompatible with
-[LIB] core.js:48:56,61: string
+object.js:34
+ 34: (entries(a) : Array<[string|number, void]>);
+      ^^^^^^^^^^ function call
+  1: type A = { foo: string, bar: number };
+                     ^^^^^^ string. This type is incompatible with
+ 34: (entries(a) : Array<[string|number, void]>);
+                                         ^^^^ undefined
 
-object.js:34:2,11: function call
-Error:
-object.js:1:17,22: string
-This type is incompatible with
-object.js:34:37,40: undefined
+object.js:34
+ 34: (entries(a) : Array<[string|number, void]>);
+      ^^^^^^^^^^ function call
+  1: type A = { foo: string, bar: number };
+                                  ^^^^^^ number. This type is incompatible with
+ 34: (entries(a) : Array<[string|number, void]>);
+                                         ^^^^ undefined
 
-object.js:34:2,11: function call
-Error:
-object.js:1:30,35: number
-This type is incompatible with
-object.js:34:37,40: undefined
+object.js:34
+ 34: (entries(a) : Array<[string|number, void]>);
+      ^^^^^^^^^^ function call
+ 34: (entries(a) : Array<[string|number, void]>);
+                                 ^^^^^^ number. This type is incompatible with
+string. See: [LIB] core.js:48
 
-object.js:34:2,11: function call
-Error:
-object.js:34:29,34: number
-This type is incompatible with
-[LIB] core.js:48:56,61: string
+object.js:43
+ 43: (values(b) : void);
+      ^^^^^^^^^ function call
+ 43: (values(b) : void);
+      ^^^^^^^^^ array type. This type is incompatible with
+ 43: (values(b) : void);
+                  ^^^^ undefined
 
-object.js:43:2,10: function call
-Error:
-object.js:43:2,10: array type
-This type is incompatible with
-object.js:43:14,17: undefined
+object.js:46
+ 46: (values(b) : Array<void>);
+      ^^^^^^^^^ function call
+  2: type B = { [k: number]: boolean };
+                             ^^^^^^^ boolean. This type is incompatible with
+ 46: (values(b) : Array<void>);
+                        ^^^^ undefined
 
-object.js:46:2,10: function call
-Error:
-object.js:2:25,31: boolean
-This type is incompatible with
-object.js:46:20,23: undefined
+object.js:46
+ 46: (values(b) : Array<void>);
+      ^^^^^^^^^ function call
+ 46: (values(b) : Array<void>);
+                        ^^^^ undefined. This type is incompatible with
+  2: type B = { [k: number]: boolean };
+                             ^^^^^^^ boolean
 
-object.js:46:2,10: function call
-Error:
-object.js:46:20,23: undefined
-This type is incompatible with
-object.js:2:25,31: boolean
+object.js:52
+ 52: (entries(b): Array<[number, boolean]>);
+      ^^^^^^^^^^ function call
+ 52: (entries(b): Array<[number, boolean]>);
+                         ^^^^^^ number. This type is incompatible with
+string. See: [LIB] core.js:48
 
-object.js:52:2,11: function call
-Error:
-object.js:52:21,26: number
-This type is incompatible with
-[LIB] core.js:48:56,61: string
+object.js:55
+ 55: (entries(b) : void);
+      ^^^^^^^^^^ function call
+ 55: (entries(b) : void);
+      ^^^^^^^^^^ array type. This type is incompatible with
+ 55: (entries(b) : void);
+                   ^^^^ undefined
 
-object.js:55:2,11: function call
-Error:
-object.js:55:2,11: array type
-This type is incompatible with
-object.js:55:15,18: undefined
+object.js:58
+ 58: (entries(b) : Array<void>);
+      ^^^^^^^^^^ function call
+ 58: (entries(b) : Array<void>);
+                         ^^^^ undefined. This type is incompatible with
+tuple type. See: [LIB] core.js:48
 
-object.js:58:2,11: function call
-Error:
-object.js:58:21,24: undefined
-This type is incompatible with
-[LIB] core.js:48:55,65: tuple type
+object.js:61
+ 61: (entries(b) : Array<[void, boolean]>);
+      ^^^^^^^^^^ function call
+ 61: (entries(b) : Array<[void, boolean]>);
+                          ^^^^ undefined. This type is incompatible with
+string. See: [LIB] core.js:48
 
-object.js:61:2,11: function call
-Error:
-object.js:61:22,25: undefined
-This type is incompatible with
-[LIB] core.js:48:56,61: string
+object.js:64
+ 64: (entries(b) : Array<[string, void]>);
+      ^^^^^^^^^^ function call
+  2: type B = { [k: number]: boolean };
+                             ^^^^^^^ boolean. This type is incompatible with
+ 64: (entries(b) : Array<[string, void]>);
+                                  ^^^^ undefined
 
-object.js:64:2,11: function call
-Error:
-object.js:2:25,31: boolean
-This type is incompatible with
-object.js:64:30,33: undefined
+object.js:64
+ 64: (entries(b) : Array<[string, void]>);
+      ^^^^^^^^^^ function call
+ 64: (entries(b) : Array<[string, void]>);
+                                  ^^^^ undefined. This type is incompatible with
+  2: type B = { [k: number]: boolean };
+                             ^^^^^^^ boolean
 
-object.js:64:2,11: function call
-Error:
-object.js:64:30,33: undefined
-This type is incompatible with
-object.js:2:25,31: boolean
+regexp.js:26
+ 26:     RegExp('foo', 'z'); // error
+         ^^^^^^^^^^^^^^^^^^ function call
+ 26:     RegExp('foo', 'z'); // error
+                       ^^^ string. This type is incompatible with
+string enum. See: [LIB] core.js:252
 
-regexp.js:26:5,22: function call
-Error:
-regexp.js:26:19,21: string
-This type is incompatible with
-[LIB] core.js:252:47,58: string enum
+regexp.js:27
+ 27:     new RegExp('foo', 'z'); // error
+         ^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 27:     new RegExp('foo', 'z'); // error
+                           ^^^ string. This type is incompatible with
+string enum. See: [LIB] core.js:253
 
-regexp.js:27:5,26: constructor call
-Error:
-regexp.js:27:23,25: string
-This type is incompatible with
-[LIB] core.js:253:51,62: string enum
+weakset.js:19
+ 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+               ^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+ 19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+               ^^^^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  polymorphic type: function type. See: [LIB] core.js:425
+  Error:
+   19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                             ^^^^^^^^^ array literal. This type is incompatible with
+  undefined. See: [LIB] core.js:425
+  Member 2:
+  polymorphic type: function type. See: [LIB] core.js:426
+  Error:
+   19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                              ^ number. This type is incompatible with
+  object type. See: [LIB] core.js:426
+  Member 3:
+  polymorphic type: function type. See: [LIB] core.js:427
+  Error:
+   19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                              ^ number. This type is incompatible with
+  object type. See: [LIB] core.js:427
 
-weakset.js:19:11,32: constructor call
-Function cannot be called on any member of intersection type
-weakset.js:19:11,32: intersection
-Member 1:
-[LIB] core.js:425:5,47: polymorphic type: function type
-Error:
-weakset.js:19:23,31: array literal
-This type is incompatible with
-[LIB] core.js:425:31,34: undefined
-Member 2:
-[LIB] core.js:426:5,58: polymorphic type: function type
-Error:
-weakset.js:19:24,24: number
-This type is incompatible with
-[LIB] core.js:426:20,25: object type
-Member 3:
-[LIB] core.js:427:5,61: polymorphic type: function type
-Error:
-weakset.js:19:24,24: number
-This type is incompatible with
-[LIB] core.js:427:20,25: object type
+weakset.js:36
+ 36: let ws5 = new WeakSet(numbers()); // error, must be objects
+               ^^^^^^^^^^^^^^^^^^^^^^ constructor call. Function cannot be called on any member of intersection type
+ 36: let ws5 = new WeakSet(numbers()); // error, must be objects
+               ^^^^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  polymorphic type: function type. See: [LIB] core.js:425
+  Error:
+   36: let ws5 = new WeakSet(numbers()); // error, must be objects
+                             ^^^^^^^^^ $Iterable. This type is incompatible with
+  undefined. See: [LIB] core.js:425
+  Member 2:
+  polymorphic type: function type. See: [LIB] core.js:426
+  Error:
+   36: let ws5 = new WeakSet(numbers()); // error, must be objects
+                             ^^^^^^^^^ $Iterable. This type is incompatible with
+  array type. See: [LIB] core.js:426
+  Member 3:
+  polymorphic type: function type. See: [LIB] core.js:427
+  Error:
+   29: function* numbers(): Iterable<number> {
+                                     ^^^^^^ number. This type is incompatible with
+  object type. See: [LIB] core.js:427
 
-weakset.js:36:11,32: constructor call
-Function cannot be called on any member of intersection type
-weakset.js:36:11,32: intersection
-Member 1:
-[LIB] core.js:425:5,47: polymorphic type: function type
-Error:
-weakset.js:36:23,31: $Iterable
-This type is incompatible with
-[LIB] core.js:425:31,34: undefined
-Member 2:
-[LIB] core.js:426:5,58: polymorphic type: function type
-Error:
-weakset.js:36:23,31: $Iterable
-This type is incompatible with
-[LIB] core.js:426:38,45: array type
-Member 3:
-[LIB] core.js:427:5,61: polymorphic type: function type
-Error:
-weakset.js:29:31,36: number
-This type is incompatible with
-[LIB] core.js:427:20,25: object type
 
 Found 27 errors

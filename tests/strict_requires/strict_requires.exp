@@ -1,14 +1,20 @@
+D.js:3
+  3: var x: number = C.foo;
+                     ^^^^^ string. This type is incompatible with
+  3: var x: number = C.foo;
+            ^^^^^^ number
 
-D.js:3:17,21: string
-This type is incompatible with
-D.js:3:8,13: number
+D.js:4
+  4: var y: string = C.A;
+                     ^^^ number. This type is incompatible with
+  4: var y: string = C.A;
+            ^^^^^^ string
 
-D.js:4:17,19: number
-This type is incompatible with
-D.js:4:8,13: string
+D.js:5
+  5: C.A = false;
+           ^^^^^ boolean. This type is incompatible with
+  3:     A: require('./A'),
+            ^^^^^^^^^^^^^^ number. See: C.js:3
 
-D.js:5:7,11: boolean
-This type is incompatible with
-C.js:3:8,21: number
 
 Found 3 errors

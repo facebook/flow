@@ -1,6 +1,8 @@
+constructor.js:6
+  6:     constructor():number { }
+                       ^^^^^^ return undefined. This type is incompatible with
+  6:     constructor():number { }
+                       ^^^^^^ number
 
-constructor.js:6:19,24: return undefined
-This type is incompatible with
-constructor.js:6:19,24: number
 
 Found 1 error

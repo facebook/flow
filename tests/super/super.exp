@@ -1,66 +1,92 @@
+constructor.js:15
+ 15:     this.y; // error (no super call)
+              ^ property `y`. Property cannot be accessed on possibly undefined value
+ 12: class D extends A {
+           ^ uninitialized this (expected super constructor call)
 
-constructor.js:15:10,10: property `y`
-Property cannot be accessed on possibly undefined value
-constructor.js:12:7,7: uninitialized this (expected super constructor call)
+constructor.js:16
+ 16:     this.x; // error (no super call)
+              ^ property `x`. Property cannot be accessed on possibly undefined value
+ 12: class D extends A {
+           ^ uninitialized this (expected super constructor call)
 
-constructor.js:16:10,10: property `x`
-Property cannot be accessed on possibly undefined value
-constructor.js:12:7,7: uninitialized this (expected super constructor call)
+constructor.js:36
+ 36:     leak(this); // error (no super call yet)
+         ^^^^^^^^^^ function call
+ 30:   f.y; // error
+         ^ property `y`. Property cannot be accessed on possibly undefined value
+ 30:   f.y; // error
+       ^ uninitialized this (expected super constructor call)
 
-constructor.js:36:5,14: function call
-Error:
-constructor.js:30:5,5: property `y`
-Property cannot be accessed on possibly undefined value
-constructor.js:30:3,3: uninitialized this (expected super constructor call)
+constructor.js:36
+ 36:     leak(this); // error (no super call yet)
+         ^^^^^^^^^^ function call
+ 31:   f.x; // error
+         ^ property `x`. Property cannot be accessed on possibly undefined value
+ 31:   f.x; // error
+       ^ uninitialized this (expected super constructor call)
 
-constructor.js:36:5,14: function call
-Error:
-constructor.js:31:5,5: property `x`
-Property cannot be accessed on possibly undefined value
-constructor.js:31:3,3: uninitialized this (expected super constructor call)
+constructor.js:45
+ 45:     super.x; // error (no super call)
+               ^ property `x`. Property cannot be accessed on possibly undefined value
+ 43: class G extends A {
+           ^ uninitialized this (expected super constructor call)
 
-constructor.js:45:11,11: property `x`
-Property cannot be accessed on possibly undefined value
-constructor.js:43:7,7: uninitialized this (expected super constructor call)
+constructor.js:69
+ 69:     super(this); // error (no super call yet)
+         ^^^^^^^^^^^ super(...)
+ 63:     leaked_this.foo()
+         ^^^^^^^^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
+ 63:     leaked_this.foo()
+         ^^^^^^^^^^^ uninitialized this (expected super constructor call)
 
-constructor.js:69:5,15: super(...)
-Error:
-constructor.js:63:5,21: call of method `foo`
-Method cannot be called on possibly undefined value
-constructor.js:63:5,15: uninitialized this (expected super constructor call)
+constructor.js:83
+ 83:     super(() => this.foo()); // error (no super call yet)
+                     ^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
+ 81: class J extends J_ {
+           ^ uninitialized this (expected super constructor call)
 
-constructor.js:83:17,26: call of method `foo`
-Method cannot be called on possibly undefined value
-constructor.js:81:7,7: uninitialized this (expected super constructor call)
+super.js:10
+ 10:     super(x);
+         ^^^^^^^^ super(...)
+ 10:     super(x);
+               ^ string. This type is incompatible with
+  3:   constructor(x:number) { }
+                     ^^^^^^ number
 
-super.js:10:5,12: super(...)
-Error:
-super.js:10:11,11: string
-This type is incompatible with
-super.js:3:17,22: number
+super.js:14
+ 14:     (super.staticMethod('foo'): number); // error, string !~> number
+          ^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 14:     (super.staticMethod('foo'): number); // error, string !~> number
+                                     ^^^^^^ number
 
-super.js:14:6,30: string
-This type is incompatible with
-super.js:14:33,38: number
+super.js:15
+ 15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
+                ^^^^^^^^^^^ property `doesntExist`. Property not found in
+  8: class B extends A {
+                     ^ statics of A
 
-super.js:15:12,22: property `doesntExist`
-Property not found in
-super.js:8:17,17: statics of A
+super.js:19
+ 19:     super.f(0);
+         ^^^^^^^^^^ super.f(...)
+ 19:     super.f(0);
+                 ^ number. This type is incompatible with
+  5:   f(x:string) { }
+           ^^^^^^ string
 
-super.js:19:5,14: super.f(...)
-Error:
-super.js:19:13,13: number
-This type is incompatible with
-super.js:5:7,12: string
+super.js:20
+ 20:     return super.g;
+                      ^ property `g`. Property not found in
+  8: class B extends A {
+                     ^ A
 
-super.js:20:18,18: property `g`
-Property not found in
-super.js:8:17,17: A
+test.js:3
+  3:   constructor() { return super(); }
+                    ^ return. Missing annotation
 
-test.js:3:16,16: return
-Missing annotation
+test.js:4
+  4:   foo() { return super.foo(); }
+            ^ return. Missing annotation
 
-test.js:4:8,8: return
-Missing annotation
 
 Found 14 errors

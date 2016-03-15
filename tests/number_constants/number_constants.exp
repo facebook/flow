@@ -1,26 +1,38 @@
+number_constants.js:2
+  2: var b: string = Number.MAX_SAFE_INTEGER;
+                     ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  2: var b: string = Number.MAX_SAFE_INTEGER;
+            ^^^^^^ string
 
-number_constants.js:2:17,39: number
-This type is incompatible with
-number_constants.js:2:8,13: string
+number_constants.js:4
+  4: var d: string = Number.MIN_SAFE_INTEGER;
+                     ^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  4: var d: string = Number.MIN_SAFE_INTEGER;
+            ^^^^^^ string
 
-number_constants.js:4:17,39: number
-This type is incompatible with
-number_constants.js:4:8,13: string
+number_constants.js:6
+  6: var f: string = Number.MAX_VALUE;
+                     ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  6: var f: string = Number.MAX_VALUE;
+            ^^^^^^ string
 
-number_constants.js:6:17,32: number
-This type is incompatible with
-number_constants.js:6:8,13: string
+number_constants.js:8
+  8: var h: string = Number.MIN_VALUE;
+                     ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  8: var h: string = Number.MIN_VALUE;
+            ^^^^^^ string
 
-number_constants.js:8:17,32: number
-This type is incompatible with
-number_constants.js:8:8,13: string
+number_constants.js:10
+ 10: var j: string = Number.NaN;
+                     ^^^^^^^^^^ number. This type is incompatible with
+ 10: var j: string = Number.NaN;
+            ^^^^^^ string
 
-number_constants.js:10:17,26: number
-This type is incompatible with
-number_constants.js:10:8,13: string
+number_constants.js:12
+ 12: var l: string = Number.EPSILON;
+                     ^^^^^^^^^^^^^^ number. This type is incompatible with
+ 12: var l: string = Number.EPSILON;
+            ^^^^^^ string
 
-number_constants.js:12:17,30: number
-This type is incompatible with
-number_constants.js:12:8,13: string
 
 Found 6 errors

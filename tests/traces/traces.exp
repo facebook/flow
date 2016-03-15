@@ -1,120 +1,184 @@
-
-Traces.js:4:1,5: function call
-Error:
-Traces.js:3:21,21: number
-This type is incompatible with
-Traces.js:2:15,20: string
+Traces.js:4
+  4: f0(0);
+     ^^^^^ function call
+  3: function f0(x) { g0(x) }
+                         ^ number. This type is incompatible with
+  2: function g0(y:string) { }
+                   ^^^^^^ string
 Trace:
 * path 1:
-Traces.js:3:21,21: NumT [number]
-Traces.js:2:15,20: ~> StrT [string] (from path 2)
+  3: function f0(x) { g0(x) }
+                         ^ NumT [number]
+  2: function g0(y:string) { }
+                   ^^^^^^ ~> StrT [string] (from path 2)
 * path 2:
-Traces.js:3:21,21: NumT [number]
-Traces.js:3:21,21: ~> OpenT [identifier `x`] (from path 3)
-Traces.js:3:21,21: ~> ReposLowerT [identifier `x`] (from [not shown])
+  3: function f0(x) { g0(x) }
+                         ^ NumT [number]
+  3: function f0(x) { g0(x) }
+                         ^ ~> OpenT [identifier `x`] (from path 3)
+  3: function f0(x) { g0(x) }
+                         ^ ~> ReposLowerT [identifier `x`] (from [not shown])
 * path 3:
-Traces.js:4:4,4:   NumT [number]
-Traces.js:3:13,13: ~> OpenT [parameter `x`] (from [not shown])
-Traces.js:3:21,21: ~> ReposLowerT [identifier `x`]
+  4: f0(0);
+        ^   NumT [number]
+  3: function f0(x) { g0(x) }
+                 ^ ~> OpenT [parameter `x`] (from [not shown])
+  3: function f0(x) { g0(x) }
+                         ^ ~> ReposLowerT [identifier `x`]
 
-Traces.js:9:1,12: function call
-Error:
-Traces.js:8:27,27: number
-This type is incompatible with
-Traces.js:7:25,30: string
+Traces.js:9
+  9: f1("hey", 0);
+     ^^^^^^^^^^^^ function call
+  8: function f1(x, y) { g1(x, y) }
+                               ^ number. This type is incompatible with
+  7: function g1(a:string, b:string) { }
+                             ^^^^^^ string
 Trace:
 * path 1:
-Traces.js:8:27,27: NumT [number]
-Traces.js:7:25,30: ~> StrT [string] (from path 2)
+  8: function f1(x, y) { g1(x, y) }
+                               ^ NumT [number]
+  7: function g1(a:string, b:string) { }
+                             ^^^^^^ ~> StrT [string] (from path 2)
 * path 2:
-Traces.js:8:27,27: NumT [number]
-Traces.js:8:27,27: ~> OpenT [identifier `y`] (from path 3)
-Traces.js:8:27,27: ~> ReposLowerT [identifier `y`] (from [not shown])
+  8: function f1(x, y) { g1(x, y) }
+                               ^ NumT [number]
+  8: function f1(x, y) { g1(x, y) }
+                               ^ ~> OpenT [identifier `y`] (from path 3)
+  8: function f1(x, y) { g1(x, y) }
+                               ^ ~> ReposLowerT [identifier `y`] (from [not shown])
 * path 3:
-Traces.js:9:11,11: NumT [number]
-Traces.js:8:16,16: ~> OpenT [parameter `y`] (from [not shown])
-Traces.js:8:27,27: ~> ReposLowerT [identifier `y`]
+  9: f1("hey", 0);
+               ^ NumT [number]
+  8: function f1(x, y) { g1(x, y) }
+                    ^ ~> OpenT [parameter `y`] (from [not shown])
+  8: function f1(x, y) { g1(x, y) }
+                               ^ ~> ReposLowerT [identifier `y`]
 
-Traces.js:14:25,25: string
-This type is incompatible with
-Traces.js:14:25,29: number
+Traces.js:14
+ 14: f2(function(x) { return x * x });
+                             ^ string. This type is incompatible with
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ number
 Trace:
 * path 1:
-Traces.js:14:25,25: StrT [string]
-Traces.js:14:25,25: ~> OpenT [identifier `x`] (from path 2)
-Traces.js:14:25,29: ~> NumT [number]
+ 14: f2(function(x) { return x * x });
+                             ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                             ^ ~> OpenT [identifier `x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> NumT [number]
 * path 2:
-Traces.js:12:22,27: StrT [string]
-Traces.js:14:13,13: ~> OpenT [parameter `x`] (from path 3)
-Traces.js:14:25,25: ~> ReposLowerT [identifier `x`]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> OpenT [parameter `x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                             ^ ~> ReposLowerT [identifier `x`]
 * path 3:
-Traces.js:12:22,27: StrT [string]
-Traces.js:12:22,27: ~> ReposLowerT [string] (from [not shown])
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Traces.js:14:29,29: string
-This type is incompatible with
-Traces.js:14:25,29: number
+Traces.js:14
+ 14: f2(function(x) { return x * x });
+                                 ^ string. This type is incompatible with
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ number
 Trace:
 * path 1:
-Traces.js:14:29,29: StrT [string]
-Traces.js:14:29,29: ~> OpenT [identifier `x`] (from path 2)
-Traces.js:14:25,29: ~> NumT [number]
+ 14: f2(function(x) { return x * x });
+                                 ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> OpenT [identifier `x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> NumT [number]
 * path 2:
-Traces.js:12:22,27: StrT [string]
-Traces.js:14:13,13: ~> OpenT [parameter `x`] (from path 3)
-Traces.js:14:29,29: ~> ReposLowerT [identifier `x`]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> OpenT [parameter `x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> ReposLowerT [identifier `x`]
 * path 3:
-Traces.js:12:22,27: StrT [string]
-Traces.js:12:22,27: ~> ReposLowerT [string] (from [not shown])
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Traces.js:20:1,10: function call
-Error:
-Traces.js:19:29,29: string
-This type is incompatible with
-Traces.js:19:29,33: number
+Traces.js:20
+ 20: f3(double);
+     ^^^^^^^^^^ function call
+ 19: function double(n) { return n * 2 }
+                                 ^ string. This type is incompatible with
+ 19: function double(n) { return n * 2 }
+                                 ^^^^^ number
 Trace:
 * path 1:
-Traces.js:19:29,29: StrT [string]
-Traces.js:19:29,29: ~> OpenT [identifier `n`] (from path 2)
-Traces.js:19:29,33: ~> NumT [number]
+ 19: function double(n) { return n * 2 }
+                                 ^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> OpenT [identifier `n`] (from path 2)
+ 19: function double(n) { return n * 2 }
+                                 ^^^^^ ~> NumT [number]
 * path 2:
-Traces.js:17:22,27: StrT [string]
-Traces.js:19:17,17: ~> OpenT [parameter `n`] (from path 3)
-Traces.js:19:29,29: ~> ReposLowerT [identifier `n`]
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                     ^ ~> OpenT [parameter `n`] (from path 3)
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> ReposLowerT [identifier `n`]
 * path 3:
-Traces.js:17:22,27: StrT [string]
-Traces.js:17:22,27: ~> ReposLowerT [string] (from [not shown])
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
-Traces2.js:17:12,25: React element `B`
-Error:
-Traces2.js:6:3,11: property `foo`
-Property not found in
-Traces2.js:17:12,25: props of React element `B`
+Traces2.js:17
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ React element `B`
+  6:   propTypes: { foo: React.PropTypes.string.isRequired }
+       ^^^^^^^^^ property `foo`. Property not found in
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ props of React element `B`
 Trace:
 * path 1:
-Traces2.js:17:12,25:     MixedT [props of React element `B`]
-Traces2.js:6:3,11:       ~> LookupT [property `foo`] (from path 2)
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^     MixedT [props of React element `B`]
+  6:   propTypes: { foo: React.PropTypes.string.isRequired }
+       ^^^^^^^^^       ~> LookupT [property `foo`] (from path 2)
 * path 2:
-Traces2.js:17:12,25:     ObjT [props of React element `B`]
-Traces2.js:6:3,11:       ~> ObjT [propTypes of React component] (from path 3)
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^     ObjT [props of React element `B`]
+  6:   propTypes: { foo: React.PropTypes.string.isRequired }
+       ^^^^^^^^^       ~> ObjT [propTypes of React component] (from path 3)
 * path 3:
-Traces2.js:17:12,25:     ObjT [props of React element `B`]
-[LIB] react.js:94:42,42: ~> OpenT [existential] (from [not shown])
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^     ObjT [props of React element `B`]
+~> OpenT [existential] (from [not shown]). See: [LIB] react.js:94
 
-Traces2.js:17:12,25: React element `B`
-Error:
-Traces2.js:10:3,11: property `bar`
-Property not found in
-Traces2.js:15:12,25: props of React element `A`
+Traces2.js:17
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ React element `B`
+ 10:   propTypes: { bar: React.PropTypes.string.isRequired }
+       ^^^^^^^^^ property `bar`. Property not found in
+ 15:     return <A foo="hey"/>;
+                ^^^^^^^^^^^^^^ props of React element `A`
 Trace:
 * path 1:
-Traces2.js:15:12,25:     MixedT [props of React element `A`]
-Traces2.js:10:3,11:      ~> LookupT [property `bar`] (from path 2)
+ 15:     return <A foo="hey"/>;
+                ^^^^^^^^^^^^^^     MixedT [props of React element `A`]
+ 10:   propTypes: { bar: React.PropTypes.string.isRequired }
+       ^^^^^^^^^      ~> LookupT [property `bar`] (from path 2)
 * path 2:
-Traces2.js:15:12,25:     ObjT [props of React element `A`]
-Traces2.js:10:3,11:      ~> ObjT [propTypes of React component] (from path 3)
+ 15:     return <A foo="hey"/>;
+                ^^^^^^^^^^^^^^     ObjT [props of React element `A`]
+ 10:   propTypes: { bar: React.PropTypes.string.isRequired }
+       ^^^^^^^^^      ~> ObjT [propTypes of React component] (from path 3)
 * path 3:
-Traces2.js:15:12,25:     ObjT [props of React element `A`]
-[LIB] react.js:94:42,42: ~> OpenT [existential] (from [not shown])
+ 15:     return <A foo="hey"/>;
+                ^^^^^^^^^^^^^^     ObjT [props of React element `A`]
+~> OpenT [existential] (from [not shown]). See: [LIB] react.js:94
+
 
 Found 7 errors

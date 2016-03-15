@@ -1,74 +1,112 @@
+indexer.js:9
+  9:   [k2: number]: number; // error: not supported (yet)
+       ^^^^^^^^^^^^^^^^^^^^ multiple indexers are not supported
 
-indexer.js:9:3,22: multiple indexers are not supported
+interface.js:3
+  3: var x: string = new C().x;
+                     ^^^^^^^^^ number. This type is incompatible with
+  3: var x: string = new C().x;
+            ^^^^^^ string
 
-interface.js:3:17,25: number
-This type is incompatible with
-interface.js:3:8,13: string
+interface.js:7
+  7: var i = new I(); // error
+                 ^ I. type referenced from value position
+  5: interface I { x: number; }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ type I
 
-interface.js:7:13,13: I
-type referenced from value position
-interface.js:5:1,26: type I
+interface.js:10
+ 10:   (o.name: string); // error, name is static
+          ^^^^ property `name`. Property not found in
+ 10:   (o.name: string); // error, name is static
+        ^ I
 
-interface.js:10:6,9: property `name`
-Property not found in
-interface.js:10:4,4: I
+test.js:2
+  2: interface I_ { x: number }
+                       ^^^^^^ number. This type is incompatible with
+  6: var k: K = { x: "", y: "" }; // error: x should be number
+                     ^^ string
 
-test.js:2:19,24: number
-This type is incompatible with
-test.js:6:17,18: string
+test.js:6
+  6: var k: K = { x: "", y: "" }; // error: x should be number
+                     ^^ string. This type is incompatible with
+  2: interface I_ { x: number }
+                       ^^^^^^ number
 
-test.js:6:17,18: string
-This type is incompatible with
-test.js:2:19,24: number
+test.js:7
+  7: (k.x: string); // error: x is number
+      ^^^ number. This type is incompatible with
+  7: (k.x: string); // error: x is number
+           ^^^^^^ string
 
-test.js:7:2,4: number
-This type is incompatible with
-test.js:7:7,12: string
+test.js:11
+ 11: declare class D extends C, Other { } // error: multiple extends
+                             ^ A class cannot extend multiple classes!
 
-test.js:11:25,25: A class cannot extend multiple classes!
+test.js:19
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+              ^^^^^^ number. This type is incompatible with
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                             ^^ string
 
-test.js:19:10,15: number
-This type is incompatible with
-test.js:19:25,26: string
+test.js:19
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+              ^^^^^^ number. This type is incompatible with
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                           ^^ string
 
-test.js:19:10,15: number
-This type is incompatible with
-test.js:19:39,40: string
+test.js:19
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                             ^^ string. This type is incompatible with
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+              ^^^^^^ number
 
-test.js:19:25,26: string
-This type is incompatible with
-test.js:19:10,15: number
+test.js:19
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+                                           ^^ string. This type is incompatible with
+ 19: var e: E<number> = { x: "", y: "", z: "" }; // error: x and z should be numbers
+              ^^^^^^ number
 
-test.js:19:39,40: string
-This type is incompatible with
-test.js:19:10,15: number
+test.js:20
+ 20: (e.x: string); // error: x is number
+      ^^^ number. This type is incompatible with
+ 20: (e.x: string); // error: x is number
+           ^^^^^^ string
 
-test.js:20:2,4: number
-This type is incompatible with
-test.js:20:7,12: string
+test.js:22
+ 22: (e.z: string); // error: z is number
+      ^^^ number. This type is incompatible with
+ 22: (e.z: string); // error: z is number
+           ^^^^^^ string
 
-test.js:22:2,4: number
-This type is incompatible with
-test.js:22:7,12: string
+test2.js:5
+  5: function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
+                                      ^ property `z`. Property not found in
+  5: function foo(l: L) { l.x; l.y; l.z; } // error: z not found in L
+                                    ^ L
 
-test2.js:5:34,34: property `z`
-Property not found in
-test2.js:5:32,32: L
+test3.js:1
+  1: interface I { x: number, y : string }
+                      ^^^^^^ number. This type is incompatible with
+  3: interface K extends I, J { x: string } // error: x is number in I
+                                   ^^^^^^ string
 
-test3.js:1:18,23: number
-This type is incompatible with
-test3.js:3:31,36: string
+test3.js:3
+  3: interface K extends I, J { x: string } // error: x is number in I
+                                   ^^^^^^ string. This type is incompatible with
+  1: interface I { x: number, y : string }
+                      ^^^^^^ number
 
-test3.js:3:31,36: string
-This type is incompatible with
-test3.js:1:18,23: number
+test3.js:5
+  5:   (k.x: number); // error: x is string in K
+        ^^^ string. This type is incompatible with
+  5:   (k.x: number); // error: x is string in K
+             ^^^^^^ number
 
-test3.js:5:4,6: string
-This type is incompatible with
-test3.js:5:9,14: number
+test3.js:6
+  6:   (k.y: number); // error: y is string in I
+        ^^^ string. This type is incompatible with
+  6:   (k.y: number); // error: y is string in I
+             ^^^^^^ number
 
-test3.js:6:4,6: string
-This type is incompatible with
-test3.js:6:9,14: number
 
 Found 19 errors

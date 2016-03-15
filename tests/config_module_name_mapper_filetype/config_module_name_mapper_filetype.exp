@@ -1,5 +1,6 @@
+test.js:4
+  4: import {doesntExist} from "./SomeCSSFile.css"; // Error: `doestExist` isn't an export
+             ^^^^^^^^^^^ Named import from module `./SomeCSSFile.css`. This module has no named export called `doesntExist`.
 
-test.js:4:9,19: Named import from module `./SomeCSSFile.css`
-This module has no named export called `doesntExist`.
 
 Found 1 error

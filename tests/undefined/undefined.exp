@@ -1,6 +1,8 @@
+undefined.js:3
+  3:     x.foo();
+         ^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
+  3:     x.foo();
+         ^ uninitialized variable
 
-undefined.js:3:5,11: call of method `foo`
-Method cannot be called on possibly undefined value
-undefined.js:3:5,5: uninitialized variable
 
 Found 1 error

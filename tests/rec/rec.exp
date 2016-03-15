@@ -1,38 +1,56 @@
+issue-598.js:7
+  7: function bar(y: F<number>): F<string> { return y; }
+                       ^^^^^^ number. This type is incompatible with
+  7: function bar(y: F<number>): F<string> { return y; }
+                                   ^^^^^^ string
 
-issue-598.js:7:19,24: number
-This type is incompatible with
-issue-598.js:7:31,36: string
+issue-598.js:7
+  7: function bar(y: F<number>): F<string> { return y; }
+                                   ^^^^^^ string. This type is incompatible with
+  7: function bar(y: F<number>): F<string> { return y; }
+                       ^^^^^^ number
 
-issue-598.js:7:31,36: string
-This type is incompatible with
-issue-598.js:7:19,24: number
+test.js:3
+  3: type Pstar<X> = X | Pstar<P<X>>; // this is like Promise*
+                               ^^^^ P. This type is incompatible with
+  9: (pstar: number); // error, but limit potentially unbounded number of errors!
+             ^^^^^^ number
 
-test.js:3:27,30: P
-This type is incompatible with
-test.js:9:9,14: number
+test.js:6
+  6: (p.x: string); // error
+      ^^^ number. This type is incompatible with
+  6: (p.x: string); // error
+           ^^^^^^ string
 
-test.js:6:2,4: number
-This type is incompatible with
-test.js:6:7,12: string
+test.js:13
+ 13: (pstar.x: string); // error
+      ^^^^^^^ number. This type is incompatible with
+ 13: (pstar.x: string); // error
+               ^^^^^^ string
 
-test.js:13:2,8: number
-This type is incompatible with
-test.js:13:11,16: string
+test.js:16
+ 16: (pstar.x: string); // error
+      ^^^^^^^ P. This type is incompatible with
+ 16: (pstar.x: string); // error
+               ^^^^^^ string
 
-test.js:16:2,8: P
-This type is incompatible with
-test.js:16:11,16: string
+test2.js:30
+ 30: ((new C: C<number>): D<string>) // error: number ~/~ string
+                ^^^^^^ number. This type is incompatible with
+ 30: ((new C: C<number>): D<string>) // error: number ~/~ string
+                            ^^^^^^ string
 
-test2.js:30:12,17: number
-This type is incompatible with
-test2.js:30:24,29: string
+test2.js:30
+ 30: ((new C: C<number>): D<string>) // error: number ~/~ string
+                            ^^^^^^ string. This type is incompatible with
+ 30: ((new C: C<number>): D<string>) // error: number ~/~ string
+                ^^^^^^ number
 
-test2.js:30:24,29: string
-This type is incompatible with
-test2.js:30:12,17: number
+test3.js:12
+ 12: function bar(x: P<number>): () => P<number> {
+                                       ^^^^^^^^^ function type. Callable signature not found in
+ 10: type P<X> = () => Q<P<X>>;
+                       ^^^^^^^ object type
 
-test3.js:12:35,43: function type
-Callable signature not found in
-test3.js:10:19,25: object type
 
 Found 9 errors

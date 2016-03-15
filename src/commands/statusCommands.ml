@@ -106,6 +106,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let ic, oc = CommandUtils.connect server_flags args.root in
     ServerProt.cmd_to_channel oc (ServerProt.STATUS (args.root, args.wait_for_recheck));
     let response = ServerProt.response_from_channel ic in
+    let strip_root = args.strip_root in
     match response with
     | ServerProt.DIRECTORY_MISMATCH d ->
       Printf.printf "%s is running on a different directory.\n" name;
@@ -116,21 +117,21 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       raise CommandExceptions.Server_directory_mismatch
     | ServerProt.ERRORS errors ->
       let error_flags = args.error_flags in
-      let errors = if args.strip_root
+      let errors = if strip_root
         then Errors_js.strip_root_from_errors args.root errors
         else errors
       in
       begin if args.output_json then
-        Errors_js.print_error_json stdout errors
+        Errors_js.print_error_json ~root:args.root stdout errors
       else if args.from = "vim" || args.from = "emacs" then
         Errors_js.print_error_deprecated stdout errors
       else
-        Errors_js.print_error_summary ~flags:error_flags ~root:args.root errors
+        Errors_js.print_error_summary ~strip_root ~flags:error_flags ~root:args.root errors
       end;
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->
       if args.output_json
-      then Errors_js.print_error_json stdout []
+      then Errors_js.print_error_json ~root:args.root stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit Ok)
     | ServerProt.PONG ->

@@ -1,74 +1,106 @@
+child_process/execSync.js:8
+  8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. Function cannot be called on any member of intersection type
+  8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+      ^^^^^^^^ intersection
+  Member 1:
+  function type. See: [LIB] node.js:173
+  Error:
+  property `encoding`. Property not found in. See: [LIB] node.js:175
+    8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+                       ^^^^^^^^^^^^^^^^ object literal
+  Member 2:
+  function type. See: [LIB] node.js:178
+  Error:
+    8: (execSync('ls', {timeout: '250'})); // error, no signatures match
+                                 ^^^^^ string. This type is incompatible with
+  number. See: [LIB] node.js:104
 
-child_process/execSync.js:8:2,33: function call
-Function cannot be called on any member of intersection type
-child_process/execSync.js:8:2,9: intersection
-Member 1:
-[LIB] node.js:173:28,176:11: function type
-Error:
-[LIB] node.js:175:14,49: property `encoding`
-Property not found in
-child_process/execSync.js:8:17,32: object literal
-Member 2:
-[LIB] node.js:178:28,181:11: function type
-Error:
-child_process/execSync.js:8:27,31: string
-This type is incompatible with
-[LIB] node.js:104:13,18: number
+json_file/test.js:4
+  4: (data.foo: void); // error, should be object literal
+      ^^^^^^^^ object literal. This type is incompatible with
+  4: (data.foo: void); // error, should be object literal
+                ^^^^ undefined
 
-json_file/test.js:4:2,9: object literal
-This type is incompatible with
-json_file/test.js:4:12,15: undefined
+json_file/test.js:5
+  5: (data.foo.bar: void); // error, should be boolean
+      ^^^^^^^^^^^^ boolean. This type is incompatible with
+  5: (data.foo.bar: void); // error, should be boolean
+                    ^^^^ undefined
 
-json_file/test.js:5:2,13: boolean
-This type is incompatible with
-json_file/test.js:5:16,19: undefined
+json_file/test.js:6
+  6: (data.abc: boolean); // error, should be ?string
+      ^^^^^^^^ null. This type is incompatible with
+  6: (data.abc: boolean); // error, should be ?string
+                ^^^^^^^ boolean
 
-json_file/test.js:6:2,9: null
-This type is incompatible with
-json_file/test.js:6:12,18: boolean
+json_file/test.js:6
+  6: (data.abc: boolean); // error, should be ?string
+      ^^^^^^^^ string. This type is incompatible with
+  6: (data.abc: boolean); // error, should be ?string
+                ^^^^^^^ boolean
 
-json_file/test.js:6:2,9: string
-This type is incompatible with
-json_file/test.js:6:12,18: boolean
+json_file/test.js:6
+  6: (data.abc: boolean); // error, should be ?string
+      ^^^^^^^^ undefined. This type is incompatible with
+  6: (data.abc: boolean); // error, should be ?string
+                ^^^^^^^ boolean
 
-json_file/test.js:6:2,9: undefined
-This type is incompatible with
-json_file/test.js:6:12,18: boolean
+json_file/test.js:9
+  9: (data2.baz: void); // error, should be string
+      ^^^^^^^^^ string. This type is incompatible with
+  9: (data2.baz: void); // error, should be string
+                 ^^^^ undefined
 
-json_file/test.js:9:2,10: string
-This type is incompatible with
-json_file/test.js:9:13,16: undefined
+json_file/test.js:12
+ 12: (data3.foo: void); // error, should be number (not string! index.js wins)
+      ^^^^^^^^^ number. This type is incompatible with
+ 12: (data3.foo: void); // error, should be number (not string! index.js wins)
+                 ^^^^ undefined
 
-json_file/test.js:12:2,10: number
-This type is incompatible with
-json_file/test.js:12:13,16: undefined
+json_file/test.js:16
+ 16: (data4: void); // error, should be Array<number>
+      ^^^^^ array literal. This type is incompatible with
+ 16: (data4: void); // error, should be Array<number>
+             ^^^^ undefined
 
-json_file/test.js:16:2,6: array literal
-This type is incompatible with
-json_file/test.js:16:9,12: undefined
+json_file/test.js:18
+ 18: (require('./json_string'): void); // error, should be string
+      ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 18: (require('./json_string'): void); // error, should be string
+                                ^^^^ undefined
 
-json_file/test.js:18:2,25: string
-This type is incompatible with
-json_file/test.js:18:28,31: undefined
+json_file/test.js:19
+ 19: (require('./json_number'): void); // error, should be number
+      ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 19: (require('./json_number'): void); // error, should be number
+                                ^^^^ undefined
 
-json_file/test.js:19:2,25: number
-This type is incompatible with
-json_file/test.js:19:28,31: undefined
+json_file/test.js:20
+ 20: (require('./json_true'): void); // error, should be true
+      ^^^^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
+ 20: (require('./json_true'): void); // error, should be true
+                              ^^^^ undefined
 
-json_file/test.js:20:2,23: boolean
-This type is incompatible with
-json_file/test.js:20:26,29: undefined
+json_file/test.js:21
+ 21: (require('./json_false'): void); // error, should be false
+      ^^^^^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
+ 21: (require('./json_false'): void); // error, should be false
+                               ^^^^ undefined
 
-json_file/test.js:21:2,24: boolean
-This type is incompatible with
-json_file/test.js:21:27,30: undefined
+json_file/test.js:22
+ 22: (require('./json_null'): void); // error, should be null
+      ^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+ 22: (require('./json_null'): void); // error, should be null
+                              ^^^^ undefined
 
-json_file/test.js:22:2,23: null
-This type is incompatible with
-json_file/test.js:22:26,29: undefined
+invalid_package_file/package.json:1
+  1: 
+     ^ Unexpected end of input
 
-invalid_package_file/package.json: Unexpected end of input
+json_file/json_invalid.json:1
+  1: :derp
+     ^ Unexpected token :
 
-json_file/json_invalid.json:1:1,1: Unexpected token :
 
 Found 16 errors

@@ -1,124 +1,182 @@
+Arith.js:13
+ 13:   num(x+y); // error
+       ^^^^^^^^ function call
+ 13:   num(x+y); // error
+           ^^^ string. This type is incompatible with
+  4: function num(x:number) { }
+                    ^^^^^^ number
 
-Arith.js:13:3,10: function call
-Error:
-Arith.js:13:7,9: string
-This type is incompatible with
-Arith.js:4:16,21: number
+Arith.js:15
+ 15:   str(x+x); // error
+       ^^^^^^^^ function call
+ 15:   str(x+x); // error
+           ^^^ number. This type is incompatible with
+  6: function str(x:string) { }
+                    ^^^^^^ string
 
-Arith.js:15:3,10: function call
-Error:
-Arith.js:15:7,9: number
-This type is incompatible with
-Arith.js:6:16,21: string
+Arith.js:16
+ 16:   str(z+y); // error
+           ^ object literal. This type is incompatible with
+ 16:   str(z+y); // error
+           ^^^ string
 
-Arith.js:16:7,7: object literal
-This type is incompatible with
-Arith.js:16:7,9: string
+Arith.js:22
+ 22:   num(x+z);
+       ^^^^^^^^ function call
+ 22:   num(x+z);
+           ^^^ string. This type is incompatible with
+  4: function num(x:number) { }
+                    ^^^^^^ number
 
-Arith.js:22:3,10: function call
-Error:
-Arith.js:22:7,9: string
-This type is incompatible with
-Arith.js:4:16,21: number
+Arith.js:22
+ 22:   num(x+z);
+           ^ number. This type is incompatible with
+ 22:   num(x+z);
+           ^^^ string
 
-Arith.js:22:7,7: number
-This type is incompatible with
-Arith.js:22:7,9: string
+Arith.js:22
+ 22:   num(x+z);
+             ^ object literal. This type is incompatible with
+ 22:   num(x+z);
+           ^^^ string
 
-Arith.js:22:9,9: object literal
-This type is incompatible with
-Arith.js:22:7,9: string
+Arith.js:62
+ 62: str("foo" + true); // error
+                 ^^^^ boolean. This type is incompatible with
+ 62: str("foo" + true); // error
+         ^^^^^^^^^^^^ string
 
-Arith.js:62:13,16: boolean
-This type is incompatible with
-Arith.js:62:5,16: string
+Arith.js:63
+ 63: str(true + "foo"); // error
+         ^^^^ boolean. This type is incompatible with
+ 63: str(true + "foo"); // error
+         ^^^^^^^^^^^^ string
 
-Arith.js:63:5,8: boolean
-This type is incompatible with
-Arith.js:63:5,16: string
+Arith.js:64
+ 64: str("foo" + null); // error
+                 ^^^^ null. This type is incompatible with
+ 64: str("foo" + null); // error
+         ^^^^^^^^^^^^ string
 
-Arith.js:64:13,16: null
-This type is incompatible with
-Arith.js:64:5,16: string
+Arith.js:65
+ 65: str(null + "foo"); // error
+         ^^^^ null. This type is incompatible with
+ 65: str(null + "foo"); // error
+         ^^^^^^^^^^^^ string
 
-Arith.js:65:5,8: null
-This type is incompatible with
-Arith.js:65:5,16: string
+Arith.js:66
+ 66: str("foo" + undefined); // error
+                 ^^^^^^^^^ undefined. This type is incompatible with
+ 66: str("foo" + undefined); // error
+         ^^^^^^^^^^^^^^^^^ string
 
-Arith.js:66:13,21: undefined
-This type is incompatible with
-Arith.js:66:5,21: string
+Arith.js:67
+ 67: str(undefined + "foo"); // error
+         ^^^^^^^^^ undefined. This type is incompatible with
+ 67: str(undefined + "foo"); // error
+         ^^^^^^^^^^^^^^^^^ string
 
-Arith.js:67:5,13: undefined
-This type is incompatible with
-Arith.js:67:5,21: string
+mult.js:5
+  5: num(null * 1);
+         ^^^^ null. This type is incompatible with
+  5: num(null * 1);
+         ^^^^^^^^ number
 
-mult.js:5:5,8: null
-This type is incompatible with
-mult.js:5:5,12: number
+mult.js:6
+  6: num(1 * null);
+             ^^^^ null. This type is incompatible with
+  6: num(1 * null);
+         ^^^^^^^^ number
 
-mult.js:6:9,12: null
-This type is incompatible with
-mult.js:6:5,12: number
+relational.js:4
+  4: (1 < "foo"); // error
+      ^ number. Cannot be compared to
+  4: (1 < "foo"); // error
+          ^^^^^ string
 
-relational.js:4:2,2: number
-Cannot be compared to
-relational.js:4:6,10: string
+relational.js:5
+  5: ("foo" < 1); // error
+      ^^^^^ string. Cannot be compared to
+  5: ("foo" < 1); // error
+              ^ number
 
-relational.js:5:2,6: string
-Cannot be compared to
-relational.js:5:10,10: number
+relational.js:7
+  7: (1 < {foo: 1}); // error
+      ^ number. Cannot be compared to
+  7: (1 < {foo: 1}); // error
+          ^^^^^^^^ object literal
 
-relational.js:7:2,2: number
-Cannot be compared to
-relational.js:7:6,13: object literal
+relational.js:8
+  8: ({foo: 1} < 1); // error
+      ^^^^^^^^ object literal. Cannot be compared to
+  8: ({foo: 1} < 1); // error
+                 ^ number
 
-relational.js:8:2,9: object literal
-Cannot be compared to
-relational.js:8:13,13: number
+relational.js:9
+  9: ({foo: 1} < {foo: 1}); // error
+      ^^^^^^^^ object literal. Cannot be compared to
+  9: ({foo: 1} < {foo: 1}); // error
+                 ^^^^^^^^ object literal
 
-relational.js:9:2,9: object literal
-Cannot be compared to
-relational.js:9:13,20: object literal
+relational.js:10
+ 10: ("foo" < {foo: 1}); // error
+      ^^^^^ string. Cannot be compared to
+ 10: ("foo" < {foo: 1}); // error
+              ^^^^^^^^ object literal
 
-relational.js:10:2,6: string
-Cannot be compared to
-relational.js:10:10,17: object literal
+relational.js:11
+ 11: ({foo: 1} < "foo"); // error
+      ^^^^^^^^ object literal. Cannot be compared to
+ 11: ({foo: 1} < "foo"); // error
+                 ^^^^^ string
 
-relational.js:11:2,9: object literal
-Cannot be compared to
-relational.js:11:13,17: string
+relational.js:14
+ 14: (1 < x); // 2 errors: null !~> number; undefined !~> number
+          ^ null. Cannot be compared to
+ 14: (1 < x); // 2 errors: null !~> number; undefined !~> number
+      ^ number
 
-relational.js:14:6,6: null
-Cannot be compared to
-relational.js:14:2,2: number
+relational.js:14
+ 14: (1 < x); // 2 errors: null !~> number; undefined !~> number
+          ^ undefined. Cannot be compared to
+ 14: (1 < x); // 2 errors: null !~> number; undefined !~> number
+      ^ number
 
-relational.js:14:6,6: undefined
-Cannot be compared to
-relational.js:14:2,2: number
+relational.js:15
+ 15: (x < 1); // 2 errors: null !~> number; undefined !~> number
+      ^ null. Cannot be compared to
+ 15: (x < 1); // 2 errors: null !~> number; undefined !~> number
+          ^ number
 
-relational.js:15:2,2: null
-Cannot be compared to
-relational.js:15:6,6: number
+relational.js:15
+ 15: (x < 1); // 2 errors: null !~> number; undefined !~> number
+      ^ undefined. Cannot be compared to
+ 15: (x < 1); // 2 errors: null !~> number; undefined !~> number
+          ^ number
 
-relational.js:15:2,2: undefined
-Cannot be compared to
-relational.js:15:6,6: number
+relational.js:17
+ 17: (null < null); // error
+      ^^^^ null. Cannot be compared to
+ 17: (null < null); // error
+             ^^^^ null
 
-relational.js:17:2,5: null
-Cannot be compared to
-relational.js:17:9,12: null
+relational.js:18
+ 18: (undefined < null); // error
+      ^^^^^^^^^ undefined. Cannot be compared to
+ 18: (undefined < null); // error
+                  ^^^^ null
 
-relational.js:18:2,10: undefined
-Cannot be compared to
-relational.js:18:14,17: null
+relational.js:19
+ 19: (null < undefined); // error
+      ^^^^ null. Cannot be compared to
+ 19: (null < undefined); // error
+             ^^^^^^^^^ undefined
 
-relational.js:19:2,5: null
-Cannot be compared to
-relational.js:19:9,17: undefined
+relational.js:20
+ 20: (undefined < undefined); // error
+      ^^^^^^^^^ undefined. Cannot be compared to
+ 20: (undefined < undefined); // error
+                  ^^^^^^^^^ undefined
 
-relational.js:20:2,10: undefined
-Cannot be compared to
-relational.js:20:14,22: undefined
 
 Found 29 errors

@@ -28,19 +28,23 @@ let spec = {
     |> server_flags
     |> root_flag
     |> error_flags
+    |> strip_root_flag
     |> json_flags
     |> verbose_flags
     |> anon "filename" (optional string) ~doc:"Filename"
   )
 }
 
-let main option_values root error_flags use_json verbose file () =
+let main option_values root error_flags strip_root use_json verbose file () =
   let file = get_file_from_filename_or_stdin file None in
   let root = guess_root (
     match root with
     | Some root -> Some root
     | None -> ServerProt.path_of_input file
   ) in
+
+  let flowconfig = FlowConfig.get root in
+  let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
   let ic, oc = connect option_values root in
 
   if not use_json && (verbose <> None)
@@ -48,26 +52,32 @@ let main option_values root error_flags use_json verbose file () =
 
   ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE (file, verbose));
   let response = ServerProt.response_from_channel ic in
+  let stdin_file = match file with
+    | ServerProt.FileContent (None, contents) -> Some ("-", contents)
+    | ServerProt.FileContent (Some (path), contents) -> Some (path, contents)
+    | _ -> None
+  in
   match response with
   | ServerProt.ERRORS e ->
       if use_json
-      then Errors_js.print_error_json stdout e
+      then
+        Errors_js.print_error_json
+        ~stdin_file
+        ~root
+        stdout
+        e
       else (
-        let stdin_file = match file with
-          | ServerProt.FileContent (None, contents) -> Some ("-", contents)
-          | ServerProt.FileContent (Some (path), contents) -> Some (path, contents)
-          | _ -> None
-        in
         Errors_js.print_error_summary
           ~flags:error_flags
-          ~stdin_file:stdin_file
+          ~stdin_file
+          ~strip_root
           ~root
           e;
         FlowExitStatus.(exit Type_error)
       )
   | ServerProt.NO_ERRORS ->
       if use_json
-      then Errors_js.print_error_json stdout []
+      then Errors_js.print_error_json ~stdin_file ~root stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit Ok)
   | _ ->

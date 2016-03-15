@@ -49,8 +49,6 @@ val loc_of_error: error -> Loc.t
 val infos_of_error: error -> info list
 val extra_of_error: error -> info_tree list
 
-(* error collections *)
-
 (* we store errors in sets, currently, because distinct
    traces may share endpoints, and produce the same error *)
 module ErrorSet : Set.S with type elt = error
@@ -74,6 +72,7 @@ type stdin_file = (string * string) option
 
 val print_error_color_new:
   stdin_file:stdin_file ->
+  strip_root:bool ->
   one_line:bool ->
   color:Tty.color_mode ->
   root: Path.t ->
@@ -82,13 +81,18 @@ val print_error_color_new:
 
 val deprecated_json_props_of_loc : Loc.t -> (string * Hh_json.json) list
 val json_of_errors : error list -> Hh_json.json
-
-val print_error_json : out_channel -> error list -> unit
+val print_error_json :
+  ?stdin_file:stdin_file ->
+  root: Path.t ->
+  out_channel ->
+  error list ->
+  unit
 
 (* Human readable output *)
 val print_error_summary:
   flags:Options.error_flags ->
   ?stdin_file:stdin_file ->
+  strip_root: bool ->
   root: Path.t ->
   error list ->
   unit

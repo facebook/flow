@@ -1,16 +1,21 @@
+advanced_arrows.js:7
+  7: var bad = (x: number): string => x; // Error!
+                                      ^ number. This type is incompatible with
+  7: var bad = (x: number): string => x; // Error!
+                            ^^^^^^ string
 
-advanced_arrows.js:7:34,34: number
-This type is incompatible with
-advanced_arrows.js:7:24,29: string
+advanced_arrows.js:11
+ 11: (ident("hi"): number); // Error
+      ^^^^^^^^^^^ string. This type is incompatible with
+ 11: (ident("hi"): number); // Error
+                   ^^^^^^ number
 
-advanced_arrows.js:11:2,12: string
-This type is incompatible with
-advanced_arrows.js:11:15,20: number
+arrows.js:7
+  7:     images = images.sort((a, b) => (a.width - b.width) + "");
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `sort`
+  7:     images = images.sort((a, b) => (a.width - b.width) + "");
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:172
 
-arrows.js:7:14,60: call of method `sort`
-Error:
-arrows.js:7:36,59: string
-This type is incompatible with
-[LIB] core.js:172:38,43: number
 
 Found 3 errors

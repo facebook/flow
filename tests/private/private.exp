@@ -1,6 +1,8 @@
+private.js:11
+ 11:     var _x: string = this._x;
+                               ^^ property `_x`. Property not found in
+  8: class B extends A {
+           ^ B
 
-private.js:11:27,28: property `_x`
-Property not found in
-private.js:8:7,7: B
 
 Found 1 error

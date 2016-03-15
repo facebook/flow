@@ -1,14 +1,20 @@
+type.js:2
+  2: var b: typeof a = "...";
+                       ^^^^^ string. This type is incompatible with
+  1: declare var a: number;
+                    ^^^^^^ number
 
-type.js:2:19,23: string
-This type is incompatible with
-type.js:1:16,21: number
+type.js:3
+  3: var c: typeof a = "...";
+                       ^^^^^ string. This type is incompatible with
+  1: declare var a: number;
+                    ^^^^^^ number
 
-type.js:3:19,23: string
-This type is incompatible with
-type.js:1:16,21: number
+type.js:6
+  6: var x:T = "...";
+               ^^^^^ string. This type is incompatible with
+  6: var x:T = "...";
+           ^ number
 
-type.js:6:11,15: string
-This type is incompatible with
-type.js:6:7,7: number
 
 Found 3 errors

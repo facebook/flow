@@ -1,62 +1,71 @@
+date.js:2
+  2: var x:string = d.getTime();
+                    ^^^^^^^^^^^ call of method `getTime`
+  2: var x:string = d.getTime();
+                    ^^^^^^^^^^^ number. This type is incompatible with
+  2: var x:string = d.getTime();
+           ^^^^^^ string
 
-date.js:2:16,26: call of method `getTime`
-Error:
-date.js:2:16,26: number
-This type is incompatible with
-date.js:2:7,12: string
+date.js:18
+ 18: new Date({});
+     ^^^^^^^^^^^^ constructor call
+ 18: new Date({});
+              ^^ object literal. This type is incompatible with
+union: number | string. See: [LIB] core.js:271
+  Member 1:
+  number. See: [LIB] core.js:271
+  Error:
+   18: new Date({});
+                ^^ object literal. This type is incompatible with
+  number. See: [LIB] core.js:271
+  Member 2:
+  string. See: [LIB] core.js:271
+  Error:
+   18: new Date({});
+                ^^ object literal. This type is incompatible with
+  string. See: [LIB] core.js:271
 
-date.js:18:1,12: constructor call
-Error:
-date.js:18:10,11: object literal
-This type is incompatible with
-[LIB] core.js:271:25,39: union: number | string
-Member 1:
-[LIB] core.js:271:25,30: number
-Error:
-date.js:18:10,11: object literal
-This type is incompatible with
-[LIB] core.js:271:25,30: number
-Member 2:
-[LIB] core.js:271:34,39: string
-Error:
-date.js:18:10,11: object literal
-This type is incompatible with
-[LIB] core.js:271:34,39: string
+date.js:19
+ 19: new Date(2015, '6');
+     ^^^^^^^^^^^^^^^^^^^ constructor call
+ 19: new Date(2015, '6');
+                    ^^^ string. This type is incompatible with
+number. See: [LIB] core.js:271
 
-date.js:19:1,19: constructor call
-Error:
-date.js:19:16,18: string
-This type is incompatible with
-[LIB] core.js:271:50,55: number
+date.js:20
+ 20: new Date(2015, 6, '18');
+     ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 20: new Date(2015, 6, '18');
+                       ^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:271
 
-date.js:20:1,23: constructor call
-Error:
-date.js:20:19,22: string
-This type is incompatible with
-[LIB] core.js:271:64,69: number
+date.js:21
+ 21: new Date(2015, 6, 18, '11');
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 21: new Date(2015, 6, 18, '11');
+                           ^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:271
 
-date.js:21:1,27: constructor call
-Error:
-date.js:21:23,26: string
-This type is incompatible with
-[LIB] core.js:271:79,84: number
+date.js:22
+ 22: new Date(2015, 6, 18, 11, '55');
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 22: new Date(2015, 6, 18, 11, '55');
+                               ^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:271
 
-date.js:22:1,31: constructor call
-Error:
-date.js:22:27,30: string
-This type is incompatible with
-[LIB] core.js:271:96,101: number
+date.js:23
+ 23: new Date(2015, 6, 18, 11, 55, '42');
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 23: new Date(2015, 6, 18, 11, 55, '42');
+                                   ^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:271
 
-date.js:23:1,35: constructor call
-Error:
-date.js:23:31,34: string
-This type is incompatible with
-[LIB] core.js:271:113,118: number
+date.js:24
+ 24: new Date(2015, 6, 18, 11, 55, 42, '999');
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 24: new Date(2015, 6, 18, 11, 55, 42, '999');
+                                       ^^^^^ string. This type is incompatible with
+number. See: [LIB] core.js:271
 
-date.js:24:1,40: constructor call
-Error:
-date.js:24:35,39: string
-This type is incompatible with
-[LIB] core.js:271:135,140: number
 
 Found 8 errors

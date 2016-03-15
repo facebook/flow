@@ -1,22 +1,32 @@
+test.js:2
+  2: var foo: number = new Foo(); // error (returns object literal above)
+                       ^^^^^^^^^ object literal. This type is incompatible with
+  2: var foo: number = new Foo(); // error (returns object literal above)
+              ^^^^^^ number
 
-test.js:2:19,27: object literal
-This type is incompatible with
-test.js:2:10,15: number
+test.js:5
+  5: var bar: number = new Bar(); // error (returns new object)
+                       ^^^^^^^^^ new object. This type is incompatible with
+  5: var bar: number = new Bar(); // error (returns new object)
+              ^^^^^^ number
 
-test.js:5:19,27: new object
-This type is incompatible with
-test.js:5:10,15: number
+test.js:8
+  8: var qux: number = new Qux(); // error (returns new object)
+                       ^^^^^^^^^ new object. This type is incompatible with
+  8: var qux: number = new Qux(); // error (returns new object)
+              ^^^^^^ number
 
-test.js:8:19,27: new object
-This type is incompatible with
-test.js:8:10,15: number
+test2.js:7
+  7: d.x = ""; // error, string ~/~ number (but property x is found)
+           ^^ string. This type is incompatible with
+  2:   constructor(): { x: number }; // OK
+                           ^^^^^^ number
 
-test2.js:7:7,8: string
-This type is incompatible with
-test2.js:2:23,28: number
+test2.js:9
+  9: (new D: D); // error, new D is an object, D not in proto chain
+      ^^^^^ object type. This type is incompatible with
+  9: (new D: D); // error, new D is an object, D not in proto chain
+             ^ D
 
-test2.js:9:2,6: object type
-This type is incompatible with
-test2.js:9:9,9: D
 
 Found 5 errors

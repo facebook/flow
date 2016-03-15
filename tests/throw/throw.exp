@@ -1,6 +1,8 @@
+test.js:13
+ 13:     return a*1; // a is not null
+                ^ string. This type is incompatible with
+ 13:     return a*1; // a is not null
+                ^^^ number
 
-test.js:13:12,12: string
-This type is incompatible with
-test.js:13:12,14: number
 
 Found 1 error

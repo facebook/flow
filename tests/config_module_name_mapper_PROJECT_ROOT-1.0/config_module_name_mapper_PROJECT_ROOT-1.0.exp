@@ -1,6 +1,8 @@
+main.js:6
+  6: var b: string = test; // Error: number ~> string
+                     ^^^^ number. This type is incompatible with
+  6: var b: string = test; // Error: number ~> string
+            ^^^^^^ string
 
-main.js:6:17,20: number
-This type is incompatible with
-main.js:6:8,13: string
 
 Found 1 error

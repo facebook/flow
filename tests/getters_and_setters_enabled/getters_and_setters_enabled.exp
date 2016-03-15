@@ -1,120 +1,178 @@
+class.js:18
+ 18:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
+                                                ^^^^^^ null. This type is incompatible with
+ 19:   set propWithSubtypingGetterAndSetter(x: number) { }
+                                               ^^^^^^ number
 
-class.js:18:44,49: null
-This type is incompatible with
-class.js:19:43,48: number
+class.js:18
+ 18:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
+                                                ^^^^^^ undefined. This type is incompatible with
+ 19:   set propWithSubtypingGetterAndSetter(x: number) { }
+                                               ^^^^^^ number
 
-class.js:18:44,49: undefined
-This type is incompatible with
-class.js:19:43,48: number
+class.js:23
+ 23:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; }
+                                                         ^^^^^^ null. This type is incompatible with
+ 22:   set propWithSubtypingGetterAndSetterReordered(x: number) { }
+                                                        ^^^^^^ number
 
-class.js:23:53,58: null
-This type is incompatible with
-class.js:22:52,57: number
+class.js:23
+ 23:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; }
+                                                         ^^^^^^ undefined. This type is incompatible with
+ 22:   set propWithSubtypingGetterAndSetterReordered(x: number) { }
+                                                        ^^^^^^ number
 
-class.js:23:53,58: undefined
-This type is incompatible with
-class.js:22:52,57: number
+class.js:25
+ 25:   get propWithMismatchingGetterAndSetter(): number { return 4; }
+                                                 ^^^^^^ number. This type is incompatible with
+ 26:   set propWithMismatchingGetterAndSetter(x: string) { } // Error doesn't match getter
+                                                 ^^^^^^ string
 
-class.js:25:45,50: number
-This type is incompatible with
-class.js:26:45,50: string
+class.js:26
+ 26:   set propWithMismatchingGetterAndSetter(x: string) { } // Error doesn't match getter
+                                                 ^^^^^^ string. This type is incompatible with
+ 25:   get propWithMismatchingGetterAndSetter(): number { return 4; }
+                                                 ^^^^^^ number
 
-class.js:26:45,50: string
-This type is incompatible with
-class.js:25:45,50: number
+class.js:41
+ 41: var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 41: var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
+                               ^^^^^^ string
 
-class.js:41:36,61: number
-This type is incompatible with
-class.js:41:27,32: string
+class.js:42
+ 42: var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 42: var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+                               ^^^^^^ string
 
-class.js:42:36,63: number
-This type is incompatible with
-class.js:42:27,32: string
+class.js:49
+ 49: foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `goodSetterNoAnnotation`
+ 11:   set goodSetterNoAnnotation(x) { z = x; }
+                                           ^ string. This type is incompatible with
+  5: var z: number = 123;
+            ^^^^^^ number
 
-class.js:49:1,26: assignment of property `goodSetterNoAnnotation`
-Error:
-class.js:11:39,39: string
-This type is incompatible with
-class.js:5:8,13: number
+class.js:50
+ 50: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `goodSetterWithAnnotation`
+ 50: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                    ^^^^^^^ string. This type is incompatible with
+ 12:   set goodSetterWithAnnotation(x: number) { z = x; }
+                                       ^^^^^^ number
 
-class.js:50:1,28: assignment of property `goodSetterWithAnnotation`
-Error:
-class.js:50:32,38: string
-This type is incompatible with
-class.js:12:35,40: number
+class.js:52
+ 52: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+ 52: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                       ^^^^^^ number
 
-class.js:52:44,79: null
-This type is incompatible with
-class.js:52:35,40: number
+class.js:52
+ 52: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 52: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                       ^^^^^^ number
 
-class.js:52:44,79: undefined
-This type is incompatible with
-class.js:52:35,40: number
+class.js:54
+ 54: var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 54: var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
+                                      ^^^^^^ number
 
-class.js:54:43,70: string
-This type is incompatible with
-class.js:54:34,39: number
+class.js:55
+ 55: foo.propOverriddenWithSetter = 123; // Error number ~> string
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `propOverriddenWithSetter`
+ 55: foo.propOverriddenWithSetter = 123; // Error number ~> string
+                                    ^^^ number. This type is incompatible with
+ 32:   set propOverriddenWithSetter(x: string) { }
+                                       ^^^^^^ string
 
-class.js:55:1,28: assignment of property `propOverriddenWithSetter`
-Error:
-class.js:55:32,34: number
-This type is incompatible with
-class.js:32:35,40: string
+object.js:15
+ 15:   set goodSetterNoAnnotation(x) { z = x; },
+                                           ^ string. This type is incompatible with
+  5: var z: number = 123;
+            ^^^^^^ number
 
-object.js:15:39,39: string
-This type is incompatible with
-object.js:5:8,13: number
+object.js:22
+ 22:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // Error
+                                                ^^^^^^ null. This type is incompatible with
+ 23:   set propWithSubtypingGetterAndSetter(x: number) { },
+                                               ^^^^^^ number
 
-object.js:22:44,49: null
-This type is incompatible with
-object.js:23:43,48: number
+object.js:22
+ 22:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // Error
+                                                ^^^^^^ undefined. This type is incompatible with
+ 23:   set propWithSubtypingGetterAndSetter(x: number) { },
+                                               ^^^^^^ number
 
-object.js:22:44,49: undefined
-This type is incompatible with
-object.js:23:43,48: number
+object.js:26
+ 26:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; },
+                                                         ^^^^^^ null. This type is incompatible with
+ 25:   set propWithSubtypingGetterAndSetterReordered(x: number) { }, // Error
+                                                        ^^^^^^ number
 
-object.js:26:53,58: null
-This type is incompatible with
-object.js:25:52,57: number
+object.js:26
+ 26:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; },
+                                                         ^^^^^^ undefined. This type is incompatible with
+ 25:   set propWithSubtypingGetterAndSetterReordered(x: number) { }, // Error
+                                                        ^^^^^^ number
 
-object.js:26:53,58: undefined
-This type is incompatible with
-object.js:25:52,57: number
+object.js:28
+ 28:   get exampleOfOrderOfGetterAndSetter(): A { return new A(); },
+                                              ^ A. This type is incompatible with
+ 29:   set exampleOfOrderOfGetterAndSetter(x: B) {},
+                                              ^ B
 
-object.js:28:42,42: A
-This type is incompatible with
-object.js:29:42,42: B
+object.js:32
+ 32:   get exampleOfOrderOfGetterAndSetterReordered(): A { return new A(); },
+                                                       ^ A. This type is incompatible with
+ 31:   set exampleOfOrderOfGetterAndSetterReordered(x: B) {},
+                                                       ^ B
 
-object.js:32:51,51: A
-This type is incompatible with
-object.js:31:51,51: B
+object.js:41
+ 41: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 41: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
+                               ^^^^^^ string
 
-object.js:41:36,61: number
-This type is incompatible with
-object.js:41:27,32: string
+object.js:42
+ 42: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 42: var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
+                               ^^^^^^ string
 
-object.js:42:36,63: number
-This type is incompatible with
-object.js:42:27,32: string
+object.js:49
+ 49: obj.goodSetterWithAnnotation = "hello"; // Error string ~> number
+                                    ^^^^^^^ string. This type is incompatible with
+ 16:   set goodSetterWithAnnotation(x: number) { z = x; },
+                                       ^^^^^^ number
 
-object.js:49:32,38: string
-This type is incompatible with
-object.js:16:35,40: number
+object.js:51
+ 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
+ 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                       ^^^^^^ number
 
-object.js:51:44,79: null
-This type is incompatible with
-object.js:51:35,40: number
+object.js:51
+ 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                       ^^^^^^ number
 
-object.js:51:44,79: undefined
-This type is incompatible with
-object.js:51:35,40: number
+object.js:60
+ 60:   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B. This type is incompatible with
+ 59: var testExampleOrOrderOfGetterAndSetterReordered: number =
+                                                       ^^^^^^ number
 
-object.js:60:3,46: B
-This type is incompatible with
-object.js:59:51,56: number
+react.js:7
+  7:     get a() { return 4; },
+         ^^^^^^^^^^^^^^^^^^^^^ get/set properties not supported for React propTypes
 
-react.js:7:5,25: get/set properties not supported for React propTypes
+react.js:8
+  8:     set b(x: number) { this.c = x; },
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ get/set properties not supported for React propTypes
 
-react.js:8:5,36: get/set properties not supported for React propTypes
 
 Found 29 errors

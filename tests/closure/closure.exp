@@ -1,62 +1,88 @@
+Closure.js:20
+ 20: takes_string(global_x); // error
+     ^^^^^^^^^^^^^^^^^^^^^^ function call
+ 20: takes_string(global_x); // error
+                  ^^^^^^^^ number. This type is incompatible with
+  6: function takes_string(_:string) { }
+                             ^^^^^^ string
 
-Closure.js:20:1,22: function call
-Error:
-Closure.js:20:14,21: number
-This type is incompatible with
-Closure.js:6:25,30: string
+Closure.js:38
+ 38:   takes_string(local_x); // error
+       ^^^^^^^^^^^^^^^^^^^^^ function call
+ 38:   takes_string(local_x); // error
+                    ^^^^^^^ number. This type is incompatible with
+  6: function takes_string(_:string) { }
+                             ^^^^^^ string
 
-Closure.js:38:3,23: function call
-Error:
-Closure.js:38:16,22: number
-This type is incompatible with
-Closure.js:6:25,30: string
+Closure.js:57
+ 57: takes_string(global_y); // error
+     ^^^^^^^^^^^^^^^^^^^^^^ function call
+ 57: takes_string(global_y); // error
+                  ^^^^^^^^ number. This type is incompatible with
+  6: function takes_string(_:string) { }
+                             ^^^^^^ string
 
-Closure.js:57:1,22: function call
-Error:
-Closure.js:57:14,21: number
-This type is incompatible with
-Closure.js:6:25,30: string
+Closure.js:77
+ 77:   takes_string(local_y); // error
+       ^^^^^^^^^^^^^^^^^^^^^ function call
+ 77:   takes_string(local_y); // error
+                    ^^^^^^^ number. This type is incompatible with
+  6: function takes_string(_:string) { }
+                             ^^^^^^ string
 
-Closure.js:77:3,23: function call
-Error:
-Closure.js:77:16,22: number
-This type is incompatible with
-Closure.js:6:25,30: string
+cond_havoc.js:12
+ 12:   return x; // error, string ~/~> number (return type anno) TODO
+              ^ string. This type is incompatible with
+  6: function example(b: bool): number {
+                                ^^^^^^ number
 
-cond_havoc.js:12:10,10: string
-This type is incompatible with
-cond_havoc.js:6:28,33: number
+const.js:20
+ 20:     call_me = () => { var y:number = var_x; };  // error
+                                          ^^^^^ null. This type is incompatible with
+ 20:     call_me = () => { var y:number = var_x; };  // error
+                                 ^^^^^^ number
 
-const.js:20:38,42: null
-This type is incompatible with
-const.js:20:29,34: number
+const.js:20
+ 20:     call_me = () => { var y:number = var_x; };  // error
+                                          ^^^^^ undefined. This type is incompatible with
+ 20:     call_me = () => { var y:number = var_x; };  // error
+                                 ^^^^^^ number
 
-const.js:20:38,42: undefined
-This type is incompatible with
-const.js:20:29,34: number
+const.js:38
+ 38:     call_me = () => { var y:number = var_x; };  // error
+                                          ^^^^^ boolean. This type is incompatible with
+ 38:     call_me = () => { var y:number = var_x; };  // error
+                                 ^^^^^^ number
 
-const.js:38:38,42: boolean
-This type is incompatible with
-const.js:38:29,34: number
+const.js:38
+ 38:     call_me = () => { var y:number = var_x; };  // error
+                                          ^^^^^ string. This type is incompatible with
+ 38:     call_me = () => { var y:number = var_x; };  // error
+                                 ^^^^^^ number
 
-const.js:38:38,42: string
-This type is incompatible with
-const.js:38:29,34: number
+const.js:40
+ 40:     call_me = () => { var y:string = var_x; };  // error
+                                          ^^^^^ boolean. This type is incompatible with
+ 40:     call_me = () => { var y:string = var_x; };  // error
+                                 ^^^^^^ string
 
-const.js:40:38,42: boolean
-This type is incompatible with
-const.js:40:29,34: string
+const.js:40
+ 40:     call_me = () => { var y:string = var_x; };  // error
+                                          ^^^^^ number. This type is incompatible with
+ 40:     call_me = () => { var y:string = var_x; };  // error
+                                 ^^^^^^ string
 
-const.js:40:38,42: number
-This type is incompatible with
-const.js:40:29,34: string
+const.js:42
+ 42:     call_me = () => { var y:boolean = var_x; };  // error
+                                           ^^^^^ number. This type is incompatible with
+ 42:     call_me = () => { var y:boolean = var_x; };  // error
+                                 ^^^^^^^ boolean
 
-const.js:42:39,43: number
-This type is incompatible with
-const.js:42:29,35: boolean
+const.js:42
+ 42:     call_me = () => { var y:boolean = var_x; };  // error
+                                           ^^^^^ string. This type is incompatible with
+ 42:     call_me = () => { var y:boolean = var_x; };  // error
+                                 ^^^^^^^ boolean
 
-const.js:42:39,43: string
-This type is incompatible with
-const.js:42:29,35: boolean
 
 Found 13 errors

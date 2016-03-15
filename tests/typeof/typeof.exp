@@ -1,22 +1,32 @@
+typeof.js:43
+ 43: var b: MyClass1 = MyClass1;
+                       ^^^^^^^^ class type: MyClass1. This type is incompatible with
+ 43: var b: MyClass1 = MyClass1;
+            ^^^^^^^^ MyClass1
 
-typeof.js:43:19,26: class type: MyClass1
-This type is incompatible with
-typeof.js:43:8,15: MyClass1
+typeof.js:53
+ 53: var c: typeof MyClass2 = new MyClass2();
+                              ^^^^^^^^^^^^^^ MyClass2. This type is incompatible with
+ 45: class MyClass2 {
+           ^^^^^^^^ class type: MyClass2
 
-typeof.js:53:26,39: MyClass2
-This type is incompatible with
-typeof.js:45:7,14: class type: MyClass2
+typeof.js:61
+ 61: var e: typeof numValue = 'asdf'; // Error: string ~> number
+                              ^^^^^^ string. This type is incompatible with
+ 59: var numValue:number = 42;
+                  ^^^^^^ number
 
-typeof.js:61:26,31: string
-This type is incompatible with
-typeof.js:59:14,19: number
+typeof.js:73
+ 73: var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
+                   ^^^^^^^^^^^ numberAlias. type referenced from value position
+ 67: type numberAlias = number;
+          ^^^^^^^^^^^ type numberAlias
 
-typeof.js:73:15,25: numberAlias
-type referenced from value position
-typeof.js:67:6,16: type numberAlias
+typeof.js:82
+ 82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
+                      ^^^ object literal. Ineligible value used in/as type annotation (did you forget 'typeof'?)
+ 82:  var keys: $Keys<Map> = "A";  // Error: ineligible value used in type anno
+                      ^^^ Map
 
-typeof.js:82:18,20: object literal
-Ineligible value used in/as type annotation (did you forget 'typeof'?)
-typeof.js:82:18,20: Map
 
 Found 5 errors

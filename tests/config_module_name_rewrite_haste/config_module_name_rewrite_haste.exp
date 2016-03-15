@@ -1,8 +1,10 @@
+A.js:12
+ 12: var m2 = require('2DoesntExist'); // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^ 2DoesntExist. Required module not found
 
-A.js:12:10,32: 2DoesntExist
-Required module not found
+A.js:13
+ 13: import {numVal} from '3DoesntExist'; // Error
+                          ^^^^^^^^^^^^^^ 3DoesntExist. Required module not found
 
-A.js:13:22,35: 3DoesntExist
-Required module not found
 
 Found 2 errors

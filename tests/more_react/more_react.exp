@@ -1,26 +1,36 @@
+API.react.js:4
+  4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
+         ^^^^^^^^ property `setProps`. Property not found in
+  4: app.setProps({y:42}); // error, y:number but foo expects string in App.react
+     ^^^ React$Element
 
-API.react.js:4:5,12: property `setProps`
-Property not found in
-API.react.js:4:1,3: React$Element
+API.react.js:5
+  5: app.setState({z:42}); // error, z:number but foo expects string in App.react
+         ^^^^^^^^ property `setState`. Property not found in
+  5: app.setState({z:42}); // error, z:number but foo expects string in App.react
+     ^^^ React$Element
 
-API.react.js:5:5,12: property `setState`
-Property not found in
-API.react.js:5:1,3: React$Element
+App.react.js:36
+ 36:         {foo(z,x)} // error, since z: number
+                  ^ number. This type is incompatible with
+ 10: function foo(p:string,q:string):string { return p+q; }
+                    ^^^^^^ string
 
-App.react.js:36:14,14: number
-This type is incompatible with
-App.react.js:10:16,21: string
+JSX.js:8
+  8:   <App y={42}> // error, y: number but foo expects string in App.react
+       ^^^^^^^^^^^^ props of React element `App`
+  8:   <App y={42}> // error, y: number but foo expects string in App.react
+               ^^ number. This type is incompatible with
+ 14:   getDefaultProps: function(): { y: string } {
+                                         ^^^^^^ string. See: App.react.js:14
 
-JSX.js:8:3,14: props of React element `App`
-Error:
-JSX.js:8:11,12: number
-This type is incompatible with
-App.react.js:14:37,42: string
+propTypes.js:15
+ 15: <D
+     ^ React element `D`
+  9:   propTypes: {
+       ^^^^^^^^^ property `name`. Property not found in
+ 15: <D
+     ^ props of React element `D`
 
-propTypes.js:15:1,18:2: React element `D`
-Error:
-propTypes.js:9:3,11: property `name`
-Property not found in
-propTypes.js:15:1,18:2: props of React element `D`
 
 Found 5 errors

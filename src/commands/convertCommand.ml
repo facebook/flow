@@ -46,7 +46,11 @@ let convert_file error_flags outpath file =
       Errors_js.parse_error_to_flow_error e
     ) errors in
     let root = Path.dummy_path in
-    Errors_js.print_error_summary ~flags:error_flags ~root flow_errors;
+    Errors_js.print_error_summary
+      ~flags:error_flags
+      ~strip_root:false
+      ~root
+      flow_errors;
     n, 0, 1
   )
 

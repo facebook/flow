@@ -1,57 +1,80 @@
+import_typeof.js:13
+ 13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
+                          ^^^^^^^^^^^^^^^ constructor call
+ 13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
+                          ^^^^^^^^^^^^^^^ ClassFoo1. This type is incompatible with
+ 13: var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
+             ^^^^^^^^^^ class type: ClassFoo1
 
-import_typeof.js:13:22,36: constructor call
-Error:
-import_typeof.js:13:22,36: ClassFoo1
-This type is incompatible with
-import_typeof.js:13:9,18: class type: ClassFoo1
+import_typeof.js:14
+ 14: new ClassFoo1T(); // Error: ClassFoo1T is not bound to a value
+         ^^^^^^^^^^ ClassFoo1T. type referenced from value position
+  9: import typeof ClassFoo1T from "./ExportDefault_Class";
+                   ^^^^^^^^^^ type ClassFoo1T
 
-import_typeof.js:14:5,14: ClassFoo1T
-type referenced from value position
-import_typeof.js:9:15,24: type ClassFoo1T
+import_typeof.js:24
+ 24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
+                          ^^^^^^^^^^^^^^^ constructor call
+ 24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
+                          ^^^^^^^^^^^^^^^ ClassFoo2. This type is incompatible with
+ 24: var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
+             ^^^^^^^^^^ class type: ClassFoo2
 
-import_typeof.js:24:22,36: constructor call
-Error:
-import_typeof.js:24:22,36: ClassFoo2
-This type is incompatible with
-import_typeof.js:24:9,18: class type: ClassFoo2
+import_typeof.js:25
+ 25: new ClassFoo2T(); // Error: ClassFoo2T is not bound to a value
+         ^^^^^^^^^^ ClassFoo2T. type referenced from value position
+ 20: import typeof {ClassFoo2 as ClassFoo2T} from "./ExportNamed_Class";
+                    ^^^^^^^^^^^^^^^^^^^^^^^ type ClassFoo2T
 
-import_typeof.js:25:5,14: ClassFoo2T
-type referenced from value position
-import_typeof.js:20:16,38: type ClassFoo2T
+import_typeof.js:35
+ 35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
+                          ^^^^^^^^^^^^^^^ constructor call
+ 35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
+                          ^^^^^^^^^^^^^^^ ClassFoo3. This type is incompatible with
+ 35: var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
+             ^^^^^^^^^^ class type: ClassFoo3
 
-import_typeof.js:35:22,36: constructor call
-Error:
-import_typeof.js:35:22,36: ClassFoo3
-This type is incompatible with
-import_typeof.js:35:9,18: class type: ClassFoo3
+import_typeof.js:45
+ 45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
+                          ^^^^^^^^^^^^^^^ constructor call
+ 45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
+                          ^^^^^^^^^^^^^^^ ClassFoo4. This type is incompatible with
+ 45: var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)
+             ^^^^^^^^^^ class type: ClassFoo4
 
-import_typeof.js:45:22,36: constructor call
-Error:
-import_typeof.js:45:22,36: ClassFoo4
-This type is incompatible with
-import_typeof.js:45:9,18: class type: ClassFoo4
+import_typeof.js:51
+ 51: import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
+                    ^^^^^^^^^ Named import from module `./ExportNamed_Alias`. The `AliasFoo3` export is a type, but not a value. `import typeof` only works on value exports like classes, vars, lets, etc. If you intended to import a type alias or interface, please use `import type` instead.
 
-import_typeof.js:51:16,24: Named import from module `./ExportNamed_Alias`
-The `AliasFoo3` export is a type, but not a value. `import typeof` only works on value exports like classes, vars, lets, etc. If you intended to import a type alias or interface, please use `import type` instead.
+import_typeof.js:68
+ 68: var f2: num_default = 'asdf'; // Error: string ~> number
+                           ^^^^^^ string. This type is incompatible with
+ 68: var f2: num_default = 'asdf'; // Error: string ~> number
+             ^^^^^^^^^^^ number
 
-import_typeof.js:68:23,28: string
-This type is incompatible with
-import_typeof.js:68:9,19: number
+import_typeof.js:77
+ 77: var g2: num_named = 'asdf'; // Error: string ~> number
+                         ^^^^^^ string. This type is incompatible with
+ 77: var g2: num_named = 'asdf'; // Error: string ~> number
+             ^^^^^^^^^ number
 
-import_typeof.js:77:21,26: string
-This type is incompatible with
-import_typeof.js:77:9,17: number
+import_typeof.js:86
+ 86: var h2: num_cjs_default = 'asdf'; // Error: string ~> number
+                               ^^^^^^ string. This type is incompatible with
+ 86: var h2: num_cjs_default = 'asdf'; // Error: string ~> number
+             ^^^^^^^^^^^^^^^ number
 
-import_typeof.js:86:27,32: string
-This type is incompatible with
-import_typeof.js:86:9,23: number
+import_typeof.js:95
+ 95: var i2: num_cjs_named = 'asdf'; // Error: string ~> number
+                             ^^^^^^ string. This type is incompatible with
+ 95: var i2: num_cjs_named = 'asdf'; // Error: string ~> number
+             ^^^^^^^^^^^^^ number
 
-import_typeof.js:95:25,30: string
-This type is incompatible with
-import_typeof.js:95:9,21: number
+import_typeof.js:103
+103: var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
+                                           ^^ number. This type is incompatible with
+  4: export var str = 'asdf';
+                ^^^ string. See: ExportNamed_Multi.js:4
 
-import_typeof.js:103:39,40: number
-This type is incompatible with
-ExportNamed_Multi.js:4:12,14: string
 
 Found 12 errors

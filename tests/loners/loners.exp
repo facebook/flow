@@ -1,6 +1,8 @@
+loners.js:2
+  2: var z = o.z;
+               ^ property `z`. Property not found in
+  2: var z = o.z;
+             ^ object literal
 
-loners.js:2:11,11: property `z`
-Property not found in
-loners.js:2:9,9: object literal
 
 Found 1 error

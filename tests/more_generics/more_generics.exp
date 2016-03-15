@@ -1,20 +1,28 @@
+poly.js:3
+  3: function foo2<T,S>(x:T):S { return x; }
+                                        ^ T. This type is incompatible with
+  3: function foo2<T,S>(x:T):S { return x; }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `S`
 
-poly.js:3:36,36: T
-This type is incompatible with
-poly.js:3:1,39: some incompatible instantiation of `S`
+poly.js:10
+ 10: function foo5<T>():Array<T> { return x; }
+                   ^ T. This type is incompatible with
+ 10: function foo5<T>():Array<T> { return x; }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `T`
 
-poly.js:10:15,15: T
-This type is incompatible with
-poly.js:10:1,41: some incompatible instantiation of `T`
+poly.js:20
+ 20: function foo7<R>(x:R):R { return foo5(); }
+                                      ^^^^^^ array type. This type is incompatible with
+ 20: function foo7<R>(x:R):R { return foo5(); }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `R`
 
-poly.js:20:34,39: array type
-This type is incompatible with
-poly.js:20:1,42: some incompatible instantiation of `R`
+poly.js:23
+ 23:   var z = foo8(x,x);
+               ^^^^^^^^^ function call
+ 24:   y();
+       ^^^ function call. Function cannot be called on
+ 24:   y();
+       ^ U
 
-poly.js:23:11,19: function call
-Error:
-poly.js:24:3,5: function call
-Function cannot be called on
-poly.js:24:3,3: U
 
 Found 4 errors

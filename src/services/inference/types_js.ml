@@ -1295,20 +1295,23 @@ let full_check workers ~ordered_libs parse_next opts =
 
 (* helper - print errors. used in check-and-die runs *)
 let print_errors options errors =
+  let strip_root = Options.should_strip_root options in
   let errors =
-    if Options.should_strip_root options then (
+    if strip_root then (
       let root = FlowConfig.((get_unsafe ()).root) in
       Errors.strip_root_from_errors root errors
     )
     else errors
   in
 
+  let root = Options.root options in
   if options.Options.opt_json
-  then Errors.print_error_json stdout errors
+  then Errors.print_error_json ~root stdout errors
   else
     Errors.print_error_summary
       ~flags:(Options.error_flags options)
-      ~root:(Options.root options)
+      ~strip_root
+      ~root
       errors
 
 (* initialize flow server state, including full check *)

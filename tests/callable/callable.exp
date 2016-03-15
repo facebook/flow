@@ -1,12 +1,16 @@
+primitives.js:6
+  6: dict(); // error, callable signature not found
+     ^^^^^^ function call. Callable signature not found in
+  6: dict(); // error, callable signature not found
+     ^^^^ object type
 
-primitives.js:6:1,6: function call
-Callable signature not found in
-primitives.js:6:1,4: object type
+primitives.js:12
+ 12: icall(0); // error, number ~> string
+     ^^^^^^^^ function call
+ 12: icall(0); // error, number ~> string
+           ^ number. This type is incompatible with
+  9:   (x: string): void;
+           ^^^^^^ string
 
-primitives.js:12:1,8: function call
-Error:
-primitives.js:12:7,7: number
-This type is incompatible with
-primitives.js:9:7,12: string
 
 Found 2 errors

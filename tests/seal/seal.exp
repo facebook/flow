@@ -1,6 +1,8 @@
+obj_annot.js:4
+  4:     return param.id;
+                      ^^ property `id`. Property not found in
+  4:     return param.id;
+                ^^^^^ object type
 
-obj_annot.js:4:18,19: property `id`
-Property not found in
-obj_annot.js:4:12,16: object type
 
 Found 1 error

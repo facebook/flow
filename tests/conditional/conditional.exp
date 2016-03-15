@@ -1,10 +1,14 @@
+conditional.js:23
+ 23:   return (x != null) ? x : (x != null);
+                            ^ number. This type is incompatible with
+ 20: function d(): string { // expected `: number | boolean`
+                   ^^^^^^ string
 
-conditional.js:23:24,24: number
-This type is incompatible with
-conditional.js:20:15,20: string
+conditional.js:23
+ 23:   return (x != null) ? x : (x != null);
+                                 ^^^^^^^^^ boolean. This type is incompatible with
+ 20: function d(): string { // expected `: number | boolean`
+                   ^^^^^^ string
 
-conditional.js:23:29,37: boolean
-This type is incompatible with
-conditional.js:20:15,20: string
 
 Found 2 errors

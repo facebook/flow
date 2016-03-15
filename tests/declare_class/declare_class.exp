@@ -1,24 +1,34 @@
+lib/test.js:0
+  0: 
+     ^ Library type error:
+  0: 
+     ^ inconsistent use of library definitions
+  8:   foo(): string;
+              ^^^^^^ string. This type is incompatible with
+  2:   foo(): number;
+              ^^^^^^ number
 
-[LIB] lib/test.js: Library type error:
-[LIB] lib/test.js: inconsistent use of library definitions
-[LIB] lib/test.js:8:10,15: string
-This type is incompatible with
-[LIB] lib/test.js:2:10,15: number
+declare_class.js:6
+  6: C.x = "";
+     ^^^ assignment of property `x`
+  6: C.x = "";
+           ^^ string. This type is incompatible with
+  2:     static x: number;
+                   ^^^^^^ number
 
-declare_class.js:6:1,3: assignment of property `x`
-Error:
-declare_class.js:6:7,8: string
-This type is incompatible with
-declare_class.js:2:15,20: number
+declare_class.js:7
+  7: C.foo("");
+     ^^^^^^^^^ call of method `foo`
+  7: C.foo("");
+           ^^ string. This type is incompatible with
+  3:     static foo(x: number): void;
+                       ^^^^^^ number
 
-declare_class.js:7:1,9: call of method `foo`
-Error:
-declare_class.js:7:7,8: string
-This type is incompatible with
-declare_class.js:3:19,24: number
+declare_class.js:10
+ 10: (C.name: number); // error, it's a string
+      ^^^^^^ string. This type is incompatible with
+ 10: (C.name: number); // error, it's a string
+              ^^^^^^ number
 
-declare_class.js:10:2,7: string
-This type is incompatible with
-declare_class.js:10:10,15: number
 
 Found 4 errors
