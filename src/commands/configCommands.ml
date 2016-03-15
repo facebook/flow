@@ -39,7 +39,19 @@ module Init = struct
     let ignores = flowconfig_flags.CommandUtils.ignores in
     let includes = flowconfig_flags.CommandUtils.includes in
     let libs = flowconfig_flags.CommandUtils.libs in
-    FlowConfig.init ~root ~ignores ~includes ~libs ~options
+
+    let file = FlowConfig.fullpath root in
+    if Sys.file_exists file
+    then begin
+      let msg = Utils_js.spf "Error: \"%s\" already exists!\n%!" file in
+      FlowExitStatus.(exit ~msg Invalid_flowconfig)
+    end;
+
+    let config = FlowConfig.init ~root ~ignores ~includes ~libs ~options in
+
+    let out = Sys_utils.open_out_no_fail file in
+    FlowConfig.write config out;
+    Sys_utils.close_out_no_fail file out
 
   let command = CommandSpec.command spec main
 end

@@ -69,6 +69,7 @@ val init:
   includes: string list ->
   libs: string list ->
   options: string list ->
-  unit
+  config
+val write: config -> out_channel -> unit
 
 val version: string

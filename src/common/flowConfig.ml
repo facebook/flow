@@ -9,7 +9,6 @@
  *)
 
 open Utils_js
-open Sys_utils
 
 let version = "0.22.1"
 
@@ -658,18 +657,12 @@ let fullpath root =
 
 let read root =
   let filename = fullpath root in
-  let lines = cat_no_fail filename |> split_lines in
+  let lines = Sys_utils.cat_no_fail filename |> Sys_utils.split_lines in
   let config = empty_config root in
   let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
   parse config lines
 
 let init ~root ~ignores ~includes ~libs ~options =
-  let file = fullpath root in
-  if Sys.file_exists file
-  then begin
-    let msg = spf "Error: \"%s\" already exists!\n%!" file in
-    FlowExitStatus.(exit ~msg Invalid_flowconfig)
-  end;
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
@@ -678,9 +671,9 @@ let init ~root ~ignores ~includes ~libs ~options =
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
   let config = parse_libs config lib_lines in
-  let out = open_out_no_fail (fullpath root) in
-  Pp.config out config;
-  close_out_no_fail (fullpath root) out
+  config
+
+let write config oc = Pp.config oc config
 
 (* We should restart every time the config changes, so it's cool to cache it *)
 let cache = ref None
