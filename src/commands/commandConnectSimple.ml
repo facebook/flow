@@ -8,6 +8,8 @@
  *
  *)
 
+module Server_files = Server_files_js
+
 type error =
   | Server_missing
   | Server_initializing
@@ -18,7 +20,7 @@ type error =
 exception ConnectTimeout
 
 let server_exists ~tmp_dir root =
-  not (Lock.check (FlowConfig.lock_file ~tmp_dir root))
+  not (Lock.check (Server_files.lock_file ~tmp_dir root))
 
 let wait_on_server_restart ic =
   try
@@ -63,7 +65,7 @@ let close_connection sockaddr =
       Timeout.close_in_noerr ic
 
 let establish_connection ~timeout ~tmp_dir root =
-  let sock_name = Socket.get_path (FlowConfig.socket_file ~tmp_dir root) in
+  let sock_name = Socket.get_path (Server_files.socket_file ~tmp_dir root) in
   let sockaddr =
     if Sys.win32 then
       let ic = open_in_bin sock_name in
@@ -122,8 +124,8 @@ let connect_once ~tmp_dir root =
   with
   | _ ->
     if not (server_exists ~tmp_dir root) then Result.Error Server_missing
-    else if not (Lock.check (FlowConfig.init_file ~tmp_dir root))
+    else if not (Lock.check (Server_files.init_file ~tmp_dir root))
     then Result.Error Server_initializing
-    else if not (Lock.check (FlowConfig.recheck_file ~tmp_dir root))
+    else if not (Lock.check (Server_files.recheck_file ~tmp_dir root))
     then Result.Error Server_rechecking
     else Result.Error Server_busy

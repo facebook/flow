@@ -56,13 +56,6 @@ val get: Path.t -> config
 val get_unsafe: unit -> config
 val fullpath: Path.t -> string
 
-val init_file: tmp_dir:string -> Path.t -> string
-val recheck_file: tmp_dir:string -> Path.t -> string
-val lock_file: tmp_dir:string -> Path.t -> string
-val pids_file: tmp_dir:string -> Path.t -> string
-val socket_file: tmp_dir:string -> Path.t -> string
-val log_file: tmp_dir:string -> Path.t -> Opts.t -> Path.t
-
 val init:
   root: Path.t ->
   ignores: string list ->

@@ -13,6 +13,7 @@ open ServerEnv
 open ServerUtils
 open Utils_js
 module List = Core_list
+module Server_files = Server_files_js
 
 exception State_not_found
 
@@ -30,7 +31,7 @@ module type SERVER_PROGRAM = sig
 end
 
 let grab_lock ~tmp_dir root =
-  if not (Lock.grab (FlowConfig.lock_file ~tmp_dir root))
+  if not (Lock.grab (Server_files.lock_file ~tmp_dir root))
   then
     let msg = "Error: another server is already running?\n" in
     FlowExitStatus.(exit ~msg Lock_stolen)
@@ -48,10 +49,10 @@ module MainInit : sig
 end = struct
 
   let grab_init_lock ~tmp_dir root =
-    ignore(Lock.grab (FlowConfig.init_file ~tmp_dir root))
+    ignore(Lock.grab (Server_files.init_file ~tmp_dir root))
 
   let release_init_lock ~tmp_dir root =
-    ignore(Lock.release (FlowConfig.init_file ~tmp_dir root))
+    ignore(Lock.release (Server_files.init_file ~tmp_dir root))
 
   let wakeup_client oc msg =
     Option.iter oc begin fun oc ->
@@ -151,9 +152,9 @@ end = struct
     let root = Options.root genv.ServerEnv.options in
     let tmp_dir = Options.temp_dir genv.ServerEnv.options in
 
-    ignore(Lock.grab (FlowConfig.recheck_file ~tmp_dir root));
+    ignore(Lock.grab (Server_files.recheck_file ~tmp_dir root));
     let env = Program.recheck genv old_env updates in
-    ignore(Lock.release (FlowConfig.recheck_file ~tmp_dir root));
+    ignore(Lock.release (Server_files.recheck_file ~tmp_dir root));
     env, updates
 
   (* When a rebase occurs, dfind takes a while to give us the full list of
@@ -184,7 +185,7 @@ end = struct
     let env = ref env in
     let rechecked = ref false in
     while true do
-      let lock_file = FlowConfig.lock_file ~tmp_dir root in
+      let lock_file = Server_files.lock_file ~tmp_dir root in
       if not (Lock.check lock_file) then begin
         Flow_logger.log "Lost %s lock; reacquiring.\n" Program.name;
         FlowEventLogger.lock_lost lock_file;
@@ -233,7 +234,7 @@ end = struct
     begin if not is_check_mode
     then begin
       grab_lock ~tmp_dir root;
-      PidLog.init (FlowConfig.pids_file ~tmp_dir root);
+      PidLog.init (Server_files.pids_file ~tmp_dir root);
       PidLog.log ~reason:"main" (Unix.getpid())
     end else
       PidLog.disable ()
@@ -252,7 +253,9 @@ end = struct
       * connections until init is done) so that the client can try to use the
       * socket and get blocked on it -- otherwise, trying to open a socket with
       * no server on the other end is an immediate error. *)
-      let socket = Socket.init_unix_socket (FlowConfig.socket_file ~tmp_dir root) in
+      let socket = Socket.init_unix_socket (
+        Server_files.socket_file ~tmp_dir root
+      ) in
       let env = MainInit.go options program_init waiting_channel in
       let dfind = match genv.dfind with
       | Some dfind -> dfind
@@ -323,7 +326,7 @@ end = struct
   let daemonize options =
     (* Let's make sure this isn't all for naught before we fork *)
     let { Options.opt_root; opt_temp_dir; _ } = options in
-    let lock = FlowConfig.lock_file ~tmp_dir:opt_temp_dir opt_root in
+    let lock = Server_files.lock_file ~tmp_dir:opt_temp_dir opt_root in
     if not (Lock.check lock)
     then begin
       let msg = spf

@@ -240,7 +240,7 @@ let connect server_flags root =
   in
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
   let log_file =
-    Path.to_string (FlowConfig.log_file ~tmp_dir root config_options) in
+    Path.to_string (Server_files_js.log_file ~tmp_dir root config_options) in
   let retries = server_flags.retries in
   let retry_if_init = server_flags.retry_if_init in
   let expiry = match server_flags.timeout with

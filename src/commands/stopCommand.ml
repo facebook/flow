@@ -66,7 +66,7 @@ let mean_kill ~tmp_dir root =
   Utils_js.prerr_endlinef "Attempting to meanly kill server for %s"
     (Path.to_string root);
   let pids =
-    try PidLog.get_pids (FlowConfig.pids_file ~tmp_dir root)
+    try PidLog.get_pids (Server_files_js.pids_file ~tmp_dir root)
     with PidLog.FailedToGetPids -> Printf.fprintf stderr
         "Unable to figure out pids of running Flow server. \
         Try manually killing it with 'pkill %s' (be careful on shared \

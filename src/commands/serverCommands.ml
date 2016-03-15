@@ -198,9 +198,11 @@ module OptionParser(Config : CONFIG) = struct
           let dirname = Path.make (Filename.dirname s) in
           let basename = Filename.basename s in
           Path.concat dirname basename
-      | None -> FlowConfig.(
-          log_file ~tmp_dir:opt_temp_dir root flowconfig.options
-        )
+      | None ->
+          Server_files_js.log_file
+            ~tmp_dir:opt_temp_dir
+            root
+            flowconfig.FlowConfig.options
     in
     let opt_max_workers = match max_workers with
     | Some x -> x

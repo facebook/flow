@@ -251,27 +251,6 @@ type config = {
   root: Path.t;
 }
 
-let add_dir_sep dir =
-  let open Filename in
-  if check_suffix dir dir_sep
-  then dir
-  else dir ^ dir_sep
-
-let file_of_root extension ~tmp_dir root =
-  let tmp_dir = tmp_dir |> Path.make |> Path.to_string |> add_dir_sep in
-  let root_part = Path.slash_escaped_string_of_path root in
-  Printf.sprintf "%s%s.%s" tmp_dir root_part extension
-
-let init_file    = file_of_root "init"
-let recheck_file = file_of_root "recheck"
-let lock_file    = file_of_root "lock"
-let pids_file    = file_of_root "pids"
-let socket_file  = file_of_root "sock"
-let log_file ~tmp_dir root opts =
-  match opts.Opts.log_file with
-  | Some x -> x
-  | None -> Path.make (file_of_root "log" ~tmp_dir root)
-
 module Pp : sig
   val config : out_channel -> config -> unit
 end = struct
