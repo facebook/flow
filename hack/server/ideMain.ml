@@ -207,6 +207,10 @@ let get_client_job ((client_ic, _) as client) =
 
 let daemon_main options (parent_ic, _parent_oc) =
   Printexc.record_backtrace true;
+
+  let gc_control = Gc.get () in
+  Gc.set {gc_control with Gc.max_overhead = 200};
+
   SharedMem.enable_local_writes ();
   let parent_in_fd = Daemon.descr_of_in_channel parent_ic in
   let typechecker_process = IdeProcessPipeInit.ide_recv parent_in_fd in
