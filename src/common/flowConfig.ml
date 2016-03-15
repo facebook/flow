@@ -245,7 +245,7 @@ type config = {
   (* non-root include paths *)
   includes: string list;
   (* library paths. no wildcards *)
-  libs: Path.t list;
+  libs: string list;
   (* config options *)
   options: Opts.t;
   (* root path *)
@@ -288,7 +288,7 @@ end = struct
     List.iter (fun inc -> (fprintf o "%s\n" inc)) includes
 
   let libs o libs =
-    List.iter (fun lib -> (fprintf o "%s\n" (Path.to_string lib))) libs
+    List.iter (fun lib -> (fprintf o "%s\n" lib)) libs
 
   let options =
     let opt o name value = fprintf o "%s=%s\n" name value
@@ -355,9 +355,7 @@ let parse_includes config lines =
   { config with includes; }
 
 let parse_libs config lines =
-  let libs = lines
-  |> trim_lines
-  |> List.map (Files_js.make_path_absolute config.root) in
+  let libs = trim_lines lines in
   { config with libs; }
 
 let parse_ignores config lines =
@@ -665,7 +663,7 @@ let read root =
   let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
   parse config lines
 
-let init root ignores includes options =
+let init ~root ~ignores ~includes ~libs ~options =
   let file = fullpath root in
   if Sys.file_exists file
   then begin
@@ -675,9 +673,11 @@ let init root ignores includes options =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
+  let lib_lines = List.map (fun s -> (1, s)) libs in
   let config = parse_ignores (empty_config root) ignores_lines in
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
+  let config = parse_libs config lib_lines in
   let out = open_out_no_fail (fullpath root) in
   Pp.config out config;
   close_out_no_fail (fullpath root) out

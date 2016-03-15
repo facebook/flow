@@ -108,13 +108,7 @@ module OptionParser(Config : CONFIG) = struct
         exe_name cmdname cmddoc;
   }
 
-  let list_of_string_arg arg_str =
-    match arg_str with
-    | None -> []
-    | Some arg_str -> Str.split (Str.regexp ",") arg_str
-
-  let ignores_of_arg patterns arg_str =
-    let extras = list_of_string_arg arg_str in
+  let ignores_of_arg patterns extras =
     let patterns = List.rev_append extras patterns in
     List.map (fun s ->
       (* On Windows, we have to take care about '\'. *)
@@ -136,6 +130,17 @@ module OptionParser(Config : CONFIG) = struct
       let msg = "Could not locate flowlib files" in
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
     end
+
+  let libs ~root flowconfig extras =
+    let config_libs =
+      List.map (Files_js.make_path_absolute root) flowconfig.FlowConfig.libs in
+    match extras with
+    | None -> config_libs
+    | Some libs ->
+      let libs = libs
+      |> Str.split (Str.regexp ",")
+      |> List.map Path.make in
+      config_libs @ libs
 
   let result = ref None
   let main
@@ -166,21 +171,13 @@ module OptionParser(Config : CONFIG) = struct
     let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
     | Opts.Node -> "node"
     | Opts.Haste -> "haste") in
-    let opt_libs = FlowConfig.(match lib with
-    | None -> flowconfig.libs
-    | Some libs ->
-        let libs = libs
-        |> Str.split (Str.regexp ",")
-        |> List.map Path.make in
-        flowconfig.libs @ libs
-    ) in
     let opt_ignores = ignores_of_arg
       flowconfig.FlowConfig.ignores
       flowconfig_flags.ignores in
     let opt_includes =
       let includes = List.rev_append
         flowconfig.FlowConfig.includes
-        (list_of_string_arg flowconfig_flags.includes) in
+        flowconfig_flags.includes in
       includes_of_arg root includes in
     let opt_traces = match traces with
       | Some level -> level
@@ -239,7 +236,7 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_profile = profile;
       Options.opt_strip_root;
       Options.opt_module;
-      Options.opt_libs;
+      Options.opt_libs = libs ~root flowconfig lib;
       Options.opt_default_lib_dir;
       Options.opt_munge_underscores = opt_munge_underscores;
       Options.opt_temp_dir;

@@ -45,7 +45,7 @@ type config = {
   (* non-root include paths *)
   includes: string list;
   (* library paths. no wildcards *)
-  libs: Path.t list;
+  libs: string list;
   (* config options *)
   options: Opts.t;
   (* root path *)
@@ -63,6 +63,12 @@ val pids_file: tmp_dir:string -> Path.t -> string
 val socket_file: tmp_dir:string -> Path.t -> string
 val log_file: tmp_dir:string -> Path.t -> Opts.t -> Path.t
 
-val init: Path.t -> string list -> string list -> string list -> unit
+val init:
+  root: Path.t ->
+  ignores: string list ->
+  includes: string list ->
+  libs: string list ->
+  options: string list ->
+  unit
 
 val version: string

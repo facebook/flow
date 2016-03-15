@@ -36,15 +36,10 @@ module Init = struct
     | None -> []
     | Some str -> Str.split (Str.regexp ";") str
     in
-    let ignores = match flowconfig_flags.CommandUtils.ignores with
-    | None -> []
-    | Some str -> Str.split (Str.regexp ",") str
-    in
-    let includes = match flowconfig_flags.CommandUtils.includes with
-    | None -> []
-    | Some str -> Str.split (Str.regexp ",") str
-    in
-    FlowConfig.init root ignores includes options
+    let ignores = flowconfig_flags.CommandUtils.ignores in
+    let includes = flowconfig_flags.CommandUtils.includes in
+    let libs = flowconfig_flags.CommandUtils.libs in
+    FlowConfig.init ~root ~ignores ~includes ~libs ~options
 
   let command = CommandSpec.command spec main
 end

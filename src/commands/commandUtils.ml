@@ -161,12 +161,21 @@ let root_flag prev = CommandSpec.ArgSpec.(
 )
 
 type flowconfig_params = {
-  ignores: string option;
-  includes: string option;
+  ignores: string list;
+  includes: string list;
+  libs: string list;
 }
 
-let collect_flowconfig_flags main ignores includes =
-  main { ignores; includes; }
+let collect_flowconfig_flags =
+  let list_of_string_arg = function
+  | None -> []
+  | Some arg_str -> Str.split (Str.regexp ",") arg_str
+  in
+  fun main ignores_str includes_str lib_str ->
+    let ignores = list_of_string_arg ignores_str in
+    let includes = list_of_string_arg includes_str in
+    let libs = list_of_string_arg lib_str in
+    main { ignores; includes; libs; }
 
 let flowconfig_flags prev = CommandSpec.ArgSpec.(
   prev
@@ -175,6 +184,8 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
     ~doc:"Specify one or more ignore patterns, comma separated"
   |> flag "--include" (optional string)
     ~doc:"Specify one or more include patterns, comma separated"
+  |> flag "--libs" (optional string)
+    ~doc:"Specify one or more lib files/directories, comma separated"
 )
 
 (* relativize a loc's source path to a given root whenever strip_root is set *)
