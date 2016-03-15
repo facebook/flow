@@ -32,6 +32,7 @@ type t =
   | Dfind_died
   | Dfind_unresponsive
   | EventLogger_Timeout
+  | EventLogger_broken_pipe
   | CantRunAI
   | Watchman_failed
   | Hhconfig_deleted
@@ -77,6 +78,7 @@ let ec t = match t with
   | Hhconfig_deleted -> 104
   | Hhconfig_changed -> 4
   | Server_name_not_found -> 105
+  | EventLogger_broken_pipe -> 106
   | IDE_malformed_request -> 201
   | IDE_no_server -> 202
   | IDE_out_of_retries -> 203
@@ -113,6 +115,7 @@ let to_string = function
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
   | EventLogger_Timeout -> "EventLogger_Timeout"
+  | EventLogger_broken_pipe -> "EventLogger_broken_pipe"
   | CantRunAI -> "CantRunAI"
   | Watchman_failed -> "Watchman_failed"
   | Hhconfig_deleted -> "Hhconfig_deleted"
