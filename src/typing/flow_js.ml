@@ -3185,7 +3185,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           then String.sub raw 1 (raw_len - 1)
           else "-" ^ raw
         in
-        NumT (reason_op, Literal (~-. value, raw))
+        NumT (replace_reason "number" reason_op, Literal (~-. value, raw))
       | AnyLiteral
       | Truthy ->
         l

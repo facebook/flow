@@ -27,4 +27,8 @@ unary.js:19:11,11: string
 This type is incompatible with
 unary.js:19:10,11: number
 
-Found 7 errors
+unary.js:26:2,3: number
+This type is incompatible with
+unary.js:26:6,9: undefined
+
+Found 8 errors

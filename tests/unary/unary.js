@@ -22,3 +22,5 @@ function x3(y: string) {
 function x4(y: string): boolean {
   return !y; // ok, coercion is allowed
 }
+
+(-1: void); // error, number ~> void
