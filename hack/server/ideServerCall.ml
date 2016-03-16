@@ -48,6 +48,13 @@ let get_colour_response tcopt files_info path =
   let colors = ColorFile.go file_contents coverage in
   Colour_response (ServerColorFile.to_json colors)
 
+let get_find_lvar_refs_response tcopt files_info content line column =
+  let get_result = FindLocalsService.attach_hooks line column in
+  ignore (ServerIdeUtils.check_file_input
+    tcopt files_info (ServerUtils.FileContent content));
+  FindLocalsService.detach_hooks ();
+  Find_lvar_refs_response (get_result ())
+
 let get_call_response id call tcopt files_info errorl =
   match call with
   | Auto_complete_call content ->
@@ -57,10 +64,12 @@ let get_call_response id call tcopt files_info errorl =
   | Search_call s ->
     Result (get_search_response s)
   | Status_call ->
-    Result( get_status_reponse errorl)
+    Result (get_status_reponse errorl)
   | IdeJson.Find_refs_call s ->
     (* TODO: we can also lookup dependency table and fulfill requests with
      * only several dependencies in IDE process *)
     Deferred_to_typechecker (Find_refs_call s)
   | Colour_call path ->
     Result (get_colour_response tcopt files_info path)
+  | Find_lvar_refs_call (content, line, column) ->
+    Result (get_find_lvar_refs_response tcopt files_info content line column)

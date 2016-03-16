@@ -19,6 +19,7 @@ type call_type =
   | Status_call
   | Find_refs_call of FindRefsService.action
   | Colour_call of string
+  | Find_lvar_refs_call of string * int * int
 
 type response_type =
   | Auto_complete_response of Hh_json.json
@@ -27,6 +28,7 @@ type response_type =
   | Status_response of Hh_json.json
   | Find_refs_response of FindRefsService.result
   | Colour_response of Hh_json.json
+  | Find_lvar_refs_response of Pos.t list
 
 type parsing_result =
   (* Parsing_error means that message was unrecoverably mangled (eg. no ID, or

@@ -13,6 +13,7 @@ open Core
 open Hh_json
 open Result
 open Result.Monad_infix
+open Utils
 
 let server_busy_error_code = 1
 let invalid_call_error_code = 2
@@ -62,6 +63,15 @@ let args_to_call = function
   | [JSON_String "--color"; JSON_String path]
   | [JSON_String "--colour"; JSON_String path] ->
     Colour_call path
+  | [JSON_String "--find-lvar-refs";
+     JSON_String content;
+     JSON_Number line;
+     JSON_Number column
+    ] -> begin
+      try Find_lvar_refs_call(
+        content, int_of_string line, int_of_string column)
+      with _ -> raise Not_found
+    end
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -150,6 +160,12 @@ let json_string_of_response id response =
     | Status_response r -> r
     | Find_refs_response r -> ServerFindRefs.to_json r
     | Colour_response r -> r
+    | Find_lvar_refs_response pos_list ->
+      let res_list = List.map pos_list (compose Pos.json Pos.to_absolute) in
+      JSON_Object [
+        "positions",      JSON_Array res_list;
+        "internal_error", JSON_Bool false
+      ]
   in
   json_to_string (build_response_json id result_field)
 
