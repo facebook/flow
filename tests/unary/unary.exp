@@ -40,9 +40,11 @@ unary.js:19
  19:   return ~y;  // error, we don't allow coercion here
               ^^ number
 
+unary.js:26
+ 26: (-1: void); // error, number ~> void
+      ^^ number. This type is incompatible with
+ 26: (-1: void); // error, number ~> void
+          ^^^^ undefined
 
-unary.js:26:2,3: number
-This type is incompatible with
-unary.js:26:6,9: undefined
 
 Found 8 errors
