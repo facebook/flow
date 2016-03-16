@@ -12,11 +12,22 @@ type env = Scope.t list
 
 type metadata = {
   checked: bool;
-  weak: bool;
-  munge_underscores: bool;
-  verbose: int option;
-  strip_root: bool;
+  enable_const_params: bool;
+  enable_unsafe_getters_and_setters: bool;
+  esproposal_class_static_fields: Options.esproposal_feature_mode;
+  esproposal_class_instance_fields: Options.esproposal_feature_mode;
+  esproposal_decorators: Options.esproposal_feature_mode;
+  esproposal_export_star_as: Options.esproposal_feature_mode;
+  facebook_ignore_fbt: bool;
+  ignore_non_literal_requires: bool;
   max_trace_depth: int;
+  munge_underscores: bool;
+  root: Path.t;
+  strip_root: bool;
+  suppress_comments: Str.regexp list;
+  suppress_types: SSet.t;
+  verbose: int option;
+  weak: bool;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)
@@ -58,6 +69,30 @@ and module_exports_type =
   | CommonJSModule of Loc.t option
   | ESModule
 
+let metadata_of_options options = {
+  checked = Options.all options;
+  enable_const_params = Options.enable_const_params options;
+  enable_unsafe_getters_and_setters =
+    Options.enable_unsafe_getters_and_setters options;
+  esproposal_class_static_fields =
+    Options.esproposal_class_static_fields options;
+  esproposal_class_instance_fields =
+    Options.esproposal_class_instance_fields options;
+  esproposal_decorators = Options.esproposal_decorators options;
+  esproposal_export_star_as = Options.esproposal_export_star_as options;
+  facebook_ignore_fbt = Options.should_ignore_fbt options;
+  ignore_non_literal_requires =
+    Options.should_ignore_non_literal_requires options;
+  max_trace_depth = Options.max_trace_depth options;
+  munge_underscores = Options.should_munge_underscores options;
+  root = Options.root options;
+  strip_root = Options.should_strip_root options;
+  suppress_comments = Options.suppress_comments options;
+  suppress_types = Options.suppress_types options;
+  verbose = Options.verbose options;
+  weak = Options.weak_by_default options;
+}
+
 (* create a new context structure.
    Flow_js.fresh_context prepares for actual use.
  *)
@@ -85,21 +120,20 @@ let make metadata file module_name = {
   annot_table = Hashtbl.create 0;
 }
 
-let make_simple ?(metadata = {
-    checked = false;
-    weak = false;
-    munge_underscores = false;
-    verbose = None;
-    strip_root = false;
-    max_trace_depth = 0;
-  }) (filename:Loc.filename) =
-  make metadata filename (Modulename.Filename filename)
-
 (* accessors *)
 let annot_table cx = cx.annot_table
 let envs cx = cx.envs
+let enable_const_params cx = cx.metadata.enable_const_params
+let enable_unsafe_getters_and_setters cx =
+  cx.metadata.enable_unsafe_getters_and_setters
 let errors cx = cx.errors
 let error_suppressions cx = cx.error_suppressions
+let esproposal_class_static_fields cx =
+  cx.metadata.esproposal_class_static_fields
+let esproposal_class_instance_fields cx =
+  cx.metadata.esproposal_class_instance_fields
+let esproposal_decorators cx = cx.metadata.esproposal_decorators
+let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
 let evaluated cx = cx.evaluated
 let file cx = cx.file
 let find_props cx id = IMap.find_unsafe id cx.property_maps
@@ -116,8 +150,14 @@ let module_name cx = cx.module_name
 let property_maps cx = cx.property_maps
 let required cx = cx.required
 let require_loc cx = cx.require_loc
+let root cx = cx.metadata.root
+let should_ignore_fbt cx = cx.metadata.facebook_ignore_fbt
+let should_ignore_non_literal_requires cx =
+  cx.metadata.ignore_non_literal_requires
 let should_munge_underscores cx  = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root
+let suppress_comments cx = cx.metadata.suppress_comments
+let suppress_types cx = cx.metadata.suppress_types
 let type_table cx = cx.type_table
 let verbose cx = cx.metadata.verbose
 

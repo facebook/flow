@@ -245,6 +245,36 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_max_workers;
       Options.opt_ignores;
       Options.opt_includes;
+      Options.opt_suppress_comments = FlowConfig.(
+        flowconfig.options.Opts.suppress_comments
+      );
+      Options.opt_suppress_types = FlowConfig.(
+        flowconfig.options.Opts.suppress_types
+      );
+      Options.opt_enable_const_params = FlowConfig.(
+        flowconfig.options.Opts.enable_const_params
+      );
+      Options.opt_enable_unsafe_getters_and_setters = FlowConfig.(
+        flowconfig.options.Opts.enable_unsafe_getters_and_setters
+      );
+      Options.opt_esproposal_decorators = FlowConfig.(
+        flowconfig.options.Opts.esproposal_decorators
+      );
+      Options.opt_esproposal_export_star_as = FlowConfig.(
+        flowconfig.options.Opts.esproposal_export_star_as
+      );
+      Options.opt_ignore_fbt = FlowConfig.(
+        flowconfig.options.Opts.facebook_ignore_fbt
+      );
+      Options.opt_ignore_non_literal_requires = FlowConfig.(
+        flowconfig.options.Opts.ignore_non_literal_requires
+      );
+      Options.opt_esproposal_class_static_fields = FlowConfig.(
+        flowconfig.options.Opts.esproposal_class_static_fields
+      );
+      Options.opt_esproposal_class_instance_fields = FlowConfig.(
+        flowconfig.options.Opts.esproposal_class_instance_fields
+      );
     };
     ()
 

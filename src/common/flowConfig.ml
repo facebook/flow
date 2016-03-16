@@ -29,18 +29,13 @@ module Opts = struct
 
   type moduleSystem = Node | Haste
 
-  type esproposal_feature_mode =
-    | ESPROPOSAL_ENABLE
-    | ESPROPOSAL_IGNORE
-    | ESPROPOSAL_WARN
-
   type t = {
     enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
-    esproposal_class_instance_fields: esproposal_feature_mode;
-    esproposal_class_static_fields: esproposal_feature_mode;
-    esproposal_decorators: esproposal_feature_mode;
-    esproposal_export_star_as: esproposal_feature_mode;
+    esproposal_class_instance_fields: Options.esproposal_feature_mode;
+    esproposal_class_static_fields: Options.esproposal_feature_mode;
+    esproposal_decorators: Options.esproposal_feature_mode;
+    esproposal_export_star_as: Options.esproposal_feature_mode;
     facebook_ignore_fbt: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
@@ -107,10 +102,10 @@ module Opts = struct
   let default_options = {
     enable_const_params = false;
     enable_unsafe_getters_and_setters = false;
-    esproposal_class_instance_fields = ESPROPOSAL_WARN;
-    esproposal_class_static_fields = ESPROPOSAL_WARN;
-    esproposal_decorators = ESPROPOSAL_WARN;
-    esproposal_export_star_as = ESPROPOSAL_WARN;
+    esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
+    esproposal_class_static_fields = Options.ESPROPOSAL_WARN;
+    esproposal_decorators = Options.ESPROPOSAL_WARN;
+    esproposal_export_star_as = Options.ESPROPOSAL_WARN;
     facebook_ignore_fbt = false;
     ignore_non_literal_requires = false;
     moduleSystem = Node;
@@ -224,12 +219,12 @@ module Opts = struct
 
   let optparse_esproposal_feature_flag ?(allow_enable=false) =
     let values = [
-      ("ignore", ESPROPOSAL_IGNORE);
-      ("warn", ESPROPOSAL_WARN);
+      ("ignore", Options.ESPROPOSAL_IGNORE);
+      ("warn", Options.ESPROPOSAL_WARN);
     ] in
     let values =
       if allow_enable
-      then ("enable", ESPROPOSAL_ENABLE)::values
+      then ("enable", Options.ESPROPOSAL_ENABLE)::values
       else values
     in
     optparse_enum values
@@ -666,8 +661,3 @@ let get root =
   | Some config ->
       assert (root = config.root);
       config
-
-let get_unsafe () =
-  match !cache with
-  | Some config -> config
-  | None -> failwith "No config loaded"

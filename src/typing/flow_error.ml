@@ -171,7 +171,12 @@ end = struct
       let max_trace_depth = Context.max_trace_depth cx in
       if max_trace_depth = 0 then [] else
         let strip_root = Context.should_strip_root cx in
-        Trace.reasons_of_trace ~strip_root ~level:max_trace_depth trace
+        let root = Context.root cx in
+        let prep_path r =
+          if not strip_root then r
+          else Reason_js.strip_root root r
+        in
+        Trace.reasons_of_trace ~prep_path ~level:max_trace_depth trace
         |> List.map info_of_reason
     in
     (* NOTE: We include the operation's reason in the error message, unless it

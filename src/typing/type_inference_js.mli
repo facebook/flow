@@ -22,9 +22,7 @@ val infer_ast:
 val mk_object: Context.t -> reason -> Type.t
 
 val infer_lib_file:
-  max_trace_depth: int ->
-  verbose: int option ->
-  strip_root: bool ->
+  metadata: Context.metadata ->
   exclude_syms:SSet.t ->
   filename ->
   Spider_monkey_ast.Statement.t list ->

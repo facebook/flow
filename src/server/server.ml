@@ -26,10 +26,10 @@ struct
 
   let parse_options = OptionParser.parse
 
-  let preinit () =
+  let preinit options =
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. *)
-    ignore (Init_js.get_master_cx ());
+    ignore (Init_js.get_master_cx options);
     Parsing_service_js.call_on_success SearchService_js.update
 
   let init genv =
@@ -283,7 +283,10 @@ struct
 
   let find_module ~options (moduleref, filename) oc =
     let file = Loc.SourceFile filename in
-    let cx = Context.make_simple file in
+    let metadata = Context.({ (metadata_of_options options) with
+      checked = false;
+    }) in
+    let cx = Context.make metadata file (Modulename.Filename file) in
     let loc = {Loc.none with Loc.source = Some file;} in
     let module_name = Module_js.imported_module ~options cx loc moduleref in
     let response: filename option = Module_js.get_module_file module_name in

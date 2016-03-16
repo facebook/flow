@@ -18,7 +18,7 @@ module Server_files = Server_files_js
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  val preinit : unit -> unit
+  val preinit : Options.options -> unit
   val init : genv -> (FlowEventLogger.Timing.t * env)
   val run_once_and_exit : env -> unit
   (* filter and relativize updated file paths *)
@@ -223,7 +223,7 @@ end = struct
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
     FlowEventLogger.init_server root;
-    Program.preinit ();
+    Program.preinit options;
     SharedMem.(init default_config);
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.

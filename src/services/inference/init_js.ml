@@ -28,16 +28,14 @@ module Infer = Type_inference_js
    it's useless. should only be accessed through ContextHeap. *)
 let get_master_cx =
   let cx_ = ref None in
-  fun () -> match !cx_ with
+  fun options -> match !cx_ with
   | None ->
-    let cx = Flow_js.fresh_context { Context.
+    let metadata = Context.({ (metadata_of_options options) with
       checked = false;
       weak = false;
-      munge_underscores = false;
-      verbose = None;
-      strip_root = false;
-      max_trace_depth = 0;
-    } Loc.Builtins (Modulename.String Files_js.lib_module) in
+    }) in
+    let cx = Flow_js.fresh_context
+      metadata Loc.Builtins (Modulename.String Files_js.lib_module) in
     cx_ := Some cx;
     cx
   | Some cx -> cx
@@ -73,8 +71,10 @@ let parse_lib_file save_parse_errors file =
 
    returns list of (filename, success) pairs
  *)
-let load_lib_files files ~max_trace_depth ~verbose ~strip_root
+let load_lib_files files ~options
   save_parse_errors save_infer_errors save_suppressions =
+
+  let verbose = Options.verbose options in
 
   (* iterate in reverse override order *)
   let _, result = List.rev files |> List.fold_left (
@@ -84,12 +84,17 @@ let load_lib_files files ~max_trace_depth ~verbose ~strip_root
       match parse_lib_file save_parse_errors file with
       | lib_file, Some (_, statements, comments) ->
 
+        let metadata = Context.({ (metadata_of_options options) with
+          checked = false;
+          weak = false;
+        }) in
+
         let cx, syms = Infer.infer_lib_file
-          ~max_trace_depth ~verbose ~strip_root ~exclude_syms
+          ~metadata ~exclude_syms
           lib_file statements comments
         in
 
-        let master_cx = get_master_cx () in
+        let master_cx = get_master_cx options in
         Merge_js.merge_lib_file cx master_cx save_infer_errors save_suppressions;
 
         (if verbose != None then
@@ -114,15 +119,15 @@ let load_lib_files files ~max_trace_depth ~verbose ~strip_root
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
-let init ~max_trace_depth ~verbose ~strip_root lib_files
+let init ~options lib_files
     save_parse_errors save_infer_errors save_suppressions =
 
   let result = load_lib_files lib_files
-    ~max_trace_depth ~verbose ~strip_root
+    ~options
     save_parse_errors save_infer_errors save_suppressions in
 
   Flow_js.Cache.clear();
-  let master_cx = get_master_cx () in
+  let master_cx = get_master_cx options in
   let reason = Reason_js.builtin_reason "module" in
   let builtin_module = Infer.mk_object master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);

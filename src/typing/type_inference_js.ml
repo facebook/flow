@@ -429,22 +429,15 @@ let check_type_param_arity cx loc params n f =
     let msg = spf "Incorrect number of type parameters (expected %n)" n in
     error_type cx loc msg
 
-let is_suppress_type type_name = FlowConfig.(Opts.(
-  let config = get_unsafe () in
-  SSet.mem type_name config.options.suppress_types
-))
+let is_suppress_type cx type_name =
+  SSet.mem type_name (Context.suppress_types cx)
 
-let are_getters_and_setters_enabled () = FlowConfig.(Opts.(
-  let config = get_unsafe () in
-  config.options.enable_unsafe_getters_and_setters
-))
-
-let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
+let warn_or_ignore_decorators cx decorators_list =
   if decorators_list = [] then () else
-  match (get_unsafe ()).options.esproposal_decorators with
-  | ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
-  | ESPROPOSAL_IGNORE -> ()
-  | ESPROPOSAL_WARN ->
+  match Context.esproposal_decorators cx with
+  | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN ->
       let first_loc = fst (List.hd decorators_list) in
       let last_loc =
         fst (List.nth decorators_list ((List.length decorators_list) - 1))
@@ -456,12 +449,11 @@ let warn_or_ignore_decorators cx decorators_list = FlowConfig.(Opts.(
           "Additionally, Flow does not account for the type implications " ^
           "of decorators at this time."
       ])
-))
 
-let warn_or_ignore_export_star_as cx name = FlowConfig.(Opts.(
+let warn_or_ignore_export_star_as cx name =
   if name = None then () else
-  match ((get_unsafe ()).options.esproposal_export_star_as, name) with
-  | ESPROPOSAL_WARN, Some(loc, _) ->
+  match Context.esproposal_export_star_as cx, name with
+  | Options.ESPROPOSAL_WARN, Some(loc, _) ->
     FlowError.add_warning cx (loc, [
       "Experimental `export * as` usage";
       "`export * as` is an active early stage feature proposal that may " ^
@@ -470,7 +462,6 @@ let warn_or_ignore_export_star_as cx name = FlowConfig.(Opts.(
         "of your .flowconfig"
     ])
   | _ -> ()
-))
 
 let mk_custom_fun cx loc typeParameters kind =
   check_type_param_arity cx loc typeParameters 0 (fun () ->
@@ -742,7 +733,7 @@ let rec convert cx type_params_map = Ast.Type.(function
        *)
       (* TODO move these to type aliases once optional type args
          work properly in type aliases: #7007731 *)
-      | type_name when is_suppress_type type_name ->
+      | type_name when is_suppress_type cx type_name ->
         (* Optional type params are info-only, validated then forgotten. *)
         List.iter (fun p -> ignore (convert cx type_params_map p)) typeParameters;
         AnyT.at loc
@@ -3084,9 +3075,7 @@ and export_statement cx _type_params_map loc
 
       warn_or_ignore_export_star_as cx star_as_name;
 
-      let parse_export_star_as =
-        FlowConfig.(Opts.((get_unsafe ()).options.esproposal_export_star_as))
-      in
+      let parse_export_star_as = Context.esproposal_export_star_as cx in
       (match star_as_name with
       | Some ident ->
         let (_, {Ast.Identifier.name; _;}) = ident in
@@ -3098,11 +3087,11 @@ and export_statement cx _type_params_map loc
         mark_exports_type cx reason Context.ESModule;
 
         let remote_namespace_t =
-          if parse_export_star_as = FlowConfig.Opts.ESPROPOSAL_ENABLE
+          if parse_export_star_as = Options.ESPROPOSAL_ENABLE
           then import_ns cx reason source_module_name batch_loc
           else AnyT.why (
             let config_value =
-              if parse_export_star_as = FlowConfig.Opts.ESPROPOSAL_IGNORE
+              if parse_export_star_as = Options.ESPROPOSAL_IGNORE
               then "ignore"
               else "warn"
             in
@@ -3208,7 +3197,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       key = Property.Identifier (_, { Ast.Identifier.name; _ });
       value = (vloc, Ast.Expression.Function func);
       _ })
-    when are_getters_and_setters_enabled () ->
+    when Context.enable_unsafe_getters_and_setters cx ->
     Ast.Expression.Function.(
       let { body; returnType; _ } = func in
       let reason = mk_reason "getter function" vloc in
@@ -3233,7 +3222,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       key = Property.Identifier (_, { Ast.Identifier.name; _ });
       value = (vloc, Ast.Expression.Function func);
       _ })
-    when are_getters_and_setters_enabled () ->
+    when Context.enable_unsafe_getters_and_setters cx ->
     Ast.Expression.Function.(
       let { params; defaults; body; returnType; _ } = func in
       let reason = mk_reason "setter function" vloc in
@@ -3628,8 +3617,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         require cx module_name loc
       | _ ->
         let ignore_non_literals =
-          FlowConfig.(Opts.((get_unsafe ()).options.ignore_non_literal_requires))
-        in
+          Context.should_ignore_non_literal_requires cx in
         if not ignore_non_literals then (
           let msg =
             "The parameter passed to require() must be a literal string."
@@ -4449,9 +4437,7 @@ and jsx cx type_params_map = Ast.JSX.(function { openingElement; children; _ } -
 
 and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
-  let facebook_ignore_fbt =
-    FlowConfig.((get_unsafe ()).options.Opts.facebook_ignore_fbt)
-  in
+  let facebook_ignore_fbt = Context.should_ignore_fbt cx in
   match name with
   | Identifier (_, { Identifier.name })
       when name = "fbt" && facebook_ignore_fbt ->
@@ -5684,7 +5670,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       warn_or_ignore_decorators cx decorators;
 
       (match kind with
-      | Method.Get | Method.Set when not (are_getters_and_setters_enabled ()) ->
+      | Method.Get | Method.Set when not (Context.enable_unsafe_getters_and_setters cx) ->
         let msg = "get/set properties not yet supported" in
         FlowError.add_error cx (loc, [msg])
       | _ -> ());
@@ -5765,22 +5751,21 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       }) ->
         (match value with
           | None -> ()
-          | Some _ -> FlowConfig.(Opts.(
-            let opts = (FlowConfig.get_unsafe ()).options in
+          | Some _ ->
             let (config_setting, reason_subject, config_key) =
               if static then
-                (opts.esproposal_class_static_fields,
+                (Context.esproposal_class_static_fields cx,
                  "class static field",
                  "class_static_fields")
               else
-                (opts.esproposal_class_instance_fields,
+                (Context.esproposal_class_instance_fields cx,
                  "class instance field",
                   "class_instance_fields")
             in
             match config_setting with
-            | ESPROPOSAL_ENABLE
-            | ESPROPOSAL_IGNORE -> ()
-            | ESPROPOSAL_WARN ->
+            | Options.ESPROPOSAL_ENABLE
+            | Options.ESPROPOSAL_IGNORE -> ()
+            | Options.ESPROPOSAL_WARN ->
               FlowError.add_warning cx (loc, [
                 spf "Experimental %s usage" reason_subject;
                 spf
@@ -5791,7 +5776,6 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
                 (String.capitalize reason_subject)
                 config_key
               ])
-          ))
         );
         let r = mk_reason (spf "class property `%s`" name) loc in
         let t = mk_type_annotation cx type_params_map r typeAnnotation in
@@ -5848,10 +5832,8 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
 (* Processes the bodies of instance and static class members (methods/fields). *)
 and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
   let _, { Body.body = elements } = body in
-  let (opt_static_fields, opt_inst_fields) = FlowConfig.(Opts.(
-    let opts = (FlowConfig.get_unsafe ()).options in
-    (opts.esproposal_class_static_fields, opts.esproposal_class_instance_fields)
-  )) in
+  let opt_static_fields = Context.esproposal_class_static_fields cx in
+  let opt_inst_fields = Context.esproposal_class_instance_fields cx in
   List.iter (function
     | Body.Method (_, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
@@ -5928,7 +5910,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
             if static then opt_static_fields else opt_inst_fields
           in
 
-          if config_opt <> FlowConfig.Opts.ESPROPOSAL_IGNORE then (
+          if config_opt <> Options.ESPROPOSAL_IGNORE then (
             (* determine if we are in a derived class *)
             let derived_ctor = match super with
               | ClassT (MixedT _) -> false
@@ -6466,10 +6448,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
   Env_js.push_var_scope cx function_scope;
 
   (* add param bindings *)
-  let const_params = FlowConfig.(
-    let config = get_unsafe () in
-    config.options.Opts.enable_const_params
-  ) in
+  let const_params = Context.enable_const_params cx in
   params |> FuncParams.iter Scope.(fun (name, t, loc) ->
     let reason = mk_reason (spf "param `%s`" name) loc in
     (* add default value as lower bound, if provided *)
@@ -6698,8 +6677,7 @@ let scan_for_suppressions =
     List.exists (fun r -> Str.string_match r comment 0) suppress_comments
 
   in fun cx comments ->
-    let config = FlowConfig.get_unsafe () in
-    let suppress_comments = FlowConfig.(config.options.Opts.suppress_comments) in
+    let suppress_comments = Context.suppress_comments cx in
     let should_suppress = should_suppress suppress_comments in
 
     (* Bail immediately if we're not using error suppressing comments *)
@@ -6799,22 +6777,11 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
  *)
-let infer_lib_file
-    ~max_trace_depth
-    ~verbose
-    ~strip_root
-    ~exclude_syms
-    file statements comments =
+let infer_lib_file ~metadata ~exclude_syms file statements comments =
   Flow_js.Cache.clear();
 
-  let cx = Flow_js.fresh_context { Context.
-    checked = false;
-    weak = false;
-    munge_underscores = false; (* no sense supporting private props in libs *)
-    verbose;
-    strip_root;
-    max_trace_depth;
-  } file (Modulename.String Files_js.lib_module) in
+  let cx = Flow_js.fresh_context
+    metadata file (Modulename.String Files_js.lib_module) in
 
   let module_scope = Scope.fresh () in
   Env_js.init_env ~exclude_syms cx module_scope;

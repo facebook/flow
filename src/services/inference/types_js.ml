@@ -252,14 +252,7 @@ let infer_module ~options ~metadata filename =
    takes list of filenames, accumulates into parallel lists of
    filenames, error sets *)
 let infer_job opts (inferred, errsets, errsuppressions) files =
-  let metadata = { Context.
-    checked = Options.all opts;
-    weak = Options.weak_by_default opts;
-    max_trace_depth = Options.max_trace_depth opts;
-    munge_underscores = Options.should_munge_underscores opts;
-    verbose = Options.verbose opts;
-    strip_root = Options.should_strip_root opts;
-  } in
+  let metadata = Context.metadata_of_options opts in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
     try checktime opts 1.0
       (fun t -> spf "perf: inferred %s in %f" (string_of_filename file) t)
@@ -572,18 +565,12 @@ let typecheck_contents ~options ?verbose contents filename =
     parse_result, info
   ) in
 
-  let strip_root = Options.should_strip_root options in
-
   match parse_result with
   | Parsing_service_js.Parse_ok ast ->
       (* defaults *)
-      let metadata = { Context.
-        checked = true;
-        weak = false;
-        max_trace_depth = 0;
-        munge_underscores = false; (* TODO: read from .flowconfig? *)
-        verbose;
-        strip_root;
+      let metadata = { (Context.metadata_of_options options) with
+        Context.checked = true;
+        Context.verbose = verbose;
       } in
       (* apply overrides from the docblock *)
       let metadata = apply_docblock_overrides metadata info in
@@ -757,7 +744,7 @@ end
 
 let merge_strict workers dependency_graph partition opts =
   (* NOTE: master_cx will only be saved once per server lifetime *)
-  let master_cx = Init_js.get_master_cx () in
+  let master_cx = Init_js.get_master_cx opts in
   (* TODO: we probably don't need to save master_cx in ContextHeap *)
   ContextHeap.add Loc.Builtins master_cx;
   (* store master signature context to heap *)
@@ -1130,7 +1117,7 @@ let recheck genv env modified =
   let modified_count = FilenameSet.cardinal modified in
 
   (* clear errors for modified files, deleted files and master *)
-  let master_cx = Init_js.get_master_cx () in
+  let master_cx = Init_js.get_master_cx options in
   clear_errors ~debug (Context.file master_cx :: FilenameSet.elements modified);
   clear_errors ~debug (FilenameSet.elements deleted);
 
@@ -1227,8 +1214,6 @@ let recheck genv env modified =
 
 (* full typecheck *)
 let full_check workers ~ordered_libs parse_next opts =
-  let verbose = Options.verbose opts in
-
   let timing = FlowEventLogger.Timing.create () in
 
   (* force types when --all is set, but otherwise forbid them unless the file
@@ -1238,8 +1223,6 @@ let full_check workers ~ordered_libs parse_next opts =
   ) in
 
   let profile = profile_and_not_quiet opts in
-  let strip_root = Options.should_strip_root opts in
-  let max_trace_depth = Options.max_trace_depth opts in
 
   Flow_logger.log "Parsing";
   let timing, (parsed, skipped_files, error_files, errors) =
@@ -1271,9 +1254,7 @@ let full_check workers ~ordered_libs parse_next opts =
       (* after local inference and before merge, bring in libraries *)
       (* if any fail to parse, our return value will suppress merge *)
       let lib_files = Init_js.init
-        ~max_trace_depth
-        ~strip_root
-        ~verbose
+        ~options:opts
         ordered_libs
         (fun file errs -> save_errors parse_errors [file] [errs])
         (fun file errs -> save_errors infer_errors [file] [errs])
@@ -1296,15 +1277,13 @@ let full_check workers ~ordered_libs parse_next opts =
 (* helper - print errors. used in check-and-die runs *)
 let print_errors options errors =
   let strip_root = Options.should_strip_root options in
+  let root = Options.root options in
+
   let errors =
-    if strip_root then (
-      let root = FlowConfig.((get_unsafe ()).root) in
-      Errors.strip_root_from_errors root errors
-    )
+    if strip_root then Errors.strip_root_from_errors root errors
     else errors
   in
 
-  let root = Options.root options in
   if options.Options.opt_json
   then Errors.print_error_json ~root stdout errors
   else
