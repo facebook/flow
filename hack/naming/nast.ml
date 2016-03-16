@@ -358,6 +358,7 @@ type def =
   | Fun of fun_
   | Class of class_
   | Typedef of typedef
+  | Constant of gconst
 
 type program = def list
 

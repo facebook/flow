@@ -12,8 +12,7 @@ let go content line char =
   let result = ref None in
   IdentifySymbolService.attach_hooks result line char;
   let funs, classes =
-    ServerIdeUtils.declare Relative_path.default content in
-  ServerIdeUtils.typecheck funs classes;
+    ServerIdeUtils.declare_and_check Relative_path.default content in
   ServerIdeUtils.revive funs classes;
   IdentifySymbolService.detach_hooks ();
   match !result with

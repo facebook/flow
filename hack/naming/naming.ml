@@ -898,10 +898,6 @@ module Make (GetLocals : GetLocals) = struct
   let check_tparams_shadow class_tparam_names methods =
     List.iter methods (check_method_tparams class_tparam_names)
 
-  (**************************************************************************)
-  (* The entry point to CHECK the program, and transform the program *)
-  (**************************************************************************)
-
   let rec class_constraints tparams =
     let cstrs = make_constraints tparams in
     (* Checking there is no cycle in the type constraints *)
@@ -2309,6 +2305,20 @@ module Make (GetLocals : GetLocals) = struct
     let env = genv, lenv in
     ignore (expr_lambda env f);
     List.dedup !to_capture
+
+  (**************************************************************************)
+  (* The entry point to CHECK the program, and transform the program *)
+  (**************************************************************************)
+
+  let program tcopt ast = List.filter_map ast begin function
+    | Ast.Fun f -> Some (N.Fun (fun_ tcopt f))
+    | Ast.Class c -> Some (N.Class (class_ tcopt c))
+    | Ast.Typedef t -> Some (N.Typedef (typedef tcopt t))
+    | Ast.Constant cst -> Some (N.Constant (global_const tcopt cst))
+    | Ast.Stmt _ -> None
+    | Ast.Namespace _
+    | Ast.NamespaceUse _ -> assert false
+  end
 
 end
 

@@ -17,8 +17,7 @@ open Core
 let auto_complete files_info content =
   AutocompleteService.attach_hooks();
   let content_funs, content_classes =
-    ServerIdeUtils.declare Relative_path.default content in
-  ServerIdeUtils.typecheck content_funs content_classes;
+    ServerIdeUtils.declare_and_check Relative_path.default content in
   let fun_names, class_names =
     files_info
     |> Relative_path.Map.values

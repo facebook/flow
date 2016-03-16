@@ -13,6 +13,8 @@
  * Transform all the local names into a unique identifier
  *)
 
+val program: TypecheckerOptions.t -> Ast.program -> Nast.program
+
 (* Solves the local names within a function *)
 val fun_: TypecheckerOptions.t -> Ast.fun_ -> Nast.fun_
 
