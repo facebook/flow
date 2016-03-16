@@ -136,7 +136,9 @@ build-flow-native-deps: build-flow-stubs
 		$(NATIVE_OBJECT_FILES)
 
 build-flow-stubs:
-	echo "const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD 2>/dev/null || hg identify -i)\";" > hack/utils/get_build_id.gen.c
+	OUT="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD || hg id -i)\"; \
+	const unsigned long BuildInfo_kRevisionCommitTimeUnix = $$(git log -1 --pretty=format:%ct || echo $$(hg log -r . -T \{date\} | grep -o ^[^.]* || echo 0))ul;"; \
+	if [ "$$OUT" != "$$(cat utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$OUT" > hack/utils/get_build_id.gen.c; fi
 
 build-flow-stubs-with-ocp:
 	ocaml unix.cma scripts/gen_build_id.ml hack/utils/get_build_id.gen.c
