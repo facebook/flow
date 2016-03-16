@@ -66,14 +66,14 @@ let error el =
 let type_fun tcopt x fn =
   try
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tcopt x fun_;
+    Typing.fun_def tcopt fun_;
   with Not_found ->
     ()
 
 let type_class tcopt x fn =
   try
     let class_ = Naming_heap.ClassHeap.find_unsafe x in
-    Typing.class_def tcopt x class_
+    Typing.class_def tcopt class_
   with Not_found ->
     ()
 
@@ -218,11 +218,11 @@ let hh_auto_complete fn =
         match def with
         | Ast.Fun f ->
           let f = Naming.fun_ tcopt f in
-          Typing.fun_def tcopt (snd f.Nast.f_name) f
+          Typing.fun_def tcopt f
         | Ast.Class c ->
           let c = Naming.class_ tcopt c in
           Decl.class_decl tcopt c;
-          Typing.class_def tcopt (snd c.Nast.c_name) c
+          Typing.class_def tcopt c
         | _ -> ()
       end;
     end;
@@ -261,10 +261,10 @@ let hh_get_method_at_position fn line char =
         match def with
         | Ast.Fun f ->
           let f = Naming.fun_ tcopt f in
-          Typing.fun_def tcopt (snd f.Nast.f_name) f
+          Typing.fun_def tcopt f
         | Ast.Class c ->
           let c = Naming.class_ tcopt c in
-          Typing.class_def tcopt (snd c.Nast.c_name) c
+          Typing.class_def tcopt c
         | _ -> ()
       end;
     end;
@@ -438,11 +438,11 @@ let hh_arg_info fn line char =
   Errors.ignore_ begin fun () ->
     List.iter funs begin fun (_, f_name) ->
       let f = Naming_heap.FunHeap.find_unsafe f_name in
-      Typing.fun_def TypecheckerOptions.permissive f_name f
+      Typing.fun_def TypecheckerOptions.permissive f
     end;
     List.iter classes begin fun (_, c_name) ->
       let c = Naming_heap.ClassHeap.find_unsafe c_name in
-      Typing.class_def TypecheckerOptions.permissive c_name c
+      Typing.class_def TypecheckerOptions.permissive c
     end;
   end;
   let result = ArgumentInfoService.get_result() in

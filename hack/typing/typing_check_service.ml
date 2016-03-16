@@ -32,7 +32,7 @@ let type_fun tcopt fn x =
     if not @@ Naming_heap.FunHeap.mem x then
       Decl.declare_fun_in_file tcopt fn x;
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tcopt x fun_;
+    Typing.fun_def tcopt fun_;
   with Not_found -> ()
 
 let type_class tcopt fn x =
@@ -40,7 +40,7 @@ let type_class tcopt fn x =
     if not @@ Naming_heap.ClassHeap.mem x then
       Decl.declare_class_in_file tcopt fn x;
     let class_ = Naming_heap.ClassHeap.find_unsafe x in
-    Typing.class_def tcopt x class_
+    Typing.class_def tcopt class_
   with Not_found -> ()
 
 let check_typedef tcopt fn x =

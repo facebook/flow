@@ -91,8 +91,8 @@ let declare_and_check path content =
        * won't work in this case because we haven't put the new ASTs into
        * the parsing heap. *)
       List.iter nast begin function
-        | Nast.Fun f -> Typing.fun_def tcopt (snd f.Nast.f_name) f;
-        | Nast.Class c -> Typing.class_def tcopt (snd c.Nast.c_name) c;
+        | Nast.Fun f -> Typing.fun_def tcopt f;
+        | Nast.Class c -> Typing.class_def tcopt c;
         | _ -> ()
       end;
       !declared_funs, !declared_classes

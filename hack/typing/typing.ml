@@ -306,7 +306,7 @@ and check_param env param (_, ty) =
 (*****************************************************************************)
 (* Now we are actually checking stuff! *)
 (*****************************************************************************)
-and fun_def tcopt _ f =
+and fun_def tcopt f =
   (* reset the expression dependent display ids for each function body *)
   Reason.expr_display_id_map := IMap.empty;
   Typing_hooks.dispatch_enter_fun_def_hook f;
@@ -3803,7 +3803,7 @@ and check_parent_abstract position parent_type class_type =
       ~is_final position class_type.tc_typeconsts;
   end else ()
 
-and class_def tcopt _ c =
+and class_def tcopt c =
   let filename = Pos.filename (fst c.Nast.c_name) in
   let dep = Dep.Class (snd c.c_name) in
   let env = Env.empty tcopt filename (Some dep) in

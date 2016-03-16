@@ -198,8 +198,8 @@ let suggest_files fnl =
     | Some ast ->
       let nast = Naming.program tcopt ast in
       List.iter nast begin function
-        | Nast.Fun f -> Typing.fun_def tcopt (snd f.Nast.f_name) f
-        | Nast.Class c -> Typing.class_def tcopt (snd c.Nast.c_name) c
+        | Nast.Fun f -> Typing.fun_def tcopt f
+        | Nast.Class c -> Typing.class_def tcopt c
         | _ -> ()
       end
     | None -> ()
