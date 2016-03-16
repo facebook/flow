@@ -20,11 +20,13 @@ let rec connect env ~retries =
   | SMUtils.Last_server_died ->
     raise Exit_status.(Exit_with IDE_no_server) in
   match conn with
-  | Result.Ok (ic, oc) -> (ic, oc)
+  | Result.Ok (ic, oc) ->
+    SMUtils.send_ide_client_type oc SMUtils.Persistent;
+    (ic, oc)
   | Result.Error e -> begin match e with
     | SMUtils.Monitor_connection_failure
     | SMUtils.Server_busy when retries > 0 -> connect env ~retries:(retries-1)
-    | SMUtils.Monitor_connection_failure 
+    | SMUtils.Monitor_connection_failure
     | SMUtils.Server_busy ->
       raise Exit_status.(Exit_with IDE_out_of_retries)
     | SMUtils.Server_died

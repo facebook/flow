@@ -14,7 +14,11 @@ open IdeJson
 type env = {
   typechecker : IdeProcessPipe.to_typechecker;
   tcopt : TypecheckerOptions.t;
+  (* Persistent client talking JSON protocol *)
   client : (in_channel * out_channel) option;
+  (* Non-persistent clients awaiting to receive Hello message and send their
+   * single ServerCommand request *)
+  requests : (Timeout.in_channel * out_channel) list;
   (* Whether typechecker has finished full initialization. In the future, we
    * can have more granularity here, allowing some queries to run sooner. *)
   typechecker_init_done : bool;
@@ -30,6 +34,7 @@ let build_env typechecker tcopt = {
   typechecker = typechecker;
   tcopt = tcopt;
   client = None;
+  requests = [];
   typechecker_init_done = false;
   files_info = Relative_path.Map.empty;
   errorl = [];
@@ -45,14 +50,14 @@ type wait_handle =
   | Channel of Unix.file_descr * job
   (* Job that should be run if provided function tells us that there is
    * something to do *)
-  | Fun of (unit -> job list)
+  | Fun of (env -> job list)
 
-let get_ready wait_handles =
+let get_ready env wait_handles =
   let funs, channels = List.partition_map wait_handles ~f:begin function
     | Fun x -> `Fst x
     | Channel (x, y) -> `Snd (x, y)
   end in
-  let ready_funs = List.concat_map funs ~f:(fun f -> f ()) in
+  let ready_funs = List.concat_map funs ~f:(fun f -> f env) in
   let wait_time = if ready_funs = [] then 1.0 else 0.0 in
   let fds = List.map channels ~f:fst in
   let readable, _, _ = Unix.select fds [] [] wait_time in
@@ -83,13 +88,23 @@ let handle_new_client parent_in_fd env  =
   let socket = Libancillary.ancil_recv_fd parent_in_fd in
   let ic, oc =
     (Unix.in_channel_of_descr socket), (Unix.out_channel_of_descr socket) in
-  match env.client with
-  | None ->
-    Hh_logger.log "Connected new client";
-    { env with client = Some (ic, oc) }
-  | Some _ ->
-    Hh_logger.log "Rejected a client";
-    handle_already_has_client oc; env
+  let client_type =
+    Marshal_tools.from_fd_with_preamble (Unix.descr_of_in_channel ic) in
+
+  match client_type with
+  | ServerMonitorUtils.Persistent ->
+    begin match env.client with
+    | None ->
+      Hh_logger.log "Connected new persistent client";
+      { env with client = Some (ic, oc) }
+    | Some _ ->
+      Hh_logger.log "Rejected a client";
+      handle_already_has_client oc; env
+    end
+  | ServerMonitorUtils.Request ->
+    Hh_logger.log "Connected new single request client";
+    let ic, oc = Timeout.in_channel_of_descr socket, oc in
+    { env with requests = (ic, oc)::env.requests }
 
 let send_call_to_typecheker env id = function
   | IdeServerCall.Find_refs_call action ->
@@ -176,10 +191,31 @@ let handle_server_idle env =
     ignore (SharedMem.try_lock_hashtable ~do_:(fun () -> IdeIdle.go ()));
   env
 
+(* This is similar to ServerCommand.handle, except that it handles only SEARCH
+ * queries which cannot be handled there anymore *)
+let handle_waiting_hh_client_requests env =
+  List.iter env.requests begin fun (ic, oc) ->
+    try
+      ServerCommand.say_hello oc;
+      let msg = ServerCommand.read_client_msg ic in
+
+      match msg with
+      | ServerCommand.Rpc ServerRpc.SEARCH (query, type_) ->
+        let response = ServerSearch.go query type_ in
+        ServerCommand.send_response_to_client (ic, oc) response;
+      | _ -> assert false
+
+    with
+    | Sys_error("Broken pipe")
+    | ServerCommand.Read_command_timeout ->
+      ServerUtils.shutdown_client (ic, oc)
+  end;
+  {env with requests = []}
+
 let get_jobs typechecker parent_in_fd =
   let idle_handle = Fun (
-    fun () -> if IdeIdle.has_tasks () then [{
-      priority = 3;
+    fun _ -> if IdeIdle.has_tasks () then [{
+      priority = 4;
       run = handle_server_idle
     }] else []
   ) in
@@ -195,7 +231,17 @@ let get_jobs typechecker parent_in_fd =
       run = handle_new_client parent_in_fd
     }
   ) in
-  [idle_handle; typechecker_handle; monitor_handle]
+  let hh_clients_handle = Fun (
+    fun env -> if
+      (not (List.is_empty env.requests)) &&
+      env.typechecker_init_done &&
+      (not (HackSearchService.IdeProcessApi.updates_pending ()))
+    then [{
+      priority = 3;
+      run = handle_waiting_hh_client_requests;
+    }] else []
+  ) in
+  [idle_handle; typechecker_handle; monitor_handle; hh_clients_handle]
 
 let get_client_job ((client_ic, _) as client) =
   Channel (
@@ -228,7 +274,7 @@ let daemon_main options (parent_ic, _parent_oc) =
         | Some client -> (get_client_job client) :: jobs
         | None -> jobs
       in
-      let ready_jobs = get_ready jobs in
+      let ready_jobs = get_ready !env jobs in
       let sorted_ready_jobs = List.sort ready_jobs ~cmp:begin fun x y ->
         x.priority - y.priority
       end in

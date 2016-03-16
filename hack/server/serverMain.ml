@@ -109,8 +109,7 @@ let sleep_and_check in_fd =
 
 let handle_connection_ genv env ic oc =
   try
-    output_string oc "Hello\n";
-    flush oc;
+    ServerCommand.say_hello oc;
     ServerCommand.handle genv env (ic, oc)
   with
   | Sys_error("Broken pipe") | ServerCommand.Read_command_timeout ->

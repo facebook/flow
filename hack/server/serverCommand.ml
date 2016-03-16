@@ -148,18 +148,26 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
           )
       end)
 
+let say_hello oc =
+  output_string oc "Hello\n";
+  flush oc
+
+let read_client_msg ic =
+  Timeout.with_timeout
+    ~timeout:1
+    ~on_timeout: (fun _ -> raise Read_command_timeout)
+    ~do_: (fun timeout -> Timeout.input_value ~timeout ic)
+
+let send_response_to_client (ic, oc) response =
+  Marshal.to_channel oc response [];
+  flush oc;
+  ServerUtils.shutdown_client (ic, oc)
+
 let handle genv env (ic, oc) =
-  let msg =
-    Timeout.with_timeout
-      ~timeout:1
-      ~on_timeout: (fun _ -> raise Read_command_timeout)
-      ~do_: (fun timeout -> Timeout.input_value ~timeout ic)
-  in
+  let msg = read_client_msg ic in
   match msg with
   | Rpc cmd ->
       let response = ServerRpc.handle genv env cmd in
-      Marshal.to_channel oc response [];
-      flush oc;
-      ServerUtils.shutdown_client (ic, oc);
+      send_response_to_client (ic, oc) response;
       if cmd = ServerRpc.KILL then ServerUtils.die_nicely ()
   | Stream cmd -> stream_response genv env (ic, oc) ~cmd

@@ -139,5 +139,4 @@ module IdeProcessApi = struct
   end
 
 let attach_hooks () =
-  Parsing_hooks.attach_file_parsed_hook WorkerApi.update;
-  Parsing_hooks.attach_parse_task_completed_hook MasterApi.update_search_index
+  Parsing_hooks.attach_file_parsed_hook WorkerApi.update

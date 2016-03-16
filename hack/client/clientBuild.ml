@@ -66,6 +66,7 @@ let main env =
     retry_if_init = true;
     expiry = None;
     no_load = false;
+    to_ide = false;
   } in
   let old_svnrev = Option.try_with begin fun () ->
     Sys_utils.read_file ServerBuild.svnrev_path

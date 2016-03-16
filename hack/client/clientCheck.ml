@@ -50,6 +50,12 @@ let expand_path file =
 let main args =
   let mode_s = ClientEnv.mode_to_string args.mode in
   HackEventLogger.client_check args.from mode_s;
+
+  (* Search index was removed from typechecker process *)
+  let connect_to_ide_process = match args.mode with
+  | MODE_SEARCH _-> true;
+  | _ -> false in
+
   let conn = ClientConnect.connect { ClientConnect.
     root = args.root;
     autostart = args.autostart;
@@ -57,6 +63,7 @@ let main args =
     retry_if_init = args.retry_if_init;
     expiry = args.timeout;
     no_load = args.no_load;
+    to_ide = connect_to_ide_process;
   } in
   let exit_status =
     match args.mode with

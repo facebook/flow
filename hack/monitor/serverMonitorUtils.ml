@@ -41,6 +41,16 @@ type shutdown_result =
   (** Request sent, but channel hasn't hung up. *)
   | SHUTDOWN_UNVERIFIED
 
+(* The clients that connect to IDE process can either establish persistent
+ * connection and talk the JSON protocol, or exchange a single request-response
+ * by sending a ServerCommand *)
+type ide_client_type =
+  | Request
+  | Persistent
+
+let send_ide_client_type oc (t : ide_client_type)=
+  Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc) t
+
 exception Server_shutting_down
 exception Last_server_died
 
