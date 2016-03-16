@@ -233,7 +233,8 @@ let server_flags prev = CommandSpec.ArgSpec.(
 )
 
 let connect server_flags root =
-  let config_options = FlowConfig.((get root).options) in
+  let flowconfig = Server_files_js.config_file root in
+  let config_options = FlowConfig.((get flowconfig).options) in
   let tmp_dir = match server_flags.temp_dir with
   | Some dir -> dir
   | None -> config_options.FlowConfig.Opts.temp_dir

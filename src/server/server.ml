@@ -419,7 +419,7 @@ struct
     let all_libs = env.ServerEnv.libs in
     let options = genv.ServerEnv.options in
     let root = Options.root options in
-    let config_path = FlowConfig.fullpath root in
+    let config_path = Server_files_js.config_file root in
     let sroot = Path.to_string root in
     let want = Files_js.wanted ~options all_libs in
 

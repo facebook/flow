@@ -8,6 +8,7 @@
  *
  *)
 
+val config_file: Path.t -> string
 val init_file: tmp_dir:string -> Path.t -> string
 val recheck_file: tmp_dir:string -> Path.t -> string
 val lock_file: tmp_dir:string -> Path.t -> string

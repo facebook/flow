@@ -19,6 +19,9 @@ let file_of_root extension ~tmp_dir root =
   let root_part = Path.slash_escaped_string_of_path root in
   Printf.sprintf "%s%s.%s" tmp_dir root_part extension
 
+let config_file root =
+  Path.to_string (Path.concat root ".flowconfig")
+
 let init_file    = file_of_root "init"
 let recheck_file = file_of_root "recheck"
 let lock_file    = file_of_root "lock"

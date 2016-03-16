@@ -242,8 +242,6 @@ type config = {
   libs: string list;
   (* config options *)
   options: Opts.t;
-  (* root path *)
-  root: Path.t;
 }
 
 module Pp : sig
@@ -292,12 +290,11 @@ end = struct
     options o config
 end
 
-let empty_config root = {
+let empty_config = {
   ignores = [];
   includes = [];
   libs = [];
   options = Opts.default_options;
-  root;
 }
 
 let group_into_sections lines =
@@ -626,22 +623,17 @@ let parse config lines =
   let sections = group_into_sections lines in
   List.fold_left parse_section config sections
 
-let fullpath root =
-  Path.to_string (Path.concat root ".flowconfig")
-
-let read root =
-  let filename = fullpath root in
+let read filename =
   let lines = Sys_utils.cat_no_fail filename |> Sys_utils.split_lines in
-  let config = empty_config root in
   let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
-  parse config lines
+  parse empty_config lines
 
-let init ~root ~ignores ~includes ~libs ~options =
+let init ~ignores ~includes ~libs ~options =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
   let lib_lines = List.map (fun s -> (1, s)) libs in
-  let config = parse_ignores (empty_config root) ignores_lines in
+  let config = parse_ignores empty_config ignores_lines in
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
   let config = parse_libs config lib_lines in
@@ -652,12 +644,12 @@ let write config oc = Pp.config oc config
 (* We should restart every time the config changes, so it's cool to cache it *)
 let cache = ref None
 
-let get root =
+let get filename =
   match !cache with
   | None ->
-      let config = read root in
-      cache := Some config;
+      let config = read filename in
+      cache := Some (filename, config);
       config
-  | Some config ->
-      assert (root = config.root);
+  | Some (cached_filename, config) ->
+      assert (filename = cached_filename);
       config

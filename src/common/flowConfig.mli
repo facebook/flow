@@ -44,15 +44,11 @@ type config = {
   libs: string list;
   (* config options *)
   options: Opts.t;
-  (* root path *)
-  root: Path.t;
 }
 
-val get: Path.t -> config
-val fullpath: Path.t -> string
+val get: string -> config
 
 val init:
-  root: Path.t ->
   ignores: string list ->
   includes: string list ->
   libs: string list ->

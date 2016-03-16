@@ -88,7 +88,7 @@ let mean_kill ~tmp_dir root =
 
 let main temp_dir from root () =
   let root = CommandUtils.guess_root root in
-  let config = FlowConfig.get root in
+  let config = FlowConfig.get (Server_files_js.config_file root) in
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with
   | Some x -> x

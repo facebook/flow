@@ -43,7 +43,7 @@ let main option_values root error_flags strip_root use_json verbose file () =
     | None -> ServerProt.path_of_input file
   ) in
 
-  let flowconfig = FlowConfig.get root in
+  let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
   let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
   let ic, oc = connect option_values root in
 

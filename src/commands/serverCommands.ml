@@ -167,7 +167,7 @@ module OptionParser(Config : CONFIG) = struct
       () =
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
-    let flowconfig = FlowConfig.get root in
+    let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
     | Opts.Node -> "node"
     | Opts.Haste -> "haste") in
