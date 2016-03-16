@@ -82,6 +82,13 @@ let args_to_call = function
     ] ->
       let line, column = string_positions_to_ints line column in
       Type_at_pos_call (content, line, column)
+  | [JSON_String "--format";
+     JSON_String content;
+     JSON_Number start;
+     JSON_Number end_
+    ] ->
+      let start, end_ = string_positions_to_ints start end_ in
+      Format_call (content, start, end_)
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -177,6 +184,18 @@ let json_string_of_response id response =
         "internal_error", JSON_Bool false
       ]
     | Type_at_pos_response (pos, ty) -> ServerInferType.to_json pos ty
+    | Format_response result ->
+      let error_text, result, is_error = match result with
+        | Format_hack.Disabled_mode -> "Php_or_decl", "", false
+        | Format_hack.Parsing_error _ -> "Parsing_error", "", false
+        | Format_hack.Internal_error -> "", "", true
+        | Format_hack.Success s -> "", s, false
+      in
+      JSON_Object [
+        "error_message",  JSON_String error_text;
+        "result",         JSON_String result;
+        "internal_error", JSON_Bool is_error;
+      ]
   in
   json_to_string (build_response_json id result_field)
 

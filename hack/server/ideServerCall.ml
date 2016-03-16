@@ -64,6 +64,10 @@ let get_type_at_pos_response tcopt files_info content line column =
   let type_reason_pos = Option.map type_reason_pos Pos.to_absolute in
   Type_at_pos_response (type_reason_pos, type_name)
 
+let get_format_response content start end_ =
+  let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
+  Format_response (Format_hack.region modes Path.dummy_path start end_ content)
+
 let get_call_response id call tcopt files_info errorl =
   match call with
   | Auto_complete_call content ->
@@ -84,3 +88,5 @@ let get_call_response id call tcopt files_info errorl =
     Result (get_find_lvar_refs_response tcopt files_info content line column)
   | Type_at_pos_call (content, line, column) ->
     Result (get_type_at_pos_response tcopt files_info content line column)
+  | Format_call (content, start, end_) ->
+    Result (get_format_response content start end_)
