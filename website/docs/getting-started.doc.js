@@ -17,7 +17,7 @@ next: five-simple-examples.html
   ```bash
   $> mkdir -p get_started
   $> cd get_started
-  $> echo '{"name": "get_started", "scripts": {"flow": "flow; [[ $?=0||$?=2 ]]"}}' > package.json
+  $> echo '{"name": "get_started", "scripts": {"flow": "flow; test $? -eq 0 -o $? -eq 2"}}' > package.json
   ```
 
   Next we'll add Flow to our project:
