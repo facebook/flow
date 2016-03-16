@@ -163,8 +163,9 @@ build-hack-native-deps: build-hack-stubs
 # If you modify this rule, do not forget to edit the file
 # `$(ROOT)/scripts/gen_build_id.ml` used on Windows.
 build-hack-stubs:
-	REV="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD || hg id -i)\";"; \
-	if [ "$$REV" != "$$(cat utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$REV" > utils/get_build_id.gen.c; fi
+	OUT="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD || hg id -i)\"; \
+	const unsigned long BuildInfo_kRevisionCommitTimeUnix = $$(git log -1 --pretty=format:%ct || echo $$(hg log -r . -T \{date\} | grep -o ^[^.]* || echo 0))ul;"; \
+	if [ "$$OUT" != "$$(cat utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$OUT" > utils/get_build_id.gen.c; fi
 
 build-hack-stubs-with-ocp:
 	cd $(ROOT)/.. && \

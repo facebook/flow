@@ -7,19 +7,18 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  */
-#define _XOPEN_SOURCE
-
 #define CAML_NAME_SPACE
 #include <caml/memory.h>
 #include <caml/alloc.h>
 
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <time.h>
 
 extern const char* const BuildInfo_kRevision;
-const char* const build_time = __DATE__ " " __TIME__;
+extern const uint64_t BuildInfo_kRevisionCommitTimeUnix;
 
 /**
  * Export the constants provided by Facebook's build system to ocaml-land, since
@@ -41,24 +40,18 @@ value hh_get_build_revision(void) {
   CAMLreturn(result);
 }
 
-value hh_get_build_time_string(void) {
+value hh_get_build_commit_time_string(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
-  size_t len = strlen(build_time);
+  char* s = ctime((long*)&BuildInfo_kRevisionCommitTimeUnix);
+  size_t len = strlen(s);
   result = caml_alloc_string(len);
 
-  memcpy(String_val(result), build_time, len);
+  memcpy(String_val(result), s, len);
   CAMLreturn(result);
 }
 
-value hh_get_build_time(void) {
-#ifdef _WIN32
-  return Val_long(0);
-#else
-  struct tm tm;
-  char* success = strptime(build_time, "%b %d %Y %H:%M:%S", &tm);
-  assert(success != NULL && "Failed to parse build time");
-  return Val_long(mktime(&tm));
-#endif
+value hh_get_build_commit_time(void) {
+  return Val_long(BuildInfo_kRevisionCommitTimeUnix);
 }
