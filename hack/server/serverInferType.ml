@@ -18,3 +18,17 @@ let go (env:ServerEnv.env) (fn, line, char) =
   let pos = Option.map pos Pos.to_absolute in
   InferAtPosService.detach_hooks ();
   pos, ty
+
+let to_json pos ty =
+  let ty_json = match ty with
+    | Some ty -> Hh_json.JSON_String ty
+    | None -> Hh_json.JSON_Null
+  in
+  let pos_json = match pos with
+    | Some pos -> Pos.json pos
+    | None -> Hh_json.JSON_Null
+  in
+  Hh_json.JSON_Object [
+    "type", ty_json;
+    "pos", pos_json;
+  ]

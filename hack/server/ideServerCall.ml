@@ -55,6 +55,15 @@ let get_find_lvar_refs_response tcopt files_info content line column =
   FindLocalsService.detach_hooks ();
   Find_lvar_refs_response (get_result ())
 
+let get_type_at_pos_response tcopt files_info content line column =
+  let get_result = InferAtPosService.attach_hooks line column in
+  ignore (ServerIdeUtils.check_file_input
+    tcopt files_info (ServerUtils.FileContent content));
+  InferAtPosService.detach_hooks ();
+  let type_reason_pos, type_name = get_result () in
+  let type_reason_pos = Option.map type_reason_pos Pos.to_absolute in
+  Type_at_pos_response (type_reason_pos, type_name)
+
 let get_call_response id call tcopt files_info errorl =
   match call with
   | Auto_complete_call content ->
@@ -73,3 +82,5 @@ let get_call_response id call tcopt files_info errorl =
     Result (get_colour_response tcopt files_info path)
   | Find_lvar_refs_call (content, line, column) ->
     Result (get_find_lvar_refs_response tcopt files_info content line column)
+  | Type_at_pos_call (content, line, column) ->
+    Result (get_type_at_pos_response tcopt files_info content line column)

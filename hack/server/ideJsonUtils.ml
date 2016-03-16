@@ -18,6 +18,11 @@ open Utils
 let server_busy_error_code = 1
 let invalid_call_error_code = 2
 
+let string_positions_to_ints line column =
+  try
+    int_of_string line, int_of_string column
+  with Failure "int_of_string" -> raise Not_found
+
 (**
  * During transition from hh_client based to persistent connection based
  * operation we will initially just dump command line arguments into an "args"
@@ -67,11 +72,16 @@ let args_to_call = function
      JSON_String content;
      JSON_Number line;
      JSON_Number column
-    ] -> begin
-      try Find_lvar_refs_call(
-        content, int_of_string line, int_of_string column)
-      with _ -> raise Not_found
-    end
+    ] ->
+      let line, column = string_positions_to_ints line column in
+      Find_lvar_refs_call (content, line, column)
+  | [JSON_String "--type-at-pos";
+     JSON_String content;
+     JSON_Number line;
+     JSON_Number column
+    ] ->
+      let line, column = string_positions_to_ints line column in
+      Type_at_pos_call (content, line, column)
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -166,6 +176,7 @@ let json_string_of_response id response =
         "positions",      JSON_Array res_list;
         "internal_error", JSON_Bool false
       ]
+    | Type_at_pos_response (pos, ty) -> ServerInferType.to_json pos ty
   in
   json_to_string (build_response_json id result_field)
 
