@@ -19,10 +19,6 @@ open Core
 module Env = Typing_env
 module SN = Naming_special_names
 
-module TypingSuggestFastStore = GlobalStorage.Make(struct
-  type t = FileInfo.fast
-end)
-
 let insert_resolved_result fn acc result =
   let pl = try Relative_path.Map.find_unsafe fn acc with Not_found -> [] in
   let pl = result :: pl in
@@ -187,39 +183,26 @@ let collate_types fast all_types =
   end;
   tbl
 
-let type_fun x =
-  try
-    let tcopt = TypecheckerOptions.permissive in
-    let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tcopt x fun_;
-  with Not_found ->
-    ()
-
-let type_class x =
-  try
-    let tcopt = TypecheckerOptions.permissive in
-    let class_ = Naming_heap.ClassHeap.get x in
-    (match class_ with
-    | None -> ()
-    | Some class_ -> Typing.class_def tcopt x class_
-    )
-  with Not_found ->
-    ()
-
 let keys map = Relative_path.Map.fold (fun x _ y -> x :: y) map []
 
 (* Typecheck a part of the codebase, in order to record the type suggestions in
  * Type_suggest.types. *)
-let suggest_files fast fnl =
+let suggest_files fnl =
   SharedMem.invalidate_caches();
   Typing_defs.is_suggest_mode := true;
   Typing_suggest.types := [];
   Typing_suggest.initialized_members := SMap.empty;
   List.iter fnl begin fun fn ->
-    let { FileInfo.n_funs; n_classes; _ } =
-      Relative_path.Map.find_unsafe fn fast in
-    SSet.iter type_fun n_funs;
-    SSet.iter type_class n_classes;
+    let tcopt = TypecheckerOptions.permissive in
+    match Parser_heap.ParserHeap.get fn with
+    | Some ast ->
+      let nast = Naming.program tcopt ast in
+      List.iter nast begin function
+        | Nast.Fun f -> Typing.fun_def tcopt (snd f.Nast.f_name) f
+        | Nast.Class c -> Typing.class_def tcopt (snd c.Nast.c_name) c
+        | _ -> ()
+      end
+    | None -> ()
   end;
   let result = !Typing_suggest.types in
   Typing_defs.is_suggest_mode := false;
@@ -228,13 +211,11 @@ let suggest_files fast fnl =
   result
 
 let suggest_files_worker acc fnl =
-  let fast = TypingSuggestFastStore.load() in
-  let types = suggest_files fast fnl in
+  let types = suggest_files fnl in
   List.rev_append types acc
 
 let parallel_suggest_files workers fast =
   let fnl = keys fast in
-  TypingSuggestFastStore.store fast;
   let result =
     MultiWorker.call
       workers
@@ -243,7 +224,6 @@ let parallel_suggest_files workers fast =
       ~merge:(List.rev_append)
       ~next:(Bucket.make fnl)
   in
-  TypingSuggestFastStore.clear();
   result
 
 (*****************************************************************************)
@@ -256,7 +236,7 @@ let go workers fast =
   let types =
     match workers with
     | Some _ -> parallel_suggest_files workers fast
-    | None -> suggest_files fast (keys fast) in
+    | None -> suggest_files (keys fast) in
   let collated = collate_types fast types in
   let resolved =
     match workers with
