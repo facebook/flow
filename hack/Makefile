@@ -241,6 +241,7 @@ do-test:
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/colour
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/coverage
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/dumpsymbolinfo
+	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/dump_inheritance
 	python3 ../test/verify.py --program ../bin/hh_format ../test/format
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/suggest
 	python3 ../test/verify.py --program ../bin/hh_single_type_check ../test/typecheck

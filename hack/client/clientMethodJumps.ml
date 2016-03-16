@@ -51,7 +51,7 @@ let readable_place name pos p_name =
   then (readable^" "^(Utils.strip_ns p_name)^"::"^(Utils.strip_ns name))
   else (readable^" "^(Utils.strip_ns name))
 
-let print_readable res find_children =
+let print_readable res ~find_children =
   List.iter res begin fun res ->
     let origin_readable = readable_place
         res.MethodJumps.orig_name
@@ -70,4 +70,4 @@ let go res find_children output_json =
   if output_json then
     print_json res
   else
-    print_readable res find_children
+    print_readable res ~find_children

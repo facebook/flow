@@ -23,6 +23,7 @@ type mode =
   | Color
   | Coverage
   | Dump_symbol_info
+  | Dump_inheritance
   | Errors
   | Lint
   | Suggest
@@ -240,6 +241,9 @@ let parse_options () =
     "--dump-deps",
       Arg.Unit (set_mode Dump_deps),
       "Print dependencies";
+    "--dump-inheritance",
+      Arg.Unit (set_mode Dump_inheritance),
+      "Print inheritance";
   ] in
   let options = Arg.align options in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
@@ -397,6 +401,27 @@ let handle_mode mode filename tcopt files_contents files_info errors =
       ignore @@ Typing_check_utils.check_defs tcopt fn fileinfo
     end files_info;
     Typing_deps.dump_deps stdout
+  | Dump_inheritance ->
+    Typing_deps.update_files files_info;
+    Relative_path.Map.iter begin fun fn fileinfo ->
+      if fn = builtins_filename then () else begin
+        List.iter fileinfo.FileInfo.classes begin fun (_p, class_) ->
+          Printf.printf "Ancestors of %s:\n" class_;
+          let ancestors = MethodJumps.get_inheritance
+            class_ ~find_children:false files_info None in
+          ClientMethodJumps.print_readable ancestors ~find_children:false;
+          Printf.printf "\n";
+        end;
+        Printf.printf "\n";
+        List.iter fileinfo.FileInfo.classes begin fun (_p, class_) ->
+          Printf.printf "Children of %s:\n" class_;
+          let children = MethodJumps.get_inheritance
+            class_ ~find_children:true files_info None in
+          ClientMethodJumps.print_readable children ~find_children:true;
+          Printf.printf "\n";
+        end;
+      end
+    end files_info;
   | Suggest
   | Errors ->
       let errors = Relative_path.Map.fold begin fun fn fileinfo errors ->

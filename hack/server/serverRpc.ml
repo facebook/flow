@@ -52,7 +52,8 @@ let handle : type a. genv -> env -> a t -> a =
     | OUTLINE content ->
         FileOutline.outline content
     | METHOD_JUMP (class_, find_children) ->
-        MethodJumps.get_inheritance class_ find_children env genv
+      MethodJumps.get_inheritance class_ ~find_children env.files_info
+        genv.workers
     | FIND_REFS find_refs_action ->
         if ServerArgs.ai_mode genv.options = None then
           ServerFindRefs.go find_refs_action genv env

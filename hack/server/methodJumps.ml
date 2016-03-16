@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Typing_defs
 
 type result = {
   orig_name: string;
@@ -102,18 +103,11 @@ let find_extended_classes_in_files_parallel workers target_class_name mthds
         target_class_name mthds target_class_pos [] classes
 
 (* Find child classes *)
-let get_child_classes_and_methods cls mthds env genv acc =
+let get_child_classes_and_methods cls mthds files_info workers acc =
   let files = FindRefsService.get_child_classes_files
-      genv.ServerEnv.workers
-      env.ServerEnv.files_info
-      cls.Typing_defs.tc_name in
+    workers files_info cls.tc_name in
   find_extended_classes_in_files_parallel
-      genv.ServerEnv.workers
-      cls.Typing_defs.tc_name
-      mthds
-      cls.Typing_defs.tc_pos
-      env.ServerEnv.files_info
-      files
+    workers cls.tc_name mthds cls.tc_pos files_info files
 
 (* Find ancestor classes *)
 let get_ancestor_classes_and_methods cls mthds acc =
@@ -152,12 +146,13 @@ let build_method_smap cls =
 (*  Returns a list of the ancestor or child
  *  classes and methods for a given class
  *)
-let get_inheritance class_ find_children env genv =
+let get_inheritance class_ ~find_children files_info workers =
   let class_ = add_ns class_ in
   let class_ = Typing_heap.Classes.get class_ in
   match class_ with
   | None -> []
   | Some c ->
     let mthds = build_method_smap c.Typing_defs.tc_name in
-    if find_children then get_child_classes_and_methods c mthds env genv []
+    if find_children then
+      get_child_classes_and_methods c mthds files_info workers []
     else get_ancestor_classes_and_methods c mthds []
