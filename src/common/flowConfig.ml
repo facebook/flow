@@ -623,9 +623,22 @@ let parse config lines =
   let sections = group_into_sections lines in
   List.fold_left parse_section config sections
 
+let is_not_comment =
+  let comment_regexps = [
+    Str.regexp_string "#";                (* Line starts with # *)
+    Str.regexp_string ";";                (* Line starts with ; *)
+    Str.regexp_string "\240\159\146\169"; (* Line starts with poop emoji *)
+  ] in
+  fun (_, line) ->
+    not (List.exists
+      (fun (regexp) -> Str.string_match regexp line 0)
+      comment_regexps)
+
 let read filename =
-  let lines = Sys_utils.cat_no_fail filename |> Sys_utils.split_lines in
-  let lines = List.mapi (fun i line -> (i+1, String.trim line)) lines in
+  let lines = Sys_utils.cat_no_fail filename
+    |> Sys_utils.split_lines
+    |> List.mapi (fun i line -> (i+1, String.trim line))
+    |> List.filter is_not_comment in
   parse empty_config lines
 
 let init ~ignores ~includes ~libs ~options =

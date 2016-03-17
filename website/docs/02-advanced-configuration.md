@@ -250,6 +250,18 @@ So far, we support the following ways to specify supported versions
   digit (e.g.  `^0.13.0` expands into `>=0.13.0 <0.14.0`, and `^0.13.1` expands
   into `>=0.13.1 <0.14.0`, whereas "^1.2.3" expands into ">=1.2.3 <2.0.0").
 
+### Comments
+
+Comment support was added in v0.23.0. Lines beginning with 0 or more spaces
+followed by an `#` or `;` are ignored.  For example:
+
+```
+# This is a comment
+   # This is a comment
+; This is a comment
+   ; This is a comment
+```
+
 ### Example
 
 Say you have the following directory structure, with your `.flowconfig` in
