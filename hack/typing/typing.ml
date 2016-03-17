@@ -3492,7 +3492,8 @@ and non_null ?expanded:(expanded=ISet.empty) env ty =
       env, ty
 
 and condition_var_non_null env = function
-  | _, Lvar (_, x) ->
+  | _, Lvar (_, x)
+  | _, Dollardollar (_, x) ->
       let env, x_ty = Env.get_local env x in
       let env, x_ty = Env.expand_type env x_ty in
       let env, x_ty = non_null env x_ty in
