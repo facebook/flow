@@ -25,9 +25,11 @@ let get_autocomplete_response content files_info =
   ))
 
 let get_identify_function_response content line char =
-  Identify_function_response (
-    ServerIdentifyFunction.go content line char
-  )
+  let res = match ServerIdentifyFunction.go content line char with
+    | Some result -> Utils.strip_ns result.IdentifySymbolService.name
+    | _ -> ""
+  in
+  Identify_function_response res
 
 let get_search_response s =
   let query_type = "" in (* no filters, search all types of identifiers *)
@@ -68,6 +70,11 @@ let get_format_response content start end_ =
   let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   Format_response (Format_hack.region modes Path.dummy_path start end_ content)
 
+let get_method_name_response content line column =
+  Get_method_name_response (
+    ServerIdentifyFunction.go content line column
+  )
+
 let get_call_response id call tcopt files_info errorl =
   match call with
   | Auto_complete_call content ->
@@ -90,3 +97,5 @@ let get_call_response id call tcopt files_info errorl =
     Result (get_type_at_pos_response tcopt files_info content line column)
   | Format_call (content, start, end_) ->
     Result (get_format_response content start end_)
+  | Get_method_name_call (content, line, column) ->
+    Result (get_method_name_response content line column)

@@ -89,6 +89,13 @@ let args_to_call = function
     ] ->
       let start, end_ = string_positions_to_ints start end_ in
       Format_call (content, start, end_)
+  | [JSON_String "--get-method-name";
+     JSON_String content;
+     JSON_Number line;
+     JSON_Number column
+    ] ->
+      let line, column = string_positions_to_ints line column in
+      Get_method_name_call (content, line, column)
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -196,6 +203,24 @@ let json_string_of_response id response =
         "result",         JSON_String result;
         "internal_error", JSON_Bool is_error;
       ]
+    | Get_method_name_response result ->
+      begin match result with
+      | Some res ->
+        let result_type =
+          match res.IdentifySymbolService.type_ with
+          | IdentifySymbolService.Class -> "class"
+          | IdentifySymbolService.Method -> "method"
+          | IdentifySymbolService.Function -> "function"
+          | IdentifySymbolService.LocalVar -> "local"
+        in
+        JSON_Object [
+          "name",        JSON_String res.IdentifySymbolService.name;
+          "result_type", JSON_String result_type;
+          "pos",         Pos.json
+                           (Pos.to_absolute res.IdentifySymbolService.pos);
+        ]
+      | _ -> JSON_Object []
+      end
   in
   json_to_string (build_response_json id result_field)
 

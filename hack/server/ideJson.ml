@@ -22,6 +22,7 @@ type call_type =
   | Find_lvar_refs_call of string * int * int
   | Type_at_pos_call of string * int * int
   | Format_call of string * int * int
+  | Get_method_name_call of string * int * int
 
 type response_type =
   | Auto_complete_response of Hh_json.json
@@ -33,6 +34,7 @@ type response_type =
   | Find_lvar_refs_response of Pos.t list
   | Type_at_pos_response of Pos.absolute option * string option
   | Format_response of string Format_hack.return
+  | Get_method_name_response of IdentifySymbolService.find_symbol_result option
 
 type parsing_result =
   (* Parsing_error means that message was unrecoverably mangled (eg. no ID, or

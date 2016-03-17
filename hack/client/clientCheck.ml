@@ -140,6 +140,10 @@ let main args =
       let content = Sys_utils.read_stdin_to_string () in
       let result =
         Cmd.rpc conn @@ Rpc.IDENTIFY_FUNCTION (content, line, char) in
+      let result = match result with
+        | Some result -> Utils.strip_ns result.IdentifySymbolService.name
+        | _ -> ""
+      in
       print_endline result;
       Exit_status.Ok
     | MODE_TYPE_AT_POS arg ->

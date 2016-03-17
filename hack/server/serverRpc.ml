@@ -18,7 +18,8 @@ type _ t =
   | INFER_TYPE : ServerUtils.file_input * int * int -> ServerInferType.result t
   | COVERAGE_LEVELS : ServerUtils.file_input -> ServerColorFile.result t
   | AUTOCOMPLETE : string -> AutocompleteService.result t
-  | IDENTIFY_FUNCTION : string * int * int -> string t
+  | IDENTIFY_FUNCTION : string * int * int ->
+      IdentifySymbolService.find_symbol_result option t
   | OUTLINE : string -> (Pos.absolute * string * string) list t
   | METHOD_JUMP : (string * bool) -> MethodJumps.result list t
   | FIND_REFS : FindRefsService.action -> FindRefsService.result t

@@ -15,6 +15,4 @@ let go content line char =
     ServerIdeUtils.declare_and_check Relative_path.default content in
   ServerIdeUtils.revive funs classes;
   IdentifySymbolService.detach_hooks ();
-  match !result with
-  | Some result -> Utils.strip_ns result.IdentifySymbolService.name
-  | _ -> ""
+  !result
