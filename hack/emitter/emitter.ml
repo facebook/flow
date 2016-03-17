@@ -205,18 +205,18 @@ let fun_to_method f =
     m_user_attributes = f.f_user_attributes; m_ret = f.f_ret
   }
 
-let emit_fun nenv env (_, x) =
-  let f = Naming_heap.FunHeap.find_unsafe x in
+let emit_fun nenv env f =
+  let f = Naming.fun_ TypecheckerOptions.default f in
   let nb = TNBody.func_body nenv f in
   let f = { f with f_body = NamedBody nb } in
   let dummy_method = fun_to_method f in
 
   let env = start_new_function env in
+  let full_name = snd f.f_name in
   let env =
     emit_method_or_func env ~is_method:false ~is_static:true
-      ~tparams:[] ~full_name:x dummy_method (fmt_name x) in
+      ~tparams:[] ~full_name dummy_method (fmt_name full_name) in
   emit_str env ""
-
 
 (* extends lists and things are hints,
  * but I *think* it needs to be an apply? *)
@@ -374,8 +374,8 @@ let handle_class_attrs env cls =
       else unimpl ("function user attribute: " ^ name)
   end
 
-let emit_class nenv env (_, x) =
-  let cls = Naming_heap.ClassHeap.find_unsafe x in
+let emit_class nenv env cls =
+  let cls = Naming.class_ TypecheckerOptions.default cls in
   let cls = TNBody.class_meth_bodies nenv cls in
 
   (* make any adjustments to the class that are needed for xhp *)
@@ -400,7 +400,7 @@ let emit_class nenv env (_, x) =
   let extends_list = fmt_extends_list extends in
   let implements_list = fmt_implements_list implements in
 
-  let name = fmt_name x in
+  let name = fmt_name (snd cls.c_name) in
   let self_name, parent_name = match cls.c_kind with
     (* interfaces don't have code so we don't need the names;
      * traits can make self and parent calls to things that are actually
@@ -493,9 +493,9 @@ let rec emit_all_closures env =
   emit_all_closures env
 
 
-let emit_typedef _nenv env (_, x) =
-  let typedef = Naming_heap.TypedefHeap.find_unsafe x in
-  emit_strs env [".alias"; fmt_name x; "=";
+let emit_typedef _nenv env t =
+  let typedef = Naming.typedef TypecheckerOptions.default t in
+  emit_strs env [".alias"; fmt_name (snd t.Ast.t_id); "=";
                  Emitter_types.fmt_hint_constraint
                    ~tparams:[] ~always_extended:false typedef.t_kind ^ ";"]
 
@@ -554,9 +554,13 @@ let emit_file ~is_test nenv filename ast
   let env = emit_strs env
     [".filepath"; quote_str (Relative_path.to_absolute filename) ^ ";\n"] in
   let env = emit_main env ~is_test ast in
-  let env = List.fold_left ~f:(emit_fun nenv) ~init:env funs in
-  let env = List.fold_left ~f:(emit_class nenv) ~init:env classes in
-  let env = List.fold_left ~f:(emit_typedef nenv) ~init:env typedefs in
+  let env = List.fold_left ast ~init:env ~f:begin fun env stmt ->
+    match stmt with
+    | Ast.Fun f -> emit_fun nenv env f
+    | Ast.Class c -> emit_class nenv env c
+    | Ast.Typedef t -> emit_typedef nenv env t
+    | _ -> env
+  end in
   let env = emit_all_closures env in
   let env = emit_str env "" in
 
