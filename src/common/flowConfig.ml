@@ -24,6 +24,8 @@ let multi_error (errs:(int * string) list) =
 
 let error ln msg = multi_error [(ln, msg)]
 
+let project_root_token = Str.regexp_string "<PROJECT_ROOT>";
+
 module Opts = struct
   exception UserError of string
 

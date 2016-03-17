@@ -76,6 +76,22 @@ This `[ignore]` section will ignore
 2. Any file or directory under `.*/src/foo` or under `.*/src/bar`
 3. Any file that ends with the extension `.ignore.js`
 
+Starting with Flow v0.23.0, you may use the `<PROJECT_ROOT>` placeholder in
+your regular expressions. At runtime, Flow will treat the placeholder as if it
+were the absolute path to the project's root directory. This is useful for
+writing regular expressions that are relative rather than absolute. For
+example, you can write
+
+```
+[ignore]
+<PROJECT_ROOT>/__tests__/.*
+```
+
+which would ignore any file or directory under the directory named `__tests__/`
+within the project root. However, unlike the previous example's
+`.*/__tests__/.*`, it would NOT ignore files or directories under other
+directories named `__tests__/`, like `src/__tests__/`.
+
 ### `[libs]`
 
 The `[libs]` heading in a `.flowconfig` file tells `flow` to include the

@@ -47,7 +47,7 @@ type info = {
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 let replace_name_mapper_template_tokens =
-  let project_root_token = Str.regexp_string "<PROJECT_ROOT>" in
+  let project_root_token = FlowConfig.project_root_token in
 
   (* Escape things like \1 and \2 which are interpreted as special references
    * in a template. So \1 will become \\1 *)

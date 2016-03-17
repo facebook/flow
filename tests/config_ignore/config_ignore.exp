@@ -1,0 +1,8 @@
+dir/foo.js:3
+  3: var x: number = "string"; // Error string ~> number
+                     ^^^^^^^^ string. This type is incompatible with
+  3: var x: number = "string"; // Error string ~> number
+            ^^^^^^ number
+
+
+Found 1 error

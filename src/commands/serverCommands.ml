@@ -108,11 +108,15 @@ module OptionParser(Config : CONFIG) = struct
         exe_name cmdname cmddoc;
   }
 
-  let ignores_of_arg patterns extras =
+  let ignores_of_arg root patterns extras =
     let patterns = List.rev_append extras patterns in
     List.map (fun s ->
-      (* On Windows, we have to take care about '\'. *)
-      let reg = Str.regexp (Str.global_replace (Str.regexp "/") "[/\\]" s) in
+      let root = Path.to_string root in
+      let reg = s
+        (* On Windows, we have to take care about '\'. *)
+        |> Str.global_replace (Str.regexp "/") "[/\\]"
+        |> Str.global_replace (FlowConfig.project_root_token) root
+        |> Str.regexp in
       (s, reg)
     ) patterns
 
@@ -172,6 +176,7 @@ module OptionParser(Config : CONFIG) = struct
     | Opts.Node -> "node"
     | Opts.Haste -> "haste") in
     let opt_ignores = ignores_of_arg
+      root
       flowconfig.FlowConfig.ignores
       flowconfig_flags.ignores in
     let opt_includes =
