@@ -63,7 +63,7 @@ let intersect env parent_lenv (fake1, locals1) (fake2, locals2) =
             List.fold_left ~f:begin fun acc ty ->
               if List.mem acc ty then acc else ty::acc
             end ~init:all_large all_small in
-          let env, ty = Type.unify Pos.none Reason.URnone env ty1 ty2 in
+          let env, ty = Type.unify env.Env.pos Reason.URnone env ty1 ty2 in
           env, IMap.add local_id (all_types, ty, eid) locals
     end locals1 (env, parent_locals)
   in
@@ -175,7 +175,7 @@ let fully_integrate env (parent_fake_members, parent_locals) =
           | [first] -> env, first
           | first :: rest ->
               List.fold_left ~f:begin fun (env, ty_acc) ty ->
-                Type.unify Pos.none Reason.URnone env ty_acc ty
+                Type.unify env.Env.pos Reason.URnone env ty_acc ty
               end ~init:(env, first) rest
         in
         env, IMap.add local_id (ty :: parent_all_types, ty, eid) locals
