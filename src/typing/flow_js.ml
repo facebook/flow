@@ -1579,10 +1579,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
 
-    | (StrT (reason_s, Literal x), UseT KeysT (_, o)) ->
-      let reason_op = replace_reason (spf "string literal `%s`" x) reason_s in
+    | (StrT (reason_s, Literal x), UseT KeysT (reason_op, o)) ->
+      let reason_next = replace_reason (spf "property `%s`" x) reason_s in
       (* check that o has key x *)
-      rec_flow cx trace (o, HasOwnPropT(reason_op,x))
+      rec_flow cx trace (o, ReposLowerT(reason_op, HasOwnPropT(reason_next, x)))
 
     | (StrT (_, (Truthy | AnyLiteral)), UseT KeysT _) ->
       flow_err cx trace "Expected string literal" l u

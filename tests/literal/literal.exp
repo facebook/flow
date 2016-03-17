@@ -1,14 +1,14 @@
 enum_client.js:6
   6: foo("LOCATION"); // error
-         ^^^^^^^^^^ string literal `LOCATION`. Property not found in
-  1: var APIKeys = require('./enum');
-                   ^^^^^^^^^^^^^^^^^ object literal
+         ^^^^^^^^^^ property `LOCATION`. Property not found in
+  4: function foo(x: $Keys<typeof APIKeys>) { }
+                     ^^^^^^^^^^^^^^^^^^^^^ object literal
 
 enum_client.js:10
  10: bar(APIKeys.NAME); // error: since "NAME" is not in the smaller enum
-         ^^^^^^^^^^^^ string literal `name`. Property not found in
+         ^^^^^^^^^^^^ property `name`. Property not found in
   8: function bar(x: $Keys<{age: number}>) { }
-                           ^^^^^^^^^^^^^ object type
+                     ^^^^^^^^^^^^^^^^^^^^ object type
 
 enum_client.js:17
  17: var name:number = object[APIKeys.NAME]; // error: object.name is a string

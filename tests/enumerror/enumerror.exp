@@ -2,17 +2,17 @@ enumerror.js:10
  10: isActive({state: 'PAUSE'});
      ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  10: isActive({state: 'PAUSE'});
-                      ^^^^^^^ string literal `PAUSE`. Property not found in
+                      ^^^^^^^ property `PAUSE`. Property not found in
   3: function isActive(ad: {state: $Keys<{
-                                         ^ object type
+                                   ^ object type
 
 enumerror.js:20
  20: isActive2({state: 'PAUSE'});
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
  20: isActive2({state: 'PAUSE'});
-                       ^^^^^^^ string literal `PAUSE`. Property not found in
- 12: var MyStates = {
-                    ^ object literal
+                       ^^^^^^^ property `PAUSE`. Property not found in
+ 17: function isActive2(ad: {state: $Keys<typeof MyStates>}): boolean {
+                                    ^^^^^^^^^^^^^^^^^^^^^^ object literal
 
 
 Found 2 errors

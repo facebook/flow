@@ -12,15 +12,15 @@ test.js:7
 
 test.js:14
  14: o2.qux; // error: qux not found
-        ^^^ string literal `qux`. Property not found in
- 11: type Key2 = $Keys<R>; // another way to make an enum type, with unknown key set
-                       ^ object type
+        ^^^ property `qux`. Property not found in
+ 12: var o2: {[key: Key2]: number} = { foo: 0 }; // OK to leave out bar
+                    ^^^^ object type
 
 test.js:20
  20:   x: { foo: number, qux: boolean }; // error: qux not found
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string literal `qux`. Property not found in
- 19: class D extends C<{foo: number, bar: string}> {
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `qux`. Property not found in
+ 17:   x: $Subtype<{[key: $Keys<X>]: any}>; // object with larger key set than X's
+                          ^^^^^^^^ object type
 
 test.js:23
  23: type AnyKey = $Keys<Object>;
