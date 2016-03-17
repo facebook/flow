@@ -17,7 +17,7 @@ next: syntax.html
   `any` and `mixed` describe more flexible constraints on values, whereas
   literal types describe specifically a single value.
 
-  Flow comes out of the box with support for the JavaScript standard libarary,
+  Flow comes out of the box with support for the JavaScript standard library,
   Browser APIs like the DOM, and the Node.js standard library.
 */
 
