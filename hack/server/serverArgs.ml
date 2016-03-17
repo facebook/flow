@@ -102,7 +102,7 @@ let parse_options () =
   let options = Arg.align options in
   Arg.parse options (fun s -> root := s) usage;
   if !version then begin
-    print_string Build_id.build_id_ohai;
+    print_endline Build_id.build_id_ohai;
     exit 0
   end;
   (* --json and --save both imply check *)
