@@ -67,10 +67,6 @@ let emit_file { filename; read_stdin; is_test } () =
   let parsed_file = Parser_hack.program filename contents  in
   let {Parser_hack.file_mode; comments; ast} = parsed_file in
   let funs, classes, typedefs, consts = Ast_utils.get_defs ast in
-  let file_info =
-    { FileInfo.
-      file_mode; funs; classes; typedefs; consts; comments;
-      consider_names_just_for_autoload = false } in
 
   if file_mode <> Some FileInfo.Mstrict &&
      file_mode <> Some FileInfo.Mpartial then
@@ -83,7 +79,7 @@ let emit_file { filename; read_stdin; is_test } () =
   NamingGlobal.make_env ~funs ~classes ~typedefs ~consts;
 
   (* Actually emit. *)
-  Emitter.emit_file ~is_test tcopt filename ast file_info
+  Emitter.emit_file ~is_test tcopt filename ast
 
 
 let main_hack options =

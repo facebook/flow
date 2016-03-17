@@ -545,10 +545,7 @@ let emit_main env ~is_test ast =
   let env = emit_exit env in
   emit_str env ""
 
-let emit_file ~is_test nenv filename ast
-    {FileInfo.funs; classes; typedefs; consts; _} =
-  if consts <> [] then unimpl "global consts";
-
+let emit_file ~is_test nenv filename ast =
   let env = new_env () in
 
   let env = emit_strs env
@@ -559,6 +556,7 @@ let emit_file ~is_test nenv filename ast
     | Ast.Fun f -> emit_fun nenv env f
     | Ast.Class c -> emit_class nenv env c
     | Ast.Typedef t -> emit_typedef nenv env t
+    | Ast.Constant _ -> unimpl "global consts"
     | _ -> env
   end in
   let env = emit_all_closures env in
