@@ -33,43 +33,6 @@ let check_constraint env ck cstr_ty ty =
         | Ast.Constraint_as ->
             TUtils.sub_type env cstr_ty ty
         | Ast.Constraint_super ->
-            (* invert_grow_super is intentionally not used here. Consider
-             * the following:
-             *
-             * class A {}
-             * class B extends A {}
-             * class C extends A {}
-             * class Foo<T> {
-             *   public function bar<Tu super T>(Tu $x): Tu {}
-             * }
-             * function f(Foo<C> $x, B $y): A {
-             *   return $x->bar($y);
-             * }
-             *
-             * C is not a supertype of B. However, this doesn't mean the
-             * constraint is violated: All's good if Tu = A. Figuring out the
-             * most specific supertype is expensive, though, so we just put the
-             * constraint into a Tunresolved. (Tunresolved only grows if
-             * grow_super is true.) The return type hint provides the
-             * supertype we want, and we just have to check that the hint is
-             * consistent with all the types in the Tunresolved.
-             *
-             * Note that since Tu = mixed is always a solution, a `super`
-             * constraint itself should never create a type error. That is,
-             * it should only result in the type growing as a Tunresolved.
-             * Errors will only arise when we encounter conflicting type hints.
-             * Thus we ensure that ty is wrapped in a Tunresolved here.
-             *)
-            let env = match ty, ety with
-              | (_, Tvar _), (_, Tunresolved _) -> env
-              | (_, Tvar n), (r, _) ->
-                  let ety = r, Tunresolved [ety] in
-                  let env = Env.add env n ety in
-                  env
-              | _ ->
-                  (* I don't think ty will ever be anything but a Tvar...
-                   * might be able to assert false here *)
-                  env in
             (* If cstr_ty is a Tvar, we don't want to unify that Tvar with
              * ty; we merely want the constraint itself to be added to the
              * ty's list of unresolved types. Thus we pass the expanded
