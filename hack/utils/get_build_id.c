@@ -44,11 +44,12 @@ value hh_get_build_commit_time_string(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
-  char* s = ctime((long*)&BuildInfo_kRevisionCommitTimeUnix);
-  size_t len = strlen(s);
-  result = caml_alloc_string(len);
+  char s[25];
+  struct tm p;
+  localtime_r((time_t*)&BuildInfo_kRevisionCommitTimeUnix, &p);
+  strftime(s, sizeof(s), "%c", &p);
 
-  memcpy(String_val(result), s, len);
+  result = caml_copy_string(s);
   CAMLreturn(result);
 }
 
