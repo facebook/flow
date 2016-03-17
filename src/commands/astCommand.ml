@@ -31,10 +31,16 @@ let spec = {
         ~doc:"Include a list of syntax tokens in the output"
     |> flag "--pretty" no_arg
         ~doc:"Pretty-print JSON output"
+    |> flag "--type" (enum ["js"; "json"])
+        ~doc:"Type of input file (js or json)"
     |> CommandUtils.from_flag
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
 }
+
+type ast_file_type =
+  | Ast_json
+  | Ast_js
 
 module Hh_jsonTranslator : (
   Estree_translator.Translator with type t = Hh_json.json
@@ -93,10 +99,21 @@ let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
   ]
 )))
 
-let main include_tokens pretty from filename () =
+let main include_tokens pretty file_type_opt from filename () =
   FlowEventLogger.set_from from;
   let file = get_file filename in
   let content = ServerProt.file_input_get_content file in
+
+  let file_type =
+    match file_type_opt with
+    | Some "json" -> Ast_json
+    | Some "js" -> Ast_js
+    | _ ->
+      begin match filename with
+      | Some fn -> if Files_js.is_json_file fn then Ast_json else Ast_js
+      | None -> Ast_js
+      end
+  in
 
   (**
    * Record token stream into a list when the --tokens flag is passed.
@@ -120,10 +137,20 @@ let main include_tokens pretty from filename () =
         types = true;
       }) in
 
-      let (ocaml_ast, errors) =
-        Parser_flow.program ~fail:false ~parse_options ~token_sink content
+      let (translated_ast, errors) =
+        match file_type with
+        | Ast_js ->
+          let (ocaml_ast, errors) =
+            Parser_flow.program ~fail:false ~parse_options ~token_sink content
+          in
+          Translate.program ocaml_ast, errors
+        | Ast_json ->
+          let (ocaml_ast, errors) =
+            Parser_flow.json_file ~fail:false ~parse_options ~token_sink content None
+          in
+          Translate.expression ocaml_ast, errors
       in
-      match Translate.program ocaml_ast with
+      match translated_ast with
       | Hh_json.JSON_Object params ->
           let errors_prop = ("errors", Translate.errors errors) in
           let tokens_prop = ("tokens", Hh_json.JSON_Array (List.rev !tokens)) in
