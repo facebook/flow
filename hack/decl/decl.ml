@@ -551,7 +551,12 @@ and class_const_decl env c acc (h, id, e) =
           Some (Ast.Constraint_as, (r, Tany))) in
         const_ty
   in
-  let cc = { cc_synthesized = false; cc_type = ty; cc_origin = c_name; } in
+  let cc = {
+    cc_synthesized = false;
+    cc_type = ty;
+    cc_expr = e;
+    cc_origin = c_name;
+  } in
   let acc = SMap.add (snd id) cc acc in
   acc
 
@@ -565,6 +570,7 @@ and class_class_decl class_id =
   {
     cc_synthesized = true;
     cc_type        = classname_ty;
+    cc_expr        = None;
     cc_origin      = name;
   }
 
@@ -633,6 +639,7 @@ and typeconst_ty_decl pos c_name tc_name ~is_abstract =
   {
     cc_synthesized = true;
     cc_type        = ts_ty;
+    cc_expr        = None;
     cc_origin      = tc_name;
   }
 

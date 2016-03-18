@@ -359,6 +359,7 @@ and class_elt = {
 and class_const = {
   cc_synthesized : bool;
   cc_type        : decl ty;
+  cc_expr        : Nast.expr option;
   (* identifies the class from which this const originates *)
   cc_origin      : string;
 }

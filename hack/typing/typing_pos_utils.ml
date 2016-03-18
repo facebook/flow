@@ -127,6 +127,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
   and class_const cc =
     { cc_synthesized = cc.cc_synthesized;
       cc_type = ty cc.cc_type;
+      cc_expr = Option.map cc.cc_expr (Nast_pos_mapper.expr pos);
       cc_origin = cc.cc_origin;
     }
 
