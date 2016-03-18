@@ -38,4 +38,6 @@ module List = struct
       let env, x = f env x1 x2 in
       let env, rl = map2_env env rl1 rl2 ~f in
       env, x :: rl
+
+  let for_all2 = List.for_all2
 end

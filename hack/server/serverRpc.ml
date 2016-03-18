@@ -70,8 +70,8 @@ let handle : type a. genv -> env -> a t -> a =
         ServerArgumentInfo.go contents line col
     | SEARCH (query, type_) -> ServerSearch.go query type_
     | COVERAGE_COUNTS path -> ServerCoverageMetric.go path genv env
-    | LINT fnl -> ServerLint.go genv fnl
-    | LINT_ALL code -> ServerLint.lint_all genv code
+    | LINT fnl -> ServerLint.go genv env fnl
+    | LINT_ALL code -> ServerLint.lint_all genv env code
     | CREATE_CHECKPOINT x -> ServerCheckpoint.create_checkpoint x
     | RETRIEVE_CHECKPOINT x -> ServerCheckpoint.retrieve_checkpoint x
     | DELETE_CHECKPOINT x -> ServerCheckpoint.delete_checkpoint x

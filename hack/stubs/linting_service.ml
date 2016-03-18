@@ -8,4 +8,4 @@
  *
  *)
 
-let lint _ _ = ()
+let lint _ _ _ = ()

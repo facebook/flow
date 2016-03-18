@@ -383,7 +383,7 @@ let handle_mode mode filename tcopt files_contents files_info errors =
       let lint_errors =
         Relative_path.Map.fold begin fun fn content lint_errors ->
           lint_errors @ fst (Lint.do_ begin fun () ->
-            Linting_service.lint fn content
+            Linting_service.lint tcopt fn content
           end)
         end files_contents [] in
       if lint_errors <> []
