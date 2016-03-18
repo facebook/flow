@@ -3728,8 +3728,9 @@ and xhp_attribute_string env start abs_start =
 and xhp_body pos name env =
   (* First grab any literal text that appears before the next
    * bit of markup *)
-  let start = Pos.make env.file env.lb in
   let abs_start = env.lb.Lexing.lex_curr_pos in
+  let start_pos = File_pos.of_lexing_pos env.lb.Lexing.lex_curr_p in
+  let start = Pos.make_from_file_pos env.file start_pos start_pos in
   let text = xhp_text env start abs_start in
   (* Now handle any markup *)
   text @ xhp_body_inner pos name env
