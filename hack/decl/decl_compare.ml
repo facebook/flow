@@ -206,6 +206,12 @@ module CompareTypes = struct
 
   and members acc m1 m2 = smap class_elt acc m1 m2
 
+  and class_const (subst, same) c1 c2 =
+    let same = same && c1.cc_synthesized = c2.cc_synthesized in
+    ty (subst, same) c1.cc_type c2.cc_type
+
+  and class_consts acc m1 m2 = smap class_const acc m1 m2
+
   and typeconst (subst, same) tc1 {
     ttc_name = tc2_ttc_name;
     ttc_constraint = tc2_ttc_constraint;
@@ -254,7 +260,7 @@ module CompareTypes = struct
     in
     let acc = subst, same in
     let acc = tparam_list acc c1.tc_tparams c2.tc_tparams in
-    let acc = members acc c1.tc_consts c2.tc_consts in
+    let acc = class_consts acc c1.tc_consts c2.tc_consts in
     let acc = members acc c1.tc_props c2.tc_props in
     let acc = members acc c1.tc_sprops c2.tc_sprops in
     let acc = members acc c1.tc_methods c2.tc_methods in

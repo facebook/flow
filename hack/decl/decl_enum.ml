@@ -44,5 +44,5 @@ let rewrite_class name enum ancestors consts =
     (* A special constant called "class" gets added, and we don't
      * want to rewrite its type. *)
     SMap.mapi (fun k c ->
-               if k = SN.Members.mClass then c else {c with ce_type = ty})
+               if k = SN.Members.mClass then c else {c with cc_type = ty})
       consts

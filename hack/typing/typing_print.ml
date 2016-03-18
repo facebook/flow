@@ -397,6 +397,12 @@ module PrintClass = struct
       "\n"^indent^field^": "^(class_elt v)^acc
     end m ""
 
+  let class_const_smap m =
+    SMap.fold begin fun field cc acc ->
+      let synth = if cc.cc_synthesized then "synthetic " else "" in
+      "("^field^": "^synth^Full.to_string_decl cc.cc_type^") "^acc
+    end m ""
+
   let typeconst {
     ttc_name = tc_name;
     ttc_constraint = tc_constraint;
@@ -461,7 +467,7 @@ module PrintClass = struct
     let tc_kind = class_kind c.tc_kind in
     let tc_name = c.tc_name in
     let tc_tparams = tparam_list c.tc_tparams in
-    let tc_consts = class_elt_smap c.tc_consts in
+    let tc_consts = class_const_smap c.tc_consts in
     let tc_typeconsts = typeconst_smap c.tc_typeconsts in
     let tc_props = class_elt_smap c.tc_props in
     let tc_sprops = class_elt_smap c.tc_sprops in

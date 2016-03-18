@@ -356,6 +356,13 @@ and class_elt = {
   ce_origin      : string;
 }
 
+and class_const = {
+  cc_synthesized : bool;
+  cc_type        : decl ty;
+  (* identifies the class from which this const originates *)
+  cc_origin      : string;
+}
+
 (* The position is that of the hint in the `use` / `implements` AST node
  * that causes a class to have this requirement applied to it. E.g.
  *
@@ -384,7 +391,7 @@ and class_type = {
   tc_name                : string ;
   tc_pos                 : Pos.t ;
   tc_tparams             : tparam list ;
-  tc_consts              : class_elt SMap.t;
+  tc_consts              : class_const SMap.t;
   tc_typeconsts          : typeconst_type SMap.t;
   tc_props               : class_elt SMap.t;
   tc_sprops              : class_elt SMap.t;

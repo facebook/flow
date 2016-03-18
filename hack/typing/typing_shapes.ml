@@ -94,7 +94,7 @@ let to_array env shape_ty res =
             begin match Env.get_class env cid with
               | Some class_ -> begin match Env.get_const env class_ mid with
                   | Some const ->
-                      Typing_phase.localize_with_self env const.ce_type
+                    Typing_phase.localize_with_self env const.cc_type
                   | None -> env, (Reason.Rnone, Tany)
                 end
               | None -> env, (Reason.Rnone, Tany)

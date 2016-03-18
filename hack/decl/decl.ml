@@ -551,11 +551,8 @@ and class_const_decl env c acc (h, id, e) =
           Some (Ast.Constraint_as, (r, Tany))) in
         const_ty
   in
-  let ce = { ce_final = true; ce_is_xhp_attr = false; ce_override = false;
-             ce_synthesized = false; ce_visibility = Vpublic; ce_type = ty;
-             ce_origin = c_name;
-           } in
-  let acc = SMap.add (snd id) ce acc in
+  let cc = { cc_synthesized = false; cc_type = ty; cc_origin = c_name; } in
+  let acc = SMap.add (snd id) cc acc in
   acc
 
 (* Every class, interface, and trait implicitly defines a ::class to
@@ -566,13 +563,9 @@ and class_class_decl class_id =
   let classname_ty =
     reason, Tapply ((pos, SN.Classes.cClassname), [reason, Tthis]) in
   {
-    ce_final       = false;
-    ce_is_xhp_attr = false;
-    ce_override    = false;
-    ce_synthesized = true;
-    ce_visibility  = Vpublic;
-    ce_type        = classname_ty;
-    ce_origin      = name;
+    cc_synthesized = true;
+    cc_type        = classname_ty;
+    cc_origin      = name;
   }
 
 and class_var_decl env c acc cv =
@@ -638,13 +631,9 @@ and typeconst_ty_decl pos c_name tc_name ~is_abstract =
     then r, Tgeneric (c_name^"::"^tc_name, Some (Ast.Constraint_as, ts_ty))
     else ts_ty in
   {
-    ce_final       = false;
-    ce_is_xhp_attr = false;
-    ce_override    = false;
-    ce_synthesized = true;
-    ce_visibility  = Vpublic;
-    ce_type        = ts_ty;
-    ce_origin      = tc_name;
+    cc_synthesized = true;
+    cc_type        = ts_ty;
+    cc_origin      = tc_name;
   }
 
 and typeconst_decl env c (acc, acc2) {

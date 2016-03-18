@@ -60,7 +60,7 @@ val fresh_tenv : env -> (env -> unit) -> unit
 val get_class : env -> Classes.key -> Classes.t option
 val get_typedef : env -> Typedefs.key -> Typedefs.t option
 val get_class_dep : env -> Classes.key -> Classes.t option
-val get_const : env -> class_type -> string -> class_elt option
+val get_const : env -> class_type -> string -> class_const option
 val get_typeconst : env -> class_type -> string -> typeconst_type option
 val get_gconst : env -> GConsts.key -> GConsts.t option
 val get_static_member : bool -> env -> class_type -> string -> class_elt option

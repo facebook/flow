@@ -125,6 +125,12 @@ let autocomplete_new cid env _ =
   | Nast.CI sid -> autocomplete_token Autocomplete.Acnew (Some env) sid
   | _ -> ()
 
+let get_class_elt_types env class_ cid elts =
+  let elts = SMap.filter begin fun _ x ->
+    Typing_visibility.is_visible env x.ce_visibility cid class_
+  end elts in
+  SMap.map (fun class_elt -> class_elt.ce_type) elts
+
 let autocomplete_method is_static class_ id env cid ~is_method =
   if is_auto_complete (snd id)
   then begin
@@ -133,16 +139,19 @@ let autocomplete_method is_static class_ id env cid ~is_method =
     Autocomplete.argument_global_type := Some Autocomplete.Acclass_get;
     let results =
       if is_static
-      then SMap.union class_.tc_smethods
-                      (SMap.union class_.tc_consts class_.tc_sprops)
-      else SMap.union class_.tc_methods class_.tc_props
+      then
+        let elts = SMap.union class_.tc_smethods class_.tc_sprops in
+        let elt_types = get_class_elt_types env class_ cid elts in
+        SMap.fold begin fun x class_const acc ->
+          SMap.add x class_const.cc_type acc
+        end class_.tc_consts elt_types
+      else
+        let elts = SMap.union class_.tc_methods class_.tc_props in
+        get_class_elt_types env class_ cid elts
     in
-    let results = SMap.filter begin fun _ x ->
-      Typing_visibility.is_visible env x.ce_visibility cid class_
-    end results in
-    SMap.iter begin fun x class_elt ->
-      add_result x (Phase.decl class_elt.ce_type)
-    end results
+    SMap.iter begin fun x ty ->
+      add_result x (Phase.decl ty)
+    end results;
   end
 
 let autocomplete_smethod = autocomplete_method true

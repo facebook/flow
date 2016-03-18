@@ -133,29 +133,38 @@ let check_ambiguous_inheritance f parent child pos class_ origin =
       ~do_: (fun error ->
         Errors.ambiguous_inheritance pos class_.tc_name origin error)
 
-(* Check that overriding is correct *)
-let check_override env ?(ignore_fun_return = false) ?(check_for_const = false)
-    parent_class class_ parent_class_elt class_elt =
-  let class_known = if use_parent_for_known then parent_class.tc_members_fully_known
+let should_check_params parent_class class_ =
+  let class_known =
+    if use_parent_for_known then parent_class.tc_members_fully_known
     else class_.tc_members_fully_known in
+  let check_params = class_known || check_partially_known_method_params in
+  class_known, check_params
+
+(* Check that overriding is correct *)
+let check_override env ?(ignore_fun_return = false)
+    parent_class class_ parent_class_elt class_elt =
+  let class_known, check_params = should_check_params parent_class class_ in
   let check_vis = class_known || check_partially_known_method_visibility in
   if check_vis then check_visibility parent_class_elt class_elt else ();
-  let check_params = class_known || check_partially_known_method_params in
   if check_params then
-    if check_for_const
-    then check_types_for_const env parent_class_elt.ce_type class_elt.ce_type
-    else match parent_class_elt.ce_type, class_elt.ce_type with
-      | (r_parent, Tfun ft_parent), (r_child, Tfun ft_child) ->
-        let subtype_funs = SubType.subtype_method ~check_return:(
-            (not ignore_fun_return) &&
-            (class_known || check_partially_known_method_returns)
-          ) in
-        let check (r1, ft1) (r2, ft2) () = ignore(subtype_funs env r1 ft1 r2 ft2) in
-        check_ambiguous_inheritance check (r_parent, ft_parent) (r_child, ft_child)
-          (Reason.to_pos r_child) class_ class_elt.ce_origin
-      | fty_parent, fty_child ->
-        let pos = Reason.to_pos (fst fty_child) in
-        ignore (unify_decl pos Typing_reason.URnone env fty_parent fty_child)
+    match parent_class_elt.ce_type, class_elt.ce_type with
+    | (r_parent, Tfun ft_parent), (r_child, Tfun ft_child) ->
+      let subtype_funs = SubType.subtype_method ~check_return:(
+          (not ignore_fun_return) &&
+          (class_known || check_partially_known_method_returns)
+        ) in
+      let check (r1, ft1) (r2, ft2) () = ignore(subtype_funs env r1 ft1 r2 ft2) in
+      check_ambiguous_inheritance check (r_parent, ft_parent) (r_child, ft_child)
+        (Reason.to_pos r_child) class_ class_elt.ce_origin
+    | fty_parent, fty_child ->
+      let pos = Reason.to_pos (fst fty_child) in
+      ignore (unify_decl pos Typing_reason.URnone env fty_parent fty_child)
+
+let check_const_override env
+    parent_class class_ parent_class_const class_const =
+  let _class_known, check_params = should_check_params parent_class class_ in
+  if check_params then
+    check_types_for_const env parent_class_const.cc_type class_const.cc_type
 
 (* Privates are only visible in the parent, we don't need to check them *)
 let filter_privates members =
@@ -184,6 +193,9 @@ let check_members check_private env parent_class class_ parent_members members =
 (* Instantiation basically applies the substitution *)
 let instantiate_members subst members =
   SMap.map (Inst.instantiate_ce subst) members
+
+let instantiate_consts subst consts =
+  SMap.map (Inst.instantiate_cc subst) consts
 
 let make_all_members class_ = [
   class_.tc_props;
@@ -313,21 +325,21 @@ let check_typeconsts env parent_class class_ =
 
 let check_consts env parent_class class_ psubst subst =
   let pconsts, consts = parent_class.tc_consts, class_.tc_consts in
-  let pconsts = instantiate_members psubst pconsts in
-  let consts = instantiate_members subst consts in
-  let check_const_override = check_override env ~check_for_const:true parent_class class_ in
+  let pconsts = instantiate_consts psubst pconsts in
+  let consts = instantiate_consts subst consts in
   SMap.iter begin fun const_name parent_const ->
     if const_name <> SN.Members.mClass then
       match SMap.get const_name consts with
-        | Some const ->
-          (* skip checks for typeconst derived class constants *)
-          (match SMap.get const_name class_.tc_typeconsts with
-           | None -> check_const_override parent_const const
-           | Some _ -> ())
-        | None ->
-          let parent_pos = Reason.to_pos (fst parent_const.ce_type) in
-          Errors.member_not_implemented const_name parent_pos
-            class_.tc_pos parent_class.tc_pos;
+      | Some const ->
+        (* skip checks for typeconst derived class constants *)
+        (match SMap.get const_name class_.tc_typeconsts with
+         | None ->
+           check_const_override env parent_class class_ parent_const const
+         | Some _ -> ())
+      | None ->
+        let parent_pos = Reason.to_pos (fst parent_const.cc_type) in
+        Errors.member_not_implemented const_name parent_pos
+          class_.tc_pos parent_class.tc_pos;
   end pconsts;
   ()
 

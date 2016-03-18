@@ -99,6 +99,10 @@ let instantiate_ce subst ({ ce_type = x; _ } as ce) =
   let x = instantiate subst x in
   { ce with ce_type = x }
 
+let instantiate_cc subst ({ cc_type = x; _ } as cc) =
+  let x = instantiate subst x in
+  { cc with cc_type = x }
+
 let instantiate_typeconst subst (
   { ttc_constraint = x; ttc_type = y; _ } as tc) =
     let x = Option.map x (instantiate subst) in

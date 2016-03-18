@@ -124,6 +124,12 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       ce_origin      = ce.ce_origin     ;
     }
 
+  and class_const cc =
+    { cc_synthesized = cc.cc_synthesized;
+      cc_type = ty cc.cc_type;
+      cc_origin = cc.cc_origin;
+    }
+
   and typeconst tc =
     { ttc_name = string_id tc.ttc_name;
       ttc_constraint = ty_opt tc.ttc_constraint;
@@ -147,7 +153,7 @@ module TraversePos(ImplementPos: sig val pos: Pos.t -> Pos.t end) = struct
       tc_req_ancestors         = tc.tc_req_ancestors                  ;
       tc_req_ancestors_extends = tc.tc_req_ancestors_extends          ;
       tc_tparams               = List.map tc.tc_tparams type_param    ;
-      tc_consts                = SMap.map class_elt tc.tc_consts      ;
+      tc_consts                = SMap.map class_const tc.tc_consts    ;
       tc_typeconsts            = SMap.map typeconst tc.tc_typeconsts  ;
       tc_props                 = SMap.map class_elt tc.tc_props       ;
       tc_sprops                = SMap.map class_elt tc.tc_sprops      ;

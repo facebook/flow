@@ -28,7 +28,7 @@ module Inst = Decl_instantiate
 
 type inherited = {
   ih_cstr     : class_elt option * bool (* consistency required *);
-  ih_consts   : class_elt SMap.t ;
+  ih_consts   : class_const SMap.t ;
   ih_typeconsts : typeconst_type SMap.t ;
   ih_props    : class_elt SMap.t ;
   ih_sprops   : class_elt SMap.t ;
@@ -102,16 +102,16 @@ let add_methods methods' acc =
 
 let add_const name const acc =
   match SMap.get name acc with
-    | None ->
+  | None ->
+    SMap.add name const acc
+  | Some existing_const ->
+    match (snd const.cc_type, snd existing_const.cc_type) with
+    | Tgeneric(_, _), Tgeneric(_, _) ->
       SMap.add name const acc
-    | Some existing_const ->
-      match (snd const.ce_type, snd existing_const.ce_type) with
-        | Tgeneric(_, _), Tgeneric(_, _) ->
-          SMap.add name const acc
-        | Tgeneric(_, _), _ ->
-          acc
-        | _, _ ->
-          SMap.add name const acc
+    | Tgeneric(_, _), _ ->
+      acc
+    | _, _ ->
+      SMap.add name const acc
 
 let add_members members acc =
   SMap.fold SMap.add members acc
@@ -209,7 +209,7 @@ let map_inherited f inh =
   {
     ih_cstr     = (Option.map (fst inh.ih_cstr) f), (snd inh.ih_cstr);
     ih_typeconsts = inh.ih_typeconsts;
-    ih_consts   = SMap.map f inh.ih_consts;
+    ih_consts   = inh.ih_consts;
     ih_props    = SMap.map f inh.ih_props;
     ih_sprops   = SMap.map f inh.ih_sprops;
     ih_methods  = SMap.map f inh.ih_methods;
@@ -235,7 +235,6 @@ let chown_private owner =
 
 let apply_fn_to_class_elts fn class_type = {
   class_type with
-  tc_consts = fn class_type.tc_consts;
   tc_typeconsts = class_type.tc_typeconsts;
   tc_props = fn class_type.tc_props;
   tc_sprops = fn class_type.tc_sprops;
@@ -264,7 +263,7 @@ let inherit_hack_class env c p class_name class_type argl =
   in
   let typeconsts = SMap.map (Inst.instantiate_typeconst subst)
     class_type.tc_typeconsts in
-  let consts   = instantiate class_type.tc_consts in
+  let consts = SMap.map (Inst.instantiate_cc subst) class_type.tc_consts in
   let props    = instantiate class_type.tc_props in
   let sprops   = instantiate class_type.tc_sprops in
   let methods  = instantiate class_type.tc_methods in
@@ -285,7 +284,7 @@ let inherit_hack_class env c p class_name class_type argl =
 (* mostly copy paste of inherit_hack_class *)
 let inherit_hack_class_constants_only p class_name class_type argl =
   let subst = make_substitution p class_name class_type argl in
-  let instantiate = SMap.map (Inst.instantiate_ce subst) in
+  let instantiate = SMap.map (Inst.instantiate_cc subst) in
   let consts  = instantiate class_type.tc_consts in
   let typeconsts = SMap.map (Inst.instantiate_typeconst subst)
     class_type.tc_typeconsts in
