@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Reordered_argument_collections
 
 let to_json input =
   let entries = List.map input begin fun (name, pos) ->
@@ -49,7 +50,7 @@ let search_method class_name method_name include_defs genv env =
       genv.ServerEnv.workers env.ServerEnv.files_info class_name in
   let all_classes = FindRefsService.find_child_classes
       class_name env.ServerEnv.files_info files in
-  let all_classes = SSet.add class_name all_classes in
+  let all_classes = SSet.add all_classes class_name in
   (* Get all the files that reference those classes *)
   let files = FindRefsService.get_dependent_files
       genv.ServerEnv.workers all_classes in

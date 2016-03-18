@@ -10,6 +10,7 @@
 
 open Core
 open Config_file.Getters
+open Reordered_argument_collections
 
 type t = {
   load_script      : Path.t option;
@@ -55,11 +56,11 @@ let make_sharedmem_config config options =
 let config_list_regexp = (Str.regexp "[, \t]+")
 
 let config_user_attributes config =
-  match SMap.get "user_attributes" config with
+  match SMap.get config "user_attributes" with
     | None -> None
     | Some s ->
       let custom_attrs = Str.split config_list_regexp s in
-      Some (List.fold_right custom_attrs ~f:SSet.add ~init:SSet.empty)
+      Some (List.fold_left custom_attrs ~f:SSet.add ~init:SSet.empty)
 
 let maybe_relative_path fn =
   (* Note: this is not the same as calling realpath; the cwd is not
@@ -73,12 +74,12 @@ let maybe_relative_path fn =
 let load config_filename options =
   let config = Config_file.parse (Relative_path.to_absolute config_filename) in
   let load_script =
-    Option.map (SMap.get "load_script" config) maybe_relative_path in
+    Option.map (SMap.get config "load_script") maybe_relative_path in
   (* Since we use the unix alarm() for our timeouts, a timeout value of 0 means
    * to wait indefinitely *)
   let load_script_timeout = int_ "load_script_timeout" ~default:0 config in
   let load_mini_script =
-    Option.map (SMap.get "load_mini_script" config) maybe_relative_path in
+    Option.map (SMap.get config "load_mini_script") maybe_relative_path in
   let tcopts = { TypecheckerOptions.
     tco_assume_php = bool_ "assume_php" ~default:true config;
     tco_unsafe_xhp = bool_ "unsafe_xhp" ~default:false config;

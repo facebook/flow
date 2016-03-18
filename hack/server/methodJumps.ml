@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Reordered_argument_collections
 open Typing_defs
 module Reason = Typing_reason
 
@@ -29,10 +30,10 @@ let get_overridden_methods origin_class or_mthds dest_class acc =
   let dest_class = Typing_heap.Classes.find_unsafe dest_class in
 
   (* Check if each destination method exists in the origin *)
-  SMap.fold begin fun m_name de_mthd acc ->
+  SMap.fold dest_class.tc_methods ~init:acc ~f:begin fun m_name de_mthd acc ->
     (* Filter out inherited methods *)
     if de_mthd.ce_origin <> dest_class.tc_name then acc else
-    let or_mthd = SMap.get m_name or_mthds in
+    let or_mthd = SMap.get or_mthds m_name in
     match or_mthd with
     | Some or_mthd when or_mthd.ce_origin = origin_class ->
       {
@@ -45,7 +46,7 @@ let get_overridden_methods origin_class or_mthds dest_class acc =
       } :: acc
     | Some _
     | None -> acc
-  end dest_class.tc_methods acc
+  end
 
 let check_if_extends_class_and_find_methods target_class_name mthds
       target_class_pos class_name acc =
@@ -118,7 +119,7 @@ let get_ancestor_classes_and_methods cls acc =
   match class_ with
   | None -> []
   | Some cls ->
-      SMap.fold begin fun k v acc ->
+      SMap.fold cls.Typing_defs.tc_ancestors ~init:acc ~f:begin fun k v acc ->
         let class_ = Typing_heap.Classes.get k in
         match class_ with
         | None -> acc
@@ -135,7 +136,7 @@ let get_ancestor_classes_and_methods cls acc =
               orig_p_name = "";
               dest_p_name = "";
             } :: acc
-      end cls.Typing_defs.tc_ancestors acc
+      end
 
 (*  Returns a list of the ancestor or child
  *  classes and methods for a given class

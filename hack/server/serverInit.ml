@@ -11,6 +11,7 @@
 open Core
 open ServerEnv
 open ServerCheckUtils
+open Reordered_argument_collections
 open Utils
 
 open Result.Export
@@ -266,11 +267,11 @@ let get_dirty_fast old_fast fast dirty =
 
 let get_all_deps {FileInfo.n_funs; n_classes; n_types; n_consts} =
   let add_deps_of_sset dep_ctor sset depset =
-    SSet.fold begin fun n acc ->
+    SSet.fold sset ~init:depset ~f:begin fun n acc ->
       let dep = dep_ctor n in
       let deps = Typing_deps.get_bazooka dep in
       DepSet.union deps acc
-    end sset depset
+    end
   in
   let deps = add_deps_of_sset (fun n -> Dep.Fun n) n_funs DepSet.empty in
   let deps = add_deps_of_sset (fun n -> Dep.FunName n) n_funs deps in
@@ -368,8 +369,8 @@ let init ?load_mini_script genv =
     genv.wait_until_ready ();
     let root = Path.to_string root in
     let updates = genv.notifier () in
-    let updates = SSet.filter (fun p ->
-      str_starts_with p root && ServerEnv.file_filter p) updates in
+    let updates = SSet.filter updates (fun p ->
+      str_starts_with p root && ServerEnv.file_filter p) in
     let changed_while_parsing = Relative_path.(relativize_set Root updates) in
     (* Build targets are untracked by version control, so we must always
      * recheck them. While we could query hg / git for the untracked files,

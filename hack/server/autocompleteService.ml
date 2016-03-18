@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Reordered_argument_collections
 open Typing_defs
 open Utils
 
@@ -126,10 +127,10 @@ let autocomplete_new cid env _ =
   | _ -> ()
 
 let get_class_elt_types env class_ cid elts =
-  let elts = SMap.filter begin fun _ x ->
+  let elts = SMap.filter elts begin fun _ x ->
     Typing_visibility.is_visible env x.ce_visibility cid class_
-  end elts in
-  SMap.map (fun class_elt -> class_elt.ce_type) elts
+  end in
+  SMap.map elts (fun class_elt -> class_elt.ce_type)
 
 let autocomplete_method is_static class_ id env cid ~is_method =
   if is_auto_complete (snd id)
@@ -142,16 +143,16 @@ let autocomplete_method is_static class_ id env cid ~is_method =
       then
         let elts = SMap.union class_.tc_smethods class_.tc_sprops in
         let elt_types = get_class_elt_types env class_ cid elts in
-        SMap.fold begin fun x class_const acc ->
-          SMap.add x class_const.cc_type acc
-        end class_.tc_consts elt_types
+        SMap.fold class_.tc_consts ~f:begin fun x class_const acc ->
+          SMap.add acc x class_const.cc_type
+        end ~init:elt_types
       else
         let elts = SMap.union class_.tc_methods class_.tc_props in
         get_class_elt_types env class_ cid elts
     in
-    SMap.iter begin fun x ty ->
+    SMap.iter results begin fun x ty ->
       add_result x (Phase.decl ty)
-    end results;
+    end;
   end
 
 let autocomplete_smethod = autocomplete_method true
@@ -165,7 +166,7 @@ let autocomplete_lvar_naming _ id locals =
     (* Store the position and a map of name to ident so we can add
      * types at this point later *)
     Autocomplete.auto_complete_pos := Some (fst id);
-    Autocomplete.auto_complete_vars := SMap.map snd locals
+    Autocomplete.auto_complete_vars := SMap.map locals snd
   end
 
 let autocomplete_lvar_typing id env =
@@ -177,10 +178,10 @@ let autocomplete_lvar_typing id env =
     ac_env := Some env;
     Autocomplete.auto_complete_pos := Some (fst id);
     (* Get the types of all the variables in scope at this point *)
-    SMap.iter begin fun x ident ->
+    SMap.iter !Autocomplete.auto_complete_vars begin fun x ident ->
       let _, ty = Typing_env.get_local env ident in
       add_result x (Phase.locl ty)
-    end !Autocomplete.auto_complete_vars;
+    end;
     (* Add $this if we're in a instance method *)
     let ty = Typing_env.get_self env in
     if not (Typing_env.is_static env) && (fst ty) <> Reason.Rnone

@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Reordered_argument_collections
 
 (*****************************************************************************)
 (* Error. *)
@@ -18,7 +19,7 @@ let canon_set names =
   names
   |> SSet.elements
   |> List.map ~f:NamingGlobal.canon_key
-  |> List.fold_right ~f:SSet.add ~init:SSet.empty
+  |> List.fold_left ~f:SSet.add ~init:SSet.empty
 
 let report_error exn =
   let exn_str = Printexc.to_string exn in
@@ -69,10 +70,10 @@ let declare_and_check path content =
       let funs, classes = List.fold_left ast ~f:begin fun (funs, classes) def ->
         match def with
           | Ast.Fun { Ast.f_name; _ } ->
-            declared_funs := SSet.add (snd f_name) !declared_funs;
+            declared_funs := SSet.add !declared_funs (snd f_name);
             f_name::funs, classes
           | Ast.Class { Ast.c_name; _ } ->
-            declared_classes := SSet.add (snd c_name) !declared_classes;
+            declared_classes := SSet.add !declared_classes (snd c_name);
             funs, c_name::classes
           | _ -> funs, classes
       end ~init:([], []) in

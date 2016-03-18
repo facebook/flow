@@ -11,6 +11,7 @@
 open Core
 open ServerCheckUtils
 open ServerEnv
+open Reordered_argument_collections
 open Utils
 
 module SLC = ServerLocalConfig
@@ -25,21 +26,21 @@ let print_defs prefix defs =
   end
 
 let print_fast_pos fast_pos =
-  SMap.iter begin fun x (funs, classes) ->
+  SMap.iter fast_pos begin fun x (funs, classes) ->
     Printf.printf "File: %s\n" x;
     print_defs "Fun" funs;
     print_defs "Class" classes;
-  end fast_pos;
+  end;
   Printf.printf "\n";
   flush stdout;
   ()
 
 let print_fast fast =
-  SMap.iter begin fun x (funs, classes) ->
+  SMap.iter fast begin fun x (funs, classes) ->
     Printf.printf "File: %s\n" x;
-    SSet.iter (Printf.printf "  Fun %s\n") funs;
-    SSet.iter (Printf.printf "  Class %s\n") classes;
-  end fast;
+    SSet.iter funs (Printf.printf "  Fun %s\n");
+    SSet.iter classes (Printf.printf "  Class %s\n");
+  end;
   Printf.printf "\n";
   flush stdout;
   ()
@@ -49,7 +50,7 @@ let print_fast fast =
 (*****************************************************************************)
 
 let set_of_idl l =
-  List.fold_left l ~f:(fun acc (_, x) -> SSet.add x acc) ~init:SSet.empty
+  List.fold_left l ~f:(fun acc (_, x) -> SSet.add acc x) ~init:SSet.empty
 
 (*****************************************************************************)
 (* We want add all the declarations that were present in a file *before* the

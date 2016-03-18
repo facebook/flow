@@ -13,6 +13,7 @@
 (* Code for auto-completion *)
 (*****************************************************************************)
 open Core
+open Reordered_argument_collections
 
 let auto_complete files_info content =
   AutocompleteService.attach_hooks();
@@ -26,7 +27,7 @@ let auto_complete files_info content =
         List.fold_left ids ~init ~f: begin fun acc (_, x) ->
           (* Duplicate class/function name is an error so should be rare, we
            * only need to avoid adding the names declared in content twice *)
-          if SSet.mem x content_ids then acc else x::acc
+          if SSet.mem content_ids x then acc else x::acc
         end in
       add_all funs content_funs f, add_all classes content_classes c
     end ~init:(SSet.elements content_funs, SSet.elements content_classes)

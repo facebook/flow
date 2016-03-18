@@ -10,6 +10,7 @@
 
 open Core
 open Coverage_level
+open Reordered_argument_collections
 open Utils
 
 module FileInfoStore = GlobalStorage.Make(struct
@@ -23,10 +24,10 @@ let count_exprs fn type_acc =
   let level_of_type = level_of_type_mapper fn in
   Hashtbl.fold (fun (p, kind) ty acc ->
     let r, lvl = level_of_type (p, ty) in
-    let counter = match SMap.get kind acc with
+    let counter = match SMap.get acc kind with
       | Some counter -> counter
       | None -> empty_counter in
-    SMap.add kind (incr_counter lvl (r, p, counter)) acc
+    SMap.add acc ~key:kind ~data:(incr_counter lvl (r, p, counter))
   ) type_acc SMap.empty
 
 let accumulate_types fn defs =
