@@ -394,6 +394,7 @@ module rec TypeTerm : sig
 
     | SingletonBoolP of bool (* true or false *)
     | SingletonStrP of string (* string literal *)
+    | SingletonNumP of number_literal
 
     | BoolP (* boolean *)
     | FunP (* function *)
@@ -1096,6 +1097,7 @@ let rec loc_of_predicate = function
 
   | SingletonBoolP _
   | SingletonStrP _
+  | SingletonNumP _
 
   | BoolP
   | FunP
@@ -1434,6 +1436,7 @@ let rec string_of_predicate = function
   | SingletonBoolP false -> "false"
   | SingletonBoolP true -> "true"
   | SingletonStrP str -> spf "string `%s`" str
+  | SingletonNumP (_,raw) -> spf "number `%s`" raw
 
   (* typeof *)
   | VoidP -> "undefined"

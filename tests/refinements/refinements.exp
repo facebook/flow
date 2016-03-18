@@ -374,10 +374,64 @@ null.js:7
   7:   if (null * 100) {
            ^^^^^^^^^^ number
 
-number.js:6
-  6:       return x; // error
+number.js:8
+  8:       (x: void); // error
+            ^ number. This type is incompatible with
+  8:       (x: void); // error
+               ^^^^ undefined
+
+number.js:10
+ 10:     (x: 0); // error
+          ^ number. Expected number literal `0`
+ 10:     (x: 0); // error
+             ^ number literal `0`
+
+number.js:15
+ 15:       (x: 0); // error
+            ^ number. Expected number literal `0`
+ 15:       (x: 0); // error
+               ^ number literal `0`
+
+number.js:17
+ 17:     (x: void); // error
+          ^ number. This type is incompatible with
+ 17:     (x: void); // error
+             ^^^^ undefined
+
+number.js:51
+ 51:       (x: void); // error
+            ^ number literal `0`. This type is incompatible with
+ 51:       (x: void); // error
+               ^^^^ undefined
+
+number.js:55
+ 55:       (x: void); // error
+            ^ number literal `1`. This type is incompatible with
+ 55:       (x: void); // error
+               ^^^^ undefined
+
+number.js:63
+ 63:     return x.foo; // error
+                ^^^^^ number. Expected number literal `0`
+ 59:   function(x: { foo: number }): 0 {
+                                     ^ number literal `0`
+
+number.js:77
+ 77:     if (str === obj.bar) { // error, no such property
+                         ^^^ property `bar`. Property not found in
+ 77:     if (str === obj.bar) { // error, no such property
+                     ^^^ object type
+
+number.js:97
+ 97:       return s; // error
+                  ^ number. This type is incompatible with
+ 93:   function(s: number): ?Mode {
+                             ^^^^ number enum
+
+number.js:116
+116:       return x; // error
                   ^ number. Expected number literal `0`
-  4:   function(x: number): 0 {
+114:   function(x: number): 0 {
                             ^ number literal `0`
 
 property.js:64
@@ -811,4 +865,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 127 errors
+Found 136 errors

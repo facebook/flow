@@ -435,6 +435,7 @@ and gc_pred cx state = function
   | ArrP
   | SingletonBoolP _
   | SingletonStrP _
+  | SingletonNumP _
   | PropExistsP _
       -> ()
 

@@ -4743,6 +4743,17 @@ and filter_not_string_literal expected = function
   | StrT (r, Literal actual) when actual = expected -> EmptyT r
   | t -> t
 
+and filter_number_literal expected t = match t with
+  | NumT (_, Literal actual) when snd actual = snd expected -> t
+  | NumT (r, Truthy) when snd expected <> "0" -> NumT (r, Literal expected)
+  | NumT (r, AnyLiteral) -> NumT (r, Literal expected)
+  | MixedT r -> NumT (r, Literal expected)
+  | _ -> EmptyT (reason_of_t t)
+
+and filter_not_number_literal expected = function
+  | NumT (r, Literal actual) when snd actual = snd expected -> EmptyT r
+  | t -> t
+
 and filter_true = function
   | BoolT (r, Some true)
   | BoolT (r, None) -> BoolT (r, Some true)
@@ -4842,6 +4853,16 @@ and predicate cx trace t (l,p) = match (l,p) with
 
   | (_, NotP(SingletonStrP lit)) ->
     rec_flow_t cx trace (filter_not_string_literal lit l, t)
+
+  (*********************)
+  (* _ ~ some number n *)
+  (*********************)
+
+  | (_, SingletonNumP lit) ->
+    rec_flow_t cx trace (filter_number_literal lit l, t)
+
+  | (_, NotP(SingletonNumP lit)) ->
+    rec_flow_t cx trace (filter_not_number_literal lit l, t)
 
   (***********************)
   (* typeof _ ~ "number" *)

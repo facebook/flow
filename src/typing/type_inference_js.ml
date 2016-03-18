@@ -5257,6 +5257,13 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         let val_t = expression cx type_params_map value in
         literal_test loc ~sense ~strict expr val_t (SingletonStrP lit)
 
+    (* special case equality relations involving numbers *)
+    | (_, Expression.Literal { Literal.value = Literal.Number lit; raw }) as value, expr
+    | expr, ((_, Expression.Literal { Literal.value = Literal.Number lit; raw }) as value)
+      ->
+        let val_t = expression cx type_params_map value in
+        literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit, raw))
+
     (* TODO: add Type.predicate variant that tests number equality *)
 
     (* expr op null *)

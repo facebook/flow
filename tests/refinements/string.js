@@ -21,7 +21,7 @@ let tests = [
     if (x === 'foo') {
       return x; // unreachable, no error
     }
-    return 'foo'; // error
+    return 'foo';
   },
 
   function(x: 'foo'): string {
