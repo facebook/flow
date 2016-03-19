@@ -2733,6 +2733,8 @@ and expr_atomic ~allow_class ~class_const env =
   | Tdollardollar ->
       pos, Dollardollar
   | Tunsafeexpr ->
+      (* Consume the rest of the comment. *)
+      ignore (L.comment (Buffer.create 256) env.file env.lb);
       let e = expr env in
       let end_ = Pos.make env.file env.lb in
       Pos.btw pos end_, Unsafeexpr e

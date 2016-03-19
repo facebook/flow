@@ -314,13 +314,8 @@ rule token file = parse
   (* ignored *)
   | ws+                { token file lexbuf }
   | '\n'               { Lexing.new_line lexbuf; token file lexbuf }
-  | unsafeexpr_start   { let buf = Buffer.create 256 in
-                         let start = lexbuf.Lexing.lex_start_p in
-                         ignore (comment buf file lexbuf);
-                         (* unsafeexpr is technically made up of multiple
-                          * tokens, but we want to treat it as a single token
-                          * as far as start / end positions are concerned *)
-                         lexbuf.Lexing.lex_start_p <- start;
+  | unsafeexpr_start   { (* Only process the start of the comment. The parser
+                          * should then consume the remaining comment. *)
                          Tunsafeexpr
                        }
   | fixme_start        { let fixme = fixme_state0 file lexbuf in
