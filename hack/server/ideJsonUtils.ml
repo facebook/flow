@@ -96,6 +96,7 @@ let args_to_call = function
     ] ->
       let line, column = string_positions_to_ints line column in
       Get_method_name_call (content, line, column)
+  | [JSON_String "--outline"; JSON_String content] -> Outline_call content
   | _ -> raise Not_found
 
 let call_of_string s =
@@ -221,6 +222,8 @@ let json_string_of_response id response =
         ]
       | _ -> JSON_Object []
       end
+    | Outline_response result ->
+      FileOutline.to_json result
   in
   json_to_string (build_response_json id result_field)
 

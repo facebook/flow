@@ -74,6 +74,8 @@ let get_method_name_response content line column =
   Get_method_name_response (
     ServerIdentifyFunction.go content line column
   )
+let get_outline_call_response content =
+  Outline_response (FileOutline.outline content)
 
 let get_call_response id call tcopt files_info errorl =
   match call with
@@ -99,3 +101,5 @@ let get_call_response id call tcopt files_info errorl =
     Result (get_format_response content start end_)
   | Get_method_name_call (content, line, column) ->
     Result (get_method_name_response content line column)
+  | Outline_call content ->
+    Result (get_outline_call_response content)
