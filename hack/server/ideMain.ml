@@ -68,8 +68,8 @@ let get_ready env wait_handles =
 
 (* Wrapper to ensure flushing and type safety of sent type *)
 let write_string_to_channel (s : string) oc =
-  Marshal.to_channel oc s [];
-  flush oc
+  let oc_fd = Unix.descr_of_out_channel oc in
+  Marshal_tools.to_fd_with_preamble oc_fd s
 
 let handle_already_has_client oc =
   let response = Hh_json.(json_to_string (
@@ -114,8 +114,7 @@ let send_call_to_typecheker env id = function
 let send_typechecker_response_to_client env id response =
   Option.iter env.client begin fun (_, oc) ->
     let response = IdeJsonUtils.json_string_of_response id response in
-    Marshal.to_channel oc response [];
-    flush oc
+    write_string_to_channel response oc;
   end
 
 (* Will return a response for the client, or None if the response is going to

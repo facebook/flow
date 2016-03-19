@@ -40,6 +40,9 @@ let rec connect env ~retries =
 let malformed_input () =
   raise Exit_status.(Exit_with IDE_malformed_request)
 
+let read_server_message fd : string =
+  Marshal_tools.from_fd_with_preamble fd
+
 let server_disconnected () =
   raise Exit_status.(Exit_with Ok)
 
@@ -51,8 +54,7 @@ let write_response res =
   Printf.printf "%s\n" res;
   flush stdout
 
-let get_ready_channel server_ic =
-  let server_in_fd = Timeout.descr_of_in_channel server_ic in
+let get_ready_channel server_in_fd =
   let stdin_fd = Unix.descr_of_in_channel stdin in
   let readable, _, _ = Unix.select [server_in_fd; stdin_fd] [] [] 1.0 in
   if readable = [] then `None
@@ -62,15 +64,16 @@ let get_ready_channel server_ic =
 let main env =
   Printexc.record_backtrace true;
   let (ic, oc) = connect env ~retries:3 in
+  let in_fd = Timeout.descr_of_in_channel ic in
   while true do
-    match get_ready_channel ic with
+    match get_ready_channel in_fd with
     | `None -> ()
     | `Stdin ->
       let request = read_request () in
       Marshal.to_channel oc request [];
       flush oc;
     | `Server ->
-      let res = try Timeout.input_value ic with
+      let res = try read_server_message in_fd with
         | End_of_file -> server_disconnected ()
       in
       write_response res;
