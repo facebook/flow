@@ -267,6 +267,19 @@ let token_from_lb
                   last_lexeme = Lexing.lexeme lexbuf } in
   (token, position), lex_env
 
+(* token, pos, lexeme *)
+type tokens = (Lexer_hack.token * Pos.t * string) list
+
+let tokenize (file : Relative_path.t) (content : string) : tokens =
+  let lexbuf = Lexing.from_string content in
+  let lex_env = default_lex_env in
+  let rec get_tokens lex_env acc =
+    let (token, pos), lex_env = token_from_lb file lexbuf lex_env in
+    match token with
+    | Lexer_hack.Teof -> (token, pos, "") :: acc
+    | _ -> get_tokens lex_env ((token, pos, Lexing.lexeme lexbuf) :: acc) in
+  List.rev (get_tokens lex_env [])
+
 (* ================== End Lexing Helpers ============================ *)
 
 (* comparison that accommodate File_pos.dummy *)

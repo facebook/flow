@@ -16,6 +16,12 @@ val parse_file : Relative_path.t -> Parser_hack.parser_return
 val lexing_slice_to_string : (File_pos.t * File_pos.t) -> string -> string
 val format_file_pos : File_pos.t -> string
 
+type tokens = (Lexer_hack.token * Pos.t * string) list
+val tokenize : Relative_path.t -> string -> tokens
+
+val position_min : File_pos.t -> File_pos.t -> File_pos.t
+val position_max : File_pos.t -> File_pos.t -> File_pos.t
+
 (* source extent finding functions *)
 val source_extent_catch : Relative_path.t -> string -> catch ->
                           (File_pos.t * File_pos.t)
