@@ -8,6 +8,7 @@
  *
 *)
 
+open IdeEnv
 open IdeJson
 open Core
 
@@ -77,26 +78,28 @@ let get_method_name_response content line column =
 let get_outline_call_response content =
   Outline_response (FileOutline.outline content)
 
-let get_call_response id call tcopt files_info errorl =
+let get_call_response id call env =
   match call with
   | Auto_complete_call content ->
-    Result (get_autocomplete_response content files_info)
+    Result (get_autocomplete_response content env.files_info)
   | Identify_function_call (content, line, char) ->
     Result (get_identify_function_response content line char)
   | Search_call s ->
     Result (get_search_response s)
   | Status_call ->
-    Result (get_status_reponse errorl)
+    Result (get_status_reponse env.errorl)
   | IdeJson.Find_refs_call s ->
     (* TODO: we can also lookup dependency table and fulfill requests with
      * only several dependencies in IDE process *)
     Deferred_to_typechecker (Find_refs_call s)
   | Colour_call path ->
-    Result (get_colour_response tcopt files_info path)
+    Result (get_colour_response env.tcopt env.files_info path)
   | Find_lvar_refs_call (content, line, column) ->
-    Result (get_find_lvar_refs_response tcopt files_info content line column)
+    Result (get_find_lvar_refs_response env.tcopt
+      env.files_info content line column)
   | Type_at_pos_call (content, line, column) ->
-    Result (get_type_at_pos_response tcopt files_info content line column)
+    Result (get_type_at_pos_response env.tcopt
+      env.files_info content line column)
   | Format_call (content, start, end_) ->
     Result (get_format_response content start end_)
   | Get_method_name_call (content, line, column) ->

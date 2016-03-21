@@ -9,40 +9,12 @@
 *)
 
 open Core
+open IdeEnv
 open IdeJson
-
-type env = {
-  typechecker : IdeProcessPipe.to_typechecker;
-  tcopt : TypecheckerOptions.t;
-  (* Persistent client talking JSON protocol *)
-  client : (in_channel * out_channel) option;
-  (* Non-persistent clients awaiting to receive Hello message and send their
-   * single ServerCommand request *)
-  requests : (Timeout.in_channel * out_channel) list;
-  (* Whether typechecker has finished full initialization. In the future, we
-   * can have more granularity here, allowing some queries to run sooner. *)
-  typechecker_init_done : bool;
-  (* IDE process's version of ServerEnv.file_info, synchronized periodically
-   * from typechecker process. *)
-  files_info : FileInfo.t Relative_path.Map.t;
-  (* IDE process's version of ServerEnv.errorl, synchronized periodically
-   * from typechecker process. *)
-  errorl : Errors.t
-}
-
-let build_env typechecker tcopt = {
-  typechecker = typechecker;
-  tcopt = tcopt;
-  client = None;
-  requests = [];
-  typechecker_init_done = false;
-  files_info = Relative_path.Map.empty;
-  errorl = [];
-}
 
 type job = {
   priority : int;
-  run : env -> env;
+  run : IdeEnv.t -> IdeEnv.t;
 }
 
 type wait_handle =
@@ -50,7 +22,7 @@ type wait_handle =
   | Channel of Unix.file_descr * job
   (* Job that should be run if provided function tells us that there is
    * something to do *)
-  | Fun of (env -> job list)
+  | Fun of (IdeEnv.t -> job list)
 
 let get_ready env wait_handles =
   let funs, channels = List.partition_map wait_handles ~f:begin function
@@ -123,7 +95,7 @@ let get_call_response env id call =
   let busy = fun () -> IdeJsonUtils.json_string_of_server_busy id in
   if not env.typechecker_init_done then Some (busy ()) else
   let response = SharedMem.try_lock_hashtable ~do_:begin fun () ->
-    IdeServerCall.get_call_response id call env.tcopt env.files_info env.errorl
+    IdeServerCall.get_call_response id call env
   end in
   match response with
   | Some (IdeServerCall.Deferred_to_typechecker call) ->
