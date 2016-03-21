@@ -18,6 +18,7 @@ type deferred_to_typechecker =
 type result =
   | Result of IdeJson.response_type
   | Deferred_to_typechecker of deferred_to_typechecker
+  | Server_busy
 
 let get_autocomplete_response content files_info =
   let res = ServerAutoComplete.auto_complete files_info content in
@@ -78,7 +79,7 @@ let get_method_name_response content line column =
 let get_outline_call_response content =
   Outline_response (FileOutline.outline content)
 
-let get_call_response id call env =
+let get_call_response_ id call env =
   match call with
   | Auto_complete_call content ->
     Result (get_autocomplete_response content env.files_info)
@@ -106,3 +107,26 @@ let get_call_response id call env =
     Result (get_method_name_response content line column)
   | Outline_call content ->
     Result (get_outline_call_response content)
+
+let needs_typechecker_init = function
+  | IdeJson.Format_call _ -> false
+  | _ -> true
+
+let needs_shared_memory = function
+  | IdeJson.Format_call _
+  | IdeJson.Search_call _
+  | IdeJson.Status_call -> false
+  | _ -> true
+
+let get_call_response id call env =
+  if needs_typechecker_init call && (not env.typechecker_init_done) then
+    Server_busy
+  else if needs_shared_memory call then begin
+    let response = SharedMem.try_lock_hashtable ~do_:begin fun () ->
+     get_call_response_ id call env
+    end in
+    match response with
+    | Some response -> response
+    | None -> Server_busy
+  end else
+    get_call_response_ id call env

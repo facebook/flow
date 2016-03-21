@@ -92,18 +92,15 @@ let send_typechecker_response_to_client env id response =
 (* Will return a response for the client, or None if the response is going to
  * be computed asynchronously *)
 let get_call_response env id call =
-  let busy = fun () -> IdeJsonUtils.json_string_of_server_busy id in
-  if not env.typechecker_init_done then Some (busy ()) else
-  let response = SharedMem.try_lock_hashtable ~do_:begin fun () ->
-    IdeServerCall.get_call_response id call env
-  end in
+  let response = IdeServerCall.get_call_response id call env in
   match response with
-  | Some (IdeServerCall.Deferred_to_typechecker call) ->
+  | IdeServerCall.Deferred_to_typechecker call ->
       send_call_to_typecheker env id call;
       None
-  | Some (IdeServerCall.Result response) ->
+  | IdeServerCall.Result response ->
       Some (IdeJsonUtils.json_string_of_response id response)
-  | None -> Some (busy ())
+  | IdeServerCall.Server_busy ->
+      Some (IdeJsonUtils.json_string_of_server_busy id)
 
 let handle_gone_client env =
   Hh_logger.log "Client went away";
