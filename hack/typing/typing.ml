@@ -854,7 +854,7 @@ and expr_
       let tvector = Tclass ((p, name), [v]) in
       let ty = Reason.Rwitness p, tvector in
       env, ty
-  | KeyValCollection (name, l) ->
+  | KeyValCollection (kind, l) ->
       let kl, vl = List.unzip l in
       let env, kl = List.map_env env kl expr in
       let env, kl = List.map_env env kl Typing_env.unbind in
@@ -868,7 +868,7 @@ and expr_
       let env, vl = List.map_env env vl TUtils.unresolved in
       let env, v =
         List.fold_left_env env vl ~init:v ~f:(Type.unify p Reason.URvalue) in
-      let ty = Tclass ((p, name), [k; v])
+      let ty = Tclass ((p, kvc_kind_to_name kind), [k; v])
       in
       env, (Reason.Rwitness p, ty)
   | Clone e -> expr env e

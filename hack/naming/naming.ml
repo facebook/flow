@@ -1705,11 +1705,9 @@ module Make (GetLocals : GetLocals) = struct
             || x = SN.Collections.cSet
             || x = SN.Collections.cImmSet ->
           N.ValCollection (cn, (List.map l (afield_value env cn)))
-        | x when
-            x = SN.Collections.cMap
-            || x = SN.Collections.cImmMap
-            || x = SN.Collections.cStableMap ->
-          N.KeyValCollection (cn, (List.map l (afield_kvalue env cn)))
+        | x when N.is_kvc_kind x ->
+          N.KeyValCollection ((N.get_kvc_kind cn),
+            (List.map l (afield_kvalue env cn)))
         | x when x = SN.Collections.cPair ->
           (match l with
             | [] ->

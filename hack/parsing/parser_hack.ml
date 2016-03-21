@@ -2765,7 +2765,7 @@ and expr_atomic_word ~allow_class ~class_const env pos = function
       expr_anon_async env pos
   | "function" ->
       expr_anon_fun env pos ~sync:FDeclSync
-  | name when is_collection env ->
+  | name when is_collection env name ->
       expr_collection env pos name
   | "await" ->
       expr_await env pos
@@ -2957,39 +2957,38 @@ and check_call_time_reference = function
 (* Collections *)
 (*****************************************************************************)
 
-and is_collection env = peek env = Tlcb
+and is_collection env name =
+  (peek env = Tlcb) || (name = "dict" && peek env = Tlb)
 
 and expr_collection env pos name =
-  if is_collection env
-  then build_collection env pos name
-  else pos, Id (pos, name)
-
-and build_collection env pos name =
-  let name = pos, name in
-  let fds = collection_field_list env in
+  let sentinels = match name with
+    | x when x = "dict" -> (Tlb, Trb)
+    | _ -> (Tlcb, Trcb)
+  in
+  let fds = collection_field_list env sentinels in
   let end_ = Pos.make env.file env.lb in
-  Pos.btw pos end_, Collection (name, fds)
+  Pos.btw pos end_, Collection ((pos, name), fds)
 
-and collection_field_list env =
-  expect env Tlcb;
-  collection_field_list_remain env
+and collection_field_list env (start_sentinel, end_sentinel) =
+  expect env start_sentinel;
+  collection_field_list_remain env end_sentinel
 
-and collection_field_list_remain env =
+and collection_field_list_remain env end_sentinel =
   match L.token env.file env.lb with
-  | Trcb -> []
+  | x when x = end_sentinel -> []
   | _ ->
       L.back env.lb;
       let error_state = !(env.errors) in
       let fd = array_field env in
       match L.token env.file env.lb with
-      | Trcb ->
+      | x when x = end_sentinel ->
           [fd]
       | Tcomma ->
           if !(env.errors) != error_state
           then [fd]
-          else fd :: collection_field_list_remain env
+          else fd :: collection_field_list_remain env end_sentinel
       | _ ->
-          error_expect env "}"; []
+          error_expect env (L.token_to_string end_sentinel); []
 
 (*****************************************************************************)
 (* Imports - require/include/require_once/include_once *)

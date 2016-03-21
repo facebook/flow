@@ -2742,6 +2742,12 @@ and expr_atomic_word env last_tok = function
       expect "(" env;
       right env array_body;
       expect ")" env
+  | "dict" ->
+      out "dict" env;
+      expect (token_to_string Tlb) env;
+      (** Dict body looks exactly like an array body. *)
+      right env array_body;
+      expect (token_to_string Trb) env;
   | "empty" | "unset" | "isset" as v ->
       out v env;
       arg_list ~trailing:false env

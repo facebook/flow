@@ -275,13 +275,18 @@ and class_id =
   | CIexpr of expr
   | CI of sid
 
+and kvc_kind = [
+  | `Map
+  | `ImmMap
+  | `Dict ]
+
 and expr = Pos.t * expr_
 and expr_ =
   | Any
   | Array of afield list
   | Shape of expr ShapeMap.t
   | ValCollection of string * expr list
-  | KeyValCollection of string * field list
+  | KeyValCollection of kvc_kind * field list
   | This
   | Id of sid
   | Lvar of id
@@ -377,3 +382,25 @@ let class_id_to_str = function
   | CIexpr (_, Lvar (_, x)) -> "$"^string_of_int(x)
   | CIexpr _ -> assert false
   | CI (_, x) -> x
+
+let is_kvc_kind name = match name with
+  | x when
+    x = SN.Collections.cMap
+    || x = SN.Collections.cImmMap
+    || x = SN.Collections.cStableMap
+    || x = SN.Collections.cDict -> true
+  | _ -> false
+
+let get_kvc_kind name = match name with
+  | x when x = SN.Collections.cMap -> `Map
+  | x when x = SN.Collections.cImmMap -> `ImmMap
+  | x when x = SN.Collections.cDict -> `Dict
+  | _ -> begin
+    Errors.internal_error Pos.none ("Invalid KeyValueCollection name: "^name);
+    `Map
+  end
+
+let kvc_kind_to_name kind = match kind with
+  | `Map -> SN.Collections.cMap
+  | `ImmMap -> SN.Collections.cImmMap
+  | `Dict -> SN.Collections.cDict

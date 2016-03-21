@@ -703,8 +703,8 @@ and emit_expr env (pos, expr_ as expr) =
         emit_ColAddNewElemC env
     in
     List.fold_left ~f:emit_entry ~init:env es
-  | KeyValCollection (col, fields) ->
-    let col_id = get_collection_id col in
+  | KeyValCollection (col_kind, fields) ->
+    let col_id = get_collection_id (kvc_kind_to_name col_kind) in
     let env = emit_NewCol env col_id in
     let emit_field env (ek, ev) =
         let env = emit_expr env ek in

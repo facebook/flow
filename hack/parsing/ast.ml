@@ -322,6 +322,7 @@ and import_flavor =
   | IncludeOnce
   | RequireOnce
 
+(** "array" field. Fields of array, map, dict, and shape literals. *)
 and afield =
   | AFvalue of expr
   | AFkvalue of expr * expr
