@@ -80,9 +80,6 @@ let aliases_to_hh = [
   "AsyncFunctionWaitHandle";
   "AsyncGeneratorWaitHandle";
   "AwaitAllWaitHandle";
-  "GenArrayWaitHandle";
-  "GenMapWaitHandle";
-  "GenVectorWaitHandle";
   "ConditionWaitHandle";
   "RescheduleWaitHandle";
   "SleepWaitHandle";

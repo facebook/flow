@@ -56,9 +56,6 @@ let autoimport_classes = [
   "AsyncFunctionWaitHandle";
   "AsyncGeneratorWaitHandle";
   "AwaitAllWaitHandle";
-  "GenArrayWaitHandle";
-  "GenMapWaitHandle";
-  "GenVectorWaitHandle";
   "ConditionWaitHandle";
   "RescheduleWaitHandle";
   "SleepWaitHandle";
