@@ -275,7 +275,9 @@ end = struct
       if options.moduleSystem <> default_options.moduleSystem
       then opt o "module.system" (module_system options.moduleSystem);
       if options.all <> default_options.all
-      then opt o "all" (string_of_bool options.all)
+      then opt o "all" (string_of_bool options.all);
+      if options.temp_dir <> default_options.temp_dir
+      then opt o "temp_dir" options.temp_dir
     )
 
   let config o config =
