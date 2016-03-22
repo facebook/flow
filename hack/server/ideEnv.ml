@@ -13,9 +13,6 @@ type t = {
   tcopt : TypecheckerOptions.t;
   (* Persistent client talking JSON protocol *)
   client : (in_channel * out_channel) option;
-  (* Non-persistent clients awaiting to receive Hello message and send their
-   * single ServerCommand request *)
-  requests : (Timeout.in_channel * out_channel) list;
   (* Whether typechecker has finished full initialization. In the future, we
    * can have more granularity here, allowing some queries to run sooner. *)
   typechecker_init_done : bool;
@@ -31,7 +28,6 @@ let build_env typechecker tcopt = {
   typechecker = typechecker;
   tcopt = tcopt;
   client = None;
-  requests = [];
   typechecker_init_done = false;
   files_info = Relative_path.Map.empty;
   errorl = [];
