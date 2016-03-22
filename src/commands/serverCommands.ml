@@ -84,7 +84,8 @@ module OptionParser(Config : CONFIG) = struct
   | Detach -> CommandSpec.ArgSpec.(
       empty
       |> dummy Options.default_error_flags (* error_flags *)
-      |> dummy false (* json *)
+      |> flag "--json" no_arg
+          ~doc:"Respond in JSON format"
       |> dummy false (* profile *)
       |> dummy false (* quiet *)
       |> flag "--log-file" string

@@ -363,9 +363,21 @@ end = struct
     end else begin
       Unix.close waiting_channel_out_fd;
       (* let original parent exit *)
-      Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
-      Printf.eprintf
-        "Logs will go to %s\n%!" (Path.to_string (Options.log_file options));
+
+      let log_file = Path.to_string (Options.log_file options) in
+      if options.Options.opt_json
+      then begin
+        let open Hh_json in
+        let json = json_to_string (JSON_Object [
+          "pid", JSON_String (string_of_int pid);
+          "log_file", JSON_String log_file;
+        ]) in
+        print_string json
+      end else begin
+        Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
+        Printf.eprintf
+          "Logs will go to %s\n%!" log_file
+      end;
 
       wait_loop pid options waiting_channel_ic;
       raise Exit
