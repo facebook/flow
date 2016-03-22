@@ -14,6 +14,7 @@ open Core
 
 type deferred_to_typechecker =
   | Find_refs_call of FindRefsService.action
+  | Status_call
 
 type result =
   | Result of IdeJson.response_type
@@ -39,10 +40,6 @@ let get_search_response s =
   Search_call_response ( Hh_json.JSON_Array (
     List.map res ServerSearch.result_to_json
   ))
-
-let get_status_reponse errorl =
-  let errorl = List.map errorl Errors.to_absolute in
-  Status_response (ServerError.get_errorl_json errorl)
 
 let get_colour_response tcopt files_info path =
   let check = fun () -> ServerIdeUtils.check_file_input
@@ -87,8 +84,12 @@ let get_call_response_ id call env =
     Result (get_identify_function_response content line char)
   | Search_call s ->
     Result (get_search_response s)
-  | Status_call ->
-    Result (get_status_reponse env.errorl)
+  | IdeJson.Status_call ->
+    (* We need to go through the typechecker to reduce race conditions that
+     * occur when editors issue "file save" and "status request" operations in
+     * short succession, expecting that status will reflect the state of saved
+     * file *)
+    Deferred_to_typechecker (Status_call)
   | IdeJson.Find_refs_call s ->
     (* TODO: we can also lookup dependency table and fulfill requests with
      * only several dependencies in IDE process *)
@@ -109,6 +110,7 @@ let get_call_response_ id call env =
     Result (get_outline_call_response content)
 
 let needs_typechecker_init = function
+  | IdeJson.Status_call
   | IdeJson.Format_call _ -> false
   | _ -> true
 

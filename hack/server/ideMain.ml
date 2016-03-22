@@ -8,6 +8,7 @@
  *
 *)
 
+open Core
 open IdeEnv
 open IdeJson
 
@@ -59,10 +60,17 @@ let handle_waiting_hh_client_request (ic, oc) env =
     ServerUtils.shutdown_client (ic, oc));
   env
 
-let send_call_to_typecheker env id = function
+let send_call_to_typechecker env id = function
   | IdeServerCall.Find_refs_call action ->
     let msg = IdeProcessMessage.Find_refs_call (id, action) in
-    IdeProcessPipe.send env.typechecker msg
+    IdeProcessPipe.send env.typechecker msg;
+    env
+  | IdeServerCall.Status_call ->
+    let msg = IdeProcessMessage.Start_recheck in
+    IdeProcessPipe.send env.typechecker msg;
+    { env with persistent_client_requests =
+      (id, Status_call) :: env.persistent_client_requests;
+    }
 
 let send_typechecker_response_to_client env id response =
   Option.iter env.client begin fun (_, oc) ->
@@ -76,12 +84,11 @@ let get_call_response env id call =
   let response = IdeServerCall.get_call_response id call env in
   match response with
   | IdeServerCall.Deferred_to_typechecker call ->
-      send_call_to_typecheker env id call;
-      None
+      send_call_to_typechecker env id call, None
   | IdeServerCall.Result response ->
-      Some (IdeJsonUtils.json_string_of_response id response)
+      env, Some (IdeJsonUtils.json_string_of_response id response)
   | IdeServerCall.Server_busy ->
-      Some (IdeJsonUtils.json_string_of_server_busy id)
+      env, Some (IdeJsonUtils.json_string_of_server_busy id)
 
 let handle_gone_client ic env =
   Hh_logger.log "Client went away";
@@ -103,7 +110,8 @@ let handle_client_request (ic, oc) env =
       flush oc;
       env
     | Call (id, call) ->
-      begin match get_call_response env id call with
+      let env, response = get_call_response env id call in
+      begin match response with
         | Some response -> write_string_to_channel response oc
         | None -> ()
       end;
@@ -113,6 +121,21 @@ let handle_client_request (ic, oc) env =
   | Sys_error _ ->
     (* client went away in the meantime *)
     handle_gone_client ic env
+
+let handle_recheck_done env =
+  (* if rechecking is done, we assume that the error list is stabilized, and
+   * we can answer any pending Status calls. *)
+  let ready_requests, pending_requests =
+    List.partition_map env.persistent_client_requests ~f:begin function
+      | (id, Status_call) -> `Fst id
+      | x -> `Snd x
+    end in
+  List.iter ready_requests (fun id ->
+    let errorl = List.map env.errorl Errors.to_absolute in
+    let response = Status_response (ServerError.get_errorl_json errorl) in
+    send_typechecker_response_to_client env id response
+  );
+  { env with persistent_client_requests = pending_requests }
 
 let handle_new_client parent_in_fd env  =
   let socket = Libancillary.ancil_recv_fd parent_in_fd in
@@ -151,6 +174,7 @@ let handle_new_client parent_in_fd env  =
 let handle_typechecker_message env =
   match IdeProcessPipe.recv env.typechecker with
   | IdeProcessMessage.Typechecker_init_done ->
+    let env = handle_recheck_done env in
     { env with typechecker_init_done = true }
   | IdeProcessMessage.Sync_file_info updated_files_info ->
     Hh_logger.log "Received file info updates for %d files"
@@ -170,6 +194,8 @@ let handle_typechecker_message env =
     let response = IdeJson.Find_refs_response response in
     send_typechecker_response_to_client env id response;
     env
+  | IdeProcessMessage.Recheck_finished ->
+    handle_recheck_done env
 
 let handle_server_idle env =
   if IdeIdle.has_tasks () then

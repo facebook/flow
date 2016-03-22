@@ -13,6 +13,7 @@ type t = {
   tcopt : TypecheckerOptions.t;
   (* Persistent client talking JSON protocol *)
   client : (in_channel * out_channel) option;
+  persistent_client_requests : (IdeJson.call_id * IdeJson.call_type) list;
   (* Whether typechecker has finished full initialization. In the future, we
    * can have more granularity here, allowing some queries to run sooner. *)
   typechecker_init_done : bool;
@@ -28,6 +29,7 @@ let build_env typechecker tcopt = {
   typechecker = typechecker;
   tcopt = tcopt;
   client = None;
+  persistent_client_requests = [];
   typechecker_init_done = false;
   files_info = Relative_path.Map.empty;
   errorl = [];

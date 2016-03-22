@@ -12,6 +12,7 @@ open IdeJson
 
 type deferred_to_typechecker =
   | Find_refs_call of FindRefsService.action
+  | Status_call
 
 type result =
   | Result of IdeJson.response_type

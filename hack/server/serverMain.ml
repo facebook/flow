@@ -168,6 +168,11 @@ let recheck genv old_env updates =
   BuildMain.incremental_update genv old_env env updates;
   env, to_recheck, total_rechecked
 
+let ide_recheck_finished ide_process =
+  Option.iter ide_process begin fun x ->
+    IdeProcessPipe.send x (IdeProcessMessage.Recheck_finished);
+  end
+
 (* When a rebase occurs, dfind takes a while to give us the full list of
  * updates, and it often comes in batches. To get an accurate measurement
  * of rebase time, we use the heuristic that any changes that come in
@@ -250,6 +255,9 @@ let rec ide_recv_messages_loop ide_process genv env =
         let msg = IdeProcessMessage.Find_refs_response (id, res) in
         IdeProcessPipe.send ide_process msg;
         ide_recv_messages_loop ide_process genv env
+    (* Start_recheck doesn't do anything except breaking out of sleep_and_check
+     * loop so we can proceed to the rechecking of files changed on disk *)
+    | IdeProcessMessage.Start_recheck -> ()
 
 let ide_recv_messages genv env =
   Option.iter genv.ide_process begin fun ide_process ->
@@ -301,6 +309,7 @@ let serve genv env in_fd _ =
         genv.ide_process new_env.errorl !env.errorl;
       Hh_logger.log "Recheck id: %s" !recheck_id;
     end;
+    ide_recheck_finished genv.ide_process;
     env := new_env;
     last_stats := stats;
     if has_client then
