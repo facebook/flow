@@ -1,3 +1,9 @@
+createElementRequiredProp_string.js:5
+  5:   props: {
+              ^ property `test`. Property not found in
+ 20:     return (<Cmp/>);
+                 ^^^^^^ props of React element `Cmp`
+
 import_react.js:7
   7: var b: number = new react.Component(); // Error: ReactComponent ~> number
                      ^^^^^^^^^^^^^^^^^^^^^ constructor call
@@ -95,4 +101,4 @@ proptype_oneOfType.js:23
              ^^^^^^^^^^^^^^^^^^^^^^ string
 
 
-Found 10 errors
+Found 11 errors
