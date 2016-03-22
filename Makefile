@@ -95,6 +95,9 @@ NATIVE_LIBRARIES=\
 FILES_TO_COPY=\
   $(wildcard lib/*.js)
 
+JS_STUBS=\
+	$(wildcard js/*.js)
+
 ################################################################################
 #                                    Rules                                     #
 ################################################################################
@@ -108,7 +111,8 @@ EXTRA_INCLUDE_OPTS=$(foreach dir, $(EXTRA_INCLUDE_PATHS),-ccopt -I -ccopt $(dir)
 EXTRA_LIB_OPTS=$(foreach dir, $(EXTRA_LIB_PATHS),-cclib -L -cclib $(dir))
 FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(framework))
 
-LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS) $(SECTCREATE)
+BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
+LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS) $(SECTCREATE)
 
 
 all: $(FLOWLIB) build-flow copy-flow-files
@@ -179,3 +183,15 @@ test: build-flow copy-flow-files
 
 test-ocp: build-flow-with-ocp copy-flow-files-ocp
 	${MAKE} do-test
+
+js: build-flow-native-deps
+	mkdir -p bin
+	ocamlbuild -use-ocamlfind \
+		-pkgs js_of_ocaml \
+		-build-dir _build \
+		-lflags -custom -no-links \
+		$(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(BYTECODE_LINKER_FLAGS)" \
+		src/flow_dot_js.byte
+	js_of_ocaml --opt 3 -o bin/flow.js $(JS_STUBS) _build/src/flow_dot_js.byte
+
+.PHONY: all js
