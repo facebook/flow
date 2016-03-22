@@ -146,7 +146,7 @@ object_prototype.js:150
 object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-string. See: [LIB] core.js:274
+string. See: [LIB] core.js:279
 
 object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error

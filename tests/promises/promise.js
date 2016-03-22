@@ -226,15 +226,3 @@ Promise.resolve(0)
     // TODO
     var b: string = num; // Error: string ~> number
   });
-
-///////////////////////////////////
-// == Promise.prototype.done == //
-///////////////////////////////////
-
-// done with arrow function
-function testDone(p: Promise<string>) {
-  p.done(
-    x => x*10, // Error string ~> number
-    err => err*10, // No error
-  );
-}

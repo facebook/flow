@@ -1,13 +1,13 @@
 async.js:12
  12:   return 1;  // error, number != bool
               ^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of async return. See: [LIB] core.js:452
+union: type application of identifier `Promise` | type parameter `T` of async return. See: [LIB] core.js:457
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:452
+  type application of identifier `Promise`. See: [LIB] core.js:457
   Error:
    12:   return 1;  // error, number != bool
                 ^ number. This type is incompatible with
-  Promise. See: [LIB] core.js:452
+  Promise. See: [LIB] core.js:457
   Member 2:
    12:   return 1;  // error, number != bool
          ^^^^^^^^^ type parameter `T` of async return
@@ -20,13 +20,13 @@ union: type application of identifier `Promise` | type parameter `T` of async re
 async.js:31
  31:   return await p; // error, number != bool
               ^^^^^^^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of async return. See: [LIB] core.js:452
+union: type application of identifier `Promise` | type parameter `T` of async return. See: [LIB] core.js:457
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:452
+  type application of identifier `Promise`. See: [LIB] core.js:457
   Error:
    31:   return await p; // error, number != bool
                 ^^^^^^^ number. This type is incompatible with
-  Promise. See: [LIB] core.js:452
+  Promise. See: [LIB] core.js:457
   Member 2:
    31:   return await p; // error, number != bool
          ^^^^^^^^^^^^^^^ type parameter `T` of async return

@@ -35,13 +35,13 @@ array_lib.js:21
                             ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                      ^^^ string. This type is incompatible with
-union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:165
+union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:167
   Member 1:
-  array type. See: [LIB] core.js:165
+  array type. See: [LIB] core.js:167
   Error:
    21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                        ^^^ string. This type is incompatible with
-  array type. See: [LIB] core.js:165
+  array type. See: [LIB] core.js:167
   Member 2:
    21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                               ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `S` of call of method `concat`
@@ -56,13 +56,13 @@ array_lib.js:21
                             ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                           ^^^ string. This type is incompatible with
-union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:165
+union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:167
   Member 1:
-  array type. See: [LIB] core.js:165
+  array type. See: [LIB] core.js:167
   Error:
    21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                             ^^^ string. This type is incompatible with
-  array type. See: [LIB] core.js:165
+  array type. See: [LIB] core.js:167
   Member 2:
    21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                               ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `S` of call of method `concat`
@@ -77,13 +77,13 @@ array_lib.js:21
                             ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                                ^^^ string. This type is incompatible with
-union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:165
+union: array type | type parameter `S` of call of method `concat`. See: [LIB] core.js:167
   Member 1:
-  array type. See: [LIB] core.js:165
+  array type. See: [LIB] core.js:167
   Error:
    21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                                  ^^^ string. This type is incompatible with
-  array type. See: [LIB] core.js:165
+  array type. See: [LIB] core.js:167
   Member 2:
    21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                               ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `S` of call of method `concat`
@@ -99,14 +99,14 @@ array_lib.js:46
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See: [LIB] core.js:186
+  polymorphic type: function type. See: [LIB] core.js:188
   Error:
    46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
                                    ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
    46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
                                    ^^^^^^^^^^^^^^^^ number
   Member 2:
-  polymorphic type: function type. See: [LIB] core.js:190
+  polymorphic type: function type. See: [LIB] core.js:192
   Error:
    46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
                                    ^^^ string. This type is incompatible with
@@ -119,14 +119,14 @@ array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See: [LIB] core.js:193
+  polymorphic type: function type. See: [LIB] core.js:195
   Error:
    47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                         ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
    47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                         ^^^^^^^^^^^^^^^^ number
   Member 2:
-  polymorphic type: function type. See: [LIB] core.js:197
+  polymorphic type: function type. See: [LIB] core.js:199
   Error:
    47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
                                         ^^^ string. This type is incompatible with

@@ -1,3 +1,16 @@
+###master (next release)
+
+- Removed non-standard Promise methods
+
+Previous versions of Flow specified the type of Promise.prototype.done and
+Promise.cast, which are not standard or implemented in browsers.
+
+If you rely on a polyfill that does provide these methods, you can redeclare the
+Promise class in your project's local libs folder. Note that you need to copy
+the entire class declaration from lib/core.js in order to add methods and
+properties. It's not currently possible to extend the builtin declarations, but
+it is possible to redefine them.
+
 ###v0.22.1
 
 - Patch release to fix some JSON parsing issues that went out in v0.22.0

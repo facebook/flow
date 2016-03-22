@@ -3,13 +3,13 @@ issue-198.js:1
              ^ call of method `then`
   5:         return num.toFixed();
                     ^^^^^^^^^^^^^ string. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See: [LIB] core.js:444
+union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See: [LIB] core.js:449
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:444
+  type application of identifier `Promise`. See: [LIB] core.js:449
   Error:
     5:         return num.toFixed();
                       ^^^^^^^^^^^^^ string. This type is incompatible with
-  Promise. See: [LIB] core.js:444
+  Promise. See: [LIB] core.js:449
   Member 2:
     1: var p = new Promise(function(resolve, reject) {
                ^ type parameter `U` of call of method `then`
