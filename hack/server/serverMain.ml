@@ -104,9 +104,20 @@ module Program =
 (* The main loop *)
 (*****************************************************************************)
 
-let sleep_and_check in_fd =
-  let ready_fd_l, _, _ = Unix.select [in_fd] [] [] (1.0) in
-  ready_fd_l <> []
+let sleep_and_check in_fd ide_process =
+  match ide_process with
+  | Some ide_process ->
+    let ide_fd = ide_process.IdeProcessPipe.in_fd in
+    let ready_fd_l, _, _ = Unix.select [in_fd; ide_fd] [] [] (1.0) in
+    begin match ready_fd_l with
+      | [x] when x = in_fd -> true, false
+      | [x] when x = ide_fd -> false, true
+      | [] -> false, false
+      | _ -> true, true
+    end
+  | None ->
+    let ready_fd_l, _, _ = Unix.select [in_fd] [] [] (1.0) in
+    ready_fd_l <> [], false
 
 let handle_connection_ genv env ic oc =
   try
@@ -255,12 +266,12 @@ let serve genv env in_fd _ =
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
     SharedMem.hashtable_mutex_unlock ();
-    let has_client = sleep_and_check in_fd in
+    let has_client, has_ide_messages =
+      sleep_and_check in_fd genv.ide_process in
     (* For now we only run IDE commands in idle loop, with plan to vet more
      * places where it's safe to do so in parallel. *)
     SharedMem.hashtable_mutex_lock ();
-    (* TODO: make waiting on IDE messages part of sleep_and_check *)
-    ide_recv_messages genv !env;
+    if has_ide_messages then ide_recv_messages genv !env;
     let has_parsing_hook = !ServerTypeCheck.hook_after_parsing <> None in
     if not has_client && not has_parsing_hook
     then begin
