@@ -50,9 +50,8 @@ module Make = functor (EnvType: sig type t end) -> struct
 
   let rec wait_for_channel ~priority fd f =
     let f' = begin fun env ->
-      let env = f env in
       wait_for_channel ~priority fd f;
-      env
+      f env
     end in
     let wait_handle = Channel (fd, { priority ; run = f'}) in
     env := { !env with waiting_jobs = wait_handle :: !env.waiting_jobs }
