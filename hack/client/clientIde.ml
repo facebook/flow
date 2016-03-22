@@ -74,7 +74,8 @@ let main env =
       flush oc;
     | `Server ->
       let res = try read_server_message in_fd with
-        | End_of_file -> server_disconnected ()
+        | Marshal_tools.Reading_Preamble_Exception
+        | Unix.Unix_error _ -> server_disconnected ()
       in
       write_response res;
   done;
