@@ -76,6 +76,30 @@ Arith.js:67
  67: str(undefined + "foo"); // error
          ^^^^^^^^^^^^^^^^^ string
 
+generic.js:3
+  3: function f<A,B>(a:A,b:B):A {return a+b} // error: mixed ~> incompatible instantiation
+                                        ^^^ mixed. This type is incompatible with
+  3: function f<A,B>(a:A,b:B):A {return a+b} // error: mixed ~> incompatible instantiation
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `A`
+
+generic.js:4
+  4: function f<A,B>(a:A,b:B):A {return b+a} // error: mixed ~> incompatible instantiation
+                                        ^^^ mixed. This type is incompatible with
+  4: function f<A,B>(a:A,b:B):A {return b+a} // error: mixed ~> incompatible instantiation
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `A`
+
+generic.js:5
+  5: function f<A,B>(a:A,b:B):B {return a+b} // error: mixed ~> incompatible instantiation
+                                        ^^^ mixed. This type is incompatible with
+  5: function f<A,B>(a:A,b:B):B {return a+b} // error: mixed ~> incompatible instantiation
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `B`
+
+generic.js:6
+  6: function f<A,B>(a:A,b:B):B {return b+a} // error: mixed ~> incompatible instantiation
+                                        ^^^ mixed. This type is incompatible with
+  6: function f<A,B>(a:A,b:B):B {return b+a} // error: mixed ~> incompatible instantiation
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `B`
+
 mult.js:5
   5: num(null * 1);
          ^^^^ null. This type is incompatible with
@@ -179,4 +203,4 @@ relational.js:20
                   ^^^^^^^^^ undefined
 
 
-Found 29 errors
+Found 33 errors
