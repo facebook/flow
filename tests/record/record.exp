@@ -22,11 +22,5 @@ test.js:20
  17:   x: $Subtype<{[key: $Keys<X>]: any}>; // object with larger key set than X's
                           ^^^^^^^^ object type
 
-test.js:23
- 23: type AnyKey = $Keys<Object>;
-                         ^^^^^^ string. Expected string literal
- 24: var o3: {[key: AnyKey]: number} = { foo: 0 };
-                    ^^^^^^ key set
 
-
-Found 5 errors
+Found 4 errors

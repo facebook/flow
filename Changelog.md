@@ -11,6 +11,22 @@ the entire class declaration from lib/core.js in order to add methods and
 properties. It's not currently possible to extend the builtin declarations, but
 it is possible to redefine them.
 
+- stricter dictionaries
+
+Dictionaries used to be covariant, which was unsound. Consider the following
+example:
+
+```js
+var obj: {foo: number, bar: string} = {foo: 0, bar: ""};
+var dict: {[k:string]: mixed} = obj;
+dict.foo = true; // can write anything into `foo`
+(obj.foo: number); // this invariant no longer holds
+```
+
+This release changes the subtyping relationship between objects to be invariant
+with respect to indexer types. The assignment from `obj` to `dict` is now a type
+error.
+
 ###v0.22.1
 
 - Patch release to fix some JSON parsing issues that went out in v0.22.0
