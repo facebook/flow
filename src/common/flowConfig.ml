@@ -53,6 +53,7 @@ module Opts = struct
     log_file: Path.t option;
     max_workers: int;
     temp_dir: string;
+    version: string option;
   }
 
   type _initializer =
@@ -123,6 +124,7 @@ module Opts = struct
     log_file = None;
     max_workers = Sys_utils.nbr_procs;
     temp_dir = Filename.concat Sys_utils.temp_dir_name "flow";
+    version = None;
   }
 
   let parse =
@@ -588,28 +590,22 @@ let parse_options config lines =
   in
   {config with options}
 
-let assert_version (ln, line) =
-  try
-    if not (Semver.satisfies line version)
-    then error ln (
-      spf
-        "Wrong version of Flow. The config specifies version %s but this is version %s"
-        line
-        version
-    )
-  with Semver.Parse_error _ ->
+let parse_version config lines =
+  let ln, version_str = lines
+  |> List.map (fun (ln, line) -> ln, String.trim line)
+  |> List.filter (fun (_, s) -> s <> "")
+  |> List.hd
+  in
+
+  if not (Semver.is_valid_range version_str) then
     error ln (
       spf
         "Expected version to match %%d.%%d.%%d, with an optional leading ^, got %s"
-        line
-    )
+        version_str
+    );
 
-let parse_version config lines =
-  lines
-    |> List.map (fun (ln, line) -> ln, String.trim line)
-    |> List.filter (fun (_, s) -> s <> "")
-    |> List.iter assert_version;
-  config
+  let options = { config.options with Opts.version = Some version_str } in
+  { config with options }
 
 let parse_section config ((section_ln, section), lines) =
   match section, lines with

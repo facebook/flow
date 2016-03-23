@@ -32,6 +32,7 @@ module Opts : sig
     log_file: Path.t option;
     max_workers: int;
     temp_dir: string;
+    version: string option;
   }
 end
 

@@ -194,6 +194,10 @@ end = struct
     List.for_all (Comparator.satisfies version) range
 end
 
+let is_valid_range range =
+  try let _ = Range.parse range in true
+  with Parse_error _ -> false
+
 let satisfies (range:string) (version:string) =
   let range = Range.parse range in
   let version = Version.parse version in

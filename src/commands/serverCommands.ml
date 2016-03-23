@@ -49,6 +49,8 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
+    |> flag "--ignore-version" no_arg
+        ~doc:"Ignore the version constraint in .flowconfig"
     |> flowconfig_flags
     |> verbose_flags
     |> strip_root_flag
@@ -147,6 +149,16 @@ module OptionParser(Config : CONFIG) = struct
       |> List.map Path.make in
       config_libs @ libs
 
+  let assert_version version_constraint =
+    if not (Semver.satisfies version_constraint FlowConfig.version)
+    then
+      let msg = Utils_js.spf
+        "Wrong version of Flow. The config specifies version %s but this is version %s"
+        version_constraint
+        FlowConfig.version
+      in
+      FlowExitStatus.(exit ~msg Invalid_flowconfig)
+
   let result = ref None
   let main
       error_flags
@@ -163,6 +175,7 @@ module OptionParser(Config : CONFIG) = struct
       no_flowlib
       munge_underscore_members
       max_workers
+      ignore_version
       flowconfig_flags
       verbose
       strip_root
@@ -173,6 +186,12 @@ module OptionParser(Config : CONFIG) = struct
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
+
+    begin match ignore_version, FlowConfig.(flowconfig.options.Opts.version) with
+    | false, Some version -> assert_version version
+    | _ -> ()
+    end;
+
     let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
     | Opts.Node -> "node"
     | Opts.Haste -> "haste") in

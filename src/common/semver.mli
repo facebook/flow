@@ -28,4 +28,5 @@
 
 exception Parse_error of string
 
+val is_valid_range : string -> bool
 val satisfies : string -> string -> bool
