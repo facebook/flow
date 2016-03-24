@@ -271,6 +271,11 @@ let normalize_filename ~root filename =
   then Path.to_string (Path.concat root filename)
   else filename
 
+let normalize_stdin_filename ~root = function
+| None -> None
+| Some (stdin_filename, contents) ->
+    Some (normalize_filename ~root stdin_filename, contents)
+
 let read_line_in_file line filename stdin_file =
   match filename with
   | None ->
@@ -311,6 +316,7 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
   let c0 = loc.start.column in
   let c1 = loc._end.column in
   let filename = file_of_source ~root loc.source in
+  let stdin_file = normalize_stdin_filename ~root stdin_file in
 
   let see_another_file filename =
     if filename = main_file
@@ -655,6 +661,7 @@ let json_of_message_with_context ~root ~stdin_file message =
   | Some loc ->
       let open Loc in
       let filename = file_of_source ~root loc.source in
+      let stdin_file = normalize_stdin_filename ~root stdin_file in
       let line = loc.start.line - 1 in
       read_line_in_file line filename stdin_file in
   let context = ("context", match code_line with

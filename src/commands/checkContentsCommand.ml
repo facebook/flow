@@ -20,7 +20,11 @@ let spec = {
   doc = "Run typechecker on contents from stdin";
   usage = Printf.sprintf
     "Usage: %s check-contents [OPTION]... [FILE]\n\n\
-      e.g. %s check-contents < foo.js\n"
+      Runs a flow check on the contents of stdin. If FILE is provided, then\n\
+      check-contents pretends that the contents of stdin come from FILE\n\n\
+      e.g. %s check-contents < foo.js\n\
+      or   %s check-contents foo.js < foo.js\n"
+      CommandUtils.exe_name
       CommandUtils.exe_name
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
