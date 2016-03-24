@@ -6,6 +6,10 @@
  * LICENSE file in the "hack" directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *)
+*)
 
-include Scheduler.Make(struct type t = IdeEnv.t end)
+let persistent_client_request = 0
+let hh_client_request = 1
+let new_client = 2
+let typechecker_message = 3
+let idle = 4

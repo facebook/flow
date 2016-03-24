@@ -11,8 +11,8 @@
 open Core
 
 type 'a bucket =
-| Job of 'a list
-| Wait
+  | Job of 'a list
+  | Wait
 
 type 'a nextlist_dynamic =
   unit -> 'a bucket

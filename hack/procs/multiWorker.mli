@@ -26,8 +26,8 @@ val call :
    elements are added to the workload) or Some list of elements. It will be
    called repeatedly until it returns Some empty list.  *)
 type 'a bucket =
-| Job of 'a list
-| Wait
+  | Job of 'a list
+  | Wait
 
 type 'a nextlist_dynamic =
   unit -> 'a bucket

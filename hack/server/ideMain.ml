@@ -12,16 +12,6 @@ open Core
 open IdeEnv
 open IdeJson
 
-module IdeScheduler = IdeScheduler.Make(struct type t = IdeEnv.t end)
-
-module Priorities = struct
-  let persistent_client_request = 0
-  let hh_client_request = 1
-  let new_client = 2
-  let typechecker_message = 3
-  let idle = 4
-end
-
 (* Wrapper to ensure flushing and type safety of sent type *)
 let write_string_to_channel (s : string) oc =
   let oc_fd = Unix.descr_of_out_channel oc in
@@ -152,7 +142,7 @@ let handle_new_client parent_in_fd env  =
       IdeScheduler.wait_for_channel
         (Unix.descr_of_in_channel ic)
         (handle_client_request (ic, oc))
-        ~priority:Priorities.persistent_client_request;
+        ~priority:IdePriorities.persistent_client_request;
       { env with client = Some (ic, oc) }
     | Some _ ->
       Hh_logger.log "Rejected a client";
@@ -163,12 +153,11 @@ let handle_new_client parent_in_fd env  =
     let ic, oc = Timeout.in_channel_of_descr socket, oc in
     IdeScheduler.wait_for_fun
       (fun env ->
-        env.typechecker_init_done &&
-        (not (HackSearchService.IdeProcessApi.updates_pending ()))
+        env.typechecker_init_done && (not (IdeSearch.updates_pending ()))
       )
       (handle_waiting_hh_client_request (ic, oc))
       ~once:true
-      ~priority:Priorities.hh_client_request;
+      ~priority:IdePriorities.hh_client_request;
     env
 
 let handle_typechecker_message env =
@@ -184,8 +173,7 @@ let handle_typechecker_message env =
       end
       env.files_info
       updated_files_info in
-    HackSearchService.IdeProcessApi.enqueue_updates
-      (Relative_path.Map.keys updated_files_info);
+    IdeSearch.enqueue_updates (Relative_path.Map.keys updated_files_info);
     { env with files_info = new_files_info }
   | IdeProcessMessage.Sync_error_list errorl ->
     Hh_logger.log "Received error list update";
@@ -197,24 +185,16 @@ let handle_typechecker_message env =
   | IdeProcessMessage.Recheck_finished ->
     handle_recheck_done env
 
-let handle_server_idle env =
-  if IdeIdle.has_tasks () then
-    ignore (SharedMem.try_lock_hashtable ~do_:(fun () -> IdeIdle.go ()));
-  env
-
 let init_scheduler monitor_in_fd typechecker_in_fd =
   IdeScheduler.wait_for_channel
     monitor_in_fd
     (handle_new_client monitor_in_fd)
-    ~priority:Priorities.new_client;
+    ~priority:IdePriorities.new_client;
   IdeScheduler.wait_for_channel
     typechecker_in_fd
     handle_typechecker_message
-    ~priority:Priorities.typechecker_message;
-  IdeScheduler.wait_for_fun
-    (fun _ -> IdeIdle.has_tasks ())
-    handle_server_idle
-    ~priority:Priorities.idle
+    ~priority:IdePriorities.typechecker_message;
+  ()
 
 let daemon_main options (parent_ic, _parent_oc) =
   Printexc.record_backtrace true;
@@ -230,7 +210,6 @@ let daemon_main options (parent_ic, _parent_oc) =
   let tcopt = ServerConfig.typechecker_options config in
   let env = ref (build_env typechecker_process tcopt) in
 
-  IdeIdle.init ();
   init_scheduler parent_in_fd typechecker_process.IdeProcessPipe.in_fd;
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
