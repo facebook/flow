@@ -37,6 +37,7 @@ let autoimport_classes = [
   "Collection";
   "Vector";
   "ImmVector";
+  "dict";
   "Map";
   "ImmMap";
   "StableMap";
