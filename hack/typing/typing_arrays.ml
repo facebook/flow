@@ -61,7 +61,7 @@ let array_type_list_to_single_type env values =
   in match unknown with
     | Some (r, _) -> env, (r, Tany)
     | None ->
-      let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+      let env, value = Env.fresh_unresolved_type env in
       List.fold_left_env env values ~init:value ~f:TUtils.unify
 
 let downcast_akshape_to_akmap_ env r fdm =
@@ -69,7 +69,7 @@ let downcast_akshape_to_akmap_ env r fdm =
   let env, values = List.map_env env values Typing_env.unbind in
   let env, value = array_type_list_to_single_type env values in
   let env, keys = List.map_env env keys Typing_env.unbind in
-  let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+  let env, key = Env.fresh_unresolved_type env in
   let env, key = List.fold_left_env env keys ~init:key ~f:TUtils.unify in
   env, (r, Tarraykind (AKmap (key, value)))
 
@@ -170,23 +170,23 @@ let update_array_type p access_type ~lvar_assignment env ty =
     method! on_tarraykind_akempty (env, seen) _ =
       match access_type with
         | AKshape_key field_name ->
-          let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-          let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let env, tk = Env.fresh_unresolved_type env in
+          let env, tv = Env.fresh_unresolved_type env in
           let fdm = ShapeMap.singleton field_name (tk, tv) in
           (env, seen), (Reason.Rused_as_shape p, Tarraykind (AKshape fdm))
         | AKappend ->
-          let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let env, tv = Env.fresh_unresolved_type env in
           (env, seen), (Reason.Rappend p, Tarraykind (AKvec tv))
         | AKother | AKtuple_index _ ->
-          let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-          let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let env, tk = Env.fresh_unresolved_type env in
+          let env, tv = Env.fresh_unresolved_type env in
           (env, seen), (Reason.Rused_as_map p, Tarraykind (AKmap (tk, tv)))
 
     method! on_tarraykind_akshape (env, seen) r fdm =
       match access_type with
         | AKshape_key field_name ->
-          let env, tk = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-          let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let env, tk = Env.fresh_unresolved_type env in
+          let env, tv = Env.fresh_unresolved_type env in
           let env, ty =
             if akshape_key_consistent_with_map field_name fdm then begin
               let fdm = if ShapeMap.mem field_name fdm && (not lvar_assignment)
@@ -203,7 +203,7 @@ let update_array_type p access_type ~lvar_assignment env ty =
     method! on_tshape (env, seen) r fields_known fdm =
       match access_type with
         | AKshape_key field_name when lvar_assignment ->
-          let env, tv = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let env, tv = Env.fresh_unresolved_type env in
           let fdm = ShapeMap.add field_name tv fdm in
           (env, seen), (Reason.Rwitness p, Tshape (fields_known, fdm))
         | _ ->
@@ -213,7 +213,7 @@ let update_array_type p access_type ~lvar_assignment env ty =
       match access_type with
         | AKtuple_index index when IMap.mem index fields ->
            let env, fields = if lvar_assignment then
-             let env, ty = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+             let env, ty = Env.fresh_unresolved_type env in
              env, IMap.add index ty fields
            else env, fields in
            (env, seen), (Reason.Rappend p, Tarraykind (AKtuple fields))

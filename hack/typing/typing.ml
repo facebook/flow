@@ -823,7 +823,7 @@ and expr_
           end ~init:(env, IMap.empty) in
          env, (Reason.Rwitness p, Tarraykind (AKtuple fields))
       else
-      let env, value = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+      let env, value = Env.fresh_unresolved_type env in
       let env, values = List.rev_map_env env l array_field_value in
       let has_unknown = List.exists values (fun (_, ty) -> ty = Tany) in
       let env, values = List.rev_map_env env values TUtils.unresolved in
@@ -838,14 +838,14 @@ and expr_
       if is_vec then
         env, (Reason.Rwitness p, Tarraykind (AKvec value))
       else
-        let env, key = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+        let env, key = Env.fresh_unresolved_type env in
         let env, keys = List.rev_map_env env l array_field_key in
         let env, keys = List.rev_map_env env keys TUtils.unresolved in
         let unify_key = Type.unify p Reason.URarray_key in
         let env, key = List.fold_left_env env keys ~init:key ~f:unify_key in
         env, (Reason.Rwitness p, Tarraykind (AKmap (key, value)))
   | ValCollection (name, el) ->
-      let env, x = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+      let env, x = Env.fresh_unresolved_type env in
       let env, tyl = List.map_env env el expr in
       let env, tyl = List.map_env env tyl Typing_env.unbind in
       let env, tyl = List.map_env env tyl TUtils.unresolved in
@@ -860,8 +860,8 @@ and expr_
       let env, kl = List.map_env env kl Typing_env.unbind in
       let env, vl = List.map_env env vl expr in
       let env, vl = List.map_env env vl Typing_env.unbind in
-      let env, k = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-      let env, v = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+      let env, k = Env.fresh_unresolved_type env in
+      let env, v = Env.fresh_unresolved_type env in
       let env, kl = List.map_env env kl TUtils.unresolved in
       let env, k =
         List.fold_left_env env kl ~init:k ~f:(Type.unify p Reason.URkey) in
@@ -1186,7 +1186,7 @@ and expr_
             let typename =
               Reason.Rwitness p, Tapply((p, SN.Classes.cTypename), [tdef]) in
             let env, tparams = List.map_env env tparaml begin fun env _ ->
-              TUtils.in_var env (Reason.Rnone, Tunresolved [])
+              Env.fresh_unresolved_type env
             end in
             let ety_env = { (Phase.env_with_self env) with
                             substs = Subst.make tparaml tparams } in
@@ -1442,7 +1442,7 @@ and anon_make tenv p f =
         let env = List.fold_left ~f:anon_check_param ~init:env f.f_params in
         let env, hret =
           match f.f_ret with
-          | None -> TUtils.in_var env (Reason.Rnone, Tunresolved [])
+          | None -> Env.fresh_unresolved_type env
           | Some x ->
             let ret = TI.instantiable_hint env x in
             (* If a 'this' type appears it needs to be compatible with the
@@ -1503,7 +1503,7 @@ and new_object ~check_not_abstract p env c el uel =
         && not (requires_consistent_construct c) then
         uninstantiable_error p c class_.tc_pos class_.tc_name p c_ty;
       let env, params = List.map_env env class_.tc_tparams begin fun env _ ->
-        TUtils.in_var env (Reason.Rnone, Tunresolved [])
+        Env.fresh_unresolved_type env
       end in
       let env =
         if SSet.mem "XHP" class_.tc_extends then env else
@@ -3058,7 +3058,7 @@ and static_class_id p env = function
       | None -> env, (Reason.Rnone, Tany) (* Tobject *)
       | Some class_ ->
         let env, params = List.map_env env class_.tc_tparams begin fun env _ ->
-          TUtils.in_var env (Reason.Rnone, Tunresolved [])
+          Env.fresh_unresolved_type env
         end in
         env, (Reason.Rwitness (fst c), Tclass (c, params))
     )
@@ -3327,8 +3327,8 @@ and binop in_cond p env bop p1 ty1 p2 ty2 =
        * messages if we just let those get unified in the next case. *)
       | (_, Tarraykind (AKmap _ as ak)), (_, Tarraykind (AKmap _))
       | (_, Tarraykind (AKvec _ as ak)), (_, Tarraykind (AKvec _)) ->
-          let env, a_sup = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
-          let env, b_sup = TUtils.in_var env (Reason.Rnone, Tunresolved []) in
+          let env, a_sup = Env.fresh_unresolved_type env in
+          let env, b_sup = Env.fresh_unresolved_type env in
           let res_ty = Reason.Rarray_plus_ret p, Tarraykind (
             match ak with
               | AKvec _ -> AKvec a_sup

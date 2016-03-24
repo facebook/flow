@@ -21,6 +21,8 @@ module TUEnv = Typing_unification_env
 let rec unify env ty1 ty2 =
   unify_with_uenv env (TUEnv.empty, ty1) (TUEnv.empty, ty2)
 
+(* If result is (env', ty) then env' extends env,
+ * and ty1 <: ty and ty2 <: ty under env' *)
 and unify_with_uenv env (uenv1, ty1) (uenv2, ty2) =
   if ty1 == ty2 then env, ty1 else
   match ty1, ty2 with

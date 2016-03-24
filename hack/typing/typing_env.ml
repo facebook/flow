@@ -77,6 +77,8 @@ let add_subst env x x' =
   then { env with subst = IMap.add x x' env.subst }
   else env
 
+(* Apply variable-to-variable substitution from environment. Update environment
+   if we ended up iterating (cf path compression in union-find) *)
 let rec get_var env x =
   let x' = IMap.get x env.subst in
   (match x' with
@@ -96,6 +98,10 @@ let rename env x x' =
 let add env x ty =
   let env, x = get_var env x in
   { env with tenv = IMap.add x ty env.tenv }
+
+let fresh_unresolved_type env =
+  let v = Ident.tmp () in
+  add env v (Reason.Rnone, Tunresolved []), (Reason.Rnone, Tvar v)
 
 let get_type env x_reason x =
   let env, x = get_var env x in
