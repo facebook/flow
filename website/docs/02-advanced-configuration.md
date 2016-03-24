@@ -189,7 +189,7 @@ can be overridden with command line flags.
 - `suppress_comment` (regex): defines a magical comment that suppresses any Flow errors on the following line. For example:
 
     ```
-    suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+    suppress_comment= \\(.\\|\\n\\)*\\$FlowFixMe
     ```
 
     will match a comment like this:
