@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Reordered_argument_collections
 
 (*****************************************************************************)
 (* The "static" environment, initialized first and then doesn't change *)
@@ -56,10 +57,10 @@ let list_files env oc =
   let acc = List.fold_right
     ~f:begin fun error acc ->
       let pos = Errors.get_pos error in
-      Relative_path.Set.add (Pos.filename pos) acc
+      Relative_path.Set.add acc (Pos.filename pos)
     end
     ~init:Relative_path.Set.empty
     env.errorl in
-  Relative_path.Set.iter (fun s ->
-    Printf.fprintf oc "%s\n" (Relative_path.to_absolute s)) acc;
+  Relative_path.Set.iter acc (fun s ->
+    Printf.fprintf oc "%s\n" (Relative_path.to_absolute s));
   flush oc

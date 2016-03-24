@@ -67,11 +67,11 @@ let gen_ident_rekeying_map ident_list =
 let lvar_list_map lvar_map =
   Pos.Map.fold begin fun pos ident map ->
     let file = Pos.filename pos in
-    let ident_list = match Relative_path.Map.get file map with
+    let ident_list = match Relative_path.Map.get map file with
       | Some ident_list -> ident_list
       | None -> []
     in
-    Relative_path.Map.add file (ident :: ident_list) map
+    Relative_path.Map.add map ~key:file ~data:(ident :: ident_list)
   end lvar_map Relative_path.Map.empty
 
 (* For each local variable in lvar_map find its type in type_map.
@@ -83,8 +83,8 @@ let lvar_list_map lvar_map =
 let generate_types lvar_map type_map =
   let line_map = transform_map type_map in
   let file_to_lvarlist_map = lvar_list_map lvar_map in
-  let file_lvar_rekeying_map = Relative_path.Map.map
-    begin fun v -> gen_ident_rekeying_map v end file_to_lvarlist_map in
+  let file_lvar_rekeying_map = Relative_path.Map.map file_to_lvarlist_map
+    (fun v -> gen_ident_rekeying_map v) in
   let lvar_pos_list = Pos.Map.keys lvar_map in
   List.rev_map lvar_pos_list begin fun lvar_pos ->
     let key = SymbolUtils.get_key lvar_pos in

@@ -158,7 +158,7 @@ let get_files deps =
   end deps Relative_path.Set.empty
 
 let update_files fast =
-  Relative_path.Map.iter begin fun filename info ->
+  Relative_path.Map.iter fast begin fun filename info ->
     let {FileInfo.funs; classes; typedefs;
          consts = _ (* TODO probably a bug #3844332 *);
          comments = _;
@@ -179,6 +179,6 @@ let update_files fast =
       let previous =
         try Hashtbl.find !ifiles def with Not_found -> Relative_path.Set.empty
       in
-      Hashtbl.replace !ifiles def (Relative_path.Set.add filename previous)
+      Hashtbl.replace !ifiles def (Relative_path.Set.add previous filename)
     end defs
-  end fast
+  end

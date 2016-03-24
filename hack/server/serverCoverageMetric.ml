@@ -95,7 +95,7 @@ let get_coverage root neutral fnl =
   SharedMem.invalidate_caches();
   let files_info = FileInfoStore.load () in
   let file_counts = List.rev_filter_map fnl begin fun fn ->
-    match Relative_path.Map.get fn files_info with
+    match Relative_path.Map.get files_info fn with
     | None -> None
     | Some defs ->
         let type_acc = accumulate_types fn defs in

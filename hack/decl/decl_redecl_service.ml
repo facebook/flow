@@ -69,8 +69,8 @@ let on_the_fly_decl_file tcopt (errors, failed) fn =
      *)
       let file_with_error = Pos.filename (Errors.get_pos error) in
       assert (file_with_error <> Relative_path.default);
-      let failed = Relative_path.Set.add file_with_error failed in
-      let failed = Relative_path.Set.add fn failed in
+      let failed = Relative_path.Set.add failed file_with_error in
+      let failed = Relative_path.Set.add failed fn in
       error :: errors, failed
     end ~init:(errors, failed)
 
@@ -249,9 +249,9 @@ let remove_old_defs { FileInfo.n_funs; n_classes; n_types; n_consts } =
   ()
 
 let get_defs fast =
-  Relative_path.Map.fold begin fun _ names1 names2 ->
+  Relative_path.Map.fold fast ~f:begin fun _ names1 names2 ->
     FileInfo.merge_names names1 names2
-  end fast FileInfo.empty_names
+  end ~init:FileInfo.empty_names
 
 (*****************************************************************************)
 (* The main entry point *)

@@ -87,10 +87,10 @@ let find_extended_classes_in_files target_class_name mthds target_class_pos
 
 let find_extended_classes_in_files_parallel workers target_class_name mthds
       target_class_pos files_info files =
-  let classes = Relative_path.Set.fold begin fun fn acc ->
+  let classes = Relative_path.Set.fold files ~init:[] ~f:begin fun fn acc ->
     let { FileInfo.classes; _ } = Relative_path.Map.find_unsafe fn files_info in
     classes :: acc
-  end files [] in
+  end in
 
   if List.length classes > 10 then
     MultiWorker.call

@@ -30,7 +30,7 @@ let print_patch filename (line, kind, type_) =
 (*****************************************************************************)
 
 let add_file env fn =
-  let failed_parsing = Relative_path.Set.add fn env.ServerEnv.failed_parsing in
+  let failed_parsing = Relative_path.Set.add env.ServerEnv.failed_parsing fn in
   { env with ServerEnv.failed_parsing = failed_parsing }
 
 (* Maps filenames to the contents of those files, split into lines. Each line
@@ -60,7 +60,7 @@ let read_file_raw fn =
   split_and_number content
 
 let read_file fn =
-  match Relative_path.Map.get fn !file_data with
+  match Relative_path.Map.get !file_data fn with
     | Some d -> d
     | None -> read_file_raw fn
 
@@ -74,7 +74,7 @@ let write_file fn numbered_lines =
   let oc = open_out_no_fail abs_fn in
   output_string oc (Buffer.contents buf);
   close_out_no_fail abs_fn oc;
-  file_data := Relative_path.Map.add fn numbered_lines !file_data
+  file_data := Relative_path.Map.add !file_data ~key:fn ~data:numbered_lines
 
 let apply_patch (genv:ServerEnv.genv) (env:ServerEnv.env) fn f =
   Printf.printf "Patching %s: %!" (Relative_path.to_absolute fn);
@@ -289,11 +289,11 @@ open ServerEnv
 
 (* Selects the files we want to annotate. *)
 let select_files env dirname =
-  Relative_path.Map.fold begin fun fn defs acc ->
+  Relative_path.Map.fold env.files_info ~f:begin fun fn defs acc ->
     if is_prefix_dir dirname (Relative_path.to_absolute fn)
-    then Relative_path.Map.add fn defs acc
+    then Relative_path.Map.add acc ~key:fn ~data:defs
     else acc
-  end env.files_info Relative_path.Map.empty
+  end ~init:Relative_path.Map.empty
 
 (* Infers the types where annotations are missing. *)
 let infer_types genv env dirname =
@@ -306,7 +306,7 @@ let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
   let tcopt = (!env).tcopt in
   let tenv = Typing_env.empty tcopt Relative_path.default ~droot:None in
   file_data := Relative_path.Map.empty;
-  Relative_path.Map.iter begin fun fn patchl ->
+  Relative_path.Map.iter patches begin fun fn patchl ->
     List.iter patchl begin fun (line, k, type_ as patch) ->
       if Hashtbl.mem tried_patches (fn, patch) then () else
       let go patch =
@@ -325,7 +325,7 @@ let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
       | Typing_suggest.Kmember name ->
           go (add_member name line type_string)
     end
-  end patches;
+  end;
   ()
 
 (* Main entry point *)

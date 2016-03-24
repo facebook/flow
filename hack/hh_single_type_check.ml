@@ -263,9 +263,9 @@ let suggest_and_print fn { FileInfo.funs; classes; typedefs; consts; _ } =
   let n_types = make_set typedefs in
   let n_consts = make_set consts in
   let names = { FileInfo.n_funs; n_classes; n_types; n_consts } in
-  let fast = Relative_path.Map.add fn names Relative_path.Map.empty in
+  let fast = Relative_path.Map.singleton fn names in
   let patch_map = Typing_suggest_service.go None fast in
-  match Relative_path.Map.get fn patch_map with
+  match Relative_path.Map.get patch_map fn with
     | None -> ()
     | Some l -> begin
       (* Sort so that the unit tests come out in a consistent order, normally
@@ -307,7 +307,7 @@ let file_to_files file =
     List.fold_left ~f: begin fun acc (sub_fn, content) ->
       let file =
         Relative_path.create Relative_path.Dummy (abs_fn^"--"^sub_fn) in
-      Relative_path.Map.add file content acc
+      Relative_path.Map.add acc ~key:file ~data:content
     end ~init: Relative_path.Map.empty files
   else if str_starts_with content "// @directory " then
     let contentl = Str.split (Str.regexp "\n") content in
@@ -353,7 +353,7 @@ let handle_mode mode filename tcopt files_contents files_info errors =
         Printf.printf "%s %s\n" r.res_name r.res_ty
       end result
   | Color ->
-      Relative_path.Map.iter begin fun fn fileinfo ->
+      Relative_path.Map.iter files_info begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
           let result = ServerColorFile.get_level_list begin fun () ->
             ignore @@ Typing_check_utils.check_defs tcopt fn fileinfo;
@@ -361,16 +361,16 @@ let handle_mode mode filename tcopt files_contents files_info errors =
           end in
           print_colored fn result;
         end
-      end files_info
+      end
   | Coverage ->
-      Relative_path.Map.iter begin fun fn fileinfo ->
+      Relative_path.Map.iter files_info begin fun fn fileinfo ->
         if fn = builtins_filename then () else begin
           let type_acc = ServerCoverageMetric.accumulate_types fn fileinfo in
           print_coverage fn type_acc;
         end
-      end files_info
+      end
   | Dump_symbol_info ->
-      begin match Relative_path.Map.get filename files_info with
+      begin match Relative_path.Map.get files_info filename with
         | Some fileinfo ->
             let raw_result =
               SymbolInfoService.helper [] [(filename, fileinfo)] in
@@ -380,12 +380,12 @@ let handle_mode mode filename tcopt files_contents files_info errors =
         | None -> ()
       end
   | Lint ->
-      let lint_errors =
-        Relative_path.Map.fold begin fun fn content lint_errors ->
+      let lint_errors = Relative_path.Map.fold files_contents ~init:[]
+        ~f:begin fun fn content lint_errors ->
           lint_errors @ fst (Lint.do_ begin fun () ->
             Linting_service.lint tcopt fn content
           end)
-        end files_contents [] in
+        end in
       if lint_errors <> []
       then begin
         let lint_errors = List.sort ~cmp: begin fun x y ->
@@ -397,13 +397,13 @@ let handle_mode mode filename tcopt files_contents files_info errors =
       end
       else Printf.printf "No lint errors\n"
   | Dump_deps ->
-    Relative_path.Map.iter begin fun fn fileinfo ->
+    Relative_path.Map.iter files_info begin fun fn fileinfo ->
       ignore @@ Typing_check_utils.check_defs tcopt fn fileinfo
-    end files_info;
+    end;
     Typing_deps.dump_deps stdout
   | Dump_inheritance ->
     Typing_deps.update_files files_info;
-    Relative_path.Map.iter begin fun fn fileinfo ->
+    Relative_path.Map.iter files_info begin fun fn fileinfo ->
       if fn = builtins_filename then () else begin
         List.iter fileinfo.FileInfo.classes begin fun (_p, class_) ->
           Printf.printf "Ancestors of %s and their overridden methods:\n"
@@ -423,14 +423,15 @@ let handle_mode mode filename tcopt files_contents files_info errors =
           Printf.printf "\n";
         end;
       end
-    end files_info;
+    end;
   | Suggest
   | Errors ->
-      let errors = Relative_path.Map.fold begin fun fn fileinfo errors ->
-        errors @ Typing_check_utils.check_defs tcopt fn fileinfo
-      end files_info errors in
+      let errors =
+        Relative_path.Map.fold files_info ~f:begin fun fn fileinfo errors ->
+          errors @ Typing_check_utils.check_defs tcopt fn fileinfo
+        end ~init:errors in
       if mode = Suggest
-      then Relative_path.Map.iter suggest_and_print files_info;
+      then Relative_path.Map.iter files_info suggest_and_print;
       if errors <> []
       then (error (List.hd_exn errors); exit 2)
       else Printf.printf "No errors\n"
@@ -450,9 +451,8 @@ let decl_and_run_mode {filename; mode; no_builtins} =
     let parsed_files =
       Relative_path.Map.mapi Parser_hack.program files_contents in
     let parsed_builtins = Parser_hack.program builtins_filename builtins in
-    let parsed_files =
-      Relative_path.Map.add builtins_filename parsed_builtins parsed_files
-    in
+    let parsed_files = Relative_path.Map.add parsed_files
+      ~key:builtins_filename ~data:parsed_builtins in
 
     let files_info =
       Relative_path.Map.mapi begin fun fn parsed_file ->
@@ -464,14 +464,14 @@ let decl_and_run_mode {filename; mode; no_builtins} =
           consider_names_just_for_autoload = false }
       end parsed_files in
 
-    Relative_path.Map.iter begin fun fn fileinfo ->
+    Relative_path.Map.iter files_info begin fun fn fileinfo ->
       let {FileInfo.funs; classes; typedefs; consts; _} = fileinfo in
       NamingGlobal.make_env ~funs ~classes ~typedefs ~consts
-    end files_info;
+    end;
 
-    Relative_path.Map.iter begin fun fn _ ->
+    Relative_path.Map.iter files_info begin fun fn _ ->
       Decl.make_env tcopt fn
-    end files_info;
+    end;
 
     files_info
   end in

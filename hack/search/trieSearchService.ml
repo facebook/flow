@@ -186,14 +186,14 @@ module Make(S : SearchUtils.Searchable) = struct
       let files = List.fold_left keys ~f:begin fun acc key ->
         let filenames = Hashtbl.find !main_index key in
         List.fold_left filenames ~f:begin fun acc fn ->
-          Relative_path.Set.add fn acc
+          Relative_path.Set.add acc fn
         end ~init:acc
       end ~init:Relative_path.Set.empty in
       let results = ref [] in
       (* for every file, look in shared memory for all the results the file
        * contains. anything where the key starts with the full search
        * term is a match *)
-      Relative_path.Set.iter begin fun fn ->
+      Relative_path.Set.iter files begin fun fn ->
         let defs =
           try SearchUpdates.find_unsafe fn
           with Not_found -> []
@@ -210,7 +210,7 @@ module Make(S : SearchUtils.Searchable) = struct
             in
             results := (res, score) :: !results
         end
-      end files;
+      end;
       let res = List.sort begin fun a b ->
         (snd a) - (snd b)
       end !results in

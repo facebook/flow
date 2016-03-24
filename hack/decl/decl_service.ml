@@ -47,7 +47,7 @@ let decl_file tcopt (errorl, failed) fn =
   in
   let failed =
     if errorl' = [] then failed
-    else Relative_path.Set.add fn failed in
+    else Relative_path.Set.add failed fn in
   let errorl = List.rev_append (List.rev errorl') errorl in
   errorl, failed
 
@@ -69,7 +69,8 @@ let merge_decl (errors1, failed1) (errors2, failed2) =
 
 let go (workers:Worker.t list option) ~bucket_size tcopt fast =
   TypeDeclarationStore.store tcopt;
-  let fast_l = Relative_path.Map.fold (fun x _ y -> x :: y) fast [] in
+  let fast_l =
+    Relative_path.Map.fold fast ~init:[] ~f:(fun x _ y -> x :: y) in
   let neutral = [], Relative_path.Set.empty in
   dn "Declaring the types";
   let result =

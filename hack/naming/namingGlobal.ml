@@ -148,7 +148,7 @@ let add_files_to_rename failed defl defs_in_env =
     | None -> failed
     | Some previous_definition_position ->
       let filename = Pos.filename previous_definition_position in
-      Relative_path.Set.add filename failed
+      Relative_path.Set.add failed filename
   end ~init:failed defl
 
 let ndecl_file fn { FileInfo.file_mode = _; funs; classes; typedefs; consts;

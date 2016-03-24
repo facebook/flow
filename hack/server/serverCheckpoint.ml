@@ -16,9 +16,9 @@ let checkpoints = ref SMap.empty
 let process_updates updates =
   (* Appending changed files to each checkpoint in the map *)
   checkpoints := SMap.map !checkpoints begin fun cur_set ->
-    Relative_path.Map.fold begin fun path _ acc ->
-      Relative_path.Set.add path acc
-    end updates cur_set
+    Relative_path.Map.fold updates ~f:begin fun path _ acc ->
+      Relative_path.Set.add acc path
+    end ~init:cur_set
   end
 
 let create_checkpoint x =

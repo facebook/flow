@@ -252,7 +252,7 @@ let update_term_lookup file add_terms remove_terms =
       try Hashtbl.find !term_lookup term
       with Not_found -> Relative_path.Set.empty
     in
-    Hashtbl.replace !term_lookup term (Relative_path.Set.add file old_val);
+    Hashtbl.replace !term_lookup term (Relative_path.Set.add old_val file);
   end add_terms
 
 (* Updates the keylist and defmap for a file (will be used to populate
@@ -354,7 +354,7 @@ let get_terms_from_string_and_type strings =
       try Hashtbl.find !term_lookup str
       with Not_found -> Relative_path.Set.empty
     in
-    Relative_path.Set.fold begin fun file acc ->
+    Relative_path.Set.fold files ~init:acc ~f:begin fun file acc ->
       let defmap =
         try SearchKeyToTermMap.find_unsafe file
         with Not_found -> TMap.empty
@@ -370,7 +370,7 @@ let get_terms_from_string_and_type strings =
           (term, score) :: acc
         end ~init:acc
       with Not_found -> acc
-    end files acc
+    end
   end ~init:[]
 
 let query needle type_ =

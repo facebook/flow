@@ -82,7 +82,7 @@ let check_file tcopt (errors, failed) (fn, file_infos) =
     SSet.iter (check_const tcopt fn) n_consts;
   end in
   let failed =
-    if errors' <> [] then Relative_path.Set.add fn failed else failed in
+    if errors' <> [] then Relative_path.Set.add failed fn else failed in
   List.rev_append errors' errors, failed
 
 let check_files tcopt (errors, failed) fnl =

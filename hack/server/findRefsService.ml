@@ -74,7 +74,7 @@ let check_if_extends_class target_class_name class_name acc =
 
 let find_child_classes target_class_name files_info files =
   SharedMem.invalidate_caches();
-  Relative_path.Set.fold begin fun fn acc ->
+  Relative_path.Set.fold files ~init:SSet.empty ~f:begin fun fn acc ->
     (try
       let { FileInfo.classes; _ } =
         Relative_path.Map.find_unsafe fn files_info in
@@ -83,7 +83,7 @@ let find_child_classes target_class_name files_info files =
       end
     with Not_found ->
       acc)
-  end files SSet.empty
+  end
 
 let get_child_classes_files workers files_info class_name =
   match Typing_heap.Classes.get class_name with
@@ -108,7 +108,7 @@ let get_deps_set classes =
         let dep = Typing_deps.Dep.Class class_.tc_name in
         let bazooka = Typing_deps.get_bazooka dep in
         let files = Typing_deps.get_files bazooka in
-        let files = Relative_path.Set.add fn files in
+        let files = Relative_path.Set.add files fn in
         Relative_path.Set.union files acc
     | _ -> acc
   end ~init:Relative_path.Set.empty
@@ -120,7 +120,7 @@ let get_deps_set_function f_name =
     let dep = Typing_deps.Dep.Fun f_name in
     let bazooka = Typing_deps.get_bazooka dep in
     let files = Typing_deps.get_files bazooka in
-    Relative_path.Set.add fn files
+    Relative_path.Set.add files fn
   with Not_found -> Relative_path.Set.empty
 
 let find_refs target_classes target_method acc fileinfo_l =
@@ -172,11 +172,12 @@ let get_definitions target_classes target_method =
   | None, None -> []
 
 let find_references workers target_classes target_method include_defs
-    files_info files =
-  let fileinfo_l = Relative_path.Set.fold (fun fn acc ->
-    match Relative_path.Map.get fn files_info with
+      files_info files =
+  let fileinfo_l = Relative_path.Set.fold files ~f:begin fun fn acc ->
+    match Relative_path.Map.get files_info fn with
     | Some fi -> (fn, fi) :: acc
-    | None -> acc) files [] in
+    | None -> acc
+  end ~init:[] in
   let results =
     if List.length fileinfo_l < 10 then
       find_refs target_classes target_method [] fileinfo_l

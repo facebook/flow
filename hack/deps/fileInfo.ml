@@ -95,4 +95,4 @@ let merge_names t_names1 t_names2 =
   }
 
 let simplify_fast fast =
-  Relative_path.Map.map simplify fast
+  Relative_path.Map.map fast simplify

@@ -190,7 +190,7 @@ let indexing genv =
 let parsing genv env ~get_next t =
   let files_info, errorl, failed =
     Parsing_service.go genv.workers ~get_next in
-  let files_info = Relative_path.Map.(fold add) files_info env.files_info in
+  let files_info = Relative_path.Map.union files_info env.files_info in
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
   Stats.(stats.init_parsing_heap_size <- hs);
@@ -212,13 +212,13 @@ let update_files genv files_info t =
 
 let naming env t =
   let env =
-    Relative_path.Map.fold begin fun k v env ->
+    Relative_path.Map.fold env.files_info ~f:begin fun k v env ->
       let errorl, failed = NamingGlobal.ndecl_file k v in
       { env with
         errorl = List.rev_append errorl env.errorl;
         failed_parsing = Relative_path.Set.union env.failed_parsing failed;
       }
-    end env.files_info env
+    end ~init:env
   in
   let hs = SharedMem.heap_size () in
   Hh_logger.log "Heap size: %d" hs;
@@ -256,14 +256,14 @@ let type_check genv env fast t =
   end else env, t
 
 let get_dirty_fast old_fast fast dirty =
-  Relative_path.Set.fold begin fun fn acc ->
-    let dirty_fast = Relative_path.Map.get fn fast in
-    let dirty_old_fast = Relative_path.Map.get fn old_fast in
+  Relative_path.Set.fold dirty ~f:begin fun fn acc ->
+    let dirty_fast = Relative_path.Map.get fast fn in
+    let dirty_old_fast = Relative_path.Map.get old_fast fn in
     let fast = Option.merge dirty_old_fast dirty_fast FileInfo.merge_names in
     match fast with
-    | Some fast -> Relative_path.Map.add fn fast acc
+    | Some fast -> Relative_path.Map.add acc ~key:fn ~data:fast
     | None -> acc
-  end dirty Relative_path.Map.empty
+  end ~init:Relative_path.Map.empty
 
 let get_all_deps {FileInfo.n_funs; n_classes; n_types; n_consts} =
   let add_deps_of_sset dep_ctor sset depset =
@@ -290,9 +290,9 @@ let get_all_deps {FileInfo.n_funs; n_classes; n_types; n_consts} =
  * Finally we recheck the lot. *)
 let type_check_dirty genv env old_fast fast dirty_files t =
   let fast = get_dirty_fast old_fast fast dirty_files in
-  let names = Relative_path.Map.fold begin fun _k v acc ->
+  let names = Relative_path.Map.fold fast ~f:begin fun _k v acc ->
     FileInfo.merge_names v acc
-  end fast FileInfo.empty_names in
+  end ~init:FileInfo.empty_names in
   let deps = get_all_deps names in
   let to_recheck = Typing_deps.get_files deps in
   let fast = extend_fast fast env.files_info to_recheck in
@@ -360,7 +360,8 @@ let init ?load_mini_script genv =
   let t = update_files genv env.files_info t in
   let env, t = naming env t in
   let fast = FileInfo.simplify_fast env.files_info in
-  let fast = Relative_path.(Set.fold Map.remove) env.failed_parsing fast in
+  let fast = Relative_path.Set.fold env.failed_parsing
+    ~f:Relative_path.Map.remove ~init:fast in
   let env, t = type_decl genv env fast t in
 
   let state = state_future >>= fun f ->

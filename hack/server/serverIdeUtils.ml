@@ -117,7 +117,7 @@ let check_file_input tcopt files_info fi =
       path
   | ServerUtils.FileName fn ->
       let path = Relative_path.create Relative_path.Root fn in
-      let () = match Relative_path.Map.get path files_info with
-      | Some fileinfo -> recheck tcopt [(path, fileinfo)]
-      | None -> () in
+      let () = match Relative_path.Map.get files_info path with
+        | Some fileinfo -> recheck tcopt [(path, fileinfo)]
+        | None -> () in
       path

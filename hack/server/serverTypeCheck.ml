@@ -71,32 +71,32 @@ let set_of_idl l =
 (*****************************************************************************)
 
 let add_old_decls old_files_info fast =
-  Relative_path.Map.fold begin fun filename info_names acc ->
-    match Relative_path.Map.get filename old_files_info with
+  Relative_path.Map.fold fast ~f:begin fun filename info_names acc ->
+    match Relative_path.Map.get old_files_info filename with
     | Some {FileInfo.consider_names_just_for_autoload = true; _}
     | None -> acc
     | Some old_info ->
       let old_info_names = FileInfo.simplify old_info in
       let info_names = FileInfo.merge_names old_info_names info_names in
-      Relative_path.Map.add filename info_names acc
-  end fast fast
+      Relative_path.Map.add acc ~key:filename ~data:info_names
+  end ~init:fast
 
 let reparse_infos files_info fast =
-  Relative_path.Map.fold begin fun x _y acc ->
+  Relative_path.Map.fold fast ~f:begin fun x _y acc ->
     try
       let info = Relative_path.Map.find_unsafe x files_info in
       if info.FileInfo.consider_names_just_for_autoload then acc else
-      Relative_path.Map.add x info acc
+      Relative_path.Map.add acc ~key:x ~data:info
     with Not_found -> acc
-  end fast Relative_path.Map.empty
+  end ~init:Relative_path.Map.empty
 
 (*****************************************************************************)
 (* Removes the names that were defined in the files *)
 (*****************************************************************************)
 
 let remove_decls env fast_parsed =
-  Relative_path.Map.iter begin fun fn _ ->
-    match Relative_path.Map.get fn env.files_info with
+  Relative_path.Map.iter fast_parsed begin fun fn _ ->
+    match Relative_path.Map.get env.files_info fn with
     | Some {FileInfo.consider_names_just_for_autoload = true; _}
     | None -> ()
     | Some {FileInfo.
@@ -112,7 +112,7 @@ let remove_decls env fast_parsed =
       let typedefs = set_of_idl typel in
       let consts = set_of_idl constl in
       NamingGlobal.remove_decls ~funs ~classes ~typedefs ~consts
-  end fast_parsed;
+  end;
   env
 
 (*****************************************************************************)
@@ -120,7 +120,7 @@ let remove_decls env fast_parsed =
 (*****************************************************************************)
 
 let remove_failed fast failed =
-  Relative_path.Set.fold Relative_path.Map.remove failed fast
+  Relative_path.Set.fold failed ~init:fast ~f:Relative_path.Map.remove
 
 (*****************************************************************************)
 (* Parses the set of modified files *)
@@ -143,8 +143,7 @@ let parsing genv env =
 
 let update_file_info env fast_parsed =
   Typing_deps.update_files fast_parsed;
-  let files_info =
-    Relative_path.Map.fold Relative_path.Map.add fast_parsed env.files_info in
+  let files_info = Relative_path.Map.union fast_parsed env.files_info in
   files_info
 
 (*****************************************************************************)
@@ -156,12 +155,12 @@ let update_file_info env fast_parsed =
 let declare_names env files_info fast_parsed =
   let env = remove_decls env fast_parsed in
   let errorl, failed_naming =
-    Relative_path.Map.fold begin fun k v (errorl, failed) ->
+    Relative_path.Map.fold fast_parsed ~f:begin fun k v (errorl, failed) ->
       let errorl', failed'= NamingGlobal.ndecl_file k v in
       let errorl = List.rev_append errorl' errorl in
       let failed = Relative_path.Set.union failed' failed in
       errorl, failed
-    end fast_parsed ([], Relative_path.Set.empty) in
+    end ~init:([], Relative_path.Set.empty) in
   let fast = remove_failed fast_parsed failed_naming in
   let fast = FileInfo.simplify_fast fast in
   env, errorl, failed_naming, fast
@@ -236,8 +235,7 @@ let type_check genv env =
   let errorl = List.rev_append errorl' errorl in
 
   (* DECLARING TYPES: merging results of the 2 phases *)
-  let fast =
-    Relative_path.Map.fold Relative_path.Map.add fast fast_redecl_phase2 in
+  let fast = Relative_path.Map.union fast fast_redecl_phase2 in
   let to_recheck = Relative_path.Set.union env.failed_decl to_redecl_phase2 in
   let to_recheck = Relative_path.Set.union to_recheck1 to_recheck in
   let to_recheck = Relative_path.Set.union to_recheck2 to_recheck in

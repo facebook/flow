@@ -124,6 +124,6 @@ let clear paths =
   (* hack's search service operates on Relative_paths, so we have to convert *)
   let paths = FilenameSet.fold (fun p acc ->
     let p = string_of_filename p in
-    Relative_path.Set.add (Relative_path.create Relative_path.Dummy p) acc
+    Relative_path.Set.add acc (Relative_path.create Relative_path.Dummy p)
   ) paths Relative_path.Set.empty in
   SS.MasterApi.clear_shared_memory paths

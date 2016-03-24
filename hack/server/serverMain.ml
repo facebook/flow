@@ -148,11 +148,11 @@ let handle_connection genv env ic oc =
 
 let recheck genv old_env updates =
   let to_recheck =
-    Relative_path.Set.filter begin fun update ->
+    Relative_path.Set.filter updates begin fun update ->
       ServerEnv.file_filter (Relative_path.suffix update)
-    end updates in
+    end in
   let config_in_updates =
-    Relative_path.Set.mem ServerConfig.filename updates in
+    Relative_path.Set.mem updates ServerConfig.filename in
   if config_in_updates then begin
     let new_config = ServerConfig.(load filename genv.options) in
     if not (ServerConfig.is_compatible genv.config new_config) then begin
@@ -217,13 +217,12 @@ let ide_sync_files_info ide_process files_info =
 
 let ide_update_files_info ide_process files_info updated_files_info =
   Option.iter ide_process begin fun x ->
-    let updated_files_info = Relative_path.Set.fold begin fun path acc ->
-        match Relative_path.Map.get path files_info with
-        | Some file_info -> Relative_path.Map.add path file_info acc
+    let updated_files_info =
+      Relative_path.Set.fold updated_files_info ~f:begin fun path acc ->
+        match Relative_path.Map.get files_info path with
+        | Some file_info -> Relative_path.Map.add acc ~key:path ~data:file_info
         | None -> acc
-      end
-      updated_files_info
-      Relative_path.Map.empty in
+      end ~init:Relative_path.Map.empty in
     IdeProcessPipe.send x (IdeProcessMessage.Sync_file_info updated_files_info);
   end
 

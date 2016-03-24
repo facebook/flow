@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Reordered_argument_collections
 open Utils
 
 type prefix =
@@ -63,8 +64,8 @@ module S = struct
   let to_string (p, rest) = string_of_prefix p ^ "|" ^ rest
 end
 
-module Set = Set.Make(S)
-module Map = MyMap.Make(S)
+module Set = Reordered_argument_set(Set.Make(S))
+module Map = Reordered_argument_map(MyMap.Make(S))
 
 let to_absolute (p, rest) = path_of_prefix p ^ rest
 
@@ -84,9 +85,7 @@ let join prefix xs =
   concat prefix @@ List.fold_left xs ~init:"" ~f:Filename.concat
 
 let relativize_set prefix m =
-  SSet.fold (fun k a -> Set.add (create prefix k) a) m Set.empty
+  SSet.fold m ~init:Set.empty ~f:(fun k a -> Set.add a (create prefix k))
 
 let set_of_list xs =
-  List.fold_left xs
-    ~f:(fun acc x -> Set.add x acc)
-    ~init:Set.empty
+  List.fold_left xs ~f:Set.add ~init:Set.empty

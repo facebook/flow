@@ -8,6 +8,8 @@
  *
  *)
 
+open Reordered_argument_collections
+
 type prefix =
   | Root
   | Hhi
@@ -33,8 +35,8 @@ val prefix : t -> prefix
 val suffix : t -> string
 val to_absolute : t -> string
 
-module Set : module type of Set.Make (S)
-module Map : module type of MyMap.Make (S)
+module Set : module type of Reordered_argument_set(Set.Make(S))
+module Map : module type of Reordered_argument_map(MyMap.Make(S))
 
 val relativize_set : prefix -> SSet.t -> Set.t
 val set_of_list : t list -> Set.t
