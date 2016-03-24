@@ -80,7 +80,7 @@ let look_ahead (lb : Lexing.lexbuf) (f : Lexing.lexbuf -> 'a) : 'a =
   Parser_hack.restore_lexbuf_state lb saved;
   ret
 
-let is_xhp file lexbuf lex_env =
+let is_xhp ?(from_xhp=false) file lexbuf lex_env =
   let is_keyword lexeme =
     List.exists (fun keyword -> lexeme = keyword) hack_not_cname in
   let looks_like_xhp = look_ahead lexbuf (fun lb ->
@@ -92,7 +92,7 @@ let is_xhp file lexbuf lex_env =
        Lexer_hack.xhpattr file lb = Lexer_hack.Tgt)) in
   looks_like_xhp &&
     (* isnt something like Vector<string> *)
-    (lex_env.last_token <> Lexer_hack.Tword ||
+    (from_xhp || lex_env.last_token <> Lexer_hack.Tword ||
        is_keyword lex_env.last_lexeme)
 
 (* determines if a { in a string is an expression or a { literal *)
@@ -134,10 +134,11 @@ and upd_fn_xhp_string tok lex_env _ _ =
   | Lexer_hack.Tdquote -> pop_lex_env lex_env
   | _ -> lex_env
 
-and upd_fn_rcb tok lex_env _ _ =
+and upd_fn_rcb tok lex_env file lexbuf =
   match tok with
+  | Lexer_hack.Tlcb -> push_lex_env lex_env plain_get_token upd_fn_rcb
   | Lexer_hack.Trcb -> pop_lex_env lex_env
-  | _ -> lex_env
+  | _ -> plain_upd_fn tok lex_env file lexbuf
 
 and get_token_xhp file lexbuf = Lexer_hack.xhpname file lexbuf
 and upd_fn_xhp tok lex_env _ _ =
@@ -170,7 +171,9 @@ and get_token_xhp_attr_value file lexbuf =
   Lexer_hack.xhpattr file lexbuf
 and upd_fn_xhp_attr_value tok lex_env _ _ =
   match tok with
-  | Lexer_hack.Trcb -> pop_lex_env lex_env
+  | Lexer_hack.Tlcb ->
+     let le = pop_lex_env lex_env in
+     push_lex_env le plain_get_token upd_fn_rcb
   | Lexer_hack.Tdquote ->
      let le = pop_lex_env lex_env in
      push_lex_env le get_token_string2 upd_fn_xhp_string
@@ -188,7 +191,7 @@ and upd_fn_xhp_body tok lex_env file lexbuf =
   match tok with
   | Lexer_hack.Tlcb -> push_lex_env lex_env plain_get_token upd_fn_rcb
   | Lexer_hack.Tlt ->
-     if is_xhp file lexbuf lex_env
+     if is_xhp file lexbuf lex_env ~from_xhp:true
      then push_lex_env lex_env get_token_xhp upd_fn_xhp
      else (* must be </xhpname> *)
        let le = pop_lex_env lex_env in
@@ -206,10 +209,12 @@ and upd_fn_xhp_comment _ lex_env _ _ = pop_lex_env lex_env
 and get_tok_heredoc _ lexbuf = Lexer_hack.heredoc_token lexbuf
 
 (* This is so that we can know what token we end the heredoc on *)
-and upd_fn_heredoc_hd _ lex_env _ lexbuf =
+and upd_fn_heredoc_hd tok lex_env _ lexbuf =
   let env = pop_lex_env lex_env in
   let lexeme = Lexing.lexeme lexbuf in
-  push_lex_env env get_tok_heredoc (upd_fn_heredoc_body lexeme)
+  match tok with
+  | Lexer_hack.Tquote | Lexer_hack.Tdquote -> lex_env (* nowdoc style *)
+  | _ -> push_lex_env env get_tok_heredoc (upd_fn_heredoc_body lexeme)
 
 (* pop when we find the end of the heredoc *)
 and upd_fn_heredoc_body to_stop tok lex_env _ lexbuf =
@@ -223,7 +228,7 @@ and upd_fn_heredoc_body to_stop tok lex_env _ lexbuf =
         lexbuf
         (fun lexbuf ->
          match Lexer_hack.heredoc_token lexbuf with
-         | Lexer_hack.Tsc -> true
+         | Lexer_hack.Tsc | Lexer_hack.Tnewline -> true
          | _ -> false) in
     if lookaheadres
     then pop_lex_env lex_env
@@ -239,6 +244,9 @@ and plain_upd_fn tok lex_env file lexbuf =
      push_lex_env lex_env get_token_xhp upd_fn_xhp
   | Lexer_hack.Theredoc ->
      push_lex_env lex_env plain_get_token upd_fn_heredoc_hd
+  | Lexer_hack.Tunsafeexpr ->
+     ignore (Lexer_hack.comment (Buffer.create 256) file lexbuf);
+     lex_env
   | _ -> lex_env
 
 let default_lex_env =
