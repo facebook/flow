@@ -70,6 +70,8 @@ linux) setup_linux ;;
 esac
 
 printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
-cd website/ && npm install
-cd website/ && node_modules/.bin/bower install
+pushd website >/dev/null
+npm install
+node_modules/.bin/bower install
+popd >/dev/null
 printf "travis_fold:end:npm_install\n"
