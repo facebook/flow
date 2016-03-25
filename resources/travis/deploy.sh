@@ -38,3 +38,7 @@ git -C "$PAGES_CHECKOUT" add -f -A .
 git -C "$PAGES_CHECKOUT" commit -m "Updating to ${TRAVIS_REPO_SLUG}@${TRAVIS_COMMIT}" || :
 git -C "$PAGES_CHECKOUT" push -q "https://${GH_BOT_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git" gh-pages 2>/dev/null
 printf "travis_fold:end:push_gh_pages\n"
+
+printf "travis_fold:start:push_s3\nPushing to S3\n"
+bundle exec s3_website push --config-dir=website/ --site="$PAGES_CHECKOUT"
+printf "travis_fold:end:push_s3\n"

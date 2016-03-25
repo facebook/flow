@@ -3,6 +3,11 @@ GEM
   specs:
     addressable (2.3.8)
     colorator (0.1)
+    colored (1.2)
+    configure-s3-website (1.7.1)
+      deep_merge (= 1.0.0)
+    deep_merge (1.0.0)
+    dotenv (1.0.2)
     faraday (0.9.2)
       multipart-post (>= 1.2, < 3)
     ffi (1.9.10)
@@ -34,11 +39,17 @@ GEM
       ffi (>= 0.5.0)
     redcarpet (3.3.4)
     rouge (1.10.1)
+    s3_website (2.12.3)
+      colored (= 1.2)
+      configure-s3-website (= 1.7.1)
+      dotenv (~> 1.0)
+      thor (~> 0.18)
     safe_yaml (1.0.4)
     sass (3.4.21)
     sawyer (0.6.0)
       addressable (~> 2.3.5)
       faraday (~> 0.8, < 0.10)
+    thor (0.19.1)
 
 PLATFORMS
   ruby
@@ -48,6 +59,7 @@ DEPENDENCIES
   jekyll-paginate
   octokit
   redcarpet
+  s3_website
 
 BUNDLED WITH
    1.11.2

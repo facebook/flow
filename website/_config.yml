@@ -41,3 +41,4 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - vendor
+  - s3_website.yml
