@@ -3,3 +3,6 @@ _site/
 *.swo
 *.swp
 .jekyll-metadata
+.asset-cache
+_assets/third-party
+node_modules

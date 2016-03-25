@@ -4,9 +4,8 @@
     <meta charset='utf-8'>
     <title>Flow | {{ page.title }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
-    <link rel='stylesheet' href='/static/flow.css' type='text/css'/>
-    <link rel='stylesheet' href='/static/syntax.css' type='text/css'/>
-    <link rel="stylesheet" href='/static/pygments.css' type='text/css'/>
+    {% css 'flow.css' %}
+    {% css 'syntax.css' %}
     <link rel='shortcut icon' href='/static/favicon.png'>
     <meta name='viewport' content='width=480'>
     <meta property="og:title" content="{{ page.title }}" />

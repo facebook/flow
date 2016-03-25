@@ -1,3 +1,5 @@
+//= require jquery/dist/jquery.slim.min.js
+
 function highlightErrors(errors) {
   var errorMessage = $('<div class="errmsg"></div>');
   errorMessage.hide();

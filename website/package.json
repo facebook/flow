@@ -1,0 +1,8 @@
+{
+  "name": "flowtype.org",
+  "version": "0.0.0",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "bower": "^1.7.7"
+  }
+}

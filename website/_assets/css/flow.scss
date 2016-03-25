@@ -1,3 +1,6 @@
+/*= link flow-hero-logo.png */
+/*= link search.png */
+
 * {
     padding: 0;
     margin: 0;
@@ -224,7 +227,7 @@ header.topbar .logo {
 }
 
 .flow-header {
-    background-image: url(flow-hero-logo.png);
+    background-image: url(asset-path('flow-hero-logo.png'));
     background-size: contain;
     background-position: 50% 50%;
     background-repeat: no-repeat;
@@ -604,7 +607,7 @@ div.CodeMirror-lines {
 }
 
 input#algolia-doc-search {
-    background: transparent url('/static/search.png') no-repeat 10px center;
+    background: transparent url(asset-path('search.png')) no-repeat 10px center;
     background-size: 16px 16px;
 
     position: relative;

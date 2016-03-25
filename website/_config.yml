@@ -14,6 +14,7 @@ repository: facebook/flow
 
 gems:
 - jekyll-paginate
+- jekyll-assets
 
 paginate: 5
 paginate_path: "/blog/page:num/"
@@ -42,3 +43,14 @@ exclude:
   - Gemfile.lock
   - vendor
   - s3_website.yml
+  - bower.json
+  - package.json
+  - node_modules
+  - .asset-cache
+
+assets:
+  sources:
+    - _assets/css
+    - _assets/js
+    - _assets/images
+    - _assets/third-party

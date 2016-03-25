@@ -50,6 +50,14 @@ module Jekyll
       validate_data! filename
       validate_permalink! filename
 
+      # Add the script tag for inlineErrors.js at the bottom of every .doc.js
+      # file. Do it here so that it is processed by Liquid before passing off
+      # to the converter, which can't access the asset paths anymore; it needs
+      # to happen at the end of the page rather than in a layout so that the
+      # script downloads after the content, but before the highlightErrors call
+      # that the converter injects.
+      self.content += '/* {% js "inlineErrors.js" %} */' + "\n"
+
       self.data
     end
   end
@@ -311,8 +319,6 @@ module Jekyll
       end
 
       out = outs.join
-      out += '<script src="//code.jquery.com/jquery-git2.min.js"></script>'
-      out += '<script src="/static/dhtml.js"></script>'
       out += "<script>highlightErrors(#{JSON.generate(errors_json)})</script>"
       out
     end
