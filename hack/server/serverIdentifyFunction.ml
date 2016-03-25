@@ -16,3 +16,6 @@ let go content line char =
   ServerIdeUtils.revive funs classes;
   IdentifySymbolService.detach_hooks ();
   !result
+
+let go_absolute content line char =
+  Option.map (go content line char) IdentifySymbolService.to_absolute

@@ -261,6 +261,13 @@ let main args =
         Cmd.rpc conn @@ Rpc.FIND_LVAR_REFS (content, line, char) in
       ClientFindLocals.go results args.output_json;
       Exit_status.Ok
+    | MODE_GET_METHOD_NAME arg ->
+      let line, char = parse_position_string arg in
+      let content = Sys_utils.read_stdin_to_string () in
+      let result =
+        Cmd.rpc conn @@ Rpc.IDENTIFY_FUNCTION (content, line, char) in
+      ClientGetMethodName.go result args.output_json;
+      Exit_status.Ok
   in
   HackEventLogger.client_check_finish args.from mode_s exit_status;
   exit_status

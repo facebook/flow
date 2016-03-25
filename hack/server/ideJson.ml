@@ -35,7 +35,8 @@ type response_type =
   | Find_lvar_refs_response of Pos.t list
   | Type_at_pos_response of Pos.absolute option * string option
   | Format_response of string Format_hack.return
-  | Get_method_name_response of IdentifySymbolService.find_symbol_result option
+  | Get_method_name_response of
+    (Relative_path.t IdentifySymbolService.find_symbol_result) option
   | Outline_response of (Pos.absolute * string * string) list
 
 type parsing_result =

@@ -19,7 +19,7 @@ type _ t =
   | COVERAGE_LEVELS : ServerUtils.file_input -> ServerColorFile.result t
   | AUTOCOMPLETE : string -> AutocompleteService.result t
   | IDENTIFY_FUNCTION : string * int * int ->
-      IdentifySymbolService.find_symbol_result option t
+      (string IdentifySymbolService.find_symbol_result) option t
   | OUTLINE : string -> (Pos.absolute * string * string) list t
   | METHOD_JUMP : (string * bool) -> MethodJumps.result list t
   | FIND_REFS : FindRefsService.action -> FindRefsService.result t
@@ -50,7 +50,7 @@ let handle : type a. genv -> env -> a t -> a =
     | AUTOCOMPLETE content ->
         ServerAutoComplete.auto_complete env.files_info content
     | IDENTIFY_FUNCTION (content, line, char) ->
-        ServerIdentifyFunction.go content line char
+        ServerIdentifyFunction.go_absolute content line char
     | OUTLINE content ->
         FileOutline.outline content
     | METHOD_JUMP (class_, find_children) ->

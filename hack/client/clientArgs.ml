@@ -226,6 +226,9 @@ let parse_check_args cmd =
       Arg.String (fun x -> set_mode (MODE_FIND_LVAR_REFS x) ()),
       (* (mode) finds references of local variable at [line:character] *)
       (* position in file on stdin *) "";
+    "--get-method-name",
+      Arg.String (fun x -> set_mode (MODE_GET_METHOD_NAME x) ()),
+      (* (mode) same as --identify-function, but returns more information *) "";
 
     (* flags *)
     "--json", Arg.Set output_json,

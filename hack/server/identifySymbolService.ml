@@ -16,10 +16,14 @@ type target_type =
 | Method
 | LocalVar
 
-type find_symbol_result = {
+type 'a find_symbol_result = {
   name:  string;
   type_: target_type;
-  pos: Pos.t;
+  pos: 'a Pos.pos;
+}
+
+let to_absolute x = { x with
+  pos = Pos.to_absolute x.pos
 }
 
 let is_target target_line target_char pos =
