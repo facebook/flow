@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS=
+OPAM_DEPENDS="js_of_ocaml.2.7"
 
 TMP=${TMPDIR:-/tmp}
 
@@ -20,51 +20,56 @@ getopam() {
     fi
 }
 
-setup_linux () {
-  printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" "$OCAML_VERSION" "$OPAM_VERSION"
-  export PREFIX="$HOME/usr"
-  export BINDIR="$PREFIX/bin"
-  export PATH="$BINDIR:$PATH"
-
-  file="opam-$OPAM_VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
-
-  echo Downloading OPAM...
-  getopam "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION" "$file"
-
-  mkdir -p "$BINDIR" 2>/dev/null || true
-  install -m 755 "$TMP/$file" "$BINDIR/opam"
-  rm -f "$TMP/$file"
-
-  OPAM="$BINDIR/opam"
-
-  export OPAMYES=1
-  export OPAMVERBOSE=1
-  "$OPAM" init -a -y -k local flow resources/opam --comp "$OCAML_VERSION"
-  "$OPAM" repository add default https://opam.ocaml.org --priority=-1 >/dev/null
-  # TODO: Install js_of_ocaml and test the parser
-  # opam install ${OPAM_DEPENDS}
-  printf "travis_fold:end:opam_installer\n"
-}
-
-setup_osx () {
-  case $OCAML_VERSION in
-  4.02.1)
+case "$TRAVIS_OS_NAME" in
+  osx)
+    printf "travis_fold:start:brew_install\nInstalling brew\n"
     brew update
-    brew install ocaml ;;
-  4.01.0)
-    brew install ocaml ;;
-  *) echo "Unknown $OCAML_VERSION"; exit 1 ;;
-  esac
-
-  # TODO: Figure out how to get opam to run in travis.
-  # 1.2.0 fails due to https://github.com/ocaml/opam/issues/1853
-  # 1.1.0 fails due to :
-  #  'opam init -a -y' failed.
-  #  Fatal error:
-  #  Sys_error("/Users/travis/.opam/repo/default/packages/ott/ott.0.21.2/opam: Too many open files")
-}
-
-case $TRAVIS_OS_NAME in
-  osx) setup_osx ;;
-linux) setup_linux ;;
+    brew install aspcud
+    printf "travis_fold:end:brew_install\n"
+    ;;
 esac
+
+printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" \
+  "$OCAML_VERSION" "$OPAM_VERSION"
+
+INSTALL_DIR="${TMP%%/}/ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}"
+export PREFIX="$INSTALL_DIR/usr"
+export OPAMROOT="$INSTALL_DIR/.opam"
+BINDIR="$PREFIX/bin"
+export PATH="$BINDIR:$PATH"
+
+file="opam-$OPAM_VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
+
+echo Downloading OPAM...
+getopam "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION" "$file"
+
+mkdir -p "$BINDIR" 2>/dev/null || true
+install -m 755 "$TMP/$file" "$BINDIR/opam"
+rm -f "$TMP/$file"
+
+OPAM="$BINDIR/opam"
+
+echo "Initializing OPAM..."
+"$OPAM" init \
+  --no-setup --yes --quiet \
+  -k local flow resources/opam \
+  --comp "$OCAML_VERSION" >/dev/null
+eval $("$OPAM" config env)
+case "$OPAM_VERSION" in
+  1.1.*)
+    DEFAULT_OPAM_REPO=https://opam.ocaml.org/1.1
+    ;;
+  *)
+    DEFAULT_OPAM_REPO=https://opam.ocaml.org
+    ;;
+esac
+("$OPAM" repository list --short | grep "\bdefault\b" >/dev/null) || \
+  "$OPAM" repository --yes \
+    add default "$DEFAULT_OPAM_REPO" --priority=-1 >/dev/null
+
+"$OPAM" repository list
+
+echo "Installing dependencies..."
+"$OPAM" install --yes ${OPAM_DEPENDS}
+
+printf "travis_fold:end:opam_installer\n"
