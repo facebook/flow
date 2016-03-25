@@ -57,7 +57,7 @@ let start_hh_server options =
   let log_link = ServerFiles.log_link (ServerArgs.root options) in
   start_server options Program.hh_server log_link ServerMain.daemon_main
 
-let start_ide_server options =
+let _start_ide_server options =
   let log_link = ServerFiles.ide_log_link (ServerArgs.root options) in
   start_server options Program.ide_server log_link IdeMain.daemon_main
 
@@ -105,10 +105,10 @@ let monitor_daemon_main (options: ServerArgs.options) =
       end;
 
       let typechecker = start_hh_server options in
-      let ide = start_ide_server options in
+      (*let ide = start_ide_server options in
       IdeProcessPipeInit.monitor_make_and_send
-        typechecker.SP.out_fd ide.SP.out_fd;
-      [typechecker; ide]
+        typechecker.SP.out_fd ide.SP.out_fd; *)
+      [typechecker]
     end in
     let waiting_client = ServerArgs.waiting_client options in
     ServerMonitor.start_monitoring ~waiting_client ServerMonitorUtils.({

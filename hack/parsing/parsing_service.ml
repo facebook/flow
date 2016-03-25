@@ -117,4 +117,8 @@ let parse_parallel workers get_next =
 (*****************************************************************************)
 
 let go workers ~get_next =
-  parse_parallel workers get_next
+  let fast, errorl, failed_parsing =
+    parse_parallel workers get_next in
+  Parsing_hooks.dispatch_parse_task_completed_hook
+    (Relative_path.Map.keys fast);
+  fast, errorl, failed_parsing

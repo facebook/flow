@@ -407,8 +407,8 @@ let run_once options =
 let daemon_main options (ic, oc) =
   let in_fd = Daemon.descr_of_in_channel ic in
   let out_fd = Daemon.descr_of_out_channel oc in
-  let ide_process = IdeProcessPipeInit.typechecker_recv in_fd in
-  let genv = setup_server options (Some ide_process) in
+  (* let ide_process = None IdeProcessPipeInit.typechecker_recv in_fd in *)
+  let genv = setup_server options None in
   if ServerArgs.check_mode genv.options then
     (Hh_logger.log "Invalid program args - can't run daemon in check mode.";
     Exit_status.(exit Input_error));

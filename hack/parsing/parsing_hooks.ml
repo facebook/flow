@@ -13,11 +13,23 @@ open Core
 let (file_parsed_hooks:
   (Relative_path.t -> Ast.program -> unit) list ref) = ref []
 
+let (parse_task_completed_hooks:
+  (Relative_path.t list -> unit) list ref) = ref []
+
 let attach_file_parsed_hook hook =
   file_parsed_hooks := hook :: !file_parsed_hooks
+
+let attach_parse_task_completed_hook hook =
+  parse_task_completed_hooks := hook :: !parse_task_completed_hooks
 
 let dispatch_file_parsed_hook fn ast =
   List.iter !file_parsed_hooks (fun hook -> hook fn ast)
 
+let dispatch_parse_task_completed_hook files =
+  List.iter !parse_task_completed_hooks begin fun hook ->
+    hook files
+  end
+
 let remove_all_hooks () =
   file_parsed_hooks := [];
+  parse_task_completed_hooks := [];
