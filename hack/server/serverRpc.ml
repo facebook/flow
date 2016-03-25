@@ -36,6 +36,7 @@ type _ t =
   | DELETE_CHECKPOINT : string -> bool t
   | STATS : Stats.t t
   | KILL : unit t
+  | FIND_LVAR_REFS : string * int * int -> ServerFindLocals.result t
 
 let handle : type a. genv -> env -> a t -> a =
   fun genv env -> function
@@ -77,3 +78,5 @@ let handle : type a. genv -> env -> a t -> a =
     | DELETE_CHECKPOINT x -> ServerCheckpoint.delete_checkpoint x
     | STATS -> Stats.get_stats ()
     | KILL -> ()
+    | FIND_LVAR_REFS (content, line, char) ->
+        ServerFindLocals.go content line char

@@ -36,6 +36,7 @@ type client_mode =
 | MODE_RETRIEVE_CHECKPOINT of string
 | MODE_DELETE_CHECKPOINT of string
 | MODE_STATS
+| MODE_FIND_LVAR_REFS of string
 
 type client_check_env = {
   mode: client_mode;
@@ -75,3 +76,4 @@ let mode_to_string = function
   | MODE_RETRIEVE_CHECKPOINT _ -> "MODE_RETRIEVE_CHECKPOINT"
   | MODE_DELETE_CHECKPOINT _ -> "MODE_DELETE_CHECKPOINT"
   | MODE_STATS -> "MODE_STATS"
+  | MODE_FIND_LVAR_REFS _ -> "MODE_FIND_LVAR_REFS"
