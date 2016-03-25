@@ -37,6 +37,7 @@ type _ t =
   | STATS : Stats.t t
   | KILL : unit t
   | FIND_LVAR_REFS : string * int * int -> ServerFindLocals.result t
+  | FORMAT : string * int * int -> string Format_hack.return t
 
 let handle : type a. genv -> env -> a t -> a =
   fun genv env -> function
@@ -80,3 +81,5 @@ let handle : type a. genv -> env -> a t -> a =
     | KILL -> ()
     | FIND_LVAR_REFS (content, line, char) ->
         ServerFindLocals.go content line char
+    | FORMAT (content, from, to_) ->
+        ServerFormat.go content from to_

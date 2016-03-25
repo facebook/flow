@@ -38,6 +38,7 @@ type client_mode =
 | MODE_STATS
 | MODE_FIND_LVAR_REFS of string
 | MODE_GET_METHOD_NAME of string
+| MODE_FORMAT of int * int
 
 type client_check_env = {
   mode: client_mode;
@@ -79,3 +80,4 @@ let mode_to_string = function
   | MODE_STATS -> "MODE_STATS"
   | MODE_FIND_LVAR_REFS _ -> "MODE_FIND_LVAR_REFS"
   | MODE_GET_METHOD_NAME _ -> "MODE_GET_METHOD_NAME"
+  | MODE_FORMAT _ -> "MODE_FORMAT"

@@ -70,6 +70,7 @@ let parse_check_args cmd =
   let logname = ref false in
   let refactor_mode = ref "" in
   let refactor_before = ref "" in
+  let format_from = ref 0 in
 
   (* custom behaviors *)
   let set_from x () = from := x in
@@ -229,6 +230,11 @@ let parse_check_args cmd =
     "--get-method-name",
       Arg.String (fun x -> set_mode (MODE_GET_METHOD_NAME x) ()),
       (* (mode) same as --identify-function, but returns more information *) "";
+    "--format",
+      Arg.Tuple ([
+        Arg.Int (fun x -> format_from := x);
+        Arg.Int (fun x -> set_mode (MODE_FORMAT (!format_from, x)) ())
+      ]), "";
 
     (* flags *)
     "--json", Arg.Set output_json,
