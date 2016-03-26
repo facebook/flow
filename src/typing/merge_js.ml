@@ -174,15 +174,16 @@ module ContextOptimizer = struct
   class context_optimizer = object
     inherit [quotient] Type_visitor.t as super
 
-    method! id_ cx quotient id =
+    method! tvar cx quotient r id =
       let { reduced_graph; _ } = quotient in
       if (IMap.mem id reduced_graph) then quotient
       else
         let types = Flow_js.possible_types cx id in
         let t = match types with
+          | [] -> AnyT.t
           | [t] -> t
-          | t::_ -> UnionT (reason_of_t t, UnionRep.make types)
-          | [] -> AnyT.t in
+          | _ -> UnionT (r, UnionRep.make types)
+        in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
         super#type_ cx { quotient with reduced_graph } t

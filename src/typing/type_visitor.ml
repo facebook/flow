@@ -20,7 +20,7 @@ open Type
 *)
 class ['a] t = object(self)
   method type_ cx (acc: 'a) = function
-  | OpenT (_, id) -> self#id_ cx acc id
+  | OpenT (r, id) -> self#tvar cx acc r id
 
   | NumT _
   | StrT _
@@ -218,7 +218,7 @@ class ['a] t = object(self)
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,
      handle Resolved and Unresolved cases, etc. *)
-  method id_ _cx acc _id = acc
+  method tvar _cx acc _r _id = acc
 
   method private dict_ cx acc { key; value; _ } =
     let acc = self#type_ cx acc key in
