@@ -10,12 +10,12 @@ next: objects.html
 */
 
 /*
-  Classes were introduced in JavaScript (ES6) to formalize the common practice of
+  Classes were introduced in JavaScript to formalize the common practice of
   simulating class-like inheritance hierarchies in JavaScript with functions
   and prototypes.
 
   In Flow, a class may be defined using
-  [ES6 syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)
+  [standard syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)
   extended with field declarations.
 */
 
@@ -35,9 +35,9 @@ class D extends C {
 }
 
 /*
-  In the code above, C has two fields: `x` typed as `string`, and `y` typed as `number`,
-  as well as a constructor, and a few methods. `D` overrides those methods, and
-  also has a static method.
+  In the code above, class `C` defines fields `x` and `y`, which are typed as
+  `string` and `number`, respectively. `C` also defines a constructor and a
+  few methods. class `D` then overrides those methods, and adds a static method.
 
   Just like other languages with classes, Flow enforces that the type of
   an overridden method in a superclass (e.g., `bar` in `C`) is compatible with
@@ -68,7 +68,7 @@ var n: number = c.foo();  // string is incompatible with number
 /*
   ### Annotations, Globally
 
-  In general, type inference adds convenience, and helps to keep code
+  In general, type inference adds convenience and helps to keep code
   from becoming cluttered with redundant type annotations. But a lack of
   annotations can also reduce clarity - in particular, when errors occur
   far from their causes.
@@ -103,7 +103,7 @@ module.exports.D = ExportD;
 
   Flow treats classes as **nominal** types: structurally identical classes
   are not interchangeable, and one class is only a subtype of another
-  if it has been explicitly declared as a subclass, using `extends`.
+  if it has been explicitly declared as a subclass using `extends`.
 */
 
 // structurally identical to C, but nominally unrelated
@@ -223,8 +223,8 @@ var mapOfA: ReadWriteMap<string, A> = mapOfB;
   co- or contravariant, meaning that one instance is compatible with another
   if one type argument is a sub- or supertype, respectively, of the other.
 
-  **Covariance** is useful whan a type parameter only appears in output (or "positive")
-  positions within a class definition:
+  **Covariance** is useful whan a type parameter only appears in output (or
+  "positive") positions within a class definition:
 */
 
 class ReadOnlyMap<K, +V> {
@@ -250,9 +250,10 @@ var readOnlyMapOfA: ReadOnlyMap<string, A> = readOnlyMapOfB;
   in annotations. `this` can improve the precision of certain types
   in the presence of inheritance.
 
-  Intuitively, the meaning of the `this` type is as follows: consider a class `C`,
-  and a class `D` extending `C`. At runtime, the value of `this` within methods
-  of `C` will sometimes be an instance of `C`, and sometimes an instance of `D`.
+  Intuitively, the meaning of the `this` type is as follows: consider a class
+  `C` and a class `D` extending `C`. At runtime, the value of `this` within
+  methods of `C` will sometimes be an instance of `C`, and sometimes an instance
+  of `D`.
 
   Within the body of `C`, then, the `this` type denotes *both* `C` and `D`.
   More generally, the `this` type behaves exactly like a type parameter on
@@ -262,10 +263,9 @@ var readOnlyMapOfA: ReadOnlyMap<string, A> = readOnlyMapOfB;
   (aka covariant, "positive") positions, if subtyping is to be preserved.
 
   The payoff comes in the form of improved precision in the types of superclass
-  methods *from the perspective of subclasses*: for example, a method of `C` that
-  returns a value of type `this` can safely be viewed as returning `D` when
-  invoked on an instance of `D` - instead of being locked to the less accurate
-  (and no safer) type `C`, simply by virtue of having been defined in `C`.
+  methods *from the perspective of subclasses*: for example, a method of `C`
+  that returns a value of type `this` can safely be viewed as returning `D` when
+  invoked on an instance of `D`.
 */
 
 class ThisA {
