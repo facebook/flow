@@ -362,7 +362,9 @@ let init ?load_mini_script genv =
   let fast = FileInfo.simplify_fast env.files_info in
   let fast = Relative_path.Set.fold env.failed_parsing
     ~f:Relative_path.Map.remove ~init:fast in
-  let env, t = type_decl genv env fast t in
+  let env, t =
+    if genv.local_config.SLC.lazy_decl then env, t
+    else type_decl genv env fast t in
 
   let state = state_future >>= fun f ->
     with_loader_timeout timeout (fun _ -> f `Wait_for_changes)
