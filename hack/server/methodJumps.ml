@@ -107,8 +107,8 @@ let find_extended_classes_in_files_parallel workers target_class_name mthds
         target_class_name mthds target_class_pos [] classes
 
 (* Find child classes *)
-let get_child_classes_and_methods cls files_info workers acc =
-  let files = FindRefsService.get_child_classes_files
+let get_child_classes_and_methods tcopt cls files_info workers acc =
+  let files = FindRefsService.get_child_classes_files tcopt
     workers files_info cls.tc_name in
   find_extended_classes_in_files_parallel
     workers cls.tc_name cls.tc_methods cls.tc_pos files_info files
@@ -141,12 +141,12 @@ let get_ancestor_classes_and_methods cls acc =
 (*  Returns a list of the ancestor or child
  *  classes and methods for a given class
  *)
-let get_inheritance class_ ~find_children files_info workers =
+let get_inheritance tcopt class_ ~find_children files_info workers =
   let class_ = add_ns class_ in
   let class_ = Typing_heap.Classes.get class_ in
   match class_ with
   | None -> []
   | Some c ->
     if find_children then
-      get_child_classes_and_methods c files_info workers []
+      get_child_classes_and_methods tcopt c files_info workers []
     else get_ancestor_classes_and_methods c []

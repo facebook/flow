@@ -408,7 +408,7 @@ let handle_mode mode filename tcopt files_contents files_info errors =
         List.iter fileinfo.FileInfo.classes begin fun (_p, class_) ->
           Printf.printf "Ancestors of %s and their overridden methods:\n"
             class_;
-          let ancestors = MethodJumps.get_inheritance
+          let ancestors = MethodJumps.get_inheritance tcopt
             class_ ~find_children:false files_info None in
           ClientMethodJumps.print_readable ancestors ~find_children:false;
           Printf.printf "\n";
@@ -417,7 +417,7 @@ let handle_mode mode filename tcopt files_contents files_info errors =
         List.iter fileinfo.FileInfo.classes begin fun (_p, class_) ->
           Printf.printf "Children of %s and the methods they override:\n"
             class_;
-          let children = MethodJumps.get_inheritance
+          let children = MethodJumps.get_inheritance tcopt
             class_ ~find_children:true files_info None in
           ClientMethodJumps.print_readable children ~find_children:true;
           Printf.printf "\n";

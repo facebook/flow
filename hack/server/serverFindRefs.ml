@@ -9,6 +9,7 @@
  *)
 
 open Core
+open ServerEnv
 open Reordered_argument_collections
 
 let to_json input =
@@ -33,32 +34,32 @@ let strip_ns results =
 
 let search class_names method_name include_defs files genv env =
   (* Get all the references to the provided method name and classes in the files *)
-  let res = FindRefsService.find_references genv.ServerEnv.workers class_names
-      method_name include_defs env.ServerEnv.files_info files in
+  let res = FindRefsService.find_references env.tcopt genv.workers
+    class_names method_name include_defs env.files_info files in
   strip_ns res
 
 let search_function function_name include_defs genv env =
   let function_name = add_ns function_name in
   let files = FindRefsService.get_dependent_files_function
-      genv.ServerEnv.workers function_name in
+    env.tcopt genv.ServerEnv.workers function_name in
   search None (Some function_name) include_defs files genv env
 
 let search_method class_name method_name include_defs genv env =
   let class_name = add_ns class_name in
   (* Find all the classes that extend this one *)
-  let files = FindRefsService.get_child_classes_files
-      genv.ServerEnv.workers env.ServerEnv.files_info class_name in
-  let all_classes = FindRefsService.find_child_classes
-      class_name env.ServerEnv.files_info files in
+  let files = FindRefsService.get_child_classes_files env.tcopt
+      genv.workers env.files_info class_name in
+  let all_classes = FindRefsService.find_child_classes env.tcopt
+      class_name env.files_info files in
   let all_classes = SSet.add all_classes class_name in
   (* Get all the files that reference those classes *)
-  let files = FindRefsService.get_dependent_files
+  let files = FindRefsService.get_dependent_files env.tcopt
       genv.ServerEnv.workers all_classes in
   search (Some all_classes) (Some method_name) include_defs files genv env
 
 let search_class class_name include_defs genv env =
   let class_name = add_ns class_name in
-  let files = FindRefsService.get_dependent_files
+  let files = FindRefsService.get_dependent_files env.tcopt
       genv.ServerEnv.workers (SSet.singleton class_name) in
   search (Some (SSet.singleton class_name)) None include_defs files genv env
 

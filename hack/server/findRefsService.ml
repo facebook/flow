@@ -64,29 +64,29 @@ let detach_hooks () =
   Decl_hooks.remove_all_hooks ();
   Typing_hooks.remove_all_hooks ()
 
-let check_if_extends_class target_class_name class_name acc =
-  let class_ = Typing_heap.Classes.get class_name in
+let check_if_extends_class tcopt target_class_name class_name acc =
+  let class_ = Typing_lazy_heap.get_class tcopt class_name in
   match class_ with
   | None -> acc
   | Some { Typing_defs.tc_ancestors = imps; _ }
       when SMap.mem target_class_name imps -> SSet.add acc class_name
   | _ -> acc
 
-let find_child_classes target_class_name files_info files =
+let find_child_classes tcopt target_class_name files_info files =
   SharedMem.invalidate_caches();
   Relative_path.Set.fold files ~init:SSet.empty ~f:begin fun fn acc ->
     (try
       let { FileInfo.classes; _ } =
         Relative_path.Map.find_unsafe fn files_info in
       List.fold_left classes ~init:acc ~f:begin fun acc cid ->
-        check_if_extends_class target_class_name (snd cid) acc
+        check_if_extends_class tcopt target_class_name (snd cid) acc
       end
     with Not_found ->
       acc)
   end
 
-let get_child_classes_files workers files_info class_name =
-  match Typing_heap.Classes.get class_name with
+let get_child_classes_files tcopt workers files_info class_name =
+  match Typing_lazy_heap.get_class tcopt class_name with
   | Some class_ ->
     (* Find the files that contain classes that extend class_ *)
     let cid_hash =
@@ -99,9 +99,9 @@ let get_child_classes_files workers files_info class_name =
   | _ ->
     Relative_path.Set.empty
 
-let get_deps_set classes =
+let get_deps_set tcopt classes =
   SSet.fold classes ~f:begin fun class_name acc ->
-    match Typing_heap.Classes.get class_name with
+    match Typing_lazy_heap.get_class tcopt class_name with
     | Some class_ ->
         (* Get all files with dependencies on this class *)
         let fn = Pos.filename class_.tc_pos in
@@ -110,18 +110,19 @@ let get_deps_set classes =
         let files = Typing_deps.get_files bazooka in
         let files = Relative_path.Set.add files fn in
         Relative_path.Set.union files acc
-    | _ -> acc
+    | None -> acc
   end ~init:Relative_path.Set.empty
 
-let get_deps_set_function f_name =
-  try
-    let fun_ = Typing_heap.Funs.find_unsafe f_name in
+let get_deps_set_function tcopt f_name =
+  match Typing_lazy_heap.get_fun tcopt f_name with
+  | Some fun_ ->
     let fn = Pos.filename fun_.ft_pos in
     let dep = Typing_deps.Dep.Fun f_name in
     let bazooka = Typing_deps.get_bazooka dep in
     let files = Typing_deps.get_files bazooka in
     Relative_path.Set.add files fn
-  with Not_found -> Relative_path.Set.empty
+  | None ->
+    Relative_path.Set.empty
 
 let find_refs target_classes target_method acc fileinfo_l =
   let results_acc = ref Pos.Map.empty in
@@ -141,11 +142,11 @@ let parallel_find_refs workers fileinfo_l target_classes target_method =
     ~merge:(List.rev_append)
     ~next:(Bucket.make fileinfo_l)
 
-let get_definitions target_classes target_method =
+let get_definitions tcopt target_classes target_method =
   match target_classes, target_method with
   | Some classes, Some method_name ->
     SSet.fold classes ~init:[] ~f:begin fun class_name acc ->
-      match Typing_heap.Classes.get class_name with
+      match Typing_lazy_heap.get_class tcopt class_name with
       | Some class_ ->
         let add_meth meths acc = match SMap.get meths method_name with
           | Some meth when meth.ce_origin = class_.tc_name ->
@@ -160,18 +161,18 @@ let get_definitions target_classes target_method =
     end
   | Some classes, None ->
     SSet.fold classes ~init:[] ~f:begin fun class_name acc ->
-      match Typing_heap.Classes.get class_name with
+      match Typing_lazy_heap.get_class tcopt class_name with
       | Some class_ -> (class_name, class_.tc_pos) :: acc
       | None -> acc
     end
   | None, Some fun_name ->
-    begin match Typing_heap.Funs.get fun_name with
+    begin match Typing_lazy_heap.get_fun tcopt fun_name with
       | Some fun_ -> [fun_name, fun_.ft_pos]
       | None -> []
     end
   | None, None -> []
 
-let find_references workers target_classes target_method include_defs
+let find_references tcopt workers target_classes target_method include_defs
       files_info files =
   let fileinfo_l = Relative_path.Set.fold files ~f:begin fun fn acc ->
     match Relative_path.Map.get files_info fn with
@@ -185,15 +186,15 @@ let find_references workers target_classes target_method include_defs
       parallel_find_refs workers fileinfo_l target_classes target_method
     in
   if include_defs then
-    let defs = get_definitions target_classes target_method in
+    let defs = get_definitions tcopt target_classes target_method in
     List.rev_append defs results
   else
     results
 
-let get_dependent_files_function workers f_name =
+let get_dependent_files_function tcopt workers f_name =
   (* This is performant enough to not need to go parallel for now *)
-  get_deps_set_function f_name
+  get_deps_set_function tcopt f_name
 
-let get_dependent_files workers input_set =
+let get_dependent_files tcopt workers input_set =
   (* This is performant enough to not need to go parallel for now *)
-  get_deps_set input_set
+  get_deps_set tcopt input_set
