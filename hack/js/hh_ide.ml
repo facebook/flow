@@ -208,13 +208,13 @@ let hh_check_syntax fn content =
   error errors
 
 let hh_auto_complete fn =
+  let tcopt = TypecheckerOptions.permissive in
   let fn = Relative_path.create Relative_path.Root fn in
   AutocompleteService.attach_hooks();
   try
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
       List.iter ast begin fun def ->
-        let tcopt = TypecheckerOptions.permissive in
         match def with
         | Ast.Fun f ->
           let f = Naming.fun_ tcopt f in
@@ -234,7 +234,7 @@ let hh_auto_complete fn =
       | Some Autocomplete.Acclass_get -> "class_get"
       | Some Autocomplete.Acprop -> "var"
       | None -> "none" in
-    let result = AutocompleteService.get_results [] [] in
+    let result = AutocompleteService.get_results tcopt [] [] in
     let result =
       List.map result AutocompleteService.autocomplete_result_to_json
     in

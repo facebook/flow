@@ -218,7 +218,7 @@ let get_constructor_ty c =
         (* Nothing defined, so we need to fake the entire constructor *)
       reason, Typing_defs.Tfun (Typing_env.make_ft pos [] return_ty)
 
-let compute_complete_global funs classes =
+let compute_complete_global tcopt funs classes =
   let completion_type = !Autocomplete.argument_global_type in
   let gname = Utils.strip_ns !Autocomplete.auto_complete_for_global in
   let gname = strip_suffix gname in
@@ -227,7 +227,7 @@ let compute_complete_global funs classes =
     List.iter classes begin fun name ->
       if !result_count > 100 then raise Exit;
       if str_starts_with (strip_ns name) gname
-      then match (Typing_heap.Classes.get name) with
+      then match (Typing_lazy_heap.get_class tcopt name) with
         | Some c
           when should_complete_class completion_type c.Typing_defs.tc_kind ->
             incr result_count;
@@ -286,7 +286,7 @@ let compute_complete_global funs classes =
           | None -> false
           | Some s -> str_starts_with stripped_name s in
         if matches_gname || matches_gname_gns
-        then match (Typing_heap.Funs.get name) with
+        then match (Typing_lazy_heap.get_fun tcopt name) with
           | Some fun_ ->
             incr result_count;
             let ty =
@@ -352,18 +352,17 @@ let result_compare a b =
   else if a.expected_ty then -1
   else 1
 
-let get_results funs classes =
+let get_results tcopt funs classes =
   Errors.ignore_ begin fun() ->
     let completion_type = !Autocomplete.argument_global_type in
     if completion_type = Some Autocomplete.Acid ||
        completion_type = Some Autocomplete.Acnew ||
        completion_type = Some Autocomplete.Actype
-    then compute_complete_global funs classes;
+    then compute_complete_global tcopt funs classes;
     let results = !autocomplete_results in
     let env = match !ac_env with
       | Some e -> e
       | None ->
-        let tcopt = TypecheckerOptions.permissive in
         Typing_env.empty tcopt Relative_path.default ~droot:None
     in
     let results = List.map results begin fun x ->

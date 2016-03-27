@@ -21,8 +21,8 @@ type result =
   | Deferred_to_typechecker of deferred_to_typechecker
   | Server_busy
 
-let get_autocomplete_response content files_info =
-  let res = ServerAutoComplete.auto_complete files_info content in
+let get_autocomplete_response tcopt content files_info =
+  let res = ServerAutoComplete.auto_complete tcopt files_info content in
   Auto_complete_response ( Hh_json.JSON_Array (
     List.map res AutocompleteService.autocomplete_result_to_json
   ))
@@ -79,7 +79,7 @@ let get_outline_call_response content =
 let get_call_response_ id call env =
   match call with
   | Auto_complete_call content ->
-    Result (get_autocomplete_response content env.files_info)
+    Result (get_autocomplete_response env.tcopt content env.files_info)
   | Identify_function_call (content, line, char) ->
     Result (get_identify_function_response content line char)
   | Search_call s ->

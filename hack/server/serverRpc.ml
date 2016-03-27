@@ -49,7 +49,7 @@ let handle : type a. genv -> env -> a t -> a =
     | INFER_TYPE (fn, line, char) ->
         ServerInferType.go env (fn, line, char)
     | AUTOCOMPLETE content ->
-        ServerAutoComplete.auto_complete env.files_info content
+        ServerAutoComplete.auto_complete env.tcopt env.files_info content
     | IDENTIFY_FUNCTION (content, line, char) ->
         ServerIdentifyFunction.go_absolute content line char
     | OUTLINE content ->

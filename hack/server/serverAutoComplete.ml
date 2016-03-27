@@ -15,7 +15,7 @@
 open Core
 open Reordered_argument_collections
 
-let auto_complete files_info content =
+let auto_complete tcopt files_info content =
   AutocompleteService.attach_hooks();
   let content_funs, content_classes =
     ServerIdeUtils.declare_and_check Relative_path.default content in
@@ -32,7 +32,7 @@ let auto_complete files_info content =
       add_all funs content_funs f, add_all classes content_classes c
     end ~init:(SSet.elements content_funs, SSet.elements content_classes)
   in
-  let result = AutocompleteService.get_results fun_names class_names in
+  let result = AutocompleteService.get_results tcopt fun_names class_names in
   ServerIdeUtils.revive content_funs content_classes;
   AutocompleteService.detach_hooks();
   result
