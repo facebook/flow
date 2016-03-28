@@ -1,3 +1,11 @@
+Bar.js:15
+ 15:     new Qux().w = "?";
+         ^^^^^^^^^^^ assignment of property `w`
+ 15:     new Qux().w = "?";
+                       ^^^ string. This type is incompatible with
+  5:   w:number;
+         ^^^^^^ number. See: Qux.js:5
+
 Foo.js:10
  10:     this.x = x;
               ^ property `x`. Property cannot be assigned on possibly undefined value
@@ -7,6 +15,14 @@ Foo.js:10
 Foo.js:13
  13:   foo(y:string,z):number {
                     ^ parameter `z`. Missing annotation
+
+Foo.js:15
+ 15:     var u = new Foo("...").qux();
+                 ^^^^^^^^^^^^^^^^^^^^ call of method `qux`
+ 18:     return v.bar(z,u);
+                        ^ number. This type is incompatible with
+ 14:   bar(z:string,u:string):string {
+                      ^^^^^^ string. See: Bar.js:14
 
 Foo.js:16
  16:     var v = new Bar(y);
@@ -24,9 +40,11 @@ Foo.js:18
  13:   foo(y:string,z):number {
                        ^^^^^^ number
 
-Qux.js:7
-  7:   qux() { return this.w; }
-            ^ return. Missing annotation
+Qux.js:9
+  9:   fooqux(x:number) { }
+                ^^^^^^ number. This type is incompatible with
+ 21:   fooqux(x:string) {
+                ^^^^^^ string. See: Foo.js:21
 
 
-Found 5 errors
+Found 7 errors

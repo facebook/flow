@@ -6,10 +6,6 @@ annot.js:5
   5:   bar(x) { }
            ^ parameter `x`. Missing annotation
 
-fun.js:8
-  8: function f(x:number) { return x; }
-                         ^ return. Missing annotation
-
 fun.js:11
  11: var x:string = f(0);
                     ^^^^ number. This type is incompatible with
@@ -23,4 +19,4 @@ obj.js:10
            ^^^^^^ string
 
 
-Found 5 errors
+Found 4 errors

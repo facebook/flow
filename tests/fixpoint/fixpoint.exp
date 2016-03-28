@@ -2,9 +2,9 @@ Fun.js:8
   8: function fix(fold) {
                   ^^^^ parameter `fold`. Missing annotation
 
-Fun.js:8
-  8: function fix(fold) {
-                       ^ return. Missing annotation
+Fun.js:19
+ 19:     return function(n) {
+                         ^ parameter `n`. Missing annotation
 
 Fun.js:28
  28: factorial("...");

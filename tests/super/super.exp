@@ -80,13 +80,5 @@ super.js:20
   8: class B extends A {
                      ^ A
 
-test.js:3
-  3:   constructor() { return super(); }
-                    ^ return. Missing annotation
 
-test.js:4
-  4:   foo() { return super.foo(); }
-            ^ return. Missing annotation
-
-
-Found 14 errors
+Found 12 errors

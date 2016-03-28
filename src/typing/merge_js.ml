@@ -212,9 +212,13 @@ module ContextOptimizer = struct
     let reducer = new context_optimizer in
     List.fold_left (reducer#type_ cx) empty exports
 
+  (* string form of a context's own module name *)
+  let context_module cx =
+    Modulename.to_string (Context.module_name cx)
+
+  (* the tvar on which a context hosts its own exports *)
   let export cx =
-    let m = Modulename.to_string (Context.module_name cx) in
-    Flow_js.lookup_module cx m
+    Flow_js.lookup_module cx (context_module cx)
 
   (* reduce a context to a "signature context" *)
   let sig_context component_cxs =
@@ -225,8 +229,8 @@ module ContextOptimizer = struct
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_envs cx quotient.reduced_envs;
     other_cxs |> List.iter (fun other_cx ->
-      let m = Modulename.to_string (Context.module_name other_cx) in
-      Context.add_module cx m (export other_cx)
+      let other_m = context_module other_cx in
+      Context.add_module cx other_m (export other_cx)
     )
 
 end

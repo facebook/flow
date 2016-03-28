@@ -1,22 +1,14 @@
 infer.js:4
-  4:   a: function(arg) {  // missing arg and return annotations
-                   ^^^ parameter `arg`. Missing annotation
-
-infer.js:4
-  4:   a: function(arg) {  // missing arg and return annotations
-                       ^ return. Missing annotation
-
-infer.js:8
-  8:   b: function(arg) {  // missing arg and return annotations
+  4:   a: function(arg) {  // missing arg annotation
                    ^^^ parameter `arg`. Missing annotation
 
 infer.js:8
-  8:   b: function(arg) {  // missing arg and return annotations
-                       ^ return. Missing annotation
+  8:   b: function(arg) {  // missing arg annotation
+                   ^^^ parameter `arg`. Missing annotation
 
-infer.js:14
- 14:   c: function(arg: string) {  // missing return annotation
-                               ^ return. Missing annotation
+infer.js:32
+ 32:     return function(x) {  // missing param annotation
+                         ^ parameter `x`. Missing annotation
 
 
-Found 5 errors
+Found 3 errors

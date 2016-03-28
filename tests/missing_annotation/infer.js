@@ -1,17 +1,17 @@
 /* @flow */
 
 var Foo = {
-  a: function(arg) {  // missing arg and return annotations
+  a: function(arg) {  // missing arg annotation
     return arg;
   },
 
-  b: function(arg) {  // missing arg and return annotations
+  b: function(arg) {  // missing arg annotation
     return {
       bar: arg
     };
   },
 
-  c: function(arg: string) {  // missing return annotation
+  c: function(arg: string) {  // no return annotation required
     return {
       bar: arg
     };
@@ -24,6 +24,23 @@ var Foo = {
       bar: arg
     };
   },
+
+  // return type annotation may be omitted, but if so, input positions on
+  // observed return type (e.g. param types in a function type) must come
+  // from annotations
+  e: function(arg: string) {
+    return function(x) {  // missing param annotation
+      return x;
+    }
+  },
+
+  // ...if the return type is annotated explicitly, this is unnecessary
+  f: function(arg: string): (x:number) => number {
+    return function(x) {  // no error
+      return x;
+    }
+  }
+
 };
 
 var Bar = {

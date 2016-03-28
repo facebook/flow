@@ -10,17 +10,9 @@
   5:   constructor(x) { this.x = x; }
                    ^ parameter `x`. Missing annotation
 
-2/A.js:7
-  7:   getX() { return this.x; }
-             ^ return. Missing annotation
-
 2/A.js:9
   9:   onLoad(callback) {
               ^^^^^^^^ parameter `callback`. Missing annotation
-
-2/A.js:9
-  9:   onLoad(callback) {
-                       ^ return. Missing annotation
 
 2/A.js:10
  10:     return callback(this.getX());
@@ -31,4 +23,4 @@
                           ^^^^^^ string
 
 
-Found 6 errors
+Found 4 errors

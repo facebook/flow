@@ -6107,26 +6107,29 @@ end
    superclass.
 *)
 (* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) cx skip ids = function
-  | BoundT _ -> ()
+let rec assert_ground ?(infer=false) cx skip ids t =
+  let recurse ?infer = assert_ground ?infer cx skip ids in
+  match t with
+  | BoundT _ ->
+    ()
 
   (* Type variables that are not forced to be annotated include those that
      are dependent on requires, or whose reasons indicate that they are
      derivable. The latter category includes annotations and builtins. *)
   | OpenT (reason_open, id)
-      when (ISet.mem id skip || is_derivable_reason reason_open)
-        -> ()
+    when (ISet.mem id skip || is_derivable_reason reason_open) ->
+    ()
 
   (* when the infer flag is set, traverse the types reachable from this tvar,
      rather than stopping here and reporting a missing annotation. Note that
      when this function is called recursively on those types, infer will be
      false. *)
   | OpenT (_, id) when infer ->
-      assert_ground_id cx skip ids id
+    assert_ground_id cx skip ids id
 
   | OpenT (reason_open, id) ->
-      unify cx (OpenT (reason_open, id)) AnyT.t;
-      add_error cx (mk_info reason_open ["Missing annotation"])
+    unify cx (OpenT (reason_open, id)) AnyT.t;
+    add_error cx (mk_info reason_open ["Missing annotation"])
 
   | NumT _
   | StrT _
@@ -6136,107 +6139,104 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | AnyT _
   | NullT _
   | VoidT _
-  | TaintT _
-    ->
-      ()
+  | TaintT _ ->
+    ()
 
   | FunT (_, static, prototype, { this_t; params_tlist; return_t; _ }) ->
-      let f = assert_ground cx skip ids in
-      unify cx static AnyT.t;
-      unify cx prototype AnyT.t;
-      unify cx this_t AnyT.t;
-      List.iter f params_tlist;
-      f return_t
+    unify cx static AnyT.t;
+    unify cx prototype AnyT.t;
+    unify cx this_t AnyT.t;
+    List.iter recurse params_tlist;
+    recurse ~infer:true return_t
 
-  | PolyT (_,t) ->
-      assert_ground cx skip ids t
-
+  | PolyT (_, t)
   | ThisClassT t ->
-      assert_ground cx skip ids t
+    recurse t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
-      unify cx proto_t AnyT.t;
-      iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
+    unify cx proto_t AnyT.t;
+    iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
 
   | ArrT (_, t, ts) ->
-      assert_ground cx skip ids t;
-      ts |> List.iter (assert_ground cx skip ids)
+    recurse t;
+    List.iter recurse ts
 
-  | ClassT t -> assert_ground cx skip ids t
-
-  | TypeT (_, t) -> assert_ground cx skip ids t
+  | ClassT t
+  | TypeT (_, t) ->
+    recurse t
 
   | InstanceT (_, static, super, instance) ->
-      let process_element name t =
-        let infer = is_munged_prop_name cx name in
-        assert_ground cx skip ids ~infer t
-      in
-      iter_props cx instance.fields_tmap process_element;
-      iter_props cx instance.methods_tmap process_element;
-      unify cx static AnyT.t;
-      assert_ground cx skip ids super
+    let process_element name t =
+      let infer = is_munged_prop_name cx name in
+      recurse ~infer t
+    in
+    iter_props cx instance.fields_tmap process_element;
+    iter_props cx instance.methods_tmap process_element;
+    unify cx static AnyT.t;
+    recurse super
 
-  | RestT (t) -> assert_ground cx skip ids t
+  | RestT t
+  | OptionalT t ->
+    recurse t
 
-  | OptionalT (t) -> assert_ground cx skip ids t
+  | TypeAppT (c, ts) ->
+    recurse ~infer:true c;
+    List.iter recurse ts
 
-  | TypeAppT(c,ts) ->
-      assert_ground ~infer:true cx skip ids c;
-      List.iter (assert_ground cx skip ids) ts
+  | ThisTypeAppT (c, this, ts) ->
+    recurse ~infer:true c;
+    recurse ~infer:true this;
+    List.iter recurse ts
 
-  | ThisTypeAppT(c,this,ts) ->
-      assert_ground ~infer:true cx skip ids c;
-      assert_ground ~infer:true cx skip ids this;
-      List.iter (assert_ground cx skip ids) ts
+  | MaybeT t ->
+    recurse t
 
-  | MaybeT(t) -> assert_ground cx skip ids t
+  | IntersectionT (_, rep) ->
+    List.iter recurse (InterRep.members rep)
 
-  | IntersectionT(_, rep) ->
-      List.iter (assert_ground cx skip ids) (InterRep.members rep)
+  | UnionT (_, rep) ->
+    List.iter recurse (UnionRep.members rep)
 
-  | UnionT(_, rep) ->
-      List.iter (assert_ground cx skip ids) (UnionRep.members rep)
+  | AnyWithLowerBoundT t
+  | AnyWithUpperBoundT t ->
+    recurse t
 
-  | AnyWithLowerBoundT(t) ->
-      assert_ground cx skip ids t
+  | AnyObjT _
+  | AnyFunT _ ->
+    ()
 
-  | AnyWithUpperBoundT(t) ->
-      assert_ground cx skip ids t
+  | ShapeT t ->
+    recurse t
 
-  | AnyObjT _ -> ()
-  | AnyFunT _ -> ()
+  | DiffT (t1, t2) ->
+    recurse t1;
+    recurse t2
 
-  | ShapeT(t) ->
-      assert_ground cx skip ids t
-  | DiffT(t1, t2) ->
-      assert_ground cx skip ids t1;
-      assert_ground cx skip ids t2
+  | KeysT (_, t) ->
+    recurse t
 
-  | KeysT(_, t) ->
-      assert_ground cx skip ids t
+  | SingletonStrT _
+  | SingletonNumT _
+  | SingletonBoolT _ ->
+    ()
 
-  | SingletonStrT _ -> ()
-  | SingletonNumT _ -> ()
-  | SingletonBoolT _ -> ()
-
-  | ModuleT(_, {exports_tmap; cjs_export}) ->
-      iter_props cx exports_tmap
-        (fun _ -> assert_ground ~infer:true cx skip ids);
-      (match cjs_export with
-       | Some(t) -> assert_ground ~infer:true cx skip ids t
-       | None -> ()
-      )
+  | ModuleT (_, { exports_tmap; cjs_export }) ->
+    iter_props cx exports_tmap (fun _ -> recurse ~infer:true);
+    begin match cjs_export with
+    | Some t -> recurse ~infer:true t
+    | None -> ()
+    end
 
   | AnnotT _ ->
-      (* don't ask for an annotation if one is already provided :) *)
-      (** TODO: one of the uses of derivable_reason was to mark type variables
-          that represented annotations so that they could be ignored. Since we
-          can now ignore annotations directly, consider renaming or getting rid
-          of derivable entirely. **)
-      ()
+    (* don't ask for an annotation if one is already provided :) *)
+    (** TODO: one of the uses of derivable_reason was to mark type variables
+        that represented annotations so that they could be ignored. Since we
+        can now ignore annotations directly, consider renaming or getting rid
+        of derivable entirely. **)
+    ()
 
   | ExistsT _ ->
-      ()
+    ()
 
   | FunProtoT _
   | FunProtoApplyT _
@@ -6247,8 +6247,8 @@ let rec assert_ground ?(infer=false) cx skip ids = function
   | SpeculativeMatchT _
   | ReposUpperT _
   | ExtendsT _
-  | CustomFunT _
-    -> () (* TODO *)
+  | CustomFunT _ ->
+    () (* TODO *)
 
 and assert_ground_id cx skip ids id =
   if not (ISet.mem id !ids)
