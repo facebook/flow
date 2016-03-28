@@ -1,5 +1,7 @@
 //= require jquery/dist/jquery.slim.min.js
 
+import * as $ from "jquery"
+
 function highlightErrors(errors) {
   var errorMessage = $('<div class="errmsg"></div>');
   errorMessage.hide();
@@ -61,3 +63,5 @@ function highlightErrors(errors) {
     }
   });
 }
+
+exports.highlight = highlightErrors;

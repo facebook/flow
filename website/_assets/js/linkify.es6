@@ -1,8 +1,4 @@
-[].slice.apply(
-  document.querySelectorAll(
-    'article h2, article h3, article h4'
-  )
-).forEach(function(header) {
+exports.linkifyHeader = function linkifyHeader(header) {
   var slug = header.innerText
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-')
@@ -19,4 +15,4 @@
   hash.href = '#' + slug;
   hash.innerText = '#';
   header.appendChild(hash);
-});
+};

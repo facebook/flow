@@ -18,6 +18,7 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "^2.2.2"
+    "jquery": "^2.2.2",
+    "requirejs": "^2.2.0"
   }
 }

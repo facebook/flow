@@ -20,9 +20,7 @@
     {% else %}
     <meta property='og:type' content='website'>
     {% endif %}
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
-    <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
-    <script type="text/javascript">{'try{Typekit.load();}catch(e){}'}</script>
+    {% js prelude.js %}
     <link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{{ site.url }}/blog/feed.xml">
 </head>
 <body>
