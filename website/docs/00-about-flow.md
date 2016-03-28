@@ -42,7 +42,7 @@ and understand for humans and computers alike. Flow is particularly well suited
 to code like this, but that's not all Flow can do.
 
 JavaScript also provides powerful tools for metaprogramming that traditional
-statically typed langauges lack. Flow is designed to understand even very
+statically typed languages lack. Flow is designed to understand even very
 dynamic code which is often found in JavaScript programs.
 
 We're constantly improving Flow to understand more and more JavaScript, but if
