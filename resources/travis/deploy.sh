@@ -30,7 +30,7 @@ printf "travis_fold:end:clone_gh_pages\n"
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
 env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
-  bundle exec jekyll build -s website/ -d "$PAGES_CHECKOUT"
+  bundle exec jekyll build -s website/ -d "$PAGES_CHECKOUT" --verbose
 printf "travis_fold:end:jekyll_build\n"
 
 printf "travis_fold:start:push_gh_pages\nPushing gh-pages\n"
