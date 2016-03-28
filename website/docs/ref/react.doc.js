@@ -121,6 +121,7 @@ const Counter = React.createClass({
 /*
 
  ![animation](flow-state.gif)
+ 
 
   ## Defining components as `React.Component` subclasses
 
