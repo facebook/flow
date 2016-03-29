@@ -61,12 +61,13 @@ open LookupMode
 (* Environment *)
 (****************)
 
+type t = Scope.t list
+
 (* the environment is a scope stack, which mutates as an AST is
    traversed. changesets are also managed here, but live in
    a separate Changeset module for dependency reasons.
  *)
-type 'a stack = 'a list ref
-let scopes: Scope.t stack = ref []
+let scopes: t ref = ref []
 
 (* symbols whose bindings are forcibly prevented from being created,
    initialized, etc. This set is initialized in init_env, and is normally
@@ -614,7 +615,7 @@ let init_value_entry kind cx name ~has_anno specific reason =
         value_state = State.Undeclared | State.Declared; _ } as v)
     | Const _, Value ({ Entry.kind = Const _;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
-      Changeset.(add_var_change (scope.id, name, Write));
+      Changeset.(change_var (scope.id, name, Write));
       Flow_js.flow_t cx (specific, Entry.general_of_value v);
       let value_binding = { v with value_state = State.Initialized; specific } in
       (* if binding is annotated, flow annotated type like initializer *)
@@ -752,10 +753,33 @@ let read_entry ~lookup_mode ~specific cx name reason =
       tdz_error cx name reason v;
       AnyT.at value_declare_loc
     | _ ->
-      Changeset.(add_var_change (scope.id, name, Read));
+      Changeset.(change_var (scope.id, name, Read));
       let s, g = value_entry_types ~lookup_mode scope v in
       if specific then s else g
   )
+
+let rec seek_env f = function
+| [] -> None
+| scope :: scopes ->
+  match f scope with
+  | Some x -> Some x
+  | None -> seek_env f scopes
+
+(* get env entry for name, if it exists *)
+let get_env_entry name =
+  seek_env (Scope.get_entry name)
+
+(* get current env entry for name, if it exists *)
+let get_current_env_entry name =
+  get_env_entry name !scopes
+
+(* get env refi for key, if it exists *)
+let get_env_refi key =
+  seek_env (Scope.get_refi key)
+
+(* get current env refi for name, if it exists *)
+let get_current_env_refi key =
+  get_env_refi key !scopes
 
 (* get var's specific type *)
 let get_var ?(lookup_mode=ForValue) =
@@ -793,15 +817,14 @@ let update_var op cx name specific reason =
   let scope, entry = find_entry cx name reason in
   let value_assign_loc = loc_of_reason reason in
   Entry.(match entry with
-
   | Value ({
       Entry.kind = (Let _ as kind); value_state = State.Undeclared; _
     } as v) when not (allow_forward_ref kind) && same_activation scope ->
-    tdz_error cx name reason v
-
+    tdz_error cx name reason v;
+    None
   | Value ({ Entry.kind = Let _ | Var; _ } as v) ->
-    Changeset.(add_var_change (scope.id, name, op));
-
+    let change = scope.id, name, op in
+    Changeset.change_var change;
     Flow_js.flow_t cx (specific, Entry.general_of_value v);
     (* add updated entry *)
     let update = Entry.Value {
@@ -810,24 +833,24 @@ let update_var op cx name specific reason =
       specific;
       value_assign_loc;
     } in
-
-    Scope.add_entry name update scope
-
+    Scope.add_entry name update scope;
+    Some change
   | Value ({ Entry.kind = Const ConstVarBinding; _ } as v) ->
     let msg = spf "%s cannot be reassigned"
       Entry.(string_of_value_kind (kind_of_value v)) in
-    binding_error msg cx name entry reason
-
+    binding_error msg cx name entry reason;
+    None
   | Value ({ Entry.kind = Const ConstParamBinding; _ } as v) ->
     (* TODO: remove extra info when surface syntax is added *)
     let msg = spf "%s cannot be reassigned \
       (see experimental.const_params=true in .flowconfig)"
       Entry.(string_of_value_kind (kind_of_value v)) in
-    binding_error msg cx name entry reason
-
+    binding_error msg cx name entry reason;
+    None
   | Type _ ->
     let msg = "type alias referenced from value position" in
-    binding_error msg cx name entry reason
+    binding_error msg cx name entry reason;
+    None
   )
 
 (* update var by direct assignment *)
@@ -840,15 +863,15 @@ let refine_var = update_var Changeset.Refine
 let refine_const cx name specific reason =
   let scope, entry = find_entry cx name reason in
   Entry.(match entry with
-
   | Value ({ Entry.kind = Const _; _ } as v) ->
-    Changeset.(add_var_change (scope.id, name, Refine));
+    let change = scope.id, name, Changeset.Refine in
+    Changeset.change_var change;
     Flow_js.flow_t cx (specific, Entry.general_of_value v);
     let update = Value {
       v with value_state = State.Initialized; specific
     } in
-    Scope.add_entry name update scope
-
+    Scope.add_entry name update scope;
+    Some change
   | _ ->
     assert_false (spf "refine_const called on %s %s"
       (Entry.string_of_kind entry) name)
@@ -868,6 +891,7 @@ let envs_congruent envs =
       List.for_all check_scope (List.tl envs) &&
         check_scopes (List.map List.tl envs)
   in
+  let envs = ListUtils.phys_uniq envs in
   List.length envs <= 1 ||
     let len = List.length (List.hd envs) in
     List.for_all (fun env -> List.length env = len) (List.tl envs) &&
@@ -904,20 +928,22 @@ let merge_env =
     )
   in
 
-  (* merge_entry helper - child specifics feed new specific tvar *)
-  let merge_types cx reason name (specific0, general0) specific1 specific2 =
-    (* no change *)
-    if specific0 = specific1 && specific0 = specific2
-    then specific0, general0
+  (* merge_entry helper - calculate new specific type *)
+  let merge_specific cx reason name (specific0, general0) specific1 specific2 =
+    (** if both children are unchanged, or 1 child is unchanged and the other
+        is bottom (EmptyT), then we can avoid creating a merged specific *)
+    if (specific0 = specific1 && (specific0 = specific2 || is_bot specific2))
+    || (specific0 = specific2 && is_bot specific1)
+    then specific0
     (* child has reverted to original - shortcut *)
     else if specific1 = general0 || specific2 = general0
-    then general0, general0
+    then general0
     (* general case *)
     else
       let reason = replace_reason name reason in
       let tvar = create_union cx reason specific1 specific2 in
       Flow_js.flow_t cx (tvar, general0);
-      tvar, general0
+      tvar
   in
 
   (* propagate var state updates from child entries *)
@@ -949,10 +975,13 @@ let merge_env =
       let { specific = s0; general = g0; _ } = orig in
       let { specific = s1; _ } = child1 in
       let { specific = s2; _ } = child2 in
-      let specific, general = merge_types cx reason name (s0, g0) s1 s2 in
+      let specific = merge_specific cx reason name (s0, g0) s1 s2 in
       let value_state = merge_states orig child1 child2 in
-      let e = Entry.Value { orig with Entry.specific; general; value_state } in
-      add_entry name e scope0
+      (* replace entry if anything changed *)
+      if specific == s0 && value_state = orig.value_state
+      then ()
+      else let e = Entry.Value { orig with Entry.specific; value_state } in
+        add_entry name e scope0
     (* type aliases can't be refined or reassigned, shouldn't be here *)
     | Some Type _, Some Type _, Some Type _ ->
       assert_false (spf "merge_env %s: type alias %s found in changelist"
@@ -997,10 +1026,11 @@ let merge_env =
     (* evenly distributed refinements are merged *)
     | Some base, Some child1, Some child2 ->
       let name = Key.string_of_key key in
-      let refined, original = merge_types cx reason name
-        (base.refined, base.original) child1.refined child2.refined in
-      let refi = { base with refined; original } in
-      add_refi key refi scope0
+      let refined = merge_specific cx reason name (base.refined, base.original)
+        child1.refined child2.refined in
+      if refined == base.refined
+      then ()
+      else add_refi key { base with refined } scope0
 
     (* refi was introduced in both children *)
     | None, Some child1, Some child2 ->
@@ -1023,9 +1053,11 @@ let merge_env =
 
   (* merge entries and refis found in changeset *)
   fun cx reason (env0, env1, env2) changeset ->
-    (if envs_congruent [env0; env1; env2] then ()
-    else assert_false (spf "merge_env %s: envs not congruent"
-      (string_of_reason reason)));
+    begin if not (envs_congruent [env0; env1; env2]) then assert_false
+      (spf "merge_env %s: envs not congruent: %d %d %d"
+        (string_of_reason reason)
+        (List.length env0) (List.length env1) (List.length env2))
+    end;
     changeset |> Changeset.iter_type_updates
       (merge_entry cx reason (env0, env1, env2))
       (merge_refi cx reason (env0, env1, env2))
@@ -1157,7 +1189,7 @@ let widen_env =
 
 (* clear refinement informnation for all binding entries in env *)
 let havoc_all () =
-  iter_scopes (Scope.havoc ~make_specific:(fun general -> general))
+  iter_scopes Scope.havoc
 
 (* set specific type of every non-internal var *and const*
    in top activation to undefined, and clear heap refinements.
@@ -1168,12 +1200,10 @@ let havoc_all () =
    remain a source of bugs.
  *)
 let reset_current_activation reason =
-  iter_local_scopes (
-    Scope.havoc ~consts:true ~make_specific:(fun _ -> EmptyT reason))
+  iter_local_scopes (Scope.reset reason)
 
 (* clear refinement info for (topmost bindings of) given names in env *)
 let havoc_vars = Scope.(
-
   (* clear specific info for (topmost binding of) given var in env *)
   let havoc_entry (_, name, _) =
     let rec loop = function
@@ -1181,13 +1211,12 @@ let havoc_vars = Scope.(
     | scope :: scopes ->
       match get_entry name scope with
       | Some entry ->
-        let entry = Entry.havoc (fun gen -> gen) name entry in
+        let entry = Entry.havoc name entry in
         add_entry name entry scope
       | None ->
         loop scopes
     in loop !scopes
   in
-
   (* clear refinement for (topmost binding of) given key in env *)
   let havoc_refi (_, key, _) =
     let rec loop = function
@@ -1200,7 +1229,6 @@ let havoc_vars = Scope.(
         loop scopes
     in loop !scopes
   in
-
   Changeset.iter_type_updates havoc_entry havoc_refi
 )
 
@@ -1234,27 +1262,27 @@ let add_heap_refinement op key reason refined original =
   let refi = { refi_loc; refined; original } in
   let base, _ = key in
   let scope, _ = find_entry_in_var_scope base in
-  ignore Changeset.(add_refi_change (scope.id, key, op));
-  Scope.add_refi key refi scope
+  let change = scope.id, key, op in
+  Changeset.change_refi change;
+  Scope.add_refi key refi scope;
+  change
 
 let set_expr = add_heap_refinement Changeset.Write
 let refine_expr = add_heap_refinement Changeset.Refine
 
 (* add predicate refinements from given preds map to environment.
+   returns changeset containing all refinements added to env.
    note: orig_types maps names to unrefined types. this param is
    only necessary for fresh pseudovars like heap refinements -
    others can be obtained via get_var.
  *)
 let refine_with_preds cx reason preds orig_types =
-
   let mk_refi_type orig_type pred refi_reason =
     Flow_js.mk_tvar_where cx refi_reason (fun refined_type ->
       Flow_js.flow cx (orig_type, PredicateT (pred, refined_type)))
   in
-
-  let refine_with_pred key pred =
+  let refine_with_pred key pred acc =
     match key with
-
     (* for real consts/lets/vars, we model assignment/initialization *)
     | name, [] when not (is_internal_name name) ->
       let refi_reason =
@@ -1273,12 +1301,14 @@ let refine_with_preds cx reason preds orig_types =
           | Const _ -> refine_const
           | _ -> refine_var
         in
-        refine cx name refi_type refi_reason
+        begin match refine cx name refi_type refi_reason with
+        | Some change -> Changeset.add_var change acc
+        | None -> acc
+        end
       | _, entry ->
         assert_false (
           spf "attempt to refine %s %s" (Entry.string_of_kind entry) name)
       )
-
     (* for heap refinements, we just add new entries *)
     | _ ->
       let refi_reason =
@@ -1289,10 +1319,10 @@ let refine_with_preds cx reason preds orig_types =
       in
       let orig_type = KeyMap.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
-      refine_expr key refi_reason refi_type orig_type
-
+      let change = refine_expr key refi_reason refi_type orig_type in
+      Changeset.add_refi change acc
   in
-  preds |> KeyMap.iter refine_with_pred
+  KeyMap.fold refine_with_pred preds Changeset.empty
 
 (* run the given function in a clone of the current environment
    augmented by the given refinement map, then merge the final
@@ -1303,7 +1333,7 @@ let in_refined_env cx reason preds orig_types f =
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
   update_env cx reason new_env;
-  refine_with_preds cx reason preds orig_types;
+  let _ = refine_with_preds cx reason preds orig_types in
 
   let result = f () in
 

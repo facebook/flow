@@ -90,7 +90,14 @@ let copy_n n v =
 
 (** unique list items, in order of first appearance *)
 let rec uniq = function
-  | [] -> []
-  | [x] -> [x]
-  | x :: (y :: _ as l) when x = y -> uniq l
-  | x :: rl -> x :: uniq rl
+| [] -> []
+| [x] -> [x]
+| x :: (y :: _ as l) when x = y -> uniq l
+| x :: rl -> x :: uniq rl
+
+(** physically unique list items, in order of first appearance *)
+let rec phys_uniq = function
+| [] -> []
+| [x] -> [x]
+| x :: (y :: _ as l) when x == y -> phys_uniq l
+| x :: rl -> x :: phys_uniq rl

@@ -72,7 +72,7 @@ function switch_post_init(i) {
     default:
       x = 2;
   }
-  var y:number = x; // error, possibly uninitialized
+  var y:number = x; // no error, all cases covered
 }
 
 // use in a switch after a skipped decl is an error
@@ -119,4 +119,30 @@ function for_of_post_init() {
     x = 0;
   }
   var y:number = x; // error
+}
+
+// use of let after guaranteed init (exhaustive switch + throw) is ok
+function switch_post_init2(i): number {
+  let bar;
+  switch (i) {
+    case 1:
+      bar = 3;
+      break;
+    default:
+      throw new Error('Invalid state');
+  }
+  return bar; // ok, definitely initialized
+}
+
+// use of let after guaranteed init (exhaustive switch + throw) is ok
+function switch_post_init2(i): number {
+  let bar;
+  switch (i) {
+    case 1:
+      bar = 3;
+      break;
+    default:
+      throw new Error('Invalid state');
+  }
+  return bar; // ok, definitely initialized
 }

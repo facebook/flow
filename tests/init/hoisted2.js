@@ -107,7 +107,7 @@ function switch_post_init(i) {
     default:
       x = 2;
   }
-  var y:number = x; // error, possibly uninitialized
+  var y:number = x; // no error, all cases covered
 }
 
 // local use of annotated var in switch is ok
@@ -120,7 +120,7 @@ function switch_scoped_init_1(i) {
 }
 
 // ...but use of var before switch gives undefined
-function switch_scoped_init_1(i) {
+function switch_scoped_init_2(i) {
   var y:number = x; // error
   switch (i) {
     case 0:
@@ -129,7 +129,7 @@ function switch_scoped_init_1(i) {
 }
 
 // ...and after
-function switch_scoped_init_1(i) {
+function switch_scoped_init_3(i) {
   switch (i) {
     case 0:
       var x:number = 0;
@@ -138,7 +138,7 @@ function switch_scoped_init_1(i) {
 }
 
 // ...and in a fallthrough case without initialization
-function switch_scoped_init_1(i) {
+function switch_scoped_init_4(i) {
   switch (i) {
     case 0:
       var x:number = 0;

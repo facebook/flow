@@ -865,6 +865,19 @@ let is_use = function
   | UseT _ -> false
   | _ -> true
 
+(* convenience *)
+let is_bot = function
+| EmptyT _ -> true
+| _ -> false
+
+let is_top = function
+| MixedT _ -> true
+| _ -> false
+
+let is_any = function
+| AnyT _ -> true
+| _ -> false
+
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
    the type system), so printing the reason provides a good idea of what the

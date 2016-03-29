@@ -208,5 +208,11 @@ null_tests.js:150
 147:   ensure103(): string {
                     ^^^^^^ string
 
+switch.js:49
+ 49:   return foo; // error, possibly uninitialized
+              ^^^ possibly uninitialized variable. This type is incompatible with
+ 27: function exhaustion2(x, y): number {
+                                 ^^^^^^ number
 
-Found 35 errors
+
+Found 36 errors

@@ -35,34 +35,58 @@ break.js:19
                    ^^^^^^ number
 
 break.js:23
- 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+ 23:     var w:number = x; // 2 errors: (boolean | string) !~> number
                         ^ boolean. This type is incompatible with
- 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+ 23:     var w:number = x; // 2 errors: (boolean | string) !~> number
                ^^^^^^ number
 
 break.js:23
- 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
-                        ^ null. This type is incompatible with
- 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
-               ^^^^^^ number
-
-break.js:23
- 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+ 23:     var w:number = x; // 2 errors: (boolean | string) !~> number
                         ^ string. This type is incompatible with
- 23:     var w:number = x; // 3 errors: ?(boolean | string) !~> number
+ 23:     var w:number = x; // 2 errors: (boolean | string) !~> number
                ^^^^^^ number
 
-break.js:29
- 29:         var y:number = z;
+break.js:31
+ 31:       let y:number = x; // error: boolean !~> number
+                          ^ boolean. This type is incompatible with
+ 31:       let y:number = x; // error: boolean !~> number
+                 ^^^^^^ number
+
+break.js:35
+ 35:       let z:number = x; // 2 errors: (boolean | string) !~> number
+                          ^ boolean. This type is incompatible with
+ 35:       let z:number = x; // 2 errors: (boolean | string) !~> number
+                 ^^^^^^ number
+
+break.js:35
+ 35:       let z:number = x; // 2 errors: (boolean | string) !~> number
+                          ^ string. This type is incompatible with
+ 35:       let z:number = x; // 2 errors: (boolean | string) !~> number
+                 ^^^^^^ number
+
+break.js:40
+ 40:     var w:number = x; // 2 errors: (boolean | string) !~> number
+                        ^ boolean. This type is incompatible with
+ 40:     var w:number = x; // 2 errors: (boolean | string) !~> number
+               ^^^^^^ number
+
+break.js:40
+ 40:     var w:number = x; // 2 errors: (boolean | string) !~> number
+                        ^ string. This type is incompatible with
+ 40:     var w:number = x; // 2 errors: (boolean | string) !~> number
+               ^^^^^^ number
+
+break.js:46
+ 46:         var y:number = z;
                             ^ string. This type is incompatible with
- 29:         var y:number = z;
+ 46:         var y:number = z;
                    ^^^^^^ number
 
-break.js:33
- 33:     var w:number = z; // error: string !~> number
+break.js:50
+ 50:     var w:number = z; // error: string !~> number
                         ^ string. This type is incompatible with
- 33:     var w:number = z; // error: string !~> number
+ 50:     var w:number = z; // error: string !~> number
                ^^^^^^ number
 
 
-Found 11 errors
+Found 15 errors

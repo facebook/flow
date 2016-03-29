@@ -11,13 +11,15 @@
 open Reason_js
 open Scope
 
+type t = Scope.t list
+
 val peek_scope: unit -> Scope.t
 
-val peek_env: unit -> Scope.t list
+val peek_env: unit -> t
 
-val clone_env: Scope.t list -> Scope.t list
+val clone_env: t -> t
 
-val string_of_env: Context.t -> Scope.t list -> string
+val string_of_env: Context.t -> t -> string
 
 val in_async_scope: unit -> bool
 val in_generator_scope: unit -> bool
@@ -42,7 +44,7 @@ val init_env:
   Scope.t ->
   unit
 
-val update_env: Context.t -> reason -> Scope.t list -> unit
+val update_env: Context.t -> reason -> t -> unit
 
 (***)
 
@@ -98,6 +100,11 @@ end
 
 val local_scope_entry_exists: string -> bool
 
+val get_env_entry: string -> t -> Scope.Entry.t option
+val get_current_env_entry: string -> Scope.Entry.t option
+val get_env_refi: Key.t -> t -> Scope.refi_binding option
+val get_current_env_refi: Key.t -> Scope.refi_binding option
+
 val get_var:
   ?lookup_mode:LookupMode.t ->
   Context.t ->
@@ -119,16 +126,18 @@ val var_ref:
   reason ->
   Type.t
 
-val set_var: Context.t -> string -> Type.t -> reason -> unit
+val set_var: Context.t -> string -> Type.t -> reason ->
+  Changeset.EntryRef.t option
 
-val set_expr: Key.t -> reason -> Type.t -> Type.t -> unit
+val set_expr: Key.t -> reason -> Type.t -> Type.t ->
+  Changeset.RefiRef.t
 
 val refine_with_preds:
   Context.t ->
   reason ->
   Type.predicate KeyMap.t ->
   Type.t KeyMap.t ->
-  unit
+  Changeset.t
 
 val in_refined_env:
   Context.t ->
@@ -141,7 +150,7 @@ val in_refined_env:
 val merge_env:
   Context.t ->
   reason ->
-  Scope.t list * Scope.t list * Scope.t list ->
+  t * t * t ->
   Changeset.t ->
   unit
 
@@ -150,7 +159,7 @@ val widen_env: Context.t -> reason -> unit
 val copy_env:
   Context.t ->
   reason ->
-  Scope.t list * Scope.t list ->
+  t * t ->
   Changeset.t ->
   unit
 

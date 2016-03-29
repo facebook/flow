@@ -148,29 +148,29 @@ module Entry = struct
   let general_of_value (value: value_binding) = value.general
   let state_of_value (value: value_binding) = value.value_state
 
-  (* Given a name, an entry, and a function for making a new
-     specific type from a Var entry's current general type,
-     return a new Value entry with specific type replaced for
-     non-internal, non-Const entries.
-     Consts and internal vars are read-only, so specific types
-     can be preserved.
-     TODO: in a standard havoc, value_state should go from
-     Declared to MaybeInitialized. But make_specific obscures
-     what kind of havoc this is. Need to remove make_specific
-     and make separate havoc funcs, then dael with value_state
-     per specific semantics of each.
-     ...consts flag is another log in the above fire. consts true
-     and nonstandard make_specific fun go together.
-   *)
-  let havoc ?(consts=false) make_specific name entry =
+  (** Given a named entry, return a new Value entry with specific type replaced
+      with general type for non-internal, non-Const value entries. Types, consts
+      and internal vars are read-only, so specific types can be preserved.
+      TODO: value_state should go from Declared to MaybeInitialized?
+    *)
+  let havoc name entry =
     match entry with
-    | Type _ -> entry
-    | Value { kind = Const _; _ } when not consts ->
+    | Type _
+    | Value { kind = Const _; _ } ->
       entry
     | Value v ->
       if Reason_js.is_internal_name name
       then entry
-      else Value { v with specific = make_specific v.general }
+      else Value { v with specific = v.general }
+
+  let reset reason name entry =
+    match entry with
+    | Type _ ->
+      entry
+    | Value v ->
+      if Reason_js.is_internal_name name
+      then entry
+      else Value { v with specific = Type.EmptyT reason }
 
   let is_lex = function
     | Type _ -> false
@@ -267,10 +267,10 @@ let get_entry name scope =
   SMap.get name scope.entries
 
 (* havoc entry *)
-let havoc_entry make_specific name scope =
+let havoc_entry name scope =
   match get_entry name scope with
   | Some entry ->
-    let entry = Entry.havoc make_specific name entry in
+    let entry = Entry.havoc name entry in
     scope.entries <- SMap.add name entry scope.entries
   | None ->
     assert_false (spf "entry %S not found in scope %d: { %s }"
@@ -317,14 +317,15 @@ let havoc_refis ?name scope =
 
 (* havoc a scope:
    - clear all refinements
-   - clear all entries using the given make_specific function,
-   which makes a new specific type from a general type.
-   If consts is true, const entries are havoc'd also. This is
-   bad and should go away - see Env_js.havoc_current_activation
+   - reset specific types of entries to their general types
  *)
-let havoc ?(consts=false) ~make_specific scope =
+let havoc scope =
   havoc_refis scope;
-  scope |> update_entries (Entry.havoc ~consts make_specific)
+  update_entries Entry.havoc scope
+
+let reset reason scope =
+  havoc_refis scope;
+  update_entries (Entry.reset reason) scope
 
 let is_lex scope =
   match scope.kind with

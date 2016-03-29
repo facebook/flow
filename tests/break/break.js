@@ -20,7 +20,24 @@ function bar(b) {
         break;
     case 2:
     }
-    var w:number = x; // 3 errors: ?(boolean | string) !~> number
+    var w:number = x; // 2 errors: (boolean | string) !~> number
+}
+
+function bar2(b) {
+    var x = b ? null: false;
+    if (x == null) return;
+    switch ("") {
+    case 0: {
+      let y:number = x; // error: boolean !~> number
+      x = "";
+    }
+    case 1: {
+      let z:number = x; // 2 errors: (boolean | string) !~> number
+      break;
+    }
+    case 2:
+    }
+    var w:number = x; // 2 errors: (boolean | string) !~> number
 }
 
 function qux(b) {

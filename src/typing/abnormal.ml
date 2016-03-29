@@ -17,6 +17,16 @@ type t =
   | Break of string option
   | Continue of string option
 
+let opt_label name = function
+  | None -> name
+  | Some s -> name ^ " " ^ s
+
+let to_string = function
+  | Return -> "Return"
+  | Throw -> "Throw"
+  | Break label -> opt_label "Break" label
+  | Continue label -> opt_label "Continue" label
+
 exception Exn of t
 
 open Utils_js
@@ -66,27 +76,40 @@ let ignore_break_or_continue_to_label label f =
     | Some (Continue cont_label) when cont_label = label -> None
     | result -> result
 
-(* thread-local state used to detect abnormal control flows *)
-module AbSet = Set.Make(struct
+(********************************************************************)
+
+(** at some points we need to record control flow directives in addition
+    to responding to them. *)
+
+module AbnormalMap : MyMap.S with type key = t = MyMap.Make (struct
   type abnormal = t
   type t = abnormal
   let compare = Pervasives.compare
 end)
 
-let abnormals = ref AbSet.empty
+let abnormals: Env_js.t AbnormalMap.t ref = ref AbnormalMap.empty
 
-(* register a control flow directive *)
-let set abnormal =
-  abnormals := AbSet.add abnormal !abnormals;
+(** record the appearance of a control flow directive.
+    associate the given env if passed *)
+let save_and_throw ?(env=[]) abnormal =
+  abnormals := AbnormalMap.add abnormal env !abnormals;
   throw_control_flow_exception abnormal
 
-(* swap in a new presence value for a given control directive,
-   and return the current value *)
-let swap abnormal newv =
-  let oldv = AbSet.mem abnormal !abnormals in
-  if oldv = newv then ()
-  else abnormals := AbSet.(if newv then add else remove) abnormal !abnormals;
-  oldv
+(** set or remove a given control flow directive's value,
+    and return the current one *)
+let swap_saved abnormal value =
+  let old = AbnormalMap.get abnormal !abnormals in
+  if old <> value then begin
+    abnormals := match value with
+      | None -> AbnormalMap.remove abnormal !abnormals
+      | Some env -> AbnormalMap.add abnormal env !abnormals
+  end;
+  old
+
+(** remove a given control flow directive's value,
+    and return the current one *)
+let clear_saved abnormal =
+  swap_saved abnormal None
 
 let string = function
   | Return -> "return"

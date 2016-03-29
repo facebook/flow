@@ -10,6 +10,12 @@
 
 open Utils_js
 
+(** A Changeset holds records of var read/writes and refis.
+    First part of this module defines the structure and an API
+    over it, second part hosts global changeset state and a
+    separate API. Second part is embedded here due to dependencies.
+  *)
+
 (* operations on vars and refis.
    refine is a read that results in a type update *)
 type op = Read | Write | Refine
@@ -43,6 +49,12 @@ type t = EntryRefSet.t * RefiRefSet.t
 
 let empty = EntryRefSet.empty, RefiRefSet.empty
 
+let add_var var_ref (vars, refis) =
+  EntryRefSet.add var_ref vars, refis
+
+let add_refi refi_ref (vars, refis) =
+  vars, RefiRefSet.add refi_ref refis
+
 (* ugh ocaml *)
 let iset_of_list list =
   List.fold_left (fun acc elem -> ISet.add elem acc) ISet.empty list
@@ -59,6 +71,11 @@ let include_scopes ids (vars, refis) =
 let include_ops ops (vars, refis) =
   EntryRefSet.filter (fun (_, _, op) -> List.mem op ops) vars,
   RefiRefSet.filter (fun (_, _, op) -> List.mem op ops) refis
+
+let include_reads = include_ops [Read]
+let include_writes = include_ops [Write]
+let include_refines = include_ops [Refine]
+let include_type_updates = include_ops [Write; Refine]
 
 let iter ?ops f_vars f_refis changeset =
   let vars, refis = match ops with
@@ -81,9 +98,16 @@ let union (vars1, refis1) (vars2, refis2) =
   EntryRefSet.union vars1 vars2,
   RefiRefSet.union refis1 refis2
 
+let inter (vars1, refis1) (vars2, refis2) =
+  EntryRefSet.inter vars1 vars2,
+  RefiRefSet.inter refis1 refis2
+
 let diff (vars1, refis1) (vars2, refis2) =
   EntryRefSet.diff vars1 vars2,
   RefiRefSet.diff refis1 refis2
+
+let comp x y =
+  union (diff x y) (diff y x)
 
 let string_of_entry_ref (scope_id, name, op) =
   spf "(%d, %s, %s)"
@@ -97,7 +121,7 @@ let string_of_refi_ref (scope_id, key, op) =
     (Key.string_of_key key)
     (string_of_op op)
 
-let string_of_changeset =
+let to_string =
   let string_of_changed_vars changed_vars =
     spf "{ %s }"
       (let entry_refs = EntryRefSet.fold (fun entry_ref acc ->
@@ -118,6 +142,13 @@ let string_of_changeset =
       (string_of_changed_refis changed_refis)
 
 (*************************************************************)
+
+(** change tracking **)
+(** provides an API over a global stack of changesets to track
+    read/write ops and refinements as AST traversal duing infer
+    drives calls into Env module.
+    (Kill globals TODO: move to context.)
+  *)
 
 (* due to the current dependency situation, we locate the
    global changeset stack here for now, so it can be accessed
@@ -155,15 +186,15 @@ let swap f_vars f_refis =
 
 (* clear changeset, return previous *)
 let clear () =
-  swap
-    (Some (fun _ -> EntryRefSet.empty))
-    (Some (fun _ -> RefiRefSet.empty))
+  swap (Some (fun _ -> EntryRefSet.empty)) (Some (fun _ -> RefiRefSet.empty))
+
+(* restore passed changeset, return previous *)
+let restore (vars, refis) =
+  swap (Some (fun _ -> vars)) (Some (fun _ -> refis))
 
 (* merge changeset with passed one, return previous *)
 let merge (vars, refis) =
-  swap
-    (Some (EntryRefSet.union vars))
-    (Some (RefiRefSet.union refis))
+  swap (Some (EntryRefSet.union vars)) (Some (RefiRefSet.union refis))
 
 (* filter changes targeting the given scope from the current changeset *)
 let filter_scope_changes id =
@@ -172,8 +203,9 @@ let filter_scope_changes id =
     (Some (RefiRefSet.filter (fun (scope_id, _, _) -> scope_id != id)))
 
 (* record a changed var in current changeset *)
-let add_var_change entry_ref =
+let change_var entry_ref =
   ignore (swap (Some (EntryRefSet.add entry_ref)) None)
 
-let add_refi_change refi_ref =
+(* record a refinement in current changeset *)
+let change_refi refi_ref =
   ignore (swap None (Some (RefiRefSet.add refi_ref)))
