@@ -1,5 +1,5 @@
-//= require linkify.js
-//= require analytics.js
+//= require analytics
+//= require linkify
 
 import {linkifyHeader} from "linkify"
 import * as docsearch from "docsearch"

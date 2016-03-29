@@ -19,7 +19,19 @@ module Jekyll
         dirname = File.dirname(sf.path.gsub(site.source, ""))
         basename = File.basename(sf.path)
 
-        site.pages << FlowdocPage.new(site, site.source, dirname, basename)
+        page = FlowdocPage.new(site, site.source, dirname, basename)
+        site.pages << page
+
+        sprockets = site.sprockets
+        asset = sprockets.find_asset('inlineErrors', {})
+        raise AssetNotFoundError, 'inlineErrors' unless asset
+        sprockets.used.add(asset)
+        if page["path"] && sprockets.digest?
+          site.regenerator.add_dependency(
+            site.in_source_dir(page["path"]),
+            site.in_source_dir(asset.logical_path)
+          )
+        end
 
         true
       end
