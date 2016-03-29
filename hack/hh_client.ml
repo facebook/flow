@@ -58,6 +58,7 @@ let () =
         | ClientCommand.CRestart env -> ClientRestart.main env
         | ClientCommand.CBuild env -> ClientBuild.main env
         | ClientCommand.CIde env -> ClientIde.main env
+        | ClientCommand.CDebug env -> ClientDebug.main env
     with Exit_status.Exit_with es ->
       HackEventLogger.client_bad_exit es;
       es

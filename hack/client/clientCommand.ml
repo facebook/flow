@@ -15,6 +15,7 @@ type command =
   | CRestart of ClientStart.env
   | CBuild of ClientBuild.env
   | CIde of ClientIde.env
+  | CDebug of ClientDebug.env
 
 type command_keyword =
   | CKCheck
@@ -24,3 +25,4 @@ type command_keyword =
   | CKBuild
   | CKNone
   | CKIde
+  | CKDebug

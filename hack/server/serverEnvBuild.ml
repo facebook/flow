@@ -77,6 +77,7 @@ let make_genv options config local_config ide_process =
     indexer;
     notifier;
     wait_until_ready;
+    debug_channels = None;
     ide_process;
   }
 

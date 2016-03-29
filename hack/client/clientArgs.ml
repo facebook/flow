@@ -29,6 +29,7 @@ let parse_command () =
   | "restart" -> CKRestart
   | "build" -> CKBuild
   | "ide" -> CKIde
+  | "debug" -> CKDebug
   | _ -> CKNone
 
 let parse_without_command options usage command =
@@ -470,6 +471,20 @@ let parse_ide_args () =
     root = root
   }
 
+let parse_debug_args () =
+  let usage =
+    Printf.sprintf "Usage: %s debug [WWW-ROOT]\n" Sys.argv.(0) in
+  let options = [] in
+  let args = parse_without_command options usage "debug" in
+  let root =
+    match args with
+    | [] -> get_root None
+    | [x] -> get_root (Some x)
+    | _ -> Printf.printf "%s\n" usage; exit 2 in
+  CDebug { ClientDebug.
+    root
+  }
+
 let parse_args () =
   match parse_command () with
     | CKNone
@@ -478,6 +493,7 @@ let parse_args () =
     | CKStop -> parse_stop_args ()
     | CKRestart -> parse_restart_args ()
     | CKBuild -> parse_build_args ()
+    | CKDebug -> parse_debug_args ()
     | CKIde -> parse_ide_args ()
 
 let root = function
@@ -486,4 +502,5 @@ let root = function
   | CStart { ClientStart.root; _ }
   | CRestart { ClientStart.root; _ }
   | CStop { ClientStop.root; _ }
-  | CIde { ClientIde.root; _} -> root
+  | CIde { ClientIde.root; _}
+  | CDebug { ClientDebug.root } -> root

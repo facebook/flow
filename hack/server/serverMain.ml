@@ -327,7 +327,6 @@ let serve genv env in_fd _ =
         HackEventLogger.get_client_channels_exception e;
         Hh_logger.log
           "Getting Client FDs failed. Ignoring.");
-       ;
   done
 
 let program_init genv =

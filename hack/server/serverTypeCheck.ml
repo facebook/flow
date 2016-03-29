@@ -45,6 +45,31 @@ let print_fast fast =
   flush stdout;
   ()
 
+let debug_print_fast_keys genv name fast =
+  ServerEnv.debug_out genv begin fun () ->
+    let open Hh_json in
+    let files = Relative_path.Map.fold fast ~init:[] ~f:begin fun k _v acc ->
+      JSON_String (Relative_path.suffix k) :: acc
+    end in
+    let decls = Relative_path.Map.fold fast ~init:[] ~f:begin fun _k v acc ->
+      let {FileInfo.n_funs; n_classes; n_types; n_consts} = v in
+      let prepend_json_strings decls acc =
+        SSet.fold decls ~init:acc ~f:(fun n acc -> JSON_String n :: acc) in
+      let acc = prepend_json_strings n_funs acc in
+      let acc = prepend_json_strings n_classes acc in
+      let acc = prepend_json_strings n_types acc in
+      let acc = prepend_json_strings n_consts acc in
+      acc
+    end in
+    let obj = JSON_Object [
+      "type", JSON_String "incremental_files";
+      "name", JSON_String name;
+      "files", JSON_Array files;
+      "decls", JSON_Array decls;
+    ] in
+    Hh_json.json_to_string obj
+  end
+
 (*****************************************************************************)
 (* Given a set of Ast.id list produce a SSet.t (got rid of the positions)    *)
 (*****************************************************************************)
@@ -215,6 +240,7 @@ let type_check genv env =
   let t = Hh_logger.log_duration "Naming" t in
 
   let bucket_size = genv.local_config.SLC.type_decl_bucket_size in
+  debug_print_fast_keys genv "to_redecl_phase1" fast;
   let _, _, to_redecl_phase2, to_recheck1 =
     Decl_redecl_service.redo_type_decl
       ~bucket_size genv.workers env.tcopt fast in
@@ -225,9 +251,9 @@ let type_check genv env =
   HackEventLogger.first_redecl_end t hs;
   let t = Hh_logger.log_duration "Determining changes" t in
 
-  let fast_redecl_phase2 = extend_fast fast files_info to_redecl_phase2 in
-
   (* DECLARING TYPES: Phase2 *)
+  let fast_redecl_phase2 = extend_fast fast files_info to_redecl_phase2 in
+  debug_print_fast_keys genv "to_redecl_phase2" fast_redecl_phase2;
   let errorl', failed_decl, _to_redecl2, to_recheck2 =
     Decl_redecl_service.redo_type_decl
       ~bucket_size genv.workers env.tcopt fast_redecl_phase2 in
@@ -248,6 +274,7 @@ let type_check genv env =
   let to_recheck = Relative_path.Set.union to_recheck env.failed_check in
   let fast = extend_fast fast files_info to_recheck in
   ServerCheckpoint.process_updates fast;
+  debug_print_fast_keys genv "to_recheck" fast;
   let errorl', failed_check =
     Typing_check_service.go genv.workers env.tcopt fast in
   let errorl', failed_check = match ServerArgs.ai_mode genv.options with

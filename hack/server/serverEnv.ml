@@ -27,6 +27,7 @@ type genv = {
     notifier         : unit -> SSet.t;
     (* If daemons are spawned as part of the init process, wait for them here *)
     wait_until_ready : unit -> unit;
+    mutable debug_channels   : (Timeout.in_channel * out_channel) option;
     ide_process      : IdeProcessPipe.to_ide option;
   }
 
@@ -43,7 +44,6 @@ type env = {
     files_info     : FileInfo.t Relative_path.Map.t;
     tcopt          : TypecheckerOptions.t;
     errorl         : Errors.t;
-    (* the strings in those sets represent filenames *)
     failed_parsing : Relative_path.Set.t;
     failed_decl    : Relative_path.Set.t;
     failed_check   : Relative_path.Set.t;
@@ -64,3 +64,18 @@ let list_files env oc =
   Relative_path.Set.iter acc (fun s ->
     Printf.fprintf oc "%s\n" (Relative_path.to_absolute s));
   flush oc
+
+let debug_out genv msg_thunk =
+  Option.iter genv.debug_channels begin fun (_ic, oc) ->
+    (* The input is read using input_line, hence we append a trailing
+     * newline *)
+    (* We use a thunk instead of a string so that expensive computations
+     * don't slow down the server when the debug listener isn't attached *)
+    try
+      output_string oc (msg_thunk () ^ "\n");
+      flush oc;
+    with Sys_error "Broken pipe" -> begin
+      Hh_logger.log "Debug listener has gone away.";
+      genv.debug_channels <- None;
+    end
+  end

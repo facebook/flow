@@ -13,6 +13,7 @@ open Utils
 type 'a command =
   | Rpc of 'a ServerRpc.t
   | Stream of streamed
+  | Debug
 
 and streamed =
   | SHOW of string
@@ -34,6 +35,10 @@ let rpc : type a. Timeout.in_channel * out_channel -> a ServerRpc.t -> a
 
 let stream_request oc cmd =
   Marshal.to_channel oc (Stream cmd) [];
+  flush oc
+
+let connect_debug oc =
+  Marshal.to_channel oc Debug [];
   flush oc
 
 (****************************************************************************)
@@ -171,3 +176,4 @@ let handle genv env (ic, oc) =
       send_response_to_client (ic, oc) response;
       if cmd = ServerRpc.KILL then ServerUtils.die_nicely ()
   | Stream cmd -> stream_response genv env (ic, oc) ~cmd
+  | Debug -> genv.ServerEnv.debug_channels <- Some (ic, oc)
