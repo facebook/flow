@@ -81,6 +81,9 @@ module Codes = struct
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
+let internal_error pos msg =
+  add 0 Error pos ("Internal error: "^msg)
+
 let lowercase_constant pos cst =
   let lower = String.lowercase cst in
   add Codes.lowercase_constant Warning pos
