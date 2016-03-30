@@ -1372,14 +1372,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* logical types *)
     (*****************)
 
-    | (BoolT (_, Some x), NotT(reason, tout))
-    | (SingletonBoolT (_, x), NotT(reason, tout)) ->
-      let reason = replace_reason (spf "boolean value `%b`" (not x)) reason in
-      let t = BoolT (reason, Some (not x)) in
-      rec_flow_t cx trace (t, tout)
-
-    | (_, NotT(reason, tout)) ->
+    (* !x when x is of unknown truthiness *)
+    | BoolT (_, None), NotT (reason, tout)
+    | StrT (_, AnyLiteral), NotT (reason, tout)
+    | NumT (_, AnyLiteral), NotT (reason, tout) ->
       rec_flow_t cx trace (BoolT.at (loc_of_reason reason), tout)
+
+    (* !x when x is falsy *)
+    | BoolT (_, Some false), NotT (reason, tout)
+    | SingletonBoolT (_, false), NotT (reason, tout)
+    | StrT (_, Literal ""), NotT (reason, tout)
+    | SingletonStrT (_, ""), NotT (reason, tout)
+    | NumT (_, Literal (0., _)), NotT (reason, tout)
+    | SingletonNumT (_, (0., _)), NotT (reason, tout)
+    | NullT _, NotT (reason, tout)
+    | VoidT _, NotT (reason, tout) ->
+      let reason = replace_reason "boolean value `true`" reason in
+      rec_flow_t cx trace (BoolT (reason, Some true), tout)
+
+    (* !x when x is truthy *)
+    | (_, NotT(reason, tout)) ->
+      let reason = replace_reason "boolean value `false`" reason in
+      rec_flow_t cx trace (BoolT (reason, Some false), tout)
 
     | (left, AndT(_, right, u)) ->
       (* a falsy && b ~> a

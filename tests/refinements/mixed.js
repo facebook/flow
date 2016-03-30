@@ -6,18 +6,39 @@ function takesString(x: string) {}
 function num(x: mixed) {
   if (typeof x === "number") {
     takesString(x); // error
+    (!x: false); // error: we don't know the truthiness of x
+  }
+  if (typeof x === "number" && x) {
+    (!x: false); // ok
+  }
+  if (x && typeof x === "number") {
+    (!x: false); // ok
   }
 }
 
 function str(x: mixed) {
   if (typeof x === "string") {
     takesNumber(x); // error
+    (!x: false); // error: we don't know the truthiness of x
+  }
+  if (typeof x === "string" && x) {
+    (!x: false); // ok
+  }
+  if (x && typeof x === "string") {
+    (!x: false); // ok
   }
 }
 
 function bool(x: mixed) {
   if (typeof x === "boolean") {
     takesString(x); // error
+    (x: true); // error: we don't know the truthiness of x
+  }
+  if (typeof x === "boolean" && x) {
+    (x: true); // ok
+  }
+  if (x && typeof x === "boolean") {
+    (x: true); // ok
   }
 }
 

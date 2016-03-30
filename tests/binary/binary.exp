@@ -220,7 +220,7 @@ in.js:44
 
 in.js:45
  45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-             ^^^^^^ boolean. This type is incompatible with
+             ^^^^^^ boolean value `false`. This type is incompatible with
  45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
              ^^^^^^ union: string | number
   Member 1:
@@ -228,7 +228,7 @@ in.js:45
                ^^^^^^ string
   Error:
    45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ boolean. This type is incompatible with
+               ^^^^^^ boolean value `false`. This type is incompatible with
    45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
                ^^^^^^ string
   Member 2:
@@ -236,7 +236,7 @@ in.js:45
                ^^^^^^ number
   Error:
    45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ boolean. This type is incompatible with
+               ^^^^^^ boolean value `false`. This type is incompatible with
    45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
                ^^^^^^ number
 

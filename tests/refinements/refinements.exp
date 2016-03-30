@@ -212,106 +212,124 @@ mixed.js:8
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:14
- 14:     takesNumber(x); // error
+mixed.js:9
+  9:     (!x: false); // error: we don't know the truthiness of x
+          ^^ boolean. Expected boolean literal `false`
+  9:     (!x: false); // error: we don't know the truthiness of x
+              ^^^^^ boolean literal `false`
+
+mixed.js:21
+ 21:     takesNumber(x); // error
          ^^^^^^^^^^^^^^ function call
- 14:     takesNumber(x); // error
+ 21:     takesNumber(x); // error
                      ^ string. This type is incompatible with
   3: function takesNumber(x: number) {}
                              ^^^^^^ number
 
-mixed.js:20
- 20:     takesString(x); // error
+mixed.js:22
+ 22:     (!x: false); // error: we don't know the truthiness of x
+          ^^ boolean. Expected boolean literal `false`
+ 22:     (!x: false); // error: we don't know the truthiness of x
+              ^^^^^ boolean literal `false`
+
+mixed.js:34
+ 34:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 20:     takesString(x); // error
+ 34:     takesString(x); // error
                      ^ boolean. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:26
- 26:     takesString(x); // error
+mixed.js:35
+ 35:     (x: true); // error: we don't know the truthiness of x
+          ^ boolean. Expected boolean literal `true`
+ 35:     (x: true); // error: we don't know the truthiness of x
+             ^^^^ boolean literal `true`
+
+mixed.js:47
+ 47:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 26:     takesString(x); // error
+ 47:     takesString(x); // error
                      ^ function. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:32
- 32:     takesString(x); // error
+mixed.js:53
+ 53:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 32:     takesString(x); // error
+ 53:     takesString(x); // error
                      ^ null. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:32
- 32:     takesString(x); // error
+mixed.js:53
+ 53:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 32:     takesString(x); // error
+ 53:     takesString(x); // error
                      ^ object. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:38
- 38:     takesString(x); // error
+mixed.js:59
+ 59:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 38:     takesString(x); // error
+ 59:     takesString(x); // error
                      ^ array. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:44
- 44:     takesString(x); // error
+mixed.js:65
+ 65:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 44:     takesString(x); // error
+ 65:     takesString(x); // error
                      ^ undefined. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:50
- 50:     takesString(x); // error
+mixed.js:71
+ 71:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 50:     takesString(x); // error
+ 71:     takesString(x); // error
                      ^ null. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:56
- 56:     takesString(x); // error
+mixed.js:77
+ 77:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 56:     takesString(x); // error
+ 77:     takesString(x); // error
                      ^ null. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:56
- 56:     takesString(x); // error
+mixed.js:77
+ 77:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 56:     takesString(x); // error
+ 77:     takesString(x); // error
                      ^ undefined. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:62
- 62:     takesString(x); // error
+mixed.js:83
+ 83:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 62:     takesString(x); // error
+ 83:     takesString(x); // error
                      ^ boolean. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:68
- 68:     takesString(x); // error
+mixed.js:89
+ 89:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
- 68:     takesString(x); // error
+ 89:     takesString(x); // error
                      ^ boolean. This type is incompatible with
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
-mixed.js:76
- 76:       (x['foo']: string); // error, mixed
+mixed.js:97
+ 97:       (x['foo']: string); // error, mixed
             ^^^^^^^^ mixed. This type is incompatible with
- 76:       (x['foo']: string); // error, mixed
+ 97:       (x['foo']: string); // error, mixed
                       ^^^^^^ string
 
 not.js:5
@@ -361,6 +379,24 @@ not.js:21
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on
  21:     x[0]; // should error for number (0)
          ^ number
+
+not.js:41
+ 41:     (!x: false); // error, strings are not always truthy
+          ^^ boolean. Expected boolean literal `false`
+ 41:     (!x: false); // error, strings are not always truthy
+              ^^^^^ boolean literal `false`
+
+not.js:44
+ 44:     (!x: false); // error, numbers are not always truthy
+          ^^ boolean. Expected boolean literal `false`
+ 44:     (!x: false); // error, numbers are not always truthy
+              ^^^^^ boolean literal `false`
+
+not.js:47
+ 47:     (!x: false); // error, bools are not always truthy
+          ^^ boolean. Expected boolean literal `false`
+ 47:     (!x: false); // error, bools are not always truthy
+              ^^^^^ boolean literal `false`
 
 null.js:4
   4:   if (100 * null) {
@@ -865,4 +901,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 136 errors
+Found 142 errors
