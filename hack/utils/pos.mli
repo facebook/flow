@@ -67,4 +67,6 @@ val make_from_file_pos :
   pos_file:Relative_path.t -> pos_start:File_pos.t ->
     pos_end:File_pos.t -> t
 
+val set_file : Relative_path.t -> t -> t
+
 module Map : MyMap.S with type key = t
