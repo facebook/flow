@@ -150,7 +150,7 @@ For example, the following code typechecks:
 
 // @flow
 function foo(p) { p.x = 42; }
-function bar(q) { q.f(); }
+function bar(q) { return q.f(); }
 
 var o = { };
 o.f = function() { return this.x; };
@@ -165,9 +165,8 @@ initialized by `foo(o)`, but it is hard to track this fact statically.
 Fortunately, though, the following code does not typecheck:
 */
 
-foo(o);
 // $ExpectError
-var x: string = bar(o);
+var test: string = bar(o);
 
 /*
 In other words, Flow knows enough to infer that whenever the `x` property of
