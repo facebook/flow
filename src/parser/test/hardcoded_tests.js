@@ -2715,6 +2715,7 @@ module.exports = {
       'var await = { await }': {},
       'var async = { async }': {},
       'var async = { async : foo }': {},
+      'class async { async: number; }': {},
       'async function f() { var await = { await : async function foo() {} } }':
         {},
       'async function f(async, await) { var x = await async; return x; }': {},
