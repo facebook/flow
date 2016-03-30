@@ -17,8 +17,14 @@ type 'a t
 val get_code : 'a t -> int
 val get_pos : 'a t -> 'a Pos.pos
 
-val add : ?bypass_changed_lines:bool -> int -> severity -> Pos.t ->
-  string -> unit
+val add :
+  ?bypass_changed_lines:bool ->
+  ?autofix:string * string ->
+  int ->
+  severity ->
+  Pos.t ->
+  string ->
+  unit
 val to_absolute : Relative_path.t t -> string t
 val to_string : string t -> string
 val to_json : string t -> Hh_json.json
