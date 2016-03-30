@@ -122,6 +122,7 @@ clean:
 	ocamlbuild -clean
 	rm -rf bin
 	rm -f hack/utils/get_build_id.gen.c
+	rm -f flow.odocl
 
 build-flow: build-flow-native-deps $(FLOWLIB)
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
@@ -195,3 +196,29 @@ js: build-flow-native-deps
 	js_of_ocaml --opt 3 -o bin/flow.js $(JS_STUBS) _build/src/flow_dot_js.byte
 
 .PHONY: all js
+	
+# This rule runs if any .ml or .mli file has been touched. It recursively calls
+# ocamldep to figure out all the modules that we use to build src/flow.ml
+flow.odocl: $(shell find . -name "*.ml" -o -name "*.mli")
+	echo "src/flow.ml" > deps
+	echo "" > last_deps
+	until diff deps last_deps > /dev/null; do \
+		cp deps last_deps; \
+		cat deps \
+		  | xargs ocamldep -one-line $(INCLUDE_OPTS) \
+  		  | grep -o "[a-zA-Z0-9/_-]*\.cm[xo]" \
+		  | sed "s/\.cm[xo]$$/.ml/" \
+		  | sort -u > temp_deps; \
+		mv temp_deps deps; \
+	done
+	# For some reason these two AST files cause ocamldoc to get stuck
+	cat deps \
+		| grep -v "src/parser/spider_monkey_ast.ml" \
+		| grep -v "src/dts/dts_ast.ml" \
+		| sed "s/\.ml$$//" > $@
+	rm -f deps last_deps temp_deps
+
+flow.docdir/index.html: flow.odocl
+	ocamlbuild $(INCLUDE_OPTS) -use-ocamlfind flow.docdir/index.html
+
+doc: flow.docdir/index.html
