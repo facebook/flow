@@ -788,6 +788,8 @@ let not_expect_bound t = match t with
 let not_expect_use_bound t =
   lift_to_use not_expect_bound t
 
+(********************** start of slab **********************************)
+
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
@@ -5934,6 +5936,11 @@ and tvar_with_constraint cx u =
   mk_tvar_where cx reason (fun tvar ->
     flow cx (tvar, u)
   )
+
+(************* end of slab **************************************************)
+
+let mk_object cx reason =
+  mk_object_with_proto cx reason (MixedT reason)
 
 (* Externally visible function for unification. *)
 let unify cx t1 t2 =
