@@ -28,6 +28,9 @@ git -C "$PAGES_CHECKOUT" pull -q --depth 20 "https://github.com/${TRAVIS_REPO_SL
 printf "travis_fold:end:clone_gh_pages\n"
 
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
+mkdir -p "website/_assets/gen"
+cp "bin/flow.js" "website/_assets/gen/flow.js"
+cp -r "lib" "website/static/flowlib"
 env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
   bundle exec jekyll build -s website/ -d "$PAGES_CHECKOUT" --verbose

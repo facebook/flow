@@ -1,8 +1,18 @@
 .DS_STORE
-_site/
 *.swo
 *.swp
-.jekyll-metadata
-.asset-cache
-_assets/third-party
 node_modules
+
+# default jekyll build dir
+_site/
+
+# jekyll/jekyll-assets caches
+.asset-cache
+.jekyll-metadata
+
+# Bower-installed dependencies
+_assets/third-party
+
+# Flow build artifacts are copied here:
+_assets/gen
+static/flowlib

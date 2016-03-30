@@ -166,9 +166,8 @@ let check_content_js js_file js_content =
   check_content ~filename ~content
 
 let exports =
-  let exports = Js.Unsafe.get Js.Unsafe.global "exports" in
-  if Js.Optdef.test exports
-  then exports
+  if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")
+  then Js.Unsafe.js_expr "exports"
   else begin
     let exports = Js.Unsafe.obj [||] in
     Js.Unsafe.set Js.Unsafe.global "flow" exports;

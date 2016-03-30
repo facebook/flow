@@ -1,0 +1,29 @@
+---
+title: Try Flow
+permalink: /try/
+layout: default
+---
+
+<h1>Try Flow</h1>
+
+<textarea id="code">
+/* @flow */
+
+function foo(x: ?number): string {
+  if (x) {
+    return x;
+  }
+  return "default string";
+}
+</textarea>
+
+{% css 'tryFlow.css' %}
+
+<script>
+  require(
+    ['{% asset_name 'tryFlow.js' %}', '{% asset_name 'flow.js' %}'],
+    function(tryFlow) {
+      tryFlow.createEditor(document.getElementById("code"));
+    }
+  );
+</script>
