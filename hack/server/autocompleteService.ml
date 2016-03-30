@@ -218,11 +218,12 @@ let get_constructor_ty c =
         (* Nothing defined, so we need to fake the entire constructor *)
       reason, Typing_defs.Tfun (Typing_env.make_ft pos [] return_ty)
 
-let compute_complete_global tcopt funs classes =
+let compute_complete_global tcopt gen_funs_and_classes =
   let completion_type = !Autocomplete.argument_global_type in
   let gname = Utils.strip_ns !Autocomplete.auto_complete_for_global in
   let gname = strip_suffix gname in
   let result_count = ref 0 in
+  let funs, classes = gen_funs_and_classes () in
   try
     List.iter classes begin fun name ->
       if !result_count > 100 then raise Exit;
@@ -352,13 +353,13 @@ let result_compare a b =
   else if a.expected_ty then -1
   else 1
 
-let get_results tcopt funs classes =
+let get_results tcopt gen_funs_and_classes =
   Errors.ignore_ begin fun() ->
     let completion_type = !Autocomplete.argument_global_type in
     if completion_type = Some Autocomplete.Acid ||
        completion_type = Some Autocomplete.Acnew ||
        completion_type = Some Autocomplete.Actype
-    then compute_complete_global tcopt funs classes;
+    then compute_complete_global tcopt gen_funs_and_classes;
     let results = !autocomplete_results in
     let env = match !ac_env with
       | Some e -> e
