@@ -3848,7 +3848,7 @@ and class_def_ env c tc =
     (c.c_extends @ c.c_implements @ c.c_uses)
     (Decl_hint.hint env.Env.decl_env) in
   TI.check_tparams_instantiable env (fst c.c_tparams);
-  Typing_variance.class_ (snd c.c_name) tc impl;
+  Typing_variance.class_ (Env.get_options env) (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
   List.iter impl (check_implements_tparaml env);
   let env, parent_id, parent = class_def_parent env c tc in

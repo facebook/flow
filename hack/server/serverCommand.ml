@@ -81,7 +81,7 @@ let stream_response (genv:ServerEnv.genv) env (ic, oc) ~cmd =
       (match class_ with
       | None -> output_string oc "Missing from typing env\n"
       | Some c ->
-          let class_str = Typing_print.class_ c in
+          let class_str = Typing_print.class_ env.ServerEnv.tcopt c in
           output_string oc (class_str^"\n")
       );
       output_string oc "\nfunction:\n";

@@ -14,7 +14,6 @@ open Utils
 
 module Reason = Typing_reason
 module Env    = Typing_env
-module DefsDB = Typing_heap
 module Inst   = Decl_instantiate
 module Subst = Decl_subst
 module TUtils = Typing_utils

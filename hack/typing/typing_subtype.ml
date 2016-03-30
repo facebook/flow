@@ -16,7 +16,6 @@ open Typing_dependent_type
 module Reason = Typing_reason
 module Unify = Typing_unify
 module Env = Typing_env
-module DefsDB = Typing_heap
 module Subst = Decl_subst
 module TUtils = Typing_utils
 module TUEnv = Typing_unification_env
