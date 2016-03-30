@@ -77,3 +77,18 @@ function obj2(x: mixed) {
     }
   }
 }
+
+function obj2(x: mixed) {
+  if (typeof x === "object" && x) {
+    (x: Object);
+  }
+  if (x && typeof x === "object") {
+    (x: Object);
+  }
+  if (x != null && typeof x === "object") {
+    (x: Object);
+  }
+  if (x !== null && typeof x === "object") {
+    (x: Object);
+  }
+}

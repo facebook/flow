@@ -441,7 +441,7 @@ let rec convert cx type_params_map = Ast.Type.(function
      and use the root proto reason to build an error. *)
   let reason_desc = "object type" in
   let pmap = Flow_js.mk_propmap cx props_map in
-  let proto = MixedT (reason_of_string reason_desc) in
+  let proto = MixedT (reason_of_string reason_desc, Mixed_everything) in
   let flags = {
     sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
     exact = not sealed;
@@ -555,7 +555,7 @@ and mk_type_param_declarations cx type_params_map typeParameters =
   | loc, { TypeParam.name; bound; variance } ->
     let reason = mk_reason name loc in
     let bound = match bound with
-    | None -> MixedT reason
+    | None -> MixedT (reason, Mixed_everything)
     | Some (_, u) ->
         mk_type cx (SMap.union smap type_params_map) reason (Some u)
     in

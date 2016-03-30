@@ -1795,8 +1795,10 @@ and statement cx type_params_map = Ast.Statement.(
           | Type _ -> assert_false "type entry in nonfor_types"
         ) nonfor_types in
 
+        let proto = MixedT (reason, Mixed_everything) in
+
         for_types,
-        Flow.mk_object_with_map_proto cx reason map (MixedT reason)
+        Flow.mk_object_with_map_proto cx reason map proto
       )) in
     let module_t = mk_commonjs_module_t cx reason reason exports_ in
     let module_t = Flow.mk_tvar_where cx reason (fun t ->
@@ -2379,7 +2381,7 @@ and object_ cx type_params_map reason ?(allow_sealed=true) props =
   Ast.Expression.Object.(
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
-  let proto = MixedT reason in
+  let proto = MixedT (reason, Mixed_everything) in
   (* Return an object with specified sealing. *)
   let mk_object ?(sealed=false) map =
     Flow.mk_object_with_map_proto cx reason ~sealed map proto
@@ -2792,11 +2794,12 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         Flow.flow_t cx (t, StrT.at loc)
       ) argts;
       let reason = mk_reason "new Function(..)" loc in
+      let proto = MixedT (reason, Mixed_everything) in
       FunT (
         reason,
         Flow.dummy_static reason,
         Flow.dummy_prototype,
-        Flow.mk_functiontype [] ~params_names:[] (MixedT reason)
+        Flow.mk_functiontype [] ~params_names:[] proto
       )
     )
 
@@ -3600,7 +3603,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
 
       let reason_props = prefix_reason "props of " reason in
       let o = Flow.mk_object_with_map_proto cx reason_props
-        !map (MixedT reason_props)
+        !map (MixedT (reason_props, Mixed_everything))
       in
       let o = match !spread with
         | None -> o
@@ -3700,7 +3703,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
 
       let reason_props = prefix_reason "props of " component_t_reason in
       let o = Flow.mk_object_with_map_proto cx reason_props
-        !attr_map (MixedT reason_props)
+        !attr_map (MixedT (reason_props, Mixed_everything))
       in
       let o = match !spread with
         | None -> o
@@ -3849,7 +3852,7 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
         value = mk_proptype cx type_params_map e
       } in
       let pmap = Flow.mk_propmap cx SMap.empty in
-      let proto = MixedT (reason_of_string "Object") in
+      let proto = MixedT (reason_of_string "Object", Mixed_everything) in
       ObjT (mk_reason "objectOf" vloc, Flow.mk_objecttype ~flags dict pmap proto)
 
   | vloc, Call { Call.
@@ -3902,7 +3905,8 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
       let reason = mk_reason "shape" vloc in
       let amap, omap, dict = mk_proptypes cx type_params_map properties in
       let map = SMap.union amap (SMap.map (fun t -> OptionalT t) omap) in
-      Flow.mk_object_with_map_proto cx reason ?dict map (MixedT reason)
+      let proto = MixedT (reason, Mixed_everything) in
+      Flow.mk_object_with_map_proto cx reason ?dict map proto
 
   (* Support for FB-specific ReactPropTypes validators. *)
   (** TODO: instead, route to custom lib defs, somehow...details of which have
@@ -4039,8 +4043,8 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         let map = SMap.fold (fun k v map ->
           SMap.add k (OptionalT v) map
         ) omap amap in
-        props :=
-          Flow.mk_object_with_map_proto cx reason ?dict map (MixedT reason);
+        let proto = MixedT (reason, Mixed_everything) in
+        props := Flow.mk_object_with_map_proto cx reason ?dict map proto;
         fmap, mmap
 
       (* getDefaultProps *)
@@ -4053,7 +4057,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           let { params; defaults; rest; body; returnType; _ } = func in
           let reason = mk_reason "defaultProps" vloc in
           let t = mk_method cx type_params_map reason (params, defaults, rest)
-            returnType body this (MixedT reason)
+            returnType body this (MixedT (reason, Mixed_everything))
           in
           let ret_loc = match returnType with
             | Some (_, (loc, _)) -> loc
@@ -4082,7 +4086,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           let { params; defaults; rest; body; returnType; _ } = func in
           let reason = mk_reason "initial state of React component" vloc in
           let t = mk_method cx type_params_map reason (params, defaults, rest)
-            returnType body this (MixedT reason)
+            returnType body this (MixedT (reason, Mixed_everything))
           in
           (* since the call to getInitialState happens internally, we need to
              fake a location to pretend the call happened. using the position
@@ -4118,7 +4122,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           let reason = mk_reason "function" vloc in
           let t = mk_method cx type_params_map reason ~kind
             (params, defaults, rest)
-            returnType body this (MixedT reason)
+            returnType body this (MixedT (reason, Mixed_everything))
           in
           fmap, SMap.add name t mmap
         )
@@ -4161,7 +4165,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
   in
   let override_statics =
     Flow.mk_object_with_map_proto cx
-      static_reason smap (MixedT static_reason)
+      static_reason smap (MixedT (static_reason, Mixed_everything))
   in
   let super_static = Flow.mk_tvar_where cx static_reason (fun t ->
     Flow.flow cx (super,
@@ -4690,7 +4694,7 @@ and static_method_call_Object cx
 
 and mk_extends cx type_params_map = function
   | (None, None) ->
-      let root = MixedT (reason_of_string "Object") in
+      let root = MixedT (reason_of_string "Object", Mixed_everything) in
       root
   | (None, _) ->
       assert false (* type args with no head expr *)
@@ -4700,7 +4704,7 @@ and mk_extends cx type_params_map = function
 
 and mk_interface_super cx structural reason_i map = function
   | (None, None) ->
-      let root = MixedT (reason_of_string "Object") in
+      let root = MixedT (reason_of_string "Object", Mixed_everything) in
       root
   | (None, _) ->
       assert false (* type args with no head expr *)
@@ -4716,7 +4720,7 @@ and mk_interface_super cx structural reason_i map = function
 
 and mk_mixins cx reason_i map = function
   | (None, None) ->
-      let root = MixedT (reason_of_string "Object") in
+      let root = MixedT (reason_of_string "Object", Mixed_everything) in
       root
   | (None, _) ->
       assert false (* type args with no head expr *)
@@ -5026,8 +5030,8 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
           Flow.mk_tvar cx (prefix_reason "yield of " meth_reason),
           Flow.mk_tvar cx (prefix_reason "next of " meth_reason)
         ) else (
-          MixedT (replace_reason "no yield" meth_reason),
-          MixedT (replace_reason "no next" meth_reason)
+          MixedT (replace_reason "no yield" meth_reason, Mixed_everything),
+          MixedT (replace_reason "no next" meth_reason, Mixed_everything)
         ) in
         mk_body None cx tparams_map ~kind:function_kind ~derived_ctor
           meth_params return_type body this super yield next;
@@ -5511,8 +5515,8 @@ and function_decl id cx type_params_map (reason:reason) ~kind
       Flow.mk_tvar cx (prefix_reason "yield of " reason),
       Flow.mk_tvar cx (prefix_reason "next of " reason)
     ) else (
-      MixedT (replace_reason "no yield" reason),
-      MixedT (replace_reason "no next" reason)
+      MixedT (replace_reason "no yield" reason, Mixed_everything),
+      MixedT (replace_reason "no next" reason, Mixed_everything)
     ) in
 
     mk_body id cx type_params_map ~kind params ret body this super yield next;
@@ -5710,7 +5714,10 @@ and mk_params_ret cx type_params_map params (body, ret_type_opt) =
 and mk_function id cx type_params_map reason ?(kind=Scope.Ordinary)
   type_params params ret body this =
   (* Normally, functions do not have access to super. *)
-  let super = MixedT (replace_reason "empty super object" reason) in
+  let super = MixedT (
+    replace_reason "empty super object" reason,
+    Mixed_everything
+  ) in
   let signature = function_decl id cx type_params_map reason ~kind
     type_params params ret body this super in
   mk_function_type cx reason this signature

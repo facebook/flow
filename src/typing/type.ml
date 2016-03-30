@@ -60,7 +60,7 @@ module rec TypeTerm : sig
     | StrT of reason * string literal
     | BoolT of reason * bool option
     | EmptyT of reason
-    | MixedT of reason
+    | MixedT of reason * mixed_flavor
     | AnyT of reason
     | NullT of reason
     | VoidT of reason
@@ -420,6 +420,13 @@ module rec TypeTerm : sig
     | AnyLiteral
 
   and number_literal = (float * string)
+
+  and mixed_flavor =
+    | Mixed_everything
+    | Mixed_truthy
+    | Mixed_non_maybe
+    | Mixed_non_null
+    | Mixed_non_void
 
   (* used by FunT and CallT *)
   and funtype = {
@@ -832,7 +839,7 @@ end)
 
 module MixedT = Primitive (struct
   let desc = "mixed"
-  let make r = MixedT r
+  let make r = MixedT (r, Mixed_everything)
 end)
 
 module EmptyT = Primitive (struct
@@ -892,7 +899,7 @@ let rec reason_of_t = function
   | StrT (reason, _)
   | BoolT (reason, _)
   | EmptyT reason
-  | MixedT reason
+  | MixedT (reason, _)
   | AnyT reason
   | NullT reason
   | VoidT reason
@@ -1132,7 +1139,7 @@ let rec mod_reason_of_t f = function
   | StrT (reason, t) -> StrT (f reason, t)
   | BoolT (reason, t) -> BoolT (f reason, t)
   | EmptyT reason -> EmptyT (f reason)
-  | MixedT reason -> MixedT (f reason)
+  | MixedT (reason, t) -> MixedT (f reason, t)
   | AnyT reason -> AnyT (f reason)
   | NullT reason -> NullT (f reason)
   | VoidT reason -> VoidT (f reason)
