@@ -8,13 +8,7 @@
  *
  *)
 
-(* This module is the entry point of the typechecker. It sets up subtyping
-   constraints for every expression, statement, and declaration form in a
-   JavaScript AST; the subtyping constraints are themselves solved in module
-   Flow_js. It also manages environments, including not only the maintenance of
-   scope information for every function (pushing/popping scopes, looking up
-   variables) but also flow-sensitive information about local variables at every
-   point inside a function (and when to narrow or widen their types). *)
+(* infer phase services *)
 
 module Ast = Spider_monkey_ast
 module Env = Env_js

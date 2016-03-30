@@ -8,7 +8,7 @@
  *
  *)
 
-(* This module is the entry point of the typechecker. It sets up subtyping
+(* This module contains the traversal functions which set up subtyping
    constraints for every expression, statement, and declaration form in a
    JavaScript AST; the subtyping constraints are themselves solved in module
    Flow_js. It also manages environments, including not only the maintenance of
