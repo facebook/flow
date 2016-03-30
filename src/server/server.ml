@@ -151,13 +151,13 @@ struct
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type ~options (file_input, line, col, include_raw) oc =
+  let infer_type ~options (file_input, line, col, verbose, include_raw) oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let (err, resp) =
     (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents ~options content file with
+      let cx = match Types_js.typecheck_contents ?verbose ~options content file with
       | _, Some cx, _, _ -> cx
       | _  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
@@ -468,8 +468,8 @@ struct
         get_importers ~options module_names oc
     | ServerProt.GET_IMPORTS module_names ->
         get_imports ~options module_names oc
-    | ServerProt.INFER_TYPE (fn, line, char, include_raw) ->
-        infer_type ~options (fn, line, char, include_raw) oc
+    | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
+        infer_type ~options (fn, line, char, verbose, include_raw) oc
     | ServerProt.KILL ->
         die_nicely genv oc
     | ServerProt.PING ->

@@ -35,8 +35,12 @@ type command =
 | GET_DEF of file_input * int * int (* filename, line, char *)
 | GET_IMPORTERS of string list
 | GET_IMPORTS of string list
-| INFER_TYPE of file_input * int * int * bool (* filename|content, line,
-                                                        char, include raw *)
+| INFER_TYPE of
+    file_input * (* filename|content *)
+    int * (* line *)
+    int * (* char *)
+    int option * (* verbosity *)
+    bool (* include raw *)
 | KILL
 | PING
 | PORT of string list

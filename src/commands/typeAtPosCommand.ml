@@ -31,6 +31,7 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> verbose_flags
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> flag "--raw" no_arg
@@ -120,7 +121,7 @@ let handle_error (loc, err) json strip =
   );
   flush stderr
 
-let main option_values root json strip_root path include_raw args () =
+let main option_values root json strip_root verbose path include_raw args () =
   let json = json || include_raw in
   let (file, line, column) = parse_args path args in
   let root = guess_root (
@@ -128,9 +129,13 @@ let main option_values root json strip_root path include_raw args () =
     | Some root -> Some root
     | None -> ServerProt.path_of_input file
   ) in
+
+  if not json && (verbose <> None)
+  then prerr_endline "NOTE: --verbose writes to the server log file";
+
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc
-    (ServerProt.INFER_TYPE (file, line, column, include_raw));
+    (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
   match (Timeout.input_value ic) with
   | (Some err, None) -> handle_error err json (relativize strip_root root)
   | (None, Some resp) -> handle_response resp json (relativize strip_root root)
