@@ -10,7 +10,17 @@ NATIVE_OBJECT_FILES=\
 	hack/utils/nproc.o\
 	hack/utils/realpath.o\
 	hack/utils/sysinfo.o\
-	hack/utils/priorities.o
+	hack/utils/priorities.o\
+	hack/utils/win32_support.o
+
+RUNNER_DEPS=\
+	hack/heap\
+	hack/utils\
+	hack/utils/collections\
+	hack/utils/hh_json\
+	hack/third-party/core\
+	src/common\
+	src/parser
 
 all: build-parser
 
@@ -36,7 +46,7 @@ _build/src/parser/test/run_hardcoded_tests.native:
 		$(NATIVE_OBJECT_FILES); \
 	ocamlbuild \
 		-build-dir src/parser/_build \
-		-I hack/heap -I hack/utils -I hack/third-party/core -I src/parser \
+		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
 	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
 		src/parser/test/run_hardcoded_tests.native
