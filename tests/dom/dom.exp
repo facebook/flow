@@ -12,6 +12,120 @@ CanvasRenderingContext2D.js:11
                          ^^^ string. This type is incompatible with
 number. See: [LIB] dom.js:710
 
+Element.js:14
+ 14:     element.scrollIntoView({ behavior: 'invalid' });
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
+ 14:     element.scrollIntoView({ behavior: 'invalid' });
+                                ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+union: boolean | object type. See: [LIB] dom.js:446
+  Member 1:
+  boolean. See: [LIB] dom.js:446
+  Error:
+   14:     element.scrollIntoView({ behavior: 'invalid' });
+                                  ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  boolean. See: [LIB] dom.js:446
+  Member 2:
+  object type. See: [LIB] dom.js:446
+  Error:
+   14:     element.scrollIntoView({ behavior: 'invalid' });
+                                              ^^^^^^^^^ string. This type is incompatible with
+  string enum. See: [LIB] dom.js:446
+
+Element.js:15
+ 15:     element.scrollIntoView({ block: 'invalid' });
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
+ 15:     element.scrollIntoView({ block: 'invalid' });
+                                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+union: boolean | object type. See: [LIB] dom.js:446
+  Member 1:
+  boolean. See: [LIB] dom.js:446
+  Error:
+   15:     element.scrollIntoView({ block: 'invalid' });
+                                  ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  boolean. See: [LIB] dom.js:446
+  Member 2:
+  object type. See: [LIB] dom.js:446
+  Error:
+   15:     element.scrollIntoView({ block: 'invalid' });
+                                           ^^^^^^^^^ string. This type is incompatible with
+  string enum. See: [LIB] dom.js:446
+
+Element.js:16
+ 16:     element.scrollIntoView(1);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
+ 16:     element.scrollIntoView(1);
+                                ^ number. This type is incompatible with
+union: boolean | object type. See: [LIB] dom.js:446
+  Member 1:
+  boolean. See: [LIB] dom.js:446
+  Error:
+   16:     element.scrollIntoView(1);
+                                  ^ number. This type is incompatible with
+  boolean. See: [LIB] dom.js:446
+  Member 2:
+  object type. See: [LIB] dom.js:446
+  Error:
+   16:     element.scrollIntoView(1);
+                                  ^ number. This type is incompatible with
+  object type. See: [LIB] dom.js:446
+
+HTMLElement.js:14
+ 14:     element.scrollIntoView({ behavior: 'invalid' });
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
+ 14:     element.scrollIntoView({ behavior: 'invalid' });
+                                ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+union: boolean | object type. See: [LIB] dom.js:491
+  Member 1:
+  boolean. See: [LIB] dom.js:491
+  Error:
+   14:     element.scrollIntoView({ behavior: 'invalid' });
+                                  ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  boolean. See: [LIB] dom.js:491
+  Member 2:
+  object type. See: [LIB] dom.js:491
+  Error:
+   14:     element.scrollIntoView({ behavior: 'invalid' });
+                                              ^^^^^^^^^ string. This type is incompatible with
+  string enum. See: [LIB] dom.js:491
+
+HTMLElement.js:15
+ 15:     element.scrollIntoView({ block: 'invalid' });
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
+ 15:     element.scrollIntoView({ block: 'invalid' });
+                                ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+union: boolean | object type. See: [LIB] dom.js:491
+  Member 1:
+  boolean. See: [LIB] dom.js:491
+  Error:
+   15:     element.scrollIntoView({ block: 'invalid' });
+                                  ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+  boolean. See: [LIB] dom.js:491
+  Member 2:
+  object type. See: [LIB] dom.js:491
+  Error:
+   15:     element.scrollIntoView({ block: 'invalid' });
+                                           ^^^^^^^^^ string. This type is incompatible with
+  string enum. See: [LIB] dom.js:491
+
+HTMLElement.js:16
+ 16:     element.scrollIntoView(1);
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
+ 16:     element.scrollIntoView(1);
+                                ^ number. This type is incompatible with
+union: boolean | object type. See: [LIB] dom.js:491
+  Member 1:
+  boolean. See: [LIB] dom.js:491
+  Error:
+   16:     element.scrollIntoView(1);
+                                  ^ number. This type is incompatible with
+  boolean. See: [LIB] dom.js:491
+  Member 2:
+  object type. See: [LIB] dom.js:491
+  Error:
+   16:     element.scrollIntoView(1);
+                                  ^ number. This type is incompatible with
+  object type. See: [LIB] dom.js:491
+
 eventtarget.js:9
   9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `attachEvent`. Function cannot be called on possibly undefined value
@@ -44,4 +158,4 @@ union: number | undefined. See: [LIB] dom.js:585
   undefined. See: [LIB] dom.js:584
 
 
-Found 5 errors
+Found 11 errors
