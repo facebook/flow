@@ -22,17 +22,11 @@ type genv = {
 (* The environment constantly maintained by the server *)
 (*****************************************************************************)
 
-(* In addition to this environment, many functions are storing and
- * updating ASTs, NASTs, and types in a shared space
- * (see respectively Parser_heap, Naming_heap, Typing_env).
- * The Ast.id are keys to index this shared space.
- *)
-
 type env = {
     files: Utils_js.FilenameSet.t;
     libs: SSet.t; (* a subset of `files` *)
     errorl: Errors_js.error list;
-  }
+}
 
 let async_queue : (unit -> unit) list ref = ref []
 

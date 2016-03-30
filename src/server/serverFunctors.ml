@@ -27,7 +27,7 @@ module type SERVER_PROGRAM = sig
   val parse_options: unit -> Options.options
   val get_watch_paths: Options.options -> Path.t list
   val name: string
-  val handle_client : genv -> env -> rechecked:bool -> client -> unit
+  val handle_client : genv -> env -> client -> env
 end
 
 let grab_lock ~tmp_dir root =
@@ -107,7 +107,7 @@ end = struct
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
     ready_socket_l <> []
 
-  let handle_connection_ genv env rechecked socket =
+  let handle_connection_ genv env socket =
     let cli, _ = Unix.accept socket in
     let ic = Unix.in_channel_of_descr cli in
     let oc = Unix.out_channel_of_descr cli in
@@ -124,38 +124,33 @@ end = struct
         FlowExitStatus.exit FlowExitStatus.Build_id_mismatch
       end else msg_to_channel oc Connection_ok;
       let client = { ic; oc; close } in
-      Program.handle_client genv env rechecked client
+      Program.handle_client genv env client
     with
     | Sys_error("Broken pipe") ->
-      shutdown_client (ic, oc)
+      shutdown_client (ic, oc);
+      env
     | e ->
       let msg = Printexc.to_string e in
       EventLogger.master_exception msg;
       Printf.fprintf stderr "Error: %s\n%!" msg;
       Printexc.print_backtrace stderr;
-      shutdown_client (ic, oc)
+      shutdown_client (ic, oc);
+      env
 
-  let handle_connection genv env rechecked socket =
+  let handle_connection genv env socket =
     ServerPeriodical.stamp_connection ();
-    try handle_connection_ genv env rechecked socket
+    try handle_connection_ genv env socket
     with
     | Unix.Unix_error (e, _, _) ->
         Printf.fprintf stderr "Unix error: %s\n" (Unix.error_message e);
         Printexc.print_backtrace stderr;
-        flush stderr
+        flush stderr;
+        env
     | e ->
         Printf.fprintf stderr "Error: %s\n" (Printexc.to_string e);
         Printexc.print_backtrace stderr;
-        flush stderr
-
-  let recheck genv old_env updates =
-    let root = Options.root genv.ServerEnv.options in
-    let tmp_dir = Options.temp_dir genv.ServerEnv.options in
-
-    ignore(Lock.grab (Server_files.recheck_file ~tmp_dir root));
-    let env = Program.recheck genv old_env updates in
-    ignore(Lock.release (Server_files.recheck_file ~tmp_dir root));
-    env, updates
+        flush stderr;
+        env
 
   (* When a rebase occurs, dfind takes a while to give us the full list of
    * updates, and it often comes in batches. To get an accurate measurement
@@ -163,27 +158,22 @@ end = struct
    * right after one rechecking round finishes to be part of the same
    * rebase, and we don't log the recheck_end event until the update list
    * is no longer getting populated. *)
-  let rec recheck_loop i rechecked_count genv env =
+  let rec recheck_loop genv env =
     let dfind = match genv.dfind with
     | Some dfind -> dfind
     | None -> failwith "recheck_loop called without dfind set"
     in
     let raw_updates = DfindLib.get_changes dfind in
-    if SSet.is_empty raw_updates then i, rechecked_count, env else begin
+    if SSet.is_empty raw_updates then env else begin
       let updates = Program.process_updates genv env raw_updates in
-      let env, rechecked = recheck genv env updates in
-      let rechecked_count = rechecked_count +
-        (FilenameSet.cardinal rechecked) in
-      recheck_loop (i + 1) rechecked_count genv env
+      let env = Program.recheck genv env updates in
+      recheck_loop genv env
     end
-
-  let recheck_loop = recheck_loop 0 0
 
   let serve genv env socket =
     let root = Options.root genv.options in
     let tmp_dir = Options.temp_dir genv.options in
     let env = ref env in
-    let rechecked = ref false in
     while true do
       let lock_file = Server_files.lock_file ~tmp_dir root in
       if not (Lock.check lock_file) then begin
@@ -197,13 +187,9 @@ end = struct
       end;
       ServerPeriodical.call_before_sleeping();
       let has_client = sleep_and_check socket in
-      let _, rechecked_count, new_env = recheck_loop genv !env in
-      env := new_env;
-      rechecked := !rechecked || (rechecked_count > 0);
-      if has_client then begin
-        handle_connection genv !env !rechecked socket;
-        rechecked := false
-      end;
+      env := recheck_loop genv !env;
+      if has_client
+      then env := handle_connection genv !env socket;
       ServerEnv.invoke_async_queue ();
       EventLogger.flush ();
     done

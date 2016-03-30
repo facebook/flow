@@ -25,6 +25,7 @@ end = struct
     ConvertCommand.command;
     CoverageCommand.command;
     FindModuleCommand.command;
+    ForceRecheckCommand.command;
     GetDefCommand.command;
     GetImportersCommand.command;
     GetImportsCommand.command;
