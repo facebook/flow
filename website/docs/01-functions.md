@@ -70,11 +70,47 @@ When checking the body of a function, types of optional parameters are considere
 
 ### Too Few Arguments
 
-Flow produces an error whenever a call provides too few arguments to a
-function. On the other hand, too many arguments is fine, which is why Flow
-does not complain on most uses of builtin primitives like `Array`, whose
-methods are often called with closures that take fewer parameters than
-prescribed.
+When you call a function with fewer arguments than it accepts, the `void` type
+will be flowed to the missing parameters. If the missing parameter does not
+accept values of type `void` then you will get an error.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+function takesANumber(x: number) {}
+takesANumber() // Error: undefined passed to x, which expects a number
+{% endhighlight %}
+
+However if the missing parameter accepts values of type `void` then there will
+be no error.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+function canTakeNoArgs(a: void, b: ?number, c?: number) {}
+canTakeNoArgs();
+{% endhighlight %}
+
+### Too Many Arguments 
+
+In JavaScript you can call a function with more arguments than it expects. Flow
+allows this too. However, there is an easy trick to declare a function can't
+take extra arguments.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+function takesOnlyOneNumber(x: number, ...rest: Array<void>) {}
+takesOnlyOneNumber(1, 2) // Error: 2 does not have the type void
+{% endhighlight %}
+
+This is particularly useful when declaring overloads in lib files.
+
+{% highlight javascript linenos=table %}
+/* @flow */
+// The first overload matches 0 args, the second matches 1 arg, the third
+// matches 2 args
+declare function foo(...rest: Array<void>): string;
+declare function foo(a: number, ...rest: Array<void>): string;
+declare function foo(a: number, b: number, ...rest: Array<void>): string;
+{% endhighlight %}
 
 ## Function-based type annotations
 
