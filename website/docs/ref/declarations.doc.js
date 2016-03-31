@@ -80,6 +80,40 @@ if (isLeapYear('2016')) console.log('Yay!');
   Note that it is entirely up to the programmer to ensure that declared
   definitions actually exist, and have the correct types.
 
+  ## Mixins
+
+  You can declare a class which mixes in 1 or more other classes with the
+  `mixins` keyword. Mixing class `B` into class `A` copies `B`'s fields and
+  methods into `A`. Note, however, that any fields or methods that `B` inherits
+  are not copied over. Mixins are for code reuse, not for multiple inheritance.
+*/
+
+// You can mixin more than one class
+declare class MyClass extends Child mixins MixinA, MixinB {}
+declare class MixinA {
+  a: number;
+  b: number;
+}
+// Mixing in MixinB will NOT mix in MixinBase
+declare class MixinB extends MixinBase {}
+declare class MixinBase {
+  c: number;
+}
+declare class Child extends Base {
+  a: string;
+  c: string;
+}
+declare class Base {
+  b: string;
+}
+
+var c = new MyClass();
+(c.a: number); // Both Child and MixinA provide `a`, so MixinA wins
+(c.b: number); // The same principle holds for `b`, which Child inherits
+(c.c: string); // mixins does not copy inherited properties,
+               // so `c` comes from Child
+
+/*
   ## Declaring types
 
   It is similarly useful to declare types. Like other declarations, type
