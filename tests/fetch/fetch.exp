@@ -1,0 +1,395 @@
+
+fetch.js:12:28,43: function call
+Error:
+fetch.js:12:18,23: string
+This type is incompatible with
+[LIB] bom.js:474:81,88: Response
+
+fetch.js:25:26,43: function call
+Error:
+[LIB] bom.js:474:81,88: Library type error:
+[LIB] bom.js:474:81,88: Response
+This type is incompatible with
+fetch.js:25:18,21: Blob
+
+headers.js:3:11,53: constructor call
+Error:
+headers.js:3:23,52: string
+This type is incompatible with
+[LIB] bom.js:368:24,34: union: Headers | object type
+
+headers.js:4:11,53: constructor call
+Error:
+headers.js:4:23,52: array literal
+This type is incompatible with
+[LIB] bom.js:368:24,34: union: Headers | object type
+
+headers.js:9:1,24: call of method `append`
+Error:
+headers.js:9:1,24: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:369:33,38: string
+
+headers.js:10:1,40: call of method `append`
+Error:
+headers.js:10:1,40: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:369:33,38: string
+
+headers.js:10:1,40: call of method `append`
+Error:
+headers.js:10:10,39: object literal
+This type is incompatible with
+[LIB] bom.js:369:18,23: string
+
+headers.js:12:1,21: call of method `set`
+Error:
+headers.js:12:1,21: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:376:30,35: string
+
+headers.js:13:1,37: call of method `set`
+Error:
+headers.js:13:1,37: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:376:30,35: string
+
+headers.js:13:1,37: call of method `set`
+Error:
+headers.js:13:7,36: object literal
+This type is incompatible with
+[LIB] bom.js:376:15,20: string
+
+headers.js:15:20,57: undefined
+This type is incompatible with
+headers.js:15:10,16: Headers
+
+headers.js:18:19,39: call of method `get`
+Error:
+headers.js:18:19,39: string
+This type is incompatible with
+headers.js:18:10,15: number
+
+request.js:2:20,32: constructor call
+Error:
+request.js:2:20,32: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:449:24,39: union: string | Request
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:367:5,44: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:369:5,45: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:370:5,30: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:371:5,41: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:372:5,29: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:373:5,39: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:374:5,30: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:375:5,28: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:376:5,42: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:361:46,51: Library type error:
+[LIB] bom.js:361:46,51: string
+This type is incompatible with
+[LIB] bom.js:377:5,30: function type
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:407:14,22: Library type error:
+[LIB] bom.js:407:14,22: null
+This type is incompatible with
+[LIB] bom.js:454:12,20: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:407:14,22: Library type error:
+[LIB] bom.js:407:14,22: undefined
+This type is incompatible with
+[LIB] bom.js:454:12,20: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:408:20,34: Library type error:
+[LIB] bom.js:408:20,34: null
+This type is incompatible with
+[LIB] bom.js:455:18,32: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:408:20,34: Library type error:
+[LIB] bom.js:408:20,34: undefined
+This type is incompatible with
+[LIB] bom.js:455:18,32: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:409:16,26: Library type error:
+[LIB] bom.js:409:16,26: null
+This type is incompatible with
+[LIB] bom.js:456:14,20: Headers
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:409:16,26: Library type error:
+[LIB] bom.js:409:16,26: undefined
+This type is incompatible with
+[LIB] bom.js:456:14,20: Headers
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:410:18,23: Library type error:
+[LIB] bom.js:410:18,23: null
+This type is incompatible with
+[LIB] bom.js:457:16,21: string
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:410:18,23: Library type error:
+[LIB] bom.js:410:18,23: undefined
+This type is incompatible with
+[LIB] bom.js:457:16,21: string
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:411:15,24: Library type error:
+[LIB] bom.js:411:15,24: null
+This type is incompatible with
+[LIB] bom.js:458:13,22: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:411:15,24: Library type error:
+[LIB] bom.js:411:15,24: undefined
+This type is incompatible with
+[LIB] bom.js:458:13,22: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:412:13,20: Library type error:
+[LIB] bom.js:412:13,20: null
+This type is incompatible with
+[LIB] bom.js:459:11,18: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:412:13,20: Library type error:
+[LIB] bom.js:412:13,20: undefined
+This type is incompatible with
+[LIB] bom.js:459:11,18: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:413:17,28: Library type error:
+[LIB] bom.js:413:17,28: null
+This type is incompatible with
+[LIB] bom.js:460:15,26: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:413:17,28: Library type error:
+[LIB] bom.js:413:17,28: undefined
+This type is incompatible with
+[LIB] bom.js:460:15,26: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:414:17,22: Library type error:
+[LIB] bom.js:414:17,22: null
+This type is incompatible with
+[LIB] bom.js:461:15,20: string
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:414:17,22: Library type error:
+[LIB] bom.js:414:17,22: undefined
+This type is incompatible with
+[LIB] bom.js:461:15,20: string
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:415:23,40: Library type error:
+[LIB] bom.js:415:23,40: null
+This type is incompatible with
+[LIB] bom.js:462:21,38: string enum
+
+request.js:6:20,36: constructor call
+Error:
+[LIB] bom.js:415:23,40: Library type error:
+[LIB] bom.js:415:23,40: undefined
+This type is incompatible with
+[LIB] bom.js:462:21,38: string enum
+
+request.js:8:20,34: constructor call
+Error:
+request.js:8:32,33: object literal
+This type is incompatible with
+[LIB] bom.js:449:24,39: union: string | Request
+
+request.js:30:20,35:2: constructor call
+Error:
+request.js:32:12,37: string
+This type is incompatible with
+[LIB] bom.js:409:16,26: union: Headers | object type
+
+request.js:37:20,44:2: constructor call
+Error:
+request.js:38:11,19: string
+This type is incompatible with
+[LIB] bom.js:411:15,24: string enum
+
+request.js:49:1,31: call of method `then`
+Error:
+request.js:49:19,24: Buffer
+This type is incompatible with
+[LIB] bom.js:471:21,26: string
+
+request.js:51:1,40: call of method `then`
+Error:
+[LIB] bom.js:467:28,38: Library type error:
+[LIB] bom.js:467:28,38: ArrayBuffer
+This type is incompatible with
+request.js:51:27,32: Buffer
+
+response.js:10:21,12:2: constructor call
+Error:
+response.js:11:13,17: string
+This type is incompatible with
+[LIB] bom.js:419:15,20: number
+
+response.js:14:21,17:2: constructor call
+Error:
+response.js:16:14,43: string
+This type is incompatible with
+[LIB] bom.js:421:16,26: union: Headers | object type
+
+response.js:33:21,38:2: constructor call
+Error:
+response.js:33:34,38:1: object literal
+This type is incompatible with
+[LIB] bom.js:425:25,66: union: string | URLSearchParams | FormData | Blob
+
+response.js:44:1,31: call of method `then`
+Error:
+response.js:44:19,24: Buffer
+This type is incompatible with
+[LIB] bom.js:445:21,26: string
+
+response.js:46:1,40: call of method `then`
+Error:
+[LIB] bom.js:441:28,38: Library type error:
+[LIB] bom.js:441:28,38: ArrayBuffer
+This type is incompatible with
+response.js:46:27,32: Buffer
+
+urlsearchparams.js:4:11,49: constructor call
+Error:
+urlsearchparams.js:4:31,48: array literal
+This type is incompatible with
+[LIB] bom.js:382:25,48: union: string | URLSearchParams
+
+urlsearchparams.js:5:11,49: constructor call
+Error:
+urlsearchparams.js:5:31,48: object literal
+This type is incompatible with
+[LIB] bom.js:382:25,48: union: string | URLSearchParams
+
+urlsearchparams.js:9:1,16: call of method `append`
+Error:
+urlsearchparams.js:9:1,16: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:383:33,38: string
+
+urlsearchparams.js:10:1,28: call of method `append`
+Error:
+urlsearchparams.js:10:1,28: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:383:33,38: string
+
+urlsearchparams.js:10:1,28: call of method `append`
+Error:
+urlsearchparams.js:10:10,27: object literal
+This type is incompatible with
+[LIB] bom.js:383:18,23: string
+
+urlsearchparams.js:12:1,13: call of method `set`
+Error:
+urlsearchparams.js:12:1,13: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:390:30,35: string
+
+urlsearchparams.js:13:1,25: call of method `set`
+Error:
+urlsearchparams.js:13:1,25: undefined (too few arguments, expected default/rest parameters)
+This type is incompatible with
+[LIB] bom.js:390:30,35: string
+
+urlsearchparams.js:13:1,25: call of method `set`
+Error:
+urlsearchparams.js:13:7,24: object literal
+This type is incompatible with
+[LIB] bom.js:390:15,20: string
+
+urlsearchparams.js:15:28,53: undefined
+This type is incompatible with
+urlsearchparams.js:15:10,24: URLSearchParams
+
+urlsearchparams.js:18:19,31: call of method `get`
+Error:
+urlsearchparams.js:18:19,31: string
+This type is incompatible with
+urlsearchparams.js:18:10,15: number
+
+Found 61 errors
