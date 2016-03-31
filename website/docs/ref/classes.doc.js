@@ -223,7 +223,7 @@ var mapOfA: ReadWriteMap<string, A> = mapOfB;
   co- or contravariant, meaning that one instance is compatible with another
   if one type argument is a sub- or supertype, respectively, of the other.
 
-  **Covariance** is useful whan a type parameter only appears in output (or
+  **Covariance** is useful when a type parameter only appears in output (or
   "positive") positions within a class definition:
 */
 

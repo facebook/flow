@@ -179,7 +179,7 @@ errors where the programmer accesses a non-existent property by mistake. Thus, F
 also supports sealed object types, where accesses of non-existent properties are reported
 as errors.
 
-When object types appear as annotatations, they are considered sealed. Also, non-empty
+When object types appear as annotations, they are considered sealed. Also, non-empty
 object literals are considered to have sealed object types. In fact, the only cases where
 an object type is not sealed are when it describes an empty object literal (to be extended
 by adding properties to it), an object literal with [spread properties](https://github.com/sebmarkbage/ecmascript-rest-spread), or when it describes a map (see below).
