@@ -329,9 +329,9 @@ let print_hash_stats () =
     used_slots slots load_factor;
   ()
 
-let get_build_targets () =
+let get_build_targets env =
   let targets =
-    List.map (BuildMain.get_live_targets ()) (Relative_path.(concat Root)) in
+    List.map (BuildMain.get_live_targets env) (Relative_path.(concat Root)) in
   Relative_path.set_of_list targets
 
 (* entry point *)
@@ -379,7 +379,7 @@ let init ?load_mini_script genv =
      * recheck them. While we could query hg / git for the untracked files,
      * it's much slower. *)
     let dirty_files =
-      Relative_path.Set.union dirty_files (get_build_targets ()) in
+      Relative_path.Set.union dirty_files (get_build_targets env) in
     Ok (dirty_files, changed_while_parsing, old_fast)
   in
   HackEventLogger.vcs_changed_files_end t;
