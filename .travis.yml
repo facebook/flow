@@ -1,16 +1,7 @@
 language: c
 sudo: false
 
-os:
-- linux
-- osx
-
 env:
-  matrix:
-  - OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
-  - OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
-  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
-  - OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
   global:
   # GH_BOT_TOKEN (facebook-github-bot-0)
   - secure: I1W8xlf8Ojxkc92n8Rb9AGX7kdCk0DeWEPd6PKRrGQO0FtyCkcvxNo+wp6ApQI7+NqkuFRVngHVOQOd3AqR57IFiSjZ+Cj/BJyg6WOo92olkAAP0OWihmCj53d2xDpp7LaM99srPbZXYE5vSTTKBX/5Soz9UghzsI5Q1ECmV5fU=
@@ -21,14 +12,36 @@ env:
   # CLOUDFRONT_ID
   - secure: Jr+6c6pF5H0lP4Kt6evlf/xYD/Qjoms3HK7lw1kg8lzwoEXPD3MezgkpOktU8ZBllGolc+ou23h+3hgJwvqi7ANmjzfxyVDdpB7Kiw4y2pEm6tAXYzmatSDb401u7+2sb2H/aSe8yikNrVrizvqaJrDOGeptCBjXQF+a2lNeMC0=
 
+# NOTE: We set the compiler to a bogus "no-op" bash command (":") to work around
+# a Travis caching limitation: the cache slug only depends on the compiler name,
+# not any other environment vars, so we fake the compiler name to change the
+# cache slug.
+#
+# Alternatively, if Travis had ocaml support, it would presumably include the
+# ocaml version in the slug like it does for other languages.
+#
+# See https://github.com/travis-ci/travis-ci/issues/4393
 matrix:
-  exclude:
-    - os: osx
-      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
-    - os: osx
+  include:
+    - compiler: ": Linux, ocaml 4.02.1, opam 1.2.0"
+      os: linux
+      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
+
+    - compiler: ": Linux, ocaml 4.01.0, opam 1.2.0"
+      os: linux
       env: OCAML_VERSION=4.01.0 OPAM_VERSION=1.2.0
-    - os: osx
+
+    - compiler: ": Linux, ocaml 4.02.1, opam 1.1.1"
+      os: linux
+      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.1.1
+
+    - compiler: ": Linux, ocaml 4.01.0, opam 1.1.1"
+      os: linux
       env: OCAML_VERSION=4.01.0 OPAM_VERSION=1.1.1
+
+    - compiler: ": Mac, ocaml 4.02.1, opam 1.2.0"
+      os: osx
+      env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
 
 addons:
   apt:
@@ -38,9 +51,9 @@ addons:
 
 install: bash -e resources/travis/install_deps.sh
 
-script: bash -e .travis-ci.sh
+script: bash -e resources/travis/build.sh
 
-before_deploy: bash -e resources/travis/zip_release.sh
+before_deploy: bash -e resources/travis/before_deploy.sh
 
 cache:
   directories:
