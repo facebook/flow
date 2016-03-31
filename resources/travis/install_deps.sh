@@ -32,22 +32,27 @@ esac
 printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" \
   "$OCAML_VERSION" "$OPAM_VERSION"
 
-INSTALL_DIR="${TMP%%/}/ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}"
+PLATFORM=$(uname -s || echo unknown)
+ARCH=$(uname -m || echo unknown)
+
+INSTALL_DIR="$HOME/.flow_cache/ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}_${PLATFORM}-${ARCH}"
 export PREFIX="$INSTALL_DIR/usr"
 export OPAMROOT="$INSTALL_DIR/.opam"
 BINDIR="$PREFIX/bin"
 export PATH="$BINDIR:$PATH"
 
-file="opam-$OPAM_VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
-
-echo Downloading OPAM...
-getopam "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION" "$file"
-
-mkdir -p "$BINDIR" 2>/dev/null || true
-install -m 755 "$TMP/$file" "$BINDIR/opam"
-rm -f "$TMP/$file"
-
 OPAM="$BINDIR/opam"
+
+if [ -f "$OPAM" ]; then
+  echo "Using existing OPAM..."
+else
+  echo Downloading OPAM...
+  file="opam-$OPAM_VERSION-$ARCH-$PLATFORM"
+  getopam "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION" "$file"
+  mkdir -p "$BINDIR" 2>/dev/null || true
+  install -m 755 "$TMP/$file" "$BINDIR/opam"
+  rm -f "$TMP/$file"
+fi
 
 echo "Initializing OPAM..."
 "$OPAM" init \
