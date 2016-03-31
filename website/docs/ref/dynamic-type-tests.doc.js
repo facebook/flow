@@ -269,7 +269,7 @@ function foo(x: { y: ?string }): string {
 /*
   Flow does perform a mutation analysis and where it is safe to do so, will
   preserve refinements after function calls which it knows do not invalidate the
-  refinemnet.
+  refinement.
 */
 
 function bar(x: ?string): string {

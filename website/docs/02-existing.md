@@ -10,7 +10,7 @@ next: type-annotations.html
 
 Making previously-untyped code typecheck with Flow may take some time and work - and sometimes it may not be worth the effort in the short term. Flow supports *interface files* so you can use libraries in a typed way without having to run Flow on them at all. If your project just depends on third party libraries, check out our [guide](third-party.html) on using Flow with external dependencies and consider using an interface file for the libraries.
 
-Why is typechecking existing code so hard? Libraries not written with types in mind often contain complex, highly dynamic code that confuses analysers such as Flow. The code may also have been written in a style that Flow deliberately chooses not to support in order to give the programmer more help. Some typical examples are:
+Why is typechecking existing code so hard? Libraries not written with types in mind often contain complex, highly dynamic code that confuses analyzers such as Flow. The code may also have been written in a style that Flow deliberately chooses not to support in order to give the programmer more help. Some typical examples are:
 
 * Operations on primitive values: While JavaScript allows operations such as `true + 3`, Flow considers it a type error. This is by design, and is done to provide the programmer with more safety. While that's easily avoided for new code, it can sometimes be a lot of effort to eliminate such patterns from existing code.
 * Nullability: Flow protects you against accessing properties on `null` by tracking null or undefined values throughout the program. In large existing codebases, though, this can require inserting some extra null checks in places where a value appears like it may be null, but actually isn't at runtime.

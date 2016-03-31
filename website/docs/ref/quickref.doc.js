@@ -248,7 +248,7 @@ class BFoo {
   ### Sugar-free classes
 
   ES2015 classes formalize the common practice of simulating class-like
-  inheritace with functions and prototypes. Flow does have limited support for
+  inheritance with functions and prototypes. Flow does have limited support for
   this pattern as well, but the ES2015 class syntax is highly recommended.
 */
 
