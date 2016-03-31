@@ -182,6 +182,7 @@ let extract_file_names env json =
 let get_all_files env =
   with_crash_record env.root "get_all_files" @@ fun () ->
   let response = exec env.socket (query env) in
+  env.clockspec <- J.get_string_val "clock" response;
   extract_file_names env response
 
 let get_changes env =
