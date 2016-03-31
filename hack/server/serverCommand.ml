@@ -178,4 +178,6 @@ let handle genv env (ic, oc) =
       send_response_to_client (ic, oc) response;
       if cmd = ServerRpc.KILL then ServerUtils.die_nicely ()
   | Stream cmd -> stream_response genv env (ic, oc) ~cmd
-  | Debug -> genv.ServerEnv.debug_channels <- Some (ic, oc)
+  | Debug ->
+    genv.ServerEnv.debug_channels <- Some (ic, oc);
+    ServerDebug.say_hello genv

@@ -64,18 +64,3 @@ let list_files env oc =
   Relative_path.Set.iter acc (fun s ->
     Printf.fprintf oc "%s\n" (Relative_path.to_absolute s));
   flush oc
-
-let debug_out genv msg_thunk =
-  Option.iter genv.debug_channels begin fun (_ic, oc) ->
-    (* The input is read using input_line, hence we append a trailing
-     * newline *)
-    (* We use a thunk instead of a string so that expensive computations
-     * don't slow down the server when the debug listener isn't attached *)
-    try
-      output_string oc (msg_thunk () ^ "\n");
-      flush oc;
-    with Sys_error "Broken pipe" -> begin
-      Hh_logger.log "Debug listener has gone away.";
-      genv.debug_channels <- None;
-    end
-  end

@@ -46,7 +46,7 @@ let print_fast fast =
   ()
 
 let debug_print_fast_keys genv name fast =
-  ServerEnv.debug_out genv begin fun () ->
+  ServerDebug.log genv begin fun () ->
     let open Hh_json in
     let files = Relative_path.Map.fold fast ~init:[] ~f:begin fun k _v acc ->
       JSON_String (Relative_path.suffix k) :: acc
@@ -61,13 +61,12 @@ let debug_print_fast_keys genv name fast =
       let acc = prepend_json_strings n_consts acc in
       acc
     end in
-    let obj = JSON_Object [
+    JSON_Object [
       "type", JSON_String "incremental_files";
       "name", JSON_String name;
       "files", JSON_Array files;
       "decls", JSON_Array decls;
-    ] in
-    Hh_json.json_to_string obj
+    ]
   end
 
 (*****************************************************************************)
@@ -293,6 +292,7 @@ let type_check genv env =
   let t = Hh_logger.log_duration "Type-check" t in
 
   Hh_logger.log "Total: %f\n%!" (t -. start_t);
+  ServerDebug.info genv "incremental_done";
 
   (* Done, that's the new environment *)
   let new_env = {
