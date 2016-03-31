@@ -43,7 +43,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> CommandUtils.json_flags
         |> CommandUtils.error_flags
         |> CommandUtils.strip_root_flag
-        |> CommandUtils.wait_for_recheck_flag
         |> dummy false (* match --version below *)
         |> anon "root" (optional string) ~doc:"Root directory"
       )
@@ -84,7 +83,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> CommandUtils.json_flags
         |> CommandUtils.error_flags
         |> CommandUtils.strip_root_flag
-        |> CommandUtils.wait_for_recheck_flag
         |> flag "--version" no_arg
             ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
         |> anon "root" (optional string) ~doc:"Root directory"
@@ -97,14 +95,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     output_json: bool;
     error_flags: Options.error_flags;
     strip_root: bool;
-    wait_for_recheck: bool;
   }
 
   let rec check_status (args:args) server_flags =
     let name = "flow" in
 
     let ic, oc = CommandUtils.connect server_flags args.root in
-    ServerProt.cmd_to_channel oc (ServerProt.STATUS (args.root, args.wait_for_recheck));
+    ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
     let response = ServerProt.response_from_channel ic in
     let strip_root = args.strip_root in
     match response with
@@ -137,8 +134,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     | ServerProt.PONG ->
       let msg = "Why on earth did the server respond with a pong?" in
       FlowExitStatus.(exit ~msg Unknown_error)
-    | ServerProt.RETRY ->
-      retry (args, server_flags) 1 "Waiting for recheck..."
     | ServerProt.SERVER_DYING ->
       let msg = Utils_js.spf
         "Server has been killed for %s"
@@ -163,7 +158,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     end else
       FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
-  let main server_flags json error_flags strip_root wait_for_recheck version root () =
+  let main server_flags json error_flags strip_root version root () =
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";
@@ -184,7 +179,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       output_json = json;
       error_flags;
       strip_root;
-      wait_for_recheck;
     } in
     check_status args server_flags
 end

@@ -2385,7 +2385,10 @@ end = struct
             []
         in
         let static = Expect.maybe env T_STATIC in
-        let async = Peek.token ~i:1 env <> T_LPAREN && Declaration.async env in
+        let async =
+          Peek.token ~i:1 env <> T_LPAREN &&
+          Peek.token ~i:1 env <> T_COLON &&
+          Declaration.async env in
         let generator = Declaration.generator env async in
         match (async, generator, key env) with
         | false, false,

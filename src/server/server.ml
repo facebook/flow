@@ -68,8 +68,7 @@ struct
     end;
     flush oc
 
-  let print_status ~retry genv env client_root oc =
-    if retry then ServerProt.response_to_channel oc ServerProt.RETRY else
+  let print_status genv env client_root oc =
     let server_root = Options.root genv.options in
     if server_root <> client_root
     then begin
@@ -152,13 +151,13 @@ struct
       _end = { Loc.line; column = col + 1; offset = 0; };
     }
 
-  let infer_type ~options (file_input, line, col, include_raw) oc =
+  let infer_type ~options (file_input, line, col, verbose, include_raw) oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let (err, resp) =
     (try
       let content = ServerProt.file_input_get_content file_input in
-      let cx = match Types_js.typecheck_contents ~options content file with
+      let cx = match Types_js.typecheck_contents ?verbose ~options content file with
       | _, Some cx, _, _ -> cx
       | _  -> failwith "Couldn't parse file" in
       let loc = mk_loc file line col in
@@ -368,48 +367,6 @@ struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let respond genv env ~rechecked ~client ~msg =
-    let oc = client.oc in
-    let options = genv.ServerEnv.options in
-    let { ServerProt.client_logging_context; command; } = msg in
-    match command with
-    | ServerProt.AUTOCOMPLETE fn ->
-        autocomplete ~options client_logging_context fn oc
-    | ServerProt.CHECK_FILE (fn, verbose) ->
-        check_file ~options fn verbose oc
-    | ServerProt.DUMP_TYPES (fn, format) ->
-        dump_types ~options fn format oc
-    | ServerProt.ERROR_OUT_OF_DATE ->
-        incorrect_hash oc
-    | ServerProt.FIND_MODULE (moduleref, filename) ->
-        find_module ~options (moduleref, filename) oc
-    | ServerProt.GET_DEF (fn, line, char) ->
-        get_def ~options (fn, line, char) oc
-    | ServerProt.GET_IMPORTERS module_names ->
-        get_importers ~options module_names oc
-    | ServerProt.GET_IMPORTS module_names ->
-        get_imports ~options module_names oc
-    | ServerProt.INFER_TYPE (fn, line, char, include_raw) ->
-        infer_type ~options (fn, line, char, include_raw) oc
-    | ServerProt.KILL ->
-        die_nicely genv oc
-    | ServerProt.PING ->
-        ServerProt.response_to_channel oc ServerProt.PONG
-    | ServerProt.PORT (files) ->
-        port files oc
-    | ServerProt.SEARCH query ->
-        search query oc
-    | ServerProt.STATUS (client_root, wait_for_recheck) ->
-        print_status ~retry:(wait_for_recheck && not rechecked)
-          genv env client_root oc
-    | ServerProt.SUGGEST (files) ->
-        suggest ~options files oc
-
-  let handle_client genv env ~rechecked client =
-    let msg = ServerProt.cmd_from_channel client.ic in
-    respond genv env ~rechecked ~client ~msg;
-    client.close ()
-
   let get_watch_paths options = Path_matcher.stems (Options.includes options)
 
   (* filter a set of updates coming from dfind and return
@@ -474,9 +431,64 @@ struct
     if FilenameSet.is_empty updates
     then env
     else begin
+      let root = Options.root genv.ServerEnv.options in
+      let tmp_dir = Options.temp_dir genv.ServerEnv.options in
+      ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
       SearchService_js.clear updates;
-      let server_env = Types_js.recheck genv env updates in
+      let env = Types_js.recheck genv env updates in
       SearchService_js.update_from_master updates;
-      server_env
+      ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
+      env
     end
+
+  let respond genv env ~client ~msg =
+    let env = ref env in
+    let oc = client.oc in
+    let options = genv.ServerEnv.options in
+    let { ServerProt.client_logging_context; command; } = msg in
+    begin match command with
+    | ServerProt.AUTOCOMPLETE fn ->
+        autocomplete ~options client_logging_context fn oc
+    | ServerProt.CHECK_FILE (fn, verbose) ->
+        check_file ~options fn verbose oc
+    | ServerProt.DUMP_TYPES (fn, format) ->
+        dump_types ~options fn format oc
+    | ServerProt.ERROR_OUT_OF_DATE ->
+        incorrect_hash oc
+    | ServerProt.FIND_MODULE (moduleref, filename) ->
+        find_module ~options (moduleref, filename) oc
+    | ServerProt.FORCE_RECHECK (files) ->
+        Marshal.to_channel oc () [];
+        flush oc;
+        let updates = process_updates genv !env (Utils_js.set_of_list files) in
+        env := recheck genv !env updates
+    | ServerProt.GET_DEF (fn, line, char) ->
+        get_def ~options (fn, line, char) oc
+    | ServerProt.GET_IMPORTERS module_names ->
+        get_importers ~options module_names oc
+    | ServerProt.GET_IMPORTS module_names ->
+        get_imports ~options module_names oc
+    | ServerProt.INFER_TYPE (fn, line, char, verbose, include_raw) ->
+        infer_type ~options (fn, line, char, verbose, include_raw) oc
+    | ServerProt.KILL ->
+        die_nicely genv oc
+    | ServerProt.PING ->
+        ServerProt.response_to_channel oc ServerProt.PONG
+    | ServerProt.PORT (files) ->
+        port files oc
+    | ServerProt.SEARCH query ->
+        search query oc
+    | ServerProt.STATUS client_root ->
+        print_status genv !env client_root oc
+    | ServerProt.SUGGEST (files) ->
+        suggest ~options files oc
+    end;
+    !env
+
+  let handle_client genv env client =
+    let msg = ServerProt.cmd_from_channel client.ic in
+    let env = respond genv env ~client ~msg in
+    client.close ();
+    env
+
 end

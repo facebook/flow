@@ -96,6 +96,8 @@ val mk_object_with_map_proto : Context.t -> reason ->
   ?frozen:bool ->
   ?dict:Type.dicttype -> (Type.t SMap.t) -> Type.t -> Type.t
 
+val mk_object: Context.t -> reason -> Type.t
+
 (* ... *)
 
 val mk_nominal: Context.t -> int

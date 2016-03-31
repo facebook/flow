@@ -69,28 +69,24 @@ whether that is a class, module or some other construct.
 {% highlight javascript linenos=table %}
 /* @flow */
 class Foo { }
+class Bar { }
 // b ends up being a Foo type, since f evaluates to Foo
 var b: { f : typeof Foo } = { f : Foo };
-// Since f is Foo, and b is of a Foo type, we can instantiate b as Foo 
-new b.f();
+// Since the type of b.f is typeof Foo (i.e. Class<Foo>), the following 
+// assignment is valid because the type of the new instance is Foo:
+var inst1: Foo = new b.f();
+// However, this fails because the type of the new instance is not Bar:
+var inst2: Bar = new b.f();
 {% endhighlight %}
 
-Let's see an example where we use `typeof` and Flow will catch a typing error:
-
-{% highlight javascript linenos=table %}
-/* @flow */
-class Foo { }
-class Bar { }
-var b: { f : typeof Foo } = { f : Foo };
-var c: { g : typeof Bar } = { g : Bar };
-// b is of type Foo, not of type Bar (g is a Bar )
-new b.g();
-{% endhighlight %}
 
 ```bbcode
-/tmp/flow/f.js:6:5,7: property g
-Property not found in
-  /tmp/flow/f.js:6:5,5: object type
+tmp/flow/f.js:10
+ 10: var inst2: Bar = new b.f();
+                      ^^^^^^^^^ Foo. This type is incompatible with
+ 10: var inst2: Bar = new b.f();
+                ^^^ Bar
+
 
 Found 1 error
 ```

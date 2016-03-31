@@ -421,8 +421,12 @@ let get_extend_deps cid_hash to_redecl =
 (*****************************************************************************)
 let get_fun_deps old_funs fid (to_redecl, to_recheck) =
   match SMap.find_unsafe fid old_funs, Typing_heap.Funs.get fid with
-  | None, None ->
-      to_redecl, to_recheck
+  (* Note that we must include all dependencies even if we get the None, None
+   * case. Due to the fact we can declare types lazily, there may be no
+   * existing declaration in the old Typing_heap that corresponds to a function
+   * `foo` in the AST. Then when the user deletes `foo`, the new Typing_heap
+   * will also lack a definition of `foo`. Now we must recheck all the use
+   * sites of `foo` to make sure there are no dangling references. *)
   | None, _ | _, None ->
       let where_fun_is_used = Typing_deps.get_bazooka (Dep.Fun fid) in
       let to_recheck = DepSet.union where_fun_is_used to_recheck in
@@ -450,8 +454,6 @@ let get_funs_deps old_funs funs =
 (*****************************************************************************)
 let get_type_deps old_types tid to_recheck =
   match SMap.find_unsafe tid old_types, Typing_heap.Typedefs.get tid with
-  | None, None ->
-      to_recheck
   | None, _ | _, None ->
       let bazooka = Typing_deps.get_bazooka (Dep.Class tid) in
       DepSet.union bazooka to_recheck
@@ -478,8 +480,6 @@ let get_gconst_deps old_gconsts cst_id (to_redecl, to_recheck) =
   let cst1 = SMap.find_unsafe cst_id old_gconsts in
   let cst2 = Typing_heap.GConsts.get cst_id in
   match cst1, cst2 with
-  | None, None ->
-      to_redecl, to_recheck
   | None, _ | _, None ->
       let where_const_is_used = Typing_deps.get_bazooka (Dep.GConst cst_id) in
       let to_recheck = DepSet.union where_const_is_used to_recheck in
@@ -504,7 +504,6 @@ let get_gconsts_deps old_gconsts gconsts =
 (*****************************************************************************)
 let get_class_deps old_classes new_classes trace cid (to_redecl, to_recheck) =
   match SMap.find_unsafe cid old_classes, SMap.find_unsafe cid new_classes with
-  | None, None -> to_redecl, to_recheck
   | None, _ | _, None ->
       get_all_dependencies trace cid (to_redecl, to_recheck)
   | Some class1, Some class2 when class_big_diff class1 class2 ->

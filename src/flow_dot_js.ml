@@ -121,7 +121,7 @@ let set_libs filenames =
 
   Flow_js.Cache.clear();
   let reason = Reason_js.builtin_reason "module" in
-  let builtin_module = Type_inference_js.mk_object master_cx reason in
+  let builtin_module = Flow_js.mk_object master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context [master_cx]
 
@@ -166,9 +166,8 @@ let check_content_js js_file js_content =
   check_content ~filename ~content
 
 let exports =
-  let exports = Js.Unsafe.get Js.Unsafe.global "exports" in
-  if Js.Optdef.test exports
-  then exports
+  if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")
+  then Js.Unsafe.js_expr "exports"
   else begin
     let exports = Js.Unsafe.obj [||] in
     Js.Unsafe.set Js.Unsafe.global "flow" exports;

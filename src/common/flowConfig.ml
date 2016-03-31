@@ -591,21 +591,24 @@ let parse_options config lines =
   {config with options}
 
 let parse_version config lines =
-  let ln, version_str = lines
+  let potential_versions = lines
   |> List.map (fun (ln, line) -> ln, String.trim line)
   |> List.filter (fun (_, s) -> s <> "")
-  |> List.hd
   in
 
-  if not (Semver.is_valid_range version_str) then
-    error ln (
-      spf
-        "Expected version to match %%d.%%d.%%d, with an optional leading ^, got %s"
-        version_str
-    );
+  match potential_versions with
+  | (ln, version_str) :: _ ->
+    if not (Semver.is_valid_range version_str) then
+      error ln (
+        spf
+          "Expected version to match %%d.%%d.%%d, with an optional leading ^, got %s"
+          version_str
+      );
 
-  let options = { config.options with Opts.version = Some version_str } in
-  { config with options }
+    let options = { config.options with Opts.version = Some version_str } in
+    { config with options }
+  | _ -> config
+
 
 let parse_section config ((section_ln, section), lines) =
   match section, lines with

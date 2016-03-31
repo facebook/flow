@@ -18,7 +18,7 @@ val suggest: 'a Typing_defs.ty -> string
 val full: Typing_env.env -> 'a Typing_defs.ty -> string
 val full_strip_ns: Typing_env.env -> 'a Typing_defs.ty -> string
 val debug: Typing_env.env -> 'a Typing_defs.ty -> string
-val class_: Typing_heap.Class.t -> string
+val class_: TypecheckerOptions.t -> Typing_heap.Class.t -> string
 val gconst: Typing_heap.GConst.t -> string
 val fun_: Typing_heap.Fun.t -> string
 val typedef: Typing_heap.Typedef.t -> string

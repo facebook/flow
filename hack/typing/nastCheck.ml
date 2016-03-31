@@ -298,10 +298,13 @@ and hint_ env p = function
       List.iter hl (hint env);
       hint env h;
       ()
-  | Happly ((_, x), hl) as h when Typing_env.is_typedef x ->
-      let {td_tparams; _} = Typing_heap.Typedefs.find_unsafe x in
-      check_happly env.typedef_tparams env.tenv (p, h);
-      check_params env p x td_tparams hl
+  | Happly ((_, x), hl) as h when Env.is_typedef x ->
+    begin match Typing_lazy_heap.get_typedef (Env.get_options env.tenv) x with
+      | Some {td_tparams; _} ->
+        check_happly env.typedef_tparams env.tenv (p, h);
+        check_params env p x td_tparams hl
+      | None -> ()
+    end
   | Happly ((_, x), hl) as h ->
       (match Env.get_class env.tenv x with
       | None -> ()

@@ -54,3 +54,4 @@ assets:
     - _assets/js
     - _assets/images
     - _assets/third-party
+    - _assets/gen

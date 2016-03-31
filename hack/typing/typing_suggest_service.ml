@@ -132,7 +132,11 @@ let resolve_types acc collated_values =
     (* We don't suggest shape type hints yet, so downgrading all
      * shape-like arrays to plain arrays. *)
     let type_ = Typing_arrays.fully_expand_tvars_downcast_aktypes env type_ in
-    match Typing_suggest.normalize type_ with
+    (* XXX should probably use the real .hhconfig-based tcopt to lazy decl to
+     * be correct in incremental mode, but --convert is not really maintained
+     * anyway and precludes incremental mode *)
+    let tcopt = TypecheckerOptions.permissive in
+    match Typing_suggest.normalize tcopt type_ with
     | None -> ()
     | Some ty ->
         patches := (insert_resolved_result fn !patches (line, kind, ty))

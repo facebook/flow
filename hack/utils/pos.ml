@@ -130,6 +130,9 @@ let destruct_range (p : 'a pos) : (int * int * int * int) =
 let make_from_file_pos ~pos_file ~pos_start ~pos_end =
   { pos_file; pos_start; pos_end }
 
+let set_file pos_file pos =
+  { pos with pos_file }
+
 module Map = MyMap.Make (struct
   type path = t
   (* The definition below needs to refer to the t in the outer scope, but MyMap

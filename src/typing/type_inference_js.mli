@@ -8,9 +8,6 @@
  *
  *)
 
-open Reason_js
-open Utils_js
-
 val infer_ast:
   ?gc: bool ->
   metadata: Context.metadata ->
@@ -19,12 +16,10 @@ val infer_ast:
   Spider_monkey_ast.program ->
   Context.t
 
-val mk_object: Context.t -> reason -> Type.t
-
 val infer_lib_file:
   metadata: Context.metadata ->
   exclude_syms:SSet.t ->
-  filename ->
+  Utils_js.filename ->
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->
   Context.t * string list

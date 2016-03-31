@@ -35,12 +35,17 @@ type command =
 | GET_DEF of file_input * int * int (* filename, line, char *)
 | GET_IMPORTERS of string list
 | GET_IMPORTS of string list
-| INFER_TYPE of file_input * int * int * bool (* filename|content, line,
-                                                        char, include raw *)
+| INFER_TYPE of
+    file_input * (* filename|content *)
+    int * (* line *)
+    int * (* char *)
+    int option * (* verbosity *)
+    bool (* include raw *)
 | KILL
 | PING
 | PORT of string list
-| STATUS of Path.t * bool
+| STATUS of Path.t
+| FORCE_RECHECK of string list
 | SEARCH of string
 | SUGGEST of string list
 
@@ -77,7 +82,6 @@ type response =
 | ERRORS of Errors_js.error list
 | NO_ERRORS
 | PONG
-| RETRY
 | SERVER_DYING
 | SERVER_OUT_OF_DATE
 
@@ -86,7 +90,6 @@ let response_to_string = function
   | ERRORS _ -> "Some Errors"
   | NO_ERRORS -> "No Errors"
   | PONG -> "Pong"
-  | RETRY -> "Retry"
   | SERVER_DYING -> "Server Dying"
   | SERVER_OUT_OF_DATE -> "Server Out of Date"
 

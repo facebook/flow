@@ -39,10 +39,10 @@ let dummy_static reason =
   AnyFunT (prefix_reason "statics of " reason)
 
 let dummy_prototype =
-  MixedT (reason_of_string "empty prototype object")
+  MixedT (reason_of_string "empty prototype object", Mixed_everything)
 
 let dummy_this =
-  MixedT (reason_of_string "global object")
+  MixedT (reason_of_string "global object", Mixed_everything)
 
 let mk_methodtype this tins ?params_names tout = {
   this_t = this;
@@ -788,6 +788,8 @@ let not_expect_bound t = match t with
 let not_expect_use_bound t =
   lift_to_use not_expect_bound t
 
+(********************** start of slab **********************************)
+
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
@@ -1182,7 +1184,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              we create below for non-CommonJS exports *)
           reposition ~trace cx reason t
         | None ->
-          let proto = MixedT(reason) in
+          let proto = MixedT (reason, Mixed_everything) in
           let props_smap = find_props cx exports.exports_tmap in
           mk_object_with_map_proto cx reason
             ~sealed:true ~frozen:true props_smap proto
@@ -1197,7 +1199,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some(t) -> SMap.add "default" t exports_tmap
         | None -> exports_tmap
       ) in
-      let proto = MixedT(reason) in
+      let proto = MixedT (reason, Mixed_everything) in
       let ns_obj = mk_object_with_map_proto cx reason
         ~sealed:true ~frozen:true ns_obj_tmap proto
       in
@@ -1370,14 +1372,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* logical types *)
     (*****************)
 
-    | (BoolT (_, Some x), NotT(reason, tout))
-    | (SingletonBoolT (_, x), NotT(reason, tout)) ->
-      let reason = replace_reason (spf "boolean value `%b`" (not x)) reason in
-      let t = BoolT (reason, Some (not x)) in
-      rec_flow_t cx trace (t, tout)
-
-    | (_, NotT(reason, tout)) ->
+    (* !x when x is of unknown truthiness *)
+    | BoolT (_, None), NotT (reason, tout)
+    | StrT (_, AnyLiteral), NotT (reason, tout)
+    | NumT (_, AnyLiteral), NotT (reason, tout) ->
       rec_flow_t cx trace (BoolT.at (loc_of_reason reason), tout)
+
+    (* !x when x is falsy *)
+    | BoolT (_, Some false), NotT (reason, tout)
+    | SingletonBoolT (_, false), NotT (reason, tout)
+    | StrT (_, Literal ""), NotT (reason, tout)
+    | SingletonStrT (_, ""), NotT (reason, tout)
+    | NumT (_, Literal (0., _)), NotT (reason, tout)
+    | SingletonNumT (_, (0., _)), NotT (reason, tout)
+    | NullT _, NotT (reason, tout)
+    | VoidT _, NotT (reason, tout) ->
+      let reason = replace_reason "boolean value `true`" reason in
+      rec_flow_t cx trace (BoolT (reason, Some true), tout)
+
+    (* !x when x is truthy *)
+    | (_, NotT(reason, tout)) ->
+      let reason = replace_reason "boolean value `false`" reason in
+      rec_flow_t cx trace (BoolT (reason, Some false), tout)
 
     | (left, AndT(_, right, u)) ->
       (* a falsy && b ~> a
@@ -1894,14 +1910,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        and "erasing" its static and super *)
 
     | ThisClassT (InstanceT (_, _, _, instance)), MixinT (r, tvar) ->
+      let static = MixedT (r, Mixed_everything) in
+      let super = MixedT (r, Mixed_everything) in
       rec_flow cx trace (
-        ThisClassT (InstanceT (r, MixedT r, MixedT r, instance)),
+        ThisClassT (InstanceT (r, static, super, instance)),
         UseT tvar
       )
 
     | PolyT (xs, ThisClassT (InstanceT (_, _, _, instance))), MixinT (r, tvar) ->
+      let static = MixedT (r, Mixed_everything) in
+      let super = MixedT (r, Mixed_everything) in
       rec_flow cx trace (
-        PolyT (xs, ThisClassT (InstanceT (r, MixedT r, MixedT r, instance))),
+        PolyT (xs, ThisClassT (InstanceT (r, static, super, instance))),
         UseT tvar
       )
 
@@ -2463,10 +2483,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | InstanceT (_, static, _, _), GetPropT (_, (_, "statics"), t) ->
       rec_flow_t cx trace (static, t)
 
-    | MixedT reason, GetPropT(_, (_, "statics"), u) ->
+    | MixedT (reason, _), GetPropT(_, (_, "statics"), u) ->
       (* MixedT not only serves as the instance type of the root class, but also
          as the statics of the root class. *)
-      rec_flow_t cx trace (MixedT (prefix_reason "statics of " reason), u)
+      rec_flow_t cx trace (
+        MixedT (prefix_reason "statics of " reason, Mixed_everything),
+        u)
 
     (********************************************************)
     (* instances of classes may have their fields looked up *)
@@ -2677,7 +2699,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT (_, { props_tmap = mapr; _ }), ObjRestT (reason, xs, t)) ->
       let map = find_props cx mapr in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
-      let o = mk_object_with_map_proto cx reason map (MixedT reason) in
+      let proto = MixedT (reason, Mixed_everything) in
+      let o = mk_object_with_map_proto cx reason map proto in
       rec_flow_t cx trace (o, t)
 
     | (InstanceT (_, _, super, insttype), ObjRestT (reason, xs, t)) ->
@@ -2689,7 +2712,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Spread fields from the instance into another object *)
       let map = find_props cx insttype.fields_tmap in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
-      let obj_inst = mk_object_with_map_proto cx reason map (MixedT reason) in
+      let proto = MixedT (reason, Mixed_everything) in
+      let obj_inst = mk_object_with_map_proto cx reason map proto in
 
       (* ObjAssign the inst-generated obj into the super-generated obj *)
       let o = mk_tvar_where cx reason (fun tvar ->
@@ -2711,7 +2735,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ((NullT _ | VoidT _), ObjRestT (reason, _, t)) ->
       (* mirroring Object.assign semantics, treat null/void as empty objects *)
-      let o = mk_object_with_proto cx reason (MixedT reason) in
+      let o = mk_object cx reason in
       rec_flow_t cx trace (o, t)
 
     (*************************************)
@@ -3327,7 +3351,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, LookupT (reason, strict, try_ts_on_failure, s, t))
 
-    | (MixedT reason, LookupT (reason_op, Some strict_reason, [], x, _)) ->
+    | (MixedT (reason, _), LookupT (reason_op, Some strict_reason, [], x, _)) ->
 
       if is_object_prototype_method x
       then
@@ -4195,6 +4219,9 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   let pmap = mk_propmap cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
+and mk_object cx reason =
+  mk_object_with_proto cx reason (MixedT (reason, Mixed_everything))
+
 
 (* Object assignment patterns. In the `Object.assign` model (chain_objects), an
    existing object receives properties from other objects. This pattern suffers
@@ -4209,7 +4236,7 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
    other patterns wherever they are potentially racy. *)
 
 and spread_objects cx reason those =
-  let obj = mk_object_with_proto cx reason (MixedT reason) in
+  let obj = mk_object cx reason in
   chain_objects cx reason obj those
 
 and chain_objects cx ?trace reason this those =
@@ -4549,7 +4576,7 @@ and lookup_prop cx trace l reason strict x t =
   let l =
     (* munge names beginning with single _ *)
     if is_munged_prop_name cx x
-    then MixedT (reason_of_t l)
+    then MixedT (reason_of_t l, Mixed_everything)
     else l
   in
   rec_flow cx trace (l, LookupT (reason, strict, [], x, t))
@@ -4630,6 +4657,7 @@ and filter_exists = function
   | BoolT (r, None) -> BoolT (r, Some true)
   | StrT (r, AnyLiteral) -> StrT (r, Truthy)
   | NumT (r, AnyLiteral) -> NumT (r, Truthy)
+  | MixedT (r, _) -> MixedT (r, Mixed_truthy)
 
   (* truthy things pass through *)
   | t -> t
@@ -4657,7 +4685,9 @@ and filter_not_exists t = match t with
   | FunT (r, _, _, _)
   | AnyFunT r
   | SingletonNumT (r, _)
-  | NumT (r, (Literal _ | Truthy)) -> EmptyT r
+  | NumT (r, (Literal _ | Truthy))
+  | MixedT (r, Mixed_truthy)
+    -> EmptyT r
 
   | ClassT t -> EmptyT (reason_of_t t)
 
@@ -4676,7 +4706,12 @@ and filter_maybe = function
   | MaybeT t ->
     let reason = reason_of_t t in
     UnionT (reason, UnionRep.make [NullT.why reason; VoidT.why reason])
-  | MixedT r -> UnionT (r, UnionRep.make [NullT.why r; VoidT.why r])
+  | MixedT (r, Mixed_everything) ->
+    UnionT (r, UnionRep.make [NullT.why r; VoidT.why r])
+  | MixedT (r, Mixed_truthy) -> EmptyT.why r
+  | MixedT (r, Mixed_non_maybe) -> EmptyT.why r
+  | MixedT (r, Mixed_non_void) -> NullT r
+  | MixedT (r, Mixed_non_null) -> VoidT r
   | NullT r -> NullT r
   | VoidT r -> VoidT r
   | OptionalT t ->
@@ -4690,13 +4725,19 @@ and filter_not_maybe = function
   | MaybeT t -> t
   | OptionalT t -> filter_not_maybe t
   | NullT r | VoidT r -> EmptyT r
+  | MixedT (r, Mixed_truthy) -> MixedT (r, Mixed_truthy)
+  | MixedT (r, Mixed_everything)
+  | MixedT (r, Mixed_non_maybe)
+  | MixedT (r, Mixed_non_void)
+  | MixedT (r, Mixed_non_null) -> MixedT (r, Mixed_non_maybe)
   | t -> t
 
 and filter_null = function
   | OptionalT (MaybeT t)
   | MaybeT t -> NullT.why (reason_of_t t)
   | NullT r -> NullT r
-  | MixedT r -> NullT.why r
+  | MixedT (r, Mixed_everything)
+  | MixedT (r, Mixed_non_void) -> NullT.why r
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -4709,6 +4750,8 @@ and filter_not_null = function
   | UnionT (r, rep) ->
     recurse_into_union filter_not_null (r, UnionRep.members rep)
   | NullT r -> EmptyT r
+  | MixedT (r, Mixed_everything) -> MixedT (r, Mixed_non_null)
+  | MixedT (r, Mixed_non_void) -> MixedT (r, Mixed_non_maybe)
   | t -> t
 
 and filter_undefined = function
@@ -4717,7 +4760,8 @@ and filter_undefined = function
   | OptionalT t ->
     let reason = reason_of_t t in
     VoidT.why reason
-  | MixedT r -> VoidT.why r
+  | MixedT (r, Mixed_everything)
+  | MixedT (r, Mixed_non_null) -> VoidT.why r
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -4730,13 +4774,15 @@ and filter_not_undefined = function
   | UnionT (r, rep) ->
     recurse_into_union filter_not_undefined (r, UnionRep.members rep)
   | VoidT r -> EmptyT r
+  | MixedT (r, Mixed_everything) -> MixedT (r, Mixed_non_void)
+  | MixedT (r, Mixed_non_null) -> MixedT (r, Mixed_non_maybe)
   | t -> t
 
 and filter_string_literal expected t = match t with
   | StrT (_, Literal actual) when actual = expected -> t
   | StrT (r, Truthy) when expected <> "" -> StrT (r, Literal expected)
   | StrT (r, AnyLiteral) -> StrT (r, Literal expected)
-  | MixedT r -> StrT (r, Literal expected)
+  | MixedT (r, _) -> StrT (r, Literal expected)
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_string_literal expected = function
@@ -4747,7 +4793,7 @@ and filter_number_literal expected t = match t with
   | NumT (_, Literal actual) when snd actual = snd expected -> t
   | NumT (r, Truthy) when snd expected <> "0" -> NumT (r, Literal expected)
   | NumT (r, AnyLiteral) -> NumT (r, Literal expected)
-  | MixedT r -> NumT (r, Literal expected)
+  | MixedT (r, _) -> NumT (r, Literal expected)
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_number_literal expected = function
@@ -4757,7 +4803,7 @@ and filter_not_number_literal expected = function
 and filter_true = function
   | BoolT (r, Some true)
   | BoolT (r, None) -> BoolT (r, Some true)
-  | MixedT r -> BoolT (replace_reason "boolean" r, Some true)
+  | MixedT (r, _) -> BoolT (replace_reason "boolean" r, Some true)
   | t -> EmptyT (reason_of_t t)
 
 and filter_not_true = function
@@ -4768,7 +4814,7 @@ and filter_not_true = function
 and filter_false = function
   | BoolT (r, Some false)
   | BoolT (r, None) -> BoolT (r, Some false)
-  | MixedT r -> BoolT (replace_reason "boolean" r, Some false)
+  | MixedT (r, _) -> BoolT (replace_reason "boolean" r, Some false)
   | t -> EmptyT (reason_of_t t)
 
 and filter_not_false = function
@@ -4822,7 +4868,11 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "boolean" *)
   (***********************)
 
-  | (MixedT r, BoolP) ->
+  | (MixedT (r, Mixed_truthy), BoolP) ->
+    let r = replace_reason BoolT.desc r in
+    rec_flow_t cx trace (BoolT (r, Some true), t)
+
+  | (MixedT (r, _), BoolP) ->
     rec_flow_t cx trace (BoolT.why r, t)
 
   | (_, BoolP) ->
@@ -4835,7 +4885,11 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "string" *)
   (***********************)
 
-  | (MixedT r, StrP) ->
+  | (MixedT (r, Mixed_truthy), StrP) ->
+    let r = replace_reason StrT.desc r in
+    rec_flow_t cx trace (StrT (r, Truthy), t)
+
+  | (MixedT (r, _), StrP) ->
     rec_flow_t cx trace (StrT.why r, t)
 
   | (_, StrP) ->
@@ -4868,7 +4922,11 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "number" *)
   (***********************)
 
-  | (MixedT r, NumP) ->
+  | (MixedT (r, Mixed_truthy), NumP) ->
+    let r = replace_reason NumT.desc r in
+    rec_flow_t cx trace (NumT (r, Truthy), t)
+
+  | (MixedT (r, _), NumP) ->
     rec_flow_t cx trace (NumT.why r, t)
 
   | (_, NumP) ->
@@ -4881,7 +4939,7 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "function" *)
   (***********************)
 
-  | (MixedT r, FunP) ->
+  | (MixedT (r, _), FunP) ->
     rec_flow_t cx trace (AnyFunT (replace_reason "function" r), t)
 
   | (_, FunP) ->
@@ -4894,16 +4952,23 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* typeof _ ~ "object" *)
   (***********************)
 
-  | (MixedT r, ObjP) ->
+  | (MixedT (r, flavor), ObjP) ->
     let reason = replace_reason "object" r in
     let dict = Some {
       key = StrT.why r;
-      value = MixedT r;
+      value = MixedT (replace_reason MixedT.desc r, Mixed_everything);
       dict_name = None;
     } in
-    let obj = mk_object_with_proto cx reason ?dict (MixedT reason) in
-    let union = create_union [NullT.why r; obj] in
-    rec_flow_t cx trace (union, t)
+    let proto = MixedT (reason, Mixed_everything) in
+    let obj = mk_object_with_proto cx reason ?dict proto in
+    let filtered_l = match flavor with
+    | Mixed_truthy
+    | Mixed_non_maybe
+    | Mixed_non_null -> obj
+    | Mixed_everything
+    | Mixed_non_void -> create_union [NullT.why r; obj]
+    in
+    rec_flow_t cx trace (filtered_l, t)
 
   | (_, ObjP) ->
     filter cx trace t l is_object
@@ -4915,7 +4980,8 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* Array.isArray _ *)
   (*******************)
 
-  | (MixedT r, ArrP) ->
+  | (MixedT (r, _), ArrP) ->
+    (* TODO: should use MixedT instead of AnyT, like we do with objects *)
     let filtered_l = ArrT (replace_reason "array" r, AnyT.why r, []) in
     rec_flow_t cx trace (filtered_l, t)
 
@@ -5934,6 +6000,8 @@ and tvar_with_constraint cx u =
   mk_tvar_where cx reason (fun tvar ->
     flow cx (tvar, u)
   )
+
+(************* end of slab **************************************************)
 
 (* Externally visible function for unification. *)
 let unify cx t1 t2 =

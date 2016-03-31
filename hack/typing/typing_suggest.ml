@@ -141,8 +141,8 @@ let rec my_unify depth env ty1 ty2 =
  * we are only interested in the non-parametric ones, infering
  * the parameter would be too hard anyway.
  *)
-let get_implements (_, x) =
-  match Typing_heap.Classes.get x with
+let get_implements tcopt (_, x) =
+  match Typing_lazy_heap.get_class tcopt x with
   | None -> SSet.empty
   | Some { tc_ancestors = tyl; _ } ->
       SMap.fold begin fun _ ty set ->
@@ -157,13 +157,13 @@ let get_implements (_, x) =
 (** normalizes a "guessed" type. We basically want to bailout whenever
  * the inferred type doesn't resolve to a type hint.
  *)
-let rec normalize (r, ty) = r, normalize_ ty
-and normalize_ = function
-  | Tunresolved [x] -> snd (normalize x)
+let rec normalize tcopt (r, ty) = r, normalize_ tcopt ty
+and normalize_ tcopt = function
+  | Tunresolved [x] -> snd (normalize tcopt x)
   | Tunresolved tyl
     when List.exists tyl (function _, Toption _ -> true | _ -> false) ->
       let tyl = List.map tyl (function _, Toption ty -> ty | x -> x) in
-      normalize_ (Toption (Reason.Rnone, Tunresolved tyl))
+      normalize_ tcopt (Toption (Reason.Rnone, Tunresolved tyl))
   | Tunresolved tyl
     when List.exists tyl
     (function _, (Tany | Tunresolved []) -> true | _ -> false) ->
@@ -174,7 +174,7 @@ and normalize_ = function
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject | Tshape _
              ) -> true
       end in
-      normalize_ (Tunresolved tyl)
+      normalize_ tcopt (Tunresolved tyl)
   | Tunresolved ((_, Tclass (x, [])) :: rl) ->
       (* If we have A & B & C where all the elements are classes
        * we try to find a unique common ancestor.
@@ -186,16 +186,16 @@ and normalize_ = function
           | Tanon (_, _) | Tfun _ | Tunresolved _ | Tobject
           | Tshape _) -> raise Exit
       end in
-      let x_imp = get_implements x in
+      let x_imp = get_implements tcopt x in
       let set = List.fold_left rl ~f:begin fun x_imp x ->
-        SSet.inter x_imp (get_implements x)
+        SSet.inter x_imp (get_implements tcopt x)
       end ~init:x_imp in
       (* is it unique? *)
       if SSet.cardinal set = 1
       then Tclass ((Pos.none, SSet.choose set), [])
       else raise Exit
   | Tunresolved (x :: (y :: _ as rl)) when compare_types x y = 0 ->
-      normalize_ (Tunresolved rl)
+      normalize_ tcopt (Tunresolved rl)
   | Tunresolved _ | Tany -> raise Exit
   | Tmixed -> Tmixed                       (* ' with Nothing (mixed type) *)
   | Tarraykind akind -> begin
@@ -203,18 +203,18 @@ and normalize_ = function
       Tarraykind (match akind with
         | AKany -> AKany
         | AKempty -> AKempty
-        | AKvec tk -> AKvec (normalize tk)
-        | AKmap (tk, tv) -> AKmap (normalize tk, normalize tv)
+        | AKvec tk -> AKvec (normalize tcopt tk)
+        | AKmap (tk, tv) -> AKmap (normalize tcopt tk, normalize tcopt tv)
         (* fully_expand_tvars_downcast_aktypes should have removed those *)
         | AKshape _ | AKtuple _ -> raise Exit
       )
     with Exit -> Tarraykind AKany
   end
   | Tabstract (AKgeneric (_, _), _) as x -> x
-  | Tabstract (AKdependent _, Some ty) -> normalize_ (snd ty)
-  | Toption (_, (Toption (_, _) as ty)) -> normalize_ ty
+  | Tabstract (AKdependent _, Some ty) -> normalize_ tcopt (snd ty)
+  | Toption (_, (Toption (_, _) as ty)) -> normalize_ tcopt ty
   | Toption (_, Tprim Nast.Tvoid) -> raise Exit
-  | Toption ty -> Toption (normalize ty)
+  | Toption ty -> Toption (normalize tcopt ty)
   | Tprim _ as ty -> ty
   | Tvar _ -> raise Exit
   | Tfun _ -> raise Exit
@@ -224,7 +224,7 @@ and normalize_ = function
        * local one. Figure something else out that doesn't involve spamming '\'
        * across FB code, maybe? See if anyone complains on GitHub? I have no
        * idea how bad this is in practice, I'm kinda hoping it's okay. *)
-      normalize_ (Tclass ((pos, strip_ns name), tyl))
+      normalize_ tcopt (Tclass ((pos, strip_ns name), tyl))
   | Tclass ((pos1, "Awaitable"), [(_, Toption (pos2, Tprim Nast.Tvoid))]) ->
       (* Special case: Awaitable<?void> is nonsensical, but often
        * Awaitable<void> works. *)
@@ -236,14 +236,14 @@ and normalize_ = function
         then ":"^name
         else name
       in
-      Tclass ((pos, name), List.map tyl normalize)
-  | Ttuple tyl -> Ttuple (List.map tyl normalize)
+      Tclass ((pos, name), List.map tyl (normalize tcopt))
+  | Ttuple tyl -> Ttuple (List.map tyl (normalize tcopt))
   | Tanon _ -> raise Exit
   | Tobject -> raise Exit
   | Tabstract _ -> raise Exit
   | Tshape _ -> raise Exit
 
-let normalize ty =
+let normalize tcopt ty =
   try
-    Some (normalize ty)
+    Some (normalize tcopt ty)
   with Exit -> None

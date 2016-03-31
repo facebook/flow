@@ -428,7 +428,7 @@ module PrintClass = struct
       "\n("^(typeconst v)^")"^acc
     end m ""
 
-  let ancestors_smap m =
+  let ancestors_smap tcopt m =
     (* Format is as follows:
      *    ParentKnownToHack
      *  ! ParentCompletelyUnknown
@@ -437,7 +437,7 @@ module PrintClass = struct
      * ParentPartiallyKnown must inherit one of the ! Unknown parents, so that
      * sigil could be omitted *)
     SMap.fold begin fun field v acc ->
-      let sigil, kind = match Typing_heap.Classes.get field with
+      let sigil, kind = match Typing_lazy_heap.get_class tcopt field with
         | None -> "!", ""
         | Some {tc_members_fully_known; tc_kind; _} ->
           (if tc_members_fully_known then " " else "~"),
@@ -459,7 +459,7 @@ module PrintClass = struct
       acc ^ Full.to_string_decl x ^ ", "
     end
 
-  let class_type c =
+  let class_type tcopt c =
     let tc_need_init = bool c.tc_need_init in
     let tc_members_fully_known = bool c.tc_members_fully_known in
     let tc_abstract = bool c.tc_abstract in
@@ -474,7 +474,7 @@ module PrintClass = struct
     let tc_methods = class_elt_smap_with_breaks c.tc_methods in
     let tc_smethods = class_elt_smap_with_breaks c.tc_smethods in
     let tc_construct = constructor c.tc_construct in
-    let tc_ancestors = ancestors_smap c.tc_ancestors in
+    let tc_ancestors = ancestors_smap tcopt c.tc_ancestors in
     let tc_req_ancestors = req_ancestors c.tc_req_ancestors in
     let tc_req_ancestors_extends = sset c.tc_req_ancestors_extends in
     let tc_extends = sset c.tc_extends in
@@ -562,7 +562,7 @@ let debug env ty =
   let e_str = error (snd ty) in
   let f_str = full_strip_ns env ty in
   e_str^" "^f_str
-let class_ c = PrintClass.class_type c
+let class_ tcopt c = PrintClass.class_type tcopt c
 let gconst gc = Full.to_string_decl gc
 let fun_ f = PrintFun.fun_type f
 let typedef td = PrintTypedef.typedef td

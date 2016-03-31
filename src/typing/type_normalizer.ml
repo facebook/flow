@@ -34,8 +34,8 @@ let fake_instance name =
   } in
   InstanceT (
     reason_of_string name,
-    MixedT (reason_of_string "dummy static"),
-    MixedT (reason_of_string "dummy super"),
+    MixedT (reason_of_string "dummy static", Mixed_everything),
+    MixedT (reason_of_string "dummy super", Mixed_everything),
     insttype
   )
 

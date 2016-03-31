@@ -1703,7 +1703,7 @@ and assign p env e1 ty2 =
           | [x1; x2] ->
               let env, _ = assign p env x1 ty1 in
               let env, _ = assign p env x2 ty2 in
-              env, (Reason.Rwitness (fst e1), Tprim Tvoid)
+              env, folded_ety2
           | _ ->
               Errors.pair_arity p;
               env, (r, Tany)
@@ -1726,7 +1726,7 @@ and assign p env e1 ty2 =
             let env = List.fold2_exn el tyl ~f:begin fun env lvalue ty2 ->
               fst (assign p env lvalue ty2)
             end ~init:env in
-            env, (Reason.Rwitness p1, Tprim Tvoid)
+            env, ty2
       | _, Tabstract (_, Some ty2) -> assign p env e1 ty2
       | _, (Tmixed | Tarraykind _ | Toption _ | Tprim _
         | Tvar _ | Tfun _ | Tabstract (_, _) | Tanon (_, _)
@@ -3848,7 +3848,7 @@ and class_def_ env c tc =
     (c.c_extends @ c.c_implements @ c.c_uses)
     (Decl_hint.hint env.Env.decl_env) in
   TI.check_tparams_instantiable env (fst c.c_tparams);
-  Typing_variance.class_ (snd c.c_name) tc impl;
+  Typing_variance.class_ (Env.get_options env) (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
   List.iter impl (check_implements_tparaml env);
   let env, parent_id, parent = class_def_parent env c tc in
