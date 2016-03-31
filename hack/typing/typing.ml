@@ -1703,7 +1703,7 @@ and assign p env e1 ty2 =
           | [x1; x2] ->
               let env, _ = assign p env x1 ty1 in
               let env, _ = assign p env x2 ty2 in
-              env, (Reason.Rwitness (fst e1), Tprim Tvoid)
+              env, folded_ety2
           | _ ->
               Errors.pair_arity p;
               env, (r, Tany)
