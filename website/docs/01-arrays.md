@@ -7,7 +7,8 @@ next: classes.html
 ---
 
 Array types are simply instantiations of a special polymorphic Array class:
-the type `Array<T>` describes arrays whose elements are of type `T`.
+the type `Array<T>` describes arrays whose elements are of type `T`.  The
+shorthand syntax `T[]` is equivalent to `Array<T>`.
 
 ## Type Annotating Arrays
 
