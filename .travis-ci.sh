@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-TMP=${TMPDIR:-/tmp}
-
 case "$TRAVIS_OS_NAME" in
   linux)
     # For some reason the Linux containers start killing the tests if too many
@@ -10,7 +8,9 @@ case "$TRAVIS_OS_NAME" in
     ;;
 esac
 
-INSTALL_DIR="${TMP%%/}/ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}"
+PLATFORM=$(uname -s || echo unknown)
+ARCH=$(uname -m || echo unknown)
+INSTALL_DIR="$HOME/.flow_cache/ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}_${PLATFORM}-${ARCH}"
 export PATH="$INSTALL_DIR/usr/bin:$PATH"
 export OPAMROOT="$INSTALL_DIR/.opam"
 eval "$(opam config env)"

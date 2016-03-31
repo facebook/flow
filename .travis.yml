@@ -42,6 +42,13 @@ script: bash -e .travis-ci.sh
 
 before_deploy: bash -e resources/travis/zip_release.sh
 
+cache:
+  directories:
+  - $HOME/.flow_cache
+
+before_cache:
+  - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
+
 deploy:
 # upload releases to github, from both Mac and Linux
 - provider: releases
