@@ -1726,7 +1726,7 @@ and assign p env e1 ty2 =
             let env = List.fold2_exn el tyl ~f:begin fun env lvalue ty2 ->
               fst (assign p env lvalue ty2)
             end ~init:env in
-            env, (Reason.Rwitness p1, Tprim Tvoid)
+            env, ty2
       | _, Tabstract (_, Some ty2) -> assign p env e1 ty2
       | _, (Tmixed | Tarraykind _ | Toption _ | Tprim _
         | Tvar _ | Tfun _ | Tabstract (_, _) | Tanon (_, _)
