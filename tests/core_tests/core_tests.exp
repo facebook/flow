@@ -4,29 +4,29 @@ map.js:23
  23:     let x = new Map(['foo', 123]); // error
                  ^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See: [LIB] core.js:395
-  Error:
-   23:     let x = new Map(['foo', 123]); // error
-                           ^^^^^^^^^^^^ array literal. This type is incompatible with
-  undefined. See: [LIB] core.js:395
-  Member 2:
   polymorphic type: function type. See: [LIB] core.js:396
   Error:
    23:     let x = new Map(['foo', 123]); // error
                            ^^^^^^^^^^^^ array literal. This type is incompatible with
-  null. See: [LIB] core.js:396
-  Member 3:
+  undefined. See: [LIB] core.js:396
+  Member 2:
   polymorphic type: function type. See: [LIB] core.js:397
   Error:
    23:     let x = new Map(['foo', 123]); // error
-                                   ^^^ number. This type is incompatible with
-  tuple type. See: [LIB] core.js:397
-  Member 4:
+                           ^^^^^^^^^^^^ array literal. This type is incompatible with
+  null. See: [LIB] core.js:397
+  Member 3:
   polymorphic type: function type. See: [LIB] core.js:398
   Error:
    23:     let x = new Map(['foo', 123]); // error
                                    ^^^ number. This type is incompatible with
   tuple type. See: [LIB] core.js:398
+  Member 4:
+  polymorphic type: function type. See: [LIB] core.js:399
+  Error:
+   23:     let x = new Map(['foo', 123]); // error
+                                   ^^^ number. This type is incompatible with
+  tuple type. See: [LIB] core.js:399
 
 map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
@@ -41,7 +41,7 @@ map.js:29
           ^^^^^^^^^^^^ call of method `get`
  29:     (x.get('foo'): boolean); // error, string | void
                         ^^^^^^^ boolean. This type is incompatible with
-undefined. See: [LIB] core.js:403
+undefined. See: [LIB] core.js:404
 
 map.js:30
  30:     x.get(123); // error, wrong key type
@@ -56,14 +56,14 @@ regexp.js:26
          ^^^^^^^^^^^^^^^^^^ function call
  26:     RegExp('foo', 'z'); // error
                        ^^^ string. This type is incompatible with
-string enum. See: [LIB] core.js:257
+string enum. See: [LIB] core.js:258
 
 regexp.js:27
  27:     new RegExp('foo', 'z'); // error
          ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  27:     new RegExp('foo', 'z'); // error
                            ^^^ string. This type is incompatible with
-string enum. See: [LIB] core.js:258
+string enum. See: [LIB] core.js:259
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
@@ -71,23 +71,23 @@ weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See: [LIB] core.js:433
-  Error:
-   19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                             ^^^^^^^^^ array literal. This type is incompatible with
-  undefined. See: [LIB] core.js:433
-  Member 2:
   polymorphic type: function type. See: [LIB] core.js:434
   Error:
    19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
-                              ^ number. This type is incompatible with
-  object type. See: [LIB] core.js:434
-  Member 3:
+                             ^^^^^^^^^ array literal. This type is incompatible with
+  undefined. See: [LIB] core.js:434
+  Member 2:
   polymorphic type: function type. See: [LIB] core.js:435
   Error:
    19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                               ^ number. This type is incompatible with
   object type. See: [LIB] core.js:435
+  Member 3:
+  polymorphic type: function type. See: [LIB] core.js:436
+  Error:
+   19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                              ^ number. This type is incompatible with
+  object type. See: [LIB] core.js:436
 
 weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
@@ -95,23 +95,23 @@ weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See: [LIB] core.js:433
-  Error:
-   36: let ws5 = new WeakSet(numbers()); // error, must be objects
-                             ^^^^^^^^^ $Iterable. This type is incompatible with
-  undefined. See: [LIB] core.js:433
-  Member 2:
   polymorphic type: function type. See: [LIB] core.js:434
   Error:
    36: let ws5 = new WeakSet(numbers()); // error, must be objects
                              ^^^^^^^^^ $Iterable. This type is incompatible with
-  array type. See: [LIB] core.js:434
-  Member 3:
+  undefined. See: [LIB] core.js:434
+  Member 2:
   polymorphic type: function type. See: [LIB] core.js:435
+  Error:
+   36: let ws5 = new WeakSet(numbers()); // error, must be objects
+                             ^^^^^^^^^ $Iterable. This type is incompatible with
+  array type. See: [LIB] core.js:435
+  Member 3:
+  polymorphic type: function type. See: [LIB] core.js:436
   Error:
    29: function* numbers(): Iterable<number> {
                                      ^^^^^^ number. This type is incompatible with
-  object type. See: [LIB] core.js:435
+  object type. See: [LIB] core.js:436
 
 
 Found 8 errors

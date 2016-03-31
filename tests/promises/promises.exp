@@ -51,13 +51,13 @@ promise.js:10
      ^ call of method `then`
  11:   resolve(0);
                ^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:447
+union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:448
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:447
+  type application of identifier `Promise`. See: [LIB] core.js:448
   Error:
    11:   resolve(0);
                  ^ number. This type is incompatible with
-  Promise. See: [LIB] core.js:447
+  Promise. See: [LIB] core.js:448
   Member 2:
    10: new Promise(function(resolve, reject) {
        ^ type parameter `R` of constructor call
@@ -72,13 +72,13 @@ promise.js:20
      ^ call of method `then`
  20: new Promise((resolve, reject) => resolve(0))
                                               ^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:447
+union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:448
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:447
+  type application of identifier `Promise`. See: [LIB] core.js:448
   Error:
    20: new Promise((resolve, reject) => resolve(0))
                                                 ^ number. This type is incompatible with
-  Promise. See: [LIB] core.js:447
+  Promise. See: [LIB] core.js:448
   Member 2:
    20: new Promise((resolve, reject) => resolve(0))
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `R` of constructor call
@@ -93,19 +93,19 @@ promise.js:30
                ^ constructor call
  30:   resolve(new Promise(function(resolve, reject) {
                ^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:447
+union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:448
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:447
+  type application of identifier `Promise`. See: [LIB] core.js:448
   Error:
    31:     resolve(0);
                    ^ number. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:447
+  union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:448
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:447
+    type application of identifier `Promise`. See: [LIB] core.js:448
     Error:
      31:     resolve(0);
                      ^ number. This type is incompatible with
-    Promise. See: [LIB] core.js:447
+    Promise. See: [LIB] core.js:448
     Member 2:
      30:   resolve(new Promise(function(resolve, reject) {
                    ^ type parameter `R` of constructor call
@@ -128,19 +128,19 @@ promise.js:41
                  ^ constructor call
  41:     resolve(new Promise(function(resolve, reject) {
                  ^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:447
+union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:448
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:447
+  type application of identifier `Promise`. See: [LIB] core.js:448
   Error:
    42:       resolve(0);
                      ^ number. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:447
+  union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:448
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:447
+    type application of identifier `Promise`. See: [LIB] core.js:448
     Error:
      42:       resolve(0);
                        ^ number. This type is incompatible with
-    Promise. See: [LIB] core.js:447
+    Promise. See: [LIB] core.js:448
     Member 2:
      41:     resolve(new Promise(function(resolve, reject) {
                      ^ type parameter `R` of constructor call
@@ -163,13 +163,13 @@ promise.js:51
      ^ call of method `then`
  53:     resolve(42);
                  ^^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:447
+union: type application of identifier `Promise` | type parameter `R` of constructor call. See: [LIB] core.js:448
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:447
+  type application of identifier `Promise`. See: [LIB] core.js:448
   Error:
    53:     resolve(42);
                    ^^ number. This type is incompatible with
-  Promise. See: [LIB] core.js:447
+  Promise. See: [LIB] core.js:448
   Member 2:
    51: new Promise(function(resolve, reject) {
        ^ type parameter `R` of constructor call
@@ -184,13 +184,13 @@ promise.js:115
      ^ call of method `then`
 115: Promise.resolve(0).then(function(num) {
                      ^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:460
+  type application of identifier `Promise`. See: [LIB] core.js:461
   Error:
   115: Promise.resolve(0).then(function(num) {
                        ^ number. This type is incompatible with
-  Promise. See: [LIB] core.js:460
+  Promise. See: [LIB] core.js:461
   Member 2:
   115: Promise.resolve(0).then(function(num) {
        ^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
@@ -205,19 +205,19 @@ promise.js:121
                      ^^^^^^^^^^^^^^^^^^ call of method `resolve`
 121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:460
+  type application of identifier `Promise`. See: [LIB] core.js:461
   Error:
   121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                                        ^ number. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:460
+    type application of identifier `Promise`. See: [LIB] core.js:461
     Error:
     121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                                          ^ number. This type is incompatible with
-    Promise. See: [LIB] core.js:460
+    Promise. See: [LIB] core.js:461
     Member 2:
     121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                          ^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
@@ -240,19 +240,19 @@ promise.js:127
                                      ^^^^^^^^^^^^^^^^^^ call of method `resolve`
 127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:460
+  type application of identifier `Promise`. See: [LIB] core.js:461
   Error:
   127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                                        ^ number. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:460
+    type application of identifier `Promise`. See: [LIB] core.js:461
     Error:
     127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                                          ^ number. This type is incompatible with
-    Promise. See: [LIB] core.js:460
+    Promise. See: [LIB] core.js:461
     Member 2:
     127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                          ^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
@@ -275,13 +275,13 @@ promise.js:157
      ^ call of method `then`
 158:   .then(function(num) { return 'asdf'; })
                                     ^^^^^^ string. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See: [LIB] core.js:452
+union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See: [LIB] core.js:453
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:452
+  type application of identifier `Promise`. See: [LIB] core.js:453
   Error:
   158:   .then(function(num) { return 'asdf'; })
                                       ^^^^^^ string. This type is incompatible with
-  Promise. See: [LIB] core.js:452
+  Promise. See: [LIB] core.js:453
   Member 2:
   157: Promise.resolve(0)
        ^ type parameter `U` of call of method `then`
@@ -296,19 +296,19 @@ promise.js:166
                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 166:   .then(function(num) { return Promise.resolve('asdf'); })
                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See: [LIB] core.js:452
+union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See: [LIB] core.js:453
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:452
+  type application of identifier `Promise`. See: [LIB] core.js:453
   Error:
   166:   .then(function(num) { return Promise.resolve('asdf'); })
                                                       ^^^^^^ string. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:460
+    type application of identifier `Promise`. See: [LIB] core.js:461
     Error:
     166:   .then(function(num) { return Promise.resolve('asdf'); })
                                                         ^^^^^^ string. This type is incompatible with
-    Promise. See: [LIB] core.js:460
+    Promise. See: [LIB] core.js:461
     Member 2:
     166:   .then(function(num) { return Promise.resolve('asdf'); })
                                         ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
@@ -331,19 +331,19 @@ promise.js:174
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:460
+  type application of identifier `Promise`. See: [LIB] core.js:461
   Error:
   174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                                       ^^^^^^ string. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:460
+    type application of identifier `Promise`. See: [LIB] core.js:461
     Error:
     174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                                         ^^^^^^ string. This type is incompatible with
-    Promise. See: [LIB] core.js:460
+    Promise. See: [LIB] core.js:461
     Member 2:
     174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                         ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
@@ -366,13 +366,13 @@ promise.js:197
      ^ call of method `then`
 198:   .catch(function(num) { return 'asdf'; })
                                      ^^^^^^ string. This type is incompatible with
-union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See: [LIB] core.js:457
+union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See: [LIB] core.js:458
   Member 1:
-  ?type application of identifier `Promise`. See: [LIB] core.js:457
+  ?type application of identifier `Promise`. See: [LIB] core.js:458
   Error:
   198:   .catch(function(num) { return 'asdf'; })
                                        ^^^^^^ string. This type is incompatible with
-  Promise. See: [LIB] core.js:457
+  Promise. See: [LIB] core.js:458
   Member 2:
   197: Promise.reject(0)
        ^ type parameter `U` of call of method `catch`
@@ -387,19 +387,19 @@ promise.js:206
                                      ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See: [LIB] core.js:457
+union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See: [LIB] core.js:458
   Member 1:
-  ?type application of identifier `Promise`. See: [LIB] core.js:457
+  ?type application of identifier `Promise`. See: [LIB] core.js:458
   Error:
   206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                                        ^^^^^^ string. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:460
+    type application of identifier `Promise`. See: [LIB] core.js:461
     Error:
     206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                                          ^^^^^^ string. This type is incompatible with
-    Promise. See: [LIB] core.js:460
+    Promise. See: [LIB] core.js:461
     Member 2:
     206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                          ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
@@ -422,19 +422,19 @@ promise.js:214
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
   Member 1:
-  type application of identifier `Promise`. See: [LIB] core.js:460
+  type application of identifier `Promise`. See: [LIB] core.js:461
   Error:
   214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                                        ^^^^^^ string. This type is incompatible with
-  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:460
+  union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See: [LIB] core.js:461
     Member 1:
-    type application of identifier `Promise`. See: [LIB] core.js:460
+    type application of identifier `Promise`. See: [LIB] core.js:461
     Error:
     214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                                          ^^^^^^ string. This type is incompatible with
-    Promise. See: [LIB] core.js:460
+    Promise. See: [LIB] core.js:461
     Member 2:
     214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                          ^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
