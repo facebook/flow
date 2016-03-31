@@ -46,6 +46,9 @@ cache:
   directories:
   - $HOME/.flow_cache
 
+before_cache:
+  - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
+
 deploy:
 # upload releases to github, from both Mac and Linux
 - provider: releases
