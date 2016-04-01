@@ -20,22 +20,39 @@ getopam() {
     fi
 }
 
+PLATFORM=$(uname -s || echo unknown)
+ARCH=$(uname -m || echo unknown)
+SLUG="ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}_${PLATFORM}-${ARCH}"
+
+CACHE_ROOT="$HOME/.flow_cache"
+mkdir -p "$CACHE_ROOT"
+
 case "$TRAVIS_OS_NAME" in
   osx)
     printf "travis_fold:start:brew_install\nInstalling brew\n"
     brew update
-    brew install aspcud
+    brew install aspcud awscli
     printf "travis_fold:end:brew_install\n"
+
+    printf "travis_fold:start:cache.1\nSetting up build cache\n"
+    echo -n "downloading $TRAVIS_BRANCH/$SLUG.tar.gz:"
+    aws s3 cp --storage-class REDUCED_REDUNDANCY "s3://ci-cache.flowtype.org/$TRAVIS_BRANCH/$SLUG.tar.gz" "$TMP" >/dev/null 2>&1 || true
+    if [ -f "$TMP/$SLUG.tar.gz" ]; then
+      gzip -d "$TMP/$SLUG.tar.gz"
+      shasum "$TMP/$SLUG.tar" > "$TMP/$SLUG.tar.sha1"
+      tar -Pxf "$TMP/$SLUG.tar"
+      echo " done"
+    else
+      echo " no cache found"
+    fi
+    printf "travis_fold:end:cache.1\n"
     ;;
 esac
 
 printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" \
   "$OCAML_VERSION" "$OPAM_VERSION"
 
-PLATFORM=$(uname -s || echo unknown)
-ARCH=$(uname -m || echo unknown)
-
-INSTALL_DIR="$HOME/.flow_cache/ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}_${PLATFORM}-${ARCH}"
+INSTALL_DIR="$CACHE_ROOT/$SLUG"
 export PREFIX="$INSTALL_DIR/usr"
 export OPAMROOT="$INSTALL_DIR/.opam"
 BINDIR="$PREFIX/bin"
