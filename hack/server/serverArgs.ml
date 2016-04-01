@@ -50,13 +50,13 @@ module Messages = struct
                       \ starting and again when it's done starting"
 end
 
-(*****************************************************************************)
-(* CAREFUL!!!!!!! *)
-(*****************************************************************************)
-(* --json is used for the linters. External tools are relying on the
-   format -- don't change it in an incompatible way!
-*)
-(*****************************************************************************)
+let print_json_version () =
+  let open Hh_json in
+  let json = JSON_Object [
+    "commit", JSON_String Build_id.build_revision;
+    "commit_time", int_ Build_id.build_commit_time;
+  ] in
+  print_endline @@ json_to_string json
 
 (*****************************************************************************)
 (* The main entry point *)
@@ -102,7 +102,8 @@ let parse_options () =
   let options = Arg.align options in
   Arg.parse options (fun s -> root := s) usage;
   if !version then begin
-    print_endline Build_id.build_id_ohai;
+    if !json_mode then print_json_version ()
+    else print_endline Build_id.build_id_ohai;
     exit 0
   end;
   (* --json and --save both imply check *)

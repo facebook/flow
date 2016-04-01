@@ -99,7 +99,7 @@ let load_state root cmd (_ic, oc) =
         "%s %s %s"
         (Filename.quote (Path.to_string cmd))
         (Filename.quote (Path.to_string root))
-        (Filename.quote Build_id.build_id_ohai) in
+        (Filename.quote Build_id.build_revision) in
     Hh_logger.log "Running load_mini script: %s\n%!" cmd;
     let ic = Unix.open_process_in cmd in
     let json = read_json_line ic in
