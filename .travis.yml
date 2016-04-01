@@ -1,4 +1,3 @@
-language: c
 sudo: false
 
 env:
@@ -15,12 +14,14 @@ env:
 # NOTE: We set the compiler to a bogus "no-op" bash command (":") to work around
 # a Travis caching limitation: the cache slug only depends on the compiler name,
 # not any other environment vars, so we fake the compiler name to change the
-# cache slug.
+# cache slug. Using `language: cpp` ensures that the `CC` env is set to `gcc`
+# instead of our bogus value.
 #
 # Alternatively, if Travis had ocaml support, it would presumably include the
 # ocaml version in the slug like it does for other languages.
 #
 # See https://github.com/travis-ci/travis-ci/issues/4393
+language: cpp
 matrix:
   include:
     - compiler: ": Linux, ocaml 4.02.1, opam 1.2.0"
