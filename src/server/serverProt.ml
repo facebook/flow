@@ -59,13 +59,13 @@ let cmd_to_channel (oc:out_channel) (cmd:command): unit =
     client_logging_context = FlowEventLogger.get_context ();
     command = cmd;
   } in
-  Printf.fprintf oc "%s\n" Build_id.build_id_ohai;
+  Printf.fprintf oc "%s\n" Build_id.build_revision;
   Marshal.to_channel oc command [];
   flush oc
 
 let cmd_from_channel (ic:in_channel): command_with_context =
   let s = input_line ic in
-  if s <> Build_id.build_id_ohai
+  if s <> Build_id.build_revision
   then {
     client_logging_context = FlowEventLogger.get_context ();
     command = ERROR_OUT_OF_DATE;
@@ -94,12 +94,12 @@ let response_to_string = function
   | SERVER_OUT_OF_DATE -> "Server Out of Date"
 
 let response_to_channel (oc:out_channel) (cmd:response): unit =
-  Printf.fprintf oc "%s\n" Build_id.build_id_ohai;
+  Printf.fprintf oc "%s\n" Build_id.build_revision;
   Marshal.to_channel oc cmd [];
   flush oc
 
 let response_from_channel (ic:Timeout.in_channel): response =
   let s = Timeout.input_line ic in
-  if s <> Build_id.build_id_ohai
+  if s <> Build_id.build_revision
   then SERVER_OUT_OF_DATE
   else Timeout.input_value ic

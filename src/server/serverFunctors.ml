@@ -116,7 +116,7 @@ end = struct
       Unix.close cli in
     try
       let client_build_id = input_line ic in
-      if client_build_id <> Build_id.build_id_ohai then begin
+      if client_build_id <> Build_id.build_revision then begin
         msg_to_channel oc Build_id_mismatch;
         FlowEventLogger.out_of_date ();
         Printf.eprintf "Status: Error\n";
