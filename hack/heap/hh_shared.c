@@ -168,10 +168,6 @@ static size_t heap_size;
 #define CACHE_MASK      (~(CACHE_LINE_SIZE - 1))
 #define ALIGNED(x)      ((x + CACHE_LINE_SIZE - 1) & CACHE_MASK)
 
-/* Fix the location of our shared memory so we can save and restore the
- * hashtable easily */
-#define SHARED_MEM_INIT 0x500000000000ll
-
 /* As a sanity check when loading from a file */
 static uint64_t MAGIC_CONSTANT = 0xfacefacefaceb000ll;
 
@@ -261,7 +257,7 @@ CAMLprim value hh_hashtable_mutex_trylock(void) {
   // TODO
 #else
   res = pthread_mutex_trylock(hashtable_mutex);
-  if ((res != 0 ) && (res != EBUSY)) {
+  if ((res != 0) && (res != EBUSY)) {
     caml_failwith("Error trying to acquire the lock");
   }
 #endif
@@ -275,7 +271,7 @@ CAMLprim value hh_hashtable_mutex_unlock(void) {
 #else
   int res = pthread_mutex_unlock(hashtable_mutex);
   if (res != 0) {
-    caml_failwith("Error releasing the lock");\
+    caml_failwith("Error releasing the lock");
   }
 #endif
   CAMLreturn(Val_unit);
@@ -449,11 +445,8 @@ CAMLprim value hh_shared_init(
   shared_mem = MapViewOfFileEx(
     handle,
     FILE_MAP_ALL_ACCESS,
-    0, 0,
-    0,
-    (char *)SHARED_MEM_INIT);
-  if (shared_mem != (char *)SHARED_MEM_INIT) {
-    shared_mem = NULL;
+    0, 0, 0);
+  if (shared_mem == NULL) {
     win32_maperr(GetLastError());
     uerror("MapViewOfFileEx", Nothing);
   }
@@ -463,12 +456,10 @@ CAMLprim value hh_shared_init(
   /* MAP_NORESERVE is because we want a lot more virtual memory than what
    * we are actually going to use.
    */
-  int flags = MAP_SHARED | MAP_ANON | MAP_NORESERVE | MAP_FIXED;
+  int flags = MAP_SHARED | MAP_ANON | MAP_NORESERVE;
   int prot  = PROT_READ  | PROT_WRITE;
 
-  shared_mem =
-    (char*)mmap((void*)SHARED_MEM_INIT,  shared_mem_size, prot,
-                flags, 0, 0);
+  shared_mem = (char*)mmap(NULL, shared_mem_size, prot, flags, 0, 0);
   if(shared_mem == MAP_FAILED) {
     printf("Error initializing: %s\n", strerror(errno));
     exit(2);
