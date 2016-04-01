@@ -329,21 +329,13 @@ static void init_shared_globals(char* mem) {
 
 #ifdef _WIN32
   if (!VirtualAlloc(mem,
-                    global_size_b + page_size +
+                    page_size + global_size_b +
                       2 * DEP_SIZE_B + HASHTBL_SIZE_B,
                     MEM_COMMIT, PAGE_READWRITE)) {
     win32_maperr(GetLastError());
     uerror("VirtualAlloc2", Nothing);
   }
 #endif
-
-  /* Global storage initialization:
-   * We store this at the start of the shared memory section as it never
-   * needs to get saved (always reset after each typechecking run) */
-  global_storage = (value*)mem;
-  // Initial size is zero
-  global_storage[0] = 0;
-  mem += global_size_b;
 
   /* BEGINNING OF THE SMALL OBJECTS PAGE
    * We keep all the small objects in this page.
@@ -376,6 +368,12 @@ static void init_shared_globals(char* mem) {
   // Just checking that the page is large enough.
   assert(page_size > 3*CACHE_LINE_SIZE + (int)sizeof(int));
   /* END OF THE SMALL OBJECTS PAGE */
+
+  /* Global storage initialization */
+  global_storage = (value*)mem;
+  // Initial size is zero
+  global_storage[0] = 0;
+  mem += global_size_b;
 
   /* Dependencies */
   deptbl = (uint64_t*)mem;
