@@ -1,5 +1,5 @@
 [ignore]
-.*/tmp*
+.*/incremental_path/tmp*
 
 [options]
 strip_root=true

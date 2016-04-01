@@ -1,5 +1,5 @@
 [ignore]
-.*/tmp*
+.*/incremental_delete/tmp*
 
 [options]
 strip_root=true

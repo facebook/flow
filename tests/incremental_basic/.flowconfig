@@ -1,5 +1,5 @@
 [ignore]
-.*/tmp*
+.*/incremental_basic/tmp*
 
 [options]
 strip_root=true

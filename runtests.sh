@@ -285,8 +285,11 @@ runtest() {
 num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
 printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
 
+TMP_DIR=$(mktemp -d)
+cp -R tests $TMP_DIR
+
 # Index N of pids should correspond to the test at index N of dirs
-dirs=(tests/*/)
+dirs=($TMP_DIR/tests/*/)
 pids=()
 
 # Starts running a test in the background. If there are no more tests then it
