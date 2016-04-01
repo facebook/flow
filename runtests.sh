@@ -285,7 +285,7 @@ runtest() {
 num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
 printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
 
-TMP_DIR=$(mktemp -d)
+TMP_DIR=$(mktemp -d /tmp/tmp.XXXXXXXXXX)
 cp -R tests $TMP_DIR
 
 # Index N of pids should correspond to the test at index N of dirs
