@@ -164,12 +164,12 @@ let update_status env =
    else
      { env with servers = servers }
 
-let read_build_id_ohai fd =
+let read_version fd =
   let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
   let newline_byte = String.create 1 in
   let _ = Unix.read fd newline_byte 0 1 in
   if newline_byte <> "\n" then
-    (Hh_logger.log "Did not find newline character after build_id ohai";
+    (Hh_logger.log "Did not find newline character after version";
      raise Malformed_build_id);
   client_build_id
 
@@ -268,8 +268,8 @@ and client_prehandoff env server_name client_fd =
 
 and ack_and_handoff_client env client_fd =
   try
-    let client_build_id = read_build_id_ohai client_fd in
-    if client_build_id <> Build_id.build_id_ohai
+    let client_version = read_version client_fd in
+    if client_version <> Build_id.build_revision
     then
       client_out_of_date env client_fd
     else (

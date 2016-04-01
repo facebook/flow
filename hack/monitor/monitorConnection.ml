@@ -27,10 +27,10 @@ let wait_on_server_restart ic =
      (* Server has exited and hung up on us *)
      ()
 
-let send_build_id_ohai oc =
+let send_version oc =
   Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
-    Build_id.build_id_ohai;
-  (** For backwards-compatibility, newline has always followed build id ohai *)
+    Build_id.build_revision;
+  (** For backwards-compatibility, newline has always followed the version *)
   let _ = Unix.write (Unix.descr_of_out_channel oc) "\n" 0 1 in
   ()
 
@@ -60,7 +60,7 @@ let establish_connection ~timeout config =
 
 let get_cstate config (ic, oc) =
   try
-    send_build_id_ohai oc;
+    send_version oc;
     let cstate : connection_state = from_channel_without_buffering ic in
     Result.Ok (ic, oc, cstate)
   with _ ->
