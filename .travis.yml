@@ -4,10 +4,10 @@ env:
   global:
   # GH_BOT_TOKEN (facebook-github-bot-0)
   - secure: I1W8xlf8Ojxkc92n8Rb9AGX7kdCk0DeWEPd6PKRrGQO0FtyCkcvxNo+wp6ApQI7+NqkuFRVngHVOQOd3AqR57IFiSjZ+Cj/BJyg6WOo92olkAAP0OWihmCj53d2xDpp7LaM99srPbZXYE5vSTTKBX/5Soz9UghzsI5Q1ECmV5fU=
-  # S3_ID
-  - secure: 0EVq9e+b8n1tyMJtWNRMbZvrF7Rp72Zi07HU4bsPgL3eM6nTXa0i2KotgI9P3h4TOUhcDrQXT4oJemchjLsH5yMIbaDycfoou2q0ePit03YDLj/iAIkuf8s+coZWgUTGoMp8TtmDsgrhoLOb5DBVL3PpLQ6jSuoppzysl4iOQ50=
-  # S3_SECRET
-  - secure: W59c7k40PEKcCqXjbMHVJcIdKgyHkyyTlprU1zTxNneANXxtPu54Gaz84BfHVgq3SK0G+Eqyr19eZTQ4yhfnZzt0TXgfiyYTmPN5ifLJd1x4C56ndXQmSdhR05To9/k9gLlFXoNxDh6rrP+zq2Zp5KbxHTWrm91a21BUGLqnANY=
+  # AWS_ACCESS_KEY_ID
+  - secure: HMGkDgbay0TcQtiCm5K4F1Y8trtMT5X5S8nRGrTrKBuI4RIEkTQ06VdQVf96gnhe/7IjDQfAUbXWspSmlpWbIKij4BRHOijezU37sooNUkQp4R+EfPpbJECnuv+4WqZI2bMj2i3sw3b8f1oNCFztzHrpxZQ9oOeQbenf/8c2fQs=
+  # AWS_SECRET_ACCESS_KEY
+  - secure: huLKjE7xlxl7HaCLIIVyDaZN9ZsWrR4RcxW+JNUH1F9lM5mbRjAPayawSKRzHViu7u6uUNkjMOJs3lRlWdj8ezH2vnJNm9oNvCOYuSFmBIBELVlXcfbqpX9ZffbJeFiUZ2dOwrDEhm3+WIg6Wr3QbUtVdlMfNvljOJ3CQQc9Yc4=
   # CLOUDFRONT_ID
   - secure: Jr+6c6pF5H0lP4Kt6evlf/xYD/Qjoms3HK7lw1kg8lzwoEXPD3MezgkpOktU8ZBllGolc+ou23h+3hgJwvqi7ANmjzfxyVDdpB7Kiw4y2pEm6tAXYzmatSDb401u7+2sb2H/aSe8yikNrVrizvqaJrDOGeptCBjXQF+a2lNeMC0=
 
@@ -51,9 +51,9 @@ addons:
     - aspcud
 
 install: bash -e resources/travis/install_deps.sh
-
 script: bash -e resources/travis/build.sh
-
+after_success: bash -e resources/travis/after_script.sh
+after_failure: bash -e resources/travis/after_script.sh
 before_deploy: bash -e resources/travis/before_deploy.sh
 
 cache:
