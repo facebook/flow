@@ -97,11 +97,11 @@ let rec patch ll offset lines = function
       let shift = match del with
       | Some n -> (* delete n chars at l, c *)
           lines.(l - 1) <- spf "%s%s"
-            (Str.string_before line c) (Str.string_after line (c + n));
+            (string_before line c) (string_after line (c + n));
           -n
       | None -> (* insert str at l, c *)
           lines.(l - 1) <- spf "%s%s%s"
-            (Str.string_before line c) str (Str.string_after line c);
+            (string_before line c) str (string_after line c);
           String.length str
       in
       let offset = (if l = ll then offset else 0) + shift in
@@ -209,7 +209,7 @@ let internal_module_name name =
   spf "$module__%s" name
 
 let is_internal_module_name name =
-  Str.string_match (Str.regexp "\\$module__.*") name 0
+  Utils.str_starts_with name "$module__"
 
 let internal_pattern_name loc =
   spf "$pattern__%s" (string_of_loc loc)
@@ -277,7 +277,7 @@ let strip_root_from_loc root loc = Loc.(
   | Some Builtins -> Some Builtins
   | Some LibFile file ->
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    if Str.string_match (Str.regexp_string root_str) file 0
+    if Utils.str_starts_with file root_str
     then Some (LibFile (spf "[LIB] %s" (Files_js.relative_path root_str file)))
     else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
 

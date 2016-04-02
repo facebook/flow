@@ -24,6 +24,9 @@ let string_of_float_trunc x =
   else
     result
 
+let string_before s n = String.sub s 0 n
+let string_after s n = String.sub s n (String.length s - n)
+
 (* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
    instead of `open Loc`, which pollutes too much. *)
 type filename = Loc.filename
