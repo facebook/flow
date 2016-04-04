@@ -136,7 +136,7 @@ static size_t heap_size;
 #define HASHTBL_POW     18
 #else
 #define DEP_POW         26
-#define HASHTBL_POW     25
+#define HASHTBL_POW     26
 #endif
 
 /* Convention: .*_B = Size in bytes. */
