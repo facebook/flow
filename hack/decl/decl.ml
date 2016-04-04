@@ -818,24 +818,77 @@ let make_env tcopt fn =
   | Some prog ->
     name_and_declare_types_program tcopt prog
 
+module Error_list = Shared_list.Make(struct
+  type element = Errors.error
+  let max_size = 10 * 1024 * 1024 * 1024
+end)
+
+module Failed_list = Shared_list.Make(struct
+  type element = Relative_path.t
+  let max_size = 10 * 1024 * 1024 * 1024
+end)
+
+(* Returns a list of files that are considered to have failed decl and must
+ * be redeclared every time the typechecker discovers a file change *)
+let failures_from_errors decl_errors fn =
+  List.fold_left decl_errors ~f:begin fun failed error ->
+    (* It is important to add the file that is the cause of the failure.
+     * What can happen is that during a declaration phase, we realize
+     * that a parent class is outdated. When this happens, we redeclare
+     * the class, even if it is in a different file. Therefore, the file
+     * where the error occurs might be different from the file we
+     * are declaring right now.
+     *)
+    let file_with_error = Pos.filename (Errors.get_pos error) in
+    assert (file_with_error <> Relative_path.default);
+    let failed = Relative_path.Set.add failed file_with_error in
+    let failed = Relative_path.Set.add failed fn in
+    failed
+  end ~init:Relative_path.Set.empty
+
+let run_and_record_errors file f =
+  let errors, () = Errors.do_ f in
+  let failures = failures_from_errors errors file in
+  Relative_path.Set.iter failures Failed_list.append;
+  List.iter errors Error_list.append;
+  ()
+
 let declare_class_in_file tcopt file name =
   match Parser_heap.find_class_in_file file name with
   | Some cls ->
     let class_env = { tcopt; stack = SSet.empty; } in
-    class_decl_if_missing class_env cls
+    run_and_record_errors file begin fun () ->
+      class_decl_if_missing class_env cls
+    end;
   | None -> raise Not_found
 
 let declare_fun_in_file tcopt file name =
   match Parser_heap.find_fun_in_file file name with
-  | Some f -> ifun_decl tcopt f
+  | Some f ->
+    run_and_record_errors file begin fun () ->
+      ifun_decl tcopt f
+    end
   | None -> raise Not_found
 
 let declare_typedef_in_file tcopt file name =
   match Parser_heap.find_typedef_in_file file name with
-  | Some t -> type_typedef_naming_and_decl tcopt t
+  | Some t ->
+    run_and_record_errors file begin fun () ->
+      type_typedef_naming_and_decl tcopt t
+    end
   | None -> raise Not_found
 
 let declare_const_in_file tcopt file name =
   match Parser_heap.find_const_in_file file name with
-  | Some cst -> iconst_decl tcopt cst
+  | Some cst ->
+    run_and_record_errors file begin fun () ->
+      iconst_decl tcopt cst
+    end
   | None -> raise Not_found
+
+let errors_and_failures () =
+  Error_list.get (), Failed_list.get ()
+
+let reset_errors () =
+  Error_list.reset ();
+  Failed_list.reset ()

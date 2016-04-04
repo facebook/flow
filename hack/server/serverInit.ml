@@ -412,6 +412,14 @@ let init ?load_mini_script genv =
       type_check genv env fast t
   in
 
+  let errorl, failed = Decl.errors_and_failures () in
+  Decl.reset_errors ();
+  let env = { env with
+    failed_decl =
+      List.fold_left failed ~init:env.failed_decl ~f:Relative_path.Set.add;
+    errorl = List.rev_append errorl env.errorl;
+  } in
+
   let env, _t = ai_check genv env.files_info env t in
 
   SharedMem.init_done ();

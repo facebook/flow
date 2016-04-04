@@ -43,29 +43,11 @@ end)
 (* Re-declaring the types in a file *)
 (*****************************************************************************)
 
-(* Returns a list of files that are considered to have failed decl and must
- * be redeclared every time the typechecker discovers a file change *)
-let get_decl_failures decl_errors fn =
-  List.fold_left decl_errors ~f:begin fun failed error ->
-    (* It is important to add the file that is the cause of the failure.
-     * What can happen is that during a declaration phase, we realize
-     * that a parent class is outdated. When this happens, we redeclare
-     * the class, even if it is in a different file. Therefore, the file
-     * where the error occurs might be different from the file we
-     * are declaring right now.
-     *)
-    let file_with_error = Pos.filename (Errors.get_pos error) in
-    assert (file_with_error <> Relative_path.default);
-    let failed = Relative_path.Set.add failed file_with_error in
-    let failed = Relative_path.Set.add failed fn in
-    failed
-  end ~init:Relative_path.Set.empty
-
 let on_the_fly_decl_file tcopt (errors, failed) fn =
   let decl_errors, () = Errors.do_ begin fun () ->
     Decl.make_env tcopt fn
   end in
-  let failed' = get_decl_failures decl_errors fn in
+  let failed' = Decl.failures_from_errors decl_errors fn in
   List.rev_append decl_errors errors, Relative_path.Set.union failed failed'
 
 (*****************************************************************************)
