@@ -363,7 +363,9 @@ let init ?load_mini_script genv =
   let fast = Relative_path.Set.fold env.failed_parsing
     ~f:Relative_path.Map.remove ~init:fast in
   let env, t =
-    if genv.local_config.SLC.lazy_decl then env, t
+    if genv.local_config.SLC.lazy_decl
+      && Option.is_none (ServerArgs.ai_mode genv.options)
+    then env, t
     else type_decl genv env fast t in
 
   let state = state_future >>= fun f ->
