@@ -70,6 +70,8 @@ MODULES=\
 NATIVE_OBJECT_FILES=\
   hack/$(INOTIFY_STUBS)\
   hack/heap/hh_shared.o\
+  hack/heap/hh_shared_common.o\
+  hack/heap/hh_shared_list.o\
   hack/hhi/hhi_elf.o\
   hack/utils/files.o\
   hack/utils/get_build_id.gen.o\
@@ -97,6 +99,8 @@ FILES_TO_COPY=\
 
 JS_STUBS=\
 	$(wildcard js/*.js)
+
+ALL_HEADER_FILES=$(addprefix _build/,$(shell find hack -name '*.h'))
 
 ################################################################################
 #                                    Rules                                     #
@@ -136,7 +140,11 @@ build-flow-debug: build-flow-native-deps $(FLOWLIB)
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow
 
-build-flow-native-deps: build-flow-stubs
+%.h: $(subst _build/,,$@)
+	mkdir -p $(dir $@)
+	cp $(subst _build/,,$@) $@
+
+build-flow-native-deps: build-flow-stubs $(ALL_HEADER_FILES)
 	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
 		$(NATIVE_OBJECT_FILES)
 
