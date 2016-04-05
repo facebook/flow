@@ -77,26 +77,27 @@ module Make(S : SearchUtils.Searchable) = struct
 
   module MasterApi = struct
 
+    exception Search_limit
     (* what keys a specific file currently has results for *)
     (* 10000 is a number that seemed reasonable for the amount of files
      * in a codebase *)
-    let removal_index = ref (Hashtbl.create 1000)
+    let removal_index = Hashtbl.create 1000
 
     (* Hashtable the names of files with results for a string key *)
-    let main_index = ref (Hashtbl.create 1000)
+    let main_index = Hashtbl.create 1000
 
     (* trie used to store ONLY KEYS to give a typeahead feeling for searching *)
-    let trie = ref (Trie.create ())
+    let trie = Trie.create ()
 
     let lookup str =
      try
-       Hashtbl.find !main_index str
+       Hashtbl.find main_index str
      with Not_found ->
        []
 
     let replace key value =
-      if value = [] then Hashtbl.remove !main_index key
-      else Hashtbl.replace !main_index key value
+      if value = [] then Hashtbl.remove main_index key
+      else Hashtbl.replace main_index key value
 
     (* Insert the selected filename into the hashtable, and the trie
      * Takes in a set of keys that are currently empty that we plan to delete
@@ -108,7 +109,7 @@ module Make(S : SearchUtils.Searchable) = struct
       then begin
         (* We don't actually store useful stuff in the trie. Just
          * whether a key exists or not *)
-        Trie.add !trie key ()
+        Trie.add trie key ()
           ~if_exist: (fun _ _ -> ()) (* this can probably throw an exception *)
           ~transform: (fun _ -> ())
       end;
@@ -129,7 +130,7 @@ module Make(S : SearchUtils.Searchable) = struct
 
     let process_file fn =
       let old_keys =
-        try Hashtbl.find !removal_index fn
+        try Hashtbl.find removal_index fn
         with Not_found ->
           [] (* This will happen when we haven't seen this file before *)
       in
@@ -148,11 +149,11 @@ module Make(S : SearchUtils.Searchable) = struct
       let to_remove = SSet.diff old_keys_set new_keys_set in
 
       let removed_keys = SSet.fold (remove_fn fn) to_remove SSet.empty in
-      Hashtbl.replace !removal_index fn new_keys;
+      Hashtbl.replace removal_index fn new_keys;
       let removed_keys = SSet.fold (insert_fn fn) to_add removed_keys in
       (* removed keys now contains any keys that we removed and didn't
        * add again for this file change. So we remove from the trie *)
-      SSet.iter (Trie.remove !trie) removed_keys
+      SSet.iter (Trie.remove trie) removed_keys
 
     let index_files fns =
       List.iter fns process_file
@@ -174,41 +175,58 @@ module Make(S : SearchUtils.Searchable) = struct
         else
           get_score ~qi:(qi+1) ~ti:(ti+1) ~score:(score+1) term query
 
-    let query input ~filter_map =
+    let results_for_file results results_count fn str ~filter_map ~limit =
+      (* for a file, look in shared memory for all the results the file
+       * contains. anything where the key starts with the full search
+       * term is a match *)
+      let defs =
+        try SearchUpdates.find_unsafe fn
+        with Not_found -> []
+      in
+      List.iter defs begin fun (key, res) ->
+        (* Now we're comparing results in shared memory. These keys
+         * have not been simplified, so we check if they start with
+         * the full search term *)
+        if str_starts_with key str then begin
+          match filter_map str key res with
+          | Some res ->
+            results := res :: !results;
+            incr results_count;
+            begin match limit with
+              | Some limit ->
+                if !results_count >= limit then raise Search_limit;
+              | None -> ()
+            end
+          | None -> ()
+        end
+      end
+
+    let query input ~filter_map ~limit =
       let str = String.lowercase (Utils.strip_ns input) in
       let short_key = simplify_key str in
       (* get all the keys beneath short_key in the trie *)
       let keys =
-        try Trie.find_prefix_limit 25 !trie short_key (fun k _ -> k)
+        try Trie.find_prefix_limit 25 trie short_key (fun k _ -> k)
         with Not_found -> []
       in
-      (* Get set of filenames that contain results for those keys *)
-      let files = List.fold_left keys ~f:begin fun acc key ->
-        let filenames = Hashtbl.find !main_index key in
-        List.fold_left filenames ~f:begin fun acc fn ->
-          Relative_path.Set.add acc fn
-        end ~init:acc
-      end ~init:Relative_path.Set.empty in
+
       let results = ref [] in
-      (* for every file, look in shared memory for all the results the file
-       * contains. anything where the key starts with the full search
-       * term is a match *)
-      Relative_path.Set.iter files begin fun fn ->
-        let defs =
-          try SearchUpdates.find_unsafe fn
-          with Not_found -> []
-        in
-        List.iter defs begin fun (key, res) ->
-          (* Now we're comparing results in shared memory. These keys
-           * have not been simplified, so we check if they start with
-           * the full search term *)
-          if str_starts_with key str then begin
-            match filter_map str key res with
-            | Some res -> results := res :: !results
-            | None -> ()
+      let results_count = ref 0 in
+      let seen = Hashtbl.create 1000 in
+      (* Go through set of filenames that contain results for those keys. We
+       * accumulate results by reference to be able to early return from
+       * computation by throwing an exception. *)
+      (try
+        List.iter keys ~f:begin fun key ->
+          let filenames = Hashtbl.find main_index key in
+          List.iter filenames ~f:begin fun fn ->
+            if not (Hashtbl.mem seen fn) then begin
+              results_for_file results results_count fn str ~filter_map ~limit;
+              Hashtbl.add seen fn true
+            end
           end
         end
-      end;
+      with Search_limit -> ());
       !results
 
     let search_query input =
@@ -220,7 +238,7 @@ module Make(S : SearchUtils.Searchable) = struct
         in
         Some (res, score)
       in
-      let results = query input ~filter_map:compute_score in
+      let results = query input ~filter_map:compute_score ~limit:None in
       let res = List.sort begin fun a b ->
         (snd a) - (snd b)
       end results in
