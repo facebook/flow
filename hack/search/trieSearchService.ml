@@ -174,7 +174,7 @@ module Make(S : SearchUtils.Searchable) = struct
         else
           get_score ~qi:(qi+1) ~ti:(ti+1) ~score:(score+1) term query
 
-    let search_query input =
+    let query input ~filter_map =
       let str = String.lowercase (Utils.strip_ns input) in
       let short_key = simplify_key str in
       (* get all the keys beneath short_key in the trie *)
@@ -202,18 +202,28 @@ module Make(S : SearchUtils.Searchable) = struct
           (* Now we're comparing results in shared memory. These keys
            * have not been simplified, so we check if they start with
            * the full search term *)
-          if str_starts_with key str then
-            let score =
-              if str_starts_with (String.lowercase res.name) str
-              then get_score res str
-              else (String.length key) * 2
-            in
-            results := (res, score) :: !results
+          if str_starts_with key str then begin
+            match filter_map str key res with
+            | Some res -> results := res :: !results
+            | None -> ()
+          end
         end
       end;
+      !results
+
+    let search_query input =
+      let compute_score str key res =
+        let score =
+          if str_starts_with (String.lowercase res.name) str
+          then get_score res str
+          else (String.length key) * 2
+        in
+        Some (res, score)
+      in
+      let results = query input ~filter_map:compute_score in
       let res = List.sort begin fun a b ->
         (snd a) - (snd b)
-      end !results in
+      end results in
       List.take res 50
 
   end
