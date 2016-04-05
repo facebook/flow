@@ -470,16 +470,16 @@ number.js:116
 114:   function(x: number): 0 {
                             ^ number literal `0`
 
-property.js:64
- 64:     return x[y.z];  // error
+property.js:71
+ 71:     return x[y.z];  // error
                 ^^^^^^ null. This type is incompatible with
- 61: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
+ 68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                ^^^^^^ string
 
-property.js:64
- 64:     return x[y.z];  // error
+property.js:71
+ 71:     return x[y.z];  // error
                 ^^^^^^ undefined. This type is incompatible with
- 61: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
+ 68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                ^^^^^^ string
 
 refinements.js:4

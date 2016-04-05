@@ -56,6 +56,13 @@ function d_array(x: {y: Array<?string>}, a: {b: number}): string {
   return "";
 }
 
+function e_array(x: Array<?string>): string {
+  if (x[0]) {
+    return x[0];
+  }
+  return "";
+}
+
 // --- name-sensitive havoc ---
 
 function c2(x: {[key: string]: ?string}, y: {z: string}): string {

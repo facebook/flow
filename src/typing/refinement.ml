@@ -40,6 +40,10 @@ let rec key = Ast.Expression.(function
         Ast.Literal.value = Ast.Literal.String name;
         _;
       })
+    | Member.PropertyExpression (_, Ast.Expression.Literal {
+        Ast.Literal.value = Ast.Literal.Number _;
+        raw = name;
+      })
    ); _; } -> (
   match key _object with
   | Some (base, chain) ->
