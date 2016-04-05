@@ -62,7 +62,7 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
-let parse_source_file ~fail ~types content file =
+let parse_source_file ~fail ~types ~use_strict content file =
   let parse_options = Some Parser_env.({
     (**
      * Always parse ES proposal syntax. The user-facing config option to
@@ -73,7 +73,8 @@ let parse_source_file ~fail ~types content file =
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
     esproposal_export_star_as = true;
-    types = types
+    types = types;
+    use_strict;
   }) in
   let ast, parse_errors =
     Parser_flow.program_file ~fail ~parse_options content (Some file) in
@@ -87,6 +88,7 @@ let parse_json_file ~fail content file =
     esproposal_decorators = false;
     esproposal_export_star_as = false;
     types = true;
+    use_strict = true; (* JSON bans octals; this only forbids legacy octals *)
   }) in
 
   (* parse the file as JSON, then munge the AST to convert from an object
@@ -130,7 +132,7 @@ let get_docblock file content =
     let filename = string_of_filename file in
     Docblock.extract filename content
 
-let do_parse ?(fail=true) ~types_mode ~info content file =
+let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
     match file with
     | Loc.JsonFile _ ->
@@ -151,7 +153,7 @@ let do_parse ?(fail=true) ~types_mode ~info content file =
       in
       (* don't bother to parse if types are disabled *)
       if types
-      then Parse_ok (parse_source_file ~fail ~types content file)
+      then Parse_ok (parse_source_file ~fail ~types ~use_strict content file)
       else Parse_skip
   )
   with
@@ -169,10 +171,10 @@ let do_parse ?(fail=true) ~types_mode ~info content file =
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
-let reducer ~types_mode (ok, skips, fails, errors) file =
+let reducer ~types_mode ~use_strict (ok, skips, fails, errors) file =
   let content = cat (string_of_filename file) in
   let info = get_docblock file content in
-  match (do_parse ~types_mode ~info content file) with
+  match (do_parse ~types_mode ~use_strict ~info content file) with
   | Parse_ok ast ->
       (* Consider the file unchanged if its reparsing info is the same as its
          old parsing info. A complication is that we don't want to drop a .flow
@@ -200,11 +202,11 @@ let merge (ok1, skip1, fail1, errors1) (ok2, skip2, fail2, errors2) =
 
 (***************************** public ********************************)
 
-let parse ~types_mode ~profile workers next =
+let parse ~types_mode ~use_strict ~profile workers next =
   let t = Unix.gettimeofday () in
   let ok, skip, fail, errors = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode ))
+    ~job: (List.fold_left (reducer ~types_mode ~use_strict))
     ~neutral: (FilenameSet.empty, [], [], [])
     ~merge: merge
     ~next: next in
@@ -222,11 +224,12 @@ let parse ~types_mode ~profile workers next =
 
   (ok, skip, fail, errors)
 
-let reparse ~types_mode ~profile workers files =
+let reparse ~types_mode ~use_strict ~profile workers files =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
   let next = Bucket.make (FilenameSet.elements files) in
-  let ok, skips, fails, errors = parse ~types_mode ~profile workers next in
+  let ok, skips, fails, errors =
+    parse ~types_mode ~use_strict ~profile workers next in
   let modified = List.fold_left (fun acc (fail, _) ->
     FilenameSet.add fail acc
   ) ok fails in

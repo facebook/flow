@@ -257,6 +257,9 @@ module OptionParser(Config : CONFIG) = struct
       Options.opt_module_name_mappers = FlowConfig.(
         flowconfig.options.Opts.module_name_mappers
       );
+      Options.opt_modules_are_use_strict = FlowConfig.(
+        flowconfig.options.Opts.modules_are_use_strict
+      );
       Options.opt_node_resolver_dirnames = FlowConfig.(
         flowconfig.options.Opts.node_resolver_dirnames
       );

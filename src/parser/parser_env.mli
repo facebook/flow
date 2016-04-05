@@ -36,6 +36,7 @@ type parse_options = {
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
   types: bool;
+  use_strict: bool;
 }
 val default_parse_options : parse_options
 

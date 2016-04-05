@@ -24,6 +24,7 @@ module Opts : sig
     node_resolver_dirnames: string list;
     munge_underscores: bool;
     module_file_exts: SSet.t;
+    modules_are_use_strict: bool;
     suppress_comments: Str.regexp list;
     suppress_types: SSet.t;
     traces: int;

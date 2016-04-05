@@ -45,6 +45,7 @@ module Opts = struct
     node_resolver_dirnames: string list;
     munge_underscores: bool;
     module_file_exts: SSet.t;
+    modules_are_use_strict: bool;
     suppress_comments: Str.regexp list;
     suppress_types: SSet.t;
     traces: int;
@@ -116,6 +117,7 @@ module Opts = struct
     node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
     module_file_exts;
+    modules_are_use_strict = false;
     suppress_comments = [];
     suppress_types = SSet.empty;
     traces = 0;
@@ -493,6 +495,15 @@ let parse_options config lines =
       setter = (fun opts v ->
         let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
         {opts with node_resolver_dirnames;}
+      );
+    }
+
+    |> define_opt "module.use_strict" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with modules_are_use_strict = v;}
       );
     }
 

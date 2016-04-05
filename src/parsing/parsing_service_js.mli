@@ -31,6 +31,7 @@ type results =
  * asts are made available via get_ast_unsafe. *)
 val parse:
   types_mode: types_mode ->
+  use_strict: bool ->
   profile: bool ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
   (unit -> filename list) ->    (* delivers buckets of filenames *)
@@ -39,6 +40,7 @@ val parse:
 (* for non-initial passes: updates asts for passed file set. *)
 val reparse:
   types_mode: types_mode ->
+  use_strict: bool ->
   profile: bool ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
@@ -63,6 +65,7 @@ val call_on_success: (filename -> Spider_monkey_ast.program -> unit) -> unit
 val do_parse:
   ?fail:bool ->
   types_mode: types_mode ->
+  use_strict: bool ->
   info: Docblock.t ->
   string ->                 (* contents of the file *)
   filename ->               (* filename *)

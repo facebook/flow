@@ -44,11 +44,15 @@ let get_master_cx =
 let parse_lib_file save_parse_errors file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
+  (* lib files are always "use strict" *)
+  let use_strict = true in
   try Parsing.(
     let lib_content = cat file in
     let lib_file = Loc.LibFile file in
     let info = Docblock.extract file lib_content in
-    lib_file, match do_parse ~types_mode ~info lib_content lib_file with
+    let parse_result =
+      do_parse ~types_mode ~use_strict ~info lib_content lib_file in
+    lib_file, match parse_result with
     | Parse_ok ast ->
       Some ast
     | Parse_err errors ->

@@ -128,13 +128,15 @@ let main include_tokens pretty file_type_opt from filename () =
 
   let results =
     try
-      (* Turn on all the options for now. TODO: make these CLI flags? *)
+      (* Make the parser as permissive as possible.
+         TODO: make these CLI flags *)
       let parse_options = Some Parser_env.({
         esproposal_class_instance_fields = true;
         esproposal_class_static_fields = true;
         esproposal_decorators = true;
         esproposal_export_star_as = true;
         types = true;
+        use_strict = false;
       }) in
 
       let (translated_ast, errors) =

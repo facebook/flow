@@ -43,6 +43,7 @@ type options = {
   opt_module: string;
   opt_module_file_exts: SSet.t;
   opt_module_name_mappers: (Str.regexp * string) list;
+  opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_node_resolver_dirnames: string list;
   opt_profile : bool;
@@ -90,6 +91,7 @@ let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
 let module_file_exts opts = opts.opt_module_file_exts
 let module_name_mappers opts = opts.opt_module_name_mappers
+let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach

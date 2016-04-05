@@ -556,10 +556,11 @@ let typecheck_contents ~options ?verbose contents filename =
 
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
+  let use_strict = Options.modules_are_use_strict options in
   let timing, (parse_result, info) = with_timer "Parsing" timing (fun () ->
     let info = Docblock.extract (string_of_filename filename) contents in
     let parse_result = Parsing_service_js.do_parse
-      ~fail:false ~types_mode ~info
+      ~fail:false ~types_mode ~use_strict ~info
       contents filename
     in
     parse_result, info
@@ -1104,6 +1105,8 @@ let recheck genv env modified =
     if Options.all options then TypesAllowed else TypesForbiddenByDefault
   ) in
 
+  let use_strict = Options.modules_are_use_strict options in
+
   Flow_logger.log "Parsing";
   (* reparse modified and added files, updating modified to reflect removal of
      unchanged files *)
@@ -1111,7 +1114,7 @@ let recheck genv env modified =
     with_timer ~opts:options "Parsing" timing (fun () ->
       let profile = profile_and_not_quiet options in
       Parsing_service_js.reparse
-        ~types_mode ~profile
+        ~types_mode ~use_strict ~profile
         genv.ServerEnv.workers modified
     ) in
   let modified_count = FilenameSet.cardinal modified in
@@ -1222,12 +1225,16 @@ let full_check workers ~ordered_libs parse_next opts =
     if Options.all opts then TypesAllowed else TypesForbiddenByDefault
   ) in
 
+  let use_strict = Options.modules_are_use_strict opts in
+
   let profile = profile_and_not_quiet opts in
 
   Flow_logger.log "Parsing";
   let timing, (parsed, skipped_files, error_files, errors) =
     with_timer ~opts "Parsing" timing (fun () ->
-      Parsing_service_js.parse ~types_mode ~profile workers parse_next
+      Parsing_service_js.parse
+        ~types_mode ~use_strict ~profile
+        workers parse_next
     ) in
   let error_filenames = List.map (fun (file, _) -> file) error_files in
   save_errors parse_errors error_filenames errors;

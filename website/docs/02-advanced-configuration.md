@@ -117,23 +117,23 @@ can be overridden with command line flags.
     ```
     module.name_mapper= '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
     ```
-  
+
     makes Flow treat `require('image!foo.jpg')` as if it were `require('ImageStub')`.
-  
+
     (**note:** you can specify `module.name_mapper` multiple times)
 
-- `module.name_mapper.extension` (string -> string): specify a file extension to match, and a replacement module name, separated by a `->`. 
+- `module.name_mapper.extension` (string -> string): specify a file extension to match, and a replacement module name, separated by a `->`.
 
     *(Note that this is just shorthand for `module.name_mapper='^\(.\*\)\.EXTENSION$' -> 'TEMPLATE'`)*
 
     For example:
-    
+
     ```
     module.name_mapper.extension= 'css' -> '<PROJECT_ROOT>/CSSFlowStub.js.flow'
     ```
-  
+
     makes Flow treat `require('foo.css')` as if it were `require(PROJECT_ROOT + '/CSSFlowStub')`.
-  
+
     (**note:** you can specify `module.name_mapper.extension` multiple times for different extensions)
 
 - `module.system` (`node` | `haste`): the module system to use to resolve
@@ -168,6 +168,9 @@ can be overridden with command line flags.
     ```
 
     then Flow will instead look for the file extensions `.foo` and `.bar`.
+
+- `module.use_strict` (boolean): set this to `true` if you use a transpiler that
+  adds `"use strict";` to the top of every module. The default value is `false`.
 
 - `munge_underscores` (boolean): Set this to `true` to have Flow treat
   underscore-prefixed class properties and methods as private. This should be

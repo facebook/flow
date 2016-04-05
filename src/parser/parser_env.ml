@@ -131,6 +131,7 @@ type parse_options = {
   esproposal_decorators: bool;
   esproposal_export_star_as: bool;
   types: bool;
+  use_strict: bool;
 }
 let default_parse_options = {
   esproposal_class_instance_fields = false;
@@ -138,6 +139,7 @@ let default_parse_options = {
   esproposal_decorators = false;
   esproposal_export_star_as = false;
   types = true;
+  use_strict = false;
 }
 
 type env = {
@@ -193,7 +195,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source lb =
     single_lookahead  = ref lookahead;
     last              = ref None;
     priority          = 0;
-    strict            = false;
+    strict            = parse_options.use_strict;
     in_export         = false;
     in_loop           = false;
     in_switch         = false;
