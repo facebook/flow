@@ -71,7 +71,6 @@ CAMLprim value hh_shared_list_get(value list_val) {
   char* list_end = ((char**)mem)[0];
   while (list_ptr < list_end) {
     size_t size = *(size_t*)(list_ptr);
-    printf("%lu\n", size);
     str = caml_alloc_string(size);
     memcpy(String_val(str), list_ptr + sizeof(size_t), size);
     size_t slot_size = ALIGNED(size + sizeof(size_t));
