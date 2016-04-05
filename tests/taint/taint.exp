@@ -124,7 +124,7 @@ globals.js:5
   5:     fakeDocument.location = x; // error
                                  ^ taint. This type is incompatible with
   6:   location: FakeLocation;
-                 ^^^^^^^^^^^^ FakeLocation. See: lib.js:6
+                 ^^^^^^^^^^^^ FakeLocation. See lib: lib.js:6
 
 taint2.js:8
   8:     fakeDocument.location.assign(tainted);
@@ -132,7 +132,7 @@ taint2.js:8
   8:     fakeDocument.location.assign(tainted);
                                       ^^^^^^^ taint. This type is incompatible with
   2:   assign(url: string): void;
-                   ^^^^^^ string. See: lib.js:2
+                   ^^^^^^ string. See lib: lib.js:2
 
 taint3.js:10
  10:     var loc : string = safe;

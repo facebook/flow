@@ -4,17 +4,17 @@ child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:
-  function type. See: [LIB] node.js:173
+  function type. See lib: node.js:173
   Error:
-  property `encoding`. Property not found in. See: [LIB] node.js:175
+  property `encoding`. Property not found in. See lib: node.js:175
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal
   Member 2:
-  function type. See: [LIB] node.js:178
+  function type. See lib: node.js:178
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                                  ^^^^^ string. This type is incompatible with
-  number. See: [LIB] node.js:104
+  number. See lib: node.js:104
 
 json_file/test.js:4
   4: (data.foo: void); // error, should be object literal
@@ -95,8 +95,7 @@ json_file/test.js:22
                               ^^^^ undefined
 
 invalid_package_file/package.json:1
-  1: 
-     ^ Unexpected end of input
+Unexpected end of input
 
 json_file/json_invalid.json:1
   1: :derp

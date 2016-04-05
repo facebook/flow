@@ -1,8 +1,6 @@
 lib/test.js:0
-  0: 
-     ^ Library type error:
-  0: 
-     ^ inconsistent use of library definitions
+Library type error:
+inconsistent use of library definitions
   8:   foo(): string;
               ^^^^^^ string. This type is incompatible with
   2:   foo(): number;

@@ -291,7 +291,7 @@ let read_line_in_file line filename stdin_file =
         let lines = Str.split_delim (Str.regexp "\n") content in
         if (List.length lines) > line && (line >= 0)
         then Some (List.nth lines line)
-        else Some ""
+        else None
       end with Sys_error _ -> None
 
 let file_of_source ~root source =
@@ -318,11 +318,11 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
   let filename = file_of_source ~root loc.source in
   let stdin_file = normalize_stdin_filename ~root stdin_file in
 
-  let see_another_file filename =
+  let see_another_file ~is_lib filename =
     if filename = main_file
     then [(default_style "")]
     else [
-      comment_style ". See: ";
+      comment_style (Printf.sprintf ". See%s: " (if is_lib then " lib" else ""));
       comment_file_style (Printf.sprintf
         "%s:%d"
         (relative_path ~strip_root ~root filename)
@@ -338,16 +338,21 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
       default_style "\n";
     ]
   | None, _ ->
-      let original_filename = match loc.source with
-      | Some Loc.LibFile filename
-      | Some Loc.SourceFile filename
-      | Some Loc.JsonFile filename -> filename
-      | Some Loc.Builtins
-      | None -> failwith "Should only have lib and source files at this point" in
+      let original_filename, is_lib = match filename, loc.source with
+      | Some filename, Some Loc.LibFile _
+      | None, Some Loc.LibFile filename -> filename,true
+      | Some filename, _
+      | None, Some Loc.SourceFile filename
+      | None, Some Loc.JsonFile filename -> filename, false
+      | None, Some Loc.Builtins
+      | None, None -> failwith "Should only have lib and source files at this point" in
       [comment_style s] @
-      (see_another_file original_filename) @
+      (see_another_file ~is_lib original_filename) @
       [default_style "\n"];
   | Some code_line, Some filename ->
+      let is_lib = match loc.source with
+      | Some Loc.LibFile _ -> true
+      | _ -> false in
       let line_number_text = Printf.sprintf "%3d: " l0 in
       let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
         then highlight_error_in_line code_line c0 c1
@@ -371,7 +376,7 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
       line_number_style line_number_text ::
       highlighted_line @
       [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
-      (see_another_file filename) @
+      (see_another_file ~is_lib filename) @
       [default_style "\n"]
 )
 

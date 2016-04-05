@@ -2,25 +2,25 @@ test.js:3
   3: N.x = M(N.x);
            ^^^^^^ string. This type is incompatible with
   5:     declare var x: number;
-                        ^^^^^^ number. See: lib/lib.js:5
+                        ^^^^^^ number. See lib: lib/lib.js:5
 
 test.js:3
   3: N.x = M(N.x);
              ^^^ number. This type is incompatible with
   2:     declare function exports(x:string): string;
-                                    ^^^^^^ string. See: lib/lib.js:2
+                                    ^^^^^^ string. See lib: lib/lib.js:2
 
 test.js:5
   5: N.y = P(N.y);
            ^^^^^^ string. This type is incompatible with
   6:     declare var y: number;
-                        ^^^^^^ number. See: lib/lib.js:6
+                        ^^^^^^ number. See lib: lib/lib.js:6
 
 test.js:5
   5: N.y = P(N.y);
              ^^^ number. This type is incompatible with
   2:     declare function exports(x:string): string;
-                                    ^^^^^^ string. See: lib/lib.js:2
+                                    ^^^^^^ string. See lib: lib/lib.js:2
 
 test.js:7
   7: N.z = Q(N.z);
@@ -28,7 +28,7 @@ test.js:7
   7: N.z = Q(N.z);
            ^^^^^^ string. This type is incompatible with
   7:     declare var z: number;
-                        ^^^^^^ number. See: lib/lib.js:7
+                        ^^^^^^ number. See lib: lib/lib.js:7
 
 test.js:7
   7: N.z = Q(N.z);
@@ -36,7 +36,7 @@ test.js:7
   7: N.z = Q(N.z);
              ^^^ number. This type is incompatible with
   2:     declare function exports(x:string): string;
-                                    ^^^^^^ string. See: lib/lib.js:2
+                                    ^^^^^^ string. See lib: lib/lib.js:2
 
 
 Found 6 errors

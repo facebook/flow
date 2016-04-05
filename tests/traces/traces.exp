@@ -155,7 +155,7 @@ Trace:
 * path 3:
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^     ObjT [props of React element `B`]
-~> OpenT [existential] (from [not shown]). See: [LIB] react.js:94
+~> OpenT [existential] (from [not shown]). See lib: react.js:94
 
 Traces2.js:17
  17:     return <B bar="hey"/>;
@@ -178,7 +178,7 @@ Trace:
 * path 3:
  15:     return <A foo="hey"/>;
                 ^^^^^^^^^^^^^^     ObjT [props of React element `A`]
-~> OpenT [existential] (from [not shown]). See: [LIB] react.js:94
+~> OpenT [existential] (from [not shown]). See lib: react.js:94
 
 
 Found 7 errors

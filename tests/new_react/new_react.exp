@@ -54,7 +54,7 @@ classes.js:41
  41: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
   5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
 
 classes.js:41
  41: var foo: $jsx<number> = <Foo/>;
@@ -70,7 +70,7 @@ classes.js:41
  41: var foo: $jsx<number> = <Foo/>;
                    ^^^^^^ number. This type is incompatible with
   5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
 
 classes.js:59
  59:     var _: string = this.props.x;
@@ -88,7 +88,7 @@ classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number. This type is incompatible with
   5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
 
 classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
@@ -104,7 +104,7 @@ classes.js:81
  81: var foo_legacy: $jsx<number> = <FooLegacy/>;
                           ^^^^^^ number. This type is incompatible with
   5: type _ReactElement<DefaultProps, Props, Config: $Diff<Props, DefaultProps>, C: $React.Component<DefaultProps, Props, any>> = $React.Element<Config>;
-                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See: fakelib/type_aliases.js:5
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React$Component. See lib: fakelib/type_aliases.js:5
 
 import-react.js:18
  18: <HelloMessage name={007} />; // number ~/~> string error

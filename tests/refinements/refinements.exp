@@ -750,7 +750,7 @@ typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
        ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
   3: declare var BAZ: {stuff?: (x: number) => void} | void;
-                               ^^^^^^^^^^^^^^^^^^^ undefined. See: lib.js:3
+                               ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
 
 typeof.js:23
  23:   BAZ.stuff(123); // error, refinement is gone
@@ -768,7 +768,7 @@ typeof.js:30
  30:     BAZ.stuff(123); // error, refinement is gone
          ^^^^^^^^^^^^^^ call of method `stuff`. Function cannot be called on possibly undefined value
   3: declare var BAZ: {stuff?: (x: number) => void} | void;
-                               ^^^^^^^^^^^^^^^^^^^ undefined. See: lib.js:3
+                               ^^^^^^^^^^^^^^^^^^^ undefined. See lib: lib.js:3
 
 typeof.js:49
  49:   if (typeof x === "foo") { // error

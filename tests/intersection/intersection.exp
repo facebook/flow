@@ -5,20 +5,20 @@ test_obj.js:29
             ^ object type
   Member 1:
    33: type C = { [key: string]: number } & { [key: string]: number };
-                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: lib/lib.js:33
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
    28: type E = { [key: string]: string };
                                  ^^^^^^ string. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
-                                 ^^^^^^ number. See: lib/lib.js:33
+                                 ^^^^^^ number. See lib: lib/lib.js:33
   Member 2:
    33: type C = { [key: string]: number } & { [key: string]: number };
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See: lib/lib.js:33
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: lib/lib.js:33
   Error:
    28: type E = { [key: string]: string };
                                  ^^^^^^ string. This type is incompatible with
    33: type C = { [key: string]: number } & { [key: string]: number };
-                                                             ^^^^^^ number. See: lib/lib.js:33
+                                                             ^^^^^^ number. See lib: lib/lib.js:33
 
 
 Found 1 error
