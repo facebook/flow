@@ -1,5 +1,5 @@
 [ignore]
-.*/incremental_delete/tmp*
+<PROJECT_ROOT>/tmp*
 
 [options]
 strip_root=true

@@ -129,7 +129,6 @@ runtest() {
     return_status=$RUNTEST_SKIP
     dir=$1
     dir=${dir%*/}
-    cd "$dir" || exit 1
     name=${dir##*/}
     exp_file="${name}.exp"
     # On Windows we skip some tests as symlinks not available
@@ -140,9 +139,8 @@ runtest() {
         return $RUNTEST_SKIP
     elif [[ -z $filter || $name =~ $filter ]]
     then
-        if ([ ! -e "$exp_file" ] || [[ ! -e ".flowconfig" && ! -e ".testconfig" ]])
+        if ([ ! -e "$dir/$exp_file" ] || [[ ! -e "$dir/.flowconfig" && ! -e "$dir/.testconfig" ]])
         then
-            cd ../.. || exit 1
             if [ "$name" = "auxiliary" ] ||
                [ "$name" = "callable" ] ||
                [ "$name" = "suggest" ]
@@ -165,9 +163,20 @@ runtest() {
         }
         trap cleanup EXIT
 
-        # check this dir
-        out_file="${OUT_DIR}/${name}.out"
-        err_file="${OUT_DIR}/${name}.err"
+        # Some tests mutate the source directory, so make a copy first and run
+        # from there. the . in "$dir/." copies the entire directory, including
+        # hidden files like .flowconfig.
+        cp -R "$dir/." "$OUT_DIR"
+
+        out_file="$name.out"
+        err_file="$name.err"
+        diff_file="$name.diff"
+        abs_out_file="$OUT_DIR/$name.out"
+        abs_err_file="$OUT_DIR/$name.err"
+        abs_diff_file="$OUT_DIR/$name.diff"
+
+        # run the tests from inside $OUT_DIR
+        pushd "$OUT_DIR" >/dev/null
 
         # get config flags.
         # for now this is kind of ad-hoc:
@@ -195,7 +204,8 @@ runtest() {
         shell=""
         cmd="check"
         stdin=""
-        stderr_dest="$err_file"
+        stderr_dest="$abs_err_file"
+        cwd=""
         if [ -e ".testconfig" ]
         then
             # all
@@ -203,10 +213,12 @@ runtest() {
             then
                 all=""
             fi
+            # cwd (current directory)
+            cwd="$(awk '$1=="cwd:"{print $2}' .testconfig)"
             # ignore_stderr
             if [ "$(awk '$1=="ignore_stderr:"{print $2}' .testconfig)" == "false" ]
             then
-                stderr_dest="$out_file"
+                stderr_dest="$abs_out_file"
             fi
             # stdin
             stdin="$(awk '$1=="stdin:"{print $2}' .testconfig)"
@@ -225,11 +237,15 @@ runtest() {
             fi
         fi
 
+        if [ "$cwd" != "" ]; then
+            pushd "$cwd" >/dev/null
+        fi
+
         # run test
         if [ "$cmd" == "check" ]
         then
             # default command is check with configurable --all
-            "$FLOW" check . $all --strip-root --show-all-errors 1> "$out_file" 2> "$stderr_dest"
+            "$FLOW" check . $all --strip-root --show-all-errors 1> "$abs_out_file" 2> "$stderr_dest"
         else
             # otherwise, run specified flow command, then kill the server
 
@@ -241,16 +257,16 @@ runtest() {
             if [ "$shell" != "" ]
             then
                 # run test script
-                sh "$shell" "$FLOW" 1> "$out_file" 2> "$stderr_dest"
+                sh "$shell" "$FLOW" 1> "$abs_out_file" 2> "$stderr_dest"
             else
             # If there's stdin, then direct that in
             # cmd should NOT be double quoted...it may contain many commands
             # and we do want word splitting
                 if [ "$stdin" != "" ]
                 then
-                    cmd="$FLOW $cmd < $stdin 1> $out_file 2> $stderr_dest"
+                    cmd="$FLOW $cmd < $stdin 1> $abs_out_file 2> $stderr_dest"
                 else
-                    cmd="$FLOW $cmd 1> $out_file 2> $stderr_dest"
+                    cmd="$FLOW $cmd 1> $abs_out_file 2> $stderr_dest"
                 fi
                 eval "$cmd"
             fi
@@ -259,25 +275,32 @@ runtest() {
 
             trap - SIGINT SIGTERM
         fi
-        diff_file="${OUT_DIR}/${name}.diff"
+
+        if [ "$cwd" != "" ]; then
+            popd >/dev/null
+        fi
+
         diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file"
-        if [ -s "$diff_file" ]
+
+        # leave $OUT_DIR
+        popd >/dev/null
+
+        if [ -s "$OUT_DIR/$diff_file" ]
         then
-            mv "$out_file" .
-            mv "$err_file" .
-            mv "$diff_file" .
+            mv "$OUT_DIR/$out_file" "$dir"
+            mv "$OUT_DIR/$err_file" "$dir"
+            mv "$OUT_DIR/$diff_file" "$dir"
             return_status=$RUNTEST_FAILURE
         else
             rm -rf "$OUT_DIR"
-            rm -f "$(basename "$out_file")"
-            rm -f "$(basename "$err_file")"
-            rm -f "$(basename "$diff_file")"
+            rm -f "$dir/$out_file"
+            rm -f "$dir/$err_file"
+            rm -f "$dir/$diff_file"
             return_status=$RUNTEST_SUCCESS
         fi
     else
         return_status=$RUNTEST_SKIP
     fi
-    cd ../.. || exit 1
     return $return_status
 }
 
@@ -285,11 +308,8 @@ runtest() {
 num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
 printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
 
-TMP_DIR=$(mktemp -d /tmp/flow_tests.XXXXX)
-cp -R tests $TMP_DIR
-
 # Index N of pids should correspond to the test at index N of dirs
-dirs=($TMP_DIR/tests/*/)
+dirs=(tests/*/)
 pids=()
 
 # Starts running a test in the background. If there are no more tests then it

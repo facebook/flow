@@ -1,5 +1,5 @@
 [ignore]
-.*/incremental_basic/tmp*
+<PROJECT_ROOT>/tmp*
 
 [options]
 strip_root=true
