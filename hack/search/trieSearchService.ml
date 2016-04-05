@@ -36,6 +36,15 @@ module Make(S : SearchUtils.Searchable) = struct
     with Not_found ->
       str
 
+  let double_colon = Str.regexp_string "::"
+
+  let cut_after_double_colon str =
+    try
+      let i = Str.search_forward double_colon str 0 in
+      String.sub str 0 i
+    with Not_found ->
+      str
+
   (* function that shortens the keys stored in the trie to make things faster *)
   let simplify_key key =
     let key =
@@ -49,9 +58,9 @@ module Make(S : SearchUtils.Searchable) = struct
     (* stuff after the dot is class members and they're all probably
      * in the same file anyways (JS) *)
     let key = cut_str_after '.' key in
-    (* stuff after the colon is class members and they're all probably
+    (* stuff after the double colon is class members and they're all probably
      * in the same file anyways (PHP) *)
-    cut_str_after ':' key
+    cut_after_double_colon key
 
   module WorkerApi = struct
     let process_term key name pos type_ trie_acc =
