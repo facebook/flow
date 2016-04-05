@@ -20,7 +20,7 @@ module Make(S : SearchUtils.Searchable) = struct
       Trie.WorkerApi.update fn trie_defs;
       Fuzzy.update fn fuzzy_defs
 
-    let process_trie_term = Trie.WorkerApi.process_term
+    let process_trie_term = Trie.WorkerApi.process_term_for_search
 
     let process_fuzzy_term = Fuzzy.process_term
 

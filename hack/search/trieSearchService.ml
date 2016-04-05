@@ -38,7 +38,6 @@ module Make(S : SearchUtils.Searchable) = struct
 
   (* function that shortens the keys stored in the trie to make things faster *)
   let simplify_key key =
-    let key = String.lowercase key in
     let key =
       try
         (* Testing showed this max length gave us some indexing time back
@@ -61,8 +60,11 @@ module Make(S : SearchUtils.Searchable) = struct
                     name        = name;
                     result_type = type_
                   } in
-       let key = String.lowercase key in
        (key, res) :: trie_acc
+
+    let process_term_for_search key =
+      (* When performing user searches, we want them to be case-insensitive *)
+      process_term (String.lowercase key)
 
     let update fn trie_defs =
       SearchUpdates.add fn trie_defs;
@@ -202,7 +204,7 @@ module Make(S : SearchUtils.Searchable) = struct
       end
 
     let query input ~filter_map ~limit =
-      let str = String.lowercase (Utils.strip_ns input) in
+      let str = Utils.strip_ns input in
       let short_key = simplify_key str in
       (* get all the keys beneath short_key in the trie *)
       let keys =
@@ -230,6 +232,7 @@ module Make(S : SearchUtils.Searchable) = struct
       !results
 
     let search_query input =
+      let input = String.lowercase input in
       let compute_score str key res =
         let score =
           if str_starts_with (String.lowercase res.name) str
