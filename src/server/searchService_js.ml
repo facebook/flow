@@ -107,7 +107,7 @@ let update fn ast =
           fuzzy_defs, trie_defs
       | _ -> fuzzy_defs, trie_defs
     end (SS.Fuzzy.TMap.empty, []) stmt_l in
-  SS.WorkerApi.update fn trie_defs fuzzy_defs
+  SS.WorkerApi.update fn trie_defs fuzzy_defs []
 
 let query input =
   SS.MasterApi.query input None

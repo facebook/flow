@@ -72,6 +72,11 @@ module WorkerApi = struct
     let key = strip_ns name in
     SS.WorkerApi.process_fuzzy_term key name (fst id) type_ acc
 
+  let add_autocomplete_term id type_ acc =
+    let pos, name = id in
+    let key = strip_ns name in
+    SS.WorkerApi.process_autocomplete_term key name pos type_ acc
+
   (* Called by a worker after the file is parsed *)
   let update fn ast =
     let fuzzy_defs, trie_defs =
@@ -96,7 +101,14 @@ module WorkerApi = struct
           fuzzy_defs, trie_defs
       | _ -> fuzzy_defs, trie_defs
     end ~init:(SS.Fuzzy.TMap.empty, []) in
-    SS.WorkerApi.update fn trie_defs fuzzy_defs
+    let autocomplete_defs = List.fold_left ast ~f:begin fun acc def ->
+      match def with
+      | Ast.Fun f -> add_autocomplete_term f.Ast.f_name Function acc
+      | Ast.Class c -> add_autocomplete_term
+          c.Ast.c_name (Class c.Ast.c_kind) acc
+      | _ -> acc
+    end ~init:[] in
+    SS.WorkerApi.update fn trie_defs fuzzy_defs autocomplete_defs
 end
 
 module MasterApi = struct
