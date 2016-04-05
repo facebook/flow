@@ -107,6 +107,7 @@ ALL_HEADER_FILES=$(addprefix _build/,$(shell find hack -name '*.h'))
 ################################################################################
 
 CC_FLAGS=-DNO_LZ4
+CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
 LIB_OPTS=$(foreach lib,$(OCAML_LIBRARIES),-lib $(lib))

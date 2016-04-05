@@ -1,10 +1,11 @@
 #!/bin/bash -e
 
+EXTRA_CC_FLAGS=""
 case "$TRAVIS_OS_NAME" in
   linux)
-    # For some reason the Linux containers start killing the tests if too many
-    # tests are run in parallel. Luckily we can easily configure that here
-    export FLOW_RUNTESTS_PARALLELISM=4
+    # The linux containers don't have much memory. Let's compile with 
+    # a smaller heap size
+    EXTRA_CC_FLAGS="EXTRA_CC_FLAGS=-DOSS_SMALL_HH_TABLE_POWS"
     ;;
 esac
 
@@ -20,7 +21,7 @@ printf "Using ocaml %s from %s\n  and opam %s from %s\n" \
   "$(opam --version)" "$(which opam)"
 
 printf "travis_fold:start:make\nBuilding flow\n"
-make
+make $EXTRA_CC_FLAGS
 printf "travis_fold:end:make\n"
 
 printf "travis_fold:start:make_js\nBuilding flow.js\n"
