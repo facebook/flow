@@ -731,7 +731,6 @@ and fun_ ~attr ~(sync:fun_decl_kind) env =
     f_user_attributes = attr;
     f_fun_kind = fun_kind sync is_generator;
     f_mode = env.mode;
-    f_mtime = 0.0;
     f_namespace = Namespace_env.empty;
   }
 
@@ -2599,7 +2598,6 @@ and lambda_body ~sync env params ret =
     f_user_attributes = [];
     f_fun_kind;
     f_mode = env.mode;
-    f_mtime = 0.0;
     f_namespace = Namespace_env.empty;
   }
   in Lfun f
@@ -3102,7 +3100,6 @@ and expr_anon_fun env pos ~(sync:fun_decl_kind) =
     f_user_attributes = [];
     f_fun_kind = fun_kind sync is_generator;
     f_mode = env.mode;
-    f_mtime = 0.0;
     f_namespace = Namespace_env.empty;
   }
   in
