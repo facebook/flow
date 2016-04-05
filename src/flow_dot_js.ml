@@ -10,6 +10,7 @@ let parse_content file content =
     esproposal_decorators = true;
     esproposal_export_star_as = true;
     types = true;
+    use_strict = false;
   }) in
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
 
