@@ -71,7 +71,7 @@ let to_pp = function
   | BlameM (loc, s) -> loc, s
   | CommentM s -> Loc.none, s
 
-type stdin_file = (string * string) option
+type stdin_file = (Path.t * string) option
 
 let message_of_string s =
   CommentM s
@@ -245,7 +245,7 @@ let is_short_lib filename =
   String.length filename > len && String.sub filename 0 len = lib_prefix
 
 let relative_path ~strip_root ~root filename =
-  if is_short_lib filename
+  if is_short_lib filename || Filename.is_relative filename
   then filename
   else if strip_root
   then Files_js.relative_path (Path.to_string root) filename
@@ -266,15 +266,6 @@ let highlight_error_in_line line c0 c1 =
     source_fragment_style suffix;
   ]
 
-let normalize_filename ~root filename =
-  if Filename.is_relative filename
-  then Path.to_string (Path.concat root filename)
-  else filename
-
-let normalize_stdin_filename ~root = function
-| None -> None
-| Some (stdin_filename, contents) ->
-    Some (normalize_filename ~root stdin_filename, contents)
 
 let read_line_in_file line filename stdin_file =
   match filename with
@@ -283,7 +274,8 @@ let read_line_in_file line filename stdin_file =
   | Some filename ->
       try begin
         let content = match stdin_file with
-        | Some (stdin_filename, content) when stdin_filename = filename ->
+        | Some (stdin_filename, content)
+          when Path.to_string stdin_filename = filename ->
             content
         | _ ->
             Sys_utils.cat filename
@@ -294,7 +286,7 @@ let read_line_in_file line filename stdin_file =
         else None
       end with Sys_error _ -> None
 
-let file_of_source ~root source =
+let file_of_source source =
   match source with
     | Some Loc.LibFile filename ->
         let filename =
@@ -303,10 +295,10 @@ let file_of_source ~root source =
             let prefix_len = String.length lib_prefix in
             String.sub filename prefix_len (String.length filename - prefix_len)
           end else filename in
-        Some (normalize_filename ~root filename)
+        Some filename
     | Some Loc.SourceFile filename
     | Some Loc.JsonFile filename ->
-        Some (normalize_filename ~root filename)
+        Some filename
     | Some Loc.Builtins -> None
     | None -> None
 
@@ -315,8 +307,7 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
   let l1 = loc._end.line in
   let c0 = loc.start.column in
   let c1 = loc._end.column in
-  let filename = file_of_source ~root loc.source in
-  let stdin_file = normalize_stdin_filename ~root stdin_file in
+  let filename = file_of_source loc.source in
 
   let see_another_file ~is_lib filename =
     if filename = main_file
@@ -433,13 +424,13 @@ let infos_of_error { messages; _ } =
 
 let extra_of_error { extra; _ } = extra
 
-let file_of_error ~root err =
+let file_of_error err =
   let loc = loc_of_error err in
-  file_of_source ~root loc.Loc.source
+  file_of_source loc.Loc.source
 
 let print_error_header ~strip_root ~root message =
   let loc, _ = to_pp message in
-  let filename = file_of_source ~root loc.Loc.source in
+  let filename = file_of_source loc.Loc.source in
   let relfilename = match filename with
   | Some fn -> relative_path ~strip_root ~root fn
   | None -> "[No file]" in
@@ -483,7 +474,7 @@ let get_pretty_printed_error_new ~stdin_file:stdin_file ~strip_root ~one_line ~r
   let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
   let header = print_error_header ~strip_root ~root (List.hd messages) in
-  let main_file = match file_of_error ~root error with
+  let main_file = match file_of_error error with
     | Some filename -> filename
     | None -> "[No file]" in
   let formatted_messages = List.concat (List.map (
@@ -658,15 +649,14 @@ let json_of_message_props message =
 let json_of_message message =
   Hh_json.JSON_Object (json_of_message_props message)
 
-let json_of_message_with_context ~root ~stdin_file message =
+let json_of_message_with_context ~stdin_file message =
   let open Hh_json in
   let _, loc = unwrap_message message in
   let code_line = match loc with
   | None -> None
   | Some loc ->
       let open Loc in
-      let filename = file_of_source ~root loc.source in
-      let stdin_file = normalize_stdin_filename ~root stdin_file in
+      let filename = file_of_source loc.source in
       let line = loc.start.line - 1 in
       read_line_in_file line filename stdin_file in
   let context = ("context", match code_line with
@@ -723,28 +713,21 @@ let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
 let json_of_error error =
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
-let json_of_error_with_context ~stdin_file ~root error =
-  let json_of_message = json_of_message_with_context ~root ~stdin_file in
+let json_of_error_with_context ~stdin_file error =
+  let json_of_message = json_of_message_with_context ~stdin_file in
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
 let json_of_errors errors =
   Hh_json.JSON_Array (List.map json_of_error errors)
 
-let json_of_errors_with_context ~stdin_file ~root errors =
-  Hh_json.JSON_Array (List.map (
-    json_of_error_with_context
-      ~stdin_file
-      ~root
-  ) errors)
+let json_of_errors_with_context ~stdin_file errors =
+  Hh_json.JSON_Array (List.map (json_of_error_with_context ~stdin_file) errors)
 
-let print_error_json ?(stdin_file=None) ~root oc el =
+let print_error_json ?(stdin_file=None) oc el =
   let open Hh_json in
   let res = JSON_Object [
     "flowVersion", JSON_String FlowConfig.version;
-    "errors", json_of_errors_with_context
-      ~stdin_file
-      ~root
-      el;
+    "errors", json_of_errors_with_context ~stdin_file el;
     "passed", JSON_Bool (el = []);
   ] in
   output_string oc (json_to_string res);

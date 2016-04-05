@@ -1285,7 +1285,7 @@ let print_errors options errors =
   in
 
   if options.Options.opt_json
-  then Errors.print_error_json ~root stdout errors
+  then Errors.print_error_json stdout errors
   else
     Errors.print_error_summary
       ~flags:(Options.error_flags options)

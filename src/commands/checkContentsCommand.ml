@@ -57,19 +57,17 @@ let main option_values root error_flags strip_root use_json verbose file () =
   ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE (file, verbose));
   let response = ServerProt.response_from_channel ic in
   let stdin_file = match file with
-    | ServerProt.FileContent (None, contents) -> Some ("-", contents)
-    | ServerProt.FileContent (Some (path), contents) -> Some (path, contents)
+    | ServerProt.FileContent (None, contents) ->
+        Some (Path.make_unsafe "-", contents)
+    | ServerProt.FileContent (Some path, contents) ->
+        Some (Path.make path, contents)
     | _ -> None
   in
   match response with
   | ServerProt.ERRORS e ->
       if use_json
       then
-        Errors_js.print_error_json
-        ~stdin_file
-        ~root
-        stdout
-        e
+        Errors_js.print_error_json ~stdin_file stdout e
       else (
         Errors_js.print_error_summary
           ~flags:error_flags
@@ -81,7 +79,7 @@ let main option_values root error_flags strip_root use_json verbose file () =
       )
   | ServerProt.NO_ERRORS ->
       if use_json
-      then Errors_js.print_error_json ~stdin_file ~root stdout []
+      then Errors_js.print_error_json ~stdin_file stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit Ok)
   | _ ->

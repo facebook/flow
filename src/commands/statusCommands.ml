@@ -119,7 +119,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         else errors
       in
       begin if args.output_json then
-        Errors_js.print_error_json ~root:args.root stdout errors
+        Errors_js.print_error_json stdout errors
       else if args.from = "vim" || args.from = "emacs" then
         Errors_js.print_error_deprecated stdout errors
       else
@@ -128,7 +128,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->
       if args.output_json
-      then Errors_js.print_error_json ~root:args.root stdout []
+      then Errors_js.print_error_json stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit Ok)
     | ServerProt.PONG ->
