@@ -1,2 +1,56 @@
 //= require codemirror.css
 //= require codemirror/addon/lint/lint.css
+
+#try.content {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#try footer {
+  position: absolute;
+  height: 30px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-top: 1px solid #ddd;
+  padding: 4px 7px;
+  font-size: 12px;
+}
+
+.editor {
+}
+
+.editor .code {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 30px;
+  right: 50%;
+  background: #fff;
+}
+
+.editor .errors {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  right: 0;
+  bottom: 30px;
+  font-size: 12px;
+  background: #f7f7f7;
+  border-left: 1px solid #ddd;
+  overflow: auto;
+  padding: 7px 10px;
+}
+
+.editor .errors ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.editor .CodeMirror {
+  height: 100%;
+}

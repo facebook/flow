@@ -70,6 +70,13 @@ end
 
 type stdin_file = (Path.t * string) option
 
+val deprecated_json_props_of_loc : Loc.t -> (string * Hh_json.json) list
+val json_of_errors : error list -> Hh_json.json
+val json_of_errors_with_context :
+  stdin_file: stdin_file ->
+  error list ->
+  Hh_json.json
+
 val print_error_color_new:
   stdin_file:stdin_file ->
   strip_root:bool ->
@@ -79,8 +86,6 @@ val print_error_color_new:
   error ->
   unit
 
-val deprecated_json_props_of_loc : Loc.t -> (string * Hh_json.json) list
-val json_of_errors : error list -> Hh_json.json
 val print_error_json :
   ?stdin_file:stdin_file ->
   out_channel ->

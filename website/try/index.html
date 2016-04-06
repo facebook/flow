@@ -1,13 +1,14 @@
 ---
 title: Try Flow
 permalink: /try/
-layout: default
+layout: try
 ---
 
-<h1>Try Flow</h1>
+{% css 'tryFlow.css' %}
 
-<textarea id="code">
-/* @flow */
+<div class="editor">
+  <div class="code">
+    <textarea id="code">/* @flow */
 
 function foo(x: ?number): string {
   if (x) {
@@ -16,14 +17,18 @@ function foo(x: ?number): string {
   return "default string";
 }
 </textarea>
-
-{% css 'tryFlow.css' %}
+  </div>
+  <pre class="errors" id="errors"></pre>
+</div>
 
 <script>
   require(
     ['{% asset_name 'tryFlow.js' %}', '{% asset_name 'flow.js' %}'],
     function(tryFlow) {
-      tryFlow.createEditor(document.getElementById("code"));
+      tryFlow.createEditor(
+        document.getElementById("code"),
+        document.getElementById("errors")
+      );
     }
   );
 </script>

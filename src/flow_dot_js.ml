@@ -127,6 +127,7 @@ let set_libs filenames =
   Merge_js.ContextOptimizer.sig_context [master_cx]
 
 let check_content ~filename ~content =
+  let stdin_file = Some (Path.make_unsafe filename, content) in
   let root = Path.dummy_path in
   let filename = Loc.SourceFile filename in
   let ast, _parse_errors = parse_content filename content in
@@ -145,7 +146,7 @@ let check_content ~filename ~content =
 
   Context.errors cx
   |> Errors_js.ErrorSet.elements
-  |> Errors_js.json_of_errors
+  |> Errors_js.json_of_errors_with_context ~stdin_file
   |> js_of_json
 
 let check filename =

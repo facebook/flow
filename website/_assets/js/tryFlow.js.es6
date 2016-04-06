@@ -45,9 +45,28 @@ var flowReady = Promise.all(libs.map(get)).then(function(contents) {
   flow.setLibs(libs);
 });
 
-function validator(text, callback, options) {
+function printErrors(errors) {
+  if (errors.length == 0) {
+    return document.createTextNode('No errors!');
+  }
+  return errors.reduce((list, err) => {
+    let li = document.createElement('li');
+    li.innerHTML = JSON.stringify(err, null, 2);
+    list.appendChild(li);
+    return list;
+  }, document.createElement('ul'));
+}
+
+function getAnnotations(text, callback, options) {
+  const errorsNode = options.errorsNode;
   flowReady.then(function() {
     var errors = flow.checkContent('-', text);
+
+    if (errorsNode) {
+      while (errorsNode.lastChild) errorsNode.removeChild(errorsNode.lastChild);
+      errorsNode.appendChild(printErrors(errors));
+    }
+
     var lint = errors.map(function(err) {
       var messages = err.message;
       var firstLoc = messages[0].loc;
@@ -67,11 +86,9 @@ function validator(text, callback, options) {
     callback(lint);
   });
 }
-validator.async = true;
+getAnnotations.async = true;
 
-CodeMirror.registerHelper("lint", "javascript", validator);
-
-exports.createEditor = function createEditor(domNode) {
+exports.createEditor = function createEditor(domNode, errorsNode) {
   require([
     'codemirror/addon/lint/lint',
     'codemirror/mode/javascript/javascript',
@@ -81,7 +98,7 @@ exports.createEditor = function createEditor(domNode) {
     CodeMirror.fromTextArea(domNode, {
       lineNumbers: true,
       mode: "jsx",
-      lint: true
+      lint: { getAnnotations, errorsNode }
     });
   });
 }
