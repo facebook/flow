@@ -95,7 +95,8 @@ json_file/test.js:22
                               ^^^^ undefined
 
 invalid_package_file/package.json:1
-Unexpected end of input
+  1: 
+     ^ Unexpected end of input
 
 json_file/json_invalid.json:1
   1: :derp

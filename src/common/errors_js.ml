@@ -266,6 +266,23 @@ let highlight_error_in_line line c0 c1 =
     source_fragment_style suffix;
   ]
 
+(* 0-indexed *)
+let nth_line ~n content =
+  let rec loop ~n ~pos content =
+    if pos > String.length content then
+      raise (Invalid_argument "not enough lines");
+    let next_newline =
+      try String.index_from content pos '\n'
+      with Not_found -> String.length content
+    in
+    if n < 0 then
+      raise (Invalid_argument "can't choose negative line")
+    else if n = 0 then
+      String.sub content pos (next_newline - pos)
+    else
+      loop ~n:(n - 1) ~pos:(next_newline + 1) content
+  in
+  loop ~n ~pos:0 content
 
 let read_line_in_file line filename stdin_file =
   match filename with
@@ -280,10 +297,8 @@ let read_line_in_file line filename stdin_file =
         | _ ->
             Sys_utils.cat filename
         in
-        let lines = Str.split_delim (Str.regexp "\n") content in
-        if (List.length lines) > line && (line >= 0)
-        then Some (List.nth lines line)
-        else None
+        try Some (nth_line ~n:line content)
+        with Invalid_argument _ -> None
       end with Sys_error _ -> None
 
 let file_of_source source =
