@@ -47,6 +47,27 @@ let check_extend_kind parent_pos parent_kind child_pos child_kind =
       let child  = Ast.string_of_class_kind child_kind in
       Errors.wrong_extend_kind child_pos child parent_pos parent
 
+let rec infer_const (p, expr_) = match expr_ with
+  | String _ -> Reason.Rwitness p, Tprim Tstring
+  | True
+  | False -> Reason.Rwitness p, Tprim Tbool
+  | Int _ -> Reason.Rwitness p, Tprim Tint
+  | Float _ -> Reason.Rwitness p, Tprim Tfloat
+  | Unop ((Ast.Uminus | Ast.Uplus | Ast.Utild | Ast.Unot), e2) ->
+    infer_const e2
+  | _ ->
+    (* We can't infer the type of everything here. Notably, if you
+     * define a const in terms of another const, we need an annotation,
+     * since the other const may not have been declared yet.
+     *
+     * Also note that a number of expressions are considered invalid
+     * as constant initializers, even if we can infer their type; see
+     * Naming.check_constant_expr. *)
+    raise Exit
+
+let infer_const expr =
+  try Some (infer_const expr) with Exit -> None
+
 (*****************************************************************************)
 (* Functions used retrieve everything implemented in parent classes
  * The return values:
@@ -520,29 +541,14 @@ and class_const_decl env c acc (h, id, e) =
         let pos, name = id in
         Reason.Rwitness pos,
           Tgeneric (c_name^"::"^name, Some (Ast.Constraint_as, h_ty))
-      | None, Some e -> begin
-        let rec infer_const (p, expr_) = match expr_ with
-          | String _ -> Reason.Rwitness p, Tprim Tstring
-          | True
-          | False -> Reason.Rwitness p, Tprim Tbool
-          | Int _ -> Reason.Rwitness p, Tprim Tint
-          | Float _ -> Reason.Rwitness p, Tprim Tfloat
-          | Unop ((Ast.Uminus | Ast.Uplus | Ast.Utild | Ast.Unot), e2) ->
-            infer_const e2
-          | _ ->
-            (* We can't infer the type of everything here. Notably, if you
-             * define a const in terms of another const, we need an annotation,
-             * since the other const may not have been declared yet.
-             *
-             * Also note that a number of expressions are considered invalid
-             * as constant initializers, even if we can infer their type; see
-             * Naming.check_constant_expr. *)
+      | None, Some e ->
+        begin match infer_const e with
+          | Some ty -> ty
+          | None ->
             if c.c_mode = FileInfo.Mstrict && c.c_kind <> Ast.Cenum
             then Errors.missing_typehint (fst id);
             Reason.Rwitness (fst id), Tany
-        in
-        infer_const e
-      end
+        end
       | None, None ->
         let pos, name = id in
         if c.c_mode = FileInfo.Mstrict then Errors.missing_typehint pos;
@@ -779,15 +785,23 @@ and type_typedef_naming_and_decl tcopt tdef =
 (*****************************************************************************)
 
 let iconst_decl tcopt cst =
+  let open Option.Monad_infix in
   let cst = Naming.global_const tcopt cst in
-  let _cst_pos, cst_name = cst.cst_name in
+  let cst_pos, cst_name = cst.cst_name in
   Naming_heap.ConstHeap.add cst_name cst;
   let dep = Dep.GConst (snd cst.cst_name) in
   let env = {Decl_env.mode = cst.cst_mode; droot = Some dep} in
   let hint_ty =
     match cst.cst_type with
-    | None -> Reason.Rnone, Tany
     | Some h -> Decl_hint.hint env h
+    | None ->
+      match cst.cst_value >>= infer_const with
+      | Some ty -> ty
+      | None when cst.cst_mode = FileInfo.Mstrict ->
+        Errors.missing_typehint cst_pos;
+        Reason.Rwitness cst_pos, Tany
+      | None ->
+        Reason.Rwitness cst_pos, Tany
   in
   Typing_heap.GConsts.add cst_name hint_ty;
   ()
