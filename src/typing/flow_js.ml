@@ -2199,7 +2199,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         || ldesc = "function"
         || ldesc = "arrow function"
         || lflags.frozen
-        || Str.string_match (Str.regexp ".*React") ldesc 0
+        || string_contains_react ldesc
       in
 
       (* If both are dictionaries, ensure the keys and values are compatible
@@ -3506,6 +3506,8 @@ and flow_eq cx trace reason l r =
   else match (l, r) with
   | (_, _) when equatable (l, r) -> ()
   | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
+
+and string_contains_react = is_substring "React"
 
 and is_object_prototype_method = function
   | "hasOwnProperty"
