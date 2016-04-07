@@ -174,7 +174,9 @@ let handle genv env (ic, oc) =
   let msg = read_client_msg ic in
   match msg with
   | Rpc cmd ->
+      let t = Unix.gettimeofday () in
       let response = ServerRpc.handle genv env cmd in
+      HackEventLogger.handled_command (ServerRpc.to_string cmd) t;
       send_response_to_client (ic, oc) response;
       if cmd = ServerRpc.KILL then ServerUtils.die_nicely ()
   | Stream cmd -> stream_response genv env (ic, oc) ~cmd

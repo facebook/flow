@@ -83,3 +83,28 @@ let handle : type a. genv -> env -> a t -> a =
         ServerFindLocals.go content line char
     | FORMAT (content, from, to_) ->
         ServerFormat.go content from to_
+
+let to_string : type a. a t -> _ = function
+  | STATUS -> "STATUS"
+  | INFER_TYPE _ -> "INFER_TYPE"
+  | COVERAGE_LEVELS _ -> "COVERAGE_LEVELS"
+  | AUTOCOMPLETE _ -> "AUTOCOMPLETE"
+  | IDENTIFY_FUNCTION _ -> "IDENTIFY_FUNCTION"
+  | OUTLINE _ -> "OUTLINE"
+  | METHOD_JUMP _ -> "METHOD_JUMP"
+  | FIND_REFS _ -> "FIND_REFS"
+  | REFACTOR _ -> "REFACTOR"
+  | DUMP_SYMBOL_INFO _ -> "DUMP_SYMBOL_INFO"
+  | DUMP_AI_INFO _ -> "DUMP_AI_INFO"
+  | ARGUMENT_INFO _ -> "ARGUMENT_INFO"
+  | SEARCH _ -> "SEARCH"
+  | COVERAGE_COUNTS _ -> "COVERAGE_COUNTS"
+  | LINT _ -> "LINT"
+  | LINT_ALL _ -> "LINT_ALL"
+  | CREATE_CHECKPOINT _ -> "CREATE_CHECKPOINT"
+  | RETRIEVE_CHECKPOINT _ -> "RETRIEVE_CHECKPOINT"
+  | DELETE_CHECKPOINT _ -> "DELETE_CHECKPOINT"
+  | STATS -> "STATS"
+  | KILL -> "KILL"
+  | FIND_LVAR_REFS _ -> "FIND_LVAR_REFS"
+  | FORMAT _ -> "FORMAT"
