@@ -34,26 +34,16 @@ let rec js_of_json = function
       Js.Unsafe.inject Js.null
 
 
-let parse_lib_file _save_parse_errors file =
-  try (
-    let lib_content = Sys_utils.cat file in
-    let lib_file = Loc.LibFile file in
-    let ast, _parse_errors = parse_content lib_file lib_content in
-    lib_file, Some ast
-  )
-  with _ -> failwith (
-    Printf.sprintf "Can't read library definitions file %s, exiting." file
-  )
-
 let load_lib_files ~master_cx ~metadata files
     save_parse_errors save_infer_errors save_suppressions =
   (* iterate in reverse override order *)
   let _, result = List.rev files |> List.fold_left (
 
     fun (exclude_syms, result) file ->
-
-      match parse_lib_file save_parse_errors file with
-      | lib_file, Some (_, statements, comments) ->
+      let lib_content = Sys_utils.cat file in
+      let lib_file = Loc.LibFile file in
+      match parse_content lib_file lib_content with
+      | (_, statements, comments), [] ->
 
         let cx, syms = Type_inference_js.infer_lib_file
           ~metadata ~exclude_syms
@@ -68,7 +58,11 @@ let load_lib_files ~master_cx ~metadata files
         let result = (lib_file, true) :: result in
         exclude_syms, result
 
-      | lib_file, None ->
+      | _, parse_errors ->
+        let converted = List.fold_left (fun acc err ->
+          Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
+        ) Errors_js.ErrorSet.empty parse_errors in
+        save_parse_errors lib_file converted;
         exclude_syms, ((lib_file, false) :: result)
 
     ) (SSet.empty, [])
@@ -130,21 +124,27 @@ let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
   let root = Path.dummy_path in
   let filename = Loc.SourceFile filename in
-  let ast, _parse_errors = parse_content filename content in
+  let errors = match parse_content filename content with
+  | ast, [] ->
+    (* defaults *)
+    let metadata = stub_metadata ~root ~checked:true in
 
-  (* defaults *)
-  let metadata = stub_metadata ~root ~checked:true in
+    Flow_js.Cache.clear();
 
-  Flow_js.Cache.clear();
+    let cx = Type_inference_js.infer_ast
+        ~gc:false ~metadata ~filename ~module_name:(Modulename.String "-") ast
+    in
 
-  let cx = Type_inference_js.infer_ast
-      ~gc:false ~metadata ~filename ~module_name:(Modulename.String "-") ast
+    let master_cx = get_master_cx root in
+    Merge_js.merge_component_strict [cx] [] [] [] master_cx;
+
+    Context.errors cx
+  | _, parse_errors ->
+    List.fold_left (fun acc err ->
+      Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
+    ) Errors_js.ErrorSet.empty parse_errors
   in
-
-  let master_cx = get_master_cx root in
-  Merge_js.merge_component_strict [cx] [] [] [] master_cx;
-
-  Context.errors cx
+  errors
   |> Errors_js.ErrorSet.elements
   |> Errors_js.json_of_errors_with_context ~stdin_file
   |> js_of_json

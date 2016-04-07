@@ -41,27 +41,16 @@ let get_master_cx =
     cx
   | Some cx -> cx
 
-let parse_lib_file save_parse_errors file =
+let parse_lib_file file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
   (* lib files are always "use strict" *)
   let use_strict = true in
-  try Parsing.(
+  try
     let lib_content = cat file in
     let lib_file = Loc.LibFile file in
     let info = Docblock.extract file lib_content in
-    let parse_result =
-      do_parse ~types_mode ~use_strict ~info lib_content lib_file in
-    lib_file, match parse_result with
-    | Parse_ok ast ->
-      Some ast
-    | Parse_err errors ->
-      save_parse_errors lib_file errors;
-      None
-    | Parse_skip ->
-      (* should never happen *)
-      None
-  )
+    Parsing.do_parse ~types_mode ~use_strict ~info lib_content lib_file
   with _ -> failwith (
     spf "Can't read library definitions file %s, exiting." file
   )
@@ -86,8 +75,9 @@ let load_lib_files files ~options
 
     fun (exclude_syms, result) file ->
 
-      match parse_lib_file save_parse_errors file with
-      | lib_file, Some (_, statements, comments) ->
+      let lib_file = Loc.LibFile file in
+      match parse_lib_file file with
+      | Parsing.Parse_ok (_, statements, comments) ->
 
         let metadata = Context.({ (metadata_of_options options) with
           checked = false;
@@ -104,8 +94,7 @@ let load_lib_files files ~options
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"
-            (Loc.string_of_filename lib_file)
-            (String.concat ", " syms));
+            file (String.concat ", " syms));
 
         (* symbols loaded from this file are suppressed
            if found in later ones *)
@@ -113,7 +102,12 @@ let load_lib_files files ~options
         let result = (lib_file, true) :: result in
         exclude_syms, result
 
-      | lib_file, None ->
+      | Parsing.Parse_err errors ->
+        save_parse_errors lib_file errors;
+        exclude_syms, ((lib_file, false) :: result)
+
+      | Parsing.Parse_skip ->
+        (* should never happen *)
         exclude_syms, ((lib_file, false) :: result)
 
     ) (SSet.empty, [])
