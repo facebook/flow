@@ -60,7 +60,10 @@ let parse_position_string arg =
 
 let main args =
   let mode_s = ClientEnv.mode_to_string args.mode in
-  HackEventLogger.client_check args.from mode_s;
+  HackEventLogger.client_set_from args.from;
+  HackEventLogger.client_set_mode mode_s;
+
+  HackEventLogger.client_check ();
 
   let conn = ClientConnect.connect { ClientConnect.
     root = args.root;
@@ -275,5 +278,5 @@ let main args =
       ClientFormat.go result args.output_json;
       Exit_status.Ok
   in
-  HackEventLogger.client_check_finish args.from mode_s exit_status;
+  HackEventLogger.client_check_finish exit_status;
   exit_status
