@@ -30,7 +30,7 @@ let default_info = {
 let max_tokens = 10
 
 let extract =
-  let words_rx = Str.regexp "[ \t\n\\*/]+" in
+  let words_rx = Str.regexp "[ \t\r\n\\*/]+" in
 
   let rec parse_attributes acc = function
     | "@flow" :: "weak" :: xs ->

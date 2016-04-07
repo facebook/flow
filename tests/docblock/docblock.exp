@@ -1,8 +1,1 @@
-docblock.js:34
- 34: C.o = {
-       ^ property `o`. Property not found in
- 34: C.o = {
-     ^ statics of C
-
-
-Found 1 error
+No errors!
