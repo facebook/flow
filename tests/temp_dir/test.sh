@@ -1,7 +1,7 @@
 #!/bin/bash
 FLOW=$1
 $FLOW stop 2> /dev/null > /dev/null
-DIR=$(mktemp -d /tmp/flow.XXXXX)
+DIR=$(mktemp -d /tmp/flow.XXXXXX)
 $FLOW start --wait --temp-dir "$DIR" 2> /dev/null > /dev/null
 if [[ "$OSTYPE" == "msys"* ]]; then
     [ -f "$DIR"/*.sock ]    && echo "sock file exists"
@@ -17,8 +17,8 @@ $FLOW stop --temp-dir "$DIR" 2> /dev/null > /dev/null
 rm -rf "$DIR"
 
 # Test a .flowconfig with temp_dir
-DIR=$(mktemp -d /tmp/flow.XXXXX)
-TEST_DIR=$(mktemp -d /tmp/flow.XXXXX)
+DIR=$(mktemp -d /tmp/flow.XXXXXX)
+TEST_DIR=$(mktemp -d /tmp/flow.XXXXXX)
 printf "[options]\ntemp_dir=%s" "$DIR" > "$TEST_DIR/.flowconfig"
 $FLOW status "$TEST_DIR" 2> /dev/null > /dev/null
 if [[ "$OSTYPE" == "msys"* ]]; then

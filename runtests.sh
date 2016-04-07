@@ -155,7 +155,7 @@ runtest() {
         # parallel runs of the same test don't stomp on each other (Facebook
         # internally runs a stress test to look for flaky tests). If a test
         # fails, we'll then copy the files back to the source directory.
-        OUT_DIR=$(mktemp -d /tmp/flow_test.XXXXX)
+        OUT_DIR=$(mktemp -d /tmp/flow_test.XXXXXX)
 
         # deletes the temp directory
         function cleanup {
