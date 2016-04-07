@@ -8,6 +8,9 @@ ignore_declaration_files() {
   mv node_modules/package_with_full_main/code.js.flow node_modules/package_with_full_main/code.js.flow.ignored
   mv node_modules/package_with_no_package_json/index.js.flow node_modules/package_with_no_package_json/index.js.flow.ignored
   mv node_modules/package_with_partial_main/code.js.flow node_modules/package_with_partial_main/code.js.flow.ignored
+  mv node_modules/package_with_dir_flow_main/dir/index.js.flow node_modules/package_with_dir_flow_main/dir/index.js.flow.ignored
+  mv node_modules/package_with_full_flow_main/code.js.flow node_modules/package_with_full_flow_main/code.js.flow.ignored
+  mv node_modules/package_with_partial_flow_main/code.js.flow node_modules/package_with_partial_flow_main/code.js.flow.ignored
 }
 
 use_declaration_files() {
@@ -17,6 +20,9 @@ use_declaration_files() {
   mv node_modules/package_with_full_main/code.js.flow.ignored node_modules/package_with_full_main/code.js.flow
   mv node_modules/package_with_no_package_json/index.js.flow.ignored node_modules/package_with_no_package_json/index.js.flow
   mv node_modules/package_with_partial_main/code.js.flow.ignored node_modules/package_with_partial_main/code.js.flow
+  mv node_modules/package_with_dir_flow_main/dir/index.js.flow.ignored node_modules/package_with_dir_flow_main/dir/index.js.flow
+  mv node_modules/package_with_full_flow_main/code.js.flow.ignored node_modules/package_with_full_flow_main/code.js.flow
+  mv node_modules/package_with_partial_flow_main/code.js.flow.ignored node_modules/package_with_partial_flow_main/code.js.flow
 }
 
 ignore_implementation_files() {
@@ -26,6 +32,9 @@ ignore_implementation_files() {
   mv node_modules/package_with_full_main/code.js node_modules/package_with_full_main/code.js.ignored
   mv node_modules/package_with_no_package_json/index.js node_modules/package_with_no_package_json/index.js.ignored
   mv node_modules/package_with_partial_main/code.js node_modules/package_with_partial_main/code.js.ignored
+  mv node_modules/package_with_dir_flow_main/dir/index.js node_modules/package_with_dir_flow_main/dir/index.js.ignored
+  mv node_modules/package_with_full_flow_main/code.js node_modules/package_with_full_flow_main/code.js.ignored
+  mv node_modules/package_with_partial_flow_main/code.js node_modules/package_with_partial_flow_main/code.js.ignored
 }
 
 use_implementation_files() {
@@ -35,6 +44,9 @@ use_implementation_files() {
   mv node_modules/package_with_full_main/code.js.ignored node_modules/package_with_full_main/code.js
   mv node_modules/package_with_no_package_json/index.js.ignored node_modules/package_with_no_package_json/index.js
   mv node_modules/package_with_partial_main/code.js.ignored node_modules/package_with_partial_main/code.js
+  mv node_modules/package_with_dir_flow_main/dir/index.js.ignored node_modules/package_with_dir_flow_main/dir/index.js
+  mv node_modules/package_with_full_main/code.js.ignored node_modules/package_with_full_flow_main/code.js
+  mv node_modules/package_with_partial_flow_main/code.js.ignored node_modules/package_with_partial_flow_main/code.js
 }
 
 printf "======Start off with the .js files but without the .flow file======\n"
