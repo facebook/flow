@@ -1003,6 +1003,7 @@ and Class : sig
     typeParameters: Type.ParameterDeclaration.t option;
     superTypeParameters: Type.ParameterInstantiation.t option;
     implements: Class.Implements.t list;
+    decorators: Expression.t list;
   }
 end = Class
 

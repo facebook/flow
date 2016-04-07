@@ -1,5 +1,6 @@
 /* @flow */
 
+@decorator4
 class Foo {
   @decorator1
   method1() {}
