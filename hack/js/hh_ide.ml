@@ -234,7 +234,7 @@ let hh_auto_complete fn =
       | Some Autocomplete.Acclass_get -> "class_get"
       | Some Autocomplete.Acprop -> "var"
       | None -> "none" in
-    let result = AutocompleteService.get_results tcopt (fun () -> [], []) in
+    let result = AutocompleteService.get_results tcopt SSet.empty SSet.empty in
     let result =
       List.map result AutocompleteService.autocomplete_result_to_json
     in

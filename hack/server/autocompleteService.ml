@@ -92,21 +92,28 @@ let autocomplete_result_to_json res =
       "expected_ty", Hh_json.JSON_Bool expected_ty;
   ]
 
+let get_result name ty =
+  {
+    ty   = ty;
+    name = name;
+    desc = None;
+  }
+
+let add_res res =
+  autocomplete_results := res :: !autocomplete_results
+
 let add_result name ty =
-  autocomplete_results :=
-    {
-      ty   = ty;
-      name = name;
-      desc = None;
-    } :: !autocomplete_results
+  add_res (get_result name ty)
+
+let get_result_with_desc name ty desc =
+  {
+    ty   = ty;
+    name = name;
+    desc = Some desc;
+  }
 
 let add_result_with_desc name ty desc =
-  autocomplete_results :=
-    {
-      ty   = ty;
-      name = name;
-      desc = Some desc;
-    } :: !autocomplete_results
+  add_res (get_result_with_desc name ty desc)
 
 let autocomplete_token ac_type env x =
   if is_auto_complete (snd x)
@@ -218,87 +225,127 @@ let get_constructor_ty c =
         (* Nothing defined, so we need to fake the entire constructor *)
       reason, Typing_defs.Tfun (Typing_env.make_ft pos [] return_ty)
 
-let compute_complete_global tcopt gen_funs_and_classes =
+(* Global identifier autocomplete uses search service to find matching names *)
+let search_funs_and_classes input ~on_class ~on_function =
+  HackSearchService.MasterApi.query_autocomplete input ~limit:(Some 100)
+    ~filter_map:begin fun _ _ res ->
+      let name = res.SearchUtils.name in
+      match res.SearchUtils.result_type with
+      | HackSearchService.Class _-> on_class name
+      | HackSearchService.Function -> on_function name
+      | _ -> None
+    end
+
+let compute_complete_global tcopt content_funs content_classes =
   let completion_type = !Autocomplete.argument_global_type in
   let gname = Utils.strip_ns !Autocomplete.auto_complete_for_global in
   let gname = strip_suffix gname in
+
+  let gname_gns = if should_complete_fun completion_type then
+    (* Disgusting hack alert!
+     *
+     * In PHP/Hack, namespaced function lookup falls back into the global
+     * namespace if no function in the current namespace exists. The
+     * typechecker knows everything that exists, and resolves all of this
+     * during naming -- meaning that by the time that we get to typing, not
+     * only has "gname" been fully qualified, but we've lost whatever it
+     * might have looked like originally. This makes it tough to do the full
+     * namespace fallback behavior here -- we'd like to know if whatever
+     * "gname" corresponds to in the source code has a '\' to qualify it, but
+     * since it's already fully qualified here, we can't know.
+     *
+     * Except, we can kinda reverse engineer and figure it out. We have the
+     * positional information, which we can use to figure out how long the
+     * original source code token was, and then figure out what portion of
+     * "gname" that corresponds to, and see if it has a '\'. Since fully
+     * qualifying a name will always prepend, this all works.
+     *)
+    match !Autocomplete.auto_complete_pos with
+      | None -> None
+      | Some p ->
+          let len = (Pos.length p) - suffix_len in
+          let start = String.length gname - len in
+          if String.contains_from gname start '\\'
+          then None else Some (strip_all_ns gname)
+    else None in
+
   let result_count = ref 0 in
-  let funs, classes = gen_funs_and_classes () in
-  try
-    List.iter classes begin fun name ->
-      if !result_count > 100 then raise Exit;
-      if str_starts_with (strip_ns name) gname
-      then match (Typing_lazy_heap.get_class tcopt name) with
-        | Some c
-          when should_complete_class completion_type c.Typing_defs.tc_kind ->
-            incr result_count;
-            let s = Utils.strip_ns name in
-            (match !ac_env with
-              | Some _env when completion_type=Some Autocomplete.Acnew ->
-                  add_result s (Phase.decl (get_constructor_ty c))
-              | _ ->
-                  let desc = match c.Typing_defs.tc_kind with
-                    | Ast.Cabstract -> "abstract class"
-                    | Ast.Cnormal -> "class"
-                    | Ast.Cinterface -> "interface"
-                    | Ast.Ctrait -> "trait"
-                    | Ast.Cenum -> "enum"
-                  in
-                  let ty =
-                    Typing_reason.Rwitness c.Typing_defs.tc_pos,
-                    Typing_defs.Tapply ((c.Typing_defs.tc_pos, name), [])
-                  in
-                  add_result_with_desc s (Phase.decl ty) desc)
-        | _ -> ()
-    end;
-    if should_complete_fun completion_type
-    then begin
-      (* Disgusting hack alert!
-       *
-       * In PHP/Hack, namespaced function lookup falls back into the global
-       * namespace if no function in the current namespace exists. The
-       * typechecker knows everything that exists, and resolves all of this
-       * during naming -- meaning that by the time that we get to typing, not
-       * only has "gname" been fully qualified, but we've lost whatever it
-       * might have looked like originally. This makes it tough to do the full
-       * namespace fallback behavior here -- we'd like to know if whatever
-       * "gname" corresponds to in the source code has a '\' to qualify it, but
-       * since it's already fully qualified here, we can't know.
-       *
-       * Except, we can kinda reverse engineer and figure it out. We have the
-       * positional information, which we can use to figure out how long the
-       * original source code token was, and then figure out what portion of
-       * "gname" that corresponds to, and see if it has a '\'. Since fully
-       * qualifying a name will always prepend, this all works.
-       *)
-      let gname_gns = match !Autocomplete.auto_complete_pos with
-        | None -> None
-        | Some p ->
-            let len = (Pos.length p) - suffix_len in
-            let start = String.length gname - len in
-            if String.contains_from gname start '\\'
-            then None else Some (strip_all_ns gname)
-      in
-      List.iter funs begin fun name ->
-        if !result_count > 100 then raise Exit;
-        let stripped_name = strip_ns name in
-        let matches_gname = str_starts_with stripped_name gname in
-        let matches_gname_gns = match gname_gns with
-          | None -> false
-          | Some s -> str_starts_with stripped_name s in
-        if matches_gname || matches_gname_gns
-        then match (Typing_lazy_heap.get_fun tcopt name) with
-          | Some fun_ ->
-            incr result_count;
-            let ty =
-              Typing_reason.Rwitness fun_.Typing_defs.ft_pos,
-              Typing_defs.Tfun fun_
-            in
-            add_result stripped_name (Phase.decl ty)
-          | _ -> ()
-      end
-    end
-  with Exit -> ()
+
+  let on_class name ~seen =
+    (* Skip the names that we know we have analyzed before *)
+    if SSet.mem seen name then None else
+    if not (str_starts_with (strip_ns name) gname) then None else
+    match Typing_lazy_heap.get_class tcopt name with
+    | Some c
+      when should_complete_class completion_type c.Typing_defs.tc_kind ->
+        incr result_count;
+        let s = Utils.strip_ns name in
+        (match !ac_env with
+          | Some _env when completion_type = Some Autocomplete.Acnew ->
+              Some (get_result s (Phase.decl (get_constructor_ty c)))
+          | _ ->
+              let desc = match c.Typing_defs.tc_kind with
+                | Ast.Cabstract -> "abstract class"
+                | Ast.Cnormal -> "class"
+                | Ast.Cinterface -> "interface"
+                | Ast.Ctrait -> "trait"
+                | Ast.Cenum -> "enum"
+              in
+              let ty =
+                Typing_reason.Rwitness c.Typing_defs.tc_pos,
+                Typing_defs.Tapply ((c.Typing_defs.tc_pos, name), [])
+              in
+              Some (get_result_with_desc s (Phase.decl ty) desc))
+    | _ -> None
+  in
+
+  let on_function name ~seen =
+    if SSet.mem seen name then None else
+    if should_complete_fun completion_type then begin
+      let stripped_name = strip_ns name in
+      let matches_gname = str_starts_with stripped_name gname in
+      let matches_gname_gns = match gname_gns with
+        | None -> false
+        | Some s -> str_starts_with stripped_name s in
+      if matches_gname || matches_gname_gns
+      then match Typing_lazy_heap.get_fun tcopt name with
+        | Some fun_ ->
+          incr result_count;
+          let ty =
+            Typing_reason.Rwitness fun_.Typing_defs.ft_pos,
+            Typing_defs.Tfun fun_
+          in
+          Some (get_result stripped_name (Phase.decl ty))
+        | _ -> None
+      else None
+    end else None
+  in
+
+  (* Try using the names in local content buffer first *)
+  List.iter
+    (List.filter_map (SSet.elements content_classes) (on_class ~seen:SSet.empty))
+      add_res;
+  List.iter
+    (List.filter_map (SSet.elements content_funs) (on_function ~seen:SSet.empty))
+      add_res;
+
+  (* Use search results to look for matches, while excluding names we have
+   * already seen in local content buffer *)
+  let gname_results = search_funs_and_classes gname
+    ~on_class:(on_class ~seen:content_classes)
+    ~on_function:(on_function ~seen:content_funs)
+  in
+  List.iter gname_results add_res;
+
+  (* Compute global namespace fallback results for functions, if applicable *)
+  match gname_gns with
+  | Some gname_gns when gname <> gname_gns ->
+    let gname_gns_results = search_funs_and_classes gname_gns
+      ~on_class:(fun _ -> None)
+      ~on_function:(on_function ~seen:content_funs)
+    in
+    List.iter gname_gns_results add_res;
+  | _ -> ()
 
 let process_fun_call fun_args used_args env =
   let is_target target_pos p =
@@ -353,13 +400,13 @@ let result_compare a b =
   else if a.expected_ty then -1
   else 1
 
-let get_results tcopt gen_funs_and_classes =
+let get_results tcopt funs classes =
   Errors.ignore_ begin fun() ->
     let completion_type = !Autocomplete.argument_global_type in
     if completion_type = Some Autocomplete.Acid ||
        completion_type = Some Autocomplete.Acnew ||
        completion_type = Some Autocomplete.Actype
-    then compute_complete_global tcopt gen_funs_and_classes;
+    then compute_complete_global tcopt funs classes;
     let results = !autocomplete_results in
     let env = match !ac_env with
       | Some e -> e

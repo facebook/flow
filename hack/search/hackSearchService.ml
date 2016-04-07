@@ -122,6 +122,9 @@ module MasterApi = struct
   let query input type_ =
     SS.MasterApi.query input (get_type type_)
 
+  let query_autocomplete input ~limit ~filter_map =
+    SS.AutocompleteTrie.MasterApi.query input ~limit ~filter_map
+
   let clear_shared_memory =
     SS.MasterApi.clear_shared_memory
 
