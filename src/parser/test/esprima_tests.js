@@ -3901,7 +3901,7 @@ module.exports = {
               type: 'Wrong number',
               expected: 51,
               actual: 50
-            },
+            }
           }
         },
         'class A {static foo() {}}',

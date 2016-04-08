@@ -15,7 +15,6 @@ open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
 module SMap = Map.Make(String)
-
 let is_future_reserved = function
   | "enum" -> true
   | _ -> false
@@ -2374,7 +2373,7 @@ end = struct
             value;
             kind;
             static;
-            decorators
+            decorators;
           })))
 
       in fun env -> Ast.Expression.Object.Property.(
@@ -2418,6 +2417,7 @@ end = struct
       (* 10.2.1 says all parts of a class definition are strict *)
       let env = env |> with_strict true in
       let start_loc = Peek.loc env in
+      let decorators = decorator_list env decorators in
       Expect.token env T_CLASS;
       let tmp_env = env |> with_no_let true in
       let id = (
@@ -2435,7 +2435,7 @@ end = struct
         typeParameters;
         superTypeParameters;
         implements;
-        decorators;
+        classDecorators=decorators;
       }))
 
     let class_expression env =
@@ -2464,7 +2464,7 @@ end = struct
         typeParameters;
         superTypeParameters;
         implements;
-        decorators;
+        classDecorators=decorators;
       }))
 
     let key = key ~allow_computed_key:false
@@ -4243,6 +4243,7 @@ end = struct
     | T_LET -> _let env
     | T_CONST -> var_or_const env
     | _ when Peek._function env -> Declaration._function env
+    | T_AT
     | T_CLASS -> class_declaration env decorators
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
@@ -4293,7 +4294,6 @@ end = struct
     | T_STATIC
     | T_IMPORT (* TODO *)
     | T_EXPORT (* TODO *)
-    | T_AT
     | T_ELLIPSIS ->
         error_unexpected env;
         Eat.token env;

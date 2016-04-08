@@ -3031,6 +3031,18 @@ module.exports = {
       },
     },
     'Decorators (experimental/early)': {
+      'function Bar() { @myDecorator2 @myDecorator1\nclass Foo { myMethod() {} } }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.body.body.0': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+          ]
+        }
+      },
       '@myDecorator2 @myDecorator1\nclass Foo { myMethod() {} }': {
         '%parse_options%': {
           "esproposal_decorators": true
