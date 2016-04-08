@@ -4289,7 +4289,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       let obj_t = expression cx type_params_map _object in
 
       let prop_reason = mk_reason (spf "property `%s`" prop_name) prop_loc in
-      Flow.flow cx (obj_t, HasPropT (prop_reason, None, prop_name));
+      Flow.flow cx (obj_t, HasPropT (prop_reason, None, TypeTerm.Literal prop_name));
 
       let expr_reason = mk_reason (spf "property `%s`" prop_name) expr_loc in
       let prop_t = match Refinement.get cx expr expr_reason with

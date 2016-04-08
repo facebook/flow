@@ -6,9 +6,11 @@ var React = require('react');
 
 var Div = 'div';
 var Bad = 'bad';
+var Str: string = 'str';
 
 <Div />; // This is fine
 <Bad />; // This is fine
+<Str />; // This is fine
 
 React.createElement('div', {}); // This is fine
 React.createElement('bad', {}); // This is fine

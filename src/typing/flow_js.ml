@@ -1335,7 +1335,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyFunT reason, SetPropT (_, (_, x), _)
     | AnyFunT reason, LookupT (_, _, _, x, _)
     | AnyFunT reason, MethodT (_, (_, x), _)
-    | AnyFunT reason, HasPropT (_, _, x) when is_function_prototype x ->
+    | AnyFunT reason, HasPropT (_, _, Literal x) when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, UseT u) when function_like u -> ()
     | (AnyFunT _, UseT u) when object_like u -> ()
@@ -1595,13 +1595,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
 
-    | (StrT (reason_s, Literal x), UseT KeysT (reason_op, o)) ->
-      let reason_next = replace_reason (spf "property `%s`" x) reason_s in
+    | (StrT (reason_s, literal), UseT KeysT (reason_op, o)) ->
+      let reason_next = match literal with
+      | Literal x -> replace_reason (spf "property `%s`" x) reason_s
+      | _ -> replace_reason "some string with unknown value" reason_s in
       (* check that o has key x *)
-      rec_flow cx trace (o, ReposLowerT(reason_op, HasOwnPropT(reason_next, x)))
+      rec_flow cx trace (o, ReposLowerT(reason_op, HasOwnPropT(reason_next, literal)))
 
-    | (StrT (_, (Truthy | AnyLiteral)), UseT KeysT _) ->
-      flow_err cx trace "Expected string literal" l u
 
     | KeysT (reason1, o1), _ ->
       (* flow all keys of o1 to u *)
@@ -1612,21 +1612,31 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* helpers *)
 
-    | (ObjT (reason_o, { props_tmap = mapr; _ }), HasOwnPropT (reason_op, x)) ->
-      if has_prop cx mapr x then ()
-      else flow_err_prop_not_found cx trace (reason_op, reason_o)
+    | (ObjT (reason_o, { props_tmap = mapr; dict_t; _; }), HasOwnPropT (reason_op, x)) ->
+      (match x, dict_t with
+      (* If we have a literal string and that property exists *)
+      | Literal x, _ when has_prop cx mapr x -> ()
+      (* If we have a dictionary, try that next *)
+      | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
+      | _ ->
+          flow_err_prop_not_found cx trace (reason_op, reason_o))
 
     | ObjT (reason_o, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
       HasPropT (reason_op, strict, x) ->
-      if has_prop cx mapr x || dict_t <> None then ()
-      else
+      (match x, dict_t with
+      (* If we have a literal string and that property exists *)
+      | Literal x, _ when has_prop cx mapr x -> ()
+      (* If we have a dictionary, try that next *)
+      | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
+      | _ ->
         let strict = match strict with
         | Some r -> Some r
         | None -> Some reason_o
         in
         rec_flow cx trace (proto, HasPropT (reason_op, strict, x))
+      )
 
-    | (InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, x)) ->
+    | (InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, Literal x)) ->
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
@@ -1634,9 +1644,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Some _ -> ()
       | None -> flow_err_prop_not_found cx trace (reason_op, reason_o)
       )
+    | (InstanceT (reason_o, _, _, _), HasOwnPropT(reason_op, _)) ->
+        flow_err_reasons cx trace "Expected string literal" (reason_op, reason_o)
 
     | InstanceT (reason_o, _, super, instance),
-      HasPropT (reason_op, strict, x) ->
+      HasPropT (reason_op, strict, Literal x) ->
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
@@ -1647,8 +1659,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some r -> Some r
           | None -> Some reason_o
           in
-          rec_flow cx trace (super, HasPropT (reason_op, strict, x))
+          rec_flow cx trace (super, HasPropT (reason_op, strict, Literal x))
       )
+    | (InstanceT (reason_o, _, _, _), HasPropT(reason_op, _, _)) ->
+        flow_err_reasons cx trace "Expected string literal" (reason_op, reason_o)
 
     (* AnyObjT has every prop *)
     | AnyObjT _, HasOwnPropT _

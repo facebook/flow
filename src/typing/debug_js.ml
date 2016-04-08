@@ -71,12 +71,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     | AnyLiteral -> []
     end
 
-  | StrT (_, lit) ->
-    begin match lit with
-    | Literal s -> ["literal", JSON_String s]
-    | Truthy -> ["refinement", JSON_String "Truthy"]
-    | AnyLiteral -> []
-    end
+  | StrT (_, lit) -> _json_of_string_literal lit
 
   | BoolT (_, b) ->
     (match b with
@@ -266,6 +261,12 @@ and _json_of_import_kind = Hh_json.(function
   | ImportValue -> JSON_String "ImportValue"
 )
 
+and _json_of_string_literal = Hh_json.(function
+  | Literal s -> ["literal", JSON_String s]
+  | Truthy -> ["refinement", JSON_String "Truthy"]
+  | AnyLiteral -> []
+)
+
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
 and _json_of_use_t_impl json_cx t = Hh_json.(
   JSON_Object ([
@@ -438,7 +439,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | HasOwnPropT (_, key) -> [
-      "key", JSON_String key
+      "key", JSON_Object (_json_of_string_literal key)
     ]
 
   | HasPropT (_, strict, key) ->
@@ -446,7 +447,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       | None -> []
       | Some r -> ["strictReason", json_of_reason r]
     ) @ [
-      "key", JSON_String key;
+      "key", JSON_Object (_json_of_string_literal key)
     ]
 
   | ElemT (_, base, elem) -> [

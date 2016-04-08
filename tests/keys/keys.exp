@@ -1,0 +1,56 @@
+keys.js:10
+ 10:   (123: $Keys<Object>); // Error: number -> keys of Object
+        ^^^ number. This type is incompatible with
+ 10:   (123: $Keys<Object>); // Error: number -> keys of Object
+             ^^^^^^^^^^^^^ key set
+
+keys.js:21
+ 21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
+        ^^^ number. This type is incompatible with
+ 21:   (123: $Keys<StrDict>); // Error: number -> keys of StrDict
+             ^^^^^^^^^^^^^^ key set
+
+keys.js:26
+ 26:   (str: $Keys<StrLitDict>); // Error: Not all strings are allowed
+        ^^^ some string with unknown value. Expected string literal `hi`
+ 24: type StrLitDict = {[key: 'hi']: mixed};
+                              ^^^^ string literal `hi`
+
+keys.js:28
+ 28:     (str: $Keys<StrLitDict>); // Error: Not all truthy strings are allowed
+          ^^^ some string with unknown value. Expected string literal `hi`
+ 24: type StrLitDict = {[key: 'hi']: mixed};
+                              ^^^^ string literal `hi`
+
+keys.js:31
+ 31:   ('bye': $Keys<StrLitDict>); // Error: The wrong string literal is not allowed
+        ^^^^^ property `bye`. Expected string literal `hi`, got `bye` instead
+ 24: type StrLitDict = {[key: 'hi']: mixed};
+                              ^^^^ string literal `hi`
+
+keys.js:33
+ 33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
+        ^^^ number. This type is incompatible with
+ 33:   (123: $Keys<StrLitDict>); // Error: number -> keys of StrLitDict
+             ^^^^^^^^^^^^^^^^^ key set
+
+keys.js:38
+ 38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
+        ^^^ some string with unknown value. Property not found in
+ 38:   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
+             ^^^^^^^^^^^^^ object type
+
+keys.js:40
+ 40:     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
+          ^^^ some string with unknown value. Property not found in
+ 40:     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit
+               ^^^^^^^^^^^^^ object type
+
+keys.js:44
+ 44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
+        ^^^ number. This type is incompatible with
+ 44:   (123: $Keys<ObjLit>); // Error: number -> keys of ObjLit
+             ^^^^^^^^^^^^^ key set
+
+
+Found 9 errors

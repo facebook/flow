@@ -344,8 +344,8 @@ module rec TypeTerm : sig
 
     (* Keys *)
     | GetKeysT of reason * t
-    | HasOwnPropT of reason * string
-    | HasPropT of reason * reason option * string
+    | HasOwnPropT of reason * string literal
+    | HasPropT of reason * reason option * string literal
 
     (* Element access *)
     | ElemT of reason * t * t
@@ -1266,8 +1266,8 @@ and mod_reason_of_use_t f = function
 
   | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
   | GetKeysT (reason, t) -> GetKeysT (f reason, t)
-  | HasOwnPropT (reason, t) -> HasOwnPropT (f reason, t)
-  | HasPropT (reason, strict, t) -> HasPropT (f reason, strict, t)
+  | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
+  | HasPropT (reason, strict, prop) -> HasPropT (f reason, strict, prop)
 
   | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
 

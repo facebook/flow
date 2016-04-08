@@ -46,8 +46,8 @@ main.js:17
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
                                ^^^^^^ number
 
-strings.js:9
-  9: <Bad />; // Error: 'bad' not in JSXIntrinsics
+strings.js:10
+ 10: <Bad />; // Error: 'bad' not in JSXIntrinsics
      ^^^^^^^ React element `Bad`
   6: var Bad = 'bad';
                ^^^^^ string. This type is incompatible with
@@ -65,24 +65,62 @@ union: type application of polymorphic type: type `ReactClass` | key set. See li
                  ^^^^^ property `bad`. Property not found in
   object type. See lib: react.js:174
 
-strings.js:12
- 12: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
+strings.js:11
+ 11: <Str />; // Error: string ~> keys of JSXIntrinsics
+     ^^^^^^^ React element `Str`
+  7: var Str: string = 'str';
+              ^^^^^^ string. This type is incompatible with
+union: type application of polymorphic type: type `ReactClass` | key set. See lib: react.js:174
+  Member 1:
+  type application of polymorphic type: type `ReactClass`. See lib: react.js:174
+  Error:
+    7: var Str: string = 'str';
+                ^^^^^^ string. This type is incompatible with
+  class type: existential. See lib: react.js:174
+  Member 2:
+  key set. See lib: react.js:174
+  Error:
+    7: var Str: string = 'str';
+                ^^^^^^ some string with unknown value. Property not found in
+  object type. See lib: react.js:174
+
+strings.js:14
+ 14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
- 12: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
+ 14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
                          ^^^^^ string. This type is incompatible with
 union: type application of polymorphic type: type `ReactClass` | key set. See lib: react.js:174
   Member 1:
   type application of polymorphic type: type `ReactClass`. See lib: react.js:174
   Error:
-   12: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
+   14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
                            ^^^^^ string. This type is incompatible with
   class type: existential. See lib: react.js:174
   Member 2:
   key set. See lib: react.js:174
   Error:
-   12: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
+   14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
                            ^^^^^ property `bad`. Property not found in
   object type. See lib: react.js:174
 
+strings.js:15
+ 15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+ 15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
+                         ^^^ string. This type is incompatible with
+union: type application of polymorphic type: type `ReactClass` | key set. See lib: react.js:174
+  Member 1:
+  type application of polymorphic type: type `ReactClass`. See lib: react.js:174
+  Error:
+   15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
+                           ^^^ string. This type is incompatible with
+  class type: existential. See lib: react.js:174
+  Member 2:
+  key set. See lib: react.js:174
+  Error:
+   15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
+                           ^^^ some string with unknown value. Property not found in
+  object type. See lib: react.js:174
 
-Found 8 errors
+
+Found 10 errors
