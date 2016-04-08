@@ -1,71 +1,63 @@
 #!/bin/sh
 FLOW=$1
 
-ignore_declaration_files() {
-  mv A.js.flow A.js.flow.ignored
-  mv node_modules/B.js.flow node_modules/B.js.flow.ignored
-  mv node_modules/package_with_dir_main/dir/index.js.flow node_modules/package_with_dir_main/dir/index.js.flow.ignored
-  mv node_modules/package_with_full_main/code.js.flow node_modules/package_with_full_main/code.js.flow.ignored
-  mv node_modules/package_with_no_package_json/index.js.flow node_modules/package_with_no_package_json/index.js.flow.ignored
-  mv node_modules/package_with_partial_main/code.js.flow node_modules/package_with_partial_main/code.js.flow.ignored
+IMPL_FILES="
+  A.js
+  node_modules/B.js
+  node_modules/package_with_dir_main/dir/index.js
+  node_modules/package_with_full_main/code.js
+  node_modules/package_with_no_package_json/index.js
+  node_modules/package_with_partial_main/code.js
+"
+DECL_FILES=$(echo "$IMPL_FILES" | sed -e "s/\.js/.js.flow/g")
+
+ignore_files() {
+  for file in $1; do
+    mv "$file" "$file.ignored"
+  done
 }
 
-use_declaration_files() {
-  mv A.js.flow.ignored A.js.flow
-  mv node_modules/B.js.flow.ignored node_modules/B.js.flow
-  mv node_modules/package_with_dir_main/dir/index.js.flow.ignored node_modules/package_with_dir_main/dir/index.js.flow
-  mv node_modules/package_with_full_main/code.js.flow.ignored node_modules/package_with_full_main/code.js.flow
-  mv node_modules/package_with_no_package_json/index.js.flow.ignored node_modules/package_with_no_package_json/index.js.flow
-  mv node_modules/package_with_partial_main/code.js.flow.ignored node_modules/package_with_partial_main/code.js.flow
-}
-
-ignore_implementation_files() {
-  mv A.js A.js.ignored
-  mv node_modules/B.js node_modules/B.js.ignored
-  mv node_modules/package_with_dir_main/dir/index.js node_modules/package_with_dir_main/dir/index.js.ignored
-  mv node_modules/package_with_full_main/code.js node_modules/package_with_full_main/code.js.ignored
-  mv node_modules/package_with_no_package_json/index.js node_modules/package_with_no_package_json/index.js.ignored
-  mv node_modules/package_with_partial_main/code.js node_modules/package_with_partial_main/code.js.ignored
-}
-
-use_implementation_files() {
-  mv A.js.ignored A.js
-  mv node_modules/B.js.ignored node_modules/B.js
-  mv node_modules/package_with_dir_main/dir/index.js.ignored node_modules/package_with_dir_main/dir/index.js
-  mv node_modules/package_with_full_main/code.js.ignored node_modules/package_with_full_main/code.js
-  mv node_modules/package_with_no_package_json/index.js.ignored node_modules/package_with_no_package_json/index.js
-  mv node_modules/package_with_partial_main/code.js.ignored node_modules/package_with_partial_main/code.js
+use_files() {
+  for file in $1; do
+    mv "$file.ignored" "$file"
+  done
 }
 
 printf "======Start off with the .js files but without the .flow file======\n"
 "$FLOW" status --old-output-format .
-use_declaration_files
+use_files "$DECL_FILES"
+"$FLOW" force-recheck $DECL_FILES
 "$FLOW" status --old-output-format .
-ignore_declaration_files
+ignore_files "$DECL_FILES"
+"$FLOW" force-recheck $DECL_FILES
 "$FLOW" status --old-output-format .
 
 printf "\n\n======Start off with the .js files and the .flow file======\n"
 "$FLOW" stop .
-use_declaration_files
+use_files "$DECL_FILES"
 "$FLOW" start . --all --wait
 
 "$FLOW" status --old-output-format .
-ignore_declaration_files
+ignore_files "$DECL_FILES"
+"$FLOW" force-recheck $DECL_FILES
 "$FLOW" status --old-output-format .
-use_declaration_files
+use_files "$DECL_FILES"
+"$FLOW" force-recheck $DECL_FILES
 "$FLOW" status --old-output-format .
 
 printf "\n\n======Start off without the .js files and with the .flow file======\n"
 "$FLOW" stop .
-ignore_implementation_files
+ignore_files "$IMPL_FILES"
 "$FLOW" start . --all --wait
 
 "$FLOW" status --old-output-format .
-use_implementation_files
+use_files "$IMPL_FILES"
+"$FLOW" force-recheck $IMPL_FILES
 "$FLOW" status --old-output-format .
-ignore_implementation_files
+ignore_files "$IMPL_FILES"
+"$FLOW" force-recheck $IMPL_FILES
 "$FLOW" status --old-output-format .
 
 # reset
-use_implementation_files
-ignore_declaration_files
+use_files "$IMPL_FILES"
+ignore_files "$DECL_FILES"
