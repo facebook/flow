@@ -6082,7 +6082,7 @@ end = struct
   let find_props cx fields =
     SMap.filter (fun key _ ->
       (* Filter out keys that start with "$" *)
-      not (Str.string_match (Str.regexp "\\$") key 0)
+      not (String.length key >= 1 && key.[0] = '$')
     ) (find_props cx fields)
 
   (* TODO: Think of a better place to put this *)
