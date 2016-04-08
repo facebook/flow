@@ -202,7 +202,7 @@ let with_loc fn env =
 module rec Parse : sig
   val program : env -> Ast.program
   val statement : env -> Ast.Statement.t
-  val statement_list_item : env -> Ast.Statement.t
+  val statement_list_item : ?decorators:Ast.Expression.t list -> env -> Ast.Statement.t
   val statement_list : term_fn:(token->bool) -> env -> Ast.Statement.t list
   val statement_list_with_directives : term_fn:(token->bool) -> env -> Ast.Statement.t list * bool
   val module_body : term_fn:(token->bool) -> env -> Ast.Statement.t list
@@ -2414,11 +2414,10 @@ end = struct
             init env start_loc decorators key async generator static
       )
 
-    let class_declaration env decoratorss =
+    let class_declaration env decorators =
       (* 10.2.1 says all parts of a class definition are strict *)
       let env = env |> with_strict true in
       let start_loc = Peek.loc env in
-      let decorators = decorator_list env [] in
       Expect.token env T_CLASS;
       let tmp_env = env |> with_no_let true in
       let id = (
@@ -3327,7 +3326,7 @@ end = struct
         * cases *)
       | T_ASYNC
       | T_FUNCTION ->
-          let stmt = Parse.statement_list_item env in
+          let stmt = Parse.statement_list_item env ~decorators:decorators in
           let names = Statement.(
             match stmt with
             | (_, VariableDeclaration { VariableDeclaration.declarations; _; }) ->
@@ -4159,7 +4158,7 @@ end = struct
         | t when term_fn t -> env, string_tokens, stmts
         | _ ->
             let string_token = Peek.loc env, Peek.token env in
-            let possible_directive = item_fn env [] in
+            let possible_directive = item_fn env in
             let stmts = possible_directive::stmts in
             (match possible_directive with
             | _, Ast.Statement.Expression {
@@ -4191,18 +4190,18 @@ end = struct
         env, stmts
 
   (* 15.2 *)
-  and module_item env ?decorator =
+  and module_item ?(decorators=[]) env =
     let decorators = if Peek.token env = T_AT
       then begin
-        Object.decorator_list env []
-      end else []
+        Object.decorator_list env decorators
+      end else decorators
     in
     match Peek.token env with
     | T_EXPORT -> Statement.export_declaration env decorators
     | T_IMPORT -> Statement.import_declaration env
     | T_DECLARE when Peek.token ~i:1 env = T_EXPORT ->
         Statement.declare_export_declaration env
-    | _ -> statement_list_item env decorators
+    | _ -> statement_list_item env ~decorators:decorators
 
   and module_body_with_directives env term_fn =
     let env, directives = directives env term_fn module_item in
@@ -4237,14 +4236,13 @@ end = struct
     in fun ~term_fn env -> statements env term_fn []
 
 
-  and statement_list_item env ?decorators:(decorators = []) =
+  and statement_list_item ?(decorators=[]) env =
     Statement.(match Peek.token env with
     (* Remember kids, these look like statements but they're not
       * statements... (see section 13) *)
     | T_LET -> _let env
     | T_CONST -> var_or_const env
     | _ when Peek._function env -> Declaration._function env
-    | T_AT
     | T_CLASS -> class_declaration env decorators
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env

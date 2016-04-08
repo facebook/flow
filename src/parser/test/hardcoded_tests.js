@@ -3043,30 +3043,30 @@ module.exports = {
           ]
         }
       },
-      // '@myDecorator2 @myDecorator1\nexport class Foo { myMethod() {} }': {
-      //   '%parse_options%': {
-      //     "esproposal_decorators": true
-      //   },
-      //   'body.0': {
-      //     'type': 'ClassDeclaration',
-      //     'decorators': [
-      //       {'type': 'Identifier', 'name': 'myDecorator2'},
-      //       {'type': 'Identifier', 'name': 'myDecorator1'},
-      //     ]
-      //   }
-      // },
-      // '@myDecorator2 @myDecorator1\nexport default class Foo { myMethod() {} }': {
-      //   '%parse_options%': {
-      //     "esproposal_decorators": true
-      //   },
-      //   'body.0': {
-      //     'type': 'ClassDeclaration',
-      //     'decorators': [
-      //       {'type': 'Identifier', 'name': 'myDecorator2'},
-      //       {'type': 'Identifier', 'name': 'myDecorator1'},
-      //     ]
-      //   }
-      // },
+      '@myDecorator2 @myDecorator1\nexport class Foo { myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.declaration': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+          ]
+        }
+      },
+      '@myDecorator2 @myDecorator1\nexport default class Foo { myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.declaration': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+          ]
+        }
+      },
       'class Foo { @myDecorator1 @myDecorator2 myMethod() {} }': {
         '%parse_options%': {
           "esproposal_decorators": true
