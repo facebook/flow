@@ -70,8 +70,6 @@ MODULES=\
 NATIVE_OBJECT_FILES=\
   hack/$(INOTIFY_STUBS)\
   hack/heap/hh_shared.o\
-  hack/heap/hh_shared_common.o\
-  hack/heap/hh_shared_list.o\
   hack/hhi/hhi_elf.o\
   hack/utils/files.o\
   hack/utils/get_build_id.gen.o\
