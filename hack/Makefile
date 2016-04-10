@@ -70,8 +70,6 @@ MODULES=\
 
 NATIVE_OBJECT_FILES=\
   heap/hh_shared.o\
-  heap/hh_shared_common.o\
-  heap/hh_shared_list.o\
   hhi/hhi_elf.o\
   hhi/hhi_win32res_stubs.o\
   libancillary/libancillary-stubs.o\

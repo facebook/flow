@@ -42,9 +42,3 @@ val declare_class_in_file:
 
 val declare_fun_in_file:
   TypecheckerOptions.t -> Relative_path.t -> string -> unit
-
-val failures_from_errors: Errors.t -> Relative_path.t -> Relative_path.Set.t
-
-val errors_and_failures: unit -> Errors.t * Relative_path.t list
-
-val reset_errors: unit -> unit

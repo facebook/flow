@@ -103,9 +103,8 @@
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <unistd.h>
 #endif
-
-#include "hh_shared_common.h"
 
 // The following 'typedef' won't be required anymore
 // when dropping support for OCaml < 4.03
@@ -116,6 +115,16 @@ typedef unsigned __int64 uint64_t;
 #ifndef NO_LZ4
 #include <lz4.h>
 #include <lz4hc.h>
+#endif
+
+#ifdef _WIN32
+static int win32_getpagesize(void)
+{
+  SYSTEM_INFO siSysInfo;
+  GetSystemInfo(&siSysInfo);
+  return siSysInfo.dwPageSize;
+}
+#define getpagesize win32_getpagesize
 #endif
 
 /*****************************************************************************/
@@ -153,6 +162,11 @@ static size_t heap_size;
 #define Get_size(x)     (((size_t*)(x))[-1])
 #define Get_buf_size(x) (((size_t*)(x))[-1] + sizeof(size_t))
 #define Get_buf(x)      (x - sizeof(size_t))
+
+/* Too lazy to use getconf */
+#define CACHE_LINE_SIZE (1 << 6)
+#define CACHE_MASK      (~(CACHE_LINE_SIZE - 1))
+#define ALIGNED(x)      ((x + CACHE_LINE_SIZE - 1) & CACHE_MASK)
 
 /* As a sanity check when loading from a file */
 static uint64_t MAGIC_CONSTANT = 0xfacefacefaceb000ll;
@@ -759,6 +773,41 @@ void hh_collect(value aggressive_val) {
 }
 
 /*****************************************************************************/
+/* Allocates in the shared heap.
+ * The chunks are cache aligned.
+ * The word before the chunk address contains the size of the chunk in bytes.
+ * The function returns a pointer to the data (the size can be accessed by
+ * looking at the address: chunk - sizeof(size_t)).
+ */
+/*****************************************************************************/
+
+static char* hh_alloc(size_t size) {
+  size_t slot_size  = ALIGNED(size + sizeof(size_t));
+  char* chunk       = __sync_fetch_and_add(heap, (char*)slot_size);
+#ifdef _WIN32
+  if (!VirtualAlloc(chunk, slot_size, MEM_COMMIT, PAGE_READWRITE)) {
+    win32_maperr(GetLastError());
+    uerror("VirtualAlloc1", Nothing);
+  }
+#endif
+  *((size_t*)chunk) = size;
+  return (chunk + sizeof(size_t));
+}
+
+/*****************************************************************************/
+/* Allocates an ocaml value in the shared heap.
+ * The values can only be ocaml strings. It returns the address of the
+ * allocated chunk.
+ */
+/*****************************************************************************/
+static char* hh_store_ocaml(value data) {
+  size_t data_size = caml_string_length(data);
+  char* addr = hh_alloc(data_size);
+  memcpy(addr, String_val(data), data_size);
+  return addr;
+}
+
+/*****************************************************************************/
 /* Given an OCaml string, returns the 8 first bytes in an unsigned long.
  * The key is generated using MD5, but we only use the first 8 bytes because
  * it allows us to use atomic operations.
@@ -777,7 +826,7 @@ static void write_at(unsigned int slot, value data) {
   // Try to write in a value to indicate that the data is being written.
   if(hashtbl[slot].addr == NULL &&
      __sync_bool_compare_and_swap(&(hashtbl[slot].addr), NULL, (char*)1)) {
-    hashtbl[slot].addr = hh_store_ocaml(heap, data);
+    hashtbl[slot].addr = hh_store_ocaml(data);
   }
 }
 

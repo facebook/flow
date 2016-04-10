@@ -276,14 +276,6 @@ let type_check genv env =
   debug_print_fast_keys genv "to_recheck" fast;
   let errorl', failed_check =
     Typing_check_service.go genv.workers env.tcopt fast in
-  let errorl = List.rev_append errorl' errorl in
-
-  let errorl', failed_lazy_decl = Decl.errors_and_failures () in
-  Decl.reset_errors ();
-  let failed_decl = List.fold_left failed_lazy_decl
-    ~init:failed_decl ~f:Relative_path.Set.add in
-  let errorl = List.rev_append errorl' errorl in
-
   let errorl', failed_check = match ServerArgs.ai_mode genv.options with
     | None -> errorl', failed_check
     | Some ai_opt ->
