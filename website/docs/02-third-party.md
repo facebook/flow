@@ -48,9 +48,10 @@ Running `flow` will unsurprisingly produce an error:
 underscore_example.js:11:10,10: unknown global name: _
 ```
 
-This is because Flow doesn't know anything about the `_` variable/module. To fix this we need to bring in an interface file for Underscore.:
+This is because Flow doesn't know anything about the global variable `_`. To fix this we need to create an interface file for Underscore. If we set the `[libs]` configuration to `interfaces/`, Flow will look for any `.js` files located inside that directory for declarations.
 
 {% highlight javascript linenos=table %}
+// interfaces/underscore.js
 declare class Underscore {
   findWhere<T>(list: Array<T>, properties: {}): T;
 }
