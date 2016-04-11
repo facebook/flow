@@ -208,10 +208,10 @@ takes_any(0);
 takes_any("");
 takes_any({ foo: "bar" });
 
-declare var any: any;
-(any: number);
-(any: string);
-(any: { foo: string });
+declare var unsafe: any;
+(unsafe: number);
+(unsafe: string);
+(unsafe: { foo: string });
 
 /*
   In addition to compatibility between types, it's useful to think of `any` in
@@ -220,9 +220,9 @@ declare var any: any;
   taking any number arguments of any type, which will also return `any`.
 */
 
-any.foo.bar.baz;
-(any("foo"): string);
-(any("bar"): number);
+unsafe.foo.bar.baz;
+(unsafe("foo"): string);
+(unsafe("bar"): number);
 
 /*
   You can think of `any` as a kind of "backdoor" in the type system. Use of
