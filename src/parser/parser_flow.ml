@@ -15,7 +15,6 @@ open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
 module SMap = Map.Make(String)
-
 let is_future_reserved = function
   | "enum" -> true
   | _ -> false
@@ -202,7 +201,7 @@ let with_loc fn env =
 module rec Parse : sig
   val program : env -> Ast.program
   val statement : env -> Ast.Statement.t
-  val statement_list_item : env -> Ast.Statement.t
+  val statement_list_item : ?decorators:Ast.Expression.t list -> env -> Ast.Statement.t
   val statement_list : term_fn:(token->bool) -> env -> Ast.Statement.t list
   val statement_list_with_directives : term_fn:(token->bool) -> env -> Ast.Statement.t list * bool
   val module_body : term_fn:(token->bool) -> env -> Ast.Statement.t list
@@ -219,7 +218,7 @@ module rec Parse : sig
   val pattern : env -> Error.t -> Ast.Pattern.t
   val pattern_from_expr : env -> Ast.Expression.t -> Ast.Pattern.t
   val object_key : env -> Loc.t * Ast.Expression.Object.Property.key
-  val class_declaration : env -> Ast.Statement.t
+  val class_declaration : env -> Ast.Expression.t list -> Ast.Statement.t
   val class_expression : env -> Ast.Expression.t
   val is_assignable_lhs : Ast.Expression.t -> bool
 end = struct
@@ -1979,8 +1978,9 @@ end = struct
   module Object : sig
     val key : env -> Loc.t * Ast.Expression.Object.Property.key
     val _initializer : env -> Loc.t * Ast.Expression.Object.t
-    val class_declaration : env -> Ast.Statement.t
+    val class_declaration : env -> Ast.Expression.t list -> Ast.Statement.t
     val class_expression : env -> Ast.Expression.t
+    val decorator_list : env -> Ast.Expression.t list -> Ast.Expression.t list
   end = struct
     let rec decorator_list env decorators =
       match Peek.token env with
@@ -2373,7 +2373,7 @@ end = struct
             value;
             kind;
             static;
-            decorators
+            decorators;
           })))
 
       in fun env -> Ast.Expression.Object.Property.(
@@ -2413,10 +2413,11 @@ end = struct
             init env start_loc decorators key async generator static
       )
 
-    let class_declaration env =
+    let class_declaration env decorators =
       (* 10.2.1 says all parts of a class definition are strict *)
       let env = env |> with_strict true in
       let start_loc = Peek.loc env in
+      let decorators = decorator_list env decorators in
       Expect.token env T_CLASS;
       let tmp_env = env |> with_no_let true in
       let id = (
@@ -2434,10 +2435,17 @@ end = struct
         typeParameters;
         superTypeParameters;
         implements;
+        classDecorators=decorators;
       }))
 
     let class_expression env =
       let start_loc = Peek.loc env in
+      let decorators =
+        if (parse_options env).esproposal_decorators then
+          decorator_list env []
+        else
+          []
+      in
       Expect.token env T_CLASS;
       let id, typeParameters = match Peek.token env with
         | T_EXTENDS
@@ -2456,6 +2464,7 @@ end = struct
         typeParameters;
         superTypeParameters;
         implements;
+        classDecorators=decorators;
       }))
 
     let key = key ~allow_computed_key:false
@@ -2476,7 +2485,7 @@ end = struct
     val declare_export_declaration: env -> Ast.Statement.t
     val do_while: env -> Ast.Statement.t
     val empty: env -> Ast.Statement.t
-    val export_declaration: env -> Ast.Statement.t
+    val export_declaration: env -> Ast.Expression.t list -> Ast.Statement.t
     val expression: env -> Ast.Statement.t
     val import_declaration: env -> Ast.Statement.t
     val interface: env -> Ast.Statement.t
@@ -3160,6 +3169,7 @@ end = struct
       | _ ->
           Parse.statement env)
 
+
     let export_source env =
       Expect.contextual env "from";
       match Peek.token env with
@@ -3232,7 +3242,7 @@ end = struct
           | None -> errs in
           export_specifiers_and_errs env (specifier::specifiers) errs
 
-    let export_declaration env =
+    let export_declaration env decorators =
       let env = env |> with_strict true |> with_in_export true in
       let start_loc = Peek.loc env in
       Expect.token env T_EXPORT;
@@ -3248,7 +3258,7 @@ end = struct
               fst fn, Some (Declaration fn)
           | T_CLASS ->
               (* export default class foo { ... } *)
-              let _class = Object.class_declaration env in
+              let _class = Object.class_declaration env decorators in
               fst _class, Some (Declaration _class)
           | _ ->
               (* export default [assignment expression]; *)
@@ -3316,7 +3326,7 @@ end = struct
         * cases *)
       | T_ASYNC
       | T_FUNCTION ->
-          let stmt = Parse.statement_list_item env in
+          let stmt = Parse.statement_list_item env ~decorators:decorators in
           let names = Statement.(
             match stmt with
             | (_, VariableDeclaration { VariableDeclaration.declarations; _; }) ->
@@ -3425,6 +3435,7 @@ end = struct
               (* declare export default function foo (...): ...  *)
               let fn = declare_function env start_loc in
               fst fn, Some (Function fn)
+          | T_AT
           | T_CLASS ->
               (* declare export default class foo { ... } *)
               let _class = declare_class env start_loc in
@@ -4179,13 +4190,18 @@ end = struct
         env, stmts
 
   (* 15.2 *)
-  and module_item env =
+  and module_item ?(decorators=[]) env =
+    let decorators = if Peek.token env = T_AT
+      then begin
+        Object.decorator_list env decorators
+      end else decorators
+    in
     match Peek.token env with
-    | T_EXPORT -> Statement.export_declaration env
+    | T_EXPORT -> Statement.export_declaration env decorators
     | T_IMPORT -> Statement.import_declaration env
     | T_DECLARE when Peek.token ~i:1 env = T_EXPORT ->
         Statement.declare_export_declaration env
-    | _ -> statement_list_item env
+    | _ -> statement_list_item env ~decorators:decorators
 
   and module_body_with_directives env term_fn =
     let env, directives = directives env term_fn module_item in
@@ -4220,14 +4236,15 @@ end = struct
     in fun ~term_fn env -> statements env term_fn []
 
 
-  and statement_list_item env =
+  and statement_list_item ?(decorators=[]) env =
     Statement.(match Peek.token env with
     (* Remember kids, these look like statements but they're not
       * statements... (see section 13) *)
     | T_LET -> _let env
     | T_CONST -> var_or_const env
     | _ when Peek._function env -> Declaration._function env
-    | T_CLASS -> class_declaration env
+    | T_AT
+    | T_CLASS -> class_declaration env decorators
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
@@ -4277,7 +4294,6 @@ end = struct
     | T_STATIC
     | T_IMPORT (* TODO *)
     | T_EXPORT (* TODO *)
-    | T_AT
     | T_ELLIPSIS ->
         error_unexpected env;
         Eat.token env;

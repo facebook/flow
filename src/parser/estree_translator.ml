@@ -617,6 +617,7 @@ end with type t = Impl.t) = struct
       "typeParameters", option type_parameter_declaration c.typeParameters;
       "superTypeParameters", option type_parameter_instantiation c.superTypeParameters;
       "implements", array_of_list class_implements c.implements;
+      "decorators", array_of_list expression c.classDecorators;
     |]
   )
 
@@ -628,6 +629,7 @@ end with type t = Impl.t) = struct
       "typeParameters", option type_parameter_declaration c.typeParameters;
       "superTypeParameters", option type_parameter_instantiation c.superTypeParameters;
       "implements", array_of_list class_implements c.implements;
+      "decorators", array_of_list expression c.classDecorators;
     |]
   )
 

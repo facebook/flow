@@ -172,6 +172,11 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       if (esprima.implements === undefined) {
         esprima.implements = [];
       }
+
+      // Class Decorator are not part of esprima but supported by flow
+      if (esprima.decorators === undefined) {
+        esprima.decorators = [];
+      }
       break;
     case "ClassDeclaration":
       if (esprima.typeParameters === undefined) {
@@ -182,6 +187,11 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       }
       if (esprima.implements === undefined) {
         esprima.implements = [];
+      }
+
+      // Class Decorator are not part of esprima but supported by flow
+      if (esprima.decorators === undefined) {
+        esprima.decorators = [];
       }
       break;
     case "ClassBody":
