@@ -50,6 +50,7 @@ type client_check_env = {
   timeout: float option;
   autostart: bool;
   no_load: bool;
+  ai_mode: string option;
 }
 
 let mode_to_string = function

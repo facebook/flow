@@ -23,6 +23,7 @@ type env = {
   root: Path.t;
   no_load : bool;
   silent : bool;
+  ai_mode : string option;
 }
 
 let start_server env =
@@ -32,11 +33,15 @@ let start_server env =
   Unix.set_close_on_exec in_fd;
   let ic = Unix.in_channel_of_descr in_fd in
 
-  let hh_server = get_hhserver () in
+  let ai_options =
+    match env.ai_mode with
+    | Some ai -> [| "--ai"; ai |]
+    | None -> [||] in  let hh_server = get_hhserver () in
   let hh_server_args =
     Array.concat [
       [|hh_server; "-d"; Path.to_string env.root|];
       if env.no_load then [| "--no-load" |] else [||];
+      ai_options;
       (** If the client starts up a server monitor process, the output of that
        * bootup is passed to this FD - so this FD needs to be threaded
        * through the server monitor process then to the typechecker process.

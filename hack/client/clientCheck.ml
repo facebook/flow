@@ -73,6 +73,7 @@ let main args =
     expiry = args.timeout;
     no_load = args.no_load;
     to_ide = false;
+    ai_mode = args.ai_mode;
   } in
   let exit_status =
     match args.mode with

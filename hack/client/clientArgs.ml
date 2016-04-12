@@ -72,6 +72,7 @@ let parse_check_args cmd =
   let refactor_mode = ref "" in
   let refactor_before = ref "" in
   let format_from = ref 0 in
+  let ai_mode = ref None in
 
   (* custom behaviors *)
   let set_from x () = from := x in
@@ -251,7 +252,10 @@ let parse_check_args cmd =
     "--timeout",  Arg.Float (fun x -> timeout := Some (Unix.time() +. x)),
       " set the timeout in seconds (default: no timeout)";
     "--autostart-server", Arg.Bool (fun x -> autostart := x),
-      " automatically start hh_server if it's not running (default: true)\n";
+      " automatically start hh_server if it's not running (default: true)";
+    "--ai", Arg.String (fun s -> ai_mode :=
+         Some (ignore (Ai_options.prepare ~server:true s); s)),
+      " run AI module with provided options\n";
 
     (* deprecated *)
     "--from-vim", Arg.Unit (fun () -> from := "vim"; retries := 0; retry_if_init := false),
@@ -313,6 +317,7 @@ let parse_check_args cmd =
     timeout = !timeout;
     autostart = !autostart;
     no_load = !no_load;
+    ai_mode = !ai_mode;
   }
 
 let parse_start_env command =
@@ -323,6 +328,7 @@ let parse_start_env command =
       WWW-ROOT is assumed to be current directory if unspecified\n"
       Sys.argv.(0) command (String.capitalize command) in
   let no_load = ref false in
+  let ai_mode = ref None in
   let wait_deprecation_msg () = Printf.eprintf
     "WARNING: --wait is deprecated, does nothing, and will be going away \
      soon!\n%!" in
@@ -330,7 +336,9 @@ let parse_start_env command =
     "--wait", Arg.Unit wait_deprecation_msg,
     " this flag is deprecated and does nothing!";
     "--no-load", Arg.Set no_load,
-    " start from a fresh state"
+    " start from a fresh state";
+    "--ai", Arg.String (fun x -> ai_mode := Some x),
+    "  run ai with options ";
   ] in
   let args = parse_without_command options usage command in
   let root =
@@ -344,6 +352,7 @@ let parse_start_env command =
   { ClientStart.
     root = root;
     no_load = !no_load;
+    ai_mode = !ai_mode;
     silent = false;
   }
 

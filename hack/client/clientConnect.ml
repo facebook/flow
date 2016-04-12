@@ -20,6 +20,7 @@ type env = {
   expiry : float option;
   no_load : bool;
   to_ide : bool;
+  ai_mode : string option;
 }
 
 let running_load_script_re = Str.regexp_string "Running load script"
@@ -205,6 +206,7 @@ let rec connect ?(first_attempt=false) env retries start_time tail_env =
           root = env.root;
           no_load = env.no_load;
           silent = false;
+          ai_mode = env.ai_mode;
         };
         connect env retries start_time tail_env
       end else begin
