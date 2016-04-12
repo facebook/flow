@@ -54,6 +54,11 @@ type command_with_context = {
   command: command;
 }
 
+type dump_types_response = (
+  (Loc.t * string * string * string option * Reason_js.t list) list,
+  Loc.t * string
+) Utils_js.ok_or_err
+
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   let command = {
     client_logging_context = FlowEventLogger.get_context ();

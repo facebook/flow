@@ -107,9 +107,10 @@ let main option_values root json strip_root path include_raw filename () =
   ServerProt.cmd_to_channel oc
     (ServerProt.DUMP_TYPES (file, include_raw));
 
-  match (Timeout.input_value ic) with
-  | (Some err, None) -> handle_error err json (relativize strip_root root)
-  | (None, Some resp) -> handle_response resp json (relativize strip_root root)
-  | (_, _) -> assert false
+  match (Timeout.input_value ic : ServerProt.dump_types_response) with
+  | Utils_js.Err err ->
+      handle_error err json (relativize strip_root root)
+  | Utils_js.OK resp ->
+      handle_response resp json (relativize strip_root root)
 
 let command = CommandSpec.command spec main

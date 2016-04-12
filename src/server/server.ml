@@ -200,19 +200,19 @@ struct
       in
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
-    let (err, resp) =
+    let resp =
     (try
        let content = ServerProt.file_input_get_content file_input in
        let cx = match Types_js.typecheck_contents ~options content file with
        | _, Some cx, _, _ -> cx
        | _  -> failwith "Couldn't parse file" in
-      (None, Some (Query_types.dump_types printer raw_printer cx))
+      OK (Query_types.dump_types printer raw_printer cx)
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
-      (Some err, None)
+      Err err
     ) in
-    Marshal.to_channel oc (err, resp) [];
+    Marshal.to_channel oc (resp : ServerProt.dump_types_response) [];
     flush oc
 
   let parse_suggest_cmd file =
