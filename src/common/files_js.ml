@@ -31,7 +31,8 @@ let is_valid_path ~options =
   let file_exts = Options.module_file_exts options in
   let is_valid_path_helper path =
     not (is_dot_file path) &&
-    SSet.exists (Filename.check_suffix path) file_exts
+    (SSet.exists (Filename.check_suffix path) file_exts ||
+      Filename.basename path = "package.json")
 
   in fun path ->
     if Filename.check_suffix path flow_ext
