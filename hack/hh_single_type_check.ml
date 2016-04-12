@@ -28,6 +28,7 @@ type mode =
   | Lint
   | Suggest
   | Dump_deps
+  | Identify_symbol of int * int
 
 type options = {
   filename : string;
@@ -206,6 +207,7 @@ let parse_options () =
   let usage = Printf.sprintf "Usage: %s filename\n" Sys.argv.(0) in
   let mode = ref Errors in
   let no_builtins = ref false in
+  let line = ref 0 in
   let set_mode x () =
     if !mode <> Errors
     then raise (Arg.Bad "only a single mode should be specified")
@@ -245,6 +247,12 @@ let parse_options () =
     "--dump-inheritance",
       Arg.Unit (set_mode Dump_inheritance),
       "Print inheritance";
+    "--identify-symbol",
+      Arg.Tuple ([
+        Arg.Int (fun x -> line := x);
+        Arg.Int (fun column -> set_mode (Identify_symbol (!line, column)) ());
+      ]),
+      "Show info about symbol at given line and column";
   ] in
   let options = Arg.align options in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
@@ -342,6 +350,19 @@ let print_coverage fn type_acc =
   let counts = ServerCoverageMetric.count_exprs fn type_acc in
   ClientCoverageMetric.go ~json:false (Some (Leaf counts))
 
+let print_symbol symbol =
+  let open IdentifySymbolService in
+  let line, start, end_ = Pos.info_pos symbol.pos in
+  Printf.printf "%s\n%s\nline %d, characters %d-%d\n"
+    symbol.name
+    begin match symbol.type_ with
+    | Class -> "Class"
+    | Function -> "Function"
+    | Method -> "Method"
+    | LocalVar -> "LocalVar"
+    end
+    line start end_
+
 let handle_mode mode filename tcopt files_contents files_info errors =
   match mode with
   | Ai _ -> ()
@@ -425,6 +446,10 @@ let handle_mode mode filename tcopt files_contents files_info errors =
         end;
       end
     end;
+  | Identify_symbol (line, column) ->
+    let file = cat (Relative_path.to_absolute filename) in
+    let result = ServerIdentifyFunction.go file line column in
+    Option.iter result print_symbol
   | Suggest
   | Errors ->
       let errors =
