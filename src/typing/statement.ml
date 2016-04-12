@@ -4295,7 +4295,9 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       let prop_t = match Refinement.get cx expr expr_reason with
       | Some t -> t
       | None ->
-          get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
+        if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t
+        then AnyT.at prop_loc
+        else get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
       in
 
       (* refine the object (`foo.bar` in the example) based on the prop. *)
@@ -4478,7 +4480,9 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       let t = match Refinement.get cx e expr_reason with
       | Some t -> t
       | None ->
-          get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
+        if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t
+        then AnyT.at prop_loc
+        else get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
       in
 
       let out = match Refinement.key e with
