@@ -261,8 +261,16 @@ let rec normalize_type_impl cx ids t = match t with
   | AbstractT t ->
       AbstractT (normalize_type_impl cx ids t)
 
+  | EvalT (_, _, id) ->
+      let evaluated = Context.evaluated cx in
+      begin match IMap.get id evaluated with
+      | Some t -> normalize_type_impl cx ids t
+      | None ->
+        failwith (spf "Unexpectedly unevaluated EvalT: %s"
+          (reason_of_t t |> string_of_reason))
+      end
+
   | FunProtoT _
-  | EvalT (_, _, _)
   | ExistsT _
   | ModuleT (_, _)
   | SpeculativeMatchT (_, _, _)
