@@ -1,10 +1,14 @@
-test.js:4
-  4:   @decorator1
+test.js:3
+  3: @decorator4
+      ^^^^^^^^^^ Experimental decorator usage. Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
+
+test.js:5
+  5:   @decorator1
         ^^^^^^^^^^ Experimental decorator usage. Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
 
-test.js:7
-  7:   @decorator2
+test.js:8
+  8:   @decorator2
         ^ Experimental decorator usage. Decorators are an early stage proposal that may change. Additionally, Flow does not account for the type implications of decorators at this time.
 
 
-Found 2 errors
+Found 3 errors

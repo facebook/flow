@@ -5148,8 +5148,11 @@ and mk_class = Ast.Class.(
     typeParameters;
     superTypeParameters;
     implements;
+    classDecorators;
   } ->
   let self = Flow.mk_tvar cx reason_c in
+
+  warn_or_ignore_decorators cx classDecorators;
 
   (* As a running example, let's say the class declaration is:
      class C<X> extends D<X> { f: X; m<Y: X>(x: Y): X { ... } }

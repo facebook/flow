@@ -3031,6 +3031,90 @@ module.exports = {
       },
     },
     'Decorators (experimental/early)': {
+      'function Bar() { @myDecorator2 @myDecorator1\nclass Foo { myMethod() {} } }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.body.body.0': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+          ]
+        }
+      },
+      '@myDecorator2 @myDecorator1\nclass Foo { myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+          ]
+        }
+      },
+      '@myDecorator2 @myDecorator1\nexport class Foo { myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.declaration': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+          ]
+        }
+      },
+      '@myDecorator1\nexport\n@myDecorator2\nclass Foo { myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.declaration': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+          ]
+        }
+      },
+      '@myDecorator2 @myDecorator1\nexport default class Foo { myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.declaration': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+          ]
+        }
+      },
+      '@myDecorator1\nexport default\n@myDecorator2\nclass Foo { myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.declaration': {
+          'type': 'ClassDeclaration',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+          ]
+        }
+      },
+      'class Foo { @myDecorator1 @myDecorator2 myMethod() {} }': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'body.0.body.body': [{
+          'type': 'MethodDefinition',
+          'decorators': [
+            {'type': 'Identifier', 'name': 'myDecorator1'},
+            {'type': 'Identifier', 'name': 'myDecorator2'},
+          ]
+        }]
+      },
       'class Foo { @myDecorator1 @myDecorator2 myMethod() {} }': {
         '%parse_options%': {
           "esproposal_decorators": true
@@ -3126,11 +3210,91 @@ module.exports = {
       }
     },
     'Invalid Decorators': {
-      '@blah': {
+      '@BadDirectiveNoParseOption': {
         'errors': {
           '0.message': 'Unexpected token @',
         },
-      }
+      },
+      '@BadDirectiveWithParseOption': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\nimport * from "foo"': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\ndeclare export class Foo {}': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\nlet x = 123;': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\nconst x = 123;': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\nfunction foo() {}': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\ninterface Foo {}': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\ndeclare class Foo {}': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\ntype Foo = any;': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
+      '@blah\n10*20;': {
+        '%parse_options%': {
+          "esproposal_decorators": true
+        },
+        'errors': {
+          '0.message': 'Found a decorator in an unsupported position.',
+        },
+      },
     },
     'Valid uninitialized destructured bindings': {
       'function x({ foo }) {}': {},

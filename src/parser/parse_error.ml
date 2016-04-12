@@ -73,6 +73,7 @@ type t =
   | DuplicateExport of string
   | ExportNamelessClass
   | ExportNamelessFunction
+  | UnsupportedDecorator
 
 exception Error of (Loc.t * t) list
 
@@ -165,4 +166,5 @@ module PP =
       | ExportNamelessFunction -> "When exporting a function as a named export, \
           you must specify a function name. Did you mean \
           `export default function ...`?"
+      | UnsupportedDecorator -> "Found a decorator in an unsupported position."
   end
