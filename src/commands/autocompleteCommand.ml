@@ -13,6 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
+open Utils_js
 
 let spec = {
   CommandSpec.
@@ -80,7 +81,7 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main option_values root json strip_root args () =
+let main option_values root use_json strip_root args () =
   let file = parse_args args in
   let root = guess_root (
     match root with
@@ -94,22 +95,33 @@ let main option_values root json strip_root args () =
     else fun loc -> loc in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
-  let error, completions = Timeout.input_value ic in
-  if json
+  let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
+  if use_json
   then (
-    let results =
-      List.map
+    let json = match results with
+    | Err error ->
+      Hh_json.JSON_Object [
+        "error", Hh_json.JSON_String error;
+        "result", Hh_json.JSON_Array []; (* TODO: remove this? kept for BC *)
+      ]
+    | OK completions ->
+      let results = List.map
         (AutocompleteService_js.autocomplete_result_to_json loc_preprocessor)
         completions
+      in
+      Hh_json.JSON_Object ["result", Hh_json.JSON_Array results]
     in
-    let json = wrap_command_result_json error (Hh_json.JSON_Array results) in
     print_endline (Hh_json.json_to_string json)
   ) else (
-    List.iter (fun res ->
-      let name = res.AutocompleteService_js.res_name in
-      let ty = res.AutocompleteService_js.res_ty in
-      print_endline (Printf.sprintf "%s %s" name ty)
-    ) completions
+    match results with
+    | Err error ->
+      prerr_endlinef "Error: %s" error
+    | OK completions ->
+      List.iter (fun res ->
+        let name = res.AutocompleteService_js.res_name in
+        let ty = res.AutocompleteService_js.res_ty in
+        print_endline (Printf.sprintf "%s %s" name ty)
+      ) completions
   )
 
 let command = CommandSpec.command spec main

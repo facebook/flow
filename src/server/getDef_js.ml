@@ -63,11 +63,16 @@ let getdef_get_result ~options cx state =
   | Some Gdmem (name, this) ->
       let this_t = Flow_js.resolve_type cx this in
       let member_result = Flow_js.Autocomplete.extract_members cx this_t in
-      let _, result_map =
+      let command_result =
         Flow_js.Autocomplete.command_result_of_member_result member_result in
-      (match SMap.get name result_map with
-      | Some t -> Type.loc_of_t t
-      | None -> Loc.none)
+      begin match command_result with
+      | Err _ -> Loc.none
+      | OK result_map ->
+        begin match SMap.get name result_map with
+        | Some t -> Type.loc_of_t t
+        | None -> Loc.none
+        end
+      end
   | Some Gdrequire (name, require_loc) ->
       let module_t = Flow_js.resolve_type cx (
         SMap.find_unsafe name (Context.module_map cx)

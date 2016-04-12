@@ -10,6 +10,7 @@
 
 open Autocomplete_js
 open Type_printer
+open Utils_js
 
 (* Details about functions to be added in json output *)
 type func_param_result = {
@@ -150,20 +151,25 @@ let autocomplete_member
     ~json_data
     ~timing;
 
-  let error, result_map = Autocomplete.command_result_of_member_result result in
-
-  let result_map = autocomplete_filter_members result_map in
-  let result_map = SMap.mapi (fun name t ->
-      let loc = Type.loc_of_t t in
-      let gt = Type_normalizer.normalize_type cx t in
-      autocomplete_create_result cx name gt loc
-    ) result_map in
-  error, List.rev (SMap.values result_map)
+  match Autocomplete.command_result_of_member_result result with
+  | Err error -> Err error
+  | OK result_map ->
+    OK (
+      result_map
+      |> autocomplete_filter_members
+      |> SMap.mapi (fun name t ->
+          let loc = Type.loc_of_t t in
+          let gt = Type_normalizer.normalize_type cx t in
+          autocomplete_create_result cx name gt loc
+        )
+      |> SMap.values
+      |> List.rev
+    )
 )
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id cx env =
-  SMap.fold (fun name entry acc ->
+  let result = SMap.fold (fun name entry acc ->
     (* Filter out internal environment variables except for this and
        super. *)
     let is_this = name = (Reason_js.internal_name "this") in
@@ -186,8 +192,8 @@ let autocomplete_id cx env =
         autocomplete_create_result cx name type_ loc in
       result :: acc
     )
-  ) env []
-  |> Utils_js.command_result_success
+  ) env [] in
+  OK result
 
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
@@ -223,4 +229,4 @@ let autocomplete_get_results timing client_logging_context cx state parse_result
   parse_result
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
       autocomplete_jsx timing client_logging_context cx cls ac_name ac_loc parse_result
-  | None -> Utils_js.command_result_success []
+  | None -> OK []

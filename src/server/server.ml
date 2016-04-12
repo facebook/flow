@@ -126,10 +126,10 @@ struct
           parse_result
       with exn ->
         Flow_logger.log "Couldn't autocomplete%s" (Printexc.to_string exn);
-        command_result_success []
+        OK []
     in
     Autocomplete_js.autocomplete_unset_hooks ();
-    Marshal.to_channel oc results [];
+    Marshal.to_channel oc (results : ServerProt.autocomplete_response) [];
     flush oc
 
   let check_file ~options file_input verbose oc =
