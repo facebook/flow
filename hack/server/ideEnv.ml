@@ -32,5 +32,5 @@ let build_env typechecker tcopt = {
   persistent_client_requests = [];
   typechecker_init_done = false;
   files_info = Relative_path.Map.empty;
-  errorl = [];
+  errorl = Errors.empty;
 }

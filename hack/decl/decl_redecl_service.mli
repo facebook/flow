@@ -15,4 +15,4 @@ val redo_type_decl :
   bucket_size:int ->
   TypecheckerOptions.t ->
   FileInfo.names Relative_path.Map.t ->
-  Errors.error list * Relative_path.Set.t * DepSet.t * DepSet.t
+  Errors.t * Relative_path.Set.t * DepSet.t * DepSet.t

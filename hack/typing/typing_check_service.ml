@@ -21,7 +21,7 @@ module TypeCheckStore = GlobalStorage.Make(struct
   type t = TypecheckerOptions.t
 end)
 
-let neutral = [], Relative_path.Set.empty
+let neutral = Errors.empty, Relative_path.Set.empty
 
 (*****************************************************************************)
 (* The job that will be run on the workers *)
@@ -32,7 +32,7 @@ let type_fun tcopt fn x =
     if not @@ Naming_heap.FunHeap.mem x then
       Decl.declare_fun_in_file tcopt fn x;
     let fun_ = Naming_heap.FunHeap.find_unsafe x in
-    Typing.fun_def tcopt fun_;
+    Typing.fun_def tcopt fun_
   with Not_found -> ()
 
 let type_class tcopt fn x =
@@ -81,9 +81,12 @@ let check_file tcopt (errors, failed) (fn, file_infos) =
     SSet.iter (check_typedef tcopt fn) n_types;
     SSet.iter (check_const tcopt fn) n_consts;
   end in
+  let errors = Errors.merge errors' errors in
   let failed =
-    if errors' <> [] then Relative_path.Set.add failed fn else failed in
-  List.rev_append errors' errors, failed
+    if not (Errors.is_empty errors')
+    then Relative_path.Set.add failed fn
+    else failed in
+  errors, failed
 
 let check_files tcopt (errors, failed) fnl =
   SharedMem.invalidate_caches();

@@ -60,7 +60,7 @@ let list_files env oc =
       Relative_path.Set.add acc (Pos.filename pos)
     end
     ~init:Relative_path.Set.empty
-    env.errorl in
+    (Errors.get_error_list env.errorl) in
   Relative_path.Set.iter acc (fun s ->
     Printf.fprintf oc "%s\n" (Relative_path.to_absolute s));
   flush oc

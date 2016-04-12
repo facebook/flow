@@ -52,8 +52,3 @@ let print_errorl use_json el oc =
       end sl
   end;
   flush oc
-
-let sort_errorl el =
-  List.sort ~cmp:begin fun x y ->
-    Pos.compare (Errors.get_pos x) (Errors.get_pos y)
-  end el

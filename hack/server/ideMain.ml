@@ -121,7 +121,8 @@ let handle_recheck_done env =
       | x -> `Snd x
     end in
   List.iter ready_requests (fun id ->
-    let errorl = List.map env.errorl Errors.to_absolute in
+    let errorl = List.map (Errors.get_error_list env.errorl)
+        Errors.to_absolute in
     let response = Status_response (ServerError.get_errorl_json errorl) in
     send_typechecker_response_to_client env id response
   );

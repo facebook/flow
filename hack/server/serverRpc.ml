@@ -42,8 +42,8 @@ type _ t =
 let handle : type a. genv -> env -> a t -> a =
   fun genv env -> function
     | STATUS ->
-        HackEventLogger.check_response env.errorl;
-        let el = ServerError.sort_errorl env.errorl in
+      HackEventLogger.check_response (Errors.get_error_list env.errorl);
+        let el = Errors.get_sorted_error_list env.errorl in
         List.map ~f:Errors.to_absolute el
     | COVERAGE_LEVELS fn -> ServerColorFile.go env fn
     | INFER_TYPE (fn, line, char) ->

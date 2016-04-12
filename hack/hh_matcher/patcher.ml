@@ -545,7 +545,8 @@ let apply_patches
                   so_far ^ "\n" ^ fst str_pair ^ " " ^ snd str_pair)
                  ""
                  (Common_exns.flatten_error
-                    (Common_exns.ParseErrors format_errs))) in
+                    (Common_exns.ParseErrors
+                       (Errors.get_error_list format_errs)))) in
             failwith ("Failed to format file:\n" ^ errors) in
        let format_patch =
          { start_loc = f_start;

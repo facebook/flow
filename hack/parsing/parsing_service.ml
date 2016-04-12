@@ -15,7 +15,7 @@ open Core
 (*****************************************************************************)
 
 let neutral = (
-  Relative_path.Map.empty, [],
+  Relative_path.Map.empty, Errors.empty,
   Relative_path.Set.empty
   )
 
@@ -53,9 +53,9 @@ let really_parse (acc, errorl, error_files) fn =
        consider_names_just_for_autoload = false}
     in
     let acc = Relative_path.Map.add acc ~key:fn ~data:defs in
-    let errorl = List.rev_append errorl' errorl in
+    let errorl = Errors.merge errorl' errorl in
     let error_files =
-      if errorl' = []
+      if Errors.is_empty errorl'
       then error_files
       else Relative_path.Set.add error_files fn
     in
@@ -87,7 +87,7 @@ let merge_parse
     (acc1, status1, files1)
     (acc2, status2, files2) =
   Relative_path.Map.union acc1 acc2,
-  List.rev_append status1 status2,
+  Errors.merge status1 status2,
   Relative_path.Set.union files1 files2
 
 let parse_files acc fnl =

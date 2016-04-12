@@ -181,10 +181,10 @@ let declare_names env files_info fast_parsed =
   let errorl, failed_naming =
     Relative_path.Map.fold fast_parsed ~f:begin fun k v (errorl, failed) ->
       let errorl', failed'= NamingGlobal.ndecl_file k v in
-      let errorl = List.rev_append errorl' errorl in
+      let errorl = Errors.merge errorl' errorl in
       let failed = Relative_path.Set.union failed' failed in
       errorl, failed
-    end ~init:([], Relative_path.Set.empty) in
+    end ~init:(Errors.empty, Relative_path.Set.empty) in
   let fast = remove_failed fast_parsed failed_naming in
   let fast = FileInfo.simplify_fast fast in
   env, errorl, failed_naming, fast
@@ -234,7 +234,8 @@ let type_check genv env =
   (* COMPUTES WHAT MUST BE REDECLARED  *)
   let fast = extend_fast fast files_info env.failed_decl in
   let fast = add_old_decls env.files_info fast in
-  let errorl = List.rev_append errorl' errorl in
+  let errorl = Errors.merge errorl' errorl in
+
   HackEventLogger.naming_end t;
   let t = Hh_logger.log_duration "Naming" t in
 
@@ -257,7 +258,7 @@ let type_check genv env =
     Decl_redecl_service.redo_type_decl
       ~bucket_size genv.workers env.tcopt fast_redecl_phase2 in
   let to_recheck2 = Typing_deps.get_files to_recheck2 in
-  let errorl = List.rev_append errorl' errorl in
+  let errorl = Errors.merge errorl' errorl in
 
   (* DECLARING TYPES: merging results of the 2 phases *)
   let fast = Relative_path.Map.union fast fast_redecl_phase2 in
@@ -283,10 +284,11 @@ let type_check genv env =
       let ae, af = Ai.go_incremental
         Typing_check_utils.check_defs
         genv.workers fast_infos env.tcopt ai_opt in
-      (List.rev_append errorl' ae),
+      (Errors.merge errorl' ae),
       (Relative_path.Set.union af failed_check)
   in
-  let errorl = List.rev (List.rev_append errorl' errorl) in
+  let errorl = Errors.merge errorl' errorl in
+
   let total_rechecked_count = Relative_path.Map.cardinal fast in
   HackEventLogger.type_check_end total_rechecked_count t;
   let t = Hh_logger.log_duration "Type-check" t in

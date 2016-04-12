@@ -10,7 +10,6 @@
 
 type 'a error_
 type error = Pos.t error_
-type t = error list
 
 val is_hh_fixme : (Pos.t -> int -> bool) ref
 val to_list : 'a error_ -> ('a * string) list
@@ -309,10 +308,22 @@ val to_string : Pos.absolute error_ -> string
 val try_ : (unit -> 'a) -> (error -> 'a) -> 'a
 val try_with_error : (unit -> 'a) -> (unit -> 'a) -> 'a
 val try_add_err : Pos.t -> string -> (unit -> 'a) -> (unit -> 'a) -> 'a
-val do_ : (unit -> 'a) -> error list * 'a
+
+(* The type of collections of errors *)
+type t
+
+val do_ : (unit -> 'a) -> t * 'a
 val ignore_ : (unit -> 'a) -> 'a
 val try_when :
   (unit -> 'a) -> when_:(unit -> bool) -> do_:(error -> unit) -> 'a
 val has_no_errors : (unit -> 'a) -> bool
 val must_error : (unit -> unit) -> (unit -> unit) -> unit
 val to_absolute : error -> Pos.absolute error_
+
+val merge : t -> t -> t
+val empty : t
+val is_empty : t -> bool
+val get_error_list : t -> error list
+val get_sorted_error_list : t -> error list
+val from_error_list : error list -> t
+val iter_error_list : (error -> unit) -> t -> unit

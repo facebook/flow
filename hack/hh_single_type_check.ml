@@ -429,7 +429,8 @@ let handle_mode mode filename tcopt files_contents files_info errors =
   | Errors ->
       let errors =
         Relative_path.Map.fold files_info ~f:begin fun fn fileinfo errors ->
-          errors @ Typing_check_utils.check_defs tcopt fn fileinfo
+          errors @ Errors.get_error_list
+              (Typing_check_utils.check_defs tcopt fn fileinfo)
         end ~init:errors in
       if mode = Suggest
       then Relative_path.Map.iter files_info suggest_and_print;
@@ -476,7 +477,8 @@ let decl_and_run_mode {filename; mode; no_builtins} =
 
     files_info
   end in
-  handle_mode mode filename tcopt files_contents files_info errors
+  handle_mode mode filename tcopt files_contents files_info
+    (Errors.get_error_list errors)
 
 let main_hack ({filename; mode; no_builtins;} as opts) =
   Sys_utils.signal Sys.sigusr1

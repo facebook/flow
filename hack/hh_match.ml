@@ -88,7 +88,7 @@ let parse_file file : match_ret * string * Parser_hack.parser_return =
     if parser_output.Parser_hack.file_mode = None
     then Php
     else
-      if parsing_errors <> []
+      if not (Errors.is_empty parsing_errors)
       then
         (* Get a nice string to display about the parsing exception *)
         ParsingException
@@ -97,7 +97,8 @@ let parse_file file : match_ret * string * Parser_hack.parser_return =
                  so_far ^ "\n" ^ fst str_pair ^ " " ^ snd str_pair)
              ~init:""
              (Common_exns.flatten_error
-                (Common_exns.ParseErrors parsing_errors)))
+                (Common_exns.ParseErrors
+                   (Errors.get_error_list parsing_errors))))
       else Success in
   (pr, content, parser_output)
 

@@ -46,9 +46,9 @@ let decl_file tcopt (errorl, failed) fn =
   end
   in
   let failed =
-    if errorl' = [] then failed
+    if Errors.is_empty errorl' then failed
     else Relative_path.Set.add failed fn in
-  let errorl = List.rev_append (List.rev errorl') errorl in
+  let errorl = Errors.merge errorl' errorl in
   errorl, failed
 
 let decl_files (errors, failed) fnl =
@@ -60,7 +60,7 @@ let decl_files (errors, failed) fnl =
 (*****************************************************************************)
 
 let merge_decl (errors1, failed1) (errors2, failed2) =
-  errors1 @ errors2,
+  Errors.merge errors1 errors2,
   Relative_path.Set.union failed1 failed2
 
 (*****************************************************************************)
@@ -71,7 +71,7 @@ let go (workers:Worker.t list option) ~bucket_size tcopt fast =
   TypeDeclarationStore.store tcopt;
   let fast_l =
     Relative_path.Map.fold fast ~init:[] ~f:(fun x _ y -> x :: y) in
-  let neutral = [], Relative_path.Set.empty in
+  let neutral = Errors.empty, Relative_path.Set.empty in
   dn "Declaring the types";
   let result =
     MultiWorker.call

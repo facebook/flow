@@ -260,9 +260,9 @@ let nast_to_extent_stmt
   let parse_errs, parse_res =
     Errors.do_ (fun () -> Parser_hack.program file content) in
   (* If we can't parse the file, return None *)
-  match parse_errs with
-  | [] ->
+  if Errors.is_empty parse_errs
+  then
      let _, _, res =
        visitor#on_program (false, false, None) parse_res.Parser_hack.ast in
      res
-  | _ -> None
+  else None

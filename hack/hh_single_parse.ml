@@ -22,8 +22,8 @@ let parse_and_print filename =
       Parser_hack.from_file file
     end
   in
-  if List.length errorl > 0 then begin
-    List.iter print_error errorl;
+  if not (Errors.is_empty errorl) then begin
+    Errors.iter_error_list print_error errorl;
     exit 1
   end;
   let str = Debug.dump_ast (Ast.AProgram result.Parser_hack.ast) in

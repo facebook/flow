@@ -22,7 +22,7 @@ open Typing_deps
 (*****************************************************************************)
 (* The neutral element of declaration (cf procs/multiWorker.mli) *)
 (*****************************************************************************)
-let otf_neutral =  [], Relative_path.Set.empty
+let otf_neutral =  Errors.empty, Relative_path.Set.empty
 let compute_deps_neutral = DepSet.empty, DepSet.empty
 
 (*****************************************************************************)
@@ -65,8 +65,8 @@ let on_the_fly_decl_file tcopt (errors, failed) fn =
   let decl_errors, () = Errors.do_ begin fun () ->
     Decl.make_env tcopt fn
   end in
-  let failed' = get_decl_failures decl_errors fn in
-  List.rev_append decl_errors errors, Relative_path.Set.union failed failed'
+  let failed' = get_decl_failures (Errors.get_error_list decl_errors) fn in
+  Errors.merge decl_errors errors, Relative_path.Set.union failed failed'
 
 (*****************************************************************************)
 (* Given a set of classes, compare the old and the new type and deduce
@@ -129,7 +129,7 @@ let compute_gconsts_deps old_gconsts (to_redecl, to_recheck) gconsts =
 let redeclare_files tcopt filel =
   List.fold_left filel
     ~f:(on_the_fly_decl_file tcopt)
-    ~init:([], Relative_path.Set.empty)
+    ~init:(Errors.empty, Relative_path.Set.empty)
 
 let otf_decl_files tcopt filel =
   SharedMem.invalidate_caches();
@@ -188,7 +188,7 @@ let load_and_compute_deps _acc filel =
 (*****************************************************************************)
 
 let merge_on_the_fly (errorl1, failed1) (errorl2, failed2) =
-  errorl1 @ errorl2, Relative_path.Set.union failed1 failed2
+  Errors.merge errorl1 errorl2, Relative_path.Set.union failed1 failed2
 
 let merge_compute_deps (to_redecl1, to_recheck1) (to_redecl2, to_recheck2) =
   DepSet.union to_redecl1 to_redecl2, DepSet.union to_recheck1 to_recheck2

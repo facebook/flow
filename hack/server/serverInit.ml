@@ -65,7 +65,7 @@ let make_next_files genv : Relative_path.t MultiWorker.nextlist =
 
 let save_state env fn =
   let t = Unix.gettimeofday () in
-  if env.errorl <> []
+  if not (Errors.is_empty env.errorl)
   then failwith "--save-mini only works if there are no type errors!";
   let chan = Sys_utils.open_out_no_fail fn in
   let names = FileInfo.simplify_fast env.files_info in
@@ -198,7 +198,7 @@ let parsing genv env ~get_next t =
   HackEventLogger.parsing_end t hs  ~parsed_count:0;
   let env = { env with
     files_info;
-    errorl = List.rev_append errorl env.errorl;
+    errorl = Errors.merge errorl env.errorl;
     failed_parsing = Relative_path.Set.union env.failed_parsing failed;
   } in
   env, (Hh_logger.log_duration "Parsing" t)
@@ -215,7 +215,7 @@ let naming env t =
     Relative_path.Map.fold env.files_info ~f:begin fun k v env ->
       let errorl, failed = NamingGlobal.ndecl_file k v in
       { env with
-        errorl = List.rev_append errorl env.errorl;
+        errorl = Errors.merge errorl env.errorl;
         failed_parsing = Relative_path.Set.union env.failed_parsing failed;
       }
     end ~init:env
@@ -235,7 +235,7 @@ let type_decl genv env fast t =
   let t = Hh_logger.log_duration "Type-decl" t in
   let env = {
     env with
-    errorl = List.rev_append errorl env.errorl;
+    errorl = Errors.merge errorl env.errorl;
     failed_decl;
   } in
   env, t
@@ -249,7 +249,7 @@ let type_check genv env fast t =
     Hh_logger.log "Heap size: %d" hs;
     HackEventLogger.type_check_end count t;
     let env = { env with
-      errorl = List.rev_append errorl env.errorl;
+      errorl = Errors.merge errorl env.errorl;
       failed_check = failed;
     } in
     env, (Hh_logger.log_duration "Type-check" t)
@@ -311,7 +311,7 @@ let ai_check genv files_info env t =
     let errorl, failed = Ai.go
       Typing_check_utils.check_defs genv.workers files_info env.tcopt ai_opt in
     let env = { env with
-      errorl = List.rev_append errorl env.errorl;
+      errorl = Errors.merge errorl env.errorl;
       failed_check = Relative_path.Set.union failed env.failed_check;
     } in
     env, (Hh_logger.log_duration "Ai" t)

@@ -1207,8 +1207,8 @@ let rec entry ~keep_source_metadata ~no_trailing_commas ~modes
         Parser_hack.program rp content in
       if not (List.mem modes file_mode) then raise PHP;
     end in
-    if errorl <> []
-    then Parsing_error errorl
+    if not (Errors.is_empty errorl)
+    then Parsing_error (Errors.get_error_list errorl)
     else begin
       let lb = Lexing.from_string content in
       let env = empty file lb from to_ keep_source_metadata no_trailing_commas in

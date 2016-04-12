@@ -83,26 +83,26 @@ let apply_patch (genv:ServerEnv.genv) (env:ServerEnv.env) fn f =
   if patched == content
   then begin
     Printf.printf "No patch\n"; flush stdout;
-    [], env
+    Errors.empty, env
   end
   else begin
     write_file fn patched;
     let env = add_file env fn in
     let env, _rechecked = ServerTypeCheck.type_check genv env in
     let errors = env.ServerEnv.errorl in
-    if env.ServerEnv.errorl <> []
+    if not (Errors.is_empty env.ServerEnv.errorl)
     then begin
       (* Reverting the changes *)
       write_file fn content;
       let env = add_file env fn in
       Printf.printf "Failed\n"; flush stdout;
       let env, _rechecked = ServerTypeCheck.type_check genv env in
-      assert (env.ServerEnv.errorl = []);
+      assert (Errors.is_empty env.ServerEnv.errorl);
       errors, env
     end
     else begin
       Printf.printf "OK\n"; flush stdout;
-      [], env
+      Errors.empty, env
     end
   end
 
@@ -278,9 +278,9 @@ let fail_not_clean genv =
   exit 3
 
 let check_no_error genv env =
-  match env.ServerEnv.errorl with
-  | [] -> ()
-  | _ -> fail_not_clean genv
+  if Errors.is_empty env.ServerEnv.errorl
+  then ()
+  else fail_not_clean genv
 
 (*****************************************************************************)
 (* Entry point *)
@@ -312,7 +312,7 @@ let apply_patches tried_patches (genv:ServerEnv.genv) env continue patches =
       let go patch =
         let errors, new_env = apply_patch genv !env fn patch in
         env := new_env;
-        if errors = []
+        if Errors.is_empty errors
         then continue := true
       in
       Hashtbl.add tried_patches (fn, patch) true;

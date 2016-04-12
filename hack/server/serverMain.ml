@@ -70,10 +70,10 @@ module Program =
     let run_once_and_exit genv env =
       ServerError.print_errorl
         (ServerArgs.json_mode genv.options)
-        (List.map env.errorl Errors.to_absolute) stdout;
+        (List.map (Errors.get_error_list env.errorl) Errors.to_absolute) stdout;
       match ServerArgs.convert genv.options with
       | None ->
-         exit (if env.errorl = [] then 0 else 1)
+         exit (if Errors.is_empty env.errorl then 0 else 1)
       | Some dirname ->
          ServerConvert.go genv env dirname;
          exit 0
@@ -94,7 +94,8 @@ module Program =
           Relative_path.Set.union typecheck_updates old_env.failed_parsing in
         let check_env = { old_env with failed_parsing = failed_parsing } in
         let new_env, total_rechecked = ServerTypeCheck.check genv check_env in
-        ServerStamp.touch_stamp_errors old_env.errorl new_env.errorl;
+        ServerStamp.touch_stamp_errors (Errors.get_error_list old_env.errorl)
+                                       (Errors.get_error_list new_env.errorl);
         new_env, total_rechecked
       end
 
@@ -239,8 +240,10 @@ let ide_update_error_list ide_process new_error_list old_error_list =
   let cheap_equals l1 l2 = cheap_equals l1 l2 5 in
 
   Option.iter ide_process begin fun x ->
-    if not (cheap_equals new_error_list old_error_list) then
-      IdeProcessPipe.send x (IdeProcessMessage.Sync_error_list new_error_list);
+    if not (cheap_equals (Errors.get_error_list new_error_list)
+                         (Errors.get_error_list old_error_list))
+    then IdeProcessPipe.send x
+           (IdeProcessMessage.Sync_error_list new_error_list);
   end
 
 let rec ide_recv_messages_loop ide_process genv env =
@@ -268,7 +271,7 @@ let serve genv env in_fd _ =
   let last_stats = ref empty_recheck_loop_stats in
   let recheck_id = ref (Random_id.short_string ()) in
   ide_sync_files_info genv.ide_process !env.files_info;
-  ide_update_error_list genv.ide_process !env.errorl [];
+  ide_update_error_list genv.ide_process !env.errorl Errors.empty;
   ide_typechecker_init_done genv.ide_process;
   while true do
     ServerMonitorUtils.exit_if_parent_dead ();
