@@ -50,6 +50,12 @@ let string t =
   Printf.sprintf "File %S, line %d, characters %d-%d:"
     (String.trim t.pos_file) line start end_
 
+(* Some positions, like those in buffers sent by IDE/created by unit tests might
+ * not have a file specified *)
+let string_no_file t =
+  let line, start, end_ = info_pos t in
+  Printf.sprintf "line %d, characters %d-%d" line start end_
+
 let json pos =
   let line, start, end_ = info_pos pos in
   let fn = filename pos in

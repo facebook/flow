@@ -18,12 +18,19 @@ type target_type =
 
 type 'a find_symbol_result = {
   name:  string;
+  (* Where the name is defined, so click-to-definition can be implemented with
+   * only one roundtrip to the server. Optional, because user can identify
+   * undefined symbol, and we also don't return definitions for local
+   * variables *)
+  name_pos: 'a Pos.pos option;
   type_: target_type;
+  (* Extents of the symbol itself *)
   pos: 'a Pos.pos;
 }
 
 let to_absolute x = { x with
-  pos = Pos.to_absolute x.pos
+  name_pos = Option.map x.name_pos Pos.to_absolute;
+  pos = Pos.to_absolute x.pos;
 }
 
 let is_target target_line target_char pos =
@@ -34,17 +41,39 @@ let is_target target_line target_char pos =
 let process_class_id result_ref is_target_fun cid _ =
   if is_target_fun (fst cid)
   then begin
-    result_ref := Some { name  = snd cid;
+    let name = snd cid in
+    let name_pos = Option.map (Naming_heap.TypeIdHeap.get name) fst in
+    result_ref := Some { name;
+                         name_pos;
                          type_ = Class;
                          pos   = fst cid
                        }
   end
 
+let construct_method = "__construct"
+
 let process_method result_ref is_target_fun c_name id =
   if is_target_fun (fst id)
   then begin
+    let method_name = (snd id) in
+    let open Option.Monad_infix in
+    let name_pos =
+      Naming_heap.ClassHeap.get c_name >>= fun class_ ->
+      if method_name = construct_method then begin
+        Some (fst (match class_.Nast.c_constructor with
+          | Some m -> m.Nast.m_name
+          | None -> class_.Nast.c_name
+        ))
+      end else begin
+        List.find class_.Nast.c_methods
+          (fun m -> (snd m.Nast.m_name) = method_name) >>= fun m ->
+        Some (fst m.Nast.m_name)
+      end
+    in
+
     result_ref :=
-      Some { name  = (c_name ^ "::" ^ (snd id));
+      Some { name  = (c_name ^ "::" ^ method_name);
+             name_pos = name_pos;
              type_ = Method;
              pos   = fst id
            }
@@ -56,13 +85,16 @@ let process_method_id result_ref is_target_fun class_ id _ _ ~is_method =
 
 let process_constructor result_ref is_target_fun class_ _ p =
   process_method_id
-    result_ref is_target_fun class_ (p, "__construct") () () ~is_method:true
+    result_ref is_target_fun class_ (p, construct_method) () () ~is_method:true
 
 let process_fun_id result_ref is_target_fun id =
   if is_target_fun (fst id)
   then begin
+    let name = snd id in
+    let name_pos = Naming_heap.FunPosHeap.get name in
     result_ref :=
-      Some { name  = snd id;
+      Some { name;
+             name_pos;
              type_ = Function;
              pos   = fst id
            }
@@ -72,6 +104,8 @@ let process_lvar_id result_ref is_target_fun _ id _ =
   if is_target_fun (fst id)
   then begin
     result_ref := Some { name  = snd id;
+                         (* TODO: return the position of first occurence *)
+                         name_pos = None;
                          type_ = LocalVar;
                          pos   = fst id
                        }

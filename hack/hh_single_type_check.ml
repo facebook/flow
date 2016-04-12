@@ -352,8 +352,7 @@ let print_coverage fn type_acc =
 
 let print_symbol symbol =
   let open IdentifySymbolService in
-  let line, start, end_ = Pos.info_pos symbol.pos in
-  Printf.printf "%s\n%s\nline %d, characters %d-%d\n"
+  Printf.printf "%s\n%s\n%s\n"
     symbol.name
     begin match symbol.type_ with
     | Class -> "Class"
@@ -361,7 +360,10 @@ let print_symbol symbol =
     | Method -> "Method"
     | LocalVar -> "LocalVar"
     end
-    line start end_
+    (Pos.string_no_file symbol.pos);
+  Option.iter symbol.name_pos begin fun x ->
+    Printf.printf "defined: %s\n"  (Pos.string_no_file x)
+  end
 
 let handle_mode mode filename tcopt files_contents files_info errors =
   match mode with

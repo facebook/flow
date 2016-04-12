@@ -35,6 +35,8 @@ val length : 'a pos -> int
 
 val string : absolute -> string
 
+val string_no_file : 'a pos -> string
+
 val json : absolute -> Hh_json.json
 
 val inside : 'a pos -> int -> int -> bool
