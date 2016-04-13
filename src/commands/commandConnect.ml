@@ -74,15 +74,14 @@ let start_flow_server env =
   Utils_js.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
-  let from_arg = match FlowEventLogger.((get_context ()).from) with
-    | Some from -> from
-    | None -> "" in
   let exe = Sys.argv.(0) in
   let args = [
     "--temp-dir"; tmp_dir;
-    "--from"; from_arg;
     Path.to_string root;
   ] in
+  let args = match FlowEventLogger.((get_context ()).from) with
+    | Some from -> "--from"::from::args
+    | None -> args in
   let args = if ignore_version then "--ignore-version"::args else args in
   try
     let server_pid =
