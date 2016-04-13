@@ -1,15 +1,46 @@
 ###master (next release)
 
-- Removed non-standard Promise methods
+###v0.23.0
 
-Previous versions of Flow specified the type of Promise.prototype.done and
-Promise.cast, which are not standard or implemented in browsers.
+Likely to cause new Flow errors:
+- When you refine a `mixed` variable with `typeof myVar === 'object'`, we used to refine the type of `myVar` to `null | Object`. Now it is refined to `null | {[key: string]: mixed}`. This means `myVar.prop` has the type `mixed` rather than `any`.
+- Removed non-standard Promise methods. Previous versions of Flow specified the type of Promise.prototype.done and Promise.cast, which are not standard or implemented in browsers. If you rely on a polyfill that does provide these methods, you can redeclare the Promise class in your project's local libs folder. Note that you need to copy the entire class declaration from lib/core.js in order to add methods and properties. It's not currently possible to extend the builtin declarations, but it is possible to redefine them.
 
-If you rely on a polyfill that does provide these methods, you can redeclare the
-Promise class in your project's local libs folder. Note that you need to copy
-the entire class declaration from lib/core.js in order to add methods and
-properties. It's not currently possible to extend the builtin declarations, but
-it is possible to redefine them.
+New features:
+- Errors involving union or intersection types now include more information about why the various branches failed
+- `flow init` now has more command line flags to specify what should be in the created `.flowconfig`
+- `flow ast` now can parse JSON files
+- Comments are now supported in `.flowconfig` files. Lines starting with `#` or `;` are ignored
+- In the `[ignore]` section of a `.flowconfig` you can now ignore a relative path with `<PROJECT_ROOT>/path/to/ignored`
+- Most `flow` commands have an `--ignore-version` flag to skip the version check specified in the `.flowconfig`.
+- Added a `module.use_strict` option to the `.flowconfig`. When it is true, Flow will treat every file as if it has the `"use strict";` directive.
+- Using strict equality, you can now refine the `number` type into number literal types. (e.g. after `x === 0` Flow now knows that x has the type `0`)
+- Flow no longer requires return type annotations for exported functions if Flow can fully infer the type.
+- `flow force-recheck FILE1 FILE2` command tells the flow server that `FILE1` and `FILE2` have changed and that it should recheck. This is intended for tooling that might be racing the file system notifications.
+- Flow is smarter about what `!x` evaluates to for various types of `x`.
+- `<Foo />` is now allowed when `Foo` is a `string`. If `$JSXIntrinsics` is defined, `Foo` must be a subtype of `$Keys<$JSXIntrinsics>`
+- Support for class decorators in addition to property decorators (also gated behind the `esproposal.decorators` config option). Thanks @marudor!
+
+Notable bug fixes: 
+- Disallow `(obj: SomeClass)` except for when `obj instanceof SomeClass`
+- Fixed setting temp dir via the `.flowconfig`
+- Added missing `all` flag to the `.flowconfig`
+- Fixed a bug when destructuring a non-literal object type using a pattern with defaults
+- Fixed the `--strip-root` flag for displaying errors
+- Classes can now have properties named `async`
+- Fixed refinements like `if (foo[0]) { ... }`, which should work like `if (foo["prop"]) { ... }` does. That is, Flow should remember that `foo[0]` exists and is truthy.
+- Fixed parsing docblocks with CRLF line endings
+- Fixed autocomplete within if statements
+
+Misc:
+- Added more info and structure to JSON output, without removing or existing fields
+- Loads of improvements to the builtin libraries
+- Bunch of perf improvements
+- Clarified some errors messages and error locations
+- `flow start --json` will start a server and output a JSON blob with info about the new server
+- Slowly improving tracking side effects in switch statements
+- Some improvements to pretty printing errors
+- `Object.values()` and `Object.entries` return `Array<mixed>` and `Array<[string, mixed]>` respectively, since Flow currently is never sure that it knows about every property in an object.
 
 ###v0.22.1
 
