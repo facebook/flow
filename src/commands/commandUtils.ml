@@ -154,6 +154,12 @@ let root_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Project root directory containing the .flowconfig"
 )
 
+let ignore_version_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--ignore-version" no_arg
+      ~doc:"Ignore the version constraint in .flowconfig"
+)
+
 type flowconfig_params = {
   ignores: string list;
   includes: string list;
@@ -194,10 +200,18 @@ type command_params = {
   timeout : int;
   no_auto_start : bool;
   temp_dir : string option;
+  ignore_version : bool;
 }
 
 let collect_server_flags
-  main timeout retries retry_if_init no_auto_start temp_dir from =
+    main
+    timeout
+    retries
+    retry_if_init
+    no_auto_start
+    temp_dir
+    from
+    ignore_version =
   let default def = function
   | Some x -> x
   | None -> def in
@@ -209,6 +223,7 @@ let collect_server_flags
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
     temp_dir;
+    ignore_version;
   }
 
 let server_flags prev = CommandSpec.ArgSpec.(
@@ -224,6 +239,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
       ~doc:"If the server is not running, do not start it; just exit"
   |> temp_dir_flag
   |> from_flag
+  |> ignore_version_flag
 )
 
 let connect server_flags root =
@@ -249,6 +265,7 @@ let connect server_flags root =
     expiry;
     tmp_dir;
     log_file;
+    ignore_version = server_flags.ignore_version;
   } in
   CommandConnect.connect env
 

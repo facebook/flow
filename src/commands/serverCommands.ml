@@ -49,8 +49,7 @@ module OptionParser(Config : CONFIG) = struct
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
-    |> flag "--ignore-version" no_arg
-        ~doc:"Ignore the version constraint in .flowconfig"
+    |> ignore_version_flag
     |> flowconfig_flags
     |> verbose_flags
     |> strip_root_flag

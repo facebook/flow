@@ -18,6 +18,7 @@ type env = {
   expiry : float option;
   tmp_dir : string;
   log_file : string;
+  ignore_version : bool;
 }
 
 (* During initialization, we can provide the client with some clue as to what
@@ -66,7 +67,10 @@ let msg_of_tail tail_env =
     "[processing]"
 
 (* Starts up a flow server by literally calling flow start *)
-let start_flow_server ~tmp_dir root =
+let start_flow_server env =
+  let tmp_dir = env.tmp_dir in
+  let ignore_version = env.ignore_version in
+  let root = env.root in
   Utils_js.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
@@ -74,13 +78,16 @@ let start_flow_server ~tmp_dir root =
     | Some from -> from
     | None -> "" in
   let exe = Sys.argv.(0) in
+  let args = [
+    "--temp-dir"; tmp_dir;
+    "--from"; from_arg;
+    Path.to_string root;
+  ] in
+  let args = if ignore_version then "--ignore-version"::args else args in
   try
     let server_pid =
       Unix.(create_process exe
-              [| exe; "start";
-                 "--temp-dir"; tmp_dir;
-                 "--from"; from_arg;
-                 Path.to_string root |]
+              (Array.of_list (exe::"start"::args))
               stdin stdout stderr) in
     match Unix.waitpid [] server_pid with
       | _, Unix.WEXITED 0 -> true
@@ -151,7 +158,7 @@ let rec connect env retries start_time tail_env =
   | Result.Error CCS.Server_missing ->
       if env.autostart then begin
         let retries =
-          if start_flow_server ~tmp_dir:env.tmp_dir env.root
+          if start_flow_server env
           then begin
             Printf.eprintf
               "Started a new flow server: %s%!"
