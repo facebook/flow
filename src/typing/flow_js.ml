@@ -2220,8 +2220,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          with each other. *)
       (match ldict, udict with
         | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
-            rec_unify cx trace lk uk;
-            rec_unify cx trace lv uv
+            dictionary cx trace lk lv udict;
+            dictionary cx trace uk uv ldict
         | _ -> ());
 
       (* Properties in u must either exist in l, or match l's indexer. *)
@@ -2246,12 +2246,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                annotation), then we add it to the inflowing type as
                an optional property, as well as ensuring compatibility
                with dictionary constraints if present *)
-            dictionary cx trace false (string_key s ureason) t ldict;
+            dictionary cx trace (string_key s ureason) t ldict;
             write_prop cx lflds s ut;
           | _ ->
             (* otherwise, we ensure compatibility with dictionary constraints
                if present, and look up the property in the prototype *)
-            dictionary cx trace false (string_key s ureason) ut ldict;
+            dictionary cx trace (string_key s ureason) ut ldict;
             (* if l is NOT a dictionary, then do a strict lookup *)
             let strict = if ldict = None then Some lreason else None in
             rec_flow cx trace (lproto, LookupT (ureason, strict, [], s, ut))
@@ -2262,7 +2262,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Any properties in l but not u must match indexer *)
       iter_real_props cx lflds (fun s lt ->
         if not (has_prop cx uflds s)
-        then dictionary cx trace lit (string_key s lreason) lt udict
+        then dictionary cx trace (string_key s lreason) lt udict
       );
 
       rec_flow_t cx trace (l, uproto)
@@ -2812,7 +2812,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           flags.sealed (dict_t <> None) reason_o reason_op in
         let t = ensure_prop_for_write cx trace strict_reason mapr x proto
           reason_op reason_prop in
-        dictionary cx trace false (string_key x reason_op) t dict_t;
+        dictionary cx trace (string_key x reason_op) t dict_t;
         rec_flow_t cx trace (tin, t)
 
     (* Since we don't know the type of the prop, use AnyT. *)
@@ -5590,8 +5590,8 @@ and rec_unify cx trace t1 t2 =
     (* ensure the keys and values are compatible with each other. *)
     begin match ldict, udict with
     | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
-        rec_unify cx trace lk uk;
-        rec_unify cx trace lv uv
+        dictionary cx trace lk lv udict;
+        dictionary cx trace uk uv ldict
     | Some _, None ->
         let lreason = replace_reason "some property" lreason in
         flow_err_prop_not_found cx trace (lreason, ureason)
@@ -5609,11 +5609,11 @@ and rec_unify cx trace t1 t2 =
       | Some t1, None ->
           (* x exists in obj1 but not obj2; if obj2 is a dictionary make sure
              t1 is allowed, otherwise error *)
-          flow_prop_to_dict cx trace false x t1 udict lreason ureason
+          flow_prop_to_dict cx trace x t1 udict lreason ureason
       | None, Some t2 ->
           (* x exists in obj2 but not obj1; if obj1 is a dictionary make sure
              t2 is allowed, otherwise error *)
-          flow_prop_to_dict cx trace false x t2 ldict ureason lreason
+          flow_prop_to_dict cx trace x t2 ldict ureason lreason
       | None, None -> ());
       None
     ) lpmap upmap |> ignore
@@ -5629,11 +5629,10 @@ and rec_unify cx trace t1 t2 =
 and naive_unify cx trace t1 t2 =
   rec_flow_t cx trace (t1,t2); rec_flow_t cx trace (t2,t1)
 
-(* flow a property's key and value types to a dictionary, or error if none *)
-and flow_prop_to_dict cx trace fresh k v dict prop_reason dict_reason =
+and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
   match dict with
   | Some _ ->
-    dictionary cx trace fresh (string_key k prop_reason) v dict
+    dictionary cx trace (string_key k prop_reason) v dict
   | None ->
     let prop_reason = replace_reason (spf "property `%s`" k) prop_reason in
     flow_err_prop_not_found cx trace (prop_reason, dict_reason)
@@ -5749,20 +5748,16 @@ and multiflow_partial cx trace ?strict = function
     rec_flow cx trace (tin, tout);
     multiflow_partial cx trace ?strict (tins,touts)
 
-(* check a property's key and value types against a dictionary type, or do
-   nothing if none. key type must be a subtype of dictionary key type. depending
-   on whether `fresh` is true or false, value type must be subtype of or equal
-   to dictionary type, respectively.  *)
-and dictionary cx trace fresh keyt valuet = function
+and dictionary cx trace keyt valuet = function
   | None -> ()
   | Some { key; value; _ } ->
       rec_flow_t cx trace (keyt, key);
       begin match keyt with
       | StrT (_, Literal str) ->
         if not (is_dictionary_exempt str)
-        then flow_to_mutable_child cx trace fresh valuet value
+        then rec_flow_t cx trace (valuet, value)
       | _ ->
-        flow_to_mutable_child cx trace fresh valuet value
+        rec_flow_t cx trace (valuet, value)
       end
 
 and string_key s reason =

@@ -24,35 +24,29 @@ object_create.js:17
  17: (o: C);
          ^ C
 
-object_keys.js:32
- 32:   (k: void); // errors: 1|2|a|b ~> void
-        ^ object literal. This type is incompatible with
- 32:   (k: void); // errors: 1|2|a|b ~> void
-           ^^^^ undefined
+object_keys.js:5
+  5: (Object.keys(sealed): void); // error, Array<string>
+      ^^^^^^^^^^^^^^^^^^^ array type. This type is incompatible with
+  5: (Object.keys(sealed): void); // error, Array<string>
+                           ^^^^ undefined
 
-object_keys.js:37
- 37:   (k: void) // error: string ~> void
+object_keys.js:9
+  9:   (k : number) // error: number ~> string
         ^ string. This type is incompatible with
- 37:   (k: void) // error: string ~> void
-           ^^^^ undefined
+  9:   (k : number) // error: number ~> string
+            ^^^^^^ number
 
-object_keys.js:45
- 45:   (k: void) // error: string ~> void
+object_keys.js:14
+ 14:   (k : number) // error: number ~> string
         ^ string. This type is incompatible with
- 45:   (k: void) // error: string ~> void
-           ^^^^ undefined
+ 14:   (k : number) // error: number ~> string
+            ^^^^^^ number
 
-object_keys.js:56
- 56:     (k: void); // error: string ~> void
-          ^ object type. This type is incompatible with
- 56:     (k: void); // error: string ~> void
-             ^^^^ undefined
-
-object_keys.js:62
- 62:     (k: void); // error: string ~> void
-          ^ string. This type is incompatible with
- 62:     (k: void); // error: string ~> void
-             ^^^^ undefined
+object_keys.js:18
+ 18: (Object.keys(any): Array<number>); // error, Array<string>
+                  ^^^ string. This type is incompatible with
+ 18: (Object.keys(any): Array<number>); // error, Array<string>
+                              ^^^^^^ number
 
 object_missing.js:5
   5:     Object.doesNotExist();
@@ -160,99 +154,5 @@ object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error
                            ^^^^^^ number
 
-object_values.js:34
- 34:   (v: void); // errors: A|B|C|D ~> void
-        ^ mixed. This type is incompatible with
- 34:   (v: void); // errors: A|B|C|D ~> void
-           ^^^^ undefined
 
-object_values.js:39
- 39:   (v: void); // error: mixed ~> void
-        ^ mixed. This type is incompatible with
- 39:   (v: void); // error: mixed ~> void
-           ^^^^ undefined
-
-object_values.js:48
- 48:   (v: string);
-        ^ mixed. This type is incompatible with
- 48:   (v: string);
-           ^^^^^^ string
-
-object_values.js:50
- 50:   (v: void);
-        ^ mixed. This type is incompatible with
- 50:   (v: void);
-           ^^^^ undefined
-
-object_values.js:55
- 55: dict.foo = 0; // error: `foo` is a string, incompatible with `k`
-     ^^^^^^^^ property `foo` is a string. This type is incompatible with
- 45: var dict: {[k:number]: string} = {}
-                   ^^^^^^ number
-
-object_values.js:55
- 55: dict.foo = 0; // error: `foo` is a string, incompatible with `k`
-                ^ number. This type is incompatible with
- 45: var dict: {[k:number]: string} = {}
-                            ^^^^^^ string
-
-object_values.js:61
- 61:   (v: string|number);
-        ^ mixed. This type is incompatible with
- 61:   (v: string|number);
-           ^^^^^^^^^^^^^ union: string | number
-  Member 1:
-   61:   (v: string|number);
-             ^^^^^^ string
-  Error:
-   61:   (v: string|number);
-          ^ mixed. This type is incompatible with
-   61:   (v: string|number);
-             ^^^^^^ string
-  Member 2:
-   61:   (v: string|number);
-                    ^^^^^^ number
-  Error:
-   61:   (v: string|number);
-          ^ mixed. This type is incompatible with
-   61:   (v: string|number);
-                    ^^^^^^ number
-
-object_values.js:63
- 63:   (v: void);
-        ^ mixed. This type is incompatible with
- 63:   (v: void);
-           ^^^^ undefined
-
-object_values.js:68
- 68: mixed_dict.bar = true; // error: `bar` is a string, incompatible with `k`
-     ^^^^^^^^^^^^^^ property `bar` is a string. This type is incompatible with
- 58: var mixed_dict: {[k:number]: string, foo: number} = {foo: 0};
-                         ^^^^^^ number
-
-object_values.js:68
- 68: mixed_dict.bar = true; // error: `bar` is a string, incompatible with `k`
-                      ^^^^ boolean. This type is incompatible with
- 58: var mixed_dict: {[k:number]: string, foo: number} = {foo: 0};
-                                  ^^^^^^ string
-
-object_values.js:78
- 78:     (v: void); // error: mixed ~> void
-          ^ mixed. This type is incompatible with
- 78:     (v: void); // error: mixed ~> void
-             ^^^^ undefined
-
-object_values.js:88
- 88:     (v: string);
-          ^ mixed. This type is incompatible with
- 88:     (v: string);
-             ^^^^^^ string
-
-object_values.js:89
- 89:     (v: number);
-          ^ mixed. This type is incompatible with
- 89:     (v: number);
-             ^^^^^^ number
-
-
-Found 40 errors
+Found 26 errors
