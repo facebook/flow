@@ -16,4 +16,11 @@ let tests = [
     (target.detachEvent('foo', listener): void); // invalid, may be undefined
     (target.detachEvent && target.detachEvent('foo', listener): void); // valid
   },
+
+  function() {
+    window.onmessage = (event: MessageEvent) => {
+      invariant(event.target === window);
+      invariant(event.type === 'message');
+    };
+  },
 ];
