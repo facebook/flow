@@ -105,11 +105,9 @@ let add { paths; stems; stem_map; } path =
   in
   { paths = path::paths; stems; stem_map; }
 
-(* find a prefix for f in a list of paths, or none *)
-let rec find_prefix f = function
-  | [] -> None
-  | h :: _ when Utils.str_starts_with f (Path.to_string h) -> Some h
-  | _ :: t -> find_prefix f t
+(* filters a list of prefixes into only the prefixes with which f starts *)
+let find_prefixes f =
+  List.filter (fun prefix -> Utils.str_starts_with f (Path.to_string prefix))
 
 (* find a match for f in a list of patterns, or none *)
 let rec match_patt f = function
@@ -118,8 +116,8 @@ let rec match_patt f = function
   | (_, _) :: t -> match_patt f t
 
 let matches path_matcher f =
-  match find_prefix f path_matcher.stems with
-  | None -> false
-  | Some stem ->
-      let patts = PathMap.find_unsafe stem path_matcher.stem_map in
-      match_patt f patts != None
+  let matching_stems = find_prefixes f path_matcher.stems in
+  List.exists (fun stem ->
+    let patts = PathMap.find_unsafe stem path_matcher.stem_map in
+    match_patt f patts != None
+  ) matching_stems

@@ -1,3 +1,9 @@
+../foo/batman/baz.js:3
+  3: var x: number = "not a number" // Error string ~> number
+                     ^^^^^^^^^^^^^^ string. This type is incompatible with
+  3: var x: number = "not a number" // Error string ~> number
+            ^^^^^^ number
+
 ../included/test.js:1
   1: (123: string);
       ^^^ number. This type is incompatible with
@@ -5,4 +11,4 @@
            ^^^^^^ string
 
 
-Found 1 error
+Found 2 errors

@@ -1,4 +1,6 @@
 [include]
 ../included
+../foo/**/bar.js
+../foo/batman
 [options]
 module.system=haste
