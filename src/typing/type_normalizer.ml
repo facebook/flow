@@ -266,8 +266,10 @@ let rec normalize_type_impl cx ids t = match t with
       begin match IMap.get id evaluated with
       | Some t -> normalize_type_impl cx ids t
       | None ->
-        failwith (spf "Unexpectedly unevaluated EvalT: %s"
-          (reason_of_t t |> string_of_reason))
+        (* this happens when, for example, the RHS of a destructuring is
+           unconstrained, so we never evaluate the destructuring. so, make the
+           destructured value also unconstrained... *)
+        EmptyT.t
       end
 
   | FunProtoT _

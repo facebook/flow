@@ -19,3 +19,4 @@ $FLOW type-at-pos optional.js 10 11 --strip-root --json
 $FLOW type-at-pos optional.js 10 14 --strip-root --json
 $FLOW type-at-pos optional.js 14 10 --strip-root --json
 "$FLOW" type-at-pos destructuring.js 3 6 --strip-root --json
+"$FLOW" type-at-pos destructuring.js 17 13 --strip-root --json
