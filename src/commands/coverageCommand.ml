@@ -59,7 +59,7 @@ let handle_error ~json (loc, err) strip =
   );
   flush stderr
 
-let is_covered ctor = ctor <> "AnyT" && ctor <> "UndefT"
+let is_covered ctor = ctor <> "AnyT" && ctor <> "EmptyT"
 
 let accum_coverage (covered, total) (_loc, ctor, _pretty, _raw, _reasons) =
   if is_covered ctor
