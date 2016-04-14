@@ -13,6 +13,8 @@ show_help() {
   echo "        verbose output (shows skipped tests)"
 }
 
+export IN_FLOW_TEST=1
+
 OPTIND=1
 verbose=0
 while getopts "h?v" opt; do
