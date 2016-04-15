@@ -17,6 +17,7 @@ type options
 
 val parse_options: unit -> options
 val default_options: root:string -> options
+val print_json_version: unit -> unit
 
 (*****************************************************************************)
 (* Accessors *)

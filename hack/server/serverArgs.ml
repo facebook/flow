@@ -55,6 +55,7 @@ let print_json_version () =
   let json = JSON_Object [
     "commit", JSON_String Build_id.build_revision;
     "commit_time", int_ Build_id.build_commit_time;
+    "api_version", int_ Build_id.build_api_version;
   ] in
   print_endline @@ json_to_string json
 

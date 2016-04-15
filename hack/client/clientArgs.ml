@@ -274,7 +274,8 @@ let parse_check_args cmd =
   let args = parse_without_command options usage "check" in
 
   if !version then begin
-    print_endline Build_id.build_id_ohai;
+    if !output_json then ServerArgs.print_json_version ()
+    else print_endline Build_id.build_id_ohai;
     exit 0;
   end;
 
