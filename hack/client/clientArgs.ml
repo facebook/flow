@@ -239,7 +239,8 @@ let parse_check_args cmd =
         Arg.Int (fun x -> format_from := x);
         Arg.Int (fun x -> set_mode (MODE_FORMAT (!format_from, x)) ())
       ]), "";
-
+    "--ide-get-definition",
+      Arg.String (fun x -> set_mode (MODE_GET_DEFINITION x) ()), "";
     (* flags *)
     "--json", Arg.Set output_json,
       " output json for machine consumption. (default: false)";
