@@ -1,0 +1,106 @@
+classes.js:18
+ 18: (b_number.p: boolean); // Error number ~> boolean
+      ^^^^^^^^^^ number. This type is incompatible with
+ 18: (b_number.p: boolean); // Error number ~> boolean
+                  ^^^^^^^ boolean
+
+classes.js:19
+ 19: (b_void.p: boolean); // Error void ~> boolean
+      ^^^^^^^^ undefined. This type is incompatible with
+ 19: (b_void.p: boolean); // Error void ~> boolean
+                ^^^^^^^ boolean
+
+classes.js:20
+ 20: (b_default.p: boolean); // Error string ~> boolean
+      ^^^^^^^^^^^ string. This type is incompatible with
+ 20: (b_default.p: boolean); // Error string ~> boolean
+                   ^^^^^^^ boolean
+
+classes.js:25
+ 25: var c_number: C<number> = new C(123); // Error number ~> ?string
+                     ^^^^^^ number. This type is incompatible with
+ 23: class C<T: ?string = string> extends A<T> {}
+                 ^^^^^^ string
+
+classes.js:25
+ 25: var c_number: C<number> = new C(123); // Error number ~> ?string
+                               ^^^^^^^^^^ constructor call
+ 25: var c_number: C<number> = new C(123); // Error number ~> ?string
+                                     ^^^ number. This type is incompatible with
+ 23: class C<T: ?string = string> extends A<T> {}
+                 ^^^^^^ string
+
+classes.js:30
+ 30: (c_void.p: boolean); // Error void ~> boolean
+      ^^^^^^^^ undefined. This type is incompatible with
+ 30: (c_void.p: boolean); // Error void ~> boolean
+                ^^^^^^^ boolean
+
+classes.js:31
+ 31: (c_default.p: boolean); // Error string ~> boolean
+      ^^^^^^^^^^^ string. This type is incompatible with
+ 31: (c_default.p: boolean); // Error string ~> boolean
+                   ^^^^^^^ boolean
+
+classes.js:38
+ 38: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
+                         ^^^ D. Too few type arguments. Expected at least 1
+
+classes.js:38
+ 38: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
+                         ^^^ type application of identifier `D`. Too few type arguments. Expected at least 1
+
+classes.js:38
+ 38: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
+                               ^^^^^^^^^^^^^^ D. Too few type arguments. Expected at least 1
+
+classes.js:39
+ 39: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ D. Too many type arguments. Expected at most 2
+
+classes.js:39
+ 39: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `D`. Too many type arguments. Expected at most 2
+
+classes.js:39
+ 39: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
+                                                ^^^^^^^^^^^^^^ D. Too many type arguments. Expected at most 2
+
+classes.js:42
+ 42: (d_number.p: boolean); // Error number ~> boolean
+      ^^^^^^^^^^ number. This type is incompatible with
+ 42: (d_number.p: boolean); // Error number ~> boolean
+                  ^^^^^^^ boolean
+
+classes.js:43
+ 43: (d_void.p: boolean); // Error void ~> boolean
+      ^^^^^^^^ undefined. This type is incompatible with
+ 43: (d_void.p: boolean); // Error void ~> boolean
+                ^^^^^^^ boolean
+
+classes.js:44
+ 44: (d_default.p: boolean); // Error string ~> boolean
+      ^^^^^^^^^^^ string. This type is incompatible with
+ 44: (d_default.p: boolean); // Error string ~> boolean
+                   ^^^^^^^ boolean
+
+classes.js:47
+ 47: class E<S: string, T: number = S> {} // Error: string ~> number
+                ^^^^^^ string. This type is incompatible with
+ 47: class E<S: string, T: number = S> {} // Error: string ~> number
+                           ^^^^^^ number
+
+classes.js:48
+ 48: class F<S: string, T: S = number> {} // Error: number ~> string
+                               ^^^^^^ number. This type is incompatible with
+ 48: class F<S: string, T: S = number> {} // Error: number ~> string
+                ^^^^^^ string
+
+classes.js:54
+ 54: (g_default.p: boolean); // Error string ~> boolean
+      ^^^^^^^^^^^ string. This type is incompatible with
+ 54: (g_default.p: boolean); // Error string ~> boolean
+                   ^^^^^^^ boolean
+
+
+Found 19 errors

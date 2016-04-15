@@ -4741,17 +4741,19 @@ and mk_super cx type_params_map c targs =
        up on their instances. *)
     let params = Anno.extract_type_param_instantiations targs in
     let this = SMap.find_unsafe "this" type_params_map in
-    if params = [] then
-      (* No type params, but `c` could still be a polymorphic class that must be
-         implicitly instantiated. We need to do this before we try to
-         this-specialize `c`. *)
-      let reason = reason_of_t c in
-      let c = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (reason, false, [], tvar))
-      ) in
-      ThisTypeAppT (c, this, [])
-    else
-      ThisTypeAppT (c, this, List.map (Anno.convert cx type_params_map) params)
+    match params with
+    | None
+    | Some [] ->
+        (* No type params, but `c` could still be a polymorphic class that must be
+          implicitly instantiated. We need to do this before we try to
+          this-specialize `c`. *)
+        let reason = reason_of_t c in
+        let c = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+          Flow.flow cx (c, SpecializeT (reason, false, [], tvar))
+        ) in
+        ThisTypeAppT (c, this, [])
+    | Some params ->
+        ThisTypeAppT (c, this, List.map (Anno.convert cx type_params_map) params)
 
 (* Makes signatures for fields and methods in a class. *)
 and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
@@ -5484,7 +5486,8 @@ and add_this self cx reason_c typeparams type_params_map =
       name = "this";
       reason = replace_reason "`this` type" reason_c;
       bound = rec_instance_type;
-      polarity = Positive
+      polarity = Positive;
+      default = None;
     } in
     (* Add the type of `this` to the end of the list of type
        parameters. Remember, order is important, since we don't have recursive

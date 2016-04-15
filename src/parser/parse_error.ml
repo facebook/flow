@@ -74,6 +74,7 @@ type t =
   | ExportNamelessClass
   | ExportNamelessFunction
   | UnsupportedDecorator
+  | MissingTypeParamDefault
 
 exception Error of (Loc.t * t) list
 
@@ -167,4 +168,8 @@ module PP =
           you must specify a function name. Did you mean \
           `export default function ...`?"
       | UnsupportedDecorator -> "Found a decorator in an unsupported position."
+      | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
+          since a preceding type parameter declaration has a default."
+
+
   end

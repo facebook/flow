@@ -1954,8 +1954,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* NOTE: we consider empty targs specialization for polymorphic definitions
        to be the same as implicit specialization, which is handled by a
-       fall-through case below. *)
-    | (PolyT (ids,t), SpecializeT(reason,cache,ts,tvar)) when ts <> [] ->
+       fall-through case below.The exception is when the PolyT has type
+       parameters with defaults. *)
+    | (PolyT (ids,t), SpecializeT(reason,cache,ts,tvar)) 
+        when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
       let t_ = instantiate_poly_with_targs cx trace reason ~cache (ids,t) ts in
       rec_flow_t cx trace (t_, tvar)
 
@@ -3885,7 +3887,11 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
 
   | PolyT (xs,t) ->
     let xs, map = List.fold_left (fun (xs, map) typeparam ->
-      { typeparam with bound = subst cx ~force map typeparam.bound }::xs,
+      let bound = subst cx ~force map typeparam.bound in
+      let default = match typeparam.default with
+      | None -> None 
+      | Some default -> Some (subst cx ~force map default) in
+      { typeparam with bound; default; }::xs,
       SMap.remove typeparam.name map
     ) ([], map) xs in
     PolyT (List.rev xs, subst cx ~force:false map t)
@@ -4147,29 +4153,39 @@ and polarity_mismatch cx polarity tp =
     (Polarity.string tp.polarity) in
   add_error cx (mk_info tp.reason [msg])
 
-and typeapp_arity_mismatch cx expected_num reason =
-  let msg = spf "wrong number of type arguments (expected %d)" expected_num in
-  add_error cx (mk_info reason [msg])
+and poly_minimum_arity xs =
+  List.filter (fun typeparam -> typeparam.default = None) xs
+  |> List.length
 
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
-  let len_xs = List.length xs in
-  if len_xs <> List.length ts
-  then (
-    typeapp_arity_mismatch cx len_xs reason_op;
-    AnyT reason_op
-  )
-  else
-    let map =
-      List.fold_left2
-        (fun map typeparam t ->
-          let t_ = cache_instantiate cx trace cache (typeparam, reason_op) t in
-          rec_flow_t cx trace (t_, subst cx map typeparam.bound);
-          SMap.add typeparam.name t_ map
-        )
-        SMap.empty xs ts
-    in
-    subst cx map t
+  let minimum_arity = poly_minimum_arity xs in
+  let maximum_arity = List.length xs in
+  if List.length ts > maximum_arity
+  then begin
+    let msg = spf "Too many type arguments. Expected at most %d" maximum_arity in
+    add_error cx (mk_info reason_op [msg]);
+  end;
+  let map, _ = List.fold_left
+    (fun (map, ts) typeparam ->
+      let t, ts = match typeparam, ts with
+      | {default=Some default; _;}, [] -> 
+          (* fewer arguments than params and we have a default *)
+          subst cx map default, []
+      | {default=None; _;}, [] ->
+          (* fewer arguments than params but no default *)
+          let msg = spf "Too few type arguments. Expected at least %d" minimum_arity in
+          add_error cx (mk_info reason_op [msg]);
+          AnyT reason_op, []
+      | _, t::ts -> 
+          t, ts in
+      let t_ = cache_instantiate cx trace cache (typeparam, reason_op) t in
+      rec_flow_t cx trace (t_, subst cx map typeparam.bound);
+      SMap.add typeparam.name t_ map, ts
+    )
+    (SMap.empty, ts)
+    xs in
+  subst cx map t
 
 (* Given a type parameter, a supplied type argument for specializing it, and a
    reason for specialization, either return the type argument or, when directed,

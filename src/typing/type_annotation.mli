@@ -37,7 +37,7 @@ val mk_nominal_type: ?for_type:bool ->
   Context.t ->
   Reason_js.t ->
   Type.t SMap.t ->
-  (Type.t * Spider_monkey_ast.Type.t list) ->
+  (Type.t * Spider_monkey_ast.Type.t list option) ->
   Type.t
 
 val mk_type_param_declarations: Context.t ->
@@ -47,4 +47,4 @@ val mk_type_param_declarations: Context.t ->
 
 val extract_type_param_instantiations:
   Spider_monkey_ast.Type.ParameterInstantiation.t option ->
-  Spider_monkey_ast.Type.t list
+  Spider_monkey_ast.Type.t list option

@@ -1050,6 +1050,7 @@ end with type t = Impl.t) = struct
       "name", string tp.name;
       "bound", option type_annotation tp.bound;
       "variance", option variance tp.variance;
+      "default", option _type tp.default;
     |]
   )
 

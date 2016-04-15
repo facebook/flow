@@ -400,7 +400,10 @@ and gc_id cx state id =
   state#mark root_id |> ignore
 
 and gc_typeparam cx state typeparam =
-  gc cx state typeparam.bound
+  gc cx state typeparam.bound;
+  match typeparam.default with 
+  | None -> ()
+  | Some t -> gc cx state t
 
 and gc_selector cx state = function
   | Prop _ -> ()

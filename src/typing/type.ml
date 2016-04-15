@@ -506,7 +506,8 @@ module rec TypeTerm : sig
     reason: reason;
     name: string;
     bound: t;
-    polarity: polarity
+    polarity: polarity;
+    default: t option;
   }
 
   and selector =
@@ -1151,8 +1152,8 @@ let rec mod_reason_of_t f = function
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
   | ThisClassT t -> ThisClassT (mod_reason_of_t f t)
-  | BoundT { reason; name; bound; polarity } ->
-    BoundT { reason = f reason; name; bound; polarity }
+  | BoundT { reason; name; bound; polarity; default; } ->
+    BoundT { reason = f reason; name; bound; polarity; default; }
   | ExistsT reason -> ExistsT (f reason)
   | ObjT (reason, ot) -> ObjT (f reason, ot)
   | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)

@@ -174,6 +174,7 @@ and Type : sig
         name: string;
         bound: Type.annotation option;
         variance: Variance.t option;
+        default: Type.t option;
       }
     end
     type t = Loc.t * t'

@@ -30,7 +30,10 @@ let is_suppress_type cx type_name =
   SSet.mem type_name (Context.suppress_types cx)
 
 let check_type_param_arity cx loc params n f =
-  if List.length params = n
+  let num_params = match params with
+  | None -> 0
+  | Some l -> List.length l in
+  if num_params = n
   then f ()
   else
     let msg = spf "Incorrect number of type parameters (expected %n)" n in
@@ -133,6 +136,11 @@ let rec convert cx type_params_map = Ast.Type.(function
   let _, { Ast.Identifier.name; _ } = id in
   let typeParameters = extract_type_param_instantiations typeParameters in
 
+  let convert_type_params () = Option.value_map
+    typeParameters
+    ~default: []
+    ~f:(List.map (convert cx type_params_map)) in
+
   begin match name with
 
   (* TODO Type.Mixed *)
@@ -144,51 +152,53 @@ let rec convert cx type_params_map = Ast.Type.(function
   (* Array<T> *)
   | "Array" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      let t = convert cx type_params_map (List.hd typeParameters) in
+      let t = convert_type_params () |> List.hd in
       ArrT (mk_reason "array type" loc, t, [])
     )
 
   (* $Either<...T> is the union of types ...T *)
   | "$Either" ->
-    let ts = List.map (convert cx type_params_map) typeParameters in
+    let ts = convert_type_params () in
     UnionT (mk_reason "union type" loc, UnionRep.make ts)
 
   (* $All<...T> is the intersection of types ...T *)
   | "$All" ->
-    let ts = List.map (convert cx type_params_map) typeParameters in
+    let ts = convert_type_params () in
     let rep = InterRep.make ts in
     IntersectionT (mk_reason "intersection type" loc, rep)
 
   (* $Tuple<...T> is the tuple of types ...T *)
   | "$Tuple" ->
-    let ts = List.map (convert cx type_params_map) typeParameters in
+    let ts = convert_type_params () in
     ArrT (mk_reason "tuple type" loc, AnyT.t, ts)
 
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      AnyWithLowerBoundT (convert cx type_params_map (List.hd typeParameters))
+      let t = convert_type_params () |> List.hd in
+      AnyWithLowerBoundT t
     )
 
   (* $Subtype<T> acts as any over subtypes of T *)
   | "$Subtype" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      AnyWithUpperBoundT (convert cx type_params_map (List.hd typeParameters))
+      let t = convert_type_params () |> List.hd in
+      AnyWithUpperBoundT t
     )
 
   (* $Shape<T> matches the shape of T *)
   | "$Shape" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      ShapeT (convert cx type_params_map (List.hd typeParameters))
+      let t = convert_type_params () |> List.hd in
+      ShapeT t
     )
 
   (* $Diff<T,S> *)
   | "$Diff" ->
     check_type_param_arity cx loc typeParameters 2 (fun () ->
-      let t1 = typeParameters |> List.hd |>
-        convert cx type_params_map in
-      let t2 = typeParameters |> List.tl |> List.hd |>
-        convert cx type_params_map in
+      let t1, t2 = match convert_type_params () with
+      | [t1; t2] -> t1, t2
+      | _ -> assert false in
       DiffT (t1, t2)
     )
 
@@ -196,7 +206,7 @@ let rec convert cx type_params_map = Ast.Type.(function
   (** TODO: remove $Enum **)
   | "$Keys" | "$Enum"->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      let t = convert cx type_params_map (List.hd typeParameters) in
+      let t = convert_type_params () |> List.hd in
       KeysT (mk_reason "key set" loc, t)
     )
 
@@ -204,8 +214,8 @@ let rec convert cx type_params_map = Ast.Type.(function
   (** TODO: use `import typeof` instead when that lands **)
   | "$Exports" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      match List.hd typeParameters with
-      | _, StringLiteral { StringLiteral.value; _ } ->
+      match typeParameters with
+      | Some ((_, StringLiteral { StringLiteral.value; _ })::_) ->
           let reason = (mk_reason (spf "exports of module `%s`" value) loc) in
           let remote_module_t =
             Env.get_var_declared_type cx (internal_module_name value) reason
@@ -213,12 +223,16 @@ let rec convert cx type_params_map = Ast.Type.(function
           Flow_js.mk_tvar_where cx reason (fun t ->
             Flow_js.flow cx (remote_module_t, CJSRequireT(reason, t))
           )
-      | _ -> assert false
+      | _ -> 
+          let msg = "$Exports requires a string literal" in
+          FlowError.add_error cx (loc, [msg]);
+          AnyT.t
     )
 
   | "$Abstract" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      AbstractT(convert cx type_params_map (List.hd typeParameters))
+      let t = convert_type_params () |> List.hd in
+      AbstractT t
     )
 
   | "this" ->
@@ -239,7 +253,8 @@ let rec convert cx type_params_map = Ast.Type.(function
   (* Class<T> is the type of the class whose instances are of type T *)
   | "Class" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      ClassT(convert cx type_params_map (List.hd typeParameters))
+      let t = convert_type_params () |> List.hd in
+      ClassT t
     )
 
   | "Function" | "function" ->
@@ -274,7 +289,7 @@ let rec convert cx type_params_map = Ast.Type.(function
 
   | "$Tainted" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      let t = convert cx type_params_map (List.hd typeParameters) in
+      let t = convert_type_params () |> List.hd in
       let reason = Reason_js.repos_reason loc (reason_of_t t) in
       UnionT (reason, UnionRep.make [t; TaintT (mk_reason "taint" loc)])
     )
@@ -309,7 +324,7 @@ let rec convert cx type_params_map = Ast.Type.(function
      work properly in type aliases: #7007731 *)
   | type_name when is_suppress_type cx type_name ->
     (* Optional type params are info-only, validated then forgotten. *)
-    List.iter (fun p -> ignore (convert cx type_params_map p)) typeParameters;
+    ignore (convert_type_params ());
     AnyT.at loc
 
   (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
@@ -541,35 +556,45 @@ and mk_singleton_boolean reason b =
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
 (** See comment on Flow_js.mk_instance for what the for_type flag means. **)
 and mk_nominal_type ?(for_type=true) cx reason type_params_map (c, targs) =
-  if targs = [] then
-    Flow_js.mk_instance cx reason ~for_type c
-  else
-    let tparams = List.map (convert cx type_params_map) targs in
-    TypeAppT (c, tparams)
+  match targs with
+  | None ->
+      Flow_js.mk_instance cx reason ~for_type c
+  | Some targs ->
+      let tparams = List.map (convert cx type_params_map) targs in
+      TypeAppT (c, tparams)
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
 and mk_type_param_declarations cx type_params_map typeParameters =
   let open Ast.Type.ParameterDeclaration in
-  let add_type_param (typeparams, smap) = function
-  | loc, { TypeParam.name; bound; variance } ->
+  let add_type_param (typeparams, smap, bounds_map) = function
+  | loc, { TypeParam.name; bound; variance; default; } ->
     let reason = mk_reason name loc in
     let bound = match bound with
     | None -> MixedT (reason, Mixed_everything)
     | Some (_, u) ->
         mk_type cx (SMap.union smap type_params_map) reason (Some u)
     in
+    let default = match default with
+    | None -> None
+    | Some default ->
+        let type_params_map = SMap.union smap type_params_map in
+        let t = mk_type cx type_params_map reason (Some default) in
+        Flow_js.flow_t cx (Flow_js.subst cx bounds_map t, 
+                           Flow_js.subst cx bounds_map bound);
+        Some t in
     let polarity = TypeParam.Variance.(match variance with
     | Some Plus -> Positive
     | Some Minus -> Negative
     | None -> Neutral
     ) in
-    let typeparam = { reason; name; bound; polarity } in
+    let typeparam = { reason; name; bound; polarity; default; } in
     (typeparam :: typeparams,
-     SMap.add name (BoundT typeparam) smap)
+     SMap.add name (BoundT typeparam) smap,
+     SMap.add name (Flow_js.subst cx bounds_map bound) bounds_map)
   in
-  let typeparams, smap = extract_type_param_declarations typeParameters
-    |> List.fold_left add_type_param ([], SMap.empty)
+  let typeparams, smap, _ = extract_type_param_declarations typeParameters
+    |> List.fold_left add_type_param ([], SMap.empty, SMap.empty)
   in
   List.rev typeparams, SMap.union smap type_params_map
 
@@ -593,5 +618,6 @@ and extract_type_param_declarations =
 
 and extract_type_param_instantiations =
   let open Ast.Type.ParameterInstantiation in
-  let f (_, typeParameters) = typeParameters.params in
-  Option.value_map ~f ~default:[]
+  function
+  | None -> None
+  | Some (_, typeParameters) -> Some typeParameters.params
