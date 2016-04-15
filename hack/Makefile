@@ -5,6 +5,7 @@
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
 EXTRA_CC_FLAGS=
+BYTECODE=
 
 ################################################################################
 #                              OS-dependent stuff                              #
@@ -26,6 +27,12 @@ ifeq ($(OS), Darwin)
   ELF=
   FRAMEWORKS=CoreServices CoreFoundation
   SECTCREATE=-cclib -sectcreate -cclib __text -cclib hhi -cclib $(ROOT)/../bin/hhi.tar.gz
+endif
+
+ifeq ($(BYTECODE), 1)
+  TARGET_EXT=byte
+else
+  TARGET_EXT=native
 endif
 
 ################################################################################
@@ -95,15 +102,17 @@ NATIVE_LIBRARIES=\
   pthread\
   $(ELF)
 
-TARGETS=_build/hh_server.native _build/hh_client.native \
-		_build/hh_single_type_check.native _build/hh_emitter.native \
-		_build/hh_format.native _build/h2tp.native \
-		_build/hh_match.native \
-		_build/code_extent_tests.native \
-		_build/matcher_test.native \
-		_build/patcher_api_test.native \
-		_build/patcher_module_test.native \
-		_build/patcher_test.native
+TARGETS_BASE=_build/hh_server _build/hh_client \
+	_build/hh_single_type_check _build/hh_emitter \
+	_build/hh_format _build/h2tp \
+	_build/hh_match \
+	_build/code_extent_tests \
+	_build/matcher_test \
+	_build/patcher_api_test \
+	_build/patcher_module_test \
+	_build/patcher_test
+
+TARGETS=$(foreach target,$(TARGETS_BASE),$(target).$(TARGET_EXT))
 
 # Find all source files (all files not in _build dir)
 ALL_SRC_FILES=$(call rwildcard,$(patsubst _build,,$(wildcard *)),*.*)
@@ -150,7 +159,7 @@ $(TARGETS): $(ALL_SRC_FILES)
 	# we place it here to avoid unnecessary rebuilds
 	$(MAKE) build-hack-native-deps build-hhi-archive
 	ocamlbuild -no-links -cflag -g $(INCLUDE_OPTS) $(LIB_OPTS) \
-		-lflags "-g $(LINKER_FLAGS)" \
+		-lflags "-g $(LINKER_FLAGS)" -tag custom \
 		$(patsubst _build/%,%,$(TARGETS))
 	# Touching the targets is necessary because the ocaml build
 	# doesn't change the modification dates of the targets if
@@ -178,16 +187,16 @@ build-hhi-archive:
 copy-hack-files: build-hack
 	mkdir -p ../bin
 ifeq ($(OS), Linux)
-	objcopy --add-section hhi=../bin/hhi.tar.gz _build/hh_server.native ../bin/hh_server
+	objcopy --add-section hhi=../bin/hhi.tar.gz _build/hh_server.$(TARGET_EXT) ../bin/hh_server
 else
-	cp _build/hh_server.native ../bin/hh_server
+	cp _build/hh_server.$(TARGET_EXT) ../bin/hh_server
 endif
-	cp _build/hh_client.native ../bin/hh_client
-	cp _build/hh_single_type_check.native ../bin/hh_single_type_check
-	cp _build/hh_emitter.native ../bin/hh_emitter
-	cp _build/hh_format.native ../bin/hh_format
-	cp _build/h2tp/h2tp.native ../bin/h2tp
-	cp _build/hh_match.native ../bin/hh_match
+	cp _build/hh_client.$(TARGET_EXT) ../bin/hh_client
+	cp _build/hh_single_type_check.$(TARGET_EXT) ../bin/hh_single_type_check
+	cp _build/hh_emitter.$(TARGET_EXT) ../bin/hh_emitter
+	cp _build/hh_format.$(TARGET_EXT) ../bin/hh_format
+	cp _build/h2tp/h2tp.$(TARGET_EXT) ../bin/h2tp
+	cp _build/hh_match.$(TARGET_EXT) ../bin/hh_match
 
 copy-hack-files-ocp: build-hack-with-ocp
 	mkdir -p ../bin
@@ -204,15 +213,15 @@ endif
 
 copy-match-test-files:
 	mkdir -p ../bin
-	cp _build/hh_matcher/test/code_extent_tests.native \
+	cp _build/hh_matcher/test/code_extent_tests.$(TARGET_EXT) \
 		../bin/code_extent_test_driver
-	cp _build/hh_matcher/test/matcher_test.native \
+	cp _build/hh_matcher/test/matcher_test.$(TARGET_EXT) \
 		../bin/hh_match_test_driver
-	cp _build/hh_matcher/test/patcher_module_test.native \
+	cp _build/hh_matcher/test/patcher_module_test.$(TARGET_EXT) \
 		../bin/hh_patch_module_test_driver
-	cp _build/hh_matcher/test/patcher_api_test.native \
+	cp _build/hh_matcher/test/patcher_api_test.$(TARGET_EXT) \
 		../bin/hh_patch_api_test_driver
-	cp _build/hh_matcher/test/patcher_test.native \
+	cp _build/hh_matcher/test/patcher_test.$(TARGET_EXT) \
 		../bin/hh_patch_test_driver
 
 copy-match-test-files-ocp:
