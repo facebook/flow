@@ -27,8 +27,8 @@ let get_autocomplete_response tcopt content files_info =
     List.map res AutocompleteService.autocomplete_result_to_json
   ))
 
-let get_identify_function_response content line char =
-  let res = match ServerIdentifyFunction.go content line char with
+let get_identify_function_response content line char tcopt =
+  let res = match ServerIdentifyFunction.go content line char tcopt with
     | Some result -> Utils.strip_ns result.IdentifySymbolService.name
     | _ -> ""
   in
@@ -69,9 +69,9 @@ let get_format_response content start end_ =
   let modes = [Some FileInfo.Mstrict; Some FileInfo.Mpartial] in
   Format_response (Format_hack.region modes Path.dummy_path start end_ content)
 
-let get_method_name_response content line column =
+let get_method_name_response content line column tcopt =
   Get_method_name_response (
-    ServerIdentifyFunction.go content line column
+    ServerIdentifyFunction.go content line column tcopt
   )
 let get_outline_call_response content =
   Outline_response (FileOutline.outline content)
@@ -81,7 +81,7 @@ let get_call_response_ id call env =
   | Auto_complete_call content ->
     Result (get_autocomplete_response env.tcopt content env.files_info)
   | Identify_function_call (content, line, char) ->
-    Result (get_identify_function_response content line char)
+    Result (get_identify_function_response content line char env.tcopt)
   | Search_call s ->
     Result (get_search_response s)
   | IdeJson.Status_call ->
@@ -105,7 +105,7 @@ let get_call_response_ id call env =
   | Format_call (content, start, end_) ->
     Result (get_format_response content start end_)
   | Get_method_name_call (content, line, column) ->
-    Result (get_method_name_response content line column)
+    Result (get_method_name_response content line column env.tcopt)
   | Outline_call content ->
     Result (get_outline_call_response content)
 

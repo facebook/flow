@@ -9,6 +9,7 @@
  *)
 
 open Core
+open Typing_defs
 
 type target_type =
 | Class
@@ -50,24 +51,39 @@ let process_class_id result_ref is_target_fun cid _ =
                        }
   end
 
-let construct_method = "__construct"
+(* We have the method element from typing phase, but it doesn't have positional
+ * information - we need to go back and fetch relevant named AST *)
+let get_method_pos _type method_name m  =
+  let open Option.Monad_infix in
+  Naming_heap.ClassHeap.get m.ce_origin >>= fun class_ ->
+  let methods = match _type with
+    | `Constructor -> Option.to_list class_.Nast.c_constructor
+    | `Method -> class_.Nast.c_methods
+    | `Smethod ->  class_.Nast.c_static_methods
+  in
+  List.find methods (fun m -> (snd m.Nast.m_name) = method_name) >>= fun m ->
+  Some (fst m.Nast.m_name)
 
-let process_method result_ref is_target_fun c_name id =
+let process_method result_ref is_target_fun tcopt c_name id =
   if is_target_fun (fst id)
   then begin
     let method_name = (snd id) in
     let open Option.Monad_infix in
     let name_pos =
-      Naming_heap.ClassHeap.get c_name >>= fun class_ ->
-      if method_name = construct_method then begin
-        Some (fst (match class_.Nast.c_constructor with
-          | Some m -> m.Nast.m_name
-          | None -> class_.Nast.c_name
-        ))
+      (* Classes on typing heap have all the methods from inheritance hierarchy
+       * folded together, so we will correctly identify them even if method_name
+       * is not defined directly in class c_name *)
+      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
+      if method_name = Naming_special_names.Members.__construct then begin
+        match fst class_.tc_construct with
+          | Some m -> get_method_pos `Constructor method_name m
+          | None -> Some class_.tc_pos
       end else begin
-        List.find (class_.Nast.c_methods @ class_.Nast.c_static_methods)
-          (fun m -> (snd m.Nast.m_name) = method_name) >>= fun m ->
-        Some (fst m.Nast.m_name)
+        match SMap.get method_name class_.tc_methods with
+        | Some m -> get_method_pos `Method method_name m
+        | None ->
+          (SMap.get method_name class_.tc_smethods) >>=
+          (get_method_pos `Smethod method_name)
       end
     in
 
@@ -79,13 +95,14 @@ let process_method result_ref is_target_fun c_name id =
            }
   end
 
-let process_method_id result_ref is_target_fun class_ id _ _ ~is_method =
+let process_method_id result_ref is_target_fun tcopt class_ id _ _ ~is_method =
   let class_name = class_.Typing_defs.tc_name in
-  process_method result_ref is_target_fun class_name id
+  process_method result_ref is_target_fun tcopt class_name id
 
-let process_constructor result_ref is_target_fun class_ _ p =
+let process_constructor result_ref is_target_fun tcopt class_ _ p =
   process_method_id
-    result_ref is_target_fun class_ (p, construct_method) () () ~is_method:true
+    result_ref is_target_fun tcopt
+      class_ (p, Naming_special_names.Members.__construct) () () ~is_method:true
 
 let process_fun_id result_ref is_target_fun id =
   if is_target_fun (fst id)
@@ -111,36 +128,36 @@ let process_lvar_id result_ref is_target_fun _ id _ =
                        }
   end
 
-let process_named_class result_ref is_target_fun class_ =
+let process_named_class result_ref is_target_fun tcopt class_ =
   process_class_id result_ref is_target_fun class_.Nast.c_name ();
   let c_name = snd class_.Nast.c_name in
   let all_methods = class_.Nast.c_methods @ class_.Nast.c_static_methods in
   List.iter all_methods begin fun method_ ->
-    process_method result_ref is_target_fun c_name method_.Nast.m_name
+    process_method result_ref is_target_fun tcopt c_name method_.Nast.m_name
   end;
   match class_.Nast.c_constructor with
     | Some method_ ->
       let id =
         fst method_.Nast.m_name, Naming_special_names.Members.__construct
       in
-      process_method result_ref is_target_fun c_name id
+      process_method result_ref is_target_fun tcopt c_name id
     | None -> ()
 
 let process_named_fun result_ref is_target_fun fun_ =
   process_fun_id result_ref is_target_fun fun_.Nast.f_name
 
-let attach_hooks result_ref line char =
+let attach_hooks result_ref line char tcopt =
   let is_target_fun = is_target line char in
-  let process_method_id = process_method_id result_ref is_target_fun in
+  let process_method_id = process_method_id result_ref is_target_fun tcopt in
   Typing_hooks.attach_cmethod_hook process_method_id;
   Typing_hooks.attach_smethod_hook process_method_id;
   Typing_hooks.attach_constructor_hook
-    (process_constructor result_ref is_target_fun);
+    (process_constructor result_ref is_target_fun tcopt);
   Typing_hooks.attach_fun_id_hook (process_fun_id result_ref is_target_fun);
   Decl_hooks.attach_class_id_hook (process_class_id result_ref is_target_fun);
   Naming_hooks.attach_lvar_hook (process_lvar_id result_ref is_target_fun);
   Naming_hooks.attach_class_named_hook
-    (process_named_class result_ref is_target_fun);
+    (process_named_class result_ref is_target_fun tcopt);
   Naming_hooks.attach_fun_named_hook
     (process_named_fun result_ref is_target_fun)
 

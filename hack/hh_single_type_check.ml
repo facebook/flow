@@ -450,7 +450,7 @@ let handle_mode mode filename tcopt files_contents files_info errors =
     end;
   | Identify_symbol (line, column) ->
     let file = cat (Relative_path.to_absolute filename) in
-    let result = ServerIdentifyFunction.go file line column in
+    let result = ServerIdentifyFunction.go file line column tcopt in
     Option.iter result print_symbol
   | Suggest
   | Errors ->

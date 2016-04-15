@@ -252,12 +252,12 @@ let hh_get_method_at_position fn line char =
   Autocomplete.auto_complete := false;
   let fn = Relative_path.create Relative_path.Root fn in
   let result = ref None in
-  IdentifySymbolService.attach_hooks result line char;
+  let tcopt = TypecheckerOptions.permissive in
+  IdentifySymbolService.attach_hooks result line char tcopt;
   try
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
       List.iter ast begin fun def ->
-        let tcopt = TypecheckerOptions.permissive in
         match def with
         | Ast.Fun f ->
           let f = Naming.fun_ tcopt f in

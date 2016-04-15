@@ -52,7 +52,7 @@ let handle : type a. genv -> env -> a t -> a =
     | AUTOCOMPLETE content ->
         ServerAutoComplete.auto_complete env.tcopt env.files_info content
     | IDENTIFY_FUNCTION (content, line, char) ->
-        ServerIdentifyFunction.go_absolute content line char
+        ServerIdentifyFunction.go_absolute content line char env.tcopt
     | OUTLINE content ->
         FileOutline.outline content
     | METHOD_JUMP (class_, find_children) ->

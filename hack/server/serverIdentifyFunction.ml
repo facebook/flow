@@ -8,14 +8,14 @@
  *
  *)
 
-let go content line char =
+let go content line char tcopt =
   let result = ref None in
-  IdentifySymbolService.attach_hooks result line char;
+  IdentifySymbolService.attach_hooks result line char tcopt;
   let funs, classes =
     ServerIdeUtils.declare_and_check Relative_path.default content in
   ServerIdeUtils.revive funs classes;
   IdentifySymbolService.detach_hooks ();
   !result
 
-let go_absolute content line char =
-  Option.map (go content line char) IdentifySymbolService.to_absolute
+let go_absolute content line char tcopt =
+  Option.map (go content line char tcopt) IdentifySymbolService.to_absolute
