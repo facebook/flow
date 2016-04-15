@@ -51,15 +51,17 @@ let lint tcopt _acc fnl =
     errs @ acc
   end ~init:[]
 
+let lint_and_filter tcopt code acc fnl =
+  let lint_errs = lint tcopt acc fnl in
+  List.filter lint_errs (fun err -> Lint.get_code err = code)
+
 let lint_all genv env code =
   let next = compose
     (List.map ~f:(RP.create RP.Root))
     (genv.indexer FindUtils.is_php) in
   let errs = MultiWorker.call
     genv.workers
-    ~job:(fun acc fnl ->
-      let lint_errs = lint env.tcopt acc fnl in
-      List.filter lint_errs (fun err -> Lint.get_code err = code))
+    ~job:(lint_and_filter env.tcopt code)
     ~merge:List.rev_append
     ~neutral:[]
     ~next in

@@ -60,7 +60,20 @@ let (make_pipe: unit -> ('a, 'b) pipe) = fun () ->
   let ic = Unix.in_channel_of_descr descr_ic in
   let oc = Unix.out_channel_of_descr descr_oc in
   let input() = Marshal.from_channel ic in
-  let output data = Marshal.to_channel oc data [Marshal.Closures]; flush oc in
+  let output data =
+    let s = Marshal.to_string data [Marshal.Closures] in
+    let len = String.length s in
+    if len > 10 * 1024 * 1024 (* 10 MB *) then begin
+      Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
+        which may have an adverse performance impact. If you are sending \
+        closures, double-check to ensure that they have not captured large
+        values in their environment." len;
+      Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
+        (Printexc.get_callstack 100));
+    end;
+    output_string oc s;
+    flush oc
+  in
   { pipe_descr_in = descr_ic;
     pipe_fin = input;
     pipe_descr_out = descr_oc;
