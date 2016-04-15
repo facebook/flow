@@ -65,7 +65,7 @@ let process_method result_ref is_target_fun c_name id =
           | None -> class_.Nast.c_name
         ))
       end else begin
-        List.find class_.Nast.c_methods
+        List.find (class_.Nast.c_methods @ class_.Nast.c_static_methods)
           (fun m -> (snd m.Nast.m_name) = method_name) >>= fun m ->
         Some (fst m.Nast.m_name)
       end
