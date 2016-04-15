@@ -132,6 +132,9 @@ let main args =
     | MODE_DUMP_AI_INFO files ->
       ClientAiInfo.go conn files expand_path;
       Exit_status.Ok
+    | MODE_FIND_DEPENDENT_FILES files ->
+      ClientFindDependentFiles.go conn files expand_path;
+      Exit_status.Ok
     | MODE_REFACTOR (ref_mode, before, after) ->
       ClientRefactor.go conn args ref_mode before after;
       Exit_status.Ok

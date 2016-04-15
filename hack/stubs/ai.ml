@@ -45,6 +45,10 @@ module InfoService = struct
 
 end
 
+module ServerFindDepFiles = struct
+  let go _ _ _ = []
+end
+
 module ServerFindRefs = struct
   type action =
     | Class of string
