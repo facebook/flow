@@ -36,7 +36,7 @@ let get_identify_function_response content line char =
 
 let get_search_response s =
   let query_type = "" in (* no filters, search all types of identifiers *)
-  let res = ServerSearch.go s query_type in
+  let res = ServerSearch.go None s query_type in
   Search_call_response ( Hh_json.JSON_Array (
     List.map res ServerSearch.result_to_json
   ))

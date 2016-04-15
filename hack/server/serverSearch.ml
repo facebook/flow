@@ -58,6 +58,6 @@ let result_to_json res =
       "scope", Hh_json.JSON_String scope_string;
     ]
 
-let go query type_ =
-  let results = HackSearchService.MasterApi.query query type_ in
+let go workers query type_ =
+  let results = HackSearchService.MasterApi.query workers query type_ in
   List.map results SearchUtils.to_absolute

@@ -40,7 +40,7 @@ let handle_waiting_hh_client_request (ic, oc) env =
 
     match msg with
     | ServerCommand.Rpc ServerRpc.SEARCH (query, type_) ->
-      let response = ServerSearch.go query type_ in
+      let response = ServerSearch.go None query type_ in
       ServerCommand.send_response_to_client (ic, oc) response;
     | _ -> assert false
 

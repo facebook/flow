@@ -74,7 +74,7 @@ let handle : type a. genv -> env -> a t -> a =
           file_list (ServerArgs.ai_mode genv.options) env.tcopt
     | ARGUMENT_INFO (contents, line, col) ->
         ServerArgumentInfo.go contents line col
-    | SEARCH (query, type_) -> ServerSearch.go query type_
+    | SEARCH (query, type_) -> ServerSearch.go genv.workers query type_
     | COVERAGE_COUNTS path -> ServerCoverageMetric.go path genv env
     | LINT fnl -> ServerLint.go genv env fnl
     | LINT_ALL code -> ServerLint.lint_all genv env code

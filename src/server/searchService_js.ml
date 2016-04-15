@@ -110,7 +110,7 @@ let update fn ast =
   SS.WorkerApi.update fn trie_defs fuzzy_defs []
 
 let query input =
-  SS.MasterApi.query input None
+  SS.MasterApi.query None input None
 
 let update_from_master files =
   (* hack's search service operates on Relative_paths, so we have to convert *)

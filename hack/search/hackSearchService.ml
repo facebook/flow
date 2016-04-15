@@ -119,8 +119,8 @@ module MasterApi = struct
     | "typedef" -> Some Typedef
     | _ -> None
 
-  let query input type_ =
-    SS.MasterApi.query input (get_type type_)
+  let query workers input type_ =
+    SS.MasterApi.query workers input (get_type type_)
 
   let query_autocomplete input ~limit ~filter_map =
     SS.AutocompleteTrie.MasterApi.query input ~limit ~filter_map
