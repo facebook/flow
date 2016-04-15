@@ -6,3 +6,4 @@ C.sort((a, b) => a - b);
 
 var x: Array<string> = ['1', '2'];
 var y: Array<string> = ['3', ...x];
+var z: Array<string> = [...'123'];
