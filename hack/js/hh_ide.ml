@@ -253,7 +253,7 @@ let hh_get_method_at_position fn line char =
   let fn = Relative_path.create Relative_path.Root fn in
   let result = ref None in
   let tcopt = TypecheckerOptions.permissive in
-  IdentifySymbolService.attach_hooks result line char tcopt;
+  IdentifySymbolService.attach_hooks result line char;
   try
     let ast = Parser_heap.ParserHeap.find_unsafe fn in
     Errors.ignore_ begin fun () ->
@@ -272,10 +272,11 @@ let hh_get_method_at_position fn line char =
     let result =
       match !result with
       | Some res ->
+          let res = IdentifySymbolService.infer_method_position tcopt res in
           let result_type =
             match res.IdentifySymbolService.type_ with
             | IdentifySymbolService.Class -> "class"
-            | IdentifySymbolService.Method -> "method"
+            | IdentifySymbolService.Method _ -> "method"
             | IdentifySymbolService.Function -> "function"
             | IdentifySymbolService.LocalVar -> "local" in
           JSON_Object [ "name",           JSON_String res.IdentifySymbolService.name;

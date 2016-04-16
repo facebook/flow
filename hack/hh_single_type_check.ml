@@ -357,7 +357,7 @@ let print_symbol symbol =
     begin match symbol.type_ with
     | Class -> "Class"
     | Function -> "Function"
-    | Method -> "Method"
+    | Method _ -> "Method"
     | LocalVar -> "LocalVar"
     end
     (Pos.string_no_file symbol.pos);

@@ -10,12 +10,14 @@
 
 let go content line char tcopt =
   let result = ref None in
-  IdentifySymbolService.attach_hooks result line char tcopt;
+  IdentifySymbolService.attach_hooks result line char;
   let funs, classes =
     ServerIdeUtils.declare_and_check Relative_path.default content in
+  let result =
+    Option.map !result (IdentifySymbolService.infer_method_position tcopt) in
   ServerIdeUtils.revive funs classes;
   IdentifySymbolService.detach_hooks ();
-  !result
+  result
 
 let go_absolute content line char tcopt =
   Option.map (go content line char tcopt) IdentifySymbolService.to_absolute

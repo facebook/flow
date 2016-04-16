@@ -13,7 +13,7 @@ open Hh_json
 let get_result_type res =
   match res.IdentifySymbolService.type_ with
   | IdentifySymbolService.Class -> "class"
-  | IdentifySymbolService.Method -> "method"
+  | IdentifySymbolService.Method _ -> "method"
   | IdentifySymbolService.Function -> "function"
   | IdentifySymbolService.LocalVar -> "local"
 

@@ -210,7 +210,7 @@ let json_string_of_response id response =
         let result_type =
           match res.IdentifySymbolService.type_ with
           | IdentifySymbolService.Class -> "class"
-          | IdentifySymbolService.Method -> "method"
+          | IdentifySymbolService.Method _ -> "method"
           | IdentifySymbolService.Function -> "function"
           | IdentifySymbolService.LocalVar -> "local"
         in
