@@ -27,6 +27,7 @@ open Constraint_js
 open Type
 open Flow_error
 
+
 (* The following functions are used as constructors for function types and
    object types, which unfortunately have many fields, not all of which are
    meaningful in all contexts. This part of the design should be revisited:
@@ -698,7 +699,7 @@ module Cache = struct
     let compare = Pervasives.compare
   end)
 
-  (* Cache that remembers pairs of types that are passed to __flow__. *)
+  (* Cache that remembers pairs of types that are passed to __. *)
   module FlowConstraint = struct
     let cache = ref TypePairSet.empty
 
@@ -3333,6 +3334,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT(reason, (reason, "$value"), t))
+
+    | (StrT (r, _), UseT (ArrT _))
+      ->
+      let arr = ArrT (r, StrT (r, AnyLiteral), []) in
+      rec_flow cx trace (arr, u)
+
 
     (*************************)
     (* repositioning, part 2 *)

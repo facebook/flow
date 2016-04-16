@@ -1,2 +1,14 @@
+test.js:11
+ 11: var z2: Array<'1' | '2' | '3'> = [...'123']; //error
+                                          ^^^^^ string. This type is incompatible with
+ 11: var z2: Array<'1' | '2' | '3'> = [...'123']; //error
+                   ^^^^^^^^^^^^^^^ string enum
 
-Found 0 errors
+test.js:12
+ 12: var z3: Array<'123'> = [...'123']; //error
+                                ^^^^^ string. Expected string literal `123`
+ 12: var z3: Array<'123'> = [...'123']; //error
+                   ^^^^^ string literal `123`
+
+
+Found 2 errors

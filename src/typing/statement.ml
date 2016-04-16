@@ -2540,10 +2540,8 @@ and array_element_spread cx type_params_map (loc, e) =
   let arr = expression cx type_params_map (loc, e) in
   let reason = mk_reason "spread operand" loc in
   Flow.mk_tvar_where cx reason (fun tvar ->
-      match arr with
-      | StrT (_, _) -> Flow.flow_t cx (arr, tvar)
-      | _ -> Flow.flow_t cx (arr, ArrT (reason, tvar, []))
-    )
+    Flow.flow_t cx (arr, ArrT (reason, tvar, []));
+  )
 
 and spread cx type_params_map (loc, e) =
   RestT (array_element_spread cx type_params_map (loc, e))
