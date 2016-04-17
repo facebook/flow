@@ -9,6 +9,7 @@ let parse_content file content =
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
     esproposal_export_star_as = true;
+    esproposal_function_bind = true;
     types = true;
     use_strict = false;
   }) in
@@ -77,6 +78,7 @@ let stub_metadata ~root ~checked = { Context.
   esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
   esproposal_decorators = Options.ESPROPOSAL_WARN;
   esproposal_export_star_as = Options.ESPROPOSAL_WARN;
+  esproposal_function_bind = Options.ESPROPOSAL_WARN;
   facebook_ignore_fbt = false;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;

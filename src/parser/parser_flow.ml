@@ -345,8 +345,12 @@ end = struct
           let t = primary env in
           Loc.btwn start_loc (fst t), Type.Typeof t
       | T_LBRACKET -> tuple env
+      | T_COLON ->
+        Expect.token env T_COLON;
+        Expect.token env T_COLON;
+        primary env
       | T_IDENTIFIER ->
-          let loc, g = generic env in
+        let loc, g = generic env in
           loc, Type.Generic g
       | T_STRING (loc, value, raw, octal)  ->
           if octal then strict_error env Error.StrictOctalLiteral;
@@ -739,6 +743,18 @@ end = struct
 
     and raw_generic_with_identifier =
       let rec identifier env (q_loc, qualification) =
+        if Peek.token env = T_COLON
+        then begin
+          Expect.token env T_COLON;
+          Expect.token env T_COLON;
+          let id = Parse.identifier env in
+          let loc = Loc.btwn q_loc (fst id) in
+          let qualification = Type.Generic.Identifier.(Qualified (loc, {
+              qualification;
+              id;
+            })) in
+          identifier env (loc, qualification)
+        end else
         if Peek.token env = T_PERIOD
         then begin
           Expect.token env T_PERIOD;
@@ -1484,6 +1500,15 @@ end = struct
             _object  = left;
             property = PropertyExpression expr;
             computed = true;
+            })))
+      | T_COLON ->
+        Expect.token env T_COLON;
+        Expect.token env T_COLON;
+        let id, _ = identifier_or_reserved_keyword env in
+        call env (Loc.btwn (fst left) (fst id), Expression.(Member Member.({
+            _object  = left;
+            property = PropertyIdentifier id;
+            computed = false;
           })))
       | T_PERIOD ->
           Expect.token env T_PERIOD;
@@ -1571,6 +1596,15 @@ end = struct
             _object  = left;
             property = PropertyExpression expr;
             computed = true;
+            })))
+      | T_COLON ->
+        Expect.token env T_COLON;
+        Expect.token env T_COLON;
+        let id, _ = identifier_or_reserved_keyword env in
+        call env (Loc.btwn (fst left) (fst id), Expression.(Member Member.({
+            _object  = left;
+            property = PropertyIdentifier id;
+            computed = false;
           })))
       | T_PERIOD ->
           Expect.token env T_PERIOD;
@@ -4276,6 +4310,17 @@ end = struct
     | T_TRY -> _try env
     | T_WHILE -> _while env
     | T_WITH -> _with env
+    | T_COLON ->
+      Expect.token env T_COLON;
+      if Peek.token env == T_COLON && Peek.identifier ~i:1 env then begin
+        Expect.token env T_COLON;
+        maybe_labeled env
+      end
+      else begin
+        error_unexpected env;
+        Eat.token env;
+        statement env
+      end
     | _ when Peek.identifier env -> maybe_labeled env
     (* If we see an else then it's definitely an error, but we can probably
      * assume that this is a malformed if statement that is missing the if *)
@@ -4283,7 +4328,6 @@ end = struct
     (* There are a bunch of tokens that aren't the start of any valid
      * statement. We list them here in order to skip over them, rather than
      * getting stuck *)
-    | T_COLON
     | T_RPAREN
     | T_RCURLY
     | T_RBRACKET

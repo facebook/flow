@@ -32,6 +32,7 @@ type options = {
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
+  opt_esproposal_function_bind: esproposal_feature_mode;
   opt_ignore_fbt: bool;
   opt_ignore_non_literal_requires: bool;
   opt_ignores: (string * Str.regexp) list;
@@ -80,6 +81,7 @@ let esproposal_class_instance_fields opts =
   opts.opt_esproposal_class_instance_fields
 let esproposal_decorators opts = opts.opt_esproposal_decorators
 let esproposal_export_star_as opts = opts.opt_esproposal_export_star_as
+let esproposal_function_bind opts = opts.opt_esproposal_function_bind
 let ignores opts = opts.opt_ignores
 let includes opts = opts.opt_includes
 let is_check_mode opts = opts.opt_check_mode

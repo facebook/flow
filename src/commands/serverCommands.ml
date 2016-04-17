@@ -301,6 +301,9 @@ module OptionParser(Config : CONFIG) = struct
       );
       Options.opt_esproposal_class_instance_fields = FlowConfig.(
         flowconfig.options.Opts.esproposal_class_instance_fields
+        );
+      Options.opt_esproposal_function_bind = FlowConfig.(
+        flowconfig.options.Opts.esproposal_function_bind
       );
     };
     ()

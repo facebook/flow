@@ -177,6 +177,8 @@ end = struct
         {opts with esproposal_decorators = value;}
     | "esproposal_export_star_as" ->
         {opts with esproposal_export_star_as = value;}
+    | "esproposal_function_bind" ->
+        {opts with esproposal_function_bind = value;}
     | "types" ->
         {opts with types = value;}
     | _ ->

@@ -73,6 +73,7 @@ let parse_source_file ~fail ~types ~use_strict content file =
     esproposal_class_static_fields = true;
     esproposal_decorators = true;
     esproposal_export_star_as = true;
+    esproposal_function_bind = true;
     types = types;
     use_strict;
   }) in
@@ -87,6 +88,7 @@ let parse_json_file ~fail content file =
     esproposal_class_static_fields = false;
     esproposal_decorators = false;
     esproposal_export_star_as = false;
+    esproposal_function_bind = false;
     types = true;
     use_strict = true; (* JSON bans octals; this only forbids legacy octals *)
   }) in
