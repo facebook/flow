@@ -3444,11 +3444,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, SetPropT (_, (reason_prop, _), _)) ->
       flow_err_reasons cx trace (err_msg l u) (reason_prop, reason_of_t l)
 
+
+    (* string spread *)
     | (StrT (r, literal), UseT (ArrT (_, _, []))) when literal == AnyLiteral ->
       let arr = ArrT (r, StrT (r, AnyLiteral), []) in
       rec_flow cx trace (arr, u)
 
-
+    (* spread for everything that has @@iterator *)
     | (InstanceT (r, _, _, insttype), UseT (ArrT _)) when has_prop cx insttype.methods_tmap "@@iterator" ->
       let iteratorType = read_prop cx insttype.methods_tmap "@@iterator" in
       begin match iteratorType with
