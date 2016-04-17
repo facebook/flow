@@ -1,0 +1,20 @@
+test.js:5
+  5: var z2: Array<'1' | '2' | '3'> = [...'123']; //error
+                                          ^^^^^ string. This type is incompatible with
+  5: var z2: Array<'1' | '2' | '3'> = [...'123']; //error
+                   ^^^^^^^^^^^^^^^ string enum
+
+test.js:6
+  6: var z3: Array<'123'> = [...'123']; //error
+                                ^^^^^ string. Expected string literal `123`
+  6: var z3: Array<'123'> = [...'123']; //error
+                   ^^^^^ string literal `123`
+
+test.js:26
+ 26: function* genG() {
+                     ^ undefined. This type is incompatible with
+ 29: var G: Array<number> = [...genG()]; //Error, genG can return void
+                  ^^^^^^ number
+
+
+Found 3 errors
