@@ -358,6 +358,7 @@ let program_init genv =
   env
 
 let setup_server options ide_process =
+  Hh_logger.log "Version: %s" Build_id.build_id_ohai;
   let root = ServerArgs.root options in
   SharedMem.hashtable_mutex_lock ();
   (* The OCaml default is 500, but we care about minimizing the memory
