@@ -9,7 +9,6 @@
  *)
 
 val infer_ast:
-  ?gc: bool ->
   metadata: Context.metadata ->
   filename: Loc.filename ->
   module_name: Modulename.t ->

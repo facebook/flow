@@ -578,7 +578,7 @@ let typecheck_contents ~options ?verbose contents filename =
 
       let timing, cx = with_timer "Infer" timing (fun () ->
         TI.infer_ast
-          ~gc:false ~metadata ~filename ~module_name:(Modulename.String "-") ast
+          ~metadata ~filename ~module_name:(Modulename.String "-") ast
       ) in
 
       let cache = new context_cache in

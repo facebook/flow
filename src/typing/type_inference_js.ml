@@ -69,7 +69,7 @@ let scan_for_suppressions =
       | _ -> ()) comments
 
 (* build module graph *)
-let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
+let infer_ast ~metadata ~filename ~module_name ast =
   Flow_js.Cache.clear();
 
   let _, statements, comments = ast in
@@ -146,11 +146,6 @@ let infer_ast ?(gc=true) ~metadata ~filename ~module_name ast =
 
   (* insist that whatever type flows into exports is fully annotated *)
   force_annotations cx;
-
-  (if gc then
-    let ins = SSet.elements (Context.required cx) in
-    let out = exported_module_name in
-    Gc_js.do_gc cx (out::ins));
 
   cx
 

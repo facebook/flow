@@ -132,7 +132,7 @@ let check_content ~filename ~content =
     Flow_js.Cache.clear();
 
     let cx = Type_inference_js.infer_ast
-        ~gc:false ~metadata ~filename ~module_name:(Modulename.String "-") ast
+      ~metadata ~filename ~module_name:(Modulename.String "-") ast
     in
 
     let master_cx = get_master_cx root in
