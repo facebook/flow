@@ -104,19 +104,19 @@ logical.js:315
 
 logical.js:322
 322:     return false && x && y;
-                ^^^^^ boolean. This type is incompatible with
+                ^^^^^^^^^^ boolean. This type is incompatible with
 321: function logical10b(x: number, y: string): Array<any> { // expected `: boolean`
                                                 ^^^^^^^^^^ array type
 
 logical.js:329
 329:     return x && false && y;
-                ^ number. This type is incompatible with
+                ^^^^^^^^^^ boolean. This type is incompatible with
 328: function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
                                                 ^^^^^^^^^^ array type
 
 logical.js:329
 329:     return x && false && y;
-                     ^^^^^ boolean. This type is incompatible with
+                ^^^^^^^^^^ number. This type is incompatible with
 328: function logical10c(x: number, y: string): Array<any> { // expected `number | boolean`
                                                 ^^^^^^^^^^ array type
 
@@ -174,5 +174,17 @@ logical.js:400
 395: function logical14(x: number): Array<{x: string}> {
                                               ^^^^^^ string
 
+logical.js:510
+510:   return (x.y && x.z); // error: x.y is a string
+               ^^^ string. This type is incompatible with
+509: function logical19a(x: { y: string, z: boolean }): boolean {
+                                                        ^^^^^^^ boolean
 
-Found 24 errors
+logical.js:513
+513:   return (x.y || x.z); // error: x.y is a string
+               ^^^ string. This type is incompatible with
+512: function logical19b(x: { y: string, z: boolean }): boolean {
+                                                        ^^^^^^^ boolean
+
+
+Found 26 errors

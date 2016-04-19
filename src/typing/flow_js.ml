@@ -1395,43 +1395,53 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason = replace_reason "boolean value `false`" reason in
       rec_flow_t cx trace (BoolT (reason, Some false), tout)
 
-    | (left, AndT(_, right, u)) ->
+    | (left, AndT(reason, (left_loc, right_loc), right, u)) ->
       (* a falsy && b ~> a
          a truthy && b ~> b
          a && b ~> a falsy | b *)
+      let left_reason = repos_reason left_loc reason in
+      let right_reason = repos_reason right_loc reason in
       let truthy_left = filter_exists left in
       (match truthy_left with
       | EmptyT _ ->
         (* falsy *)
-        rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
+        rec_flow cx trace
+          (left, ReposLowerT (left_reason, PredicateT (NotP ExistsP, u)))
       | _ ->
         (match filter_not_exists left with
-        | EmptyT _ -> (* truthy *) rec_flow_t cx trace (right, u)
+        | EmptyT _ -> (* truthy *)
+          rec_flow cx trace (right, ReposLowerT (right_reason, UseT u))
         | _ ->
-          rec_flow cx trace (left, PredicateT (NotP ExistsP, u));
+          rec_flow cx trace
+            (left, ReposLowerT (left_reason, PredicateT (NotP ExistsP, u)));
           (match truthy_left with
           | EmptyT _ -> ()
-          | _ -> rec_flow_t cx trace (right, u))
+          | _ -> rec_flow cx trace (right, ReposLowerT (right_reason, UseT u)))
         )
       )
 
-    | (left, OrT(_, right, u)) ->
+    | (left, OrT(reason, (left_loc, right_loc), right, u)) ->
       (* a truthy || b ~> a
          a falsy || b ~> b
          a || b ~> a truthy | b *)
+      let left_reason = repos_reason left_loc reason in
+      let right_reason = repos_reason right_loc reason in
       let falsy_left = filter_not_exists left in
       (match falsy_left with
       | EmptyT _ ->
         (* truthy *)
-        rec_flow cx trace (left, PredicateT (ExistsP, u))
+        rec_flow cx trace
+          (left, ReposLowerT (left_reason, PredicateT (ExistsP, u)))
       | _ ->
         (match filter_exists left with
-        | EmptyT _ -> (* falsy *) rec_flow_t cx trace (right, u)
+        | EmptyT _ -> (* falsy *)
+          rec_flow cx trace (right, ReposLowerT (right_reason, UseT u))
         | _ ->
-          rec_flow cx trace (left, PredicateT (ExistsP, u));
+          rec_flow cx trace
+            (left, ReposLowerT (left_reason, PredicateT (ExistsP, u)));
           (match falsy_left with
           | EmptyT _ -> ()
-          | _ -> rec_flow_t cx trace (right, u))
+          | _ -> rec_flow cx trace (right, ReposLowerT (right_reason, UseT u)))
         )
       )
 

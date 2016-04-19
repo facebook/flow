@@ -502,3 +502,13 @@ function logical18a(x: number, y: number): number {
 function logical18b(x: {a: number}, y: {b: number}): number {
     return x.a - 1 || y.b - 1;
 }
+
+/**
+ * Layer of indirection in the LHS (get prop)
+ */
+function logical19a(x: { y: string, z: boolean }): boolean {
+  return (x.y && x.z); // error: x.y is a string
+}
+function logical19b(x: { y: string, z: boolean }): boolean {
+  return (x.y || x.z); // error: x.y is a string
+}

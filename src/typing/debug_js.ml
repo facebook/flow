@@ -352,8 +352,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | AndT (_, right, res)
-  | OrT (_, right, res) -> [
+  | AndT (_, _, right, res)
+  | OrT (_, _, right, res) -> [
       "rightType", _json_of_t json_cx right;
       "resultType", _json_of_t json_cx res
     ]
