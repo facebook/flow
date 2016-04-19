@@ -18,6 +18,7 @@ type metadata = {
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
   esproposal_export_star_as: Options.esproposal_feature_mode;
+  esproposal_function_bind: Options.esproposal_feature_mode;
   facebook_ignore_fbt: bool;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
@@ -80,6 +81,7 @@ let metadata_of_options options = {
     Options.esproposal_class_instance_fields options;
   esproposal_decorators = Options.esproposal_decorators options;
   esproposal_export_star_as = Options.esproposal_export_star_as options;
+  esproposal_function_bind = Options.esproposal_function_bind options;
   facebook_ignore_fbt = Options.should_ignore_fbt options;
   ignore_non_literal_requires =
     Options.should_ignore_non_literal_requires options;
@@ -134,6 +136,8 @@ let esproposal_class_instance_fields cx =
   cx.metadata.esproposal_class_instance_fields
 let esproposal_decorators cx = cx.metadata.esproposal_decorators
 let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
+let esproposal_function_bind cx =
+  cx.metadata.esproposal_function_bind
 let evaluated cx = cx.evaluated
 let file cx = cx.file
 let find_props cx id = IMap.find_unsafe id cx.property_maps

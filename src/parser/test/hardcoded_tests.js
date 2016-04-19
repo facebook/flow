@@ -3494,6 +3494,22 @@ module.exports = {
           }
         }]
       }
+    },
+    'Function Bind': {
+      'foo::bar()': {},
+      'foo::bar': {},
+      '::foo.bar()': {},
+      '::foo': {},
+      '::export default class foo {}': {
+        'errors.0.message': 'Unexpected token :',
+        'errors.1.message': 'Unexpected token export',
+        'errors.2.message': 'Unexpected token default'
+      },
+      '::const bar = 1': {
+        'errors.0.message': 'Unexpected token :',
+        'errors.1.message': 'Unexpected token const',
+        'errors.2.message': 'Unexpected token const'
+      },
     }
   }
 };

@@ -17,6 +17,7 @@ module Opts : sig
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
     esproposal_export_star_as: Options.esproposal_feature_mode;
+    esproposal_function_bind: Options.esproposal_feature_mode;
     facebook_ignore_fbt: bool;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
