@@ -794,7 +794,9 @@ let not_expect_use_bound t =
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
-let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
+let rec __flow cx ((l: Type.t), (u: Type.use_t))
+
+ trace =
   begin match Context.verbose cx with
     | Some num_indent ->
       let indent = String.make ((Trace.trace_depth trace - 1) * num_indent) ' ' in
@@ -3466,9 +3468,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           end
       | _ ->
         flow_err cx trace (err_msg l u) l u
-      end
-
-
+      end *)
 
     | _ ->
       flow_err cx trace (err_msg l u) l u

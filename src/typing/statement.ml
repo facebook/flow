@@ -2537,14 +2537,16 @@ and expression_or_spread cx type_params_map = Ast.Expression.(function
 )
 
 and array_element_spread cx type_params_map (loc, e) =
-  let arr = expression cx type_params_map (loc, e) in
+  let spread_element = expression cx type_params_map (loc, e) in
   let reason = mk_reason "spread operand" loc in
   Flow.mk_tvar_where cx reason (fun tvar ->
-      let tvarArray = ArrT (reason, tvar, []) in
-      match arr with
-      | StrT (r, _) -> Flow.flow_t cx (StrT(r, AnyLiteral), tvarArray);
-      | _ -> Flow.flow_t cx (arr, tvarArray);
-  )
+      let iterable = Flow.get_builtin_typeapp
+          cx
+          reason
+          "$Iterable"
+          [tvar; AnyT.at loc; AnyT.at loc] in
+      Flow.flow_t cx (spread_element, iterable);
+    )
 
 and spread cx type_params_map (loc, e) =
   RestT (array_element_spread cx type_params_map (loc, e))
