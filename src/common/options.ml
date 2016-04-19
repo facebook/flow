@@ -99,6 +99,7 @@ let should_ignore_fbt opts = opts.opt_ignore_fbt
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
 let should_munge_underscores opts = opts.opt_munge_underscores
+let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root
 let should_wait opts = opts.opt_should_wait
 let suppress_comments opts = opts.opt_suppress_comments

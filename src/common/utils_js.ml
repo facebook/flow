@@ -8,6 +8,8 @@
  *
 *)
 
+exception Key_not_found of (* message *) string * (* key *) string
+
 let spf = Printf.sprintf
 let print_endlinef fmt = Printf.ksprintf print_endline fmt
 let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
@@ -95,16 +97,6 @@ let assert_false s =
 
 let __DEBUG__ ?(s="") f =
   try f () with _ -> assert_false s
-
-(* Time logging utility. Computes the elapsed time when running some code, and
-   if the elapsed time satisfies a given predicate (typically, is more than a
-   threshold), prints a message. *)
-let time pred msg f =
-  let start = Unix.gettimeofday () in
-  let ret = f () in
-  let elap = (Unix.gettimeofday ()) -. start in
-  if not (pred elap) then () else prerr_endline (msg elap);
-  ret
 
 let call_succeeds try_function function_input =
   try

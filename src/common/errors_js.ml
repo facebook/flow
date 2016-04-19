@@ -65,6 +65,20 @@ let mk_error ?(kind=InferError) ?op_info ?trace_infos ?(extra=[]) infos =  {
 let simple_error ?(kind=InferError) loc msg =
   mk_error ~kind [loc, [msg]]
 
+let internal_error filename msg =
+  let position = Loc.({
+    line = 1;
+    column = 0;
+    offset = 0;
+  }) in
+  let loc = Loc.({
+    source = Some filename;
+    start = position;
+    _end = position;
+  }) in
+  simple_error ~kind:InternalError loc msg
+
+
 (*******************************)
 
 let to_pp = function
