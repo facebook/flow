@@ -103,9 +103,9 @@ weakset.js:36
   Member 2:
   polymorphic type: function type. See lib: core.js:435
   Error:
-   36: let ws5 = new WeakSet(numbers()); // error, must be objects
-                             ^^^^^^^^^ $Iterable. This type is incompatible with
-  array type. See lib: core.js:435
+   29: function* numbers(): Iterable<number> {
+                                     ^^^^^^ number. This type is incompatible with
+  object type. See lib: core.js:435
   Member 3:
   polymorphic type: function type. See lib: core.js:436
   Error:
