@@ -46,24 +46,37 @@ function bar5(x: number, y?: ?number) {
   num(x + y);
 }
 
-num(null + null); // === 0
-num(undefined + undefined); // === NaN
+(null + null: 0);
+(null + 1: 1);
+(1 + null: 1);
+(1 + true: 2);
+(true + 1: 2);
+(1 + false: 1);
+(false + 1: 1);
+(null + true: 1);
+(true + null: 1);
+(null + false: 0);
+(false + null: 0);
 
-num(null + 1); // === 1
-num(1 + null); // === 1
+// (we don't do constant propagation with NaN yet)
+num(undefined + undefined); // === NaN
 num(undefined + 1); // === NaN
 num(1 + undefined); // === NaN
-
-num(null + true); // === 1
-num(true + null); // === 1
 num(undefined + true); // === NaN
 num(true + undefined); // === NaN
 
-str("foo" + true); // error
-str(true + "foo"); // error
-str("foo" + null); // error
-str(null + "foo"); // error
-str("foo" + undefined); // error
-str(undefined + "foo"); // error
+("foo" + true: "footrue");
+(true + "foo": "truefoo");
+("foo" + null: "foonull");
+(null + "foo": "nullfoo");
+("foo" + undefined: "fooundefined");
+(undefined + "foo": "undefinedfoo");
+("foo" + 123: "foo123");
+(123 + "foo": "123foo");
+("foo" + 123.4: "foo123.4");
+(123.4 + "foo": "123.4foo");
+
+(1+1: 2);
+("hi " + "there": "hi there");
 
 module.exports = "arith";

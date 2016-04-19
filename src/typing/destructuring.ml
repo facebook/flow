@@ -83,7 +83,7 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
         | Some (Element ((loc, _) as p)) ->
             let key = NumT (
               mk_reason "number" loc,
-              Literal (float i, string_of_int i)
+              Literal ((float i, string_of_int i), 0)
             ) in
             let reason = mk_reason (spf "element %d" i) loc in
             let init = Option.map init (fun expr ->

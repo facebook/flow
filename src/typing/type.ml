@@ -150,10 +150,10 @@ module rec TypeTerm : sig
     (* collects the keys of an object *)
     | KeysT of reason * t
     (* singleton string, matches exactly a given string literal *)
-    | SingletonStrT of reason * string
+    | SingletonStrT of reason * (string * int)
     (* matches exactly a given number literal, for some definition of "exactly"
        when it comes to floats... *)
-    | SingletonNumT of reason * number_literal
+    | SingletonNumT of reason * (number_literal * int)
     (* singleton bool, matches exactly a given boolean literal *)
     | SingletonBoolT of reason * bool
 
@@ -271,7 +271,7 @@ module rec TypeTerm : sig
     | MixinT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
-    | AdderT of reason * t * t
+    | AdderT of reason * bool * t * t
     (* overloaded relational operator, could be subsumed by general overloading *)
     | ComparatorT of reason * t
     (* unary minus operator on numbers, allows negative number literals *)
@@ -415,7 +415,7 @@ module rec TypeTerm : sig
     | SentinelProp of string
 
   and 'a literal =
-    | Literal of 'a
+    | Literal of ('a * int)
     | Truthy
     | AnyLiteral
 
@@ -1017,7 +1017,7 @@ and reason_of_use_t = function
   | SuperT (reason,_)
   | MixinT (reason, _)
 
-  | AdderT (reason,_,_)
+  | AdderT (reason,_,_,_)
   | ComparatorT (reason,_)
   | UnaryMinusT (reason, _)
 
@@ -1231,7 +1231,7 @@ and mod_reason_of_use_t f = function
 
   | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
 
-  | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
+  | AdderT (reason, is_reversed, rt, lt) -> AdderT (f reason, is_reversed, rt, lt)
   | ComparatorT (reason, t) -> ComparatorT (f reason, t)
   | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
 

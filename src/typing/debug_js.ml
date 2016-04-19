@@ -66,7 +66,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | NumT (_, lit) ->
     begin match lit with
-    | Literal (_, raw) -> ["literal", JSON_String raw]
+    | Literal ((_, raw), _) -> ["literal", JSON_String raw]
     | Truthy -> ["refinement", JSON_String "Truthy"]
     | AnyLiteral -> []
     end
@@ -194,11 +194,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SingletonStrT (_, s) -> [
+  | SingletonStrT (_, (s, _)) -> [
       "literal", JSON_String s
     ]
 
-  | SingletonNumT (_, (_, raw)) -> [
+  | SingletonNumT (_, ((_, raw), _)) -> [
       "literal", JSON_String raw
     ]
 
@@ -262,7 +262,7 @@ and _json_of_import_kind = Hh_json.(function
 )
 
 and _json_of_string_literal = Hh_json.(function
-  | Literal s -> ["literal", JSON_String s]
+  | Literal (s, _) -> ["literal", JSON_String s]
   | Truthy -> ["refinement", JSON_String "Truthy"]
   | AnyLiteral -> []
 )
@@ -330,9 +330,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | AdderT (_, l, r) -> [
+  | AdderT (_, is_reversed, l, r) -> [
       "leftType", _json_of_t json_cx l;
-      "rightType", _json_of_t json_cx r
+      "rightType", _json_of_t json_cx r;
+      "is_reversed", JSON_Bool is_reversed;
     ]
 
   | ComparatorT (_, t) -> [
@@ -915,11 +916,11 @@ and dump_t_ =
   let override stack cx t = match t with
     | OpenT (r, id) -> Some (dump_tvar stack cx r id)
     | NumT (_, lit) -> Some (match lit with
-        | Literal (_, raw) -> spf "NumT(%s)" raw
+        | Literal ((_, raw), _) -> spf "NumT(%s)" raw
         | Truthy -> spf "NumT(truthy)"
         | AnyLiteral -> "NumT")
     | StrT (_, c) -> Some (match c with
-        | Literal s -> spf "StrT(%S)" s
+        | Literal (s, _) -> spf "StrT(%S)" s
         | Truthy -> spf "StrT(truthy)"
         | AnyLiteral -> "StrT")
     | BoolT (_, c) -> Some (match c with
