@@ -15,15 +15,16 @@ function* genE() {
   return 2;
 }
 var E: number[] = [...genE()];
+var F: number[] = genE(); // error
 
-function* genF() {
+function* genG() {
   yield 1;
   yield '';
   return true;
 }
-var F: Array<number | string | bool> = [...genF()];
+var G: Array<number | string | bool> = [...genG()];
 
-function* genG() {
+function* genH() {
   yield 1;
 }
-var G: Array<number> = [...genG()]; //Error, genG can return void
+var H: Array<number> = [...genH()]; //Error, genG can return void

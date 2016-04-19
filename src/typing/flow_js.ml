@@ -3451,7 +3451,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (arr, u)
 
     (* spread for everything that has @@iterator *)
-    | (InstanceT (r, _, _, insttype), UseT (ArrT _)) when has_prop cx insttype.methods_tmap "@@iterator" ->
+    | (InstanceT (r, _, _, insttype), UseT (ArrT (_, (OpenT _), []))) when has_prop cx insttype.methods_tmap "@@iterator" ->
       let iteratorType = read_prop cx insttype.methods_tmap "@@iterator" in
       begin match iteratorType with
         | FunT (_, _, _, { return_t; _ }) ->
