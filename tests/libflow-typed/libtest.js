@@ -1,0 +1,1 @@
+const dino : Dinosaur = "Stegosaurus"

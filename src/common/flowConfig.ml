@@ -333,7 +333,7 @@ let parse_includes config lines =
   { config with includes; }
 
 let parse_libs config lines =
-  let libs = trim_lines lines in
+  let libs = "flow-typed" :: (trim_lines lines) in
   { config with libs; }
 
 let parse_ignores config lines =
