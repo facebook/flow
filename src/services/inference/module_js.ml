@@ -55,7 +55,7 @@ let replace_name_mapper_template_tokens =
     Str.global_replace (Str.regexp "\\\\[0-9]+") "\\\\\\0" in
 
   fun opts template ->
-    let root_path = escape_template (Path.to_string opts.Options.opt_root) in
+    let root_path = escape_template (Path.to_string (Options.root opts)) in
     Str.global_replace project_root_token root_path template
 
 
@@ -215,7 +215,7 @@ module type MODULE_SYSTEM = sig
      the module it refers to. If given an optional reference to an accumulator,
      record paths that were looked up but not found during resolution. *)
   val imported_module:
-    options: Options.options ->
+    options: Options.t ->
     Context.t -> Loc.t ->
     ?path_acc:SSet.t ref ->
     string -> Modulename.t
@@ -565,7 +565,8 @@ let get_module_system opts =
   match !module_system with
   | Some system -> system
   | None ->
-    let system = Hashtbl.find module_system_table opts.Options.opt_module in
+    let module_system_name = Options.module_system opts in
+    let system = Hashtbl.find module_system_table module_system_name in
     module_system := Some system;
     system
 

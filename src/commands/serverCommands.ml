@@ -235,71 +235,71 @@ module OptionParser(Config : CONFIG) = struct
     let all = all || FlowConfig.(flowconfig.options.Opts.all) in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
-    result := Some {
-      Options.opt_check_mode = Config.(mode = Check);
-      Options.opt_server_mode = Config.(mode = Server);
-      Options.opt_error_flags = error_flags;
-      Options.opt_log_file = opt_log_file;
-      Options.opt_root = root;
-      Options.opt_should_detach = Config.(mode = Detach);
-      Options.opt_should_wait = wait;
-      Options.opt_debug = debug;
-      Options.opt_verbose = verbose;
-      Options.opt_all = all;
-      Options.opt_weak = weak;
-      Options.opt_traces;
-      Options.opt_json = json;
-      Options.opt_quiet = quiet || json;
-      Options.opt_module_file_exts = FlowConfig.(
+    result := Some { Options.
+      opt_check_mode = Config.(mode = Check);
+      opt_server_mode = Config.(mode = Server);
+      opt_error_flags = error_flags;
+      opt_log_file = opt_log_file;
+      opt_root = root;
+      opt_should_detach = Config.(mode = Detach);
+      opt_should_wait = wait;
+      opt_debug = debug;
+      opt_verbose = verbose;
+      opt_all = all;
+      opt_weak = weak;
+      opt_traces;
+      opt_json = json;
+      opt_quiet = quiet || json;
+      opt_module_file_exts = FlowConfig.(
         flowconfig.options.Opts.module_file_exts
       );
-      Options.opt_module_name_mappers = FlowConfig.(
+      opt_module_name_mappers = FlowConfig.(
         flowconfig.options.Opts.module_name_mappers
       );
-      Options.opt_modules_are_use_strict = FlowConfig.(
+      opt_modules_are_use_strict = FlowConfig.(
         flowconfig.options.Opts.modules_are_use_strict
       );
-      Options.opt_node_resolver_dirnames = FlowConfig.(
+      opt_node_resolver_dirnames = FlowConfig.(
         flowconfig.options.Opts.node_resolver_dirnames
       );
-      Options.opt_profile = profile;
-      Options.opt_strip_root;
-      Options.opt_module;
-      Options.opt_libs = libs ~root flowconfig lib;
-      Options.opt_default_lib_dir;
-      Options.opt_munge_underscores = opt_munge_underscores;
-      Options.opt_temp_dir;
-      Options.opt_max_workers;
-      Options.opt_ignores;
-      Options.opt_includes;
-      Options.opt_suppress_comments = FlowConfig.(
+      opt_profile = profile;
+      opt_strip_root;
+      opt_module;
+      opt_libs = libs ~root flowconfig lib;
+      opt_default_lib_dir;
+      opt_munge_underscores = opt_munge_underscores;
+      opt_temp_dir;
+      opt_max_workers;
+      opt_ignores;
+      opt_includes;
+      opt_suppress_comments = FlowConfig.(
         flowconfig.options.Opts.suppress_comments
       );
-      Options.opt_suppress_types = FlowConfig.(
+      opt_suppress_types = FlowConfig.(
         flowconfig.options.Opts.suppress_types
       );
-      Options.opt_enable_const_params = FlowConfig.(
+      opt_enable_const_params = FlowConfig.(
         flowconfig.options.Opts.enable_const_params
       );
-      Options.opt_enable_unsafe_getters_and_setters = FlowConfig.(
+      opt_enable_unsafe_getters_and_setters = FlowConfig.(
         flowconfig.options.Opts.enable_unsafe_getters_and_setters
       );
-      Options.opt_esproposal_decorators = FlowConfig.(
+      opt_esproposal_decorators = FlowConfig.(
         flowconfig.options.Opts.esproposal_decorators
       );
-      Options.opt_esproposal_export_star_as = FlowConfig.(
+      opt_esproposal_export_star_as = FlowConfig.(
         flowconfig.options.Opts.esproposal_export_star_as
       );
-      Options.opt_ignore_fbt = FlowConfig.(
+      opt_ignore_fbt = FlowConfig.(
         flowconfig.options.Opts.facebook_ignore_fbt
       );
-      Options.opt_ignore_non_literal_requires = FlowConfig.(
+      opt_ignore_non_literal_requires = FlowConfig.(
         flowconfig.options.Opts.ignore_non_literal_requires
       );
-      Options.opt_esproposal_class_static_fields = FlowConfig.(
+      opt_esproposal_class_static_fields = FlowConfig.(
         flowconfig.options.Opts.esproposal_class_static_fields
       );
-      Options.opt_esproposal_class_instance_fields = FlowConfig.(
+      opt_esproposal_class_instance_fields = FlowConfig.(
         flowconfig.options.Opts.esproposal_class_instance_fields
       );
     };

@@ -9,7 +9,7 @@
  *)
 
 module type OPTION_PARSER = sig
-  val parse : unit -> Options.options
+  val parse : unit -> Options.t
 end
 
 module TI = Type_inference_js

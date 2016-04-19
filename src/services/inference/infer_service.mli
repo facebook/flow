@@ -11,7 +11,7 @@
 open Utils_js
 
 val infer:
-  options: Options.options ->
+  options: Options.t ->
   workers: Worker.t list option ->
   save_errors: (filename list -> Errors_js.ErrorSet.t list -> unit) ->
   save_suppressions: (filename list -> Errors_js.ErrorSuppressions.t list -> unit) ->

@@ -14,14 +14,14 @@ val global_file_name: string
 val flow_ext: string
 
 val is_json_file: string -> bool
-val is_flow_file: options: Options.options -> string -> bool
+val is_flow_file: options: Options.t -> string -> bool
 
 (* true if a file path matches an [ignore] entry in config *)
-val is_ignored: Options.options -> string -> bool
+val is_ignored: Options.t -> string -> bool
 (* true if a file path matches an [include] path in config *)
-val is_included: Options.options -> string -> bool
+val is_included: Options.t -> string -> bool
 
-val init: Options.options -> string list * SSet.t
+val init: Options.t -> string list * SSet.t
 
 val lib_module: string
 
@@ -33,13 +33,13 @@ val absolute_path: Str.regexp
 
 (* given a root, make a filter for file names *)
 val wanted:
-  options: Options.options ->
+  options: Options.t ->
   SSet.t ->
   string -> bool
 
 (* given a root, make a next_files function for MultiWorker *)
 val make_next_files:
-  options: Options.options ->
+  options: Options.t ->
   libs: SSet.t ->
   unit -> string list
 

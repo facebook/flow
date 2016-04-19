@@ -8,7 +8,7 @@
  *
  *)
 
-val get_master_cx: Options.options -> Context.t
+val get_master_cx: Options.t -> Context.t
 
 (* called to initialize library code on initial full pass.
    params are functions to save errors and suppressions:
@@ -16,7 +16,7 @@ val get_master_cx: Options.options -> Context.t
    to Types_js, where error management stuff lives.
  *)
 val init :
-  options: Options.options ->
+  options: Options.t ->
   string list ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->

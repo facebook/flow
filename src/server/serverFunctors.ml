@@ -18,14 +18,14 @@ module Server_files = Server_files_js
 exception State_not_found
 
 module type SERVER_PROGRAM = sig
-  val preinit : Options.options -> unit
+  val preinit : Options.t -> unit
   val init : genv -> (FlowEventLogger.Timing.t * env)
   val run_once_and_exit : env -> unit
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
   val recheck: genv -> env -> FilenameSet.t -> env
-  val parse_options: unit -> Options.options
-  val get_watch_paths: Options.options -> Path.t list
+  val parse_options: unit -> Options.t
+  val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_client : genv -> env -> client -> env
 end
@@ -42,7 +42,7 @@ let grab_lock ~tmp_dir root =
 
 module MainInit : sig
   val go:
-    Options.options ->
+    Options.t ->
     (unit -> env) ->    (* init function to run while we have init lock *)
     out_channel option ->
     env
@@ -311,13 +311,14 @@ end = struct
 
   let daemonize options =
     (* Let's make sure this isn't all for naught before we fork *)
-    let { Options.opt_root; opt_temp_dir; _ } = options in
-    let lock = Server_files.lock_file ~tmp_dir:opt_temp_dir opt_root in
+    let root = Options.root options in
+    let tmp_dir = Options.temp_dir options in
+    let lock = Server_files.lock_file ~tmp_dir root in
     if not (Lock.check lock)
     then begin
       let msg = spf
         "Error: There is already a server running for %s"
-        (Path.to_string opt_root) in
+        (Path.to_string root) in
       FlowExitStatus.(exit ~msg Lock_stolen)
     end;
 
@@ -351,7 +352,7 @@ end = struct
       (* let original parent exit *)
 
       let log_file = Path.to_string (Options.log_file options) in
-      if options.Options.opt_json
+      if Options.should_output_json options
       then begin
         let open Hh_json in
         let json = json_to_string (JSON_Object [

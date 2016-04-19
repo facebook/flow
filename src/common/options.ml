@@ -20,7 +20,7 @@ type esproposal_feature_mode =
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
-type options = {
+type t = {
   opt_all : bool;
   opt_check_mode: bool;
   opt_debug : bool;
@@ -91,6 +91,7 @@ let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
 let module_file_exts opts = opts.opt_module_file_exts
 let module_name_mappers opts = opts.opt_module_name_mappers
+let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames
 let root opts = opts.opt_root
@@ -99,6 +100,7 @@ let should_ignore_fbt opts = opts.opt_ignore_fbt
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
 let should_munge_underscores opts = opts.opt_munge_underscores
+let should_output_json opts = opts.opt_json
 let should_profile opts = opts.opt_profile && not opts.opt_quiet
 let should_strip_root opts = opts.opt_strip_root
 let should_wait opts = opts.opt_should_wait

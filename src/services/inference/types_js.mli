@@ -18,7 +18,7 @@ val server_init:
   ServerEnv.genv -> FlowEventLogger.Timing.t * ServerEnv.env
 
 val typecheck_contents:
-  options: Options.options ->
+  options: Options.t ->
   ?verbose: int ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)

@@ -31,14 +31,14 @@ type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 (* export and import functions for the module system *)
 val exported_module:
-  options: Options.options ->
+  options: Options.t ->
   filename -> Docblock.t -> Modulename.t
 val imported_module:
-  options: Options.options ->
+  options: Options.t ->
   Context.t -> Loc.t -> ?path_acc: SSet.t ref -> string -> Modulename.t
 
 val find_resolved_module:
-  options: Options.options ->
+  options: Options.t ->
   Context.t -> Loc.t -> string -> Modulename.t
 
 val module_exists: Modulename.t -> bool
@@ -60,17 +60,17 @@ val get_reverse_imports: Modulename.t -> NameSet.t option
 (* commit new and removed modules, after local inference *)
 val commit_modules:
   Worker.t list option ->
-  options: Options.options ->
+  options: Options.t ->
   filename list ->                    (* inferred modules *)
   NameSet.t ->                           (* removed files *)
   Errors_js.ErrorSet.t FilenameMap.t  (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
-val add_module_info: options:Options.options -> Context.t -> unit
+val add_module_info: options:Options.t -> Context.t -> unit
 
 (* add info for unparsed file to module info store *)
 val add_unparsed_info:
-  options:Options.options ->
+  options:Options.t ->
   filename ->
   Docblock.t ->
   unit

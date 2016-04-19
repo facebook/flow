@@ -605,7 +605,7 @@ let print_errors options errors =
     else errors
   in
 
-  if options.Options.opt_json
+  if Options.should_output_json options
   then Errors.print_error_json stdout errors
   else
     Errors.print_error_summary

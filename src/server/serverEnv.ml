@@ -13,7 +13,7 @@
 (*****************************************************************************)
 
 type genv = {
-    options          : Options.options;
+    options          : Options.t;
     workers          : Worker.t list option;
     dfind            : DfindLib.t option;
   }

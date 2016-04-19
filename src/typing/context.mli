@@ -35,7 +35,7 @@ type module_exports_type =
   | ESModule
 
 val make: metadata -> Loc.filename -> Modulename.t -> t
-val metadata_of_options: Options.options -> metadata
+val metadata_of_options: Options.t -> metadata
 
 (* accessors *)
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
