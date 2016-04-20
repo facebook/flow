@@ -404,7 +404,10 @@ struct
     end;
 
     (* Die if a lib file changed *)
-    let libs = SSet.filter (fun x -> SSet.mem x all_libs) updates in
+    let flow_typed_path = Path.to_string (Files_js.get_flowtyped_path root) in
+    let libs = updates |> SSet.filter (fun x ->
+      SSet.mem x all_libs || x = flow_typed_path
+    ) in
     if not (SSet.is_empty libs)
     then begin
       Flow_logger.log "Status: Error";

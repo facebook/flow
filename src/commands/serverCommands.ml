@@ -138,8 +138,25 @@ module OptionParser(Config : CONFIG) = struct
     end
 
   let libs ~root flowconfig extras =
+    let flowtyped_path = Files_js.get_flowtyped_path root in
+    let has_explicit_flowtyped_lib = ref false in
     let config_libs =
-      List.map (Files_js.make_path_absolute root) flowconfig.FlowConfig.libs in
+      List.fold_right (fun lib abs_libs ->
+        let abs_lib = Files_js.make_path_absolute root lib in
+        (**
+         * "flow-typed" is always included in the libs list for convenience,
+         * but there's no guarantee that it exists on the filesystem.
+         *)
+        if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
+        abs_lib::abs_libs
+      ) flowconfig.FlowConfig.libs []
+    in
+    let config_libs =
+      if !has_explicit_flowtyped_lib = false
+         && (Sys.file_exists (Path.to_string flowtyped_path))
+      then flowtyped_path::config_libs
+      else config_libs
+    in
     match extras with
     | None -> config_libs
     | Some libs ->

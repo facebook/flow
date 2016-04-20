@@ -55,3 +55,5 @@ val relative_path: string -> string -> string
 val make_path_absolute: Path.t -> string -> Path.t
 
 val is_prefix: string -> string -> bool
+
+val get_flowtyped_path: Path.t -> Path.t

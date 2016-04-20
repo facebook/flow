@@ -275,3 +275,7 @@ let relative_path =
        the test-suite script... *)
     make_relative (split_path root, split_path file)
     |> String.concat "/"
+
+(* helper to get the full path to the "flow-typed" library dir *)
+let get_flowtyped_path root =
+  make_path_absolute root "flow-typed"
