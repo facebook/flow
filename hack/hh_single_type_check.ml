@@ -29,6 +29,7 @@ type mode =
   | Suggest
   | Dump_deps
   | Identify_symbol of int * int
+  | Find_local of int * int
 
 type options = {
   filename : string;
@@ -253,6 +254,12 @@ let parse_options () =
         Arg.Int (fun column -> set_mode (Identify_symbol (!line, column)) ());
       ]),
       "Show info about symbol at given line and column";
+    "--find-local",
+      Arg.Tuple ([
+        Arg.Int (fun x -> line := x);
+        Arg.Int (fun column -> set_mode (Find_local (!line, column)) ());
+      ]),
+      "Find all usages of local at given line and column";
   ] in
   let options = Arg.align options in
   Arg.parse options (fun fn -> fn_ref := Some fn) usage;
@@ -452,6 +459,11 @@ let handle_mode mode filename tcopt files_contents files_info errors =
     let file = cat (Relative_path.to_absolute filename) in
     let result = ServerIdentifyFunction.go file line column tcopt in
     Option.iter result print_symbol
+  | Find_local (line, column) ->
+    let file = cat (Relative_path.to_absolute filename) in
+    let result = ServerFindLocals.go file line column in
+    let print pos = Printf.printf "%s\n" (Pos.string_no_file pos) in
+    List.iter result print
   | Suggest
   | Errors ->
       let errors =

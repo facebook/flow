@@ -8,6 +8,11 @@
  *
  *)
 
+(**
+ * This is dead code; when the code in src/js/hh_ide.ml and
+ * src/server/serverFindLocals.ml is removed, this can be removed also.
+ *)
+
 module PosSet = Set.Make(Pos)
 
 let handle_lvar target_ident ident_refs line char_pos ident id _ =
