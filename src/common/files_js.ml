@@ -77,11 +77,18 @@ let kind_of_path path = Unix.(
     Other
 )
 
+let can_read path =
+  try let () = Unix.access path [Unix.R_OK] in true
+  with Unix.Unix_error (e, _, _) ->
+    Printf.eprintf "Skipping %s: %s\n%!" path (Unix.error_message e);
+    false
+
 type stack =
   | S_Nil
   | S_Dir of string list * string * stack
 
 let max_files = 1000
+
 (* Calls out to `find <paths>` and immediately returns a closure. Running that
    closure will return a List of up to 1000 files whose paths match
    `path_filter`, and if the path is a symlink then whose real path matches
@@ -100,11 +107,14 @@ let make_next_files_and_symlinks
         let file = if dir = "" then file else Filename.concat dir file in
         match kind_of_path file with
         | Reg real ->
-          if path_filter file && (file = real || realpath_filter real)
+          if path_filter file && (file = real || realpath_filter real) && can_read real
           then process (sz+1) (real :: acc, symlinks) files dir stack
           else process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
-          let dirfiles = Array.to_list @@ Sys.readdir path in
+          let dirfiles =
+            if can_read path then Array.to_list @@ Sys.readdir path
+            else []
+          in
           let symlinks =
             (* accumulates all of the symlinks that point to
                directories outside of `paths`; symlinks that point to
