@@ -14,23 +14,18 @@ open Utils_js
 
 module Errors = Errors_js
 
-(* errors are stored by phase,
-   in maps from file path to error set
- *)
-(* errors encountered during parsing *)
-let parse_errors = ref FilenameMap.empty
-(* errors encountered during local inference *)
-let infer_errors = ref FilenameMap.empty
-(* errors encountered during module commit *)
-let module_errors = ref FilenameMap.empty
-(* errors encountered during merge *)
+(* errors are stored in a map from file path to error set, so that the errors
+   from checking particular files can be cleared during recheck. *)
+let errors_by_file = ref FilenameMap.empty
+(* errors encountered during merge have to be stored separately so dependencies
+   can be cleared during merge. *)
 let merge_errors = ref FilenameMap.empty
 (* error suppressions in the code *)
 let error_suppressions = ref FilenameMap.empty
 (* aggregate error map, built after check or recheck
    by collate_errors
  *)
-let all_errors = ref FilenameMap.empty
+let all_errors = ref Errors.ErrorSet.empty
 
 (****************** typecheck job helpers *********************)
 
@@ -40,20 +35,23 @@ let all_errors = ref FilenameMap.empty
 let clear_errors ?(debug=false) (files: filename list) =
   List.iter (fun file ->
     if debug then prerr_endlinef "clear errors %s" (string_of_filename file);
-    parse_errors := FilenameMap.remove file !parse_errors;
-    infer_errors := FilenameMap.remove file !infer_errors;
-    module_errors := FilenameMap.remove file !module_errors;
+    errors_by_file := FilenameMap.remove file !errors_by_file;
     merge_errors := FilenameMap.remove file !merge_errors;
     error_suppressions := FilenameMap.remove file !error_suppressions;
   ) files;
-  all_errors := FilenameMap.empty
+  all_errors := Errors.ErrorSet.empty
 
 (* helper - save an error set into a global error map.
    clear mapping if errorset is empty *)
 let save_errset mapref file errset =
-  mapref := if Errors.ErrorSet.cardinal errset = 0
-    then FilenameMap.remove file !mapref
-    else FilenameMap.add file errset !mapref
+  if Errors.ErrorSet.cardinal errset > 0 then
+    mapref :=
+      let errset = match FilenameMap.get file !mapref with
+      | Some prev_errset ->
+        Errors.ErrorSet.union prev_errset errset
+      | None -> errset
+      in
+      FilenameMap.add file errset !mapref
 
 (* given a reference to a error map (files to errorsets), and
    two parallel lists of such, save the latter into the former. *)
@@ -74,36 +72,13 @@ let save_suppressions mapref files errsups = Errors.(
   ) files errsups
 )
 
-(* distribute errors from a set into a filename-indexed map,
-   based on position info contained in error, not incoming key *)
-let distrib_errs = Errors.(
-
-  let distrib_error _orig_file error error_map =
-    let file = match Loc.source (loc_of_error error) with
-    | Some x -> x
-    | None ->
-        assert_false (spf "distrib_errs: no source for error: %s"
-          (Hh_json.json_to_multiline (json_of_errors [error])));
-    in
-    match FilenameMap.get file error_map with
-    | None ->
-      FilenameMap.add file (ErrorSet.singleton error) error_map
-    | Some error_set ->
-      if ErrorSet.mem error error_set
-      then error_map
-      else FilenameMap.add file (ErrorSet.add error error_set) error_map
-  in
-
-  fun _file file_errors error_map ->
-    ErrorSet.fold (distrib_error _file) file_errors error_map
-)
 (* Given all the errors as a map from file => errorset
  * 1) Filter out the suppressed errors from the error sets
  * 2) Remove files with empty errorsets from the map
  * 3) Add errors for unused suppressions
  * 4) Properly distribute the new errors
  *)
-let filter_suppressed_errors emap = Errors.(
+let filter_suppressed_errors errors = Errors.(
   let suppressions = ref ErrorSuppressions.empty in
 
   let filter_suppressed_error error =
@@ -117,22 +92,18 @@ let filter_suppressed_errors emap = Errors.(
     !error_suppressions
     ErrorSuppressions.empty;
 
-  let emap = emap
-    |> FilenameMap.map (ErrorSet.filter filter_suppressed_error)
-    |> FilenameMap.filter (fun _ v -> not (ErrorSet.is_empty v)) in
+  let errors = ErrorSet.filter filter_suppressed_error errors in
 
   (* For each unused suppression, create an error *)
-  let unused_suppression_errors = List.fold_left
+  ErrorSuppressions.unused !suppressions
+  |> List.fold_left
     (fun errset loc ->
       let err = Errors.mk_error [
         loc, ["Error suppressing comment"; "Unused suppression"]
       ] in
       ErrorSet.add err errset
     )
-    ErrorSet.empty
-    (ErrorSuppressions.unused !suppressions) in
-
-    distrib_errs "" unused_suppression_errors emap
+    errors
 )
 
 (* retrieve a full error list.
@@ -142,30 +113,20 @@ let filter_suppressed_errors emap = Errors.(
    this may no longer be necessary
  *)
 let get_errors () =
-  let all = !all_errors in
-  let all = filter_suppressed_errors all in
-
-  (* flatten to list, with lib errors bumped to top *)
-  let append_errset errset errlist =
-    List.rev_append (Errors.ErrorSet.elements errset) errlist
-  in
-  let revlist_libs, revlist_others = FilenameMap.fold (
-    fun file errset (libs, others) ->
-      if Loc.source_is_lib_file file
-      then append_errset errset libs, others
-      else libs, append_errset errset others
-    ) all ([], [])
-  in
-  List.rev_append revlist_libs (List.rev revlist_others)
+  !all_errors
+  |> filter_suppressed_errors
+  |> Errors.ErrorSet.elements
 
 (* relocate errors to their reported positions,
    combine in single error map *)
-let collate_errors () =
-  all_errors :=
-    !parse_errors
-    |> FilenameMap.fold distrib_errs !infer_errors
-    |> FilenameMap.fold distrib_errs !merge_errors
-    |> FilenameMap.fold distrib_errs !module_errors
+let collate_errors =
+  let open Errors in
+  let collate _ errset acc = ErrorSet.union acc errset in
+  fun () ->
+    all_errors :=
+      ErrorSet.empty
+      |> FilenameMap.fold collate !errors_by_file
+      |> FilenameMap.fold collate !merge_errors
 
 let with_timer ?options timer timing f =
   let timing = FlowEventLogger.Timing.start_timer ~timer timing in
@@ -243,7 +204,7 @@ let typecheck_contents ~options ?verbose contents filename =
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules workers ~options inferred removed =
   let errmap = Module_js.commit_modules workers ~options inferred removed in
-  save_errormap module_errors errmap
+  save_errormap errors_by_file errmap
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
    (although it probably doesn't need to be), it is only done under --debug. *)
@@ -281,7 +242,7 @@ let typecheck ~options ~timing ~workers ~make_merge_input files removed unparsed
   let timing, inferred =
     with_timer ~options "Infer" timing (fun () ->
       Infer_service.infer ~options ~workers
-        ~save_errors:(save_errors infer_errors)
+        ~save_errors:(save_errors errors_by_file)
         ~save_suppressions:(save_suppressions error_suppressions)
         files
     ) in
@@ -439,7 +400,7 @@ let recheck genv env modified =
 
   (* record reparse errors *)
   let failed_filenames = List.map (fun (file, _) -> file) freshparse_fail in
-  save_errors parse_errors failed_filenames freshparse_errors;
+  save_errors errors_by_file failed_filenames freshparse_errors;
 
   (* get old (unmodified, undeleted) files that were parsed successfully *)
   let old_parsed = env.ServerEnv.files in
@@ -550,7 +511,7 @@ let full_check workers ~ordered_libs parse_next options =
         workers parse_next
     ) in
   let error_filenames = List.map (fun (file, _) -> file) error_files in
-  save_errors parse_errors error_filenames errors;
+  save_errors errors_by_file error_filenames errors;
 
   Flow_logger.log "Building package heap";
   let timing, () = with_timer ~options "PackageHeap" timing (fun () ->
@@ -573,10 +534,8 @@ let full_check workers ~ordered_libs parse_next options =
       let lib_files = Init_js.init
         ~options
         ordered_libs
-        (fun file errs -> save_errors parse_errors [file] [errs])
-        (fun file errs -> save_errors infer_errors [file] [errs])
-        (fun file sups ->
-          save_suppressions error_suppressions [file] [sups])
+        (fun file errs -> save_errors errors_by_file [file] [errs])
+        (fun file sups -> save_suppressions error_suppressions [file] [sups])
       in
       (* Note: if any libs failed, return false and files to report errors for.
          (other errors will be suppressed.)

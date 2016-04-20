@@ -1,0 +1,4 @@
+// @flow
+
+// $FlowIssue
+(123: string);

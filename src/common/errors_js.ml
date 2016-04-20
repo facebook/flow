@@ -538,7 +538,7 @@ let deprecated_json_props_of_loc loc = Loc.(
 (* first reason's position, then second reason's position, etc.; if all
    positions match then first message, then second message, etc. *)
 let compare =
-  let seq k1 k2 = fun () ->
+  let seq k1 k2 () =
     match k1 () with
     | 0 -> k2 ()
     | i -> i
@@ -548,6 +548,17 @@ let compare =
   in
   let string_cmp x1 x2 () =
     String.compare x1 x2
+  in
+  let kind_cmp =
+    (* show internal errors first, then parse errors. then both infer warnings
+       and errors at the same priority. *)
+    let order_of_kind = function
+    | InternalError -> 1
+    | ParseError -> 2
+    | InferError -> 3
+    | InferWarning -> 3
+    in
+    fun k1 k2 () -> (order_of_kind k1) - (order_of_kind k2)
   in
   let rec compare_message_lists k = function
     | [], [] -> k ()
@@ -563,11 +574,17 @@ let compare =
         seq (loc_cmp loc1 loc2) (fun () ->
           compare_message_lists (seq k (string_cmp m1 m2)) (rest1, rest2)
         ) ()
-  in
-  fun {messages = ml1; op = op1; _} {messages = ml2; op = op2; _} ->
-    let ml1 = match op1 with Some op -> op :: ml1 | None -> ml1 in
-    let ml2 = match op2 with Some op -> op :: ml2 | None -> ml2 in
-    compare_message_lists (fun () -> 0) (ml1, ml2)
+  in fun err1 err2 ->
+    let {kind = k1; messages = ml1; op = op1; _} = err1 in
+    let {kind = k2; messages = ml2; op = op2; _} = err2 in
+    let loc1, loc2 = loc_of_error err1, loc_of_error err2 in
+    seq (loc_cmp loc1 loc2) (
+      seq (kind_cmp k1 k2) (fun () ->
+        let ml1 = match op1 with Some op -> op :: ml1 | None -> ml1 in
+        let ml2 = match op2 with Some op -> op :: ml2 | None -> ml2 in
+        compare_message_lists (fun () -> 0) (ml1, ml2)
+      )
+    ) ()
 
 module Error = struct
   type t = error

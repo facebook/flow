@@ -1,0 +1,3 @@
+[options]
+suppress_comment=.*\\$FlowIssue
+strip_root=true

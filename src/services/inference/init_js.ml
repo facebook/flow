@@ -65,8 +65,7 @@ let parse_lib_file file =
 
    returns list of (filename, success) pairs
  *)
-let load_lib_files files ~options
-  save_parse_errors save_infer_errors save_suppressions =
+let load_lib_files files ~options save_errors save_suppressions =
 
   let verbose = Options.verbose options in
 
@@ -90,7 +89,7 @@ let load_lib_files files ~options
         in
 
         let master_cx = get_master_cx options in
-        Merge_js.merge_lib_file cx master_cx save_infer_errors save_suppressions;
+        Merge_js.merge_lib_file cx master_cx save_errors save_suppressions;
 
         (if verbose != None then
           prerr_endlinef "load_lib %s: added symbols { %s }"
@@ -103,7 +102,7 @@ let load_lib_files files ~options
         exclude_syms, result
 
       | Parsing.Parse_err errors ->
-        save_parse_errors lib_file errors;
+        save_errors lib_file errors;
         exclude_syms, ((lib_file, false) :: result)
 
       | Parsing.Parse_skip ->
@@ -119,11 +118,11 @@ let load_lib_files files ~options
    returns list of (lib file, success) pairs.
  *)
 let init ~options lib_files
-    save_parse_errors save_infer_errors save_suppressions =
+    save_errors save_suppressions =
 
   let result = load_lib_files lib_files
     ~options
-    save_parse_errors save_infer_errors save_suppressions in
+    save_errors save_suppressions in
 
   Flow.Cache.clear();
   let master_cx = get_master_cx options in

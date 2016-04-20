@@ -83,12 +83,33 @@ let string_of_filename = function
   | LibFile x | SourceFile x | JsonFile x -> x
   | Builtins -> "(global)"
 
-let compare loc1 loc2 =
-  Pervasives.compare
-    (loc1.source, loc1.start.line, loc1.start.column,
-     loc1._end.line, loc1._end.column)
-    (loc2.source, loc2.start.line, loc2.start.column,
-     loc2._end.line, loc2._end.column)
+let compare =
+  (* builtins, then libs, then source and json files at the same priority since
+     JSON files are basically source files. *)
+  let order_of_filename = function
+  | Builtins -> 1
+  | LibFile _ -> 2
+  | SourceFile _ -> 3
+  | JsonFile _ -> 3
+  in
+  let source_cmp a b =
+    match a, b with
+    | Some _, None -> -1
+    | None, Some _ -> 1
+    | None, None -> 0
+    | Some fn1, Some fn2 ->
+      let k = (order_of_filename fn1) - (order_of_filename fn2) in
+      if k <> 0 then k
+      else String.compare (string_of_filename fn1) (string_of_filename fn2)
+  in
+  let pos_cmp a b = Pervasives.compare (a.line, a.column) (b.line, b.column) in
+  fun loc1 loc2 ->
+    let k = source_cmp loc1.source loc2.source in
+    if k = 0 then
+      let k = pos_cmp loc1.start loc2.start in
+      if k = 0 then pos_cmp loc1._end loc2._end
+      else k
+    else k
 
 (**
  * This is mostly useful for debugging purposes.

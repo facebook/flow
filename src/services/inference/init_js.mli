@@ -19,6 +19,5 @@ val init :
   options: Options.t ->
   string list ->
   (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
-  (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
   (Loc.filename -> Errors_js.ErrorSuppressions.t -> unit) ->
   (Loc.filename * bool) list

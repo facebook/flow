@@ -16,6 +16,14 @@ child_process/execSync.js:8
                                  ^^^^^ string. This type is incompatible with
   number. See lib: node.js:104
 
+invalid_package_file/package.json:1
+  1: 
+     ^ Unexpected end of input
+
+json_file/json_invalid.json:1
+  1: :derp
+     ^ Unexpected token :
+
 json_file/test.js:4
   4: (data.foo: void); // error, should be object literal
       ^^^^^^^^ object literal. This type is incompatible with
@@ -93,14 +101,6 @@ json_file/test.js:22
       ^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
  22: (require('./json_null'): void); // error, should be null
                               ^^^^ undefined
-
-invalid_package_file/package.json:1
-  1: 
-     ^ Unexpected end of input
-
-json_file/json_invalid.json:1
-  1: :derp
-     ^ Unexpected token :
 
 
 Found 16 errors
