@@ -22,7 +22,7 @@ module Dep = Typing_deps.Dep
 module SLC = ServerLocalConfig
 
 exception No_loader
-exception Loader_timeout
+exception Loader_timeout of string
 
 (*
  * hh_server can initialize either by typechecking the entire project (aka
@@ -122,12 +122,13 @@ let load_state root cmd (_ic, oc) =
     let to_recheck = List.map to_recheck Hh_json.get_string_exn in
     Daemon.to_channel oc @@ Ok (`Snd to_recheck)
   with e ->
+    Hh_logger.exc ~prefix:"Failed to load state: " e;
     Daemon.to_channel oc @@ Error e
 
-let with_loader_timeout timeout f =
+let with_loader_timeout timeout stage f =
   Result.try_with @@ fun () ->
-  Timeout.with_timeout ~timeout ~do_:f
-    ~on_timeout:(fun _ -> raise Loader_timeout)
+  Timeout.with_timeout ~timeout ~do_:(fun _ -> f ())
+    ~on_timeout:(fun _ -> raise @@ Loader_timeout stage)
 
 (* This generator-like function first runs the load script to download state
  * and loads the downloaded dependency table into shared memory. It then
@@ -144,7 +145,7 @@ let mk_state_future root cmd =
   let log_fd = Daemon.fd_of_path log_file in
   let {Daemon.channels = (ic, _oc); pid} as daemon =
     Daemon.fork (log_fd, log_fd) (load_state root) cmd
-  in fun `Wait_for_state ->
+  in fun () ->
   let fn =
     try
       Daemon.from_channel ic >>| function
@@ -162,7 +163,7 @@ let mk_state_future root cmd =
        * through *)
       (try Daemon.kill daemon with e -> Hh_logger.exc e);
       raise e
-  in fun `Wait_for_changes ->
+  in fun () ->
   fn >>= fun fn ->
   Daemon.from_channel ic >>| function
   | `Fst _ -> assert false
@@ -352,7 +353,7 @@ let init ?load_mini_script genv =
 
   let timeout = genv.local_config.SLC.load_mini_script_timeout in
   let state_future = state_future >>= fun f ->
-    with_loader_timeout timeout (fun _ -> f `Wait_for_state)
+    with_loader_timeout timeout "wait_for_state" f
   in
   HackEventLogger.load_mini_state_end t;
   let t = Hh_logger.log_duration "Loading mini-state" t in
@@ -369,7 +370,7 @@ let init ?load_mini_script genv =
     else type_decl genv env fast t in
 
   let state = state_future >>= fun f ->
-    with_loader_timeout timeout (fun _ -> f `Wait_for_changes)
+    with_loader_timeout timeout "wait_for_changes" f
     |> Result.join >>= fun (dirty_files, old_fast) ->
     genv.wait_until_ready ();
     let root = Path.to_string root in
