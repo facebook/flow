@@ -4842,8 +4842,10 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       let typeparams, type_params_map =
         Anno.mk_type_param_declarations cx type_params_map typeParameters in
 
-      let meth_params, meth_return_type = mk_params_ret cx type_params_map
-        (params, defaults, rest) (body, returnType) in
+      let meth_params = mk_params cx type_params_map
+        (params, defaults, rest) in
+      let meth_return_type = mk_return_type cx type_params_map
+        (body, returnType) in
       let reason_desc = (match kind with
       | Method.Method -> spf "method `%s`" name
       | Method.Constructor -> "constructor"
@@ -5521,8 +5523,8 @@ and function_decl id cx type_params_map (reason:reason) ~kind
   let typeparams, type_params_map =
     Anno.mk_type_param_declarations cx type_params_map type_params in
 
-  let params, ret =
-    mk_params_ret cx type_params_map params (body, ret) in
+  let params = mk_params cx type_params_map params in
+  let ret = mk_return_type cx type_params_map (body, ret) in
 
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
@@ -5707,8 +5709,16 @@ and before_pos loc =
     }
   )
 
-and mk_params_ret cx type_params_map params (body, ret_type_opt) =
-  let (params, defaults, rest) = params in
+and mk_return_type cx type_params_map (body, ret_type_opt) =
+  let phantom_return_loc = Ast.Statement.FunctionDeclaration.(match body with
+    | BodyBlock (loc, _) -> before_pos loc
+    | BodyExpression (loc, _) -> loc
+  ) in
+
+  Anno.mk_type_annotation cx type_params_map
+    (mk_reason "return" phantom_return_loc) ret_type_opt
+
+and mk_params cx type_params_map (params, defaults, rest) =
   let defaults = if defaults = [] && params <> []
     then List.map (fun _ -> None) params
     else defaults
@@ -5717,19 +5727,9 @@ and mk_params_ret cx type_params_map params (body, ret_type_opt) =
   let params = List.fold_left2 (FuncParams.add cx type_params_map)
     FuncParams.empty params defaults in
 
-  let params = match rest with
+  match rest with
   | Some ident -> FuncParams.add_rest cx type_params_map params ident
-  | None -> params in
-
-  let phantom_return_loc = Ast.Statement.FunctionDeclaration.(match body with
-    | BodyBlock (loc, _) -> before_pos loc
-    | BodyExpression (loc, _) -> loc
-  ) in
-
-  let return_type = Anno.mk_type_annotation cx type_params_map
-    (mk_reason "return" phantom_return_loc) ret_type_opt in
-
-  params, return_type
+  | None -> params
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason ?(kind=Scope.Ordinary)
