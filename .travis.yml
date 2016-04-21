@@ -68,7 +68,7 @@ deploy:
 - provider: releases
   api_key:
     # facebook-github-bot-0
-    secure: I1W8xlf8Ojxkc92n8Rb9AGX7kdCk0DeWEPd6PKRrGQO0FtyCkcvxNo+wp6ApQI7+NqkuFRVngHVOQOd3AqR57IFiSjZ+Cj/BJyg6WOo92olkAAP0OWihmCj53d2xDpp7LaM99srPbZXYE5vSTTKBX/5Soz9UghzsI5Q1ECmV5fU=
+    secure: DhwkQ1L8uJEeY48KWMrIuhuBOpYwAfUCiPoG5IAgAgd/t4kAfw89g6a0XWxZ538L3+7C56T3syIvc02LmSiFBv2UzDyjRBASDRHrYGn4RQp6s6YJ2DuVqoIXKG6Ax3hhnGYJ4qbsiOd5v8MBwWUQ5zIb7nDEBEFE8kdrBDi6V2k=
   repo: facebook/flow
   skip_cleanup: true
   file_glob: true
