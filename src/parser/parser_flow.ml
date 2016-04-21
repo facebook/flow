@@ -234,6 +234,7 @@ end = struct
   module Type : sig
     val _type : env -> Ast.Type.t
     val type_parameter_declaration : env -> Ast.Type.ParameterDeclaration.t option
+    val type_parameter_declaration_with_defaults : env -> Ast.Type.ParameterDeclaration.t option
     val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
     val generic : env -> Loc.t * Ast.Type.Generic.t
     val _object : ?allow_static:bool -> env -> Loc.t * Type.Object.t
@@ -542,7 +543,7 @@ end = struct
 
     and _function env =
       let start_loc = Peek.loc env in
-      let typeParameters = type_parameter_declaration env in
+      let typeParameters = type_parameter_declaration ~allow_default:false env in
       let rest, params = function_param_list env in
       Expect.token env T_ARROW;
       let returnType = _type env in
@@ -556,7 +557,7 @@ end = struct
 
     and _object =
       let methodish env start_loc =
-        let typeParameters = type_parameter_declaration env in
+        let typeParameters = type_parameter_declaration ~allow_default:false env in
         let rest, params = function_param_list env in
         Expect.token env T_COLON;
         let returnType = _type env in
@@ -674,16 +675,26 @@ end = struct
         })
 
     and type_parameter_declaration =
-      let rec params env acc = Type.ParameterDeclaration.TypeParam.(
+      let rec params env ~allow_default ~require_default acc = Type.ParameterDeclaration.TypeParam.(
         let variance = match Peek.token env with
           | T_PLUS -> Eat.token env; Some Variance.Plus
           | T_MINUS -> Eat.token env; Some Variance.Minus
           | _ -> None in
         let loc, id = Parse.identifier_with_type env Error.StrictParamName in
+        let default, require_default = match allow_default, Peek.token env with
+        | false, _ -> None, false
+        | true, T_ASSIGN ->
+            Eat.token env;
+            Some (_type env), true
+        | true, _ ->
+            if require_default
+            then error_at env (loc, Error.MissingTypeParamDefault);
+            None, require_default in
         let param = loc, {
           name = id.Identifier.name;
           bound = id.Identifier.typeAnnotation;
           variance;
+          default;
         } in
         let acc = param::acc in
         match Peek.token env with
@@ -693,16 +704,16 @@ end = struct
           Expect.token env T_COMMA;
           if Peek.token env = T_GREATER_THAN
           then List.rev acc
-          else params env acc
+          else params env ~allow_default ~require_default acc
       )
-      in fun env ->
+      in fun ~allow_default env ->
           let start_loc = Peek.loc env in
           if Peek.token env = T_LESS_THAN
           then begin
             if not (should_parse_types env)
             then error env Error.UnexpectedTypeAnnotation;
             Expect.token env T_LESS_THAN;
-            let params = params env [] in
+            let params = params env ~allow_default ~require_default:false [] in
             let loc = Loc.btwn start_loc (Peek.loc env) in
             Expect.token env T_GREATER_THAN;
             Some (loc, Type.ParameterDeclaration.({
@@ -712,15 +723,14 @@ end = struct
 
     and type_parameter_instantiation =
       let rec params env acc =
-        let acc = (_type env)::acc in
         match Peek.token env with
         | T_EOF
         | T_GREATER_THAN -> List.rev acc
         | _ ->
-          Expect.token env T_COMMA;
-          if Peek.token env = T_GREATER_THAN
-          then List.rev acc
-          else params env acc
+          let acc = (_type env)::acc in
+          if Peek.token env <> T_GREATER_THAN
+          then Expect.token env T_COMMA;
+          params env acc
 
       in fun env ->
           let start_loc = Peek.loc env in
@@ -780,7 +790,10 @@ end = struct
       ret
 
     let _type = wrap _type
-    let type_parameter_declaration = wrap type_parameter_declaration
+    let type_parameter_declaration_with_defaults =
+      wrap (type_parameter_declaration ~allow_default:true)
+    let type_parameter_declaration =
+      wrap (type_parameter_declaration ~allow_default:false)
     let type_parameter_instantiation = wrap type_parameter_instantiation
     let _object ?(allow_static=false) env = wrap (_object ~allow_static) env
     let function_param_list = wrap function_param_list
@@ -2434,7 +2447,7 @@ end = struct
         | true, false -> None
         | _ -> Some(Parse.identifier tmp_env)
       ) in
-      let typeParameters = Type.type_parameter_declaration env in
+      let typeParameters = Type.type_parameter_declaration_with_defaults env in
       let body, superClass, superTypeParameters, implements = _class env in
       let loc = Loc.btwn start_loc (fst body) in
       loc, Ast.Statement.(ClassDeclaration Class.({
@@ -2457,7 +2470,7 @@ end = struct
         | T_LCURLY -> None, None
         | _ ->
             let id = Some (Parse.identifier env) in
-            let typeParameters = Type.type_parameter_declaration env in
+            let typeParameters = Type.type_parameter_declaration_with_defaults env in
             id, typeParameters in
       let body, superClass, superTypeParameters, implements = _class env in
       let loc = Loc.btwn start_loc (fst body) in
@@ -2961,7 +2974,7 @@ end = struct
       Expect.token env T_TYPE;
       Eat.push_lex_mode env TYPE_LEX;
       let id = Parse.identifier env in
-      let typeParameters = Type.type_parameter_declaration env in
+      let typeParameters = Type.type_parameter_declaration_with_defaults env in
       Expect.token env T_ASSIGN;
       (match Peek.token env with
       | T_BIT_OR | T_BIT_AND -> Eat.token env
@@ -3004,7 +3017,7 @@ end = struct
           then error env Error.UnexpectedTypeInterface;
           Expect.token env T_INTERFACE;
           let id = Parse.identifier env in
-          let typeParameters = Type.type_parameter_declaration env in
+          let typeParameters = Type.type_parameter_declaration_with_defaults env in
           let extends = if Peek.token env = T_EXTENDS
           then begin
             Expect.token env T_EXTENDS;
@@ -3038,7 +3051,7 @@ end = struct
         let env = env |> with_strict true in
         Expect.token env T_CLASS;
         let id = Parse.identifier env in
-        let typeParameters = Type.type_parameter_declaration env in
+        let typeParameters = Type.type_parameter_declaration_with_defaults env in
         let extends = if Peek.token env = T_EXTENDS
           then begin
             Expect.token env T_EXTENDS;

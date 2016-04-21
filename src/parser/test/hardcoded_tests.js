@@ -3494,6 +3494,67 @@ module.exports = {
           }
         }]
       }
-    }
+    },
+    'Type Parameter Defaults': {
+      'type A<T = string> = T': {},
+      'type A<T: ?string = string> = T': {},
+      'type A<S, T: ?string = string> = T': {},
+      'type A<S = number, T: ?string = string> = T': {},
+      'class A<T = string> {}': {},
+      'class A<T: ?string = string> {}': {},
+      'class A<S, T: ?string = string> {}': {},
+      'class A<S = number, T: ?string = string> {}': {},
+      '(class A<T = string> {})': {},
+      '(class A<T: ?string = string> {})': {},
+      '(class A<S, T: ?string = string> {})': {},
+      '(class A<S = number, T: ?string = string> {})': {},
+      'declare class A<T = string> {}': {},
+      'declare class A<T: ?string = string> {}': {},
+      'declare class A<S, T: ?string = string> {}': {},
+      'declare class A<S = number, T: ?string = string> {}': {},
+      'interface A<T = string> {}': {},
+      'interface A<T: ?string = string> {}': {},
+      'interface A<S, T: ?string = string> {}': {},
+      'interface A<S = number, T: ?string = string> {}': {},
+
+      // With defaults, this is now valid
+      'var x: Foo<>': {},
+      'class A extends B<> {}': {},
+    },
+    'Invalid Type Parameter Defaults': {
+      'type A<T = string : ?string> = T': {
+        'errors.0.message': 'Unexpected token :'
+      },
+      'type A<HasDefault = string, NoDefault> = T': {
+        'errors.0.message': 'Type parameter declaration needs a default, since a preceding type parameter declaration has a default.'
+      },
+      'class A extends B<T = number> {}': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      'var x: Array<T = number>': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      'function foo<T = string>() {}': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      'declare function foo<T = string>() {}': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      '({ foo<T = string>() {} })': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      'class A { foo<T = string>() {} }': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      '(class A { foo<T = string>() {} })': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      'declare class A { foo<T = string>(): void }': {
+        'errors.0.message': 'Unexpected token ='
+      },
+      '<T = string>() => 123': {
+        'errors.0.message': 'Unexpected token ='
+      }
+    },
   }
 };

@@ -235,8 +235,9 @@ class ['a] t = object(self)
     | None -> acc
     | Some t -> self#type_ cx acc t
 
-  method private type_param cx acc { bound; _ } =
-    self#type_ cx acc bound
+  method private type_param cx acc { bound; default; _ } =
+    let acc = self#type_ cx acc bound in
+    self#opt (self#type_ cx) acc default
 
   method fun_type cx acc { this_t; params_tlist; return_t; _ } =
     let acc = self#type_ cx acc this_t in

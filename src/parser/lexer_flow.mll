@@ -867,6 +867,8 @@ and type_token env = parse
   (* Generics *)
   | "<"                { env, T_LESS_THAN }
   | ">"                { env, T_GREATER_THAN }
+  (* Generic default *)
+  | "="                { env, T_ASSIGN }
   (* Optional or nullable *)
   | "?"                { env, T_PLING }
   (* Existential *)

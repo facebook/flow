@@ -512,12 +512,14 @@ and json_of_polarity_impl _json_cx polarity =
 
 and json_of_typeparam json_cx = check_depth json_of_typeparam_impl json_cx
 and json_of_typeparam_impl json_cx tparam = Hh_json.(
-  JSON_Object [
+  JSON_Object ([
     "reason", json_of_reason tparam.reason;
     "name", JSON_String tparam.name;
     "bound", _json_of_t json_cx tparam.bound;
     "polarity", json_of_polarity json_cx tparam.polarity;
-  ]
+  ] @ match tparam.default with
+    | None -> []
+    | Some t -> ["default", _json_of_t json_cx t])
 )
 
 and json_of_objtype json_cx = check_depth json_of_objtype_impl json_cx
