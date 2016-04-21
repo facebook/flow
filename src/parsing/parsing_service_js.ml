@@ -88,7 +88,7 @@ let parse_json_file ~fail content file =
     esproposal_decorators = false;
     esproposal_export_star_as = false;
     types = true;
-    use_strict = true; (* JSON bans octals; this only forbids legacy octals *)
+    use_strict = false;
   }) in
 
   (* parse the file as JSON, then munge the AST to convert from an object
