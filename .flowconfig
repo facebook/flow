@@ -1,3 +1,11 @@
 [ignore]
+<PROJECT_ROOT>/examples/.*
+<PROJECT_ROOT>/src/dts/tests/.*
+<PROJECT_ROOT>/tests/.*
+<PROJECT_ROOT>/website/.*
+.*/json5/test/parse-cases/.*
 
-[include]
+[options]
+suppress_comment=.*\\$FlowFixMe
+esproposal.class_instance_fields=enable
+esproposal.class_static_fields=enable

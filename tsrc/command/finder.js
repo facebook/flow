@@ -1,0 +1,39 @@
+/* @flow */
+
+import {format} from 'util';
+import {basename, join, relative, resolve} from 'path';
+
+import {exec} from './../async';
+
+type Command = {
+  name: string,
+  path: string,
+};
+
+export default async function(cwd: string): Promise<Map<string, string>> {
+  const root = join(".", relative(cwd, join(__dirname, "..")));
+  const stdout = await exec(
+    format('find -H %s -name "*Command.js"', root),
+    {cwd},
+  );
+  const commands = stdout.trim().split("\n");
+
+  const commandMap = new Map();
+  for (const command of commands) {
+    const match = basename(command).match(/^(.*)Command.js$/);
+    if (match != null) {
+      const commandName = match[1];
+
+      if (commandMap.has(commandName)) {
+        throw new Error(format(
+          "Error: Multiple providers for command `%s`:\n`%s` and `%s`\n",
+          commandName,
+          commandMap.get(commandName),
+          command,
+        ));
+      }
+      commandMap.set(commandName, command);
+    }
+  }
+  return commandMap;
+}

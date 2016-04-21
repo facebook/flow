@@ -1,0 +1,81 @@
+/* @flow */
+
+import {format} from 'util';
+
+import Base from '../command/Base';
+import commandFinder from '../command/finder';
+
+type Args = {
+  command: ?string,
+};
+
+export default class HelpCommand extends Base<Args> {
+  static processArgv(argv: Object): Args {
+    const command = argv._.length > 0 ? argv._[0] : null;
+    return { command };
+  }
+
+  static async run(args: Args): Promise<void> {
+    const commandName = args.command;
+    if (commandName != null) {
+      const commandMap = await commandFinder(__dirname);
+      const commandPath = commandMap.get(commandName);
+
+      if (commandPath === undefined) {
+        process.stderr.write(format("Unsupported command `%s`\n", commandName));
+        return this.showUsage(this.BAD_ARGS);
+      }
+
+      // $FlowFixMe
+      require(commandPath).default.showUsage(this.OK);
+    } else {
+      await this.showGeneralUsage(this.OK);
+    }
+  }
+
+  static description(): string {
+    return "Shows usage message";
+  }
+
+  static async usage(): Promise<string> {
+    const validCommands = await this.validCommands();
+
+    return `usage: ${process.argv[1]} help [COMMAND]
+
+${validCommands}
+`;
+  }
+
+  static async showGeneralUsage(exitCode: number): Promise<void> {
+    const validCommands = await this.validCommands();
+
+    process.stderr.write(`usage: ${process.argv[1]} [COMMAND]
+
+${validCommands}
+`);
+    process.exit(exitCode);
+  }
+
+  static async validCommands(): Promise<string> {
+    const commandMap = await commandFinder(__dirname);
+    const maxLength = Math.max(
+      14,
+      ...Array.from(commandMap.keys()).map(k => k.length)
+    );
+
+    const validCommands = [];
+    for (const commandName of commandMap.keys()) {
+      validCommands.push(format(
+        "%s%s  %s",
+        commandName,
+        Array(maxLength - commandName.length).join(" "),
+        // $FlowFixMe
+        require(commandMap.get(commandName)).default.description(),
+      ));
+    }
+    return format(
+      "Valid values for COMMAND:\n%s",
+      validCommands.sort().join("\n")
+    );
+  }
+}
