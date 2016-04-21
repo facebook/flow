@@ -1,5 +1,9 @@
 ###master (next release)
 
+###v0.23.1
+
+- Fixed parsing of JSON files with duplicate object keys
+
 ###v0.23.0
 
 Likely to cause new Flow errors:
