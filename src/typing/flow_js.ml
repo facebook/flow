@@ -1013,8 +1013,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         spf
           ("The %s export is a value, but not a type. `import type` only " ^^
            "works on type exports like type aliases, interfaces, and " ^^
-           "classes. If you inteded to import the type *of* a value, please " ^^
-           "use `import typeof` instead.")
+           "classes. If you intended to import the type *of* a value, " ^^
+           "please use `import typeof` instead.")
           msg_export
       ])
 
