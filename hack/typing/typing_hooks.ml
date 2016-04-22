@@ -37,6 +37,9 @@ let (cmethod_hooks: (Typing_defs.class_type -> Pos.t * string ->
                      Typing_env.env -> Nast.class_id option -> is_method:bool ->
                      is_const:bool -> unit) list ref) = ref []
 
+let (taccess_hooks: (Typing_defs.class_type -> Typing_defs.typeconst_type ->
+                     Pos.t -> unit) list ref) = ref []
+
 let (lvar_hooks: (Pos.t * Ident.t -> Typing_env.env ->
                   unit) list ref) = ref []
 
@@ -76,6 +79,9 @@ let attach_smethod_hook hook =
 
 let attach_cmethod_hook hook =
   cmethod_hooks := hook :: !cmethod_hooks
+
+let attach_taccess_hook hook =
+  taccess_hooks := hook :: !taccess_hooks
 
 let attach_binop_hook hook =
   binop_hooks := hook :: !binop_hooks
@@ -156,6 +162,9 @@ let dispatch_smethod_hook class_ id env cid ~is_method ~is_const=
 let dispatch_cmethod_hook class_ id env cid ~is_method =
   List.iter !cmethod_hooks
     (fun hook -> hook class_ id env cid ~is_method ~is_const:false)
+
+let dispatch_taccess_hook class_ typeconst pos =
+  List.iter !taccess_hooks (fun hook -> hook class_ typeconst pos)
 
 let dispatch_lvar_hook id env =
   List.iter !lvar_hooks begin fun hook -> hook id env end

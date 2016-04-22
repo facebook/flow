@@ -186,6 +186,7 @@ and get_typeconst env class_pos class_name pos tconst =
             `class_typeconst pos (class_.tc_pos, class_name) tconst `no_hint;
           raise Exit
       | Some tc -> tc in
+    Typing_hooks.dispatch_taccess_hook class_ typeconst pos;
     (* Check for cycles. We do this by combining the name of the current class
      * with the remaining ids that we need to expand. If we encounter the same
      * class name + ids that means we have entered a cycle.
