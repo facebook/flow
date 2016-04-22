@@ -200,10 +200,30 @@ js: build-flow-native-deps
 		-lflags -custom -no-links \
 		$(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(BYTECODE_LINKER_FLAGS)" \
 		src/flow_dot_js.byte
-	js_of_ocaml --opt 3 -o bin/flow.js $(JS_STUBS) _build/src/flow_dot_js.byte
+	# js_of_ocaml has no ability to upgrade warnings to errors, but we want to
+	# error if, for example, there are any unimplemented C primitives.
+	#
+	# this gibberish redirects stderr to a variable while letting stdout through
+	# (see http://mywiki.wooledge.org/BashFAQ/002), and then we error if err_out
+	# has any output.
+	{ err_out=$$( \
+		js_of_ocaml \
+			--opt 3 \
+			--disable genprim \
+			-o bin/flow.js \
+			$(JS_STUBS) _build/src/flow_dot_js.byte \
+			2>&1 1>&3- \
+	) ;} 3>&1; \
+	ret=$?; \
+	if [ ! $$ret ]; then \
+		exit $$ret; \
+	elif [ "x$$err_out" != "x" ]; then \
+		printf "js_of_ocaml produced output on stderr:\n%s\n" "$$err_out" 1>&2; \
+		exit 1; \
+	fi
 
 .PHONY: all js
-	
+
 # This rule runs if any .ml or .mli file has been touched. It recursively calls
 # ocamldep to figure out all the modules that we use to build src/flow.ml
 flow.odocl: $(shell find . -name "*.ml" -o -name "*.mli")
