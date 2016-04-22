@@ -16,7 +16,7 @@ open ServerEnv
 
 module SLC = ServerLocalConfig
 
-let make_genv options config local_config ide_process =
+let make_genv options config local_config =
   let root = ServerArgs.root options in
   let check_mode   = ServerArgs.check_mode options in
   let gc_control   = ServerConfig.gc_control config in
@@ -78,7 +78,6 @@ let make_genv options config local_config ide_process =
     notifier;
     wait_until_ready;
     debug_channels = None;
-    ide_process;
   }
 
 let make_env config =

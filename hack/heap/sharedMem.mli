@@ -87,31 +87,6 @@ val hash_stats : unit -> table_stats
 
 val invalidate_caches: unit -> unit
 
-(* With local writes enabled, data written will not be stored in global shared
- * memory, but in a local (to the process) hashtable.
- * When reading previously written data, local version will be returned. Reading
- * data that was not locally written will return version from shared memory.
- *
- * This is useful when non-master process needs to call a function that
- * has a side effect of writing to shared memory that we don't want to
- * persist outside of this process, and factoring out the side effect is
- * too annoying. *)
-val enable_local_writes: unit -> unit
-
-(* Thread safety of master and worker processes is achieved implicitly by
- * ordering of Hack typing phases - only master is allowed to perform
- * non-parallelizable operations (moves and removals from hashtable), and does
- * it when workers are not doing any tasks.
- *
- * Lock below is exposed for use of non-worker processes (like IDE process)
- * that want to read shared memory at arbitrary times. *)
-
-val hashtable_mutex_lock: unit -> unit
-val hashtable_mutex_trylock: unit -> bool
-val hashtable_mutex_unlock: unit -> unit
-
-val try_lock_hashtable: do_:(unit -> 'a) -> 'a option
-
 (*****************************************************************************)
 (* The signature of a shared memory hashtable.
  * To create one: SharedMem.NoCache(struct type = my_type_of_value end).

@@ -229,54 +229,6 @@ static char* heap_init;
 /* This should only be used by the master */
 static size_t heap_init_size = 0;
 
-/*****************************************************************************/
-/* Locking */
-/*****************************************************************************/
-
-#ifndef _WIN32
-pthread_mutex_t* hashtable_mutex;
-#endif
-
-CAMLprim value hh_hashtable_mutex_lock(void) {
-  CAMLparam0();
-#ifdef _WIN32
-  // TODO
-#else
-  int res = pthread_mutex_lock(hashtable_mutex);
-  if (res != 0) {
-    caml_failwith("Error acquiring the lock");
-  }
-#endif
-  CAMLreturn(Val_unit);
-}
-
-CAMLprim value hh_hashtable_mutex_trylock(void) {
-  CAMLparam0();
-  int res = 0;
-#ifdef _WIN32
-  // TODO
-#else
-  res = pthread_mutex_trylock(hashtable_mutex);
-  if ((res != 0) && (res != EBUSY)) {
-    caml_failwith("Error trying to acquire the lock");
-  }
-#endif
-  CAMLreturn(Val_bool(res == 0));
-}
-
-CAMLprim value hh_hashtable_mutex_unlock(void) {
-  CAMLparam0();
-#ifdef _WIN32
-  // TODO
-#else
-  int res = pthread_mutex_unlock(hashtable_mutex);
-  if (res != 0) {
-    caml_failwith("Error releasing the lock");
-  }
-#endif
-  CAMLreturn(Val_unit);
-}
-
 static size_t used_heap_size(void) {
   return *heap - heap_init;
 }
@@ -352,17 +304,9 @@ static void init_shared_globals(char* mem) {
   counter = (uintptr_t*)(mem + 2*CACHE_LINE_SIZE);
   *counter = early_counter + 1;
 
-  assert (CACHE_LINE_SIZE >= sizeof(pthread_mutex_t));
-  hashtable_mutex = (pthread_mutex_t*)(mem + 3*CACHE_LINE_SIZE);
-
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-  pthread_mutex_init(hashtable_mutex, &attr);
-
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 3*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 2*CACHE_LINE_SIZE + (int)sizeof(int));
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Global storage initialization */

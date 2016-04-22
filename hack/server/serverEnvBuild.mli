@@ -12,7 +12,6 @@ val make_genv:
   ServerArgs.options ->
   ServerConfig.t ->
   ServerLocalConfig.t ->
-  IdeProcessPipe.to_ide option ->
     ServerEnv.genv
 
 val make_env: ServerConfig.t -> ServerEnv.env

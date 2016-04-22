@@ -80,18 +80,6 @@ external dep_slots : unit -> int = "hh_dep_slots"
 (*****************************************************************************)
 external hh_init_done: unit -> unit = "hh_call_after_init"
 
-external hashtable_mutex_lock: unit -> unit = "hh_hashtable_mutex_lock"
-external hashtable_mutex_trylock: unit -> bool = "hh_hashtable_mutex_trylock"
-external hashtable_mutex_unlock: unit -> unit = "hh_hashtable_mutex_unlock"
-
-let try_lock_hashtable ~do_ =
-  if hashtable_mutex_trylock () then begin
-    Some (Utils.with_context
-      ~enter:(fun () -> ())
-      ~do_:do_
-      ~exit:hashtable_mutex_unlock)
-  end else None
-
 let init_done () =
   hh_init_done ();
   EventLogger.sharedmem_init_done (heap_size ())
@@ -223,68 +211,6 @@ module Raw (Key: Key) (Value: sig type t end) = struct
   external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
 end
 
-let local_writes = ref false
-
-let enable_local_writes () =
-  assert (not !local_writes);
-  local_writes := true
-
-module RawWithLocalWritesOption:
-  functor (Key : Key) -> functor(Value: sig type t end) -> sig
-
-  val hh_add         : Key.md5 -> Value.t -> unit
-  val hh_mem         : Key.md5 -> bool
-  val hh_get         : Key.md5 -> Value.t
-  val hh_remove      : Key.md5 -> unit
-  val hh_move        : Key.md5 -> Key.md5 -> unit
-
-end = functor (Key : Key) -> functor (Value: sig type t end) -> struct
-
-  module Raw = Raw (Key) (Value)
-
-  (* We store option type instead of the type itself to be able to locally
-   * cache removals too *)
-  let (local_writes_storage : (Key.md5, Value.t option) Hashtbl.t)
-    = Hashtbl.create 7
-
-  let hh_mem key =
-    if not !local_writes then Raw.hh_mem key
-    else
-      try
-        begin match Hashtbl.find local_writes_storage key with
-          | None -> false
-          | Some _ -> true
-        end
-      with Not_found -> Raw.hh_mem key
-
-  let hh_add key value =
-    if not !local_writes then Raw.hh_add key value
-    else if not (hh_mem key) then
-      Hashtbl.replace local_writes_storage key (Some value)
-
-  let hh_get key =
-    if not !local_writes then Raw.hh_get key
-    else
-      try
-        begin match Hashtbl.find local_writes_storage key with
-          | None -> raise Not_found
-          | Some x -> x
-        end
-      with Not_found -> Raw.hh_get key
-
-  let hh_remove key =
-    if not !local_writes then Raw.hh_remove key
-    else Hashtbl.replace local_writes_storage key None
-
-  let hh_move key1 key2 =
-    if not !local_writes then Raw.hh_move key1 key2
-    else begin
-      let value = hh_get key1 in
-      hh_remove key2;
-      hh_add key2 value
-    end
-end
-
 (*****************************************************************************)
 (* Module used to access "new" values (as opposed to old ones).
  * There are several cases where we need to compare the old and the new
@@ -319,7 +245,7 @@ module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
 end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
   module Data = Serial(Value)
-  module Raw = RawWithLocalWritesOption (Key) (Data)
+  module Raw = Raw (Key) (Data)
 
   let add key value = Raw.hh_add (Key.md5 key) (Data.make value)
   let mem key = Raw.hh_mem (Key.md5 key)
@@ -367,7 +293,7 @@ module Old : functor (Key : Key) -> functor (Value : Value.Type) -> sig
 end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
 
   module Data = Serial(Value)
-  module Raw = RawWithLocalWritesOption (Key) (Data)
+  module Raw = Raw (Key) (Data)
 
   let get key =
     let key = Key.md5_old key in

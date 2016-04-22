@@ -66,7 +66,6 @@ let parse_check_args cmd =
   let autostart = ref true in
   let from = ref "" in
   let version = ref false in
-  let ide_logname = ref false in
   let monitor_logname = ref false in
   let logname = ref false in
   let refactor_mode = ref "" in
@@ -202,8 +201,6 @@ let parse_check_args cmd =
       " (mode) find all occurrences of lint with the given error code";
     "--version", Arg.Set version,
       " (mode) show version and exit\n";
-    "--ide-logname", Arg.Set ide_logname,
-      " (mode) show ide server log filename and exit\n";
     "--monitor-logname", Arg.Set monitor_logname,
       " (mode) show monitor log filename and exit\n";
     "--logname", Arg.Set logname,
@@ -289,12 +286,6 @@ let parse_check_args cmd =
         Printf.fprintf stderr "Error: please provide at most one www directory\n%!";
         exit 1;
   in
-
-  if !ide_logname then begin
-    let ide_log_link = ServerFiles.ide_log_link root in
-    Printf.printf "%s\n%!" ide_log_link;
-    exit 0;
-  end;
 
   if !monitor_logname then begin
     let monitor_log_link = ServerFiles.monitor_log_link root in

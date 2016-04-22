@@ -28,7 +28,6 @@ type genv = {
     (* If daemons are spawned as part of the init process, wait for them here *)
     wait_until_ready : unit -> unit;
     mutable debug_channels   : (Timeout.in_channel * out_channel) option;
-    ide_process      : IdeProcessPipe.to_ide option;
   }
 
 (*****************************************************************************)
