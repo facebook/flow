@@ -19,6 +19,7 @@ type target_type =
 | LocalVar
 | Property of string * string
 | ClassConst of string * string
+| Typeconst of string * string
 
 type 'a find_symbol_result = {
   name:  string;
@@ -61,6 +62,7 @@ let get_member_pos type_ member_name member_origin =
   let method_pos m = m.Nast.m_name in
   let prop_pos m = m.Nast.cv_id in
   let const_pos (_, sid, _) = sid in
+  let typeconst_pos m = m.Nast.c_tconst_name in
 
   Naming_heap.ClassHeap.get member_origin >>= fun class_ ->
   let members = match type_ with
@@ -72,6 +74,7 @@ let get_member_pos type_ member_name member_origin =
     | `Prop -> List.map class_.Nast.c_vars prop_pos
     | `Sprop -> List.map class_.Nast.c_static_vars prop_pos
     | `Cconst -> List.map class_.Nast.c_consts const_pos
+    | `Typeconst -> List.map class_.Nast.c_typeconsts typeconst_pos
   in
   List.find members (fun m -> (snd m) = member_name) >>= fun m ->
   Some (fst m)
@@ -130,6 +133,21 @@ let process_lvar_id result_ref is_target_fun _ id _ =
                        }
   end
 
+let process_typeconst result_ref is_target_fun class_name tconst_name pos =
+  if (is_target_fun pos) then begin
+    result_ref :=
+      Some { name = class_name ^ "::" ^ tconst_name;
+             name_pos = None;
+             type_ = Typeconst (class_name, tconst_name);
+             pos;
+           }
+  end
+
+let process_taccess result_ref is_target_fun class_ typeconst pos =
+    let class_name = class_.tc_name in
+    let tconst_name = (snd typeconst.ttc_name) in
+    process_typeconst result_ref is_target_fun class_name tconst_name pos
+
 let process_named_class result_ref is_target_fun class_ =
   process_class_id result_ref is_target_fun class_.Nast.c_name ();
   let c_name = snd class_.Nast.c_name in
@@ -146,6 +164,14 @@ let process_named_class result_ref is_target_fun class_ =
   List.iter class_.Nast.c_consts begin fun (_, const_id, _) ->
     process_member result_ref is_target_fun
       c_name const_id ~is_method:false ~is_const:true
+  end;
+  List.iter class_.Nast.c_typeconsts begin fun typeconst ->
+    process_typeconst result_ref is_target_fun c_name
+      (snd typeconst.Nast.c_tconst_name) (fst typeconst.Nast.c_tconst_name)
+  end;
+  List.iter class_.Nast.c_typeconsts begin fun typeconst ->
+    process_typeconst result_ref is_target_fun c_name
+      (snd typeconst.Nast.c_tconst_name) (fst typeconst.Nast.c_tconst_name)
   end;
   match class_.Nast.c_constructor with
     | Some method_ ->
@@ -197,7 +223,11 @@ let infer_symbol_position tcopt result =
       Naming_heap.FunPosHeap.get result.name
     | Class ->
       Option.map (Naming_heap.TypeIdHeap.get result.name) fst
-    | _ -> result.name_pos
+    | Typeconst (c_name, typeconst_name) ->
+      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
+      SMap.get typeconst_name class_.tc_typeconsts >>= fun m ->
+      get_member_pos `Typeconst typeconst_name m.ttc_origin
+    | LocalVar -> result.name_pos
   in
   { result with name_pos = name_pos }
 
@@ -209,6 +239,7 @@ let attach_hooks result_ref line char =
   Typing_hooks.attach_constructor_hook
     (process_constructor result_ref is_target_fun);
   Typing_hooks.attach_fun_id_hook (process_fun_id result_ref is_target_fun);
+  Typing_hooks.attach_taccess_hook (process_taccess result_ref is_target_fun);
   Decl_hooks.attach_class_id_hook (process_class_id result_ref is_target_fun);
   Naming_hooks.attach_lvar_hook (process_lvar_id result_ref is_target_fun);
   Naming_hooks.attach_class_named_hook
