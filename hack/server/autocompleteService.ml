@@ -139,7 +139,7 @@ let get_class_elt_types env class_ cid elts =
   end in
   SMap.map elts (fun class_elt -> class_elt.ce_type)
 
-let autocomplete_method is_static class_ id env cid ~is_method =
+let autocomplete_method is_static class_ id env cid ~is_method ~is_const =
   if is_auto_complete (snd id)
   then begin
     ac_env := Some env;

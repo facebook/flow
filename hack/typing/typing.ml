@@ -2669,7 +2669,7 @@ and class_get_ ~is_method ~is_const ~ety_env ?(incl_tc=false) env cid cty
               (p, (class_.tc_name^"::"^mid)) ::
                   !Typing_defs.accumulate_method_calls_result;
         Typing_hooks.dispatch_smethod_hook
-          class_ (p, mid) env ety_env.from_class ~is_method;
+          class_ (p, mid) env ety_env.from_class ~is_method ~is_const;
         let ety_env =
           { ety_env with
             substs = Subst.make class_.tc_tparams paraml } in

@@ -24,7 +24,7 @@ let process_fun_id results_acc target_fun id =
   then results_acc := Pos.Map.add (fst id) (snd id) !results_acc
 
 let process_method_id results_acc target_classes target_method
-    class_ id _ _ ~is_method =
+    class_ id _ _ ~is_method ~is_const =
   let class_name = class_.Typing_defs.tc_name in
   if target_method = (snd id) && (SSet.mem target_classes class_name)
   then
@@ -34,7 +34,7 @@ let process_method_id results_acc target_classes target_method
 let process_constructor results_acc target_classes target_method class_ _ p =
   process_method_id
     results_acc target_classes target_method class_ (p, "__construct")
-    () () ~is_method:true
+    () () ~is_method:true ~is_const:false
 
 let process_class_id results_acc target_classes cid mid_option =
    if (SSet.mem target_classes (snd cid))

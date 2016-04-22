@@ -25,13 +25,17 @@ let assign_hooks: (Pos.t -> Typing_defs.locl Typing_defs.ty ->
 
 let (id_hooks: (Pos.t * string -> Typing_env.env -> unit) list ref) = ref []
 
+(* In this method is_const parameter will always be false, so it's not carrying
+ * any new information. It's here to keep the signature of smethod_hooks and
+ * cmethod_hooks the same, since more often than not people want to use the
+ * same hook for both *)
 let (smethod_hooks: (Typing_defs.class_type -> Pos.t * string ->
                      Typing_env.env -> Nast.class_id option -> is_method:bool ->
-                     unit) list ref) = ref []
+                     is_const:bool -> unit) list ref) = ref []
 
 let (cmethod_hooks: (Typing_defs.class_type -> Pos.t * string ->
                      Typing_env.env -> Nast.class_id option -> is_method:bool ->
-                     unit) list ref) = ref []
+                     is_const:bool -> unit) list ref) = ref []
 
 let (lvar_hooks: (Pos.t * Ident.t -> Typing_env.env ->
                   unit) list ref) = ref []
@@ -145,11 +149,13 @@ let dispatch_assign_hook p ty2 env =
 let dispatch_id_hook id env =
   List.iter !id_hooks begin fun hook -> hook id env end
 
-let dispatch_smethod_hook class_ id env cid ~is_method =
-  List.iter !smethod_hooks (fun hook -> hook class_ id env cid ~is_method)
+let dispatch_smethod_hook class_ id env cid ~is_method ~is_const=
+  List.iter !smethod_hooks
+    (fun hook -> hook class_ id env cid ~is_method ~is_const)
 
 let dispatch_cmethod_hook class_ id env cid ~is_method =
-  List.iter !cmethod_hooks (fun hook -> hook class_ id env cid ~is_method)
+  List.iter !cmethod_hooks
+    (fun hook -> hook class_ id env cid ~is_method ~is_const:false)
 
 let dispatch_lvar_hook id env =
   List.iter !lvar_hooks begin fun hook -> hook id env end
