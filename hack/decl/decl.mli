@@ -28,6 +28,8 @@ val class_decl:
 
 val fun_decl : Nast.fun_ -> unit
 
+val typedef_decl : Nast.typedef -> unit
+
 val fun_decl_in_env:
   Decl_env.env -> Nast.fun_ -> Typing_defs.decl Typing_defs.fun_type
 

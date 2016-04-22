@@ -756,28 +756,31 @@ let rec type_typedef_decl_if_missing tcopt typedef =
   else
     type_typedef_naming_and_decl tcopt typedef
 
-and type_typedef_naming_and_decl tcopt tdef =
+and typedef_decl tdef =
   let {
-    t_pos = _;
+    t_name = td_pos, tid;
     t_tparams = params;
     t_constraint = tcstr;
     t_kind = concrete_type;
     t_user_attributes = _;
-  } as decl = Naming.typedef tcopt tdef in
-  let td_pos, tid = tdef.Ast.t_id in
+    t_mode = mode;
+    t_vis = td_vis;
+  } = tdef in
   let dep = Typing_deps.Dep.Class tid in
-  let env = {Decl_env.mode = tdef.Ast.t_mode; droot = Some dep} in
+  let env = {Decl_env.mode = mode; droot = Some dep} in
   let td_tparams = List.map params (type_param env) in
   let td_type = Decl_hint.hint env concrete_type in
   let td_constraint = Option.map tcstr (Decl_hint.hint env) in
-  let td_vis = match tdef.Ast.t_kind with
-    | Ast.Alias _ -> Transparent
-    | Ast.NewType _ -> Opaque in
   let tdecl = {
     td_vis; td_tparams; td_constraint; td_type; td_pos;
   } in
   Typing_heap.Typedefs.add tid tdecl;
-  Naming_heap.TypedefHeap.add tid decl;
+
+and type_typedef_naming_and_decl tcopt tdef =
+  let tdef = Naming.typedef tcopt tdef in
+  let tid = snd tdef.t_name in
+  typedef_decl tdef;
+  Naming_heap.TypedefHeap.add tid tdef;
   ()
 
 (*****************************************************************************)

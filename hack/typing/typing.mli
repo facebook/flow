@@ -19,7 +19,7 @@ val fun_def:
 val class_def:
   TypecheckerOptions.t -> Nast.class_ -> unit
 val typedef_def:
-  Typing_heap.Typedefs.key -> Nast.typedef -> unit
+  Nast.typedef -> unit
 
 val expr:
   Typing_env.env -> Nast.expr ->

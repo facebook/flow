@@ -4048,7 +4048,8 @@ and method_def env m =
     | Some _ -> ();
   Typing_hooks.dispatch_exit_method_def_hook m
 
-and typedef_def tid typedef =
+and typedef_def typedef =
+  let tid = (snd typedef.t_name) in
   let filename = Pos.filename (fst typedef.t_kind) in
   let dep = Typing_deps.Dep.Class tid in
   let env =
@@ -4061,11 +4062,13 @@ and typedef_def tid typedef =
   let env = Typing_env.set_mode env FileInfo.Mdecl in
   NastCheck.typedef env typedef;
   let {
-    t_pos;
+    t_name = t_pos, _;
     t_tparams = _;
     t_constraint = tcstr;
     t_kind = hint;
     t_user_attributes = _;
+    t_vis = _;
+    t_mode = _;
   } = typedef in
   let ty = TI.instantiable_hint env hint in
   let env, ty = Phase.localize_with_self env ty in

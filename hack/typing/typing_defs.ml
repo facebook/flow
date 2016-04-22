@@ -420,11 +420,9 @@ and enum_type = {
   te_constraint : decl ty option;
 }
 
-and typedef_visibility = Transparent | Opaque
-
 and typedef_type = {
   td_pos: Pos.t;
-  td_vis: typedef_visibility;
+  td_vis: Nast.typedef_visibility;
   td_tparams: tparam list;
   td_constraint: decl ty option;
   td_type: decl ty;

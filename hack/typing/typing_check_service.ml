@@ -48,7 +48,7 @@ let check_typedef tcopt fn x =
     if not @@ Naming_heap.TypedefHeap.mem x then
       Decl.declare_typedef_in_file tcopt fn x;
     let typedef = Naming_heap.TypedefHeap.find_unsafe x in
-    Typing.typedef_def x typedef;
+    Typing.typedef_def typedef;
     Typing_variance.typedef tcopt x
   with Not_found -> ()
 

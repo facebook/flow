@@ -2251,13 +2251,19 @@ module Make (GetLocals : GetLocals) = struct
           Errors.typedef_constraint pos;
       | _ -> ()
     end;
+    let t_vis = match tdef.t_kind with
+      | Ast.Alias _ -> N.Transparent
+      | Ast.NewType _ -> N.Opaque
+    in
     let attrs = user_attributes env tdef.t_user_attributes in
     {
-      N.t_pos = fst tdef.t_id;
+      N.t_name = tdef.t_id;
       t_tparams = tparaml;
       t_constraint = tconstraint;
       t_kind = hint env ty;
       t_user_attributes = attrs;
+      t_mode = tdef.t_mode;
+      t_vis;
     }
 
   (**************************************************************************)
