@@ -34,7 +34,7 @@ type args = {
   files: string list;
 }
 
-let rec force_recheck (args:args) server_flags =
+let force_recheck (args:args) server_flags =
   let ic, oc = CommandUtils.connect server_flags args.root in
   let files = List.map CommandUtils.get_path_of_file args.files in
   ServerProt.cmd_to_channel oc
@@ -42,19 +42,13 @@ let rec force_recheck (args:args) server_flags =
   let () = Timeout.input_value ic in
   FlowExitStatus.(exit Ok)
 
-and retry (args, server_flags) sleep msg =
-  CommandUtils.check_timeout ();
-  let retries = server_flags.CommandUtils.retries in
-  if retries > 0
-  then begin
-    Printf.fprintf stderr "%s\n%!" msg;
-    CommandUtils.sleep sleep;
-    force_recheck args { server_flags with CommandUtils.retries = retries - 1 }
-  end else
-    FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
-
 let main server_flags root files () =
-  let root = CommandUtils.guess_root root in
+  let root = CommandUtils.guess_root (
+    match root, files with
+    | Some root, _ -> Some root
+    | None, file::_ -> (Some file)
+    | None, [] -> None
+  ) in
   let args = { root; files } in
   force_recheck args server_flags
 

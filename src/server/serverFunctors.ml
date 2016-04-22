@@ -111,9 +111,7 @@ end = struct
     let cli, _ = Unix.accept socket in
     let ic = Unix.in_channel_of_descr cli in
     let oc = Unix.out_channel_of_descr cli in
-    let close () =
-      Unix.shutdown cli Unix.SHUTDOWN_ALL;
-      Unix.close cli in
+    let close () = ServerUtils.shutdown_client (ic, oc) in
     try
       let client_build_id = input_line ic in
       if client_build_id <> Build_id.build_revision then begin
