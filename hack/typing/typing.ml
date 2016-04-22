@@ -693,6 +693,7 @@ and catch parent_lenv after_try env (ety, exn, b) =
   let env = LEnv.fully_integrate env parent_lenv in
   let cid = CI ety in
   let ety_p = (fst ety) in
+  TUtils.process_class_id cid;
   let env, _ = instantiable_cid ety_p env cid in
   let env, ety = static_class_id ety_p env cid in
   let env = exception_ty ety_p env ety in
@@ -1276,6 +1277,7 @@ and expr_
       Phase.hint_locl env ty
   | InstanceOf (e, cid) ->
       let env, _ = expr env e in
+      TUtils.process_class_id cid;
       let env, _class = instantiable_cid p env cid in
       env, (Reason.Rwitness p, Tprim Tbool)
   | Efun (f, _idl) ->
