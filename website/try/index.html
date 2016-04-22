@@ -7,16 +7,7 @@ layout: try
 {% css 'tryFlow.css' %}
 
 <div class="editor">
-  <div class="code">
-    <textarea id="code">/* @flow */
-
-function foo(x: ?number): string {
-  if (x) {
-    return x;
-  }
-  return "default string";
-}
-</textarea>
+  <div class="code" id="code">
   </div>
   <pre class="errors" id="errors"></pre>
 </div>

@@ -3,9 +3,13 @@
 //= require codemirror/mode/javascript/javascript
 //= require codemirror/mode/xml/xml
 //= require codemirror/mode/jsx/jsx
+//= require base64-js/lib/b64
+//= require text-encoder-lite-module/index
 //= depend_on flow.js
 
 import CodeMirror from "codemirror/lib/codemirror"
+import base64 from "base64-js/lib/b64"
+import {TextEncoderLite, TextDecoderLite} from "text-encoder-lite-module/index"
 import flow from "flow"
 
 function get(url) {
@@ -88,6 +92,27 @@ function getAnnotations(text, callback, options) {
 }
 getAnnotations.async = true;
 
+const defaultValue = `/* @flow */
+
+function foo(x: ?number): string {
+  if (x) {
+    return x;
+  }
+  return "default string";
+}
+`;
+
+function getHashedValue(hash) {
+  if (hash[0] !== '#') return null;
+  const encoded = hash.slice(1);
+  if (encoded.match(/^[a-zA-Z0-9+/=_-]+$/)) {
+    const byteArray = base64.toByteArray(encoded);
+    const value = (new TextDecoderLite()).decode(byteArray);
+    return value;
+  }
+  return null;
+}
+
 exports.createEditor = function createEditor(domNode, errorsNode) {
   require([
     'codemirror/addon/lint/lint',
@@ -95,10 +120,22 @@ exports.createEditor = function createEditor(domNode, errorsNode) {
     'codemirror/mode/xml/xml',
     'codemirror/mode/jsx/jsx'
   ], function() {
-    CodeMirror.fromTextArea(domNode, {
+    const location = window.location;
+
+    const editor = CodeMirror(domNode, {
+      value: getHashedValue(location.hash) || defaultValue,
       lineNumbers: true,
       mode: "jsx",
       lint: { getAnnotations, errorsNode }
+    });
+
+    const encoder = new TextEncoderLite();
+
+    editor.on('changes', () => {
+      const value = editor.getValue();
+      const byteArray = encoder.encode(value);
+      const encoded = base64.fromByteArray(byteArray);
+      location.hash = `#${encoded}`;
     });
   });
 }
