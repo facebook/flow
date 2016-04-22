@@ -564,45 +564,6 @@ let declare_implicit_let kind =
   declare_value_entry (Entry.Let kind)
 let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
-(* Used to adjust state based on whether there is an annotation.
-
-   This reveals an interesting tension between annotations and
-   flow-sensitivity. Consider:
-
-   var x:A = new B(); // B is a subclass of A
-   // ^ should we have x:A or x:B after this initialization?
-   x = new B();
-   // ^ how about after this assignment?
-   if (x instanceof B) {
-   // ^ and how about after this dynamic check?
-   }
-
-   In general, it seems desirable to narrow down the type
-   of a variable when possible (indeed, that's the whole point
-   of flow-sensitivity) but it is unclear what to do when there
-   are annotations. It might be argued that annotations override
-   flow-sensitivity, but that is not very nice, because it would
-   force patterns such as:
-
-   var y = x;
-   if (y instanceof B) {
-   // ^ we have y:B after this dynamic check, yet x:A
-   }
-
-   Below, we do a compromise; we remain flow-sensitive in general
-   but treat an annotation as if it were part of initialization.
-   This seems to be a nice solution, because (e.g.) it would ban
-   code such as:
-
-   function foo(x:B) { }
-   var x:A = new B();
-   foo(x);
-*)
-let force_general_type cx ({ Entry.general; _ } as value_binding) = Entry.(
-  Flow_js.flow_t cx (general, general);
-  { value_binding with specific = general }
-)
-
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound *)
 let init_value_entry kind cx name ~has_anno specific reason =
@@ -616,14 +577,14 @@ let init_value_entry kind cx name ~has_anno specific reason =
     | Const _, Value ({ Entry.kind = Const _;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
       Changeset.(change_var (scope.id, name, Write));
-      Flow_js.flow_t cx (specific, Entry.general_of_value v);
-      let value_binding = { v with value_state = State.Initialized; specific } in
-      (* if binding is annotated, flow annotated type like initializer *)
-      let new_entry = Value (
-        if has_anno
-        then force_general_type cx value_binding
-        else value_binding
-      ) in
+      if specific != v.general then
+        Flow_js.flow_t cx (specific, v.general);
+      (* note that annotation supercedes specific initializer type *)
+      let value_binding = { v with
+        value_state = State.Initialized;
+        specific = if has_anno then v.general else specific
+      } in
+      let new_entry = Value value_binding in
       Scope.add_entry name new_entry scope;
     | _ ->
       (* Incompatible or non-redeclarable new and previous entries.
@@ -655,16 +616,17 @@ let init_type cx name _type reason =
       ()
     )
 
-(* used to enforce annotations: see commentary in force_general_type *)
+(* treat a var's declared (annotated) type as an initializer *)
 let pseudo_init_declared_type cx name reason =
   if not (is_excluded name)
   then Entry.(
     let scope, entry = find_entry cx name reason in
     match entry with
     | Value value_binding ->
-      let value_binding =
-        { value_binding with value_state = State.Declared } in
-      let entry = Value (force_general_type cx value_binding) in
+      let entry = Value { value_binding with
+        value_state = State.Declared;
+        specific = value_binding.general
+      } in
       Scope.add_entry name entry scope
     | Type _ ->
       assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
