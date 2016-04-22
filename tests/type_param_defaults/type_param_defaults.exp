@@ -50,23 +50,7 @@ classes.js:33
 
 classes.js:40
  40: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
-                         ^^^ D. Too few type arguments. Expected at least 1
-
-classes.js:40
- 40: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
-                         ^^^ type application of identifier `D`. Too few type arguments. Expected at least 1
-
-classes.js:40
- 40: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
                                ^^^^^^^^^^^^^^ D. Too few type arguments. Expected at least 1
-
-classes.js:41
- 41: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
-                     ^^^^^^^^^^^^^^^^^^^^^^^^ D. Too many type arguments. Expected at most 2
-
-classes.js:41
- 41: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
-                     ^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `D`. Too many type arguments. Expected at most 2
 
 classes.js:41
  41: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
@@ -127,4 +111,4 @@ classes.js:62
                  ^^^^^^ string
 
 
-Found 23 errors
+Found 19 errors
