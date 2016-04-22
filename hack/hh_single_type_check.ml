@@ -367,6 +367,7 @@ let print_symbol symbol =
     | Method _ -> "Method"
     | LocalVar -> "LocalVar"
     | Property _ -> "Property"
+    | ClassConst _ -> "ClassConst"
     end
     (Pos.string_no_file symbol.pos);
   Option.iter symbol.name_pos begin fun x ->

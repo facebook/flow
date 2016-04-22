@@ -278,7 +278,9 @@ let hh_get_method_at_position fn line char =
             | IdentifySymbolService.Method _ -> "method"
             | IdentifySymbolService.Function -> "function"
             | IdentifySymbolService.LocalVar -> "local"
-            | IdentifySymbolService.Property _ -> "property" in
+            | IdentifySymbolService.Property _ -> "property"
+            | IdentifySymbolService.ClassConst _ -> "class_const"
+          in
           JSON_Object [ "name",           JSON_String res.IdentifySymbolService.name;
                    "result_type",    JSON_String result_type;
                    "pos",            Pos.json (Pos.to_absolute res.IdentifySymbolService.pos);

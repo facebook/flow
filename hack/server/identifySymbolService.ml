@@ -18,6 +18,7 @@ type target_type =
 | Method of string * string
 | LocalVar
 | Property of string * string
+| ClassConst of string * string
 
 type 'a find_symbol_result = {
   name:  string;
@@ -54,13 +55,14 @@ let process_class_id result_ref is_target_fun cid _ =
 
 (* We have the method element from typing phase, but it doesn't have positional
  * information - we need to go back and fetch relevant named AST *)
-let get_member_pos type_ member_name m =
+let get_member_pos type_ member_name member_origin =
   let open Option.Monad_infix in
 
   let method_pos m = m.Nast.m_name in
   let prop_pos m = m.Nast.cv_id in
+  let const_pos (_, sid, _) = sid in
 
-  Naming_heap.ClassHeap.get m.ce_origin >>= fun class_ ->
+  Naming_heap.ClassHeap.get member_origin >>= fun class_ ->
   let members = match type_ with
     | `Constructor -> Option.to_list
       (class_.Nast.c_constructor >>= fun m ->
@@ -69,22 +71,27 @@ let get_member_pos type_ member_name m =
     | `Smethod -> List.map class_.Nast.c_static_methods method_pos
     | `Prop -> List.map class_.Nast.c_vars prop_pos
     | `Sprop -> List.map class_.Nast.c_static_vars prop_pos
+    | `Cconst -> List.map class_.Nast.c_consts const_pos
   in
   List.find members (fun m -> (snd m) = member_name) >>= fun m ->
   Some (fst m)
 
 let clean_member_name name = lstrip name "$"
 
-let process_member result_ref is_target_fun c_name id ~is_method =
+let process_member result_ref is_target_fun c_name id ~is_method ~is_const =
   if is_target_fun (fst id)
   then begin
     let member_name = (snd id) in
+    let type_ =
+      if is_const then ClassConst (c_name, member_name)
+      else if is_method then Method (c_name, member_name)
+      else Property (c_name, member_name)
+    in
     result_ref :=
       Some { name  = (c_name ^ "::" ^ (clean_member_name member_name));
-             (* Method position is calculated later in infer_method_position *)
+             (* Method position is calculated later in infer_member_position *)
              name_pos = None;
-             type_ = if is_method then Method (c_name, member_name)
-                     else Property (c_name, member_name);
+             type_;
              pos   = fst id
            }
   end
@@ -92,7 +99,7 @@ let process_member result_ref is_target_fun c_name id ~is_method =
 let process_method_id result_ref is_target_fun class_ id _ _
     ~is_method ~is_const =
   let class_name = class_.Typing_defs.tc_name in
-  process_member result_ref is_target_fun class_name id is_method
+  process_member result_ref is_target_fun class_name id is_method is_const
 
 let process_constructor result_ref is_target_fun class_ _ p =
   process_method_id
@@ -129,19 +136,24 @@ let process_named_class result_ref is_target_fun class_ =
   let all_methods = class_.Nast.c_methods @ class_.Nast.c_static_methods in
   List.iter all_methods begin fun method_ ->
     process_member result_ref is_target_fun
-      c_name method_.Nast.m_name ~is_method:true
+      c_name method_.Nast.m_name ~is_method:true ~is_const:false
   end;
   let all_props = class_.Nast.c_vars @ class_.Nast.c_static_vars in
   List.iter all_props begin fun prop ->
     process_member result_ref is_target_fun
-      c_name prop.Nast.cv_id ~is_method:false
+      c_name prop.Nast.cv_id ~is_method:false ~is_const:false
+  end;
+  List.iter class_.Nast.c_consts begin fun (_, const_id, _) ->
+    process_member result_ref is_target_fun
+      c_name const_id ~is_method:false ~is_const:true
   end;
   match class_.Nast.c_constructor with
     | Some method_ ->
       let id =
         fst method_.Nast.m_name, Naming_special_names.Members.__construct
       in
-      process_member result_ref is_target_fun c_name id ~is_method:true
+      process_member result_ref is_target_fun
+        c_name id ~is_method:true ~is_const:false
     | None -> ()
 
 let process_named_fun result_ref is_target_fun fun_ =
@@ -160,23 +172,27 @@ let infer_symbol_position tcopt result =
       Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
       if method_name = Naming_special_names.Members.__construct then begin
         match fst class_.tc_construct with
-          | Some m -> get_member_pos `Constructor method_name m
+          | Some m -> get_member_pos `Constructor method_name m.ce_origin
           | None -> Some class_.tc_pos
       end else begin
         match SMap.get method_name class_.tc_methods with
-        | Some m -> get_member_pos `Method method_name m
+        | Some m -> get_member_pos `Method method_name m.ce_origin
         | None ->
-          (SMap.get method_name class_.tc_smethods) >>=
-          (get_member_pos `Smethod method_name)
+          SMap.get method_name class_.tc_smethods >>= fun m ->
+          get_member_pos `Smethod method_name m.ce_origin
       end
     | Property (c_name, property_name) ->
       Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
       begin match SMap.get property_name class_.tc_props with
-      | Some m -> get_member_pos `Prop property_name m
+      | Some m -> get_member_pos `Prop property_name m.ce_origin
       | None ->
-        (SMap.get property_name class_.tc_sprops) >>=
-        (get_member_pos `Sprop (clean_member_name property_name))
+        SMap.get property_name class_.tc_sprops >>= fun m ->
+        get_member_pos `Sprop (clean_member_name property_name) m.ce_origin
       end
+    | ClassConst (c_name, const_name) ->
+      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
+      SMap.get const_name class_.tc_consts >>= fun m ->
+      get_member_pos `Cconst const_name m.cc_origin
     | Function ->
       Naming_heap.FunPosHeap.get result.name
     | Class ->
