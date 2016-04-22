@@ -16,6 +16,14 @@ export type Flag = {
   name: string,
   description: string,
   aliases?: Array<string>,
+} | {
+  type: "enum",
+  name: string,
+  description: string,
+  argName: string,
+  validValues: Array<string>,
+  aliases?: Array<string>,
+  default?: string,
 };
 
 export const commonFlags = {
@@ -32,6 +40,15 @@ export const commonFlags = {
     description: "Number of tests to run in parallel",
     aliases: ["p"],
     default: "16",
+  },
+  errorCheckCommand: {
+    type: "enum",
+    name: "check",
+    argName: "COMMAND",
+    description: "The flow command to check flow errors",
+    validValues: ["check", "status"],
+    aliases: ["c"],
+    default: "check",
   },
 }
 
@@ -83,7 +100,7 @@ export default class Base<T: Object> {
     const alias = {};
 
     for (const flag of this.getAllFlags()) {
-      if (flag.type === "string") {
+      if (flag.type === "string" || flag.type === "enum") {
         string.push(flag.name);
         flag.default !== undefined && (defaults[flag.name] = flag.default);
       } else {
@@ -122,8 +139,14 @@ export default class Base<T: Object> {
 
     usage += "\n\nOPTIONS:";
     for (const flag of flags) {
-      const arg = flag.type === "string" ? " "+flag.argName : "";
-      const defaultDesc = flag.type === "string" && flag.default !== undefined
+      const arg = flag.type === "string" || flag.type === "enum"
+        ? " "+flag.argName
+        : "";
+      const values = flag.type === "enum"
+        ? format(" [%s]", flag.validValues.map(x => format('"%s"', x)).join(", "))
+        : "";
+      const defaultDesc =
+        flag.default !== undefined
         ? format(' (default: "%s")', flag.default)
         : "";
       const names = []
@@ -131,7 +154,7 @@ export default class Base<T: Object> {
         .map(name => (name.length == 1 ? '-' : '--') + name + arg)
         .join(", ");
       usage += "\n    " + names
-      usage += "\n        " + flag.description + defaultDesc;
+      usage += "\n        " + flag.description + values + defaultDesc;
     }
 
     usage += "\n";
