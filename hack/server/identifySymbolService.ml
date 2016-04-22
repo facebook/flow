@@ -173,6 +173,13 @@ let process_named_class result_ref is_target_fun class_ =
     process_typeconst result_ref is_target_fun c_name
       (snd typeconst.Nast.c_tconst_name) (fst typeconst.Nast.c_tconst_name)
   end;
+  (* We don't check anything about xhp attributes, so the hooks won't fire when
+     typechecking the class. Need to look at them individually. *)
+  List.iter class_.Nast.c_xhp_attr_uses begin function
+    | _, Nast.Happly (cid, _) ->
+      process_class_id result_ref is_target_fun cid ()
+    | _ -> ()
+  end;
   match class_.Nast.c_constructor with
     | Some method_ ->
       let id =
