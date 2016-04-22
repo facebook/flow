@@ -298,15 +298,21 @@ let nth_line ~n content =
   in
   loop ~n ~pos:0 content
 
-let read_line_in_file line filename stdin_file =
+let normalize_filename ~root filename =
+  if Filename.is_relative filename
+  then Path.to_string (Path.concat root filename)
+  else filename
+
+let read_line_in_file ~root line filename stdin_file =
   match filename with
   | None ->
       None
   | Some filename ->
+      let filename = normalize_filename ~root filename in
       try begin
         let content = match stdin_file with
         | Some (stdin_filename, content)
-          when Path.to_string stdin_filename = filename ->
+          when normalize_filename ~root (Path.to_string stdin_filename) = filename ->
             content
         | _ ->
             Sys_utils.cat filename
@@ -349,7 +355,7 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
         l0)
     ] in
 
-  let code_line = read_line_in_file (l0 - 1) filename stdin_file in
+  let code_line = read_line_in_file ~root (l0 - 1) filename stdin_file in
 
   match code_line, filename with
   | _, None ->
@@ -695,7 +701,7 @@ let json_of_message_props message =
 let json_of_message message =
   Hh_json.JSON_Object (json_of_message_props message)
 
-let json_of_message_with_context ~stdin_file message =
+let json_of_message_with_context ~root ~stdin_file message =
   let open Hh_json in
   let _, loc = unwrap_message message in
   let code_line = match loc with
@@ -704,7 +710,7 @@ let json_of_message_with_context ~stdin_file message =
       let open Loc in
       let filename = file_of_source loc.source in
       let line = loc.start.line - 1 in
-      read_line_in_file line filename stdin_file in
+      read_line_in_file ~root line filename stdin_file in
   let context = ("context", match code_line with
   | None -> JSON_Null
   | Some context -> JSON_String context) in
@@ -759,21 +765,21 @@ let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
 let json_of_error error =
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
-let json_of_error_with_context ~stdin_file error =
-  let json_of_message = json_of_message_with_context ~stdin_file in
+let json_of_error_with_context ~root ~stdin_file error =
+  let json_of_message = json_of_message_with_context ~root ~stdin_file in
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
 let json_of_errors errors =
   Hh_json.JSON_Array (List.map json_of_error errors)
 
-let json_of_errors_with_context ~stdin_file errors =
-  Hh_json.JSON_Array (List.map (json_of_error_with_context ~stdin_file) errors)
+let json_of_errors_with_context ~root ~stdin_file errors =
+  Hh_json.JSON_Array (List.map (json_of_error_with_context ~root ~stdin_file) errors)
 
-let print_error_json ?(stdin_file=None) oc el =
+let print_error_json ~root ?(stdin_file=None) oc el =
   let open Hh_json in
   let res = JSON_Object [
     "flowVersion", JSON_String FlowConfig.version;
-    "errors", json_of_errors_with_context ~stdin_file el;
+    "errors", json_of_errors_with_context ~root ~stdin_file el;
     "passed", JSON_Bool (el = []);
   ] in
   output_string oc (json_to_string res);

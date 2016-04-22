@@ -146,7 +146,7 @@ let check_content ~filename ~content =
   in
   errors
   |> Errors_js.ErrorSet.elements
-  |> Errors_js.json_of_errors_with_context ~stdin_file
+  |> Errors_js.json_of_errors_with_context ~root ~stdin_file
   |> js_of_json
 
 let check filename =

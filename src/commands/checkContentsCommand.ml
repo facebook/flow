@@ -67,7 +67,7 @@ let main option_values root error_flags strip_root use_json verbose file () =
   | ServerProt.ERRORS e ->
       if use_json
       then
-        Errors_js.print_error_json ~stdin_file stdout e
+        Errors_js.print_error_json ~root ~stdin_file stdout e
       else (
         Errors_js.print_error_summary
           ~flags:error_flags
@@ -79,7 +79,7 @@ let main option_values root error_flags strip_root use_json verbose file () =
       )
   | ServerProt.NO_ERRORS ->
       if use_json
-      then Errors_js.print_error_json ~stdin_file stdout []
+      then Errors_js.print_error_json ~root ~stdin_file stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit Ok)
   | _ ->
