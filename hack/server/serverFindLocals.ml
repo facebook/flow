@@ -285,8 +285,7 @@ module LocalMap = struct
     let results_set = match localmap.target_ident with
     | Some ident -> LocalPositions.get ident localmap.locals
     | _ -> PosSet.empty in
-    let results_list = PosSet.elements results_set in
-    List.map results_list Pos.to_absolute
+    PosSet.elements results_set
 end (* End of module LocalMap *)
 
 (**
@@ -514,14 +513,18 @@ let parse content =
     in ast
   end
 
-(**
+let go_from_ast ast line char =
+  let empty = LocalMap.make line char in
+  let visitor = new local_finding_visitor in
+  let localmap = visitor#on_program empty ast in
+  LocalMap.results localmap
+
+ (**
   * This is the entrypoint to this module. The contents of a file, and a
   * position within it, identifying a local, are given. The result is a
   * list of the positions of other uses of that local in the file.
   *)
 let go content line char =
   let ast = parse content in
-  let empty = LocalMap.make line char in
-  let visitor = new local_finding_visitor in
-  let localmap = visitor#on_program empty ast in
-  LocalMap.results localmap
+  let results_list = go_from_ast ast line char in
+  List.map results_list Pos.to_absolute

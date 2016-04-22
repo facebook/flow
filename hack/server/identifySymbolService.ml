@@ -195,7 +195,7 @@ let process_named_fun result_ref is_target_fun fun_ =
 (* We cannot compute member position in process_member hook because
  * it can be called from naming phase when the naming heap is not populated
  * yet. We do it here in separate function called afterwards. *)
-let infer_symbol_position tcopt result =
+let infer_symbol_position tcopt ast result =
   let open Option.Monad_infix in
   let name_pos = match result.type_ with
     | Method (c_name, method_name) ->
@@ -234,7 +234,9 @@ let infer_symbol_position tcopt result =
       Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
       SMap.get typeconst_name class_.tc_typeconsts >>= fun m ->
       get_member_pos `Typeconst typeconst_name m.ttc_origin
-    | LocalVar -> result.name_pos
+    | LocalVar ->
+      let line, char, _ = Pos.info_pos result.pos in
+      List.hd (ServerFindLocals.go_from_ast ast line char)
   in
   { result with name_pos = name_pos }
 

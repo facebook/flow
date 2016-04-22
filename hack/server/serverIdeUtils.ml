@@ -65,7 +65,7 @@ let revive funs classes typedefs =
  * SharedMem.S.oldify_batch) - after working with local content is done,
  * original definitions can (and should) be restored using "revive".
  *)
-let declare_and_check path content =
+let declare_and_check_get_ast path content =
   let tcopt = TypecheckerOptions.permissive in
   Autocomplete.auto_complete := false;
   Autocomplete.auto_complete_for_global := "";
@@ -115,11 +115,14 @@ let declare_and_check path content =
         | Nast.Typedef t -> Typing.typedef_def t
         | _ -> ()
       end;
-      !declared_funs, !declared_classes, !declared_typedefs
+      (!declared_funs, !declared_classes, !declared_typedefs), ast
     end
   with e ->
     report_error e;
-    SSet.empty, SSet.empty, SSet.empty
+    (SSet.empty, SSet.empty, SSet.empty), []
+
+let declare_and_check path content =
+  fst (declare_and_check_get_ast path content)
 
 let recheck tcopt filetuple_l =
   SharedMem.invalidate_caches();
