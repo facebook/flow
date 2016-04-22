@@ -15,10 +15,10 @@
 
 let auto_complete tcopt files_info content =
   AutocompleteService.attach_hooks();
-  let content_funs, content_classes =
+  let content_funs, content_classes, content_typedefs =
     ServerIdeUtils.declare_and_check Relative_path.default content in
   let result = AutocompleteService.get_results
     tcopt content_funs content_classes in
-  ServerIdeUtils.revive content_funs content_classes;
+  ServerIdeUtils.revive content_funs content_classes content_typedefs;
   AutocompleteService.detach_hooks();
   result

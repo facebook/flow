@@ -12,7 +12,7 @@ type result = int * (string option * string) list
 
 let go content line char =
   ArgumentInfoService.attach_hooks (line, char);
-  let funs, classes =
+  let funs, classes, typedefs=
     ServerIdeUtils.declare_and_check Relative_path.default content in
   let pos, expected =
     match ArgumentInfoService.get_result() with
@@ -20,5 +20,5 @@ let go content line char =
     | _ ->(-1), []
   in
   ArgumentInfoService.detach_hooks();
-  ServerIdeUtils.revive funs classes;
+  ServerIdeUtils.revive funs classes typedefs;
   pos, expected
