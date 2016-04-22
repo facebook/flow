@@ -10,12 +10,14 @@
 
 open Core
 open Typing_defs
+open Utils
 
 type target_type =
 | Class
 | Function
 | Method of string * string
 | LocalVar
+| Property of string * string
 
 type 'a find_symbol_result = {
   name:  string;
@@ -43,9 +45,8 @@ let process_class_id result_ref is_target_fun cid _ =
   if is_target_fun (fst cid)
   then begin
     let name = snd cid in
-    let name_pos = Option.map (Naming_heap.TypeIdHeap.get name) fst in
     result_ref := Some { name;
-                         name_pos;
+                         name_pos = None;
                          type_ = Class;
                          pos   = fst cid
                        }
@@ -53,33 +54,44 @@ let process_class_id result_ref is_target_fun cid _ =
 
 (* We have the method element from typing phase, but it doesn't have positional
  * information - we need to go back and fetch relevant named AST *)
-let get_method_pos _type method_name m  =
+let get_member_pos type_ member_name m =
   let open Option.Monad_infix in
-  Naming_heap.ClassHeap.get m.ce_origin >>= fun class_ ->
-  let methods = match _type with
-    | `Constructor -> Option.to_list class_.Nast.c_constructor
-    | `Method -> class_.Nast.c_methods
-    | `Smethod ->  class_.Nast.c_static_methods
-  in
-  List.find methods (fun m -> (snd m.Nast.m_name) = method_name) >>= fun m ->
-  Some (fst m.Nast.m_name)
 
-let process_method result_ref is_target_fun c_name id =
+  let method_pos m = m.Nast.m_name in
+  let prop_pos m = m.Nast.cv_id in
+
+  Naming_heap.ClassHeap.get m.ce_origin >>= fun class_ ->
+  let members = match type_ with
+    | `Constructor -> Option.to_list
+      (class_.Nast.c_constructor >>= fun m ->
+      Some (method_pos m))
+    | `Method -> List.map class_.Nast.c_methods method_pos
+    | `Smethod -> List.map class_.Nast.c_static_methods method_pos
+    | `Prop -> List.map class_.Nast.c_vars prop_pos
+    | `Sprop -> List.map class_.Nast.c_static_vars prop_pos
+  in
+  List.find members (fun m -> (snd m) = member_name) >>= fun m ->
+  Some (fst m)
+
+let clean_member_name name = lstrip name "$"
+
+let process_member result_ref is_target_fun c_name id ~is_method =
   if is_target_fun (fst id)
   then begin
-    let method_name = (snd id) in
+    let member_name = (snd id) in
     result_ref :=
-      Some { name  = (c_name ^ "::" ^ method_name);
+      Some { name  = (c_name ^ "::" ^ (clean_member_name member_name));
              (* Method position is calculated later in infer_method_position *)
              name_pos = None;
-             type_ = Method (c_name, method_name);
+             type_ = if is_method then Method (c_name, member_name)
+                     else Property (c_name, member_name);
              pos   = fst id
            }
   end
 
 let process_method_id result_ref is_target_fun class_ id _ _ ~is_method =
   let class_name = class_.Typing_defs.tc_name in
-  process_method result_ref is_target_fun class_name id
+  process_member result_ref is_target_fun class_name id is_method
 
 let process_constructor result_ref is_target_fun class_ _ p =
   process_method_id
@@ -90,10 +102,9 @@ let process_fun_id result_ref is_target_fun id =
   if is_target_fun (fst id)
   then begin
     let name = snd id in
-    let name_pos = Naming_heap.FunPosHeap.get name in
     result_ref :=
       Some { name;
-             name_pos;
+             name_pos = None;
              type_ = Function;
              pos   = fst id
            }
@@ -115,41 +126,59 @@ let process_named_class result_ref is_target_fun class_ =
   let c_name = snd class_.Nast.c_name in
   let all_methods = class_.Nast.c_methods @ class_.Nast.c_static_methods in
   List.iter all_methods begin fun method_ ->
-    process_method result_ref is_target_fun c_name method_.Nast.m_name
+    process_member result_ref is_target_fun
+      c_name method_.Nast.m_name ~is_method:true
+  end;
+  let all_props = class_.Nast.c_vars @ class_.Nast.c_static_vars in
+  List.iter all_props begin fun prop ->
+    process_member result_ref is_target_fun
+      c_name prop.Nast.cv_id ~is_method:false
   end;
   match class_.Nast.c_constructor with
     | Some method_ ->
       let id =
         fst method_.Nast.m_name, Naming_special_names.Members.__construct
       in
-      process_method result_ref is_target_fun c_name id
+      process_member result_ref is_target_fun c_name id ~is_method:true
     | None -> ()
 
 let process_named_fun result_ref is_target_fun fun_ =
   process_fun_id result_ref is_target_fun fun_.Nast.f_name
 
-(* We cannot compute method position in process_method hook because
+(* We cannot compute member position in process_member hook because
  * it can be called from naming phase when the naming heap is not populated
  * yet. We do it here in separate function called afterwards. *)
-let infer_method_position tcopt result =
+let infer_symbol_position tcopt result =
+  let open Option.Monad_infix in
   let name_pos = match result.type_ with
     | Method (c_name, method_name) ->
-      let open Option.Monad_infix in
       (* Classes on typing heap have all the methods from inheritance hierarchy
        * folded together, so we will correctly identify them even if method_name
        * is not defined directly in class c_name *)
       Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
       if method_name = Naming_special_names.Members.__construct then begin
         match fst class_.tc_construct with
-          | Some m -> get_method_pos `Constructor method_name m
+          | Some m -> get_member_pos `Constructor method_name m
           | None -> Some class_.tc_pos
       end else begin
         match SMap.get method_name class_.tc_methods with
-        | Some m -> get_method_pos `Method method_name m
+        | Some m -> get_member_pos `Method method_name m
         | None ->
           (SMap.get method_name class_.tc_smethods) >>=
-          (get_method_pos `Smethod method_name)
+          (get_member_pos `Smethod method_name)
       end
+    | Property (c_name, property_name) ->
+      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
+      begin match SMap.get property_name class_.tc_props with
+      | Some m -> get_member_pos `Prop property_name m
+      | None ->
+        (SMap.get property_name class_.tc_sprops) >>=
+        (get_member_pos `Sprop (clean_member_name property_name))
+      end
+    | Function ->
+      Naming_heap.FunPosHeap.get result.name
+    | Class ->
+      Option.map (Naming_heap.TypeIdHeap.get result.name) fst
     | _ -> result.name_pos
   in
   { result with name_pos = name_pos }

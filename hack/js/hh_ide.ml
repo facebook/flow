@@ -272,13 +272,13 @@ let hh_get_method_at_position fn line char =
     let result =
       match !result with
       | Some res ->
-          let res = IdentifySymbolService.infer_method_position tcopt res in
           let result_type =
             match res.IdentifySymbolService.type_ with
             | IdentifySymbolService.Class -> "class"
             | IdentifySymbolService.Method _ -> "method"
             | IdentifySymbolService.Function -> "function"
-            | IdentifySymbolService.LocalVar -> "local" in
+            | IdentifySymbolService.LocalVar -> "local"
+            | IdentifySymbolService.Property _ -> "property" in
           JSON_Object [ "name",           JSON_String res.IdentifySymbolService.name;
                    "result_type",    JSON_String result_type;
                    "pos",            Pos.json (Pos.to_absolute res.IdentifySymbolService.pos);

@@ -16,6 +16,7 @@ let get_result_type res =
   | IdentifySymbolService.Method _ -> "method"
   | IdentifySymbolService.Function -> "function"
   | IdentifySymbolService.LocalVar -> "local"
+  | IdentifySymbolService.Property _ -> "property"
 
 let to_json = function
   | Some res ->
