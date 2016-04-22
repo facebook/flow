@@ -3500,6 +3500,9 @@ and flow_addition cx trace reason l r u =
      (NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _)) ->
     rec_flow_t cx trace (NumT.why reason, u)
 
+  | (EmptyT _, _)
+  | (_, EmptyT _) -> ()
+
   | (_, _) ->
     let fake_str = StrT.why reason in
     rec_flow_t cx trace (l, fake_str);
@@ -3631,6 +3634,9 @@ and ground_subtype = function
 
   (* Allows call args to propagate  *)
   | (AnyT _, CallT _) -> false
+
+  (* Ensure a+b is mixed if either a or b is mixed *)
+  | (EmptyT _, AdderT _) -> false
 
   | (NumT _, UseT NumT _)
   | (StrT _, UseT StrT _)
