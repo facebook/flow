@@ -207,6 +207,84 @@ let with_loc fn env =
   in
   Loc.btwn start_loc end_loc, result
 
+module Modifier = struct
+  type t' =
+    | Static
+    | Access of access
+  type t = Loc.t * t'
+
+  let from_token = function
+    | T_STATIC -> Some Static
+    | T_READWRITE -> Some (Access ReadWrite)
+    | T_READONLY -> Some (Access ReadOnly)
+    | T_WRITEONLY -> Some (Access WriteOnly)
+    | _ -> None
+
+  let to_string = function
+    | Static -> "static"
+    | Access ReadWrite -> "readwrite"
+    | Access ReadOnly -> "readonly"
+    | Access WriteOnly -> "writeonly"
+
+  let parse_one env =
+    let { lex_token; lex_loc; _ } = lookahead env in
+    match from_token lex_token with
+    | None -> None
+    | Some x ->
+        Eat.token env;
+        Some (lex_loc, x)
+
+  let parse_all env =
+    let rec loop acc = match parse_one env with
+    | Some modifier -> loop (modifier::acc)
+    | None -> acc
+    in
+    loop []
+
+  let includes_static = List.exists (function
+    | _, Static -> true
+    | _ -> false
+  )
+
+  (* Given a list of modifiers (in reverse order, as returned by
+     `parse_all`), return a single strictness modifier and a single access
+     modifier while generating errors for any unexpected modifiers. *)
+  let validate ~allow_static ~allow_access env modifiers =
+    let modifiers = List.rev modifiers in
+    modifiers |> List.fold_left (fun (static, access) modifier ->
+      match (modifier, static, access, allow_static, allow_access) with
+      (* duplicate static modifier *)
+      | (loc, Static), true, _, _, _
+      (* static modifier not allowed *)
+      | (loc, Static), _, _, false, _
+      (* duplicate access modifier *)
+      | (loc, Access _), _, Some _, _, _
+      (* access modifier not allowed *)
+      | (loc, Access _), _, _, _, false ->
+          error_at env (loc, Error.UnexpectedModifier);
+          static, access
+      (* first static modifier *)
+      | (_, Static), false, access, true, _ ->
+          true, access
+      (* first access modifier *)
+      | (_, Access access), static, None, _, true ->
+          static, Some access
+    ) (false, None)
+
+  (* In the event that we parsed a modifier but actually wanted a property
+     identifier (e.g., { readonly: boolean }), do the conversion. Note
+     that the property name "static" is a strict error. *)
+  let to_key env (loc, kind) =
+    if kind = Static then
+      strict_error_at env (loc, Error.StrictReservedWord);
+
+    Expression.Object.Property.Identifier (loc, { Identifier.
+      name = to_string kind;
+      optional = false;
+      typeAnnotation = None;
+    })
+end
+
 module rec Parse : sig
   val program : env -> Ast.program
   val statement : env -> Ast.Statement.t
@@ -569,7 +647,7 @@ end = struct
           typeParameters;
         })
 
-      in let method_property env start_loc static key =
+      in let method_property env start_loc static access key =
         let value = methodish env start_loc in
         let value = fst value, Type.Function (snd value) in
         fst value, Type.Object.Property.({
@@ -577,6 +655,7 @@ end = struct
           value;
           optional = false;
           static;
+          access;
           _method = true;
         })
 
@@ -587,7 +666,7 @@ end = struct
           static;
         })
 
-      in let property env start_loc static key =
+      in let property env start_loc static access key =
         if not (should_parse_types env)
         then error env Error.UnexpectedTypeAnnotation;
         let optional = Expect.maybe env T_PLING in
@@ -598,10 +677,11 @@ end = struct
           value;
           optional;
           static;
+          access;
           _method = false;
         })
 
-      in let indexer_property env start_loc static =
+      in let indexer_property env start_loc static access =
         Expect.token env T_LBRACKET;
         let id, _ = Parse.identifier_or_reserved_keyword env in
         Expect.token env T_COLON;
@@ -614,6 +694,7 @@ end = struct
           key;
           value;
           static;
+          access;
         })
 
       in let semicolon env =
@@ -624,40 +705,39 @@ end = struct
 
       in let rec properties ~allow_static env (acc, indexers, callProperties) =
         let start_loc = Peek.loc env in
-        let static = allow_static && Expect.maybe env T_STATIC in
+        let modifiers = Modifier.parse_all env in
         match Peek.token env with
         | T_EOF
         | T_RCURLY -> List.rev acc, List.rev indexers, List.rev callProperties
         | T_LBRACKET ->
-          let indexer = indexer_property env start_loc static in
+          let static, access = Modifier.validate env modifiers
+            ~allow_static ~allow_access:true in
+          let indexer = indexer_property env start_loc static access in
           semicolon env;
           properties allow_static env (acc, indexer::indexers, callProperties)
         | T_LESS_THAN
         | T_LPAREN ->
+          let static, _ = Modifier.validate env modifiers
+            ~allow_static ~allow_access:false in
           let call_prop = call_property env start_loc static in
           semicolon env;
           properties allow_static env (acc, indexers, call_prop::callProperties)
         | _ ->
-          let static, (_, key) = match static, Peek.token env with
-          | true, T_COLON ->
-              strict_error_at env (start_loc, Error.StrictReservedWord);
-              let static_key =
-                start_loc, Expression.Object.Property.Identifier ( start_loc, {
-                  Identifier.name = "static";
-                  optional = false;
-                  typeAnnotation = None;
-                }) in
-              false, static_key
+          let modifiers, key = match modifiers, Peek.token env with
+          | hd::tl, T_COLON ->
+              tl, Modifier.to_key env hd
           | _ ->
               Eat.push_lex_mode env NORMAL_LEX;
-              let key = Parse.object_key env in
+              let (_, key) = Parse.object_key env in
               Eat.pop_lex_mode env;
-              static, key
+              modifiers, key
           in
+          let static, access = Modifier.validate env modifiers
+            ~allow_static ~allow_access:true in
           let property = match Peek.token env with
           | T_LESS_THAN
-          | T_LPAREN -> method_property env start_loc static key
-          | _ -> property env start_loc static key in
+          | T_LPAREN -> method_property env start_loc static access key
+          | _ -> property env start_loc static access key in
           semicolon env;
           properties allow_static env (property::acc, indexers, callProperties)
 
@@ -1939,6 +2019,9 @@ end = struct
         | T_VAR
         | T_WHILE
         | T_WITH
+        | T_READWRITE
+        | T_READONLY
+        | T_WRITEONLY
         | T_CONST
         | T_LET
         | T_NULL
@@ -2100,24 +2183,37 @@ end = struct
         end else begin
           (* look for a following identifier to tell whether to parse a function
            * or not *)
+          let modifiers = Modifier.parse_all env in
           let async = Peek.identifier ~i:1 env && Declaration.async env in
-          Property (match async , Declaration.generator env async, key env with
-          | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
-              "get"; _}) as key)) ->
+          let generator = Declaration.generator env async in
+          let modifiers, key = match modifiers, Peek.token env with
+          | hd::tl, T_COLON -> tl, Modifier.to_key env hd
+          | _ -> modifiers, snd (key env) in
+          Property (match async, generator, key with
+          | false, false,
+            Property.Identifier (_, { Ast.Identifier.name = "get"; _}) ->
               (match Peek.token env with
               | T_COLON
               | T_LESS_THAN
-              | T_LPAREN -> init env start_loc key false false
-              | _ -> get env start_loc)
-          | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
-              "set"; _}) as key)) ->
+              | T_LPAREN ->
+                  init env start_loc key modifiers async generator
+              | _ ->
+                  let _, _ = Modifier.validate env modifiers
+                    ~allow_static:false ~allow_access:false in
+                  get env start_loc)
+          | false, false,
+            Property.Identifier (_, { Ast.Identifier.name = "set"; _}) ->
               (match Peek.token env with
               | T_COLON
               | T_LESS_THAN
-              | T_LPAREN -> init env start_loc key false false
-              | _ -> set env start_loc)
-          | async, generator, (_, key) ->
-              init env start_loc key async generator
+              | T_LPAREN ->
+                  init env start_loc key modifiers async generator
+              | _ ->
+                  let _, _ = Modifier.validate env modifiers
+                    ~allow_static:false ~allow_access:false in
+                  set env start_loc)
+          | _ ->
+              init env start_loc key modifiers async generator
           )
         end
       )
@@ -2130,6 +2226,7 @@ end = struct
           key;
           value;
           kind = Get;
+          access = None;
           _method = false;
           shorthand = false;
         })
@@ -2142,11 +2239,14 @@ end = struct
           key;
           value;
           kind = Set;
+          access = None;
           _method = false;
           shorthand = false;
         })
 
-      and init env start_loc key async generator =
+      and init env start_loc key modifiers async generator =
+        let _, access = Modifier.validate env modifiers
+          ~allow_static:false ~allow_access:true in
         Ast.Expression.Object.Property.(
           let value, shorthand, _method =
             match Peek.token env with
@@ -2184,11 +2284,13 @@ end = struct
                 value, false, true
             | _ ->
               Expect.token env T_COLON;
-              Parse.assignment env, false, false in
+              Parse.assignment env, false, false
+          in
           Loc.btwn start_loc (fst value), {
             key;
             value;
             kind = Init;
+            access;
             _method;
             shorthand;
           }
@@ -2320,6 +2422,7 @@ end = struct
           value;
           kind = Get;
           static;
+          access = None;
           decorators;
         })))
 
@@ -2331,15 +2434,18 @@ end = struct
           value;
           kind = Set;
           static;
+          access = None;
           decorators;
         })))
 
-      in let init env start_loc decorators key async generator static =
+      in let init env start_loc decorators key modifiers async generator =
         match Peek.token env with
         | T_COLON
         | T_ASSIGN
         | T_SEMICOLON when not async && not generator ->
           (* Class property with annotation *)
+          let static, access = Modifier.validate env modifiers
+            ~allow_static:true ~allow_access:true in
           let typeAnnotation = Type.annotation_opt env in
           let options = parse_options env in
           let value =
@@ -2357,6 +2463,7 @@ end = struct
             value;
             typeAnnotation;
             static;
+            access;
           })))
         | _ ->
           let typeParameters = Type.type_parameter_declaration env in
@@ -2383,56 +2490,70 @@ end = struct
             returnType;
             typeParameters;
           }) in
-          let kind = Ast.(match key with
-            | Expression.Object.Property.Identifier (_, {
+          let kind, allow_access = Ast.(
+            match Modifier.includes_static modifiers, key with
+            | false, Expression.Object.Property.Identifier (_, {
                 Identifier.name = "constructor";
                 _;
               })
-            | Expression.Object.Property.Literal (_, {
+            | false, Expression.Object.Property.Literal (_, {
                 Literal.value = Literal.String "constructor";
                 _;
               }) ->
-              Class.Method.Constructor
+              Class.Method.Constructor, false
             | _ ->
-              Class.Method.Method) in
+              Class.Method.Method, true) in
+          let static, access = Modifier.validate env modifiers
+            ~allow_static:true ~allow_access in
           Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
             key;
             value;
             kind;
             static;
+            access;
             decorators;
           })))
 
       in fun env -> Ast.Expression.Object.Property.(
         let start_loc = Peek.loc env in
         let decorators = decorator_list env in
-        let static = Expect.maybe env T_STATIC in
+        let modifiers = Modifier.parse_all env in
         let async =
           Peek.token ~i:1 env <> T_LPAREN &&
           Peek.token ~i:1 env <> T_COLON &&
           Declaration.async env in
         let generator = Declaration.generator env async in
-        match (async, generator, key env) with
-        | false, false,
-          (_, (Identifier (_, { Identifier.name = "get"; _ }) as key)) ->
+
+        let modifiers, key = match modifiers, Peek.token env with
+        | hd::tl, T_COLON -> tl, Modifier.to_key env hd
+        | _ -> modifiers, snd (key env) in
+        match async, generator, key with
+        | false, false, Identifier (_, { Identifier.name = "get"; _ }) ->
             (match Peek.token env with
             | T_LESS_THAN
             | T_COLON
             | T_ASSIGN
             | T_SEMICOLON
-            | T_LPAREN -> init env start_loc decorators key async generator static
-            | _ -> get env start_loc decorators static )
-        | false, false,
-          (_, (Identifier (_, { Identifier.name = "set"; _ }) as key)) ->
+            | T_LPAREN ->
+                init env start_loc decorators key modifiers async generator
+            | _ ->
+                let static, _ = Modifier.validate env modifiers
+                  ~allow_static:true ~allow_access:false in
+                get env start_loc decorators static)
+        | false, false, Identifier (_, { Identifier.name = "set"; _ }) ->
             (match Peek.token env with
             | T_LESS_THAN
             | T_COLON
             | T_ASSIGN
             | T_SEMICOLON
-            | T_LPAREN -> init env start_loc decorators key async generator static
-            | _ -> set env start_loc decorators static)
-        | _, _, (_, key) ->
-            init env start_loc decorators key async generator static
+            | T_LPAREN ->
+                init env start_loc decorators key modifiers async generator
+            | _ ->
+                let static, _ = Modifier.validate env modifiers
+                  ~allow_static:true ~allow_access:false in
+                set env start_loc decorators static)
+        | _ ->
+            init env start_loc decorators key modifiers async generator
       )
 
     let class_declaration env decorators =

@@ -40,6 +40,11 @@ end with type t = Impl.t) = struct
     | Some v -> f v
     | None -> null
 
+  let access = function
+    | ReadWrite -> string "ReadWrite"
+    | ReadOnly -> string "ReadOnly"
+    | WriteOnly -> string "WriteOnly"
+
   let position p =
     obj [|
       "line", int p.Loc.line;
@@ -650,25 +655,30 @@ end with type t = Impl.t) = struct
     | Method m -> class_method m
     | Property p -> class_property p)
 
-  and class_method (loc, method_) =
-    let { Class.Method.key; value; kind; static; decorators; } = method_ in
-    let key, computed = Expression.Object.Property.(match key with
-      | Literal lit -> literal lit, false
-      | Identifier id -> identifier id, false
-      | Computed expr -> expression expr, true) in
-    let kind = Class.Method.(match kind with
+  and class_method_key = Expression.Object.Property.(function
+    | Literal lit -> literal lit, false
+    | Identifier id -> identifier id, false
+    | Computed expr -> expression expr, true
+  )
+
+  and class_method (loc, method_) = Class.Method.(
+    let key, computed = class_method_key method_.key in
+    let kind = match method_.kind with
       | Constructor -> "constructor"
       | Method -> "method"
       | Get -> "get"
-      | Set -> "set") in
+      | Set -> "set"
+    in
     node "MethodDefinition" loc [|
       "key", key;
-      "value", function_expression value;
+      "value", function_expression method_.value;
       "kind", string kind;
-      "static", bool static;
+      "static", bool method_.static;
       "computed", bool computed;
-      "decorators", array_of_list expression decorators;
+      "access", option access method_.access;
+      "decorators", array_of_list expression method_.decorators;
     |]
+  )
 
   and class_property (loc, prop) = Class.Property.(
     let key, computed = (match prop.key with
@@ -681,6 +691,7 @@ end with type t = Impl.t) = struct
       "typeAnnotation", option type_annotation prop.typeAnnotation;
       "computed", bool computed;
       "static", bool prop.static;
+      "access", option access prop.access;
     |]
   )
 
@@ -750,6 +761,7 @@ end with type t = Impl.t) = struct
         "key", key;
         "value", expression prop.value;
         "kind", string kind;
+        "access", option access prop.access;
         "method", bool prop._method;
         "shorthand", bool prop.shorthand;
         "computed", bool computed;
@@ -941,6 +953,7 @@ end with type t = Impl.t) = struct
       "value", _type prop.value;
       "optional", bool prop.optional;
       "static", bool prop.static;
+      "access", option access prop.access;
     |]
   )
 

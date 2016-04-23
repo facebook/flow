@@ -392,7 +392,11 @@ let rec convert cx type_params_map = Ast.Type.(function
 
 | loc, Object { Object.properties; indexers; callProperties; } ->
   let props_map = List.fold_left (
-    fun props_map (loc, { Object.Property.key; value; optional; _ }) ->
+    fun props_map (loc, { Object.Property.key; value; optional; access; _ }) ->
+      Option.iter access ~f:(fun _ ->
+        let msg = "access modifiers not yet supported" in
+        FlowError.add_error cx (loc, [msg])
+      );
       (match key with
         | Ast.Expression.Object.Property.Literal
             (_, { Ast.Literal.value = Ast.Literal.String name; _ })
@@ -410,7 +414,7 @@ let rec convert cx type_params_map = Ast.Type.(function
           let msg = "Unsupported key in object type" in
           FlowError.add_error cx (loc, [msg]);
           props_map
-    )
+      )
   ) SMap.empty properties
   in
   let props_map = match callProperties with
