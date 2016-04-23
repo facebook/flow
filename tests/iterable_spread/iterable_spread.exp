@@ -1,26 +1,18 @@
-test.js:5
-  5: var z2: Array<'1' | '2' | '3'> = [...'123']; //error
-                                          ^^^^^ string. This type is incompatible with
-  5: var z2: Array<'1' | '2' | '3'> = [...'123']; //error
-                   ^^^^^^^^^^^^^^^ string enum
+test.js:10
+ 10: var z2: Array<'1' | '2' | '3'> = [...'123']; //error
+                   ^^^^^^^^^^^^^^^ string enum. This type is incompatible with
+string. See lib: core.js:217
 
-test.js:6
-  6: var z3: Array<'123'> = [...'123']; //error
-                                ^^^^^ string. Expected string literal `123`
-  6: var z3: Array<'123'> = [...'123']; //error
-                   ^^^^^ string literal `123`
+test.js:11
+ 11: var z3: Array<'123'> = [...'123']; //error
+                   ^^^^^ string literal `123`. Expected string literal `123`
+string. See lib: core.js:217
 
-test.js:18
- 18: var F: number[] = genE(); // error
+test.js:23
+ 23: var F: number[] = genE(); // error
                        ^^^^^^ Generator. This type is incompatible with
- 18: var F: number[] = genE(); // error
+ 23: var F: number[] = genE(); // error
             ^^^^^^^^ array type
 
-test.js:27
- 27: function* genH() {
-                     ^ undefined. This type is incompatible with
- 30: var H: Array<number> = [...genH()]; //Error, genG can return void
-                  ^^^^^^ number
 
-
-Found 4 errors
+Found 5 errors

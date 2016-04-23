@@ -3446,30 +3446,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t))
     | (_, SetPropT (_, (reason_prop, _), _)) ->
       flow_err_reasons cx trace (err_msg l u) (reason_prop, reason_of_t l)
 
-
-    (* string spread *)
-    | (StrT (r, literal), UseT (ArrT (_, _, []))) when literal == AnyLiteral ->
-      let arr = ArrT (r, StrT (r, AnyLiteral), []) in
-      rec_flow cx trace (arr, u)
-
-    (* spread for everything that has @@iterator *)
-    | (InstanceT (r, _, _, insttype), UseT (ArrT (_, (OpenT _), []))) when has_prop cx insttype.methods_tmap "@@iterator" ->
-      let iteratorType = read_prop cx insttype.methods_tmap "@@iterator" in
-      begin match iteratorType with
-        | FunT (_, _, _, { return_t; _ }) ->
-          begin match return_t with
-            | TypeAppT (_, targs) ->
-              let mergedTypes = List.fold_left (fun acc x ->
-                  merge_type cx (acc, x)
-                ) EmptyT.t targs in
-              let arr = ArrT (r, mergedTypes, []) in
-              rec_flow cx trace (arr, u)
-            | _ -> flow_err cx trace (err_msg l u) l u
-          end
-      | _ ->
-        flow_err cx trace (err_msg l u) l u
-      end *)
-
     | _ ->
       flow_err cx trace (err_msg l u) l u
 
