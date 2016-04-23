@@ -2350,7 +2350,7 @@ end = struct
               else None
             ) else None in
           let end_loc = Peek.loc env in
-          if Expect.maybe env T_SEMICOLON then begin
+          if Expect.maybe env T_SEMICOLON then () else begin
             if Peek.token ~i:1 env == T_LBRACKET || Peek.token ~i:1 env == T_LPAREN then error_unexpected env
           end;
           let loc = Loc.btwn start_loc end_loc in
