@@ -2,6 +2,7 @@
 
 class Foo {
   annotationOnly: string;
-  initOnly = 'asdf';
+  initOnly = 'asdf'
   initWithAnnotation: string = 'asdf';
+  [computed]: string;
 }
