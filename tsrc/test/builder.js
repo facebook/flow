@@ -159,7 +159,10 @@ export class TestBuilder {
       );
     }
 
-    const [err, stdout, stderr] = await execManual(cmd, {cwd: __dirname});
+    const [err, stdout, stderr] = await execManual(
+      cmd,
+      {cwd: __dirname, maxBuffer: 1024 * 1024},
+    );
 
     // 0 - no errors
     // 2 - Some errors
