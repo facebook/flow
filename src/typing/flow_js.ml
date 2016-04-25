@@ -4220,6 +4220,15 @@ and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
   in
   instantiate_poly_with_targs cx trace reason_op (xs,t) ts
 
+(* instantiate each param of a polymorphic type with its upper bound *)
+and instantiate_poly_param_upper_bounds cx typeparams =
+  let _, revlist = List.fold_left (
+    fun (map, list) { name; bound; _ } ->
+      let t = subst cx map bound in
+      SMap.add name t map, t :: list
+    ) (SMap.empty, []) typeparams in
+  List.rev revlist
+
 (* Fix a this-abstracted instance type by tying a "knot": assume that the
    fixpoint is some `this`, substitute it as This in the instance type, and
    finally unify it with the instance type. Return the class type wrapping the
@@ -5606,6 +5615,19 @@ and rec_unify cx trace t1 t2 =
 
   | OpenT (_, id), t | t, OpenT (_, id) when ok_unify t ->
     resolve_id cx trace id t
+
+  | PolyT (params1, t1), PolyT (params2, t2)
+    when List.length params1 = List.length params2 ->
+    (** for equal-arity polymorphic types, unify param upper bounds
+        with each other, then instances parameterized by these *)
+    let args1 = instantiate_poly_param_upper_bounds cx params1 in
+    let args2 = instantiate_poly_param_upper_bounds cx params2 in
+    List.iter2 (rec_unify cx trace) args1 args2;
+    let inst1 = let r = reason_of_t t1 in
+      instantiate_poly_with_targs cx trace r (params1, t1) args1 in
+    let inst2 = let r = reason_of_t t2 in
+      instantiate_poly_with_targs cx trace r (params2, t2) args2 in
+    rec_unify cx trace inst1 inst2
 
   | ArrT (_, t1, ts1), ArrT (_, t2, ts2) ->
     array_unify cx trace (ts1, t1, ts2, t2)
