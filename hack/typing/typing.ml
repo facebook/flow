@@ -1947,15 +1947,18 @@ and dispatch_call p env call_type (fpos, fun_expr as e) el uel =
        (match el, uel with
          | [(_, Array_get (ea, Some _))], [] ->
            let env, ty = expr env ea in
-           Errors.try_
-             (fun () -> SubType.sub_type
-                          env (Reason.Rnone, Tarraykind AKany) ty)
-             (fun _ ->
-              let env, (r, ety) = Env.expand_type env ty in
-              Errors.unset_nonidx_in_strict
-                p
-                (Reason.to_string ("This is " ^ Typing_print.error ety) r);
-              env)
+           if List.exists ~f:(fun super -> SubType.is_sub_type env super ty) [
+             (Reason.Rnone, (Tclass ((Pos.none, SN.Collections.cDict),
+               [(Reason.Rnone, Tany); (Reason.Rnone, Tany)])));
+             (Reason.Rnone, Tarraykind AKany)
+           ] then env
+           else begin
+             let env, (r, ety) = Env.expand_type env ty in
+             Errors.unset_nonidx_in_strict
+               p
+               (Reason.to_string ("This is " ^ Typing_print.error ety) r);
+             env
+           end
          | _ -> Errors.unset_nonidx_in_strict p []; env)
        else env in
       (match el with

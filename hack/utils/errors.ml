@@ -1318,7 +1318,7 @@ let isset_empty_in_strict pos name =
 
 let unset_nonidx_in_strict pos msgs =
   add_list Typing.unset_nonidx_in_strict
-    ([pos, "In strict mode, unset is banned except on array indexing"] @
+    ([pos, "In strict mode, unset is banned except on array or dict indexing"] @
      msgs)
 
 let unpacking_disallowed_builtin_function pos name =
