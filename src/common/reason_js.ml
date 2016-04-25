@@ -145,6 +145,8 @@ let json_of_loc loc = Hh_json.(Loc.(
     | None -> JSON_Null);
     "start", JSON_Object [
       "line", int_ loc.start.line;
+      (* It's not ideal that we use a different column numbering system here
+       * versus other places (like the estree translator) *)
       "column", int_ (loc.start.column + 1);
       "offset", int_ loc.start.offset;
     ];

@@ -7,7 +7,7 @@ export type FlowResult = {
   errors: Array<FlowError>,
   flowVersion: string,
 };
-type FlowError = {
+export type FlowError = {
   kind: string,
   level: string,
   message: Array<FlowMessage>,
@@ -15,7 +15,7 @@ type FlowError = {
   operation?: FlowMessage,
   extra?: FlowExtra,
 };
-type FlowMessage = {
+export type FlowMessage = {
   descr: string,
   type: "Blame" | "Comment",
   context?: ?string,
@@ -26,7 +26,7 @@ type FlowExtra = Array<{
   message: Array<FlowMessage>,
   children: FlowExtra,
 }>
-type FlowLoc = {
+export type FlowLoc = {
   source: ?string,
   type: ?("LibFile" | "SourceFile" | "JsonFile" | "Builtin"),
   start: FlowPos,
@@ -85,9 +85,14 @@ export function prettyPrint(result: FlowResult): string {
   return result.errors.map(prettyPrintError).join("\n\n");
 }
 
-function prettyPrintError(error: FlowError): string {
+export function mainLocOfError(error: FlowError): ?FlowLoc {
+  const { operation, message } = error;
+  return operation && operation.loc || message[0].loc;
+}
+
+export function mergedMessagesOfError(error: FlowError): Array<FlowMessage> {
   const { level, kind, message, operation, trace, extra } = error;
-  let mainLoc = operation && operation.loc || message[0].loc;
+  let mainLoc = mainLocOfError(error);
   let messages = [].concat(
     getHeader(mainLoc),
     getKindMessage(kind, level, message),
@@ -98,7 +103,7 @@ function prettyPrintError(error: FlowError): string {
   );
   const mainFile = mainLoc && mainLoc.source || "[No file]";
   // Merge comments into blames
-  messages = messages.reduce((acc, message) => {
+  return messages.reduce((acc, message) => {
     const {descr, loc, type} = message;
     if (loc != null || acc.length == 0 || type == "Blame") {
       acc.push(message);
@@ -108,7 +113,19 @@ function prettyPrintError(error: FlowError): string {
     }
     return acc;
   }, []);
+}
+
+export function prettyPrintError(error: FlowError): string {
+  let mainLoc = mainLocOfError(error);
+  const mainFile = mainLoc && mainLoc.source || "[No file]";
+  const messages = mergedMessagesOfError(error);
   return messages.map(prettyPrintMessage.bind(null, mainFile)).join("\n");
+}
+
+export function prettyPrintMessageOfError(error: FlowError, message: FlowMessage): string {
+  let mainLoc = mainLocOfError(error);
+  const mainFile = mainLoc && mainLoc.source || "[No file]";
+  return prettyPrintMessage(mainFile, message);
 }
 
 function mkComment(descr: string): FlowMessage {
