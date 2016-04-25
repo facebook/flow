@@ -514,10 +514,12 @@ let parse content =
   end
 
 let go_from_ast ast line char =
-  let empty = LocalMap.make line char in
-  let visitor = new local_finding_visitor in
-  let localmap = visitor#on_program empty ast in
-  LocalMap.results localmap
+  try
+    let empty = LocalMap.make line char in
+    let visitor = new local_finding_visitor in
+    let localmap = visitor#on_program empty ast in
+    LocalMap.results localmap
+  with _ -> [] (* TODO (ericlippert, #10973485) *)
 
  (**
   * This is the entrypoint to this module. The contents of a file, and a
