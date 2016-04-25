@@ -7,27 +7,27 @@ conversion.js:10
   function type. See lib: core.js:28
   Error:
    10: (Object(undefined): Number); // error
-               ^^^^^^^^^ undefined. This type is incompatible with
-  string. See lib: core.js:28
+        ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+   10: (Object(undefined): Number); // error
+                           ^^^^^^ Number
   Member 2:
   function type. See lib: core.js:29
   Error:
    10: (Object(undefined): Number); // error
                ^^^^^^^^^ undefined. This type is incompatible with
-  number. See lib: core.js:29
+  boolean. See lib: core.js:29
   Member 3:
   function type. See lib: core.js:30
   Error:
    10: (Object(undefined): Number); // error
                ^^^^^^^^^ undefined. This type is incompatible with
-  boolean. See lib: core.js:30
+  number. See lib: core.js:30
   Member 4:
   function type. See lib: core.js:31
   Error:
    10: (Object(undefined): Number); // error
-        ^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
-   10: (Object(undefined): Number); // error
-                           ^^^^^^ Number
+               ^^^^^^^^^ undefined. This type is incompatible with
+  string. See lib: core.js:31
   Member 5:
   polymorphic type: function type. See lib: core.js:32
   Error:
@@ -45,26 +45,26 @@ conversion.js:18
   Error:
    18: var z = Object(123); // error (next line makes this not match any signatures)
                       ^^^ number. This type is incompatible with
-  string. See lib: core.js:28
+  undefined. See lib: core.js:28
   Member 2:
   function type. See lib: core.js:29
+  Error:
+   18: var z = Object(123); // error (next line makes this not match any signatures)
+                      ^^^ number. This type is incompatible with
+  boolean. See lib: core.js:29
+  Member 3:
+  function type. See lib: core.js:30
   Error:
    19: (z.charAt(0): string);
           ^^^^^^ property `charAt`. Property not found in
    19: (z.charAt(0): string);
         ^ Number
-  Member 3:
-  function type. See lib: core.js:30
-  Error:
-   18: var z = Object(123); // error (next line makes this not match any signatures)
-                      ^^^ number. This type is incompatible with
-  boolean. See lib: core.js:30
   Member 4:
   function type. See lib: core.js:31
   Error:
    18: var z = Object(123); // error (next line makes this not match any signatures)
                       ^^^ number. This type is incompatible with
-  undefined. See lib: core.js:31
+  string. See lib: core.js:31
   Member 5:
   polymorphic type: function type. See lib: core.js:32
   Error:

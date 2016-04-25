@@ -42,8 +42,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -70,8 +70,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -93,8 +93,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -106,8 +106,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -119,8 +119,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     }
@@ -178,10 +178,28 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 217,
-      "endline": 217,
+      "line": 234,
+      "endline": 234,
       "start": 5,
       "end": 34
+    },
+    {
+      "name": "anchor",
+      "type": "(name: string) => string",
+      "func_details": {
+        "return_type": "string",
+        "params": [
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      },
+      "path": "[LIB] core.js",
+      "line": 235,
+      "endline": 235,
+      "start": 5,
+      "end": 32
     },
     {
       "name": "charAt",
@@ -196,8 +214,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 218,
-      "endline": 218,
+      "line": 236,
+      "endline": 236,
       "start": 5,
       "end": 31
     },
@@ -214,8 +232,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 219,
-      "endline": 219,
+      "line": 237,
+      "endline": 237,
       "start": 5,
       "end": 37
     },
@@ -232,8 +250,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 220,
-      "endline": 220,
+      "line": 238,
+      "endline": 238,
       "start": 5,
       "end": 38
     },
@@ -250,8 +268,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 221,
-      "endline": 221,
+      "line": 239,
+      "endline": 239,
       "start": 5,
       "end": 45
     },
@@ -268,8 +286,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 222,
-      "endline": 222,
+      "line": 240,
+      "endline": 240,
       "start": 5,
       "end": 37
     },
@@ -290,8 +308,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 230,
-      "endline": 230,
+      "line": 241,
+      "endline": 241,
       "start": 5,
       "end": 62
     },
@@ -312,8 +330,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 223,
-      "endline": 223,
+      "line": 242,
+      "endline": 242,
       "start": 5,
       "end": 62
     },
@@ -334,8 +352,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 224,
-      "endline": 224,
+      "line": 243,
+      "endline": 243,
       "start": 5,
       "end": 60
     },
@@ -356,8 +374,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 225,
-      "endline": 225,
+      "line": 244,
+      "endline": 244,
       "start": 5,
       "end": 64
     },
@@ -366,10 +384,28 @@ valueOf () => Object
       "type": "number",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 243,
-      "endline": 243,
+      "line": 263,
+      "endline": 263,
       "start": 13,
       "end": 18
+    },
+    {
+      "name": "link",
+      "type": "(href: string) => string",
+      "func_details": {
+        "return_type": "string",
+        "params": [
+          {
+            "name": "href",
+            "type": "string"
+          }
+        ]
+      },
+      "path": "[LIB] core.js",
+      "line": 245,
+      "endline": 245,
+      "start": 5,
+      "end": 30
     },
     {
       "name": "localeCompare",
@@ -384,8 +420,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 226,
-      "endline": 226,
+      "line": 246,
+      "endline": 246,
       "start": 5,
       "end": 39
     },
@@ -402,8 +438,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 227,
-      "endline": 227,
+      "line": 247,
+      "endline": 247,
       "start": 5,
       "end": 50
     },
@@ -420,8 +456,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 228,
-      "endline": 228,
+      "line": 248,
+      "endline": 248,
       "start": 5,
       "end": 38
     },
@@ -438,8 +474,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 231,
-      "endline": 231,
+      "line": 249,
+      "endline": 249,
       "start": 5,
       "end": 33
     },
@@ -460,8 +496,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 232,
-      "endline": 232,
+      "line": 250,
+      "endline": 250,
       "start": 5,
       "end": 124
     },
@@ -478,8 +514,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 233,
-      "endline": 233,
+      "line": 251,
+      "endline": 251,
       "start": 5,
       "end": 43
     },
@@ -500,8 +536,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 234,
-      "endline": 234,
+      "line": 252,
+      "endline": 252,
       "start": 5,
       "end": 47
     },
@@ -522,8 +558,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 235,
-      "endline": 235,
+      "line": 253,
+      "endline": 253,
       "start": 5,
       "end": 68
     },
@@ -544,8 +580,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 229,
-      "endline": 229,
+      "line": 254,
+      "endline": 254,
       "start": 5,
       "end": 64
     },
@@ -566,8 +602,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 244,
-      "endline": 244,
+      "line": 255,
+      "endline": 255,
       "start": 5,
       "end": 49
     },
@@ -588,8 +624,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 236,
-      "endline": 236,
+      "line": 256,
+      "endline": 256,
       "start": 5,
       "end": 50
     },
@@ -601,8 +637,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 238,
-      "endline": 238,
+      "line": 257,
+      "endline": 257,
       "start": 5,
       "end": 31
     },
@@ -614,8 +650,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 240,
-      "endline": 240,
+      "line": 258,
+      "endline": 258,
       "start": 5,
       "end": 31
     },
@@ -627,8 +663,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 237,
-      "endline": 237,
+      "line": 259,
+      "endline": 259,
       "start": 5,
       "end": 25
     },
@@ -640,8 +676,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 239,
-      "endline": 239,
+      "line": 260,
+      "endline": 260,
       "start": 5,
       "end": 25
     },
@@ -653,8 +689,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 241,
-      "endline": 241,
+      "line": 261,
+      "endline": 261,
       "start": 5,
       "end": 18
     },
@@ -666,8 +702,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 242,
-      "endline": 242,
+      "line": 262,
+      "endline": 262,
       "start": 5,
       "end": 21
     }
@@ -696,8 +732,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 96,
-      "endline": 96,
+      "line": 125,
+      "endline": 125,
       "start": 5,
       "end": 50
     },
@@ -714,8 +750,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 95,
-      "endline": 95,
+      "line": 126,
+      "endline": 126,
       "start": 5,
       "end": 44
     },
@@ -732,8 +768,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 97,
-      "endline": 97,
+      "line": 127,
+      "endline": 127,
       "start": 5,
       "end": 43
     },
@@ -750,8 +786,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 98,
-      "endline": 98,
+      "line": 128,
+      "endline": 128,
       "start": 5,
       "end": 36
     },
@@ -763,8 +799,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 99,
-      "endline": 99,
+      "line": 129,
+      "endline": 129,
       "start": 5,
       "end": 21
     }
@@ -788,8 +824,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 91,
-      "endline": 91,
+      "line": 106,
+      "endline": 106,
       "start": 5,
       "end": 22
     }
@@ -828,8 +864,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -846,8 +882,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -859,8 +895,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -872,8 +908,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -885,8 +921,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     }
@@ -915,8 +951,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -933,8 +969,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -946,8 +982,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -959,8 +995,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -972,8 +1008,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     }
@@ -1006,18 +1042,18 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 80,
-      "endline": 80,
-      "start": 12,
-      "end": 35
+      "line": 95,
+      "endline": 95,
+      "start": 14,
+      "end": 37
     },
     {
       "name": "arguments",
       "type": "any",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 83,
-      "endline": 83,
+      "line": 98,
+      "endline": 98,
       "start": 16,
       "end": 18
     },
@@ -1038,8 +1074,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 81,
-      "endline": 81,
+      "line": 96,
+      "endline": 96,
       "start": 11,
       "end": 33
     },
@@ -1060,8 +1096,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 82,
-      "endline": 82,
+      "line": 97,
+      "endline": 97,
       "start": 11,
       "end": 33
     },
@@ -1070,8 +1106,8 @@ valueOf () => Object
       "type": "null | Function",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 84,
-      "endline": 84,
+      "line": 99,
+      "endline": 99,
       "start": 13,
       "end": 27
     },
@@ -1088,8 +1124,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -1098,8 +1134,8 @@ valueOf () => Object
       "type": "number",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 85,
-      "endline": 85,
+      "line": 100,
+      "endline": 100,
       "start": 13,
       "end": 18
     },
@@ -1108,8 +1144,8 @@ valueOf () => Object
       "type": "string",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 86,
-      "endline": 86,
+      "line": 101,
+      "endline": 101,
       "start": 11,
       "end": 16
     },
@@ -1126,8 +1162,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -1139,8 +1175,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -1152,8 +1188,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -1165,8 +1201,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     }
@@ -1199,18 +1235,18 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 80,
-      "endline": 80,
-      "start": 12,
-      "end": 35
+      "line": 95,
+      "endline": 95,
+      "start": 14,
+      "end": 37
     },
     {
       "name": "arguments",
       "type": "any",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 83,
-      "endline": 83,
+      "line": 98,
+      "endline": 98,
       "start": 16,
       "end": 18
     },
@@ -1231,8 +1267,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 81,
-      "endline": 81,
+      "line": 96,
+      "endline": 96,
       "start": 11,
       "end": 33
     },
@@ -1253,8 +1289,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 82,
-      "endline": 82,
+      "line": 97,
+      "endline": 97,
       "start": 11,
       "end": 33
     },
@@ -1263,8 +1299,8 @@ valueOf () => Object
       "type": "null | Function",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 84,
-      "endline": 84,
+      "line": 99,
+      "endline": 99,
       "start": 13,
       "end": 27
     },
@@ -1281,8 +1317,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -1291,8 +1327,8 @@ valueOf () => Object
       "type": "number",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 85,
-      "endline": 85,
+      "line": 100,
+      "endline": 100,
       "start": 13,
       "end": 18
     },
@@ -1301,8 +1337,8 @@ valueOf () => Object
       "type": "string",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 86,
-      "endline": 86,
+      "line": 101,
+      "endline": 101,
       "start": 11,
       "end": 16
     },
@@ -1319,8 +1355,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -1332,8 +1368,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -1345,8 +1381,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -1358,8 +1394,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     }
@@ -1436,8 +1472,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 96,
-      "endline": 96,
+      "line": 125,
+      "endline": 125,
       "start": 5,
       "end": 50
     },
@@ -1454,8 +1490,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 95,
-      "endline": 95,
+      "line": 126,
+      "endline": 126,
       "start": 5,
       "end": 44
     },
@@ -1472,8 +1508,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 97,
-      "endline": 97,
+      "line": 127,
+      "endline": 127,
       "start": 5,
       "end": 43
     },
@@ -1490,8 +1526,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 98,
-      "endline": 98,
+      "line": 128,
+      "endline": 128,
       "start": 5,
       "end": 36
     },
@@ -1503,8 +1539,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 99,
-      "endline": 99,
+      "line": 129,
+      "endline": 129,
       "start": 5,
       "end": 21
     }
@@ -1543,8 +1579,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -1561,8 +1597,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -1574,8 +1610,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -1587,8 +1623,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -1600,8 +1636,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     }
@@ -1648,8 +1684,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -1676,8 +1712,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -1689,8 +1725,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -1702,8 +1738,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -1715,8 +1751,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     },
@@ -1755,8 +1791,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -1773,8 +1809,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -1786,8 +1822,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -1799,8 +1835,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -1812,8 +1848,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     },
@@ -1852,8 +1888,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 50,
-      "endline": 50,
+      "line": 52,
+      "endline": 52,
       "start": 5,
       "end": 38
     },
@@ -1870,8 +1906,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 51,
-      "endline": 51,
+      "line": 53,
+      "endline": 53,
       "start": 5,
       "end": 44
     },
@@ -1883,8 +1919,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 52,
-      "endline": 52,
+      "line": 54,
+      "endline": 54,
       "start": 5,
       "end": 28
     },
@@ -1896,8 +1932,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 53,
-      "endline": 53,
+      "line": 55,
+      "endline": 55,
       "start": 5,
       "end": 22
     },
@@ -1909,8 +1945,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 54,
-      "endline": 54,
+      "line": 56,
+      "endline": 56,
       "start": 5,
       "end": 21
     },

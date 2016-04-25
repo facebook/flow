@@ -63,7 +63,7 @@ object_prototype.js:38
 object_prototype.js:39
  39: var xToString2 : () => number = x.toString; // error
                             ^^^^^^ number. This type is incompatible with
-string. See lib: core.js:53
+string. See lib: core.js:55
 
 object_prototype.js:43
  43: var yToString : number = y.toString; // error
@@ -82,14 +82,14 @@ object_prototype.js:51
       ^^^^^^^^^^^^^^^^^^^^ call of method `toString`
  51: (123).toString('foo'); // error
                     ^^^^^ string. This type is incompatible with
-number. See lib: core.js:98
+number. See lib: core.js:128
 
 object_prototype.js:52
  52: (123).toString(null); // error
       ^^^^^^^^^^^^^^^^^^^ call of method `toString`
  52: (123).toString(null); // error
                     ^^^^ null. This type is incompatible with
-number. See lib: core.js:98
+number. See lib: core.js:128
 
 object_prototype.js:71
  71: var xHasOwnProperty : number = x.hasOwnProperty; // error
@@ -100,7 +100,7 @@ object_prototype.js:71
 object_prototype.js:72
  72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
                                               ^^^^^^ number. This type is incompatible with
-boolean. See lib: core.js:50
+boolean. See lib: core.js:52
 
 object_prototype.js:76
  76: var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -117,7 +117,7 @@ object_prototype.js:96
 object_prototype.js:97
  97: var xPropertyIsEnumerable2 : (prop: string) => number =
                                                     ^^^^^^ number. This type is incompatible with
-boolean. See lib: core.js:51
+boolean. See lib: core.js:53
 
 object_prototype.js:102
 102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -146,7 +146,7 @@ object_prototype.js:150
 object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-string. See lib: core.js:280
+string. See lib: core.js:340
 
 object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error
