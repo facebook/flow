@@ -3,13 +3,11 @@
 //= require codemirror/mode/javascript/javascript
 //= require codemirror/mode/xml/xml
 //= require codemirror/mode/jsx/jsx
-//= require base64-js/lib/b64
-//= require text-encoder-lite-module/index
+//= require lz-string
 //= depend_on flow.js
 
 import CodeMirror from "codemirror/lib/codemirror"
-import base64 from "base64-js/lib/b64"
-import {TextEncoderLite, TextDecoderLite} from "text-encoder-lite-module/index"
+import LZString from "lz-string"
 import flow from "flow"
 
 function get(url) {
@@ -103,12 +101,11 @@ function foo(x: ?number): string {
 `;
 
 function getHashedValue(hash) {
-  if (hash[0] !== '#') return null;
-  const encoded = hash.slice(1);
-  if (encoded.match(/^[a-zA-Z0-9+/=_-]+$/)) {
-    const byteArray = base64.toByteArray(encoded);
-    const value = (new TextDecoderLite()).decode(byteArray);
-    return value;
+  if (hash[0] !== '#' || hash.length < 2) return null;
+  const version = hash.slice(1, 2);
+  const encoded = hash.slice(2);
+  if (version === '0' && encoded.match(/^[a-zA-Z0-9+/=_-]+$/)) {
+    return LZString.decompressFromEncodedURIComponent(encoded);
   }
   return null;
 }
@@ -129,13 +126,10 @@ exports.createEditor = function createEditor(domNode, errorsNode) {
       lint: { getAnnotations, errorsNode }
     });
 
-    const encoder = new TextEncoderLite();
-
     editor.on('changes', () => {
       const value = editor.getValue();
-      const byteArray = encoder.encode(value);
-      const encoded = base64.fromByteArray(byteArray);
-      location.hash = `#${encoded}`;
+      const encoded = LZString.compressToEncodedURIComponent(value);
+      location.hash = `#0${encoded}`;
     });
   });
 }

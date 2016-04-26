@@ -11,7 +11,7 @@ _site/
 .jekyll-metadata
 
 # Bower-installed dependencies
-_assets/third-party
+_assets/third-party-bower
 
 # Flow build artifacts are copied here:
 _assets/gen

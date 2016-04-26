@@ -14,14 +14,13 @@
     "node_modules",
     "bower_components",
     "_assets/third-party",
+    "_assets/third-party-bower",
     "test",
     "tests"
   ],
   "dependencies": {
     "jquery": "^2.2.2",
     "requirejs": "^2.2.0",
-    "codemirror": "^5.13.2",
-    "base64-js": "^1.1.2",
-    "text-encoder-lite-module": "https://github.com/rschuchart/TextEncoderLiteModule.git#724ced2cdb8f19e023958a71bc5509fa84d9b0df"
+    "codemirror": "^5.13.2"
   }
 }

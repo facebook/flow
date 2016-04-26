@@ -54,4 +54,5 @@ assets:
     - _assets/js
     - _assets/images
     - _assets/third-party
+    - _assets/third-party-bower
     - _assets/gen
