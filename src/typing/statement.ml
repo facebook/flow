@@ -20,7 +20,6 @@ module Env = Env_js
 module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
-module FuncParams = Func_params
 
 open Utils_js
 open Reason_js
@@ -105,7 +104,7 @@ type class_method_signature = {
   meth_reason: reason;
   meth_tparams: Type.typeparam list;
   meth_tparams_map: Type.t SMap.t;
-  meth_params: FuncParams.t;
+  meth_params: Func_params.t;
   meth_return_type: Type.t;
 }
 
@@ -4662,7 +4661,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         meth_reason = replace_reason "default constructor" reason_c;
         meth_tparams = [];
         meth_tparams_map = SMap.empty;
-        meth_params = FuncParams.empty;
+        meth_params = Func_params.empty;
         meth_return_type = VoidT.t;
       }
   in
@@ -4912,7 +4911,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
       Flow.generate_tests cx meth_reason meth_tparams (fun map_ ->
         let tparams_map =
           meth_tparams_map |> SMap.map (Flow.subst cx map_) in
-        let meth_params = FuncParams.subst cx map_ meth_params in
+        let meth_params = Func_params.subst cx map_ meth_params in
         let return_type = Flow.subst cx map_ meth_return_type in
         (* determine if we are in a derived constructor *)
         let derived_ctor = match super with
@@ -4990,8 +4989,8 @@ and mk_methodtype method_sig =
     Flow.dummy_static method_sig.meth_reason,
     Flow.dummy_prototype,
     Flow.mk_functiontype
-      (FuncParams.tlist method_sig.meth_params)
-      ?params_names:(Some (FuncParams.names method_sig.meth_params))
+      (Func_params.tlist method_sig.meth_params)
+      ?params_names:(Some (Func_params.names method_sig.meth_params))
       method_sig.meth_return_type
   ) in
   if (method_sig.meth_tparams = [])
@@ -5099,7 +5098,7 @@ and mk_class = Ast.Class.(
         SMap.map (Flow.subst cx map_) method_sig.meth_tparams_map;
 
       (* params = (x: Y), ret = T *)
-      meth_params = FuncParams.subst cx map_ method_sig.meth_params;
+      meth_params = Func_params.subst cx map_ method_sig.meth_params;
       meth_return_type = Flow.subst cx map_ method_sig.meth_return_type;
     } in
 
@@ -5398,7 +5397,7 @@ and function_decl id cx type_params_map (reason:reason) ~kind
   Flow.generate_tests cx reason typeparams (fun map_ ->
     let type_params_map =
       type_params_map |> SMap.map (Flow.subst cx map_) in
-    let params = FuncParams.subst cx map_ params in
+    let params = Func_params.subst cx map_ params in
     let ret = Flow.subst cx map_ ret in
 
     let yield, next = if kind = Scope.Generator then (
@@ -5476,10 +5475,10 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
 
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
-  params |> FuncParams.iter Scope.(fun (name, t, loc) ->
+  params |> Func_params.iter Scope.(fun (name, t, loc) ->
     let reason = mk_reason (spf "param `%s`" name) loc in
     (* add default value as lower bound, if provided *)
-    FuncParams.with_default name (fun default ->
+    Func_params.with_default name (fun default ->
       let default_t = mk_default cx type_params_map reason default in
       Flow.flow_t cx (default_t, t)
     ) params;
@@ -5580,11 +5579,11 @@ and mk_params cx type_params_map (params, defaults, rest) =
     else defaults
   in
 
-  let params = List.fold_left2 (FuncParams.add cx type_params_map)
-    FuncParams.empty params defaults in
+  let params = List.fold_left2 (Func_params.add cx type_params_map)
+    Func_params.empty params defaults in
 
   match rest with
-  | Some ident -> FuncParams.add_rest cx type_params_map params ident
+  | Some ident -> Func_params.add_rest cx type_params_map params ident
   | None -> params
 
 (* Process a function definition, returning a (polymorphic) function type. *)
@@ -5624,8 +5623,8 @@ and mk_function_type cx reason this signature =
 
   let funtype = {
     this_t = this;
-    params_tlist = FuncParams.tlist params;
-    params_names = Some (FuncParams.names params);
+    params_tlist = Func_params.tlist params;
+    params_names = Some (Func_params.names params);
     return_t = ret;
     closure_t = Env.peek_frame ();
     changeset = Env.retrieve_closure_changeset ()
@@ -5645,8 +5644,8 @@ and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
     function_decl None cx type_params_map ~kind reason None
       params ret body this super
   in
-  let params_tlist = FuncParams.tlist params in
-  let params_names = Some (FuncParams.names params) in
+  let params_tlist = Func_params.tlist params in
+  let params_names = Some (Func_params.names params) in
   let frame = Env.peek_frame () in
   FunT (
     reason,
