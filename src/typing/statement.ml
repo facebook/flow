@@ -68,6 +68,26 @@ let function_kind ~async ~generator =
   | false, true -> Scope.Generator
   | false, false -> Scope.Ordinary
 
+let function_desc ~async ~generator desc =
+  match async, generator with
+  | true, true -> assert_false "async && generator"
+  | true, false -> spf "async %s" desc
+  | false, true -> spf "generator %s" desc
+  | false, false -> desc
+
+let before_pos loc = Loc.(
+  let { line; column; offset } = loc.start in
+  let start = { line; column = column - 1; offset = offset - 1 } in
+  let _end = { line; column; offset } in
+  { loc with start; _end }
+)
+
+let function_return_loc = Ast.Function.(function
+  | {returnType = Some (_, (loc, _)); _}
+  | {body = BodyExpression (loc, _); _} -> loc
+  | {body = BodyBlock (loc, _); _} -> before_pos loc
+)
+
 let warn_or_ignore_decorators cx decorators_list =
   if decorators_list = [] then () else
   match Context.esproposal_decorators cx with
@@ -277,19 +297,19 @@ and statement_decl cx type_params_map = Ast.Statement.(
 
   | (_, Debugger) -> ()
 
-  | (loc, FunctionDeclaration { Ast.Function.id; async; _ }) -> (
-      match id with
-      | Some id ->
-        let _, { Ast.Identifier.name; _ } = id in
-        let r = mk_reason (spf "%sfunction %s"
-          (if async then "async " else "") name) loc in
+  | (loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
+      (match id with
+      | Some (_, {Ast.Identifier.name; _}) ->
+        let desc = function_desc ~async ~generator (spf "function %s" name) in
+        let r = mk_reason desc loc in
         let tvar = Flow.mk_tvar cx r in
         Env.bind_fun cx name tvar r
-      | None -> failwith (
+      | None ->
+        failwith (
           "Flow Error: Nameless function declarations should always be given " ^
           "an implicit name before they get hoisted!"
         )
-    )
+      )
 
   | (loc, DeclareVariable { DeclareVariable.id; }) ->
       let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
@@ -1547,23 +1567,10 @@ and statement cx type_params_map = Ast.Statement.(
   | (_, Debugger) ->
       ()
 
-  | (loc, FunctionDeclaration { Ast.Function.
-      id;
-      params; defaults; rest;
-      body;
-      generator;
-      returnType;
-      typeParameters;
-      async;
-      _
-    }) ->
-      let kind = function_kind ~async ~generator in
+  | (loc, FunctionDeclaration func) ->
+      let {Ast.Function.id; _} = func in
       let reason = mk_reason "function" loc in
-      let this = Flow.mk_tvar cx (replace_reason "this" reason) in
-      let fn_type = mk_function None cx type_params_map reason ~kind
-        typeParameters (params, defaults, rest) returnType body this
-      in
-
+      let fn_type = mk_function None cx type_params_map reason func in
       (**
        * Use the loc for the function name in the types table. When the function
        * has no name (i.e. for `export default function() ...`), generate a loc
@@ -2136,19 +2143,11 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
                        Ast.Identifier.name; _ });
                      value = (vloc, Ast.Expression.Function func);
                      _ }) ->
-      Ast.Function.(
-        let { params; defaults; rest; body;
-              returnType; typeParameters; id; async; generator; _ } = func
-        in
-        let kind = function_kind ~async ~generator in
-        let reason = mk_reason "function" vloc in
-        let this = Flow.mk_tvar cx (replace_reason "this" reason) in
-        let ft = mk_function id cx type_params_map ~kind reason typeParameters
-          (params, defaults, rest) returnType body this
-        in
-        Hashtbl.replace (Context.type_table cx) vloc ft;
-        SMap.add name ft map
-      )
+      let reason = mk_reason "function" vloc in
+      let {Ast.Function.id; _} = func in
+      let ft = mk_function id cx type_params_map reason func in
+      Hashtbl.replace (Context.type_table cx) vloc ft;
+      SMap.add name ft map
 
   (* name = non-function expr *)
   | Property (_, { Property.kind = Property.Init;
@@ -2189,13 +2188,8 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       value = (vloc, Ast.Expression.Function func);
       _ })
     when Context.enable_unsafe_getters_and_setters cx ->
-    Ast.Function.(
-      let { body; returnType; _ } = func in
       let reason = mk_reason "getter function" vloc in
-      let this = Flow.mk_tvar cx (replace_reason "this" reason) in
-      let function_type = mk_function None cx type_params_map reason None
-        ([], [], None) returnType body this
-      in
+      let function_type = mk_function None cx type_params_map reason func in
       let return_t = extract_getter_type function_type in
       let map, prop_t = (match SMap.get name map with
       | Some prop_t -> map, prop_t
@@ -2205,7 +2199,6 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
         SMap.add name prop_t map, prop_t) in
       Flow.unify cx prop_t return_t;
       map
-    )
 
   (* unsafe setter property *)
   | Property (_, {
@@ -2214,13 +2207,8 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       value = (vloc, Ast.Expression.Function func);
       _ })
     when Context.enable_unsafe_getters_and_setters cx ->
-    Ast.Function.(
-      let { params; defaults; body; returnType; _ } = func in
       let reason = mk_reason "setter function" vloc in
-      let this = Flow.mk_tvar cx (replace_reason "this" reason) in
-      let function_type = mk_function None cx type_params_map reason None
-        (params, defaults, None) returnType body this
-      in
+      let function_type = mk_function None cx type_params_map reason func in
       let param_t = extract_setter_type function_type in
       let map, prop_t = (match SMap.get name map with
       | Some prop_t -> map, prop_t
@@ -2230,7 +2218,6 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
         SMap.add name prop_t map, prop_t) in
       Flow.unify cx prop_t param_t;
       map
-    )
 
   | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
     let msg = "get/set properties not yet supported" in
@@ -2853,51 +2840,17 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         (VoidT.at loc)
         expressions
 
-  | Function { Ast.Function.
-      id;
-      params; defaults; rest;
-      body;
-      async;
-      generator;
-      returnType;
-      typeParameters;
-      _
-    } ->
-      let kind = function_kind ~async ~generator in
-      let desc = match kind with
-      | Scope.Ordinary -> "function"
-      | Scope.Async -> "async function"
-      | Scope.Generator -> "generator function"
-      | Scope.Module -> assert_false "module scope as function activation"
-      | Scope.Global -> assert_false "global scope as function activation"
-      in
+  | Function func ->
+      let {Ast.Function.id; async; generator; _} = func in
+      let desc = function_desc ~async ~generator "function" in
       let reason = mk_reason desc loc in
-      let this = Flow.mk_tvar cx (replace_reason "this" reason) in
-      mk_function id cx type_params_map reason ~kind
-        typeParameters (params, defaults, rest) returnType body this
+      mk_function id cx type_params_map reason func
 
-  | ArrowFunction { Ast.Function.
-      id;
-      params; defaults; rest;
-      body;
-      async;
-      returnType;
-      typeParameters;
-      _
-    } ->
-      let kind = function_kind ~async ~generator:false in
-      let desc = match kind with
-      | Scope.Ordinary -> "arrow function"
-      | Scope.Async -> "async arrow function"
-      | Scope.Generator -> assert_false "generator arrow function"
-      | Scope.Module -> assert_false "module scope as arrow function activation"
-      | Scope.Global -> assert_false "global scope as arrow function activation"
-      in
+  | ArrowFunction func ->
+      let {Ast.Function.async; generator; _} = func in
+      let desc = function_desc ~async ~generator "arrow function" in
       let reason = mk_reason desc loc in
-      let this = this_ cx reason in
-      let super = super_ cx reason in
-      mk_arrow id cx type_params_map reason ~kind
-        typeParameters (params, defaults, rest) returnType body this super
+      mk_arrow cx type_params_map reason func
 
   | TaggedTemplate {
       TaggedTemplate.tag = _, Identifier (_,
@@ -3930,19 +3883,11 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           key = Property.Identifier (_, {
             Ast.Identifier.name = "getDefaultProps"; _ });
           value = (vloc, Ast.Expression.Function func);
-          _ }) ->
-        Ast.Function.(
-          let { params; defaults; rest; body; returnType; _ } = func in
+          _
+        }) ->
           let reason = mk_reason "defaultProps" vloc in
-          let t = mk_method cx type_params_map reason (params, defaults, rest)
-            returnType body this (MixedT (reason, Mixed_everything))
-          in
-          let ret_loc = match returnType with
-            | Some (_, (loc, _)) -> loc
-            | None -> (match body with
-              | BodyBlock (loc, _) -> loc
-              | BodyExpression (loc, _) -> loc
-            ) in
+          let t = mk_method cx type_params_map reason func this in
+          let ret_loc = function_return_loc func in
           let ret_reason = repos_reason ret_loc reason in
           let default_tvar = Flow.mk_tvar cx (derivable_reason ret_reason) in
           let override_default = Flow.tvar_with_constraint cx
@@ -3952,29 +3897,20 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             CallT (reason,
               Flow.mk_functiontype [] override_default));
           fmap, mmap
-        )
 
       (* getInitialState *)
       | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
             Ast.Identifier.name = "getInitialState"; _ });
           value = (vloc, Ast.Expression.Function func);
-          _ }) ->
-        Ast.Function.(
-          let { params; defaults; rest; body; returnType; _ } = func in
+          _
+        }) ->
           let reason = mk_reason "initial state of React component" vloc in
-          let t = mk_method cx type_params_map reason (params, defaults, rest)
-            returnType body this (MixedT (reason, Mixed_everything))
-          in
+          let t = mk_method cx type_params_map reason func this in
           (* since the call to getInitialState happens internally, we need to
              fake a location to pretend the call happened. using the position
              of the return type makes it act like an IIFE. *)
-          let ret_loc = match returnType with
-            | Some (_, (loc, _)) -> loc
-            | None -> (match body with
-              | BodyBlock (loc, _) -> loc
-              | BodyExpression (loc, _) -> loc
-            ) in
+          let ret_loc = function_return_loc func in
           let ret_reason = repos_reason ret_loc reason in
           let state_tvar = Flow.mk_tvar cx (derivable_reason ret_reason) in
           let override_state = Flow.tvar_with_constraint cx
@@ -3984,26 +3920,17 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             CallT (ret_reason,
               Flow.mk_functiontype [] override_state));
           fmap, mmap
-        )
 
       (* name = function expr *)
       | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
             Ast.Identifier.name; _ });
           value = (vloc, Ast.Expression.Function func);
-          _ }) ->
-        Ast.Function.(
-          let { params; defaults; rest; body;
-            returnType; async; generator; _ } = func
-          in
-          let kind = function_kind ~async ~generator in
+          _
+        }) ->
           let reason = mk_reason "function" vloc in
-          let t = mk_method cx type_params_map reason ~kind
-            (params, defaults, rest)
-            returnType body this (MixedT (reason, Mixed_everything))
-          in
+          let t = mk_method cx type_params_map reason func this in
           fmap, SMap.add name t mmap
-        )
 
       (* name = non-function expr *)
       | Property (_, { Property.kind = Property.Init;
@@ -4697,8 +4624,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
-        value = _, { Ast.Function.params; defaults; rest;
-          returnType; typeParameters; body; _ };
+        value = _, ({ Ast.Function.typeParameters; _ } as func);
         kind;
         static;
         decorators;
@@ -4716,10 +4642,8 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       let typeparams, type_params_map =
         Anno.mk_type_param_declarations cx type_params_map typeParameters in
 
-      let meth_params = mk_params cx type_params_map
-        (params, defaults, rest) in
-      let meth_return_type = mk_return_type cx type_params_map
-        (body, returnType) in
+      let meth_params = Func_params.mk cx type_params_map func in
+      let meth_return_type = mk_return_type cx type_params_map func in
       let reason_desc = (match kind with
       | Method.Method -> spf "method `%s`" name
       | Method.Constructor -> "constructor"
@@ -5383,14 +5307,21 @@ and remove_this typeparams type_params_map =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx type_params_map (reason:reason) ~kind
-  type_params params ret body this super =
+and function_decl id cx type_params_map reason func this super =
+  let { Ast.Function.
+    typeParameters = type_params;
+    async; generator;
+    body;
+    _;
+  } = func in
+
+  let kind = function_kind ~async ~generator in
 
   let typeparams, type_params_map =
     Anno.mk_type_param_declarations cx type_params_map type_params in
 
-  let params = mk_params cx type_params_map params in
-  let ret = mk_return_type cx type_params_map (body, ret) in
+  let params = Func_params.mk cx type_params_map func  in
+  let ret = mk_return_type cx type_params_map func in
 
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
@@ -5553,56 +5484,29 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
 
   Env.update_env cx reason env
 
-and before_pos loc =
-  Loc.(
-    let line = loc.start.line in
-    let column = loc.start.column in
-    let offset = loc.start.offset in
-    { loc with
-        start = { line = line; column = column - 1; offset = offset - 1; };
-        _end = { line = line; column = column; offset = offset; }
-    }
-  )
-
-and mk_return_type cx type_params_map (body, ret_type_opt) =
-  let phantom_return_loc = Ast.Function.(match body with
-    | BodyBlock (loc, _) -> before_pos loc
-    | BodyExpression (loc, _) -> loc
-  ) in
-
-  Anno.mk_type_annotation cx type_params_map
-    (mk_reason "return" phantom_return_loc) ret_type_opt
-
-and mk_params cx type_params_map (params, defaults, rest) =
-  let defaults = if defaults = [] && params <> []
-    then List.map (fun _ -> None) params
-    else defaults
-  in
-
-  let params = List.fold_left2 (Func_params.add cx type_params_map)
-    Func_params.empty params defaults in
-
-  match rest with
-  | Some ident -> Func_params.add_rest cx type_params_map params ident
-  | None -> params
+and mk_return_type cx type_params_map func =
+  let phantom_return_loc = function_return_loc func in
+  let reason = mk_reason "return" phantom_return_loc in
+  let ret = func.Ast.Function.returnType in
+  Anno.mk_type_annotation cx type_params_map reason ret
 
 (* Process a function definition, returning a (polymorphic) function type. *)
-and mk_function id cx type_params_map reason ?(kind=Scope.Ordinary)
-  type_params params ret body this =
+and mk_function id cx type_params_map reason func =
+  let this = Flow.mk_tvar cx (replace_reason "this" reason) in
   (* Normally, functions do not have access to super. *)
   let super = MixedT (
     replace_reason "empty super object" reason,
     Mixed_everything
   ) in
-  let signature = function_decl id cx type_params_map reason ~kind
-    type_params params ret body this super in
+  let signature = function_decl id cx type_params_map reason func this super in
   mk_function_type cx reason this signature
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
-and mk_arrow id cx type_params_map reason ~kind type_params params
-  ret body this super =
-  let signature = function_decl id cx type_params_map reason ~kind type_params
-    params ret body this super in
+and mk_arrow cx type_params_map reason func =
+  let this = this_ cx reason in
+  let super = super_ cx reason in
+  let {Ast.Function.id; _} = func in
+  let signature = function_decl id cx type_params_map reason func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
@@ -5638,12 +5542,11 @@ and mk_function_type cx reason this signature =
 
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
-and mk_method cx type_params_map reason ?(kind=Scope.Ordinary)
-  params ret body this super =
-  let (_,params,ret) =
-    function_decl None cx type_params_map ~kind reason None
-      params ret body this super
-  in
+and mk_method cx type_params_map reason func this =
+  let super = MixedT (reason, Mixed_everything) in
+  let id = None in
+  let signature = function_decl id cx type_params_map reason func this super in
+  let (_,params,ret) = signature in
   let params_tlist = Func_params.tlist params in
   let params_names = Some (Func_params.names params) in
   let frame = Env.peek_frame () in

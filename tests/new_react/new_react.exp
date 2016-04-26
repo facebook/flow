@@ -310,7 +310,7 @@ state4.js:9
   9:     this.setState({ y: 0 });
                        ^^^^^^^^ property `y` of object literal. Property not found in
   4:   getInitialState: function() {
-                                   ^ object literal
+                                  ^ object literal
 
 state4.js:10
  10:     return <div>{this.state.z}</div>

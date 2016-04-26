@@ -72,6 +72,18 @@ let add_rest cx type_params_map params =
       list = Rest (Anno.mk_rest cx t, (name, t, loc)) :: params.list
     }
 
+let mk cx type_params_map {Ast.Function.params; defaults; rest; _} =
+  let defaults =
+    if defaults = [] && params <> []
+    then List.map (fun _ -> None) params
+    else defaults
+  in
+  let params = List.fold_left2 (add cx type_params_map) empty params defaults in
+  match rest with
+  | Some ident -> add_rest cx type_params_map params ident
+  | None -> params
+
+
 let names params =
   params.list |> List.rev |> List.map (function
     | Simple (_, (name, _, _))

@@ -14,6 +14,11 @@ val add_rest: Context.t ->
   Spider_monkey_ast.Identifier.t ->
   t
 
+val mk: Context.t ->
+  (Type.t SMap.t) -> (* type params map *)
+  Spider_monkey_ast.Function.t ->
+  t
+
 (* name of each param, in order *)
 (* destructured params will be "_" *)
 val names: t -> string list
