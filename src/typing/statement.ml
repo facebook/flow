@@ -5299,21 +5299,12 @@ and mk_class = Ast.Class.(
       body;
   );
 
-  let enforce_void_return method_sig =
-    let meth_return_type =
-      if (is_void cx method_sig.meth_return_type)
-      then (VoidT.at (loc_of_t method_sig.meth_return_type))
-      else method_sig.meth_return_type
-    in
-    mk_methodtype {method_sig with meth_return_type;}
-  in
-
-  let methods = SMap.map enforce_void_return inst_sig.sig_methods in
-  let getters = SMap.map enforce_void_return inst_sig.sig_getters in
-  let setters = SMap.map enforce_void_return inst_sig.sig_setters in
-  let smethods = SMap.map enforce_void_return static_sig.sig_methods in
-  let sgetters = SMap.map enforce_void_return static_sig.sig_getters in
-  let ssetters = SMap.map enforce_void_return static_sig.sig_setters in
+  let methods = SMap.map mk_methodtype inst_sig.sig_methods in
+  let getters = SMap.map mk_methodtype inst_sig.sig_getters in
+  let setters = SMap.map mk_methodtype inst_sig.sig_setters in
+  let smethods = SMap.map mk_methodtype static_sig.sig_methods in
+  let sgetters = SMap.map mk_methodtype static_sig.sig_getters in
+  let ssetters = SMap.map mk_methodtype static_sig.sig_setters in
 
   (* If there is a both a getter and a setter, then flow the setter type to
     * the getter. Otherwise just use the getter type or the setter type *)
@@ -5551,18 +5542,7 @@ and function_decl id cx type_params_map (reason:reason) ~kind
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
 
-  let ret =
-    if (is_void cx ret)
-    then (VoidT.at (loc_of_t ret))
-    else ret
-  in
-
   (typeparams,params,ret)
-
-and is_void cx = function
-  | OpenT(_,id) ->
-      Flow.check_types cx id (function | VoidT _ -> true | _ -> false)
-  | _ -> false
 
 (* When in a derived constructor, initialize this and super to undefined. *)
 and initialize_this_super derived_ctor this super scope = Scope.(

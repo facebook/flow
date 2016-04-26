@@ -452,12 +452,6 @@ and resolve_type cx = function
       ) AnyT.t ts
   | t -> t
 
-(* Check whether any of the def types describing a solution for a type variable
-   satisfy a predicate. *)
-let check_types cx id f =
-  let types = possible_types cx id in
-  List.exists f types
-
 (** The following functions do "shallow" walks over types, respectively from
     requires and from exports, in order to report missing annotations. There are
     some opportunities for future work:

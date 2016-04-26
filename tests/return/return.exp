@@ -10,5 +10,11 @@ function_return.js:23
  19: function h(x): number {
                     ^^^^^^ number
 
+void.js:12
+ 12: (f(true): void); // error: string ~> void
+      ^^^^^^^ string. This type is incompatible with
+ 12: (f(true): void); // error: string ~> void
+               ^^^^ undefined
 
-Found 2 errors
+
+Found 3 errors
