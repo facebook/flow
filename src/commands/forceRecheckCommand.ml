@@ -42,11 +42,24 @@ let force_recheck (args:args) server_flags =
   let () = Timeout.input_value ic in
   FlowExitStatus.(exit Ok)
 
+let rec find_parent_that_exists path =
+  if Sys.file_exists path
+  then path
+  else begin
+    let newpath = Filename.dirname path in
+    (* dirname called repeatedly should eventually return ".", which should
+     * always exist. But no harm in being overly cautious. Let's detect
+     * infinite recursion *)
+    if newpath = path
+    then path
+    else find_parent_that_exists newpath
+  end
+
 let main server_flags root files () =
   let root = CommandUtils.guess_root (
     match root, files with
     | Some root, _ -> Some root
-    | None, file::_ -> (Some file)
+    | None, file::_ -> (Some (find_parent_that_exists file))
     | None, [] -> None
   ) in
   let args = { root; files } in
