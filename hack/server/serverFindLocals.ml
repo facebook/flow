@@ -49,7 +49,18 @@ module ScopeChain = struct
   type scope = Ident.t SMap.t
   type t = scope list
 
-  let empty = []
+  (*
+   * In correct code locals are always found inside a function, method or
+   * lambda, and so there is always a scope already pushed on the scope chain
+   * when the local is added. However, suppose we are in erroneous code, such
+   * that the parser has parsed a local expression that is not inside a
+   * function. In that case we might attempt to add a local to the current
+   * scope with an empty scope chain.
+   *
+   * Therefore we head every scope chain with a "dummy" scope that can be
+   * used for these error cases.
+   *)
+  let empty = SMap.empty :: []
 
   let push scopechain =
     SMap.empty :: scopechain
@@ -514,12 +525,10 @@ let parse content =
   end
 
 let go_from_ast ast line char =
-  try
-    let empty = LocalMap.make line char in
-    let visitor = new local_finding_visitor in
-    let localmap = visitor#on_program empty ast in
-    LocalMap.results localmap
-  with _ -> [] (* TODO (ericlippert, #10973485) *)
+  let empty = LocalMap.make line char in
+  let visitor = new local_finding_visitor in
+  let localmap = visitor#on_program empty ast in
+  LocalMap.results localmap
 
  (**
   * This is the entrypoint to this module. The contents of a file, and a
@@ -527,6 +536,11 @@ let go_from_ast ast line char =
   * list of the positions of other uses of that local in the file.
   *)
 let go content line char =
-  let ast = parse content in
-  let results_list = go_from_ast ast line char in
-  List.map results_list Pos.to_absolute
+  try
+    let ast = parse content in
+    let results_list = go_from_ast ast line char in
+    List.map results_list Pos.to_absolute
+  with Failure error ->
+    failwith (
+      (Printf.sprintf "Find locals service failed with error %s:\n" error) ^
+      (Printf.sprintf "line %d char %d\ncontent: \n%s\n" line char content))
