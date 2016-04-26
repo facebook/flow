@@ -92,7 +92,7 @@ let update fn ast =
     List.fold_left begin fun (fuzzy_defs, trie_defs) (_, def) ->
       match def with
       | Ast.Statement.FunctionDeclaration
-         { Ast.Statement.FunctionDeclaration.id = Some f_name; _ } ->
+         { Ast.Function.id = Some f_name; _ } ->
           let fuzzy_defs = add_fuzzy_term f_name Function fuzzy_defs in
           fuzzy_defs, trie_defs
       | Ast.Statement.DeclareFunction df ->

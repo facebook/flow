@@ -277,7 +277,7 @@ and statement_decl cx type_params_map = Ast.Statement.(
 
   | (_, Debugger) -> ()
 
-  | (loc, FunctionDeclaration { FunctionDeclaration.id; async; _ }) -> (
+  | (loc, FunctionDeclaration { Ast.Function.id; async; _ }) -> (
       match id with
       | Some id ->
         let _, { Ast.Identifier.name; _ } = id in
@@ -1547,8 +1547,8 @@ and statement cx type_params_map = Ast.Statement.(
   | (_, Debugger) ->
       ()
 
-  | (loc, FunctionDeclaration {
-      FunctionDeclaration.id;
+  | (loc, FunctionDeclaration { Ast.Function.
+      id;
       params; defaults; rest;
       body;
       generator;
@@ -1733,27 +1733,27 @@ and statement cx type_params_map = Ast.Statement.(
             else decl in
           statement cx type_params_map decl;
           (match decl with
-          | loc, FunctionDeclaration({FunctionDeclaration.id=None; _;}) ->
+          | loc, FunctionDeclaration {Ast.Function.id = None; _} ->
             if default then
               [("function() {}", loc, internal_name "*default*", None)]
             else failwith (
               "Parser Error: Immediate exports of nameless functions can " ^
               "only exist for default exports!"
             )
-          | loc, FunctionDeclaration({FunctionDeclaration.id=Some ident; _;}) ->
+          | loc, FunctionDeclaration {Ast.Function.id = Some ident; _} ->
             let name = ident_name ident in
             [(spf "function %s() {}" name, loc, name, None)]
-          | loc, ClassDeclaration({Ast.Class.id=None; _;}) ->
+          | loc, ClassDeclaration {Ast.Class.id = None; _} ->
             if default then
               [("class {}", loc, internal_name "*default*", None)]
             else failwith (
               "Parser Error: Immediate exports of nameless classes can " ^
               "only exist for default exports"
             )
-          | _, ClassDeclaration({Ast.Class.id=Some ident; _;}) ->
+          | _, ClassDeclaration {Ast.Class.id = Some ident; _} ->
             let name = ident_name ident in
             [(spf "class %s {}" name, (fst ident), name, None)]
-          | _, VariableDeclaration({VariableDeclaration.declarations; _; }) ->
+          | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
             let decl_to_bindings accum (_, decl) =
               let id = snd decl.VariableDeclaration.Declarator.id in
               List.rev (extract_destructured_bindings accum id)
@@ -1762,10 +1762,10 @@ and statement cx type_params_map = Ast.Statement.(
             bound_names |> List.map (fun (loc, name) ->
               (spf "var %s" name, loc, name, None)
             )
-          | _, TypeAlias({TypeAlias.id; _;}) ->
+          | _, TypeAlias {TypeAlias.id; _} ->
             let name = ident_name id in
             [(spf "type %s = ..." name, loc, name, None)]
-          | _, InterfaceDeclaration({Interface.id; _;}) ->
+          | _, InterfaceDeclaration {Interface.id; _} ->
             let name = ident_name id in
             [(spf "interface %s = ..." name, loc, name, None)]
           | _ -> failwith "Parser Error: Invalid export-declaration type!")
@@ -2136,7 +2136,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
                        Ast.Identifier.name; _ });
                      value = (vloc, Ast.Expression.Function func);
                      _ }) ->
-      Ast.Expression.Function.(
+      Ast.Function.(
         let { params; defaults; rest; body;
               returnType; typeParameters; id; async; generator; _ } = func
         in
@@ -2189,7 +2189,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       value = (vloc, Ast.Expression.Function func);
       _ })
     when Context.enable_unsafe_getters_and_setters cx ->
-    Ast.Expression.Function.(
+    Ast.Function.(
       let { body; returnType; _ } = func in
       let reason = mk_reason "getter function" vloc in
       let this = Flow.mk_tvar cx (replace_reason "this" reason) in
@@ -2214,7 +2214,7 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
       value = (vloc, Ast.Expression.Function func);
       _ })
     when Context.enable_unsafe_getters_and_setters cx ->
-    Ast.Expression.Function.(
+    Ast.Function.(
       let { params; defaults; body; returnType; _ } = func in
       let reason = mk_reason "setter function" vloc in
       let this = Flow.mk_tvar cx (replace_reason "this" reason) in
@@ -2853,8 +2853,8 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         (VoidT.at loc)
         expressions
 
-  | Function {
-      Function.id;
+  | Function { Ast.Function.
+      id;
       params; defaults; rest;
       body;
       async;
@@ -2876,8 +2876,8 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       mk_function id cx type_params_map reason ~kind
         typeParameters (params, defaults, rest) returnType body this
 
-  | ArrowFunction {
-      ArrowFunction.id;
+  | ArrowFunction { Ast.Function.
+      id;
       params; defaults; rest;
       body;
       async;
@@ -3931,7 +3931,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             Ast.Identifier.name = "getDefaultProps"; _ });
           value = (vloc, Ast.Expression.Function func);
           _ }) ->
-        Ast.Expression.Function.(
+        Ast.Function.(
           let { params; defaults; rest; body; returnType; _ } = func in
           let reason = mk_reason "defaultProps" vloc in
           let t = mk_method cx type_params_map reason (params, defaults, rest)
@@ -3939,7 +3939,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           in
           let ret_loc = match returnType with
             | Some (_, (loc, _)) -> loc
-            | None -> Ast.Statement.FunctionDeclaration.(match body with
+            | None -> (match body with
               | BodyBlock (loc, _) -> loc
               | BodyExpression (loc, _) -> loc
             ) in
@@ -3960,7 +3960,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             Ast.Identifier.name = "getInitialState"; _ });
           value = (vloc, Ast.Expression.Function func);
           _ }) ->
-        Ast.Expression.Function.(
+        Ast.Function.(
           let { params; defaults; rest; body; returnType; _ } = func in
           let reason = mk_reason "initial state of React component" vloc in
           let t = mk_method cx type_params_map reason (params, defaults, rest)
@@ -3971,7 +3971,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
              of the return type makes it act like an IIFE. *)
           let ret_loc = match returnType with
             | Some (_, (loc, _)) -> loc
-            | None -> Ast.Statement.FunctionDeclaration.(match body with
+            | None -> (match body with
               | BodyBlock (loc, _) -> loc
               | BodyExpression (loc, _) -> loc
             ) in
@@ -3992,7 +3992,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
             Ast.Identifier.name; _ });
           value = (vloc, Ast.Expression.Function func);
           _ }) ->
-        Ast.Expression.Function.(
+        Ast.Function.(
           let { params; defaults; rest; body;
             returnType; async; generator; _ } = func
           in
@@ -4697,7 +4697,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
-        value = _, { Ast.Expression.Function.params; defaults; rest;
+        value = _, { Ast.Function.params; defaults; rest;
           returnType; typeParameters; body; _ };
         kind;
         static;
@@ -4879,7 +4879,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
     | Body.Method (_, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
-        value = _, { Ast.Expression.Function.body; async; generator; _ };
+        value = _, { Ast.Function.body; async; generator; _ };
         static;
         kind;
         decorators;
@@ -5455,7 +5455,7 @@ and define_internal cx reason x =
 and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     params ret body this super yield next =
 
-  let loc = Ast.Statement.FunctionDeclaration.(match body with
+  let loc = Ast.Function.(match body with
     | BodyBlock (loc, _)
     | BodyExpression (loc, _) -> loc
   ) in
@@ -5509,10 +5509,10 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
   );
 
   let stmts = Ast.Statement.(match body with
-    | FunctionDeclaration.BodyBlock (_, { Block.body }) ->
+    | Ast.Function.BodyBlock (_, { Block.body }) ->
         body
-    | FunctionDeclaration.BodyExpression expr ->
-        [ fst expr, Return { Return.argument = Some expr } ]
+    | Ast.Function.BodyExpression expr ->
+        [fst expr, Return { Return.argument = Some expr }]
   ) in
 
   (* decl/type visit pre-pass *)
@@ -5565,7 +5565,7 @@ and before_pos loc =
   )
 
 and mk_return_type cx type_params_map (body, ret_type_opt) =
-  let phantom_return_loc = Ast.Statement.FunctionDeclaration.(match body with
+  let phantom_return_loc = Ast.Function.(match body with
     | BodyBlock (loc, _) -> before_pos loc
     | BodyExpression (loc, _) -> loc
   ) in

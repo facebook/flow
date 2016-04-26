@@ -272,23 +272,6 @@ and Statement : sig
       finalizer: (Loc.t * Block.t) option;
     }
   end
-  module FunctionDeclaration : sig
-    type body =
-      | BodyBlock of (Loc.t * Block.t)
-      | BodyExpression of Expression.t
-    and t = {
-      id: Identifier.t option;
-      params: Pattern.t list;
-      defaults: Expression.t option list;
-      rest: Identifier.t option;
-      body: body;
-      async: bool;
-      generator: bool;
-      expression: bool;
-      returnType: Type.annotation option;
-      typeParameters: Type.ParameterDeclaration.t option;
-    }
-  end
   module VariableDeclaration : sig
     module Declarator : sig
       type t = Loc.t * t'
@@ -484,7 +467,7 @@ and Statement : sig
     | ForOf of ForOf.t
     | Let of Let.t
     | Debugger
-    | FunctionDeclaration of FunctionDeclaration.t
+    | FunctionDeclaration of Function.t
     | VariableDeclaration of VariableDeclaration.t
     | ClassDeclaration of Class.t
     | InterfaceDeclaration of Interface.t
@@ -570,34 +553,6 @@ and Expression : sig
       | SpreadProperty of SpreadProperty.t
     type t = {
       properties: property list;
-    }
-  end
-  module Function : sig
-    type t = {
-      id: Identifier.t option;
-      params: Pattern.t list;
-      defaults: Expression.t option list;
-      rest: Identifier.t option;
-      body: Statement.FunctionDeclaration.body;
-      async: bool;
-      generator: bool;
-      expression: bool;
-      returnType: Type.annotation option;
-      typeParameters: Type.ParameterDeclaration.t option;
-    }
-  end
-  module ArrowFunction : sig
-    type t = {
-      id: Identifier.t option;
-      params: Pattern.t list;
-      defaults: Expression.t option list;
-      rest: Identifier.t option;
-      body: Statement.FunctionDeclaration.body;
-      async: bool;
-      generator: bool;
-      expression: bool;
-      returnType: Type.annotation option;
-      typeParameters: Type.ParameterDeclaration.t option;
     }
   end
   module Sequence : sig
@@ -764,7 +719,7 @@ and Expression : sig
     | Array of Array.t
     | Object of Object.t
     | Function of Function.t
-    | ArrowFunction of ArrowFunction.t
+    | ArrowFunction of Function.t
     | Sequence of Sequence.t
     | Unary of Unary.t
     | Binary of Binary.t
@@ -967,7 +922,7 @@ and Class : sig
     and t' = {
       kind: kind;
       key: Expression.Object.Property.key;
-      value: Loc.t * Expression.Function.t;
+      value: Loc.t * Function.t;
       static: bool;
       decorators: Expression.t list;
     }
@@ -1007,5 +962,23 @@ and Class : sig
     classDecorators: Expression.t list;
   }
 end = Class
+
+and Function : sig
+  type body =
+    | BodyBlock of (Loc.t * Statement.Block.t)
+    | BodyExpression of Expression.t
+  type t = {
+    id: Identifier.t option;
+    params: Pattern.t list;
+    defaults: Expression.t option list;
+    rest: Identifier.t option;
+    body: body;
+    async: bool;
+    generator: bool;
+    expression: bool;
+    returnType: Type.annotation option;
+    typeParameters: Type.ParameterDeclaration.t option;
+  }
+end = Function
 
 type program = Loc.t * Statement.t list * Comment.t list

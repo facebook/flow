@@ -199,7 +199,7 @@ let meta_params params map cmap =
   ) cmap params
 
 let meta_return body map cmap =
-  let bloc = Ast.Statement.FunctionDeclaration.(match body with
+  let bloc = Ast.Function.(match body with
     | BodyBlock (loc, _) -> loc
     | BodyExpression (loc, _) -> loc (* probably wrong, it's after the => *)
   ) in
@@ -242,7 +242,7 @@ and meta_expression cmap = Ast.Expression.(function
       concat_fold (fun cmap -> function
         | Object.Property (loc, {
             Object.Property.value = (_, Function {
-              Function.params; body; _
+              Ast.Function.params; body; _
             });
             key = Ast.Expression.Object.Property.Identifier _;
             _
@@ -264,8 +264,8 @@ and meta_expression cmap = Ast.Expression.(function
   | _, Assignment { Assignment.right; _ } ->
       meta_expression cmap right
 
-  | loc, Function { Function.params; body; _ }
-  | loc, ArrowFunction { ArrowFunction.params; body; _ } ->
+  | loc, Function { Ast.Function.params; body; _ }
+  | loc, ArrowFunction { Ast.Function.params; body; _ } ->
       meta_fbody cmap loc params body
 
   | _ -> cmap, []
@@ -290,7 +290,7 @@ and meta_statement cmap = Ast.Statement.(function
       concat_fold Ast.Class.(fun cmap -> function
         | Body.Method (loc, {
             Method.key = Ast.Expression.Object.Property.Identifier _;
-            value = _, { Ast.Expression.Function.params; body; _ };
+            value = _, { Ast.Function.params; body; _ };
             kind = Method.Method | Method.Constructor;
             static = false;
             decorators = _;
@@ -299,7 +299,7 @@ and meta_statement cmap = Ast.Statement.(function
         | _ -> cmap, []
       ) cmap elements
 
-  | loc, FunctionDeclaration { FunctionDeclaration.params; body; _ } ->
+  | loc, FunctionDeclaration { Ast.Function.params; body; _ } ->
       meta_fbody cmap loc params body
 
   | _ -> cmap, [] (* TODO *)
@@ -307,9 +307,9 @@ and meta_statement cmap = Ast.Statement.(function
 
 and meta_body body cmap = Ast.Statement.(
   match body with
-    | FunctionDeclaration.BodyBlock (_, { Block.body }) ->
+    | Ast.Function.BodyBlock (_, { Block.body }) ->
         meta_statements cmap body
-    | FunctionDeclaration.BodyExpression expr ->
+    | Ast.Function.BodyExpression expr ->
         meta_expression cmap expr
 )
 

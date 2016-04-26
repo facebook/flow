@@ -202,7 +202,7 @@ end with type t = Impl.t) = struct
   | loc, ClassDeclaration c -> class_declaration (loc, c)
   | loc, InterfaceDeclaration i -> interface_declaration (loc, i)
   | loc, VariableDeclaration var -> variable_declaration (loc, var)
-  | loc, FunctionDeclaration fn ->  Statement.FunctionDeclaration.(
+  | loc, FunctionDeclaration fn ->  Function.(
       (* esprima/estree hasn't come around to the idea that function decls can
        * have optional ids :( *)
       let (node_type, node_value) = (
@@ -305,10 +305,10 @@ end with type t = Impl.t) = struct
           "properties", array_of_list object_property _object.Object.properties;
         |]
     | loc, Function _function -> function_expression (loc, _function)
-    | loc, ArrowFunction arrow -> ArrowFunction.(
+    | loc, ArrowFunction arrow -> Function.(
         let body = (match arrow.body with
-        | Statement.FunctionDeclaration.BodyBlock b -> block b
-        | Statement.FunctionDeclaration.BodyExpression expr -> expression expr)
+        | BodyBlock b -> block b
+        | BodyExpression expr -> expression expr)
         in
         node "ArrowFunctionExpression" loc [|
           "id", option identifier arrow.id;
@@ -500,10 +500,10 @@ end with type t = Impl.t) = struct
     | loc, Class c -> class_expression (loc, c)
     | loc, JSXElement element -> jsx_element (loc, element))
 
-  and function_expression (loc, _function) = Expression.Function.(
+  and function_expression (loc, _function) = Function.(
     let body = match _function.body with
-    | Statement.FunctionDeclaration.BodyBlock b -> block b
-    | Statement.FunctionDeclaration.BodyExpression expr -> expression expr
+    | BodyBlock b -> block b
+    | BodyExpression expr -> expression expr
     in
     node "FunctionExpression" loc [|
       "id", option identifier _function.id;

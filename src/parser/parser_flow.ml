@@ -922,7 +922,7 @@ end = struct
     let function_body env ~async ~generator =
       let env = enter_function env ~async ~generator in
       let loc, block, strict = Parse.function_block_body env in
-      loc, Statement.FunctionDeclaration.BodyBlock (loc, block), strict
+      loc, Function.BodyBlock (loc, block), strict
 
     let concise_function_body env ~async ~generator =
       let env = env |> with_in_function true in
@@ -933,7 +933,7 @@ end = struct
       | _ ->
           let env = enter_function env ~async ~generator in
           let expr = Parse.assignment env in
-          Statement.FunctionDeclaration.BodyExpression expr, strict env
+          Function.BodyExpression expr, strict env
 
     let generator env is_async =
       match is_async, Expect.maybe env T_MULT with
@@ -977,11 +977,11 @@ end = struct
       let _, body, strict = function_body env ~async ~generator in
       let simple = is_simple_function_params params defaults rest in
       strict_post_check env ~strict ~simple id params;
-      let end_loc, expression = Ast.Statement.FunctionDeclaration.(
+      let end_loc, expression = Ast.Function.(
         match body with
         | BodyBlock (loc, _) -> loc, false
         | BodyExpression (loc, _) -> loc, true) in
-      Loc.btwn start_loc end_loc, Statement.(FunctionDeclaration FunctionDeclaration.({
+      Loc.btwn start_loc end_loc, Statement.(FunctionDeclaration Function.({
         id;
         params;
         defaults;
@@ -1615,7 +1615,7 @@ end = struct
         Declaration.function_body env ~async ~generator in
       let simple = Declaration.is_simple_function_params params defaults rest in
       Declaration.strict_post_check env ~strict ~simple id params;
-      let expression = Ast.Statement.FunctionDeclaration.(
+      let expression = Function.(
         match body with
         | BodyBlock _ -> false
         | BodyExpression _ -> true) in
@@ -1881,12 +1881,12 @@ end = struct
         let simple =
           Declaration.is_simple_function_params params defaults rest in
         Declaration.strict_post_check env ~strict ~simple None params;
-        let expression = Ast.Statement.FunctionDeclaration.(
+        let expression = Function.(
           match body with
           | BodyBlock _ -> false
           | BodyExpression _ -> true) in
         let loc = Loc.btwn start_loc end_loc in
-        loc, Expression.(ArrowFunction ArrowFunction.({
+        loc, Expression.(ArrowFunction Function.({
           id = None;
           params;
           defaults;
@@ -2068,11 +2068,11 @@ end = struct
       let rest = None in
       let simple = Declaration.is_simple_function_params params defaults rest in
       Declaration.strict_post_check env ~strict ~simple None params;
-      let end_loc, expression = Ast.Statement.FunctionDeclaration.(
+      let end_loc, expression = Function.(
         match body with
         | BodyBlock (loc, _) -> loc, false
         | BodyExpression (loc, _) -> loc, true) in
-      let value = end_loc, Ast.Expression.Function.({
+      let value = end_loc, Function.({
         id = None;
         params;
         defaults;
@@ -2165,7 +2165,7 @@ end = struct
                   Declaration.function_body env ~async ~generator in
                 let simple = Declaration.is_simple_function_params params defaults rest in
                 Declaration.strict_post_check env ~strict ~simple None params;
-                let end_loc, expression = Ast.Statement.FunctionDeclaration.(
+                let end_loc, expression = Function.(
                   match body with
                   | BodyBlock (loc, _) -> loc, false
                   | BodyExpression (loc, _) -> loc, true) in
@@ -2367,11 +2367,11 @@ end = struct
           let simple =
             Declaration.is_simple_function_params params defaults rest in
           Declaration.strict_post_check env ~strict ~simple None params;
-          let end_loc, expression = Ast.Statement.FunctionDeclaration.(
+          let end_loc, expression = Function.(
             match body with
             | BodyBlock (loc, _) -> loc, false
             | BodyExpression (loc, _) -> loc, true) in
-          let value = end_loc, Ast.Expression.Function.({
+          let value = end_loc, Function.({
             id = None;
             params;
             defaults;
@@ -3354,13 +3354,13 @@ end = struct
                 let id = declaration.VariableDeclaration.Declarator.id in
                 extract_pattern_binding_names names [id]
               ) [] declarations
-            | (loc, ClassDeclaration { Class.id=Some id; _; })
-            | (loc, FunctionDeclaration { FunctionDeclaration.id=Some id; _; })
+            | (loc, ClassDeclaration { Class.id = Some id; _; })
+            | (loc, FunctionDeclaration { Function.id = Some id; _; })
               -> [(loc, extract_ident_name id)]
             | (loc, ClassDeclaration { Class.id = None; _; }) ->
               error_at env (loc, Error.ExportNamelessClass);
               []
-            | (loc, FunctionDeclaration { FunctionDeclaration.id = None; _; }) ->
+            | (loc, FunctionDeclaration { Function.id = None; _; }) ->
               error_at env (loc, Error.ExportNamelessFunction);
               []
             | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
