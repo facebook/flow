@@ -1,0 +1,38 @@
+readwrite.js:6
+  6:   readwrite p: number, // access modifiers not yet supported
+       ^^^^^^^^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:10
+ 10:   readwrite [x]: 0, // access modifiers not yet supported
+       ^^^^^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:11
+ 11:   readwrite p: 0,   // access modifiers not yet supported
+       ^^^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:15
+ 15:   readwrite p;      // access modifiers not yet supported
+       ^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:16
+ 16:   readwrite m() {}; // access modifiers not yet supported
+       ^^^^^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:20
+ 20:   readwrite p: number; // access modifiers not yet supported
+       ^^^^^^^^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:21
+ 21:   readwrite m(): void; // access modifiers not yet supported
+       ^^^^^^^^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:25
+ 25:   readwrite p: number; // access modifiers not yet supported
+       ^^^^^^^^^^^^^^^^^^^ access modifiers not yet supported
+
+readwrite.js:26
+ 26:   readwrite m(): void; // access modifiers not yet supported
+       ^^^^^^^^^^^^^^^^^^^ access modifiers not yet supported
+
+
+Found 9 errors

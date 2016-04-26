@@ -293,7 +293,7 @@ and meta_statement cmap = Ast.Statement.(function
             value = _, { Ast.Expression.Function.params; body; _ };
             kind = Method.Method | Method.Constructor;
             static = false;
-            decorators = _;
+            _;
           }) ->
             meta_fbody cmap loc params body
         | _ -> cmap, []

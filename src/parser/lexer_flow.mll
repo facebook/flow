@@ -43,6 +43,9 @@
     | T_VAR
     | T_WHILE
     | T_WITH
+    | T_READWRITE
+    | T_READONLY
+    | T_WRITEONLY
     | T_CONST
     | T_LET
     | T_NULL
@@ -177,6 +180,9 @@
     | T_VAR -> "T_VAR"
     | T_WHILE -> "T_WHILE"
     | T_WITH -> "T_WITH"
+    | T_READWRITE -> "T_READWRITE"
+    | T_READONLY -> "T_READONLY"
+    | T_WRITEONLY -> "T_WRITEONLY"
     | T_CONST -> "T_CONST"
     | T_LET  -> "T_LET"
     | T_NULL -> "T_NULL"
@@ -491,6 +497,9 @@
       "class", T_CLASS;
       "extends", T_EXTENDS;
       "static", T_STATIC;
+      "readwrite", T_READWRITE;
+      "readonly", T_READONLY;
+      "writeonly", T_WRITEONLY;
       "else", T_ELSE;
       "new", T_NEW;
       "delete", T_DELETE;
@@ -517,6 +526,9 @@
   let _ = List.iter (fun (key, token) -> Hashtbl.add type_keywords key token)
     [
       "static",  T_STATIC;
+      "readwrite", T_READWRITE;
+      "readonly", T_READONLY;
+      "writeonly", T_WRITEONLY;
       "typeof",  T_TYPEOF;
       "any",     T_ANY_TYPE;
       "bool",    T_BOOLEAN_TYPE;

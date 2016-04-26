@@ -3556,5 +3556,233 @@ module.exports = {
         'errors.0.message': 'Unexpected token ='
       }
     },
+    'Object type property modifiers': {
+      'type X = {p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0': {
+          'static': false,
+          'access': null
+        }
+      },
+      'type X = {readwrite p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0': {
+          'static': false,
+          'access': 'ReadWrite'
+        }
+      },
+      'type X = {readonly p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0': {
+          'static': false,
+          'access': 'ReadOnly'
+        }
+      },
+      'type X = {writeonly p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0': {
+          'static': false,
+          'access': 'WriteOnly'
+        }
+      },
+      'type X = {static p:T}': {
+        'errors.0': {
+          'loc.start.column': 10,
+          'loc.end.column': 16,
+          'message': 'Unexpected modifier'
+        }
+      },
+      'type X = {readwrite:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0': {
+          'key.name': 'readwrite',
+          'access': null
+        }
+      },
+      'type X = {readwrite readonly:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0': {
+          'key.name': 'readonly',
+          'access': 'ReadWrite'
+        }
+      },
+      'type X = {readonly readwrite p:T}': {
+        'errors.0': {
+          'loc.start.column': 19,
+          'loc.end.column': 28,
+          'message': 'Unexpected modifier'
+        }
+      }
+    },
+    'Object literal property modifiers': {
+      '({p:T})': {
+        'errors.length': 0,
+        'body.0.expression.properties.0': {
+          'access': null
+        }
+      },
+      '({readwrite p:e})': {
+        'errors.length': 0,
+        'body.0.expression.properties.0': {
+          'access': 'ReadWrite'
+        }
+      },
+      '({readonly p:e})': {
+        'errors.length': 0,
+        'body.0.expression.properties.0': {
+          'access': 'ReadOnly'
+        }
+      },
+      '({writeonly p:e})': {
+        'errors.length': 0,
+        'body.0.expression.properties.0': {
+          'access': 'WriteOnly'
+        }
+      },
+      '({static p:e})': {
+        'errors.0': {
+          'loc.start.column': 2,
+          'loc.end.column': 8,
+          'message': 'Unexpected modifier'
+        }
+      },
+      '({readwrite:e})': {
+        'errors.length': 0,
+        'body.0.expression.properties.0': {
+          'key.name': 'readwrite',
+          'access': null
+        }
+      },
+      '({readwrite readonly:e})': {
+        'errors.length': 0,
+        'body.0.expression.properties.0': {
+          'key.name': 'readonly',
+          'access': 'ReadWrite'
+        }
+      },
+      '({readonly readwrite p:e})': {
+        'errors.0': {
+          'loc.start.column': 11,
+          'loc.end.column': 20,
+          'message': 'Unexpected modifier'
+        }
+      }
+    },
+    'Class property modifiers': {
+      'class C {p:T;}': {
+        'errors.length': 0,
+        'body.0.body.body.0': {
+          'static': false,
+          'access': null
+        }
+      },
+      'class C {readwrite p:T;}': {
+        'errors.length': 0,
+        'body.0.body.body.0': {
+          'static': false,
+          'access': 'ReadWrite'
+        }
+      },
+      'class C {readonly p:T;}': {
+        'errors.length': 0,
+        'body.0.body.body.0': {
+          'static': false,
+          'access': 'ReadOnly'
+        }
+      },
+      'class C {writeonly p:T;}': {
+        'errors.length': 0,
+        'body.0.body.body.0': {
+          'static': false,
+          'access': 'WriteOnly'
+        }
+      },
+      'class C {static p:T;}': {
+        'errors.length': 0,
+        'body.0.body.body.0': {
+          'static': true,
+          'access': null
+        }
+      },
+      'class C {readwrite:T;}': {
+        'errors.length': 0,
+        'body.0.body.body.0': {
+          'key.name': 'readwrite',
+          'access': null
+        }
+      },
+      'class C {readwrite readonly:T;}': {
+        'errors.length': 0,
+        'body.0.body.body.0': {
+          'key.name': 'readonly',
+          'access': 'ReadWrite'
+        }
+      },
+      'class C {readonly readwrite p:T;}': {
+        'errors.0': {
+          'loc.start.column': 18,
+          'loc.end.column': 27,
+          'message': 'Unexpected modifier'
+        }
+      }
+    },
+    'Interface modifiers': {
+      'interface C {p:T;}': {
+        'errors.length': 0,
+        'body.0.body.properties.0': {
+          'static': false,
+          'access': null
+        }
+      },
+      'interface C {readwrite p:T;}': {
+        'errors.length': 0,
+        'body.0.body.properties.0': {
+          'static': false,
+          'access': 'ReadWrite'
+        }
+      },
+      'interface C {readonly p:T;}': {
+        'errors.length': 0,
+        'body.0.body.properties.0': {
+          'static': false,
+          'access': 'ReadOnly'
+        }
+      },
+      'interface C {writeonly p:T;}': {
+        'errors.length': 0,
+        'body.0.body.properties.0': {
+          'static': false,
+          'access': 'WriteOnly'
+        }
+      },
+      'interface C {static p:T;}': {
+        'errors.length': 0,
+        'body.0.body.properties.0': {
+          'static': true,
+          'access': null
+        }
+      },
+      'interface C {readwrite:T;}': {
+        'errors.length': 0,
+        'body.0.body.properties.0': {
+          'key.name': 'readwrite',
+          'access': null
+        }
+      },
+      'interface C {readwrite readonly:T;}': {
+        'errors.length': 0,
+        'body.0.body.properties.0': {
+          'key.name': 'readonly',
+          'access': 'ReadWrite'
+        }
+      },
+      'interface C {readonly readwrite p:T;}': {
+        'errors.0': {
+          'loc.start.column': 22,
+          'loc.end.column': 31,
+          'message': 'Unexpected modifier'
+        }
+      }
+    }
   }
 };

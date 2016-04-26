@@ -68,6 +68,13 @@ let function_kind ~async ~generator =
   | false, true -> Scope.Generator
   | false, false -> Scope.Ordinary
 
+let warn_access_modifier cx loc =
+  Option.iter ~f:(fun _ ->
+    let msg = "access modifiers not yet supported" in
+    FlowError.add_error cx (loc, [msg])
+  )
+
+
 let warn_or_ignore_decorators cx decorators_list =
   if decorators_list = [] then () else
   match Context.esproposal_decorators cx with
@@ -524,8 +531,9 @@ and statement cx type_params_map = Ast.Statement.(
     let sfmap, smmap, fmap, mmap = List.fold_left (
       fun (sfmap_, smmap_, fmap_, mmap_)
         (loc, { Ast.Type.Object.Property.key;
-          value; static; _method; optional
+          value; static; access; _method; optional
         }) ->
+        warn_access_modifier cx loc access;
         if optional && _method
         then begin
           let msg = "optional methods are not supported" in
@@ -2130,37 +2138,21 @@ and export_statement cx _type_params_map loc
   )
 
 and object_prop cx type_params_map map = Ast.Expression.Object.(function
-  (* name = function expr *)
-  | Property (_, { Property.kind = Property.Init;
-                     key = Property.Identifier (_, {
-                       Ast.Identifier.name; _ });
-                     value = (vloc, Ast.Expression.Function func);
-                     _ }) ->
-      Ast.Expression.Function.(
-        let { params; defaults; rest; body;
-              returnType; typeParameters; id; async; generator; _ } = func
-        in
-        let kind = function_kind ~async ~generator in
-        let reason = mk_reason "function" vloc in
-        let this = Flow.mk_tvar cx (replace_reason "this" reason) in
-        let ft = mk_function id cx type_params_map ~kind reason typeParameters
-          (params, defaults, rest) returnType body this
-        in
-        Hashtbl.replace (Context.type_table cx) vloc ft;
-        SMap.add name ft map
-      )
-
-  (* name = non-function expr *)
-  | Property (_, { Property.kind = Property.Init;
+  (* name = expr *)
+  | Property (loc, { Property.
+      kind = Property.Init;
       key =
         Property.Identifier (_, { Ast.Identifier.name; _ }) |
         Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-                   value = v;
-                   _ }) ->
-    let t = expression cx type_params_map v in
+      value;
+      access;
+      _;
+    }) ->
+    warn_access_modifier cx loc access;
+    let t = expression cx type_params_map value in
     SMap.add name t map
 
   (* literal LHS *)
@@ -2183,12 +2175,12 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
    *)
 
   (* unsafe getter property *)
-  | Property (_, {
-      Property.kind = Property.Get;
+  | Property (_, { Property.
+      kind = Property.Get;
       key = Property.Identifier (_, { Ast.Identifier.name; _ });
       value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
+      _
+    }) when Context.enable_unsafe_getters_and_setters cx ->
     Ast.Expression.Function.(
       let { body; returnType; _ } = func in
       let reason = mk_reason "getter function" vloc in
@@ -2208,12 +2200,12 @@ and object_prop cx type_params_map map = Ast.Expression.Object.(function
     )
 
   (* unsafe setter property *)
-  | Property (_, {
-    Property.kind = Property.Set;
+  | Property (_, { Property.
+      kind = Property.Set;
       key = Property.Identifier (_, { Ast.Identifier.name; _ });
       value = (vloc, Ast.Expression.Function func);
-      _ })
-    when Context.enable_unsafe_getters_and_setters cx ->
+      _;
+    }) when Context.enable_unsafe_getters_and_setters cx ->
     Ast.Expression.Function.(
       let { params; defaults; body; returnType; _ } = func in
       let reason = mk_reason "setter function" vloc in
@@ -2294,7 +2286,8 @@ and object_ cx type_params_map reason ?(allow_sealed=true) props =
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj in
         false, SMap.empty, Some result
-    | Property (_, { Property.key = Property.Computed k; value = v; _ }) ->
+    | Property (loc, { Property.key = Property.Computed k; value = v; access; _ }) ->
+        warn_access_modifier cx loc access;
         let k = expression cx type_params_map k in
         let v = expression cx type_params_map v in
         let obj = eval_object (map, result) in
@@ -4701,6 +4694,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
           returnType; typeParameters; body; _ };
         kind;
         static;
+        access;
         decorators;
       }) ->
 
@@ -4712,6 +4706,8 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         let msg = "get/set properties not yet supported" in
         FlowError.add_error cx (loc, [msg])
       | _ -> ());
+
+      warn_access_modifier cx loc access;
 
       let typeparams, type_params_map =
         Anno.mk_type_param_declarations cx type_params_map typeParameters in
@@ -4788,7 +4784,9 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         typeAnnotation;
         value;
         static;
+        access;
       }) ->
+        warn_access_modifier cx loc access;
         (match value with
           | None -> ()
           | Some _ ->
@@ -4876,15 +4874,17 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
   let opt_static_fields = Context.esproposal_class_static_fields cx in
   let opt_inst_fields = Context.esproposal_class_instance_fields cx in
   List.iter (function
-    | Body.Method (_, {
+    | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
         value = _, { Ast.Expression.Function.body; async; generator; _ };
         static;
+        access;
         kind;
         decorators;
       }) ->
 
+      warn_access_modifier cx loc access;
       warn_or_ignore_decorators cx decorators;
 
       let this, super, class_sig =

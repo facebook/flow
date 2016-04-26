@@ -13,6 +13,11 @@
  * https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
  *)
 
+type access =
+  | ReadWrite
+  | ReadOnly
+  | WriteOnly
+
 module rec Identifier : sig
   type t = Loc.t * t'
   and t' = {
@@ -69,6 +74,7 @@ and Type : sig
         value: Type.t;
         optional: bool;
         static: bool;
+        access: access option;
         _method: bool;
       }
       type t = Loc.t * t'
@@ -79,6 +85,7 @@ and Type : sig
         key: Type.t;
         value: Type.t;
         static: bool;
+        access: access option;
       }
       and t = Loc.t * t'
     end
@@ -555,6 +562,7 @@ and Expression : sig
         key: key;
         value: Expression.t;
         kind: kind;
+        access: access option;
         _method: bool;
         shorthand: bool;
       }
@@ -969,6 +977,7 @@ and Class : sig
       key: Expression.Object.Property.key;
       value: Loc.t * Expression.Function.t;
       static: bool;
+      access: access option;
       decorators: Expression.t list;
     }
   end
@@ -979,6 +988,7 @@ and Class : sig
       value: Expression.t option;
       typeAnnotation: Type.annotation option;
       static: bool;
+      access: access option;
     }
   end
   module Implements : sig

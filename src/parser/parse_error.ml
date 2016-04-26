@@ -16,6 +16,7 @@ type t =
   | UnexpectedString
   | UnexpectedIdentifier
   | UnexpectedReserved
+  | UnexpectedModifier
   | UnexpectedEOS
   | UnexpectedTypeAlias
   | UnexpectedTypeAnnotation
@@ -94,6 +95,7 @@ module PP =
       | UnexpectedString ->  "Unexpected string"
       | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
+      | UnexpectedModifier -> "Unexpected modifier"
       | UnexpectedEOS ->  "Unexpected end of input"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
       | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"
