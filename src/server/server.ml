@@ -424,8 +424,12 @@ struct
         (* removes excluded and lib files. the latter are already filtered *)
         want f
       then
-        (* TODO: is SourceFile always accurate? e.g. .json files *)
-        FilenameSet.add (Loc.SourceFile f) acc
+        let filename =
+          if Files_js.is_json_file f
+          then Loc.JsonFile f
+          else Loc.SourceFile f
+        in
+        FilenameSet.add filename acc
       else acc
     ) updates FilenameSet.empty
 

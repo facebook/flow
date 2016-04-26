@@ -1,4 +1,6 @@
 
+Initial status:
+
 a.js:2:17,17: number
 This type is incompatible with
 a.js:2:8,13: string
@@ -13,6 +15,8 @@ c.js:3:8,13: string
 
 Found 3 errors
 
+Delete c.js:
+
 a.js:2:17,17: number
 This type is incompatible with
 a.js:2:8,13: string
@@ -22,6 +26,8 @@ This type is incompatible with
 b.js:3:8,13: number
 
 Found 2 errors
+
+Delete b.js:
 
 a.js:2:17,17: number
 This type is incompatible with
@@ -29,6 +35,8 @@ a.js:2:8,13: string
 
 Found 1 error
 
+Restore b.js:
+
 a.js:2:17,17: number
 This type is incompatible with
 a.js:2:8,13: string
@@ -38,6 +46,8 @@ This type is incompatible with
 b.js:3:8,13: number
 
 Found 2 errors
+
+Restore c.js:
 
 a.js:2:17,17: number
 This type is incompatible with
@@ -52,3 +62,21 @@ This type is incompatible with
 c.js:3:8,13: string
 
 Found 3 errors
+
+Delete d.json:
+
+a.js:2:17,17: number
+This type is incompatible with
+a.js:2:8,13: string
+
+b.js:3:17,17: string
+This type is incompatible with
+b.js:3:8,13: number
+
+c.js:3:17,17: number
+This type is incompatible with
+c.js:3:8,13: string
+
+Found 3 errors
+
+Done!
