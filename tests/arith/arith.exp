@@ -40,42 +40,6 @@ Arith.js:22
  22:   num(x+z);
            ^^^ string
 
-Arith.js:62
- 62: str("foo" + true); // error
-                 ^^^^ boolean. This type is incompatible with
- 62: str("foo" + true); // error
-         ^^^^^^^^^^^^ string
-
-Arith.js:63
- 63: str(true + "foo"); // error
-         ^^^^ boolean. This type is incompatible with
- 63: str(true + "foo"); // error
-         ^^^^^^^^^^^^ string
-
-Arith.js:64
- 64: str("foo" + null); // error
-                 ^^^^ null. This type is incompatible with
- 64: str("foo" + null); // error
-         ^^^^^^^^^^^^ string
-
-Arith.js:65
- 65: str(null + "foo"); // error
-         ^^^^ null. This type is incompatible with
- 65: str(null + "foo"); // error
-         ^^^^^^^^^^^^ string
-
-Arith.js:66
- 66: str("foo" + undefined); // error
-                 ^^^^^^^^^ undefined. This type is incompatible with
- 66: str("foo" + undefined); // error
-         ^^^^^^^^^^^^^^^^^ string
-
-Arith.js:67
- 67: str(undefined + "foo"); // error
-         ^^^^^^^^^ undefined. This type is incompatible with
- 67: str(undefined + "foo"); // error
-         ^^^^^^^^^^^^^^^^^ string
-
 mult.js:5
   5: num(null * 1);
          ^^^^ null. This type is incompatible with
@@ -179,4 +143,4 @@ relational.js:20
                   ^^^^^^^^^ undefined
 
 
-Found 29 errors
+Found 23 errors

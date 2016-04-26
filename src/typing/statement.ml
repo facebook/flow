@@ -3017,7 +3017,7 @@ and identifier cx name loc =
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | String s ->
-      StrT (mk_reason "string" loc, Literal s)
+      StrT (mk_reason "string" loc, Literal (s, 0))
 
   | Boolean b ->
       BoolT (mk_reason "boolean" loc, Some b)
@@ -3026,7 +3026,7 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
       NullT.at loc
 
   | Number f ->
-      NumT (mk_reason "number" loc, Literal (f, lit.raw))
+      NumT (mk_reason "number" loc, Literal ((f, lit.raw), 0))
 
   | RegExp _ ->
       Flow.get_builtin_type cx (mk_reason "regexp" loc) "RegExp"
@@ -3164,7 +3164,7 @@ and binary cx type_params_map loc = Ast.Expression.Binary.(function
       let t1 = expression cx type_params_map left in
       let t2 = expression cx type_params_map right in
       Flow.mk_tvar_where cx reason (fun t ->
-        Flow.flow cx (t1, AdderT (reason, t2, t));
+        Flow.flow cx (t1, AdderT (reason, false, t2, t));
       )
 )
 
@@ -3323,8 +3323,8 @@ and assignment cx type_params_map loc = Ast.Expression.(function
       let rhs_t = expression cx type_params_map rhs in
       let result_t = Flow.mk_tvar cx reason in
       (* lhs = lhs + rhs *)
-      Flow.flow cx (lhs_t, AdderT (reason, rhs_t, result_t));
-      Flow.flow cx (rhs_t, AdderT (reason, lhs_t, result_t));
+      Flow.flow cx (lhs_t, AdderT (reason, false, rhs_t, result_t));
+      Flow.flow cx (rhs_t, AdderT (reason, true, lhs_t, result_t));
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | _, Ast.Pattern.Identifier (id_loc, { Ast.Identifier.name; _ }) ->
@@ -4094,7 +4094,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       let obj_t = expression cx type_params_map _object in
 
       let prop_reason = mk_reason (spf "property `%s`" prop_name) prop_loc in
-      Flow.flow cx (obj_t, HasPropT (prop_reason, None, TypeTerm.Literal prop_name));
+      Flow.flow cx (obj_t, HasPropT (prop_reason, None, TypeTerm.Literal (prop_name, 0)));
 
       let expr_reason = mk_reason (spf "property `%s`" prop_name) expr_loc in
       let prop_t = match Refinement.get cx expr expr_reason with

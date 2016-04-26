@@ -542,11 +542,11 @@ and mk_keys_type reason = function
 
 and mk_singleton_string reason key =
   let reason = replace_reason (spf "string literal `%s`" key) reason in
-  SingletonStrT (reason, key)
+  SingletonStrT (reason, (key, 0))
 
 and mk_singleton_number reason num raw =
   let reason = replace_reason (spf "number literal `%.16g`" num) reason in
-  SingletonNumT (reason, (num, raw))
+  SingletonNumT (reason, ((num, raw), 0))
 
 and mk_singleton_boolean reason b =
   let reason = replace_reason (spf "boolean literal `%b`" b) reason in
