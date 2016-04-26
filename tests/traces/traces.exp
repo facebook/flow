@@ -10,19 +10,19 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
   2: function g0(y:string) { }
-                   ^^^^^^ ~> StrT [string] (from path 2)
+                   ^^^^^^ ~> UseT(UnknownUse, StrT) [string] (from path 2)
 * path 2:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
   3: function f0(x) { g0(x) }
-                         ^ ~> OpenT [identifier `x`] (from path 3)
+                         ^ ~> UseT(UnknownUse, OpenT) [identifier `x`] (from path 3)
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [identifier `x`] (from [not shown])
 * path 3:
   4: f0(0);
         ^   NumT [number]
   3: function f0(x) { g0(x) }
-                 ^ ~> OpenT [parameter `x`] (from [not shown])
+                 ^ ~> UseT(UnknownUse, OpenT) [parameter `x`] (from [not shown])
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [identifier `x`]
 
@@ -38,19 +38,19 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
   7: function g1(a:string, b:string) { }
-                             ^^^^^^ ~> StrT [string] (from path 2)
+                             ^^^^^^ ~> UseT(UnknownUse, StrT) [string] (from path 2)
 * path 2:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
-                               ^ ~> OpenT [identifier `y`] (from path 3)
+                               ^ ~> UseT(UnknownUse, OpenT) [identifier `y`] (from path 3)
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [identifier `y`] (from [not shown])
 * path 3:
   9: f1("hey", 0);
                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
-                    ^ ~> OpenT [parameter `y`] (from [not shown])
+                    ^ ~> UseT(UnknownUse, OpenT) [parameter `y`] (from [not shown])
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [identifier `y`]
 
@@ -64,14 +64,14 @@ Trace:
  14: f2(function(x) { return x * x });
                              ^ StrT [string]
  14: f2(function(x) { return x * x });
-                             ^ ~> OpenT [identifier `x`] (from path 2)
+                             ^ ~> UseT(UnknownUse, OpenT) [identifier `x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> NumT [number]
+                             ^^^^^ ~> UseT(UnknownUse, NumT) [number]
 * path 2:
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ StrT [string]
  14: f2(function(x) { return x * x });
-                 ^ ~> OpenT [parameter `x`] (from path 3)
+                 ^ ~> UseT(UnknownUse, OpenT) [parameter `x`] (from path 3)
  14: f2(function(x) { return x * x });
                              ^ ~> ReposLowerT [identifier `x`]
 * path 3:
@@ -90,14 +90,14 @@ Trace:
  14: f2(function(x) { return x * x });
                                  ^ StrT [string]
  14: f2(function(x) { return x * x });
-                                 ^ ~> OpenT [identifier `x`] (from path 2)
+                                 ^ ~> UseT(UnknownUse, OpenT) [identifier `x`] (from path 2)
  14: f2(function(x) { return x * x });
-                             ^^^^^ ~> NumT [number]
+                             ^^^^^ ~> UseT(UnknownUse, NumT) [number]
 * path 2:
  12: function g2(ylam: (s:string) => number) { }
                           ^^^^^^ StrT [string]
  14: f2(function(x) { return x * x });
-                 ^ ~> OpenT [parameter `x`] (from path 3)
+                 ^ ~> UseT(UnknownUse, OpenT) [parameter `x`] (from path 3)
  14: f2(function(x) { return x * x });
                                  ^ ~> ReposLowerT [identifier `x`]
 * path 3:
@@ -118,14 +118,14 @@ Trace:
  19: function double(n) { return n * 2 }
                                  ^ StrT [string]
  19: function double(n) { return n * 2 }
-                                 ^ ~> OpenT [identifier `n`] (from path 2)
+                                 ^ ~> UseT(UnknownUse, OpenT) [identifier `n`] (from path 2)
  19: function double(n) { return n * 2 }
-                                 ^^^^^ ~> NumT [number]
+                                 ^^^^^ ~> UseT(UnknownUse, NumT) [number]
 * path 2:
  17: function g3(ylam: (s:string) => number) { }
                           ^^^^^^ StrT [string]
  19: function double(n) { return n * 2 }
-                     ^ ~> OpenT [parameter `n`] (from path 3)
+                     ^ ~> UseT(UnknownUse, OpenT) [parameter `n`] (from path 3)
  19: function double(n) { return n * 2 }
                                  ^ ~> ReposLowerT [identifier `n`]
 * path 3:
@@ -151,11 +151,11 @@ Trace:
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^     ObjT [props of React element `B`]
   6:   propTypes: { foo: React.PropTypes.string.isRequired }
-       ^^^^^^^^^       ~> ObjT [propTypes of React component] (from path 3)
+       ^^^^^^^^^       ~> UseT(UnknownUse, ObjT) [propTypes of React component] (from path 3)
 * path 3:
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^     ObjT [props of React element `B`]
-~> OpenT [existential] (from [not shown]). See lib: react.js:94
+~> UseT(UnknownUse, OpenT) [existential] (from [not shown]). See lib: react.js:94
 
 Traces2.js:17
  17:     return <B bar="hey"/>;
@@ -174,11 +174,11 @@ Trace:
  15:     return <A foo="hey"/>;
                 ^^^^^^^^^^^^^^     ObjT [props of React element `A`]
  10:   propTypes: { bar: React.PropTypes.string.isRequired }
-       ^^^^^^^^^      ~> ObjT [propTypes of React component] (from path 3)
+       ^^^^^^^^^      ~> UseT(UnknownUse, ObjT) [propTypes of React component] (from path 3)
 * path 3:
  15:     return <A foo="hey"/>;
                 ^^^^^^^^^^^^^^     ObjT [props of React element `A`]
-~> OpenT [existential] (from [not shown]). See lib: react.js:94
+~> UseT(UnknownUse, OpenT) [existential] (from [not shown]). See lib: react.js:94
 
 
 Found 7 errors

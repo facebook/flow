@@ -243,9 +243,15 @@ module rec TypeTerm : sig
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
 
+  and use_op =
+    | FunReturn
+    | FunImplicitReturn
+    | Addition
+    | UnknownUse
+
   and use_t =
     (* def types can be used as upper bounds *)
-    | UseT of t
+    | UseT of use_op * t
 
     (*************)
     (* use types *)
@@ -865,7 +871,7 @@ end)
 
 (* lift an operation on Type.t to an operation on Type.use_t *)
 let lift_to_use f = function
-  | UseT t -> f t
+  | UseT (_, t) -> f t
   | _ -> ()
 
 (* def types vs. use types *)
@@ -1000,7 +1006,7 @@ and reason_of_defer_use_t = function
       reason
 
 and reason_of_use_t = function
-  | UseT t -> reason_of_t t
+  | UseT (_, t) -> reason_of_t t
 
   | BindT (reason, _)
   | ApplyT (reason, _, _)
@@ -1213,7 +1219,7 @@ and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
 
 and mod_reason_of_use_t f = function
-  | UseT t -> UseT (mod_reason_of_t f t)
+  | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
 
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
@@ -1377,8 +1383,14 @@ let string_of_ctor = function
   | ExtendsT _ -> "ExtendsT"
   | CustomFunT _ -> "CustomFunT"
 
+let string_of_use_op = function
+  | FunReturn -> "FunReturn"
+  | FunImplicitReturn -> "FunImplicitReturn"
+  | Addition -> "Addition"
+  | UnknownUse -> "UnknownUse"
+
 let string_of_use_ctor = function
-  | UseT t -> string_of_ctor t
+  | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
   | SummarizeT _ -> "SummarizeT"
   | SuperT _ -> "SuperT"

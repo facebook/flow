@@ -1,12 +1,10 @@
 function_return.js:7
   7: function f(x): number {
-                    ^^^^^^ return undefined. This type is incompatible with
-  7: function f(x): number {
-                    ^^^^^^ number
+                    ^^^^^^ number. This type is incompatible with an implicitly-returned undefined.
 
 function_return.js:23
  23:   return;
-       ^^^^^^^ undefined. This type is incompatible with
+       ^^^^^^^ undefined. This type is incompatible with the expected return type of
  19: function h(x): number {
                     ^^^^^^ number
 

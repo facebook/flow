@@ -32,7 +32,7 @@ Closure.js:77
 
 cond_havoc.js:12
  12:   return x; // error, string ~/~> number (return type anno) TODO
-              ^ string. This type is incompatible with
+              ^ string. This type is incompatible with the expected return type of
   6: function example(b: bool): number {
                                 ^^^^^^ number
 

@@ -164,10 +164,17 @@ let reasons_of_trace ~prep_path ?(level=0) trace =
 
   let tmap, imap = index_trace level trace in
 
+  let is_pipelined_tvar ~steps ~i lower =
+    i > 0 && (
+      let upper = match List.nth steps (i - 1) with (_, upper, _, _) -> upper in
+      match upper with
+      | UseT (_, upper) -> lower = upper
+      | _ -> false
+    )
+  in
   let print_step (steps: step list) i (lower, upper, Parent parent, _) =
     (* omit lower if it's a pipelined tvar *)
-    (if i > 0 &&
-      UseT lower = (match List.nth steps (i - 1) with (_, upper, _, _) -> upper)
+    (if is_pipelined_tvar ~steps ~i lower
     then []
     else [pretty_r ~prep_path max_pos_len (reason_of_t_add_id lower)
       (spf "%s " (string_of_ctor lower)) ""]

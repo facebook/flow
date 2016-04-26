@@ -1,6 +1,6 @@
 poly.js:3
   3: function foo2<T,S>(x:T):S { return x; }
-                                        ^ T. This type is incompatible with
+                                        ^ T. This type is incompatible with the expected return type of
   3: function foo2<T,S>(x:T):S { return x; }
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `S`
 
@@ -12,7 +12,7 @@ poly.js:10
 
 poly.js:20
  20: function foo7<R>(x:R):R { return foo5(); }
-                                      ^^^^^^ array type. This type is incompatible with
+                                      ^^^^^^ array type. This type is incompatible with the expected return type of
  20: function foo7<R>(x:R):R { return foo5(); }
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `R`
 

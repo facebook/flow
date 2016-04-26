@@ -213,7 +213,7 @@ end = struct
 
   (* for when a t has been extracted from a use_t *)
   let flow_err_use_t cx trace msg ?extra lower upper =
-    flow_err cx trace msg ?extra lower (UseT upper)
+    flow_err cx trace msg ?extra lower (UseT (UnknownUse, upper))
 
 end
 

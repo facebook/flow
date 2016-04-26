@@ -6,7 +6,7 @@ test.js:3
 
 test.js:9
   9:         return x; // error, since T: number and U: number does not imply U: T
-                    ^ number. This type is incompatible with
+                    ^ number. This type is incompatible with the expected return type of
   7: class C<T: number> {
            ^ some incompatible instantiation of `T`
 

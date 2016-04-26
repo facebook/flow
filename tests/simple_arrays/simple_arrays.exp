@@ -1,6 +1,6 @@
 array.js:4
   4:     if (i % 2 == 0) { a[i] = 0; }
-                                  ^ number. This type is incompatible with
+                                  ^ number. This type is incompatible with the expected return type of
   8: function foo(i): string { return a[i]; }
                       ^^^^^^ string
 

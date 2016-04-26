@@ -198,19 +198,19 @@ local.js:54
 
 null_tests.js:150
 150:       return super.p;  // not ok
-                  ^^^^^^^ null. This type is incompatible with
+                  ^^^^^^^ null. This type is incompatible with the expected return type of
 147:   ensure103(): string {
                     ^^^^^^ string
 
 null_tests.js:150
 150:       return super.p;  // not ok
-                  ^^^^^^^ undefined. This type is incompatible with
+                  ^^^^^^^ undefined. This type is incompatible with the expected return type of
 147:   ensure103(): string {
                     ^^^^^^ string
 
 switch.js:49
  49:   return foo; // error, possibly uninitialized
-              ^^^ possibly uninitialized variable. This type is incompatible with
+              ^^^ possibly uninitialized variable. This type is incompatible with the expected return type of
  27: function exhaustion2(x, y): number {
                                  ^^^^^^ number
 

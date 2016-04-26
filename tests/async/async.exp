@@ -38,9 +38,7 @@ union: type application of identifier `Promise` | type parameter `T` of async re
 
 async.js:45
  45:   static async m(a): void { await a; } // error, void != Promise<void>
-                          ^^^^ Promise. This type is incompatible with
- 45:   static async m(a): void { await a; } // error, void != Promise<void>
-                          ^^^^ undefined
+                          ^^^^ undefined. This type is incompatible with an implicitly-returned Promise.
 
 async2.js:11
  11:     var a = await foo();
@@ -58,9 +56,7 @@ async2.js:26
 
 async2.js:50
  50:   async function voidoid5(): void { // error, void != Promise<void>
-                                  ^^^^ Promise. This type is incompatible with
- 50:   async function voidoid5(): void { // error, void != Promise<void>
-                                  ^^^^ undefined
+                                  ^^^^ undefined. This type is incompatible with an implicitly-returned Promise.
 
 async2.js:57
  57:   : Promise<number> { // error, number != void

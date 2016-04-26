@@ -1,6 +1,6 @@
 nullable.js:1
   1: function foo():string { return null; }
-                                    ^^^^ null. This type is incompatible with
+                                    ^^^^ null. This type is incompatible with the expected return type of
   1: function foo():string { return null; }
                     ^^^^^^ string
 

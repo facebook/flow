@@ -346,7 +346,7 @@ scope.js:93
 
 scope.js:103
 103:     return x(); // error: string ~> number
-                ^^^ string. This type is incompatible with
+                ^^^ string. This type is incompatible with the expected return type of
 101:   function f0(x = () => a): number {
                                  ^^^^^^ number
 

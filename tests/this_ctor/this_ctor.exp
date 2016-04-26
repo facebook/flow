@@ -2,7 +2,7 @@ test.js:10
  10:     return new this.constructor(this.n); // Error A ~> number
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
   1: class A {
-           ^ A. This type is incompatible with
+           ^ A. This type is incompatible with the expected return type of
   9:   badClone(): number {
                    ^^^^^^ number
 

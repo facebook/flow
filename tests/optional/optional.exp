@@ -84,7 +84,7 @@ optional.js:9
   9: qux(0,0);
      ^^^^^^^^ function call
   9: qux(0,0);
-           ^ number. This type is incompatible with
+           ^ number. This type is incompatible with the expected return type of
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                   ^^^^^^ string
 
@@ -92,7 +92,7 @@ optional.js:10
  10: qux(0,...["",42]);
      ^^^^^^^^^^^^^^^^^ function call
  10: qux(0,...["",42]);
-                  ^^ number. This type is incompatible with
+                  ^^ number. This type is incompatible with the expected return type of
   7: function qux(x="hello",...y):string { foo(x); return y[0]; }
                                   ^^^^^^ string
 

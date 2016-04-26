@@ -24,7 +24,7 @@ switch_default_fallthrough.js:17
 
 switch_default_fallthrough.js:21
  21:     return b; // error, number ~/> string
-                ^ number. This type is incompatible with
+                ^ number. This type is incompatible with the expected return type of
   4: function foo(x : mixed): string {
                               ^^^^^^ string
 
@@ -54,7 +54,7 @@ switch_default_fallthrough.js:44
 
 switch_default_fallthrough.js:46
  46:     return a+b; // error, string ~/> number
-                ^^^ string. This type is incompatible with
+                ^^^ string. This type is incompatible with the expected return type of
  24: function baz(x: mixed): number {
                              ^^^^^^ number
 

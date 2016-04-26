@@ -1,6 +1,6 @@
 advanced_arrows.js:7
   7: var bad = (x: number): string => x; // Error!
-                                      ^ number. This type is incompatible with
+                                      ^ number. This type is incompatible with the expected return type of
   7: var bad = (x: number): string => x; // Error!
                             ^^^^^^ string
 

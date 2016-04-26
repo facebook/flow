@@ -70,7 +70,7 @@ test.js:26
  26:     return new this(); // error B ~> number
                 ^^^^^^^^^^ constructor call
   9: class B extends A {
-           ^ B. This type is incompatible with
+           ^ B. This type is incompatible with the expected return type of
  25:   static badCreate(): number {
                            ^^^^^^ number
 
@@ -102,7 +102,7 @@ test.js:53
 
 test.js:54
  54:     return this.x; // error
-                ^^^^^^ number. This type is incompatible with
+                ^^^^^^ number. This type is incompatible with the expected return type of
  52:   static foo(): string {
                      ^^^^^^ string
 

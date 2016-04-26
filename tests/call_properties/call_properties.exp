@@ -1,6 +1,6 @@
 A.js:8
   8:   return f();
-              ^^^ string. This type is incompatible with
+              ^^^ string. This type is incompatible with the expected return type of
   7: function b(f: { (): string }): number {
                                     ^^^^^^ number
 
@@ -52,7 +52,7 @@ B.js:11
 
 C.js:7
   7: function b(x: { (z: number): string }): (z: number) => number {
-                                  ^^^^^^ string. This type is incompatible with
+                                  ^^^^^^ string. This type is incompatible with the expected return type of
   7: function b(x: { (z: number): string }): (z: number) => number {
                                                             ^^^^^^ number
 
@@ -88,7 +88,7 @@ D.js:11
 
 D.js:20
  20: function e(x: { (): string; (x: number): string }): () => number {
-                                              ^^^^^^ string. This type is incompatible with
+                                              ^^^^^^ string. This type is incompatible with the expected return type of
  20: function e(x: { (): string; (x: number): string }): () => number {
                                                                ^^^^^^ number
 

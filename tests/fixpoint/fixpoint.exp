@@ -38,7 +38,7 @@ Ycombinator.js:10
  10:   function fix_f(x:number):number { return f(x); }
                                                 ^^^^ function call
  10:   function fix_f(x:number):number { return f(x); }
-                                                ^^^^ string. This type is incompatible with
+                                                ^^^^ string. This type is incompatible with the expected return type of
  10:   function fix_f(x:number):number { return f(x); }
                                 ^^^^^^ number
 
@@ -54,7 +54,7 @@ Ycombinator.js:14
  14:   function fix_f(x:string):string { return f(x); }
                                                 ^^^^ function call
  14:   function fix_f(x:string):string { return f(x); }
-                                                ^^^^ number. This type is incompatible with
+                                                ^^^^ number. This type is incompatible with the expected return type of
  14:   function fix_f(x:string):string { return f(x); }
                                 ^^^^^^ string
 

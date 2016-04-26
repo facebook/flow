@@ -6,7 +6,7 @@ annot.js:4
 
 annot.js:6
   6: var qux = function(str:string, i:number):number { return foo(str,i); }
-                                                              ^^^^^^^^^^ string. This type is incompatible with
+                                                              ^^^^^^^^^^ string. This type is incompatible with the expected return type of
   6: var qux = function(str:string, i:number):number { return foo(str,i); }
                                               ^^^^^^ number
 

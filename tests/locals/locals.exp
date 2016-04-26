@@ -126,7 +126,7 @@ locals.js:14
 
 locals.js:22
  22:   return x;
-              ^ string. This type is incompatible with
+              ^ string. This type is incompatible with the expected return type of
  17: function foo0(b: bool): number {
                              ^^^^^^ number
 

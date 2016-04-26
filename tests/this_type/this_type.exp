@@ -140,7 +140,7 @@ self.js:4
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
                             ^^^^^^^^^^^^^ call of method `foo`
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
-                            ^^^^^^^^^^^^^ A. This type is incompatible with
+                            ^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
               ^^^^ some incompatible instantiation of `this`
 

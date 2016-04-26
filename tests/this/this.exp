@@ -1,6 +1,6 @@
 This.js:29
  29:   return this.x
-              ^^^^^^ string. This type is incompatible with
+              ^^^^^^ string. This type is incompatible with the expected return type of
  28: function f1() : number {
                      ^^^^^^ number
 
@@ -26,7 +26,7 @@ global object
 
 This.js:49
  49:     return a2()
-                ^^^^ string. This type is incompatible with
+                ^^^^ string. This type is incompatible with the expected return type of
  47: function f2() : number {
                      ^^^^^^ number
 

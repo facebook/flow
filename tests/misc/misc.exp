@@ -28,7 +28,7 @@ D.js:11
  11: var i = o.fn();
              ^^^^^^ call of method `fn`
   6: function g():string { return this.i; }
-                                  ^^^^^^ boolean. This type is incompatible with
+                                  ^^^^^^ boolean. This type is incompatible with the expected return type of
   6: function g():string { return this.i; }
                   ^^^^^^ string
 
@@ -58,7 +58,7 @@ F.js:2
 
 F.js:5
   5:   return x.length;
-              ^^^^^^^^ number. This type is incompatible with
+              ^^^^^^^^ number. This type is incompatible with the expected return type of
   4: function foo(x: Array<number>): string {
                                      ^^^^^^ string
 

@@ -460,7 +460,7 @@ number.js:77
 
 number.js:97
  97:       return s; // error
-                  ^ number. This type is incompatible with
+                  ^ number. This type is incompatible with the expected return type of
  93:   function(s: number): ?Mode {
                              ^^^^ number enum
 
@@ -472,13 +472,13 @@ number.js:116
 
 property.js:71
  71:     return x[y.z];  // error
-                ^^^^^^ null. This type is incompatible with
+                ^^^^^^ null. This type is incompatible with the expected return type of
  68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                ^^^^^^ string
 
 property.js:71
  71:     return x[y.z];  // error
-                ^^^^^^ undefined. This type is incompatible with
+                ^^^^^^ undefined. This type is incompatible with the expected return type of
  68: function c2(x: {[key: string]: ?string}, y: {z: string}): string {
                                                                ^^^^^^ string
 
@@ -604,7 +604,7 @@ string.js:77
 
 string.js:98
  98:       return s; // error
-                  ^ string. This type is incompatible with
+                  ^ string. This type is incompatible with the expected return type of
  94:   function(s: string): ?Mode {
                              ^^^^ string enum
 
@@ -616,7 +616,7 @@ string.js:117
 
 switch.js:8
   8:       return text; // error, should return string
-                  ^^^^ number. This type is incompatible with
+                  ^^^^ number. This type is incompatible with the expected return type of
   3: function foo(text: string | number): string {
                                           ^^^^^^ string
 
@@ -742,7 +742,7 @@ typeof.js:5
 
 typeof.js:12
  12:     return x; // error, null
-                ^ null. This type is incompatible with
+                ^ null. This type is incompatible with the expected return type of
   9: function bar(): number {
                      ^^^^^^ number
 

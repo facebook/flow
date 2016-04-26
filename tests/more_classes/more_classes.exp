@@ -36,7 +36,7 @@ Foo.js:18
  18:     return v.bar(z,u);
                 ^^^^^^^^^^ call of method `bar`
  18:     return v.bar(z,u);
-                ^^^^^^^^^^ string. This type is incompatible with
+                ^^^^^^^^^^ string. This type is incompatible with the expected return type of
  13:   foo(y:string,z):number {
                        ^^^^^^ number
 

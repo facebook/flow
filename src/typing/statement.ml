@@ -1063,7 +1063,7 @@ and statement cx type_params_map = Ast.Statement.(
           ]
         else t
       in
-      Flow.flow_t cx (t, ret);
+      Flow.flow cx (t, UseT (FunReturn, ret));
       Env.reset_current_activation reason;
       Abnormal.save_and_throw Abnormal.Return
 
@@ -5465,9 +5465,9 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     let loc = loc_of_t ret in
     let void_t = Scope.(match kind with
     | Ordinary ->
-      VoidT (mk_reason "return undefined" loc)
+      VoidT.at loc
     | Async ->
-      let reason = mk_reason "return Promise<Unit>" loc in
+      let reason = mk_reason "Promise<void>" loc in
       let promise = Flow.get_builtin cx "Promise" reason in
       TypeAppT (promise, [VoidT.at loc])
     | Generator ->
@@ -5477,7 +5477,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     | Module -> assert_false "module scope as function activation"
     | Global -> assert_false "global scope as function activation"
     ) in
-    Flow.flow_t cx (void_t, ret)
+    Flow.flow cx (void_t, UseT (FunImplicitReturn, ret))
   );
 
   Env.pop_var_scope ();

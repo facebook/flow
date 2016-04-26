@@ -8,25 +8,25 @@ traces.js:15:8,13: string
 Trace:
 * path 1:
 traces.js:15:17,25: NumT [number]
-traces.js:15:17,25: ~> OpenT [assignment of var `a`] (from path 2)
-traces.js:15:8,13:  ~> StrT [string]
+traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [assignment of var `a`] (from path 2)
+traces.js:15:8,13:  ~> UseT(UnknownUse, StrT) [string]
 * path 2:
 traces.js:15:17,25: NumT [number]
-traces.js:15:17,25: ~> OpenT [function call] (from path 3)
-traces.js:15:17,25: ~> OpenT [function call] (from path 6)
+traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [function call] (from path 3)
+traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [function call] (from path 6)
 traces.js:15:17,25: ~> ReposLowerT [assignment of var `a`]
 * path 3:
 traces.js:12:10,14: NumT [number]
-traces.js:12:10,14: ~> OpenT [function call] (from path 4)
-traces.js:11:24,24: ~> OpenT [return]
+traces.js:12:10,14: ~> UseT(UnknownUse, OpenT) [function call] (from path 4)
+traces.js:11:24,24: ~> UseT(FunReturn, OpenT) [return]
 traces.js:15:17,25: ~> ReposLowerT [function call] (from path 6)
 * path 4:
 traces.js:12:10,12: FunT [function]
-traces.js:12:10,12: ~> OpenT [identifier `bar`] (from path 5)
+traces.js:12:10,12: ~> UseT(UnknownUse, OpenT) [identifier `bar`] (from path 5)
 traces.js:12:10,14: ~> CallT [function call]
 * path 5:
 traces.js:9:1,36:   FunT [function]
-traces.js:9:1,36:   ~> OpenT [function bar]
+traces.js:9:1,36:   ~> UseT(UnknownUse, OpenT) [function bar]
 traces.js:12:10,12: ~> ReposLowerT [identifier `bar`]
 * path 6:
 traces.js:15:17,19: FunT [function]
