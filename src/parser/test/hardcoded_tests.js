@@ -2658,6 +2658,9 @@ module.exports = {
             'loc.start.line': 1,
             'loc.start.column': 0,
           },
+          {
+            'message': 'Unexpected end of input'
+          }
         ],
         'comments': [{
           'type': 'Block',
