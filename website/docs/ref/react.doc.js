@@ -130,7 +130,7 @@ const Counter = React.createClass({
   function accepts or what kind of value it might return.
 
   Flow has a much richer type system which is able to express those constraints
-  and more. With class-based components, you can specify the your components'
+  and more. With class-based components, you can specify the components'
   props, default props, and state using Flow's annotation syntax.
 */
 
