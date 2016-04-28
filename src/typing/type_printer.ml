@@ -12,6 +12,12 @@ open Reason_js
 open Type
 open Utils_js
 
+let dedup_strlist list =
+  let _, rlist = List.fold_left (fun (set, rlist) s ->
+    SSet.add s set, if SSet.mem s set then rlist else s :: rlist
+  ) (SSet.empty, []) list
+  in List.rev rlist
+
 let name_prefix_of_t = function
   | RestT _ -> "..."
   | _ -> ""
@@ -149,19 +155,15 @@ let rec type_printer override fallback enclosure cx t =
         parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 
     | IntersectionT (_, rep) ->
-        let type_s =
-          (InterRep.members rep
-            |> List.map (pp EnclosureIntersect cx)
-            |> String.concat " & "
-          ) in
+        let mems = List.map (pp EnclosureIntersect cx) (InterRep.members rep) in
+        let mems = dedup_strlist mems in
+        let type_s = String.concat " & " mems in
         parenthesize type_s enclosure [EnclosureUnion; EnclosureMaybe]
 
     | UnionT (_, rep) ->
-        let type_s =
-          (UnionRep.members rep
-            |> List.map (pp EnclosureUnion cx)
-            |> String.concat " | "
-          ) in
+        let mems = List.map (pp EnclosureUnion cx) (UnionRep.members rep) in
+        let mems = dedup_strlist mems in
+        let type_s = String.concat " | " mems in
         parenthesize type_s enclosure [EnclosureIntersect; EnclosureMaybe]
 
     | OptionalT t ->
