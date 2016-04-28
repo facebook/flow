@@ -265,7 +265,7 @@ let compute_complete_global tcopt content_funs content_classes =
       | Some p ->
           let len = (Pos.length p) - suffix_len in
           let start = String.length gname - len in
-          if String.contains_from gname start '\\'
+          if start < 0 || String.contains_from gname start '\\'
           then None else Some (strip_all_ns gname)
     else None in
 
