@@ -15,6 +15,7 @@
 #include <caml/fail.h>
 #include <caml/signals.h>
 #include <caml/callback.h>
+#include <caml/unixsupport.h>
 
 #include <stdio.h>
 #include <pthread.h>
@@ -410,6 +411,9 @@ CAMLprim value stub_fsevents_add_watch(value env, value path)
   CAMLlocal1(ret);
   struct env *c_env = (struct env*)env;
   char *rpath = realpath(String_val(path), NULL);
+  if (rpath == NULL) {
+    uerror("realpath", path);
+  }
   send_command(c_env, ADD_WATCH, rpath);
   ret = caml_copy_string(rpath);
   free(rpath);
@@ -425,6 +429,9 @@ CAMLprim value stub_fsevents_rm_watch(value env, value path)
   CAMLlocal1(ret);
   struct env *c_env = (struct env*)env;
   char *rpath = realpath(String_val(path), NULL);
+  if (rpath == NULL) {
+    uerror("realpath", path);
+  }
   send_command(c_env, RM_WATCH, String_val(path));
   ret = caml_copy_string(rpath);
   free(rpath);
