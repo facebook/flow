@@ -41,7 +41,9 @@ let init roots =
     wpaths   = SSet.empty;
   } in
   List.iter roots begin fun root ->
-    ignore (Fsevents.add_watch env.fsevents root)
+    try ignore (Fsevents.add_watch env.fsevents root)
+    with Unix.Unix_error (Unix.ENOENT, _, _) ->
+      prerr_endline ("Not watching root \"" ^ root ^ "\": file not found.")
   end;
   env
 
