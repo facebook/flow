@@ -140,9 +140,9 @@ let reason_to_string ~sign (_, descr, variance) =
         (variance_to_string variance)
         name
   | Rconstraint_super ->
-      "`super` constraints are covariant"
+      "`super` constraints on method type parameters are covariant"
   | Rconstraint_as ->
-      "`as` constraints are contravariant"
+      "`as` constraints on method type parameters are contravariant"
 
 let detailed_message variance pos stack =
   match stack with
@@ -384,6 +384,8 @@ and class_method tcopt root _method_name method_ env =
             end ~init:env in
           let env =
             List.fold_left ~f:(fun_param tcopt root) ~init:env ft_params in
+          let env =
+            List.fold_left ~f:(fun_tparam tcopt root) ~init:env ft_tparams in
           let env = fun_ret tcopt root env ft_ret in
           env
       | _ -> assert false
@@ -393,6 +395,12 @@ and fun_param tcopt root env (_, (reason, _ as ty)) =
   let reason_contravariant = pos, Rfun_parameter, Pcontravariant in
   let variance = Vcontravariant [reason_contravariant] in
   type_ tcopt root variance env ty
+
+and fun_tparam tcopt root env (_, _, cstr_opt) =
+  begin match cstr_opt with
+  | None -> env
+  | Some cstr -> constraint_ tcopt root env cstr
+  end
 
 and fun_ret tcopt root env (reason, _ as ty) =
   let pos = Reason.to_pos reason in
@@ -419,7 +427,7 @@ and type_ tcopt root variance env (reason, ty) =
       (* `this` constraints are bivariant (otherwise any class that used the
        * `this` type would not be able to use covariant type params) *)
       env
-  | Tgeneric (name, cstr_opt) ->
+  | Tgeneric (name, _) ->
       let pos = Reason.to_pos reason in
       (* This section makes the position more precise.
        * Say we find a return type that is a tuple (int, int, T).
@@ -438,10 +446,7 @@ and type_ tcopt root variance env (reason, ty) =
         | x -> x
       in
       let env = add_variance env name variance in
-      begin match cstr_opt with
-        | None -> env
-        | Some cstr -> constraint_ tcopt root env cstr
-      end
+      env
   | Toption ty ->
       type_ tcopt root variance env ty
   | Tprim _ -> env
@@ -481,7 +486,8 @@ and type_ tcopt root variance env (reason, ty) =
         type_ tcopt root variance env ty
       end ty_map env
 
-(* `as` constraints must be contravariant and `super` constraints covariant. To
+(* `as` constraints on method type parameters must be contravariant
+ * and `super` constraints on method type parameters are covariant. To
  * see why, suppose that we allow the wrong variance:
  *
  *   class Foo<+T> {
