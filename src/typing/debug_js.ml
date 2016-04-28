@@ -367,7 +367,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out
     ]
 
-  | SpecializeT (_, cache, targs, tvar) -> [
+  | SpecializeT (_, _, cache, targs, tvar) -> [
       "cache", JSON_Bool cache;
       "types", JSON_Array (List.map (_json_of_t json_cx) targs);
       "tvar", _json_of_t json_cx tvar

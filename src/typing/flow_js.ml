@@ -1502,35 +1502,40 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        their reasons, so we'd trivially lose precision. *)
 
     | (ThisTypeAppT(c,this,ts), _) ->
-      let reason = reason_of_use_t u in
-      let tc = specialize_class cx trace reason c ts in
-      let c = instantiate_this_class cx trace reason tc this in
-      rec_flow cx trace (mk_instance cx reason ~for_type:false c, u)
+      let reason_op = reason_of_use_t u in
+      let reason_tapp = reason_of_t l in
+      let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
+      let c = instantiate_this_class cx trace reason_op tc this in
+      rec_flow cx trace (mk_instance cx reason_op ~for_type:false c, u)
 
     | (_, UseT (use_op, ThisTypeAppT(c,this,ts))) ->
-      let reason = reason_of_t l in
-      let tc = specialize_class cx trace reason c ts in
-      let c = instantiate_this_class cx trace reason tc this in
-      let t_out = mk_instance cx reason ~for_type:false c in
+      let reason_op = reason_of_t l in
+      let reason_tapp = reason_of_use_t u in
+      let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
+      let c = instantiate_this_class cx trace reason_op tc this in
+      let t_out = mk_instance cx reason_op ~for_type:false c in
       rec_flow cx trace (l, UseT (use_op, t_out))
 
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_use_t u in
-        let t = mk_typeapp_instance cx reason_op ~cache:true c ts in
+        let reason_tapp = reason_of_t l in
+        let t = mk_typeapp_instance cx ~reason_op ~reason_tapp ~cache:true c ts in
         rec_flow cx trace (t, u)
 
     | (TypeAppT(c,ts), _) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
-          let reason = reason_of_use_t u in
-          let t = mk_typeapp_instance cx reason c ts in
+          let reason_op = reason_of_use_t u in
+          let reason_tapp = reason_of_t l in
+          let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (t, u);
           TypeAppExpansion.pop ()
         )
 
     | (_, UseT (use_op, TypeAppT(c,ts))) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
-          let reason = reason_of_t l in
-          let t = mk_typeapp_instance cx reason c ts in
+          let reason_op = reason_of_t l in
+          let reason_tapp = reason_of_use_t u in
+          let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (l, UseT (use_op, t));
           TypeAppExpansion.pop ()
         )
@@ -1971,16 +1976,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        to be the same as implicit specialization, which is handled by a
        fall-through case below.The exception is when the PolyT has type
        parameters with defaults. *)
-    | (PolyT (ids,t), SpecializeT(reason,cache,ts,tvar))
+    | (PolyT (ids,t), SpecializeT(reason_op,reason_tapp,cache,ts,tvar))
         when ts <> [] || (poly_minimum_arity ids < List.length ids) ->
-      let t_ = instantiate_poly_with_targs cx trace reason ~cache (ids,t) ts in
+      let t_ = instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ~cache (ids,t) ts in
       rec_flow_t cx trace (t_, tvar)
 
     | PolyT (tps, _), VarianceCheckT(_, ts, polarity) ->
       variance_check cx polarity (tps, ts)
 
     (* empty targs specialization of non-polymorphic classes is a no-op *)
-    | (ClassT _ | ThisClassT _), SpecializeT(_,_,[],tvar) ->
+    | (ClassT _ | ThisClassT _), SpecializeT(_,_,_,[],tvar) ->
       rec_flow_t cx trace (l, tvar)
 
     (* this-specialize a this-abstracted class by substituting This *)
@@ -2088,8 +2093,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            using `*`. *)
         | UseT (_, TypeT _) -> true
         | _ -> false in
-      let reason = reason_of_use_t u in
-      let t_ = instantiate_poly ~weak cx trace reason (ids,t) in
+      let reason_op = reason_of_use_t u in
+      let reason_tapp = reason_of_t l in
+      let t_ = instantiate_poly ~weak cx trace ~reason_op ~reason_tapp (ids,t) in
       rec_flow cx trace (t_, u)
 
     (* when a this-abstracted class flows to upper bounds, fix the class *)
@@ -4191,13 +4197,25 @@ and poly_minimum_arity xs =
   |> List.length
 
 (* Instantiate a polymorphic definition given type arguments. *)
-and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
+and instantiate_poly_with_targs
+  cx
+  trace
+  ~reason_op
+  ~reason_tapp
+  ?(cache=false)
+  (xs,t)
+  ts
+  =
   let minimum_arity = poly_minimum_arity xs in
   let maximum_arity = List.length xs in
+  let reason_arity = reason_of_t t in
   if List.length ts > maximum_arity
   then begin
     let msg = spf "Too many type arguments. Expected at most %d" maximum_arity in
-    add_error cx (mk_info reason_op [msg]);
+    add_extended_error cx [
+      mk_info reason_tapp [msg];
+      mk_info reason_arity ["See definition here"];
+    ]
   end;
   let map, _ = List.fold_left
     (fun (map, ts) typeparam ->
@@ -4208,7 +4226,10 @@ and instantiate_poly_with_targs cx trace reason_op ?(cache=false) (xs,t) ts =
       | {default=None; _;}, [] ->
           (* fewer arguments than params but no default *)
           let msg = spf "Too few type arguments. Expected at least %d" minimum_arity in
-          add_error cx (mk_info reason_op [msg]);
+          add_extended_error cx [
+            mk_info reason_tapp [msg];
+            mk_info reason_arity ["See definition here"];
+          ];
           AnyT reason_op, []
       | _, t::ts ->
           t, ts in
@@ -4232,7 +4253,7 @@ and cache_instantiate cx trace cache (typeparam, reason_op) t =
   else t
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
+and instantiate_poly ?(weak=false) cx trace ~reason_op ~reason_tapp (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
     if weak then (
       match typeparam.bound with
@@ -4241,7 +4262,7 @@ and instantiate_poly ?(weak=false) cx trace reason_op (xs,t) =
     ) else ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
   )
   in
-  instantiate_poly_with_targs cx trace reason_op (xs,t) ts
+  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* instantiate each param of a polymorphic type with its upper bound *)
 and instantiate_poly_param_upper_bounds cx typeparams =
@@ -4271,10 +4292,10 @@ and instantiate_this_class cx trace reason tc this =
 (* Specialize targs in a class. This is somewhat different from
    mk_typeapp_instance, in that it returns the specialized class type, not the
    specialized instance type. *)
-and specialize_class cx trace reason c ts =
+and specialize_class cx trace ~reason_op ~reason_tapp c ts =
   if ts = [] then c
-  else mk_tvar_where cx reason (fun tvar ->
-    rec_flow cx trace (c, SpecializeT (reason, false, ts, tvar))
+  else mk_tvar_where cx reason_op (fun tvar ->
+    rec_flow cx trace (c, SpecializeT (reason_op, reason_tapp, false, ts, tvar))
   )
 
 and mk_object_with_proto cx reason ?dict proto =
@@ -5651,9 +5672,9 @@ and rec_unify cx trace t1 t2 =
     let args2 = instantiate_poly_param_upper_bounds cx params2 in
     List.iter2 (rec_unify cx trace) args1 args2;
     let inst1 = let r = reason_of_t t1 in
-      instantiate_poly_with_targs cx trace r (params1, t1) args1 in
+      instantiate_poly_with_targs cx trace ~reason_op:r ~reason_tapp:r (params1, t1) args1 in
     let inst2 = let r = reason_of_t t2 in
-      instantiate_poly_with_targs cx trace r (params2, t2) args2 in
+      instantiate_poly_with_targs cx trace ~reason_op:r ~reason_tapp:r (params2, t2) args2 in
     rec_unify cx trace inst1 inst2
 
   | ArrT (_, t1, ts1), ArrT (_, t2, ts2) ->
@@ -5854,9 +5875,9 @@ and get_builtin_typeapp cx reason x ts =
   TypeAppT(get_builtin cx x reason, ts)
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
-and mk_typeapp_instance cx reason ?(cache=false) c ts =
-  let t = mk_tvar cx reason in
-  flow_opt cx (c, SpecializeT(reason,cache,ts,t));
+and mk_typeapp_instance cx ~reason_op ~reason_tapp ?(cache=false) c ts =
+  let t = mk_tvar cx reason_op in
+  flow_opt cx (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
   mk_instance cx (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing

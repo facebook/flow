@@ -305,12 +305,16 @@ module rec TypeTerm : sig
     | ReifyTypeT of reason * t_out
 
     (* operation on polymorphic types *)
-    (** SpecializeT(_, cache, targs, tresult) instantiates a polymorphic type with
+    (** SpecializeT(_, _, cache, targs, tresult) instantiates a polymorphic type with
         type arguments targs, and flows the result into tresult. If cache is set,
         it looks up a cache of existing instantiations for the type parameters of
         the polymorphic type, unifying the type arguments with those
-        instantiations if such exist. **)
-    | SpecializeT of reason * bool * t list * t
+        instantiations if such exist.
+
+        The first reason is the reason why we're specializing. The second
+        reason points to the type application itself
+    **)
+    | SpecializeT of reason * reason * bool * t list * t
     (* operation on this-abstracted classes *)
     | ThisSpecializeT of reason * t * t
     (* variance check on polymorphic types *)
@@ -1041,7 +1045,7 @@ and reason_of_use_t = function
   | EqT (reason, _) ->
       reason
 
-  | SpecializeT(reason,_,_,_)
+  | SpecializeT(reason,_,_,_,_)
       -> reason
 
   | ThisSpecializeT(reason,_,_)
@@ -1254,7 +1258,8 @@ and mod_reason_of_use_t f = function
 
   | ReifyTypeT (reason, t_out) -> ReifyTypeT (f reason, t_out)
 
-  | SpecializeT(reason, cache, ts, t) -> SpecializeT (f reason, cache, ts, t)
+  | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
+      SpecializeT (f reason_op, reason_tapp, cache, ts, t)
 
   | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
 
