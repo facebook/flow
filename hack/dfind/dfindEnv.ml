@@ -57,10 +57,9 @@ type t = {
  *)
 (*****************************************************************************)
 
-let make roots =
-  let fsnotify = Fsnotify.init roots in
+let make () =
   {
-    fsnotify  = fsnotify          ;
+    fsnotify  = Fsnotify.init ()  ;
     files     = TimeFiles.empty   ;
     new_files = SSet.empty        ;
     dirs      = SMap.empty        ;

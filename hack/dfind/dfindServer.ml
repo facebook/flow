@@ -59,7 +59,7 @@ let run_daemon (scuba_table, roots) (ic, oc) =
   Printexc.record_backtrace true;
   let t = Unix.gettimeofday () in
   let roots = List.map roots Path.to_string in
-  let env = DfindEnv.make roots in
+  let env = DfindEnv.make () in
   List.iter roots (DfindAddFile.path env);
   EventLogger.dfind_ready scuba_table t;
   Daemon.to_channel oc Ready;

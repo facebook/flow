@@ -15,8 +15,9 @@ exception Error of string * int
 
 type watch = string
 type env = {
-          fsevents : Fsevents.env;
-  mutable wpaths   : SSet.t;
+  fsevents : Fsevents.env;
+  mutable roots : string list;
+  mutable wpaths : SSet.t;
 }
 
 type event = {
@@ -24,26 +25,33 @@ type event = {
   wpath : string; (* The watched path that triggered this event *)
 }
 
+let is_prefixed_by_dir fn dir =
+  let prefix = dir ^ Filename.dir_sep in
+  String.length fn > String.length prefix &&
+  String.sub fn 0 (String.length prefix) = prefix
+
 (* Returns None if we're already watching that path and Some watch otherwise *)
 let add_watch env path =
-  (* FSEvents is watching the root directory. You don't actually need to tell it
-   * to watch subdirectories and files too *)
   if SSet.mem path env.wpaths
   then None
   else begin
+    (* FSEvents is watching the root directory. You don't actually need to tell
+     * it to watch subdirectories and files too *)
+    if not (List.exists ~f:(is_prefixed_by_dir path) env.roots)
+    then begin
+      ignore (Fsevents.add_watch env.fsevents path);
+      env.roots <- path :: env.roots;
+    end;
+
     env.wpaths <- SSet.add path env.wpaths;
     Some path
   end
 
-let init roots =
-  let env = {
-    fsevents = Fsevents.init ();
-    wpaths   = SSet.empty;
-  } in
-  List.iter roots begin fun root ->
-    ignore (Fsevents.add_watch env.fsevents root)
-  end;
-  env
+let init () = {
+  fsevents = Fsevents.init ();
+  wpaths = SSet.empty;
+  roots = [];
+}
 
 let read env =
   List.map

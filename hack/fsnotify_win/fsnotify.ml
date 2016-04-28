@@ -36,7 +36,7 @@ module SSet = Set.Make(String)
 type env = {
   fsenv: fsenv;
   fd: Unix.file_descr;
-  watchers: watcher_id list;
+  mutable watchers: (string * watcher_id) list; (* root path * watcher id *)
   mutable wpaths: SSet.t;
 }
 
@@ -64,16 +64,16 @@ external raw_read_events:
 
 (** Init *)
 
-let init roots =
+let init () =
   let in_fd, out_fd = Unix.pipe () in
   Unix.set_close_on_exec in_fd;
   Unix.set_close_on_exec out_fd;
-  let fsenv = raw_init out_fd in
-  let watchers = List.map roots ~f:(raw_add_watch fsenv) in
-  { fsenv; fd = in_fd; watchers; wpaths = SSet.empty }
+  { fsenv = raw_init out_fd; fd = in_fd; watchers = []; wpaths = SSet.empty }
 
-
-(** Faked add_watch, as for `fsnotify_darwin`. *)
+let is_prefixed_by_dir fn (dir, _) =
+  let prefix = dir ^ Filename.dir_sep in
+  String.length fn > String.length prefix &&
+  String.sub fn 0 (String.length prefix) = prefix
 
 (* Returns None if we're already watching that path and Some watch otherwise *)
 let add_watch env path =
@@ -82,6 +82,11 @@ let add_watch env path =
   if SSet.mem path env.wpaths then
     None
   else begin
+    if not (List.exists ~f:(is_prefixed_by_dir path) env.watchers)
+    then begin
+      let watcher = raw_add_watch env.fsenv path in
+      env.watchers <- (path, watcher) :: env.watchers
+    end;
     env.wpaths <- SSet.add path env.wpaths;
     Some ()
   end

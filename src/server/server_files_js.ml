@@ -27,6 +27,7 @@ let recheck_file = file_of_root "recheck"
 let lock_file    = file_of_root "lock"
 let pids_file    = file_of_root "pids"
 let socket_file  = file_of_root "sock"
+let dfind_log_file = file_of_root "dfind"
 let log_file ~tmp_dir root opts =
   match opts.FlowConfig.Opts.log_file with
   | Some x -> x
