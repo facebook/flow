@@ -397,7 +397,7 @@ function cardComparator(a, b, aceHigh?) {
 /*
   ## JavaScript standard library
 
-  Type declarations for the [JavaScript standard libarary][CORE] are included
+  Type declarations for the [JavaScript standard library][CORE] are included
   with Flow.
 
   [CORE]: https://github.com/facebook/flow/blob/master/lib/core.js
@@ -417,7 +417,7 @@ function cardComparator(a, b, aceHigh?) {
 
   ## Node.js
 
-  Type declarations for the [Node.js standard libarary][NODE] are included with
+  Type declarations for the [Node.js standard library][NODE] are included with
   Flow.
 
   [NODE]: https://github.com/facebook/flow/blob/master/lib/node.js
