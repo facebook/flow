@@ -39,7 +39,7 @@ type event = {
   wpath : string; (* The watched path that triggered this event *)
 }
 
-let init _roots = {
+let init () = {
   fd     = wrap (Inotify.init) ();
   wpaths = WMap.empty;
 }
