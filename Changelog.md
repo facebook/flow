@@ -1,4 +1,28 @@
-###master (next release)
+###v0.24.0
+
+New features:
+- Many common errors now have more contextual error messages. [Check out the test file changes](https://github.com/facebook/flow/commit/7b8c3aed5d852ad9b8290076508658168d0d5fde) to see what this looks like!
+- If a `<PROJECT_ROOT>/flow-typed/` directory exists, Flow will now assume it is a [libs] directory by default to help reduce the amount of out-of-the-box configuration that is necessary. (Thanks @splodingsocks!)
+- Support for specifying a default on a type parameter declaration. For example: `type Iterator<Yield, Return=void, Next=void> = ...`. 
+  - NOTE: [The pull request to add syntax support for this is pending](https://github.com/babel/babylon/pull/25), so it may be necessary to wait on that to ship before using this feature
+
+Notable bug fixes:
+- Fixed the `flow coverage` command.
+- Fixed crashes when running `type-at-pos` and `dump-types` over destructuring.
+- Fixed a refinement bug when evaluating a method call on a refined variable in some cases.
+- Fixed an issue where some system commands could throw if Flow attempts to read a directory that it doesn't have permission to read.
+- Fixed a bug where the inferred return type of some functions that *might* return `void` could end up as *exactly* `void` (rather than a union of the possible return types).
+- Fixed a bug where the server would crash if a `.json` file is deleted after a server was already running.
+- Type applications that don't have the right number of type parameters (i.e. `Map<number>`) now emit a more clear error.
+- Lots of dom/bom improvements sent in from contributors! (big thanks to @marudor for lots of these!)
+
+Misc:
+- Better locations for logical operator errors
+- Better error message sorting: 
+  - Sorts errors in `.json` files by name coalesced with `.js` files
+  - Sorts all internal errors before parse errors before type/inference errors
+  - Sorts lib file errors before source file errors
+- Perf improvements for some comparisons of polymorphic types
 
 ###v0.23.1
 
