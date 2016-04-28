@@ -869,6 +869,7 @@ end with type t = Impl.t) = struct
     | Any -> any_type loc
     | Void -> void_type loc
     | Null -> null_type loc
+    | This -> this_type loc
     | Number -> number_type loc
     | String -> string_type loc
     | Boolean -> boolean_type loc
@@ -892,6 +893,8 @@ end with type t = Impl.t) = struct
   and void_type loc = node "VoidTypeAnnotation" loc [||]
 
   and null_type loc = node "NullTypeAnnotation" loc [||]
+
+  and this_type loc = node "ThisTypeAnnotation" loc [||]
 
   and number_type loc = node "NumberTypeAnnotation" loc [||]
 

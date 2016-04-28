@@ -67,6 +67,12 @@ let btwn loc1 loc2 = {
   _end = loc2._end;
 }
 
+let start loc = {
+  source = loc.source;
+  start = loc.start;
+  _end = loc.start;
+}
+
 let btwn_exclusive loc1 loc2 = {
   source = loc1.source;
   start = loc1._end;

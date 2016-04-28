@@ -525,6 +525,7 @@
       "false",   T_FALSE;
       "number",  T_NUMBER_TYPE;
       "string",  T_STRING_TYPE;
+      "this",    T_THIS;
       "void",    T_VOID_TYPE;
       "null",    T_NULL;
     ]
