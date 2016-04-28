@@ -91,7 +91,7 @@ and expand_ env (root_reason, root_ty as root) =
             create_root_from_type_constant
               env class_pos class_name root head in
           expand_ { env with ids = tail } ty
-      | Tabstract (AKgeneric (s, _), Some ty) ->
+      | Tabstract (AKgeneric s, Some ty) ->
           (* Expanding a generic creates a dependent type *)
           let dep_ty = `cls s, [] in
           let env =

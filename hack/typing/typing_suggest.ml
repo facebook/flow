@@ -210,7 +210,7 @@ and normalize_ tcopt = function
       )
     with Exit -> Tarraykind AKany
   end
-  | Tabstract (AKgeneric (_, _), _) as x -> x
+  | Tabstract (AKgeneric _, _) as x -> x
   | Tabstract (AKdependent _, Some ty) -> normalize_ tcopt (snd ty)
   | Toption (_, (Toption (_, _) as ty)) -> normalize_ tcopt ty
   | Toption (_, Tprim Nast.Tvoid) -> raise Exit

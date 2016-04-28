@@ -171,10 +171,9 @@ class deep_type_mapper = object(this)
     })
   method! on_tabstract env r ak cstr =
     match ak with
-      | AKgeneric (x, super) ->
-          let env, super = this#on_opt_type env super in
+      | AKgeneric x ->
           let env, cstr = this#on_opt_type env cstr in
-          env, (r, Tabstract (AKgeneric (x, super), cstr))
+          env, (r, Tabstract (AKgeneric x, cstr))
       | AKnewtype (x, tyl) ->
           let env, tyl = List.map_env env tyl this#on_type in
           let env, cstr = this#on_opt_type env cstr in

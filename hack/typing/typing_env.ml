@@ -31,11 +31,20 @@ type fake_members = {
 type expression_id = Ident.t
 type local = locl ty list * locl ty * expression_id
 type local_env = fake_members * local IMap.t
-
+type tparam_info = {
+  lower_bounds : locl ty list;
+  upper_bounds : locl ty list;
+}
+type tpenv = tparam_info SMap.t
 type env = {
   pos     : Pos.t      ;
   tenv    : locl ty IMap.t ;
   subst   : int IMap.t ;
+  (* Lower and upper bounds on generic type parameters and abstract types
+   * For constraints of the form Tu <: Tv where both Tu and Tv are type
+   * parameters, we store an upper bound for Tu and a lower bound for Tv
+   *)
+  tpenv   : tpenv      ;
   lenv    : local_env  ;
   genv    : genv       ;
   decl_env: Decl_env.env;
@@ -148,6 +157,52 @@ let get_shape_field_name = function
   | SFlit (_, s) -> s
   | SFclass_const ((_, s1), (_, s2)) -> s1^"::"^s2
 
+let get_lower_bounds env name =
+  match SMap.get name env.tpenv with
+  | None -> []
+  | Some {lower_bounds; _} -> lower_bounds
+
+let get_upper_bounds env name =
+  match SMap.get name env.tpenv with
+  | None -> []
+  | Some {upper_bounds; _} -> upper_bounds
+
+let add_upper_bound_ env name ty =
+  match SMap.get name env.tpenv with
+  | None -> { env with tpenv =
+      SMap.add name {lower_bounds=[]; upper_bounds=[ty]} env.tpenv }
+  | Some {lower_bounds; upper_bounds} ->
+    { env with tpenv =
+        SMap.add name {lower_bounds=lower_bounds;
+                       upper_bounds=ty::upper_bounds} env.tpenv }
+
+let add_lower_bound_ env name ty =
+  match SMap.get name env.tpenv with
+  | None -> { env with tpenv =
+      SMap.add name {lower_bounds=[ty]; upper_bounds=[]} env.tpenv }
+  | Some {lower_bounds; upper_bounds} ->
+    { env with tpenv =
+        SMap.add name {lower_bounds=ty::lower_bounds;
+                       upper_bounds=upper_bounds} env.tpenv }
+
+let add_upper_bound env name ty =
+  match ty with
+  | (r, Tabstract (AKgeneric formal_super, _)) ->
+    let env = add_lower_bound_ env formal_super
+                (r, Tabstract (AKgeneric name, None)) in
+    add_upper_bound_ env name ty
+  | _ ->
+    add_upper_bound_ env name ty
+
+let add_lower_bound env name ty =
+  match ty with
+  | (r, Tabstract (AKgeneric formal_sub, _)) ->
+    let env = add_upper_bound_ env formal_sub
+                (r, Tabstract (AKgeneric name, None)) in
+    add_lower_bound_ env name ty
+  | _ ->
+    add_lower_bound_ env name ty
+
 (* When printing out types (by hh_show()), TVars are printed with an
  * associated identifier. We reindex them (in the order of appearance) to be
  * consecutive integers starting from zero, because the internal identifier
@@ -224,13 +279,12 @@ let rec debug stack env (r, ty) =
       | Tarraykey -> o "Tarraykey"
       | Tnoreturn -> o "Tnoreturn"
       )
-  | Tabstract (AKgeneric(s, super), cstr_opt) ->
+  | Tabstract (AKgeneric s, cstr_opt) ->
       o "generic ";
       o s;
-      (match cstr_opt, super with
-      | None, None -> ()
-      | Some x, _ -> o " as <"; debug stack env x; o ">"
-      | _, Some x -> o " super <"; debug stack env x; o ">"
+      (match cstr_opt with
+       | None -> ()
+       | Some x -> o " as <"; debug stack env x; o ">"
       )
   | Tabstract (ak, cstr) ->
      o "[";  o (AbstractKind.to_string ak); o "]";
@@ -270,7 +324,16 @@ and debugl stack env x =
   | [x] -> debug stack env x
   | x :: rl -> debug stack env x; o ", "; debugl stack env rl
 
-let debug env ty = debug ISet.empty env ty; print_newline()
+(* For now, we only display lower bounds because upper bounds
+ * are shown inline *)
+and debug_tpenv env =
+  let o = print_string in
+  SMap.iter (fun x {lower_bounds; _} ->
+    if not (List.is_empty lower_bounds)
+    then (o " where "; o x; o " super ";
+          debugl ISet.empty env lower_bounds)) env.tpenv
+
+let debug env ty = debug ISet.empty env ty; debug_tpenv env; print_newline()
 
 let empty_fake_members = {
   last_call = None;
@@ -284,6 +347,7 @@ let empty tcopt file ~droot = {
   pos     = Pos.none;
   tenv    = IMap.empty;
   subst   = IMap.empty;
+  tpenv   = SMap.empty;
   lenv    = empty_local;
   todo    = [];
   in_loop = false;

@@ -108,7 +108,7 @@ let enum_class_check env tc consts const_types =
           | Tabstract (AKenum _, _) -> ()
           (* Don't tell anyone, but we allow type params too, since there are
            * Enum subclasses that need to do that *)
-          | Tabstract (AKgeneric (_, _), _) -> ()
+          | Tabstract (AKgeneric _, _) -> ()
           | Tany | Tarraykind _ | Tprim _ | Toption _ | Tvar _
             | Tabstract (_, _) | Tclass (_, _) | Ttuple _ | Tanon (_, _)
             | Tunresolved _ | Tobject | Tfun _ | Tshape _ ->

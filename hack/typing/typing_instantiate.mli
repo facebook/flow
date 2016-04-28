@@ -29,7 +29,7 @@ type subst
  *)
 (*****************************************************************************)
 
-val make_subst: tparam list -> decl ty list -> subst
+val make_subst: decl tparam list -> decl ty list -> subst
 
 (*****************************************************************************)
 (* Primitive instantiating a type.

@@ -91,7 +91,7 @@ module ErrorString = struct
     match ak, cstr with
     | AKnewtype (_, _), _ -> "an object of type "^x
     | AKenum _, _ -> "a value of "^x
-    | AKgeneric (_, _), _ -> "a value of generic type "^x
+    | AKgeneric _, _ -> "a value of generic type "^x
     | AKdependent (`cls c, []), Some (_, ty) ->
         type_ ty^" (known to be exactly the class '"^strip_ns c^"')"
     | AKdependent ((`static | `expr _), _), _ ->
@@ -159,7 +159,7 @@ module Suggest = struct
     | Tany                   -> "..."
     | Tmixed                 -> "mixed"
     | Tgeneric (s, _)        -> s
-    | Tabstract (AKgeneric (s, _), _) -> s
+    | Tabstract (AKgeneric s, _) -> s
     | Toption ty             -> "?" ^ type_ ty
     | Tprim tp               -> prim tp
     | Tvar _                 -> "..."
@@ -311,7 +311,8 @@ module Full = struct
     | Some param_name, param_type ->
         ty st env o param_type; o " "; o param_name
 
-  and tparam o (_, (_, x), _) = o x
+  and tparam: type a. _ -> a tparam -> _ =
+    fun o (_, (_, x), _) -> o x
 
   let to_string env x =
     let buf = Buffer.create 50 in

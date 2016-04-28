@@ -189,14 +189,13 @@ and unify_ env r1 ty1 r2 ty2 =
           in
           let env, argl = List.map2_env env argl1 argl2 unify in
           env, Tabstract (AKnewtype (x1, argl), tcstr)
-  | Tabstract (AKgeneric (x1, Some super1), tcstr1),
-    Tabstract (AKgeneric (x2, Some super2), tcstr2)
+  | Tabstract (AKgeneric x1, tcstr1),
+    Tabstract (AKgeneric x2, tcstr2)
     when x1 = x2 && (Option.is_none tcstr1 = Option.is_none tcstr2) ->
-      let env, super = unify env super1 super2 in
       let env, tcstr = match Option.map2 tcstr1 tcstr2 ~f:(unify env) with
         | None -> env, None
         | Some (env, cstr) -> env, Some cstr in
-      env, Tabstract (AKgeneric (x1, Some super), tcstr)
+      env, Tabstract (AKgeneric x1, tcstr)
   | Tabstract (ak1, tcstr1), Tabstract (ak2, tcstr2)
     when ak1 = ak2 && (Option.is_none tcstr1 = Option.is_none tcstr2) ->
       let env, tcstr = match Option.map2 tcstr1 tcstr2 ~f:(unify env) with

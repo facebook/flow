@@ -87,7 +87,13 @@ and instantiate_ subst x =
         | Fellipsis _ | Fstandard _ as x -> x
       in
       let ret = instantiate subst ft.ft_ret in
-      Tfun { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
+      let tparams = List.map ft.ft_tparams begin fun (var, name, cstropt) ->
+        (var, name, match cstropt with
+        | None -> None
+        | Some (ck, ty) -> Some (ck, instantiate subst ty))
+      end in
+      Tfun { ft with ft_arity = arity; ft_params = params;
+                     ft_ret = ret; ft_tparams = tparams }
   | Tapply (x, tyl) ->
       let tyl = List.map tyl (instantiate subst) in
       Tapply (x, tyl)

@@ -237,7 +237,7 @@ and abstract_kind =
     (* enum foo ... *)
   | AKenum of string
     (* <T super C> ; None if 'as' constrained *)
-  | AKgeneric of string * locl ty option
+  | AKgeneric of string
     (* see dependent_type *)
   | AKdependent of dependent_type
 
@@ -320,7 +320,7 @@ and 'phase fun_type = {
   ft_deprecated: string option   ;
   ft_abstract  : bool            ;
   ft_arity     : 'phase fun_arity    ;
-  ft_tparams   : tparam list     ;
+  ft_tparams   : 'phase tparam list     ;
   ft_params    : 'phase fun_params   ;
   ft_ret       : 'phase ty           ;
 }
@@ -391,7 +391,7 @@ and class_type = {
   tc_kind                : Ast.class_kind;
   tc_name                : string ;
   tc_pos                 : Pos.t ;
-  tc_tparams             : tparam list ;
+  tc_tparams             : decl tparam list ;
   tc_consts              : class_const SMap.t;
   tc_typeconsts          : typeconst_type SMap.t;
   tc_props               : class_elt SMap.t;
@@ -423,12 +423,13 @@ and enum_type = {
 and typedef_type = {
   td_pos: Pos.t;
   td_vis: Nast.typedef_visibility;
-  td_tparams: tparam list;
+  td_tparams: decl tparam list;
   td_constraint: decl ty option;
   td_type: decl ty;
 }
 
-and tparam = Ast.variance * Ast.id * (Ast.constraint_kind * decl ty) option
+and 'phase tparam =
+  Ast.variance * Ast.id * (Ast.constraint_kind * 'phase ty) option
 
 type phase_ty =
   | DeclTy of decl ty
@@ -465,7 +466,7 @@ let arity_min ft_arity : int = match ft_arity with
 module AbstractKind = struct
   let to_string = function
     | AKnewtype (name, _) -> name
-    | AKgeneric (name, _) -> name
+    | AKgeneric name -> name
     | AKenum name -> "enum "^(Utils.strip_ns name)
     | AKdependent (dt, ids) ->
        let dt =

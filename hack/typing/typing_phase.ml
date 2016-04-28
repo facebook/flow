@@ -129,20 +129,18 @@ let rec localize_with_env ~ety_env env (dty: decl ty) =
             | Some (ck, ty) ->
                 let env, ty = localize ~ety_env env ty in
                 TGenConstraint.add_check_constraint_todo env r x ck ty x_ty
-            | None -> env
-          in
+            | None -> env in
           env, (ety_env, (Reason.Rinstantiate (fst x_ty, x, r), snd x_ty))
       | None ->
           (match cstr_opt with
-          | None ->
-              env, (ety_env, (r, Tabstract (AKgeneric (x, None), None)))
+          | None | Some (Ast.Constraint_super, _) ->
+            env, (ety_env, (r, Tabstract (AKgeneric x, None)))
+            (* We retain the bound in Tabstract here despite env.bounds;
+               there remains lots of special casing in typing.ml *)
           | Some (Ast.Constraint_as, ty) ->
               let env, ty = localize ~ety_env env ty in
-              env, (ety_env, (r, Tabstract (AKgeneric (x, None), Some ty)))
-          | Some (Ast.Constraint_super, ty) ->
-              let env, ty = localize ~ety_env env ty in
-              env, (ety_env, (r, Tabstract (AKgeneric (x, Some ty), None)))
-          )
+              env, (ety_env, (r, Tabstract (AKgeneric x, Some ty)))
+            )
       )
   | r, Toption ty ->
        let env, ty = localize ~ety_env env ty in
@@ -214,13 +212,22 @@ and localize_ft ?(instantiate_tparams=true) ~ety_env env ft =
     let env, param = localize ~ety_env env param in
     env, (name, param)
   end in
+  let env, tparams = List.map_env env ft.ft_tparams
+    begin fun env (var, name, cstropt) ->
+    match cstropt with
+    | None -> env, (var, name, None)
+    | Some (ck, ty) ->
+      let env, ty = localize ~ety_env env ty in env, (var, name, Some(ck, ty))
+    end in
+
   let env, arity = match ft.ft_arity with
     | Fvariadic (min, (name, var_ty)) ->
        let env, var_ty = localize ~ety_env env var_ty in
        env, Fvariadic (min, (name, var_ty))
     | Fellipsis _ | Fstandard (_, _) as x -> env, x in
   let env, ret = localize ~ety_env env ft.ft_ret in
-  env, { ft with ft_arity = arity; ft_params = params; ft_ret = ret }
+  env, { ft with ft_arity = arity; ft_params = params;
+                 ft_ret = ret; ft_tparams = tparams }
 
 let env_with_self env =
   {
@@ -235,6 +242,19 @@ let env_with_self env =
  *)
 let localize_with_self env ty =
   localize env ty ~ety_env:(env_with_self env)
+
+let localize_bounds (env:Env.env) (tparams:Nast.tparam list) =
+  let add_bound env ((_, (_,id), cstr_opt): Nast.tparam) =
+    match cstr_opt with
+    | None ->
+      env
+    | Some (ck, h) ->
+      let env, ty = localize_with_self env
+                      (Decl_hint.hint env.Env.decl_env h) in
+      match ck with
+      | Ast.Constraint_super -> Env.add_lower_bound env id ty
+      | Ast.Constraint_as    -> Env.add_upper_bound env id ty in
+  List.fold_left tparams ~f:add_bound ~init:env
 
 (* Helper functions *)
 

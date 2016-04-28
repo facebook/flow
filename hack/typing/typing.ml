@@ -333,6 +333,7 @@ and fun_def tcopt f =
       in
       TI.check_params_instantiable env f_params;
       TI.check_tparams_instantiable env f.f_tparams;
+      let env = Phase.localize_bounds env f.f_tparams in
       let env, params = List.map_env env f_params make_param_local_ty in
       let env = List.fold2_exn ~f:bind_param ~init:env params f_params in
       let env = fun_ env hret (fst f.f_name) nb f.f_fun_kind in
@@ -1366,7 +1367,7 @@ and class_const ?(incl_tc=false) env p (cid, mid) =
   let env, const_ty =
     class_get ~is_method:false ~is_const:true ~incl_tc env cty mid cid in
   match const_ty with
-    | r, Tabstract (AKgeneric (n, _), _) ->
+    | r, Tabstract (AKgeneric n, _) ->
       let () = match cid with
         | CIstatic | CIexpr _ -> ();
         | _ -> Errors.abstract_const_usage p (Reason.to_pos r) n; ()
@@ -3853,6 +3854,7 @@ and class_def_ env c tc =
     (c.c_extends @ c.c_implements @ c.c_uses)
     (Decl_hint.hint env.Env.decl_env) in
   TI.check_tparams_instantiable env (fst c.c_tparams);
+  let env = Phase.localize_bounds env (fst c.c_tparams) in
   Typing_variance.class_ (Env.get_options env) (snd c.c_name) tc impl;
   let self = get_self_from_c env c in
   List.iter impl (check_implements_tparaml env);
@@ -4032,6 +4034,7 @@ and method_def env m =
   in
   TI.check_params_instantiable env m_params;
   TI.check_tparams_instantiable env m.m_tparams;
+  let env = Phase.localize_bounds env m.m_tparams in
   let env, params = List.map_env env m_params make_param_local_ty in
   if Env.is_strict env then begin
     List.iter2_exn ~f:(check_param env) m_params params;
@@ -4076,6 +4079,7 @@ and typedef_def typedef =
     t_mode = _;
   } = typedef in
   let ty = TI.instantiable_hint env hint in
+  let env = Phase.localize_bounds env typedef.t_tparams in
   let env, ty = Phase.localize_with_self env ty in
   begin match tcstr with
     | Some tcstr ->
