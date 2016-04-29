@@ -30,7 +30,7 @@ let get_errorl_json el =
 
 let print_errorl_json oc el =
   let res = get_errorl_json el in
-  output_string oc (Hh_json.json_to_string res);
+  Hh_json.json_to_output oc res;
   flush oc
 
 let print_errorl use_json el oc =
