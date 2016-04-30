@@ -247,12 +247,13 @@ end = struct
     val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
     val generic : env -> Loc.t * Ast.Type.Generic.t
     val _object : ?allow_static:bool -> env -> Loc.t * Type.Object.t
-    val function_param_list : env -> Type.Function.Param.t option * Type.Function.Param.t list
+    val function_this_param : env -> Ast.Type.Function.ThisParam.t
+    val function_param_list : env -> Type.Function.ThisParam.t * Type.Function.Param.t list * Type.Function.Param.t option
     val annotation : env -> Ast.Type.annotation
     val annotation_opt : env -> Ast.Type.annotation option
   end = struct
     type param_list_or_type =
-      | ParamList of (Type.Function.Param.t option * Type.Function.Param.t list)
+      | ParamList of (Type.Function.ThisParam.t * Type.Function.Param.t list * Type.Function.Param.t option)
       | Type of Type.t
 
     let rec _type env = union env
@@ -398,6 +399,7 @@ end = struct
       | T_STRING_TYPE  -> Some Type.String
       | T_VOID_TYPE    -> Some Type.Void
       | T_NULL         -> Some Type.Null
+      | T_THIS         -> Some Type.This
       | _ -> None
 
     and tuple =
@@ -431,33 +433,41 @@ end = struct
         optional;
       })
 
-    and function_param_list_without_parens =
+    and function_this_param env =
+      let name, _ = Parse.identifier_or_reserved_keyword env in
+      let param = function_param_with_id env name in
+      if Peek.token env <> T_RPAREN
+      then Expect.token env T_COMMA;
+      Type.Function.ThisParam.Explicit param
+
+    and function_param_list_without_parens env this params =
       let param env =
         let name, _ = Parse.identifier_or_reserved_keyword env in
         function_param_with_id env name
-
-      in let rec param_list env acc =
+      in
+      let rec param_list env acc =
         match Peek.token env with
         | T_EOF
-        | T_ELLIPSIS
-        | T_RPAREN as t ->
-            let rest = if t = T_ELLIPSIS
-            then begin
-              Expect.token env T_ELLIPSIS;
-              Some (param env)
-            end else None in
-            rest, List.rev acc
+        | T_RPAREN ->
+            this, List.rev acc, None
+        | T_ELLIPSIS ->
+            Expect.token env T_ELLIPSIS;
+            this, List.rev acc, Some (param env)
         | _ ->
           let acc = (param env)::acc in
           if Peek.token env <> T_RPAREN
           then Expect.token env T_COMMA;
           param_list env acc
-
-      in fun env -> param_list env
+      in
+      param_list env params
 
     and function_param_list env =
         Expect.token env T_LPAREN;
-        let ret = function_param_list_without_parens env [] in
+        let this = match Peek.token env with
+          | T_THIS -> function_this_param env
+          | _ -> Type.Function.ThisParam.Implicit (Loc.start (Peek.loc env))
+        in
+        let ret = function_param_list_without_parens env this [] in
         Expect.token env T_RPAREN;
         ret
 
@@ -467,11 +477,15 @@ end = struct
       | T_EOF
       | T_ELLIPSIS ->
           (* (... is definitely the beginning of a param list *)
-          ParamList (function_param_list_without_parens env [])
+          let loc = Loc.start (Peek.loc env) in
+          let this = Type.Function.ThisParam.Implicit loc in
+          ParamList (function_param_list_without_parens env this [])
       | T_RPAREN ->
-          (* () or is definitely a param list *)
-          ParamList (None, [])
-      | T_IDENTIFIER ->
+          (* () is definitely a param list *)
+          let loc = Loc.start (Peek.loc env) in
+          ParamList (Type.Function.ThisParam.Implicit loc, [], None)
+      | T_IDENTIFIER
+      | T_THIS ->
           (* This could be a function parameter or a generic type *)
           function_param_or_generic_type env
       | token ->
@@ -498,7 +512,9 @@ end = struct
                   typeAnnotation;
                   optional;
                 }) in
-                ParamList (function_param_list_without_parens env [param])
+                let loc = Loc.start (fst name) in
+                let this = Type.Function.ThisParam.Implicit loc in
+                ParamList (function_param_list_without_parens env this [param])
               | _ ->
                 Type (_type env)
           )
@@ -507,13 +523,20 @@ end = struct
       ret
 
     and function_param_or_generic_type env =
+      let token = Peek.token env in
       let id = Parse.identifier env in
       match Peek.token env with
       | T_PLING (* optional param *)
       | T_COLON ->
           let param = function_param_with_id env id in
           ignore (Expect.maybe env T_COMMA);
-          ParamList (function_param_list_without_parens env [param])
+          let this, params = match token with
+            | T_THIS -> Type.Function.ThisParam.Explicit param, []
+            | _ ->
+                let loc = Loc.start (fst param) in
+                Type.Function.ThisParam.Implicit loc, [param]
+          in
+          ParamList (function_param_list_without_parens env this params)
       | _ ->
           Type (union_with env
                   (intersection_with env
@@ -523,11 +546,12 @@ end = struct
     and function_or_group env =
       let start_loc = Peek.loc env in
       match param_list_or_type env with
-      | ParamList (rest, params) ->
+      | ParamList (this, params, rest) ->
         Expect.token env T_ARROW;
         let returnType = _type env in
         let end_loc = fst returnType in
         Loc.btwn start_loc end_loc, Type.(Function Function.({
+          this;
           params;
           returnType;
           rest;
@@ -538,11 +562,12 @@ end = struct
     and _function env =
       let start_loc = Peek.loc env in
       let typeParameters = type_parameter_declaration ~allow_default:false env in
-      let rest, params = function_param_list env in
+      let this, params, rest = function_param_list env in
       Expect.token env T_ARROW;
       let returnType = _type env in
       let end_loc = fst returnType in
       Loc.btwn start_loc end_loc, Type.(Function Function.({
+        this;
         params;
         returnType;
         rest;
@@ -552,11 +577,12 @@ end = struct
     and _object =
       let methodish env start_loc =
         let typeParameters = type_parameter_declaration ~allow_default:false env in
-        let rest, params = function_param_list env in
+        let this, params, rest = function_param_list env in
         Expect.token env T_COLON;
         let returnType = _type env in
         let loc = Loc.btwn start_loc (fst returnType) in
         loc, Type.Function.({
+          this;
           params;
           returnType;
           rest;
@@ -790,6 +816,7 @@ end = struct
       wrap (type_parameter_declaration ~allow_default:false)
     let type_parameter_instantiation = wrap type_parameter_instantiation
     let _object ?(allow_static=false) env = wrap (_object ~allow_static) env
+    let function_this_param = wrap function_this_param
     let function_param_list = wrap function_param_list
     let annotation = wrap annotation
     let annotation_opt = wrap annotation_opt
@@ -909,9 +936,13 @@ end = struct
 
       in fun env ->
         Expect.token env T_LPAREN;
+        let this = match Peek.token env with
+          | T_THIS -> Type.function_this_param env
+          | _ -> Ast.Type.Function.ThisParam.Implicit (Loc.start (Peek.loc env))
+        in
         let params, defaults, rest = param_list env ([], [], false) in
         Expect.token env T_RPAREN;
-        params, defaults, rest
+        this, params, defaults, rest
 
     let function_body env ~async ~generator =
       let env = enter_function env ~async ~generator in
@@ -966,7 +997,7 @@ end = struct
           in
           (Type.type_parameter_declaration env, Some id)
       ) in
-      let params, defaults, rest = function_params env in
+      let this, params, defaults, rest = function_params env in
       let returnType = Type.annotation_opt env in
       let _, body, strict = function_body env ~async ~generator in
       let simple = is_simple_function_params params defaults rest in
@@ -977,6 +1008,7 @@ end = struct
         | BodyExpression (loc, _) -> loc, true) in
       Loc.btwn start_loc end_loc, Statement.(FunctionDeclaration Function.({
         id;
+        this;
         params;
         defaults;
         rest;
@@ -1618,7 +1650,7 @@ end = struct
             | _ -> Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
           id, Type.type_parameter_declaration env
         end in
-      let params, defaults, rest = Declaration.function_params env in
+      let this, params, defaults, rest = Declaration.function_params env in
       let returnType = Type.annotation_opt env in
       let end_loc, body, strict =
         Declaration.function_body env ~async ~generator in
@@ -1630,6 +1662,7 @@ end = struct
         | BodyExpression _ -> true) in
       Loc.btwn start_loc end_loc, Expression.(Function Function.({
         id;
+        this;
         params;
         defaults;
         rest;
@@ -1853,17 +1886,22 @@ end = struct
          * that it's an async function *)
         let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
         let typeParameters = Type.type_parameter_declaration env in
-        let params, defaults, rest, returnType =
+        let this, params, defaults, rest, returnType =
           (* Disallow all fancy features for identifier => body *)
           if Peek.identifier env && typeParameters = None
           then
             let id =
               Parse.identifier ~restricted_error:Error.StrictParamName env in
             let param = fst id, Pattern.Identifier id in
-            [param], [], None, None
+            let this =
+              Ast.Type.Function.ThisParam.Implicit (Loc.start (fst id))
+            in
+            this, [param], [], None, None
           else
-            let params, defaults, rest = Declaration.function_params env in
-            params, defaults, rest, Type.annotation_opt env in
+            let
+              this, params, defaults, rest = Declaration.function_params env
+            in
+            this, params, defaults, rest, Type.annotation_opt env in
 
         (* It's hard to tell if an invalid expression was intended to be an
          * arrow function before we see the =>. If there are no params, that
@@ -1897,6 +1935,7 @@ end = struct
         let loc = Loc.btwn start_loc end_loc in
         loc, Expression.(ArrowFunction Function.({
           id = None;
+          this;
           params;
           defaults;
           rest;
@@ -2063,6 +2102,10 @@ end = struct
       | Get | Set -> None
       | _ -> Type.type_parameter_declaration env) in
       Expect.token env T_LPAREN;
+      let this = match Peek.token env with
+        | T_THIS -> Type.function_this_param env
+        | _ -> Ast.Type.Function.ThisParam.Implicit (Loc.start (Peek.loc env))
+      in
       let params = Ast.Expression.Object.Property.(match kind with
       | Get -> []
       | Set ->
@@ -2083,6 +2126,7 @@ end = struct
         | BodyExpression (loc, _) -> loc, true) in
       let value = end_loc, Function.({
         id = None;
+        this;
         params;
         defaults;
         rest;
@@ -2168,7 +2212,9 @@ end = struct
             | T_LESS_THAN
             | T_LPAREN ->
                 let typeParameters = Type.type_parameter_declaration env in
-                let params, defaults, rest = Declaration.function_params env in
+                let
+                  this, params, defaults, rest = Declaration.function_params env
+                in
                 let returnType = Type.annotation_opt env in
                 let _, body, strict =
                   Declaration.function_body env ~async ~generator in
@@ -2180,6 +2226,7 @@ end = struct
                   | BodyExpression (loc, _) -> loc, true) in
                 let value = end_loc, Ast.Expression.(Function Function.({
                   id = None;
+                  this;
                   params;
                   defaults;
                   rest;
@@ -2373,7 +2420,7 @@ end = struct
           })))
         | _ ->
           let typeParameters = Type.type_parameter_declaration env in
-          let params, defaults, rest = Declaration.function_params env in
+          let this, params, defaults, rest = Declaration.function_params env in
           let returnType = Type.annotation_opt env in
           let _, body, strict =
             Declaration.function_body env ~async ~generator in
@@ -2386,6 +2433,7 @@ end = struct
             | BodyExpression (loc, _) -> loc, true) in
           let value = end_loc, Function.({
             id = None;
+            this;
             params;
             defaults;
             rest;
@@ -2404,8 +2452,14 @@ end = struct
             | Expression.Object.Property.Literal (_, {
                 Literal.value = Literal.String "constructor";
                 _;
-              }) ->
-              Class.Method.Constructor
+              }) -> (
+                match static, this with
+                | false, Type.Function.ThisParam.Explicit (loc, _) ->
+                    error_at env (loc, Error.CtorThisParam);
+                    Class.Method.Constructor
+                | false, _ -> Class.Method.Constructor
+                | _ -> Class.Method.Method
+              )
             | _ ->
               Class.Method.Method) in
           Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
@@ -3094,12 +3148,13 @@ end = struct
       let id = Parse.identifier env in
       let start_sig_loc = Peek.loc env in
       let typeParameters = Type.type_parameter_declaration env in
-      let rest, params = Type.function_param_list env in
+      let this, params, rest = Type.function_param_list env in
       Expect.token env T_COLON;
       let returnType = Type._type env in
       let end_loc = fst returnType in
       let loc = Loc.btwn start_sig_loc end_loc in
       let value = loc, Ast.Type.(Function {Function.
+        this;
         params;
         returnType;
         rest;

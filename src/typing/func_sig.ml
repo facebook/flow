@@ -2,6 +2,7 @@ module Env = Env_js
 module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
+module FlowError = Flow_error
 
 open Reason_js
 open Type
@@ -36,13 +37,67 @@ let function_kind {Ast.Function.async; generator; _ } =
   | false, true -> Generator
   | false, false -> Ordinary
 
-let mk cx tparams_map reason func =
+let mk cx tparams_map reason ?(this=Flow.dummy_this) func =
+(*TJP: Arrow functions should not receive a `this` on the signature--checking
+  the body suffices for lexical scoping.  Non-arrow functions should get
+  explicit `this` pseudo-params someday, so the optional `this` stays.  The
+  following check, however, belongs at the call site, since arrow functions
+  should still disallow a `this` parameter.*)
+  (match func with
+    | { Ast.Function.this = Ast.Type.Function.ThisParam.Explicit (loc, _); _ }
+      ->
+        let msg =
+          "explicit this pseudo-parameters are not allowed on functions" in
+        FlowError.add_error cx (loc, [msg])
+    | _ -> ());
   let {Ast.Function.typeParameters; returnType; body; _} = func in
   let kind = function_kind func in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx tparams_map typeParameters
   in
-  let params = Func_params.mk cx tparams_map func in
+  let params = Func_params.mk cx tparams_map this func in
+  let return_t =
+    let reason = mk_reason "return" (return_loc func) in
+    Anno.mk_type_annotation cx tparams_map reason returnType
+  in
+  {reason; kind; tparams; tparams_map; params; body; return_t}
+
+(*TJP
+0dcad010b88fe8861d69bc7c4bc792bf73980bb4
+let mk cx tparams_map reason func =
+  let {Ast.Function.typeParameters; returnType; body; _} = func in
+  let kind = function_kind func in
+=======
+let mk cx tparams_map reason ?(this=Flow.dummy_this) func =
+  (match func with
+    | { Ast.Function.this = Ast.Type.Function.ThisParam.Explicit (loc, _); _ }
+      ->
+        let msg =
+          "explicit this pseudo-parameters are not allowed on functions" in
+        FlowError.add_error cx (loc, [msg])
+    | _ -> ());
+  let { Ast.Function.typeParameters; returnType; _ } = func in
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx tparams_map typeParameters
+  in
+  let params = Func_params.mk cx tparams_map func this in
+  let return_t =
+    let reason = mk_reason "return" (return_loc func) in
+    Anno.mk_type_annotation cx tparams_map reason returnType
+  in
+  {reason; tparams; tparams_map; params; return_t}
+
+let mk_class_method cx tparams_map reason implicit_this func =
+  let {Ast.Function.typeParameters; returnType; _} = func in
+0dcad010b88fe8861d69bc7c4bc792bf73980bb4 Pre-rebase squash*)
+
+let mk_class_method cx tparams_map reason implicit_this func =
+  let {Ast.Function.typeParameters; returnType; body; _} = func in
+  let kind = function_kind func in
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx tparams_map typeParameters
+  in
+  let params = Func_params.mk cx tparams_map implicit_this func in
   let return_t =
     let reason = mk_reason "return" (return_loc func) in
     Anno.mk_type_annotation cx tparams_map reason returnType
@@ -54,15 +109,22 @@ let empty_body =
   let body = [] in
   Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body})
 
-let convert cx tparams_map loc func =
+let convert cx tparams_map ?(static=false) loc func =
   let {Ast.Type.Function.typeParameters; returnType; _} = func in
   let reason = mk_reason "function type" loc in
   let kind = Ordinary in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx tparams_map typeParameters
   in
+  let params = Func_params.convert cx tparams_map ~static func in
+  let body = empty_body in
+(*TJP
+0dcad010b88fe8861d69bc7c4bc792bf73980bb4 0dcad010b88fe8861d69bc7c4bc792bf73980bb4
   let params = Func_params.convert cx tparams_map func in
   let body = empty_body in
+=======
+  let params = Func_params.convert cx tparams_map ~static func in
+0dcad010b88fe8861d69bc7c4bc792bf73980bb4 Pre-rebase squash*)
   let return_t = Anno.convert cx tparams_map returnType in
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
@@ -71,17 +133,38 @@ let default_constructor tparams_map reason = {
   kind = Ordinary;
   tparams = [];
   tparams_map;
-  params = Func_params.empty;
+  params = Func_params.empty Flow.dummy_this;
   body = empty_body;
   return_t = VoidT.t;
 }
+
+(*TJP
+0dcad010b88fe8861d69bc7c4bc792bf73980bb4
+  tparams_map;
+  params = Func_params.empty;
+  body = empty_body;
+=======
+  tparams_map = SMap.empty;
+  params = Func_params.empty Flow.dummy_this;
+  return_t = VoidT.t;
+}
+
+let empty_class_method reason this = {
+  reason;
+  tparams = [];
+  tparams_map = SMap.empty;
+  params = Func_params.empty this;
+0dcad010b88fe8861d69bc7c4bc792bf73980bb4 Pre-rebase squash
+  return_t = VoidT.t;
+}
+*)
 
 let field_initializer tparams_map reason expr return_t = {
   reason;
   kind = FieldInit expr;
   tparams = [];
   tparams_map;
-  params = Func_params.empty;
+  params = Func_params.empty Flow.dummy_this; (*TJP: Find some test cases that activate this*)
   body = empty_body;
   return_t;
 }
@@ -135,13 +218,14 @@ let functiontype cx this_t {reason; tparams; params; return_t; _} =
   else PolyT (tparams, t)
 
 let methodtype {reason; tparams; params; return_t; _} =
+  let this = Func_params.this params in
   let params_tlist = Func_params.tlist params in
   let params_names = Func_params.names params in
   let t = FunT (
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_functiontype params_tlist ~params_names return_t
+    Flow.mk_methodtype this params_tlist ~params_names return_t
   ) in
   if tparams = []
   then t

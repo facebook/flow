@@ -54,7 +54,14 @@ and Type : sig
       }
     end
 
+    module ThisParam : sig
+      type t =
+      | Implicit of Loc.t
+      | Explicit of Param.t
+    end
+
     type t = {
+      this: ThisParam.t;
       params: Param.t list;
       returnType: Type.t;
       rest: Param.t option;
@@ -141,6 +148,7 @@ and Type : sig
     | Any
     | Void
     | Null
+    | This
     | Number
     | String
     | Boolean
@@ -972,6 +980,7 @@ and Function : sig
     | BodyExpression of Expression.t
   type t = {
     id: Identifier.t option;
+    this: Type.Function.ThisParam.t;
     params: Pattern.t list;
     defaults: Expression.t option list;
     rest: Identifier.t option;

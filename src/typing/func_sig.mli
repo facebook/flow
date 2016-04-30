@@ -8,12 +8,21 @@ type t
 val mk: Context.t ->
   Type.t SMap.t -> (* type params map *)
   Reason_js.t ->
+  ?this:Type.t -> (* fixed this type*)
+  Spider_monkey_ast.Function.t ->
+  t
+
+val mk_class_method: Context.t ->
+  Type.t SMap.t -> (* type params map *)
+  Reason_js.t ->
+  Type.t -> (* implicit `this` pseudo-parameter *)
   Spider_monkey_ast.Function.t ->
   t
 
 (** Create signature from function type AST. *)
 val convert: Context.t ->
   Type.t SMap.t -> (* type params map *)
+  ?static:bool ->
   Loc.t ->
   Spider_monkey_ast.Type.Function.t ->
   t
@@ -86,6 +95,8 @@ val toplevels:
 
 (** 1. Type Conversion *)
 
+(*TJP: Remove the following two, rolling their functionality into `mk` and
+  `mk_class_method`--two functions in need of renaming.*)
 (** Create a function type for function declarations/expressions. *)
 val functiontype: Context.t ->
   Type.t -> (* this *)

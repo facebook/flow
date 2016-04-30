@@ -930,7 +930,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (sink_t, _)) ->
+    | l, UseT (use_op, AnnotT (sink_t, _))
+    | ClassT (l), UseT (use_op, ClassT (AnnotT (sink_t, _))) ->
       let reason = reason_of_t sink_t in
       rec_flow cx trace (sink_t, ReposUseT (reason, use_op, l))
 
@@ -2426,7 +2427,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************************************************)
 
     | (_,
-       UseT (_, InstanceT (reason_inst, _, super, {
+       UseT (_, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -2434,7 +2435,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        })))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+        | InstanceT (_, l, _, _),
+          InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+            structural_subtype cx trace l reason
+              (super, fields_tmap, methods_tmap)
+        | _ -> ())
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -3461,7 +3469,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
-    | (MixedT _, UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+    | (MixedT _,
+       UseT (_, ExtendsT ([], l, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -3469,7 +3478,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        }))))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+        | InstanceT (_, l, _, _),
+          InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+            structural_subtype cx trace l reason
+              (super, fields_tmap, methods_tmap)
+        | _ -> ())
 
     | (MixedT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
@@ -3687,6 +3703,7 @@ and ground_subtype = function
   | (VoidT _, UseT (_, VoidT _))
   | (EmptyT _, _)
   | (_, UseT (_, MixedT _))
+  | (_, UseT (_, ClassT (MixedT _)))
   | (_, UseT (_, FunProtoT _)) (* MixedT is used for object protos, this is for funcs *)
   | (AnyT _, _)
   | (_, UseT (_, AnyT _))
@@ -5917,7 +5934,7 @@ and get_builtin_typeapp cx reason x ts =
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ~reason_op ~reason_tapp ?(cache=false) c ts =
   let t = mk_tvar cx reason_op in
-  flow_opt cx (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
+  flow_opt cx (c, SpecializeT(reason_op,reason_tapp,cache,ts,t)); (*TJP: The topology op doesn't trigger any flows! Shouldn't this trigger a specialization on the Array builtin? Checkout master and then snoop*)
   mk_instance cx (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
@@ -6000,6 +6017,7 @@ and become cx ?trace r t = match t with
 
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace reason t =
+  let repos t = mod_reason_of_t (repos_reason (loc_of_reason reason)) t in
   match t with
   | OpenT (r, id) ->
     let constraints = find_graph cx id in
@@ -6024,7 +6042,10 @@ and reposition cx ?trace reason t =
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+  | InstanceT (reason_inst, static, super, insttype) ->
+      let loc = loc_of_reason reason in
+      InstanceT (repos_reason loc reason_inst, repos static, super, insttype)
+  | _ -> repos t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
@@ -6313,8 +6334,8 @@ end
    superclass.
 *)
 (* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) cx skip ids t =
-  let recurse ?infer = assert_ground ?infer cx skip ids in
+let rec assert_ground ?(infer=false) ?(in_class=false) cx skip ids t =
+  let recurse ?infer = assert_ground ?infer ~in_class cx skip ids in
   match t with
   | BoundT _ ->
     ()
@@ -6351,13 +6372,13 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | FunT (_, static, prototype, { this_t; params_tlist; return_t; _ }) ->
     unify cx static AnyT.t;
     unify cx prototype AnyT.t;
-    unify cx this_t AnyT.t;
+    if in_class then recurse ~infer:true this_t else unify cx this_t AnyT.t;
     List.iter recurse params_tlist;
     recurse ~infer:true return_t
 
   | PolyT (_, t)
   | ThisClassT t ->
-    recurse t
+    assert_ground ~in_class:true cx skip ids t (*TJP: Does this case apply universally to PolyT?*)
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
     unify cx proto_t AnyT.t;
@@ -6367,7 +6388,9 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     recurse t;
     List.iter recurse ts
 
-  | ClassT t
+  | ClassT t ->
+    assert_ground ~in_class:true cx skip ids t
+
   | TypeT (_, t) ->
     recurse t
 
