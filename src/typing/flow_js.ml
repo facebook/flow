@@ -5934,7 +5934,7 @@ and get_builtin_typeapp cx reason x ts =
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ~reason_op ~reason_tapp ?(cache=false) c ts =
   let t = mk_tvar cx reason_op in
-  flow_opt cx (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
+  flow_opt cx (c, SpecializeT(reason_op,reason_tapp,cache,ts,t)); (*TJP: The topology op doesn't trigger any flows! Shouldn't this trigger a specialization on the Array builtin? Checkout master and then snoop*)
   mk_instance cx (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
@@ -6377,7 +6377,7 @@ let rec assert_ground ?(infer=false) ?(in_class=false) cx skip ids t =
     recurse ~infer:true return_t
 
   | PolyT (_, t) ->
-     recurse t
+    recurse t
 
   | ThisClassT t ->
     assert_ground ~in_class:true cx skip ids t

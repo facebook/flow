@@ -108,6 +108,8 @@ val toplevels:
 
 (** 1. Type Conversion *)
 
+(*TJP: Remove the following two, rolling their functionality into `mk` and
+  `mk_class_method`--two functions in need of renaming.*)
 (** Create a function type for function declarations/expressions. *)
 val functiontype: Context.t -> t -> Type.t
 

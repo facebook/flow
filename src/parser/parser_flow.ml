@@ -516,8 +516,7 @@ end = struct
                 let this = Type.Function.ThisParam.Implicit loc in
                 ParamList (function_param_list_without_parens env this [param])
               | _ ->
-                Type (_type env)
-          )
+                Type (_type env))
       in
       Expect.token env T_RPAREN;
       ret
