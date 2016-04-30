@@ -928,7 +928,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (sink_t, _)) ->
+    | l, UseT (use_op, AnnotT (sink_t, _))
+    | ClassT (l), UseT (use_op, ClassT (AnnotT (sink_t, _))) ->
       let reason = reason_of_t sink_t in
       rec_flow cx trace (ReposUpperT (reason, l), UseT (use_op, sink_t))
 
@@ -2043,7 +2044,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* TODO: ideally we'd do the same when lower bounds flow to a
        this-abstracted class, but fixing the class is easier; might need to
        revisit *)
-    | (_, UseT (use_op, ThisClassT i)) ->
+    | (_, UseT (use_op, ThisClassT i)) -> (*TJP: x ~> Class<this> case? Or has the `this` already been fixed? *)
       let r = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace r i))
 

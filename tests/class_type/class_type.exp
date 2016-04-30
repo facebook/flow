@@ -1,2 +1,8 @@
+test2.js:23
+ 23:   static gn(): Class<Z> {
+                          ^ Z. This type is incompatible with
+ 17:   static gn(): Class<this> {
+                          ^^^^ some incompatible instantiation of `this`
 
-Found 0 errors
+
+Found 1 error
