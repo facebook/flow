@@ -4571,6 +4571,7 @@ and mk_super cx type_params_map c targs =
 (* Makes signatures for fields and methods in a class. *)
 and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
   let _, { Body.body = elements } = body in
+  let this = SMap.find_unsafe "this" type_params_map in
 
   (* In case there is no constructor, pick up a default one. *)
   let default_methods =
@@ -4584,11 +4585,13 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
     else
       (* Parent class constructors simply return new instances, which is
          indicated by the VoidT return type *)
+      let this_reason = replace_reason "pseudo-param `this`" reason_c in
+      let this_repos = Flow_js.reposition cx this_reason this in
       SMap.singleton "constructor" {
         meth_reason = replace_reason "default constructor" reason_c;
         meth_tparams = [];
         meth_tparams_map = SMap.empty;
-        meth_params = Func_params.empty;
+        meth_params = Func_params.empty this_repos;
         meth_return_type = VoidT.t;
       }
   in
@@ -4642,7 +4645,9 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       let typeparams, type_params_map =
         Anno.mk_type_param_declarations cx type_params_map typeParameters in
 
-      let meth_params = Func_params.mk cx type_params_map func in
+      let implicit_this = if static then ClassT this else this in
+      let meth_params = Func_params.mk cx type_params_map func implicit_this in
+(*TJP: Ocaml method to warn on statics with `this: this` and nonstatics with `this: Class<this>` *)
       let meth_return_type = mk_return_type cx type_params_map func in
       let reason_desc = (match kind with
       | Method.Method -> spf "method `%s`" name
@@ -4655,6 +4660,8 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         meth_tparams = typeparams;
         meth_tparams_map = type_params_map;
         meth_params;
+(* TJP: `static fn(this: this)` should yield a warning (because the `this` type
+   is not `Class<>` qualified) *)
         meth_return_type;
       } in
 
@@ -4811,9 +4818,9 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
 
       warn_or_ignore_decorators cx decorators;
 
-      let this, super, class_sig =
+      let _, super, class_sig =
         if static then static_info else instance_info
-      in
+      in (* TJP: Ideally, the infos would no longer contain `this` *)
 
       let sigs_to_use = match kind with
       | Method.Constructor
@@ -4835,7 +4842,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
       Flow.generate_tests cx meth_reason meth_tparams (fun map_ ->
         let tparams_map =
           meth_tparams_map |> SMap.map (Flow.subst cx map_) in
-        let meth_params = Func_params.subst cx map_ meth_params in
+        let meth_params = Func_params.subst cx map_ meth_params in (*TJP: Verify semantics for `this` substitution*)
         let return_type = Flow.subst cx map_ meth_return_type in
         (* determine if we are in a derived constructor *)
         let derived_ctor = match super with
@@ -4852,7 +4859,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
           MixedT (replace_reason "no next" meth_reason, Mixed_everything)
         ) in
         mk_body None cx tparams_map ~kind:function_kind ~derived_ctor
-          meth_params return_type body this super yield next;
+          meth_params return_type body super yield next;
       );
       ignore  (Abnormal.swap_saved Abnormal.Return save_return);
       ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
@@ -4912,7 +4919,8 @@ and mk_methodtype method_sig =
     method_sig.meth_reason,
     Flow.dummy_static method_sig.meth_reason,
     Flow.dummy_prototype,
-    Flow.mk_functiontype
+    Flow.mk_methodtype
+      (Func_params.this method_sig.meth_params)
       (Func_params.tlist method_sig.meth_params)
       ?params_names:(Some (Func_params.names method_sig.meth_params))
       method_sig.meth_return_type
@@ -5022,7 +5030,7 @@ and mk_class = Ast.Class.(
         SMap.map (Flow.subst cx map_) method_sig.meth_tparams_map;
 
       (* params = (x: Y), ret = T *)
-      meth_params = Func_params.subst cx map_ method_sig.meth_params;
+      meth_params = Func_params.subst cx map_ method_sig.meth_params; (*TJP: Verify semantics for `this` substitution*)
       meth_return_type = Flow.subst cx map_ method_sig.meth_return_type;
     } in
 
@@ -5089,8 +5097,8 @@ and mk_class = Ast.Class.(
     let static = ClassT this in
 
     mk_class_elements cx
-      (this, super, inst_sig_substituted)
-      (static, super_static, static_sig_substituted)
+      (this, super, inst_sig_substituted) (*TJP: `this` could be useful for non-methods, but prefer the method-bound `this` for checks.*)
+      (static, super_static, static_sig_substituted) (*TJP: `statics` could be useful for non-methods, but prefer the method-bound `Class<this>` for checks.*)
       map_
       body;
   );
@@ -5308,44 +5316,46 @@ and remove_this typeparams type_params_map =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx type_params_map reason func this super =
-  let { Ast.Function.
-    typeParameters = type_params;
-    async; generator;
-    body;
-    _;
-  } = func in
+  match func with
+  | { Ast.Function.this = Ast.Type.Function.ThisParam.Explicit _; _ } ->
+      failwith "Explicit this pseudo-parameters are not allowed on functions"
+  | { Ast.Function.
+      typeParameters = type_params;
+      async; generator;
+      body;
+      _;
+    } ->
+      let kind = function_kind ~async ~generator in
 
-  let kind = function_kind ~async ~generator in
+      let typeparams, type_params_map =
+        Anno.mk_type_param_declarations cx type_params_map type_params in
 
-  let typeparams, type_params_map =
-    Anno.mk_type_param_declarations cx type_params_map type_params in
+      let params = Func_params.mk cx type_params_map func this in
+      let ret = mk_return_type cx type_params_map func in
 
-  let params = Func_params.mk cx type_params_map func  in
-  let ret = mk_return_type cx type_params_map func in
+      let save_return = Abnormal.clear_saved Abnormal.Return in
+      let save_throw = Abnormal.clear_saved Abnormal.Throw in
+      Flow.generate_tests cx reason typeparams (fun map_ ->
+        let type_params_map =
+          type_params_map |> SMap.map (Flow.subst cx map_) in
+        let params = Func_params.subst cx map_ params in
+        let ret = Flow.subst cx map_ ret in
 
-  let save_return = Abnormal.clear_saved Abnormal.Return in
-  let save_throw = Abnormal.clear_saved Abnormal.Throw in
-  Flow.generate_tests cx reason typeparams (fun map_ ->
-    let type_params_map =
-      type_params_map |> SMap.map (Flow.subst cx map_) in
-    let params = Func_params.subst cx map_ params in
-    let ret = Flow.subst cx map_ ret in
+        let yield, next = if kind = Scope.Generator then (
+          Flow.mk_tvar cx (prefix_reason "yield of " reason),
+          Flow.mk_tvar cx (prefix_reason "next of " reason)
+        ) else (
+          MixedT (replace_reason "no yield" reason, Mixed_everything),
+          MixedT (replace_reason "no next" reason, Mixed_everything)
+        ) in
 
-    let yield, next = if kind = Scope.Generator then (
-      Flow.mk_tvar cx (prefix_reason "yield of " reason),
-      Flow.mk_tvar cx (prefix_reason "next of " reason)
-    ) else (
-      MixedT (replace_reason "no yield" reason, Mixed_everything),
-      MixedT (replace_reason "no next" reason, Mixed_everything)
-    ) in
+        mk_body id cx type_params_map ~kind params ret body super yield next;
+      );
 
-    mk_body id cx type_params_map ~kind params ret body this super yield next;
-  );
+      ignore (Abnormal.swap_saved Abnormal.Return save_return);
+      ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
 
-  ignore (Abnormal.swap_saved Abnormal.Return save_return);
-  ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
-
-  (typeparams,params,ret)
+      (typeparams,params,ret)
 
 (* When in a derived constructor, initialize this and super to undefined. *)
 and initialize_this_super derived_ctor this super scope = Scope.(
@@ -5384,7 +5394,7 @@ and define_internal cx reason x =
   ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) reason)
 
 and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
-    params ret body this super yield next =
+    params ret body super yield next =
 
   let loc = Ast.Function.(match body with
     | BodyBlock (loc, _)
@@ -5429,6 +5439,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     Scope.add_entry name entry function_scope);
 
   (* special bindings for this, super, and return value slot *)
+  let this = Func_params.this params in
   initialize_this_super derived_ctor this super function_scope;
   Scope.(
     let new_entry t =

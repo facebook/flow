@@ -3930,7 +3930,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ) ([], map) xs in
     PolyT (List.rev xs, subst cx ~force:false map t)
 
-  | ThisClassT t ->
+  | ThisClassT t ->(*TJP: Figure out the syntactic origin of this*)
     let map = SMap.remove "this" map in
     ThisClassT (subst cx ~force map t)
 
@@ -3997,7 +3997,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       let ts = List.map (subst cx ~force map) ts in
       TypeAppT(c, ts)
 
-  | ThisTypeAppT(c, this, ts) ->
+  | ThisTypeAppT(c, this, ts) -> (*TJP: Grep to figure out the syntactic origin of these*)
       let c = subst cx ~force map c in
       let this = subst cx ~force map this in
       let ts = List.map (subst cx ~force map) ts in
