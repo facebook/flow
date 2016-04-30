@@ -1,7 +1,7 @@
-test2.js:23
- 23:   static gn(): Class<Z> {
-                          ^ Z. This type is incompatible with
- 17:   static gn(): Class<this> {
+test2.js:35
+ 35:   static gn(): Class<Y> {
+                          ^ Y. This type is incompatible with
+ 29:   static gn(): Class<this> {
                           ^^^^ some incompatible instantiation of `this`
 
 

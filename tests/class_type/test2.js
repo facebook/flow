@@ -1,28 +1,40 @@
 class A {}
 class B extends A {}
 
-class X {
+class K {
+  static gn() {
+    return this;
+  }
+}
+
+class L extends K {
+  static gn() { // Bug: False positive.  This is a NG.
+    return L;
+  }
+}
+
+class W {
   fn(): Class<A> {
     return B;
   }
   static fn(): Class<A> {
     return B;
   }
-  static gn(): Class<X> {
-    return X;
+  static gn(): Class<W> {
+    return W;
   }
 }
 
-class Y extends X {
+class X extends W {
   static gn(): Class<this> {
     return this;
   }
 }
 
-class Z extends Y {
-  static gn(): Class<Z> {
-    return Z;
+class Y extends X {
+  static gn(): Class<Y> {
+    return Y;
   }
 }
 
-var K: Class<X> = Y.gn();
+var a: Class<W> = X.gn();
