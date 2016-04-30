@@ -2044,7 +2044,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* TODO: ideally we'd do the same when lower bounds flow to a
        this-abstracted class, but fixing the class is easier; might need to
        revisit *)
-    | (_, UseT (use_op, ThisClassT i)) -> (*TJP: x ~> Class<this> case? Or has the `this` already been fixed? *)
+    | (_, UseT (use_op, ThisClassT i)) ->
       let r = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace r i))
 
