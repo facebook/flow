@@ -10,7 +10,7 @@
 
 open Utils_js
 
-let version = "0.24.0"
+let version = "0.24.1"
 
 let map_add map (key, value) = SMap.add key value map
 
