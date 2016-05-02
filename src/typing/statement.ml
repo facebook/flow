@@ -75,17 +75,11 @@ let function_desc ~async ~generator desc =
   | false, true -> spf "generator %s" desc
   | false, false -> desc
 
-let before_pos loc = Loc.(
-  let { line; column; offset } = loc.start in
-  let start = { line; column = column - 1; offset = offset - 1 } in
-  let _end = { line; column; offset } in
-  { loc with start; _end }
-)
-
-let function_return_loc = Ast.Function.(function
-  | {returnType = Some (_, (loc, _)); _}
-  | {body = BodyExpression (loc, _); _} -> loc
-  | {body = BodyBlock (loc, _); _} -> before_pos loc
+let method_desc name = Ast.Class.Method.(function
+  | Method -> spf "method `%s`" name
+  | Constructor -> "constructor"
+  | Get -> spf "getter for `%s`" name
+  | Set -> spf "setter for `%s`" name
 )
 
 let warn_or_ignore_decorators cx decorators_list =
@@ -120,19 +114,11 @@ let warn_or_ignore_export_star_as cx name =
   | _ -> ()
 *)
 
-type class_method_signature = {
-  meth_reason: reason;
-  meth_tparams: Type.typeparam list;
-  meth_tparams_map: Type.t SMap.t;
-  meth_params: Func_params.t;
-  meth_return_type: Type.t;
-}
-
 type class_signature = {
   sig_fields: Type.t SMap.t;
-  sig_methods: class_method_signature SMap.t;
-  sig_getters: class_method_signature SMap.t;
-  sig_setters: class_method_signature SMap.t;
+  sig_methods: Func_sig.t SMap.t;
+  sig_getters: Func_sig.t SMap.t;
+  sig_setters: Func_sig.t SMap.t;
 }
 
 (************)
@@ -3887,7 +3873,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
         }) ->
           let reason = mk_reason "defaultProps" vloc in
           let t = mk_method cx type_params_map reason func this in
-          let ret_loc = function_return_loc func in
+          let ret_loc = Func_sig.return_loc func in
           let ret_reason = repos_reason ret_loc reason in
           let default_tvar = Flow.mk_tvar cx (derivable_reason ret_reason) in
           let override_default = Flow.tvar_with_constraint cx
@@ -3910,7 +3896,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
           (* since the call to getInitialState happens internally, we need to
              fake a location to pretend the call happened. using the position
              of the return type makes it act like an IIFE. *)
-          let ret_loc = function_return_loc func in
+          let ret_loc = Func_sig.return_loc func in
           let ret_reason = repos_reason ret_loc reason in
           let state_tvar = Flow.mk_tvar cx (derivable_reason ret_reason) in
           let override_state = Flow.tvar_with_constraint cx
@@ -4584,13 +4570,8 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
     else
       (* Parent class constructors simply return new instances, which is
          indicated by the VoidT return type *)
-      SMap.singleton "constructor" {
-        meth_reason = replace_reason "default constructor" reason_c;
-        meth_tparams = [];
-        meth_tparams_map = SMap.empty;
-        meth_params = Func_params.empty;
-        meth_return_type = VoidT.t;
-      }
+      let reason = replace_reason "default constructor" reason_c in
+      SMap.singleton "constructor" (Func_sig.empty reason)
   in
 
   let default_sfields =
@@ -4624,7 +4605,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
           { Ast.Identifier.name; _ });
-        value = _, ({ Ast.Function.typeParameters; _ } as func);
+        value = (_, func);
         kind;
         static;
         decorators;
@@ -4639,24 +4620,8 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         FlowError.add_error cx (loc, [msg])
       | _ -> ());
 
-      let typeparams, type_params_map =
-        Anno.mk_type_param_declarations cx type_params_map typeParameters in
-
-      let meth_params = Func_params.mk cx type_params_map func in
-      let meth_return_type = mk_return_type cx type_params_map func in
-      let reason_desc = (match kind with
-      | Method.Method -> spf "method `%s`" name
-      | Method.Constructor -> "constructor"
-      | Method.Get -> spf "getter for `%s`" name
-      | Method.Set -> spf "setter for `%s`" name) in
-      let meth_reason = mk_reason reason_desc loc in
-      let method_sig = {
-        meth_reason;
-        meth_tparams = typeparams;
-        meth_tparams_map = type_params_map;
-        meth_params;
-        meth_return_type;
-      } in
+      let reason = mk_reason (method_desc name kind) loc in
+      let method_sig = Func_sig.mk cx type_params_map reason func in
 
       (match kind, static with
       | (Method.Constructor | Method.Method), true ->
@@ -4822,38 +4787,33 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
       | Method.Set -> class_sig.sig_setters
       in
 
-      let {
-        meth_reason;
-        meth_tparams;
-        meth_tparams_map;
-        meth_return_type;
-        meth_params;
-      } = SMap.find_unsafe name sigs_to_use in
+      let func_sig = SMap.find_unsafe name sigs_to_use in
+      let {Func_sig.reason; _} = func_sig in
 
       let save_return = Abnormal.clear_saved Abnormal.Return in
       let save_throw = Abnormal.clear_saved Abnormal.Throw in
-      Flow.generate_tests cx meth_reason meth_tparams (fun map_ ->
-        let tparams_map =
-          meth_tparams_map |> SMap.map (Flow.subst cx map_) in
-        let meth_params = Func_params.subst cx map_ meth_params in
-        let return_type = Flow.subst cx map_ meth_return_type in
+
+      func_sig |> Func_sig.generate_tests cx (fun func_sig ->
         (* determine if we are in a derived constructor *)
         let derived_ctor = match super with
           | ClassT (MixedT _) -> false
           | MixedT _ -> false
           | _ -> name = "constructor"
         in
-        let function_kind = function_kind ~async ~generator in
+
+        let kind = function_kind ~async ~generator in
         let yield, next = if generator then (
-          Flow.mk_tvar cx (prefix_reason "yield of " meth_reason),
-          Flow.mk_tvar cx (prefix_reason "next of " meth_reason)
+          Flow.mk_tvar cx (prefix_reason "yield of " reason),
+          Flow.mk_tvar cx (prefix_reason "next of " reason)
         ) else (
-          MixedT (replace_reason "no yield" meth_reason, Mixed_everything),
-          MixedT (replace_reason "no next" meth_reason, Mixed_everything)
+          MixedT (replace_reason "no yield" reason, Mixed_everything),
+          MixedT (replace_reason "no next" reason, Mixed_everything)
         ) in
-        mk_body None cx tparams_map ~kind:function_kind ~derived_ctor
-          meth_params return_type body this super yield next;
+
+        mk_body None cx func_sig ~kind ~derived_ctor
+          body this super yield next;
       );
+
       ignore  (Abnormal.swap_saved Abnormal.Return save_return);
       ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
 
@@ -4907,20 +4867,6 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
   ) elements
 )
 
-and mk_methodtype method_sig =
-  let ft = FunT (
-    method_sig.meth_reason,
-    Flow.dummy_static method_sig.meth_reason,
-    Flow.dummy_prototype,
-    Flow.mk_functiontype
-      (Func_params.tlist method_sig.meth_params)
-      ?params_names:(Some (Func_params.names method_sig.meth_params))
-      method_sig.meth_return_type
-  ) in
-  if (method_sig.meth_tparams = [])
-  then ft
-  else PolyT (method_sig.meth_tparams, ft)
-
 and extract_setter_type = function
   | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
   | _ ->  failwith "Setter property with unexpected type"
@@ -4942,6 +4888,8 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
 and mk_class = Ast.Class.(
+  let mk_methodtype = Func_sig.methodtype in
+  let subst_method_sig = Func_sig.subst in
   let merge_getters_and_setters cx getters setters =
     SMap.fold
       (fun name setter_type getters_and_setters ->
@@ -4954,8 +4902,9 @@ and mk_class = Ast.Class.(
       )
       (SMap.map extract_setter_type setters)
       (SMap.map extract_getter_type getters)
+  in
 
-  in fun cx type_params_map loc reason_c {
+  fun cx type_params_map loc reason_c {
     id=_;
     body;
     superClass;
@@ -5009,22 +4958,6 @@ and mk_class = Ast.Class.(
     (* super: D<T> *)
     let super = Flow.subst cx map_ super in
     let super_static = Flow.subst cx map_ super_static in
-
-    let subst_method_sig cx map_ method_sig = {
-      method_sig with
-
-      (* typeparams = <Y: X> *)
-      meth_tparams = List.map (fun typeparam ->
-        { typeparam with bound = Flow.subst cx map_ typeparam.bound }
-      ) method_sig.meth_tparams;
-
-      meth_tparams_map =
-        SMap.map (Flow.subst cx map_) method_sig.meth_tparams_map;
-
-      (* params = (x: Y), ret = T *)
-      meth_params = Func_params.subst cx map_ method_sig.meth_params;
-      meth_return_type = Flow.subst cx map_ method_sig.meth_return_type;
-    } in
 
     (* Substitue type vars on fields and methods *)
     let inst_sig_substituted = {
@@ -5308,29 +5241,14 @@ and remove_this typeparams type_params_map =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx type_params_map reason func this super =
-  let { Ast.Function.
-    typeParameters = type_params;
-    async; generator;
-    body;
-    _;
-  } = func in
+  let { Ast.Function.body; async; generator; _ } = func in
 
-  let kind = function_kind ~async ~generator in
-
-  let typeparams, type_params_map =
-    Anno.mk_type_param_declarations cx type_params_map type_params in
-
-  let params = Func_params.mk cx type_params_map func  in
-  let ret = mk_return_type cx type_params_map func in
+  let func_sig = Func_sig.mk cx type_params_map reason func in
 
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
-  Flow.generate_tests cx reason typeparams (fun map_ ->
-    let type_params_map =
-      type_params_map |> SMap.map (Flow.subst cx map_) in
-    let params = Func_params.subst cx map_ params in
-    let ret = Flow.subst cx map_ ret in
-
+  func_sig |> Func_sig.generate_tests cx (fun func_sig ->
+    let kind = function_kind ~async ~generator in
     let yield, next = if kind = Scope.Generator then (
       Flow.mk_tvar cx (prefix_reason "yield of " reason),
       Flow.mk_tvar cx (prefix_reason "next of " reason)
@@ -5339,13 +5257,13 @@ and function_decl id cx type_params_map reason func this super =
       MixedT (replace_reason "no next" reason, Mixed_everything)
     ) in
 
-    mk_body id cx type_params_map ~kind params ret body this super yield next;
+    mk_body id cx func_sig ~kind body this super yield next
   );
 
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
 
-  (typeparams,params,ret)
+  func_sig
 
 (* When in a derived constructor, initialize this and super to undefined. *)
 and initialize_this_super derived_ctor this super scope = Scope.(
@@ -5383,8 +5301,10 @@ and define_internal cx reason x =
   let opt = Env.get_var_declared_type cx ix reason in
   ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) reason)
 
-and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
-    params ret body this super yield next =
+and mk_body id cx func_sig ~kind ?(derived_ctor=false)
+    body this super yield next =
+
+  let {Func_sig.tparams_map; params; return_t; _} = func_sig in
 
   let loc = Ast.Function.(match body with
     | BodyBlock (loc, _)
@@ -5410,7 +5330,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     let reason = mk_reason (spf "param `%s`" name) loc in
     (* add default value as lower bound, if provided *)
     Func_params.with_default name (fun default ->
-      let default_t = mk_default cx type_params_map reason default in
+      let default_t = mk_default cx tparams_map reason default in
       Flow.flow_t cx (default_t, t)
     ) params;
     (* add to scope *)
@@ -5436,7 +5356,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
     in
     add_entry (internal_name "yield") (new_entry yield) function_scope;
     add_entry (internal_name "next") (new_entry next) function_scope;
-    add_entry (internal_name "return") (new_entry ret) function_scope
+    add_entry (internal_name "return") (new_entry return_t) function_scope
   );
 
   let stmts = Ast.Statement.(match body with
@@ -5447,12 +5367,12 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
   ) in
 
   (* decl/type visit pre-pass *)
-  toplevel_decls cx type_params_map stmts;
+  toplevel_decls cx tparams_map stmts;
 
   (* statement visit pass *)
   let is_void = Abnormal.(
     match catch_control_flow_exception (fun () ->
-      toplevels cx type_params_map stmts
+      toplevels cx tparams_map stmts
     ) with
     | Some Return -> false
     | Some Throw -> false (* NOTE *)
@@ -5462,7 +5382,7 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
 
   (* build return type for void funcs *)
   (if is_void then
-    let loc = loc_of_t ret in
+    let loc = loc_of_t return_t in
     let void_t = Scope.(match kind with
     | Ordinary ->
       VoidT.at loc
@@ -5472,23 +5392,17 @@ and mk_body id cx type_params_map ~kind ?(derived_ctor=false)
       TypeAppT (promise, [VoidT.at loc])
     | Generator ->
       let reason = mk_reason "return Generator<Yield,void,Next>" loc in
-      let ret = VoidT.at loc in
-      Flow.get_builtin_typeapp cx reason "Generator" [yield; ret; next]
+      let return_t = VoidT.at loc in
+      Flow.get_builtin_typeapp cx reason "Generator" [yield; return_t; next]
     | Module -> assert_false "module scope as function activation"
     | Global -> assert_false "global scope as function activation"
     ) in
-    Flow.flow cx (void_t, UseT (FunImplicitReturn, ret))
+    Flow.flow cx (void_t, UseT (FunImplicitReturn, return_t))
   );
 
   Env.pop_var_scope ();
 
   Env.update_env cx reason env
-
-and mk_return_type cx type_params_map func =
-  let phantom_return_loc = function_return_loc func in
-  let reason = mk_reason "return" phantom_return_loc in
-  let ret = func.Ast.Function.returnType in
-  Anno.mk_type_annotation cx type_params_map reason ret
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason func =
@@ -5498,64 +5412,28 @@ and mk_function id cx type_params_map reason func =
     replace_reason "empty super object" reason,
     Mixed_everything
   ) in
-  let signature = function_decl id cx type_params_map reason func this super in
-  mk_function_type cx reason this signature
+  let func_sig = function_decl id cx type_params_map reason func this super in
+  Func_sig.functiontype cx this func_sig
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx type_params_map reason func =
   let this = this_ cx reason in
   let super = super_ cx reason in
   let {Ast.Function.id; _} = func in
-  let signature = function_decl id cx type_params_map reason func this super in
+  let func_sig = function_decl id cx type_params_map reason func this super in
   (* Do not expose the type of `this` in the function's type. The call to
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
      objects through which the function may be called. *)
-  mk_function_type cx reason Flow.dummy_this signature
-
-(* Make a function type given the receiver type and the signature extracted from
-   a function declaration. *)
-and mk_function_type cx reason this signature =
-  let typeparams, params, ret = signature in
-
-  (* prepare type *)
-  let proto_reason = replace_reason "prototype" reason in
-  let prototype = Flow.mk_object cx proto_reason in
-  let static_reason = prefix_reason "statics of " reason in
-  let static = Flow.mk_object_with_proto cx static_reason
-    (FunProtoT static_reason) in
-
-  let funtype = {
-    this_t = this;
-    params_tlist = Func_params.tlist params;
-    params_names = Some (Func_params.names params);
-    return_t = ret;
-    closure_t = Env.peek_frame ();
-    changeset = Env.retrieve_closure_changeset ()
-  } in
-
-  if (typeparams = [])
-  then
-    FunT (reason, static, prototype, funtype)
-  else
-    PolyT (typeparams, FunT(reason, static, prototype, funtype))
+  Func_sig.functiontype cx Flow.dummy_this func_sig
 
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
 and mk_method cx type_params_map reason func this =
   let super = MixedT (reason, Mixed_everything) in
   let id = None in
-  let signature = function_decl id cx type_params_map reason func this super in
-  let (_,params,ret) = signature in
-  let params_tlist = Func_params.tlist params in
-  let params_names = Some (Func_params.names params) in
-  let frame = Env.peek_frame () in
-  FunT (
-    reason,
-    Flow.dummy_static reason,
-    Flow.dummy_prototype,
-    Flow.mk_functiontype2 params_tlist ?params_names ret frame
-  )
+  let func_sig = function_decl id cx type_params_map reason func this super in
+  Func_sig.methodtype_DEPRECATED func_sig
 
 and mk_default cx type_params_map reason = Default.fold
   ~expr:(expression cx type_params_map)

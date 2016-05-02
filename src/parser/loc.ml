@@ -73,6 +73,20 @@ let btwn_exclusive loc1 loc2 = {
   _end = loc2.start;
 }
 
+(* Returns the position immediately before the start of the given loc. If the
+   given loc is at the beginning of a line, return the position of the first
+   char on the same line. *)
+let char_before loc =
+  let start =
+    let { line; column; offset } = loc.start in
+    let column, offset = if column > 0
+    then column - 1, offset - 1
+    else column, offset in
+    { line; column; offset }
+  in
+  let _end = loc.start in
+  { loc with start; _end }
+
 (* Returns true if loc1 entirely overlaps loc2 *)
 let contains loc1 loc2 =
   loc1.source = loc2.source &&
