@@ -103,3 +103,13 @@ let methodtype_DEPRECATED {reason; params; return_t; _} =
     Flow.dummy_prototype,
     Flow.mk_functiontype2 params_tlist ~params_names return_t frame
   )
+
+let gettertype x =
+  match methodtype x with
+  | FunT (_, _, _, { Type.return_t; _; }) -> return_t
+  | _ -> failwith "Getter property with unexpected type"
+
+let settertype x =
+  match methodtype x with
+  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
+  | _ ->  failwith "Setter property with unexpected type"

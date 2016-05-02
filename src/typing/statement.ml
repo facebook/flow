@@ -99,6 +99,47 @@ let warn_or_ignore_decorators cx decorators_list =
           "Additionally, Flow does not account for the type implications " ^
           "of decorators at this time."
       ])
+
+let warn_or_ignore_class_properties cx ~static loc value =
+  if value = None then () else
+  let config_setting, reason_subject, config_key =
+    if static then
+      Context.esproposal_class_static_fields cx,
+      "class static field",
+      "class_static_fields"
+    else
+      Context.esproposal_class_instance_fields cx,
+      "class instance field",
+      "class_instance_fields"
+  in
+  match config_setting with
+  | Options.ESPROPOSAL_ENABLE
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN ->
+    FlowError.add_warning cx (loc, [
+      spf "Experimental %s usage" reason_subject;
+      spf
+      ("%ss are an active early stage feature proposal that may change. " ^^
+       "You may opt-in to using them anyway in Flow by putting " ^^
+       "`esproposal.%s=enable` into the [options] section of your .flowconfig.")
+      (String.capitalize reason_subject)
+      config_key
+    ])
+
+let warn_unsafe_getters_setters cx loc = Ast.Class.Method.(function
+  | Get | Set when not (Context.enable_unsafe_getters_and_setters cx) ->
+    FlowError.add_warning cx (loc, [
+      "Potentially unsafe get/set usage";
+      ("Getters and setters with side effects are potentially unsafe and " ^
+      "disabled by default. You may opt-in to using them anyway by putting " ^
+      "`unsafe.enable_getters_and_setters=true` into the [options] section " ^
+      "of your .flowconfig.");
+    ])
+
+  | _ -> ()
+)
+
+
 (*
 let warn_or_ignore_export_star_as cx name =
   if name = None then () else
@@ -113,13 +154,6 @@ let warn_or_ignore_export_star_as cx name =
     ])
   | _ -> ()
 *)
-
-type class_signature = {
-  sig_fields: Type.t SMap.t;
-  sig_methods: Func_sig.t SMap.t;
-  sig_getters: Func_sig.t SMap.t;
-  sig_setters: Func_sig.t SMap.t;
-}
 
 (************)
 (* Visitors *)
@@ -4558,27 +4592,6 @@ and mk_super cx type_params_map c targs =
 and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
-  (* In case there is no constructor, pick up a default one. *)
-  let default_methods =
-    if is_derived
-    then
-      (* Subclass default constructors are technically of the form (...args) =>
-         { super(...args) }, but we can approximate that using flow's existing
-         inheritance machinery. *)
-      (* TODO: Does this distinction matter for the type checker? *)
-      SMap.empty
-    else
-      (* Parent class constructors simply return new instances, which is
-         indicated by the VoidT return type *)
-      let reason = replace_reason "default constructor" reason_c in
-      SMap.singleton "constructor" (Func_sig.empty reason)
-  in
-
-  let default_sfields =
-    let reason = prefix_reason "`name` property of" reason_c in
-    SMap.singleton "name" (StrT.why reason)
-  in
-
   (* NOTE: We used to mine field declarations from field assignments in a
      constructor as a convenience, but it was not worth it: often, all that did
      was exchange a complaint about a missing field for a complaint about a
@@ -4586,21 +4599,33 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
      to be redeclared if they were assigned in the constructor. So we don't do
      it. In the future, we could do it again, but only for private fields. *)
 
-  let static_sig = {
-    sig_fields = default_sfields;
-    sig_methods = SMap.empty;
-    sig_getters = SMap.empty;
-    sig_setters = SMap.empty;
-  } in
+  let class_sig = Class_sig.empty in
 
-  let inst_sig = {
-    sig_fields = SMap.empty;
-    sig_methods = default_methods;
-    sig_getters = SMap.empty;
-    sig_setters = SMap.empty;
-  } in
+  (* In case there is no constructor, pick up a default one. *)
+  let class_sig =
+    if is_derived
+    then
+      (* Subclass default constructors are technically of the form (...args) =>
+         { super(...args) }, but we can approximate that using flow's existing
+         inheritance machinery. *)
+      (* TODO: Does this distinction matter for the type checker? *)
+      class_sig
+    else
+      (* Parent class constructors simply return new instances, which is
+         indicated by the VoidT return type of an empty Func_sig. *)
+      let reason = replace_reason "default constructor" reason_c in
+      let func_sig = Func_sig.empty reason in
+      Class_sig.add_method ~static:false "constructor" func_sig class_sig
+  in
 
-  List.fold_left (fun (static_sig, inst_sig) -> function
+  (* All classes have a static "name" property. *)
+  let class_sig =
+    let reason = prefix_reason "`name` property of" reason_c in
+    let t = StrT.why reason in
+    Class_sig.add_field ~static:true "name" t class_sig
+  in
+
+  List.fold_left (fun class_sig -> function
     (* instance and static methods *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
@@ -4612,63 +4637,17 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       }) ->
 
       warn_or_ignore_decorators cx decorators;
+      warn_unsafe_getters_setters cx loc kind;
 
-      (match kind with
-      | Method.Get | Method.Set
-        when not (Context.enable_unsafe_getters_and_setters cx) ->
-        let msg = "get/set properties not yet supported" in
-        FlowError.add_error cx (loc, [msg])
-      | _ -> ());
-
+      let add = match kind with
+      | Method.Constructor
+      | Method.Method -> Class_sig.add_method
+      | Method.Get -> Class_sig.add_getter
+      | Method.Set -> Class_sig.add_setter
+      in
       let reason = mk_reason (method_desc name kind) loc in
       let method_sig = Func_sig.mk cx type_params_map reason func in
-
-      (match kind, static with
-      | (Method.Constructor | Method.Method), true ->
-        {
-          static_sig with
-          sig_methods = SMap.add name method_sig static_sig.sig_methods;
-          sig_getters = SMap.remove name static_sig.sig_getters;
-          sig_setters = SMap.remove name static_sig.sig_setters;
-        },
-        inst_sig
-      | Method.Get, true ->
-        {
-          static_sig with
-          sig_methods = SMap.remove name static_sig.sig_methods;
-          sig_getters = SMap.add name method_sig static_sig.sig_getters;
-        },
-        inst_sig
-      | Method.Set, true ->
-        {
-          static_sig with
-          sig_methods = SMap.remove name static_sig.sig_methods;
-          sig_setters = SMap.add name method_sig static_sig.sig_setters;
-        },
-        inst_sig
-      | (Method.Constructor | Method.Method), false ->
-        static_sig,
-        {
-          inst_sig with
-          sig_methods = SMap.add name method_sig inst_sig.sig_methods;
-          sig_getters = SMap.remove name inst_sig.sig_getters;
-          sig_setters = SMap.remove name inst_sig.sig_setters;
-        }
-      | Method.Get, false ->
-        static_sig,
-        {
-          inst_sig with
-          sig_methods = SMap.remove name inst_sig.sig_methods;
-          sig_getters = SMap.add name method_sig inst_sig.sig_getters;
-        }
-      | Method.Set, false ->
-        static_sig,
-        {
-          inst_sig with
-          sig_methods = SMap.remove name inst_sig.sig_methods;
-          sig_setters = SMap.add name method_sig inst_sig.sig_setters;
-        }
-      )
+      add ~static name method_sig class_sig
 
     (* fields *)
     | Body.Property (loc, {
@@ -4678,57 +4657,12 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         value;
         static;
       }) ->
-        (match value with
-          | None -> ()
-          | Some _ ->
-            let (config_setting, reason_subject, config_key) =
-              if static then
-                (Context.esproposal_class_static_fields cx,
-                 "class static field",
-                 "class_static_fields")
-              else
-                (Context.esproposal_class_instance_fields cx,
-                 "class instance field",
-                  "class_instance_fields")
-            in
-            match config_setting with
-            | Options.ESPROPOSAL_ENABLE
-            | Options.ESPROPOSAL_IGNORE -> ()
-            | Options.ESPROPOSAL_WARN ->
-              FlowError.add_warning cx (loc, [
-                spf "Experimental %s usage" reason_subject;
-                spf
-                ("%ss are an active early stage feature proposal that may " ^^
-                "change. You may opt-in to using them anyway in Flow by " ^^
-                "putting `esproposal.%s=enable` into the [options] " ^^
-                "section of your .flowconfig.")
-                (String.capitalize reason_subject)
-                config_key
-              ])
-        );
+        warn_or_ignore_class_properties cx ~static loc value;
+
         let r = mk_reason (spf "class property `%s`" name) loc in
         let t = Anno.mk_type_annotation cx type_params_map r typeAnnotation in
-        if static then (
-          {
-            static_sig with
-            sig_fields = SMap.add name t static_sig.sig_fields;
-            sig_getters = SMap.remove name static_sig.sig_getters;
-            sig_setters = SMap.remove name static_sig.sig_setters;
-          },
-          inst_sig
-        ) else (
-          {
-            static_sig with
-            sig_getters = inst_sig.sig_getters;
-            sig_setters = inst_sig.sig_setters;
-          },
-          {
-            inst_sig with
-            sig_fields = SMap.add name t inst_sig.sig_fields;
-            sig_getters = SMap.remove name inst_sig.sig_getters;
-            sig_setters = SMap.remove name inst_sig.sig_setters;
-          }
-        )
+
+        Class_sig.add_field ~static name t class_sig
 
     (* literal LHS *)
     | Body.Method (loc, {
@@ -4741,7 +4675,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       }) ->
         let msg = "literal properties not yet supported" in
         FlowError.add_error cx (loc, [msg]);
-        (static_sig, inst_sig)
+        class_sig
 
     (* computed LHS *)
     | Body.Method (loc, {
@@ -4754,13 +4688,14 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       }) ->
         let msg = "computed property keys not supported" in
         FlowError.add_error cx (loc, [msg]);
-        (static_sig, inst_sig)
-  ) (static_sig, inst_sig) elements
+        class_sig
+  ) class_sig elements
 )
 
 (* Processes the bodies of instance and static class members
   (methods/fields). *)
-and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
+and mk_class_elements cx instance_info static_info class_sig tparams body =
+  Ast.Class.(
   let _, { Body.body = elements } = body in
   let opt_static_fields = Context.esproposal_class_static_fields cx in
   let opt_inst_fields = Context.esproposal_class_instance_fields cx in
@@ -4776,18 +4711,18 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
 
       warn_or_ignore_decorators cx decorators;
 
-      let this, super, class_sig =
+      let this, super =
         if static then static_info else instance_info
       in
 
-      let sigs_to_use = match kind with
+      let find_unsafe = match kind with
       | Method.Constructor
-      | Method.Method -> class_sig.sig_methods
-      | Method.Get -> class_sig.sig_getters
-      | Method.Set -> class_sig.sig_setters
+      | Method.Method -> Class_sig.find_method_unsafe
+      | Method.Get -> Class_sig.find_getter_unsafe
+      | Method.Set -> Class_sig.find_setter_unsafe
       in
 
-      let func_sig = SMap.find_unsafe name sigs_to_use in
+      let func_sig = find_unsafe ~static name class_sig in
       let {Func_sig.reason; _} = func_sig in
 
       let save_return = Abnormal.clear_saved Abnormal.Return in
@@ -4810,8 +4745,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
           MixedT (replace_reason "no next" reason, Mixed_everything)
         ) in
 
-        mk_body None cx func_sig ~kind ~derived_ctor
-          body this super yield next;
+        mk_body None cx func_sig ~kind ~derived_ctor body this super yield next
       );
 
       ignore  (Abnormal.swap_saved Abnormal.Return save_return);
@@ -4827,7 +4761,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
         match value with
         | None -> ()
         | Some value ->
-          let this, super, class_sig =
+          let this, super =
             if static then static_info else instance_info
           in
 
@@ -4855,7 +4789,7 @@ and mk_class_elements cx instance_info static_info tparams body = Ast.Class.(
             Env.push_var_scope cx initializer_scope;
 
             let init_t = expression cx tparams value in
-            let field_t = SMap.find_unsafe name class_sig.sig_fields in
+            let field_t = Class_sig.find_field_unsafe ~static name class_sig in
             Flow.flow_t cx (init_t, field_t);
 
             Env.pop_var_scope ();
@@ -4887,31 +4821,14 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
    static members. The static members can be thought of as instance members of a
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
-and mk_class = Ast.Class.(
-  let mk_methodtype = Func_sig.methodtype in
-  let subst_method_sig = Func_sig.subst in
-  let merge_getters_and_setters cx getters setters =
-    SMap.fold
-      (fun name setter_type getters_and_setters ->
-        match SMap.get name getters_and_setters with
-        | Some prop_t ->
-          Flow.unify cx setter_type prop_t;
-          getters_and_setters
-        | None ->
-          SMap.add name setter_type getters_and_setters
-      )
-      (SMap.map extract_setter_type setters)
-      (SMap.map extract_getter_type getters)
-  in
-
-  fun cx type_params_map loc reason_c {
-    id=_;
+and mk_class cx type_params_map loc reason_c = Ast.Class.(fun {
     body;
     superClass;
     typeParameters;
     superTypeParameters;
     implements;
     classDecorators;
+    _;
   } ->
   let self = Flow.mk_tvar cx reason_c in
 
@@ -4936,7 +4853,7 @@ and mk_class = Ast.Class.(
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let is_derived = superClass <> None in
-  let (static_sig, inst_sig) =
+  let class_sig =
     mk_class_signature cx reason_c type_params_map is_derived body
   in
 
@@ -4960,39 +4877,11 @@ and mk_class = Ast.Class.(
     let super_static = Flow.subst cx map_ super_static in
 
     (* Substitue type vars on fields and methods *)
-    let inst_sig_substituted = {
-      sig_fields = SMap.map (Flow.subst cx map_) inst_sig.sig_fields;
-      sig_methods = SMap.map (subst_method_sig cx map_) inst_sig.sig_methods;
-      sig_getters = SMap.map (subst_method_sig cx map_) inst_sig.sig_getters;
-      sig_setters = SMap.map (subst_method_sig cx map_) inst_sig.sig_setters;
-    } in
-    let static_sig_substituted = {
-      sig_fields = SMap.map (Flow.subst cx map_) static_sig.sig_fields;
-      sig_methods = SMap.map (subst_method_sig cx map_) static_sig.sig_methods;
-      sig_getters = SMap.map (subst_method_sig cx map_) static_sig.sig_getters;
-      sig_setters = SMap.map (subst_method_sig cx map_) static_sig.sig_setters;
-    } in
+    let class_sig = Class_sig.subst cx map_ class_sig in
 
     (* Generate types for each element *)
-    let methods = SMap.map mk_methodtype inst_sig_substituted.sig_methods in
-    let getters = SMap.map mk_methodtype inst_sig_substituted.sig_getters in
-    let setters = SMap.map mk_methodtype inst_sig_substituted.sig_setters in
-    let smethods = SMap.map mk_methodtype static_sig_substituted.sig_methods in
-    let sgetters = SMap.map mk_methodtype static_sig_substituted.sig_getters in
-    let ssetters = SMap.map mk_methodtype static_sig_substituted.sig_setters in
-
-    (* If there is a both a getter and a setter, then flow the setter type to
-     * the getter. Otherwise just use the getter type or the setter type *)
-    let sgetters_and_setters = merge_getters_and_setters cx sgetters ssetters in
-    let getters_and_setters = merge_getters_and_setters cx getters setters in
-
-    (* Treat getters and setters as fields *)
-    let sfields =
-      SMap.fold SMap.add sgetters_and_setters static_sig_substituted.sig_fields
-    in
-    let fields =
-      SMap.fold SMap.add getters_and_setters inst_sig_substituted.sig_fields
-    in
+    let sfields, smethods = Class_sig.static_elements cx class_sig in
+    let fields, methods = Class_sig.instance_elements cx class_sig in
 
     let type_params_map = SMap.remove "this" type_params_map in
 
@@ -5022,27 +4911,15 @@ and mk_class = Ast.Class.(
     let static = ClassT this in
 
     mk_class_elements cx
-      (this, super, inst_sig_substituted)
-      (static, super_static, static_sig_substituted)
+      (this, super)
+      (static, super_static)
+      class_sig
       map_
       body;
   );
 
-  let methods = SMap.map mk_methodtype inst_sig.sig_methods in
-  let getters = SMap.map mk_methodtype inst_sig.sig_getters in
-  let setters = SMap.map mk_methodtype inst_sig.sig_setters in
-  let smethods = SMap.map mk_methodtype static_sig.sig_methods in
-  let sgetters = SMap.map mk_methodtype static_sig.sig_getters in
-  let ssetters = SMap.map mk_methodtype static_sig.sig_setters in
-
-  (* If there is a both a getter and a setter, then flow the setter type to
-    * the getter. Otherwise just use the getter type or the setter type *)
-  let sgetters_and_setters = merge_getters_and_setters cx sgetters ssetters in
-  let getters_and_setters = merge_getters_and_setters cx getters setters in
-
-  (* Treat getters and setters as fields *)
-  let sfields = SMap.fold SMap.add sgetters_and_setters static_sig.sig_fields in
-  let fields = SMap.fold SMap.add getters_and_setters inst_sig.sig_fields in
+  let sfields, smethods = Class_sig.static_elements cx class_sig in
+  let fields, methods = Class_sig.instance_elements cx class_sig in
 
   let typeparams, type_params_map =
     remove_this typeparams type_params_map in
