@@ -2,21 +2,15 @@ type t
 
 (* build up a params value *)
 val empty: t
-val add: Context.t ->
-  (Type.t SMap.t) -> (* type params map *)
-  t ->
-  Spider_monkey_ast.Pattern.t ->
-  Spider_monkey_ast.Expression.t option -> (* default expr *)
-  t
-val add_rest: Context.t ->
-  (Type.t SMap.t) -> (* type params map *)
-  t ->
-  Spider_monkey_ast.Identifier.t ->
-  t
 
 val mk: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
   Spider_monkey_ast.Function.t ->
+  t
+
+val convert: Context.t ->
+  (Type.t SMap.t) -> (* type params map *)
+  Spider_monkey_ast.Type.Function.t ->
   t
 
 (* name of each param, in order *)

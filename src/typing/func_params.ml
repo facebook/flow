@@ -22,67 +22,90 @@ let empty = {
   defaults = SMap.empty
 }
 
-let add cx type_params_map params pattern default =
-  Ast.Pattern.(match pattern with
-  | loc, Identifier (_, { Ast.Identifier.name; typeAnnotation; optional }) ->
-    let reason = mk_reason (Utils.spf "parameter `%s`" name) loc in
-    let t = Anno.mk_type_annotation cx type_params_map reason typeAnnotation
-    in (match default with
-    | None ->
-      let t =
-        if optional
-        then OptionalT t
-        else t
+(* Ast.Function.t -> Func_params.t *)
+let mk cx type_params_map func =
+  let add_param params pattern default = Ast.Pattern.(
+    match pattern with
+    | loc, Identifier (_, { Ast.Identifier.name; typeAnnotation; optional }) ->
+      let reason = mk_reason (Utils.spf "parameter `%s`" name) loc in
+      let t = Anno.mk_type_annotation cx type_params_map reason typeAnnotation
+      in (match default with
+      | None ->
+        let t =
+          if optional
+          then OptionalT t
+          else t
+        in
+        Hashtbl.replace (Context.type_table cx) loc t;
+        let binding = name, t, loc in
+        let list = Simple (t, binding) :: params.list in
+        { params with list }
+      | Some expr ->
+        (* TODO: assert (not optional) *)
+        let binding = name, t, loc in
+        { list = Simple (OptionalT t, binding) :: params.list;
+          defaults = SMap.add name (Default.Expr expr) params.defaults })
+    | loc, _ ->
+      let reason = mk_reason "destructuring" loc in
+      let t = type_of_pattern pattern
+        |> Anno.mk_type_annotation cx type_params_map reason in
+      let default = Option.map default Default.expr in
+      let bindings = ref [] in
+      let defaults = ref params.defaults in
+      pattern |> destructuring cx t None default (fun _ loc name default t ->
+        Hashtbl.replace (Context.type_table cx) loc t;
+        bindings := (name, t, loc) :: !bindings;
+        Option.iter default ~f:(fun default ->
+          defaults := SMap.add name default !defaults
+        )
+      );
+      let t = match default with
+        | Some _ -> OptionalT t
+        | None -> t (* TODO: assert (not optional) *)
       in
-      Hashtbl.replace (Context.type_table cx) loc t;
-      let binding = name, t, loc in
-      let list = Simple (t, binding) :: params.list in
-      { params with list }
-    | Some expr ->
-      (* TODO: assert (not optional) *)
-      let binding = name, t, loc in
-      { list = Simple (OptionalT t, binding) :: params.list;
-        defaults = SMap.add name (Default.Expr expr) params.defaults })
-  | loc, _ ->
-    let reason = mk_reason "destructuring" loc in
-    let t = type_of_pattern pattern
-      |> Anno.mk_type_annotation cx type_params_map reason in
-    let default = Option.map default Default.expr in
-    let bindings = ref [] in
-    let defaults = ref params.defaults in
-    pattern |> destructuring cx t None default (fun _ loc name default t ->
-      Hashtbl.replace (Context.type_table cx) loc t;
-      bindings := (name, t, loc) :: !bindings;
-      Option.iter default ~f:(fun default ->
-        defaults := SMap.add name default !defaults
-      )
-    );
-    let t = match default with
-      | Some _ -> OptionalT t
-      | None -> t (* TODO: assert (not optional) *)
-    in
-    { list = Complex (t, !bindings) :: params.list;
-      defaults = !defaults })
-
-let add_rest cx type_params_map params =
-  function loc, { Ast.Identifier.name; typeAnnotation; _ } ->
-    let reason = mk_reason (Utils.spf "rest parameter `%s`" name) loc in
-    let t = Anno.mk_type_annotation cx type_params_map reason typeAnnotation
-    in { params with
-      list = Rest (Anno.mk_rest cx t, (name, t, loc)) :: params.list
-    }
-
-let mk cx type_params_map {Ast.Function.params; defaults; rest; _} =
+      let param = Complex (t, !bindings) in
+      { list = param :: params.list; defaults = !defaults }
+  ) in
+  let add_rest params =
+    function loc, { Ast.Identifier.name; typeAnnotation; _ } ->
+      let reason = mk_reason (Utils.spf "rest parameter `%s`" name) loc in
+      let t =
+        Anno.mk_type_annotation cx type_params_map reason typeAnnotation
+      in
+      let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
+      { params with list =  param :: params.list }
+  in
+  let {Ast.Function.params; defaults; rest; _} = func in
   let defaults =
     if defaults = [] && params <> []
     then List.map (fun _ -> None) params
     else defaults
   in
-  let params = List.fold_left2 (add cx type_params_map) empty params defaults in
+  let params = List.fold_left2 add_param empty params defaults in
   match rest with
-  | Some ident -> add_rest cx type_params_map params ident
+  | Some ident -> add_rest params ident
   | None -> params
 
+(* Ast.Type.Function.t -> Func_params.t *)
+let convert cx type_params_map func = Ast.Type.Function.(
+  let add_param params (loc, {Param.name; typeAnnotation; optional; _}) =
+    let _, {Ast.Identifier.name; _} = name in
+    let t = Anno.convert cx type_params_map typeAnnotation in
+    let t = if optional then OptionalT t else t in
+    let binding = name, t, loc in
+    { params with list = Simple (t, binding) :: params.list }
+  in
+  let add_rest params (loc, {Param.name; typeAnnotation; _}) =
+    let _, {Ast.Identifier.name; _} = name in
+    let t = Anno.convert cx type_params_map typeAnnotation in
+    let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
+    { params with list = param :: params.list }
+  in
+  let params = List.fold_left add_param empty func.params in
+  match func.rest with
+  | Some ident -> add_rest params ident
+  | None -> params
+)
 
 let names params =
   params.list |> List.rev |> List.map (function

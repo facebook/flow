@@ -20,6 +20,7 @@ module Env = Env_js
 module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
+module Iface_sig = Class_sig (* same thing, mo'less *)
 
 open Utils_js
 open Reason_js
@@ -556,103 +557,78 @@ and statement cx type_params_map = Ast.Statement.(
       then add_this self cx reason typeparams type_params_map
       else typeparams, type_params_map in
 
-    let default_sfmap =
+    let iface_sig = Iface_sig.empty in
+
+    let iface_sig =
       let reason = prefix_reason "`name` property of" reason in
-      SMap.singleton "name" (StrT.why reason)
+      let t = StrT.why reason in
+      Iface_sig.add_field ~static:true "name" t iface_sig
     in
 
-    let sfmap, smmap, fmap, mmap = List.fold_left (
-      fun (sfmap_, smmap_, fmap_, mmap_)
-        (loc, { Ast.Type.Object.Property.key;
-          value; static; _method; optional
-        }) ->
-        if optional && _method
-        then begin
-          let msg = "optional methods are not supported" in
-          FlowError.add_error cx (loc, [msg])
-        end;
-        Ast.Expression.Object.(match key with
-        | Property.Literal (loc, _)
-        | Property.Computed (loc, _) ->
-          FlowError.add_error cx (loc, ["illegal name"]);
-          (sfmap_, smmap_, fmap_, mmap_)
-
-        | Property.Identifier (loc, { Ast.Identifier.name; _ }) ->
+    let iface_sig = List.fold_left (
+      fun s (loc, {Ast.Type.Object.Property.
+        key; value; static; _method; optional
+      }) ->
+      if optional && _method
+      then begin
+        let msg = "optional methods are not supported" in
+        FlowError.add_error cx (loc, [msg])
+      end;
+      Ast.Expression.Object.(match _method, key with
+      | _, Property.Literal (loc, _)
+      | _, Property.Computed (loc, _) ->
+          let msg = "illegal name" in
+          FlowError.add_error cx (loc, [msg]);
+          s
+      | true, Property.Identifier (_, {Ast.Identifier.name; _}) ->
+          (match value with
+          | _, Ast.Type.Function func ->
+            let fsig = Func_sig.convert cx type_params_map loc func in
+            Iface_sig.append_method ~static name fsig s
+          | _ ->
+            let msg = "internal error: expected function type" in
+            FlowError.add_internal_error cx (loc, [msg]);
+            s)
+      | false, Property.Identifier (_, {Ast.Identifier.name; _}) ->
           let t = Anno.convert cx type_params_map value in
           let t = if optional then OptionalT t else t in
-          (* check for overloads in static and instance method maps *)
-          let map_ = if static then smmap_ else mmap_ in
-          let t = match SMap.get name map_ with
-            | None -> t
-            | Some (IntersectionT (reason, rep)) ->
-              let seen_ts = InterRep.members rep in
-              let rep = InterRep.make (seen_ts @ [t]) in
-              IntersectionT (reason, rep)
-            | Some seen_t ->
-              let rep = InterRep.make [seen_t; t] in
-              IntersectionT (Reason_js.mk_reason iname loc, rep)
-          in
-            (* TODO: additionally check that the four maps are disjoint *)
-            (match static, _method with
-            | true, true ->  (sfmap_, SMap.add name t smmap_, fmap_, mmap_)
-            | true, false -> (SMap.add name t sfmap_, smmap_, fmap_, mmap_)
-            | false, true -> (sfmap_, smmap_, fmap_, SMap.add name t mmap_)
-            | false, false -> (sfmap_, smmap_, SMap.add name t fmap_, mmap_)
-            )
-        )
-    ) (default_sfmap, SMap.empty, SMap.empty, SMap.empty) properties
-    in
-    let fmap = match indexers with
-      | [] -> fmap
-      | (_, { Ast.Type.Object.Indexer.key; value; _; })::rest ->
-        (* TODO *)
+          Iface_sig.add_field ~static name t s)
+    ) iface_sig properties in
+
+    let iface_sig = match indexers with
+      | [] -> iface_sig
+      | (_, {Ast.Type.Object.Indexer.key; value; static; _})::rest ->
+        (* TODO? *)
         List.iter (fun (indexer_loc, _) ->
           let msg = "multiple indexers are not supported" in
           FlowError.add_error cx (indexer_loc, [msg]);
         ) rest;
+        let k = Anno.convert cx type_params_map key in
+        let v = Anno.convert cx type_params_map value in
+        iface_sig
+          |> Iface_sig.add_field ~static "$key" k
+          |> Iface_sig.add_field ~static "$value" v
+    in
 
-        let keyt = Anno.convert cx type_params_map key in
-        let valuet = Anno.convert cx type_params_map value in
-        fmap |> SMap.add "$key" keyt |> SMap.add "$value" valuet
+    let iface_sig = List.fold_left (
+      fun s (loc, {Ast.Type.Object.CallProperty.value = (_, func); static}) ->
+      let fsig = Func_sig.convert cx type_params_map loc func in
+      Iface_sig.append_method ~static "$call" fsig s
+    ) iface_sig callProperties in
+
+    let iface_sig =
+      let static = false in
+      if Iface_sig.mem_method ~static "constructor" iface_sig
+      then iface_sig
+      else
+        let reason = mk_reason "constructor" loc in
+        let fsig = Func_sig.empty reason in
+        Iface_sig.add_method ~static "constructor" fsig iface_sig
     in
-    let calls = callProperties |> List.map (function
-      | loc, { Ast.Type.Object.CallProperty.value = (_, ft); static; } ->
-        (static, Anno.convert cx type_params_map (loc, Ast.Type.Function ft))
-    ) in
-    let scalls, calls = List.partition fst calls in
-    let smmap = match scalls with
-      | [] -> smmap
-      | [_,t] -> SMap.add "$call" t smmap
-      | _ ->
-        let scalls = List.map snd scalls in
-        let rep = InterRep.make scalls in
-        SMap.add "$call" (IntersectionT (mk_reason iname loc, rep)) smmap
-    in
-    let mmap = match calls with
-      | [] -> mmap
-      | [_,t] -> SMap.add "$call" t mmap
-      | _ ->
-        let calls = List.map snd calls in
-        let rep = InterRep.make calls in
-        SMap.add "$call" (IntersectionT (mk_reason iname loc, rep)) mmap
-    in
-    let mmap = match SMap.get "constructor" mmap with
-      | None ->
-        let constructor_funtype =
-          Flow.mk_functiontype [] ~params_names:[] VoidT.t in
-        let reason = Reason_js.mk_reason "constructor" loc in
-        let funt = FunT (
-          reason,
-          Flow.dummy_static reason,
-          Flow.dummy_prototype,
-          constructor_funtype
-        ) in
-        SMap.add "constructor" funt mmap
-      | Some _ ->
-        mmap
-    in
+
     let interface_t = mk_interface cx reason typeparams type_params_map
-      (sfmap, smmap, fmap, mmap) extends mixins structural in
+      iface_sig extends mixins structural in
+
     Flow.unify cx self interface_t;
     Hashtbl.replace (Context.type_table cx) loc interface_t;
     (* interface is a type alias, declare class is a var *)
@@ -4984,12 +4960,11 @@ and extract_mixins _cx =
    interface and nominal if B is a declare class. If you set the structural flag
    to true, then this interface will be checked structurally. Another difference
    is that a declare class may have mixins, but an interface may not. *)
-(* TODO: this function shares a lot of code with mk_class. Sometimes that causes
+(* TODO: this function shares some code with mk_class. Sometimes that causes
    bad divergence; e.g., bugs around the handling of generics were fixed in
-   mk_class but not in mk_interface. This code should be consolidated soon,
-   ideally when we provide full support for interfaces. *)
+   mk_class but not in mk_interface. This code should be consolidated more. *)
 and mk_interface cx reason_i typeparams type_params_map
-    (sfmap, smmap, fmap, mmap) extends mixins structural =
+    iface_sig extends mixins structural =
   let id = Flow.mk_nominal cx in
 
   let extends = extract_extends cx structural extends in
@@ -5018,19 +4993,19 @@ and mk_interface cx reason_i typeparams type_params_map
     let super = Flow.subst cx map_ super in
     let super_static = Flow.subst cx map_ super_static in
 
-    let fmap = fmap |> SMap.map (Flow.subst cx map_) in
-    let sfmap = sfmap |> SMap.map (Flow.subst cx map_) in
-    let mmap = mmap |> SMap.map (Flow.subst cx map_) in
-    let smmap = smmap |> SMap.map (Flow.subst cx map_) in
+    let iface_sig = Iface_sig.subst cx map_ iface_sig in
 
     let type_params_map = SMap.remove "this" type_params_map in
+
+    let sfields, smethods = Iface_sig.static_elements cx iface_sig in
+    let fields, methods = Iface_sig.instance_elements cx iface_sig in
 
     let static_instance = {
       class_id = 0;
       type_args = type_params_map |> SMap.map (Flow.subst cx map_);
       arg_polarities;
-      fields_tmap = Flow.mk_propmap cx sfmap;
-      methods_tmap = Flow.mk_propmap cx smmap;
+      fields_tmap = Flow.mk_propmap cx sfields;
+      methods_tmap = Flow.mk_propmap cx smethods;
       mixins = false;
       structural;
     } in
@@ -5039,8 +5014,8 @@ and mk_interface cx reason_i typeparams type_params_map
       class_id = id;
       type_args = type_params_map |> SMap.map (Flow.subst cx map_);
       arg_polarities;
-      fields_tmap = Flow.mk_propmap cx fmap;
-      methods_tmap = Flow.mk_propmap cx mmap;
+      fields_tmap = Flow.mk_propmap cx fields;
+      methods_tmap = Flow.mk_propmap cx methods;
       mixins = false;
       structural;
     } in
@@ -5052,12 +5027,15 @@ and mk_interface cx reason_i typeparams type_params_map
     then remove_this typeparams type_params_map
     else typeparams, type_params_map in
 
+  let sfields, smethods = Iface_sig.static_elements cx iface_sig in
+  let fields, methods = Iface_sig.instance_elements cx iface_sig in
+
   let static_instance = {
     class_id = 0;
     type_args = type_params_map;
     arg_polarities;
-    fields_tmap = Flow.mk_propmap cx sfmap;
-    methods_tmap = Flow.mk_propmap cx smmap;
+    fields_tmap = Flow.mk_propmap cx sfields;
+    methods_tmap = Flow.mk_propmap cx smethods;
     mixins = false;
     structural;
   } in
@@ -5071,8 +5049,8 @@ and mk_interface cx reason_i typeparams type_params_map
     class_id = id;
     type_args = type_params_map;
     arg_polarities;
-    fields_tmap = Flow.mk_propmap cx fmap;
-    methods_tmap = Flow.mk_propmap cx mmap;
+    fields_tmap = Flow.mk_propmap cx fields;
+    methods_tmap = Flow.mk_propmap cx methods;
     mixins = false;
     structural;
   } in

@@ -20,19 +20,27 @@ let return_loc = Ast.Function.(function
   | {body = BodyBlock (loc, _); _} -> Loc.char_before loc
 )
 
-let mk_return_type cx tparams_map func =
-  let reason = mk_reason "return" (return_loc func) in
-  let ret = func.Ast.Function.returnType in
-  Anno.mk_type_annotation cx tparams_map reason ret
-
 let mk cx tparams_map reason func =
-  let {Ast.Function.typeParameters; _} = func in
+  let {Ast.Function.typeParameters; returnType; _} = func in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx tparams_map typeParameters
   in
   let params = Func_params.mk cx tparams_map func in
-  let return_t = mk_return_type cx tparams_map func in
-  { reason; tparams; tparams_map; params; return_t }
+  let return_t =
+    let reason = mk_reason "return" (return_loc func) in
+    Anno.mk_type_annotation cx tparams_map reason returnType
+  in
+  {reason; tparams; tparams_map; params; return_t}
+
+let convert cx tparams_map loc func =
+  let {Ast.Type.Function.typeParameters; returnType; _} = func in
+  let reason = mk_reason "function type" loc in
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx tparams_map typeParameters
+  in
+  let params = Func_params.convert cx tparams_map func in
+  let return_t = Anno.convert cx tparams_map returnType in
+  {reason; tparams; tparams_map; params; return_t}
 
 let empty reason = {
   reason;
