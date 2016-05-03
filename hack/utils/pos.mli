@@ -35,9 +35,15 @@ val length : 'a pos -> int
 
 val string : absolute -> string
 
+val multiline_string : absolute -> string
+
 val string_no_file : 'a pos -> string
 
+val multiline_string_no_file : 'a pos -> string
+
 val json : absolute -> Hh_json.json
+
+val multiline_json : absolute -> Hh_json.json
 
 val inside : 'a pos -> int -> int -> bool
 
@@ -61,8 +67,6 @@ val compare : 'a pos -> 'a pos -> int
  * you feel a need to use this. *)
 val pos_start : 'a pos -> File_pos.t
 val pos_end : 'a pos -> File_pos.t
-
-val destruct_range : 'a pos -> (int * int * int * int)
 
 (* XXX deprecated: should only be used by Flow *)
 val make_from_file_pos :

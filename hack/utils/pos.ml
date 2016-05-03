@@ -133,6 +133,27 @@ let destruct_range (p : 'a pos) : (int * int * int * int) =
   line_start, col_start_minus1 + 1,
   line_end,   col_end_minus1 + 1
 
+let multiline_string t =
+  let line_start, char_start, line_end, char_end = destruct_range t in
+  Printf.sprintf "File %S, line %d, character %d - line %d, character %d:"
+    (String.trim t.pos_file) line_start char_start line_end (char_end - 1)
+
+let multiline_string_no_file t =
+  let line_start, char_start, line_end, char_end = destruct_range t in
+  Printf.sprintf "line %d, character %d - line %d, character %d"
+    line_start char_start line_end (char_end - 1)
+
+let multiline_json t =
+  let line_start, char_start, line_end, char_end = destruct_range t in
+  let fn = filename t in
+  Hh_json.JSON_Object [
+    "filename",   Hh_json.JSON_String fn;
+    "line_start", Hh_json.int_ line_start;
+    "char_start", Hh_json.int_ char_start;
+    "line_end",   Hh_json.int_ line_end;
+    "char_end",   Hh_json.int_ (char_end - 1);
+  ]
+
 let make_from_file_pos ~pos_file ~pos_start ~pos_end =
   { pos_file; pos_start; pos_end }
 
