@@ -907,153 +907,195 @@ let json_of_env ?(depth=1000) cx env =
 
 (*****************************************************************)
 
-(* old debug type printer - ad-hoc middle ground between the public
-   printer (no internal types, no literal refinements, etc.) and
-   json *)
-let rec dump_t cx t =
-  dump_t_ ISet.empty cx t
+(* debug printer *)
 
-and dump_t_ =
-  (* we'll want to add more here *)
-  let override stack cx t = match t with
-    | OpenT (r, id) -> Some (dump_tvar stack cx r id)
-    | NumT (_, lit) -> Some (match lit with
-        | Literal (_, raw) -> spf "NumT(%s)" raw
-        | Truthy -> spf "NumT(truthy)"
-        | AnyLiteral -> "NumT")
-    | StrT (_, c) -> Some (match c with
-        | Literal s -> spf "StrT(%S)" s
-        | Truthy -> spf "StrT(truthy)"
-        | AnyLiteral -> "StrT")
-    | BoolT (_, c) -> Some (match c with
-        | Some b -> spf "BoolT(%B)" b
-        | None -> "BoolT")
-    | EmptyT _
-    | MixedT _
-    | AnyT _
-    | NullT _ -> Some (string_of_ctor t)
-    | _ -> None
+let rec dump_t ?(depth=3) cx t =
+  dump_t_ (depth, ISet.empty) cx t
+
+and dump_t_ (depth, tvars) cx t =
+
+  let p ?(reason=true) ?(extra="") t =
+    spf "%s (%s%s%s)"
+      (string_of_ctor t)
+      (if reason then spf "%S" (desc_of_reason (reason_of_t t)) else "")
+      (if reason && extra <> "" then ", " else "")
+      extra
   in
-  fun stack cx t -> Type_printer.(
-    type_printer (override stack) string_of_ctor EnclosureNone cx t
-  )
 
-and dump_use_t cx t =
-  dump_use_t_ ISet.empty cx t
+  let kid = dump_t_ (depth-1, tvars) cx in
+  let use_kid = dump_use_t_ (depth-1, tvars) cx in
 
-and dump_use_t_ stack cx t = match t with
-  | UseT (_, t) -> dump_t_ stack cx t
-
-  | SetPropT (_, (_, n), t) ->
-      spf "SetPropT(%s: %s)" n (dump_t_ stack cx t)
-  | GetPropT (_, (_, n), t) ->
-      spf "GetPropT(%s: %s)" n (dump_t_ stack cx t)
-  | LookupT (_, _, _, n, t) ->
-      spf "LookupT(%s: %s)" n (dump_t_ stack cx t)
-  | PredicateT (p, t) -> spf "PredicateT(%s | %s)"
-      (string_of_predicate p) (dump_t_ stack cx t)
-  | _ -> "" (* TODO *)
-
-
-(* type variable dumper. abbreviates a few simple cases for readability.
-   note: if we turn the tvar record into a datatype, these will give a
-   sense of some of the obvious data constructors *)
-and dump_tvar stack cx _r id = Constraint_js.(
-  let sbounds = if ISet.mem id stack then "(...)" else (
-    let stack = ISet.add id stack in
+  let tvar id =
+    if ISet.mem id tvars then spf "%d, ^" id else
+    let stack = ISet.add id tvars in
+    let open Constraint_js in
     match IMap.find_unsafe id (Context.graph cx) with
-    | Goto id -> spf "Goto TYPE_%d" id
-    | Root { rank; constraints = Resolved t } ->
-        spf "Root (rank = %d, resolved = %s)"
-          rank (dump_t_ stack cx t)
-    | Root { rank; constraints = Unresolved bounds } ->
-        spf "Root (rank = %d, unresolved = %s)"
-          rank (dump_bounds stack cx id bounds)
-  ) in
-  (spf "TYPE_%d: " id) ^ sbounds
-)
+    | Goto g -> spf "%d, Goto %d" id g
+    | Root { constraints = Resolved t; _ } ->
+      spf "%d, Resolved %s" id (dump_t_ (depth-1, stack) cx t)
+    | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
+      if lower = TypeMap.empty && upper = UseTypeMap.empty
+      then spf "%d" id
+      else spf "%d, [%s], [%s]" id
+        (String.concat "; " (List.rev (TypeMap.fold
+          (fun t _ acc ->
+            dump_t_ (depth-1, stack) cx t :: acc
+          ) lower [])))
+        (String.concat "; " (List.rev (UseTypeMap.fold
+          (fun use_t _ acc ->
+            dump_use_t_ (depth-1, stack) cx use_t :: acc
+          ) upper [])))
+  in
 
-and dump_bounds stack cx id bounds = Constraint_js.(match bounds with
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = UseTypeMap.empty
-      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* no inflows or outflows *)
-      "(free)"
-  | { lower; upper; lowertvars; uppertvars; }
-      when upper = UseTypeMap.empty
-      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* only concrete inflows *)
-      spf "L %s" (dump_tkeys stack cx lower)
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = UseTypeMap.empty
-      && IMap.cardinal uppertvars = 1 ->
-      (* only tvar inflows *)
-      spf "LV %s" (dump_tvarkeys cx id lowertvars)
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty
-      && IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* only concrete outflows *)
-      spf "U %s" (dump_use_tkeys stack cx upper)
-  | { lower; upper; lowertvars; uppertvars; }
-      when lower = TypeMap.empty && upper = UseTypeMap.empty
-      && IMap.cardinal lowertvars = 1 ->
-      (* only tvar outflows *)
-      spf "UV %s" (dump_tvarkeys cx id uppertvars)
-  | { lower; upper; lowertvars; uppertvars; }
-      when IMap.cardinal lowertvars = 1 && IMap.cardinal uppertvars = 1 ->
-      (* only concrete inflows/outflows *)
-      let l = dump_tkeys stack cx lower in
-      let u = dump_use_tkeys stack cx upper in
-      if l = u then "= " ^ l
-      else "L " ^ l ^ " U " ^ u
-  | { lower; upper; lowertvars; uppertvars; } ->
-    let slower = if lower = TypeMap.empty then "" else
-      spf " lower = %s;" (dump_tkeys stack cx lower) in
-    let supper = if upper = UseTypeMap.empty then "" else
-      spf " upper = %s;" (dump_use_tkeys stack cx upper) in
-    let sltvars = if IMap.cardinal lowertvars <= 1 then "" else
-      spf " lowertvars = %s;" (dump_tvarkeys cx id lowertvars) in
-    let sutvars = if IMap.cardinal uppertvars <= 1 then "" else
-      spf " uppertvars = %s;" (dump_tvarkeys cx id uppertvars) in
-    "{" ^ slower ^ supper ^ sltvars ^ sutvars ^ " }"
-)
+  if depth = 0 then string_of_ctor t
+  else match t with
+  | OpenT (_, id) -> p ~extra:(tvar id) t
+  | NumT (_, lit) -> p ~extra:(match lit with
+    | Literal (_, raw) -> raw
+    | Truthy -> "truthy"
+    | AnyLiteral -> "") t
+  | StrT (_, c) -> p ~extra:(match c with
+    | Literal s -> spf "%S" s
+    | Truthy -> "truthy"
+    | AnyLiteral -> "") t
+  | BoolT (_, c) -> p ~extra:(match c with
+    | Some b -> spf "%B" b
+    | None -> "") t
+  | EmptyT _
+  | MixedT _
+  | AnyT _
+  | NullT _
+  | VoidT _
+  | FunT _
+  | FunProtoT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
+  | PolyT _ -> p t
+  | ThisClassT _ -> p t
+  | BoundT param -> p ~extra:param.name t
+  | ExistsT _ -> p t
+  | ObjT (_, { props_tmap; _ }) -> p ~extra:(spf "%d" props_tmap) t
+  | ArrT (_, elem, tup) -> p ~extra:(spf "%s, %s" (kid elem)
+      (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
+  | ClassT inst -> p ~reason:false ~extra:(kid inst) t
+  | InstanceT (_, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
+  | ReposUpperT (_, arg) -> p ~extra:(kid arg) t
+  | TypeT (_, arg) -> p ~extra:(kid arg) t
+  | AnnotT (sink, source) -> p ~reason:false
+      ~extra:(spf "%s, %s" (kid sink) (kid source)) t
+  | OptionalT arg
+  | RestT arg
+  | AbstractT arg -> p ~reason:false ~extra:(kid arg) t
+  | EvalT (_, expr, id) -> p
+      ~extra:(spf "%s, %d" (string_of_defer_use_ctor expr) id) t
+  | TypeAppT (base, args) -> p ~reason:false ~extra:(spf "%s, [%s]"
+      (kid base) (String.concat "; " (List.map kid args))) t
+  | ThisTypeAppT (base, this, args) -> p ~reason:false
+      ~extra:(spf "%s, %s, [%s]" (kid base) (kid this)
+        (String.concat "; " (List.map kid args))) t
+  | MaybeT arg -> p ~reason:false ~extra:(kid arg) t
+  | TaintT _ -> p t
+  | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
+      (String.concat "; " (List.map kid (InterRep.members rep)))) t
+  | UnionT (_, rep) -> p ~extra:(spf "[%s]"
+      (String.concat "; " (List.map kid (UnionRep.members rep)))) t
+  | SpeculativeMatchT (_, l, next) -> p
+      ~extra:(spf "%s, %s" (kid l) (use_kid next)) t
+  | AnyWithLowerBoundT arg
+  | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
+  | AnyObjT _
+  | AnyFunT _ -> p t
+  | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
+  | DiffT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | KeysT (_, arg) -> p ~extra:(kid arg) t
+  | SingletonStrT (_, s) -> p ~extra:(spf "%S" s) t
+  | SingletonNumT (_, (_, s)) -> p ~extra:s t
+  | SingletonBoolT (_, b) -> p ~extra:(spf "%B" b) t
+  | ModuleT _ -> p t
+  | ExtendsT (nexts, l, u) -> p ~reason:false ~extra:(spf "[%s], %s, %s"
+    (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
+  | CustomFunT _ -> p t
 
-(* dump the keys of a type map as a list *)
-and dump_tkeys stack cx tmap =
-  "[" ^ (
-    String.concat "," (
-      List.rev (
-        TypeMap.fold (
-          fun t _ acc -> dump_t_ stack cx t :: acc
-        ) tmap []
-      )
-    )
-  ) ^ "]"
+and dump_use_t ?(depth=3) cx t =
+  dump_use_t_ (depth, ISet.empty) cx t
 
-and dump_use_tkeys stack cx tmap =
-  "[" ^ (
-    String.concat "," (
-      List.rev (
-        UseTypeMap.fold (
-          fun t _ acc -> dump_use_t_ stack cx t :: acc
-        ) tmap []
-      )
-    )
-  ) ^ "]"
+and dump_use_t_ (depth, tvars) cx t =
 
-(* dump the keys of a tvar map as a list *)
-and dump_tvarkeys _cx self imap =
-  "[" ^ (
-    String.concat "," (
-      List.rev (
-        IMap.fold (
-          fun id _ acc ->
-            if id = self then acc else spf "TYPE_%d" id :: acc
-        ) imap []
-      )
-    )
-  ) ^ "]"
+  let p ?(reason=true) ?(extra="") use_t =
+    spf "%s (%s%s%s)"
+      (string_of_use_ctor use_t)
+      (if reason then spf "%S" (desc_of_reason (reason_of_use_t use_t)) else "")
+      (if reason && extra <> "" then ", " else "")
+      extra
+  in
 
+  let kid t = dump_t_ (depth-1, tvars) cx t in
+  let use_kid use_t = dump_use_t_ (depth-1, tvars) cx use_t in
+
+  if depth = 0 then string_of_use_ctor t
+  else match t with
+  | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
+  | SummarizeT (_, arg) -> p ~extra:(kid arg) t
+  | SuperT _ -> p t
+  | MixinT (_, arg) -> p ~extra:(kid arg) t
+  | ApplyT (_, f, _) -> p ~extra:(kid f) t
+  | BindT _ -> p t
+  | CallT _ -> p t
+  | MethodT (_, (r, name), _) -> p
+      ~extra:(spf "(%S, %S)" (desc_of_reason r) name) t
+  | SetPropT (_, (r, name), ptype) -> p
+      ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t
+  | GetPropT (_, (r, name), ptype) -> p
+      ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t
+  | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | ConstructorT _ -> p t
+  | AdderT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | ComparatorT (_, arg) -> p ~extra:(kid arg) t
+  | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
+  | BecomeT (_, arg) -> p ~extra:(kid arg) t
+  | PredicateT (pred, arg) -> p ~reason:false
+      ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
+  | EqT (_, arg) -> p ~extra:(kid arg) t
+  | AndT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | OrT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | NotT (_, arg) -> p ~extra:(kid arg) t
+  | ReifyTypeT (_, arg) -> p ~extra:(kid arg) t
+  | SpecializeT (_, _, b, args, ret) -> p ~extra:(spf "%b, [%s], %s"
+      b (String.concat "; " (List.map kid args)) (kid ret)) t
+  | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
+      (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
+  | LookupT (_, _, _, name, ret) -> p ~extra:(spf "%S, %s" name (kid ret)) t
+  | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | ObjAssignT _
+  | ObjFreezeT _
+  | ObjRestT _
+  | ObjSealT _
+  | ObjTestT _
+  | ArrRestT _
+  | UnaryMinusT _
+  | GetKeysT _
+  | HasOwnPropT _
+  | HasPropT _
+  | ElemT _
+  | ConcretizeLowerT _
+  | ConcretizeUpperT _
+  | ImportModuleNsT _
+  | ImportDefaultT _
+  | ImportNamedT _
+  | ImportTypeT _
+  | ImportTypeofT _
+  | AssertImportIsValueT _
+  | CJSRequireT _
+  | CJSExtractNamedExportsT _
+  | ExportNamedT _
+  | ExportStarFromT _
+  | DebugPrintT _
+  | TupleMapT _ -> p t
+
+(*****************************************************)
 
 (* scopes and types *)
 
