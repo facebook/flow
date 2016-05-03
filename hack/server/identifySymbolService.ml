@@ -25,8 +25,11 @@ type 'a find_symbol_result = {
   name:  string;
   (* Where the name is defined, so click-to-definition can be implemented with
    * only one roundtrip to the server. Optional, because user can identify
-   * undefined symbol, and we also don't return definitions for local
-   * variables *)
+   * undefined symbol.
+   *
+   * We cannot compute member position in process_member hook because
+   * it can be called from naming phase when the naming heap is not populated
+   * yet. We do it later in ServerSymbolDefinition module. *)
   name_pos: 'a Pos.pos option;
   type_: target_type;
   (* Extents of the symbol itself *)
@@ -54,31 +57,6 @@ let process_class_id result_ref is_target_fun cid _ =
                        }
   end
 
-(* We have the method element from typing phase, but it doesn't have positional
- * information - we need to go back and fetch relevant named AST *)
-let get_member_pos type_ member_name member_origin =
-  let open Option.Monad_infix in
-
-  let method_pos m = m.Nast.m_name in
-  let prop_pos m = m.Nast.cv_id in
-  let const_pos (_, sid, _) = sid in
-  let typeconst_pos m = m.Nast.c_tconst_name in
-
-  Naming_heap.ClassHeap.get member_origin >>= fun class_ ->
-  let members = match type_ with
-    | `Constructor -> Option.to_list
-      (class_.Nast.c_constructor >>= fun m ->
-      Some (method_pos m))
-    | `Method -> List.map class_.Nast.c_methods method_pos
-    | `Smethod -> List.map class_.Nast.c_static_methods method_pos
-    | `Prop -> List.map class_.Nast.c_vars prop_pos
-    | `Sprop -> List.map class_.Nast.c_static_vars prop_pos
-    | `Cconst -> List.map class_.Nast.c_consts const_pos
-    | `Typeconst -> List.map class_.Nast.c_typeconsts typeconst_pos
-  in
-  List.find members (fun m -> (snd m) = member_name) >>= fun m ->
-  Some (fst m)
-
 let clean_member_name name = lstrip name "$"
 
 let process_member result_ref is_target_fun c_name id ~is_method ~is_const =
@@ -92,7 +70,6 @@ let process_member result_ref is_target_fun c_name id ~is_method ~is_const =
     in
     result_ref :=
       Some { name  = (c_name ^ "::" ^ (clean_member_name member_name));
-             (* Method position is calculated later in infer_member_position *)
              name_pos = None;
              type_;
              pos   = fst id
@@ -126,7 +103,6 @@ let process_lvar_id result_ref is_target_fun _ id _ =
   if is_target_fun (fst id)
   then begin
     result_ref := Some { name  = snd id;
-                         (* TODO: return the position of first occurence *)
                          name_pos = None;
                          type_ = LocalVar;
                          pos   = fst id
@@ -169,10 +145,6 @@ let process_named_class result_ref is_target_fun class_ =
     process_typeconst result_ref is_target_fun c_name
       (snd typeconst.Nast.c_tconst_name) (fst typeconst.Nast.c_tconst_name)
   end;
-  List.iter class_.Nast.c_typeconsts begin fun typeconst ->
-    process_typeconst result_ref is_target_fun c_name
-      (snd typeconst.Nast.c_tconst_name) (fst typeconst.Nast.c_tconst_name)
-  end;
   (* We don't check anything about xhp attributes, so the hooks won't fire when
      typechecking the class. Need to look at them individually. *)
   List.iter class_.Nast.c_xhp_attr_uses begin function
@@ -191,54 +163,6 @@ let process_named_class result_ref is_target_fun class_ =
 
 let process_named_fun result_ref is_target_fun fun_ =
   process_fun_id result_ref is_target_fun fun_.Nast.f_name
-
-(* We cannot compute member position in process_member hook because
- * it can be called from naming phase when the naming heap is not populated
- * yet. We do it here in separate function called afterwards. *)
-let infer_symbol_position tcopt ast result =
-  let open Option.Monad_infix in
-  let name_pos = match result.type_ with
-    | Method (c_name, method_name) ->
-      (* Classes on typing heap have all the methods from inheritance hierarchy
-       * folded together, so we will correctly identify them even if method_name
-       * is not defined directly in class c_name *)
-      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
-      if method_name = Naming_special_names.Members.__construct then begin
-        match fst class_.tc_construct with
-          | Some m -> get_member_pos `Constructor method_name m.ce_origin
-          | None -> Some class_.tc_pos
-      end else begin
-        match SMap.get method_name class_.tc_methods with
-        | Some m -> get_member_pos `Method method_name m.ce_origin
-        | None ->
-          SMap.get method_name class_.tc_smethods >>= fun m ->
-          get_member_pos `Smethod method_name m.ce_origin
-      end
-    | Property (c_name, property_name) ->
-      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
-      begin match SMap.get property_name class_.tc_props with
-      | Some m -> get_member_pos `Prop property_name m.ce_origin
-      | None ->
-        SMap.get property_name class_.tc_sprops >>= fun m ->
-        get_member_pos `Sprop (clean_member_name property_name) m.ce_origin
-      end
-    | ClassConst (c_name, const_name) ->
-      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
-      SMap.get const_name class_.tc_consts >>= fun m ->
-      get_member_pos `Cconst const_name m.cc_origin
-    | Function ->
-      Naming_heap.FunPosHeap.get result.name
-    | Class ->
-      Option.map (Naming_heap.TypeIdHeap.get result.name) fst
-    | Typeconst (c_name, typeconst_name) ->
-      Typing_lazy_heap.get_class tcopt c_name >>= fun class_ ->
-      SMap.get typeconst_name class_.tc_typeconsts >>= fun m ->
-      get_member_pos `Typeconst typeconst_name m.ttc_origin
-    | LocalVar ->
-      let line, char, _ = Pos.info_pos result.pos in
-      List.hd (ServerFindLocals.go_from_ast ast line char)
-  in
-  { result with name_pos = name_pos }
 
 let attach_hooks result_ref line char =
   let is_target_fun = is_target line char in

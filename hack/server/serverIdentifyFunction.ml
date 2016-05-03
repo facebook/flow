@@ -13,9 +13,10 @@ let go content line char tcopt =
   IdentifySymbolService.attach_hooks result line char;
   let (funs, classes, typedefs), ast =
     ServerIdeUtils.declare_and_check_get_ast Relative_path.default content in
-  let result =
-    Option.map !result (IdentifySymbolService.infer_symbol_position tcopt ast)
-  in
+  let result = Option.map !result begin fun x ->
+    let name_pos = ServerSymbolDefinition.go tcopt ast x in
+    { x with IdentifySymbolService.name_pos = name_pos }
+  end in
   ServerIdeUtils.revive funs classes typedefs;
   IdentifySymbolService.detach_hooks ();
   result

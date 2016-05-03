@@ -371,9 +371,9 @@ let print_symbol symbol =
     | Typeconst _ -> "Typeconst"
     end
     (Pos.string_no_file symbol.pos);
-  Option.iter symbol.name_pos begin fun x ->
-    Printf.printf "defined: %s\n"  (Pos.string_no_file x)
-  end
+  Printf.printf "defined: %s\n"
+    (Option.value_map symbol.name_pos ~f:Pos.string_no_file ~default:"None")
+
 
 let handle_mode mode filename tcopt files_contents files_info errors =
   match mode with
