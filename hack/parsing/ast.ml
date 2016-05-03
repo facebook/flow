@@ -167,6 +167,7 @@ and method_ = {
   m_ret: hint option;
   m_ret_by_ref: bool;
   m_fun_kind: fun_kind;
+  m_extents: Pos.t
 }
 
 and typeconst = {

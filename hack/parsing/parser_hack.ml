@@ -1530,6 +1530,7 @@ and modifier_word env = function
 (*****************************************************************************)
 
 and class_member_def env =
+  let member_start = Pos.make env.file env.lb in
   let attrs = attribute env in
   let modifier_start = Pos.make env.file env.lb in
   let modifiers = mandatory_modifier_list env in
@@ -1545,7 +1546,7 @@ and class_member_def env =
       ClassVars (modifiers, None, cvars)
   | Tword ->
       let word = Lexing.lexeme env.lb in
-      class_member_word env ~modifiers ~attrs word
+      class_member_word env member_start ~modifiers ~attrs word
   | _ ->
       L.back env.lb;
       check_visibility env modifier_pos modifiers;
@@ -1678,21 +1679,21 @@ and xhp_category_list env =
  *)
 (*****************************************************************************)
 
-and class_member_word env ~attrs ~modifiers = function
+and class_member_word env member_start ~attrs ~modifiers = function
   | "async" ->
       expect_word env "function";
       let is_ref = ref_opt env in
       if is_ref
         then error env ("Asynchronous function cannot return reference");
       let fun_name = identifier env in
-      let method_ =
-        method_ env ~modifiers ~attrs ~sync:FDeclAsync is_ref fun_name in
+      let method_ = method_ env member_start
+        ~modifiers ~attrs ~sync:FDeclAsync is_ref fun_name in
       Method method_
   | "function" ->
       let is_ref = ref_opt env in
       let fun_name = identifier env in
-      let method_ =
-        method_ env ~modifiers ~attrs ~sync:FDeclSync is_ref fun_name in
+      let method_ = method_ env member_start
+        ~modifiers ~attrs ~sync:FDeclSync is_ref fun_name in
       Method method_
   | _ ->
       L.back env.lb;
@@ -1720,12 +1721,14 @@ and typeconst_def env ~is_abstract =
     tconst_type = type_;
   }
 
-and method_ env ~modifiers ~attrs ~(sync:fun_decl_kind) is_ref pname =
+and method_ env method_start ~modifiers ~attrs ~(sync:fun_decl_kind)
+    is_ref pname =
   let pos, name = pname in
   let tparams = class_params env in
   let params = parameter_list env in
   let ret = hint_return_opt env in
   let is_generator, body_stmts = function_body env in
+  let method_end = Pos.make env.file env.lb in
   let ret = method_implicit_return env pname ret in
   if name = "__destruct" && params <> []
   then error_at env pos "Destructor must not have any parameters.";
@@ -1738,6 +1741,7 @@ and method_ env ~modifiers ~attrs ~(sync:fun_decl_kind) is_ref pname =
     m_kind = modifiers;
     m_user_attributes = attrs;
     m_fun_kind = fun_kind sync is_generator;
+    m_extents = Pos.btw method_start method_end;
   }
 
 (*****************************************************************************)
