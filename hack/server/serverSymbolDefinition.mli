@@ -12,4 +12,4 @@
    TypecheckerOptions.t ->
    Ast.program ->
    Relative_path.t IdentifySymbolService.find_symbol_result ->
-   Pos.t option
+   (Pos.t option * Pos.t option)

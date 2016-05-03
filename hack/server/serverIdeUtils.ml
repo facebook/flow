@@ -44,7 +44,11 @@ let oldify_typedefs names =
   Naming_heap.TypeCanonHeap.oldify_batch @@ canon_set names;
   Typing_heap.Typedefs.oldify_batch names
 
-let revive funs classes typedefs =
+let oldify_file name =
+  Parser_heap.ParserHeap.oldify_batch @@
+    Parser_heap.ParserHeap.KeySet.singleton name
+
+let revive funs classes typedefs file_name =
   Typing_heap.Funs.revive_batch funs;
   Naming_heap.FunPosHeap.revive_batch funs;
   Naming_heap.FunCanonHeap.revive_batch @@ canon_set funs;
@@ -55,7 +59,10 @@ let revive funs classes typedefs =
 
   Naming_heap.TypeIdHeap.revive_batch typedefs;
   Naming_heap.TypeCanonHeap.revive_batch @@ canon_set typedefs;
-  Typing_heap.Typedefs.revive_batch typedefs
+  Typing_heap.Typedefs.revive_batch typedefs;
+
+  Parser_heap.ParserHeap.revive_batch @@
+    Parser_heap.ParserHeap.KeySet.singleton file_name
 
 (* This will parse, declare and check all functions and classes in content
  * buffer.
@@ -92,10 +99,12 @@ let declare_and_check_get_ast path content =
           | _ -> funs, classes, typedefs
       end ~init:([], [], []) in
 
+      oldify_file path;
       oldify_funs !declared_funs;
       oldify_classes !declared_classes;
       oldify_typedefs !declared_typedefs;
 
+      Parser_heap.ParserHeap.add path ast;
       NamingGlobal.make_env ~funs ~classes ~typedefs ~consts:[];
       let nast = Naming.program tcopt ast in
       List.iter nast begin function
@@ -135,7 +144,7 @@ let check_file_input tcopt files_info fi =
   | ServerUtils.FileContent content ->
       let path = Relative_path.default in
       let funs, classes, typedefs = declare_and_check path content in
-      revive funs classes typedefs;
+      revive funs classes typedefs path;
       path
   | ServerUtils.FileName fn ->
       let path = Relative_path.create Relative_path.Root fn in
