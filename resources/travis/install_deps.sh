@@ -36,7 +36,9 @@ case "$TRAVIS_OS_NAME" in
 
     printf "travis_fold:start:cache.1\nSetting up build cache\n"
     echo -n "downloading $TRAVIS_BRANCH/$SLUG.tar.gz:"
-    aws s3 cp --storage-class REDUCED_REDUNDANCY "s3://ci-cache.flowtype.org/$TRAVIS_BRANCH/$SLUG.tar.gz" "$TMP" >/dev/null 2>&1 || true
+    curl -sSL -o "$TMP/$SLUG.tar.gz" \
+      "https://s3.amazonaws.com/ci-cache.flowtype.org/$TRAVIS_BRANCH/$SLUG.tar.gz" \
+      || true
     if [ -f "$TMP/$SLUG.tar.gz" ]; then
       gzip -d "$TMP/$SLUG.tar.gz"
       shasum "$TMP/$SLUG.tar" > "$TMP/$SLUG.tar.sha1"
