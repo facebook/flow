@@ -50,20 +50,35 @@ let empty reason = {
   return_t = VoidT.t;
 }
 
+(* Return a function signature with type parameters in `map` substituted. Note
+   that this function *does not* substitute any type parameters declared by the
+   function itself, which may shadow the names of type parameters in `map`.
+   This function signature's own type parameters will be substitued by
+   `generate_tests`. *)
 let subst cx map x =
   let {tparams; tparams_map; params; return_t; _} = x in
-  let tparams = List.map (fun tp ->
-    {tp with bound = Flow.subst cx map tp.bound}
-  ) tparams in
+  (* Remove shadowed type params from `map`, but allow bounds/defaults to be
+     substituted if they refer to a type param before it is shadowed. *)
+  let tparams, map = tparams |> List.fold_left (fun (tparams, map) tp ->
+    let bound = Flow.subst cx map tp.bound in
+    let default = Option.map ~f:(Flow.subst cx map) tp.default in
+    {tp with bound; default}::tparams,
+    SMap.remove tp.name map
+  ) ([], map) in
+  let tparams = List.rev tparams in
   let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
   let params = Func_params.subst cx map params in
   let return_t = Flow.subst cx map return_t in
   {x with tparams; tparams_map; params; return_t}
 
 let generate_tests cx f x =
-  let {reason; tparams; _} = x in
-  let f map = f (subst cx map x) in
-  Flow.generate_tests cx reason tparams f
+  let {reason; tparams; tparams_map; params; return_t; _} = x in
+  Flow.generate_tests cx reason tparams (fun map ->
+    let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
+    let params = Func_params.subst cx map params in
+    let return_t = Flow.subst cx map return_t in
+    f {x with tparams_map; params; return_t}
+  )
 
 let functiontype cx this_t {reason; tparams; params; return_t; _} =
   let static =

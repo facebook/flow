@@ -1,0 +1,56 @@
+default_params.js:6
+  6:     h(c); // err, T ~> U
+         ^^^^ function call
+  6:     h(c); // err, T ~> U
+           ^ T. This type is incompatible with
+  3:     function h(d:U = b) {}
+                      ^ some incompatible instantiation of `U`
+
+default_params.js:10
+ 10:   g(0,0); // error: number ~> T
+       ^^^^^^ function call
+ 10:   g(0,0); // error: number ~> T
+           ^ number. This type is incompatible with
+  2:   function g<U>(b:U, c:T = a) {
+                            ^ some incompatible instantiation of `T`
+
+method_shadow.js:42
+ 42: g.m(true); // err, bool ~> number|string
+     ^^^^^^^^^ call of method `m`
+ 42: g.m(true); // err, bool ~> number|string
+         ^^^^ boolean. This type is incompatible with
+ 40: declare var g: G<number|string>;
+                      ^^^^^^^^^^^^^ union: number | string
+  Member 1:
+   40: declare var g: G<number|string>;
+                        ^^^^^^ number
+  Error:
+   42: g.m(true); // err, bool ~> number|string
+           ^^^^ boolean. This type is incompatible with
+   40: declare var g: G<number|string>;
+                        ^^^^^^ number
+  Member 2:
+   40: declare var g: G<number|string>;
+                               ^^^^^^ string
+  Error:
+   42: g.m(true); // err, bool ~> number|string
+           ^^^^ boolean. This type is incompatible with
+   40: declare var g: G<number|string>;
+                               ^^^^^^ string
+
+method_shadow.js:43
+ 43: (g.m(""): G<number>); // err, string ~> number
+          ^^ string. This type is incompatible with
+ 43: (g.m(""): G<number>); // err, string ~> number
+                 ^^^^^^ number
+
+method_shadow.js:51
+ 51:         this.x = x; // err, m's T != H's T
+             ^^^^^^ assignment of property `x`
+ 51:         this.x = x; // err, m's T != H's T
+                      ^ T. This type is incompatible with
+ 48: class H<T> {
+           ^ some incompatible instantiation of `T`
+
+
+Found 5 errors
