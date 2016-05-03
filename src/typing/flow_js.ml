@@ -2044,7 +2044,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* TODO: ideally we'd do the same when lower bounds flow to a
        this-abstracted class, but fixing the class is easier; might need to
        revisit *)
-    | (_, UseT (use_op, ThisClassT i)) -> (*TJP: x ~> Class<this> case? Or has the `this` already been fixed? *)
+    | (_, UseT (use_op, ThisClassT i)) ->
       let r = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace r i))
 
@@ -2401,7 +2401,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************************************************)
 
     | (_,
-       UseT (_, InstanceT (reason_inst, _, super, {
+       UseT (_, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -2409,7 +2409,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        })))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+        | InstanceT (_, l, _, _),
+          InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+            structural_subtype cx trace l reason
+              (super, fields_tmap, methods_tmap)
+        | _ -> ())
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -3438,7 +3445,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
-    | (MixedT _, UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+    | (MixedT _,
+       UseT (_, ExtendsT ([], l, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -3446,7 +3454,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        }))))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+        | InstanceT (_, l, _, _),
+          InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+            structural_subtype cx trace l reason
+              (super, fields_tmap, methods_tmap)
+        | _ -> ())
 
     | (MixedT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
@@ -3663,6 +3678,7 @@ and ground_subtype = function
   | (VoidT _, UseT (_, VoidT _))
   | (EmptyT _, _)
   | (_, UseT (_, MixedT _))
+  | (_, UseT (_, ClassT (MixedT _)))
   | (_, UseT (_, FunProtoT _)) (* MixedT is used for object protos, this is for funcs *)
   | (AnyT _, _)
   | (_, UseT (_, AnyT _))
@@ -3930,7 +3946,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ) ([], map) xs in
     PolyT (List.rev xs, subst cx ~force:false map t)
 
-  | ThisClassT t ->(*TJP: Figure out the syntactic origin of this*)
+  | ThisClassT t ->
     let map = SMap.remove "this" map in
     ThisClassT (subst cx ~force map t)
 
@@ -3997,7 +4013,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
       let ts = List.map (subst cx ~force map) ts in
       TypeAppT(c, ts)
 
-  | ThisTypeAppT(c, this, ts) -> (*TJP: Grep to figure out the syntactic origin of these*)
+  | ThisTypeAppT(c, this, ts) ->
       let c = subst cx ~force map c in
       let this = subst cx ~force map this in
       let ts = List.map (subst cx ~force map) ts in
@@ -5940,6 +5956,7 @@ and become cx ?trace r t = match t with
 
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace reason t =
+  let repos t = mod_reason_of_t (repos_reason (loc_of_reason reason)) t in
   match t with
   | OpenT (r, id) ->
     let constraints = find_graph cx id in
@@ -5964,7 +5981,10 @@ and reposition cx ?trace reason t =
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+  | InstanceT (reason_inst, static, super, insttype) ->
+      let loc = loc_of_reason reason in
+      InstanceT (repos_reason loc reason_inst, repos static, super, insttype)
+  | _ -> repos t
 
 (* set the position of the given use type from a reason *)
 and reposition_use cx ?trace reason t = match t with
@@ -6260,8 +6280,8 @@ end
    superclass.
 *)
 (* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) cx skip ids t =
-  let recurse ?infer = assert_ground ?infer cx skip ids in
+let rec assert_ground ?(infer=false) ?(in_class=false) cx skip ids t =
+  let recurse ?infer = assert_ground ?infer ~in_class cx skip ids in
   match t with
   | BoundT _ ->
     ()
@@ -6298,13 +6318,13 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | FunT (_, static, prototype, { this_t; params_tlist; return_t; _ }) ->
     unify cx static AnyT.t;
     unify cx prototype AnyT.t;
-    unify cx this_t AnyT.t;
+    if in_class then recurse ~infer:true this_t else unify cx this_t AnyT.t;
     List.iter recurse params_tlist;
     recurse ~infer:true return_t
 
   | PolyT (_, t)
   | ThisClassT t ->
-    recurse t
+    assert_ground ~in_class:true cx skip ids t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
     unify cx proto_t AnyT.t;
@@ -6314,7 +6334,9 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     recurse t;
     List.iter recurse ts
 
-  | ClassT t
+  | ClassT t ->
+    assert_ground ~in_class:true cx skip ids t
+
   | TypeT (_, t) ->
     recurse t
 

@@ -82,16 +82,13 @@ let mk cx type_params_map {Ast.Function.this; params; defaults; rest; _} implici
     then List.map (fun _ -> None) params
     else defaults
   in
-  let this =
-    let desc = "pseudo-param `this`" in
-    Ast.Type.Function.ThisParam.(match this with
-      | Implicit loc -> Flow_js.reposition cx (mk_reason desc loc) implicit_this
-      | Explicit (loc, { Ast.Type.Function.Param.typeAnnotation; _ }) ->
-          let reason = mk_reason desc loc in (*TJP: Should I be using just the type's loc?*)
-          let anno = Some (loc, typeAnnotation) in
-          Anno.mk_type_annotation cx type_params_map reason anno
-    )
-  in
+  let this = Ast.Type.Function.ThisParam.(match this with
+    | Implicit _ -> implicit_this
+    | Explicit (loc, { Ast.Type.Function.Param.typeAnnotation; _ }) ->
+        let reason = mk_reason "pseudo-param `this`" loc in
+        let anno = Some (loc, typeAnnotation) in
+        Anno.mk_type_annotation cx type_params_map reason anno
+  ) in
   let func_params = {
     this;
     rev_list = [];
