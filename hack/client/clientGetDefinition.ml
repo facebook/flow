@@ -12,15 +12,20 @@ open Hh_json
 
 let to_json = function
   | Some res ->
-    let definition_pos = match res.IdentifySymbolService.name_pos with
-      | Some pos -> Pos.json pos
-      | None -> JSON_Null
+    let definition_pos =
+      Option.value_map res.IdentifySymbolService.name_pos
+        ~f:Pos.json ~default:JSON_Null
+    in
+    let definition_extents =
+      Option.value_map res.IdentifySymbolService.name_extents
+        ~f:Pos.multiline_json ~default:JSON_Null
     in
     JSON_Object [
       "name",           JSON_String res.IdentifySymbolService.name;
       "result_type",    JSON_String (ClientGetMethodName.get_result_type res);
       "pos",            Pos.json (res.IdentifySymbolService.pos);
       "definition_pos", definition_pos;
+      "definition_extents", definition_extents;
     ]
   | None -> JSON_Null
 
@@ -35,6 +40,10 @@ let print_readable = function
       (Pos.string_no_file res.IdentifySymbolService.pos);
     Option.iter res.IdentifySymbolService.name_pos begin fun pos ->
       Printf.printf ", defined: %s" (Pos.string_no_file pos)
+    end;
+    Option.iter res.IdentifySymbolService.name_extents begin fun pos ->
+      Printf.printf ", definition extents: %s"
+        (Pos.multiline_string_no_file pos)
     end;
     print_newline ()
   | None -> ()

@@ -31,6 +31,7 @@ type 'a find_symbol_result = {
    * it can be called from naming phase when the naming heap is not populated
    * yet. We do it later in ServerSymbolDefinition module. *)
   name_pos: 'a Pos.pos option;
+  name_extents: 'a Pos.pos option;
   type_: target_type;
   (* Extents of the symbol itself *)
   pos: 'a Pos.pos;
@@ -38,6 +39,7 @@ type 'a find_symbol_result = {
 
 let to_absolute x = { x with
   name_pos = Option.map x.name_pos Pos.to_absolute;
+  name_extents = Option.map x.name_extents Pos.to_absolute;
   pos = Pos.to_absolute x.pos;
 }
 
@@ -52,6 +54,7 @@ let process_class_id result_ref is_target_fun cid _ =
     let name = snd cid in
     result_ref := Some { name;
                          name_pos = None;
+                         name_extents = None;
                          type_ = Class;
                          pos   = fst cid
                        }
@@ -71,6 +74,7 @@ let process_member result_ref is_target_fun c_name id ~is_method ~is_const =
     result_ref :=
       Some { name  = (c_name ^ "::" ^ (clean_member_name member_name));
              name_pos = None;
+             name_extents = None;
              type_;
              pos   = fst id
            }
@@ -94,6 +98,7 @@ let process_fun_id result_ref is_target_fun id =
     result_ref :=
       Some { name;
              name_pos = None;
+             name_extents = None;
              type_ = Function;
              pos   = fst id
            }
@@ -104,6 +109,7 @@ let process_lvar_id result_ref is_target_fun _ id _ =
   then begin
     result_ref := Some { name  = snd id;
                          name_pos = None;
+                         name_extents = None;
                          type_ = LocalVar;
                          pos   = fst id
                        }
@@ -114,6 +120,7 @@ let process_typeconst result_ref is_target_fun class_name tconst_name pos =
     result_ref :=
       Some { name = class_name ^ "::" ^ tconst_name;
              name_pos = None;
+             name_extents = None;
              type_ = Typeconst (class_name, tconst_name);
              pos;
            }
