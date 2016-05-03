@@ -198,25 +198,31 @@ let merge_compute_deps (to_redecl1, to_recheck1) (to_redecl2, to_recheck2) =
 (*****************************************************************************)
 
 let parallel_otf_decl workers bucket_size tcopt fast fnl =
-  OnTheFlyStore.store (tcopt, fast);
-  let errors, failed =
-    MultiWorker.call
-      workers
-      ~job:load_and_otf_decl_files
-      ~neutral:otf_neutral
-      ~merge:merge_on_the_fly
-      ~next:(Bucket.make ~max_size:bucket_size fnl)
-  in
-  let to_redecl, to_recheck =
-    MultiWorker.call
-      workers
-      ~job:load_and_compute_deps
-      ~neutral:compute_deps_neutral
-      ~merge:merge_compute_deps
-      ~next:(Bucket.make ~max_size:bucket_size fnl)
-  in
-  OnTheFlyStore.clear();
-  errors, failed, to_redecl, to_recheck
+  try
+    OnTheFlyStore.store (tcopt, fast);
+    let errors, failed =
+      MultiWorker.call
+        workers
+        ~job:load_and_otf_decl_files
+        ~neutral:otf_neutral
+        ~merge:merge_on_the_fly
+        ~next:(Bucket.make ~max_size:bucket_size fnl)
+    in
+    let to_redecl, to_recheck =
+      MultiWorker.call
+        workers
+        ~job:load_and_compute_deps
+        ~neutral:compute_deps_neutral
+        ~merge:merge_compute_deps
+        ~next:(Bucket.make ~max_size:bucket_size fnl)
+    in
+    OnTheFlyStore.clear();
+    errors, failed, to_redecl, to_recheck
+  with e ->
+    if SharedMem.is_heap_overflow () then
+      Exit_status.exit Exit_status.Redecl_heap_overflow
+    else
+      raise e
 
 (*****************************************************************************)
 (* Code invalidating the heap *)

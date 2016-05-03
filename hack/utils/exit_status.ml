@@ -45,6 +45,7 @@ type t =
   | Nfs_root
   | IDE_init_failure
   | IDE_typechecker_died
+  | Redecl_heap_overflow
 
 exception Exit_with of t
 
@@ -79,6 +80,7 @@ let ec t = match t with
   | Hhconfig_changed -> 4
   | Server_name_not_found -> 105
   | EventLogger_broken_pipe -> 106
+  | Redecl_heap_overflow -> 107
   | IDE_malformed_request -> 201
   | IDE_no_server -> 202
   | IDE_out_of_retries -> 203
@@ -127,6 +129,7 @@ let to_string = function
   | Nfs_root -> "Nfs_root"
   | IDE_init_failure -> "IDE_init_failure"
   | IDE_typechecker_died -> "IDE_typechecker_died"
+  | Redecl_heap_overflow -> "Redecl_heap_overflow"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n

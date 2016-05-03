@@ -652,6 +652,13 @@ void hh_call_after_init() {
   CAMLreturn0;
 }
 
+value hh_check_heap_overflow() {
+  if (*heap >= shared_mem + shared_mem_size) {
+    return Val_bool(1);
+  }
+  return Val_bool(0);
+}
+
 /*****************************************************************************/
 /* We compact the heap when it gets twice as large as its initial size.
  * Step one, copy the live values in a new heap.

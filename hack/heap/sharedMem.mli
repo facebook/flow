@@ -81,6 +81,8 @@ val dep_stats : unit -> table_stats
 
 val hash_stats : unit -> table_stats
 
+val is_heap_overflow: unit -> bool
+
 (*****************************************************************************)
 (* Cache invalidation. *)
 (*****************************************************************************)

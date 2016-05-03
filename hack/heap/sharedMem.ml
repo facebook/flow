@@ -80,6 +80,8 @@ external dep_slots : unit -> int = "hh_dep_slots"
 (*****************************************************************************)
 external hh_init_done: unit -> unit = "hh_call_after_init"
 
+external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
+
 let init_done () =
   hh_init_done ();
   EventLogger.sharedmem_init_done (heap_size ())
@@ -112,6 +114,8 @@ let collect (effort : [ `gentle | `aggressive ]) =
       old_size new_size time_taken;
     EventLogger.sharedmem_gc_ran effort old_size new_size time_taken
   end
+
+let is_heap_overflow () = hh_check_heap_overflow ()
 
 (*****************************************************************************)
 (* Module returning the MD5 of the key. It's because the code in C land
