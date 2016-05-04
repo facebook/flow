@@ -1,2 +1,6 @@
+test.js:7
+  7:   [computed]: string;
+       ^^^^^^^^^^^^^^^^^^^ computed property keys not supported
 
-Found 0 errors
+
+Found 1 error

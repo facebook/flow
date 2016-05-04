@@ -3020,6 +3020,40 @@ module.exports = {
       'class Properties { set() {} }': {
         'body.0.body.body.0.key.name': 'set',
       },
+      'class Properties { x: string y: number; }': {
+        'body.0.body.body': [{
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+          'value': null,
+          'static': false,
+          'computed': false,
+        }, {
+          'type': 'ClassProperty',
+          'key.name': 'y',
+          'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+          'value': null,
+          'static': false,
+          'computed': false,
+        }]
+      },
+      'class Properties { x: string; [y]: number; }': {
+        'body.0.body.body': [{
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+          'value': null,
+          'static': false,
+          'computed': false,
+        }, {
+          'type': 'ClassProperty',
+          'key.name': 'y',
+          'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+          'value': null,
+          'static': false,
+          'computed': true,
+        }]
+      },
     },
     'Comments': {
       // Regression test: "/*" should be allowed inside block comments
