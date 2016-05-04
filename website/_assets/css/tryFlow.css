@@ -51,6 +51,11 @@
   padding: 0;
 }
 
+.editor .errors .msgHighlight,
+.editor .errors .msgType {
+  cursor: pointer;
+}
+
 .editor .CodeMirror {
   height: 100%;
 }
