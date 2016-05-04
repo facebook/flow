@@ -25,7 +25,9 @@ ARCH=$(uname -m || echo unknown)
 SLUG="ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}_${PLATFORM}-${ARCH}"
 
 CACHE_ROOT="$HOME/.flow_cache"
+BOWER_CACHE="$CACHE_ROOT/.bower"
 mkdir -p "$CACHE_ROOT"
+mkdir -p "$BOWER_CACHE"
 
 case "$TRAVIS_OS_NAME" in
   osx)
@@ -101,6 +103,8 @@ printf "travis_fold:end:opam_installer\n"
 printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
 pushd website >/dev/null
 npm install
-node_modules/.bin/bower install
+node_modules/.bin/bower \
+  --config.storage.packages="$BOWER_CACHE/packages" \
+  install
 popd >/dev/null
 printf "travis_fold:end:npm_install\n"
