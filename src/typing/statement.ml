@@ -4645,7 +4645,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
       let typeparams, type_params_map =
         Anno.mk_type_param_declarations cx type_params_map typeParameters in
 
-      let implicit_this = if static then ThisClassT this else this in
+      let implicit_this = if static then ClassT this else this in
       let meth_params = Func_params.mk cx type_params_map func implicit_this in
 (*TJP: Ocaml method to warn on statics with `this: this` and nonstatics with `this: Class<this>` *)
       let meth_return_type = mk_return_type cx type_params_map func in
