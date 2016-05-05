@@ -33,16 +33,10 @@ module ParserHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
     let prefix = Prefix.make()
   end)
 
-let (parser_hook: (filename -> Ast.program -> unit) list ref) = ref []
-let call_on_success f = parser_hook := f :: !parser_hook
+let (parser_hook: (filename -> Ast.program option -> unit) list ref) = ref []
+let register_hook f = parser_hook := f :: !parser_hook
 
 let execute_hook file ast =
-  let ast = match ast with
-  | None ->
-     let empty_ast, _ = Parser_flow.parse_program true (Some file) "" in
-     empty_ast
-  | Some ast -> ast
-  in
   try
     List.iter (fun callback -> callback file ast) !parser_hook
   with e ->

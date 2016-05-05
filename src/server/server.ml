@@ -30,7 +30,11 @@ struct
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. *)
     ignore (Init_js.get_master_cx options);
-    Parsing_service_js.call_on_success SearchService_js.update
+    Parsing_service_js.register_hook (fun filename ast ->
+      match ast with
+      | Some ast -> SearchService_js.update filename ast
+      | None -> ()
+    )
 
   let init genv =
     (* write binary path and version to server log *)
