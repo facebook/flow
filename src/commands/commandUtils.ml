@@ -166,26 +166,40 @@ type flowconfig_params = {
   libs: string list;
 }
 
-let collect_flowconfig_flags =
-  let list_of_string_arg = function
-  | None -> []
-  | Some arg_str -> Str.split (Str.regexp ",") arg_str
-  in
-  fun main ignores_str includes_str lib_str ->
+let list_of_string_arg = function
+| None -> []
+| Some arg_str -> Str.split (Str.regexp ",") arg_str
+
+let collect_flowconfig_flags main ignores_str includes_str lib_str =
     let ignores = list_of_string_arg ignores_str in
     let includes = list_of_string_arg includes_str in
     let libs = list_of_string_arg lib_str in
     main { ignores; includes; libs; }
 
+let ignore_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--ignore" (optional string)
+    ~doc:"Specify one or more ignore patterns, comma separated"
+)
+
+let include_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--include" (optional string)
+    ~doc:"Specify one or more include patterns, comma separated"
+)
+
+let libs_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--libs" (optional string)
+    ~doc:"Specify one or more lib files/directories, comma separated"
+)
+
 let flowconfig_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_flowconfig_flags
-  |> flag "--ignore" (optional string)
-    ~doc:"Specify one or more ignore patterns, comma separated"
-  |> flag "--include" (optional string)
-    ~doc:"Specify one or more include patterns, comma separated"
-  |> flag "--libs" (optional string)
-    ~doc:"Specify one or more lib files/directories, comma separated"
+  |> ignore_flag
+  |> include_flag
+  |> libs_flag
 )
 
 (* relativize a loc's source path to a given root whenever strip_root is set *)
@@ -241,6 +255,24 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> from_flag
   |> ignore_version_flag
 )
+
+let ignores_of_arg root patterns extras =
+  let patterns = List.rev_append extras patterns in
+  List.map (fun s ->
+    let root = Path.to_string root in
+    let reg = s
+      (* On Windows, we have to take care about '\'. *)
+      |> Str.global_replace (Str.regexp "/") "[/\\]"
+      |> Str.global_replace (FlowConfig.project_root_token) root
+      |> Str.regexp in
+    (s, reg)
+  ) patterns
+
+let includes_of_arg root paths =
+  List.fold_left (fun acc path ->
+    let path = Files_js.make_path_absolute root path in
+    Path_matcher.add acc path
+  ) Path_matcher.empty paths
 
 let connect server_flags root =
   let flowconfig = Server_files_js.config_file root in
