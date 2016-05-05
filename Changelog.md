@@ -1,3 +1,7 @@
+###v0.24.2
+
+- Fixed a bug where Flow might run out of memory in a repository with a lot of non-flow files
+
 ###v0.24.1
 
 - Fixed a bug where `autocomplete` can show internal variable names for files that use destructuring
