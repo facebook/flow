@@ -56,10 +56,13 @@ val get_ast_and_info_unsafe:
 (* remove asts for given file set. *)
 val remove_asts: FilenameSet.t -> unit
 
-(* Adds a hook called every time a file has been successfully parsed.
- * When a file is deleted, the hook is called with an empty Ast.
+(* Adds a hook that is called every time a file has been processed.
+ * When a file fails to parse, is deleted or is skipped because it isn't a Flow
+ * file, the AST is None.
  *)
-val call_on_success: (filename -> Spider_monkey_ast.program -> unit) -> unit
+val register_hook:
+  (filename -> Spider_monkey_ast.program option -> unit) ->
+  unit
 
 (* parse contents of a file *)
 val do_parse:
