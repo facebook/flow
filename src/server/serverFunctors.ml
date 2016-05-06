@@ -61,7 +61,7 @@ end = struct
         flush oc
       with
       (* The client went away *)
-      | Sys_error ("Broken pipe") -> ()
+      | Sys_error msg when msg = "Broken pipe" -> ()
       | e ->
           prerr_endlinef "wakeup_client: %s" (Printexc.to_string e)
     end
@@ -71,7 +71,7 @@ end = struct
       try close_out oc
       with
       (* The client went away *)
-      | Sys_error ("Broken pipe") -> ()
+      | Sys_error msg when msg = "Broken pipe" -> ()
       | e ->
           prerr_endlinef "close_waiting_channel: %s" (Printexc.to_string e)
     end
@@ -124,7 +124,7 @@ end = struct
       let client = { ic; oc; close } in
       Program.handle_client genv env client
     with
-    | Sys_error("Broken pipe") ->
+    | Sys_error msg when msg = "Broken pipe" ->
       shutdown_client (ic, oc);
       env
     | e ->

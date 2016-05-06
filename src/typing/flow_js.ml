@@ -5661,7 +5661,9 @@ and rec_unify cx trace t1 t2 =
   | OpenT (_, id1), OpenT (_, id2) ->
     merge_ids cx trace id1 id2
 
-  | OpenT (_, id), t | t, OpenT (_, id) when ok_unify t ->
+  | OpenT (_, id), t when ok_unify t ->
+    resolve_id cx trace id t
+  | t, OpenT (_, id) when ok_unify t ->
     resolve_id cx trace id t
 
   | PolyT (params1, t1), PolyT (params2, t2)

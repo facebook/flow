@@ -1,5 +1,5 @@
 type t =
-  | Ok
+  | No_error
   | Server_initializing
   | Type_error
   | Out_of_time

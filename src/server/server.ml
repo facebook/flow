@@ -47,7 +47,7 @@ struct
 
   let run_once_and_exit env =
     match env.ServerEnv.errorl with
-      | [] -> FlowExitStatus.(exit Ok)
+      | [] -> FlowExitStatus.(exit No_error)
       | _ -> FlowExitStatus.(exit Type_error)
 
   let incorrect_hash oc =

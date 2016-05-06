@@ -318,7 +318,12 @@ let symlink =
      on Windows since Vista, but until Seven (included), one should
      have administratrive rights in order to create symlink. *)
   let win32_symlink source dest = write_file ~file:dest source in
-  if Sys.win32 then win32_symlink else Unix.symlink
+  if Sys.win32 
+  then win32_symlink 
+  else 
+    (* 4.03 addds an optional argument to Unix.symlink that we want to ignore
+     *)
+    fun source dest -> Unix.symlink source dest
 
 (* Creates a symlink at <dir>/<linkname.ext> to
  * <dir>/<pluralized ext>/<linkname>-<timestamp>.<ext> *)
