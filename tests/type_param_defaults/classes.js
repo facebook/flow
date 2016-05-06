@@ -13,13 +13,13 @@ class B<T = string> extends A<T> {}
 var b_number: B<number> = new B(123);
 var b_void: B<void> = new B();
 var b_default: B<> = new B('hello');
-var b_any: B = new B(10);
+
 var b_star: B<*> = new B(123);
 
 (b_number.p: boolean); // Error number ~> boolean
 (b_void.p: boolean); // Error void ~> boolean
 (b_default.p: boolean); // Error string ~> boolean
-(b_any.p: boolean); // This is fine due to any
+
 (b_star.p: boolean); // Error number ~> boolean
 
 class C<T: ?string = string> extends A<T> {}
@@ -27,11 +27,11 @@ class C<T: ?string = string> extends A<T> {}
 var c_number: C<number> = new C(123); // Error number ~> ?string
 var c_void: C<void> = new C();
 var c_default: C<> = new C('hello');
-var c_any: C = new C('hello');
+var c_star: C<*> = new C('hello');
 
 (c_void.p: boolean); // Error void ~> boolean
 (c_default.p: boolean); // Error string ~> boolean
-(c_any.p: boolean); // This is fine due to any
+(c_star.p: boolean); // Error string ~> boolean
 
 class D<S, T = string> extends A<T> {}
 var d_number: D<mixed, number> = new D(123);
@@ -39,12 +39,12 @@ var d_void: D<mixed, void> = new D();
 var d_default: D<mixed> = new D('hello');
 var d_too_few_args: D<> = new D('hello'); // Error too few tparams
 var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
-var d_any: D = new D(10);
+var d_star: D<*> = new D(10); // error, number ~> string
 
 (d_number.p: boolean); // Error number ~> boolean
 (d_void.p: boolean); // Error void ~> boolean
 (d_default.p: boolean); // Error string ~> boolean
-(d_any.p: boolean); // This is fine due to any
+(d_star.p: boolean); // Error number ~> boolean
 
 class E<S: string, T: number = S> {} // Error: string ~> number
 class F<S: string, T: S = number> {} // Error: number ~> string
@@ -62,4 +62,4 @@ class I<T: ?string = *> extends A<T> {}
 var i_number: I<number> = new I(123); // Error number ~> ?string
 var i_void: I<void> = new I();
 var i_default: I<> = new I('hello');
-var i_any: I = new I('hello');
+var i_star: I<*> = new I('hello');

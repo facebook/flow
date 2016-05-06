@@ -14,7 +14,7 @@ function testIterable1(iterable: Iterable<number>): void {
   }
 }
 
-function testIterable2(iterable: Iterable): void {
+function testIterable2(iterable: Iterable<*>): void {
   for (var x of iterable) {
     (x: string);
   }
@@ -33,7 +33,7 @@ function testMap1(map: Map<string, number>): void {
   }
 }
 
-function testMap2(map: Map): void {
+function testMap2(map: Map<*, *>): void {
   for (var elem of map) {
     (elem: [number, string]); // Any tuple is fine
     (elem: number); // Error - tuple ~> number
@@ -46,7 +46,7 @@ function testSet1(set: Set<string>): void {
   }
 }
 
-function testSet2(set: Set): void {
+function testSet2(set: Set<*>): void {
   for (var x of set) {
     (x: number); // Anything goes
   }

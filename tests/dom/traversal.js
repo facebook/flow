@@ -3,7 +3,7 @@
 let tests = [
   // basic functionality
   function() {
-    const i: NodeIterator = document.createNodeIterator(document.body);
+    const i: NodeIterator<*,*> = document.createNodeIterator(document.body);
     const filter: NodeFilter = i.filter;
     const response:
       typeof NodeFilter.FILTER_ACCEPT |
@@ -12,7 +12,7 @@ let tests = [
       filter.acceptNode(document.body);
   },
   function() {
-    const w: TreeWalker = document.createTreeWalker(document.body);
+    const w: TreeWalker<*,*> = document.createTreeWalker(document.body);
     const filter: NodeFilter = w.filter;
     const response:
       typeof NodeFilter.FILTER_ACCEPT |

@@ -570,8 +570,8 @@ module ImplicitTypeArgument = struct
     mk_tvar cx (prefix_reason prefix_desc reason_op)
 
   (* Abstract a type argument that is created by implicit instantiation
-     above. Sometimes, these type arguments are involved in type expansion loops,
-     so we abstract them to detect such loops. *)
+     above. Sometimes, these type arguments are involved in type expansion
+     loops, so we abstract them to detect such loops. *)
   let abstract_targ tvar =
     let reason, _ = open_tvar tvar in
     let desc = desc_of_reason reason in
@@ -2052,51 +2052,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let r = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace r i))
 
-    | (PolyT (ids,t), _) ->
-      (* Some observed cases of u are listed below. These look legit, as common
-         uses of polymorphic classes and functions. However, they may not cover
-         all legit uses.
-
-      (* class-like *)
-      | TypeT _
-      | ConstructorT _
-      | GetPropT _
-      | SetPropT _
-      | MethodT _
-
-      (* function-like *)
-      | CallT _
-      | FunT _
-
-      (* general uses *)
-      | PredicateT _
-
+    (** This rule is hit when a polymorphic type appears outside a
+        type application expression - i.e. not followed by a type argument list
+        delimited by angle brackets.
+        We want to require full expressions in type positions like annotations,
+        but allow use of polymorphically-typed values - for example, in class
+        extends clauses and at function call sites - without explicit type
+        arguments, since typically they're easily inferred from context.
       *)
-
-      let weak = match u with
-        (* Implicitly instantiating polymorphic types in annotations leads to
-           confusing errors. In particular, when multiple instantiations of a
-           polymorphic type flow to such an annotation, the instantiations are
-           unified via the implicit instantiation at the annotation. This
-           situation is made worse by the fact that the annotation site is often
-           not included as part of the ensuing errors due to such unification.
-
-           Instead, we fall back to using `any` as type arguments when they are
-           missing. This conforms to the general intuition that all
-           instantiations of a polymorphic type Foo are subtypes of Foo. When
-           falling back to `any` is inadequate, we force the programmer to be
-           explicit about what the type arguments of a polymorphic type are in
-           an annotation. Overall, this scheme reduces false positives as well
-           as improves blaming when errors do arise.
-
-           It is always possible to recover implicit instantiation by explicitly
-           using `*`. *)
-        | UseT (_, TypeT _) -> true
-        | _ -> false in
+    | (PolyT (ids,t), _) ->
       let reason_op = reason_of_use_t u in
       let reason_tapp = reason_of_t l in
-      let t_ = instantiate_poly ~weak cx trace ~reason_op ~reason_tapp (ids,t) in
-      rec_flow cx trace (t_, u)
+      begin match u with
+      | UseT (_, TypeT _) ->
+        let msg = missing_type_args_msg ids in
+        add_error cx (mk_info reason_op [msg]);
+      | _ ->
+        let t_ = instantiate_poly cx trace ~reason_op ~reason_tapp (ids,t) in
+        rec_flow cx trace (t_, u)
+      end
 
     (* when a this-abstracted class flows to upper bounds, fix the class *)
     | (ThisClassT i, _) ->
@@ -4196,6 +4170,16 @@ and poly_minimum_arity xs =
   List.filter (fun typeparam -> typeparam.default = None) xs
   |> List.length
 
+(* Missing type arguments error message for given poly type *)
+and missing_type_args_msg params =
+  let min = poly_minimum_arity params in
+  let max = List.length params in
+  let arity, args = if min = max
+    then spf "%d" max, if max = 1 then "argument" else "arguments"
+    else spf "%d-%d" min max, "arguments" in
+  spf "Application of polymorphic type needs \
+    <list of %s %s>. (Can use `*` for inferrable ones)" arity args
+
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs
   cx
@@ -4253,15 +4237,10 @@ and cache_instantiate cx trace cache (typeparam, reason_op) t =
   else t
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly ?(weak=false) cx trace ~reason_op ~reason_tapp (xs,t) =
+and instantiate_poly cx trace ~reason_op ~reason_tapp (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
-    if weak then (
-      match typeparam.bound with
-      | MixedT _ -> AnyT.why reason_op
-      | other_bound -> AnyWithUpperBoundT (other_bound)
-    ) else ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
-  )
-  in
+    ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
+  ) in
   instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* instantiate each param of a polymorphic type with its upper bound *)
@@ -6230,8 +6209,8 @@ end = struct
         let prot_members = extract_members_as_map cx proto_t in
         Success (SMap.union prot_members members)
     | IntersectionT (_, rep) ->
-        (* Intersection type should autocomplete for every property of every type
-        * in the intersection *)
+        (* Intersection type should autocomplete for every property of
+           every type in the intersection *)
         let ts = InterRep.members rep in
         let ts = List.map (resolve_type cx) ts in
         let members = List.map (extract_members_as_map cx) ts in

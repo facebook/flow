@@ -4,18 +4,18 @@ annot.js:10
  10:   return (new A: A<{}>) || (new A: A<{x: string}>);
                         ^^ object type
 
-implicit_bounded_instantiation.js:18
- 18: a.meth(42); // Error: number ~> Middle
+implicit_bounded_instantiation.js:19
+ 19: a.meth(42); // Error: number ~> Middle
      ^^^^^^^^^^ call of method `meth`
- 18: a.meth(42); // Error: number ~> Middle
+ 19: a.meth(42); // Error: number ~> Middle
             ^^ number. This type is incompatible with
   7: class C<T: Middle> {
                 ^^^^^^ Middle
 
-implicit_bounded_instantiation.js:19
- 19: a.meth(new Base()); // Error: Base ~> Middle
+implicit_bounded_instantiation.js:20
+ 20: a.meth(new Base()); // Error: Base ~> Middle
      ^^^^^^^^^^^^^^^^^^ call of method `meth`
- 19: a.meth(new Base()); // Error: Base ~> Middle
+ 20: a.meth(new Base()); // Error: Base ~> Middle
             ^^^^^^^^^^ Base. This type is incompatible with
   7: class C<T: Middle> {
                 ^^^^^^ Middle

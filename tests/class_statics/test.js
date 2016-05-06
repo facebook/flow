@@ -30,7 +30,7 @@ class B extends A {
 class C<X> {
   static x: X;
   static bar(x: X) { }
-  static create(): C {
+  static create(): C<*> {
     return new this();
   }
 }
@@ -43,7 +43,7 @@ class D extends C<string> {
   }
 }
 
-var d: C = D.create();
+var d: C<*> = D.create();
 (new A: typeof A);
 (B: typeof A);
 
@@ -53,4 +53,9 @@ class E {
     this.bar(); // error
     return this.x; // error
   }
+}
+
+// note: above classdefs are sufficiently annotated to export
+module.exports = {
+  A: A, B: B, C: C, D: D, E: E
 }

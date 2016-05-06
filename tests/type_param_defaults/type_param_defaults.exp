@@ -48,6 +48,12 @@ classes.js:33
  33: (c_default.p: boolean); // Error string ~> boolean
                    ^^^^^^^ boolean
 
+classes.js:34
+ 34: (c_star.p: boolean); // Error string ~> boolean
+      ^^^^^^^^ string. This type is incompatible with
+ 34: (c_star.p: boolean); // Error string ~> boolean
+                ^^^^^^^ boolean
+
 classes.js:40
  40: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
                          ^^^ type application of identifier `D`. Too few type arguments. Expected at least 1
@@ -59,6 +65,12 @@ classes.js:41
                      ^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `D`. Too many type arguments. Expected at most 2
  36: class D<S, T = string> extends A<T> {}
            ^ class type: D. See definition here
+
+classes.js:42
+ 42: var d_star: D<*> = new D(10); // error, number ~> string
+                              ^^ number. This type is incompatible with
+ 36: class D<S, T = string> extends A<T> {}
+                    ^^^^^^ string
 
 classes.js:44
  44: (d_number.p: boolean); // Error number ~> boolean
@@ -77,6 +89,12 @@ classes.js:46
       ^^^^^^^^^^^ string. This type is incompatible with
  46: (d_default.p: boolean); // Error string ~> boolean
                    ^^^^^^^ boolean
+
+classes.js:47
+ 47: (d_star.p: boolean); // Error number ~> boolean
+      ^^^^^^^^ string. This type is incompatible with
+ 47: (d_star.p: boolean); // Error number ~> boolean
+                ^^^^^^^ boolean
 
 classes.js:49
  49: class E<S: string, T: number = S> {} // Error: string ~> number
@@ -115,4 +133,4 @@ classes.js:62
                  ^^^^^^ string
 
 
-Found 19 errors
+Found 22 errors

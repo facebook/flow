@@ -470,7 +470,7 @@ let rec convert cx type_params_map = Ast.Type.(function
      ensures that existential type variables under a polymorphic type remain
      unevaluated until the polymorphic type is applied. *)
   let force = SMap.is_empty type_params_map in
-  let reason = mk_reason "existential" loc in
+  let reason = derivable_reason (mk_reason "existential" loc) in
   if force then Flow_js.mk_tvar cx reason
   else ExistsT reason
 )
