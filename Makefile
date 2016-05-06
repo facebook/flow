@@ -98,11 +98,13 @@ FILES_TO_COPY=\
 JS_STUBS=\
 	$(wildcard js/*.js)
 
-ALL_HEADER_FILES=$(addprefix _build/,$(shell find hack -name '*.h'))
-
 ################################################################################
 #                                    Rules                                     #
 ################################################################################
+
+ALL_HEADER_FILES=$(addprefix _build/,$(shell find hack -name '*.h'))
+BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
+BUILT_C_FILES=$(patsubst %.o,%.c,$(BUILT_OBJECT_FILES))
 
 CC_FLAGS=-DNO_LZ4
 CC_FLAGS += $(EXTRA_CC_FLAGS)
@@ -127,14 +129,14 @@ clean:
 	rm -f hack/utils/get_build_id.gen.c
 	rm -f flow.odocl
 
-build-flow: build-flow-native-deps $(FLOWLIB)
+build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
 build-flow-with-ocp: build-flow-stubs-with-ocp
 	[ -d _obuild ] || ocp-build init
 	ocp-build build flow
 
-build-flow-debug: build-flow-native-deps $(FLOWLIB)
+build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow
@@ -143,14 +145,18 @@ build-flow-debug: build-flow-native-deps $(FLOWLIB)
 	mkdir -p $(dir $@)
 	cp $(subst _build/,,$@) $@
 
-build-flow-native-deps: build-flow-stubs $(ALL_HEADER_FILES)
-	ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)"\
-		$(NATIVE_OBJECT_FILES)
+# Compile each object file. Equivalent to this ocamlbuild rule, but faster:
+# ocamlbuild -ocamlc "ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS)" $(subst _build/,,$@)
+$(BUILT_C_FILES): _build/%.c: %.c
+	mkdir -p $(dir $@)
+	cp $< $@
+$(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
+	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
-build-flow-stubs:
+hack/utils/get_build_id.gen.c: FORCE
 	OUT="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD || hg id -i)\"; \
 	const unsigned long BuildInfo_kRevisionCommitTimeUnix = $$(git log -1 --pretty=format:%ct || echo $$(hg log -r . -T \{date\} | grep -o ^[^.]* || echo 0))ul;"; \
-	if [ "$$OUT" != "$$(cat utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$OUT" > hack/utils/get_build_id.gen.c; fi
+	if [ "$$OUT" != "$$(cat hack/utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$OUT" > hack/utils/get_build_id.gen.c; fi
 
 build-flow-stubs-with-ocp:
 	ocaml unix.cma scripts/gen_build_id.ml hack/utils/get_build_id.gen.c
@@ -192,7 +198,7 @@ test: build-flow copy-flow-files
 test-ocp: build-flow-with-ocp copy-flow-files-ocp
 	${MAKE} do-test
 
-js: build-flow-native-deps
+js: $(NATIVE_OBJECT_FILES)
 	mkdir -p bin
 	ocamlbuild -use-ocamlfind \
 		-pkgs js_of_ocaml \
@@ -217,7 +223,9 @@ js: build-flow-native-deps
 		exit 1; \
 	fi
 
-.PHONY: all js
+FORCE:
+
+.PHONY: all js FORCE
 
 # This rule runs if any .ml or .mli file has been touched. It recursively calls
 # ocamldep to figure out all the modules that we use to build src/flow.ml
