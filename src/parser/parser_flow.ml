@@ -3132,7 +3132,6 @@ end = struct
         | _ -> module_items env (declare ~in_module:true env::acc)
 
       in fun env start_loc ->
-        Expect.contextual env "module";
         let id = match Peek.token env with
         | T_STRING (loc, value, raw, octal) ->
             if octal then strict_error env Error.StrictOctalLiteral;
@@ -3151,43 +3150,59 @@ end = struct
         Loc.btwn start_loc (fst body),
         Statement.(DeclareModule DeclareModule.({ id; body; }))
 
+    and declare_module_exports env start_loc =
+      Expect.token env T_PERIOD;
+      Expect.contextual env "exports";
+      let type_annot = Type.annotation env in
+      let end_loc =
+        match Peek.semicolon_loc env with
+        | Some loc -> loc
+        | None -> fst type_annot
+      in
+      Eat.semicolon env;
+      let loc = Loc.btwn start_loc end_loc in
+      (loc, Statement.DeclareModuleExports type_annot)
+
     and declare ?(in_module=false) env =
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeDeclaration;
       let start_loc = Peek.loc env in
       (* eventually, just emit a wrapper AST node *)
       (match Peek.token ~i:1 env with
-      | T_CLASS ->
-          Expect.token env T_DECLARE;
-          declare_class_statement env start_loc
-      | T_INTERFACE ->
-          Expect.token env T_DECLARE;
-          interface env
-      | T_TYPE ->
-          Expect.token env T_DECLARE;
-          type_alias env;
-      | T_FUNCTION ->
-          Expect.token env T_DECLARE;
-          declare_function_statement env start_loc
-      | T_VAR ->
-          Expect.token env T_DECLARE;
-          declare_var_statement env start_loc
-      | T_ASYNC ->
-          Expect.token env T_DECLARE;
-          error env Error.DeclareAsync;
-          Expect.token env T_ASYNC;
-          declare_function_statement env start_loc
-      | T_IDENTIFIER when not in_module && Peek.value ~i:1 env = "module" ->
-          Expect.token env T_DECLARE;
-          declare_module env start_loc
-      | _ when in_module ->
-          (* Oh boy, found some bad stuff in a declare module. Let's just
-            * pretend it's a declare var (arbitrary choice) *)
-          Expect.token env T_DECLARE;
-          declare_var_statement env start_loc
-      | _ ->
-          Parse.statement env)
-
+        | T_CLASS ->
+            Expect.token env T_DECLARE;
+            declare_class_statement env start_loc
+        | T_INTERFACE ->
+            Expect.token env T_DECLARE;
+            interface env
+        | T_TYPE ->
+            Expect.token env T_DECLARE;
+            type_alias env;
+        | T_FUNCTION ->
+            Expect.token env T_DECLARE;
+            declare_function_statement env start_loc
+        | T_VAR ->
+            Expect.token env T_DECLARE;
+            declare_var_statement env start_loc
+        | T_ASYNC ->
+            Expect.token env T_DECLARE;
+            error env Error.DeclareAsync;
+            Expect.token env T_ASYNC;
+            declare_function_statement env start_loc
+        | T_IDENTIFIER when Peek.value ~i:1 env = "module" ->
+            Expect.token env T_DECLARE;
+            Expect.contextual env "module";
+            if in_module || Peek.token env = T_PERIOD
+            then declare_module_exports env start_loc
+            else declare_module env start_loc
+        | _ when in_module ->
+            (* Oh boy, found some bad stuff in a declare module. Let's just
+              * pretend it's a declare var (arbitrary choice) *)
+            Expect.token env T_DECLARE;
+            declare_var_statement env start_loc
+        | _ ->
+            Parse.statement env
+      )
 
     let export_source env =
       Expect.contextual env "from";

@@ -409,6 +409,8 @@ and statement_decl cx type_params_map = Ast.Statement.(
             )
         )
 
+  | (_, DeclareModuleExports _) -> ()
+
   | (_, ExportDeclaration { ExportDeclaration.default; declaration; _ }) -> (
       match declaration with
       | Some(ExportDeclaration.Declaration(stmt)) ->
@@ -1634,31 +1636,46 @@ and statement cx type_params_map = Ast.Statement.(
 
     let module_scope = Scope.fresh () in
     Env.push_var_scope cx module_scope;
+    Context.set_in_declare_module cx true;
 
     toplevel_decls cx type_params_map elements;
     toplevels cx type_params_map elements;
 
+    Context.set_in_declare_module cx false;
     Env.pop_var_scope ();
 
-    let for_types, exports_ = Scope.(Entry.(
-      match get_entry "exports" module_scope with
-      | Some (Value { specific = exports; _ }) ->
-        (** TODO: what happens when value bindings other than `exports`
-            are also declared? *)
-        let for_types = SMap.filter (fun _ ->
+    (**
+     * TODO(jeffmo): `declare var exports` is deprecated (in favor of
+     *               `declare module.exports`). v0.25 retains support for it as
+     *               a transitionary grace period, but this will be removed as
+     *               early as v0.26.
+     *)
+    let legacy_exports = Scope.get_entry "exports" module_scope in
+    let declared_module_exports =
+      Scope.get_entry (internal_name "declare_module.exports") module_scope
+    in
+
+    let (type_exports, cjs_module_exports) = Scope.(Entry.(
+      match (legacy_exports, declared_module_exports) with
+      (* TODO: Eventually drop support for legacy "declare var exports" *)
+      | (Some (Value {specific=exports; _;}), None)
+      | (_, Some (Value {specific=exports; _;})) ->
+        let type_exports = SMap.filter (fun _ ->
           function
           | Value _ -> false
           | Type _ -> true
         ) module_scope.entries in
+        type_exports, exports
 
-        for_types, exports
-
-      | Some _ ->
+      | (_, Some (Type _)) ->
         assert_false (
-          spf "non-var exports entry in declared module `%s`" name)
+          "Internal Error: `declare module.exports` was created as a type " ^
+          "binding. This should never happen!"
+        )
 
-      | None ->
-        let for_types, nonfor_types = SMap.partition (
+      | (Some (Type _), None)
+      | (None, None) ->
+        let type_exports, value_exports = SMap.partition (
           fun _ entry -> match entry with
           | Value _ -> false
           | Type _ -> true
@@ -1667,15 +1684,16 @@ and statement cx type_params_map = Ast.Statement.(
         let map = SMap.map (
           function
           | Value { specific; _ } -> specific
-          | Type _ -> assert_false "type entry in nonfor_types"
-        ) nonfor_types in
+          | Type _ -> assert_false "type entry in value_exports"
+        ) value_exports in
 
         let proto = MixedT (reason, Mixed_everything) in
 
-        for_types,
+        type_exports,
         Flow.mk_object_with_map_proto cx reason map proto
-      )) in
-    let module_t = mk_commonjs_module_t cx reason reason exports_ in
+    )) in
+
+    let module_t = mk_commonjs_module_t cx reason reason cjs_module_exports in
     let module_t = Flow.mk_tvar_where cx reason (fun t ->
       Flow.flow cx (
         module_t,
@@ -1685,7 +1703,7 @@ and statement cx type_params_map = Ast.Statement.(
             function
             | Type { _type; _ } -> _type
             | _ -> assert_false "non-type entry in for_types"
-          ) for_types,
+          ) type_exports,
           t
         )
       )
@@ -1722,6 +1740,19 @@ and statement cx type_params_map = Ast.Statement.(
       export_statement cx type_params_map loc
         default export_info specifiers source
         Ast.Statement.ExportDeclaration.ExportValue
+
+  | (loc, DeclareModuleExports annot) ->
+    let t = Anno.convert cx SMap.empty (snd annot) in
+
+    if Context.in_declare_module cx then (
+      let name = internal_name "declare_module.exports" in
+      let reason = mk_reason "declare module.exports" loc in
+      Env.bind_declare_var cx name t reason
+    ) else (
+      let reason = mk_reason "declare module.exports" loc in
+      mark_exports_type cx reason (Context.CommonJSModule(Some loc));
+      set_module_exports cx reason t
+    )
 
   | (loc, ExportDeclaration {
       ExportDeclaration.default;

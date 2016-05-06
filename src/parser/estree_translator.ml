@@ -256,6 +256,10 @@ end with type t = Impl.t) = struct
           "source", option literal export.source;
         |]
       )
+    | loc, DeclareModuleExports annot ->
+        node "DeclareModuleExports" loc [|
+          "typeAnnotation", type_annotation annot
+        |]
     | loc, ExportDeclaration export -> ExportDeclaration.(
         let declaration = match export.declaration with
         | Some (Declaration stmt) -> statement stmt

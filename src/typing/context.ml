@@ -63,6 +63,8 @@ type t = {
 
   type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
+
+  mutable in_declare_module: bool;
 }
 
 and module_exports_type =
@@ -118,6 +120,8 @@ let make metadata file module_name = {
 
   type_table = Hashtbl.create 0;
   annot_table = Hashtbl.create 0;
+
+  in_declare_module = false;
 }
 
 (* accessors *)
@@ -140,6 +144,7 @@ let find_props cx id = IMap.find_unsafe id cx.property_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
 let globals cx = cx.globals
 let graph cx = cx.graph
+let in_declare_module cx = cx.in_declare_module
 let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
@@ -199,6 +204,8 @@ let set_globals cx globals =
   cx.globals <- globals
 let set_graph cx graph =
   cx.graph <- graph
+let set_in_declare_module cx v =
+  cx.in_declare_module <- v
 let set_module_exports_type cx module_exports_type =
   cx.module_exports_type <- module_exports_type
 let set_property_maps cx property_maps =

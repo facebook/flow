@@ -1615,6 +1615,18 @@ module.exports = {
       'declare export default class A { static () : number }': {
       },
     },
+    'Declare module.exports': {
+      'declare module.exports: number': {
+        'body.0.type': 'DeclareModuleExports',
+        'body.0.typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+      },
+      'declare module "foo" { declare module.exports: number; }': {
+        'body.0.body.body.0': {
+          'type': 'DeclareModuleExports',
+          'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+        },
+      },
+    },
     'Invalid Declare Export': {
       // declare export type is not supported since export type is identical
       'declare export type foo = number;': {
@@ -1700,6 +1712,11 @@ module.exports = {
           ],
         },
       },
+    },
+    'Invalid declare module.exports': {
+      'declare module.exports': {
+        'errors.0.message': 'Unexpected end of input',
+      }
     },
     'Invalid Declaration Statements': {
       // You must provide a return type
@@ -2953,11 +2970,9 @@ module.exports = {
       },
       'class Properties { static x = "hello"; }': {
         '%parse_options%': {
-          'esproposal_class_instance_fields': false,
+          'esproposal_class_static_fields': false,
         },
-        'errors': {
-          '0.message': 'Unexpected string',
-        },
+        'errors.0.message': 'Unexpected string',
       },
       'class Properties { static x: string = "hello"; }': {
         '%parse_options%': {

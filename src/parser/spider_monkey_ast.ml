@@ -475,6 +475,7 @@ and Statement : sig
     | DeclareFunction of DeclareFunction.t
     | DeclareClass of Interface.t
     | DeclareModule of DeclareModule.t
+    | DeclareModuleExports of Type.annotation
     | DeclareExportDeclaration of DeclareExportDeclaration.t
     | ExportDeclaration of ExportDeclaration.t
     | ImportDeclaration of ImportDeclaration.t

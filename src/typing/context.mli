@@ -54,6 +54,7 @@ val find_props: t -> Constraint_js.ident -> Type.properties
 val find_module: t -> string -> Type.t
 val globals: t -> SSet.t
 val graph: t -> Constraint_js.node IMap.t
+val in_declare_module: t -> bool
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
@@ -93,6 +94,7 @@ val set_envs: t -> env IMap.t -> unit
 val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint_js.node IMap.t -> unit
+val set_in_declare_module: t -> bool -> unit
 val set_module_exports_type: t -> module_exports_type -> unit
 val set_property_maps: t -> Type.properties IMap.t -> unit
 val set_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit

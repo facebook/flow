@@ -62,5 +62,11 @@ test_relative.js:9
   9: (A2.fun(): string); // Error number ~> string
                 ^^^^^^ string
 
+test_relative.js:13
+ 13: (CJS: number); // Error: string ~> number
+      ^^^ string. This type is incompatible with
+ 13: (CJS: number); // Error: string ~> number
+           ^^^^^^ number
 
-Found 8 errors
+
+Found 9 errors

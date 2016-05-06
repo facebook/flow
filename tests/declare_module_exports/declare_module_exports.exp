@@ -1,0 +1,30 @@
+main.js:5
+  5: (declare_module_exports: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+  5: (declare_module_exports: string); // Error: number ~> string
+                              ^^^^^^ string
+
+main.js:8
+  8: import {str} from "declare_m_e_with_other_value_declares";
+             ^^^ Named import from module `declare_m_e_with_other_value_declares`. This module has no named export called `str`.
+
+main.js:12
+ 12: (42: str2); // Error: number ~> string
+      ^^ number. This type is incompatible with
+ 12: (42: str2); // Error: number ~> string
+          ^^^^ string
+
+main.js:21
+ 21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
+                                       ^^^^^^ string
+
+main.js:25
+ 25: (declare_m_e_with_declare_var_e: string); // Error: number ~> string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 25: (declare_m_e_with_declare_var_e: string); // Error: number ~> string
+                                      ^^^^^^ string
+
+
+Found 5 errors
