@@ -274,14 +274,18 @@ valueOf () => Object
       "end": 45
     },
     {
-      "name": "contains",
-      "type": "(substr: string) => boolean",
+      "name": "endsWith",
+      "type": "(searchString: string, position?: number) => boolean",
       "func_details": {
         "return_type": "boolean",
         "params": [
           {
-            "name": "substr",
+            "name": "searchString",
             "type": "string"
+          },
+          {
+            "name": "position?",
+            "type": "number"
           }
         ]
       },
@@ -289,10 +293,10 @@ valueOf () => Object
       "line": 240,
       "endline": 240,
       "start": 5,
-      "end": 37
+      "end": 62
     },
     {
-      "name": "endsWith",
+      "name": "includes",
       "type": "(searchString: string, position?: number) => boolean",
       "func_details": {
         "return_type": "boolean",
@@ -314,28 +318,6 @@ valueOf () => Object
       "end": 62
     },
     {
-      "name": "includes",
-      "type": "(searchString: string, position?: number) => boolean",
-      "func_details": {
-        "return_type": "boolean",
-        "params": [
-          {
-            "name": "searchString",
-            "type": "string"
-          },
-          {
-            "name": "position?",
-            "type": "number"
-          }
-        ]
-      },
-      "path": "[LIB] core.js",
-      "line": 242,
-      "endline": 242,
-      "start": 5,
-      "end": 62
-    },
-    {
       "name": "indexOf",
       "type": "(searchString: string, position?: number) => number",
       "func_details": {
@@ -352,8 +334,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 243,
-      "endline": 243,
+      "line": 242,
+      "endline": 242,
       "start": 5,
       "end": 60
     },
@@ -374,8 +356,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 244,
-      "endline": 244,
+      "line": 243,
+      "endline": 243,
       "start": 5,
       "end": 64
     },
@@ -384,8 +366,8 @@ valueOf () => Object
       "type": "number",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 263,
-      "endline": 263,
+      "line": 262,
+      "endline": 262,
       "start": 13,
       "end": 18
     },
@@ -402,8 +384,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 245,
-      "endline": 245,
+      "line": 244,
+      "endline": 244,
       "start": 5,
       "end": 30
     },
@@ -420,8 +402,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 246,
-      "endline": 246,
+      "line": 245,
+      "endline": 245,
       "start": 5,
       "end": 39
     },
@@ -438,8 +420,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 247,
-      "endline": 247,
+      "line": 246,
+      "endline": 246,
       "start": 5,
       "end": 50
     },
@@ -456,8 +438,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 248,
-      "endline": 248,
+      "line": 247,
+      "endline": 247,
       "start": 5,
       "end": 38
     },
@@ -474,8 +456,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 249,
-      "endline": 249,
+      "line": 248,
+      "endline": 248,
       "start": 5,
       "end": 33
     },
@@ -496,8 +478,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 250,
-      "endline": 250,
+      "line": 249,
+      "endline": 249,
       "start": 5,
       "end": 124
     },
@@ -514,8 +496,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 251,
-      "endline": 251,
+      "line": 250,
+      "endline": 250,
       "start": 5,
       "end": 43
     },
@@ -536,8 +518,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 252,
-      "endline": 252,
+      "line": 251,
+      "endline": 251,
       "start": 5,
       "end": 47
     },
@@ -558,8 +540,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 253,
-      "endline": 253,
+      "line": 252,
+      "endline": 252,
       "start": 5,
       "end": 68
     },
@@ -580,8 +562,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 254,
-      "endline": 254,
+      "line": 253,
+      "endline": 253,
       "start": 5,
       "end": 64
     },
@@ -602,8 +584,8 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 255,
-      "endline": 255,
+      "line": 254,
+      "endline": 254,
       "start": 5,
       "end": 49
     },
@@ -624,13 +606,26 @@ valueOf () => Object
         ]
       },
       "path": "[LIB] core.js",
-      "line": 256,
-      "endline": 256,
+      "line": 255,
+      "endline": 255,
       "start": 5,
       "end": 50
     },
     {
       "name": "toLocaleLowerCase",
+      "type": "() => string",
+      "func_details": {
+        "return_type": "string",
+        "params": []
+      },
+      "path": "[LIB] core.js",
+      "line": 256,
+      "endline": 256,
+      "start": 5,
+      "end": 31
+    },
+    {
+      "name": "toLocaleUpperCase",
       "type": "() => string",
       "func_details": {
         "return_type": "string",
@@ -643,7 +638,7 @@ valueOf () => Object
       "end": 31
     },
     {
-      "name": "toLocaleUpperCase",
+      "name": "toLowerCase",
       "type": "() => string",
       "func_details": {
         "return_type": "string",
@@ -653,10 +648,10 @@ valueOf () => Object
       "line": 258,
       "endline": 258,
       "start": 5,
-      "end": 31
+      "end": 25
     },
     {
-      "name": "toLowerCase",
+      "name": "toUpperCase",
       "type": "() => string",
       "func_details": {
         "return_type": "string",
@@ -669,7 +664,7 @@ valueOf () => Object
       "end": 25
     },
     {
-      "name": "toUpperCase",
+      "name": "trim",
       "type": "() => string",
       "func_details": {
         "return_type": "string",
@@ -678,19 +673,6 @@ valueOf () => Object
       "path": "[LIB] core.js",
       "line": 260,
       "endline": 260,
-      "start": 5,
-      "end": 25
-    },
-    {
-      "name": "trim",
-      "type": "() => string",
-      "func_details": {
-        "return_type": "string",
-        "params": []
-      },
-      "path": "[LIB] core.js",
-      "line": 261,
-      "endline": 261,
       "start": 5,
       "end": 18
     },
@@ -702,8 +684,8 @@ valueOf () => Object
         "params": []
       },
       "path": "[LIB] core.js",
-      "line": 262,
-      "endline": 262,
+      "line": 261,
+      "endline": 261,
       "start": 5,
       "end": 21
     }
