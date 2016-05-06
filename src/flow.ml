@@ -30,6 +30,7 @@ end = struct
     GetImportersCommand.command;
     GetImportsCommand.command;
     ConfigCommands.Init.command;
+    LsCommand.command;
     PortCommand.command;
     ServerCommands.Server.command;
     SearchCommand.command;
