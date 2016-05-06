@@ -198,7 +198,7 @@ test: build-flow copy-flow-files
 test-ocp: build-flow-with-ocp copy-flow-files-ocp
 	${MAKE} do-test
 
-js: $(NATIVE_OBJECT_FILES)
+js: $(BUILT_OBJECT_FILES)
 	mkdir -p bin
 	ocamlbuild -use-ocamlfind \
 		-pkgs js_of_ocaml \
@@ -214,7 +214,7 @@ js: $(NATIVE_OBJECT_FILES)
 			-o bin/flow.js \
 			$(JS_STUBS) _build/src/flow_dot_js.byte \
 			2>_build/js_of_ocaml.err; \
-	ret=$?; \
+	ret=$$?; \
 	if [ ! $$ret ]; then \
 		exit $$ret; \
 	elif [ -s _build/js_of_ocaml.err ]; then \
