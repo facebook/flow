@@ -15,7 +15,11 @@ end
 
 include S
 
-external hh_counter_next : unit -> int = "hh_counter_next"
+let ctr = ref 1
+
+let next () =
+  incr ctr;
+  !ctr
 
 let track_names = ref false
 let trace = ref IMap.empty
@@ -29,14 +33,17 @@ let get_name x =
   IMap.find_unsafe x !trace
 
 let make x =
-  let res = hh_counter_next () in
+  let res = next () in
   if !track_names then trace := IMap.add res x !trace;
   res
 
-let make_fake = Hashtbl.hash
+(* `make` always returns a positive value. By multiplying the hash by -1 we
+ * ensure that the value returned by `get` never overlaps with those returned
+ * by `make` *)
+let get x = -(Hashtbl.hash x)
 
 let tmp () =
-  let res = hh_counter_next () in
+  let res = next () in
   if !track_names then begin
     trace := IMap.add res ("__tmp"^string_of_int res) !trace ;
   end;

@@ -8,6 +8,8 @@
  *
  *)
 
+(* Used to represent local variables in the named AST. *)
+
 module S : sig
   type t
   val compare : t -> t -> int
@@ -25,9 +27,14 @@ val to_int : t -> int
 
 val get_name : t -> string
 
+(* Returns a fresh id every time. *)
 val make : string -> t
 
-val make_fake : string -> t
+(* Returns the same id every time for a given string argument. Used for
+ * function / method parameters.
+ * The ids returned here are guaranteed not to overlap with those returned by
+ * Local_id.make, which is used for naming local variables. *)
+val get : string -> t
 
 val tmp : unit -> t
 
