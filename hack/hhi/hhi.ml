@@ -28,7 +28,10 @@ let touch () =
  * security risk. Be careful. *)
 let extract data =
   let tmpdir = Path.make (Tmp.temp_dir GlobalConfig.tmp_dir "hhi") in
-  let oc = Unix.open_process_out ("tar xzC " ^ (Path.to_string tmpdir)) in
+  (* we set all timestamps to the start of the epoch in order to have
+   * reproducible builds *)
+  let tar_cmd = "tar --extract --gzip --warning=no-timestamp --directory=" in
+  let oc = Unix.open_process_out (tar_cmd ^ (Path.to_string tmpdir)) in
   output_string oc data;
   flush oc;
   ignore (Unix.close_process_out oc);
@@ -43,7 +46,7 @@ let extract_embedded () =
  * bytecode builds. *)
 let extract_external () =
   let path =
-    Path.concat (Path.dirname Path.executable_name) "/../hhi.tar.gz" in
+    Path.concat (Path.dirname Path.executable_name) "hhi.tar.gz" in
   if Path.file_exists path then Some (extract (Path.cat path)) else None
 
 let extract_win32_res () =
