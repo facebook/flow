@@ -928,7 +928,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (sink_t, _)) ->
+    | l, UseT (use_op, AnnotT (sink_t, _))
+    | ClassT (l), UseT (use_op, ClassT (AnnotT (sink_t, _))) ->
       let reason = reason_of_t sink_t in
       rec_flow cx trace (ReposUpperT (reason, l), UseT (use_op, sink_t))
 
