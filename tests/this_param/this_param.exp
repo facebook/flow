@@ -2,6 +2,14 @@ ctor.js:2
   2:   constructor(this: this) {}
                    ^^^^^^^^^^ Found a `this` pseudo-param on a constructor.
 
+explicit.js:7
+  7: a.method(); // NG
+     ^^^^^^^^^^ call of method `method`
+  7: a.method(); // NG
+     ^ A. This type is incompatible with
+  2:   method(this: Class<this>) {}
+                          ^^^^ class type: `this` type
+
 function.js:1
   1: function fn(this: { x: number }, x: string): string {
                  ^^^^^^^^^^^^^^^^^^^ explicit this pseudo-parameters are not allowed on functions
@@ -14,132 +22,145 @@ function.js:14
  14: var k = (this: any) => 5;
               ^^^^^^^^^ explicit this pseudo-parameters are not allowed on functions
 
-interface.js:21
- 21: var n1: number = a.method();       // NG
+interface.js:22
+ 22: var n1: number = a.method();       // NG
                       ^^^^^^^^^^ call of method `method`
   9:   method(this: this & I): number {
                            ^ property `anotherMethod` of I. Property not found in
- 21: var n1: number = a.method();       // NG
+ 22: var n1: number = a.method();       // NG
                       ^ A
 
-interface.js:21
- 21: var n1: number = a.method();       // NG
+interface.js:22
+ 22: var n1: number = a.method();       // NG
                       ^^^^^^^^^^ call of method `method`
   9:   method(this: this & I): number {
                            ^ property `anotherStaticMethod` of statics of I. Property not found in
- 21: var n1: number = a.method();       // NG
+ 22: var n1: number = a.method();       // NG
                       ^ statics of A
 
-interface.js:22
- 22: var n2: number = A.staticMethod(); // NG
+interface.js:23
+ 23: var n2: number = A.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  12:   static staticMethod(this: Class<I> & Class<this>): number {
                                        ^ property `anotherStaticMethod` of statics of I. Property not found in
   6: class A {
            ^ statics of A
 
-interface.js:22
- 22: var n2: number = A.staticMethod(); // NG
+interface.js:23
+ 23: var n2: number = A.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  12:   static staticMethod(this: Class<I> & Class<this>): number {
                                        ^ property `anotherMethod` of I. Property not found in
- 22: var n2: number = A.staticMethod(); // NG
+ 23: var n2: number = A.staticMethod(); // NG
                       ^ A
 
-interface.js:39
- 39: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
+interface.js:40
+ 40: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
                       ^^^^^^^^^^ call of method `method`
- 25:   anotherMethod(): string {
+ 26:   anotherMethod(): string {
                         ^^^^^^ string. This type is incompatible with
   2:   anotherMethod(): number;
                         ^^^^^^ number
 
-interface.js:39
- 39: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
+interface.js:40
+ 40: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
                       ^^^^^^^^^^ call of method `method`
- 29:   static anotherStaticMethod(): string {
+ 30:   static anotherStaticMethod(): string {
                                      ^^^^^^ string. This type is incompatible with
   3:   static anotherStaticMethod(): number;
                                      ^^^^^^ number
 
-interface.js:73
- 73:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
-                ^^^^^^^^^^^^^ call of method `method`
- 69:   method(this: I): number {
+interface.js:70
+ 70:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 68: class K {
+ 86: var n7: number = ell.fn(); // NG
+                      ^^^ object literal
+
+interface.js:74
+ 74:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
+                ^^^^^^^^^^^^^ call of method `method`
+ 70:   method(this: I): number {
+                    ^ property `anotherMethod` of I. Property not found in
+ 69: class K {
            ^ K
 
-interface.js:73
- 73:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
+interface.js:74
+ 74:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
                 ^^^^^^^^^^^^^ call of method `method`
- 69:   method(this: I): number {
+ 70:   method(this: I): number {
                     ^ property `anotherStaticMethod` of statics of I. Property not found in
- 68: class K {
+ 69: class K {
            ^ statics of K
 
-interface.js:79
- 79: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+interface.js:80
+ 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^^^^^^^^^^ call of method `method`
- 69:   method(this: I): number {
+ 70:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 79: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+ 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^ K
 
-interface.js:79
- 79: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+interface.js:80
+ 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^^^^^^^^^^ call of method `method`
- 69:   method(this: I): number {
+ 70:   method(this: I): number {
                     ^ property `anotherStaticMethod` of statics of I. Property not found in
- 79: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+ 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^ statics of K
 
-object.js:23
- 23: var n1: number = a.method(); // NG
+interface.js:89
+ 89: var n8: number = fn(); // NG
+                      ^^^^ function call
+ 70:   method(this: I): number {
+                    ^ property `anotherMethod` of I. Property not found in
+global object
+
+object.js:22
+ 22: var n1: number = a.method(); // NG
                       ^^^^^^^^^^ call of method `method`
  12:   method(this: this & I): number {
                            ^ property `anotherMethod`. Property not found in
- 23: var n1: number = a.method(); // NG
+ 22: var n1: number = a.method(); // NG
                       ^ A
 
-object.js:24
- 24: var n2: number = A.staticMethod(); // NG
+object.js:23
+ 23: var n2: number = A.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  15:   static staticMethod(this: J & Class<this>): number {
                                  ^ property `anotherStaticMethod`. Property not found in
- 24: var n2: number = A.staticMethod(); // NG
+ 23: var n2: number = A.staticMethod(); // NG
                       ^ statics of A
 
-object.js:39
- 39: var n3: number = b.method(); // NG
+object.js:38
+ 38: var n3: number = b.method(); // NG
                       ^^^^^^^^^^ call of method `method`
   2:   anotherMethod(): number;
                         ^^^^^^ number. This type is incompatible with
- 27:   anotherMethod(): string {
+ 26:   anotherMethod(): string {
                         ^^^^^^ string
 
-object.js:39
- 39: var n3: number = b.method(); // NG
+object.js:38
+ 38: var n3: number = b.method(); // NG
                       ^^^^^^^^^^ call of method `method`
- 27:   anotherMethod(): string {
+ 26:   anotherMethod(): string {
                         ^^^^^^ string. This type is incompatible with
   2:   anotherMethod(): number;
                         ^^^^^^ number
 
-object.js:41
- 41: var s3: number = B.staticMethod(); // NG: This line triggers an extra negative :(
+object.js:46
+ 46: var s3: number = B.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
   6:   anotherStaticMethod(): number;
                               ^^^^^^ number. This type is incompatible with
- 31:   static anotherStaticMethod(): string {
+ 30:   static anotherStaticMethod(): string {
                                      ^^^^^^ string
 
-object.js:41
- 41: var s3: number = B.staticMethod(); // NG: This line triggers an extra negative :(
+object.js:46
+ 46: var s3: number = B.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  15:   static staticMethod(this: J & Class<this>): number {
                                  ^^^^^^^^^^^^^^^ intersection. This type is incompatible with
- 26: class B extends A {
+ 25: class B extends A {
            ^ class type: `this` type
   Member 1:
     5: type J = {
@@ -147,64 +168,56 @@ object.js:41
   Error:
     5: type J = {
                 ^ object type. This type is incompatible with
-   26: class B extends A {
+   25: class B extends A {
              ^ class type: `this` type
   Member 2:
    15:   static staticMethod(this: J & Class<this>): number {
                                              ^^^^ class type: some incompatible instantiation of `this`
   Error:
-   26: class B extends A {
+   25: class B extends A {
              ^ B. This type is incompatible with
    15:   static staticMethod(this: J & Class<this>): number {
                                              ^^^^ some incompatible instantiation of `this`
 
-object.js:41
- 41: var s3: number = B.staticMethod(); // NG: This line triggers an extra negative :(
+object.js:46
+ 46: var s3: number = B.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
- 31:   static anotherStaticMethod(): string {
+ 30:   static anotherStaticMethod(): string {
                                      ^^^^^^ string. This type is incompatible with
   6:   anotherStaticMethod(): number;
                               ^^^^^^ number
 
-object.js:54
- 54: var n4: number = C.staticMethod(); // OK! False Negative!
+object.js:61
+ 61: var n4: number = C.staticMethod(); // OK
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
- 43: class C extends A {
+ 48: class C extends A {
            ^ C. This type is incompatible with
  15:   static staticMethod(this: J & Class<this>): number {
                                            ^^^^ some incompatible instantiation of `this`
 
-object.js:61
- 61:     return this.method(); // NG
+object.js:68
+ 68:     return this.method(); // NG
                 ^^^^^^^^^^^^^ call of method `method`
- 57:   method(this: I): number {
+ 64:   method(this: I): number {
                     ^ property `anotherMethod`. Property not found in
- 56: class K {
+ 63: class K {
            ^ K
 
-object.js:66
- 66: var n5: number = k.method(); // NG
+object.js:73
+ 73: var n5: number = k.method(); // NG
                       ^^^^^^^^^^ call of method `method`
- 57:   method(this: I): number {
+ 64:   method(this: I): number {
                     ^ property `anotherMethod`. Property not found in
- 66: var n5: number = k.method(); // NG
+ 73: var n5: number = k.method(); // NG
                       ^ K
 
-object.js:91
- 91: t.getXMultBy(4); // NG
+object.js:98
+ 98: t.getXMultBy(4); // NG
      ^^^^^^^^^^^^^^^ call of method `getXMultBy`
- 90: t._x = "a string";
+ 97: t._x = "a string";
             ^^^^^^^^^^ string. This type is incompatible with
- 80:   getXMultBy(this: Issue1369<number>, y: number): number {
+ 87:   getXMultBy(this: Issue1369<number>, y: number): number {
                                   ^^^^^^ number
 
-test.js:9
-  9: a.method();
-     ^^^^^^^^^^ call of method `method`
-  9: a.method();
-     ^ A. This type is incompatible with
-  4:   method(this: Class<this>) {}
-                          ^^^^ class type: `this` type
 
-
-Found 26 errors
+Found 28 errors

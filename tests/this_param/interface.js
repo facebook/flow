@@ -5,13 +5,14 @@ interface I {
 
 class A {
   x: number;
-  static x: number; 
+  static x: number;
   method(this: this & I): number {
     return this.x + this.anotherMethod();
   }
   static staticMethod(this: Class<I> & Class<this>): number {
     // TODO:  There's a commutativity problem here.
-    // `Class<this> & I != I & Class<this>`
+    // `Class<this> & I != I & Class<this>`.  Add tests for intersections that
+    // include `ThisClassT`s.
     return this.x + this.anotherStaticMethod();
   }
 }
@@ -80,10 +81,9 @@ var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
 var n6: number = k.methodCaller();
 
 var ell = {
-  anotherMethod(): number {
-    return 3;
-  },
   fn: K.prototype.method
 };
+var n7: number = ell.fn(); // NG
 
-var n7: number = ell.fn(); // OK
+var fn = K.prototype.method;
+var n8: number = fn(); // NG

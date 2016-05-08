@@ -8,12 +8,11 @@ type J = {
 
 class A {
   x: number;
-  static x: number; 
+  static x: number;
   method(this: this & I): number {
     return this.anotherMethod();
   }
   static staticMethod(this: J & Class<this>): number {
-    // NG AnnotT ~> ClassT flow necessary to capture statics.  Should this use case be supported (a class with only static methods is kinda an object, but then I guess somebody might want to inherit from such a data structure).
     return this.anotherStaticMethod();
   }
 }
@@ -38,7 +37,13 @@ var b = new B();
 var s1: string = b.anotherMethod();
 var n3: number = b.method(); // NG
 var s2: string = B.anotherStaticMethod();
-var s3: number = B.staticMethod(); // NG: This line triggers an extra negative :(
+
+// False negative.  This is an error, but the errors include a possibly
+// unnecessary error, i.e. `J & Class<this>` incompatible with
+// `class B extends A`.  This traces back to the InstanceT ~> ObjT flow: found
+// fields get `rec_unify`ed instead of `rec_flow`ed (I suspect that this has to
+// do with the dynamism of objects under flow).
+var s3: number = B.staticMethod(); // NG
 
 class C extends A {
   anotherMethod() {
@@ -51,7 +56,9 @@ class C extends A {
 
 var c = new C();
 var n3: number = c.method();
-var n4: number = C.staticMethod(); // OK! False Negative!
+
+// False negative.
+var n4: number = C.staticMethod(); // OK
 
 class K {
   method(this: I): number {
@@ -89,4 +96,3 @@ s.getXMultBy(3);
 var t = new Issue1369();
 t._x = "a string";
 t.getXMultBy(4); // NG
-
