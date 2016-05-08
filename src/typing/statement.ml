@@ -2726,7 +2726,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       let reason = mk_reason (spf "super.%s(...)" name) loc in
       let reason_prop = mk_reason (spf "property `%s`" name) ploc in
       let super = super_ cx (mk_reason "super" super_loc) in
-      let this = this_ cx (mk_reason "this" super_loc) in (*TJP: Bad loc?  Cause an error and check it out.*)
+      let this = this_ cx (mk_reason "this" super_loc) in
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
@@ -4648,7 +4648,6 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
 
       let implicit_this = if static then ClassT this else this in
       let meth_params = Func_params.mk cx type_params_map func implicit_this in
-(*TJP: Ocaml method to warn on statics with `this: this` and nonstatics with `this: Class<this>` *)
       let meth_return_type = mk_return_type cx type_params_map func in
       let reason_desc = (match kind with
       | Method.Method -> spf "method `%s`" name
@@ -4661,8 +4660,6 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
         meth_tparams = typeparams;
         meth_tparams_map = type_params_map;
         meth_params;
-(* TJP: `static fn(this: this)` should yield a warning (because the `this` type
-   is not `Class<>` qualified) *)
         meth_return_type;
       } in
 
@@ -5031,7 +5028,7 @@ and mk_class = Ast.Class.(
         SMap.map (Flow.subst cx map_) method_sig.meth_tparams_map;
 
       (* params = (x: Y), ret = T *)
-      meth_params = Func_params.subst cx map_ method_sig.meth_params; (*TJP: Verify semantics for `this` substitution*)
+      meth_params = Func_params.subst cx map_ method_sig.meth_params;
       meth_return_type = Flow.subst cx map_ method_sig.meth_return_type;
     } in
 

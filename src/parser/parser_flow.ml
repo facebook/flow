@@ -2444,9 +2444,6 @@ end = struct
                 | false, Type.Function.ThisParam.Explicit (loc, _) ->
                     error_at env (loc, Error.CtorThisParam);
                     Class.Method.Constructor
-(* TJP: Does this actually admit any errors.
-   I suspect that the explicit pseudoparam ought to be replaced with an implicit one here--or statements.ml could handle it?
-   Prove that it does before "fixing" anything. *)
                 | false, _ -> Class.Method.Constructor
                 | _ -> Class.Method.Method
               )
