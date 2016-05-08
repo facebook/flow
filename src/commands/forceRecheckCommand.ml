@@ -40,7 +40,7 @@ let force_recheck (args:args) server_flags =
   ServerProt.cmd_to_channel oc
     (ServerProt.FORCE_RECHECK files);
   let () = Timeout.input_value ic in
-  FlowExitStatus.(exit Ok)
+  FlowExitStatus.(exit No_error)
 
 let rec find_parent_that_exists path =
   if Sys.file_exists path

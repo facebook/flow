@@ -130,7 +130,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       if args.output_json
       then Errors_js.print_error_json ~root:args.root stdout []
       else Printf.printf "No errors!\n%!";
-      FlowExitStatus.(exit Ok)
+      FlowExitStatus.(exit No_error)
     | ServerProt.PONG ->
       let msg = "Why on earth did the server respond with a pong?" in
       FlowExitStatus.(exit ~msg Unknown_error)
@@ -163,7 +163,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";
       CommandUtils.print_version ();
-      FlowExitStatus.(exit Ok)
+      FlowExitStatus.(exit No_error)
     );
 
     let root = CommandUtils.guess_root root in

@@ -86,7 +86,7 @@ end = struct
     with
     | CommandSpec.Show_help ->
         print_endline (CommandSpec.string_of_usage command);
-        FlowExitStatus.(exit Ok)
+        FlowExitStatus.(exit No_error)
     | CommandSpec.Failed_to_parse msg ->
         let msg = Utils_js.spf
           "%s: %s\n%s"
@@ -99,4 +99,4 @@ end
 
 let _ = FlowShell.main ()
 (* If we haven't exited yet, let's exit now for logging's sake *)
-let _ = FlowExitStatus.(exit Ok)
+let _ = FlowExitStatus.(exit No_error)

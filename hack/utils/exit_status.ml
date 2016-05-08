@@ -9,7 +9,7 @@
  *)
 
 type t =
-  | Ok
+  | No_error
   | Build_error
   | Build_terminated
   | Checkpoint_error
@@ -50,7 +50,7 @@ type t =
 exception Exit_with of t
 
 let ec t = match t with
-  | Ok -> 0
+  | No_error -> 0
   | Build_error -> 2
   | Build_terminated -> 1
   | Checkpoint_error -> 8
@@ -93,7 +93,7 @@ let exit t =
   Pervasives.exit code
 
 let to_string = function
-  | Ok -> "Ok"
+  | No_error -> "Ok"
   | Build_error -> "Build_error"
   | Build_terminated -> "Build_terminated"
   | Checkpoint_error -> "Checkpoint_error"
