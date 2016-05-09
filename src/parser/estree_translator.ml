@@ -1052,7 +1052,8 @@ end with type t = Impl.t) = struct
     ) in
     node "TypeParameter" loc [|
       "name", string tp.name;
-      "bound", option type_annotation tp.bound;
+      "typeAnnotation", option type_annotation tp.bound;
+      "optional", bool false;
       "variance", option variance tp.variance;
       "default", option _type tp.default;
     |]
@@ -1171,6 +1172,7 @@ end with type t = Impl.t) = struct
     node "ExportSpecifier" loc [|
       "id", identifier specifier.id;
       "name", option identifier specifier.name;
+      "exported", identifier specifier.id;
     |]
   )
 
@@ -1193,6 +1195,7 @@ end with type t = Impl.t) = struct
     node "ImportSpecifier" span_loc [|
       "id", identifier remote_id;
       "name", option identifier local_id;
+      "imported", identifier remote_id;
     |]
 
   and comment_list comments = array_of_list comment comments

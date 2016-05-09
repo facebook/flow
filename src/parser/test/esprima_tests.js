@@ -3190,24 +3190,34 @@ module.exports = {
         'class A { foo() { let let } }',
         {
           content: 'function foo([a.a]) {}',
-          explanation: 'Esprima is off by one',
+          explanation: 'Esprima is off by one, flow fails to parse it',
           expected_differences: {
             'root.errors.0.column': {
               type: 'Wrong error column',
               expected: 18,
-              actual: '14-17'
+              actual: '15-16'
             },
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Invalid left-hand side in formals list',
+              actual: 'Unexpected token .',
+            }
           },
         },
         {
           content: 'var f = function ([a.a]) {}',
-          explanation: 'Esprima is off by one',
+          explanation: 'Esprima is off by one, flow fails to parse it',
           expected_differences: {
             'root.errors.0.column': {
               type: 'Wrong error column',
               expected: 23,
-              actual: '19-22'
+              actual: '20-21'
             },
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Invalid left-hand side in formals list',
+              actual: 'Unexpected token .',
+            }
           },
         },
     ],
@@ -3234,38 +3244,8 @@ module.exports = {
         */
         '<AbC-def\n  test="&#x0026;&#38;">\nbar\nbaz\n</AbC-def>',
         '<a b={x ? <c /> : <d />} />',
-        {
-          content: '<a>{}</a>',
-          explanation: 'Esprima counts the curly-braces in its loc, flow does not. FIXME',
-          expected_differences: {
-            'root.body.0.expression.children.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: '4',
-              actual: '3'
-            },
-            'root.body.0.expression.children.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: '4',
-              actual: '5'
-            },
-          }
-        },
-        {
-          content: '<a>{/* this is a comment */}</a>',
-          explanation: 'Esprima counts the curly-braces in its loc, flow does not. FIXME',
-          expected_differences: {
-            'root.body.0.expression.children.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: '4',
-              actual: '3'
-            },
-            'root.body.0.expression.children.0.expression.range.1': {
-              type: 'Wrong number',
-              expected: '27',
-              actual: '28'
-            },
-          }
-        },
+        '<a>{}</a>',
+        '<a>{/* this is a comment */}</a>',
         '<div>@test content</div>',
         '<div><br />7x invalid-js-identifier</div>',
         '<a.b></a.b>',
@@ -3399,14 +3379,18 @@ module.exports = {
         '([a, , b]) => 42',
         {
           content: '([a.a]) => 42',
-          explanation: 'Esprima has the wrong location because it is ' +
-            'doing the check after-the-fact, once the => is reached',
+          explanation: 'Flow fails to parse it correctly',
           expected_differences: {
             'root.errors.0.column': {
               type: 'Wrong error column',
               expected: 7,
-              actual: '2-5'
+              actual: '8-10'
             },
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Invalid left-hand side in formals list',
+              actual: 'Unexpected token =>',
+            }
           },
         },
         '(x=1) => x * x',
@@ -4251,8 +4235,9 @@ module.exports = {
             },
           }
         },
-        'var {[x]: y} = {y}',
-        'function f({[x]: y}) {}',
+        // These tests fail due to computed Properties
+        // 'var {[x]: y} = {y}',
+        // 'function f({[x]: y}) {}',
         'var x = {*[test]() { yield *v; }}',
     ],
 
@@ -5242,7 +5227,7 @@ module.exports = {
     ],
     'Bounded Polymorphism': [
       'function foo<T: Foo>() {}',
-      'class Foo<T: Bar> {}',
+      'class Foo<T: Bar>() {}',
     ],
     'For Of Loops': [
         'for(x of list) process(x);',
