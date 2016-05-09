@@ -559,7 +559,24 @@ and statement cx type_params_map = Ast.Statement.(
       then add_this self cx reason typeparams type_params_map
       else typeparams, type_params_map in
 
-    let iface_sig = Iface_sig.empty in
+    let iface_sig =
+      let id = Flow.mk_nominal cx in
+      let extends = extract_extends cx structural extends in
+      let mixins = extract_mixins cx mixins in
+      let super_reason = prefix_reason "super of " reason in
+      (* mixins override extends *)
+      let interface_supers =
+        List.map (mk_mixins cx super_reason type_params_map) mixins @
+        List.map (mk_interface_super cx structural super_reason type_params_map)
+          extends
+      in
+      let super = match interface_supers with
+        | [] -> AnyT.t
+        | [t] -> t
+        | ts -> IntersectionT (super_reason, InterRep.make ts)
+      in
+      Iface_sig.empty ~structural id reason super
+    in
 
     let iface_sig =
       let reason = prefix_reason "`name` property of" reason in
@@ -628,8 +645,9 @@ and statement cx type_params_map = Ast.Statement.(
         Iface_sig.add_method ~static "constructor" fsig iface_sig
     in
 
-    let interface_t = mk_interface cx reason typeparams type_params_map
-      iface_sig extends mixins structural in
+    let interface_t =
+      mk_interface cx reason typeparams type_params_map iface_sig structural
+    in
 
     Flow.unify cx self interface_t;
     Hashtbl.replace (Context.type_table cx) loc interface_t;
@@ -4596,7 +4614,7 @@ and mk_super cx type_params_map c targs =
         ThisTypeAppT (c, this, List.map (Anno.convert cx type_params_map) params)
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
+and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -4606,7 +4624,10 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
      to be redeclared if they were assigned in the constructor. So we don't do
      it. In the future, we could do it again, but only for private fields. *)
 
-  let class_sig = Class_sig.empty in
+  let class_sig =
+    let id = Flow.mk_nominal cx in
+    Class_sig.empty id reason_c super
+  in
 
   (* In case there is no constructor, pick up a default one. *)
   let class_sig =
@@ -4701,7 +4722,7 @@ and mk_class_signature cx reason_c type_params_map is_derived body = Ast.Class.(
 
 (* Processes the bodies of instance and static class members
   (methods/fields). *)
-and mk_class_elements cx instance_info static_info class_sig tparams body =
+and mk_class_elements cx this static_ class_sig tparams body =
   Ast.Class.(
   let _, { Body.body = elements } = body in
   let opt_static_fields = Context.esproposal_class_static_fields cx in
@@ -4718,9 +4739,10 @@ and mk_class_elements cx instance_info static_info class_sig tparams body =
 
       warn_or_ignore_decorators cx decorators;
 
-      let this, super =
-        if static then static_info else instance_info
-      in
+      let this = if static then static_ else this in
+      let super = class_sig |> Class_sig.(
+        with_sig ~static (fun s -> s.super)
+      ) in
 
       let find_unsafe = match kind with
       | Method.Constructor
@@ -4768,9 +4790,10 @@ and mk_class_elements cx instance_info static_info class_sig tparams body =
         match value with
         | None -> ()
         | Some value ->
-          let this, super =
-            if static then static_info else instance_info
-          in
+          let this = if static then static_ else this in
+          let super = class_sig |> Class_sig.(
+            with_sig ~static (fun s -> s.super)
+          ) in
 
           let config_opt =
             if static then opt_static_fields else opt_inst_fields
@@ -4861,103 +4884,34 @@ and mk_class cx type_params_map loc reason_c = Ast.Class.(fun {
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
   let is_derived = superClass <> None in
   let class_sig =
-    mk_class_signature cx reason_c type_params_map is_derived body
+    let super = mk_extends cx type_params_map (superClass, superTypeParameters) in
+    mk_class_signature cx reason_c type_params_map super is_derived body
   in
-
-  let id = Flow.mk_nominal cx in
-
-  (* super: D<X> *)
-  let super = mk_extends cx type_params_map (superClass, superTypeParameters) in
-  let super_static = ClassT (super) in
-
-  let static_reason = prefix_reason "statics of " reason_c in
 
   let arg_polarities = List.fold_left (fun acc tp ->
     SMap.add tp.name tp.polarity acc
   ) SMap.empty typeparams in
 
   Flow.generate_tests cx reason_c typeparams (fun map_ ->
-    (* map_: [X := T] where T = mixed, _|_ *)
-
-    (* super: D<T> *)
-    let super = Flow.subst cx map_ super in
-    let super_static = Flow.subst cx map_ super_static in
-
-    (* Substitue type vars on fields and methods *)
     let class_sig = Class_sig.subst cx map_ class_sig in
-
-    (* Generate types for each element *)
-    let sfields, smethods = Class_sig.static_elements cx class_sig in
-    let fields, methods = Class_sig.instance_elements cx class_sig in
-
     let type_params_map = SMap.remove "this" type_params_map in
 
-    let static_instance = {
-      class_id = 0;
-      type_args = type_params_map |> SMap.map (Flow.subst cx map_);
-      arg_polarities;
-      fields_tmap = Flow.mk_propmap cx sfields;
-      methods_tmap = Flow.mk_propmap cx smethods;
-      mixins = false;
-      structural = false;
-    } in
-    Flow.flow cx (super_static, SuperT(reason_c, static_instance));
-
-    let instance = {
-      class_id = id;
-      type_args = type_params_map |> SMap.map (Flow.subst cx map_);
-      arg_polarities;
-      fields_tmap = Flow.mk_propmap cx fields;
-      methods_tmap = Flow.mk_propmap cx methods;
-      mixins = false;
-      structural = false;
-    } in
-    Flow.flow cx (super, SuperT(reason_c, instance));
+    Class_sig.mutually Class_sig.(
+      check_super cx type_params_map arg_polarities class_sig
+    ) |> ignore;
 
     let this = SMap.find_unsafe "this" map_ in
     let static = ClassT this in
 
-    mk_class_elements cx
-      (this, super)
-      (static, super_static)
-      class_sig
-      map_
-      body;
+    mk_class_elements cx this static class_sig map_ body
   );
-
-  let sfields, smethods = Class_sig.static_elements cx class_sig in
-  let fields, methods = Class_sig.instance_elements cx class_sig in
 
   let typeparams, type_params_map =
     remove_this typeparams type_params_map in
 
-  let static_instance = {
-    class_id = 0;
-    type_args = type_params_map;
-    arg_polarities;
-    fields_tmap = Flow.mk_propmap cx sfields;
-    methods_tmap = Flow.mk_propmap cx smethods;
-    mixins = false;
-    structural = false;
-  } in
-  let static = InstanceT (
-    static_reason,
-    MixedT.t,
-    super_static,
-    static_instance
-  ) in
-
-  let instance = {
-    class_id = id;
-    type_args = type_params_map;
-    arg_polarities;
-    fields_tmap = Flow.mk_propmap cx fields;
-    methods_tmap = Flow.mk_propmap cx methods;
-    mixins = false;
-    structural = false;
-  } in
-
-  let this = InstanceT (reason_c, static, super, instance) in
+  let this =
+    Class_sig.this_instance cx type_params_map arg_polarities class_sig
+  in
 
   (* check polarity of all type parameters appearing in the class *)
   Flow.check_polarity cx Positive this;
@@ -4994,63 +4948,18 @@ and extract_mixins _cx =
 (* TODO: this function shares some code with mk_class. Sometimes that causes
    bad divergence; e.g., bugs around the handling of generics were fixed in
    mk_class but not in mk_interface. This code should be consolidated more. *)
-and mk_interface cx reason_i typeparams type_params_map
-    iface_sig extends mixins structural =
-  let id = Flow.mk_nominal cx in
-
-  let extends = extract_extends cx structural extends in
-  let mixins = extract_mixins cx mixins in
-  let super_reason = prefix_reason "super of " reason_i in
-  (* mixins override extends *)
-  let interface_supers =
-    List.map (mk_mixins cx super_reason type_params_map) mixins @
-    List.map (mk_interface_super cx structural super_reason type_params_map)
-      extends
-  in
-  let super = match interface_supers with
-    | [] -> AnyT.t
-    | [t] -> t
-    | ts -> IntersectionT (super_reason, InterRep.make ts)
-  in
-
-  let super_static = ClassT(super) in
-  let static_reason = prefix_reason "statics of " reason_i in
-
+and mk_interface cx reason_i typeparams type_params_map iface_sig structural =
   let arg_polarities = List.fold_left (fun acc tp ->
     SMap.add tp.name tp.polarity acc
   ) SMap.empty typeparams in
 
   Flow.generate_tests cx reason_i typeparams (fun map_ ->
-    let super = Flow.subst cx map_ super in
-    let super_static = Flow.subst cx map_ super_static in
-
     let iface_sig = Iface_sig.subst cx map_ iface_sig in
-
     let type_params_map = SMap.remove "this" type_params_map in
 
-    let sfields, smethods = Iface_sig.static_elements cx iface_sig in
-    let fields, methods = Iface_sig.instance_elements cx iface_sig in
-
-    let static_instance = {
-      class_id = 0;
-      type_args = type_params_map |> SMap.map (Flow.subst cx map_);
-      arg_polarities;
-      fields_tmap = Flow.mk_propmap cx sfields;
-      methods_tmap = Flow.mk_propmap cx smethods;
-      mixins = false;
-      structural;
-    } in
-    Flow.flow cx (super_static, SuperT(reason_i, static_instance));
-    let instance = {
-      class_id = id;
-      type_args = type_params_map |> SMap.map (Flow.subst cx map_);
-      arg_polarities;
-      fields_tmap = Flow.mk_propmap cx fields;
-      methods_tmap = Flow.mk_propmap cx methods;
-      mixins = false;
-      structural;
-    } in
-    Flow.flow cx (super, SuperT(reason_i, instance));
+    Iface_sig.mutually Class_sig.(
+      check_super cx type_params_map arg_polarities iface_sig
+    ) |> ignore;
   );
 
   let typeparams, type_params_map =
@@ -5058,34 +4967,9 @@ and mk_interface cx reason_i typeparams type_params_map
     then remove_this typeparams type_params_map
     else typeparams, type_params_map in
 
-  let sfields, smethods = Iface_sig.static_elements cx iface_sig in
-  let fields, methods = Iface_sig.instance_elements cx iface_sig in
-
-  let static_instance = {
-    class_id = 0;
-    type_args = type_params_map;
-    arg_polarities;
-    fields_tmap = Flow.mk_propmap cx sfields;
-    methods_tmap = Flow.mk_propmap cx smethods;
-    mixins = false;
-    structural;
-  } in
-  let static = InstanceT (
-    static_reason,
-    MixedT.t,
-    super_static,
-    static_instance
-  ) in
-  let instance = {
-    class_id = id;
-    type_args = type_params_map;
-    arg_polarities;
-    fields_tmap = Flow.mk_propmap cx fields;
-    methods_tmap = Flow.mk_propmap cx methods;
-    mixins = false;
-    structural;
-  } in
-  let this = InstanceT (reason_i, static, super, instance) in
+  let this =
+    Iface_sig.this_instance cx type_params_map arg_polarities iface_sig
+  in
 
   let cls_body = if structural
     then ClassT this

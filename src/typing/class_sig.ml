@@ -1,6 +1,10 @@
 module Flow = Flow_js
 
+open Reason_js
+
 type signature = {
+  reason: reason;
+  super: Type.t;
   fields: Type.t SMap.t;
   (* Multiple function signatures indicates an overloaded method. Note that
      function signatures are stored in reverse definition order. *)
@@ -9,24 +13,38 @@ type signature = {
   setters: Func_sig.t SMap.t;
 }
 
-type t = (* static *) signature * (* instance *) signature
+type t = {
+  id: int;
+  structural: bool;
+  static: signature;
+  instance: signature;
+}
 
-let empty =
-  let empty_sig = {
+let empty ?(structural=false) id reason super =
+  let empty_sig reason super = {
+    reason; super;
     fields = SMap.empty;
     methods = SMap.empty;
     getters = SMap.empty;
     setters = SMap.empty;
   } in
-  (empty_sig, empty_sig)
+  let static =
+    let super = Type.ClassT super in
+    let reason = prefix_reason "statics of " reason in
+    empty_sig reason super
+  in
+  let instance = empty_sig reason super in
+  { id; structural; static; instance }
 
-let map_sig ~static f (static_sig, inst_sig) =
+let map_sig ~static f s =
   if static
-  then (f static_sig, inst_sig)
-  else (static_sig, f inst_sig)
+  then {s with static = f s.static}
+  else {s with instance = f s.instance}
 
-let with_sig ~static f (static_sig, inst_sig) =
-  if static then f static_sig else f inst_sig
+let with_sig ~static f s =
+  if static then f s.static else f s.instance
+
+let mutually f = (f ~static:true, f ~static:false)
 
 let add_field name t = map_sig (fun s -> {
   s with
@@ -77,16 +95,20 @@ let find_setter_unsafe = find_unsafe (fun s -> s.setters)
 
 let mem_method name = with_sig (fun s -> SMap.mem name s.methods)
 
-let subst cx map class_sig =
+let subst cx map s =
   let map_sig s = {
+    reason = s.reason;
+    super = Flow.subst cx map s.super;
     fields = SMap.map (Flow.subst cx map) s.fields;
     methods = SMap.map (List.map (Func_sig.subst cx map)) s.methods;
     getters = SMap.map (Func_sig.subst cx map) s.getters;
     setters = SMap.map (Func_sig.subst cx map) s.setters;
   } in
-  (map_sig (fst class_sig), map_sig (snd class_sig))
+  let static = map_sig s.static in
+  let instance = map_sig s.instance in
+  {s with static; instance}
 
-let signature_elements cx s =
+let elements cx = with_sig (fun s ->
   let methods =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
@@ -113,6 +135,34 @@ let signature_elements cx s =
   let fields = SMap.union getters_and_setters s.fields in
 
   fields, methods
+)
 
-let static_elements cx (s, _) = signature_elements cx s
-let instance_elements cx (_, s) = signature_elements cx s
+let insttype ~static cx type_args arg_polarities s =
+  let class_id = if static then 0 else s.id in
+  let fields, methods = elements ~static cx s in
+  { Type.
+    class_id;
+    type_args;
+    arg_polarities;
+    fields_tmap = Flow.mk_propmap cx fields;
+    methods_tmap = Flow.mk_propmap cx methods;
+    mixins = false;
+    structural = s.structural;
+  }
+
+let check_super ~static cx type_args arg_polarities s =
+  let reason = s.instance.reason in
+  let super = with_sig ~static (fun s -> s.super) s in
+  let insttype = insttype ~static cx type_args arg_polarities s in
+  Flow.flow cx (super, Type.SuperT (reason, insttype))
+
+let this_instance cx type_args arg_polarities s =
+  let static_insttype, insttype =
+    mutually (insttype cx type_args arg_polarities s)
+  in
+  let static =
+    let {reason; super; _} = s.static in
+    Type.InstanceT (reason, Type.MixedT.t, super, static_insttype)
+  in
+  let {reason; super; _} = s.instance in
+  Type.InstanceT (reason, static, super, insttype)
