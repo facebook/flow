@@ -6436,3 +6436,13 @@ let enforce_strict cx id =
      walking the graph starting from id. Typically, id corresponds to
      exports. *)
   assert_ground_id cx !skip_ids (ref ISet.empty) id
+
+(* Would rather this live elsewhere, but here because module DAG. *)
+let mk_default cx reason ~expr = Default.fold ~expr
+  ~cons:(fun t1 t2 ->
+    mk_tvar_where cx reason (fun tvar ->
+      flow_t cx (t1, tvar);
+      flow_t cx (t2, tvar)))
+  ~selector:(fun r t sel ->
+    let id = mk_id () in
+    eval_selector cx r t sel id)

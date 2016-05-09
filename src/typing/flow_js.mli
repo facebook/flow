@@ -102,6 +102,10 @@ val mk_object: Context.t -> reason -> Type.t
 
 val mk_nominal: Context.t -> int
 
+val mk_default: Context.t -> reason ->
+  expr:('a -> Type.t) ->
+  'a Default.t -> Type.t
+
 (* val graph: bounds IMap.t ref *)
 val lookup_module: Context.t -> string -> Type.t
 

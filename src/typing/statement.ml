@@ -61,14 +61,6 @@ let summarize cx t = match t with
 
 (* AST helpers *)
 
-(* translate AST async/generator flags into Scope.function_kind *)
-let function_kind ~async ~generator =
-  match async, generator with
-  | true, true -> assert_false "async && generator"
-  | true, false -> Scope.Async
-  | false, true -> Scope.Generator
-  | false, false -> Scope.Ordinary
-
 let function_desc ~async ~generator desc =
   match async, generator with
   | true, true -> assert_false "async && generator"
@@ -581,7 +573,7 @@ and statement cx type_params_map = Ast.Statement.(
     let iface_sig =
       let reason = prefix_reason "`name` property of" reason in
       let t = StrT.why reason in
-      Iface_sig.add_field ~static:true "name" t iface_sig
+      Iface_sig.add_field ~static:true "name" (t, None) iface_sig
     in
 
     let iface_sig = List.fold_left (
@@ -615,7 +607,7 @@ and statement cx type_params_map = Ast.Statement.(
       | false, Property.Identifier (_, {Ast.Identifier.name; _}) ->
           let t = Anno.convert cx type_params_map value in
           let t = if optional then OptionalT t else t in
-          Iface_sig.add_field ~static name t s)
+          Iface_sig.add_field ~static name (t, None) s)
     ) iface_sig properties in
 
     let iface_sig = match indexers with
@@ -629,8 +621,8 @@ and statement cx type_params_map = Ast.Statement.(
         let k = Anno.convert cx type_params_map key in
         let v = Anno.convert cx type_params_map value in
         iface_sig
-          |> Iface_sig.add_field ~static "$key" k
-          |> Iface_sig.add_field ~static "$value" v
+          |> Iface_sig.add_field ~static "$key" (k, None)
+          |> Iface_sig.add_field ~static "$value" (v, None)
     in
 
     let iface_sig = List.fold_left (
@@ -644,7 +636,7 @@ and statement cx type_params_map = Ast.Statement.(
       then iface_sig
       else
         let reason = mk_reason "constructor" loc in
-        Iface_sig.add_default_constructor reason iface_sig
+        Iface_sig.add_default_constructor type_params_map reason iface_sig
     in
 
     let interface_t =
@@ -2422,7 +2414,9 @@ and variable cx type_params_map kind
         destructuring cx t init None (fun cx loc name default t ->
           let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
           Option.iter default (fun default ->
-            let default_t = mk_default cx type_params_map reason default in
+            let default_t = Flow.mk_default cx reason default
+              ~expr:(expression cx type_params_map)
+            in
             Flow.flow_t cx (default_t, t)
           );
           init_var cx name ~has_anno t reason
@@ -4642,14 +4636,14 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
       class_sig
     else
       let reason = replace_reason "default constructor" reason_c in
-      Class_sig.add_default_constructor reason class_sig
+      Class_sig.add_default_constructor type_params_map reason class_sig
   in
 
   (* All classes have a static "name" property. *)
   let class_sig =
     let reason = prefix_reason "`name` property of" reason_c in
     let t = StrT.why reason in
-    Class_sig.add_field ~static:true "name" t class_sig
+    Class_sig.add_field ~static:true "name" (t, None) class_sig
   in
 
   List.fold_left (fun class_sig -> function
@@ -4693,7 +4687,7 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
         let r = mk_reason (spf "class property `%s`" name) loc in
         let t = Anno.mk_type_annotation cx type_params_map r typeAnnotation in
 
-        Class_sig.add_field ~static name t class_sig
+        Class_sig.add_field ~static name (t, value) class_sig
 
     (* literal LHS *)
     | Body.Method (loc, {
@@ -4721,120 +4715,6 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
         FlowError.add_error cx (loc, [msg]);
         class_sig
   ) class_sig elements
-)
-
-(* Processes the bodies of instance and static class members
-  (methods/fields). *)
-and mk_class_elements cx this static_ class_sig tparams body =
-  Ast.Class.(
-  let _, { Body.body = elements } = body in
-  let opt_static_fields = Context.esproposal_class_static_fields cx in
-  let opt_inst_fields = Context.esproposal_class_instance_fields cx in
-  List.iter (function
-    | Body.Method (_, {
-        Method.key = Ast.Expression.Object.Property.Identifier (_,
-          { Ast.Identifier.name; _ });
-        value = _, { Ast.Function.body; async; generator; _ };
-        static;
-        kind;
-        decorators;
-      }) ->
-
-      warn_or_ignore_decorators cx decorators;
-
-      let this = if static then static_ else this in
-      let super = class_sig |> Class_sig.(
-        with_sig ~static (fun s -> s.super)
-      ) in
-
-      let func_sig = match kind with
-      | Method.Constructor ->
-        Class_sig.find_constructor_unsafe class_sig
-      | Method.Method ->
-        Class_sig.find_method_unsafe ~static name class_sig
-      | Method.Get ->
-        Class_sig.find_getter_unsafe ~static name class_sig
-      | Method.Set ->
-        Class_sig.find_setter_unsafe ~static name class_sig
-      in
-
-      let {Func_sig.reason; _} = func_sig in
-
-      let save_return = Abnormal.clear_saved Abnormal.Return in
-      let save_throw = Abnormal.clear_saved Abnormal.Throw in
-
-      func_sig |> Func_sig.generate_tests cx (fun func_sig ->
-        (* determine if we are in a derived constructor *)
-        let derived_ctor = match super with
-          | ClassT (MixedT _) -> false
-          | MixedT _ -> false
-          | _ -> name = "constructor"
-        in
-
-        let kind = function_kind ~async ~generator in
-        let yield, next = if generator then (
-          Flow.mk_tvar cx (prefix_reason "yield of " reason),
-          Flow.mk_tvar cx (prefix_reason "next of " reason)
-        ) else (
-          MixedT (replace_reason "no yield" reason, Mixed_everything),
-          MixedT (replace_reason "no next" reason, Mixed_everything)
-        ) in
-
-        mk_body None cx func_sig ~kind ~derived_ctor body this super yield next
-      );
-
-      ignore  (Abnormal.swap_saved Abnormal.Return save_return);
-      ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
-
-    | Body.Property (loc, {
-        Property.key = Ast.Expression.Object.Property.Identifier (_,
-          { Ast.Identifier.name; _ });
-        value;
-        static;
-        _;
-      }) -> (
-        match value with
-        | None -> ()
-        | Some value ->
-          let this = if static then static_ else this in
-          let super = class_sig |> Class_sig.(
-            with_sig ~static (fun s -> s.super)
-          ) in
-
-          let config_opt =
-            if static then opt_static_fields else opt_inst_fields
-          in
-
-          if config_opt <> Options.ESPROPOSAL_IGNORE then (
-            (* determine if we are in a derived class *)
-            let derived_ctor = match super with
-              | ClassT (MixedT _) -> false
-              | MixedT _ -> false
-              | _ -> name = "constructor"
-            in
-
-            (* Infer the initializer in a function-like scope *)
-            let orig_ctx = Env.peek_env () in
-            let new_ctx = Env.clone_env orig_ctx in
-            let reason = mk_reason (spf "field initializer for `%s`" name) loc
-            in Env.update_env cx reason new_ctx;
-            Env.havoc_all ();
-
-            let initializer_scope = Scope.fresh () in
-            initialize_this_super derived_ctor this super initializer_scope;
-            Env.push_var_scope cx initializer_scope;
-
-            let init_t = expression cx tparams value in
-            let field_t = Class_sig.find_field_unsafe ~static name class_sig in
-            Flow.flow_t cx (init_t, field_t);
-
-            Env.pop_var_scope ();
-            Env.update_env cx reason orig_ctx
-          );
-      )
-
-    | _ -> ()
-  ) elements
 )
 
 and extract_setter_type = function
@@ -4906,10 +4786,10 @@ and mk_class cx type_params_map loc reason_c = Ast.Class.(fun {
       check_super cx type_params_map arg_polarities class_sig
     ) |> ignore;
 
-    let this = SMap.find_unsafe "this" map_ in
-    let static = ClassT this in
-
-    mk_class_elements cx this static class_sig map_ body
+    Class_sig.toplevels cx map_ class_sig
+      ~decls:toplevel_decls
+      ~stmts:toplevels
+      ~expr:expression
   );
 
   let typeparams, type_params_map =
@@ -5017,168 +4897,31 @@ and remove_this typeparams type_params_map =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx type_params_map reason func this super =
-  let { Ast.Function.body; async; generator; _ } = func in
-
   let func_sig = Func_sig.mk cx type_params_map reason func in
+
+  let this, super =
+    let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in
+    new_entry this, new_entry super
+  in
 
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
-  func_sig |> Func_sig.generate_tests cx (fun func_sig ->
-    let kind = function_kind ~async ~generator in
-    let yield, next = if kind = Scope.Generator then (
-      Flow.mk_tvar cx (prefix_reason "yield of " reason),
-      Flow.mk_tvar cx (prefix_reason "next of " reason)
-    ) else (
-      MixedT (replace_reason "no yield" reason, Mixed_everything),
-      MixedT (replace_reason "no next" reason, Mixed_everything)
-    ) in
-
-    mk_body id cx func_sig ~kind body this super yield next
+  func_sig |> Func_sig.generate_tests cx (
+    Func_sig.toplevels id cx this super
+      ~decls:toplevel_decls
+      ~stmts:toplevels
+      ~expr:expression
   );
-
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
 
   func_sig
-
-(* When in a derived constructor, initialize this and super to undefined. *)
-and initialize_this_super derived_ctor this super scope = Scope.(
-  if derived_ctor then (
-    let undefined =
-      let msg = "uninitialized this (expected super constructor call)" in
-        VoidT (replace_reason msg (reason_of_t this))
-    in
-      undefine_internal "this" undefined this scope;
-      undefine_internal "super" undefined super scope
-  )
-  else (
-    let loc = loc_of_t this in
-    add_entry (internal_name "this") (Entry.new_var ~loc this) scope;
-    let loc = loc_of_t super in
-    add_entry (internal_name "super") (Entry.new_var ~loc super) scope;
-  )
-)
-
-(* For internal names, we can afford to initialize with undefined and fatten the
-   declared type to allow undefined. This works because we always look up the
-   flow-sensitive type of internals, and don't havoc them. However, the same
-   trick wouldn't work for normal uninitialized locals, e.g., so it cannot be
-   used in general to track definite assignments. *)
-and undefine_internal x undefined t scope = Scope.(
-  (* TODO state uninitialized *)
-  let loc = loc_of_t t in
-  let entry = Entry.new_var ~loc ~specific:undefined (OptionalT t) in
-  add_entry (internal_name x) entry scope
-)
 
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
   let ix = internal_name x in
   let opt = Env.get_var_declared_type cx ix reason in
   ignore Env.(set_var cx ix (Flow.filter_optional cx reason opt) reason)
-
-and mk_body id cx func_sig ~kind ?(derived_ctor=false)
-    body this super yield next =
-
-  let {Func_sig.tparams_map; params; return_t; _} = func_sig in
-
-  let loc = Ast.Function.(match body with
-    | BodyBlock (loc, _)
-    | BodyExpression (loc, _) -> loc
-  ) in
-  let reason = mk_reason "function body" loc in
-
-  let env =  Env.peek_env () in
-  let new_env = Env.clone_env env in
-
-  Env.update_env cx reason new_env;
-  Env.havoc_all();
-
-  (* create and prepopulate function scope *)
-  let function_scope = Scope.fresh ~var_scope_kind:kind () in
-
-  (* push the scope early so default exprs can reference earlier params *)
-  Env.push_var_scope cx function_scope;
-
-  (* add param bindings *)
-  let const_params = Context.enable_const_params cx in
-  params |> Func_params.iter Scope.(fun (name, t, loc) ->
-    let reason = mk_reason (spf "param `%s`" name) loc in
-    (* add default value as lower bound, if provided *)
-    Func_params.with_default name (fun default ->
-      let default_t = mk_default cx tparams_map reason default in
-      Flow.flow_t cx (default_t, t)
-    ) params;
-    (* add to scope *)
-    if const_params
-    then Env.bind_implicit_const ~state:State.Initialized
-      Entry.ConstParamBinding cx name t reason
-    else Env.bind_implicit_let ~state:State.Initialized
-      Entry.ParamBinding cx name t reason
-  );
-
-  (* early-add our own name binding for recursive calls *)
-  (match id with
-  | None -> ()
-  | Some (loc, { Ast.Identifier.name; _ }) ->
-    let entry = Scope.Entry.new_var ~loc (AnyT.at loc) in
-    Scope.add_entry name entry function_scope);
-
-  (* special bindings for this, super, and return value slot *)
-  initialize_this_super derived_ctor this super function_scope;
-  Scope.(
-    let new_entry t =
-      Entry.(new_const ~loc:(loc_of_t t) ~state:State.Initialized t)
-    in
-    add_entry (internal_name "yield") (new_entry yield) function_scope;
-    add_entry (internal_name "next") (new_entry next) function_scope;
-    add_entry (internal_name "return") (new_entry return_t) function_scope
-  );
-
-  let stmts = Ast.Statement.(match body with
-    | Ast.Function.BodyBlock (_, { Block.body }) ->
-        body
-    | Ast.Function.BodyExpression expr ->
-        [fst expr, Return { Return.argument = Some expr }]
-  ) in
-
-  (* decl/type visit pre-pass *)
-  toplevel_decls cx tparams_map stmts;
-
-  (* statement visit pass *)
-  let is_void = Abnormal.(
-    match catch_control_flow_exception (fun () ->
-      toplevels cx tparams_map stmts
-    ) with
-    | Some Return -> false
-    | Some Throw -> false (* NOTE *)
-    | Some exn -> throw_control_flow_exception exn (* NOTE *)
-    | None -> true
-  ) in
-
-  (* build return type for void funcs *)
-  (if is_void then
-    let loc = loc_of_t return_t in
-    let void_t = Scope.(match kind with
-    | Ordinary ->
-      VoidT.at loc
-    | Async ->
-      let reason = mk_reason "Promise<void>" loc in
-      let promise = Flow.get_builtin cx "Promise" reason in
-      TypeAppT (promise, [VoidT.at loc])
-    | Generator ->
-      let reason = mk_reason "return Generator<Yield,void,Next>" loc in
-      let return_t = VoidT.at loc in
-      Flow.get_builtin_typeapp cx reason "Generator" [yield; return_t; next]
-    | Module -> assert_false "module scope as function activation"
-    | Global -> assert_false "global scope as function activation"
-    ) in
-    Flow.flow cx (void_t, UseT (FunImplicitReturn, return_t))
-  );
-
-  Env.pop_var_scope ();
-
-  Env.update_env cx reason env
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason func =
@@ -5210,13 +4953,3 @@ and mk_method cx type_params_map reason func this =
   let id = None in
   let func_sig = function_decl id cx type_params_map reason func this super in
   Func_sig.methodtype_DEPRECATED func_sig
-
-and mk_default cx type_params_map reason = Default.fold
-  ~expr:(expression cx type_params_map)
-  ~cons:Flow_js.(fun t1 t2 ->
-    mk_tvar_where cx reason (fun tvar ->
-      flow_t cx (t1, tvar);
-      flow_t cx (t2, tvar)))
-  ~selector:(fun r t sel ->
-    let id = mk_id () in
-    Flow.eval_selector cx r t sel id)
