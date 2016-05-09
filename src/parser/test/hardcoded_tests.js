@@ -2914,12 +2914,12 @@ module.exports = {
           'computed': false,
         }]
       },
-      'class Properties { x = "hello"; }': {
+      'class Properties { x = "hi mom"; }': {
         '%parse_options%': {
           'esproposal_class_instance_fields': false,
         },
         'errors': {
-          '0.message': 'Unexpected string',
+          '0.message': 'Unexpected token =',
         },
       },
       'class Properties { x: string = "hello"; }': {
@@ -2968,11 +2968,11 @@ module.exports = {
           'computed': false,
         }]
       },
-      'class Properties { static x = "hello"; }': {
+      'class Properties { static x = "hi mom"; }': {
         '%parse_options%': {
           'esproposal_class_static_fields': false,
         },
-        'errors.0.message': 'Unexpected string',
+        'errors.0.message': 'Unexpected token =',
       },
       'class Properties { static x: string = "hello"; }': {
         '%parse_options%': {

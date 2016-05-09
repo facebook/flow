@@ -2343,11 +2343,13 @@ end = struct
           let typeAnnotation = Type.annotation_opt env in
           let options = parse_options env in
           let value =
-            if Expect.maybe env T_ASSIGN then (
+            if Peek.token env = T_ASSIGN then (
               if static && options.esproposal_class_static_fields
                  || (not static) && options.esproposal_class_instance_fields
-              then Some (Parse.expression env)
-              else None
+              then begin 
+                Expect.token env T_ASSIGN;
+                Some (Parse.expression env)
+              end else None
             ) else None in
           let end_loc = Peek.loc env in
           if Expect.maybe env T_SEMICOLON then () else begin

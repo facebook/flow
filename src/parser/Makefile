@@ -39,7 +39,7 @@ js:
 test-js: build-parser js
 	npm test
 
-_build/src/parser/test/run_hardcoded_tests.native:
+_build/src/parser/test/run_hardcoded_tests.native: build-parser
 	cd $(TOP); \
 	ocamlbuild -build-dir src/parser/_build \
 		-ocamlc "ocamlopt -ccopt -DNO_LZ4" \
