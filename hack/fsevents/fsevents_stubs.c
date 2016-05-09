@@ -20,13 +20,18 @@
 #include <stdio.h>
 #include <pthread.h>
 
+#if (OCAML_VERSION_MAJOR == 4) && (OCAML_VERSION_MINOR < 3)
 // Basically the ocaml headers and the mac headers are redefining the same
 // types. AFAIK, this is a longstanding bug in the ocaml headers
 // (http://caml.inria.fr/mantis/print_bug_page.php?bug_id=4877). Looking at the
 // OS X headers, the conflicting typehints are gated with these definitions, so
 // this was the easiest workaround for me.
+//
+// This bug was apparently fixed in 4.03, causing the opposite problem, hence
+// the above gating.
 #define _UINT64
 #define _UINT32
+#endif
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
