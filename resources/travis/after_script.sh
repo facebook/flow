@@ -22,7 +22,7 @@ if [[ "$TRAVIS_OS_NAME" = "osx" && "$TRAVIS_PULL_REQUEST" = "false" ]]; then
     tar -Pczf "$CACHE_TGZ" "$CACHE_ROOT"
     CHANGED=1
   fi
-  if [ "$CHANGED" -eq 1 ]; then
+  if [ $CHANGED -eq 1 ]; then
     echo "uploading $TRAVIS_BRANCH/$SLUG.tar.gz"
     aws s3 cp --storage-class REDUCED_REDUNDANCY "$CACHE_TGZ" "s3://ci-cache.flowtype.org/$TRAVIS_BRANCH/$SLUG.tar.gz"
   else
