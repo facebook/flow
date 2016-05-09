@@ -42,7 +42,7 @@ let convert cx tparams_map loc func =
   let return_t = Anno.convert cx tparams_map returnType in
   {reason; tparams; tparams_map; params; return_t}
 
-let empty reason = {
+let default_constructor reason = {
   reason;
   tparams = [];
   tparams_map = SMap.empty;

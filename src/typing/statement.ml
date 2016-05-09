@@ -603,7 +603,11 @@ and statement cx type_params_map = Ast.Statement.(
           (match value with
           | _, Ast.Type.Function func ->
             let fsig = Func_sig.convert cx type_params_map loc func in
-            Iface_sig.append_method ~static name fsig s
+            let append_method = match static, name with
+            | false, "constructor" -> Iface_sig.append_constructor
+            | _ -> Iface_sig.append_method ~static name
+            in
+            append_method fsig s
           | _ ->
             let msg = "internal error: expected function type" in
             FlowError.add_internal_error cx (loc, [msg]);
@@ -636,13 +640,11 @@ and statement cx type_params_map = Ast.Statement.(
     ) iface_sig callProperties in
 
     let iface_sig =
-      let static = false in
-      if Iface_sig.mem_method ~static "constructor" iface_sig
+      if Iface_sig.mem_constructor iface_sig
       then iface_sig
       else
         let reason = mk_reason "constructor" loc in
-        let fsig = Func_sig.empty reason in
-        Iface_sig.add_method ~static "constructor" fsig iface_sig
+        Iface_sig.add_default_constructor reason iface_sig
     in
 
     let interface_t =
@@ -4639,11 +4641,8 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
       (* TODO: Does this distinction matter for the type checker? *)
       class_sig
     else
-      (* Parent class constructors simply return new instances, which is
-         indicated by the VoidT return type of an empty Func_sig. *)
       let reason = replace_reason "default constructor" reason_c in
-      let func_sig = Func_sig.empty reason in
-      Class_sig.add_method ~static:false "constructor" func_sig class_sig
+      Class_sig.add_default_constructor reason class_sig
   in
 
   (* All classes have a static "name" property. *)
@@ -4668,14 +4667,18 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
       warn_unsafe_getters_setters cx loc kind;
 
       let add = match kind with
-      | Method.Constructor
-      | Method.Method -> Class_sig.add_method
-      | Method.Get -> Class_sig.add_getter
-      | Method.Set -> Class_sig.add_setter
+      | Method.Constructor ->
+        Class_sig.add_constructor
+      | Method.Method ->
+        Class_sig.add_method ~static name
+      | Method.Get ->
+        Class_sig.add_getter ~static name
+      | Method.Set ->
+        Class_sig.add_setter ~static name
       in
       let reason = mk_reason (method_desc name kind) loc in
       let method_sig = Func_sig.mk cx type_params_map reason func in
-      add ~static name method_sig class_sig
+      add method_sig class_sig
 
     (* fields *)
     | Body.Property (loc, {
@@ -4744,14 +4747,17 @@ and mk_class_elements cx this static_ class_sig tparams body =
         with_sig ~static (fun s -> s.super)
       ) in
 
-      let find_unsafe = match kind with
-      | Method.Constructor
-      | Method.Method -> Class_sig.find_method_unsafe
-      | Method.Get -> Class_sig.find_getter_unsafe
-      | Method.Set -> Class_sig.find_setter_unsafe
+      let func_sig = match kind with
+      | Method.Constructor ->
+        Class_sig.find_constructor_unsafe class_sig
+      | Method.Method ->
+        Class_sig.find_method_unsafe ~static name class_sig
+      | Method.Get ->
+        Class_sig.find_getter_unsafe ~static name class_sig
+      | Method.Set ->
+        Class_sig.find_setter_unsafe ~static name class_sig
       in
 
-      let func_sig = find_unsafe ~static name class_sig in
       let {Func_sig.reason; _} = func_sig in
 
       let save_return = Abnormal.clear_saved Abnormal.Return in

@@ -16,6 +16,9 @@ type signature = {
 type t = {
   id: int;
   structural: bool;
+  (* Multiple function signatures indicates an overloaded constructor. Note that
+     function signatures are stored in reverse definition order. *)
+  constructor: Func_sig.t list;
   static: signature;
   instance: signature;
 }
@@ -28,13 +31,14 @@ let empty ?(structural=false) id reason super =
     getters = SMap.empty;
     setters = SMap.empty;
   } in
+  let constructor = [] in
   let static =
     let super = Type.ClassT super in
     let reason = prefix_reason "statics of " reason in
     empty_sig reason super
   in
   let instance = empty_sig reason super in
-  { id; structural; static; instance }
+  { id; structural; constructor; static; instance }
 
 let map_sig ~static f s =
   if static
@@ -52,6 +56,16 @@ let add_field name t = map_sig (fun s -> {
   getters = SMap.remove name s.getters;
   setters = SMap.remove name s.setters;
 })
+
+let add_constructor fsig s =
+  {s with constructor = [fsig]}
+
+let add_default_constructor reason s =
+  let fsig = Func_sig.default_constructor reason in
+  add_constructor fsig s
+
+let append_constructor fsig s =
+  {s with constructor = fsig::s.constructor}
 
 (* Adding a method *overwrites* any existing methods. This implements the
    behavior of classes, which permit duplicate definitions where latter
@@ -88,12 +102,13 @@ let add_setter name fsig = map_sig (fun s -> {
 
 let find_unsafe f name = with_sig (fun s -> SMap.find_unsafe name (f s))
 let find_field_unsafe = find_unsafe (fun s -> s.fields)
+let find_constructor_unsafe s = List.hd s.constructor
 let find_method_unsafe name ~static s =
   find_unsafe (fun s -> s.methods) ~static name s |> List.hd
 let find_getter_unsafe = find_unsafe (fun s -> s.getters)
 let find_setter_unsafe = find_unsafe (fun s -> s.setters)
 
-let mem_method name = with_sig (fun s -> SMap.mem name s.methods)
+let mem_constructor {constructor; _} = constructor <> []
 
 let subst cx map s =
   let map_sig s = {
@@ -104,11 +119,12 @@ let subst cx map s =
     getters = SMap.map (Func_sig.subst cx map) s.getters;
     setters = SMap.map (Func_sig.subst cx map) s.setters;
   } in
+  let constructor = List.map (Func_sig.subst cx map) s.constructor in
   let static = map_sig s.static in
   let instance = map_sig s.instance in
-  {s with static; instance}
+  {s with constructor; static; instance}
 
-let elements cx = with_sig (fun s ->
+let elements cx ?constructor = with_sig (fun s ->
   let methods =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
@@ -119,6 +135,12 @@ let elements cx = with_sig (fun s ->
       | [t] -> t
       | t::_ as ts -> IntersectionT (reason_of_t t, InterRep.make ts)
     ) s.methods
+  in
+
+  (* Re-add the constructor as a method. *)
+  let methods = match constructor with
+  | Some t -> SMap.add "constructor" t methods
+  | None -> methods
   in
 
   (* If there is a both a getter and a setter, then flow the setter type to
@@ -139,7 +161,17 @@ let elements cx = with_sig (fun s ->
 
 let insttype ~static cx type_args arg_polarities s =
   let class_id = if static then 0 else s.id in
-  let fields, methods = elements ~static cx s in
+  let constructor = if static then None else
+    let ts = List.rev_map Func_sig.methodtype s.constructor in
+    match ts with
+    | [] -> None
+    | [t] -> Some t
+    | t::_ as ts ->
+      let open Type in
+      let t = IntersectionT (reason_of_t t, InterRep.make ts) in
+      Some t
+  in
+  let fields, methods = elements ?constructor ~static cx s in
   { Type.
     class_id;
     type_args;
