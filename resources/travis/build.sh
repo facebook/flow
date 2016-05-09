@@ -31,3 +31,7 @@ printf "travis_fold:end:make_js\n"
 printf "travis_fold:start:runtests\nRunning flow tests\n"
 ./runtests.sh bin/flow
 printf "travis_fold:end:runtests\n"
+
+printf "travis_fold:start:runparsertests\nRunning ocaml parser tests\n"
+(cd src/parser && make test-ocaml)
+printf "travis_fold:end:runparsertests\n"
