@@ -81,7 +81,7 @@ let main option_values root error_flags strip_root use_json verbose file () =
       if use_json
       then Errors_js.print_error_json ~root ~stdin_file stdout []
       else Printf.printf "No errors!\n%!";
-      FlowExitStatus.(exit Ok)
+      FlowExitStatus.(exit No_error)
   | _ ->
       let msg = "Unexpected server response!" in
       FlowExitStatus.(exit ~msg Unknown_error)

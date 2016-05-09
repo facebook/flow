@@ -100,7 +100,7 @@ let convert path recurse error_flags outpath =
     nerrs total_files successful_converts;
   let num_failed_conversions = total_files - successful_converts in
   if num_failed_conversions = 0
-  then FlowExitStatus.(exit Ok)
+  then FlowExitStatus.(exit No_error)
   else begin
     let msg = spf "Failed to convert %d files" num_failed_conversions in
     FlowExitStatus.(exit ~msg Unknown_error)

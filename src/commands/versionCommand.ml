@@ -47,6 +47,6 @@ let main json from _root () =
   end else begin
     CommandUtils.print_version ()
   end;
-  FlowExitStatus.(exit Ok)
+  FlowExitStatus.(exit No_error)
 
 let command = CommandSpec.command spec main

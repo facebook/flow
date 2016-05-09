@@ -1,6 +1,6 @@
 type t =
   (* The generic 0 exit code *)
-  | Ok
+  | No_error
   (* Tried and failed to connect to a server due to the server still
    * initializing *)
   | Server_initializing
@@ -56,12 +56,12 @@ type t =
   * In reality, probably no one cares about many of these exit codes. The ones
   * I know are definitely being watched for are:
   *
-  * Ok
+  * No_error
   * Type_error
   * Out_of_time
   *)
 let error_code = function
-  | Ok -> 0
+  | No_error -> 0
   | Server_initializing -> 1
   | Type_error -> 2
   | Out_of_time -> 3
@@ -91,7 +91,7 @@ let unpack_process_status = function
   | Unix.WSTOPPED n -> "stopped", n
 
 let to_string = function
-  | Ok -> "Ok"
+  | No_error -> "Ok"
   | Input_error -> "Input_error"
   | Could_not_find_flowconfig -> "Could_not_find_flowconfig"
   | Server_out_of_date -> "Server_out_of_date"

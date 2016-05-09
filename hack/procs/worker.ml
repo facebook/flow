@@ -59,7 +59,17 @@ let (make_pipe: unit -> ('a, 'b) pipe) = fun () ->
 
   let ic = Unix.in_channel_of_descr descr_ic in
   let oc = Unix.out_channel_of_descr descr_oc in
-  let input() = Marshal.from_channel ic in
+  let input () =
+    (* OCaml 4.03.0 changed the behavior of Marshal.from_channel to no longer
+     * throw End_of_file when the pipe has closed. We can simulate that
+     * behavior, however, by trying to read a byte afterwards, which WILL raise
+     * End_of_file if the pipe has closed *)
+    begin try Marshal.from_channel ic
+    with Failure msg as e when msg = "input_value: truncated object" ->
+      ignore (input_byte ic);
+      raise e
+    end in
+
   let output data =
     let s = Marshal.to_string data [Marshal.Closures] in
     let len = String.length s in

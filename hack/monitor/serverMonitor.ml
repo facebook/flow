@@ -184,7 +184,7 @@ let rec handle_monitor_rpc env client_fd =
     let kill_signal_time = Unix.gettimeofday () in
     kill_servers env.servers;
     wait_for_servers_exit env.servers kill_signal_time;
-    Exit_status.(exit Ok)
+    Exit_status.(exit No_error)
 
 and hand_off_client_connection server client_fd =
   let status = Libancillary.ancil_send_fd server.out_fd client_fd in
@@ -264,7 +264,7 @@ and client_prehandoff env server_name client_fd =
     (** Server has died; notify the client *)
     msg_to_channel client_fd (PH.Server_died {PH.status; PH.was_oom});
     (** Next client to connect starts a new server. *)
-    Exit_status.exit Exit_status.Ok
+    Exit_status.exit Exit_status.No_error
 
 and ack_and_handoff_client env client_fd =
   try
