@@ -475,7 +475,7 @@ and statement cx type_params_map = Ast.Statement.(
       Iface_sig.mk_interface cx type_params_map loc reason structural self i
     in
     iface_sig |> Iface_sig.generate_tests cx (fun iface_sig ->
-      Iface_sig.(mutually (check_super cx iface_sig)) |> ignore;
+      Iface_sig.check_super cx iface_sig
     );
     let interface_t = Iface_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self interface_t;
@@ -4405,7 +4405,7 @@ and mk_class cx type_params_map loc reason c =
     Class_sig.mk cx type_params_map loc reason self c ~expr:expression
   in
   class_sig |> Class_sig.generate_tests cx (fun class_sig ->
-    Class_sig.(mutually (check_super cx class_sig)) |> ignore;
+    Class_sig.check_super cx class_sig;
     Class_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels

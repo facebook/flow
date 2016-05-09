@@ -86,11 +86,6 @@ let field_initializer tparams_map reason expr return_t = {
   return_t;
 }
 
-(* Return a function signature with type parameters in `map` substituted. Note
-   that this function *does not* substitute any type parameters declared by the
-   function itself, which may shadow the names of type parameters in `map`.
-   This function signature's own type parameters will be substitued by
-   `generate_tests`. *)
 let subst cx map x =
   let {tparams; tparams_map; params; return_t; _} = x in
   (* Remove shadowed type params from `map`, but allow bounds/defaults to be

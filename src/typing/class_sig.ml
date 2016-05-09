@@ -237,7 +237,7 @@ let insttype ~static cx s =
     structural = s.structural;
   }
 
-and add_this self cx reason tparams tparams_map =
+let add_this self cx reason tparams tparams_map =
   (* We haven't computed the instance type yet, but we can still capture a
      reference to it using the class name (as long as the class has a name).
      We need this reference to constrain the `this` in the class. *)
@@ -263,23 +263,25 @@ and add_this self cx reason tparams tparams_map =
   tparams@[this_tp],
   SMap.add "this" (Type.BoundT this_tp) tparams_map
 
-and remove_this x =
+let remove_this x =
   if x.structural then x else {
     x with
     tparams = List.rev (List.tl (List.rev x.tparams));
     tparams_map = SMap.remove "this" x.tparams_map;
   }
 
-let check_super ~static cx x =
+let check_super cx x =
   let x = remove_this x in
   let reason = x.instance.reason in
-  let super = with_sig ~static (fun s -> s.super) x in
-  let insttype = insttype ~static cx x in
-  Flow.flow cx (super, Type.SuperT (reason, insttype))
+  mutually (fun ~static ->
+    let super = with_sig ~static (fun s -> s.super) x in
+    let insttype = insttype ~static cx x in
+    Flow.flow cx (super, Type.SuperT (reason, insttype))
+  ) |> ignore
 
 (* TODO: Ideally we should check polarity for all class types, but this flag is
    flipped off for interface/declare class currently. *)
-let classtype ?(check_polarity=true) cx x =
+let classtype cx ?(check_polarity=true) x =
   let x = remove_this x in
   let {
     structural;
