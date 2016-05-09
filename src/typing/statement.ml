@@ -567,7 +567,7 @@ and statement cx type_params_map = Ast.Statement.(
         | [t] -> t
         | ts -> IntersectionT (super_reason, InterRep.make ts)
       in
-      Iface_sig.empty ~structural id reason super
+      Iface_sig.empty ~structural id reason typeparams type_params_map super
     in
 
     let iface_sig =
@@ -636,11 +636,15 @@ and statement cx type_params_map = Ast.Statement.(
       then iface_sig
       else
         let reason = mk_reason "constructor" loc in
-        Iface_sig.add_default_constructor type_params_map reason iface_sig
+        Iface_sig.add_default_constructor reason iface_sig
     in
 
+    iface_sig |> Iface_sig.generate_tests cx (fun iface_sig ->
+      Iface_sig.(mutually (check_super cx iface_sig)) |> ignore;
+    );
+
     let interface_t =
-      mk_interface cx reason typeparams type_params_map iface_sig structural
+      Iface_sig.classtype ~check_polarity:false cx iface_sig
     in
 
     Flow.unify cx self interface_t;
@@ -4610,7 +4614,7 @@ and mk_super cx type_params_map c targs =
         ThisTypeAppT (c, this, List.map (Anno.convert cx type_params_map) params)
 
 (* Makes signatures for fields and methods in a class. *)
-and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.Class.(
+and mk_class_signature cx class_sig body = Ast.Class.(
   let _, { Body.body = elements } = body in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -4620,33 +4624,7 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
      to be redeclared if they were assigned in the constructor. So we don't do
      it. In the future, we could do it again, but only for private fields. *)
 
-  let class_sig =
-    let id = Flow.mk_nominal cx in
-    Class_sig.empty id reason_c super
-  in
-
-  (* In case there is no constructor, pick up a default one. *)
-  let class_sig =
-    if is_derived
-    then
-      (* Subclass default constructors are technically of the form (...args) =>
-         { super(...args) }, but we can approximate that using flow's existing
-         inheritance machinery. *)
-      (* TODO: Does this distinction matter for the type checker? *)
-      class_sig
-    else
-      let reason = replace_reason "default constructor" reason_c in
-      Class_sig.add_default_constructor type_params_map reason class_sig
-  in
-
-  (* All classes have a static "name" property. *)
-  let class_sig =
-    let reason = prefix_reason "`name` property of" reason_c in
-    let t = StrT.why reason in
-    Class_sig.add_field ~static:true "name" (t, None) class_sig
-  in
-
-  List.fold_left (fun class_sig -> function
+  List.fold_left (fun c -> function
     (* instance and static methods *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
@@ -4671,8 +4649,8 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
         Class_sig.add_setter ~static name
       in
       let reason = mk_reason (method_desc name kind) loc in
-      let method_sig = Func_sig.mk cx type_params_map reason func in
-      add method_sig class_sig
+      let method_sig = Class_sig.mk_method cx c reason func in
+      add method_sig c
 
     (* fields *)
     | Body.Property (loc, {
@@ -4684,10 +4662,9 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
       }) ->
         warn_or_ignore_class_properties cx ~static loc value;
 
-        let r = mk_reason (spf "class property `%s`" name) loc in
-        let t = Anno.mk_type_annotation cx type_params_map r typeAnnotation in
-
-        Class_sig.add_field ~static name (t, value) class_sig
+        let reason = mk_reason (spf "class property `%s`" name) loc in
+        let field = Class_sig.mk_field cx c reason typeAnnotation value in
+        Class_sig.add_field ~static name field c
 
     (* literal LHS *)
     | Body.Method (loc, {
@@ -4700,7 +4677,7 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
       }) ->
         let msg = "literal properties not yet supported" in
         FlowError.add_error cx (loc, [msg]);
-        class_sig
+        c
 
     (* computed LHS *)
     | Body.Method (loc, {
@@ -4713,7 +4690,7 @@ and mk_class_signature cx reason_c type_params_map super is_derived body = Ast.C
       }) ->
         let msg = "computed property keys not supported" in
         FlowError.add_error cx (loc, [msg]);
-        class_sig
+        c
   ) class_sig elements
 )
 
@@ -4768,43 +4745,44 @@ and mk_class cx type_params_map loc reason_c = Ast.Class.(fun {
     add_this self cx reason_c typeparams type_params_map in
 
   (* fields: { f: X }, methods_: { m<Y: X>(x: Y): X } *)
-  let is_derived = superClass <> None in
   let class_sig =
     let super = mk_extends cx type_params_map (superClass, superTypeParameters) in
-    mk_class_signature cx reason_c type_params_map super is_derived body
+    let id = Flow.mk_nominal cx in
+    Class_sig.empty id reason_c typeparams type_params_map super
   in
 
-  let arg_polarities = List.fold_left (fun acc tp ->
-    SMap.add tp.name tp.polarity acc
-  ) SMap.empty typeparams in
+  (* In case there is no constructor, pick up a default one. *)
+  let class_sig =
+    if superClass <> None
+    then
+      (* Subclass default constructors are technically of the form (...args) =>
+         { super(...args) }, but we can approximate that using flow's existing
+         inheritance machinery. *)
+      (* TODO: Does this distinction matter for the type checker? *)
+      class_sig
+    else
+      let reason = replace_reason "default constructor" reason_c in
+      Class_sig.add_default_constructor reason class_sig
+  in
 
-  Flow.generate_tests cx reason_c typeparams (fun map_ ->
-    let class_sig = Class_sig.subst cx map_ class_sig in
-    let type_params_map = SMap.remove "this" type_params_map in
+  (* All classes have a static "name" property. *)
+  let class_sig =
+    let reason = prefix_reason "`name` property of" reason_c in
+    let t = StrT.why reason in
+    Class_sig.add_field ~static:true "name" (t, None) class_sig
+  in
 
-    Class_sig.mutually Class_sig.(
-      check_super cx type_params_map arg_polarities class_sig
-    ) |> ignore;
+  let class_sig = mk_class_signature cx class_sig body in
 
-    Class_sig.toplevels cx map_ class_sig
+  class_sig |> Class_sig.generate_tests cx (fun class_sig ->
+    Class_sig.(mutually (check_super cx class_sig)) |> ignore;
+    Class_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels
       ~expr:expression
   );
 
-  let typeparams, type_params_map =
-    remove_this typeparams type_params_map in
-
-  let this =
-    Class_sig.this_instance cx type_params_map arg_polarities class_sig
-  in
-
-  (* check polarity of all type parameters appearing in the class *)
-  Flow.check_polarity cx Positive this;
-
-  let class_t =
-    let cls_body = ThisClassT this in
-    if (typeparams = []) then cls_body else PolyT(typeparams, cls_body) in
+  let class_t = Class_sig.classtype cx class_sig in
   Flow.unify cx self class_t;
   class_t
 )
@@ -4825,42 +4803,6 @@ and extract_mixins _cx =
   List.map (fun (_, {Ast.Type.Generic.id; typeParameters}) ->
     (Some id, typeParameters)
   )
-
-(* Processes a declare class or interface. One difference between a declare
-   class and an interface is that the the A ~> B check is structural if B is an
-   interface and nominal if B is a declare class. If you set the structural flag
-   to true, then this interface will be checked structurally. Another difference
-   is that a declare class may have mixins, but an interface may not. *)
-(* TODO: this function shares some code with mk_class. Sometimes that causes
-   bad divergence; e.g., bugs around the handling of generics were fixed in
-   mk_class but not in mk_interface. This code should be consolidated more. *)
-and mk_interface cx reason_i typeparams type_params_map iface_sig structural =
-  let arg_polarities = List.fold_left (fun acc tp ->
-    SMap.add tp.name tp.polarity acc
-  ) SMap.empty typeparams in
-
-  Flow.generate_tests cx reason_i typeparams (fun map_ ->
-    let iface_sig = Iface_sig.subst cx map_ iface_sig in
-    let type_params_map = SMap.remove "this" type_params_map in
-
-    Iface_sig.mutually Class_sig.(
-      check_super cx type_params_map arg_polarities iface_sig
-    ) |> ignore;
-  );
-
-  let typeparams, type_params_map =
-    if not structural
-    then remove_this typeparams type_params_map
-    else typeparams, type_params_map in
-
-  let this =
-    Iface_sig.this_instance cx type_params_map arg_polarities iface_sig
-  in
-
-  let cls_body = if structural
-    then ClassT this
-    else ThisClassT this in
-  if typeparams = [] then cls_body else PolyT (typeparams, cls_body)
 
 and add_this self cx reason_c typeparams type_params_map =
     (* We haven't computed the instance type yet, but we can still capture a
@@ -4887,10 +4829,6 @@ and add_this self cx reason_c typeparams type_params_map =
        parameters! *)
     typeparams@[this_tp],
     SMap.add "this" (BoundT this_tp) type_params_map
-
-and remove_this typeparams type_params_map =
-    List.rev (List.tl (List.rev typeparams)),
-    SMap.remove "this" type_params_map
 
 (* Given a function declaration and types for `this` and `super`, extract a
    signature consisting of type parameters, parameter types, parameter names,

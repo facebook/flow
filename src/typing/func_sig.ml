@@ -109,12 +109,12 @@ let subst cx map x =
 
 let generate_tests cx f x =
   let {reason; tparams; tparams_map; params; return_t; _} = x in
-  Flow.generate_tests cx reason tparams (fun map ->
-    let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
-    let params = Func_params.subst cx map params in
-    let return_t = Flow.subst cx map return_t in
-    f {x with tparams_map; params; return_t}
-  )
+  Flow.generate_tests cx reason tparams (fun map -> f {
+    x with
+    tparams_map = SMap.map (Flow.subst cx map) tparams_map;
+    params = Func_params.subst cx map params;
+    return_t = Flow.subst cx map return_t;
+  })
 
 let functiontype cx this_t {reason; tparams; params; return_t; _} =
   let static =

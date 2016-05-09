@@ -1,3 +1,4 @@
+module Anno = Type_annotation
 module Ast = Spider_monkey_ast
 module Flow = Flow_js
 module Utils = Utils_js
@@ -27,6 +28,8 @@ type signature = {
 type t = {
   id: int;
   structural: bool;
+  tparams: Type.typeparam list;
+  tparams_map: Type.t SMap.t;
   (* Multiple function signatures indicates an overloaded constructor. Note that
      function signatures are stored in reverse definition order. *)
   constructor: Func_sig.t list;
@@ -34,7 +37,7 @@ type t = {
   instance: signature;
 }
 
-let empty ?(structural=false) id reason super =
+let empty ?(structural=false) id reason tparams tparams_map super =
   let empty_sig reason super = {
     reason; super;
     fields = SMap.empty;
@@ -50,7 +53,7 @@ let empty ?(structural=false) id reason super =
     empty_sig reason super
   in
   let instance = empty_sig reason super in
-  { id; structural; constructor; static; instance }
+  { id; structural; tparams; tparams_map; constructor; static; instance }
 
 let map_sig ~static f s =
   if static
@@ -72,8 +75,8 @@ let add_field name fld = map_sig (fun s -> {
 let add_constructor fsig s =
   {s with constructor = [fsig]}
 
-let add_default_constructor tparams_map reason s =
-  let fsig = Func_sig.default_constructor tparams_map reason in
+let add_default_constructor reason s =
+  let fsig = Func_sig.default_constructor s.tparams_map reason in
   add_constructor fsig s
 
 let append_constructor fsig s =
@@ -116,6 +119,13 @@ let add_setter name fsig = map_sig (fun s -> {
   method_decls = (Setter, name)::s.method_decls;
 })
 
+let mk_method cx x reason func =
+  Func_sig.mk cx x.tparams_map reason func
+
+let mk_field cx x reason typeAnnotation value =
+  let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in
+  (t, value)
+
 let mem_constructor {constructor; _} = constructor <> []
 
 (* visits all methods, getters, and setters in declaration order *)
@@ -139,21 +149,28 @@ let iter_methods f {methods; getters; setters; method_decls; _} =
   let method_decls = List.rev method_decls in
   loop methods method_decls
 
-let subst cx map s =
-  let subst_field (t, value) = (Flow.subst cx map t, value) in
-  let map_sig s = {
-    reason = s.reason;
-    super = Flow.subst cx map s.super;
-    fields = SMap.map subst_field s.fields;
-    methods = SMap.map (List.map (Func_sig.subst cx map)) s.methods;
-    getters = SMap.map (Func_sig.subst cx map) s.getters;
-    setters = SMap.map (Func_sig.subst cx map) s.setters;
-    method_decls = s.method_decls;
-  } in
-  let constructor = List.map (Func_sig.subst cx map) s.constructor in
-  let static = map_sig s.static in
-  let instance = map_sig s.instance in
-  {s with constructor; static; instance}
+let subst_field cx map (t, value) =
+  Flow.subst cx map t, value
+
+let subst_sig cx map s = {
+  reason = s.reason;
+  super = Flow.subst cx map s.super;
+  fields = SMap.map (subst_field cx map) s.fields;
+  methods = SMap.map (List.map (Func_sig.subst cx map)) s.methods;
+  getters = SMap.map (Func_sig.subst cx map) s.getters;
+  setters = SMap.map (Func_sig.subst cx map) s.setters;
+  method_decls = s.method_decls;
+}
+
+let generate_tests cx f x =
+  let {tparams_map; constructor; static; instance; _} = x in
+  Flow.generate_tests cx x.instance.reason x.tparams (fun map -> f {
+    x with
+    tparams_map = SMap.map (Flow.subst cx map) tparams_map;
+    constructor = List.map (Func_sig.subst cx map) constructor;
+    static = subst_sig cx map static;
+    instance = subst_sig cx map instance;
+  })
 
 let elements cx ?constructor = with_sig (fun s ->
   let methods =
@@ -191,7 +208,12 @@ let elements cx ?constructor = with_sig (fun s ->
   fields, methods
 )
 
-let insttype ~static cx type_args arg_polarities s =
+let arg_polarities x =
+  List.fold_left Type.(fun acc tp ->
+    SMap.add tp.name tp.polarity acc
+  ) SMap.empty x.tparams
+
+let insttype ~static cx s =
   let class_id = if static then 0 else s.id in
   let constructor = if static then None else
     let ts = List.rev_map Func_sig.methodtype s.constructor in
@@ -206,33 +228,49 @@ let insttype ~static cx type_args arg_polarities s =
   let fields, methods = elements ?constructor ~static cx s in
   { Type.
     class_id;
-    type_args;
-    arg_polarities;
+    type_args = s.tparams_map;
+    arg_polarities = arg_polarities s;
     fields_tmap = Flow.mk_propmap cx fields;
     methods_tmap = Flow.mk_propmap cx methods;
     mixins = false;
     structural = s.structural;
   }
 
-let check_super ~static cx type_args arg_polarities s =
-  let reason = s.instance.reason in
-  let super = with_sig ~static (fun s -> s.super) s in
-  let insttype = insttype ~static cx type_args arg_polarities s in
+and remove_this x =
+  if x.structural then x else {
+    x with
+    tparams = List.rev (List.tl (List.rev x.tparams));
+    tparams_map = SMap.remove "this" x.tparams_map;
+  }
+
+let check_super ~static cx x =
+  let x = remove_this x in
+  let reason = x.instance.reason in
+  let super = with_sig ~static (fun s -> s.super) x in
+  let insttype = insttype ~static cx x in
   Flow.flow cx (super, Type.SuperT (reason, insttype))
 
-let this_instance cx type_args arg_polarities s =
-  let static_insttype, insttype =
-    mutually (insttype cx type_args arg_polarities s)
-  in
-  let static =
-    let {reason; super; _} = s.static in
-    Type.InstanceT (reason, Type.MixedT.t, super, static_insttype)
-  in
-  let {reason; super; _} = s.instance in
-  Type.InstanceT (reason, static, super, insttype)
+(* TODO: Ideally we should check polarity for all class types, but this flag is
+   flipped off for interface/declare class currently. *)
+let classtype ?(check_polarity=true) cx x =
+  let x = remove_this x in
+  let {
+    structural;
+    tparams;
+    static = {reason = sreason; super = ssuper; _};
+    instance = {reason; super; _};
+    _;
+  } = x in
+  let open Type in
+  let sinsttype, insttype = mutually (insttype cx x) in
+  let static = InstanceT (sreason, MixedT.t, ssuper, sinsttype) in
+  let this = InstanceT (reason, static, super, insttype) in
+  (if check_polarity then Flow.check_polarity cx Positive this);
+  let t = if structural then ClassT this else ThisClassT this in
+  if tparams = [] then t else PolyT (tparams, t)
 
 (* Processes the bodies of instance and static class members. *)
-let toplevels cx tparams_map ~decls ~stmts ~expr x =
+let toplevels cx ~decls ~stmts ~expr x =
   let new_entry t = Scope.Entry.new_var ~loc:(Type.loc_of_t t) t in
 
   let method_ this super f =
@@ -253,12 +291,12 @@ let toplevels cx tparams_map ~decls ~stmts ~expr x =
       let init =
         let desc = Utils.spf "field initializer for `%s`" name in
         let reason = mk_reason desc loc in
-        Func_sig.field_initializer tparams_map reason expr field_t
+        Func_sig.field_initializer x.tparams_map reason expr field_t
       in
       method_ this super init
   in
 
-  let this = SMap.find_unsafe "this" tparams_map in
+  let this = SMap.find_unsafe "this" x.tparams_map in
   let static = Type.ClassT this in
 
   x |> with_sig ~static:true (fun s ->
