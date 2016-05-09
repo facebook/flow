@@ -24,6 +24,10 @@ env:
 language: cpp
 matrix:
   include:
+    - compiler: ": Linux, ocaml 4.03.0, opam 1.2.0"
+      os: linux
+      env: OCAML_VERSION=4.03.0 OPAM_VERSION=1.2.0
+
     - compiler: ": Linux, ocaml 4.02.1, opam 1.2.0"
       os: linux
       env: OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0

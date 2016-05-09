@@ -110,7 +110,7 @@ let verify_cstate ic = function
  * it opens the socket but it doesn't read or write to it. So during
  * initialization, this function should time out. *)
 let connect_once ~tmp_dir root =
-  let open Result in
+  let (>>=) = Result.(>>=) in
   try
     Timeout.with_timeout
       ~timeout:1
@@ -120,7 +120,7 @@ let connect_once ~tmp_dir root =
         get_cstate ~timeout sockaddr ic oc
       end >>= fun (ic, oc, cstate) ->
       verify_cstate ic cstate >>= fun () ->
-      Ok (ic, oc)
+      Result.Ok (ic, oc)
   with
   | _ ->
     if not (server_exists ~tmp_dir root) then Result.Error Server_missing

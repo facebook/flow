@@ -1,0 +1,16 @@
+opam-version: "1"
+version: "4.03.0"
+src: "https://github.com/ocaml/ocaml/archive/4.03.0.tar.gz"
+build: [
+  ["mkdir" "-p" "%{lib}%/ocaml/"]
+  ["./configure" "-prefix" prefix "-with-debug-runtime"]
+  [make "world"]
+  [make "world.opt"]
+  [make "install"]
+]
+packages: [
+  "base-unix"
+  "base-bigarray"
+  "base-threads"
+]
+env: [[CAML_LD_LIBRARY_PATH = "%{lib}%/stublibs"]]
