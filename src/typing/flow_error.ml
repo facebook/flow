@@ -95,6 +95,15 @@ module Impl : sig
   val flow_err_prop_not_found:
     Context.t -> Trace.t -> reason * reason -> unit
 
+  val warn_or_ignore_decorators:
+    Context.t -> Loc.t -> unit
+
+  val warn_or_ignore_class_properties:
+    Context.t -> static:bool -> Loc.t -> unit
+
+  val warn_unsafe_getters_setters:
+    Context.t -> Loc.t -> unit
+
 end = struct
 
   exception SpeculativeError of Errors.error
@@ -197,6 +206,53 @@ end = struct
   (* TODO remove once error messages are indexed *)
   let flow_err_prop_not_found cx trace (r1, r2) =
     flow_err_reasons cx trace "Property not found in" (r1, r2)
+
+  let warn_or_ignore_decorators cx loc =
+    match Context.esproposal_decorators cx with
+    | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
+    | Options.ESPROPOSAL_IGNORE -> ()
+    | Options.ESPROPOSAL_WARN ->
+      add_warning cx (loc, [
+        "Experimental decorator usage";
+        "Decorators are an early stage proposal that may change. " ^
+          "Additionally, Flow does not account for the type implications " ^
+          "of decorators at this time."
+      ])
+
+  let warn_or_ignore_class_properties cx ~static loc =
+    let config_setting, reason_subject, config_key =
+      if static then
+        Context.esproposal_class_static_fields cx,
+        "class static field",
+        "class_static_fields"
+      else
+        Context.esproposal_class_instance_fields cx,
+        "class instance field",
+        "class_instance_fields"
+    in
+    match config_setting with
+    | Options.ESPROPOSAL_ENABLE
+    | Options.ESPROPOSAL_IGNORE -> ()
+    | Options.ESPROPOSAL_WARN ->
+      add_warning cx (loc, [
+        spf "Experimental %s usage" reason_subject;
+        spf
+        ("%ss are an active early stage feature proposal that may change. " ^^
+         "You may opt-in to using them anyway in Flow by putting " ^^
+         "`esproposal.%s=enable` into the [options] section of your .flowconfig.")
+        (String.capitalize reason_subject)
+        config_key
+      ])
+
+  let warn_unsafe_getters_setters cx loc =
+    if not (Context.enable_unsafe_getters_and_setters cx)
+    then add_warning cx (loc, [
+      "Potentially unsafe get/set usage";
+      ("Getters and setters with side effects are potentially unsafe and " ^
+      "disabled by default. You may opt-in to using them anyway by putting " ^
+      "`unsafe.enable_getters_and_setters=true` into the [options] section " ^
+      "of your .flowconfig.");
+    ])
 
   (* decide reason order based on UB's flavor and blamability *)
   let ordered_reasons l u =

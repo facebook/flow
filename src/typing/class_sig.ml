@@ -1,5 +1,6 @@
 module Anno = Type_annotation
 module Ast = Spider_monkey_ast
+module Env = Env_js
 module Flow = Flow_js
 module Utils = Utils_js
 
@@ -236,6 +237,32 @@ let insttype ~static cx s =
     structural = s.structural;
   }
 
+and add_this self cx reason tparams tparams_map =
+  (* We haven't computed the instance type yet, but we can still capture a
+     reference to it using the class name (as long as the class has a name).
+     We need this reference to constrain the `this` in the class. *)
+  let rec_instance_type =
+    match tparams with
+    | [] ->
+      Flow.mk_instance cx reason self
+    | _ ->
+      let tparams = List.map (fun tp -> Type.BoundT tp) tparams in
+      Type.TypeAppT (self, tparams)
+  in
+  let this_tp = { Type.
+    name = "this";
+    reason = replace_reason "`this` type" reason;
+    bound = rec_instance_type;
+    polarity = Type.Positive;
+    default = None;
+  } in
+  (* Add the type of `this` to the end of the list of type
+     parameters. Remember, order is important, since we don't have recursive
+     bounds (aka F-bounds): the bound of This refers to all the other type
+     parameters! *)
+  tparams@[this_tp],
+  SMap.add "this" (Type.BoundT this_tp) tparams_map
+
 and remove_this x =
   if x.structural then x else {
     x with
@@ -268,6 +295,346 @@ let classtype ?(check_polarity=true) cx x =
   (if check_polarity then Flow.check_polarity cx Positive this);
   let t = if structural then ClassT this else ThisClassT this in
   if tparams = [] then t else PolyT (tparams, t)
+
+let mk_super cx tparams_map c targs = Type.(
+  (* A super class must be parameterized by This, so that it can be
+     specialized to this class and its subclasses when properties are looked
+     up on their instances. *)
+  let params = Anno.extract_type_param_instantiations targs in
+  let this = SMap.find_unsafe "this" tparams_map in
+  match params with
+  | None
+  | Some [] ->
+      (* No type params, but `c` could still be a polymorphic class that must
+         be implicitly instantiated. We need to do this before we try to
+         this-specialize `c`. *)
+      let reason = reason_of_t c in
+      let c = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+        Flow.flow cx (c, SpecializeT (reason, reason, false, [], tvar))
+      ) in
+      ThisTypeAppT (c, this, [])
+  | Some params ->
+      ThisTypeAppT (c, this, List.map (Anno.convert cx tparams_map) params)
+)
+
+let mk_interface_super cx structural reason map = Type.(function
+  | (None, None) ->
+      MixedT (reason_of_string "Object", Mixed_everything)
+  | (None, _) ->
+      assert false (* type args with no head expr *)
+  | (Some id, targs) ->
+      let desc, lookup_mode =
+        if structural then "extends", Env.LookupMode.ForType
+        else "mixins", Env.LookupMode.ForValue in
+      let i = Anno.convert_qualification ~lookup_mode cx desc id in
+      if structural then
+        let params = Anno.extract_type_param_instantiations targs in
+        Anno.mk_nominal_type cx reason map (i, params)
+      else mk_super cx map i targs
+)
+
+let mk_extends cx tparams_map ~expr = Type.(function
+  | (None, None) ->
+      MixedT (reason_of_string "Object", Mixed_everything)
+  | (None, _) ->
+      assert false (* type args with no head expr *)
+  | (Some e, targs) ->
+      let c = expr cx tparams_map e in
+      mk_super cx tparams_map c targs
+)
+
+let mk_mixins cx reason map = Type.(function
+  | (None, None) ->
+      MixedT (reason_of_string "Object", Mixed_everything)
+  | (None, _) ->
+      assert false (* type args with no head expr *)
+  | (Some id, targs) ->
+      let i =
+        let lookup_mode = Env.LookupMode.ForValue in
+        Anno.convert_qualification ~lookup_mode cx "mixins" id
+      in
+      let props_bag = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+        Flow.flow cx (i, MixinT (reason, tvar))
+      ) in
+      mk_super cx map props_bag targs
+)
+
+(* Process a class definition, returning a (polymorphic) class type. A class
+   type is a wrapper around an instance type, which contains types of instance
+   members, a pointer to the super instance type, and a container for types of
+   static members. The static members can be thought of as instance members of a
+   "metaclass": thus, the static type is itself implemented as an instance
+   type. *)
+let mk cx tparams_map loc reason self ~expr = Ast.Class.(
+  let warn_or_ignore_decorators cx = function
+  | [] -> ()
+  | (start_loc, _)::ds ->
+    let loc = List.fold_left (fun start_loc (end_loc, _) ->
+      Loc.btwn start_loc end_loc
+    ) start_loc ds in
+    Flow_error.warn_or_ignore_decorators cx loc
+  in
+
+  fun {
+    body = (_, { Body.body = elements });
+    superClass;
+    typeParameters;
+    superTypeParameters;
+    implements;
+    classDecorators;
+    _;
+  } ->
+
+  warn_or_ignore_decorators cx classDecorators;
+
+  (* TODO *)
+  if implements <> [] then
+    let msg = "implements not supported" in
+    Flow_error.add_error cx (loc, [msg])
+  else ();
+
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx tparams_map typeParameters
+  in
+
+  let tparams, tparams_map =
+    add_this self cx reason tparams tparams_map
+  in
+
+  let class_sig =
+    let super =
+      mk_extends cx tparams_map ~expr (superClass, superTypeParameters)
+    in
+    let id = Flow.mk_nominal cx in
+    empty id reason tparams tparams_map super
+  in
+
+  (* In case there is no constructor, pick up a default one. *)
+  let class_sig =
+    if superClass <> None
+    then
+      (* Subclass default constructors are technically of the form (...args) =>
+         { super(...args) }, but we can approximate that using flow's existing
+         inheritance machinery. *)
+      (* TODO: Does this distinction matter for the type checker? *)
+      class_sig
+    else
+      let reason = replace_reason "default constructor" reason in
+      add_default_constructor reason class_sig
+  in
+
+  (* All classes have a static "name" property. *)
+  let class_sig =
+    let reason = prefix_reason "`name` property of" reason in
+    let t = Type.StrT.why reason in
+    add_field ~static:true "name" (t, None) class_sig
+  in
+
+  (* NOTE: We used to mine field declarations from field assignments in a
+     constructor as a convenience, but it was not worth it: often, all that did
+     was exchange a complaint about a missing field for a complaint about a
+     missing annotation. Moreover, it caused fields declared in the super class
+     to be redeclared if they were assigned in the constructor. So we don't do
+     it. In the future, we could do it again, but only for private fields. *)
+
+  List.fold_left (fun c -> function
+    (* instance and static methods *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Identifier (_,
+          { Ast.Identifier.name; _ });
+        value = (_, func);
+        kind;
+        static;
+        decorators;
+      }) ->
+
+      warn_or_ignore_decorators cx decorators;
+
+      Ast.Class.Method.(match kind with
+      | Get | Set -> Flow_error.warn_unsafe_getters_setters cx loc
+      | _ -> ());
+
+      let method_desc, add = match kind with
+      | Method.Constructor ->
+          "constructor",
+          add_constructor
+      | Method.Method ->
+          Utils.spf "method `%s`" name,
+          add_method ~static name
+      | Method.Get ->
+          Utils.spf "getter for `%s`" name,
+          add_getter ~static name
+      | Method.Set ->
+          Utils.spf "setter for `%s`" name,
+          add_setter ~static name
+      in
+      let reason = mk_reason method_desc loc in
+      let method_sig = mk_method cx c reason func in
+      add method_sig c
+
+    (* fields *)
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Identifier
+          (_, { Ast.Identifier.name; _ });
+        typeAnnotation;
+        value;
+        static;
+      }) ->
+        if value <> None
+        then Flow_error.warn_or_ignore_class_properties cx ~static loc;
+
+        let reason = mk_reason (Utils.spf "class property `%s`" name) loc in
+        let field = mk_field cx c reason typeAnnotation value in
+        add_field ~static name field c
+
+    (* literal LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Literal _;
+        _
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Literal _;
+        _
+      }) ->
+        let msg = "literal properties not yet supported" in
+        Flow_error.add_error cx (loc, [msg]);
+        c
+
+    (* computed LHS *)
+    | Body.Method (loc, {
+        Method.key = Ast.Expression.Object.Property.Computed _;
+        _
+      })
+    | Body.Property (loc, {
+        Property.key = Ast.Expression.Object.Property.Computed _;
+        _
+      }) ->
+        let msg = "computed property keys not supported" in
+        Flow_error.add_error cx (loc, [msg]);
+        c
+  ) class_sig elements
+)
+
+let rec extract_extends cx structural = function
+  | [] -> [None,None]
+  | [_, {Ast.Type.Generic.id; typeParameters}] ->
+      [Some id, typeParameters]
+  | (loc, {Ast.Type.Generic.id; typeParameters})::others ->
+      if structural
+      then (Some id, typeParameters)::(extract_extends cx structural others)
+      else
+        let msg = "A class cannot extend multiple classes!" in
+        Flow_error.add_error cx (loc, [msg]);
+        []
+
+let extract_mixins _cx =
+  List.map (fun (_, {Ast.Type.Generic.id; typeParameters}) ->
+    (Some id, typeParameters)
+  )
+
+let mk_interface cx tparams_map loc reason structural self = Ast.Statement.(
+  fun { Interface.
+    typeParameters;
+    body = (_, { Ast.Type.Object.properties; indexers; callProperties });
+    extends;
+    mixins;
+    _;
+  } ->
+
+  let tparams, tparams_map =
+    Anno.mk_type_param_declarations cx tparams_map typeParameters in
+
+  let tparams, tparams_map =
+    if not structural
+    then add_this self cx reason tparams tparams_map
+    else tparams, tparams_map in
+
+  let iface_sig =
+    let id = Flow.mk_nominal cx in
+    let extends = extract_extends cx structural extends in
+    let mixins = extract_mixins cx mixins in
+    let super_reason = prefix_reason "super of " reason in
+    (* mixins override extends *)
+    let interface_supers =
+      List.map (mk_mixins cx super_reason tparams_map) mixins @
+      List.map (mk_interface_super cx structural super_reason tparams_map)
+        extends
+    in
+    let super = Type.(match interface_supers with
+      | [] -> AnyT.t
+      | [t] -> t
+      | ts -> IntersectionT (super_reason, InterRep.make ts)
+    ) in
+    empty ~structural id reason tparams tparams_map super
+  in
+
+  let iface_sig =
+    let reason = prefix_reason "`name` property of" reason in
+    let t = Type.StrT.why reason in
+    add_field ~static:true "name" (t, None) iface_sig
+  in
+
+  let iface_sig = List.fold_left (
+    fun s (loc, {Ast.Type.Object.Property.
+      key; value; static; _method; optional
+    }) ->
+    if optional && _method
+    then begin
+      let msg = "optional methods are not supported" in
+      Flow_error.add_error cx (loc, [msg])
+    end;
+    Ast.Expression.Object.(match _method, key with
+    | _, Property.Literal (loc, _)
+    | _, Property.Computed (loc, _) ->
+        let msg = "illegal name" in
+        Flow_error.add_error cx (loc, [msg]);
+        s
+    | true, Property.Identifier (_, {Ast.Identifier.name; _}) ->
+        (match value with
+        | _, Ast.Type.Function func ->
+          let fsig = Func_sig.convert cx tparams_map loc func in
+          let append_method = match static, name with
+          | false, "constructor" -> append_constructor
+          | _ -> append_method ~static name
+          in
+          append_method fsig s
+        | _ ->
+          let msg = "internal error: expected function type" in
+          Flow_error.add_internal_error cx (loc, [msg]);
+          s)
+    | false, Property.Identifier (_, {Ast.Identifier.name; _}) ->
+        let t = Anno.convert cx tparams_map value in
+        let t = if optional then Type.OptionalT t else t in
+        add_field ~static name (t, None) s)
+  ) iface_sig properties in
+
+  let iface_sig = match indexers with
+    | [] -> iface_sig
+    | (_, {Ast.Type.Object.Indexer.key; value; static; _})::rest ->
+      (* TODO? *)
+      List.iter (fun (indexer_loc, _) ->
+        let msg = "multiple indexers are not supported" in
+        Flow_error.add_error cx (indexer_loc, [msg]);
+      ) rest;
+      let k = Anno.convert cx tparams_map key in
+      let v = Anno.convert cx tparams_map value in
+      iface_sig
+        |> add_field ~static "$key" (k, None)
+        |> add_field ~static "$value" (v, None)
+  in
+
+  let iface_sig = List.fold_left (
+    fun s (loc, {Ast.Type.Object.CallProperty.value = (_, func); static}) ->
+    let fsig = Func_sig.convert cx tparams_map loc func in
+    append_method ~static "$call" fsig s
+  ) iface_sig callProperties in
+
+  if mem_constructor iface_sig
+  then iface_sig
+  else
+    let reason = mk_reason "constructor" loc in
+    add_default_constructor reason iface_sig
+)
 
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =
