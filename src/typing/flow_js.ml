@@ -4375,7 +4375,10 @@ and try_union cx trace l reason rep =
       rec_flow_t cx trace (l, UnionT (reason, UnionRep.empty))
     | ts, errs ->
       (* otherwise, build extra info from history *)
-      let extra = List.(rev (combine ts errs)) |> List.mapi (
+      let tslen, errslen = List.length ts, List.length errs in
+      let extra = if tslen <> errslen
+      then None (* temp fix to prevent List.combine error *)
+      else Some (List.(rev (combine ts errs)) |> List.mapi (
         fun i (t, err) ->
           let header_infos = [
             Loc.none, [spf "Member %d:" (i + 1)];
@@ -4391,10 +4394,10 @@ and try_union cx trace l reason rep =
             | _ -> Errors.InfoNode (info_list, error_extra)
           in
           info_tree
-      ) in
+      )) in
       (* TODO: pass in use_op? *)
       let u = UseT (UnknownUse, UnionT (reason, UnionRep.empty)) in
-      flow_err cx trace (err_msg l u) ~extra l u
+      flow_err cx trace (err_msg l u) ?extra l u
 
 (** try the first member of an intersection, packaging the remainder
     for subsequent attempts. Empty intersection indicates failure *)
@@ -4413,7 +4416,10 @@ and try_intersection cx trace u reason rep =
       rec_flow cx trace (IntersectionT (reason, InterRep.empty), u)
     | ts, errs ->
       (* otherwise, build extra info from history *)
-      let extra = List.(rev (combine ts errs)) |> List.mapi (
+      let tslen, errslen = List.length ts, List.length errs in
+      let extra = if tslen <> errslen
+      then None (* temp fix to prevent List.combine error *)
+      else Some (List.(rev (combine ts errs)) |> List.mapi (
         fun i (t, err) ->
           let header_infos = [
             Loc.none, [spf "Member %d:" (i + 1)];
@@ -4429,9 +4435,9 @@ and try_intersection cx trace u reason rep =
             | _ -> Errors.InfoNode (info_list, error_extra)
           in
           info_tree
-      ) in
+      )) in
       let l = IntersectionT (reason, InterRep.empty) in
-      flow_err cx trace (err_msg l u) ~extra l u
+      flow_err cx trace (err_msg l u) ?extra l u
 
 (* Some types need their parts to be concretized (i.e., type variables may need
    to be replaced by concrete types) so that speculation has a chance to fail

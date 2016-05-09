@@ -3688,7 +3688,7 @@ and mk_proptype cx type_params_map = Ast.Expression.(function
       };
       arguments = [Expression e];
     } ->
-      Flow.mk_instance cx (mk_reason "instanceOf" vloc)
+      Flow.mk_instance cx ~for_type:false (mk_reason "instanceOf" vloc)
         (expression cx type_params_map e)
 
   | vloc, Call { Call.
