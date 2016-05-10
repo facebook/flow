@@ -57,7 +57,7 @@ class.js:134
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
 134: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                               ^^ string. This type is incompatible with
-undefined. See lib: core.js:403
+undefined. See lib: core.js:405
 
 class.js:137
 137:   (x : string) // error: number ~> string
@@ -142,7 +142,7 @@ generators.js:95
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
  95: delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                      ^^ string. This type is incompatible with
-undefined. See lib: core.js:403
+undefined. See lib: core.js:405
 
 generators.js:101
 101:   (x : string) // error: number ~> string

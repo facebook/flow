@@ -366,8 +366,8 @@ valueOf () => Object
       "type": "number",
       "func_details": null,
       "path": "[LIB] core.js",
-      "line": 262,
-      "endline": 262,
+      "line": 264,
+      "endline": 264,
       "start": 13,
       "end": 18
     },
@@ -677,7 +677,7 @@ valueOf () => Object
       "end": 18
     },
     {
-      "name": "valueOf",
+      "name": "trimLeft",
       "type": "() => string",
       "func_details": {
         "return_type": "string",
@@ -686,6 +686,32 @@ valueOf () => Object
       "path": "[LIB] core.js",
       "line": 261,
       "endline": 261,
+      "start": 5,
+      "end": 22
+    },
+    {
+      "name": "trimRight",
+      "type": "() => string",
+      "func_details": {
+        "return_type": "string",
+        "params": []
+      },
+      "path": "[LIB] core.js",
+      "line": 262,
+      "endline": 262,
+      "start": 5,
+      "end": 23
+    },
+    {
+      "name": "valueOf",
+      "type": "() => string",
+      "func_details": {
+        "return_type": "string",
+        "params": []
+      },
+      "path": "[LIB] core.js",
+      "line": 263,
+      "endline": 263,
       "start": 5,
       "end": 21
     }
