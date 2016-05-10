@@ -471,16 +471,15 @@ end = struct
       | token ->
           (match primitive token with
           | None ->
-              (* All params start with an identifier or ... *)
+              (* All params start with an identifier or `...` *)
               Type (_type env)
-          | Some t ->
-              (* Don't know if this is (number) or (number: number) (the first is
-              * a type the second is a param) *)
-            let name, _ = Parse.identifier_or_reserved_keyword env in
-            match Peek.token env with
-            | T_PLING
-            | T_COLON ->
+          | Some _ ->
+              (* Don't know if this is (number) or (number: number). The first
+               * is a type, the second is a param. *)
+              match Peek.token ~i:1 env with
+              | T_PLING | T_COLON ->
                 (* Ok this is definitely a parameter *)
+                let name, _ = Parse.identifier_or_reserved_keyword env in
                 if not (should_parse_types env)
                 then error env Error.UnexpectedTypeAnnotation;
                 let optional = Expect.maybe env T_PLING in
@@ -494,20 +493,9 @@ end = struct
                   optional;
                 }) in
                 ParamList (function_param_list_without_parens env [param])
-            | _ ->
-                (* Ok this is definitely a type *)
-                (* Note; what we really want here (absent 2-token LA :) is
-                    Eat.vomit env;
-                    Type (_type env)
-                  ...but currently there's bad interaction between Eat.vomit,
-                  Expect.tok, and possibly mode switching. See e.g. Type
-                  Grouping test failures when the above is used.
-                *)
-                Type
-                  (union_with env
-                    (intersection_with env
-                      (postfix_with env (fst name, t)))
-                ))
+              | _ ->
+                Type (_type env)
+          )
       in
       Expect.token env T_RPAREN;
       ret
@@ -2346,7 +2334,7 @@ end = struct
             if Peek.token env = T_ASSIGN then (
               if static && options.esproposal_class_static_fields
                  || (not static) && options.esproposal_class_instance_fields
-              then begin 
+              then begin
                 Expect.token env T_ASSIGN;
                 Some (Parse.expression env)
               end else None

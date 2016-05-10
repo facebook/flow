@@ -2034,6 +2034,20 @@ module.exports = {
       'var a: (typeof A)': {},
       'var a: Array<(number)>': {},
       'var a: ([]) = []': {},
+      'var a: (number: number) => number = (number) => { return 123; }': {}
+    },
+    'Invalid Type Grouping': {
+      'var a: (true: number) => number = (number) => { return 123; }': {
+        'errors': [
+          {
+            'message': 'Unexpected token :',
+            'loc.start.line': 1,
+            'loc.start.column': 12,
+            'loc.end.line': 1,
+            'loc.end.column': 13
+          }
+        ]
+      }
     },
     'String Literal Types': {
       'var a: "duck"': {
