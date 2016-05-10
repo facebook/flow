@@ -5,5 +5,6 @@
 <src/commands/shellCompleteCommand.ml>: warn(-3)
 <src/flow.ml>: warn(-3)
 <src/services/inference/module_js.ml>: warn(-3)
+<src/typing/flow_error.ml>: warn(-3)
 <src/typing/statement.ml>: warn(-3)
 <**/node_modules/**>: -traverse
