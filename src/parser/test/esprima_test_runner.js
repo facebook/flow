@@ -143,7 +143,6 @@ function handleSpecialObjectCompare(esprima, flow, env) {
             delete prop.value;
             delete prop.kind;
             delete prop.method;
-            delete prop.shorthand;
             break;
         }
       }
@@ -232,6 +231,9 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       esprima.returnType = null;
       esprima.typeParameters = null;
       break;
+    case 'ExportBatchSpecifier':
+      esprima.name = esprima.name || null;
+      break;
   }
 
   switch (esprima.type) {
@@ -255,6 +257,14 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       case "JSXText":
         // Esprima represents JSX children string literals as Literal nodes
         flow.type = "Literal";
+        break;
+      case 'TypeParameter':
+        flow.type = 'Identifier';
+        flow.typeAnnotation = flow.bound;
+        flow.optional = false;
+        delete flow.bound;
+        delete flow.variance;
+        delete flow.default;
         break;
     }
   }

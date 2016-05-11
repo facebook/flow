@@ -19,12 +19,12 @@
     "esprima-fb": "15001.1001.0-dev-harmony-fb"
   },
   "dependencies": {
-    "ast-types": "0.8.14",
+    "ast-types": "0.8.16",
     "colors": ">=0.6.2",
     "minimist": ">=0.2.0"
   },
   "engines": {
-      "node": ">=0.4.0"
+    "node": ">=0.4.0"
   },
   "scripts": {
     "test": "node test/run_tests.js",
