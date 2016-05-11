@@ -100,13 +100,18 @@ echo "Installing dependencies..."
 
 printf "travis_fold:end:opam_installer\n"
 
+printf "travis_fold:start:npm_upgrade\nMaking sure we have a reasonable version of npm\n"
+  printf "Started with npm version $(npm --version)\n"
+  if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
+  printf "After upgrade, using npm version $(npm --version)\n"
+printf "travis_fold:end:npm_upgrade\n"
+
 printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
-  printf "Using npm version $(npm --version)\n"
-  printf "travis_fold:start:npm_install_tool\n"
+  printf "travis_fold:start:npm_install_tool\nRunning npm install for tool\n"
     npm install | cat
   printf "travis_fold:end:npm_install_tool\n"
 
-  printf "travis_fold:start:npm_install_website\n"
+  printf "travis_fold:start:npm_install_website\nRunning npm install for the website\n"
     pushd website >/dev/null
       npm install | cat
       node_modules/.bin/bower \
@@ -115,7 +120,7 @@ printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
     popd >/dev/null
   printf "travis_fold:end:npm_install_website\n"
 
-  printf "travis_fold:start:npm_install_parser\n"
+  printf "travis_fold:start:npm_install_parser\nRunning npm install for the parser\n"
     pushd src/parser >/dev/null
       npm install | cat
     popd >/dev/null
