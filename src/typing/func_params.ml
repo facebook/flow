@@ -138,6 +138,7 @@ let convert_method cx type_params_map ?(static=false) func = Ast.Type.Function.(
         Anno.this cx type_params_map implicit_loc
     | true, ThisParam.Implicit implicit_loc ->
         ClassT (Anno.this cx type_params_map implicit_loc)
+              (*TJP: This (was?) breaking String(val)--global~>this is no good.  static(value:any):string*)
   in
   convert_fn cx type_params_map func (empty this)
 )
