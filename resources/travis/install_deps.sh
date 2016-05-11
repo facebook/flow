@@ -101,6 +101,7 @@ echo "Installing dependencies..."
 printf "travis_fold:end:opam_installer\n"
 
 printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
+  printf "Using node version $(node --version)\n"
   printf "Using npm version $(npm --version)\n"
 
   printf "travis_fold:start:npm_install_tool\nRunning npm install for tool\n"
