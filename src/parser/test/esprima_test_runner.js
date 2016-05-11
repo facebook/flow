@@ -3,7 +3,6 @@
  */
 
 var esprima = require("esprima-fb");
-var flow = require("../flow_parser.js");
 var util = require("util");
 var ast_types = require("./esprima_ast_types.js");
 
@@ -372,7 +371,7 @@ function runTest(test, esprima_options, test_options) {
     result.output += "\n";
   }
   try {
-    var flow_ast = flow.parse(test.content, {});
+    var flow_ast = test_options.flow.parse(test.content, {});
   } catch (e) {
     output("Flow exploded:", util.inspect(e, {depth: null}));
     result.passed = false;

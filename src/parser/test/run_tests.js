@@ -10,6 +10,7 @@ var argv = parseArgs(
       "filter",
       "section-filter",
       "numTests",
+      "parser",
     ],
     boolean: [
       "dumpAst",
@@ -30,6 +31,7 @@ var cli_options = {
   dumpAst: argv.dumpAst,
   jsonErrors: argv.jsonErrors,
   showDifferences: argv.showDifferences,
+  flow: require(argv.parser || "../flow_parser.js"),
 };
 
 function escape_content(content) {

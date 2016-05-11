@@ -2038,15 +2038,13 @@ module.exports = {
     },
     'Invalid Type Grouping': {
       'var a: (true: number) => number = (number) => { return 123; }': {
-        'errors': [
-          {
-            'message': 'Unexpected token :',
-            'loc.start.line': 1,
-            'loc.start.column': 12,
-            'loc.end.line': 1,
-            'loc.end.column': 13
-          }
-        ]
+        'errors.0': {
+          'message': 'Unexpected token :',
+          'loc.start.line': 1,
+          'loc.start.column': 12,
+          'loc.end.line': 1,
+          'loc.end.column': 13
+        }
       }
     },
     'String Literal Types': {
