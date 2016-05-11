@@ -52,8 +52,7 @@ val init_env :
 
 (* getters: *)
 val strict : env -> bool
-val last : env -> (lex_env * lex_result) option
-val last_token : env -> token option
+val last_loc : env -> Loc.t option
 val lb : env -> Lexing.lexbuf
 val lookahead : ?i:int -> env -> lex_result
 val lex_env : env -> lex_env
@@ -73,11 +72,6 @@ val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
 val source : env -> Loc.filename option
 val should_parse_types : env -> bool
-
-(* miscellaneous operations *)
-val last_opt : env -> (lex_result -> 'a) -> 'a option
-val last_value : env -> string option
-val last_loc : env -> Loc.t option
 
 (* mutators: *)
 val error_at : env -> Loc.t * Parse_error.t -> unit

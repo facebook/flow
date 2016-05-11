@@ -219,7 +219,6 @@ let strict env = env.strict
 let lb env = env.lb
 let lex_mode env = List.hd !(env.lex_mode_stack)
 let lex_env env = !(env.lex_env)
-let last env = !(env.last)
 let in_export env = env.in_export
 let comments env = !(env.comments)
 let labels env = env.labels
@@ -287,12 +286,9 @@ let with_error_callback error_callback env =
 
 (* other helper functions: *)
 let error_list env = List.iter (error_at env)
-let last_opt env fn = match !(env.last) with
+let last_loc env = match !(env.last) with
   | None -> None
-  | Some (_, result) -> Some (fn result)
-let last_token env = last_opt env (fun result -> result.lex_token)
-let last_value env = last_opt env (fun result -> result.lex_value)
-let last_loc env = last_opt env (fun result -> result.lex_loc)
+  | Some (_, result) -> Some result.lex_loc
 
 let lex env mode =
   let lex_env, lex_result = lex !(env.lex_env) mode in
@@ -337,7 +333,7 @@ let advance env (lex_env, lex_result) next_lex_mode =
   env.lookahead := None
 
 let vomit env =
-  Lexing.(match last env with
+  Lexing.(match !(env.last) with
   | None ->
       env.lb.lex_curr_pos <- 0;
       let none_curr_p = {

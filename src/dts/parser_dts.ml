@@ -72,12 +72,9 @@ let init_env lb = {
   lex_mode_stack  = ref [NORMAL_LEX];
 }
 
-let last_opt env fn = match !(env.last) with
+let last_loc env = match !(env.last) with
   | None -> None
-  | Some result -> Some (fn result)
-let last env = last_opt env (fun result -> result.lex_token)
-let last_value env = last_opt env (fun result -> result.lex_value)
-let last_loc env = last_opt env (fun result -> result.lex_loc)
+  | Some result -> Some result.lex_loc
 
 let is_future_reserved = function
   | "class"
