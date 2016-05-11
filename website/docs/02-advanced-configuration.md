@@ -55,7 +55,7 @@ default, nothing is ignored.
 
 Things to keep in mind:
 
-1. These are OCaml regular expressions.
+1. These are [OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
 2. These regular expressions match against absolute paths. They probably should
    start with `.*`
 3. Ignores are processed AFTER includes. If you include and ignore a file it
@@ -119,6 +119,8 @@ can be overridden with command line flags.
     ```
 
     makes Flow treat `require('image!foo.jpg')` as if it were `require('ImageStub')`.
+
+    These are [OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp). Use `\(` and `\)` (slashes required!) to create a capturing group, which you can refer to in the replacement pattern as `\1` (up to `\9`).
 
     (**note:** you can specify `module.name_mapper` multiple times)
 
