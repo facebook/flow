@@ -21,4 +21,4 @@ let build_commit_time = get_build_commit_time ()
 
 (* Monotonically increasing identifier that can be used when we introduce
  * backward incompatible changes in hh_client commands *)
-let build_api_version = 0
+let build_api_version = 1
