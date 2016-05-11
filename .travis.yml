@@ -13,7 +13,8 @@ env:
 
 # Let's use a modern version of node. This comes with a better version of npm
 # than the default too.
-node_js: 5.1
+node_js: 
+  - "5.1"
 
 # NOTE: We set the compiler to a bogus "no-op" bash command (":") to work around
 # a Travis caching limitation: the cache slug only depends on the compiler name,
