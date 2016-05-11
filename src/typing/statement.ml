@@ -68,6 +68,12 @@ let function_desc ~async ~generator desc =
   | false, true -> spf "generator %s" desc
   | false, false -> desc
 
+(*TJP: Should I be rejecting *object* methods too? *)
+let reject_explicit_this cx msg = function
+  | {Ast.Function.this = Ast.Type.Function.ThisParam.Explicit (loc, _); _} ->
+    FlowError.add_error cx (loc, [msg])
+  | _ -> ()
+
 (*
 let warn_or_ignore_export_star_as cx name =
   if name = None then () else
@@ -4407,12 +4413,12 @@ and mk_class cx type_params_map loc reason c =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx type_params_map reason func this super =
-  let func_sig = Func_sig.mk cx type_params_map reason func in
+and function_decl id cx type_params_map sig_this reason func body_this super =
+  let func_sig = Func_sig.mk_function cx type_params_map reason sig_this func in
 
   let this, super =
     let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in
-    new_entry this, new_entry super
+    new_entry body_this, new_entry super
   in
 
   let save_return = Abnormal.clear_saved Abnormal.Return in
@@ -4436,31 +4442,36 @@ and define_internal cx reason x =
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason func =
+  reject_explicit_this cx
+    "this pseudo-parameters are not allowed on functions" func;
   let this = Flow.mk_tvar cx (replace_reason "this" reason) in
   (* Normally, functions do not have access to super. *)
   let super = MixedT (
     replace_reason "empty super object" reason,
     Mixed_everything
   ) in
-  let func_sig = function_decl id cx type_params_map reason func this super in
-  Func_sig.functiontype cx this func_sig
+  Func_sig.functiontype cx
+    (function_decl id cx type_params_map this reason func this super)
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx type_params_map reason func =
+  reject_explicit_this cx
+    "this pseudo-parameters are not allowed on arrow functions" func;
   let this = this_ cx reason in
   let super = super_ cx reason in
   let {Ast.Function.id; _} = func in
-  let func_sig = function_decl id cx type_params_map reason func this super in
-  (* Do not expose the type of `this` in the function's type. The call to
-     function_decl above has already done the necessary checking of `this` in
-     the body of the function. Now we want to avoid re-binding `this` to
-     objects through which the function may be called. *)
-  Func_sig.functiontype cx Flow.dummy_this func_sig
+  (* Use `dummy_this` in the function's signature and, ultimately, type. The
+     call to function_decl does the necessary checking of `this` in the body of
+     the function. Since any `this`es in the arrow function are lexically bound,
+     we want to avoid re-binding `this` to objects through which the function
+     may be called, hence the `dummy_this`. *)
+  Func_sig.functiontype cx
+    (function_decl id cx type_params_map Flow.dummy_this reason func this super)
 
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
 and mk_method cx type_params_map reason func this =
   let super = MixedT (reason, Mixed_everything) in
   let id = None in
-  let func_sig = function_decl id cx type_params_map reason func this super in
-  Func_sig.methodtype_DEPRECATED func_sig
+  Func_sig.methodtype_DEPRECATED
+    (function_decl id cx type_params_map this reason func this super)

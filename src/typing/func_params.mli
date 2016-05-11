@@ -2,13 +2,26 @@ type t
 
 (* build up a params value *)
 val empty: Type.t -> t
-val mk: Context.t ->
+
+val mk_function: Context.t ->
+                 (Type.t SMap.t) -> (* type params map *)
+  Type.t -> (* this *)
+  Spider_monkey_ast.Function.t ->
+  t
+
+val mk_method: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
   Type.t -> (* implicit `this` pseudoparameter *)
   Spider_monkey_ast.Function.t ->
   t
 
-val convert: Context.t ->
+val convert_function: Context.t ->
+  (Type.t SMap.t) -> (* type params map *)
+  Type.t -> (* this *)                    
+  Spider_monkey_ast.Type.Function.t ->
+  t
+
+val convert_method: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
   ?static:bool ->
   Spider_monkey_ast.Type.Function.t ->

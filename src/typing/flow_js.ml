@@ -6376,9 +6376,11 @@ let rec assert_ground ?(infer=false) ?(in_class=false) cx skip ids t =
     List.iter recurse params_tlist;
     recurse ~infer:true return_t
 
-  | PolyT (_, t)
+  | PolyT (_, t) ->
+     recurse t
+
   | ThisClassT t ->
-    assert_ground ~in_class:true cx skip ids t (*TJP: Does this case apply universally to PolyT?*)
+    assert_ground ~in_class:true cx skip ids t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
     unify cx proto_t AnyT.t;

@@ -24,8 +24,7 @@ let empty this = {
   defaults = SMap.empty
 }
 
-(* Ast.Function.t -> Func_params.t *)
-let mk cx type_params_map implicit_this func =
+let mk_fn cx type_params_map func empty_except_this =
   let add_param params pattern default = Ast.Pattern.(
     match pattern with
     | loc, Identifier (_, { Ast.Identifier.name; typeAnnotation; optional }) ->
@@ -45,7 +44,7 @@ let mk cx type_params_map implicit_this func =
       | Some expr ->
         (* TODO: assert (not optional) *)
         let binding = name, t, loc in
-        { this = params.this;
+        { params with
           rev_list = Simple (OptionalT t, binding) :: params.rev_list;
           defaults = SMap.add name (Default.Expr expr) params.defaults })
     | loc, _ ->
@@ -67,7 +66,7 @@ let mk cx type_params_map implicit_this func =
         | None -> t (* TODO: assert (not optional) *)
       in
       let param = Complex (t, !bindings) in
-      { this = params.this;
+      { params with
         rev_list = param :: params.rev_list;
         defaults = !defaults })
   in
@@ -80,33 +79,46 @@ let mk cx type_params_map implicit_this func =
       let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
       { params with rev_list = param :: params.rev_list }
   in
-  let {Ast.Function.this; params; defaults; rest; _} = func in
+  let {Ast.Function.params; defaults; _} = func in
   let defaults =
     if defaults = [] && params <> []
     then List.map (fun _ -> None) params
     else defaults
   in
-  let this = Ast.Type.Function.ThisParam.(match this with
-    | Implicit loc ->
+  let params = List.fold_left2 add_param empty_except_this params defaults in
+  match func.Ast.Function.rest with
+  | Some ident -> add_rest params ident
+  | None -> params
+
+(* Ast.Function.t -> Func_params.t *)
+let mk_function cx type_params_map this func =
+  mk_fn cx type_params_map func (empty this)
+
+(* Ast.Function.t -> Func_params.t *)
+let mk_method cx type_params_map implicit_this func =
+  let this = Ast.Type.Function.(match func.Ast.Function.this with
+    | ThisParam.Implicit loc ->
         let reason = mk_reason "implicit `this` pseudo-parameter" loc in
         Flow.reposition cx reason implicit_this
-    | Explicit (loc, { Ast.Type.Function.Param.typeAnnotation; _ }) ->
+    | ThisParam.Explicit (loc, { Param.typeAnnotation; _ }) ->
         let reason = mk_reason "explicit `this` pseudo-parameter" loc in
         let anno = Some (loc, typeAnnotation) in
         Anno.mk_type_annotation cx type_params_map reason anno
   ) in
-  let func_params = {
-    this;
+(*TJP: Old{
+    this; (* TJP: Don't both of those lookups need to do the ThisTypeAppT logic
+             from `add_this` for generics? No. `add_this` has taken care of it
+             for explicit `this` types. However, the implicit_this above should
+             be wrapped analogously.
+
+             Test that it works (arraylib, aka Nemesis), and then generalize
+             `add_this` for use here (if it's sufficiently ugly). *)
     rev_list = [];
     defaults = SMap.empty
-  } in
-  let func_params = List.fold_left2 add_param func_params params defaults in
-  match rest with
-  | Some ident -> add_rest func_params ident
-  | None -> func_params
+  } in*)
+  mk_fn cx type_params_map func (empty this)
 
-(* Ast.Type.Function.t -> Func_params.t *)
-let convert cx type_params_map ?(static=false) func = Ast.Type.Function.(
+let convert_fn cx type_params_map func empty_except_this = Ast.Type.Function.(
   let add_param params (loc, {Param.name; typeAnnotation; optional; _}) =
     let _, {Ast.Identifier.name; _} = name in
     let t = Anno.convert cx type_params_map typeAnnotation in
@@ -120,6 +132,18 @@ let convert cx type_params_map ?(static=false) func = Ast.Type.Function.(
     let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
     { params with rev_list = param :: params.rev_list }
   in
+  let params = List.fold_left add_param empty_except_this func.params in
+  match func.rest with
+  | Some ident -> add_rest params ident
+  | None -> params
+)
+
+(* Ast.Type.Function.t -> Func_params.t *)
+let convert_function cx type_params_map this func =
+  convert_fn cx type_params_map func (empty this)
+
+(* Ast.Type.Function.t -> Func_params.t *)
+let convert_method cx type_params_map ?(static=false) func = Ast.Type.Function.(
   let this = match static, func.Ast.Type.Function.this with
     | _, ThisParam.Explicit (_, {Param.typeAnnotation; _}) ->
         Anno.convert cx type_params_map typeAnnotation
@@ -127,11 +151,9 @@ let convert cx type_params_map ?(static=false) func = Ast.Type.Function.(
         Anno.this cx type_params_map implicit_loc
     | true, ThisParam.Implicit implicit_loc ->
         ClassT (Anno.this cx type_params_map implicit_loc)
+              (*TJP: This (was?) breaking String(val)--global~>this is no good.  static(value:any):string*)
   in
-  let params = List.fold_left add_param (empty this) func.params in
-  match func.rest with
-  | Some ident -> add_rest params ident
-  | None -> params
+  convert_fn cx type_params_map func (empty this)
 )
 
 let this params = params.this
