@@ -176,11 +176,6 @@ module Expect = struct
     if Peek.token env <> t then error_unexpected env;
     Eat.token env
 
-  let eof env =
-    if Peek.token env <> T_EOF then error_unexpected env;
-    let eof_lex_result = lookahead env in
-    Eat.advance env (lex_env env, eof_lex_result) (lex_mode env)
-
   (* If the next token is t, then eat it and return true
    * else return false *)
   let maybe env t =
@@ -4167,7 +4162,7 @@ end = struct
     let loc = match stmts with
     | [] -> Loc.from_lb (source env) (lb env)
     | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts))) in
-    Expect.eof env;
+    Expect.token env T_EOF;
     let comments = List.rev (comments env) in
     loc, stmts, comments
 
