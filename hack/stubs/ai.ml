@@ -57,3 +57,12 @@ module ServerFindRefs = struct
 
   let go _  _ _ = []
 end
+
+module TraceService = struct
+  type action =
+    | Class of string
+    | Method of string * string
+    | Function of string
+
+  let go _ _ _ _ = ""
+end
