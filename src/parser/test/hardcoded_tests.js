@@ -811,6 +811,11 @@ module.exports = {
           {'type': 'TypeParameter', 'name': 'B'},
         ]
       },
+      'type Foo = Array<*>': {
+        'body.0.right.typeParameters.params': [
+          {'type': 'ExistsTypeAnnotation'}
+        ]
+      },
     },
     'Tuples': {
       'var a : [] = [];': {
@@ -2645,7 +2650,7 @@ module.exports = {
       },
       '*/': {
         'errors': {
-          '0.message': 'Unexpected token */',
+          '0.message': 'Unexpected token *',
         }
       },
       '/*::': {
@@ -3093,6 +3098,28 @@ module.exports = {
           'value': ' /* ',
         }]
       },
+      // Regression test: there are no comments here!
+      'let x = /x/* 5 */y/;': {
+        'comments': [],
+        'body.0.declarations.0.init': {
+          'type': 'BinaryExpression',
+          'operator': '*',
+          'left': {
+            'type': 'BinaryExpression',
+            'operator': '*',
+            'left': { 'type': 'Literal', 'regex.pattern': 'x' },
+            'right': { 'type': 'Literal', 'value': 5 }
+          },
+          'right': { 'type': 'Literal', 'regex.pattern': 'y' }
+        }
+      },
+      // Regression test: there is a comments here!
+      'type Foo = Array<*/* comment */>': {
+        'comments': [
+          { 'type': 'Block', 'value': ' comment '}
+        ],
+        'body.0.right.typeParameters.params.0.type': 'ExistsTypeAnnotation'
+      }
     },
     'Decorators (experimental/early)': {
       'function Bar() { @myDecorator2 @myDecorator1\nclass Foo { myMethod() {} } }': {

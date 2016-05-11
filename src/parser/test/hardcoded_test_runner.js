@@ -68,7 +68,8 @@ function diff_to_string(diff) {
   var expected_str = "";
   if (typeof diff.expected !== "undefined") {
     expected_str =
-      ". Expected " + diff.expected + ", got " + diff.actual;
+      ". Expected " + JSON.stringify(diff.expected) +
+      ", got " + JSON.stringify(diff.actual);
   }
   return diff.path + ": " + diff.type + expected_str;
 }

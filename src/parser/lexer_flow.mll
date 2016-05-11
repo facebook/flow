@@ -622,12 +622,14 @@ rule token env = parse
                            | _ -> token env lexbuf
                        }
   | "*/"               {
-                         let () = if not env.lex_in_comment_syntax then
-                           let loc = lb_to_loc env.lex_source lexbuf in
-                           unexpected_error env loc "*/"
-                         in
-                         let env = { env with lex_in_comment_syntax = false } in
-                         token env lexbuf
+                         if env.lex_in_comment_syntax then
+                           let env = { env with
+                             lex_in_comment_syntax = false
+                           } in
+                           token env lexbuf
+                         else
+                           let () = yyback 1 lexbuf in
+                           env, T_MULT
                        }
   | "//"               {
                          let start = lb_to_loc env.lex_source lexbuf in
@@ -788,12 +790,14 @@ and type_token env = parse
                            | _ -> type_token env lexbuf
                        }
   | "*/"               {
-                         let () = if not env.lex_in_comment_syntax then
-                           let loc = lb_to_loc env.lex_source lexbuf in
-                           unexpected_error env loc "*/"
-                         in
-                         let env = { env with lex_in_comment_syntax = false } in
-                         type_token env lexbuf
+                         if env.lex_in_comment_syntax then
+                           let env = { env with
+                             lex_in_comment_syntax = false
+                           } in
+                           type_token env lexbuf
+                         else
+                           let () = yyback 1 lexbuf in
+                           env, T_MULT
                        }
   | "//"               {
                          let start = lb_to_loc env.lex_source lexbuf in

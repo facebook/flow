@@ -13,3 +13,7 @@ def("DeclareModuleExports")
   .bases("Statement")
   .build("typeAnnotation")
   .field("typeAnnotation", def("TypeAnnotation"));
+
+def("ExistsTypeAnnotation")
+  .bases("Type")
+  .build();
