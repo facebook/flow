@@ -38,7 +38,7 @@ case "$TRAVIS_OS_NAME" in
 
     printf "travis_fold:start:cache.1\nSetting up build cache\n"
     echo -n "downloading $TRAVIS_BRANCH/$SLUG.tar.gz:"
-    curl -sSL -o "$TMP/$SLUG.tar.gz" \
+    curl -sSL --fail -o "$TMP/$SLUG.tar.gz" \
       "https://s3.amazonaws.com/ci-cache.flowtype.org/$TRAVIS_BRANCH/$SLUG.tar.gz" \
       || true
     if [ -f "$TMP/$SLUG.tar.gz" ]; then
