@@ -63,6 +63,8 @@ val field_initializer:
 
 (** 1. Manipulation *)
 
+val this: t -> Type.t
+
 (** Return a signature with types from provided map substituted.
 
     Note that this function does not substitute type parameters declared by the

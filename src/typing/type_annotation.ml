@@ -354,7 +354,9 @@ let rec convert cx type_params_map = Ast.Type.(function
   FlowError.add_error cx (loc, [msg]);
   AnyT.t
 
-| loc, Function { Function.this = Function.ThisParam.Implicit _; params; returnType; rest; typeParameters } ->
+| loc, Function f ->
+  let { Function.params; returnType; rest; typeParameters; _ } = f in
+
   let typeparams, type_params_map =
     mk_type_param_declarations cx type_params_map typeParameters in
 

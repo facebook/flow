@@ -4,7 +4,7 @@ type t
 val empty: Type.t -> t
 
 val mk_function: Context.t ->
-                 (Type.t SMap.t) -> (* type params map *)
+  (Type.t SMap.t) -> (* type params map *)
   Type.t -> (* this *)
   Spider_monkey_ast.Function.t ->
   t
@@ -17,7 +17,7 @@ val mk_method: Context.t ->
 
 val convert_function: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
-  Type.t -> (* this *)                    
+  Type.t -> (* this *)
   Spider_monkey_ast.Type.Function.t ->
   t
 

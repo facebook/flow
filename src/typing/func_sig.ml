@@ -107,6 +107,8 @@ let field_initializer tparams_map reason expr return_t = {
   return_t;
 }
 
+let this x = Func_params.this x.params
+
 let subst cx map x =
   let {tparams; tparams_map; params; return_t; _} = x in
   (* Remove shadowed type params from `map`, but allow bounds/defaults to be
