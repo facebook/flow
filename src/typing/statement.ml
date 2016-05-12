@@ -4443,7 +4443,7 @@ and define_internal cx reason x =
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason func =
   reject_explicit_this cx
-    "this pseudo-parameters are not allowed on functions" func;
+    "`this` pseudo-parameters are not allowed on functions" func;
   let this = Flow.mk_tvar cx (replace_reason "this" reason) in
   (* Normally, functions do not have access to super. *)
   let super = MixedT (
@@ -4456,7 +4456,7 @@ and mk_function id cx type_params_map reason func =
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx type_params_map reason func =
   reject_explicit_this cx
-    "this pseudo-parameters are not allowed on arrow functions" func;
+    "`this` pseudo-parameters are not allowed on arrow functions" func;
   let this = this_ cx reason in
   let super = super_ cx reason in
   let {Ast.Function.id; _} = func in

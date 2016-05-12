@@ -97,25 +97,12 @@ let mk_function cx type_params_map this func =
 (* Ast.Function.t -> Func_params.t *)
 let mk_method cx type_params_map implicit_this func =
   let this = Ast.Type.Function.(match func.Ast.Function.this with
-    | ThisParam.Implicit loc ->
-        let reason = mk_reason "implicit `this` pseudo-parameter" loc in
-        Flow.reposition cx reason implicit_this
+    | ThisParam.Implicit _ -> implicit_this
     | ThisParam.Explicit (loc, { Param.typeAnnotation; _ }) ->
         let reason = mk_reason "explicit `this` pseudo-parameter" loc in
         let anno = Some (loc, typeAnnotation) in
         Anno.mk_type_annotation cx type_params_map reason anno
   ) in
-(*TJP: Old{
-    this; (* TJP: Don't both of those lookups need to do the ThisTypeAppT logic
-             from `add_this` for generics? No. `add_this` has taken care of it
-             for explicit `this` types. However, the implicit_this above should
-             be wrapped analogously.
-
-             Test that it works (arraylib, aka Nemesis), and then generalize
-             `add_this` for use here (if it's sufficiently ugly). *)
-    rev_list = [];
-    defaults = SMap.empty
-  } in*)
   mk_fn cx type_params_map func (empty this)
 
 let convert_fn cx type_params_map func empty_except_this = Ast.Type.Function.(
@@ -151,7 +138,6 @@ let convert_method cx type_params_map ?(static=false) func = Ast.Type.Function.(
         Anno.this cx type_params_map implicit_loc
     | true, ThisParam.Implicit implicit_loc ->
         ClassT (Anno.this cx type_params_map implicit_loc)
-              (*TJP: This (was?) breaking String(val)--global~>this is no good.  static(value:any):string*)
   in
   convert_fn cx type_params_map func (empty this)
 )

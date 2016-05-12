@@ -51,11 +51,7 @@ let this cx type_params_map loc =
        type reflects the interface of `this` exposed in the current
        environment. Currently, we only support this types in a class
        environment: a this type in class C is bounded by C. *)
-    let reason = match Loc.width loc with
-      | 0 -> mk_reason "implicit `this` type" loc
-      | _ -> mk_reason "explicit `this` type" loc
-    in
-    Flow_js.reposition cx reason (SMap.find_unsafe "this" type_params_map)
+    SMap.find_unsafe "this" type_params_map
   else (
     FlowError.add_warning cx (loc, ["Unexpected use of `this` type"]);
     AnyT.t
@@ -74,7 +70,9 @@ let rec convert cx type_params_map = Ast.Type.(function
 
 | loc, Null -> NullT.at loc
 
-| loc, This -> this cx type_params_map loc
+| loc, This ->
+  let reason = mk_reason "`this` type" loc in
+  Flow_js.reposition cx reason (this cx type_params_map loc)
 
 | loc, Number -> NumT.at loc
 
