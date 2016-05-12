@@ -101,10 +101,24 @@ echo "Installing dependencies..."
 printf "travis_fold:end:opam_installer\n"
 
 printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
-pushd website >/dev/null
-npm install
-node_modules/.bin/bower \
-  --config.storage.packages="$BOWER_CACHE/packages" \
-  install
-popd >/dev/null
+  printf "Using npm version $(npm --version)\n"
+
+  printf "travis_fold:start:npm_install_tool\nRunning npm install for tool\n"
+    npm install | cat
+  printf "travis_fold:end:npm_install_tool\n"
+
+  printf "travis_fold:start:npm_install_website\nRunning npm install for the website\n"
+    pushd website >/dev/null
+      npm install | cat
+      node_modules/.bin/bower \
+        --config.storage.packages="$BOWER_CACHE/packages" \
+        install
+    popd >/dev/null
+  printf "travis_fold:end:npm_install_website\n"
+
+  printf "travis_fold:start:npm_install_parser\nRunning npm install for the parser\n"
+    pushd src/parser >/dev/null
+      npm install | cat
+    popd >/dev/null
+  printf "travis_fold:end:npm_install_parser\n"
 printf "travis_fold:end:npm_install\n"

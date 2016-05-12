@@ -32,6 +32,10 @@ printf "travis_fold:start:runtests\nRunning flow tests\n"
 ./runtests.sh bin/flow
 printf "travis_fold:end:runtests\n"
 
-printf "travis_fold:start:runparsertests\nRunning ocaml parser tests\n"
-(cd src/parser && make test-ocaml)
-printf "travis_fold:end:runparsertests\n"
+printf "travis_fold:start:run_tool_test\nRunning tool test\n"
+./tool test | cat # Force no tty mode
+printf "travis_fold:end:run_tool_test\n"
+
+printf "travis_fold:start:run_parser_tests\nRunning parser tests\n"
+(cd src/parser && make test)
+printf "travis_fold:end:run_parser_tests\n"
