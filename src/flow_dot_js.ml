@@ -73,6 +73,7 @@ let stub_metadata ~root ~checked = { Context.
   checked;
   enable_const_params = false;
   enable_unsafe_getters_and_setters = false;
+  enforce_strict_type_args = false;
   esproposal_class_static_fields = Options.ESPROPOSAL_WARN;
   esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
   esproposal_decorators = Options.ESPROPOSAL_WARN;
