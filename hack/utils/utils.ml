@@ -212,3 +212,23 @@ let assert_false_log_backtrace () =
   Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
     (Printexc.get_callstack 100));
   assert false
+
+(* Returns the largest element in arr strictly less than `bound` *)
+let infimum (arr : 'a array)
+            (bound : 'b)
+            (compare : 'a -> 'b -> int) : int option =
+  let rec binary_search low high = begin
+    if low = high then
+      Some low
+    else if low > high then
+      None
+    else begin
+      let mid = (low + high + 1) / 2 in
+      let test = Array.get arr mid in
+      if compare test bound < 0 then
+        binary_search mid high
+      else
+        binary_search low (mid - 1)
+    end
+  end in
+  binary_search 0 ((Array.length arr) - 1)
