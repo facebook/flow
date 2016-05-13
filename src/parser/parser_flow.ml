@@ -393,11 +393,8 @@ end = struct
         | T_RBRACKET -> List.rev acc
         | _ ->
             let acc = (_type env)::acc in
-            if Peek.token env = T_RBRACKET
             (* Trailing comma support (like [number, string,]) *)
-            then begin
-              if Peek.token env = T_COMMA then Expect.token env T_COMMA
-            end else Expect.token env T_COMMA;
+            if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
             types env acc
 
       in fun env ->
