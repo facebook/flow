@@ -1,3 +1,22 @@
+###v0.25.0
+Likely to cause new Flow errors:
+- [@marudor](https://github.com/marudor) made a tremendous effort to clean up the builtin flowlib definitions, adding missing things, fixing annotations, and removing non-standard and deprecated features. If you're relying on these things, then you may have new errors.
+- In the past, generic types could leave off the type arguments. Flow is moving towards making these required. Applying type arguments to a polymorphic type (e.g. `Map<string, number>`) is like calling a function. If writing `my_function` was the same thing as writing `my_function()`, it would be really difficult to pass functions as values. Similarly, by making type arguments required, it frees us up to do more with our polymorphic types. If you have a polymorphic type with default types, like `type Foo<T = number>`, you can now write `Foo<>` to apply 0 type arguments to the polymorphic type `Foo`.
+
+  To ease migration, v0.25.0 still allows you to omit type arguments by default. v0.26.0 will start enforcing that type arguments are always supplied. To enable this behavior in v0.25.0, you can add `experimental.strict_type_args=true` to the `.flowconfig`.
+
+New Features:
+- New `flow ls` command to list the files that Flow can see.
+- `declare module.exports: type;` <-- this is the new syntax to declare the CommonJS export type. Previously, you had to write `declare var exports: type;`. This can be used in `.flow` files and in `declare module` declarations.
+
+Notable bug fixes:
+- fix parsing of `/x/* 5 */y/` - that's no comment!
+
+Misc:
+- Now Flow builds on OCaml 4.03.0
+- Fixed up the parser tests (thanks for the help [@marudor](https://github.com/marudor)!) and have started running those in CI
+- A ton of refactoring and clean up
+
 ###v0.24.2
 
 - Fixed a bug where Flow might run out of memory in a repository with a lot of non-flow files
@@ -11,7 +30,7 @@
 New features:
 - Many common errors now have more contextual error messages. [Check out the test file changes](https://github.com/facebook/flow/commit/7b8c3aed5d852ad9b8290076508658168d0d5fde#diff-839cf9ce7d26ef86255e179b8a539fc7) to see what this looks like!
 - If a `<PROJECT_ROOT>/flow-typed/` directory exists, Flow will now assume it is a [libs] directory by default to help reduce the amount of out-of-the-box configuration that is necessary. (Thanks @splodingsocks!)
-- Support for specifying a default on a type parameter declaration. For example: `type Iterator<Yield, Return=void, Next=void> = ...`. 
+- Support for specifying a default on a type parameter declaration. For example: `type Iterator<Yield, Return=void, Next=void> = ...`.
   - NOTE: [The pull request to add syntax support for this is pending](https://github.com/babel/babylon/pull/25), so it may be necessary to wait on that to ship before using this feature
 
 Notable bug fixes:
@@ -26,7 +45,7 @@ Notable bug fixes:
 
 Misc:
 - Better locations for logical operator errors
-- Better error message sorting: 
+- Better error message sorting:
   - Sorts errors in `.json` files by name coalesced with `.js` files
   - Sorts all internal errors before parse errors before type/inference errors
   - Sorts lib file errors before source file errors
@@ -57,7 +76,7 @@ New features:
 - `<Foo />` is now allowed when `Foo` is a `string`. If `$JSXIntrinsics` is defined, `Foo` must be a subtype of `$Keys<$JSXIntrinsics>`
 - Support for class decorators in addition to property decorators (also gated behind the `esproposal.decorators` config option). Thanks @marudor!
 
-Notable bug fixes: 
+Notable bug fixes:
 - Disallow `(obj: SomeClass)` except for when `obj instanceof SomeClass`
 - Fixed setting temp dir via the `.flowconfig`
 - Added missing `all` flag to the `.flowconfig`
@@ -129,7 +148,7 @@ New features:
 - Refining `string` and union types with string equality now properly refines the types.
 - Support for `export * as` from @leebyron's [Stage1 proposal](https://github.com/leebyron/ecmascript-more-export-from). Babel support [here](http://babeljs.io/docs/plugins/transform-export-extensions/)
 
-Notable bug fixes: 
+Notable bug fixes:
 - Fixed bug with class expressions due to `this` type
 - Fixed autocomplete for `this`
 - Recognizes exhaustiveness in `switch` statements with `default` case.
@@ -177,7 +196,7 @@ Misc:
 - Various error position relevancy improvements
 - Significantly improved general understanding of special functions like `Function.prototype.{bind,call,apply}`
 - Improved error messages for `import` statements where the remote exports don't exist (or may be typo'd)
-- Improvements to understanding of deferred initialization of `let` variables 
+- Improvements to understanding of deferred initialization of `let` variables
 - `flow get-def` will now hop through lvalues in variable assignments for more fine-grained "hop-tracing" of a variable back to its definition
 - Objects with a `callable` signature can now be passed in to type positions that expect a function with a matching signature
 - Significant improvements to efficiency/perf when recalculating types based on a change to a file with an already-running Flow server
@@ -228,8 +247,8 @@ Misc:
 
 Likely to cause new Flow errors:
 
-- Flow is now stricter (and more consistent) about how `null` works when used as an initialization value for object properties that are mutated later. So `let o = {prop: null}; o.prop = 42;` is now an error and requires that `null` be annotated: `let o = {prop: (null: ?number)};`. 
-- The return type of RegExp.prototype.match() is now properly annotated to return a nullable. 
+- Flow is now stricter (and more consistent) about how `null` works when used as an initialization value for object properties that are mutated later. So `let o = {prop: null}; o.prop = 42;` is now an error and requires that `null` be annotated: `let o = {prop: (null: ?number)};`.
+- The return type of RegExp.prototype.match() is now properly annotated to return a nullable.
 
 New Features:
 
