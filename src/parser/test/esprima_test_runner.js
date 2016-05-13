@@ -350,9 +350,12 @@ function compare(esprima, flow, env) {
   }
 
   if (flow && flow_type == "object" && flow.hasOwnProperty("type") ) {
-    if (env.should_run_ast_types() &&
-        !ast_types.namedTypes[flow.type].check(flow, true)) {
-      env.ast_types_error();
+    if (env.should_run_ast_types()) {
+      if (!ast_types.namedTypes[flow.type]) {
+        env.diff("Unknown AST type", "known type", flow.type);
+      } else if (!ast_types.namedTypes[flow.type].check(flow, true)) {
+        env.ast_types_error();
+      }
     }
   }
 }
