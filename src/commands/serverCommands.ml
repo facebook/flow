@@ -298,6 +298,9 @@ module OptionParser(Config : CONFIG) = struct
       opt_enable_const_params = FlowConfig.(
         flowconfig.options.Opts.enable_const_params
       );
+      opt_enforce_strict_type_args = FlowConfig.(
+        flowconfig.options.Opts.enforce_strict_type_args
+      );
       opt_enable_unsafe_getters_and_setters = FlowConfig.(
         flowconfig.options.Opts.enable_unsafe_getters_and_setters
       );

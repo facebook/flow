@@ -14,6 +14,7 @@ type metadata = {
   checked: bool;
   enable_const_params: bool;
   enable_unsafe_getters_and_setters: bool;
+  enforce_strict_type_args: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
@@ -76,6 +77,8 @@ let metadata_of_options options = {
   enable_const_params = Options.enable_const_params options;
   enable_unsafe_getters_and_setters =
     Options.enable_unsafe_getters_and_setters options;
+  enforce_strict_type_args =
+    Options.enforce_strict_type_args options;
   esproposal_class_static_fields =
     Options.esproposal_class_static_fields options;
   esproposal_class_instance_fields =
@@ -130,6 +133,7 @@ let envs cx = cx.envs
 let enable_const_params cx = cx.metadata.enable_const_params
 let enable_unsafe_getters_and_setters cx =
   cx.metadata.enable_unsafe_getters_and_setters
+let enforce_strict_type_args cx = cx.metadata.enforce_strict_type_args
 let errors cx = cx.errors
 let error_suppressions cx = cx.error_suppressions
 let esproposal_class_static_fields cx =

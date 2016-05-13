@@ -2065,8 +2065,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_tapp = reason_of_t l in
       begin match u with
       | UseT (_, TypeT _) ->
-        let msg = missing_type_args_msg ids in
-        add_error cx (mk_info reason_op [msg]);
+        if Context.enforce_strict_type_args cx then
+          let msg = missing_type_args_msg ids in
+          add_error cx (mk_info reason_op [msg])
+        else
+          let inst = instantiate_poly_default_args
+            cx trace ~reason_op ~reason_tapp (ids, t) in
+          rec_flow cx trace (inst, u)
       | _ ->
         let t_ = instantiate_poly cx trace ~reason_op ~reason_tapp (ids,t) in
         rec_flow cx trace (t_, u)
@@ -4235,6 +4240,16 @@ and cache_instantiate cx trace cache (typeparam, reason_op) t =
     rec_unify cx trace t t_;
     t_
   else t
+
+(* Instantiate a polymorphic definition with stated bound or 'any' for args *)
+(* Needed only for experimental.enforce_strict_type_args=false killswitch *)
+and instantiate_poly_default_args cx trace ~reason_op ~reason_tapp (xs,t) =
+  let ts = xs |> List.map (fun typeparam ->
+      match typeparam.bound with
+      | MixedT _ -> AnyT.why reason_op
+      | other_bound -> AnyWithUpperBoundT (other_bound)
+  ) in
+  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
 and instantiate_poly cx trace ~reason_op ~reason_tapp (xs,t) =

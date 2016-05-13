@@ -13,6 +13,7 @@ module Opts : sig
   type t = {
     enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
+    enforce_strict_type_args: bool;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;

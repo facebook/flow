@@ -15,6 +15,7 @@ type metadata = {
   checked: bool;
   enable_const_params: bool;
   enable_unsafe_getters_and_setters: bool;
+  enforce_strict_type_args: bool;
   esproposal_class_static_fields: Options.esproposal_feature_mode;
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
@@ -41,6 +42,7 @@ val metadata_of_options: Options.t -> metadata
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
 val enable_const_params: t -> bool
 val enable_unsafe_getters_and_setters: t -> bool
+val enforce_strict_type_args: t -> bool
 val envs: t -> env IMap.t
 val errors: t -> Errors_js.ErrorSet.t
 val error_suppressions: t -> Errors_js.ErrorSuppressions.t
