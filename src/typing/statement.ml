@@ -3025,6 +3025,7 @@ and binary cx type_params_map loc = Ast.Expression.Binary.(function
   | { operator = RShift3; left; right }
   | { operator = Minus; left; right }
   | { operator = Mult; left; right }
+  | { operator = Exp; left; right }
   | { operator = Div; left; right }
   | { operator = Mod; left; right }
   | { operator = BitOr; left; right }
@@ -3212,6 +3213,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
 
   | (lhs, Assignment.MinusAssign, rhs)
   | (lhs, Assignment.MultAssign, rhs)
+  | (lhs, Assignment.ExpAssign, rhs)
   | (lhs, Assignment.DivAssign, rhs)
   | (lhs, Assignment.ModAssign, rhs)
   | (lhs, Assignment.LShiftAssign, rhs)

@@ -593,6 +593,7 @@ and Expression : sig
       | Plus
       | Minus
       | Mult
+      | Exp
       | Div
       | Mod
       | BitOr
@@ -612,6 +613,7 @@ and Expression : sig
       | PlusAssign
       | MinusAssign
       | MultAssign
+      | ExpAssign
       | DivAssign
       | ModAssign
       | LShiftAssign

@@ -76,6 +76,18 @@ Arith.js:67
  67: str(undefined + "foo"); // error
          ^^^^^^^^^^^^^^^^^ string
 
+exponent.js:7
+  7: y **= 2; // error
+     ^ string. This type is incompatible with
+  7: y **= 2; // error
+     ^^^^^^^ number
+
+exponent.js:7
+  7: y **= 2; // error
+     ^^^^^^^ number. This type is incompatible with
+  6: let y: string = "123";
+            ^^^^^^ string
+
 mult.js:5
   5: num(null * 1);
          ^^^^ null. This type is incompatible with
@@ -87,6 +99,18 @@ mult.js:6
              ^^^^ null. This type is incompatible with
   6: num(1 * null);
          ^^^^^^^^ number
+
+mult.js:12
+ 12: y *= 2; // error
+     ^ string. This type is incompatible with
+ 12: y *= 2; // error
+     ^^^^^^ number
+
+mult.js:12
+ 12: y *= 2; // error
+     ^^^^^^ number. This type is incompatible with
+ 11: let y: string = "123";
+            ^^^^^^ string
 
 relational.js:4
   4: (1 < "foo"); // error
@@ -179,4 +203,4 @@ relational.js:20
                   ^^^^^^^^^ undefined
 
 
-Found 29 errors
+Found 33 errors

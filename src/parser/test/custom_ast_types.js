@@ -17,3 +17,33 @@ def("DeclareModuleExports")
 def("ExistsTypeAnnotation")
   .bases("Type")
   .build();
+
+var BinaryOperator = or(
+    "==", "!=", "===", "!==",
+    "<", "<=", ">", ">=",
+    "<<", ">>", ">>>",
+    "+", "-", "*", "/", "%",
+    "&", // TODO Missing from the Parser API.
+    "|", "^", "in",
+    "instanceof", "..",
+    "**");
+
+def("BinaryExpression")
+    .bases("Expression")
+    .build("operator", "left", "right")
+    .field("operator", BinaryOperator)
+    .field("left", def("Expression"))
+    .field("right", def("Expression"));
+
+var AssignmentOperator = or(
+    "=", "+=", "-=", "*=", "/=", "%=",
+    "<<=", ">>=", ">>>=",
+    "|=", "^=", "&=",
+    "**=");
+
+def("AssignmentExpression")
+    .bases("Expression")
+    .build("operator", "left", "right")
+    .field("operator", AssignmentOperator)
+    .field("left", def("Pattern"))
+    .field("right", def("Expression"));

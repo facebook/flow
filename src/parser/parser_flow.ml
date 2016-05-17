@@ -1058,6 +1058,12 @@ end = struct
   end
 
   module Expression = struct
+    type op_precedence = Left_assoc of int | Right_assoc of int
+    let is_tighter a b =
+      let a_prec = match a with Left_assoc x -> x | Right_assoc x -> x - 1 in
+      let b_prec = match b with Left_assoc x -> x | Right_assoc x -> x in
+      a_prec >= b_prec
+
     (* AssignmentExpression :
      *   ConditionalExpression
      *   LeftHandSideExpression = AssignmentExpression
@@ -1237,6 +1243,7 @@ end = struct
       | T_MOD_ASSIGN -> Some ModAssign
       | T_DIV_ASSIGN -> Some DivAssign
       | T_MULT_ASSIGN -> Some MultAssign
+      | T_EXP_ASSIGN -> Some ExpAssign
       | T_MINUS_ASSIGN -> Some MinusAssign
       | T_PLUS_ASSIGN -> Some PlusAssign
       | T_ASSIGN -> Some Assign
@@ -1291,32 +1298,33 @@ end = struct
         type_
 
     and binary =
-      (* All BinaryExpression operators are left associative *)
       let binary_op env =
         let ret = Expression.Binary.(match Peek.token env with
+        (* Most BinaryExpression operators are left associative *)
         (* Lowest pri *)
-        | T_BIT_OR -> Some (BitOr, 2)
-        | T_BIT_XOR -> Some (Xor, 3)
-        | T_BIT_AND -> Some (BitAnd, 4)
-        | T_EQUAL -> Some (Equal, 5)
-        | T_STRICT_EQUAL -> Some (StrictEqual, 5)
-        | T_NOT_EQUAL -> Some (NotEqual, 5)
-        | T_STRICT_NOT_EQUAL -> Some (StrictNotEqual, 5)
-        | T_LESS_THAN -> Some (LessThan, 6)
-        | T_LESS_THAN_EQUAL -> Some (LessThanEqual, 6)
-        | T_GREATER_THAN -> Some (GreaterThan, 6)
-        | T_GREATER_THAN_EQUAL -> Some (GreaterThanEqual, 6)
+        | T_BIT_OR -> Some (BitOr, Left_assoc 2)
+        | T_BIT_XOR -> Some (Xor, Left_assoc 3)
+        | T_BIT_AND -> Some (BitAnd, Left_assoc 4)
+        | T_EQUAL -> Some (Equal, Left_assoc 5)
+        | T_STRICT_EQUAL -> Some (StrictEqual, Left_assoc 5)
+        | T_NOT_EQUAL -> Some (NotEqual, Left_assoc 5)
+        | T_STRICT_NOT_EQUAL -> Some (StrictNotEqual, Left_assoc 5)
+        | T_LESS_THAN -> Some (LessThan, Left_assoc 6)
+        | T_LESS_THAN_EQUAL -> Some (LessThanEqual, Left_assoc 6)
+        | T_GREATER_THAN -> Some (GreaterThan, Left_assoc 6)
+        | T_GREATER_THAN_EQUAL -> Some (GreaterThanEqual, Left_assoc 6)
         | T_IN ->
-            if (no_in env) then None else Some (In, 6)
-        | T_INSTANCEOF -> Some (Instanceof, 6)
-        | T_LSHIFT -> Some (LShift, 7)
-        | T_RSHIFT -> Some (RShift, 7)
-        | T_RSHIFT3 -> Some (RShift3, 7)
-        | T_PLUS -> Some (Plus, 8)
-        | T_MINUS -> Some (Minus, 8)
-        | T_MULT -> Some (Mult, 9)
-        | T_DIV -> Some (Div, 9)
-        | T_MOD -> Some (Mod, 9)
+            if (no_in env) then None else Some (In, Left_assoc 6)
+        | T_INSTANCEOF -> Some (Instanceof, Left_assoc 6)
+        | T_LSHIFT -> Some (LShift, Left_assoc 7)
+        | T_RSHIFT -> Some (RShift, Left_assoc 7)
+        | T_RSHIFT3 -> Some (RShift3, Left_assoc 7)
+        | T_PLUS -> Some (Plus, Left_assoc 8)
+        | T_MINUS -> Some (Minus, Left_assoc 8)
+        | T_MULT -> Some (Mult, Left_assoc 9)
+        | T_DIV -> Some (Div, Left_assoc 9)
+        | T_MOD -> Some (Mod, Left_assoc 9)
+        | T_EXP -> Some (Exp, Right_assoc 10)
         (* Highest priority *)
         | _ -> None)
         in if ret <> None then Eat.token env;
@@ -1330,7 +1338,7 @@ end = struct
         }))
 
       in let rec add_to_stack right (rop, rpri) rloc = function
-        | (left, (lop, lpri), lloc)::rest when lpri >= rpri->
+        | (left, (lop, lpri), lloc)::rest when is_tighter lpri rpri ->
             let loc = Loc.btwn lloc rloc in
             let right = make_binary left right lop loc in
             add_to_stack right (rop, rpri) loc rest
@@ -1344,6 +1352,7 @@ end = struct
 
       in let rec helper env stack =
         let start_loc = Peek.loc env in
+        let is_unary = peek_unary_op env <> None in
         let right = unary (env |> with_no_in false) in
         let end_loc = match last_loc env with
         | Some loc -> loc
@@ -1361,13 +1370,15 @@ end = struct
         | None ->
           collapse_stack right right_loc stack
         | Some (rop, rpri) ->
+          if is_unary && rop = Expression.Binary.Exp then
+            error_at env (right_loc, Error.InvalidLHSInExponentiation);
           helper env (add_to_stack right (rop, rpri) right_loc stack)
 
       in fun env -> helper env []
 
-    and unary env =
-      let begin_loc = Peek.loc env in
-      let op = Expression.Unary.(match Peek.token env with
+    and peek_unary_op env =
+      let open Expression.Unary in
+      match Peek.token env with
       | T_NOT -> Some Not
       | T_BIT_NOT -> Some BitNot
       | T_PLUS -> Some Plus
@@ -1381,7 +1392,11 @@ end = struct
        * an identifier in other contexts (such as a variable name), but it's how
        * Babel does it. *)
       | T_AWAIT when allow_await env -> Some Await
-      | _ -> None) in
+      | _ -> None
+
+    and unary env =
+      let begin_loc = Peek.loc env in
+      let op = peek_unary_op env in
       match op with
       | None -> begin
           let op = Expression.Update.(match Peek.token env with

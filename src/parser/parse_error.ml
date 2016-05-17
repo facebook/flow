@@ -28,6 +28,7 @@ type t =
   | InvalidRegExpFlags of string
   | UnterminatedRegExp
   | InvalidLHSInAssignment
+  | InvalidLHSInExponentiation
   | InvalidLHSInForIn
   | InvalidLHSInForOf
   | ExpectedPatternFoundExpression
@@ -106,6 +107,7 @@ module PP =
       | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '"^flags^"'"
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"
       | InvalidLHSInAssignment ->  "Invalid left-hand side in assignment"
+      | InvalidLHSInExponentiation -> "Invalid left-hand side in exponentiation expression"
       | InvalidLHSInForIn ->  "Invalid left-hand side in for-in"
       | InvalidLHSInForOf ->  "Invalid left-hand side in for-of"
       | ExpectedPatternFoundExpression -> (

@@ -91,6 +91,7 @@
     | T_MOD_ASSIGN
     | T_DIV_ASSIGN
     | T_MULT_ASSIGN
+    | T_EXP_ASSIGN
     | T_MINUS_ASSIGN
     | T_PLUS_ASSIGN
     | T_ASSIGN
@@ -116,6 +117,7 @@
     | T_MINUS
     | T_DIV
     | T_MULT
+    | T_EXP
     | T_MOD
     | T_NOT
     | T_BIT_NOT
@@ -236,6 +238,7 @@
     | T_MOD_ASSIGN -> "T_MOD_ASSIGN"
     | T_DIV_ASSIGN -> "T_DIV_ASSIGN"
     | T_MULT_ASSIGN -> "T_MULT_ASSIGN"
+    | T_EXP_ASSIGN -> "T_EXP_ASSIGN"
     | T_MINUS_ASSIGN -> "T_MINUS_ASSIGN"
     | T_PLUS_ASSIGN -> "T_PLUS_ASSIGN"
     | T_ASSIGN -> "T_ASSIGN"
@@ -261,6 +264,7 @@
     | T_MINUS -> "T_MINUS"
     | T_DIV -> "T_DIV"
     | T_MULT -> "T_MULT"
+    | T_EXP -> "T_EXP"
     | T_MOD -> "T_MOD"
     | T_NOT -> "T_NOT"
     | T_BIT_NOT -> "T_BIT_NOT"
@@ -718,6 +722,7 @@ rule token env = parse
   | "+="               { env, T_PLUS_ASSIGN }
   | "-="               { env, T_MINUS_ASSIGN }
   | "*="               { env, T_MULT_ASSIGN }
+  | "**="              { env, T_EXP_ASSIGN }
   | "%="               { env, T_MOD_ASSIGN }
   | "&="               { env, T_BIT_AND_ASSIGN }
   | "|="               { env, T_BIT_OR_ASSIGN }
@@ -727,6 +732,7 @@ rule token env = parse
   | "+"                { env, T_PLUS }
   | "-"                { env, T_MINUS }
   | "*"                { env, T_MULT }
+  | "**"               { env, T_EXP }
   | "%"                { env, T_MOD }
   | "|"                { env, T_BIT_OR }
   | "&"                { env, T_BIT_AND }

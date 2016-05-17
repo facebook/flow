@@ -2313,6 +2313,95 @@ module.exports = {
         },
       },
     },
+    'Exponentiation Operator': {
+      '2 ** 3;': {
+        'body.0.expression': {
+          'type': 'BinaryExpression',
+          'range': [0,6],
+          'operator': '**',
+          'left': {'type':'Literal', 'range':[0,1], 'value':2},
+          'right': {'type':'Literal', 'range':[5,6],'value':3}
+        },
+        'errors': []
+      },
+      // ** is right-associative: (1 + (2 ** (3 ** 4))) + 5
+      '1 + 2 ** 3 ** 4 + 5;': {
+        'body.0.expression': {
+          'type': 'BinaryExpression',
+          'range': [0,19],
+          'operator': '+',
+          'left': {
+            'type': 'BinaryExpression',
+            'range': [0,15],
+            'operator': '+',
+            'left.value': 1,
+            'right': {
+              'type': 'BinaryExpression',
+              'range': [4,15],
+              'operator': '**',
+              'left.value': 2,
+              'right': {
+                'type': 'BinaryExpression',
+                'range': [9,15],
+                'operator': '**',
+                'left.value': 3,
+                'right.value': 4,
+              }
+            }
+          },
+          'right': {'type': 'Literal', 'range': [18,19], 'value': 5}
+        },
+        'errors': []
+      },
+      '(-1) ** 2': {
+        'body.0.expression': {
+          'type': 'BinaryExpression',
+          'range': [0,9],
+          'operator': '**',
+          'left': {
+            'type': 'UnaryExpression',
+            'range': [1,3],
+            'operator': '-',
+            'prefix': true,
+            'argument.value': 1,
+          },
+          'right.value': 2,
+        },
+        'errors': []
+      },
+      '-1 ** 2': {
+        'body.0.expression': {
+          'type': 'BinaryExpression',
+          'range': [0,7],
+          'operator': '**',
+          'left': {
+            'type': 'UnaryExpression',
+            'range': [0,2],
+            'operator': '-',
+            'prefix': true,
+            'argument.value': 1,
+          },
+          'right.value': 2
+        },
+        'errors': [
+          {
+            'loc.start.column': 0,
+            'loc.end.column': 2,
+            'message': 'Invalid left-hand side in exponentiation expression'
+          },
+        ],
+      },
+      'let x = 2; x **= 3;': {
+        'body.1.expression': {
+          'type': 'AssignmentExpression',
+          'range': [11,18],
+          'operator': '**=',
+          'left.name': 'x',
+          'right.value': 3
+        },
+        'errors': [],
+      }
+    },
     'Declare Module': {
       'declare module A {}': {
         'body.0': {
