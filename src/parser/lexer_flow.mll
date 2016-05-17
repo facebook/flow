@@ -318,8 +318,46 @@
     lex_value: string;
     lex_errors: (Loc.t * Parse_error.t) list;
     lex_comments: Ast.Comment.t list;
+    lex_result_in_comment_syntax: bool;
+    lex_lb_abs_pos: int;
+    lex_lb_start_pos: int;
+    lex_lb_curr_pos: int;
+    lex_lb_last_pos: int;
+    lex_lb_last_action: int;
+    lex_lb_eof_reached: bool;
+    lex_lb_mem: int array;
+    lex_lb_start_p: Lexing.position;
     lex_lb_curr_p: Lexing.position;
   }
+
+  let debug_string_of_lex_result lex_result =
+    Printf.sprintf
+      "{\n  \
+        lex_token = %s\n  \
+        lex_value = %S\n  \
+        lex_errors = (length = %d)\n  \
+        lex_comments = (length = %d)\n  \
+        lex_result_in_comment_syntax = %b\n  \
+        lex_lb_abs_pos = %d\n  \
+        lex_lb_start_pos = %d\n  \
+        lex_lb_curr_pos = %d\n  \
+        lex_lb_last_pos = %d\n  \
+        lex_lb_last_action = %d\n  \
+        lex_lb_eof_reached = %b\n  \
+        lex_lb_mem = (length = %d)\n\
+      }"
+    (token_to_string lex_result.lex_token)
+    lex_result.lex_value
+    (List.length lex_result.lex_errors)
+    (List.length lex_result.lex_comments)
+    lex_result.lex_result_in_comment_syntax
+    lex_result.lex_lb_abs_pos
+    lex_result.lex_lb_start_pos
+    lex_result.lex_lb_curr_pos
+    lex_result.lex_lb_last_pos
+    lex_result.lex_lb_last_action
+    lex_result.lex_lb_eof_reached
+    (Array.length lex_result.lex_lb_mem)
 
   let lb_to_loc = Loc.from_lb
 
@@ -340,6 +378,15 @@
       lex_value;
       lex_errors = List.rev state.lex_errors_acc;
       lex_comments = List.rev state.lex_comments_acc;
+      lex_result_in_comment_syntax = env.lex_in_comment_syntax;
+      lex_lb_abs_pos = env.lex_lb.Lexing.lex_abs_pos;
+      lex_lb_start_pos = env.lex_lb.Lexing.lex_start_pos;
+      lex_lb_curr_pos = env.lex_lb.Lexing.lex_curr_pos;
+      lex_lb_last_pos = env.lex_lb.Lexing.lex_last_pos;
+      lex_lb_last_action = env.lex_lb.Lexing.lex_last_action;
+      lex_lb_eof_reached = env.lex_lb.Lexing.lex_eof_reached;
+      lex_lb_mem = env.lex_lb.Lexing.lex_mem;
+      lex_lb_start_p = env.lex_lb.Lexing.lex_start_p;
       lex_lb_curr_p = env.lex_lb.Lexing.lex_curr_p;
     }
 
@@ -446,22 +493,6 @@
     | JSX_SINGLE_QUOTED_TEXT
     | JSX_DOUBLE_QUOTED_TEXT
     | JSX_CHILD_TEXT
-
-  let lex_template_part env template_part =
-    let start = lb_to_loc env.lex_source env.lex_lb in
-    let cooked = Buffer.create 127 in
-    let uncooked = Buffer.create 127 in
-    let raw = Buffer.create 127 in
-    Buffer.add_string raw (Lexing.lexeme env.lex_lb);
-    let _end, tail = template_part env cooked uncooked raw env.lex_lb in
-    let part = Ast.Expression.TemplateLiteral.({
-      Element.value = {
-        Element.cooked = Buffer.contents cooked;
-        raw = Buffer.contents uncooked;
-      };
-      tail;
-    }) in
-    env, T_TEMPLATE_PART ((Loc.btwn start _end, part), Buffer.contents raw)
 
   let keywords = Hashtbl.create 53
   let type_keywords = Hashtbl.create 53
@@ -660,7 +691,22 @@ rule token env = parse
                          let _end, octal = string_quote env quote buf raw octal lexbuf in
                          env, T_STRING (Loc.btwn start _end, Buffer.contents buf, Buffer.contents raw, octal)
                        }
-  | '`'                { lex_template_part env template_part }
+  | '`'                { let cooked = Buffer.create 127 in
+                         let uncooked = Buffer.create 127 in
+                         let raw = Buffer.create 127 in
+                         Buffer.add_string raw (Lexing.lexeme lexbuf);
+
+                         let start = lb_to_loc env.lex_source env.lex_lb in
+                         let _end, tail = template_part env cooked uncooked raw env.lex_lb in
+                         let part = Ast.Expression.TemplateLiteral.({
+                           Element.value = {
+                             Element.cooked = Buffer.contents cooked;
+                             raw = Buffer.contents uncooked;
+                           };
+                           tail;
+                         }) in
+                         env, T_TEMPLATE_PART ((Loc.btwn start _end, part), Buffer.contents raw)
+                       }
   (* Numbers cannot be immediately followed by words *)
   | binnumber ((letter | ['2'-'9']) alphanumeric* as w)
                        { illegal_number env lexbuf w (T_NUMBER BINARY) }
@@ -1035,6 +1081,32 @@ and line_comment env buf = parse
                        ) }
   | _ as c             { Buffer.add_char buf c;
                          line_comment env buf lexbuf }
+
+and regexp env = parse
+  | eof               { env, T_EOF }
+  | line_terminator_sequence
+                      { Lexing.new_line lexbuf;
+                        regexp env lexbuf }
+  | whitespace+       { unicode_fix_cols lexbuf;
+                        regexp env lexbuf }
+  | "//"              { let start = lb_to_loc env.lex_source lexbuf in
+                        let buf = Buffer.create 127 in
+                        let _end = line_comment env buf lexbuf in
+                        save_comment env start _end buf true;
+                        regexp env lexbuf }
+  | "/*"              { let start = lb_to_loc env.lex_source lexbuf in
+                        let buf = Buffer.create 127 in
+                        let _end = comment env buf lexbuf in
+                        save_comment env start _end buf true;
+                        regexp env lexbuf }
+  | '/'               { let start = lb_to_loc env.lex_source lexbuf in
+                        let buf = Buffer.create 127 in
+                        let flags = regexp_body env buf lexbuf in
+                        let end_ = lb_to_loc env.lex_source env.lex_lb in
+                        let loc = Loc.btwn start end_ in
+                        env, T_REGEXP (loc, Buffer.contents buf, flags) }
+  | _                 { illegal env (lb_to_loc env.lex_source lexbuf);
+                        env, T_ERROR }
 
 and regexp_body env buf = parse
   | eof               { let loc = lb_to_loc env.lex_source lexbuf in
@@ -1443,6 +1515,12 @@ and jsx_text env mode buf raw = parse
                         Buffer.add_char buf c;
                         jsx_text env mode buf raw lexbuf }
 
+and template_tail env cooked uncooked raw = parse
+  | '}'               { Buffer.add_string raw "}";
+                        template_part env cooked uncooked raw lexbuf }
+  | _                 { illegal env (lb_to_loc env.lex_source lexbuf);
+                        lb_to_loc env.lex_source lexbuf, true }
+
 and template_part env cooked uncooked raw = parse
   | eof               { illegal env (lb_to_loc env.lex_source lexbuf);
                         lb_to_loc env.lex_source lexbuf, true }
@@ -1478,19 +1556,8 @@ and template_part env cooked uncooked raw = parse
                         template_part env cooked uncooked raw lexbuf }
 
 {
-  let lex_regexp env prefix =
-    (* At this point we already lex'd the /, so we can get the position of the
-     * last lexed token as the start location *)
-    let start = lb_to_loc env.lex_source env.lex_lb in
-    let buf = Buffer.create 127 in
-    (* For regexps like /=/, we parse the /= as T_DIV_ASSIGN, so we just parse
-     * the regexp knowing that the pattern has the "=" prefix *)
-    Buffer.add_string buf prefix;
-    let flags = regexp_body env buf env.lex_lb in
-    let _end = lb_to_loc env.lex_source env.lex_lb in
-    let regexp =
-      T_REGEXP (Loc.btwn start _end, Buffer.contents buf, flags) in
-    get_result_and_clear_state (env, regexp)
+  let lex_regexp env =
+    get_result_and_clear_state (regexp env env.lex_lb)
 
   (* Lexing JSX children requires a string buffer to keep track of whitespace
    * *)
@@ -1504,9 +1571,22 @@ and template_part env cooked uncooked raw = parse
   let lex_jsx_tag env =
     get_result_and_clear_state (lex_jsx_tag env env.lex_lb)
 
-  let lex_template_part env =
-    let env, part = lex_template_part env template_part in
-    get_result_and_clear_state (env, part)
+  let lex_template_tail env =
+    let cooked = Buffer.create 127 in
+    let uncooked = Buffer.create 127 in
+    let raw = Buffer.create 127 in
+    let start = Loc.from_curr_lb env.lex_source env.lex_lb in
+    let _end, tail = template_tail env cooked uncooked raw env.lex_lb in
+    let part = Ast.Expression.TemplateLiteral.({
+      Element.value = {
+        Element.cooked = Buffer.contents cooked;
+        raw = Buffer.contents uncooked;
+      };
+      tail;
+    }) in
+    let loc = Loc.btwn start _end in
+    let token = T_TEMPLATE_PART ((loc, part), Buffer.contents raw) in
+    get_result_and_clear_state (env, token)
 
   let type_token env =
     get_result_and_clear_state (type_token env env.lex_lb)

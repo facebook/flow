@@ -1877,15 +1877,23 @@ module.exports = {
       },
       // 11.8.5.1 no unicode as flags
       'var x = /[P QR]/\\\\u0067': {
-        'errors': {
-          '0': {
+        'errors': [
+          {
             'message': 'Unexpected token ILLEGAL',
-            'loc': {
-              'start.column': 16,
-              'end.column': 17,
-            },
-          }
-        }
+            'loc.start.column': 16,
+            'loc.end.column': 17,
+          },
+          {
+            'message': 'Unexpected token ILLEGAL',
+            'loc.start.column': 17,
+            'loc.end.column': 18,
+          },
+          {
+            'message': 'Unexpected identifier',
+            'loc.start.column': 18,
+            'loc.end.column': 23,
+          },
+        ]
       },
       // No generics for getters and setters
       '({ get foo<T>() {} })': {

@@ -108,11 +108,26 @@ let strict_error env e = if strict env then error env e
 
 let strict_error_at env (loc, e) = if strict env then error_at env (loc, e)
 
-let rec filter_duplicate_errors acc = function
-| [_] | [] as l -> l
-| (loc1, _) :: ((loc2, _) :: _ as rl) when Loc.compare loc1 loc2 = 0 ->
-    filter_duplicate_errors acc rl
-| x :: rl -> filter_duplicate_errors (x :: acc) rl
+(* Sometimes we add the same error for multiple different reasons. This is hard
+   to avoid, so instead we just filter the duplicates out. This function takes
+   a reversed list of errors and returns the list in forward order with dupes
+   removed. This differs from a set because the original order is preserved. *)
+let filter_duplicate_errors =
+  let module ErrorSet = Set.Make(struct
+    type t = Loc.t * Error.t
+    let compare (a_loc, a_error) (b_loc, b_error) =
+      let loc = Loc.compare a_loc b_loc in
+      if loc = 0
+      then Pervasives.compare a_error b_error
+      else loc
+  end) in
+  fun errs ->
+    let errs = List.rev errs in
+    let _, deduped = List.fold_left (fun (set, deduped) err ->
+      if ErrorSet.mem err set then (set, deduped)
+      else (ErrorSet.add err set, err::deduped)
+    ) (ErrorSet.empty, []) errs in
+    List.rev deduped
 
 let get_unexpected_error = function
   | T_EOF, _ -> Error.UnexpectedEOS
@@ -132,7 +147,6 @@ let error_unexpected env =
    * token, so we should process any lexing errors before complaining about the
    * unexpected token *)
   error_list env (lookahead.lex_errors);
-  clear_lookahead_errors env;
   error env (get_unexpected_error (lookahead.lex_token, lookahead.lex_value))
 
 let error_on_decorators env = List.iter
@@ -140,7 +154,7 @@ let error_on_decorators env = List.iter
 
 (* Consume zero or more tokens *)
 module Eat : sig
-  val advance : env -> lex_env * lex_result -> lex_mode -> unit
+  val advance : env -> lex_env * lex_result -> unit
   val token : env -> unit
   val push_lex_mode : env -> lex_mode -> unit
   val pop_lex_mode : env -> unit
@@ -153,7 +167,7 @@ end = struct
   (* Consume a single token *)
   let token env =
     let last = lex_env env, lookahead env in
-    advance env last (lex_mode env)
+    advance env last
 
   let push_lex_mode = Parser_env.push_lex_mode
   let pop_lex_mode = Parser_env.pop_lex_mode
@@ -1672,8 +1686,8 @@ end = struct
       | T_LBRACKET ->
           let loc, arr = array_initializer env in
           loc, Expression.Array arr
-      | T_DIV -> regexp env ""
-      | T_DIV_ASSIGN -> regexp env "="
+      | T_DIV
+      | T_DIV_ASSIGN -> regexp env
       | T_LESS_THAN ->
           let loc, element = Parse.jsx_element env in
           loc, Expression.JSXElement element
@@ -1713,9 +1727,9 @@ end = struct
         let expressions = expr::expressions in
         match Peek.token env with
         | T_RCURLY ->
-            let lex_env, lex_result = lex_template_part (lex_env env) in
+            let lex_env, lex_result = lex_template_tail (lex_env env) in
             set_lex_env env lex_env;
-            Eat.advance env (lex_env, lex_result) NORMAL_LEX;
+            Eat.advance env (lex_env, lex_result);
             let loc, part = match lex_result.lex_token with
             | T_TEMPLATE_PART ((loc, part), _) -> loc, part
             | _ -> assert false in
@@ -1803,10 +1817,10 @@ end = struct
           elements;
         })
 
-    and regexp env prefix =
-      let lex_env, lex_result = lex_regexp (lex_env env) prefix in
+    and regexp env =
+      let lex_env, lex_result = lex_regexp (lex_env env) in
       set_lex_env env lex_env;
-      Eat.advance env (lex_env, lex_result) NORMAL_LEX;
+      Eat.advance env (lex_env, lex_result);
       let pattern, raw_flags = match lex_result.lex_token with
         | T_REGEXP (_, pattern, flags) -> pattern, flags
         | _ -> assert false in
@@ -4171,10 +4185,10 @@ end = struct
 
   let rec program env =
     let stmts = module_body_with_directives env (fun _ -> false) in
+    Expect.token env T_EOF;
     let loc = match stmts with
     | [] -> Loc.from_lb (source env) (lb env)
     | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts))) in
-    Expect.token env T_EOF;
     let comments = List.rev (comments env) in
     loc, stmts, comments
 
@@ -4445,9 +4459,10 @@ let mk_parse_env ?(token_sink=None) ?(parse_options=None) filename content =
 
 let do_parse env parser fail =
   let ast = parser env in
-  if fail && (errors env) <> []
-  then raise (Error.Error (filter_duplicate_errors [] (errors env)));
-  ast, List.rev (errors env)
+  let error_list = filter_duplicate_errors (errors env) in
+  if fail && error_list <> []
+  then raise (Error.Error error_list);
+  ast, error_list
 
 let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
   let env = mk_parse_env ~token_sink ~parse_options filename content in

@@ -1443,6 +1443,25 @@ export default suite(({addFile, flowCmd}) => [
       "loc": {
         "source": null,
         "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 45
+        }
+      },
+      "range": [
+        0,
+        45
+      ],
+      "value": " Regex literals require a lexer mode change"
+    },
+    {
+      "type": "Block",
+      "loc": {
+        "source": null,
+        "start": {
           "line": 4,
           "column": 0
         },

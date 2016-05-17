@@ -151,11 +151,9 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
       else Parse_skip
   )
   with
-  | Parse_error.Error parse_errors ->
-    let converted = List.fold_left (fun acc err ->
-      Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
-    ) Errors_js.ErrorSet.empty parse_errors in
-    Parse_err converted
+  | Parse_error.Error (first_parse_error::_) ->
+    let err = Errors_js.parse_error_to_flow_error first_parse_error in
+    Parse_err (Errors_js.ErrorSet.singleton err)
   | e ->
     let s = Printexc.to_string e in
     let msg = spf "unexpected parsing exception: %s" s in
