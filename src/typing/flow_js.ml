@@ -2163,6 +2163,45 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let promise = get_builtin_typeapp cx reason_op "Promise" [t] in
       rec_flow_t cx trace (promise, return_t)
 
+    (* If you haven't heard, React is a pretty big deal. *)
+
+    | CustomFunT (_, ReactCreateElement),
+      CallT (reason_op, { params_tlist = c::o::_; return_t; _ }) ->
+      Ops.push reason_op;
+      rec_flow cx trace (c, ReactCreateElementT (reason_op, o, return_t));
+      Ops.pop ()
+
+    | _, ReactCreateElementT (reason_op, config, tout) ->
+      let elem_reason = replace_reason "React element" reason_op in
+      (match l with
+      | ClassT _ ->
+        let react_class =
+          get_builtin_typeapp cx reason_op "ReactClass" [config]
+        in
+        rec_flow_t cx trace (l, react_class)
+      | FunT _ ->
+        let return_t =
+          get_builtin_typeapp cx elem_reason "React$Element" [AnyT.t]
+        in
+        let return_t = MaybeT return_t in
+        let context_t = AnyT.t in
+        let call_t =
+          CallT (reason_op, mk_methodtype NullT.t [config; context_t] return_t)
+        in
+        rec_flow cx trace (l, call_t)
+      | StrT _
+      | SingletonStrT _ ->
+        let jsx_intrinsics = get_builtin_type cx reason_op "$JSXIntrinsics" in
+        rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
+      | AnyFunT _ -> ()
+      | AnyObjT _ -> ()
+      | _ ->
+        flow_err cx trace (err_msg l u) l u
+      );
+      rec_flow_t cx trace (
+        get_builtin_typeapp cx elem_reason "React$Element" [config],
+        tout
+      )
 
     (* Facebookisms are special Facebook-specific functions that are not
        expressable with our current type syntax, so we've hacked in special
@@ -3608,6 +3647,7 @@ and err_operation = function
   | UnaryMinusT _ -> "Expected number instead of"
   | ReifyTypeT _ -> "Internal Error: Invalid type applied to ReifyTypeT!"
   | TupleMapT _ -> "Expected array instead of"
+  | ReactCreateElementT _ -> "Expected React component instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
      to throw on a use type, so mark the error instead *)

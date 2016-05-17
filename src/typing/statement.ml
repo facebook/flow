@@ -3269,6 +3269,52 @@ and jsx cx type_params_map = Ast.JSX.(
 and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   let facebook_ignore_fbt = Context.should_ignore_fbt cx in
+
+  let mk_props reason c =
+    let map = ref SMap.empty in
+    let spread = ref None in
+    attributes |> List.iter (function
+      | Opening.Attribute (aloc, { Attribute.
+            name = Attribute.Identifier (_, { Identifier.name = aname });
+            value
+          }) ->
+        if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
+        then
+          let atype = (match value with
+            | Some (Attribute.Literal (loc, lit)) ->
+                literal cx loc lit
+            | Some (Attribute.ExpressionContainer (_, {
+                ExpressionContainer.expression =
+                  ExpressionContainer.Expression (loc, e)
+              })) ->
+                expression cx type_params_map (loc, e)
+            | _ ->
+                (* empty or nonexistent attribute values *)
+                EmptyT.at aloc
+          ) in
+
+          if not (react_ignore_attribute aname)
+          then map := !map |> SMap.add aname atype
+
+      | Opening.Attribute _ ->
+          () (* TODO: attributes with namespaced names *)
+
+      | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
+          let ex_t = expression cx type_params_map argument in
+          spread := Some (ex_t)
+    );
+    let reason_props = prefix_reason "props of " reason in
+    let o = Flow.mk_object_with_map_proto cx reason_props
+      !map (MixedT (reason_props, Mixed_everything))
+    in
+    match !spread with
+      | None -> o
+      | Some ex_t ->
+          let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
+          clone_object_with_excludes cx
+            reason_prop o ex_t react_ignored_attributes
+  in
+
   match name with
   | Identifier (_, { Identifier.name })
       when name = "fbt" && facebook_ignore_fbt ->
@@ -3277,50 +3323,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
   | Identifier (_, { Identifier.name }) when name = String.capitalize name ->
       let reason = mk_reason (spf "React element `%s`" name) eloc in
       let c = Env.get_var cx name reason in
-      let map = ref SMap.empty in
-      let spread = ref None in
-      attributes |> List.iter (function
-        | Opening.Attribute (aloc, { Attribute.
-              name = Attribute.Identifier (_, { Identifier.name = aname });
-              value
-            }) ->
-          if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
-          then
-            let atype = (match value with
-              | Some (Attribute.Literal (loc, lit)) ->
-                  literal cx loc lit
-              | Some (Attribute.ExpressionContainer (_, {
-                  ExpressionContainer.expression =
-                    ExpressionContainer.Expression (loc, e)
-                })) ->
-                  expression cx type_params_map (loc, e)
-              | _ ->
-                  (* empty or nonexistent attribute values *)
-                  EmptyT.at aloc
-            ) in
-
-            if not (react_ignore_attribute aname)
-            then map := !map |> SMap.add aname atype
-
-        | Opening.Attribute _ ->
-            () (* TODO: attributes with namespaced names *)
-
-        | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
-            let ex_t = expression cx type_params_map argument in
-            spread := Some (ex_t)
-      );
-
-      let reason_props = prefix_reason "props of " reason in
-      let o = Flow.mk_object_with_map_proto cx reason_props
-        !map (MixedT (reason_props, Mixed_everything))
-      in
-      let o = match !spread with
-        | None -> o
-        | Some ex_t ->
-            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
-            clone_object_with_excludes cx
-              reason_prop o ex_t react_ignored_attributes
-      in
+      let o = mk_props reason c in
       (* TODO: children *)
       let react = require cx "react" eloc in
       Flow.mk_tvar_where cx reason (fun tvar ->
@@ -3378,49 +3381,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
         in
         Flow.flow cx (prop_t, ReifyTypeT(component_t_reason, t))
       ) in
-
-      let attr_map = ref SMap.empty in
-      let spread = ref None in
-      attributes |> List.iter (function
-        | Opening.Attribute (aloc, { Attribute.
-            name = Attribute.Identifier (_, { Identifier.name = aname });
-            value
-          }) ->
-            let attr_type = (match value with
-              | Some (Attribute.Literal (loc, lit)) ->
-                  literal cx loc lit
-              | Some (Attribute.ExpressionContainer (_, {
-                  ExpressionContainer.expression =
-                    ExpressionContainer.Expression (loc, e)
-                })) ->
-                  expression cx type_params_map (loc, e)
-              | _ ->
-                  (* empty or nonexistent attribute values *)
-                  EmptyT.at aloc
-            ) in
-
-            if not (react_ignore_attribute aname)
-            then attr_map := !attr_map |> SMap.add aname attr_type
-
-        | Opening.Attribute _ ->
-            () (* TODO: attributes with namespaced names *)
-
-        | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
-            let spread_t = expression cx type_params_map argument in
-            spread := Some spread_t
-      );
-
-      let reason_props = prefix_reason "props of " component_t_reason in
-      let o = Flow.mk_object_with_map_proto cx reason_props
-        !attr_map (MixedT (reason_props, Mixed_everything))
-      in
-      let o = match !spread with
-        | None -> o
-        | Some ex_t ->
-            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
-            clone_object_with_excludes cx
-              reason_prop o ex_t react_ignored_attributes
-      in
+      let o = mk_props component_t_reason component_t in
       (* TODO: children *)
       let react = require cx "react" eloc in
       let reason = mk_reason (spf "React element: `%s`" name) eloc in

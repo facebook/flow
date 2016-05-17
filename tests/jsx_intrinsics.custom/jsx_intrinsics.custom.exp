@@ -1,32 +1,24 @@
 main.js:12
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
-  6:   props: {
-              ^ property `prop`. Property not found in
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                          ^^^^^^^^^^^^^^^ object type
+                          ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
 
 main.js:12
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                          ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `prop`. Property not found in
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
+                          ^^^^^^^^^^^^^^^ object type
 
 main.js:15
  15: <div id={42} />; // Error: (`id` prop) number ~> string
      ^^^^^^^^^^^^^^^ React element: `div`
  15: <div id={42} />; // Error: (`id` prop) number ~> string
               ^^ number. This type is incompatible with
-  5:   div: $JSXIntrinsic<{id: string}>,
-                               ^^^^^^ string. See lib: lib/jsx.js:5
-
-main.js:17
- 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                          ^^^^^^^^^^^^^^^^^ React element: `div`
- 17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                               ^^^^^^ number. This type is incompatible with
   5:   div: $JSXIntrinsic<{id: string}>,
                                ^^^^^^ string. See lib: lib/jsx.js:5
 
@@ -50,77 +42,29 @@ strings.js:10
  10: <Bad />; // Error: 'bad' not in JSXIntrinsics
      ^^^^^^^ React element `Bad`
   6: var Bad = 'bad';
-               ^^^^^ string. This type is incompatible with
-union: type application of polymorphic type: type `ReactClass` | key set. See lib: react.js:174
-  Member 1:
-  type application of polymorphic type: type `ReactClass`. See lib: react.js:174
-  Error:
-    6: var Bad = 'bad';
-                 ^^^^^ string. This type is incompatible with
-  class type: existential. See lib: react.js:174
-  Member 2:
-  key set. See lib: react.js:174
-  Error:
-    6: var Bad = 'bad';
-                 ^^^^^ property `bad`. Property not found in
-  object type. See lib: react.js:174
+               ^^^^^ property `bad`. Property not found in
+ 10: <Bad />; // Error: 'bad' not in JSXIntrinsics
+     ^^^^^^^ object type
 
 strings.js:11
  11: <Str />; // Error: string ~> keys of JSXIntrinsics
      ^^^^^^^ React element `Str`
   7: var Str: string = 'str';
-              ^^^^^^ string. This type is incompatible with
-union: type application of polymorphic type: type `ReactClass` | key set. See lib: react.js:174
-  Member 1:
-  type application of polymorphic type: type `ReactClass`. See lib: react.js:174
-  Error:
-    7: var Str: string = 'str';
-                ^^^^^^ string. This type is incompatible with
-  class type: existential. See lib: react.js:174
-  Member 2:
-  key set. See lib: react.js:174
-  Error:
-    7: var Str: string = 'str';
-                ^^^^^^ some string with unknown value. Property not found in
-  object type. See lib: react.js:174
+              ^^^^^^ some string with unknown value. Property not found in
+ 11: <Str />; // Error: string ~> keys of JSXIntrinsics
+     ^^^^^^^ object type
 
 strings.js:14
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+                         ^^^^^ property `bad`. Property not found in
  14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                         ^^^^^ string. This type is incompatible with
-union: type application of polymorphic type: type `ReactClass` | key set. See lib: react.js:174
-  Member 1:
-  type application of polymorphic type: type `ReactClass`. See lib: react.js:174
-  Error:
-   14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                           ^^^^^ string. This type is incompatible with
-  class type: existential. See lib: react.js:174
-  Member 2:
-  key set. See lib: react.js:174
-  Error:
-   14: React.createElement('bad', {}); // Error: 'bad' not in JSXIntrinsics
-                           ^^^^^ property `bad`. Property not found in
-  object type. See lib: react.js:174
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 strings.js:15
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+                         ^^^ some string with unknown value. Property not found in
  15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                         ^^^ string. This type is incompatible with
-union: type application of polymorphic type: type `ReactClass` | key set. See lib: react.js:174
-  Member 1:
-  type application of polymorphic type: type `ReactClass`. See lib: react.js:174
-  Error:
-   15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                           ^^^ string. This type is incompatible with
-  class type: existential. See lib: react.js:174
-  Member 2:
-  key set. See lib: react.js:174
-  Error:
-   15: React.createElement(Str, {}); // Error: string ~> keys of JSXIntrinsics
-                           ^^^ some string with unknown value. Property not found in
-  object type. See lib: react.js:174
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
 
-Found 10 errors
+Found 9 errors

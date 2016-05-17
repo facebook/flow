@@ -246,6 +246,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | ObjectAssign -> "Object.assign"
       | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
       | PromiseAll -> "Promise.all"
+      | ReactCreateElement -> "React.createElement"
       | Merge -> "merge"
       | MergeDeepInto -> "mergeDeepInto"
       | MergeInto -> "mergeInto"
@@ -499,6 +500,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | TupleMapT (_, t, t_out) -> [
       "t", _json_of_t json_cx t;
       "t_out", _json_of_t json_cx t_out;
+    ]
+
+  | ReactCreateElementT (_, t, t_out) -> [
+      "config", _json_of_t json_cx t;
+      "returnType", _json_of_t json_cx t_out;
     ]
   )
 )
@@ -1093,7 +1099,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | ExportNamedT _
   | ExportStarFromT _
   | DebugPrintT _
-  | TupleMapT _ -> p t
+  | TupleMapT _
+  | ReactCreateElementT _ ->
+    p t
 
 (*****************************************************)
 

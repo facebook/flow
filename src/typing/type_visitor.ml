@@ -214,6 +214,7 @@ class ['a] t = object(self)
   | ExportStarFromT (_, _, _)
   | DebugPrintT (_)
   | TupleMapT (_, _, _)
+  | ReactCreateElementT _
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

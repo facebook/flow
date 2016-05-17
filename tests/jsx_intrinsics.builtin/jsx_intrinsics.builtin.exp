@@ -1,18 +1,18 @@
 main.js:12
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
-  6:   props: {
-              ^ property `prop`. Property not found in
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                          ^^^^^^^^^^^^^^^ object type
+                          ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+ 12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
 
 main.js:12
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `CustomComponent`
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                          ^^^^^^^^^^^^^^^ property `prop1`. Property not found in
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `prop`. Property not found in
  12: var b: React.Element<{prop1: string}> = <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `CustomComponent`
+                          ^^^^^^^^^^^^^^^ object type
 
 main.js:19
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
@@ -22,5 +22,13 @@ main.js:19
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of JSX Intrinsic: `div`
 
+main.js:19
+ 19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element: `div`
+ 19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `not_a_real_attr`. Property not found in
+ 19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
+                          ^^^^^^^^^^^^^^^^^^^^^ object type
 
-Found 3 errors
+
+Found 4 errors

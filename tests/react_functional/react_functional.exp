@@ -1,0 +1,30 @@
+test.js:4
+  4: <F />; // error: missing `foo`
+     ^^^^^ React element `F`
+  3: function F(props: { foo: string }) {}
+                       ^^^^^^^^^^^^^^^ property `foo`. Property not found in
+  4: <F />; // error: missing `foo`
+     ^^^^^ props of React element `F`
+
+test.js:5
+  5: <F foo={0} />; // error: number ~> string
+     ^^^^^^^^^^^^^ React element `F`
+  5: <F foo={0} />; // error: number ~> string
+             ^ number. This type is incompatible with
+  3: function F(props: { foo: string }) {}
+                              ^^^^^^ string
+
+test.js:9
+  9: function G(props: { foo: string|numner }) {}
+                                     ^^^^^^ identifier `numner`. Could not resolve name
+
+test.js:13
+ 13: <Z />; // error, expected React component
+     ^^^^^ React element `Z`
+ 13: <Z />; // error, expected React component
+     ^^^^^ React element `Z`. Expected React component instead of
+ 12: var Z = 0;
+             ^ number
+
+
+Found 4 errors

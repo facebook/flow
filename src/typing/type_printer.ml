@@ -145,7 +145,7 @@ let rec type_printer override fallback enclosure cx t =
 
     | PolyT (xs,t) ->
         let type_s =
-          spf "<%s> %s"
+          spf "<%s>%s"
             (xs
               |> List.map (fun param -> param.name)
               |> String.concat ", "

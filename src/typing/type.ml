@@ -380,6 +380,17 @@ module rec TypeTerm : sig
     (* Map a FunT over each element in a tuple *)
     | TupleMapT of reason * t * t_out
 
+    (**
+     * An internal-only type to evaluate JSX expression. This type exists to
+     * wait for the first parameter of a React.createElement call in order to
+     * properly dispatch. That is, given a ReactClass, a statless functional
+     * component, or a string, do the right thing.
+     *
+     * This type shouldn't exist, but is a temporary measure until the type of
+     * React.createElement can be represented by an intersection without running
+     * into intersection bugs. *)
+    | ReactCreateElementT of reason * t * t_out
+
     | DebugPrintT of reason
 
     (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
@@ -538,10 +549,13 @@ module rec TypeTerm : sig
   and t_out = t
 
   and custom_fun_kind =
-  (* special builtins *)
+  (* builtins *)
   | ObjectAssign
   | ObjectGetPrototypeOf
   | PromiseAll
+
+  (* 3rd party libs *)
+  | ReactCreateElement
 
   (* Facebookisms *)
   | Merge
@@ -1094,6 +1108,7 @@ and reason_of_use_t = function
   | ExportStarFromT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
   | TupleMapT (reason, _, _) -> reason
+  | ReactCreateElementT (reason, _, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1303,7 +1318,7 @@ and mod_reason_of_use_t f = function
   | ExportStarFromT (reason, target_module_t, t_out) -> ExportStarFromT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
   | TupleMapT (reason, t, tout) -> TupleMapT (f reason, t, tout)
-
+  | ReactCreateElementT (reason, t, tout) -> ReactCreateElementT (f reason, t, tout)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1449,6 +1464,7 @@ let string_of_use_ctor = function
   | ExportStarFromT _ -> "ExportStarFromT"
   | DebugPrintT _ -> "DebugPrintT"
   | TupleMapT _ -> "TupleMapT"
+  | ReactCreateElementT _ -> "ReactCreateElementT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

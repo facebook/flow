@@ -137,48 +137,50 @@ Trace:
 Traces2.js:17
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ React element `B`
-  6:   propTypes: { foo: React.PropTypes.string.isRequired }
-       ^^^^^^^^^ property `foo`. Property not found in
+ 15:     return <A foo="hey"/>;
+                ^^^^^^^^^^^^^^ property `foo`. Property not found in
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ props of React element `B`
 Trace:
 * path 1:
  17:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^     MixedT [props of React element `B`]
-  6:   propTypes: { foo: React.PropTypes.string.isRequired }
-       ^^^^^^^^^       ~> LookupT [property `foo`] (from path 2)
+                ^^^^^^^^^^^^^^ InstanceT [React$Element]
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from path 2)
 * path 2:
  17:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^     ObjT [props of React element `B`]
-  6:   propTypes: { foo: React.PropTypes.string.isRequired }
-       ^^^^^^^^^       ~> UseT(UnknownUse, ObjT) [propTypes of React component] (from path 3)
+                ^^^^^^^^^^^^^^ InstanceT [React$Element]
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from path 3)
 * path 3:
- 17:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^     ObjT [props of React element `B`]
-~> UseT(UnknownUse, OpenT) [existential] (from [not shown]). See lib: react.js:94
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ReposUpperT [Element]
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from [not shown])
 
 Traces2.js:17
  17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ React element `B`
- 10:   propTypes: { bar: React.PropTypes.string.isRequired }
-       ^^^^^^^^^ property `bar`. Property not found in
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ property `bar`. Property not found in
  15:     return <A foo="hey"/>;
                 ^^^^^^^^^^^^^^ props of React element `A`
 Trace:
 * path 1:
- 15:     return <A foo="hey"/>;
-                ^^^^^^^^^^^^^^     MixedT [props of React element `A`]
- 10:   propTypes: { bar: React.PropTypes.string.isRequired }
-       ^^^^^^^^^      ~> LookupT [property `bar`] (from path 2)
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ InstanceT [React$Element]
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from path 2)
 * path 2:
- 15:     return <A foo="hey"/>;
-                ^^^^^^^^^^^^^^     ObjT [props of React element `A`]
- 10:   propTypes: { bar: React.PropTypes.string.isRequired }
-       ^^^^^^^^^      ~> UseT(UnknownUse, ObjT) [propTypes of React component] (from path 3)
+ 17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ InstanceT [React$Element]
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from path 3)
 * path 3:
- 15:     return <A foo="hey"/>;
-                ^^^^^^^^^^^^^^     ObjT [props of React element `A`]
-~> UseT(UnknownUse, OpenT) [existential] (from [not shown]). See lib: react.js:94
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ReposUpperT [Element]
+ 13: function f(b): React.Element<*> {
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from [not shown])
 
 
 Found 7 errors

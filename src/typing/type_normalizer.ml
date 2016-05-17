@@ -164,6 +164,57 @@ let rec normalize_type_impl cx ids t = match t with
       ) in
       fake_fun param_names [promises] promise
 
+  (* Fake the signature of React.createElement (overloaded)
+     1. Component class
+       <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
+     2. Stateless functional component
+       type SFC<T> = (config: T, context: any) => React$Element<T>
+       <T>(fn: SFC<T>, config: T, children?: any) => React$Element<T>
+     3. $JSXIntrinsics
+       (no reasonable signature for this) *)
+  | CustomFunT (_, ReactCreateElement) ->
+      let config_name = "Config" in
+      let config_tp =
+        let reason = reason_of_string config_name in
+        {
+          reason;
+          name = config_name;
+          bound = MixedT (reason, Mixed_everything);
+          polarity = Neutral;
+          default = None;
+        }
+      in
+      let config = BoundT config_tp in
+      let any = AnyT (reason_of_string "any") in
+      let react_element =
+        let instance = fake_instance "React$Element" in
+        TypeAppT (PolyT ([config_tp], ClassT instance), [config])
+      in
+      let component_class =
+        let instance = fake_instance "ReactClass" in
+        TypeAppT (PolyT ([config_tp], ClassT instance), [config])
+      in
+      let stateless_functional_component =
+        let params_names = Some ["config"; "context"] in
+        let param_ts = [config; any] in
+        fake_fun params_names param_ts react_element
+      in
+      let t1 =
+        let params_names = Some ["name"; "config"; "children"] in
+        let param_ts = [component_class; config; any] in
+        PolyT ([config_tp], fake_fun params_names param_ts react_element)
+      in
+      let t2 =
+        let params_names = Some ["fn"; "config"; "children"] in
+        let param_ts = [stateless_functional_component; config; any] in
+        PolyT ([config_tp], fake_fun params_names param_ts react_element)
+      in
+      IntersectionT (
+        reason_of_string "intersection type",
+        InterRep.make [t1; t2]
+      )
+
+
   | ObjT (_, ot) ->
       let dict = match ot.dict_t with
         | None -> None
