@@ -951,33 +951,33 @@ traversal.js:183
                                                           ^^^^^^^^^^^^^^^^ arrow function. This type is incompatible with
   union: NodeFilterCallback | object type. See lib: dom.js:581
     Member 1:
-    NodeFilterCallback. See lib: dom.js:1723
+    NodeFilterCallback. See lib: dom.js:1741
     Error:
     183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ string. This type is incompatible with
-    union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1719
+    union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1739
       Member 1:
-      typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1719
+      typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1739
       Error:
       183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                       ^^^^^^^^ string. This type is incompatible with
-      number literal `1`. See lib: dom.js:1719
+      number literal `1`. See lib: dom.js:1739
       Member 2:
-      typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1720
+      typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1739
       Error:
       183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                       ^^^^^^^^ string. This type is incompatible with
-      number literal `2`. See lib: dom.js:1720
+      number literal `2`. See lib: dom.js:1739
       Member 3:
-      typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1721
+      typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1739
       Error:
       183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                       ^^^^^^^^ string. This type is incompatible with
-      number literal `3`. See lib: dom.js:1721
+      number literal `3`. See lib: dom.js:1739
     Member 2:
-    object type. See lib: dom.js:1723
+    object type. See lib: dom.js:1741
     Error:
-    property `accept`. Property not found in. See lib: dom.js:1723
+    property `accept`. Property not found in. See lib: dom.js:1741
     183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                             ^^^^^^^^^^^^^^^^ arrow function
   Member 42:
@@ -1245,35 +1245,35 @@ traversal.js:185
                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
   union: NodeFilterCallback | object type. See lib: dom.js:581
     Member 1:
-    NodeFilterCallback. See lib: dom.js:1723
+    NodeFilterCallback. See lib: dom.js:1741
     Error:
-    function type. Callable signature not found in. See lib: dom.js:1723
+    function type. Callable signature not found in. See lib: dom.js:1741
     185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal
     Member 2:
-    object type. See lib: dom.js:1723
+    object type. See lib: dom.js:1741
     Error:
     185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                               ^^^^^^^^ string. This type is incompatible with
-    union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1719
+    union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1739
       Member 1:
-      typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1719
+      typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1739
       Error:
       185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ string. This type is incompatible with
-      number literal `1`. See lib: dom.js:1719
+      number literal `1`. See lib: dom.js:1739
       Member 2:
-      typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1720
+      typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1739
       Error:
       185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ string. This type is incompatible with
-      number literal `2`. See lib: dom.js:1720
+      number literal `2`. See lib: dom.js:1739
       Member 3:
-      typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1721
+      typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1739
       Error:
       185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ string. This type is incompatible with
-      number literal `3`. See lib: dom.js:1721
+      number literal `3`. See lib: dom.js:1739
   Member 42:
   polymorphic type: function type. See lib: dom.js:592
   Error:
@@ -1539,15 +1539,15 @@ traversal.js:186
                                                           ^^ object literal. This type is incompatible with
   union: NodeFilterCallback | object type. See lib: dom.js:581
     Member 1:
-    NodeFilterCallback. See lib: dom.js:1723
+    NodeFilterCallback. See lib: dom.js:1741
     Error:
-    function type. Callable signature not found in. See lib: dom.js:1723
+    function type. Callable signature not found in. See lib: dom.js:1741
     186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                             ^^ object literal
     Member 2:
-    object type. See lib: dom.js:1723
+    object type. See lib: dom.js:1741
     Error:
-    property `accept`. Property not found in. See lib: dom.js:1723
+    property `accept`. Property not found in. See lib: dom.js:1741
     186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                             ^^ object literal
   Member 42:
