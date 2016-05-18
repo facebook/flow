@@ -533,6 +533,20 @@ void hh_shared_clear(void) {
 /*****************************************************************************/
 /* Dependencies */
 /*****************************************************************************/
+
+/*****************************************************************************/
+/* Hashes an integer such that the low bits are a good starting hash slot. */
+/*****************************************************************************/
+static uint64_t hash_uint64(uint64_t n) {
+  // Multiplying produces a well-mixed value in the high bits of the result.
+  // The bswap moves those "good" high bits into the low bits, to serve as the
+  // initial hash table slot number.
+  const uint64 golden_ratio = 0x9e3779b97f4a7c15ull;
+  return __builtin_bswap64(n * golden_ratio);
+}
+
+
+/*****************************************************************************/
 /* This code is very perf sensitive, please check the performance before
  * modifying.
  * The table contains key/value bindings encoded in a word.
@@ -578,9 +592,8 @@ static int htable_add(uint64_t* table, unsigned long hash, uint64_t value) {
 void hh_add_dep(value ocaml_dep) {
   CAMLparam1(ocaml_dep);
   uint64_t dep = Long_val(ocaml_dep);
-  unsigned long hash = (dep >> 31) * (dep & ((1ul << 31) - 1));
 
-  if(!htable_add(deptbl_bindings, hash, hash)) {
+  if (!htable_add(deptbl_bindings, hash_uint64(dep), dep)) {
     CAMLreturn0;
   }
 
@@ -1034,11 +1047,10 @@ void hh_load_dep_table(value in_filename) {
   tv = log_duration("Loading file", tv);
 
   uintptr_t slot = 0;
-  unsigned long hash = 0;
   for (slot = 0; slot < DEP_SIZE; ++slot) {
-    hash = deptbl[slot];
-    if (hash != 0) {
-      htable_add(deptbl_bindings, hash, hash);
+    uint64_t dep = deptbl[slot];
+    if (dep != 0) {
+      htable_add(deptbl_bindings, hash_uint64(dep), dep);
     }
   }
 
