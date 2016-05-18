@@ -9,9 +9,9 @@
  *)
 
 type severity =
-  | Error
-  | Warning
-  | Advice
+  | Lint_error
+  | Lint_warning
+  | Lint_advice
 
 type 'a t
 val get_code : 'a t -> int

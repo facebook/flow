@@ -17,14 +17,14 @@ open Utils
  * a line that was changed in the given diff; and "Error" will always raise a
  * confirmation prompt, regardless of where the lint occurs in the file. *)
 type severity =
-  | Error
-  | Warning
-  | Advice
+  | Lint_error
+  | Lint_warning
+  | Lint_advice
 
 let string_of_severity = function
-  | Error -> "error"
-  | Warning -> "warning"
-  | Advice -> "advice"
+  | Lint_error -> "error"
+  | Lint_warning -> "warning"
+  | Lint_advice -> "advice"
 
 type 'a t = {
   code : int;
@@ -93,20 +93,20 @@ module Codes = struct
 end
 
 let internal_error pos msg =
-  add 0 Error pos ("Internal error: "^msg)
+  add 0 Lint_error pos ("Internal error: "^msg)
 
 let lowercase_constant pos cst =
   let lower = String.lowercase cst in
-  add Codes.lowercase_constant Warning pos
+  add Codes.lowercase_constant Lint_warning pos
     (spf "Please use '%s' instead of '%s'" lower cst)
 
 let use_collection_literal pos coll =
   let coll = strip_ns coll in
-  add Codes.use_collection_literal Warning pos
+  add Codes.use_collection_literal Lint_warning pos
     (spf "Use `%s {...}` instead of `new %s(...)`" coll coll)
 
 let static_string ?(no_consts=false) pos =
-  add Codes.static_string Warning pos begin
+  add Codes.static_string Lint_warning pos begin
     if no_consts
     then
       "This should be a string literal so that lint can analyze it."
