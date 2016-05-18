@@ -141,9 +141,12 @@ let char_code env =
     else begin
       env.pos <- env.pos + 1;
       let c = peek env in
-      if not (is_digit c) then syntax_error env "expected digit";
-      let i = (Char.code c) - (Char.code '0') in
-      char_code_ (10*acc + i) env (len-1)
+      let i =
+        if '0' <= c && c <= '9' then (Char.code c) - (Char.code '0')
+        else if 'a' <= c && c <= 'f' then 10 + (Char.code c) - (Char.code 'a')
+        else syntax_error env "expected hexadecimal digit"
+      in
+      char_code_ (16*acc + i) env (len-1)
     end
   in
   char_code_ 0 env 4
