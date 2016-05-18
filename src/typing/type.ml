@@ -383,7 +383,7 @@ module rec TypeTerm : sig
     (**
      * An internal-only type to evaluate JSX expression. This type exists to
      * wait for the first parameter of a React.createElement call in order to
-     * properly dispatch. That is, given a ReactClass, a statless functional
+     * properly dispatch. That is, given a ReactClass, a stateless functional
      * component, or a string, do the right thing.
      *
      * This type shouldn't exist, but is a temporary measure until the type of
