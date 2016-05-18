@@ -124,20 +124,6 @@ can be overridden with command line flags.
 
     (**note:** you can specify `module.name_mapper` multiple times)
 
-- `module.name_mapper.extension` (string -> string): specify a file extension to match, and a replacement module name, separated by a `->`.
-
-    *(Note that this is just shorthand for `module.name_mapper='^\(.\*\)\.EXTENSION$' -> 'TEMPLATE'`)*
-
-    For example:
-
-    ```
-    module.name_mapper.extension= 'css' -> '<PROJECT_ROOT>/CSSFlowStub.js.flow'
-    ```
-
-    makes Flow treat `require('foo.css')` as if it were `require(PROJECT_ROOT + '/CSSFlowStub')`.
-
-    (**note:** you can specify `module.name_mapper.extension` multiple times for different extensions)
-
 - `module.system` (`node` | `haste`): the module system to use to resolve
   `import` and `require`. [Haste](https://github.com/facebook/node-haste) is
   used in React Native. The default is `node`.
