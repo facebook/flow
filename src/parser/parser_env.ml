@@ -50,6 +50,7 @@ module Lookahead : sig
   type t
   val create : Lexing.lexbuf -> lex_env -> lex_mode -> t
   val peek : t -> int -> lex_result
+  val junk : t -> unit
 end = struct
   type t = {
     mutable la_results    : lex_result option array;
@@ -116,6 +117,14 @@ end = struct
       | Some result -> result
       (* only happens if there is a defect in the lookahead module *)
       | None -> failwith "Lookahead.peek failed"
+
+  (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
+  let junk t =
+    lex_until t 1;
+    if t.la_num_lexed > 1 then
+      Array.blit t.la_results 1 t.la_results 0 (t.la_num_lexed - 1);
+    t.la_results.(t.la_num_lexed - 1) <- None;
+    t.la_num_lexed <- t.la_num_lexed - 1;
 end
 
 type token_sink_result = {
@@ -237,7 +246,9 @@ let error_at env (loc, e) =
   | Some callback -> callback env e
 let comment_list env =
   List.iter (fun c -> env.comments := c :: !(env.comments))
-let set_lex_env env lex_env = env.lex_env := lex_env
+let set_lex_env env lex_env =
+  env.lookahead := None;
+  env.lex_env := lex_env
 let record_export env (loc, export_name) =
   let exports = !(env.exports) in
   if SSet.mem export_name exports
@@ -318,7 +329,9 @@ let advance env (lex_env, lex_result) =
   error_list env lex_result.lex_errors;
   comment_list env lex_result.lex_comments;
   env.last := Some (lex_env, lex_result);
-  env.lookahead := None
+  match !(env.lookahead) with
+  | Some la -> Lookahead.junk la
+  | None -> ()
 
 let push_lex_mode env mode =
   env.lex_mode_stack := mode :: !(env.lex_mode_stack);
