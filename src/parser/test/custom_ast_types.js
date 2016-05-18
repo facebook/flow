@@ -14,6 +14,24 @@ def("DeclareModuleExports")
   .build("typeAnnotation")
   .field("typeAnnotation", def("TypeAnnotation"));
 
+def("DeclareModule")
+  .bases("Statement")
+  .build("id", "body", "kind")
+  .field("id", or(def("Identifier"), def("Literal")))
+  .field("body", def("BlockStatement"))
+  .field("kind", or("CommonJS", "ES"));
+
+def("DeclareExportDeclaration")
+  .field("declaration", or(
+    def("DeclareVariable"),
+    def("DeclareFunction"),
+    def("DeclareClass"),
+    def("Type"), // Implies default type
+    def("TypeAlias"), // Implies named type
+    def("InterfaceDeclaration"),
+    null
+  ))
+
 def("ExistsTypeAnnotation")
   .bases("Type")
   .build();

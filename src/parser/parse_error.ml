@@ -76,6 +76,8 @@ type t =
   | ExportNamelessFunction
   | UnsupportedDecorator
   | MissingTypeParamDefault
+  | DuplicateDeclareModuleExports
+  | AmbiguousDeclareModuleKind
 
 exception Error of (Loc.t * t) list
 
@@ -172,6 +174,11 @@ module PP =
       | UnsupportedDecorator -> "Found a decorator in an unsupported position."
       | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
           since a preceding type parameter declaration has a default."
+      | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` \
+          statement!"
+      | AmbiguousDeclareModuleKind -> "Found both `declare module.exports` and \
+          `declare export` in the same module. Modules can only have 1 since \
+          they are either an ES module xor they are a CommonJS module."
 
 
   end
