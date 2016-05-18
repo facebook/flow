@@ -697,7 +697,7 @@ rule token env = parse
                          Buffer.add_string raw (Lexing.lexeme lexbuf);
 
                          let start = lb_to_loc env.lex_source env.lex_lb in
-                         let _end, tail = template_part env cooked uncooked raw env.lex_lb in
+                         let loc, tail = template_part env start cooked uncooked raw env.lex_lb in
                          let part = Ast.Expression.TemplateLiteral.({
                            Element.value = {
                              Element.cooked = Buffer.contents cooked;
@@ -705,7 +705,7 @@ rule token env = parse
                            };
                            tail;
                          }) in
-                         env, T_TEMPLATE_PART ((Loc.btwn start _end, part), Buffer.contents raw)
+                         env, T_TEMPLATE_PART ((loc, part), Buffer.contents raw)
                        }
   (* Numbers cannot be immediately followed by words *)
   | binnumber ((letter | ['2'-'9']) alphanumeric* as w)
@@ -1515,26 +1515,51 @@ and jsx_text env mode buf raw = parse
                         Buffer.add_char buf c;
                         jsx_text env mode buf raw lexbuf }
 
-and template_tail env cooked uncooked raw = parse
-  | '}'               { Buffer.add_string raw "}";
-                        template_part env cooked uncooked raw lexbuf }
+and template_tail env = parse
+  | line_terminator_sequence
+                      { Lexing.new_line lexbuf;
+                        template_tail env lexbuf }
+  | whitespace+       { unicode_fix_cols lexbuf;
+                        template_tail env lexbuf }
+  | "//"              { let start = lb_to_loc env.lex_source lexbuf in
+                        let buf = Buffer.create 127 in
+                        let _end = line_comment env buf lexbuf in
+                        save_comment env start _end buf true;
+                        template_tail env lexbuf }
+  | "/*"              { let start = lb_to_loc env.lex_source lexbuf in
+                        let buf = Buffer.create 127 in
+                        let _end = comment env buf lexbuf in
+                        save_comment env start _end buf true;
+                        template_tail env lexbuf }
+  | '}'               { let start = lb_to_loc env.lex_source lexbuf in
+                        let cooked = Buffer.create 127 in
+                        let uncooked = Buffer.create 127 in
+                        let raw = Buffer.create 127 in
+                        Buffer.add_string raw "}";
+                        let loc, tail = template_part env start cooked uncooked raw lexbuf in
+                        (loc,
+                         Buffer.contents cooked,
+                         Buffer.contents uncooked,
+                         Buffer.contents raw,
+                         tail)
+                      }
   | _                 { illegal env (lb_to_loc env.lex_source lexbuf);
-                        lb_to_loc env.lex_source lexbuf, true }
+                        lb_to_loc env.lex_source lexbuf, "", "", "", true }
 
-and template_part env cooked uncooked raw = parse
+and template_part env start cooked uncooked raw = parse
   | eof               { illegal env (lb_to_loc env.lex_source lexbuf);
-                        lb_to_loc env.lex_source lexbuf, true }
+                        Loc.btwn start (lb_to_loc env.lex_source lexbuf), true }
   | '`'               { Buffer.add_char raw '`';
-                        lb_to_loc env.lex_source lexbuf, true }
+                        Loc.btwn start (lb_to_loc env.lex_source lexbuf), true }
   | "${"              { Buffer.add_string raw "${";
-                        lb_to_loc env.lex_source lexbuf, false }
+                        Loc.btwn start (lb_to_loc env.lex_source lexbuf), false }
   | '\\'              { Buffer.add_char uncooked '\\';
                         Buffer.add_char raw '\\';
                         let _ = string_escape env cooked lexbuf in
                         let str = Lexing.lexeme lexbuf in
                         Buffer.add_string uncooked str;
                         Buffer.add_string raw str;
-                        template_part env cooked uncooked raw lexbuf }
+                        template_part env start cooked uncooked raw lexbuf }
   (* ECMAScript 6th Syntax, 11.8.6.1 Static Semantics: TV’s and TRV’s
    * Long story short, <LF> is 0xA, <CR> is 0xA, and <CR><LF> is 0xA
    * *)
@@ -1543,17 +1568,17 @@ and template_part env cooked uncooked raw = parse
                         Buffer.add_string raw lf;
                         Buffer.add_string cooked "\n";
                         Lexing.new_line lexbuf;
-                        template_part env cooked uncooked raw lexbuf }
+                        template_part env start cooked uncooked raw lexbuf }
   | ("\n" | "\r") as lf
                       { Buffer.add_char uncooked lf;
                         Buffer.add_char raw lf;
                         Buffer.add_char cooked '\n';
                         Lexing.new_line lexbuf;
-                        template_part env cooked uncooked raw lexbuf }
+                        template_part env start cooked uncooked raw lexbuf }
   | _ as c            { Buffer.add_char uncooked c;
                         Buffer.add_char raw c;
                         Buffer.add_char cooked c;
-                        template_part env cooked uncooked raw lexbuf }
+                        template_part env start cooked uncooked raw lexbuf }
 
 {
   let lex_regexp env =
@@ -1572,20 +1597,15 @@ and template_part env cooked uncooked raw = parse
     get_result_and_clear_state (lex_jsx_tag env env.lex_lb)
 
   let lex_template_tail env =
-    let cooked = Buffer.create 127 in
-    let uncooked = Buffer.create 127 in
-    let raw = Buffer.create 127 in
-    let start = Loc.from_curr_lb env.lex_source env.lex_lb in
-    let _end, tail = template_tail env cooked uncooked raw env.lex_lb in
+    let loc, cooked, uncooked, raw, tail = template_tail env env.lex_lb in
     let part = Ast.Expression.TemplateLiteral.({
       Element.value = {
-        Element.cooked = Buffer.contents cooked;
-        raw = Buffer.contents uncooked;
+        Element.cooked = cooked;
+        raw = uncooked;
       };
       tail;
     }) in
-    let loc = Loc.btwn start _end in
-    let token = T_TEMPLATE_PART ((loc, part), Buffer.contents raw) in
+    let token = T_TEMPLATE_PART ((loc, part), raw) in
     get_result_and_clear_state (env, token)
 
   let type_token env =

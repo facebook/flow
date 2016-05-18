@@ -3328,7 +3328,9 @@ module.exports = {
         '`\n\r\n`',
         '`\\u{000042}\\u0042\\x42\\102\\A`',
         '`Hello\rworld`',
-        'new raw`42`'
+        'new raw`42`',
+        '`foo ${\n  "bar"\n} baz`',
+        '`foo ${/* a */ "bar" /* b */} baz`'
     ],
 
 
