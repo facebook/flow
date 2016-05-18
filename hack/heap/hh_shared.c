@@ -541,7 +541,7 @@ static uint64_t hash_uint64(uint64_t n) {
   // Multiplying produces a well-mixed value in the high bits of the result.
   // The bswap moves those "good" high bits into the low bits, to serve as the
   // initial hash table slot number.
-  const uint64 golden_ratio = 0x9e3779b97f4a7c15ull;
+  const uint64_t golden_ratio = 0x9e3779b97f4a7c15ull;
   return __builtin_bswap64(n * golden_ratio);
 }
 
