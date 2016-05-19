@@ -138,6 +138,7 @@ module T = struct
       |> Sig.add_name reason
 
   let explicit_body cx _ _ class_ast class_sig =
+    let this = SMap.find_unsafe "this" tparams_map in
     let add_element class_sig = Ast.Class.(function
       (* instance and static methods *)
       | Body.Method (loc, {
@@ -170,7 +171,8 @@ module T = struct
             Sig.add_setter ~static name
         in
         let reason = mk_reason method_desc loc in
-        let method_sig = Sig.mk_method cx class_sig reason func in
+        let implicit_this = if static then Type.ClassT this else this in
+        let method_sig = Sig.mk_method cx class_sig reason implicit_this func in
         add method_sig class_sig
 
       (* fields *)

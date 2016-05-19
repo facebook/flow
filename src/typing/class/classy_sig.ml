@@ -135,8 +135,8 @@ let add_setter name fsig = map_sig (fun s -> {
   method_decls = add_setter_decl name s.method_decls;
 })
 
-let mk_method cx x reason func =
-  Func_sig.mk cx x.tparams_map reason func
+let mk_method cx x reason implicit_this func =
+  Func_sig.mk cx x.tparams_map reason implicit_this func
 
 let mk_field cx x reason typeAnnotation value =
   let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in

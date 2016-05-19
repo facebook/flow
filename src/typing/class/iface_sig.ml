@@ -29,7 +29,7 @@ let intersect_supers reason = Type.(function
   | ts -> IntersectionT (prefix_reason "super of " reason, InterRep.make ts)
 )
 
-let add_property cx tparams_map iface_sig property = Ast.Type.Object.(
+let add_property fn_func cx tparams_map iface_sig property = Ast.Type.Object.(
   let (loc, { Property.key; value; static; _method; optional }) = property in
   if optional && _method
   then begin
@@ -45,7 +45,7 @@ let add_property cx tparams_map iface_sig property = Ast.Type.Object.(
   | true, Property.Identifier (_, {Ast.Identifier.name; _}) ->
       Ast.Type.(match value with
       | _, Function func ->
-        let fsig = Func_sig.convert cx tparams_map loc func in
+        let fsig = fn_func cx tparams_map static loc func in
         let append_method = match static, name with
         | false, "constructor" -> Sig.append_constructor
         | _ -> Sig.append_method ~static name
@@ -79,7 +79,25 @@ let add_indexers cx tparams_map indexers iface_sig =
 let add_call_property cx tparams_map iface_sig call_property =
   let loc, {Ast.Type.Object.CallProperty.value = (_, func); static} =
     call_property in
+<<<<<<< 0833c964300a987884b6a9f6f67d94b73406316d
   let fsig = Func_sig.convert cx tparams_map loc func in
+=======
+  let fsig = Ast.Type.(match func.Function.this with
+    | Function.ThisParam.Implicit _ ->
+      (* * Interface without a `this` pseudo-param => dummy_this (static and
+           non-static.
+         * Declaration without a `this` pseudo-param => dummy_this (static and
+           non-static) (`String` is declared callable for creation without the
+           new operator, for instance, so the `dummy_this` is consistent). *)
+      Func_sig.convert_function cx tparams_map Flow.dummy_this loc func
+    | _ ->
+      (* Given an interface with a `this` pseudo-param, any `this` types
+         buried in that pseudo-param induce a warning and use an AnyT instead
+         (`Type_annotation.convert` behavior).  This case covers class
+         declarations. *)
+      Func_sig.convert_method cx tparams_map ~static loc func
+  ) in
+>>>>>>> Major refactor of class_sig
   Sig.append_method ~static "$call" fsig iface_sig
 
 let add_default_constructor loc iface_sig =
@@ -122,9 +140,21 @@ module T = struct
   let implicit_body reason _ = Sig.add_name reason
 
   let explicit_body cx tparams_map loc class_ast iface_sig =
+    let mk_function_property cx tparams_map static loc func = Ast.Type.(
+      match func.Function.this with
+        | Function.ThisParam.Implicit _ ->
+            (* Interface without a `this` pseudo-param => AnyT *)
+            let tmap = SMap.add "this" Type.AnyT.t tparams_map in
+            Func_sig.convert_method cx tmap ~static loc func
+        | Function.ThisParam.Explicit _ ->
+            (* Given an interface with a `this` pseudo-param, any `this` types
+               buried in that pseudo-param induce a warning and use an AnyT
+               instead (`Type_annotation.convert` behavior). *)
+            Func_sig.convert_method cx tparams_map ~static loc func
+    ) in
     let { Ast.Type.Object.properties; indexers; callProperties } =
       extract_body class_ast in
-    let add_properties = add_property cx tparams_map in
+    let add_properties = add_property mk_function_property cx tparams_map in
     let add_call_properties = add_call_property cx tparams_map in
     iface_sig
       |> Sig.fold_pipe add_properties properties
