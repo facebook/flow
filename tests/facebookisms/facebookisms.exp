@@ -8,6 +8,10 @@ copyProperties.js:31
  31:     (copyProperties({ foo: 'a' }): { foo: number }); // err, num !~> string
                                                ^^^^^^ number
 
+invariant.js:6
+  6:     invariant(x, 'truthy only'); // error, forgot to require invariant
+         ^^^^^^^^^ identifier `invariant`. Could not resolve name
+
 mergeInto.js:6
   6:     (mergeInto()); // error, unknown global
           ^^^^^^^^^ identifier `mergeInto`. Could not resolve name
@@ -25,4 +29,4 @@ test.js:7
            ^^^ Foo
 
 
-Found 5 errors
+Found 6 errors

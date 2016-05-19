@@ -91,7 +91,7 @@ class GeneratorExamples {
 
   *generic_next<N>(): Generator<void,N,N> {
     var n = yield undefined;
-    invariant(n != null);
+    if (n == null) throw new Error();
     return n;
   }
 }

@@ -115,6 +115,6 @@ function *generic_return<R>(r: R): Generator<void,R,void> {
 
 function *generic_next<N>(): Generator<void,N,N> {
   var n = yield undefined;
-  invariant(n != null);
+  if (n == null) throw new Error();
   return n;
 }

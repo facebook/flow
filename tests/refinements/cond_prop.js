@@ -7,7 +7,7 @@ type NonNullType = {kind: 'NonNullType', type: Name | ListType | BadType};
 type BadType = {};
 
 function getTypeASTName(typeAST: Type): string {
-  invariant(typeAST.type, 'Must be wrapping type'); // OK
+  if (!typeAST.type) throw new Error('Must be wrapping type'); // OK
   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
 }
 

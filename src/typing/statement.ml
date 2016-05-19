@@ -2647,12 +2647,13 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
   (* See ~/www/static_upstream/core/ *)
 
   | Call {
-      Call.callee = _, Identifier (_,
-        { Ast.Identifier.name = "invariant"; _ });
+      Call.callee = (_, Identifier (_,
+        { Ast.Identifier.name = "invariant"; _ })) as callee;
       arguments
     } ->
       (* TODO: require *)
       let reason = mk_reason "invariant" loc in
+      ignore (expression cx type_params_map callee);
       (match arguments with
       | (Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.Boolean false; _;

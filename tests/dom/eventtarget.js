@@ -19,8 +19,7 @@ let tests = [
 
   function() {
     window.onmessage = (event: MessageEvent) => {
-      invariant(event.target === window);
-      invariant(event.type === 'message');
+      (event.target: window);
     };
   },
 ];
