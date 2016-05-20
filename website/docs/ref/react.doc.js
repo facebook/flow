@@ -329,46 +329,56 @@ type TimelyProps = {
   date: Date,
   name: string,
   excited: boolean
-}
+};
 
 class Timely extends React.Component<void, TimelyProps, void> {
   render() {
-    const hours = this.props.date.getHours()
-    const timeOfDay = hours > 17 ? 'Evening' : hours > 12 ? 'Afternoon' : 'Morning'
+    const hours = this.props.date.getHours();
+    const timeOfDay = hours > 17 ? 'Evening' : hours > 12 ? 'Afternoon' : 'Morning';
 
-    return <div>Good {timeOfDay} {this.props.name} {this.props.excited ? '!' : ''}</div>
+    return (
+      <div>
+        Good {timeOfDay} {this.props.name} {this.props.excited ? '!' : ''}
+      </div>
+    );
   }
 }
 
 // $ExpectError
 <Timely />; // Timely didn't get the required props
+
 // $ExpectError
-<Timely name='John' />; //- Timely didn't get the required props
+<Timely name='John' />; // Timely didn't get the required props
+
 // $ExpectError
 <Timely name='John' excited={true} />; // Timely didn't get the required props
+
 
 const x = <Timely date={new Date()} name='John' excited={true} />
 // Only way to satisfy all prop requirements.
 type Injected = {date: Date}
 declare function injectDate<DefaultProps, Props, State, C: React$Component<DefaultProps, Props, State>>(
   Komponent: Class<C>
-): Class<React$Component<DefaultProps, $Diff<Props, Injected>, void>>;
+): Class<React$Component<void, $Diff<Props, {date: Date}>, void>>;
 
 const Timeless = injectDate(Timely);
+// $ExpectError
+<Timeless />; // props not satisfied.
 
 // $ExpectError
-<Timeless />; // -- Error. props not satisfied.
+<Timeless excited={true} />; // props not satisfied.
+
 // $ExpectError
-<Timeless excited={true} />; // -- Error. props not satisfied.
+<Timeless name='Sally' />; // props not satisfied.
+
 // $ExpectError
-<Timeless name='Sally' />; // Error. props not satisfied.
-// $ExpectError
-<Timeless name={1234} excited={true} />; // -- Error. name must be a string
+<Timeless name={1234} excited={true} />; // name must be a string
+
 
 <Timeless name='Sally' excited={true} />;
-// No Errors
 
-<Timeless name='Sally' excited={true} date={1234} />; // -- Error, date must still be a Date object
+// $ExpectError
+<Timeless name='Sally' excited={true} date={1234} /> // date must still be a Date object
 
 /*
   If you want to support stateless functions with your HOCs, the type definition gets
@@ -387,7 +397,7 @@ declare var injectDatesWithStatelessSupport: (
 /*
   Here, we essentially overloaded the definition for the HOC with the types for stateless functions.
   This is neccessary as statelss component don't have defaultProps, while classes do.
-  
+
   As the type definitions for Higher-Order-Components can often get complex, it's usually best to
   to their types in a file with the `.flow` extension next to your `.js` source file.
 
