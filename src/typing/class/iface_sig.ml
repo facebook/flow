@@ -121,7 +121,7 @@ module T = struct
   let preliminary_checks _ _ _ = ()
   let implicit_body reason _ = Sig.add_name reason
 
-  let explicit_body cx tparams_map loc (class_ast:Ast.Statement.Interface.t) iface_sig =
+  let explicit_body cx tparams_map loc class_ast iface_sig =
     let mk_function_property cx tparams_map _ loc func =
       Func_sig.convert cx tparams_map loc func in
     let { Ast.Type.Object.properties; indexers; callProperties } =
