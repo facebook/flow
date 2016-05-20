@@ -51,7 +51,7 @@ module T = struct
     (* mixins override extends *)
     Iface_sig.intersect_supers reason (mixin_ts @ super_ts)
 
-  let preliminary_warnings _ _ _ = ()
+  let preliminary_checks _ _ _ = ()
   let implicit_body reason _ = Sig.add_name reason
 
   let explicit_body cx tparams_map loc class_ast class_sig =
