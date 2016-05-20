@@ -177,63 +177,42 @@ module DeclClass = Make(Decl_class_sig.T)
 
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =
+  let open Sig in
+
   let new_entry t = Scope.Entry.new_var ~loc:(Type.loc_of_t t) t in
-  let push () =
-    Abnormal.clear_saved Abnormal.Return,
-    Abnormal.clear_saved Abnormal.Throw in
-  let pop (save_return, save_throw) =
+
+  let method_ this super f =
+    let save_return = Abnormal.clear_saved Abnormal.Return in
+    let save_throw = Abnormal.clear_saved Abnormal.Throw in
+    f |> Func_sig.generate_tests cx (
+      Func_sig.toplevels None cx this super ~decls ~stmts ~expr
+    );
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
-    ignore (Abnormal.swap_saved Abnormal.Throw save_throw) in
-
-  let ctor this super f =
-    let save = push () in
-    f |> Func_sig.generate_tests cx (
-      Func_sig.toplevels None cx this super ~decls ~stmts ~expr
-    );
-    pop save
-  in
-
-  let method_ super f =
-    let this = new_entry (Func_sig.this f) in
-    let super = new_entry super in
-    let save = push () in
-    f |> Func_sig.generate_tests cx (
-      Func_sig.toplevels None cx this super ~decls ~stmts ~expr
-    );
-    pop save
+    ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
   in
 
   let field config this super name (field_t, value) =
-(* TJP: Should the `this_t` get bound externally analogous to Func_sig? That
-   change would bring `field` much closer in behavior to `method_` (no `this`
-   param to `field--instead look it up). *)
     match config, value with
     | Options.ESPROPOSAL_IGNORE, _ -> ()
     | _, None -> ()
-    | _, Some ((loc, _) as xp) ->
+    | _, Some ((loc, _) as expr) ->
       let init =
         let desc = Utils.spf "field initializer for `%s`" name in
         let reason = mk_reason desc loc in
-        Func_sig.field_initializer x.Sig.tparams_map reason xp field_t
+        Func_sig.field_initializer x.tparams_map reason expr field_t
       in
-      let this, super = new_entry this, new_entry super in
-      let save = push () in
-      init |> Func_sig.generate_tests cx (
-        Func_sig.toplevels None cx this super ~decls ~stmts ~expr
-      );
-      pop save
+      method_ this super init
   in
-
-  let open Sig in
 
   let this = SMap.find_unsafe "this" x.tparams_map in
   let static = Type.ClassT this in
 
   x |> with_sig ~static:true (fun s ->
     (* process static methods and fields *)
-    iter_methods (method_ s.super) s;
+    let this, super = new_entry static, new_entry s.super in
+    iter_methods (method_ this super) s;
     let config = Context.esproposal_class_static_fields cx in
-    SMap.iter (field config static s.super) s.fields
+    SMap.iter (field config this super) s.fields
   );
 
   x |> with_sig ~static:false (fun s ->
@@ -263,13 +242,14 @@ let toplevels cx ~decls ~stmts ~expr x =
           new_entry t
       in
       let this, super = new_entry this, new_entry s.super in
-      x.constructor |> List.iter (ctor this super)
+      x.constructor |> List.iter (method_ this super)
     end;
 
     (* process instance methods and fields *)
     begin
-      iter_methods (method_ s.super) s;
+      let this, super = new_entry this, new_entry s.super in
+      iter_methods (method_ this super) s;
       let config = Context.esproposal_class_instance_fields cx in
-      SMap.iter (field config this s.super) s.fields
+      SMap.iter (field config this super) s.fields
     end
   )
