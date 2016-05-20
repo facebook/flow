@@ -217,7 +217,7 @@ const AsyncGreeter = loadAsync(Greeter, new Promise((resolve, reject) => {
   In this example we're going to see a Component that manages the data for another component
   using `state`.
 
-  Here the HOC componen's state a key `config` which happens to be the same value as the one
+  Here the HOC component's state a key `config` which happens to be the same value as the one
   required by the ReactClass given to it.
 */
 
