@@ -112,7 +112,7 @@ module T = struct
     let pair = superClass, superTypeParameters in
     mk_extends mk_extends_type cx tparams_map reason pair
 
-  let preliminary_warnings cx loc { Ast.Class.implements; classDecorators; _ } =
+  let preliminary_checks cx loc { Ast.Class.implements; classDecorators; _ } =
     warn_or_ignore_decorators cx classDecorators;
 
     (* TODO *)

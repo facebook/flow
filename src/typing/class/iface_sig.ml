@@ -118,7 +118,7 @@ module T = struct
     in
     intersect_supers reason super_ts
 
-  let preliminary_warnings _ _ _ = ()
+  let preliminary_checks _ _ _ = ()
   let implicit_body reason _ = Sig.add_name reason
 
   let explicit_body cx tparams_map loc (class_ast:Ast.Statement.Interface.t) iface_sig =

@@ -1,13 +1,14 @@
-(*
- * `declare class` subst_sig needs to dig deeper than others (ThisSpecializeT
-   flows for super and statics), so abstract it. The signature stays invariant
-   if `this` gets looked up in the tparams_map.
- *)
 module Ast = Spider_monkey_ast
 module Flow = Flow_js
 module Sig = Classy_sig
 
 open Reason_js
+
+type self_t = Type.t
+type tparams_t = Type.typeparam list
+type tparams_map_t = Type.t SMap.t
+type expr_fn_t = Context.t -> tparams_map_t -> Ast.Expression.t -> Type.t
+type stmt_fn_t = Context.t -> tparams_map_t -> Ast.Statement.t list -> unit
 
 module type ClassyType =
   sig
@@ -19,39 +20,20 @@ module type ClassyType =
     val structural: bool
     val mk_class: Type.t -> Type.t
     val remove_this: Sig.t -> Sig.t
-    val subst_sig: Context.t ->(*TJP: Hopefully, this can be de-abstracted. I suspect that DeclClass may need a tweaked alg :( *)
-      Type.t SMap.t ->
-      Sig.signature ->
-      Sig.signature
-    val mk_type_param_declarations: Context.t ->
-      Type.t SMap.t ->
-      reason ->
-      Type.t ->
-      classy_ast_t ->
-      Type.typeparam list * Type.t SMap.t
-    val mk_super: Context.t ->
-      Type.t SMap.t ->
-      (Context.t -> Type.t SMap.t -> Ast.Expression.t -> Type.t) ->
-      reason ->
-      classy_ast_t ->
-      Type.t
-    val preliminary_warnings: Context.t ->
-      Loc.t ->
-      classy_ast_t ->
-      unit
-    val implicit_body: reason ->
-      classy_ast_t ->
-      Sig.t ->
-      Sig.t
-    val explicit_body: Context.t ->
-      Type.t SMap.t ->
-      Loc.t ->
-      classy_ast_t ->
-      Sig.t ->
-      Sig.t
+    val subst_sig: Context.t -> tparams_map_t -> Sig.signature -> Sig.signature
+    val mk_type_param_declarations: Context.t -> tparams_map_t -> reason ->
+      self_t -> classy_ast_t -> tparams_t * tparams_map_t
+    val mk_super: Context.t -> tparams_map_t -> expr_fn_t -> reason ->
+      classy_ast_t -> Type.t
+    val preliminary_checks: Context.t -> Loc.t -> classy_ast_t -> unit
+    val implicit_body: reason -> classy_ast_t -> Sig.t -> Sig.t
+    val explicit_body: Context.t -> tparams_map_t -> Loc.t -> classy_ast_t ->
+      Sig.t -> Sig.t
   end
 
 module Make(Classy : ClassyType) = struct
+  type classy_ast_t = Classy.classy_ast_t
+
   (* Process a class definition, returning a (polymorphic) class type. A class
      type is a wrapper around an instance type, which contains types of instance
      members, a pointer to the super instance type, and a container for types of
@@ -59,7 +41,7 @@ module Make(Classy : ClassyType) = struct
      a "metaclass": thus, the static type is itself implemented as an instance
      type. *)
   let mk_sig cx tparams_map expr loc reason self class_ast =
-    Classy.preliminary_warnings cx loc class_ast;
+    Classy.preliminary_checks cx loc class_ast;
     let tparams, tparams_map =
       Classy.mk_type_param_declarations cx tparams_map reason self class_ast in
     let super = Classy.mk_super cx tparams_map expr reason class_ast in
@@ -88,7 +70,6 @@ module Make(Classy : ClassyType) = struct
       in
 
       (* Re-add the constructor as a method. *)
-(*TJP: Is there a predicate that the constructor gets removed before entering `elements`?*)
       let methods = match constructor with
       | Some t -> SMap.add "constructor" t methods
       | None -> methods
@@ -152,7 +133,6 @@ module Make(Classy : ClassyType) = struct
   let generate_tests cx f x =
     let open Sig in
     let {tparams; tparams_map; constructor; static; instance; _} = x in
-(*TJP: The following closes around tparams_map without substituting for `this`. Why?*)
     Flow.generate_tests cx instance.reason tparams (fun map -> f {
       x with
       tparams_map = SMap.map (Flow.subst cx map) tparams_map;
