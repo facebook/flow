@@ -97,11 +97,15 @@ deploy:
     - $OCAML_VERSION = 4.02.1
     - $OPAM_VERSION = 1.2.0
 
+# The use of secure prevents forks from spamming irc and email.
+# See https://github.com/travis-ci/travis-ci/issues/5063
 notifications:
   email:
     recipients:
-      - flowtype@fb.com
+      # flowtype@fb.com
+      secure: "AWT9H7vKPWp/GYMxKij58cIn7v5ehpm/4ecNqCCDTDVHNEBoP4z6BJdPZyheOQ0QL47m7E5Qy2okbPRhmItZV74Gm38Ri7lvmm6o5vscv428zcmPiZLsob8ibJkYQC5TnUsJigyr8yoCmIXyj9WPw3Tfm96eoZ/vvnoDQGxQPs4="
   irc:
     channels:
-      - "chat.freenode.net#flowtype"
+      # chat.freenode.net#flowtype
+      secure: "OLvGXInHGV66u17k4JPZJTXZyrlqCeAVjVQ+oZuqV5JQo6lep/GtcU6uwmjJOgY/yQR7FPvBG92ru4ef/6CIkIwbCq3Zt/ftfei8rNFO0FlymdC7YXjB8hqN8zs6FIVyxzkjOyg8mX1tRulGwxOLB4yeua9t91RiCkjHtvXeixw="
     on_success: change
