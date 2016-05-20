@@ -915,7 +915,7 @@ let illegal_constant pos =
 
 let cyclic_constraint pos =
   add Naming.cyclic_constraint pos
-    "Cyclic constraint"
+    "Cyclic constraint between type parameters"
 
 let invalid_req_implements pos =
   add Naming.invalid_req_implements pos
