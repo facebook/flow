@@ -2626,11 +2626,10 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       let reason = mk_reason (spf "super.%s(...)" name) loc in
       let reason_prop = mk_reason (spf "property `%s`" name) ploc in
       let super = super_ cx (mk_reason "super" super_loc) in
-      let this = this_ cx (mk_reason "this" super_loc) in
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype this argts t in
+        let funtype = Flow.mk_methodtype super argts t in
         Flow.flow cx (super, MethodT (reason, (reason_prop, name), funtype))
       )
 
