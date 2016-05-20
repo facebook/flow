@@ -68,12 +68,6 @@ let function_desc ~async ~generator desc =
   | false, true -> spf "generator %s" desc
   | false, false -> desc
 
-(*TJP: Should I be rejecting *object* methods too? *)
-let reject_explicit_this cx msg = function
-  | {Ast.Function.this = Ast.Type.Function.ThisParam.Explicit (loc, _); _} ->
-    FlowError.add_error cx (loc, [msg])
-  | _ -> ()
-
 (*
 let warn_or_ignore_export_star_as cx name =
   if name = None then () else
@@ -2678,12 +2672,13 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
   (* See ~/www/static_upstream/core/ *)
 
   | Call {
-      Call.callee = _, Identifier (_,
-        { Ast.Identifier.name = "invariant"; _ });
+      Call.callee = (_, Identifier (_,
+        { Ast.Identifier.name = "invariant"; _ })) as callee;
       arguments
     } ->
       (* TODO: require *)
       let reason = mk_reason "invariant" loc in
+      ignore (expression cx type_params_map callee);
       (match arguments with
       | (Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.Boolean false; _;
@@ -3056,6 +3051,7 @@ and binary cx type_params_map loc = Ast.Expression.Binary.(function
   | { operator = RShift3; left; right }
   | { operator = Minus; left; right }
   | { operator = Mult; left; right }
+  | { operator = Exp; left; right }
   | { operator = Div; left; right }
   | { operator = Mod; left; right }
   | { operator = BitOr; left; right }
@@ -3243,6 +3239,7 @@ and assignment cx type_params_map loc = Ast.Expression.(function
 
   | (lhs, Assignment.MinusAssign, rhs)
   | (lhs, Assignment.MultAssign, rhs)
+  | (lhs, Assignment.ExpAssign, rhs)
   | (lhs, Assignment.DivAssign, rhs)
   | (lhs, Assignment.ModAssign, rhs)
   | (lhs, Assignment.LShiftAssign, rhs)
@@ -3298,6 +3295,52 @@ and jsx cx type_params_map = Ast.JSX.(
 and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   let facebook_ignore_fbt = Context.should_ignore_fbt cx in
+
+  let mk_props reason c =
+    let map = ref SMap.empty in
+    let spread = ref None in
+    attributes |> List.iter (function
+      | Opening.Attribute (aloc, { Attribute.
+            name = Attribute.Identifier (_, { Identifier.name = aname });
+            value
+          }) ->
+        if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
+        then
+          let atype = (match value with
+            | Some (Attribute.Literal (loc, lit)) ->
+                literal cx loc lit
+            | Some (Attribute.ExpressionContainer (_, {
+                ExpressionContainer.expression =
+                  ExpressionContainer.Expression (loc, e)
+              })) ->
+                expression cx type_params_map (loc, e)
+            | _ ->
+                (* empty or nonexistent attribute values *)
+                EmptyT.at aloc
+          ) in
+
+          if not (react_ignore_attribute aname)
+          then map := !map |> SMap.add aname atype
+
+      | Opening.Attribute _ ->
+          () (* TODO: attributes with namespaced names *)
+
+      | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
+          let ex_t = expression cx type_params_map argument in
+          spread := Some (ex_t)
+    );
+    let reason_props = prefix_reason "props of " reason in
+    let o = Flow.mk_object_with_map_proto cx reason_props
+      !map (MixedT (reason_props, Mixed_everything))
+    in
+    match !spread with
+      | None -> o
+      | Some ex_t ->
+          let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
+          clone_object_with_excludes cx
+            reason_prop o ex_t react_ignored_attributes
+  in
+
   match name with
   | Identifier (_, { Identifier.name })
       when name = "fbt" && facebook_ignore_fbt ->
@@ -3306,50 +3349,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
   | Identifier (_, { Identifier.name }) when name = String.capitalize name ->
       let reason = mk_reason (spf "React element `%s`" name) eloc in
       let c = Env.get_var cx name reason in
-      let map = ref SMap.empty in
-      let spread = ref None in
-      attributes |> List.iter (function
-        | Opening.Attribute (aloc, { Attribute.
-              name = Attribute.Identifier (_, { Identifier.name = aname });
-              value
-            }) ->
-          if not (Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c)
-          then
-            let atype = (match value with
-              | Some (Attribute.Literal (loc, lit)) ->
-                  literal cx loc lit
-              | Some (Attribute.ExpressionContainer (_, {
-                  ExpressionContainer.expression =
-                    ExpressionContainer.Expression (loc, e)
-                })) ->
-                  expression cx type_params_map (loc, e)
-              | _ ->
-                  (* empty or nonexistent attribute values *)
-                  EmptyT.at aloc
-            ) in
-
-            if not (react_ignore_attribute aname)
-            then map := !map |> SMap.add aname atype
-
-        | Opening.Attribute _ ->
-            () (* TODO: attributes with namespaced names *)
-
-        | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
-            let ex_t = expression cx type_params_map argument in
-            spread := Some (ex_t)
-      );
-
-      let reason_props = prefix_reason "props of " reason in
-      let o = Flow.mk_object_with_map_proto cx reason_props
-        !map (MixedT (reason_props, Mixed_everything))
-      in
-      let o = match !spread with
-        | None -> o
-        | Some ex_t ->
-            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
-            clone_object_with_excludes cx
-              reason_prop o ex_t react_ignored_attributes
-      in
+      let o = mk_props reason c in
       (* TODO: children *)
       let react = require cx "react" eloc in
       Flow.mk_tvar_where cx reason (fun tvar ->
@@ -3407,49 +3407,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
         in
         Flow.flow cx (prop_t, ReifyTypeT(component_t_reason, t))
       ) in
-
-      let attr_map = ref SMap.empty in
-      let spread = ref None in
-      attributes |> List.iter (function
-        | Opening.Attribute (aloc, { Attribute.
-            name = Attribute.Identifier (_, { Identifier.name = aname });
-            value
-          }) ->
-            let attr_type = (match value with
-              | Some (Attribute.Literal (loc, lit)) ->
-                  literal cx loc lit
-              | Some (Attribute.ExpressionContainer (_, {
-                  ExpressionContainer.expression =
-                    ExpressionContainer.Expression (loc, e)
-                })) ->
-                  expression cx type_params_map (loc, e)
-              | _ ->
-                  (* empty or nonexistent attribute values *)
-                  EmptyT.at aloc
-            ) in
-
-            if not (react_ignore_attribute aname)
-            then attr_map := !attr_map |> SMap.add aname attr_type
-
-        | Opening.Attribute _ ->
-            () (* TODO: attributes with namespaced names *)
-
-        | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
-            let spread_t = expression cx type_params_map argument in
-            spread := Some spread_t
-      );
-
-      let reason_props = prefix_reason "props of " component_t_reason in
-      let o = Flow.mk_object_with_map_proto cx reason_props
-        !attr_map (MixedT (reason_props, Mixed_everything))
-      in
-      let o = match !spread with
-        | None -> o
-        | Some ex_t ->
-            let reason_prop = prefix_reason "spread of " (reason_of_t ex_t) in
-            clone_object_with_excludes cx
-              reason_prop o ex_t react_ignored_attributes
-      in
+      let o = mk_props component_t_reason component_t in
       (* TODO: children *)
       let react = require cx "react" eloc in
       let reason = mk_reason (spf "React element: `%s`" name) eloc in
@@ -4449,12 +4407,12 @@ and mk_class cx type_params_map loc reason c =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx type_params_map sig_this reason func body_this super =
-  let func_sig = Func_sig.mk_function cx type_params_map reason sig_this func in
+and function_decl id cx type_params_map reason func this super =
+  let func_sig = Func_sig.mk cx type_params_map reason func in
 
   let this, super =
     let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in
-    new_entry body_this, new_entry super
+    new_entry this, new_entry super
   in
 
   let save_return = Abnormal.clear_saved Abnormal.Return in
@@ -4478,36 +4436,31 @@ and define_internal cx reason x =
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason func =
-  reject_explicit_this cx
-    "`this` pseudo-parameters are not allowed on functions" func;
   let this = Flow.mk_tvar cx (replace_reason "this" reason) in
   (* Normally, functions do not have access to super. *)
   let super = MixedT (
     replace_reason "empty super object" reason,
     Mixed_everything
   ) in
-  Func_sig.functiontype cx
-    (function_decl id cx type_params_map this reason func this super)
+  let func_sig = function_decl id cx type_params_map reason func this super in
+  Func_sig.functiontype cx this func_sig
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx type_params_map reason func =
-  reject_explicit_this cx
-    "`this` pseudo-parameters are not allowed on arrow functions" func;
   let this = this_ cx reason in
   let super = super_ cx reason in
   let {Ast.Function.id; _} = func in
-  (* Use `dummy_this` in the function's signature and, ultimately, type. The
-     call to function_decl does the necessary checking of `this` in the body of
-     the function. Since any `this`es in the arrow function are lexically bound,
-     we want to avoid re-binding `this` to objects through which the function
-     may be called, hence the `dummy_this`. *)
-  Func_sig.functiontype cx
-    (function_decl id cx type_params_map Flow.dummy_this reason func this super)
+  let func_sig = function_decl id cx type_params_map reason func this super in
+  (* Do not expose the type of `this` in the function's type. The call to
+     function_decl above has already done the necessary checking of `this` in
+     the body of the function. Now we want to avoid re-binding `this` to
+     objects through which the function may be called. *)
+  Func_sig.functiontype cx Flow.dummy_this func_sig
 
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
 and mk_method cx type_params_map reason func this =
   let super = MixedT (reason, Mixed_everything) in
   let id = None in
-  Func_sig.methodtype_DEPRECATED
-    (function_decl id cx type_params_map this reason func this super)
+  let func_sig = function_decl id cx type_params_map reason func this super in
+  Func_sig.methodtype_DEPRECATED func_sig
