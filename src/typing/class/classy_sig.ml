@@ -85,12 +85,22 @@ let append_constructor fsig s =
 (* Adding a method *overwrites* any existing methods. This implements the
    behavior of classes, which permit duplicate definitions where latter
    definitions overwrite former ones. *)
+let overwrite_method_decl ~shadowed_kinds kind name method_decls =
+  let not_shadowed (k, n) = not (n = name && List.mem k shadowed_kinds) in
+  (kind, name)::(List.filter not_shadowed method_decls)
+
+let add_method_decl =
+  overwrite_method_decl ~shadowed_kinds:[Getter;Setter;Method] Method
+
+(* Adding a method *overwrites* any existing methods. This implements the
+   behavior of classes, which permit duplicate definitions where latter
+   definitions overwrite former ones. *)
 let add_method name fsig = map_sig (fun s -> {
   s with
   methods = SMap.add name [fsig] s.methods;
   getters = SMap.remove name s.getters;
   setters = SMap.remove name s.setters;
-  method_decls = (Method, name)::s.method_decls;
+  method_decls = add_method_decl name s.method_decls;
 })
 
 (* Appending a method builds a list of function signatures. This implements the
@@ -105,18 +115,24 @@ let append_method name fsig = map_sig (fun s ->
   {s with methods; method_decls}
 )
 
+let add_getter_decl =
+  overwrite_method_decl ~shadowed_kinds:[Getter;Method] Getter
+
 let add_getter name fsig = map_sig (fun s -> {
   s with
   getters = SMap.add name fsig s.getters;
   methods = SMap.remove name s.methods;
-  method_decls = (Getter, name)::s.method_decls;
+  method_decls = add_getter_decl name s.method_decls;
 })
+
+let add_setter_decl =
+  overwrite_method_decl ~shadowed_kinds:[Setter;Method] Setter
 
 let add_setter name fsig = map_sig (fun s -> {
   s with
   setters = SMap.add name fsig s.setters;
   methods = SMap.remove name s.methods;
-  method_decls = (Setter, name)::s.method_decls;
+  method_decls = add_setter_decl name s.method_decls;
 })
 
 let mk_method cx x reason func =
