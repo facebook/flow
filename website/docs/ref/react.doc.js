@@ -308,7 +308,7 @@ function loadAsync<Config>(
 }
 
 /*
-  ## Higher-Order-Components II: React Class Decrators
+  ## Higher-Order-Components II: React Class Decorators
 
   **NOTE**: Advanced and Experimental
   This uses undocumented types such as $Diff which may get changed without a warning.
@@ -321,7 +321,7 @@ function loadAsync<Config>(
   as the original Component, but it may require a sub-set of the original props,
   as it my inject some on it's own.
 
-  Here we will see a Class Decrator that will automatically inject the current Date
+  Here we will see a Class Decorator that will automatically inject the current Date
   into a component.
 */
 
