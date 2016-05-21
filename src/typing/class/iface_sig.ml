@@ -29,7 +29,7 @@ let intersect_supers reason = Type.(function
   | ts -> IntersectionT (prefix_reason "super of " reason, InterRep.make ts)
 )
 
-let add_property fn_func cx tparams_map iface_sig property = Ast.Type.Object.(
+let add_property cx tparams_map iface_sig property = Ast.Type.Object.(
   let (loc, { Property.key; value; static; _method; optional }) = property in
   if optional && _method
   then begin
@@ -45,7 +45,7 @@ let add_property fn_func cx tparams_map iface_sig property = Ast.Type.Object.(
   | true, Property.Identifier (_, {Ast.Identifier.name; _}) ->
       Ast.Type.(match value with
       | _, Function func ->
-        let fsig = fn_func cx tparams_map static loc func in
+        let fsig = Func_sig.convert cx tparams_map loc func in
         let append_method = match static, name with
         | false, "constructor" -> Sig.append_constructor
         | _ -> Sig.append_method ~static name
@@ -122,11 +122,9 @@ module T = struct
   let implicit_body reason _ = Sig.add_name reason
 
   let explicit_body cx tparams_map loc class_ast iface_sig =
-    let mk_function_property cx tparams_map _ loc func =
-      Func_sig.convert cx tparams_map loc func in
     let { Ast.Type.Object.properties; indexers; callProperties } =
       extract_body class_ast in
-    let add_properties = add_property mk_function_property cx tparams_map in
+    let add_properties = add_property cx tparams_map in
     let add_call_properties = add_call_property cx tparams_map in
     iface_sig
       |> Sig.fold_pipe add_properties properties
