@@ -55,12 +55,9 @@ module T = struct
   let implicit_body reason _ = Sig.add_name reason
 
   let explicit_body cx tparams_map loc class_ast class_sig =
-    let mk_function_property cx tparams_map _ loc func =
-      Func_sig.convert cx tparams_map loc func in
     let { Ast.Type.Object.properties; indexers; callProperties } =
       Iface_sig.extract_body class_ast in
-    let add_properties =
-      Iface_sig.add_property mk_function_property cx tparams_map in
+    let add_properties = Iface_sig.add_property cx tparams_map in
     let add_call_properties = Iface_sig.add_call_property cx tparams_map in
     class_sig
       |> Sig.fold_pipe add_properties properties
