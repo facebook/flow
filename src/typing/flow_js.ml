@@ -113,7 +113,7 @@ let mk_tvar cx reason =
   Context.add_tvar cx tvar (Constraint_js.new_unresolved_root ());
   (if Context.is_verbose cx then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
-    (string_of_reason reason));
+    (Context.string_of_reason cx reason));
   OpenT (reason, tvar)
 
 let mk_tvar_where cx reason f =
@@ -795,9 +795,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     prerr_endlinef
       "\n%s[%d] %s (%s) ~>\n%s[%d] %s (%s)"
       indent pid
-      (dump_reason (reason_of_t l)) (string_of_ctor l)
+      (Context.dump_reason cx (reason_of_t l)) (string_of_ctor l)
       indent pid
-      (dump_reason (reason_of_use_t u)) (string_of_use_ctor u)
+      (Context.dump_reason cx (reason_of_use_t u)) (string_of_use_ctor u)
   | None -> ()
   end;
 
@@ -2112,8 +2112,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (if Context.is_verbose cx then
         prerr_endlinef "%d havoc_call_env fundef %s callsite %s"
           (Unix.getpid ())
-          (string_of_reason reason_fundef)
-          (string_of_reason reason_callsite));
+          (Context.string_of_reason cx reason_fundef)
+          (Context.string_of_reason cx reason_callsite));
       havoc_call_env cx func_scope_id call_scope_id changeset;
 
       Ops.pop ()
@@ -3809,7 +3809,7 @@ and generate_tests cx reason typeparams each =
 and mk_nominal cx =
   let nominal = mk_id () in
   (if Context.is_verbose cx then prerr_endlinef
-      "NOM %d %s" nominal (string_of_filename (Context.file cx)));
+      "NOM %d %s" nominal (Context.string_of_file cx));
   nominal
 
 and flow_type_args cx trace instance instance_super =
