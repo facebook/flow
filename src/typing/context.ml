@@ -237,3 +237,21 @@ let merge_into cx cx_other =
   set_evaluated cx (IMap.union (evaluated cx_other) (evaluated cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx))
+
+let dump_reason cx reason = if should_strip_root cx
+  then Reason_js.dump_reason (Reason_js.strip_root (root cx) reason)
+  else Reason_js.dump_reason reason
+
+let string_of_reason cx reason = if should_strip_root cx
+  then Reason_js.string_of_reason (Reason_js.strip_root (root cx) reason)
+  else Reason_js.string_of_reason reason
+
+let string_of_file cx =
+  let filename = Loc.string_of_filename (file cx) in
+  match is_verbose cx with
+  | false -> filename
+  | true ->
+    let root_str = Path.to_string (root cx) ^ Filename.dir_sep in
+    if Utils.str_starts_with filename root_str
+      then Files_js.relative_path root_str filename
+      else filename
