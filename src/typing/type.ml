@@ -230,8 +230,6 @@ module rec TypeTerm : sig
 
     (* failure case for speculative matching *)
     | SpeculativeMatchT of reason * t * use_t
-    (* repositioning uses *)
-    | ReposUpperT of reason * t
     (* util for deciding subclassing relations *)
     | ExtendsT of t list * t * t
 
@@ -269,7 +267,10 @@ module rec TypeTerm : sig
     | GetPropT of reason * propname * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
+
+    (* repositioning *)
     | ReposLowerT of reason * use_t
+    | ReposUseT of reason * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * t list * t
@@ -956,8 +957,6 @@ let rec reason_of_t = function
   | TypeT (reason,_)
       -> reason
 
-  | ReposUpperT (reason, _) -> reason
-
   | AnnotT (_, assume_t) ->
       reason_of_t assume_t
 
@@ -1052,6 +1051,7 @@ and reason_of_use_t = function
   | ReifyTypeT (reason, _)
   | BecomeT (reason, _)
   | ReposLowerT (reason, _)
+  | ReposUseT (reason, _, _)
       -> reason
 
   | PredicateT (_, t) -> reason_of_t t
@@ -1186,7 +1186,6 @@ let rec mod_reason_of_t f = function
   | ClassT t -> ClassT (mod_reason_of_t f t)
   | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
 
-  | ReposUpperT (reason, t) -> ReposUpperT (f reason, t)
   | TypeT (reason, t) -> TypeT (f reason, t)
   | AnnotT (assert_t, assume_t) ->
       AnnotT (mod_reason_of_t f assert_t, mod_reason_of_t f assume_t)
@@ -1249,6 +1248,7 @@ and mod_reason_of_use_t f = function
 
   | MethodT (reason, name, ft) -> MethodT(f reason, name, ft)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
+  | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
 
@@ -1375,7 +1375,6 @@ let string_of_ctor = function
   | ArrT _ -> "ArrT"
   | ClassT _ -> "ClassT"
   | InstanceT _ -> "InstanceT"
-  | ReposUpperT _ -> "ReposUpperT"
   | TypeT _ -> "TypeT"
   | AnnotT _ -> "AnnotT"
   | OptionalT _ -> "OptionalT"
@@ -1427,6 +1426,7 @@ let string_of_use_ctor = function
   | AdderT _ -> "AdderT"
   | ComparatorT _ -> "ComparatorT"
   | ReposLowerT _ -> "ReposLowerT"
+  | ReposUseT _ -> "ReposUseT"
   | BecomeT _ -> "BecomeT"
   | PredicateT _ -> "PredicateT"
   | EqT _ -> "EqT"

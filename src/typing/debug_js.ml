@@ -232,10 +232,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "cjsExport", cjs_export;
     ]
 
-  | ReposUpperT (_, t) -> [
-      "type", _json_of_t json_cx t
-    ]
-
   | ExtendsT (_, t1, t2) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
@@ -305,6 +301,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | ReposLowerT (_, use_t) -> [
       "type", _json_of_use_t json_cx use_t
+    ]
+
+  | ReposUseT (_, op, t) -> [
+      "use", JSON_String (string_of_use_op op);
+      "type", _json_of_t json_cx t
     ]
 
   | SetPropT (_, name, t)
@@ -986,7 +987,6 @@ and dump_t_ (depth, tvars) cx t =
       (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
   | InstanceT (_, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
-  | ReposUpperT (_, arg) -> p ~extra:(kid arg) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t
   | AnnotT (sink, source) -> p ~reason:false
       ~extra:(spf "%s, %s" (kid sink) (kid source)) t
@@ -1060,6 +1060,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | AdderT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ComparatorT (_, arg) -> p ~extra:(kid arg) t
   | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
+  | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t

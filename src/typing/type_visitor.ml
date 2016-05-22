@@ -139,9 +139,6 @@ class ['a] t = object(self)
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
 
-  | ReposUpperT (_, t) ->
-    self#type_ cx acc t
-
   | ExtendsT (ts, t1, t2) ->
     let acc = self#list (self#type_ cx) acc ts in
     let acc = self#type_ cx acc t1 in
@@ -169,6 +166,7 @@ class ['a] t = object(self)
   | MethodT (_, _, _)
   | BecomeT (_, _)
   | ReposLowerT (_, _)
+  | ReposUseT (_, _, _)
   | SetPropT (_, _, _)
   | GetPropT (_, _, _)
   | SetElemT (_, _, _)

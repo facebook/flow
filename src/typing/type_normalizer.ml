@@ -327,7 +327,6 @@ let rec normalize_type_impl cx ids t = match t with
   | ExistsT _
   | ModuleT (_, _)
   | SpeculativeMatchT (_, _, _)
-  | ReposUpperT (_, _)
   | ExtendsT (_, _, _) ->
     (** TODO **)
     failwith (spf "Unsupported type in normalize_type_impl: %s" (string_of_ctor t))

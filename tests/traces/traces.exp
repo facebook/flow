@@ -154,9 +154,9 @@ Trace:
                     ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from path 3)
 * path 3:
  13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ReposUpperT [Element]
+                    ^^^^^^^^^^^^^^^^ InstanceT [React$Element]
  13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from [not shown])
+                    ^^^^^^^^^^^^^^^^ ~> ReposUseT [Element] (from [not shown])
 
 Traces2.js:17
  17:     return <B bar="hey"/>;
@@ -178,9 +178,9 @@ Trace:
                     ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from path 3)
 * path 3:
  13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ReposUpperT [Element]
+                    ^^^^^^^^^^^^^^^^ InstanceT [React$Element]
  13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from [not shown])
+                    ^^^^^^^^^^^^^^^^ ~> ReposUseT [Element] (from [not shown])
 
 
 Found 7 errors

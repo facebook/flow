@@ -916,10 +916,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* repositioning, part 1 *)
     (*************************)
 
-    (* Repositions a concrete upper bound using the reason stored in the lower
-       bound. This can be used to store a reason as it flows through a tvar. *)
-    | (ReposUpperT (reason, l), u) ->
-      rec_flow cx trace (l, reposition_use cx reason u)
+    (* Waits for a def type to become concrete, repositions it as an upper UseT
+       using the stored reason. This can be used to store a reason as it flows
+       through a tvar. *)
+
+    | (u_def, ReposUseT (reason, use_op, l)) ->
+      rec_flow cx trace (l, UseT (use_op, reposition cx reason u_def))
 
     (***************)
     (* annotations *)
@@ -930,7 +932,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (use_op, AnnotT (sink_t, _)) ->
       let reason = reason_of_t sink_t in
-      rec_flow cx trace (ReposUpperT (reason, l), UseT (use_op, sink_t))
+      rec_flow cx trace (sink_t, ReposUseT (reason, use_op, l))
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
@@ -4060,7 +4062,6 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
 
   | SpeculativeMatchT _
   | ModuleT _
-  | ReposUpperT _
   | ExtendsT _
     ->
       failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
@@ -4179,7 +4180,6 @@ and check_polarity cx polarity = function
   | FunProtoBindT _
   | FunProtoCallT _
   | EvalT _
-  | ReposUpperT _
   | ExtendsT _
   | CustomFunT _
     -> () (* TODO *)
@@ -6028,13 +6028,6 @@ and reposition cx ?trace reason t =
       )
   | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
 
-(* set the position of the given use type from a reason *)
-and reposition_use cx ?trace reason t = match t with
-  | UseT (use_op, t) ->
-    (* TODO: reposition use_op? *)
-    UseT (use_op, reposition cx ?trace reason t)
-  | _ -> mod_reason_of_use_t (repos_reason (loc_of_reason reason)) t
-
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
 and mk_typeof_annotation cx ?trace valtype =
@@ -6460,7 +6453,6 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | AbstractT _
   | EvalT _
   | SpeculativeMatchT _
-  | ReposUpperT _
   | ExtendsT _
   | CustomFunT _ ->
     () (* TODO *)
