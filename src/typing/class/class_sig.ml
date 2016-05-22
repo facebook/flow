@@ -137,7 +137,7 @@ module T = struct
       |> add_ctor class_ast
       |> Sig.add_name reason
 
-  let explicit_body cx _ _ class_ast class_sig =
+  let explicit_body cx tparams_map _ class_ast class_sig =
     let this = SMap.find_unsafe "this" tparams_map in
     let add_element class_sig = Ast.Class.(function
       (* instance and static methods *)

@@ -79,9 +79,6 @@ let add_indexers cx tparams_map indexers iface_sig =
 let add_call_property cx tparams_map iface_sig call_property =
   let loc, {Ast.Type.Object.CallProperty.value = (_, func); static} =
     call_property in
-<<<<<<< 0833c964300a987884b6a9f6f67d94b73406316d
-  let fsig = Func_sig.convert cx tparams_map loc func in
-=======
   let fsig = Ast.Type.(match func.Function.this with
     | Function.ThisParam.Implicit _ ->
       (* * Interface without a `this` pseudo-param => dummy_this (static and
@@ -97,7 +94,6 @@ let add_call_property cx tparams_map iface_sig call_property =
          declarations. *)
       Func_sig.convert_method cx tparams_map ~static loc func
   ) in
->>>>>>> Major refactor of class_sig
   Sig.append_method ~static "$call" fsig iface_sig
 
 let add_default_constructor loc iface_sig =
