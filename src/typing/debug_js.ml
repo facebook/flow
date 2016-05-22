@@ -453,9 +453,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "key", JSON_Object (_json_of_string_literal key)
     ]
 
-  | ElemT (_, base, elem) -> [
+  | ElemT (_, base, elem, rw) -> [
       "baseType", _json_of_t json_cx base;
-      "elemType", _json_of_t json_cx elem
+      "elemType", _json_of_t json_cx elem;
+      "rw", JSON_String (string_of_rw rw);
     ]
 
   | CJSRequireT (_, export) -> [

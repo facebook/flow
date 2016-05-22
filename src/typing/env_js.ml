@@ -576,7 +576,7 @@ let init_value_entry kind cx name ~has_anno specific reason =
         value_state = State.Undeclared | State.Declared; _ } as v)
     | Const _, Value ({ Entry.kind = Const _;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
-      Changeset.(change_var (scope.id, name, Write));
+      Changeset.change_var (scope.id, name, Changeset.Write);
       if specific != v.general then
         Flow_js.flow_t cx (specific, v.general);
       (* note that annotation supercedes specific initializer type *)
@@ -715,7 +715,7 @@ let read_entry ~lookup_mode ~specific cx name reason =
       tdz_error cx name reason v;
       AnyT.at value_declare_loc
     | _ ->
-      Changeset.(change_var (scope.id, name, Read));
+      Changeset.change_var (scope.id, name, Changeset.Read);
       let s, g = value_entry_types ~lookup_mode scope v in
       if specific then s else g
   )

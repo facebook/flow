@@ -8,7 +8,7 @@
  *
  *)
 
-open Utils_js
+module Utils = Utils_js
 
 (** A Changeset holds records of var read/writes and refis.
     First part of this module defines the structure and an API
@@ -110,34 +110,34 @@ let comp x y =
   union (diff x y) (diff y x)
 
 let string_of_entry_ref (scope_id, name, op) =
-  spf "(%d, %s, %s)"
+  Utils.spf "(%d, %s, %s)"
     scope_id
     name
     (string_of_op op)
 
 let string_of_refi_ref (scope_id, key, op) =
-  spf "(%d, %s, %s)"
+  Utils.spf "(%d, %s, %s)"
     scope_id
     (Key.string_of_key key)
     (string_of_op op)
 
 let to_string =
   let string_of_changed_vars changed_vars =
-    spf "{ %s }"
+    Utils.spf "{ %s }"
       (let entry_refs = EntryRefSet.fold (fun entry_ref acc ->
           string_of_entry_ref entry_ref :: acc
         ) changed_vars [] in
         String.concat "; " (List.rev entry_refs))
   in
   let string_of_changed_refis changed_refis =
-    spf "{ %s }"
+    Utils.spf "{ %s }"
       (let refi_refs = RefiRefSet.fold (fun refi_ref acc ->
           string_of_refi_ref refi_ref :: acc
         ) changed_refis [] in
         String.concat "; " (List.rev refi_refs))
   in
   fun (changed_vars, changed_refis) ->
-    spf "%s, %s"
+    Utils.spf "%s, %s"
       (string_of_changed_vars changed_vars)
       (string_of_changed_refis changed_refis)
 

@@ -359,7 +359,7 @@ module rec TypeTerm : sig
     | HasPropT of reason * reason option * string literal
 
     (* Element access *)
-    | ElemT of reason * t * t
+    | ElemT of reason * t * t * rw
 
     (* Module import handling *)
     | CJSRequireT of reason * t
@@ -1089,7 +1089,7 @@ and reason_of_use_t = function
   | HasOwnPropT (reason, _) -> reason
   | HasPropT (reason, _, _) -> reason
 
-  | ElemT (reason, _, _) -> reason
+  | ElemT (reason, _, _, _) -> reason
 
   | ConcretizeLowerT (t, _, _, _) -> reason_of_t t
   | ConcretizeUpperT (_, _, _, t) -> reason_of_use_t t
@@ -1296,7 +1296,7 @@ and mod_reason_of_use_t f = function
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
   | HasPropT (reason, strict, prop) -> HasPropT (f reason, strict, prop)
 
-  | ElemT (reason, t, t2) -> ElemT (f reason, t, t2)
+  | ElemT (reason, t, t2, rw) -> ElemT (f reason, t, t2, rw)
 
   | ConcretizeLowerT (t1, ts1, ts2, t2) ->
       ConcretizeLowerT (mod_reason_of_t f t1, ts1, ts2, t2)

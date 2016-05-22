@@ -87,6 +87,12 @@ let set_of_list = List.fold_left (fun acc x -> SSet.add x acc) SSet.empty
 (* ok-or-error type *)
 type ('a,'b) ok_or_err = OK of 'a | Err of 'b
 
+type rw = Read | Write
+
+let string_of_rw = function
+  | Read -> "Read"
+  | Write -> "Write"
+
 let assert_false s =
   let callstack = Printexc.(get_callstack 10 |> raw_backtrace_to_string) in
   prerr_endline (spf "%s%s\n%s:\n%s%s%s"

@@ -2935,11 +2935,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjT _, SetElemT(reason_op,key,tin))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithLowerBoundT tin))
+      rec_flow cx trace (key, ElemT(reason_op, l, tin, Write))
 
     | (ObjT _, GetElemT(reason_op,key,tout))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithUpperBoundT tout))
+      rec_flow cx trace (key, ElemT(reason_op, l, tout, Read))
 
     (* Since we don't know the type of the element, flow it to `AnyT`. This
        could go through `ElemT` like `ObjT` does, but this is a shortcut. *)
@@ -2952,46 +2952,45 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ArrT (_, _, []), SetElemT(reason_op, key,tin))
       ->
       let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT(reason_op, l, AnyWithLowerBoundT tin));
+      rec_flow cx trace (num, ElemT(reason_op, l, tin, Write));
       rec_flow_t cx trace (key, num)
 
     | (ArrT _, SetElemT(reason_op, key,tin))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithLowerBoundT tin))
+      rec_flow cx trace (key, ElemT(reason_op, l, tin, Write))
 
     | (ArrT (_, _, []), GetElemT(reason_op, key,tout))
       ->
       let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT(reason_op, l, AnyWithUpperBoundT tout));
+      rec_flow cx trace (num, ElemT(reason_op, l, tout, Read));
       rec_flow_t cx trace (key, num)
 
     | (ArrT _, GetElemT(reason_op, key,tout))
       ->
-      rec_flow cx trace (key, ElemT(reason_op, l, AnyWithUpperBoundT tout))
+      rec_flow cx trace (key, ElemT(reason_op, l, tout, Read))
 
-    | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t)) ->
+    | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t, rw)) ->
       let reason_x = replace_reason (spf "property `%s`" x) reason_x in
-      (match t with
-      | AnyWithLowerBoundT tin ->
-          rec_flow cx trace (o, SetPropT(reason_op, (reason_x, x), tin))
-      | AnyWithUpperBoundT tout ->
-          rec_flow cx trace (o, GetPropT(reason_op, (reason_x, x), tout))
-      | _ -> assert false)
+      let u = match rw with
+      | Read -> GetPropT (reason_op, (reason_x, x), t)
+      | Write -> SetPropT (reason_op, (reason_x, x), t)
+      in
+      rec_flow cx trace (o, u)
 
     (* if the object is a dictionary, verify it *)
-    | (_, ElemT(_, ObjT(_, {dict_t = Some { key; value; _ }; _}), t))
-      ->
+    | (_, ElemT(_, ObjT(_, {dict_t = Some { key; value; _ }; _}), t, rw)) ->
       rec_flow_t cx trace (l, key);
-      rec_flow_t cx trace (value,t);
-      rec_flow_t cx trace (t,value)
+      (match rw with
+      | Read -> rec_flow_t cx trace (value, t)
+      | Write -> rec_flow_t cx trace (t, value))
 
     (* otherwise, string and number keys are allowed, but there's nothing else
        to flow without knowing their literal values. *)
-    | (StrT _, ElemT(_, ObjT _, _))
-    | (NumT _, ElemT(_, ObjT _, _)) ->
+    | (StrT _, ElemT(_, ObjT _, _, _))
+    | (NumT _, ElemT(_, ObjT _, _, _)) ->
       ()
 
-    | (NumT (_, literal), ElemT(_, ArrT(_, value, ts), t)) ->
+    | (NumT (_, literal), ElemT(_, ArrT(_, value, ts), t, rw)) ->
       let value = match literal with
       | Literal (float_value, _) ->
           begin try
@@ -3003,10 +3002,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           end
       | _ -> value
       in
-      (match t with
-      | AnyWithLowerBoundT tin -> rec_flow_t cx trace (tin, value)
-      | AnyWithUpperBoundT tout -> rec_flow_t cx trace (value, tout)
-      | _ -> assert false)
+      (match rw with
+      | Read -> rec_flow_t cx trace (value, t)
+      | Write -> rec_flow_t cx trace (t, value))
 
     | (ArrT _, GetPropT(reason_op, (_, "constructor"), tout)) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -3629,10 +3627,10 @@ and err_operation = function
   | ConstructorT _ -> "Constructor cannot be called on"
   | GetElemT _ -> "Computed property/element cannot be accessed on"
   | SetElemT _ -> "Computed property/element cannot be assigned on"
-  | ElemT (_, ObjT _, AnyWithUpperBoundT _) -> "Computed property cannot be accessed with"
-  | ElemT (_, ArrT _, AnyWithUpperBoundT _) -> "Element cannot be accessed with"
-  | ElemT (_, ObjT _, AnyWithLowerBoundT _) -> "Computed property cannot be assigned with"
-  | ElemT (_, ArrT _, AnyWithLowerBoundT _) -> "Element cannot be assigned with"
+  | ElemT (_, ObjT _, _, Read) -> "Computed property cannot be accessed with"
+  | ElemT (_, ArrT _, _, Read) -> "Element cannot be accessed with"
+  | ElemT (_, ObjT _, _, Write) -> "Computed property cannot be assigned with"
+  | ElemT (_, ArrT _, _, Write) -> "Element cannot be assigned with"
   | ObjAssignT _ -> "Expected object instead of"
   | ObjRestT _ -> "Expected object instead of"
   | ObjSealT _ -> "Expected object instead of"
