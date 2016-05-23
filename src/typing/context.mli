@@ -79,9 +79,6 @@ val verbose: t -> int option
 
 val copy_of_context: t -> t
 val merge_into: t -> t -> unit
-val dump_reason: t -> Reason_js.t -> string
-val string_of_reason: t -> Reason_js.t -> string
-val string_of_file: t -> string
 
 (* mutators *)
 val add_env: t -> int -> env -> unit
