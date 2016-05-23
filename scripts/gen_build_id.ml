@@ -8,7 +8,7 @@
  *
  *)
 
-#use "scripts/utils.ml"
+#use "utils.ml"
 
 let () =
   let out_file = Sys.argv.(1) in

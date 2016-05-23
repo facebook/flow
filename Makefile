@@ -155,7 +155,7 @@ $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
 _build/hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
-	ocaml -w -3 unix.cma scripts/gen_build_id.ml $@
+	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
 # We only rebuild the flowlib archive if any of the libs have changed. If the
 # archive has changed, then the incremental build needs to re-embed it into the
