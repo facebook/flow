@@ -158,7 +158,7 @@ and find_root cx id =
 
   | None ->
       let msg = spf "find_root: tvar %d not found in file %s" id
-        (string_of_filename (Context.file cx))
+        (Debug_js.string_of_file cx)
       in
       failwith msg
 
@@ -213,7 +213,7 @@ let havoc_call_env = Scope.(
 
   let havoc_entry cx scope ((_, name, _) as entry_ref) =
     (if Context.is_verbose cx then
-      prerr_endlinef "havoc_entry %s %s"
+      prerr_endlinef "%d havoc_entry %s %s" (Unix.getpid ())
         (Changeset.string_of_entry_ref entry_ref)
         (Debug_js.string_of_scope cx scope)
       );
@@ -232,7 +232,7 @@ let havoc_call_env = Scope.(
 
   let havoc_refi cx scope ((_, key, _) as refi_ref) =
     (if Context.is_verbose cx then
-      prerr_endlinef "havoc_refi %s"
+      prerr_endlinef "%d havoc_refi %s" (Unix.getpid ())
         (Changeset.string_of_refi_ref refi_ref));
     match get_refi key scope with
     | Some _ ->
@@ -704,8 +704,8 @@ module Cache = struct
       | _ ->
         if TypePairSet.mem (l, u) !cache then begin
           if Context.is_verbose cx
-          then prerr_endlinef "FlowConstraint cache hit on (%s, %s)"
-            (string_of_ctor l) (string_of_use_ctor u);
+          then prerr_endlinef "[%d] FlowConstraint cache hit on (%s, %s)"
+            (Unix.getpid ()) (string_of_ctor l) (string_of_use_ctor u);
           true
         end else begin
           cache := TypePairSet.add (l, u) !cache;
@@ -791,11 +791,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
   begin match Context.verbose cx with
   | Some num_indent ->
     let indent = String.make ((Trace.trace_depth trace - 1) * num_indent) ' ' in
-    let open Debug_js in
+    let pid = Unix.getpid () in
     prerr_endlinef
-      "\n%s%s (%s) ~>\n%s%s (%s)"
-      indent (dump_reason cx (reason_of_t l)) (string_of_ctor l)
-      indent (dump_reason cx (reason_of_use_t u)) (string_of_use_ctor u)
+      "\n%s[%d] %s (%s) ~>\n%s[%d] %s (%s)"
+      indent pid
+      (Debug_js.dump_reason cx (reason_of_t l)) (string_of_ctor l)
+      indent pid
+      (Debug_js.dump_reason cx (reason_of_use_t u)) (string_of_use_ctor u)
   | None -> ()
   end;
 
@@ -2108,7 +2110,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (t1, t2);
 
       (if Context.is_verbose cx then
-        prerr_endlinef "havoc_call_env fundef %s callsite %s"
+        prerr_endlinef "%d havoc_call_env fundef %s callsite %s"
+          (Unix.getpid ())
           (Debug_js.string_of_reason cx reason_fundef)
           (Debug_js.string_of_reason cx reason_callsite));
       havoc_call_env cx func_scope_id call_scope_id changeset;
