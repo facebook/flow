@@ -19,7 +19,7 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "^2.2.2",
+    "jquery": "^3.0.0",
     "requirejs": "^2.2.0",
     "codemirror": "^5.13.2"
   }
