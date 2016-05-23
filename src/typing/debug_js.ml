@@ -1105,6 +1105,10 @@ and dump_use_t_ (depth, tvars) cx t =
   | ReactCreateElementT _ ->
     p t
 
+let dump_reason cx reason = if Context.should_strip_root cx
+  then dump_reason (strip_root (Context.root cx) reason)
+  else dump_reason reason
+
 (*****************************************************)
 
 (* scopes and types *)
@@ -1169,6 +1173,20 @@ let string_of_scope cx scope = Scope.(
     (string_of_scope_entries cx scope.entries)
     (string_of_scope_refis cx scope.refis)
 )
+
+let string_of_reason cx reason = if Context.should_strip_root cx
+  then string_of_reason (strip_root (Context.root cx) reason)
+  else string_of_reason reason
+
+let string_of_file cx =
+  let filename = Loc.string_of_filename (Context.file cx) in
+  match Context.is_verbose cx with
+  | false -> filename
+  | true ->
+    let root_str = Path.to_string (Context.root cx) ^ Filename.dir_sep in
+    if Utils.str_starts_with filename root_str
+      then Files_js.relative_path root_str filename
+      else filename
 
 let string_of_selector = function
   | Elem _ -> "Elem _" (* TODO print info about the key *)
