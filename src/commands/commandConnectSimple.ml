@@ -53,7 +53,7 @@ let open_connection ~timeout sockaddr =
       let conn = Timeout.open_connection ~timeout sockaddr in
       connections := SockMap.add sockaddr conn !connections;
       (* It's important that we only write this once per connection *)
-      Printf.fprintf (snd conn) "%s\n%!" Build_id.build_revision;
+      Printf.fprintf (snd conn) "%s\n%!" ServerProt.build_revision;
       conn
 
 let close_connection sockaddr =

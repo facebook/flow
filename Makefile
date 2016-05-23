@@ -18,7 +18,7 @@ FLOWLIB=bin/flowlib.tar.gz
 
 ifeq ($(OS), Linux)
   INOTIFY=third-party/inotify
-  INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.o
+  INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=fsnotify_linux
   ELF=elf
   FRAMEWORKS=
@@ -26,7 +26,7 @@ ifeq ($(OS), Linux)
 endif
 ifeq ($(OS), Darwin)
   INOTIFY=fsevents
-  INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.o
+  INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.c
   FSNOTIFY=fsnotify_darwin
   ELF=
   FRAMEWORKS=CoreServices CoreFoundation
@@ -67,21 +67,20 @@ MODULES=\
   hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
 
-NATIVE_OBJECT_FILES=\
+NATIVE_C_FILES=\
   hack/$(INOTIFY_STUBS)\
-  hack/heap/hh_shared.o\
-  hack/hhi/hhi_elf.o\
-  hack/utils/files.o\
-  hack/utils/get_build_id.gen.o\
-  hack/utils/get_build_id.o\
-  hack/utils/handle_stubs.o\
-  hack/utils/nproc.o\
-  hack/utils/realpath.o\
-  hack/utils/sysinfo.o\
-  hack/utils/priorities.o\
-  hack/utils/win32_support.o\
-  hack/hhi/hhi_win32res_stubs.o\
-  src/embedded/flowlib_elf.o
+  hack/heap/hh_shared.c\
+  hack/hhi/hhi_elf.c\
+  hack/utils/files.c\
+  hack/utils/get_build_id.c\
+  hack/utils/handle_stubs.c\
+  hack/utils/nproc.c\
+  hack/utils/realpath.c\
+  hack/utils/sysinfo.c\
+  hack/utils/priorities.c\
+  hack/utils/win32_support.c\
+  hack/hhi/hhi_win32res_stubs.c\
+  src/embedded/flowlib_elf.c
 
 OCAML_LIBRARIES=\
   unix\
@@ -103,8 +102,10 @@ JS_STUBS=\
 ################################################################################
 
 ALL_HEADER_FILES=$(addprefix _build/,$(shell find hack -name '*.h'))
+NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
+NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
+BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
-BUILT_C_FILES=$(patsubst %.o,%.c,$(BUILT_OBJECT_FILES))
 
 CC_FLAGS=-DNO_LZ4
 CC_FLAGS += $(EXTRA_CC_FLAGS)
@@ -132,7 +133,7 @@ clean:
 build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
-build-flow-with-ocp: build-flow-stubs-with-ocp
+build-flow-with-ocp: hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
 	ocp-build build flow
 
@@ -153,13 +154,8 @@ $(BUILT_C_FILES): _build/%.c: %.c
 $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
-hack/utils/get_build_id.gen.c: FORCE
-	OUT="const char* const BuildInfo_kRevision = \"$$(git rev-parse HEAD || hg id -i)\"; \
-	const unsigned long BuildInfo_kRevisionCommitTimeUnix = $$(git log -1 --pretty=format:%ct || echo $$(hg log -r . -T \{date\} | grep -o ^[^.]* || echo 0))ul;"; \
-	if [ "$$OUT" != "$$(cat hack/utils/get_build_id.gen.c 2>/dev/null)" ]; then echo "$$OUT" > hack/utils/get_build_id.gen.c; fi
-
-build-flow-stubs-with-ocp:
-	ocaml unix.cma scripts/gen_build_id.ml hack/utils/get_build_id.gen.c
+_build/hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
+	ocaml -w -3 unix.cma scripts/gen_build_id.ml $@
 
 # We only rebuild the flowlib archive if any of the libs have changed. If the
 # archive has changed, then the incremental build needs to re-embed it into the
@@ -225,7 +221,7 @@ js: $(BUILT_OBJECT_FILES)
 
 FORCE:
 
-.PHONY: all js FORCE
+.PHONY: all js build-flow build-flow-with-ocp build-flow-debug FORCE
 
 # This rule runs if any .ml or .mli file has been touched. It recursively calls
 # ocamldep to figure out all the modules that we use to build src/flow.ml
