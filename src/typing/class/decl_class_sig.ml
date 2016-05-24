@@ -11,7 +11,7 @@ module T = struct
 
   let ct_check_polarity = false
   let structural = false
-  let mk_class c = Type.ThisClassT c
+  let class_ctor c = Type.ThisClassT c
   let remove_this = Class_sig.remove_this
   let subst_sig = Class_sig.subst_sig
 

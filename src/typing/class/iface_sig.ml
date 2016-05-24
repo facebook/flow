@@ -95,7 +95,7 @@ module T = struct
 
   let ct_check_polarity = false
   let structural = true
-  let mk_class i = Type.ClassT i
+  let class_ctor i = Type.ClassT i
   let remove_this x = x (* there exists no `this`, so remove nothing *)
   let subst_sig = Class_sig.subst_sig
 
