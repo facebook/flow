@@ -3674,6 +3674,9 @@ and ground_subtype = function
   (* Allow any lower bound to be repositioned *)
   | (_, ReposLowerT _) -> false
 
+  (* Allow deferred unification with `any` *)
+  | (_, UnifyT _) -> false
+
   (* Prevents Tainted<any> -> any *)
   | (UnionT _, _) | (TaintT _, _) -> false
 
