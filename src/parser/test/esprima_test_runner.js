@@ -198,7 +198,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       for (var i = 0; i < esprima.body.length; i++) {
         var body = esprima.body[i];
         if (body && body.type == "MethodDefinition") {
-          if (body.key.name === "constructor") {
+          if (body.key.name === "constructor" && body.static === false) {
             body.kind = "constructor";
           } else if (body.kind === "init" || body.kind === "") {
             body.kind = "method";
