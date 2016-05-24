@@ -66,10 +66,7 @@ end = struct
      * promises not to change it so a shallow copy should be fine *)
     (* I don't know how to do a copy without an update *)
     let lb = Lexing.({ lb with lex_buffer = lb.lex_buffer }) in
-    let lex_env = { lex_env with
-      lex_lb = lb;
-      lex_state = ref !(lex_env.lex_state)
-    } in
+    let lex_env = { lex_env with lex_lb = lb; } in
     {
       la_results = [||];
       la_num_lexed = 0;
