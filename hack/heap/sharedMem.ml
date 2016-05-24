@@ -19,16 +19,43 @@ let default_config =
   let gig = 1024 * 1024 * 1024 in
   {global_size = gig; heap_size = 20 * gig}
 
+(* Allocated in C only. *)
+type handle = private {
+  h_fd: Unix.file_descr;
+  h_global_size: int;
+  h_heap_size: int;
+}
+
+exception Out_of_shared_memory
+let () =
+  Callback.register_exception "out_of_shared_memory" Out_of_shared_memory
+
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
-external hh_shared_init: global_size:int -> heap_size:int -> unit
-= "hh_shared_init"
+external hh_shared_init
+  : global_size:int -> heap_size:int -> shm_dir:string -> handle
+  = "hh_shared_init"
+
+let handle = ref None
 
 let init config =
-  hh_shared_init
+  let shm_dir = GlobalConfig.shm_dir in
+  handle := Some (hh_shared_init
     ~global_size:config.global_size
     ~heap_size:config.heap_size
+    ~shm_dir)
+
+let init_default () =
+  init default_config
+
+external hh_worker_init : handle -> unit = "hh_worker_init"
+
+let connect () =
+  match !handle with
+  | Some handle -> hh_worker_init handle
+  | None ->
+      failwith "Worker tried to connect before SharedMem was initialized!"
 
 external reset: unit -> unit = "hh_shared_reset"
 

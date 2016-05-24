@@ -21,6 +21,7 @@ ifeq ($(OS), Linux)
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=fsnotify_linux
   ELF=elf
+  RT=rt
   FRAMEWORKS=
   SECTCREATE=
 endif
@@ -29,6 +30,7 @@ ifeq ($(OS), Darwin)
   INOTIFY_STUBS=$(INOTIFY)/fsevents_stubs.c
   FSNOTIFY=fsnotify_darwin
   ELF=
+  RT=
   FRAMEWORKS=CoreServices CoreFoundation
   SECTCREATE=-cclib -sectcreate -cclib __text -cclib flowlib -cclib $(abspath $(FLOWLIB))
 endif
@@ -89,7 +91,8 @@ OCAML_LIBRARIES=\
 
 NATIVE_LIBRARIES=\
   pthread\
-  $(ELF)
+  $(ELF)\
+  $(RT)
 
 FILES_TO_COPY=\
   $(wildcard lib/*.js)

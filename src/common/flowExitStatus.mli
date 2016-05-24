@@ -12,6 +12,7 @@ type t =
   | Lock_stolen
   | Could_not_find_flowconfig
   | Server_out_of_date
+  | Out_of_shared_memory
   | Server_client_directory_mismatch
   | Commandline_usage_error
   | Server_start_failed of Unix.process_status

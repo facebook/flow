@@ -46,6 +46,7 @@ type t =
   | IDE_init_failure
   | IDE_typechecker_died
   | Redecl_heap_overflow
+  | Out_of_shared_memory
 
 exception Exit_with of t
 
@@ -68,6 +69,7 @@ let ec t = match t with
   | Unused_server -> 5
   | Lock_stolen -> 11
   | Lost_parent_monitor -> 12
+  | Out_of_shared_memory -> 15
   | Interrupted -> -6
   | Missing_hhi -> 97
   | Socket_error -> 98
@@ -130,6 +132,7 @@ let to_string = function
   | IDE_init_failure -> "IDE_init_failure"
   | IDE_typechecker_died -> "IDE_typechecker_died"
   | Redecl_heap_overflow -> "Redecl_heap_overflow"
+  | Out_of_shared_memory -> "Out_of_shared_memory"
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n

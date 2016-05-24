@@ -98,8 +98,12 @@ let update_status_ (server: ServerProcess.server_process) = match server with
       | 0, _ ->
         server
       | _, _ ->
+        let oom_code = Exit_status.ec Exit_status.Out_of_shared_memory in
+        let was_oom = match proc_stat with
+        | Unix.WEXITED code when code = oom_code -> true
+        | _ -> check_dmesg_for_oom process in
         ServerProcessTools.check_exit_status proc_stat process;
-        Died_unexpectedly (proc_stat, (check_dmesg_for_oom process)))
+        Died_unexpectedly (proc_stat, was_oom))
   | _ -> server
 
 let start_servers monitor_starter =

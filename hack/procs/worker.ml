@@ -10,8 +10,6 @@
 
 open Core
 
-external hh_worker_init: unit -> unit = "hh_worker_init"
-
 (*****************************************************************************)
 (* Module building workers
  * A worker is a subprocess executing an arbitrary function
@@ -100,6 +98,10 @@ type ('a, 'b) msg = {
     arg: 'a         ;
   }
 
+type 'a job_result =
+  | Result of 'a
+  | Out_of_shared_memory
+
 (*****************************************************************************)
 (* Everything we need to know about a worker.
  * It is called real_t and not t because the type-system is not flexible
@@ -121,7 +123,7 @@ type ('a, 'b) real_t = {
     send_task   : (('a, 'b) msg -> unit) ;
 
     (* Used by the scheduler to retrieve the result of a job *)
-    recv_result : (unit -> 'b)           ;
+    recv_result : (unit -> 'b job_result);
 
     (* We need to keep this file descriptors around to use Unix.select *)
     descr_recv  : Unix.file_descr        ;
@@ -202,7 +204,7 @@ module MakeWorker = struct
         (* Unix duplicates file descriptors during a fork, we make sure
          * we close all the ones we don't need anymore.
          *)
-        hh_worker_init();
+        SharedMem.connect ();
         Gc.set gc_control;
         close_parent descr_parent_reads descr_parent_sends acc;
         if !Utils.profile
@@ -256,8 +258,13 @@ module MakeWorker = struct
         | 0 ->
             (try
               let { job = job; arg = arg } = child_reads_task() in
-              let result = job arg in
-              child_sends_result result;
+              (try
+                let result = Result (job arg) in
+                child_sends_result result;
+              with SharedMem.Out_of_shared_memory as e ->
+                (* Try to calmly inform the server *)
+                child_sends_result Out_of_shared_memory;
+                raise e);
               (* This is the interesting part. Since we die here,
                * all the memory allocated during the job is reclaimed
                * by the system. This makes memory consumption much much
@@ -267,6 +274,8 @@ module MakeWorker = struct
             with
             | End_of_file ->
                 exit 1
+            | SharedMem.Out_of_shared_memory ->
+                Exit_status.exit Exit_status.Out_of_shared_memory
             | e ->
                 let e_str = Printexc.to_string e in
                 Printf.printf "Exception: %s\n" e_str;
@@ -312,7 +321,12 @@ end
 (*****************************************************************************)
 let get_pid proc = (Obj.magic proc).pid
 let call proc f x = proc.send_task ({ job = f; arg = x })
-let get_result proc _ = proc.recv_result()
+
+let get_result proc _ = match proc.recv_result() with
+| Result r -> r
+| Out_of_shared_memory ->
+    raise SharedMem.Out_of_shared_memory
+
 let make heap gc_control = Obj.magic (MakeWorker.make [] heap gc_control)
 let call proc = Obj.magic (call (Obj.magic proc))
 let select procl = Obj.magic (select (Obj.magic procl))

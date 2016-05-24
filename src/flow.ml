@@ -97,6 +97,14 @@ end = struct
         FlowExitStatus.(exit ~msg Commandline_usage_error)
 end
 
-let _ = FlowShell.main ()
+let _ =
+  try FlowShell.main ()
+  with
+  | SharedMem.Out_of_shared_memory ->
+      FlowExitStatus.(exit Out_of_shared_memory)
+  | e ->
+      let msg = Utils.spf "Unhandled exception: %s" (Printexc.to_string e) in
+      FlowExitStatus.(exit ~msg Unknown_error)
+
 (* If we haven't exited yet, let's exit now for logging's sake *)
 let _ = FlowExitStatus.(exit No_error)

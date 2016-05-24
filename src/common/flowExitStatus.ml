@@ -27,6 +27,8 @@ type t =
   (* Generic out-of-date error. This could be a version thing or maybe
    * something changed and Flow can't handle it incrementally yet *)
   | Server_out_of_date
+  (* We ran out of shared memory *)
+  | Out_of_shared_memory
   (* A weird error where a client talks to the wrong server. Really should
    * never happen *)
   | Server_client_directory_mismatch
@@ -75,6 +77,7 @@ let error_code = function
   | Could_not_find_flowconfig -> 12
   | Server_out_of_date -> 13
   | Server_client_directory_mismatch -> 14
+  | Out_of_shared_memory -> 15
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
   | Commandline_usage_error -> 64
   | Server_start_failed _ -> 78
@@ -96,6 +99,7 @@ let to_string = function
   | Could_not_find_flowconfig -> "Could_not_find_flowconfig"
   | Server_out_of_date -> "Server_out_of_date"
   | Server_client_directory_mismatch -> "Server_client_directory_mismatch"
+  | Out_of_shared_memory -> "Out_of_shared_memory"
   | Kill_error -> "Kill_error"
   | No_server_running -> "No_server_running"
   | Out_of_time -> "Out_of_time"
