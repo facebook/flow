@@ -20,7 +20,7 @@ make js
 printf "travis_fold:end:make_js\n"
 
 printf "travis_fold:start:runtests\nRunning flow tests\n"
-./runtests.sh bin/flow
+FLOW_RUNTESTS_PARALLELISM=4 ./runtests.sh bin/flow
 printf "travis_fold:end:runtests\n"
 
 printf "travis_fold:start:run_tool_test\nRunning tool test\n"
