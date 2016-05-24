@@ -596,12 +596,18 @@ end
 
 module TypeAppExpansion : sig
   type entry
-  val push_unless_loop : Context.t -> (Type.t * Type.t list) -> bool
+
+  (* Detect whether pushing would cause a loop. Push only if no loop is
+     detected, and return whether push happened. *)
+  val push_array_unless_loop : Context.t -> Type.t list -> bool
+  val push_instant_unless_loop : Context.t -> (Type.t * Type.t list) -> bool
   val pop : unit -> unit
   val get : unit -> entry list
   val set : entry list -> unit
 end = struct
-  type entry = Type.t * TypeSet.t list
+  type entry =
+    | Array of TypeSet.t list
+    | Instant of Type.t * TypeSet.t list
   let stack = ref ([]: entry list)
 
   (* visitor to collect roots of type applications nested in a type *)
@@ -625,56 +631,73 @@ end = struct
     list |> List.map f |> String.concat sep
 
   (* show entries in the stack *)
-  let show_entry (c, tss) =
-    spf "%s<%s>" (desc_of_t c) (
-      string_of_list tss "," (fun ts ->
-        spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t)
-      ))
+  let show_entry =
+    let string_of_ts ts =
+      spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t) in
+    function
+    | Instant (c, ts) ->
+      spf "%s<%s>" (desc_of_t c) (string_of_list ts "," string_of_ts)
+    | Array ts ->
+      spf "Array<%s>" (string_of_list ts "," string_of_ts)
 
   let _dump_stack () =
     string_of_list !stack "\n" show_entry
 
-  (* Detect whether pushing would cause a loop. Push only if no loop is
-     detected, and return whether push happened. *)
+  (* Say that targs are possibly expanding when, given previous targs and
+     current targs, each previously non-empty targ is contained in the
+     corresponding current targ. *)
+  let possibly_expanding_targs prev_tss tss =
+    (* The following helper carries around a bit that indicates whether prev_tss
+       contains at least one non-empty set. *)
+    let rec loop seen_nonempty_prev_ts = function
+      | prev_ts::prev_tss, ts::tss ->
+        (* if prev_ts is not a subset of ts, we have found a counterexample
+           and we can bail out *)
+        TypeSet.subset prev_ts ts &&
+          (* otherwise, we recurse on the remaining targs, updating the bit *)
+          loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts))
+            (prev_tss, tss)
+      | [], [] ->
+        (* we have found no counterexamples, so it comes down to whether we've
+           seen any non-empty prev_ts *)
+        seen_nonempty_prev_ts
+      | [], _ | _, [] ->
+        (* something's wrong around arities, but that's not our problem, so
+           bail out *)
+        false
+    in loop false (prev_tss, tss)
 
-  let push_unless_loop =
+  let push cx top =
+    stack := top :: !stack;
+    if Context.is_verbose cx then
+      prerr_endlinef "typeapp stack entry: %s" (show_entry top)
 
-    (* Say that targs are possibly expanding when, given previous targs and
-       current targs, each previously non-empty targ is contained in the
-       corresponding current targ. *)
-    let possibly_expanding_targs prev_tss tss =
-      (* The following helper carries around a bit that indicates whether
-         prev_tss contains at least one non-empty set. *)
-      let rec loop seen_nonempty_prev_ts = function
-        | prev_ts::prev_tss, ts::tss ->
-          (* if prev_ts is not a subset of ts, we have found a counterexample
-             and we can bail out *)
-          TypeSet.subset prev_ts ts &&
-            (* otherwise, we recurse on the remaining targs, updating the bit *)
-            loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts))
-              (prev_tss, tss)
-        | [], [] ->
-          (* we have found no counterexamples, so it comes down to whether we've
-             seen any non-empty prev_ts *)
-          seen_nonempty_prev_ts
-        | [], _ | _, [] ->
-          (* something's wrong around arities, but that's not our problem, so
-             bail out *)
-          false
-      in loop false (prev_tss, tss)
-
-    in fun cx (c, ts) ->
-      let tss = List.map (collect_roots cx) ts in
-      let loop = !stack |> List.exists (fun (prev_c, prev_tss) ->
+  let push_instant_unless_loop cx (c, ts) =
+    let tss = List.map (collect_roots cx) ts in
+    let p = function
+      | Instant (prev_c, prev_tss) ->
         c = prev_c && possibly_expanding_targs prev_tss tss
-      ) in
-      if loop then false
-      else begin
-        stack := (c, tss) :: !stack;
-        if Context.is_verbose cx then
-          prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
-        true
-      end
+      | _ -> false
+    in
+    let loop = !stack |> List.exists p in
+    if loop then false
+    else begin
+      push cx (Instant (c, tss));
+      true
+    end
+
+  let push_array_unless_loop cx ts =
+    let tss = List.map (collect_roots cx) ts in
+    let p = function
+      | Array prev_tss -> possibly_expanding_targs prev_tss tss
+      | _ -> false
+    in
+    let loop = !stack |> List.exists p in
+    if loop then false
+    else begin
+      push cx (Array tss);
+      true
+    end
 
   let pop () = stack := List.tl !stack
   let get () = !stack
@@ -764,7 +787,7 @@ module RecursionCheck : sig
 
 end = struct
   exception LimitExceeded of Trace.t
-  let limit = 10000
+  let limit = 100
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
@@ -1525,8 +1548,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let t = mk_typeapp_instance cx ~reason_op ~reason_tapp ~cache:true c ts in
         rec_flow cx trace (t, u)
 
+    (*Do the LHS first, and break protocol in teh MethodT instance*)
     | (TypeAppT(c,ts), _) ->
-        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+        if TypeAppExpansion.push_instant_unless_loop cx (c, ts) then (
           let reason_op = reason_of_use_t u in
           let reason_tapp = reason_of_t l in
           let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
@@ -1535,7 +1559,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         )
 
     | (_, UseT (use_op, TypeAppT(c,ts))) ->
-        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+        if TypeAppExpansion.push_instant_unless_loop cx (c, ts) then (
           let reason_op = reason_of_t l in
           let reason_tapp = reason_of_use_t u in
           let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
@@ -3387,6 +3411,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT(reason, (reason, "$value"), t))
+
+    (*TJP: Preempt the ReposLowerT flow, but behave identically otherwise*)
+    | (ArrT (_, t, _), ReposLowerT (reason_op, u)) ->
+(*Neglecting the third argument to ArrT*)
+        if TypeAppExpansion.push_array_unless_loop cx [t] then (
+(*Minimally invasive--closest to the intention of ArrT (specializing too early
+  would probably cause problems)*)
+          rec_flow cx trace (reposition cx reason_op l, u);
+(*(*`TypeAppT, _`'s analogous behavior from above.*)
+          let reason = reason_of_use_t u in
+          let arrt = get_builtin_typeapp cx reason "Array" [t] in
+          rec_flow cx trace (arrt, u);
+*)
+          TypeAppExpansion.pop ()
+        )
 
     (*************************)
     (* repositioning, part 2 *)
@@ -6379,9 +6418,6 @@ let rec assert_ground ?(infer=false) ?(in_class=false) cx skip ids t =
   | PolyT (_, t) ->
     recurse t
 
-  | ThisClassT t ->
-    assert_ground ~in_class:true cx skip ids t
-
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
     unify cx proto_t AnyT.t;
     iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
@@ -6390,6 +6426,7 @@ let rec assert_ground ?(infer=false) ?(in_class=false) cx skip ids t =
     recurse t;
     List.iter recurse ts
 
+  | ThisClassT t
   | ClassT t ->
     assert_ground ~in_class:true cx skip ids t
 

@@ -2,7 +2,7 @@ declare class _C {
   foo(): number;
 }
 declare var _module: {
-  C: Class<_C>;
+  C: typeof _C;
 }
 declare class D extends _module.C {
   foo(): string;
