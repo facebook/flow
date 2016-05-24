@@ -13,7 +13,7 @@ module T = struct
   let structural = false
   let class_ctor c = Type.ThisClassT c
   let remove_this = Class_sig.remove_this
-  let subst_sig = Class_sig.subst_sig
+  let subst = Class_sig.subst
 
   let mk_type_param_declarations cx tparams_map reason self class_ast =
     let { Ast.Statement.Interface.typeParameters = tps; _ } = class_ast in

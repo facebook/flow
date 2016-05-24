@@ -20,7 +20,7 @@ module type ClassyType =
     val structural: bool
     val class_ctor: Type.t -> Type.t
     val remove_this: Sig.t -> Sig.t
-    val subst_sig: Context.t -> tparams_map_t -> Sig.signature -> Sig.signature
+    val subst: Context.t -> tparams_map_t -> Sig.signature -> Sig.signature
     val mk_type_param_declarations: Context.t -> tparams_map_t -> reason ->
       self_t -> classy_ast_t -> tparams_t * tparams_map_t
     val mk_super: Context.t -> tparams_map_t -> expr_fn_t -> reason ->
@@ -137,8 +137,8 @@ module Make(Classy : ClassyType) = struct
       x with
       tparams_map = SMap.map (Flow.subst cx map) tparams_map;
       constructor = List.map (Func_sig.subst cx map) constructor;
-      static = Classy.subst_sig cx map static;
-      instance = Classy.subst_sig cx map instance;
+      static = Classy.subst cx map static;
+      instance = Classy.subst cx map instance;
     })
   let check_super cx x =
     let open Sig in
