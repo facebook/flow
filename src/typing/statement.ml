@@ -68,7 +68,6 @@ let function_desc ~async ~generator desc =
   | false, true -> spf "generator %s" desc
   | false, false -> desc
 
-(*TJP: Should I be rejecting *object* methods too? *)
 let reject_explicit_this cx msg = function
   | {Ast.Function.this = Ast.Type.Function.ThisParam.Explicit (loc, _); _} ->
     FlowError.add_error cx (loc, [msg])

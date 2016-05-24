@@ -102,7 +102,7 @@ let field_initializer tparams_map reason expr return_t = {
   kind = FieldInit expr;
   tparams = [];
   tparams_map;
-  params = Func_params.empty Flow.dummy_this; (*TJP: Find some test cases that activate this*)
+  params = Func_params.empty Flow.dummy_this;
   body = empty_body;
   return_t;
 }
