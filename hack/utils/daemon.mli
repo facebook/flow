@@ -27,7 +27,11 @@ val descr_of_out_channel : 'a out_channel -> Unix.file_descr
 val cast_out : 'a out_channel -> Pervasives.out_channel *)
 
 val close_out : 'a out_channel -> unit
+val output_string : 'a out_channel -> string -> unit
+
 val close_in : 'a in_channel -> unit
+val input_char : 'a in_channel -> char
+val input_value : 'a in_channel -> 'b
 
 (** Spawning new process *)
 

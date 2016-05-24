@@ -135,7 +135,7 @@ begin library "flow-server-base"
 end
 
 begin library "flow-typing"
-  requires += [ "flow-server-base" "flow-parsing" ]
+  requires += [ "flow-server-base" "flow-parsing" "flow-common" ]
   files = [
     "src/typing/key.ml"
     "src/typing/changeset.ml"
@@ -169,6 +169,7 @@ begin library "flow-server"
     "src/server/serverUtils.ml"
     "src/server/serverProt.ml"
     "src/server/searchService_js.ml"
+    "src/server/serverWorker.ml"
     "src/server/serverEnvBuild.ml"
     "src/server/serverPeriodical.ml"
     "src/server/serverFunctors.ml"

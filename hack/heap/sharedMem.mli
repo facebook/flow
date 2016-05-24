@@ -25,20 +25,26 @@ type config = {
 
 val default_config : config
 
+type handle = private {
+  h_fd: Unix.file_descr;
+  h_global_size: int;
+  h_heap_size: int;
+}
+
 exception Out_of_shared_memory
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking! *)
 (*****************************************************************************)
 
-val init: config -> unit
-val init_default: unit -> unit
+val init: config -> handle
+val init_default: unit -> handle
 
 (*****************************************************************************)
 (* Connect a slave to the shared heap *)
 (*****************************************************************************)
 
-val connect: unit -> unit
+val connect: handle -> is_master:bool -> unit
 
 (*****************************************************************************)
 (* Resets the initialized and used memory to the state right after

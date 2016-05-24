@@ -239,14 +239,14 @@ end = struct
     FlowEventLogger.init_server root;
     Relative_path.set_path_prefix Relative_path.Root root;
     Program.preinit options;
-    let _handle = SharedMem.(init { default_config with shm_dir }) in
+    let handle = SharedMem.(init { default_config with shm_dir }) in
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
-      ServerEnvBuild.make_genv ~multicore:true options watch_paths in
+      ServerEnvBuild.make_genv ~multicore:true options watch_paths handle in
     let program_init = create_program_init genv in
     if is_check_mode then
       let env = program_init () in

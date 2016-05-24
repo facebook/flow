@@ -6,9 +6,6 @@
  * LICENSE file in the "hack" directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
-*)
+ *)
 
-val start_monitoring:
-  waiting_client:Unix.file_descr option ->
-  ServerMonitorUtils.monitor_config ->
-  ServerMonitorUtils.monitor_starter -> 'a
+val make : Options.t -> SharedMem.handle -> Worker.t list

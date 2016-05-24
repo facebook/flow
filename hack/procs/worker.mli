@@ -12,7 +12,7 @@
 (*****************************************************************************)
 (* Module building workers.
  * A worker is a subprocess executing an arbitrary function.
- * You should first create a fixed amount of workers and then use those 
+ * You should first create a fixed amount of workers and then use those
  * because the amount of workers is limited and to make the load-balancing
  * of tasks better (cf multiWorker.ml).
  *)
@@ -25,32 +25,39 @@ type t
 (* The handle is what we get back when we start a job. It's a "future"
  * (sometimes called a "promise"). The scheduler uses the handle to retrieve
  * the result of the job when the task is done (cf multiWorker.ml).
- * Note that the scheduler has to use a handle for that. But the handle
- * is just a trick to get type-checking on workers, a handle is a
- * phantom type, it doesn't really have a value.
  *)
 (*****************************************************************************)
 type 'a handle
 
-(* Creates a worker *)
-val make: int -> Gc.control -> t list
+type 'a entry
+val register_entry_point:
+  restore:('a -> unit) -> 'a entry
+
+(* Creates a pool of workers. *)
+val make:
+  saved_state : 'a ->
+  entry       : 'a entry ->
+  nbr_procs   : int ->
+  debug       : bool ->
+  gc_control  : Gc.control ->
+  heap_handle : SharedMem.handle ->
+    t list
 
 (* Call in a sub-process (CAREFUL, GLOBALS ARE COPIED) *)
 val call: t -> ('a -> 'b) -> 'a -> 'b handle
 
 (* Retrieves the result (once the worker is done) hangs otherwise *)
-val get_result: t -> 'a handle -> 'a
+val get_result: 'a handle -> 'a
 
-(* Selects among multiple process those which are ready *)
-val select: t list -> t list
+(* Selects among multiple handles those which are ready. *)
+type 'a selected = {
+  readys: 'a handle list;
+  waiters: 'a handle list;
+}
+val select: 'a handle list -> 'a selected
 
-(* Gives back the Unix process ID of a process *)
-val get_pid: t -> int
+(* Returns the worker which produces this handle *)
+val get_worker: 'a handle -> t
 
-(* Returns the file descriptor used by the master process to receive results
- * from the child. (cf hh_server.ml section on pipes)
- *)
-val get_file_descr: t -> Unix.file_descr
-
-(* Kills the worker with kill -9 *)
-val kill: t -> unit
+(* Killall the workers *)
+val killall: unit -> unit

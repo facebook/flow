@@ -18,6 +18,10 @@ type ('in_, 'out) handle = {
   pid : int;
 }
 
+(* Windows: ensure that the serialize/deserialize functions
+   for the custom block of "Unix.file_descr" are registred. *)
+let () = Lazy.force Handle.init
+
 let to_channel :
   'a out_channel -> ?flags:Marshal.extern_flags list -> ?flush:bool ->
   'a -> unit =
@@ -262,4 +266,9 @@ let kill h =
   Sys_utils.terminate_process h.pid
 
 let close_out = close_out
+let output_string = output_string
+let flush = flush
+
 let close_in = Timeout.close_in
+let input_char ic = Timeout.input_char ic
+let input_value ic = Timeout.input_value ic

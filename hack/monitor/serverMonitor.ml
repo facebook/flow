@@ -344,7 +344,7 @@ let start_monitoring ~waiting_client monitor_config monitor_starter =
    * can be notified when the monitor socket is ready. The FD number was passed
    * in program args. *)
   Option.iter waiting_client begin fun fd ->
-    let oc = Handle.to_out_channel fd in
+    let oc = Unix.out_channel_of_descr fd in
     try
       output_string oc (ServerMonitorUtils.ready^"\n");
       close_out oc;

@@ -42,24 +42,16 @@ external hh_shared_init
   : global_size:int -> heap_size:int -> shm_dir:string -> handle
   = "hh_shared_init"
 
-let handle = ref None
-
 let init config =
-  handle := Some (hh_shared_init
+  hh_shared_init
     ~global_size:config.global_size
     ~heap_size:config.heap_size
-    ~shm_dir:config.shm_dir)
+    ~shm_dir:config.shm_dir
 
-let init_default () =
+let init_default () : handle =
   init default_config
 
-external hh_worker_init : handle -> unit = "hh_worker_init"
-
-let connect () =
-  match !handle with
-  | Some handle -> hh_worker_init handle
-  | None ->
-      failwith "Worker tried to connect before SharedMem was initialized!"
+external connect : handle -> is_master:bool -> unit = "hh_connect"
 
 external reset: unit -> unit = "hh_shared_reset"
 

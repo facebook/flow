@@ -17,6 +17,17 @@ external raw_get_handle :
   Unix.file_descr -> handle = "caml_hh_worker_get_handle" "noalloc"
 external raw_wrap_handle :
   handle -> Unix.file_descr = "caml_hh_worker_create_handle"
+external win_setup_handle_serialization :
+  unit -> unit = "win_setup_handle_serialization"
+
+let init =
+  (* Windows: register the serialize/desarialize functions
+     for the custom block of "Unix.file_descr". *)
+  lazy begin
+    win_setup_handle_serialization ()
+  end
+
+let () = Lazy.force init
 
 let () = assert (Sys.win32 || Obj.is_int (Obj.repr Unix.stdin))
 let get_handle =

@@ -271,7 +271,7 @@ static uintptr_t early_counter = 1;
 static char** heap;
 
 /* Useful to add assertions */
-static pid_t master_pid;
+static pid_t* master_pid;
 static pid_t my_pid;
 
 /* Where the heap started (bottom) */
@@ -539,9 +539,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(uintptr_t));
   counter = (uintptr_t*)(mem + 2*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(pid_t));
+  master_pid = (pid_t*)(mem + 3*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 2*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 3*CACHE_LINE_SIZE + (int)sizeof(int));
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Global storage initialization */
@@ -615,11 +618,11 @@ CAMLprim value hh_shared_init(
 
   // Keeping the pids around to make asserts.
 #ifdef _WIN32
-  master_pid = 0;
-  my_pid = master_pid;
+  *master_pid = 0;
+  my_pid = *master_pid;
 #else
-  master_pid = getpid();
-  my_pid = master_pid;
+  *master_pid = getpid();
+  my_pid = *master_pid;
 #endif
 
 #ifdef MADV_DONTDUMP
@@ -664,8 +667,8 @@ void hh_shared_reset() {
 }
 
 /* Must be called by every worker before any operation is performed */
-value hh_worker_init(value connector) {
-  CAMLparam1(connector);
+value hh_connect(value connector, value is_master) {
+  CAMLparam2(connector, is_master);
   memfd = Handle_val(Field(connector, 0));
   global_size_b = Long_val(Field(connector, 1));
   heap_size = Long_val(Field(connector, 2));
@@ -676,6 +679,12 @@ value hh_worker_init(value connector) {
 #endif
   char *shared_mem_init = memfd_map(get_shared_mem_size());
   define_globals(shared_mem_init);
+
+  if (Bool_val(is_master)) {
+    fprintf(stderr, "Reconnecting as master %d", my_pid);
+    *master_pid = my_pid;
+  }
+
   CAMLreturn(Val_unit);
 }
 
@@ -707,6 +716,18 @@ CAMLprim value hh_counter_next(void) {
 }
 
 /*****************************************************************************/
+/* There are a bunch of operations that only the designated master thread is
+ * allowed to do. This assert will fail if the current process is not the master
+ * process
+ */
+/*****************************************************************************/
+void assert_master() {
+  assert(my_pid == *master_pid);
+}
+
+/*****************************************************************************/
+
+/*****************************************************************************/
 /* Global storage */
 /*****************************************************************************/
 
@@ -714,7 +735,7 @@ void hh_shared_store(value data) {
   CAMLparam1(data);
   size_t size = caml_string_length(data);
 
-  assert(my_pid == master_pid);                  // only the master can store
+  assert_master();                               // only the master can store
   assert(global_storage[0] == 0);                // Is it clear?
   assert(size < global_size_b - sizeof(value));  // Do we have enough space?
 
@@ -746,7 +767,7 @@ CAMLprim value hh_shared_load(void) {
 }
 
 void hh_shared_clear(void) {
-  assert(my_pid == master_pid);
+  assert_master();
   global_storage[0] = 0;
 }
 
@@ -958,7 +979,7 @@ void hh_collect(value aggressive_val) {
 
   tmp_heap = temp_memory_map();
   dest = tmp_heap;
-  assert(my_pid == master_pid); // Comes from the master
+  assert_master(); // Comes from the master
 
   // Walking the table
   size_t i;
@@ -1115,6 +1136,7 @@ static unsigned int find_slot(value key) {
  */
 /*****************************************************************************/
 value hh_mem(value key) {
+  CAMLparam1(key);
   unsigned int slot = find_slot(key);
   if(hashtbl[slot].hash == get_hash(key) &&
      hashtbl[slot].addr != NULL) {
@@ -1127,9 +1149,9 @@ value hh_mem(value key) {
       asm volatile("pause" : : : "memory");
 #endif
     }
-    return Val_bool(1);
+    CAMLreturn(Val_bool(1));
   }
-  return Val_bool(0);
+  CAMLreturn(Val_bool(0));
 }
 
 /*****************************************************************************/
@@ -1159,7 +1181,7 @@ void hh_move(value key1, value key2) {
   unsigned int slot1 = find_slot(key1);
   unsigned int slot2 = find_slot(key2);
 
-  assert(my_pid == master_pid);
+  assert_master();
   assert(hashtbl[slot1].hash == get_hash(key1));
   assert(hashtbl[slot2].addr == NULL);
   hashtbl[slot2].hash = get_hash(key2);
@@ -1175,7 +1197,7 @@ void hh_move(value key1, value key2) {
 void hh_remove(value key) {
   unsigned int slot = find_slot(key);
 
-  assert(my_pid == master_pid);
+  assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
   hashtbl[slot].addr = NULL;
 }
