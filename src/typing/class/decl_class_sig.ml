@@ -12,7 +12,7 @@ module T = struct
   let ct_check_polarity = false
   let structural = false
   let class_ctor c = Type.ThisClassT c
-  let remove_this = Class_sig.remove_this
+  let remove_this_tparam = Class_sig.remove_this_tparam
   let subst = Class_sig.subst
 
   let mk_type_param_declarations cx tparams_map reason self class_ast =

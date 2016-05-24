@@ -19,7 +19,7 @@ module type ClassyType =
     val ct_check_polarity: bool
     val structural: bool
     val class_ctor: Type.t -> Type.t
-    val remove_this: Sig.t -> Sig.t
+    val remove_this_tparam: Sig.t -> Sig.t
     val subst: Context.t -> tparams_map_t -> Sig.signature -> Sig.signature
     val mk_type_param_declarations: Context.t -> tparams_map_t -> reason ->
       self_t -> classy_ast_t -> tparams_t * tparams_map_t
@@ -115,7 +115,7 @@ module Make(Classy : ClassyType) = struct
     }
 
   let classtype cx x =
-    let x = Classy.remove_this x in
+    let x = Classy.remove_this_tparam x in
     let { Sig.
       tparams;
       static = { Sig.reason = sreason; super = ssuper; _ };
@@ -142,7 +142,7 @@ module Make(Classy : ClassyType) = struct
     })
   let check_super cx x =
     let open Sig in
-    let x = Classy.remove_this x in
+    let x = Classy.remove_this_tparam x in
     let reason = x.instance.reason in
     mutually (fun ~static ->
       let super = with_sig ~static (fun s -> s.super) x in
