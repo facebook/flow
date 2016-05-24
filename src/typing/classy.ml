@@ -18,7 +18,7 @@ module type ClassyType =
        is flipped off for interface/declare class currently. *)
     val ct_check_polarity: bool
     val structural: bool
-    val mk_class: Type.t -> Type.t
+    val class_ctor: Type.t -> Type.t
     val remove_this: Sig.t -> Sig.t
     val subst_sig: Context.t -> tparams_map_t -> Sig.signature -> Sig.signature
     val mk_type_param_declarations: Context.t -> tparams_map_t -> reason ->
@@ -127,7 +127,7 @@ module Make(Classy : ClassyType) = struct
     let static = InstanceT (sreason, MixedT.t, ssuper, sinsttype) in
     let this = InstanceT (reason, static, super, insttype) in
     (if Classy.ct_check_polarity then Flow.check_polarity cx Positive this);
-    let t = Classy.mk_class this in
+    let t = Classy.class_ctor this in
     if tparams = [] then t else PolyT (tparams, t)
 
   let generate_tests cx f x =

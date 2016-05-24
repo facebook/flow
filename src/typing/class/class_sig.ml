@@ -95,7 +95,7 @@ module T = struct
   type classy_ast_t = Ast.Class.t
   let ct_check_polarity = true
   let structural = false
-  let mk_class c = Type.ThisClassT c
+  let class_ctor c = Type.ThisClassT c
   let remove_this = remove_this
   let subst_sig = subst_sig
 
