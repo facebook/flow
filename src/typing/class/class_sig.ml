@@ -72,7 +72,7 @@ let add_this self cx reason tparams tparams_map =
   tparams@[this_tp],
   SMap.add "this" (Type.BoundT this_tp) tparams_map
 
-let remove_this x = Sig.(
+let remove_this_tparam x = Sig.(
   let tparams = List.rev (List.tl (List.rev x.tparams)) in
   let tparams_map = SMap.remove "this" x.tparams_map in
   { x with tparams; tparams_map }
@@ -96,7 +96,7 @@ module T = struct
   let ct_check_polarity = true
   let structural = false
   let class_ctor c = Type.ThisClassT c
-  let remove_this = remove_this
+  let remove_this_tparam = remove_this_tparam
   let subst = subst
 
   let mk_type_param_declarations cx tparams_map reason self class_ast =

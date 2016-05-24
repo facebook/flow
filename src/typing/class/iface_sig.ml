@@ -96,7 +96,7 @@ module T = struct
   let ct_check_polarity = false
   let structural = true
   let class_ctor i = Type.ClassT i
-  let remove_this x = x (* there exists no `this`, so remove nothing *)
+  let remove_this_tparam x = x
   let subst = Class_sig.subst
 
   let mk_type_param_declarations cx tparams_map _ _ class_ast =
