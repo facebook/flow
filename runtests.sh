@@ -351,7 +351,9 @@ while (( next_test_to_reap < ${#dirs[@]} )); do
       $RUNTEST_MISSING_FILES )
         (( failed++ ))
         print_failure "$testname"
-        printf "Missing %s.exp file or .flowconfig file\n" "$testname" ;;
+        name=${testname%*/}
+        name=${name##*/}
+        printf "Missing %s.exp file or .flowconfig file\n" "$name" ;;
     esac
 
     ((next_test_to_reap++))
