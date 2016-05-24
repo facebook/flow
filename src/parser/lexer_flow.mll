@@ -367,6 +367,12 @@
     (Array.length lex_result.lex_lb_mem)
 
   let loc_of_lexbuf env lexbuf = Loc.from_lb env.lex_source lexbuf
+  let is_comment_syntax_enabled env = env.lex_enable_comment_syntax
+  let is_in_comment_syntax env = env.lex_in_comment_syntax
+  let in_comment_syntax is_in env =
+    if is_in <> env.lex_in_comment_syntax
+    then { env with lex_in_comment_syntax = is_in }
+    else env
 
   let get_result_and_clear_state (env, lex_token) =
     let state = !(env.lex_state) in
@@ -643,7 +649,7 @@ rule token env = parse
                        }
   | "/*" (whitespace* as sp) (":" | "::" | "flow-include" as escape_type) as pattern
                        {
-                         if not env.lex_enable_comment_syntax then
+                         if not (is_comment_syntax_enabled env) then
                            let start = loc_of_lexbuf env lexbuf in
                            let buf = Buffer.create 127 in
                            Buffer.add_string buf sp;
@@ -652,22 +658,18 @@ rule token env = parse
                            save_comment env start _end buf true;
                            token env lexbuf
                          else
-                           let () = if env.lex_in_comment_syntax then
+                           let () = if is_in_comment_syntax env then
                              let loc = loc_of_lexbuf env lexbuf in
                              unexpected_error env loc pattern
                            in
-                           let env = {
-                             env with lex_in_comment_syntax = true
-                           } in
+                           let env = in_comment_syntax true env in
                            match escape_type with
                            | ":" -> env, T_COLON
                            | _ -> token env lexbuf
                        }
   | "*/"               {
-                         if env.lex_in_comment_syntax then
-                           let env = { env with
-                             lex_in_comment_syntax = false
-                           } in
+                         if is_in_comment_syntax env then
+                           let env = in_comment_syntax false env in
                            token env lexbuf
                          else
                            let () = yyback 1 lexbuf in
@@ -800,7 +802,7 @@ rule token env = parse
   | "/"                { env, T_DIV }
   | "@"                { env, T_AT }
   (* Others *)
-  | eof                { let () = if env.lex_in_comment_syntax then
+  | eof                { let () = if is_in_comment_syntax env then
                            let loc = loc_of_lexbuf env lexbuf in
                            lex_error env loc Parse_error.UnexpectedEOS
                          in
@@ -830,7 +832,7 @@ and type_token env = parse
                        }
   | "/*" (whitespace* as sp) (":" | "::" | "flow-include" as escape_type) as pattern
                        {
-                         if not env.lex_enable_comment_syntax then
+                         if not (is_comment_syntax_enabled env) then
                            let start = loc_of_lexbuf env lexbuf in
                            let buf = Buffer.create 127 in
                            Buffer.add_string buf sp;
@@ -839,22 +841,18 @@ and type_token env = parse
                            save_comment env start _end buf true;
                            type_token env lexbuf
                          else
-                           let () = if env.lex_in_comment_syntax then
+                           let () = if is_in_comment_syntax env then
                              let loc = loc_of_lexbuf env lexbuf in
                              unexpected_error env loc pattern
                            in
-                           let env = { env with
-                             lex_in_comment_syntax = true;
-                           } in
+                           let env = in_comment_syntax true env in
                            match escape_type with
                            | ":" -> env, T_COLON
                            | _ -> type_token env lexbuf
                        }
   | "*/"               {
-                         if env.lex_in_comment_syntax then
-                           let env = { env with
-                             lex_in_comment_syntax = false
-                           } in
+                         if is_in_comment_syntax env then
+                           let env = in_comment_syntax false env in
                            type_token env lexbuf
                          else
                            let () = yyback 1 lexbuf in
@@ -954,7 +952,7 @@ and type_token env = parse
   | '+'                { env, T_PLUS }
   | '-'                { env, T_MINUS }
   (* Others *)
-  | eof                { let () = if env.lex_in_comment_syntax then
+  | eof                { let () = if is_in_comment_syntax env then
                            let loc = loc_of_lexbuf env lexbuf in
                            lex_error env loc Parse_error.UnexpectedEOS
                          in
@@ -1064,12 +1062,12 @@ and comment env buf = parse
                          comment env buf lexbuf }
   | "*/"               {
                          let loc = loc_of_lexbuf env lexbuf in
-                         if env.lex_in_comment_syntax
+                         if is_in_comment_syntax env
                          then unexpected_error_w_suggest env loc "*/" "*-/";
                          loc
                        }
   | "*-/"              {
-                         if env.lex_in_comment_syntax
+                         if is_in_comment_syntax env
                          then loc_of_lexbuf env lexbuf
                          else (
                            Buffer.add_string buf "*-/";

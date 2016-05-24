@@ -322,9 +322,8 @@ let advance env (lex_env, lex_result) =
   env.lb.Lexing.lex_start_p <- lex_result.lex_lb_start_p;
   env.lb.Lexing.lex_curr_p <- lex_result.lex_lb_curr_p;
 
-  env.lex_env := { lex_env with
-    lex_in_comment_syntax = lex_result.lex_result_in_comment_syntax
-  };
+  env.lex_env :=
+    in_comment_syntax lex_result.lex_result_in_comment_syntax lex_env;
 
   error_list env lex_result.lex_errors;
   comment_list env lex_result.lex_comments;
