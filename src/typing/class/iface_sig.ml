@@ -97,7 +97,7 @@ module T = struct
   let structural = true
   let class_ctor i = Type.ClassT i
   let remove_this x = x (* there exists no `this`, so remove nothing *)
-  let subst_sig = Class_sig.subst_sig
+  let subst = Class_sig.subst
 
   let mk_type_param_declarations cx tparams_map _ _ class_ast =
     let { Ast.Statement.Interface.typeParameters; _ } = class_ast in

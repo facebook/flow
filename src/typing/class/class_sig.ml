@@ -6,7 +6,7 @@ module Utils = Utils_js
 
 open Reason_js
 
-let subst_sig cx map s =
+let subst cx map s =
   let subst_field cx tparams_map (t, value) =
     Flow.subst cx tparams_map t, value in
   Sig.({
@@ -97,7 +97,7 @@ module T = struct
   let structural = false
   let class_ctor c = Type.ThisClassT c
   let remove_this = remove_this
-  let subst_sig = subst_sig
+  let subst = subst
 
   let mk_type_param_declarations cx tparams_map reason self class_ast =
     let { Ast.Class.typeParameters; _ } = class_ast in
