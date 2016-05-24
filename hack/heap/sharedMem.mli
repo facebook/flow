@@ -18,9 +18,10 @@
 (*****************************************************************************)
 
 type config = {
-  global_size : int;
-  heap_size   : int;
-  shm_dir     : string;
+  global_size   : int;
+  heap_size     : int;
+  shm_dirs      : string list;
+  shm_min_avail : int;
 }
 
 val default_config : config

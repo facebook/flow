@@ -12,9 +12,15 @@ open Utils_js
 
 let version = "0.25.0"
 
-let default_shm_dir =
-  try Sys.getenv "FLOW_SHMDIR"
-  with _ -> "/dev/shm"
+let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
+let default_shm_dirs =
+  try
+    Sys.getenv "FLOW_SHMDIR"
+    |> Str.(split (regexp ","))
+  with _ -> [ "/dev/shm"; default_temp_dir; ]
+
+(* Half a gig *)
+let default_shm_min_avail = 1024 * 1024 * 512
 
 let map_add map (key, value) = SMap.add key value map
 
@@ -59,7 +65,8 @@ module Opts = struct
     log_file: Path.t option;
     max_workers: int;
     temp_dir: string;
-    shm_dir: string;
+    shm_dirs: string list;
+    shm_min_avail: int;
     version: string option;
   }
 
@@ -132,8 +139,9 @@ module Opts = struct
     all = false;
     log_file = None;
     max_workers = Sys_utils.nbr_procs;
-    temp_dir = Filename.concat Sys_utils.temp_dir_name "flow";
-    shm_dir = default_shm_dir;
+    temp_dir = default_temp_dir;
+    shm_dirs = default_shm_dirs;
+    shm_min_avail = default_shm_min_avail;
     version = None;
   }
 
@@ -578,12 +586,21 @@ let parse_options config lines =
       });
     }
 
-    |> define_opt "shm_dir" {
+    |> define_opt "sharedmemory.dirs" {
       _initializer = USE_DEFAULT;
-      flags = [];
+      flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v -> {
-        opts with shm_dir = v;
+        opts with shm_dirs = opts.shm_dirs @ [v];
+      });
+    }
+
+    |> define_opt "sharedmemory.minimum_available" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts shm_min_avail -> {
+        opts with shm_min_avail;
       });
     }
 

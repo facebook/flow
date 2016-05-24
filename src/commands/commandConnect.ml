@@ -17,7 +17,8 @@ type env = {
   retry_if_init : bool;
   expiry : float option;
   tmp_dir : string;
-  shm_dir : string;
+  shm_dirs : string list;
+  shm_min_avail : int;
   log_file : string;
   ignore_version : bool;
 }
@@ -69,17 +70,15 @@ let msg_of_tail tail_env =
 
 (* Starts up a flow server by literally calling flow start *)
 let start_flow_server env =
-  let tmp_dir = env.tmp_dir in
-  let shm_dir = env.shm_dir in
-  let ignore_version = env.ignore_version in
-  let root = env.root in
+  let {tmp_dir; shm_dirs; shm_min_avail; ignore_version; root; _;} = env in
   Utils_js.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
   let exe = Sys.argv.(0) in
   let args = [
     "--temp-dir"; tmp_dir;
-    "--shm-dir"; shm_dir;
+    "--sharedmemory-dirs"; String.concat "," shm_dirs;
+    "--sharedmemory-minimum-available"; string_of_int shm_min_avail;
     Path.to_string root;
   ] in
   let args = match FlowEventLogger.((get_context ()).from) with

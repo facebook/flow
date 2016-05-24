@@ -34,7 +34,8 @@ module Opts : sig
     log_file: Path.t option;
     max_workers: int;
     temp_dir: string;
-    shm_dir: string;
+    shm_dirs: string list;
+    shm_min_avail: int;
     version: string option;
   }
 end

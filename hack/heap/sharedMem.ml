@@ -11,9 +11,10 @@
 open Core
 
 type config = {
-  global_size : int;
-  heap_size   : int;
-  shm_dir     : string;
+  global_size      : int;
+  heap_size        : int;
+  shm_dirs         : string list;
+  shm_min_avail    : int;
 }
 
 let default_config =
@@ -21,7 +22,8 @@ let default_config =
   {
     global_size = gig;
     heap_size = 20 * gig;
-    shm_dir = GlobalConfig.shm_dir;
+    shm_dirs = [GlobalConfig.shm_dir; GlobalConfig.tmp_dir;];
+    shm_min_avail = gig / 2; (* Half a gig by default *)
   }
 
 (* Allocated in C only. *)
@@ -32,21 +34,101 @@ type handle = private {
 }
 
 exception Out_of_shared_memory
+exception Failed_anonymous_memfd_init
+exception Less_than_minimum_available of int
+exception Failed_to_use_shm_dir of string
 let () =
-  Callback.register_exception "out_of_shared_memory" Out_of_shared_memory
+  Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
+  Callback.register_exception "failed_anonymous_memfd_init" Failed_anonymous_memfd_init;
+  Callback.register_exception "less_than_minimum_available" (Less_than_minimum_available 0)
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
 external hh_shared_init
-  : global_size:int -> heap_size:int -> shm_dir:string -> handle
-  = "hh_shared_init"
+  : global_size:int ->
+    heap_size:int ->
+    shm_min_avail:int ->
+    shm_dir:string option ->
+      handle = "hh_shared_init"
 
-let init config =
+let anonymous_init config =
   hh_shared_init
     ~global_size:config.global_size
     ~heap_size:config.heap_size
-    ~shm_dir:config.shm_dir
+    ~shm_min_avail:config.shm_min_avail
+    ~shm_dir:None
+
+let rec shm_dir_init config = function
+| [] ->
+    Hh_logger.log
+      "We've run out of filesystems to use for shared memory";
+    raise Out_of_shared_memory
+| shm_dir::shm_dirs ->
+    let shm_min_avail = config.shm_min_avail in
+    begin try
+      (* For some reason statvfs is segfaulting when the directory doesn't
+       * exist, instead of returning -1 and an errno *)
+      if not (Sys.file_exists shm_dir)
+      then raise (Failed_to_use_shm_dir "shm_dir does not exist");
+      hh_shared_init
+        ~global_size:config.global_size
+        ~heap_size:config.heap_size
+        ~shm_min_avail
+        ~shm_dir:(Some shm_dir)
+    with
+    | Less_than_minimum_available avail ->
+        EventLogger.(log_if_initialized (fun () ->
+          sharedmem_less_than_minimum_available
+            ~shm_dir
+            ~shm_min_avail
+            ~avail
+        ));
+        if !Utils.debug
+        then Hh_logger.log
+          "Filesystem %s only has %d bytes available, \
+            which is less than the minimum %d bytes"
+          shm_dir
+          avail
+          config.shm_min_avail;
+        shm_dir_init config shm_dirs
+    | Unix.Unix_error (e, fn, arg) ->
+        let fn_string =
+          if fn = ""
+          then ""
+          else Utils.spf " thrown by %s(%s)" fn arg in
+        let reason =
+          Utils.spf "Unix error%s: %s" fn_string (Unix.error_message e) in
+        EventLogger.(log_if_initialized (fun () ->
+          sharedmem_failed_to_use_shm_dir ~shm_dir ~reason
+        ));
+        if !Utils.debug
+        then Hh_logger.log
+          "Failed to use shm dir `%s`: %s"
+          shm_dir
+          reason;
+        shm_dir_init config shm_dirs
+    | Failed_to_use_shm_dir reason ->
+        EventLogger.(log_if_initialized (fun () ->
+          sharedmem_failed_to_use_shm_dir ~shm_dir ~reason
+        ));
+        if !Utils.debug
+        then Hh_logger.log
+          "Failed to use shm dir `%s`: %s"
+          shm_dir
+          reason;
+        shm_dir_init config shm_dirs
+    end
+
+let init config =
+  try anonymous_init config
+  with Failed_anonymous_memfd_init ->
+    EventLogger.(log_if_initialized (fun () ->
+      sharedmem_failed_anonymous_memfd_init ()
+    ));
+    if !Utils.debug
+    then Hh_logger.log "Failed to use anonymous memfd init";
+    shm_dir_init config config.shm_dirs
 
 let init_default () : handle =
   init default_config

@@ -9,10 +9,17 @@
  *)
 
 let init _ _ = ()
+let log_if_initialized _ = ()
 let master_exception _ = ()
 let worker_exception _ = ()
 let sharedmem_gc_ran _ _ _ _ = ()
 let sharedmem_init_done _ = ()
+let sharedmem_failed_anonymous_memfd_init _ = ()
+let sharedmem_failed_to_use_shm_dir ~shm_dir:_ ~reason:_ = ()
+let sharedmem_less_than_minimum_available
+  ~shm_dir:_
+  ~shm_min_avail:_
+  ~avail:_ = ()
 let find_done ~time_taken:_ ~name:_ = ()
 let log_gc_stats () = ()
 let flush _ = ()

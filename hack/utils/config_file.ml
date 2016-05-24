@@ -48,4 +48,7 @@ module Getters = struct
   let bool_ key ~default config =
     Option.value_map (SMap.get key config) ~default ~f:bool_of_string
 
+  let string_list ~delim key ~default config =
+    Option.value_map (SMap.get key config) ~default ~f:(Str.split delim)
+
 end

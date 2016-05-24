@@ -54,7 +54,8 @@ module OptionParser(Config : CONFIG) = struct
     |> verbose_flags
     |> strip_root_flag
     |> temp_dir_flag
-    |> shm_dir_flag
+    |> shm_dirs_flag
+    |> shm_min_avail_flag
     |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
@@ -179,10 +180,12 @@ module OptionParser(Config : CONFIG) = struct
       verbose
       strip_root
       temp_dir
-      shm_dir
+      shm_dirs
+      shm_min_avail
       from
       root
       () =
+
     FlowEventLogger.set_from from;
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
@@ -215,12 +218,16 @@ module OptionParser(Config : CONFIG) = struct
     | Some x -> x
     | None -> FlowConfig.(flowconfig.options.Opts.temp_dir)
     in
-    let opt_shm_dir = match shm_dir with
-    | Some x -> x
-    | None -> FlowConfig.(flowconfig.options.Opts.shm_dir)
-    in
+    let opt_shm_dirs = Option.value_map
+      shm_dirs
+      ~default:FlowConfig.(flowconfig.options.Opts.shm_dirs)
+      ~f:(Str.split (Str.regexp ",")) in
+    let opt_shm_min_avail = Option.value
+      shm_min_avail
+      ~default:FlowConfig.(flowconfig.options.Opts.shm_min_avail) in
     let opt_temp_dir = Path.to_string (Path.make opt_temp_dir) in
-    let opt_shm_dir = Path.to_string (Path.make opt_shm_dir) in
+    let opt_shm_dirs =
+      List.map Path.(fun dir -> dir |> make |> to_string) opt_shm_dirs in
     let opt_default_lib_dir =
       if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
@@ -275,7 +282,8 @@ module OptionParser(Config : CONFIG) = struct
       opt_default_lib_dir;
       opt_munge_underscores = opt_munge_underscores;
       opt_temp_dir;
-      opt_shm_dir;
+      opt_shm_dirs;
+      opt_shm_min_avail;
       opt_max_workers;
       opt_ignores;
       opt_includes;

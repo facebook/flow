@@ -223,7 +223,8 @@ end = struct
     let is_check_mode = Options.is_check_mode options in
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
-    let shm_dir = Options.shm_dir options in
+    let shm_dirs = Options.shm_dirs options in
+    let shm_min_avail = Options.shm_min_avail options in
     (* You need to grab the lock before initializing the pid files
        and before to allocate the shared heap. *)
     begin if not is_check_mode
@@ -239,7 +240,8 @@ end = struct
     FlowEventLogger.init_server root;
     Relative_path.set_path_prefix Relative_path.Root root;
     Program.preinit options;
-    let handle = SharedMem.(init { default_config with shm_dir }) in
+    let handle =
+      SharedMem.(init { default_config with shm_dirs; shm_min_avail; }) in
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)

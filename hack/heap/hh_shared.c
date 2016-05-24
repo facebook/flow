@@ -348,7 +348,7 @@ static HANDLE memfd;
  * Committing the whole shared heap at once would require the same
  * amount of free space in memory (or in swap file).
  **************************************************************************/
-void memfd_init(char *shm_dir, size_t shared_mem_size) {
+void memfd_init(char *shm_dir, size_t shared_mem_size, long minimum_avail) {
   memfd = CreateFileMapping(
     INVALID_HANDLE_VALUE,
     NULL,
@@ -369,6 +369,33 @@ void memfd_init(char *shm_dir, size_t shared_mem_size) {
 
 static int memfd = -1;
 
+static void raise_failed_anonymous_memfd_init() {
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("failed_anonymous_memfd_init");
+  caml_raise_constant(*exn);
+}
+
+static void raise_less_than_minimum_available(long avail) {
+  CAMLlocal1(arg);
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("less_than_minimum_available");
+  arg = Val_long(avail);
+  caml_raise_with_arg(*exn, arg);
+}
+
+#include <sys/statvfs.h>
+void assert_avail_exceeds_minimum(char *shm_dir, long minimum_avail) {
+  struct statvfs stats;
+  long avail;
+  if (statvfs(shm_dir, &stats)) {
+    uerror("statvfs", caml_copy_string(shm_dir));
+  }
+  avail = stats.f_bsize * stats.f_bavail;
+  if (avail < minimum_avail) {
+    raise_less_than_minimum_available(avail);
+  }
+}
+
 /**************************************************************************
  * The memdfd_init function creates a anonymous memory file that might
  * be inherited by `Daemon.spawned` processus (contrary to a simple
@@ -385,19 +412,27 @@ static int memfd = -1;
  * The resulting file descriptor should be mmaped with the memfd_map
  * function (see below).
  ****************************************************************************/
-void memfd_init(char *shm_dir, size_t shared_mem_size) {
+void memfd_init(char *shm_dir, size_t shared_mem_size, long minimum_avail) {
+  if (shm_dir == NULL) {
+    // This means that we should try to use the anonymous-y system calls
 #if defined(MEMFD_CREATE)
-  memfd = memfd_create("fb_heap", 0);
+    memfd = memfd_create("fb_heap", 0);
 #endif
-  if (memfd < 0) {
 #if defined(__APPLE__)
-    char memname[255];
-    snprintf(memname, sizeof(memname), "/fb_heap.%d", getpid());
-    memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
     if (memfd < 0) {
-        uerror("shm_open", Nothing);
+      char memname[255];
+      snprintf(memname, sizeof(memname), "/fb_heap.%d", getpid());
+      memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
+      if (memfd < 0) {
+          uerror("shm_open", Nothing);
+      }
     }
 #endif
+    if (memfd < 0) {
+      raise_failed_anonymous_memfd_init();
+    }
+  } else {
+    assert_avail_exceeds_minimum(shm_dir, minimum_avail);
     if (memfd < 0) {
       char template[1024];
       if (!snprintf(template, 1024, "%s/fb_heap-XXXXXX", shm_dir)) {
@@ -405,7 +440,7 @@ void memfd_init(char *shm_dir, size_t shared_mem_size) {
       };
       memfd = mkstemp(template);
       if (memfd < 0) {
-        uerror("mkstemp", Nothing);
+        uerror("mkstemp", caml_copy_string(template));
       }
       unlink(template);
     }
@@ -602,17 +637,26 @@ static size_t get_shared_mem_size() {
 CAMLprim value hh_shared_init(
   value global_size_val,
   value heap_size_val,
+  value min_avail_val,
   value shm_dir_val
 ) {
 
-  CAMLparam3(global_size_val, heap_size_val, shm_dir_val);
+  CAMLparam4(global_size_val, heap_size_val, min_avail_val, shm_dir_val);
   CAMLlocal1(connector);
 
   global_size_b = Long_val(global_size_val);
   heap_size = Long_val(heap_size_val);
 
   shared_mem_size = get_shared_mem_size();
-  memfd_init(String_val(shm_dir_val), shared_mem_size);
+
+  // None -> NULL
+  // Some str -> String_val(str)
+  char *shm_dir = NULL;
+  if (shm_dir_val != Val_int(0)) {
+    shm_dir = String_val(Field(shm_dir_val, 0));
+  }
+
+  memfd_init(shm_dir, shared_mem_size, Long_val(min_avail_val));
   char *shared_mem_init = memfd_map(shared_mem_size);
   define_globals(shared_mem_init);
 
