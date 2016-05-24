@@ -307,7 +307,7 @@ runtest() {
 }
 
 
-num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
+num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-8}
 printf "Running up to %d test(s) in parallel\n" $num_to_run_in_parallel
 
 # Index N of pids should correspond to the test at index N of dirs
