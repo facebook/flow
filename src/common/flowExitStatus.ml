@@ -27,7 +27,7 @@ type t =
   (* Generic out-of-date error. This could be a version thing or maybe
    * something changed and Flow can't handle it incrementally yet *)
   | Server_out_of_date
-  (* We ran out of shared memory *)
+  (* When the shared memory is missing space (e.g. full /dev/shm) *)
   | Out_of_shared_memory
   (* A weird error where a client talks to the wrong server. Really should
    * never happen *)

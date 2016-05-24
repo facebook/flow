@@ -98,7 +98,7 @@ let update_status_ (server: ServerProcess.server_process) = match server with
       | 0, _ ->
         server
       | _, _ ->
-        let oom_code = Exit_status.ec Exit_status.Out_of_shared_memory in
+        let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
         let was_oom = match proc_stat with
         | Unix.WEXITED code when code = oom_code -> true
         | _ -> check_dmesg_for_oom process in
@@ -148,11 +148,11 @@ let update_status env =
    let env = { env with servers = servers } in
    let watchman_failed _ status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
-        when c = Exit_status.(ec Watchman_failed) -> true
+        when c = Exit_status.(exit_code Watchman_failed) -> true
      | _ -> false in
    let config_changed _ status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
-        when c = Exit_status.(ec Hhconfig_changed) -> true
+        when c = Exit_status.(exit_code Hhconfig_changed) -> true
      | _ -> false in
    let max_watchman_retries = 3 in
    if (SMap.exists watchman_failed servers)

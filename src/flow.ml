@@ -59,8 +59,6 @@ end = struct
   let commands = ShellCommand.command :: commands
 
   let main () =
-    Daemon.check_entry_point (); (* this call might not return *)
-
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let default_command = DefaultCommand.command in
     let argv = Array.to_list Sys.argv in
@@ -98,7 +96,9 @@ end = struct
 end
 
 let _ =
-  try FlowShell.main ()
+  try
+    Daemon.check_entry_point (); (* this call might not return *)
+    FlowShell.main ()
   with
   | SharedMem.Out_of_shared_memory ->
       FlowExitStatus.(exit Out_of_shared_memory)

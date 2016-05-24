@@ -50,7 +50,7 @@ type t =
 
 exception Exit_with of t
 
-let ec t = match t with
+let exit_code = function
   | No_error -> 0
   | Build_error -> 2
   | Build_terminated -> 1
@@ -90,9 +90,10 @@ let ec t = match t with
   | IDE_init_failure -> 205
   | IDE_typechecker_died -> 206
 
+
 let exit t =
-  let code = ec t in
-  Pervasives.exit code
+  let ec = exit_code t in
+  Pervasives.exit ec
 
 let to_string = function
   | No_error -> "Ok"

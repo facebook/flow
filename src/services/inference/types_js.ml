@@ -311,10 +311,11 @@ let typecheck ~options ~timing ~workers ~make_merge_input files removed unparsed
       if Options.should_profile options then Gc.print_stat stderr;
       Flow_logger.log "Done";
       timing
-    with exc ->
-      prerr_endline (Printexc.to_string exc);
-      timing
-    in
+    with
+    | SharedMem.Out_of_shared_memory as exn -> raise exn
+    | exc ->
+        prerr_endline (Printexc.to_string exc);
+        timing in
     (* collate errors by origin *)
     collate_errors ();
     timing

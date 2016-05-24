@@ -62,3 +62,5 @@ val write: config -> out_channel -> unit
 
 val version: string
 val project_root_token: Str.regexp
+
+val restore: string -> config -> unit

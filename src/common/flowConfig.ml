@@ -706,3 +706,5 @@ let get filename =
   | Some (cached_filename, config) ->
       assert (filename = cached_filename);
       config
+
+let restore filename config = cache := Some (filename, config)

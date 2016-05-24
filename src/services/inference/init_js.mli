@@ -9,6 +9,7 @@
  *)
 
 val get_master_cx: Options.t -> Context.t
+val restore_master_cx: Context.t -> unit
 
 (* called to initialize library code on initial full pass.
    params are functions to save errors and suppressions:

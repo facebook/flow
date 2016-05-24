@@ -27,9 +27,9 @@ module Infer = Type_inference_js
 (* created in the master process (see Server.preinit), populated and saved to
    ContextHeap. forked workers will have an empty replica from the master, but
    it's useless. should only be accessed through ContextHeap. *)
-let get_master_cx =
+let get_master_cx, restore_master_cx =
   let cx_ = ref None in
-  fun options -> match !cx_ with
+  let get_master_cx options = match !cx_ with
   | None ->
     let metadata = Context.({ (metadata_of_options options) with
       checked = false;
@@ -39,7 +39,9 @@ let get_master_cx =
       metadata Loc.Builtins (Modulename.String Files_js.lib_module) in
     cx_ := Some cx;
     cx
-  | Some cx -> cx
+  | Some cx -> cx in
+  let restore_master_cx cx = cx_ := Some cx in
+  get_master_cx, restore_master_cx
 
 let parse_lib_file file =
   (* types are always allowed in lib files *)

@@ -23,6 +23,7 @@ let get_context _ = {
   root = None;
   start_time = 0.0;
 }
+let restore_context _ = ()
 let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()

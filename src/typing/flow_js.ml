@@ -543,6 +543,9 @@ let lookup_module cx m = Context.find_module cx m
 let builtins cx =
   lookup_module cx Files_js.lib_module
 
+let restore_builtins cx b =
+  Context.add_module cx Files_js.lib_module b
+
 (* new contexts are prepared here, so we can install shared tvars *)
 let fresh_context metadata file module_name =
   let cx = Context.make metadata file module_name in

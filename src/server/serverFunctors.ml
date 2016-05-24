@@ -197,6 +197,11 @@ end = struct
     FlowEventLogger.init_done ~timing;
     env
 
+  let open_log_file options =
+    let file = Path.to_string (Options.log_file options) in
+    (try Sys.rename file (file ^ ".old") with _ -> ());
+    Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
+
   (* The main entry point of the daemon
   * the only trick to understand here, is that env.modified is the set
   * of files that changed, it is only set back to SSet.empty when the
@@ -204,26 +209,31 @@ end = struct
   * we look if env.modified changed.
   *)
   let main options waiting_channel =
+    (* We don't want to spew for flow check *)
+    let is_check_mode = Options.is_check_mode options in
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
     let shm_dir = Options.shm_dir options in
-    FlowEventLogger.init_server root;
-    Program.preinit options;
-    SharedMem.(init { default_config with shm_dir });
-    (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
-    * someone C-c the client.
-    *)
-    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
-    let is_check_mode = Options.is_check_mode options in
-    (* You need to grab the lock before initializing the pid files *)
+    (* You need to grab the lock before initializing the pid files
+       and before to allocate the shared heap. *)
     begin if not is_check_mode
     then begin
       grab_lock ~tmp_dir root;
       PidLog.init (Server_files.pids_file ~tmp_dir root);
       PidLog.log ~reason:"main" (Unix.getpid())
-    end else
-      PidLog.disable ()
+    end else begin
+      PidLog.disable ();
+      Flow_logger.disable ()
     end;
+    end;
+    FlowEventLogger.init_server root;
+    Relative_path.set_path_prefix Relative_path.Root root;
+    Program.preinit options;
+    let _handle = SharedMem.(init { default_config with shm_dir }) in
+    (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
+    * someone C-c the client.
+    *)
+    Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
       ServerEnvBuild.make_genv ~multicore:true options watch_paths in
@@ -288,6 +298,10 @@ end = struct
                * forward that error code *)
               "There is already a server running.",
               FlowExitStatus.Lock_stolen
+            else if code = FlowExitStatus.(error_code Out_of_shared_memory)
+            then
+              "The server is failed to allocate shared memory.",
+              FlowExitStatus.Out_of_shared_memory
             else
               spf "exited prematurely with code %d." code, exit_code
         | Unix.WSIGNALED signal ->
@@ -301,12 +315,6 @@ end = struct
     in
     if Options.should_wait options && msg <> "ready"
     then wait_loop child_pid options ic
-
-  let open_log_file options =
-    let file = Path.to_string (Options.log_file options) in
-    (try Sys.rename file (file ^ ".old") with _ -> ());
-    mkdir_no_fail (Filename.dirname file);
-    Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
 
   let daemonize options =
     (* Let's make sure this isn't all for naught before we fork *)
@@ -371,18 +379,12 @@ end = struct
 
   let start () =
     let options = Program.parse_options () in
-    Relative_path.set_path_prefix Relative_path.Root (Options.root options);
     try
       let waiting_channel =
         if Options.should_detach options
         then Some (daemonize options)
         else None in
 
-      (* We don't want to spew for flow check *)
-      if Options.is_check_mode options
-      then Flow_logger.disable ();
-      if Options.is_server_mode options
-      then Flow_logger.also_log_to_fd (open_log_file options);
       main options waiting_channel
     with Exit ->
       ()
