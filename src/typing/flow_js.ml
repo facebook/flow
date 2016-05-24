@@ -3322,12 +3322,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let arrt = get_builtin_typeapp cx reason "Array" [t] in
       rec_flow cx trace (arrt, u)
 
-    (*TJP: Analogous to TypeAppT above*)
-(*    | (ArrT (_, t, _), MethodT _) ->
-      let reason = reason_of_use_t u in
-      let arrt = get_builtin_typeapp cx reason "Array" [t] in
-      rec_flow cx trace (arrt, u)
- *)
     | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       if TypeAppExpansion.push_array_unless_loop cx [t] then (
         let reason = reason_of_use_t u in
