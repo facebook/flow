@@ -787,7 +787,7 @@ module RecursionCheck : sig
 
 end = struct
   exception LimitExceeded of Trace.t
-  let limit = 100
+  let limit = 10000
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
@@ -3322,10 +3322,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let arrt = get_builtin_typeapp cx reason "Array" [t] in
       rec_flow cx trace (arrt, u)
 
-    | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
+    (*TJP: Analogous to TypeAppT above*)
+(*    | (ArrT (_, t, _), MethodT _) ->
       let reason = reason_of_use_t u in
       let arrt = get_builtin_typeapp cx reason "Array" [t] in
       rec_flow cx trace (arrt, u)
+ *)
+    | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
+      if TypeAppExpansion.push_array_unless_loop cx [t] then (
+        let reason = reason_of_use_t u in
+        let arrt = get_builtin_typeapp cx reason "Array" [t] in
+        rec_flow cx trace (arrt, u);
+        TypeAppExpansion.pop ()
+      )
 
     (***********************)
     (* String library call *)
@@ -3411,21 +3420,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT(reason, (reason, "$value"), t))
-
-    (*TJP: Preempt the ReposLowerT flow, but behave identically otherwise*)
-    | (ArrT (_, t, _), ReposLowerT (reason_op, u)) ->
-(*Neglecting the third argument to ArrT*)
-        if TypeAppExpansion.push_array_unless_loop cx [t] then (
-(*Minimally invasive--closest to the intention of ArrT (specializing too early
-  would probably cause problems)*)
-          rec_flow cx trace (reposition cx reason_op l, u);
-(*(*`TypeAppT, _`'s analogous behavior from above.*)
-          let reason = reason_of_use_t u in
-          let arrt = get_builtin_typeapp cx reason "Array" [t] in
-          rec_flow cx trace (arrt, u);
-*)
-          TypeAppExpansion.pop ()
-        )
 
     (*************************)
     (* repositioning, part 2 *)
