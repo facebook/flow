@@ -1548,7 +1548,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let t = mk_typeapp_instance cx ~reason_op ~reason_tapp ~cache:true c ts in
         rec_flow cx trace (t, u)
 
-    (*Do the LHS first, and break protocol in teh MethodT instance*)
     | (TypeAppT(c,ts), _) ->
         if TypeAppExpansion.push_instant_unless_loop cx (c, ts) then (
           let reason_op = reason_of_use_t u in
