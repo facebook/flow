@@ -54,6 +54,7 @@ module OptionParser(Config : CONFIG) = struct
     |> verbose_flags
     |> strip_root_flag
     |> temp_dir_flag
+    |> shm_dir_flag
     |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
@@ -178,6 +179,7 @@ module OptionParser(Config : CONFIG) = struct
       verbose
       strip_root
       temp_dir
+      shm_dir
       from
       root
       () =
@@ -213,7 +215,12 @@ module OptionParser(Config : CONFIG) = struct
     | Some x -> x
     | None -> FlowConfig.(flowconfig.options.Opts.temp_dir)
     in
+    let opt_shm_dir = match shm_dir with
+    | Some x -> x
+    | None -> FlowConfig.(flowconfig.options.Opts.shm_dir)
+    in
     let opt_temp_dir = Path.to_string (Path.make opt_temp_dir) in
+    let opt_shm_dir = Path.to_string (Path.make opt_shm_dir) in
     let opt_default_lib_dir =
       if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
@@ -268,6 +275,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_default_lib_dir;
       opt_munge_underscores = opt_munge_underscores;
       opt_temp_dir;
+      opt_shm_dir;
       opt_max_workers;
       opt_ignores;
       opt_includes;

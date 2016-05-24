@@ -11,13 +11,18 @@
 open Core
 
 type config = {
-  global_size: int;
-  heap_size : int;
+  global_size : int;
+  heap_size   : int;
+  shm_dir     : string;
 }
 
 let default_config =
   let gig = 1024 * 1024 * 1024 in
-  {global_size = gig; heap_size = 20 * gig}
+  {
+    global_size = gig;
+    heap_size = 20 * gig;
+    shm_dir = GlobalConfig.shm_dir;
+  }
 
 (* Allocated in C only. *)
 type handle = private {
@@ -40,11 +45,10 @@ external hh_shared_init
 let handle = ref None
 
 let init config =
-  let shm_dir = GlobalConfig.shm_dir in
   handle := Some (hh_shared_init
     ~global_size:config.global_size
     ~heap_size:config.heap_size
-    ~shm_dir)
+    ~shm_dir:config.shm_dir)
 
 let init_default () =
   init default_config

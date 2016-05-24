@@ -118,6 +118,12 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Directory in which to store temp files (default: /tmp/flow/)"
 )
 
+let shm_dir_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--shm-dir" string
+      ~doc:"Directory in which to store shared memory heap (default: /dev/shm/)"
+)
+
 let from_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--from" (optional string)
@@ -214,6 +220,7 @@ type command_params = {
   timeout : int;
   no_auto_start : bool;
   temp_dir : string option;
+  shm_dir : string option;
   ignore_version : bool;
 }
 
@@ -224,6 +231,7 @@ let collect_server_flags
     retry_if_init
     no_auto_start
     temp_dir
+    shm_dir
     from
     ignore_version =
   let default def = function
@@ -237,6 +245,7 @@ let collect_server_flags
     timeout = (default 0 timeout);
     no_auto_start = no_auto_start;
     temp_dir;
+    shm_dir;
     ignore_version;
   }
 
@@ -252,6 +261,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server is not running, do not start it; just exit"
   |> temp_dir_flag
+  |> shm_dir_flag
   |> from_flag
   |> ignore_version_flag
 )
@@ -279,9 +289,12 @@ let connect server_flags root =
   let config_options = FlowConfig.((get flowconfig).options) in
   let tmp_dir = match server_flags.temp_dir with
   | Some dir -> dir
-  | None -> config_options.FlowConfig.Opts.temp_dir
-  in
+  | None -> config_options.FlowConfig.Opts.temp_dir in
+  let shm_dir = match server_flags.shm_dir with
+  | Some dir -> dir
+  | None -> config_options.FlowConfig.Opts.shm_dir in
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
+  let shm_dir = Path.to_string (Path.make shm_dir) in
   let log_file =
     Path.to_string (Server_files_js.log_file ~tmp_dir root config_options) in
   let retries = server_flags.retries in
@@ -296,6 +309,7 @@ let connect server_flags root =
     retry_if_init;
     expiry;
     tmp_dir;
+    shm_dir;
     log_file;
     ignore_version = server_flags.ignore_version;
   } in

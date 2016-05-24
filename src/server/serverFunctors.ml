@@ -206,9 +206,10 @@ end = struct
   let main options waiting_channel =
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
+    let shm_dir = Options.shm_dir options in
     FlowEventLogger.init_server root;
     Program.preinit options;
-    SharedMem.(init default_config);
+    SharedMem.(init { default_config with shm_dir });
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)

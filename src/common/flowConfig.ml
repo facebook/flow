@@ -12,6 +12,10 @@ open Utils_js
 
 let version = "0.25.0"
 
+let default_shm_dir =
+  try Sys.getenv "FLOW_SHMDIR"
+  with _ -> "/dev/shm"
+
 let map_add map (key, value) = SMap.add key value map
 
 let multi_error (errs:(int * string) list) =
@@ -55,6 +59,7 @@ module Opts = struct
     log_file: Path.t option;
     max_workers: int;
     temp_dir: string;
+    shm_dir: string;
     version: string option;
   }
 
@@ -128,6 +133,7 @@ module Opts = struct
     log_file = None;
     max_workers = Sys_utils.nbr_procs;
     temp_dir = Filename.concat Sys_utils.temp_dir_name "flow";
+    shm_dir = default_shm_dir;
     version = None;
   }
 
@@ -569,6 +575,15 @@ let parse_options config lines =
       optparser = optparse_string;
       setter = (fun opts v -> {
         opts with temp_dir = v;
+      });
+    }
+
+    |> define_opt "shm_dir" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_string;
+      setter = (fun opts v -> {
+        opts with shm_dir = v;
       });
     }
 

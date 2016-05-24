@@ -52,6 +52,12 @@ let main strip_root ignore_flag include_flag root () =
     |> Path.to_string
   in
 
+  let opt_shm_dir =
+    FlowConfig.(flowconfig.options.Opts.shm_dir)
+    |> Path.make
+    |> Path.to_string
+  in
+
   let opt_log_file = Server_files_js.log_file
     ~tmp_dir:opt_temp_dir
     root
@@ -111,6 +117,7 @@ let main strip_root ignore_flag include_flag root () =
     opt_default_lib_dir = None;
     opt_munge_underscores = false;
     opt_temp_dir;
+    opt_shm_dir;
     opt_max_workers = 1;
     opt_ignores;
     opt_includes;
