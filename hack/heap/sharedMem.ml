@@ -10,9 +10,13 @@
 
 open Core
 
+(* Don't change the ordering of this record without updating hh_shared_init in
+ * hh_shared.c, which indexes into config objects *)
 type config = {
   global_size      : int;
   heap_size        : int;
+  dep_table_pow    : int;
+  hash_table_pow   : int;
   shm_dirs         : string list;
   shm_min_avail    : int;
 }
@@ -20,10 +24,12 @@ type config = {
 let default_config =
   let gig = 1024 * 1024 * 1024 in
   {
-    global_size = gig;
-    heap_size = 20 * gig;
-    shm_dirs = [GlobalConfig.shm_dir; GlobalConfig.tmp_dir;];
-    shm_min_avail = gig / 2; (* Half a gig by default *)
+    global_size    = gig;
+    heap_size      = 20 * gig;
+    dep_table_pow  = 17; (* 1 << 17 *)
+    hash_table_pow = 18; (* 1 << 18 *)
+    shm_dirs       = [GlobalConfig.shm_dir; GlobalConfig.tmp_dir;];
+    shm_min_avail  = gig / 2; (* Half a gig by default *)
   }
 
 (* Allocated in C only. *)
@@ -45,19 +51,13 @@ let () =
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
-external hh_shared_init
-  : global_size:int ->
-    heap_size:int ->
-    shm_min_avail:int ->
-    shm_dir:string option ->
-      handle = "hh_shared_init"
+external hh_shared_init :
+  config:config -> shm_dir:string option -> handle = "hh_shared_init"
 
 let anonymous_init config =
   hh_shared_init
-    ~global_size:config.global_size
-    ~heap_size:config.heap_size
-    ~shm_min_avail:config.shm_min_avail
-    ~shm_dir:None
+    ~config
+    ~shm_dir: None
 
 let rec shm_dir_init config = function
 | [] ->
@@ -72,9 +72,7 @@ let rec shm_dir_init config = function
       if not (Sys.file_exists shm_dir)
       then raise (Failed_to_use_shm_dir "shm_dir does not exist");
       hh_shared_init
-        ~global_size:config.global_size
-        ~heap_size:config.heap_size
-        ~shm_min_avail
+        ~config
         ~shm_dir:(Some shm_dir)
     with
     | Less_than_minimum_available avail ->

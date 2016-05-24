@@ -62,6 +62,8 @@ type t = {
   opt_weak : bool;
   opt_shm_dirs: string list;
   opt_shm_min_avail: int;
+  opt_shm_dep_table_pow: int;
+  opt_shm_hash_table_pow: int;
 }
 
 let default_error_flags = {
@@ -113,5 +115,7 @@ let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 let shm_dirs opts = opts.opt_shm_dirs
 let shm_min_avail opts = opts.opt_shm_min_avail
+let shm_dep_table_pow opts = opts.opt_shm_dep_table_pow
+let shm_hash_table_pow opts = opts.opt_shm_hash_table_pow
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak

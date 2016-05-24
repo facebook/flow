@@ -131,6 +131,20 @@ let shm_min_avail_flag prev = CommandSpec.ArgSpec.(
         least these many bytes available (default: 536870912 - which is 512MB)"
 )
 
+let shm_dep_table_pow_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--sharedmemory-dep-table-pow" int
+      ~doc:"The exponent for the size of the shared memory dependency table. \
+        The default is 17, implying a size of 2^17 bytes"
+)
+
+let shm_hash_table_pow_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--sharedmemory-hash-table-pow" int
+      ~doc:"The exponent for the size of the shared memory hash table. \
+        The default is 19, implying a size of 2^19 bytes"
+)
+
 let from_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--from" (optional string)
@@ -221,15 +235,17 @@ let relativize strip_root root loc =
   else Reason_js.strip_root_from_loc root loc
 
 type command_params = {
-  from : string;
-  retries : int;
-  retry_if_init : bool;
-  timeout : int;
-  no_auto_start : bool;
-  temp_dir : string option;
-  shm_dirs : string option;
-  shm_min_avail : int option;
-  ignore_version : bool;
+  from               : string;
+  retries            : int;
+  retry_if_init      : bool;
+  timeout            : int;
+  no_auto_start      : bool;
+  temp_dir           : string option;
+  shm_dirs           : string option;
+  shm_min_avail      : int option;
+  shm_dep_table_pow  : int option;
+  shm_hash_table_pow : int option;
+  ignore_version     : bool;
 }
 
 let collect_server_flags
@@ -241,6 +257,8 @@ let collect_server_flags
     temp_dir
     shm_dirs
     shm_min_avail
+    shm_dep_table_pow
+    shm_hash_table_pow
     from
     ignore_version =
   let default def = function
@@ -256,6 +274,8 @@ let collect_server_flags
     temp_dir;
     shm_dirs;
     shm_min_avail;
+    shm_dep_table_pow;
+    shm_hash_table_pow;
     ignore_version;
   }
 
@@ -273,6 +293,8 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> temp_dir_flag
   |> shm_dirs_flag
   |> shm_min_avail_flag
+  |> shm_dep_table_pow_flag
+  |> shm_hash_table_pow_flag
   |> from_flag
   |> ignore_version_flag
 )
@@ -303,13 +325,9 @@ let connect server_flags root =
     ~f:normalize
     ~default:config_options.FlowConfig.Opts.temp_dir
     server_flags.temp_dir in
-  let shm_dirs = Option.value_map
+  let shm_dirs = Option.map
     ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
-    ~default:config_options.FlowConfig.Opts.shm_dirs
     server_flags.shm_dirs in
-  let shm_min_avail = Option.value
-    ~default:config_options.FlowConfig.Opts.shm_min_avail
-    server_flags.shm_min_avail in
   let log_file =
     Path.to_string (Server_files_js.log_file ~tmp_dir root config_options) in
   let retries = server_flags.retries in
@@ -325,7 +343,9 @@ let connect server_flags root =
     expiry;
     tmp_dir;
     shm_dirs;
-    shm_min_avail;
+    shm_min_avail = server_flags.shm_min_avail;
+    shm_dep_table_pow = server_flags.shm_dep_table_pow;
+    shm_hash_table_pow = server_flags.shm_hash_table_pow;
     log_file;
     ignore_version = server_flags.ignore_version;
   } in

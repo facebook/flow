@@ -67,6 +67,8 @@ module Opts = struct
     temp_dir: string;
     shm_dirs: string list;
     shm_min_avail: int;
+    shm_dep_table_pow: int;
+    shm_hash_table_pow: int;
     version: string option;
   }
 
@@ -142,6 +144,8 @@ module Opts = struct
     temp_dir = default_temp_dir;
     shm_dirs = default_shm_dirs;
     shm_min_avail = default_shm_min_avail;
+    shm_dep_table_pow = 17;
+    shm_hash_table_pow = 19;
     version = None;
   }
 
@@ -601,6 +605,24 @@ let parse_options config lines =
       optparser = optparse_uint;
       setter = (fun opts shm_min_avail -> {
         opts with shm_min_avail;
+      });
+    }
+
+    |> define_opt "sharedmemory.dep_table_pow" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts shm_dep_table_pow -> {
+        opts with shm_dep_table_pow;
+      });
+    }
+
+    |> define_opt "sharedmemory.hash_table_pow" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts shm_hash_table_pow -> {
+        opts with shm_hash_table_pow;
       });
     }
 

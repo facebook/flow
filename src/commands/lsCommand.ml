@@ -120,6 +120,12 @@ let main strip_root ignore_flag include_flag root () =
     opt_temp_dir;
     opt_shm_dirs;
     opt_shm_min_avail;
+    opt_shm_dep_table_pow = FlowConfig.(
+      flowconfig.options.Opts.shm_dep_table_pow
+    );
+    opt_shm_hash_table_pow = FlowConfig.(
+      flowconfig.options.Opts.shm_hash_table_pow
+    );
     opt_max_workers = 1;
     opt_ignores;
     opt_includes;

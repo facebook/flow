@@ -56,6 +56,8 @@ module OptionParser(Config : CONFIG) = struct
     |> temp_dir_flag
     |> shm_dirs_flag
     |> shm_min_avail_flag
+    |> shm_dep_table_pow_flag
+    |> shm_hash_table_pow_flag
     |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
@@ -182,6 +184,8 @@ module OptionParser(Config : CONFIG) = struct
       temp_dir
       shm_dirs
       shm_min_avail
+      shm_dep_table_pow
+      shm_hash_table_pow
       from
       root
       () =
@@ -228,6 +232,12 @@ module OptionParser(Config : CONFIG) = struct
     let opt_temp_dir = Path.to_string (Path.make opt_temp_dir) in
     let opt_shm_dirs =
       List.map Path.(fun dir -> dir |> make |> to_string) opt_shm_dirs in
+    let opt_shm_dep_table_pow = Option.value
+      shm_dep_table_pow
+      ~default:FlowConfig.(flowconfig.options.Opts.shm_dep_table_pow) in
+    let opt_shm_hash_table_pow = Option.value
+      shm_hash_table_pow
+      ~default:FlowConfig.(flowconfig.options.Opts.shm_hash_table_pow) in
     let opt_default_lib_dir =
       if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
@@ -284,6 +294,8 @@ module OptionParser(Config : CONFIG) = struct
       opt_temp_dir;
       opt_shm_dirs;
       opt_shm_min_avail;
+      opt_shm_dep_table_pow;
+      opt_shm_hash_table_pow;
       opt_max_workers;
       opt_ignores;
       opt_includes;

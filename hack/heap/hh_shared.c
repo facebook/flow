@@ -175,31 +175,18 @@ static int win32_getpagesize(void) {
  * memory), initialized in hh_shared_init */
 /*****************************************************************************/
 
+/* Convention: .*_b = Size in bytes. */
+
 static size_t global_size_b;
 static size_t heap_size;
 
-// XXX: DEP_POW and HASHTBL_POW are not configurable because we take a ~2% perf
-// hit by doing so, likely because the compiler does some constant folding.
-// Should revisit this if / when we switch to compiling with an optimization
-// level higher than -O0. In lieu of that, let's use a define so we don't use
-// absurd amounts of RAM for OSS users.
-#ifdef OSS_SMALL_HH_TABLE_POWS
-#define DEP_POW         17
-#define HASHTBL_POW     18
-#else
-#define DEP_POW         25
-#define HASHTBL_POW     25
-#endif
-
-/* Convention: .*_B = Size in bytes. */
-
 /* Used for the dependency hashtable */
-#define DEP_SIZE        (1ul << DEP_POW)
-#define DEP_SIZE_B      (DEP_SIZE * sizeof(value))
+static unsigned long dep_size;
+static unsigned long dep_size_b;
 
 /* Used for the shared hashtable */
-#define HASHTBL_SIZE    (1ul << HASHTBL_POW)
-#define HASHTBL_SIZE_B  (HASHTBL_SIZE * sizeof(helt_t))
+static unsigned long hashtbl_size;
+static unsigned long hashtbl_size_b;
 
 /* Size of where we allocate shared objects. */
 #define Get_size(x)     (((size_t*)(x))[-1])
@@ -295,7 +282,7 @@ CAMLprim value hh_hash_used_slots(void) {
   CAMLparam0();
   uint64_t count = 0;
   uintptr_t i = 0;
-  for (i = 0; i < HASHTBL_SIZE; ++i) {
+  for (i = 0; i < hashtbl_size; ++i) {
     if (hashtbl[i].addr != NULL) {
       count++;
     }
@@ -305,7 +292,7 @@ CAMLprim value hh_hash_used_slots(void) {
 
 CAMLprim value hh_hash_slots(void) {
   CAMLparam0();
-  CAMLreturn(Val_long(HASHTBL_SIZE));
+  CAMLreturn(Val_long(hashtbl_size));
 }
 
 #ifdef _WIN32
@@ -523,20 +510,14 @@ static void memfd_reserve(char * mem, size_t sz) {
 
 #elif defined(__APPLE__)
 
+/* So OSX lacks fallocate, but in general you can do
+ * fcntl(fd, F_PREALLOCATE, &store)
+ * however it doesn't seem to work for a shm_open fd, so this function is
+ * currently a no-op. This means that our OOM handling for OSX is a little
+ * weaker than the other OS's */
 static void memfd_reserve(char * mem, size_t sz) {
   (void)mem;
   (void)sz;
-  // TODO ??
-  /* fstore_t store = { F_ALLOCATECONTIG, F_PEOFPOSMODE, */
-  /*                    (uint64_t)(mem - SHARED_MEM_INIT), sz }; */
-  /* int ret = fcntl(memfd, F_PREALLOCATE, &store); */
-  /* if (ret == -1) { */
-  /*   store.fst_flags = F_ALLOCATEALL; */
-  /*   ret = fcntl(memfd, F_PREALLOCATE, &store); */
-  /*   if (ret == -1) { */
-  /*     uerror("preallocate", Nothing); */
-  /*   } */
-  /* } */
 }
 
 #else
@@ -588,14 +569,14 @@ static void define_globals(char * shared_mem_init) {
 
   /* Dependencies */
   deptbl = (uint64_t*)mem;
-  mem += DEP_SIZE_B;
+  mem += dep_size_b;
 
   deptbl_bindings = (uint64_t*)mem;
-  mem += DEP_SIZE_B;
+  mem += dep_size_b;
 
   /* Hashtable */
   hashtbl = (helt_t*)mem;
-  mem += HASHTBL_SIZE_B;
+  mem += hashtbl_size_b;
 
   /* Heap */
   heap_init = mem;
@@ -626,8 +607,23 @@ static void init_shared_globals() {
  * virtual. */
 static size_t get_shared_mem_size() {
   size_t page_size = getpagesize();
-  return (global_size_b + 2 * DEP_SIZE_B + HASHTBL_SIZE_B +
+  return (global_size_b + 2 * dep_size_b + hashtbl_size_b +
           heap_size + page_size);
+}
+
+static void set_sizes(
+  unsigned long config_global_size,
+  unsigned long config_heap_size,
+  unsigned long config_dep_table_pow,
+  unsigned long config_hash_table_pow) {
+
+  global_size_b = config_global_size;
+  heap_size = config_heap_size;
+
+  dep_size       = 1ul << config_dep_table_pow;
+  dep_size_b     = dep_size * sizeof(value);
+  hashtbl_size   = 1ul << config_hash_table_pow;
+  hashtbl_size_b = hashtbl_size * sizeof(helt_t);
 }
 
 /*****************************************************************************/
@@ -635,17 +631,28 @@ static size_t get_shared_mem_size() {
 /*****************************************************************************/
 
 CAMLprim value hh_shared_init(
-  value global_size_val,
-  value heap_size_val,
-  value min_avail_val,
+  value config_val,
   value shm_dir_val
 ) {
+  CAMLparam2(config_val, shm_dir_val);
+  CAMLlocal5(
+    connector,
+    config_global_size_val,
+    config_heap_size_val,
+    config_dep_table_pow_val,
+    config_hash_table_pow_val
+  );
 
-  CAMLparam4(global_size_val, heap_size_val, min_avail_val, shm_dir_val);
-  CAMLlocal1(connector);
-
-  global_size_b = Long_val(global_size_val);
-  heap_size = Long_val(heap_size_val);
+  config_global_size_val = Field(config_val, 0);
+  config_heap_size_val = Field(config_val, 1);
+  config_dep_table_pow_val = Field(config_val, 2);
+  config_hash_table_pow_val = Field(config_val, 3);
+  set_sizes(
+    Long_val(config_global_size_val),
+    Long_val(config_heap_size_val),
+    Long_val(config_dep_table_pow_val),
+    Long_val(config_hash_table_pow_val)
+  );
 
   shared_mem_size = get_shared_mem_size();
 
@@ -656,7 +663,11 @@ CAMLprim value hh_shared_init(
     shm_dir = String_val(Field(shm_dir_val, 0));
   }
 
-  memfd_init(shm_dir, shared_mem_size, Long_val(min_avail_val));
+  memfd_init(
+    shm_dir,
+    shared_mem_size,
+    Long_val(Field(config_val, 5))
+  );
   char *shared_mem_init = memfd_map(shared_mem_size);
   define_globals(shared_mem_init);
 
@@ -668,6 +679,7 @@ CAMLprim value hh_shared_init(
   *master_pid = getpid();
   my_pid = *master_pid;
 #endif
+
 
 #ifdef MADV_DONTDUMP
   // We are unlikely to get much useful information out of the shared heap in
@@ -693,10 +705,12 @@ CAMLprim value hh_shared_init(
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
 
-  connector = caml_alloc_tuple(3);
+  connector = caml_alloc_tuple(5);
   Field(connector, 0) = Val_handle(memfd);
-  Field(connector, 1) = global_size_val;
-  Field(connector, 2) = heap_size_val;
+  Field(connector, 1) = config_global_size_val;
+  Field(connector, 2) = config_heap_size_val;
+  Field(connector, 3) = config_dep_table_pow_val;
+  Field(connector, 4) = config_hash_table_pow_val;
 
   CAMLreturn(connector);
 }
@@ -714,8 +728,12 @@ void hh_shared_reset() {
 value hh_connect(value connector, value is_master) {
   CAMLparam2(connector, is_master);
   memfd = Handle_val(Field(connector, 0));
-  global_size_b = Long_val(Field(connector, 1));
-  heap_size = Long_val(Field(connector, 2));
+  set_sizes(
+    Long_val(Field(connector, 1)),
+    Long_val(Field(connector, 2)),
+    Long_val(Field(connector, 3)),
+    Long_val(Field(connector, 4))
+  );
 #ifdef _WIN32
   my_pid = 1; // Trick
 #else
@@ -725,7 +743,6 @@ value hh_connect(value connector, value is_master) {
   define_globals(shared_mem_init);
 
   if (Bool_val(is_master)) {
-    fprintf(stderr, "Reconnecting as master %d", my_pid);
     *master_pid = my_pid;
   }
 
@@ -846,7 +863,7 @@ static uint64_t hash_uint64(uint64_t n) {
 /*****************************************************************************/
 
 static int htable_add(uint64_t* table, unsigned long hash, uint64_t value) {
-  unsigned long slot = hash & (DEP_SIZE - 1);
+  unsigned long slot = hash & (dep_size - 1);
 
   while(1) {
     /* It considerably speeds things up to do a normal load before trying using
@@ -870,7 +887,7 @@ static int htable_add(uint64_t* table, unsigned long hash, uint64_t value) {
       }
     }
 
-    slot = (slot + 1) & (DEP_SIZE - 1);
+    slot = (slot + 1) & (dep_size - 1);
   }
 }
 
@@ -891,7 +908,7 @@ CAMLprim value hh_dep_used_slots(void) {
   CAMLparam0();
   uint64_t count = 0;
   uintptr_t slot = 0;
-  for (slot = 0; slot < DEP_SIZE; ++slot) {
+  for (slot = 0; slot < dep_size; ++slot) {
     if (deptbl[slot]) {
       count++;
     }
@@ -901,7 +918,7 @@ CAMLprim value hh_dep_used_slots(void) {
 
 CAMLprim value hh_dep_slots(void) {
   CAMLparam0();
-  CAMLreturn(Val_long(DEP_SIZE));
+  CAMLreturn(Val_long(dep_size));
 }
 
 /* Given a key, returns the list of values bound to it. */
@@ -910,7 +927,7 @@ CAMLprim value hh_get_dep(value dep) {
   CAMLlocal2(result, cell);
 
   unsigned long hash = Long_val(dep);
-  unsigned long slot = hash & (DEP_SIZE - 1);
+  unsigned long slot = hash & (dep_size - 1);
 
   result = Val_int(0); // The empty list
 
@@ -924,7 +941,7 @@ CAMLprim value hh_get_dep(value dep) {
       Field(cell, 1) = result;
       result = cell;
     }
-    slot = (slot + 1) & (DEP_SIZE - 1);
+    slot = (slot + 1) & (dep_size - 1);
   }
 
   CAMLreturn(result);
@@ -1027,7 +1044,7 @@ void hh_collect(value aggressive_val) {
 
   // Walking the table
   size_t i;
-  for(i = 0; i < HASHTBL_SIZE; i++) {
+  for(i = 0; i < hashtbl_size; i++) {
     if(hashtbl[i].addr != NULL) { // Found a non empty slot
       size_t bl_size      = Get_buf_size(hashtbl[i].addr);
       size_t aligned_size = ALIGNED(bl_size);
@@ -1110,7 +1127,7 @@ static void write_at(unsigned int slot, value data) {
 /*****************************************************************************/
 void hh_add(value key, value data) {
   unsigned long hash = get_hash(key);
-  unsigned int slot = hash & (HASHTBL_SIZE - 1);
+  unsigned int slot = hash & (hashtbl_size - 1);
 
   while(1) {
     unsigned long slot_hash = hashtbl[slot].hash;
@@ -1124,7 +1141,7 @@ void hh_add(value key, value data) {
       // We think we might have a free slot, try to atomically grab it.
       if(__sync_bool_compare_and_swap(&(hashtbl[slot].hash), 0, hash)) {
         unsigned long size = __sync_fetch_and_add(hcounter, 1);
-        assert(size < HASHTBL_SIZE);
+        assert(size < hashtbl_size);
         write_at(slot, data);
         return;
       }
@@ -1148,7 +1165,7 @@ void hh_add(value key, value data) {
       }
     }
 
-    slot = (slot + 1) & (HASHTBL_SIZE - 1);
+    slot = (slot + 1) & (hashtbl_size - 1);
   }
 }
 
@@ -1159,7 +1176,7 @@ void hh_add(value key, value data) {
 /*****************************************************************************/
 static unsigned int find_slot(value key) {
   unsigned long hash = get_hash(key);
-  unsigned int slot = hash & (HASHTBL_SIZE - 1);
+  unsigned int slot = hash & (hashtbl_size - 1);
 
   while(1) {
     if(hashtbl[slot].hash == hash) {
@@ -1168,7 +1185,7 @@ static unsigned int find_slot(value key) {
     if(hashtbl[slot].hash == 0) {
       return slot;
     }
-    slot = (slot + 1) & (HASHTBL_SIZE - 1);
+    slot = (slot + 1) & (hashtbl_size - 1);
   }
 }
 
@@ -1314,11 +1331,11 @@ void hh_save_dep_table(value out_filename) {
 
   int compressed_size = 0;
 
-  assert(LZ4_MAX_INPUT_SIZE >= DEP_SIZE_B);
-  char* compressed = malloc(DEP_SIZE_B);
+  assert(LZ4_MAX_INPUT_SIZE >= dep_size_b);
+  char* compressed = malloc(dep_size_b);
   assert(compressed != NULL);
 
-  compressed_size = LZ4_compressHC((char*)deptbl, compressed, DEP_SIZE_B);
+  compressed_size = LZ4_compressHC((char*)deptbl, compressed, dep_size_b);
   assert(compressed_size > 0);
 
   fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
@@ -1352,12 +1369,12 @@ void hh_load_dep_table(value in_filename) {
   int actual_compressed_size = LZ4_decompress_fast(
       compressed,
       (char*)deptbl,
-      DEP_SIZE_B);
+      dep_size_b);
   assert(compressed_size == actual_compressed_size);
   tv = log_duration("Loading file", tv);
 
   uintptr_t slot = 0;
-  for (slot = 0; slot < DEP_SIZE; ++slot) {
+  for (slot = 0; slot < dep_size; ++slot) {
     uint64_t dep = deptbl[slot];
     if (dep != 0) {
       htable_add(deptbl_bindings, hash_uint64(dep), dep);

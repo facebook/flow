@@ -36,6 +36,8 @@ module Opts : sig
     temp_dir: string;
     shm_dirs: string list;
     shm_min_avail: int;
+    shm_dep_table_pow: int;
+    shm_hash_table_pow: int;
     version: string option;
   }
 end

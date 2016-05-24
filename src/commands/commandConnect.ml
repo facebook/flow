@@ -17,8 +17,10 @@ type env = {
   retry_if_init : bool;
   expiry : float option;
   tmp_dir : string;
-  shm_dirs : string list;
-  shm_min_avail : int;
+  shm_dirs : string list option;
+  shm_min_avail : int option;
+  shm_dep_table_pow : int option;
+  shm_hash_table_pow : int option;
   log_file : string;
   ignore_version : bool;
 }
@@ -68,23 +70,41 @@ let msg_of_tail tail_env =
   else
     "[processing]"
 
+let arg name value arr = match value with
+| None -> arr
+| Some value -> name::value::arr
+
+let arg_map name ~f value arr =
+  let value = Option.map ~f value in
+  arg name value arr
+
+let flag name value arr =
+  if value then name::arr else arr
+
 (* Starts up a flow server by literally calling flow start *)
 let start_flow_server env =
-  let {tmp_dir; shm_dirs; shm_min_avail; ignore_version; root; _;} = env in
+  let {
+    tmp_dir;
+    shm_dirs;
+    shm_min_avail;
+    shm_dep_table_pow;
+    shm_hash_table_pow;
+    ignore_version;
+    root;
+    _;
+  } = env in
   Utils_js.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
   let exe = Sys.argv.(0) in
-  let args = [
-    "--temp-dir"; tmp_dir;
-    "--sharedmemory-dirs"; String.concat "," shm_dirs;
-    "--sharedmemory-minimum-available"; string_of_int shm_min_avail;
-    Path.to_string root;
-  ] in
-  let args = match FlowEventLogger.((get_context ()).from) with
-    | Some from -> "--from"::from::args
-    | None -> args in
-  let args = if ignore_version then "--ignore-version"::args else args in
+  let args = [ Path.to_string root ]
+  |> arg_map "--sharedmemory-hash-table-pow" ~f:string_of_int shm_hash_table_pow
+  |> arg_map "--sharedmemory-dep-table-pow" ~f:string_of_int shm_dep_table_pow
+  |> arg_map "--sharedmemory-minimum-available" ~f:string_of_int shm_min_avail
+  |> arg_map "--sharedmemory-dirs" ~f:(String.concat ",") shm_dirs
+  |> arg "--temp-dir" (Some tmp_dir)
+  |> arg "--from" FlowEventLogger.((get_context ()).from)
+  |> flag "--ignore-version" ignore_version in
   try
     let server_pid =
       Unix.(create_process exe

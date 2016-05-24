@@ -225,6 +225,8 @@ end = struct
     let tmp_dir = Options.temp_dir options in
     let shm_dirs = Options.shm_dirs options in
     let shm_min_avail = Options.shm_min_avail options in
+    let dep_table_pow = Options.shm_dep_table_pow options in
+    let hash_table_pow = Options.shm_hash_table_pow options in
     (* You need to grab the lock before initializing the pid files
        and before to allocate the shared heap. *)
     begin if not is_check_mode
@@ -241,7 +243,12 @@ end = struct
     Relative_path.set_path_prefix Relative_path.Root root;
     Program.preinit options;
     let handle =
-      SharedMem.(init { default_config with shm_dirs; shm_min_avail; }) in
+      SharedMem.(init { default_config with
+        shm_dirs;
+        shm_min_avail;
+        dep_table_pow;
+        hash_table_pow;
+      }) in
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)

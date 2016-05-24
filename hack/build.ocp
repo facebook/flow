@@ -119,7 +119,6 @@ begin library "hh-utils-common"
     "hh-fsnotify"
     "hh-utils-json"
   ]
-  ccopt += "-DOSS_SMALL_HH_TABLE_POWS"
   files = [
     "heap/hh_shared.c"
 
