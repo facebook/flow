@@ -707,4 +707,4 @@ let get filename =
       assert (filename = cached_filename);
       config
 
-let restore filename config = cache := Some (filename, config)
+let restore (filename, config) = cache := Some (filename, config)

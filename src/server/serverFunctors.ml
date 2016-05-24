@@ -8,7 +8,6 @@
  *
  *)
 
-open Sys_utils
 open ServerEnv
 open ServerUtils
 open Utils_js
@@ -40,11 +39,15 @@ let grab_lock ~tmp_dir root =
 (* Main initialization *)
 (*****************************************************************************)
 
+type daemon_msg =
+  | Starting
+  | Ready
+
 module MainInit : sig
   val go:
     Options.t ->
     (unit -> env) ->    (* init function to run while we have init lock *)
-    out_channel option ->
+    daemon_msg Daemon.out_channel option ->
     env
 end = struct
 
@@ -57,23 +60,25 @@ end = struct
   let wakeup_client oc msg =
     Option.iter oc begin fun oc ->
       try
-        output_string oc (msg ^ "\n");
-        flush oc
+        Daemon.to_channel oc msg
       with
       (* The client went away *)
-      | Sys_error msg when msg = "Broken pipe" -> ()
+      | Sys_error msg
+        when msg = "Broken pipe"  || msg = "Invalid argument" -> ()
       | e ->
-          prerr_endlinef "wakeup_client: %s" (Printexc.to_string e)
+        prerr_endlinef "wakeup_client: %s" (Printexc.to_string e)
     end
 
   let close_waiting_channel oc =
     Option.iter oc begin fun oc ->
-      try close_out oc
+      try
+        Daemon.close_out oc
       with
       (* The client went away *)
-      | Sys_error msg when msg = "Broken pipe" -> ()
+      | Sys_error msg
+        when msg = "Broken pipe"  || msg = "Invalid argument" -> ()
       | e ->
-          prerr_endlinef "close_waiting_channel: %s" (Printexc.to_string e)
+        prerr_endlinef "close_waiting_channel: %s" (Printexc.to_string e)
     end
 
   (* This code is only executed when the options --check is NOT present *)
@@ -84,11 +89,11 @@ end = struct
     grab_lock ~tmp_dir root;
     Flow_logger.log "Initializing Server (This might take some time)";
     grab_init_lock ~tmp_dir root;
-    wakeup_client waiting_channel "starting";
+    wakeup_client waiting_channel Starting;
     ServerPeriodical.init ();
     let env = init_fun () in
     release_init_lock ~tmp_dir root;
-    wakeup_client waiting_channel "ready";
+    wakeup_client waiting_channel Ready;
     Flow_logger.log "Server is READY";
     let t' = Unix.gettimeofday () in
     Flow_logger.log "Took %f seconds to initialize." (t' -. t);
@@ -99,6 +104,11 @@ end
 (*****************************************************************************)
 (* The main loop *)
 (*****************************************************************************)
+let new_entry_point =
+  let cpt = ref 0 in
+  fun () ->
+    incr cpt;
+    Printf.sprintf "main_%d" !cpt
 
 module ServerMain (Program : SERVER_PROGRAM) : sig
   val start : unit -> unit
@@ -208,7 +218,7 @@ end = struct
   * type-checker succeeded. So to know if there is some work to be done,
   * we look if env.modified changed.
   *)
-  let main options waiting_channel =
+  let main ?waiting_channel options =
     (* We don't want to spew for flow check *)
     let is_check_mode = Options.is_check_mode options in
     let root = Options.root options in
@@ -266,8 +276,8 @@ end = struct
    * initialization to complete *)
   let rec wait_loop child_pid options ic =
     let msg = try
-      input_line ic
-    with End_of_file ->
+      Daemon.from_channel ic
+      with End_of_file ->
       (* The pipe broke before we got the alls-clear from the server. What kind
        * of things could go wrong. Well we check the lock before forking the
        * server, but maybe by the time the server started someone else had
@@ -313,8 +323,19 @@ end = struct
         in spf "Error: Failed to start server. %s" reason, exit_code
       in FlowExitStatus.(exit ~msg exit_code)
     in
-    if Options.should_wait options && msg <> "ready"
+    if Options.should_wait options && msg <> Ready
     then wait_loop child_pid options ic
+
+  let main_entry =
+    Daemon.register_entry_point
+      (new_entry_point ())
+      (fun (options, config, logging_context) (ic, waiting_channel) ->
+        ignore(Sys_utils.setsid());
+        Daemon.close_in ic;
+        FlowConfig.restore config;
+        FlowEventLogger.restore_context logging_context;
+        FlowEventLogger.init_flow_command ~version:FlowConfig.version;
+        main ~waiting_channel options)
 
   let daemonize options =
     (* Let's make sure this isn't all for naught before we fork *)
@@ -329,63 +350,37 @@ end = struct
       FlowExitStatus.(exit ~msg Lock_stolen)
     end;
 
-    (* Create a pipe for synchronization with the server: we will wait
-       until the server finishes its init phase. *)
-    let waiting_channel_in_fd, waiting_channel_out_fd = Unix.pipe () in
-    let waiting_channel_ic = Unix.in_channel_of_descr waiting_channel_in_fd in
-
+    let log_file = Path.to_string (Options.log_file options) in
+    let log_fd = open_log_file options in
+    let config_file = Server_files_js.config_file root in
+    let {Daemon.pid; channels = (waiting_channel_ic, waiting_channel_oc)} =
+      Daemon.spawn
+        (log_fd, log_fd)
+        main_entry
+        (options, (config_file, FlowConfig.get config_file), FlowEventLogger.get_context ()) in
     (* detach ourselves from the parent process *)
-    let pid = Fork.fork() in
-    if pid == 0
+    Daemon.close_out waiting_channel_oc;
+    (* let original parent exit *)
+
+    if Options.should_output_json options
     then begin
-      ignore(Unix.setsid());
-      Unix.close waiting_channel_in_fd;
-      with_umask 0o111 begin fun () ->
-        (* close stdin/stdout/stderr *)
-        let null_path = Path.to_string Path.null_path in
-        let fd = Unix.openfile null_path [Unix.O_RDONLY; Unix.O_CREAT] 0o777 in
-        Unix.dup2 fd Unix.stdin;
-        Unix.close fd;
-
-        let fd = open_log_file options in
-        Unix.dup2 fd Unix.stdout;
-        Unix.dup2 fd Unix.stderr;
-        Unix.close fd;
-        Unix.out_channel_of_descr waiting_channel_out_fd
-      end
-      (* child process is ready *)
+      let open Hh_json in
+      let json = json_to_string (JSON_Object [
+        "pid", JSON_String (string_of_int pid);
+        "log_file", JSON_String log_file;
+      ]) in
+      print_string json
     end else begin
-      Unix.close waiting_channel_out_fd;
-      (* let original parent exit *)
+      Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
+      Printf.eprintf
+        "Logs will go to %s\n%!" log_file
+    end;
 
-      let log_file = Path.to_string (Options.log_file options) in
-      if Options.should_output_json options
-      then begin
-        let open Hh_json in
-        let json = json_to_string (JSON_Object [
-          "pid", JSON_String (string_of_int pid);
-          "log_file", JSON_String log_file;
-        ]) in
-        print_string json
-      end else begin
-        Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
-        Printf.eprintf
-          "Logs will go to %s\n%!" log_file
-      end;
-
-      wait_loop pid options waiting_channel_ic;
-      raise Exit
-    end
+    wait_loop pid options waiting_channel_ic
 
   let start () =
     let options = Program.parse_options () in
-    try
-      let waiting_channel =
-        if Options.should_detach options
-        then Some (daemonize options)
-        else None in
-
-      main options waiting_channel
-    with Exit ->
-      ()
+    if Options.should_detach options
+    then daemonize options
+    else main options
 end
