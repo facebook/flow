@@ -361,27 +361,27 @@ end = struct
       | T_STRING (loc, value, raw, octal)  ->
           if octal then strict_error env Error.StrictOctalLiteral;
           Expect.token env (T_STRING (loc, value, raw, octal));
-          loc, Type.(StringLiteral StringLiteral.({
-            value;
+          loc, Type.StringLiteral {
+            Type.StringLiteral.value;
             raw;
-          }))
+          }
       | T_NUMBER_SINGLETON_TYPE (number_type, value) ->
           let raw = Peek.value env in
           Expect.token env (T_NUMBER_SINGLETON_TYPE (number_type, value));
           if number_type = LEGACY_OCTAL
           then strict_error env Error.StrictOctalLiteral;
-          loc, Type.(NumberLiteral NumberLiteral.({
-            value;
+          loc, Type.NumberLiteral {
+            Type.NumberLiteral.value;
             raw;
-          }))
+          }
       | (T_TRUE | T_FALSE) as token ->
           let raw = Peek.value env in
           Expect.token env token;
           let value = token = T_TRUE in
-          loc, Type.(BooleanLiteral BooleanLiteral.({
-            value;
+          loc, Type.BooleanLiteral {
+            Type.BooleanLiteral.value;
             raw;
-          }))
+          }
       | token ->
           match primitive token with
           | Some t ->
@@ -1727,33 +1727,38 @@ end = struct
         let expressions = expr::expressions in
         match Peek.token env with
         | T_RCURLY ->
-            let lex_env, lex_result = lex_template_tail (lex_env env) in
+            let lex_env, lex_result = template_tail (lex_env env) in
             set_lex_env env lex_env;
             Eat.advance env (lex_env, lex_result);
-            let loc, part = match lex_result.lex_token with
-            | T_TEMPLATE_PART ((loc, part), _) -> loc, part
+            let loc, part, is_tail = match lex_result.lex_token with
+            | T_TEMPLATE_PART (loc, {cooked; raw; _}, tail) ->
+                let open Ast.Expression.TemplateLiteral in
+                loc, { Element.value = { Element.cooked; raw; }; tail; }, tail
             | _ -> assert false in
             let quasis = (loc, part)::quasis in
-            if part.Expression.TemplateLiteral.Element.tail
+            if is_tail
             then loc, List.rev quasis, List.rev expressions
             else template_parts env quasis expressions
         | _ ->
             (* Malformed template *)
             error_unexpected env;
-            let imaginary_quasi = fst expr, Expression.TemplateLiteral.Element.({
-              value = {
+            let imaginary_quasi = fst expr, { Expression.TemplateLiteral.Element.
+              value = { Expression.TemplateLiteral.Element.
                 raw = "";
                 cooked = "";
               };
               tail = true;
-            }) in
+            } in
             fst expr, List.rev (imaginary_quasi::quasis), List.rev expressions
 
-      in fun env ((head, _) as part) ->
+      in fun env ((start_loc, {cooked; raw; _}, is_tail) as part) ->
         Expect.token env (T_TEMPLATE_PART part);
-        let start_loc = fst head in
         let end_loc, quasis, expressions =
-          if (snd head).Expression.TemplateLiteral.Element.tail
+          let head = Ast.Expression.TemplateLiteral.(start_loc, {
+            Element.value = { Element.cooked; raw; };
+            tail = is_tail;
+          }) in
+          if is_tail
           then start_loc, [head], []
           else template_parts env [head] [] in
         let loc = Loc.btwn start_loc end_loc in
@@ -3227,7 +3232,7 @@ end = struct
           (* Just make up a string for the error case *)
           let raw = Peek.value env in
           let value = Literal.String raw in
-          let ret = Peek.loc env, Literal.({ value; raw; }) in
+          let ret = Peek.loc env, { Literal.value; raw; } in
           error_unexpected env;
           ret
 
@@ -3611,7 +3616,7 @@ end = struct
             (* Just make up a string for the error case *)
             let raw = Peek.value env in
             let value = Literal.String raw in
-            let ret = Peek.loc env, Literal.({ value; raw; }) in
+            let ret = Peek.loc env, { Literal.value; raw; } in
             error_unexpected env;
             ret
 
