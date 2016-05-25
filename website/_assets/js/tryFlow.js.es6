@@ -31,11 +31,11 @@ function get(url) {
 
 var libs = [
   '/static/flowlib/core.js',
-  // '/static/flowlib/bom.js',
-  // '/static/flowlib/cssom.js',
-  // '/static/flowlib/dom.js',
-  // '/static/flowlib/node.js',
-  // '/static/flowlib/react.js',
+  '/static/flowlib/bom.js',
+  '/static/flowlib/cssom.js',
+  '/static/flowlib/dom.js',
+  '/static/flowlib/node.js',
+  '/static/flowlib/react.js',
 ];
 
 var flowReady = Promise.all(libs.map(get)).then(function(contents) {
