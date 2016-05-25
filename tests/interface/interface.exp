@@ -108,5 +108,29 @@ test3.js:6
   6:   (k.y: number); // error: y is string in I
              ^^^^^^ number
 
+test4.js:8
+  8: var p: A & I = a; // NG
+                ^ property `fn` of I. Property not found in
+  8: var p: A & I = a; // NG
+                    ^ A
 
-Found 19 errors
+test4.js:8
+  8: var p: A & I = a; // NG
+                ^ property `gn` of statics of I. Property not found in
+  8: var p: A & I = a; // NG
+                    ^ statics of A
+
+test4.js:9
+  9: var P: Class<A> & Class<I> = A; // NG
+                             ^ property `gn` of statics of I. Property not found in
+  6: class A {}
+           ^ statics of A
+
+test4.js:9
+  9: var P: Class<A> & Class<I> = A; // NG
+                             ^ property `fn` of I. Property not found in
+  9: var P: Class<A> & Class<I> = A; // NG
+                                  ^ A
+
+
+Found 23 errors
