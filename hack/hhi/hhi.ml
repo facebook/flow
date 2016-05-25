@@ -28,10 +28,7 @@ let touch () =
  * security risk. Be careful. *)
 let extract data =
   let tmpdir = Path.make (Tmp.temp_dir GlobalConfig.tmp_dir "hhi") in
-  (* we set all timestamps to the start of the epoch in order to have
-   * reproducible builds *)
-  let tar_cmd = "tar --extract --gzip --warning=no-timestamp --directory=" in
-  let oc = Unix.open_process_out (tar_cmd ^ (Path.to_string tmpdir)) in
+  let oc = Unix.open_process_out ("tar xzC " ^ (Path.to_string tmpdir)) in
   output_string oc data;
   flush oc;
   ignore (Unix.close_process_out oc);
