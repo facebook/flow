@@ -67,20 +67,29 @@ let calc_reverse_deps workers fileset = Module_js.(
    require them), generate the closure of the dependencies of a
    given fileset, using get_module_info to map files to modules
  *)
-let dep_closure rdmap fileset = FilenameSet.(
+let dep_closure rdmap fileset =
+  let deps_of_module m = Module_js.NameMap.get m rdmap in
+  let deps_of_file f =
+    let m = Module_js.((get_module_info f)._module) in
+    let f_module = Modulename.Filename f in
+    (* In general, a file exports its module via two names. See Modulename for
+       details. It suffices to note here that dependents of the file can use
+       either of those names to import the module. *)
+    match deps_of_module m, deps_of_module f_module with
+      | None, None -> FilenameSet.empty
+      | None, Some deps
+      | Some deps, None -> deps
+      | Some deps1, Some deps2 -> FilenameSet.union deps1 deps2
+  in
   let rec expand rdmap fileset seen =
-    fold (fun f acc ->
-      if mem f !seen then acc else (
-        seen := add f !seen;
-        let m = Module_js.((get_module_info f)._module) in
-        add f (match Module_js.NameMap.get m rdmap with
-          | None -> acc
-          | Some deps -> union acc (expand rdmap deps seen)
-        )
+    FilenameSet.fold (fun f acc ->
+      if FilenameSet.mem f !seen then acc else (
+        seen := FilenameSet.add f !seen;
+        let deps = deps_of_file f in
+        FilenameSet.add f (FilenameSet.union acc (expand rdmap deps seen))
       )
-    ) fileset empty
-  in expand rdmap fileset (ref empty)
-)
+    ) fileset FilenameSet.empty
+  in expand rdmap fileset (ref FilenameSet.empty)
 
 (* Files that must be rechecked include those that immediately or recursively
    depend on modules that were added, deleted, or modified as a consequence of
@@ -93,26 +102,40 @@ let dep_closure rdmap fileset = FilenameSet.(
 
    - unmodified_files is all unmodified files in the current state
    - inferred_files is all files that have just been through local inference
-   - touched_modules is all modules whose infos have just been cleared
+   - removed_modules is all modules whose infos have just been cleared
 
-   Note that while touched_modules and (the modules provided by) inferred_files
+   Note that while removed_modules and (the modules provided by) inferred_files
    usually overlap, inferred_files will include providers of new modules, and
-   touched_modules will include modules provided by deleted files.
+   removed_modules will include modules provided by deleted files.
 
    Return the subset of unmodified_files transitively dependent on changes,
    and the subset directly dependent on them.
 *)
-let dependent_files workers unmodified_files inferred_files touched_modules =
+let dependent_files workers unmodified_files inferred_files removed_modules =
 
   (* get reverse dependency map for unmodified files.
      TODO should generate this once on startup, keep required_by
      in module infos and update incrementally on recheck *)
   let reverse_deps = calc_reverse_deps workers unmodified_files in
 
-  (* expand touched_modules to include those provided by new files *)
+  (* touched_modules includes removed modules and those provided by new files *)
   let touched_modules = FilenameSet.fold Module_js.(fun file mods ->
-    NameSet.add (get_module_name file) mods
-  ) inferred_files touched_modules in
+    let m = get_module_name file in
+    let f_module = Modulename.Filename file in
+    (* Add both possible names of the module exported by file; see
+       Module_js.commit_modules for similar operations when creating
+       removed_modules.
+
+       TODO: Forgetting to account for both possible names of an exported module
+       is a common source of bugs. We need to think of ways to make it harder,
+       if not impossible, to miss this nuance. Moreover, different places in the
+       code address this nuance is different ways, so formalizing this concept
+       in a way that could be enforced by the compiler would give us more
+       confidence in our invariants here (and detect both missing checks as well
+       as redundant checks).
+    *)
+    mods |> NameSet.add m |> NameSet.add f_module
+  ) inferred_files removed_modules in
 
   (* files whose resolution paths may encounter newly inferred modules *)
   let resolution_path_files = MultiWorker.call workers
