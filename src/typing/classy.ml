@@ -10,27 +10,25 @@ type tparams_map_t = Type.t SMap.t
 type expr_fn_t = Context.t -> tparams_map_t -> Ast.Expression.t -> Type.t
 type stmt_fn_t = Context.t -> tparams_map_t -> Ast.Statement.t list -> unit
 
-module type ClassyType =
-  sig
-    type classy_ast_t
+module type ClassyType = sig
+  type classy_ast_t
 
-    (* TODO: Ideally we should check polarity for all class types, but this flag
-       is flipped off for interface/declare class currently. *)
-    val ct_check_polarity: bool
-    val structural: bool
-    val class_ctor: Type.t -> Type.t
-    val remove_this_tparam: Sig.t -> Sig.t
-    val subst: Context.t -> tparams_map_t -> Sig.signature -> Sig.signature
-    val mk_type_param_declarations: Context.t -> tparams_map_t -> reason ->
-      self_t -> classy_ast_t -> tparams_t * tparams_map_t
-    val mk_super: Context.t -> tparams_map_t -> expr_fn_t -> reason ->
-      classy_ast_t -> Type.t
-    val preliminary_checks: Context.t -> Loc.t -> classy_ast_t -> unit
-    val implicit_body: reason -> classy_ast_t -> Sig.t -> Sig.t
-    val explicit_body: Context.t -> tparams_map_t -> Loc.t -> classy_ast_t ->
-      Sig.t -> Sig.t
-  end
-
+  (* TODO: Ideally we should check polarity for all class types, but this flag
+     is flipped off for interface/declare class currently. *)
+  val ct_check_polarity: bool
+  val structural: bool
+  val class_ctor: Type.t -> Type.t
+  val remove_this_tparam: Sig.t -> Sig.t
+  val subst: Context.t -> tparams_map_t -> Sig.signature -> Sig.signature
+  val mk_type_param_declarations: Context.t -> tparams_map_t -> reason ->
+    self_t -> classy_ast_t -> tparams_t * tparams_map_t
+  val mk_super: Context.t -> tparams_map_t -> expr_fn_t -> reason ->
+    classy_ast_t -> Type.t
+  val preliminary_checks: Context.t -> Loc.t -> classy_ast_t -> unit
+  val implicit_body: reason -> classy_ast_t -> Sig.t -> Sig.t
+  val explicit_body: Context.t -> tparams_map_t -> Loc.t -> classy_ast_t ->
+    Sig.t -> Sig.t
+end
 module Make(Classy : ClassyType) = struct
   type classy_ast_t = Classy.classy_ast_t
 
