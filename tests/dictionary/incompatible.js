@@ -23,8 +23,8 @@ function foo1(
 function foo2(
   x: Array<{[key: string]: mixed}>
 ): Array<{[key: string]: mixed, fooBar: string}> {
-  x[0].fooBar = 123; // error, number !~> string
-  return x;
+  x[0].fooBar = 123; // OK, since number ~> mixed (x's dictionary)
+  return x; // considered OK (but unsound)! see foo1 in compatible.js
 }
 
 // OK, since we assume dictionaries have every key

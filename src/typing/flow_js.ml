@@ -2858,9 +2858,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if flags.frozen then
         flow_err cx trace "Mutation not allowed on" l u
       else
-        let strict_reason = mk_strict_lookup_reason
+        let strict = mk_strict_lookup_reason
           flags.sealed (dict_t <> None) reason_o reason_op in
-        let t = ensure_prop_for_write cx trace strict_reason mapr x proto
+        let t = ensure_prop_for_write cx trace strict mapr x proto dict_t
           reason_op reason_prop in
         dictionary cx trace (string_key x reason_op) t dict_t;
         rec_flow_t cx trace (tin, t)
@@ -4767,8 +4767,20 @@ and ensure_prop_for_read cx strict mapr x proto dict_t
   Ops.set ops;
   tout
 
-and ensure_prop_for_write cx trace strict mapr x proto reason_op reason_prop =
-  match read_prop_opt cx mapr x with
+and ensure_prop_for_write cx trace strict mapr x proto dict_t
+    reason_op reason_prop =
+  let t = match (read_prop_opt cx mapr x, dict_t) with
+  | Some t, _ -> Some t
+  | None, Some { key; value; _ } ->
+    if is_dictionary_exempt x
+    then None
+    else (
+      rec_flow_t cx trace (string_key x reason_op, key);
+      Some value
+    )
+  | None, None -> None
+  in
+  match t with
   (* map contains property x at type t *)
   | Some t -> t
   (* otherwise, error if strict, else unshadow/add prop *)

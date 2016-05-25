@@ -64,12 +64,6 @@ incompatible.js:19
  18:   x: Array<{[key: string]: number}>
                                 ^^^^^^ number
 
-incompatible.js:26
- 26:   x[0].fooBar = 123; // error, number !~> string
-                     ^^^ number. This type is incompatible with
- 25: ): Array<{[key: string]: mixed, fooBar: string}> {
-                                             ^^^^^^ string
-
 incompatible.js:36
  36: function foo4(x: {[key: string]: number}): {[key: string]: number, foo: string} {
                                                                              ^^^^^^ string. This type is incompatible with
@@ -107,4 +101,4 @@ test_client.js:4
                                               ^^^^^^ string. See: test.js:2
 
 
-Found 18 errors
+Found 17 errors
