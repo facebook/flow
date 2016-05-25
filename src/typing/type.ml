@@ -610,6 +610,10 @@ and UnionRep : sig
   (** map rep r to rep r' along type mapping f *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
 
+  (** map rep r to rep r' along type mapping f. drops history. if nothing would
+      be changed, returns the physically-identical rep. *)
+  val ident_map: (TypeTerm.t -> TypeTerm.t) -> t -> t
+
   (** quick membership test: Some true/false or None = needs full check *)
   val quick_mem: TypeTerm.t -> t -> bool option
 
@@ -707,6 +711,14 @@ end = struct
 
   let map f rep = make (List.map f (members rep))
 
+  let ident_map f ((ts, _enum, hist, errs) as rep) =
+    let rev_ts, changed = List.fold_left (fun (rev_ts, changed) member ->
+      let member_ = f member in
+      member_::rev_ts, changed || member_ != member
+    ) ([], false) ts in
+    let changed = changed || hist <> [] || errs <> [] in
+    if changed then make (List.rev rev_ts) else rep
+
   let quick_mem t (tlist, enum, _, _) =
     let t = canon t in
     match enum with
@@ -758,6 +770,10 @@ and InterRep : sig
   (** map rep r to rep r' along type mapping f. drops history *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
 
+  (** map rep r to rep r' along type mapping f. drops history. if nothing would
+      be changed, returns the physically-identical rep. *)
+  val ident_map: (TypeTerm.t -> TypeTerm.t) -> t -> t
+
 end = struct
   (** intersection rep is:
       - member list in declaration order
@@ -788,6 +804,14 @@ end = struct
   let errors (_, _, errs) = errs
 
   let map f rep = make (List.map f (members rep))
+
+  let ident_map f ((ts, hist, errs) as rep) =
+    let rev_ts, changed = List.fold_left (fun (rev_ts, changed) member ->
+      let member_ = f member in
+      member_::rev_ts, changed || member_ != member
+    ) ([], false) ts in
+    let changed = changed || hist <> [] || errs <> [] in
+    if changed then make (List.rev rev_ts) else rep
 
 end
 

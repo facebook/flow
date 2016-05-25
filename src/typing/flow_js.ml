@@ -3893,6 +3893,20 @@ and structural_subtype cx trace lower reason_struct
 (* substitutions *)
 (*****************)
 
+and ident_map (f: 'a -> 'a) (lst: 'a list) : 'a list =
+  let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
+    let item_ = f item in
+    item_::lst_, changed || item_ != item
+  ) ([], false) lst in
+  if changed then List.rev rev_lst else lst
+
+and ident_smap (f: 'a -> 'a) (map: 'a SMap.t): 'a SMap.t =
+  let map_, changed = SMap.fold (fun key item (map_, changed) ->
+    let item_ = f item in
+    SMap.add key item_ map_, changed || item_ != item
+  ) map (SMap.empty, false) in
+  if changed then map_ else map
+
 (** Substitute bound type variables with associated types in a type. Do not
     force substitution under polymorphic types. This ensures that existential
     type variables under a polymorphic type remain unevaluated until the
@@ -3903,11 +3917,11 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | BoundT typeparam ->
     begin match SMap.get typeparam.name map with
     | None -> t
-    | Some t ->
+    | Some param_t ->
       (* opportunistically reposition This substitutions; in general
          repositioning may lead to non-termination *)
-      if typeparam.name = "this" then reposition cx typeparam.reason t
-      else t
+      if typeparam.name = "this" then reposition cx typeparam.reason param_t
+      else param_t
     end
 
   | ExistsT reason ->
@@ -3935,130 +3949,186 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | FunT (reason, static, proto, {
     this_t = this;
     params_tlist = params;
-    params_names = names;
-    return_t = ret;
-    closure_t = j;
+    params_names;
+    return_t;
+    closure_t;
     changeset
   }) ->
-    FunT (reason, subst cx ~force map static, subst cx ~force map proto, {
-      this_t = subst cx ~force map this;
-      params_tlist = List.map (subst cx ~force map) params;
-      params_names = names;
-      return_t = subst cx ~force map ret;
-      closure_t = j;
-      changeset
-    })
+    let static_ = subst cx ~force map static in
+    let proto_ = subst cx ~force map proto in
+    let this_ = subst cx ~force map this in
+    let params_ = ident_map (subst cx ~force map) params in
+    let return_t_ = subst cx ~force map return_t in
+    if static_ == static &&
+       proto_ == proto &&
+       this_ == this &&
+       params_ == params &&
+       return_t_ == return_t
+    then t
+    else
+      FunT (reason, static_, proto_, {
+        this_t = this_;
+        params_tlist = params_;
+        params_names;
+        return_t = return_t_;
+        closure_t;
+        changeset
+      })
 
-  | PolyT (xs,t) ->
-    let xs, map = List.fold_left (fun (xs, map) typeparam ->
+  | PolyT (xs, inner) ->
+    let xs, map, changed = List.fold_left (fun (xs, map, changed) typeparam ->
       let bound = subst cx ~force map typeparam.bound in
       let default = match typeparam.default with
       | None -> None
-      | Some default -> Some (subst cx ~force map default) in
+      | Some default ->
+        let default_ = subst cx ~force map default in
+        if default_ == default then typeparam.default else Some default_
+      in
       { typeparam with bound; default; }::xs,
-      SMap.remove typeparam.name map
-    ) ([], map) xs in
-    PolyT (List.rev xs, subst cx ~force:false map t)
+      SMap.remove typeparam.name map,
+      changed || bound != typeparam.bound || default != typeparam.default
+    ) ([], map, false) xs in
+    let inner_ = subst cx ~force:false map inner in
+    let changed = changed || inner_ != inner in
+    if changed then PolyT (List.rev xs, inner_) else t
 
-  | ThisClassT t ->
+  | ThisClassT this ->
     let map = SMap.remove "this" map in
-    ThisClassT (subst cx ~force map t)
+    let this_ = subst cx ~force map this in
+    if this_ == this then t else ThisClassT this_
 
-  | ObjT (reason, {
-    flags;
-    dict_t;
-    props_tmap = id;
-    proto_t = proto
-  }) ->
-    ObjT (reason, {
-      flags;
-      dict_t = (match dict_t with
-      | None -> None
-      | Some dict ->
-          Some { dict with
-            key = subst cx ~force map dict.key;
-            value = subst cx ~force map dict.value;
-          });
-      props_tmap = subst_propmap cx force map id;
-      proto_t = subst cx ~force map proto
-    })
+  | ObjT (reason, { flags; dict_t; props_tmap; proto_t; }) ->
+    let dict_t_ = match dict_t with
+    | None -> None
+    | Some dict ->
+        let key_ = subst cx ~force map dict.key in
+        let value_ = subst cx ~force map dict.value in
+        if key_ == dict.key && value_ == dict.value then dict_t
+        else Some { dict with key = key_; value = value_; }
+    in
+    let props_tmap_ = subst_propmap cx force map props_tmap in
+    let proto_t_ = subst cx ~force map proto_t in
+    if dict_t_ == dict_t &&
+       props_tmap_ == props_tmap &&
+       proto_t_ == proto_t
+    then t
+    else
+      ObjT (reason, {
+        flags;
+        dict_t = dict_t_;
+        props_tmap = props_tmap_;
+        proto_t = proto_t_;
+      })
 
-  | ArrT (reason, t, ts) ->
-    ArrT (reason,
-          subst cx ~force map t,
-          ts |> List.map (subst cx ~force map))
+  | ArrT (reason, arr_t, ts) ->
+    let arr_t_ = subst cx ~force map arr_t in
+    let ts_ = ident_map (subst cx ~force map) ts in
+    if arr_t_ == arr_t && ts_ == ts then t
+    else ArrT (reason, arr_t_, ts_)
 
-  | ClassT t -> ClassT (subst cx ~force map t)
+  | ClassT cls ->
+    let cls_ = subst cx ~force map cls in
+    if cls_ == cls then t else ClassT cls_
 
-  | TypeT (reason, t) ->
-    TypeT (reason, subst cx ~force map t)
+  | TypeT (reason, type_t) ->
+    let type_t_ = subst cx ~force map type_t in
+    if type_t_ == type_t then t else TypeT (reason, type_t_)
 
   | AnnotT (sink_t, source_t) ->
-    AnnotT (subst cx ~force map sink_t, subst cx ~force map source_t)
+    let sink_t_ = subst cx ~force map sink_t in
+    let source_t_ = subst cx ~force map source_t in
+    if sink_t_ == sink_t && source_t_ == source_t then t
+    else AnnotT (sink_t_, source_t_)
 
   | InstanceT (reason, static, super, instance) ->
-    InstanceT (
-      reason,
-      subst cx ~force map static,
-      subst cx ~force map super,
-      { instance with
-        type_args = instance.type_args |> SMap.map (subst cx ~force map);
-        fields_tmap = subst_propmap cx force map instance.fields_tmap;
-        methods_tmap = subst_propmap cx force map instance.methods_tmap;
-      }
+    let static_ = subst cx ~force map static in
+    let super_ = subst cx ~force map super in
+    let type_args_ = ident_smap (subst cx ~force map) instance.type_args in
+    let fields_tmap_ = subst_propmap cx force map instance.fields_tmap in
+    let methods_tmap_ = subst_propmap cx force map instance.methods_tmap in
+    if static_ == static &&
+       super_ == super &&
+       type_args_ == instance.type_args &&
+       fields_tmap_ == instance.fields_tmap &&
+       methods_tmap_ == instance.methods_tmap
+    then t
+    else
+      InstanceT (
+        reason,
+        static_,
+        super_,
+        { instance with
+          type_args = type_args_;
+          fields_tmap = fields_tmap_;
+          methods_tmap = methods_tmap_;
+        }
     )
 
-  | OptionalT (t) -> OptionalT (subst cx ~force map t)
+  | OptionalT opt_t ->
+    let opt_t_ = subst cx ~force map opt_t in
+    if opt_t_ == opt_t then t else OptionalT opt_t_
 
-  | RestT (t) -> RestT (subst cx ~force map t)
+  | RestT rest_t ->
+    let rest_t_ = subst cx ~force map rest_t in
+    if rest_t_ == rest_t then t else RestT rest_t_
 
-  | AbstractT (t) -> AbstractT (subst cx ~force map t)
+  | AbstractT abstract_t ->
+    let abstract_t_ = subst cx ~force map abstract_t in
+    if abstract_t_ == abstract_t then t else AbstractT abstract_t_
 
-  | EvalT (t, defer_use_t, id) ->
-      let result_t = subst cx ~force map t in
-      let result_defer_use_t = subst_defer_use_t cx ~force map defer_use_t in
-      let result_id =
-        if t = result_t && defer_use_t = result_defer_use_t
-        then id else mk_id () in
-      EvalT (result_t, result_defer_use_t, result_id)
+  | EvalT (eval_t, defer_use_t, _) ->
+    let eval_t_ = subst cx ~force map eval_t in
+    let defer_use_t_ = subst_defer_use_t cx ~force map defer_use_t in
+    if eval_t_ == eval_t && defer_use_t_ == defer_use_t then t
+    else EvalT (eval_t_, defer_use_t_, mk_id ())
 
   | TypeAppT(c, ts) ->
-      let c = subst cx ~force map c in
-      let ts = List.map (subst cx ~force map) ts in
-      TypeAppT(c, ts)
+    let c_ = subst cx ~force map c in
+    let ts_ = ident_map (subst cx ~force map) ts in
+    if c_ == c && ts_ == ts then t else TypeAppT (c_, ts_)
 
   | ThisTypeAppT(c, this, ts) ->
-      let c = subst cx ~force map c in
-      let this = subst cx ~force map this in
-      let ts = List.map (subst cx ~force map) ts in
-      ThisTypeAppT(c, this, ts)
+    let c_ = subst cx ~force map c in
+    let this_ = subst cx ~force map this in
+    let ts_ = ident_map (subst cx ~force map) ts in
+    if c_ == c && this_ == this && ts_ == ts then t
+    else ThisTypeAppT (c_, this_, ts_)
 
-  | MaybeT(t) ->
-    MaybeT(subst cx ~force map t)
+  | MaybeT maybe_t ->
+    let maybe_t_ = subst cx ~force map maybe_t in
+    if maybe_t_ == maybe_t then t else MaybeT maybe_t_
 
   | IntersectionT (reason, rep) ->
-    IntersectionT (reason, InterRep.map (subst cx ~force map) rep)
+    let rep_ = InterRep.ident_map (subst cx ~force map) rep in
+    if rep_ == rep then t else IntersectionT (reason, rep_)
 
   | UnionT (reason, rep) ->
-    UnionT (reason, UnionRep.map (subst cx ~force map) rep)
+    let rep_ = UnionRep.ident_map (subst cx ~force map) rep in
+    if rep_ == rep then t else UnionT (reason, rep_)
 
-  | AnyWithLowerBoundT(t) ->
-    AnyWithLowerBoundT(subst cx ~force map t)
+  | AnyWithLowerBoundT any_t ->
+    let any_t_ = subst cx ~force map any_t in
+    if any_t_ == any_t then t else AnyWithLowerBoundT any_t_
 
-  | AnyWithUpperBoundT(t) ->
-    AnyWithUpperBoundT(subst cx ~force map t)
+  | AnyWithUpperBoundT any_t ->
+    let any_t_ = subst cx ~force map any_t in
+    if any_t_ == any_t then t else AnyWithUpperBoundT any_t_
 
   | AnyObjT _ -> t
   | AnyFunT _ -> t
 
-  | ShapeT(t) ->
-    ShapeT(subst cx ~force map t)
+  | ShapeT shape_t ->
+    let shape_t_ = subst cx ~force map shape_t in
+    if shape_t_ == shape_t then t else ShapeT shape_t_
 
   | DiffT(t1, t2) ->
-    DiffT(subst cx ~force map t1, subst cx ~force map t2)
+    let t1_ = subst cx ~force map t1 in
+    let t2_ = subst cx ~force map t2 in
+    if t1_ == t1 && t2_ == t2 then t else DiffT (t1_, t2_)
 
-  | KeysT(reason, t) ->
-    KeysT(reason, subst cx ~force map t)
+  | KeysT (reason, keys_t) ->
+    let keys_t_ = subst cx ~force map keys_t in
+    if keys_t_ == keys_t then t else KeysT (reason, keys_t_)
 
   | SingletonNumT _
   | SingletonBoolT _
@@ -4070,9 +4140,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ->
       failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
-and subst_defer_use_t cx ~force map = function
+and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
-      DestructuringT (reason, subst_selector cx force map s)
+      let s_ = subst_selector cx force map s in
+      if s_ == s then t else DestructuringT (reason, s_)
 
 and eval_selector cx reason curr_t s i =
   let evaluated = Context.evaluated cx in
@@ -4093,16 +4164,18 @@ and eval_selector cx reason curr_t s i =
 
 and subst_propmap cx force map id =
   let pmap = find_props cx id in
-  let pmap_ = SMap.map (subst cx ~force map) pmap in
-  if pmap_ = pmap then id
+  let pmap_ = ident_smap (subst cx ~force map) pmap in
+  if pmap_ == pmap then id
   else mk_propmap cx pmap_
 
-and subst_selector cx force map = function
-  | Prop x -> Prop x
-  | Elem key -> Elem (subst cx ~force map key)
-  | ObjRest xs -> ObjRest xs
-  | ArrRest i -> ArrRest i
-  | Default -> Default
+and subst_selector cx force map s = match s with
+  | Elem key ->
+    let key_ = subst cx ~force map key in
+    if key_ == key then s else Elem key_
+  | Prop _
+  | ObjRest _
+  | ArrRest _
+  | Default -> s
 
 (* TODO: flesh this out *)
 and check_polarity cx polarity = function
