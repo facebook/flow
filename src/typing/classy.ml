@@ -29,6 +29,7 @@ module type ClassyType = sig
   val explicit_body: Context.t -> tparams_map_t -> Loc.t -> classy_ast_t ->
     Sig.t -> Sig.t
 end
+
 module Make(Classy : ClassyType) = struct
   type classy_ast_t = Classy.classy_ast_t
 
@@ -38,7 +39,7 @@ module Make(Classy : ClassyType) = struct
      static members. The static members can be thought of as instance members of
      a "metaclass": thus, the static type is itself implemented as an instance
      type. *)
-  let mk_sig cx tparams_map expr loc reason self class_ast =
+  let mk cx tparams_map expr loc reason self class_ast =
     Classy.preliminary_checks cx loc class_ast;
     let tparams, tparams_map =
       Classy.mk_type_param_declarations cx tparams_map reason self class_ast in
@@ -149,9 +150,18 @@ module Make(Classy : ClassyType) = struct
     ) |> ignore
 end
 
+module type InterfaceType = sig
+  type classy_ast_t = Ast.Statement.Interface.t
+  val mk: Context.t -> tparams_map_t -> expr_fn_t -> Loc.t -> reason ->
+    self_t -> classy_ast_t -> Sig.t
+  val classtype: Context.t -> Sig.t -> Type.t
+  val generate_tests: Context.t -> (Sig.t -> unit) -> Sig.t -> unit
+  val check_super: Context.t -> Sig.t -> unit
+end
+
 module Class = Make(Class_sig.T)
-module Interface = Make(Iface_sig.T)
-module DeclClass = Make(Decl_class_sig.T)
+module Interface : InterfaceType = Make(Iface_sig.T)
+module DeclClass : InterfaceType = Make(Decl_class_sig.T)
 
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =

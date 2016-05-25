@@ -40,6 +40,49 @@ module TypeExSet = Set.Make(struct
   let compare = reasonless_compare
 end)
 
+module NonClass = struct
+  module type NonClassType = sig
+    module Sig : Cls.InterfaceType
+    val bind: Context.t -> string -> Type.t -> reason -> unit
+    val init: Context.t -> string -> Type.t -> reason -> unit
+  end
+
+  module DeclClassT = struct
+    module Sig = Cls.DeclClass
+    let bind = Env.bind_declare_var
+    let init = Env.init_var ~has_anno:false
+  end
+  module InterfaceT = struct
+    module Sig = Cls.Interface
+    let bind cx = Env.bind_type cx
+    let init = Env.init_type
+  end
+
+  let extract_name { Ast.Statement.Interface.id; _ } =
+    (snd id).Ast.Identifier.name
+
+  module Make(T : NonClassType) = struct
+    let declare cx loc iface_ast =
+      let name = extract_name iface_ast in
+      let r = mk_reason (spf "class `%s`" name) loc in
+      let tvar = Flow.mk_tvar cx r in
+      T.bind cx name tvar r
+
+    let init cx tparams_map expr loc iface_ast =
+      let name = extract_name iface_ast in
+      let reason = DescFormat.instance_reason name loc in
+      let self = Flow.mk_tvar cx reason in
+      let iface_sig = T.Sig.mk cx tparams_map expr loc reason self iface_ast in
+      iface_sig |> T.Sig.generate_tests cx (T.Sig.check_super cx);
+      let t = T.Sig.classtype cx iface_sig in
+      Flow.unify cx self t;
+      Hashtbl.replace (Context.type_table cx) loc t;
+      T.init cx name t reason
+  end
+end
+module DeclClassStat = NonClass.Make(NonClass.DeclClassT)
+module InterfaceStat = NonClass.Make(NonClass.InterfaceT)
+
 let ident_name (_, ident) =
   ident.Ast.Identifier.name
 
@@ -286,18 +329,11 @@ and statement_decl cx type_params_map = Ast.Statement.(
       | None -> ()
     )
 
-  | (loc, DeclareClass { Interface.id; _ })
-  | (loc, InterfaceDeclaration { Interface.id; _ }) as stmt ->
-      let is_interface = match stmt with
-      | (_, InterfaceDeclaration _) -> true
-      | _ -> false in
-      let _, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "class `%s`" name) loc in
-      let tvar = Flow.mk_tvar cx r in
-      (* interface is a type alias, declare class is a var *)
-      if is_interface
-      then Env.bind_type cx name tvar r
-      else Env.bind_declare_var cx name tvar r
+  | (loc, DeclareClass decl) ->
+      DeclClassStat.declare cx loc decl
+
+  | (loc, InterfaceDeclaration decl) ->
+      InterfaceStat.declare cx loc decl
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
@@ -465,48 +501,6 @@ and statement cx type_params_map = Ast.Statement.(
 
   let variables cx { VariableDeclaration.declarations; kind } =
     List.iter (variable cx type_params_map kind) declarations
-  in
-
-  let classy fn_classtype fn_init cx tparams_map loc i =
-    let {Interface.id = (_, {Ast.Identifier.name; _}); _} = i in
-    let reason = DescFormat.instance_reason name loc in
-    let self = Flow.mk_tvar cx reason in
-    let t = fn_classtype cx tparams_map loc reason self i in
-    Flow.unify cx self t;
-    Hashtbl.replace (Context.type_table cx) loc t;
-    fn_init cx name t reason
-  in
-
-  let interface cx loc i =
-    let iface_t cx tparams_map loc reason self i =
-      let iface_sig =
-        Cls.Interface.mk_sig cx tparams_map expression loc reason self i in
-      iface_sig |> Cls.Interface.generate_tests cx (fun test_iface_sig ->
-        Cls.Interface.check_super cx test_iface_sig
-      );
-      Cls.Interface.classtype cx iface_sig
-    in
-    let init cx name interface_t reason =
-      (* interface is a type alias *)
-      Env.init_type cx name interface_t reason
-    in
-    classy iface_t init cx type_params_map loc i
-  in
-
-  let declare_class cx loc i =
-    let decl_t cx tparams_map loc reason self i =
-      let decl_sig =
-        Cls.DeclClass.mk_sig cx tparams_map expression loc reason self i in
-      decl_sig |> Cls.DeclClass.generate_tests cx (fun test_decl_sig ->
-        Cls.DeclClass.check_super cx test_decl_sig
-      );
-      Cls.DeclClass.classtype cx decl_sig
-    in
-    let init cx name declare_class_t reason =
-      (* declare class is a var *)
-      Env.init_var ~has_anno:false cx name declare_class_t reason
-    in
-    classy decl_t init cx type_params_map loc i
   in
 
   let catch_clause cx { Try.CatchClause.param; guard = _; body = (_, b) } =
@@ -1487,10 +1481,10 @@ and statement cx type_params_map = Ast.Statement.(
         reason
 
   | (loc, DeclareClass decl) ->
-    declare_class cx loc decl
+    DeclClassStat.init cx type_params_map expression loc decl
 
   | (loc, InterfaceDeclaration decl) ->
-    interface cx loc decl
+    InterfaceStat.init cx type_params_map expression loc decl
 
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
     let name = match id with
@@ -4389,16 +4383,16 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
 
 and mk_class cx type_params_map loc reason c =
   let self = Flow.mk_tvar cx reason in
-  let class_sig =
-    Cls.Class.mk_sig cx type_params_map expression loc reason self c in
-  class_sig |> Cls.Class.generate_tests cx (fun test_class_sig ->
-    Cls.Class.check_super cx test_class_sig;
-    Cls.toplevels cx test_class_sig
+  let open Cls.Class in
+  let class_sig = mk cx type_params_map expression loc reason self c in
+  class_sig |> generate_tests cx (fun test_sig ->
+    check_super cx test_sig;
+    Cls.toplevels cx test_sig
       ~decls:toplevel_decls
       ~stmts:toplevels
       ~expr:expression
   );
-  let class_t = Cls.Class.classtype cx class_sig in
+  let class_t = classtype cx class_sig in
   Flow.unify cx self class_t;
   class_t
 

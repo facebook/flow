@@ -93,6 +93,7 @@ let warn_or_ignore_decorators cx = function
 
 module T = struct
   type classy_ast_t = Ast.Class.t
+
   let ct_check_polarity = true
   let structural = false
   let class_ctor c = Type.ThisClassT c
