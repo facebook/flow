@@ -239,6 +239,7 @@ begin library "hh-parsing"
   files = [
     "parsing/namespace_env.ml"
     "parsing/ast.ml"
+    "parsing/fixmes.ml"
     "parsing/lexer_hack.mll"
     "parsing/namespaces.ml"
     "parsing/parser_heap.ml"

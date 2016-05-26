@@ -10,6 +10,7 @@
 
 type 'a error_
 type error = Pos.t error_
+type applied_fixme = Pos.t * int
 
 val is_hh_fixme : (Pos.t -> int -> bool) ref
 val to_list : 'a error_ -> ('a * string) list
@@ -327,3 +328,4 @@ val get_error_list : t -> error list
 val get_sorted_error_list : t -> error list
 val from_error_list : error list -> t
 val iter_error_list : (error -> unit) -> t -> unit
+val get_applied_fixmes : t -> applied_fixme list

@@ -17,6 +17,10 @@ type error_code = int
  * before sending it to the client *)
 type 'a message = 'a * string
 
+type applied_fixme = Pos.t * int
+
+let applied_fixmes: applied_fixme list ref = ref []
+
 module Common = struct
 
   let try_with_result f1 f2 error_list accumulate_errors =
@@ -35,13 +39,17 @@ module Common = struct
   let do_ f error_list accumulate_errors =
     let error_list_copy = !error_list in
     let accumulate_errors_copy = !accumulate_errors in
+    let applied_fixmes_copy = !applied_fixmes in
     error_list := [];
+    applied_fixmes := [];
     accumulate_errors := true;
     let result = f () in
     let out_errors = !error_list in
+    let out_applied_fixmes = !applied_fixmes in
     error_list := error_list_copy;
+    applied_fixmes := applied_fixmes_copy;
     accumulate_errors := accumulate_errors_copy;
-    List.rev out_errors, result
+    (List.rev out_errors, out_applied_fixmes), result
 
   (*****************************************************************************)
   (* Error code printing. *)
@@ -72,7 +80,7 @@ module type Errors_modes = sig
   type error = Pos.t error_
 
   val try_with_result: (unit -> 'a) -> ('a -> error -> 'a) -> 'a
-  val do_: (unit -> 'a) -> error list * 'a
+  val do_: (unit -> 'a) -> (error list * applied_fixme list) * 'a
 
   val add_error: error -> unit
   val make_error: error_code -> (Pos.t message) list -> error
@@ -84,8 +92,7 @@ module type Errors_modes = sig
 
   val to_string : Pos.absolute error_ -> string
 
-  val get_sorted_error_list: error list -> error list
-  val iter_error_list: (error -> unit) -> error list -> unit
+  val get_sorted_error_list: error list * applied_fixme list -> error list
 
 end
 
@@ -142,12 +149,10 @@ module NonTracingErrors: Errors_modes = struct
     );
     Buffer.contents buf
 
-  let get_sorted_error_list err =
+  let get_sorted_error_list (err,_) =
     List.sort ~cmp:begin fun x y ->
       Pos.compare (get_pos x) (get_pos y)
     end err
-
-  let iter_error_list f err = List.iter ~f:f (get_sorted_error_list err)
 
 end
 
@@ -211,12 +216,10 @@ module TracingErrors: Errors_modes = struct
     );
     Buffer.contents buf
 
-  let get_sorted_error_list err =
+  let get_sorted_error_list (err,_) =
     List.sort ~cmp:begin fun x y ->
       Pos.compare (get_pos x) (get_pos y)
     end err
-
-  let iter_error_list f err = List.iter ~f:f (get_sorted_error_list err)
 
 end
 
@@ -231,7 +234,7 @@ module Errors_with_mode(M: Errors_modes) = struct
 type 'a error_ = 'a M.error_
 type error = Pos.t error_
 
-type t = error list
+type t = error list * applied_fixme list
 
 (*****************************************************************************)
 (* HH_FIXMEs hook *)
@@ -243,23 +246,29 @@ let (is_hh_fixme: (Pos.t -> error_code -> bool) ref) = ref (fun _ _ -> false)
 (* Errors accumulator. *)
 (*****************************************************************************)
 
+let add_applied_fixme code pos =
+  applied_fixmes := (pos, code) :: !applied_fixmes
+
 let rec add_error = M.add_error
 
 and add code pos msg =
-  if !is_hh_fixme pos code then () else
+  if !is_hh_fixme pos code then add_applied_fixme code pos else
   add_error (M.make_error code [pos, msg])
 
 and add_list code pos_msg_l =
   let pos = fst (List.hd_exn pos_msg_l) in
-  if !is_hh_fixme pos code then () else
+  if !is_hh_fixme pos code then add_applied_fixme code pos else
   add_error (make_error code pos_msg_l)
 
-and merge err' err = List.rev_append err' err
+and merge (err',fixmes') (err,fixmes) =
+  (List.rev_append err' err, List.rev_append fixmes' fixmes)
 
-and empty = []
-and is_empty err = err = []
-and get_error_list err = err
-and from_error_list err = err
+and empty = ([], [])
+and is_empty (err, fixmes) = err = []
+
+and get_error_list (err, fixmes) = err
+and get_applied_fixmes (err, fixmes) = fixmes
+and from_error_list err = (err, [])
 
 (*****************************************************************************)
 (* Accessors. (All methods delegated to the parameterized module.) *)
@@ -272,8 +281,7 @@ and to_list = M.to_list
 and make_error = M.make_error
 
 let get_sorted_error_list = M.get_sorted_error_list
-
-let iter_error_list = M.iter_error_list
+let iter_error_list f err = List.iter ~f:f (get_sorted_error_list err)
 
 (*****************************************************************************)
 (* Error code printing. *)
