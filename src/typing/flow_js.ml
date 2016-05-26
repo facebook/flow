@@ -896,6 +896,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* concretization *)
     (******************)
 
+    | ClassT i, ConcretizeLowerT _ ->
+      let concrete_l = mk_tvar_where cx (reason_of_t l) (fun t ->
+        flow_opt cx (i, UnifyT(ClassT i, t))
+      ) in
+      rec_flow cx trace (concrete_l, u)
+
     (** pairs emitted by in-progress concretize_parts *)
     | t, ConcretizeLowerT (l, todo_ts, done_ts, u) ->
       concretize_lower_parts cx trace l u (t :: done_ts) todo_ts
@@ -4655,6 +4661,8 @@ and lower_parts_to_concretize _cx = function
     List.fold_left (fun (tvar, fpart, acc) -> function
       | AnnotT (_, t) | (OpenT _ as t) ->
         true, fpart, t :: acc
+      | ClassT (AnnotT (_, t)) | ClassT (OpenT _ as t) ->
+        true, fpart, (ClassT t) :: acc
       | FunT _ as t ->  tvar, Partition.add t fpart, t :: acc
       | t -> tvar, fpart, t :: acc
     ) (false, FunType.return_type_partition [], []) ts in
