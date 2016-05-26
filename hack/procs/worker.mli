@@ -38,7 +38,6 @@ val make:
   saved_state : 'a ->
   entry       : 'a entry ->
   nbr_procs   : int ->
-  debug       : bool ->
   gc_control  : Gc.control ->
   heap_handle : SharedMem.handle ->
     t list

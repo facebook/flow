@@ -226,28 +226,20 @@ let register_entry_point ~restore =
 let workers = ref []
 
 (* Build one worker. *)
-let make_one ~debug spawn id =
+let make_one spawn id =
   if id >= max_workers then failwith "Too many workers";
-
-  (* In debug mode, create a log file *)
-  let log_fd = if debug
-    then Daemon.fd_of_path (Utils.spf "slave_%d.log" id)
-    else Daemon.null_fd () in
-
-  (* This worker should always use this log_fd *)
-  let spawn () = spawn log_fd in
 
   let prespawned = if not use_prespawned then None else Some (spawn ()) in
   let worker = { id; busy = false; killed = false; prespawned; spawn } in
   workers := worker :: !workers;
   worker
 
-let make ~saved_state ~entry ~nbr_procs ~debug ~gc_control ~heap_handle =
+let make ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let spawn log_fd =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     let handle =
       Daemon.spawn
-        (log_fd, log_fd)
+        Unix.(stdout, stderr)
         entry
         (saved_state, gc_control, heap_handle) in
     Unix.set_close_on_exec heap_handle.SharedMem.h_fd;
@@ -255,7 +247,7 @@ let make ~saved_state ~entry ~nbr_procs ~debug ~gc_control ~heap_handle =
   in
   let made_workers = ref [] in
   for n = 1 to nbr_procs do
-    made_workers := make_one ~debug spawn n :: !made_workers
+    made_workers := make_one spawn n :: !made_workers
   done;
   !made_workers
 

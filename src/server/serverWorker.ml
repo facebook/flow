@@ -34,6 +34,5 @@ let make options heap_handle =
     ~saved_state: (save options)
     ~entry
     ~nbr_procs: (Options.max_workers options)
-    ~debug: (Options.is_debug_mode options)
     ~gc_control: GlobalConfig.gc_control
     ~heap_handle
