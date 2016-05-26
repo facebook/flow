@@ -1,7 +1,6 @@
 <!-- Pagination links - copied from http://jekyllrb.com/docs/pagination/ -->
 {% if paginator.total_pages > 1 %}
-<br />
-<div class="pagination">
+<p class="pagination">
   {% if paginator.previous_page %}
     <a href="{{ paginator.previous_page_path | prepend: site.baseurl | replace: '//', '/' }}">&laquo; Prev</a>
   {% else %}
@@ -23,7 +22,5 @@
   {% else %}
     <span>Next &raquo;</span>
   {% endif %}
-</div>
-<br />
+</p>
 {% endif %}
-
