@@ -62,7 +62,6 @@ var c = new C();
 var n3: number = c.method();       // OK
 var n4: number = C.staticMethod(); // OK
 
-// TJP TODO: In tests, generalize the following to a generic so that #1369 can be closed. Remove this note.
 class K {
   method(this: I): number {
     return this.anotherMethod(); // OK

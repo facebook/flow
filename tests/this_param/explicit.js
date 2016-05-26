@@ -6,5 +6,5 @@ class A {
 var a = new A();
 a.method(); // NG
 
-// False positive.  Most likely a problem with the "knot" of `fix_this_class`.
+// False positive.
 A.staticMethod(); // NG

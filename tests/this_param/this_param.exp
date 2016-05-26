@@ -70,48 +70,48 @@ interface.js:37
   3:   static anotherStaticMethod(): number;
                                      ^^^^^^ number
 
-interface.js:67
- 67:   method(this: I): number {
+interface.js:66
+ 66:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 83: var n7: number = ell.fn(); // NG
+ 82: var n7: number = ell.fn(); // NG
                       ^^^ object literal
 
-interface.js:71
- 71:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
+interface.js:70
+ 70:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
                 ^^^^^^^^^^^^^ call of method `method`
- 67:   method(this: I): number {
+ 66:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 66: class K {
+ 65: class K {
            ^ K
 
-interface.js:71
- 71:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
+interface.js:70
+ 70:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
                 ^^^^^^^^^^^^^ call of method `method`
- 67:   method(this: I): number {
+ 66:   method(this: I): number {
                     ^ property `anotherStaticMethod` of statics of I. Property not found in
- 66: class K {
+ 65: class K {
            ^ statics of K
 
-interface.js:77
- 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+interface.js:76
+ 76: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^^^^^^^^^^ call of method `method`
- 67:   method(this: I): number {
+ 66:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+ 76: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^ K
 
-interface.js:77
- 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+interface.js:76
+ 76: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^^^^^^^^^^ call of method `method`
- 67:   method(this: I): number {
+ 66:   method(this: I): number {
                     ^ property `anotherStaticMethod` of statics of I. Property not found in
- 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+ 76: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^ statics of K
 
-interface.js:86
- 86: var n8: number = fn(); // NG
+interface.js:85
+ 85: var n8: number = fn(); // NG
                       ^^^^ function call
- 67:   method(this: I): number {
+ 66:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
 global object
 
