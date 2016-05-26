@@ -57,3 +57,5 @@ val make_path_absolute: Path.t -> string -> Path.t
 val is_prefix: string -> string -> bool
 
 val get_flowtyped_path: Path.t -> Path.t
+
+val filename_from_string: string -> Loc.filename

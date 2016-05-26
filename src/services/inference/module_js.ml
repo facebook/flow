@@ -141,7 +141,8 @@ end)
 let resolution_path_dependency files acc f =
   match InfoHeap.get f with
   | Some { phantom_dependents = fs; _ } when fs |> SSet.exists (fun f ->
-      FilenameSet.mem (Loc.SourceFile f) files
+      FilenameSet.mem (Loc.SourceFile f) files ||
+      FilenameSet.mem (Loc.JsonFile f) files
     ) -> FilenameSet.add f acc
   | _ -> acc
 
@@ -438,7 +439,7 @@ module Node = struct
         | Some _ as result -> result
     in
     match choose_candidate candidates with
-    | Some(str) -> Modulename.Filename (Loc.SourceFile str)
+    | Some str -> Modulename.Filename (Files_js.filename_from_string str)
     | None -> Modulename.String import_str
 
   (* in node, file names are module names, as guaranteed by
@@ -524,7 +525,7 @@ module Haste: MODULE_SYSTEM = struct
     let chosen_candidate = List.hd candidates in
 
     match resolve_import ~options cx loc ?path_acc chosen_candidate with
-    | Some(name) -> Modulename.Filename (Loc.SourceFile name)
+    | Some name -> Modulename.Filename (Files_js.filename_from_string name)
     | None -> Modulename.String chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also

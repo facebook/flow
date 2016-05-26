@@ -581,11 +581,7 @@ let server_init genv =
 
   let get_next_raw = Files_js.make_next_files ~options ~libs in
   let get_next = fun () ->
-    get_next_raw () |> List.map (fun file ->
-      if Files_js.is_json_file file
-      then Loc.JsonFile file
-      else Loc.SourceFile file
-    )
+    get_next_raw () |> List.map Files_js.filename_from_string
   in
   let (timing, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in
