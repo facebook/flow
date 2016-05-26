@@ -170,6 +170,30 @@ interface.js:1
   1: interface I { xs: Array<this>; }
                              ^^^^ Unexpected use of `this` type
 
+interface2.js:19
+ 19:     return new this("qwer");
+                ^^^^^^^^^^^^^^^^ constructor call
+ 19:     return new this("qwer");
+                         ^^^^^^ string. This type is incompatible with
+ 11:   constructor(n: number) {}
+                      ^^^^^^ number
+
+interface2.js:24
+ 24: var c2 = c1.fn({x:"asdf",TheClass:C}); // NG: missing `deref`
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `fn`
+ 12:   fn(this: this & I, t: T): this {
+                       ^ property `deref` of statics of I. Property not found in
+ 24: var c2 = c1.fn({x:"asdf",TheClass:C}); // NG: missing `deref`
+              ^^ statics of C
+
+interface2.js:41
+ 41: var x2 = x1.fn(); // NG: missing `deref`
+              ^^^^^^^ call of method `fn`
+ 29:   fn(this: this & I): this {
+                       ^ property `deref` of statics of I. Property not found in
+ 41: var x2 = x1.fn(); // NG: missing `deref`
+              ^^ statics of X
+
 self.js:4
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
                             ^^^^^^^^^^^^^ call of method `foo`
@@ -239,4 +263,4 @@ test.js:56
                     ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
 
-Found 46 errors
+Found 49 errors
