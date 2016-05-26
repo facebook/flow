@@ -147,44 +147,44 @@ object.js:38
   2:   anotherMethod(): number;
                         ^^^^^^ number
 
-object.js:46
- 46: var s3: number = B.staticMethod(); // NG
+object.js:40
+ 40: var s3: number = B.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
   6:   anotherStaticMethod(): number;
                               ^^^^^^ number. This type is incompatible with
  30:   static anotherStaticMethod(): string {
                                      ^^^^^^ string
 
-object.js:46
- 46: var s3: number = B.staticMethod(); // NG
+object.js:40
+ 40: var s3: number = B.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  30:   static anotherStaticMethod(): string {
                                      ^^^^^^ string. This type is incompatible with
   6:   anotherStaticMethod(): number;
                               ^^^^^^ number
 
-object.js:70
- 70:     return this.method(); // NG
+object.js:60
+ 60:     return this.method(); // NG
                 ^^^^^^^^^^^^^ call of method `method`
- 66:   method(this: I): number {
+ 56:   method(this: I): number {
                     ^ property `anotherMethod`. Property not found in
- 65: class K {
+ 55: class K {
            ^ K
 
-object.js:75
- 75: var n5: number = k.method(); // NG
+object.js:65
+ 65: var n5: number = k.method(); // NG
                       ^^^^^^^^^^ call of method `method`
- 66:   method(this: I): number {
+ 56:   method(this: I): number {
                     ^ property `anotherMethod`. Property not found in
- 75: var n5: number = k.method(); // NG
+ 65: var n5: number = k.method(); // NG
                       ^ K
 
-object.js:100
-100: t.getXMultBy(4); // NG
+object.js:90
+ 90: t.getXMultBy(4); // NG
      ^^^^^^^^^^^^^^^ call of method `getXMultBy`
- 99: t._x = "a string";
+ 89: t._x = "a string";
             ^^^^^^^^^^ string. This type is incompatible with
- 89:   getXMultBy(this: Issue1369<number>, y: number): number {
+ 79:   getXMultBy(this: Issue1369<number>, y: number): number {
                                   ^^^^^^ number
 
 

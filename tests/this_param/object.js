@@ -37,12 +37,6 @@ var b = new B();
 var s1: string = b.anotherMethod();
 var n3: number = b.method(); // NG
 var s2: string = B.anotherStaticMethod();
-
-
-
-
-
-
 var s3: number = B.staticMethod(); // NG
 
 class C extends A {
@@ -56,10 +50,6 @@ class C extends A {
 
 var c = new C();
 var n3: number = c.method();
-
-
-
-
 var n4: number = C.staticMethod(); // OK
 
 class K {
