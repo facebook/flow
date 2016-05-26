@@ -164,28 +164,48 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer ~types_mode ~use_strict (ok, skips, fails, errors) file =
-  let content = cat (string_of_filename file) in
-  let info = get_docblock file content in
-  match (do_parse ~types_mode ~use_strict ~info content file) with
-  | Parse_ok ast ->
-      (* Consider the file unchanged if its reparsing info is the same as its
-         old parsing info. A complication is that we don't want to drop a .flow
-         file, even if it is unchanged, since it might have been added to the
-         modified set simply because a corresponding implementation file was
-         also added. *)
-      if not (Loc.check_suffix file Files_js.flow_ext)
-        && ParserHeap.get_old file = Some (ast, info)
-      then (ok, skips, fails, errors)
-      else begin
-        ParserHeap.add file (ast, info);
-        execute_hook file (Some ast);
-        (FilenameSet.add file ok, skips, fails, errors)
+  (* It turns out that sometimes files appear and disappear very quickly. Just
+   * because someone told us that this file exists and needs to be parsed, it
+   * doesn't mean it actually still exists. If anything goes wrong reading this
+   * file, let's skip it. We don't need to notify our caller, since they'll
+   * probably get the delete event anyway *)
+  let content =
+    let filename_string = string_of_filename file in
+    try Some (cat filename_string)
+    with e ->
+      prerr_endlinef
+        "Parsing service failed to cat %s, so skipping it. Exception: %s"
+        filename_string
+        (Printexc.to_string e);
+      None in
+  match content with
+  | Some content ->
+      let info = get_docblock file content in
+      begin match (do_parse ~types_mode ~use_strict ~info content file) with
+      | Parse_ok ast ->
+          (* Consider the file unchanged if its reparsing info is the same as
+           * its old parsing info. A complication is that we don't want to drop
+           * a .flow file, even if it is unchanged, since it might have been
+           * added to the modified set simply because a corresponding
+           * implementation file was also added. *)
+          if not (Loc.check_suffix file Files_js.flow_ext)
+            && ParserHeap.get_old file = Some (ast, info)
+          then (ok, skips, fails, errors)
+          else begin
+            ParserHeap.add file (ast, info);
+            execute_hook file (Some ast);
+            (FilenameSet.add file ok, skips, fails, errors)
+          end
+      | Parse_err converted ->
+          execute_hook file None;
+          (ok, skips, (file, info) :: fails, converted :: errors)
+      | Parse_skip ->
+          execute_hook file None;
+          (ok, (file, info) :: skips, fails, errors)
       end
-  | Parse_err converted ->
+  | None ->
       execute_hook file None;
-      (ok, skips, (file, info) :: fails, converted :: errors)
-  | Parse_skip ->
-      execute_hook file None;
+      let info = Docblock.default_info in
       (ok, (file, info) :: skips, fails, errors)
 
 (* merge is just memberwise union/concat of results *)
