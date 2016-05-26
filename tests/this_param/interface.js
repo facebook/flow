@@ -10,9 +10,6 @@ class A {
     return this.x + this.anotherMethod();
   }
   static staticMethod(this: Class<this> & Class<I>): number {
-
-
-
     return this.x + this.anotherStaticMethod();
   }
 }

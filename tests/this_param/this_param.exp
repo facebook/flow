@@ -22,96 +22,96 @@ function.js:14
  14: var k = (this: any) => 5;
               ^^^^^^^^^ `this` pseudo-parameters are not allowed on arrow functions
 
-interface.js:22
- 22: var n1: number = a.method();       // NG
+interface.js:19
+ 19: var n1: number = a.method();       // NG
                       ^^^^^^^^^^ call of method `method`
   9:   method(this: this & I): number {
                            ^ property `anotherMethod` of I. Property not found in
- 22: var n1: number = a.method();       // NG
+ 19: var n1: number = a.method();       // NG
                       ^ A
 
-interface.js:22
- 22: var n1: number = a.method();       // NG
+interface.js:19
+ 19: var n1: number = a.method();       // NG
                       ^^^^^^^^^^ call of method `method`
   9:   method(this: this & I): number {
                            ^ property `anotherStaticMethod` of statics of I. Property not found in
- 22: var n1: number = a.method();       // NG
+ 19: var n1: number = a.method();       // NG
                       ^ statics of A
 
-interface.js:23
- 23: var n2: number = A.staticMethod(); // NG
+interface.js:20
+ 20: var n2: number = A.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  12:   static staticMethod(this: Class<this> & Class<I>): number {
                                                      ^ property `anotherStaticMethod` of statics of I. Property not found in
   6: class A {
            ^ statics of A
 
-interface.js:23
- 23: var n2: number = A.staticMethod(); // NG
+interface.js:20
+ 20: var n2: number = A.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  12:   static staticMethod(this: Class<this> & Class<I>): number {
                                                      ^ property `anotherMethod` of I. Property not found in
- 23: var n2: number = A.staticMethod(); // NG
+ 20: var n2: number = A.staticMethod(); // NG
                       ^ A
 
-interface.js:40
- 40: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
+interface.js:37
+ 37: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
                       ^^^^^^^^^^ call of method `method`
- 26:   anotherMethod(): string {
+ 23:   anotherMethod(): string {
                         ^^^^^^ string. This type is incompatible with
   2:   anotherMethod(): number;
                         ^^^^^^ number
 
-interface.js:40
- 40: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
+interface.js:37
+ 37: var n3: number = b.method(); // NG: The return type on `anotherMethod` of `B`
                       ^^^^^^^^^^ call of method `method`
- 30:   static anotherStaticMethod(): string {
+ 27:   static anotherStaticMethod(): string {
                                      ^^^^^^ string. This type is incompatible with
   3:   static anotherStaticMethod(): number;
                                      ^^^^^^ number
 
-interface.js:70
- 70:   method(this: I): number {
+interface.js:67
+ 67:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 86: var n7: number = ell.fn(); // NG
+ 83: var n7: number = ell.fn(); // NG
                       ^^^ object literal
 
-interface.js:74
- 74:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
+interface.js:71
+ 71:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
                 ^^^^^^^^^^^^^ call of method `method`
- 70:   method(this: I): number {
+ 67:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 69: class K {
+ 66: class K {
            ^ K
 
-interface.js:74
- 74:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
+interface.js:71
+ 71:     return this.method(); // NG: The implicit pseudo-param of `methodCaller`,
                 ^^^^^^^^^^^^^ call of method `method`
- 70:   method(this: I): number {
+ 67:   method(this: I): number {
                     ^ property `anotherStaticMethod` of statics of I. Property not found in
- 69: class K {
+ 66: class K {
            ^ statics of K
 
-interface.js:80
- 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+interface.js:77
+ 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^^^^^^^^^^ call of method `method`
- 70:   method(this: I): number {
+ 67:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
- 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+ 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^ K
 
-interface.js:80
- 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+interface.js:77
+ 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^^^^^^^^^^ call of method `method`
- 70:   method(this: I): number {
+ 67:   method(this: I): number {
                     ^ property `anotherStaticMethod` of statics of I. Property not found in
- 80: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
+ 77: var n5: number = k.method(); // NG: `k` doesn't satisfy the requirements of `I`
                       ^ statics of K
 
-interface.js:89
- 89: var n8: number = fn(); // NG
+interface.js:86
+ 86: var n8: number = fn(); // NG
                       ^^^^ function call
- 70:   method(this: I): number {
+ 67:   method(this: I): number {
                     ^ property `anotherMethod` of I. Property not found in
 global object
 
