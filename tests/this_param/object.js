@@ -38,11 +38,11 @@ var s1: string = b.anotherMethod();
 var n3: number = b.method(); // NG
 var s2: string = B.anotherStaticMethod();
 
-// False negative
-// Although this is no good, an unnecessary error seems to be generated:
-// "`J & Class<this>` intersection. This type is incompatible with `B`". An
-// appropriate error is generated for the case, this is unneeded. The problem
-// may be rooted in ObjT lookups doing a unify--is some bound filter missing?
+
+
+
+
+
 var s3: number = B.staticMethod(); // NG
 
 class C extends A {
@@ -57,9 +57,9 @@ class C extends A {
 var c = new C();
 var n3: number = c.method();
 
-// False negative
-// "`C`. This type is incompatible with `J & Class<this>`, some incompatible
-// instantiation of `this`". Smells like a `subst` problem.
+
+
+
 var n4: number = C.staticMethod(); // OK
 
 class K {

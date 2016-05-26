@@ -1,4 +1,4 @@
-/*@flow*/interface I {
+interface I {
   anotherMethod(): number;
   static anotherStaticMethod(): number;
 }

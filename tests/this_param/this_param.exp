@@ -158,42 +158,10 @@ object.js:46
 object.js:46
  46: var s3: number = B.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
- 15:   static staticMethod(this: J & Class<this>): number {
-                                 ^^^^^^^^^^^^^^^ intersection. This type is incompatible with
- 25: class B extends A {
-           ^ class type: `this` type
-  Member 1:
-    5: type J = {
-                ^ object type
-  Error:
-    5: type J = {
-                ^ object type. This type is incompatible with
-   25: class B extends A {
-             ^ class type: `this` type
-  Member 2:
-   15:   static staticMethod(this: J & Class<this>): number {
-                                             ^^^^ class type: some incompatible instantiation of `this`
-  Error:
-   25: class B extends A {
-             ^ B. This type is incompatible with
-   15:   static staticMethod(this: J & Class<this>): number {
-                                             ^^^^ some incompatible instantiation of `this`
-
-object.js:46
- 46: var s3: number = B.staticMethod(); // NG
-                      ^^^^^^^^^^^^^^^^ call of method `staticMethod`
  30:   static anotherStaticMethod(): string {
                                      ^^^^^^ string. This type is incompatible with
   6:   anotherStaticMethod(): number;
                               ^^^^^^ number
-
-object.js:63
- 63: var n4: number = C.staticMethod(); // OK
-                      ^^^^^^^^^^^^^^^^ call of method `staticMethod`
- 48: class C extends A {
-           ^ C. This type is incompatible with
- 15:   static staticMethod(this: J & Class<this>): number {
-                                           ^^^^ some incompatible instantiation of `this`
 
 object.js:70
  70:     return this.method(); // NG
@@ -220,4 +188,4 @@ object.js:100
                                   ^^^^^^ number
 
 
-Found 28 errors
+Found 26 errors
