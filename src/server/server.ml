@@ -428,11 +428,7 @@ struct
         (* removes excluded and lib files. the latter are already filtered *)
         want f
       then
-        let filename =
-          if Files_js.is_json_file f
-          then Loc.JsonFile f
-          else Loc.SourceFile f
-        in
+        let filename = Files_js.filename_from_string f in
         FilenameSet.add filename acc
       else acc
     ) updates FilenameSet.empty

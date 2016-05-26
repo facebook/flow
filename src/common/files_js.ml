@@ -289,3 +289,9 @@ let relative_path =
 (* helper to get the full path to the "flow-typed" library dir *)
 let get_flowtyped_path root =
   make_path_absolute root "flow-typed"
+
+(* helper: make different kinds of Loc.filename from a path string *)
+let filename_from_string p =
+  if is_json_file p
+  then Loc.JsonFile p
+  else Loc.SourceFile p
