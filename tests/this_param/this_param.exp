@@ -41,16 +41,16 @@ interface.js:22
 interface.js:23
  23: var n2: number = A.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
- 12:   static staticMethod(this: Class<I> & Class<this>): number {
-                                       ^ property `anotherStaticMethod` of statics of I. Property not found in
+ 12:   static staticMethod(this: Class<this> & Class<I>): number {
+                                                     ^ property `anotherStaticMethod` of statics of I. Property not found in
   6: class A {
            ^ statics of A
 
 interface.js:23
  23: var n2: number = A.staticMethod(); // NG
                       ^^^^^^^^^^^^^^^^ call of method `staticMethod`
- 12:   static staticMethod(this: Class<I> & Class<this>): number {
-                                       ^ property `anotherMethod` of I. Property not found in
+ 12:   static staticMethod(this: Class<this> & Class<I>): number {
+                                                     ^ property `anotherMethod` of I. Property not found in
  23: var n2: number = A.staticMethod(); // NG
                       ^ A
 

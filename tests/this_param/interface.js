@@ -9,10 +9,10 @@ class A {
   method(this: this & I): number {
     return this.x + this.anotherMethod();
   }
-  static staticMethod(this: Class<I> & Class<this>): number {
-    // TODO:  There's a commutativity problem here.
-    // `Class<this> & I != I & Class<this>`.  Add tests for intersections that
-    // include `ThisClassT`s.
+  static staticMethod(this: Class<this> & Class<I>): number {
+
+
+
     return this.x + this.anotherStaticMethod();
   }
 }
