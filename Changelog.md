@@ -1,16 +1,34 @@
+###v0.26.0
+([@gabelevi](https://github.com/gabelevi) mistakingly listed a few v0.26.0 changes as being in v0.25.0. The Changelog has been updated to reflect reality. Sorry!)
+
+Likely to cause new Flow errors:
+- Flow now understands stateless functional React components, which may reveal many errors if you use them heavily.
+
+New Features:
+- Support for stateless functional React components!
+- Support for the exponentiation operator (`**`)
+- New `flow ls` command to list the files that Flow can see.
+
+Notable bug fixes:
+- Fixed parsing of `/x/* 5 */y/` - that's no comment!
+- Fixed parsing of newlines or comments at the end of a template literal.
+- Fixed an incremental bug where Flow didn't notice new JSON files in certain situations
+- Fixed a parsing service crash when a file appears and disappears suddenly.
+
+Misc:
+- Restored a bunch of deprecated/experimental/browser-specific APIs to the builtin flowlib and made them optional
+- Fixed up parser tests and further integrated them into CI.
+- Lots of refactoring!
+
 ###v0.25.0
 Likely to cause new Flow errors:
 - [@marudor](https://github.com/marudor) made a tremendous effort to clean up the builtin flowlib definitions, adding missing things, fixing annotations, and removing non-standard and deprecated features. If you're relying on these things, then you may have new errors.
 - In the past, generic types could leave off the type arguments. Flow is moving towards making these required. Applying type arguments to a polymorphic type (e.g. `Map<string, number>`) is like calling a function. If writing `my_function` was the same thing as writing `my_function()`, it would be really difficult to pass functions as values. Similarly, by making type arguments required, it frees us up to do more with our polymorphic types. If you have a polymorphic type with default types, like `type Foo<T = number>`, you can now write `Foo<>` to apply 0 type arguments to the polymorphic type `Foo`.
 
-  To ease migration, v0.25.0 still allows you to omit type arguments by default. v0.26.0 will start enforcing that type arguments are always supplied. To enable this behavior in v0.25.0, you can add `experimental.strict_type_args=true` to the `.flowconfig`.
+  To ease migration, v0.25.0 still allows you to omit type arguments by default. v0.27.0 will start enforcing that type arguments are always supplied. To enable this behavior in v0.25.0, you can add `experimental.strict_type_args=true` to the `.flowconfig`.
 
 New Features:
-- New `flow ls` command to list the files that Flow can see.
 - `declare module.exports: type;` <-- this is the new syntax to declare the CommonJS export type. Previously, you had to write `declare var exports: type;`. This can be used in `.flow` files and in `declare module` declarations.
-
-Notable bug fixes:
-- fix parsing of `/x/* 5 */y/` - that's no comment!
 
 Misc:
 - Now Flow builds on OCaml 4.03.0
