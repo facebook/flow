@@ -15,7 +15,7 @@ The Flow Parser is a JavaScript parser written in OCaml. It produces an AST that
 You can use the Flow parser in your browser or in node. To use in node you can just do
 
 ```JavaScript
-require('flow-parser').parse('1+1');
+require('flow-parser').parse('1+1', {});
 ```
 
 To use in the browser, you can add
@@ -27,8 +27,18 @@ To use in the browser, you can add
 which will make the `flow` object available to use like so:
 
 ```JavaScript
-flow.parse('1+1');
+flow.parse('1+1', {});
 ```
+
+## Options
+
+The second argument to `flow.parse` is the options object. Currently supported options:
+
+* `esproposal_decorators` (boolean, default `false`) - enable parsing of decorators
+* `esproposal_class_instance_fields` (boolean, default `false`) - enable parsing of class instance fields
+* `esproposal_class_static_fields` (boolean, default `false`) - enable parsing of class static fields
+* `esproposal_export_star_as` (boolean, default `false`) - enable parsing of `export * as` syntax
+* `types` (boolean, default `true`) - enable parsing of Flow types
 
 # bin scripts
 
