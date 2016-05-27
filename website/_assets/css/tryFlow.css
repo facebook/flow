@@ -59,3 +59,9 @@
 .editor .CodeMirror {
   height: 100%;
 }
+
+.editor .CodeMirror pre {
+  font-family: "Roboto Mono", Menlo, monospace;
+  font-size: 13px;
+  -webkit-font-smoothing: subpixel-antialiased;
+}

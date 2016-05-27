@@ -18,7 +18,6 @@ html {
 
 body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-family: proxima-nova, "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #444;
     margin: 0;
     padding-top: 50px;
@@ -31,6 +30,15 @@ h1, h2, h3, h4 {
     margin: 1.3em 0 0.2em;
     line-height: 1.4em;
     position: relative;
+}
+
+header, h1, h2, h3, h4 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+code, pre {
+    font-family: "Roboto Mono", Menlo, monospace;
+    -webkit-font-smoothing: subpixel-antialiased;
 }
 
 td {
@@ -79,13 +87,6 @@ p, ul, ol {
     width: 500px;
     margin-left: auto;
     margin-right: auto;
-}
-
-code {
-    letter-spacing: 0.02em;
-    padding-right: 2px;
-    padding-left: 4px;
-    border-radius: 3px;
 }
 
 .highlight {
