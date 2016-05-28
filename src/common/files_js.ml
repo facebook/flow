@@ -73,7 +73,7 @@ let kind_of_path path = Unix.(
   | S_DIR -> Dir (path, false)
   | _ -> Other
   with Unix_error (e, _, _) ->
-    Printf.eprintf "%s %s\n%!" path (Unix.error_message e);
+    Printf.eprintf "Skipping %s: %s\n%!" path (Unix.error_message e);
     Other
 )
 
@@ -82,6 +82,12 @@ let can_read path =
   with Unix.Unix_error (e, _, _) ->
     Printf.eprintf "Skipping %s: %s\n%!" path (Unix.error_message e);
     false
+
+let try_readdir path =
+  try Sys.readdir path
+  with Sys_error msg ->
+    Printf.eprintf "Skipping %s\n%!" msg;
+    [||]
 
 type stack =
   | S_Nil
@@ -111,10 +117,7 @@ let make_next_files_and_symlinks
           then process (sz+1) (real :: acc, symlinks) files dir stack
           else process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
-          let dirfiles =
-            if can_read path then Array.to_list @@ Sys.readdir path
-            else []
-          in
+          let dirfiles = Array.to_list @@ try_readdir path in
           let symlinks =
             (* accumulates all of the symlinks that point to
                directories outside of `paths`; symlinks that point to
