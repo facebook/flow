@@ -36,42 +36,63 @@ let function_kind {Ast.Function.async; generator; _ } =
   | false, true -> Generator
   | false, false -> Ordinary
 
-let mk cx tparams_map reason func =
-  let {Ast.Function.typeParameters; returnType; body; _} = func in
+let mk_fn cx tparams tparams_map reason func params =
+  let {Ast.Function.returnType; body; _} = func in
   let kind = function_kind func in
-  let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx tparams_map typeParameters
-  in
-  let params = Func_params.mk cx tparams_map func in
   let return_t =
     let reason = mk_reason "return" (return_loc func) in
     Anno.mk_type_annotation cx tparams_map reason returnType
   in
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
+let mk_function cx tparams_map reason this func =
+  let tparams, tparams_map = Anno.mk_type_param_declarations
+                               cx tparams_map func.Ast.Function.typeParameters
+  in
+  let params = Func_params.mk_function cx tparams_map this func in
+  mk_fn cx tparams tparams_map reason func params
+
+let mk_method cx tparams_map reason implicit_this func =
+  let tparams, tparams_map = Anno.mk_type_param_declarations
+                               cx tparams_map func.Ast.Function.typeParameters
+  in
+  let params = Func_params.mk_method cx tparams_map implicit_this func in
+  mk_fn cx tparams tparams_map reason func params
+
 let empty_body =
   let loc = Loc.none in
   let body = [] in
   Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body})
 
-let convert cx tparams_map loc func =
-  let {Ast.Type.Function.typeParameters; returnType; _} = func in
+let convert_fn cx tparams tparams_map loc func params =
   let reason = mk_reason "function type" loc in
   let kind = Ordinary in
-  let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx tparams_map typeParameters
-  in
-  let params = Func_params.convert cx tparams_map func in
   let body = empty_body in
-  let return_t = Anno.convert cx tparams_map returnType in
+  let return_t = Ast.Type.Function.(
+    Anno.convert cx tparams_map func.returnType
+  ) in
   {reason; kind; tparams; tparams_map; params; body; return_t}
+
+let convert_function cx tparams_map this loc func =
+  let tparams, tparams_map = Ast.Type.Function.(
+    Anno.mk_type_param_declarations cx tparams_map func.typeParameters
+  ) in
+  let params = Func_params.convert_function cx tparams_map this func in
+  convert_fn cx tparams tparams_map loc func params
+
+let convert_method cx tparams_map ?(static=false) loc func =
+  let tparams, tparams_map = Ast.Type.Function.(
+    Anno.mk_type_param_declarations cx tparams_map func.typeParameters
+  ) in
+  let params = Func_params.convert_method cx tparams_map ~static func in
+  convert_fn cx tparams tparams_map loc func params
 
 let default_constructor tparams_map reason = {
   reason;
   kind = Ordinary;
   tparams = [];
   tparams_map;
-  params = Func_params.empty;
+  params = Func_params.empty Flow.dummy_this;
   body = empty_body;
   return_t = VoidT.t;
 }
@@ -81,10 +102,12 @@ let field_initializer tparams_map reason expr return_t = {
   kind = FieldInit expr;
   tparams = [];
   tparams_map;
-  params = Func_params.empty;
+  params = Func_params.empty Flow.dummy_this;
   body = empty_body;
   return_t;
 }
+
+let this x = Func_params.this x.params
 
 let subst cx map x =
   let {tparams; tparams_map; params; return_t; _} = x in
@@ -111,7 +134,7 @@ let generate_tests cx f x =
     return_t = Flow.subst cx map return_t;
   })
 
-let functiontype cx this_t {reason; tparams; params; return_t; _} =
+let functiontype cx {reason; tparams; params; return_t; _} =
   let static =
     let reason = prefix_reason "statics of " reason in
     let proto = FunProtoT reason in
@@ -122,7 +145,7 @@ let functiontype cx this_t {reason; tparams; params; return_t; _} =
     Flow.mk_object cx reason
   in
   let funtype = { Type.
-    this_t;
+    this_t = Func_params.this params;
     params_tlist = Func_params.tlist params;
     params_names = Some (Func_params.names params);
     return_t;
@@ -135,13 +158,14 @@ let functiontype cx this_t {reason; tparams; params; return_t; _} =
   else PolyT (tparams, t)
 
 let methodtype {reason; tparams; params; return_t; _} =
+  let this = Func_params.this params in
   let params_tlist = Func_params.tlist params in
   let params_names = Func_params.names params in
   let t = FunT (
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_functiontype params_tlist ~params_names return_t
+    Flow.mk_methodtype this params_tlist ~params_names return_t
   ) in
   if tparams = []
   then t

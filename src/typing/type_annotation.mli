@@ -12,6 +12,11 @@
     called during AST traversal.
   *)
 
+val this:  Context.t ->
+  Type.t SMap.t ->
+  Loc.t ->
+  Type.t
+
 val convert: Context.t ->
   Type.t SMap.t ->
   Spider_monkey_ast.Type.t ->

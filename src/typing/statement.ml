@@ -19,8 +19,8 @@
 module Env = Env_js
 module Ast = Spider_monkey_ast
 module Anno = Type_annotation
+module Cls = Classy
 module Flow = Flow_js
-module Iface_sig = Class_sig (* same thing, mo'less *)
 
 open Utils_js
 open Reason_js
@@ -39,6 +39,49 @@ module TypeExSet = Set.Make(struct
   include Type
   let compare = reasonless_compare
 end)
+
+module NonClass = struct
+  module type NonClassType = sig
+    module Sig : Cls.InterfaceType
+    val bind: Context.t -> string -> Type.t -> reason -> unit
+    val init: Context.t -> string -> Type.t -> reason -> unit
+  end
+
+  module DeclClassT = struct
+    module Sig = Cls.DeclClass
+    let bind = Env.bind_declare_var
+    let init = Env.init_var ~has_anno:false
+  end
+  module InterfaceT = struct
+    module Sig = Cls.Interface
+    let bind cx = Env.bind_type cx
+    let init = Env.init_type
+  end
+
+  let extract_name { Ast.Statement.Interface.id; _ } =
+    (snd id).Ast.Identifier.name
+
+  module Make(T : NonClassType) = struct
+    let declare cx loc iface_ast =
+      let name = extract_name iface_ast in
+      let r = mk_reason (spf "class `%s`" name) loc in
+      let tvar = Flow.mk_tvar cx r in
+      T.bind cx name tvar r
+
+    let init cx tparams_map expr loc iface_ast =
+      let name = extract_name iface_ast in
+      let reason = DescFormat.instance_reason name loc in
+      let self = Flow.mk_tvar cx reason in
+      let iface_sig = T.Sig.mk cx tparams_map expr loc reason self iface_ast in
+      iface_sig |> T.Sig.generate_tests cx (T.Sig.check_super cx);
+      let t = T.Sig.classtype cx iface_sig in
+      Flow.unify cx self t;
+      Hashtbl.replace (Context.type_table cx) loc t;
+      T.init cx name t reason
+  end
+end
+module DeclClassStat = NonClass.Make(NonClass.DeclClassT)
+module InterfaceStat = NonClass.Make(NonClass.InterfaceT)
 
 let ident_name (_, ident) =
   ident.Ast.Identifier.name
@@ -67,6 +110,11 @@ let function_desc ~async ~generator desc =
   | true, false -> spf "async %s" desc
   | false, true -> spf "generator %s" desc
   | false, false -> desc
+
+let reject_explicit_this cx msg = function
+  | {Ast.Function.this = Ast.Type.Function.ThisParam.Explicit (loc, _); _} ->
+    FlowError.add_error cx (loc, [msg])
+  | _ -> ()
 
 (*
 let warn_or_ignore_export_star_as cx name =
@@ -286,18 +334,11 @@ and statement_decl cx type_params_map = Ast.Statement.(
       | None -> ()
     )
 
-  | (loc, DeclareClass { Interface.id; _ })
-  | (loc, InterfaceDeclaration { Interface.id; _ }) as stmt ->
-      let is_interface = match stmt with
-      | (_, InterfaceDeclaration _) -> true
-      | _ -> false in
-      let _, { Ast.Identifier.name; _ } = id in
-      let r = mk_reason (spf "class `%s`" name) loc in
-      let tvar = Flow.mk_tvar cx r in
-      (* interface is a type alias, declare class is a var *)
-      if is_interface
-      then Env.bind_type cx name tvar r
-      else Env.bind_declare_var cx name tvar r
+  | (loc, DeclareClass decl) ->
+      DeclClassStat.declare cx loc decl
+
+  | (loc, InterfaceDeclaration decl) ->
+      InterfaceStat.declare cx loc decl
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
@@ -465,24 +506,6 @@ and statement cx type_params_map = Ast.Statement.(
 
   let variables cx { VariableDeclaration.declarations; kind } =
     List.iter (variable cx type_params_map kind) declarations
-  in
-
-  let interface cx loc structural i =
-    let {Interface.id = (_, {Ast.Identifier.name; _}); _} = i in
-    let reason = DescFormat.instance_reason name loc in
-    let self = Flow.mk_tvar cx reason in
-    let iface_sig =
-      Iface_sig.mk_interface cx type_params_map loc reason structural self i
-    in
-    iface_sig |> Iface_sig.generate_tests cx (fun iface_sig ->
-      Iface_sig.check_super cx iface_sig
-    );
-    let interface_t = Iface_sig.classtype ~check_polarity:false cx iface_sig in
-    Flow.unify cx self interface_t;
-    Hashtbl.replace (Context.type_table cx) loc interface_t;
-    (* interface is a type alias, declare class is a var *)
-    Env.(if structural then init_type else init_var ~has_anno:false)
-      cx name interface_t reason
   in
 
   let catch_clause cx { Try.CatchClause.param; guard = _; body = (_, b) } =
@@ -1463,10 +1486,10 @@ and statement cx type_params_map = Ast.Statement.(
         reason
 
   | (loc, DeclareClass decl) ->
-    interface cx loc false decl
+    DeclClassStat.init cx type_params_map expression loc decl
 
   | (loc, InterfaceDeclaration decl) ->
-    interface cx loc true decl
+    InterfaceStat.init cx type_params_map expression loc decl
 
   | (loc, DeclareModule { DeclareModule.id; body; }) ->
     let name = match id with
@@ -2602,10 +2625,11 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       let reason = mk_reason (spf "super.%s(...)" name) loc in
       let reason_prop = mk_reason (spf "property `%s`" name) ploc in
       let super = super_ cx (mk_reason "super" super_loc) in
+      let this = this_ cx (mk_reason "this" super_loc) in
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
-        let funtype = Flow.mk_methodtype super argts t in
+        let funtype = Flow.mk_methodtype this argts t in
         Flow.flow cx (super, MethodT (reason, (reason_prop, name), funtype))
       )
 
@@ -4365,17 +4389,16 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
 
 and mk_class cx type_params_map loc reason c =
   let self = Flow.mk_tvar cx reason in
-  let class_sig =
-    Class_sig.mk cx type_params_map loc reason self c ~expr:expression
-  in
-  class_sig |> Class_sig.generate_tests cx (fun class_sig ->
-    Class_sig.check_super cx class_sig;
-    Class_sig.toplevels cx class_sig
+  let open Cls.Class in
+  let class_sig = mk cx type_params_map expression loc reason self c in
+  class_sig |> generate_tests cx (fun test_sig ->
+    check_super cx test_sig;
+    Cls.toplevels cx test_sig
       ~decls:toplevel_decls
       ~stmts:toplevels
       ~expr:expression
   );
-  let class_t = Class_sig.classtype cx class_sig in
+  let class_t = classtype cx class_sig in
   Flow.unify cx self class_t;
   class_t
 
@@ -4383,12 +4406,12 @@ and mk_class cx type_params_map loc reason c =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx type_params_map reason func this super =
-  let func_sig = Func_sig.mk cx type_params_map reason func in
+and function_decl id cx type_params_map sig_this reason func body_this super =
+  let func_sig = Func_sig.mk_function cx type_params_map reason sig_this func in
 
   let this, super =
     let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in
-    new_entry this, new_entry super
+    new_entry body_this, new_entry super
   in
 
   let save_return = Abnormal.clear_saved Abnormal.Return in
@@ -4412,31 +4435,36 @@ and define_internal cx reason x =
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx type_params_map reason func =
+  reject_explicit_this cx
+    "`this` pseudo-parameters are not allowed on functions" func;
   let this = Flow.mk_tvar cx (replace_reason "this" reason) in
   (* Normally, functions do not have access to super. *)
   let super = MixedT (
     replace_reason "empty super object" reason,
     Mixed_everything
   ) in
-  let func_sig = function_decl id cx type_params_map reason func this super in
-  Func_sig.functiontype cx this func_sig
+  Func_sig.functiontype cx
+    (function_decl id cx type_params_map this reason func this super)
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx type_params_map reason func =
+  reject_explicit_this cx
+    "`this` pseudo-parameters are not allowed on arrow functions" func;
   let this = this_ cx reason in
   let super = super_ cx reason in
   let {Ast.Function.id; _} = func in
-  let func_sig = function_decl id cx type_params_map reason func this super in
-  (* Do not expose the type of `this` in the function's type. The call to
-     function_decl above has already done the necessary checking of `this` in
-     the body of the function. Now we want to avoid re-binding `this` to
-     objects through which the function may be called. *)
-  Func_sig.functiontype cx Flow.dummy_this func_sig
+  (* Use `dummy_this` in the function's signature and, ultimately, type. The
+     call to function_decl does the necessary checking of `this` in the body of
+     the function. Since any `this`es in the arrow function are lexically bound,
+     we want to avoid re-binding `this` to objects through which the function
+     may be called, hence the `dummy_this`. *)
+  Func_sig.functiontype cx
+    (function_decl id cx type_params_map Flow.dummy_this reason func this super)
 
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
 and mk_method cx type_params_map reason func this =
   let super = MixedT (reason, Mixed_everything) in
   let id = None in
-  let func_sig = function_decl id cx type_params_map reason func this super in
-  Func_sig.methodtype_DEPRECATED func_sig
+  Func_sig.methodtype_DEPRECATED
+    (function_decl id cx type_params_map this reason func this super)

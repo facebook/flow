@@ -599,12 +599,18 @@ end
 
 module TypeAppExpansion : sig
   type entry
-  val push_unless_loop : Context.t -> (Type.t * Type.t list) -> bool
+
+  (* Detect whether pushing would cause a loop. Push only if no loop is
+     detected, and return whether push happened. *)
+  val push_array_unless_loop : Context.t -> Type.t list -> bool
+  val push_instant_unless_loop : Context.t -> (Type.t * Type.t list) -> bool
   val pop : unit -> unit
   val get : unit -> entry list
   val set : entry list -> unit
 end = struct
-  type entry = Type.t * TypeSet.t list
+  type entry =
+    | Array of TypeSet.t list
+    | Instant of Type.t * TypeSet.t list
   let stack = ref ([]: entry list)
 
   (* visitor to collect roots of type applications nested in a type *)
@@ -628,56 +634,73 @@ end = struct
     list |> List.map f |> String.concat sep
 
   (* show entries in the stack *)
-  let show_entry (c, tss) =
-    spf "%s<%s>" (desc_of_t c) (
-      string_of_list tss "," (fun ts ->
-        spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t)
-      ))
+  let show_entry =
+    let string_of_ts ts =
+      spf "[%s]" (string_of_list (TypeSet.elements ts) ";" desc_of_t) in
+    function
+    | Instant (c, ts) ->
+      spf "%s<%s>" (desc_of_t c) (string_of_list ts "," string_of_ts)
+    | Array ts ->
+      spf "Array<%s>" (string_of_list ts "," string_of_ts)
 
   let _dump_stack () =
     string_of_list !stack "\n" show_entry
 
-  (* Detect whether pushing would cause a loop. Push only if no loop is
-     detected, and return whether push happened. *)
+  (* Say that targs are possibly expanding when, given previous targs and
+     current targs, each previously non-empty targ is contained in the
+     corresponding current targ. *)
+  let possibly_expanding_targs prev_tss tss =
+    (* The following helper carries around a bit that indicates whether prev_tss
+       contains at least one non-empty set. *)
+    let rec loop seen_nonempty_prev_ts = function
+      | prev_ts::prev_tss, ts::tss ->
+        (* if prev_ts is not a subset of ts, we have found a counterexample
+           and we can bail out *)
+        TypeSet.subset prev_ts ts &&
+          (* otherwise, we recurse on the remaining targs, updating the bit *)
+          loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts))
+            (prev_tss, tss)
+      | [], [] ->
+        (* we have found no counterexamples, so it comes down to whether we've
+           seen any non-empty prev_ts *)
+        seen_nonempty_prev_ts
+      | [], _ | _, [] ->
+        (* something's wrong around arities, but that's not our problem, so
+           bail out *)
+        false
+    in loop false (prev_tss, tss)
 
-  let push_unless_loop =
+  let push cx top =
+    stack := top :: !stack;
+    if Context.is_verbose cx then
+      prerr_endlinef "typeapp stack entry: %s" (show_entry top)
 
-    (* Say that targs are possibly expanding when, given previous targs and
-       current targs, each previously non-empty targ is contained in the
-       corresponding current targ. *)
-    let possibly_expanding_targs prev_tss tss =
-      (* The following helper carries around a bit that indicates whether
-         prev_tss contains at least one non-empty set. *)
-      let rec loop seen_nonempty_prev_ts = function
-        | prev_ts::prev_tss, ts::tss ->
-          (* if prev_ts is not a subset of ts, we have found a counterexample
-             and we can bail out *)
-          TypeSet.subset prev_ts ts &&
-            (* otherwise, we recurse on the remaining targs, updating the bit *)
-            loop (seen_nonempty_prev_ts || not (TypeSet.is_empty prev_ts))
-              (prev_tss, tss)
-        | [], [] ->
-          (* we have found no counterexamples, so it comes down to whether we've
-             seen any non-empty prev_ts *)
-          seen_nonempty_prev_ts
-        | [], _ | _, [] ->
-          (* something's wrong around arities, but that's not our problem, so
-             bail out *)
-          false
-      in loop false (prev_tss, tss)
-
-    in fun cx (c, ts) ->
-      let tss = List.map (collect_roots cx) ts in
-      let loop = !stack |> List.exists (fun (prev_c, prev_tss) ->
+  let push_instant_unless_loop cx (c, ts) =
+    let tss = List.map (collect_roots cx) ts in
+    let p = function
+      | Instant (prev_c, prev_tss) ->
         c = prev_c && possibly_expanding_targs prev_tss tss
-      ) in
-      if loop then false
-      else begin
-        stack := (c, tss) :: !stack;
-        if Context.is_verbose cx then
-          prerr_endlinef "typeapp stack entry: %s" (show_entry (c, tss));
-        true
-      end
+      | _ -> false
+    in
+    let loop = !stack |> List.exists p in
+    if loop then false
+    else begin
+      push cx (Instant (c, tss));
+      true
+    end
+
+  let push_array_unless_loop cx ts =
+    let tss = List.map (collect_roots cx) ts in
+    let p = function
+      | Array prev_tss -> possibly_expanding_targs prev_tss tss
+      | _ -> false
+    in
+    let loop = !stack |> List.exists p in
+    if loop then false
+    else begin
+      push cx (Array tss);
+      true
+    end
 
   let pop () = stack := List.tl !stack
   let get () = !stack
@@ -876,6 +899,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* concretization *)
     (******************)
 
+    | ClassT i, ConcretizeLowerT _ ->
+      let concrete_l = mk_tvar_where cx (reason_of_t l) (fun t ->
+        flow_opt cx (i, UnifyT(ClassT i, t))
+      ) in
+      rec_flow cx trace (concrete_l, u)
+
     (** pairs emitted by in-progress concretize_parts *)
     | t, ConcretizeLowerT (l, todo_ts, done_ts, u) ->
       concretize_lower_parts cx trace l u (t :: done_ts) todo_ts
@@ -933,7 +962,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (sink_t, _)) ->
+    | l, UseT (use_op, AnnotT (sink_t, _))
+    | ClassT (l), UseT (use_op, ClassT (AnnotT (sink_t, _))) ->
       let reason = reason_of_t sink_t in
       rec_flow cx trace (sink_t, ReposUseT (reason, use_op, l))
 
@@ -1528,7 +1558,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (t, u)
 
     | (TypeAppT(c,ts), _) ->
-        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+        if TypeAppExpansion.push_instant_unless_loop cx (c, ts) then (
           let reason_op = reason_of_use_t u in
           let reason_tapp = reason_of_t l in
           let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
@@ -1537,7 +1567,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         )
 
     | (_, UseT (use_op, TypeAppT(c,ts))) ->
-        if TypeAppExpansion.push_unless_loop cx (c, ts) then (
+        if TypeAppExpansion.push_instant_unless_loop cx (c, ts) then (
           let reason_op = reason_of_t l in
           let reason_tapp = reason_of_use_t u in
           let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
@@ -2429,7 +2459,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************************************************)
 
     | (_,
-       UseT (_, InstanceT (reason_inst, _, super, {
+       UseT (_, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -2437,7 +2467,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        })))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+        | InstanceT (_, l, _, _),
+          InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+            structural_subtype cx trace l reason
+              (super, fields_tmap, methods_tmap)
+        | _ -> ())
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -3294,9 +3331,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (arrt, u)
 
     | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
-      let reason = reason_of_use_t u in
-      let arrt = get_builtin_typeapp cx reason "Array" [t] in
-      rec_flow cx trace (arrt, u)
+      if TypeAppExpansion.push_array_unless_loop cx [t] then (
+        let reason = reason_of_use_t u in
+        let arrt = get_builtin_typeapp cx reason "Array" [t] in
+        rec_flow cx trace (arrt, u);
+        TypeAppExpansion.pop ()
+      )
 
     (***********************)
     (* String library call *)
@@ -3464,7 +3504,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
-    | (MixedT _, UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+    | (MixedT _,
+       UseT (_, ExtendsT ([], l, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -3472,7 +3513,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        }))))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+        | InstanceT (_, l, _, _),
+          InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+            structural_subtype cx trace l reason
+              (super, fields_tmap, methods_tmap)
+        | _ -> ())
 
     | (MixedT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
@@ -3693,6 +3741,7 @@ and ground_subtype = function
   | (VoidT _, UseT (_, VoidT _))
   | (EmptyT _, _)
   | (_, UseT (_, MixedT _))
+  | (_, UseT (_, ClassT (MixedT _)))
   | (_, UseT (_, FunProtoT _)) (* MixedT is used for object protos, this is for funcs *)
   | (AnyT _, _)
   | (_, UseT (_, AnyT _))
@@ -4691,6 +4740,8 @@ and lower_parts_to_concretize _cx = function
     List.fold_left (fun (tvar, fpart, acc) -> function
       | AnnotT (_, t) | (OpenT _ as t) ->
         true, fpart, t :: acc
+      | ClassT (AnnotT (_, t)) | ClassT (OpenT _ as t) ->
+        true, fpart, (ClassT t) :: acc
       | FunT _ as t ->  tvar, Partition.add t fpart, t :: acc
       | t -> tvar, fpart, t :: acc
     ) (false, FunType.return_type_partition [], []) ts in
@@ -6091,6 +6142,7 @@ and become cx ?trace r t = match t with
 
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace reason t =
+  let repos t = mod_reason_of_t (repos_reason (loc_of_reason reason)) t in
   match t with
   | OpenT (r, id) ->
     let constraints = find_graph cx id in
@@ -6115,7 +6167,10 @@ and reposition cx ?trace reason t =
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+  | InstanceT (reason_inst, static, super, insttype) ->
+      let loc = loc_of_reason reason in
+      InstanceT (repos_reason loc reason_inst, repos static, super, insttype)
+  | _ -> repos t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
@@ -6404,8 +6459,8 @@ end
    superclass.
 *)
 (* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) cx skip ids t =
-  let recurse ?infer = assert_ground ?infer cx skip ids in
+let rec assert_ground ?(infer=false) ?(in_class=false) cx skip ids t =
+  let recurse ?infer = assert_ground ?infer ~in_class cx skip ids in
   match t with
   | BoundT _ ->
     ()
@@ -6442,12 +6497,11 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | FunT (_, static, prototype, { this_t; params_tlist; return_t; _ }) ->
     unify cx static AnyT.t;
     unify cx prototype AnyT.t;
-    unify cx this_t AnyT.t;
+    if in_class then recurse ~infer:true this_t else unify cx this_t AnyT.t;
     List.iter recurse params_tlist;
     recurse ~infer:true return_t
 
-  | PolyT (_, t)
-  | ThisClassT t ->
+  | PolyT (_, t) ->
     recurse t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
@@ -6458,7 +6512,10 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     recurse t;
     List.iter recurse ts
 
-  | ClassT t
+  | ThisClassT t
+  | ClassT t ->
+    assert_ground ~in_class:true cx skip ids t
+
   | TypeT (_, t) ->
     recurse t
 

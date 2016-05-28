@@ -92,6 +92,40 @@ generics.js:8
   8: (new ImplicitNumber().val: string) // error: number ~> string
                                 ^^^^^^ string
 
+generics.js:46
+ 46: var c2 = new C("another string"); // NG
+              ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 46: var c2 = new C("another string"); // NG
+                    ^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 26: class C extends B<number> {
+                       ^^^^^^ number
+
+generics.js:47
+ 47: var c3 = new C(null); // NG
+              ^^^^^^^^^^^ constructor call
+ 47: var c3 = new C(null); // NG
+                    ^^^^ null. This type is incompatible with
+ 26: class C extends B<number> {
+                       ^^^^^^ number
+
+generics.js:49
+ 49: c1 = b1.method(); // NG
+          ^^^^^^^^^^^ B. This type is incompatible with
+ 45: var c1: C = new C(2);
+             ^ C
+
+generics.js:50
+ 50: c1 = b2.method(); // NG
+          ^^^^^^^^^^^ B. This type is incompatible with
+ 45: var c1: C = new C(2);
+             ^ C
+
+generics.js:51
+ 51: c1 = b3.method(); // NG
+          ^^^^^^^^^^^ B. This type is incompatible with
+ 45: var c1: C = new C(2);
+             ^ C
+
 import.js:8
   8:   foo(): B1 { return new B1(); } // error
               ^^ B1. This type is incompatible with
@@ -135,6 +169,30 @@ import.js:22
 interface.js:1
   1: interface I { xs: Array<this>; }
                              ^^^^ Unexpected use of `this` type
+
+interface2.js:19
+ 19:     return new this("qwer");
+                ^^^^^^^^^^^^^^^^ constructor call
+ 19:     return new this("qwer");
+                         ^^^^^^ string. This type is incompatible with
+ 11:   constructor(n: number) {}
+                      ^^^^^^ number
+
+interface2.js:24
+ 24: var c2 = c1.fn({x:"asdf",TheClass:C}); // NG: missing `deref`
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `fn`
+ 12:   fn(this: this & I, t: T): this {
+                       ^ property `deref` of statics of I. Property not found in
+ 24: var c2 = c1.fn({x:"asdf",TheClass:C}); // NG: missing `deref`
+              ^^ statics of C
+
+interface2.js:41
+ 41: var x2 = x1.fn(); // NG: missing `deref`
+              ^^^^^^^ call of method `fn`
+ 29:   fn(this: this & I): this {
+                       ^ property `deref` of statics of I. Property not found in
+ 41: var x2 = x1.fn(); // NG: missing `deref`
+              ^^ statics of X
 
 self.js:4
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
@@ -205,4 +263,4 @@ test.js:56
                     ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
 
 
-Found 41 errors
+Found 49 errors

@@ -76,6 +76,7 @@ type t =
   | ExportNamelessFunction
   | UnsupportedDecorator
   | MissingTypeParamDefault
+  | CtorThisParam
 
 exception Error of (Loc.t * t) list
 
@@ -172,6 +173,7 @@ module PP =
       | UnsupportedDecorator -> "Found a decorator in an unsupported position."
       | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
           since a preceding type parameter declaration has a default."
+      | CtorThisParam -> "Found a `this` pseudo-param on a constructor."
 
 
   end

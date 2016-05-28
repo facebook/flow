@@ -28,5 +28,37 @@ declare_class.js:10
  10: (C.name: number); // error, it's a string
               ^^^^^^ number
 
+pseudo_this.js:15
+ 15: var s1: string = x.absM(); // NG: X doesn't implement V
+                      ^^^^^^^^ call of method `absM`
+  9:   absM(this: this & V): string;
+                         ^ property `virtualM` of V. Property not found in
+ 15: var s1: string = x.absM(); // NG: X doesn't implement V
+                      ^ X
 
-Found 4 errors
+pseudo_this.js:15
+ 15: var s1: string = x.absM(); // NG: X doesn't implement V
+                      ^^^^^^^^ call of method `absM`
+  9:   absM(this: this & V): string;
+                         ^ property `virtualSM` of statics of V. Property not found in
+ 15: var s1: string = x.absM(); // NG: X doesn't implement V
+                      ^ statics of X
+
+pseudo_this.js:16
+ 16: var s2: string = X.absSM(); // NG: X doesn't implement V
+                      ^^^^^^^^^ call of method `absSM`
+ 10:   static absSM(this: Class<this> & Class<V>): string;
+                                              ^ property `virtualSM` of statics of V. Property not found in
+  6: declare class X {
+     ^ statics of X
+
+pseudo_this.js:16
+ 16: var s2: string = X.absSM(); // NG: X doesn't implement V
+                      ^^^^^^^^^ call of method `absSM`
+ 10:   static absSM(this: Class<this> & Class<V>): string;
+                                              ^ property `virtualM` of V. Property not found in
+ 16: var s2: string = X.absSM(); // NG: X doesn't implement V
+                      ^ X
+
+
+Found 8 errors

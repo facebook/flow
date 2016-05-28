@@ -5,15 +5,35 @@ type t
 (** 1. Constructors *)
 
 (** Create signature from function AST. *)
-val mk: Context.t ->
+val mk_function: Context.t ->
   Type.t SMap.t -> (* type params map *)
   Reason_js.t ->
+  Type.t -> (* this *)
   Spider_monkey_ast.Function.t ->
   t
 
-(** Create signature from function type AST. *)
-val convert: Context.t ->
+val mk_method: Context.t ->
   Type.t SMap.t -> (* type params map *)
+  Reason_js.t ->
+  Type.t -> (* implicit `this` pseudo-parameter *)
+  Spider_monkey_ast.Function.t ->
+  t
+
+(** Create function signature from function type AST. *)
+(*TJP: This functionality could be achieved by pushing a "this" into
+  `tparams_map` and using `~static:false`, but that's too magical. I'm tempted
+  to remodel the AST....*)
+val convert_function: Context.t ->
+  Type.t SMap.t -> (* type params map *)
+  Type.t -> (* this *)
+  Loc.t ->
+  Spider_monkey_ast.Type.Function.t ->
+  t
+
+(** Create method signature from function type AST. *)
+val convert_method: Context.t ->
+  Type.t SMap.t -> (* type params map *)
+  ?static:bool ->
   Loc.t ->
   Spider_monkey_ast.Type.Function.t ->
   t
@@ -42,6 +62,8 @@ val field_initializer:
   t
 
 (** 1. Manipulation *)
+
+val this: t -> Type.t
 
 (** Return a signature with types from provided map substituted.
 
@@ -87,9 +109,7 @@ val toplevels:
 (** 1. Type Conversion *)
 
 (** Create a function type for function declarations/expressions. *)
-val functiontype: Context.t ->
-  Type.t -> (* this *)
-  t -> Type.t
+val functiontype: Context.t -> t -> Type.t
 
 (** Create a function type for class/interface methods. *)
 val methodtype: t -> Type.t

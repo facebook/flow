@@ -45,6 +45,18 @@ let mk_custom_fun cx loc typeParameters kind =
     CustomFunT (reason, kind)
   )
 
+let this cx type_params_map loc =
+  if SMap.mem "this" type_params_map then
+    (* We model a this type like a type parameter. The bound on a this
+       type reflects the interface of `this` exposed in the current
+       environment. Currently, we only support this types in a class
+       environment: a this type in class C is bounded by C. *)
+    SMap.find_unsafe "this" type_params_map
+  else (
+    FlowError.add_warning cx (loc, ["Unexpected use of `this` type"]);
+    AnyT.t
+  )
+
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -57,6 +69,10 @@ let rec convert cx type_params_map = Ast.Type.(function
 | loc, Void -> VoidT.at loc
 
 | loc, Null -> NullT.at loc
+
+| loc, This ->
+  let reason = mk_reason "`this` type" loc in
+  Flow_js.reposition cx reason (this cx type_params_map loc)
 
 | loc, Number -> NumT.at loc
 
@@ -235,21 +251,6 @@ let rec convert cx type_params_map = Ast.Type.(function
       AbstractT t
     )
 
-  | "this" ->
-    if SMap.mem "this" type_params_map then
-      (* We model a this type like a type parameter. The bound on a this
-         type reflects the interface of `this` exposed in the current
-         environment. Currently, we only support this types in a class
-         environment: a this type in class C is bounded by C. *)
-      check_type_param_arity cx loc typeParameters 0 (fun () ->
-        let reason = mk_reason "`this` type" loc in
-        Flow_js.reposition cx reason (SMap.find_unsafe "this" type_params_map)
-      )
-    else (
-      FlowError.add_warning cx (loc, ["Unexpected use of `this` type"]);
-      AnyT.t
-    )
-
   (* Class<T> is the type of the class whose instances are of type T *)
   | "Class" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
@@ -348,7 +349,14 @@ let rec convert cx type_params_map = Ast.Type.(function
 
   end
 
-| loc, Function { Function.params; returnType; rest; typeParameters } ->
+| _, Function { Function.this = Function.ThisParam.Explicit (loc, _); _ } ->
+  let msg = "Unsupported `this` pseudo-parameter found in function type" in
+  FlowError.add_error cx (loc, [msg]);
+  AnyT.t
+
+| loc, Function f ->
+  let { Function.params; returnType; rest; typeParameters; _ } = f in
+
   let typeparams, type_params_map =
     mk_type_param_declarations cx type_params_map typeParameters in
 

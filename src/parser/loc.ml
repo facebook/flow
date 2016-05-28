@@ -67,6 +67,15 @@ let btwn loc1 loc2 = {
   _end = loc2._end;
 }
 
+let start loc = {
+  source = loc.source;
+  start = loc.start;
+  _end = let s = loc.start in
+         { s with offset = s.offset+1; column = s.column+1 }
+}
+
+let width loc = loc.start.offset - (loc._end.offset - 1)
+
 let btwn_exclusive loc1 loc2 = {
   source = loc1.source;
   start = loc1._end;

@@ -52,6 +52,7 @@ MODULES=\
   src/services/port\
   src/stubs\
   src/typing\
+  src/typing/class\
   hack/dfind\
   hack/find\
   hack/globals\
