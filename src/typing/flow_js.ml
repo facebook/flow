@@ -1849,6 +1849,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (List.hd ts,
          LookupT (reason, strict, (List.tl ts) @ try_ts_on_failure, s, t))
 
+    | IntersectionT (r, rep), GetPropT (reason_op, (reason_prop, "constructor"), t) ->
+      let retarget mem = mk_tvar_where cx reason_op (fun t ->
+        let u = GetPropT (reason_op, (reason_prop, "constructor"), t) in
+        rec_flow cx trace (mem, u)
+      ) in
+      let ts = List.map retarget (InterRep.members rep) in
+      rec_flow_t cx trace (IntersectionT (r, InterRep.make ts), t)
+
     (** constructor calls **)
     | IntersectionT (_, rep),
       ConstructorT (reason_op, result_ts, try_ts, args, t) ->
