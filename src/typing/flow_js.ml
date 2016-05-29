@@ -2447,6 +2447,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
+    | (ClassT _,
+       UseT (_, InstanceT (_, _, _, { structural = true; _; }))) ->
+      flow_err cx trace
+        "This class is incompatible with interface (did you forget 'Class<.>')"
+        l u;
+
     | (_,
        UseT (_, InstanceT (reason_inst, static, super, {
          fields_tmap;
@@ -2531,17 +2537,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       construct_next_result cx trace reason_op args t ret (result_ts, try_ts);
       Ops.pop ()
-
-    | InstanceT _, ConstructorT (reason_op, result_ts, next::try_ts, args, t) ->
-      (* Throw away the unshifted l. Should unshifted members be an error? Wait
-         for verdict before writing tests. *)
-      rec_flow cx trace (next, ConstructorT (reason_op, result_ts, try_ts, args, t))
-
-    | InstanceT _, ConstructorT (reason_op, result_ts, [], _, t) ->
-      (* Throw away the unshifted l. Should unshifted members be an error? Wait
-         for verdict before writing tests. *)
-      let r = replace_reason "?intersection?" reason_op in (*TJP: ?*)
-      rec_flow_t cx trace (IntersectionT (r, InterRep.make (List.rev result_ts)), t)
 
     (****************************************************************)
     (* function types derive objects through explicit instantiation *)

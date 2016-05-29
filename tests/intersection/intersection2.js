@@ -1,4 +1,4 @@
-class A {
+/*@flow*/class A {
   m(): void {}
   static staticM(): void {}
 }
@@ -29,8 +29,8 @@ function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
   Ap.staticM();
   Ap.anotherStaticM();
   Ap.yaM();
-  Ap.constructor.yaStaticM(); //OK? It seems more okay for a signature like `gn(ap: K & L & Class<A>): void`
-  var a = new Ap(); // Here, J gets silently dropped from the intersection. OK?
+  Ap.constructor.yaStaticM();
+  var a = new Ap();
   a.m();
   a.anotherM();
   a.constructor.staticM();
@@ -45,7 +45,7 @@ class JLess extends A {
 }
 var jLess = new JLess;
 fn(jLess);
-gn(JLess); //NG: False positive: Where's the "missing `yaStaticM` property" error? (Probably tied to the silent `J` dropping--wait for hard spec on that behavior)
+gn(JLess);
 
 class Full { // Forgot `extends A`
   anotherM(): void {}
@@ -65,4 +65,4 @@ class AlmostJ extends A {
 }
 var almostJ = new AlmostJ;
 fn(almostJ);
-gn(AlmostJ); //NG: False positive: Where's the "missing `yaStaticM` property" error? ...
+gn(AlmostJ);

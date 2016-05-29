@@ -1,54 +1,18 @@
-intersection2.js:38
- 38:   a.yaM(); //NG
-       ^^^^^^^ call of method `yaM`. Method cannot be called on any member of intersection type
- 38:   a.yaM(); //NG
-       ^ intersection
-  Member 1:
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                                        ^ A
-  Error:
-   38:   a.yaM(); //NG
-           ^^^ property `yaM`. Property not found in
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                                        ^ A
-  Member 2:
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                             ^ I
-  Error:
-   38:   a.yaM(); //NG
-           ^^^ property `yaM`. Property not found in
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                             ^ I
-
-intersection2.js:39
- 39:   a.constructor.yaStaticM(); //NG
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `yaStaticM`. Method cannot be called on any member of intersection type
- 39:   a.constructor.yaStaticM(); //NG
-       ^ intersection
-  Member 1:
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                                        ^ class type: A
-  Error:
-   39:   a.constructor.yaStaticM(); //NG
-                       ^^^^^^^^^ property `yaStaticM`. Property not found in
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                                        ^ statics of A
-  Member 2:
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                             ^ class type: I
-  Error:
-   39:   a.constructor.yaStaticM(); //NG
-                       ^^^^^^^^^ property `yaStaticM`. Property not found in
-   28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                             ^ statics of I
+intersection2.js:33
+ 33:   var a = new Ap();
+               ^^^^^^^^ constructor call
+ 33:   var a = new Ap();
+               ^^^^^^^^ constructor call. Constructor cannot be called on
+ 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
+                                           ^ J
 
 intersection2.js:48
- 48: gn(JLess); //NG: False positive: Where's the "missing `yaStaticM` property" error? (Probably tied to the silent `J` dropping--wait for hard spec on that behavior)
+ 48: gn(JLess);
      ^^^^^^^^^ function call
+ 48: gn(JLess);
+        ^^^^^ class type: JLess. This class is incompatible with interface (did you forget 'Class<.>')
  28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                                           ^ property `yaM` of J. Property not found in
- 48: gn(JLess); //NG: False positive: Where's the "missing `yaStaticM` property" error? (Probably tied to the silent `J` dropping--wait for hard spec on that behavior)
-        ^^^^^ class type: JLess
+                                           ^ J
 
 intersection2.js:57
  57: fn(full);
@@ -61,26 +25,26 @@ intersection2.js:57
 intersection2.js:58
  58: gn(Full);
      ^^^^^^^^ function call
- 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                                           ^ property `yaM` of J. Property not found in
- 58: gn(Full);
-        ^^^^ class type: Full
-
-intersection2.js:58
- 58: gn(Full);
-     ^^^^^^^^ function call
  58: gn(Full);
         ^^^^ Full. This type is incompatible with
  28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
                                       ^ A
 
-intersection2.js:68
- 68: gn(AlmostJ); //NG: False positive: Where's the "missing `yaStaticM` property" error? ...
-     ^^^^^^^^^^^ function call
+intersection2.js:58
+ 58: gn(Full);
+     ^^^^^^^^ function call
+ 58: gn(Full);
+        ^^^^ class type: Full. This class is incompatible with interface (did you forget 'Class<.>')
  28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
-                                           ^ property `yaM` of J. Property not found in
- 68: gn(AlmostJ); //NG: False positive: Where's the "missing `yaStaticM` property" error? ...
-        ^^^^^^^ class type: AlmostJ
+                                           ^ J
+
+intersection2.js:68
+ 68: gn(AlmostJ);
+     ^^^^^^^^^^^ function call
+ 68: gn(AlmostJ);
+        ^^^^^^^ class type: AlmostJ. This class is incompatible with interface (did you forget 'Class<.>')
+ 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
+                                           ^ J
 
 test_obj.js:29
  29: var e: E = c; // error
@@ -105,4 +69,4 @@ test_obj.js:29
                                                              ^^^^^^ number. See lib: lib/lib.js:33
 
 
-Found 8 errors
+Found 7 errors
