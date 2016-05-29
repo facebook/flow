@@ -504,7 +504,7 @@ let rec assume_ground cx ids = function
   | GetPropT (_, _, t)
   | CallT (_, { return_t = t; _ })
   | MethodT (_, _, { return_t = t; _ })
-  | ConstructorT (_, _, t) ->
+  | ConstructorT (_, _, _, _, t) ->
     assume_ground cx ids (UseT (UnknownUse, t))
 
   | _ -> ()
@@ -1738,7 +1738,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (use_op, IntersectionT (_, rep)) ->
       InterRep.members rep |> List.iter (fun t ->
         rec_flow cx trace (l, UseT (use_op, t))
-      )
+      );
 
     (* When a subtyping question involves a union appearing on the right or an
        intersection appearing on the left, the simplification rules are
@@ -1848,6 +1848,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (List.hd ts,
          LookupT (reason, strict, (List.tl ts) @ try_ts_on_failure, s, t))
+
+    (** constructor calls **)
+    | IntersectionT (_, rep),
+      ConstructorT (reason_op, result_ts, try_ts, args, t) ->
+      let ts = InterRep.members rep in
+      rec_flow cx trace
+        (List.hd ts,
+         ConstructorT (reason_op, result_ts, (List.tl ts) @ try_ts, args, t));
 
     (** extends **)
     | IntersectionT (_, rep),
@@ -2422,6 +2430,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if instance.class_id = instance_super.class_id
       then
         flow_type_args cx trace instance instance_super
+(*TJP: Check constructor compatibility also? Maybe compute a `newable` flag for
+  polling by ConstructorT? Write the tests first, and then fix them. *)
       else
         rec_flow cx trace (super, u)
 
@@ -2496,7 +2506,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*********************************************************)
 
     | ClassT (this),
-      ConstructorT (reason_op, args, t) ->
+      ConstructorT (reason_op, result_ts, try_ts, args, t) ->
       let reason_o = replace_reason "constructor return" (reason_of_t this) in
       Ops.push reason_op;
       (* call this.constructor(args) *)
@@ -2508,8 +2518,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         );
       ) in
       (* return this *)
-      rec_flow cx trace (ret, ObjTestT(reason_o, this, t));
-      Ops.pop ();
+      let ret = mk_tvar_where cx reason_o (fun t ->
+        rec_flow cx trace (ret, ObjTestT(reason_o, this, t))
+      ) in
+      construct_next_result cx trace reason_op args t ret (result_ts, try_ts);
+      Ops.pop ()
+
+    | InstanceT _, ConstructorT (reason_op, result_ts, next::try_ts, args, t) ->
+      (* Throw away the unshifted l. Should unshifted members be an error? Wait
+         for verdict before writing tests. *)
+      rec_flow cx trace (next, ConstructorT (reason_op, result_ts, try_ts, args, t))
+
+    | InstanceT _, ConstructorT (reason_op, result_ts, [], _, t) ->
+      (* Throw away the unshifted l. Should unshifted members be an error? Wait
+         for verdict before writing tests. *)
+      let r = replace_reason "?intersection?" reason_op in (*TJP: ?*)
+      rec_flow_t cx trace (IntersectionT (r, InterRep.make (List.rev result_ts)), t)
 
     (****************************************************************)
     (* function types derive objects through explicit instantiation *)
@@ -2520,7 +2544,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         params_tlist = params;
         return_t = ret;
         _ }),
-      ConstructorT (reason_op, args, t) ->
+      ConstructorT (reason_op, result_ts, try_ts, args, t) ->
       (* TODO: closure *)
       (** create new object **)
       let reason_c = replace_reason "new object" reason in
@@ -2535,12 +2559,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       multiflow cx trace reason_op (args, params);
       (** if ret is object-like, return ret; otherwise return new_obj **)
       let reason_o = replace_reason "constructor return" reason in
-      rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
+      let ret = mk_tvar_where cx reason_o (fun t ->
+        rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
+      ) in
+      construct_next_result cx trace reason_op args t ret (result_ts, try_ts)
 
-    | AnyFunT reason_fundef, ConstructorT (reason_op, args, t) ->
+    | AnyFunT reason_fundef, ConstructorT (reason_op, result_ts, try_ts, args, t) ->
       let reason_o = replace_reason "constructor return" reason_fundef in
       multiflow cx trace reason_op (args, [RestT (AnyT.t)]);
-      rec_flow_t cx trace (AnyObjT reason_o, t);
+      let ret = AnyObjT reason_o in
+      construct_next_result cx trace reason_op args t ret (result_ts, try_ts)
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
@@ -4742,6 +4770,19 @@ and concretize_lower_parts cx trace l u done_list = function
   rec_flow cx trace (concrete_l, u)
 | t :: todo_list ->
   rec_flow cx trace (t, ConcretizeLowerT (l, todo_list, done_list, u))
+
+and construct_next_result cx trace reason args t result_t = function
+| [], [] ->
+  rec_flow_t cx trace (result_t, t)
+| result_ts, next::try_ts ->
+  let result_ts = List.rev (result_t::result_ts) in
+  rec_flow cx trace (next, ConstructorT (reason, result_ts, try_ts, args, t))
+| result_ts, [] -> (*TJP: Activate with a test*)
+  let result_ts = List.rev (result_t::result_ts) in
+  let r = replace_reason "?intersection?" reason in
+  (* Should I be pushing `r` to the error stack here? Activate with tests,
+     minding the particulars of the errors. *)
+  rec_flow_t cx trace (IntersectionT (r, InterRep.make result_ts), t)
 
 (* property lookup functions in objects and instances *)
 

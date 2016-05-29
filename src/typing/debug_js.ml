@@ -320,7 +320,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "elemType", _json_of_t json_cx elemt
     ]
 
-  | ConstructorT (_, tparams, t) -> [
+  | ConstructorT (_, _, _, tparams, t) -> [
       "typeParams", JSON_Array (List.map (_json_of_t json_cx) tparams);
       "type", _json_of_t json_cx t
     ]

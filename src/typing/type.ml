@@ -273,7 +273,7 @@ module rec TypeTerm : sig
     | ReposUseT of reason * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
-    | ConstructorT of reason * t list * t
+    | ConstructorT of reason * t list * t list * t list * t
     | SuperT of reason * insttype
     | MixinT of reason * t
 
@@ -1060,7 +1060,7 @@ and reason_of_use_t = function
   | SetElemT (reason,_,_)
   | GetElemT (reason,_,_)
 
-  | ConstructorT (reason,_,_)
+  | ConstructorT (reason,_,_,_,_)
 
   | SuperT (reason,_)
   | MixinT (reason, _)
@@ -1279,7 +1279,8 @@ and mod_reason_of_use_t f = function
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
 
-  | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
+  | ConstructorT (reason, result_ts, try_ts, args, t) ->
+      ConstructorT (f reason, result_ts, try_ts, args, t)
 
   | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
   | ComparatorT (reason, t) -> ComparatorT (f reason, t)

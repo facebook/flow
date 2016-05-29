@@ -2840,7 +2840,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
 and new_call cx tok class_ argts =
   let reason = mk_reason "constructor call" tok in
   Flow.mk_tvar_where cx reason (fun t ->
-    Flow.flow cx (class_, ConstructorT (reason, argts, t));
+    Flow.flow cx (class_, ConstructorT (reason, [], [], argts, t));
   )
 
 and func_call cx reason func_t argts =
