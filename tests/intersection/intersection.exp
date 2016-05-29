@@ -1,7 +1,5 @@
 intersection2.js:33
  33:   var a = new Ap();
-               ^^^^^^^^ constructor call
- 33:   var a = new Ap();
                ^^^^^^^^ constructor call. Constructor cannot be called on
  28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
                                            ^ J
