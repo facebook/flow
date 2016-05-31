@@ -9,7 +9,7 @@
  *)
 
 let do_ _ _ _ = ()
-let go _ _ _ _ _ = Errors.empty, Relative_path.Set.empty
+let go _ _ _ _ _ _ = Errors.empty, Relative_path.Set.empty
 let go_incremental _ _ _ _ _ =  Errors.empty, Relative_path.Set.empty
 let modify_shared_mem_sizes
     global_size heap_size dep_table_pow hash_table_pow _ =
