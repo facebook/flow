@@ -76,7 +76,7 @@ systems. For example, Flow helps you catch errors involving `null`, unlike most
 type systems.
 
 We first introduced Flow at the [@Scale Conference](/docs/running.html) in
-September:
+September 2014:
 
 <iframe
   frameborder="0"
