@@ -122,6 +122,49 @@ module WithToken(Token: TokenType) = struct
       expr_statement_expr : t;
       expr_statement_semicolon : t
     }
+    and while_statement = {
+      while_keyword : t;
+      while_left_paren : t;
+      while_condition_expr : t;
+      while_right_paren: t;
+      while_body: t
+    }
+    and if_statement = {
+      if_keyword: t;
+      if_left_paren: t;
+      if_condition_expr: t;
+      if_right_paren: t;
+      if_statement: t;
+      if_elseif_clauses: t;
+      if_else_clause: t;
+    }
+    and elseif_clause ={
+      elseif_keyword: t;
+      elseif_left_paren: t;
+      elseif_condition_expr: t;
+      elseif_right_paren: t;
+      elseif_statement: t
+    }
+    and else_clause = {
+      else_keyword: t;
+      else_statement: t;
+    }
+    and do_statement = {
+      do_keyword: t;
+      do_statement: t;
+      do_while_keyword: t;
+      do_left_paren: t;
+      do_condition_expr: t;
+      do_right_paren: t;
+      do_semicolon: t
+    }
+    and switch_statement = {
+      switch_keyword: t;
+      switch_left_paren: t;
+      switch_expr: t;
+      switch_right_paren: t;
+      switch_compound_statement: t
+    }
     and unary_operator = {
       unary_operator : t;
       unary_operand : t
@@ -194,6 +237,12 @@ module WithToken(Token: TokenType) = struct
 
     | CompoundStatement of compound_statement
     | ExpressionStatement of expression_statement
+    | WhileStatement of while_statement
+    | IfStatement of if_statement
+    | ElseifClause of elseif_clause
+    | ElseClause of else_clause
+    | DoStatement of do_statement
+    | SwitchStatement of switch_statement
 
     | LiteralExpression of t
     | VariableExpression of t
@@ -239,6 +288,12 @@ module WithToken(Token: TokenType) = struct
       | DefaultArgumentSpecifier _ -> SyntaxKind.DefaultArgumentSpecifier
       | CompoundStatement _ -> SyntaxKind.CompoundStatement
       | ExpressionStatement _ -> SyntaxKind.ExpressionStatement
+      | WhileStatement _ -> SyntaxKind.WhileStatement
+      | IfStatement _ -> SyntaxKind.IfStatement
+      | ElseifClause _ -> SyntaxKind.ElseifClause
+      | ElseClause _ -> SyntaxKind.ElseClause
+      | DoStatement _ -> SyntaxKind.DoStatement
+      | SwitchStatement _ -> SyntaxKind.SwitchStatement
       | PrefixUnaryOperator _ -> SyntaxKind.PrefixUnaryOperator
       | PostfixUnaryOperator _ -> SyntaxKind.PostfixUnaryOperator
       | BinaryOperator _ -> SyntaxKind.BinaryOperator
@@ -278,6 +333,19 @@ module WithToken(Token: TokenType) = struct
         [ x.compound_left_brace; x.compound_statements; x.compound_right_brace ]
       | ExpressionStatement x -> [ x.expr_statement_expr;
         x.expr_statement_semicolon ]
+      | WhileStatement x -> [ x.while_keyword; x.while_left_paren;
+        x.while_condition_expr; x.while_right_paren; x.while_body ]
+      | IfStatement x -> [ x.if_keyword; x.if_left_paren; x.if_condition_expr;
+        x.if_right_paren; x.if_statement; x.if_elseif_clauses;
+        x.if_else_clause ]
+      | ElseifClause x -> [ x.elseif_keyword; x.elseif_left_paren;
+        x.elseif_condition_expr; x.elseif_right_paren; x.elseif_statement ]
+      | ElseClause x -> [ x.else_keyword; x.else_statement ]
+      | DoStatement x -> [ x.do_keyword; x.do_statement;
+      x.do_while_keyword; x.do_left_paren; x.do_condition_expr;
+      x.do_right_paren; x.do_semicolon ]
+      | SwitchStatement x -> [ x.switch_keyword; x.switch_left_paren;
+        x.switch_expr; x.switch_right_paren; x.switch_compound_statement ]
       | PrefixUnaryOperator x -> [ x.unary_operator; x.unary_operand ]
       | PostfixUnaryOperator x -> [ x.unary_operand; x.unary_operator ]
       | BinaryOperator x ->
@@ -325,6 +393,37 @@ module WithToken(Token: TokenType) = struct
     let compound_left_brace x = x.compound_left_brace
     let compound_statements x = x.compound_statements
     let compound_right_brace x = x.compound_right_brace
+    let while_keyword x = x.while_keyword
+    let while_left_paren x = x.while_left_paren
+    let while_condition_expr x = x.while_condition_expr
+    let while_right_paren x = x.while_right_paren
+    let while_body x = x.while_body
+    let if_keyword x = x.if_keyword
+    let if_left_paren x = x.if_left_paren
+    let if_condition_expr x = x.if_condition_expr
+    let if_right_paren x = x.if_right_paren
+    let if_statement x = x.if_statement
+    let if_elseif_clauses x = x.if_elseif_clauses
+    let if_else_clause x = x.if_else_clause
+    let elseif_keyword x = x.elseif_keyword
+    let elseif_left_paren x = x.elseif_left_paren
+    let elseif_condition_expr x = x.elseif_condition_expr
+    let elseif_right_paren x = x.elseif_right_paren
+    let elseif_statement x = x.elseif_statement
+    let else_keyword x = x.else_keyword
+    let else_statement x = x.else_statement
+    let do_keyword x = x.do_keyword
+    let do_statement x = x.do_statement
+    let do_while_keyword x = x.do_while_keyword
+    let do_left_paren x = x.do_left_paren
+    let do_condition_expr x = x.do_condition_expr
+    let do_right_paren x = x.do_right_paren
+    let do_semicolon x = x.do_semicolon
+    let switch_keyword x = x.switch_keyword
+    let switch_left_paren x = x.switch_left_paren
+    let switch_expr x = x.switch_expr
+    let switch_right_paren x = x.switch_right_paren
+    let switch_compound_statement x = x.switch_compound_statement
     let expr_statement_expr x = x.expr_statement_expr
     let expr_statement_semicolon x = x.expr_statement_semicolon
     let unary_operator x = x.unary_operator
@@ -431,6 +530,30 @@ module WithToken(Token: TokenType) = struct
       | (SyntaxKind.ExpressionStatement, [ expr_statement_expr;
         expr_statement_semicolon ]) ->
         ExpressionStatement { expr_statement_expr; expr_statement_semicolon }
+      | (SyntaxKind.WhileStatement, [ while_keyword; while_left_paren;
+        while_condition_expr; while_right_paren; while_body ]) ->
+        WhileStatement{ while_keyword; while_left_paren;
+          while_condition_expr; while_right_paren; while_body }
+      | (SyntaxKind.IfStatement, [ if_keyword; if_left_paren; if_condition_expr;
+        if_right_paren; if_statement; if_elseif_clauses; if_else_clause ]) ->
+        IfStatement { if_keyword; if_left_paren; if_condition_expr;
+          if_right_paren; if_statement; if_elseif_clauses; if_else_clause }
+      | (SyntaxKind.ElseifClause, [ elseif_keyword; elseif_left_paren;
+        elseif_condition_expr; elseif_right_paren; elseif_statement ]) ->
+        ElseifClause { elseif_keyword; elseif_left_paren;
+          elseif_condition_expr; elseif_right_paren; elseif_statement }
+      | (SyntaxKind.ElseClause, [ else_keyword; else_statement ]) ->
+        ElseClause { else_keyword; else_statement }
+      | (SyntaxKind.DoStatement, [ do_keyword; do_statement;
+        do_while_keyword; do_left_paren; do_condition_expr;
+        do_right_paren; do_semicolon ]) ->
+        DoStatement { do_keyword; do_statement;
+          do_while_keyword; do_left_paren; do_condition_expr;
+          do_right_paren; do_semicolon }
+      | (SyntaxKind.SwitchStatement, [ switch_keyword; switch_left_paren;
+        switch_expr; switch_right_paren; switch_compound_statement ]) ->
+        SwitchStatement{ switch_keyword; switch_left_paren;
+          switch_expr; switch_right_paren; switch_compound_statement }
       | (SyntaxKind.PrefixUnaryOperator, [ unary_operator; unary_operand ]) ->
         PrefixUnaryOperator { unary_operator; unary_operand }
       | (SyntaxKind.PostfixUnaryOperator, [ unary_operand; unary_operator ]) ->
@@ -574,6 +697,42 @@ module WithToken(Token: TokenType) = struct
         expr_statement_semicolon =
         from_children SyntaxKind.ExpressionStatement
           [ expr_statement_expr; expr_statement_semicolon ]
+
+      let make_while_statement
+        while_keyword while_left_paren while_condition_expr
+        while_right_paren while_body =
+        from_children SyntaxKind.WhileStatement
+          [ while_keyword; while_left_paren; while_condition_expr;
+          while_right_paren; while_body ]
+
+      let make_if_statement
+        if_keyword if_left_paren if_condition_expr if_right_paren if_statement
+        if_elseif_clauses if_else_clause =
+        from_children SyntaxKind.IfStatement
+          [ if_keyword; if_left_paren; if_condition_expr; if_right_paren;
+          if_statement; if_elseif_clauses; if_else_clause ]
+      let make_elseif_clause
+        elseif_keyword elseif_left_paren elseif_condition_expr
+        elseif_right_paren elseif_statement =
+        from_children SyntaxKind.ElseifClause
+          [ elseif_keyword; elseif_left_paren; elseif_condition_expr;
+          elseif_right_paren; elseif_statement ]
+      let make_else_clause else_keyword else_statement =
+        from_children SyntaxKind.ElseClause
+          [ else_keyword; else_statement ]
+      let make_do_statement
+        do_keyword do_statement do_while_keyword do_left_paren
+        do_condition_expr do_right_paren do_semicolon =
+        from_children SyntaxKind.DoStatement
+        [ do_keyword; do_statement; do_while_keyword; do_left_paren;
+        do_condition_expr; do_right_paren; do_semicolon ]
+
+      let make_switch_statement
+        switch_keyword switch_left_paren switch_expr
+        switch_right_paren switch_compound_statement =
+        from_children SyntaxKind.SwitchStatement
+          [ switch_keyword; switch_left_paren; switch_expr;
+          switch_right_paren; switch_compound_statement ]
 
       let make_type_constant type_constant_left_type type_constant_separator
           type_constant_right_type =

@@ -24,6 +24,12 @@ type t =
 (* Statements *)
 | CompoundStatement
 | ExpressionStatement
+| WhileStatement
+| DoStatement
+| IfStatement
+| ElseifClause
+| ElseClause
+| SwitchStatement
 
 (* Expressions *)
 | LiteralExpression
@@ -59,6 +65,12 @@ let to_string kind =
   | ParameterDeclaration -> "parameter_declaration"
   | CompoundStatement -> "compound_statement"
   | ExpressionStatement -> "expression_statement"
+  | WhileStatement -> "while_statement"
+  | DoStatement -> "do_statement"
+  | IfStatement -> "if_statement"
+  | ElseifClause -> "elseif_clause"
+  | ElseClause -> "else_clause"
+  | SwitchStatement -> "switch_statement"
   | PrefixUnaryOperator -> "prefix_unary_operator"
   | PostfixUnaryOperator -> "postfix_unary_operator"
   | BinaryOperator -> "binary_operator"
