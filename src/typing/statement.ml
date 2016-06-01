@@ -3264,11 +3264,11 @@ and react_ignore_attribute aname =
 
 and jsx cx type_params_map = Ast.JSX.(
   function { openingElement; children; _ } ->
-  jsx_title cx type_params_map openingElement
-    (List.map (jsx_body cx type_params_map) children)
+  let children = jsx_children cx type_params_map children in
+  jsx_title cx type_params_map openingElement children
 )
 
-and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
+and jsx_title cx type_params_map openingElement children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   let facebook_ignore_fbt = Context.should_ignore_fbt cx in
 
@@ -3305,6 +3305,9 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
           let ex_t = expression cx type_params_map argument in
           spread := Some (ex_t)
     );
+    (match children with
+    | Some t -> map := !map |> SMap.add "children" t
+    | None -> ());
     let reason_props = prefix_reason "props of " reason in
     let o = Flow.mk_object_with_map_proto cx reason_props
       !map (MixedT (reason_props, Mixed_everything))
@@ -3401,16 +3404,74 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
       AnyT.at eloc
 )
 
-and jsx_body cx type_params_map = Ast.JSX.(function
-  | _, Element e -> jsx cx type_params_map e
-  | _, ExpressionContainer ec -> (
-      let open ExpressionContainer in
-      let { expression = ex } = ec in
-      match ex with
-        | Expression (loc, e) -> expression cx type_params_map (loc, e)
-        | EmptyExpression loc -> EmptyT (mk_reason "empty jsx body" loc)
+and jsx_children cx type_params_map children = Ast.JSX.(
+  (* The existence of JSX children determines whether we should override any
+     explicit `children` prop. To determine existence, we need to trim any
+     empty elements from each side, due to JSX whitespace rules. *)
+  let empty = function
+    | loc, Text {Text.value; _} ->
+      (* An all-whitespace text node is non-empty (i.e., should not be trimmed)
+         if it is on a single line. For example `<b> </b>` has a child, but this
+         does not: <b>\n </b>. *)
+      Loc.multiline loc && String.(length (trim value)) = 0
+    | _, ExpressionContainer { ExpressionContainer.
+        expression = ExpressionContainer.EmptyExpression _
+      } -> true
+    | _ -> false
+  in
+
+  let type_of_child = function
+    | loc, Text _ -> StrT (mk_reason "string" loc, AnyLiteral)
+    | _, Element e -> jsx cx type_params_map e
+    | loc, ExpressionContainer c -> ExpressionContainer.(
+      match c.expression with
+      | Expression e -> expression cx type_params_map e
+      | EmptyExpression _ -> EmptyT (mk_reason "empty jsx body" loc)
     )
-  | loc, Text _ -> StrT.at loc (* TODO: create StrT (..., Literal ...)) *)
+  in
+
+  (* Trim from the left, returning either a non-empty list of children or
+     nothing. If the first child is a text node, munge its location to begin at
+     the first non-whitespace element to improve error positioning. *)
+  let children =
+    let rec loop = function
+    | [] -> None
+    | child::children when empty child ->
+        loop children
+    | (loc, (Text {Text.value; _} as text))::children ->
+        let child = (Loc.ltrim loc value, text) in
+        Some (child, children)
+    | child::children ->
+        Some (child, children)
+    in
+    loop children
+  in
+
+  Option.map children (fun (child, children) ->
+    (* Calculate the extent of all children and trim out any remaining non-empty
+       children. We need to trim in order to properly detect a single child in
+       the presence of trailing "whitespace" e.g., <b><i/>\n </b> *)
+    let loc, children = List.fold_left (fun (loc, children) child ->
+      if empty child
+      then (loc, children)
+      else (Loc.btwn loc (fst child), Nel.cons child children)
+    ) ((fst child), (child, [])) children in
+
+    (* Convert trimmed child list to a type. React passes singleton children
+       through as-is to avoid an array allocation. *)
+    let ts = Nel.map type_of_child children in
+    match Nel.rev ts with
+    | (t, []) -> t
+    | _ ->
+      let tset = Nel.fold_left (fun tset t ->
+        TypeExSet.add t tset
+      ) TypeExSet.empty ts in
+      let elemt = match TypeExSet.elements tset with
+      | [t] -> t
+      | ts -> UnionT (mk_reason "children" loc, UnionRep.make ts)
+      in
+      ArrT (mk_reason "array type" loc, elemt, Nel.to_list ts)
+  )
 )
 
 (* Native support for React.PropTypes validation functions, which are

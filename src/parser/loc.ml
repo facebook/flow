@@ -73,6 +73,8 @@ let btwn_exclusive loc1 loc2 = {
   _end = loc2.start;
 }
 
+let multiline loc = loc.start.line <> loc._end.line
+
 (* Returns the position immediately before the start of the given loc. If the
    given loc is at the beginning of a line, return the position of the first
    char on the same line. *)
@@ -86,6 +88,42 @@ let char_before loc =
   in
   let _end = loc.start in
   { loc with start; _end }
+
+(* Given a location of a string and the string value, trims any leading
+   whitespace and returns the resulting location.
+   Raises Invalid_argument if loc and string don't match. *)
+let ltrim loc x =
+  let len = String.length x in
+  let rec loop pos i =
+    if i = len then pos else
+    match x.[i] with
+    | ' ' | '\012' | '\t' ->
+      let pos = {
+        pos with
+        column = pos.column + 1;
+        offset = pos.offset + 1;
+      } in
+      loop pos (i+1)
+    | '\r' ->
+      (* the lexer treats sole \r as a newline and so shall we *)
+      (* if this is \r\n, move down a single column and over two chars *)
+      let skip = if i < len-1 && x.[i+1] = '\n' then 2 else 1 in
+      let pos = {
+        line = pos.line + 1;
+        column = 0;
+        offset = pos.offset + skip;
+      } in
+      loop pos (i+skip)
+    | '\n' ->
+      let pos = {
+        line = pos.line + 1;
+        column = 0;
+        offset = pos.offset + 1;
+      } in
+      loop pos (i+1)
+    | _ -> pos
+  in
+  { loc with start = loop loc.start 0 }
 
 (* Returns true if loc1 entirely overlaps loc2 *)
 let contains loc1 loc2 =
