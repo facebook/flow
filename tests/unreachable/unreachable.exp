@@ -1,3 +1,11 @@
+typecheck.js:4
+  4:   return bar();
+              ^^^^^ function call
+  4:   return bar();
+              ^^^^^ number. This type is incompatible with the expected return type of
+  3: function test1(): string {
+                       ^^^^^^ string
+
 unreachable.js:5
   5:   return bar(x) + baz(y);
                        ^^^^^^ function call. Function cannot be called on possibly undefined value
@@ -17,4 +25,4 @@ unreachable.js:24
                ^ unreachable code
 
 
-Found 4 errors
+Found 5 errors

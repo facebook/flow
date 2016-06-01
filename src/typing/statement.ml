@@ -444,9 +444,10 @@ and toplevels cx type_params_map stmts =
         | (x, _ :: t) -> drop (pred x) t
       in
       let trailing = drop uc stmts in
-      trailing |> List.iter Ast.Statement.(function
+      trailing |> List.iter Ast.Statement.(fun stmt ->
+        match stmt with
         (* function declarations are hoisted, so not unreachable *)
-        | (_, FunctionDeclaration _ ) -> ()
+        | (_, FunctionDeclaration _ ) -> statement cx type_params_map stmt;
         (* variable declarations are hoisted, but associated assignments are not,
            so skip variable declarations with no assignments.
            Note: this does not seem like a practice anyone would use *)
