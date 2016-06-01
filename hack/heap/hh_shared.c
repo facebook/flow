@@ -1204,7 +1204,7 @@ value hh_mem(value key) {
     // The data is currently in the process of being written, wait until it
     // actually is ready to be used before returning.
     while (hashtbl[slot].addr == (char*)1) {
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(__powerpc64__)
       asm volatile("yield" : : : "memory");
 #else
       asm volatile("pause" : : : "memory");
