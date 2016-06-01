@@ -303,6 +303,7 @@ val illegal_type_structure : Pos.t -> string -> unit
 val illegal_typeconst_direct_access : Pos.t -> unit
 val class_property_only_static_literal : Pos.t -> unit
 val reference_expr : Pos.t -> unit
+val unification_cycle : Pos.t -> string -> unit
 
 val to_json : Pos.absolute error_ -> Hh_json.json
 val to_string : Pos.absolute error_ -> string

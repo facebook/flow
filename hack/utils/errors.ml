@@ -571,6 +571,7 @@ module Typing                               = struct
   let class_property_only_static_literal    = 4152 (* DONT MODIFY!!!! *)
   let attribute_too_few_arguments           = 4153 (* DONT MODIFY!!!! *)
   let reference_expr                        = 4154 (* DONT MODIFY!!!! *)
+  let unification_cycle                     = 4155 (* DONT MODIFY!!!! *)
   (* EXTEND HERE WITH NEW VALUES IF NEEDED *)
 end
 
@@ -1288,6 +1289,12 @@ let shape_field_unset pos1 pos2 name =
 let invalid_shape_remove_key p =
   add Typing.invalid_shape_remove_key p
     "You can only unset fields of local variables"
+
+let unification_cycle pos ty =
+  add_list Typing.unification_cycle
+    [pos, "Type circularity: in order to type-check this expression it " ^
+       "is necessary for a type [rec] to be equal to type " ^ ty]
+
 
 let explain_constraint p_inst pos name (error : error) =
   let inst_msg = "Some type constraint(s) here are violated" in
