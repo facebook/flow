@@ -4,17 +4,17 @@ child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:
-  function type. See lib: node.js:175
+  function type. See lib: node.js:184
   Error:
-  property `encoding`. Property not found in. See lib: node.js:177
+  property `encoding`. Property not found in. See lib: node.js:186
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal
   Member 2:
-  function type. See lib: node.js:180
+  function type. See lib: node.js:189
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                                  ^^^^^ string. This type is incompatible with
-  number. See lib: node.js:104
+  number. See lib: node.js:113
 
 invalid_package_file/package.json:1
   1: 
