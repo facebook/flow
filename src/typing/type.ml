@@ -401,6 +401,8 @@ module rec TypeTerm : sig
     | ConcretizeLowerT of t * t list * t list * use_t
     | ConcretizeUpperT of t * t list * t list * use_t
 
+    | SentinelPropTestT of t * bool * sentinel_value * t_out
+
   and predicate =
     | AndP of predicate * predicate
     | OrP of predicate * predicate
@@ -563,6 +565,11 @@ module rec TypeTerm : sig
   | MergeDeepInto
   | MergeInto
   | Mixin
+
+  and sentinel_value =
+  | SentinelStr of string
+  | SentinelNum of number_literal
+  | SentinelBool of bool
 
 end = TypeTerm
 
@@ -1134,6 +1141,8 @@ and reason_of_use_t = function
   | TupleMapT (reason, _, _) -> reason
   | ReactCreateElementT (reason, _, _) -> reason
 
+  | SentinelPropTestT (_, _, _, result) -> reason_of_t result
+
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
    due to parallelism, which messes up test diffs. Should
@@ -1344,6 +1353,9 @@ and mod_reason_of_use_t f = function
   | TupleMapT (reason, t, tout) -> TupleMapT (f reason, t, tout)
   | ReactCreateElementT (reason, t, tout) -> ReactCreateElementT (f reason, t, tout)
 
+  | SentinelPropTestT (l, sense, sentinel, result) ->
+      SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
+
 (* type comparison mod reason *)
 let reasonless_compare =
   let swap_reason t r = mod_reason_of_t (fun _ -> r) t in
@@ -1489,6 +1501,7 @@ let string_of_use_ctor = function
   | DebugPrintT _ -> "DebugPrintT"
   | TupleMapT _ -> "TupleMapT"
   | ReactCreateElementT _ -> "ReactCreateElementT"
+  | SentinelPropTestT _ -> "SentinelPropTestT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

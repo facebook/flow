@@ -213,6 +213,7 @@ class ['a] t = object(self)
   | DebugPrintT (_)
   | TupleMapT (_, _, _)
   | ReactCreateElementT _
+  | SentinelPropTestT _
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

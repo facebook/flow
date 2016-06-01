@@ -508,6 +508,16 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "config", _json_of_t json_cx t;
       "returnType", _json_of_t json_cx t_out;
     ]
+
+  | SentinelPropTestT (l, sense, sentinel, result) -> [
+      "l", _json_of_t json_cx l;
+      "sense", JSON_Bool sense;
+      "sentinel", (match sentinel with
+      | SentinelStr s -> JSON_String s
+      | SentinelNum (_, raw) -> JSON_String raw
+      | SentinelBool b -> JSON_Bool b);
+      "result", _json_of_t json_cx result;
+    ]
   )
 )
 
@@ -1102,7 +1112,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | ExportStarFromT _
   | DebugPrintT _
   | TupleMapT _
-  | ReactCreateElementT _ ->
+  | ReactCreateElementT _
+  | SentinelPropTestT _ ->
     p t
 
 let dump_reason cx reason = if Context.should_strip_root cx

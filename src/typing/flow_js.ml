@@ -3285,6 +3285,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, PredicateT(p,t)) ->
       predicate cx trace t (l,p)
 
+    | StrT (_, Literal value),
+      SentinelPropTestT (_, sense, SentinelStr sentinel, _)
+      when (value = sentinel) != sense ->
+        (* provably unreachable, so prune *)
+        ()
+
+    | NumT (_, Literal (value, _)),
+      SentinelPropTestT (_, sense, SentinelNum (sentinel, _), _)
+      when (value = sentinel) != sense ->
+        (* provably unreachable, so prune *)
+        ()
+
+    | BoolT (_, Some value),
+      SentinelPropTestT (_, sense, SentinelBool sentinel, _)
+      when (value = sentinel) != sense ->
+        (* provably unreachable, so prune *)
+        ()
+
+    | _, SentinelPropTestT (l, _, _, result) ->
+        (* property exists, but is not something we can use for refinement *)
+        rec_flow_t cx trace (l, result)
+
     (**********************)
     (* Array library call *)
     (**********************)
@@ -5450,42 +5472,36 @@ and sentinel_prop_test key cx trace result = function
   (* obj.key ===/!== string value *)
   | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Literal value)) ->
       (match read_prop_opt cx props_tmap key with
-        | Some (SingletonStrT (_, v))
-        | Some (StrT (_, Literal v)) when (value = v) != sense ->
-            (* provably unreachable, so prune *)
-            ()
-        | _ ->
-            (* not enough info to refine: either the property exists but is
-               something else that we cannot use as a refinement, or the
-               property doesn't exist at all *)
+        | Some t ->
+            let sentinel = SentinelStr value in
+            let test = SentinelPropTestT (obj, sense, sentinel, result) in
+            rec_flow cx trace (t, test)
+        | None ->
+            (* property doesn't exist, unable to prune case *)
             rec_flow_t cx trace (obj, result)
       )
 
   (* obj.key ===/!== number value *)
-  | (sense, (ObjT (_, { props_tmap; _}) as obj), NumT (_, Literal (value, _))) ->
+  | (sense, (ObjT (_, { props_tmap; _}) as obj), NumT (_, Literal value)) ->
       (match read_prop_opt cx props_tmap key with
-        | Some (SingletonNumT (_, (v, _)))
-        | Some (NumT (_, Literal (v, _))) when (value = v) != sense ->
-            (* provably unreachable, so prune *)
-            ()
-        | _ ->
-            (* not enough info to refine: either the property exists but is
-               something else that we cannot use as a refinement, or the
-               property doesn't exist at all *)
+        | Some t ->
+            let sentinel = SentinelNum value in
+            let test = SentinelPropTestT (obj, sense, sentinel, result) in
+            rec_flow cx trace (t, test)
+        | None ->
+            (* property doesn't exist, unable to prune case *)
             rec_flow_t cx trace (obj, result)
       )
 
   (* obj.key ===/!== boolean value *)
   | (sense, (ObjT (_, { props_tmap; _}) as obj), BoolT (_, Some value)) ->
       (match read_prop_opt cx props_tmap key with
-        | Some (SingletonBoolT (_, v))
-        | Some (BoolT (_, Some v)) when (value = v) != sense ->
-            (* provably unreachable, so prune *)
-            ()
-        | _ ->
-            (* not enough info to refine: either the property exists but is
-               something else that we cannot use as a refinement, or the
-               property doesn't exist at all *)
+        | Some t ->
+            let sentinel = SentinelBool value in
+            let test = SentinelPropTestT (obj, sense, sentinel, result) in
+            rec_flow cx trace (t, test)
+        | None ->
+            (* property doesn't exist, unable to prune case *)
             rec_flow_t cx trace (obj, result)
       )
 
