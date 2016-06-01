@@ -19,15 +19,19 @@ const React = require("react");
   tracking the types of props and state. Flow understands which props are
   required and also supports default props.
 
-  Currently, Flow supports components defined using the `React.createClass`
-  factory method and those defined using JavaScript classes inheriting from
-  `React.Component`.
+  React provides a few different ways to define components:
 
-  Support for stateless functional components is coming soon.
+  * [the `React.createClass` factory](#the-react-createclass-factory),
+  * [`React.Component` subclasses](#defining-components-as-react-component-subclasses),
+  * and [stateless functional components](#stateless-functional-components)
 
-  ## Defining components with the `createClass` factory
+  This document explains how to make strongly-typed components using all of the
+  above styles and includes an example of a [higher order
+  component](#higher-order-components).
+*/
 
-  ### PropTypes
+/*
+  ## The `React.createClass` factory
 
   React ships with PropTypes, which verify the props provided to a component.
   Unlike the static analysis performed by Flow, PropTypes are only checked at
@@ -55,8 +59,6 @@ const Greeter = React.createClass({
 <Greeter name="World" />; // "Hello, World!"
 
 /*
-  ### Default Props
-
   Flow understands when a default value is specified via `getDefaultProps` and
   will not error when the prop is not provided.
 
@@ -83,8 +85,6 @@ const DefaultGreeter = React.createClass({
 <DefaultGreeter name="Flow" />; // "Hello, Flow!"
 
 /*
-  ### State
-
   Flow ensures that state reads and writes are consistent with the object
   returned from `getInitialState`.
 */
@@ -119,8 +119,6 @@ const Counter = React.createClass({
 });
 
 /*
-  ![animation](flow-state.gif)
-
   ## Defining components as `React.Component` subclasses
 
   While PropTypes are great, they are quite limited. For example, it's possible
@@ -143,27 +141,23 @@ class Button extends React.Component {
     display: 'static' | 'hover' | 'active';
   };
 
-  static defaultProps = {
-    visited: false,
-  };
+  static defaultProps: { visited: boolean };
 
-  onMouseEnter = () => this.setState({
-    display: 'hover',
-  });
-
-  onMouseLeave = () => this.setState({
-    display: 'static',
-  });
-
-  onMouseDown = () => this.setState({
-    display: 'active',
-  });
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+  onMouseDown: () => void;
 
   constructor(props) {
     super(props);
     this.state = {
       display: 'static',
     };
+
+    const setDisplay = display => this.setState({display});
+
+    this.onMouseEnter = () => setDisplay('hover');
+    this.onMouseLeave = () => setDisplay('static');
+    this.onMouseDown = () => setDisplay('active');
   }
 
   render() {
@@ -183,6 +177,7 @@ class Button extends React.Component {
     );
   }
 }
+Button.defaultProps = { visited: false };
 
 function renderButton(container: HTMLElement, visited?: boolean) {
   const element = (
@@ -198,51 +193,102 @@ function renderButton(container: HTMLElement, visited?: boolean) {
 }
 
 /*
-  ## Higher-order components
+  ## Stateless functional components
+
+  Any function that returns a React element can be used as a component class in
+  a JSX expression.
 */
 
-type Props<Config> = {
-  class: ReactClass<Config>,
-  config: Promise<Config>,
-};
+function SayAgain(props: { message: string }) {
+  return (
+    <div>
+      <p>{props.message}</p>
+      <p>{props.message}</p>
+    </div>
+  );
+}
 
-type State<Config> = {
-  config: ?Config,
-  loading: boolean,
-};
+<SayAgain message="Echo!" />;
+<SayAgain message="Save the whales!" />;
 
-class HOC<Config> extends React.Component<void, Props<Config>, State<Config>> {
-  state: State<Config>;
+/*
+  Stateless functional components can specify default props as destructuring
+  with default values.
+*/
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      config: null,
-      loading: false,
+function Echo({ message, times = 2 }: { message: string, times?: number }) {
+  var messages = new Array(times).fill(<p>{message}</p>);
+
+  return (
+    <div>
+      {messages}
+    </div>
+  );
+}
+
+<Echo message="Helloooo!" />;
+<Echo message="Flow rocks!" times={42} />;
+
+/*
+  ## Higher-order components
+
+  Occasionally, repeated patterns in React components can be abstracted into
+  functions that transform one component class into another.
+
+  In the example below, the HOC `loadAsync` takes a component that requires some
+  arbitrary config and a promise that will eventually provide that config and
+  returns a component that takes care of loading the data and displaying the
+  component asynchronously.
+*/
+
+function loadAsync<Config>(
+  ComposedComponent: ReactClass<Config>,
+  configPromise: Promise<Config>,
+): ReactClass<{}> {
+  return class extends React.Component {
+    state: {
+      config: ?Config,
+      loading: boolean,
     };
-  }
 
-  load() {
-    this.setState({loading: true});
-    this.props.config.then(config => this.setState({
-      loading: false,
-      config
-    }));
-  }
+    load: () => void;
 
-  render() {
-    if (this.state.config == null) {
-      let label = this.state.loading ? "Loading..." : "Load";
-      return (
-        <button disabled={this.state.loading} onClick={this.load.bind(this)}>
-          {label}
-        </button>
-      );
-    } else {
-      return React.createElement(
-        this.props.class,
-        this.state.config,
-      );
+    constructor(props) {
+      super(props);
+
+      this.state = {
+        config: null,
+        loading: false,
+      }
+
+      this.load = () => {
+        this.setState({loading: true});
+        configPromise.then(config => this.setState({
+          loading: false,
+          config,
+        }));
+      }
+    }
+
+    render() {
+      if (this.state.config == null) {
+        let label = this.state.loading ? "Loading..." : "Load";
+        return (
+          <button disabled={this.state.loading} onClick={this.load.bind(this)}>
+            {label}
+          </button>
+        );
+      } else {
+        return <ComposedComponent {...this.state.config} />
+      }
     }
   }
 }
+
+const AsyncGreeter = loadAsync(Greeter, new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve({ name: "Async World" });
+  }, 1000);
+}));
+
+<AsyncGreeter />;
