@@ -29,10 +29,13 @@ type t = {
   offset_map : OffsetMap.t
 }
 
+let make content =
+  { text = content; offset_map = OffsetMap.make content }
+
 let from_file file =
   let content =
     try Sys_utils.cat (Relative_path.to_absolute file) with _ -> "" in
-  { text = content; offset_map = OffsetMap.make content }
+  make content
 
 let length source_text =
   String.length source_text.text

@@ -635,7 +635,7 @@ module WithToken(Token: TokenType) = struct
       let make_binary_operator
         binary_left_operand binary_operator binary_right_operand =
           from_children SyntaxKind.BinaryOperator
-            [ binary_right_operand; binary_operator; binary_right_operand ]
+            [ binary_left_operand; binary_operator; binary_right_operand ]
 
       let make_parenthesized_expression
         paren_expr_left_paren paren_expr paren_expr_right_paren =
