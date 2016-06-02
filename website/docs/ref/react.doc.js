@@ -274,7 +274,7 @@ function loadAsync<Config>(
       if (this.state.config == null) {
         let label = this.state.loading ? "Loading..." : "Load";
         return (
-          <button disabled={this.state.loading} onClick={this.load.bind(this)}>
+          <button disabled={this.state.loading} onClick={this.load}>
             {label}
           </button>
         );
