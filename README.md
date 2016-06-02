@@ -23,6 +23,12 @@ For example, on Ubuntu 14.04 and similar systems:
 sudo apt-get install ocaml libelf-dev
 ```
 
+On OSX, using the [brew package manager](http://brew.sh/):
+
+```
+brew install ocaml ocamlbuild libelf
+```
+
 Once you have these dependencies, building Flow just requires running
 
 ```
