@@ -71,14 +71,16 @@ print_failure() {
 
     diff_file="${dir}${name}.diff"
     err_file="${dir}${name}.err"
-    cat "$err_file"
-    if [ -t 1 ] ; then
+    [ -f "$err_file" ] && cat "$err_file"
+    if [ -f "$diff_file" ]; then
+      if [ -t 1 ] ; then
         esc=$(echo -e "\x1b")
         sed \
             "s/^-/${esc}[31m-/;s/^+/${esc}[32m+/;s/^@/${esc}[35m@/;s/$/${esc}[0m/" \
             < "$diff_file"
-    else
+      else
         cat "$diff_file"
+      fi
     fi
 }
 print_skip() {
