@@ -168,6 +168,58 @@ let check_content_js js_file js_content =
   let content = Js.to_string js_content in
   check_content ~filename ~content
 
+let mk_loc file line col =
+  {
+    Loc.
+    source = Some file;
+    start = { Loc.line; column = col; offset = 0; };
+    _end = { Loc.line; column = col + 1; offset = 0; };
+  }
+
+let infer_type filename content line col =
+    let filename = Loc.SourceFile filename in
+    let root = Path.dummy_path in
+    match parse_content filename content with
+    | ast, [] ->
+      (* defaults *)
+      let metadata = stub_metadata ~root ~checked:true in
+
+      Flow_js.Cache.clear();
+
+      let cx = Type_inference_js.infer_ast
+        ~metadata ~filename ~module_name:(Modulename.String "-") ast
+      in
+      let loc = mk_loc filename line col in
+      let (loc, ground_t, possible_ts) = Query_types.query_type cx loc in
+      let ty, raw_type = match ground_t with
+        | None -> None, None
+        | Some t ->
+            let ty = Some (Type_printer.string_of_t cx t) in
+            let raw_type = Some (Debug_js.jstr_of_t ~depth:10 cx t)
+            in
+            ty, raw_type
+      in
+      let reasons =
+        possible_ts
+        |> List.map Type.reason_of_t
+      in
+      (None, Some (loc, ty, raw_type, reasons))
+    | _, _ -> failwith "parse error"
+
+
+let handle_inferred_result (_, inferred, _, _) =
+  inferred
+
+let type_at_pos js_file js_content js_line js_col =
+  let filename = Js.to_string js_file in
+  let content = Js.to_string js_content in
+  let line = Js.parseInt js_line in
+  let col = Js.parseInt js_col in
+  match infer_type filename content line col with
+  | (Some err, None) -> err
+  | (None, Some resp) -> handle_inferred_result resp
+  | (_, _) ->  failwith "Error"
+
 let exports =
   if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")
   then Js.Unsafe.js_expr "exports"
@@ -187,3 +239,7 @@ let () = Js.Unsafe.set exports
   "checkContent" (Js.wrap_callback check_content_js)
 let () = Js.Unsafe.set exports
   "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_version)
+let () = Js.Unsafe.set exports
+  "flowVersion" (Js.string FlowConfig.version)
+let () = Js.Unsafe.set exports
+  "typeAtPos" (Js.wrap_callback type_at_pos)
