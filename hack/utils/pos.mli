@@ -13,6 +13,11 @@
  * character *after* the last character of the relevant lexeme.) *)
 type 'a pos
 
+(** The underlying type used to construct Pos instances.
+ *
+ * See "val make: 'a -> b -> 'a pos" *)
+type b = Pos_source.t
+
 type t = Relative_path.t pos
 
 type absolute = string pos
@@ -49,7 +54,7 @@ val inside : 'a pos -> int -> int -> bool
 
 val contains : 'a pos -> 'a pos -> bool
 
-val make : 'a -> Lexing.lexbuf -> 'a pos
+val make : 'a -> b -> 'a pos
 
 val make_from : 'a -> 'a pos
 
