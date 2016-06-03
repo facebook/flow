@@ -55,6 +55,7 @@ module ServerFindRefs = struct
     | Method of string
     | Property of string
     | Class_const of string
+    | Typeconst of string
 
   type action =
     | Class of string
@@ -69,6 +70,7 @@ module TraceService = struct
     | Method of string
     | Property of string
     | Class_const of string
+    | Typeconst of string
 
   type action =
     | Class of string
