@@ -409,6 +409,13 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, long minimum_avail) {
     if (memfd < 0) {
       char memname[255];
       snprintf(memname, sizeof(memname), "/fb_heap.%d", getpid());
+      // the ftruncate below will fail with errno EINVAL if you try to
+      // ftruncate the same sharedmem fd more than once. We're seeing this in
+      // some tests, which might imply that two flow processes with the same
+      // pid are starting up. This shm_unlink should prevent that from
+      // happening. Here's a stackoverflow about it
+      // http://stackoverflow.com/questions/25502229/ftruncate-not-working-on-posix-shared-memory-in-mac-os-x
+      shm_unlink(memname);
       memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
       if (memfd < 0) {
           uerror("shm_open", Nothing);
