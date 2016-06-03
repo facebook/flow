@@ -47,13 +47,12 @@ val init_env :
   ?token_sink:(token_sink_result -> unit) option
   -> ?parse_options:parse_options option
   -> Loc.filename option
-  -> Lexing.lexbuf
+  -> string
   -> env
 
 (* getters: *)
 val strict : env -> bool
 val last_loc : env -> Loc.t option
-val lb : env -> Lexing.lexbuf
 val lookahead : ?i:int -> env -> lex_result
 val lex_env : env -> lex_env
 val lex_mode : env -> lex_mode
@@ -80,7 +79,7 @@ val error_list : env -> (Loc.t * Parse_error.t) list -> unit
 val push_lex_mode : env -> lex_mode -> unit
 val pop_lex_mode : env -> unit
 val double_pop_lex_mode : env -> unit
-val set_lex_env : env -> lex_env -> unit
+val clear_lookahead : env -> unit
 val record_export: env -> Loc.t * string -> unit
 
 (* functional operations -- these return shallow copies, so future mutations to

@@ -179,7 +179,18 @@ type env = {
 }
 
 (* constructor *)
-let init_env ?(token_sink=None) ?(parse_options=None) source lb =
+let init_env ?(token_sink=None) ?(parse_options=None) source content =
+  let lb = Lexing.from_string content in
+  (match source with
+    | None
+    | Some Loc.Builtins -> ()
+    | Some Loc.LibFile fn
+    | Some Loc.SourceFile fn
+    | Some Loc.JsonFile fn ->
+      lb.Lexing.lex_curr_p <- {
+        lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
+      });
+
   let parse_options =
     match parse_options with
     | Some opts -> opts
@@ -216,7 +227,6 @@ let init_env ?(token_sink=None) ?(parse_options=None) source lb =
 
 (* getters: *)
 let strict env = env.strict
-let lb env = env.lb
 let lex_mode env = List.hd !(env.lex_mode_stack)
 let lex_env env = !(env.lex_env)
 let in_export env = env.in_export
@@ -243,9 +253,8 @@ let error_at env (loc, e) =
   | Some callback -> callback env e
 let comment_list env =
   List.iter (fun c -> env.comments := c :: !(env.comments))
-let set_lex_env env lex_env =
-  env.lookahead := None;
-  env.lex_env := lex_env
+let clear_lookahead env =
+  env.lookahead := None
 let record_export env (loc, export_name) =
   let exports = !(env.exports) in
   if SSet.mem export_name exports
@@ -258,7 +267,7 @@ let lookahead ?(i=0) env =
   let lookahead = match !(env.lookahead) with
     | Some l -> l
     | None -> begin
-        let l = Lookahead.create (lb env) (lex_env env) (lex_mode env) in
+        let l = Lookahead.create env.lb (lex_env env) (lex_mode env) in
         env.lookahead := Some l;
         l
       end in
@@ -308,7 +317,11 @@ let advance env (lex_env, lex_result) =
         }
   );
 
-  (* commit the result's lexbuf state *)
+  (* commit the result's lexbuf state, making sure we only move forward *)
+  assert (env.lb.Lexing.lex_abs_pos <= lex_result.lex_lb_abs_pos);
+  assert (env.lb.Lexing.lex_start_pos <= lex_result.lex_lb_start_pos);
+  assert (env.lb.Lexing.lex_curr_pos <= lex_result.lex_lb_curr_pos);
+  assert (env.lb.Lexing.lex_last_pos <= lex_result.lex_lb_last_pos);
   env.lb.Lexing.lex_abs_pos <- lex_result.lex_lb_abs_pos;
   env.lb.Lexing.lex_start_pos <- lex_result.lex_lb_start_pos;
   env.lb.Lexing.lex_curr_pos <- lex_result.lex_lb_curr_pos;

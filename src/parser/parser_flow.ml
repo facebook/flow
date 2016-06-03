@@ -1727,8 +1727,8 @@ end = struct
         let expressions = expr::expressions in
         match Peek.token env with
         | T_RCURLY ->
+            clear_lookahead env;
             let lex_env, lex_result = template_tail (lex_env env) in
-            set_lex_env env lex_env;
             Eat.advance env (lex_env, lex_result);
             let loc, part, is_tail = match lex_result.lex_token with
             | T_TEMPLATE_PART (loc, {cooked; raw; _}, tail) ->
@@ -1823,8 +1823,8 @@ end = struct
         })
 
     and regexp env =
+      clear_lookahead env;
       let lex_env, lex_result = lex_regexp (lex_env env) in
-      set_lex_env env lex_env;
       Eat.advance env (lex_env, lex_result);
       let pattern, raw_flags = match lex_result.lex_token with
         | T_REGEXP (_, pattern, flags) -> pattern, flags
@@ -4190,9 +4190,10 @@ end = struct
 
   let rec program env =
     let stmts = module_body_with_directives env (fun _ -> false) in
+    let end_loc = Peek.loc env in
     Expect.token env T_EOF;
     let loc = match stmts with
-    | [] -> Loc.from_lb (source env) (lb env)
+    | [] -> end_loc
     | _ -> Loc.btwn (fst (List.hd stmts)) (fst (List.hd (List.rev stmts))) in
     let comments = List.rev (comments env) in
     loc, stmts, comments
@@ -4449,19 +4450,6 @@ end
 (*****************************************************************************)
 (* Entry points *)
 (*****************************************************************************)
-let mk_parse_env ?(token_sink=None) ?(parse_options=None) filename content =
-  let lb = Lexing.from_string content in
-  (match filename with
-    | None
-    | Some Loc.Builtins -> ()
-    | Some Loc.LibFile fn
-    | Some Loc.SourceFile fn
-    | Some Loc.JsonFile fn ->
-      lb.Lexing.lex_curr_p <- {
-        lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
-      });
-  init_env ~token_sink ~parse_options filename lb
-
 let do_parse env parser fail =
   let ast = parser env in
   let error_list = filter_duplicate_errors (errors env) in
@@ -4470,7 +4458,7 @@ let do_parse env parser fail =
   ast, error_list
 
 let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
-  let env = mk_parse_env ~token_sink ~parse_options filename content in
+  let env = init_env ~token_sink ~parse_options filename content in
   do_parse env Parse.program fail
 
 let program ?(fail=true) ?(token_sink=None) ?(parse_options=None) content =
@@ -4482,7 +4470,7 @@ let program_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content f
 (* even if fail=false, still raises an error on a totally invalid token, since
    there's no legitimate fallback. *)
 let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content filename =
-  let env = mk_parse_env ~token_sink ~parse_options filename content in
+  let env = init_env ~token_sink ~parse_options filename content in
   match Peek.token env with
   | T_LBRACKET
   | T_LCURLY
