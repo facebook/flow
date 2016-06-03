@@ -34,18 +34,24 @@ type lex_mode =
   | TYPE_LEX
   | JSX_TAG
   | JSX_CHILD
+  | TEMPLATE
+  | REGEXP
 
 let mode_to_string = function
   | NORMAL_LEX -> "NORMAL"
   | TYPE_LEX -> "TYPE"
   | JSX_TAG -> "JSX TAG"
   | JSX_CHILD -> "JSX CHILD"
+  | TEMPLATE -> "TEMPLATE"
+  | REGEXP -> "REGEXP"
 
 let lex lex_env = function
   | NORMAL_LEX -> Lexer_flow.token lex_env
   | TYPE_LEX -> Lexer_flow.type_token lex_env
   | JSX_TAG -> Lexer_flow.lex_jsx_tag lex_env
   | JSX_CHILD -> Lexer_flow.lex_jsx_child lex_env
+  | TEMPLATE -> Lexer_flow.template_tail lex_env
+  | REGEXP -> Lexer_flow.lex_regexp lex_env
 
 module Lookahead : sig
   type t
@@ -252,8 +258,6 @@ let error_at env (loc, e) =
   | Some callback -> callback env e
 let comment_list env =
   List.iter (fun c -> env.comments := c :: !(env.comments))
-let clear_lookahead env =
-  env.lookahead := None
 let record_export env (loc, export_name) =
   let exports = !(env.exports) in
   if SSet.mem export_name exports

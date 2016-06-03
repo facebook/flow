@@ -20,6 +20,8 @@ type lex_mode =
   | TYPE_LEX
   | JSX_TAG
   | JSX_CHILD
+  | TEMPLATE
+  | REGEXP
 
 type token_sink_result = {
   token_loc: Loc.t;
@@ -54,7 +56,6 @@ val init_env :
 val strict : env -> bool
 val last_loc : env -> Loc.t option
 val lookahead : ?i:int -> env -> Lex_result.t
-val lex_env : env -> Lex_env.t
 val in_export : env -> bool
 val labels : env -> SSet.t
 val comments : env -> Comment.t list
@@ -78,7 +79,6 @@ val error_list : env -> (Loc.t * Parse_error.t) list -> unit
 val push_lex_mode : env -> lex_mode -> unit
 val pop_lex_mode : env -> unit
 val double_pop_lex_mode : env -> unit
-val clear_lookahead : env -> unit
 val record_export: env -> Loc.t * string -> unit
 
 (* functional operations -- these return shallow copies, so future mutations to

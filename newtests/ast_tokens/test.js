@@ -29,7 +29,7 @@ export default suite(({addFile, flowCmd}) => [
   "tokens": [
     {
       "type": "T_REGEXP",
-      "context": "normal",
+      "context": "regexp",
       "loc": {
         "start": {
           "line": 2,

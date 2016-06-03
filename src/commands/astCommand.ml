@@ -80,6 +80,8 @@ let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
       | TYPE_LEX -> "type"
       | JSX_TAG -> "jsxTag"
       | JSX_CHILD -> "jsxChild"
+      | TEMPLATE -> "template"
+      | REGEXP -> "regexp"
     ));
     ("loc", JSON_Object [
       ("start", JSON_Object [

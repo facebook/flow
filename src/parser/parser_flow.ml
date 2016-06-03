@@ -8,7 +8,6 @@
  *
  *)
 
-module Lex_env = Lexer_flow.Lex_env
 module Lex_result = Lexer_flow.Lex_result
 module Token = Lexer_flow.Token
 open Token
@@ -144,11 +143,11 @@ let get_unexpected_error = function
 
 let error_unexpected env =
   let lookahead = lookahead env in
-  (* So normally we consume the lookahead lex result when Eat.advance is
-   * called, which will add any lexing errors to our list of errors. However,
-   * raising an unexpected error for a lookahead is kind of like consuming that
-   * token, so we should process any lexing errors before complaining about the
-   * unexpected token *)
+  (* So normally we consume the lookahead lex result when Eat.token calls
+   * Parser_env.advance, which will add any lexing errors to our list of errors.
+   * However, raising an unexpected error for a lookahead is kind of like
+   * consuming that token, so we should process any lexing errors before
+   * complaining about the unexpected token *)
   error_list env (Lex_result.errors lookahead);
   error env (get_unexpected_error (
     Lex_result.token lookahead,
@@ -160,20 +159,15 @@ let error_on_decorators env = List.iter
 
 (* Consume zero or more tokens *)
 module Eat : sig
-  val advance : env -> Lex_result.t -> unit
   val token : env -> unit
   val push_lex_mode : env -> lex_mode -> unit
   val pop_lex_mode : env -> unit
   val double_pop_lex_mode : env -> unit
   val semicolon : env -> unit
 end = struct
-  let advance = Parser_env.advance
-
   (* TODO should this be in Parser_env? *)
   (* Consume a single token *)
-  let token env =
-    advance env (lookahead env)
-
+  let token env = Parser_env.advance env (lookahead env)
   let push_lex_mode = Parser_env.push_lex_mode
   let pop_lex_mode = Parser_env.pop_lex_mode
   let double_pop_lex_mode = Parser_env.double_pop_lex_mode
@@ -1732,14 +1726,14 @@ end = struct
         let expressions = expr::expressions in
         match Peek.token env with
         | T_RCURLY ->
-            clear_lookahead env;
-            let _lex_env, lex_result = Lexer_flow.template_tail (lex_env env) in
-            Eat.advance env lex_result;
-            let loc, part, is_tail = match Lex_result.token lex_result with
+            Eat.push_lex_mode env TEMPLATE;
+            let loc, part, is_tail = match Peek.token env with
             | T_TEMPLATE_PART (loc, {cooked; raw; _}, tail) ->
                 let open Ast.Expression.TemplateLiteral in
+                Eat.token env;
                 loc, { Element.value = { Element.cooked; raw; }; tail; }, tail
             | _ -> assert false in
+            Eat.pop_lex_mode env;
             let quasis = (loc, part)::quasis in
             if is_tail
             then loc, List.rev quasis, List.rev expressions
@@ -1828,12 +1822,15 @@ end = struct
         })
 
     and regexp env =
-      clear_lookahead env;
-      let _lex_env, lex_result = Lexer_flow.lex_regexp (lex_env env) in
-      Eat.advance env lex_result;
-      let pattern, raw_flags = match Lex_result.token lex_result with
-        | T_REGEXP (_, pattern, flags) -> pattern, flags
+      Eat.push_lex_mode env REGEXP;
+      let loc = Peek.loc env in
+      let raw, pattern, raw_flags = match Peek.token env with
+        | T_REGEXP (_, pattern, flags) ->
+            let raw = Peek.value env in
+            Eat.token env;
+            raw, pattern, flags
         | _ -> assert false in
+      Eat.pop_lex_mode env;
       let filtered_flags = Buffer.create (String.length raw_flags) in
       String.iter (function
         | 'g' | 'i' | 'm' | 'y' as c -> Buffer.add_char filtered_flags c
@@ -1842,8 +1839,7 @@ end = struct
       if flags <> raw_flags
       then error env (Error.InvalidRegExpFlags raw_flags);
       let value = Literal.(RegExp { RegExp.pattern; flags; }) in
-      let raw = Lex_result.value lex_result in
-      Lex_result.loc lex_result, Expression.(Literal { Literal.value; raw; })
+      loc, Expression.(Literal { Literal.value; raw; })
 
     and try_arrow_function =
       (* Certain errors (almost all errors) cause a rollback *)
