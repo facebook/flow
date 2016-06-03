@@ -160,7 +160,7 @@ let error_on_decorators env = List.iter
 
 (* Consume zero or more tokens *)
 module Eat : sig
-  val advance : env -> Lex_env.t * Lex_result.t -> unit
+  val advance : env -> Lex_result.t -> unit
   val token : env -> unit
   val push_lex_mode : env -> lex_mode -> unit
   val pop_lex_mode : env -> unit
@@ -172,8 +172,7 @@ end = struct
   (* TODO should this be in Parser_env? *)
   (* Consume a single token *)
   let token env =
-    let last = lex_env env, lookahead env in
-    advance env last
+    advance env (lookahead env)
 
   let push_lex_mode = Parser_env.push_lex_mode
   let pop_lex_mode = Parser_env.pop_lex_mode
@@ -1734,8 +1733,8 @@ end = struct
         match Peek.token env with
         | T_RCURLY ->
             clear_lookahead env;
-            let lex_env, lex_result = Lexer_flow.template_tail (lex_env env) in
-            Eat.advance env (lex_env, lex_result);
+            let _lex_env, lex_result = Lexer_flow.template_tail (lex_env env) in
+            Eat.advance env lex_result;
             let loc, part, is_tail = match Lex_result.token lex_result with
             | T_TEMPLATE_PART (loc, {cooked; raw; _}, tail) ->
                 let open Ast.Expression.TemplateLiteral in
@@ -1830,8 +1829,8 @@ end = struct
 
     and regexp env =
       clear_lookahead env;
-      let lex_env, lex_result = Lexer_flow.lex_regexp (lex_env env) in
-      Eat.advance env (lex_env, lex_result);
+      let _lex_env, lex_result = Lexer_flow.lex_regexp (lex_env env) in
+      Eat.advance env lex_result;
       let pattern, raw_flags = match Lex_result.token lex_result with
         | T_REGEXP (_, pattern, flags) -> pattern, flags
         | _ -> assert false in

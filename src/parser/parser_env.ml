@@ -155,7 +155,7 @@ type env = {
   comments          : Comment.t list ref;
   labels            : SSet.t;
   exports           : SSet.t ref;
-  last              : (Lex_env.t * Lex_result.t) option ref;
+  last              : Lex_result.t option ref;
   priority          : int;
   strict            : bool;
   in_export         : bool;
@@ -290,9 +290,9 @@ let with_error_callback error_callback env =
 let error_list env = List.iter (error_at env)
 let last_loc env = match !(env.last) with
   | None -> None
-  | Some (_, result) -> Some (Lex_result.loc result)
+  | Some result -> Some (Lex_result.loc result)
 
-let advance env (lex_env, lex_result) =
+let advance env lex_result =
   (* If there's a token_sink, emit the lexed token before moving forward *)
   (match !(env.token_sink) with
     | None -> ()
@@ -333,11 +333,11 @@ let advance env (lex_env, lex_result) =
   lexbuf.Lexing.lex_curr_p <- lex_result.Lex_result.lex_lb_curr_p;
 
   env.lex_env := Lex_env.in_comment_syntax
-    (Lex_result.is_in_comment_syntax lex_result) lex_env;
+    (Lex_result.is_in_comment_syntax lex_result) !(env.lex_env);
 
   error_list env (Lex_result.errors lex_result);
   comment_list env (Lex_result.comments lex_result);
-  env.last := Some (lex_env, lex_result);
+  env.last := Some lex_result;
   match !(env.lookahead) with
   | Some la -> Lookahead.junk la
   | None -> ()
@@ -385,7 +385,7 @@ module Try = struct
     saved_errors         : (Loc.t * Error.t) list;
     saved_comments       : Ast.Comment.t list;
     saved_lb             : Lexing.lexbuf;
-    saved_last           : (Lex_env.t * Lex_result.t) option;
+    saved_last           : Lex_result.t option;
     saved_lex_mode_stack : lex_mode list;
     saved_lex_env        : Lex_env.t;
     token_buffer         : ((token_sink_result -> unit) * token_sink_result Queue.t) option;

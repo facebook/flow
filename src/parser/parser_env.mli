@@ -55,7 +55,6 @@ val strict : env -> bool
 val last_loc : env -> Loc.t option
 val lookahead : ?i:int -> env -> Lex_result.t
 val lex_env : env -> Lex_env.t
-val lex_mode : env -> lex_mode
 val in_export : env -> bool
 val labels : env -> SSet.t
 val comments : env -> Comment.t list
@@ -112,4 +111,4 @@ module Try : sig
 end
 
 (* TODO get rid of this abomination *)
-val advance : env -> Lex_env.t * Lex_result.t -> unit
+val advance : env -> Lex_result.t -> unit
