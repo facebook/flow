@@ -295,6 +295,41 @@ open Token
 (*****************************************************************************)
 (* Environment *)
 (*****************************************************************************)
+
+let debug_string_of_lexing_position position =
+  Printf.sprintf
+    "{pos_fname=%S; pos_lnum=%d; pos_bol=%d; pos_cnum=%d}"
+    position.Lexing.pos_fname
+    position.Lexing.pos_lnum
+    position.Lexing.pos_bol
+    position.Lexing.pos_cnum
+
+let debug_string_of_lexbuf (lb: Lexing.lexbuf) =
+  Printf.sprintf
+    "{ \
+      lex_buffer = %S; \
+      lex_buffer_len = %d; \
+      lex_abs_pos = %d; \
+      lex_start_pos = %d; \
+      lex_curr_pos = %d; \
+      lex_last_pos = %d; \
+      lex_last_action = %d; \
+      lex_eof_reached = %b; \
+      lex_mem = TODO; \
+      lex_start_p = %s; \
+      lex_curr_p = %s; \
+    }"
+    lb.Lexing.lex_buffer
+    lb.Lexing.lex_buffer_len
+    lb.Lexing.lex_abs_pos
+    lb.Lexing.lex_start_pos
+    lb.Lexing.lex_curr_pos
+    lb.Lexing.lex_last_pos
+    lb.Lexing.lex_last_action
+    lb.Lexing.lex_eof_reached
+    (debug_string_of_lexing_position lb.Lexing.lex_start_p)
+    (debug_string_of_lexing_position lb.Lexing.lex_curr_p)
+
 module Lex_env = struct
   type t = {
     lex_source            : Loc.filename option;
@@ -349,12 +384,13 @@ module Lex_env = struct
     Printf.sprintf
       "{\n  \
         lex_source = %s\n  \
-        lex_lb = {TODO}\n  \
+        lex_lb = %s\n  \
         lex_in_comment_syntax = %b\n  \
         lex_enable_comment_syntax = %b\n  \
         lex_state = {errors = (count = %d); comments = (count = %d)}\n\
       }"
       source
+      (debug_string_of_lexbuf env.lex_lb)
       (is_in_comment_syntax env)
       (is_comment_syntax_enabled env)
       (List.length (state env).lex_errors_acc)
@@ -387,14 +423,6 @@ module Lex_result = struct
   let comments result = result.lex_comments
   let errors result = result.lex_errors
   let is_in_comment_syntax result = result.lex_result_in_comment_syntax
-
-  let debug_string_of_lexing_position position =
-    Printf.sprintf
-      "{pos_fname=%S; pos_lnum=%d; pos_bol=%d; pos_cnum=%d}"
-      position.Lexing.pos_fname
-      position.Lexing.pos_lnum
-      position.Lexing.pos_bol
-      position.Lexing.pos_cnum
 
   let debug_string_of_lex_result lex_result =
     Printf.sprintf
