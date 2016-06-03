@@ -53,6 +53,7 @@ end
 module ServerFindRefs = struct
   type member =
     | Method of string
+    | Property of string
 
   type action =
     | Class of string
@@ -65,6 +66,7 @@ end
 module TraceService = struct
   type member =
     | Method of string
+    | Property of string
 
   type action =
     | Class of string
