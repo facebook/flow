@@ -933,8 +933,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | l, UseT (use_op, AnnotT (sink_t, _))
-    | ClassT (l), UseT (use_op, ClassT (AnnotT (sink_t, _))) ->
+    | l, UseT (use_op, AnnotT (sink_t, _)) ->
       let reason = reason_of_t sink_t in
       rec_flow cx trace (sink_t, ReposUseT (reason, use_op, l))
 
@@ -2507,8 +2506,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         "Ineligible value used in/as type annotation (did you forget 'typeof'?)"
         l u
 
-    | (ClassT(l), UseT (_, ClassT(u))) ->
-      rec_unify cx trace l u
+    | (ClassT(l), UseT (use_op, ClassT(u))) ->
+      rec_flow cx trace (l, UseT (use_op, u))
 
     | FunT (_,static1,prototype,_),
       UseT (_, ClassT (InstanceT (_,static2,_, _) as u_)) ->

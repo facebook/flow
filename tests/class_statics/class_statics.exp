@@ -1,9 +1,3 @@
-test.js:1
-  1: class A {
-           ^ A. This type is incompatible with
- 48: (B: typeof A);
-      ^ B
-
 test.js:2
   2:   static x: number;
                  ^^^^^^ number. This type is incompatible with
@@ -107,4 +101,4 @@ test.js:54
                      ^^^^^^ string
 
 
-Found 16 errors
+Found 15 errors
