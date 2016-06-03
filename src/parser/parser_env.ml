@@ -117,7 +117,7 @@ end = struct
 
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
-    lex_until t 1;
+    lex_until t 0;
     if t.la_num_lexed > 1 then
       Array.blit t.la_results 1 t.la_results 0 (t.la_num_lexed - 1);
     t.la_results.(t.la_num_lexed - 1) <- None;
