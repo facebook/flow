@@ -48,7 +48,7 @@ let lex lex_env = function
 
 module Lookahead : sig
   type t
-  val create : Lexing.lexbuf -> lex_env -> lex_mode -> t
+  val create : lex_env -> lex_mode -> t
   val peek : t -> int -> lex_result
   val junk : t -> unit
 end = struct
@@ -59,7 +59,8 @@ end = struct
     mutable la_lex_env    : lex_env;
   }
 
-  let create lb lex_env mode =
+  let create lex_env mode =
+    let lb = lex_env.lex_lb in
     (* copy all the mutable things so that we have a distinct lexing environment
      * that does not interfere with ordinary lexer operations *)
     (* lex_buffer has type bytes, which is itself mutable, but the lexer
@@ -153,8 +154,6 @@ type env = {
   comments          : Comment.t list ref;
   labels            : SSet.t;
   exports           : SSet.t ref;
-  (* the lex buffer in the state after a single lookahead *)
-  lb                : Lexing.lexbuf;
   last              : (lex_env * lex_result) option ref;
   priority          : int;
   strict            : bool;
@@ -203,7 +202,6 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     comments          = ref [];
     labels            = SSet.empty;
     exports           = ref SSet.empty;
-    lb                = lb;
     last              = ref None;
     priority          = 0;
     strict            = parse_options.use_strict;
@@ -267,7 +265,7 @@ let lookahead ?(i=0) env =
   let lookahead = match !(env.lookahead) with
     | Some l -> l
     | None -> begin
-        let l = Lookahead.create env.lb (lex_env env) (lex_mode env) in
+        let l = Lookahead.create (lex_env env) (lex_mode env) in
         env.lookahead := Some l;
         l
       end in
@@ -318,19 +316,20 @@ let advance env (lex_env, lex_result) =
   );
 
   (* commit the result's lexbuf state, making sure we only move forward *)
-  assert (env.lb.Lexing.lex_abs_pos <= lex_result.lex_lb_abs_pos);
-  assert (env.lb.Lexing.lex_start_pos <= lex_result.lex_lb_start_pos);
-  assert (env.lb.Lexing.lex_curr_pos <= lex_result.lex_lb_curr_pos);
-  assert (env.lb.Lexing.lex_last_pos <= lex_result.lex_lb_last_pos);
-  env.lb.Lexing.lex_abs_pos <- lex_result.lex_lb_abs_pos;
-  env.lb.Lexing.lex_start_pos <- lex_result.lex_lb_start_pos;
-  env.lb.Lexing.lex_curr_pos <- lex_result.lex_lb_curr_pos;
-  env.lb.Lexing.lex_last_pos <- lex_result.lex_lb_last_pos;
-  env.lb.Lexing.lex_last_action <- lex_result.lex_lb_last_action;
-  env.lb.Lexing.lex_eof_reached <- lex_result.lex_lb_eof_reached;
-  env.lb.Lexing.lex_mem <- lex_result.lex_lb_mem;
-  env.lb.Lexing.lex_start_p <- lex_result.lex_lb_start_p;
-  env.lb.Lexing.lex_curr_p <- lex_result.lex_lb_curr_p;
+  let lexbuf = !(env.lex_env).lex_lb in
+  assert (lexbuf.Lexing.lex_abs_pos <= lex_result.lex_lb_abs_pos);
+  assert (lexbuf.Lexing.lex_start_pos <= lex_result.lex_lb_start_pos);
+  assert (lexbuf.Lexing.lex_curr_pos <= lex_result.lex_lb_curr_pos);
+  assert (lexbuf.Lexing.lex_last_pos <= lex_result.lex_lb_last_pos);
+  lexbuf.Lexing.lex_abs_pos <- lex_result.lex_lb_abs_pos;
+  lexbuf.Lexing.lex_start_pos <- lex_result.lex_lb_start_pos;
+  lexbuf.Lexing.lex_curr_pos <- lex_result.lex_lb_curr_pos;
+  lexbuf.Lexing.lex_last_pos <- lex_result.lex_lb_last_pos;
+  lexbuf.Lexing.lex_last_action <- lex_result.lex_lb_last_action;
+  lexbuf.Lexing.lex_eof_reached <- lex_result.lex_lb_eof_reached;
+  lexbuf.Lexing.lex_mem <- lex_result.lex_lb_mem;
+  lexbuf.Lexing.lex_start_p <- lex_result.lex_lb_start_p;
+  lexbuf.Lexing.lex_curr_p <- lex_result.lex_lb_curr_p;
 
   env.lex_env :=
     in_comment_syntax lex_result.lex_result_in_comment_syntax lex_env;
@@ -402,11 +401,11 @@ module Try = struct
           );
           Some(orig_token_sink, buffer)
     in
+    let lb = !(env.lex_env).lex_lb in
     {
       saved_errors         = !(env.errors);
       saved_comments       = !(env.comments);
-      saved_lb             =
-        Lexing.({env.lb with lex_abs_pos=env.lb.lex_abs_pos});
+      saved_lb             = Lexing.({lb with lex_abs_pos=lb.lex_abs_pos});
       saved_last           = !(env.last);
       saved_lex_mode_stack = !(env.lex_mode_stack);
       saved_lex_env        = !(env.lex_env);
@@ -429,18 +428,19 @@ module Try = struct
     env.lex_env := saved_state.saved_lex_env;
     env.lookahead := None;
 
+    let lexbuf = !(env.lex_env).lex_lb in
     Lexing.(begin
-      env.lb.lex_buffer <- saved_state.saved_lb.lex_buffer;
-      env.lb.lex_buffer_len <- saved_state.saved_lb.lex_buffer_len;
-      env.lb.lex_abs_pos <- saved_state.saved_lb.lex_abs_pos;
-      env.lb.lex_start_pos <- saved_state.saved_lb.lex_start_pos;
-      env.lb.lex_curr_pos <- saved_state.saved_lb.lex_curr_pos;
-      env.lb.lex_last_pos <- saved_state.saved_lb.lex_last_pos;
-      env.lb.lex_last_action <- saved_state.saved_lb.lex_last_action;
-      env.lb.lex_eof_reached <- saved_state.saved_lb.lex_eof_reached;
-      env.lb.lex_mem <- saved_state.saved_lb.lex_mem;
-      env.lb.lex_start_p <- saved_state.saved_lb.lex_start_p;
-      env.lb.lex_curr_p <- saved_state.saved_lb.lex_curr_p;
+      lexbuf.lex_buffer <- saved_state.saved_lb.lex_buffer;
+      lexbuf.lex_buffer_len <- saved_state.saved_lb.lex_buffer_len;
+      lexbuf.lex_abs_pos <- saved_state.saved_lb.lex_abs_pos;
+      lexbuf.lex_start_pos <- saved_state.saved_lb.lex_start_pos;
+      lexbuf.lex_curr_pos <- saved_state.saved_lb.lex_curr_pos;
+      lexbuf.lex_last_pos <- saved_state.saved_lb.lex_last_pos;
+      lexbuf.lex_last_action <- saved_state.saved_lb.lex_last_action;
+      lexbuf.lex_eof_reached <- saved_state.saved_lb.lex_eof_reached;
+      lexbuf.lex_mem <- saved_state.saved_lb.lex_mem;
+      lexbuf.lex_start_p <- saved_state.saved_lb.lex_start_p;
+      lexbuf.lex_curr_p <- saved_state.saved_lb.lex_curr_p;
     end);
 
     FailedToParse
