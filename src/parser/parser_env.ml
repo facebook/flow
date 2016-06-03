@@ -8,8 +8,9 @@
  *
  *)
 
-open Lexer_flow
 module Ast = Spider_monkey_ast
+module Lex_env = Lexer_flow.Lex_env
+module Lex_result = Lexer_flow.Lex_result
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
@@ -41,33 +42,33 @@ let mode_to_string = function
   | JSX_CHILD -> "JSX CHILD"
 
 let lex lex_env = function
-  | NORMAL_LEX -> token lex_env
-  | TYPE_LEX -> type_token lex_env
-  | JSX_TAG -> lex_jsx_tag lex_env
-  | JSX_CHILD -> lex_jsx_child lex_env
+  | NORMAL_LEX -> Lexer_flow.token lex_env
+  | TYPE_LEX -> Lexer_flow.type_token lex_env
+  | JSX_TAG -> Lexer_flow.lex_jsx_tag lex_env
+  | JSX_CHILD -> Lexer_flow.lex_jsx_child lex_env
 
 module Lookahead : sig
   type t
-  val create : lex_env -> lex_mode -> t
-  val peek : t -> int -> lex_result
+  val create : Lex_env.t -> lex_mode -> t
+  val peek : t -> int -> Lex_result.t
   val junk : t -> unit
 end = struct
   type t = {
-    mutable la_results    : lex_result option array;
+    mutable la_results    : Lex_result.t option array;
     mutable la_num_lexed  : int;
     la_lex_mode           : lex_mode;
-    mutable la_lex_env    : lex_env;
+    mutable la_lex_env    : Lex_env.t;
   }
 
   let create lex_env mode =
-    let lb = lex_env.lex_lb in
+    let lexbuf = Lex_env.lexbuf lex_env in
     (* copy all the mutable things so that we have a distinct lexing environment
      * that does not interfere with ordinary lexer operations *)
     (* lex_buffer has type bytes, which is itself mutable, but the lexer
      * promises not to change it so a shallow copy should be fine *)
     (* I don't know how to do a copy without an update *)
-    let lb = Lexing.({ lb with lex_buffer = lb.lex_buffer }) in
-    let lex_env = { lex_env with lex_lb = lb; } in
+    let lexbuf = Lexing.({ lexbuf with lex_buffer = lexbuf.lex_buffer }) in
+    let lex_env = Lex_env.with_lexbuf ~lexbuf lex_env in
     {
       la_results = [||];
       la_num_lexed = 0;
@@ -127,7 +128,7 @@ end
 
 type token_sink_result = {
   token_loc: Loc.t;
-  token: Lexer_flow.token;
+  token: Lexer_flow.Token.t;
   token_context: lex_mode;
   token_value: string;
 }
@@ -154,7 +155,7 @@ type env = {
   comments          : Comment.t list ref;
   labels            : SSet.t;
   exports           : SSet.t ref;
-  last              : (lex_env * lex_result) option ref;
+  last              : (Lex_env.t * Lex_result.t) option ref;
   priority          : int;
   strict            : bool;
   in_export         : bool;
@@ -169,7 +170,7 @@ type env = {
   error_callback    : (env -> Error.t -> unit) option;
   lex_mode_stack    : lex_mode list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
-  lex_env           : lex_env ref;
+  lex_env           : Lex_env.t ref;
   (* This needs to be cleared whenever we advance. *)
   lookahead         : Lookahead.t option ref;
   token_sink        : (token_sink_result -> unit) option ref;
@@ -196,7 +197,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     | None -> default_parse_options
   in
   let enable_types_in_comments = parse_options.types in
-  let lex_env = new_lex_env source lb ~enable_types_in_comments in
+  let lex_env = Lex_env.new_lex_env source lb ~enable_types_in_comments in
   {
     errors            = ref [];
     comments          = ref [];
@@ -289,14 +290,14 @@ let with_error_callback error_callback env =
 let error_list env = List.iter (error_at env)
 let last_loc env = match !(env.last) with
   | None -> None
-  | Some (_, result) -> Some result.lex_loc
+  | Some (_, result) -> Some (Lex_result.loc result)
 
 let advance env (lex_env, lex_result) =
   (* If there's a token_sink, emit the lexed token before moving forward *)
   (match !(env.token_sink) with
     | None -> ()
     | Some token_sink ->
-        let {lex_loc; lex_token; lex_value; _;} = lex_result in
+        let {Lex_result.lex_loc; lex_token; lex_value; _;} = lex_result in
         token_sink {
           token_loc=lex_loc;
           token=lex_token;
@@ -316,26 +317,26 @@ let advance env (lex_env, lex_result) =
   );
 
   (* commit the result's lexbuf state, making sure we only move forward *)
-  let lexbuf = !(env.lex_env).lex_lb in
-  assert (lexbuf.Lexing.lex_abs_pos <= lex_result.lex_lb_abs_pos);
-  assert (lexbuf.Lexing.lex_start_pos <= lex_result.lex_lb_start_pos);
-  assert (lexbuf.Lexing.lex_curr_pos <= lex_result.lex_lb_curr_pos);
-  assert (lexbuf.Lexing.lex_last_pos <= lex_result.lex_lb_last_pos);
-  lexbuf.Lexing.lex_abs_pos <- lex_result.lex_lb_abs_pos;
-  lexbuf.Lexing.lex_start_pos <- lex_result.lex_lb_start_pos;
-  lexbuf.Lexing.lex_curr_pos <- lex_result.lex_lb_curr_pos;
-  lexbuf.Lexing.lex_last_pos <- lex_result.lex_lb_last_pos;
-  lexbuf.Lexing.lex_last_action <- lex_result.lex_lb_last_action;
-  lexbuf.Lexing.lex_eof_reached <- lex_result.lex_lb_eof_reached;
-  lexbuf.Lexing.lex_mem <- lex_result.lex_lb_mem;
-  lexbuf.Lexing.lex_start_p <- lex_result.lex_lb_start_p;
-  lexbuf.Lexing.lex_curr_p <- lex_result.lex_lb_curr_p;
+  let lexbuf = Lex_env.lexbuf !(env.lex_env) in
+  assert (lexbuf.Lexing.lex_abs_pos <= lex_result.Lex_result.lex_lb_abs_pos);
+  assert (lexbuf.Lexing.lex_start_pos <= lex_result.Lex_result.lex_lb_start_pos);
+  assert (lexbuf.Lexing.lex_curr_pos <= lex_result.Lex_result.lex_lb_curr_pos);
+  assert (lexbuf.Lexing.lex_last_pos <= lex_result.Lex_result.lex_lb_last_pos);
+  lexbuf.Lexing.lex_abs_pos <- lex_result.Lex_result.lex_lb_abs_pos;
+  lexbuf.Lexing.lex_start_pos <- lex_result.Lex_result.lex_lb_start_pos;
+  lexbuf.Lexing.lex_curr_pos <- lex_result.Lex_result.lex_lb_curr_pos;
+  lexbuf.Lexing.lex_last_pos <- lex_result.Lex_result.lex_lb_last_pos;
+  lexbuf.Lexing.lex_last_action <- lex_result.Lex_result.lex_lb_last_action;
+  lexbuf.Lexing.lex_eof_reached <- lex_result.Lex_result.lex_lb_eof_reached;
+  lexbuf.Lexing.lex_mem <- lex_result.Lex_result.lex_lb_mem;
+  lexbuf.Lexing.lex_start_p <- lex_result.Lex_result.lex_lb_start_p;
+  lexbuf.Lexing.lex_curr_p <- lex_result.Lex_result.lex_lb_curr_p;
 
-  env.lex_env :=
-    in_comment_syntax lex_result.lex_result_in_comment_syntax lex_env;
+  env.lex_env := Lex_env.in_comment_syntax
+    (Lex_result.is_in_comment_syntax lex_result) lex_env;
 
-  error_list env lex_result.lex_errors;
-  comment_list env lex_result.lex_comments;
+  error_list env (Lex_result.errors lex_result);
+  comment_list env (Lex_result.comments lex_result);
   env.last := Some (lex_env, lex_result);
   match !(env.lookahead) with
   | Some la -> Lookahead.junk la
@@ -384,9 +385,9 @@ module Try = struct
     saved_errors         : (Loc.t * Error.t) list;
     saved_comments       : Ast.Comment.t list;
     saved_lb             : Lexing.lexbuf;
-    saved_last           : (lex_env * lex_result) option;
+    saved_last           : (Lex_env.t * Lex_result.t) option;
     saved_lex_mode_stack : lex_mode list;
-    saved_lex_env        : lex_env;
+    saved_lex_env        : Lex_env.t;
     token_buffer         : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
   }
 
@@ -401,7 +402,7 @@ module Try = struct
           );
           Some(orig_token_sink, buffer)
     in
-    let lb = !(env.lex_env).lex_lb in
+    let lb = Lex_env.lexbuf !(env.lex_env) in
     {
       saved_errors         = !(env.errors);
       saved_comments       = !(env.comments);
@@ -428,7 +429,7 @@ module Try = struct
     env.lex_env := saved_state.saved_lex_env;
     env.lookahead := None;
 
-    let lexbuf = !(env.lex_env).lex_lb in
+    let lexbuf = Lex_env.lexbuf !(env.lex_env) in
     Lexing.(begin
       lexbuf.lex_buffer <- saved_state.saved_lb.lex_buffer;
       lexbuf.lex_buffer_len <- saved_state.saved_lb.lex_buffer_len;

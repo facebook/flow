@@ -9,9 +9,10 @@
  *)
 
 {
-  module Ast = Spider_monkey_ast
+module Ast = Spider_monkey_ast
 
-  type token =
+module Token = struct
+  type t =
     | T_NUMBER of number_type
     | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
     | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
@@ -149,22 +150,6 @@
     literal: string; (* same as raw, plus characters like ` and ${ *)
   }
 
-
-(*****************************************************************************)
-(* Backtracking. *)
-(*****************************************************************************)
-  let yyback n lexbuf =
-    Lexing.(
-      lexbuf.lex_curr_pos <- lexbuf.lex_curr_pos - n;
-      let currp = lexbuf.lex_curr_p in
-      lexbuf.lex_curr_p <-
-        { currp with pos_cnum = currp.pos_cnum - n }
-    )
-
-  let back lb =
-    let n = Lexing.lexeme_end lb - Lexing.lexeme_start lb in
-    yyback n lb
-
 (*****************************************************************************)
 (* Pretty printer (pretty?) *)
 (*****************************************************************************)
@@ -289,11 +274,29 @@
     | T_NUMBER_SINGLETON_TYPE _ -> "T_NUMBER_SINGLETON_TYPE"
     | T_STRING_TYPE -> "T_STRING_TYPE"
     | T_VOID_TYPE -> "T_VOID_TYPE"
+end
+open Token
 
 (*****************************************************************************)
-(* Errors *)
+(* Backtracking. *)
 (*****************************************************************************)
-  type lex_env = {
+  let yyback n lexbuf =
+    Lexing.(
+      lexbuf.lex_curr_pos <- lexbuf.lex_curr_pos - n;
+      let currp = lexbuf.lex_curr_p in
+      lexbuf.lex_curr_p <-
+        { currp with pos_cnum = currp.pos_cnum - n }
+    )
+
+  let back lb =
+    let n = Lexing.lexeme_end lb - Lexing.lexeme_start lb in
+    yyback n lb
+
+(*****************************************************************************)
+(* Environment *)
+(*****************************************************************************)
+module Lex_env = struct
+  type t = {
     lex_source            : Loc.filename option;
     lex_lb                : Lexing.lexbuf;
     lex_in_comment_syntax : bool;
@@ -319,8 +322,49 @@
     lex_state = empty_lex_state;
   }
 
-  type lex_result = {
-    lex_token: token;
+  let get_and_clear_state env =
+    let state = env.lex_state in
+    let env = if state != empty_lex_state
+      then { env with lex_state = empty_lex_state }
+      else env
+    in
+    env, state
+
+  let lexbuf env = env.lex_lb
+  let with_lexbuf ~lexbuf env = { env with lex_lb = lexbuf }
+  let source env = env.lex_source
+  let state env = env.lex_state
+  let is_in_comment_syntax env = env.lex_in_comment_syntax
+  let is_comment_syntax_enabled env = env.lex_enable_comment_syntax
+  let in_comment_syntax is_in env =
+    if is_in <> env.lex_in_comment_syntax
+    then { env with lex_in_comment_syntax = is_in }
+    else env
+
+  let debug_string_of_lex_env (env: t) =
+    let source = match (source env) with
+      | None -> "None"
+      | Some x -> Printf.sprintf "Some %S" (Loc.string_of_filename x)
+    in
+    Printf.sprintf
+      "{\n  \
+        lex_source = %s\n  \
+        lex_lb = {TODO}\n  \
+        lex_in_comment_syntax = %b\n  \
+        lex_enable_comment_syntax = %b\n  \
+        lex_state = {errors = (count = %d); comments = (count = %d)}\n\
+      }"
+      source
+      (is_in_comment_syntax env)
+      (is_comment_syntax_enabled env)
+      (List.length (state env).lex_errors_acc)
+      (List.length (state env).lex_comments_acc)
+end
+open Lex_env
+
+module Lex_result = struct
+  type t = {
+    lex_token: Token.t;
     lex_loc: Loc.t;
     lex_value: string;
     lex_errors: (Loc.t * Parse_error.t) list;
@@ -337,24 +381,12 @@
     lex_lb_curr_p: Lexing.position;
   }
 
-  let debug_string_of_lex_env (env: lex_env) =
-    let source = match env.lex_source with
-      | None -> "None"
-      | Some x -> Printf.sprintf "Some %S" (Loc.string_of_filename x)
-    in
-    Printf.sprintf
-      "{\n  \
-        lex_source = %s\n  \
-        lex_lb = {TODO}\n  \
-        lex_in_comment_syntax = %b\n  \
-        lex_enable_comment_syntax = %b\n  \
-        lex_state = {errors = (count = %d); comments = (count = %d)}\n\
-      }"
-      source
-      env.lex_in_comment_syntax
-      env.lex_enable_comment_syntax
-      (List.length env.lex_state.lex_errors_acc)
-      (List.length env.lex_state.lex_comments_acc)
+  let token result = result.lex_token
+  let loc result = result.lex_loc
+  let value result = result.lex_value
+  let comments result = result.lex_comments
+  let errors result = result.lex_errors
+  let is_in_comment_syntax result = result.lex_result_in_comment_syntax
 
   let debug_string_of_lexing_position position =
     Printf.sprintf
@@ -396,21 +428,12 @@
     lex_result.lex_lb_last_action
     lex_result.lex_lb_eof_reached
     (Array.length lex_result.lex_lb_mem)
+end
 
-  let loc_of_lexbuf env lexbuf = Loc.from_lb env.lex_source lexbuf
-  let is_comment_syntax_enabled env = env.lex_enable_comment_syntax
-  let is_in_comment_syntax env = env.lex_in_comment_syntax
-  let in_comment_syntax is_in env =
-    if is_in <> env.lex_in_comment_syntax
-    then { env with lex_in_comment_syntax = is_in }
-    else env
+  let loc_of_lexbuf env lexbuf = Loc.from_lb (source env) lexbuf
 
   let get_result_and_clear_state (env, lex_token) =
-    let state = env.lex_state in
-    let env = if state != empty_lex_state
-      then { env with lex_state = empty_lex_state }
-      else env
-    in
+    let env, state = get_and_clear_state env in
     let (lex_loc, lex_value) = match lex_token with
     | T_STRING (loc, _, raw, _) ->
         loc, raw
@@ -420,7 +443,7 @@
     | T_REGEXP (loc, pattern, flags) -> loc, "/" ^ pattern ^ "/" ^ flags
     | _ -> loc_of_lexbuf env env.lex_lb, Lexing.lexeme env.lex_lb in
     env, {
-      lex_token;
+      Lex_result.lex_token;
       lex_loc;
       lex_value;
       lex_errors = List.rev state.lex_errors_acc;
@@ -437,31 +460,31 @@
       lex_lb_curr_p = env.lex_lb.Lexing.lex_curr_p;
     }
 
-  let lex_error (env: lex_env) loc err: lex_env =
+  let lex_error (env: Lex_env.t) loc err: Lex_env.t =
     let lex_errors_acc = (loc, err)::env.lex_state.lex_errors_acc in
     { env with lex_state = { env.lex_state with lex_errors_acc; } }
 
   let unexpected_error env loc value =
     lex_error env loc (Parse_error.UnexpectedToken value)
 
-  let unexpected_error_w_suggest (env: lex_env) (loc: Loc.t) value suggest =
+  let unexpected_error_w_suggest (env: Lex_env.t) (loc: Loc.t) value suggest =
     lex_error env loc (Parse_error.UnexpectedTokenWithSuggestion (value, suggest))
 
-  let illegal (env: lex_env) (loc: Loc.t) =
+  let illegal (env: Lex_env.t) (loc: Loc.t) =
     lex_error env loc (Parse_error.UnexpectedToken "ILLEGAL")
 
-  let illegal_number (env: lex_env) lexbuf word token =
+  let illegal_number (env: Lex_env.t) lexbuf word token =
     let loc = loc_of_lexbuf env lexbuf in
     yyback (String.length word) lexbuf;
     let env = illegal env loc in
     env, token
 
   let save_comment
-    (env: lex_env)
+    (env: Lex_env.t)
     (start: Loc.t) (_end: Loc.t)
     (buf: Buffer.t)
     (multiline: bool)
-  : lex_env = Ast.Comment.(
+  : Lex_env.t = Ast.Comment.(
     let loc = Loc.btwn start _end in
     let s = Buffer.contents buf in
     let c = if multiline then Block s else Line s in
@@ -1661,7 +1684,7 @@ and template_part env start cooked raw literal = parse
   (* Lexing JSX children requires a string buffer to keep track of whitespace
    * *)
   let lex_jsx_child env =
-    let start = Loc.from_curr_lb env.lex_source env.lex_lb in
+    let start = Loc.from_curr_lb (source env) env.lex_lb in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let env, child = lex_jsx_child env start buf raw env.lex_lb in

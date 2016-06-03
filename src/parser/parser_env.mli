@@ -23,7 +23,7 @@ type lex_mode =
 
 type token_sink_result = {
   token_loc: Loc.t;
-  token: Lexer_flow.token;
+  token: Lexer_flow.Token.t;
   token_context: lex_mode;
   token_value: string;
 }
@@ -53,8 +53,8 @@ val init_env :
 (* getters: *)
 val strict : env -> bool
 val last_loc : env -> Loc.t option
-val lookahead : ?i:int -> env -> lex_result
-val lex_env : env -> lex_env
+val lookahead : ?i:int -> env -> Lex_result.t
+val lex_env : env -> Lex_env.t
 val lex_mode : env -> lex_mode
 val in_export : env -> bool
 val labels : env -> SSet.t
@@ -112,4 +112,4 @@ module Try : sig
 end
 
 (* TODO get rid of this abomination *)
-val advance : env -> lex_env * lex_result -> unit
+val advance : env -> Lex_env.t * Lex_result.t -> unit

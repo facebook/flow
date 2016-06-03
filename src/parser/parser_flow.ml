@@ -8,7 +8,10 @@
  *
  *)
 
-open Lexer_flow
+module Lex_env = Lexer_flow.Lex_env
+module Lex_result = Lexer_flow.Lex_result
+module Token = Lexer_flow.Token
+open Token
 open Parser_env
 module Ast = Spider_monkey_ast
 open Ast
@@ -44,9 +47,9 @@ module Peek = struct
   open Loc
 
   (* If you're looping waiting for a token, then use token_loop instead. *)
-  let token ?(i=0) env = (lookahead ~i env).lex_token
-  let value ?(i=0) env = (lookahead ~i env).lex_value
-  let loc ?(i=0) env = (lookahead ~i env).lex_loc
+  let token ?(i=0) env = Lex_result.token (lookahead ~i env)
+  let value ?(i=0) env = Lex_result.value (lookahead ~i env)
+  let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
 
   (* True if there is a line terminator before the next token *)
   let line_terminator env =
@@ -146,15 +149,18 @@ let error_unexpected env =
    * raising an unexpected error for a lookahead is kind of like consuming that
    * token, so we should process any lexing errors before complaining about the
    * unexpected token *)
-  error_list env (lookahead.lex_errors);
-  error env (get_unexpected_error (lookahead.lex_token, lookahead.lex_value))
+  error_list env (Lex_result.errors lookahead);
+  error env (get_unexpected_error (
+    Lex_result.token lookahead,
+    Lex_result.value lookahead
+  ))
 
 let error_on_decorators env = List.iter
   (fun decorator -> error_at env ((fst decorator), Error.UnsupportedDecorator))
 
 (* Consume zero or more tokens *)
 module Eat : sig
-  val advance : env -> lex_env * lex_result -> unit
+  val advance : env -> Lex_env.t * Lex_result.t -> unit
   val token : env -> unit
   val push_lex_mode : env -> lex_mode -> unit
   val pop_lex_mode : env -> unit
@@ -220,9 +226,9 @@ module rec Parse : sig
   val program : env -> Ast.program
   val statement : env -> Ast.Statement.t
   val statement_list_item : ?decorators:Ast.Expression.t list -> env -> Ast.Statement.t
-  val statement_list : term_fn:(token->bool) -> env -> Ast.Statement.t list
-  val statement_list_with_directives : term_fn:(token->bool) -> env -> Ast.Statement.t list * bool
-  val module_body : term_fn:(token->bool) -> env -> Ast.Statement.t list
+  val statement_list : term_fn:(Token.t -> bool) -> env -> Ast.Statement.t list
+  val statement_list_with_directives : term_fn:(Token.t -> bool) -> env -> Ast.Statement.t list * bool
+  val module_body : term_fn:(Token.t -> bool) -> env -> Ast.Statement.t list
   val expression : env -> Ast.Expression.t
   val assignment : env -> Ast.Expression.t
   val object_initializer : env -> Loc.t * Ast.Expression.Object.t
@@ -1728,9 +1734,9 @@ end = struct
         match Peek.token env with
         | T_RCURLY ->
             clear_lookahead env;
-            let lex_env, lex_result = template_tail (lex_env env) in
+            let lex_env, lex_result = Lexer_flow.template_tail (lex_env env) in
             Eat.advance env (lex_env, lex_result);
-            let loc, part, is_tail = match lex_result.lex_token with
+            let loc, part, is_tail = match Lex_result.token lex_result with
             | T_TEMPLATE_PART (loc, {cooked; raw; _}, tail) ->
                 let open Ast.Expression.TemplateLiteral in
                 loc, { Element.value = { Element.cooked; raw; }; tail; }, tail
@@ -1824,9 +1830,9 @@ end = struct
 
     and regexp env =
       clear_lookahead env;
-      let lex_env, lex_result = lex_regexp (lex_env env) in
+      let lex_env, lex_result = Lexer_flow.lex_regexp (lex_env env) in
       Eat.advance env (lex_env, lex_result);
-      let pattern, raw_flags = match lex_result.lex_token with
+      let pattern, raw_flags = match Lex_result.token lex_result with
         | T_REGEXP (_, pattern, flags) -> pattern, flags
         | _ -> assert false in
       let filtered_flags = Buffer.create (String.length raw_flags) in
@@ -1837,8 +1843,8 @@ end = struct
       if flags <> raw_flags
       then error env (Error.InvalidRegExpFlags raw_flags);
       let value = Literal.(RegExp { RegExp.pattern; flags; }) in
-      let raw = lex_result.lex_value in
-      lex_result.lex_loc, Expression.(Literal { Literal.value; raw; })
+      let raw = Lex_result.value lex_result in
+      Lex_result.loc lex_result, Expression.(Literal { Literal.value; raw; })
 
     and try_arrow_function =
       (* Certain errors (almost all errors) cause a rollback *)
@@ -1936,7 +1942,10 @@ end = struct
      * x.if
      *)
     and identifier_or_reserved_keyword env =
-      let { lex_token; lex_value; lex_loc; _ } = lookahead env in
+      let lex_result = lookahead env in
+      let lex_token = Lex_result.token lex_result in
+      let lex_value = Lex_result.value lex_result in
+      let lex_loc = Lex_result.loc lex_result in
       match lex_token with
       | T_IDENTIFIER -> Parse.identifier env, None
       | _ ->

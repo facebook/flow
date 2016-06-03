@@ -9,6 +9,7 @@
  *)
 
 module Ast = Spider_monkey_ast
+module Lex_result = Lexer_flow.Lex_result
 
 type flow_mode = OptIn | OptInWeak | OptOut
 
@@ -55,17 +56,18 @@ let extract =
      * more context). At some point this should change back to consuming only
      * the first token. *)
     let lb = Lexing.from_string content in
-    let env = Lexer_flow.new_lex_env None lb ~enable_types_in_comments:false in
+    let env =
+      Lexer_flow.Lex_env.new_lex_env None lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
         let env, lexer_result = Lexer_flow.token env in
-        match lexer_result.Lexer_flow.lex_comments with
-        | [] -> Lexer_flow.(
+        match Lex_result.comments lexer_result with
+        | [] -> Lexer_flow.Token.(
             (**
              * Stop looking for docblocks if we see any tokens other than a
              * string or a semicolon (`"use babel";` or `"use strict";`).
              *)
-            match lexer_result.lex_token with
+            match Lex_result.token lexer_result with
             | T_STRING _
             | T_SEMICOLON
               -> get_first_comment_contents ~i:(i + 1) env

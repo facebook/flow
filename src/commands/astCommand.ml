@@ -73,7 +73,7 @@ let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
   } = token_result in
 
   JSON_Object [
-    ("type", JSON_String (Lexer_flow.token_to_string token));
+    ("type", JSON_String (Lexer_flow.Token.token_to_string token));
     ("context", JSON_String (
       match token_context with
       | NORMAL_LEX -> "normal"
