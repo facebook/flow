@@ -26,7 +26,7 @@ sudo apt-get install ocaml libelf-dev
 On OSX, using the [brew package manager](http://brew.sh/):
 
 ```
-brew install ocaml ocamlbuild libelf
+brew install ocaml ocamlbuild libelf opam
 ```
 
 Once you have these dependencies, building Flow just requires running
