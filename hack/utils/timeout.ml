@@ -43,7 +43,20 @@ module Alarm_timeout = struct
   let really_input = ignore_timeout Pervasives.really_input
   let input_char = ignore_timeout Pervasives.input_char
   let input_line = ignore_timeout Pervasives.input_line
-  let input_value = ignore_timeout Pervasives.input_value
+
+  let input_value_with_workaround ic =
+    (* OCaml 4.03.0 changed the behavior of input_value to no longer
+     * throw End_of_file when the pipe has closed. We can simulate that
+     * behavior, however, by trying to read a byte afterwards, which WILL
+     * raise End_of_file if the pipe has closed 
+     * http://caml.inria.fr/mantis/view.php?id=7142 *)
+    try Pervasives.input_value ic
+    with Failure msg as e ->
+      if msg = "input_value: truncated object"
+      then Pervasives.input_char ic |> ignore;
+      raise e
+
+  let input_value = ignore_timeout input_value_with_workaround
   let open_in name = Pervasives.open_in name, None
   let close_in (ic, _) = Pervasives.close_in ic
   let close_in_noerr (ic, _) = Pervasives.close_in_noerr ic

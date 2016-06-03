@@ -133,16 +133,7 @@ let slave_main ic oc =
     Daemon.output_string oc s;
     Daemon.flush oc in
   try
-    let Request do_process =
-      (* OCaml 4.03.0 changed the behavior of Marshal.from_channel to no longer
-       * throw End_of_file when the pipe has closed. We can simulate that
-       * behavior, however, by trying to read a byte afterwards, which WILL
-       * raise End_of_file if the pipe has closed *)
-      try Daemon.from_channel ic
-      with Failure msg as e when msg = "input_value: truncated object" ->
-        Daemon.input_char ic |> ignore;
-        raise e
-    in
+    let Request do_process = Daemon.from_channel ic in
     do_process { send = send_result };
     exit 0
   with
