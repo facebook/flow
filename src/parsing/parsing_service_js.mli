@@ -64,6 +64,11 @@ val register_hook:
   (filename -> Spider_monkey_ast.program option -> unit) ->
   unit
 
+val get_docblock:
+  filename ->
+  string ->
+  Errors_js.ErrorSet.t option * Docblock.t
+
 (* parse contents of a file *)
 val do_parse:
   ?fail:bool ->

@@ -20,6 +20,11 @@ type t = {
   isDeclarationFile: bool;
 }
 
+type error = Loc.t * error_kind
+and error_kind =
+  | MultipleFlowAttributes
+  | MultipleProvidesModuleAttributes
+
 let default_info = {
   flow = None;
   preventMunge = None;
@@ -30,23 +35,48 @@ let default_info = {
 (* Avoid lexing unbounded in perverse cases *)
 let max_tokens = 10
 
-let extract =
+let extract : Loc.filename -> string -> error list * t =
   let words_rx = Str.regexp "[ \t\r\n\\*/]+" in
 
-  let rec parse_attributes acc = function
+  (* walks a list of words, returns a list of errors and the extracted info.
+     if @flow or @providesModule is found more than once, the first one is used
+     and an error is returned. *)
+  let rec parse_attributes (errors, info) loc = function
     | "@flow" :: "weak" :: xs ->
-        parse_attributes { acc with flow = Some OptInWeak } xs
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptInWeak } in
+        parse_attributes acc loc xs
     | "@flow" :: xs ->
-        parse_attributes { acc with flow = Some OptIn } xs
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptIn } in
+        parse_attributes acc loc xs
     | "@noflow" :: xs ->
-        parse_attributes { acc with flow = Some OptOut } xs
+        let acc =
+          if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
+          else errors, { info with flow = Some OptOut } in
+        parse_attributes acc loc xs
     | "@providesModule" :: m :: xs ->
-        parse_attributes { acc with providesModule = Some m } xs
+        let acc =
+          if info.providesModule <> None then
+            (loc, MultipleProvidesModuleAttributes)::errors, info
+          else
+            errors, { info with providesModule = Some m }
+        in
+        parse_attributes acc loc xs
     | "@preventMunge" :: xs ->
-        parse_attributes { acc with preventMunge = Some true } xs
+        (* dupes are ok since they can only be truthy *)
+        parse_attributes (errors, { info with preventMunge = Some true }) loc xs
     | _ :: xs ->
-        parse_attributes acc xs
-    | [] -> acc
+        parse_attributes (errors, info) loc xs
+    | [] -> (errors, info)
+  in
+
+  let string_of_comment = function
+  | (loc, Ast.Comment.Block s)
+  | (loc, Ast.Comment.Line s)
+    -> loc, s
   in
 
   fun filename content ->
@@ -57,7 +87,7 @@ let extract =
      * the first token. *)
     let lb = Lexing.from_string content in
     let env =
-      Lexer_flow.Lex_env.new_lex_env None lb ~enable_types_in_comments:false in
+      Lexer_flow.Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
         let env, lexer_result = Lexer_flow.token env in
@@ -73,17 +103,20 @@ let extract =
               -> get_first_comment_contents ~i:(i + 1) env
             | _ -> None
           )
-        | (_, Ast.Comment.Block s) :: _
-        | (_, Ast.Comment.Line s) :: _
-          -> Some s
+        | comments
+          -> Some (List.map string_of_comment comments)
       else None in
     let info =
-      if Filename.check_suffix filename Files_js.flow_ext
+      let filename_str = Loc.string_of_filename filename in
+      if Filename.check_suffix filename_str Files_js.flow_ext
       then { default_info with isDeclarationFile = true; }
       else default_info in
     match get_first_comment_contents env with
-      | Some s -> parse_attributes info (Str.split words_rx s)
-      | None -> info
+      | Some comments ->
+          List.fold_left (fun acc (loc, s) ->
+            parse_attributes acc loc (Str.split words_rx s)
+          ) ([], info) comments
+      | None -> [], info
 
 (* accessors *)
 let flow info = info.flow

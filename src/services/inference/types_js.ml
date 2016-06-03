@@ -156,14 +156,21 @@ let typecheck_contents ~options ?verbose contents filename =
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
   let use_strict = Options.modules_are_use_strict options in
-  let timing, (parse_result, info) = with_timer "Parsing" timing (fun () ->
-    let info = Docblock.extract (string_of_filename filename) contents in
-    let parse_result = Parsing_service_js.do_parse
-      ~fail:false ~types_mode ~use_strict ~info
-      contents filename
-    in
-    parse_result, info
-  ) in
+  let timing, (errors, parse_result, info) =
+    with_timer "Parsing" timing (fun () ->
+      let docblock_errors, info =
+        Parsing_service_js.get_docblock filename contents in
+      let parse_result = Parsing_service_js.do_parse
+        ~fail:false ~types_mode ~use_strict ~info
+        contents filename
+      in
+      let errors = match docblock_errors with
+        | None -> Errors.ErrorSet.empty
+        | Some errs -> errs
+      in
+      errors, parse_result, info
+    )
+  in
 
   match parse_result with
   | Parsing_service_js.Parse_ok ast ->
@@ -187,18 +194,20 @@ let typecheck_contents ~options ?verbose contents filename =
 
       (* Filter out suppressed errors *)
       let error_suppressions = Context.error_suppressions cx in
-      let errors = (Context.errors cx) |> Errors.ErrorSet.filter (fun err ->
-        not (fst (Errors.ErrorSuppressions.check err error_suppressions))
-      ) in
+      let errors = Errors.ErrorSet.fold (fun err errors ->
+        if not (fst (Errors.ErrorSuppressions.check err error_suppressions))
+        then Errors.ErrorSet.add err errors
+        else errors
+      ) (Context.errors cx) errors in
 
       timing, Some cx, errors, info
 
-  | Parsing_service_js.Parse_err errors ->
-      timing, None, errors, info
+  | Parsing_service_js.Parse_err parse_errors ->
+      timing, None, Errors.ErrorSet.union parse_errors errors, info
 
   | Parsing_service_js.Parse_skip ->
       (* should never happen *)
-      timing, None, Errors.ErrorSet.empty, info
+      timing, None, errors, info
 
 
 (* commit newly inferred and removed modules, collect errors. *)

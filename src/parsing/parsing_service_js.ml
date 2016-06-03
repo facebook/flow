@@ -119,12 +119,27 @@ let parse_json_file ~fail content file =
   let comments = ([]: Comment.t list) in
   (loc, [statement], comments)
 
-let get_docblock file content =
+let string_of_docblock_error = function
+  | Docblock.MultipleFlowAttributes ->
+    "Unexpected @flow declaration. Only one per file is allowed."
+  | Docblock.MultipleProvidesModuleAttributes ->
+    "Unexpected @providesModule declaration. Only one per file is allowed."
+
+let get_docblock file content : Errors_js.ErrorSet.t option * Docblock.t =
   match file with
-  | Loc.JsonFile _ -> Docblock.default_info
+  | Loc.JsonFile _ -> None, Docblock.default_info
   | _ ->
-    let filename = string_of_filename file in
-    Docblock.extract filename content
+    let errors, docblock = Docblock.extract file content in
+    if errors = [] then None, docblock
+    else
+      let errs = List.fold_left (fun acc (loc, err) ->
+        let err = Errors_js.mk_error
+          ~kind:Errors_js.ParseError
+          [loc, [string_of_docblock_error err]]
+        in
+        Errors_js.ErrorSet.add err acc
+      ) Errors_js.ErrorSet.empty errors in
+      Some errs, docblock
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   try (
@@ -180,28 +195,33 @@ let reducer ~types_mode ~use_strict (ok, skips, fails, errors) file =
       None in
   match content with
   | Some content ->
-      let info = get_docblock file content in
-      begin match (do_parse ~types_mode ~use_strict ~info content file) with
-      | Parse_ok ast ->
-          (* Consider the file unchanged if its reparsing info is the same as
-           * its old parsing info. A complication is that we don't want to drop
-           * a .flow file, even if it is unchanged, since it might have been
-           * added to the modified set simply because a corresponding
-           * implementation file was also added. *)
-          if not (Loc.check_suffix file Files_js.flow_ext)
-            && ParserHeap.get_old file = Some (ast, info)
-          then (ok, skips, fails, errors)
-          else begin
-            ParserHeap.add file (ast, info);
-            execute_hook file (Some ast);
-            (FilenameSet.add file ok, skips, fails, errors)
-          end
-      | Parse_err converted ->
-          execute_hook file None;
-          (ok, skips, (file, info) :: fails, converted :: errors)
-      | Parse_skip ->
-          execute_hook file None;
-          (ok, (file, info) :: skips, fails, errors)
+      begin match get_docblock file content with
+      | None, info ->
+        begin match (do_parse ~types_mode ~use_strict ~info content file) with
+        | Parse_ok ast ->
+            (* Consider the file unchanged if its reparsing info is the same as
+             * its old parsing info. A complication is that we don't want to
+             * drop a .flow file, even if it is unchanged, since it might have
+             * been added to the modified set simply because a corresponding
+             * implementation file was also added. *)
+            if not (Loc.check_suffix file Files_js.flow_ext)
+              && ParserHeap.get_old file = Some (ast, info)
+            then (ok, skips, fails, errors)
+            else begin
+              ParserHeap.add file (ast, info);
+              execute_hook file (Some ast);
+              (FilenameSet.add file ok, skips, fails, errors)
+            end
+        | Parse_err converted ->
+            execute_hook file None;
+            (ok, skips, (file, info) :: fails, converted :: errors)
+        | Parse_skip ->
+            execute_hook file None;
+            (ok, (file, info) :: skips, fails, errors)
+        end
+      | Some docblock_errors, info ->
+        execute_hook file None;
+        (ok, skips, (file, info) :: fails, docblock_errors :: errors)
       end
   | None ->
       execute_hook file None;

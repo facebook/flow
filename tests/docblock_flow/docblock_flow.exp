@@ -1,0 +1,36 @@
+license_with_flow.js:4
+  4: ("": void); // error
+      ^^ string. This type is incompatible with
+  4: ("": void); // error
+          ^^^^ undefined
+
+multiple_flows_1.js:2
+  2: /* @flow */
+     ^^^^^^^^^^^ Unexpected @flow declaration. Only one per file is allowed.
+
+multiple_flows_2.js:1
+  1: /**
+     ^ Unexpected @flow declaration. Only one per file is allowed.
+
+multiple_providesModule_1.js:1
+  1: /**
+     ^ Unexpected @providesModule declaration. Only one per file is allowed.
+
+multiple_providesModule_2.js:5
+  5: /**
+     ^ Unexpected @providesModule declaration. Only one per file is allowed.
+
+use_strict_with_flow.js:4
+  4: ("": void); // error
+      ^^ string. This type is incompatible with
+  4: ("": void); // error
+          ^^^^ undefined
+
+with_flow.js:3
+  3: ("": void); // error
+      ^^ string. This type is incompatible with
+  3: ("": void); // error
+          ^^^^ undefined
+
+
+Found 7 errors

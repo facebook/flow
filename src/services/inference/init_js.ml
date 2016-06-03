@@ -51,7 +51,7 @@ let parse_lib_file file =
   try
     let lib_content = cat file in
     let lib_file = Loc.LibFile file in
-    let info = Docblock.extract file lib_content in
+    let info = Docblock.({ default_info with isDeclarationFile = true }) in
     Parsing.do_parse ~types_mode ~use_strict ~info lib_content lib_file
   with _ -> failwith (
     spf "Can't read library definitions file %s, exiting." file
