@@ -89,7 +89,6 @@ val typedef_constraint : Pos.t -> unit
 val add_a_typehint : Pos.t -> unit
 val local_const : Pos.t -> unit
 val illegal_constant : Pos.t -> unit
-val cyclic_constraint : Pos.t -> unit
 val parsing_error : Pos.t * string -> unit
 val format_string :
   Pos.t -> string -> string -> Pos.t -> string -> string -> unit

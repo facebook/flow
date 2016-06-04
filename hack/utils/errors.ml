@@ -314,7 +314,7 @@ module Naming                               = struct
   let typeparam_alok                        = 2002 (* DONT MODIFY!!!! *)
   let assert_arity                          = 2003 (* DONT MODIFY!!!! *)
   let primitive_invalid_alias               = 2004 (* DONT MODIFY!!!! *)
-  let cyclic_constraint                     = 2005 (* DONT MODIFY!!!! *)
+  (* DECPRECATED let cyclic_constraint      = 2005 *)
   let did_you_mean_naming                   = 2006 (* DONT MODIFY!!!! *)
   let different_scope                       = 2007 (* DONT MODIFY!!!! *)
   let disallowed_xhp_type                   = 2008 (* DONT MODIFY!!!! *)
@@ -921,10 +921,6 @@ let local_const var_pos =
 let illegal_constant pos =
   add Naming.illegal_constant pos
     "Illegal constant value"
-
-let cyclic_constraint pos =
-  add Naming.cyclic_constraint pos
-    "Cyclic constraint between type parameters"
 
 let invalid_req_implements pos =
   add Naming.invalid_req_implements pos
