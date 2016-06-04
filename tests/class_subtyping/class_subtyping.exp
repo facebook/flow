@@ -32,5 +32,17 @@ test4.js:13
  13: foo(new D, { f_: 0 });
                 ^^^^^^^^^ object literal
 
+test5.js:17
+ 17: function gn(): Class<A> & Class<I> {
+                                     ^ property `m1` of I. Property not found in
+ 18:   return class K extends A {}
+              ^^^^^^^^^^^^^^^^^^^^ class expr `K`
 
-Found 5 errors
+test5.js:17
+ 17: function gn(): Class<A> & Class<I> {
+                                     ^ property `sm1` of statics of I. Property not found in
+ 18:   return class K extends A {}
+              ^^^^^^^^^^^^^^^^^^^^ statics of class expr `K`
+
+
+Found 7 errors
