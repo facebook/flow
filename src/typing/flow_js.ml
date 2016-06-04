@@ -933,7 +933,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | l, UseT (use_op, AnnotT (sink_t, _)) ->
+    | _, UseT (use_op, AnnotT (sink_t, _)) ->
       let reason = reason_of_t sink_t in
       rec_flow cx trace (sink_t, ReposUseT (reason, use_op, l))
 
@@ -2532,7 +2532,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       (* return this *)
       rec_flow cx trace (ret, ObjTestT(reason_o, this, t));
-      Ops.pop ()
+      Ops.pop ();
 
     (****************************************************************)
     (* function types derive objects through explicit instantiation *)
@@ -2563,7 +2563,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyFunT reason_fundef, ConstructorT (reason_op, args, t) ->
       let reason_o = replace_reason "constructor return" reason_fundef in
       multiflow cx trace reason_op (args, [RestT (AnyT.t)]);
-      rec_flow_t cx trace (AnyObjT reason_o, t)
+      rec_flow_t cx trace (AnyObjT reason_o, t);
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
