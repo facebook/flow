@@ -45,14 +45,6 @@ let mode_to_string = function
   | TEMPLATE -> "TEMPLATE"
   | REGEXP -> "REGEXP"
 
-let lex lex_env = function
-  | NORMAL_LEX -> Lexer_flow.token lex_env
-  | TYPE_LEX -> Lexer_flow.type_token lex_env
-  | JSX_TAG -> Lexer_flow.lex_jsx_tag lex_env
-  | JSX_CHILD -> Lexer_flow.lex_jsx_child lex_env
-  | TEMPLATE -> Lexer_flow.template_tail lex_env
-  | REGEXP -> Lexer_flow.lex_regexp lex_env
-
 module Lookahead : sig
   type t
   val create : Lex_env.t -> lex_mode -> t
@@ -105,7 +97,16 @@ end = struct
 
   (* precondition: there is enough room in t.la_results for the result *)
   let lex t =
-    let lex_env, lex_result = lex t.la_lex_env t.la_lex_mode in
+    let lex_env = t.la_lex_env in
+    let lex_env, lex_result =
+      match t.la_lex_mode with
+      | NORMAL_LEX -> Lexer_flow.token lex_env
+      | TYPE_LEX -> Lexer_flow.type_token lex_env
+      | JSX_TAG -> Lexer_flow.lex_jsx_tag lex_env
+      | JSX_CHILD -> Lexer_flow.lex_jsx_child lex_env
+      | TEMPLATE -> Lexer_flow.template_tail lex_env
+      | REGEXP -> Lexer_flow.lex_regexp lex_env
+    in
     t.la_lex_env <- lex_env;
     t.la_results.(t.la_num_lexed) <- Some lex_result;
     t.la_num_lexed <- t.la_num_lexed + 1
