@@ -2475,8 +2475,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         "Ineligible value used in/as type annotation (did you forget 'typeof'?)"
         l u
 
-    | (ClassT(l), UseT (use_op, ClassT(u))) ->
-      rec_flow cx trace (l, UseT(use_op, u))
+    | (ClassT(l), UseT (_, ClassT(u))) ->
+      rec_flow_t cx trace (l, u)
 
     | FunT (_,static1,prototype,_),
       UseT (_, ClassT (InstanceT (_,static2,_, _) as u_)) ->
