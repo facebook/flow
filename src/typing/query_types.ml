@@ -73,6 +73,22 @@ let dump_types printer raw_printer cx =
     (a_loc, _, _, _, _) (b_loc, _, _, _, _) -> Loc.compare a_loc b_loc
   )
 
+let is_covered = function
+  | Type.AnyT _
+  | Type.EmptyT _ -> false
+  | _ -> true
+
+let covered_types cx =
+  Type_normalizer.suggested_type_cache := IMap.empty;
+  let lst = Hashtbl.fold (fun loc t list ->
+    let ground_t = Type_normalizer.normalize_type cx t in
+    (loc, is_covered ground_t)::list
+  ) (Context.type_table cx) [] in
+  lst |> List.sort (fun
+    (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc
+  )
+
+
 (********)
 (* Fill *)
 (********)
