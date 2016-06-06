@@ -165,6 +165,35 @@ module WithToken(Token: TokenType) = struct
       switch_right_paren: t;
       switch_compound_statement: t
     }
+    and case_statement = {
+      case_keyword: t;
+      case_expr: t;
+      case_colon: t;
+      case_stmt: t;
+    }
+    and default_statement = {
+      default_keyword: t;
+      default_colon: t;
+      default_stmt: t;
+    }
+    and return_statement = {
+      return_keyword: t;
+      return_expr: t;
+      return_semicolon: t
+    }
+    and throw_statement = {
+      throw_keyword: t;
+      throw_expr: t;
+      throw_semicolon: t
+    }
+    and break_statement = {
+      break_keyword: t;
+      break_semicolon: t
+    }
+    and continue_statement = {
+      continue_keyword: t;
+      continue_semicolon: t
+    }
     and unary_operator = {
       unary_operator : t;
       unary_operand : t
@@ -243,6 +272,12 @@ module WithToken(Token: TokenType) = struct
     | ElseClause of else_clause
     | DoStatement of do_statement
     | SwitchStatement of switch_statement
+    | CaseStatement of case_statement
+    | DefaultStatement of default_statement
+    | ReturnStatement of return_statement
+    | ThrowStatement of throw_statement
+    | BreakStatement of break_statement
+    | ContinueStatement of continue_statement
 
     | LiteralExpression of t
     | VariableExpression of t
@@ -294,6 +329,12 @@ module WithToken(Token: TokenType) = struct
       | ElseClause _ -> SyntaxKind.ElseClause
       | DoStatement _ -> SyntaxKind.DoStatement
       | SwitchStatement _ -> SyntaxKind.SwitchStatement
+      | CaseStatement _ -> SyntaxKind.CaseStatement
+      | DefaultStatement _ -> SyntaxKind.DefaultStatement
+      | ReturnStatement _ -> SyntaxKind.ReturnStatement
+      | ThrowStatement _ -> SyntaxKind.ThrowStatement
+      | BreakStatement _ -> SyntaxKind.BreakStatement
+      | ContinueStatement _ -> SyntaxKind.ContinueStatement
       | PrefixUnaryOperator _ -> SyntaxKind.PrefixUnaryOperator
       | PostfixUnaryOperator _ -> SyntaxKind.PostfixUnaryOperator
       | BinaryOperator _ -> SyntaxKind.BinaryOperator
@@ -346,6 +387,15 @@ module WithToken(Token: TokenType) = struct
       x.do_right_paren; x.do_semicolon ]
       | SwitchStatement x -> [ x.switch_keyword; x.switch_left_paren;
         x.switch_expr; x.switch_right_paren; x.switch_compound_statement ]
+      | CaseStatement x ->
+        [ x.case_keyword; x.case_expr; x.case_colon; x.case_stmt ]
+      | DefaultStatement x ->
+        [ x.default_keyword; x.default_colon; x.default_stmt ]
+      | ReturnStatement x -> [ x.return_keyword;
+        x.return_expr; x.return_semicolon ]
+      | ThrowStatement x -> [ x.throw_keyword; x.throw_expr; x.throw_semicolon ]
+      | BreakStatement x -> [ x.break_keyword; x.break_semicolon ]
+      | ContinueStatement x -> [ x.continue_keyword; x.continue_semicolon ]
       | PrefixUnaryOperator x -> [ x.unary_operator; x.unary_operand ]
       | PostfixUnaryOperator x -> [ x.unary_operand; x.unary_operator ]
       | BinaryOperator x ->
@@ -424,6 +474,23 @@ module WithToken(Token: TokenType) = struct
     let switch_expr x = x.switch_expr
     let switch_right_paren x = x.switch_right_paren
     let switch_compound_statement x = x.switch_compound_statement
+    let case_keyword x = x.case_keyword
+    let case_expr x = x.case_expr
+    let case_colon x = x.case_colon
+    let case_stmt x = x.case_stmt
+    let default_keyword x = x.default_keyword
+    let default_colon x = x.default_colon
+    let default_stmt x = x.default_stmt
+    let return_keyword x = x.return_keyword
+    let return_expr x = x.return_expr
+    let return_semicolon x = x.return_semicolon
+    let throw_keyword x = x.throw_keyword
+    let throw_expr x = x.throw_expr
+    let throw_semicolon x = x.throw_semicolon
+    let break_keyword x = x.break_keyword
+    let break_semicolon x = x.break_semicolon
+    let continue_keyword x = x.break_keyword
+    let continue_semicolon x = x.break_semicolon
     let expr_statement_expr x = x.expr_statement_expr
     let expr_statement_semicolon x = x.expr_statement_semicolon
     let unary_operator x = x.unary_operator
@@ -554,6 +621,23 @@ module WithToken(Token: TokenType) = struct
         switch_expr; switch_right_paren; switch_compound_statement ]) ->
         SwitchStatement{ switch_keyword; switch_left_paren;
           switch_expr; switch_right_paren; switch_compound_statement }
+      | (SyntaxKind.CaseStatement, [ case_keyword;
+        case_expr; case_colon; case_stmt ]) ->
+        CaseStatement { case_keyword; case_expr; case_colon; case_stmt }
+      | (SyntaxKind.DefaultStatement, [ default_keyword;
+          default_colon; default_stmt ]) ->
+        DefaultStatement { default_keyword; default_colon; default_stmt }
+      | (SyntaxKind.ReturnStatement, [ return_keyword;
+        return_expr; return_semicolon ]) ->
+        ReturnStatement { return_keyword; return_expr; return_semicolon }
+      | (SyntaxKind.ThrowStatement, [ throw_keyword;
+        throw_expr; throw_semicolon ]) ->
+        ThrowStatement { throw_keyword; throw_expr; throw_semicolon }
+      | (SyntaxKind.BreakStatement, [ break_keyword; break_semicolon ]) ->
+        BreakStatement { break_keyword; break_semicolon }
+      | (SyntaxKind.ContinueStatement,
+          [ continue_keyword; continue_semicolon ]) ->
+        ContinueStatement { continue_keyword; continue_semicolon }
       | (SyntaxKind.PrefixUnaryOperator, [ unary_operator; unary_operand ]) ->
         PrefixUnaryOperator { unary_operator; unary_operand }
       | (SyntaxKind.PostfixUnaryOperator, [ unary_operand; unary_operator ]) ->
@@ -711,15 +795,18 @@ module WithToken(Token: TokenType) = struct
         from_children SyntaxKind.IfStatement
           [ if_keyword; if_left_paren; if_condition_expr; if_right_paren;
           if_statement; if_elseif_clauses; if_else_clause ]
+
       let make_elseif_clause
         elseif_keyword elseif_left_paren elseif_condition_expr
         elseif_right_paren elseif_statement =
         from_children SyntaxKind.ElseifClause
           [ elseif_keyword; elseif_left_paren; elseif_condition_expr;
           elseif_right_paren; elseif_statement ]
+
       let make_else_clause else_keyword else_statement =
         from_children SyntaxKind.ElseClause
           [ else_keyword; else_statement ]
+
       let make_do_statement
         do_keyword do_statement do_while_keyword do_left_paren
         do_condition_expr do_right_paren do_semicolon =
@@ -733,6 +820,30 @@ module WithToken(Token: TokenType) = struct
         from_children SyntaxKind.SwitchStatement
           [ switch_keyword; switch_left_paren; switch_expr;
           switch_right_paren; switch_compound_statement ]
+
+      let make_case_statement case_keyword case_expr case_colon case_stmt =
+        from_children SyntaxKind.CaseStatement
+          [ case_keyword; case_expr; case_colon; case_stmt ]
+
+      let make_default_statement default_keyword default_colon default_stmt =
+        from_children SyntaxKind.DefaultStatement
+          [ default_keyword; default_colon; default_stmt ]
+
+      let make_return_statement return_keyword return_expr return_semicolon =
+        from_children SyntaxKind.ReturnStatement
+          [ return_keyword; return_expr; return_semicolon ]
+
+      let make_throw_statement throw_keyword throw_expr throw_semicolon =
+        from_children SyntaxKind.ThrowStatement
+          [ throw_keyword; throw_expr; throw_semicolon ]
+
+      let make_break_statement break_keyword break_semicolon =
+        from_children SyntaxKind.BreakStatement
+          [ break_keyword; break_semicolon ]
+
+      let make_continue_statement continue_keyword continue_semicolon =
+        from_children SyntaxKind.ContinueStatement
+          [ continue_keyword; continue_semicolon ]
 
       let make_type_constant type_constant_left_type type_constant_separator
           type_constant_right_type =

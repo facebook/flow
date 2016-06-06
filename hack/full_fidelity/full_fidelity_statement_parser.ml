@@ -100,9 +100,7 @@ module WithExpressionParser(ExpressionParser :
     | Continue -> parse_continue_statement parser
     | Return -> parse_return_statement parser
     | Throw -> parse_throw_statement parser
-    (* TODO: Only valid inside switch *)
     | Default -> parse_default_label_statement parser
-    (* TODO: Only valid inside switch *)
     | Case -> parse_case_label_statement parser
     | LeftBrace -> parse_compound_statement parser
     | Static -> parse_function_static_declaration parser
@@ -229,34 +227,52 @@ module WithExpressionParser(ExpressionParser :
     (parser, make_error [make_token token])
 
   and parse_break_statement parser =
-    (* TODO *)
-    let (parser, token) = next_token parser in
-    (parser, make_error [make_token token])
+    let (parser, break_token) = assert_token parser Break in
+    let (parser, semi_token) =
+      expect_token parser Semicolon SyntaxError.error1010 in
+    (parser, make_break_statement break_token semi_token)
 
   and parse_continue_statement parser =
-    (* TODO *)
-    let (parser, token) = next_token parser in
-    (parser, make_error [make_token token])
+    let (parser, continue_token) = assert_token parser Continue in
+    let (parser, semi_token) =
+      expect_token parser Semicolon SyntaxError.error1010 in
+    (parser, make_continue_statement continue_token semi_token)
 
   and parse_return_statement parser =
-    (* TODO *)
-    let (parser, token) = next_token parser in
-    (parser, make_error [make_token token])
+    let (parser, return_token) = assert_token parser Return in
+    let (parser1, semi_token) = next_token parser in
+    if Token.kind semi_token = Semicolon then
+      (parser, make_return_statement
+        return_token (make_missing()) (make_token semi_token))
+    else
+      let (parser, expr) = parse_expression parser in
+      let (parser, semi_token) =
+        expect_token parser Semicolon SyntaxError.error1010 in
+      (parser, make_return_statement return_token expr semi_token)
 
   and parse_throw_statement parser =
-    (* TODO *)
-    let (parser, token) = next_token parser in
-    (parser, make_error [make_token token])
+    let (parser, throw_token) = assert_token parser Throw in
+    let (parser, expr) = parse_expression parser in
+    let (parser, semi_token) =
+      expect_token parser Semicolon SyntaxError.error1010 in
+    (parser, make_throw_statement throw_token expr semi_token)
 
   and parse_default_label_statement parser =
-    (* TODO *)
-    let (parser, token) = next_token parser in
-    (parser, make_error [make_token token])
+    (* TODO: Only valid inside switch *)
+    let (parser, default_token) = assert_token parser Default in
+    let (parser, colon_token) =
+      expect_token parser Colon SyntaxError.error1020 in
+    let (parser, stmt) = parse_statement parser in
+    (parser, make_default_statement default_token colon_token stmt)
 
   and parse_case_label_statement parser =
-    (* TODO *)
-    let (parser, token) = next_token parser in
-    (parser, make_error [make_token token])
+    (* TODO: Only valid inside switch *)
+    let (parser, case_token) = assert_token parser Case in
+    let (parser, expr) = parse_expression parser in
+    let (parser, colon_token) =
+      expect_token parser Colon SyntaxError.error1020 in
+    let (parser, stmt) = parse_statement parser in
+    (parser, make_case_statement case_token expr colon_token stmt)
 
   and parse_function_static_declaration parser =
     (* TODO *)

@@ -30,6 +30,12 @@ type t =
 | ElseifClause
 | ElseClause
 | SwitchStatement
+| CaseStatement
+| DefaultStatement
+| ReturnStatement
+| ThrowStatement
+| BreakStatement
+| ContinueStatement
 
 (* Expressions *)
 | LiteralExpression
@@ -71,6 +77,12 @@ let to_string kind =
   | ElseifClause -> "elseif_clause"
   | ElseClause -> "else_clause"
   | SwitchStatement -> "switch_statement"
+  | CaseStatement -> "case_statement"
+  | DefaultStatement -> "default_statement"
+  | ReturnStatement -> "return_statement"
+  | ThrowStatement -> "throw_statement"
+  | BreakStatement -> "break_statement"
+  | ContinueStatement -> "continue_statement"
   | PrefixUnaryOperator -> "prefix_unary_operator"
   | PostfixUnaryOperator -> "postfix_unary_operator"
   | BinaryOperator -> "binary_operator"
