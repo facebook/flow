@@ -851,7 +851,7 @@ let print_error_summary ~flags ?(stdin_file=None) ~strip_root ~root errors =
   let total =
     List.fold_left print_error_if_not_truncated 0 errors
   in
-  print_newline ();
+  if total > 0 then print_newline ();
   if truncate && total > 50 then (
     Printf.printf
       "... %d more %s (only 50 out of %d errors displayed)\n"
