@@ -1848,6 +1848,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (List.hd ts,
          LookupT (reason, strict, (List.tl ts) @ try_ts_on_failure, s, t))
 
+    | IntersectionT (r, rep), GetPropT (reason_op, (reason_prop, "constructor"), t) ->
+      let retarget element = mk_tvar_where cx reason_op (fun t ->
+        let u = GetPropT (reason_op, (reason_prop, "constructor"), t) in
+        rec_flow cx trace (element, u)
+      ) in
+      let ts = List.map retarget (InterRep.members rep) in
+      rec_flow_t cx trace (IntersectionT (r, InterRep.make ts), t)
+
+    (** constructor calls **)
+    | IntersectionT (r, rep),
+      ConstructorT (reason_op, args, t) ->
+      let ts = InterRep.members rep |> List.map (fun element ->
+        mk_tvar_where cx reason_op (fun tvar ->
+          rec_flow cx trace (element, ConstructorT (reason_op, args, tvar))
+        )
+      ) in
+      rec_flow_t cx trace (IntersectionT (r, InterRep.make ts), t)
+
     (** extends **)
     | IntersectionT (_, rep),
       UseT (use_op, ExtendsT (try_ts_on_failure, l, u)) ->
@@ -2428,8 +2446,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Enable structural subtyping for upperbounds like interfaces *)
     (***************************************************************)
 
+    | (ClassT _,
+       UseT (_, InstanceT (_, _, _, { structural = true; _; }))) ->
+      flow_err cx trace
+        "This class is incompatible with interface (did you forget 'Class<.>')"
+        l u;
+
     | (_,
-       UseT (_, InstanceT (reason_inst, _, super, {
+       UseT (_, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -2437,7 +2461,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        })))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+         | InstanceT (_, l, _, _),
+           InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+             structural_subtype cx trace l reason
+               (super, fields_tmap, methods_tmap)
+         | _ -> ())
 
     (********************************************************)
     (* runtime types derive static types through annotation *)
@@ -2475,8 +2506,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         "Ineligible value used in/as type annotation (did you forget 'typeof'?)"
         l u
 
-    | (ClassT(l), UseT (_, ClassT(u))) ->
-      rec_unify cx trace l u
+    | (ClassT(l), UseT (use_op, ClassT(u))) ->
+      rec_flow cx trace (l, UseT (use_op, u))
 
     | FunT (_,static1,prototype,_),
       UseT (_, ClassT (InstanceT (_,static2,_, _) as u_)) ->
@@ -3486,7 +3517,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
-    | (MixedT _, UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+    | (MixedT _,
+       UseT (_, ExtendsT ([], l, InstanceT (reason_inst, static, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -3494,7 +3526,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        }))))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      (match l, static with
+         | InstanceT (_, l, _, _),
+           InstanceT (reason, _, super, { fields_tmap; methods_tmap; _; }) ->
+             structural_subtype cx trace l reason
+               (super, fields_tmap, methods_tmap)
+         | _ -> ())
 
     | (MixedT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
@@ -3715,6 +3754,7 @@ and ground_subtype = function
   | (VoidT _, UseT (_, VoidT _))
   | (EmptyT _, _)
   | (_, UseT (_, MixedT _))
+  | (_, UseT (_, ClassT (MixedT _)))
   | (_, UseT (_, FunProtoT _)) (* MixedT is used for object protos, this is for funcs *)
   | (AnyT _, _)
   | (_, UseT (_, AnyT _))
@@ -6107,6 +6147,7 @@ and become cx ?trace r t = match t with
 
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace reason t =
+  let repos t = mod_reason_of_t (repos_reason (loc_of_reason reason)) t in
   match t with
   | OpenT (r, id) ->
     let constraints = find_graph cx id in
@@ -6131,7 +6172,10 @@ and reposition cx ?trace reason t =
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+  | InstanceT (reason_inst, static, super, insttype) ->
+      let loc = loc_of_reason reason in
+      InstanceT (repos_reason loc reason_inst, repos static, super, insttype)
+  | _ -> repos t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)

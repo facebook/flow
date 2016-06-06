@@ -1,3 +1,49 @@
+intersection2.js:33
+ 33:   var a = new Ap();
+               ^^^^^^^^ constructor call. Constructor cannot be called on
+ 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
+                                           ^ J
+
+intersection2.js:48
+ 48: gn(JLess);
+     ^^^^^^^^^ function call
+ 48: gn(JLess);
+        ^^^^^ class type: JLess. This class is incompatible with interface (did you forget 'Class<.>')
+ 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
+                                           ^ J
+
+intersection2.js:57
+ 57: fn(full);
+     ^^^^^^^^ function call
+ 57: fn(full);
+        ^^^^ Full. This type is incompatible with
+ 11: function fn(a: I & A): void {
+                        ^ A
+
+intersection2.js:58
+ 58: gn(Full);
+     ^^^^^^^^ function call
+ 58: gn(Full);
+        ^^^^ Full. This type is incompatible with
+ 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
+                                      ^ A
+
+intersection2.js:58
+ 58: gn(Full);
+     ^^^^^^^^ function call
+ 58: gn(Full);
+        ^^^^ class type: Full. This class is incompatible with interface (did you forget 'Class<.>')
+ 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
+                                           ^ J
+
+intersection2.js:68
+ 68: gn(AlmostJ);
+     ^^^^^^^^^^^ function call
+ 68: gn(AlmostJ);
+        ^^^^^^^ class type: AlmostJ. This class is incompatible with interface (did you forget 'Class<.>')
+ 28: function gn(Ap: Class<I> & Class<A> & J): void { // Forgot `Class<.>` on `J`
+                                           ^ J
+
 test_obj.js:29
  29: var e: E = c; // error
                 ^ intersection. This type is incompatible with
@@ -21,4 +67,4 @@ test_obj.js:29
                                                              ^^^^^^ number. See lib: lib/lib.js:33
 
 
-Found 1 error
+Found 7 errors
