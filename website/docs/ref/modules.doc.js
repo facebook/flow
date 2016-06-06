@@ -267,7 +267,7 @@ ES_DefaultExport.default();
   module.name_mapper='^\(.*\)\.css$' -> '<PROJECT_ROOT>/CSSModule.js.flow'
   ```
 
-  **NOTE: You do not need to manually substitue anything for
+  **NOTE: You do not need to manually substitute anything for
           "\<PROJECT\_ROOT\>".** This is a string token that Flow recognizes and
           will automatically replace with the path to the directory of your
           .flowconfig file.
