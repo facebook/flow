@@ -3938,6 +3938,12 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       Scope.KeyMap.add key unrefined_t tmap)
   in
 
+  let flow_eqt ~strict loc (t1, t2) =
+    if not strict then
+      let reason = mk_reason "non-strict equality comparison" loc in
+      Flow_js.flow cx (t1, EqT (reason, t2))
+  in
+
   (* package result quad from test type, refi key, unrefined type,
      predicate, and predicate's truth sense *)
   let result test_t key unrefined_t pred sense =
@@ -3945,26 +3951,28 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   (* inspect a null equality test *)
-  let null_test loc ~sense ~strict e =
-    let refinement = match refinable_lvalue e with
-    | None, _ -> None
+  let null_test loc ~sense ~strict e null_t =
+    let t, refinement = match refinable_lvalue e with
+    | None, t -> t, None
     | Some name, t ->
         let pred = if strict then NullP else MaybeP in
-        Some (name, t, pred, sense)
+        t, Some (name, t, pred, sense)
     in
+    flow_eqt ~strict loc (t, null_t);
     match refinement with
     | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
     | None -> empty_result (BoolT.at loc)
   in
 
   (* inspect an undefined equality test *)
-  let undef_test loc ~sense ~strict e =
-    let refinement = match refinable_lvalue e with
-    | None, _ -> None
+  let undef_test loc ~sense ~strict e void_t =
+    let t, refinement = match refinable_lvalue e with
+    | None, t -> t, None
     | Some name, t ->
         let pred = if strict then VoidP else MaybeP in
-        Some (name, t, pred, sense)
+        t, Some (name, t, pred, sense)
     in
+    flow_eqt ~strict loc (t, void_t);
     match refinement with
     | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
     | None -> empty_result (BoolT.at loc)
@@ -4022,6 +4030,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   let literal_test loc ~strict ~sense expr val_t pred =
     let t, sentinel_refinement = condition_of_maybe_sentinel cx type_params_map
       ~sense ~strict expr val_t in
+    flow_eqt ~strict loc (t, val_t);
     let refinement = if strict then Refinement.key expr else None in
     let out = match refinement with
     | Some name -> result (BoolT.at loc) name t pred sense
@@ -4058,8 +4067,9 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
   in
 
   let sentinel_prop_test loc ~sense ~strict expr val_t =
-    let _, sentinel_refinement = condition_of_maybe_sentinel
+    let t, sentinel_refinement = condition_of_maybe_sentinel
       cx type_params_map ~sense ~strict expr val_t in
+    flow_eqt ~strict loc (t, val_t);
     let out = empty_result (BoolT.at loc) in
     match sentinel_refinement with
     | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
@@ -4108,23 +4118,21 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     (* TODO: add Type.predicate variant that tests number equality *)
 
     (* expr op null *)
-    | (_, Expression.Literal { Literal.value = Literal.Null; _ }), expr
-    | expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })
+    | (_, Expression.Literal { Literal.value = Literal.Null; _ } as null), expr
+    | expr, (_, Expression.Literal { Literal.value = Literal.Null; _ } as null)
       ->
-        null_test loc ~sense ~strict expr
+        let null_t = expression cx type_params_map null in
+        null_test loc ~sense ~strict expr null_t
 
     (* expr op undefined *)
-    | (_, Identifier (_, { Identifier.name = "undefined"; _ })), expr
-    | expr, (_, Identifier (_, { Identifier.name = "undefined"; _ }))
-      ->
-        undef_test loc ~sense ~strict expr
-
+    | (_, Identifier (_, { Identifier.name = "undefined"; _ }) as void), expr
+    | expr, (_, Identifier (_, { Identifier.name = "undefined"; _ }) as void)
     (* expr op void(...) *)
-    | (_, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg), expr
-    | expr, (_, Unary ({ Unary.operator = Unary.Void; _ }) as void_arg)
+    | (_, Unary ({ Unary.operator = Unary.Void; _ }) as void), expr
+    | expr, (_, Unary ({ Unary.operator = Unary.Void; _ }) as void)
       ->
-        ignore (expression cx type_params_map void_arg);
-        undef_test loc ~sense ~strict expr
+        let void_t = expression cx type_params_map void in
+        undef_test loc ~sense ~strict expr void_t
 
     (* fallback case for equality relations involving sentinels (this should be
        lower priority since it refines the object but not the property) *)
@@ -4136,8 +4144,9 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
 
     (* for all other cases, walk the AST but always return bool *)
     | expr, value ->
-        ignore (expression cx type_params_map expr);
-        ignore (expression cx type_params_map value);
+        let t1 = expression cx type_params_map expr in
+        let t2 = expression cx type_params_map value in
+        flow_eqt ~strict loc (t1, t2);
         empty_result (BoolT.at loc)
   in
 

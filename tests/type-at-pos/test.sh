@@ -21,3 +21,8 @@ $FLOW type-at-pos optional.js 14 10 --strip-root --json
 "$FLOW" type-at-pos destructuring.js 3 6 --strip-root --json
 "$FLOW" type-at-pos destructuring.js 17 13 --strip-root --json
 "$FLOW" type-at-pos react.js 2 7 --strip-root --json
+
+printf "predicates.js - null: "
+"$FLOW" type-at-pos predicates.js 4 12 --strip-root --json
+printf "predicates.js - undefined: "
+"$FLOW" type-at-pos predicates.js 5 12 --strip-root --json

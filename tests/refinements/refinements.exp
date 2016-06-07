@@ -138,6 +138,28 @@ cond_prop.js:48
  48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
               ^ object type
 
+eq.js:5
+  5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
+             ^ string. Cannot be compared to
+  5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
+                  ^ number
+
+eq.js:19
+ 19:     if (x.y == 123) {} // error
+             ^^^^^^^^^^ non-strict equality comparison
+ 18:   function(x: { y: 'foo' } | { y: 'bar' }) {
+                        ^^^^^ string literal `foo`. Cannot be compared to
+ 19:     if (x.y == 123) {} // error
+                    ^^^ number
+
+eq.js:19
+ 19:     if (x.y == 123) {} // error
+             ^^^^^^^^^^ non-strict equality comparison
+ 18:   function(x: { y: 'foo' } | { y: 'bar' }) {
+                                       ^^^^^ string literal `bar`. Cannot be compared to
+ 19:     if (x.y == 123) {} // error
+                    ^^^ number
+
 hasOwnProperty.js:4
   4:   x.y(); // error: could be undefined
        ^^^^^ call of method `y`. Function cannot be called on possibly undefined value
@@ -901,4 +923,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 142 errors
+Found 145 errors
