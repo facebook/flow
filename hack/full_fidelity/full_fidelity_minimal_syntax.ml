@@ -49,12 +49,12 @@ let full_width node =
   MinimalSyntaxValue.full_width (value node)
 
 let leading_width node =
-  match (leading_token [node]) with
+  match leading_token node with
   | None -> 0
   | Some token -> MinimalToken.leading_width token
 
 let trailing_width node =
-  match (trailing_token [node]) with
+  match trailing_token node with
   | None -> 0
   | Some token -> MinimalToken.trailing_width token
 

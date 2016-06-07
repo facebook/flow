@@ -537,29 +537,31 @@ module WithToken(Token: TokenType) = struct
       | Token token -> Some token
       | _ -> None
 
-    let rec leading_token nodes =
-      match nodes with
-      | [] -> None
-      | h :: t ->
-        let token = get_token h in
-        if token = None then
-          let result = leading_token (children h) in
-          if result = None then leading_token t else result
-        else
-          token
-
-    let rec trailing_token nodes =
+    let leading_token node =
       let rec aux nodes =
         match nodes with
         | [] -> None
         | h :: t ->
           let token = get_token h in
           if token = None then
-            let result = trailing_token (children h) in
+            let result = aux (children h) in
             if result = None then aux t else result
           else
             token in
-      aux (List.rev nodes)
+      aux [node]
+
+    let trailing_token node =
+      let rec aux nodes =
+        match nodes with
+        | [] -> None
+        | h :: t ->
+          let token = get_token h in
+          if token = None then
+            let result = aux (List.rev (children h)) in
+            if result = None then aux t else result
+          else
+            token in
+      aux [node]
 
     let syntax_from_children kind ts =
       match kind, ts with

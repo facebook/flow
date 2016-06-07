@@ -69,3 +69,15 @@ let text node =
     Buffer.add_string buffer (EditableToken.full_text token) in
   List.iter aux (all_tokens node);
   Buffer.contents buffer
+
+let leading_trivia node =
+  let token = leading_token node in
+  match token with
+  | None -> []
+  | Some t -> EditableToken.leading t
+
+let trailing_trivia node =
+  let token = trailing_token node in
+  match token with
+  | None -> []
+  | Some t -> EditableToken.trailing t
