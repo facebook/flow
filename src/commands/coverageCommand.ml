@@ -59,10 +59,8 @@ let handle_error ~json (loc, err) strip =
   );
   flush stderr
 
-let is_covered ctor = ctor <> "AnyT" && ctor <> "EmptyT"
-
-let accum_coverage (covered, total) (_loc, ctor, _pretty, _raw, _reasons) =
-  if is_covered ctor
+let accum_coverage (covered, total) (_loc, is_covered) =
+  if is_covered
   then (covered + 1, total + 1)
   else (covered, total + 1)
 
@@ -72,28 +70,27 @@ let colorize content from_offset to_offset color accum =
     (Tty.Normal color, substr)::accum, to_offset
   else accum, from_offset
 
-let debug_range (loc, ctor, pretty, _raw, _reasons) = Loc.(
-  prerr_endlinef "%d:%d,%d:%d: %s (%s)"
+let debug_range (loc, is_covered) = Loc.(
+  prerr_endlinef "%d:%d,%d:%d: (%b)"
     loc.start.line loc.start.column
     loc._end.line loc._end.column
-    pretty
-    ctor
+    is_covered
 )
 
 let rec colorize_file content last_offset accum = Loc.(function
   | [] -> colorize content last_offset (String.length content) Tty.Default accum
-  | (loc, ctor, _str, _raw, _reasons)::rest ->
+  | (loc, is_covered)::rest ->
     let offset, end_offset = loc.start.offset, loc._end.offset in
 
     (* catch up to the start of this range *)
     let accum, offset = colorize content last_offset offset Tty.Default accum in
 
-    let color = if not (is_covered ctor) then Tty.Red else Tty.Default in
+    let color = if not (is_covered) then Tty.Red else Tty.Default in
     let accum, offset = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
 )
 
-let sort_ranges (a_loc, _, _, _, _) (b_loc, _, _, _, _) = Loc.(Pervasives.compare
+let sort_ranges (a_loc, _) (b_loc, _) = Loc.(Pervasives.compare
   (a_loc.start.offset, a_loc._end.offset)
   (b_loc.start.offset, b_loc._end.offset)
 )
@@ -101,12 +98,12 @@ let sort_ranges (a_loc, _, _, _, _) (b_loc, _, _, _, _) = Loc.(Pervasives.compar
 let rec split_overlapping_ranges accum = Loc.(function
   | [] -> accum
   | range::[] -> range::accum
-  | (loc1, ctor1, str1, raw1, reasons1)::(loc2, ctor2, str2, raw2, reasons2)::rest ->
+  | (loc1, is_covered1)::(loc2, is_covered2)::rest ->
       let accum, todo =
         if loc1._end.offset < loc2.start.offset then
           (* range 1 is completely before range 2, so consume range 1 *)
-          (loc1, ctor1, str1, raw1, reasons1)::accum,
-          (loc2, ctor2, str2, raw2, reasons2)::rest
+          (loc1, is_covered1)::accum,
+          (loc2, is_covered2)::rest
 
         else if loc1.start.offset = loc2.start.offset then
           (* range 1 and 2 start at the same place, so consume range 1 and
@@ -117,12 +114,12 @@ let rec split_overlapping_ranges accum = Loc.(function
                 start = { loc2.start with offset = loc1._end.offset + 1 }
               } in
               List.sort sort_ranges (
-                (loc1, ctor1, str1, raw1, reasons1)::
-                (tail_loc, ctor2, str2, raw2, reasons2)::
+                (loc1, is_covered1)::
+                (tail_loc, is_covered2)::
                 rest
               )
             else
-              (loc1, ctor1, str1, raw1, reasons1)::rest
+              (loc1, is_covered1)::rest
           in
           accum, rest
 
@@ -132,8 +129,8 @@ let rec split_overlapping_ranges accum = Loc.(function
           let head_loc = { loc1 with
             _end = { loc1._end with offset = loc2.start.offset - 1 }
           } in
-          (head_loc, ctor1, str1, raw1, reasons1)::accum,
-          (loc2, ctor2, str2, raw2, reasons2)::rest
+          (head_loc, is_covered1)::accum,
+          (loc2, is_covered2)::rest
 
         else
           (* range 2 is in the middle of range 1, so split range 1 and consume
@@ -146,17 +143,17 @@ let rec split_overlapping_ranges accum = Loc.(function
             start = { loc1.start with offset = loc2._end.offset + 1 }
           } in
           let todo =
-            (loc2, ctor2, str2, raw2, reasons2)::
-            (tail_loc, ctor1, str1, raw1, reasons1)::
+            (loc2, is_covered2)::
+            (tail_loc, is_covered1)::
             rest
           in
-          (head_loc, ctor1, str1, raw1, reasons1)::accum,
+          (head_loc, is_covered1)::accum,
           List.sort sort_ranges todo
       in
       split_overlapping_ranges accum todo
 )
 
-let handle_response ~json ~color ~debug types content =
+let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
   if debug then List.iter debug_range types;
 
   begin if color then
@@ -191,9 +188,9 @@ let main option_values root json color debug strip_root path filename () =
     | None -> ServerProt.path_of_input file
   ) in
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc (ServerProt.DUMP_TYPES (file, false));
+  ServerProt.cmd_to_channel oc (ServerProt.COVERAGE file);
 
-  match (Timeout.input_value ic : ServerProt.dump_types_response) with
+  match (Timeout.input_value ic : ServerProt.coverage_response) with
   | Err err ->
       handle_error ~json err (relativize strip_root root)
   | OK resp ->

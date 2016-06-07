@@ -219,6 +219,24 @@ struct
     Marshal.to_channel oc (resp : ServerProt.dump_types_response) [];
     flush oc
 
+  let coverage ~options file_input oc =
+    let file = ServerProt.file_input_get_filename file_input in
+    let file = Loc.SourceFile file in
+    let resp =
+    (try
+       let content = ServerProt.file_input_get_content file_input in
+       let cx = match Types_js.typecheck_contents ~options content file with
+       | _, Some cx, _, _ -> cx
+       | _  -> failwith "Couldn't parse file" in
+      OK (Query_types.covered_types cx)
+    with exn ->
+      let loc = mk_loc file 0 0 in
+      let err = (loc, Printexc.to_string exn) in
+      Err err
+    ) in
+    Marshal.to_channel oc (resp : ServerProt.coverage_response) [];
+    flush oc
+
   let parse_suggest_cmd file =
     let digits = "\\([0-9]+\\)" in
     let re = Printf.sprintf "\\(.*\\):%s:%s,%s:%s"
@@ -458,6 +476,8 @@ struct
         autocomplete ~options client_logging_context fn oc
     | ServerProt.CHECK_FILE (fn, verbose) ->
         check_file ~options fn verbose oc
+    | ServerProt.COVERAGE (fn) ->
+        coverage ~options fn oc
     | ServerProt.DUMP_TYPES (fn, format) ->
         dump_types ~options fn format oc
     | ServerProt.ERROR_OUT_OF_DATE ->

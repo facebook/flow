@@ -33,6 +33,7 @@ let build_revision = match Build_id.build_revision with
 type command =
 | AUTOCOMPLETE of file_input
 | CHECK_FILE of file_input * int option (* verbose *)
+| COVERAGE of file_input
 | DUMP_TYPES of file_input * bool (* filename, include raw *)
 | ERROR_OUT_OF_DATE
 | FIND_MODULE of string * string
@@ -64,6 +65,11 @@ type autocomplete_response = (
 ) Utils_js.ok_or_err
 type dump_types_response = (
   (Loc.t * string * string * string option * Reason_js.t list) list,
+  Loc.t * string
+) Utils_js.ok_or_err
+
+type coverage_response = (
+  (Loc.t * bool) list,
   Loc.t * string
 ) Utils_js.ok_or_err
 
