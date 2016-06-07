@@ -167,11 +167,16 @@ let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
   let percent = (float_of_int covered /. float_of_int total) *. 100. in
 
   if json then
+    let uncovered_locs = types
+      |> List.filter (fun (_, is_covered) -> not is_covered)
+      |> List.map (fun (loc, _) -> loc)
+    in
     let open Hh_json in
     JSON_Object [
       "expressions", JSON_Object [
         "covered_count", int_ covered;
         "uncovered_count", int_ (total - covered);
+        "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason_js.json_of_loc);
       ];
     ]
     |> json_to_string
