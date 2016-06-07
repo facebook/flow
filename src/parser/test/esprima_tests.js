@@ -4934,13 +4934,6 @@ module.exports = {
       'declare function foo();',
       'declare function foo(x): void',
     ],
-    'Declare Module': [
-      'declare module A {}',
-      'declare module "./a/b.js" {}',
-      'declare module A { declare var x: number; }',
-      'declare module A { declare function foo(): number; }',
-      'declare module A { declare class B { foo(): number; } }',
-    ],
     'Invalid Declare Module': [
       'declare Module A {}',
       'declare module {}',

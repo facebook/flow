@@ -239,6 +239,11 @@ end with type t = Impl.t) = struct
         node "DeclareModule" loc [|
           "id", id;
           "body", block m.body;
+          "kind", (
+            match m.kind with
+            | DeclareModule.CommonJS _ -> string "CommonJS"
+            | DeclareModule.ES _ -> string "ES"
+          )
         |]
       )
     | loc, DeclareExportDeclaration export -> DeclareExportDeclaration.(
@@ -247,6 +252,8 @@ end with type t = Impl.t) = struct
         | Some (Function f) -> declare_function f
         | Some (Class c) -> declare_class c
         | Some (DefaultType t) -> _type t
+        | Some (NamedType t) -> type_alias t
+        | Some (Interface i) -> interface_declaration i
         | None -> null
         in
         node "DeclareExportDeclaration" loc [|

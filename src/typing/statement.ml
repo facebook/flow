@@ -327,6 +327,10 @@ and statement_decl cx type_params_map = Ast.Statement.(
         | Some (Class (loc, c)) ->
             statement_decl cx type_params_map (loc, DeclareClass c)
         | Some (DefaultType _) -> ()
+        | Some (NamedType (loc, t)) ->
+            statement_decl cx type_params_map (loc, TypeAlias t)
+        | Some (Interface (loc, i)) ->
+            statement_decl cx type_params_map (loc, InterfaceDeclaration i)
         | None ->
             if not default
             then ()
@@ -1469,7 +1473,7 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc true decl
 
-  | (loc, DeclareModule { DeclareModule.id; body; }) ->
+  | (loc, DeclareModule { DeclareModule.id; body; kind=_; }) ->
     let name = match id with
     | DeclareModule.Identifier ident -> ident_name ident
     | DeclareModule.Literal (_, { Ast.Literal.value = Ast.Literal.String str; _; }) ->
@@ -1582,6 +1586,19 @@ and statement cx type_params_map = Ast.Statement.(
       | Some (DefaultType (loc, t)) ->
           let _type = Anno.convert cx type_params_map (loc, t) in
           [( "<<type>>", loc, "default", Some _type)]
+      | Some (NamedType (_, {
+          TypeAlias.
+          id = (name_loc, {Ast.Identifier.name; _;});
+          right;
+          _;
+        })) ->
+          (* TODO: This is wrong. Should just delegate to `statement cx ...` *)
+          let _type = Anno.convert cx type_params_map right in
+          [(spf "type %s = ..." name, name_loc, name, Some _type)]
+      | Some (Interface (loc, i)) ->
+          let {Interface.id = (name_loc, {Ast.Identifier.name; _;}); _;} = i in
+          statement cx type_params_map (loc, InterfaceDeclaration i);
+          [(spf "interface %s {}" name, name_loc, name, None)]
       | None ->
           [] in
 

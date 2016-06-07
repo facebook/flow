@@ -1632,8 +1632,209 @@ module.exports = {
         },
       },
     },
+    '`declare module {}` with exports': {
+      'declare module "foo" { declare export * from "bar"; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration': null,
+            'specifiers': [{
+              'type': 'ExportBatchSpecifier',
+              'name': null,
+            }],
+            'source': {
+              'type': 'Literal',
+              'value': 'bar',
+            },
+          },
+          'kind': 'ES',
+        },
+      },
+
+      'declare module "foo" { declare export {a,} from "bar"; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration': null,
+            'specifiers': [{
+              'type': 'ExportSpecifier',
+              'id': {
+                'type': 'Identifier',
+                'name': 'a',
+                'typeAnnotation': null,
+              },
+            }],
+            'source': {
+              'type': 'Literal',
+              'value': 'bar',
+            },
+          },
+          'kind': 'ES',
+        },
+      },
+
+      'declare module "foo" { declare export {a,}; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration': null,
+            'specifiers': [{
+              'type': 'ExportSpecifier',
+              'id': {
+                'type': 'Identifier',
+                'name': 'a',
+                'typeAnnotation': null,
+              },
+            }],
+            'source': null,
+          },
+          'kind': 'ES',
+        },
+      },
+
+      'declare module "foo" { declare export var a: number; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration.id': {
+              'type': 'Identifier',
+              'name': 'a',
+              'typeAnnotation.typeAnnotation.type': 'NumberTypeAnnotation',
+            },
+            'specifiers.length': 0,
+            'source': null,
+          },
+        },
+      },
+
+      'declare module "foo" { declare export function bar(p1: number): string; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration': {
+              'type': 'DeclareFunction',
+              'id': {
+                'name': 'bar',
+                'typeAnnotation.typeAnnotation': {
+                  'type': 'FunctionTypeAnnotation',
+                  'params': [{
+                    'type': 'FunctionTypeParam',
+                    'name.name': 'p1',
+                    'typeAnnotation.type': 'NumberTypeAnnotation',
+                  }],
+                  'returnType.type': 'StringTypeAnnotation',
+                },
+              },
+            },
+            'specifiers.length': 0,
+            'source': null,
+          },
+          'kind': 'ES',
+        },
+      },
+
+      'declare module "foo" { declare export class Foo { meth(p1: number): void; } }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration': {
+              'type': 'DeclareClass',
+              'id': {'name': 'Foo', 'typeAnnotation': null},
+              'body.properties': [{
+                'type': 'ObjectTypeProperty',
+                'key': {'type': 'Identifier', 'name': 'meth'},
+                'value': {
+                  'type': 'FunctionTypeAnnotation',
+                  'params': [{
+                    'type': 'FunctionTypeParam',
+                    'name': {'type': 'Identifier', 'name': 'p1'},
+                    'typeAnnotation.type': 'NumberTypeAnnotation',
+                  }],
+                  'returnType.type': 'VoidTypeAnnotation',
+                },
+              }],
+            },
+            'specifiers.length': 0,
+            'source': null,
+          },
+          'kind': 'ES',
+        },
+      },
+
+      'declare module "foo" { declare export type bar = number; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration': {
+              'type': 'TypeAlias',
+              'id': {'type': 'Identifier', 'name': 'bar'},
+              'right.type': 'NumberTypeAnnotation',
+            },
+            'specifiers.length': 0,
+            'source': null,
+          },
+          'kind': 'CommonJS',
+        },
+      },
+
+      'declare module "foo" { declare export type bar = number; declare export var baz: number; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.length': 2,
+          'kind': 'ES',
+        },
+      },
+
+      'declare module "foo" { declare export type bar = number; declare module.exports: number; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.length': 2,
+          'kind': 'CommonJS',
+        },
+      },
+
+      'declare module "foo" { declare export interface bar {} }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.0': {
+            'type': 'DeclareExportDeclaration',
+            'declaration': {
+              'type': 'InterfaceDeclaration',
+              'id': {'type': 'Identifier', 'name': 'bar'},
+            },
+            'specifiers.length': 0,
+            'source': null,
+          },
+          'kind': 'CommonJS',
+        },
+      },
+
+      'declare module "foo" { declare export interface bar {} declare export var baz: number; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.length': 2,
+          'kind': 'ES',
+        },
+      },
+
+      'declare module "foo" { declare export interface bar {} declare module.exports: number; }': {
+        'body.0': {
+          'type': 'DeclareModule',
+          'body.body.length': 2,
+          'kind': 'CommonJS',
+        },
+      },
+    },
     'Invalid Declare Export': {
-      // declare export type is not supported since export type is identical
+      // declare export type is not supported at the toplevel since export type
+			// is identical there.
       'declare export type foo = number;': {
         'errors.0.message': '`declare export type` is not supported. Use `export type` instead.',
       },
@@ -2444,6 +2645,11 @@ module.exports = {
       'declare module A { export default function foo() {} }': {
         'errors': {
           '0.message': 'Unexpected token export',
+        }
+      },
+      'declare module "foo" { declare export var a: number; declare module.exports: number; }': {
+        'errors': {
+          '0.message': 'Found both `declare module.exports` and `declare export` in the same module. Modules can only have 1 since they are either an ES module xor they are a CommonJS module.'
         }
       },
     },
