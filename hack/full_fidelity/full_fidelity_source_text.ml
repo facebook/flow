@@ -57,5 +57,35 @@ let offset_to_position source_text offset =
   OffsetMap.offset_to_position source_text.offset_map offset
 
 (* Take a one-based (line, char) pair, produce a zero-based offset *)
-let position_to_offset source_text (line, character) =
-  OffsetMap.position_to_offset
+let position_to_offset source_text position =
+  OffsetMap.position_to_offset source_text.offset_map position
+
+let is_newline source_text offset =
+  let c = get source_text offset in
+  c = '\r' || c = '\n'
+
+(* Takes an offset, returns the offset of the first character in this line. *)
+let start_of_line source_text offset =
+  OffsetMap.offset_to_line_start_offset source_text.offset_map offset
+
+(* Takes an offset, returns the offset of the last non-newline character
+   in this line, if there is one, or the first newline character in a blank
+   line. Note that if we are on a newline, the last non-newline character in
+   this file could be before the given offset. *)
+let end_of_line source_text offset =
+  let len = length source_text in
+  if len = 0 then
+    0
+  else
+    let sol = start_of_line source_text offset in
+    if is_newline source_text sol then
+      sol
+    else
+      let rec aux i =
+        if i >= len then
+          len - 1
+        else if is_newline source_text i then
+          i - 1
+        else
+          aux i + 1 in
+      aux sol + 1

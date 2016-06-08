@@ -47,3 +47,7 @@ let rec position_to_offset offset_map (line, character) =
     if l < line then failwith "invalid line passed to pos_to_offset"
     else if l = line then o + character - 1
     else position_to_offset t (line, character)
+
+let offset_to_line_start_offset offset_map offset =
+  let (_, c) = offset_to_position offset_map offset in
+  offset - c + 1
