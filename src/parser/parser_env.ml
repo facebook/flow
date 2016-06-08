@@ -162,7 +162,7 @@ type env = {
   comments          : Comment.t list ref;
   labels            : SSet.t;
   exports           : SSet.t ref;
-  last              : Lex_result.t option ref;
+  last_loc          : Loc.t option ref;
   priority          : int;
   strict            : bool;
   in_export         : bool;
@@ -210,7 +210,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     comments          = ref [];
     labels            = SSet.empty;
     exports           = ref SSet.empty;
-    last              = ref None;
+    last_loc          = ref None;
     priority          = 0;
     strict            = parse_options.use_strict;
     in_export         = false;
@@ -293,77 +293,7 @@ let with_error_callback error_callback env =
 
 (* other helper functions: *)
 let error_list env = List.iter (error_at env)
-let last_loc env = match !(env.last) with
-  | None -> None
-  | Some result -> Some (Lex_result.loc result)
-
-let advance env lex_result =
-  (* If there's a token_sink, emit the lexed token before moving forward *)
-  (match !(env.token_sink) with
-    | None -> ()
-    | Some token_sink ->
-        let {Lex_result.lex_loc; lex_token; lex_value; _;} = lex_result in
-        token_sink {
-          token_loc=lex_loc;
-          token=lex_token;
-          (**
-           * The lex mode is useful because it gives context to some
-           * context-sensitive tokens.
-           *
-           * Some examples of such tokens include:
-           *
-           * `=>` - Part of an arrow function? or part of a type annotation?
-           * `<`  - A less-than? Or an opening to a JSX element?
-           * ...etc...
-           *)
-          token_context=(lex_mode env);
-          token_value=lex_value
-        }
-  );
-
-  (* commit the result's lexbuf state, making sure we only move forward *)
-  let lexbuf = Lex_env.lexbuf !(env.lex_env) in
-  assert (lexbuf.Lexing.lex_abs_pos <= lex_result.Lex_result.lex_lb_abs_pos);
-  assert (lexbuf.Lexing.lex_start_pos <= lex_result.Lex_result.lex_lb_start_pos);
-  assert (lexbuf.Lexing.lex_curr_pos <= lex_result.Lex_result.lex_lb_curr_pos);
-  assert (lexbuf.Lexing.lex_last_pos <= lex_result.Lex_result.lex_lb_last_pos);
-  lexbuf.Lexing.lex_abs_pos <- lex_result.Lex_result.lex_lb_abs_pos;
-  lexbuf.Lexing.lex_start_pos <- lex_result.Lex_result.lex_lb_start_pos;
-  lexbuf.Lexing.lex_curr_pos <- lex_result.Lex_result.lex_lb_curr_pos;
-  lexbuf.Lexing.lex_last_pos <- lex_result.Lex_result.lex_lb_last_pos;
-  lexbuf.Lexing.lex_last_action <- lex_result.Lex_result.lex_lb_last_action;
-  lexbuf.Lexing.lex_eof_reached <- lex_result.Lex_result.lex_lb_eof_reached;
-  lexbuf.Lexing.lex_mem <- lex_result.Lex_result.lex_lb_mem;
-  lexbuf.Lexing.lex_start_p <- lex_result.Lex_result.lex_lb_start_p;
-  lexbuf.Lexing.lex_curr_p <- lex_result.Lex_result.lex_lb_curr_p;
-
-  env.lex_env := Lex_env.in_comment_syntax
-    (Lex_result.is_in_comment_syntax lex_result) !(env.lex_env);
-
-  error_list env (Lex_result.errors lex_result);
-  comment_list env (Lex_result.comments lex_result);
-  env.last := Some lex_result;
-  match !(env.lookahead) with
-  | Some la -> Lookahead.junk la
-  | None -> ()
-
-let push_lex_mode env mode =
-  env.lex_mode_stack := mode :: !(env.lex_mode_stack);
-  env.lookahead := None
-
-let pop_lex_mode env =
-  let new_stack = match !(env.lex_mode_stack) with
-  | _mode::stack -> stack
-  | _ -> failwith "Popping lex mode from empty stack" in
-  env.lex_mode_stack := new_stack;
-  env.lookahead := None
-
-let double_pop_lex_mode env =
-  let new_stack = match !(env.lex_mode_stack) with
-  | _::_::stack -> stack
-  | _ -> failwith "Popping lex mode from empty stack" in
-  env.lex_mode_stack := new_stack;
-  env.lookahead := None
+let last_loc env = !(env.last_loc)
 
 let without_error_callback env = { env with error_callback = None }
 
@@ -376,6 +306,233 @@ let enter_function env ~async ~generator = { env with
     allow_await = async;
     allow_yield = generator;
   }
+
+let is_future_reserved = function
+  | "enum" -> true
+  | _ -> false
+
+let is_strict_reserved = function
+  | "interface"
+  | "implements"
+  | "package"
+  | "private"
+  | "protected"
+  | "public"
+  | "static"
+  | "yield" -> true
+  | _ -> false
+
+let is_restricted = function
+  | "eval"
+  | "arguments" -> true
+  | _ -> false
+
+(* Answer questions about what comes next *)
+module Peek = struct
+  open Loc
+  open Lexer_flow.Token
+
+  let token ?(i=0) env = Lex_result.token (lookahead ~i env)
+  let value ?(i=0) env = Lex_result.value (lookahead ~i env)
+  let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
+  let errors ?(i=0) env = Lex_result.errors (lookahead ~i env)
+  let comments ?(i=0) env = Lex_result.comments (lookahead ~i env)
+
+  let is_in_comment_syntax ?(i=0) env =
+    Lex_result.is_in_comment_syntax (lookahead ~i env)
+
+  let lex_env env =
+    Lex_env.in_comment_syntax (is_in_comment_syntax env) !(env.lex_env)
+
+  (* True if there is a line terminator before the next token *)
+  let is_line_terminator env =
+    match last_loc env with
+      | None -> false
+      | Some loc' ->
+          (loc env).start.line > loc'.start.line
+
+  let is_implicit_semicolon env =
+    match token env with
+    | T_EOF | T_RCURLY -> true
+    | T_SEMICOLON -> false
+    | _ -> is_line_terminator env
+
+  let semicolon_loc ?(i=0) env =
+    if token ~i env = T_SEMICOLON
+    then Some (loc ~i env)
+    else None
+
+  (* This returns true if the next token is identifier-ish (even if it is an
+   * error) *)
+  let is_identifier ?(i=0) env =
+    let name = value ~i env in
+    match token ~i env with
+    | _ when
+      is_strict_reserved name ||
+      is_restricted name ||
+      is_future_reserved name-> true
+    | T_LET
+    | T_TYPE
+    | T_OF
+    | T_DECLARE
+    | T_ASYNC
+    | T_AWAIT
+    | T_IDENTIFIER -> true
+    | _ -> false
+
+  let is_function ?(i=0) env =
+    token ~i env = T_FUNCTION ||
+    (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
+
+  let is_class ?(i=0) env =
+    match token ~i env with
+    | T_CLASS
+    | T_AT -> true
+    | _ -> false
+end
+
+
+(*****************************************************************************)
+(* Errors *)
+(*****************************************************************************)
+
+(* Complains about an error at the location of the lookahead *)
+let error env e =
+  let loc = Peek.loc env in
+  error_at env (loc, e)
+
+let get_unexpected_error = Lexer_flow.Token.(function
+  | T_EOF, _ -> Error.UnexpectedEOS
+  | T_NUMBER _, _ -> Error.UnexpectedNumber
+  | T_JSX_TEXT _, _
+  | T_STRING _, _ -> Error.UnexpectedString
+  | T_IDENTIFIER, _ -> Error.UnexpectedIdentifier
+  | _, word when is_future_reserved word -> Error.UnexpectedReserved
+  | _, word when is_strict_reserved word -> Error.StrictReservedWord
+  | _, value -> Error.UnexpectedToken value
+)
+
+let error_unexpected env =
+  (* So normally we consume the lookahead lex result when Eat.token calls
+   * Parser_env.advance, which will add any lexing errors to our list of errors.
+   * However, raising an unexpected error for a lookahead is kind of like
+   * consuming that token, so we should process any lexing errors before
+   * complaining about the unexpected token *)
+  error_list env (Peek.errors env);
+  error env (get_unexpected_error (Peek.token env, Peek.value env))
+
+let error_on_decorators env = List.iter
+  (fun decorator -> error_at env ((fst decorator), Error.UnsupportedDecorator))
+
+let strict_error env e = if strict env then error env e
+let strict_error_at env (loc, e) = if strict env then error_at env (loc, e)
+
+
+(* Consume zero or more tokens *)
+module Eat = struct
+  (* Consume a single token *)
+  let token env =
+    (* If there's a token_sink, emit the lexed token before moving forward *)
+    (match !(env.token_sink) with
+      | None -> ()
+      | Some token_sink ->
+          let token_loc = Peek.loc env in
+          let token = Peek.token env in
+          let token_value = Peek.value env in
+          token_sink {
+            token_loc;
+            token;
+            (**
+             * The lex mode is useful because it gives context to some
+             * context-sensitive tokens.
+             *
+             * Some examples of such tokens include:
+             *
+             * `=>` - Part of an arrow function? or part of a type annotation?
+             * `<`  - A less-than? Or an opening to a JSX element?
+             * ...etc...
+             *)
+            token_context=(lex_mode env);
+            token_value;
+          }
+    );
+
+    (* commit the result's lexbuf state, making sure we only move forward *)
+    let lex_result = lookahead env in
+    let lexbuf = Lex_env.lexbuf !(env.lex_env) in
+    assert (lexbuf.Lexing.lex_abs_pos <= lex_result.Lex_result.lex_lb_abs_pos);
+    assert (lexbuf.Lexing.lex_start_pos <= lex_result.Lex_result.lex_lb_start_pos);
+    assert (lexbuf.Lexing.lex_curr_pos <= lex_result.Lex_result.lex_lb_curr_pos);
+    assert (lexbuf.Lexing.lex_last_pos <= lex_result.Lex_result.lex_lb_last_pos);
+    lexbuf.Lexing.lex_abs_pos <- lex_result.Lex_result.lex_lb_abs_pos;
+    lexbuf.Lexing.lex_start_pos <- lex_result.Lex_result.lex_lb_start_pos;
+    lexbuf.Lexing.lex_curr_pos <- lex_result.Lex_result.lex_lb_curr_pos;
+    lexbuf.Lexing.lex_last_pos <- lex_result.Lex_result.lex_lb_last_pos;
+    lexbuf.Lexing.lex_last_action <- lex_result.Lex_result.lex_lb_last_action;
+    lexbuf.Lexing.lex_eof_reached <- lex_result.Lex_result.lex_lb_eof_reached;
+    lexbuf.Lexing.lex_mem <- lex_result.Lex_result.lex_lb_mem;
+    lexbuf.Lexing.lex_start_p <- lex_result.Lex_result.lex_lb_start_p;
+    lexbuf.Lexing.lex_curr_p <- lex_result.Lex_result.lex_lb_curr_p;
+
+    env.lex_env := Peek.lex_env env;
+
+    error_list env (Peek.errors env);
+    comment_list env (Peek.comments env);
+    env.last_loc := Some (Peek.loc env);
+
+    match !(env.lookahead) with
+    | Some la -> Lookahead.junk la
+    | None -> ()
+
+  let push_lex_mode env mode =
+    env.lex_mode_stack := mode :: !(env.lex_mode_stack);
+    env.lookahead := None
+
+  let pop_lex_mode env =
+    let new_stack = match !(env.lex_mode_stack) with
+    | _mode::stack -> stack
+    | _ -> failwith "Popping lex mode from empty stack" in
+    env.lex_mode_stack := new_stack;
+    env.lookahead := None
+
+  let double_pop_lex_mode env =
+    let new_stack = match !(env.lex_mode_stack) with
+    | _::_::stack -> stack
+    | _ -> failwith "Popping lex mode from empty stack" in
+    env.lex_mode_stack := new_stack;
+    env.lookahead := None
+
+  (* Semicolon insertion is handled here :(. There seem to be 2 cases where
+  * semicolons are inserted. First, if we reach the EOF. Second, if the next
+  * token is } or is separated by a LineTerminator.
+  *)
+  let semicolon env =
+    if not (Peek.is_implicit_semicolon env)
+    then
+      if Peek.token env = Lexer_flow.Token.T_SEMICOLON
+      then token env
+      else error_unexpected env
+end
+
+module Expect = struct
+  let token env t =
+    if Peek.token env <> t then error_unexpected env;
+    Eat.token env
+
+  (* If the next token is t, then eat it and return true
+   * else return false *)
+  let maybe env t =
+    if Peek.token env = t
+    then begin
+      Eat.token env;
+      true
+    end else false
+
+  let contextual env str =
+    if Peek.value env <> str
+    then error_unexpected env;
+    Eat.token env
+end
 
 (* This module allows you to try parsing and rollback if you need. This is not
  * cheap and its usage is strongly discouraged *)
@@ -390,7 +547,7 @@ module Try = struct
     saved_errors         : (Loc.t * Error.t) list;
     saved_comments       : Ast.Comment.t list;
     saved_lb             : Lexing.lexbuf;
-    saved_last           : Lex_result.t option;
+    saved_last_loc       : Loc.t option;
     saved_lex_mode_stack : lex_mode list;
     saved_lex_env        : Lex_env.t;
     token_buffer         : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
@@ -412,7 +569,7 @@ module Try = struct
       saved_errors         = !(env.errors);
       saved_comments       = !(env.comments);
       saved_lb             = Lexing.({lb with lex_abs_pos=lb.lex_abs_pos});
-      saved_last           = !(env.last);
+      saved_last_loc       = !(env.last_loc);
       saved_lex_mode_stack = !(env.lex_mode_stack);
       saved_lex_env        = !(env.lex_env);
       token_buffer;
@@ -429,7 +586,7 @@ module Try = struct
     reset_token_sink ~flush:false env saved_state.token_buffer;
     env.errors := saved_state.saved_errors;
     env.comments := saved_state.saved_comments;
-    env.last := saved_state.saved_last;
+    env.last_loc := saved_state.saved_last_loc;
     env.lex_mode_stack := saved_state.saved_lex_mode_stack;
     env.lex_env := saved_state.saved_lex_env;
     env.lookahead := None;

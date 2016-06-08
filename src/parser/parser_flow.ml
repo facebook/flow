@@ -8,7 +8,6 @@
  *
  *)
 
-module Lex_result = Lexer_flow.Lex_result
 module Token = Lexer_flow.Token
 open Token
 open Parser_env
@@ -17,98 +16,10 @@ open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
 module SMap = Map.Make(String)
-let is_future_reserved = function
-  | "enum" -> true
-  | _ -> false
-
-let is_strict_reserved = function
-  | "interface"
-  | "implements"
-  | "package"
-  | "private"
-  | "protected"
-  | "public"
-  | "static"
-  | "yield" -> true
-  | _ -> false
-
-let is_restricted = function
-  | "eval"
-  | "arguments" -> true
-  | _ -> false
 
 let name_of_id id =
   let (_, {Identifier.name; _;}) = id in
   name
-
-(* Answer questions about what comes next *)
-module Peek = struct
-  open Loc
-
-  (* If you're looping waiting for a token, then use token_loop instead. *)
-  let token ?(i=0) env = Lex_result.token (lookahead ~i env)
-  let value ?(i=0) env = Lex_result.value (lookahead ~i env)
-  let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
-
-  (* True if there is a line terminator before the next token *)
-  let line_terminator env =
-    match last_loc env with
-      | None -> false
-      | Some loc' ->
-          (loc env).start.line > loc'.start.line
-
-  let is_implicit_semicolon env =
-    match token env with
-    | T_EOF | T_RCURLY -> true
-    | T_SEMICOLON -> false
-    | _ -> line_terminator env
-
-  let semicolon_loc ?(i=0) env =
-    if token ~i env = T_SEMICOLON
-    then Some (loc ~i env)
-    else None
-
-  (* This returns true if the next token is identifier-ish (even if it is an
-   * error) *)
-  let identifier ?(i=0) env =
-    let name = value ~i env in
-    match token ~i env with
-    | _ when
-      is_strict_reserved name ||
-      is_restricted name ||
-      is_future_reserved name-> true
-    | T_LET
-    | T_TYPE
-    | T_OF
-    | T_DECLARE
-    | T_ASYNC
-    | T_AWAIT
-    | T_IDENTIFIER -> true
-    | _ -> false
-
-  let _function ?(i=0) env =
-    token ~i env = T_FUNCTION ||
-    (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)
-
-  let _class ?(i=0) env =
-    match token ~i env with
-    | T_CLASS
-    | T_AT -> true
-    | _ -> false
-end
-
-(*****************************************************************************)
-(* Errors *)
-(*****************************************************************************)
-
-(* Complains about an error at the location of the lookahead *)
-let error env e =
-  let loc = Peek.loc env in
-  error_at env (loc, e)
-
-let strict_error env e = if strict env then error env e
-
-let strict_error_at env (loc, e) = if strict env then error_at env (loc, e)
 
 (* Sometimes we add the same error for multiple different reasons. This is hard
    to avoid, so instead we just filter the duplicates out. This function takes
@@ -130,79 +41,6 @@ let filter_duplicate_errors =
       else (ErrorSet.add err set, err::deduped)
     ) (ErrorSet.empty, []) errs in
     List.rev deduped
-
-let get_unexpected_error = function
-  | T_EOF, _ -> Error.UnexpectedEOS
-  | T_NUMBER _, _ -> Error.UnexpectedNumber
-  | T_JSX_TEXT _, _
-  | T_STRING _, _ -> Error.UnexpectedString
-  | T_IDENTIFIER, _ -> Error.UnexpectedIdentifier
-  | _, word when is_future_reserved word -> Error.UnexpectedReserved
-  | _, word when is_strict_reserved word -> Error.StrictReservedWord
-  | _, value -> Error.UnexpectedToken value
-
-let error_unexpected env =
-  let lookahead = lookahead env in
-  (* So normally we consume the lookahead lex result when Eat.token calls
-   * Parser_env.advance, which will add any lexing errors to our list of errors.
-   * However, raising an unexpected error for a lookahead is kind of like
-   * consuming that token, so we should process any lexing errors before
-   * complaining about the unexpected token *)
-  error_list env (Lex_result.errors lookahead);
-  error env (get_unexpected_error (
-    Lex_result.token lookahead,
-    Lex_result.value lookahead
-  ))
-
-let error_on_decorators env = List.iter
-  (fun decorator -> error_at env ((fst decorator), Error.UnsupportedDecorator))
-
-(* Consume zero or more tokens *)
-module Eat : sig
-  val token : env -> unit
-  val push_lex_mode : env -> lex_mode -> unit
-  val pop_lex_mode : env -> unit
-  val double_pop_lex_mode : env -> unit
-  val semicolon : env -> unit
-end = struct
-  (* TODO should this be in Parser_env? *)
-  (* Consume a single token *)
-  let token env = Parser_env.advance env (lookahead env)
-  let push_lex_mode = Parser_env.push_lex_mode
-  let pop_lex_mode = Parser_env.pop_lex_mode
-  let double_pop_lex_mode = Parser_env.double_pop_lex_mode
-
-  (* Semicolon insertion is handled here :(. There seem to be 2 cases where
-  * semicolons are inserted. First, if we reach the EOF. Second, if the next
-  * token is } or is separated by a LineTerminator.
-  *)
-  let semicolon env =
-    if not (Peek.is_implicit_semicolon env)
-    then
-      if Peek.token env = T_SEMICOLON
-      then token env
-      else error_unexpected env
-end
-
-module Expect = struct
-  let token env t =
-    if Peek.token env <> t then error_unexpected env;
-    Eat.token env
-
-  (* If the next token is t, then eat it and return true
-   * else return false *)
-  let maybe env t =
-    if Peek.token env = t
-    then begin
-      Eat.token env;
-      true
-    end else false
-
-  let contextual env str =
-    if Peek.value env <> str
-    then error_unexpected env;
-    Eat.token env
-end
 
 let with_loc fn env =
   let start_loc = Peek.loc env in
@@ -1128,16 +966,16 @@ end = struct
           raise Try.Rollback
         (* async x => 123 -- and we've already parsed async as an identifier
          * expression *)
-        | _ when Peek.identifier env -> begin match snd ret with
+        | _ when Peek.is_identifier env -> begin match snd ret with
           | Expression.Identifier (_, {Identifier.name = "async"; _ })
-              when not (Peek.line_terminator env) ->
+              when not (Peek.is_line_terminator env) ->
             raise Try.Rollback
           | _ -> ret
           end
         | _ -> ret
 
       in fun env ->
-        match Peek.token env, Peek.identifier env with
+        match Peek.token env, Peek.is_identifier env with
         | T_YIELD, _ when (allow_yield env) -> yield env
         | T_LPAREN, _
         | T_LESS_THAN, _
@@ -1451,7 +1289,7 @@ end = struct
     and postfix env =
       let argument = left_hand_side env in
       (* No line terminator allowed before operator *)
-      if Peek.line_terminator env
+      if Peek.is_line_terminator env
       then argument
       else let op = Expression.Update.(match Peek.token env with
       | T_INCR -> Some Increment
@@ -1478,7 +1316,7 @@ end = struct
     and left_hand_side env =
       let expr = match Peek.token env with
       | T_NEW -> _new env (fun new_expr _args -> new_expr)
-      | _ when Peek._function env -> _function env
+      | _ when Peek.is_function env -> _function env
       | _ -> primary env in
       let expr = member env expr in
       match Peek.token env with
@@ -1534,7 +1372,7 @@ end = struct
           _new env finish_fn'
       | _ ->
           let expr = match Peek.token env with
-          | _ when Peek._function env -> _function env
+          | _ when Peek.is_function env -> _function env
           | _ -> primary env in
           let callee = member (env |> with_no_call true) expr in
           (* You can do something like
@@ -1702,7 +1540,7 @@ end = struct
             typeAnnotation = None;
             optional = false; } in
           loc, Expression.Identifier id
-      | _ when Peek.identifier env ->
+      | _ when Peek.is_identifier env ->
           let id = Parse.identifier env in
           fst id, Expression.Identifier id
       | t ->
@@ -1861,7 +1699,7 @@ end = struct
         let typeParameters = Type.type_parameter_declaration env in
         let params, defaults, rest, returnType =
           (* Disallow all fancy features for identifier => body *)
-          if Peek.identifier env && typeParameters = None
+          if Peek.is_identifier env && typeParameters = None
           then
             let id =
               Parse.identifier ~restricted_error:Error.StrictParamName env in
@@ -1882,7 +1720,7 @@ end = struct
           then without_error_callback env
           else env in
 
-        if Peek.line_terminator env && Peek.token env = T_ARROW
+        if Peek.is_line_terminator env && Peek.token env = T_ARROW
         then error env Error.NewlineBeforeArrow;
         Expect.token env T_ARROW;
 
@@ -1937,10 +1775,9 @@ end = struct
      * x.if
      *)
     and identifier_or_reserved_keyword env =
-      let lex_result = lookahead env in
-      let lex_token = Lex_result.token lex_result in
-      let lex_value = Lex_result.value lex_result in
-      let lex_loc = Lex_result.loc lex_result in
+      let lex_token = Peek.token env in
+      let lex_value = Peek.value env in
+      let lex_loc = Peek.loc env in
       match lex_token with
       | T_IDENTIFIER -> Parse.identifier env, None
       | _ ->
@@ -2118,7 +1955,7 @@ end = struct
         end else begin
           (* look for a following identifier to tell whether to parse a function
            * or not *)
-          let async = Peek.identifier ~i:1 env && Declaration.async env in
+          let async = Peek.is_identifier ~i:1 env && Declaration.async env in
           Property (match async , Declaration.generator env async, key env with
           | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
               "get"; _}) as key)) ->
@@ -2465,7 +2302,7 @@ end = struct
       Expect.token env T_CLASS;
       let tmp_env = env |> with_no_let true in
       let id = (
-        match in_export env, Peek.identifier tmp_env with
+        match in_export env, Peek.is_identifier tmp_env with
         | true, false -> None
         | _ -> Some(Parse.identifier tmp_env)
       ) in
@@ -2732,7 +2569,7 @@ end = struct
       let test = Parse.expression env in
       Expect.token env T_RPAREN;
       let consequent = match Peek.token env with
-      | _ when Peek._function env ->
+      | _ when Peek.is_function env ->
           strict_error env Error.StrictFunctionStatement;
           Declaration._function env
       | _ -> Parse.statement env in
@@ -2820,7 +2657,7 @@ end = struct
     and throw env =
       let start_loc = Peek.loc env in
       Expect.token env T_THROW;
-      if Peek.line_terminator env
+      if Peek.is_line_terminator env
       then error_at env (start_loc, Error.NewlineAfterThrow);
       let argument = Parse.expression env in
       let end_loc = match Peek.semicolon_loc env with
@@ -3014,7 +2851,7 @@ end = struct
       })
 
     and type_alias env =
-      if Peek.identifier ~i:1 env
+      if Peek.is_identifier ~i:1 env
       then
         let loc, type_alias = type_alias_helper env in
         loc, Statement.TypeAlias type_alias
@@ -3033,7 +2870,7 @@ end = struct
 
       in fun env ->
         let start_loc = Peek.loc env in
-        if Peek.identifier ~i:1 env
+        if Peek.is_identifier ~i:1 env
         then begin
           if not (should_parse_types env)
           then error env Error.UnexpectedTypeInterface;
@@ -3310,7 +3147,7 @@ end = struct
               (* export default function foo (...) { ... } *)
               let fn = Declaration._function env in
               fst fn, Some (Declaration fn)
-          | _ when Peek._class env ->
+          | _ when Peek.is_class env ->
               (* export default class foo { ... } *)
               let _class = Object.class_declaration env decorators in
               fst _class, Some (Declaration _class)
@@ -3375,11 +3212,11 @@ end = struct
       | T_LET
       | T_CONST
       | T_VAR
-      (* not using Peek._class here because it would guard all of the
+      (* not using Peek.is_class here because it would guard all of the
         * cases *)
       | T_AT
       | T_CLASS
-      (* not using Peek._function here because it would guard all of the
+      (* not using Peek.is_function here because it would guard all of the
         * cases *)
       | T_ASYNC
       | T_FUNCTION ->
@@ -3677,7 +3514,7 @@ end = struct
             ImportTypeof, None
           | _ -> ImportValue, None
         in
-        match Peek.token env, Peek.identifier env with
+        match Peek.token env, Peek.is_identifier env with
         (* import "ModuleName"; *)
         | T_STRING (str_loc, value, raw, octal), _
             when importKind = ImportValue ->
@@ -4293,15 +4130,15 @@ end = struct
 
 
   and statement_list_item ?(decorators=[]) env =
-    if not (Peek._class env)
+    if not (Peek.is_class env)
     then error_on_decorators env decorators;
     Statement.(match Peek.token env with
     (* Remember kids, these look like statements but they're not
       * statements... (see section 13) *)
     | T_LET -> _let env
     | T_CONST -> var_or_const env
-    | _ when Peek._function env -> Declaration._function env
-    | _ when Peek._class env -> class_declaration env decorators
+    | _ when Peek.is_function env -> Declaration._function env
+    | _ when Peek.is_class env -> class_declaration env decorators
     | T_INTERFACE -> interface env
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
@@ -4327,7 +4164,7 @@ end = struct
     | T_TRY -> _try env
     | T_WHILE -> _while env
     | T_WITH -> _with env
-    | _ when Peek.identifier env -> maybe_labeled env
+    | _ when Peek.is_identifier env -> maybe_labeled env
     (* If we see an else then it's definitely an error, but we can probably
      * assume that this is a malformed if statement that is missing the if *)
     | T_ELSE -> _if env

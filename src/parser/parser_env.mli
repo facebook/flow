@@ -11,8 +11,6 @@
 (* This module provides a layer between the lexer and the parser which includes
  * some parser state and some lexer state *)
 
-open Lexer_flow
-open Spider_monkey_ast
 module SSet : Set.S with type t = Set.Make(String).t
 
 type lex_mode =
@@ -55,10 +53,9 @@ val init_env :
 (* getters: *)
 val strict : env -> bool
 val last_loc : env -> Loc.t option
-val lookahead : ?i:int -> env -> Lex_result.t
 val in_export : env -> bool
 val labels : env -> SSet.t
-val comments : env -> Comment.t list
+val comments : env -> Spider_monkey_ast.Comment.t list
 val in_loop : env -> bool
 val in_switch : env -> bool
 val in_function : env -> bool
@@ -74,11 +71,14 @@ val should_parse_types : env -> bool
 
 (* mutators: *)
 val error_at : env -> Loc.t * Parse_error.t -> unit
-val comment_list : env -> Comment.t list -> unit
+val error : env -> Parse_error.t -> unit
+val error_unexpected : env -> unit
+val error_on_decorators : env -> (Loc.t * 'a) list -> unit
+val strict_error : env -> Parse_error.t -> unit
+val strict_error_at : env -> Loc.t * Parse_error.t -> unit
+val get_unexpected_error : Lexer_flow.Token.t * string -> Parse_error.t
+val comment_list : env -> Spider_monkey_ast.Comment.t list -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
-val push_lex_mode : env -> lex_mode -> unit
-val pop_lex_mode : env -> unit
-val double_pop_lex_mode : env -> unit
 val record_export: env -> Loc.t * string -> unit
 
 (* functional operations -- these return shallow copies, so future mutations to
@@ -100,6 +100,38 @@ val without_error_callback : env -> env
 val add_label : env -> string -> env
 val enter_function : env -> async:bool -> generator:bool -> env
 
+val is_future_reserved : string -> bool
+val is_strict_reserved : string -> bool
+val is_restricted : string -> bool
+
+module Peek : sig
+  val token : ?i:int -> env -> Lexer_flow.Token.t
+  val value : ?i:int -> env -> string
+  val loc : ?i:int -> env -> Loc.t
+  val errors : ?i:int -> env -> (Loc.t * Parse_error.t) list
+  val comments : ?i:int -> env -> Spider_monkey_ast.Comment.t list
+  val is_line_terminator : env -> bool
+  val is_implicit_semicolon : env -> bool
+  val semicolon_loc : ?i:int -> env -> Loc.t option
+  val is_identifier : ?i:int -> env -> bool
+  val is_function : ?i:int -> env -> bool
+  val is_class : ?i:int -> env -> bool
+end
+
+module Eat : sig
+  val token : env -> unit
+  val push_lex_mode : env -> lex_mode -> unit
+  val pop_lex_mode : env -> unit
+  val double_pop_lex_mode : env -> unit
+  val semicolon : env -> unit
+end
+
+module Expect : sig
+  val token : env -> Lexer_flow.Token.t -> unit
+  val maybe : env -> Lexer_flow.Token.t -> bool
+  val contextual : env -> string -> unit
+end
+
 module Try : sig
   type 'a parse_result =
     | ParsedSuccessfully of 'a
@@ -109,6 +141,3 @@ module Try : sig
 
   val to_parse: env -> (env -> 'a) -> 'a parse_result
 end
-
-(* TODO get rid of this abomination *)
-val advance : env -> Lex_result.t -> unit
