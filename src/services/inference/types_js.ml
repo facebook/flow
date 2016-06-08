@@ -156,10 +156,11 @@ let typecheck_contents ~options ?verbose contents filename =
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
   let use_strict = Options.modules_are_use_strict options in
+  let max_tokens = Options.max_header_tokens options in
   let timing, (errors, parse_result, info) =
     with_timer "Parsing" timing (fun () ->
       let docblock_errors, info =
-        Parsing_service_js.get_docblock filename contents in
+        Parsing_service_js.get_docblock ~max_tokens filename contents in
       let parse_result = Parsing_service_js.do_parse
         ~fail:false ~types_mode ~use_strict ~info
         contents filename
@@ -397,8 +398,9 @@ let recheck genv env modified =
   let timing, (modified, (freshparsed, freshparse_skips, freshparse_fail, freshparse_errors)) =
     with_timer ~options "Parsing" timing (fun () ->
       let profile = Options.should_profile options in
+      let max_header_tokens = Options.max_header_tokens options in
       Parsing_service_js.reparse
-        ~types_mode ~use_strict ~profile
+        ~types_mode ~use_strict ~profile ~max_header_tokens
         workers modified
     ) in
   let modified_count = FilenameSet.cardinal modified in
@@ -512,12 +514,13 @@ let full_check workers ~ordered_libs parse_next options =
   let use_strict = Options.modules_are_use_strict options in
 
   let profile = Options.should_profile options in
+  let max_header_tokens = Options.max_header_tokens options in
 
   Flow_logger.log "Parsing";
   let timing, (parsed, skipped_files, error_files, errors) =
     with_timer ~options "Parsing" timing (fun () ->
       Parsing_service_js.parse
-        ~types_mode ~use_strict ~profile
+        ~types_mode ~use_strict ~profile ~max_header_tokens
         workers parse_next
     ) in
   let error_filenames = List.map (fun (file, _) -> file) error_files in

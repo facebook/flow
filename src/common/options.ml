@@ -64,6 +64,7 @@ type t = {
   opt_shm_min_avail: int;
   opt_shm_dep_table_pow: int;
   opt_shm_hash_table_pow: int;
+  opt_max_header_tokens: int;
 }
 
 let default_error_flags = {
@@ -93,6 +94,7 @@ let is_debug_mode opts = opts.opt_debug
 let is_server_mode opts = opts.opt_server_mode
 let lib_paths opts = opts.opt_libs
 let log_file opts = opts.opt_log_file
+let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
 let module_file_exts opts = opts.opt_module_file_exts

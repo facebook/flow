@@ -33,6 +33,7 @@ val parse:
   types_mode: types_mode ->
   use_strict: bool ->
   profile: bool ->
+  max_header_tokens: int ->
   Worker.t list option ->       (* Some=parallel, None=serial *)
   (unit -> filename list) ->    (* delivers buckets of filenames *)
   results                       (* job results, not asts *)
@@ -42,6 +43,7 @@ val reparse:
   types_mode: types_mode ->
   use_strict: bool ->
   profile: bool ->
+  max_header_tokens: int ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
   FilenameSet.t * results   (* modified files and job results *)
@@ -65,6 +67,7 @@ val register_hook:
   unit
 
 val get_docblock:
+  max_tokens:int -> (* how many tokens to check in the beginning of the file *)
   filename ->
   string ->
   Errors_js.ErrorSet.t option * Docblock.t

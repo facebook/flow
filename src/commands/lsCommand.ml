@@ -140,6 +140,9 @@ let main strip_root ignore_flag include_flag root () =
     opt_esproposal_export_star_as = Options.ESPROPOSAL_WARN;
     opt_ignore_fbt = false;
     opt_ignore_non_literal_requires = false;
+    opt_max_header_tokens = FlowConfig.(
+      flowconfig.options.Opts.max_header_tokens
+    )
   } in
 
   let _, libs = Files_js.init options in

@@ -125,11 +125,13 @@ let string_of_docblock_error = function
   | Docblock.MultipleProvidesModuleAttributes ->
     "Unexpected @providesModule declaration. Only one per file is allowed."
 
-let get_docblock file content : Errors_js.ErrorSet.t option * Docblock.t =
+let get_docblock
+  ~max_tokens file content
+: Errors_js.ErrorSet.t option * Docblock.t =
   match file with
   | Loc.JsonFile _ -> None, Docblock.default_info
   | _ ->
-    let errors, docblock = Docblock.extract file content in
+    let errors, docblock = Docblock.extract ~max_tokens file content in
     if errors = [] then None, docblock
     else
       let errs = List.fold_left (fun acc (loc, err) ->
@@ -178,7 +180,11 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
-let reducer ~types_mode ~use_strict (ok, skips, fails, errors) file =
+let reducer
+  ~types_mode ~use_strict ~max_header_tokens
+  (ok, skips, fails, errors)
+  file
+: results =
   (* It turns out that sometimes files appear and disappear very quickly. Just
    * because someone told us that this file exists and needs to be parsed, it
    * doesn't mean it actually still exists. If anything goes wrong reading this
@@ -195,7 +201,7 @@ let reducer ~types_mode ~use_strict (ok, skips, fails, errors) file =
       None in
   match content with
   | Some content ->
-      begin match get_docblock file content with
+      begin match get_docblock ~max_tokens:max_header_tokens file content with
       | None, info ->
         begin match (do_parse ~types_mode ~use_strict ~info content file) with
         | Parse_ok ast ->
@@ -234,11 +240,14 @@ let merge (ok1, skip1, fail1, errors1) (ok2, skip2, fail2, errors2) =
 
 (***************************** public ********************************)
 
-let parse ~types_mode ~use_strict ~profile workers next =
+let parse
+  ~types_mode ~use_strict ~profile ~max_header_tokens
+  workers next
+: results =
   let t = Unix.gettimeofday () in
   let ok, skip, fail, errors = MultiWorker.call
     workers
-    ~job: (List.fold_left (reducer ~types_mode ~use_strict))
+    ~job: (List.fold_left (reducer ~types_mode ~use_strict ~max_header_tokens))
     ~neutral: (FilenameSet.empty, [], [], [])
     ~merge: merge
     ~next: next in
@@ -256,12 +265,12 @@ let parse ~types_mode ~use_strict ~profile workers next =
 
   (ok, skip, fail, errors)
 
-let reparse ~types_mode ~use_strict ~profile workers files =
+let reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
   let next = Bucket.make (FilenameSet.elements files) in
   let ok, skips, fails, errors =
-    parse ~types_mode ~use_strict ~profile workers next in
+    parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
   let modified = List.fold_left (fun acc (fail, _) ->
     FilenameSet.add fail acc
   ) ok fails in

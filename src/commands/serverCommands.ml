@@ -332,6 +332,9 @@ module OptionParser(Config : CONFIG) = struct
       opt_esproposal_class_instance_fields = FlowConfig.(
         flowconfig.options.Opts.esproposal_class_instance_fields
       );
+      opt_max_header_tokens = FlowConfig.(
+        flowconfig.options.Opts.max_header_tokens
+      )
     };
     ()
 

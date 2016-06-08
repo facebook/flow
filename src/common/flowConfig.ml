@@ -63,6 +63,7 @@ module Opts = struct
     strip_root: bool;
     all: bool;
     log_file: Path.t option;
+    max_header_tokens: int;
     max_workers: int;
     temp_dir: string;
     shm_dirs: string list;
@@ -140,6 +141,7 @@ module Opts = struct
     strip_root = false;
     all = false;
     log_file = None;
+    max_header_tokens = 10;
     max_workers = Sys_utils.nbr_procs;
     temp_dir = default_temp_dir;
     shm_dirs = default_shm_dirs;
@@ -415,6 +417,15 @@ let parse_options config lines =
       setter = (fun opts v -> {
         opts with log_file = Some v;
       });
+    }
+
+    |> define_opt "max_header_tokens" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts v ->
+        {opts with max_header_tokens = v;}
+      );
     }
 
     |> define_opt "module.ignore_non_literal_requires" {

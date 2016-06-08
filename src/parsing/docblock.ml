@@ -35,7 +35,7 @@ let default_info = {
 (* Avoid lexing unbounded in perverse cases *)
 let max_tokens = 10
 
-let extract : Loc.filename -> string -> error list * t =
+let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
   let words_rx = Str.regexp "[ \t\r\n\\*/]+" in
 
   (* walks a list of words, returns a list of errors and the extracted info.
@@ -79,7 +79,17 @@ let extract : Loc.filename -> string -> error list * t =
     -> loc, s
   in
 
-  fun filename content ->
+  let map_n =
+    let rec helper f remaining acc = function
+      | [] -> List.rev acc
+      | hd::rest ->
+        if remaining <= 0 then List.rev acc
+        else helper f (remaining - 1) ((f hd)::acc) rest
+    in
+    fun f n lst -> helper f n [] lst
+  in
+
+  fun ~max_tokens filename content ->
     (* Consume tokens in the file until we get a comment. This is a hack to
      * support Nuclide, which needs 'use babel' as the first token due to
      * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
@@ -103,8 +113,8 @@ let extract : Loc.filename -> string -> error list * t =
               -> get_first_comment_contents ~i:(i + 1) env
             | _ -> None
           )
-        | comments
-          -> Some (List.map string_of_comment comments)
+        | comments ->
+          Some (map_n string_of_comment (max_tokens - i) comments)
       else None in
     let info =
       let filename_str = Loc.string_of_filename filename in
