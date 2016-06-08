@@ -1,0 +1,14 @@
+template.js:5
+  5: (`baz`: number); // error
+      ^^^^^ string. This type is incompatible with
+  5: (`baz`: number); // error
+             ^^^^^^ number
+
+template.js:8
+  8: `foo ${{bar: 123}} baz`; // error, object can't be appended
+            ^^^^^^^^^^ object literal. This type cannot be added to
+  8: `foo ${{bar: 123}} baz`; // error, object can't be appended
+     ^^^^^^^^^^^^^^^^^^^^^^^ string
+
+
+Found 2 errors

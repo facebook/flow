@@ -2759,12 +2759,35 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       ret
 
   | TemplateLiteral {
-      (* TODO: walk quasis? *)
-      TemplateLiteral.quasis = _;
+      TemplateLiteral.quasis;
       expressions
     } ->
-      List.iter (fun e -> ignore (expression cx type_params_map e)) expressions;
-      StrT.at loc
+      let reason = mk_reason "string" loc in
+      let strt_of_quasi = function
+      | (elem_loc, {
+          TemplateLiteral.Element.value = {
+            TemplateLiteral.Element.cooked;
+            _
+          };
+          _
+        }) -> StrT (mk_reason "string" elem_loc, Type.Literal cooked)
+      in
+      begin match quasis with
+      | head::rest ->
+          let headt = strt_of_quasi head in
+          List.fold_left2 (fun acc expr elem ->
+            let e = expression cx type_params_map expr in
+            let tailt = strt_of_quasi elem in
+            let acc = Flow.mk_tvar_where cx reason (fun t_out ->
+              Flow.flow cx (acc, AdderT (reason, e, t_out));
+            ) in
+            Flow.mk_tvar_where cx reason (fun t_out ->
+              Flow.flow cx (acc, AdderT (reason, tailt, t_out));
+            )
+          ) headt expressions rest
+      | [] ->
+          StrT.at loc (* impossible *)
+      end
 
   | JSXElement e ->
       jsx cx type_params_map e

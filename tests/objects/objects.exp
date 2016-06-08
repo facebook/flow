@@ -102,22 +102,28 @@ objects.js:9
   3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
                      ^^^^^^ string
 
-objects.js:14
- 14: y['foo'] = 123; // error, number !~> string
-                ^^^ number. This type is incompatible with
- 13: var y : {foo: string} = {foo: 'bar'};
-                   ^^^^^^ string
+objects.js:12
+ 12: (x[`foo`]: string);   // error, key doesn't exist
+        ^^^^^ property `foo`. Property not found in
+ 12: (x[`foo`]: string);   // error, key doesn't exist
+      ^ object type
 
 objects.js:15
- 15: y['bar'] = 'abc'; // error, property not found
+ 15: y['foo'] = 123; // error, number !~> string
+                ^^^ number. This type is incompatible with
+ 14: var y : {foo: string} = {foo: 'bar'};
+                   ^^^^^^ string
+
+objects.js:16
+ 16: y['bar'] = 'abc'; // error, property not found
        ^^^^^ property `bar`. Property not found in
- 15: y['bar'] = 'abc'; // error, property not found
+ 16: y['bar'] = 'abc'; // error, property not found
      ^ object type
 
-objects.js:17
- 17: (y['hasOwnProperty']: string); // error, prototype method is not a string
+objects.js:18
+ 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
       ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 17: (y['hasOwnProperty']: string); // error, prototype method is not a string
+ 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
                            ^^^^^^ string
 
 unaliased_assign.js:18
@@ -127,4 +133,4 @@ unaliased_assign.js:18
                     ^^^^^^ string
 
 
-Found 11 errors
+Found 12 errors

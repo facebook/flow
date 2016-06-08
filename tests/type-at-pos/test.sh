@@ -26,3 +26,5 @@ printf "predicates.js - null: "
 "$FLOW" type-at-pos predicates.js 4 12 --strip-root --json
 printf "predicates.js - undefined: "
 "$FLOW" type-at-pos predicates.js 5 12 --strip-root --json
+printf "templates.js:2:7 = "
+"$FLOW" type-at-pos templates.js 2 7 --strip-root --json
