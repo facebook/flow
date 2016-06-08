@@ -23,7 +23,18 @@ module WithSyntax(Syntax: SyntaxType) = struct
     f node;
     List.iter (iter f) (Syntax.children node)
 
+  (* This depth-first traversal applies the function to the parent node,
+     updating the accumulator, *before* recursing on the children
+     left-to-right. *)
   let rec fold f acc node =
-    List.fold_left (fold f) (f acc node) (Syntax.children node)
+    let acc = (f acc node) in
+    List.fold_left (fold f) acc (Syntax.children node)
+
+  (* This depth-first applies the function to the parent node,
+     updating the accumulator, *after* recursing on the children
+     left-to-right. *)
+  let rec fold_post f acc node =
+    let acc = List.fold_left (fold_post f) acc (Syntax.children node) in
+    f acc node
 
 end
