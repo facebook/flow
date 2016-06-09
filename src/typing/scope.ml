@@ -155,7 +155,13 @@ module Entry = struct
     *)
   let havoc name entry =
     match entry with
-    | Type _
+    | Type _ ->
+      entry
+    | Value ({ kind = Const _; specific = Type.EmptyT _; _ } as v) ->
+      (* cleared consts: see note on Env_js.reset_current_activation *)
+      if Reason_js.is_internal_name name
+      then entry
+      else Value { v with specific = v.general }
     | Value { kind = Const _; _ } ->
       entry
     | Value v ->
