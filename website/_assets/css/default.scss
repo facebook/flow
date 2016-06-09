@@ -328,7 +328,7 @@ header.subhero {
 }
 
 section.content {
-    padding: 20px 0;
+    padding: 30px 0;
 }
 
 section.content article ul li,
@@ -668,4 +668,31 @@ input#algolia-doc-search:focus {
 
 .aa-cursor .algolia-docsearch-suggestion {
     background: #f1f3f5;
+}
+
+.fourOhFour section.content article {
+    width: 100%;
+    font-size: 12px;
+}
+
+.fourOhFour section.content .extraDetails {
+    display: none;
+}
+
+@media (min-width: 481px) {
+  .fourOhFour section.content article {
+    background-image: url(asset-path('flow-no-wordmark.png'));
+    background-size: 241px 300px;
+    background-repeat: no-repeat;
+    padding-left: 260px;
+    font-size: 16px;
+  }
+
+  .fourOhFour section.content .extraDetails {
+      display: inline;
+  }
+}
+
+.fourOhFour article h1 {
+  margin-bottom: 15px;
 }
