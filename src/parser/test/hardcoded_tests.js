@@ -3186,6 +3186,118 @@ module.exports = {
           'computed': true,
         }]
       },
+      'class X {\n  x = "y"\n  foo() {}\n}': {
+        '%parse_options%': {
+          'esproposal_class_instance_fields': true,
+        },
+        'body.0.body.body': [{
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'value': { 'type': 'Literal', 'value': 'y'},
+          'static': false,
+          'computed': false,
+        }, {
+          'type': 'MethodDefinition',
+          'key': {
+            'type': 'Identifier',
+            'name': 'foo',
+          },
+          'value.type': 'FunctionExpression',
+          'kind': 'method',
+        }],
+        'errors': [],
+      },
+      'class X {\n  x = "y"\n  [computed] = "z"\n}': {
+        '%parse_options%': {
+          'esproposal_class_instance_fields': true,
+        },
+        'body.0.body.body.0': {
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'value': {
+            'type': 'AssignmentExpression',
+            'operator': '=',
+            'left': {
+              'type': 'MemberExpression',
+              'object.value': 'y',
+              'property.name': 'computed',
+            },
+            'right': {
+              'type': 'Literal',
+              'value': 'z',
+            },
+          },
+          'static': false,
+          'computed': false,
+        },
+        'errors': [],
+      },
+      'class X {\n  x = "y"\n  [computed]: string\n}': {
+        '%parse_options%': {
+          'esproposal_class_instance_fields': true,
+        },
+        'body.0.body.body.0': {
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'value': {
+            'type': 'MemberExpression',
+            'object.value': 'y',
+            'property.name': 'computed',
+          },
+          'static': false,
+          'computed': false,
+        },
+        'errors.0': {
+          'loc.start.line': 3,
+          'loc.start.column': 12,
+          'loc.end.line': 3,
+          'loc.end.column': 13,
+          'message': 'Unexpected token :'
+        },
+      },
+      'class X {\n  x: string\n  [computed]: string\n}': {
+        'body.0.body.body': [{
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+          'value': null,
+          'static': false,
+          'computed': false,
+        }, {
+          'type': 'ClassProperty',
+          'key.name': 'computed',
+          'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+          'value': null,
+          'static': false,
+          'computed': true,
+        }],
+        'errors': [{
+          'loc.start.line': 3,
+          'loc.start.column': 2,
+          'loc.end.line': 3,
+          'loc.end.column': 3,
+          'message': 'Unexpected token ['
+        }],
+      },
+      'class X {\n  x: string\n  foo(): void {}\n}': {
+        'body.0.body.body': [{
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'typeAnnotation.typeAnnotation.type': 'StringTypeAnnotation',
+          'value': null,
+          'static': false,
+          'computed': false,
+        }, {
+          'type': 'MethodDefinition',
+          'key': {
+            'type': 'Identifier',
+            'name': 'foo',
+          },
+          'value.type': 'FunctionExpression',
+          'kind': 'method',
+        }],
+        'errors': [],
+      },
     },
     'Comments': {
       // Regression test: "/*" should be allowed inside block comments

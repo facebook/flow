@@ -166,7 +166,7 @@ end = struct
       postfix_with env t
 
     and postfix_with env t =
-      if Expect.maybe env T_LBRACKET
+      if not (Peek.is_line_terminator env) && Expect.maybe env T_LBRACKET
       then begin
         let end_loc = Peek.loc env in
         Expect.token env T_RBRACKET;
@@ -2208,7 +2208,7 @@ end = struct
             ) else None in
           let end_loc = Peek.loc env in
           if Expect.maybe env T_SEMICOLON then () else begin
-            if Peek.token ~i:1 env == T_LBRACKET || Peek.token ~i:1 env == T_LPAREN then error_unexpected env
+            if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then error_unexpected env
           end;
           let loc = Loc.btwn start_loc end_loc in
           Ast.Class.(Body.Property (loc, Property.({
