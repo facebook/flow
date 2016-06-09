@@ -405,16 +405,6 @@ module Lex_result = struct
     lex_value: string;
     lex_errors: (Loc.t * Parse_error.t) list;
     lex_comments: Ast.Comment.t list;
-    lex_result_in_comment_syntax: bool;
-    lex_lb_abs_pos: int;
-    lex_lb_start_pos: int;
-    lex_lb_curr_pos: int;
-    lex_lb_last_pos: int;
-    lex_lb_last_action: int;
-    lex_lb_eof_reached: bool;
-    lex_lb_mem: int array;
-    lex_lb_start_p: Lexing.position;
-    lex_lb_curr_p: Lexing.position;
   }
 
   let token result = result.lex_token
@@ -422,7 +412,6 @@ module Lex_result = struct
   let value result = result.lex_value
   let comments result = result.lex_comments
   let errors result = result.lex_errors
-  let is_in_comment_syntax result = result.lex_result_in_comment_syntax
 
   let debug_string_of_lex_result lex_result =
     Printf.sprintf
@@ -430,32 +419,12 @@ module Lex_result = struct
         lex_token = %s\n  \
         lex_value = %S\n  \
         lex_errors = (length = %d)\n  \
-        lex_comments = (length = %d)\n  \
-        lex_result_in_comment_syntax = %b\n  \
-        lex_lb_abs_pos = %d\n  \
-        lex_lb_start_pos = %d\n  \
-        lex_lb_curr_pos = %d\n  \
-        lex_lb_start_p = %s\n  \
-        lex_lb_curr_p = %s\n  \
-        lex_lb_last_pos = %d\n  \
-        lex_lb_last_action = %d\n  \
-        lex_lb_eof_reached = %b\n  \
-        lex_lb_mem = (length = %d)\n\
+        lex_comments = (length = %d)\n\
       }"
     (token_to_string lex_result.lex_token)
     lex_result.lex_value
     (List.length lex_result.lex_errors)
     (List.length lex_result.lex_comments)
-    lex_result.lex_result_in_comment_syntax
-    lex_result.lex_lb_abs_pos
-    lex_result.lex_lb_start_pos
-    lex_result.lex_lb_curr_pos
-    (debug_string_of_lexing_position lex_result.lex_lb_start_p)
-    (debug_string_of_lexing_position lex_result.lex_lb_curr_p)
-    lex_result.lex_lb_last_pos
-    lex_result.lex_lb_last_action
-    lex_result.lex_lb_eof_reached
-    (Array.length lex_result.lex_lb_mem)
 end
 
   let loc_of_lexbuf env lexbuf = Loc.from_lb (source env) lexbuf
@@ -476,16 +445,6 @@ end
       lex_value;
       lex_errors = List.rev state.lex_errors_acc;
       lex_comments = List.rev state.lex_comments_acc;
-      lex_result_in_comment_syntax = env.lex_in_comment_syntax;
-      lex_lb_abs_pos = env.lex_lb.Lexing.lex_abs_pos;
-      lex_lb_start_pos = env.lex_lb.Lexing.lex_start_pos;
-      lex_lb_curr_pos = env.lex_lb.Lexing.lex_curr_pos;
-      lex_lb_last_pos = env.lex_lb.Lexing.lex_last_pos;
-      lex_lb_last_action = env.lex_lb.Lexing.lex_last_action;
-      lex_lb_eof_reached = env.lex_lb.Lexing.lex_eof_reached;
-      lex_lb_mem = env.lex_lb.Lexing.lex_mem;
-      lex_lb_start_p = env.lex_lb.Lexing.lex_start_p;
-      lex_lb_curr_p = env.lex_lb.Lexing.lex_curr_p;
     }
 
   let lex_error (env: Lex_env.t) loc err: Lex_env.t =

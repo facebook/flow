@@ -49,10 +49,11 @@ module Lookahead : sig
   type t
   val create : Lex_env.t -> lex_mode -> t
   val peek : t -> int -> Lex_result.t
+  val lex_env : t -> int -> Lex_env.t
   val junk : t -> unit
 end = struct
   type t = {
-    mutable la_results    : Lex_result.t option array;
+    mutable la_results    : (Lex_env.t * Lex_result.t) option array;
     mutable la_num_lexed  : int;
     la_lex_mode           : lex_mode;
     mutable la_lex_env    : Lex_env.t;
@@ -107,8 +108,15 @@ end = struct
       | TEMPLATE -> Lexer_flow.template_tail lex_env
       | REGEXP -> Lexer_flow.lex_regexp lex_env
     in
+    let cloned_env =
+      let lexbuf =
+        let lexbuf = Lex_env.lexbuf lex_env in
+        Lexing.({ lexbuf with lex_buffer = lexbuf.lex_buffer })
+      in
+      Lex_env.with_lexbuf ~lexbuf lex_env
+    in
     t.la_lex_env <- lex_env;
-    t.la_results.(t.la_num_lexed) <- Some lex_result;
+    t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
     t.la_num_lexed <- t.la_num_lexed + 1
 
   let lex_until t i =
@@ -120,7 +128,14 @@ end = struct
   let peek t i =
     lex_until t i;
     match t.la_results.(i) with
-      | Some result -> result
+      | Some (_, result) -> result
+      (* only happens if there is a defect in the lookahead module *)
+      | None -> failwith "Lookahead.peek failed"
+
+  let lex_env t i =
+    lex_until t i;
+    match t.la_results.(i) with
+      | Some (lex_env, _) -> lex_env
       (* only happens if there is a defect in the lookahead module *)
       | None -> failwith "Lookahead.peek failed"
 
@@ -179,7 +194,7 @@ type env = {
   (* lex_env is the lex_env after the single lookahead has been lexed *)
   lex_env           : Lex_env.t ref;
   (* This needs to be cleared whenever we advance. *)
-  lookahead         : Lookahead.t option ref;
+  lookahead         : Lookahead.t ref;
   token_sink        : (token_sink_result -> unit) option ref;
   parse_options     : parse_options;
   source            : Loc.filename option;
@@ -225,7 +240,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     error_callback    = None;
     lex_mode_stack    = ref [NORMAL_LEX];
     lex_env           = ref lex_env;
-    lookahead         = ref None;
+    lookahead         = ref (Lookahead.create lex_env NORMAL_LEX);
     token_sink        = ref token_sink;
     parse_options;
     source;
@@ -234,7 +249,6 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
 (* getters: *)
 let strict env = env.strict
 let lex_mode env = List.hd !(env.lex_mode_stack)
-let lex_env env = !(env.lex_env)
 let in_export env = env.in_export
 let comments env = !(env.comments)
 let labels env = env.labels
@@ -268,14 +282,7 @@ let record_export env (loc, export_name) =
 (* lookahead: *)
 let lookahead ?(i=0) env =
   assert (i < maximum_lookahead);
-  let lookahead = match !(env.lookahead) with
-    | Some l -> l
-    | None -> begin
-        let l = Lookahead.create (lex_env env) (lex_mode env) in
-        env.lookahead := Some l;
-        l
-      end in
-  Lookahead.peek lookahead i
+  Lookahead.peek !(env.lookahead) i
 
 (* functional operations: *)
 let with_strict strict env = { env with strict }
@@ -337,12 +344,7 @@ module Peek = struct
   let loc ?(i=0) env = Lex_result.loc (lookahead ~i env)
   let errors ?(i=0) env = Lex_result.errors (lookahead ~i env)
   let comments ?(i=0) env = Lex_result.comments (lookahead ~i env)
-
-  let is_in_comment_syntax ?(i=0) env =
-    Lex_result.is_in_comment_syntax (lookahead ~i env)
-
-  let lex_env env =
-    Lex_env.in_comment_syntax (is_in_comment_syntax env) !(env.lex_env)
+  let lex_env ?(i=0) env = Lookahead.lex_env !(env.lookahead) i
 
   (* True if there is a line terminator before the next token *)
   let is_line_terminator env =
@@ -457,50 +459,31 @@ module Eat = struct
           }
     );
 
-    (* commit the result's lexbuf state, making sure we only move forward *)
-    let lex_result = lookahead env in
-    let lexbuf = Lex_env.lexbuf !(env.lex_env) in
-    assert (lexbuf.Lexing.lex_abs_pos <= lex_result.Lex_result.lex_lb_abs_pos);
-    assert (lexbuf.Lexing.lex_start_pos <= lex_result.Lex_result.lex_lb_start_pos);
-    assert (lexbuf.Lexing.lex_curr_pos <= lex_result.Lex_result.lex_lb_curr_pos);
-    assert (lexbuf.Lexing.lex_last_pos <= lex_result.Lex_result.lex_lb_last_pos);
-    lexbuf.Lexing.lex_abs_pos <- lex_result.Lex_result.lex_lb_abs_pos;
-    lexbuf.Lexing.lex_start_pos <- lex_result.Lex_result.lex_lb_start_pos;
-    lexbuf.Lexing.lex_curr_pos <- lex_result.Lex_result.lex_lb_curr_pos;
-    lexbuf.Lexing.lex_last_pos <- lex_result.Lex_result.lex_lb_last_pos;
-    lexbuf.Lexing.lex_last_action <- lex_result.Lex_result.lex_lb_last_action;
-    lexbuf.Lexing.lex_eof_reached <- lex_result.Lex_result.lex_lb_eof_reached;
-    lexbuf.Lexing.lex_mem <- lex_result.Lex_result.lex_lb_mem;
-    lexbuf.Lexing.lex_start_p <- lex_result.Lex_result.lex_lb_start_p;
-    lexbuf.Lexing.lex_curr_p <- lex_result.Lex_result.lex_lb_curr_p;
-
     env.lex_env := Peek.lex_env env;
 
     error_list env (Peek.errors env);
     comment_list env (Peek.comments env);
     env.last_loc := Some (Peek.loc env);
 
-    match !(env.lookahead) with
-    | Some la -> Lookahead.junk la
-    | None -> ()
+    Lookahead.junk !(env.lookahead)
 
   let push_lex_mode env mode =
     env.lex_mode_stack := mode :: !(env.lex_mode_stack);
-    env.lookahead := None
+    env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
 
   let pop_lex_mode env =
     let new_stack = match !(env.lex_mode_stack) with
     | _mode::stack -> stack
     | _ -> failwith "Popping lex mode from empty stack" in
     env.lex_mode_stack := new_stack;
-    env.lookahead := None
+    env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
 
   let double_pop_lex_mode env =
     let new_stack = match !(env.lex_mode_stack) with
     | _::_::stack -> stack
     | _ -> failwith "Popping lex mode from empty stack" in
     env.lex_mode_stack := new_stack;
-    env.lookahead := None
+    env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
 
   (* Semicolon insertion is handled here :(. There seem to be 2 cases where
   * semicolons are inserted. First, if we reach the EOF. Second, if the next
@@ -546,7 +529,6 @@ module Try = struct
   type saved_state = {
     saved_errors         : (Loc.t * Error.t) list;
     saved_comments       : Ast.Comment.t list;
-    saved_lb             : Lexing.lexbuf;
     saved_last_loc       : Loc.t option;
     saved_lex_mode_stack : lex_mode list;
     saved_lex_env        : Lex_env.t;
@@ -564,11 +546,9 @@ module Try = struct
           );
           Some(orig_token_sink, buffer)
     in
-    let lb = Lex_env.lexbuf !(env.lex_env) in
     {
       saved_errors         = !(env.errors);
       saved_comments       = !(env.comments);
-      saved_lb             = Lexing.({lb with lex_abs_pos=lb.lex_abs_pos});
       saved_last_loc       = !(env.last_loc);
       saved_lex_mode_stack = !(env.lex_mode_stack);
       saved_lex_env        = !(env.lex_env);
@@ -589,22 +569,7 @@ module Try = struct
     env.last_loc := saved_state.saved_last_loc;
     env.lex_mode_stack := saved_state.saved_lex_mode_stack;
     env.lex_env := saved_state.saved_lex_env;
-    env.lookahead := None;
-
-    let lexbuf = Lex_env.lexbuf !(env.lex_env) in
-    Lexing.(begin
-      lexbuf.lex_buffer <- saved_state.saved_lb.lex_buffer;
-      lexbuf.lex_buffer_len <- saved_state.saved_lb.lex_buffer_len;
-      lexbuf.lex_abs_pos <- saved_state.saved_lb.lex_abs_pos;
-      lexbuf.lex_start_pos <- saved_state.saved_lb.lex_start_pos;
-      lexbuf.lex_curr_pos <- saved_state.saved_lb.lex_curr_pos;
-      lexbuf.lex_last_pos <- saved_state.saved_lb.lex_last_pos;
-      lexbuf.lex_last_action <- saved_state.saved_lb.lex_last_action;
-      lexbuf.lex_eof_reached <- saved_state.saved_lb.lex_eof_reached;
-      lexbuf.lex_mem <- saved_state.saved_lb.lex_mem;
-      lexbuf.lex_start_p <- saved_state.saved_lb.lex_start_p;
-      lexbuf.lex_curr_p <- saved_state.saved_lb.lex_curr_p;
-    end);
+    env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env);
 
     FailedToParse
 
