@@ -6,6 +6,12 @@ typecheck.js:4
   3: function test1(): string {
                        ^^^^^^ string
 
+typecheck.js:21
+ 21:     var y: string = n;    // error, n is number (EmptyT would work)
+                         ^ number. This type is incompatible with
+ 21:     var y: string = n;    // error, n is number (EmptyT would work)
+                ^^^^^^ string
+
 unreachable.js:5
   5:   return bar(x) + baz(y);
                        ^^^^^^ function call. Function cannot be called on possibly undefined value
@@ -25,4 +31,4 @@ unreachable.js:24
                ^ unreachable code
 
 
-Found 5 errors
+Found 6 errors
