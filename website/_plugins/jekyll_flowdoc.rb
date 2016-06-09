@@ -331,7 +331,13 @@ module Jekyll
   Hooks.register :site, :pre_render do |site|
     FlowdocConverter.tempdir = Dir.mktmpdir
     File.open(File.join(FlowdocConverter.tempdir, '.flowconfig'), 'w') {|f|
-      f.write("[options]\nsuppress_comment=\\\\(.\\\\|\\n\\\\)*\\\\$DocIssue\n")
+      f.write(
+        <<-EOF.gsub(/^ {10}/, '')
+          [options]
+          suppress_comment=\\\\(.\\\\|\\n\\\\)*\\\\$DocIssue
+          max_header_tokens=1
+        EOF
+      )
     }
   end
 
