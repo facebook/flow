@@ -178,8 +178,7 @@ type env = {
   labels            : SSet.t;
   exports           : SSet.t ref;
   last_loc          : Loc.t option ref;
-  priority          : int;
-  strict            : bool;
+  in_strict_mode    : bool;
   in_export         : bool;
   in_loop           : bool;
   in_switch         : bool;
@@ -226,8 +225,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     labels            = SSet.empty;
     exports           = ref SSet.empty;
     last_loc          = ref None;
-    priority          = 0;
-    strict            = parse_options.use_strict;
+    in_strict_mode    = parse_options.use_strict;
     in_export         = false;
     in_loop           = false;
     in_switch         = false;
@@ -247,7 +245,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
   }
 
 (* getters: *)
-let strict env = env.strict
+let in_strict_mode env = env.in_strict_mode
 let lex_mode env = List.hd !(env.lex_mode_stack)
 let in_export env = env.in_export
 let comments env = !(env.comments)
@@ -285,7 +283,7 @@ let lookahead ?(i=0) env =
   Lookahead.peek !(env.lookahead) i
 
 (* functional operations: *)
-let with_strict strict env = { env with strict }
+let with_strict in_strict_mode env = { env with in_strict_mode }
 let with_in_function in_function env = { env with in_function }
 let with_allow_yield allow_yield env = { env with allow_yield }
 let with_allow_await allow_await env = { env with allow_await }
@@ -426,8 +424,9 @@ let error_unexpected env =
 let error_on_decorators env = List.iter
   (fun decorator -> error_at env ((fst decorator), Error.UnsupportedDecorator))
 
-let strict_error env e = if strict env then error env e
-let strict_error_at env (loc, e) = if strict env then error_at env (loc, e)
+let strict_error env e = if in_strict_mode env then error env e
+let strict_error_at env (loc, e) =
+  if in_strict_mode env then error_at env (loc, e)
 
 
 (* Consume zero or more tokens *)

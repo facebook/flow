@@ -703,7 +703,7 @@ end = struct
          * want to do these checks in strict mode *)
         let env =
           if strict
-          then env |> with_strict (not (Parser_env.strict env))
+          then env |> with_strict (not (Parser_env.in_strict_mode env))
           else env in
         (match id with
         | Some (loc, { Identifier.name; _ }) ->
@@ -764,7 +764,7 @@ end = struct
       | _ ->
           let env = enter_function env ~async ~generator in
           let expr = Parse.assignment env in
-          Function.BodyExpression expr, strict env
+          Function.BodyExpression expr, in_strict_mode env
 
     let generator env is_async =
       match is_async, Expect.maybe env T_MULT with
@@ -4068,7 +4068,10 @@ end = struct
                   * has the right length)
                   *)
                 let len = Loc.(loc._end.column - loc.start.column) in
-                let strict = (strict env) || (str = "use strict" && len = 12) in
+                let strict =
+                  (in_strict_mode env) ||
+                  (str = "use strict" && len = 12)
+                in
                 let string_tokens = string_token::string_tokens in
                 statement_list
                   (env |> with_strict strict)
@@ -4117,7 +4120,7 @@ end = struct
     let stmts = statement_list ~term_fn env in
     (* Prepend the directives *)
     let stmts = List.fold_left (fun acc stmt -> stmt::acc) stmts directives in
-    stmts, (strict env)
+    stmts, (in_strict_mode env)
 
   and statement_list =
     let rec statements env term_fn acc =
@@ -4217,7 +4220,7 @@ end = struct
     | T_LET ->
     (* So "let" is disallowed as an identifier in a few situations. 11.6.2.1
      * lists them out. It is always disallowed in strict mode *)
-      if strict env
+      if in_strict_mode env
       then strict_error env Error.StrictReservedWord
       else
         if no_let env
