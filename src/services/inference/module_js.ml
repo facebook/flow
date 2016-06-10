@@ -944,8 +944,8 @@ let remove_files files =
   let names = FilenameSet.fold (fun file names ->
       match InfoHeap.get file with
       | Some info ->
-          let { _module; required; parsed; _ } = info in
-          (if parsed then remove_provider file _module);
+          let { _module; required; _ } = info in
+          remove_provider file _module;
           (match NameHeap.get _module with
           | Some f when f = file -> (
               (* untrack all imports from this file. we only do this for
