@@ -1,0 +1,148 @@
+[No file]:0
+inconsistent use of library definitions
+IDBRequest. Cannot inherit non-newable. See lib: indexeddb.js:15
+EventTarget. See lib: indexeddb.js:15
+
+[No file]:0
+inconsistent use of library definitions
+IDBDatabase. Cannot inherit non-newable. See lib: indexeddb.js:30
+EventTarget. See lib: indexeddb.js:30
+
+[No file]:0
+inconsistent use of library definitions
+IDBTransaction. Cannot inherit non-newable. See lib: indexeddb.js:46
+EventTarget. See lib: indexeddb.js:46
+
+[No file]:0
+inconsistent use of library definitions
+IDBIndex. Cannot inherit non-newable. See lib: indexeddb.js:80
+EventTarget. See lib: indexeddb.js:80
+
+indexeddb.js:0
+Library type error:
+inconsistent use of library definitions
+IDBOpenDBRequest. Cannot inherit non-newable
+IDBRequest
+
+indexeddb.js:0
+Library type error:
+inconsistent use of library definitions
+IDBCursorWithValue. Cannot inherit non-newable
+IDBCursor
+
+class.js:24
+ 24:   return D; //ng
+              ^ newable D
+  4:   constructor(n: number) {}
+                      ^^^^^^ number. This type is incompatible with
+  9:   constructor(s: string) { super(2); }
+                      ^^^^^^ string
+
+class_function.js:14
+ 14:   return class F_ extends X { //ng (non-newable `X`)
+              ^ class expr `F_`. Cannot inherit non-newable
+ 14:   return class F_ extends X { //ng (non-newable `X`)
+                               ^ C
+
+class_function.js:14
+ 14:   return class F_ extends X { //ng (non-newable `X`)
+              ^ newable class expr `F_`
+  4:   constructor(n: number) {}
+                      ^^^^^^ number. This type is incompatible with
+ 17:     constructor(s: string) {} //ng (non-subtype ctor)
+                        ^^^^^^ string
+
+class_function.js:27
+ 27: let g = new G("one"); //ng
+             ^^^^^^^^^^^^ constructor call
+ 27: let g = new G("one"); //ng
+                   ^^^^^ string. This type is incompatible with
+  4:   constructor(n: number) {}
+                      ^^^^^^ number
+
+class_function.js:49
+ 49:   return class M_ extends X {
+              ^ newable class expr `M_`
+ 36:   constructor(o: {x:number, y:number}): void
+                      ^^^^^^^^^^^^^^^^^^^^ object type. This type is incompatible with
+ 50:     constructor(n: number) {} //ng
+                        ^^^^^^ number
+
+class_function.js:61
+ 61: let n = new N({x1:"not a number", x2:7});
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 61: let n = new N({x1:"not a number", x2:7});
+                       ^^^^^^^^^^^^^^ string. This type is incompatible with
+ 56:     constructor(config: {x1:number, x2:string}) {}
+                                 ^^^^^^ number
+
+class_function.js:61
+ 61: let n = new N({x1:"not a number", x2:7});
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
+ 61: let n = new N({x1:"not a number", x2:7});
+                                          ^ number. This type is incompatible with
+ 56:     constructor(config: {x1:number, x2:string}) {}
+                                            ^^^^^^ string
+
+class_function.js:62
+ 62: let a: string = n.m();
+                     ^^^^^ number. This type is incompatible with
+ 62: let a: string = n.m();
+            ^^^^^^ string
+
+import.js:5
+  5: let L = Ln(E); //ok
+             ^^^^^ function call
+  7: let ell2 = new L("not an object");
+                ^^^^^^^^^^^^^^^^^^^^^^ constructor call. Constructor cannot be called on non-newable any member of intersection type
+  7: let ell2 = new L("not an object");
+                    ^ intersection
+  Member 1:
+   39: export function Ln(X: Class<Newable<C>>): Class<C> & Class<Newable<I>> {
+                                                       ^ class type: C. See: class_function.js:39
+  Error:
+    7: let ell2 = new L("not an object");
+                        ^^^^^^^^^^^^^^^ string. This type is incompatible with
+    4:   constructor(n: number) {}
+                        ^^^^^^ number. See: class_function.js:4
+  Member 2:
+   39: export function Ln(X: Class<Newable<C>>): Class<C> & Class<Newable<I>> {
+                                                                          ^ class type: I. See: class_function.js:39
+  Error:
+    7: let ell2 = new L("not an object");
+                        ^^^^^^^^^^^^^^^ string. This type is incompatible with
+   36:   constructor(o: {x:number, y:number}): void
+                        ^^^^^^^^^^^^^^^^^^^^ object type. See: class_function.js:36
+
+instance.js:21
+ 21:   return new D("five"); //ng
+                  ^ newable D
+  4:   constructor(n: number) {}
+                      ^^^^^^ number. This type is incompatible with
+  9:   constructor(s: string) { super(2); }
+                      ^^^^^^ string
+
+test.js:20
+ 20: var X2: Class<Newable<A>> = B;
+                                 ^ newable B
+  4:   constructor(n: number) {}
+                      ^^^^^^ number. This type is incompatible with
+ 10:   constructor(s: string) {
+                      ^^^^^^ string
+
+test.js:43
+ 43:   return new X("twenty five"); //ng
+                  ^ B. This type is non-newable
+ 43:   return new X("twenty five"); //ng
+                  ^ B
+
+test.js:46
+ 46:   return new X(26);
+              ^^^^^^^^^ constructor call
+ 46:   return new X(26);
+                    ^^ number. This type is incompatible with
+ 10:   constructor(s: string) {
+                      ^^^^^^ string
+
+
+Found 19 errors

@@ -247,6 +247,7 @@ let insttype ~static cx s =
     fields_tmap = Flow.mk_propmap cx fields;
     methods_tmap = Flow.mk_propmap cx methods;
     mixins = false;
+    newable = Type.NewableUndefined;
     structural = s.structural;
   }
 

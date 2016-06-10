@@ -30,6 +30,7 @@ let fake_instance name =
     fields_tmap = 0;
     methods_tmap = 0;
     mixins = false;
+    newable = NewableUndefined;
     structural = false;
   } in
   InstanceT (

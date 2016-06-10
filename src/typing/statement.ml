@@ -3888,6 +3888,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
     fields_tmap = Flow.mk_propmap cx fmap;
     methods_tmap = Flow.mk_propmap cx mmap;
     mixins = !mixins <> [];
+    newable = NewableUndefined;
     structural = false;
   } in
   Flow.flow cx (super, SuperT (super_reason, itype));

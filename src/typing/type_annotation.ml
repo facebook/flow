@@ -257,6 +257,15 @@ let rec convert cx type_params_map = Ast.Type.(function
       ClassT t
     )
 
+  | "Newable" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      let r = reason_of_t t in
+      Flow_js.mk_tvar_derivable_where cx r (fun tvar ->
+        Flow_js.flow cx (t, SetNewableT(r, tvar))
+      )
+    )
+
   | "Function" | "function" ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
       let reason = mk_reason "function type" loc in

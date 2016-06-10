@@ -2417,11 +2417,33 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, ExtendsT([],l,u)))
 
     | (InstanceT (_,_,super,instance),
-       UseT (_, ExtendsT(_, _, InstanceT (_,_,_,instance_super)))) ->
+       UseT (_, ExtendsT(_, origin, InstanceT (_,_,_,instance_super)))) ->
       if instance.class_id = instance_super.class_id
-      then
-        flow_type_args cx trace instance instance_super
-      else
+      then (
+        flow_type_args cx trace instance instance_super;
+        if instance_super.newable = NewableTrue then (
+          let reason = reason_of_t origin in
+          let origin = mk_tvar_where cx reason (fun t ->
+            (* Can I refactor the AssertNewableT to include the ctors somehow?
+               I'm worried about one of them being non-concrete and thereby
+               circumventing the Ops.push. In particular, consider the case
+               where a function extends a parameter class. *)
+            rec_flow cx trace (origin, AssertNewableT (reason, t))
+          ) in
+          Ops.push (prefix_reason "newable " reason);
+          let ctor = "constructor" in
+          let origin_ctor =
+            let r = prefix_reason "constructor of " reason in
+            mk_tvar_where cx r (lookup_prop cx trace origin r None ctor)
+          in
+          let super_ctor =
+            let r = prefix_reason "constructor of " (reason_of_use_t u) in
+            mk_tvar_where cx r (lookup_prop cx trace l r None ctor)
+          in
+          rec_flow_t cx trace (origin_ctor, super_ctor);
+          Ops.pop ()
+        )
+      ) else
         rec_flow cx trace (super, u)
 
     (***************************************************************)
@@ -2439,13 +2461,66 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       structural_subtype cx trace l reason_inst
         (super, fields_tmap, methods_tmap)
 
+    (************************************************************)
+    (* Newable annotations commute with class value annotations *)
+    (************************************************************)
+
+    | ClassT instance, SetNewableT (reason, t)
+      ->
+      let set_t = mk_tvar_derivable_where cx reason (fun tvar ->
+        rec_flow cx trace (instance, SetNewableT (reason, tvar))
+      ) in
+      rec_unify cx trace (ClassT set_t) t
+
+    | ClassT instance, UnsetNewableT (reason, t)
+      ->
+      let unset_t = mk_tvar_derivable_where cx reason (fun tvar ->
+        rec_flow cx trace (instance, UnsetNewableT (reason, tvar))
+      ) in
+      rec_unify cx trace (ClassT unset_t) t
+
+    | InstanceT (r, st, su, insttype), SetNewableT (_, t)
+      ->
+      (* reposition to the reason of SetNewableT? *)
+      let insttype = {insttype with newable=NewableTrue} in
+      rec_unify cx trace (InstanceT (r, st, su, insttype)) t
+
+    | InstanceT (r, st, su, insttype), UnsetNewableT (_, t)
+      ->
+      (* the NewableTrue state is sticky *)
+      let instance = match insttype.newable with
+        | NewableUndefined
+          -> InstanceT (r, st, su, {insttype with newable=NewableFalse})
+        | _
+          -> l
+      in
+      rec_unify cx trace instance t
+
+    | InstanceT (_, _, _, {newable=NewableUndefined; _}), AssertNewableT (_, t)
+      ->
+      (*I flagged this with an `assert false` to test my expectation that this
+        doesn't hit. The `async` test activated it. Why?*)
+      rec_flow_t cx trace (l, t)
+
+    | InstanceT (_, _, _, {newable=NewableTrue; _}), AssertNewableT (_, t)
+      ->
+      rec_flow_t cx trace (l, t)
+
+    | InstanceT (_, _, _, {newable=NewableFalse; _}), AssertNewableT _
+      ->
+      flow_err cx trace "This type is non-newable" l u
+
     (********************************************************)
     (* runtime types derive static types through annotation *)
     (********************************************************)
 
-    | (ClassT(it), UseT (_, TypeT(r,t))) ->
-      (* a class value annotation becomes the instance type *)
-      rec_flow cx trace (it, BecomeT (r, t))
+    | (ClassT it, UseT (_, TypeT (r, t))) ->
+      (* a class value annotation becomes the non-newable instance type, unless
+         the `newable` flag is already `NewableTrue` *)
+      let nonnewable_t = mk_tvar_derivable_where cx r (fun tvar ->
+        rec_flow cx trace (it, UnsetNewableT (r, tvar))
+      ) in
+      rec_flow cx trace (nonnewable_t, BecomeT (r, t))
 
     | (FunT(_, _, prototype, _), UseT (_, TypeT(reason, t))) ->
       (* a function value annotation becomes the prototype type *)
@@ -2475,8 +2550,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         "Ineligible value used in/as type annotation (did you forget 'typeof'?)"
         l u
 
-    | (ClassT(l), UseT (_, ClassT(u))) ->
-      rec_unify cx trace l u
+    | ClassT l, UseT (_, ClassT u) ->
+      rec_flow_t cx trace (l, u)
 
     | FunT (_,static1,prototype,_),
       UseT (_, ClassT (InstanceT (_,static2,_, _) as u_)) ->
@@ -2489,6 +2564,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ClassT (this),
       ConstructorT (reason_op, args, t) ->
+      let this = mk_tvar_where cx (reason_of_t this) (fun t ->
+        rec_flow cx trace (this, AssertNewableT (reason_op, t))
+      ) in
       let reason_o = replace_reason "constructor return" (reason_of_t this) in
       Ops.push reason_op;
       (* call this.constructor(args) *)
@@ -3202,6 +3280,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
+    | (InstanceT (_,_,_,({newable=NewableFalse; _})),
+       SuperT _)
+      ->
+      flow_err cx trace "Cannot inherit non-newable" l u
+
     | (InstanceT (_,_,_,instance_super),
        SuperT (reason,instance))
       ->
@@ -3486,15 +3569,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
-    | (MixedT _, UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+    | (MixedT _,
+       UseT (_, ExtendsT ([], origin, (InstanceT (reason_inst, _, super, {
          fields_tmap;
          methods_tmap;
+         newable;
          structural = true;
          _;
-       }))))
+       }) as u))))
       ->
       structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
+        (super, fields_tmap, methods_tmap);
+
+      if newable = NewableTrue then (
+        (*export this (repeated) logic to an external function?*)
+        let reason = reason_of_t origin in
+        let origin = mk_tvar_where cx reason (fun t ->
+          rec_flow cx trace (origin, AssertNewableT (reason, t))
+        ) in
+        Ops.push (prefix_reason "newable " reason);
+        let ctor = "constructor" in
+        let origin_ctor =
+          let r = prefix_reason "constructor of " reason in
+          mk_tvar_where cx r (lookup_prop cx trace origin r None ctor)
+        in
+        let super_ctor =
+          let r = prefix_reason "constructor of " (reason_of_t u) in
+          mk_tvar_where cx r (lookup_prop cx trace u r None ctor)
+        in
+        rec_flow_t cx trace (origin_ctor, super_ctor);
+        Ops.pop ()
+      )
 
     | (MixedT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
@@ -3649,7 +3754,7 @@ and err_operation = function
   | MethodT _ -> "Method cannot be called on"
   | CallT _ -> "Function cannot be called on"
   | ApplyT _ -> "Expected array of arguments instead of"
-  | ConstructorT _ -> "Constructor cannot be called on"
+  | ConstructorT _ -> "Constructor cannot be called on non-newable"
   | GetElemT _ -> "Computed property/element cannot be accessed on"
   | SetElemT _ -> "Computed property/element cannot be assigned on"
   | ElemT (_, ObjT _, _, Read) -> "Computed property cannot be accessed with"
@@ -3662,6 +3767,7 @@ and err_operation = function
   | ArrRestT _ -> "Expected array instead of"
   | SuperT _ -> "Cannot inherit"
   | MixinT _ -> "Expected class instead of"
+  | AssertNewableT _ -> "Expected newable instead of"
   | SpecializeT _ -> "Expected polymorphic type instead of"
   | ThisSpecializeT _ -> "Expected class instead of"
   | VarianceCheckT _ -> "Expected polymorphic type instead of"
