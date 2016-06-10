@@ -250,19 +250,25 @@ let is_instantiable_reason r =
 
    Then the types of Tags.ACTION_FOO and Tags.ACTION_BAR are assumed to be 0->1.
 *)
-let is_constant_property_reason r =
-  let desc = desc_of_reason r in
+let is_constant_property_reason =
+  let is_lowercase_char =
+    let a_code, z_code = Char.code 'a', Char.code 'z' in
+    fun chr ->
+      let code = Char.code chr in
+      a_code <= code && code <= z_code
+  in
+  let rec no_lowercase str i j =
+    if is_lowercase_char str.[i] then false
+    else if i = j then true
+    else no_lowercase str (i + 1) j
+  in
   let property_prefix = "property `" in
-  Utils.str_starts_with desc property_prefix &&
-    let i = String.length property_prefix in
-    let j = String.index_from desc (i+1) '`' in
-    let property_name = String.sub desc i (j-i) in
-    try
-      String.iter (fun c ->
-        assert (c = '_' || Char.uppercase c = c)
-      ) property_name;
-      true
-    with _ -> false
+  let prop_start = String.length property_prefix + 1 in
+  fun r ->
+    let desc = desc_of_reason r in
+    Utils.str_starts_with desc property_prefix &&
+      let prop_end = String.index_from desc prop_start '`' in
+      no_lowercase desc prop_start prop_end
 
 let is_derivable_reason r =
   r.derivable
