@@ -16,6 +16,25 @@ module Error = Parse_error
 module SSet = Set.Make(String)
 module SMap = Map.Make(String)
 
+module Lex_mode = struct
+  type t =
+    | NORMAL
+    | TYPE
+    | JSX_TAG
+    | JSX_CHILD
+    | TEMPLATE
+    | REGEXP
+
+  let debug_string_of_lex_mode (mode: t) =
+    match mode with
+    | NORMAL -> "NORMAL"
+    | TYPE -> "TYPE"
+    | JSX_TAG -> "JSX_TAG"
+    | JSX_CHILD -> "JSX_CHILD"
+    | TEMPLATE -> "TEMPLATE"
+    | REGEXP -> "REGEXP"
+end
+
 (* READ THIS BEFORE YOU MODIFY:
  *
  * The current implementation for lookahead beyond a single token is
@@ -29,25 +48,9 @@ module SMap = Map.Make(String)
  *)
 let maximum_lookahead = 2
 
-type lex_mode =
-  | NORMAL_LEX
-  | TYPE_LEX
-  | JSX_TAG
-  | JSX_CHILD
-  | TEMPLATE
-  | REGEXP
-
-let mode_to_string = function
-  | NORMAL_LEX -> "NORMAL"
-  | TYPE_LEX -> "TYPE"
-  | JSX_TAG -> "JSX TAG"
-  | JSX_CHILD -> "JSX CHILD"
-  | TEMPLATE -> "TEMPLATE"
-  | REGEXP -> "REGEXP"
-
 module Lookahead : sig
   type t
-  val create : Lex_env.t -> lex_mode -> t
+  val create : Lex_env.t -> Lex_mode.t -> t
   val peek : t -> int -> Lex_result.t
   val lex_env : t -> int -> Lex_env.t
   val junk : t -> unit
@@ -55,7 +58,7 @@ end = struct
   type t = {
     mutable la_results    : (Lex_env.t * Lex_result.t) option array;
     mutable la_num_lexed  : int;
-    la_lex_mode           : lex_mode;
+    la_lex_mode           : Lex_mode.t;
     mutable la_lex_env    : Lex_env.t;
   }
 
@@ -101,12 +104,12 @@ end = struct
     let lex_env = t.la_lex_env in
     let lex_env, lex_result =
       match t.la_lex_mode with
-      | NORMAL_LEX -> Lexer_flow.token lex_env
-      | TYPE_LEX -> Lexer_flow.type_token lex_env
-      | JSX_TAG -> Lexer_flow.lex_jsx_tag lex_env
-      | JSX_CHILD -> Lexer_flow.lex_jsx_child lex_env
-      | TEMPLATE -> Lexer_flow.template_tail lex_env
-      | REGEXP -> Lexer_flow.lex_regexp lex_env
+      | Lex_mode.NORMAL -> Lexer_flow.token lex_env
+      | Lex_mode.TYPE -> Lexer_flow.type_token lex_env
+      | Lex_mode.JSX_TAG -> Lexer_flow.jsx_tag lex_env
+      | Lex_mode.JSX_CHILD -> Lexer_flow.jsx_child lex_env
+      | Lex_mode.TEMPLATE -> Lexer_flow.template_tail lex_env
+      | Lex_mode.REGEXP -> Lexer_flow.regexp lex_env
     in
     let cloned_env =
       let lexbuf =
@@ -151,7 +154,7 @@ end
 type token_sink_result = {
   token_loc: Loc.t;
   token: Lexer_flow.Token.t;
-  token_context: lex_mode;
+  token_context: Lex_mode.t;
   token_value: string;
 }
 
@@ -189,7 +192,7 @@ type env = {
   allow_yield       : bool;
   allow_await       : bool;
   error_callback    : (env -> Error.t -> unit) option;
-  lex_mode_stack    : lex_mode list ref;
+  lex_mode_stack    : Lex_mode.t list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
   lex_env           : Lex_env.t ref;
   (* This needs to be cleared whenever we advance. *)
@@ -236,9 +239,9 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     allow_yield       = true;
     allow_await       = false;
     error_callback    = None;
-    lex_mode_stack    = ref [NORMAL_LEX];
+    lex_mode_stack    = ref [Lex_mode.NORMAL];
     lex_env           = ref lex_env;
-    lookahead         = ref (Lookahead.create lex_env NORMAL_LEX);
+    lookahead         = ref (Lookahead.create lex_env Lex_mode.NORMAL);
     token_sink        = ref token_sink;
     parse_options;
     source;
@@ -529,7 +532,7 @@ module Try = struct
     saved_errors         : (Loc.t * Error.t) list;
     saved_comments       : Ast.Comment.t list;
     saved_last_loc       : Loc.t option;
-    saved_lex_mode_stack : lex_mode list;
+    saved_lex_mode_stack : Lex_mode.t list;
     saved_lex_env        : Lex_env.t;
     token_buffer         : ((token_sink_result -> unit) * token_sink_result Queue.t) option;
   }

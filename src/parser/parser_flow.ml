@@ -480,7 +480,7 @@ end = struct
                 }) in
               false, static_key
           | _ ->
-              Eat.push_lex_mode env NORMAL_LEX;
+              Eat.push_lex_mode env Lex_mode.NORMAL;
               let key = Parse.object_key env in
               Eat.pop_lex_mode env;
               static, key
@@ -615,7 +615,7 @@ end = struct
 
     let wrap f env =
       let env = env |> with_strict true in
-      Eat.push_lex_mode env TYPE_LEX;
+      Eat.push_lex_mode env Lex_mode.TYPE;
       let ret = f env in
       Eat.pop_lex_mode env;
       ret
@@ -1564,7 +1564,7 @@ end = struct
         let expressions = expr::expressions in
         match Peek.token env with
         | T_RCURLY ->
-            Eat.push_lex_mode env TEMPLATE;
+            Eat.push_lex_mode env Lex_mode.TEMPLATE;
             let loc, part, is_tail = match Peek.token env with
             | T_TEMPLATE_PART (loc, {cooked; raw; _}, tail) ->
                 let open Ast.Expression.TemplateLiteral in
@@ -1660,7 +1660,7 @@ end = struct
         })
 
     and regexp env =
-      Eat.push_lex_mode env REGEXP;
+      Eat.push_lex_mode env Lex_mode.REGEXP;
       let loc = Peek.loc env in
       let raw, pattern, raw_flags = match Peek.token env with
         | T_REGEXP (_, pattern, flags) ->
@@ -2831,7 +2831,7 @@ end = struct
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeAlias;
       Expect.token env T_TYPE;
-      Eat.push_lex_mode env TYPE_LEX;
+      Eat.push_lex_mode env Lex_mode.TYPE;
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
       Expect.token env T_ASSIGN;
@@ -3787,7 +3787,7 @@ end = struct
 
   module JSX = struct
     let spread_attribute env =
-      Eat.push_lex_mode env NORMAL_LEX;
+      Eat.push_lex_mode env Lex_mode.NORMAL;
       let start_loc = Peek.loc env in
       Expect.token env T_LCURLY;
       Expect.token env T_ELLIPSIS;
@@ -3800,7 +3800,7 @@ end = struct
       })
 
     let expression_container env =
-      Eat.push_lex_mode env NORMAL_LEX;
+      Eat.push_lex_mode env Lex_mode.NORMAL;
       let start_loc = Peek.loc env in
       Expect.token env T_LCURLY;
       let expression = if Peek.token env = T_RCURLY
@@ -3965,7 +3965,7 @@ end = struct
 
       and element_without_lt =
         let element_or_closing env =
-          Eat.push_lex_mode env JSX_TAG;
+          Eat.push_lex_mode env Lex_mode.JSX_TAG;
           let start_loc = Peek.loc env in
           Expect.token env T_LESS_THAN;
           match Peek.token env with
@@ -4005,7 +4005,7 @@ end = struct
             if (snd openingElement).JSX.Opening.selfClosing
             then [], None
             else begin
-              Eat.push_lex_mode env JSX_CHILD;
+              Eat.push_lex_mode env Lex_mode.JSX_CHILD;
               let ret = children_and_closing env [] in
               ret
             end in
@@ -4024,7 +4024,7 @@ end = struct
 
       and element env =
         let start_loc = Peek.loc env in
-        Eat.push_lex_mode env JSX_TAG;
+        Eat.push_lex_mode env Lex_mode.JSX_TAG;
         Expect.token env T_LESS_THAN;
         element_without_lt env start_loc
   end

@@ -1217,23 +1217,23 @@ and regexp_class env buf = parse
   | _ as c            { Buffer.add_char buf c;
                         regexp_class env buf lexbuf }
 
-and lex_jsx_tag env = parse
+and jsx_tag env = parse
   | eof               { env, T_EOF }
   | line_terminator_sequence
                       { Lexing.new_line lexbuf;
-                        lex_jsx_tag env lexbuf }
+                        jsx_tag env lexbuf }
   | whitespace+       { unicode_fix_cols lexbuf;
-                        lex_jsx_tag env lexbuf }
+                        jsx_tag env lexbuf }
   | "//"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
                         let env, _end = line_comment env buf lexbuf in
                         let env = save_comment env start _end buf true in
-                        lex_jsx_tag env lexbuf }
+                        jsx_tag env lexbuf }
   | "/*"              { let start = loc_of_lexbuf env lexbuf in
                         let buf = Buffer.create 127 in
                         let env, _end = comment env buf lexbuf in
                         let env = save_comment env start _end buf true in
-                        lex_jsx_tag env lexbuf }
+                        jsx_tag env lexbuf }
   | '<'               { env, T_LESS_THAN }
   | '/'               { env, T_DIV }
   | '>'               { env, T_GREATER_THAN }
@@ -1261,10 +1261,10 @@ and lex_jsx_tag env = parse
                       }
   | _                 { env, T_ERROR }
 
-and lex_jsx_child env start buf raw = parse
+and jsx_child env start buf raw = parse
 (*
   | whitespace+ as ws { Buffer.add_string buf ws;
-                        lex_jsx_child env start buf lexbuf
+                        jsx_child env start buf lexbuf
                       }
 *)
   | line_terminator_sequence as lt
@@ -1665,20 +1665,20 @@ and template_part env start cooked raw literal = parse
                         template_part env start cooked raw literal lexbuf }
 
 {
-  let lex_regexp env =
+  let regexp env =
     get_result_and_clear_state (regexp env env.lex_lb)
 
   (* Lexing JSX children requires a string buffer to keep track of whitespace
    * *)
-  let lex_jsx_child env =
+  let jsx_child env =
     let start = Loc.from_curr_lb (source env) env.lex_lb in
     let buf = Buffer.create 127 in
     let raw = Buffer.create 127 in
-    let env, child = lex_jsx_child env start buf raw env.lex_lb in
+    let env, child = jsx_child env start buf raw env.lex_lb in
     get_result_and_clear_state (env, child)
 
-  let lex_jsx_tag env =
-    get_result_and_clear_state (lex_jsx_tag env env.lex_lb)
+  let jsx_tag env =
+    get_result_and_clear_state (jsx_tag env env.lex_lb)
 
   let template_tail env =
     get_result_and_clear_state (template_tail env env.lex_lb)

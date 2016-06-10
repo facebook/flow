@@ -74,10 +74,10 @@ let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
 
   JSON_Object [
     ("type", JSON_String (Lexer_flow.Token.token_to_string token));
-    ("context", JSON_String (
+    ("context", JSON_String Parser_env.Lex_mode.(
       match token_context with
-      | NORMAL_LEX -> "normal"
-      | TYPE_LEX -> "type"
+      | NORMAL -> "normal"
+      | TYPE -> "type"
       | JSX_TAG -> "jsxTag"
       | JSX_CHILD -> "jsxChild"
       | TEMPLATE -> "template"

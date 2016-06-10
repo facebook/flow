@@ -13,22 +13,23 @@
 
 module SSet : Set.S with type t = Set.Make(String).t
 
-type lex_mode =
-  | NORMAL_LEX
-  | TYPE_LEX
-  | JSX_TAG
-  | JSX_CHILD
-  | TEMPLATE
-  | REGEXP
+module Lex_mode : sig
+  type t =
+    | NORMAL
+    | TYPE
+    | JSX_TAG
+    | JSX_CHILD
+    | TEMPLATE
+    | REGEXP
+  val debug_string_of_lex_mode: t -> string
+end
 
 type token_sink_result = {
   token_loc: Loc.t;
   token: Lexer_flow.Token.t;
-  token_context: lex_mode;
+  token_context: Lex_mode.t;
   token_value: string;
 }
-
-val mode_to_string : lex_mode -> string
 
 type parse_options = {
   esproposal_class_instance_fields: bool;
@@ -120,7 +121,7 @@ end
 
 module Eat : sig
   val token : env -> unit
-  val push_lex_mode : env -> lex_mode -> unit
+  val push_lex_mode : env -> Lex_mode.t -> unit
   val pop_lex_mode : env -> unit
   val double_pop_lex_mode : env -> unit
   val semicolon : env -> unit
