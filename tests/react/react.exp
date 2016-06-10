@@ -1,75 +1,3 @@
-children.js:9
-  9: <A />; // error: property `children` not found
-     ^^^^^ React element `A`
-  6:   props: { children: string };
-              ^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
-  9: <A />; // error: property `children` not found
-     ^^^^^ props of React element `A`
-
-children.js:10
- 10: <A></A>; // error: property `children` not found
-     ^^^ React element `A`
-  6:   props: { children: string };
-              ^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
- 10: <A></A>; // error: property `children` not found
-     ^^^ props of React element `A`
-
-children.js:11
- 11: <A children={0} />; // error: number ~> string
-     ^^^^^^^^^^^^^^^^^^ React element `A`
- 11: <A children={0} />; // error: number ~> string
-                  ^ number. This type is incompatible with
-  6:   props: { children: string };
-                          ^^^^^^ string
-
-children.js:13
- 13: <A>{0}</A>; // error: number ~> string
-     ^^^ React element `A`
- 13: <A>{0}</A>; // error: number ~> string
-         ^ number. This type is incompatible with
-  6:   props: { children: string };
-                          ^^^^^^ string
-
-children.js:16
- 16: <A children={""}>{null}</A>; // error: null ~> string
-     ^^^^^^^^^^^^^^^^^ React element `A`
- 16: <A children={""}>{null}</A>; // error: null ~> string
-                       ^^^^ null. This type is incompatible with
-  6:   props: { children: string };
-                          ^^^^^^ string
-
-children.js:22
- 22:   <A children={0}>
-       ^^^^^^^^^^^^^^^^ React element `A`
- 22:   <A children={0}>
-                    ^ number. This type is incompatible with
-  6:   props: { children: string };
-                          ^^^^^^ string
-
-children.js:36
- 36:   <A>
-       ^^^ React element `A`
- 37:     x
-         ^ array type. This type is incompatible with
-  6:   props: { children: string };
-                          ^^^^^^ string
-
-children.js:57
- 57:   <A>
-       ^^^ React element `A`
-  6:   props: { children: string };
-              ^^^^^^^^^^^^^^^^^^^^ property `children`. Property not found in
- 57:   <A>
-       ^^^ props of React element `A`
-
-children.js:78
- 78:   <B>
-       ^^^ React element `B`
- 79:     a
-         ^ string. Expected string literal `a b`
- 71:   props: { children: "a b" };
-                          ^^^^^ string literal `a b`
-
 createElementRequiredProp_string.js:5
   5:   props: {
               ^ property `test`. Property not found in
@@ -173,4 +101,4 @@ proptype_oneOfType.js:23
              ^^^^^^^^^^^^^^^^^^^^^^ string
 
 
-Found 20 errors
+Found 11 errors
