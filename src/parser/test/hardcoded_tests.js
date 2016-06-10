@@ -3298,6 +3298,21 @@ module.exports = {
         }],
         'errors': [],
       },
+      'class X {\n  x = () => {}\n  y(): void {}\n}': {
+        '%parse_options%': {
+          'esproposal_class_instance_fields': true,
+        },
+        'body.0.body.body': [{
+          'type': 'ClassProperty',
+          'key.name': 'x',
+          'value.type': 'ArrowFunctionExpression',
+        }, {
+          'type': 'MethodDefinition',
+          'key.name': 'y',
+          'value.type': 'FunctionExpression',
+          'kind': 'method',
+        }],
+      },
     },
     'Comments': {
       // Regression test: "/*" should be allowed inside block comments
