@@ -51,6 +51,12 @@ type t = {
   (* map from evaluation ids to types *)
   mutable evaluated: Type.t IMap.t;
 
+  (* graph tracking full resolution of types *)
+  mutable type_graph: Graph_explorer.graph;
+
+  (* map of speculation ids to sets of unresolved tvars *)
+  mutable all_unresolved: Type.TypeSet.t IMap.t;
+
   (* map from frame ids to env snapshots *)
   mutable envs: env IMap.t;
 
@@ -114,6 +120,8 @@ let make metadata file module_name = {
   envs = IMap.empty;
   property_maps = IMap.empty;
   evaluated = IMap.empty;
+  type_graph = Graph_explorer.new_graph ISet.empty;
+  all_unresolved = IMap.empty;
   modulemap = SMap.empty;
 
   errors = Errors_js.ErrorSet.empty;
@@ -128,6 +136,7 @@ let make metadata file module_name = {
 }
 
 (* accessors *)
+let all_unresolved cx = cx.all_unresolved
 let annot_table cx = cx.annot_table
 let envs cx = cx.envs
 let enable_const_params cx = cx.metadata.enable_const_params
@@ -167,6 +176,7 @@ let should_munge_underscores cx  = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root
 let suppress_comments cx = cx.metadata.suppress_comments
 let suppress_types cx = cx.metadata.suppress_types
+let type_graph cx = cx.type_graph
 let type_table cx = cx.type_table
 let verbose cx = cx.metadata.verbose
 
@@ -200,6 +210,8 @@ let remove_all_error_suppressions cx =
   cx.error_suppressions <- Errors_js.ErrorSuppressions.empty
 let remove_tvar cx id =
   cx.graph <- IMap.remove id cx.graph
+let set_all_unresolved cx all_unresolved =
+  cx.all_unresolved <- all_unresolved
 let set_envs cx envs =
   cx.envs <- envs
 let set_evaluated cx evaluated =
@@ -214,6 +226,8 @@ let set_module_exports_type cx module_exports_type =
   cx.module_exports_type <- module_exports_type
 let set_property_maps cx property_maps =
   cx.property_maps <- property_maps
+let set_type_graph cx type_graph =
+  cx.type_graph <- type_graph
 let set_tvar cx id node =
   cx.graph <- IMap.add id node cx.graph
 
@@ -235,5 +249,7 @@ let merge_into cx cx_other =
   set_envs cx (IMap.union (envs cx_other) (envs cx));
   set_property_maps cx (IMap.union (property_maps cx_other) (property_maps cx));
   set_evaluated cx (IMap.union (evaluated cx_other) (evaluated cx));
+  set_type_graph cx (Graph_explorer.union_finished (type_graph cx_other) (type_graph cx));
+  set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
   set_graph cx (IMap.union (graph cx_other) (graph cx))

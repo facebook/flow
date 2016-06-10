@@ -228,6 +228,10 @@ module ContextOptimizer = struct
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
     Context.set_envs cx quotient.reduced_envs;
+    Context.set_type_graph cx (
+      Graph_explorer.new_graph
+        (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)
+    );
     other_cxs |> List.iter (fun other_cx ->
       let other_m = context_module other_cx in
       Context.add_module cx other_m (export other_cx)

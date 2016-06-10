@@ -264,7 +264,7 @@ let add_this self cx reason tparams tparams_map =
   in
   let this_tp = { Type.
     name = "this";
-    reason = replace_reason "`this` type" reason;
+    reason = replace_reason thistype_desc reason;
     bound = rec_instance_type;
     polarity = Type.Positive;
     default = None;

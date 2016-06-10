@@ -1,7 +1,7 @@
 /**
  * Tests for intersections of object types
  *
- * @flow
+ * @noflow
  */
 
 // TODO we should give explicit errors for incompatibilities

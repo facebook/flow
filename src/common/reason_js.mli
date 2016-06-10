@@ -39,6 +39,14 @@ val internal_module_name: string -> string
 
 val internal_pattern_name: Loc.t -> string
 
+val typeparam_prefix: string -> string
+val has_typeparam_prefix: string -> bool
+val thistype_desc: string
+val existential_desc: string
+val is_instantiable_reason: reason -> bool
+
+val is_constant_property_reason: reason -> bool
+
 val derivable_reason: reason -> reason
 val is_derivable_reason: reason -> bool
 
@@ -70,8 +78,6 @@ val wrap_reason: string -> string -> reason -> reason
 val replace_reason: string -> reason -> reason
 
 val repos_reason: Loc.t -> reason -> reason
-
-val compare: reason -> reason -> int
 
 val do_patch: string list -> (int * int * string) list -> string
 

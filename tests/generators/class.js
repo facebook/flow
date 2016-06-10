@@ -100,13 +100,7 @@ var examples = new GeneratorExamples();
 
 for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
 
-// We miss reporting an error number ~> boolean from the arg passed in the next
-// call (below) to x in the infer_stmt function (above) via yield. This is a
-// bug, arising due to a bad interaction between generics and union types (which
-// appear in the signature of iterators, which in turn generators depend on). In
-// particular, the error reappears when the iteration in the above line is
-// commented.
-var infer_stmt_next = examples.infer_stmt().next(0).value;
+var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
 if (typeof infer_stmt_next === "undefined") {
 } else if (typeof infer_stmt_next === "number") {
 } else {

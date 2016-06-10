@@ -327,6 +327,7 @@ let types_of constraints =
 
 (* Def types that describe the solution of a type variable. *)
 let possible_types cx id = types_of (find_graph cx id)
+  |> List.filter is_proper_def
 
 let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
@@ -558,18 +559,13 @@ let fresh_context metadata file module_name =
 (***********************)
 
 module ImplicitTypeArgument = struct
-  (* helpers *)
-  let add_typeparam_prefix s = spf "type parameter%s" s
-  let has_typeparam_prefix s =
-    (String.length s) >= 14 && (String.sub s 0 14) = "type parameter"
-
   (* Make a type argument for a given type parameter, given a reason. Note that
      not all type arguments are tvars; the following function is used only when
      polymorphic types need to be implicitly instantiated, because there was no
      explicit instantiation (via a type application), or when we want to cache a
      unique instantiation and unify it with other explicit instantiations. *)
   let mk_targ cx (typeparam, reason_op) =
-    let prefix_desc = add_typeparam_prefix (spf " `%s` of " typeparam.name) in
+    let prefix_desc = typeparam_prefix (spf " `%s` of " typeparam.name) in
     mk_tvar cx (prefix_reason prefix_desc reason_op)
 
   (* Abstract a type argument that is created by implicit instantiation
@@ -688,10 +684,10 @@ end
   *)
 module Cache = struct
 
-  module TypePairSet : Set.S with type elt = TypeTerm.t * TypeTerm.use_t =
+  type type_pair = TypeTerm.t * TypeTerm.use_t
+  module TypePairSet : Set.S with type elt = type_pair =
   Set.Make (struct
-    type elt = TypeTerm.t * TypeTerm.use_t
-    type t = elt
+    type t = type_pair
     let compare = Pervasives.compare
   end)
 
@@ -745,6 +741,223 @@ module Cache = struct
 
 end
 
+(* Helper module for full type resolution as needed to check union and
+   intersection types.
+
+   Given a type, we walk it to collect the parts of it we wish to resolve. Once
+   these parts are resolved, they must themselves be walked to collect further
+   parts to resolve, and so on. In other words, type resolution jobs are created
+   and processed in rounds, moving closer and closer to full resolution of the
+   original type. Needless to say, these jobs can be recursive, and so must be
+   managed carefully for termination and performance. The job management itself
+   is done in Graph_explorer. (The jobs are naturally modeled as a graph with
+   dynamically created nodes and edges.)
+
+   Here, we define the function that creates a single round of such jobs.
+*)
+
+module ResolvableTypeJob = struct
+
+  (* A datatype describing type resolution jobs.
+
+     We unfold types as we go, looking for parts that cannot be unfolded
+     immediately (thus needing resolution to proceed).
+
+     The handling of these parts involve calls to `flow` and `unify`, and is
+     thus decoupled from the walker itself for clarity. Here, we just create
+     different jobs for different parts encountered. These jobs are further
+     processed by bindings_of_jobs.
+
+     Briefly, jobs are created for the following cases. (1) Annotation sources
+     need to be resolved. (2) So do heads of type applications. (3) Resolved
+     tvars are recursively unfolded, but we need to remember which resolved
+     tvars have been unfolded to prevent infinite unfolding. (4) Unresolved
+     tvars are handled differently based on context: when they are expected
+     (e.g., when they are part of inferred types), they are logged; when they
+     are unexpected (e.g., when they are part of annotations), they are
+     converted to `any`. For more details see bindings_of_jobs.
+
+  *)
+  type t =
+  | Binding of Type.t
+  | OpenResolved
+  | OpenUnresolved of int option * Type.t
+
+  (* log_unresolved is a mode that determines whether to log unresolved tvars:
+     it is None when resolving annotations, and Some speculation_id when
+     resolving inferred types. *)
+  let rec collect_of_types ?log_unresolved cx reason =
+    List.fold_left (collect_of_type ?log_unresolved cx reason)
+
+  and collect_of_type ?log_unresolved cx reason acc = function
+    | OpenT (r, id) as tvar ->
+      if IMap.mem id acc then acc
+      else if is_constant_property_reason r
+      (* It is important to consider reads of constant property names as fully
+         resolvable, especially since constant property names are often used to
+         store literals that serve as tags for disjoint unions. Unfortunately,
+         today we cannot distinguish such reads from others, so we rely on a
+         common style convention to recognize constant property names. For now
+         this hack pays for itself: we do not ask such reads to be annotated
+         with the corresponding literal types to decide membership in those
+         disjoint unions. *)
+      then IMap.add id (Binding tvar) acc
+      else begin match find_graph cx id with
+      | Resolved t ->
+        let acc = IMap.add id OpenResolved acc in
+        collect_of_type ?log_unresolved cx reason acc t
+      | Unresolved _ ->
+        if is_instantiable_reason r || is_instantiable_reason reason
+        (* Instantiable reasons indicate unresolved tvars that are created
+           "fresh" for the sole purpose of binding to other types, e.g. as
+           instantiations of type parameters or as existentials. Constraining
+           them during speculative matching typically do not cause side effects
+           across branches, and help make progress. *)
+        then acc
+        else IMap.add id (OpenUnresolved (log_unresolved, tvar)) acc
+      end
+
+    | AnnotT (_, source) ->
+      let _, id = open_tvar source in
+      if IMap.mem id acc then acc
+      else IMap.add id (Binding source) acc
+
+    | ThisTypeAppT (poly_t, _, targs)
+    | TypeAppT (poly_t, targs)
+      ->
+      begin match poly_t with
+      | OpenT (_, id) ->
+        if IMap.mem id acc then
+          collect_of_types ?log_unresolved cx reason acc targs
+        else begin
+          let acc = IMap.add id (Binding poly_t) acc in
+          collect_of_types ?log_unresolved cx reason acc targs
+        end
+
+      | _ ->
+        let ts = poly_t::targs in
+        collect_of_types ?log_unresolved cx reason acc ts
+      end
+
+    (* Some common kinds of types are quite overloaded: sometimes they correspond
+       to types written by the user, but sometimes they also model internal types,
+       and as such carry other bits of information. For now, we walk only some
+       parts of these types. These parts are chosen such that they directly
+       correspond to parts of the surface syntax of types. It is less clear what
+       it means to resolve other "internal" parts of these types. In theory,
+       ignoring them *might* lead to bugs, but we've not seen examples of such
+       bugs yet. Leaving further investigation of this point as future work. *)
+
+    | ObjT (_, { props_tmap; _ }) ->
+      let props_tmap = find_props cx props_tmap in
+      let ts = SMap.fold (fun x t ts ->
+        if is_internal_name x then ts (* avoid resolving types of shadow properties *)
+        else t::ts
+      ) props_tmap [] in
+      collect_of_types ?log_unresolved cx reason acc ts
+    | FunT (_, _, _, { params_tlist; return_t; _ }) ->
+      let ts = return_t :: params_tlist in
+      collect_of_types ?log_unresolved cx reason acc ts
+    | ArrT (_, elem_t, ts) ->
+      let ts = elem_t::ts in
+      collect_of_types ?log_unresolved cx reason acc ts
+    | InstanceT (_, static, super,
+                 { class_id; type_args; fields_tmap; methods_tmap; _ }) ->
+      let ts = if class_id = 0 then [] else [super; static] in
+      let ts = SMap.fold (fun _ t ts -> t::ts) type_args ts in
+      let props_tmap = SMap.union
+        (find_props cx fields_tmap) (find_props cx methods_tmap) in
+      let ts = SMap.fold (fun _ t ts -> t::ts) props_tmap ts in
+      collect_of_types ?log_unresolved cx reason acc ts
+    | PolyT (_, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+    | BoundT _ ->
+      acc
+
+    (* TODO: The following kinds of types are not walked out of laziness. It's not
+       immediately clear what we'd gain (or lose) by walking them. *)
+
+    | EvalT _
+    | ChoiceKitT (_, _)
+    | ModuleT (_, _)
+    | ExtendsT (_, _, _)
+      ->
+      acc
+
+    (* The following cases exactly follow Type_visitor (i.e., they do the standard
+       walk). TODO: Rewriting this walker as a subclass of Type_visitor would be
+       quite nice (as long as we confirm that the resulting virtualization of
+       calls to this function doesn't lead to perf degradation: this function is
+       expected to be quite hot). *)
+
+    | OptionalT t | MaybeT t | RestT t ->
+      collect_of_type ?log_unresolved cx reason acc t
+    | UnionT (_, rep) ->
+      let ts = UnionRep.members rep in
+      collect_of_types ?log_unresolved cx reason acc ts
+    | IntersectionT (_, rep) ->
+      let ts = InterRep.members rep in
+      collect_of_types ?log_unresolved cx reason acc ts
+
+    | AnyWithUpperBoundT t
+    | AnyWithLowerBoundT t
+    | AbstractT t
+      ->
+      collect_of_type ?log_unresolved cx reason acc t
+
+    | TypeT (_, t)
+    | ClassT t
+    | ThisClassT t
+      ->
+      collect_of_type ?log_unresolved cx reason acc t
+
+    | KeysT (_, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
+    | ShapeT (t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
+    | DiffT (t1, t2) ->
+      let ts = [t1;t2] in
+      collect_of_types ?log_unresolved cx reason acc ts
+
+    | FunProtoBindT _
+    | FunProtoCallT _
+    | FunProtoApplyT _
+    | FunProtoT _
+    | CustomFunT (_, _)
+    | BoolT _
+    | NumT _
+    | StrT _
+    | VoidT _
+    | NullT _
+    | EmptyT _
+    | MixedT _
+    | AnyT _
+    | TaintT _
+    | AnyObjT _
+    | AnyFunT _
+    | SingletonBoolT _
+    | SingletonNumT _
+    | SingletonStrT _
+    | ExistsT _
+      ->
+      acc
+
+  (* TODO: Support for use types is currently sketchy. Full resolution of use
+     types are only needed for choice-making on intersections. We care about
+     calls in particular because one of the biggest uses of intersections is
+     function overloading. More uses will be added over time. *)
+  let collect_of_use ~log_unresolved cx reason acc = function
+  | UseT (_, t) ->
+    collect_of_type ~log_unresolved cx reason acc t
+  | CallT (_, ft) ->
+    collect_of_types ~log_unresolved cx reason acc
+      (ft.params_tlist @ [ft.return_t])
+  | _ -> acc
+
+end
+
 (*********************************************************************)
 
 (********************)
@@ -782,8 +995,17 @@ let not_expect_bound t = match t with
   | BoundT _ -> assert_false (spf "Did not expect %s" (string_of_ctor t))
   | _ -> ()
 
-let not_expect_use_bound t =
+let not_expect_bound_use t =
   lift_to_use not_expect_bound t
+
+(* Sometimes we expect to see only proper def types. Proper def types make sense
+   as use types. *)
+let expect_proper_def t =
+  if not (is_proper_def t) then
+    assert_false (spf "Did not expect %s" (string_of_ctor t))
+
+let expect_proper_def_use t =
+  lift_to_use expect_proper_def t
 
 (********************** start of slab **********************************)
 
@@ -814,7 +1036,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Type parameters should always be substituted out, and as such they should
        never appear "exposed" in flows. (They can still appear bound inside
        polymorphic definitions.) *)
-    not_expect_bound l; not_expect_use_bound u;
+    not_expect_bound l; not_expect_bound_use u;
+    (* Types that are classified as def types but don't make sense as use types
+       should not appear as use types. *)
+    expect_proper_def_use u;
+
+    (* Before processing the flow action, check that it is not deferred. If it
+       is, then when speculation is complete, the action either fires or is
+       discarded depending on whether the case that created the action is
+       selected or not. *)
+    if not (defer_action cx (Speculation.Action.Flow (l, u))) then
 
     match (l,u) with
 
@@ -872,17 +1103,74 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (t1, UseT (use_op, t2))
       );
 
-    (******************)
-    (* concretization *)
-    (******************)
+    (************************)
+    (* Full type resolution *)
+    (************************)
 
-    (** pairs emitted by in-progress concretize_parts *)
-    | t, ConcretizeLowerT (l, todo_ts, done_ts, u) ->
-      concretize_lower_parts cx trace l u (t :: done_ts) todo_ts
+    (* Full resolution of a type involves (1) walking the type to collect a
+       bunch of unresolved tvars (2) emitting constraints that, once those tvars
+       are resolved, recursively trigger the process for the resolved types (3)
+       finishing when no unresolved tvars remain.
 
-    (** pairs emitted by in-progress concretize_parts *)
-    | t, ConcretizeUpperT (l, todo_ts, done_ts, u) ->
-      concretize_upper_parts cx trace l u (t :: done_ts) todo_ts
+       (1) is covered in ResolvableTypeJob. Below, we cover (2) and (3).
+
+       For (2), we emit a FullyResolveType constraint on any unresolved tvar
+       found by (1). These unresolved tvars are chosen so that they have the
+       following nice property, called '0->1': they remain unresolved until, at
+       some point, they are unified with a concrete type. Moreover, the act of
+       resolution coincides with the appearance of one (the first and the last)
+       upper bound. (In general, unresolved tvars can accumulate an arbitrary
+       number of lower and upper bounds over its lifetime.) More details can be
+       found in bindings_of_jobs.
+
+       For (3), we create a special "goal" tvar that acts like a promise for
+       fully resolving the original type, and emit a Trigger constraint on the
+       goal when no more work remains.
+
+       The main client of full type resolution is checking union and
+       intersection types. The check itself is modeled by a TryFlow constraint,
+       which is guarded by a goal tvar that corresponds to some full type
+       resolution requirement. Eventually, this goal is "triggered," which in
+       turn triggers the check. (The name "TryFlow" refers to the technique used
+       in the check, which literally tries each branch of the union or
+       intersection in turn, maintaining some matching state as it goes: see
+       speculative_matches for details). *)
+
+    | t, ChoiceKitUseT (reason, FullyResolveType id) ->
+      fully_resolve_type cx reason id t
+
+    | ChoiceKitT (_, Trigger), ChoiceKitUseT (reason, TryFlow (i, spec)) ->
+      speculative_matches cx trace reason i spec
+
+    (* Intersection types need a preprocessing step before they can be checked;
+       this step brings it closer to parity with the checking of union types,
+       where the preprocessing effectively happens "automatically." This
+       apparent asymmetry is explained in prep_try_intersection.
+
+       Here, it suffices to note that the preprocessing step involves
+       concretizing some types. Type concretization is distinct from full type
+       resolution. Whereas full type resolution is a recursive process that
+       needs careful orchestration, type concretization is a relatively simple
+       one-step process: a tvar is concretized when any lower bound appears on
+       it. Also, unlike full type resolution, the tvars that are concretized
+       don't necessarily have the 0->1 property: they could be concretized at
+       different types, as more and more lower bounds appear. *)
+
+    | UnionT (_, urep), IntersectionPreprocessKitT (reason,
+        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
+      UnionRep.members urep |> List.iter (fun t ->
+        rec_flow cx trace (t, IntersectionPreprocessKitT (reason,
+          ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
+      )
+
+    | AnnotT (_, source_t), IntersectionPreprocessKitT (reason,
+        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
+      rec_flow cx trace (source_t, IntersectionPreprocessKitT (reason,
+        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
+
+    | t, IntersectionPreprocessKitT (reason,
+        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
+      prep_try_intersection cx trace reason unresolved (resolved @ [t]) u r rep
 
     (*****************)
     (* destructuring *)
@@ -933,9 +1221,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (sink_t, _)) ->
-      let reason = reason_of_t sink_t in
-      rec_flow cx trace (sink_t, ReposUseT (reason, use_op, l))
+    | _, UseT (use_op, AnnotT (_, source_t)) ->
+      let reason = reason_of_t source_t in
+      rec_flow cx trace (source_t, ReposUseT (reason, use_op, l))
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
@@ -963,6 +1251,32 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UnifyT(t,t_other)) ->
       rec_unify cx trace t t_other
+
+    (*****************************************************************)
+    (* Intersection type preprocessing for certain object predicates *)
+    (*****************************************************************)
+
+    (* Predicate refinements on intersections of object types need careful
+       handling. An intersection of object types passes a predicate when any of
+       those object types passes the predicate: however, the refined type must
+       be the intersection as a whole, not the particular object type that
+       passes the predicate! (For example, we may check some condition on
+       property x and property y of { x: ... } & { y: ... } in sequence, and not
+       expect to get property-not-found errors in the process.)
+
+       Although this seems like a special case, it's not. An intersection of
+       object types should behave more or less the same as a "concatenated"
+       object type with all the properties of those object types. The added
+       complication arises as an implementation detail, because we do not
+       concatenate those object types explicitly. *)
+
+    | _, IntersectionPreprocessKitT (_,
+        SentinelPropTest (sense, key, t, inter, tvar)) ->
+      sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
+
+    | _, IntersectionPreprocessKitT (_,
+        PropExistsTest (sense, key, inter, tvar)) ->
+      prop_exists_test_generic key cx trace tvar inter sense l
 
     (*********************************************************************)
     (* `import type` creates a properly-parameterized type alias for the *)
@@ -1521,6 +1835,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let t_out = mk_instance cx reason_op ~for_type:false c in
       rec_flow cx trace (l, UseT (use_op, t_out))
 
+    | TypeAppT _, ReposLowerT (reason_op, u) ->
+        rec_flow cx trace (reposition cx reason_op l, u)
+
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_use_t u in
         let reason_tapp = reason_of_t l in
@@ -1760,30 +2077,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when List.mem u (InterRep.members rep) ->
       ()
 
-    (** To check that the concrete type l may flow to UnionT(_, ts), we try each
-        type in ts in turn. The types in ts may be type variables, but by
-        routing them through SpeculativeMatchT, we ensure that they are
-        tried only when their concrete uses are available. The different
-        branches of unions are assumed to be disjoint at the top level, so that
-        it is always sound to pick the first type in ts that matches the type
-        l. *)
-
-    (** pairs emitted by try_union:
-        UnionT has been partitioned into head_u (head member)
-        and tail_u (union of tail members) *)
-    | SpeculativeMatchT(_, l, tail_u), head_u ->
-      begin match speculative_match cx trace l head_u with
-      | None -> ()
-      | Some err ->
-        (* rec_flow cx trace (l, tail_u) *)
-        let tail_u = match tail_u with
-          | UseT (use_op, UnionT (r, rep)) ->
-            (* record this error *)
-            UseT (use_op, UnionT (r, UnionRep.record_error err rep))
-          | _ -> tail_u
-        in rec_flow cx trace (l, tail_u)
-      end
-
     | _, UseT (use_op, UnionT (r, rep)) -> (
       match UnionRep.quick_mem l rep with
       | Some true -> ()
@@ -1794,7 +2087,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         rec_flow cx trace (l, UseT (use_op, EmptyT r))
       | None ->
-        try_union cx trace l r rep
+        (* Try the branches of the union in turn, with the goal of selecting the
+           correct branch. This process is reused for intersections as well. See
+           comments on try_union and try_intersection. *)
+        try_union cx l r rep
     )
 
     (* maybe and optional types are just special union types *)
@@ -1804,31 +2100,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (t1, UseT (use_op, OptionalT(t2))) ->
       rec_flow cx trace (t1, UseT (use_op, t2))
-
-    (** To check that IntersectionT(_, ts) may flow to the concrete type u, we
-        try each type in ts in turn. The types in ts may be type variables, but
-        by routing them through SpeculativeMatchT, we ensure that they
-        are tried only when their concrete definitionss are available. Note that
-        unlike unions, the different branches of intersections are usually not
-        distinct at the top level (e.g., they may all be function types, or
-        object types): instead, they are assumed to be disjoint in their parts,
-        so we must suffiently concretize parts of u to make the disjointness
-        evident when the different branches are tried; see below. *)
-
-    (** pairs emitted by try_intersection:
-        IntersectionT has been partitioned into head_l (head member)
-        and tail_l (intersection of tail members) *)
-    | head_l, UseT (_, SpeculativeMatchT (_, tail_l, u)) -> (
-      match speculative_match cx trace head_l u with
-      | None -> ()
-      | Some err ->
-        let tail_l = match tail_l with
-          | IntersectionT (r, rep) ->
-            (* record this error *)
-            IntersectionT (r, InterRep.record_error err rep)
-          | _ -> tail_l
-        in rec_flow cx trace (tail_l, u)
-    )
 
     (** special treatment for some operations on intersections: these
         rules fire for particular UBs whose constraints can (or must)
@@ -1881,8 +2152,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
 
-    (** predicates: prevent a predicate UB from prematurely
-        decomposing an intersection LB *)
+    (** predicates: prevent a predicate upper bound from prematurely decomposing
+        an intersection lower bound *)
     | IntersectionT _, PredicateT (pred, tout) ->
       predicate cx trace tout (l, pred)
 
@@ -1898,25 +2169,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT _, ReposLowerT (reason_op, u) ->
       rec_flow cx trace (reposition cx reason_op l, u)
 
-    (** All other pairs with an intersection LB come here.
-        Before processing, we ensure that both the UB target and
-        the intersection LB are concretized. Each of these steps
-        is a recursion, and the concretization may result in other
-        rules (eg the special cases above) firing. If none do, then
-        we'll wind up back here with a fully concretized pair, at
-        which point we begin the speculative match process via
-        try_intersection. *)
+    (** All other pairs with an intersection lower bound come here. Before
+        further processing, we ensure that the upper bound is concretized. See
+        prep_try_intersection for details. **)
+
+    (* (After the above preprocessing step, try the branches of the intersection
+       in turn, with the goal of selecting the correct branch. This process is
+       reused for unions as well. See comments on try_union and
+       try_intersection.)  *)
 
     | IntersectionT (r, rep), u ->
-      let upper_parts = upper_parts_to_concretize cx u in
-      if upper_parts <> []
-      then concretize_upper_parts cx trace l u [] upper_parts
-      else (
-        let lower_parts = lower_parts_to_concretize cx l in
-        if lower_parts <> []
-        then concretize_lower_parts cx trace l u [] lower_parts
-        else try_intersection cx trace u r rep
-      )
+      prep_try_intersection cx trace
+        (reason_of_use_t u) (parts_to_replace u) [] u r rep
 
     (* singleton lower bounds are equivalent to the corresponding
        primitive with a literal constraint. These conversions are
@@ -2277,7 +2541,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           if lit then (
             (* prop from unaliased LB: check <:, then make exact *)
             rec_flow cx trace (lt, UseT (use_op, ut));
-            write_prop cx lflds s ut
+            (* Band-aid to avoid side effect in speculation mode. Even in
+               non-speculation mode, the side effect here is racy, so it either
+               needs to be taken out or replaced with something more
+               robust. Tracked by #11299251. *)
+            if not (speculating ()) then write_prop cx lflds s ut
           ) else (
             (* prop from aliased LB must be exact *)
             rec_unify cx trace lt ut
@@ -2293,7 +2561,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                an optional property, as well as ensuring compatibility
                with dictionary constraints if present *)
             dictionary cx trace (string_key s ureason) t ldict;
-            write_prop cx lflds s ut;
+            (* Band-aid to avoid side effect in speculation mode. Even in
+               non-speculation mode, the side effect here is racy, so it either
+               needs to be taken out or replaced with something more
+               robust. Tracked by #11299251. *)
+            if not (speculating ()) then write_prop cx lflds s ut;
           | _ ->
             (* otherwise, we ensure compatibility with dictionary constraints
                if present, and look up the property in the prototype *)
@@ -3964,6 +4236,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | ChoiceKitT _
   | CustomFunT _
     ->
     t
@@ -4156,7 +4429,6 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | SingletonBoolT _
   | SingletonStrT _ -> t
 
-  | SpeculativeMatchT _
   | ModuleT _
   | ExtendsT _
     ->
@@ -4272,7 +4544,6 @@ and check_polarity cx polarity = function
   | AnnotT _
   | ShapeT _
   | DiffT _
-  | SpeculativeMatchT _
   | KeysT _
   | FunProtoT _
   | FunProtoApplyT _
@@ -4280,6 +4551,7 @@ and check_polarity cx polarity = function
   | FunProtoCallT _
   | EvalT _
   | ExtendsT _
+  | ChoiceKitT _
   | CustomFunT _
     -> () (* TODO *)
 
@@ -4474,13 +4746,372 @@ and chain_objects cx ?trace reason this those =
     )
   ) this those
 
-(* Speculatively match types, returning success. *)
-and speculative_match cx trace l u =
+(*******************************************************)
+(* Entry points into the process of trying different   *)
+(* branches of union and intersection types.           *)
+(*******************************************************)
+
+(* The problem we're trying to solve here is common to checking unions and
+   intersections: how do we make a choice between alternatives, when (i) we have
+   only partial information (i.e., while we're in the middle of type inference)
+   and when (ii) we want to avoid regret (i.e., by not committing to an
+   alternative that might not work out, when alternatives that were not
+   considered could have worked out)?
+
+   To appreciate the problem, consider what happens without choice. Partial
+   information is not a problem: we emit constraints that must be satisfied for
+   something to work, and either those constraints fail (indicating a problem)
+   or they don't fail (indicating no problem). With choice and partial
+   information, we cannot naively emit constraints as we try alternatives
+   *without also having a mechanism to roll back those constraints*. This is
+   because those constraints don't *have* to be satisfied; some other
+   alternative may end up not needing those constraints to be satisfied for
+   things to work out!
+
+   It is not too hard to imagine scary scenarios we can get into without a
+   roll-back mechanism. (These scenarios are not theoretical, by the way: with a
+   previous implementation of union and intersection types that didn't
+   anticipate these scenarios, they consistently caused a lot of problems in
+   real-world use cases.)
+
+   * One bad state we can get into is where, when trying an alternative, we emit
+   constraints hoping they would be satisfied, and they appear to work. So we
+   commit to that particular alternative. Then much later find out that those
+   constraints are unsatified, at which point we have lost the ability to try
+   other alternatives that could have worked. This leads to a class of bugs
+   where a union or intersection type contains cases that should have worked,
+   but they don't.
+
+   * An even worse state we can get into is where we do discover that an
+   alternative won't work out while we're still in a position of choosing
+   another alternative, but in the process of making that discovery we emit
+   constraints that linger on in a ghost-like state. Meanwhile, we pick another
+   alternative, it works out, and we move on. Except that much later the ghost
+   constraints become unsatisfied, leading to much confusion on the source of
+   the resulting errors. This leads to a class of bugs where we get spurious
+   errors even when a union or intersection type seems to have worked.
+
+   So, we just implement roll-back, right? Basically...yes. But rolling back
+   constraints is really hard in the current implementation. Instead, we try to
+   avoid processing constraints that have side effects as much as possible while
+   trying alternatives: by ensuring that (1) we don't (need to) emit too many
+   constraints that have side effects (2) those that we do emit get deferred,
+   instead of being processed immediately, until a choice can be made, thereby
+   not participating in the choice-making process.
+
+   (1) How do we ensure we don't emit too many constraints that have side
+   effects? By fully resolving types before they participate in the
+   choice-making process. Basically, we want to have as much information as we
+   can before trying alternatives. It is a nice property of our implementation
+   that once types are resolved, constraints emitted against them don't have
+   (serious) side effects: they get simplified and simplified until we either
+   hit success or failure. The details of this process is described in
+   ResolvableTypeJob and in resolve_bindings.
+
+   (2) But not all types can be fully resolved. In particular, while union and
+   intersection types themselves can be fully resolved, the lower and upper
+   bounds we check them against could have still-to-be-inferred types in
+   them. How do we ensure that for the potentially side-effectful constraints we
+   do emit on these types, we avoid undue side effects? By explicitly marking
+   these types as unresolved, and deferring the execution of constraints that
+   involved such marked types until a choice can be made. The details of this
+   process is described in Speculation.
+
+   There is a necessary trade-off in the approach. In particular, (2) means that
+   sometimes choices cannot be made: it is ambiguous which constraints should be
+   executed when trying different alternatives. We detect such ambiguities
+   (conservatively, but only when a best-effort choice-making strategy doesn't
+   work), and ask for additional annotations to disambiguate the relevant
+   alternatives. A particularly nice property of this approach is that it is
+   complete: with enough annotations it is always possible to make a
+   choice. Another "meta-feature" of this approach is that it leaves room for
+   incremental improvement: e.g., we would need fewer additional annotations as
+   we improve our inference algorithm to detect cases where more unresolved
+   tvars can be fully resolved ahead of time (in other words, detect when they
+   have the "0->1" property, discussed elsewhere, roughly meaning they are
+   determined by annotations).
+*)
+
+(** Every choice-making process on a union or intersection type is assigned a
+    unique identifier, called the speculation_id. This identifier keeps track of
+    unresolved tvars encountered when trying to fully resolve types. **)
+
+and try_union cx l reason rep =
+  let ts = UnionRep.members rep in
+  let speculation_id = mk_id() in
+  Speculation.init_speculation cx speculation_id;
+
+  (* collect parts of the union type to be fully resolved *)
+  let imap = ResolvableTypeJob.collect_of_types cx reason IMap.empty ts in
+  (* collect parts of the lower bound to be fully resolved, while logging
+     unresolved tvars *)
+  let imap = ResolvableTypeJob.collect_of_type
+    ~log_unresolved:speculation_id cx reason imap l in
+  (* fully resolve the collected types *)
+  resolve_bindings_init cx reason (bindings_of_jobs cx imap) @@
+  (* ...and then begin the choice-making process *)
+    try_flow_continuation cx reason speculation_id (UnionCases(l, ts))
+
+and try_intersection cx u reason rep =
+  let ts = InterRep.members rep in
+  let speculation_id = mk_id() in
+  Speculation.init_speculation cx speculation_id;
+
+  (* collect parts of the intersection type to be fully resolved *)
+  let imap = ResolvableTypeJob.collect_of_types cx reason IMap.empty ts in
+  (* collect parts of the upper bound to be fully resolved, while logging
+     unresolved tvars *)
+  let imap = ResolvableTypeJob.collect_of_use
+    ~log_unresolved:speculation_id cx reason imap u in
+  (* fully resolve the collected types *)
+  resolve_bindings_init cx reason (bindings_of_jobs cx imap) @@
+  (* ...and then begin the choice-making process *)
+    try_flow_continuation cx reason speculation_id (IntersectionCases(ts, u))
+
+(* Preprocessing for intersection types.
+
+   Before feeding into the choice-making machinery described above, we
+   preprocess upper bounds of intersection types. This preprocessing seems
+   asymmetric, but paradoxically, it is not: the purpose of the preprocessing is
+   to bring choice-making on intersections to parity with choice-making on
+   unions.
+
+   Consider what happens when a lower bound is checked against a union type. The
+   lower bound is always concretized before a choice is made! In other words,
+   even if we emit a flow from an unresolved tvar to a union type, the
+   constraint fires only when the unresolved tvar has been concretized.
+
+   Now, consider checking an intersection type with an upper bound. As an
+   artifact of how tvars and concrete types are processed, the upper bound would
+   appear to be concrete even though the actual parts of the upper bound that
+   are involved in the choice-making may be unresolved! (These parts are the
+   top-level input positions in the upper bound, which end up choosing between
+   the top-level input positions in the members of the intersection type.) If we
+   did not concretize the parts of the upper bound involved in choice-making, we
+   would start the choice-making process at a disadvantage (compared to
+   choice-making with a union type and an already concretized lower
+   bound). Thus, we do an extra preprocessing step where we collect the parts of
+   the upper bound to be concretized, and for each combination of concrete types
+   for those parts, call the choice-making process.
+*)
+
+(** The following function concretizes each tvar in unresolved in turn,
+    recording their corresponding concrete lower bounds in resolved as it
+    goes. At each step, it emits a ConcretizeTypes constraint on an unresolved
+    tvar, which in turn calls into this function when a concrete lower bound
+    appears on that tvar. **)
+and prep_try_intersection cx trace reason unresolved resolved u r rep =
+  match unresolved with
+  | [] -> try_intersection cx (replace_parts resolved u) r rep
+  | tvar::unresolved ->
+    rec_flow cx trace (tvar, intersection_preprocess_kit reason
+      (ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
+
+(* some patterns need to be concretized before proceeding further *)
+and patt_that_needs_concretization = function
+  | OpenT _ | UnionT _ | AnnotT _ -> true
+  | _ -> false
+
+and concretize_patt replace patt =
+  snd (List.fold_left (fun (replace, result) t ->
+    if patt_that_needs_concretization t
+    then List.tl replace, result@[List.hd replace]
+    else replace, result@[t]
+  ) (replace, []) patt)
+
+(* for now, we only care about concretizating parts of functions and calls *)
+and parts_to_replace = function
+  | UseT (_, FunT (_, _, _, callt)) ->
+    List.filter patt_that_needs_concretization callt.params_tlist
+  | CallT (_, callt) ->
+    List.filter patt_that_needs_concretization callt.params_tlist
+  | _ -> []
+
+and replace_parts replace = function
+  | UseT (op, FunT (r, t1, t2, callt)) ->
+    UseT (op, FunT (r, t1, t2, { callt with
+      params_tlist = concretize_patt replace callt.params_tlist;
+    }))
+  | CallT (r, callt) ->
+    CallT (r, { callt with
+      params_tlist = concretize_patt replace callt.params_tlist;
+    })
+  | u -> u
+
+(************************)
+(* Full type resolution *)
+(************************)
+
+(* Here we continue where we left off at ResolvableTypeJob. Once we have
+   collected a set of type resolution jobs, we create so-called bindings from
+   these jobs. A binding is a (id, tvar) pair, where tvar is what needs to be
+   resolved, and id is an identifier that serves as an index for that job.
+
+   We don't try to fully resolve unresolved tvars that are not annotation
+   sources or heads of type applications, since in general they don't satify the
+   0->1 property. Instead:
+
+   (1) When we're expecting them, e.g., when we're looking at inferred types, we
+   mark them so that we can recognize them later, during speculative matching.
+
+   (2) When we're not expecting them, e.g., when we're fully resolving union /
+   intersection type annotations, we unify them as `any`. Ideally we wouldn't be
+   worrying about this case, but who knows what cruft we might have accumulated
+   on annotation types, so just getting that cruft out of the way.
+
+   These decisions were made in ResolvableTypeJob.collect_of_types and are
+   reflected in the use (or not) of OpenUnresolved (see below).
+*)
+
+and bindings_of_jobs cx jobs =
+  IMap.fold ResolvableTypeJob.(fun id job bindings -> match job with
+  | OpenResolved -> bindings
+  | Binding t -> (id, t)::bindings
+  | OpenUnresolved (log_unresolved, t) ->
+    begin match log_unresolved with
+    | Some speculation_id ->
+      Speculation.add_unresolved_to_speculation cx speculation_id t
+    | None ->
+      unify cx t AnyT.t
+    end;
+    bindings
+  ) jobs []
+
+(* Entry point into full type resolution. Create an identifier for the goal
+   tvar, and call the general full type resolution function below. *)
+and resolve_bindings_init cx reason bindings done_tvar =
+  let id = create_goal cx done_tvar in
+  resolve_bindings cx reason id bindings
+
+and create_goal cx tvar =
+  let i = mk_id () in
+  Graph_explorer.node (Context.type_graph cx) i;
+  Context.set_evaluated cx (IMap.add i tvar (Context.evaluated cx));
+  i
+
+(* Let id be the identifier associated with a tvar that is not yet
+   resolved. (Here, resolved/unresolved refer to the state of the tvar in the
+   context graph: does it point to Resolved _ or Unresolved _?) As soon as the
+   tvar is resolved to some type, we generate some bindings by walking that
+   type. Full type resolution at id now depends on full resolution of the
+   ids/tvars in those bindings. The following function ensures that those
+   dependencies are recorded and processed.
+
+   Dependency management happens in Graph_explorer, using efficient data
+   structures discussed therein. All we need to do here is to connect id to
+   bindings in that graph, while taking care that (1) the conditions of adding
+   edges to the graph are satisfied, and (2) cleaning up the effects of adding
+   those edges to the graph. Finally (3) we request full type resolution of the
+   bindings themselves.
+
+   For (1), note that the graph only retains transitively closed dependencies
+   from one kind of tvars to another kind of tvars. The former kind includes
+   tvars that are resolved but not yet fully resolved. The latter kind includes
+   tvars that are not yet resolved. Thus, in particular we must filter out
+   bindings that correspond to fully resolved tvars (see
+   is_unfinished_target). On the other hand, the fully_resolve_type function
+   below already ensures that id is not yet fully resolved (via
+   is_unexplored_source).
+
+   For (2), after adding edges we might discover that some tvars are now fully
+   resolved: this happens when, e.g., no new transitively closed dependencies
+   get added on id, and full type resolution of some tvars depended only on id.
+   If any of these fully resolved tvars were goal tvars, we trigger them.
+
+   For (3) we emit a ResolveType constraint for each binding; when the
+   corresponding tvar is resolved, the function fully_resolve_type below is
+   called, which in turn calls back into this function (thus closing the
+   recursive loop).
+*)
+
+and resolve_bindings cx reason id bindings =
+  let bindings = filter_bindings cx bindings in
+  let fully_resolve_ids = connect_id_to_bindings cx id bindings in
+  ISet.iter (fun id ->
+    match IMap.get id (Context.evaluated cx) with
+    | None -> ()
+    | Some tvar -> trigger cx reason tvar
+  ) fully_resolve_ids;
+  List.iter (resolve_binding cx reason) bindings
+
+and fully_resolve_type cx reason id t =
+  if is_unexplored_source cx id then
+    let imap = ResolvableTypeJob.collect_of_type cx reason IMap.empty t in
+    resolve_bindings cx reason id (bindings_of_jobs cx imap)
+
+and filter_bindings cx =
+  List.filter (fun (id, _) -> is_unfinished_target cx id)
+
+and connect_id_to_bindings cx id bindings =
+  let ids, _ = List.split bindings in
+  Graph_explorer.edges (Context.type_graph cx) (id, ids)
+
+(* Sanity conditions on source and target before adding edges to the
+   graph. Nodes are in one of three states, described in Graph_explorer:
+   Not_found (corresponding to unresolved tvars), Found _ (corresponding to
+   resolved but not yet fully resolved tvars), and Finished (corresponding to
+   fully resolved tvars). *)
+
+and is_unexplored_source cx id =
+  match Graph_explorer.stat_graph id (Context.type_graph cx) with
+  | Graph_explorer.Finished -> false
+  | Graph_explorer.Not_found -> false
+  | Graph_explorer.Found node -> Graph_explorer.is_unexplored_node node
+
+and is_unfinished_target cx id =
+  let type_graph = Context.type_graph cx in
+  match Graph_explorer.stat_graph id type_graph with
+  | Graph_explorer.Finished -> false
+  | Graph_explorer.Not_found ->
+    Graph_explorer.node type_graph id;
+    true
+  | Graph_explorer.Found node ->
+    not (Graph_explorer.is_finished_node node)
+
+(** utils for creating toolkit types **)
+
+and choice_kit reason k =
+  ChoiceKitT (reason, k)
+
+and choice_kit_use reason k =
+  ChoiceKitUseT (reason, k)
+
+and intersection_preprocess_kit reason k =
+  IntersectionPreprocessKitT (reason, k)
+
+(** utils for emitting toolkit constraints **)
+
+and trigger cx reason done_tvar =
+  flow cx (choice_kit reason Trigger, UseT (UnknownUse, done_tvar))
+
+and try_flow_continuation cx reason speculation_id spec =
+  tvar_with_constraint cx
+    (choice_kit_use reason (TryFlow (speculation_id, spec)))
+
+and resolve_binding cx reason (id, t) =
+  flow cx (
+    t,
+    choice_kit_use reason (FullyResolveType id)
+  )
+
+(************************)
+(* Speculative matching *)
+(************************)
+
+(* Speculatively match a pair of types, returning whether some error was
+   encountered or not. Speculative matching happens in the context of a
+   particular "branch": this context controls how some constraints emitted
+   during the matching might be processed. See comments in Speculation for
+   details on branches. See also speculative_matches, which calls this function
+   iteratively and processes its results. *)
+and speculative_match cx trace branch l u =
   let ops = Ops.get () in
   let typeapp_stack = TypeAppExpansion.get () in
-  set_speculative ();
+  let cache = !Cache.FlowConstraint.cache in
+  set_speculative branch;
   let restore () =
     restore_speculative ();
+    Cache.FlowConstraint.cache := cache;
     TypeAppExpansion.set typeapp_stack;
     Ops.set ops
   in
@@ -4496,11 +5127,221 @@ and speculative_match cx trace l u =
     restore ();
     raise exn
 
-(* try each branch of a union in turn *)
-and try_union cx trace l reason rep =
-  match UnionRep.members rep with
-  | t :: _ ->
-    (* embed reasons of consituent types into outer reason *)
+(* Speculatively match several alternatives in turn, as presented when checking
+   a union or intersection type. This process maintains a so-called "match
+   state" that describes the best possible choice found so far, and can
+   terminate in various ways:
+
+   (1) One of the alternatives definitely succeeds. This is straightforward: we
+   can safely discard any later alternatives.
+
+   (2) All alternatives fail. This is also straightforward: we emit an
+   appropriate error message.
+
+   (3) One of the alternatives looks promising (i.e., it doesn't immediately
+   fail, but it doesn't immediately succeed either: some potentially
+   side-effectful constraints, called actions, were emitted while trying the
+   alternative, whose execution has been deferred), and all the later
+   alternatives fail. In this scenario, we pick the promising alternative, and
+   then fire the deferred actions. This is fine, because the choice cannot cause
+   regret: the chosen alternative was the only one that had any chance of
+   succeeding.
+
+   (4) Multiple alternatives look promising, but the set of deferred actions
+   emitted while trying the first of those alternatives form a subset of those
+   emitted by later trials. Here we pick the first promising alternative (and
+   fire the deferred actions). The reason this is fine is similar to (3): once
+   again, the choice cannot cause any regret, because if it failed, then the
+   later alternatives would have failed too. So the chosen alternative had the
+   best chance of succeeding.
+
+   (5) But sometimes, multiple alternatives look promising and we really can't
+   decide which is best. This happens when the set of deferred actions emitted
+   by them are incomparable, or later trials have more chances of succeeding
+   than previous trials. Such scenarios typically point to real ambiguities, and
+   so we ask for additional annotations on unresolved tvars to disambiguate.
+
+   See Speculation for more details on terminology and low-level mechanisms used
+   here, including what bits of information are carried by match_state and case,
+   how actions are deferred and diff'd, etc.
+
+   Because this process is common to checking union and intersection types, we
+   abstract the latter into a so-called "spec." The spec is used to customize
+   error messages and to ignore unresolved tvars that are deemed irrelevant to
+   choice-making.
+*)
+and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
+  (* extract stuff to ignore while considering actions *)
+  let ignore = ignore_of_spec spec in
+  (* split spec into a list of pairs of types to try speculative matching on *)
+  let trials = trials_of_spec spec in
+
+  let rec loop match_state = function
+    (* Here match_state can take on various values:
+
+       (a) (NoMatch errs) indicates that everything has failed up to this point,
+       with errors recorded in errs. Note that the initial value of acc is
+       Some (NoMatch []).
+
+       (b) (ConditionalMatch case) indicates the a promising alternative has
+       been found, but not chosen yet.
+    *)
+    | [] -> return match_state
+
+    | (case_id, case_r, l, u)::trials ->
+      let case = { case_id; unresolved = TypeSet.empty; actions = []} in
+      (* speculatively match the pair of types in this trial *)
+      let error = speculative_match cx trace
+        { Speculation.ignore; speculation_id; case } l u in
+      match error with
+      | None ->
+        (* no error, looking great so far... *)
+        begin match match_state with
+        | Speculation.NoMatch _ ->
+          (* everything had failed up to this point. so no ambiguity yet... *)
+          if TypeSet.is_empty case.unresolved
+          (* ...and no unresolved tvars encountered during the speculative
+             match! This is great news. It means that this alternative will
+             definitely succeed. Fire any deferred actions and short-cut. *)
+          then fire_actions cx trace case.actions
+          (* Otherwise, record that we've found a promising alternative. *)
+          else loop (Speculation.ConditionalMatch case) trials
+
+        | Speculation.ConditionalMatch prev_case ->
+          (* umm, there's another previously found promising alternative *)
+          (* so compute the difference in side effects between that alternative
+             and this *)
+          let ts = diff prev_case case in
+          (* if the side effects of the previously found promising alternative
+             are fewer, then keep holding on to that alternative *)
+          if ts = [] then loop match_state trials
+          (* otherwise, we have an ambiguity; blame the unresolved tvars and
+             short-cut *)
+          else begin
+            let prev_case_id = prev_case.case_id in
+            let cases = choices_of_spec spec in
+            blame_unresolved cx trace prev_case_id case_id cases case_r r ts
+          end
+        end
+      | Some err ->
+        (* if an error is found, then throw away this alternative... *)
+        begin match match_state with
+        | Speculation.NoMatch errs ->
+          (* ...adding to the error list if no promising alternative has been
+             found yet *)
+          loop (Speculation.NoMatch (err::errs)) trials
+        | _ -> loop match_state trials
+        end
+
+  and return = function
+  | Speculation.ConditionalMatch case ->
+    (* best choice that survived, congrats! fire deferred actions  *)
+    fire_actions cx trace case.actions
+  | Speculation.NoMatch errs ->
+    (* everything failed; make a really detailed error message listing out the
+       error found for each alternative *)
+    let ts = choices_of_spec spec in
+    let errs = List.rev errs in
+    assert (List.length ts = List.length errs);
+    let extra = List.(combine ts errs) |> List.mapi (
+      fun i (t, err) ->
+        let header_infos = [
+          Loc.none, [spf "Member %d:" (i + 1)];
+          info_of_reason (reason_of_t t);
+          Loc.none, ["Error:"];
+        ] in
+        let error_infos, error_extra = Errors.(
+          infos_of_error err, extra_of_error err
+        ) in
+        let info_list = header_infos @ error_infos in
+        let info_tree = match error_extra with
+          | [] -> Errors.InfoLeaf (info_list)
+          | _ -> Errors.InfoNode (info_list, error_extra)
+        in
+        info_tree
+    ) in
+    let l,u = match spec with
+      | UnionCases (l, us) ->
+        let r = mk_union_reason r us in
+        l, UseT (UnknownUse, UnionT (r, UnionRep.empty))
+
+      | IntersectionCases (ls, u) ->
+        let r = mk_intersection_reason r ls in
+        IntersectionT (r, InterRep.empty), u
+    in
+    flow_err cx trace (err_msg l u) ~extra l u
+
+  in loop (Speculation.NoMatch []) trials
+)
+
+(* Make an informative error message that points out the ambiguity, and where
+   additional annotations can help disambiguate. Recall that an ambiguity
+   arises precisely when:
+
+   (1) one alternative looks promising, but has some chance of failing
+
+   (2) a later alternative also looks promising, and has some chance of not
+   failing even if the first alternative fails
+
+   ...with the caveat that "looks promising" and "some chance of failing" are
+   euphemisms for some pretty conservative approximations made by Flow when it
+   encounters potentially side-effectful constraints involving unresolved tvars
+   during a trial.
+*)
+and blame_unresolved cx trace prev_i i cases case_r r ts =
+  let infos = ts |> List.map (fun t ->
+    rec_unify cx trace t AnyT.t;
+    info_of_reason (reason_of_t t)
+  ) in
+  let prev_case = reason_of_t (List.nth cases prev_i) in
+  let case = reason_of_t (List.nth cases i) in
+  let extra = [
+    Errors.InfoLeaf [
+      Loc.none, [spf "Case %d may work:" (prev_i + 1)];
+      info_of_reason prev_case;
+    ];
+    Errors.InfoLeaf [
+      Loc.none, [spf "But if it doesn't, case %d looks promising too:" (i + 1)];
+      info_of_reason case;
+    ];
+    Errors.InfoLeaf (
+      (Loc.none,
+       [spf "Please provide additional annotation(s) to determine whether case %d works \
+(or consider merging it with case %d):"
+           (prev_i + 1)
+           (i + 1)
+       ])::
+        infos
+    )
+  ] in
+  add_extended_error cx ~extra [
+    (mk_info case_r
+       ["Could not decide which case to select"]);
+    (info_of_reason r)
+  ]
+
+and trials_of_spec = function
+  | UnionCases (l, us) ->
+    List.mapi (fun i u -> (i, reason_of_t l, l, UseT (UnknownUse, u))) us
+  | IntersectionCases (ls, u) ->
+    List.mapi (fun i l -> (i, reason_of_use_t u, l, u)) ls
+
+and ignore_of_spec = function
+  | IntersectionCases (_, CallT (_, callt)) -> Some (callt.return_t)
+  | _ -> None
+
+and choices_of_spec = function
+  | UnionCases (_, ts)
+  | IntersectionCases (ts, _)
+    -> ts
+
+and fire_actions cx trace = List.iter (function
+  | _, Speculation.Action.Flow (l, u) -> rec_flow cx trace (l, u)
+  | _, Speculation.Action.Unify (t1, t2) -> rec_unify cx trace t1 t2
+)
+
+and mk_union_reason r us =
+  List.fold_left (fun reason t ->
     let rdesc = desc_of_reason reason in
     let tdesc = desc_of_reason (reason_of_t t) in
     let udesc = if not (Utils.str_starts_with rdesc "union:")
@@ -4514,239 +5355,12 @@ and try_union cx trace l reason rep =
       else if Utils.str_ends_with rdesc tdesc
       then spf "%s(s)" rdesc
       else spf "%s | %s" rdesc tdesc
-      in
-    (* try head member, package the rest *)
-    let r = replace_reason udesc reason in
-    let next_attempt = UnionT (r, UnionRep.tail rep) in
-    (* TODO: pass in use_op? *)
-    let u = UseT (UnknownUse, next_attempt) in
-    rec_flow_t cx trace (SpeculativeMatchT(r, l, u), t)
-  | [] ->
-    (* fail *)
-    match UnionRep.(history rep, errors rep) with
-    | [], [] ->
-      (* shouldn't happen, but... if no history, give blanket error *)
-      rec_flow_t cx trace (l, UnionT (reason, UnionRep.empty))
-    | ts, errs ->
-      (* otherwise, build extra info from history *)
-      let tslen, errslen = List.length ts, List.length errs in
-      let extra = if tslen <> errslen
-      then None (* temp fix to prevent List.combine error *)
-      else Some (List.(rev (combine ts errs)) |> List.mapi (
-        fun i (t, err) ->
-          let header_infos = [
-            Loc.none, [spf "Member %d:" (i + 1)];
-            info_of_reason (reason_of_t t);
-            Loc.none, ["Error:"];
-          ] in
-          let error_infos, error_extra = Errors.(
-            infos_of_error err, extra_of_error err
-          ) in
-          let info_list = header_infos @ error_infos in
-          let info_tree = match error_extra with
-            | [] -> Errors.InfoLeaf (info_list)
-            | _ -> Errors.InfoNode (info_list, error_extra)
-          in
-          info_tree
-      )) in
-      (* TODO: pass in use_op? *)
-      let u = UseT (UnknownUse, UnionT (reason, UnionRep.empty)) in
-      flow_err cx trace (err_msg l u) ?extra l u
+    in
+    replace_reason udesc reason
+  ) r us
 
-(** try the first member of an intersection, packaging the remainder
-    for subsequent attempts. Empty intersection indicates failure *)
-and try_intersection cx trace u reason rep =
-  match InterRep.members rep with
-  | t :: _ ->
-    (* try the head member, package the rest *)
-    let r = replace_reason "intersection" reason in
-    let next_attempt = IntersectionT (r, InterRep.tail rep) in
-    rec_flow_t cx trace (t, SpeculativeMatchT (reason, next_attempt, u))
-  | [] ->
-    (* fail *)
-    match InterRep.(history rep, errors rep) with
-    | [], [] ->
-      (* shouldn't happen, but... if no history, give blanket error *)
-      rec_flow cx trace (IntersectionT (reason, InterRep.empty), u)
-    | ts, errs ->
-      (* otherwise, build extra info from history *)
-      let tslen, errslen = List.length ts, List.length errs in
-      let extra = if tslen <> errslen
-      then None (* temp fix to prevent List.combine error *)
-      else Some (List.(rev (combine ts errs)) |> List.mapi (
-        fun i (t, err) ->
-          let header_infos = [
-            Loc.none, [spf "Member %d:" (i + 1)];
-            info_of_reason (reason_of_t t);
-            Loc.none, ["Error:"];
-          ] in
-          let error_infos, error_extra = Errors.(
-            infos_of_error err, extra_of_error err
-          ) in
-          let info_list = header_infos @ error_infos in
-          let info_tree = match error_extra with
-            | [] -> Errors.InfoLeaf (info_list)
-            | _ -> Errors.InfoNode (info_list, error_extra)
-          in
-          info_tree
-      )) in
-      let l = IntersectionT (reason, InterRep.empty) in
-      flow_err cx trace (err_msg l u) ?extra l u
-
-(* Some types need their parts to be concretized (i.e., type variables may need
-   to be replaced by concrete types) so that speculation has a chance to fail
-   early (and other branches are tried): otherwise, those failures may remain
-   latent, and cause spurious errors to be reported. *)
-
-(** TODO: switch to concretization for other types that need multiple parts
-    to be concretized, e.g. AdderT, ComparatorT, ObjAssignT... *)
-
-(** Upper and lower bounds have disjoint concretization processes, and we
-    look for different types to concretize in each case. But the processes
-    have the same general shape:
-
-    1. A particular rule needs an UB (resp. LB) to be fully concrete to
-    proceed, so it calls upper/lower_parts_to_concretize. If the type is fully
-    concrete already, an empty list is returned, otherwise the list contains
-    component types to be concretized. (The caller should treat this list as
-    an opaque value, apart from testing its emptiness.)
-
-    2. If the list from step 1 is non-empty, concretization is needed, and
-    the rule calls concretize_upper/lower_parts, passing the the (LB, UB)
-    pair along with the concretization list. This kicks off the concretization
-    process, which uses ConcretizeLower/UpperT to work through the list of
-    types without further intervention.
-
-    (Note that concretization is not quite a simple recursive traversal of
-    the concretization list: when a tvar is exposed for concretization, the
-    edge from that tvar to the ConcretizeLower/UpperT holding the snapshot
-    of the corresponding concretization state persists in the graph: many
-    concrete LBs may flow through a tvar, and each induces a different
-    overall concretization.)
-
-    3. When the concretization process reaches the end of the todo list,
-    replace_upper/lower_concrete_types will build a fresh type using the
-    concretized parts, and feed the resulting LB/UB pair back into the flow
-    function.
-
-    There's no fundamental need for the finished type to be structurally
-    similar to the original: in addition to concretizing, the final step
-    can do arbitrary transforms.
-
-    But note the importance of guaranteeing termination: for the typechecker
-    not to loop[1], a type must eventually yield an empty concretization list
-    if passed repeatedly through this process. Every use-case so far will in
-    fact yield an empty list in one step, and there's no reason to think
-    that multiple steps will ever be needed.
-
-    But care should be taken to avoid simply returning an incoming type as a
-    concretized result when there's nothing to do: instead these types should
-    return an empty concretization list (concretization is partial, not
-    idempotent).
-
-    [1] The FlowConstraint cache will prevent the typechecker from actually
-    looping, but the circuit breaker will also prevent further typechecking
-    from taking place, making the error silent. To help trap this situation
-    we emit an explicit internal error when this equality is detected.
-  *)
-
-(** Concretize an upper bound.
-
-    Currently we only need to concretize FunT and CallT UBs, to support
-    overloaded function selection. Here we'll request concretization
-    for any such type with tvars in its param list.
-
-    Note: we expose the outflow tvars from AnnotT. There may be other
-    wrapper types that need similar treatment.
-  *)
-and upper_parts_to_concretize _cx u =
-  let expose_tvars = List.map (function AnnotT (_, t) | t -> t) in
-  let has_tvar = List.exists (function OpenT _ -> true | _ -> false) in
-  match u with
-  | CallT (_, callt)                   (* call of overloaded function *)
-  | UseT (_, FunT (_, _, _, callt)) -> (* selection of overloaded function *)
-    let ts = expose_tvars callt.params_tlist in
-    if has_tvar ts then ts else []
-  | _ -> []
-
-and replace_upper_concrete_parts ts = function
-| CallT (reason, callt) ->
-  CallT (reason, { callt with params_tlist = ts })
-| UseT (use_op, FunT (reason, static, prototype, callt)) ->
-  let callt = { callt with params_tlist = ts } in
-  UseT (use_op, FunT (reason, static, prototype, callt))
-| u -> u
-
-(** move a newly concretized type from the todo list (final param) to
-    the done list, and either continue concretizing or call flow on
-    the original LB and the fully concretized UB
-  *)
-and concretize_upper_parts cx trace l u done_list = function
-| [] ->
-  let done_list = List.rev done_list in
-  let concrete_u = replace_upper_concrete_parts done_list u in
-
-  if u = concrete_u then flow_err cx trace
-    "Internal error: concretization leaves upper bound unchanged" l u;
-
-  rec_flow cx trace (l, concrete_u)
-| t :: todo_list ->
-  rec_flow cx trace (t, ConcretizeUpperT (l, todo_list, done_list, u))
-
-(** Concretize a lower bound.
-
-    Currently we concretize intersection LBs, so they can be manipulated
-    and checked in various ways. See replace_lower_concrete_parts.
-  *)
-and lower_parts_to_concretize _cx = function
-| IntersectionT (_, rep) ->
-  let ts = InterRep.members rep in
-  (** trap intersections that contain, or might contain, function types
-      which share a return type.
-      TODO: similarly we'll want to trap intersections that contain,
-      or might contain, incompatible object types.
-      Note also that we extract outflow tvars from AnnotT.
-    *)
-  let tvar,   (* true if tvars present *)
-    fpart,    (* funtypes partitioned by return value *)
-    ts =      (* concretization list *)
-    List.fold_left (fun (tvar, fpart, acc) -> function
-      | AnnotT (_, t) | (OpenT _ as t) ->
-        true, fpart, t :: acc
-      | FunT _ as t ->  tvar, Partition.add t fpart, t :: acc
-      | t -> tvar, fpart, t :: acc
-    ) (false, FunType.return_type_partition [], []) ts in
-  if tvar || not (Partition.is_discrete fpart)
-  then List.rev ts
-  else []
-| _ -> []
-
-(** Note: here we may normalize or otherwise transform the result LB,
-    based on the concretized type list.
-  *)
-and replace_lower_concrete_parts ts = function
-| IntersectionT (r, _) -> (
-  match FunType.merge_funtypes_by_return_type ts with
-  | [t] -> t
-  | ts -> IntersectionT (r, InterRep.make ts)
-)
-| l -> l
-
-(** move a newly concretized type from the todo list (final param) to
-    the done list, and either continue concretizing or call flow on
-    the fully concretized LB and the original UB
-  *)
-and concretize_lower_parts cx trace l u done_list = function
-| [] ->
-  let done_list = List.rev done_list in
-  let concrete_l = replace_lower_concrete_parts done_list l in
-
-  if l = concrete_l then flow_err cx trace
-    "Internal error: concretization leaves lower bound unchanged" l u;
-
-  rec_flow cx trace (concrete_l, u)
-| t :: todo_list ->
-  rec_flow cx trace (t, ConcretizeLowerT (l, todo_list, done_list, u))
+and mk_intersection_reason r _ls =
+  replace_reason "intersection" r
 
 (* property lookup functions in objects and instances *)
 
@@ -5314,20 +5928,42 @@ and predicate cx trace t (l,p) = match (l,p) with
     assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
 
 and prop_exists_test cx trace key sense obj result =
-  match obj with
-  | ObjT (_, { props_tmap; _}) ->
+  prop_exists_test_generic key cx trace result obj sense obj
+
+and prop_exists_test_generic key cx trace result orig_obj sense = function
+  | ObjT (_, { props_tmap; _}) as obj ->
       begin match read_prop_opt cx props_tmap key with
       | Some t ->
         let filter = if sense then filter_exists else filter_not_exists in
         begin match filter t with
         | EmptyT _ -> () (* provably unreachable, so prune *)
-        | _ -> rec_flow_t cx trace (obj, result)
+        | _ -> rec_flow_t cx trace (orig_obj, result)
         end
       | None ->
-        rec_flow_t cx trace (obj, result)
+        (* TODO: possibly unsound to filter out orig_obj here, but if we don't,
+           case elimination based on prop existence checking doesn't work for
+           (disjoint unions of) intersections of objects, where the prop appears
+           in a different branch of the intersection. It is easy to avoid this
+           unsoundness with slightly more work, but will wait until a
+           refactoring of property lookup lands to revisit. Tracked by
+           #11301092. *)
+        if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
       end
+  | IntersectionT (_, rep) ->
+    (* For an intersection of object types, try the test for each object type in
+       turn, while recording the original intersection so that we end up with
+       the right refinement. See the comment on the implementation of
+       IntersectionPreprocessKit for more details. *)
+    let reason = reason_of_t result in
+    InterRep.members rep |> List.iter (fun obj ->
+      rec_flow cx trace (
+        obj,
+        intersection_preprocess_kit reason
+          (PropExistsTest(sense, key, orig_obj, result))
+      )
+    )
   | _ ->
-    rec_flow_t cx trace (obj, result)
+    rec_flow_t cx trace (orig_obj, result)
 
 and binary_predicate cx trace sense test left right result =
   let handler =
@@ -5438,7 +6074,10 @@ and instanceof_test cx trace result = function
   | (false, left, _) ->
     rec_flow_t cx trace (left, result)
 
-and sentinel_prop_test key cx trace result = function
+and sentinel_prop_test key cx trace result (sense, obj, t) =
+  sentinel_prop_test_generic key cx trace result obj (sense, obj, t)
+
+and sentinel_prop_test_generic key cx trace result orig_obj = function
   (** Evaluate a refinement predicate of the form
 
       obj.key eq value
@@ -5474,11 +6113,17 @@ and sentinel_prop_test key cx trace result = function
       (match read_prop_opt cx props_tmap key with
         | Some t ->
             let sentinel = SentinelStr value in
-            let test = SentinelPropTestT (obj, sense, sentinel, result) in
+            let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
             rec_flow cx trace (t, test)
         | None ->
-            (* property doesn't exist, unable to prune case *)
-            rec_flow_t cx trace (obj, result)
+          (* TODO: possibly unsound to filter out orig_obj here, but if we
+             don't, case elimination based on sentinel prop checking doesn't
+             work for (disjoint unions of) intersections of objects, where the
+             sentinel prop and the payload appear in different branches of the
+             intersection. It is easy to avoid this unsoundness with slightly
+             more work, but will wait until a refactoring of property lookup
+             lands to revisit. Tracked by #11301092. *)
+          if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
       )
 
   (* obj.key ===/!== number value *)
@@ -5486,11 +6131,17 @@ and sentinel_prop_test key cx trace result = function
       (match read_prop_opt cx props_tmap key with
         | Some t ->
             let sentinel = SentinelNum value in
-            let test = SentinelPropTestT (obj, sense, sentinel, result) in
+            let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
             rec_flow cx trace (t, test)
         | None ->
-            (* property doesn't exist, unable to prune case *)
-            rec_flow_t cx trace (obj, result)
+          (* TODO: possibly unsound to filter out orig_obj here, but if we
+             don't, case elimination based on sentinel prop checking doesn't
+             work for (disjoint unions of) intersections of objects, where the
+             sentinel prop and the payload appear in different branches of the
+             intersection. It is easy to avoid this unsoundness with slightly
+             more work, but will wait until a refactoring of property lookup
+             lands to revisit. Tracked by #11301092. *)
+          if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
       )
 
   (* obj.key ===/!== boolean value *)
@@ -5498,15 +6149,37 @@ and sentinel_prop_test key cx trace result = function
       (match read_prop_opt cx props_tmap key with
         | Some t ->
             let sentinel = SentinelBool value in
-            let test = SentinelPropTestT (obj, sense, sentinel, result) in
+            let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
             rec_flow cx trace (t, test)
         | None ->
-            (* property doesn't exist, unable to prune case *)
-            rec_flow_t cx trace (obj, result)
+          (* TODO: possibly unsound to filter out orig_obj here, but if we
+             don't, case elimination based on sentinel prop checking doesn't
+             work for (disjoint unions of) intersections of objects, where the
+             sentinel prop and the payload appear in different branches of the
+             intersection. It is easy to avoid this unsoundness with slightly
+             more work, but will wait until a refactoring of property lookup
+             lands to revisit. Tracked by #11301092. *)
+          if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
       )
 
-  | (_, obj, _) -> (* not enough info to refine *)
-    rec_flow_t cx trace (obj, result)
+  | sense, IntersectionT (_, rep),
+     (StrT (_, Literal _) | NumT (_, Literal (_, _)) | BoolT (_, Some _) as t)
+    ->
+    (* For an intersection of object types, try the test for each object type in
+       turn, while recording the original intersection so that we end up with
+       the right refinement. See the comment on the implementation of
+       IntersectionPreprocessKit for more details. *)
+    let reason = reason_of_t result in
+    InterRep.members rep |> List.iter (fun obj ->
+      rec_flow cx trace (
+        obj,
+        intersection_preprocess_kit reason
+          (SentinelPropTest(sense, key, t, orig_obj, result))
+      )
+    )
+
+  | _ -> (* not enough info to refine *)
+    rec_flow_t cx trace (orig_obj, result)
 
 (***********************)
 (* bounds manipulation *)
@@ -5798,11 +6471,23 @@ and ok_unify = function
 
 and rec_unify cx trace t1 t2 =
   if t1 = t2 then () else (
-  (* Expect that t1 and t2 are def types. *)
 
+  (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
+     t2 and flowing t2 to t1. This also means that any restrictions on such
+     flows should also be enforced here. In particular, we don't expect t1 or t2
+     to be type parameters, and we don't expect t1 or t2 to be def types that
+     don't make sense as use types. See __flow for more details. *)
   not_expect_bound t1; not_expect_bound t2;
+  expect_proper_def t1; expect_proper_def t2;
+
+  (* Before processing the unify action, check that it is not deferred. If it
+     is, then when speculation is complete, the action either fires or is
+     discarded depending on whether the case that created the action is
+     selected or not. *)
+  if not (defer_action cx (Speculation.Action.Unify (t1, t2))) then
 
   match t1, t2 with
+
   | OpenT (_, id1), OpenT (_, id2) ->
     merge_ids cx trace id1 id2
 
@@ -5984,7 +6669,7 @@ and multiflow_partial cx trace ?strict = function
        place that constrained the type arg. this is pretty hacky. *)
     let tout =
       let u = UseT (UnknownUse, tout) in
-      if ImplicitTypeArgument.has_typeparam_prefix (desc_of_t tin)
+      if has_typeparam_prefix (desc_of_t tin)
       then u
       else ReposLowerT (reason_of_t tin, u)
     in
@@ -6071,10 +6756,10 @@ and mk_instance cx instance_reason ?(for_type=true) c =
       (* this part is similar to making a runtime value *)
       flow_opt_t cx (c, TypeT(instance_reason,t))
     ) in
-    let sink_t = mk_tvar_where cx instance_reason (fun t ->
-      (* when source_t is concrete, unify with sink_t *)
-      flow_opt cx (source_t, UnifyT(source_t, t))
-    ) in
+    (* TODO: Actually, sink_t is redundant now with ReposUseT, so we can remove
+       it. Basically ReposUseT takes care of capturing lower bounds and flowing
+       them to the resolved annotation when it is ready. *)
+    let sink_t = source_t in
     AnnotT (sink_t, source_t)
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
@@ -6250,11 +6935,11 @@ and tvar_with_constraint cx u =
     flow cx (tvar, u)
   )
 
-(************* end of slab **************************************************)
-
 (* Externally visible function for unification. *)
-let unify cx t1 t2 =
+and unify cx t1 t2 =
   rec_unify cx (Trace.unit_trace t1 (UseT (UnknownUse, t2))) t1 t2
+
+(************* end of slab **************************************************)
 
 let intersect_members cx members =
   match members with
@@ -6468,10 +7153,10 @@ let rec assert_ground ?(infer=false) cx skip ids t =
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
     unify cx proto_t AnyT.t;
-    iter_props cx id (fun _ -> assert_ground ~infer:true cx skip ids)
+    iter_props cx id (fun _ -> recurse ~infer:true)
 
   | ArrT (_, t, ts) ->
-    recurse t;
+    recurse ~infer:true t;
     List.iter recurse ts
 
   | ClassT t
@@ -6508,7 +7193,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     List.iter recurse (InterRep.members rep)
 
   | UnionT (_, rep) ->
-    List.iter recurse (UnionRep.members rep)
+    List.iter (recurse ~infer:true) (UnionRep.members rep)
 
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t ->
@@ -6557,8 +7242,8 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | FunProtoCallT _
   | AbstractT _
   | EvalT _
-  | SpeculativeMatchT _
   | ExtendsT _
+  | ChoiceKitT _
   | CustomFunT _ ->
     () (* TODO *)
 

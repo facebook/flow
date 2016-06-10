@@ -280,12 +280,11 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | ArrT (_, t, _ts)
+  | ArrT (_, t, ts)
     ->
-      (*(match ts with
-      | [] -> *)is_printed_type_parsable_impl weak cx EnclosureNone t
-      (*| _ ->
-          is_printed_type_list_parsable weak cx EnclosureNone t*)
+      (match ts with
+      | [] -> is_printed_type_parsable_impl weak cx EnclosureNone t
+      | ts -> is_printed_type_list_parsable weak cx EnclosureNone ts)
 
   | RestT t
     when (enclosure == EnclosureParam)

@@ -16,125 +16,41 @@ child_process/execSync.js:8
                                  ^^^^^ string. This type is incompatible with
   number. See lib: node.js:113
 
+fs/fs.js:13
+ 13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
+     ^ call of method `readFile`. Could not decide which case to select
+intersection type. See lib: node.js:623
+  Case 3 may work:
+  function type. See lib: node.js:632
+  But if it doesn't, case 4 looks promising too:
+  function type. See lib: node.js:637
+  Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
+   13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
+                                                         ^^^^ parameter `data`
+
 fs/fs.js:24
  24: (fs.readFileSync("file.exp") : string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `readFileSync`. Function cannot be called on any member of intersection type
-intersection. See lib: node.js:642
-  Member 1:
-  function type. See lib: node.js:642
-  Error:
-   24: (fs.readFileSync("file.exp") : string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Buffer. This type is incompatible with
-   24: (fs.readFileSync("file.exp") : string); // error
-                                      ^^^^^^ string
-  Member 2:
-  function intersection. See lib: node.js:644
-  Error:
-   24: (fs.readFileSync("file.exp") : string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  union: object type | string. See lib: node.js:644
-    Member 1:
-    object type. See lib: node.js:644
-    Error:
-     24: (fs.readFileSync("file.exp") : string); // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-    object type. See lib: node.js:644
-    Member 2:
-    string. See lib: node.js:643
-    Error:
-     24: (fs.readFileSync("file.exp") : string); // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-    string. See lib: node.js:643
-  Member 3:
-  function type. See lib: node.js:645
-  Error:
-   24: (fs.readFileSync("file.exp") : string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  object type. See lib: node.js:645
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Buffer. This type is incompatible with
+ 24: (fs.readFileSync("file.exp") : string); // error
+                                    ^^^^^^ string
 
 fs/fs.js:27
  27: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `readFileSync`. Function cannot be called on any member of intersection type
-intersection. See lib: node.js:642
-  Member 1:
-  function type. See lib: node.js:642
-  Error:
-   27: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-                                    ^^^^^^ string. This type is incompatible with
-  undefined. See lib: node.js:642
-  Member 2:
-  function intersection. See lib: node.js:644
-  Error:
-   27: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-   27: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-                                              ^^^^^^ Buffer
-  Member 3:
-  function type. See lib: node.js:645
-  Error:
-   27: (fs.readFileSync("file.exp", "blah") : Buffer); // error
-                                    ^^^^^^ string. This type is incompatible with
-  object type. See lib: node.js:645
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 27: (fs.readFileSync("file.exp", "blah") : Buffer); // error
+                                            ^^^^^^ Buffer
 
 fs/fs.js:30
  30: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `readFileSync`. Function cannot be called on any member of intersection type
-intersection. See lib: node.js:642
-  Member 1:
-  function type. See lib: node.js:642
-  Error:
-   30: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
-                                    ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  undefined. See lib: node.js:642
-  Member 2:
-  function intersection. See lib: node.js:644
-  Error:
-   30: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-   30: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
-                                                            ^^^^^^ Buffer
-  Member 3:
-  function type. See lib: node.js:645
-  Error:
-  inconsistent use of library definitions
-  string. This type is incompatible with. See lib: node.js:644
-  undefined. See lib: node.js:645
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 30: (fs.readFileSync("file.exp", { encoding: "blah" }) : Buffer); // error
+                                                          ^^^^^^ Buffer
 
 fs/fs.js:33
  33: (fs.readFileSync("file.exp", {}) : string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `readFileSync`. Function cannot be called on any member of intersection type
-intersection. See lib: node.js:642
-  Member 1:
-  function type. See lib: node.js:642
-  Error:
-   33: (fs.readFileSync("file.exp", {}) : string); // error
-                                    ^^ object literal. This type is incompatible with
-  undefined. See lib: node.js:642
-  Member 2:
-  function intersection. See lib: node.js:644
-  Error:
-   33: (fs.readFileSync("file.exp", {}) : string); // error
-                                    ^^ object literal. This type is incompatible with
-  union: object type | string. See lib: node.js:644
-    Member 1:
-    object type. See lib: node.js:644
-    Error:
-    property `encoding`. Property not found in. See lib: node.js:644
-     33: (fs.readFileSync("file.exp", {}) : string); // error
-                                      ^^ object literal
-    Member 2:
-    string. See lib: node.js:643
-    Error:
-     33: (fs.readFileSync("file.exp", {}) : string); // error
-                                      ^^ object literal. This type is incompatible with
-    string. See lib: node.js:643
-  Member 3:
-  function type. See lib: node.js:645
-  Error:
-   33: (fs.readFileSync("file.exp", {}) : string); // error
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Buffer. This type is incompatible with
-   33: (fs.readFileSync("file.exp", {}) : string); // error
-                                          ^^^^^^ string
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Buffer. This type is incompatible with
+ 33: (fs.readFileSync("file.exp", {}) : string); // error
+                                        ^^^^^^ string
 
 invalid_package_file/package.json:1
   1: 
@@ -223,4 +139,4 @@ json_file/test.js:22
                               ^^^^ undefined
 
 
-Found 20 errors
+Found 21 errors

@@ -2415,10 +2415,10 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
 
   | Array { Array.elements } -> (
     let reason = mk_reason "array literal" loc in
-    let element_reason = mk_reason "array element" loc in
     match elements with
     | [] ->
         (* empty array, analogous to object with implicit properties *)
+        let element_reason = mk_reason "unknown element type of empty array" loc in
         let elemt = Flow.mk_tvar cx element_reason in
         ArrT (prefix_reason "empty " reason, elemt, [])
     | elems ->
@@ -2435,10 +2435,42 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
           if tup then elemt :: tlist else []
         ) (true, TypeExSet.empty, []) elems
         in
-        (* composite elem type is union *)
+        (* composite elem type is an upper bound of all element types *)
         let elemt = match TypeExSet.elements tset with
         | [t] -> t
-        | list -> UnionT (element_reason, UnionRep.make list)
+        | list ->
+          let element_reason = mk_reason "inferred union of array element types \
+(alternatively, provide an annotation to summarize the array element type)"
+            loc in
+          (* Should the element type of the array be the union of its element
+             types?
+
+             No. Instead of using a union, we use an unresolved tvar to
+             represent the least upper bound of each element type. Effectively,
+             this keeps the element type "open," at least locally.[*]
+
+             Using a union pins down the element type prematurely, and moreover,
+             might lead to speculative matching when setting elements or caling
+             contravariant methods (`push`, `concat`, etc.) on the array.
+
+             In any case, using a union doesn't quite work as intended today
+             when the element types themselves could be unresolved tvars. For
+             example, the following code would work even with unions:
+
+             declare var o: { x: number; }
+             var a = ["hey", o.x]; // no error, but is an error is o.x is replaced by 42
+             declare var i: number;
+             a[i] = false;
+
+             [*] Eventually, the element type does get pinned down to a union
+             when it is part of the module's exports. In the future we might
+             have to do that pinning more carefully, and using an unresolved
+             tvar instead of a union here doesn't conflict with those plans.
+          *)
+          Flow_js.mk_tvar_where cx element_reason (fun tvar ->
+            list |> List.iter (fun t ->
+              Flow_js.flow cx (t, UseT (UnknownUse, tvar)))
+          )
         in
         ArrT (reason, elemt, List.rev tlist)
     )
@@ -2704,10 +2736,26 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       Env.update_env cx reason env;
       (* TODO call loc_of_predicate on some pred?
          t1 is wrong but hopefully close *)
-      Flow.mk_tvar_where cx reason (fun t ->
-        Flow.flow_t cx (t1, t);
-        Flow.flow_t cx (t2, t);
-      )
+
+      (* NOTE: In general it is dangerous to express the least upper bound of
+         some types as a union: it might pin down the least upper bound
+         prematurely (before all the types have been inferred), and when the
+         union appears as an upper bound, it might lead to speculative matching.
+
+         However, here a union is safe, because this union is guaranteed to only
+         appear as a lower bound.
+
+         In such "covariant" positions, avoiding unnecessary indirection via
+         tvars is a good thing, because it improves precision. In particular, it
+         enables more types to be fully resolvable, which improves results of
+         speculative matching.
+
+         It should be possible to do this more broadly and systematically. For
+         example, results of operations on annotations (like property gets on
+         objects, calls on functions) are often represented as unresolved tvars,
+         where they could be pinned down to resolved types.
+      *)
+      UnionT (reason, UnionRep.make [t1; t2])
 
   | Assignment { Assignment.operator; left; right } ->
       assignment cx type_params_map loc (left, operator, right)
@@ -3019,10 +3067,13 @@ and binary cx type_params_map loc = Ast.Expression.Binary.(function
       let t2 = expression cx type_params_map right in
       let reason1 = mk_reason "LHS of `in` operator" loc1 in
       let reason2 = mk_reason "RHS of `in` operator" loc2 in
-      let lhs = UnionT (reason1, UnionRep.make [StrT.why reason1; NumT.why reason1]) in
+      let lhs =
+        UnionT (reason1, UnionRep.make [StrT.why reason1; NumT.why reason1]) in
       let rhs =
-        let elemt = Flow.mk_tvar cx reason2 in
-        UnionT (reason2, UnionRep.make [AnyObjT reason2; ArrT (reason2, elemt, [])])
+        UnionT (reason2, UnionRep.make [
+          AnyObjT reason2;
+          ArrT (reason2, AnyT reason2, []) (* approximation of "any array" *)
+        ])
       in
       Flow.flow_t cx (t1, lhs);
       Flow.flow_t cx (t2, rhs);

@@ -228,10 +228,11 @@ module rec TypeTerm : sig
     (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
         round pegs in the square holes. **)
 
-    (* failure case for speculative matching *)
-    | SpeculativeMatchT of reason * t * use_t
     (* util for deciding subclassing relations *)
     | ExtendsT of t list * t * t
+
+    (* toolkit for making choices *)
+    | ChoiceKitT of reason * choice_tool
 
     (* Sigil representing functions that the type system is not expressive enough
        to annotate, so we customize their behavior internally. *)
@@ -392,14 +393,13 @@ module rec TypeTerm : sig
      * into intersection bugs. *)
     | ReactCreateElementT of reason * t * t_out
 
+    (* toolkit for making choices, contd. (appearing only as upper bounds) *)
+    | ChoiceKitUseT of reason * choice_use_tool
+
+    (* tools for preprocessing intersections *)
+    | IntersectionPreprocessKitT of reason * intersection_preprocess_tool
+
     | DebugPrintT of reason
-
-    (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
-        round pegs in the square holes. **)
-
-    (* manage a worklist of types to be concretized *)
-    | ConcretizeLowerT of t * t list * t list * use_t
-    | ConcretizeUpperT of t * t list * t list * use_t
 
     | SentinelPropTestT of t * bool * sentinel_value * t_out
 
@@ -570,6 +570,22 @@ module rec TypeTerm : sig
   | SentinelStr of string
   | SentinelNum of number_literal
   | SentinelBool of bool
+
+  and choice_tool =
+  | Trigger
+
+  and choice_use_tool =
+  | FullyResolveType of ident
+  | TryFlow of int * spec
+
+  and intersection_preprocess_tool =
+  | ConcretizeTypes of t list * t list * t * use_t
+  | SentinelPropTest of bool * string * t * t * t
+  | PropExistsTest of bool * string * t * t
+
+  and spec =
+  | UnionCases of t * t list
+  | IntersectionCases of t list * use_t
 
 end = TypeTerm
 
@@ -929,6 +945,12 @@ let is_use = function
   | UseT _ -> false
   | _ -> true
 
+(* not all so-called def types can appear as use types *)
+(* TODO: separate these misfits out *)
+let is_proper_def = function
+  | ChoiceKitT _ -> false
+  | _ -> true
+
 (* convenience *)
 let is_bot = function
 | EmptyT _ -> true
@@ -1040,9 +1062,9 @@ let rec reason_of_t = function
   | SingletonNumT (reason, _)
   | SingletonBoolT (reason, _) -> reason
 
-  | SpeculativeMatchT (reason, _, _) -> reason
-
   | ModuleT (reason, _) -> reason
+
+  | ChoiceKitT (reason, _) -> reason
 
   | CustomFunT (reason, _) -> reason
 
@@ -1122,9 +1144,6 @@ and reason_of_use_t = function
 
   | ElemT (reason, _, _, _) -> reason
 
-  | ConcretizeLowerT (t, _, _, _) -> reason_of_t t
-  | ConcretizeUpperT (_, _, _, t) -> reason_of_use_t t
-
   | SummarizeT (reason, _) -> reason
 
   | CJSRequireT (reason, _) -> reason
@@ -1142,6 +1161,9 @@ and reason_of_use_t = function
   | ReactCreateElementT (reason, _, _) -> reason
 
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
+
+  | ChoiceKitUseT (reason, _) -> reason
+  | IntersectionPreprocessKitT (reason, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1257,12 +1279,11 @@ let rec mod_reason_of_t f = function
   | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
   | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
 
-  | SpeculativeMatchT (reason, t1, t2) ->
-      SpeculativeMatchT (f reason, t1, t2)
-
   | ModuleT (reason, exports) -> ModuleT (f reason, exports)
 
   | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
+
+  | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
 
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
 
@@ -1331,11 +1352,6 @@ and mod_reason_of_use_t f = function
 
   | ElemT (reason, t, t2, rw) -> ElemT (f reason, t, t2, rw)
 
-  | ConcretizeLowerT (t1, ts1, ts2, t2) ->
-      ConcretizeLowerT (mod_reason_of_t f t1, ts1, ts2, t2)
-  | ConcretizeUpperT (t1, ts1, ts2, t2) ->
-      ConcretizeUpperT (t1, ts1, ts2, mod_reason_of_use_t f t2)
-
   | SummarizeT (reason, t) -> SummarizeT (f reason, t)
 
   | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
@@ -1355,6 +1371,9 @@ and mod_reason_of_use_t f = function
 
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
+
+  | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
+  | IntersectionPreprocessKitT (reason, tool) -> IntersectionPreprocessKitT (f reason, tool)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1423,7 +1442,6 @@ let string_of_ctor = function
   | TaintT _ -> "TaintT"
   | IntersectionT _ -> "IntersectionT"
   | UnionT _ -> "UnionT"
-  | SpeculativeMatchT _ -> "SpeculativeMatchT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
   | AnyObjT _ -> "AnyObjT"
@@ -1436,6 +1454,10 @@ let string_of_ctor = function
   | SingletonBoolT _ -> "SingletonBoolT"
   | ModuleT _ -> "ModuleT"
   | ExtendsT _ -> "ExtendsT"
+  | ChoiceKitT (_, tool) ->
+    spf "ChoiceKitT %s" begin match tool with
+    | Trigger -> "Trigger"
+    end
   | CustomFunT _ -> "CustomFunT"
 
 let string_of_use_op = function
@@ -1486,8 +1508,6 @@ let string_of_use_ctor = function
   | HasOwnPropT _ -> "HasOwnPropT"
   | HasPropT _ -> "HasPropT"
   | ElemT _ -> "ElemT"
-  | ConcretizeLowerT _ -> "ConcretizeLowerT"
-  | ConcretizeUpperT _ -> "ConcretizeUpperT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportNamedT _ -> "ImportNamedT"
@@ -1502,6 +1522,17 @@ let string_of_use_ctor = function
   | TupleMapT _ -> "TupleMapT"
   | ReactCreateElementT _ -> "ReactCreateElementT"
   | SentinelPropTestT _ -> "SentinelPropTestT"
+  | ChoiceKitUseT (_, tool) ->
+    spf "ChoiceKitUseT %s" begin match tool with
+    | FullyResolveType _ -> "FullyResolveType"
+    | TryFlow _ -> "TryFlow"
+    end
+  | IntersectionPreprocessKitT (_, tool) ->
+    spf "IntersectionPreprocessKitT %s" begin match tool with
+    | ConcretizeTypes _ -> "ConcretizeTypes"
+    | SentinelPropTest _ -> "SentinelPropTest"
+    | PropExistsTest _ -> "PropExistsTest"
+    end
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

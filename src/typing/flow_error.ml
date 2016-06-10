@@ -44,9 +44,23 @@ module Impl : sig
 
   (* speculative checking *)
   exception SpeculativeError of Errors.error
-  val set_speculative: unit -> unit
+
+  (* Maintain a stack of speculative branches. See Speculation for the contents
+     of the "branch" data structure.
+
+     When speculating (i.e., when this stack is non-empty), some things are
+     handled differently:
+
+     (1) flow and unify actions on unresolved tvars are deferred
+     (2) any errors cause short-cutting
+  *)
+  val set_speculative: Speculation.branch -> unit
   val restore_speculative: unit -> unit
-  val speculation_depth: unit -> int
+  val speculating: unit -> bool
+
+  (* decide whether an action should be deferred.
+     when speculating, actions that involve unresolved tvars are deferred. *)
+  val defer_action: Context.t -> Speculation.Action.t -> bool
 
   (* error info is a location followed by a list of strings.
      mk_info takes location and first string from a reason. *)
@@ -108,13 +122,17 @@ end = struct
 
   exception SpeculativeError of Errors.error
 
-  let speculative = ref 0
-  let set_speculative () = speculative := !speculative + 1
-  let restore_speculative () = speculative := !speculative - 1
-  let speculation_depth () = !speculative
+  let speculations = ref []
+  let set_speculative branch =
+    speculations := branch::!speculations
+  let restore_speculative () =
+    speculations := List.tl !speculations
+  let speculating () = !speculations <> []
 
-  (* internal *)
-  let throw_on_error () = !speculative > 0
+  let defer_action cx action =
+    speculating() &&
+      let branch = List.hd !speculations in
+      Speculation.defer_if_relevant cx branch action
 
   let mk_info reason extra_msgs =
     loc_of_reason reason, desc_of_reason reason :: extra_msgs
@@ -125,7 +143,7 @@ end = struct
   (* lowish-level error logging.
      basic filtering and packaging before sending error to context. *)
   let add_output cx error =
-    if throw_on_error ()
+    if speculating ()
     then raise (SpeculativeError error)
     else (
       if Context.is_verbose cx

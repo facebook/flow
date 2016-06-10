@@ -215,11 +215,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "assume", _json_of_t json_cx t2
     ]
 
-  | SpeculativeMatchT (_, attempt, target) -> [
-      "attemptType", _json_of_t json_cx attempt;
-      "targetType", _json_of_use_t json_cx target
-    ]
-
   | ModuleT (_, {exports_tmap; cjs_export;}) ->
     let property_maps = Context.property_maps json_cx.cx in
     let tmap = IMap.find_unsafe exports_tmap property_maps in
@@ -235,6 +230,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | ExtendsT (_, t1, t2) -> [
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
+    ]
+
+  | ChoiceKitT (_, tool) -> [
+      "tool", JSON_String (match tool with
+      | Trigger -> "trigger"
+      );
     ]
 
   | CustomFunT (_, kind) -> [
@@ -429,14 +430,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type2", _json_of_t json_cx t2
     ]
 
-  | ConcretizeLowerT (l, todo_list, done_list, u)
-  | ConcretizeUpperT (l, todo_list, done_list, u) -> [
-      "lowerType", _json_of_t json_cx l;
-      "todoTypes", JSON_Array (List.map (_json_of_t json_cx) todo_list);
-      "doneTypes", JSON_Array (List.map (_json_of_t json_cx) done_list);
-      "upperType", _json_of_use_t json_cx u
-    ]
-
   | GetKeysT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -507,6 +500,21 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | ReactCreateElementT (_, t, t_out) -> [
       "config", _json_of_t json_cx t;
       "returnType", _json_of_t json_cx t_out;
+  ]
+
+  | ChoiceKitUseT (_, tool) -> [
+      "tool", JSON_String (match tool with
+      | FullyResolveType _ -> "fullyResolveType"
+      | TryFlow _ -> "tryFlow"
+      );
+    ]
+
+  | IntersectionPreprocessKitT (_, tool) -> [
+      "tool", JSON_String (match tool with
+      | ConcretizeTypes _ -> "concretizeTypes"
+      | SentinelPropTest _ -> "sentinelPropTest"
+      | PropExistsTest _ -> "propExistsTest"
+      );
     ]
 
   | SentinelPropTestT (l, sense, sentinel, result) -> [
@@ -724,6 +732,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
       "right", json_of_pred json_cx r
     ]
   | NotP p -> ["pred", json_of_pred json_cx p]
+
   | LeftP (b, t)
   | RightP (b, t) -> [
       "binaryTest", json_of_binary_test json_cx b;
@@ -941,7 +950,6 @@ and dump_t_ (depth, tvars) cx t =
   in
 
   let kid = dump_t_ (depth-1, tvars) cx in
-  let use_kid = dump_use_t_ (depth-1, tvars) cx in
 
   let tvar id =
     if ISet.mem id tvars then spf "%d, ^" id else
@@ -1017,8 +1025,6 @@ and dump_t_ (depth, tvars) cx t =
       (String.concat "; " (List.map kid (InterRep.members rep)))) t
   | UnionT (_, rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (List.map kid (UnionRep.members rep)))) t
-  | SpeculativeMatchT (_, l, next) -> p
-      ~extra:(spf "%s, %s" (kid l) (use_kid next)) t
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
   | AnyObjT _
@@ -1033,6 +1039,7 @@ and dump_t_ (depth, tvars) cx t =
   | ExtendsT (nexts, l, u) -> p ~reason:false ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
   | CustomFunT _ -> p t
+  | ChoiceKitT _ -> p t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
@@ -1098,8 +1105,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | HasOwnPropT _
   | HasPropT _
   | ElemT _
-  | ConcretizeLowerT _
-  | ConcretizeUpperT _
   | ImportModuleNsT _
   | ImportDefaultT _
   | ImportNamedT _
@@ -1113,7 +1118,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | DebugPrintT _
   | TupleMapT _
   | ReactCreateElementT _
-  | SentinelPropTestT _ ->
+  | SentinelPropTestT _
+  | IntersectionPreprocessKitT _
+  | ChoiceKitUseT _ ->
     p t
 
 let dump_reason cx reason = if Context.should_strip_root cx

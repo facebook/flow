@@ -93,9 +93,25 @@ let rec convert cx type_params_map = Ast.Type.(function
   let reason = mk_reason "tuple type" loc in
   let element_reason = mk_reason "tuple element" loc in
   let tx =
-    if ts = []
-    then Flow_js.mk_tvar cx element_reason
-    else UnionT (element_reason, UnionRep.make elts) in
+    if ts = [] then Flow_js.mk_tvar cx element_reason
+    else
+      (* If a tuple should be viewed as an array, what would the element type of
+         the array be?
+
+         Using a union here seems appealing but is wrong: setting elements
+         through arbitrary indices at the union type would be unsound, since it
+         might violate the projected types of the tuple at their corresponding
+         positions. This also shows why `mixed` doesn't work, either.
+
+         On the other hand, using the empty type would prevent writes, but admit
+         unsound reads.
+
+         The correct solution is to safely case a tuple type to a covariant
+         array interface whose element type would be a union. Until we have
+         that, we use the following closest approximation, that behaves like a
+         union as a lower bound but `any` as an upper bound.
+      *)
+      AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make elts)) in
   ArrT (reason, tx, elts)
 
 | loc, Array t ->
@@ -242,7 +258,7 @@ let rec convert cx type_params_map = Ast.Type.(function
          environment. Currently, we only support this types in a class
          environment: a this type in class C is bounded by C. *)
       check_type_param_arity cx loc typeParameters 0 (fun () ->
-        let reason = mk_reason "`this` type" loc in
+        let reason = mk_reason thistype_desc loc in
         Flow_js.reposition cx reason (SMap.find_unsafe "this" type_params_map)
       )
     else (
@@ -470,7 +486,7 @@ let rec convert cx type_params_map = Ast.Type.(function
      ensures that existential type variables under a polymorphic type remain
      unevaluated until the polymorphic type is applied. *)
   let force = SMap.is_empty type_params_map in
-  let reason = derivable_reason (mk_reason "existential" loc) in
+  let reason = derivable_reason (mk_reason existential_desc loc) in
   if force then Flow_js.mk_tvar cx reason
   else ExistsT reason
 )

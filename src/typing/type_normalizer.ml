@@ -101,6 +101,9 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["thisArg"; "argArray"] in
       fake_fun params_names tins any
 
+  | ChoiceKitT (_, _) ->
+      AnyT.t
+
   (* Fake the signature of $Facebookism$Merge: *)
   (* (...objects: Array<Object>): Object *)
   | CustomFunT (_, Merge) ->
@@ -326,7 +329,6 @@ let rec normalize_type_impl cx ids t = match t with
   | FunProtoT _
   | ExistsT _
   | ModuleT (_, _)
-  | SpeculativeMatchT (_, _, _)
   | ExtendsT (_, _, _) ->
     (** TODO **)
     failwith (spf "Unsupported type in normalize_type_impl: %s" (string_of_ctor t))

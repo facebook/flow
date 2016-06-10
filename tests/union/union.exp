@@ -1,23 +1,8 @@
-issue-198.js:1
-  1: var p = new Promise(function(resolve, reject) {
-             ^ call of method `then`
-  5:         return num.toFixed();
-                    ^^^^^^^^^^^^^ string. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See lib: core.js:484
-  Member 1:
-  type application of identifier `Promise`. See lib: core.js:484
-  Error:
-    5:         return num.toFixed();
-                      ^^^^^^^^^^^^^ string. This type is incompatible with
-  Promise. See lib: core.js:484
-  Member 2:
-    1: var p = new Promise(function(resolve, reject) {
-               ^ type parameter `U` of call of method `then`
-  Error:
-    9:         return str.toFixed();
-                          ^^^^^^^ property `toFixed`. Property not found in
-    9:         return str.toFixed();
-                      ^^^ String
+issue-198.js:9
+  9:         return str.toFixed();
+                        ^^^^^^^ property `toFixed`. Property not found in
+  9:         return str.toFixed();
+                    ^^^ String
 
 issue-324.js:8
   8: foostr = barstr;

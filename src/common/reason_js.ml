@@ -216,6 +216,54 @@ let is_internal_module_name name =
 let internal_pattern_name loc =
   spf ".$pattern__%s" (string_of_loc loc)
 
+let typeparam_prefix s =
+  spf "type parameter%s" s
+
+let has_typeparam_prefix s =
+  Utils.str_starts_with s "type parameter"
+
+let thistype_desc = "`this` type"
+let existential_desc = "existential"
+
+(* Instantiable reasons identify tvars that are created for the purpose of
+   instantiation: they are fresh rather than shared, and should become types
+   that flow to them. We assume these characteristics when performing
+   speculative matching (even though we don't yet enforce them). *)
+let is_instantiable_reason r =
+  let desc = desc_of_reason r in
+  has_typeparam_prefix desc
+  || desc = thistype_desc
+  || desc = existential_desc
+
+(* TODO: Property accesses create unresolved tvars to hold results, even when
+   the object(s) on which the property accesses happen may be resolved. This can
+   and should be fixed, for various benefits including but not limited to more
+   precise type inference. But meanwhile we need to consider results of property
+   accesses that might result in sentinel property values as constants to decide
+   membership in disjoint unions, instead of asking for unnecessary annotations
+   to make progress. According to Facebook's style guide, constant properties
+   should have names like CONSTANT_PROPERTY, so we bet that when properties with
+   such names are accessed, their types have the 0->1 property.
+
+   As an example, suppose that we have an object `Tags` that stores tags of a
+   disjoint union, e.g. { ACTION_FOO: 'foo', ACTION_BAR: 'bar' }.
+
+   Then the types of Tags.ACTION_FOO and Tags.ACTION_BAR are assumed to be 0->1.
+*)
+let is_constant_property_reason r =
+  let desc = desc_of_reason r in
+  let property_prefix = "property `" in
+  Utils.str_starts_with desc property_prefix &&
+    let i = String.length property_prefix in
+    let j = String.index_from desc (i+1) '`' in
+    let property_name = String.sub desc i (j-i) in
+    try
+      String.iter (fun c ->
+        assert (c = '_' || Char.uppercase c = c)
+      ) property_name;
+      true
+    with _ -> false
+
 let is_derivable_reason r =
   r.derivable
 
@@ -243,10 +291,6 @@ let is_blamable_reason r =
 let reasons_overlap r1 r2 =
   Loc.(contains r1.loc r2.loc)
 
-(* reasons compare on their locations *)
-let compare r1 r2 =
-  Pervasives.compare (loc_of_reason r1) (loc_of_reason r2)
-
 (* reason transformers: *)
 
 (* returns reason whose description is prefix-extension of original *)
@@ -270,7 +314,7 @@ let replace_reason replacement reason =
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
-  mk_reason (desc_of_reason reason) loc
+  mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc
 
 (* helper: strip root from positions *)
 let strip_root_from_loc root loc = Loc.(

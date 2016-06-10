@@ -210,7 +210,6 @@ let typecheck_contents ~options ?verbose contents filename =
       (* should never happen *)
       timing, None, errors, info
 
-
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules workers ~options inferred removed =
   let errmap = Module_js.commit_modules workers ~options inferred removed in

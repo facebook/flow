@@ -32,37 +32,45 @@ class.js:101
 101: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                                  ^^^^^^ string
 
-class.js:109
-109: var infer_stmt_next = examples.infer_stmt().next(0).value;
+class.js:103
+103: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
-113:   (infer_stmt_next : boolean) // error: string ~> boolean
+103: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
+                                                      ^ number. This type is incompatible with
+ 28:     var x: ?boolean = yield 0;
+                 ^^^^^^^ boolean
+
+class.js:103
+103: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+107:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ string. This type is incompatible with
-113:   (infer_stmt_next : boolean) // error: string ~> boolean
+107:   (infer_stmt_next : boolean) // error: string ~> boolean
                           ^^^^^^^ boolean
 
-class.js:128
-128: examples.delegate_next_generator().next("");
+class.js:122
+122: examples.delegate_next_generator().next("");
                                              ^^ string. This type is incompatible with
  50:       var x: ?number = yield; // error: string ~> number
                    ^^^^^^ number
 
-class.js:131
-131:   (x : number) // error: string ~> number
+class.js:125
+125:   (x : number) // error: string ~> number
         ^ string. This type is incompatible with
-131:   (x : number) // error: string ~> number
+125:   (x : number) // error: string ~> number
             ^^^^^^ number
 
-class.js:134
-134: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
+class.js:128
+128: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
-134: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
+128: examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                               ^^ string. This type is incompatible with
-undefined. See lib: core.js:405
+undefined. See lib: core.js:407
 
-class.js:137
-137:   (x : string) // error: number ~> string
+class.js:131
+131:   (x : string) // error: number ~> string
         ^ number. This type is incompatible with
-137:   (x : string) // error: number ~> string
+131:   (x : string) // error: number ~> string
             ^^^^^^ string
 
 class_failure.js:12
@@ -72,11 +80,19 @@ class_failure.js:12
                                                  ^^^^^^ string
 
 class_failure.js:14
- 14: var infer_stmt_next = examples.infer_stmt().next(0).value; // this should be an
+ 14: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
- 22:   (infer_stmt_next : boolean) // error: string ~> boolean
+ 14: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
+                                                      ^ number. This type is incompatible with
+  5:     var x: ?boolean = yield 0;
+                 ^^^^^^^ boolean
+
+class_failure.js:14
+ 14: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+ 19:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ string. This type is incompatible with
- 22:   (infer_stmt_next : boolean) // error: string ~> boolean
+ 19:   (infer_stmt_next : boolean) // error: string ~> boolean
                           ^^^^^^^ boolean
 
 generators.js:3
@@ -142,7 +158,7 @@ generators.js:95
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
  95: delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                      ^^ string. This type is incompatible with
-undefined. See lib: core.js:405
+undefined. See lib: core.js:407
 
 generators.js:101
 101:   (x : string) // error: number ~> string
@@ -183,4 +199,4 @@ throw.js:22
                             ^^^^^^ string
 
 
-Found 28 errors
+Found 30 errors

@@ -21,7 +21,7 @@ let tests = [
   // bad constructors
   function() {
     let x = new Map(['foo', 123]); // error
-    let y: Map<number, string> = new Map([['foo', 123]]); // TODO: y no error?
+    let y: Map<number, string> = new Map([['foo', 123]]); // error
   },
 
   // get()

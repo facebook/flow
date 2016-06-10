@@ -38,7 +38,7 @@ function bar(x: Breakfast) {
 function qux(x: Breakfast) {
   if (x.taste === 'Good') {
     (x.raw: 'Yes' | 'No'); // 2 errors:
-                           // Apple.raw doesn't exist
+                           // Orange.raw doesn't exist
                            // Carrot.raw is neither Yes nor No
   }
 }

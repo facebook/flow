@@ -22,6 +22,8 @@ class ['a] t = object(self)
   method type_ cx (acc: 'a) = function
   | OpenT (r, id) -> self#tvar cx acc r id
 
+  | ChoiceKitT (_, Trigger) -> acc
+
   | NumT _
   | StrT _
   | BoolT _
@@ -131,11 +133,6 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t2 in
     acc
 
-  | SpeculativeMatchT (_, t1, t2) ->
-    let acc = self#type_ cx acc t1 in
-    let acc = self#use_type_ cx acc t2 in
-    acc
-
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes
 
@@ -194,8 +191,6 @@ class ['a] t = object(self)
   | ArrRestT (_, _, _)
   | UnaryMinusT (_, _)
   | UnifyT (_, _)
-  | ConcretizeLowerT (_, _, _, _)
-  | ConcretizeUpperT (_, _, _, _)
   | GetKeysT (_, _)
   | HasOwnPropT (_, _)
   | HasPropT (_, _, _)
@@ -214,6 +209,8 @@ class ['a] t = object(self)
   | TupleMapT (_, _, _)
   | ReactCreateElementT _
   | SentinelPropTestT _
+  | ChoiceKitUseT (_, _)
+  | IntersectionPreprocessKitT (_, _)
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

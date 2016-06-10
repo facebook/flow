@@ -1,40 +1,14 @@
 async.js:12
  12:   return 1;  // error, number != bool
               ^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:492
-  Member 1:
-  type application of identifier `Promise`. See lib: core.js:492
-  Error:
-   12:   return 1;  // error, number != bool
-                ^ number. This type is incompatible with
-  Promise. See lib: core.js:492
-  Member 2:
-   12:   return 1;  // error, number != bool
-         ^^^^^^^^^ type parameter `T` of async return
-  Error:
-   12:   return 1;  // error, number != bool
-                ^ number. This type is incompatible with
-   11: async function f1(): Promise<bool> {
-                                    ^^^^ boolean
+ 11: async function f1(): Promise<bool> {
+                                  ^^^^ boolean
 
 async.js:31
  31:   return await p; // error, number != bool
               ^^^^^^^ number. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:492
-  Member 1:
-  type application of identifier `Promise`. See lib: core.js:492
-  Error:
-   31:   return await p; // error, number != bool
-                ^^^^^^^ number. This type is incompatible with
-  Promise. See lib: core.js:492
-  Member 2:
-   31:   return await p; // error, number != bool
-         ^^^^^^^^^^^^^^^ type parameter `T` of async return
-  Error:
-   31:   return await p; // error, number != bool
-                ^^^^^^^ number. This type is incompatible with
-   30: async function f4(p: Promise<number>): Promise<bool> {
-                                                      ^^^^ boolean
+ 30: async function f4(p: Promise<number>): Promise<bool> {
+                                                    ^^^^ boolean
 
 async.js:45
  45:   static async m(a): void { await a; } // error, void != Promise<void>

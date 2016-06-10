@@ -24,45 +24,18 @@ caching_bug.js:21
 
 iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
- 20:     next(): IteratorResult<string, void> {
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s)
-  Member 1:
-  object type. See lib: core.js:393
-  Error:
-   23:         return { done, value: "still going..." }; // Error string ~> void
-                                     ^^^^^^^^^^^^^^^^ string. This type is incompatible with
-   20:     next(): IteratorResult<string, void> {
-                                          ^^^^ undefined
-  Member 2:
-  object type. See lib: core.js:396
-  Error:
-  inconsistent use of library definitions
-  boolean literal `true`. Expected boolean literal `false`, got `true` instead. See lib: core.js:394
-  boolean literal `false`. See lib: core.js:397
+                      ^^^^ boolean. Expected boolean literal `false`, got `true` instead
+boolean literal `false`. See lib: core.js:399
 
 iterator_result.js:25
  25:         return { done }; // Error void ~> string
-                    ^^^^^^^^ object literal. This type is incompatible with
- 20:     next(): IteratorResult<string, void> {
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: object type(s)
-  Member 1:
-  object type. See lib: core.js:393
-  Error:
-   25:         return { done }; // Error void ~> string
-                        ^^^^ boolean. Expected boolean literal `true`, got `false` instead
-  boolean literal `true`. See lib: core.js:394
-  Member 2:
-  object type. See lib: core.js:396
-  Error:
-  property `value`. Property not found in. See lib: core.js:396
-   25:         return { done }; // Error void ~> string
-                      ^^^^^^^^ object literal
+                      ^^^^ boolean. Expected boolean literal `true`, got `false` instead
+boolean literal `true`. See lib: core.js:396
 
 map.js:13
  13: function mapTest4(map: Map<number, string>): Iterable<string> {
                                                            ^^^^^^ string. This type is incompatible with
-tuple type. See lib: core.js:423
+tuple type. See lib: core.js:425
 
 set.js:13
  13: function setTest4(set: Set<string>): Iterable<number> {
@@ -79,7 +52,7 @@ set.js:13
 string.js:5
   5: var stringTest3: Iterable<number> = "hi"; // Error - string is a Iterable<string>
                                ^^^^^^ number. This type is incompatible with
-string. See lib: core.js:234
+string. See lib: core.js:236
 
 
 Found 10 errors

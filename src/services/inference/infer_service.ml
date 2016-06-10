@@ -48,10 +48,11 @@ let infer_module ~options ~metadata filename =
 let infer_job ~options (inferred, errsets, errsuppressions) files =
   let metadata = Context.metadata_of_options options in
   List.fold_left (fun (inferred, errsets, errsuppressions) file ->
+    let file_str = string_of_filename file in
     try Profile_utils.checktime ~options 1.0
-      (fun t -> spf "perf: inferred %s in %f" (string_of_filename file) t)
+      (fun t -> spf "perf: inferred %s in %f" file_str t)
       (fun () ->
-        (*prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file;*)
+        (* prerr_endlinef "[%d] INFER: %s" (Unix.getpid()) file_str; *)
 
         (* infer produces a context for this module *)
         let cx = infer_module ~options ~metadata file in

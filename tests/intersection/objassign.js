@@ -3,7 +3,7 @@
  *
  * Definitions in lib/lib.js
  *
- * @flow
+ * @noflow
  */
 
 declare var x: ObjAssignT;

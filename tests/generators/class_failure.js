@@ -11,10 +11,7 @@ var examples = new GeneratorExamples();
 
 for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
 
-var infer_stmt_next = examples.infer_stmt().next(0).value; // this should be an
-                                                           // error, but we miss
-                                                           // it: see class.js
-                                                           // for details
+var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
 
 if (typeof infer_stmt_next === "undefined") {
 } else if (typeof infer_stmt_next === "number") {

@@ -39,6 +39,7 @@ val make: metadata -> Loc.filename -> Modulename.t -> t
 val metadata_of_options: Options.t -> metadata
 
 (* accessors *)
+val all_unresolved: t -> Type.TypeSet.t IMap.t
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
 val enable_const_params: t -> bool
 val enable_unsafe_getters_and_setters: t -> bool
@@ -74,6 +75,7 @@ val should_munge_underscores: t -> bool
 val should_strip_root: t -> bool
 val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
+val type_graph: t -> Graph_explorer.graph
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> int option
 
@@ -94,6 +96,8 @@ val remove_all_error_suppressions: t -> unit
 val remove_tvar: t -> Constraint_js.ident -> unit
 val set_envs: t -> env IMap.t -> unit
 val set_evaluated: t  -> Type.t IMap.t -> unit
+val set_type_graph: t  -> Graph_explorer.graph -> unit
+val set_all_unresolved: t  -> Type.TypeSet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint_js.node IMap.t -> unit
 val set_in_declare_module: t -> bool -> unit

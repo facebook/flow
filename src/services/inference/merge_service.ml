@@ -170,7 +170,7 @@ let merge_strict_job ~options (merged, errsets) (components: filename list list)
     try Profile_utils.checktime ~options 1.0
       (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
       (fun () ->
-        (*prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) file;*)
+        (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
         let file, errors = merge_strict_component ~options component in
         file :: merged, errors :: errsets
       )
