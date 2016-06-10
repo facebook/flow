@@ -1861,6 +1861,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          UseT (use_op, ExtendsT ((List.tl ts) @ try_ts_on_failure, l, u)))
 
     (** consistent override of properties **)
+    | IntersectionT (_, rep), NewableSuperT _
     | IntersectionT (_, rep), SuperT _ ->
       InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
 
@@ -3281,12 +3282,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         exist. **)
 
     | (InstanceT (_,_,_,({newable=NewableFalse; _})),
-       SuperT _)
+       NewableSuperT _)
       ->
       flow_err cx trace "Cannot inherit non-newable" l u
 
-    | (InstanceT (_,_,_,instance_super),
-       SuperT (reason,instance))
+    | (InstanceT (_,_,_,instance_super), NewableSuperT (reason,instance))
+    | (InstanceT (_,_,_,instance_super), SuperT (reason,instance))
       ->
         iter_props cx instance_super.fields_tmap (fun x -> function
           | AbstractT t when not (has_prop cx instance.fields_tmap x) ->
@@ -3308,7 +3309,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             lookup_prop cx trace l reason None x (AnyWithLowerBoundT t)
         )
 
+    | ObjT _, NewableSuperT (reason, instance)
     | ObjT _, SuperT (reason, instance)
+    | AnyObjT _, NewableSuperT (reason, instance)
     | AnyObjT _, SuperT (reason, instance)
       ->
         iter_props cx instance.fields_tmap (fun x t ->
@@ -3557,7 +3560,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
         flow_err_prop_not_found cx trace (reason_op, reason_strict)
 
-    (* SuperT only involves non-strict lookups *)
+    (* (Newable)SuperT only involves non-strict lookups *)
+    | (MixedT _, NewableSuperT _)
     | (MixedT _, SuperT _) -> ()
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
@@ -3848,7 +3852,7 @@ and object_use = function
 
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
-  | SuperT _
+  | NewableSuperT _ | SuperT _
   | GetKeysT _ | HasOwnPropT _ | HasPropT _
   | ObjAssignT _ | ObjRestT _
   | SetElemT _ | GetElemT _

@@ -80,6 +80,7 @@ val mk_interface: Context.t ->
 
 (** Emits constraints to ensure the signature is compatible with its declared
     superclass (classes) or extends/mixins (interfaces) *)
+val check_newable_super: Context.t -> t -> unit
 val check_super: Context.t -> t -> unit
 
 (** Invoke callback with type parameters substituted by upper/lower bounds. *)

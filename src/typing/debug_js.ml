@@ -325,6 +325,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | NewableSuperT (_, instance)
   | SuperT (_, instance) -> [
       "instance", json_of_insttype json_cx instance
     ]
@@ -1060,6 +1061,7 @@ and dump_use_t_ (depth, tvars) cx t =
   else match t with
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
   | SummarizeT (_, arg) -> p ~extra:(kid arg) t
+  | NewableSuperT _ -> p t
   | SuperT _ -> p t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | SetNewableT (_, it)

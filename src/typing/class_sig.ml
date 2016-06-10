@@ -284,6 +284,15 @@ let remove_this x =
     tparams_map = SMap.remove "this" x.tparams_map;
   }
 
+let check_newable_super cx x =
+  let x = remove_this x in
+  let reason = x.instance.reason in
+  mutually (fun ~static ->
+    let super = with_sig ~static (fun s -> s.super) x in
+    let insttype = insttype ~static cx x in
+    Flow.flow cx (super, Type.NewableSuperT (reason, insttype))
+  ) |> ignore
+
 let check_super cx x =
   let x = remove_this x in
   let reason = x.instance.reason in

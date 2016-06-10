@@ -274,6 +274,7 @@ module rec TypeTerm : sig
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * t list * t
+    | NewableSuperT of reason * insttype
     | SuperT of reason * insttype
     | MixinT of reason * t
     | SetNewableT of reason * t
@@ -1078,6 +1079,7 @@ and reason_of_use_t = function
 
   | ConstructorT (reason,_,_)
 
+  | NewableSuperT (reason,_)
   | SuperT (reason,_)
   | MixinT (reason, _)
   | SetNewableT (reason, _)
@@ -1284,6 +1286,7 @@ and mod_reason_of_defer_use_t f = function
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
 
+  | NewableSuperT (reason, inst) -> NewableSuperT (f reason, inst)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | SetNewableT (reason, inst) -> SetNewableT (f reason, inst)
@@ -1463,6 +1466,7 @@ let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
   | SummarizeT _ -> "SummarizeT"
+  | NewableSuperT _ -> "NewableSuperT"
   | SuperT _ -> "SuperT"
   | MixinT _ -> "MixinT"
   | SetNewableT _ -> "SetNewableT"

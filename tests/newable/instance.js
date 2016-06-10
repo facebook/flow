@@ -1,4 +1,4 @@
-// flow
+
 
 class C {
   constructor(n: number) {}

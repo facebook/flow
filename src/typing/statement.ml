@@ -4432,7 +4432,7 @@ and mk_class cx type_params_map loc reason c =
     Class_sig.mk cx type_params_map loc reason self c ~expr:expression
   in
   class_sig |> Class_sig.generate_tests cx (fun class_sig ->
-    Class_sig.check_super cx class_sig;
+    Class_sig.check_newable_super cx class_sig;
     Class_sig.toplevels cx class_sig
       ~decls:toplevel_decls
       ~stmts:toplevels

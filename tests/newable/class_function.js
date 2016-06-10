@@ -1,4 +1,4 @@
-// @flow
+
 
 class C {
   constructor(n: number) {}
@@ -13,7 +13,7 @@ export class E extends D {
 function Fn(X: Class<C>): Class<Newable<C>> {
   return class F_ extends X { //ng (non-newable `X`)
     // The `super(...)` calls required from constructor bodies imply that the
-    // extension class should be newable-qualified
+    // extension class must be newable-qualified.
     constructor(s: string) {} //ng (non-subtype ctor)
   }
 }
