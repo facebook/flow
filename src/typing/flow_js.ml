@@ -3582,7 +3582,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          _;
        }) as u))))
       ->
-      structural_subtype cx trace l reason_inst
+      structural_subtype cx trace origin reason_inst
         (super, fields_tmap, methods_tmap);
 
       if newable = NewableTrue then (

@@ -13,11 +13,8 @@ class B extends A {
   static sm() {}
 }
 
-// Value B is newable, Type A non-newable => ClassT (NewableT B) ~> ClassT A //ok
-var X1: Class<A> = B;
-
-//Value B is newable, Type A newable => ClassT (NewableT B) ~> ClassT (NewableT A) //ng (incompatible ctor)
-var X2: Class<Newable<A>> = B;
+var X1: Class<A> = B; //ok
+var X2: Class<Newable<A>> = B; //ng
 
 var a: A = new A(1); //ok
 var b: A = new B("two"); //ok
@@ -45,5 +42,5 @@ function gn(X: Class<B>): Newable<B> {
 function hn(X) {
   return new X(26);
 }
-var call1 = hn(A);
-var call2 = hn(B);
+var call1 = hn(A); //ok
+var call2 = hn(B); //ng

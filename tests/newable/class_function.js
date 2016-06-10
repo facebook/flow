@@ -27,7 +27,7 @@ let G = Gn(C); //ok
 let g = new G("one"); //ng
 
 function Hn(X: Class<Newable<C>>): Class<Newable<C>> {
-  return class H_ extends X {}
+  return class H_ extends X {} //ok
 }
 let H = Hn(C); //ok
 let h = new H(2); //ok
@@ -37,8 +37,8 @@ interface I {
 }
 
 export function Ln(X: Class<Newable<C>>): Class<C> & Class<Newable<I>> {
-  return class L_ extends X {
-    constructor(o: {x:number, y:number}) {}
+  return class L_ extends X { //ok
+    constructor(o: {x:number, y:number}) {} //ok
   }
 }
 let L = Ln(C); //ok
@@ -46,7 +46,7 @@ let ell1 = new L({x:1, y:2, z:3}); //ok
 //Under another PR: `let ell2 = new ell1.constructor({x:11, y:12, z:13});` //ok
 
 function Mn(X: Class<Newable<C>>): Class<C> & Class<Newable<I>> {
-  return class M_ extends X {
+  return class M_ extends X { //ok
     constructor(n: number) {} //ng
   }
 }
@@ -58,5 +58,5 @@ function Nn(X) {
   }
 }
 let N = Nn(C);
-let n = new N({x1:"not a number", x2:7});
-let a: string = n.m();
+let n = new N({x1:"not a number", x2:7}); //ng
+let a: string = n.m(); //ng
