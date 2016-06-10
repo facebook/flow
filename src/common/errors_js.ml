@@ -734,7 +734,6 @@ let rec json_of_info_tree ~json_of_message tree =
       ["children", JSON_Array (List.map (json_of_info_tree ~json_of_message) kids)]
   )
 
-(* adapted from Errors.to_json to output multi-line errors properly *)
 let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
   let open Hh_json in
   let kind_str, severity_str = match kind with

@@ -21,6 +21,8 @@
    subtyping. This process continues till a fixpoint is reached---which itself
    is guaranteed to exist, and is usually reached in very few steps. *)
 
+module Errors = Errors_js
+
 open Utils_js
 open Reason_js
 open Constraint_js
