@@ -1,3 +1,15 @@
+###v0.27.0
+
+Notable bug fixes:
+- Fixed a filesystem race condition where Flow would note that a directory exists just before it is deleted, then try to read the directory
+- Fixed some issues with disjoint unions that have complex definitions
+- Fixed an issue where functions that come after a return aren't analyzed (even though they are hoisted)
+- A few updates to the Node.js library definitions
+- Fixed a race condition when adding specific properties to dictionary types
+- Various performance improvements
+- `--strip-root` is now applied to the output of `--verbose`
+- Fixed an issue where duplicate method declarations weren't understood correctly
+
 ###v0.26.0
 ([@gabelevi](https://github.com/gabelevi) mistakingly listed a few v0.26.0 changes as being in v0.25.0. The Changelog has been updated to reflect reality. Sorry!)
 
