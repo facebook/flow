@@ -26,7 +26,7 @@ x = {a: 1, b: 2, c: "three"};
 {% endhighlight %}
 
 The value `{a: 1, b: 2, c: "three"}` is admissible here because the
-`Intersection` type only constrains keys `a` and `b`.
+`Intersection` type only constrains properties `a` and `b`.
 
 > NOTE
 >
