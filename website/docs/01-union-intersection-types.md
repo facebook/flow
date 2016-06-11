@@ -11,8 +11,8 @@ a value to be one of the input types:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-type Union = number | string
-var x: Union = 1;
+type U = number | string
+var x: U = 1;
 x = "two";
 {% endhighlight %}
 
@@ -20,8 +20,8 @@ An intersection type requires a value to be all of the input types:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-type Intersection = {a: number} & {b: number}
-var x: Intersection = {a: 1, b: 2};
+type I = {a: number} & {b: number}
+var x: I = {a: 1, b: 2};
 x = {a: 1, b: 2, c: "three"};
 {% endhighlight %}
 
