@@ -7,7 +7,7 @@ next: type-aliases.html
 ---
 
 Flow adds support for both union and intersection types. A union type requires
-for a value to be one of the input types:
+a value to be one of the input types:
 
 {% highlight javascript linenos=table %}
 /* @flow */
