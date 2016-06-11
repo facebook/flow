@@ -2,8 +2,8 @@
 id: union-intersection-types
 title: Union and Intersection Types
 permalink: /docs/union-intersection-types.html
-prev: destructuring.html
-next: type-aliases.html
+prev: type-aliases.html
+next: typeof.html
 ---
 
 Flow adds support for both union and intersection types. A union type requires

@@ -2,8 +2,8 @@
 id: type-aliases
 title: Type Aliases
 permalink: /docs/type-aliases.html
-prev: union-intersection-types.html
-next: typeof.html
+prev: destructuring.html
+next: union-intersection-types.html
 ---
 
 Flow supports type aliasing. 
