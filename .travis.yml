@@ -2,8 +2,8 @@ sudo: false
 
 env:
   global:
-  # GH_BOT_TOKEN (facebook-github-bot-0)
-  - secure: I1W8xlf8Ojxkc92n8Rb9AGX7kdCk0DeWEPd6PKRrGQO0FtyCkcvxNo+wp6ApQI7+NqkuFRVngHVOQOd3AqR57IFiSjZ+Cj/BJyg6WOo92olkAAP0OWihmCj53d2xDpp7LaM99srPbZXYE5vSTTKBX/5Soz9UghzsI5Q1ECmV5fU=
+  # DOC_BOT_TOKEN (flow-doc-bot)
+  - secure: 2Sdk/yAm79iNRpN6U3CT83nDbdeR740lwHLQIoOKGi7jxphWbKq3JNjj2f1Fa4X13sc8yKfEfdQzLSwZVch1fxG4Ib4uzb3RqtH9g0Yf63shl/6EMJE+p83EktNse6BMgSSAkLxruVPE9m7yptmQ0ydlHbO7DLchaTbRs1C73N4=
   # AWS_ACCESS_KEY_ID
   - secure: HMGkDgbay0TcQtiCm5K4F1Y8trtMT5X5S8nRGrTrKBuI4RIEkTQ06VdQVf96gnhe/7IjDQfAUbXWspSmlpWbIKij4BRHOijezU37sooNUkQp4R+EfPpbJECnuv+4WqZI2bMj2i3sw3b8f1oNCFztzHrpxZQ9oOeQbenf/8c2fQs=
   # AWS_SECRET_ACCESS_KEY

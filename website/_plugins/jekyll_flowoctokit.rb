@@ -4,7 +4,7 @@ module Jekyll
   class FlowGitHubGenerator < Jekyll::Generator
     def self.releases(repo)
       @releases ||= Hash.new do |hash, key|
-        access_token = ENV['GH_BOT_TOKEN']
+        access_token = ENV['DOC_BOT_TOKEN']
         authed = access_token.nil? ? "" : " (with auth)"
         Jekyll.logger.info "GitHub Query:", "releases for #{key}#{authed}"
         client = Octokit::Client.new(:access_token => access_token)
