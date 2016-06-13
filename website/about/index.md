@@ -2,9 +2,11 @@
 id: about-flow
 title: About Flow
 section: about
-permalink: /docs/about-flow.html
-next: getting-started.html
+layout: default
+permalink: /about/
 ---
+
+# What Is Flow?
 
 Flow is a **static type checker** for JavaScript. It can be used to catch common
 bugs in JavaScript programs before they run, including:

@@ -1,7 +1,5 @@
 - title: Quick Start
   items:
-  - id: about-flow
-    title: About Flow
   - id: getting-started
     title: Getting started with Flow
   - id: five-simple-examples

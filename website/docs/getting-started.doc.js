@@ -4,7 +4,6 @@
 id: getting-started
 title: Getting started with Flow
 permalink: /docs/getting-started.html
-prev: about-flow.html
 next: five-simple-examples.html
 ---
 */
