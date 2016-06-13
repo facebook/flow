@@ -25,7 +25,9 @@ module Jekyll
       mac_binary = "https://github.com/#{repo}/releases/download/#{tag}/flow-osx-#{tag}.zip"
 
       {
-        'name' => release.name.empty? ? release.tag_name : release.name,
+        'name' => release.name.nil? || release.name.empty? ?
+          release.tag_name :
+          release.name,
         'tag_name' => release.tag_name,
         'linux_binary' => {
           'url' => linux_binary
