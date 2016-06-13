@@ -8,6 +8,7 @@ exclude_from_upload:
 
 cloudfront_distribution_id: <%= ENV['CLOUDFRONT_ID'] %>
 cloudfront_invalidate_root: true
+cloudfront_wildcard_invalidation: true
 
 redirects:
   /docs/about.html: /about/
