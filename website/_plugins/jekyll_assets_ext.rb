@@ -13,7 +13,7 @@ module Jekyll
           sprockets = site.sprockets
 
           asset = find_asset(args, sprockets)
-          sprockets.used.add(asset)
+          sprockets.manifest.add(asset)
           File.basename(asset.logical_path, File.extname(asset.logical_path))
 
         rescue => error

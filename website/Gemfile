@@ -6,6 +6,4 @@ gem 'octokit'
 gem 'redcarpet'
 gem 's3_website'
 gem 'sprockets-es6'
-
-# master as of 2016-03-24; makes liquid processing optional
-gem 'jekyll-assets', :git => 'https://github.com/jekyll/jekyll-assets.git', :ref => '6e8b3847e7bd96cfc9e01c1b4b92ff466ae23c5e'
+gem 'jekyll-assets', '~>2.2'

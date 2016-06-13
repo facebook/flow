@@ -25,7 +25,7 @@ module Jekyll
         sprockets = site.sprockets
         asset = sprockets.find_asset('inlineErrors', {})
         raise AssetNotFoundError, 'inlineErrors' unless asset
-        sprockets.used.add(asset)
+        sprockets.manifest.add(asset)
         if page["path"] && sprockets.digest?
           site.regenerator.add_dependency(
             site.in_source_dir(page["path"]),

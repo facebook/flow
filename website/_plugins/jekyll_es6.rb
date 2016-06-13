@@ -73,7 +73,7 @@ module Sprockets
       # if the imported dependency is also required via `//= require source`,
       # then don't mark it as "used", so that we don't build a separate asset
       # for it.
-      env.parent.used.add(asset) unless asset_is_required?(input, asset)
+      env.parent.manifest.add(asset) unless asset_is_required?(input, asset)
 
       asset.uri
     end
