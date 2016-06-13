@@ -25,9 +25,11 @@
       {% assign post = site.posts[i] %}
         <li>
           <a
-            {% if (post.title == page.title) %} class="active" {% endif %}
+            {% if (post.slug == page.slug) %} class="active" {% endif %}
             href="{{ site.baseurl }}{{ post.url }}">
-            {{ post.title }}
+            {% if post['short-title'] %}{{ post['short-title'] }}
+            {% else %}{{ post.title }}
+            {% endif %}
           </a>
         </li>
       {% endfor %}

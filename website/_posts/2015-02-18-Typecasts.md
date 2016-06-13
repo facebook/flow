@@ -1,8 +1,8 @@
 ---
-author: bhosmer 
+title: Announcing Typecasts
+short-title: Typecasts
+author: bhosmer
 ---
-
-### Announcing Typecasts
 
 As of version 0.3.0, Flow supports typecast expression.
 
@@ -24,23 +24,23 @@ For any JavaScript expression `<expr>` and any Flow type `<type>`, you can write
 
 <!--truncate-->
 
-### How Typecasts Work
+## How Typecasts Work
 
-To evaluate a typecast expression, Flow will first check that `<expr>` is a `<type>`. 
+To evaluate a typecast expression, Flow will first check that `<expr>` is a `<type>`.
 
 ```JavaScript
 (1+1: number); // this is fine
 (1+1: string); // but this is is an error
 ```
- 
-Second, Flow will infer that the typecast expression `(<expr>: <type>)` has the type `<type>`. 
+
+Second, Flow will infer that the typecast expression `(<expr>: <type>)` has the type `<type>`.
 
 ```JavaScript
 [(0: ?number)]; // Flow will infer the type Array<?number>
 [0];            // Without the typecast, Flow infers the type Array<number>
 ```
 
-### Safety
+## Safety
 
 Typecasts obey the same rules as other type annotations, so they provide the same safety guarantees. This means they are safe unless you explicitly use the `any` type to defeat Flow's typechecking. Here are examples of upcasting (which is allowed), downcasting (which is forbidden), and using `any`.
 
@@ -50,20 +50,20 @@ class Child extends Base {}
 var child: Child = new Child();
 
 // Upcast from Child to Base, a more general type: OK
-var base: Base = new Child(); 
+var base: Base = new Child();
 
 // Upcast from Child to Base, a more general type: OK
-(child: Base); 
+(child: Base);
 
 // Downcast from Base to Child: unsafe, ERROR
-(base: Child); 
+(base: Child);
 
 // Upcast base to any then downcast any to Child.
 // Unsafe downcasting from any is allowed: OK
-((base: any): Child); 
+((base: any): Child);
 ```
 
-### More examples
+## More examples
 
 Typecasts are particularly useful to check assumptions and help Flow infer the types you intend. Here are some examples:
 
@@ -73,11 +73,10 @@ Typecasts are particularly useful to check assumptions and help Flow infer the t
 (null: ?number) // Tells Flow that this expression is a nullable number.
 ```
 
-### Transformations
+## Transformations
 
-Like type annotations and other Flow features, typecasts need to be transformed away before the code can be run. The transforms will be available in react-tools `0.13.0` when it is published soon, but for now they're available in `0.13.0-beta.2`, which you can install with 
+Like type annotations and other Flow features, typecasts need to be transformed away before the code can be run. The transforms will be available in react-tools `0.13.0` when it is published soon, but for now they're available in `0.13.0-beta.2`, which you can install with
 
 ```bash
 npm install react-tools@0.13.0-beta.2
 ```
-
