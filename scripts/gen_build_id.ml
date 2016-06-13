@@ -13,24 +13,26 @@
 let () =
   let out_file = Sys.argv.(1) in
   let rev =
-    try read_process_output "git" [|"git"; "rev-parse"; "HEAD"|]
+    try read_process_output "git rev-parse HEAD"
     with Failure _ ->
-      try read_process_output "hg" [|"hg"; "id"; "-i"|]
+      try read_process_output "hg id -i"
       with Failure _ -> ""
   in
   let time =
-    try read_process_output "git" [|"git"; "log"; "-1"; "--pretty=tformat:%ct"|]
+    try read_process_output "git log -1 --pretty=tformat:%ct"
     with Failure _ ->
       try
-        let raw = read_process_output "hg" [|"hg"; "log"; "-r"; "."; "-T"; "{date|hgdate}\\n"|] in
+        let raw = read_process_output "hg log -r . -T \"{date|hgdate}\\n\"" in
         String.sub raw 0 (String.index raw ' ')
       with
       | Failure _ -> "0"
       | Not_found -> "0"
   in
-  let content = Printf.sprintf
-    "const char* const BuildInfo_kRevision = %S;\nconst unsigned long BuildInfo_kRevisionCommitTimeUnix = %sul;\n"
-    rev time in
+  let content =
+    let spf = Printf.sprintf in
+    (spf "const char* const BuildInfo_kRevision = %S;\n" rev) ^
+    (spf "const unsigned long BuildInfo_kRevisionCommitTimeUnix = %sul;\n" time)
+  in
   let do_dump =
     not (Sys.file_exists out_file) || string_of_file out_file <> content in
   if do_dump then
