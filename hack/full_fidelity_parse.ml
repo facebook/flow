@@ -29,7 +29,13 @@ let parse_and_print filename =
   let printer err = Printf.printf "%s\n" (SyntaxError.to_string err) in
 
   let str = Debug.dump_full_fidelity syntax_tree in
-
+  let editable = Full_fidelity_editable_syntax.from_tree syntax_tree in
+  let pretty = Full_fidelity_pretty_printer.pretty_print editable in
+  let text = Full_fidelity_editable_syntax.text editable in
+  Printf.printf "Original text:\n%s" text;
+  Printf.printf "\n----\n";
+  Printf.printf "Pretty print result:\n%s" pretty;
+  Printf.printf "\n----\n";
   List.iter printer errors;
   Printf.printf "%s" str;
   Printf.printf "\n----\n";
