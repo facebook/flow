@@ -3,7 +3,7 @@ permalink: /blog/:categories/:year/:month/:day/:title.html
 url: http://flowtype.org
 name: Flow
 relative_permalinks: false
-markdown: redcarpet
+markdown: FlowMarkdownParser
 description: A static type checker for JavaScript
 timezone: America/Los_Angeles
 
