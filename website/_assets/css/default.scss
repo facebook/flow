@@ -222,8 +222,6 @@ header.topbar {
 
 header.topbar .logo {
     float: left;
-    height: 30px;
-    margin-top: 7px;
     margin-right: 20px;
 }
 
@@ -250,18 +248,18 @@ header.topbar nav ul {
 
 header.topbar nav ul li {
     display: inline;
-    text-transform: uppercase;
+    text-transform: lowercase;
 }
 
 header.topbar nav ul li a {
     padding: 0 8px;
-    text-transform: uppercase;
+    text-transform: lowercase;
     letter-spacing: 1px;
     line-height: 50px;
     display: inline-block;
     height: 50px;
     color: #EEE;
-    font-size: 15px;
+    font-size: 18px;
 }
 
 header.topbar nav ul li a.active {
