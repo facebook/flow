@@ -64,6 +64,9 @@ before_deploy: bash -e resources/travis/before_deploy.sh
 cache:
   directories:
   - $HOME/.flow_cache
+  - node_modules
+  - website/node_modules
+  - src/parser/node_modules
 
 before_cache:
   - rm -rf $HOME/.flow_cache/ocaml-*/.opam/log
