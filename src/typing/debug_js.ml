@@ -991,12 +991,14 @@ and dump_t_ (depth, tvars) cx t =
   | BoolT (_, c) -> p ~extra:(match c with
     | Some b -> spf "%B" b
     | None -> "") t
+  | FunT (_,_,_,{params_tlist;return_t;_}) -> p ~extra:(spf "[%s] (%s)"
+      (String.concat "; " (List.map kid params_tlist))
+      (kid return_t)) t
   | EmptyT _
   | MixedT _
   | AnyT _
   | NullT _
   | VoidT _
-  | FunT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
@@ -1069,7 +1071,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | ApplyT (_, f, _) -> p ~extra:(kid f) t
   | BindT _ -> p t
-  | CallT _ -> p t
+  | CallT (_,{params_tlist;return_t;_}) -> p ~extra:(spf "[%s] (%s)"
+      (String.concat "; " (List.map kid params_tlist))
+      (kid return_t)) t
   | MethodT (_, (r, name), _) -> p
       ~extra:(spf "(%S, %S)" (desc_of_reason r) name) t
   | SetPropT (_, (r, name), ptype) -> p
