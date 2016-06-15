@@ -81,6 +81,7 @@ let stub_metadata ~root ~checked = { Context.
   facebook_ignore_fbt = false;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
+  max_workers = 0;
   munge_underscores = false;
   root;
   strip_root = true;
