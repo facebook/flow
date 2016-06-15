@@ -46,7 +46,7 @@ test-js: build-parser js
 ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native: build-parser
 	cd $(TOP); \
 	ocamlbuild \
-		-ocamlc "ocamlopt -ccopt -DNO_LZ4" \
+		-ocamlc "ocamlopt" \
 		$(NATIVE_OBJECT_FILES); \
 	ocamlbuild \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \

@@ -20,12 +20,6 @@ if os_type = "Unix" then {
   cclib += [ "-lrt" ]
 }
 
-if have_lz4 then {
-  cclib += [ "-llz4" ]
-} else {
-  ccopt += [ "-DNO_LZ4" ]
-}
-
 requires = [ "unix" "str" "threads" ]
 
 begin library "hh-third-party"

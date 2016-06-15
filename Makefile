@@ -110,7 +110,7 @@ NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 
-CC_FLAGS=-DNO_LZ4
+CC_FLAGS=
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
@@ -235,7 +235,7 @@ flow.odocl: $(shell find . -name "*.ml" -o -name "*.mli")
 		cp deps last_deps; \
 		cat deps \
 		  | xargs ocamldep -one-line $(INCLUDE_OPTS) \
-  		  | grep -o "[a-zA-Z0-9/_-]*\.cm[xo]" \
+		  | grep -o "[a-zA-Z0-9/_-]*\.cm[xo]" \
 		  | sed "s/\.cm[xo]$$/.ml/" \
 		  | sort -u > temp_deps; \
 		mv temp_deps deps; \
