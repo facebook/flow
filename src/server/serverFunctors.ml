@@ -255,7 +255,7 @@ end = struct
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let watch_paths = root :: Program.get_watch_paths options in
     let genv =
-      ServerEnvBuild.make_genv ~multicore:true options watch_paths handle in
+      ServerEnvBuild.make_genv options watch_paths handle in
     let program_init = create_program_init genv in
     if is_check_mode then
       let env = program_init () in

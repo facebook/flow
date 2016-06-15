@@ -12,8 +12,9 @@
 (*****************************************************************************)
 (* Building the environment *)
 (*****************************************************************************)
-let make_genv ~multicore options watch_paths handle =
-  let check_mode   = Options.is_check_mode options in
+let make_genv options watch_paths handle =
+  let check_mode = Options.is_check_mode options in
+  let multicore = Options.max_workers options > 0 in
   let workers =
     if multicore then
       Some (ServerWorker.make options handle)
