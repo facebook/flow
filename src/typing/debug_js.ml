@@ -1053,7 +1053,7 @@ and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason=true) ?(extra="") use_t =
     spf "%s (%s%s%s)"
       (string_of_use_ctor use_t)
-      (if reason then spf "%S" (desc_of_reason (reason_of_use_t use_t)) else "")
+      (if reason then spf "%S" (dump_reason cx (reason_of_use_t use_t)) else "")
       (if reason && extra <> "" then ", " else "")
       extra
   in
