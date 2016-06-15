@@ -1,0 +1,2 @@
+[options]
+experimental.strict_type_args=false
