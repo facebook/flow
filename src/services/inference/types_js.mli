@@ -19,7 +19,7 @@ val server_init:
 
 val typecheck_contents:
   options: Options.t ->
-  ?verbose: int ->
+  ?verbose: Verbose.t ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
   FlowEventLogger.Timing.t *

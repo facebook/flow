@@ -936,6 +936,10 @@ let json_of_env ?(depth=1000) cx env =
 
 (* debug printer *)
 
+let dump_reason cx reason = if Context.should_strip_root cx
+  then dump_reason (strip_root (Context.root cx) reason)
+  else dump_reason reason
+
 let rec dump_t ?(depth=3) cx t =
   dump_t_ (depth, ISet.empty) cx t
 
@@ -944,7 +948,7 @@ and dump_t_ (depth, tvars) cx t =
   let p ?(reason=true) ?(extra="") t =
     spf "%s (%s%s%s)"
       (string_of_ctor t)
-      (if reason then spf "%S" (desc_of_reason (reason_of_t t)) else "")
+      (if reason then spf "%S" (dump_reason cx (reason_of_t t)) else "")
       (if reason && extra <> "" then ", " else "")
       extra
   in
@@ -1123,10 +1127,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT _ ->
     p t
 
-let dump_reason cx reason = if Context.should_strip_root cx
-  then dump_reason (strip_root (Context.root cx) reason)
-  else dump_reason reason
-
 (*****************************************************)
 
 (* scopes and types *)
@@ -1220,12 +1220,3 @@ let string_of_default = Default.fold
     spf "Selector (%s) (%s)" str (string_of_selector sel))
   ~cons:(fun str default ->
     spf "Cons (%s) (%s)" str default)
-
-let debug_flow (l,u) =
-  spf "%s ~> %s" (string_of_ctor l) (string_of_use_ctor u)
-
-let debug_count =
-  let count = ref 0 in
-  fun f ->
-    incr count;
-    prerr_endlinef "[%d] %s" !count (f())

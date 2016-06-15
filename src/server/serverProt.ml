@@ -32,7 +32,9 @@ let build_revision = match Build_id.build_revision with
 
 type command =
 | AUTOCOMPLETE of file_input
-| CHECK_FILE of file_input * int option (* verbose *)
+| CHECK_FILE of
+    file_input *
+    Verbose.t option
 | COVERAGE of file_input
 | DUMP_TYPES of file_input * bool (* filename, include raw *)
 | ERROR_OUT_OF_DATE
@@ -44,7 +46,7 @@ type command =
     file_input * (* filename|content *)
     int * (* line *)
     int * (* char *)
-    int option * (* verbosity *)
+    Verbose.t option *
     bool (* include raw *)
 | KILL
 | PING

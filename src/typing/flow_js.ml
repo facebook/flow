@@ -1016,15 +1016,13 @@ let expect_proper_def_use t =
     this module, and the function `flow` outside this module. **)
 let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
   begin match Context.verbose cx with
-  | Some num_indent ->
-    let indent = String.make ((Trace.trace_depth trace - 1) * num_indent) ' ' in
+  | Some { Verbose.indent; depth } ->
+    let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
     let pid = Unix.getpid () in
     prerr_endlinef
-      "\n%s[%d] %s (%s) ~>\n%s[%d] %s (%s)"
-      indent pid
-      (Debug_js.dump_reason cx (reason_of_t l)) (string_of_ctor l)
-      indent pid
-      (Debug_js.dump_reason cx (reason_of_use_t u)) (string_of_use_ctor u)
+      "\n%s[%d] %s ~>\n%s[%d] %s"
+      indent pid (Debug_js.dump_t ~depth cx l)
+      indent pid (Debug_js.dump_use_t ~depth cx u)
   | None -> ()
   end;
 

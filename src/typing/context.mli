@@ -28,7 +28,7 @@ type metadata = {
   strip_root: bool;
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
-  verbose: int option;
+  verbose: Verbose.t option;
   weak: bool;
 }
 type module_exports_type =
@@ -77,7 +77,7 @@ val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
 val type_graph: t -> Graph_explorer.graph
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
-val verbose: t -> int option
+val verbose: t -> Verbose.t option
 
 val copy_of_context: t -> t
 val merge_into: t -> t -> unit

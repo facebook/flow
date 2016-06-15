@@ -58,7 +58,7 @@ type t = {
   opt_suppress_types : SSet.t;
   opt_temp_dir: string;
   opt_traces : int;
-  opt_verbose : int option; (* num of spaces to indent; None for not verbose *)
+  opt_verbose : Verbose.t option;
   opt_weak : bool;
   opt_shm_dirs: string list;
   opt_shm_min_avail: int;

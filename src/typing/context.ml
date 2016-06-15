@@ -27,7 +27,7 @@ type metadata = {
   strip_root: bool;
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
-  verbose: int option;
+  verbose: Verbose.t option;
   weak: bool;
 }
 

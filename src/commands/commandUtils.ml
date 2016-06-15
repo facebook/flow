@@ -158,10 +158,15 @@ let strip_root_flag prev = CommandSpec.ArgSpec.(
 )
 
 let verbose_flags =
-  let collector main verbose indent =
+  let collector main verbose indent depth =
     let opt_verbose =
-      if verbose || indent
-      then Some (if indent then 2 else 0)
+      if verbose || indent || depth != None
+      then Some { Verbose.
+        indent = if indent then 2 else 0;
+        depth = match depth with
+          | Some n when n >= 0 -> n
+          | _ -> 1
+      }
       else None
     in
     main opt_verbose
@@ -173,6 +178,8 @@ let verbose_flags =
         ~doc:"Print verbose info during typecheck"
     |> flag "--verbose-indent" no_arg
         ~doc:"Indent verbose info during typecheck (implies --verbose)"
+    |> flag "--verbose-depth" int
+        ~doc:"Recursively print types up to specified depth (default 1, implies --verbose)"
   )
 
 let root_flag prev = CommandSpec.ArgSpec.(
