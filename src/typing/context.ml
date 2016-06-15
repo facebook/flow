@@ -29,6 +29,7 @@ type metadata = {
   suppress_types: SSet.t;
   verbose: Verbose.t option;
   weak: bool;
+  max_workers: int;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)
@@ -102,6 +103,7 @@ let metadata_of_options options = {
   suppress_types = Options.suppress_types options;
   verbose = Options.verbose options;
   weak = Options.weak_by_default options;
+  max_workers = Options.max_workers options;
 }
 
 (* create a new context structure.
@@ -179,6 +181,12 @@ let suppress_types cx = cx.metadata.suppress_types
 let type_graph cx = cx.type_graph
 let type_table cx = cx.type_table
 let verbose cx = cx.metadata.verbose
+let max_workers cx = cx.metadata.max_workers
+
+let pid_prefix cx =
+  if max_workers cx > 0
+  then Printf.sprintf "[%d] " (Unix.getpid ())
+  else ""
 
 let copy_of_context cx = { cx with
   graph = IMap.map Constraint_js.copy_node cx.graph;

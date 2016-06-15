@@ -30,6 +30,7 @@ type metadata = {
   suppress_types: SSet.t;
   verbose: Verbose.t option;
   weak: bool;
+  max_workers: int;
 }
 type module_exports_type =
   | CommonJSModule of Loc.t option
@@ -78,6 +79,8 @@ val suppress_types: t -> SSet.t
 val type_graph: t -> Graph_explorer.graph
 val type_table: t -> (Loc.t, Type.t) Hashtbl.t
 val verbose: t -> Verbose.t option
+val max_workers: t -> int
+val pid_prefix: t -> string
 
 val copy_of_context: t -> t
 val merge_into: t -> t -> unit

@@ -954,8 +954,8 @@ let merge_env =
     (* missing completely from non-global scope *)
     | None, None, None ->
       assert_false (spf
-        "%d merge_entry %s %s: missing from scopes:\n%s\n%s\n%s"
-        (Unix.getpid ())
+        "%smerge_entry %s %s: missing from scopes:\n%s\n%s\n%s"
+        (Context.pid_prefix cx)
         (string_of_reason reason)
         (Changeset.string_of_entry_ref entry_ref)
         (Debug_js.string_of_scope cx scope0)

@@ -215,7 +215,8 @@ let havoc_call_env = Scope.(
 
   let havoc_entry cx scope ((_, name, _) as entry_ref) =
     (if Context.is_verbose cx then
-      prerr_endlinef "%d havoc_entry %s %s" (Unix.getpid ())
+      prerr_endlinef "%shavoc_entry %s %s"
+        (Context.pid_prefix cx)
         (Changeset.string_of_entry_ref entry_ref)
         (Debug_js.string_of_scope cx scope)
       );
@@ -234,7 +235,8 @@ let havoc_call_env = Scope.(
 
   let havoc_refi cx scope ((_, key, _) as refi_ref) =
     (if Context.is_verbose cx then
-      prerr_endlinef "%d havoc_refi %s" (Unix.getpid ())
+      prerr_endlinef "%shavoc_refi %s"
+        (Context.pid_prefix cx)
         (Changeset.string_of_refi_ref refi_ref));
     match get_refi key scope with
     | Some _ ->
@@ -704,9 +706,10 @@ module Cache = struct
       | OpenT _, _ | _, UseT (_, OpenT _) -> false
       | _ ->
         if TypePairSet.mem (l, u) !cache then begin
-          if Context.is_verbose cx
-          then prerr_endlinef "[%d] FlowConstraint cache hit on (%s, %s)"
-            (Unix.getpid ()) (string_of_ctor l) (string_of_use_ctor u);
+          if Context.is_verbose cx then
+            prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
+              (Context.pid_prefix cx)
+              (string_of_ctor l) (string_of_use_ctor u);
           true
         end else begin
           cache := TypePairSet.add (l, u) !cache;
@@ -1018,9 +1021,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
   begin match Context.verbose cx with
   | Some { Verbose.indent; depth } ->
     let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
-    let pid = Unix.getpid () in
+    let pid = Context.pid_prefix cx in
     prerr_endlinef
-      "\n%s[%d] %s ~>\n%s[%d] %s"
+      "\n%s%s%s ~>\n%s%s%s"
       indent pid (Debug_js.dump_t ~depth cx l)
       indent pid (Debug_js.dump_use_t ~depth cx u)
   | None -> ()
@@ -2379,8 +2382,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (t1, t2);
 
       (if Context.is_verbose cx then
-        prerr_endlinef "%d havoc_call_env fundef %s callsite %s"
-          (Unix.getpid ())
+        prerr_endlinef "%shavoc_call_env fundef %s callsite %s"
+          (Context.pid_prefix cx)
           (Debug_js.string_of_reason cx reason_fundef)
           (Debug_js.string_of_reason cx reason_callsite));
       havoc_call_env cx func_scope_id call_scope_id changeset;
