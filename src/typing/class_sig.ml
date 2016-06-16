@@ -225,7 +225,7 @@ let elements cx ?constructor = with_sig (fun s ->
     s.fields
     |> SMap.filter (fun _name (_, init_expr) -> init_expr <> None)
     |> SMap.keys
-    |> SSet.of_list
+    |> Utils_js.set_of_list
   in
 
   initialized_field_names, fields, methods
