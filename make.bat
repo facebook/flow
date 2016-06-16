@@ -1,6 +1,12 @@
 
 @echo off
 
+SET TERM=dumb
+SET EXITCODE=0
+
+ocaml.exe -I scripts -w -3 str.cma unix.cma .\scripts\ocp_build_glob.ml ocp_build_hack.ocp.fb ocp_build_hack.ocp
+ocaml.exe -I scripts -w -3 str.cma unix.cma .\scripts\ocp_build_glob.ml ocp_build_flow.ocp.fb ocp_build_flow.ocp
+
 if "%1" == "" goto build
 if "%1" == "build" goto build
 if "%1" == "all" goto build
@@ -20,11 +26,19 @@ REM 2/ generate get_build_id.gen.c
 REM 3/ start build hack with ocp-build
 :build
 if not exist "_obuild/" ocp-build init
-ocaml.exe unix.cma .\scripts\gen_build_id.ml .\hack\utils\get_build_id.gen.c
-ocaml.exe unix.cma .\scripts\gen_index.ml flowlib.rc lib
+ocaml.exe -I scripts -w -3 unix.cma .\scripts\gen_build_id.ml .\hack\utils\get_build_id.gen.c 
+ocaml.exe -I scripts -w -3 unix.cma .\scripts\gen_index.ml flowlib.rc lib
 ocp-build
+REM If the build failed then give up
+if %ERRORLEVEL% neq 0 (
+  SET EXITCODE=%ERRORLEVEL%
+  goto build_end
+)
 md bin 2>NUL
 copy _obuild\flow\flow.asm.exe bin\flow.exe
+
+:build_end
+del lib\INDEX
 
 goto end
 
@@ -37,3 +51,6 @@ goto end
 REM execute the Flow testsuite
 
 :end
+del ocp_build_flow.ocp
+del ocp_build_hack.ocp
+exit /B %EXITCODE%

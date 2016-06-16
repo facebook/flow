@@ -45,9 +45,9 @@ value hh_get_build_commit_time_string(void) {
   CAMLlocal1(result);
 
   char s[25];
-  struct tm p;
-  localtime_r((time_t*)&BuildInfo_kRevisionCommitTimeUnix, &p);
-  strftime(s, sizeof(s), "%c", &p);
+  // A previous version used localtime_r, which is not available on Windows
+  struct tm *p = localtime((time_t*)&BuildInfo_kRevisionCommitTimeUnix);
+  strftime(s, sizeof(s), "%c", p);
 
   result = caml_copy_string(s);
   CAMLreturn(result);

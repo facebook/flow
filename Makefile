@@ -94,6 +94,10 @@ NATIVE_LIBRARIES=\
   $(ELF)\
   $(RT)
 
+OCP_BUILD_FILES=\
+  ocp_build_flow.ocp\
+  ocp_build_hack.ocp
+
 FILES_TO_COPY=\
   $(wildcard lib/*.js)
 
@@ -133,12 +137,20 @@ clean:
 	rm -f hack/utils/get_build_id.gen.c
 	rm -f flow.odocl
 
+clean-ocp:
+	ocp-build clean
+	rm -f $(OCP_BUILD_FILES)
+
 build-flow: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild  -no-links  $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.native
 
-build-flow-with-ocp: hack/utils/get_build_id.gen.c
+%.ocp: %.ocp.fb scripts/utils.ml scripts/ocp_build_glob.ml
+	ocaml -I scripts -w -3 str.cma unix.cma scripts/ocp_build_glob.ml $(addsuffix .fb,$@) $@
+
+build-flow-with-ocp: $(OCP_BUILD_FILES) $(FLOWLIB) hack/utils/get_build_id.gen.c
 	[ -d _obuild ] || ocp-build init
 	ocp-build build flow
+	rm -f $(OCP_BUILD_FILES)
 
 build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
@@ -157,6 +169,9 @@ $(BUILT_C_FILES): _build/%.c: %.c
 $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 	cd $(dir $@) && ocamlopt $(EXTRA_INCLUDE_OPTS) $(CC_OPTS) -c $(notdir $<)
 
+hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
+	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
+
 _build/hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
 	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
 
@@ -170,6 +185,7 @@ $(FLOWLIB): $(wildcard lib/*)
 	tar czf $@ -C lib .
 ifeq ($(OS), Darwin)
 	rm -f _build/src/flow.d.byte _build/src/flow.native
+	rm -f _obuild/flow/flow.byte _obuild/flow/flow.asm
 endif
 
 copy-flow-files: build-flow $(FILES_TO_COPY)

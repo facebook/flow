@@ -2,6 +2,7 @@
 _build
 /_obuild
 /.ocp
+/lib/INDEX
 .DS_STORE
 docs/_site/
 _site/
@@ -14,3 +15,6 @@ npm-debug.log
 *.swo
 flow.odocl
 flow.docdir
+*~
+/hack/utils/get_build_id.gen.c
+/flowlib.rc

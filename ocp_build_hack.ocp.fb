@@ -1,0 +1,255 @@
+(**
+ * Copyright (c) 2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
+comp = [ "-thread" ]
+link = [ "-thread" ]
+
+if debug then {
+  comp += [ "-g" ]
+  link += [ "-g" ]
+}
+
+comp += [ "-w" "@a-3-4-6-27-29-35-44-48-50-52" ]
+
+requires = [ "unix" "str" "threads" ]
+
+begin library "hh-heap"
+  sort = true
+  files = begin fb-glob "hack/heap"
+  end
+  requires += [
+    "hh-stubs"
+    "hh-globals-config"
+    "tp-core"
+    "hh-utils-collections"
+  ]
+  if have_lz4 then {
+    cclib += [ "-llz4" ]
+  } else {
+    ccopt += [ "-DNO_LZ4" ]
+  }
+
+  if (os_type = "Unix" && system = "linux") then {
+    cclib += [ "-lrt" ]
+  }
+
+  comp += [ "-w" "-34" ]
+end
+
+begin library "hh-procs"
+  sort = true
+  files = begin fb-glob "hack/procs"
+  end
+  requires += [
+    "hh-stubs"
+    "hh-globals-config"
+    "hh-heap"
+    "tp-core"
+    "hh-utils"
+  ]
+end
+
+begin library "hh-embedded"
+  sort = true
+  files = begin fb-glob "hack/hhi"
+  end
+  requires += [ 
+    "bigarray" 
+    "hh-utils" 
+    "hh-find"
+    "hh-globals-config"
+  ]
+end
+
+
+begin library "hh-find"
+  sort = true
+  files = begin fb-glob "hack/find"
+  end
+  requires += [ 
+    "hh-stubs" 
+    "tp-core"
+    "hh-utils" 
+  ]
+end
+
+begin library "hh-utils"
+  sort = true
+  files = begin fb-glob "hack/utils"
+    excludes = [ 
+      "get_build_id.gen.c"
+      "win32_support.c" 
+    ]
+  end
+  files += [
+    "hack/utils/get_build_id.gen.c"
+  ]
+  requires += [
+    "hh-utils-collections"
+    "hh-utils-json"
+    "tp-core"
+  ]
+
+  if not(os_type = "Win32") || (ocaml_major_version = "4" && ocaml_minor_version = "01") then {
+    files += [ 
+      "hack/utils/win32_support.c"
+    ]
+  }
+end
+
+begin library "hh-utils-collections"
+  sort = true
+  files = begin fb-glob "hack/utils/collections"
+  end
+end
+
+begin library "hh-utils-json"
+  sort = true
+  files = begin fb-glob "hack/utils/hh_json"
+  end
+  requires += [ "tp-core" ]
+end
+ -
+
+begin library "hh-globals"
+  sort = true
+  files = begin fb-glob "hack/globals"
+    excludes = [ "globalConfig.ml" ]
+  end
+  requires += [
+    "hh-heap"
+    "hh-utils"
+    "hh-utils-collections"
+  ]
+end
+
+begin library "hh-globals-config"
+  sort = true
+  dirname = "hack/globals"
+  files = [
+    "globalConfig.ml"
+  ]
+  requires += [ "hh-utils" ]
+end
+
+begin library "hh-stubs"
+  sort = true
+  files = begin fb-glob "hack/stubs"
+  end
+  requires += [ "hh-utils" ]
+end
+
+begin library "hh-dfind"
+  sort = true
+  files = begin fb-glob "hack/dfind"
+  end
+  requires += [
+    "hh-fsnotify"
+    "hh-stubs"
+    "tp-avl"
+    "tp-core"
+    "hh-utils"
+    "hh-utils-collections"
+  ]
+end
+
+begin library "hh-search-common"
+  sort = true
+  files = begin fb-glob "hack/search"
+    excludes = [ "hackSearchService.ml"]
+  end
+  requires += [
+    "hh-heap"
+    "hh-procs"
+    "tp-core"
+    "hh-utils"
+    "hh-utils-collections"
+  ]
+end
+
+begin library "hh-socket"
+  sort = true
+  files = begin fb-glob "hack/socket"
+  end
+  requires += [ 
+    "hh-globals"
+    "hh-utils" 
+  ]
+end
+
+begin library "hh-fsnotify-linux"
+  sort = true
+  if not (system = "linux" && os_type = "Unix") then enabled = false
+  files = begin fb-glob "hack/third-party/inotify"
+  end 
+  files += begin fb-glob "hack/fsnotify_linux"
+  end
+  requires += [ 
+    "hh-utils" 
+    "tp-core"
+  ]
+  cclib += [ "-lelf" ]
+end
+
+begin library "hh-fsnotify-darwin"
+  sort = true
+  if not (system = "macosx" && os_type = "Unix") then enabled = false
+  files = begin fb-glob "hack/fsevents"
+  end 
+  files += begin fb-glob "hack/fsnotify_darwin"
+  end
+  requires += [ 
+    "hh-utils"
+    "tp-core"
+    "ROOTPROJECT"
+  ]
+  cclib = [
+    "-framework" "CoreServices"
+    "-framework" "CoreFoundation"
+  ]
+end
+
+begin library "hh-fsnotify-win"
+  sort = true
+  if not (os_type = "Win32") then enabled = false
+  files = begin fb-glob "hack/fsnotify_win"
+  end
+  requires += [ 
+    "hh-utils" 
+    "tp-core"
+  ]
+end
+
+begin library "hh-fsnotify"
+  sort = true
+  if os_type = "Win32" then {
+    requires += [ "hh-fsnotify-win" ]
+  } else if system = "linux" then {
+    requires += [ "hh-fsnotify-linux" ]
+  } else {
+    requires += [ "hh-fsnotify-darwin" ]
+  }
+end
+
+begin library "tp-avl"
+  sort = true
+  files = begin fb-glob "hack/third-party/avl"
+  end
+end
+
+begin library "tp-core"
+  sort = true
+  files = begin fb-glob "hack/third-party/core"
+    excludes = [ "result.ml" ]
+  end
+  files += [
+    "hack/third-party/core/result.ml" (comp += [ "-w" "-41" ])
+  ]
+end
