@@ -31,7 +31,7 @@ don't need to rewrite your existing codebase to start using Flow.
 You can opt-in on a per file basis by simply adding a `/* @flow */` comment to
 the top of your source file. Flow uses type inference to find errors without
 further guidance. You can add type assertions by [annotating your
-program](syntax.html) with types.
+program](/docs/syntax.html) with types.
 
 ## Idiomatic
 
@@ -48,7 +48,7 @@ statically typed languages lack. Flow is designed to understand even very
 dynamic code which is often found in JavaScript programs.
 
 We're constantly improving Flow to understand more and more JavaScript, but if
-you need it, the [`any` type](builtins.html#any) lets you opt-out of type
+you need it, the [`any` type](/docs/builtins.html#any) lets you opt-out of type
 checking in a granular way, so you can keep writing JavaScript the way
 JavaScript was meant to be written.
 
