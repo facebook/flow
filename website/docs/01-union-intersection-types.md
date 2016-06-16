@@ -2,40 +2,37 @@
 id: union-intersection-types
 title: Union and Intersection Types
 permalink: /docs/union-intersection-types.html
-prev: destructuring.html
-next: type-aliases.html
+prev: type-aliases.html
+next: typeof.html
 ---
 
-Flow adds support for both union and intersection types. A union type allows 
-for a value to be one of the input types.
+Flow adds support for both union and intersection types. A union type requires
+a value to be one of the input types:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-var x: number | string = 0;
+type U = number | string
+var x: U = 1;
+x = "two";
 {% endhighlight %}
 
-`x` can be either a `number` or a `string`. A default value can even be 
-provided of one of those two types.
+An intersection type requires a value to be all of the input types:
 
 {% highlight javascript linenos=table %}
 /* @flow */
-declare var f: ((x: number) => void) & ((x: string) => void);
-f('');
+type I = {a: number} & {b: number}
+var x: I = {a: 1, b: 2};
+x = {a: 1, b: 2, c: "three"};
 {% endhighlight %}
 
-> NOTE
-> 
-> Parentheses are important. Flow will not type-check correctly if you leave 
-> out the outer parenthesis on each of the function declarations on `f`.
-
-
-We are intersecting `function` here. A call to `f` has to be with a `number` 
-or `string`. Intersections are well-suited to mimic function overloading.
+The value `{a: 1, b: 2, c: "three"}` is admissible here because the
+`I` type only constrains properties `a` and `b`.
 
 > NOTE
-> 
-> Not all intersection types make sense. For example, no value has type 
-`number & string` since there is no value that can have both of those types.
+>
+> Intersection typing interacts with function types to yield union types over
+> the parameters, e.g. `((x: A) => T) & ((x: B) => U)` is equivalent to
+> `(x: A | B) => (T & U)`.
 
 
 ## Syntax
