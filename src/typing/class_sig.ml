@@ -219,7 +219,16 @@ let elements cx ?constructor = with_sig (fun s ->
   let fields = SMap.map fst s.fields in
   let fields = SMap.union getters_and_setters fields in
 
-  fields, methods
+  (* Only un-initialized fields require annotations, so determine now
+   * (syntactically) which fields have initializers *)
+  let initialized_field_names =
+    s.fields
+    |> SMap.filter (fun _name (_, init_expr) -> init_expr <> None)
+    |> SMap.keys
+    |> SSet.of_list
+  in
+
+  initialized_field_names, fields, methods
 )
 
 let arg_polarities x =
@@ -239,12 +248,13 @@ let insttype ~static cx s =
       let t = IntersectionT (reason_of_t t, InterRep.make ts) in
       Some t
   in
-  let fields, methods = elements ?constructor ~static cx s in
+  let inited_fields, fields, methods = elements ?constructor ~static cx s in
   { Type.
     class_id;
     type_args = s.tparams_map;
     arg_polarities = arg_polarities s;
     fields_tmap = Flow.mk_propmap cx fields;
+    initialized_field_names = inited_fields;
     methods_tmap = Flow.mk_propmap cx methods;
     mixins = false;
     structural = s.structural;

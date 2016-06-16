@@ -3899,6 +3899,7 @@ and react_create_class cx type_params_map loc class_props = Ast.Expression.(
     type_args = SMap.empty;
     arg_polarities = SMap.empty;
     fields_tmap = Flow.mk_propmap cx fmap;
+    initialized_field_names = SSet.empty;
     methods_tmap = Flow.mk_propmap cx mmap;
     mixins = !mixins <> [];
     structural = false;

@@ -7167,11 +7167,14 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     recurse t
 
   | InstanceT (_, static, super, instance) ->
-    let process_element name t =
-      let infer = is_munged_prop_name cx name in
+    let process_element ?(is_field=false) name t =
+      let infer =
+        is_munged_prop_name cx name
+        || (is_field && SSet.mem name instance.initialized_field_names)
+      in
       recurse ~infer t
     in
-    iter_props cx instance.fields_tmap process_element;
+    iter_props cx instance.fields_tmap (process_element ~is_field:true);
     iter_props cx instance.methods_tmap process_element;
     unify cx static AnyT.t;
     recurse super

@@ -497,6 +497,7 @@ module rec TypeTerm : sig
     type_args: t SMap.t;
     arg_polarities: polarity SMap.t;
     fields_tmap: int;
+    initialized_field_names: SSet.t;
     methods_tmap: int;
     mixins: bool;
     structural: bool;

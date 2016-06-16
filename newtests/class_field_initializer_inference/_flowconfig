@@ -1,0 +1,9 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+all=true
+esproposal.class_instance_fields=enable

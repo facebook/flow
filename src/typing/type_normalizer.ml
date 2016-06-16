@@ -28,6 +28,7 @@ let fake_instance name =
     type_args = SMap.empty;
     arg_polarities = SMap.empty;
     fields_tmap = 0;
+    initialized_field_names = SSet.empty;
     methods_tmap = 0;
     mixins = false;
     structural = false;
