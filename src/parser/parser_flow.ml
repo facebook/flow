@@ -1488,7 +1488,10 @@ end = struct
       | OCTAL ->
         float (int_of_string value)
       | NORMAL ->
-        float_of_string value
+        try Lexer_flow.FloatOfString.float_of_string value
+        with _ when Sys.win32 ->
+          error env Parse_error.WindowsFloatOfString;
+          789.0
       in
       Expect.token env (T_NUMBER number_type);
       value

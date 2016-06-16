@@ -76,6 +76,7 @@ type t =
   | ExportNamelessFunction
   | UnsupportedDecorator
   | MissingTypeParamDefault
+  | WindowsFloatOfString
 
 exception Error of (Loc.t * t) list
 
@@ -172,6 +173,11 @@ module PP =
       | UnsupportedDecorator -> "Found a decorator in an unsupported position."
       | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
           since a preceding type parameter declaration has a default."
+      | WindowsFloatOfString -> "The Windows version of OCaml has a bug in how \
+          it parses hexidecimal numbers. It is fixed in OCaml 4.03.0. Until we \
+          can switch to 4.03.0, please avoid either hexidecimal notation or \
+          Windows."
+
 
 
   end

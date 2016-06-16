@@ -466,6 +466,108 @@ end
     let env = illegal env loc in
     env, token
 
+module FloatOfString : sig
+  val float_of_string: string -> float
+end = struct
+  type t = {
+    negative: bool;
+    mantissa: int;
+    exponent: int;
+    decimal_exponent: int option;
+    todo: char list;
+  }
+
+  exception No_good
+
+  let eat f =
+    match f.todo with
+    | _::todo -> { f with todo; }
+    | _ -> raise No_good
+
+  let start str =
+    let todo = ref [] in
+    String.iter (fun c -> todo := c::(!todo)) str;
+    {
+      negative = false;
+      mantissa = 0;
+      exponent = 0;
+      decimal_exponent = None;
+      todo = List.rev (!todo);
+    }
+
+  let parse_sign f =
+    match f.todo with
+    | '+'::_ -> eat f
+    | '-'::_ -> { (eat f) with negative = true; }
+    | _ -> f
+
+  let parse_hex_symbol f =
+    match f.todo with
+    | '0'::('x' | 'X')::_ -> f |> eat |> eat
+    | _ -> raise No_good
+
+  let parse_exponent f =
+    let todo_str = f.todo
+      |> List.map Char.escaped
+      |> String.concat "" in
+    let exponent = 
+      try int_of_string todo_str
+      with Failure _ -> raise No_good in
+    { f with exponent; todo = [] }
+      
+  let rec parse_body f =
+    match f.todo with
+    | [] -> f
+    (* _ is just ignored *)
+    | '_'::_ -> parse_body (eat f)
+    | '.'::_ ->
+        if f.decimal_exponent = None
+        then parse_body { (eat f) with decimal_exponent = Some 0 }
+        else raise No_good
+    | ('p' | 'P')::_ ->
+        parse_exponent (eat f)
+    | c::_ ->
+        let ref_char_code = 
+          if c >= '0' && c <= '9'
+          then Char.code '0'
+          else if c >= 'A' && c <= 'F'
+          then Char.code 'A' - 10
+          else if c >= 'a' && c <= 'f'
+          then Char.code 'a' - 10
+          else raise No_good in
+        let value = (Char.code c) - ref_char_code in
+        let decimal_exponent = match f.decimal_exponent with
+        | None -> None
+        | Some e -> Some (e - 4) in
+        let mantissa = (f.mantissa lsl 4) + value in
+        parse_body { (eat f) with decimal_exponent; mantissa; }
+      
+  let float_of_t f =
+    assert (f.todo = []);
+    let ret = float_of_int f.mantissa in
+    let exponent = match f.decimal_exponent with
+    | None -> f.exponent
+    | Some decimal_exponent -> f.exponent + decimal_exponent in
+    let ret = 
+      if exponent = 0
+      then ret
+      else ret ** (float_of_int exponent) in
+    if f.negative
+    then -.ret
+    else ret
+
+  let float_of_string str =
+    try Pervasives.float_of_string str
+    with e when Sys.win32 ->
+      try 
+        start str
+          |> parse_sign
+          |> parse_hex_symbol
+          |> parse_body
+          |> float_of_t
+      with No_good -> raise e
+end
+
   let save_comment
     (env: Lex_env.t)
     (start: Loc.t) (_end: Loc.t)
@@ -547,7 +649,7 @@ end
     | OCTAL ->
       float (int_of_string num)
     | NORMAL ->
-      float_of_string num
+      FloatOfString.float_of_string num
     in
     let value = if neg = "" then value else ~-.value in
     T_NUMBER_SINGLETON_TYPE (number_type, value)
@@ -951,9 +1053,23 @@ and type_token env = parse
   | (neg? as neg) (legacyoctnumber as num)
       { env, mk_num_singleton LEGACY_OCTAL num neg }
   | (neg? as neg) (hexnumber as num) (non_hex_letter alphanumeric* as w)
-      { illegal_number env lexbuf w (mk_num_singleton NORMAL num neg) }
+      { 
+        let env, singleton = 
+          try env, mk_num_singleton NORMAL num neg
+          with _ when Sys.win32 ->
+            let loc = loc_of_lexbuf env lexbuf in
+            let env = lex_error env loc Parse_error.WindowsFloatOfString in
+            env, T_NUMBER_SINGLETON_TYPE (NORMAL, 789.0) in
+        illegal_number env lexbuf w singleton
+      }
   | (neg? as neg) (hexnumber as num)
-      { env, mk_num_singleton NORMAL num neg }
+      { 
+        try env, mk_num_singleton NORMAL num neg
+        with _ when Sys.win32 ->
+          let loc = loc_of_lexbuf env lexbuf in
+          let env = lex_error env loc Parse_error.WindowsFloatOfString in
+          env, T_NUMBER_SINGLETON_TYPE (NORMAL, 789.0)
+      }
   | (neg? as neg) (scinumber as num) (word as w)
       { illegal_number env lexbuf w (mk_num_singleton NORMAL num neg) }
   | (neg? as neg) (scinumber as num)
