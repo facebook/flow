@@ -6,7 +6,6 @@ TOP=$(DIR)/../..
 REL_DIR=src/parser
 
 NATIVE_OBJECT_FILES=\
-	hack/heap/hh_shared.o\
 	hack/utils/files.o\
 	hack/utils/nproc.o\
 	hack/utils/realpath.o\
