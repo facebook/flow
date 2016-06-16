@@ -362,6 +362,9 @@ end = struct
     let log_file = Path.to_string (Options.log_file options) in
     let log_fd = open_log_file options in
     let config_file = Server_files_js.config_file root in
+    (* Avoid leaking stdout and stderr to the server *)
+    Unix.(set_close_on_exec stdout);
+    Unix.(set_close_on_exec stderr);
     let {Daemon.pid; channels = (waiting_channel_ic, waiting_channel_oc)} =
       Daemon.spawn
         (log_fd, log_fd)
