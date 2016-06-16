@@ -181,12 +181,12 @@ static size_t global_size_b;
 static size_t heap_size;
 
 /* Used for the dependency hashtable */
-static unsigned long dep_size;
+static uint64_t dep_size;
 static size_t dep_size_b;
 static size_t bindings_size_b;
 
 /* Used for the shared hashtable */
-static unsigned long hashtbl_size;
+static uint64_t hashtbl_size;
 static size_t hashtbl_size_b;
 
 /* Size of where we allocate shared objects. */
@@ -440,7 +440,7 @@ static HANDLE memfd;
  * Committing the whole shared heap at once would require the same
  * amount of free space in memory (or in swap file).
  **************************************************************************/
-void memfd_init(char *shm_dir, size_t shared_mem_size, long minimum_avail) {
+void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
   memfd = CreateFileMapping(
     INVALID_HANDLE_VALUE,
     NULL,
@@ -467,7 +467,7 @@ static void raise_failed_anonymous_memfd_init() {
   caml_raise_constant(*exn);
 }
 
-static void raise_less_than_minimum_available(long avail) {
+static void raise_less_than_minimum_available(uint64_t avail) {
   CAMLlocal1(arg);
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("less_than_minimum_available");
@@ -476,9 +476,9 @@ static void raise_less_than_minimum_available(long avail) {
 }
 
 #include <sys/statvfs.h>
-void assert_avail_exceeds_minimum(char *shm_dir, long minimum_avail) {
+void assert_avail_exceeds_minimum(char *shm_dir, uint64_t minimum_avail) {
   struct statvfs stats;
-  long avail;
+  uint64_t avail;
   if (statvfs(shm_dir, &stats)) {
     uerror("statvfs", caml_copy_string(shm_dir));
   }
@@ -504,7 +504,7 @@ void assert_avail_exceeds_minimum(char *shm_dir, long minimum_avail) {
  * The resulting file descriptor should be mmaped with the memfd_map
  * function (see below).
  ****************************************************************************/
-void memfd_init(char *shm_dir, size_t shared_mem_size, long minimum_avail) {
+void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
   if (shm_dir == NULL) {
     // This means that we should try to use the anonymous-y system calls
 #if defined(MEMFD_CREATE)
@@ -724,10 +724,10 @@ static size_t get_shared_mem_size() {
 }
 
 static void set_sizes(
-  unsigned long config_global_size,
-  unsigned long config_heap_size,
-  unsigned long config_dep_table_pow,
-  unsigned long config_hash_table_pow) {
+  uint64_t config_global_size,
+  uint64_t config_heap_size,
+  uint64_t config_dep_table_pow,
+  uint64_t config_hash_table_pow) {
 
   global_size_b = config_global_size;
   heap_size = config_heap_size;
@@ -760,6 +760,7 @@ CAMLprim value hh_shared_init(
   config_heap_size_val = Field(config_val, 1);
   config_dep_table_pow_val = Field(config_val, 2);
   config_hash_table_pow_val = Field(config_val, 3);
+
   set_sizes(
     Long_val(config_global_size_val),
     Long_val(config_heap_size_val),
@@ -1344,8 +1345,8 @@ static char* hh_store_ocaml(value data) {
  * it allows us to use atomic operations.
  */
 /*****************************************************************************/
-static unsigned long get_hash(value key) {
-  return *((unsigned long*)String_val(key));
+static uint64_t get_hash(value key) {
+  return *((uint64_t*)String_val(key));
 }
 
 /*****************************************************************************/
@@ -1367,11 +1368,11 @@ static void write_at(unsigned int slot, value data) {
  */
 /*****************************************************************************/
 void hh_add(value key, value data) {
-  unsigned long hash = get_hash(key);
+  uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
 
   while(1) {
-    unsigned long slot_hash = hashtbl[slot].hash;
+    uint64_t slot_hash = hashtbl[slot].hash;
 
     if(slot_hash == hash) {
       write_at(slot, data);
@@ -1381,7 +1382,7 @@ void hh_add(value key, value data) {
     if(slot_hash == 0) {
       // We think we might have a free slot, try to atomically grab it.
       if(__sync_bool_compare_and_swap(&(hashtbl[slot].hash), 0, hash)) {
-        unsigned long size = __sync_fetch_and_add(hcounter, 1);
+        uint64_t size = __sync_fetch_and_add(hcounter, 1);
         assert(size < hashtbl_size);
         write_at(slot, data);
         return;
@@ -1416,7 +1417,7 @@ void hh_add(value key, value data) {
  */
 /*****************************************************************************/
 static unsigned int find_slot(value key) {
-  unsigned long hash = get_hash(key);
+  uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
 
   while(1) {
