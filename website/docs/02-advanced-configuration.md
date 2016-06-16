@@ -115,7 +115,7 @@ can be overridden with command line flags.
     For example:
 
     ```
-    module.name_mapper= '^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
+    module.name_mapper='^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
     ```
 
     makes Flow treat `require('image!foo.jpg')` as if it were `require('ImageStub')`.
@@ -131,7 +131,7 @@ can be overridden with command line flags.
     For example:
 
     ```
-    module.name_mapper.extension= 'css' -> '<PROJECT_ROOT>/CSSFlowStub.js.flow'
+    module.name_mapper.extension='css' -> '<PROJECT_ROOT>/CSSFlowStub.js.flow'
     ```
 
     makes Flow treat `require('foo.css')` as if it were `require(PROJECT_ROOT + '/CSSFlowStub')`.
