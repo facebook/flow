@@ -20,7 +20,7 @@ next: declarations.html
   an excellent explanation of how ES modules (sometimes referred to as
   "ES6 Modules") work, check out
   [the modules chapter](http://exploringjs.com/es6/ch_modules.html) of
-  [http://exploringjs.com/](Exploring JS).
+  [Exploring JS](http://exploringjs.com/).
 
   ## ES Modules
   Here's a succinct example of ES modules in action:
