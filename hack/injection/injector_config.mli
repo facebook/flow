@@ -14,6 +14,5 @@
  * but the actual injector to be chosen by the binary being built.
  *
  * Note: Buck doesn't currently have a build rule to only build .mli files
- * into .cmi, so you need to compile against this file directly. Probably
- * easiest with a sym link. *)
+ * into .cmi, so you need to compile against this file directly. *)
 val use_error_tracing: bool
