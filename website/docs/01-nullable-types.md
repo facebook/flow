@@ -12,11 +12,11 @@ also a valid inhabitant of any object type.
 In contrast, Flow considers `null` to be a distinct value that is not part of
 any other type. For example, the following code does not typecheck:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var o = null;
 print(o.x);
-{% endhighlight %}
+```
 
 ```text
 file.js:3:7,9: property x
@@ -30,11 +30,11 @@ Property cannot be accessed on possibly null value
 Any type `T` can be made to include `null` (and the related value `undefined`) by writing `?T`: the latter type
 is a maybe type that describes `null` (or `undefined`) or the set of values of `T`.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var o: ?string = null;
 print(o.length);
-{% endhighlight %}
+```
 
 ```text
 file.js:3:7,14: property length
@@ -48,14 +48,14 @@ contain `null`, but it still does not allow useful operations to be performed
 on it (as shown by the code above). To do so, we must perform a `null` check,
 as follows:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var o: ?string = null;
 if (o == null) {
   o = 'hello';
 }
 print(o.length);
-{% endhighlight %}
+```
 
 In this code, after the `if`-statement Flow infers that `o` is not `null` (it
 either was `null` before the `if`-statement but is now an object, or was not

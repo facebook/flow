@@ -31,9 +31,9 @@ initialized with a `number`. The method call `foo()` on the object writes
 
 Object types are of the form:
 
-{% highlight javascript %}
+```js
 { x1: T1; x2: T2; x3: T3;}
-{% endhighlight %}
+```
 
 Here is an example of declaring an object type:
 */

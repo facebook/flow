@@ -10,11 +10,11 @@ you can, if you so choose (e.g. for documentation purposes).
 
 ## Type Annotating Variables
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var x: number = 0;
 var y: any = 4;
-{% endhighlight %}
+```
 
 The actual type of a variable can change over its lifetime; at any point, the
 type is based on the most recent assignment to the variable. (In technical

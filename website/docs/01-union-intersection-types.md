@@ -9,19 +9,19 @@ next: type-aliases.html
 Flow adds support for both union and intersection types. A union type allows
 for a value to be one of the input types.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var x: number | string = 0;
-{% endhighlight %}
+```
 
 `x` can be either a `number` or a `string`. A default value can even be
 provided of one of those two types.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 declare var f: ((x: number) => void) & ((x: string) => void);
 f('');
-{% endhighlight %}
+```
 
 > NOTE
 >
@@ -45,7 +45,7 @@ or `string`. Intersections are well-suited to mimic function overloading.
 
 ## Union Example
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 class A {}
 class B {}
@@ -55,7 +55,7 @@ var x: A | B | number | C = new C();
 x = 3;
 x = new B();
 x = true; // Flow will error here
-{% endhighlight %}
+```
 
 `x` is the union of `A`, `B`, `number` and `C`. So `x` can be assigned to any
 of those types. It cannot, however, be assigned a `boolean`.
@@ -81,14 +81,14 @@ This type is incompatible with
 
 ## Intersection Example
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 class Foo {}
 class Bar {}
 declare var f: ((x: Foo) => void) & ((x: Bar) => void);
 f(new Foo());
 f(true); // Flow will error here.
-{% endhighlight %}
+```
 
 `f` is intersected on `function` that take a `Foo` or `Bar`. Trying to pass in
 a `boolean` will cause a type error.

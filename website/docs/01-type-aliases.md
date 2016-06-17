@@ -14,11 +14,11 @@ interface types.
 
 Here is a simple example:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 type T = number;
 var x: T = 0;
-{% endhighlight %}
+```
 
 We declare the new type `T` is an alias for the built-in type `number`.
 Anywhere we use `T`, we are asserting that `T` will have an underlying
@@ -28,12 +28,12 @@ type of `number`.
 
 Aliases are type checked the same way as any other type.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 type T = Array<string>;
 var x: T = [];
 x["Hi"] = 2;
-{% endhighlight %}
+```
 
 ```text
 /tmp/flow/f.js:4:3,6: string
@@ -53,19 +53,19 @@ then we tried to assign a `number` value to a `string` key in the array.
 However, that does not comport with how we declared `T`. Instead, this would
 work:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 type T = Array<string>;
 var x: T = [];
 x[2] = "Hi";
-{% endhighlight %}
+```
 
 ## A More Complicated Example
 
 Let's take a look at a more involved example where we use arrow functions in
 our type aliasing.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 // Let F<U, V> describe the type of functions of the form
 // function(x: U) {
@@ -77,7 +77,7 @@ type F<U, V> = (x: U) => V;
 function foo<X, Y>(f: F<X, Y>, x: X): Y { return f(x); }
 var b: boolean = true;
 var result: string = foo (function(x) { return b; }, 0);
-{% endhighlight %}
+```
 
 We alias a function (via the `=>` syntax), to `F<U, V>`. So whenever `F<U, V>`
 is used as a parameter or return type, that function will be the underlying

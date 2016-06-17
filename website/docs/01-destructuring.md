@@ -9,26 +9,26 @@ next: union-intersection-types.html
 Flow supports the JavaScript construct of destructuring, which allows
 you to extract data from structured values. Here is a simple example:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var arr = [1, '', true];
 var [a, b, c] = arr;
 // a: number (1), b: string (''), c : boolean (true)
-{% endhighlight %}
+```
 
 The canonical example of destructuring is swapping:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 var a = 1, b = 2;
 [a, b] = [b, a];
 // a = 2, b = 1
-{% endhighlight %}
+```
 
 ## Destructuring and Type Checks
 
 Flow can verify that any destructuring in your code is type-safe.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var arr = [1, '', 'Hello', true];
 // If you only care about some of the return values, you can skip some
@@ -36,7 +36,7 @@ var arr = [1, '', 'Hello', true];
 var [a, b, ,c] = arr;
 // a: number (1), b: string (''), c : boolean (true)
 var z: number = a * c;
-{% endhighlight %}
+```
 
 Above we have a four (4) element array `arr` (actually a
 [`tuple`](http://flowtype.org/docs/arrays.html#tuples))
@@ -55,12 +55,12 @@ Found 1 error
 
 ## Another Example
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var {x, y, ...o} = {x: '', y: 3, o: {z: false} }
 // x: string, y: number, o: {z: boolean}
 var z: number = o;
-{% endhighlight %}
+```
 
 ```text
 /tmp/flow/f.js:3:5,16: object pattern

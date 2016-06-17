@@ -12,11 +12,11 @@ shorthand syntax `T[]` is equivalent to `Array<T>`.
 
 ## Type Annotating Arrays
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var a = [1, 2, 3];
 var b: Array<number> = a.map(function(x) { return x + 1; });
-{% endhighlight %}
+```
 
 In this code, we create an array with the literal `[1, 2, 3]`, and call a method map on it, getting another array whose type we annotate as `Array<number>`.
 
@@ -28,7 +28,7 @@ classes, array types are invariant in their element types.
 
 For example:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var a = [];
 for (var i = 0; i < 10; ++i) {
@@ -40,7 +40,7 @@ for (var i = 0; i < 10; ++i) {
 }
 
 function foo(i): string { return a[i]; }
-{% endhighlight %}
+```
 
 Running Flow produces the following error:
 
@@ -80,20 +80,20 @@ consistent with the general element type of the array.
 
 Tuples are arrays, so they are declared like arrays
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 [<type1>, <type2>, <type3>, ...]
-{% endhighlight %}
+```
 
 The elements of a tuple are accessed by their indices, where the exact type
 for that particular index will be returned.
 
 ### Example
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var tup = ["1", 1, true, "positive"];
 var b = tup[1] * tup[3];
-{% endhighlight %}
+```
 
 ```
 /tmp/flow/tup.js:2:26,35: string

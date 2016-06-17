@@ -27,7 +27,7 @@ interfaces/
 
 To illustrate this workflow, we'll pick the [Underscore](http://underscorejs.org/) library. Let's say we have this simple file using Underscore:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 
 var pizzas = [
@@ -40,7 +40,7 @@ var pizzas = [
 function vegetarianPizzas() {
   return _.findWhere(pizzas, {vegetarian: true});
 }
-{% endhighlight %}
+```
 
 Running `flow` will unsurprisingly produce an error:
 
@@ -51,14 +51,14 @@ underscore_example.js:11:10,10: unknown global name: _
 
 This is because Flow doesn't know anything about the global variable `_`. To fix this we need to create an interface file for Underscore. If we set the `[libs]` configuration to `interfaces/`, Flow will look for any `.js` files located inside that directory for declarations.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 // interfaces/underscore.js
 declare class Underscore {
   findWhere<T>(list: Array<T>, properties: {}): T;
 }
 
 declare var _: Underscore;
-{% endhighlight %}
+```
 
 This only describes (part of) the interface for Underscore, eliding all implementation details - so Flow never has to understand the Underscore code itself.
 

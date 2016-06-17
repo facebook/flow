@@ -84,7 +84,7 @@ DEPENDENCIES
   jekyll (~> 3.1)
   jekyll-assets (~> 2.2)
   jekyll-paginate
-  kramdown
+  kramdown (~> 1.11)
   octokit
   rouge (< 2)
   s3_website

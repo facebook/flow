@@ -12,9 +12,9 @@ next: cli.html
 
 These errors are due to global references in your code, and possibly also due to typos. If the former, you can [declare them in an interface file](/docs/third-party.html#interface-files) if you know that they are going to be available when you run the code.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 declare var foo: <type>;
-{% endhighlight %}
+```
 
 ### Required module not found
 
@@ -28,11 +28,11 @@ These errors are due to `require(...)` or `import` statements in your code that 
 
 Alternatively, you may not have the code available for those modules, or otherwise want to specify declarations for them. In that case, as in the 'global not found' case above you need to add an interface file and point to it from within your `.flowconfig`.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 declare module Bar {
   ...
 }
-{% endhighlight %}
+```
 
 For more information about writing interface files, see [this guide](third-party.html) Note that if both an implementation and a declaration is found for a module, Flow will choose the implementation only if it has been opted-in. Otherwise it will use the declaration.
 
@@ -42,18 +42,18 @@ Flow considers types to be incompatible with `null` / `undefined` in general (th
 
 The general way to deal with this is to store the value in a local variable, and guard the operation with a dynamic check on the local variable.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 // var result = foo().bar
 var x = foo();
 var result = x != null ? x.bar : ...
-{% endhighlight %}
+```
 
 You can also try other variations of this basic pattern:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 // foo.bar()
 foo && foo.bar()
-{% endhighlight %}
+```
 
 ### Function call with too few arguments
 
@@ -61,30 +61,30 @@ In JavaScript, function calls can pass too many or too few arguments: Additional
 
 The most common way to fix these errors is to mark optional parameters with a trailing-`?` in the definition for the function being called:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 function foo(x?) { ... }
 foo();
-{% endhighlight %}
+```
 
 Doing this might shift the problem to the function definition, where `x` now has a "optional" type. So operations on `x` may then need to be guarded by dynamic checks.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 function foo(x?) {
   if (x != undefined) {
     // operation on x
   }
 }
 foo();
-{% endhighlight %}
+```
 
 Alternatively, you might want to just provide a default value to `x`, in which case the dynamic check is not required.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 function foo(x = 0) {
   // operation on x
 }
 foo();
-{% endhighlight %}
+```
 
 ### Other type confusions
 

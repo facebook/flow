@@ -9,12 +9,12 @@ next: dynamic-type-tests.html
 In vanilla JavaScript, the `typeof` operator returns a `string` specifying the
 data type of an expression. Here is a simple example:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 var index: number = 10;
 var result: string = typeof index;
 // result: 'number'
-{% endhighlight %}
+```
 
 However, in Flow, `typeof` can also be used to as a mechanism to capture
 types in type annotating positions as well.
@@ -23,19 +23,19 @@ types in type annotating positions as well.
 
 Take the following code example:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 class X {}
 var a = X; // a infers its type from X
 var b: typeof X; // b has the same type as X. It is the same as a
-{% endhighlight %}
+```
 
 There is no real advantage of using `typeof` for variable typing in the above
 case.
 
 However, imagine `X` has a `static` function:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 class X {
   static bar(): string {
@@ -46,7 +46,7 @@ var a: X = new X();
 a.bar(); // Type error
 var b: typeof X = X;
 b.bar(); // Good
-{% endhighlight %}
+```
 
 `typeof` allows the capturing of the class `X` itself, rather than just an
 instance of `X`. So constructs like `static` functions can be called using
@@ -67,7 +67,7 @@ whether that is a class, module or some other construct.
 
 ## Another Example
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 class Foo { }
 class Bar { }
@@ -78,7 +78,7 @@ var b: { f : typeof Foo } = { f : Foo };
 var inst1: Foo = new b.f();
 // However, this fails because the type of the new instance is not Bar:
 var inst2: Bar = new b.f();
-{% endhighlight %}
+```
 
 
 ```text

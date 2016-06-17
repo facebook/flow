@@ -10,11 +10,11 @@ Functions are ubiquitous in JavaScript. As expected, Flow propagates types throu
 
 ## Type Annotating Functions
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 function foo(x: string): string { return x; }
 var x: number = foo('');
-{% endhighlight %}
+```
 
 Running Flow produces the following error:
 
@@ -33,12 +33,12 @@ properties: the `this` parameter is bound to whatever object the method is
 called on. Flow understands such behavior and propagates types through `this`
 as well. For example, the following code does not typecheck:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 function foo(x) { return this.x; }
 var o = { x: 42, f: foo };
 var x: string = o.f();
-{% endhighlight %}
+```
 
 ```text
 file.js:3:14,15: number
@@ -57,13 +57,13 @@ Too few arguments (expected default/rest parameters in function)
 Functions can take optional and rest parameters, and calls to such functions
 are checked as expected. For example, the following code typechecks:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 function foo(x, y = false) { }
 function bar(z, ...w) { }
 foo(0);
 bar('h', 'e', 'l', 'l', 'o');
-{% endhighlight %}
+```
 
 Calls are matched against function signatures following the usual rules of
 argument matching while taking into account optional/rest parameters.
@@ -76,20 +76,20 @@ When you call a function with fewer arguments than it accepts, the `void` type
 will be flowed to the missing parameters. If the missing parameter does not
 accept values of type `void` then you will get an error.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 function takesANumber(x: number) {}
 takesANumber() // Error: undefined passed to x, which expects a number
-{% endhighlight %}
+```
 
 However if the missing parameter accepts values of type `void` then there will
 be no error.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 function canTakeNoArgs(a: void, b: ?number, c?: number) {}
 canTakeNoArgs();
-{% endhighlight %}
+```
 
 ### Too Many Arguments
 
@@ -97,22 +97,22 @@ In JavaScript you can call a function with more arguments than it expects. Flow
 allows this too. However, there is an easy trick to declare a function can't
 take extra arguments.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 function takesOnlyOneNumber(x: number, ...rest: Array<void>) {}
 takesOnlyOneNumber(1, 2) // Error: 2 does not have the type void
-{% endhighlight %}
+```
 
 This is particularly useful when declaring overloads in lib files.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 // The first overload matches 0 args, the second matches 1 arg, the third
 // matches 2 args
 declare function foo(...rest: Array<void>): string;
 declare function foo(a: number, ...rest: Array<void>): string;
 declare function foo(a: number, b: number, ...rest: Array<void>): string;
-{% endhighlight %}
+```
 
 ## Function-based type annotations
 
@@ -136,24 +136,24 @@ their types annotated inline, as seen above. For example, we may have:
 ## Polymorphic functions
 Functions can be polymorphic, just like polymorphic classes.
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 function foo<X>(x: X): X { return x; }
 
 var x: number = foo(0);
 var y: string = foo('');
-{% endhighlight %}
+```
 
 Furthermore, you may have polymorphic methods in polymorphic classes. For
 example, you may define a List class with a map method:
 
-{% highlight javascript linenos=table %}
+```js +line_numbers
 /* @flow */
 class List<T> {
   ...
   map<U>(f: (x: T) => U): List<U> { ... }
 }
-{% endhighlight %}
+```
 
 This means that for every instantiation of `T`, there is a polymorphic method
 for objects of type `List<T>` that, for any instantiation of `U`, takes a
