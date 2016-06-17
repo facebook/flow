@@ -231,7 +231,8 @@ let heap_check files = Module_js.(
     Hashtbl.add nh m f;
   );
   nh |> Hashtbl.iter (fun m f ->
-    assert (get_module_name f = m);
+    let names = get_module_names f in
+    assert (List.exists (fun name -> name = m) names);
   );
   ih |> Hashtbl.iter (fun _ info ->
     let parsed = info.Module_js.parsed in

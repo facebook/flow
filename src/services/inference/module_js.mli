@@ -52,7 +52,7 @@ val get_module_file: Modulename.t -> filename option
 val get_module_info: filename -> info
 
 (* given a filename, returns module name *)
-val get_module_name: filename -> Modulename.t
+val get_module_names: filename -> Modulename.t list
 
 (* given a module name, returns Some set of modules importing it or None *)
 val get_reverse_imports: Modulename.t -> NameSet.t option

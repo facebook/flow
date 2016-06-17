@@ -120,21 +120,9 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
 
   (* touched_modules includes removed modules and those provided by new files *)
   let touched_modules = FilenameSet.fold Module_js.(fun file mods ->
-    let m = get_module_name file in
-    let f_module = Modulename.Filename file in
-    (* Add both possible names of the module exported by file; see
-       Module_js.commit_modules for similar operations when creating
-       removed_modules.
-
-       TODO: Forgetting to account for both possible names of an exported module
-       is a common source of bugs. We need to think of ways to make it harder,
-       if not impossible, to miss this nuance. Moreover, different places in the
-       code address this nuance is different ways, so formalizing this concept
-       in a way that could be enforced by the compiler would give us more
-       confidence in our invariants here (and detect both missing checks as well
-       as redundant checks).
-    *)
-    mods |> NameSet.add m |> NameSet.add f_module
+    let file_mods = get_module_names file in
+    (* Add all module names exported by file *)
+    List.fold_left (fun acc m -> NameSet.add m acc) mods file_mods
   ) inferred_files removed_modules in
 
   (* files whose resolution paths may encounter newly inferred modules *)

@@ -683,8 +683,13 @@ let get_module_info f =
   | None -> failwith
       (spf "module info not found for file %s" (string_of_filename f))
 
-let get_module_name f =
-  (get_module_info f)._module
+let get_module_names f =
+  let { _module; _ } = get_module_info f in
+  match _module with
+  | Modulename.Filename file when file = f ->
+    [_module]
+  | _ ->
+    [Modulename.Filename f; _module]
 
 let add_reverse_imports workers filenames =
   let calc_module_reqs_assoc =
