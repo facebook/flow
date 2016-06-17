@@ -8,18 +8,6 @@
  *
  *)
 
-let with_pipe f =
-  let fd_r, fd_w = Unix.pipe () in
-  try
-    let res = f fd_r fd_w in
-    Unix.close fd_r;
-    Unix.close fd_w;
-    res
-  with exn ->
-    Unix.close fd_r;
-    Unix.close fd_w;
-    raise exn
-
 let with_in_channel filename f =
   let ic = open_in_bin filename in
   try let res = f ic in close_in ic; res
@@ -31,15 +19,20 @@ let with_out_channel filename f =
   with exn -> close_out oc; raise exn
 
 (* Read the first line in stdout or stderr of an external command. *)
-let read_process_output name args =
-  with_pipe @@ fun in_r in_w ->
-  with_pipe @@ fun out_r out_w ->
-  let pid = Unix.create_process name args in_r out_w out_w in
-  let out_inch = Unix.in_channel_of_descr out_r in
-  let line = input_line out_inch in
-  match Unix.waitpid [] pid with
-  | _, Unix.WEXITED 0 -> line
-  | _ -> raise (Failure line)
+let read_process_output cmd =
+  let channels = Unix.open_process_full cmd (Unix.environment ()) in
+  let (out_c, _, err_c) = channels in
+  let out = try Some (input_line out_c) with | End_of_file -> None in
+  let err = try Some (input_line err_c) with | End_of_file -> None in
+  let msg = match out, err with
+    | Some o, Some e -> o ^ "\n" ^ e
+    | Some o, None -> o
+    | None, Some e -> e
+    | _ -> ""
+  in
+  match Unix.close_process_full channels with
+  | Unix.WEXITED 0 -> msg
+  | _ -> raise (Failure msg)
 
 let string_of_file filename =
   with_in_channel filename @@ fun ic ->
