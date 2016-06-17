@@ -8,7 +8,7 @@
     {% css 'default.css' %}
     {% css 'syntax.css' %}
     <link rel='shortcut icon' href='/static/favicon.png'>
-    <meta name='viewport' content='width=480'>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta property="og:title" content="{{ page.title }}" />
     <meta property="og:site_name" content="flowtype">
     <meta property='og:description' content='Flow is a static type checker for
@@ -28,7 +28,7 @@
 
 <header class='topbar'><nav class='width'>
 <a href='/'>
-  {% img 'flow-logo' alt:'Flow logo' class:'logo' height:'50px' width:'100px' %}
+  <img src="{% asset_path 'flow-logo' %}" alt="Flow logo" class="logo" />
 </a>
     <ul>
       <li><a href="/about/#_"

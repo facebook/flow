@@ -8,6 +8,7 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
 }
 
 html {
@@ -207,6 +208,7 @@ header.topbar {
 header.topbar .logo {
     float: left;
     margin-right: 20px;
+    height: 50px;
 }
 
 .flow-header {
@@ -488,10 +490,6 @@ div.CodeMirror-lines {
 }
 
 
-#\_ {
-    display: none;
-}
-
 .hash {
     margin-left: 3px;
     visibility: hidden;
@@ -507,10 +505,84 @@ div.CodeMirror-lines {
     left: 0;
 }
 
-/* desktopish */
 
+#\_ {
+    display: block;
+    position: absolute;
+    top: -60px;
+    left: 0;
+}
+
+@media (max-width: 480px) {
+    body {
+      padding-top: 40px;
+      font-size: 13px;
+      line-height: 18px;
+    }
+
+    header.topbar .width {
+      padding: 0 5px;
+    }
+
+    header.topbar {
+      height: 40px;
+    }
+
+    header.topbar .logo {
+      margin-right: 10px;
+      height: 40px;
+    }
+
+    header.topbar nav ul li a {
+      height: 40px;
+      line-height: 40px;
+      font-size: 14px;
+      padding: 0 7px;
+    }
+
+    header.topbar nav ul.external {
+      float: left;
+    }
+
+    header.topbar .width {
+        padding: 0;
+    }
+
+    .content .width {
+      padding: 0 15px;
+    }
+
+    pre.highlight,
+    div.highlight table pre,
+    pre.highlight code {
+      font-size: 10px;
+      line-height: 16px;
+    }
+
+    .edit-page-link {
+      display: none;
+    }
+}
+
+/* small tablet/landscape phone */
 @media (min-width: 481px) {
+    .wrap, .content .width, .home-section, section.content article {
+        width: auto;
+        max-width: 100%;
+        overflow-x: scroll;
+    }
 
+    section.content article blockquote {
+        margin-left: 0;
+    }
+
+    body {
+        padding-bottom: 20px;
+    }
+}
+
+/* tablet/desktop: iPad mini is 768px in portrait mode */
+@media (min-width: 768px) {
     .width {
         max-width: 960px;
         /* make columns add to <880 for 60 gutter */
@@ -546,36 +618,9 @@ div.CodeMirror-lines {
         width: 220px;
     }
 
-}
-
-/* phoneish */
-
-@media (max-width: 480px) {
-    .wrap, .content .width, .home-section, section.content article {
-        width: auto;
-        max-width: 100%;
-        overflow-x: scroll;
-    }
-
-    header.topbar .width {
-        padding: 0 5px;
-    }
-
-    section.content article blockquote {
-        margin-left: 0;
-    }
-
-    body {
-        padding-bottom: 20px;
-    }
-
     #\_ {
-        display: block;
-        position: absolute;
-        top: -60px;
-        left: 0;
+        display: none;
     }
-
 }
 
 
@@ -659,7 +704,7 @@ input#algolia-doc-search:focus {
     display: none;
 }
 
-@media (min-width: 481px) {
+@media (min-width: 768px) {
   .fourOhFour section.content article {
     background-image: url(asset-path('flow-no-wordmark.png'));
     background-size: 241px 300px;
