@@ -288,7 +288,7 @@ followed by an `#` or `;` are ignored.  For example:
 Say you have the following directory structure, with your `.flowconfig` in
 `mydir`:
 
-```bbcode
+```text
 otherdir
 └── src
     ├── othercode.js
@@ -308,7 +308,7 @@ mydir
 
 Here is an example of how you could use the `.flowconfig` directives.
 
-```bbcode
+```text
 [include]
 ../otherdir/src
 

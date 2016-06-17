@@ -6,7 +6,7 @@ prev: nullable-types.html
 next: union-intersection-types.html
 ---
 
-Flow supports the JavaScript construct of destructuring, which allows 
+Flow supports the JavaScript construct of destructuring, which allows
 you to extract data from structured values. Here is a simple example:
 
 {% highlight javascript linenos=table %}
@@ -36,23 +36,24 @@ var arr = [1, '', 'Hello', true];
 var [a, b, ,c] = arr;
 // a: number (1), b: string (''), c : boolean (true)
 var z: number = a * c;
-{% endhighlight %} 
+{% endhighlight %}
 
-Above we have a four (4) element array `arr` (actually a 
+Above we have a four (4) element array `arr` (actually a
 [`tuple`](http://flowtype.org/docs/arrays.html#tuples))
-. And then we destructure that array into three (3) variables, `a`, `b`,  `c`. 
-However, we then try to multiply `a` (a `number`), and `c` (a `boolean`). Flow 
+. And then we destructure that array into three (3) variables, `a`, `b`,  `c`.
+However, we then try to multiply `a` (a `number`), and `c` (a `boolean`). Flow
 catches this.
 
-```bbcode
+```text
 /tmp/flow/f.js:2:28,31: boolean
 This type is incompatible with
   /tmp/flow/f.js:5:17,21: number
 
 Found 1 error
 ```
+{: .cli-error}
 
-## Another Example 
+## Another Example
 
 {% highlight javascript linenos=table %}
 /* @flow */
@@ -61,13 +62,14 @@ var {x, y, ...o} = {x: '', y: 3, o: {z: false} }
 var z: number = o;
 {% endhighlight %}
 
-```bbcode
+```text
 /tmp/flow/f.js:3:5,16: object pattern
 This type is incompatible with
   /tmp/flow/f.js:5:8,13: number
 
 Found 1 errors
 ```
+{: .cli-error}
 
-`o` has been destructed as an object that contains a boolean value. That 
+`o` has been destructed as an object that contains a boolean value. That
 cannot be assigned to a number.

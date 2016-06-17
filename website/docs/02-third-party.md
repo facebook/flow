@@ -44,9 +44,10 @@ function vegetarianPizzas() {
 
 Running `flow` will unsurprisingly produce an error:
 
-```bbcode
+```text
 underscore_example.js:11:10,10: unknown global name: _
 ```
+{: .cli-error}
 
 This is because Flow doesn't know anything about the global variable `_`. To fix this we need to create an interface file for Underscore. If we set the `[libs]` configuration to `interfaces/`, Flow will look for any `.js` files located inside that directory for declarations.
 

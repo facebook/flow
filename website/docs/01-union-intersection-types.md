@@ -6,7 +6,7 @@ prev: destructuring.html
 next: type-aliases.html
 ---
 
-Flow adds support for both union and intersection types. A union type allows 
+Flow adds support for both union and intersection types. A union type allows
 for a value to be one of the input types.
 
 {% highlight javascript linenos=table %}
@@ -14,7 +14,7 @@ for a value to be one of the input types.
 var x: number | string = 0;
 {% endhighlight %}
 
-`x` can be either a `number` or a `string`. A default value can even be 
+`x` can be either a `number` or a `string`. A default value can even be
 provided of one of those two types.
 
 {% highlight javascript linenos=table %}
@@ -24,17 +24,17 @@ f('');
 {% endhighlight %}
 
 > NOTE
-> 
-> Parentheses are important. Flow will not type-check correctly if you leave 
+>
+> Parentheses are important. Flow will not type-check correctly if you leave
 > out the outer parenthesis on each of the function declarations on `f`.
 
 
-We are intersecting `function` here. A call to `f` has to be with a `number` 
+We are intersecting `function` here. A call to `f` has to be with a `number`
 or `string`. Intersections are well-suited to mimic function overloading.
 
 > NOTE
-> 
-> Not all intersection types make sense. For example, no value has type 
+>
+> Not all intersection types make sense. For example, no value has type
 `number & string` since there is no value that can have both of those types.
 
 
@@ -57,10 +57,10 @@ x = new B();
 x = true; // Flow will error here
 {% endhighlight %}
 
-`x` is the union of `A`, `B`, `number` and `C`. So `x` can be assigned to any 
+`x` is the union of `A`, `B`, `number` and `C`. So `x` can be assigned to any
 of those types. It cannot, however, be assigned a `boolean`.
 
-```bbcode
+```text
 /tmp/flow/f.js:9:5,8: boolean
 This type is incompatible with
   /tmp/flow/f.js:2:7,7: A
@@ -77,6 +77,7 @@ This type is incompatible with
 This type is incompatible with
   /tmp/flow/f.js:6:16,21: number
 ```
+{: .cli-error}
 
 ## Intersection Example
 
@@ -89,10 +90,10 @@ f(new Foo());
 f(true); // Flow will error here.
 {% endhighlight %}
 
-`f` is intersected on `function` that take a `Foo` or `Bar`. Trying to pass in 
+`f` is intersected on `function` that take a `Foo` or `Bar`. Trying to pass in
 a `boolean` will cause a type error.
 
-```bbcode
+```text
 /tmp/flow/f.js:6:3,6: boolean
 This type is incompatible with
   /tmp/flow/f.js:2:7,9: Foo
@@ -101,3 +102,4 @@ This type is incompatible with
 This type is incompatible with
   /tmp/flow/f.js:3:7,9: Bar
 ```
+{: .cli-error}

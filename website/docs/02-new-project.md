@@ -60,9 +60,9 @@ $> flow stop
 
 As with all the examples in the Flow tutorial, you need to add
 
-{% highlight javascript linenos=table %}
+```js
 /* @flow */
-{% endhighlight %}
+```
 
 to the top of each file you'd like Flow to typecheck. You don't have to do this for all files at once, since Flow will just ignore files that do not have this comment. This allows you to convert your project progressively, one file at a time, and get the benefit of typing gradually. No need to convert your whole project at once.
 

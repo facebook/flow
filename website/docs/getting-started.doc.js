@@ -120,7 +120,7 @@ console.log(str);
   on how we recommend compiling and publishing Flow code to npm and into
   production.
 
-### Next steps
+  ### Next steps
 
   Now that we know how to set Flow up, let's take a quick look at
   [a few examples](/docs/five-simple-examples.html) that are

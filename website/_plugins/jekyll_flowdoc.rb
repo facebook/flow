@@ -123,7 +123,11 @@ module Jekyll
 
     def unindent(str)
       str = str.gsub(/\A\n|\n\z/m, '')
-      indent = str.gsub(/\n+/m, "\n").scan(/^[ \t]*/).min_by { |l| l.length }
+      indent = str
+        .gsub(/\A\n+|\n+\z/m, '')
+        .gsub(/\n+/m, "\n")
+        .scan(/^[ \t]*/)
+        .min_by { |l| l.length }
       str.gsub!(/^#{indent}/, "")
     end
 
@@ -141,7 +145,7 @@ module Jekyll
         }
       elsif is_block_comment(comment)
         {
-          :value => @markdown.convert(unindent(value)),
+          :value => unindent(value),
           :range => range
         }
       else
@@ -219,7 +223,7 @@ module Jekyll
           errors.push({
             :start =>
               "<span " +
-                "class=\"error\"" +
+                "class=\"error\" " +
                 "data-error-id=\"#{e_id}\" " +
                 "data-message-id=\"#{message['id']}\">",
             :end => '',
@@ -303,26 +307,36 @@ module Jekyll
         }.join
         if type == :code_with_nums
           lines = content.lines.count
-          '<figure class="highlight">' +
-            '<table class="highlighttable" style="border-spacing: 0"><tbody><tr>' +
-              '<td class="gutter gl" style="text-align: right">' +
-                '<pre class="lineno">' +
-                  (1..lines).to_a.join("\n") +
-                '</pre>' +
-              '</td>' +
-              '<td class="code"><pre>' + content + '</pre></td>' +
-            '</tr></tbody></table>' +
-          '</figure>'
+          <<-EOF
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">#{(1..lines).to_a.join("\n")}</pre>
+        </td>
+        <td class="code"><pre>#{content}</pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+          EOF
         elsif type == :code
-          '<figure class="highlight">' +
-            '<pre><code>' + content + '</code></pre>' +
-          '</figure>'
+          <<-EOF
+
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code>#{content}</code></pre>
+</div>
+
+          EOF
         else
           content
         end
       end
 
-      out = outs.join
+      out = @markdown.convert(outs.join)
       out += "<script>require(['inlineErrors'], function(inlineErrors) {\n  inlineErrors.highlight(#{JSON.generate(errors_json)});\n});</script>"
       out
     end

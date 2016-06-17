@@ -3,12 +3,15 @@ permalink: /blog/:categories/:year/:month/:day/:title.html
 url: http://flowtype.org
 name: Flow
 relative_permalinks: false
-markdown: FlowMarkdownParser
 description: A static type checker for JavaScript
 timezone: America/Los_Angeles
 
 lsi: false
+markdown: FlowMarkdownParser
 highlighter: rouge
+kramdown:
+  parse_block_html: false
+  syntax_highlighter: rouge
 
 repository: facebook/flow
 

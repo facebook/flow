@@ -44,11 +44,12 @@ function foo(i): string { return a[i]; }
 
 Running Flow produces the following error:
 
-```bbcode
+```text
 example.js:5:14,14: number
 This type is incompatible with
  example.js:11:18,23: string
 ```
+{: .cli-error}
 
 The type of a is not pinned to `Array<number>` by the element write `a[i] = 0`
 at line 4: if it did, Flow would report an error for an incompatible element
@@ -83,7 +84,7 @@ Tuples are arrays, so they are declared like arrays
 [<type1>, <type2>, <type3>, ...]
 {% endhighlight %}
 
-The elements of a tuple are accessed by their indices, where the exact type 
+The elements of a tuple are accessed by their indices, where the exact type
 for that particular index will be returned.
 
 ### Example
@@ -92,7 +93,7 @@ for that particular index will be returned.
 /* @flow */
 var tup = ["1", 1, true, "positive"];
 var b = tup[1] * tup[3];
-{% endhighlight %} 
+{% endhighlight %}
 
 ```
 /tmp/flow/tup.js:2:26,35: string
@@ -102,4 +103,4 @@ This type is incompatible with
 Found 1 errors
 ```
 
-We declared a tuple with four (4) elements and tried to multiply a `number` with a `string`, and Flow caught it. 
+We declared a tuple with four (4) elements and tried to multiply a `number` with a `string`, and Flow caught it.

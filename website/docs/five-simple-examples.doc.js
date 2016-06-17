@@ -29,29 +29,30 @@ This will ensure that Flow shuts down immediately after checking your project.
 
 ## 1. Hello Flow!
 
-  Inside the Flow GitHub repo, you'll find an
-  [`examples` directory](https://github.com/facebook/flow/tree/master/examples).
-  This directory contains the examples for this tutorial. To get a feel for
-  Flow, let's look at the first one:
+Inside the Flow GitHub repo, you'll find an
+[`examples` directory](https://github.com/facebook/flow/tree/master/examples).
+This directory contains the examples for this tutorial. To get a feel for
+Flow, let's look at the first one:
 
-  ```bash
-  $> cd flow/examples/01_HelloWorld
-  $> flow
-  ```
+```bash
+$> cd flow/examples/01_HelloWorld
+$> flow
+```
 
-  You should see an error that looks something like this:
+You should see an error that looks something like this:
 
-  ```bbcode
-  hello.js:7
-    7: foo("Hello, world!");
-       ^^^^^^^^^^^^^^^^^^^^ function call
-    4:   return x * 10;
-                ^ string. This type is incompatible with
-    4:   return x * 10;
-                ^^^^^^ number
-  ```
+```text
+hello.js:7
+  7: foo("Hello, world!");
+     ^^^^^^^^^^^^^^^^^^^^ function call
+  4:   return x * 10;
+              ^ string. This type is incompatible with
+  4:   return x * 10;
+              ^^^^^^ number
+```
+{: .cli-error}
 
-  Looking at the `hello.js` example file, it's easy to see why:
+Looking at the `hello.js` example file, it's easy to see why:
 
 */
 // $WithLineNums
@@ -122,13 +123,14 @@ foo('Hello', 42);
 
   With these annotations in place, if we run `flow check` we'll see an error:
 
-  ```bbcode
+  ```text
   type_annotations.js:4
     4:   return x.length * y;
                 ^^^^^^^^^^^^ number. This type is incompatible with
     3: function foo(x: string, y: number): string {
                                            ^^^^^^ string
   ```
+  {: .cli-error}
 
   In this case it is the return type for `foo` that is wrong. Even though we
   have annotated it as returning a `string`, the actual type that it returns (a
@@ -172,7 +174,7 @@ var total = length('Hello') + length(null);
   This program would fail at runtime, with a `TypeError` when it tries to read
   the property `length` on `null`. Running `flow` will detect this bug:
 
-  ```bbcode
+  ```text
   nulls.js:7
     7: var total = length("Hello") + length(null);
                                      ^^^^^^^^^^^^ function call
@@ -181,6 +183,7 @@ var total = length('Hello') + length(null);
     4:   return x.length;
                 ^ null
   ```
+  {: .cli-error}
 
   The file in the `answer` directory fixes this bug just like you might if you
   had discovered it at runtime. This fix, in turn, makes the type error go away:
@@ -230,7 +233,7 @@ total([1, 2, 3, 'Hello']);
   Flow will flag the string `'Hello'` here since the `total()` function accepts
   only an array of numbers:
 
-  ```bbcode
+  ```text
   arrays.js:11
    11: total([1, 2, 3, "Hello"]);
        ^^^^^^^^^^^^^^^^^^^^^^^^^ function call
@@ -239,6 +242,7 @@ total([1, 2, 3, 'Hello']);
     3: function total(numbers: Array<number>) {
                                      ^^^^^^ number
   ```
+  {: .cli-error}
 
   If we replace `"Hello"` with a number, the code will pass Flow's checks:
 
@@ -280,7 +284,7 @@ var res = foo('Hello') + foo(42);
 
   In this case, Flow detects that the second time the function is called (with a number), the `length` property will fail:
 
-  ```bbcode
+  ```text
   dynamic.js:4
     4:   return x.length;
                 ^^^^^^^^ property `length`
@@ -289,6 +293,7 @@ var res = foo('Hello') + foo(42);
     4:   return x.length;
                 ^ Number
   ```
+  {: .cli-error}
 
   One fix is to simply detect what the type is within the function:
 

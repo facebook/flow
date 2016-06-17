@@ -18,11 +18,12 @@ var o = null;
 print(o.x);
 {% endhighlight %}
 
-```bbcode
+```text
 file.js:3:7,9: property x
 Property cannot be accessed on possibly null value
   file.js:2:9,12: null
 ```
+{: .cli-error}
 
 ## Type Annotating Null
 
@@ -35,11 +36,12 @@ var o: ?string = null;
 print(o.length);
 {% endhighlight %}
 
-```bbcode
+```text
 file.js:3:7,14: property length
 Property cannot be accessed on possibly null or undefined value
   file.js:2:9,14: ?string
 ```
+{: .cli-error}
 
 Relaxing a type into a maybe type makes it a valid annotation for any location that may
 contain `null`, but it still does not allow useful operations to be performed
@@ -63,7 +65,7 @@ either was `null` before the `if`-statement but is now an object, or was not
 >
 > It is important to note that we used `==` instead of `===` to do a `null` check.
 > This ensures that we also check for `undefined`, which is considered part of a maybe type.
-> Using `=== null` instead would require yet another `=== undefined` to cover all cases. 
+> Using `=== null` instead would require yet another `=== undefined` to cover all cases.
 
 This illustrates an interesting feature of Flow: it understands the effects of
 some dynamic type tests and can adjust the types of local variables
@@ -75,10 +77,10 @@ Read more about <a href="/docs/dynamic-type-tests.html">dynamic type tests</a>.
 
 In addition to being able to adjust types of local variables, Flow can sometimes
 also adjust types of object properties, especially when there are no intermediate
-operations between a check and a use. In general, though, aliasing of objects 
+operations between a check and a use. In general, though, aliasing of objects
 limits the scope of this form of reasoning, since a check on an object property
-may be invalidated by a write to that property through an alias, and 
-it is difficult for a static analysis to track aliases precisely. 
+may be invalidated by a write to that property through an alias, and
+it is difficult for a static analysis to track aliases precisely.
 
 In particular, don't expect a nullable field to be recognized as non-`null` in some method because a `null` check is
 performed in some other method in your code, even when it is clear to you that

@@ -89,31 +89,24 @@ p, ul, ol {
     margin-right: auto;
 }
 
-.highlight {
+div.highlighter-rouge,
+div.highlighter-flow {
   margin: 20px 0;
 }
 
-.highlight pre {
+pre.highlight,
+div.highlight table pre {
     font-size: 13px;
     line-height: 20px;
 }
 
-.highlighttable .highlight pre {
-    padding: 0;
-}
-
-.highlighttable code {
-    padding-right: 10px;
-    margin: 0;
-    padding-left: 2px;
-    font-size: 12px;
-    display: block;
-    line-height: 20px;
+pre.highlight code {
+    width: 100%;
     white-space: pre;
-    color: hsl(39, 100%, 42%);
 }
 
-.highlight pre code, .highlighttable {
+pre.highlight code,
+div.highlight table {
     overflow-x: auto;
     display: block;
     padding: 0;
@@ -124,19 +117,23 @@ p, ul, ol {
     border-radius: 0;
     background-color: rgba(226, 141, 49, 0.1);
 }
-
-.highlight pre code {
-    width: 100%;
-    white-space: pre;
+.language-bash div.highlight table,
+.language-bash pre.highlight code {
+    border-left: 4px solid hsl(19, 0%, 42%);
+    background-color: hsla(8, 0%, 54%, 0.1);
+}
+.cli-error div.highlight table,
+.cli-error pre.highlight code {
+    border-left: 4px solid hsl(19, 100%, 42%);
+    background-color: hsla(8, 75%, 54%, 0.1);
 }
 
-
-.highlight .gutter {
+div.highlight table .gutter {
   padding: 0 5px 0 5px;
   border-right: 1px solid #ccc;
 }
 
-.highlight .code {
+div.highlight table .code {
   padding: 0 0 0 12px;
 }
 
@@ -149,23 +146,10 @@ p, ul, ol {
     font-size: 0;
 }
 
-
-.highlight pre code.language-bash {
-    border-left: 4px solid hsl(19, 0%, 42%);
-    background-color: hsla(8, 0%, 54%, 0.1);
+/* remove space between CLI + CLI error examples */
+div.language-bash + div.cli-error {
+  margin-top: -20px;
 }
-
-.highlight pre code.language-bbcode {
-    border-left: 4px solid hsl(19, 100%, 42%);
-    background-color: hsla(8, 75%, 54%, 0.1);
-}
-
-pre.code + .highlight + .highlight,
-.highlight + .highlight + .highlight,
-.highlighttable + .highlight + .highlight {
-    margin-top: -20px;
-}
-
 
 ul, ol {
     list-style-position: outside;
@@ -577,12 +561,10 @@ div.CodeMirror-lines {
         padding: 0 5px;
     }
 
-    .highlighttable, section.content article blockquote {
+    section.content article blockquote {
         margin-left: 0;
     }
-    .highlight pre {
-        padding-left: 0;
-    }
+
     body {
         padding-bottom: 20px;
     }

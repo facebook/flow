@@ -68,7 +68,7 @@ console.log(x);
 Running the type checker against the above code will yield type errors
 since we have explicitly typed all parameters and variables.
 
-```bbcode
+```text
 file.js:5
   5: var x: number = add(3, '0');
                      ^^^^^^^^^^^ function call
@@ -77,9 +77,9 @@ file.js:5
   2: function add(num1: number, num2: number): number {
                                       ^^^^^^ number
 
-
 Found 1 error
 ```
+{: .cli-error}
 
 ## Type Annotation Requirements
 
@@ -100,7 +100,7 @@ console.log(x);
 Since the multiplication operator makes no real sense on a string, Flow is
 smart enough to deduce a problem here without explicit type annotations.
 
-```bbcode
+```text
 file.js:5
   5: var x = multPI(3, '0');
              ^^^^^^^^^^^^^^ function call
@@ -109,9 +109,9 @@ file.js:5
   3:   return Math.PI * num1 * num2;
               ^^^^^^^^^^^^^^^^^^^^^ number
 
-
 Found 1 error
 ```
+{: .cli-error}
 
 ### Module Boundaries
 
@@ -140,7 +140,7 @@ var result = size(null);
 
 Type annotations are required for the `size` function in `Size.js` because `UseSize.js` imports it and thus crosses the module boundary and isn't inferred.
 
-```bbcode
+```text
 UseSize.js:6
   6: var result = size(null);
                   ^^^^^^^^^^ function call
@@ -149,9 +149,9 @@ UseSize.js:6
   5: function size(input: string): number {
                           ^^^^^^ string. See: Size.js:5
 
-
 Found 1 error
 ```
+{: .cli-error}
 
 ## `any` Annotations
 

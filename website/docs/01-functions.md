@@ -18,11 +18,12 @@ var x: number = foo('');
 
 Running Flow produces the following error:
 
-```bbcode
+```text
 file.js:2:26,31: string
 This type is incompatible with
   file.js:3:8,13: number
 ```
+{: .cli-error}
 
 ## Open methods
 
@@ -39,7 +40,7 @@ var o = { x: 42, f: foo };
 var x: string = o.f();
 {% endhighlight %}
 
-```bbcode
+```text
 file.js:3:14,15: number
 This type is incompatible with
   file.js:4:8,13: string
@@ -48,6 +49,7 @@ file.js:4:17,21: call of method f
 Too few arguments (expected default/rest parameters in function)
   file.js:2:1,34: function
 ```
+{: .cli-error}
 
 
 ## Variadics
@@ -89,7 +91,7 @@ function canTakeNoArgs(a: void, b: ?number, c?: number) {}
 canTakeNoArgs();
 {% endhighlight %}
 
-### Too Many Arguments 
+### Too Many Arguments
 
 In JavaScript you can call a function with more arguments than it expects. Flow
 allows this too. However, there is an easy trick to declare a function can't
@@ -168,8 +170,8 @@ correct one for a given call. In fact, the addition operator is a special case
 of an overloaded function that returns number in some cases and string in
 others, based on the types of its arguments.
 
-Sometimes, multiple signatures are not needed to express overloading: the signatures can 
-be coalesced using [union types](http://flowtype.org/docs/union-intersection-types.html#_). 
+Sometimes, multiple signatures are not needed to express overloading: the signatures can
+be coalesced using [union types](http://flowtype.org/docs/union-intersection-types.html#_).
 Flow provides the following syntax for union types:
 
 `T1 | .. | Tn`

@@ -57,8 +57,7 @@ GEM
     rb-fsevent (0.9.7)
     rb-inotify (0.9.7)
       ffi (>= 0.5.0)
-    redcarpet (3.3.4)
-    rouge (1.11.0)
+    rouge (1.11.1)
     s3_website (2.14.0)
       colored (= 1.2)
       configure-s3-website (= 1.7.1)
@@ -85,8 +84,9 @@ DEPENDENCIES
   jekyll (~> 3.1)
   jekyll-assets (~> 2.2)
   jekyll-paginate
+  kramdown
   octokit
-  redcarpet
+  rouge (< 2)
   s3_website
   sprockets-es6
 
