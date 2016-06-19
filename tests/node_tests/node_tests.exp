@@ -4,26 +4,26 @@ child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:
-  function type. See lib: node.js:184
+  function type. See lib: node.js:190
   Error:
   property `encoding`. Property not found in. See lib: node.js:186
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal
   Member 2:
-  function type. See lib: node.js:189
+  function type. See lib: node.js:195
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                                  ^^^^^ string. This type is incompatible with
-  number. See lib: node.js:113
+  number. See lib: node.js:119
 
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-intersection type. See lib: node.js:623
+intersection type. See lib: node.js:629
   Case 3 may work:
-  function type. See lib: node.js:632
+  function type. See lib: node.js:638
   But if it doesn't, case 4 looks promising too:
-  function type. See lib: node.js:637
+  function type. See lib: node.js:643
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                          ^^^^ parameter `data`
@@ -53,7 +53,7 @@ fs/fs.js:33
                                         ^^^^^^ string
 
 invalid_package_file/package.json:1
-  1: 
+  1:
      ^ Unexpected end of input
 
 json_file/json_invalid.json:1
