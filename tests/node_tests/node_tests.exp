@@ -6,7 +6,7 @@ child_process/execSync.js:8
   Member 1:
   function type. See lib: node.js:190
   Error:
-  property `encoding`. Property not found in. See lib: node.js:186
+  property `encoding`. Property not found in. See lib: node.js:192
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal
   Member 2:
@@ -53,7 +53,7 @@ fs/fs.js:33
                                         ^^^^^^ string
 
 invalid_package_file/package.json:1
-  1:
+  1: 
      ^ Unexpected end of input
 
 json_file/json_invalid.json:1
