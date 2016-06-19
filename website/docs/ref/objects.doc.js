@@ -206,8 +206,17 @@ dot notation. Flow infers a precise value type for the map: in other words, if
 you only write `number` values to a map, you will read `number` values back
 (rather than, say, `any`).
 
-Such a map can be given a type of the form `{ [key: string]: number }` where
-`string` is the key type and `number` is the value type of the map.
+Such a map can be given a type of the form
+*/
+
+type MapOfNumbers = { [key: string]: number };
+var numbers: MapOfNumbers = {
+  ten: 10,
+  twenty: 20,
+};
+
+/*
+where `string` is the key type and `number` is the value type of the map.
 
 ### Maps as Records
 
