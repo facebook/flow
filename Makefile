@@ -137,7 +137,7 @@ clean:
 	rm -f hack/utils/get_build_id.gen.c
 	rm -f flow.odocl
 
-clean-ocp:
+clean-ocp: clean
 	ocp-build clean
 	rm -f $(OCP_BUILD_FILES)
 
