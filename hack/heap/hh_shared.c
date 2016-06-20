@@ -158,6 +158,7 @@
 // The following 'typedef' won't be required anymore
 // when dropping support for OCaml < 4.03
 #ifdef __MINGW64__
+typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
 #endif
 
