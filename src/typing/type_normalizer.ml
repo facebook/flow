@@ -367,6 +367,19 @@ let rec normalize_type_impl cx ids t = match t with
         EmptyT.t
       end
 
+  | GraphqlT (r, t) ->
+    GraphqlT (r, match t with
+      | Graphql.FieldT (r, opts) ->
+        let selection = Option.map opts.GraphqlField.selection (fun x -> normalize_type_impl cx ids x) in
+        Graphql.FieldT (r, GraphqlField.{opts with selection})
+      | Graphql.FragT opts ->
+        let selection = normalize_type_impl cx ids opts.GraphqlFrag.selection in
+        Graphql.FragT GraphqlFrag.{opts with selection}
+      | Graphql.SelectionT (name, fields) ->
+        let fields = List.map (normalize_type_impl cx ids) fields in
+        Graphql.SelectionT (name, fields)
+    )
+
   | FunProtoT _
   | ExistsT _
   | ModuleT (_, _)

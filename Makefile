@@ -44,6 +44,7 @@ MODULES=\
   src/common\
   src/dts\
   src/embedded\
+  src/graphql\
   src/parser\
   src/parsing\
   src/server\
