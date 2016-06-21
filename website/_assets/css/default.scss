@@ -505,6 +505,64 @@ div.CodeMirror-lines {
     left: 0;
 }
 
+.code-sample {
+  position: relative;
+}
+
+.code-sample .hide,
+.code-sample .show {
+  position: absolute;
+  right: 0;
+  margin-top: -50px;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 5px 7px;
+  color: rgba(214, 139, 0, 0.75); /* #d68b00 @ 75% */
+}
+
+.code-sample:hover .hide,
+.code-sample:hover .show {
+  color: #d68b00;
+}
+
+.code-sample .hide:hover,
+.code-sample .show:hover {
+  color: #CC2E39;
+}
+
+
+/* by default, always show errors */
+.code-sample .show,
+.code-sample .hide,
+.code-sample.shown .hide {
+  display: none;
+}
+.code-sample .language-bash,
+.code-sample .language-text {
+  display: block;
+}
+
+/* on devices that can hover (so the inline errors are useful), hide the
+   cli output by default */
+@media (hover) {
+  .code-sample.shown .hide,
+  .code-sample .show {
+    display: inline;
+  }
+
+  .code-sample.shown .show,
+  .code-sample .hide,
+  .code-sample .language-bash,
+  .code-sample .language-text {
+    display: none;
+  }
+
+  .code-sample.shown .language-bash,
+  .code-sample.shown .language-text {
+    display: block;
+  }
+}
+
 
 #\_ {
     display: block;

@@ -326,6 +326,49 @@ module Jekyll
       CGI.escapeHTML(str).untaint
     end
 
+    def print_code_section(content, options)
+      if options[:line_numbers]
+        lines = content.lines.count
+        <<-EOF
+
+<div class="language-javascript highlighter-flow">
+  <div class="highlight">
+    <table style="border-spacing: 0"><tbody>
+      <tr>
+        <td class="gutter gl" style="text-align: right">
+          <pre class="lineno">#{(1..lines).to_a.join("\n")}</pre>
+        </td>
+        <td class="code"><pre>#{content}</pre></td>
+      </tr>
+    </tbody></table>
+  </div>
+</div>
+
+EOF
+      else
+        <<-EOF
+
+<div class="language-javascript highlighter-flow">
+  <pre class="highlight"><code>#{content}</code></pre>
+</div>
+
+EOF
+      end
+    end
+
+    def print_cli_output(content)
+      <<-EOF
+
+<div class="language-bash highlighter-flow">
+  <pre class="highlight"><code>$&gt; flow</code></pre>
+</div>
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>#{content}</code></pre>
+</div>
+
+EOF
+    end
+
     def convert(content)
       content = content.lines.reject { |l|
         l =~ /^\s*\/\/\s*\$ExpectError(\([^)]*\))?$/
@@ -349,21 +392,31 @@ module Jekyll
         start_loc, end_loc = item[:range]
         is_code = !item.has_key?(:value) # code or cli output
         if last_was_code && !is_code
-          with_nums = pragmas.include?('$WithLineNums') || !cli_output.empty?
-          sections.push([
-            with_nums ? :code_with_nums : :code,
-            out.sub(/\A\n+|\n+\z/m, '')
-          ])
-          sections.push([
-            :cli_output,
-            cli_output.join("\n\n")
-          ]) if !cli_output.empty?
+          with_output = !cli_output.empty?
+          with_nums = pragmas.include?('$WithLineNums') || with_output
+          html = print_code_section(
+            out.sub(/\A\n+|\n+\z/m, ''),
+            { :line_numbers => with_nums }
+          )
+          if with_output
+            html = <<-EOF
+
+<div class="code-sample">
+#{html}
+<a class="show" href="#" onclick="this.parentNode.className = 'code-sample shown'; return false">show Flow output</a>
+<a class="hide" href="#" onclick="this.parentNode.className = 'code-sample'; return false">hide Flow output</a>
+#{print_cli_output(cli_output.join("\n\n"))}
+</div>
+
+EOF
+          end
+          sections.push(html)
           out = ""
           cli_output = []
           section_start_line = item[:line]
           pragmas.clear()
         elsif !last_was_code && is_code
-          sections.push([:html, out])
+          sections.push(out)
           out = ""
           cli_output = []
           section_start_line = item[:line]
@@ -387,10 +440,13 @@ module Jekyll
           ) unless pragmas.include?('$NoCliOutput')
         elsif is_code
           value = content.slice(start_loc, end_loc - start_loc)
-          out += item[:start]
-          out += escape(value)
-          out += item[:end]
-          section_start_line += 1 if value =~ /\/\/\s*\$Doc(Issue|Hide)/
+          if value =~ /\/\/\s*\$Doc(Issue|Hide)/
+            section_start_line += 1 # skip the line
+          else
+            out += item[:start]
+            out += escape(value)
+            out += item[:end]
+          end
           last_was_code = true
         else
           out += item[:value]
@@ -399,55 +455,9 @@ module Jekyll
         last_loc = end_loc
       end
       out += escape(content.slice(last_loc, content.length - last_loc))
-      sections.push([last_was_code ? :code : :html, out])
+      sections.push(last_was_code ? print_code_section(out, { :line_numbers => false }) : out)
 
-      outs = sections.map do |type, content|
-        content = content.lines.reject { |l|
-          l =~ /\/\/\s*\$Doc(Issue|Hide)/
-        }.join
-        if type == :code_with_nums
-          lines = content.lines.count
-          <<-EOF
-
-<div class="language-javascript highlighter-flow">
-  <div class="highlight">
-    <table style="border-spacing: 0"><tbody>
-      <tr>
-        <td class="gutter gl" style="text-align: right">
-          <pre class="lineno">#{(1..lines).to_a.join("\n")}</pre>
-        </td>
-        <td class="code"><pre>#{content}</pre></td>
-      </tr>
-    </tbody></table>
-  </div>
-</div>
-
-          EOF
-        elsif type == :code
-          <<-EOF
-
-<div class="language-javascript highlighter-flow">
-  <pre class="highlight"><code>#{content}</code></pre>
-</div>
-
-          EOF
-        elsif type == :cli_output
-          <<-EOF
-
-```bash
-> flow
-```
-<div class="language-text cli-error highlighter-flow">
-  <pre class="highlight"><code>#{content}</code></pre>
-</div>
-
-EOF
-        else
-          content
-        end
-      end
-
-      out = @markdown.convert(outs.join)
+      out = @markdown.convert(sections.join)
       out += "<script>require(['inlineErrors'], function(inlineErrors) {\n  inlineErrors.highlight(#{JSON.generate(errors_json)});\n});</script>"
       out
     end

@@ -55,6 +55,7 @@ hello.js:7
 Looking at the `hello.js` example file, it's easy to see why:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
@@ -111,6 +112,7 @@ foo(10);
   annotations in Flow:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
@@ -167,6 +169,7 @@ foo('Hello', 42);
   error as shown by our third example (`03_Null`):
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
@@ -224,6 +227,7 @@ var total = length('Hello') + length(null);
   arrays:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
@@ -277,6 +281,7 @@ total([1, 2, 3, 4]);
   In our final example, `05_DynamicCode`, we haven't annotated the function, but we are passing in two different types of arguments:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
