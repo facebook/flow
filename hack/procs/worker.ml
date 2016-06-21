@@ -120,7 +120,8 @@ and 'a slave = {
 
 let slave_main ic oc =
   let send_result data =
-    let s = Marshal.to_string data [Marshal.Closures] in
+    let stats = Measure.serialize (Measure.pop_global ()) in
+    let s = Marshal.to_string (data,stats) [Marshal.Closures] in
     let len = String.length s in
     if len > 10 * 1024 * 1024 (* 10 MB *) then begin
       Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
@@ -259,9 +260,10 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
   let result () : b =
     match Unix.waitpid [Unix.WNOHANG] slave_pid with
     | 0, _ | _, Unix.WEXITED 0 ->
-        let res : b = Daemon.input_value inc in
+        let res : b * Measure.record_data = Daemon.input_value inc in
         if w.prespawned = None then Daemon.close h;
-        res
+        Measure.merge (Measure.deserialize (snd res));
+        fst res
     | _, Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
         raise SharedMem.Out_of_shared_memory
     | _, Unix.WEXITED i ->

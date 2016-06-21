@@ -46,6 +46,7 @@ type type_to_keyset = SSet.t TMap.t
 module SearchKeys = SharedMem.NoCache (Relative_path.S) (struct
   type t = type_to_keyset
   let prefix = Prefix.make()
+  let description = "SearchKeys"
 end)
 
 (* The workers are in charge of keeping this up to date per file, we use it
@@ -69,6 +70,7 @@ end)
 module SearchKeyToTermMap = SharedMem.WithCache (Relative_path.S) (struct
   type t = type_to_key_to_term_list
   let prefix = Prefix.make()
+  let description = "SearchKeyToTermMap"
 end)
 
 (* This is the table which we can find which terms are relevant to the query.

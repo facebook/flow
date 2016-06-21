@@ -358,6 +358,13 @@ static uint64_t* hcounter;   // the number of slots taken in the table
 
 /* A counter increasing globally across all forks. */
 static uintptr_t* counter;
+
+/* Logging level for shared memory statistics
+ * 0 = nothing
+ * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
+ */
+static size_t* log_level;
+
 /* This should only be used before forking */
 static uintptr_t early_counter = 1;
 
@@ -383,6 +390,11 @@ static size_t used_heap_size(void) {
 CAMLprim value hh_heap_size(void) {
   CAMLparam0();
   CAMLreturn(Val_long(used_heap_size()));
+}
+
+CAMLprim value hh_log_level(void) {
+  CAMLparam0();
+  CAMLreturn(Val_long(*log_level));
 }
 
 CAMLprim value hh_hash_used_slots(void) {
@@ -676,9 +688,12 @@ static void define_globals(char * shared_mem_init) {
   assert (CACHE_LINE_SIZE >= sizeof(pid_t));
   master_pid = (pid_t*)(mem + 4*CACHE_LINE_SIZE);
 
+  assert (CACHE_LINE_SIZE >= sizeof(size_t));
+  log_level = (size_t*)(mem + 5*CACHE_LINE_SIZE);
+
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 5*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 6*CACHE_LINE_SIZE + (int)sizeof(int));
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Global storage initialization */
@@ -710,13 +725,14 @@ static void define_globals(char * shared_mem_init) {
 
 }
 
-static void init_shared_globals() {
+static void init_shared_globals(size_t config_log_level) {
   // Initial size is zero for global storage is zero
   global_storage[0] = 0;
   // Initialize the number of element in the table
   *hcounter = 0;
   *dcounter = 0;
   *counter = early_counter + 1;
+  *log_level = config_log_level;
   // Initialize top heap pointers
   *heap = heap_init;
 }
@@ -810,7 +826,7 @@ CAMLprim value hh_shared_init(
   madvise(shared_mem, shared_mem_size, MADV_DONTDUMP);
 #endif
 
-  init_shared_globals();
+  init_shared_globals(Long_val(Field(config_val, 6)));
   // Checking that we did the maths correctly.
   assert(*heap + heap_size == shared_mem + shared_mem_size);
 
@@ -841,7 +857,7 @@ void hh_shared_reset() {
   assert(shared_mem);
   early_counter = 1;
   memset(shared_mem, 0, heap_init - shared_mem);
-  init_shared_globals();
+  init_shared_globals(0);
 #endif
 }
 

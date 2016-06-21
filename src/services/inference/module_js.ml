@@ -125,6 +125,7 @@ let module_name_candidates ~options name =
 module NameHeap = SharedMem.WithCache (Modulename) (struct
   type t = filename
   let prefix = Prefix.make()
+  let description = "Name"
 end)
 
 (* map from filename to module info *)
@@ -133,6 +134,7 @@ end)
 module InfoHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   type t = info
   let prefix = Prefix.make()
+  let description = "Info"
 end)
 
 (* Given a set of newly added files, decide whether the resolution of module
@@ -152,12 +154,14 @@ let resolution_path_dependency files acc f =
 module PackageHeap = SharedMem.WithCache (StringKey) (struct
     type t = Ast.Expression.t SMap.t
     let prefix = Prefix.make()
+    let description = "Package"
   end)
 
 (* shared heap for package.json directories by package name *)
 module ReversePackageHeap = SharedMem.WithCache (StringKey) (struct
     type t = string
     let prefix = Prefix.make()
+    let description = "ReversePackage"
   end)
 
 let get_key key tokens = Ast.(

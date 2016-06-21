@@ -24,6 +24,7 @@ type config = {
   hash_table_pow   : int;
   shm_dirs         : string list;
   shm_min_avail    : int;
+  log_level        : int;
 }
 
 val default_config : config

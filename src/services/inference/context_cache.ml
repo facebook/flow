@@ -22,11 +22,13 @@ open Utils_js
 module ContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   type t = Context.t
   let prefix = Prefix.make()
+  let description = "Context"
 end)
 
 module SigContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   type t = Context.t
   let prefix = Prefix.make()
+  let description = "SigContext"
 end)
 
 let add cx =

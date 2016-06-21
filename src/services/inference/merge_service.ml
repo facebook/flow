@@ -13,6 +13,7 @@ open Utils_js
 module LeaderHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   type t = filename
   let prefix = Prefix.make()
+  let description = "Leader"
 end)
 
 (* Warn on a missing required module resolved_r referenced as r in context cx.

@@ -21,4 +21,5 @@
 module type Type = sig
   type t
   val prefix: Prefix.t
+  val description: string
 end

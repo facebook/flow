@@ -21,12 +21,14 @@ module Make(S : SearchUtils.Searchable) = struct
   module SearchUpdates = SharedMem.WithCache (Relative_path.S) (struct
     type t = (string * (Pos.t, S.t) term) list
     let prefix = Prefix.make()
+    let description = "SearchUpdates"
   end)
   (* Maps file name to a list of keys that the file has results for *)
   (* This is only read once per update, so cache gives us no advantage *)
   module SearchKeys = SharedMem.NoCache (Relative_path.S) (struct
     type t = string list
     let prefix = Prefix.make()
+    let description = "SearchKeys"
   end)
 
   let cut_str_after cut_char str =
