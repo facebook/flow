@@ -40,13 +40,17 @@ type handle = private {
 }
 
 exception Out_of_shared_memory
+exception Hash_table_full
+exception Dep_table_full
 exception Failed_anonymous_memfd_init
 exception Less_than_minimum_available of int
 exception Failed_to_use_shm_dir of string
 let () =
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
+  Callback.register_exception "hash_table_full" Hash_table_full;
+  Callback.register_exception "dep_table_full" Dep_table_full;
   Callback.register_exception "failed_anonymous_memfd_init" Failed_anonymous_memfd_init;
-  Callback.register_exception "less_than_minimum_available" (Less_than_minimum_available 0)
+  Callback.register_exception "less_than_minimum_available" (Less_than_minimum_available 0);
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)

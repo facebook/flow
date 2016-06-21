@@ -71,7 +71,13 @@ let infer_job ~options (inferred, errsets, errsuppressions) files =
         let cx_file = Context.file cx in
         cx_file :: inferred, errs :: errsets, suppressions :: errsuppressions
       )
-    with exc ->
+    with
+    (* Unrecoverable exceptions *)
+    | SharedMem.Out_of_shared_memory
+    | SharedMem.Hash_table_full
+    | SharedMem.Dep_table_full as exc -> raise exc
+    (* A catch all suppression is probably a bad idea... *)
+    | exc ->
       let msg = "infer_job exception: "^(fmt_exc exc) in
       let errorset = Errors_js.ErrorSet.singleton
         (Errors_js.internal_error file msg) in

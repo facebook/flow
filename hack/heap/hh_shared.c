@@ -343,6 +343,7 @@ typedef union {
 } deptbl_entry_t;
 
 static deptbl_entry_t* deptbl;
+static uint64_t* dcounter;
 
 
 /* ENCODING:
@@ -353,7 +354,7 @@ static uint64_t* deptbl_bindings;
 
 /* The hashtable containing the shared values. */
 static helt_t* hashtbl;
-static int* hcounter;   // the number of slots taken in the table
+static uint64_t* hcounter;   // the number of slots taken in the table
 
 /* A counter increasing globally across all forks. */
 static uintptr_t* counter;
@@ -662,18 +663,22 @@ static void define_globals(char * shared_mem_init) {
   heap = (char**)mem;
 
   // The number of elements in the hashtable
-  assert(CACHE_LINE_SIZE >= sizeof(int));
-  hcounter = (int*)(mem + CACHE_LINE_SIZE);
+  assert(CACHE_LINE_SIZE >= sizeof(uint64_t));
+  hcounter = (uint64_t*)(mem + CACHE_LINE_SIZE);
+
+  // The number of elements in the deptable
+  assert(CACHE_LINE_SIZE >= sizeof(uint64_t));
+  dcounter = (uint64_t*)(mem + 2*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(uintptr_t));
-  counter = (uintptr_t*)(mem + 2*CACHE_LINE_SIZE);
+  counter = (uintptr_t*)(mem + 3*CACHE_LINE_SIZE);
 
   assert (CACHE_LINE_SIZE >= sizeof(pid_t));
-  master_pid = (pid_t*)(mem + 3*CACHE_LINE_SIZE);
+  master_pid = (pid_t*)(mem + 4*CACHE_LINE_SIZE);
 
   mem += page_size;
   // Just checking that the page is large enough.
-  assert(page_size > 3*CACHE_LINE_SIZE + (int)sizeof(int));
+  assert(page_size > 5*CACHE_LINE_SIZE + (int)sizeof(int));
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Global storage initialization */
@@ -710,6 +715,7 @@ static void init_shared_globals() {
   global_storage[0] = 0;
   // Initialize the number of element in the table
   *hcounter = 0;
+  *dcounter = 0;
   *counter = early_counter + 1;
   // Initialize top heap pointers
   *heap = heap_init;
@@ -951,6 +957,12 @@ void hh_shared_clear(void) {
 /* Dependencies */
 /*****************************************************************************/
 
+static void raise_dep_table_full() {
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("dep_table_full");
+  caml_raise_constant(*exn);
+}
+
 /*****************************************************************************/
 /* Hashes an integer such that the low bits are a good starting hash slot. */
 /*****************************************************************************/
@@ -990,10 +1002,17 @@ static int add_binding(uint64_t value) {
     if(slot_val == value)
       return 0;
 
+    if (*dcounter >= dep_size) {
+      raise_dep_table_full();
+    }
+
     // The slot is free, let's try to take it.
     if(slot_val == 0) {
       // See comments in hh_add about its similar construction here.
       if(__sync_bool_compare_and_swap(&table[slot], 0, value)) {
+        uint64_t size = __sync_fetch_and_add(dcounter, 1);
+        // Sanity check
+        assert(size <= dep_size);
         return 1;
       }
 
@@ -1363,6 +1382,12 @@ static void write_at(unsigned int slot, value data) {
   }
 }
 
+static void raise_hash_table_full() {
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("hash_table_full");
+  caml_raise_constant(*exn);
+}
+
 /*****************************************************************************/
 /* Adds a key value to the hashtable. This code is perf sensitive, please
  * check the perf before modifying.
@@ -1380,10 +1405,16 @@ void hh_add(value key, value data) {
       return;
     }
 
+    if (*hcounter >= hashtbl_size) {
+      // We're never going to find a spot
+      raise_hash_table_full();
+    }
+
     if(slot_hash == 0) {
       // We think we might have a free slot, try to atomically grab it.
       if(__sync_bool_compare_and_swap(&(hashtbl[slot].hash), 0, hash)) {
         uint64_t size = __sync_fetch_and_add(hcounter, 1);
+        // Sanity check
         assert(size < hashtbl_size);
         write_at(slot, data);
         return;
@@ -1504,6 +1535,7 @@ void hh_remove(value key) {
   assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
   hashtbl[slot].addr = NULL;
+  __sync_fetch_and_sub(hcounter, 1);
 }
 
 /*****************************************************************************/

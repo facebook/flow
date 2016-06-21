@@ -322,7 +322,11 @@ let typecheck ~options ~timing ~workers ~make_merge_input files removed unparsed
       Flow_logger.log "Done";
       timing
     with
-    | SharedMem.Out_of_shared_memory as exn -> raise exn
+    (* Unrecoverable exceptions *)
+    | SharedMem.Out_of_shared_memory
+    | SharedMem.Hash_table_full
+    | SharedMem.Dep_table_full as exn -> raise exn
+    (* A catch all suppression is probably a bad idea... *)
     | exc ->
         prerr_endline (Printexc.to_string exc);
         timing in

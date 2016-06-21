@@ -174,7 +174,12 @@ let merge_strict_job ~options (merged, errsets) (components: filename list list)
         let file, errors = merge_strict_component ~options component in
         file :: merged, errors :: errsets
       )
-    with exc ->
+    with
+    | SharedMem.Out_of_shared_memory
+    | SharedMem.Hash_table_full
+    | SharedMem.Dep_table_full as exc -> raise exc
+    (* A catch all suppression is probably a bad idea... *)
+    | exc ->
       let file = List.hd component in
       let msg = "merge_strict_job exception: "^(fmt_exc exc) in
       let errorset = Errors_js.ErrorSet.singleton
