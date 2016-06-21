@@ -2361,7 +2361,7 @@ end = struct
     val continue: env -> Ast.Statement.t
     val debugger: env -> Ast.Statement.t
     val declare: ?in_module:bool -> env -> Ast.Statement.t
-    val declare_export_declaration: env -> Ast.Statement.t
+    val declare_export_declaration: ?allow_export_type:bool -> env -> Ast.Statement.t
     val do_while: env -> Ast.Statement.t
     val empty: env -> Ast.Statement.t
     val export_declaration: env -> Ast.Expression.t list -> Ast.Statement.t
@@ -2861,7 +2861,7 @@ end = struct
       else
         Parse.statement env
 
-    and interface =
+    and interface_helper =
       let rec supers env acc =
         let super = Type.generic env in
         let acc = super::acc in
@@ -2870,33 +2870,36 @@ end = struct
             Expect.token env T_COMMA;
             supers env acc
         | _ -> List.rev acc
-
-      in fun env ->
+      in
+      fun env ->
         let start_loc = Peek.loc env in
-        if Peek.is_identifier ~i:1 env
+        if not (should_parse_types env)
+        then error env Error.UnexpectedTypeInterface;
+        Expect.token env T_INTERFACE;
+        let id = Parse.identifier env in
+        let typeParameters = Type.type_parameter_declaration_with_defaults env in
+        let extends = if Peek.token env = T_EXTENDS
         then begin
-          if not (should_parse_types env)
-          then error env Error.UnexpectedTypeInterface;
-          Expect.token env T_INTERFACE;
-          let id = Parse.identifier env in
-          let typeParameters = Type.type_parameter_declaration_with_defaults env in
-          let extends = if Peek.token env = T_EXTENDS
-          then begin
-            Expect.token env T_EXTENDS;
-            supers env []
-          end else [] in
-          let body = Type._object ~allow_static:true env in
-          let loc = Loc.btwn start_loc (fst body) in
-          loc, Statement.(InterfaceDeclaration Interface.({
-            id;
-            typeParameters;
-            body;
-            extends;
-            mixins = [];
-          }))
-        end else begin
-          expression env
-        end
+          Expect.token env T_EXTENDS;
+          supers env []
+        end else [] in
+        let body = Type._object ~allow_static:true env in
+        let loc = Loc.btwn start_loc (fst body) in
+        loc, Statement.Interface.({
+          id;
+          typeParameters;
+          body;
+          extends;
+          mixins = [];
+        })
+
+
+    and interface env =
+      if Peek.is_identifier ~i:1 env
+      then
+        let loc, iface = interface_helper env in
+        loc, Statement.InterfaceDeclaration iface
+      else expression env
 
     and declare_class =
       let rec supers env acc =
@@ -2985,11 +2988,68 @@ end = struct
       loc, Statement.DeclareVariable var
 
     and declare_module =
-      let rec module_items env acc =
+      let rec module_items env ~module_kind acc =
         match Peek.token env with
         | T_EOF
-        | T_RCURLY -> List.rev acc
-        | _ -> module_items env (declare ~in_module:true env::acc)
+        | T_RCURLY -> (module_kind, List.rev acc)
+        | _ ->
+          let stmt = declare ~in_module:true env in
+          let module_kind = Statement.(
+            let (loc, stmt) = stmt in
+            match (module_kind, stmt) with
+            (**
+             * The first time we see either a `declare export` or a
+             * `declare module.exports`, we lock in the kind of the module.
+             *
+             * `declare export type` and `declare export interface` are the two
+             * exceptions to this rule because they are valid in both CommonJS
+             * and ES modules (and thus do not indicate an intent for either).
+             *)
+            | None, DeclareModuleExports _ -> Some (DeclareModule.CommonJS loc)
+            | None, DeclareExportDeclaration {
+                DeclareExportDeclaration.declaration;
+                _;
+              } ->
+              (match declaration with
+                | Some (DeclareExportDeclaration.NamedType _)
+                | Some (DeclareExportDeclaration.Interface _)
+                  -> module_kind
+                | _ -> Some (DeclareModule.ES loc)
+              )
+
+            (**
+             * There should never be more than one `declare module.exports`
+             * statement *)
+            | Some (DeclareModule.CommonJS _), DeclareModuleExports _ ->
+              error env Parse_error.DuplicateDeclareModuleExports;
+              module_kind
+
+            (**
+             * It's never ok to mix and match `declare export` and
+             * `declare module.exports` in the same module because it leaves the
+             * kind of the module (CommonJS vs ES) ambiguous.
+             *
+             * The 1 exception to this rule is that `export type/interface` are
+             * both ok in CommonJS modules.
+             *)
+            | Some (DeclareModule.ES _), DeclareModuleExports _ ->
+              error env Parse_error.AmbiguousDeclareModuleKind;
+              module_kind
+            | Some (DeclareModule.CommonJS _), DeclareExportDeclaration {
+                DeclareExportDeclaration.declaration;
+                _;
+              } ->
+                (match declaration with
+                  | Some (DeclareExportDeclaration.NamedType _)
+                  | Some (DeclareExportDeclaration.Interface _)
+                    -> ()
+                  | _ -> error env Parse_error.AmbiguousDeclareModuleKind
+                );
+                module_kind
+
+            | _ -> module_kind
+          ) in
+          module_items env ~module_kind (stmt::acc)
 
       in fun env start_loc ->
         let id = match Peek.token env with
@@ -3002,13 +3062,19 @@ end = struct
             Statement.DeclareModule.Identifier (Parse.identifier env) in
         let body_start_loc = Peek.loc env in
         Expect.token env T_LCURLY;
-        let body = module_items env [] in
+        let (module_kind, body) = module_items env ~module_kind:None [] in
         Expect.token env T_RCURLY;
         let body_end_loc = Peek.loc env in
         let body_loc = Loc.btwn body_start_loc body_end_loc in
         let body = body_loc, { Statement.Block.body; } in
-        Loc.btwn start_loc (fst body),
-        Statement.(DeclareModule DeclareModule.({ id; body; }))
+        let loc = Loc.btwn start_loc (fst body) in
+        let kind =
+          match module_kind with
+          | Some k -> k
+          | None -> Statement.DeclareModule.CommonJS loc
+        in
+        loc,
+        Statement.(DeclareModule DeclareModule.({ id; body; kind; }))
 
     and declare_module_exports env start_loc =
       Expect.token env T_PERIOD;
@@ -3049,6 +3115,8 @@ end = struct
             error env Error.DeclareAsync;
             Expect.token env T_ASYNC;
             declare_function_statement env start_loc
+        | T_EXPORT when in_module ->
+            declare_export_declaration ~allow_export_type:in_module env
         | T_IDENTIFIER when Peek.value ~i:1 env = "module" ->
             Expect.token env T_DECLARE;
             Expect.contextual env "module";
@@ -3064,7 +3132,7 @@ end = struct
             Parse.statement env
       )
 
-    let export_source env =
+    and export_source env =
       Expect.contextual env "from";
       match Peek.token env with
       | T_STRING (loc, value, raw, octal) ->
@@ -3080,7 +3148,7 @@ end = struct
           error_unexpected env;
           ret
 
-    let extract_pattern_binding_names =
+    and extract_pattern_binding_names =
       let rec fold acc = Pattern.(function
         | (_, Object {Object.properties; _;}) ->
           List.fold_left (fun acc prop ->
@@ -3104,9 +3172,9 @@ end = struct
       ) in
       List.fold_left fold
 
-    let extract_ident_name (_, {Identifier.name; _;}) = name
+    and extract_ident_name (_, {Identifier.name; _;}) = name
 
-    let rec export_specifiers_and_errs env specifiers errs =
+    and export_specifiers_and_errs env specifiers errs =
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
@@ -3136,7 +3204,7 @@ end = struct
           | None -> errs in
           export_specifiers_and_errs env (specifier::specifiers) errs
 
-    let export_declaration env decorators =
+    and export_declaration env decorators =
       let env = env |> with_strict true |> with_in_export true in
       let start_loc = Peek.loc env in
       Expect.token env T_EXPORT;
@@ -3315,7 +3383,7 @@ end = struct
           }
       )
 
-    and declare_export_declaration env =
+    and declare_export_declaration ?(allow_export_type=false) env =
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeDeclaration;
       let start_loc = Peek.loc env in
@@ -3413,6 +3481,26 @@ end = struct
             specifiers;
             source;
           }
+      | T_TYPE when allow_export_type ->
+          (* declare export type = ... *)
+          let (alias_loc, alias) = type_alias_helper env in
+          let loc = Loc.btwn start_loc alias_loc in
+          (loc, Statement.DeclareExportDeclaration {
+            default = false;
+            declaration = Some (NamedType (alias_loc, alias));
+            specifiers = None;
+            source = None;
+          })
+      | T_INTERFACE when allow_export_type ->
+          (* declare export interface ... *)
+          let (iface_loc, iface) = interface_helper env in
+          let loc = Loc.btwn start_loc iface_loc in
+          (loc, Statement.DeclareExportDeclaration {
+            default = false;
+            declaration = Some (Interface (iface_loc, iface));
+            specifiers = None;
+            source = None;
+          })
       | _ ->
           (match Peek.token env with
             | T_TYPE -> error env Error.DeclareExportType

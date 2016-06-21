@@ -14,6 +14,17 @@ def("DeclareModuleExports")
   .build("typeAnnotation")
   .field("typeAnnotation", def("TypeAnnotation"));
 
+def("DeclareExportDeclaration")
+  .field("declaration", or(
+    def("DeclareVariable"),
+    def("DeclareFunction"),
+    def("DeclareClass"),
+    def("Type"), // Implies default type
+    def("TypeAlias"), // Implies named type
+    def("InterfaceDeclaration"),
+    null
+  ))
+
 def("ExistsTypeAnnotation")
   .bases("Type")
   .build();

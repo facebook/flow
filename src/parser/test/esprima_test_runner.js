@@ -265,6 +265,9 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         delete flow.variance;
         delete flow.default;
         break;
+      case 'DeclareModule':
+        delete flow.kind;
+        break;
     }
   }
 }

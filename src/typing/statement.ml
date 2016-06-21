@@ -327,6 +327,10 @@ and statement_decl cx type_params_map = Ast.Statement.(
         | Some (Class (loc, c)) ->
             statement_decl cx type_params_map (loc, DeclareClass c)
         | Some (DefaultType _) -> ()
+        | Some (NamedType (loc, t)) ->
+            statement_decl cx type_params_map (loc, TypeAlias t)
+        | Some (Interface (loc, i)) ->
+            statement_decl cx type_params_map (loc, InterfaceDeclaration i)
         | None ->
             if not default
             then ()
@@ -1469,7 +1473,7 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc true decl
 
-  | (loc, DeclareModule { DeclareModule.id; body; }) ->
+  | (loc, DeclareModule { DeclareModule.id; body; kind=_; }) ->
     let name = match id with
     | DeclareModule.Identifier ident -> ident_name ident
     | DeclareModule.Literal (_, { Ast.Literal.value = Ast.Literal.String str; _; }) ->
@@ -1565,29 +1569,42 @@ and statement cx type_params_map = Ast.Statement.(
       DeclareExportDeclaration.source;
     }) ->
       let open DeclareExportDeclaration in
-      let export_info = match declaration with
-      | Some (Variable (loc, v)) ->
-          let { DeclareVariable.id = (_, { Ast.Identifier.name; _; }) } = v in
-          statement cx type_params_map (loc, DeclareVariable v);
-          [(spf "var %s" name, loc, name, None)]
-      | Some (Function (loc, f)) ->
-          let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }) } = f in
-          statement cx type_params_map (loc, DeclareFunction f);
-          [(spf "function %s() {}" name, loc, name, None)]
-      | Some (Class (loc, c)) ->
-          let { Interface.id = (name_loc, { Ast.Identifier.name; _; }); _; }
-            = c in
-          statement cx type_params_map (loc, DeclareClass c);
-          [(spf "class %s {}" name, name_loc, name, None)]
-      | Some (DefaultType (loc, t)) ->
-          let _type = Anno.convert cx type_params_map (loc, t) in
-          [( "<<type>>", loc, "default", Some _type)]
-      | None ->
-          [] in
+      let open Ast.Statement.ExportDeclaration in
+      let export_info, export_kind =
+        match declaration with
+        | Some (Variable (loc, v)) ->
+            let { DeclareVariable.id = (_, { Ast.Identifier.name; _; }) } = v in
+            statement cx type_params_map (loc, DeclareVariable v);
+            [(spf "var %s" name, loc, name, None)], ExportValue
+        | Some (Function (loc, f)) ->
+            let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }) } = f in
+            statement cx type_params_map (loc, DeclareFunction f);
+            [(spf "function %s() {}" name, loc, name, None)], ExportValue
+        | Some (Class (loc, c)) ->
+            let { Interface.id = (name_loc, { Ast.Identifier.name; _; }); _; }
+              = c in
+            statement cx type_params_map (loc, DeclareClass c);
+            [(spf "class %s {}" name, name_loc, name, None)], ExportValue
+        | Some (DefaultType (loc, t)) ->
+            let _type = Anno.convert cx type_params_map (loc, t) in
+            [( "<<type>>", loc, "default", Some _type)], ExportValue
+        | Some (NamedType (talias_loc, ({
+            TypeAlias.
+            id = (name_loc, {Ast.Identifier.name; _;});
+            _;
+          } as talias))) ->
+            statement cx type_params_map (talias_loc, TypeAlias talias);
+            [(spf "type %s = ..." name, name_loc, name, None)], ExportType
+        | Some (Interface (loc, i)) ->
+            let {Interface.id = (name_loc, {Ast.Identifier.name; _;}); _;} = i in
+            statement cx type_params_map (loc, InterfaceDeclaration i);
+            [(spf "interface %s {}" name, name_loc, name, None)], ExportValue
+        | None ->
+            [], ExportValue
+      in
 
       export_statement cx type_params_map loc
-        default export_info specifiers source
-        Ast.Statement.ExportDeclaration.ExportValue
+        default export_info specifiers source export_kind
 
   | (loc, DeclareModuleExports annot) ->
     let t = Anno.convert cx SMap.empty (snd annot) in
