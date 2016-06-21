@@ -71,7 +71,7 @@ module Jekyll
       attr_accessor :tempdir
 
       def valid_pragma?(str)
-        @pragmas ||= Set.new ['$WithLineNums']
+        @pragmas ||= Set.new ['$WithLineNums', '$NoCliOutput']
         @pragmas.include? str
       end
     end
@@ -91,16 +91,19 @@ module Jekyll
 
     def convert_token(token)
       type, range, context = token.values_at('type', 'range', 'context')
+      line = token['loc']['start']['line']
       if type == 'T_EOF'
         {
           :value => "",
-          :range => range
+          :range => range,
+          :line => line
         }
       else
         {
           :start => "<span class=\"#{context} #{type}\">",
           :end => "</span>",
-          :range => range
+          :range => range,
+          :line => line
         }
       end
     end
@@ -133,26 +136,31 @@ module Jekyll
 
     def convert_comment(comment)
       type, loc, value, range = comment.values_at('type', 'loc', 'value', 'range')
+      line = loc['start']['line']
       if is_ignored_comment(comment)
         {
           :value => "",
-          :range => range
+          :range => range,
+          :line => line
         }
       elsif is_pragma(comment)
         {
           :pragma => value.strip,
-          :range => range
+          :range => range,
+          :line => line
         }
       elsif is_block_comment(comment)
         {
           :value => unindent(value),
-          :range => range
+          :range => range,
+          :line => line
         }
       else
         {
           :start => '<span class="comment %s">' % [type.downcase],
           :end => '</span>',
-          :range => range
+          :range => range,
+          :line => line
         }
       end
     end
@@ -193,33 +201,101 @@ module Jekyll
           m_id = e_id * 1000 + (m_index + 1)
           msg_json = {
             'id' => "M#{m_id}",
-            'description' => message['descr']
+            'description' => message['descr'],
+            'context' => message['context'],
           }
 
           m_loc = message['loc']
           if m_loc != nil
+            msg_json['source'] = m_loc['source']
             msg_json['start'] = m_loc['start']
             msg_json['end'] = m_loc['end']
           end
 
           messages.push(msg_json)
         end
+        operation = nil
+        if !error['operation'].nil?
+          op = error['operation']
+          operation = {
+            'description' => "#{op['descr']}\n",
+            'context' => op['context'],
+            'source' => op['loc']['source'],
+            'start' => op['loc']['start'],
+            'end' => op['loc']['end'],
+          }
+        end
         errors.push({
           'id' => "E#{e_id}",
-          'messages' => messages
+          'messages' => messages,
+          'operation' => operation
         })
       end
       errors
     end
 
+    def get_error_output(error, line_offset)
+      chunks = []
+      start = error['messages'][0]['start']['offset']
+      operations = error['operation'].nil? ? [] : [error['operation']]
+      (operations + error['messages']).each do |message|
+        if message.has_key?('source') &&
+           message.has_key?('start') &&
+           message.has_key?('end') &&
+           !message['context'].nil? &&
+           !message['context'].empty?
+
+          context = message['context']
+          start_col = message['start']['column'] - 1
+          end_col = message['start']['line'] == message['end']['line'] ?
+            message['end']['column'] - 1 :
+            start_col
+
+          filename = message['source'] && message['source'] != '-' ?
+            message['source'] :
+            ''
+
+          line = message['start']['line'] - (line_offset - 1)
+
+          prefix = "#{filename}#{line}: "
+          before = start_col >= 1 ? context.slice(0..(start_col - 1)) : ''
+          highlight = context.slice(start_col..end_col)
+          after = context.slice((end_col + 1)..(context.length - 1))
+
+          line = "#{prefix}#{escape(before)}" +
+            "<strong>#{escape(highlight)}</strong>" +
+            "#{escape(after)}\n"
+          chunks.push(line)
+
+          offset = start_col + prefix.length - 1
+          whitespace = "#{prefix}#{before}".gsub(/\S/, ' ')
+          arrows = '^' * highlight.length
+
+          chunks.push("#{whitespace}#{arrows} #{escape(message['description'])}")
+        else
+          chunks.push(". #{escape(message['description'])}\n")
+        end
+      end
+      chunks.join('')
+    end
+
     def get_errors(errors_json)
-      errors_json.reduce([]) do |errors, error|
+      errors = []
+      outputs = []
+      errors_json.each do |error|
         e_id = error['id']
+        first_offset = nil
+        if !error['operation'].nil?
+          first_offset = error['operation']['start']['offset']
+        end
         error['messages'].each do |message|
           next unless message.has_key?('start') && message.has_key?('end')
 
           start_offset = message['start']['offset']
           end_offset = message['end']['offset']
+
+          first_offset = start_offset if first_offset.nil?
+
           errors.push({
             :start =>
               "<span " +
@@ -228,16 +304,22 @@ module Jekyll
                 "data-message-id=\"#{message['id']}\">",
             :end => '',
             :range => [start_offset, start_offset],
-            :length => end_offset - start_offset
+            :length => end_offset - start_offset,
+            :line => message['start']['line']
           })
           errors.push({
             :start => '',
             :end => '</span>',
-            :range => [end_offset, end_offset]
+            :range => [end_offset, end_offset],
+            :line => message['start']['line']
           })
         end
-        errors
+        outputs.push({
+          :range => [first_offset, first_offset],
+          :error => error
+        })
       end
+      [errors, outputs]
     end
 
     def escape(str)
@@ -250,30 +332,41 @@ module Jekyll
       }.join
       tokens = get_tokens(content)
       errors_json = get_error_json(content)
-      errors = get_errors(errors_json)
-      items = (tokens + errors).sort_by {|item|
+      errors, outputs = get_errors(errors_json)
+      items = (tokens + errors + outputs).sort_by {|item|
         # sort by position, then by :length (longest to shortest), which sorts
         # the opening <span> tags on errors.
         [item[:range], -1 * (item[:length] || 0)
       ]}
       sections = []
       out = ""
+      cli_output = []
       pragmas = Set.new
       last_loc = 0
       last_was_code = false
+      section_start_line = 0
       items.each do |item|
         start_loc, end_loc = item[:range]
-        is_code = !item.has_key?(:value)
+        is_code = !item.has_key?(:value) # code or cli output
         if last_was_code && !is_code
+          with_nums = pragmas.include?('$WithLineNums') || !cli_output.empty?
           sections.push([
-            pragmas.include?('$WithLineNums') ? :code_with_nums : :code,
+            with_nums ? :code_with_nums : :code,
             out.sub(/\A\n+|\n+\z/m, '')
           ])
+          sections.push([
+            :cli_output,
+            cli_output.join("\n\n")
+          ]) if !cli_output.empty?
           out = ""
+          cli_output = []
+          section_start_line = item[:line]
           pragmas.clear()
         elsif !last_was_code && is_code
           sections.push([:html, out])
           out = ""
+          cli_output = []
+          section_start_line = item[:line]
           pragmas.clear()
         end
 
@@ -281,20 +374,27 @@ module Jekyll
           pragmas.add(item[:pragma])
           last_loc = end_loc # skip the pragma
           last_was_code = true
+          section_start_line = item[:line] + 1
           next
         end
 
         # Catch up over whitespace
         out += escape(content.slice(last_loc, start_loc - last_loc))
 
-        if !is_code
+        if item.has_key?(:error)
+          cli_output.push(
+            get_error_output(item[:error], section_start_line)
+          ) unless pragmas.include?('$NoCliOutput')
+        elsif is_code
+          value = content.slice(start_loc, end_loc - start_loc)
+          out += item[:start]
+          out += escape(value)
+          out += item[:end]
+          section_start_line += 1 if value =~ /\/\/\s*\$Doc(Issue|Hide)/
+          last_was_code = true
+        else
           out += item[:value]
           last_was_code = false
-        else
-          out += item[:start]
-          out += escape(content.slice(start_loc, end_loc - start_loc))
-          out += item[:end]
-          last_was_code = true
         end
         last_loc = end_loc
       end
@@ -331,6 +431,17 @@ module Jekyll
 </div>
 
           EOF
+        elsif type == :cli_output
+          <<-EOF
+
+```bash
+> flow
+```
+<div class="language-text cli-error highlighter-flow">
+  <pre class="highlight"><code>#{content}</code></pre>
+</div>
+
+EOF
         else
           content
         end

@@ -24,17 +24,6 @@ function foo(x) {
 foo('Hello, world!');
 
 /*
-```bash
-$> flow
-```
-```text
-  3:   return x * 10;
-              ^ string. This type is incompatible with
-  3:   return x * 10;
-              ^^^^^^ number
-```
-{: .cli-error}
-
 Flow also lets you gradually opt-in to statically type checking your code:
 */
 
@@ -47,17 +36,6 @@ function bar(x: string, y: number): string {
 bar('Hello', 42);
 
 /*
-```bash
-$> flow
-```
-```text
-  3:   return x.length * y;
-              ^^^^^^^^^^^^ number. This type is incompatible with
-  2: function bar(x: string, y: number): string {
-                                         ^^^^^^ string
-```
-{: .cli-error}
-
 Typed JavaScript code with Flow annotations [easily transforms](/docs/running.html)
 down to regular JavaScript, so it runs anywhere.
 

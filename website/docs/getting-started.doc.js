@@ -60,6 +60,7 @@ console.log(str);
   **index.js**
 */
 
+// $NoCliOutput
 // @flow
 
 // $ExpectError
