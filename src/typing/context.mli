@@ -42,6 +42,7 @@ val metadata_of_options: Options.t -> metadata
 (* accessors *)
 val all_unresolved: t -> Type.TypeSet.t IMap.t
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
+val declare_module_t: t -> Type.t option
 val enable_const_params: t -> bool
 val enable_unsafe_getters_and_setters: t -> bool
 val enforce_strict_type_args: t -> bool
@@ -58,7 +59,6 @@ val find_props: t -> Constraint_js.ident -> Type.properties
 val find_module: t -> string -> Type.t
 val globals: t -> SSet.t
 val graph: t -> Constraint_js.node IMap.t
-val in_declare_module: t -> bool
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
@@ -97,13 +97,13 @@ val add_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_tvar: t -> Constraint_js.ident -> unit
+val set_declare_module_t: t -> Type.t option -> unit
 val set_envs: t -> env IMap.t -> unit
 val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> Type.TypeSet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint_js.node IMap.t -> unit
-val set_in_declare_module: t -> bool -> unit
 val set_module_exports_type: t -> module_exports_type -> unit
 val set_property_maps: t -> Type.properties IMap.t -> unit
 val set_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit
