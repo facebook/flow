@@ -19,11 +19,11 @@ child_process/execSync.js:8
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-intersection type. See lib: node.js:623
+intersection type. See lib: node.js:624
   Case 3 may work:
-  function type. See lib: node.js:632
+  function type. See lib: node.js:633
   But if it doesn't, case 4 looks promising too:
-  function type. See lib: node.js:637
+  function type. See lib: node.js:638
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                          ^^^^ parameter `data`
