@@ -31,13 +31,13 @@
   <img src="{% asset_path 'flow-logo' %}" alt="Flow logo" class="logo" />
 </a>
     <ul>
-      <li><a href="/about/#_"
-          {% if page.section == 'about' %} class="active" {% endif %}>
-          About
-      </a></li>
       <li><a href="/docs/getting-started.html#_"
           {% if page.section == 'docs' %} class="active" {% endif %}>
           Docs
+      </a></li>
+      <li><a href="/try/"
+          {% if page.section == 'try' %} class="active" {% endif %}>
+          Try
       </a></li>
       <li><a href="/support.html"
           {% if page.section == 'support' %} class="active" {% endif %}>

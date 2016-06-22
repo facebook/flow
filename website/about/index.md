@@ -6,22 +6,6 @@ layout: default
 permalink: /about/
 ---
 
-# What Is Flow?
-
-Flow is a **static type checker** for JavaScript. It can be used to catch common
-bugs in JavaScript programs before they run, including:
-
-* silent type conversions,
-* `null` dereferences,
-* and the dreaded `undefined is not a function`.
-
-Flow also powers advanced features for editors, including [Vim][flow-vim],
-[Emacs][flow-emacs], and [Nuclide][flow-nuclide].
-
-[flow-vim]: https://github.com/flowtype/vim-flow
-[flow-emacs]: https://github.com/facebook/flow/blob/master/flow-types.el
-[flow-nuclide]: http://nuclide.io/docs/languages/flow/
-
 ## Gradual
 
 Flow's type checking is opt-in, which means you can gradually convert your
