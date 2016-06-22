@@ -137,8 +137,16 @@ let check_content ~filename ~content =
       ~metadata ~filename ~module_name:(Modulename.String "-") ast
     in
 
+    (* this is a VERY pared-down version of Merge_service.merge_strict_context.
+       it relies on the JS version only supporting libs + 1 file, so every
+       module you can require() must come from a lib; this skips resolving
+       module names and just adds them all to the `decls` list. *)
+    let decls = SSet.fold (fun module_name acc ->
+      (module_name, Modulename.String module_name, cx) :: acc
+    ) (Context.required cx) [] in
+
     let master_cx = get_master_cx root in
-    Merge_js.merge_component_strict [cx] [] [] [] master_cx;
+    Merge_js.merge_component_strict [cx] [] [] decls master_cx;
 
     Context.errors cx
   | _, parse_errors ->
