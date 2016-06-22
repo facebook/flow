@@ -1,0 +1,78 @@
+es_declare_module.js:6
+  6: (num1: string); // Error: number ~> string
+      ^^^^ number. This type is incompatible with
+  6: (num1: string); // Error: number ~> string
+            ^^^^^^ string
+
+es_declare_module.js:8
+  8: (str1: number); // Error: string ~> number
+      ^^^^ string. This type is incompatible with
+  8: (str1: number); // Error: string ~> number
+            ^^^^^^ number
+
+es_declare_module.js:10
+ 10: (CJS_Named: number); // Error: Module ~> number
+      ^^^^^^^^^ module `CJS_Named`. This type is incompatible with
+ 10: (CJS_Named: number); // Error: Module ~> number
+                 ^^^^^^ number
+
+es_declare_module.js:12
+ 12: import {num2} from "CJS_Clobbered"; // Error: No such export!
+             ^^^^ Named import from module `CJS_Clobbered`. This module has no named export called `num2`.
+
+es_declare_module.js:15
+ 15: (numExport: string); // Error: number ~> string
+      ^^^^^^^^^ number. This type is incompatible with
+ 15: (numExport: string); // Error: number ~> string
+                 ^^^^^^ string
+
+es_declare_module.js:18
+ 18: ('asdf': numType); // Error: string ~> number
+      ^^^^^^ string. This type is incompatible with
+ 18: ('asdf': numType); // Error: string ~> number
+              ^^^^^^^ number
+
+es_declare_module.js:20
+ 20: import {strHidden} from "ES"; // Error: No such export!
+             ^^^^^^^^^ Named import from module `ES`. This module has no named export called `strHidden`.
+
+es_declare_module.js:23
+ 23: (str3: number); // Error: string ~> number
+      ^^^^ string. This type is incompatible with
+ 23: (str3: number); // Error: string ~> number
+            ^^^^^^ number
+
+es_declare_module.js:27
+ 27: (num3: string); // Error: number ~> string
+      ^^^^ number. This type is incompatible with
+ 27: (num3: string); // Error: number ~> string
+            ^^^^^^ string
+
+es_declare_module.js:32
+ 32: (42: C); // Error: number ~> C
+      ^^ number. This type is incompatible with
+ 32: (42: C); // Error: number ~> C
+          ^ C
+
+es_declare_module.js:34
+ 34: (42: CType); // Error: number ~> CType
+      ^^ number. This type is incompatible with
+ 34: (42: CType); // Error: number ~> CType
+          ^^^^^ C
+
+es_declare_module.js:36
+ 36: import {T} from "ES"; // Error: T is a type import, not a value
+             ^ Named import from module `ES`. `T` is a type, but not a value. In order to import it, please use `import type`.
+
+es_declare_module.js:39
+ 39: ('asdf': T2); // Error: string ~> number
+      ^^^^^^ string. This type is incompatible with
+ 39: ('asdf': T2); // Error: string ~> number
+              ^^ number
+
+es_declare_module.js:41
+ 41: import {exports} from "ES"; // Error: Not an export
+             ^^^^^^^ Named import from module `ES`. This module has no named export called `exports`.
+
+
+Found 14 errors
