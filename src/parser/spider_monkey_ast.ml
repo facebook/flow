@@ -363,9 +363,15 @@ and Statement : sig
     type id =
       | Identifier of Identifier.t
       | Literal of (Loc.t * Literal.t)
+
+    type module_kind =
+      | CommonJS of Loc.t
+      | ES of Loc.t
+
     type t = {
       id: id;
       body: Loc.t * Block.t;
+      kind: module_kind;
     }
   end
   module ExportDeclaration : sig
@@ -405,6 +411,10 @@ and Statement : sig
        * this corresponds to things like
        * export default 1+1; *)
       | DefaultType of Type.t
+      (* declare export type *)
+      | NamedType of (Loc.t * TypeAlias.t)
+      (* declare export interface *)
+      | Interface of (Loc.t * Interface.t)
 
     type t = {
       default: bool;
