@@ -58,6 +58,7 @@ module OptionParser(Config : CONFIG) = struct
     |> shm_min_avail_flag
     |> shm_dep_table_pow_flag
     |> shm_hash_table_pow_flag
+    |> shm_log_level_flag
     |> from_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
@@ -186,6 +187,7 @@ module OptionParser(Config : CONFIG) = struct
       shm_min_avail
       shm_dep_table_pow
       shm_hash_table_pow
+      shm_log_level
       from
       root
       () =
@@ -238,6 +240,9 @@ module OptionParser(Config : CONFIG) = struct
     let opt_shm_hash_table_pow = Option.value
       shm_hash_table_pow
       ~default:FlowConfig.(flowconfig.options.Opts.shm_hash_table_pow) in
+    let opt_shm_log_level = Option.value
+      shm_log_level
+      ~default:FlowConfig.(flowconfig.options.Opts.shm_log_level) in
     let opt_default_lib_dir =
       if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
@@ -296,6 +301,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_shm_min_avail;
       opt_shm_dep_table_pow;
       opt_shm_hash_table_pow;
+      opt_shm_log_level;
       opt_max_workers;
       opt_ignores;
       opt_includes;

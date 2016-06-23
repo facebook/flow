@@ -225,6 +225,7 @@ end = struct
     let tmp_dir = Options.temp_dir options in
     let shm_dirs = Options.shm_dirs options in
     let shm_min_avail = Options.shm_min_avail options in
+    let shm_log_level = Options.shm_log_level options in
     let dep_table_pow = Options.shm_dep_table_pow options in
     let hash_table_pow = Options.shm_hash_table_pow options in
     (* You need to grab the lock before initializing the pid files
@@ -248,6 +249,7 @@ end = struct
         shm_min_avail;
         dep_table_pow;
         hash_table_pow;
+        log_level = shm_log_level;
       }) in
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.

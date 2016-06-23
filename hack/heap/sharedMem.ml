@@ -200,6 +200,7 @@ external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
 
 let init_done () =
   hh_init_done ();
+  Measure.print_stats ();
   EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {

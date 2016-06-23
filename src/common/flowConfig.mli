@@ -39,6 +39,7 @@ module Opts : sig
     shm_min_avail: int;
     shm_dep_table_pow: int;
     shm_hash_table_pow: int;
+    shm_log_level: int;
     version: string option;
   }
 end

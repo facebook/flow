@@ -126,6 +126,9 @@ let main strip_root ignore_flag include_flag root () =
     opt_shm_hash_table_pow = FlowConfig.(
       flowconfig.options.Opts.shm_hash_table_pow
     );
+    opt_shm_log_level = FlowConfig.(
+      flowconfig.options.Opts.shm_log_level
+    );
     opt_max_workers = 1;
     opt_ignores;
     opt_includes;

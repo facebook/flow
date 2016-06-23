@@ -21,6 +21,7 @@ type env = {
   shm_min_avail : int option;
   shm_dep_table_pow : int option;
   shm_hash_table_pow : int option;
+  shm_log_level : int option;
   log_file : string;
   ignore_version : bool;
 }
@@ -89,6 +90,7 @@ let start_flow_server env =
     shm_min_avail;
     shm_dep_table_pow;
     shm_hash_table_pow;
+    shm_log_level;
     ignore_version;
     root;
     _;
@@ -101,6 +103,7 @@ let start_flow_server env =
   |> arg_map "--sharedmemory-hash-table-pow" ~f:string_of_int shm_hash_table_pow
   |> arg_map "--sharedmemory-dep-table-pow" ~f:string_of_int shm_dep_table_pow
   |> arg_map "--sharedmemory-minimum-available" ~f:string_of_int shm_min_avail
+  |> arg_map "--sharedmemory-log-level" ~f:string_of_int shm_log_level
   |> arg_map "--sharedmemory-dirs" ~f:(String.concat ",") shm_dirs
   |> arg "--temp-dir" (Some tmp_dir)
   |> arg "--from" FlowEventLogger.((get_context ()).from)

@@ -145,6 +145,13 @@ let shm_hash_table_pow_flag prev = CommandSpec.ArgSpec.(
         The default is 19, implying a size of 2^19 bytes"
 )
 
+let shm_log_level_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--sharedmemory-log-level" int
+      ~doc:"The logging level for shared memory statistics. \
+        0=none, 1=some"
+)
+
 let from_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--from" (optional string)
@@ -252,6 +259,7 @@ type command_params = {
   shm_min_avail      : int option;
   shm_dep_table_pow  : int option;
   shm_hash_table_pow : int option;
+  shm_log_level      : int option;
   ignore_version     : bool;
 }
 
@@ -266,6 +274,7 @@ let collect_server_flags
     shm_min_avail
     shm_dep_table_pow
     shm_hash_table_pow
+    shm_log_level
     from
     ignore_version =
   let default def = function
@@ -283,6 +292,7 @@ let collect_server_flags
     shm_min_avail;
     shm_dep_table_pow;
     shm_hash_table_pow;
+    shm_log_level;
     ignore_version;
   }
 
@@ -302,6 +312,7 @@ let server_flags prev = CommandSpec.ArgSpec.(
   |> shm_min_avail_flag
   |> shm_dep_table_pow_flag
   |> shm_hash_table_pow_flag
+  |> shm_log_level_flag
   |> from_flag
   |> ignore_version_flag
 )
@@ -353,6 +364,7 @@ let connect server_flags root =
     shm_min_avail = server_flags.shm_min_avail;
     shm_dep_table_pow = server_flags.shm_dep_table_pow;
     shm_hash_table_pow = server_flags.shm_hash_table_pow;
+    shm_log_level = server_flags.shm_log_level;
     log_file;
     ignore_version = server_flags.ignore_version;
   } in
