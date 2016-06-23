@@ -1159,17 +1159,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        don't necessarily have the 0->1 property: they could be concretized at
        different types, as more and more lower bounds appear. *)
 
-    | UnionT (_, urep), IntersectionPreprocessKitT (reason,
-        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
+    | UnionT (_, urep), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       UnionRep.members urep |> List.iter (fun t ->
-        rec_flow cx trace (t, IntersectionPreprocessKitT (reason,
-          ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
+        rec_flow cx trace (t, u)
       )
 
-    | AnnotT (_, source_t), IntersectionPreprocessKitT (reason,
-        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
-      rec_flow cx trace (source_t, IntersectionPreprocessKitT (reason,
-        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
+    | MaybeT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      let lreason = reason_of_t t in
+      rec_flow cx trace (NullT.why lreason, u);
+      rec_flow cx trace (VoidT.why lreason, u);
+      rec_flow cx trace (t, u);
+
+    | OptionalT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      let lreason = reason_of_t t in
+      rec_flow cx trace (VoidT.why lreason, u);
+      rec_flow cx trace (t, u);
+
+    | AnnotT (_, source_t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      rec_flow cx trace (source_t, u)
 
     | t, IntersectionPreprocessKitT (reason,
         ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
@@ -4959,7 +4966,7 @@ and prep_try_intersection cx trace reason unresolved resolved u r rep =
 
 (* some patterns need to be concretized before proceeding further *)
 and patt_that_needs_concretization = function
-  | OpenT _ | UnionT _ | AnnotT _ -> true
+  | OpenT _ | UnionT _ | MaybeT _ | OptionalT _ | AnnotT _ -> true
   | _ -> false
 
 and concretize_patt replace patt =
