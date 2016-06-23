@@ -112,17 +112,17 @@ defaults.js:40
  35:   (o.r:void);
             ^^^^ undefined
 
-defaults.js:49
- 49:   (p:void); // error: string ~> void
-        ^ boolean. This type is incompatible with
- 49:   (p:void); // error: string ~> void
-          ^^^^ undefined
+defaults.js:43
+ 43:   p = true // error: boolean ~> string
+       ^ number. This type is incompatible with
+ 43:   p = true // error: boolean ~> string
+       ^ string
 
-defaults.js:49
- 49:   (p:void); // error: string ~> void
-        ^ number. This type is incompatible with
- 49:   (p:void); // error: string ~> void
-          ^^^^ undefined
+defaults.js:43
+ 43:   p = true // error: boolean ~> string
+           ^^^^ boolean. This type is incompatible with
+ 43:   p = true // error: boolean ~> string
+       ^ string
 
 defaults.js:49
  49:   (p:void); // error: string ~> void
@@ -130,47 +130,99 @@ defaults.js:49
  49:   (p:void); // error: string ~> void
           ^^^^ undefined
 
+defaults.js:53
+ 53:   p = true // error: boolean ~> string
+           ^^^^ boolean. This type is incompatible with
+ 53:   p = true // error: boolean ~> string
+       ^ string
+
 defaults.js:57
- 57:   p: 0}; // error: number ~> string
+ 57:   p: 0 // error: number ~> string
           ^ number. This type is incompatible with
  55:   p: string
           ^^^^^^ string
 
-defaults.js:58
- 58: (p:void); // error: string ~> void
-      ^ boolean. This type is incompatible with
- 58: (p:void); // error: string ~> void
-        ^^^^ undefined
-
-defaults.js:58
- 58: (p:void); // error: string ~> void
+defaults.js:59
+ 59: (p:void); // error: string ~> void
       ^ string. This type is incompatible with
- 58: (p:void); // error: string ~> void
+ 59: (p:void); // error: string ~> void
         ^^^^ undefined
-
-defaults.js:60
- 60: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
-                            ^ property `x`. Property cannot be accessed on possibly null value
- 60: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
-                                   ^^^^ null
 
 defaults.js:61
- 61: function obj_rest_err({...o}=0) {} // error: expected object instead of number
-                            ^^^^ object pattern spread property. Expected object instead of
- 61: function obj_rest_err({...o}=0) {} // error: expected object instead of number
-                                  ^ number
+ 61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
+                            ^ property `x`. Property cannot be accessed on possibly null value
+ 61: function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
+                                   ^^^^ null
 
 defaults.js:62
- 62: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
-                            ^ element 0. Computed property/element cannot be accessed on possibly null value
- 62: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
-                               ^^^^ null
+ 62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
+                            ^^^^ object pattern spread property. Expected object instead of
+ 62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
+                                  ^ number
 
 defaults.js:63
- 63: function arr_rest_err([...a]=null) {} // error: expected array instead of null
+ 63: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
+                            ^ element 0. Computed property/element cannot be accessed on possibly null value
+ 63: function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null
+                               ^^^^ null
+
+defaults.js:64
+ 64: function arr_rest_err([...a]=null) {} // error: expected array instead of null
                             ^^^^ rest of array pattern. Expected array instead of possibly null value
- 63: function arr_rest_err([...a]=null) {} // error: expected array instead of null
+ 64: function arr_rest_err([...a]=null) {} // error: expected array instead of null
                                   ^^^^ null
+
+defaults.js:75
+ 75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
+                            ^ number. This type is incompatible with
+ 75: function obj_prop_opt({p}:{p?:string}={p:0}) {}
+                            ^ string
+
+defaults.js:76
+ 76: function obj_prop_maybe({p}:{p:?string}={p:0}) {}
+                              ^ number. This type is incompatible with
+ 76: function obj_prop_maybe({p}:{p:?string}={p:0}) {}
+                              ^ string
+
+defaults.js:77
+ 77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                              ^ boolean. This type is incompatible with
+ 77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                              ^ union: number | string
+  Member 1:
+   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                ^ number
+  Error:
+   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                ^ boolean. This type is incompatible with
+   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                ^ number
+  Member 2:
+   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                ^ string
+  Error:
+   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                ^ boolean. This type is incompatible with
+   77: function obj_prop_union({p}:{p:number|string}={p:true}) {}
+                                ^ string
+
+defaults.js:80
+ 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                               ^ boolean. This type is incompatible with
+ 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                               ^ number
+
+defaults.js:80
+ 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                               ^ number. This type is incompatible with
+ 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                               ^ string
+
+defaults.js:80
+ 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                               ^ string. This type is incompatible with
+ 80: function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}
+                               ^ number
 
 destructuring.js:4
   4: [{a1:a, b},c] = [{a1:0, b:1},2];
@@ -333,4 +385,4 @@ unannotated.js:8
        ^ object literal
 
 
-Found 55 errors
+Found 61 errors

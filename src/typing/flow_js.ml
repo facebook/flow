@@ -4535,6 +4535,7 @@ and eval_selector cx reason curr_t s i =
       | ObjRest xs -> ObjRestT(reason, xs, tvar)
       | ArrRest i -> ArrRestT(reason, i, tvar)
       | Default -> PredicateT (NotP VoidP, tvar)
+      | Become -> BecomeT (reason, tvar)
       )
     )
   | Some it ->
@@ -4553,7 +4554,8 @@ and subst_selector cx force map s = match s with
   | Prop _
   | ObjRest _
   | ArrRest _
-  | Default -> s
+  | Default
+  | Become -> s
 
 (* TODO: flesh this out *)
 and check_polarity cx polarity = function

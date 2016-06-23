@@ -113,10 +113,17 @@ let rec variable_decl cx type_params_map entry = Ast.Statement.(
     | (loc, _) as p ->
       let pattern_name = internal_pattern_name loc in
       let r = mk_reason (spf "%s _" str_of_kind) loc in
-      let t = type_of_pattern p |>
+      let typeAnnotation = type_of_pattern p in
+      let t = typeAnnotation |>
         Anno.mk_type_annotation cx type_params_map r in
       bind cx pattern_name t r;
       p |> destructuring cx t None None (fun cx loc name _default t ->
+        let t = match typeAnnotation with
+        | None -> t
+        | Some _ ->
+          let r = repos_reason loc r in
+          EvalT (t, DestructuringT (r, Become), mk_id())
+        in
         Hashtbl.replace (Context.type_table cx) loc t;
         bind cx name t r
       )
