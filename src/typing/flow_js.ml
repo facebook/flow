@@ -3905,7 +3905,7 @@ and flow_eq cx trace reason l r =
   | (_, _) when equatable (l, r) -> ()
   | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
 
-and string_contains_react = is_substring "React"
+and string_contains_react = String_utils.is_substring "React"
 
 and is_object_prototype_method = function
   | "hasOwnProperty"
@@ -5394,15 +5394,15 @@ and mk_union_reason r us =
   List.fold_left (fun reason t ->
     let rdesc = desc_of_reason reason in
     let tdesc = desc_of_reason (reason_of_t t) in
-    let udesc = if not (Utils.str_starts_with rdesc "union:")
+    let udesc = if not (String_utils.string_starts_with rdesc "union:")
       then spf "union: %s" tdesc
-      else if Utils.str_ends_with rdesc "..."
+      else if String_utils.string_ends_with rdesc "..."
       then rdesc
-      else if Utils.str_ends_with rdesc (tdesc ^ "(s)")
+      else if String_utils.string_ends_with rdesc (tdesc ^ "(s)")
       then rdesc
       else if String.length rdesc >= 256
       then spf "%s | ..." rdesc
-      else if Utils.str_ends_with rdesc tdesc
+      else if String_utils.string_ends_with rdesc tdesc
       then spf "%s(s)" rdesc
       else spf "%s | %s" rdesc tdesc
     in

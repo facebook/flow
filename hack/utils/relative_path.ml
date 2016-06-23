@@ -11,6 +11,7 @@
 open Core
 open Reordered_argument_collections
 open Utils
+open String_utils
 
 type prefix =
   | Root
@@ -38,7 +39,7 @@ let set_path_prefix prefix v =
   assert (String.length v > 0);
   (* Ensure that there is a trailing slash *)
   let v =
-    if str_ends_with v Filename.dir_sep then v
+    if string_ends_with v Filename.dir_sep then v
     else v ^ Filename.dir_sep
   in
   match prefix with
@@ -72,7 +73,7 @@ let to_absolute (p, rest) = path_of_prefix p ^ rest
 let create prefix s =
   let prefix_s = path_of_prefix prefix in
   let prefix_len = String.length prefix_s in
-  if not (str_starts_with s prefix_s)
+  if not (string_starts_with s prefix_s)
   then begin
     Printf.eprintf "%s is not a prefix of %s" prefix_s s;
     assert_false_log_backtrace ();

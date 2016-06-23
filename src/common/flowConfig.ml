@@ -446,7 +446,7 @@ let parse_options config lines =
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v ->
-        if Utils.str_ends_with v Files_js.flow_ext
+        if String_utils.string_ends_with v Files_js.flow_ext
         then raise (Opts.UserError (
           "Cannot use file extension '" ^
           v ^

@@ -385,7 +385,7 @@ let lstat path =
   (* WTF, on Windows `lstat` fails if a directory path ends with an
      '/' (or a '\', whatever) *)
   Unix.lstat @@
-  if Sys.win32 && Utils.str_ends_with path Filename.dir_sep then
+  if Sys.win32 && String_utils.string_ends_with path Filename.dir_sep then
     String.sub path 0 (String.length path - 1)
   else
     path

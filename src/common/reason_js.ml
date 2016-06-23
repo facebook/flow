@@ -20,6 +20,7 @@
    how convoluted the flow between them is. *)
 
 open Utils_js
+open String_utils
 module Ast = Spider_monkey_ast
 
 let mk_id () = Ident.make ""
@@ -211,7 +212,7 @@ let internal_module_name name =
   spf ".$module__%s" name
 
 let is_internal_module_name name =
-  Utils.str_starts_with name ".$module__"
+  string_starts_with name ".$module__"
 
 let internal_pattern_name loc =
   spf ".$pattern__%s" (string_of_loc loc)
@@ -220,7 +221,7 @@ let typeparam_prefix s =
   spf "type parameter%s" s
 
 let has_typeparam_prefix s =
-  Utils.str_starts_with s "type parameter"
+  string_starts_with s "type parameter"
 
 let thistype_desc = "`this` type"
 let existential_desc = "existential"
@@ -251,24 +252,13 @@ let is_instantiable_reason r =
    Then the types of Tags.ACTION_FOO and Tags.ACTION_BAR are assumed to be 0->1.
 *)
 let is_constant_property_reason =
-  let is_lowercase_char =
-    let a_code, z_code = Char.code 'a', Char.code 'z' in
-    fun chr ->
-      let code = Char.code chr in
-      a_code <= code && code <= z_code
-  in
-  let rec no_lowercase str i j =
-    if is_lowercase_char str.[i] then false
-    else if i = j then true
-    else no_lowercase str (i + 1) j
-  in
   let property_prefix = "property `" in
   let prop_start = String.length property_prefix + 1 in
   fun r ->
     let desc = desc_of_reason r in
-    Utils.str_starts_with desc property_prefix &&
+    string_starts_with desc property_prefix &&
       let prop_end = String.index_from desc prop_start '`' in
-      no_lowercase desc prop_start prop_end
+      is_not_lowercase desc prop_start prop_end
 
 let is_derivable_reason r =
   r.derivable
@@ -329,7 +319,7 @@ let strip_root_from_loc root loc = Loc.(
   | Some Builtins -> Some Builtins
   | Some LibFile file ->
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    if Utils.str_starts_with file root_str
+    if string_starts_with file root_str
     then Some (LibFile (spf "[LIB] %s" (Files_js.relative_path root_str file)))
     else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
 

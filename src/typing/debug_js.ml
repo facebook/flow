@@ -1206,7 +1206,7 @@ let string_of_file cx =
   | false -> filename
   | true ->
     let root_str = Path.to_string (Context.root cx) ^ Filename.dir_sep in
-    if Utils.str_starts_with filename root_str
+    if String_utils.string_starts_with filename root_str
       then Files_js.relative_path root_str filename
       else filename
 

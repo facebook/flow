@@ -9,7 +9,7 @@
  *)
 
 open Core
-open Utils
+open String_utils
 
 module Make(S : SearchUtils.Searchable) = struct
 
@@ -200,7 +200,7 @@ module Make(S : SearchUtils.Searchable) = struct
         (* Now we're comparing results in shared memory. These keys
          * have not been simplified, so we check if they start with
          * the full search term *)
-        if str_starts_with key str then begin
+        if string_starts_with key str then begin
           match filter_map str key res with
           | Some res ->
             results := res :: !results;
@@ -246,7 +246,7 @@ module Make(S : SearchUtils.Searchable) = struct
       let input = String.lowercase input in
       let compute_score str key res =
         let score =
-          if str_starts_with (String.lowercase res.name) str
+          if string_starts_with (String.lowercase res.name) str
           then get_score res str
           else (String.length key) * 2
         in
