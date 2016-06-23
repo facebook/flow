@@ -4866,10 +4866,20 @@ module.exports = {
         'import type from "MyModule"',
         'import type, {} from "MyModule"',
         'import type, * as namespace from "MyModule"',
+        'import {type} from "MyModule"',
+        'import {type as type} from "MyModule"',
 
         // Other pseudo keywords
         'import of from "MyModule"',
+        'import {of} from "MyModule"',
         'import declare from "MyModule"',
+        'import {declare} from "MyModule"',
+        'import async from "MyModule"',
+        'import {async} from "MyModule"',
+
+        'import {of as of} from "MyModule"',
+        'import {declare as declare} from "MyModule"',
+        'import {async as async} from "MyModule"',
       ],
     },
     'Import Type': {

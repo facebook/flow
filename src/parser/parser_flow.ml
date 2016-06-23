@@ -1782,7 +1782,14 @@ end = struct
       let lex_value = Peek.value env in
       let lex_loc = Peek.loc env in
       match lex_token with
-      | T_IDENTIFIER -> Parse.identifier env, None
+      (* Anything that is a special token in Flow but not in the ES6 spec
+         should be here. *)
+      | T_ASYNC
+      | T_DECLARE
+      | T_IDENTIFIER
+      | T_OF
+      | T_TYPE
+        -> Parse.identifier env, None
       | _ ->
         let err = match lex_token with
         | T_FUNCTION
@@ -1806,7 +1813,6 @@ end = struct
         | T_CASE
         | T_CATCH
         | T_CONTINUE
-        | T_DECLARE
         | T_DEFAULT
         | T_DO
         | T_FINALLY
@@ -1830,14 +1836,11 @@ end = struct
         | T_PROTECTED
         | T_PUBLIC
         | T_YIELD
-        | T_TYPE
-        | T_OF
         | T_ANY_TYPE
         | T_BOOLEAN_TYPE
         | T_NUMBER_TYPE
         | T_STRING_TYPE
         | T_VOID_TYPE
-        | T_ASYNC
         | T_AWAIT
         | T_DEBUGGER ->
             Some (lex_loc, get_unexpected_error (lex_token, lex_value))
