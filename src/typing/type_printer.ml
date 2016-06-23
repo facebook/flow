@@ -170,7 +170,7 @@ let rec type_printer override fallback enclosure cx t =
         let type_s = pp EnclosureNone cx t in
         begin match enclosure with
         | EnclosureParam | EnclosureProp -> type_s
-        | _ -> "void | " ^ type_s
+        | _ -> type_s ^ " | void"
         end
 
     (* The following types are not syntax-supported in all cases *)

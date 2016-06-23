@@ -26,6 +26,8 @@ intersection type. See lib: node.js:624
   function type. See lib: node.js:638
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
+                                                      ^ parameter `_`
+   13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                          ^^^^ parameter `data`
 
 fs/fs.js:24

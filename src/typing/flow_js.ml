@@ -737,9 +737,12 @@ module Cache = struct
         t
   end
 
+  let repos_cache = ref Repos_cache.empty
+
   let clear () =
     FlowConstraint.cache := TypePairSet.empty;
-    Hashtbl.clear PolyInstantiation.cache
+    Hashtbl.clear PolyInstantiation.cache;
+    repos_cache := Repos_cache.empty
 
   let stats () =
     Hashtbl.stats PolyInstantiation.cache
@@ -1221,6 +1224,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        using the stored reason. This can be used to store a reason as it flows
        through a tvar. *)
 
+    | (UnionT (r, rep), ReposUseT (reason, use_op, l)) ->
+      (* Don't reposition union members when the union appears as an upper
+         bound. This improves error messages when an incompatible lower bound
+         does not satisfy any member of the union. The "overall" error points to
+         the reposition target (an annotation) but the detailed member
+         information points to the type definition. *)
+      let u_def = UnionT (repos_reason (loc_of_reason reason) r, rep) in
+      rec_flow cx trace (l, UseT (use_op, u_def))
+
     | (u_def, ReposUseT (reason, use_op, l)) ->
       rec_flow cx trace (l, UseT (use_op, reposition cx reason u_def))
 
@@ -1672,6 +1684,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ((NullT _ | VoidT _), UseT (_, MaybeT _)) -> ()
 
+    | MaybeT _, ReposLowerT (reason_op, u) ->
+      (* Don't split the maybe type into its constituent members. Instead,
+         reposition the entire maybe type. *)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+
     | (MaybeT(t), _) ->
       let reason = reason_of_t t in
       rec_flow cx trace (NullT.why reason, u);
@@ -1685,6 +1702,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** The type optional(T) is the same as undefined | UseT *)
 
     | (VoidT _, UseT (_, OptionalT _)) -> ()
+
+    | OptionalT _, ReposLowerT (reason_op, u) ->
+      (* Don't split the optional type into its constituent members. Instead,
+         reposition the entire optional type. *)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
     | (OptionalT(t), _) ->
       let reason = reason_of_t t in
@@ -2055,6 +2077,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********************************)
     (* union and intersection types *)
     (********************************)
+
+    | UnionT _, ReposLowerT (reason_op, u) ->
+      (* Don't split the union type into its constituent members. Instead,
+         reposition the entire union type. *)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
     (* cases where there is no loss of precision *)
 
@@ -6855,13 +6882,19 @@ and reposition cx ?trace reason t =
     begin match constraints with
     | Resolved t -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
     | _ ->
-      let mk_tvar_where = if is_derivable_reason r
-        then mk_tvar_derivable_where
-        else mk_tvar_where
-      in
-      mk_tvar_where cx reason (fun tvar ->
-        flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
-      )
+      (* Try to re-use an already created repositioning tvar.
+         See repos_cache.ml for details. *)
+      match Repos_cache.find id reason !Cache.repos_cache with
+      | Some t -> t
+      | None ->
+        let mk_tvar_where = if is_derivable_reason r
+          then mk_tvar_derivable_where
+          else mk_tvar_where
+        in
+        mk_tvar_where cx reason (fun tvar ->
+          Cache.(repos_cache := Repos_cache.add reason t tvar !repos_cache);
+          flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
+        )
     end
   | EvalT _ ->
       (* Modifying the reason of `EvalT`, as we do for other types, is not
@@ -6873,7 +6906,16 @@ and reposition cx ?trace reason t =
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+  | MaybeT t ->
+      MaybeT (reposition cx ?trace reason t)
+  | OptionalT t ->
+      OptionalT (reposition cx ?trace reason t)
+  | UnionT (r, rep) ->
+      let r = repos_reason (loc_of_reason reason) r in
+      let rep = UnionRep.map (reposition cx ?trace reason) rep in
+      UnionT (r, rep)
+  | _ ->
+      mod_reason_of_t (repos_reason (loc_of_reason reason)) t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
