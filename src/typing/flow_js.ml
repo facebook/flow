@@ -3457,14 +3457,39 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
-    | (FunT (reason, statics, _, _) , UseT (_, ObjT _)) ->
-        let map = SMap.add "$call" l SMap.empty in
-        let function_proto = get_builtin_type cx reason "Function" in
-        let obj = mk_object_with_map_proto cx reason map function_proto in
-        let t = mk_tvar_where cx reason (fun t ->
-          rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
-        ) in
-        rec_flow cx trace (t, u)
+    | (FunT (reason, statics, _, _) ,
+       UseT (_, ObjT (reason_o, { props_tmap; _ }))) ->
+        (* TODO: This rule doesn't interact very well with union-type
+           checking. It looks up Function.prototype, which currently doesn't
+           appear structurally in the function type, and thus may not be fully
+           resolved when the function type is checked with a union containing
+           the object type. Ideally, we should either add Function.prototype to
+           function types or fully resolve them when resolving function types,
+           but either way we might bomb perf without additional work. Meanwhile,
+           we need an immediate fix for the common case where this bug shows
+           up. So leaving this comment here as a marker for future work, while
+           going with a band-aid solution for now, as motivated below.
+
+           Fortunately, it is quite hard for a function type to successfully
+           check against an object type, and even more unlikely when the latter
+           is part of a union: the object type must only contain
+           Function.prototype methods or statics. Quickly confirming that the
+           check would fail before looking up Function.prototype (while falling
+           back to the general rule when we cannot guarantee failure) is a safe
+           optimization in any case, and fixes the commonly observed case where
+           the union type contains both a function type and a object type as
+           members, clearly intending for function types to match the former
+           instead of the latter. *)
+        if not
+          (quick_error_fun_as_obj cx trace reason statics reason_o props_tmap)
+        then
+          let map = SMap.add "$call" l SMap.empty in
+          let function_proto = get_builtin_type cx reason "Function" in
+          let obj = mk_object_with_map_proto cx reason map function_proto in
+          let t = mk_tvar_where cx reason (fun t ->
+            rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
+          ) in
+          rec_flow cx trace (t, u)
 
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
@@ -3913,6 +3938,28 @@ and is_dictionary_exempt = function
   | x when is_object_prototype_method x -> true
   | "$call" -> true
   | _ -> false
+
+(* common case checking a function as an object *)
+and quick_error_fun_as_obj cx trace reason statics reason_o props_tmap =
+  let statics_own_props = match statics with
+    | ObjT (_, { props_tmap; _ }) -> Some (find_props cx props_tmap)
+    | AnyFunT _
+    | MixedT _ -> Some SMap.empty
+    | _ -> None
+  in
+  match statics_own_props with
+  | Some statics_own_props ->
+    let props_not_found = SMap.filter (fun x _ ->
+      not (x = "$call" || is_function_prototype x || SMap.mem x statics_own_props)
+    ) (find_props cx props_tmap) in
+    SMap.iter (fun x _ ->
+      flow_err_prop_not_found cx trace (
+        replace_reason (spf "property `%s`" x) reason_o,
+        reason
+      )
+    ) props_not_found;
+    not (SMap.is_empty props_not_found)
+  | None -> false
 
 (* only on use-types - guard calls with is_use t *)
 and err_operation = function
