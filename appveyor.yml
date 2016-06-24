@@ -1,4 +1,5 @@
 version: '{build}'
+clone_folder: C:\projects\flow
 os: Visual Studio 2015
 platform: x64
 environment:
