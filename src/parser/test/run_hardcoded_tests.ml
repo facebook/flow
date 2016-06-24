@@ -18,7 +18,8 @@ module RunHardcodedTests : sig
   val main : unit -> unit
 end = struct
 
-  let should_color = Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
+  let should_color =
+    Sys.os_type <> "Win32" && Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
 
   let print to_print =
     if should_color
