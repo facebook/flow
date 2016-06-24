@@ -20,11 +20,13 @@ async function findTestSuites(): Promise<Array<string>> {
   return testSuites.map(normalize);
 }
 
-export default async function(suites: ?Set<string>): Promise<{ [key: string]: Suite }> {
-  if (suites != null) {
-    // Make a copy before messing with it
-    suites = new Set(suites);
-    for (const suite of suites) {
+export default async function(suitesOrig: ?Set<string>): Promise<{ [key: string]: Suite }> {
+  let suites = null;
+  if (suitesOrig != null) {
+    suites = new Set();
+    for (let suite of suitesOrig) {
+      suite = normalize(suite.trim());
+      suites.add(suite);
       suites.add(resolve(suite));
     }
   }

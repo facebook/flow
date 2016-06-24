@@ -1,10 +1,10 @@
 /* @flow */
 
 import colors from 'colors/safe';
-import {basename, dirname, extname, join, relative} from 'path';
+import {basename, dirname, extname, join, normalize, relative} from 'path';
 import {format} from 'util';
 
-import {exec, mkdirp, ncp, readdir, readFile, rename, unlink, writeFile} from './../async';
+import {glob, mkdirp, ncp, readdir, readFile, rename, rimraf, unlink, writeFile} from './../async';
 import runRecord from '../record/recordRunner';
 import {testsDir, defaultFlowConfigName} from '../constants';
 
@@ -25,7 +25,6 @@ async function shouldConvert(source, log? = () => {}) {
   function isInteresting(file) {
     switch (file) {
       case '.testconfig':
-      case '.flowconfig':
       case basename(source)+".exp":
         return false;
       default:
@@ -38,7 +37,11 @@ async function shouldConvert(source, log? = () => {}) {
       .filter(isInteresting)
       .length;
 
-  return interesting_file_count > 0;
+  if (interesting_file_count == 0) {
+    log("Legacy test doesn't have any interesting files");
+    return false;
+  }
+  return true;
 }
 
 async function convert(
@@ -50,11 +53,11 @@ async function convert(
     console.log("[%s]\t\t%s", source, format(...args));
   }
 
-  const suiteName = join("legacy/", basename(source));
+  const suiteName = join("legacy", basename(source));
   const dest = join(testsDir, suiteName);
 
   log("Removing directory `%s`", dest);
-  await exec(format("rm -rf %s", dest));
+  await rimraf(dest);
   log("Converting test to `%s`", dest);
 
   const goodToGo = await shouldConvert(source, log);
@@ -76,17 +79,10 @@ async function convert(
     return;
   }
 
-  const flow_files_stdout = await exec(
-    format(
-      'find %s -type f',
-      dest,
-    ),
-    {cwd: __dirname},
+  const flow_files = await glob(
+    format("%s/**/*", dest),
+    { cwd: __dirname, nodir: true, dot: true },
   );
-  const flow_files = flow_files_stdout
-    .trim()
-    .split("\n")
-    .filter(file => file != "");
 
   const converted_files = [];
   for (const file of flow_files) {
@@ -94,10 +90,9 @@ async function convert(
     await writeFile(
       file,
       fileContents
-        .toString()
         .replace(/@flow/, "@thisWillBeFlowInTest")
-        .replace(/\/test(['"])/, "/legacy_test$1")
-        .replace(/\/test\.js/, "/legacy_test.js"),
+        .replace(/[\/\\]test(['"])/g, "/legacy_test$1")
+        .replace(/[\/\\]test\.js/, "/legacy_test.js"),
     );
 
     if (basename(file) == "test.js") {
@@ -124,15 +119,10 @@ async function convert(
     }
   }
 
-  if (converted_files.length == 0) {
-    log("Skipping empty test");
-    return;
-  }
-
   let file_list = converted_files
     .sort()
-    .map(file => format("'%s'", file))
-    .join(",\n      ");
+    .map(file => format("'%s',", file.replace(/\\/g, '/')))
+    .join("\n      ");
 
   await writeFile(join(dest, "test.js"),
 `/* @flow */
@@ -141,7 +131,7 @@ import {suite, test} from '../../../tsrc/test/Tester';
 export default suite(({addFiles}) => [
   test('legacy test', [
     addFiles(
-      ${file_list},
+      ${file_list}
     ).noNewErrors(),
   ]),
 ]);
@@ -164,7 +154,7 @@ async function sanityCheck(sourceToSuiteMap) {
       skipped++;
       continue;
     }
-    const expfile = join(source, suiteName.replace(/legacy\/(.*)/, "$1.exp"));
+    const expfile = join(source, suiteName.replace(/legacy[\/\\](.*)/, "$1.exp"));
     const [exp, testFileContentsBuffer] = await Promise.all([
       readFile(expfile),
       readFile(join(testsDir, suiteName, "test.js")),
@@ -221,9 +211,11 @@ async function sanityCheck(sourceToSuiteMap) {
 export default async function(args: Args): Promise<void> {
   const sourceToSuiteMap = {};
 
+  const dirs = Array.from(args.dirs).map(dir => normalize(dir.trim()));
+
   if (!args.sanity) {
     const converted: Array<?string> = await Promise.all(
-      Array.from(args.dirs).map(convert.bind(null, sourceToSuiteMap))
+      dirs.map(convert.bind(null, sourceToSuiteMap))
     );
     const suites = new Set(converted.filter(suiteName => suiteName != null));
 
@@ -236,9 +228,9 @@ export default async function(args: Args): Promise<void> {
   } else {
     // Fake like we generate the tests
     console.log("Skipping straight to the sanity check due to `--sanity` flag");
-    for (const source of args.dirs) {
+    for (const source of dirs) {
       const goodToGo = await shouldConvert(source);
-      sourceToSuiteMap[source] = goodToGo ? join("legacy/", basename(source)) : null;
+      sourceToSuiteMap[source] = goodToGo ? join("legacy", basename(source)) : null;
     }
   }
 
