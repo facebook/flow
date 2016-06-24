@@ -320,12 +320,12 @@ let server_flags prev = CommandSpec.ArgSpec.(
 let ignores_of_arg root patterns extras =
   let patterns = List.rev_append extras patterns in
   List.map (fun s ->
-    let root = Path.to_string root in
-    let reg = s
-      (* On Windows, we have to take care about '\'. *)
-      |> Str.global_replace (Str.regexp "/") "[/\\]"
-      |> Str.global_replace (FlowConfig.project_root_token) root
-      |> Str.regexp in
+   let root = Path.to_string root
+     |> Sys_utils.normalize_filename_dir_sep in
+   let reg = s
+     |> Str.split_delim FlowConfig.project_root_token
+     |> String.concat root
+     |> Str.regexp in
     (s, reg)
   ) patterns
 

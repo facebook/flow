@@ -46,19 +46,6 @@ type info = {
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
-let replace_name_mapper_template_tokens =
-  let project_root_token = FlowConfig.project_root_token in
-
-  (* Escape things like \1 and \2 which are interpreted as special references
-   * in a template. So \1 will become \\1 *)
-  let escape_template =
-    Str.global_replace (Str.regexp "\\\\[0-9]+") "\\\\\\0" in
-
-  fun opts template ->
-    let root_path = escape_template (Path.to_string (Options.root opts)) in
-    Str.global_replace project_root_token root_path template
-
-
 let choose_provider_and_warn_about_duplicates =
   let is_flow_ext file = Loc.check_suffix file Files_js.flow_ext in
 
@@ -109,9 +96,18 @@ let module_name_candidates ~options name =
     Hashtbl.find module_name_candidates_cache name
   ) else (
     let mappers = Options.module_name_mappers options in
+    let root = Options.root options
+      |> Path.to_string
+      |> Sys_utils.normalize_filename_dir_sep in
     let map_name mapped_names (regexp, template) =
-      let template = replace_name_mapper_template_tokens options template in
-      let new_name = Str.global_replace regexp template name in
+      let new_name = name
+        (* First we apply the mapper *)
+        |> Str.global_replace regexp template
+        (* Then we replace the PROJECT_ROOT placeholder. This works like
+         * Str.global_replace except it ignores things that look like
+         * backreferences, like \1 *)
+        |> Str.split_delim FlowConfig.project_root_token
+        |> String.concat root in
       if new_name = name then mapped_names else new_name::mapped_names
     in
     let mapped_names = List.rev (name::(List.fold_left map_name [] mappers)) in

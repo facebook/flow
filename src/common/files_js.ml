@@ -222,7 +222,11 @@ let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:\\)"
 (* true if a file path matches an [ignore] entry in config *)
 let is_ignored options =
   let list = List.map snd (Options.ignores options) in
-  fun path -> List.exists (fun rx -> Str.string_match rx path 0) list
+  fun path ->
+    (* On Windows, the path may use \ instead of /, but let's standardize the
+     * ignore regex to use / *)
+    let path = Sys_utils.normalize_filename_dir_sep path in
+    List.exists (fun rx -> Str.string_match rx path 0) list
 
 (* true if a file path matches an [include] path in config *)
 let is_included options f = Path_matcher.matches (Options.includes options) f

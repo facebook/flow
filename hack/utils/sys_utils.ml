@@ -389,3 +389,7 @@ let lstat path =
     String.sub path 0 (String.length path - 1)
   else
     path
+
+let normalize_filename_dir_sep =
+  let dir_sep_char = String.get Filename.dir_sep 0 in
+  String.map (fun c -> if c = dir_sep_char then '/' else c)

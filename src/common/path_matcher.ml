@@ -53,7 +53,9 @@ let path_patt =
     let results = Str.full_split star2 str in
     let results = List.map (fun r -> match r with
       | Str.Text s ->
-          (* note: unix path specifiers only *)
+          (* note: unix directory seperators specifiers only. Windows directory
+           * seperators will already have been normalized to unix directory
+           * seperators *)
           let s = Str.global_replace star "[^/]*" s in
           Str.global_replace qmark "." s
       | Str.Delim _ -> ".*") results in
