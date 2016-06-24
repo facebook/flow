@@ -12,6 +12,8 @@ import {
 } from 'fs';
 import {ncp as ncp_ncp} from 'ncp';
 import {format} from 'util';
+import {glob as glob_glob} from 'glob';
+import mkdirp_mkdirp from 'mkdirp';
 
 export function exec(cmd: string, options?: Object): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -19,11 +21,6 @@ export function exec(cmd: string, options?: Object): Promise<string> {
       if (err == null) {
         resolve(stdout.toString());
       } else {
-        console.log("exec failed!");
-        console.log("cmd:", cmd);
-        console.log("err:", err);
-        console.log("stdout:", stdout);
-        console.log("stderr:", stderr);
         reject(err, stdout, stderr);
       }
     })
@@ -109,8 +106,16 @@ export function unlink(file: string): Promise<void> {
   });
 }
 
-export async function mkdirp(dir: string): Promise<void> {
-  await exec(format("mkdir -p %s", dir));
+export function mkdirp(dir: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    mkdirp_mkdirp(dir, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 type NCPOptions = {
@@ -142,5 +147,25 @@ export function drain(writer: stream$Writable | tty$WriteStream): Promise<void> 
 export function exists(path: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     fs_exists(path, resolve);
+  });
+}
+
+type GlobOptions = {
+  cwd?: string,
+  nodir?: boolean,
+  dot?: boolean,
+};
+export function glob(
+  pattern: string,
+  options: GlobOptions,
+): Promise<Array<string>> {
+  return new Promise((resolve, reject) => {
+    glob_glob(pattern, options, (err, files) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(files);
+      }
+    });
   });
 }

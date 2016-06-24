@@ -3,7 +3,7 @@
 import {format} from 'util';
 import {basename, join, relative, resolve} from 'path';
 
-import {exec} from './../async';
+import {glob} from './../async';
 
 type Command = {
   name: string,
@@ -12,11 +12,7 @@ type Command = {
 
 export default async function(cwd: string): Promise<Map<string, string>> {
   const root = join(".", relative(cwd, join(__dirname, "..")));
-  const stdout = await exec(
-    format('find -H %s -name "*Command.js"', root),
-    {cwd},
-  );
-  const commands = stdout.trim().split("\n");
+  const commands = await glob(format("%s/**/*Command.js", root), {cwd});
 
   const commandMap = new Map();
   for (const command of commands) {

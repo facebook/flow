@@ -3,7 +3,7 @@
 import {execSync} from 'child_process';
 import {randomBytes} from 'crypto';
 import {tmpdir} from 'os';
-import {basename, dirname, extname, join} from 'path';
+import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
 
 import {appendFile, exec, execManual, mkdirp, readdir, readFile, writeFile} from '../async';
@@ -54,6 +54,10 @@ export class TestBuilder {
     return join(this.dir, 'test.js');
   }
 
+  normalizeForFlowconfig(path) {
+    return path.split(dir_sep).join('/');
+  }
+
   async createFreshDir(): Promise<void> {
     await mkdirp(this.dir);
     await mkdirp(this.tmpDir);
@@ -84,7 +88,11 @@ export class TestBuilder {
           config.push("[options]");
           options_index = config.length - 1;
         }
-        config.splice(options_index + 1, 0, "temp_dir=" + this.tmpDir);
+        config.splice(
+          options_index + 1,
+          0,
+          "temp_dir=" + this.normalizeForFlowconfig(this.tmpDir),
+        );
       } else {
         this.tmpDir = temp_dir;
       }

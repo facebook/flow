@@ -1,23 +1,23 @@
 /* @flow */
 
-import { dirname, relative, resolve } from 'path';
+import { dirname, normalize, relative, resolve } from 'path';
 import { format } from 'util';
 
-import { exec } from '../async';
+import { glob } from '../async';
 import Suite from './Suite';
 import {testsDir} from '../constants';
 
 import type {Tests} from './Tester';
 
-const testSuiteRegex = /(.*)\/test.js/;
+const testSuiteRegex = /(.*)[\/\\]test.js/;
 
 async function findTestSuites(): Promise<Array<string>> {
-  const cmd = format(
-    'find -H %s -name "test.js"',
-    testsDir,
+  const testSuites = await glob(
+    format("%s/**/test.js", testsDir),
+    {cwd: __dirname},
   );
-  const stdout = await exec(cmd, {cwd: __dirname});
-  return stdout.trim().split("\n");
+  // On Windows, glob still uses unix dir seperators, so we need to normalize
+  return testSuites.map(normalize);
 }
 
 export default async function(suites: ?Set<string>): Promise<{ [key: string]: Suite }> {

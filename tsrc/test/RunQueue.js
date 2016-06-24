@@ -45,7 +45,7 @@ export default class RunQueue {
     this.parallelism = parallelism;
     this.isFbmakeJson = isFbmakeJson;
     this.fbmakeJsonResults = [];
-    this.isTTY = !isFbmakeJson && process.stdout.isTTY && true;
+    this.isTTY = !isFbmakeJson && process.stdout.isTTY && process.platform !== "win32";
     this.bin = bin;
     this.builder = builder;
     this.results = {};
