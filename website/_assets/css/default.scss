@@ -180,7 +180,8 @@ header:after,
 section.content:after,
 footer:after,
 section.marketing-row:after,
-div.getting-started:after {
+div.getting-started:after,
+.docs-prevnext:after {
     clear: both;
     content: ".";
     display: block;
@@ -373,24 +374,11 @@ section.content aside .fb-like {
 }
 
 .edit-page-block {
-    display: table;
-    width: 100%;
-}
-
-.edit-page-block > * {
-    display: table-cell;
-}
-
-.edit-page-link {
-    text-align: right;
+    padding: 5px;
     font-size: 12px;
-    opacity: 0.6;
-    transition: opacity 0.5s;
-    vertical-align: middle;
-}
-
-.edit-page-link:hover {
-    opacity: 1;
+    color: #887766;
+    text-align: center;
+    background-color: #FCF5E0;
 }
 
 nav.toc {
@@ -449,11 +437,11 @@ body.home footer a {
   color: #999;
 }
 
-.right {
+.docs-prevnext .right {
     float: right;
 }
 
-.right a {
+.docs-prevnext .right a {
     color: #cd4e34;
     padding: 0 5px;
 }
