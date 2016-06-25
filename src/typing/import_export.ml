@@ -51,10 +51,14 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
 let get_module_t cx m reason =
-  match SMap.get m (Context.module_map cx) with
-  | Some t -> t
-  | None ->
+  match Context.declare_module_t cx with
+  | None -> (
+    match SMap.get m (Context.module_map cx) with
+    | Some t -> t
+    | None ->
       Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
+    )
+  | Some t -> t
 
 let require cx m_name loc =
   Context.add_require cx m_name loc;
@@ -93,8 +97,13 @@ let exports cx =
   get_module_t cx m (Reason_js.mk_reason "exports" loc)
 
 let set_module_t cx reason f =
-  let module_name = Modulename.to_string (Context.module_name cx) in
-  Context.add_module cx module_name (Flow.mk_tvar_where cx reason f)
+  match Context.declare_module_t cx with
+  | None -> (
+    let module_name = Modulename.to_string (Context.module_name cx) in
+    Context.add_module cx module_name (Flow.mk_tvar_where cx reason f)
+  )
+  | Some _ ->
+    Context.set_declare_module_t cx (Some (Flow.mk_tvar_where cx reason f))
 
 (**
  * Before running inference, we assume that we're dealing with a CommonJS

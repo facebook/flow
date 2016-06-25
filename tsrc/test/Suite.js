@@ -3,18 +3,18 @@
 import type {Tests, Steps} from './Tester';
 
 export default class Suite {
-  beforeEach: Steps;
+  getBeforeEach: Steps;
   tags: Array<string>;
   tests: Tests;
 
   constructor(tests: Tests) {
     this.tests = tests;
     this.tags = [];
-    this.beforeEach = () => [];
+    this.getBeforeEach = () => [];
   }
 
   beforeEach(steps: Steps): this {
-    this.beforeEach = steps;
+    this.getBeforeEach = steps;
     return this;
   }
 

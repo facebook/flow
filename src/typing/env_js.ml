@@ -755,18 +755,9 @@ let get_var_declared_type ?(lookup_mode=ForValue) =
   read_entry ~lookup_mode ~specific:false
 
 (* get var type, with location of given reason used in type's reason *)
-(* Note that we reach into UnionT here, specifically to handle unions
-   returned from value_entry_types for MaybeInitialized entries. Should
-   probably be the standard action of ReposLowerT, at which point this
-   can be removed. TODO
- *)
 let var_ref ?(lookup_mode=ForValue) cx name reason =
-  let repos = Flow_js.reposition cx reason in
-  match get_var ~lookup_mode cx name reason with
-  | UnionT (r, rep) ->
-    let ts = UnionRep.members rep in
-    repos (UnionT (r, UnionRep.make (List.map repos ts)))
-  | t -> repos t
+  let t = get_var ~lookup_mode cx name reason in
+  Flow_js.reposition cx reason t
 
 (* get refinement entry *)
 let get_refinement cx key reason =

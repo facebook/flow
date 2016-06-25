@@ -70,6 +70,7 @@ module Opts = struct
     shm_min_avail: int;
     shm_dep_table_pow: int;
     shm_hash_table_pow: int;
+    shm_log_level: int;
     version: string option;
   }
 
@@ -148,6 +149,7 @@ module Opts = struct
     shm_min_avail = default_shm_min_avail;
     shm_dep_table_pow = 17;
     shm_hash_table_pow = 19;
+    shm_log_level = 0;
     version = None;
   }
 
@@ -444,7 +446,7 @@ let parse_options config lines =
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v ->
-        if Utils.str_ends_with v Files_js.flow_ext
+        if String_utils.string_ends_with v Files_js.flow_ext
         then raise (Opts.UserError (
           "Cannot use file extension '" ^
           v ^
@@ -634,6 +636,15 @@ let parse_options config lines =
       optparser = optparse_uint;
       setter = (fun opts shm_hash_table_pow -> {
         opts with shm_hash_table_pow;
+      });
+    }
+
+    |> define_opt "sharedmemory.log_level" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts shm_log_level -> {
+        opts with shm_log_level;
       });
     }
 

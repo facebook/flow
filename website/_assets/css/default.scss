@@ -14,7 +14,6 @@
 html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    background-color: #fdfdfb;
 }
 
 body {
@@ -71,23 +70,15 @@ p, ul, ol {
     margin:  0 0 1em 0;
 }
 
-.wrap {
-    width: 960px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 20px;
-    padding-right: 20px
+.marketing-row {
+  padding: 10px 0;
+  margin: 30px 0;
 }
-
-.subhero .wrap {
-    width: auto;
-    max-width: 960px;
+.marketing-row .width {
+  max-width: 700px;
 }
-
-.home-section {
-    width: 500px;
-    margin-left: auto;
-    margin-right: auto;
+.marketing-row a {
+  color: #aaa;
 }
 
 div.highlighter-rouge,
@@ -184,7 +175,12 @@ a.hash-link:hover {
     padding: 0 20px;
 }
 
-header:after, section.content:after, footer:after {
+header:after,
+section.content:after,
+footer:after,
+section.marketing-row:after,
+div.getting-started:after,
+.docs-prevnext:after {
     clear: both;
     content: ".";
     display: block;
@@ -195,7 +191,7 @@ header:after, section.content:after, footer:after {
 }
 
 header.topbar {
-    background: #353331;
+    background: #222;
     color: #EEE;
     position: fixed;
     top: 0;
@@ -251,12 +247,12 @@ header.topbar nav ul li a {
 header.topbar nav ul li a.active {
     color: #FFF;
     border-bottom: 3px solid #FBE178;
-    background: #333;
+    background: #222;
 }
 
 header.topbar nav ul li a:hover {
     background: #FBE178;
-    color: #353331;
+    color: #222;
 }
 
 header.hero {
@@ -265,6 +261,12 @@ header.hero {
 
 header.hero .width {
     text-align: center;
+}
+
+header.hero.main {
+  background: #363d42;
+  color: #ebebed;
+  padding: 40px 0;
 }
 
 header.hero h1 {
@@ -306,13 +308,8 @@ header.hero a.sub-header-link:last-child {
 }
 
 
-header.subhero {
-    padding: 10px 0;
-    padding-top: 30px;
-}
-
 section.content {
-    padding: 30px 0;
+    margin: 30px 0;
 }
 
 section.content article ul li,
@@ -376,24 +373,11 @@ section.content aside .fb-like {
 }
 
 .edit-page-block {
-    display: table;
-    width: 100%;
-}
-
-.edit-page-block > * {
-    display: table-cell;
-}
-
-.edit-page-link {
-    text-align: right;
+    padding: 5px;
     font-size: 12px;
-    opacity: 0.6;
-    transition: opacity 0.5s;
-    vertical-align: middle;
-}
-
-.edit-page-link:hover {
-    opacity: 1;
+    color: #887766;
+    text-align: center;
+    background-color: #FCF5E0;
 }
 
 nav.toc {
@@ -428,17 +412,35 @@ nav.toc ul li {
 }
 
 footer {
-    padding: 5px 0;
-    padding-bottom: 10px;
+    padding: 5px 0 10px 0;
     font-size: 13px;
     text-align: right;
 }
 
-.right {
+body.home footer {
+    background: #363d42;
+    padding: 20px 0;
+    text-align: left;
+    color: #ebebed;
+}
+body.home footer .oss_logo {
+    float: left;
+}
+body.home footer .oss_logo img {
+    height: 45px;
+}
+body.home footer .copyright {
+  text-align: right;
+}
+body.home footer a {
+  color: #999;
+}
+
+.docs-prevnext .right {
     float: right;
 }
 
-.right a {
+.docs-prevnext .right a {
     color: #cd4e34;
     padding: 0 5px;
 }
@@ -505,6 +507,64 @@ div.CodeMirror-lines {
     left: 0;
 }
 
+.code-sample {
+  position: relative;
+}
+
+.code-sample .hide,
+.code-sample .show {
+  position: absolute;
+  right: 0;
+  margin-top: -50px;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 5px 7px;
+  color: rgba(214, 139, 0, 0.75); /* #d68b00 @ 75% */
+}
+
+.code-sample:hover .hide,
+.code-sample:hover .show {
+  color: #d68b00;
+}
+
+.code-sample .hide:hover,
+.code-sample .show:hover {
+  color: #CC2E39;
+}
+
+
+/* by default, always show errors */
+.code-sample .show,
+.code-sample .hide,
+.code-sample.shown .hide {
+  display: none;
+}
+.code-sample .language-bash,
+.code-sample .language-text {
+  display: block;
+}
+
+/* on devices that can hover (so the inline errors are useful), hide the
+   cli output by default */
+@media (hover) {
+  .code-sample.shown .hide,
+  .code-sample .show {
+    display: inline;
+  }
+
+  .code-sample.shown .show,
+  .code-sample .hide,
+  .code-sample .language-bash,
+  .code-sample .language-text {
+    display: none;
+  }
+
+  .code-sample.shown .language-bash,
+  .code-sample.shown .language-text {
+    display: block;
+  }
+}
+
 
 #\_ {
     display: block;
@@ -548,7 +608,8 @@ div.CodeMirror-lines {
         padding: 0;
     }
 
-    .content .width {
+    .content .width,
+    .marketing-row .width {
       padding: 0 15px;
     }
 
@@ -566,10 +627,9 @@ div.CodeMirror-lines {
 
 /* small tablet/landscape phone */
 @media (min-width: 481px) {
-    .wrap, .content .width, .home-section, section.content article {
+    .wrap, .content .width, section.content article {
         width: auto;
         max-width: 100%;
-        overflow-x: scroll;
     }
 
     section.content article blockquote {
@@ -578,6 +638,9 @@ div.CodeMirror-lines {
 
     body {
         padding-bottom: 20px;
+    }
+    body.home {
+        padding-bottom: 0;
     }
 }
 
@@ -620,6 +683,22 @@ div.CodeMirror-lines {
 
     #\_ {
         display: none;
+    }
+}
+
+@media (min-width: 960px) {
+    .marketing-row .width {
+      padding: 0;
+      width: 960px;
+      max-width: 960px;
+    }
+    .marketing-row .col {
+      float: left;
+      width: 280px;
+      margin-left: 40px;
+    }
+    .marketing-row .col.first {
+      margin-left: 0;
     }
 }
 
@@ -676,7 +755,7 @@ input#algolia-doc-search:focus {
 
 .algolia-docsearch-suggestion--category-header {
     background-color: #FBE178;
-    color: #353331;
+    color: #222;
 }
 
 .algolia-docsearch-suggestion--highlight {

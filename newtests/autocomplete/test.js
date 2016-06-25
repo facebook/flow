@@ -1766,7 +1766,7 @@ valueOf () => Object
     },
     {
       "name": "x",
-      "type": "void | string",
+      "type": "string | void",
       "func_details": null,
       "path": "optional.js",
       "line": 3,

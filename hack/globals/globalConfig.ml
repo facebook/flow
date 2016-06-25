@@ -32,7 +32,7 @@ let tmp_dir =
     Sys.getenv "HH_TMPDIR"
   with _ ->
     Path.to_string @@
-    Path.concat Path.temp_dir_name "hh_server"
+    Path.concat (Path.make Sys_utils.temp_dir_name) "hh_server"
 
 let shm_dir =
   try Sys.getenv "HH_SHMDIR"

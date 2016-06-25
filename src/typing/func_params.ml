@@ -47,12 +47,19 @@ let mk cx type_params_map func =
           defaults = SMap.add name (Default.Expr expr) params.defaults })
     | loc, _ ->
       let reason = mk_reason "destructuring" loc in
-      let t = type_of_pattern pattern
+      let typeAnnotation = type_of_pattern pattern in
+      let t = typeAnnotation
         |> Anno.mk_type_annotation cx type_params_map reason in
       let default = Option.map default Default.expr in
       let bindings = ref [] in
       let defaults = ref params.defaults in
       pattern |> destructuring cx t None default (fun _ loc name default t ->
+        let t = match typeAnnotation with
+        | None -> t
+        | Some _ ->
+          let reason = repos_reason loc reason in
+          EvalT (t, DestructuringT (reason, Become), mk_id())
+        in
         Hashtbl.replace (Context.type_table cx) loc t;
         bindings := (name, t, loc) :: !bindings;
         Option.iter default ~f:(fun default ->

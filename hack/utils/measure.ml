@@ -239,6 +239,15 @@ let time (type a) ?record name (f: unit -> a) : a =
   sample ~record name (end_time -. start_time);
   ret
 
+let pretty_num f =
+  if f > 1000000000.0
+  then Printf.sprintf "%.3fG" (f /. 1000000000.0)
+  else if f > 1000000.0
+  then Printf.sprintf "%.3fM" (f /. 1000000.0)
+  else if f > 1000.0
+  then Printf.sprintf "%.3fK" (f /. 1000.0)
+  else Printf.sprintf "%d" (int_of_float f)
+
 let print_entry_stats ?record name =
   let record = get_record record in
   Printf.eprintf "%s stats -- " name;
@@ -249,8 +258,9 @@ let print_entry_stats ?record name =
       let total = (float count) *. mean in
       let std_dev = sqrt (variance_sum /. (float count)) in
       Utils.prerr_endlinef
-        "samples: %d, total: %f, avg: %f, stddev: %f, max: %f, min: %f)"
-        count total mean std_dev max min
+        "samples: %s, total: %s, avg: %s, stddev: %s, max: %s, min: %s)"
+        (pretty_num (float count)) (pretty_num total) (pretty_num mean)
+        (pretty_num std_dev) (pretty_num max) (pretty_num min)
 
 let print_stats ?record () =
   let record = get_record record in

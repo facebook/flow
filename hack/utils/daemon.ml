@@ -100,7 +100,7 @@ end = struct
     let file, oc =
       Filename.open_temp_file
         ~mode:[Open_binary]
-        ~temp_dir:(Path.to_string Path.temp_dir_name)
+        ~temp_dir:Sys_utils.temp_dir_name
         "daemon_param" ".bin" in
     output_value oc data;
     close_out oc;
@@ -144,15 +144,13 @@ let exec entry param ic oc =
 
 let register_entry_point = Entry.register
 
-let null_path = Path.to_string Path.null_path
-
 let fd_of_path path =
   Sys_utils.with_umask 0o111 begin fun () ->
     Sys_utils.mkdir_no_fail (Filename.dirname path);
     Unix.openfile path [Unix.O_RDWR; Unix.O_CREAT; Unix.O_TRUNC] 0o666
   end
 
-let null_fd () = fd_of_path null_path
+let null_fd () = fd_of_path Sys_utils.null_path
 
 let setup_channels channel_mode =
   match channel_mode with

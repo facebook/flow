@@ -55,15 +55,18 @@ hello.js:7
 Looking at the `hello.js` example file, it's easy to see why:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
+(function() { // $DocHide
 function foo(x) {
   return x * 10;
 }
 
 // $ExpectError
 foo('Hello, world!');
+}); // $DocHide
 
 /*
   We're calling a function with a string, when that function clearly expects a
@@ -74,12 +77,14 @@ foo('Hello, world!');
 // $WithLineNums
 // @flow
 
+(function() { // $DocHide
 function foo(x) {
   return x * 10;
 }
 
 // This is fine, because we're passing a number now
 foo(10);
+}); // $DocHide
 
 /*
   Throughout this tutorial, you will find solutions for each example in the
@@ -107,16 +112,19 @@ foo(10);
   annotations in Flow:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
+(function() { // $DocHide
 function foo(x: string, y: number): string {
   // $ExpectError
   return x.length * y;
 }
 
-// $ExpectError
 foo('Hello', 42);
+}); // $DocHide
+
 /*
   Here we have annotated the `foo` function to say that it's two parameters are
   of type `string` and `number` and that it returns a `string`.
@@ -126,7 +134,7 @@ foo('Hello', 42);
   ```text
   type_annotations.js:4
     4:   return x.length * y;
-                ^^^^^^^^^^^^ number. This type is incompatible with
+                ^^^^^^^^^^^^ number. This type is incompatible with the expected return type of
     3: function foo(x: string, y: number): string {
                                            ^^^^^^ string
   ```
@@ -141,12 +149,15 @@ foo('Hello', 42);
 // $WithLineNums
 // @flow
 
+(function() { // $DocHide
 // Changing the return type to number fixes the error
 function foo(x: string, y: number): number {
   return x.length * y;
 }
 
 foo('Hello', 42);
+}); // $DocHide
+
 /*
 
 ## 3. Nullable types
@@ -158,6 +169,7 @@ foo('Hello', 42);
   error as shown by our third example (`03_Null`):
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
@@ -202,7 +214,7 @@ function length(x) {
 }
 
 var total = length('Hello') + length(null);
-}) // $DocHide
+}); // $DocHide
 /*
 
   Because we've checked that `x` is not `null`, Flow knows that this code is
@@ -215,6 +227,7 @@ var total = length('Hello') + length(null);
   arrays:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
@@ -268,6 +281,7 @@ total([1, 2, 3, 4]);
   In our final example, `05_DynamicCode`, we haven't annotated the function, but we are passing in two different types of arguments:
 
 */
+// $NoCliOutput
 // $WithLineNums
 // @flow
 
@@ -278,7 +292,7 @@ function foo(x) {
 }
 
 var res = foo('Hello') + foo(42);
-}) // $DocHide
+}); // $DocHide
 
 /*
 
@@ -286,8 +300,6 @@ var res = foo('Hello') + foo(42);
 
   ```text
   dynamic.js:4
-    4:   return x.length;
-                ^^^^^^^^ property `length`
     4:   return x.length;
                   ^^^^^^ property `length`. Property not found in
     4:   return x.length;
@@ -311,7 +323,7 @@ function foo(x) {
 }
 
 var res = foo('Hello') + foo(42);
-}) // $DocHide
+}); // $DocHide
 /*
 
   Flow is smart enough to detect that this conditional check is sufficient to

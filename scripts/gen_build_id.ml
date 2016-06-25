@@ -10,6 +10,17 @@
 
 #use "utils.ml"
 
+(**
+ * Computes some build identifiers based on the current commit. These IDs are
+ * used to ensure that clients and servers are the same version, even between
+ * releases. For example, if you build revision A and start a server, then check
+ * out and build revision B, it's convenient for the server to restart itself
+ * using revision B.
+ *
+ * This fails gracefully when neither hg nor git are installed, or when neither
+ * .hg nor .git exist (e.g. when building from a tarball). This is fine because
+ * you can't move between commits in such a snapshot.
+ *)
 let () =
   let out_file = Sys.argv.(1) in
   let rev =

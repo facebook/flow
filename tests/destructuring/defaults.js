@@ -40,21 +40,22 @@ obj_rest({p:{}}); // ok
 obj_rest({p:{q:0,r:null}});
 
 function obj_prop_annot({
-  p = true // TODO error: boolean ~> string
+  p = true // error: boolean ~> string
 }: {
   p: string
 } = {
-  p: 0 // TODO error: number ~> string
+  p: 0 // error: number ~> string
 }) {
   (p:void); // error: string ~> void
 }
 
 var {
-  p = true // TODO error: boolean ~> string
+  p = true // error: boolean ~> string
 }: {
   p: string
 } = {
-  p: 0}; // error: number ~> string
+  p: 0 // error: number ~> string
+};
 (p:void); // error: string ~> void
 
 function obj_prop_err({x:{y}}=null) {} // error: property `x` cannot be accessed on null
@@ -69,3 +70,11 @@ function gen<T>(x:T,{p=x}:{p:T}):T {
 // Default values in destructuring unwrap optional types
 obj_prop_fun(({} : {p?:{q?:null}})); // ok
 obj_prop_var(({} : {p?:{q?:null}})); // ok
+
+// union-like upper bounds preserved through destructuring
+function obj_prop_opt({p}:{p?:string}={p:0}) {}
+function obj_prop_maybe({p}:{p:?string}={p:0}) {}
+function obj_prop_union({p}:{p:number|string}={p:true}) {}
+
+// TODO: union-of-objects upper bounds preserved through destructuring
+function obj_prop_union2({p}:{p:number}|{p:string}={p:true}) {}

@@ -680,8 +680,11 @@ and json_of_selector_impl json_cx = Hh_json.(function
       "index", JSON_Number (string_of_int i);
     ]
   | Default -> JSON_Object [
-      "default", JSON_Bool true
-  ]
+      "default", JSON_Bool true;
+    ]
+  | Become -> JSON_Object [
+      "become", JSON_Bool true;
+    ]
 )
 
 and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx
@@ -1206,7 +1209,7 @@ let string_of_file cx =
   | false -> filename
   | true ->
     let root_str = Path.to_string (Context.root cx) ^ Filename.dir_sep in
-    if Utils.str_starts_with filename root_str
+    if String_utils.string_starts_with filename root_str
       then Files_js.relative_path root_str filename
       else filename
 
@@ -1216,6 +1219,7 @@ let string_of_selector = function
   | ArrRest i -> spf "ArrRest %i" i
   | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
   | Default -> "Default"
+  | Become -> "Become"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->

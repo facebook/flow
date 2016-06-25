@@ -64,6 +64,7 @@ type t = {
   opt_shm_min_avail: int;
   opt_shm_dep_table_pow: int;
   opt_shm_hash_table_pow: int;
+  opt_shm_log_level: int;
   opt_max_header_tokens: int;
 }
 
@@ -119,5 +120,6 @@ let shm_dirs opts = opts.opt_shm_dirs
 let shm_min_avail opts = opts.opt_shm_min_avail
 let shm_dep_table_pow opts = opts.opt_shm_dep_table_pow
 let shm_hash_table_pow opts = opts.opt_shm_hash_table_pow
+let shm_log_level opts = opts.opt_shm_log_level
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak

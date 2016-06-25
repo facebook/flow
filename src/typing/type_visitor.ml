@@ -151,6 +151,7 @@ class ['a] t = object(self)
   | ObjRest _ -> acc
   | ArrRest _ -> acc
   | Default -> acc
+  | Become -> acc
 
   method private use_type_ cx acc = function
   | UseT (_, t) ->

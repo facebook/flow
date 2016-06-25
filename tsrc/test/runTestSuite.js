@@ -69,7 +69,7 @@ export default async function(
       test.flowConfigFilename,
     );
     let stepResults = [];
-    const steps = [].concat(testSuite.beforeEach(emptyTestStep), test.steps);
+    const steps = [].concat(testSuite.getBeforeEach(emptyTestStep), test.steps);
 
     for (const step of steps) {
       if (!(step instanceof TestStep)) {

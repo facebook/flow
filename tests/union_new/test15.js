@@ -16,3 +16,9 @@ declare class KeyboardEvent { }
 
 type EventHandler = (event: Event) => mixed
 type KeyboardEventHandler = (event: KeyboardEvent) => mixed
+
+// example where globals are not yet resolved
+
+function bar(x: (() => void) | { x: number }) { }
+
+bar(() => { });

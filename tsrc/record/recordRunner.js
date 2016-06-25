@@ -137,15 +137,15 @@ export default async function(args: Args): Promise<void> {
               const assertLoc = result.assertLoc;
               if (assertLoc) {
                 const filename = join(testsDir, suiteName, assertLoc.filename);
-                const code: Buffer = await readFile(filename);
-                const ast = parser.parse(code.toString(), {});
+                const code = await readFile(filename);
+                const ast = parser.parse(code, {});
                 const range = assertLoc && dfsForRange(ast, assertLoc.line, assertLoc.column);
                 if (range) {
                   const [start, end] = range;
                   const out =
-                    code.slice(0, start).toString() +
+                    code.slice(0, start) +
                     suggestionToString(result.suggestion) +
-                    code.slice(end).toString();
+                    code.slice(end);
                   await writeFile(filename, out);
                 } else {
                   process.stderr.write("Could not find the assertion in the code\n");

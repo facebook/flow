@@ -31,6 +31,7 @@ type results =
 module ParserHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
     type t = (Spider_monkey_ast.program * Docblock.t)
     let prefix = Prefix.make()
+    let description = "Parser"
   end)
 
 let (parser_hook: (filename -> Ast.program option -> unit) list ref) = ref []

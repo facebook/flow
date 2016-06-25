@@ -113,10 +113,17 @@ let rec variable_decl cx type_params_map entry = Ast.Statement.(
     | (loc, _) as p ->
       let pattern_name = internal_pattern_name loc in
       let r = mk_reason (spf "%s _" str_of_kind) loc in
-      let t = type_of_pattern p |>
+      let typeAnnotation = type_of_pattern p in
+      let t = typeAnnotation |>
         Anno.mk_type_annotation cx type_params_map r in
       bind cx pattern_name t r;
       p |> destructuring cx t None None (fun cx loc name _default t ->
+        let t = match typeAnnotation with
+        | None -> t
+        | Some _ ->
+          let r = repos_reason loc r in
+          EvalT (t, DestructuringT (r, Become), mk_id())
+        in
         Hashtbl.replace (Context.type_table cx) loc t;
         bind cx name t r
       )
@@ -327,6 +334,10 @@ and statement_decl cx type_params_map = Ast.Statement.(
         | Some (Class (loc, c)) ->
             statement_decl cx type_params_map (loc, DeclareClass c)
         | Some (DefaultType _) -> ()
+        | Some (NamedType (loc, t)) ->
+            statement_decl cx type_params_map (loc, TypeAlias t)
+        | Some (Interface (loc, i)) ->
+            statement_decl cx type_params_map (loc, InterfaceDeclaration i)
         | None ->
             if not default
             then ()
@@ -1469,7 +1480,7 @@ and statement cx type_params_map = Ast.Statement.(
   | (loc, InterfaceDeclaration decl) ->
     interface cx loc true decl
 
-  | (loc, DeclareModule { DeclareModule.id; body; }) ->
+  | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
     let name = match id with
     | DeclareModule.Identifier ident -> ident_name ident
     | DeclareModule.Literal (_, { Ast.Literal.value = Ast.Literal.String str; _; }) ->
@@ -1484,79 +1495,91 @@ and statement cx type_params_map = Ast.Statement.(
 
     let module_scope = Scope.fresh () in
     Env.push_var_scope cx module_scope;
-    Context.set_in_declare_module cx true;
+    let outer_module_exports_kind = Context.module_exports_type cx in
+    Context.set_module_exports_type cx (
+      match kind with
+      | DeclareModule.CommonJS loc -> Context.CommonJSModule (Some loc)
+      | DeclareModule.ES _ -> Context.ESModule
+    );
+    Context.set_declare_module_t cx (Some t);
 
     toplevel_decls cx type_params_map elements;
     toplevels cx type_params_map elements;
 
-    Context.set_in_declare_module cx false;
+    Context.set_declare_module_t cx None;
+    Context.set_module_exports_type cx outer_module_exports_kind;
     Env.pop_var_scope ();
 
-    (**
-     * TODO(jeffmo): `declare var exports` is deprecated (in favor of
-     *               `declare module.exports`). v0.25 retains support for it as
-     *               a transitionary grace period, but this will be removed as
-     *               early as v0.26.
-     *)
-    let legacy_exports = Scope.get_entry "exports" module_scope in
-    let declared_module_exports =
-      Scope.get_entry (internal_name "declare_module.exports") module_scope
-    in
+    (match kind with
+      | DeclareModule.CommonJS kind_loc ->
+        (**
+         * TODO(jeffmo): `declare var exports` is deprecated (in favor of
+         *               `declare module.exports`). v0.25 retains support for it as
+         *               a transitionary grace period, but this will be removed as
+         *               early as v0.26.
+         *)
+        let legacy_exports = Scope.get_entry "exports" module_scope in
+        let declared_module_exports =
+          Scope.get_entry (internal_name "declare_module.exports") module_scope
+        in
 
-    let (type_exports, cjs_module_exports) = Scope.(Entry.(
-      match (legacy_exports, declared_module_exports) with
-      (* TODO: Eventually drop support for legacy "declare var exports" *)
-      | (Some (Value {specific=exports; _;}), None)
-      | (_, Some (Value {specific=exports; _;})) ->
-        let type_exports = SMap.filter (fun _ ->
-          function
-          | Value _ -> false
-          | Type _ -> true
-        ) module_scope.entries in
-        type_exports, exports
+        let (type_exports, cjs_module_exports) = Scope.(Entry.(
+          match (legacy_exports, declared_module_exports) with
+          (* TODO: Eventually drop support for legacy "declare var exports" *)
+          | (Some (Value {specific=exports; _;}), None)
+          | (_, Some (Value {specific=exports; _;})) ->
+            let type_exports = SMap.filter (fun _ ->
+              function
+              | Value _ -> false
+              | Type _ -> true
+            ) module_scope.entries in
+            type_exports, exports
 
-      | (_, Some (Type _)) ->
-        assert_false (
-          "Internal Error: `declare module.exports` was created as a type " ^
-          "binding. This should never happen!"
-        )
+          | (_, Some (Type _)) ->
+            assert_false (
+              "Internal Error: `declare module.exports` was created as a type " ^
+              "binding. This should never happen!"
+            )
 
-      | (Some (Type _), None)
-      | (None, None) ->
-        let type_exports, value_exports = SMap.partition (
-          fun _ entry -> match entry with
-          | Value _ -> false
-          | Type _ -> true
-        ) module_scope.entries in
+          | (Some (Type _), None)
+          | (None, None) ->
+            let type_exports, value_exports = SMap.partition (
+              fun _ entry -> match entry with
+              | Value _ -> false
+              | Type _ -> true
+            ) module_scope.entries in
 
-        let map = SMap.map (
-          function
-          | Value { specific; _ } -> specific
-          | Type _ -> assert_false "type entry in value_exports"
-        ) value_exports in
+            let map = SMap.map (
+              function
+              | Value { specific; _ } -> specific
+              | Type _ -> assert_false "type entry in value_exports"
+            ) value_exports in
 
-        let proto = MixedT (reason, Mixed_everything) in
+            let reason = repos_reason kind_loc reason in
+            let proto = MixedT (reason, Mixed_everything) in
 
-        type_exports,
-        Flow.mk_object_with_map_proto cx reason map proto
-    )) in
+            (type_exports, Flow.mk_object_with_map_proto cx reason map proto)
+        )) in
 
-    let module_t = mk_commonjs_module_t cx reason reason cjs_module_exports in
-    let module_t = Flow.mk_tvar_where cx reason (fun t ->
-      Flow.flow cx (
-        module_t,
-        ExportNamedT(
-          reason,
-          SMap.map Scope.Entry.(
-            function
-            | Type { _type; _ } -> _type
-            | _ -> assert_false "non-type entry in for_types"
-          ) type_exports,
-          t
-        )
-      )
-    ) in
-    Flow.unify cx module_t t;
+        let module_t = mk_commonjs_module_t cx reason reason cjs_module_exports in
+        let module_t = Flow.mk_tvar_where cx reason (fun t ->
+          Flow.flow cx (
+            module_t,
+            ExportNamedT(
+              reason,
+              SMap.map Scope.Entry.(
+                function
+                | Type { _type; _ } -> _type
+                | _ -> assert_false "non-type entry in for_types"
+              ) type_exports,
+              t
+            )
+          )
+        ) in
+        Flow.unify cx module_t t;
+      | DeclareModule.ES _ ->
+        Flow.flow_t cx (mk_module_t cx reason, t)
+    )
 
   | (loc, DeclareExportDeclaration {
       DeclareExportDeclaration.default;
@@ -1565,34 +1588,47 @@ and statement cx type_params_map = Ast.Statement.(
       DeclareExportDeclaration.source;
     }) ->
       let open DeclareExportDeclaration in
-      let export_info = match declaration with
-      | Some (Variable (loc, v)) ->
-          let { DeclareVariable.id = (_, { Ast.Identifier.name; _; }) } = v in
-          statement cx type_params_map (loc, DeclareVariable v);
-          [(spf "var %s" name, loc, name, None)]
-      | Some (Function (loc, f)) ->
-          let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }) } = f in
-          statement cx type_params_map (loc, DeclareFunction f);
-          [(spf "function %s() {}" name, loc, name, None)]
-      | Some (Class (loc, c)) ->
-          let { Interface.id = (name_loc, { Ast.Identifier.name; _; }); _; }
-            = c in
-          statement cx type_params_map (loc, DeclareClass c);
-          [(spf "class %s {}" name, name_loc, name, None)]
-      | Some (DefaultType (loc, t)) ->
-          let _type = Anno.convert cx type_params_map (loc, t) in
-          [( "<<type>>", loc, "default", Some _type)]
-      | None ->
-          [] in
+      let open Ast.Statement.ExportDeclaration in
+      let export_info, export_kind =
+        match declaration with
+        | Some (Variable (loc, v)) ->
+            let { DeclareVariable.id = (_, { Ast.Identifier.name; _; }) } = v in
+            statement cx type_params_map (loc, DeclareVariable v);
+            [(spf "var %s" name, loc, name, None)], ExportValue
+        | Some (Function (loc, f)) ->
+            let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }) } = f in
+            statement cx type_params_map (loc, DeclareFunction f);
+            [(spf "function %s() {}" name, loc, name, None)], ExportValue
+        | Some (Class (loc, c)) ->
+            let { Interface.id = (name_loc, { Ast.Identifier.name; _; }); _; }
+              = c in
+            statement cx type_params_map (loc, DeclareClass c);
+            [(spf "class %s {}" name, name_loc, name, None)], ExportValue
+        | Some (DefaultType (loc, t)) ->
+            let _type = Anno.convert cx type_params_map (loc, t) in
+            [( "<<type>>", loc, "default", Some _type)], ExportValue
+        | Some (NamedType (talias_loc, ({
+            TypeAlias.
+            id = (name_loc, {Ast.Identifier.name; _;});
+            _;
+          } as talias))) ->
+            statement cx type_params_map (talias_loc, TypeAlias talias);
+            [(spf "type %s = ..." name, name_loc, name, None)], ExportType
+        | Some (Interface (loc, i)) ->
+            let {Interface.id = (name_loc, {Ast.Identifier.name; _;}); _;} = i in
+            statement cx type_params_map (loc, InterfaceDeclaration i);
+            [(spf "interface %s {}" name, name_loc, name, None)], ExportType
+        | None ->
+            [], ExportValue
+      in
 
       export_statement cx type_params_map loc
-        default export_info specifiers source
-        Ast.Statement.ExportDeclaration.ExportValue
+        default export_info specifiers source export_kind
 
   | (loc, DeclareModuleExports annot) ->
     let t = Anno.convert cx SMap.empty (snd annot) in
 
-    if Context.in_declare_module cx then (
+    if Context.declare_module_t cx <> None then (
       let name = internal_name "declare_module.exports" in
       let reason = mk_reason "declare module.exports" loc in
       Env.bind_declare_var cx name t reason

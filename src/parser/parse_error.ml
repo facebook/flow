@@ -77,6 +77,8 @@ type t =
   | UnsupportedDecorator
   | MissingTypeParamDefault
   | WindowsFloatOfString
+  | DuplicateDeclareModuleExports
+  | AmbiguousDeclareModuleKind
 
 exception Error of (Loc.t * t) list
 
@@ -177,7 +179,9 @@ module PP =
           it parses hexidecimal numbers. It is fixed in OCaml 4.03.0. Until we \
           can switch to 4.03.0, please avoid either hexidecimal notation or \
           Windows."
-
-
-
+      | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` \
+          statement!"
+      | AmbiguousDeclareModuleKind -> "Found both `declare module.exports` and \
+          `declare export` in the same module. Modules can only have 1 since \
+          they are either an ES module xor they are a CommonJS module."
   end

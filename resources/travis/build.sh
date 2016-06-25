@@ -30,3 +30,7 @@ printf "travis_fold:end:run_tool_test\n"
 printf "travis_fold:start:run_parser_tests\nRunning parser tests\n"
 (cd src/parser && make test)
 printf "travis_fold:end:run_parser_tests\n"
+
+printf "travis_fold:start:make_ocp-build\nBuilding flow with ocp-build\n"
+make build-flow-with-ocp
+printf "travis_fold:end:make_ocp-build\n"

@@ -81,8 +81,6 @@ let rec wfold_left2 f env l1 l2 =
 let sl l =
   List.fold_right l ~f:(^) ~init:""
 
-let soi = string_of_int
-
 let maybe f env = function
   | None -> ()
   | Some x -> f env x
@@ -144,40 +142,6 @@ let strip_all_ns s =
     let base_name_start = String.rindex s '\\' + 1 in
     String.sub s base_name_start ((String.length s) - base_name_start)
   with Not_found -> s
-
-let str_starts_with long short =
-  try
-    let long = String.sub long 0 (String.length short) in
-    long = short
-  with Invalid_argument _ ->
-    false
-
-let str_ends_with long short =
-  try
-    let len = String.length short in
-    let long = String.sub long (String.length long - len) len in
-    long = short
-  with Invalid_argument _ ->
-    false
-
-(* Return a copy of the string with prefixing string removed.
- * The function is a no-op if it s does not start with prefix.
- * Modeled after Python's string.lstrip.
- *)
-let lstrip s prefix =
-  let prefix_length = String.length prefix in
-  if str_starts_with s prefix
-  then String.sub s prefix_length (String.length s - prefix_length)
-  else s
-
-let string_of_char = String.make 1
-
-let rpartition s c =
-  let sep_idx = String.rindex s c in
-  let first = String.sub s 0 sep_idx in
-  let second =
-    String.sub s (sep_idx + 1) (String.length s - sep_idx - 1) in
-  first, second
 
 (*****************************************************************************)
 (* Same as List.iter2, except that we only iterate as far as the shortest

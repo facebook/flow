@@ -737,9 +737,12 @@ module Cache = struct
         t
   end
 
+  let repos_cache = ref Repos_cache.empty
+
   let clear () =
     FlowConstraint.cache := TypePairSet.empty;
-    Hashtbl.clear PolyInstantiation.cache
+    Hashtbl.clear PolyInstantiation.cache;
+    repos_cache := Repos_cache.empty
 
   let stats () =
     Hashtbl.stats PolyInstantiation.cache
@@ -1159,17 +1162,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        don't necessarily have the 0->1 property: they could be concretized at
        different types, as more and more lower bounds appear. *)
 
-    | UnionT (_, urep), IntersectionPreprocessKitT (reason,
-        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
+    | UnionT (_, urep), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       UnionRep.members urep |> List.iter (fun t ->
-        rec_flow cx trace (t, IntersectionPreprocessKitT (reason,
-          ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
+        rec_flow cx trace (t, u)
       )
 
-    | AnnotT (_, source_t), IntersectionPreprocessKitT (reason,
-        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
-      rec_flow cx trace (source_t, IntersectionPreprocessKitT (reason,
-        ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
+    | MaybeT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      let lreason = reason_of_t t in
+      rec_flow cx trace (NullT.why lreason, u);
+      rec_flow cx trace (VoidT.why lreason, u);
+      rec_flow cx trace (t, u);
+
+    | OptionalT t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      let lreason = reason_of_t t in
+      rec_flow cx trace (VoidT.why lreason, u);
+      rec_flow cx trace (t, u);
+
+    | AnnotT (_, source_t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+      rec_flow cx trace (source_t, u)
 
     | t, IntersectionPreprocessKitT (reason,
         ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
@@ -1213,6 +1223,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
        through a tvar. *)
+
+    | (UnionT (r, rep), ReposUseT (reason, use_op, l)) ->
+      (* Don't reposition union members when the union appears as an upper
+         bound. This improves error messages when an incompatible lower bound
+         does not satisfy any member of the union. The "overall" error points to
+         the reposition target (an annotation) but the detailed member
+         information points to the type definition. *)
+      let u_def = UnionT (repos_reason (loc_of_reason reason) r, rep) in
+      rec_flow cx trace (l, UseT (use_op, u_def))
 
     | (u_def, ReposUseT (reason, use_op, l)) ->
       rec_flow cx trace (l, UseT (use_op, reposition cx reason u_def))
@@ -1665,6 +1684,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ((NullT _ | VoidT _), UseT (_, MaybeT _)) -> ()
 
+    | MaybeT _, ReposLowerT (reason_op, u) ->
+      (* Don't split the maybe type into its constituent members. Instead,
+         reposition the entire maybe type. *)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+
     | (MaybeT(t), _) ->
       let reason = reason_of_t t in
       rec_flow cx trace (NullT.why reason, u);
@@ -1678,6 +1702,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** The type optional(T) is the same as undefined | UseT *)
 
     | (VoidT _, UseT (_, OptionalT _)) -> ()
+
+    | OptionalT _, ReposLowerT (reason_op, u) ->
+      (* Don't split the optional type into its constituent members. Instead,
+         reposition the entire optional type. *)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
     | (OptionalT(t), _) ->
       let reason = reason_of_t t in
@@ -2049,6 +2078,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* union and intersection types *)
     (********************************)
 
+    | UnionT _, ReposLowerT (reason_op, u) ->
+      (* Don't split the union type into its constituent members. Instead,
+         reposition the entire union type. *)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
+
     (* cases where there is no loss of precision *)
 
     | UnionT (_, rep), _ ->
@@ -2281,10 +2315,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ThisClassT _, ReposLowerT (reason_op, u)) ->
       rec_flow cx trace (reposition cx reason_op l, u)
 
-    (* When do we consider a polymorphic type <X:U> UseT to be a subtype of another
+    (* When do we consider a polymorphic type <X:U> T to be a subtype of another
        polymorphic type <X:U'> T'? This is the subject of a long line of
        research. A rule that works (Cardelli/Wegner) is: force U = U', and prove
-       that UseT is a subtype of T' for any X:U'. A more general rule that proves
+       that T is a subtype of T' for any X:U'. A more general rule that proves
        that U' is a subtype of U instead of forcing U = U' is known to cause
        undecidable subtyping (Pierce): the counterexamples are fairly
        pathological, but can be reliably constructed by exploiting the "switch"
@@ -2298,7 +2332,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        Separately, none of these rules capture the logical interpretation of the
        original subtyping question (interpreting subtyping as implication, and
        polymorphism as universal quantification). What we really want to show is
-       that, for all X:U', there is some X:U such that UseT is a subtype of T'. But
+       that, for all X:U', there is some X:U such that T is a subtype of T'. But
        we already deal with statements of this form when checking polymorphic
        definitions! In particular, statements such as "there is some X:U...")
        correspond to "create a type variable with that constraint and ...", and
@@ -3457,14 +3491,39 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
-    | (FunT (reason, statics, _, _) , UseT (_, ObjT _)) ->
-        let map = SMap.add "$call" l SMap.empty in
-        let function_proto = get_builtin_type cx reason "Function" in
-        let obj = mk_object_with_map_proto cx reason map function_proto in
-        let t = mk_tvar_where cx reason (fun t ->
-          rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
-        ) in
-        rec_flow cx trace (t, u)
+    | (FunT (reason, statics, _, _) ,
+       UseT (_, ObjT (reason_o, { props_tmap; _ }))) ->
+        (* TODO: This rule doesn't interact very well with union-type
+           checking. It looks up Function.prototype, which currently doesn't
+           appear structurally in the function type, and thus may not be fully
+           resolved when the function type is checked with a union containing
+           the object type. Ideally, we should either add Function.prototype to
+           function types or fully resolve them when resolving function types,
+           but either way we might bomb perf without additional work. Meanwhile,
+           we need an immediate fix for the common case where this bug shows
+           up. So leaving this comment here as a marker for future work, while
+           going with a band-aid solution for now, as motivated below.
+
+           Fortunately, it is quite hard for a function type to successfully
+           check against an object type, and even more unlikely when the latter
+           is part of a union: the object type must only contain
+           Function.prototype methods or statics. Quickly confirming that the
+           check would fail before looking up Function.prototype (while falling
+           back to the general rule when we cannot guarantee failure) is a safe
+           optimization in any case, and fixes the commonly observed case where
+           the union type contains both a function type and a object type as
+           members, clearly intending for function types to match the former
+           instead of the latter. *)
+        if not
+          (quick_error_fun_as_obj cx trace reason statics reason_o props_tmap)
+        then
+          let map = SMap.add "$call" l SMap.empty in
+          let function_proto = get_builtin_type cx reason "Function" in
+          let obj = mk_object_with_map_proto cx reason map function_proto in
+          let t = mk_tvar_where cx reason (fun t ->
+            rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
+          ) in
+          rec_flow cx trace (t, u)
 
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
@@ -3880,7 +3939,7 @@ and flow_eq cx trace reason l r =
   | (_, _) when equatable (l, r) -> ()
   | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
 
-and string_contains_react = is_substring "React"
+and string_contains_react = String_utils.is_substring "React"
 
 and is_object_prototype_method = function
   | "hasOwnProperty"
@@ -3913,6 +3972,28 @@ and is_dictionary_exempt = function
   | x when is_object_prototype_method x -> true
   | "$call" -> true
   | _ -> false
+
+(* common case checking a function as an object *)
+and quick_error_fun_as_obj cx trace reason statics reason_o props_tmap =
+  let statics_own_props = match statics with
+    | ObjT (_, { props_tmap; _ }) -> Some (find_props cx props_tmap)
+    | AnyFunT _
+    | MixedT _ -> Some SMap.empty
+    | _ -> None
+  in
+  match statics_own_props with
+  | Some statics_own_props ->
+    let props_not_found = SMap.filter (fun x _ ->
+      not (x = "$call" || is_function_prototype x || SMap.mem x statics_own_props)
+    ) (find_props cx props_tmap) in
+    SMap.iter (fun x _ ->
+      flow_err_prop_not_found cx trace (
+        replace_reason (spf "property `%s`" x) reason_o,
+        reason
+      )
+    ) props_not_found;
+    not (SMap.is_empty props_not_found)
+  | None -> false
 
 (* only on use-types - guard calls with is_use t *)
 and err_operation = function
@@ -4075,35 +4156,73 @@ and result_of_taint_op = function
 
 (* generics *)
 
-(* Generate for every type parameter a pair of tests, instantiating that type
-   parameter with its bound and Bottom. Run a closure that takes these
-   instantiations, each one in turn, and does something with it. We use a
-   different value for test_id (see Reason_js.TestID) for every instantiation so
-   that re-analyzing the same AST with different instantiations causes different
-   reasons to be generated. *)
+(** Harness for testing parameterized types. Given a test function and a list
+    of type params, generate a bunch of argument maps and invoke the test
+    function on each, using Reason_js.TestID to keep the reasons generated by
+    each test disjoint from the others.
 
-and generate_tests cx reason typeparams each =
-  (* generate 2^|typeparams| maps *)
-  let maps = List.fold_left (fun list {name; bound; _ } ->
-    let xreason = replace_reason (spf "`%s`" name) reason in
-    let bot = EmptyT (
-      prefix_reason "some incompatible instantiation of " xreason
-    ) in
-    (* NOTE: Since the same AST is traversed by each generated test, the order
-       of generated tests is important for the proper functioning of hooks that
-       record information on the side as ASTs are traversed. Adopting the
-       convention that the last traversal "wins" (which would happen, e.g, when
-       the recorded information at a location is replaced every time that
-       location is encountered), we want the last generated test to always be
-       the one where all type parameters are substituted by their bounds
-       (instead of Bottom), so that the recorded information is the same as if
-       all type parameters were indeed erased and replaced by theirs bounds. *)
-    (List.map (SMap.add name bot) list) @
-    (List.map (fun map -> SMap.add name (subst cx map bound) map) list)
-  ) [SMap.empty] typeparams in
-  match maps with
-  | [map] -> each map (* no typeparams, so reuse current test_id *)
-  | _ -> List.iter (TestID.run each) maps
+    In the general case we simply test every combination of p = bot, p = bound
+    for each param p. For many parameter lists this will be more than strictly
+    necessary, but determining the minimal set of tests for interrelated params
+    is subtle. For now, our only refinement is to isolate all params with an
+    upper bound of MixedT (making them trivially unrelated to each other) and
+    generate a smaller set of argument maps for these which only cover a) bot,
+    bound for each param, and b) every pairwise bot/bound combination. These
+    maps are then used as seeds for powersets over the remaining params.
+
+    NOTE: Since the same AST is traversed by each generated test, the order
+    of generated tests is important for the proper functioning of hooks that
+    record information on the side as ASTs are traversed. Adopting the
+    convention that the last traversal "wins" (which would happen, e.g, when
+    the recorded information at a location is replaced every time that
+    location is encountered), we want the last generated test to always be
+    the one where all type parameters are substituted by their bounds
+    (instead of Bottom), so that the recorded information is the same as if
+    all type parameters were indeed erased and replaced by their bounds.
+  *)
+and generate_tests =
+  (* make bot type for given param *)
+  let mk_bot reason _ { name; _ } =
+    let desc = spf "some incompatible instantiation of `%s`" name in
+    EmptyT (replace_reason desc reason)
+  in
+  (* make bound type for given param and argument map *)
+  let mk_bound cx prev_args { bound; _ } =
+    subst cx prev_args bound
+  in
+  (* make argument map by folding mk_arg over param list *)
+  let mk_argmap mk_arg =
+    List.fold_left (fun acc ({ name; _ } as p) ->
+      SMap.add name (mk_arg acc p) acc
+    ) SMap.empty
+  in
+  (* for each p, a map with p bot and others bound + map with all bound *)
+  let linear cx r = function
+  | [] -> [SMap.empty]
+  | params ->
+    let all = mk_argmap (mk_bound cx) params in
+    let each = List.map (fun ({ name; _ } as p) ->
+      SMap.add name (mk_bot r SMap.empty p) all
+    ) params in
+    List.rev (all :: each)
+  in
+  (* a map for every combo of bot/bound params *)
+  let powerset cx r params arg_map =
+    let none = mk_argmap (mk_bot r) params in
+    List.fold_left (fun maps ({ name; _ } as p) ->
+      let bots = List.map (SMap.add name (SMap.find_unsafe name none)) maps in
+      let bounds = List.map (fun m -> SMap.add name (mk_bound cx m p) m) maps in
+      bots @ bounds
+    ) [arg_map] params
+  in
+  (* main - run f over a collection of arg maps generated for params *)
+  fun cx reason params f ->
+    if params = [] then f SMap.empty else
+    let is_free = function { bound = MixedT _; _ } -> true | _ -> false in
+    let free_params, dep_params = List.partition is_free params in
+    let free_sets = linear cx reason free_params in
+    let powersets = List.map (powerset cx reason dep_params) free_sets in
+    List.iter (TestID.run f) (List.flatten powersets)
 
 (*********************)
 (* inheritance utils *)
@@ -4454,6 +4573,7 @@ and eval_selector cx reason curr_t s i =
       | ObjRest xs -> ObjRestT(reason, xs, tvar)
       | ArrRest i -> ArrRestT(reason, i, tvar)
       | Default -> PredicateT (NotP VoidP, tvar)
+      | Become -> BecomeT (reason, tvar)
       )
     )
   | Some it ->
@@ -4472,7 +4592,8 @@ and subst_selector cx force map s = match s with
   | Prop _
   | ObjRest _
   | ArrRest _
-  | Default -> s
+  | Default
+  | Become -> s
 
 (* TODO: flesh this out *)
 and check_polarity cx polarity = function
@@ -4912,7 +5033,7 @@ and prep_try_intersection cx trace reason unresolved resolved u r rep =
 
 (* some patterns need to be concretized before proceeding further *)
 and patt_that_needs_concretization = function
-  | OpenT _ | UnionT _ | AnnotT _ -> true
+  | OpenT _ | UnionT _ | MaybeT _ | OptionalT _ | AnnotT _ -> true
   | _ -> false
 
 and concretize_patt replace patt =
@@ -5347,15 +5468,15 @@ and mk_union_reason r us =
   List.fold_left (fun reason t ->
     let rdesc = desc_of_reason reason in
     let tdesc = desc_of_reason (reason_of_t t) in
-    let udesc = if not (Utils.str_starts_with rdesc "union:")
+    let udesc = if not (String_utils.string_starts_with rdesc "union:")
       then spf "union: %s" tdesc
-      else if Utils.str_ends_with rdesc "..."
+      else if String_utils.string_ends_with rdesc "..."
       then rdesc
-      else if Utils.str_ends_with rdesc (tdesc ^ "(s)")
+      else if String_utils.string_ends_with rdesc (tdesc ^ "(s)")
       then rdesc
       else if String.length rdesc >= 256
       then spf "%s | ..." rdesc
-      else if Utils.str_ends_with rdesc tdesc
+      else if String_utils.string_ends_with rdesc tdesc
       then spf "%s(s)" rdesc
       else spf "%s | %s" rdesc tdesc
     in
@@ -6801,13 +6922,19 @@ and reposition cx ?trace reason t =
     begin match constraints with
     | Resolved t -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
     | _ ->
-      let mk_tvar_where = if is_derivable_reason r
-        then mk_tvar_derivable_where
-        else mk_tvar_where
-      in
-      mk_tvar_where cx reason (fun tvar ->
-        flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
-      )
+      (* Try to re-use an already created repositioning tvar.
+         See repos_cache.ml for details. *)
+      match Repos_cache.find id reason !Cache.repos_cache with
+      | Some t -> t
+      | None ->
+        let mk_tvar_where = if is_derivable_reason r
+          then mk_tvar_derivable_where
+          else mk_tvar_where
+        in
+        mk_tvar_where cx reason (fun tvar ->
+          Cache.(repos_cache := Repos_cache.add reason t tvar !repos_cache);
+          flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
+        )
     end
   | EvalT _ ->
       (* Modifying the reason of `EvalT`, as we do for other types, is not
@@ -6819,7 +6946,16 @@ and reposition cx ?trace reason t =
       mk_tvar_where cx reason (fun tvar ->
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
-  | _ -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+  | MaybeT t ->
+      MaybeT (reposition cx ?trace reason t)
+  | OptionalT t ->
+      OptionalT (reposition cx ?trace reason t)
+  | UnionT (r, rep) ->
+      let r = repos_reason (loc_of_reason reason) r in
+      let rep = UnionRep.map (reposition cx ?trace reason) rep in
+      UnionT (r, rep)
+  | _ ->
+      mod_reason_of_t (repos_reason (loc_of_reason reason)) t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)

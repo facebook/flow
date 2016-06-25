@@ -212,6 +212,8 @@ function prettyPrintMessage(
     let startCol = loc.start.column - 1;
     let contextStr = indentation;
     if (context != null) {
+      // On Windows this might have \r
+      context = context.trimRight();
       let lineStr = String(loc.start.line);
       if (lineStr.length < 3) {
         lineStr = ("   "+lineStr).slice(-3);

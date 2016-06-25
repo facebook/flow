@@ -1,9 +1,12 @@
 
+REM No echo arguments will be printed in the current state
 @echo off
 
+REM Set env variables
 SET TERM=dumb
 SET EXITCODE=0
 
+REM Run ocaml.exe
 ocaml.exe -I scripts -w -3 str.cma unix.cma .\scripts\ocp_build_glob.ml ocp_build_hack.ocp.fb ocp_build_hack.ocp
 ocaml.exe -I scripts -w -3 str.cma unix.cma .\scripts\ocp_build_glob.ml ocp_build_flow.ocp.fb ocp_build_flow.ocp
 
@@ -12,6 +15,7 @@ if "%1" == "build" goto build
 if "%1" == "all" goto build
 if "%1" == "init" goto init
 if "%1" == "clean" goto clean
+if "%1" == "test" goto test 
 REM Invalid argument
 echo Invalid argument, please check README.win32
 goto end
@@ -49,6 +53,8 @@ del bin\flow.exe 2>NUL
 goto end
 
 REM execute the Flow testsuite
+:test
+ocp-build tests
 
 :end
 del ocp_build_flow.ocp

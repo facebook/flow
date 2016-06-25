@@ -19,6 +19,7 @@ type config = {
   hash_table_pow   : int;
   shm_dirs         : string list;
   shm_min_avail    : int;
+  log_level        : int;
 }
 
 let default_config =
@@ -30,6 +31,7 @@ let default_config =
     hash_table_pow = 18; (* 1 << 18 *)
     shm_dirs       = [GlobalConfig.shm_dir; GlobalConfig.tmp_dir;];
     shm_min_avail  = gig / 2; (* Half a gig by default *)
+    log_level      = 0;
   }
 
 (* Allocated in C only. *)
@@ -40,13 +42,17 @@ type handle = private {
 }
 
 exception Out_of_shared_memory
+exception Hash_table_full
+exception Dep_table_full
 exception Failed_anonymous_memfd_init
 exception Less_than_minimum_available of int
 exception Failed_to_use_shm_dir of string
 let () =
   Callback.register_exception "out_of_shared_memory" Out_of_shared_memory;
+  Callback.register_exception "hash_table_full" Hash_table_full;
+  Callback.register_exception "dep_table_full" Dep_table_full;
   Callback.register_exception "failed_anonymous_memfd_init" Failed_anonymous_memfd_init;
-  Callback.register_exception "less_than_minimum_available" (Less_than_minimum_available 0)
+  Callback.register_exception "less_than_minimum_available" (Less_than_minimum_available 0);
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
@@ -119,7 +125,7 @@ let rec shm_dir_init config = function
     end
 
 let init config =
-  try anonymous_init config
+ try anonymous_init config
   with Failed_anonymous_memfd_init ->
     EventLogger.(log_if_initialized (fun () ->
       sharedmem_failed_anonymous_memfd_init ()
@@ -158,6 +164,13 @@ external load_dep_table: string -> unit = "hh_load_dep_table"
 external heap_size: unit -> int = "hh_heap_size"
 
 (*****************************************************************************)
+(* The logging level for shared memory statistics *)
+(* 0 = nothing *)
+(* 1 = log totals, averages, min, max bytes marshalled and unmarshalled *)
+(*****************************************************************************)
+external hh_log_level : unit -> int = "hh_log_level"
+
+(*****************************************************************************)
 (* The number of used slots in our hashtable *)
 (*****************************************************************************)
 external hash_used_slots : unit -> int = "hh_hash_used_slots"
@@ -187,6 +200,7 @@ external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
 
 let init_done () =
   hh_init_done ();
+  Measure.print_stats ();
   EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {
@@ -299,8 +313,25 @@ module Serial: functor(Value:Value.Type) -> sig
 end = functor(Value:Value.Type) -> struct
   type t = string
 
-  let make x = Marshal.to_string x []
-  let get x  = Marshal.from_string x 0
+  let make x =
+    let s = Marshal.to_string x [] in
+    if hh_log_level() > 0
+    then begin
+      let l = String.length s in
+      Measure.sample (Value.description ^ " (serialized bytes)") (float l);
+      Measure.sample ("ALL serialized bytes") (float l)
+    end;
+    s
+
+  let get x  =
+    let r = Marshal.from_string x 0 in
+    if hh_log_level() > 0
+    then begin
+      let l = String.length x in
+      Measure.sample (Value.description ^ " (deserialized bytes)") (float l);
+      Measure.sample ("ALL deserialized bytes") (float l)
+    end;
+    r
 end
 
 

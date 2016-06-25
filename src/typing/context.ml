@@ -72,7 +72,7 @@ type t = {
   type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
 
-  mutable in_declare_module: bool;
+  mutable declare_module_t: Type.t option;
 }
 
 and module_exports_type =
@@ -134,12 +134,13 @@ let make metadata file module_name = {
   type_table = Hashtbl.create 0;
   annot_table = Hashtbl.create 0;
 
-  in_declare_module = false;
+  declare_module_t = None;
 }
 
 (* accessors *)
 let all_unresolved cx = cx.all_unresolved
 let annot_table cx = cx.annot_table
+let declare_module_t cx = cx.declare_module_t
 let envs cx = cx.envs
 let enable_const_params cx = cx.metadata.enable_const_params
 let enable_unsafe_getters_and_setters cx =
@@ -159,7 +160,6 @@ let find_props cx id = IMap.find_unsafe id cx.property_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
 let globals cx = cx.globals
 let graph cx = cx.graph
-let in_declare_module cx = cx.in_declare_module
 let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
@@ -220,6 +220,8 @@ let remove_tvar cx id =
   cx.graph <- IMap.remove id cx.graph
 let set_all_unresolved cx all_unresolved =
   cx.all_unresolved <- all_unresolved
+let set_declare_module_t cx t =
+  cx.declare_module_t <- t
 let set_envs cx envs =
   cx.envs <- envs
 let set_evaluated cx evaluated =
@@ -228,8 +230,6 @@ let set_globals cx globals =
   cx.globals <- globals
 let set_graph cx graph =
   cx.graph <- graph
-let set_in_declare_module cx v =
-  cx.in_declare_module <- v
 let set_module_exports_type cx module_exports_type =
   cx.module_exports_type <- module_exports_type
 let set_property_maps cx property_maps =

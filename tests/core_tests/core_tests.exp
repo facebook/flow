@@ -47,8 +47,8 @@ map.js:24
 map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
           ^^^^^^^^^^^^ call of method `get`
- 28:   function(x: Map<string, number>) {
-                               ^^^^^^ number. This type is incompatible with
+ 29:     (x.get('foo'): boolean); // error, string | void
+          ^^^^^^^^^^^^ number. This type is incompatible with
  29:     (x.get('foo'): boolean); // error, string | void
                         ^^^^^^^ boolean
 
@@ -56,8 +56,9 @@ map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
           ^^^^^^^^^^^^ call of method `get`
  29:     (x.get('foo'): boolean); // error, string | void
-                        ^^^^^^^ boolean. This type is incompatible with
-undefined. See lib: core.js:431
+          ^^^^^^^^^^^^ undefined. This type is incompatible with
+ 29:     (x.get('foo'): boolean); // error, string | void
+                        ^^^^^^^ boolean
 
 map.js:30
  30:     x.get(123); // error, wrong key type

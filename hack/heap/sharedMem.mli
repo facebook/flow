@@ -24,6 +24,7 @@ type config = {
   hash_table_pow   : int;
   shm_dirs         : string list;
   shm_min_avail    : int;
+  log_level        : int;
 }
 
 val default_config : config
@@ -35,6 +36,8 @@ type handle = private {
 }
 
 exception Out_of_shared_memory
+exception Hash_table_full
+exception Dep_table_full
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking! *)

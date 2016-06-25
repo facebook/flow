@@ -541,6 +541,7 @@ module rec TypeTerm : sig
   | ObjRest of string list
   | ArrRest of int
   | Default
+  | Become
 
   and prototype = t
 

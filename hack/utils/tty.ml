@@ -9,7 +9,6 @@
  *)
 
 open Core
-open Utils
 
 type raw_color =
   | Default
@@ -134,7 +133,7 @@ let read_char () =
 let read_choice message choices =
   let rec loop () =
     Printf.printf "%s (%s)%!" message
-      (String.concat "|" (List.map choices string_of_char));
+      (String.concat "|" (List.map choices String_utils.string_of_char));
     let choice = read_char () in
     print_newline ();
     if List.mem choices choice then choice else loop ()

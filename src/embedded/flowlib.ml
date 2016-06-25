@@ -12,7 +12,7 @@ external get_embedded_flowlib_data : string -> string option =
   "get_embedded_flowlib_data"
 
 let touch_root r =
-  let filter = FindUtils.is_js in
+  let filter path = Filename.check_suffix path ".js" in
   Find.iter_files ~filter [ r ] (Sys_utils.try_touch ~follow_symlinks:true)
 
 (* There are several verify-use race conditions here (and in Hack's file

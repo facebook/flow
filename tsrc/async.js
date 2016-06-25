@@ -12,6 +12,9 @@ import {
 } from 'fs';
 import {ncp as ncp_ncp} from 'ncp';
 import {format} from 'util';
+import {glob as glob_glob} from 'glob';
+import mkdirp_mkdirp from 'mkdirp';
+import rimraf_rimraf from 'rimraf';
 
 export function exec(cmd: string, options?: Object): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -19,11 +22,6 @@ export function exec(cmd: string, options?: Object): Promise<string> {
       if (err == null) {
         resolve(stdout.toString());
       } else {
-        console.log("exec failed!");
-        console.log("cmd:", cmd);
-        console.log("err:", err);
-        console.log("stdout:", stdout);
-        console.log("stderr:", stderr);
         reject(err, stdout, stderr);
       }
     })
@@ -61,11 +59,13 @@ export function appendFile(filename: string, data: string): Promise<void> {
   });
 }
 
-export function readFile(filename: string): Promise<Buffer> {
+export function readFile(filename: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    fs_readFile(filename, (err, data) => {
+    fs_readFile(filename, 'utf-8', (err, data) => {
       if (err == null) {
-        resolve(data);
+        // Even if we check out the files without CRLF, reading seems to add it
+        // in.
+        resolve(data.replace(/\r\n/g, "\n"));
       } else {
         reject(err);
       }
@@ -97,6 +97,18 @@ export function rename(old_path: string, new_path: string): Promise<void> {
   });
 }
 
+export function rimraf(path: string, options?: Object = {}): Promise<void> {
+  return new Promise((resolve, reject) => {
+    rimraf_rimraf(path, options, (err) => {
+      if (err == null) {
+        resolve();
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
 export function unlink(file: string): Promise<void> {
   return new Promise((resolve, reject) => {
     fs_unlink(file, (err) => {
@@ -109,8 +121,16 @@ export function unlink(file: string): Promise<void> {
   });
 }
 
-export async function mkdirp(dir: string): Promise<void> {
-  await exec(format("mkdir -p %s", dir));
+export function mkdirp(dir: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    mkdirp_mkdirp(dir, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 type NCPOptions = {
@@ -142,5 +162,25 @@ export function drain(writer: stream$Writable | tty$WriteStream): Promise<void> 
 export function exists(path: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     fs_exists(path, resolve);
+  });
+}
+
+type GlobOptions = {
+  cwd?: string,
+  nodir?: boolean,
+  dot?: boolean,
+};
+export function glob(
+  pattern: string,
+  options: GlobOptions,
+): Promise<Array<string>> {
+  return new Promise((resolve, reject) => {
+    glob_glob(pattern, options, (err, files) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(files);
+      }
+    });
   });
 }

@@ -53,7 +53,9 @@ let path_patt =
     let results = Str.full_split star2 str in
     let results = List.map (fun r -> match r with
       | Str.Text s ->
-          (* note: unix path specifiers only *)
+          (* note: unix directory seperators specifiers only. Windows directory
+           * seperators will already have been normalized to unix directory
+           * seperators *)
           let s = Str.global_replace star "[^/]*" s in
           Str.global_replace qmark "." s
       | Str.Delim _ -> ".*") results in
@@ -106,8 +108,9 @@ let add { paths; stems; stem_map; } path =
   { paths = path::paths; stems; stem_map; }
 
 (* filters a list of prefixes into only the prefixes with which f starts *)
-let find_prefixes f =
-  List.filter (fun prefix -> Utils.str_starts_with f (Path.to_string prefix))
+let find_prefixes f = List.filter (fun prefix ->
+  String_utils.string_starts_with f (Path.to_string prefix)
+)
 
 (* find a match for f in a list of patterns, or none *)
 let rec match_patt f = function

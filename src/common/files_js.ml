@@ -20,10 +20,11 @@ let is_dot_file path =
   String.length filename > 0 && filename.[0] = '.'
 
 let is_prefix prefix =
-  let prefix_with_sep = if Utils.str_ends_with prefix Filename.dir_sep
+  let prefix_with_sep = if String_utils.string_ends_with prefix Filename.dir_sep
     then prefix
     else prefix ^ Filename.dir_sep
-  in fun path -> path = prefix || Utils.str_starts_with path prefix_with_sep
+  in fun path ->
+    path = prefix || String_utils.string_starts_with path prefix_with_sep
 
 let is_json_file path = Filename.check_suffix path ".json"
 
@@ -221,7 +222,11 @@ let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:\\)"
 (* true if a file path matches an [ignore] entry in config *)
 let is_ignored options =
   let list = List.map snd (Options.ignores options) in
-  fun path -> List.exists (fun rx -> Str.string_match rx path 0) list
+  fun path ->
+    (* On Windows, the path may use \ instead of /, but let's standardize the
+     * ignore regex to use / *)
+    let path = Sys_utils.normalize_filename_dir_sep path in
+    List.exists (fun rx -> Str.string_match rx path 0) list
 
 (* true if a file path matches an [include] path in config *)
 let is_included options f = Path_matcher.matches (Options.includes options) f
@@ -237,7 +242,7 @@ let make_next_files ~options ~libs =
   let sroot = Path.to_string root in
   let realpath_filter path = is_valid_path ~options path && filter path in
   let path_filter path =
-    (Utils.str_starts_with path sroot || is_included options path)
+    (String_utils.string_starts_with path sroot || is_included options path)
     && realpath_filter path
   in
   make_next_files_following_symlinks

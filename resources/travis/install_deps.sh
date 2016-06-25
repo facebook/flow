@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="js_of_ocaml.2.7"
+OPAM_DEPENDS="js_of_ocaml.2.7 ocp-build"
 
 TMP=${TMPDIR:-/tmp}
 
