@@ -16,14 +16,117 @@ child_process/execSync.js:8
                                  ^^^^^ string. This type is incompatible with
   number. See lib: node.js:135
 
+crypto/crypto.js:12
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ call of method `read`
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ Buffer. This type is incompatible with
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                         ^^^^^^ number
+
+crypto/crypto.js:12
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ call of method `read`
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ null. This type is incompatible with
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                         ^^^^^^ number
+
+crypto/crypto.js:12
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ call of method `read`
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ string. This type is incompatible with
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                         ^^^^^^ number
+
+crypto/crypto.js:12
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ call of method `read`
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+            ^^^^^^^^^^^ undefined. This type is incompatible with
+ 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
+                         ^^^^^^ number
+
+crypto/crypto.js:16
+ 16:     hmac.write(123); // 2 errors: not a string or a Buffer
+         ^^^^^^^^^^^^^^^ call of method `write`
+ 16:     hmac.write(123); // 2 errors: not a string or a Buffer
+                    ^^^ number. This type is incompatible with
+union: Buffer | string. See lib: node.js:1115
+  Member 1:
+  Buffer. See lib: node.js:1115
+  Error:
+   16:     hmac.write(123); // 2 errors: not a string or a Buffer
+                      ^^^ number. This type is incompatible with
+  Buffer. See lib: node.js:1115
+  Member 2:
+  string. See lib: node.js:1115
+  Error:
+   16:     hmac.write(123); // 2 errors: not a string or a Buffer
+                      ^^^ number. This type is incompatible with
+  string. See lib: node.js:1115
+
+crypto/crypto.js:26
+ 26:     hmac.update('foo', 'bogus'); // 1 error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `update`. Function cannot be called on any member of intersection type
+ 26:     hmac.update('foo', 'bogus'); // 1 error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  function type. See lib: node.js:365
+  Error:
+   26:     hmac.update('foo', 'bogus'); // 1 error
+                       ^^^^^ string. This type is incompatible with
+  Buffer. See lib: node.js:365
+  Member 2:
+  function type. See lib: node.js:366
+  Error:
+   26:     hmac.update('foo', 'bogus'); // 1 error
+                              ^^^^^^^ string. This type is incompatible with
+  string enum. See lib: node.js:366
+
+crypto/crypto.js:28
+ 28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
+         ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `update`. Function cannot be called on any member of intersection type
+ 28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
+         ^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+  Member 1:
+  function type. See lib: node.js:365
+  Error:
+   28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
+                            ^^^^^^ string. This type is incompatible with
+  undefined. See lib: node.js:365
+  Member 2:
+  function type. See lib: node.js:366
+  Error:
+   21:   function(buf: Buffer) {
+                       ^^^^^^ Buffer. This type is incompatible with
+  string. See lib: node.js:366
+
+crypto/crypto.js:35
+ 35:     (hmac.digest('hex'): void); // 1 error
+          ^^^^^^^^^^^^^^^^^^ call of method `digest`
+ 35:     (hmac.digest('hex'): void); // 1 error
+          ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 35:     (hmac.digest('hex'): void); // 1 error
+                              ^^^^ undefined
+
+crypto/crypto.js:36
+ 36:     (hmac.digest(): void); // 1 error
+          ^^^^^^^^^^^^^ call of method `digest`
+ 36:     (hmac.digest(): void); // 1 error
+          ^^^^^^^^^^^^^ Buffer. This type is incompatible with
+ 36:     (hmac.digest(): void); // 1 error
+                         ^^^^ undefined
+
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-intersection type. See lib: node.js:646
+intersection type. See lib: node.js:712
   Case 3 may work:
-  function type. See lib: node.js:655
+  function type. See lib: node.js:721
   But if it doesn't, case 4 looks promising too:
-  function type. See lib: node.js:660
+  function type. See lib: node.js:726
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                       ^ parameter `_`
@@ -141,4 +244,4 @@ json_file/test.js:22
                               ^^^^ undefined
 
 
-Found 21 errors
+Found 30 errors
