@@ -25,10 +25,11 @@ begin library "hh-heap"
   files = begin fb-glob "hack/heap"
   end
   requires += [
-    "hh-stubs"
     "hh-globals-config"
-    "tp-core"
+    "hh-stubs"
     "hh-utils-collections"
+    "hh-utils-core"
+    "tp-core"
   ]
   if have_lz4 then {
     cclib += [ "-llz4" ]
@@ -80,28 +81,142 @@ begin library "hh-find"
   ]
 end
 
-begin library "hh-utils"
+begin library "hh-utils-core"
+  dirname = "hack/utils"
   sort = true
-  files = begin fb-glob "hack/utils"
-    excludes = [ 
-      "get_build_id.gen.c"
-      "win32_support.c" 
-    ]
-  end
-  files += [
-    "hack/utils/get_build_id.gen.c"
+  files = [
+    "build_id.ml"
+    "core.ml"
+    "exit_status.ml"
+    "get_build_id.c"
+    "get_build_id.gen.c"
+    "hh_logger.ml"
+    "measure.ml"
+    "stats.ml"
+    "utils.ml"
   ]
   requires += [
     "hh-utils-collections"
     "hh-utils-json"
     "tp-core"
   ]
+end
 
+begin library "hh-utils"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "config_file.ml"
+    "file_pos.ml"
+    "findUtils.ml"
+    "local_id.ml"
+    "marshal_tools.ml"
+    "php_escaping.ml"
+    "random_id.ml"
+    "regexp_utils.ml"
+    "trie.ml"
+    "wwwroot.ml"
+  ]
+  requires += [
+    "hh-utils-core"
+    "hh-utils-relative-path"
+    "hh-utils-string"
+    "hh-utils-sys"
+    "hh-utils-collections"
+    "hh-utils-json"
+    "tp-core"
+  ]
+end
+
+begin library "hh-utils-relative-path"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "relative_path.ml"
+  ]
+  requires += [
+    "hh-heap"
+    "hh-utils-collections"
+    "tp-core"
+  ]
+end
+
+begin library "hh-utils-pos"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "pos.ml"
+    "pos_embedded.ml"
+    "pos_source"
+  ]
+  requires += [
+    "hh-utils"
+    "hh-utils-collections"
+    "hh-utils-json"
+    "hh-utils-relative-path"
+    "tp-core"
+  ]
+end
+
+begin library "hh-utils-string"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "string_utils.ml"
+  ]
+end
+
+begin library "hh-utils-sys"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "daemon.ml"
+    "files.c"
+    "fork.ml"
+    "handle.ml"
+    "handle_stubs.c"
+    "lock.ml"
+    "nproc.c"
+    "path.ml"
+    "pidLog.ml"
+    "printSignal.ml"
+    "priorities.c"
+    "realpath.c"
+    "sys_utils.ml"
+    "sysinfo.c"
+    "tail.ml"
+    "timeout.ml"
+    "tmp.ml"
+    "tty.ml"
+  ]
   if not(os_type = "Win32") || (ocaml_major_version = "4" && ocaml_minor_version = "01") then {
     files += [ 
-      "hack/utils/win32_support.c"
+      "win32_support.c"
     ]
   }
+  requires = [
+    "hh-utils-collections"
+    "hh-utils-core"
+    "hh-utils-string"
+    "tp-core"
+  ]
+end
+
+begin library "hh-utils-errors"
+  dirname = "hack/utils"
+  sort = true
+  files = [
+    "errors_sig.ml"
+  ]
+  requires = [
+    "hh-utils-collections"
+    "hh-utils-core"
+    "hh-utils-json"
+    "hh-utils-pos"
+    "hh-utils-relative-path"
+    "hh-utils-string"
+    "tp-core"
+  ]
 end
 
 begin library "hh-utils-collections"
@@ -116,7 +231,6 @@ begin library "hh-utils-json"
   end
   requires += [ "tp-core" ]
 end
- -
 
 begin library "hh-globals"
   sort = true
@@ -127,6 +241,8 @@ begin library "hh-globals"
     "hh-heap"
     "hh-utils"
     "hh-utils-collections"
+    "hh-utils-core"
+    "hh-utils-pos"
   ]
 end
 
@@ -136,14 +252,13 @@ begin library "hh-globals-config"
   files = [
     "globalConfig.ml"
   ]
-  requires += [ "hh-utils" ]
+  requires += [ "hh-utils-sys" ]
 end
 
 begin library "hh-stubs"
   sort = true
   files = begin fb-glob "hack/stubs"
   end
-  requires += [ "hh-utils" ]
 end
 
 begin library "hh-dfind"
@@ -168,9 +283,13 @@ begin library "hh-search-common"
   requires += [
     "hh-heap"
     "hh-procs"
-    "tp-core"
     "hh-utils"
     "hh-utils-collections"
+    "hh-utils-core"
+    "hh-utils-pos"
+    "hh-utils-relative-path"
+    "hh-utils-string"
+    "tp-core"
   ]
 end
 
