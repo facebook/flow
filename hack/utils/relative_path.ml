@@ -46,13 +46,22 @@ let set_path_prefix prefix v =
   | Dummy -> raise (Failure "Dummy is always represented by an empty string")
   | _ -> path_ref_of_prefix prefix := Some v
 
-type t = prefix * string
+(** The underlying storage type of the  *)
+module type Storage_type = sig
+  type t
+  val from: string -> t
+  val to_string: t -> string
+end
+
+module Make_with_underlying_data(Representation: Storage_type) = struct
+
+type t = prefix * Representation.t
 
 let prefix (p : t) = fst p
 
-let suffix (p : t) = snd p
+let suffix (p : t) = Representation.to_string (snd p)
 
-let default = (Dummy, "")
+let default = (Dummy, Representation.from "")
 
 module S = struct
   type path = t
@@ -62,13 +71,14 @@ module S = struct
 
   (* We could have simply used Marshal.to_string here, but this does slightly
    * better on space usage. *)
-  let to_string (p, rest) = string_of_prefix p ^ "|" ^ rest
+  let to_string (p, rest) = string_of_prefix p ^ "|" ^
+    (Representation.to_string rest)
 end
 
 module Set = Reordered_argument_set(Set.Make(S))
 module Map = Reordered_argument_map(MyMap.Make(S))
 
-let to_absolute (p, rest) = path_of_prefix p ^ rest
+let to_absolute (p, rest) = path_of_prefix p ^ (Representation.to_string rest)
 
 let create prefix s =
   let prefix_s = path_of_prefix prefix in
@@ -78,9 +88,10 @@ let create prefix s =
     Printf.eprintf "%s is not a prefix of %s" prefix_s s;
     assert_false_log_backtrace ();
   end;
-  prefix, String.sub s prefix_len (String.length s - prefix_len)
+  prefix, Representation.from (
+    String.sub s prefix_len (String.length s - prefix_len))
 
-let concat prefix s = prefix, s
+let concat prefix s = prefix, Representation.from s
 
 let join prefix xs =
   concat prefix @@ List.fold_left xs ~init:"" ~f:Filename.concat
@@ -90,3 +101,7 @@ let relativize_set prefix m =
 
 let set_of_list xs =
   List.fold_left xs ~f:Set.add ~init:Set.empty
+
+end
+
+include Make_with_underlying_data(Heap_string)
