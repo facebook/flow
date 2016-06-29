@@ -65,13 +65,16 @@ type autocomplete_response = (
   AutocompleteService_js.complete_autocomplete_result list,
   string
 ) Utils_js.ok_or_err
+type coverage_response = (
+  (Loc.t * bool) list,
+  Loc.t * string
+) Utils_js.ok_or_err
 type dump_types_response = (
   (Loc.t * string * string * string option * Reason_js.t list) list,
   Loc.t * string
 ) Utils_js.ok_or_err
-
-type coverage_response = (
-  (Loc.t * bool) list,
+type infer_type_response = (
+  Loc.t * string option * string option * Reason_js.t list,
   Loc.t * string
 ) Utils_js.ok_or_err
 

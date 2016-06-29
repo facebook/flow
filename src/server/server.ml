@@ -158,8 +158,7 @@ struct
   let infer_type ~options (file_input, line, col, verbose, include_raw) oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
-    let (err, resp) =
-    (try
+    let response = (try
       let content = ServerProt.file_input_get_content file_input in
       let cx = match Types_js.typecheck_contents ?verbose ~options content file with
       | _, Some cx, _, _ -> cx
@@ -182,13 +181,13 @@ struct
         possible_ts
         |> List.map Type.reason_of_t
       in
-      (None, Some (loc, ty, raw_type, reasons))
+      OK (loc, ty, raw_type, reasons)
     with exn ->
       let loc = mk_loc file line col in
       let err = (loc, Printexc.to_string exn) in
-      (Some err, None)
-    ); in
-    Marshal.to_channel oc (err, resp) [];
+      Err err
+    ) in
+    Marshal.to_channel oc (response: ServerProt.infer_type_response) [];
     flush oc
 
   let dump_types ~options file_input include_raw oc =

@@ -136,9 +136,8 @@ let main option_values root json strip_root verbose path include_raw args () =
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
-  match (Timeout.input_value ic) with
-  | (Some err, None) -> handle_error err json (relativize strip_root root)
-  | (None, Some resp) -> handle_response resp json (relativize strip_root root)
-  | (_, _) -> failwith "Oops"
+  match (Timeout.input_value ic : ServerProt.infer_type_response) with
+  | Utils_js.Err err -> handle_error err json (relativize strip_root root)
+  | Utils_js.OK resp -> handle_response resp json (relativize strip_root root)
 
 let command = CommandSpec.command spec main
