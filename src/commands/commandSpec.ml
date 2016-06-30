@@ -197,8 +197,9 @@ type t = {
   cmdname : string;
   cmddoc : string;
   flags : ArgSpec.flag_metadata SMap.t;
+  args_of_argv : string list -> string list SMap.t;
   string_of_usage : unit -> string;
-  main : string list -> unit;
+  main : string list SMap.t -> unit;
 }
 
 let no_dashes opt =
@@ -315,17 +316,15 @@ let command spec main = {
   cmddoc = spec.doc;
   flags = spec.args.ArgSpec.flags;
   string_of_usage = (fun () -> usage_string spec);
-  main = fun argv ->
-    match argv with
-    | _cmd::subcmd::args when subcmd = spec.name ->
-      let values = parse SMap.empty spec.args args in
-      let main = ArgSpec.apply spec.args values main in
-      main ()
-    | _ -> failwith "Missing subcommand";
+  args_of_argv = parse SMap.empty spec.args;
+  main = (fun args ->
+    let main = ArgSpec.apply spec.args args main in
+    main ());
 }
 
 let run command = command.main
 let name command = command.cmdname
 let doc command = command.cmddoc
 let flags command = command.flags
+let args_of_argv command = command.args_of_argv
 let string_of_usage command = command.string_of_usage ()

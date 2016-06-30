@@ -62,30 +62,26 @@ end = struct
     Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore;
     let default_command = DefaultCommand.command in
     let argv = Array.to_list Sys.argv in
-    let default = CommandSpec.name default_command in
     let (command, argv) = match argv with
     | [] -> failwith "Expected command"
-    | cmd::[] -> (default_command, cmd::default::[])
+    | cmd::[] -> (default_command, [])
     | cmd::next::rest ->
         let subcmd = String.lowercase next in
         try
           let command = List.find (fun command ->
             (CommandSpec.name command) = subcmd
           ) commands in
-          (command, argv)
+          (command, rest)
         with Not_found ->
-          (default_command, cmd::default::next::rest)
+          (default_command, next::rest)
     in
     let command_string = CommandSpec.name command in
     FlowEventLogger.set_command (Some command_string);
     FlowEventLogger.init_flow_command ~version:FlowConfig.version;
-    try
-      CommandSpec.run command argv
-    with
-    | CommandSpec.Show_help ->
-        print_endline (CommandSpec.string_of_usage command);
-        FlowExitStatus.(exit No_error)
-    | CommandSpec.Failed_to_parse msg ->
+
+    let args =
+      try CommandSpec.args_of_argv command argv
+      with CommandSpec.Failed_to_parse msg ->
         let msg = Utils_js.spf
           "%s: %s\n%s"
           (Filename.basename Sys.executable_name)
@@ -93,6 +89,12 @@ end = struct
           (CommandSpec.string_of_usage command)
         in
         FlowExitStatus.(exit ~msg Commandline_usage_error)
+    in
+
+    try CommandSpec.run command args
+    with CommandSpec.Show_help ->
+      print_endline (CommandSpec.string_of_usage command);
+      FlowExitStatus.(exit No_error)
 end
 
 let _ =

@@ -58,8 +58,9 @@ val usage : ('a, 'b) builder_t -> unit
 val command : ('main, unit -> unit) builder_t -> 'main -> t
 
 (* accessors *)
-val run : t -> string list -> unit
+val run : t -> string list SMap.t -> unit
 val name : t -> string
 val doc : t -> string
 val flags : t -> ArgSpec.flag_metadata SMap.t
+val args_of_argv : t -> string list -> string list SMap.t
 val string_of_usage : t -> string
