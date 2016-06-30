@@ -35,12 +35,22 @@ mv tmp/d.json .
 
 printf "\nDelete unchecked.js:\n"
 mv unchecked.js tmp
-$FLOW force-recheck --no-auto-start d.json
+$FLOW force-recheck --no-auto-start unchecked.js
 $FLOW status --no-auto-start --old-output-format .
 
 printf "\nRestore unchecked.js:\n"
 mv tmp/unchecked.js .
-$FLOW force-recheck --no-auto-start d.json
+$FLOW force-recheck --no-auto-start unchecked.js
+$FLOW status --no-auto-start --old-output-format .
+
+printf "\nDelete dupe2.js:\n"
+mv dupe2.js tmp
+$FLOW force-recheck --no-auto-start dupe2.js
+$FLOW status --no-auto-start --old-output-format .
+
+printf "\nRestore dupe2.js:\n"
+mv tmp/dupe2.js .
+$FLOW force-recheck --no-auto-start dupe2.js
 $FLOW status --no-auto-start --old-output-format .
 
 rmdir tmp
