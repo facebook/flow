@@ -53,10 +53,8 @@ type t
 exception Show_help
 exception Failed_to_parse of string
 
-val main : ('a, unit -> unit) builder_t -> 'a -> string list -> unit
 val usage : ('a, 'b) builder_t -> unit
 
-val raw_command : ('main, unit -> unit) builder_t -> (string list -> unit) -> t
 val command : ('main, unit -> unit) builder_t -> 'main -> t
 
 (* accessors *)

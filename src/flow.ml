@@ -20,7 +20,7 @@ end = struct
   let commands = [
     AstCommand.command;
     AutocompleteCommand.command;
-    ServerCommands.Check.command;
+    ServerCommands.CheckCommand.command;
     CheckContentsCommand.command;
     ConvertCommand.command;
     CoverageCommand.command;
@@ -32,9 +32,9 @@ end = struct
     ConfigCommands.Init.command;
     LsCommand.command;
     PortCommand.command;
-    ServerCommands.Server.command;
+    ServerCommands.ServerCommand.command;
     SearchCommand.command;
-    ServerCommands.Start.command;
+    ServerCommands.StartCommand.command;
     StopCommand.command;
     SuggestCommand.command;
     TypeAtPosCommand.command;

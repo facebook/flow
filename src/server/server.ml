@@ -8,23 +8,16 @@
  *
  *)
 
-module type OPTION_PARSER = sig
-  val parse : unit -> Options.t
-end
-
 module TI = Type_inference_js
 module Server = ServerFunctors
 
-module FlowProgram (OptionParser : OPTION_PARSER) : Server.SERVER_PROGRAM =
-struct
+module FlowProgram : Server.SERVER_PROGRAM = struct
   open Utils_js
   open Sys_utils
   open ServerEnv
   open ServerUtils
 
   let name = "flow server"
-
-  let parse_options = OptionParser.parse
 
   let preinit options =
     (* Do some initialization before creating workers, so that each worker is

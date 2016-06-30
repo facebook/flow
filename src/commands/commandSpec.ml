@@ -310,23 +310,19 @@ let usage_string spec =
 let usage spec =
   print_endline (usage_string spec)
 
-let main spec fn argv =
-  match argv with
-  | _cmd::subcmd::args when subcmd = spec.name ->
-    let values = parse SMap.empty spec.args args in
-    let main = ArgSpec.apply spec.args values fn in
-    main ()
-  | _ -> failwith "Missing subcommand"
-
-let raw_command spec main = {
+let command spec main = {
   cmdname = spec.name;
   cmddoc = spec.doc;
   flags = spec.args.ArgSpec.flags;
   string_of_usage = (fun () -> usage_string spec);
-  main;
+  main = fun argv ->
+    match argv with
+    | _cmd::subcmd::args when subcmd = spec.name ->
+      let values = parse SMap.empty spec.args args in
+      let main = ArgSpec.apply spec.args values main in
+      main ()
+    | _ -> failwith "Missing subcommand";
 }
-
-let command spec main_ = raw_command spec (main spec main_)
 
 let run command = command.main
 let name command = command.cmdname

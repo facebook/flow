@@ -20,6 +20,8 @@ module type CONFIG = sig
   val mode : mode
 end
 
+module Main = ServerFunctors.ServerMain (Server.FlowProgram)
+
 module OptionParser(Config : CONFIG) = struct
   let cmdname = match Config.mode with
   | Check -> "check"
@@ -162,7 +164,6 @@ module OptionParser(Config : CONFIG) = struct
       in
       FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
-  let result = ref None
   let main
       error_flags
       json
@@ -263,7 +264,7 @@ module OptionParser(Config : CONFIG) = struct
     let all = all || FlowConfig.(flowconfig.options.Opts.all) in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
-    result := Some { Options.
+    let options = { Options.
       opt_check_mode = Config.(mode = Check);
       opt_server_mode = Config.(mode = Server);
       opt_error_flags = error_flags;
@@ -341,41 +342,12 @@ module OptionParser(Config : CONFIG) = struct
       opt_max_header_tokens = FlowConfig.(
         flowconfig.options.Opts.max_header_tokens
       )
-    };
-    ()
+    } in
+    Main.start options
 
-  let rec parse () =
-    match !result with
-    | Some result -> result
-    | None ->
-        let argv = Array.to_list Sys.argv in
-        CommandSpec.main spec main argv;
-        parse ()
+  let command = CommandSpec.command spec main
 end
 
-module Main (OptionParser : Server.OPTION_PARSER) =
-  ServerFunctors.ServerMain (Server.FlowProgram (OptionParser))
-
-module Check = struct
-  module OptionParser = OptionParser (struct let mode = Check end)
-  module Main = Main (OptionParser)
-  let spec = OptionParser.spec
-  (* ignores argv because OptionParser grabs it directly *)
-  let command = CommandSpec.raw_command spec (fun _ -> Main.start ())
-end
-
-module Server = struct
-  module OptionParser = OptionParser (struct let mode = Server end)
-  module Main = Main (OptionParser)
-  let spec = OptionParser.spec
-  (* ignores argv because OptionParser grabs it directly *)
-  let command = CommandSpec.raw_command spec (fun _ -> Main.start ())
-end
-
-module Start = struct
-  module OptionParser = OptionParser (struct let mode = Detach end)
-  module Main = Main (OptionParser)
-  let spec = OptionParser.spec
-  (* ignores argv because OptionParser grabs it directly *)
-  let command = CommandSpec.raw_command spec (fun _ -> Main.start ())
-end
+module CheckCommand = OptionParser (struct let mode = Check end)
+module ServerCommand = OptionParser (struct let mode = Server end)
+module StartCommand = OptionParser (struct let mode = Detach end)

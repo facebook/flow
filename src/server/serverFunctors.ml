@@ -23,7 +23,6 @@ module type SERVER_PROGRAM = sig
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
   val recheck: genv -> env -> FilenameSet.t -> env
-  val parse_options: unit -> Options.t
   val get_watch_paths: Options.t -> Path.t list
   val name: string
   val handle_client : genv -> env -> client -> env
@@ -111,7 +110,7 @@ let new_entry_point =
     Printf.sprintf "main_%d" !cpt
 
 module ServerMain (Program : SERVER_PROGRAM) : sig
-  val start : unit -> unit
+  val start : Options.t -> unit
 end = struct
   let sleep_and_check socket =
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
@@ -392,8 +391,7 @@ end = struct
 
     wait_loop pid options waiting_channel_ic
 
-  let start () =
-    let options = Program.parse_options () in
+  let start options =
     if Options.should_detach options
     then daemonize options
     else main options
