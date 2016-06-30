@@ -58,7 +58,10 @@ let choose_provider_and_warn_about_duplicates =
             "current provider"]
         ])
       in
-      FilenameMap.add f (ErrorSet.singleton w) acc
+      FilenameMap.add f (match FilenameMap.get f acc with
+        | Some errset -> ErrorSet.add w errset
+        | None -> ErrorSet.singleton w
+      ) acc
     ) errmap modules in
 
     fun m errmap providers fallback ->
@@ -883,12 +886,22 @@ let commit_modules workers ~options inferred removed =
           (Modulename.to_string m);
         (NameSet.add m rem), rep, errmap
     | ps ->
-      (* incremental: clear error sets of provider candidates *)
+      (* incremental: install empty error sets here for provider candidates.
+         this will have the effect of resetting downstream errors for these
+         files, when the returned error map is used by our caller.
+         IMPORTANT: since each file may (does) provide more than one module,
+         files may already have acquired errors earlier in this fold, so we
+         must only add an empty entry if no entry is already present
+      *)
       let errmap = FilenameSet.fold (fun f acc ->
-        FilenameMap.add f ErrorSet.empty acc) ps errmap in
+        match FilenameMap.get f acc with
+        | Some _ -> acc
+        | None -> FilenameMap.add f ErrorSet.empty acc
+      ) ps errmap in
       (* now choose provider for m *)
       let p, errmap = choose_provider
         ~options (Modulename.to_string m) ps errmap in
+      (* register chosen provider in NameHeap *)
       match NameHeap.get m with
       | Some f when f = p ->
           if debug then prerr_endlinef

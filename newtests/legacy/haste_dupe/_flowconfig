@@ -1,0 +1,6 @@
+[options]
+all=true
+
+strip_root=true
+
+module.system=haste
