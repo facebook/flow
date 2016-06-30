@@ -3158,30 +3158,24 @@ and binary cx type_params_map loc = Ast.Expression.Binary.(function
 )
 
 and logical cx type_params_map loc = Ast.Expression.Logical.(function
-  | { operator = Or;
-      left = (left_loc, _) as left;
-      right = (right_loc, _) as right;
-    } ->
+  | { operator = Or; left; right } ->
       let t1, _, not_map, xtypes = predicates_of_condition cx type_params_map left in
       let reason = mk_reason "||" loc in
       let t2 = Env.in_refined_env cx reason not_map xtypes
         (fun () -> expression cx type_params_map right)
       in
       Flow.mk_tvar_where cx reason (fun t ->
-        Flow.flow cx (t1, OrT (reason, (left_loc, right_loc), t2, t));
+        Flow.flow cx (t1, OrT (reason, t2, t));
       )
 
-  | { operator = And;
-      left = (left_loc, _) as left;
-      right = (right_loc, _) as right;
-    } ->
+  | { operator = And; left; right } ->
       let t1, map, _, xtypes = predicates_of_condition cx type_params_map left in
       let reason = mk_reason "&&" loc in
       let t2 = Env.in_refined_env cx reason map xtypes
         (fun () -> expression cx type_params_map right)
       in
       Flow.mk_tvar_where cx reason (fun t ->
-        Flow.flow cx (t1, AndT (reason, (left_loc, right_loc), t2, t));
+        Flow.flow cx (t1, AndT (reason, t2, t));
       )
 )
 
@@ -4311,11 +4305,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     )
 
   (* test1 && test2 *)
-  | loc, Logical {
-      Logical.operator = Logical.And;
-      left = (left_loc, _) as left;
-      right = (right_loc, _) as right;
-    } ->
+  | loc, Logical { Logical.operator = Logical.And; left; right } ->
       let reason = mk_reason "&&" loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx type_params_map left in
@@ -4324,7 +4314,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       in
       (
         Flow.mk_tvar_where cx reason (fun t ->
-          Flow.flow cx (t1, AndT (reason, (left_loc, right_loc), t2, t));
+          Flow.flow cx (t1, AndT (reason, t2, t));
         ),
         mk_and map1 map2,
         mk_or not_map1 not_map2,
@@ -4332,11 +4322,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       )
 
   (* test1 || test2 *)
-  | loc, Logical {
-      Logical.operator = Logical.Or;
-      left = (left_loc, _) as left;
-      right = (right_loc, _) as right;
-    } ->
+  | loc, Logical { Logical.operator = Logical.Or; left; right } ->
       let reason = mk_reason "||" loc in
       let t1, map1, not_map1, xts1 =
         predicates_of_condition cx type_params_map left in
@@ -4345,7 +4331,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       in
       (
         Flow.mk_tvar_where cx reason (fun t ->
-          Flow.flow cx (t1, OrT (reason, (left_loc, right_loc), t2, t));
+          Flow.flow cx (t1, OrT (reason, t2, t));
         ),
         mk_or map1 map2,
         mk_and not_map1 not_map2,
@@ -4390,7 +4376,11 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
   Flow.mk_tvar_where cx reason (fun t ->
     let get_prop_u =
       if is_cond
-      then LookupT (reason, None, [], name, AnyWithUpperBoundT t)
+      then
+        let t = Flow.tvar_with_constraint cx
+          (ReposLowerT (reason, UseT (UnknownUse, t)))
+        in
+        LookupT (reason, None, [], name, AnyWithUpperBoundT t)
       else GetPropT (reason, (prop_reason, name), t)
     in
     Flow.flow cx (tobj, get_prop_u)

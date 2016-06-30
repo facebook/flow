@@ -146,17 +146,13 @@ eq.js:5
 
 eq.js:19
  19:     if (x.y == 123) {} // error
-             ^^^^^^^^^^ non-strict equality comparison
- 18:   function(x: { y: 'foo' } | { y: 'bar' }) {
-                        ^^^^^ string literal `foo`. Cannot be compared to
+             ^^^ string literal `bar`. Cannot be compared to
  19:     if (x.y == 123) {} // error
                     ^^^ number
 
 eq.js:19
  19:     if (x.y == 123) {} // error
-             ^^^^^^^^^^ non-strict equality comparison
- 18:   function(x: { y: 'foo' } | { y: 'bar' }) {
-                                       ^^^^^ string literal `bar`. Cannot be compared to
+             ^^^ string literal `foo`. Cannot be compared to
  19:     if (x.y == 123) {} // error
                     ^^^ number
 

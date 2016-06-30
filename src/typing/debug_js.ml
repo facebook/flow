@@ -356,8 +356,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | AndT (_, _, right, res)
-  | OrT (_, _, right, res) -> [
+  | AndT (_, right, res)
+  | OrT (_, right, res) -> [
       "rightType", _json_of_t json_cx right;
       "resultType", _json_of_t json_cx res
     ]
@@ -1094,8 +1094,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
   | EqT (_, arg) -> p ~extra:(kid arg) t
-  | AndT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
-  | OrT (_, _, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | ReifyTypeT (_, arg) -> p ~extra:(kid arg) t
   | SpecializeT (_, _, b, args, ret) -> p ~extra:(spf "%b, [%s], %s"

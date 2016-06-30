@@ -956,7 +956,7 @@ module ResolvableTypeJob = struct
      types are only needed for choice-making on intersections. We care about
      calls in particular because one of the biggest uses of intersections is
      function overloading. More uses will be added over time. *)
-  let collect_of_use ~log_unresolved cx reason acc = function
+  and collect_of_use ~log_unresolved cx reason acc = function
   | UseT (_, t) ->
     collect_of_type ~log_unresolved cx reason acc t
   | CallT (_, ft) ->
@@ -1740,60 +1740,48 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason = replace_reason "boolean value `false`" reason in
       rec_flow_t cx trace (BoolT (reason, Some false), tout)
 
-    | (left, AndT(reason, (left_loc, right_loc), right, u)) ->
+    | (left, AndT(_, right, u)) ->
       (* a falsy && b ~> a
          a truthy && b ~> b
          a && b ~> a falsy | b *)
-      let left_reason = repos_reason left_loc reason in
-      let right_reason = repos_reason right_loc reason in
       let truthy_left = filter_exists left in
       (match truthy_left with
       | EmptyT _ ->
         (* falsy *)
-        rec_flow cx trace
-          (left, ReposLowerT (left_reason, PredicateT (NotP ExistsP, u)))
+        rec_flow cx trace (left, PredicateT (NotP ExistsP, u))
       | _ ->
         (match filter_not_exists left with
         | EmptyT _ -> (* truthy *)
-          rec_flow cx trace
-            (right, ReposLowerT (right_reason, UseT (UnknownUse, u)))
+          rec_flow cx trace (right, UseT (UnknownUse, u))
         | _ ->
-          rec_flow cx trace
-            (left, ReposLowerT (left_reason, PredicateT (NotP ExistsP, u)));
+          rec_flow cx trace (left, PredicateT (NotP ExistsP, u));
           begin match truthy_left with
           | EmptyT _ -> ()
           | _ ->
-            rec_flow cx trace
-              (right, ReposLowerT (right_reason, UseT (UnknownUse, u)))
+            rec_flow cx trace (right, UseT (UnknownUse, u))
           end
         )
       )
 
-    | (left, OrT(reason, (left_loc, right_loc), right, u)) ->
+    | (left, OrT(_, right, u)) ->
       (* a truthy || b ~> a
          a falsy || b ~> b
          a || b ~> a truthy | b *)
-      let left_reason = repos_reason left_loc reason in
-      let right_reason = repos_reason right_loc reason in
       let falsy_left = filter_not_exists left in
       (match falsy_left with
       | EmptyT _ ->
         (* truthy *)
-        rec_flow cx trace
-          (left, ReposLowerT (left_reason, PredicateT (ExistsP, u)))
+        rec_flow cx trace (left, PredicateT (ExistsP, u))
       | _ ->
         (match filter_exists left with
         | EmptyT _ -> (* falsy *)
-          rec_flow cx trace
-            (right, ReposLowerT (right_reason, UseT (UnknownUse, u)))
+          rec_flow cx trace (right, UseT (UnknownUse, u))
         | _ ->
-          rec_flow cx trace
-            (left, ReposLowerT (left_reason, PredicateT (ExistsP, u)));
+          rec_flow cx trace (left, PredicateT (ExistsP, u));
           begin match falsy_left with
           | EmptyT _ -> ()
           | _ ->
-            rec_flow cx trace
-              (right, ReposLowerT (right_reason, UseT (UnknownUse, u)))
+            rec_flow cx trace (right, UseT (UnknownUse, u))
           end
         )
       )

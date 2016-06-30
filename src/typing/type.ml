@@ -292,8 +292,8 @@ module rec TypeTerm : sig
     | EqT of reason * t
 
     (* logical operators *)
-    | AndT of reason * (Loc.t * Loc.t) * t * t
-    | OrT of reason * (Loc.t * Loc.t) * t * t
+    | AndT of reason * t * t
+    | OrT of reason * t * t
     | NotT of reason * t
 
     (**
@@ -1100,8 +1100,8 @@ and reason_of_use_t = function
   | ComparatorT (reason,_)
   | UnaryMinusT (reason, _)
 
-  | AndT (reason, _, _, _)
-  | OrT (reason, _, _, _)
+  | AndT (reason, _, _)
+  | OrT (reason, _, _)
   | NotT (reason, _)
   | ReifyTypeT (reason, _)
   | BecomeT (reason, _)
@@ -1323,8 +1323,8 @@ and mod_reason_of_use_t f = function
 
   | EqT (reason, t) -> EqT (f reason, t)
 
-  | AndT (reason, locs, t1, t2) -> AndT (f reason, locs, t1, t2)
-  | OrT (reason, locs, t1, t2) -> OrT (f reason, locs, t1, t2)
+  | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
+  | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | NotT (reason, t) -> NotT (f reason, t)
 
   | ReifyTypeT (reason, t_out) -> ReifyTypeT (f reason, t_out)
