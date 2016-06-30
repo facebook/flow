@@ -32,13 +32,15 @@ export default suite(({addFile, addFiles, addCode}) => [
     // tolerant of whitespace changes. Below I added newlines to the beginning
     // and end of the error and indented it a bunch
     addCode('var boom = myNum * myStr;')
-      .newErrors(`
-        test.js:9
-          9: var boom = myNum * myStr;
-                                ^^^^^ string. This type is incompatible with
-          9: var boom = myNum * myStr;
-                        ^^^^^^^^^^^^^ number
-      `),
+      .newErrors(
+        `
+          test.js:9
+            9: var boom = myNum * myStr;
+                                  ^^^^^ string. This type is incompatible with
+            9: var boom = myNum * myStr;
+                          ^^^^^^^^^^^^^ number
+        `,
+      )
   ]),
 
   test('addFile(s) example', [
@@ -81,167 +83,169 @@ export default suite(({addFile, addFiles, addCode}) => [
     addFile('A.js')
       .flowCmd(['ast', '--tokens'], 'A.js')
       .stdout(
-`{
-  "errors": [],
-  "tokens": [
-    {
-      "type": "T_EXPORT",
-      "context": "normal",
-      "loc": {
-        "start": {
-          "line": 1,
-          "column": 0
-        },
-        "end": {
-          "line": 1,
-          "column": 6
-        }
-      },
-      "range": [
-        0,
-        6
-      ],
-      "value": "export"
-    },
-    {
-      "type": "T_DEFAULT",
-      "context": "normal",
-      "loc": {
-        "start": {
-          "line": 1,
-          "column": 7
-        },
-        "end": {
-          "line": 1,
-          "column": 14
-        }
-      },
-      "range": [
-        7,
-        14
-      ],
-      "value": "default"
-    },
-    {
-      "type": "T_NUMBER",
-      "context": "normal",
-      "loc": {
-        "start": {
-          "line": 1,
-          "column": 15
-        },
-        "end": {
-          "line": 1,
-          "column": 18
-        }
-      },
-      "range": [
-        15,
-        18
-      ],
-      "value": "123"
-    },
-    {
-      "type": "T_SEMICOLON",
-      "context": "normal",
-      "loc": {
-        "start": {
-          "line": 1,
-          "column": 18
-        },
-        "end": {
-          "line": 1,
-          "column": 19
-        }
-      },
-      "range": [
-        18,
-        19
-      ],
-      "value": ";"
-    },
-    {
-      "type": "T_EOF",
-      "context": "normal",
-      "loc": {
-        "start": {
-          "line": 2,
-          "column": 0
-        },
-        "end": {
-          "line": 2,
-          "column": 0
-        }
-      },
-      "range": [
-        20,
-        20
-      ],
-      "value": ""
-    }
-  ],
-  "type": "Program",
-  "loc": {
-    "source": null,
-    "start": {
-      "line": 1,
-      "column": 0
-    },
-    "end": {
-      "line": 1,
-      "column": 19
-    }
-  },
-  "range": [
-    0,
-    19
-  ],
-  "body": [
-    {
-      "type": "ExportDeclaration",
-      "loc": {
-        "source": null,
-        "start": {
-          "line": 1,
-          "column": 0
-        },
-        "end": {
-          "line": 1,
-          "column": 19
-        }
-      },
-      "range": [
-        0,
-        19
-      ],
-      "default": true,
-      "declaration": {
-        "type": "Literal",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 15
-          },
-          "end": {
-            "line": 1,
-            "column": 18
+        `
+          {
+            "errors": [],
+            "tokens": [
+              {
+                "type": "T_EXPORT",
+                "context": "normal",
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 6
+                  }
+                },
+                "range": [
+                  0,
+                  6
+                ],
+                "value": "export"
+              },
+              {
+                "type": "T_DEFAULT",
+                "context": "normal",
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 7
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 14
+                  }
+                },
+                "range": [
+                  7,
+                  14
+                ],
+                "value": "default"
+              },
+              {
+                "type": "T_NUMBER",
+                "context": "normal",
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 15
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 18
+                  }
+                },
+                "range": [
+                  15,
+                  18
+                ],
+                "value": "123"
+              },
+              {
+                "type": "T_SEMICOLON",
+                "context": "normal",
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 18
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 19
+                  }
+                },
+                "range": [
+                  18,
+                  19
+                ],
+                "value": ";"
+              },
+              {
+                "type": "T_EOF",
+                "context": "normal",
+                "loc": {
+                  "start": {
+                    "line": 2,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 2,
+                    "column": 0
+                  }
+                },
+                "range": [
+                  20,
+                  20
+                ],
+                "value": ""
+              }
+            ],
+            "type": "Program",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 19
+              }
+            },
+            "range": [
+              0,
+              19
+            ],
+            "body": [
+              {
+                "type": "ExportDeclaration",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 19
+                  }
+                },
+                "range": [
+                  0,
+                  19
+                ],
+                "default": true,
+                "declaration": {
+                  "type": "Literal",
+                  "loc": {
+                    "source": null,
+                    "start": {
+                      "line": 1,
+                      "column": 15
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 18
+                    }
+                  },
+                  "range": [
+                    15,
+                    18
+                  ],
+                  "value": 123,
+                  "raw": "123"
+                },
+                "specifiers": [],
+                "source": null,
+                "exportKind": "value"
+              }
+            ],
+            "comments": []
           }
-        },
-        "range": [
-          15,
-          18
-        ],
-        "value": 123,
-        "raw": "123"
-      },
-      "specifiers": [],
-      "source": null,
-      "exportKind": "value"
-    }
-  ],
-  "comments": []
-}`,
-),
+        `,
+      ),
   ]),
 ]);

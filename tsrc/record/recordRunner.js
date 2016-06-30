@@ -19,24 +19,43 @@ function escapeString(str: string): string {
     .replace(/\$/g, '\\$');
 }
 
-function suggestionToString(suggestion): string {
-  return format(
-    "%s(%s%s)",
-    suggestion.method,
-    suggestion.args.length === 0 ? "" : "\n",
-    suggestion.args.map(arg => {
+function indent(str, size) {
+  const indent = Array(size+1).join(" ");
+  return str.split("\n")
+    .map(line => line.length > 0 ? indent + line : line)
+    .join("\n");
+}
+
+function suggestionToString(suggestion, indentSize): string {
+  const args = suggestion.args
+    .map(arg => {
       switch(typeof arg) {
         case "string":
-          return format("`%s`,\n", escapeString(arg));
+          if (arg.split("\n").length === 1) {
+            return format("`%s`", escapeString(arg));
+          } else {
+            return format("`\n%s\n`", indent(escapeString(arg), 2));
+          }
         case "number":
-          return format("%d,\n", arg);
+          return format("%d", arg);
         case "object":
-          return format("%s,\n", JSON.stringify(arg, null, 2));
+          return format("%s", JSON.stringify(arg, null, 2));
         default:
-          new Error("Unhandled arg type");
+          throw new Error("Unhandled arg type");
       }
-    }),
-  );
+    })
+    .map(line => line + ",\n")
+    .join("");
+  if (suggestion.args.length === 0) {
+    return format("%s()", suggestion.method);
+  } else {
+    return format(
+      "%s(\n%s%s)",
+      suggestion.method,
+      indent(args, indentSize),
+      Array(indentSize-1).join(" "),
+    );
+  }
 }
 
 function dfsForRange(node, line, col): ?[number, number] {
@@ -144,7 +163,7 @@ export default async function(args: Args): Promise<void> {
                   const [start, end] = range;
                   const out =
                     code.slice(0, start) +
-                    suggestionToString(result.suggestion) +
+                    suggestionToString(result.suggestion, assertLoc.column) +
                     code.slice(end);
                   await writeFile(filename, out);
                 } else {
