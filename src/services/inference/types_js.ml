@@ -276,7 +276,7 @@ let typecheck ~options ~timing ~workers ~make_merge_input files removed unparsed
   ) in
 
   match merge_input with
-  | true, to_merge, direct_deps ->
+  | Some (to_merge, direct_deps) ->
     (* to_merge is the union of inferred (newly inferred files) and the
        transitive closure of all dependents. direct_deps is the subset of
        to_merge which depend on inferred files directly, or whose import
@@ -334,7 +334,7 @@ let typecheck ~options ~timing ~workers ~make_merge_input files removed unparsed
     collate_errors ();
     timing
 
-  | false, _, _ ->
+  | None ->
     (* collate errors by origin *)
     collate_errors ();
     timing
@@ -482,9 +482,7 @@ let recheck genv env modified =
       Merge_service.remove_batch to_merge;
       SharedMem.collect `gentle;
 
-      true,
-      FilenameSet.elements to_merge,
-      direct_deps
+      Some (FilenameSet.elements to_merge, direct_deps)
     )
     freshparsed
     removed_modules
@@ -554,15 +552,11 @@ let full_check workers ~ordered_libs parse_next options =
         (fun file errs -> save_errors errors_by_file [file] [errs])
         (fun file sups -> save_suppressions error_suppressions [file] [sups])
       in
-      (* Note: if any libs failed, return false and files to report errors for.
-         (other errors will be suppressed.)
-         otherwise, return true and files to merge *)
-      let err_libs = List.fold_left (
-        fun acc (file, ok) -> if ok then acc else file :: acc
-      ) [] lib_files in
-      if err_libs != []
-      then false, err_libs, FilenameSet.empty
-      else true, inferred, FilenameSet.empty
+      (* Note: if any libs failed, return None.
+         otherwise, return Some (files to merge, _) *)
+      if List.exists (fun (_, ok) -> not ok) lib_files
+      then None
+      else Some (inferred, FilenameSet.empty)
     )
     parsed
     Module_js.NameSet.empty
