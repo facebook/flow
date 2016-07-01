@@ -539,24 +539,26 @@ let full_check workers ~ordered_libs parse_next options =
     ) parsed;
   ) in
 
+  (* load library code *)
+  (* if anything errors, we'll infer but not merge client code *)
+  Flow_logger.log "Loading libraries";
+  let timing, lib_error = with_timer ~options "InitLibs" timing (fun () ->
+    let lib_files = Init_js.init
+      ~options
+      ordered_libs
+      (fun file errs -> save_errors errors_by_file [file] [errs])
+      (fun file sups -> save_suppressions error_suppressions [file] [sups])
+    in
+    List.exists (fun (_, ok) -> not ok) lib_files
+  ) in
+
+  (* typecheck client files *)
   let timing = typecheck
     ~options
     ~timing
     ~workers
     ~make_merge_input:(fun inferred ->
-      (* after local inference and before merge, bring in libraries *)
-      (* if any fail to parse, our return value will suppress merge *)
-      let lib_files = Init_js.init
-        ~options
-        ordered_libs
-        (fun file errs -> save_errors errors_by_file [file] [errs])
-        (fun file sups -> save_suppressions error_suppressions [file] [sups])
-      in
-      (* Note: if any libs failed, return None.
-         otherwise, return Some (files to merge, _) *)
-      if List.exists (fun (_, ok) -> not ok) lib_files
-      then None
-      else Some (inferred, FilenameSet.empty)
+      if lib_error then None else Some (inferred, FilenameSet.empty)
     )
     parsed
     Module_js.NameSet.empty
