@@ -1845,14 +1845,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_tapp = reason_of_t l in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
       let c = instantiate_this_class cx trace reason_op tc this in
-      rec_flow cx trace (mk_instance cx reason_op ~for_type:false c, u)
+      rec_flow cx trace (mk_instance cx ~trace reason_op ~for_type:false c, u)
 
     | (_, UseT (use_op, ThisTypeAppT(c,this,ts))) ->
       let reason_op = reason_of_t l in
       let reason_tapp = reason_of_use_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
       let c = instantiate_this_class cx trace reason_op tc this in
-      let t_out = mk_instance cx reason_op ~for_type:false c in
+      let t_out = mk_instance cx ~trace reason_op ~for_type:false c in
       rec_flow cx trace (l, UseT (use_op, t_out))
 
     | TypeAppT _, ReposLowerT (reason_op, u) ->
@@ -1861,14 +1861,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_use_t u in
         let reason_tapp = reason_of_t l in
-        let t = mk_typeapp_instance cx ~reason_op ~reason_tapp ~cache:true c ts in
+        let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp ~cache:true c ts in
         rec_flow cx trace (t, u)
 
     | (TypeAppT(c,ts), _) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason_op = reason_of_use_t u in
           let reason_tapp = reason_of_t l in
-          let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
+          let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (t, u);
           TypeAppExpansion.pop ()
         )
@@ -1877,7 +1877,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason_op = reason_of_t l in
           let reason_tapp = reason_of_use_t u in
-          let t = mk_typeapp_instance cx ~reason_op ~reason_tapp c ts in
+          let t = mk_typeapp_instance cx ~trace ~reason_op ~reason_tapp c ts in
           rec_flow cx trace (l, UseT (use_op, t));
           TypeAppExpansion.pop ()
         )
@@ -2451,10 +2451,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Build an array holding the unwrapped values of the array parameter
        * and wrap back up into a promise to return. *)
       let t = mk_tvar_where cx reason_op (fun t ->
-        let funt = get_builtin cx "$await" reason_op in
+        let funt = get_builtin cx ~trace "$await" reason_op in
         rec_flow cx trace (param, TupleMapT (reason_op, funt, t))
       ) in
-      let promise = get_builtin_typeapp cx reason_op "Promise" [t] in
+      let promise = get_builtin_typeapp cx ~trace reason_op "Promise" [t] in
       rec_flow_t cx trace (promise, return_t)
 
     (* If you haven't heard, React is a pretty big deal. *)
@@ -2470,12 +2470,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match l with
       | ClassT _ ->
         let react_class =
-          get_builtin_typeapp cx reason_op "ReactClass" [config]
+          get_builtin_typeapp cx ~trace reason_op "ReactClass" [config]
         in
         rec_flow_t cx trace (l, react_class)
       | FunT _ ->
         let return_t =
-          get_builtin_typeapp cx elem_reason "React$Element" [AnyT.t]
+          get_builtin_typeapp cx ~trace elem_reason "React$Element" [AnyT.t]
         in
         let return_t = MaybeT return_t in
         let context_t = AnyT.t in
@@ -2485,7 +2485,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (l, call_t)
       | StrT _
       | SingletonStrT _ ->
-        let jsx_intrinsics = get_builtin_type cx reason_op "$JSXIntrinsics" in
+        let jsx_intrinsics = get_builtin_type cx ~trace reason_op "$JSXIntrinsics" in
         rec_flow_t cx trace (l, KeysT (reason_op, jsx_intrinsics))
       | AnyFunT _ -> ()
       | AnyObjT _ -> ()
@@ -2493,7 +2493,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         flow_err cx trace (err_msg l u) l u
       );
       rec_flow_t cx trace (
-        get_builtin_typeapp cx elem_reason "React$Element" [config],
+        get_builtin_typeapp cx ~trace elem_reason "React$Element" [config],
         tout
       )
 
@@ -3506,7 +3506,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (quick_error_fun_as_obj cx trace reason statics reason_o props_tmap)
         then
           let map = SMap.add "$call" l SMap.empty in
-          let function_proto = get_builtin_type cx reason "Function" in
+          let function_proto = get_builtin_type cx ~trace reason "Function" in
           let obj = mk_object_with_map_proto cx reason map function_proto in
           let t = mk_tvar_where cx reason (fun t ->
             rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
@@ -3634,12 +3634,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**********************)
 
     | (ArrT (reason, t, _), HasPropT _) ->
-      let arrt = get_builtin_typeapp cx reason "Array" [t] in
+      let arrt = get_builtin_typeapp cx ~trace reason "Array" [t] in
       rec_flow cx trace (arrt, u)
 
     | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       let reason = reason_of_use_t u in
-      let arrt = get_builtin_typeapp cx reason "Array" [t] in
+      let arrt = get_builtin_typeapp cx ~trace reason "Array" [t] in
       rec_flow cx trace (arrt, u)
 
     (***********************)
@@ -3647,28 +3647,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************)
 
     | (StrT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
-      rec_flow cx trace (get_builtin_type cx reason "String",u)
+      rec_flow cx trace (get_builtin_type cx ~trace reason "String",u)
 
     (***********************)
     (* Number library call *)
     (***********************)
 
     | (NumT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
-      rec_flow cx trace (get_builtin_type cx reason "Number",u)
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Number",u)
 
     (***********************)
     (* Boolean library call *)
     (***********************)
 
     | (BoolT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
-      rec_flow cx trace (get_builtin_type cx reason "Boolean",u)
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean",u)
 
     (*************************)
     (* Function library call *)
     (*************************)
 
     | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
-      rec_flow cx trace (get_builtin_type cx reason "Function",u)
+      rec_flow cx trace (get_builtin_type cx ~trace reason "Function",u)
 
     (*********************)
     (* functions statics *)
@@ -3766,7 +3766,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             model Object.prototype as a MixedT, as an optimization against a
             possible deluge of shadow properties on Object.prototype, since it
             is shared by every object. **)
-        rec_flow cx trace (get_builtin_type cx reason "Object", u)
+        rec_flow cx trace (get_builtin_type cx ~trace reason "Object", u)
 
       (* if we're looking something up on the global/builtin object, then tweak
          the error to say that `x` doesn't exist. We can tell this is the global
@@ -6095,13 +6095,13 @@ and instanceof_test cx trace result = function
   | (true, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
 
     let right = ClassT(ExtendsT([], arr, a)) in
-    let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
+    let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
 
   | (false, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
 
     let right = ClassT(ExtendsT([], arr, a)) in
-    let arrt = get_builtin_typeapp cx reason "Array" [elemt] in
+    let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     let pred = NotP(LeftP(InstanceofTest, right)) in
     rec_flow cx trace (arrt, PredicateT (pred, result))
 
@@ -6807,27 +6807,27 @@ and string_key s reason =
 
 (* builtins, contd. *)
 
-and get_builtin cx x reason =
+and get_builtin cx ?trace x reason =
   mk_tvar_where cx reason (fun builtin ->
-    flow_opt cx (builtins cx, GetPropT(reason, (reason, x), builtin))
+    flow_opt cx ?trace (builtins cx, GetPropT(reason, (reason, x), builtin))
   )
 
-and lookup_builtin cx x reason strict builtin =
-  flow_opt cx (builtins cx, LookupT(reason,strict,[],x,builtin))
+and lookup_builtin cx ?trace x reason strict builtin =
+  flow_opt cx ?trace (builtins cx, LookupT(reason,strict,[],x,builtin))
 
-and get_builtin_typeapp cx reason x ts =
-  TypeAppT(get_builtin cx x reason, ts)
+and get_builtin_typeapp cx ?trace reason x ts =
+  TypeAppT(get_builtin cx ?trace x reason, ts)
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
-and mk_typeapp_instance cx ~reason_op ~reason_tapp ?(cache=false) c ts =
+and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?(cache=false) c ts =
   let t = mk_tvar cx reason_op in
-  flow_opt cx (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
-  mk_instance cx (reason_of_t c) t
+  flow_opt cx ?trace (c, SpecializeT(reason_op,reason_tapp,cache,ts,t));
+  mk_instance cx ?trace (reason_of_t c) t
 
 (* NOTE: the for_type flag is true when expecting a type (e.g., when processing
    an annotation), and false when expecting a runtime value (e.g., when
    processing an extends). *)
-and mk_instance cx instance_reason ?(for_type=true) c =
+and mk_instance cx ?trace instance_reason ?(for_type=true) c =
   if for_type then
     (* Make an annotation. Part of this operation is similar to making
        a runtime value type (see below), except that for annotations,
@@ -6866,7 +6866,7 @@ and mk_instance cx instance_reason ?(for_type=true) c =
 
     let source_t = mk_tvar_where cx instance_reason (fun t ->
       (* this part is similar to making a runtime value *)
-      flow_opt_t cx (c, TypeT(instance_reason,t))
+      flow_opt_t cx ?trace (c, TypeT(instance_reason,t))
     ) in
     (* TODO: Actually, sink_t is redundant now with ReposUseT, so we can remove
        it. Basically ReposUseT takes care of capturing lower bounds and flowing
@@ -6875,7 +6875,7 @@ and mk_instance cx instance_reason ?(for_type=true) c =
     AnnotT (sink_t, source_t)
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
-      flow_opt_t cx (c, ClassT(t))
+      flow_opt_t cx ?trace (c, ClassT(t))
     )
 
 (* We want to match against some t, which may either be a concrete
@@ -6951,9 +6951,9 @@ and mk_typeof_annotation cx ?trace valtype =
   let r = prefix_reason "typeof " (reason_of_t valtype) in
   become cx ?trace r valtype
 
-and get_builtin_type cx reason x =
-  let t = get_builtin cx x reason in
-  mk_instance cx reason t
+and get_builtin_type cx ?trace reason x =
+  let t = get_builtin cx ?trace x reason in
+  mk_instance cx ?trace reason t
 
 and instantiate_poly_t cx t types =
   if types = [] then (* nothing to do *) t else
@@ -6979,27 +6979,27 @@ and instantiate_type t =
 (** TODO: this should rather be moved close to ground_type_impl/resolve_type
     etc. but Ocaml name resolution rules make that require a lot more moving
     code around. **)
-and resolve_builtin_class cx = function
+and resolve_builtin_class cx ?trace = function
   | BoolT (reason, _) ->
-    let bool_t = get_builtin_type cx reason "Boolean" in
+    let bool_t = get_builtin_type cx ?trace reason "Boolean" in
     resolve_type cx bool_t
   | NumT (reason, _) ->
-    let num_t = get_builtin_type cx reason "Number" in
+    let num_t = get_builtin_type cx ?trace reason "Number" in
     resolve_type cx num_t
   | StrT (reason, _) ->
-    let string_t = get_builtin_type cx reason "String" in
+    let string_t = get_builtin_type cx ?trace reason "String" in
     resolve_type cx string_t
   | ArrT (reason, t, _) ->
-    let array_t = get_builtin cx "Array" reason in
+    let array_t = get_builtin cx ?trace "Array" reason in
     let array_t = resolve_type cx array_t in
     let array_t = instantiate_poly_t cx array_t [t] in
     instantiate_type array_t
   | t ->
     t
 
-and set_builtin cx x t =
+and set_builtin cx ?trace x t =
   let reason = builtin_reason x in
-  flow_opt cx (builtins cx, SetPropT(reason, (reason, x), t))
+  flow_opt cx ?trace (builtins cx, SetPropT(reason, (reason, x), t))
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)

@@ -39,7 +39,7 @@ val mk_tvar: Context.t -> reason -> Type.t
 val mk_tvar_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 val mk_tvar_derivable_where: Context.t -> reason -> (Type.t -> unit) -> Type.t
 
-val get_builtin_typeapp: Context.t -> reason -> string -> Type.t list -> Type.t
+val get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t
 
 (* polymorphism *)
 
@@ -116,13 +116,13 @@ val fresh_context: Context.metadata -> Loc.filename -> Modulename.t -> Context.t
 
 val builtins: Context.t -> Type.t
 val restore_builtins: Context.t -> Type.t -> unit
-val get_builtin: Context.t -> string -> reason -> Type.t
-val lookup_builtin: Context.t -> string -> reason -> reason option -> Type.t -> unit
-val get_builtin_type: Context.t -> reason -> string -> Type.t
-val resolve_builtin_class: Context.t -> Type.t -> Type.t
-val set_builtin: Context.t -> string -> Type.t -> unit
+val get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
+val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> reason option -> Type.t -> unit
+val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t
+val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
+val set_builtin: Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
 
-val mk_instance: Context.t -> reason -> ?for_type:bool -> Type.t -> Type.t
+val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> Type.t -> Type.t
 val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 
 (* strict *)
