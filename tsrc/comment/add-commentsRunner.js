@@ -135,7 +135,7 @@ async function getFlowErrors(
     )
   const [err, stdout, stderr] = await execManual(
     cmd,
-    {cwd: root, maxBuffer: 1024 * 1024}
+    {cwd: root, maxBuffer: 16 * 1024 * 1024}
   );
 
   // 0 - no errors
