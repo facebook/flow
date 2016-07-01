@@ -64,8 +64,8 @@ end = struct
     let argv = Array.to_list Sys.argv in
     let (command, argv) = match argv with
     | [] -> failwith "Expected command"
-    | cmd::[] -> (default_command, [])
-    | cmd::next::rest ->
+    | _cmd::[] -> (default_command, [])
+    | _cmd::next::rest ->
         let subcmd = String.lowercase next in
         try
           let command = List.find (fun command ->
