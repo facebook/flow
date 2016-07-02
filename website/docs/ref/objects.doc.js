@@ -112,10 +112,10 @@ var y = new FuncBasedClass(42);
 var z: number = y.f();
 
 /*
-In this code, a `new` object is created by `new Foo(42)`; this object has a
-property `x` initialized by `Foo` with the `number` passed to it. The object
-also responds to the `f` method defined in `Foo.prototype`, so `o.f()` reads
-`o.x` and returns it. This fits with the expectation of a `number` as
+In this code, a `new` object is created by `new FuncBasedClass(42)`; this object
+has a property `x` initialized by `FuncBasedClass` with the `number` passed to it.
+The object also responds to the `f` method defined in `FuncBasedClass.prototype`,
+so `y.f()` reads `y.x` and returns it. This fits with the expectation of a `number` as
 expressed by the annotation at line 6, so this code typechecks.
 
 Furthermore, Flow ensures that an object's type can always be viewed as a
