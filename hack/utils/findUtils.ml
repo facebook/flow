@@ -33,3 +33,15 @@ let is_php path =
 let is_js path =
   not (is_dot_file path) &&
   Filename.check_suffix path ".js"
+
+(** Returns whether one of the ancestral directories of path has the given
+ * name. *)
+let rec has_ancestor path ancestor_name =
+  let dirname = Filename.dirname path in
+  if dirname = path then
+    (** Terminal condition *)
+    false
+  else if (Filename.basename dirname) = ancestor_name then
+    true
+  else
+    has_ancestor dirname ancestor_name
