@@ -204,9 +204,6 @@ ES_DefaultExport.default();
   This is because, in ES modules, a **"default"** export is essentially just
   sugar for a **"named"** export whose name is `default`.
 
-  ---
-  ---
-  ---
   ## Module Resolution
 
   For both ES modules and CommonJS modules, Flow needs to understand how to look
@@ -286,9 +283,6 @@ ES_DefaultExport.default();
 */
 
 /*
-  ---
-  ---
-  ---
   ## Type Imports & Exports
 
   In addition to importing and exporting runtime variables between modules, it
@@ -380,9 +374,6 @@ var myGuitar: GuitarT = {
 };
 
 /*
-  ---
-  ---
-  ---
   ## Missing/Required Annotations
 
   Flow is able to infer most types in your program for you, but there is one
