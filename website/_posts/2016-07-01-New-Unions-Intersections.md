@@ -46,7 +46,7 @@ There are two more possibilities, however:
 * You have no idea what's going on. The cases being pointed to don't make sense.
 * They don't correspond to what you have at `<error location>`. Hopefully you won't run into (4) too often, but if you do **please file an issue**, since this means there are still latent bugs in the implementation.
 
-If you file an issue on GitHub, please include code to reproduce the issue. You can use [Try Flow](http://samgoldman.sb.facebook.com:8080/try/) to share your repro case easily.
+If you file an issue on GitHub, please include code to reproduce the issue. You can use [Try Flow](https://flowtype.org/try/) to share your repro case easily.
 
 If you're curious about the whys and hows of these new error messages, here's an excerpt from the commit message of the "fate of the union" diff:
 
