@@ -111,6 +111,9 @@ val is_heap_overflow: unit -> bool
 
 val invalidate_caches: unit -> unit
 
+(* Size of value in GC heap *)
+val value_size: Obj.t -> int
+
 (*****************************************************************************)
 (* The signature of a shared memory hashtable.
  * To create one: SharedMem.NoCache(struct type = my_type_of_value end).
