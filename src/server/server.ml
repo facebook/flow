@@ -177,7 +177,9 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       OK (loc, ty, raw_type, reasons)
     with exn ->
       let loc = mk_loc file line col in
-      let err = (loc, Printexc.to_string exn) in
+      let err = (loc, spf "%s\n%s"
+        (Printexc.to_string exn)
+        (Printexc.get_backtrace ())) in
       Err err
     ) in
     Marshal.to_channel oc (response: ServerProt.infer_type_response) [];

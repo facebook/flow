@@ -144,13 +144,17 @@ let rec type_printer override fallback enclosure cx t =
         spf "?%s" (pp EnclosureMaybe cx t)
 
     | PolyT (xs,t) ->
-        let type_s =
-          spf "<%s>%s"
-            (xs
-              |> List.map (fun param -> param.name)
-              |> String.concat ", "
-            )
-            (pp EnclosureNone cx t)
+        let xs_str =
+          xs
+          |> List.map (fun param -> param.name)
+          |> String.concat ", "
+        in
+        let type_s = match t with
+        | ClassT u
+        | ThisClassT u ->
+          spf "%s<%s>" (pp EnclosureNone cx u) xs_str
+        | _ ->
+          spf "<%s>%s" xs_str (pp EnclosureNone cx t)
         in
         parenthesize type_s enclosure [EnclosureAppT; EnclosureMaybe]
 
@@ -336,6 +340,13 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   | PolyT (_, t)
     ->
+      (* unwrap PolyT (ClassT t) because class names are parsable as part of a
+         polymorphic type declaration. *)
+      let t = match t with
+        | ThisClassT u
+        | ClassT u -> u
+        | _ -> t
+      in
       is_printed_type_parsable_impl weak cx EnclosureNone t
 
   | AnyObjT _ -> true
