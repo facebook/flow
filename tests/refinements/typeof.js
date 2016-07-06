@@ -50,3 +50,15 @@ function testInvalidValue(x: mixed) {
     return 0;
   }
 }
+
+function testTemplateLiteral(x: string | number) {
+  if (typeof x === `string`) {
+    return x.length;
+  }
+}
+
+function testInvalidTemplateLiteral(x: string | number) {
+  if (typeof x === `foo`) { // error
+    return 0;
+  }
+}

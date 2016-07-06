@@ -118,5 +118,16 @@ let tests = [
     } else {
       return x; // no error, inferred to be ""
     }
-  }
+  },
+
+  // Simple template literals are ok
+  function(x: string): 'foo' {
+    if (x === `foo`) {
+      return x;
+    }
+    if (`foo` === x) {
+      return x;
+    }
+    return 'foo';
+  },
 ];

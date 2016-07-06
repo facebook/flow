@@ -4129,6 +4129,22 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       (str_loc, Expression.Literal { Literal.value = Literal.String s; _ })
     | (str_loc, Expression.Literal { Literal.value = Literal.String s; _ }),
       (_, Expression.Unary { Unary.operator = Unary.Typeof; argument; _ })
+    | (_, Expression.Unary { Unary.operator = Unary.Typeof; argument; _ }),
+      (str_loc, Expression.TemplateLiteral {
+        TemplateLiteral.quasis = [_, {
+          TemplateLiteral.Element.value = {
+            TemplateLiteral.Element.cooked = s; _
+          }; _
+        }]; _
+      })
+    | (str_loc, Expression.TemplateLiteral {
+        TemplateLiteral.quasis = [_, {
+          TemplateLiteral.Element.value = {
+            TemplateLiteral.Element.cooked = s; _
+          }; _
+        }]; _
+      }),
+      (_, Expression.Unary { Unary.operator = Unary.Typeof; argument; _ })
       ->
         typeof_test loc sense argument s str_loc
 
@@ -4146,6 +4162,20 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       as value, expr
     | expr, ((_, Expression.Literal { Literal.value = Literal.String lit; _})
       as value)
+    | expr, ((_, Expression.TemplateLiteral {
+        TemplateLiteral.quasis = [_, {
+          TemplateLiteral.Element.value = {
+            TemplateLiteral.Element.cooked = lit; _
+          }; _
+        }]; _
+      }) as value)
+    | ((_, Expression.TemplateLiteral {
+        TemplateLiteral.quasis = [_, {
+          TemplateLiteral.Element.value = {
+            TemplateLiteral.Element.cooked = lit; _
+          }; _
+        }]; _
+      }) as value), expr
       ->
         let val_t = expression cx type_params_map value in
         literal_test loc ~sense ~strict expr val_t (SingletonStrP lit)

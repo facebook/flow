@@ -792,6 +792,10 @@ typeof.js:49
  49:   if (typeof x === "foo") { // error
                         ^^^^^ string literal `foo`. This value is not a valid `typeof` return value
 
+typeof.js:61
+ 61:   if (typeof x === `foo`) { // error
+                        ^^^^^ string literal `foo`. This value is not a valid `typeof` return value
+
 undef.js:31
  31:     var y = x * 1000;
                  ^ null. This type is incompatible with
@@ -919,4 +923,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 145 errors
+Found 146 errors
