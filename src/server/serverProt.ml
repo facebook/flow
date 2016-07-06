@@ -53,7 +53,6 @@ type command =
 | PORT of string list
 | STATUS of Path.t
 | FORCE_RECHECK of string list
-| SEARCH of string
 | SUGGEST of string list
 
 type command_with_context = {

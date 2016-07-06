@@ -15,13 +15,11 @@ let save options =
   let config = FlowConfig.get config_file in
   Flow_js.builtins master_cx,
   master_cx,
-  Path.make (Relative_path.(path_of_prefix Root)),
   (config_file, config)
 
-let restore (b, cx, rp, fc) =
+let restore (b, cx, fc) =
   Flow_js.restore_builtins cx b;
   Init_js.restore_master_cx cx;
-  Relative_path.(set_path_prefix Root rp);
   FlowConfig.restore fc
 
 (* As for [Daemon.register_entry_point], this should stay

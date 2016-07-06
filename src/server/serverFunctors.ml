@@ -240,7 +240,6 @@ end = struct
     end;
     end;
     FlowEventLogger.init_server root;
-    Relative_path.set_path_prefix Relative_path.Root root;
     Program.preinit options;
     let handle =
       SharedMem.(init { default_config with

@@ -22,21 +22,14 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let preinit options =
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. *)
-    ignore (Init_js.get_master_cx options);
-    Parsing_service_js.register_hook (fun filename ast ->
-      match ast with
-      | Some ast -> SearchService_js.update filename ast
-      | None -> ()
-    )
+    ignore (Init_js.get_master_cx options)
 
   let init genv =
     (* write binary path and version to server log *)
     Flow_logger.log "executable=%s" (Sys_utils.executable_path ());
     Flow_logger.log "version=%s" FlowConfig.version;
     (* start the server *)
-    let timing, env = Types_js.server_init genv in
-    SearchService_js.update_from_master env.ServerEnv.files;
-    timing, env
+    Types_js.server_init genv
 
   let run_once_and_exit env =
     match env.ServerEnv.errorl with
@@ -378,11 +371,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc results [];
     flush oc
 
-  let search query oc =
-    let results = SearchService_js.query query in
-    Marshal.to_channel oc results [];
-    flush oc
-
   let get_watch_paths options = Path_matcher.stems (Options.includes options)
 
   (* filter a set of updates coming from dfind and return
@@ -455,9 +443,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let root = Options.root genv.ServerEnv.options in
       let tmp_dir = Options.temp_dir genv.ServerEnv.options in
       ignore(Lock.grab (Server_files_js.recheck_file ~tmp_dir root));
-      SearchService_js.clear updates;
       let env = Types_js.recheck genv env updates in
-      SearchService_js.update_from_master updates;
       ignore(Lock.release (Server_files_js.recheck_file ~tmp_dir root));
       env
     end
@@ -499,8 +485,6 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         ServerProt.response_to_channel oc ServerProt.PONG
     | ServerProt.PORT (files) ->
         port files oc
-    | ServerProt.SEARCH query ->
-        search query oc
     | ServerProt.STATUS client_root ->
         print_status genv !env client_root oc
     | ServerProt.SUGGEST (files) ->
