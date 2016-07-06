@@ -1,5 +1,7 @@
 # Flow [![Build Status](https://travis-ci.org/facebook/flow.svg?branch=master)](https://travis-ci.org/facebook/flow) [![Windows Build status](https://ci.appveyor.com/api/projects/status/vn69m4wd0m7n4vj1/branch/master?svg=true)](https://ci.appveyor.com/project/flowtype/flow-sv90g/branch/master)
 
+[![Join the chat at https://gitter.im/facebook/flow](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/facebook/flow?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flowtype.org](http://flowtype.org/).
 
 For a background on the project, please read our [launch blog post](https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/).
