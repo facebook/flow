@@ -43,8 +43,7 @@ You can fix the errors in two ways:
 There are two more possibilities, however:
 
 * There's no real ambiguity and Flow is being too conservative / dumb. In this case, go ahead and do the annotations anyway and file an issue on GitHub. We plan to do a lot of short-term follow-up work to disambiguate more cases automatically, so over time you should see less of (3).
-* You have no idea what's going on. The cases being pointed to don't make sense.
-* They don't correspond to what you have at `<error location>`. Hopefully you won't run into (4) too often, but if you do **please file an issue**, since this means there are still latent bugs in the implementation.
+* You have no idea what's going on. The cases being pointed to don't make sense. They don't correspond to what you have at `<error location>`. Hopefully you won't run into (4) too often, but if you do **please file an issue**, since this means there are still latent bugs in the implementation.
 
 If you file an issue on GitHub, please include code to reproduce the issue. You can use [Try Flow](https://flowtype.org/try/) to share your repro case easily.
 
