@@ -18,7 +18,7 @@ exception State_not_found
 
 module type SERVER_PROGRAM = sig
   val preinit : Options.t -> unit
-  val init : genv -> (FlowEventLogger.Timing.t * env)
+  val init : genv -> (Timing.t * env)
   val run_once_and_exit : env -> unit
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
