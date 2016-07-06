@@ -1042,7 +1042,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Type parameters should always be substituted out, and as such they should
        never appear "exposed" in flows. (They can still appear bound inside
        polymorphic definitions.) *)
-    not_expect_bound l; not_expect_bound_use u;
+    not_expect_bound l;
+    not_expect_bound_use u;
     (* Types that are classified as def types but don't make sense as use types
        should not appear as use types. *)
     expect_proper_def_use u;
@@ -4767,11 +4768,16 @@ and cache_instantiate cx trace cache (typeparam, reason_op) t =
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
 (* Needed only for experimental.enforce_strict_type_args=false killswitch *)
 and instantiate_poly_default_args cx trace ~reason_op ~reason_tapp (xs,t) =
-  let ts = xs |> List.map (fun typeparam ->
-      match typeparam.bound with
+  (* Remember: other_bound might refer to other type params *)
+  let ts, _ = List.fold_left
+    (fun (ts, map) typeparam ->
+      let t = match typeparam.bound with
       | MixedT _ -> AnyT.why reason_op
-      | other_bound -> AnyWithUpperBoundT (other_bound)
-  ) in
+      | other_bound -> AnyWithUpperBoundT (subst cx map other_bound) in
+      (t::ts, SMap.add typeparam.name t map)
+    ) ([], SMap.empty)
+    xs in
+  let ts = List.rev ts in
   instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
@@ -6589,8 +6595,10 @@ and rec_unify cx trace t1 t2 =
      flows should also be enforced here. In particular, we don't expect t1 or t2
      to be type parameters, and we don't expect t1 or t2 to be def types that
      don't make sense as use types. See __flow for more details. *)
-  not_expect_bound t1; not_expect_bound t2;
-  expect_proper_def t1; expect_proper_def t2;
+  not_expect_bound t1;
+  not_expect_bound t2;
+  expect_proper_def t1;
+  expect_proper_def t2;
 
   (* Before processing the unify action, check that it is not deferred. If it
      is, then when speculation is complete, the action either fires or is
