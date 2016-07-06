@@ -275,8 +275,12 @@ module rec TypeTerm : sig
 
     (* operations on runtime types, such as classes and functions *)
     | ConstructorT of reason * t list * t
+    | NewableSuperT of reason * insttype
     | SuperT of reason * insttype
     | MixinT of reason * t
+    | SetNewableT of reason * t
+    | UnsetNewableT of reason * t
+    | AssertNewableT of reason * t
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of reason * t * t
@@ -492,6 +496,11 @@ module rec TypeTerm : sig
     | Neutral       (* invariant *)
     | Positive      (* covariant *)
 
+  and newable =
+    | NewableUndefined
+    | NewableTrue
+    | NewableFalse
+
   and insttype = {
     class_id: ident;
     type_args: t SMap.t;
@@ -500,6 +509,7 @@ module rec TypeTerm : sig
     initialized_field_names: SSet.t;
     methods_tmap: int;
     mixins: bool;
+    newable: newable;
     structural: bool;
   }
 
@@ -1093,8 +1103,12 @@ and reason_of_use_t = function
 
   | ConstructorT (reason,_,_)
 
+  | NewableSuperT (reason,_)
   | SuperT (reason,_)
   | MixinT (reason, _)
+  | SetNewableT (reason, _)
+  | UnsetNewableT (reason, _)
+  | AssertNewableT (reason, _)
 
   | AdderT (reason,_,_)
   | ComparatorT (reason,_)
@@ -1295,8 +1309,12 @@ and mod_reason_of_defer_use_t f = function
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
 
+  | NewableSuperT (reason, inst) -> NewableSuperT (f reason, inst)
   | SuperT (reason, inst) -> SuperT (f reason, inst)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
+  | SetNewableT (reason, inst) -> SetNewableT (f reason, inst)
+  | UnsetNewableT (reason, inst) -> UnsetNewableT (f reason, inst)
+  | AssertNewableT (reason, inst) -> AssertNewableT (f reason, inst)
 
   | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
   | BindT (reason, ft) -> BindT (f reason, ft)
@@ -1472,8 +1490,12 @@ let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
   | SummarizeT _ -> "SummarizeT"
+  | NewableSuperT _ -> "NewableSuperT"
   | SuperT _ -> "SuperT"
   | MixinT _ -> "MixinT"
+  | SetNewableT _ -> "SetNewableT"
+  | UnsetNewableT _ -> "UnsetNewableT"
+  | AssertNewableT _ -> "AssertNewableT"
   | ApplyT _ -> "ApplyT"
   | BindT _ -> "BindT"
   | CallT _ -> "CallT"

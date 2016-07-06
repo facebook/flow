@@ -18,4 +18,4 @@ interface IFoo extends IFooPrototype {
   static (): void;
   static y: boolean; // error, should have declared static y: number instead
 }
-exports.Foo2 = (Foo: Class<IFoo>);
+exports.Foo2 = (Foo: Class<Newable<IFoo>>);

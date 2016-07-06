@@ -9,4 +9,4 @@ var qux: number = new Qux(); // error (returns new object)
 
 class A { }
 function B() { return new A(); }
-var a: A = new B(); // OK (returns new A)
+var a: Newable<A> = new B(); // OK (returns new A)
