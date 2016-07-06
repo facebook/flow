@@ -25,13 +25,14 @@ async function newTest(bin: string, suiteName: string): Promise<void> {
   await mkdirp(dest);
 
   const testFile = join(dest, 'test.js');
+  const testerLoc = relative(dest, resolve(__dirname, "../test/Tester"));
 
   await writeFile(
     join(dest, 'test.js'),
 `/* @flow */
 
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from '${testerLoc}';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('TestName', [
