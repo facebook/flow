@@ -6,7 +6,7 @@ import {format} from 'util';
 
 import {drain} from '../async';
 import Builder from './builder';
-import findTests from './finder';
+import {findTestsByName, findTestsByRun} from './findTests';
 import RunQueue from './RunQueue';
 
 import type {Args} from './testCommand';
@@ -22,7 +22,12 @@ async function write(fmt: string, ...args: Array<mixed>): Promise<void> {
 export default async function(args: Args): Promise<void> {
   const builder = new Builder(args.errorCheckCommand);
 
-  const suites = await findTests(args.suites);
+  let suites;
+  if (args.rerun != null) {
+    suites = await findTestsByRun(args.rerun, args.failedOnly);
+  } else {
+    suites = await findTestsByName(args.suites);
+  }
 
   const runQueue = new RunQueue(
     args.bin,
@@ -70,5 +75,37 @@ export default async function(args: Args): Promise<void> {
       }
     }
   }
+
+  const runID = builder.runID;
+  const nextSteps: Array<[string, string]> = [
+    [
+      "Rerun the tests you just ran",
+      `./tool test --rerun ${runID}`,
+    ],
+  ];
+
+  if (exitCode != 0) {
+    nextSteps.push(
+      [
+        "Rerun the tests that just failed",
+        `./tool test --rerun-failed ${runID}`,
+      ],
+    );
+    nextSteps.push(
+      [
+        "Record the tests that just failed",
+        `./tool record --rerun-failed ${runID}`,
+      ],
+    );
+  };
+
+  process.stderr.write("Possible next steps:");
+  for (const [descr, cmd] of nextSteps) {
+    process.stderr.write(`
+  ${descr}
+    ${cmd}`);
+  }
+  process.stderr.write("\n\n");
+
   process.exit(exitCode);
 }

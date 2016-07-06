@@ -52,6 +52,14 @@ export const commonFlags = {
   },
 }
 
+class ShowUsageException {
+  exitCode: number;
+
+  constructor(exitCode: number) {
+    this.exitCode = exitCode;
+  }
+}
+
 export default class Base<T: Object> {
   static BAD_ARGS = 64;
   static OK = 0;
@@ -99,7 +107,8 @@ export default class Base<T: Object> {
     const defaults = {};
     const alias = {};
 
-    for (const flag of this.getAllFlags()) {
+    const flags = this.getAllFlags();
+    for (const flag of flags) {
       if (flag.type === "string" || flag.type === "enum") {
         string.push(flag.name);
         flag.default !== undefined && (defaults[flag.name] = flag.default);
@@ -113,7 +122,7 @@ export default class Base<T: Object> {
       }
     }
 
-    return parseArgs(
+    const argv = parseArgs(
       process.argv.slice(3),
       {
         boolean,
@@ -128,10 +137,25 @@ export default class Base<T: Object> {
         }
       }
     );
+    for (const flag of flags) {
+      if (flag.type === "string" || flag.type === "enum") {
+        if (argv[flag.name] === "") {
+          process.stderr.write(
+            format("Missing required argument for flag: %s\n", flag.name),
+          ),
+          this.showUsage(this.BAD_ARGS);
+        }
+      }
+    }
+    return argv;
   }
 
   // final
-  static async showUsage(exitCode) {
+  static showUsage(exitCode) {
+    throw new ShowUsageException(exitCode);
+  }
+
+  static async displayUsage(exn: ShowUsageException) {
     let usage = await this.usage();
 
     const flags = this.getAllFlags()
@@ -160,16 +184,24 @@ export default class Base<T: Object> {
     usage += "\n";
 
     process.stderr.write(usage);
-    process.exit(exitCode);
+    process.exit(exn.exitCode);
   }
 
   // final
   static async go() {
-    const argv = this.parse();
-    if (argv.help) {
-      await this.showUsage(this.OK);
-    } else {
-      await this.run(this.processArgv(argv));
+    try {
+      const argv = this.parse();
+      if (argv.help) {
+        this.showUsage(this.OK);
+      } else {
+        await this.run(this.processArgv(argv));
+      }
+    } catch (e) {
+      if (e instanceof ShowUsageException) {
+        await this.displayUsage(e);
+      } else {
+        throw e;
+      }
     }
   }
 }

@@ -30,6 +30,7 @@ export default class RunQueue {
   onDone: () => void;
   parallelism: number;
   results: {[key: string]: Array<TestResult>};
+  writeResults: Array<Promise<void>> = [];
   running: Array<string>;
   statuses: {[key: string]: {status: string, details: string}};
   suites: {[key: string]: Suite};
@@ -86,6 +87,8 @@ export default class RunQueue {
       this.checkDone();
     }
     this.isTTY && process.stdout.write('\x1B[?25h') // Show terminal cursor
+    process.stdout.write("Flushing results to disk...\n");
+    await Promise.all(this.writeResults);
   }
 
   async start(): Promise<void> {
@@ -111,6 +114,11 @@ export default class RunQueue {
     );
     var end_time = new Date().getTime() / 1000;
     this.results[suiteName] = suiteResult;
+    // No need to await these immediately, but we will make sure all writes
+    // finish before the RunQueue exits
+    this.writeResults.push(
+      this.builder.saveResults(suiteName, suiteResult),
+    );
     if (this.isFbmakeJson) {
       let details = "";
       let status = "passed";
