@@ -2774,7 +2774,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         l u
 
     | (ClassT(l), UseT (_, ClassT(u))) ->
-      rec_unify cx trace l u
+      rec_flow_t cx trace (l, u)
 
     | FunT (_,static1,prototype,_),
       UseT (_, ClassT (InstanceT (_,static2,_, _) as u_)) ->
