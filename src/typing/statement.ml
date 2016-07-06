@@ -4449,10 +4449,12 @@ and static_method_call_Object cx
     )
 
   | ("defineProperty", [ Expression e;
-                         Expression (ploc, Ast.Expression.Literal
-                           { Ast.Literal.value = Ast.Literal.String x; _ });
+                         Expression ((ploc, Ast.Expression.Literal
+                           { Ast.Literal.value = Ast.Literal.String x; _ })
+                           as key);
                          Expression config ]) ->
     let o = expression cx type_params_map e in
+    let _ = expression cx type_params_map key in
     let spec = expression cx type_params_map config in
     let tvar = Flow.mk_tvar cx reason in
     let prop_reason = mk_reason (spf "property `%s`" x) ploc in
