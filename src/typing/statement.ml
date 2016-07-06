@@ -4319,14 +4319,27 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
 
   (* Array.isArray(expr) *)
   | _, Call {
-      Call.callee = _, Member {
-        Member._object = _, Identifier (_,
-          { Identifier.name = "Array"; _ });
-        property = Member.PropertyIdentifier (_,
+      Call.callee = callee_loc, Member {
+        Member._object = (_, Identifier (_,
+          { Identifier.name = "Array"; _ }) as o);
+        property = Member.PropertyIdentifier (prop_loc,
           { Identifier.name = "isArray"; _ });
         _ };
       arguments = [Expression arg]
     } -> (
+      (* get Array.isArray in order to populate the type tables, but we don't
+         care about the result. *)
+      (* TODO: one day we can replace this with a call to `method_call`, and
+         then discard the result. currently MethodT does not update type_table
+         properly. *)
+      let obj_t = expression cx type_params_map o in
+      let reason = mk_reason "Array.isArray" callee_loc in
+      let fn_t = Flow.mk_tvar_where cx reason (fun t ->
+        let prop_reason = mk_reason "property `isArray`" prop_loc in
+        Flow.flow cx (obj_t, GetPropT (reason, (prop_reason, "isArray"), t))
+      ) in
+      Hashtbl.replace (Context.type_table cx) prop_loc fn_t;
+
       match refinable_lvalue arg with
       | Some name, t ->
           result BoolT.t name t ArrP true
