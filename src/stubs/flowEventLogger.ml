@@ -28,15 +28,6 @@ let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()
 
-module Timing = struct
-  type t = unit
-
-  let create _ = ()
-  let start_timer ~timer:_ _ = ()
-  let stop_timer ~timer:_ _ = ()
-  let get_finished_timer ~timer:_ _ = None
-end
-
 let status_response _ = ()
 let init_server _ = ()
 let init_done ~timing:_ = ()

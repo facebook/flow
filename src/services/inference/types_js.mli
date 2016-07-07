@@ -15,14 +15,14 @@ val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
 val server_init:
-  ServerEnv.genv -> FlowEventLogger.Timing.t * ServerEnv.env
+  ServerEnv.genv -> Timing.t * ServerEnv.env
 
 val typecheck_contents:
   options: Options.t ->
   ?verbose: Verbose.t ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
-  FlowEventLogger.Timing.t *
+  Timing.t *
     Context.t option *
     Errors_js.ErrorSet.t *
     Docblock.t

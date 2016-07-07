@@ -129,14 +129,14 @@ let collate_errors =
       |> FilenameMap.fold collate !merge_errors
 
 let with_timer ?options timer timing f =
-  let timing = FlowEventLogger.Timing.start_timer ~timer timing in
+  let timing = Timing.start_timer ~timer timing in
   let ret = f () in
-  let timing = FlowEventLogger.Timing.stop_timer ~timer timing in
+  let timing = Timing.stop_timer ~timer timing in
 
   (* If we're profiling then output timing information to stderr *)
   (match options with
   | Some options when Options.should_profile options ->
-      (match FlowEventLogger.Timing.get_finished_timer ~timer timing with
+      (match Timing.get_finished_timer ~timer timing with
       | Some (start_wall_age, wall_duration) ->
           prerr_endlinef
             "TimingEvent `%s`: start_wall_age: %f; wall_duration: %f"
@@ -151,7 +151,7 @@ let with_timer ?options timer timing f =
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents ~options ?verbose contents filename =
-  let timing = FlowEventLogger.Timing.create () in
+  let timing = Timing.create () in
 
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
@@ -359,7 +359,7 @@ let recheck genv env modified =
     else modified
   ) modified modified in
 
-  let timing = FlowEventLogger.Timing.create () in
+  let timing = Timing.create () in
 
   (* track deleted files, remove from modified set *)
   let deleted = FilenameSet.filter (fun f ->
@@ -505,7 +505,7 @@ let recheck genv env modified =
 
 (* full typecheck *)
 let full_check workers ~ordered_libs parse_next options =
-  let timing = FlowEventLogger.Timing.create () in
+  let timing = Timing.create () in
 
   (* force types when --all is set, but otherwise forbid them unless the file
      has @flow in it. *)
@@ -568,7 +568,7 @@ let full_check workers ~ordered_libs parse_next options =
   (timing, parsed)
 
 (* helper - print errors. used in check-and-die runs *)
-let print_errors options errors =
+let print_errors ~timing options errors =
   let strip_root = Options.should_strip_root options in
   let root = Options.root options in
 
@@ -578,8 +578,13 @@ let print_errors options errors =
   in
 
   if Options.should_output_json options
-  then Errors.print_error_json ~root stdout errors
-  else
+  then begin
+    let timing =
+      if options.Options.opt_profile
+      then Some timing
+      else None in
+    Errors.print_error_json ~root ~timing stdout errors
+  end else
     Errors.print_error_summary
       ~flags:(Options.error_flags options)
       ~strip_root
@@ -603,7 +608,7 @@ let server_init genv =
 
   let errors = get_errors () in
   if Options.is_check_mode options
-  then print_errors options errors;
+  then print_errors ~timing options errors;
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
