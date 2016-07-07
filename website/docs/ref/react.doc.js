@@ -197,6 +197,28 @@ function renderButton(container: HTMLElement, visited?: boolean) {
 
   Any function that returns a React element can be used as a component class in
   a JSX expression.
+
+*/
+const AsyncGreeter = loadAsync(Greeter, new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve({ name: "Async World" });
+  }, 1000);
+}));
+
+<AsyncGreeter />;
+
+/*
+
+  ## Higher-order components
+
+  Higher-Order-Components are a slightly overloaded term.
+
+  Firstly, there's React Components that accept other React Components as a prop.
+  In this example we're going to see a Component that manages the data for another component
+  using `state`.
+
+  Here the HOC componen's state a key `config` which happens to be the same value as the one
+  required by the ReactClass given to it.
 */
 
 function SayAgain(props: { message: string }) {
@@ -285,10 +307,93 @@ function loadAsync<Config>(
   }
 }
 
-const AsyncGreeter = loadAsync(Greeter, new Promise((resolve, reject) => {
-  setTimeout(() => {
-    resolve({ name: "Async World" });
-  }, 1000);
-}));
+/*
+  ## Higher-Order-Components II: React Class Decrators
 
-<AsyncGreeter />;
+  **NOTE**: Advanced and Experimental
+  This uses undocumented types such as $Diff which may get changed without a warning.
+  Use at your own risk.
+
+  Higher-Order-Components are often also functions that accept a ReactClass,
+  wrap it in another ReactClass and return the new ReactClass.
+
+  In such cases, the newly created ReactClass will usually accept the same `props`
+  as the original Component, but it may require a sub-set of the original props,
+  as it my inject some on it's own.
+
+  Here we will see a Class Decrator that will automatically inject the current Date
+  into a component.
+*/
+
+type TimelyProps = {
+  date: Date,
+  name: string,
+  excited: boolean
+}
+
+class Timely extends React.Component<void, TimelyProps, void> {
+  render() {
+    const hours = this.props.date.getHours()
+    const timeOfDay = hours > 17 ? 'Evening' : hours > 12 ? 'Afternoon' : 'Morning'
+
+    return <div>Good {timeOfDay} {this.props.name} {this.props.excited ? '!' : ''}</div>
+  }
+}
+
+// $ExpectError
+<Timely />; // Timely didn't get the required props
+// $ExpectError
+<Timely name='John' />; //- Timely didn't get the required props
+// $ExpectError
+<Timely name='John' excited={true} />; // Timely didn't get the required props
+
+const x = <Timely date={new Date()} name='John' excited={true} />
+// Only way to satisfy all prop requirements.
+type Injected = {date: Date}
+declare function injectDate<DefaultProps, Props, State, C: React$Component<DefaultProps, Props, State>>(
+  Komponent: Class<C>
+): Class<React$Component<DefaultProps, $Diff<Props, Injected>, void>>;
+
+const Timeless = injectDate(Timely);
+
+// $ExpectError
+<Timeless />; // -- Error. props not satisfied.
+// $ExpectError
+<Timeless excited={true} />; // -- Error. props not satisfied.
+// $ExpectError
+<Timeless name='Sally' />; // Error. props not satisfied.
+// $ExpectError
+<Timeless name={1234} excited={true} />; // -- Error. name must be a string
+
+<Timeless name='Sally' excited={true} />;
+// No Errors
+
+<Timeless name='Sally' excited={true} date={1234} />; // -- Error, date must still be a Date object
+
+/*
+  If you want to support stateless functions with your HOCs, the type definition gets
+  slightly more complicated. The type above will need to be written like this to support
+  stateless functions:
+*/
+
+// D = DefaultProps, P: Props, S: State;
+declare var injectDatesWithStatelessSupport: (
+  <D, P, C: React$Component<D, P, any>>(
+    Komponent: Class<C>
+  ) => Class<React$Component<D, $Diff<P, Injected>, any>>
+) & <P>(component: (props: P) => any) => Class<React$Component<void, $Diff<P, Injected>, any>>;
+
+
+/*
+  Here, we essentially overloaded the definition for the HOC with the types for stateless functions.
+  This is neccessary as statelss component don't have defaultProps, while classes do.
+  
+  As the type definitions for Higher-Order-Components can often get complex, it's usually best to
+  to their types in a file with the `.flow` extension next to your `.js` source file.
+
+  However, since you usually only define a few HOCs and use them across your codebase,
+  these type files will pay off for every time you use a component that has been passed
+  through a Higher-Order-Component.
+
+  The process should get better in the future.
+*/
