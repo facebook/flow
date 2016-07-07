@@ -1,0 +1,26 @@
+interfaces-neg.js:9
+  9:   kind: "user",
+             ^^^^^^ string literal `user`. Expected string literal `system`, got `user` instead
+ 13:   kind: "system",
+             ^^^^^^^^ string literal `system`
+
+interfaces-neg.js:13
+ 13:   kind: "system",
+             ^^^^^^^^ string literal `system`. Expected string literal `user`, got `system` instead
+  9:   kind: "user",
+             ^^^^^^ string literal `user`
+
+type-decls-neg.js:11
+ 11:   kind: "user",
+             ^^^^^^ string literal `user`. Expected string literal `system`, got `user` instead
+ 17:   kind: "system",
+             ^^^^^^^^ string literal `system`
+
+type-decls-neg.js:17
+ 17:   kind: "system",
+             ^^^^^^^^ string literal `system`. Expected string literal `user`, got `system` instead
+ 11:   kind: "user",
+             ^^^^^^ string literal `user`
+
+
+Found 4 errors

@@ -6195,7 +6195,7 @@ and instanceof_test cx trace result = function
 and sentinel_prop_test key cx trace result (sense, obj, t) =
   sentinel_prop_test_generic key cx trace result obj (sense, obj, t)
 
-and sentinel_prop_test_generic key cx trace result orig_obj = function
+and sentinel_prop_test_generic key cx trace result orig_obj =
   (** Evaluate a refinement predicate of the form
 
       obj.key eq value
@@ -6226,59 +6226,39 @@ and sentinel_prop_test_generic key cx trace result orig_obj = function
       the predicate function and its callers to understand how the context is
       set up so that filtering ultimately only depends on what flows to
       result. **)
+
+  let flow_sentinel sense props_tmap obj sentinel =
+    match read_prop_opt cx props_tmap key with
+    | Some t ->
+        let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
+        rec_flow cx trace (t, test)
+    | None ->
+      (* TODO: possibly unsound to filter out orig_obj here, but if we
+         don't, case elimination based on sentinel prop checking doesn't
+         work for (disjoint unions of) intersections of objects, where the
+         sentinel prop and the payload appear in different branches of the
+         intersection. It is easy to avoid this unsoundness with slightly
+         more work, but will wait until a refactoring of property lookup
+         lands to revisit. Tracked by #11301092. *)
+      if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
+  in
+  function
   (* obj.key ===/!== string value *)
   | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Literal value)) ->
-      (match read_prop_opt cx props_tmap key with
-        | Some t ->
-            let sentinel = SentinelStr value in
-            let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
-            rec_flow cx trace (t, test)
-        | None ->
-          (* TODO: possibly unsound to filter out orig_obj here, but if we
-             don't, case elimination based on sentinel prop checking doesn't
-             work for (disjoint unions of) intersections of objects, where the
-             sentinel prop and the payload appear in different branches of the
-             intersection. It is easy to avoid this unsoundness with slightly
-             more work, but will wait until a refactoring of property lookup
-             lands to revisit. Tracked by #11301092. *)
-          if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
-      )
+      flow_sentinel sense props_tmap obj (SentinelStr value)
+
+  (* instance.key ===/!== string value *)
+  | (sense, (InstanceT (_, _, _, { fields_tmap; _}) as obj),
+      StrT (_, Literal value)) ->
+      flow_sentinel sense fields_tmap obj (SentinelStr value)
 
   (* obj.key ===/!== number value *)
   | (sense, (ObjT (_, { props_tmap; _}) as obj), NumT (_, Literal value)) ->
-      (match read_prop_opt cx props_tmap key with
-        | Some t ->
-            let sentinel = SentinelNum value in
-            let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
-            rec_flow cx trace (t, test)
-        | None ->
-          (* TODO: possibly unsound to filter out orig_obj here, but if we
-             don't, case elimination based on sentinel prop checking doesn't
-             work for (disjoint unions of) intersections of objects, where the
-             sentinel prop and the payload appear in different branches of the
-             intersection. It is easy to avoid this unsoundness with slightly
-             more work, but will wait until a refactoring of property lookup
-             lands to revisit. Tracked by #11301092. *)
-          if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
-      )
+      flow_sentinel sense props_tmap obj (SentinelNum value)
 
   (* obj.key ===/!== boolean value *)
   | (sense, (ObjT (_, { props_tmap; _}) as obj), BoolT (_, Some value)) ->
-      (match read_prop_opt cx props_tmap key with
-        | Some t ->
-            let sentinel = SentinelBool value in
-            let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
-            rec_flow cx trace (t, test)
-        | None ->
-          (* TODO: possibly unsound to filter out orig_obj here, but if we
-             don't, case elimination based on sentinel prop checking doesn't
-             work for (disjoint unions of) intersections of objects, where the
-             sentinel prop and the payload appear in different branches of the
-             intersection. It is easy to avoid this unsoundness with slightly
-             more work, but will wait until a refactoring of property lookup
-             lands to revisit. Tracked by #11301092. *)
-          if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
-      )
+      flow_sentinel sense props_tmap obj (SentinelBool value)
 
   | sense, IntersectionT (_, rep),
      (StrT (_, Literal _) | NumT (_, Literal (_, _)) | BoolT (_, Some _) as t)
