@@ -663,7 +663,7 @@ async function addCommentsToSource(
   const codeBuffer = await readFile(source);
   const stdout = await exec(
     format("%s ast %s", args.bin, source),
-    {maxBuffer: 1024 * 1024},
+    {maxBuffer: 16 * 1024 * 1024},
   );
   const ast = JSON.parse(stdout);
 
