@@ -387,11 +387,13 @@ const Timeless = injectDate(Timely);
 */
 
 // D = DefaultProps, P: Props, S: State;
-declare var injectDatesWithStatelessSupport: (
-  <D, P, C: React$Component<D, P, any>>(
-    Komponent: Class<C>
-  ) => Class<React$Component<D, $Diff<P, Injected>, any>>
-) & <P>(component: (props: P) => any) => Class<React$Component<void, $Diff<P, Injected>, any>>;
+type InjectDateToClass = <D, P, C: React$Component<D, P, any>>(
+  Komponent: Class<C>
+) => Class<React$Component<D, $Diff<P, Injected>, any>>;
+
+type InjectDateStateless = <P>(component: (props: P) => any) => Class<React$Component<void, $Diff<P, Injected>, any>>;
+
+declare var injectDateStateless: InjectDateStateless & InjectDateToClass;
 
 
 /*
