@@ -71,7 +71,7 @@ crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `update`. Function cannot be called on any member of intersection type
  26:     hmac.update('foo', 'bogus'); // 1 error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^ intersection
   Member 1:
   function type. See lib: node.js:365
   Error:
@@ -89,7 +89,7 @@ crypto/crypto.js:28
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
          ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `update`. Function cannot be called on any member of intersection type
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
-         ^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^ intersection
   Member 1:
   function type. See lib: node.js:365
   Error:

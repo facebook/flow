@@ -263,7 +263,7 @@ module rec TypeTerm : sig
     | ApplyT of reason * t * funtype
     | BindT of reason * funtype
     | CallT of reason * funtype
-    | MethodT of reason * propname * funtype
+    | MethodT of (* call *) reason * (* lookup *) reason * propname * funtype
     | SetPropT of reason * propname * t
     | GetPropT of reason * propname * t
     | SetElemT of reason * t * t
@@ -1084,7 +1084,7 @@ and reason_of_use_t = function
   | ApplyT (reason, _, _)
   | CallT (reason, _)
 
-  | MethodT (reason,_,_)
+  | MethodT (reason,_,_,_)
   | SetPropT (reason,_,_)
   | GetPropT (reason,_,_)
 
@@ -1302,7 +1302,7 @@ and mod_reason_of_use_t f = function
   | BindT (reason, ft) -> BindT (f reason, ft)
   | CallT (reason, ft) -> CallT (f reason, ft)
 
-  | MethodT (reason, name, ft) -> MethodT(f reason, name, ft)
+  | MethodT (reason, lookup, name, ft) -> MethodT(f reason, lookup, name, ft)
   | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)

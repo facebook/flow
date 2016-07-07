@@ -508,7 +508,7 @@ let rec assume_ground cx ids = function
 
   | GetPropT (_, _, t)
   | CallT (_, { return_t = t; _ })
-  | MethodT (_, _, { return_t = t; _ })
+  | MethodT (_, _, _, { return_t = t; _ })
   | ConstructorT (_, _, t) ->
     assume_ground cx ids (UseT (UnknownUse, t))
 
@@ -1670,7 +1670,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyFunT reason, GetPropT (_, (_, x), _)
     | AnyFunT reason, SetPropT (_, (_, x), _)
     | AnyFunT reason, LookupT (_, _, _, x, _)
-    | AnyFunT reason, MethodT (_, (_, x), _)
+    | AnyFunT reason, MethodT (_, _, (_, x), _)
     | AnyFunT reason, HasPropT (_, _, Literal x) when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, UseT (_, u)) when function_like u -> ()
@@ -2794,7 +2794,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let funtype = mk_methodtype this args t in
         rec_flow cx trace (
           this,
-          MethodT (reason_op, (reason_o, "constructor"), funtype)
+          MethodT (reason_op, reason_o, (reason_o, "constructor"), funtype)
         );
       ) in
       (* return this *)
@@ -2834,7 +2834,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
-    | (AnyFunT _, MethodT (reason_op, _, {params_tlist; _})) ->
+    | (AnyFunT _, MethodT (reason_op, _, _, {params_tlist; _})) ->
       let any = AnyT.why reason_op in
       List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist
 
@@ -2923,16 +2923,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********************************)
 
     | InstanceT (reason_c, _, super, instance),
-      MethodT (reason_op, (reason_prop, x), funtype)
+      MethodT (reason_call, reason_lookup, (reason_prop, x), funtype)
       -> (* TODO: closure *)
-      Ops.push reason_op;
+      Ops.push reason_call;
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let methods = SMap.union fields_tmap methods_tmap in
-      let funt = mk_tvar cx reason_op in
+      let funt = mk_tvar cx reason_lookup in
       let strict = if instance.mixins then None else Some reason_c in
-      get_prop cx trace reason_prop reason_op strict super x methods funt;
-      let callt = CallT (reason_op, funtype) in
+      get_prop cx trace reason_prop reason_lookup strict super x methods funt;
+      let callt = CallT (reason_call, funtype) in
       rec_flow cx trace (funt, callt);
       Ops.pop ();
 
@@ -3193,7 +3193,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their methods called *)
     (********************************)
 
-    | (ObjT _, MethodT(_, (_, "constructor"), _)) -> ()
+    | (ObjT _, MethodT(_, _, (_, "constructor"), _)) -> ()
 
     | (ObjT (reason_o, {
       flags;
@@ -3201,18 +3201,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       proto_t = proto;
       dict_t;
     }),
-       MethodT(reason_op, (reason_prop, x), funtype))
+       MethodT(reason_call, reason_lookup, (reason_prop, x), funtype))
       ->
       let strict = mk_strict_lookup_reason
-        flags.sealed (dict_t <> None) reason_o reason_op in
+        flags.sealed (dict_t <> None) reason_o reason_lookup in
       let t = ensure_prop_for_read cx strict mapr x proto dict_t
         reason_o reason_prop trace in
-      let callt = CallT (reason_op, funtype) in
+      let callt = CallT (reason_call, funtype) in
       rec_flow cx trace (t, callt)
 
     (* Since we don't know the signature of a method on AnyObjT, assume every
        parameter is an AnyT. *)
-    | (AnyObjT _, MethodT (reason_op, _, {params_tlist; _})) ->
+    | (AnyObjT _, MethodT (reason_op, _, _, {params_tlist; _})) ->
       let any = AnyT.why reason_op in
       List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist
 
@@ -3311,7 +3311,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | (ArrT _, SetPropT(_, (_, "constructor"), _))
-    | (ArrT _, MethodT(_, (_, "constructor"), _)) ->
+    | (ArrT _, MethodT(_, _, (_, "constructor"), _)) ->
       ()
 
     (**************************************************)

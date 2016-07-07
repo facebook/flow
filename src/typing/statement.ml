@@ -907,7 +907,7 @@ and statement cx type_params_map = Ast.Statement.(
           Flow.mk_tvar_where cx reason (fun tvar ->
             let call = Flow.mk_methodtype promise [t] tvar in
             Flow.flow cx
-              (promise, MethodT (reason, (reason, "resolve"), call))
+              (promise, MethodT (reason, reason, (reason, "resolve"), call))
           )
         else if Env.in_generator_scope () then
           (* Convert the return expression's type R to Generator<Y,R,N>, where
@@ -2659,7 +2659,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       react_create_class cx type_params_map loc class_props
 
   | Call {
-      Call.callee = _, Member {
+      Call.callee = callee_loc, Member {
         Member._object = _, Identifier (super_loc,
           { Ast.Identifier.name = "super"; _ });
         property = Member.PropertyIdentifier (ploc,
@@ -2669,13 +2669,17 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       arguments
     } ->
       let reason = mk_reason (spf "super.%s(...)" name) loc in
+      let reason_lookup = mk_reason (spf "property `%s`" name) callee_loc in
       let reason_prop = mk_reason (spf "property `%s`" name) ploc in
       let super = super_ cx (mk_reason "super" super_loc) in
       let argts = List.map (expression_or_spread cx type_params_map) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
         let funtype = Flow.mk_methodtype super argts t in
-        Flow.flow cx (super, MethodT (reason, (reason_prop, name), funtype))
+        Flow.flow cx (
+          super,
+          MethodT (reason, reason_lookup, (reason_prop, name), funtype)
+        )
       )
 
   | Call {
@@ -2709,7 +2713,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
       Flow.mk_tvar_where cx reason (fun t ->
         let funtype = Flow.mk_methodtype this argts t in
         Flow.flow cx (super,
-          MethodT(reason, (super_reason, "constructor"), funtype))
+          MethodT(reason, super_reason, (super_reason, "constructor"), funtype))
       )
 
   (******************************************)
@@ -2980,9 +2984,14 @@ and method_call cx loc prop_loc (expr, obj_t, name) argts =
       Env.havoc_heap_refinements ();
       Flow.mk_tvar_where cx reason (fun t ->
         let frame = Env.peek_frame () in
+        let expr_loc, _ = expr in
+        let reason_expr = mk_reason (spf "property `%s`" name) expr_loc in
         let reason_prop = mk_reason (spf "property `%s`" name) prop_loc in
         let app = Flow.mk_methodtype2 obj_t argts t frame in
-        Flow.flow cx (obj_t, MethodT(reason, (reason_prop, name), app))
+        Flow.flow cx (
+          obj_t,
+          MethodT(reason, reason_expr, (reason_prop, name), app)
+        )
       )
   )
 
@@ -3436,6 +3445,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
         let reason_createElement = mk_reason "property `createElement`" eloc in
         Flow.flow cx (react, MethodT(
           reason,
+          reason_createElement,
           (reason_createElement, "createElement"),
           Flow.mk_methodtype react [c;o] tvar
         ))
@@ -3495,6 +3505,7 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
         let reason_createElement = mk_reason "property `createElement`" eloc in
         Flow.flow cx (react, MethodT(
           reason,
+          reason_createElement,
           (reason_createElement, "createElement"),
           Flow.mk_methodtype react [component_t;o] tvar
         ))

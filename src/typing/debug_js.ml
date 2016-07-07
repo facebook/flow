@@ -295,7 +295,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
-  | MethodT (_, name, funtype) -> [
+  | MethodT (_, _, name, funtype) -> [
       "name", json_of_propname json_cx name;
       "funType", json_of_funtype json_cx funtype
     ]
@@ -1077,7 +1077,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | CallT (_,{params_tlist;return_t;_}) -> p ~extra:(spf "[%s] (%s)"
       (String.concat "; " (List.map kid params_tlist))
       (kid return_t)) t
-  | MethodT (_, (r, name), _) -> p
+  | MethodT (_, _, (r, name), _) -> p
       ~extra:(spf "(%S, %S)" (desc_of_reason r) name) t
   | SetPropT (_, (r, name), ptype) -> p
       ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t

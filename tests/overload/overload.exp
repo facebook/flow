@@ -77,7 +77,7 @@ overload.js:24
  24: a.foo(true); // error, function cannot be called on intersection type
      ^^^^^^^^^^^ call of method `foo`. Function cannot be called on any member of intersection type
  24: a.foo(true); // error, function cannot be called on intersection type
-     ^^^^^^^^^^^ intersection
+     ^^^^^ intersection
   Member 1:
    13:     foo(x:number): number;
            ^^^^^^^^^^^^^^^^^^^^^ function type
@@ -99,7 +99,7 @@ overload.js:28
  28: a.bar({ a: true }); // error, function cannot be called on intersection type
      ^^^^^^^^^^^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
  28: a.bar({ a: true }); // error, function cannot be called on intersection type
-     ^^^^^^^^^^^^^^^^^^ intersection
+     ^^^^^ intersection
   Member 1:
    16:     bar(x: { a: number }): number;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
@@ -121,7 +121,7 @@ overload.js:32
  32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
      ^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
  32: a.bar(x); // error with nested intersection info (outer for bar, inner for x)
-     ^^^^^^^^ intersection
+     ^^^^^ intersection
   Member 1:
    16:     bar(x: { a: number }): number;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type

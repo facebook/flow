@@ -130,7 +130,7 @@ HTMLInputElement.js:7
   7:     el.setRangeText('foo', 123); // end is required
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setRangeText`. Function cannot be called on any member of intersection type
   7:     el.setRangeText('foo', 123); // end is required
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^^^^^ intersection
   Member 1:
   function type. See lib: dom.js:1475
   Error:
@@ -148,7 +148,7 @@ HTMLInputElement.js:10
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `setRangeText`. Function cannot be called on any member of intersection type
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^^^^^ intersection
   Member 1:
   function type. See lib: dom.js:1475
   Error:
@@ -172,19 +172,19 @@ eventtarget.js:9
   9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `attachEvent`. Function cannot be called on possibly undefined value
   9:     (target.attachEvent('foo', listener): void); // invalid, may be undefined
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined
+          ^^^^^^^^^^^^^^^^^^ undefined
 
 eventtarget.js:16
  16:     (target.detachEvent('foo', listener): void); // invalid, may be undefined
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `detachEvent`. Function cannot be called on possibly undefined value
  16:     (target.detachEvent('foo', listener): void); // invalid, may be undefined
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined
+          ^^^^^^^^^^^^^^^^^^ undefined
 
 path2d.js:9
   9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `arcTo`. Function cannot be called on any member of intersection type
   9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+          ^^^^^^^^^^ intersection
   Member 1:
   function type. See lib: dom.js:1024
   Error:
@@ -216,7 +216,7 @@ traversal.js:26
  26:     document.createNodeIterator({}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
  26:     document.createNodeIterator({}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
   polymorphic type: function type. See lib: dom.js:552
   Error:
@@ -480,7 +480,7 @@ traversal.js:30
  30:     document.createTreeWalker({}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
  30:     document.createTreeWalker({}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
   polymorphic type: function type. See lib: dom.js:553
   Error:
@@ -790,7 +790,7 @@ traversal.js:186
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createNodeIterator`. Function cannot be called on any member of intersection type
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
   polymorphic type: function type. See lib: dom.js:552
   Error:
@@ -1112,7 +1112,7 @@ traversal.js:193
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createTreeWalker`. Function cannot be called on any member of intersection type
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
   polymorphic type: function type. See lib: dom.js:553
   Error:

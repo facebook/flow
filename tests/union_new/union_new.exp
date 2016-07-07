@@ -243,7 +243,7 @@ test26.js:20
  20: new Record().set('foo', "42");
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
  20: new Record().set('foo', "42");
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
+     ^^^^^^^^^^^^^^^^ intersection
   Member 1:
    16:   set(x: 'foo', y: number): void;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
