@@ -222,6 +222,8 @@ end = struct
     let is_check_mode = Options.is_check_mode options in
     let root = Options.root options in
     let tmp_dir = Options.temp_dir options in
+    let shm_global_size = Options.shm_global_size options in
+    let shm_heap_size = Options.shm_heap_size options in
     let shm_dirs = Options.shm_dirs options in
     let shm_min_avail = Options.shm_min_avail options in
     let shm_log_level = Options.shm_log_level options in
@@ -241,14 +243,15 @@ end = struct
     end;
     FlowEventLogger.init_server root;
     Program.preinit options;
-    let handle =
-      SharedMem.(init { default_config with
-        shm_dirs;
-        shm_min_avail;
-        dep_table_pow;
-        hash_table_pow;
-        log_level = shm_log_level;
-      }) in
+    let handle = SharedMem.init { SharedMem.
+      global_size = shm_global_size;
+      heap_size = shm_heap_size;
+      dep_table_pow;
+      hash_table_pow;
+      shm_dirs;
+      shm_min_avail;
+      log_level = shm_log_level;
+    } in
     (* this is to transform SIGPIPE in an exception. A SIGPIPE can happen when
     * someone C-c the client.
     *)

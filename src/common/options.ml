@@ -60,6 +60,8 @@ type t = {
   opt_traces : int;
   opt_verbose : Verbose.t option;
   opt_weak : bool;
+  opt_shm_global_size: int;
+  opt_shm_heap_size: int;
   opt_shm_dirs: string list;
   opt_shm_min_avail: int;
   opt_shm_dep_table_pow: int;
@@ -116,6 +118,8 @@ let should_wait opts = opts.opt_should_wait
 let suppress_comments opts = opts.opt_suppress_comments
 let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
+let shm_global_size opts = opts.opt_shm_global_size
+let shm_heap_size opts = opts.opt_shm_heap_size
 let shm_dirs opts = opts.opt_shm_dirs
 let shm_min_avail opts = opts.opt_shm_min_avail
 let shm_dep_table_pow opts = opts.opt_shm_dep_table_pow

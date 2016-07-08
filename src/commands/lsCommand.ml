@@ -129,6 +129,12 @@ let main strip_root ignore_flag include_flag root () =
     opt_shm_log_level = FlowConfig.(
       flowconfig.options.Opts.shm_log_level
     );
+    opt_shm_global_size = FlowConfig.(
+      flowconfig.options.Opts.shm_global_size
+    );
+    opt_shm_heap_size = FlowConfig.(
+      flowconfig.options.Opts.shm_heap_size
+    );
     opt_max_workers = 1;
     opt_ignores;
     opt_includes;

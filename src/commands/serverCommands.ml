@@ -303,6 +303,12 @@ module OptionParser(Config : CONFIG) = struct
       opt_shm_dep_table_pow;
       opt_shm_hash_table_pow;
       opt_shm_log_level;
+      opt_shm_global_size = FlowConfig.(
+        flowconfig.options.Opts.shm_global_size
+      );
+      opt_shm_heap_size = FlowConfig.(
+        flowconfig.options.Opts.shm_heap_size
+      );
       opt_max_workers;
       opt_ignores;
       opt_includes;

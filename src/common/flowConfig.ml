@@ -66,6 +66,8 @@ module Opts = struct
     max_header_tokens: int;
     max_workers: int;
     temp_dir: string;
+    shm_global_size: int;
+    shm_heap_size: int;
     shm_dirs: string list;
     shm_min_avail: int;
     shm_dep_table_pow: int;
@@ -145,6 +147,8 @@ module Opts = struct
     max_header_tokens = 10;
     max_workers = Sys_utils.nbr_procs;
     temp_dir = default_temp_dir;
+    shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
+    shm_heap_size = 1024 * 1024 * 1024 * 20; (* 20 gigs *)
     shm_dirs = default_shm_dirs;
     shm_min_avail = default_shm_min_avail;
     shm_dep_table_pow = 17;

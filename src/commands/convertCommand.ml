@@ -137,7 +137,17 @@ let main error_flags outpath recurse dir () =
   if ! Sys.interactive
   then ()
   else
-    let _handle = SharedMem.init_default () in
+    let opts = FlowConfig.Opts.default_options in
+    let sharedmem_config = { SharedMem.
+      global_size = opts.FlowConfig.Opts.shm_global_size;
+      heap_size = opts.FlowConfig.Opts.shm_heap_size;
+      dep_table_pow = opts.FlowConfig.Opts.shm_dep_table_pow;
+      hash_table_pow = opts.FlowConfig.Opts.shm_hash_table_pow;
+      shm_dirs = opts.FlowConfig.Opts.shm_dirs;
+      shm_min_avail = opts.FlowConfig.Opts.shm_min_avail;
+      log_level = opts.FlowConfig.Opts.shm_log_level;
+    } in
+    let _handle = SharedMem.init sharedmem_config in
     convert path recurse error_flags outpath
 
 let command = CommandSpec.command spec main

@@ -35,6 +35,8 @@ module Opts : sig
     max_header_tokens: int;
     max_workers: int;
     temp_dir: string;
+    shm_global_size: int;
+    shm_heap_size: int;
     shm_dirs: string list;
     shm_min_avail: int;
     shm_dep_table_pow: int;
@@ -42,6 +44,7 @@ module Opts : sig
     shm_log_level: int;
     version: string option;
   }
+  val default_options : t
 end
 
 type config = {
