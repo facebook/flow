@@ -25,17 +25,17 @@ caching_bug.js:21
 iterator_result.js:23
  23:         return { done, value: "still going..." }; // Error string ~> void
                       ^^^^ boolean. Expected boolean literal `false`, got `true` instead
-boolean literal `false`. See lib: core.js:399
+boolean literal `false`. See lib: core.js:420
 
 iterator_result.js:25
  25:         return { done }; // Error void ~> string
                       ^^^^ boolean. Expected boolean literal `true`, got `false` instead
-boolean literal `true`. See lib: core.js:396
+boolean literal `true`. See lib: core.js:417
 
 map.js:13
  13: function mapTest4(map: Map<number, string>): Iterable<string> {
                                                            ^^^^^^ string. This type is incompatible with
-tuple type. See lib: core.js:425
+tuple type. See lib: core.js:446
 
 set.js:13
  13: function setTest4(set: Set<string>): Iterable<number> {
