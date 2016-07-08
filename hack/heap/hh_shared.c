@@ -539,6 +539,17 @@ void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail) {
       if (memfd < 0) {
           uerror("shm_open", Nothing);
       }
+
+      // shm_open sets FD_CLOEXEC automatically. This is undesirable, because
+      // we want this fd to be open for other processes, so that they can
+      // reconnect to the shared memory.
+      int fcntl_flags = fcntl(memfd, F_GETFD);
+      if (fcntl_flags == -1) {
+        printf("Error with fcntl(memfd): %s\n", strerror(errno));
+        uerror("fcntl", Nothing);
+      }
+      // Unset close-on-exec
+      fcntl(memfd, F_SETFD, fcntl_flags & ~FD_CLOEXEC);
     }
 #endif
     if (memfd < 0) {
