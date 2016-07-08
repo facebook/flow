@@ -2318,10 +2318,8 @@ and array_element_spread cx type_params_map (loc, e) =
 and spread cx type_params_map (loc, e) =
   RestT (array_element_spread cx type_params_map (loc, e))
 
-(* NOTE: the is_cond flag is only used when checking the type of conditions in
-   `predicates_of_condition`: see comments on function `condition`. *)
-and expression ?(is_cond=false) cx type_params_map (loc, e) =
-  let t = expression_ ~is_cond cx type_params_map loc e in
+and expression cx type_params_map (loc, e) =
+  let t = expression_ cx type_params_map loc e in
   Hashtbl.replace (Context.type_table cx) loc t;
   t
 
@@ -2334,7 +2332,7 @@ and this_ cx r = Ast.Expression.(
 and super_ cx reason =
   Env.get_var cx (internal_name "super") reason
 
-and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
+and expression_ cx type_params_map loc e = Ast.Expression.(match e with
 
   | Ast.Expression.Literal lit ->
       literal cx loc lit
@@ -2442,7 +2440,7 @@ and expression_ ~is_cond cx type_params_map loc e = Ast.Expression.(match e with
         let tobj = expression cx type_params_map _object in
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
         then AnyT.at ploc
-        else get_prop ~is_cond cx expr_reason tobj (prop_reason, name)
+        else get_prop cx expr_reason tobj (prop_reason, name)
     )
 
   | Object { Object.properties } ->
@@ -3489,7 +3487,6 @@ and jsx_title cx type_params_map openingElement _children = Ast.JSX.(
       in
       let component_t = Flow.mk_tvar_where cx component_t_reason (fun t ->
         let prop_t = get_prop
-          ~is_cond:false
           cx
           component_t_reason
           jsx_intrinsics
@@ -3974,7 +3971,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
 
   (* refinement key if expr is eligible, along with unrefined type *)
   let refinable_lvalue e =
-    Refinement.key e, condition cx type_params_map e
+    Refinement.key e, expression cx type_params_map e
   in
 
   (* package empty result (no refinements derived) from test type *)
@@ -4052,10 +4049,6 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
         _
       }) ->
 
-      (* use `expression` instead of `condition` because `_object` is the object
-         in a member expression; if it itself is a member expression, it must
-         exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here as
-         `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
       let obj_t = expression cx type_params_map _object in
 
       let prop_reason = mk_reason (spf "property `%s`" prop_name) prop_loc in
@@ -4067,7 +4060,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t
         then AnyT.at prop_loc
-        else get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
+        else get_prop cx expr_reason obj_t (prop_reason, prop_name)
       in
 
       (* refine the object (`foo.bar` in the example) based on the prop. *)
@@ -4079,7 +4072,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       in
       prop_t, refinement
     | _ ->
-      condition cx type_params_map expr, None
+      expression cx type_params_map expr, None
   in
 
   let literal_test loc ~strict ~sense expr val_t pred =
@@ -4270,10 +4263,6 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       | _, Identifier ( super_loc, { Ast.Identifier.name = "super"; _ }) ->
           super_ cx (mk_reason (spf "property `%s`" prop_name) super_loc)
       | _ ->
-          (* use `expression` instead of `condition` because `_object` is the
-             object in a member expression; if it itself is a member expression,
-             it must exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here
-             as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
           expression cx type_params_map _object in
 
       let expr_reason = mk_reason (spf "property `%s`" prop_name) loc in
@@ -4283,7 +4272,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx prop_name prop_loc obj_t
         then AnyT.at prop_loc
-        else get_prop ~is_cond:true cx expr_reason obj_t (prop_reason, prop_name)
+        else get_prop cx expr_reason obj_t (prop_reason, prop_name)
       in
 
       let out = match Refinement.key e with
@@ -4412,31 +4401,13 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
       empty_result (expression cx type_params_map e)
 ))
 
-(* Conditional expressions are checked like expressions, except that property
-   accesses are allowed even when such properties do not exist. This
-   accommodates the common JavaScript idiom of testing for the existence of a
-   property before using that property. *)
-and condition cx type_params_map e =
-  expression ~is_cond:true cx type_params_map e
-
-(* Property lookups become non-strict when processing conditional expressions
-   (see above).
-
-   TODO: It should be possible to factor the processing of LHS / reference
+(* TODO: It should be possible to factor the processing of LHS / reference
    expressions out of `expression`, somewhat like what assignment_lhs does. That
    would make everything involving Refinement be in the same place.
 *)
-and get_prop ~is_cond cx reason tobj (prop_reason, name) =
+and get_prop cx reason tobj (prop_reason, name) =
   Flow.mk_tvar_where cx reason (fun t ->
-    let get_prop_u =
-      if is_cond
-      then
-        let t = Flow.tvar_with_constraint cx
-          (ReposLowerT (reason, UseT (UnknownUse, t)))
-        in
-        LookupT (reason, None, [], name, AnyWithUpperBoundT t)
-      else GetPropT (reason, (prop_reason, name), t)
-    in
+    let get_prop_u = GetPropT (reason, (prop_reason, name), t) in
     Flow.flow cx (tobj, get_prop_u)
   )
 
