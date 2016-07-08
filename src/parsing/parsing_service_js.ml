@@ -269,7 +269,7 @@ let parse
 let reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
-  let next = Bucket.make (FilenameSet.elements files) in
+  let next = MultiWorker.next workers (FilenameSet.elements files) in
   let ok, skips, fails, errors =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
   let modified = List.fold_left (fun acc (fail, _) ->

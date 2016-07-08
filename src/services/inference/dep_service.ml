@@ -58,9 +58,10 @@ let calc_reverse_deps workers fileset = Module_js.(
     | Some v, Some w -> Some (FilenameSet.union v w)
     | None, None -> None
   ) in
+
   MultiWorker.call workers ~job ~merge
     ~neutral: Module_js.NameMap.empty
-    ~next: (Bucket.make (FilenameSet.elements fileset))
+    ~next: (MultiWorker.next workers (FilenameSet.elements fileset))
 )
 
 (* given a reverse dependency map (from modules to the files which
@@ -131,7 +132,7 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
       (Module_js.resolution_path_dependency inferred_files))
     ~neutral: FilenameSet.empty
     ~merge: FilenameSet.union
-    ~next: (Bucket.make (FilenameSet.elements unmodified_files)) in
+    ~next: (MultiWorker.next workers (FilenameSet.elements unmodified_files)) in
 
   (* files that require touched modules directly, or may resolve to
      modules provided by newly inferred files *)
@@ -184,6 +185,6 @@ let calc_dependencies workers files =
     ~job: calc_dependencies_job
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
-    ~next: (Bucket.make files) in
+    ~next: (MultiWorker.next workers files) in
   deps |> FilenameMap.map (
     FilenameSet.filter (fun f -> FilenameMap.mem f deps))

@@ -418,7 +418,7 @@ let query workers needle type_ =
     ~job:(check_terms needle)
     ~neutral:([])
     ~merge:(keep_top)
-    ~next:(Bucket.make terms)
+    ~next:(MultiWorker.next workers terms)
   in
   let res = get_terms_from_string_and_type res_terms in
   List.rev res

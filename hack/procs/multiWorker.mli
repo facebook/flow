@@ -14,6 +14,12 @@
 type 'a nextlist =
   unit -> 'a list
 
+val next :
+  ?max_size: int ->
+  Worker.t list option ->
+  'a list ->
+  'a nextlist
+
 val call :
   Worker.t list option ->
   job:('b -> 'a list -> 'b) ->

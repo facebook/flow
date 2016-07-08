@@ -101,7 +101,7 @@ let infer ~options ~workers ~save_errors ~save_suppressions files =
         ~job: (infer_job ~options)
         ~neutral: ([], [], [])
         ~merge: rev_append_triple
-        ~next: (Bucket.make files) in
+        ~next: (MultiWorker.next workers files) in
       save_errors files errors;
       save_suppressions files suppressions;
       files

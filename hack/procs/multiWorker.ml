@@ -92,3 +92,8 @@ type 'a nextlist =
 let call workers ~job ~merge ~neutral ~next =
   let next = fun () -> Job (next ()) in
   call_dynamic workers ~job ~merge ~neutral ~next
+
+let next ?max_size workers =
+  Bucket.make
+    ~num_workers: (match workers with Some w -> List.length w | None -> 1)
+    ?max_size

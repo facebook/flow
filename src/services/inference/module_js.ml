@@ -709,7 +709,7 @@ let add_reverse_imports workers filenames =
     ~job: calc_module_reqs_assoc
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (Bucket.make filenames) in
+    ~next: (MultiWorker.next workers filenames) in
   List.iter (fun (name, req) ->
     (* we need to make sure we are in the reverse import heap to avoid
        confusing behavior when querying it *)
@@ -870,7 +870,7 @@ let commit_modules workers ~options inferred removed =
     ~job: calc_file_module_assoc
     ~neutral: []
     ~merge: List.rev_append
-    ~next: (Bucket.make inferred) in
+    ~next: (MultiWorker.next workers inferred) in
   let repick = List.fold_left (fun acc (f, m) ->
     let f_module = Modulename.Filename f in
     add_provider f m; add_provider f f_module;
@@ -937,7 +937,7 @@ let commit_modules workers ~options inferred removed =
     )
     ~neutral: ()
     ~merge: (fun () () -> ())
-    ~next: (Bucket.make replace);
+    ~next: (MultiWorker.next workers replace);
 
   (* now that providers are updated, update reverse dependency info *)
   add_reverse_imports workers inferred;
