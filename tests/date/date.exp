@@ -11,61 +11,61 @@ date.js:18
      ^^^^^^^^^^^^ constructor call
  18: new Date({});
               ^^ object literal. This type is incompatible with
-union: number | string. See lib: core.js:305
+union: number | string. See lib: core.js:306
   Member 1:
-  number. See lib: core.js:305
+  number. See lib: core.js:306
   Error:
    18: new Date({});
                 ^^ object literal. This type is incompatible with
-  number. See lib: core.js:305
+  number. See lib: core.js:306
   Member 2:
-  string. See lib: core.js:305
+  string. See lib: core.js:306
   Error:
    18: new Date({});
                 ^^ object literal. This type is incompatible with
-  string. See lib: core.js:305
+  string. See lib: core.js:306
 
 date.js:19
  19: new Date(2015, '6');
      ^^^^^^^^^^^^^^^^^^^ constructor call
  19: new Date(2015, '6');
                     ^^^ string. This type is incompatible with
-number. See lib: core.js:305
+number. See lib: core.js:306
 
 date.js:20
  20: new Date(2015, 6, '18');
      ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  20: new Date(2015, 6, '18');
                        ^^^^ string. This type is incompatible with
-number. See lib: core.js:305
+number. See lib: core.js:306
 
 date.js:21
  21: new Date(2015, 6, 18, '11');
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  21: new Date(2015, 6, 18, '11');
                            ^^^^ string. This type is incompatible with
-number. See lib: core.js:305
+number. See lib: core.js:306
 
 date.js:22
  22: new Date(2015, 6, 18, 11, '55');
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  22: new Date(2015, 6, 18, 11, '55');
                                ^^^^ string. This type is incompatible with
-number. See lib: core.js:305
+number. See lib: core.js:306
 
 date.js:23
  23: new Date(2015, 6, 18, 11, 55, '42');
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  23: new Date(2015, 6, 18, 11, 55, '42');
                                    ^^^^ string. This type is incompatible with
-number. See lib: core.js:305
+number. See lib: core.js:306
 
 date.js:24
  24: new Date(2015, 6, 18, 11, 55, 42, '999');
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  24: new Date(2015, 6, 18, 11, 55, 42, '999');
                                        ^^^^^ string. This type is incompatible with
-number. See lib: core.js:305
+number. See lib: core.js:306
 
 
 Found 8 errors

@@ -23,6 +23,10 @@ for (var n in (d = a)) {
     foo(d[n]);
 }
 
+for (var x in undefined) {
+    foo(x); // unreachable
+}
+
 for (var x in null) {
     foo(x); // unreachable
 }

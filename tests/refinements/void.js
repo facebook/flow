@@ -86,3 +86,10 @@ function void_bogus_comparison() {
     return;
   }
 }
+
+function void_redefined_undefined(x: ?number) {
+  var undefined = "foo";
+  if (x !== null && x !== void(0)) {
+    var y = x * 1000;
+  }
+}

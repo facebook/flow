@@ -754,6 +754,16 @@ let get_var ?(lookup_mode=ForValue) =
 let get_var_declared_type ?(lookup_mode=ForValue) =
   read_entry ~lookup_mode ~specific:false
 
+let is_global_var _cx name =
+  let rec loop = function
+    | [] -> true
+    | scope::scopes ->
+      match Scope.get_entry name scope with
+      | Some _ -> Scope.is_global scope
+      | None -> loop scopes
+  in
+  loop !scopes
+
 (* get var type, with location of given reason used in type's reason *)
 let var_ref ?(lookup_mode=ForValue) cx name reason =
   let t = get_var ~lookup_mode cx name reason in

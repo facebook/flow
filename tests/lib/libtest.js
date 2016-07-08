@@ -5,3 +5,7 @@ var w:string = parseInt("...");
 
 var a = new Map();
 a.delete('foobar');
+
+var b = undefined;
+if (undefined) {
+}

@@ -227,40 +227,40 @@ function.js:43
 function.js:48
  48:     x.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
-number. See lib: core.js:100
+number. See lib: core.js:101
 
 function.js:49
  49:     y.length = 'foo'; // error, it's a number
          ^^^^^^^^ assignment of property `length`
  49:     y.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
-number. See lib: core.js:100
+number. See lib: core.js:101
 
 function.js:50
  50:     z.length = 'foo'; // error, it's a number
          ^^^^^^^^ assignment of property `length`
  50:     z.length = 'foo'; // error, it's a number
                     ^^^^^ string. This type is incompatible with
-number. See lib: core.js:100
+number. See lib: core.js:101
 
 function.js:52
  52:     x.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
-string. See lib: core.js:101
+string. See lib: core.js:102
 
 function.js:53
  53:     y.name = 123; // error, it's a string
          ^^^^^^ assignment of property `name`
  53:     y.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
-string. See lib: core.js:101
+string. See lib: core.js:102
 
 function.js:54
  54:     z.name = 123; // error, it's a string
          ^^^^^^ assignment of property `name`
  54:     z.name = 123; // error, it's a string
                   ^^^ number. This type is incompatible with
-string. See lib: core.js:101
+string. See lib: core.js:102
 
 rest.js:8
   8: function rest_tuple<T>(...xs: [T]): T {

@@ -27,19 +27,19 @@ overload.js:7
                       ^^^^^^^^^^^ call of method `match`
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with
-union: string | RegExp. See lib: core.js:248
+union: string | RegExp. See lib: core.js:249
   Member 1:
-  string. See lib: core.js:248
+  string. See lib: core.js:249
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  string. See lib: core.js:248
+  string. See lib: core.js:249
   Member 2:
-  RegExp. See lib: core.js:248
+  RegExp. See lib: core.js:249
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  RegExp. See lib: core.js:248
+  RegExp. See lib: core.js:249
 
 overload.js:8
   8: var x2: number = "".match(/pattern/)[0];

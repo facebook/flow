@@ -2997,13 +2997,8 @@ and identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
   else (
-    if name = "undefined"
-    then VoidT.at loc
-    else (
-      let reason = mk_reason (spf "identifier `%s`" name) loc in
-      let t = Env.var_ref ~lookup_mode:ForValue cx name reason in
-      t
-    )
+    let reason = mk_reason (spf "identifier `%s`" name) loc in
+    Env.var_ref ~lookup_mode:ForValue cx name reason
   )
 
 (* traverse a literal expression, return result type *)
@@ -4016,8 +4011,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     | None -> empty_result (BoolT.at loc)
   in
 
-  (* inspect an undefined equality test *)
-  let undef_test loc ~sense ~strict e void_t =
+  let void_test loc ~sense ~strict e void_t =
     let t, refinement = match refinable_lvalue e with
     | None, t -> t, None
     | Some name, t ->
@@ -4028,6 +4022,13 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     match refinement with
     | Some (name, t, p, sense) -> result (BoolT.at loc) name t p sense
     | None -> empty_result (BoolT.at loc)
+  in
+
+  (* inspect an undefined equality test *)
+  let undef_test loc ~sense ~strict e void_t =
+    if Env_js.is_global_var cx "undefined"
+    then void_test loc ~sense ~strict e void_t
+    else empty_result (BoolT.at loc)
   in
 
   (* a wrapper around `condition` (which is a wrapper around `expression`) that
@@ -4205,12 +4206,16 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
     (* expr op undefined *)
     | (_, Identifier (_, { Identifier.name = "undefined"; _ }) as void), expr
     | expr, (_, Identifier (_, { Identifier.name = "undefined"; _ }) as void)
+      ->
+        let void_t = expression cx type_params_map void in
+        undef_test loc ~sense ~strict expr void_t
+
     (* expr op void(...) *)
     | (_, Unary ({ Unary.operator = Unary.Void; _ }) as void), expr
     | expr, (_, Unary ({ Unary.operator = Unary.Void; _ }) as void)
       ->
         let void_t = expression cx type_params_map void in
-        undef_test loc ~sense ~strict expr void_t
+        void_test loc ~sense ~strict expr void_t
 
     (* fallback case for equality relations involving sentinels (this should be
        lower priority since it refines the object but not the property) *)

@@ -4,5 +4,47 @@ undefined.js:3
   3:     x.foo();
          ^ uninitialized variable
 
+undefined2.js:7
+  7:     (name: boolean); // error, string or void
+          ^^^^ string. This type is incompatible with
+  7:     (name: boolean); // error, string or void
+                ^^^^^^^ boolean
 
-Found 1 error
+undefined2.js:7
+  7:     (name: boolean); // error, string or void
+          ^^^^ undefined. This type is incompatible with
+  7:     (name: boolean); // error, string or void
+                ^^^^^^^ boolean
+
+undefined2.js:10
+ 10:       undefined,
+           ^^^^^^^^^ undefined. This type is incompatible with
+ 13:     (bar[x]: boolean); // error, string or void
+                  ^^^^^^^ boolean
+
+undefined2.js:11
+ 11:       'bar',
+           ^^^^^ string. This type is incompatible with
+ 13:     (bar[x]: boolean); // error, string or void
+                  ^^^^^^^ boolean
+
+undefined2.js:22
+ 22:       x[0]; // should error, could be void
+           ^^^^ access of computed property/element. Computed property/element cannot be accessed on
+ 22:       x[0]; // should error, could be void
+           ^ number
+
+undefined2.js:26
+ 26:       undefined,
+           ^^^^^^^^^ string. This type is incompatible with
+ 29:     (bar[x]: boolean); // error, string only
+                  ^^^^^^^ boolean
+
+undefined2.js:27
+ 27:       'bar',
+           ^^^^^ string. This type is incompatible with
+ 29:     (bar[x]: boolean); // error, string only
+                  ^^^^^^^ boolean
+
+
+Found 8 errors
