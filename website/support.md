@@ -10,9 +10,13 @@ permalink: /support.html
 
 **Flow** is worked on full-time by Facebook's developer infrastructure team. They're often around and available for questions.
 
+## Stack Overflow
+
+The [flowtype](http://stackoverflow.com/questions/tagged/flowtype) tag on Stack Overflow is a great place to ask questions and find answers.
+
 ## GitHub issues
 
-The [GitHub issues](https://github.com/facebook/flow/issues) page is a good place to ask questions, find answers, and report issues.
+To report a bug, please create a [GitHub issue](https://github.com/facebook/flow/issues). This is also a good place to ask questions, but it's harder to find answers once an issue has been closed.
 
 ## IRC
 
