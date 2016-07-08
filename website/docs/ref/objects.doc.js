@@ -69,6 +69,10 @@ sayHello(mySampleData);
 sayHello({message: 'Hi', isAwesome: false});
 
 /*
+Object types can be added together with the intersection operator, `&`. See
+[union and intersection types](http://flowtype.org/docs/union-intersection-types.html#_)
+for details.
+
 ## Optional properties
 
 Object types can have optional properties. The following code shows how

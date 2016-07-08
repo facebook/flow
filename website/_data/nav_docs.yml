@@ -42,10 +42,10 @@
     title: Maybe Types
   - id: destructuring
     title: Destructuring
-  - id: union-intersection-types
-    title: Union and Intersection Types
   - id: type-aliases
     title: Type Aliases
+  - id: union-intersection-types
+    title: Union and Intersection Types
   - id: typeof
     title: Typeof types
   - id: dynamic-type-tests

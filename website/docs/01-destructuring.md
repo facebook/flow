@@ -3,7 +3,7 @@ id: destructuring
 title: Destructuring
 permalink: /docs/destructuring.html
 prev: nullable-types.html
-next: union-intersection-types.html
+next: type-aliases.html
 ---
 
 Flow supports the JavaScript construct of destructuring, which allows
