@@ -6,6 +6,7 @@ import {format} from 'util';
 import {noErrors} from '../flowResult';
 import {TestStep, TestStepFirstStage} from './TestStep';
 import {newEnv} from './stepEnv';
+import {writeFile} from '../async';
 
 import type Builder from './builder';
 import type Suite from './Suite';

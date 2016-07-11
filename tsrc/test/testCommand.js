@@ -11,17 +11,25 @@ export type Args = {
   fbmakeJson: boolean,
   parallelism: number,
   errorCheckCommand: "check" | "status",
+  rerun: ?string,
+  failedOnly: boolean,
 };
 
 export default class TestCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
+    if (argv.rerun != null && argv["rerun-failed"] != null) {
+      process.stderr.write("You cannot set both --rerun and --rerun-failed\n");
+      this.showUsage(this.BAD_ARGS);
+    }
     return {
       suites,
       bin: findFlowBin(argv.bin),
       fbmakeJson: argv.fbmakeJson,
       parallelism: argv.parallelism,
       errorCheckCommand: argv.check,
+      rerun: argv.rerun || argv["rerun-failed"],
+      failedOnly: !!argv["rerun-failed"],
     };
   }
 
@@ -55,6 +63,18 @@ SUITE
         type: "boolean",
         name: "fbmakeJson",
         description: "Output JSON for fbmake",
+      },
+      {
+        type: "string",
+        name: "rerun",
+        argName: "RUN",
+        description: "Rerun tests from a previous test run",
+      },
+      {
+        type: "string",
+        name: "rerun-failed",
+        argName: "RUN",
+        description: "Rerun failed tests from a previous test run",
       },
     ];
   }

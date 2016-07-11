@@ -224,6 +224,7 @@ export default async function(args: Args): Promise<void> {
       bin: args.bin,
       parallelism: args.parallelism,
       errorCheckCommand: args.errorCheckCommand,
+      rerun: null,
     });
   } else {
     // Fake like we generate the tests
