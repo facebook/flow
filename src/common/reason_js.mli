@@ -67,6 +67,8 @@ val loc_of_reason: reason -> Loc.t
 
 val desc_of_reason: reason -> string
 
+val origin_of_reason: reason -> reason option
+
 (* simple way to get derived reasons whose descriptions are
    simple extensions of the original *)
 val prefix_reason: string -> reason -> reason
@@ -78,6 +80,8 @@ val wrap_reason: string -> string -> reason -> reason
 val replace_reason: string -> reason -> reason
 
 val repos_reason: Loc.t -> reason -> reason
+
+val update_origin_of_reason: reason option -> reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
 

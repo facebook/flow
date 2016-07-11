@@ -177,6 +177,8 @@ end = struct
       Note: Ops stack is also queried, so this isn't a stateless function.
     *)
   let typecheck_error cx trace msg ?extra (r1, r2) =
+    let origin_r1 = origin_of_reason r1 in
+    let origin_infos = opt_map_default (fun r -> [mk_info r []]) [] origin_r1 in
     (* make core info from reasons, message, and optional extra infos *)
     let core_infos = [
       mk_info r1 [msg];
@@ -207,15 +209,18 @@ end = struct
         |> List.map info_of_reason
     in
     (* NOTE: We include the operation's reason in the error message, unless it
-       overlaps *both* endpoints. *)
+       overlaps *both* endpoints, or r1's origin. *)
     let op_info = match Ops.peek () with
-      | Some r when not (reasons_overlap r r1 && reasons_overlap r r2) ->
-        Some (info_of_reason r)
+      | Some r when not (reasons_overlap r r1 && reasons_overlap r r2) -> begin
+          match origin_r1 with
+          | Some or1 when reasons_overlap r or1 -> None
+          | _ -> Some (info_of_reason r)
+        end
       | _ -> None
     in
     (* main info is core info with optional lib line prepended, and optional
        extra info appended. ops/trace info is held separately in error *)
-    let msg_infos = lib_infos @ core_infos in
+    let msg_infos = lib_infos @ origin_infos @ core_infos in
     Errors.mk_error ?op_info ~trace_infos ?extra msg_infos
 
   let flow_err_reasons cx trace msg ?extra (r1, r2) =

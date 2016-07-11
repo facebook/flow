@@ -64,6 +64,8 @@ type reason = {
   derivable: bool;
   desc: string;
   loc: Loc.t;
+  (* origin is a persistent reason, immune to repos_reason *)
+  origin: reason option;
 }
 
 type t = reason
@@ -161,20 +163,21 @@ let json_of_loc loc = Hh_json.(Loc.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc loc = {
+let mk_reason_with_test_id test_id desc loc ?(origin=None) () = {
   test_id;
   derivable = false;
   desc;
   loc;
+  origin;
 }
 
 (* The current test_id is included in every new reason. *)
 let mk_reason desc loc =
-  mk_reason_with_test_id (TestID.current()) desc loc
+  mk_reason_with_test_id (TestID.current()) desc loc ()
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let reason_of_string s =
-  mk_reason_with_test_id None s Loc.none
+  mk_reason_with_test_id None s Loc.none ()
 
 let loc_of_reason r = r.loc
 
@@ -201,6 +204,9 @@ let dump_reason r =
 
 let desc_of_reason r =
   r.desc
+
+let origin_of_reason r =
+  r.origin
 
 let internal_name name =
   spf ".%s" name
@@ -311,6 +317,10 @@ let replace_reason replacement reason =
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
   mk_reason_with_test_id reason.test_id (desc_of_reason reason) loc
+    ~origin:(origin_of_reason reason) ()
+
+let update_origin_of_reason origin reason =
+  { reason with origin = origin }
 
 (* helper: strip root from positions *)
 let strip_root_from_loc root loc = Loc.(
