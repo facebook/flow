@@ -1,4 +1,4 @@
-# Flow [![Build Status](https://travis-ci.org/facebook/flow.svg?branch=master)](https://travis-ci.org/facebook/flow) [![Windows Build status](https://ci.appveyor.com/api/projects/status/vn69m4wd0m7n4vj1/branch/master?svg=true)](https://ci.appveyor.com/project/flowtype/flow-sv90g/branch/master)
+# Flow [![Build Status](https://travis-ci.org/facebook/flow.svg?branch=master)](https://travis-ci.org/facebook/flow) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/thyvx6i5nixtoocm/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/flow/branch/master)
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flowtype.org](http://flowtype.org/).
 
