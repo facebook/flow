@@ -85,6 +85,7 @@
 #include <caml/alloc.h>
 #include <caml/fail.h>
 #include <caml/unixsupport.h>
+#include <caml/intext.h>
 
 #include <assert.h>
 
@@ -1517,19 +1518,33 @@ value hh_mem(value key) {
 }
 
 /*****************************************************************************/
-/* Returns the value associated to a given key. The key MUST be present. */
+/* Returns the value associated to a given key, and deserialize it. */
+/* The key MUST be present. */
 /*****************************************************************************/
-CAMLprim value hh_get(value key) {
+CAMLprim value hh_get_and_deserialize(value key) {
   CAMLparam1(key);
   CAMLlocal1(result);
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
   size_t size = *(size_t*)(hashtbl[slot].addr - sizeof(size_t));
-  result = caml_alloc_string(size);
-  memcpy(String_val(result), hashtbl[slot].addr, size);
+  result = caml_input_value_from_block(hashtbl[slot].addr, size);
 
   CAMLreturn(result);
+}
+
+/*****************************************************************************/
+/* Returns the size of the value associated to a given key. */
+/* The key MUST be present. */
+/*****************************************************************************/
+CAMLprim value hh_get_size(value key) {
+  CAMLparam1(key);
+
+  unsigned int slot = find_slot(key);
+  assert(hashtbl[slot].hash == get_hash(key));
+  size_t size = *(size_t*)(hashtbl[slot].addr - sizeof(size_t));
+
+  CAMLreturn(Long_val(size));
 }
 
 /*****************************************************************************/
