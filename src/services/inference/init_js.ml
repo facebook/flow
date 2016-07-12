@@ -19,7 +19,7 @@
 open Utils_js
 open Sys_utils
 
-module Files = Files_js
+module Files = Files
 module Flow = Flow_js
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
@@ -36,7 +36,7 @@ let get_master_cx, restore_master_cx =
       weak = false;
     }) in
     let cx = Flow.fresh_context
-      metadata Loc.Builtins (Modulename.String Files_js.lib_module) in
+      metadata Loc.Builtins (Modulename.String Files.lib_module) in
     cx_ := Some cx;
     cx
   | Some cx -> cx in
@@ -128,7 +128,7 @@ let init ~options lib_files
 
   Flow.Cache.clear();
   let master_cx = get_master_cx options in
-  let reason = Reason_js.builtin_reason "module" in
+  let reason = Reason.builtin_reason "module" in
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context [master_cx];

@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open Reason_js
+open Reason
 open Type
 open Utils_js
 

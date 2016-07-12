@@ -69,11 +69,11 @@ type coverage_response = (
   Loc.t * string
 ) Utils_js.ok_or_err
 type dump_types_response = (
-  (Loc.t * string * string * string option * Reason_js.t list) list,
+  (Loc.t * string * string * string option * Reason.t list) list,
   Loc.t * string
 ) Utils_js.ok_or_err
 type infer_type_response = (
-  Loc.t * string option * string option * Reason_js.t list,
+  Loc.t * string option * string option * Reason.t list,
   Loc.t * string
 ) Utils_js.ok_or_err
 
@@ -102,7 +102,7 @@ type directory_mismatch = {
 
 type response =
 | DIRECTORY_MISMATCH of directory_mismatch
-| ERRORS of Errors_js.error list
+| ERRORS of Errors.error list
 | NO_ERRORS
 | PONG
 | SERVER_DYING

@@ -9,7 +9,7 @@
  *)
 
 open Utils_js
-open Reason_js
+open Reason
 open Type
 
 (*
@@ -114,7 +114,7 @@ let spaces n = String.make n ' '
 let pos_len ~prep_path r =
   let r = prep_path r in
   let loc = loc_of_reason r in
-  let str = Errors_js.format_info (loc, []) in
+  let str = Errors.format_info (loc, []) in
   String.length str
 
 

@@ -118,7 +118,7 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
       else None in
     let info =
       let filename_str = Loc.string_of_filename filename in
-      if Filename.check_suffix filename_str Files_js.flow_ext
+      if Filename.check_suffix filename_str Files.flow_ext
       then { default_info with isDeclarationFile = true; }
       else default_info in
     match get_first_comment_contents env with

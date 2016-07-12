@@ -19,6 +19,6 @@ val restore_master_cx: Context.t -> unit
 val init :
   options: Options.t ->
   string list ->
-  (Loc.filename -> Errors_js.ErrorSet.t -> unit) ->
-  (Loc.filename -> Errors_js.ErrorSuppressions.t -> unit) ->
+  (Loc.filename -> Errors.ErrorSet.t -> unit) ->
+  (Loc.filename -> Errors.ErrorSuppressions.t -> unit) ->
   (Loc.filename * bool) list

@@ -112,7 +112,7 @@ let main include_tokens pretty file_type_opt from filename () =
     | Some "js" -> Ast_js
     | _ ->
       begin match filename with
-      | Some fn -> if Files_js.is_json_file fn then Ast_json else Ast_js
+      | Some fn -> if Files.is_json_file fn then Ast_json else Ast_js
       | None -> Ast_js
       end
   in

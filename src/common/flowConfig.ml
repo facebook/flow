@@ -450,12 +450,12 @@ let parse_options config lines =
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v ->
-        if String_utils.string_ends_with v Files_js.flow_ext
+        if String_utils.string_ends_with v Files.flow_ext
         then raise (Opts.UserError (
           "Cannot use file extension '" ^
           v ^
           "' since it ends with the reserved extension '"^
-          Files_js.flow_ext^
+          Files.flow_ext^
           "'"
         ));
         let module_file_exts = SSet.add v opts.module_file_exts in

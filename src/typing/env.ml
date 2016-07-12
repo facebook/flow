@@ -14,7 +14,7 @@
    associated type information. *)
 
 open Utils_js
-open Reason_js
+open Reason
 open Type
 open Scope
 

@@ -79,7 +79,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let errors = env.ServerEnv.errorl in
     (* TODO: check status.directory *)
     status_log errors;
-    FlowEventLogger.status_response (Errors_js.json_of_errors errors);
+    FlowEventLogger.status_response (Errors.json_of_errors errors);
     send_errorl errors oc
 
   let die_nicely genv oc =
@@ -131,7 +131,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         (match Types_js.typecheck_contents ~options ?verbose content file with
         | _, _, errors, _ -> errors)
     in
-    send_errorl (Errors_js.to_list errors) oc
+    send_errorl (Errors.to_list errors) oc
 
   let mk_loc file line col =
     {
@@ -266,7 +266,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
                   )
               | _ -> assert false
          in
-         let new_content = Reason_js.do_patch lines insertions in
+         let new_content = Reason.do_patch lines insertions in
          let patch_content = Diff.diff_of_file_and_string file new_content in
          SMap.add file patch_content result_map
        with exn ->
@@ -325,7 +325,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let module_name_of_string ~options module_name_str =
     let path = Path.to_string (Path.make module_name_str) in
-    if Files_js.is_flow_file ~options path
+    if Files.is_flow_file ~options path
     then Modulename.Filename (Loc.SourceFile path)
     else Modulename.String module_name_str
 
@@ -382,7 +382,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let root = Options.root options in
     let config_path = Server_files_js.config_file root in
     let sroot = Path.to_string root in
-    let want = Files_js.wanted ~options all_libs in
+    let want = Files.wanted ~options all_libs in
 
     (* Die if the .flowconfig changed *)
     if SSet.mem config_path updates then begin
@@ -396,7 +396,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     (* Die if a package.json changed *)
     let modified_packages = SSet.filter (fun f ->
       (String_utils.string_starts_with f sroot ||
-        Files_js.is_included options f)
+        Files.is_included options f)
       && (Filename.basename f) = "package.json" && want f
     ) updates in
     if not (SSet.is_empty modified_packages)
@@ -409,7 +409,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
 
     (* Die if a lib file changed *)
-    let flow_typed_path = Path.to_string (Files_js.get_flowtyped_path root) in
+    let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
     let libs = updates |> SSet.filter (fun x ->
       SSet.mem x all_libs || x = flow_typed_path
     ) in
@@ -423,14 +423,14 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
 
     SSet.fold (fun f acc ->
-      if Files_js.is_flow_file ~options f &&
+      if Files.is_flow_file ~options f &&
         (* note: is_included may be expensive. check in-root match first. *)
         (String_utils.string_starts_with f sroot ||
-          Files_js.is_included options f) &&
+          Files.is_included options f) &&
         (* removes excluded and lib files. the latter are already filtered *)
         want f
       then
-        let filename = Files_js.filename_from_string f in
+        let filename = Files.filename_from_string f in
         FilenameSet.add filename acc
       else acc
     ) updates FilenameSet.empty

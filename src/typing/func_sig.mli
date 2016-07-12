@@ -7,7 +7,7 @@ type t
 (** Create signature from function AST. *)
 val mk: Context.t ->
   Type.t SMap.t -> (* type params map *)
-  Reason_js.t ->
+  Reason.t ->
   Spider_monkey_ast.Function.t ->
   t
 
@@ -25,7 +25,7 @@ val convert: Context.t ->
     return type. *)
 val default_constructor:
   Type.t SMap.t -> (* type params map *)
-  Reason_js.t ->
+  Reason.t ->
   t
 
 (** Create signature for a class field initializer.
@@ -36,7 +36,7 @@ val default_constructor:
     where `this` and `super` point to the appropriate types. *)
 val field_initializer:
   Type.t SMap.t -> (* type params map *)
-  Reason_js.t ->
+  Reason.t ->
   Spider_monkey_ast.Expression.t -> (* init *)
   Type.t -> (* return type *)
   t

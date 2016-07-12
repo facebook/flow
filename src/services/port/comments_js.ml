@@ -154,7 +154,7 @@ let meta_fun cmap loc =
   let cmap, annos = mk_comment cmap loc in
   let tmap = List.fold_left (fun map -> function
     | ParamD (x,t) -> map |> SMap.add x t
-    | RetD t -> map |> SMap.add (Reason_js.internal_name "return") t
+    | RetD t -> map |> SMap.add (Reason.internal_name "return") t
     | _ -> map
   ) SMap.empty annos in
   cmap, tmap
@@ -203,7 +203,7 @@ let meta_return body map cmap =
     | BodyBlock (loc, _) -> loc
     | BodyExpression (loc, _) -> loc (* probably wrong, it's after the => *)
   ) in
-  match SMap.get (Reason_js.internal_name "return") map with
+  match SMap.get (Reason.internal_name "return") map with
     | Some t ->
         cmap, [insert_before_with_suffix bloc t " "]
     | None ->

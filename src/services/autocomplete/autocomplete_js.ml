@@ -32,7 +32,7 @@ let autocomplete_id state _cx ac_name ac_loc =
     state := Some ({
       ac_name;
       ac_loc;
-      ac_type = Acid (Env_js.all_entries ());
+      ac_type = Acid (Env.all_entries ());
     });
     true
   ) else

@@ -152,7 +152,7 @@ let to_string =
 
 (* due to the current dependency situation, we locate the
    global changeset stack here for now, so it can be accessed
-   from both Env_js and Flow_js. *)
+   from both Env and Flow_js. *)
 
 type 'a stack = 'a list ref
 let changesets: t stack = ref []

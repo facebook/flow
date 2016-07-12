@@ -8,7 +8,7 @@
  *
  *)
 
-open Reason_js
+open Reason
 open Type
 open Utils_js
 
@@ -776,17 +776,17 @@ and json_of_node_impl json_cx id = Hh_json.(
   JSON_Object (
     let json_cx = { json_cx with stack = ISet.add id json_cx.stack } in
     match IMap.find_unsafe id (Context.graph json_cx.cx) with
-    | Constraint_js.Goto id ->
+    | Constraint.Goto id ->
       ["kind", JSON_String "Goto"]
       @ ["id", int_ id]
-    | Constraint_js.Root root ->
+    | Constraint.Root root ->
       ["kind", JSON_String "Root"]
       @ ["root", json_of_root json_cx root]
   )
 )
 
 and json_of_root json_cx = check_depth json_of_root_impl json_cx
-and json_of_root_impl json_cx root = Hh_json.(Constraint_js.(
+and json_of_root_impl json_cx root = Hh_json.(Constraint.(
   JSON_Object ([
     "rank", int_ root.rank;
     "constraints", json_of_constraints json_cx root.constraints
@@ -797,10 +797,10 @@ and json_of_constraints json_cx = check_depth json_of_constraints_impl json_cx
 and json_of_constraints_impl json_cx constraints = Hh_json.(
   JSON_Object (
     match constraints with
-    | Constraint_js.Resolved t ->
+    | Constraint.Resolved t ->
       ["kind", JSON_String "Resolved"]
       @ ["type", _json_of_t json_cx t]
-    | Constraint_js.Unresolved bounds ->
+    | Constraint.Unresolved bounds ->
       ["kind", JSON_String "Unresolved"]
       @ ["bounds", json_of_bounds json_cx bounds]
   )
@@ -809,7 +809,7 @@ and json_of_constraints_impl json_cx constraints = Hh_json.(
 and json_of_bounds json_cx = check_depth json_of_bounds_impl json_cx
 and json_of_bounds_impl json_cx bounds = Hh_json.(
   match bounds with
-  | { Constraint_js.lower; upper; lowertvars; uppertvars; } -> JSON_Object ([
+  | { Constraint.lower; upper; lowertvars; uppertvars; } -> JSON_Object ([
       "lower", json_of_tkeys json_cx lower;
       "upper", json_of_use_tkeys json_cx upper;
       "lowertvars", json_of_tvarkeys json_cx lowertvars;
@@ -961,7 +961,7 @@ and dump_t_ (depth, tvars) cx t =
   let tvar id =
     if ISet.mem id tvars then spf "%d, ^" id else
     let stack = ISet.add id tvars in
-    let open Constraint_js in
+    let open Constraint in
     match IMap.find_unsafe id (Context.graph cx) with
     | Goto g -> spf "%d, Goto %d" id g
     | Root { constraints = Resolved t; _ } ->
@@ -1210,7 +1210,7 @@ let string_of_file cx =
   | true ->
     let root_str = Path.to_string (Context.root cx) ^ Filename.dir_sep in
     if String_utils.string_starts_with filename root_str
-      then Files_js.relative_path root_str filename
+      then Files.relative_path root_str filename
       else filename
 
 let string_of_selector = function

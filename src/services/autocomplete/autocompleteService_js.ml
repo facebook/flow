@@ -53,7 +53,7 @@ let autocomplete_result_to_json loc_preprocessor result =
     ("name", Hh_json.JSON_String name) ::
     ("type", Hh_json.JSON_String ty) ::
     ("func_details", func_details_to_json result.func_details) ::
-    (Errors_js.deprecated_json_props_of_loc loc)
+    (Errors.deprecated_json_props_of_loc loc)
   )
 
 let print_type cx type_ =
@@ -109,7 +109,7 @@ let autocomplete_filter_members members =
     &&
     (* strip out members from prototypes which are implicity created for
        internal reasons *)
-    not (Reason_js.is_internal_name key)
+    not (Reason.is_internal_name key)
   ) members
 
 let autocomplete_member
@@ -131,8 +131,8 @@ let autocomplete_member
 
   let json_data_list = [
     "ac_name", JSON_String ac_name;
-    "ac_loc", JSON_Object (Errors_js.deprecated_json_props_of_loc ac_loc);
-    "loc", Reason_js.json_of_loc ac_loc;
+    "ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ac_loc);
+    "loc", Reason.json_of_loc ac_loc;
     "docblock", Docblock.json_of_docblock docblock;
   ] in
 
@@ -172,9 +172,9 @@ let autocomplete_id cx env =
   let result = SMap.fold (fun name entry acc ->
     (* Filter out internal environment variables except for this and
        super. *)
-    let is_this = name = (Reason_js.internal_name "this") in
-    let is_super = name = (Reason_js.internal_name "super") in
-    if not (is_this || is_super) && Reason_js.is_internal_name name
+    let is_this = name = (Reason.internal_name "this") in
+    let is_super = name = (Reason.internal_name "super") in
+    if not (is_this || is_super) && Reason.is_internal_name name
     then acc
     else (
       let (loc, name) =
@@ -207,7 +207,7 @@ let autocomplete_jsx
   ac_name
   ac_loc
   parse_result = Flow_js.(
-    let reason = Reason_js.mk_reason ac_name ac_loc in
+    let reason = Reason.mk_reason ac_name ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = mk_tvar_where cx reason (fun tvar ->
       flow cx (

@@ -1,10 +1,9 @@
 module Anno = Type_annotation
 module Ast = Spider_monkey_ast
-module Env = Env_js
 module Flow = Flow_js
 module Utils = Utils_js
 
-open Reason_js
+open Reason
 
 type field = Type.t * Ast.Expression.t option
 

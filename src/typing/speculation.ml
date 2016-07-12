@@ -130,7 +130,7 @@ let ignore_type ignore t =
   match ignore with
   | Some ignore_t when ignore_t = t -> true
   | _ -> begin match t with
-    | Type.OpenT (r, _) -> Reason_js.is_instantiable_reason r
+    | Type.OpenT (r, _) -> Reason.is_instantiable_reason r
     | _ -> false
   end
 
@@ -173,5 +173,5 @@ let defer_if_relevant cx branch action =
 (* The state maintained by speculative_matches when trying each case of a
    union/intersection in turn. *)
 type match_state =
-| NoMatch of Errors_js.error list
+| NoMatch of Errors.error list
 | ConditionalMatch of Case.t

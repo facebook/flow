@@ -44,7 +44,7 @@ type t = {
   mutable module_exports_type: module_exports_type;
 
   (* map from tvar ids to nodes (type info structures) *)
-  mutable graph: Constraint_js.node IMap.t;
+  mutable graph: Constraint.node IMap.t;
 
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.properties IMap.t;
@@ -64,10 +64,10 @@ type t = {
   (* map from module names to their types *)
   mutable modulemap: Type.t SMap.t;
 
-  mutable errors: Errors_js.ErrorSet.t;
+  mutable errors: Errors.ErrorSet.t;
   mutable globals: SSet.t;
 
-  mutable error_suppressions: Errors_js.ErrorSuppressions.t;
+  mutable error_suppressions: Errors.ErrorSuppressions.t;
 
   type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
@@ -126,10 +126,10 @@ let make metadata file module_name = {
   all_unresolved = IMap.empty;
   modulemap = SMap.empty;
 
-  errors = Errors_js.ErrorSet.empty;
+  errors = Errors.ErrorSet.empty;
   globals = SSet.empty;
 
-  error_suppressions = Errors_js.ErrorSuppressions.empty;
+  error_suppressions = Errors.ErrorSuppressions.empty;
 
   type_table = Hashtbl.create 0;
   annot_table = Hashtbl.create 0;
@@ -189,7 +189,7 @@ let pid_prefix cx =
   else ""
 
 let copy_of_context cx = { cx with
-  graph = IMap.map Constraint_js.copy_node cx.graph;
+  graph = IMap.map Constraint.copy_node cx.graph;
   property_maps = cx.property_maps
 }
 
@@ -197,10 +197,10 @@ let copy_of_context cx = { cx with
 let add_env cx frame env =
   cx.envs <- IMap.add frame env cx.envs
 let add_error cx error =
-  cx.errors <- Errors_js.ErrorSet.add error cx.errors
+  cx.errors <- Errors.ErrorSet.add error cx.errors
 let add_error_suppression cx loc =
   cx.error_suppressions <-
-    Errors_js.ErrorSuppressions.add loc cx.error_suppressions
+    Errors.ErrorSuppressions.add loc cx.error_suppressions
 let add_global cx name =
   cx.globals <- SSet.add name cx.globals
 let add_module cx name tvar =
@@ -213,9 +213,9 @@ let add_require cx name loc =
 let add_tvar cx id bounds =
   cx.graph <- IMap.add id bounds cx.graph
 let remove_all_errors cx =
-  cx.errors <- Errors_js.ErrorSet.empty
+  cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
-  cx.error_suppressions <- Errors_js.ErrorSuppressions.empty
+  cx.error_suppressions <- Errors.ErrorSuppressions.empty
 let remove_tvar cx id =
   cx.graph <- IMap.remove id cx.graph
 let set_all_unresolved cx all_unresolved =
@@ -241,7 +241,7 @@ let set_tvar cx id node =
 
 (* constructors *)
 let make_property_map cx pmap =
-  let id = Reason_js.mk_id () in
+  let id = Reason.mk_id () in
   add_property_map cx id pmap;
   id
 

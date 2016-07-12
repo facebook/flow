@@ -20,8 +20,7 @@ open Utils_js
 
 module Ast = Spider_monkey_ast
 module Flow = Flow_js
-module Reason = Reason_js
-module ErrorSet = Errors_js.ErrorSet
+module ErrorSet = Errors.ErrorSet
 module FlowError = Flow_error
 
 module NameSet = Set.Make(Modulename)
@@ -47,11 +46,11 @@ type info = {
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 let choose_provider_and_warn_about_duplicates =
-  let is_flow_ext file = Loc.check_suffix file Files_js.flow_ext in
+  let is_flow_ext file = Loc.check_suffix file Files.flow_ext in
 
   let warn_duplicate_providers m current modules errmap =
     List.fold_left (fun acc f ->
-      let w = Errors_js.(mk_error ~kind:InferWarning [
+      let w = Errors.(mk_error ~kind:InferWarning [
           Loc.({ none with source = Some f }), [
             m; "Duplicate module provider"];
           Loc.({ none with source = Some current }), [
@@ -231,9 +230,9 @@ module type MODULE_SYSTEM = sig
     string ->   (* module name *)
     FilenameSet.t ->   (* set of candidate provider files *)
     (* map from files to error sets (accumulator) *)
-    Errors_js.ErrorSet.t FilenameMap.t ->
+    Errors.ErrorSet.t FilenameMap.t ->
     (* file, error map (accumulator) *)
-    (filename * Errors_js.ErrorSet.t FilenameMap.t)
+    (filename * Errors.ErrorSet.t FilenameMap.t)
 
 end
 
@@ -306,8 +305,8 @@ let lazy_seq: 'a option Lazy.t list -> 'a option =
 
 module Node = struct
   let exported_module file _ =
-    if Loc.check_suffix file Files_js.flow_ext
-    then Modulename.Filename (Loc.chop_suffix file Files_js.flow_ext)
+    if Loc.check_suffix file Files.flow_ext
+    then Modulename.Filename (Loc.chop_suffix file Files.flow_ext)
     else Modulename.Filename file
 
   let record_path path = function
@@ -317,11 +316,11 @@ module Node = struct
   let path_if_exists =
     let path_exists ~options path =
       (file_exists path) &&
-        not (Files_js.is_ignored options path) &&
+        not (Files.is_ignored options path) &&
         not (dir_exists path)
     in fun ~options path_acc path ->
       let path = resolve_symlinks path in
-      let declaration_path = path ^ Files_js.flow_ext in
+      let declaration_path = path ^ Files.flow_ext in
       if path_exists ~options declaration_path ||
         path_exists ~options path
       then Some path
@@ -334,7 +333,7 @@ module Node = struct
 
   let parse_main ~options cx loc path_acc package file_exts =
     let package = resolve_symlinks package in
-    if not (file_exists package) || (Files_js.is_ignored options package)
+    if not (file_exists package) || (Files.is_ignored options package)
     then None
     else
       let tokens = match PackageHeap.get package with
@@ -342,15 +341,15 @@ module Node = struct
       | None ->
         let project_root = Options.root options in
         let msg =
-          let is_included = Files_js.is_included options package in
+          let is_included = Files.is_included options package in
           let project_root_str = Path.to_string project_root in
           let is_contained_in_root =
-            Files_js.is_prefix project_root_str package
+            Files.is_prefix project_root_str package
           in
           let package_relative_to_root =
             spf "<<PROJECT_ROOT>>%s%s"
               (Filename.dir_sep)
-              (Files_js.relative_path project_root_str package)
+              (Files.relative_path project_root_str package)
           in
           if is_included || is_contained_in_root then (
             spf
@@ -375,7 +374,7 @@ module Node = struct
       match get_key "main" tokens with
       | None -> None
       | Some file ->
-        let path = Files_js.normalize_path dir file in
+        let path = Files.normalize_path dir file in
         let path_w_index = Filename.concat path "index" in
 
         lazy_seq [
@@ -385,8 +384,8 @@ module Node = struct
         ]
 
   let resolve_relative ~options cx loc ?path_acc root_path rel_path =
-    let path = Files_js.normalize_path root_path rel_path in
-    if Files_js.is_flow_file ~options path
+    let path = Files.normalize_path root_path rel_path in
+    if Files.is_flow_file ~options path
     then path_if_exists ~options path_acc path
     else (
       let path_w_index = Filename.concat path "index" in
@@ -418,11 +417,11 @@ module Node = struct
     ]
 
   let absolute r =
-    Str.string_match Files_js.absolute_path r 0
+    Str.string_match Files.absolute_path r 0
 
   let explicitly_relative r =
-    Str.string_match Files_js.current_dir_name r 0
-    || Str.string_match Files_js.parent_dir_name r 0
+    Str.string_match Files.current_dir_name r 0
+    || Str.string_match Files.parent_dir_name r 0
 
   let resolve_import ~options cx loc ?path_acc import_str =
     let file = string_of_filename (Context.file cx) in
@@ -442,7 +441,7 @@ module Node = struct
         | Some _ as result -> result
     in
     match choose_candidate candidates with
-    | Some str -> Modulename.Filename (Files_js.filename_from_string str)
+    | Some str -> Modulename.Filename (Files.filename_from_string str)
     | None -> Modulename.String import_str
 
   (* in node, file names are module names, as guaranteed by
@@ -479,9 +478,9 @@ module Haste: MODULE_SYSTEM = struct
       | None ->
           (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
            * and use its @providesModule instead *)
-          if Loc.check_suffix file Files_js.flow_ext
+          if Loc.check_suffix file Files.flow_ext
           then
-            let file_without_flow_ext = Loc.chop_suffix file Files_js.flow_ext in
+            let file_without_flow_ext = Loc.chop_suffix file Files.flow_ext in
             if Parsing_service_js.has_ast file_without_flow_ext
             then
               let _, info =
@@ -497,7 +496,7 @@ module Haste: MODULE_SYSTEM = struct
     | [] -> None
     | package_name::rest ->
         ReversePackageHeap.get package_name |> opt_map (fun package ->
-          Files_js.construct_path package rest
+          Files.construct_path package rest
         )
 
   (* similar to Node resolution, with possible special cases *)
@@ -528,7 +527,7 @@ module Haste: MODULE_SYSTEM = struct
     let chosen_candidate = List.hd candidates in
 
     match resolve_import ~options cx loc ?path_acc chosen_candidate with
-    | Some name -> Modulename.Filename (Files_js.filename_from_string name)
+    | Some name -> Modulename.Filename (Files.filename_from_string name)
     | None -> Modulename.String chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also

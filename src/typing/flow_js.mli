@@ -8,13 +8,13 @@
  *
  *)
 
-open Reason_js
+open Reason
 
 val find_constraints:
   Context.t ->
-  Constraint_js.ident ->
-  Constraint_js.ident * Constraint_js.constraints
-val find_graph: Context.t -> Constraint_js.ident -> Constraint_js.constraints
+  Constraint.ident ->
+  Constraint.ident * Constraint.constraints
+val find_graph: Context.t -> Constraint.ident -> Constraint.constraints
 
 (* propagates sources to sinks following a subtype relation *)
 val flow: Context.t -> (Type.t * Type.use_t) -> unit
@@ -126,10 +126,10 @@ val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> Type
 val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 
 (* strict *)
-val enforce_strict: Context.t -> Constraint_js.ident -> unit
+val enforce_strict: Context.t -> Constraint.ident -> unit
 val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
 val resolve_type: Context.t -> Type.t -> Type.t
-val possible_types: Context.t -> Constraint_js.ident -> Type.t list
+val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
 
 module Autocomplete : sig

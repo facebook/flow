@@ -43,10 +43,10 @@ let convert_file error_flags outpath file =
     let n = List.length errors in
     Printf.printf "%d errors:\n" n;
     let flow_errors = List.map (fun e ->
-      Errors_js.parse_error_to_flow_error e
+      Errors.parse_error_to_flow_error e
     ) errors in
     let root = Path.dummy_path in
-    Errors_js.print_error_summary
+    Errors.print_error_summary
       ~flags:error_flags
       ~strip_root:false
       ~root

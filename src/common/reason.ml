@@ -330,16 +330,16 @@ let strip_root_from_loc root loc = Loc.(
   | Some LibFile file ->
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
     if string_starts_with file root_str
-    then Some (LibFile (spf "[LIB] %s" (Files_js.relative_path root_str file)))
+    then Some (LibFile (spf "[LIB] %s" (Files.relative_path root_str file)))
     else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
 
   | Some SourceFile file ->
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (SourceFile (Files_js.relative_path root_str file))
+    Some (SourceFile (Files.relative_path root_str file))
 
   | Some JsonFile file ->
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (JsonFile (Files_js.relative_path root_str file))
+    Some (JsonFile (Files.relative_path root_str file))
   in
   { loc with source }
 )

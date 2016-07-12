@@ -3,7 +3,7 @@ module Anno = Type_annotation
 module Flow = Flow_js
 module Utils = Utils_js
 
-open Reason_js
+open Reason
 open Type
 open Destructuring
 

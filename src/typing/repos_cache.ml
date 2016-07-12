@@ -145,10 +145,10 @@
   9. ?T2v -> T2v  { cache hit reuses T2v }
 *)
 
-type ident = Constraint_js.ident
+type ident = Constraint.ident
 
 module ReposMap = MyMap.Make (struct
-  type key = ident * Reason_js.t
+  type key = ident * Reason.t
   type t = key
   let compare = Pervasives.compare
 end)

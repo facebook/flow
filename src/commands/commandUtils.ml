@@ -246,7 +246,7 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
 (* relativize a loc's source path to a given root whenever strip_root is set *)
 let relativize strip_root root loc =
   if not strip_root then loc
-  else Reason_js.strip_root_from_loc root loc
+  else Reason.strip_root_from_loc root loc
 
 type command_params = {
   from               : string;
@@ -331,7 +331,7 @@ let ignores_of_arg root patterns extras =
 
 let includes_of_arg root paths =
   List.fold_left (fun acc path ->
-    let path = Files_js.make_path_absolute root path in
+    let path = Files.make_path_absolute root path in
     Path_matcher.add acc path
   ) Path_matcher.empty paths
 
@@ -420,7 +420,7 @@ let get_path_of_file file =
   else
     (* Filename.concat does not return a normalized path when the file does
        not exist. Thus, we do it on our own... *)
-    let file = Files_js.normalize_path (Sys.getcwd()) file in
+    let file = Files.normalize_path (Sys.getcwd()) file in
     let path = Path.make file in
     Path.to_string path
 

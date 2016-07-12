@@ -18,7 +18,7 @@ let port_file (file: string) : (string, exn) ok_or_err =
     let lines = Str.split_delim (Str.regexp "\n") content in
     let insertions = Comments_js.meta_program ast in
     let insertions = List.sort Pervasives.compare insertions in
-    let new_content = Reason_js.do_patch lines insertions in
+    let new_content = Reason.do_patch lines insertions in
     let patch_content = Diff.diff_of_file_and_string file new_content in
     OK patch_content
   with exn ->

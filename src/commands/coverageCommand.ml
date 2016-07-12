@@ -49,12 +49,12 @@ let handle_error ~json (loc, err) strip =
   then (
     let json = Hh_json.JSON_Object (
       ("error", Hh_json.JSON_String err) ::
-      ("loc", Reason_js.json_of_loc loc) ::
-      (Errors_js.deprecated_json_props_of_loc loc)
+      ("loc", Reason.json_of_loc loc) ::
+      (Errors.deprecated_json_props_of_loc loc)
     ) in
     output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
-    let loc = Reason_js.string_of_loc loc in
+    let loc = Reason.string_of_loc loc in
     output_string stderr (spf "%s:\n%s\n" loc err);
   );
   flush stderr
@@ -176,7 +176,7 @@ let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
       "expressions", JSON_Object [
         "covered_count", int_ covered;
         "uncovered_count", int_ (total - covered);
-        "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason_js.json_of_loc);
+        "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
       ];
     ]
     |> json_to_string

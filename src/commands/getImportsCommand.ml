@@ -53,7 +53,7 @@ let main option_values root json strip_root modules () =
           | Modulename.String s -> s
           | Modulename.Filename f ->
             let f = Loc.string_of_filename f in
-            if strip_root then Files_js.relative_path (Path.to_string root) f
+            if strip_root then Files.relative_path (Path.to_string root) f
             else f
         in
         let loc = relativize strip_root root loc in
@@ -77,8 +77,8 @@ let main option_values root json strip_root modules () =
             List.map (fun (req, loc) ->
               Hh_json.JSON_Object (
                 ("import", Hh_json.JSON_String req) ::
-                ("loc", Reason_js.json_of_loc loc) ::
-                (Errors_js.deprecated_json_props_of_loc loc)
+                ("loc", Reason.json_of_loc loc) ::
+                (Errors.deprecated_json_props_of_loc loc)
               )
             ) assoc in
           (module_name, Hh_json.JSON_Object [

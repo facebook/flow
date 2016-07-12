@@ -154,14 +154,14 @@ let main strip_root ignore_flag include_flag root () =
     )
   } in
 
-  let _, libs = Files_js.init options in
+  let _, libs = Files.init options in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
   let normalize_filename filename =
     if not opt_strip_root then filename
-    else Files_js.relative_path root_str filename
+    else Files.relative_path root_str filename
   in
 
-  print_all_rec ~normalize_filename (Files_js.make_next_files ~options ~libs)
+  print_all_rec ~normalize_filename (Files.make_next_files ~options ~libs)
 
 let command = CommandSpec.command spec main

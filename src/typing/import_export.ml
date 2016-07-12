@@ -11,12 +11,11 @@
 (* AST handling and type setup for import/export *)
 
 module Ast = Spider_monkey_ast
-module Env = Env_js
 module Flow = Flow_js
 module FlowError = Flow_error
 
 open Utils_js
-open Reason_js
+open Reason
 open Type
 
 let mk_module_t cx reason = ModuleT(
@@ -94,7 +93,7 @@ let import_ns cx reason module_name loc =
 let exports cx =
   let m = Modulename.to_string (Context.module_name cx) in
   let loc = Loc.({ none with source = Some (Context.file cx) }) in
-  get_module_t cx m (Reason_js.mk_reason "exports" loc)
+  get_module_t cx m (Reason.mk_reason "exports" loc)
 
 let set_module_t cx reason f =
   match Context.declare_module_t cx with

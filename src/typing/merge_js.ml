@@ -10,8 +10,8 @@
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =
-  let from_t = Flow_js.lookup_module master_cx Files_js.lib_module in
-  let to_t = Flow_js.lookup_module cx_to Files_js.lib_module in
+  let from_t = Flow_js.lookup_module master_cx Files.lib_module in
+  let to_t = Flow_js.lookup_module cx_to Files.lib_module in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
@@ -26,7 +26,7 @@ let explicit_impl_require_strict cx (cx_from, r, resolved_r, cx_to) =
    in some arbitrary cx, so cx_to should have already been copied to cx. *)
 let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
   let loc = SMap.find_unsafe m (Context.require_loc cx_to) in
-  let reason = Reason_js.mk_reason m loc in
+  let reason = Reason.mk_reason m loc in
 
   (* lookup module declaration from builtin context *)
   (* TODO: cache in modulemap *)
@@ -34,7 +34,7 @@ let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
   let m_name =
     resolved_m
     |> Modulename.to_string
-    |> Reason_js.internal_module_name
+    |> Reason.internal_module_name
   in
   let from_t = Flow_js.mk_tvar cx reason in
   Flow_js.lookup_builtin cx m_name reason None from_t;
@@ -156,7 +156,7 @@ let merge_lib_file cx master_cx save_errors save_suppressions =
    reduced forms.
 *)
 module ContextOptimizer = struct
-  open Constraint_js
+  open Constraint
   open Type
 
   type quotient = {

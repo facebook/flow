@@ -115,20 +115,20 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     | ServerProt.ERRORS errors ->
       let error_flags = args.error_flags in
       let errors = if strip_root
-        then Errors_js.strip_root_from_errors args.root errors
+        then Errors.strip_root_from_errors args.root errors
         else errors
       in
       begin if args.output_json then
-        Errors_js.print_error_json ~root:args.root stdout errors
+        Errors.print_error_json ~root:args.root stdout errors
       else if args.from = "vim" || args.from = "emacs" then
-        Errors_js.print_error_deprecated stdout errors
+        Errors.print_error_deprecated stdout errors
       else
-        Errors_js.print_error_summary ~strip_root ~flags:error_flags ~root:args.root errors
+        Errors.print_error_summary ~strip_root ~flags:error_flags ~root:args.root errors
       end;
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->
       if args.output_json
-      then Errors_js.print_error_json ~root:args.root stdout []
+      then Errors.print_error_json ~root:args.root stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
     | ServerProt.PONG ->

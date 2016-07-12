@@ -79,13 +79,13 @@ let main option_values root json strip_root path args () =
   if json
   then (
     (* TODO: this format is deprecated but can't be backwards-compatible.
-       should be replaced with just `Reason_js.json_of_loc loc`. *)
-    let json = Hh_json.JSON_Object (Errors_js.deprecated_json_props_of_loc loc) in
+       should be replaced with just `Reason.json_of_loc loc`. *)
+    let json = Hh_json.JSON_Object (Errors.deprecated_json_props_of_loc loc) in
     let json = Hh_json.json_to_string json in
     print_endline json;
   ) else
     if option_values.from = "vim" || option_values.from = "emacs"
-    then print_endline (Errors_js.string_of_loc_deprecated loc)
+    then print_endline (Errors.string_of_loc_deprecated loc)
     else print_endline (range_string_of_loc loc)
 
 let command = CommandSpec.command spec main

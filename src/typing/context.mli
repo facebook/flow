@@ -47,18 +47,18 @@ val enable_const_params: t -> bool
 val enable_unsafe_getters_and_setters: t -> bool
 val enforce_strict_type_args: t -> bool
 val envs: t -> env IMap.t
-val errors: t -> Errors_js.ErrorSet.t
-val error_suppressions: t -> Errors_js.ErrorSuppressions.t
+val errors: t -> Errors.ErrorSet.t
+val error_suppressions: t -> Errors.ErrorSuppressions.t
 val esproposal_class_static_fields: t -> Options.esproposal_feature_mode
 val esproposal_class_instance_fields: t -> Options.esproposal_feature_mode
 val esproposal_decorators: t -> Options.esproposal_feature_mode
 val esproposal_export_star_as: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> Loc.filename
-val find_props: t -> Constraint_js.ident -> Type.properties
+val find_props: t -> Constraint.ident -> Type.properties
 val find_module: t -> string -> Type.t
 val globals: t -> SSet.t
-val graph: t -> Constraint_js.node IMap.t
+val graph: t -> Constraint.node IMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
@@ -87,26 +87,26 @@ val merge_into: t -> t -> unit
 
 (* mutators *)
 val add_env: t -> int -> env -> unit
-val add_error: t -> Errors_js.error -> unit
+val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
 val add_module: t -> string -> Type.t -> unit
-val add_property_map: t -> Constraint_js.ident -> Type.properties -> unit
+val add_property_map: t -> Constraint.ident -> Type.properties -> unit
 val add_require: t -> string -> Loc.t -> unit
-val add_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit
+val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
-val remove_tvar: t -> Constraint_js.ident -> unit
+val remove_tvar: t -> Constraint.ident -> unit
 val set_declare_module_t: t -> Type.t option -> unit
 val set_envs: t -> env IMap.t -> unit
 val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> Type.TypeSet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
-val set_graph: t -> Constraint_js.node IMap.t -> unit
+val set_graph: t -> Constraint.node IMap.t -> unit
 val set_module_exports_type: t -> module_exports_type -> unit
 val set_property_maps: t -> Type.properties IMap.t -> unit
-val set_tvar: t -> Constraint_js.ident -> Constraint_js.node -> unit
+val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 
 (* constructors *)
-val make_property_map: t -> Type.properties -> Constraint_js.ident
+val make_property_map: t -> Type.properties -> Constraint.ident

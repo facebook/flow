@@ -141,7 +141,7 @@ let append_extra_info messages extra =
 let rec strip_root_from_info_tree root tree =
   let strip_root_from_infos root =
     List.map (function (loc, strs) ->
-      Reason_js.strip_root_from_loc root loc, strs
+      Reason.strip_root_from_loc root loc, strs
     )
   in
   match tree with
@@ -157,7 +157,7 @@ let strip_root_from_extra root extra =
   List.map (strip_root_from_info_tree root) extra
 
 let strip_root_from_message root = function
-  | BlameM (loc, s) -> BlameM (Reason_js.strip_root_from_loc root loc, s)
+  | BlameM (loc, s) -> BlameM (Reason.strip_root_from_loc root loc, s)
   | CommentM s -> CommentM s
 
 let strip_root_from_reason_list root messages =
@@ -262,9 +262,9 @@ let relative_path ~strip_root ~root filename =
   if is_short_lib filename || Filename.is_relative filename
   then filename
   else if strip_root
-  then Files_js.relative_path (Path.to_string root) filename
+  then Files.relative_path (Path.to_string root) filename
   else begin
-    let relname = Files_js.relative_path (Sys.getcwd ()) filename in
+    let relname = Files.relative_path (Sys.getcwd ()) filename in
     if String.length relname < String.length filename
       then relname
       else filename
@@ -528,7 +528,7 @@ let print_error_color_new ~stdin_file:stdin_file ~strip_root ~one_line ~color ~r
     get_pretty_printed_error_new ~stdin_file ~strip_root ~one_line ~root error in
   Tty.cprint ~color_mode:color to_print
 
-(* TODO: deprecate this in favor of Reason_js.json_of_loc *)
+(* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc loc = Loc.(
   let file = match loc.source with
   | Some x -> Hh_json.JSON_String (string_of_filename x)
@@ -695,7 +695,7 @@ let json_of_message_props message =
   match loc with
   | None -> deprecated_json_props_of_loc Loc.none
   | Some loc ->
-    ("loc", Reason_js.json_of_loc loc) ::
+    ("loc", Reason.json_of_loc loc) ::
     deprecated_json_props_of_loc loc
 
 let json_of_message message =

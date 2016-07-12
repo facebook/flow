@@ -8,12 +8,11 @@
  *
  *)
 
-module Env = Env_js
 module Ast = Spider_monkey_ast
 module FlowError = Flow_error
 
 open Utils_js
-open Reason_js
+open Reason
 open Type
 open Env.LookupMode
 
@@ -306,7 +305,7 @@ let rec convert cx type_params_map = Ast.Type.(function
   | "$Tainted" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      let reason = Reason_js.repos_reason loc (reason_of_t t) in
+      let reason = Reason.repos_reason loc (reason_of_t t) in
       UnionT (reason, UnionRep.make [t; TaintT (mk_reason "taint" loc)])
     )
 

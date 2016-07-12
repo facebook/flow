@@ -11,7 +11,7 @@
 class ['a] t: object
   (* Only exposing a few methods for now. *)
   method type_ : Context.t -> 'a -> Type.t -> 'a
-  method tvar : Context.t -> 'a -> Reason_js.reason -> Constraint_js.ident -> 'a
-  method props : Context.t -> 'a -> Constraint_js.ident -> 'a
+  method tvar : Context.t -> 'a -> Reason.reason -> Constraint.ident -> 'a
+  method props : Context.t -> 'a -> Constraint.ident -> 'a
   method fun_type : Context.t -> 'a -> Type.funtype -> 'a
 end

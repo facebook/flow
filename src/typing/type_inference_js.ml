@@ -11,11 +11,9 @@
 (* infer phase services *)
 
 module Ast = Spider_monkey_ast
-module Env = Env_js
 module Flow = Flow_js
 module FlowError = Flow_error
 module ImpExp = Import_export
-module Reason = Reason_js
 module Utils = Utils_js
 
 (**********)
@@ -26,11 +24,11 @@ let force_annotations cx =
   let m = Modulename.to_string (Context.module_name cx) in
   let tvar = Flow_js.lookup_module cx m in
   let _, id = Type.open_tvar tvar in
-  let before = Errors_js.ErrorSet.cardinal (Context.errors cx) in
+  let before = Errors.ErrorSet.cardinal (Context.errors cx) in
   Flow_js.enforce_strict cx id;
-  let after = Errors_js.ErrorSet.cardinal (Context.errors cx) in
+  let after = Errors.ErrorSet.cardinal (Context.errors cx) in
   if (after > before) then
-    Context.add_tvar cx id Constraint_js.(Root {
+    Context.add_tvar cx id Constraint.(Root {
       rank = 0; constraints = Resolved Type.AnyT.t
     })
 
@@ -159,7 +157,7 @@ let infer_lib_file ~metadata ~exclude_syms file statements comments =
   Flow_js.Cache.clear();
 
   let cx = Flow_js.fresh_context
-    metadata file (Modulename.String Files_js.lib_module) in
+    metadata file (Modulename.String Files.lib_module) in
 
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;

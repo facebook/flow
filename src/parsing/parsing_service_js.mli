@@ -17,7 +17,7 @@ type types_mode =
 (* result of individual parse *)
 type result =
   | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors_js.ErrorSet.t
+  | Parse_err of Errors.ErrorSet.t
   | Parse_skip
 
 (* results of parse job, returned by parse and reparse *)
@@ -25,7 +25,7 @@ type results =
   FilenameSet.t *                 (* successfully parsed files *)
   (filename * Docblock.t) list *  (* list of skipped files *)
   (filename * Docblock.t) list *  (* list of failed files *)
-  Errors_js.ErrorSet.t list       (* parallel list of error sets *)
+  Errors.ErrorSet.t list       (* parallel list of error sets *)
 
 (* initial parsing pass: success/failure info is returned,
  * asts are made available via get_ast_unsafe. *)
@@ -70,7 +70,7 @@ val get_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
   filename ->
   string ->
-  Errors_js.ErrorSet.t option * Docblock.t
+  Errors.ErrorSet.t option * Docblock.t
 
 (* parse contents of a file *)
 val do_parse:

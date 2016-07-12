@@ -10,8 +10,7 @@
 
 open Type
 open Utils_js
-open Reason_js
-module Errors = Errors_js
+open Reason
 
 (** we keep a stack of reasons representing the operations
     taking place when flows are performed. the top op reason
@@ -203,7 +202,7 @@ end = struct
         let root = Context.root cx in
         let prep_path r =
           if not strip_root then r
-          else Reason_js.strip_root root r
+          else Reason.strip_root root r
         in
         Trace.reasons_of_trace ~prep_path ~level:max_trace_depth trace
         |> List.map info_of_reason

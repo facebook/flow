@@ -24,5 +24,5 @@ val typecheck_contents:
   filename ->             (* fake file-/module name *)
   Timing.t *
     Context.t option *
-    Errors_js.ErrorSet.t *
+    Errors.ErrorSet.t *
     Docblock.t

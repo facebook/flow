@@ -12,5 +12,5 @@ val key: Spider_monkey_ast.Expression.t -> Key.t option
 val get:
   Context.t ->
   Spider_monkey_ast.Expression.t ->
-  Reason_js.reason ->
+  Reason.reason ->
   Type.t option

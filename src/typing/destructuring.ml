@@ -10,12 +10,11 @@
 
 (* AST handling for destructuring exprs *)
 
-module Env = Env_js
 module Ast = Spider_monkey_ast
 module FlowError = Flow_error
 
 open Utils_js
-open Reason_js
+open Reason
 open Type
 
 (**

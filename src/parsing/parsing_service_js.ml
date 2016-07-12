@@ -10,12 +10,11 @@
 
 open Utils_js
 open Sys_utils
-module Reason = Reason_js
 module Ast = Spider_monkey_ast
 
 type result =
   | Parse_ok of Spider_monkey_ast.program
-  | Parse_err of Errors_js.ErrorSet.t
+  | Parse_err of Errors.ErrorSet.t
   | Parse_skip
 
 (* results of parse job, returned by parse and reparse *)
@@ -23,7 +22,7 @@ type results =
   FilenameSet.t *                (* successfully parsed files *)
   (filename * Docblock.t) list * (* list of skipped files *)
   (filename * Docblock.t) list * (* list of failed files *)
-  Errors_js.ErrorSet.t list      (* parallel list of error sets *)
+  Errors.ErrorSet.t list      (* parallel list of error sets *)
 
 (**************************** internal *********************************)
 
@@ -128,7 +127,7 @@ let string_of_docblock_error = function
 
 let get_docblock
   ~max_tokens file content
-: Errors_js.ErrorSet.t option * Docblock.t =
+: Errors.ErrorSet.t option * Docblock.t =
   match file with
   | Loc.JsonFile _ -> None, Docblock.default_info
   | _ ->
@@ -136,12 +135,12 @@ let get_docblock
     if errors = [] then None, docblock
     else
       let errs = List.fold_left (fun acc (loc, err) ->
-        let err = Errors_js.mk_error
-          ~kind:Errors_js.ParseError
+        let err = Errors.mk_error
+          ~kind:Errors.ParseError
           [loc, [string_of_docblock_error err]]
         in
-        Errors_js.ErrorSet.add err acc
-      ) Errors_js.ErrorSet.empty errors in
+        Errors.ErrorSet.add err acc
+      ) Errors.ErrorSet.empty errors in
       Some errs, docblock
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
@@ -170,14 +169,14 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
   )
   with
   | Parse_error.Error (first_parse_error::_) ->
-    let err = Errors_js.parse_error_to_flow_error first_parse_error in
-    Parse_err (Errors_js.ErrorSet.singleton err)
+    let err = Errors.parse_error_to_flow_error first_parse_error in
+    Parse_err (Errors.ErrorSet.singleton err)
   | e ->
     let s = Printexc.to_string e in
     let msg = spf "unexpected parsing exception: %s" s in
     let loc = Loc.({ none with source = Some file }) in
-    let err = Errors_js.(simple_error ~kind:ParseError loc msg) in
-    Parse_err (Errors_js.ErrorSet.singleton err)
+    let err = Errors.(simple_error ~kind:ParseError loc msg) in
+    Parse_err (Errors.ErrorSet.singleton err)
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
@@ -211,7 +210,7 @@ let reducer
              * drop a .flow file, even if it is unchanged, since it might have
              * been added to the modified set simply because a corresponding
              * implementation file was also added. *)
-            if not (Loc.check_suffix file Files_js.flow_ext)
+            if not (Loc.check_suffix file Files.flow_ext)
               && ParserHeap.get_old file = Some (ast, info)
             then (ok, skips, fails, errors)
             else begin

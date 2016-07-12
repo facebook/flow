@@ -16,14 +16,13 @@
    variables) but also flow-sensitive information about local variables at every
    point inside a function (and when to narrow or widen their types). *)
 
-module Env = Env_js
 module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
 module Iface_sig = Class_sig (* same thing, mo'less *)
 
 open Utils_js
-open Reason_js
+open Reason
 open Type
 open Env.LookupMode
 
@@ -4026,7 +4025,7 @@ and predicates_of_condition cx type_params_map e = Ast.(Expression.(
 
   (* inspect an undefined equality test *)
   let undef_test loc ~sense ~strict e void_t =
-    if Env_js.is_global_var cx "undefined"
+    if Env.is_global_var cx "undefined"
     then void_test loc ~sense ~strict e void_t
     else empty_result (BoolT.at loc)
   in

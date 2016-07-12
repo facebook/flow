@@ -42,7 +42,7 @@ let check_control_flow_exception = function
 
 (* helper *)
 let check_env_depth depth =
-  let new_depth = Env_js.env_depth () in
+  let new_depth = Env.env_depth () in
   if new_depth = depth then ()
   else assert_false (spf
     "env depth %d != %d after no control flow catch"
@@ -50,14 +50,14 @@ let check_env_depth depth =
 
 (* run a function, return first control-flow exception or none *)
 let catch_control_flow_exception f =
-  let depth = Env_js.env_depth () in
+  let depth = Env.env_depth () in
   try (
     f ();
     check_env_depth depth;
     None
   ) with
   | Exn abnormal ->
-    Env_js.trunc_env depth;
+    Env.trunc_env depth;
     Some abnormal
   | exn ->
     raise exn
@@ -87,7 +87,7 @@ module AbnormalMap : MyMap.S with type key = t = MyMap.Make (struct
   let compare = Pervasives.compare
 end)
 
-let abnormals: Env_js.t AbnormalMap.t ref = ref AbnormalMap.empty
+let abnormals: Env.t AbnormalMap.t ref = ref AbnormalMap.empty
 
 (** record the appearance of a control flow directive.
     associate the given env if passed *)

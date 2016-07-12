@@ -9,14 +9,14 @@
  *)
 
 open Utils_js
-open Reason_js (* mk_id *)
+open Reason (* mk_id *)
 
 (******************************************************************************)
 (* Scopes                                                                     *)
 (******************************************************************************)
 
-(* these are basically owned by Env_js, but are here
-   to break circularity between Env_js and Flow_js
+(* these are basically owned by Env, but are here
+   to break circularity between Env and Flow_js
  *)
 
 (* entry state *)
@@ -158,14 +158,14 @@ module Entry = struct
     | Type _ ->
       entry
     | Value ({ kind = Const _; specific = Type.EmptyT _; _ } as v) ->
-      (* cleared consts: see note on Env_js.reset_current_activation *)
-      if Reason_js.is_internal_name name
+      (* cleared consts: see note on Env.reset_current_activation *)
+      if Reason.is_internal_name name
       then entry
       else Value { v with specific = v.general }
     | Value { kind = Const _; _ } ->
       entry
     | Value v ->
-      if Reason_js.is_internal_name name
+      if Reason.is_internal_name name
       then entry
       else Value { v with specific = v.general }
 
@@ -174,7 +174,7 @@ module Entry = struct
     | Type _ ->
       entry
     | Value v ->
-      if Reason_js.is_internal_name name
+      if Reason.is_internal_name name
       then entry
       else Value { v with specific = Type.EmptyT reason }
 

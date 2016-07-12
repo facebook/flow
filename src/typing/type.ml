@@ -8,9 +8,8 @@
  *
  *)
 
-open Reason_js
+open Reason
 open Utils_js
-module Errors = Errors_js
 
 (******************************************************************************)
 (* Types                                                                      *)
@@ -972,7 +971,7 @@ let is_any = function
    type means to the programmer. *)
 
 let rec reason_of_t = function
-  (* note: keep in order of decls in constraint_js *)
+  (* note: keep in order of decls in Constraint *)
 
   | OpenT (reason,_)
 

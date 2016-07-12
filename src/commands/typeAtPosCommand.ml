@@ -68,15 +68,15 @@ let handle_response (loc, t, raw_t, reasons) json strip =
         ("type", Hh_json.JSON_String ty) ::
         ("reasons", Hh_json.JSON_Array
           (List.map (fun r ->
-              let r_loc = strip (Reason_js.loc_of_reason r) in
+              let r_loc = strip (Reason.loc_of_reason r) in
               Hh_json.JSON_Object (
-                  ("desc", Hh_json.JSON_String (Reason_js.desc_of_reason r)) ::
-                  ("loc", Reason_js.json_of_loc r_loc) ::
-                  (Errors_js.deprecated_json_props_of_loc r_loc)
+                  ("desc", Hh_json.JSON_String (Reason.desc_of_reason r)) ::
+                  ("loc", Reason.json_of_loc r_loc) ::
+                  (Errors.deprecated_json_props_of_loc r_loc)
                 )
             ) reasons)) ::
-        ("loc", Reason_js.json_of_loc loc) ::
-        (Errors_js.deprecated_json_props_of_loc loc)
+        ("loc", Reason.json_of_loc loc) ::
+        (Errors.deprecated_json_props_of_loc loc)
       ) in
     let json_assoc = match raw_t with
       | None -> json_assoc
@@ -95,9 +95,9 @@ let handle_response (loc, t, raw_t, reasons) json strip =
       else "\n\nSee the following locations:\n" ^ (
         reasons
         |> List.map (fun r ->
-             Reason_js.repos_reason (strip (Reason_js.loc_of_reason r)) r
+             Reason.repos_reason (strip (Reason.loc_of_reason r)) r
            )
-        |> List.map Reason_js.string_of_reason
+        |> List.map Reason.string_of_reason
         |> String.concat "\n"
       )
     in
@@ -111,12 +111,12 @@ let handle_error (loc, err) json strip =
   then (
     let json = Hh_json.JSON_Object (
       ("error", Hh_json.JSON_String err) ::
-      ("loc", Reason_js.json_of_loc loc) ::
-      (Errors_js.deprecated_json_props_of_loc loc)
+      ("loc", Reason.json_of_loc loc) ::
+      (Errors.deprecated_json_props_of_loc loc)
     ) in
     output_string stderr ((Hh_json.json_to_string json)^"\n");
   ) else (
-    let loc = Reason_js.string_of_loc loc in
+    let loc = Reason.string_of_loc loc in
     output_string stderr (Utils_js.spf "%s:\n%s\n" loc err);
   );
   flush stderr

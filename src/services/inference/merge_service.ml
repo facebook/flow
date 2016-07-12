@@ -27,12 +27,12 @@ let check_require (r, resolved_r, cx) =
       try SMap.find_unsafe r (Context.require_loc cx)
       with Not_found -> raise (Key_not_found ("Context.require_loc", r))
     in
-    let reason = Reason_js.mk_reason r loc in
+    let reason = Reason.mk_reason r loc in
 
     let m_name = Modulename.to_string resolved_r in
     let tvar = Flow_js.mk_tvar cx reason in
-    Flow_js.lookup_builtin cx (Reason_js.internal_module_name m_name)
-      reason (Some (Reason_js.builtin_reason m_name)) tvar
+    Flow_js.lookup_builtin cx (Reason.internal_module_name m_name)
+      reason (Some (Reason.builtin_reason m_name)) tvar
 
 let add_decl (r, resolved_r, cx) declarations =
   (r, resolved_r, cx) :: declarations
@@ -160,7 +160,7 @@ let merge_strict_component ~options (component: filename list) =
     Context_cache.add_sig cx;
     file, errors
   )
-  else file, Errors_js.ErrorSet.empty
+  else file, Errors.ErrorSet.empty
 
 let merge_strict_job ~options (merged, errsets) (components: filename list list) =
   List.fold_left (fun (merged, errsets) (component: filename list) ->
@@ -183,8 +183,8 @@ let merge_strict_job ~options (merged, errsets) (components: filename list list)
     | exc ->
       let file = List.hd component in
       let msg = "merge_strict_job exception: "^(fmt_exc exc) in
-      let errorset = Errors_js.ErrorSet.singleton
-        (Errors_js.internal_error file msg) in
+      let errorset = Errors.ErrorSet.singleton
+        (Errors.internal_error file msg) in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
       List.hd component :: merged, errorset::errsets

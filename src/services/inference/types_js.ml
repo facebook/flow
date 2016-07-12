@@ -12,8 +12,6 @@
 
 open Utils_js
 
-module Errors = Errors_js
-
 (* errors are stored in a map from file path to error set, so that the errors
    from checking particular files can be cleared during recheck. *)
 let errors_by_file = ref FilenameMap.empty
@@ -222,7 +220,7 @@ let heap_check files = Module_js.(
   let nh = Hashtbl.create 0 in
   files |> List.iter (fun file ->
     let m_file = get_file (Modulename.Filename file) in
-    if not (Loc.check_suffix m_file Files_js.flow_ext)
+    if not (Loc.check_suffix m_file Files.flow_ext)
     then assert (m_file = file);
     let info = get_module_info file in
     Hashtbl.add ih file info;
@@ -353,9 +351,9 @@ let recheck genv env modified =
    * modified too. This is because sometimes we decide what foo.js.flow
    * provides based on the existence of foo.js *)
   let modified = FilenameSet.fold (fun file modified ->
-    if not (Loc.check_suffix file Files_js.flow_ext) &&
-      Parsing_service_js.has_ast (Loc.with_suffix file Files_js.flow_ext)
-    then FilenameSet.add (Loc.with_suffix file Files_js.flow_ext) modified
+    if not (Loc.check_suffix file Files.flow_ext) &&
+      Parsing_service_js.has_ast (Loc.with_suffix file Files.flow_ext)
+    then FilenameSet.add (Loc.with_suffix file Files.flow_ext) modified
     else modified
   ) modified modified in
 
@@ -595,11 +593,11 @@ let print_errors ~timing options errors =
 let server_init genv =
   let options = genv.ServerEnv.options in
 
-  let ordered_libs, libs = Files_js.init options in
+  let ordered_libs, libs = Files.init options in
 
-  let get_next_raw = Files_js.make_next_files ~options ~libs in
+  let get_next_raw = Files.make_next_files ~options ~libs in
   let get_next = fun () ->
-    get_next_raw () |> List.map Files_js.filename_from_string
+    get_next_raw () |> List.map Files.filename_from_string
   in
   let (timing, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in

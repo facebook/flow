@@ -1,9 +1,8 @@
-module Env = Env_js
 module Ast = Spider_monkey_ast
 module Anno = Type_annotation
 module Flow = Flow_js
 
-open Reason_js
+open Reason
 open Type
 
 type kind =

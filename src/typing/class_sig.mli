@@ -10,7 +10,7 @@ type field = Type.t * Spider_monkey_ast.Expression.t option
 val empty:
   ?structural:bool ->
   int -> (* id *)
-  Reason_js.t ->
+  Reason.t ->
   Type.typeparam list ->
   Type.t SMap.t -> (* type params map *)
   Type.t -> (* super *)
@@ -57,7 +57,7 @@ val add_setter: string -> Func_sig.t -> static:bool -> t -> t
 val mk: Context.t ->
   Type.t SMap.t -> (* type params map *)
   Loc.t ->
-  Reason_js.t ->
+  Reason.t ->
   Type.t -> (* self *)
   expr:(
     Context.t ->
@@ -70,7 +70,7 @@ val mk: Context.t ->
 val mk_interface: Context.t ->
   Type.t SMap.t -> (* type params map *)
   Loc.t ->
-  Reason_js.t ->
+  Reason.t ->
   bool -> (* structural *)
   Type.t -> (* self *)
   Spider_monkey_ast.Statement.Interface.t ->

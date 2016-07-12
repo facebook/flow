@@ -40,9 +40,9 @@ let query_type cx loc =
   let result = ref (Loc.none, None, []) in
   let diff = ref (max_int, max_int) in
   Hashtbl.iter (fun range t ->
-    if Reason_js.in_range loc range
+    if Reason.in_range loc range
     then (
-      let d = Reason_js.diff_range range in
+      let d = Reason.diff_range range in
       if d < !diff then (
         diff := d;
         Type_normalizer.suggested_type_cache := IMap.empty;

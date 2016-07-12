@@ -8,7 +8,7 @@
  *
  *)
 
-open Reason_js
+open Reason
 open Scope
 
 type t = Scope.t list

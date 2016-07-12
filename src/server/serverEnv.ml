@@ -25,7 +25,7 @@ type genv = {
 type env = {
     files: Utils_js.FilenameSet.t;
     libs: SSet.t; (* a subset of `files` *)
-    errorl: Errors_js.error list;
+    errorl: Errors.error list;
 }
 
 let async_queue : (unit -> unit) list ref = ref []

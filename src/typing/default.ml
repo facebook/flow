@@ -23,7 +23,7 @@
  * depend on bindings established by earlier ones.
  *)
 
-open Reason_js
+open Reason
 open Type
 
 type 'a t =

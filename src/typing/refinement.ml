@@ -11,7 +11,7 @@
 module Ast = Spider_monkey_ast
 
 (*
- * type refinements on expressions - wraps Env_js API
+ * type refinements on expressions - wraps Env API
  *)
 
 (* if expression is syntactically eligible for type refinement,
@@ -23,12 +23,12 @@ let rec key = Ast.Expression.(function
 
 | _, This ->
   (* treat this as a property chain, in terms of refinement lifetime *)
-  Some (Reason_js.internal_name "this", [])
+  Some (Reason.internal_name "this", [])
 
 | _, Identifier (_, { Ast.Identifier.name; _ }) when name != "undefined" -> (
   (* ditto super *)
   match name with
-  | "super" -> Some (Reason_js.internal_name "super", [])
+  | "super" -> Some (Reason.internal_name "super", [])
   | _ -> Some (name, [])
   )
 
@@ -73,5 +73,5 @@ let rec key = Ast.Expression.(function
 (* get type refinement for expression, if it exists *)
 let get cx expr reason =
   match key expr with
-  | Some k -> Env_js.get_refinement cx k reason
+  | Some k -> Env.get_refinement cx k reason
   | None -> None

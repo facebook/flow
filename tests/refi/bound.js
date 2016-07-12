@@ -34,7 +34,7 @@ var tests =
   },
 
   /* TODO we actually allow this currently; fix
-  // requires further remedial work in Env_js
+  // requires further remedial work in Env
   function() {
     if (x != null) {
       alert("");

@@ -60,8 +60,8 @@ let load_lib_files ~master_cx ~metadata files
 
       | _, parse_errors ->
         let converted = List.fold_left (fun acc err ->
-          Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
-        ) Errors_js.ErrorSet.empty parse_errors in
+          Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+        ) Errors.ErrorSet.empty parse_errors in
         save_parse_errors lib_file converted;
         exclude_syms, ((lib_file, false) :: result)
 
@@ -100,7 +100,7 @@ let get_master_cx =
       let cx = Flow_js.fresh_context
         (stub_metadata ~root ~checked:false)
         Loc.Builtins
-        (Modulename.String Files_js.lib_module) in
+        (Modulename.String Files.lib_module) in
       master_cx := Some (root, cx);
       cx
 
@@ -117,7 +117,7 @@ let set_libs filenames =
     (fun _file _sups -> ()) in
 
   Flow_js.Cache.clear();
-  let reason = Reason_js.builtin_reason "module" in
+  let reason = Reason.builtin_reason "module" in
   let builtin_module = Flow_js.mk_object master_cx reason in
   Flow_js.flow_t master_cx (builtin_module, Flow_js.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context [master_cx]
@@ -151,12 +151,12 @@ let check_content ~filename ~content =
     Context.errors cx
   | _, parse_errors ->
     List.fold_left (fun acc err ->
-      Errors_js.(ErrorSet.add (parse_error_to_flow_error err) acc)
-    ) Errors_js.ErrorSet.empty parse_errors
+      Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
+    ) Errors.ErrorSet.empty parse_errors
   in
   errors
-  |> Errors_js.ErrorSet.elements
-  |> Errors_js.json_of_errors_with_context ~root ~stdin_file
+  |> Errors.ErrorSet.elements
+  |> Errors.json_of_errors_with_context ~root ~stdin_file
   |> js_of_json
 
 let check filename =

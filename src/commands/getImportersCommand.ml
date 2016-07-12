@@ -48,7 +48,7 @@ let main option_values root json strip_root modules () =
       | Modulename.String s -> s
       | Modulename.Filename f ->
         let f = Loc.string_of_filename f in
-        if strip_root then Files_js.relative_path (Path.to_string root) f
+        if strip_root then Files.relative_path (Path.to_string root) f
         else f
     ) (Module_js.NameSet.elements importers) in
     SMap.add module_name importer_list map
