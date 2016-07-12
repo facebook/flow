@@ -238,6 +238,10 @@ module rec TypeTerm : sig
        to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
 
+    (* Internal-only type that wraps object types for the CustomFunT(Idx)
+       function *)
+    | IdxWrapper of reason * t
+
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
@@ -403,6 +407,9 @@ module rec TypeTerm : sig
 
     | SentinelPropTestT of t * bool * sentinel_value * t_out
 
+    | IdxUnwrap of reason * t_out
+    | IdxUnMaybeifyT of reason * t_out
+
   and predicate =
     | AndP of predicate * predicate
     | OrP of predicate * predicate
@@ -567,6 +574,7 @@ module rec TypeTerm : sig
   | MergeDeepInto
   | MergeInto
   | Mixin
+  | Idx
 
   and sentinel_value =
   | SentinelStr of string
@@ -1073,6 +1081,8 @@ let rec reason_of_t = function
   | ExtendsT (_,_,t) ->
       prefix_reason "extends " (reason_of_t t)
 
+  | IdxWrapper (reason, _) -> reason
+
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _) ->
       reason
@@ -1166,6 +1176,9 @@ and reason_of_use_t = function
 
   | ChoiceKitUseT (reason, _) -> reason
   | IntersectionPreprocessKitT (reason, _) -> reason
+
+  | IdxUnwrap (reason, _) -> reason
+  | IdxUnMaybeifyT (reason, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1289,6 +1302,8 @@ let rec mod_reason_of_t f = function
 
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
 
+  | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
+
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
 
@@ -1377,6 +1392,9 @@ and mod_reason_of_use_t f = function
   | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
   | IntersectionPreprocessKitT (reason, tool) -> IntersectionPreprocessKitT (f reason, tool)
 
+  | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
+  | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
+
 (* type comparison mod reason *)
 let reasonless_compare =
   let swap_reason t r = mod_reason_of_t (fun _ -> r) t in
@@ -1461,6 +1479,7 @@ let string_of_ctor = function
     | Trigger -> "Trigger"
     end
   | CustomFunT _ -> "CustomFunT"
+  | IdxWrapper _ -> "IdxWrapper"
 
 let string_of_use_op = function
   | FunReturn -> "FunReturn"
@@ -1535,6 +1554,8 @@ let string_of_use_ctor = function
     | SentinelPropTest _ -> "SentinelPropTest"
     | PropExistsTest _ -> "PropExistsTest"
     end
+  | IdxUnwrap _ -> "IdxUnwrap"
+  | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

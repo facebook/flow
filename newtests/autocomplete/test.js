@@ -1985,162 +1985,186 @@ valueOf () => Object
 
     addFile("customfun.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'customfun.js', '11', '2'],
+      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'customfun.js', '12', '2'],
       'customfun.js',
     ).stdout(
-`{
-  "result": [
-    {
-      "name": "promiseAll",
-      "type": "(promises: Array<Promise>) => Promise",
-      "func_details": {
-        "return_type": "Promise",
-        "params": [
-          {
-            "name": "promises",
-            "type": "Array<Promise>"
-          }
-        ]
-      },
-      "path": "customfun.js",
-      "line": 9,
-      "endline": 9,
-      "start": 1,
-      "end": 35
-    },
-    {
-      "name": "objectGetPrototypeOf",
-      "type": "(o: any) => any",
-      "func_details": {
-        "return_type": "any",
-        "params": [
-          {
-            "name": "o",
-            "type": "any"
-          }
-        ]
-      },
-      "path": "customfun.js",
-      "line": 7,
-      "endline": 7,
-      "start": 1,
-      "end": 55
-    },
-    {
-      "name": "objectAssign",
-      "type": "(target: any, ...sources: Array<any>) => any",
-      "func_details": {
-        "return_type": "any",
-        "params": [
-          {
-            "name": "target",
-            "type": "any"
-          },
-          {
-            "name": "...sources",
-            "type": "Array<any>"
-          }
-        ]
-      },
-      "path": "customfun.js",
-      "line": 8,
-      "endline": 8,
-      "start": 1,
-      "end": 39
-    },
-    {
-      "name": "mixin",
-      "type": "(...objects: Array<Object>) => [class: Object]",
-      "func_details": {
-        "return_type": "[class: Object]",
-        "params": [
-          {
-            "name": "...objects",
-            "type": "Array<Object>"
-          }
-        ]
-      },
-      "path": "customfun.js",
-      "line": 6,
-      "endline": 6,
-      "start": 1,
-      "end": 38
-    },
-    {
-      "name": "mergeInto",
-      "type": "(target: Object, ...objects: Array<Object>) => void",
-      "func_details": {
-        "return_type": "void",
-        "params": [
-          {
-            "name": "target",
-            "type": "Object"
-          },
-          {
-            "name": "...objects",
-            "type": "Array<Object>"
-          }
-        ]
-      },
-      "path": "customfun.js",
-      "line": 5,
-      "endline": 5,
-      "start": 1,
-      "end": 46
-    },
-    {
-      "name": "mergeDeepInto",
-      "type": "(target: Object, ...objects: Array<Object>) => void",
-      "func_details": {
-        "return_type": "void",
-        "params": [
-          {
-            "name": "target",
-            "type": "Object"
-          },
-          {
-            "name": "...objects",
-            "type": "Array<Object>"
-          }
-        ]
-      },
-      "path": "customfun.js",
-      "line": 4,
-      "endline": 4,
-      "start": 1,
-      "end": 54
-    },
-    {
-      "name": "merge",
-      "type": "(...objects: Array<Object>) => Object",
-      "func_details": {
-        "return_type": "Object",
-        "params": [
-          {
-            "name": "...objects",
-            "type": "Array<Object>"
-          }
-        ]
-      },
-      "path": "customfun.js",
-      "line": 3,
-      "endline": 3,
-      "start": 1,
-      "end": 38
-    },
-    {
-      "name": "exports",
-      "type": "{}",
-      "func_details": null,
-      "path": "",
-      "line": 0,
-      "endline": 0,
-      "start": 1,
-      "end": 0
-    }
-  ]
-}`,
-).exitCodes([0]),
+       `
+         {
+           "result": [
+             {
+               "name": "promiseAll",
+               "type": "(promises: Array<Promise>) => Promise",
+               "func_details": {
+                 "return_type": "Promise",
+                 "params": [
+                   {
+                     "name": "promises",
+                     "type": "Array<Promise>"
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 10,
+               "endline": 10,
+               "start": 1,
+               "end": 35
+             },
+             {
+               "name": "objectGetPrototypeOf",
+               "type": "(o: any) => any",
+               "func_details": {
+                 "return_type": "any",
+                 "params": [
+                   {
+                     "name": "o",
+                     "type": "any"
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 8,
+               "endline": 8,
+               "start": 1,
+               "end": 55
+             },
+             {
+               "name": "objectAssign",
+               "type": "(target: any, ...sources: Array<any>) => any",
+               "func_details": {
+                 "return_type": "any",
+                 "params": [
+                   {
+                     "name": "target",
+                     "type": "any"
+                   },
+                   {
+                     "name": "...sources",
+                     "type": "Array<any>"
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 9,
+               "endline": 9,
+               "start": 1,
+               "end": 39
+             },
+             {
+               "name": "mixin",
+               "type": "(...objects: Array<Object>) => [class: Object]",
+               "func_details": {
+                 "return_type": "[class: Object]",
+                 "params": [
+                   {
+                     "name": "...objects",
+                     "type": "Array<Object>"
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 7,
+               "endline": 7,
+               "start": 1,
+               "end": 38
+             },
+             {
+               "name": "mergeInto",
+               "type": "(target: Object, ...objects: Array<Object>) => void",
+               "func_details": {
+                 "return_type": "void",
+                 "params": [
+                   {
+                     "name": "target",
+                     "type": "Object"
+                   },
+                   {
+                     "name": "...objects",
+                     "type": "Array<Object>"
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 6,
+               "endline": 6,
+               "start": 1,
+               "end": 46
+             },
+             {
+               "name": "mergeDeepInto",
+               "type": "(target: Object, ...objects: Array<Object>) => void",
+               "func_details": {
+                 "return_type": "void",
+                 "params": [
+                   {
+                     "name": "target",
+                     "type": "Object"
+                   },
+                   {
+                     "name": "...objects",
+                     "type": "Array<Object>"
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 5,
+               "endline": 5,
+               "start": 1,
+               "end": 54
+             },
+             {
+               "name": "merge",
+               "type": "(...objects: Array<Object>) => Object",
+               "func_details": {
+                 "return_type": "Object",
+                 "params": [
+                   {
+                     "name": "...objects",
+                     "type": "Array<Object>"
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 4,
+               "endline": 4,
+               "start": 1,
+               "end": 38
+             },
+             {
+               "name": "idx",
+               "type": "",
+               "func_details": {
+                 "return_type": "?IdxResult",
+                 "params": [
+                   {
+                     "name": "obj",
+                     "type": "IdxObject"
+                   },
+                   {
+                     "name": "pathCallback",
+                     "type": ""
+                   }
+                 ]
+               },
+               "path": "customfun.js",
+               "line": 3,
+               "endline": 3,
+               "start": 1,
+               "end": 34
+             },
+             {
+               "name": "exports",
+               "type": "{}",
+               "func_details": null,
+               "path": "",
+               "line": 0,
+               "endline": 0,
+               "start": 1,
+               "end": 0
+             }
+           ]
+         }
+       `,
+     ).exitCodes([0]),
 
 
     addFile("issue-1368.js"),

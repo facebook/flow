@@ -209,6 +209,9 @@ let rec type_printer override fallback enclosure cx t =
     | AnyFunT _ ->
         "Function"
 
+    | IdxWrapper (_, t) ->
+      spf "$IdxWrapper<%s>" (pp enclosure cx t)
+
     | t ->
         fallback t
 

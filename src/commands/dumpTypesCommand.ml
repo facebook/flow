@@ -31,6 +31,8 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
+    |> flag "--pretty" no_arg
+        ~doc:"Pretty-print JSON output"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> flag "--raw" no_arg
@@ -39,7 +41,7 @@ let spec = {
   )
 }
 
-let handle_response types json strip =
+let handle_response types json pretty strip =
   if json
   then (
     let lst = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
@@ -63,7 +65,12 @@ let handle_response types json strip =
       in
       Hh_json.JSON_Object json_assoc
     ) in
-    let json = Hh_json.json_to_string (Hh_json.JSON_Array lst) in
+    let json =
+      let arr = Hh_json.JSON_Array lst in
+        if pretty
+        then Hh_json.json_to_multiline arr
+        else Hh_json.json_to_string arr
+    in
     output_string stdout (json^"\n")
   ) else (
     let out = types
@@ -77,7 +84,7 @@ let handle_response types json strip =
   );
   flush stdout
 
-let handle_error (loc, err) json strip =
+let handle_error (loc, err) json (pretty:bool) strip =
   let loc = strip loc in
   if json
   then (
@@ -86,16 +93,21 @@ let handle_error (loc, err) json strip =
       ("loc", Reason_js.json_of_loc loc) ::
       (Errors_js.deprecated_json_props_of_loc loc)
     ) in
-    output_string stderr ((Hh_json.json_to_string json)^"\n");
+    let json =
+      if pretty
+      then Hh_json.json_to_multiline json
+      else Hh_json.json_to_string json
+    in
+    output_string stderr (json^"\n");
     (* also output an empty array on stdout, for JSON parsers *)
-    handle_response [] true strip
+    handle_response [] true pretty strip
   ) else (
     let loc = Reason_js.string_of_loc loc in
     output_string stderr (Utils_js.spf "%s:\n%s\n" loc err);
   );
   flush stderr
 
-let main option_values root json strip_root path include_raw filename () =
+let main option_values root json strip_root pretty path include_raw filename () =
   let json = json || include_raw in
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
@@ -105,12 +117,12 @@ let main option_values root json strip_root path include_raw filename () =
   ) in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc
-    (ServerProt.DUMP_TYPES (file, include_raw));
+    (ServerProt.DUMP_TYPES (file, include_raw, if strip_root then Some root else None));
 
   match (Timeout.input_value ic : ServerProt.dump_types_response) with
   | Utils_js.Err err ->
-      handle_error err json (relativize strip_root root)
+      handle_error err json pretty (relativize strip_root root)
   | Utils_js.OK resp ->
-      handle_response resp json (relativize strip_root root)
+      handle_response resp json pretty (relativize strip_root root)
 
 let command = CommandSpec.command spec main

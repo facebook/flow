@@ -27,7 +27,7 @@ val diff_range: Loc.t -> int * int
 val in_range: Loc.t -> Loc.t -> bool
 
 val string_of_loc: Loc.t -> string
-val json_of_loc: Loc.t -> Hh_json.json
+val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
 
 val reason_of_string: string -> reason
 
@@ -59,7 +59,7 @@ val is_blamable_reason: reason -> bool
 val reasons_overlap: reason -> reason -> bool
 
 val string_of_reason: reason -> string
-val json_of_reason: reason -> Hh_json.json
+val json_of_reason: ?strip_root:Path.t option -> reason -> Hh_json.json
 val dump_reason: reason -> string
 
 (* accessors *)

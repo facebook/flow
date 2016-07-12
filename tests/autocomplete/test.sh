@@ -52,7 +52,7 @@ printf "jsx2.js = "
 $FLOW autocomplete --strip-root --json jsx2.js 8 11 < jsx2.js
 
 printf "customfun.js = "
-$FLOW autocomplete --strip-root --json customfun.js 11 2 < customfun.js
+$FLOW autocomplete --strip-root --json customfun.js 12 2 < customfun.js
 
 printf "issue-1368.js = "
 $FLOW autocomplete --strip-root --json issue-1368.js 20 10 < issue-1368.js
