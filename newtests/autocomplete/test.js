@@ -1065,8 +1065,8 @@ valueOf () => Object
                "path": "[LIB] core.js",
                "line": 96,
                "endline": 96,
-               "start": 14,
-               "end": 37
+               "start": 12,
+               "end": 35
              },
              {
                "name": "arguments",
@@ -1260,8 +1260,8 @@ valueOf () => Object
                "path": "[LIB] core.js",
                "line": 96,
                "endline": 96,
-               "start": 14,
-               "end": 37
+               "start": 12,
+               "end": 35
              },
              {
                "name": "arguments",
