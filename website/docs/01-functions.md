@@ -133,6 +133,16 @@ their types annotated inline, as seen above. For example, we may have:
 
 `function foo (P1: T1, .., Pn: Tn): U { .. }`
 
+### ES2015 features
+
+Default values assigned to parameters must come after the parameter's type annotation:
+
+`function foo (P1: T1 = V): U { .. }`
+
+Arrow functions can be annotated in a similar way:
+
+`(P1: T1 .., Pn: Tn): U => { .. }`
+
 ## Polymorphic functions
 Functions can be polymorphic, just like polymorphic classes.
 
