@@ -64,6 +64,8 @@ val to_absolute : t -> absolute
 
 val to_relative_string : t -> string pos
 
+val destruct_range : t -> (int * int * int * int)
+
 (* Compare by filename, then tie-break by start position, and finally by the
  * end position *)
 val compare : 'a pos -> 'a pos -> int
