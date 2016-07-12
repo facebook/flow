@@ -325,6 +325,8 @@ let rec convert cx type_params_map = Ast.Type.(function
       mk_custom_fun cx loc typeParameters MergeInto
   | "$Facebookism$Mixin" ->
       mk_custom_fun cx loc typeParameters Mixin
+  | "$Facebookism$Idx" ->
+      mk_custom_fun cx loc typeParameters Idx
 
 
   (* You can specify in the .flowconfig the names of types that should be

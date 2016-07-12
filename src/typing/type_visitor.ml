@@ -142,6 +142,9 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t2 in
     acc
 
+  | IdxWrapper (_, t) ->
+    self#type_ cx acc t
+
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
 
@@ -212,6 +215,8 @@ class ['a] t = object(self)
   | SentinelPropTestT _
   | ChoiceKitUseT (_, _)
   | IntersectionPreprocessKitT (_, _)
+  | IdxUnwrap _
+  | IdxUnMaybeifyT _
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

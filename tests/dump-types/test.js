@@ -15,3 +15,7 @@ function f0(x: ?Object) { return nullToUndefined(x); }
 function f1(x: ?Object) { return nullToUndefined(x); }
 function f2(x: ?string) { return nullToUndefined(x); }
 function f3(x: ?string) { return nullToUndefined(x); }
+
+declare var idx: $Facebookism$Idx;
+declare var obj: {a?: {b: ?{c: null | {d: number}}}};
+const idxResult = idx(obj, obj => obj.a.b.c.d);

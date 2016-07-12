@@ -36,7 +36,7 @@ type command =
     file_input *
     Verbose.t option
 | COVERAGE of file_input
-| DUMP_TYPES of file_input * bool (* filename, include raw *)
+| DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | ERROR_OUT_OF_DATE
 | FIND_MODULE of string * string
 | GET_DEF of file_input * int * int (* filename, line, char *)

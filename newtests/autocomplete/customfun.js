@@ -1,5 +1,6 @@
 //
 
+declare var idx: $Facebookism$Idx;
 declare var merge: $Facebookism$Merge;
 declare var mergeDeepInto: $Facebookism$MergeDeepInto;
 declare var mergeInto: $Facebookism$MergeInto;

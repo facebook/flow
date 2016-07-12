@@ -927,6 +927,9 @@ module ResolvableTypeJob = struct
       let ts = [t1;t2] in
       collect_of_types ?log_unresolved cx reason acc ts
 
+    | IdxWrapper (_, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -1674,6 +1677,159 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (AnyFunT _, UseT (_, u)) when function_like u -> ()
     | (AnyFunT _, UseT (_, u)) when object_like u -> ()
     | AnyFunT _, UseT (_, (TypeT _ | AnyFunT _ | AnyObjT _)) -> ()
+
+    (**
+     * Handling for the idx() custom function.
+     *
+     * idx(a, a => a.b.c) is a 2-arg function with semantics meant to simlify
+     * the process of extracting a property from a chain of maybe-typed property
+     * accesses.
+     *
+     * As an example, if you consider an object type such as:
+     *
+     *   {
+     *     me: ?{
+     *       firstName: string,
+     *       lastName: string,
+     *       friends: ?Array<User>,
+     *     }
+     *   }
+     *
+     * The process of getting to the friends of my first friend (safely) looks
+     * something like this:
+     *
+     *   let friendsOfFriend = obj.me && obj.me.friends && obj.me.friends[0]
+     *                         && obj.me.friends[0].friends;
+     *
+     * This is verbose to say the least. To simplify, we can define a function
+     * called idx() as:
+     *
+     *   function idx(obj, callback) {
+     *     try { return callback(obj); } catch (e) {
+     *       if (isNullPropertyAccessError(e)) {
+     *         return null;
+     *       } else {
+     *         throw e;
+     *       }
+     *     }
+     *   }
+     *
+     * This function can then be used to safely dive into the aforementioned
+     * object tersely:
+     *
+     *  let friendsOfFriend = idx(obj, obj => obj.me.friends[0].friends);
+     *
+     * If we assume these semantics, then we can model the type of this function
+     * by wrapping the `obj` parameter in a special signifying wrapper type that
+     * is only valid against use types associated with property accesses. Any
+     * time this specially wrapper type flows into a property access operation,
+     * we:
+     *
+     * 1) Strip away any potential MaybeT from the contained type
+     * 2) Forward the un-Maybe'd type on to the access operation
+     * 3) Wrap the result back in the special wrapper
+     *
+     * We can then flow this wrapped `obj` to a call on the callback function,
+     * remove the wrapper from the return type, and return that value wrapped in
+     * a MaybeT.
+     *
+     * ...of course having a `?.` operator in the language would be a nice
+     *    reason to throw all of this clownerous hackery away...
+     *)
+    | CustomFunT (_, Idx),
+      CallT (reason_op, {
+        params_tlist;
+        return_t;
+        this_t;
+        closure_t;
+        changeset;
+        _;
+      }) ->
+      (match params_tlist with
+        | obj::cb::[] ->
+          let wrapped_obj = IdxWrapper (reason_op, obj) in
+          let callback_result = mk_tvar_where cx reason_op (fun t ->
+            rec_flow cx trace (cb, CallT (reason_op, {
+              this_t;
+              params_tlist = [wrapped_obj];
+              params_names = None;
+              return_t = t;
+              closure_t;
+              changeset;
+            }))
+          ) in
+          let unwrapped_t = mk_tvar_where cx reason_op (fun t ->
+            rec_flow cx trace (callback_result, IdxUnwrap(reason_op, t))
+          ) in
+          rec_flow_t cx trace (MaybeT unwrapped_t, return_t)
+        | _ ->
+          add_error cx (
+            mk_info reason_op ["idx() function takes exactly two params!"]
+          )
+      )
+
+    (* Unwrap idx() callback param *)
+    | (IdxWrapper (_, obj), IdxUnwrap (_, t)) -> rec_flow_t cx trace (obj, t)
+    | (_, IdxUnwrap (_, t)) -> rec_flow_t cx trace (l, t)
+
+    (* De-maybe-ify an idx() property access *)
+    | (MaybeT inner_t, IdxUnMaybeifyT (_, t))
+    | (OptionalT inner_t, IdxUnMaybeifyT (_, t))
+      -> rec_flow_t cx trace (inner_t, t)
+    | (NullT _, IdxUnMaybeifyT _) -> ()
+    | (VoidT _, IdxUnMaybeifyT _) -> ()
+    | (_, IdxUnMaybeifyT (_, t)) when (
+        match l with
+        | UnionT _ | IntersectionT _ -> false
+        | _ -> true
+      ) ->
+      rec_flow_t cx trace (l, t)
+
+    (* The set of valid uses of an idx() callback parameter. In general this
+       should be limited to the various forms of property access operations. *)
+    | (IdxWrapper (idx_reason, obj), ReposLowerT (reason_op, u)) ->
+      let repositioned_obj = mk_tvar_where cx reason_op (fun t ->
+        rec_flow cx trace (obj, ReposLowerT (reason_op, UseT (UnknownUse, t)))
+      ) in
+      rec_flow cx trace (IdxWrapper(idx_reason, repositioned_obj), u)
+
+    | (IdxWrapper (idx_reason, obj), GetPropT (reason_op, propname, t_out)) ->
+      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
+        rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
+      ) in
+      let prop_type = mk_tvar_where cx reason_op (fun t ->
+        rec_flow cx trace (de_maybed_obj, GetPropT (reason_op, propname, t))
+      ) in
+      rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
+
+    | (IdxWrapper (idx_reason, obj), GetElemT (reason_op, prop, t_out)) ->
+      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
+        rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
+      ) in
+      let prop_type = mk_tvar_where cx reason_op (fun t ->
+        rec_flow cx trace (de_maybed_obj, GetElemT (reason_op, prop, t))
+      ) in
+      rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
+
+    | (IdxWrapper (idx_reason, obj), LookupT (reason_op, strict, try_on_fail, prop, t_out)) ->
+      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
+        rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
+      ) in
+      let prop_type = mk_tvar_where cx reason_op (fun t ->
+        rec_flow cx trace (de_maybed_obj, LookupT (reason_op, strict, try_on_fail, prop, t))
+      ) in
+      rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
+
+    | (IdxWrapper (reason, _), UseT _) ->
+      add_error cx (mk_info reason [
+        "idx() callback functions may not be annotated and they may only " ^
+        "access properties on the callback parameter!"
+      ])
+
+    | (IdxWrapper (reason, _), _) ->
+      add_error cx (mk_info reason [
+        "idx() callbacks may only access properties on the callback parameter!"
+      ])
 
     (***************)
     (* maybe types *)
@@ -2693,7 +2849,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, UseT (_, DiffT (o1, o2))) ->
         let reason = reason_of_t l in
         let t2 = mk_tvar cx reason in
-        (* prerr_endline (string_of_reason reason); *)
         rec_flow cx trace (o2, ObjRestT (reason, [], t2));
         rec_flow cx trace (t2, ObjAssignT(reason, l, o1, [], true))
 
@@ -4350,6 +4505,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ->
     t
 
+  | IdxWrapper (reason, obj_t) -> IdxWrapper (reason, subst cx ~force map obj_t)
+
   | FunT (reason, static, proto, {
     this_t = this;
     params_tlist = params;
@@ -4634,6 +4791,8 @@ and check_polarity cx polarity = function
 
   | ObjT (_, obj) ->
     check_polarity_propmap cx Neutral obj.props_tmap
+
+  | IdxWrapper (_, obj) -> check_polarity cx polarity obj
 
   | UnionT (_, rep) ->
     List.iter (check_polarity cx polarity) (UnionRep.members rep)
@@ -7267,6 +7426,8 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
     unify cx proto_t AnyT.t;
     iter_props cx id (fun _ -> recurse ~infer:true)
+
+  | IdxWrapper (_, obj) -> assert_ground ~infer cx skip ids obj
 
   | ArrT (_, t, ts) ->
     recurse ~infer:true t;

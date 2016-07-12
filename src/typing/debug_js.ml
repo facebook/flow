@@ -41,6 +41,7 @@ type json_cx = {
   stack: ISet.t;
   depth: int;
   cx: Context.t;
+  strip_root: Path.t option;
 }
 
 let check_depth continuation json_cx =
@@ -52,7 +53,7 @@ let check_depth continuation json_cx =
 let rec _json_of_t json_cx = check_depth _json_of_t_impl json_cx
 and _json_of_t_impl json_cx t = Hh_json.(
   JSON_Object ([
-    "reason", json_of_reason (reason_of_t t);
+    "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_t t);
     "kind", JSON_String (string_of_ctor t)
   ] @
   match t with
@@ -248,7 +249,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | MergeDeepInto -> "mergeDeepInto"
       | MergeInto -> "mergeInto"
       | Mixin -> "mixin"
+      | Idx -> "idx"
       );
+    ]
+
+  | IdxWrapper (_, t) -> [
+      "wrappedObj", _json_of_t json_cx t
     ]
   )
 )
@@ -268,7 +274,7 @@ and _json_of_string_literal = Hh_json.(function
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
 and _json_of_use_t_impl json_cx t = Hh_json.(
   JSON_Object ([
-    "reason", json_of_reason (reason_of_use_t t);
+    "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_use_t t);
     "kind", JSON_String (string_of_use_ctor t)
   ] @
   match t with
@@ -389,7 +395,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | LookupT (_, rstrict, _, name, t) ->
     (match rstrict with
       | None -> []
-      | Some r -> ["strictReason", json_of_reason r]
+      | Some r -> ["strictReason", json_of_reason ~strip_root:json_cx.strip_root r]
     ) @ [
       "name", JSON_String name;
       "type", _json_of_t json_cx t
@@ -441,7 +447,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | HasPropT (_, strict, key) ->
     (match strict with
       | None -> []
-      | Some r -> ["strictReason", json_of_reason r]
+      | Some r -> ["strictReason", json_of_reason ~strip_root:json_cx.strip_root r]
     ) @ [
       "key", JSON_Object (_json_of_string_literal key)
     ]
@@ -526,6 +532,13 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       | SentinelBool b -> JSON_Bool b);
       "result", _json_of_t json_cx result;
     ]
+  | IdxUnwrap (_, t_out) -> [
+      "t_out", _json_of_t json_cx t_out
+    ]
+  | IdxUnMaybeifyT (_, t_out) -> [
+      "t_out", _json_of_t json_cx t_out
+    ]
+
   )
 )
 
@@ -540,7 +553,7 @@ and json_of_polarity_impl _json_cx polarity =
 and json_of_typeparam json_cx = check_depth json_of_typeparam_impl json_cx
 and json_of_typeparam_impl json_cx tparam = Hh_json.(
   JSON_Object ([
-    "reason", json_of_reason tparam.reason;
+    "reason", json_of_reason ~strip_root:json_cx.strip_root tparam.reason;
     "name", JSON_String tparam.name;
     "bound", _json_of_t json_cx tparam.bound;
     "polarity", json_of_polarity json_cx tparam.polarity;
@@ -698,7 +711,7 @@ and json_of_polarity_map_impl json_cx pmap = Hh_json.(
 and json_of_propname json_cx = check_depth json_of_propname_impl json_cx
 and json_of_propname_impl _json_cx (reason, literal) = Hh_json.(
   JSON_Object [
-    "reason", json_of_reason reason;
+    "reason", json_of_reason ~strip_root:_json_cx.strip_root reason;
     "literal", JSON_String literal;
   ]
 )
@@ -832,30 +845,30 @@ and json_of_tvarkeys_impl _json_cx imap = Hh_json.(
   JSON_Array (IMap.fold (fun i _ acc -> ((int_ i) :: acc)) imap [])
 )
 
-let json_of_t ?(depth=1000) cx t =
-  let json_cx = { cx; depth; stack = ISet.empty; } in
+let json_of_t ?(depth=1000) ?(strip_root=None) cx t =
+  let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
   _json_of_t json_cx t
 
-let json_of_use_t ?(depth=1000) cx use_t =
-  let json_cx = { cx; depth; stack = ISet.empty; } in
+let json_of_use_t ?(depth=1000) ?(strip_root=None) cx use_t =
+  let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
   _json_of_use_t json_cx use_t
 
-let jstr_of_t ?(depth=1000) cx t =
-  Hh_json.json_to_multiline (json_of_t ~depth cx t)
+let jstr_of_t ?(depth=1000) ?(strip_root=None) cx t =
+  Hh_json.json_to_multiline (json_of_t ~depth ~strip_root cx t)
 
-let jstr_of_use_t ?(depth=1000) cx use_t =
-  Hh_json.json_to_multiline (json_of_use_t ~depth cx use_t)
+let jstr_of_use_t ?(depth=1000) ?(strip_root=None) cx use_t =
+  Hh_json.json_to_multiline (json_of_use_t ~depth ~strip_root cx use_t)
 
-let json_of_graph ?(depth=1000) cx = Hh_json.(
+let json_of_graph ?(depth=1000) ?(strip_root=None) cx = Hh_json.(
   let entries = IMap.fold (fun id _ entries ->
-    let json_cx = { cx; depth; stack = ISet.empty; } in
+    let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
     (spf "%d" id, json_of_node json_cx id) :: entries
   ) (Context.graph cx) [] in
   JSON_Object (List.rev entries)
 )
 
-let jstr_of_graph ?(depth=1000) cx =
-  Hh_json.json_to_multiline (json_of_graph ~depth cx)
+let jstr_of_graph ?(depth=1000) ?(strip_root=None) cx =
+  Hh_json.json_to_multiline (json_of_graph ~depth ~strip_root cx)
 
 
 (* scopes *)
@@ -870,8 +883,8 @@ let json_of_scope = Scope.(
       "entry_type", JSON_String "Value";
       "kind", JSON_String (Entry.string_of_value_kind kind);
       "value_state", JSON_String (State.to_string value_state);
-      "value_declare_loc", json_of_loc value_declare_loc;
-      "value_assign_loc", json_of_loc value_assign_loc;
+      "value_declare_loc", json_of_loc ~strip_root:json_cx.strip_root value_declare_loc;
+      "value_assign_loc", json_of_loc ~strip_root:json_cx.strip_root value_assign_loc;
       "specific", _json_of_t json_cx specific;
       "general", _json_of_t json_cx general;
     ]
@@ -882,7 +895,7 @@ let json_of_scope = Scope.(
     JSON_Object [
       "entry_type", JSON_String "Type";
       "type_state", JSON_String (State.to_string type_state);
-      "type_loc", json_of_loc type_loc;
+      "type_loc", json_of_loc ~strip_root:json_cx.strip_root type_loc;
       "_type", _json_of_t json_cx _type;
     ]
   in
@@ -906,7 +919,7 @@ let json_of_scope = Scope.(
 
   let json_of_refi_impl json_cx { refi_loc; refined; original } =
     JSON_Object [
-      "refi_loc", json_of_loc refi_loc;
+      "refi_loc", json_of_loc ~strip_root:json_cx.strip_root refi_loc;
       "refined", _json_of_t json_cx refined;
       "original", _json_of_t json_cx original;
     ]
@@ -923,8 +936,8 @@ let json_of_scope = Scope.(
   in
   let json_of_refis json_cx = check_depth json_of_refis_impl json_cx in
 
-  fun ?(depth=1000) cx scope ->
-    let json_cx = { cx; depth; stack = ISet.empty; } in
+  fun ?(depth=1000) ?(strip_root=None) cx scope ->
+    let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
     JSON_Object [
       "kind", JSON_String (string_of_kind scope.kind);
       "entries", json_of_entries json_cx scope.entries;
@@ -1049,6 +1062,7 @@ and dump_t_ (depth, tvars) cx t =
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
   | CustomFunT _ -> p t
   | ChoiceKitT _ -> p t
+  | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
@@ -1131,7 +1145,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | ReactCreateElementT _
   | SentinelPropTestT _
   | IntersectionPreprocessKitT _
-  | ChoiceKitUseT _ ->
+  | ChoiceKitUseT _
+  | IdxUnwrap _
+  | IdxUnMaybeifyT _ ->
     p t
 
 (*****************************************************)

@@ -135,11 +135,40 @@ let string_of_loc loc = Loc.(
       spf "%s:%d:%d-%d" file line start end_
 )
 
-let json_of_loc loc = Hh_json.(Loc.(
+(* helper: strip root from positions *)
+let strip_root_from_loc root loc = Loc.(
+  let source = match loc.source with
+  | None -> None
+  | Some Builtins -> Some Builtins
+  | Some LibFile file ->
+    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+    if string_starts_with file root_str
+    then Some (LibFile (spf "[LIB] %s" (Files.relative_path root_str file)))
+    else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
+
+  | Some SourceFile file ->
+    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+    Some (SourceFile (Files.relative_path root_str file))
+
+  | Some JsonFile file ->
+    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+    Some (JsonFile (Files.relative_path root_str file))
+  in
+  { loc with source }
+)
+
+let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
   JSON_Object [
-    "source", (match loc.source with
+    "source", (
+      let loc =
+        match strip_root with
+        | Some root -> strip_root_from_loc root loc
+        | None -> loc
+      in
+      match loc.source with
       | Some x -> JSON_String (string_of_filename x)
-      | None -> JSON_Null);
+      | None -> JSON_Null
+    );
     "type", (match loc.source with
     | Some LibFile _ -> JSON_String "LibFile"
     | Some SourceFile _ -> JSON_String "SourceFile"
@@ -192,9 +221,9 @@ let string_of_reason r =
     else spf "%s:\n%s" spos desc
   )
 
-let json_of_reason r = Hh_json.(
+let json_of_reason ?(strip_root=None) r = Hh_json.(
   JSON_Object [
-    "pos", json_of_loc (loc_of_reason r);
+    "pos", json_of_loc ~strip_root (loc_of_reason r);
     "desc", JSON_String r.desc
   ]
 )
@@ -321,28 +350,6 @@ let repos_reason loc reason =
 
 let update_origin_of_reason origin reason =
   { reason with origin = origin }
-
-(* helper: strip root from positions *)
-let strip_root_from_loc root loc = Loc.(
-  let source = match loc.source with
-  | None -> None
-  | Some Builtins -> Some Builtins
-  | Some LibFile file ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    if string_starts_with file root_str
-    then Some (LibFile (spf "[LIB] %s" (Files.relative_path root_str file)))
-    else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
-
-  | Some SourceFile file ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (SourceFile (Files.relative_path root_str file))
-
-  | Some JsonFile file ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (JsonFile (Files.relative_path root_str file))
-  in
-  { loc with source }
-)
 
 let strip_root root reason =
   let loc = strip_root_from_loc root (loc_of_reason reason) in

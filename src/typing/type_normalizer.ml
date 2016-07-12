@@ -156,6 +156,40 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = Some ["o"] in
       fake_fun params_names tins any
 
+  | CustomFunT (reason, Idx) ->
+      let obj_param = (
+        let obj_name = "IdxObject" in
+        let obj_reason = reason_of_string obj_name in
+        BoundT {
+          reason = obj_reason;
+          name = obj_name;
+          bound = AnyObjT (reason_of_string "object type");
+          polarity = Neutral;
+          default = None;
+        }
+      ) in
+
+      let cb_ret = (
+        let cb_ret_name = "IdxResult" in
+        let cb_ret_reason = reason_of_string cb_ret_name in
+        BoundT {
+          reason = cb_ret_reason;
+          name = cb_ret_name;
+          bound = MixedT (reason, Mixed_everything);
+          polarity = Neutral;
+          default = None;
+        }
+      ) in
+
+      let cb_param = (
+        let cb_param = IdxWrapper (reason, obj_param) in
+        fake_fun (Some ["demaybifiedObj"]) [cb_param] cb_ret
+      ) in
+
+      let tins = [obj_param; cb_param] in
+      let param_names = Some ["obj"; "pathCallback"] in
+      fake_fun param_names tins (MaybeT cb_ret)
+
   (* Fake the signature of Promise.all:
      (promises: Array<Promise>): Promise *)
   | CustomFunT (_, PromiseAll) ->
@@ -218,6 +252,9 @@ let rec normalize_type_impl cx ids t = match t with
         InterRep.make [t1; t2]
       )
 
+  | IdxWrapper (_, obj) ->
+    let reason = reason_of_string "idx object" in
+    IdxWrapper (reason, normalize_type_impl cx ids obj)
 
   | ObjT (_, ot) ->
       let dict = match ot.dict_t with

@@ -178,7 +178,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc (response: ServerProt.infer_type_response) [];
     flush oc
 
-  let dump_types ~options file_input include_raw oc =
+  let dump_types ~options file_input include_raw strip_root oc =
     (* Print type using Flow type syntax *)
     let printer = Type_printer.string_of_t in
     (* Print raw representation of types as json; as it turns out, the
@@ -186,7 +186,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
        possible depth to avoid that. *)
     let raw_printer c t =
       if include_raw
-        then Some (Debug_js.jstr_of_t ~depth:max_int c t)
+        then Some (Debug_js.jstr_of_t ~depth:max_int ~strip_root c t)
         else None
       in
     let file = ServerProt.file_input_get_filename file_input in
@@ -460,8 +460,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         check_file ~options fn verbose oc
     | ServerProt.COVERAGE (fn) ->
         coverage ~options fn oc
-    | ServerProt.DUMP_TYPES (fn, format) ->
-        dump_types ~options fn format oc
+    | ServerProt.DUMP_TYPES (fn, format, strip_root) ->
+        dump_types ~options fn format strip_root oc
     | ServerProt.ERROR_OUT_OF_DATE ->
         incorrect_hash oc
     | ServerProt.FIND_MODULE (moduleref, filename) ->
