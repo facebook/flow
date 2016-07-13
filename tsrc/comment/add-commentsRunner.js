@@ -5,7 +5,7 @@ import {format} from 'util';
 
 import * as blessed from 'blessed'
 
-import {exec, execManual, readFile, writeFile} from '../async';
+import {exec, readFile, writeFile} from '../async';
 import {
   mainLocOfError,
   prettyPrintError,
@@ -13,9 +13,10 @@ import {
   prettyPrintMessageOfError,
 } from '../flowResult';
 import getPathToLoc from './getPathToLoc';
+import getFlowErrors from './getFlowErrors';
 
 import type {Args} from './add-commentsCommand';
-import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
+import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
 
 const unselectedBox = "[ ]";
 const selectedBox = "[✓]";
@@ -115,36 +116,6 @@ class BlessedError {
   isSelected() {
     return this.selected === selectedBox;
   }
-}
-
-async function getFlowErrors(
-  bin: string,
-  errorCheckCommand,
-  root: string,
-): Promise<FlowResult> {
-  const cmd = errorCheckCommand === 'check'
-  ? format(
-      "%s check --strip-root --json %s",
-      bin,
-      root,
-    )
-  : format(
-      "%s status --no-auto-start --strip-root --json %s",
-      bin,
-      root,
-    )
-  const [err, stdout, stderr] = await execManual(
-    cmd,
-    {cwd: root, maxBuffer: 16 * 1024 * 1024}
-  );
-
-  // 0 - no errors
-  // 2 - Some errors
-  if (err == null || err.code === 2) {
-    return JSON.parse(stdout.toString());
-  }
-
-  throw new Error(format('Flow check failed!', err, stdout, stderr));
 }
 
 export default async function(args: Args): Promise<void> {

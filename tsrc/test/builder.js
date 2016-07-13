@@ -54,7 +54,7 @@ export class TestBuilder {
     return join(this.dir, 'test.js');
   }
 
-  normalizeForFlowconfig(path) {
+  normalizeForFlowconfig(path: string) {
     return path.split(dir_sep).join('/');
   }
 
