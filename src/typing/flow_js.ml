@@ -7412,11 +7412,11 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | TaintT _ ->
     ()
 
-  | FunT (_, static, prototype, { this_t; params_tlist; return_t; _ }) ->
+  | FunT (reason, static, prototype, { this_t; params_tlist; return_t; _ }) ->
     unify cx static AnyT.t;
     unify cx prototype AnyT.t;
     unify cx this_t AnyT.t;
-    List.iter recurse params_tlist;
+    List.iter (recurse ~infer:(is_derivable_reason reason)) params_tlist;
     recurse ~infer:true return_t
 
   | PolyT (_, t)
@@ -7439,10 +7439,16 @@ let rec assert_ground ?(infer=false) cx skip ids t =
 
   | InstanceT (_, static, super, instance) ->
     let process_element ?(is_field=false) name t =
-      let infer =
-        is_munged_prop_name cx name
-        || (is_field && SSet.mem name instance.initialized_field_names)
+      let munged = is_munged_prop_name cx name in
+      let initialized = SSet.mem name instance.initialized_field_names in
+      let infer = munged || is_field && initialized in
+
+      let t =
+        if munged && (not is_field || initialized)
+        then mod_reason_of_t (fun r -> derivable_reason r) t
+        else t
       in
+
       recurse ~infer t
     in
     iter_props cx instance.fields_tmap (process_element ~is_field:true);
