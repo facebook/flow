@@ -6803,6 +6803,20 @@ and rec_unify cx trace t1 t2 =
       None
     ) lpmap upmap |> ignore
 
+  | FunT (_, _, _, funtype1), FunT (_, _, _, funtype2)
+    when List.length funtype1.params_tlist = List.length funtype2.params_tlist ->
+    rec_unify cx trace funtype1.this_t funtype2.this_t;
+    List.iter2 (rec_unify cx trace) funtype1.params_tlist funtype2.params_tlist;
+    rec_unify cx trace funtype1.return_t funtype2.return_t
+
+  | TypeAppT (c1, ts1), TypeAppT (c2, ts2)
+    when c1 = c2 && List.length ts1 = List.length ts2 ->
+    List.iter2 (rec_unify cx trace) ts1 ts2
+
+  | RestT t1, RestT t2
+  | RestT t1, t2 | t1, RestT t2 ->
+    rec_unify cx trace t1 t2
+
   | _ ->
     naive_unify cx trace t1 t2
   )

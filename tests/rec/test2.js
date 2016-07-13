@@ -18,10 +18,10 @@ function foo0() {
 
 type T<X> = { y: S<X> };
 type S<X> = T<S<X>>;
-function foo1(b: S<number>) {
+function foo1(b: S<*>) {
   b = b.y; // terminate despite expanding types, OK
-  // S<number> = { y: S<S<number>> }
-  // Both S<S<number>> and S<number> expand to { y: { y: ... }}.
+  // S<*> = { y: S<S<*>> }
+  // Both S<S<*>> and S<*> expand to { y: { y: ... }}.
 }
 
 class D<X> { }
