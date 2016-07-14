@@ -27,10 +27,15 @@ let restore (b, cx, fc) =
    [Daemon.check_entry_point]. *)
 let entry = Worker.register_entry_point ~restore
 
+(* Saves the default GC settings, which are restored by the workers. Workers can
+ * have more relaxed GC configs as they are short-lived processes, and this
+ * prevents the workers from inheriting GC settings the master needs. *)
+let gc_control = Gc.get ()
+
 let make options heap_handle =
   Worker.make
     ~saved_state: (save options)
     ~entry
     ~nbr_procs: (Options.max_workers options)
-    ~gc_control: GlobalConfig.gc_control
+    ~gc_control
     ~heap_handle
