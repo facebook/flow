@@ -143,20 +143,20 @@ Traces2.js:17
                 ^^^^^^^^^^^^^^ props of React element `B`
 Trace:
 * path 1:
+ 15:     return <A foo="hey"/>;
+                ^^^^^^^^^^^^^^ ObjT [props of React element `A`]
  17:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^ InstanceT [React$Element]
- 13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from path 2)
+                ^^^^^^^^^^^^^^ ~> UseT(UnknownUse, ObjT) [props of React element `B`] (from path 2)
 * path 2:
  17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ ObjT [props of React element `B`]
+ 13: function f(b): React.Element<*> {
+                                  ^ ~> UseT(UnknownUse, OpenT) [existential] (from path 3)
+* path 3:
+ 17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ InstanceT [React$Element]
  13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from path 3)
-* path 3:
- 13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ InstanceT [React$Element]
- 13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> ReposUseT [Element] (from [not shown])
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from [not shown])
 
 Traces2.js:17
  17:     return <B bar="hey"/>;
@@ -167,20 +167,20 @@ Traces2.js:17
                 ^^^^^^^^^^^^^^ props of React element `A`
 Trace:
 * path 1:
+ 15:     return <A foo="hey"/>;
+                ^^^^^^^^^^^^^^ ObjT [props of React element `A`]
  17:     return <B bar="hey"/>;
-                ^^^^^^^^^^^^^^ InstanceT [React$Element]
- 13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from path 2)
+                ^^^^^^^^^^^^^^ ~> UseT(UnknownUse, ObjT) [props of React element `B`] (from path 2)
 * path 2:
  17:     return <B bar="hey"/>;
+                ^^^^^^^^^^^^^^ ObjT [props of React element `B`]
+ 13: function f(b): React.Element<*> {
+                                  ^ ~> UseT(UnknownUse, OpenT) [existential] (from path 3)
+* path 3:
+ 17:     return <B bar="hey"/>;
                 ^^^^^^^^^^^^^^ InstanceT [React$Element]
  13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, InstanceT) [React$Element] (from path 3)
-* path 3:
- 13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ InstanceT [React$Element]
- 13: function f(b): React.Element<*> {
-                    ^^^^^^^^^^^^^^^^ ~> ReposUseT [Element] (from [not shown])
+                    ^^^^^^^^^^^^^^^^ ~> UseT(FunReturn, ExtendsT) [extends React$Element] (from [not shown])
 
 
 Found 7 errors

@@ -693,7 +693,7 @@ module Cache = struct
     let compare = Pervasives.compare
   end)
 
-  (* Cache that remembers pairs of types that are passed to __flow__. *)
+  (* Cache that remembers pairs of types that are passed to __flow. *)
   module FlowConstraint = struct
     let cache = ref TypePairSet.empty
 
@@ -5267,7 +5267,7 @@ and bindings_of_jobs cx jobs =
     | Some speculation_id ->
       Speculation.add_unresolved_to_speculation cx speculation_id t
     | None ->
-      unify cx t AnyT.t
+      unify_opt cx t AnyT.t
     end;
     bindings
   ) jobs []
@@ -6744,7 +6744,7 @@ and ok_unify = function
   | AnyWithUpperBoundT _ | AnyWithLowerBoundT _ -> false
   | _ -> true
 
-and rec_unify cx trace t1 t2 =
+and __unify cx t1 t2 trace =
   if t1 = t2 then () else (
 
   (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
@@ -7238,12 +7238,32 @@ and flow_t cx (t1, t2) =
 and tvar_with_constraint cx u =
   let reason = reason_of_use_t u in
   mk_tvar_where cx reason (fun tvar ->
-    flow cx (tvar, u)
+    flow_opt cx (tvar, u)
   )
 
+(* Wrapper functions around __unify that manage traces. Use these functions for
+   all recursive calls in the implementation of __unify. *)
+
+and rec_unify cx trace t1 t2 =
+  let max = Context.max_trace_depth cx in
+  __unify cx t1 t2 (Trace.rec_trace ~max t1 (UseT (UnknownUse, t2)) trace)
+
+and unify_opt cx t1 t2 =
+  __unify cx t1 t2 (Trace.unit_trace t1 (UseT (UnknownUse, t2)))
+
 (* Externally visible function for unification. *)
+(* Calls internal entry point and traps runaway recursion. *)
 and unify cx t1 t2 =
-  rec_unify cx (Trace.unit_trace t1 (UseT (UnknownUse, t2))) t1 t2
+  try
+    unify_opt cx t1 t2
+  with
+  | RecursionCheck.LimitExceeded trace ->
+    (* log and continue *)
+    let msg = "*** Recursion limit exceeded ***" in
+    flow_err cx trace msg t1 (UseT (UnknownUse, t2))
+  | ex ->
+    (* rethrow *)
+    raise ex
 
 (************* end of slab **************************************************)
 
@@ -7432,7 +7452,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     assert_ground_id cx skip ids id
 
   | OpenT (reason_open, id) ->
-    unify cx (OpenT (reason_open, id)) AnyT.t;
+    unify_opt cx (OpenT (reason_open, id)) AnyT.t;
     add_error cx (mk_info reason_open ["Missing annotation"])
 
   | NumT _
@@ -7447,9 +7467,9 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     ()
 
   | FunT (_, static, prototype, { this_t; params_tlist; return_t; _ }) ->
-    unify cx static AnyT.t;
-    unify cx prototype AnyT.t;
-    unify cx this_t AnyT.t;
+    unify_opt cx static AnyT.t;
+    unify_opt cx prototype AnyT.t;
+    unify_opt cx this_t AnyT.t;
     List.iter recurse params_tlist;
     recurse ~infer:true return_t
 
@@ -7458,7 +7478,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     recurse t
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
-    unify cx proto_t AnyT.t;
+    unify_opt cx proto_t AnyT.t;
     iter_props cx id (fun _ -> recurse ~infer:true)
 
   | IdxWrapper (_, obj) -> assert_ground ~infer cx skip ids obj
@@ -7481,7 +7501,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     in
     iter_props cx instance.fields_tmap (process_element ~is_field:true);
     iter_props cx instance.methods_tmap process_element;
-    unify cx static AnyT.t;
+    unify_opt cx static AnyT.t;
     recurse super
 
   | RestT t

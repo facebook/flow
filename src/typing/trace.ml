@@ -77,7 +77,6 @@ let rec_trace ~max lower upper parent =
 (* join a list of traces *)
 let concat_trace = List.concat
 
-
 (* used to index trace nodes *)
 module TraceMap : MyMap.S with type key = t = MyMap.Make (struct
   type key = t
