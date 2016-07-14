@@ -1,3 +1,24 @@
+###v0.29.0
+
+New features:
+- Tagged unions of interfaces should now work in the same way that tagged unions of type aliases work.
+
+Notable bug fixes:
+- Building Flow outside of a git or hg repo should work now
+- If you declare an overloaded function with one overload that handles a `string` argument and one overload that handles a `number` overload, then passing in a union `string | number` should now work.
+- Annotations for destructured patterns now work like non-destructured patterns. Types no longer flow through these annotations, rather they are checked against the annotations and then the annotations are used instead.
+- Allow `import {type} from "Foo"`
+- We had a bug where Flow wouldn't complain about duplicate haste modules. This is now fixed
+- Fix for edge case hit when using `experimental.strict_type_args=false` and type parameter upper bounds.
+
+Misc:
+- Various built-in libdef improvements
+- Some error location fixes
+- Lots of Windows support work. Should build and mostly work, but not fully stable yet.
+- Some performance wins
+- `flow check --json --profile` now includes profiling info in the JSON
+  response
+
 ###v0.28.0
 
 Likely to cause new Flow errors:
