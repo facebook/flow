@@ -37,3 +37,15 @@ let tmp_dir =
 let shm_dir =
   try Sys.getenv "HH_SHMDIR"
   with _ -> "/dev/shm"
+
+let default_sharedmem_config =
+  let gig = 1024 * 1024 * 1024 in
+  { SharedMem.
+    global_size    = gig;
+    heap_size      = 20 * gig;
+    dep_table_pow  = 17; (* 1 << 17 *)
+    hash_table_pow = 18; (* 1 << 18 *)
+    shm_dirs       = [shm_dir; tmp_dir;];
+    shm_min_avail  = gig / 2; (* Half a gig by default *)
+    log_level      = 0;
+  }

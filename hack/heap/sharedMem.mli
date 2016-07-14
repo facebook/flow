@@ -27,8 +27,6 @@ type config = {
   log_level        : int;
 }
 
-val default_config : config
-
 type handle = private {
   h_fd: Unix.file_descr;
   h_global_size: int;
@@ -44,7 +42,6 @@ exception Dep_table_full
 (*****************************************************************************)
 
 val init: config -> handle
-val init_default: unit -> handle
 
 (*****************************************************************************)
 (* Connect a slave to the shared heap *)

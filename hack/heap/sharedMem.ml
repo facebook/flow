@@ -22,18 +22,6 @@ type config = {
   log_level        : int;
 }
 
-let default_config =
-  let gig = 1024 * 1024 * 1024 in
-  {
-    global_size    = gig;
-    heap_size      = 20 * gig;
-    dep_table_pow  = 17; (* 1 << 17 *)
-    hash_table_pow = 18; (* 1 << 18 *)
-    shm_dirs       = [GlobalConfig.shm_dir; GlobalConfig.tmp_dir;];
-    shm_min_avail  = gig / 2; (* Half a gig by default *)
-    log_level      = 0;
-  }
-
 (* Allocated in C only. *)
 type handle = private {
   h_fd: Unix.file_descr;
@@ -133,9 +121,6 @@ let init config =
     if !Utils.debug
     then Hh_logger.log "Failed to use anonymous memfd init";
     shm_dir_init config config.shm_dirs
-
-let init_default () : handle =
-  init default_config
 
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 
