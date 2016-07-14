@@ -2875,21 +2875,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       else
         rec_flow cx trace (super, u)
 
-    (***************************************************************)
-    (* Enable structural subtyping for upperbounds like interfaces *)
-    (***************************************************************)
-
-    | (_,
-       UseT (_, InstanceT (reason_inst, _, super, {
-         fields_tmap;
-         methods_tmap;
-         structural = true;
-         _;
-       })))
-      ->
-      structural_subtype cx trace l reason_inst
-        (super, fields_tmap, methods_tmap)
-
     (********************************************************)
     (* runtime types derive static types through annotation *)
     (********************************************************)
@@ -3633,31 +3618,32 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
+    (* TODO: This rule doesn't interact very well with union-type checking. It
+       looks up Function.prototype, which currently doesn't appear structurally
+       in the function type, and thus may not be fully resolved when the
+       function type is checked with a union containing the object
+       type. Ideally, we should either add Function.prototype to function types
+       or fully resolve them when resolving function types, but either way we
+       might bomb perf without additional work. Meanwhile, we need an immediate
+       fix for the common case where this bug shows up. So leaving this comment
+       here as a marker for future work, while going with a band-aid solution
+       for now, as motivated below.
+
+       Fortunately, it is quite hard for a function type to successfully
+       check against an object type, and even more unlikely when the latter
+       is part of a union: the object type must only contain
+       Function.prototype methods or statics. Quickly confirming that the
+       check would fail before looking up Function.prototype (while falling
+       back to the general rule when we cannot guarantee failure) is a safe
+       optimization in any case, and fixes the commonly observed case where
+       the union type contains both a function type and a object type as
+       members, clearly intending for function types to match the former
+       instead of the latter. *)
     | (FunT (reason, statics, _, _) ,
        UseT (_, ObjT (reason_o, { props_tmap; _ }))) ->
-        (* TODO: This rule doesn't interact very well with union-type
-           checking. It looks up Function.prototype, which currently doesn't
-           appear structurally in the function type, and thus may not be fully
-           resolved when the function type is checked with a union containing
-           the object type. Ideally, we should either add Function.prototype to
-           function types or fully resolve them when resolving function types,
-           but either way we might bomb perf without additional work. Meanwhile,
-           we need an immediate fix for the common case where this bug shows
-           up. So leaving this comment here as a marker for future work, while
-           going with a band-aid solution for now, as motivated below.
-
-           Fortunately, it is quite hard for a function type to successfully
-           check against an object type, and even more unlikely when the latter
-           is part of a union: the object type must only contain
-           Function.prototype methods or statics. Quickly confirming that the
-           check would fail before looking up Function.prototype (while falling
-           back to the general rule when we cannot guarantee failure) is a safe
-           optimization in any case, and fixes the commonly observed case where
-           the union type contains both a function type and a object type as
-           members, clearly intending for function types to match the former
-           instead of the latter. *)
         if not
-          (quick_error_fun_as_obj cx trace reason statics reason_o props_tmap)
+          (quick_error_fun_as_obj cx trace reason statics reason_o
+             (SMap.keys (find_props cx props_tmap)))
         then
           let map = SMap.add "$call" l SMap.empty in
           let function_proto = get_builtin_type cx ~trace reason "Function" in
@@ -3666,6 +3652,40 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
           ) in
           rec_flow cx trace (t, u)
+
+    (* TODO: similar concern as above *)
+    | (FunT (reason, statics, _, _) ,
+       UseT (_, InstanceT (reason_inst, _, super, {
+         fields_tmap;
+         methods_tmap;
+         structural = true;
+         _;
+       })))
+      ->
+        if not
+          (quick_error_fun_as_obj cx trace reason statics reason_inst
+             (SMap.fold
+                (fun x _ props -> if x = "constructor" then props else x::props)
+                (find_props cx methods_tmap)
+                (SMap.keys (find_props cx fields_tmap))))
+        then
+          structural_subtype cx trace l reason_inst
+            (super, fields_tmap, methods_tmap)
+
+    (***************************************************************)
+    (* Enable structural subtyping for upperbounds like interfaces *)
+    (***************************************************************)
+
+    | (_,
+       UseT (_, InstanceT (reason_inst, _, super, {
+         fields_tmap;
+         methods_tmap;
+         structural = true;
+         _;
+       })))
+      ->
+      structural_subtype cx trace l reason_inst
+        (super, fields_tmap, methods_tmap)
 
     (*********************************************************************)
     (* class A is a base class of class B iff                            *)
@@ -4116,7 +4136,7 @@ and is_dictionary_exempt = function
   | _ -> false
 
 (* common case checking a function as an object *)
-and quick_error_fun_as_obj cx trace reason statics reason_o props_tmap =
+and quick_error_fun_as_obj cx trace reason statics reason_o props =
   let statics_own_props = match statics with
     | ObjT (_, { props_tmap; _ }) -> Some (find_props cx props_tmap)
     | AnyFunT _
@@ -4125,16 +4145,16 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props_tmap =
   in
   match statics_own_props with
   | Some statics_own_props ->
-    let props_not_found = SMap.filter (fun x _ ->
+    let props_not_found = List.filter (fun x ->
       not (x = "$call" || is_function_prototype x || SMap.mem x statics_own_props)
-    ) (find_props cx props_tmap) in
-    SMap.iter (fun x _ ->
+    ) props in
+    List.iter (fun x ->
       flow_err_prop_not_found cx trace (
         replace_reason (spf "property `%s`" x) reason_o,
         reason
       )
     ) props_not_found;
-    not (SMap.is_empty props_not_found)
+    props_not_found <> []
   | None -> false
 
 (* only on use-types - guard calls with is_use t *)

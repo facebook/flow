@@ -108,5 +108,33 @@ test3.js:6
   6:   (k.y: number); // error: y is string in I
              ^^^^^^ number
 
+test4.js:2
+  2: (function foo(x: number) { }: I); // error, property `foo` not found function
+                                   ^ property `foo`. Property not found in
+  2: (function foo(x: number) { }: I); // error, property `foo` not found function
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
-Found 19 errors
+test4.js:9
+  9: new C().bar((x: string) => { }); // error, number ~/~> string
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `bar`. Function cannot be called on any member of intersection type
+  9: new C().bar((x: string) => { }); // error, number ~/~> string
+     ^^^^^^^^^^^ intersection
+  Member 1:
+    5:   bar(i: I): void;
+         ^^^^^^^^^^^^^^^ function type
+  Error:
+    5:   bar(i: I): void;
+                ^ property `foo`. Property not found in
+    9: new C().bar((x: string) => { }); // error, number ~/~> string
+                   ^^^^^^^^^^^^^^^^^^ arrow function
+  Member 2:
+    6:   bar(f: (x: number) => void): void;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
+  Error:
+    6:   bar(f: (x: number) => void): void;
+                    ^^^^^^ number. This type is incompatible with
+    9: new C().bar((x: string) => { }); // error, number ~/~> string
+                       ^^^^^^ string
+
+
+Found 21 errors
