@@ -25,7 +25,6 @@ begin library "hh-heap"
   files = begin fb-glob "hack/heap"
   end
   requires += [
-    "hh-globals-config"
     "hh-stubs"
     "hh-utils-collections"
     "hh-utils-core"
@@ -135,6 +134,9 @@ begin library "hh-utils-relative-path"
     "relative_path.ml"
   ]
   requires += [
+    "hh-utils-core"
+    "hh-utils-string"
+    "hh-utils-sys"
     "hh-heap"
     "hh-utils-collections"
     "tp-core"
@@ -252,7 +254,10 @@ begin library "hh-globals-config"
   files = [
     "globalConfig.ml"
   ]
-  requires += [ "hh-utils-sys" ]
+  requires += [ 
+    "hh-heap"
+    "hh-utils-sys" 
+  ]
 end
 
 begin library "hh-stubs"
