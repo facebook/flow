@@ -22,7 +22,7 @@ const React = require("react");
   React provides a few different ways to define components:
 
   * [the `React.createClass` factory](#the-react-createclass-factory),
-  * [`React.Component` subclasses](#defining-components-as-react-component-subclasses),
+  * [`React.Component` subclasses](#defining-components-as-reactcomponent-subclasses),
   * and [stateless functional components](#stateless-functional-components)
 
   This document explains how to make strongly-typed components using all of the
