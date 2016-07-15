@@ -4,10 +4,6 @@ import_declare_type.js:11
  11: var k2: baz = "shab"; // Error: string to int
              ^^^ number
 
-import_declare_type.js:12
- 12: var k3: toz = foo(k1); // Error: unknown identifier toz
-             ^^^ identifier `toz`. Could not resolve name
-
 import_declare_type.js:26
  26: ({toz:3} : Foo); // error : {toz : number} ~> string
       ^^^^^^^ object literal. This type is incompatible with
@@ -27,4 +23,4 @@ import_declare_type.js:30
               ^^^^^^^^^^ number
 
 
-Found 5 errors
+Found 4 errors

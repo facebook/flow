@@ -390,10 +390,6 @@ tdz.js:41
  44:   const c = 0;
              ^ const c
 
-tdz.js:78
- 78: var x: C;       // error: C not found (bug)
-            ^ identifier `C`. Could not resolve name
-
 tdz.js:80
  80: var y = new C(); // error: let ref before decl from value position
                  ^ C. class referenced before declaration, or after skipped declaration
@@ -409,4 +405,4 @@ tdz.js:96
                    ^^^^^^ number
 
 
-Found 69 errors
+Found 68 errors

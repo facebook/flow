@@ -119,6 +119,13 @@ val get_var_declared_type:
   reason ->
   Type.t
 
+val unify_declared_type:
+  ?lookup_mode:LookupMode.t ->
+  Context.t ->
+  string ->
+  Type.t ->
+  unit
+
 val var_ref:
   ?lookup_mode:LookupMode.t ->
   Context.t ->

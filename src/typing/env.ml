@@ -754,6 +754,17 @@ let get_var ?(lookup_mode=ForValue) =
 let get_var_declared_type ?(lookup_mode=ForValue) =
   read_entry ~lookup_mode ~specific:false
 
+(* Unify declared type with another type. This is useful for allowing forward
+   references in declared types to other types declared later in scope. *)
+let unify_declared_type ?(lookup_mode=ForValue) cx name t =
+  Entry.(match get_current_env_entry name with
+  | Some (Value v) when lookup_mode = ForValue ->
+    Flow_js.unify cx t (general_of_value v)
+  | Some entry when lookup_mode <> ForValue ->
+    Flow_js.unify cx t (Entry.declared_type entry)
+  | _ -> ()
+  )
+
 let is_global_var _cx name =
   let rec loop = function
     | [] -> true

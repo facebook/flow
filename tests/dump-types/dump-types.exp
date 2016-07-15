@@ -166,7 +166,22 @@
   },
   {
     "type":"string",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"string",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":5,"column":7,"offset":74},
+          "end":{"line":5,"column":12,"offset":80}
+        },
+        "path":"test.js",
+        "line":5,
+        "endline":5,
+        "start":7,
+        "end":12
+      }
+    ],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",
@@ -1763,7 +1778,22 @@
   {
     "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"string\"\n  },\n  \"kind\":\"StrT\"\n}",
     "type":"string",
-    "reasons":[],
+    "reasons":[
+      {
+        "desc":"string",
+        "loc":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":5,"column":7,"offset":74},
+          "end":{"line":5,"column":12,"offset":80}
+        },
+        "path":"test.js",
+        "line":5,
+        "endline":5,
+        "start":7,
+        "end":12
+      }
+    ],
     "loc":{
       "source":"test.js",
       "type":"SourceFile",

@@ -10,17 +10,11 @@ test.js:7
   7: var o3: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; });
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-test.js:11
- 11: var s5: string = o5.y; // error: y may be undefined
-                      ^^^^ undefined. This type is incompatible with
- 11: var s5: string = o5.y; // error: y may be undefined
-             ^^^^^^ string
-
 test.js:19
- 19: var o5: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+ 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
                               ^^^^^^ string. This type is incompatible with
- 19: var o5: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+ 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
                                                                                 ^^^^^^ number
 
 
-Found 4 errors
+Found 3 errors

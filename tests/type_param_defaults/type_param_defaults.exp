@@ -56,15 +56,15 @@ classes.js:34
 
 classes.js:40
  40: var d_too_few_args: D<> = new D('hello'); // Error too few tparams
-                         ^^^ type application of identifier `D`. Too few type arguments. Expected at least 1
+                         ^^^ type application of polymorphic type: class type: D. Too few type arguments. Expected at least 1
  36: class D<S, T = string> extends A<T> {}
-           ^ class type: D. See definition here
+             ^^^^ See type parameters of definition here
 
 classes.js:41
  41: var d_too_many: D<mixed, string, string> = new D('hello'); // Error too many tparams
-                     ^^^^^^^^^^^^^^^^^^^^^^^^ type application of identifier `D`. Too many type arguments. Expected at most 2
+                     ^^^^^^^^^^^^^^^^^^^^^^^^ type application of polymorphic type: class type: D. Too many type arguments. Expected at most 2
  36: class D<S, T = string> extends A<T> {}
-           ^ class type: D. See definition here
+             ^^^^ See type parameters of definition here
 
 classes.js:42
  42: var d_star: D<*> = new D(10); // error, number ~> string

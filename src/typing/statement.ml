@@ -104,9 +104,14 @@ let rec variable_decl cx type_params_map entry = Ast.Statement.(
   let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
 
   let declarator = Ast.(function
-    | (loc, Pattern.Identifier (_, { Identifier.name; typeAnnotation; _ })) ->
+    | (loc, Pattern.Identifier (_, { Identifier.name; _ })) ->
       let r = mk_reason (spf "%s `%s`" str_of_kind name) loc in
-      let t = Anno.mk_type_annotation cx type_params_map r typeAnnotation in
+      (* A variable declaration may have a type annotation, but trying to
+         resolve the type annotation now may lead to errors, since in general it
+         may contain types that will be declared later in this scope. So for
+         now, we create a tvar that will serve as the declared type. Later, we
+         will resolve the type annotation and unify it with this tvar. *)
+      let t = Flow_js.mk_tvar cx r in
       Hashtbl.replace (Context.type_table cx) loc t;
       bind cx name t r
     | (loc, _) as p ->
@@ -114,6 +119,7 @@ let rec variable_decl cx type_params_map entry = Ast.Statement.(
       let r = mk_reason (spf "%s _" str_of_kind) loc in
       let typeAnnotation = type_of_pattern p in
       let t = typeAnnotation |>
+        (* TODO: delay resolution of type annotation like above? *)
         Anno.mk_type_annotation cx type_params_map r in
       bind cx pattern_name t r;
       p |> destructuring cx t None None (fun cx loc name _default t ->
@@ -2227,7 +2233,10 @@ and variable cx type_params_map kind
           name; typeAnnotation; optional
         })) ->
         (* simple lvalue *)
-        let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
+        let reason = mk_reason (spf "%s `%s`" str_of_kind name) loc in
+        (* make annotation, unify with declared type created in variable_decl *)
+        let t = Anno.mk_type_annotation cx type_params_map reason typeAnnotation in
+        Env.unify_declared_type cx name t;
         let has_anno = not (typeAnnotation = None) in
         (match init with
           | Some ((rhs_loc, _) as expr) ->

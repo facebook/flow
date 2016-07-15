@@ -60,5 +60,17 @@ annot.js:55
  55: var toz : null = 3;
                ^^^^ null
 
+forward_ref.js:1
+  1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
+                                    ^^^^ null. This type is incompatible with
+  1: let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
+                          ^^^^^^^ MyClass
 
-Found 10 errors
+forward_ref.js:4
+  4:   return null; // forward ref ok, null ~> class error
+              ^^^^ null. This type is incompatible with the expected return type of
+  3: function bar(): MyClass {
+                     ^^^^^^^ MyClass
+
+
+Found 12 errors

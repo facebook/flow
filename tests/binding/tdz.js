@@ -75,7 +75,7 @@ function f5() {
 // phasing of AST traversal, and will be fixed.
 //
 
-var x: C;       // error: C not found (bug)
+var x: C;       // ok
 
 var y = new C(); // error: let ref before decl from value position
 

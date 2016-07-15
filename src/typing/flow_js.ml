@@ -4898,13 +4898,16 @@ and instantiate_poly_with_targs
   =
   let minimum_arity = poly_minimum_arity xs in
   let maximum_arity = List.length xs in
-  let reason_arity = reason_of_t t in
+  let reason_arity =
+    let x1, xN = List.hd xs, List.hd (List.rev xs) in
+    let loc = Loc.btwn (loc_of_reason x1.reason) (loc_of_reason xN.reason) in
+    mk_reason "See type parameters of definition here" loc in
   if List.length ts > maximum_arity
   then begin
     let msg = spf "Too many type arguments. Expected at most %d" maximum_arity in
     add_extended_error cx [
       mk_info reason_tapp [msg];
-      mk_info reason_arity ["See definition here"];
+      mk_info reason_arity [];
     ]
   end;
   let map, _ = List.fold_left
@@ -4918,7 +4921,7 @@ and instantiate_poly_with_targs
           let msg = spf "Too few type arguments. Expected at least %d" minimum_arity in
           add_extended_error cx [
             mk_info reason_tapp [msg];
-            mk_info reason_arity ["See definition here"];
+            mk_info reason_arity [];
           ];
           AnyT reason_op, []
       | _, t::ts ->

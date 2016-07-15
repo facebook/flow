@@ -9,7 +9,7 @@ Trace:
 * path 1:
 traces.js:15:17,25: NumT [number]
 traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [assignment of var `a`] (from path 2)
-traces.js:15:8,13:  ~> UseT(UnknownUse, StrT) [string]
+traces.js:15:5,13:  ~> UseT(UnknownUse, OpenT) [var `a`]
 * path 2:
 traces.js:15:17,25: NumT [number]
 traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [function call] (from path 3)

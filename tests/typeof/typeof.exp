@@ -14,7 +14,7 @@ typeof.js:61
  61: var e: typeof numValue = 'asdf'; // Error: string ~> number
                               ^^^^^^ string. This type is incompatible with
  59: var numValue:number = 42;
-                  ^^^^^^ number
+         ^^^^^^^^^^^^^^^ number
 
 typeof.js:73
  73: var f: typeof numberAlias = 42; // Error: 'typeof <<type-alias>>' makes no sense...
