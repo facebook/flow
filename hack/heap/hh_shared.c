@@ -661,7 +661,7 @@ static void memfd_reserve(char * mem, size_t sz) {
 #else
 
 static void memfd_reserve(char *mem, size_t sz) {
-  if(posix_fallocate(memfd, (uint64_t)(mem - shared_mem), sz)) {
+  if(posix_fallocate(memfd, (uint64_t)mem, sz)) {
     raise_out_of_shared_memory();
   }
 }
