@@ -140,6 +140,7 @@ module type S = sig
   val typing_error_l : error -> unit
   val undefined_field : Pos.t -> string -> unit
   val array_access : Pos.t -> Pos.t -> string -> unit
+  val keyset_set : Pos.t -> Pos.t -> unit
   val array_append : Pos.t -> Pos.t -> string -> unit
   val const_mutation : Pos.t -> Pos.t -> string -> unit
   val expected_class : ?suffix:string -> Pos.t -> unit
