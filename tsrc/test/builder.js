@@ -9,6 +9,8 @@ import {format} from 'util';
 import {appendFile, exec, execManual, mkdirp, readdir, readFile, writeFile} from '../async';
 import {testsDir} from '../constants';
 
+import type {TestResult} from './runTestSuite';
+
 type CheckCommand = 'check' | 'status';
 
 export class TestBuilder {
@@ -34,7 +36,6 @@ export class TestBuilder {
     this.suiteName = suiteName;
     this.dir = join(
       baseDir,
-      suiteName.replace("/", "zS"),
       String(testNum),
     );
     this.sourceDir = join(
@@ -43,7 +44,6 @@ export class TestBuilder {
     );
     this.tmpDir = join(
       baseDir,
-      suiteName.replace("/", "zS"),
       "tmp",
       String(testNum),
     );
@@ -54,7 +54,7 @@ export class TestBuilder {
     return join(this.dir, 'test.js');
   }
 
-  normalizeForFlowconfig(path: string) {
+  normalizeForFlowconfig(path: string): string {
     return path.split(dir_sep).join('/');
   }
 
@@ -237,15 +237,20 @@ export class TestBuilder {
 }
 
 export default class Builder {
+  runID: string;
   dir: string;
   errorCheckCommand: CheckCommand;
 
   static builders: Array<TestBuilder> = [];
 
+  static getDirForRun(runID: string): string {
+    return join(tmpdir(), 'flow/tests', runID);
+  }
+
   constructor(errorCheckCommand: CheckCommand) {
     this.errorCheckCommand = errorCheckCommand;
-    const id = randomBytes(5).toString('hex');
-    this.dir = join(tmpdir(), 'fbcode/flow/tests', id);
+    this.runID = randomBytes(5).toString('hex');
+    this.dir = Builder.getDirForRun(this.runID);
     process.stderr.write(format("Tests will be built in %s\n", this.dir));
 
     // If something weird happens, lets make sure to stop all the flow servers
@@ -253,6 +258,10 @@ export default class Builder {
     process.on('exit', () => {
       Builder.builders.forEach(builder => builder.stopFlowServerSync());
     });
+  }
+
+  baseDirForSuite(suiteName: string): string {
+    return join(this.dir, suiteName.replace("/", "zS"));
   }
 
   async createFreshTest(
@@ -264,7 +273,7 @@ export default class Builder {
     const testBuilder = new TestBuilder(
       bin,
       this.errorCheckCommand,
-      this.dir,
+      this.baseDirForSuite(suiteName),
       suiteName,
       testNum,
       flowConfigFilename,
@@ -272,5 +281,23 @@ export default class Builder {
     Builder.builders.push(testBuilder);
     await testBuilder.createFreshDir(suiteName);
     return testBuilder;
+  }
+
+  saveResults(suiteName: string, results: Array<TestResult>): Promise<void> {
+    const resultsFile = join(
+      this.baseDirForSuite(suiteName),
+      "results.json",
+    );
+    return writeFile(
+      resultsFile,
+      JSON.stringify(
+        {
+          suiteName: suiteName,
+          testResults: results,
+        },
+        null,
+        2,
+      ),
+    );
   }
 }

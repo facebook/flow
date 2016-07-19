@@ -6,7 +6,7 @@ import {format} from 'util';
 
 import {readFile, writeFile} from './../async';
 import Builder from '../test/builder';
-import findTests from '../test/finder';
+import {findTestsByName, findTestsByRun} from '../test/findTests';
 import parser from 'flow-parser';
 import RunQueue from '../test/RunQueue';
 import {testsDir} from '../constants';
@@ -90,7 +90,12 @@ function dfsForRange(node, line, col): ?[number, number] {
 
 export default async function(args: Args): Promise<void> {
   const builder = new Builder(args.errorCheckCommand);
-  const suites = await findTests(args.suites);
+  let suites;
+  if (args.rerun != null) {
+    suites = await findTestsByRun(args.rerun, true);
+  } else {
+    suites = await findTestsByName(args.suites);
+  }
 
   const runQueue = new RunQueue(args.bin, args.parallelism, false, suites, builder);
 

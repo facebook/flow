@@ -10,6 +10,7 @@ export type Args = {
   bin: string,
   parallelism: number,
   errorCheckCommand: "check" | "status",
+  rerun: ?string,
 };
 
 export default class RecordCommand extends Base<Args> {
@@ -20,6 +21,7 @@ export default class RecordCommand extends Base<Args> {
       bin: findFlowBin(argv.bin),
       parallelism: argv.parallelism,
       errorCheckCommand: argv.check,
+      rerun: argv["rerun-failed"],
     };
   }
 
@@ -49,6 +51,12 @@ SUITE
       commonFlags.bin,
       commonFlags.parallelism,
       commonFlags.errorCheckCommand,
+      {
+        type: "string",
+        name: "rerun-failed",
+        argName: "RUN",
+        description: "Record failed tests from a previous test run",
+      },
     ];
   }
 }
