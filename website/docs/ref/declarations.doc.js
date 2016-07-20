@@ -49,7 +49,7 @@ next: react.html
 // $DocIssue{not a flow file}
 [libs]
 // $DocIssue{not a flow file}
-decls
+decls/
 
 /*
   ## Declaring definitions that should exist at run time
