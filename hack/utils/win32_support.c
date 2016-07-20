@@ -8,6 +8,7 @@
  *
  */
 
+#include <caml/memory.h>
 #include <caml/mlvalues.h>
 
 #ifdef _WIN32
@@ -20,8 +21,9 @@
 // Can be removed once support for ocaml-4.01 is dropped
 value win_terminate_process(value v_pid)
 {
+  CAMLparam1(v_pid);
 #ifdef _WIN32
-  return (Val_bool(TerminateProcess((HANDLE) Long_val(v_pid), 0)));
+  CAMLreturn(Val_bool(TerminateProcess((HANDLE) Long_val(v_pid), 0)));
 #else
   char error_msg[100];
   snprintf(

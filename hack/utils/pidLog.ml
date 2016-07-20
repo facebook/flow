@@ -25,13 +25,15 @@ let init pids_file =
     Unix.(set_close_on_exec (descr_of_out_channel oc))
   end
 
-let log ?reason pid =
+let log ?reason ?(no_fail=false) pid =
   if !enabled
   then
+    let pid = Sys_utils.pid_of_handle pid in
     let reason = match reason with
       | None -> "unknown"
       | Some s -> s in
     match !log_oc with
+      | None when no_fail -> ()
       | None -> failwith "Can't write pid to uninitialized pids log"
       | Some oc -> Printf.fprintf oc "%d\t%s\n%!" pid reason
 
