@@ -3,10 +3,12 @@
 import colors from 'colors/safe';
 
 import {format} from 'util';
+import {basename, dirname, resolve} from 'path';
 
+import {testsDir} from '../constants';
 import {drain} from '../async';
 import Builder from './builder';
-import {findTestsByName, findTestsByRun} from './findTests';
+import {findTestsByName, findTestsByRun, loadSuite} from './findTests';
 import RunQueue from './RunQueue';
 
 import type {Args} from './testCommand';
@@ -19,16 +21,83 @@ async function write(fmt: string, ...args: Array<mixed>): Promise<void> {
   }
 }
 
-export default async function(args: Args): Promise<void> {
-  const builder = new Builder(args.errorCheckCommand);
+function startWatchAndRun(suites, args) {
+  // Require in here to avoid the dependency for most test runs
+  const sane = require('sane');
 
-  let suites;
-  if (args.rerun != null) {
-    suites = await findTestsByRun(args.rerun, args.failedOnly);
-  } else {
-    suites = await findTestsByName(args.suites);
+  let running = false;
+  let queuedSet = new Set();
+  let queuedMessages = [];
+
+  process.stderr.write(
+    format("Watching %d suites\n", Object.keys(suites).length),
+  );
+
+  const run = async () => {
+    if (running === true) {
+      return;
+    }
+
+    queuedMessages.forEach(msg => process.stderr.write(msg + "\n"));
+    queuedMessages = [];
+
+    if (queuedSet.size === 0) {
+      return;
+    }
+    running = true;
+    const runSet = queuedSet;
+    queuedSet = new Set();
+
+    const suitesToRun = {};
+    for (const suite of runSet) {
+      suitesToRun[suite] = suites[suite];
+    }
+
+    await runOnce(suitesToRun, args);
+
+    running = false;
+    run();
   }
 
+  const watch = (watcher, name, suiteNames) => {
+    const callback = () => {
+      if (queuedSet.size === 0) {
+        queuedMessages.push("\n!!!!!!!!!!!!!!!!");
+      }
+      queuedMessages.push(format("Watcher noticed that %s changed", name));
+      suiteNames.forEach(suite => {
+        try {
+          suites[suite] = loadSuite(suite);
+          queuedSet.add(suite);
+        } catch (e) {
+          queuedMessages.push(format(
+            colors.red.bold("Failed to load test suite `%s`\n%s"),
+            colors.blue(suite),
+          ));
+          queuedMessages.push(e.stack);
+        }
+        setTimeout(run, 500); // Wait for it to settle;
+      });
+    }
+    watcher.on('change', callback);
+    watcher.on('add', callback);
+    watcher.on('delete', callback);
+  };
+
+
+  watch(
+    sane(dirname(args.bin), {glob: [basename(args.bin)]}),
+    "the Flow binary",
+    Object.keys(suites),
+  );
+  for (const suite in suites) {
+    const suiteDir = resolve(testsDir, suite);
+    watch(sane(suiteDir), format("the `%s` suite", suite), [suite]);
+  }
+}
+
+async function runOnce(suites, args) {
+  const builder = new Builder(args.errorCheckCommand);
   const runQueue = new RunQueue(
     args.bin,
     args.parallelism,
@@ -63,6 +132,9 @@ export default async function(args: Args): Promise<void> {
             testResult.stepResults.length,
           );
           const messages = [];
+          if (result.exception !== undefined) {
+            messages.push(format("Uncaught exception: %s", result.exception));
+          }
           for (const assertionResult of result.assertionResults) {
             if (assertionResult.type === "fail") {
               messages.push(...assertionResult.messages);
@@ -107,5 +179,21 @@ export default async function(args: Args): Promise<void> {
   }
   process.stderr.write("\n\n");
 
-  process.exit(exitCode);
+  return exitCode;
+}
+
+export default async function(args: Args): Promise<void> {
+  let suites;
+  if (args.rerun != null) {
+    suites = await findTestsByRun(args.rerun, args.failedOnly);
+  } else {
+    suites = await findTestsByName(args.suites);
+  }
+
+  if (args.watch) {
+    startWatchAndRun(suites, args);
+  } else {
+    const exitCode = await runOnce(suites, args);
+    process.exit(exitCode);
+  }
 }

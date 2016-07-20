@@ -17,6 +17,7 @@ type Action = (builder: TestBuilder, envWrite: StepEnvWriteable) => Promise<void
 export type StepResult = {
   passed: boolean,
   assertionResults: Array<ErrorAssertionResult>,
+  exception?: Error,
 }
 
 /**

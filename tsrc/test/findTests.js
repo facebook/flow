@@ -40,18 +40,29 @@ export async function findTestsByName(suitesOrig: ?Set<string>): Promise<{ [key:
     const suiteName = relative(testsDir, suiteFile).replace(testSuiteRegex, "$1");
     const pathToDir = dirname(suiteFile);
     if (!suites || suites.has(suiteName) || suites.has(suiteFile) || suites.has(pathToDir)) {
-      const {default: suite} = (require: any)(suiteFile);
-      if (!(suite instanceof Suite)) {
-        throw new Error(format(
-          "Test suite `%s` forgot to export default suite(...)",
-          suiteFile,
-        ));
-      }
-      result[suiteName] = suite;
+      result[suiteName] = loadSuiteByFilename(suiteFile);;
     }
   }
 
   return result;
+}
+
+function loadSuiteByFilename(filename: string): Suite {
+  delete require.cache[require.resolve(filename)]
+  const {default: suite} = (require: any)(filename);
+  if (!(suite instanceof Suite)) {
+    throw new Error(format(
+      "Test suite `%s` forgot to export default suite(...)",
+      filename,
+    ));
+  }
+  return suite;
+}
+
+export function loadSuite(suiteName: string): Suite {
+  return loadSuiteByFilename(
+    resolve(testsDir, suiteName, "test.js"),
+  );
 }
 
 export async function findTestsByRun(
