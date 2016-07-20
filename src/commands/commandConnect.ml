@@ -181,6 +181,10 @@ let rec connect env retries start_time tail_env =
   | Result.Ok (ic, oc) -> (ic, oc)
   | Result.Error CCS.Server_missing ->
       if env.autostart then begin
+        (* Windows doesn't let us move open files, and flow start
+         * tries to move the log file, so let's close our tail for
+         * now. It will be reopened when we next call connect *)
+        Tail.close_env tail_env;
         let retries =
           if start_flow_server env
           then begin
@@ -196,7 +200,6 @@ let rec connect env retries start_time tail_env =
               (Tty.spinner());
             consume_retry retries
           end in
-        Tail.close_env tail_env;
         connect env retries start_time tail_env
       end else begin
         let msg = Utils_js.spf
