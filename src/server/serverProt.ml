@@ -34,7 +34,8 @@ type command =
 | AUTOCOMPLETE of file_input
 | CHECK_FILE of
     file_input *
-    Verbose.t option
+    Verbose.t option *
+    bool (* respect_pragma *)
 | COVERAGE of file_input
 | DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | ERROR_OUT_OF_DATE
