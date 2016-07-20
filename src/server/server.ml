@@ -122,14 +122,30 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc (results : ServerProt.autocomplete_response) [];
     flush oc
 
-  let check_file ~options file_input verbose oc =
+  let check_file ~options file_input verbose respect_pragma oc =
     let file = ServerProt.file_input_get_filename file_input in
     let errors = match file_input with
     | ServerProt.FileName _ -> failwith "Not implemented"
     | ServerProt.FileContent (_, content) ->
-        let file = Loc.SourceFile file in
-        (match Types_js.typecheck_contents ~options ?verbose content file with
-        | _, _, errors, _ -> errors)
+        let should_check =
+          if not respect_pragma then
+            true
+          else
+            let (_, docblock) =
+              Parsing_service_js.get_docblock
+                Docblock.max_tokens
+                (Loc.SourceFile file)
+                content
+            in
+            Docblock.is_flow docblock
+        in
+        begin if should_check then
+          let file = Loc.SourceFile file in
+          (match Types_js.typecheck_contents ~options ?verbose content file with
+          | _, _, errors, _ -> errors)
+        else
+          Errors.ErrorSet.empty
+        end
     in
     send_errorl (Errors.to_list errors) oc
 
@@ -456,8 +472,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
         autocomplete ~options client_logging_context fn oc
-    | ServerProt.CHECK_FILE (fn, verbose) ->
-        check_file ~options fn verbose oc
+    | ServerProt.CHECK_FILE (fn, verbose, respect_pragma) ->
+        check_file ~options fn verbose respect_pragma oc
     | ServerProt.COVERAGE (fn) ->
         coverage ~options fn oc
     | ServerProt.DUMP_TYPES (fn, format, strip_root) ->
