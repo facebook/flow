@@ -188,7 +188,10 @@ module Select_timeout = struct
     match Unix.select [ tic.fd ] [] [] timeout with
     | [], _, _ -> raise Timeout
     | [_], _, _ ->
-        let read = Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max) in
+        let read = try 
+          Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max) 
+        with Unix.Unix_error (Unix.EPIPE, _, _) ->
+          raise End_of_file in
         tic.max <- tic.max + read;
         read
     | _ :: _, _, _-> assert false (* Should never happen *)
