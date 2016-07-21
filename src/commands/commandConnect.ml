@@ -141,13 +141,16 @@ let reset_retries_if_necessary retries = function
         retries_remaining = retries.original_retries;
       }
 
-let consume_retry retries =
-  let retries_remaining = retries.retries_remaining - 1 in
+let rate_limit retries =
   (* Make sure there is at least 1 second between retries *)
   let sleep_time = int_of_float
     (ceil (1.0 -. (Unix.gettimeofday() -. retries.last_connect_time))) in
-  if retries_remaining >= 0 && sleep_time > 0
-  then Unix.sleep sleep_time;
+  if sleep_time > 0
+  then Unix.sleep sleep_time
+
+let consume_retry retries =
+  let retries_remaining = retries.retries_remaining - 1 in
+  if retries_remaining >= 0 then rate_limit retries;
   { retries with retries_remaining; }
 
 (* A featureful wrapper around CommandConnectSimple.connect_once. This
@@ -235,6 +238,7 @@ let rec connect env retries start_time tail_env =
       let msg = "flow is still initializing; this can take some time." in
       if env.retry_if_init then begin
         Printf.eprintf "%s %s %s%!" msg tail_msg (Tty.spinner());
+        rate_limit retries;
         connect env retries start_time tail_env
       end else begin
         let msg = "\n"^msg^" Not retrying since --retry-if-init is false." in
@@ -243,6 +247,7 @@ let rec connect env retries start_time tail_env =
   | Result.Error CCS.Server_rechecking ->
       let msg = "flow is rechecking; this should not take long" in
       Printf.eprintf "%s %s %s%!" msg tail_msg (Tty.spinner());
+      rate_limit retries;
       connect env retries start_time tail_env
 
 let connect env =
