@@ -3022,7 +3022,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match SMap.get x pmap with
       | None ->
         rec_flow cx trace (super, u)
-      | Some (AbstractT tx) | Some tx ->
+      | Some (AbstractT tx) ->
+        (* The type of the property in the super class is abstract. The type of
+           the property in this class may be abstract or not.  We want to unify
+           just the underlying types, ignoring the abstract part.  *)
+        begin match t with
+        | AbstractT t -> rec_unify cx trace t tx
+        | _ -> rec_unify cx trace t tx
+        end
+      | Some tx ->
         rec_unify cx trace t tx
       );
 

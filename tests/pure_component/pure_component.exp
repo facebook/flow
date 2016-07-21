@@ -1,0 +1,10 @@
+test.js:6
+  6: (<C />); // error (`x` is a required prop)
+      ^^^^^ React element `C`
+  4:   props: { x: number };
+              ^^^^^^^^^^^^^ property `x`. Property not found in
+  6: (<C />); // error (`x` is a required prop)
+      ^^^^^ props of React element `C`
+
+
+Found 1 error
