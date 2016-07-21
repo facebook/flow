@@ -238,19 +238,19 @@ let format_info info =
   let formatted = format_reason_color msg in
   String.concat "" (List.map snd formatted)
 
-let print_reason_color ~first ~one_line ~color (message: message) =
+let print_reason_color ?(out_channel=stdout) ~first ~one_line ~color (message: message) =
   let to_print = format_reason_color ~first ~one_line message in
   (if first then Printf.printf "\n");
-  Tty.cprint ~color_mode:color to_print
+  Tty.cprint ~color_mode:color ~out_channel to_print
 
-let print_error_color_old ~one_line ~color (e : error) =
+let print_error_color_old ?(out_channel=stdout) ~one_line ~color (e : error) =
   let { kind; messages; op; trace; extra } = e in
   let messages = prepend_kind_message messages kind in
   let messages = prepend_op_reason messages op in
   let messages = append_extra_info messages extra in
   let messages = append_trace_reasons messages trace in
-  print_reason_color ~first:true ~one_line ~color (List.hd messages);
-  List.iter (print_reason_color ~first:false ~one_line ~color) (List.tl messages)
+  print_reason_color ~out_channel ~first:true ~one_line ~color (List.hd messages);
+  List.iter (print_reason_color ~out_channel ~first:false ~one_line ~color) (List.tl messages)
 
 let file_location_style text = (Tty.Underline Tty.Default, text)
 let default_style text = (Tty.Normal Tty.Default, text)
@@ -531,10 +531,10 @@ let get_pretty_printed_error_new ~stdin_file:stdin_file ~strip_root ~one_line ~r
     else to_print in
   (to_print @ [default_style "\n"])
 
-let print_error_color_new ~stdin_file:stdin_file ~strip_root ~one_line ~color ~root (error : error) =
+let print_error_color_new ?(out_channel=stdout) ~stdin_file:stdin_file ~strip_root ~one_line ~color ~root (error : error) =
   let to_print =
     get_pretty_printed_error_new ~stdin_file ~strip_root ~one_line ~root error in
-  Tty.cprint ~color_mode:color to_print
+  Tty.cprint ~out_channel ~color_mode:color to_print
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc loc = Loc.(
@@ -848,7 +848,7 @@ let print_error_deprecated =
     flush oc
 
 (* Human readable output *)
-let print_error_summary ~flags ?(stdin_file=None) ~strip_root ~root errors =
+let print_error_summary ?(out_channel=stdout) ~flags ?(stdin_file=None) ~strip_root ~root errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let truncate = not (flags.Options.show_all_errors) in
   let one_line = flags.Options.one_line in
@@ -858,7 +858,9 @@ let print_error_summary ~flags ?(stdin_file=None) ~strip_root ~root errors =
     else print_error_color_new ~stdin_file ~strip_root ~root
   in
   let print_error_if_not_truncated curr e =
-    (if not(truncate) || curr < 50 then print_error_color ~one_line ~color e);
+    if not(truncate) || curr < 50
+    then print_error_color ~one_line ~color ~out_channel e;
+
     curr + 1
   in
   let total =
@@ -866,9 +868,13 @@ let print_error_summary ~flags ?(stdin_file=None) ~strip_root ~root errors =
   in
   if total > 0 then print_newline ();
   if truncate && total > 50 then (
-    Printf.printf
+    Printf.fprintf
+      out_channel
       "... %d more %s (only 50 out of %d errors displayed)\n"
       (total - 50) (error_or_errors (total - 50)) total;
-    print_endline "To see all errors, re-run Flow with --show-all-errors"
+    Printf.fprintf
+      out_channel
+      "To see all errors, re-run Flow with --show-all-errors";
+    flush out_channel
   ) else
-    Printf.printf "Found %d %s\n" total (error_or_errors total)
+    Printf.fprintf out_channel "Found %d %s\n" total (error_or_errors total)

@@ -318,6 +318,34 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc response [];
     flush oc
 
+  let gen_interfaces ~options files oc =
+    let results = files |> List.map (fun file ->
+      let file_path =
+        match file with
+        | ServerProt.FileContent (Some file_path, _)
+        | ServerProt.FileName file_path -> file_path
+        | ServerProt.FileContent (None, _) -> "??"
+      in
+      let src_file = Loc.SourceFile file_path in
+      let content = ServerProt.file_input_get_content file in
+
+      match Types_js.typecheck_contents ~options content src_file with
+      | _, Some cx, errors, _ ->
+        if Errors.ErrorSet.cardinal errors > 0
+        then Utils_js.Err (
+          ServerProt.GenIface_TypecheckError (file_path, errors)
+        ) else (
+          try Utils_js.OK (file_path, Interface_generator.generate_interface cx)
+          with exn -> Utils_js.Err (
+            ServerProt.GenIface_UnexpectedError (file_path, (Printexc.to_string exn))
+          )
+        )
+      | _, _, errors, _ ->
+        Utils_js.Err (ServerProt.GenIface_TypecheckError (file_path, errors))
+    ) in
+    Marshal.to_channel oc results [];
+    flush oc
+
   let get_def ~options (file_input, line, col) oc =
     let filename = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile filename in
@@ -488,6 +516,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         flush oc;
         let updates = process_updates genv !env (Utils_js.set_of_list files) in
         env := recheck genv !env updates
+    | ServerProt.GEN_INTERFACES files ->
+        gen_interfaces ~options files oc
     | ServerProt.GET_DEF (fn, line, char) ->
         get_def ~options (fn, line, char) oc
     | ServerProt.GET_IMPORTERS module_names ->
