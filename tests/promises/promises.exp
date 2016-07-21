@@ -63,9 +63,9 @@ promise.js:30
                ^ constructor call
  30:   resolve(new Promise(function(resolve, reject) {
                ^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `R` of constructor call. See lib: core.js:498
+union: type application of identifier `Promise` | type parameter `R` of constructor call. See lib: core.js:502
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:498
+  type application of identifier `Promise`. See lib: core.js:502
   Error:
    35:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -85,9 +85,9 @@ promise.js:41
                  ^ constructor call
  41:     resolve(new Promise(function(resolve, reject) {
                  ^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `R` of constructor call. See lib: core.js:498
+union: type application of identifier `Promise` | type parameter `R` of constructor call. See lib: core.js:502
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:498
+  type application of identifier `Promise`. See lib: core.js:502
   Error:
    47:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -119,9 +119,9 @@ promise.js:121
                      ^^^^^^^^^^^^^^^^^^ call of method `resolve`
 121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:511
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:515
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:511
+  type application of identifier `Promise`. See lib: core.js:515
   Error:
   123:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -141,9 +141,9 @@ promise.js:127
                                      ^^^^^^^^^^^^^^^^^^ call of method `resolve`
 127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:511
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:515
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:511
+  type application of identifier `Promise`. See lib: core.js:515
   Error:
   129:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -169,9 +169,9 @@ promise.js:166
                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 166:   .then(function(num) { return Promise.resolve('asdf'); })
                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See lib: core.js:503
+union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See lib: core.js:507
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:503
+  type application of identifier `Promise`. See lib: core.js:507
   Error:
   169:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -191,9 +191,9 @@ promise.js:174
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:511
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:515
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:511
+  type application of identifier `Promise`. See lib: core.js:515
   Error:
   177:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -219,9 +219,9 @@ promise.js:206
                                      ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See lib: core.js:508
+union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See lib: core.js:512
   Member 1:
-  ?type application of identifier `Promise`. See lib: core.js:508
+  ?type application of identifier `Promise`. See lib: core.js:512
   Error:
   209:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -241,9 +241,9 @@ promise.js:214
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:511
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:515
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:511
+  type application of identifier `Promise`. See lib: core.js:515
   Error:
   217:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with

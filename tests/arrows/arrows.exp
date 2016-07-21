@@ -15,7 +15,7 @@ arrows.js:7
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `sort`
   7:     images = images.sort((a, b) => (a.width - b.width) + "");
                                         ^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-number. See lib: core.js:220
+number. See lib: core.js:224
 
 
 Found 3 errors
