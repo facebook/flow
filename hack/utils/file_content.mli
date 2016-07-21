@@ -13,7 +13,15 @@ type t = {time : float; content : string}
 (* 1-based position is used here *)
 type content_pos = {line : int; column : int}
 
-type code_edit = {st : content_pos; ed : content_pos; text : string}
+type content_range = {
+  st : content_pos;
+  ed : content_pos;
+}
+
+type code_edit = {
+  range : content_range option;
+  text : string;
+}
 
 val of_content : content:string -> t
 

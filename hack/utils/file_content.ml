@@ -19,9 +19,13 @@ type content_pos = {
   column : int;
 }
 
-type code_edit = {
+type content_range = {
   st : content_pos;
   ed : content_pos;
+}
+
+type code_edit = {
+  range : content_range option;
   text : string;
 }
 
@@ -39,9 +43,10 @@ let nth_line lines n =
   | Some s -> s
   | None -> ""
 
-let edit_file fc edits =
-  try
-    List.fold ~init:fc ~f:(fun fc {st; ed; text} ->
+let apply_edit = fun fc {range; text} ->
+  match range with
+  | None -> of_content text
+  | Some {st; ed} ->
     let content = get_content fc in
     let lines = match content.[0] with
     | '\n' ->
@@ -60,12 +65,16 @@ let edit_file fc edits =
       else if i == st.line - 1
         then hd := !hd ^ (String.sub line 0 (st.column - 1));
       if i == ed.line - 1 && length - (ed.column - 1) > 0
-        then tl :=
-          (String.sub line (ed.column-1) (length-ed.column+1)) ^ "\n" ^ !tl
+        then tl := (String.sub line (ed.column - 1)
+          (length - ed.column + 1)) ^ "\n" ^ !tl
       else if i == ed.line - 1
         then tl := "\n" ^ !tl
     done;
-    of_content (!hd ^ text ^ !tl)) edits
+    of_content (!hd ^ text ^ !tl)
+
+let edit_file fc (edits: code_edit list) =
+  try
+    List.fold ~init:fc ~f:apply_edit edits
   with _ ->
     (* TODO: If editor send an invalid edit we will just ignore it.
      * Maybe we should send an error response to let the editor know *)
