@@ -48,7 +48,7 @@ module Alarm_timeout = struct
     (* OCaml 4.03.0 changed the behavior of input_value to no longer
      * throw End_of_file when the pipe has closed. We can simulate that
      * behavior, however, by trying to read a byte afterwards, which WILL
-     * raise End_of_file if the pipe has closed 
+     * raise End_of_file if the pipe has closed
      * http://caml.inria.fr/mantis/view.php?id=7142 *)
     try Pervasives.input_value ic
     with Failure msg as e ->
@@ -188,7 +188,10 @@ module Select_timeout = struct
     match Unix.select [ tic.fd ] [] [] timeout with
     | [], _, _ -> raise Timeout
     | [_], _, _ ->
-        let read = Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max) in
+        let read = try
+          Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max)
+        with Unix.Unix_error (Unix.EPIPE, _, _) ->
+          raise End_of_file in
         tic.max <- tic.max + read;
         read
     | _ :: _, _, _-> assert false (* Should never happen *)
