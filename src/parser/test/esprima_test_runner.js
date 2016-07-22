@@ -233,6 +233,18 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     case 'ExportBatchSpecifier':
       esprima.name = esprima.name || null;
       break;
+
+    // Esprima is out of date. Type params are no longer Identifier nodes.
+    case 'TypeParameterDeclaration':
+      for (var i = 0; i < esprima.params.length; i++) {
+        var param = esprima.params[i];
+        param.type = 'TypeParameter';
+        param.bound = param.typeAnnotation || null;
+        param.default = param.default || null;
+        param.variance = param.variance || null;
+        delete param.typeAnnotation;
+        delete param.optional;
+      }
   }
 
   switch (esprima.type) {
@@ -256,14 +268,6 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       case "JSXText":
         // Esprima represents JSX children string literals as Literal nodes
         flow.type = "Literal";
-        break;
-      case 'TypeParameter':
-        flow.type = 'Identifier';
-        flow.typeAnnotation = flow.bound;
-        flow.optional = false;
-        delete flow.bound;
-        delete flow.variance;
-        delete flow.default;
         break;
       case 'DeclareModule':
         delete flow.kind;
