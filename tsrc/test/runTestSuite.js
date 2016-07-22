@@ -12,9 +12,17 @@ import type Builder from './builder';
 import type Suite from './Suite';
 import type {StepResult} from './TestStep';
 
-export type TestResult = {
+type TestResult = {
   name: ?string,
   stepResults: Array<StepResult>,
+};
+
+export type SuiteResult = {
+  type: 'exceptional',
+  message: string,
+} | {
+  type: 'normal',
+  testResults: Array<TestResult>,
 };
 
 export default async function(
@@ -23,27 +31,23 @@ export default async function(
   suiteName: string,
   testSuite: Suite,
   reportStatus: (status: string, details: string) => void,
-): Promise<Array<TestResult>> {
-  let results = [];
+): Promise<SuiteResult> {
+  const testResults = [];
   let testNum = 1;
-
-  const emptyTestStep = new TestStepFirstStage();
-  const tests = testSuite.tests(emptyTestStep);
 
   let stepsPassed = 0;
   let stepsFailed = 0;
   let testsRun = 0;
-  const totalTests = tests.length;
+  let totalTests = 0;
 
-  function printStatus(status: 'RUN' | 'PASS' | 'FAIL'): void {
-    let statusText = colors.grey.bold("[ ] RUN")+": ";
-    let newline = "";
+  function printStatus(status: 'RUN' | 'PASS' | 'FAIL' | 'ERROR'): void {
+    let statusText = colors.grey.bold("[ ] RUN")+":  ";
     if (status === 'PASS') {
-      statusText = colors.green.bold("[✓] PASS")+":"
-      newline = "\n";
+      statusText = colors.green.bold("[✓] PASS")+": ";
     } else if (status === 'FAIL') {
-      statusText = colors.red.bold("[✗] FAIL")+":"
-      newline = "\n";
+      statusText = colors.red.bold("[✗] FAIL")+": ";
+    } else if (status === 'ERROR') {
+      statusText = colors.bgRed(colors.white.bold("[!] ERROR"))+":";
     }
     reportStatus(
       statusText,
@@ -56,6 +60,23 @@ export default async function(
       ),
     );
   }
+
+  const emptyTestStep = new TestStepFirstStage();
+  let tests;
+  try {
+    tests = testSuite.tests(emptyTestStep);
+  } catch (e) {
+    printStatus('ERROR');
+    return {
+      type: 'exceptional',
+      message: format(
+        'Exception while generating test steps by running test.js:\n%s',
+        e.stack,
+      ),
+    };
+  }
+
+  totalTests = tests.length;
 
   for (const test of tests) {
     const steps = [].concat(
@@ -119,13 +140,17 @@ export default async function(
       // No-op if nothing is running
       await testBuilder.stopFlowServer();
     } catch (e) {
-      for (let i = stepResults.length - 1; i < steps.length; i++) {
-        stepsFailed++;
-        stepResults.push({ passed: false, assertionResults: [], exception: e});
-      }
+      printStatus('ERROR');
+      return {
+        type: 'exceptional',
+        message: format(
+          'Exception while running test steps:\n%s',
+          e.stack,
+        ),
+      };
     }
     testsRun++;
-    results.push({
+    testResults.push({
       name: test.name,
       stepResults,
     });
@@ -137,5 +162,8 @@ export default async function(
     printStatus('FAIL');
   }
 
-  return results;
+  return {
+    type: "normal",
+    testResults,
+  }
 }

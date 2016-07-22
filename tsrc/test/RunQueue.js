@@ -7,7 +7,7 @@ import runTestSuite from './runTestSuite';
 
 import type Builder from './builder';
 import type Suite from './Suite';
-import type {TestResult} from './runTestSuite';
+import type {SuiteResult} from './runTestSuite';
 
 /* Cool little thingy that runs tests in parallel and prints out a multiline
  * status view of what is running and what is done */
@@ -29,7 +29,7 @@ export default class RunQueue {
   maxLength: number;
   onDone: () => void;
   parallelism: number;
-  results: {[key: string]: Array<TestResult>};
+  results: {[key: string]: SuiteResult};
   writeResults: Array<Promise<void>> = [];
   running: Array<string>;
   statuses: {[key: string]: {status: string, details: string}};
@@ -122,28 +122,37 @@ export default class RunQueue {
     if (this.isFbmakeJson) {
       let details = "";
       let status = "passed";
-      for (let testNum = 0; testNum < suiteResult.length; testNum++) {
-        const testResult = suiteResult[testNum];
-        for (let stepNum = 0; stepNum < testResult.stepResults.length; stepNum++) {
-          const result = testResult.stepResults[stepNum];
-          if(!result.passed) {
-            status = "failed";
-            details += format(
-              "FAILED: suite %s, test %s (%d of %d), step %d of %d\n",
-              suiteName,
-              testResult.name || "unnamed test",
-              testNum+1,
-              suiteResult.length,
-              stepNum+1,
-              testResult.stepResults.length,
-            );
-            const messages = [];
-            for (const assertionResult of result.assertionResults) {
-              if (assertionResult.type === "fail") {
-                messages.push(...assertionResult.messages);
+      if (suiteResult.type === 'exceptional') {
+        status = "failed";
+        details += format(
+          "ERROR: suite %s\n%s",
+          suiteResult.message,
+        );
+      } else if (suiteResult.type === 'normal') {
+        const testResults = suiteResult.testResults;
+        for (let testNum = 0; testNum < testResults.length; testNum++) {
+          const testResult = testResults[testNum];
+          for (let stepNum = 0; stepNum < testResult.stepResults.length; stepNum++) {
+            const result = testResult.stepResults[stepNum];
+            if(!result.passed) {
+              status = "failed";
+              details += format(
+                "FAILED: suite %s, test %s (%d of %d), step %d of %d\n",
+                suiteName,
+                testResult.name || "unnamed test",
+                testNum+1,
+                testResults.length,
+                stepNum+1,
+                testResult.stepResults.length,
+              );
+              const messages = [];
+              for (const assertionResult of result.assertionResults) {
+                if (assertionResult.type === "fail") {
+                  messages.push(...assertionResult.messages);
+                }
               }
+              details += messages.join("\n");
             }
-            details += messages.join("\n");
           }
         }
       }

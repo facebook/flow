@@ -101,16 +101,16 @@ export default async function(args: Args): Promise<void> {
 
   await runQueue.go();
 
-  let totalTests, totalSteps, testNum, stepNum, suiteName;
+  let totalTests = 0, totalSteps = 0, testNum = 0, stepNum = 0, suiteName = 0;
 
   function printStatus(status: 'RECORDING' | 'RECORDED' | 'FAIL'): void {
-    let statusText = colors.bold("[ ] RECORDING:");
+    let statusText =     colors.bold("[ ] RECORDING:       ");
     let newline = "";
     if (status === 'RECORDED') {
-      statusText = colors.green.bold("[✓] RECORDED:")
+      statusText = colors.green.bold("[✓] RECORDED:        ")
       newline = "\n";
     } else if (status === 'FAIL') {
-      statusText = colors.red.bold("[✗] FAIL:")
+      statusText =   colors.red.bold("[✗] FAILED TO RECORD:")
       newline = "\n";
     }
     if (process.stdout.isTTY) {
@@ -143,16 +143,21 @@ export default async function(args: Args): Promise<void> {
 
   const results = runQueue.results;
   for (suiteName in results) {
+    const suiteResult = results[suiteName];
+    if (suiteResult.type === 'exceptional') {
+      printStatus("FAIL");
+      continue;
+    }
     // TODO - reorder records based on line number
-    totalTests = results[suiteName].length;
+    totalTests = suiteResult.testResults.length;
     for (testNum = 0; testNum < totalTests; testNum++) {
       let testFailed = false;
       let testRecorded = false;
-      totalSteps = results[suiteName][totalTests - testNum - 1].stepResults.length;
+      totalSteps = suiteResult.testResults[totalTests - testNum - 1].stepResults.length;
       for (stepNum = 0; stepNum < totalSteps; stepNum++) {
         printStatus("RECORDING")
         // Record starting at the end to avoid messing with line numbers
-        const stepResult = results[suiteName][totalTests - testNum - 1].stepResults[totalSteps - stepNum - 1];
+        const stepResult = suiteResult.testResults[totalTests - testNum - 1].stepResults[totalSteps - stepNum - 1];
         if(!stepResult.passed) {
           // Again, start with the last assertion
           for (let assertionNum = stepResult.assertionResults.length - 1; assertionNum >= 0; assertionNum--) {

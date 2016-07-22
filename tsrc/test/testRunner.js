@@ -11,6 +11,7 @@ import Builder from './builder';
 import {findTestsByName, findTestsByRun, loadSuite} from './findTests';
 import RunQueue from './RunQueue';
 
+import type Suite from './Suite';
 import type {Args} from './testCommand';
 
 /* We potentially have a ton of info to dump into stdout. Let's handle drain
@@ -27,10 +28,11 @@ function startWatchAndRun(suites, args) {
 
   let running = false;
   let queuedSet = new Set();
+  let changedThings = new Set();
   let queuedMessages = [];
 
   process.stderr.write(
-    format("Watching %d suites\n", Object.keys(suites).length),
+    format("Watching %d suites\n", suites.size),
   );
 
   const run = async () => {
@@ -38,22 +40,40 @@ function startWatchAndRun(suites, args) {
       return;
     }
 
-    queuedMessages.forEach(msg => process.stderr.write(msg + "\n"));
-    queuedMessages = [];
+    if (changedThings.size > 0) {
+      process.stderr.write("\n!!!!!!!!!!!!!!!!\n");
+      for (const changedThing of changedThings) {
+        process.stderr.write(
+          format("Watcher noticed that %s changed\n", changedThing),
+        );
+      }
+    }
+    changedThings = new Set();
 
     if (queuedSet.size === 0) {
       return;
     }
+
     running = true;
     const runSet = queuedSet;
     queuedSet = new Set();
 
     const suitesToRun = {};
-    for (const suite of runSet) {
-      suitesToRun[suite] = suites[suite];
+    for (const suiteName of runSet) {
+      try {
+        suitesToRun[suiteName] = loadSuite(suiteName);
+      } catch (e) {
+        process.stderr.write(format(
+          colors.red.bold("Failed to load test suite `%s`\n%s\n"),
+          colors.blue(suiteName),
+          e.stack,
+        ));
+      }
     }
 
-    await runOnce(suitesToRun, args);
+    if (Object.keys(suitesToRun).length > 0) {
+      await runOnce(suitesToRun, args);
+    }
 
     running = false;
     run();
@@ -61,23 +81,11 @@ function startWatchAndRun(suites, args) {
 
   const watch = (watcher, name, suiteNames) => {
     const callback = () => {
-      if (queuedSet.size === 0) {
-        queuedMessages.push("\n!!!!!!!!!!!!!!!!");
-      }
-      queuedMessages.push(format("Watcher noticed that %s changed", name));
-      suiteNames.forEach(suite => {
-        try {
-          suites[suite] = loadSuite(suite);
-          queuedSet.add(suite);
-        } catch (e) {
-          queuedMessages.push(format(
-            colors.red.bold("Failed to load test suite `%s`\n%s"),
-            colors.blue(suite),
-          ));
-          queuedMessages.push(e.stack);
-        }
-        setTimeout(run, 500); // Wait for it to settle;
-      });
+      changedThings.add(name);
+      suiteNames.forEach(suite => queuedSet.add(suite));
+
+      // We may have a lot of FS events...wait for things to settle
+      setTimeout(run, 500);
     }
     watcher.on('change', callback);
     watcher.on('add', callback);
@@ -88,15 +96,15 @@ function startWatchAndRun(suites, args) {
   watch(
     sane(dirname(args.bin), {glob: [basename(args.bin)]}),
     "the Flow binary",
-    Object.keys(suites),
+    Array.from(suites),
   );
-  for (const suite in suites) {
+  for (const suite of suites) {
     const suiteDir = resolve(testsDir, suite);
     watch(sane(suiteDir), format("the `%s` suite", suite), [suite]);
   }
 }
 
-async function runOnce(suites, args) {
+async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   const builder = new Builder(args.errorCheckCommand);
   const runQueue = new RunQueue(
     args.bin,
@@ -111,37 +119,51 @@ async function runOnce(suites, args) {
   const results = runQueue.results;
   let exitCode = 0;
   for (const suiteName of Object.keys(results).sort()) {
-    for (let testNum = 0; testNum < results[suiteName].length; testNum++) {
-      const testResult = results[suiteName][testNum];
-      for (let stepNum = 0; stepNum < testResult.stepResults.length; stepNum++) {
-        const result = testResult.stepResults[stepNum];
-        if(!result.passed) {
-          exitCode = 1;
-          await write(
-            colors.red.bold("FAILED")+
-              colors.grey(": suite ")+
-              colors.blue("%s")+
-              colors.grey(", test ")+
-              colors.blue("%s")+
-              colors.grey(" (%d of %d), step %d of %d") + "\n",
-            suiteName,
-            testResult.name || "unnamed test",
-            testNum+1,
-            results[suiteName].length,
-            stepNum+1,
-            testResult.stepResults.length,
-          );
-          const messages = [];
-          if (result.exception !== undefined) {
-            messages.push(format("Uncaught exception: %s", result.exception));
-          }
-          for (const assertionResult of result.assertionResults) {
-            if (assertionResult.type === "fail") {
-              messages.push(...assertionResult.messages);
+    const suiteResult = results[suiteName];
+    if (suiteResult.type === 'exceptional') {
+      exitCode = 2;
+      await write(
+        colors.bgRed(colors.white.bold("ERRORED"))+
+          colors.grey(": suite ")+
+          colors.blue("%s") + "\n" +
+          colors.red("%s") + "\n",
+        suiteName,
+        suiteResult.message,
+      );
+    } else {
+      const {testResults} = suiteResult;
+      for (let testNum = 0; testNum < testResults.length; testNum++) {
+        const testResult = testResults[testNum];
+        for (let stepNum = 0; stepNum < testResult.stepResults.length; stepNum++) {
+          const result = testResult.stepResults[stepNum];
+          if(!result.passed) {
+            exitCode = 1;
+            await write(
+              colors.red.bold("FAILED")+
+                colors.grey(": suite ")+
+                colors.blue("%s")+
+                colors.grey(", test ")+
+                colors.blue("%s")+
+                colors.grey(" (%d of %d), step %d of %d") + "\n",
+              suiteName,
+              testResult.name || "unnamed test",
+              testNum+1,
+              testResults.length,
+              stepNum+1,
+              testResult.stepResults.length,
+            );
+            const messages = [];
+            if (result.exception !== undefined) {
+              messages.push(format("Uncaught exception: %s", result.exception));
             }
-          }
-          for (const message of messages) {
-            await write("%s\n", message);
+            for (const assertionResult of result.assertionResults) {
+              if (assertionResult.type === "fail") {
+                messages.push(...assertionResult.messages);
+              }
+            }
+            for (const message of messages) {
+              await write("%s\n", message);
+            }
           }
         }
       }
@@ -193,7 +215,11 @@ export default async function(args: Args): Promise<void> {
   if (args.watch) {
     startWatchAndRun(suites, args);
   } else {
-    const exitCode = await runOnce(suites, args);
+    const loadedSuites = {};
+    for (const suiteName of suites) {
+      loadedSuites[suiteName] = loadSuite(suiteName);
+    }
+    const exitCode = await runOnce(loadedSuites, args);
     process.exit(exitCode);
   }
 }

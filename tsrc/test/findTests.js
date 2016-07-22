@@ -9,6 +9,7 @@ import {testsDir} from '../constants';
 import Suite from './Suite';
 
 import type {Tests} from './Tester';
+import type {SuiteResult} from './runTestSuite';
 
 const testSuiteRegex = /(.*)[\/\\]test.js/;
 
@@ -21,7 +22,7 @@ async function findTestSuites(): Promise<Array<string>> {
   return testSuites.map(normalize);
 }
 
-export async function findTestsByName(suitesOrig: ?Set<string>): Promise<{ [key: string]: Suite }> {
+export async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<string>> {
   let suites = null;
   if (suitesOrig != null) {
     suites = new Set();
@@ -33,14 +34,14 @@ export async function findTestsByName(suitesOrig: ?Set<string>): Promise<{ [key:
   }
   const testSuites = await findTestSuites();
 
-  const result = {};
+  const result = new Set();
 
   process.stderr.write(format("Found %d suites\n", testSuites.length));
   for (const suiteFile of testSuites) {
     const suiteName = relative(testsDir, suiteFile).replace(testSuiteRegex, "$1");
     const pathToDir = dirname(suiteFile);
     if (!suites || suites.has(suiteName) || suites.has(suiteFile) || suites.has(pathToDir)) {
-      result[suiteName] = loadSuiteByFilename(suiteFile);;
+      result.add(suiteName);
     }
   }
 
@@ -68,7 +69,7 @@ export function loadSuite(suiteName: string): Suite {
 export async function findTestsByRun(
   runID: string,
   failedOnly: boolean,
-): Promise<{ [key: string]: Suite }> {
+): Promise<Set<string>> {
   const runDir = Builder.getDirForRun(runID);
   const runDirExists = await exists(runDir);
 
@@ -77,7 +78,7 @@ export async function findTestsByRun(
       "Cannot find the tmp directory for run '%s'.\n",
       runID,
     ));
-    return {};
+    return new Set();
   }
 
   const results = await glob(
@@ -100,11 +101,16 @@ export async function findTestsByRun(
   }));
 
   if (failedOnly) {
-    resultContents = resultContents.filter(contents =>
-      contents.testResults.some(testResult =>
-        testResult.stepResults.some(stepResult => !stepResult.passed)
-      )
-    );
+    resultContents = resultContents.filter(contents => {
+      const suiteResult: SuiteResult = contents.results;
+      if (suiteResult.type === 'exceptional') {
+        return true;
+      } else if (suiteResult.type === 'normal') {
+        return suiteResult.testResults.some(testResult =>
+          testResult.stepResults.some(stepResult => !stepResult.passed)
+        );
+      }
+    });
   }
 
   const suites = new Set(

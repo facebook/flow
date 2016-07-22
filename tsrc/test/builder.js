@@ -9,7 +9,7 @@ import {format} from 'util';
 import {appendFile, exec, execManual, mkdirp, readdir, readFile, writeFile} from '../async';
 import {testsDir} from '../constants';
 
-import type {TestResult} from './runTestSuite';
+import type {SuiteResult} from './runTestSuite';
 
 type CheckCommand = 'check' | 'status';
 
@@ -283,17 +283,16 @@ export default class Builder {
     return testBuilder;
   }
 
-  saveResults(suiteName: string, results: Array<TestResult>): Promise<void> {
-    const resultsFile = join(
-      this.baseDirForSuite(suiteName),
-      "results.json",
-    );
-    return writeFile(
+  async saveResults(suiteName: string, results: SuiteResult): Promise<void> {
+    const dir = this.baseDirForSuite(suiteName);
+    const resultsFile = join(dir, "results.json");
+    await mkdirp(dir);
+    await writeFile(
       resultsFile,
       JSON.stringify(
         {
           suiteName: suiteName,
-          testResults: results,
+          results,
         },
         null,
         2,
