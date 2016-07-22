@@ -378,6 +378,12 @@ poly.js:15
  15: function rest_antipattern<T>(...t: T) {} // nonsense
                                         ^ T. rest parameter should have an explicit array type (or type `any`)
 
+string_lit.js:2
+  2: (val: void); // error: string ~> void
+      ^^^ string. This type is incompatible with
+  2: (val: void); // error: string ~> void
+           ^^^^ undefined
+
 unannotated.js:8
   8:   x.bar
          ^^^ property `bar`. Property not found in
@@ -385,4 +391,4 @@ unannotated.js:8
        ^ object literal
 
 
-Found 61 errors
+Found 62 errors

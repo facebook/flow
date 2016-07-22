@@ -126,16 +126,24 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
       properties |> List.iter (function
         | Property (loc, prop) ->
             begin match prop with
-            | { Property.key = Property.Identifier (loc, id);
-                pattern = p; _;
-              } ->
-                let x = id.Ast.Identifier.name in
-                let reason = mk_reason (spf "property `%s`" x) loc in
-                xs := x :: !xs;
+            | { Property.key =
+                  Property.Identifier (loc, { Ast.Identifier.name; _ });
+                pattern = p; _; }
+            | { Property.key =
+                  Property.Literal (loc, { Ast.Literal.
+                    value = Ast.Literal.String name; _ });
+                pattern = p; _; }
+              ->
+                let reason = mk_reason (spf "property `%s`" name) loc in
+                xs := name :: !xs;
                 let init = Option.map init (fun expr ->
                   loc, Ast.Expression.(Member Member.({
                     _object = expr;
-                    property = PropertyIdentifier (loc, id);
+                    property = PropertyIdentifier (loc, {
+                      Ast.Identifier.name;
+                      typeAnnotation = None;
+                      optional = false
+                    });
                     computed = false;
                   }))
                 ) in
@@ -149,9 +157,9 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
                      given `var {foo} = ...`, `foo` is both. compare to `a.foo`
                      where `foo` is the name and `a.foo` is the lookup. *)
                     curr_t,
-                    EvalT (curr_t, DestructuringT (reason, Prop x), mk_id())
+                    EvalT (curr_t, DestructuringT (reason, Prop name), mk_id())
                 ) in
-                let default = Option.map default (Default.prop x reason) in
+                let default = Option.map default (Default.prop name reason) in
                 destructuring ~parent_pattern_t cx tvar init default f p
             | _ ->
               error_destructuring cx loc
