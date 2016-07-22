@@ -75,7 +75,10 @@ let mean_kill ~tmp_dir root =
       raise FailedToKill
   in
   List.iter (fun (pid, _) ->
-    try Sys_utils.terminate_process pid
+    try 
+      pid
+      |> Sys_utils.handle_of_pid_for_termination
+      |> Sys_utils.terminate_process
     with Unix.Unix_error (Unix.ESRCH, "kill", _) ->
       (* no such process *)
       ()

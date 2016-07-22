@@ -374,6 +374,10 @@ external set_priorities : cpu_priority:int -> io_priority:int -> unit =
 
 external win_terminate_process: int -> bool = "win_terminate_process"
 
+external pid_of_handle: int -> int = "pid_of_handle"
+external handle_of_pid_for_termination: int -> int = 
+  "handle_of_pid_for_termination"
+
 let terminate_process pid =
   try Unix.kill pid Sys.sigkill
   with exn when Sys.win32 ->
