@@ -59,6 +59,7 @@ module Entry : sig
      interface. *)
 
   type ('param, 'input, 'output) t
+  val name_of_entry: ('param, 'input, 'output) t -> string
   val register:
     string -> ('param -> ('input, 'output) channel_pair -> unit) ->
     ('param, 'input, 'output) t
@@ -77,6 +78,8 @@ module Entry : sig
 end = struct
 
   type ('param, 'input, 'output) t = string
+
+  let name_of_entry name = name
 
   (* Store functions as 'Obj.t' *)
   let entry_points : (string, Obj.t) Hashtbl.t = Hashtbl.create 23
@@ -239,6 +242,10 @@ let spawn
   if log_stderr <> Unix.stderr && log_stderr <> log_stdout then
     Unix.close log_stderr;
   Unix.close in_fd;
+  PidLog.log
+    ~reason:(Entry.name_of_entry entry)
+    ~no_fail:true
+    pid;
   { channels = Timeout.in_channel_of_descr parent_in,
                Unix.out_channel_of_descr parent_out;
     pid }

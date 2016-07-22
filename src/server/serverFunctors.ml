@@ -392,17 +392,18 @@ end = struct
     (* detach ourselves from the parent process *)
     Daemon.close_out waiting_channel_oc;
     (* let original parent exit *)
-
+    let pretty_pid = Sys_utils.pid_of_handle pid in
     if Options.should_output_json options
     then begin
       let open Hh_json in
       let json = json_to_string (JSON_Object [
-        "pid", JSON_String (string_of_int pid);
+        "pid", JSON_String (string_of_int pretty_pid);
         "log_file", JSON_String log_file;
       ]) in
       print_string json
     end else begin
-      Printf.eprintf "Spawned %s (child pid=%d)\n" (Program.name) pid;
+      Printf.eprintf
+        "Spawned %s (pid=%d)\n" (Program.name) pretty_pid;
       Printf.eprintf
         "Logs will go to %s\n%!" log_file
     end;
