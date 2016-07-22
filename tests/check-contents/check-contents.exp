@@ -1,0 +1,7 @@
+syntax_error.js
+syntax_error.js:4
+  4: 
+     ^ Unexpected end of input
+
+
+Found 1 error

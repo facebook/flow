@@ -141,7 +141,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         in
         begin if should_check then
           let file = Loc.SourceFile file in
-          (match Types_js.typecheck_contents ~options ?verbose content file with
+          (match Types_js.typecheck_contents ~options ?verbose ~check_syntax:true content file with
           | _, _, errors, _ -> errors)
         else
           Errors.ErrorSet.empty

@@ -148,7 +148,7 @@ let with_timer ?options timer timing f =
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents ~options ?verbose contents filename =
+let typecheck_contents ~options ?verbose ?(check_syntax = false) contents filename =
   let timing = Timing.create () in
 
   (* always enable types when checking an individual file *)
@@ -160,7 +160,7 @@ let typecheck_contents ~options ?verbose contents filename =
       let docblock_errors, info =
         Parsing_service_js.get_docblock ~max_tokens filename contents in
       let parse_result = Parsing_service_js.do_parse
-        ~fail:false ~types_mode ~use_strict ~info
+        ~fail:check_syntax ~types_mode ~use_strict ~info
         contents filename
       in
       let errors = match docblock_errors with

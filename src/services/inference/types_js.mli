@@ -20,6 +20,7 @@ val server_init:
 val typecheck_contents:
   options: Options.t ->
   ?verbose: Verbose.t ->
+  ?check_syntax: bool ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
   Timing.t *
