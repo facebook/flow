@@ -207,8 +207,24 @@ end = struct
     env
 
   let open_log_file options =
+    (* When opening a new foo.log file, if foo.log already exists, we move it to
+     * foo.log.old. On Linux/OSX this is easy, we just call rename. On Windows,
+     * the rename can fail if foo.log is open or if foo.log.old already exists.
+     * Not a huge problem, we just need to be more intentional *)
     let file = Path.to_string (Options.log_file options) in
-    (try Sys.rename file (file ^ ".old") with _ -> ());
+    let old_file = file ^ ".old" in
+
+    (try
+      if Sys.file_exists old_file
+      then Sys.remove old_file;
+      Sys.rename file old_file
+    with e ->
+      Utils.prerr_endlinef
+        "Log rotate: failed to move '%s' to '%s'\n%s"
+        file
+        old_file
+        (Printexc.to_string e)
+    );
     Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
 
   (* The main entry point of the daemon
