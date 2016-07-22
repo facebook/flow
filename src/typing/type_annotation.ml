@@ -201,6 +201,13 @@ let rec convert cx type_params_map = Ast.Type.(function
       AnyWithUpperBoundT t
     )
 
+  (* $Type<T> acts as the type of T *)
+  | "$Type" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      TypeT (mk_reason "type" loc, t)
+    )
+
   (* $Shape<T> matches the shape of T *)
   | "$Shape" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
