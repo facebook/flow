@@ -7,6 +7,7 @@ type t
 (** Create signature from function AST. *)
 val mk: Context.t ->
   Type.t SMap.t -> (* type params map *)
+  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
   Reason.t ->
   Spider_monkey_ast.Function.t ->
   t

@@ -62,6 +62,9 @@ and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
   | None -> accum
 )
 
+let error_destructuring cx loc =
+  FlowError.add_error cx (loc, ["unsupported destructuring"])
+
 (* Destructuring visitor for tree-shaped patterns, parameteric over an action f
    to perform at the leaves. A type for the pattern is passed, which is taken
    apart as the visitor goes deeper. *)
@@ -75,8 +78,8 @@ and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
     trigger whenever a result is needed, e.g., to interact in flows with other
     lower and upper bounds). **)
 
-let rec destructuring ?parent_pattern_t cx curr_t init default f =
-  Ast.Pattern.(function
+let destructuring cx ~expr ~f = Ast.Pattern.(
+  let rec recurse ?parent_pattern_t curr_t init default = function
   | _, Array { Array.elements; _; } -> Array.(
       elements |> List.iteri (fun i -> function
         | Some (Element ((loc, _) as p)) ->
@@ -85,9 +88,9 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
               Literal (float i, string_of_int i)
             ) in
             let reason = mk_reason (spf "element %d" i) loc in
-            let init = Option.map init (fun expr ->
+            let init = Option.map init (fun init ->
               loc, Ast.Expression.(Member Member.({
-                _object = expr;
+                _object = init;
                 property = PropertyExpression (
                   loc,
                   Ast.Expression.Literal { Ast.Literal.
@@ -98,8 +101,8 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
                 computed = true;
               }))
             ) in
-            let refinement = Option.bind init (fun expr ->
-              Refinement.get cx expr reason
+            let refinement = Option.bind init (fun init ->
+              Refinement.get cx init reason
             ) in
             let parent_pattern_t, tvar = (match refinement with
             | Some refined_t -> refined_t, refined_t
@@ -108,14 +111,14 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
                 EvalT (curr_t, DestructuringT (reason, Elem key), mk_id())
             ) in
             let default = Option.map default (Default.elem key reason) in
-            destructuring ~parent_pattern_t cx tvar init default f p
+            recurse ~parent_pattern_t tvar init default p
         | Some (Spread (loc, { SpreadElement.argument = p })) ->
             let reason = mk_reason "rest of array pattern" loc in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id())
             in
             let default = Option.map default (Default.arr_rest i reason) in
-            destructuring ~parent_pattern_t:curr_t cx tvar init default f p
+            recurse ~parent_pattern_t:curr_t tvar init default p
         | None ->
             ()
       )
@@ -136,9 +139,9 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
               ->
                 let reason = mk_reason (spf "property `%s`" name) loc in
                 xs := name :: !xs;
-                let init = Option.map init (fun expr ->
+                let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({
-                    _object = expr;
+                    _object = init;
                     property = PropertyIdentifier (loc, {
                       Ast.Identifier.name;
                       typeAnnotation = None;
@@ -147,8 +150,8 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
                     computed = false;
                   }))
                 ) in
-                let refinement = Option.bind init (fun expr ->
-                  Refinement.get cx expr reason
+                let refinement = Option.bind init (fun init ->
+                  Refinement.get cx init reason
                 ) in
                 let parent_pattern_t, tvar = (match refinement with
                 | Some refined_t -> refined_t, refined_t
@@ -160,7 +163,29 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
                     EvalT (curr_t, DestructuringT (reason, Prop name), mk_id())
                 ) in
                 let default = Option.map default (Default.prop name reason) in
-                destructuring ~parent_pattern_t cx tvar init default f p
+                recurse ~parent_pattern_t tvar init default p
+            | { Property.key = Property.Computed key; pattern = p; _; } ->
+                let key_t = expr cx key in
+                let loc = fst key in
+                let reason = mk_reason "computed property/element" loc in
+                let init = Option.map init (fun init ->
+                  loc, Ast.Expression.(Member Member.({
+                    _object = init;
+                    property = PropertyExpression key;
+                    computed = true;
+                  }))
+                ) in
+                let refinement = Option.bind init (fun init ->
+                  Refinement.get cx init reason
+                ) in
+                let parent_pattern_t, tvar = (match refinement with
+                | Some refined_t -> refined_t, refined_t
+                | None ->
+                    curr_t,
+                    EvalT (curr_t, DestructuringT (reason, Elem key_t), mk_id())
+                ) in
+                let default = Option.map default (Default.elem key_t reason) in
+                recurse ~parent_pattern_t tvar init default p
             | _ ->
               error_destructuring cx loc
             end
@@ -171,7 +196,7 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
               EvalT (curr_t, DestructuringT (reason, ObjRest !xs), mk_id())
             in
             let default = Option.map default (Default.obj_rest !xs reason) in
-            destructuring ~parent_pattern_t:curr_t cx tvar init default f p
+            recurse ~parent_pattern_t:curr_t tvar init default p
       )
     )
 
@@ -201,7 +226,7 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
          *)
         | (None, None) -> Type_inference_hooks_js.NoRHS
       );
-      f cx loc name default curr_t
+      f loc name default curr_t
 
   | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in
@@ -209,13 +234,13 @@ let rec destructuring ?parent_pattern_t cx curr_t init default f =
       let tvar =
         EvalT (curr_t, DestructuringT (reason, Default), mk_id())
       in
-      destructuring ?parent_pattern_t cx tvar init default f left
+      recurse ?parent_pattern_t tvar init default left
 
   | loc, _ -> error_destructuring cx loc
+
+  in fun t init default pattern -> recurse t init default pattern
 )
 
-and error_destructuring cx loc =
-  FlowError.add_error cx (loc, ["unsupported destructuring"])
 
 let type_of_pattern = Ast.Pattern.(function
   | _, Array { Array.typeAnnotation; _; } -> typeAnnotation
@@ -227,9 +252,10 @@ let type_of_pattern = Ast.Pattern.(function
   | _, _ -> None
 )
 (* instantiate pattern visitor for assignments *)
-let destructuring_assignment cx rhs_t init =
-  destructuring cx rhs_t (Some init) None (fun cx loc name _default t ->
+let destructuring_assignment cx ~expr rhs_t init =
+  let f loc name _default t =
     (* TODO destructuring+defaults unsupported in assignment expressions *)
     let reason = mk_reason (spf "assignment of identifier `%s`" name) loc in
     ignore Env.(set_var cx name t reason)
-  )
+  in
+  destructuring cx ~expr rhs_t (Some init) None ~f

@@ -1879,7 +1879,7 @@ end = struct
         then List.rev (decorator_list_helper env [])
         else []
 
-    let key ?allow_computed_key:(allow_computed_key=true) env =
+    let key env =
       Ast.Expression.Object.Property.(match Peek.token env with
       | T_STRING (loc, value, raw, octal) ->
           if octal then strict_error env Error.StrictOctalLiteral;
@@ -1892,7 +1892,7 @@ end = struct
           let value = Expression.number env number_type in
           let value = Literal.Number value in
           loc,  Literal (loc, { Literal.value; raw; })
-      | T_LBRACKET when allow_computed_key ->
+      | T_LBRACKET ->
           let start_loc = Peek.loc env in
           Expect.token env T_LBRACKET;
           let expr = Parse.assignment (env |> with_no_in false) in
@@ -2348,8 +2348,6 @@ end = struct
         implements;
         classDecorators=decorators;
       }))
-
-    let key = key ~allow_computed_key:false
   end
 
   module Statement: sig

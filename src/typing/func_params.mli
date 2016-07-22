@@ -5,6 +5,7 @@ val empty: t
 
 val mk: Context.t ->
   (Type.t SMap.t) -> (* type params map *)
+  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
   Spider_monkey_ast.Function.t ->
   t
 

@@ -35,13 +35,13 @@ let function_kind {Ast.Function.async; generator; _ } =
   | false, true -> Generator
   | false, false -> Ordinary
 
-let mk cx tparams_map reason func =
+let mk cx tparams_map ~expr reason func =
   let {Ast.Function.typeParameters; returnType; body; _} = func in
   let kind = function_kind func in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
-  let params = Func_params.mk cx tparams_map func in
+  let params = Func_params.mk cx tparams_map ~expr func in
   let return_t =
     let reason = mk_reason "return" (return_loc func) in
     Anno.mk_type_annotation cx tparams_map reason returnType

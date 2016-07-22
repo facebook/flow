@@ -23,7 +23,7 @@ let empty = {
 }
 
 (* Ast.Function.t -> Func_params.t *)
-let mk cx type_params_map func =
+let mk cx type_params_map ~expr func =
   let add_param params pattern default = Ast.Pattern.(
     match pattern with
     | loc, Identifier (_, { Ast.Identifier.name; typeAnnotation; optional }) ->
@@ -53,7 +53,7 @@ let mk cx type_params_map func =
       let default = Option.map default Default.expr in
       let bindings = ref [] in
       let defaults = ref params.defaults in
-      pattern |> destructuring cx t None default (fun _ loc name default t ->
+      destructuring cx ~expr t None default pattern ~f:(fun loc name default t ->
         let t = match typeAnnotation with
         | None -> t
         | Some _ ->

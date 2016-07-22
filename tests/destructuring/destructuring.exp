@@ -40,6 +40,18 @@ array_rest.js:12
  12: let [...e] = 0;
                   ^ number
 
+computed.js:2
+  2: (val1: void); // error: string ~> void
+      ^^^^ string. This type is incompatible with
+  2: (val1: void); // error: string ~> void
+            ^^^^ undefined
+
+computed.js:9
+  9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
+      ^^^^^^^^^^ string. This type is incompatible with
+  9: (spread.key: void); // error (gasp!) in general we don't know if a computed prop should be excluded from spread
+                  ^^^^ undefined
+
 defaults.js:9
   9:   (q:void);
         ^ boolean. This type is incompatible with
@@ -391,4 +403,4 @@ unannotated.js:8
        ^ object literal
 
 
-Found 62 errors
+Found 64 errors

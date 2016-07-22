@@ -122,7 +122,8 @@ let rec variable_decl cx entry = Ast.Statement.(
         (* TODO: delay resolution of type annotation like above? *)
         Anno.mk_type_annotation cx SMap.empty r in
       bind cx pattern_name t r;
-      p |> destructuring cx t None None (fun cx loc name _default t ->
+      let expr _ _ = EmptyT.t in (* don't eval computed property keys *)
+      destructuring cx ~expr t None None p ~f:(fun loc name _default t ->
         let t = match typeAnnotation with
         | None -> t
         | Some _ ->
@@ -2289,14 +2290,14 @@ and variable cx kind
           )
         in
         init_var cx pattern_name ~has_anno t reason;
-        destructuring cx t init None (fun cx loc name default t ->
+        destructuring cx ~expr:expression t init None id ~f:(fun loc name default t ->
           let reason = mk_reason (spf "%s %s" str_of_kind name) loc in
           Option.iter default (fun d ->
             let default_t = Flow.mk_default cx reason d ~expr:expression in
             Flow.flow_t cx (default_t, t)
           );
           init_var cx name ~has_anno t reason
-        ) id
+        )
 )
 
 and array_element cx undef_loc el = Ast.Expression.(
@@ -3298,7 +3299,7 @@ and assignment cx loc = Ast.Expression.(function
 
         (* other r structures are handled as destructuring assignments *)
         | _ ->
-            destructuring_assignment cx t e r
+            destructuring_assignment cx ~expr:expression t e r
       );
       t
 
@@ -4525,7 +4526,7 @@ and mk_class cx loc reason c =
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
 and function_decl id cx reason func this super =
-  let func_sig = Func_sig.mk cx SMap.empty reason func in
+  let func_sig = Func_sig.mk cx SMap.empty ~expr:expression reason func in
 
   let this, super =
     let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in

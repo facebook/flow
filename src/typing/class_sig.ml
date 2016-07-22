@@ -132,8 +132,8 @@ let add_setter name fsig = map_sig (fun s -> {
   method_decls = add_setter_decl name s.method_decls;
 })
 
-let mk_method cx x reason func =
-  Func_sig.mk cx x.tparams_map reason func
+let mk_method cx ~expr x reason func =
+  Func_sig.mk cx x.tparams_map ~expr reason func
 
 let mk_field cx x reason typeAnnotation value =
   let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in
@@ -493,7 +493,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
           add_setter ~static name
       in
       let reason = mk_reason method_desc loc in
-      let method_sig = mk_method cx c reason func in
+      let method_sig = mk_method cx ~expr c reason func in
       add method_sig c
 
     (* fields *)
