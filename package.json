@@ -20,6 +20,7 @@
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
     "rimraf": "^2.5.2",
+    "sane": "^1.4.0",
     "source-map-support": "~0.4.0"
   }
 }

@@ -13,6 +13,7 @@ export type Args = {
   errorCheckCommand: "check" | "status",
   rerun: ?string,
   failedOnly: boolean,
+  watch: boolean,
 };
 
 export default class TestCommand extends Base<Args> {
@@ -30,6 +31,7 @@ export default class TestCommand extends Base<Args> {
       errorCheckCommand: argv.check,
       rerun: argv.rerun || argv["rerun-failed"],
       failedOnly: !!argv["rerun-failed"],
+      watch: Boolean(argv.watch),
     };
   }
 
@@ -75,6 +77,11 @@ SUITE
         name: "rerun-failed",
         argName: "RUN",
         description: "Rerun failed tests from a previous test run",
+      },
+      {
+        type: "boolean",
+        name: "watch",
+        description: "Automatically rerun tests when they change",
       },
     ];
   }

@@ -58,63 +58,72 @@ export default async function(
   }
 
   for (const test of tests) {
-    // flowErrors contains the current flow errors. If a step doesn't care
-    // about flow errors, we won't check for the current flow errors and
-    // flowErrors will contain null
-    let flowErrors = noErrors;
-
-    let testBuilder = await builder.createFreshTest(
-      bin,
-      suiteName,
-      testNum,
-      test.flowConfigFilename,
+    const steps = [].concat(
+      testSuite.getBeforeEach(emptyTestStep),
+      test.steps,
     );
-    let stepResults = [];
-    const steps = [].concat(testSuite.getBeforeEach(emptyTestStep), test.steps);
+    const stepResults = [];
+    try {
+      // flowErrors contains the current flow errors. If a step doesn't care
+      // about flow errors, we won't check for the current flow errors and
+      // flowErrors will contain null
+      let flowErrors = noErrors;
 
-    for (const step of steps) {
-      if (!(step instanceof TestStep)) {
-        throw new Error(format("Expected a TestStep, instead got", step));
+      let testBuilder = await builder.createFreshTest(
+        bin,
+        suiteName,
+        testNum,
+        test.flowConfigFilename,
+      );
+
+      for (const step of steps) {
+        if (!(step instanceof TestStep)) {
+          throw new Error(format("Expected a TestStep, instead got", step));
+        }
+        printStatus('RUN');
+
+        if (step.needsFlowServer()) {
+          // No-op if one is already running
+          await testBuilder.startFlowServer();
+        }
+
+        // If one of the assertions will check flow errors, then we need to make
+        // sure we have the current errors BEFORE doing any actions
+        if (flowErrors == null && step.needsFlowCheck()) {
+          flowErrors = await testBuilder.getFlowErrors();
+        }
+        let { envRead, envWrite } = newEnv(flowErrors || noErrors);
+
+        await step.performActions(testBuilder, envWrite);
+
+        let oldErrors = flowErrors;
+
+        // If any of the actions affect flow and if the assertions check flow
+        // errors, then get the new flow errors
+        if (envRead.shouldRunFlow() && step.needsFlowCheck()) {
+          flowErrors = await testBuilder.getFlowErrors();
+          envWrite.setNewErrors(flowErrors);
+        } else {
+          flowErrors = null;
+        }
+
+        let result = step.checkAssertions(envRead);
+        if (result.passed) {
+          stepsPassed++;
+        } else {
+          stepsFailed++;
+        }
+        stepResults.push(result);
       }
-      printStatus('RUN');
 
-      if (step.needsFlowServer()) {
-        // No-op if one is already running
-        await testBuilder.startFlowServer();
-      }
-
-      // If one of the assertions will check flow errors, then we need to make
-      // sure we have the current errors BEFORE doing any actions
-      if (flowErrors == null && step.needsFlowCheck()) {
-        flowErrors = await testBuilder.getFlowErrors();
-      }
-      let { envRead, envWrite } = newEnv(flowErrors || noErrors);
-
-      await step.performActions(testBuilder, envWrite);
-
-      let oldErrors = flowErrors;
-
-      // If any of the actions affect flow and if the assertions check flow
-      // errors, then get the new flow errors
-      if (envRead.shouldRunFlow() && step.needsFlowCheck()) {
-        flowErrors = await testBuilder.getFlowErrors();
-        envWrite.setNewErrors(flowErrors);
-      } else {
-        flowErrors = null;
-      }
-
-      let result = step.checkAssertions(envRead);
-      if (result.passed) {
-        stepsPassed++;
-      } else {
+      // No-op if nothing is running
+      await testBuilder.stopFlowServer();
+    } catch (e) {
+      for (let i = stepResults.length - 1; i < steps.length; i++) {
         stepsFailed++;
+        stepResults.push({ passed: false, assertionResults: [], exception: e});
       }
-      stepResults.push(result);
     }
-
-    // No-op if nothing is running
-    await testBuilder.stopFlowServer();
-
     testsRun++;
     results.push({
       name: test.name,
@@ -130,4 +139,3 @@ export default async function(
 
   return results;
 }
-
