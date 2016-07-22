@@ -39,7 +39,7 @@ let mk cx tparams_map reason func =
   let {Ast.Function.typeParameters; returnType; body; _} = func in
   let kind = function_kind func in
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx tparams_map typeParameters
+    Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
   let params = Func_params.mk cx tparams_map func in
   let return_t =
@@ -58,18 +58,18 @@ let convert cx tparams_map loc func =
   let reason = mk_reason "function type" loc in
   let kind = Ordinary in
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx tparams_map typeParameters
+    Anno.mk_type_param_declarations cx ~tparams_map typeParameters
   in
   let params = Func_params.convert cx tparams_map func in
   let body = empty_body in
   let return_t = Anno.convert cx tparams_map returnType in
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
-let default_constructor tparams_map reason = {
+let default_constructor reason = {
   reason;
   kind = Ordinary;
   tparams = [];
-  tparams_map;
+  tparams_map = SMap.empty;
   params = Func_params.empty;
   body = empty_body;
   return_t = VoidT.t;
@@ -199,15 +199,20 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* push the scope early so default exprs can reference earlier params *)
   Env.push_var_scope cx function_scope;
 
+  (* bind type params *)
+  SMap.iter (fun name t ->
+    let r = reason_of_t t in
+    Env.bind_type cx name (TypeT (r, t)) r
+      ~state:Scope.State.Initialized
+  ) tparams_map;
+
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
   params |> Func_params.iter Scope.(fun (name, t, loc) ->
     let reason = mk_reason (Utils_js.spf "param `%s`" name) loc in
     (* add default value as lower bound, if provided *)
     Func_params.with_default name (fun default ->
-      let default_t = Flow.mk_default cx reason default
-        ~expr:(expr cx tparams_map)
-      in
+      let default_t = Flow.mk_default cx reason default ~expr in
       Flow.flow_t cx (default_t, t)
     ) params;
     (* add to scope *)
@@ -257,13 +262,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
   ) in
 
   (* decl/type visit pre-pass *)
-  decls cx tparams_map statements;
+  decls cx statements;
 
   (* statement visit pass *)
   let is_void = Abnormal.(
-    match catch_control_flow_exception (fun () ->
-      stmts cx tparams_map statements
-    ) with
+    match catch_control_flow_exception (fun () -> stmts cx statements) with
     | Some Return -> false
     | Some Throw -> false (* NOTE *)
     | Some exn -> throw_control_flow_exception exn (* NOTE *)
@@ -286,7 +289,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
       FunImplicitReturn,
       Flow.get_builtin_typeapp cx reason "Generator" [yield_t; return_t; next_t]
     | FieldInit e ->
-      let return_t = expr cx tparams_map e in
+      let return_t = expr cx e in
       UnknownUse, return_t
     in
     Flow.flow cx (void_t, UseT (use_op, return_t))

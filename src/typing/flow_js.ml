@@ -4224,6 +4224,7 @@ and ground_subtype = function
 
   (* Allow any lower bound to be repositioned *)
   | (_, ReposLowerT _) -> false
+  | (_, ReposUseT _) -> false
 
   (* Allow deferred unification with `any` *)
   | (_, UnifyT _) -> false
@@ -7617,7 +7618,8 @@ let enforce_strict cx id =
   assert_ground_id cx !skip_ids (ref ISet.empty) id
 
 (* Would rather this live elsewhere, but here because module DAG. *)
-let mk_default cx reason ~expr = Default.fold ~expr
+let mk_default cx reason ~expr = Default.fold
+  ~expr:(expr cx)
   ~cons:(fun t1 t2 ->
     mk_tvar_where cx reason (fun tvar ->
       flow_t cx (t1, tvar);

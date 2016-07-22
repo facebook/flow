@@ -1,3 +1,11 @@
+class.js:4
+  4:     this.b(a); // error: A ~> incompatible instance of T
+         ^^^^^^^^^ call of method `b`
+  4:     this.b(a); // error: A ~> incompatible instance of T
+                ^ A. This type is incompatible with
+  1: class C<T> {
+           ^ some incompatible instantiation of `T`
+
 default_params.js:6
   6:     h(c); // err, T ~> U
          ^^^^ function call
@@ -53,4 +61,4 @@ method_shadow.js:51
            ^ some incompatible instantiation of `T`
 
 
-Found 5 errors
+Found 6 errors

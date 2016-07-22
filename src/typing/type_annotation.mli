@@ -41,7 +41,7 @@ val mk_nominal_type: ?for_type:bool ->
   Type.t
 
 val mk_type_param_declarations: Context.t ->
-  Type.t SMap.t ->
+  ?tparams_map:(Type.t SMap.t) ->
   Spider_monkey_ast.Type.ParameterDeclaration.t option ->
   (Type.typeparam list * Type.t SMap.t)
 

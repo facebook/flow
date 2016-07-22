@@ -12,7 +12,7 @@ val empty:
   int -> (* id *)
   Reason.t ->
   Type.typeparam list ->
-  Type.t SMap.t -> (* type params map *)
+  Type.t SMap.t -> (* tparams_map *)
   Type.t -> (* super *)
   t
 
@@ -55,20 +55,15 @@ val add_setter: string -> Func_sig.t -> static:bool -> t -> t
 
 (** Create signature from class AST. *)
 val mk: Context.t ->
-  Type.t SMap.t -> (* type params map *)
   Loc.t ->
   Reason.t ->
   Type.t -> (* self *)
-  expr:(
-    Context.t ->
-    Type.t SMap.t -> (* type params map *)
-    Spider_monkey_ast.Expression.t -> Type.t) ->
+  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
   Spider_monkey_ast.Class.t ->
   t
 
 (** Create signature from interface AST. *)
 val mk_interface: Context.t ->
-  Type.t SMap.t -> (* type params map *)
   Loc.t ->
   Reason.t ->
   bool -> (* structural *)
@@ -88,18 +83,9 @@ val generate_tests: Context.t ->
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->
-  decls:(
-    Context.t ->
-    Type.t SMap.t -> (* type params map *)
-    Spider_monkey_ast.Statement.t list -> unit) ->
-  stmts:(
-    Context.t ->
-    Type.t SMap.t -> (* type params map *)
-    Spider_monkey_ast.Statement.t list -> unit) ->
-  expr:(
-    Context.t ->
-    Type.t SMap.t -> (* type params map *)
-    Spider_monkey_ast.Expression.t -> Type.t) ->
+  decls:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
+  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
   t -> unit
 
 (** 1. Type Conversion *)

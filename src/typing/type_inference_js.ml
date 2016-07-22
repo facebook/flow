@@ -33,10 +33,10 @@ let force_annotations cx =
     })
 
 (* core inference, assuming setup and teardown happens elsewhere *)
-let infer_core cx type_params_map statements =
+let infer_core cx statements =
   try
-    statements |> Statement.toplevel_decls cx type_params_map;
-    statements |> Statement.toplevels cx type_params_map;
+    statements |> Statement.toplevel_decls cx;
+    statements |> Statement.toplevels cx;
   with
   | Abnormal.Exn _ ->
     let msg = "abnormal control flow" in
@@ -110,13 +110,11 @@ let infer_ast ~metadata ~filename ~module_name ast =
     let init_exports = Flow.mk_object cx reason in
     ImpExp.set_module_exports cx reason init_exports;
 
-    let type_params_map = SMap.empty in
-
     let initial_module_t = ImpExp.exports cx in
 
     (* infer *)
     Flow_js.flow_t cx (init_exports, local_exports_var);
-    infer_core cx type_params_map statements;
+    infer_core cx statements;
 
     scan_for_suppressions cx comments;
 
@@ -162,9 +160,7 @@ let infer_lib_file ~metadata ~exclude_syms file statements comments =
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;
 
-  let type_params_map = SMap.empty in
-
-  infer_core cx type_params_map statements;
+  infer_core cx statements;
   scan_for_suppressions cx comments;
 
   module_scope |> Scope.(iter_entries Entry.(fun name entry ->

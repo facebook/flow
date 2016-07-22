@@ -24,7 +24,6 @@ val convert: Context.t ->
     with no type parameters, no formal parameters, an empty body, and a void
     return type. *)
 val default_constructor:
-  Type.t SMap.t -> (* type params map *)
   Reason.t ->
   t
 
@@ -70,18 +69,9 @@ val toplevels:
   Context.t ->
   Scope.Entry.t -> (* this *)
   Scope.Entry.t -> (* super *)
-  decls:(
-    Context.t ->
-    Type.t SMap.t -> (* type params map *)
-    Spider_monkey_ast.Statement.t list -> unit) ->
-  stmts:(
-    Context.t ->
-    Type.t SMap.t -> (* type params map *)
-    Spider_monkey_ast.Statement.t list -> unit) ->
-  expr:(
-    Context.t ->
-    Type.t SMap.t -> (* type params map *)
-    Spider_monkey_ast.Expression.t -> Type.t) ->
+  decls:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> Spider_monkey_ast.Statement.t list -> unit) ->
+  expr:(Context.t -> Spider_monkey_ast.Expression.t -> Type.t) ->
   t -> unit
 
 (** 1. Type Conversion *)

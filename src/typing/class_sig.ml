@@ -76,7 +76,7 @@ let add_constructor fsig s =
   {s with constructor = [fsig]}
 
 let add_default_constructor reason s =
-  let fsig = Func_sig.default_constructor s.tparams_map reason in
+  let fsig = Func_sig.default_constructor reason in
   add_constructor fsig s
 
 let append_constructor fsig s =
@@ -341,7 +341,7 @@ let mk_super cx tparams_map c targs = Type.(
       ThisTypeAppT (c, this, List.map (Anno.convert cx tparams_map) params)
 )
 
-let mk_interface_super cx structural reason map = Type.(function
+let mk_interface_super cx structural reason tparams_map = Type.(function
   | (None, None) ->
       MixedT (reason_of_string "Object", Mixed_everything)
   | (None, _) ->
@@ -353,8 +353,8 @@ let mk_interface_super cx structural reason map = Type.(function
       let i = Anno.convert_qualification ~lookup_mode cx desc id in
       if structural then
         let params = Anno.extract_type_param_instantiations targs in
-        Anno.mk_nominal_type cx reason map (i, params)
-      else mk_super cx map i targs
+        Anno.mk_nominal_type cx reason tparams_map (i, params)
+      else mk_super cx tparams_map i targs
 )
 
 let mk_extends cx tparams_map ~expr = Type.(function
@@ -363,11 +363,11 @@ let mk_extends cx tparams_map ~expr = Type.(function
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some e, targs) ->
-      let c = expr cx tparams_map e in
+      let c = expr cx e in
       mk_super cx tparams_map c targs
 )
 
-let mk_mixins cx reason map = Type.(function
+let mk_mixins cx reason tparams_map = Type.(function
   | (None, None) ->
       MixedT (reason_of_string "Object", Mixed_everything)
   | (None, _) ->
@@ -380,7 +380,7 @@ let mk_mixins cx reason map = Type.(function
       let props_bag = Flow.mk_tvar_derivable_where cx reason (fun tvar ->
         Flow.flow cx (i, MixinT (reason, tvar))
       ) in
-      mk_super cx map props_bag targs
+      mk_super cx tparams_map props_bag targs
 )
 
 (* Process a class definition, returning a (polymorphic) class type. A class
@@ -389,7 +389,7 @@ let mk_mixins cx reason map = Type.(function
    static members. The static members can be thought of as instance members of a
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
-let mk cx tparams_map loc reason self ~expr = Ast.Class.(
+let mk cx loc reason self ~expr = Ast.Class.(
   let warn_or_ignore_decorators cx = function
   | [] -> ()
   | (start_loc, _)::ds ->
@@ -418,7 +418,7 @@ let mk cx tparams_map loc reason self ~expr = Ast.Class.(
   else ();
 
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx tparams_map typeParameters
+    Anno.mk_type_param_declarations cx typeParameters
   in
 
   let tparams, tparams_map =
@@ -556,7 +556,7 @@ let extract_mixins _cx =
     (Some id, typeParameters)
   )
 
-let mk_interface cx tparams_map loc reason structural self = Ast.Statement.(
+let mk_interface cx loc reason structural self = Ast.Statement.(
   fun { Interface.
     typeParameters;
     body = (_, { Ast.Type.Object.properties; indexers; callProperties });
@@ -566,7 +566,7 @@ let mk_interface cx tparams_map loc reason structural self = Ast.Statement.(
   } ->
 
   let tparams, tparams_map =
-    Anno.mk_type_param_declarations cx tparams_map typeParameters in
+    Anno.mk_type_param_declarations cx typeParameters in
 
   let tparams, tparams_map =
     if not structural
