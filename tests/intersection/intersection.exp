@@ -1,33 +1,3 @@
-pred.js:16
- 16:     || options.readableObjectMode
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property cannot be accessed on any member of intersection type
- 16:     || options.readableObjectMode
-            ^^^^^^^ intersection
-  Member 1:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                  ^^^^^^^^^^^^^^^^^^^^^ ReadableStreamOptions
-  Error:
-   16:     || options.readableObjectMode
-                      ^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property not found in
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                  ^^^^^^^^^^^^^^^^^^^^^ object type
-  Member 2:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                          ^^^^^^^^^^^^^^^^^^^^^ WritableStreamOptions
-  Error:
-   16:     || options.readableObjectMode
-                      ^^^^^^^^^^^^^^^^^^ property `readableObjectMode`. Property not found in
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                          ^^^^^^^^^^^^^^^^^^^^^ object type
-  Member 3:
-    8: type DuplexStreamOptions = ReadableStreamOptions & WritableStreamOptions & {
-                                                                                  ^ object type
-  Error:
-   17:     || options.writableObjectMode; // error, undefined ~> boolean
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with the expected return type of
-   14: function hasObjectMode_bad(options: DuplexStreamOptions): boolean {
-                                                                 ^^^^^^^ boolean
-
 test_obj.js:29
  29: var e: E = c; // error
                 ^ intersection. This type is incompatible with
@@ -51,4 +21,4 @@ test_obj.js:29
                                                              ^^^^^^ number. See lib: lib/lib.js:33
 
 
-Found 2 errors
+Found 1 error
