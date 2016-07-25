@@ -34,11 +34,19 @@ let with_out_channel filename f =
 let read_process_output name args =
   with_pipe @@ fun in_r in_w ->
   with_pipe @@ fun out_r out_w ->
-  let pid = Unix.create_process name args in_r out_w out_w in
+  let pid = 
+    try Unix.create_process name args in_r out_w out_w 
+    with Unix.Unix_error (Unix.ENOENT, _, _) ->
+      (* On Windows, this is what happens if you call create_process
+       * non_existant_thing *)
+      raise (Failure (name ^ ": command not found"))
+    in
   match Unix.waitpid [] pid with
   | _, Unix.WEXITED 0 ->
       input_line (Unix.in_channel_of_descr out_r)
   | _, Unix.WEXITED 127 ->
+      (* On Linux & OSX, this is what happens if you call create_process
+       * non_existant_thing *)
       raise (Failure (name ^ ": command not found"))
   | _, Unix.WEXITED 128 ->
       raise (Failure (input_line (Unix.in_channel_of_descr out_r)))
