@@ -31,14 +31,14 @@ next: five-simple-examples.html
   **index.js**
 */
 
-/* @flow */
+// @flow
 
 // $DocIssue
 var str = 'hello world!';
 console.log(str);
 
 /*
-  Note that we've added `/* @flow */` to the top of our file. This indicates to Flow
+  Note that we've added `// @flow` to the top of our file. This indicates to Flow
   that we want this file to be checked. **If we don't add this flag to the top of
   the file, Flow will assume that the file isn't ready to be checked yet and
   Flow will not attempt to type check the file.**
@@ -61,7 +61,7 @@ console.log(str);
 */
 
 // $NoCliOutput
-/* @flow */
+// @flow
 
 // $ExpectError
 var str: number = 'hello world!';
