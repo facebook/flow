@@ -73,7 +73,15 @@ let kind_of_path path = Unix.(
     end with Unix_error (ENOENT, _, _) -> Other)
   | S_DIR -> Dir (path, false)
   | _ -> Other
-  with Unix_error (e, _, _) ->
+  with 
+  | Unix_error (ENOENT, _, _) when Sys.win32 && String.length path >= 248 ->
+    Utils.prerr_endlinef 
+      "On Windows, paths must be less than 248 characters for directories \
+       and 260 characters for files. This path has %d characters. Skipping %s"
+      (String.length path)
+      path;
+    Other
+  | Unix_error (e, _, _) ->
     Printf.eprintf "Skipping %s: %s\n%!" path (Unix.error_message e);
     Other
 )
