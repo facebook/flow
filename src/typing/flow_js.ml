@@ -7095,11 +7095,32 @@ and become cx ?trace r t = match t with
 
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace reason t =
-  match t with
-  | OpenT (r, id) ->
+  let rec recurse seen = function
+  | OpenT (r, id) as t ->
     let constraints = find_graph cx id in
     begin match constraints with
-    | Resolved t -> mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+    | Resolved t ->
+      (* A tvar may be resolved to a type that has special repositioning logic,
+         like UnionT. We want to recurse to pick up that logic, but must be
+         careful as the union may refer back to the tvar itself, causing a loop.
+         To break the loop, we pass down a map of "already seen" tvars. *)
+      (match IMap.get id seen with
+      | Some t -> t
+      | None ->
+        (* Create a fresh tvar which can be passed in `seen` *)
+        let mk_tvar_where = if is_derivable_reason r
+          then mk_tvar_derivable_where
+          else mk_tvar_where
+        in
+        mk_tvar_where cx reason (fun tvar ->
+          let t' = recurse (IMap.add id tvar seen) t in
+          (* All `t` in `Resolved t` are concrete. Because `t` is a concrete
+             type, `t'` is also necessarily concrete (i.e., reposition preserves
+             open -> open, concrete -> concrete). The unification below thus
+             results in resolving `tvar` to `t'`, so we end up with a resolved
+             tvar whenever we started with one. *)
+          unify_opt cx tvar t';
+        ))
     | _ ->
       (* Try to re-use an already created repositioning tvar.
          See repos_cache.ml for details. *)
@@ -7115,7 +7136,7 @@ and reposition cx ?trace reason t =
           flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
         )
     end
-  | EvalT _ ->
+  | EvalT _ as t ->
       (* Modifying the reason of `EvalT`, as we do for other types, is not
          enough, since it will only affect the reason of the resulting tvar.
          Instead, repositioning a `EvalT` should simulate repositioning the
@@ -7126,15 +7147,17 @@ and reposition cx ?trace reason t =
         flow_opt cx ?trace (t, ReposLowerT (reason, UseT (UnknownUse, tvar)))
       )
   | MaybeT t ->
-      MaybeT (reposition cx ?trace reason t)
+      MaybeT (recurse seen t)
   | OptionalT t ->
-      OptionalT (reposition cx ?trace reason t)
+      OptionalT (recurse seen t)
   | UnionT (r, rep) ->
       let r = repos_reason (loc_of_reason reason) r in
-      let rep = UnionRep.map (reposition cx ?trace reason) rep in
+      let rep = UnionRep.map (recurse seen) rep in
       UnionT (r, rep)
-  | _ ->
+  | t ->
       mod_reason_of_t (repos_reason (loc_of_reason reason)) t
+  in
+  recurse IMap.empty t
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)

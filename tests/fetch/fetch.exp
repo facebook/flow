@@ -130,13 +130,6 @@ request.js:6
   6: const e: Request = new Request(b, c); // incorrect
                         ^^^^^^^^^^^^^^^^^ constructor call
 inconsistent use of library definitions
-object type. This type is incompatible with. See lib: bom.js:591
-Headers. See lib: bom.js:686
-
-request.js:6
-  6: const e: Request = new Request(b, c); // incorrect
-                        ^^^^^^^^^^^^^^^^^ constructor call
-inconsistent use of library definitions
 null. This type is incompatible with. See lib: bom.js:637
 string enum. See lib: bom.js:684
 
@@ -166,6 +159,13 @@ request.js:6
                         ^^^^^^^^^^^^^^^^^ constructor call
 inconsistent use of library definitions
 null. This type is incompatible with. See lib: bom.js:639
+Headers. See lib: bom.js:686
+
+request.js:6
+  6: const e: Request = new Request(b, c); // incorrect
+                        ^^^^^^^^^^^^^^^^^ constructor call
+inconsistent use of library definitions
+object type. This type is incompatible with. See lib: bom.js:639
 Headers. See lib: bom.js:686
 
 request.js:6

@@ -10,17 +10,17 @@ issue-598.js:7
   7: function bar(y: F<number>): F<string> { return y; }
                        ^^^^^^ number
 
-test.js:3
-  3: type Pstar<X> = X | Pstar<P<X>>; // this is like Promise*
-                               ^^^^ P. This type is incompatible with
-  9: (pstar: number); // error, but limit potentially unbounded number of errors!
-             ^^^^^^ number
-
 test.js:6
   6: (p.x: string); // error
       ^^^ number. This type is incompatible with
   6: (p.x: string); // error
            ^^^^^^ string
+
+test.js:9
+  9: (pstar: number); // error, but limit potentially unbounded number of errors!
+      ^^^^^ P. This type is incompatible with
+  9: (pstar: number); // error, but limit potentially unbounded number of errors!
+             ^^^^^^ number
 
 test.js:13
  13: (pstar.x: string); // error

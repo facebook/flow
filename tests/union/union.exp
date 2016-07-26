@@ -4,25 +4,25 @@ issue-198.js:9
   9:         return str.toFixed();
                     ^^^ String
 
-issue-324.js:6
-  6: var barstr: Bar | string = new Bar();
-                 ^^^ Bar. This type is incompatible with
+issue-324.js:8
+  8: foostr = barstr;
+              ^^^^^^ Bar. This type is incompatible with
   5: var foostr: Foo | string = new Foo();
                  ^^^^^^^^^^^^ union: Foo | string
   Member 1:
     5: var foostr: Foo | string = new Foo();
                    ^^^ Foo
   Error:
-    6: var barstr: Bar | string = new Bar();
-                   ^^^ Bar. This type is incompatible with
+    8: foostr = barstr;
+                ^^^^^^ Bar. This type is incompatible with
     5: var foostr: Foo | string = new Foo();
                    ^^^ Foo
   Member 2:
     5: var foostr: Foo | string = new Foo();
                          ^^^^^^ string
   Error:
-    6: var barstr: Bar | string = new Bar();
-                   ^^^ Bar. This type is incompatible with
+    8: foostr = barstr;
+                ^^^^^^ Bar. This type is incompatible with
     5: var foostr: Foo | string = new Foo();
                          ^^^^^^ string
 
