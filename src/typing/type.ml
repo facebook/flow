@@ -123,6 +123,9 @@ module rec TypeTerm : sig
     (* existential type variable *)
     | ExistsT of reason
 
+    (* exact *)
+    | ExactT of reason * t
+
     (* ? types *)
     | MaybeT of t
 
@@ -364,6 +367,9 @@ module rec TypeTerm : sig
 
     (* Element access *)
     | ElemT of reason * t * t * rw
+
+    (* exact ops *)
+    | MakeExactT of reason * use_t
 
     (* Module import handling *)
     | CJSRequireT of reason * t
@@ -1008,6 +1014,11 @@ let rec reason_of_t = function
   | ExistsT reason ->
       reason
 
+  | ExactT (reason, t) ->
+    let t_reason = reason_of_t t in
+    let desc = spf "exact type: %s" (desc_of_reason t_reason) in
+    replace_reason desc reason
+
   | ObjT (reason,_)
   | ArrT (reason,_,_)
       -> reason
@@ -1155,6 +1166,8 @@ and reason_of_use_t = function
 
   | ElemT (reason, _, _, _) -> reason
 
+  | MakeExactT (reason, _) -> reason
+
   | SummarizeT (reason, _) -> reason
 
   | CJSRequireT (reason, _) -> reason
@@ -1271,6 +1284,8 @@ let rec mod_reason_of_t f = function
 
   | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
 
+  | ExactT (reason, t) -> ExactT (f reason, t)
+
   | MaybeT t -> MaybeT (mod_reason_of_t f t)
 
   | TaintT (r) -> TaintT (f r)
@@ -1368,6 +1383,8 @@ and mod_reason_of_use_t f = function
 
   | ElemT (reason, t, t2, rw) -> ElemT (f reason, t, t2, rw)
 
+  | MakeExactT (reason, t) -> MakeExactT (f reason, t)
+
   | SummarizeT (reason, t) -> SummarizeT (f reason, t)
 
   | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
@@ -1445,6 +1462,7 @@ let string_of_ctor = function
   | ThisClassT _ -> "ThisClassT"
   | BoundT _ -> "BoundT"
   | ExistsT _ -> "ExistsT"
+  | ExactT _ -> "ExactT"
   | ObjT _ -> "ObjT"
   | ArrT _ -> "ArrT"
   | ClassT _ -> "ClassT"
@@ -1528,6 +1546,7 @@ let string_of_use_ctor = function
   | HasOwnPropT _ -> "HasOwnPropT"
   | HasPropT _ -> "HasPropT"
   | ElemT _ -> "ElemT"
+  | MakeExactT _ -> "MakeExactT"
   | ImportModuleNsT _ -> "ImportModuleNsT"
   | ImportDefaultT _ -> "ImportDefaultT"
   | ImportNamedT _ -> "ImportNamedT"

@@ -281,6 +281,9 @@ let rec normalize_type_impl cx ids t = match t with
             normalize_type_impl cx ids t,
             ts |> List.map (normalize_type_impl cx ids))
 
+  | ExactT (reason, t) ->
+    ExactT (reason, normalize_type_impl cx ids t)
+
   | MaybeT t ->
       let t = normalize_type_impl cx ids t in
       (match t with

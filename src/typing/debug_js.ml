@@ -159,6 +159,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | ExistsT _ ->
     []
 
+  | ExactT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | MaybeT t -> [
       "type", _json_of_t json_cx t
     ]
@@ -456,6 +460,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "baseType", _json_of_t json_cx base;
       "elemType", _json_of_t json_cx elem;
       "rw", JSON_String (string_of_rw rw);
+    ]
+
+  | MakeExactT (_, t) -> [
+      "type", _json_of_use_t json_cx t
     ]
 
   | CJSRequireT (_, export) -> [
@@ -1041,6 +1049,7 @@ and dump_t_ (depth, tvars) cx t =
   | ThisTypeAppT (base, this, args) -> p ~reason:false
       ~extra:(spf "%s, %s, [%s]" (kid base) (kid this)
         (String.concat "; " (List.map kid args))) t
+  | ExactT (_, arg) -> p ~extra:(kid arg) t
   | MaybeT arg -> p ~reason:false ~extra:(kid arg) t
   | TaintT _ -> p t
   | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
@@ -1130,6 +1139,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | HasOwnPropT _
   | HasPropT _
   | ElemT _
+  | MakeExactT _
   | ImportModuleNsT _
   | ImportDefaultT _
   | ImportNamedT _

@@ -99,6 +99,8 @@ class ['a] t = object(self)
 
   | ExistsT _ -> acc
 
+  | ExactT (_, t) -> self#type_ cx acc t
+
   | MaybeT t -> self#type_ cx acc t
 
   | IntersectionT (_, rep) ->
@@ -199,6 +201,7 @@ class ['a] t = object(self)
   | HasOwnPropT (_, _)
   | HasPropT (_, _, _)
   | ElemT (_, _, _, _)
+  | MakeExactT (_, _)
   | CJSRequireT (_, _)
   | ImportModuleNsT (_, _)
   | ImportDefaultT (_, _, _, _)

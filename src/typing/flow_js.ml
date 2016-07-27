@@ -908,9 +908,7 @@ module ResolvableTypeJob = struct
     | AnyWithUpperBoundT t
     | AnyWithLowerBoundT t
     | AbstractT t
-      ->
-      collect_of_type ?log_unresolved cx reason acc t
-
+    | ExactT (_, t)
     | TypeT (_, t)
     | ClassT t
     | ThisClassT t
@@ -2206,6 +2204,43 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (AnyObjT reason | AnyFunT reason), GetKeysT (_, keys) ->
       rec_flow_t cx trace (StrT.why reason, keys)
+
+    (************************************************************************)
+    (* exact types *)
+    (************************************************************************)
+
+    (* ExactT<X> comes from annotation, may behave as LB or UB *)
+
+    (* when $Exact<LB> ~> UB, use MakeExactT to do (exactified LB ~> UB) *)
+    | ExactT (r, t), _ ->
+      rec_flow cx trace (t, MakeExactT (r, u))
+
+    (* exact ObjT LB ~> $Exact<UB>. unify *)
+    | ObjT (_, { flags; _ }), UseT (_, ExactT (_, xu)) when flags.exact ->
+      rec_unify cx trace l xu
+
+    (* inexact LB ~> $Exact<UB>. error *)
+    | _, UseT (_, ExactT _) ->
+      flow_err cx trace
+        "Inexact type is incompatible with exact type"
+        l u
+
+    (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
+
+    (* exactify incoming LB object type, flow to UB *)
+    | ObjT (r, obj), MakeExactT (_, u) ->
+      let exactobj = { obj with flags = { obj.flags with exact = true } } in
+      rec_flow cx trace (ObjT (r, exactobj), u)
+
+    (* unsupported kind *)
+    | _, MakeExactT _ ->
+      flow_err cx trace
+        "Unsupported exact type"
+        l u
+
+    (************************************************************************)
+    (* /exact types *)
+    (************************************************************************)
 
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
@@ -4666,6 +4701,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let abstract_t_ = subst cx ~force map abstract_t in
     if abstract_t_ == abstract_t then t else AbstractT abstract_t_
 
+  | ExactT (reason, t) ->
+    let t' = subst cx ~force map t in
+    if t == t' then t else ExactT (reason, t')
+
   | EvalT (eval_t, defer_use_t, _) ->
     let eval_t_ = subst cx ~force map eval_t in
     let defer_use_t_ = subst_defer_use_t cx ~force map defer_use_t in
@@ -4796,6 +4835,7 @@ and check_polarity cx polarity = function
   | OptionalT t
   | RestT t
   | AbstractT t
+  | ExactT (_, t)
   | MaybeT t
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t
@@ -7552,6 +7592,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     recurse ~infer:true this;
     List.iter recurse ts
 
+  | ExactT (_, t)
   | MaybeT t ->
     recurse t
 

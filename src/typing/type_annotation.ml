@@ -232,6 +232,12 @@ let rec convert cx tparams_map = Ast.Type.(function
       KeysT (mk_reason "key set" loc, t)
     )
 
+  | "$Exact" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = List.hd (convert_type_params ()) in
+      ExactT (mk_reason "exact type" loc, t)
+    )
+
   (* $Exports<'M'> is the type of the exports of module 'M' *)
   (** TODO: use `import typeof` instead when that lands **)
   | "$Exports" ->
