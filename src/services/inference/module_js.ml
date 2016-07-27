@@ -50,7 +50,7 @@ let choose_provider_and_warn_about_duplicates =
 
   let warn_duplicate_providers m current modules errmap =
     List.fold_left (fun acc f ->
-      let w = Errors.(mk_error ~kind:InferWarning [
+      let w = Errors.(mk_error ~kind:DuplicateProviderError [
           Loc.({ none with source = Some f }), [
             m; "Duplicate module provider"];
           Loc.({ none with source = Some current }), [
@@ -63,24 +63,24 @@ let choose_provider_and_warn_about_duplicates =
       ) acc
     ) errmap modules in
 
-    fun m errmap providers fallback ->
-      let definitions, implementations =
-        List.partition is_flow_ext providers in
-      match implementations, definitions with
-      (* If there are no definitions or implementations, use the fallback *)
-      | [], [] -> fallback (), errmap
-      (* Else if there are no definitions, use the first implementation *)
-      | impl::dup_impls, [] ->
-          impl, warn_duplicate_providers m impl dup_impls errmap
-      (* Else use the first definition *)
-      | [], defn::dup_defns ->
-          defn, warn_duplicate_providers m defn dup_defns errmap
-      (* Don't complain about the first implementation being a duplicate *)
-      | impl::dup_impls, defn::dup_defns ->
-          let errmap = errmap
-            |> warn_duplicate_providers m impl dup_impls
-            |> warn_duplicate_providers m defn dup_defns in
-          defn, errmap
+  fun m errmap providers fallback ->
+    let definitions, implementations =
+      List.partition is_flow_ext providers in
+    match implementations, definitions with
+    (* If there are no definitions or implementations, use the fallback *)
+    | [], [] -> fallback (), errmap
+    (* Else if there are no definitions, use the first implementation *)
+    | impl::dup_impls, [] ->
+      impl, warn_duplicate_providers m impl dup_impls errmap
+    (* Else use the first definition *)
+    | [], defn::dup_defns ->
+      defn, warn_duplicate_providers m defn dup_defns errmap
+    (* Don't complain about the first implementation being a duplicate *)
+    | impl::dup_impls, defn::dup_defns ->
+      let errmap = errmap
+      |> warn_duplicate_providers m impl dup_impls
+      |> warn_duplicate_providers m defn dup_defns in
+      defn, errmap
 
 (**
  * A set of module.name_mapper config entry allows users to specify regexp
@@ -909,6 +909,8 @@ let commit_modules workers ~options inferred removed =
             (string_of_filename p);
           rem, rep, errmap
       | Some f ->
+          (* TODO: Can this happen? Is there any essential difference between
+             this case and the next? *)
           if debug then prerr_endlinef
             "new provider: %S -> %s replaces %s"
             (Modulename.to_string m)
@@ -942,7 +944,8 @@ let commit_modules workers ~options inferred removed =
   add_reverse_imports workers inferred;
 
   if debug then prerr_endlinef "*** done committing modules ***";
-  errmap
+  let providers = replace |> List.split |> snd in
+  providers, errmap
 
 let clear_infos files =
   InfoHeap.remove_batch files

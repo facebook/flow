@@ -1,0 +1,19 @@
+
+Initial status:
+No errors!
+
+Copy A.js to B.js:
+
+B.js: A
+Duplicate module provider
+A.js: current provider
+
+Found 1 error
+
+Delete A.js:
+No errors!
+
+Move B.js to A.js:
+No errors!
+
+Done!
