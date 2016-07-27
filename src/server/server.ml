@@ -30,6 +30,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Flow_logger.log "version=%s" FlowConfig.version;
     (* start the server *)
     Types_js.server_init genv
+    |> Dumper.init genv
 
   let run_once_and_exit env =
     match env.ServerEnv.errorl with
