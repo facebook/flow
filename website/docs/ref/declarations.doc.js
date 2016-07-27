@@ -232,6 +232,7 @@ export function isLeapYear(year: number): bool {
   that we also write the keyword `export`, like we would in an implementation
   file.
 */
+// @flow
 declare export function isLeapYear(year: string): bool;
 
 /*
