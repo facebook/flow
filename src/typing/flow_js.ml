@@ -2556,6 +2556,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in
           rec_flow cx trace (inst, u)
+      (* Special case for <fun>.apply and <fun>.call, which could be used to
+         simulate method calls on instances of generic classes, thereby
+         bypassing the specialization cache that is used in TypeAppT ~> MethodT
+         to avoid non-termination. So, we must use the specialization cache
+         here, too. *)
+      | CallT _ when
+          is_method_call_reason "apply" reason_op ||
+          is_method_call_reason "call" reason_op
+          ->
+        let t_ = instantiate_poly cx trace ~reason_op ~reason_tapp ~cache:true (ids,t) in
+        rec_flow cx trace (t_, u)
       | _ ->
         let t_ = instantiate_poly cx trace ~reason_op ~reason_tapp (ids,t) in
         rec_flow cx trace (t_, u)
@@ -3576,7 +3587,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* resolves the arguments... *)
     | FunProtoApplyT _,
-      CallT (reason_op, ({this_t = func; params_tlist; _} as funtype)) ->
+        CallT (reason_op, ({this_t = func; params_tlist; _} as funtype)) ->
       begin match params_tlist with
       (* func.apply() *)
       | [] ->
@@ -5010,11 +5021,11 @@ and instantiate_poly_default_args cx trace ~reason_op ~reason_tapp (xs,t) =
   instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly cx trace ~reason_op ~reason_tapp (xs,t) =
+and instantiate_poly cx trace ~reason_op ~reason_tapp ?(cache=false) (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
     ImplicitTypeArgument.mk_targ cx (typeparam, reason_op)
   ) in
-  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp (xs,t) ts
+  instantiate_poly_with_targs cx trace ~reason_op ~reason_tapp ~cache (xs,t) ts
 
 (* instantiate each param of a polymorphic type with its upper bound *)
 and instantiate_poly_param_upper_bounds cx typeparams =
