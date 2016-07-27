@@ -184,3 +184,19 @@ module WithCache :
     and type key = UserKeyType.t
     and module KeySet = Set.Make (UserKeyType)
     and module KeyMap = MyMap.Make (UserKeyType)
+
+module type CacheType = sig
+  type key
+  type value
+
+  val add: key -> value -> unit
+  val get: key -> value option
+  val remove: key -> unit
+  val clear: unit -> unit
+end
+
+module LocalCache :
+  functor (UserKeyType : UserKeyType) ->
+  functor (Value : Value.Type) ->
+  CacheType with type key = UserKeyType.t
+    and type value = Value.t

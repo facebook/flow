@@ -750,6 +750,61 @@ module OrderedCache (Key : Key) (Config:ConfigType):
 
 end
 
+module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
+
+  type key = UserKeyType.t
+  type value = Value.t
+
+  module ConfValue = struct
+    type value = Value.t
+    let capacity = 1000
+  end
+
+  module Key = KeyFunctor (UserKeyType)
+
+  (* Young values cache *)
+  module L1 = OrderedCache (Key) (ConfValue)
+  (* Frequent values cache *)
+  module L2 = FreqCache (Key) (ConfValue)
+
+  let addWithKey x y =
+    L1.add x y;
+    L2.add x y
+
+  let getWithKey x =
+    match L1.get x with
+    | None ->
+      (match L2.get x with
+       | None -> None
+       | Some v as result ->
+         L1.add x v;
+         result
+      )
+    | Some v as result ->
+      L2.add x v;
+      result
+
+  let removeWithKey x =
+    L1.remove x;
+    L2.remove x
+
+  let add x y =
+    let x = Key.make Value.prefix x in
+    addWithKey x y
+
+  let get x =
+    let x = Key.make Value.prefix x in
+    getWithKey x
+
+  let remove x =
+    let x = Key.make Value.prefix x in
+    removeWithKey x
+
+  let clear () =
+    L1.clear();
+    L2.clear()
+
+end
 (*****************************************************************************)
 (* Every time we create a new cache, a function that knows how to clear the
  * cache is registered in the "invalidate_callback_list" global.
@@ -771,18 +826,8 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
   type key = UserKeyType.t
   type t = Value.t
 
-  module ConfValue = struct
-    type value = Value.t
-    let capacity = 1000
-  end
-
-  module Key = KeyFunctor (UserKeyType)
-
-  (* Young values cache *)
-  module L1 = OrderedCache (Key) (ConfValue)
-  (* Frequent values cache *)
-  module L2 = FreqCache (Key) (ConfValue)
-
+  module Cache = LocalCache (UserKeyType) (Value)
+  module Key = Cache.Key
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
   module KeySet = Set.Make (UserKeyType)
@@ -792,8 +837,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   let add x y =
     let x = Key.make Value.prefix x in
-    L1.add x y;
-    L2.add x y;
+    Cache.addWithKey x y;
     New.add x y
 
   let write_through x y =
@@ -804,25 +848,16 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   let get x =
     let x = Key.make Value.prefix x in
-    match L1.get x with
+    match Cache.getWithKey x with
     | None ->
-        (match L2.get x with
-        | None ->
-            (match New.get x with
-            | None ->
-                None
-            | Some v as result ->
-                L1.add x v;
-                L2.add x v;
-                result
-            )
-        | Some v as result ->
-            L1.add x v;
-            result
-        )
+      (match New.get x with
+       | None -> None
+       | Some v as result ->
+         Cache.addWithKey x v;
+         result
+      )
     | Some v as result ->
-        L2.add x v;
-        result
+      result
 
   (* We don't cache old objects, they are not accessed often enough. *)
   let get_old = Direct.get_old
@@ -840,8 +875,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   let remove x =
     let x = Key.make Value.prefix x in
-    L1.remove x;
-    L2.remove x;
+    Cache.removeWithKey x;
     New.remove x
 
   let get_batch keys =
@@ -853,24 +887,21 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     Direct.oldify_batch keys;
     KeySet.iter begin fun key ->
       let key = Key.make Value.prefix key in
-      L1.remove key;
-      L2.remove key;
+      Cache.removeWithKey key
     end keys
 
   let revive_batch keys =
     Direct.revive_batch keys;
     KeySet.iter begin fun x ->
       let x = Key.make Value.prefix x in
-      L1.remove x;
-      L2.remove x;
+      Cache.removeWithKey x
     end keys
 
   let remove_batch xs = KeySet.iter remove xs
 
   let () =
     invalidate_callback_list := begin fun () ->
-      L1.clear();
-      L2.clear();
+      Cache.clear()
     end :: !invalidate_callback_list
 
   let remove_old x = Old.remove (Key.make_old Value.prefix x)
