@@ -661,7 +661,8 @@ static void memfd_reserve(char * mem, size_t sz) {
 #else
 
 static void memfd_reserve(char *mem, size_t sz) {
-  if(posix_fallocate(memfd, (uint64_t)mem, sz)) {
+  off_t offset = (off_t)(mem - shared_mem);
+  if(posix_fallocate(memfd, offset, sz)) {
     raise_out_of_shared_memory();
   }
 }
@@ -1340,7 +1341,6 @@ void hh_collect(value aggressive_val) {
       size_t aligned_size = ALIGNED(bl_size);
       char* addr          = Get_buf(hashtbl[i].addr);
 
-      memfd_reserve(dest, bl_size);
       memcpy(dest, addr, bl_size);
       // This is where the data ends up after the copy
       hashtbl[i].addr = heap_init + mem_size + sizeof(size_t);
