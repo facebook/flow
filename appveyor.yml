@@ -23,3 +23,18 @@ build_script:
 
 test_script:
 - ps: C:\projects\flow\resources\appveyor\test.ps1
+
+after_build:
+- ps: C:\projects\flow\resources\appveyor\after_build.ps1
+
+artifacts:
+  - path: bin\*.zip
+
+deploy:
+  provider: GitHub
+  # facebook-github-bot-0
+  auth_token:
+    secure: 7w+yFWgdWo0nKEj2HtEodyqEUDU1VvmJH+sa/bBCTdS6g69w+7GtM7o1fq3PvqHU
+  artifact: bin\*.zip
+  on:
+    appveyor_repo_tag: true
