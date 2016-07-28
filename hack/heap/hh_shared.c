@@ -639,11 +639,20 @@ static void raise_out_of_shared_memory()
 
 #ifdef _WIN32
 
-static void memfd_reserve(char * mem, size_t sz) {
+/* Reserves memory. This is required on Windows */
+static void win_reserve(char * mem, size_t sz) {
   if (!VirtualAlloc(mem, sz, MEM_COMMIT, PAGE_READWRITE)) {
     win32_maperr(GetLastError());
     raise_out_of_shared_memory();
   }
+}
+
+/* On Linux, memfd_reserve is only used to reserve memory that is mmap'd to the
+ * memfd file. Memory outside of that mmap does not need to be reserved, so we
+ * don't call memfd_reserve on things like the temporary mmap used by
+ * hh_collect. Instead, they use win_reserve() */
+static void memfd_reserve(char * mem, size_t sz) {
+  win_reserve(mem, sz);
 }
 
 #elif defined(__APPLE__)
@@ -1341,6 +1350,9 @@ void hh_collect(value aggressive_val) {
       size_t aligned_size = ALIGNED(bl_size);
       char* addr          = Get_buf(hashtbl[i].addr);
 
+#ifdef _WIN32
+      win_reserve(dest, bl_size);
+#endif
       memcpy(dest, addr, bl_size);
       // This is where the data ends up after the copy
       hashtbl[i].addr = heap_init + mem_size + sizeof(size_t);
