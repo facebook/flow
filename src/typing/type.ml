@@ -244,6 +244,22 @@ module rec TypeTerm : sig
        function *)
     | IdxWrapper of reason * t
 
+    (** Predicate types **)
+
+    (* This is a (temporary) checkpoint on the way to getting general
+       support for predicates. The only supported use of these types are
+       as return types of functions that accept a single argument `x`.
+       The attendant contracts are (respectively):
+       * `x` is a string  ==> `BasePred StrP [x]`
+       * `x` is a number  ==> `BasePred NumP [x]`
+       * `x` is a boolean ==> `BasePred BoolP [x]`
+
+       TODO: this will need to be replaced by something more general:
+         * as per the argument it refers to
+         * as per the property it establishes
+     *)
+    | BasePredT of reason * predicate
+
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
@@ -415,6 +431,16 @@ module rec TypeTerm : sig
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
 
+    (**
+     * A use holding the types of expressions appearing in refining positions
+     * (conditionals), when refinement is due to latent predicates. Members are:
+     * - a reason,
+     * - a boolean value denoting the positive or negative branch,
+     * - the incoming type of the refined expression, and
+     * - the fresh tvar that will hold the refined result.
+     *)
+    | CallAsPredicateT of reason * bool * t * t
+
   and predicate =
     | AndP of predicate * predicate
     | OrP of predicate * predicate
@@ -443,6 +469,11 @@ module rec TypeTerm : sig
 
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP "b", tout))` *)
     | PropExistsP of string
+
+    (* Encondes the latent predicate associated with function `f`,
+       whose type is stored in the structure.
+       TODO: Only support a single argument for now. *)
+    | LatentP of reason * t
 
   and binary_test =
     (* e1 instanceof e2 *)
@@ -1093,6 +1124,8 @@ let rec reason_of_t = function
 
   | IdxWrapper (reason, _) -> reason
 
+  | BasePredT (reason, _) -> reason
+
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _) ->
       reason
@@ -1192,6 +1225,8 @@ and reason_of_use_t = function
   | IdxUnwrap (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
 
+  | CallAsPredicateT (reason, _, _, _) -> reason
+
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
    due to parallelism, which messes up test diffs. Should
@@ -1236,6 +1271,7 @@ let rec loc_of_predicate = function
 
   | ArrP
   | PropExistsP _
+  | LatentP _
     -> Loc.none (* TODO!!!!!!!!!!!! *)
 
 
@@ -1317,6 +1353,8 @@ let rec mod_reason_of_t f = function
   | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
 
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
+
+  | BasePredT (reason, p) -> BasePredT (f reason, p)
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
@@ -1410,6 +1448,7 @@ and mod_reason_of_use_t f = function
 
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
+  | CallAsPredicateT (reason, b, l, t) -> CallAsPredicateT (f reason, b, l, t)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1497,6 +1536,7 @@ let string_of_ctor = function
     end
   | CustomFunT _ -> "CustomFunT"
   | IdxWrapper _ -> "IdxWrapper"
+  | BasePredT _ -> "BasePredT"
 
 let string_of_use_op = function
   | FunReturn -> "FunReturn"
@@ -1574,6 +1614,7 @@ let string_of_use_ctor = function
     end
   | IdxUnwrap _ -> "IdxUnwrap"
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
+  | CallAsPredicateT _ -> "CallAsPredicateT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
@@ -1613,6 +1654,8 @@ let rec string_of_predicate = function
   | ArrP -> "array"
 
   | PropExistsP key -> spf "prop `%s` is truthy" key
+
+  | LatentP (r, t) -> spf "%s of type %s" (desc_of_reason r) (string_of_ctor t)
 
 module Polarity = struct
   (* Subtype relation for polarities, interpreting neutral as positive &

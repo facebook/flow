@@ -32,6 +32,7 @@ let string_of_pred_ctor = function
   | SingletonStrP _ -> "SingletonStrP"
   | SingletonNumP _ -> "SingletonNumP"
   | PropExistsP _ -> "PropExistsP"
+  | LatentP _ -> "LatentP"
 
 let string_of_binary_test_ctor = function
   | InstanceofTest -> "InstanceofTest"
@@ -259,6 +260,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | IdxWrapper (_, t) -> [
       "wrappedObj", _json_of_t json_cx t
+    ]
+
+  | BasePredT (_ ,p) -> [
+      "BasePred", json_of_pred json_cx p
     ]
   )
 )
@@ -547,6 +552,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out
     ]
 
+  | CallAsPredicateT (_, b, t, t_out) -> [
+      "sense", JSON_Bool b;
+      "t", _json_of_t json_cx t;
+      "t_out", _json_of_t json_cx t_out
+    ]
   )
 )
 
@@ -780,6 +790,8 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | ObjP
   | ArrP
       -> []
+
+  | LatentP (_,t) -> ["latent", _json_of_t_impl json_cx t]
 ))
 
 and json_of_binary_test json_cx = check_depth json_of_binary_test_impl json_cx
@@ -1072,6 +1084,7 @@ and dump_t_ (depth, tvars) cx t =
   | CustomFunT _ -> p t
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
+  | BasePredT _ -> p t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
@@ -1157,7 +1170,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | IntersectionPreprocessKitT _
   | ChoiceKitUseT _
   | IdxUnwrap _
-  | IdxUnMaybeifyT _ ->
+  | IdxUnMaybeifyT _
+  | CallAsPredicateT _ ->
     p t
 
 (*****************************************************)

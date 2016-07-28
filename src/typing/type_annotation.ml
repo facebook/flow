@@ -370,6 +370,24 @@ let rec convert cx tparams_map = Ast.Type.(function
         (SMap.find_unsafe name tparams_map)
     )
 
+  | "$StrP" ->
+    check_type_param_arity cx loc typeParameters 0 (fun () ->
+      let reason = mk_reason "string predicate" loc in
+      BasePredT (reason, StrP)
+    )
+
+  | "$NumP" ->
+    check_type_param_arity cx loc typeParameters 0 (fun () ->
+      let reason = mk_reason "numeric predicate" loc in
+      BasePredT (reason, NumP)
+    )
+
+  | "$BoolP" ->
+    check_type_param_arity cx loc typeParameters 0 (fun () ->
+      let reason = mk_reason "boolean predicate" loc in
+      BasePredT (reason, BoolP)
+    )
+
   (* other applications with id as head expr *)
   | _ ->
     let reason = mk_reason name loc in

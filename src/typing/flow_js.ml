@@ -948,6 +948,7 @@ module ResolvableTypeJob = struct
     | SingletonNumT _
     | SingletonStrT _
     | ExistsT _
+    | BasePredT _
       ->
       acc
 
@@ -3832,7 +3833,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* types may be refined by predicates *)
     (**************************************)
 
-    | (_, PredicateT(p,t)) ->
+    | _, PredicateT(p,t) ->
       predicate cx trace t (l,p)
 
     | StrT (_, Literal value),
@@ -3856,6 +3857,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, SentinelPropTestT (l, _, _, result) ->
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace (l, result)
+
+    (*******************************)
+    (* Call to predicated function *)
+    (*******************************)
+
+    | FunT (_, _, _, { return_t; _ }), CallAsPredicateT (_,b,l_unref,t) ->
+        let pred_opt = match return_t with
+          | BasePredT (_, p) -> Some p
+          | _ -> None
+        in
+        begin match pred_opt with
+          | Some pred ->
+            let pred = if b then pred else NotP pred in
+            rec_flow cx trace (l_unref, PredicateT (pred, t))
+          | _ ->
+            rec_flow_t cx trace (l_unref, t)
+        end
+
+    (* Fall through all the remaining cases *)
+    | _, CallAsPredicateT (_,_,l_unref,t) ->
+        rec_flow_t cx trace (l_unref, t)
 
     (**********************)
     (* Array library call *)
@@ -4245,6 +4267,7 @@ and err_operation = function
   | ReifyTypeT _ -> "Internal Error: Invalid type applied to ReifyTypeT!"
   | TupleMapT _ -> "Expected array instead of"
   | ReactCreateElementT _ -> "Expected React component instead of"
+  | CallAsPredicateT _ -> "Expected (predicated) function instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
      to throw on a use type, so mark the error instead *)
@@ -4577,6 +4600,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | FunProtoCallT _
   | ChoiceKitT _
   | CustomFunT _
+  | BasePredT _
     ->
     t
 
@@ -4903,6 +4927,7 @@ and check_polarity cx polarity = function
   | ExtendsT _
   | ChoiceKitT _
   | CustomFunT _
+  | BasePredT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx polarity id =
@@ -6285,6 +6310,17 @@ and predicate cx trace t (l,p) = match (l,p) with
   | (_, NotP (OrP _)) ->
     assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
 
+  (********************)
+  (* Latent predicate *)
+  (********************)
+
+  | (_, LatentP (reason, fun_t)) ->
+    rec_flow cx trace (fun_t, CallAsPredicateT (reason, true, l, t))
+
+  | (_, NotP (LatentP (reason, fun_t))) ->
+    let neg_reason = prefix_reason "negation of " reason in
+    rec_flow cx trace (fun_t, CallAsPredicateT (neg_reason, false, l, t))
+
 and prop_exists_test cx trace key sense obj result =
   prop_exists_test_generic key cx trace result obj sense obj
 
@@ -7664,6 +7700,8 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | ChoiceKitT _
   | CustomFunT _ ->
     () (* TODO *)
+  | BasePredT _ ->
+    ()
 
 and assert_ground_id cx skip ids id =
   if not (ISet.mem id !ids)

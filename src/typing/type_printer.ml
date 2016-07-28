@@ -212,6 +212,24 @@ let rec type_printer override fallback enclosure cx t =
     | IdxWrapper (_, t) ->
       spf "$IdxWrapper<%s>" (pp enclosure cx t)
 
+    | ThisClassT _ ->
+        "This"
+
+    | BasePredT (_, p) ->
+        spf "BasePredicate %s" (string_of_predicate p)
+
+    | FunProtoT _ ->
+        "function proto"
+
+    | FunProtoBindT _ ->
+        "FunctionProtoBind"
+
+    | CustomFunT _ ->
+        "CustomFunction"
+
+    | FunProtoApplyT _ ->
+        "FunctionProtoApply"
+
     | t ->
         fallback t
 

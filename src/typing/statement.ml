@@ -2943,6 +2943,32 @@ and expression_ cx loc e = Ast.Expression.(match e with
     EmptyT.at loc
 )
 
+(* Handles function calls that appear in conditional contexts. The main
+   distinction from the case handled in `expression_` is that we also return
+   the inferred types for the call receiver and the passed arguments, and
+   potenially the keys that correspond to the supplied arguments.
+*)
+and predicated_call_expression cx (loc, callee, arguments) =
+  let (f, args, argks, t) =
+    predicated_call_expression_ cx loc callee arguments in
+  Hashtbl.replace (Context.type_table cx) loc t;
+  (f, args, argks, t)
+
+(* Returns a quadruple containing:
+   - the function type
+   - the arguments types
+   - argument keys
+   - the returned type
+*)
+and predicated_call_expression_ cx loc callee arguments =
+  let f = expression cx callee in
+  let reason = mk_reason "function call" loc in
+  let argts =
+    List.map (expression cx) arguments in
+  let argks = List.map Refinement.key arguments in
+  let t = func_call cx reason f argts in
+  (f, argts, argks, t)
+
 (* We assume that constructor functions return void
    and constructions return objects.
    TODO: This assumption does not always hold.
@@ -3954,7 +3980,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
   ClassT(instance)
 )
 
-(* given an expression found in a test position, notices certain
+(* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
    and returns a quad:
    - result type of the test (not always bool)
@@ -4400,6 +4426,27 @@ and predicates_of_condition cx e = Ast.(Expression.(
       | Some name, t -> result t name t ExistsP true
       | None, t -> empty_result t
     )
+
+  (* e.m(...) *)
+  (* XXX: Don't trap method calls for now *)
+  | _, Call { Call.callee = (_, Member _); _ } ->
+      empty_result (expression cx e)
+
+  (* f(...) *)
+
+  (* The concrete predicate is not known at this point. We attach a "latent"
+     predicate pointing to the type of the function that will supply this
+     predicated when it is resolved. *)
+  | loc, Call { Call.callee = c; arguments = [Expression arg] } ->
+      let fun_t, argts, argks, ret_t =
+        predicated_call_expression cx (loc, c, [arg]) in
+      begin match argts, argks with
+        | [arg_t], [Some arg_k] ->
+          let reason = mk_reason "call at predicate position"  loc in
+          result ret_t arg_k arg_t (LatentP (reason, fun_t)) true
+        | _ ->
+          empty_result ret_t
+      end
 
   (* fallthrough case: evaluate test expr, no refinements *)
   | e ->
