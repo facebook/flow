@@ -9,6 +9,7 @@ prev: declarations.html
 */
 
 const React = require("react");
+const ReactDOM = require("react-dom");
 
 /*
   React applications are composed of nested components. As React-based
@@ -189,7 +190,7 @@ function renderButton(container: HTMLElement, visited?: boolean) {
       }}
     />
   );
-  React.render(element, container);
+  ReactDOM.render(element, container);
 }
 
 /*
