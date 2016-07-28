@@ -13,6 +13,7 @@ type error_kind =
   | InferError
   | InferWarning
   | InternalError
+  | DuplicateProviderError
 
 val string_of_kind: error_kind -> string
 
@@ -42,6 +43,7 @@ val mk_error:
 
 val simple_error: ?kind: error_kind -> Loc.t -> string -> error
 val internal_error: Loc.filename -> string -> error
+val is_duplicate_provider_error: error -> bool
 
 val parse_error_to_flow_error : (Loc.t * Parse_error.t) -> error
 val strip_root_from_errors: Path.t -> error list -> error list

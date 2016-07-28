@@ -13,12 +13,14 @@ type error_kind =
   | InferError
   | InferWarning
   | InternalError
+  | DuplicateProviderError
 
 let string_of_kind = function
 | ParseError -> "ParseError"
 | InferError -> "InferError"
 | InferWarning -> "InferWarning"
 | InternalError -> "InternalError"
+| DuplicateProviderError -> "DuplicateProviderError"
 
 (* internal rep for core info *)
 type message =
@@ -44,6 +46,9 @@ type error = {
   trace: message list;
   extra: info_tree list
 }
+
+let is_duplicate_provider_error error =
+  error.kind = DuplicateProviderError
 
 let info_to_messages = function
 | loc, [] -> [BlameM (loc, "")]
@@ -101,6 +106,9 @@ let prepend_kind_message messages kind =
       (* TODO: we don't publicly distinguish warnings vs errors right now *)
       | InferWarning -> "Library type error:"
       | InternalError -> internal_error_prefix
+      (* TODO: is this possible? What happens when there are two `declare
+         module`s with the same name? *)
+      | DuplicateProviderError -> "Library duplicate provider error:"
       in
       BlameM (loc, header) :: messages
   | InternalError, BlameM (loc, msg) :: messages ->
@@ -556,13 +564,14 @@ let compare =
     String.compare x1 x2
   in
   let kind_cmp =
-    (* show internal errors first, then parse errors. then both infer warnings
-       and errors at the same priority. *)
+    (* show internal errors first, then duplicate provider errors, then parse
+       errors. then both infer warnings and errors at the same priority. *)
     let order_of_kind = function
     | InternalError -> 1
-    | ParseError -> 2
-    | InferError -> 3
-    | InferWarning -> 3
+    | DuplicateProviderError -> 2
+    | ParseError -> 3
+    | InferError -> 4
+    | InferWarning -> 4
     in
     fun k1 k2 () -> (order_of_kind k1) - (order_of_kind k2)
   in
@@ -741,6 +750,7 @@ let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
     | InferError -> "infer", "error"
     | InferWarning -> "infer", "warning"
     | InternalError -> "internal", "error"
+    | DuplicateProviderError -> "duplicate provider", "error"
   in
   let props = [
     "kind", JSON_String kind_str;

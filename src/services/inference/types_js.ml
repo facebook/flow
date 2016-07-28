@@ -51,6 +51,16 @@ let save_errset mapref file errset =
       in
       FilenameMap.add file errset !mapref
 
+(* Filter out duplicate provider error, if any, for the given file. *)
+let filter_duplicate_provider mapref file =
+  match FilenameMap.get file !mapref with
+  | Some prev_errset ->
+    let new_errset = Errors.ErrorSet.filter (fun err ->
+      not (Errors.is_duplicate_provider_error err)
+    ) prev_errset in
+    mapref := FilenameMap.add file new_errset !mapref
+  | None -> ()
+
 (* given a reference to a error map (files to errorsets), and
    two parallel lists of such, save the latter into the former. *)
 let save_errors mapref files errsets =
@@ -210,7 +220,17 @@ let typecheck_contents ~options ?verbose ?(check_syntax = false) contents filena
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules workers ~options inferred removed =
-  let errmap = Module_js.commit_modules workers ~options inferred removed in
+  let providers, errmap =
+    Module_js.commit_modules workers ~options inferred removed in
+  (* Providers might be new but not modified. This typically happens when old
+     providers are deleted, and previously duplicate providers become new
+     providers. In such cases, we must clear the old duplicate provider errors
+     for the new providers.
+
+     (Note that this is unncessary when the providers are modified, because in
+     that case they are rechecked and *all* their errors are cleared. But we
+     don't care about optimizing that case for now.) *)
+  List.iter (filter_duplicate_provider errors_by_file) providers;
   save_errormap errors_by_file errmap
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
