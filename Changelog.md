@@ -1,3 +1,33 @@
+###v0.30.0
+
+Likely to cause new Flow errors:
+- Fixed `React.PureComponent`'s definition, so previously missed errors are now reported
+- The definition of `console` in the build-in libdef has been filled out and is no longer `any`. 
+
+New Features:
+- From now on we're going to start publishing Windows builds with each release. Please report any issues you have!
+- Forward references in type annotations: you can now reference a class in a type annotation before the class is declared
+- T is now covariant in `Class<T>`. So if class `B` extends class `A`, then `Class<B>` is now a subtype of `Class<A>`
+- Flow now lets you destructure objects with computed keys.
+- `flow check-contents --respect-pragma` - `check-contents` checks whatever you give it, regardless of `@flow` or `@noflow`. This option changes the behavior to respect the pragma.
+- `flow check-contents` will now report parsing errors too (thanks [@nmote](https://github.com/nmote)!)
+
+Notable bug fixes:
+- Fixed `--trace` behavior when we unify types
+- Fixed situation where the client could spin-wait for the server
+- Fixed non-termination triggered by certain calls to `Function.prototype.{apply,call}`
+- Fixed issue where "Duplicate module provider" errors would stick around even after being fixed.
+- (Windows) Fixed how the flow client tails the flow server's logs
+- (Windows) Fixed the log rotating
+- (Windows) Fixed issues where Flow would report Process Handles instead of Process IDs, leading to bad messages and a non-functional `flow stop`
+- (Windows) Fixed build outside of a git or hg repository
+- (Windows) Better error messages when you have paths that are too long
+
+Misc:
+- `undefined` is now just a global variable declared in the libdefs
+- Various built-in libdef improvements
+- Nifty PR from [@nmn](https://github.com/nmn) which teaches flow that `nullableArr.filter(Boolean)` is non-nullable
+
 ###v0.29.0
 
 New features:
