@@ -45,6 +45,9 @@ val thistype_desc: string
 val existential_desc: string
 val is_instantiable_reason: reason -> bool
 
+val method_call_prefix: string -> string
+val is_method_call_reason: string -> reason -> bool
+
 val is_constant_property_reason: reason -> bool
 
 val derivable_reason: reason -> reason

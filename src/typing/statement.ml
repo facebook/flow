@@ -2966,7 +2966,7 @@ and func_call cx reason func_t argts =
   )
 
 and method_call cx loc prop_loc (expr, obj_t, name) argts =
-  let reason = mk_reason (spf "call of method `%s`" name) loc in
+  let reason = mk_reason (method_call_prefix name) loc in
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   (match Refinement.get cx expr reason with
   | Some f ->

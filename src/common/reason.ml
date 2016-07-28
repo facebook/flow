@@ -271,6 +271,12 @@ let is_instantiable_reason r =
   || desc = thistype_desc
   || desc = existential_desc
 
+let method_call_prefix name =
+  spf "call of method `%s`" name
+
+let is_method_call_reason name reason =
+  desc_of_reason reason = method_call_prefix name
+
 (* TODO: Property accesses create unresolved tvars to hold results, even when
    the object(s) on which the property accesses happen may be resolved. This can
    and should be fixed, for various benefits including but not limited to more
