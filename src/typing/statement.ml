@@ -2985,7 +2985,7 @@ and func_call cx reason func_t argts =
   Env.havoc_heap_refinements ();
   Flow.mk_tvar_where cx reason (fun t ->
     let frame = Env.peek_frame () in
-    let app = Flow.mk_functiontype2 argts t frame in
+    let app = Flow.mk_functiontype argts t ~frame in
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
@@ -3003,7 +3003,7 @@ and method_call cx loc prop_loc (expr, obj_t, name) argts =
       Env.havoc_heap_refinements ();
       Flow.mk_tvar_where cx reason (fun t ->
         let frame = Env.peek_frame () in
-        let app = Flow.mk_methodtype2 obj_t argts t frame in
+        let app = Flow.mk_methodtype obj_t argts t ~frame in
         Flow.flow cx (f, CallT (reason, app));
       )
   | None ->
@@ -3013,7 +3013,7 @@ and method_call cx loc prop_loc (expr, obj_t, name) argts =
         let expr_loc, _ = expr in
         let reason_expr = mk_reason (spf "property `%s`" name) expr_loc in
         let reason_prop = mk_reason (spf "property `%s`" name) prop_loc in
-        let app = Flow.mk_methodtype2 obj_t argts t frame in
+        let app = Flow.mk_methodtype obj_t argts t ~frame in
         Flow.flow cx (
           obj_t,
           MethodT(reason, reason_expr, (reason_prop, name), app)

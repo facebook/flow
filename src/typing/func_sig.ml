@@ -140,7 +140,7 @@ let methodtype {reason; tparams; params; return_t; _} =
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_functiontype params_tlist ~params_names return_t
+    Flow.mk_boundfunctiontype params_tlist ~params_names return_t
   ) in
   if tparams = []
   then t
@@ -154,7 +154,7 @@ let methodtype_DEPRECATED {reason; params; return_t; _} =
     reason,
     Flow.dummy_static reason,
     Flow.dummy_prototype,
-    Flow.mk_functiontype2 params_tlist ~params_names return_t frame
+    Flow.mk_functiontype params_tlist ~params_names return_t ~frame
   )
 
 let gettertype x =

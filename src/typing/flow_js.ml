@@ -42,41 +42,45 @@ let dummy_prototype =
   MixedT (reason_of_string "empty prototype object", Mixed_everything)
 
 let dummy_this =
+  AnyT (reason_of_string "bound `this` in method")
+
+let global_this =
   MixedT (reason_of_string "global object", Mixed_everything)
 
-let mk_methodtype this tins ?params_names tout = {
+(* A method type is a function type with `this` specified. *)
+let mk_methodtype ?(frame=0) this tins ?params_names tout = {
   this_t = this;
   params_tlist = tins;
   params_names;
   return_t = tout;
-  closure_t = 0;
+  closure_t = frame;
   changeset = Changeset.empty
 }
 
-let mk_methodtype2 this tins ?params_names tout j = {
-  this_t = this;
-  params_tlist = tins;
-  params_names;
-  return_t = tout;
-  closure_t = j;
-  changeset = Changeset.empty
-}
-
-let mk_functiontype tins ?params_names tout = {
+(* A bound function type is a function type with `this` = `any`. Typically, such
+   a type is given to a method when it can be considered bound: in other words,
+   when calling that method through any object would be fine, since the object
+   would be ignored. *)
+let mk_boundfunctiontype ?(frame=0) tins ?params_names tout = {
   this_t = dummy_this;
   params_tlist = tins;
   params_names;
   return_t = tout;
-  closure_t = 0;
+  closure_t = frame;
   changeset = Changeset.empty
 }
 
-let mk_functiontype2 tins ?params_names tout j = {
-  this_t = dummy_this;
+(* A function type has `this` = `mixed`. Such a type can be given to functions
+   that are meant to be called directly. On the other hand, it deliberately
+   causes problems when they are given to methods in which `this` is used
+   non-trivially: indeed, calling them directly would cause `this` to be bound
+   to the global object, which is typically unintended. *)
+let mk_functiontype ?(frame=0) tins ?params_names tout = {
+  this_t = global_this;
   params_tlist = tins;
   params_names;
   return_t = tout;
-  closure_t = j;
+  closure_t = frame;
   changeset = Changeset.empty
 }
 
@@ -2682,7 +2686,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let return_t = MaybeT return_t in
         let context_t = AnyT.t in
         let call_t =
-          CallT (reason_op, mk_methodtype NullT.t [config; context_t] return_t)
+          CallT (reason_op, mk_functiontype [config; context_t] return_t)
         in
         rec_flow cx trace (l, call_t)
       | StrT _
@@ -3654,7 +3658,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             reason_op,
             dummy_static bound_reason,
             dummy_prototype,
-            mk_functiontype tins1 tout1
+            mk_boundfunctiontype tins1 tout1
           ),
           tout2);
 
