@@ -9,7 +9,7 @@ environment:
       ocpwin_zip: C:\ocpwin64-20160113-4.02.1+ocp1-full-mingw64.zip
       ocpwin_uri: http://www.ocamlpro.com/pub/ocpwin/ocpwin-builds/ocpwin64/20160113/ocpwin64-20160113-4.02.1+ocp1-full-mingw64.zip
       ocpwin_cache:
-        secure: nAAkq86Atkhs9oJsldlsU2ASc6mx7e+3B/YxNJQlKgKFHN0aBJO7iy1Em/3hrhx1fJbotmmy7AbceuLZmgPIUnCUATEx+cYYl9FpGsvo2qQELZixyR/KtUqqJdFPJ+WWpj69FgEKZMaUC4BrFm5/X4KDhr+eGjumXbvtdeFgZaOt07CIaWSgcN2nCroK41Cq/LAkTRz3fm5Wsi8TXuofTCjzaDaEF4i3ZyUgb8+MuJQT7JD7iU8bTLaBAFQmcCEtVIHnRepjLledmUATDg6vzQ==
+        secure: aoQR72gXClljwGeQ4KBGv6pK7+pexrLimjIylhmmhmMd5FWvkq47b1rYLqB1Mw9S7LD33AugFTaCbg6BAjUT+9wKZXegkpKwDnxxMaITSkmgeViESXVXOrrB+y/UQ1/pVEoykM+oi3Yp+myAb0e9oQT5XYMdkjbZROHxza0blnYFuSEkLqQIY13eWgeed3ayt6Yniyx8ZFSlo1nFFbQz1W5q3MFtlfnAODbGYKmet0qRO7RHzzCDQbGM5d27b9nbjE1ZzDGCgA8bXoailGSMFQ==
 #    - ocaml_version: 4.01.0
 #      ocpwin_version: 4.01.0+ocp1-full-mingw64-20160113
 #      ocpwin_zip: C:\ocpwin64-20160113-4.01.0+ocp1-full-mingw64.zip
