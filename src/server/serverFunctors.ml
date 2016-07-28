@@ -212,19 +212,23 @@ end = struct
      * the rename can fail if foo.log is open or if foo.log.old already exists.
      * Not a huge problem, we just need to be more intentional *)
     let file = Path.to_string (Options.log_file options) in
-    let old_file = file ^ ".old" in
 
-    (try
-      if Sys.file_exists old_file
-      then Sys.remove old_file;
-      Sys.rename file old_file
-    with e ->
-      Utils.prerr_endlinef
-        "Log rotate: failed to move '%s' to '%s'\n%s"
-        file
-        old_file
-        (Printexc.to_string e)
-    );
+    if Sys.file_exists file
+    then begin
+      let old_file = file ^ ".old" in
+
+      (try
+        if Sys.file_exists old_file
+        then Sys.remove old_file;
+        Sys.rename file old_file
+      with e ->
+        Utils.prerr_endlinef
+          "Log rotate: failed to move '%s' to '%s'\n%s"
+          file
+          old_file
+          (Printexc.to_string e)
+      )
+    end;
     Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
 
   (* The main entry point of the daemon
