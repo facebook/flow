@@ -12,6 +12,7 @@ module type S = sig
   type 'a error_
   type error = Pos.t error_
   type applied_fixme = Pos.t * int
+  type error_flags
 
   val is_hh_fixme : (Pos.t -> int -> bool) ref
   val to_list : 'a error_ -> ('a * string) list
@@ -322,7 +323,9 @@ module type S = sig
   (* The type of collections of errors *)
   type t
 
-  val do_ : (unit -> 'a) -> t * 'a
+  val do_ : (unit -> 'a) -> t * 'a * error_flags
+  val run_in_decl_mode : (unit -> 'a) -> 'a
+  val get_lazy_decl_flag : error_flags -> bool
   val ignore_ : (unit -> 'a) -> 'a
   val try_when :
     (unit -> 'a) -> when_:(unit -> bool) -> do_:(error -> unit) -> 'a
