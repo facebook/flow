@@ -35,3 +35,5 @@ and proj_uses_propname propname = function
   false
 
 let compare = Pervasives.compare
+
+let is_simple (_, ps) = List.length ps = 0

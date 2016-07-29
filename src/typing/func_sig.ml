@@ -10,6 +10,7 @@ type kind =
   | Async
   | Generator
   | FieldInit of Ast.Expression.t
+  | Predicate
 
 type t = {
   reason: reason;
@@ -28,12 +29,14 @@ let return_loc =
   | {F.body = BodyExpression (loc, _); _} -> loc
   | {F.body = BodyBlock (loc, _); _} -> Loc.char_before loc
 
-let function_kind {Ast.Function.async; generator; _ } =
-  match async, generator with
-  | true, true -> Utils_js.assert_false "async && generator"
-  | true, false -> Async
-  | false, true -> Generator
-  | false, false -> Ordinary
+let function_kind {Ast.Function.async; generator; predicate; _ } =
+  match async, generator, predicate with
+  | true, true, false -> Utils_js.assert_false "async && generator"
+  | true, false, false -> Async
+  | false, true, false -> Generator
+  | false, false, false -> Ordinary
+  | false, false, true -> Predicate
+  | _, _, true -> Utils_js.assert_false "(async || generator) && pred"
 
 let mk cx tparams_map ~expr reason func =
   let {Ast.Function.typeParameters; returnType; body; _} = func in
@@ -190,6 +193,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
       match kind with
       | Ordinary
       | FieldInit _ -> Scope.Ordinary
+      | Predicate -> Scope.Predicate
       | Async -> Scope.Async
       | Generator -> Scope.Generator
     in
@@ -261,6 +265,19 @@ let toplevels id cx this super ~decls ~stmts ~expr
       [fst expr, Return {Return.argument = Some expr}]
   ) in
 
+  (* NOTE: Predicate functions can currently only be of the form:
+       function f(...) { return <exp>; }
+  *)
+  Ast.Statement.(if kind = Predicate then
+    match statements with
+    | [(_, Return { Return.argument = Some _})] -> ()
+    | _ ->
+        let loc = loc_of_reason reason in
+        let msg = "Invalid body for predicate function. \
+          Expected a simple return statement as body." in
+        Flow_error.add_error cx (loc, [msg])
+  );
+
   (* decl/type visit pre-pass *)
   decls cx statements;
 
@@ -291,6 +308,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
     | FieldInit e ->
       let return_t = expr cx e in
       UnknownUse, return_t
+    | Predicate ->
+      Utils_js.assert_false "Predicate functions need to return non-void"
     in
     Flow.flow cx (void_t, UseT (use_op, return_t))
   );

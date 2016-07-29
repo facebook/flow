@@ -187,14 +187,13 @@ module Entry = struct
       | _ -> false
 end
 
-module KeyMap : MyMap.S with type key = Key.t = MyMap.Make (Key)
-
 type var_scope_kind =
   | Ordinary        (* function or module *)
   | Async           (* async function *)
   | Generator       (* generator function *)
   | Module          (* module scope *)
   | Global          (* global scope *)
+  | Predicate       (* predicate function *)
 
 let string_of_var_scope_kind = function
 | Ordinary -> "Ordinary"
@@ -202,6 +201,7 @@ let string_of_var_scope_kind = function
 | Generator -> "Generator"
 | Module -> "Module"
 | Global -> "Global"
+| Predicate -> "Predicate"
 
 (* var and lexical scopes differ in hoisting behavior
    and auxiliary properties *)
@@ -228,7 +228,7 @@ type t = {
   id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
-  mutable refis: refi_binding KeyMap.t
+  mutable refis: refi_binding Key_map.t
 }
 
 (* ctor helper *)
@@ -236,7 +236,7 @@ let fresh_impl kind = {
   id = mk_id ();
   kind;
   entries = SMap.empty;
-  refis = KeyMap.empty
+  refis = Key_map.empty
 }
 
 (* return a fresh scope of the most common kind (var) *)
@@ -285,28 +285,28 @@ let havoc_entry name scope =
 
 (* use passed f to update all scope refis *)
 let update_refis f scope =
-  scope.refis <- KeyMap.mapi f scope.refis
+  scope.refis <- Key_map.mapi f scope.refis
 
 (* add refi to scope *)
 let add_refi key refi scope =
-  scope.refis <- KeyMap.add key refi scope.refis
+  scope.refis <- Key_map.add key refi scope.refis
 
 (* remove entry from scope *)
 let remove_refi key scope =
-  scope.refis <- KeyMap.remove key scope.refis
+  scope.refis <- Key_map.remove key scope.refis
 
 (* get entry from scope, or None *)
 let get_refi name scope =
-  KeyMap.get name scope.refis
+  Key_map.get name scope.refis
 
 (* havoc a refi *)
 let havoc_refi key scope =
   scope.refis <- scope.refis |>
-    KeyMap.filter (fun k _ -> Key.compare key k != 0)
+    Key_map.filter (fun k _ -> Key.compare key k != 0)
 
 (* helper: filter all refis whose expressions involve the given name *)
 let filter_refis_using_propname propname refis =
-  refis |> KeyMap.filter (fun key _ ->
+  refis |> Key_map.filter (fun key _ ->
     not (Key.uses_propname propname key)
   )
 
@@ -319,7 +319,7 @@ let havoc_refis ?name scope =
   | Some name ->
     scope.refis |> (filter_refis_using_propname name)
   | None ->
-    KeyMap.empty
+    Key_map.empty
 
 (* havoc a scope:
    - clear all refinements

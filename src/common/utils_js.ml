@@ -90,6 +90,18 @@ let opt_map_default f def = function
   | None -> def
   | Some x -> f x
 
+let rec zip lst1 lst2 = match lst1,lst2 with
+  | [], _ -> []
+  | _, [] -> []
+  | (x::xs), (y::ys) -> (x,y) :: zip xs ys
+
+let zipi xs ys =
+  zip xs ys |> List.mapi (fun i (x, y) -> (i,x,y))
+
+let map_pair f g (a,b) = (f a, g b)
+let map_fst f (a,b) = (f a, b)
+let map_snd g (a,b) = (a, g b)
+
 (**
  * Useful for various places where a user might have typoed a string and the
  * set of possible intended strings is known (i.e. variable names).

@@ -215,8 +215,8 @@ let rec type_printer override fallback enclosure cx t =
     | ThisClassT _ ->
         "This"
 
-    | BasePredT (_, p) ->
-        spf "BasePredicate %s" (string_of_predicate p)
+    | DepPredT _ ->
+        spf "Dependent predicate"
 
     | FunProtoT _ ->
         "function proto"
@@ -229,6 +229,16 @@ let rec type_printer override fallback enclosure cx t =
 
     | FunProtoApplyT _ ->
         "FunctionProtoApply"
+
+    (* TODO: Fix these *)
+    | EvalT _ ->
+        "Eval"
+
+    | ThisTypeAppT _ ->
+        "This Type App"
+
+    | ModuleT _ ->
+        "Module"
 
     | t ->
         fallback t

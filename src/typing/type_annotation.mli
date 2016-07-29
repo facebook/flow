@@ -14,6 +14,7 @@
 
 val convert: Context.t ->
   Type.t SMap.t ->
+  ?variables_in_scope:string list ->
   Spider_monkey_ast.Type.t ->
   Type.t
 

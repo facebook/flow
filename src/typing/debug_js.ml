@@ -262,8 +262,17 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "wrappedObj", _json_of_t json_cx t
     ]
 
-  | BasePredT (_ ,p) -> [
-      "BasePred", json_of_pred json_cx p
+  | DepPredT (_,(t, pos_preds, neg_preds)) -> [
+      let json_key_map f map = JSON_Object (
+        Key_map.elements map |>
+        List.map (Utils_js.map_pair Key.string_of_key f)
+      ) in
+      let json_pred_key_map = json_key_map (json_of_pred json_cx) in
+      "DepPred", JSON_Object [
+        ("base_type", _json_of_t_impl json_cx t);
+        ("pos_preds", json_pred_key_map pos_preds);
+        ("neg_preds", json_pred_key_map neg_preds)
+      ]
     ]
   )
 )
@@ -552,11 +561,20 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out
     ]
 
-  | CallAsPredicateT (_, b, t, t_out) -> [
-      "sense", JSON_Bool b;
-      "t", _json_of_t json_cx t;
-      "t_out", _json_of_t json_cx t_out
+  | CallAsPredicateT (_, sense, offset, l, t) -> [
+      "sense", JSON_Bool sense;
+      "offset", JSON_Number (spf "%d" offset);
+      "t_in", _json_of_t json_cx l;
+      "t_out", _json_of_t json_cx t
     ]
+
+  | PredSubstT (_,sense,key,l,t) -> [
+      "sense", JSON_Bool sense;
+      "key", JSON_String (Key.string_of_key key);
+      "t_in", _json_of_t json_cx l;
+      "t_out", _json_of_t json_cx t
+    ]
+
   )
 )
 
@@ -672,11 +690,14 @@ and json_of_funtype_impl json_cx {
     "paramTypes", JSON_Array (List.map (_json_of_t json_cx) params_tlist)
   ] @ (match params_names with
     | None -> []
-    | Some names -> ["paramNames", JSON_Array (List.map (fun s -> JSON_String s) names)]
+    | Some names -> [
+        "paramNames",
+        JSON_Array (List.map (fun s -> JSON_String s) names)
+      ]
   ) @ [
     "returnType", _json_of_t json_cx return_t;
     "closureIndex", int_ closure_t;
-    "changeset", json_of_changeset json_cx changeset
+    "changeset", json_of_changeset json_cx changeset;
   ])
 )
 
@@ -791,7 +812,12 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | ArrP
       -> []
 
-  | LatentP (_,t) -> ["latent", _json_of_t_impl json_cx t]
+  | LatentP (_,t,i) -> [
+      "latent", JSON_Object [
+        ("type", _json_of_t_impl json_cx t);
+        ("position", JSON_Number (spf "%d" i))
+      ]
+    ]
 ))
 
 and json_of_binary_test json_cx = check_depth json_of_binary_test_impl json_cx
@@ -947,7 +973,7 @@ let json_of_scope = Scope.(
   let json_of_refi json_cx = check_depth json_of_refi_impl json_cx in
 
   let json_of_refis_impl json_cx refis =
-    let props = KeyMap.fold (fun key refi acc ->
+    let props = Key_map.fold (fun key refi acc ->
       (Key.string_of_key key, json_of_refi json_cx refi) :: acc
     ) refis []
     |> List.rev
@@ -1084,7 +1110,7 @@ and dump_t_ (depth, tvars) cx t =
   | CustomFunT _ -> p t
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
-  | BasePredT _ -> p t
+  | DepPredT _ -> p t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
@@ -1171,7 +1197,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT _
   | IdxUnwrap _
   | IdxUnMaybeifyT _
-  | CallAsPredicateT _ ->
+  | CallAsPredicateT _
+  | PredSubstT _ ->
     p t
 
 (*****************************************************)
@@ -1221,8 +1248,8 @@ let string_of_scope_refi cx { Scope.refi_loc; refined; original } =
     (dump_t cx original)
 
 
-let string_of_scope_refis cx refis = Scope.(
-  let strings = KeyMap.fold (fun key refi acc ->
+let string_of_scope_refis cx refis =
+  let strings = Key_map.fold (fun key refi acc ->
       (spf "%s: %s"
         (Key.string_of_key key)
         (string_of_scope_refi cx refi))
@@ -1230,7 +1257,6 @@ let string_of_scope_refis cx refis = Scope.(
     ) refis []
     |> String.concat ";\n"
   in spf "[ %s ]" strings
-)
 
 let string_of_scope cx scope = Scope.(
   spf "{ kind: %s;\nentries:\n%s\nrefis:\n%s\n}"

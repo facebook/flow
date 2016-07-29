@@ -23,6 +23,7 @@ val string_of_env: Context.t -> t -> string
 
 val in_async_scope: unit -> bool
 val in_generator_scope: unit -> bool
+val in_predicate_scope: unit -> bool
 
 val all_entries: unit -> Entry.t SMap.t
 
@@ -142,15 +143,15 @@ val set_expr: Key.t -> reason -> Type.t -> Type.t ->
 val refine_with_preds:
   Context.t ->
   reason ->
-  Type.predicate KeyMap.t ->
-  Type.t KeyMap.t ->
+  Type.predicate Key_map.t ->
+  Type.t Key_map.t ->
   Changeset.t
 
 val in_refined_env:
   Context.t ->
   reason ->
-  Type.predicate KeyMap.t ->
-  Type.t KeyMap.t ->
+  Type.predicate Key_map.t ->
+  Type.t Key_map.t ->
   (unit -> 'a) ->
   'a
 

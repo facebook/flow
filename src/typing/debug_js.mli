@@ -25,7 +25,7 @@ val string_of_scope_entries:
 val string_of_scope_refi: Context.t -> Scope.refi_binding -> string
 val string_of_scope_refis:
   Context.t ->
-  Scope.refi_binding Scope.KeyMap.t ->
+  Scope.refi_binding Key_map.t ->
   string
 val string_of_scope: Context.t -> Scope.t -> string
 

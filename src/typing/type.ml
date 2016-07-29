@@ -246,19 +246,10 @@ module rec TypeTerm : sig
 
     (** Predicate types **)
 
-    (* This is a (temporary) checkpoint on the way to getting general
-       support for predicates. The only supported use of these types are
-       as return types of functions that accept a single argument `x`.
-       The attendant contracts are (respectively):
-       * `x` is a string  ==> `BasePred StrP [x]`
-       * `x` is a number  ==> `BasePred NumP [x]`
-       * `x` is a boolean ==> `BasePred BoolP [x]`
-
-       TODO: this will need to be replaced by something more general:
-         * as per the argument it refers to
-         * as per the property it establishes
-     *)
-    | BasePredT of reason * predicate
+    (* This type is expected to appear as the return type of predicate
+       functions. The second members expresses the predicates that the
+       function encodes in the form of checks. *)
+    | DepPredT of reason * dep_preds
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
@@ -433,13 +424,27 @@ module rec TypeTerm : sig
 
     (**
      * A use holding the types of expressions appearing in refining positions
-     * (conditionals), when refinement is due to latent predicates. Members are:
-     * - a reason,
-     * - a boolean value denoting the positive or negative branch,
-     * - the incoming type of the refined expression, and
-     * - the fresh tvar that will hold the refined result.
+     * (conditionals), when refinement is due to latent predicates.
+     * Members are:
+     * - reason
+     * - sense
+     * - offset of the argument being refined
+     * - incoming type of the refined expression
+     * - fresh tvar that will hold the refined result
      *)
-    | CallAsPredicateT of reason * bool * t * t
+    | CallAsPredicateT of reason * bool * int * t * t
+
+   (**
+    * Toolkit for holding a substitution of formal parameters for actual
+    * parameters at predicate function calls.
+    * Members are:
+    * - reason
+    * - sense
+    * - key being refined
+    * - type of incoming argument
+    * - fresh tvar that will hold its refined version
+    *)
+    | PredSubstT of reason * bool * Key.t * t * t
 
   and predicate =
     | AndP of predicate * predicate
@@ -470,10 +475,9 @@ module rec TypeTerm : sig
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP "b", tout))` *)
     | PropExistsP of string
 
-    (* Encondes the latent predicate associated with function `f`,
-       whose type is stored in the structure.
-       TODO: Only support a single argument for now. *)
-    | LatentP of reason * t
+    (* Encondes the latent predicate associated with the i-th parameter
+       of a function, whose type is the second element of the triplet. *)
+    | LatentP of reason * t * int
 
   and binary_test =
     (* e1 instanceof e2 *)
@@ -632,6 +636,15 @@ module rec TypeTerm : sig
   and spec =
   | UnionCases of t * t list
   | IntersectionCases of t list * use_t
+
+  (* A dependent predicate type consisting of:
+     - the result type of the test (not always bool)
+     - a map (lookup key -> type) of refinements which hold if the
+       test is true
+     - a map of refinements which hold if the test is false
+  *)
+  and dep_preds =
+    t * predicate Key_map.t * predicate Key_map.t
 
 end = TypeTerm
 
@@ -1124,7 +1137,7 @@ let rec reason_of_t = function
 
   | IdxWrapper (reason, _) -> reason
 
-  | BasePredT (reason, _) -> reason
+  | DepPredT (reason, _) -> reason
 
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _) ->
@@ -1225,7 +1238,8 @@ and reason_of_use_t = function
   | IdxUnwrap (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
 
-  | CallAsPredicateT (reason, _, _, _) -> reason
+  | CallAsPredicateT (reason, _, _, _, _) -> reason
+  | PredSubstT (reason, _, _, _, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1354,7 +1368,7 @@ let rec mod_reason_of_t f = function
 
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
 
-  | BasePredT (reason, p) -> BasePredT (f reason, p)
+  | DepPredT (reason, p) -> DepPredT (f reason, p)
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
@@ -1448,7 +1462,10 @@ and mod_reason_of_use_t f = function
 
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
-  | CallAsPredicateT (reason, b, l, t) -> CallAsPredicateT (f reason, b, l, t)
+  | CallAsPredicateT (reason, b, k, l, t) ->
+      CallAsPredicateT (f reason, b, k, l, t)
+  | PredSubstT (reason, sense, key, l, t) ->
+      PredSubstT (f reason, sense, key, l, t)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1536,7 +1553,7 @@ let string_of_ctor = function
     end
   | CustomFunT _ -> "CustomFunT"
   | IdxWrapper _ -> "IdxWrapper"
-  | BasePredT _ -> "BasePredT"
+  | DepPredT _ -> "DepPredT"
 
 let string_of_use_op = function
   | FunReturn -> "FunReturn"
@@ -1615,6 +1632,7 @@ let string_of_use_ctor = function
   | IdxUnwrap _ -> "IdxUnwrap"
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
   | CallAsPredicateT _ -> "CallAsPredicateT"
+  | PredSubstT _ -> "PredSubstT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
@@ -1655,7 +1673,8 @@ let rec string_of_predicate = function
 
   | PropExistsP key -> spf "prop `%s` is truthy" key
 
-  | LatentP (r, t) -> spf "%s of type %s" (desc_of_reason r) (string_of_ctor t)
+  | LatentP (r,t,i) -> spf "%s of the %d parameter of type %s"
+      (desc_of_reason r) i (string_of_ctor t)
 
 module Polarity = struct
   (* Subtype relation for polarities, interpreting neutral as positive &

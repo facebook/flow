@@ -770,7 +770,7 @@ and statement cx = Ast.Statement.(
         let reason, (_, preds, not_preds, xtypes) = match test with
         | None ->
           mk_reason "default" loc,
-          Scope.(EmptyT.at loc, KeyMap.empty, KeyMap.empty, KeyMap.empty)
+          (EmptyT.at loc, Key_map.empty, Key_map.empty, Key_map.empty)
         | Some expr ->
           mk_reason "case" loc,
           let fake_ast = loc, Ast.Expression.(Binary {
@@ -901,7 +901,13 @@ and statement cx = Ast.Statement.(
       in
       let t = match argument with
         | None -> VoidT.at loc
-        | Some expr -> expression cx expr
+        | Some expr ->
+          (* TODO: make sure the keys in DepPredT as bound in the func params *)
+          if Env.in_predicate_scope () then
+            let (t, p_map, n_map, _) = predicates_of_condition cx expr in
+            DepPredT (reason, (t, p_map, n_map))
+          else
+            expression cx expr
       in
       let t =
         if Env.in_async_scope () then
@@ -1267,8 +1273,8 @@ and statement cx = Ast.Statement.(
 
         let _, preds, not_preds, xtypes = match test with
           | None ->
-              EmptyT.at loc, Scope.KeyMap.empty, Scope.KeyMap.empty,
-              Scope.KeyMap.empty (* TODO: prune the "not" case *)
+              EmptyT.at loc, Key_map.empty, Key_map.empty,
+              Key_map.empty (* TODO: prune the "not" case *)
           | Some expr ->
               predicates_of_condition cx expr
         in
@@ -2949,25 +2955,24 @@ and expression_ cx loc e = Ast.Expression.(match e with
    potenially the keys that correspond to the supplied arguments.
 *)
 and predicated_call_expression cx (loc, callee, arguments) =
-  let (f, args, argks, t) =
+  let (f, argks, argts, t) =
     predicated_call_expression_ cx loc callee arguments in
   Hashtbl.replace (Context.type_table cx) loc t;
-  (f, args, argks, t)
+  (f, argks, argts, t)
 
 (* Returns a quadruple containing:
    - the function type
-   - the arguments types
    - argument keys
+   - the arguments types
    - the returned type
 *)
 and predicated_call_expression_ cx loc callee arguments =
   let f = expression cx callee in
   let reason = mk_reason "function call" loc in
-  let argts =
-    List.map (expression cx) arguments in
+  let argts = List.map (expression cx) arguments in
   let argks = List.map Refinement.key arguments in
   let t = func_call cx reason f argts in
-  (f, argts, argks, t)
+  (f, argks, argts, t)
 
 (* We assume that constructor functions return void
    and constructions return objects.
@@ -3998,7 +4003,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
 
   (* package empty result (no refinements derived) from test type *)
   let empty_result test_t =
-    Scope.(test_t, KeyMap.empty, KeyMap.empty, KeyMap.empty)
+    (test_t, Key_map.empty, Key_map.empty, Key_map.empty)
   in
 
   let add_predicate key unrefined_t pred sense (test_t, ps, notps, tmap) =
@@ -4007,9 +4012,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
       else NotP pred, pred
     in
     (test_t,
-      Scope.KeyMap.add key p ps,
-      Scope.KeyMap.add key notp notps,
-      Scope.KeyMap.add key unrefined_t tmap)
+      Key_map.add key p ps,
+      Key_map.add key notp notps,
+      Key_map.add key unrefined_t tmap)
   in
 
   let flow_eqt ~strict loc (t1, t2) =
@@ -4260,7 +4265,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         empty_result (BoolT.at loc)
   in
 
-  let mk_and map1 map2 = Scope.KeyMap.merge
+  let mk_and map1 map2 = Key_map.merge
     (fun _ p1 p2 -> match (p1,p2) with
       | (None, None) -> None
       | (Some p, None)
@@ -4270,7 +4275,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
     map1 map2
   in
 
-  let mk_or map1 map2 = Scope.KeyMap.merge
+  let mk_or map1 map2 = Key_map.merge
     (fun _ p1 p2 -> match (p1,p2) with
       | (None, None) -> None
       | (Some _, None)
@@ -4393,7 +4398,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         ),
         mk_and map1 map2,
         mk_or not_map1 not_map2,
-        Scope.KeyMap.union xts1 xts2
+        Key_map.union xts1 xts2
       )
 
   (* test1 || test2 *)
@@ -4410,7 +4415,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         ),
         mk_or map1 map2,
         mk_and not_map1 not_map2,
-        Scope.KeyMap.union xts1 xts2
+        Key_map.union xts1 xts2
       )
 
   (* !test *)
@@ -4433,20 +4438,36 @@ and predicates_of_condition cx e = Ast.(Expression.(
       empty_result (expression cx e)
 
   (* f(...) *)
-
   (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
      predicated when it is resolved. *)
-  | loc, Call { Call.callee = c; arguments = [Expression arg] } ->
-      let fun_t, argts, argks, ret_t =
-        predicated_call_expression cx (loc, c, [arg]) in
-      begin match argts, argks with
-        | [arg_t], [Some arg_k] ->
-          let reason = mk_reason "call at predicate position"  loc in
-          result ret_t arg_k arg_t (LatentP (reason, fun_t)) true
-        | _ ->
-          empty_result ret_t
-      end
+  | loc, Call { Call.callee = c; arguments }
+    (* NOTE: Toggle the line below to allow/disallow latent predicate
+       support for functions with multiple parameters. *)
+    when List.length arguments = 1
+    ->
+      let is_spread = function | Spread _ -> true | _ -> false in
+      if List.exists is_spread arguments then
+        empty_result (expression cx e)
+      else
+        let exp_args = arguments |> List.map (function
+          | Expression e -> e
+          | _ -> Utils_js.assert_false "No spreads should reach here"
+        ) in
+        let fun_t, keys, arg_ts, ret_t =
+          predicated_call_expression cx (loc, c, exp_args) in
+        let args_with_offset = Utils_js.zipi keys arg_ts in
+        let emp_pred_map = empty_result ret_t in
+        List.fold_left (fun pred_map arg_info -> match arg_info with
+          | (offset, Some key, unrefined_t) ->
+              let reason = mk_reason
+                (spf "%d arg of call at predicate position" offset) loc in
+              let pred = LatentP (reason, fun_t, offset) in
+              add_predicate key unrefined_t pred true pred_map
+
+          | _ ->
+              pred_map
+        ) emp_pred_map args_with_offset
 
   (* fallthrough case: evaluate test expr, no refinements *)
   | e ->

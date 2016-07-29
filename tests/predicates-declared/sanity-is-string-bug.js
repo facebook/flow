@@ -1,7 +1,7 @@
 // @flow
 
-declare function is_string(x: mixed): $StrP;
-declare function is_number(x: mixed): $NumP;
+declare function is_string(x: mixed): $StrP<0>;
+declare function is_number(x: mixed): $NumP<0>;
 
 // Sanity check:
 // - Erroneous logic

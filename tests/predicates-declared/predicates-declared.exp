@@ -34,11 +34,9 @@ sanity-is-string-bug.js:13
  13:     return x.join();    // error: both string and Array<string> can flow to x
                 ^ String
 
-sanity-pred-with-body.js:7
-  7:   return typeof x === "string"; // error: boolean incompatible with $StrP
-              ^^^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with the expected return type of
-  6: function pred(x: mixed): $StrP {
-                              ^^^^^ string predicate
+sanity-pred-with-body.js:6
+  6: function pred(x: mixed): $StrP<0> { // error: cannot use pred type here
+                              ^^^^^^^^ This is not a valid context for this predicate type. Dependent predicate types can only be used as return types of function declarations.
 
 
 Found 7 errors

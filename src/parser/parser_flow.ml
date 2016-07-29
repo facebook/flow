@@ -53,6 +53,21 @@ let with_loc fn env =
   in
   Loc.btwn start_loc end_loc, result
 
+let string_starts_with long short =
+  try
+    let long = String.sub long 0 (String.length short) in
+    long = short
+  with Invalid_argument _ ->
+    false
+
+(* NOTE: temporary support for predicated function definitions requires
+   that the name starts with `$pred`. In later iterations we would like to
+   add support for a more compact solutions (e.g. `function?(...)`)
+*)
+let is_predicate = function
+  | Some id -> string_starts_with (name_of_id id) "$pred$"
+  | _ -> false
+
 module rec Parse : sig
   val program : env -> Ast.program
   val statement : env -> Ast.Statement.t
@@ -803,6 +818,7 @@ end = struct
           in
           (Type.type_parameter_declaration env, Some id)
       ) in
+      let predicate = is_predicate id in
       let params, defaults, rest = function_params env in
       let returnType = Type.annotation_opt env in
       let _, body, strict = function_body env ~async ~generator in
@@ -820,6 +836,7 @@ end = struct
         body;
         generator;
         async;
+        predicate;
         expression;
         returnType;
         typeParameters;
@@ -1455,6 +1472,7 @@ end = struct
             | _ -> Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
           id, Type.type_parameter_declaration env
         end in
+      let predicate = is_predicate id in
       let params, defaults, rest = Declaration.function_params env in
       let returnType = Type.annotation_opt env in
       let end_loc, body, strict =
@@ -1473,6 +1491,7 @@ end = struct
         body;
         generator;
         async;
+        predicate;
         expression;
         returnType;
         typeParameters;
@@ -1750,6 +1769,8 @@ end = struct
           body;
           async;
           generator = false; (* arrow functions cannot be generators *)
+          (* TODO: add syntax support for arrow predicates *)
+          predicate = false;
           expression;
           returnType;
           typeParameters;
@@ -1941,6 +1962,7 @@ end = struct
         body;
         generator;
         async;
+        predicate = false; (* setters/getter are not predicates *)
         expression;
         returnType;
         typeParameters;
@@ -2038,6 +2060,8 @@ end = struct
                   body;
                   generator;
                   async;
+                  (* TODO: add support for objec method predicates *)
+                  predicate = false;
                   expression;
                   returnType;
                   typeParameters;
@@ -2244,6 +2268,8 @@ end = struct
             body;
             generator;
             async;
+            (* TODO: add support for method predicates *)
+            predicate = false;
             expression;
             returnType;
             typeParameters;

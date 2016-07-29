@@ -147,7 +147,7 @@ class ['a] t = object(self)
   | IdxWrapper (_, t) ->
     self#type_ cx acc t
 
-  | BasePredT _ -> acc
+  | DepPredT _ -> acc
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
@@ -223,6 +223,7 @@ class ['a] t = object(self)
   | IdxUnwrap _
   | IdxUnMaybeifyT _
   | CallAsPredicateT _
+  | PredSubstT _
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

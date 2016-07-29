@@ -148,6 +148,9 @@ let in_async_scope () =
 let in_generator_scope () =
   is_func_kind Generator (peek_var_scope ())
 
+let in_predicate_scope () =
+  is_func_kind Predicate (peek_var_scope ())
+
 (* build a map of all var entries - no refis - in the current
    scope stack.
    Note that we accumulate entries bottom-up, so that
@@ -1291,12 +1294,12 @@ let refine_with_preds cx reason preds orig_types =
           (Key.string_of_key key) pred_str in
         replace_reason rstr reason
       in
-      let orig_type = KeyMap.find_unsafe key orig_types in
+      let orig_type = Key_map.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in
       let change = refine_expr key refi_reason refi_type orig_type in
       Changeset.add_refi change acc
   in
-  KeyMap.fold refine_with_pred preds Changeset.empty
+  Key_map.fold refine_with_pred preds Changeset.empty
 
 (* run the given function in a clone of the current environment
    augmented by the given refinement map, then merge the final

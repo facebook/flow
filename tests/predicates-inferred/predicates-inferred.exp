@@ -1,0 +1,46 @@
+sanity-ordering.js:7
+  7:   (obj.page: Object);
+        ^^^^^^^^ null. This type is incompatible with
+  7:   (obj.page: Object);
+                  ^^^^^^ object type
+
+sanity-ordering.js:7
+  7:   (obj.page: Object);
+        ^^^^^^^^ undefined. This type is incompatible with
+  7:   (obj.page: Object);
+                  ^^^^^^ object type
+
+sanity-unbound-var.js:13
+ 13:     return x;
+                ^ array type. This type is incompatible with the expected return type of
+ 11: function foo(x: string | Array<string>): string {
+                                              ^^^^^^ string
+
+sanity-unbound-var.js:15
+ 15:     return x.join();
+                  ^^^^ property `join`. Property not found in
+ 15:     return x.join();
+                ^ String
+
+sanity.js:8
+  8: function $pred$check(y): $StrP<0> {
+                              ^^^^^^^^ This is not a valid context for this predicate type. Dependent predicate types can only be used as return types of function declarations.
+
+sanity.js:19
+ 19: function $pred$indirect_is_number(y) {
+                                          ^ Invalid body for predicate function. Expected a simple return statement as body.
+
+simple-predicate-func.js:58
+ 58:     return x;
+                ^ array type. This type is incompatible with the expected return type of
+ 56: function foo(x: string | Array<string>): string {
+                                              ^^^^^^ string
+
+simple-predicate-func.js:60
+ 60:     return x.join();
+                  ^^^^ property `join`. Property not found in
+ 60:     return x.join();
+                ^ String
+
+
+Found 8 errors

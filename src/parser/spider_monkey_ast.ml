@@ -988,6 +988,7 @@ and Function : sig
     body: body;
     async: bool;
     generator: bool;
+    predicate: bool;
     expression: bool;
     returnType: Type.annotation option;
     typeParameters: Type.ParameterDeclaration.t option;

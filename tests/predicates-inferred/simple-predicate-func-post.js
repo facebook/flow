@@ -1,11 +1,10 @@
 // @flow
 
-declare function is_string(x: mixed): $StrP;
-declare function is_number(x: mixed): $NumP;
-
 // Feature check:
+// The predicate function is defined after the conditional check
+
 function foo(x: string | Array<string>): string {
-  if (is_string(x)) {
+  if ($pred$is_string(x)) {
     // The use of `is_string` as a conditional check
     // should guarantee the narrowing of the type of `x`
     // to string.
@@ -15,4 +14,8 @@ function foo(x: string | Array<string>): string {
     // guarantees that `x` here is an Array<string>
     return x.join();
   }
+}
+
+function $pred$is_string(x) {
+  return typeof x === "string";
 }

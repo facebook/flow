@@ -250,7 +250,7 @@ let havoc_call_env = Scope.(
       if is_global scope then ()
       else assert_false (spf "missing refi %S in scope %d: { %s }"
         (Key.string_of_key key) scope.id
-        (String.concat ", " (KeyMap.fold (
+        (String.concat ", " (Key_map.fold (
           fun k _ acc -> (Key.string_of_key k) :: acc) scope.refis [])))
   in
 
@@ -952,7 +952,7 @@ module ResolvableTypeJob = struct
     | SingletonNumT _
     | SingletonStrT _
     | ExistsT _
-    | BasePredT _
+    | DepPredT _
       ->
       acc
 
@@ -1758,7 +1758,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               params_names = None;
               return_t = t;
               closure_t;
-              changeset;
+              changeset
             }))
           ) in
           let unwrapped_t = mk_tvar_where cx reason_op (fun t ->
@@ -2424,6 +2424,47 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | SingletonBoolT (reason, b), _ ->
       rec_flow cx trace (BoolT (reason, Some b), u)
+
+    (****************************************************)
+    (* dependent function type ~> substitution provider *)
+    (****************************************************)
+
+    | DepPredT (_, (_, pos_preds, neg_preds)),
+      PredSubstT (_, sense, key, unrefined_t, fresh_t) -> begin
+         let preds = if sense then pos_preds else neg_preds in
+         match Key_map.get key preds with
+         | Some p ->
+             rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
+         | _ ->
+             rec_flow_t cx trace (unrefined_t, fresh_t)
+       end
+
+    (* Fall through all the remaining cases *)
+    | _, PredSubstT (_, _, _, unrefined_t, fresh_t) ->
+       rec_flow_t cx trace (unrefined_t, fresh_t)
+
+    (*******************************)
+    (* Call to predicated function *)
+    (*******************************)
+
+    | FunT (_, _, _, { params_names = Some pn; return_t; _ }),
+      CallAsPredicateT (reason, sense, offset, unrefined_t, fresh_t) -> begin
+         try
+           (* TODO: for the moment we only support simple keys *)
+           let key = (List.nth pn offset, []) in
+           rec_flow cx trace (return_t,
+             PredSubstT (reason, sense, key, unrefined_t, fresh_t));
+         with
+           Invalid_argument _ ->
+             rec_flow_t cx trace (unrefined_t, fresh_t)
+           | _ ->
+             rec_flow_t cx trace (unrefined_t, fresh_t)
+       end
+
+    (* Fall through all the remaining cases *)
+    | _, CallAsPredicateT (_,_,_,unrefined_t, fresh_t) ->
+       rec_flow_t cx trace (unrefined_t, fresh_t)
+
 
     (********************)
     (* mixin conversion *)
@@ -3862,27 +3903,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* property exists, but is not something we can use for refinement *)
         rec_flow_t cx trace (l, result)
 
-    (*******************************)
-    (* Call to predicated function *)
-    (*******************************)
-
-    | FunT (_, _, _, { return_t; _ }), CallAsPredicateT (_,b,l_unref,t) ->
-        let pred_opt = match return_t with
-          | BasePredT (_, p) -> Some p
-          | _ -> None
-        in
-        begin match pred_opt with
-          | Some pred ->
-            let pred = if b then pred else NotP pred in
-            rec_flow cx trace (l_unref, PredicateT (pred, t))
-          | _ ->
-            rec_flow_t cx trace (l_unref, t)
-        end
-
-    (* Fall through all the remaining cases *)
-    | _, CallAsPredicateT (_,_,l_unref,t) ->
-        rec_flow_t cx trace (l_unref, t)
-
     (**********************)
     (* Array library call *)
     (**********************)
@@ -4604,7 +4624,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | FunProtoCallT _
   | ChoiceKitT _
   | CustomFunT _
-  | BasePredT _
+  | DepPredT _
     ->
     t
 
@@ -4931,7 +4951,7 @@ and check_polarity cx polarity = function
   | ExtendsT _
   | ChoiceKitT _
   | CustomFunT _
-  | BasePredT _
+  | DepPredT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx polarity id =
@@ -6318,12 +6338,13 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* Latent predicate *)
   (********************)
 
-  | (_, LatentP (reason, fun_t)) ->
-    rec_flow cx trace (fun_t, CallAsPredicateT (reason, true, l, t))
+  | (_, LatentP (reason, fun_t, offset)) ->
+      rec_flow cx trace (fun_t, CallAsPredicateT (reason, true, offset, l, t))
 
-  | (_, NotP (LatentP (reason, fun_t))) ->
-    let neg_reason = prefix_reason "negation of " reason in
-    rec_flow cx trace (fun_t, CallAsPredicateT (neg_reason, false, l, t))
+  | (_, NotP (LatentP (reason, fun_t, offset))) ->
+      let neg_reason = prefix_reason "negation of " reason in
+      rec_flow cx trace (fun_t,
+        CallAsPredicateT (neg_reason, false, offset, l, t))
 
 and prop_exists_test cx trace key sense obj result =
   prop_exists_test_generic key cx trace result obj sense obj
@@ -7710,7 +7731,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | ChoiceKitT _
   | CustomFunT _ ->
     () (* TODO *)
-  | BasePredT _ ->
+  | DepPredT _ ->
     ()
 
 and assert_ground_id cx skip ids id =
