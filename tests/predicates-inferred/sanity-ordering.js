@@ -3,11 +3,12 @@
 declare var key: string;
 declare var obj: { page: ?Object; };
 
-if (dotAccess(obj, 'path.location')) {
+if (dotAccess(obj)) {
   (obj.page: Object);
 }
 
-function dotAccess(head, path, create) {
+function dotAccess(head, create) {
+  const path = 'path.location';
   const stack = path.split('.');
   do {
     const key = stack.shift();

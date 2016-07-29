@@ -1,14 +1,34 @@
-sanity-ordering.js:7
+sanity-ordering.js:14
+ 14:     const key = stack.shift();
+                     ^^^^^^^^^^^^^ call of method `shift`
   7:   (obj.page: Object);
         ^^^^^^^^ null. This type is incompatible with
   7:   (obj.page: Object);
                   ^^^^^^ object type
 
-sanity-ordering.js:7
+sanity-ordering.js:14
+ 14:     const key = stack.shift();
+                     ^^^^^^^^^^^^^ call of method `shift`
   7:   (obj.page: Object);
         ^^^^^^^^ undefined. This type is incompatible with
   7:   (obj.page: Object);
                   ^^^^^^ object type
+
+sanity-ordering.js:14
+ 14:     const key = stack.shift();
+                     ^^^^^^^^^^^^^ call of method `shift`
+ 15:     head = head[key] || create && (head[key] = {});
+                ^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
+ 15:     head = head[key] || create && (head[key] = {});
+                ^^^^ undefined (too few arguments, expected default/rest parameters)
+
+sanity-ordering.js:14
+ 14:     const key = stack.shift();
+                     ^^^^^^^^^^^^^ call of method `shift`
+ 15:     head = head[key] || create && (head[key] = {});
+                                        ^^^^^^^^^ assignment of computed property/element. Computed property/element cannot be assigned on possibly undefined value
+ 15:     head = head[key] || create && (head[key] = {});
+                                        ^^^^ undefined (too few arguments, expected default/rest parameters)
 
 sanity-unbound-var.js:13
  13:     return x;
@@ -43,4 +63,4 @@ simple-predicate-func.js:60
                 ^ String
 
 
-Found 8 errors
+Found 10 errors

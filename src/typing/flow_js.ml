@@ -2662,10 +2662,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (AnyFunT reason_fundef | AnyT reason_fundef),
       CallT (reason_op, { this_t; params_tlist; return_t; _}) ->
       let any = AnyT.why reason_fundef in
-      rec_flow_t cx trace (any, this_t);
-      multiflow cx trace reason_op (params_tlist, [RestT any]);
-      rec_flow_t cx trace (AnyT.why reason_op, return_t);
-
+      rec_flow_t cx trace (this_t, any);
+      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
+      rec_flow_t cx trace (AnyT.why reason_op, return_t)
 
     (* Special handlers for builtin functions *)
 
@@ -3059,14 +3058,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | AnyFunT reason_fundef, ConstructorT (reason_op, args, t) ->
       let reason_o = replace_reason "constructor return" reason_fundef in
-      multiflow cx trace reason_op (args, [RestT (AnyT.t)]);
+      List.iter (fun t -> rec_flow_t cx trace (t, AnyT.why reason_op)) args;
       rec_flow_t cx trace (AnyObjT reason_o, t);
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
-    | (AnyFunT _, MethodT (reason_op, _, _, {params_tlist; _})) ->
+    | (AnyFunT _, MethodT (reason_op, _, _, { params_tlist; return_t; _})) ->
       let any = AnyT.why reason_op in
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist
+      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
+      rec_flow_t cx trace (any, return_t)
 
     (*************************)
     (* "statics" can be read *)
@@ -3424,7 +3424,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* move property type to read site *)
       rec_flow cx trace (t, ReposLowerT (reason_op, UseT (UnknownUse, tout)))
 
-    | AnyObjT _, GetPropT (reason_op, _, tout) ->
+    | (AnyObjT _ | AnyT _), GetPropT (reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     (********************************)
@@ -3450,9 +3450,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Since we don't know the signature of a method on AnyObjT, assume every
        parameter is an AnyT. *)
-    | (AnyObjT _, MethodT (reason_op, _, _, {params_tlist; _})) ->
+    | ((AnyObjT _ | AnyT _), MethodT (reason_op, _, _, { params_tlist; return_t; _})) ->
       let any = AnyT.why reason_op in
-      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist
+      List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
+      rec_flow_t cx trace (any, return_t)
 
     (******************************************)
     (* strings may have their characters read *)
@@ -3525,9 +3526,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* otherwise, string and number keys are allowed, but there's nothing else
        to flow without knowing their literal values. *)
-    | (StrT _, ElemT(_, ObjT _, _, _))
-    | (NumT _, ElemT(_, ObjT _, _, _)) ->
-      ()
+    | (StrT _, ElemT(_, ObjT _, t, rw))
+    | (NumT _, ElemT(_, ObjT _, t, rw)) ->
+      (match rw with
+      | Read -> rec_flow_t cx trace (AnyT.t, t)
+      | Write -> rec_flow_t cx trace (t, AnyT.t))
 
     | (NumT (_, literal), ElemT(_, ArrT(_, value, ts), t, rw)) ->
       let value = match literal with
@@ -4323,10 +4326,8 @@ and ground_subtype = function
   | (_, UnifyT _) -> false
 
   (* Prevents Tainted<any> -> any *)
+  (* NOTE: the union could be narrowed down to ensure it contains taint *)
   | (UnionT _, _) | (TaintT _, _) -> false
-
-  (* Allows call args to propagate  *)
-  | (AnyT _, CallT _) -> false
 
   | (NumT _, UseT (_, NumT _))
   | (StrT _, UseT (_, StrT _))
@@ -4336,9 +4337,10 @@ and ground_subtype = function
   | (EmptyT _, _)
   | (_, UseT (_, MixedT _))
   | (_, UseT (_, FunProtoT _)) (* MixedT is used for object protos, this is for funcs *)
-  | (AnyT _, _)
-  | (_, UseT (_, AnyT _))
     -> true
+
+  | (AnyT _, u) -> not (any_propagating_use_t u)
+  | (_, UseT (_, AnyT _)) -> true
 
   | _ ->
     false

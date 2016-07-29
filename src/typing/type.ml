@@ -1023,6 +1023,20 @@ let is_any = function
 | AnyT _ -> true
 | _ -> false
 
+(* Use types trapped for any propagation *)
+let any_propagating_use_t = function
+  | CallT _
+  | GetPropT _
+  | MethodT _
+  | PredicateT _
+  | AndT _
+  | OrT _
+  | ReposLowerT _
+  | IntersectionPreprocessKitT _
+  (* TODO: ...others *)
+    -> true
+  | _ -> false
+
 (* Usually types carry enough information about the "reason" for their
    existence (e.g., position in code, introduction/elimination rules in
    the type system), so printing the reason provides a good idea of what the
