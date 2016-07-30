@@ -59,9 +59,10 @@ let get_module_t cx m reason =
     )
   | Some t -> t
 
-let require cx m_name loc =
+let require cx ?(internal=false) m_name loc =
   Context.add_require cx m_name loc;
-  Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
+  if not internal
+  then Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
   let reason = mk_reason (spf "CommonJS exports of \"%s\"" m_name) loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (

@@ -3460,12 +3460,15 @@ and jsx_title cx openingElement _children = Ast.JSX.(
       when name = "fbt" && facebook_ignore_fbt ->
     AnyT.why (mk_reason "<fbt />" eloc)
 
-  | Identifier (_, { Identifier.name }) when name = String.capitalize name ->
+  | Identifier (loc, { Identifier.name }) when name = String.capitalize name ->
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc
+    then AnyT.at eloc
+    else
       let reason = mk_reason (spf "React element `%s`" name) eloc in
       let c = Env.get_var cx name reason in
       let o = mk_props reason c in
       (* TODO: children *)
-      let react = require cx "react" eloc in
+      let react = require cx ~internal:true "react" eloc in
       Flow.mk_tvar_where cx reason (fun tvar ->
         let reason_createElement = mk_reason "property `createElement`" eloc in
         Flow.flow cx (react, MethodT(
@@ -3523,7 +3526,7 @@ and jsx_title cx openingElement _children = Ast.JSX.(
       ) in
       let o = mk_props component_t_reason component_t in
       (* TODO: children *)
-      let react = require cx "react" eloc in
+      let react = require cx ~internal:true "react" eloc in
       let reason = mk_reason (spf "React element: `%s`" name) eloc in
       Flow.mk_tvar_where cx reason (fun tvar ->
         let reason_createElement = mk_reason "property `createElement`" eloc in
