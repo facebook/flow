@@ -4043,7 +4043,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             model Object.prototype as a MixedT, as an optimization against a
             possible deluge of shadow properties on Object.prototype, since it
             is shared by every object. **)
-        rec_flow cx trace (get_builtin_type cx ~trace reason "Object", u)
+        rec_flow cx trace (get_builtin_type cx ~trace strict_reason "Object", u)
 
       (* if we're looking something up on the global/builtin object, then tweak
          the error to say that `x` doesn't exist. We can tell this is the global
