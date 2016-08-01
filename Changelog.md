@@ -5,6 +5,7 @@ Likely to cause new Flow errors:
 - The definition of `console` in the build-in libdef has been filled out and is no longer `any`. 
 
 New Features:
+- From now on we're going to start publishing Windows builds with each release. Please report any issues you have!
 - Forward references in type annotations: you can now reference a class in a type annotation before the class is declared
 - T is now covariant in `Class<T>`. So if class `B` extends class `A`, then `Class<B>` is now a subtype of `Class<A>`
 - Flow now lets you destructure objects with computed keys.
