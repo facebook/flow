@@ -750,6 +750,16 @@ module OrderedCache (Key : Key) (Config:ConfigType):
 
 end
 
+(*****************************************************************************)
+(* Every time we create a new cache, a function that knows how to clear the
+ * cache is registered in the "invalidate_callback_list" global.
+ *)
+(*****************************************************************************)
+
+let invalidate_callback_list = ref []
+let invalidate_caches () =
+  List.iter !invalidate_callback_list begin fun callback -> callback() end
+
 module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   type key = UserKeyType.t
@@ -804,16 +814,13 @@ module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
     L1.clear();
     L2.clear()
 
-end
-(*****************************************************************************)
-(* Every time we create a new cache, a function that knows how to clear the
- * cache is registered in the "invalidate_callback_list" global.
- *)
-(*****************************************************************************)
+  let () =
+    invalidate_callback_list := begin fun () ->
+      L1.clear();
+      L2.clear()
+    end :: !invalidate_callback_list
 
-let invalidate_callback_list = ref []
-let invalidate_caches () =
-  List.iter !invalidate_callback_list begin fun callback -> callback() end
+end
 
 (*****************************************************************************)
 (* A functor returning an implementation of the S module with caching.
