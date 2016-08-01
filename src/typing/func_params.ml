@@ -51,7 +51,7 @@ let mk cx type_params_map ~expr func =
       let t = typeAnnotation
         |> Anno.mk_type_annotation cx type_params_map reason in
       let default = Option.map default Default.expr in
-      let bindings = ref [] in
+      let rev_bindings = ref [] in
       let defaults = ref params.defaults in
       destructuring cx ~expr t None default pattern ~f:(fun loc name default t ->
         let t = match typeAnnotation with
@@ -61,7 +61,7 @@ let mk cx type_params_map ~expr func =
           EvalT (t, DestructuringT (reason, Become), mk_id())
         in
         Hashtbl.replace (Context.type_table cx) loc t;
-        bindings := (name, t, loc) :: !bindings;
+        rev_bindings := (name, t, loc) :: !rev_bindings;
         Option.iter default ~f:(fun default ->
           defaults := SMap.add name default !defaults
         )
@@ -70,7 +70,7 @@ let mk cx type_params_map ~expr func =
         | Some _ -> OptionalT t
         | None -> t (* TODO: assert (not optional) *)
       in
-      let param = Complex (t, !bindings) in
+      let param = Complex (t, List.rev !rev_bindings) in
       { list = param :: params.list; defaults = !defaults }
   ) in
   let add_rest params =
@@ -89,9 +89,11 @@ let mk cx type_params_map ~expr func =
     else defaults
   in
   let params = List.fold_left2 add_param empty params defaults in
-  match rest with
+  let params = match rest with
   | Some ident -> add_rest params ident
   | None -> params
+  in
+  { params with list = List.rev params.list }
 
 (* Ast.Type.Function.t -> Func_params.t *)
 let convert cx type_params_map func = Ast.Type.Function.(
@@ -109,25 +111,27 @@ let convert cx type_params_map func = Ast.Type.Function.(
     { params with list = param :: params.list }
   in
   let params = List.fold_left add_param empty func.params in
-  match func.rest with
+  let params = match func.rest with
   | Some ident -> add_rest params ident
   | None -> params
+  in
+  { params with list = List.rev params.list }
 )
 
 let names params =
-  params.list |> List.rev |> List.map (function
+  params.list |> List.map (function
     | Simple (_, (name, _, _))
     | Rest (_, (name, _, _)) -> name
   | Complex _ -> "_")
 
 let tlist params =
-  params.list |> List.rev |> List.map (function
+  params.list |> List.map (function
     | Simple (t, _)
     | Complex (t, _)
     | Rest (t, _) -> t)
 
 let iter f params =
-  params.list |> List.rev |> List.iter (function
+  params.list |> List.iter (function
     | Simple (_, b)
     | Rest (_, b) -> f b
     | Complex (_, bs) -> List.iter f bs)
