@@ -242,6 +242,8 @@ can be overridden with command line flags.
   should simply ignore the syntax. The default value of this option is `warn`,
   which gives a warning on use since this proposal is still very early-stage.
 
+- `all` (boolean) - set this to check all files, not just those with `@flow`
+
 ### [version]
 
 You can specify in the `.flowconfig` which version of Flow you expect to use.
