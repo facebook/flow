@@ -670,24 +670,11 @@ and UnionRep : sig
   (** build a rep from list of members *)
   val make: TypeTerm.t list -> t
 
-  (** build new rep with tail of this one's members, preserving error
-      history and shifting head member to type history *)
-  val tail: t -> t
-
-  (** build new rep with error prepended to history *)
-  val record_error: Errors.error -> t -> t
-
   (** enum base type, if any *)
   val enum_base: t -> TypeTerm.t option
 
   (** members in declaration order *)
   val members: t -> TypeTerm.t list
-
-  (** type history in reverse speculation order *)
-  val history: t -> TypeTerm.t list
-
-  (** error history in reverse speculation order *)
-  val errors: t -> Errors.error list
 
   (** map rep r to rep r' along type mapping f *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -741,16 +728,12 @@ end = struct
       - if union is an enum (set of singletons over a common base)
         then Some (base, set)
         (additional specializations probably to come)
-      - error history, used during speculation:
-        parallel lists of failed member types and their errors
    *)
   type t =
     TypeTerm.t list *
-    (TypeTerm.t * EnumSet.t) option *
-    TypeTerm.t list *
-    Errors.error list
+    (TypeTerm.t * EnumSet.t) option
 
-  let empty = [], None, [], []
+  let empty = [], None
 
   (* helper: add t to enum set if base matches *)
   let acc_enum (base, tset) t =
@@ -770,38 +753,25 @@ end = struct
           ListUtils.fold_left_opt acc_enum (base, EnumSet.singleton t) ts
         | _ -> None
     in
-    tlist, enum, [], []
+    tlist, enum
 
-  let enum_base (_, enum, _, _) =
+  let enum_base (_, enum) =
     match enum with
     | None -> None
     | Some (base, _) -> Some base
 
-  let tail (ts, enum, hist, errs) =
-    match ts with
-    | [] -> ts, enum, hist, errs
-    | t :: ts ->  ts, enum, t :: hist, errs
-
-  let record_error err (ts, enum, hist, errs) =
-    ts, enum, hist, err :: errs
-
-  let members (tlist, _, _, _) = tlist
-
-  let history (_, _, hist, _) = hist
-
-  let errors (_, _, _, errs) = errs
+  let members (tlist, _) = tlist
 
   let map f rep = make (List.map f (members rep))
 
-  let ident_map f ((ts, _enum, hist, errs) as rep) =
+  let ident_map f ((ts, _enum) as rep) =
     let rev_ts, changed = List.fold_left (fun (rev_ts, changed) member ->
       let member_ = f member in
       member_::rev_ts, changed || member_ != member
     ) ([], false) ts in
-    let changed = changed || hist <> [] || errs <> [] in
     if changed then make (List.rev rev_ts) else rep
 
-  let quick_mem t (tlist, enum, _, _) =
+  let quick_mem t (tlist, enum) =
     let t = canon t in
     match enum with
     | None ->
@@ -813,8 +783,7 @@ end = struct
       | _ -> Some false
 end
 
-(* We encapsulate IntersectionT's internal structure to
-   maintain error histories while speculating.
+(* We encapsulate IntersectionT's internal structure.
 
    Representations are opaque. `make` chooses a
    representation internally, and client code which
@@ -833,21 +802,8 @@ and InterRep : sig
   (** build rep from list of members *)
   val make: TypeTerm.t list -> t
 
-  (** build new rep with tail of this one's members, preserving error
-      history and shifting head member to type history *)
-  val tail: t -> t
-
-  (** build new rep with error prepended to history *)
-  val record_error: Errors.error -> t -> t
-
   (** member list in declaration order *)
   val members: t -> TypeTerm.t list
-
-  (** type history in reverse speculation order *)
-  val history: t -> TypeTerm.t list
-
-  (** error history in reverse speculation order *)
-  val errors: t -> Errors.error list
 
   (** map rep r to rep r' along type mapping f. drops history *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -859,40 +815,23 @@ and InterRep : sig
 end = struct
   (** intersection rep is:
       - member list in declaration order
-      - error history, used during speculation:
-        parallel lists of failed member types and their errors
     *)
   type t =
-    TypeTerm.t list *
-    TypeTerm.t list *
-    Errors.error list
+    TypeTerm.t list
 
-  let empty = [], [], []
+  let empty = []
 
-  let make ts = ts, [], []
+  let make ts = ts
 
-  let tail (ts, hist, errs) =
-    match ts with
-    | [] -> ts, hist, errs
-    | t :: ts ->  ts, t :: hist, errs
-
-  let record_error err (ts, hist, errs) =
-    ts, hist, err :: errs
-
-  let members (ts, _, _) = ts
-
-  let history (_, hist, _) = hist
-
-  let errors (_, _, errs) = errs
+  let members (ts) = ts
 
   let map f rep = make (List.map f (members rep))
 
-  let ident_map f ((ts, hist, errs) as rep) =
+  let ident_map f ((ts) as rep) =
     let rev_ts, changed = List.fold_left (fun (rev_ts, changed) member ->
       let member_ = f member in
       member_::rev_ts, changed || member_ != member
     ) ([], false) ts in
-    let changed = changed || hist <> [] || errs <> [] in
     if changed then make (List.rev rev_ts) else rep
 
 end
