@@ -309,11 +309,6 @@ let iter_props cx id f =
   find_props cx id
   |> SMap.iter f
 
-let iter_real_props cx id f =
-  find_props cx id
-  |> SMap.filter (fun x _ -> not (is_internal_name x))
-  |> SMap.iter f
-
 (* visit an optional evaluated type at an evaluation id *)
 let visit_eval_id cx id f =
   match IMap.get id (Context.evaluated cx) with
@@ -741,15 +736,64 @@ module Cache = struct
 
   let repos_cache = ref Repos_cache.empty
 
+  (* Cache that records sentinel properties for objects. Cache entries are
+     populated before checking against a union of object types, and are used
+     while checking against each object type in the union. *)
+  module SentinelProp = struct
+    let cache = ref IMap.empty
+
+    let add id more_keys =
+      match IMap.get id !cache with
+      | Some keys ->
+        cache := IMap.add id (SSet.union keys more_keys) !cache
+      | None ->
+        cache := IMap.add id more_keys !cache
+
+    let ordered_iter id f map =
+      let map = match IMap.get id !cache with
+        | Some keys ->
+          SSet.fold (fun s map ->
+            match SMap.get s map with
+            | Some t -> f s t; SMap.remove s map
+            | None -> map
+          ) keys map
+        | _ -> map in
+      SMap.iter f map
+
+  end
+
   let clear () =
     FlowConstraint.cache := TypePairSet.empty;
     Hashtbl.clear PolyInstantiation.cache;
-    repos_cache := Repos_cache.empty
+    repos_cache := Repos_cache.empty;
+    SentinelProp.cache := IMap.empty
 
-  let stats () =
+  let stats_poly_instantiation () =
     Hashtbl.stats PolyInstantiation.cache
 
+  (* debug util: please don't dead-code-eliminate *)
+  (* Summarize flow constraints in cache as ctor/reason pairs, and return counts
+     for each group. *)
+  let summarize_flow_constraint () =
+    let group_counts = TypePairSet.fold (fun (l,u) map ->
+      let key = spf "[%s] %s => [%s] %s"
+        (string_of_ctor l) (string_of_reason (reason_of_t l))
+        (string_of_use_ctor u) (string_of_reason (reason_of_use_t u)) in
+      match SMap.get key map with
+      | None -> SMap.add key 0 map
+      | Some i -> SMap.add key (i+1) map
+    ) !FlowConstraint.cache SMap.empty in
+    SMap.elements group_counts |> List.sort
+      (fun (_,i1) (_,i2) -> Pervasives.compare i1 i2)
+
 end
+
+(* Iterate over properties of an object, prioritizing sentinel properties (if
+   any) and ignoring shadow properties (if any). *)
+let iter_real_props cx id f =
+  find_props cx id
+  |> SMap.filter (fun x _ -> not (is_internal_name x))
+  |> Cache.SentinelProp.ordered_iter id f
 
 (* Helper module for full type resolution as needed to check union and
    intersection types.
@@ -5580,6 +5624,8 @@ and speculative_match cx trace branch l u =
    choice-making.
 *)
 and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
+  (* explore optimization opportunities *)
+  optimize_spec cx spec;
   (* extract stuff to ignore while considering actions *)
   let ignore = ignore_of_spec spec in
   (* split spec into a list of pairs of types to try speculative matching on *)
@@ -5735,14 +5781,74 @@ and trials_of_spec = function
   | IntersectionCases (ls, u) ->
     List.mapi (fun i l -> (i, reason_of_use_t u, l, u)) ls
 
-and ignore_of_spec = function
-  | IntersectionCases (_, CallT (_, callt)) -> Some (callt.return_t)
-  | _ -> None
-
 and choices_of_spec = function
   | UnionCases (_, ts)
   | IntersectionCases (ts, _)
     -> ts
+
+and ignore_of_spec = function
+  | IntersectionCases (_, CallT (_, callt)) -> Some (callt.return_t)
+  | _ -> None
+
+(* spec optimization *)
+(* Currently, the only optimization we do is for disjoint unions. Specifically,
+   when an object type is checked against an union of object types, we try to
+   guess and record sentinel properties across object types in the union. By
+   checking sentinel properties first, we force immediate match failures in the
+   vast majority of cases without having to do any useless additional work. *)
+and optimize_spec cx = function
+  | UnionCases (l, ts) -> begin match l with
+    | ObjT _ -> guess_and_record_sentinel_prop cx ts
+    | _ -> ()
+    end
+  | IntersectionCases _ -> ()
+
+and guess_and_record_sentinel_prop cx ts =
+
+  let props_of_object = function
+    | AnnotT (OpenT (_, id), _) ->
+      let constraints = find_graph cx id in
+      begin match constraints with
+      | Resolved (ObjT (_, { props_tmap; _ })) -> find_props cx props_tmap
+      | _ -> SMap.empty
+      end
+    | ObjT (_, { props_tmap; _ }) -> find_props cx props_tmap
+    | _ -> SMap.empty in
+
+  let is_singleton_type = function
+    | AnnotT (OpenT (_, id), _) ->
+      let constraints = find_graph cx id in
+      begin match constraints with
+      | Resolved (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _) -> true
+      | _ -> false
+      end
+    | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ -> true
+    | _ -> false in
+
+  (* Compute the intersection of properties of objects *)
+  let prop_maps = List.map props_of_object ts in
+  let acc = List.fold_left (fun acc map ->
+    SMap.filter (fun s _ -> SMap.mem s map) acc
+  ) (List.hd prop_maps) (List.tl prop_maps) in
+
+  (* Keep only those that have singleton types *)
+  let acc = SMap.filter (fun _ -> is_singleton_type) acc in
+
+  if not (SMap.is_empty acc) then
+    (* Record the guessed sentinel properties for each object *)
+    let keys = SMap.fold (fun s _ keys -> SSet.add s keys) acc SSet.empty in
+    List.iter (function
+      | AnnotT (OpenT (_, id), _) ->
+        let constraints = find_graph cx id in
+        begin match constraints with
+        | Resolved (ObjT (_, { props_tmap; _ })) ->
+          Cache.SentinelProp.add props_tmap keys
+        | _ -> ()
+        end
+      | ObjT (_, { props_tmap; _ }) ->
+        Cache.SentinelProp.add props_tmap keys
+      | _ -> ()
+    ) ts
 
 and fire_actions cx trace = List.iter (function
   | _, Speculation.Action.Flow (l, u) -> rec_flow cx trace (l, u)

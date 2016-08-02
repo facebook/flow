@@ -32,7 +32,8 @@ val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
 
 module Cache: sig
   val clear: unit -> unit
-  val stats: unit -> Hashtbl.statistics
+  val stats_poly_instantiation: unit -> Hashtbl.statistics
+  val summarize_flow_constraint: unit -> (string * int) list
 end
 
 val mk_tvar: Context.t -> reason -> Type.t
