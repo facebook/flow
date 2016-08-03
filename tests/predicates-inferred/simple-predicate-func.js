@@ -60,3 +60,15 @@ function foo(x: string | Array<string>): string {
     return x.join();
   }
 }
+
+function foo(a, b) {
+  if ($pred$two_strings(a, b)) {
+    from_two_strings(a, b);
+  }
+}
+
+function $pred$two_strings(x,y) {
+  return $pred$is_string(x) && $pred$is_string(y) ;
+}
+
+declare function from_two_strings(x: string, y: string): void;

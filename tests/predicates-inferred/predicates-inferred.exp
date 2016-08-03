@@ -1,3 +1,15 @@
+sanity-multi-params.js:10
+ 10:     return x;
+                ^ array type. This type is incompatible with the expected return type of
+  8: function foo(x: string | Array<string>): string {
+                                              ^^^^^^ string
+
+sanity-multi-params.js:12
+ 12:     return x.join();
+                  ^^^^ property `join`. Property not found in
+ 12:     return x.join();
+                ^ String
+
 sanity-ordering.js:14
  14:     const key = stack.shift();
                      ^^^^^^^^^^^^^ call of method `shift`
@@ -55,18 +67,6 @@ sanity.js:15
 sanity.js:19
  19: function $pred$indirect_is_number(y) {
                                           ^ Invalid body for predicate function. Expected a simple return statement as body.
-
-simple-predicate-func.js:58
- 58:     return x;
-                ^ array type. This type is incompatible with the expected return type of
- 56: function foo(x: string | Array<string>): string {
-                                              ^^^^^^ string
-
-simple-predicate-func.js:60
- 60:     return x.join();
-                  ^^^^ property `join`. Property not found in
- 60:     return x.join();
-                ^ String
 
 
 Found 11 errors

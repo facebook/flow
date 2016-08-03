@@ -4445,9 +4445,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
      predicate pointing to the type of the function that will supply this
      predicated when it is resolved. *)
   | loc, Call { Call.callee = c; arguments }
-    (* NOTE: Toggle the line below to allow/disallow latent predicate
-       support for functions with multiple parameters. *)
-    when List.length arguments = 1
     ->
       let is_spread = function | Spread _ -> true | _ -> false in
       if List.exists is_spread arguments then
