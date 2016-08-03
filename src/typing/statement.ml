@@ -3479,7 +3479,7 @@ and jsx_title cx openingElement _children = Ast.JSX.(
         ))
       )
 
-  | Identifier (_, { Identifier.name }) ->
+  | Identifier (loc, { Identifier.name }) ->
       (**
        * For JSX intrinsics, we assume a built-in global
        * object type: $JSXIntrinsics. The keys of this object type correspond to
@@ -3515,11 +3515,14 @@ and jsx_title cx openingElement _children = Ast.JSX.(
         mk_reason (spf "JSX Intrinsic: `%s`" name) eloc
       in
       let component_t = Flow.mk_tvar_where cx component_t_reason (fun t ->
-        let prop_t = get_prop
-          cx
-          component_t_reason
-          jsx_intrinsics
-          (component_t_reason, name)
+        let prop_t =
+          if Type_inference_hooks_js.dispatch_member_hook cx name loc jsx_intrinsics
+          then AnyT.at eloc
+          else get_prop
+            cx
+            component_t_reason
+            jsx_intrinsics
+            (component_t_reason, name)
         in
         Flow.flow_t cx (prop_t, t)
       ) in

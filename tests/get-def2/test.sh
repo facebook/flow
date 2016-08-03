@@ -27,5 +27,5 @@ $FLOW get-def --strip-root main.js 20 41
 # React class and attribute expressions
 $FLOW get-def --strip-root react.js 9 3
 $FLOW get-def --strip-root react.js 9 9
-$FLOW get-def --strip-root react.js 11 4 # TODO: intrinstics don't work yet
+$FLOW get-def --strip-root react.js 11 4
 $FLOW get-def --strip-root react.js 11 12
