@@ -1,6 +1,8 @@
 /*
   $FlowIssue is a synonym for any, used by JS devs to signal
   a potential typechecker bug to the Flow team.
+
+  @flow
  */
 
 // no param

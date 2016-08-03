@@ -972,6 +972,12 @@ let any_propagating_use_t = function
   | OrT _
   | ReposLowerT _
   | IntersectionPreprocessKitT _
+  | PredSubstT _
+  | CallAsPredicateT _
+  | CJSRequireT _
+  | ImportModuleNsT _
+  | ImportDefaultT _
+  | ImportNamedT _
   (* TODO: ...others *)
     -> true
   | _ -> false

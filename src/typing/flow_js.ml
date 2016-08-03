@@ -1680,6 +1680,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ) in
         rec_flow_t cx trace (import_t, t)
 
+    (* imports are `any`-typed when they are from (1) unchecked modules or (2)
+       modules with `any`-typed exports *)
+    | AnyT _,
+        ( CJSRequireT(reason, t)
+        | ImportModuleNsT(reason, t)
+        | ImportDefaultT(reason, _, _, t)
+        | ImportNamedT(reason, _, _, t)
+        ) ->
+      rec_flow_t cx trace (AnyT.why reason, t)
+
     | ((PolyT (_, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
       add_error cx (mk_info reason [
         spf
@@ -4111,8 +4121,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         in
         flow_err_reasons cx trace msg (reason_op, strict_reason)
 
-    (* LookupT is a non-strict lookup, never fired *)
-    | (MixedT _, LookupT _) -> ()
+    (* LookupT is a non-strict lookup *)
+    | (MixedT (r, _), LookupT (reason_op, None, [], _, t)) ->
+      (* don't fire
+
+         ...unless this failure resulted when an unchecked module was looked up
+         and not found declared, in which case consider that module's exports to
+         be `any` *)
+      if is_unchecked_module_not_declared (r, reason_op)
+      then rec_unify cx trace t (AnyT.why reason_op)
 
     | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
         flow_err_prop_not_found cx trace (reason_op, reason_strict)
@@ -4581,6 +4598,16 @@ and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
     Some reason_o
   else
     None
+
+(* When a non-strict lookup failure happens, check whether this was the result
+   of looking up an unchecked module that is not declared.
+
+   NOTE: Although this check works today as intended, it is expected to be quite
+   fragile, and should be replaced by a distinct lookup mode once a planned
+   refactoring of LookupT lands in the near future.
+*)
+and is_unchecked_module_not_declared (reason_builtin, reason_import) =
+  is_builtin_reason reason_builtin && not (is_builtin_reason reason_import)
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)

@@ -38,5 +38,11 @@ sanity-pred-with-body.js:6
   6: function pred(x: mixed): $StrP<0> { // error: cannot use pred type here
                               ^^^^^^^^ This is not a valid context for this predicate type. Dependent predicate types can only be used as return types of function declarations.
 
+sanity-pred-with-body.js:13
+ 13:     return x;
+                ^ array type. This type is incompatible with the expected return type of
+ 10: function foo(x: string | Array<string>): string {
+                                              ^^^^^^ string
 
-Found 7 errors
+
+Found 8 errors

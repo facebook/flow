@@ -1,3 +1,5 @@
+// @flow
+
 function foo(x:any):any { return x; }
 function bar(x:any):mixed { return x; }
 function qux(x:mixed):any { return x; }

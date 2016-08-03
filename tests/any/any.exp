@@ -1,27 +1,27 @@
-any.js:6
-  6: var y:string = bar(0);
+any.js:8
+  8: var y:string = bar(0);
                     ^^^^^^ mixed. This type is incompatible with
-  6: var y:string = bar(0);
+  8: var y:string = bar(0);
            ^^^^^^ string
 
-flowfixme.js:12
- 12: function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
+flowfixme.js:14
+ 14: function baz(x:$FlowFixMe<nnumber>): $FlowFixMe<number> { return x; }
                                ^^^^^^^ identifier `nnumber`. Could not resolve name
 
-flowfixme.js:15
- 15: var y:string = bar(0);
+flowfixme.js:17
+ 17: var y:string = bar(0);
                     ^^^^^^ mixed. This type is incompatible with
- 15: var y:string = bar(0);
+ 17: var y:string = bar(0);
            ^^^^^^ string
 
-flowissue.js:12
- 12: function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
+flowissue.js:14
+ 14: function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
                                ^^^^^^^ identifier `nnumber`. Could not resolve name
 
-flowissue.js:15
- 15: var y:string = bar(0);
+flowissue.js:17
+ 17: var y:string = bar(0);
                     ^^^^^^ mixed. This type is incompatible with
- 15: var y:string = bar(0);
+ 17: var y:string = bar(0);
            ^^^^^^ string
 
 propagate.js:10
@@ -30,5 +30,17 @@ propagate.js:10
   8: function foo(c: C, x: any): string {
                                  ^^^^^^ string
 
+propagate.js:16
+ 16:     (x: boolean);
+          ^ mixed. This type is incompatible with
+ 16:     (x: boolean);
+             ^^^^^^^ boolean
 
-Found 6 errors
+propagate.js:23
+ 23:     (x: boolean);
+          ^ mixed. This type is incompatible with
+ 23:     (x: boolean);
+             ^^^^^^^ boolean
+
+
+Found 8 errors

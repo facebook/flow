@@ -46,6 +46,12 @@ sanity.js:8
   8: function $pred$check(y): $StrP<0> {
                               ^^^^^^^^ This is not a valid context for this predicate type. Dependent predicate types can only be used as return types of function declarations.
 
+sanity.js:15
+ 15:   (y: number);
+        ^ boolean. This type is incompatible with
+ 15:   (y: number);
+           ^^^^^^ number
+
 sanity.js:19
  19: function $pred$indirect_is_number(y) {
                                           ^ Invalid body for predicate function. Expected a simple return statement as body.
@@ -63,4 +69,4 @@ simple-predicate-func.js:60
                 ^ String
 
 
-Found 10 errors
+Found 11 errors
