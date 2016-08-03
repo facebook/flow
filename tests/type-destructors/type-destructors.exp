@@ -1,0 +1,12 @@
+property_type.js:1
+  1: type Malformed = $PropertyType<any, number>;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected object type and string literal as arguments to $PropertyType
+
+property_type.js:6
+  6: (42: Obj_Prop_x);
+      ^^ number. This type is incompatible with
+  6: (42: Obj_Prop_x);
+          ^^^^^^^^^^ string
+
+
+Found 2 errors
