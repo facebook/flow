@@ -309,16 +309,6 @@ module rec TypeTerm : sig
     | OrT of reason * t * t
     | NotT of reason * t
 
-    (**
-     * A special (internal-only) type used to "reify" a TypeT back down to it's
-     * value-space type. One way to think of this is as the inverse of `typeof`.
-     *
-     * Note that there is no syntax for specifying this type. To surface such a
-     * type would result in code that cannot be compiled without extensive type
-     * info (or possibly at all!).
-     *)
-    | ReifyTypeT of reason * t_out
-
     (* operation on polymorphic types *)
     (** SpecializeT(_, _, cache, targs, tresult) instantiates a polymorphic type with
         type arguments targs, and flows the result into tresult. If cache is set,
@@ -1128,7 +1118,6 @@ and reason_of_use_t = function
   | AndT (reason, _, _)
   | OrT (reason, _, _)
   | NotT (reason, _)
-  | ReifyTypeT (reason, _)
   | BecomeT (reason, _)
   | ReposLowerT (reason, _)
   | ReposUseT (reason, _, _)
@@ -1367,8 +1356,6 @@ and mod_reason_of_use_t f = function
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | NotT (reason, t) -> NotT (f reason, t)
 
-  | ReifyTypeT (reason, t_out) -> ReifyTypeT (f reason, t_out)
-
   | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
       SpecializeT (f reason_op, reason_tapp, cache, ts, t)
 
@@ -1545,7 +1532,6 @@ let string_of_use_ctor = function
   | AndT _ -> "AndT"
   | OrT _ -> "OrT"
   | NotT _ -> "NotT"
-  | ReifyTypeT _ -> "ReifyTypeT"
   | SpecializeT _ -> "SpecializeT"
   | ThisSpecializeT _ -> "ThisSpecializeT"
   | VarianceCheckT _ -> "VarianceCheckT"

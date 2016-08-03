@@ -3493,11 +3493,10 @@ and jsx_title cx openingElement _children = Ast.JSX.(
        * intrinsics their application uses with a more specific libdef.
        *)
       let jsx_intrinsics =
-        Env.get_var
-          ~lookup_mode:Env.LookupMode.ForType
+        Flow.get_builtin_type
           cx
-          "$JSXIntrinsics"
           (mk_reason "JSX Intrinsics lookup" eloc)
+          "$JSXIntrinsics"
       in
 
       (**
@@ -3522,7 +3521,7 @@ and jsx_title cx openingElement _children = Ast.JSX.(
           jsx_intrinsics
           (component_t_reason, name)
         in
-        Flow.flow cx (prop_t, ReifyTypeT(component_t_reason, t))
+        Flow.flow_t cx (prop_t, t)
       ) in
       let o = mk_props component_t_reason component_t in
       (* TODO: children *)

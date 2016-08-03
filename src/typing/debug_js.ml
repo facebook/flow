@@ -390,10 +390,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | ReifyTypeT (_, t_out) -> [
-      "t_out", _json_of_t json_cx t_out
-    ]
-
   | SpecializeT (_, _, cache, targs, tvar) -> [
       "cache", JSON_Bool cache;
       "types", JSON_Array (List.map (_json_of_t json_cx) targs);
@@ -1159,7 +1155,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
-  | ReifyTypeT (_, arg) -> p ~extra:(kid arg) t
   | SpecializeT (_, _, b, args, ret) -> p ~extra:(spf "%b, [%s], %s"
       b (String.concat "; " (List.map kid args)) (kid ret)) t
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
