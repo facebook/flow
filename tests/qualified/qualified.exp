@@ -4,10 +4,10 @@ qualified.js:4
   4: var x:M.C = 0;
            ^^^ C
 
-qualified.js:10
- 10: var b: bar = 'asdf'; // Error: string ~> number
+qualified.js:12
+ 12: var b: bar = 'asdf'; // Error: string ~> number
                   ^^^^^^ string. This type is incompatible with
- 10: var b: bar = 'asdf'; // Error: string ~> number
+ 12: var b: bar = 'asdf'; // Error: string ~> number
             ^^^ number
 
 

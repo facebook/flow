@@ -3035,22 +3035,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (TypeT(_,l), UseT (_, TypeT(_,u))) ->
       rec_unify cx trace l u
 
-    (* TODO: Disable this rule, it makes no sense semantically.
-
-       For example, consider class C. Then C.x is the static property x of
-       C. Now do type T = C. Then according to this rule, T.x is the type of
-       instance property x of C...lolwut? *)
-    | (TypeT(type_reason, l), GetPropT(get_reason, (prop_reason, name), t_out)) ->
-      (**
-       * Reify the type, extract the prop from that, then wrap that result in a
-       * TypeT again.
-       *)
-      let prop_t = mk_tvar_where cx get_reason (fun t ->
-        rec_flow cx trace (l, GetPropT(get_reason, (prop_reason, name), t))
-      ) in
-      let new_l = TypeT (type_reason, mk_typeof_annotation cx ~trace prop_t) in
-      rec_flow cx trace (new_l, UseT (UnknownUse, t_out))
-
     (* non-class/function values used in annotations are errors *)
     | _, UseT (_, TypeT _) ->
       flow_err cx trace
