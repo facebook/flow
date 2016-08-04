@@ -1666,15 +1666,28 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_flow cx trace (t, AssertImportIsValueT(reason, export_name));
             t
           | (_, None) ->
-            let msg =
-              spf "This module has no named export called `%s`." export_name
-            in
+            let num_exports = SMap.cardinal exports_tmap in
+            let has_default_export = SMap.get "default" exports_tmap <> None in
 
-            let known_exports = SMap.keys exports_tmap in
-            let suggestions = typo_suggestions known_exports export_name in
-            let msg = if List.length suggestions = 0 then msg else msg ^ (
-              spf " Did you mean `%s`?" (List.hd suggestions)
-            ) in
+            let msg =
+              if (num_exports = 1 && has_default_export)
+              then (
+                spf
+                  ("This module only has a default export. Did you mean " ^^
+                  "`import %s from ...`?")
+                  export_name
+              ) else (
+                let msg =
+                  spf "This module has no named export called `%s`." export_name
+                in
+
+                let known_exports = SMap.keys exports_tmap in
+                let suggestions = typo_suggestions known_exports export_name in
+                if List.length suggestions = 0 then msg else (
+                  msg ^ (spf " Did you mean `%s`?" (List.hd suggestions))
+                )
+              )
+            in
             add_error cx (mk_info reason [msg]);
             AnyT.why reason
         ) in
