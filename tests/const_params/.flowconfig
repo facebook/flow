@@ -6,3 +6,6 @@
 
 [options]
 experimental.const_params=true
+
+[version]
+>= 0

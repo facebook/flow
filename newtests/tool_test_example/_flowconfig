@@ -6,3 +6,6 @@
 
 [options]
 all=true
+
+[version]
+>= 0

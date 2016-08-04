@@ -19,7 +19,7 @@ rm -rf "$DIR"
 # Test a .flowconfig with temp_dir
 DIR=$(mktemp -d /tmp/flow.XXXXXX)
 TEST_DIR=$(mktemp -d /tmp/flow.XXXXXX)
-printf "[options]\ntemp_dir=%s" "$DIR" > "$TEST_DIR/.flowconfig"
+printf "[options]\ntemp_dir=%s\n[version]\n>= 0\n" "$DIR" > "$TEST_DIR/.flowconfig"
 $FLOW status "$TEST_DIR" 2> /dev/null > /dev/null
 if [[ "$OSTYPE" == "msys"* ]]; then
     [ -f "$DIR"/*.sock ]    && echo ".flowconfig: sock file exists"

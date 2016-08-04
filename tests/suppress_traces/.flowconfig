@@ -6,3 +6,6 @@
 
 [options]
 suppress_comment=.*\\$FlowFixMe.*
+
+[version]
+>= 0

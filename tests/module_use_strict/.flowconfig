@@ -1,2 +1,5 @@
 [options]
 module.use_strict=true
+
+[version]
+>= 0

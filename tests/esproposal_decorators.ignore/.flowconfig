@@ -1,2 +1,5 @@
 [options]
 esproposal.decorators=ignore
+
+[version]
+>= 0

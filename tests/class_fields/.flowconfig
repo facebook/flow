@@ -7,3 +7,6 @@
 [options]
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
+
+[version]
+>= 0

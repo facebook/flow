@@ -6,3 +6,6 @@
 [libs]
 
 [options]
+
+[version]
+>= 0

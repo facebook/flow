@@ -1,3 +1,6 @@
 [options]
 suppress_comment=.*\\$FlowIssue
 strip_root=true
+
+[version]
+>= 0

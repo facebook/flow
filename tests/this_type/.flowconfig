@@ -1,2 +1,5 @@
 [libs]
 lib
+
+[version]
+>= 0

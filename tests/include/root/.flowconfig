@@ -4,3 +4,6 @@
 ../foo/batman
 [options]
 module.system=haste
+
+[version]
+>= 0

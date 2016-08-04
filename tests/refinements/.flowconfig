@@ -3,3 +3,6 @@ module.system=haste
 
 [libs]
 lib.js
+
+[version]
+>= 0

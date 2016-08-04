@@ -6,3 +6,6 @@
 
 [options]
 suppress_comment=[
+
+[version]
+>= 0

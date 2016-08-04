@@ -1,2 +1,5 @@
 [options]
 module.name_mapper.extension='css' -> '<PROJECT_ROOT>/CSSModule.js.flow'
+
+[version]
+>= 0
