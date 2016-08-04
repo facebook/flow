@@ -197,10 +197,7 @@ module OptionParser(Config : CONFIG) = struct
     let root = CommandUtils.guess_root root in
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
-    begin match ignore_version, FlowConfig.(flowconfig.options.Opts.version) with
-    | false, Some version -> assert_version version
-    | _ -> ()
-    end;
+    if not ignore_version then assert_version flowconfig.FlowConfig.version;
 
     let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
     | Opts.Node -> "node"

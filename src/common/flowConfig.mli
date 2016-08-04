@@ -42,7 +42,6 @@ module Opts : sig
     shm_dep_table_pow: int;
     shm_hash_table_pow: int;
     shm_log_level: int;
-    version: string option;
   }
   val default_options : t
 end
@@ -56,6 +55,8 @@ type config = {
   libs: string list;
   (* config options *)
   options: Opts.t;
+  (* version *)
+  version: string;
 }
 
 val get: string -> config

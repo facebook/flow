@@ -73,7 +73,6 @@ module Opts = struct
     shm_dep_table_pow: int;
     shm_hash_table_pow: int;
     shm_log_level: int;
-    version: string option;
   }
 
   type _initializer =
@@ -154,7 +153,6 @@ module Opts = struct
     shm_dep_table_pow = 17;
     shm_hash_table_pow = 19;
     shm_log_level = 0;
-    version = None;
   }
 
   let parse =
@@ -276,6 +274,8 @@ type config = {
   libs: string list;
   (* config options *)
   options: Opts.t;
+  (* version *)
+  version: string;
 }
 
 module Pp : sig
@@ -323,15 +323,11 @@ end = struct
     libs o config.libs;
     fprintf o "\n";
     section_header o "options";
-    options o config
+    options o config;
+    fprintf o "\n";
+    section_header o "version";
+    fprintf o "%s\n" config.version
 end
-
-let empty_config = {
-  ignores = [];
-  includes = [];
-  libs = [];
-  options = Opts.default_options;
-}
 
 let group_into_sections lines =
   let is_section_header = Str.regexp "^\\[\\(.*\\)\\]$" in
@@ -692,7 +688,7 @@ let parse_options config lines =
   in
   {config with options}
 
-let parse_version config lines =
+let parse_version section_ln lines =
   let potential_versions = lines
   |> List.map (fun (ln, line) -> ln, String.trim line)
   |> List.filter (fun (_, s) -> s <> "")
@@ -707,9 +703,9 @@ let parse_version config lines =
           version_str
       );
 
-    let options = { config.options with Opts.version = Some version_str } in
-    { config with options }
-  | _ -> config
+    version_str
+  | [] ->
+    error section_ln "Expected [version] to be non-empty."
 
 
 let parse_section config ((section_ln, section), lines) =
@@ -721,11 +717,27 @@ let parse_section config ((section_ln, section), lines) =
   | "ignore", _ -> parse_ignores config lines
   | "libs", _ -> parse_libs config lines
   | "options", _ -> parse_options config lines
-  | "version", _ -> parse_version config lines
   | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
 
-let parse config lines =
+let parse lines =
   let sections = group_into_sections lines in
+  let version, sections = List.fold_left (fun (version, sections) section ->
+    match section with
+    | ((ln, "version"), lines) -> Some (parse_version ln lines), sections
+    | _ -> version, section::sections
+  ) (None, []) sections in
+  let version = match version, sections with
+  | Some version, _ -> version
+  | None, [] -> ">= 0"
+  | None, _ -> error 0 "A [version] section is required."
+  in
+  let config = {
+    ignores = [];
+    includes = [];
+    libs = [];
+    options = Opts.default_options;
+    version;
+  } in
   List.fold_left parse_section config sections
 
 let is_not_comment =
@@ -744,14 +756,21 @@ let read filename =
     |> Sys_utils.split_lines
     |> List.mapi (fun i line -> (i+1, String.trim line))
     |> List.filter is_not_comment in
-  parse empty_config lines
+  parse lines
 
 let init ~ignores ~includes ~libs ~options =
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
   let includes_lines = List.map (fun s -> (1, s)) includes in
   let options_lines = List.map (fun s -> (1, s)) options in
   let lib_lines = List.map (fun s -> (1, s)) libs in
-  let config = parse_ignores empty_config ignores_lines in
+  let config = {
+    ignores = [];
+    includes = [];
+    libs = [];
+    options = Opts.default_options;
+    version = ">= " ^ version;
+  } in
+  let config = parse_ignores config ignores_lines in
   let config = parse_includes config includes_lines in
   let config = parse_options config options_lines in
   let config = parse_libs config lib_lines in
