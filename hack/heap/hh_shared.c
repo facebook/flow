@@ -383,6 +383,9 @@ static char* heap_init;
 /* This should only be used by the master */
 static size_t heap_init_size = 0;
 
+/* Size of the heap since the last garbage collect*/
+static size_t latest_heap_size = 0;
+
 static size_t used_heap_size(void) {
   return *heap - heap_init;
 }
@@ -1304,6 +1307,7 @@ static void temp_memory_unmap(char * tmp_heap) {
 void hh_call_after_init() {
   CAMLparam0();
   heap_init_size = used_heap_size();
+  latest_heap_size = heap_init_size;
   if(2 * heap_init_size >= heap_size) {
     caml_failwith("Heap init size is too close to max heap size; "
       "GC will never get triggered!");
@@ -1333,8 +1337,8 @@ void hh_collect(value aggressive_val) {
   size_t mem_size = 0;
 
   float space_overhead = aggressive ? 1.2 : 2.0;
-  if(used_heap_size() < (size_t)(space_overhead * heap_init_size)) {
-    // We have not grown past twice the size of the initial size
+  if(used_heap_size() < (size_t)(space_overhead * latest_heap_size)) {
+    // We have not grown past twice the size since we last gc'd
     return;
   }
 
@@ -1366,7 +1370,7 @@ void hh_collect(value aggressive_val) {
   *heap = heap_init + mem_size;
 
   temp_memory_unmap(tmp_heap);
-
+  latest_heap_size = used_heap_size();
 }
 
 /*****************************************************************************/
