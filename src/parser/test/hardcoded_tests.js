@@ -816,6 +816,15 @@ module.exports = {
           {'type': 'ExistsTypeAnnotation'}
         ]
       },
+      'type T = { a: | number | string }': {
+        'body.0.right.properties.0.value': {
+          'type': 'UnionTypeAnnotation',
+          'types': [
+            {'type': 'NumberTypeAnnotation'},
+            {'type': 'StringTypeAnnotation'},
+          ]
+        }
+      }
     },
     'Tuples': {
       'var a : [] = [];': {

@@ -131,6 +131,7 @@ end = struct
       Loc.btwn start_loc end_loc, acc
 
     and union env =
+      let _ = Expect.maybe env T_BIT_OR in
       let left = intersection env in
       union_with env left
 
@@ -149,6 +150,7 @@ end = struct
         else left
 
     and intersection env =
+      let _ = Expect.maybe env T_BIT_AND in
       let left = prefix env in
       intersection_with env left
 
@@ -2865,9 +2867,6 @@ end = struct
       let id = Parse.identifier env in
       let typeParameters = Type.type_parameter_declaration_with_defaults env in
       Expect.token env T_ASSIGN;
-      (match Peek.token env with
-      | T_BIT_OR | T_BIT_AND -> Eat.token env
-      | _ -> ());
       let right = Type._type env in
       let end_loc = match Peek.semicolon_loc env with
       | None -> fst right
