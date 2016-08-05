@@ -1337,8 +1337,16 @@ void hh_collect(value aggressive_val) {
   size_t mem_size = 0;
 
   float space_overhead = aggressive ? 1.2 : 2.0;
-  if(used_heap_size() < (size_t)(space_overhead * latest_heap_size)) {
+  size_t used = used_heap_size();
+  if(used < (size_t)(space_overhead * latest_heap_size)) {
     // We have not grown past twice the size since we last gc'd
+
+    /* We maintain the invariant that the latest_heap_size
+      is at most the current heap size, to make sure the GC
+      always collects */
+    if (used < latest_heap_size) {
+      latest_heap_size = used;
+    }
     return;
   }
 
