@@ -38,6 +38,8 @@ let get_time t = t.time
 
 let get_content t = t.content
 
+let being_edited t = Unix.gettimeofday () -. t.time < 1.
+
 let nth_line lines n =
   match List.nth lines n with
   | Some s -> s

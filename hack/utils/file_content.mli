@@ -29,4 +29,6 @@ val get_time : t -> float
 
 val get_content : t -> string
 
+val being_edited : t -> bool
+
 val edit_file : t -> code_edit list -> t
