@@ -66,19 +66,19 @@ es6modules.js:47
 
 es6modules.js:53
  53: import {doesntExist} from "CommonJS_Clobbering_Class"; // Error: Not an exported binding
-             ^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `doesntExist`.
+             ^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module only has a default export. Did you mean `import doesntExist from ...`?
 
 es6modules.js:59
  59: import {staticNumber1, baseProp, childProp} from "CommonJS_Clobbering_Class"; // Error
-             ^^^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `staticNumber1`.
+             ^^^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module only has a default export. Did you mean `import staticNumber1 from ...`?
 
 es6modules.js:59
  59: import {staticNumber1, baseProp, childProp} from "CommonJS_Clobbering_Class"; // Error
-                            ^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `baseProp`.
+                            ^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module only has a default export. Did you mean `import baseProp from ...`?
 
 es6modules.js:59
  59: import {staticNumber1, baseProp, childProp} from "CommonJS_Clobbering_Class"; // Error
-                                      ^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module has no named export called `childProp`.
+                                      ^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module only has a default export. Did you mean `import childProp from ...`?
 
 es6modules.js:63
  63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
@@ -164,7 +164,7 @@ es6modules.js:97
 
 es6modules.js:103
 103: import {doesntExist} from "ES6_Default_AnonFunction1"; // Error: Not an exported binding
-             ^^^^^^^^^^^ Named import from module `ES6_Default_AnonFunction1`. This module has no named export called `doesntExist`.
+             ^^^^^^^^^^^ Named import from module `ES6_Default_AnonFunction1`. This module only has a default export. Did you mean `import doesntExist from ...`?
 
 es6modules.js:107
 107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string

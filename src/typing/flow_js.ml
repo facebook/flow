@@ -1843,9 +1843,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, IdxUnwrap (_, t)) -> rec_flow_t cx trace (l, t)
 
     (* De-maybe-ify an idx() property access *)
-    | (MaybeT inner_t, IdxUnMaybeifyT (_, t))
-    | (OptionalT inner_t, IdxUnMaybeifyT (_, t))
-      -> rec_flow_t cx trace (inner_t, t)
+    | (MaybeT inner_t, IdxUnMaybeifyT _)
+    | (OptionalT inner_t, IdxUnMaybeifyT _)
+      -> rec_flow cx trace (inner_t, u)
     | (NullT _, IdxUnMaybeifyT _) -> ()
     | (VoidT _, IdxUnMaybeifyT _) -> ()
     | (_, IdxUnMaybeifyT (_, t)) when (

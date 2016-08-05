@@ -5,101 +5,101 @@ import {suite, test} from '../../tsrc/test/Tester';
 export default suite(({addFile, addFiles, addCode}) => [
   test('idx(object)', [
     addCode('declare var idx: $Facebookism$Idx;\n').noNewErrors(),
-    addCode('declare var obj1: {a: ?{b: {c: number}}};').noNewErrors(),
-    addCode('declare var obj2: {a?: {b: {c: number}}};').noNewErrors(),
-    addCode('declare var obj3: {a: null | {b: {c: number}}};').noNewErrors(),
 
+    addCode('declare var obj1: {a: ?{b: {c: number}}};').noNewErrors(),
     addCode('obj1.a.b.c;\n').newErrors(
        `
-         test.js:12
-           12: obj1.a.b.c;
+         test.js:8
+           8: obj1.a.b.c;
                      ^ property \`b\`. Property cannot be accessed on possibly null value
-           12: obj1.a.b.c;
+           8: obj1.a.b.c;
               ^^^^^^ null
 
-         test.js:12
-           12: obj1.a.b.c;
+         test.js:8
+           8: obj1.a.b.c;
                      ^ property \`b\`. Property cannot be accessed on possibly undefined value
-           12: obj1.a.b.c;
+           8: obj1.a.b.c;
               ^^^^^^ undefined
        `,
     ),
-
     addCode('(idx(obj1, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj1, obj => obj["a"].b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj1, obj => obj.a.b.c): number);\n').newErrors(
       `
-        test.js:21
-         21: (idx(obj1, obj => obj.a.b.c): number);
+        test.js:17
+         17: (idx(obj1, obj => obj.a.b.c): number);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-         21: (idx(obj1, obj => obj.a.b.c): number);
+         17: (idx(obj1, obj => obj.a.b.c): number);
                                            ^^^^^^ number
 
-        test.js:21
-         21: (idx(obj1, obj => obj.a.b.c): number);
+        test.js:17
+         17: (idx(obj1, obj => obj.a.b.c): number);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-         21: (idx(obj1, obj => obj.a.b.c): number);
+         17: (idx(obj1, obj => obj.a.b.c): number);
                                            ^^^^^^ number
       `,
     ),
     addCode('(idx(obj1, obj => obj.a.b.c): ?string);\n').newErrors(
       `
-        test.js:24
-         24: (idx(obj1, obj => obj.a.b.c): ?string);
+        test.js:20
+         20: (idx(obj1, obj => obj.a.b.c): ?string);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-         24: (idx(obj1, obj => obj.a.b.c): ?string);
+         20: (idx(obj1, obj => obj.a.b.c): ?string);
                                             ^^^^^^ string
       `,
     ),
 
     addCode('(idx(obj1, obj => obj["a"].b.c): number);\n').newErrors(
        `
-         test.js:27
-          27: (idx(obj1, obj => obj["a"].b.c): number);
+         test.js:23
+          23: (idx(obj1, obj => obj["a"].b.c): number);
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-          27: (idx(obj1, obj => obj["a"].b.c): number);
+          23: (idx(obj1, obj => obj["a"].b.c): number);
                                                ^^^^^^ number
 
-         test.js:27
-          27: (idx(obj1, obj => obj["a"].b.c): number);
+         test.js:23
+          23: (idx(obj1, obj => obj["a"].b.c): number);
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-          27: (idx(obj1, obj => obj["a"].b.c): number);
+          23: (idx(obj1, obj => obj["a"].b.c): number);
                                                ^^^^^^ number
        `,
     ),
     addCode('idx(obj1, obj => obj.notAProp);\n').newErrors(
        `
-         test.js:30
-          30: idx(obj1, obj => obj.notAProp);
+         test.js:26
+          26: idx(obj1, obj => obj.notAProp);
                                    ^^^^^^^^ property \`notAProp\`. Property not found in
-          30: idx(obj1, obj => obj.notAProp);
+          26: idx(obj1, obj => obj.notAProp);
                                ^^^ object type
        `,
     ),
     addCode('idx(obj1, obj => obj.a = null);\n').newErrors(
        `
-         test.js:33
-          33: idx(obj1, obj => obj.a = null);
+         test.js:29
+          29: idx(obj1, obj => obj.a = null);
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call. idx() callbacks may only access properties on the callback parameter!
        `,
     ),
 
+    addCode('declare var obj2: {a?: {b: {c: number}}};').noNewErrors(),
     addCode('(idx(obj2, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj2, obj => obj.a.b.c): number);\n').newErrors(
       `
-      test.js:39
-      39: (idx(obj2, obj => obj.a.b.c): number);
+      test.js:37
+      37: (idx(obj2, obj => obj.a.b.c): number);
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ null. This type is incompatible with
-      39: (idx(obj2, obj => obj.a.b.c): number);
+      37: (idx(obj2, obj => obj.a.b.c): number);
                                         ^^^^^^ number
 
-      test.js:39
-      39: (idx(obj2, obj => obj.a.b.c): number);
+      test.js:37
+      37: (idx(obj2, obj => obj.a.b.c): number);
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
-      39: (idx(obj2, obj => obj.a.b.c): number);
+      37: (idx(obj2, obj => obj.a.b.c): number);
                                         ^^^^^^ number
       `,
     ),
+
+    addCode('declare var obj3: {a: null | {b: {c: number}}};').noNewErrors(),
     addCode('(idx(obj3, obj => obj.a.b.c): ?number);\n').noNewErrors(),
     addCode('(idx(obj3, obj => obj.a.b.c): number);\n').newErrors(
       `
@@ -116,6 +116,10 @@ export default suite(({addFile, addFiles, addCode}) => [
                                         ^^^^^^ number
       `,
     ),
+
+    // Nested maybes/optionals should get unwrapped
+    addCode('declare var obj4: {a?: ?(?{b: number})};').noNewErrors(),
+    addCode('(idx(obj4, obj => obj.a.b): ?number)').noNewErrors(),
   ]),
 
   test('idx(classInst)', [
