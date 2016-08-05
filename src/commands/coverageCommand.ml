@@ -164,7 +164,7 @@ let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
   end;
 
   let covered, total = List.fold_left accum_coverage (0, 0) types in
-  let percent = (float_of_int covered /. float_of_int total) *. 100. in
+  let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
   if json then
     let uncovered_locs = types
