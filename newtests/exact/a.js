@@ -1,7 +1,5 @@
 /**
  * Test $Exact on object types.
- *
- * @flow
  */
 
 /*

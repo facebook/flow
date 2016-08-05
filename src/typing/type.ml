@@ -366,7 +366,7 @@ module rec TypeTerm : sig
     | ElemT of reason * t * t * rw
 
     (* exact ops *)
-    | MakeExactT of reason * use_t
+    | MakeExactT of reason * make_exact
 
     (* Module import handling *)
     | CJSRequireT of reason * t
@@ -505,6 +505,8 @@ module rec TypeTerm : sig
     props_tmap: int;
     proto_t: prototype;
   }
+
+  and make_exact = Lower of t | Upper of use_t
 
   and propname = reason * name
 

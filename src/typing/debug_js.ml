@@ -472,9 +472,16 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "rw", JSON_String (string_of_rw rw);
     ]
 
-  | MakeExactT (_, t) -> [
-      "type", _json_of_use_t json_cx t
-    ]
+  | MakeExactT (_, payload) -> begin match payload with
+    | Upper u -> [
+        "cont", JSON_String "upper";
+        "type", _json_of_use_t json_cx u
+      ]
+    | Lower l -> [
+        "cont", JSON_String "lower";
+        "type", _json_of_t json_cx l
+      ]
+    end
 
   | CJSRequireT (_, export) -> [
       "export",

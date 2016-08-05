@@ -2277,43 +2277,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (AnyObjT reason | AnyFunT reason), GetKeysT (_, keys) ->
       rec_flow_t cx trace (StrT.why reason, keys)
 
-    (************************************************************************)
-    (* exact types *)
-    (************************************************************************)
-
-    (* ExactT<X> comes from annotation, may behave as LB or UB *)
-
-    (* when $Exact<LB> ~> UB, use MakeExactT to do (exactified LB ~> UB) *)
-    | ExactT (r, t), _ ->
-      rec_flow cx trace (t, MakeExactT (r, u))
-
-    (* exact ObjT LB ~> $Exact<UB>. unify *)
-    | ObjT (_, { flags; _ }), UseT (_, ExactT (_, xu)) when flags.exact ->
-      rec_unify cx trace l xu
-
-    (* inexact LB ~> $Exact<UB>. error *)
-    | _, UseT (_, ExactT _) ->
-      flow_err cx trace
-        "Inexact type is incompatible with exact type"
-        l u
-
-    (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
-
-    (* exactify incoming LB object type, flow to UB *)
-    | ObjT (r, obj), MakeExactT (_, u) ->
-      let exactobj = { obj with flags = { obj.flags with exact = true } } in
-      rec_flow cx trace (ObjT (r, exactobj), u)
-
-    (* unsupported kind *)
-    | _, MakeExactT _ ->
-      flow_err cx trace
-        "Unsupported exact type"
-        l u
-
-    (************************************************************************)
-    (* /exact types *)
-    (************************************************************************)
-
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
         out constraints, backtracking if they produce errors (and removing the
@@ -2491,6 +2454,52 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | SingletonBoolT (reason, b), _ ->
       rec_flow cx trace (BoolT (reason, Some b), u)
+
+    (************************************************************************)
+    (* exact object types *)
+    (************************************************************************)
+
+    (* ExactT<X> comes from annotation, may behave as LB or UB *)
+
+    (* when $Exact<LB> ~> UB, forward to MakeExactT *)
+    | ExactT (r, t), _ ->
+      rec_flow cx trace (t, MakeExactT (r, Upper u))
+
+    (* exact ObjT LB ~> $Exact<UB>. unify *)
+    | ObjT (_, { flags; _ }), UseT (_, ExactT (r, t)) when flags.exact ->
+      rec_flow cx trace (t, MakeExactT (r, Lower l))
+
+    (* inexact LB ~> $Exact<UB>. error *)
+    | _, UseT (_, ExactT _) ->
+      flow_err cx trace
+        "Inexact type is incompatible with exact type"
+        l u
+
+    (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
+
+    (* exactify incoming LB object type, flow to UB *)
+    | ObjT (r, obj), MakeExactT (_, Upper u) ->
+      let exactobj = { obj with flags = { obj.flags with exact = true } } in
+      rec_flow cx trace (ObjT (r, exactobj), u)
+
+    (* exactify incoming UB object type, flow to LB *)
+    | ObjT (ru, obj_u), MakeExactT (_, Lower ObjT (rl, obj_l)) ->
+      (* check for extra props in LB, then forward to standard obj ~> obj *)
+      let xl = { obj_l with flags = { obj_l.flags with exact = true } } in
+      let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
+      iter_real_props cx obj_l.props_tmap (fun prop_name _ ->
+        if not (has_prop cx obj_u.props_tmap prop_name)
+        then
+          let rl = replace_reason (spf "property `%s`" prop_name) rl in
+          flow_err_reasons cx trace "Property not found in" (rl, ru)
+      );
+      rec_flow_t cx trace (ObjT (rl, xl), ObjT (ru, xu))
+
+    (* unsupported kind *)
+    | _, MakeExactT _ ->
+      flow_err cx trace
+        "Unsupported exact type"
+        l u
 
     (****************************************************)
     (* dependent function type ~> substitution provider *)

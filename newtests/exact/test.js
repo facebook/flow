@@ -18,47 +18,59 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
     addFile('a.js')
       .newErrors(
         `
-          a.js:46
-           46: takesExactlyPerson(subtypeOfPerson); // error
+          a.js:44
+           44: takesExactlyPerson(subtypeOfPerson); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           46: takesExactlyPerson(subtypeOfPerson); // error
+           44: takesExactlyPerson(subtypeOfPerson); // error
                                   ^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-           40: declare function takesExactlyPerson(person: \$Exact<Person>): void;
+           38: declare function takesExactlyPerson(person: \$Exact<Person>): void;
                                                                   ^^^^^^ object type
 
-          a.js:58
-           58: takesExactlyPerson(returnsSubtypeOfPerson());  // error
+          a.js:56
+           56: takesExactlyPerson(returnsSubtypeOfPerson());  // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           58: takesExactlyPerson(returnsSubtypeOfPerson());  // error
+           56: takesExactlyPerson(returnsSubtypeOfPerson());  // error
                                   ^^^^^^^^^^^^^^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
-           40: declare function takesExactlyPerson(person: \$Exact<Person>): void;
+           38: declare function takesExactlyPerson(person: \$Exact<Person>): void;
                                                            ^^^^^^^^^^^^^^ exact type: Person
 
-          a.js:69
-           69: takesExactlyPerson(returnsExactlyPerson2()); // error
+          a.js:67
+           67: takesExactlyPerson(returnsExactlyPerson2()); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           69: takesExactlyPerson(returnsExactlyPerson2()); // error
+           67: takesExactlyPerson(returnsExactlyPerson2()); // error
                                   ^^^^^^^^^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-           40: declare function takesExactlyPerson(person: \$Exact<Person>): void;
+           38: declare function takesExactlyPerson(person: \$Exact<Person>): void;
                                                                   ^^^^^^ object type
 
-          a.js:83
-           83: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
+          a.js:81
+           81: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           74: declare function takesSubtypeOfPerson2(person2: Person2): void;
+           72: declare function takesSubtypeOfPerson2(person2: Person2): void;
                                                                ^^^^^^^ property \`first\`. Property not found in
-           83: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
+           81: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
                                      ^^^^^^^^^^^^^^^^^^^^^^ object type
 
-          a.js:92
-           92: takesPersonPred(returnsExactlyPersonPred()); // error
+          a.js:90
+           90: takesPersonPred(returnsExactlyPersonPred()); // error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           92: takesPersonPred(returnsExactlyPersonPred()); // error
+           90: takesPersonPred(returnsExactlyPersonPred()); // error
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type. Unsupported exact type
-           89: declare function returnsExactlyPersonPred(): \$Exact<PersonPred>;
+           87: declare function returnsExactlyPersonPred(): \$Exact<PersonPred>;
                                                                    ^^^^^^^^^^ function type
         `,
-      )
+      ),
+
+      addFile('b.js')
+        .newErrors(
+          `
+            b.js:23
+             23:   return {
+                          ^ property \`aliaseses\`. Property not found in
+              6: export type Flag = \$Exact<{
+                                           ^ object type
+          `,
+        )
+
   ]),
 
 ]);

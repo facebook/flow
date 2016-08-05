@@ -4,19 +4,19 @@ import {format} from 'util';
 
 import parseArgs from 'minimist';
 
-export type Flag = {
+export type Flag = $Exact<{
   type: "string",
   name: string,
   description: string,
   argName: string,
   aliases?: Array<string>,
   default?: string,
-} | {
+}> | $Exact<{
   type: "boolean",
   name: string,
   description: string,
   aliases?: Array<string>,
-} | {
+}> | $Exact<{
   type: "enum",
   name: string,
   description: string,
@@ -24,7 +24,7 @@ export type Flag = {
   validValues: Array<string>,
   aliases?: Array<string>,
   default?: string,
-};
+}>;
 
 export const commonFlags = {
   bin: {
