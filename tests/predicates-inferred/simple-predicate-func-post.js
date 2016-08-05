@@ -4,7 +4,7 @@
 // The predicate function is defined after the conditional check
 
 function foo(x: string | Array<string>): string {
-  if ($pred$is_string(x)) {
+  if (is_string(x)) {
     // The use of `is_string` as a conditional check
     // should guarantee the narrowing of the type of `x`
     // to string.
@@ -16,6 +16,6 @@ function foo(x: string | Array<string>): string {
   }
 }
 
-function $pred$is_string(x) {
+function is_string(x) checks {
   return typeof x === "string";
 }

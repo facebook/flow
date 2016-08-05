@@ -4,12 +4,12 @@ declare var y: mixed;
 
 // Sanity check: this should fail, because the preficate function
 // checks `y` instead of `x`.
-function $pred$err(x) {
+function err(x) checks {
   return typeof y === "string";
 }
 
 function foo(x: string | Array<string>): string {
-  if ($pred$err(x)) {
+  if (err(x)) {
     return x;
   } else {
     return x.join();

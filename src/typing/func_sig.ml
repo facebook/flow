@@ -30,16 +30,17 @@ let return_loc =
   | {F.body = BodyBlock (loc, _); _} -> Loc.char_before loc
 
 let function_kind {Ast.Function.async; generator; predicate; _ } =
-  match async, generator, predicate with
-  | true, true, false -> Utils_js.assert_false "async && generator"
-  | true, false, false -> Async
-  | false, true, false -> Generator
-  | false, false, false -> Ordinary
-  | false, false, true -> Predicate
-  | _, _, true -> Utils_js.assert_false "(async || generator) && pred"
+  Ast.Predicate.(match async, generator, predicate with
+  | true, true, None -> Utils_js.assert_false "async && generator"
+  | true, false, None -> Async
+  | false, true, None -> Generator
+  | false, false, None -> Ordinary
+  | false, false, Some (_, Declared _) -> Predicate
+  | false, false, Some (_ , Inferred) -> Predicate
+  | _, _, _ -> Utils_js.assert_false "(async || generator) && pred")
 
 let mk cx tparams_map ~expr reason func =
-  let {Ast.Function.typeParameters; returnType; body; _} = func in
+  let {Ast.Function.typeParameters; returnType; body; predicate; _} = func in
   let kind = function_kind func in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
@@ -49,6 +50,19 @@ let mk cx tparams_map ~expr reason func =
     let reason = mk_reason "return" (return_loc func) in
     Anno.mk_type_annotation cx tparams_map reason returnType
   in
+  let return_t = Ast.Predicate.(match predicate with
+    | None ->
+        return_t
+    | Some (_, Inferred) ->
+        (* Restrict the fresh condition type by the declared return type *)
+        let fresh_t = Anno.mk_type_annotation cx tparams_map reason None in
+        Flow.flow_t cx (fresh_t, return_t);
+        fresh_t
+    | Some (loc, Declared _) ->
+        Flow_error.add_error cx (loc,
+          ["Cannot declare predicate when a function body is present."]);
+        Anno.mk_type_annotation cx tparams_map reason None
+  ) in
   {reason; kind; tparams; tparams_map; params; body; return_t}
 
 let empty_body =
@@ -268,14 +282,18 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* NOTE: Predicate functions can currently only be of the form:
        function f(...) { return <exp>; }
   *)
-  Ast.Statement.(if kind = Predicate then
-    match statements with
-    | [(_, Return { Return.argument = Some _})] -> ()
-    | _ ->
-        let loc = loc_of_reason reason in
-        let msg = "Invalid body for predicate function. \
-          Expected a simple return statement as body." in
-        Flow_error.add_error cx (loc, [msg])
+  Ast.Statement.(
+    match kind with
+    | Predicate -> begin
+        match statements with
+        | [(_, Return { Return.argument = Some _})] -> ()
+        | _ ->
+            let loc = loc_of_reason reason in
+            let msg = "Invalid body for predicate function. \
+              Expected a simple return statement as body." in
+            Flow_error.add_error cx (loc, [msg])
+      end
+    | _ -> ()
   );
 
   (* decl/type visit pre-pass *)
@@ -309,7 +327,10 @@ let toplevels id cx this super ~decls ~stmts ~expr
       let return_t = expr cx e in
       UnknownUse, return_t
     | Predicate ->
-      Utils_js.assert_false "Predicate functions need to return non-void"
+      let loc = loc_of_reason reason in
+      let msg = "Predicate functions need to return non-void." in
+      Flow_error.add_error cx (loc, [msg]);
+      FunImplicitReturn, VoidT.at loc
     in
     Flow.flow cx (void_t, UseT (use_op, return_t))
   );

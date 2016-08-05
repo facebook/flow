@@ -54,19 +54,13 @@ sanity-unbound-var.js:15
  15:     return x.join();
                 ^ String
 
-sanity.js:8
-  8: function $pred$check(y): $StrP<0> {
-                              ^^^^^^^^ This is not a valid context for this predicate type. Dependent predicate types can only be used as return types of function declarations.
+sanity.js:5
+  5: function check(y) checks(typeof y === "string") {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
 
-sanity.js:15
- 15:   (y: number);
-        ^ boolean. This type is incompatible with
- 15:   (y: number);
-           ^^^^^^ number
-
-sanity.js:19
- 19: function $pred$indirect_is_number(y) {
-                                          ^ Invalid body for predicate function. Expected a simple return statement as body.
+sanity.js:16
+ 16: function indirect_is_number(y) checks {
+                                           ^ Invalid body for predicate function. Expected a simple return statement as body.
 
 
-Found 11 errors
+Found 10 errors

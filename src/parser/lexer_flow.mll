@@ -510,11 +510,11 @@ end = struct
     let todo_str = f.todo
       |> List.map Char.escaped
       |> String.concat "" in
-    let exponent = 
+    let exponent =
       try int_of_string todo_str
       with Failure _ -> raise No_good in
     { f with exponent; todo = [] }
-      
+
   let rec parse_body f =
     match f.todo with
     | [] -> f
@@ -527,7 +527,7 @@ end = struct
     | ('p' | 'P')::_ ->
         parse_exponent (eat f)
     | c::_ ->
-        let ref_char_code = 
+        let ref_char_code =
           if c >= '0' && c <= '9'
           then Char.code '0'
           else if c >= 'A' && c <= 'F'
@@ -541,14 +541,14 @@ end = struct
         | Some e -> Some (e - 4) in
         let mantissa = (f.mantissa lsl 4) + value in
         parse_body { (eat f) with decimal_exponent; mantissa; }
-      
+
   let float_of_t f =
     assert (f.todo = []);
     let ret = float_of_int f.mantissa in
     let exponent = match f.decimal_exponent with
     | None -> f.exponent
     | Some decimal_exponent -> f.exponent + decimal_exponent in
-    let ret = 
+    let ret =
       if exponent = 0
       then ret
       else ret ** (float_of_int exponent) in
@@ -559,7 +559,7 @@ end = struct
   let float_of_string str =
     try Pervasives.float_of_string str
     with e when Sys.win32 ->
-      try 
+      try
         start str
           |> parse_sign
           |> parse_hex_symbol
@@ -1053,8 +1053,8 @@ and type_token env = parse
   | (neg? as neg) (legacyoctnumber as num)
       { env, mk_num_singleton LEGACY_OCTAL num neg }
   | (neg? as neg) (hexnumber as num) (non_hex_letter alphanumeric* as w)
-      { 
-        let env, singleton = 
+      {
+        let env, singleton =
           try env, mk_num_singleton NORMAL num neg
           with _ when Sys.win32 ->
             let loc = loc_of_lexbuf env lexbuf in
@@ -1063,7 +1063,7 @@ and type_token env = parse
         illegal_number env lexbuf w singleton
       }
   | (neg? as neg) (hexnumber as num)
-      { 
+      {
         try env, mk_num_singleton NORMAL num neg
         with _ when Sys.win32 ->
           let loc = loc_of_lexbuf env lexbuf in
@@ -1125,6 +1125,7 @@ and type_token env = parse
   (* Variance annotations *)
   | '+'                { env, T_PLUS }
   | '-'                { env, T_MINUS }
+
   (* Others *)
   | eof                { let env =
                            if is_in_comment_syntax env then

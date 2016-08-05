@@ -1,20 +1,20 @@
 // @flow
 
-function $pred$is_string(y) {
+function is_string(y) checks {
   return typeof y === "string";
 }
 
-function $pred$is_bool(y) {
+function is_bool(y) checks {
   return typeof y === "boolean";
 }
 
-function $pred$is_number(y) {
+function is_number(y) checks {
   return typeof y === "number";
 }
 
 // Feature check:
 function foo(x: string | Array<string>): string {
-  if ($pred$is_string(x)) {
+  if (is_string(x)) {
     // The use of `is_string` as a conditional check
     // should guarantee the narrowing of the type of `x`
     // to string.
@@ -28,33 +28,32 @@ function foo(x: string | Array<string>): string {
 
 // Same as above but refining an offset
 function bar(z: { f: string | Array<string>}): string {
-  if ($pred$is_string(z.f)) {
+  if (is_string(z.f)) {
     return z.f;
   } else {
     return z.f.join();
   }
 }
 
-function $pred$is_number_or_bool(y) {
-  return $pred$is_number(y) || $pred$is_bool(y);
+function is_number_or_bool(y) checks {
+  return is_number(y) || is_bool(y);
 }
 
 function baz(z: string | number): number {
-  if ($pred$is_number_or_bool(z)) {
+  if (is_number_or_bool(z)) {
     return z;
   } else {
     return z.length;
   }
 }
 
-
 // Feature: multi params
-function $pred$multi_param(w,x,y,z) {
+function multi_param(w,x,y,z) checks {
   return typeof z === "string";
 }
 
 function foo(x: string | Array<string>): string {
-  if ($pred$multi_param("1", "2", "3", x)) {
+  if (multi_param("1", "2", "3", x)) {
     return x;
   } else {
     return x.join();
@@ -62,13 +61,13 @@ function foo(x: string | Array<string>): string {
 }
 
 function foo(a, b) {
-  if ($pred$two_strings(a, b)) {
+  if (two_strings(a, b)) {
     from_two_strings(a, b);
   }
 }
 
-function $pred$two_strings(x,y) {
-  return $pred$is_string(x) && $pred$is_string(y) ;
+function two_strings(x,y) checks {
+  return is_string(x) && is_string(y) ;
 }
 
 declare function from_two_strings(x: string, y: string): void;

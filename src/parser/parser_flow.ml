@@ -91,6 +91,7 @@ module rec Parse : sig
   val class_declaration : env -> Ast.Expression.t list -> Ast.Statement.t
   val class_expression : env -> Ast.Expression.t
   val is_assignable_lhs : Ast.Expression.t -> bool
+  val predicate : env -> Ast.Predicate.t option
 end = struct
   module Type : sig
     val _type : env -> Ast.Type.t
@@ -820,9 +821,9 @@ end = struct
           in
           (Type.type_parameter_declaration env, Some id)
       ) in
-      let predicate = is_predicate id in
       let params, defaults, rest = function_params env in
       let returnType = Type.annotation_opt env in
+      let predicate = Parse.predicate env in
       let _, body, strict = function_body env ~async ~generator in
       let simple = is_simple_function_params params defaults rest in
       strict_post_check env ~strict ~simple id params;
@@ -983,14 +984,18 @@ end = struct
         | T_ARROW (* x => 123 *)
         | T_COLON -> (* (x): number => 123 *)
           raise Try.Rollback
-        (* async x => 123 -- and we've already parsed async as an identifier
-         * expression *)
-        | _ when Peek.is_identifier env -> begin match snd ret with
-          | Expression.Identifier (_, {Identifier.name = "async"; _ })
-              when not (Peek.is_line_terminator env) ->
+        | _ when Peek.is_identifier env ->
+          (* (x): number checks => 123 *)
+          if Peek.value env = "checks" then
             raise Try.Rollback
-          | _ -> ret
-          end
+          (* async x => 123 -- and we've already parsed async as an identifier
+           * expression *)
+          else begin match snd ret with
+            | Expression.Identifier (_, {Identifier.name = "async"; _ })
+                when not (Peek.is_line_terminator env) ->
+              raise Try.Rollback
+            | _ -> ret
+            end
         | _ -> ret
 
       in fun env ->
@@ -1474,9 +1479,9 @@ end = struct
             | _ -> Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
           id, Type.type_parameter_declaration env
         end in
-      let predicate = is_predicate id in
       let params, defaults, rest = Declaration.function_params env in
       let returnType = Type.annotation_opt env in
+      let predicate = Parse.predicate env in
       let end_loc, body, strict =
         Declaration.function_body env ~async ~generator in
       let simple = Declaration.is_simple_function_params params defaults rest in
@@ -1733,6 +1738,8 @@ end = struct
             let params, defaults, rest = Declaration.function_params env in
             params, defaults, rest, Type.annotation_opt env in
 
+        let predicate = Parse.predicate env in
+
         (* It's hard to tell if an invalid expression was intended to be an
          * arrow function before we see the =>. If there are no params, that
          * implies "()" which is only ever found in arrow params. Similarly,
@@ -1772,7 +1779,7 @@ end = struct
           async;
           generator = false; (* arrow functions cannot be generators *)
           (* TODO: add syntax support for arrow predicates *)
-          predicate = false;
+          predicate;
           expression;
           returnType;
           typeParameters;
@@ -1964,7 +1971,7 @@ end = struct
         body;
         generator;
         async;
-        predicate = false; (* setters/getter are not predicates *)
+        predicate = None; (* setters/getter are not predicates *)
         expression;
         returnType;
         typeParameters;
@@ -2062,8 +2069,8 @@ end = struct
                   body;
                   generator;
                   async;
-                  (* TODO: add support for objec method predicates *)
-                  predicate = false;
+                  (* TODO: add support for object method predicates *)
+                  predicate = None;
                   expression;
                   returnType;
                   typeParameters;
@@ -2271,7 +2278,7 @@ end = struct
             generator;
             async;
             (* TODO: add support for method predicates *)
-            predicate = false;
+            predicate = None;
             expression;
             returnType;
             typeParameters;
@@ -2991,9 +2998,10 @@ end = struct
       let end_loc = match Peek.semicolon_loc env with
       | None -> end_loc
       | Some end_loc -> end_loc in
+      let predicate = Parse.predicate env in
       Eat.semicolon env;
       let loc = Loc.btwn start_loc end_loc in
-      loc, Statement.DeclareFunction.({ id; })
+      loc, Statement.DeclareFunction.({ id; predicate })
 
     and declare_function_statement env start_loc =
       let loc, fn = declare_function env start_loc in
@@ -4406,6 +4414,24 @@ end = struct
 
   and pattern = Pattern.pattern
   and pattern_from_expr = Pattern.from_expr
+
+  and predicate env =
+    let checks_loc = Peek.loc env in
+    if Peek.token env = T_IDENTIFIER && Peek.value env = "checks" then (
+      Expect.token env T_IDENTIFIER;
+      if Expect.maybe env T_LPAREN then (
+        let exp = Parse.expression env in
+        let rparen_loc = Peek.loc env in
+        Expect.token env T_RPAREN;
+        let loc = Loc.btwn checks_loc rparen_loc in
+        Some (loc, Predicate.Declared exp)
+      )
+      else
+        Some (checks_loc, Predicate.Inferred)
+    )
+    else
+      None
+
 end
 
 (*****************************************************************************)

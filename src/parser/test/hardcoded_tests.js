@@ -4089,5 +4089,17 @@ module.exports = {
         'errors.0.message': 'Unexpected token ='
       }
     },
+    'Function Predicates': {
+      'declare function f(x: mixed): boolean checks (x !== null);': {},
+      'function f7(x: mixed) checks { return x !== null }': {},
+      'var a1 = (x: mixed) checks => x !== null;': {},
+      '(x) checks => x !== null;': {},
+      'var a3: (x: mixed) => boolean checks (x !== null);': {
+        'errors.0.message': 'Unexpected identifier'
+      },
+      'declare function f(x: mixed): boolean checks (var x = 1; typeof x == "string");': {
+        'errors.0.message': 'Unexpected token var'
+      }
+    }
   }
 };

@@ -279,12 +279,17 @@ and statement_decl cx = Ast.Statement.(
       Hashtbl.replace (Context.type_table cx) loc t;
       Env.bind_declare_var cx name t r
 
-  | (loc, DeclareFunction { DeclareFunction.id; }) ->
+  | (loc, DeclareFunction { DeclareFunction.id; DeclareFunction.predicate}) ->
       let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
-      let r = mk_reason (spf "declare %s" name) loc in
-      let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
-      Hashtbl.replace (Context.type_table cx) loc t;
-      Env.bind_declare_fun cx name t r
+      (match declare_function_to_function_declaration cx id predicate with
+      | None ->
+          let r = mk_reason (spf "declare %s" name) loc in
+          let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
+          Hashtbl.replace (Context.type_table cx) loc t;
+          Env.bind_declare_fun cx name t r
+      | Some func_decl ->
+          statement_decl cx (loc, func_decl)
+      )
 
   | (_, VariableDeclaration decl) ->
       variable_decl cx decl
@@ -1466,8 +1471,15 @@ and statement cx = Ast.Statement.(
         Env.init_fun cx name fn_type reason
       | None -> ())
 
-  | (_, DeclareVariable _)
-  | (_, DeclareFunction _) -> ()
+  | (_, DeclareVariable _) ->
+      ()
+
+  | (loc, DeclareFunction { DeclareFunction.id; DeclareFunction.predicate }) ->
+      (match declare_function_to_function_declaration cx id predicate with
+      | Some func_decl ->
+          statement cx (loc, func_decl)
+      | _ ->
+          ())
 
   | (_, VariableDeclaration decl) ->
       variables cx decl
@@ -1608,7 +1620,7 @@ and statement cx = Ast.Statement.(
             statement cx (loc, DeclareVariable v);
             [(spf "var %s" name, loc, name, None)], ExportValue
         | Some (Function (loc, f)) ->
-            let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }) } = f in
+            let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }); _ } = f in
             statement cx (loc, DeclareFunction f);
             [(spf "function %s() {}" name, loc, name, None)], ExportValue
         | Some (Class (loc, c)) ->
@@ -2813,9 +2825,18 @@ and expression_ cx loc e = Ast.Expression.(match e with
         expressions
 
   | Function func ->
-      let {Ast.Function.id; async; generator; _} = func in
+      let {Ast.Function.id; async; generator; predicate; _} = func in
       let desc = function_desc ~async ~generator "function" in
       let reason = mk_reason desc loc in
+
+      (match predicate with
+      | Some (_, Ast.Predicate.Inferred) ->
+          FlowError.add_error cx (loc, [
+            "expression_ (Function _) - \
+            Predicate function declarations need to declare \
+            a predicate expression."])
+      | _ -> ());
+
       mk_function id cx reason func
 
   | ArrowFunction func ->
@@ -4652,3 +4673,53 @@ and mk_method cx reason func this =
   let id = None in
   let func_sig = function_decl id cx reason func this super in
   Func_sig.methodtype_DEPRECATED func_sig
+
+(* Transform predicate declare functions to functions whose body is the
+   predicate declared for the funcion *)
+and declare_function_to_function_declaration cx id predicate =
+  let _, { Ast.Identifier.typeAnnotation; _ } = id in
+  match predicate with
+  | Some (loc, Ast.Predicate.Inferred) ->
+      FlowError.add_error cx (loc, [
+        "Predicate function declarations need to declare \
+        a predicate expression."]);
+      None
+
+  | Some (loc, Ast.Predicate.Declared e) -> begin
+      match typeAnnotation with
+      | Some (_, (_, Ast.Type.Function
+        { Ast.Type.Function.params;
+          Ast.Type.Function.returnType;
+          Ast.Type.Function.typeParameters;
+          _
+        })) ->
+          let params = params |> List.map (
+              fun (l, { Ast.Type.Function.Param.name; _ }) ->
+                (l, Ast.Pattern.Identifier name)
+            )
+          in
+          let body = Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body = [
+              (loc, Ast.Statement.Return {
+                Ast.Statement.Return.argument = Some e
+              })
+            ]}) in
+          let returnType = Some (loc, returnType) in
+          Some (Ast.Statement.FunctionDeclaration Ast.Function.({
+            id = Some id;
+            params = params;
+            defaults = [];
+            rest = None;
+            body = body;
+            async = false;
+            generator = false;
+            predicate = Some (loc, Ast.Predicate.Inferred);
+            expression = false;
+            returnType = returnType;
+            typeParameters;
+          }))
+
+      | _ ->
+        None
+      end
+  | _ ->
+      None

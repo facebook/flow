@@ -1,7 +1,7 @@
 // @flow
 
-declare function f1(x: mixed): $StrP<0>;
-declare function f2(x: mixed): $ArrP<0>;
+declare function f1(x: mixed): boolean checks(typeof x === "string");
+declare function f2(x: mixed): boolean checks(Array.isArray(x));
 
 declare var cond: boolean;
 

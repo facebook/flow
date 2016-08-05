@@ -1,0 +1,46 @@
+fail-0.js:5
+  5: declare function f2(x: mixed): boolean checks;
+                                            ^^^^^^ Predicate function declarations need to declare a predicate expression.
+
+fail-1.js:5
+  5: function f6(x: mixed) checks (x !== null) {  }
+                           ^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+
+fail-1.js:5
+  5: function f6(x: mixed) checks (x !== null) {  }
+                                               ^^^^ Invalid body for predicate function. Expected a simple return statement as body.
+
+fail-1.js:5
+  5: function f6(x: mixed) checks (x !== null) {  }
+                                               ^^^^ Predicate functions need to return non-void.
+
+fail-2.js:3
+  3: var a2 = (x: mixed) checks (x !== null) => {        // Error: body form
+                         ^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+
+fail-2.js:3
+  3: var a2 = (x: mixed) checks (x !== null) => {        // Error: body form
+                                                ^ Invalid body for predicate function. Expected a simple return statement as body.
+
+fail-3.js:5
+  5: function f5(x: mixed) checks (x !== null) { return x !== null }
+                           ^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+
+fail-3.js:7
+  7: var a2 = (x: mixed) checks (x !== null) => x !== null;
+                         ^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+
+unsupported-0.js:5
+  5: var a3: (x: mixed) => boolean checks (x !== null);
+                                   ^^^^^^ Unexpected identifier
+
+unsupported-1.js:5
+  5: var a4: (x: mixed) => boolean checks = (x: mixed) => x !== null;
+                                   ^^^^^^ Unexpected identifier
+
+unsupported-2.js:5
+  5: var a5: (x: mixed) => boolean checks(x !== null) =
+                                   ^^^^^^ Unexpected identifier
+
+
+Found 11 errors

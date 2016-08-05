@@ -2519,23 +2519,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, PredSubstT (_, _, _, unrefined_t, fresh_t) ->
        rec_flow_t cx trace (unrefined_t, fresh_t)
 
+    | DepPredT (_, (l, _, _)), _ ->
+      rec_flow cx trace (l, u)
+
     (*******************************)
     (* Call to predicated function *)
     (*******************************)
 
     | FunT (_, _, _, { params_names = Some pn; return_t; _ }),
       CallAsPredicateT (reason, sense, offset, unrefined_t, fresh_t) -> begin
-         try
-           (* TODO: for the moment we only support simple keys *)
-           let key = (List.nth pn offset, []) in
-           rec_flow cx trace (return_t,
-             PredSubstT (reason, sense, key, unrefined_t, fresh_t));
-         with
-           Invalid_argument _ ->
-             rec_flow_t cx trace (unrefined_t, fresh_t)
-           | _ ->
-             rec_flow_t cx trace (unrefined_t, fresh_t)
-       end
+        try
+          (* TODO: for the moment we only support simple keys *)
+          let key = (List.nth pn offset, []) in
+          rec_flow cx trace (return_t,
+            PredSubstT (reason, sense, key, unrefined_t, fresh_t));
+        with
+          Invalid_argument _ ->
+              rec_flow_t cx trace (unrefined_t, fresh_t)
+          | _ ->
+              rec_flow_t cx trace (unrefined_t, fresh_t)
+      end
 
     (* Fall through all the remaining cases *)
     | _, CallAsPredicateT (_,_,_,unrefined_t, fresh_t) ->
