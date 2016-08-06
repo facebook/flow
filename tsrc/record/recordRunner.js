@@ -8,6 +8,7 @@ import {readFile, writeFile} from './../async';
 import Builder from '../test/builder';
 import {findTestsByName, findTestsByRun} from '../test/findTests';
 import parser from 'flow-parser';
+import {loadSuite} from '../test/findTests';
 import RunQueue from '../test/RunQueue';
 import {testsDir} from '../constants';
 
@@ -97,7 +98,12 @@ export default async function(args: Args): Promise<void> {
     suites = await findTestsByName(args.suites);
   }
 
-  const runQueue = new RunQueue(args.bin, args.parallelism, false, suites, builder);
+  const loadedSuites = {};
+  for (const suiteName of suites) {
+    loadedSuites[suiteName] = loadSuite(suiteName);
+  }
+
+  const runQueue = new RunQueue(args.bin, args.parallelism, false, loadedSuites, builder);
 
   await runQueue.go();
 
