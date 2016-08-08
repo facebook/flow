@@ -159,6 +159,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     }
 
   let infer_type ~options (file_input, line, col, verbose, include_raw) oc =
+    let max_str_len = 5000 in
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let response = (try
@@ -171,10 +172,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let ty, raw_type = match ground_t with
         | None -> None, None
         | Some t ->
-            let ty = Some (Type_printer.string_of_t cx t) in
+            let ty_string = Type_printer.string_of_t cx t in
+            let ty = Some (Utils_js.truncate_string ty_string max_str_len) in
             let raw_type =
               if include_raw then
-                Some (Debug_js.jstr_of_t ~depth:10 cx t)
+                let json_string = Debug_js.jstr_of_t ~depth:10 cx t in
+                Some (Utils_js.truncate_string json_string max_str_len)
               else
                 None
             in
