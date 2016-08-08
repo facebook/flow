@@ -130,13 +130,14 @@ const Counter = React.createClass({
   and more. With class-based components, you can specify the components'
   props, default props, and state using Flow's annotation syntax.
 */
+type Props = {
+  title: string,
+  visited: boolean,
+  onClick: () => void,
+};
 
 class Button extends React.Component {
-  props: {
-    title: string,
-    visited: boolean,
-    onClick: () => void,
-  };
+  props: Props;
 
   state: {
     display: 'static' | 'hover' | 'active';
@@ -148,7 +149,7 @@ class Button extends React.Component {
   onMouseLeave: () => void;
   onMouseDown: () => void;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       display: 'static',
