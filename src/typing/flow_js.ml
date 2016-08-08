@@ -6396,8 +6396,7 @@ and predicate cx trace t (l,p) = match (l,p) with
   (*******************)
 
   | (MixedT (r, _), ArrP) ->
-    (* TODO: should use MixedT instead of AnyT, like we do with objects *)
-    let filtered_l = ArrT (replace_reason "array" r, AnyT.why r, []) in
+    let filtered_l = ArrT (replace_reason "array" r, MixedT (r, Mixed_everything), []) in
     rec_flow_t cx trace (filtered_l, t)
 
   | (_, ArrP) ->

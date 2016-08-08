@@ -113,3 +113,9 @@ function obj2(x: mixed) {
     (x: Object);
   }
 }
+
+function arr0(x: mixed) {
+  if (Array.isArray(x)) {
+    takesString(x[0]); // error
+  }
+}

@@ -282,6 +282,14 @@ mixed.js:97
  97:       (x['foo']: string); // error, mixed
                       ^^^^^^ string
 
+mixed.js:119
+119:     takesString(x[0]); // error
+         ^^^^^^^^^^^^^^^^^ function call
+119:     takesString(x[0]); // error
+                     ^^^^ mixed. This type is incompatible with
+  4: function takesString(x: string) {}
+                             ^^^^^^ string
+
 not.js:5
   5:     x++; // should error for null, void and bool (false)
          ^ boolean. This type is incompatible with
@@ -866,4 +874,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 141 errors
+Found 142 errors
