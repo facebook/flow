@@ -4,17 +4,17 @@ child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:
-  function type. See lib: node.js:206
+  function type. See lib: node.js:211
   Error:
-  property `encoding`. Property not found in. See lib: node.js:208
+  property `encoding`. Property not found in. See lib: node.js:213
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal
   Member 2:
-  function type. See lib: node.js:211
+  function type. See lib: node.js:216
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                                  ^^^^^ string. This type is incompatible with
-  number. See lib: node.js:135
+  number. See lib: node.js:140
 
 crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
@@ -53,19 +53,19 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-union: Buffer | string. See lib: node.js:1115
+union: Buffer | string. See lib: node.js:1120
   Member 1:
-  Buffer. See lib: node.js:1115
+  Buffer. See lib: node.js:1120
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  Buffer. See lib: node.js:1115
+  Buffer. See lib: node.js:1120
   Member 2:
-  string. See lib: node.js:1115
+  string. See lib: node.js:1120
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  string. See lib: node.js:1115
+  string. See lib: node.js:1120
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -73,17 +73,17 @@ crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
          ^^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: node.js:365
+  function type. See lib: node.js:370
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
                        ^^^^^ string. This type is incompatible with
-  Buffer. See lib: node.js:365
+  Buffer. See lib: node.js:370
   Member 2:
-  function type. See lib: node.js:366
+  function type. See lib: node.js:371
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
                               ^^^^^^^ string. This type is incompatible with
-  string enum. See lib: node.js:366
+  string enum. See lib: node.js:371
 
 crypto/crypto.js:28
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
@@ -91,17 +91,17 @@ crypto/crypto.js:28
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
          ^^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: node.js:365
+  function type. See lib: node.js:370
   Error:
    28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
                             ^^^^^^ string. This type is incompatible with
-  undefined. See lib: node.js:365
+  undefined. See lib: node.js:370
   Member 2:
-  function type. See lib: node.js:366
+  function type. See lib: node.js:371
   Error:
    21:   function(buf: Buffer) {
                        ^^^^^^ Buffer. This type is incompatible with
-  string. See lib: node.js:366
+  string. See lib: node.js:371
 
 crypto/crypto.js:35
  35:     (hmac.digest('hex'): void); // 1 error
@@ -122,11 +122,11 @@ crypto/crypto.js:36
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-intersection type. See lib: node.js:712
+intersection type. See lib: node.js:717
   Case 3 may work:
-  function type. See lib: node.js:721
-  But if it doesn't, case 4 looks promising too:
   function type. See lib: node.js:726
+  But if it doesn't, case 4 looks promising too:
+  function type. See lib: node.js:731
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                       ^ parameter `_`
