@@ -15,62 +15,92 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
         `,
       ),
 
-    addFile('a.js')
-      .newErrors(
-        `
-          a.js:44
-           44: takesExactlyPerson(subtypeOfPerson); // error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           44: takesExactlyPerson(subtypeOfPerson); // error
-                                  ^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-           38: declare function takesExactlyPerson(person: \$Exact<Person>): void;
-                                                                  ^^^^^^ object type
+    addFile('exact_basics.js').newErrors(
+                                `
+                                  exact_basics.js:48
+                                   48: takesExactlyPerson(subtypeOfPerson); // error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                                   48: takesExactlyPerson(subtypeOfPerson); // error
+                                                          ^^^^^^^^^^^^^^^ property \`first\`. Property not found in
+                                   42: declare function takesExactlyPerson(person: \$Exact<Person>): void;
+                                                                                          ^^^^^^ object type
 
-          a.js:56
-           56: takesExactlyPerson(returnsSubtypeOfPerson());  // error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           56: takesExactlyPerson(returnsSubtypeOfPerson());  // error
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
-           38: declare function takesExactlyPerson(person: \$Exact<Person>): void;
-                                                           ^^^^^^^^^^^^^^ exact type: Person
+                                  exact_basics.js:60
+                                   60: takesExactlyPerson(returnsSubtypeOfPerson());  // error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                                   60: takesExactlyPerson(returnsSubtypeOfPerson());  // error
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
+                                   42: declare function takesExactlyPerson(person: \$Exact<Person>): void;
+                                                                                   ^^^^^^^^^^^^^^ exact type: Person
 
-          a.js:67
-           67: takesExactlyPerson(returnsExactlyPerson2()); // error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           67: takesExactlyPerson(returnsExactlyPerson2()); // error
-                                  ^^^^^^^^^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-           38: declare function takesExactlyPerson(person: \$Exact<Person>): void;
-                                                                  ^^^^^^ object type
+                                  exact_basics.js:71
+                                   71: takesExactlyPerson(returnsExactlyPerson2()); // error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                                   71: takesExactlyPerson(returnsExactlyPerson2()); // error
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^ property \`first\`. Property not found in
+                                   42: declare function takesExactlyPerson(person: \$Exact<Person>): void;
+                                                                                          ^^^^^^ object type
 
-          a.js:81
-           81: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           72: declare function takesSubtypeOfPerson2(person2: Person2): void;
-                                                               ^^^^^^^ property \`first\`. Property not found in
-           81: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
-                                     ^^^^^^^^^^^^^^^^^^^^^^ object type
+                                  exact_basics.js:85
+                                   85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                                   76: declare function takesSubtypeOfPerson2(person2: Person2): void;
+                                                                                       ^^^^^^^ property \`first\`. Property not found in
+                                   85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
+                                                             ^^^^^^^^^^^^^^^^^^^^^^ object type
 
-          a.js:90
-           90: takesPersonPred(returnsExactlyPersonPred()); // error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-           90: takesPersonPred(returnsExactlyPersonPred()); // error
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type. Unsupported exact type
-           87: declare function returnsExactlyPersonPred(): \$Exact<PersonPred>;
-                                                                   ^^^^^^^^^^ function type
-        `,
-      ),
+                                  exact_basics.js:94
+                                   94: takesPersonPred(returnsExactlyPersonPred()); // error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+                                   94: takesPersonPred(returnsExactlyPersonPred()); // error
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type. Unsupported exact type
+                                   91: declare function returnsExactlyPersonPred(): \$Exact<PersonPred>;
+                                                                                           ^^^^^^^^^^ function type
+                                `,
+                              ),
+    addFile('per_prop_subtyping.js').noNewErrors(),
+    addFile('prop_test.js').newErrors(
+                             `
+                               prop_test.js:13
+                                13:   if (p.xxx) {     // error, prop existence test on inexact type
+                                            ^^^ property \`xxx\`. Property not found in
+                                13:   if (p.xxx) {     // error, prop existence test on inexact type
+                                          ^ object type
 
-      addFile('b.js')
-        .newErrors(
-          `
-            b.js:23
-             23:   return {
-                          ^ property \`aliaseses\`. Property not found in
-              6: export type Flag = \$Exact<{
-                                           ^ object type
-          `,
-        )
+                               prop_test.js:33
+                                33:   if (pc.first) {       // error, prop existence test on union of inexact types
+                                             ^^^^^ property \`first\`. Property not found in
+                                33:   if (pc.first) {       // error, prop existence test on union of inexact types
+                                          ^^ object type
 
+                               prop_test.js:34
+                                34:     return pc.last;     // error, last not found on Address
+                                                  ^^^^ property \`last\`. Property not found in
+                                34:     return pc.last;     // error, last not found on Address
+                                               ^^ object type
+
+                               prop_test.js:36
+                                36:   return pc.state;      // error, state not found on Person
+                                                ^^^^^ property \`state\`. Property not found in
+                                36:   return pc.state;      // error, state not found on Person
+                                             ^^ object type
+
+                               prop_test.js:43
+                                43:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
+                                                ^^^^^ property \`state\`. Property not found in
+                                43:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
+                                             ^^ object type
+                             `,
+                           ),
+    addFile('prop_test2.js').newErrors(
+                              `
+                                prop_test2.js:36
+                                 36:   if (flag.default) {    // error, prop not found (BoolFlag)
+                                                ^^^^^^^ property \`default\`. Property not found in
+                                 36:   if (flag.default) {    // error, prop not found (BoolFlag)
+                                           ^^^^ object type
+                              `,
+                            ),
   ]),
 
 ]);

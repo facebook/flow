@@ -1727,7 +1727,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_unify cx trace l t
 
     (*******************************)
-    (* common implicit convertions *)
+    (* common implicit conversions *)
     (*******************************)
 
     | (_, UseT (_, NumT _)) when numeric l -> ()
@@ -2369,6 +2369,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (List.hd ts,
          LookupT (reason, strict, (List.tl ts) @ try_ts_on_failure, s, t))
 
+    | IntersectionT _, TestPropT (reason, prop, tout) ->
+      rec_flow cx trace (l, GetPropT (reason, prop, tout))
+
     (** extends **)
     | IntersectionT (_, rep),
       UseT (use_op, ExtendsT (try_ts_on_failure, l, u)) ->
@@ -2500,6 +2503,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       flow_err cx trace
         "Unsupported exact type"
         l u
+
+    (**************************************************************************)
+    (* TestPropT is emitted for property reads in the context of branch tests.
+       Exact types are treated permissively, others strictly.
+       Position in pattern match denotes precedence: TestPropT
+       chooses a property lookup operation rather than being one itself, and
+       so needs to be evaluated prior to any wildcards that handle such.
+       On the other hand, union and intersection rules are generally of higher
+       precedence (though not always). TODO replace match ordering with
+       explicitly precedence-driven evaluation, perf permitting *)
+    (**************************************************************************)
+
+    | ObjT (_, { flags; _ }), TestPropT (reason_op, (_, name), tout)
+      when flags.exact ->
+      let lookup =
+        let t = tvar_with_constraint cx
+          (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+        in
+        LookupT (reason_op, None, [], name, AnyWithUpperBoundT t)
+      in rec_flow cx trace (l, lookup)
+
+    | _, TestPropT (reason, prop, tout) ->
+      rec_flow cx trace (l, GetPropT (reason, prop, tout))
 
     (****************************************************)
     (* dependent function type ~> substitution provider *)
@@ -6243,6 +6269,10 @@ and filter_optional cx ?trace reason opt_t =
     flow_opt_t cx ?trace (opt_t, OptionalT(t))
   )
 
+(*******************************************************************)
+(* predicate *)
+(*******************************************************************)
+
 and predicate cx trace t (l,p) = match (l,p) with
 
   (************************)
@@ -6493,15 +6523,27 @@ and prop_exists_test cx trace key sense obj result =
   prop_exists_test_generic key cx trace result obj sense obj
 
 and prop_exists_test_generic key cx trace result orig_obj sense = function
-  | ObjT (_, { props_tmap; _}) as obj ->
+  | ObjT (_, { flags; props_tmap; _}) as obj ->
       begin match read_prop_opt cx props_tmap key with
       | Some t ->
+        (* prop is present on object type *)
+        (* Note: filter functions are not currently equipped to deal with
+           AnnotT, maybe others, making (at least) type aliases unrefinable.
+           Tracked by #12609525 *)
         let filter = if sense then filter_exists else filter_not_exists in
         begin match filter t with
-        | EmptyT _ -> () (* provably unreachable, so prune *)
-        | _ -> rec_flow_t cx trace (orig_obj, result)
+        | EmptyT _ ->
+          () (* provably unreachable, so prune *)
+        | _ ->
+          rec_flow_t cx trace (orig_obj, result)
         end
+      | None when flags.exact ->
+        (* prop is absent from exact object type *)
+        if sense
+        then ()
+        else rec_flow_t cx trace (orig_obj, result)
       | None ->
+        (* prop is absent from inexact object type *)
         (* TODO: possibly unsound to filter out orig_obj here, but if we don't,
            case elimination based on prop existence checking doesn't work for
            (disjoint unions of) intersections of objects, where the prop appears
@@ -6510,6 +6552,7 @@ and prop_exists_test_generic key cx trace result orig_obj sense = function
            refactoring of property lookup lands to revisit. Tracked by
            #11301092. *)
         if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
+
       end
   | IntersectionT (_, rep) ->
     (* For an intersection of object types, try the test for each object type in
@@ -6722,6 +6765,10 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 
   | _ -> (* not enough info to refine *)
     rec_flow_t cx trace (orig_obj, result)
+
+(*******************************************************************)
+(* /predicate *)
+(*******************************************************************)
 
 (***********************)
 (* bounds manipulation *)

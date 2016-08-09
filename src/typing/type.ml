@@ -279,6 +279,7 @@ module rec TypeTerm : sig
     | MethodT of (* call *) reason * (* lookup *) reason * propname * funtype
     | SetPropT of reason * propname * t
     | GetPropT of reason * propname * t
+    | TestPropT of reason * propname * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
 
@@ -1104,6 +1105,7 @@ and reason_of_use_t = function
   | MethodT (reason,_,_,_)
   | SetPropT (reason,_,_)
   | GetPropT (reason,_,_)
+  | TestPropT (reason, _, _)
 
   | SetElemT (reason,_,_)
   | GetElemT (reason,_,_)
@@ -1338,6 +1340,7 @@ and mod_reason_of_use_t f = function
   | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
   | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
   | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
+  | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
 
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
@@ -1521,6 +1524,7 @@ let string_of_use_ctor = function
   | MethodT _ -> "MethodT"
   | SetPropT _ -> "SetPropT"
   | GetPropT _ -> "GetPropT"
+  | TestPropT _ -> "TestPropT"
   | SetElemT _ -> "SetElemT"
   | GetElemT _ -> "GetElemT"
   | ConstructorT _ -> "ConstructorT"

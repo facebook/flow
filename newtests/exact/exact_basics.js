@@ -1,5 +1,9 @@
 /**
- * Test $Exact on object types.
+ * Test basic handling of $Exact object types.
+ * 1. object literals have exact types
+ * 2. annotated object types are made exact by wrapping in $Exact<...>
+ * 3. inflows to exact UBs must be exact, and may not have extra props
+ * 4. outflows of exact LBs may interact with inexact UBs as usual
  */
 
 /*

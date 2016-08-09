@@ -334,7 +334,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | SetPropT (_, name, t)
-  | GetPropT (_, name, t) -> [
+  | GetPropT (_, name, t)
+  | TestPropT (_, name, t) -> [
       "propName", json_of_propname json_cx name;
       "propType", _json_of_t json_cx t
     ]
@@ -1146,7 +1147,8 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "(%S, %S)" (desc_of_reason r) name) t
   | SetPropT (_, (r, name), ptype) -> p
       ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t
-  | GetPropT (_, (r, name), ptype) -> p
+  | GetPropT (_, (r, name), ptype)
+  | TestPropT (_, (r, name), ptype) -> p
       ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
