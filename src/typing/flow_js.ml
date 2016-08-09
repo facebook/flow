@@ -4842,9 +4842,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let abstract_t_ = subst cx ~force map abstract_t in
     if abstract_t_ == abstract_t then t else AbstractT abstract_t_
 
-  | ExactT (reason, t) ->
-    let t' = subst cx ~force map t in
-    if t == t' then t else ExactT (reason, t')
+  | ExactT (reason, exact_t) ->
+    let exact_t_ = subst cx ~force map exact_t in
+    if exact_t_ == exact_t then t else ExactT (reason, exact_t_)
 
   | EvalT (eval_t, defer_use_t, _) ->
     let eval_t_ = subst cx ~force map eval_t in
