@@ -24,7 +24,6 @@ module Lex_mode = struct
     | JSX_CHILD
     | TEMPLATE
     | REGEXP
-    | PREDICATE
 
   let debug_string_of_lex_mode (mode: t) =
     match mode with
@@ -34,7 +33,6 @@ module Lex_mode = struct
     | JSX_CHILD -> "JSX_CHILD"
     | TEMPLATE -> "TEMPLATE"
     | REGEXP -> "REGEXP"
-    | PREDICATE -> "PREDICATE"
 end
 
 (* READ THIS BEFORE YOU MODIFY:
@@ -108,7 +106,6 @@ end = struct
       match t.la_lex_mode with
       | Lex_mode.NORMAL -> Lexer_flow.token lex_env
       | Lex_mode.TYPE -> Lexer_flow.type_token lex_env
-      | Lex_mode.PREDICATE -> Lexer_flow.token lex_env
       | Lex_mode.JSX_TAG -> Lexer_flow.jsx_tag lex_env
       | Lex_mode.JSX_CHILD -> Lexer_flow.jsx_child lex_env
       | Lex_mode.TEMPLATE -> Lexer_flow.template_tail lex_env

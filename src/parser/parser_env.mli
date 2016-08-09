@@ -21,7 +21,6 @@ module Lex_mode : sig
     | JSX_CHILD
     | TEMPLATE
     | REGEXP
-    | PREDICATE
   val debug_string_of_lex_mode: t -> string
 end
 
