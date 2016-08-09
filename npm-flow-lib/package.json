@@ -1,0 +1,22 @@
+{
+  "name": "flow-lib",
+  "version": "0.0.0-pre",
+  "main": "dist/index.js",
+  "dependencies": {
+    "babel-polyfill": "^6.13.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.11.4",
+    "babel-plugin-syntax-async-functions": "^6.13.0",
+    "babel-plugin-transform-flow-strip-types": "^6.8.0",
+    "flow-bin": "^0.30.0"
+  },
+  "scripts": {
+    "build": "mkdir -p dist; babel ./src --out-dir=./dist",
+    "clean": "rm -rf dist",
+    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "prepublish": "mkdir -p; npm run test",
+    "test": "node dist/test_ast_types",
+    "watch": "mkdir -p dist; babel --watch=./src --out-dir=./dist"
+  }
+}
