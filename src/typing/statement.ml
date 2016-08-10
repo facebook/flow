@@ -920,12 +920,14 @@ and statement cx = Ast.Statement.(
            * expression type is itself a Promise<T>, ensure we still return
            * a Promise<T> via Promise.resolve. *)
           let reason = mk_reason "async return" loc in
-          let promise = Flow.get_builtin cx "Promise" reason in
-          Flow.mk_tvar_where cx reason (fun tvar ->
-            let call = Flow.mk_methodtype promise [t] tvar in
-            Flow.flow cx
-              (promise, MethodT (reason, reason, (reason, "resolve"), call))
-          )
+          Flow.get_builtin_typeapp cx reason "Promise" [
+            Flow.mk_tvar_where cx reason (fun tvar ->
+              let funt = Flow.get_builtin cx "$await" reason in
+              let callt = Flow.mk_functiontype [t] tvar in
+              let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
+              Flow.flow cx (funt, CallT (reason, callt))
+            )
+          ]
         else if Env.in_generator_scope () then
           (* Convert the return expression's type R to Generator<Y,R,N>, where
            * Y and R are internals, installed earlier. *)

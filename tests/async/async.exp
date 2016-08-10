@@ -46,6 +46,37 @@ async3.js:23
  31:   var c: string = a;
               ^^^^^^ string
 
+async_return_void.js:4
+  4:   return;
+       ^^^^^^^ undefined. This type is incompatible with
+  3: async function foo1(): Promise<string> {
+                                    ^^^^^^ string
+
+async_return_void.js:8
+  8:   return undefined;
+              ^^^^^^^^^ undefined. This type is incompatible with
+union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:522
+  Member 1:
+  type application of identifier `Promise`. See lib: core.js:522
+  Error:
+    8:   return undefined;
+                ^^^^^^^^^ undefined. This type is incompatible with
+  Promise. See lib: core.js:522
+  Member 2:
+    8:   return undefined;
+                ^^^^^^^^^ type parameter `T` of async return
+  Error:
+    8:   return undefined;
+                ^^^^^^^^^ undefined. This type is incompatible with
+    7: async function foo2(): Promise<string> {
+                                      ^^^^^^ string
+
+async_return_void.js:13
+ 13:   return bar();
+              ^^^^^ undefined. This type is incompatible with
+ 11: async function foo3(): Promise<string> {
+                                    ^^^^^^ string
+
 await_not_in_async.js:5
   5:   await 1;
              ^ Unexpected number
@@ -59,4 +90,4 @@ await_not_in_async3.js:6
              ^ Unexpected number
 
 
-Found 11 errors
+Found 14 errors

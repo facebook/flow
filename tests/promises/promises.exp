@@ -266,19 +266,17 @@ resolve_global.js:35
 
 resolve_global.js:40
  40:   return 0;
-       ^^^^^^^^^ async return
- 40:   return 0;
        ^^^^^^^^^ Promise. Expected polymorphic type instead of
  39: async function baz(): Promise<number> {
                            ^^^^^^^^^^^^^^^ class type: Promise
 
-resolved_void.js:3
+resolve_void.js:3
   3: (Promise.resolve(): Promise<number>); // error
       ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
   3: (Promise.resolve(): Promise<number>); // error
                                  ^^^^^^ number
 
-resolved_void.js:5
+resolve_void.js:5
   5: (Promise.resolve(undefined): Promise<number>); // error
                       ^^^^^^^^^ undefined. This type is incompatible with
 union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:515
