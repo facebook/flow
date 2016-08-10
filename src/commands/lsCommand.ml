@@ -84,6 +84,13 @@ let main strip_root ignore_flag include_flag root () =
       (list_of_string_arg include_flag) in
     includes_of_arg root includes in
 
+  let opt_graphql_schema = FlowConfig.(
+    flowconfig.options.Opts.graphql_schema
+  ) in
+  let opt_graphql_schema = Option.map opt_graphql_schema (fun file ->
+    Files.make_path_absolute root file
+  ) in
+
   let options = { Options.
     opt_check_mode = false;
     opt_server_mode = false;
@@ -151,7 +158,9 @@ let main strip_root ignore_flag include_flag root () =
     opt_ignore_non_literal_requires = false;
     opt_max_header_tokens = FlowConfig.(
       flowconfig.options.Opts.max_header_tokens
-    )
+    );
+
+    opt_graphql_schema;
   } in
 
   let _, libs = Files.init options in

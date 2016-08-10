@@ -151,11 +151,12 @@ class ['a] t = object(self)
 
   | GraphqlT (_, t) ->
     (match t with
+      | Graphql.SchemaT _ -> acc
       | Graphql.FieldT (_, {GraphqlField.selection; _}) ->
         (match selection with | Some t -> self#type_ cx acc t | None -> acc)
       | Graphql.FragT {GraphqlFrag.selection; _} ->
         self#type_ cx acc selection
-      | Graphql.SelectionT (_, fields) ->
+      | Graphql.SelectionT (_, _, fields) ->
         self#list (self#type_ cx) acc fields
     )
 

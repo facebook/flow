@@ -877,6 +877,7 @@ end)
 
 and Graphql : sig
   type t =
+    | SchemaT of Graphql_schema2.t
     | FragT of GraphqlFrag.t
     | FieldT of GraphqlField.t
     | SelectionT of GraphqlSelection.t
@@ -899,12 +900,13 @@ and GraphqlField : sig
 end = GraphqlField
 
 and GraphqlSelection : sig
-  (* type_name, field list *)
-  type t = string * TypeTerm.t list
+  (* schema, type_name, field list *)
+  type t = Graphql_schema2.t * string * TypeTerm.t list
 end = GraphqlSelection
 
 and GraphqlUse : sig
   type t =
+    | MkSelectionT of string * TypeTerm.t
     | SelectT of TypeTerm.t * TypeTerm.t
     | GetT of reason * string * TypeTerm.t
     | AssignT of TypeTerm.t * TypeTerm.t

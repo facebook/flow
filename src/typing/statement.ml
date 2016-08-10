@@ -4815,7 +4815,7 @@ and graphql_expression cx template_literal =
       _;
     } :: [] ->
     let reason = reason_of_string "operation" in
-    let selection = GraphqlT (reason, Graphql.SelectionT ("$query", [])) in
+    let selection = Flow.mk_graphql_selection cx reason "$query" in
     let selection = graphql_selection cx selection selection_set in
     Flow.mk_tvar_where cx reason (fun t ->
       Flow.flow cx (selection, GraphqlUseT (reason, GraphqlUse.ToObjT t))
@@ -4826,7 +4826,7 @@ and graphql_expression cx template_literal =
       _;
     } :: [] ->
     let reason = reason_of_string "fragment" in
-    let selection = GraphqlT (reason, Graphql.SelectionT (type_name, [])) in
+    let selection = Flow.mk_graphql_selection cx reason type_name in
     let selection = graphql_selection cx selection selection_set in
     GraphqlT (reason, Graphql.FragT {
       GraphqlFrag.type_name;

@@ -68,6 +68,8 @@ type t = {
   opt_shm_hash_table_pow: int;
   opt_shm_log_level: int;
   opt_max_header_tokens: int;
+
+  opt_graphql_schema: Path.t option;
 }
 
 let default_error_flags = {

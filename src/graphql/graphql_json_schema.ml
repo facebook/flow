@@ -89,5 +89,3 @@ let load file =
     SMap.add name def type_map
   ) SMap.empty types in
   Schema.{query_type; types}
-
-let global = load "/Users/pvolok/local/flow/tests/relay/schema.json";;

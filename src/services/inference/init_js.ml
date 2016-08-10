@@ -131,6 +131,15 @@ let init ~options lib_files
   let reason = Reason.builtin_reason "module" in
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
+
+  (match options.Options.opt_graphql_schema with
+  | Some schema_path ->
+    let schema = Graphql_json_schema.load (Path.to_string schema_path) in
+    let reason = Reason.builtin_reason "graphql schema" in
+    let schema_t = Type.GraphqlT (reason, Type.Graphql.SchemaT schema) in
+    Flow.set_builtin master_cx "graphql$schema" schema_t
+  | None -> ());
+
   Merge_js.ContextOptimizer.sig_context [master_cx];
 
   result

@@ -142,3 +142,5 @@ module Autocomplete : sig
 
   val extract_members: Context.t -> Type.t -> member_result
 end
+
+val mk_graphql_selection: Context.t -> Reason.t -> string -> Type.t

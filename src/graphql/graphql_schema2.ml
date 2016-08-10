@@ -35,6 +35,8 @@ and InputVal: sig
   }
 end = InputVal
 
+type t = Schema.t
+
 let rec name_of_type f = match f with
   | Type.Named name -> name
   | Type.List f

@@ -74,6 +74,8 @@ module Opts = struct
     shm_hash_table_pow: int;
     shm_log_level: int;
     version: string option;
+
+    graphql_schema: string option;
   }
 
   type _initializer =
@@ -155,6 +157,8 @@ module Opts = struct
     shm_hash_table_pow = 19;
     shm_log_level = 0;
     version = None;
+
+    graphql_schema = None;
   }
 
   let parse =
@@ -685,6 +689,15 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with enforce_strict_type_args = v;}
+      );
+    }
+
+    |> define_opt "graphql_schema" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        {opts with graphql_schema = Some v;}
       );
     }
 

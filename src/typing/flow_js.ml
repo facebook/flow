@@ -978,9 +978,10 @@ module ResolvableTypeJob = struct
 
     | GraphqlT (_, t) ->
       (match t with
+        | Graphql.SchemaT _ -> acc
         | Graphql.FragT {GraphqlFrag.selection; _} ->
           collect_of_type ?log_unresolved cx reason acc selection
-        | Graphql.SelectionT (_, ts) ->
+        | Graphql.SelectionT (_, _, ts) ->
           collect_of_types ?log_unresolved cx reason acc ts
         | Graphql.FieldT (_, {GraphqlField.selection; _}) ->
           (match selection with
@@ -4216,13 +4217,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if is_unchecked_module_not_declared (r, reason_op)
       then rec_unify cx trace t (AnyT.why reason_op)
 
-    | GraphqlT (reason, Graphql.SelectionT (type_name, fields)),
+    | GraphqlT (_, Graphql.SchemaT schema),
+      GraphqlUseT (reason, GraphqlUse.MkSelectionT (type_name, result)) ->
+
+      let selection = Graphql.SelectionT (schema, type_name, []) in
+      rec_flow_t cx trace (GraphqlT (reason, selection), result)
+
+    | GraphqlT (reason, Graphql.SelectionT (schema, type_name, fields)),
       GraphqlUseT (
           _,
           GraphqlUse.SelectT (GraphqlT (_, Graphql.FieldT field) as fld, result)
         ) ->
 
-      let schema = Graphql_json_schema.global in
       let type_def = Graphql_schema2.type_def schema type_name in
       let (reason_f, {GraphqlField.name = field_name; _}) = field in
 
@@ -4230,8 +4236,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Graphql_schema2.Type.Obj (_, fields_map, _) ->
         (match SMap.get field_name fields_map with
         | Some _ ->
-          let s = GraphqlT (reason, Graphql.SelectionT (type_name, fld::fields)) in
-          rec_flow_t cx trace (s, result)
+          let s = Graphql.SelectionT (schema, type_name, fld::fields) in
+          rec_flow_t cx trace (GraphqlT (reason, s), result)
         | None ->
           rec_flow_t cx trace (l, result);
           flow_err_reasons cx trace "Field not found in" (reason_f, reason)
@@ -4246,7 +4252,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       rec_flow cx trace (t, GraphqlUseT (reason, GraphqlUse.AssignT (l, result)))
 
-    | GraphqlT (_, Graphql.SelectionT (_, fields)),
+    | GraphqlT (_, Graphql.SelectionT (_, _, fields)),
       GraphqlUseT (
           reason,
           GraphqlUse.AssignT (target, result)
@@ -4265,13 +4271,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       rec_flow cx trace (selection, u)
 
-    | (GraphqlT (_, Graphql.SelectionT (type_name, _)),
+    | (GraphqlT (_, Graphql.SelectionT (schema, type_name, _)),
       GraphqlUseT (
           _,
           GraphqlUse.GetT (reason, field_name, result)
         )) ->
 
-      let schema = Graphql_json_schema.global in
       let _type = Graphql_schema2.type_def schema type_name in
 
       (match _type with
@@ -4279,8 +4284,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (match SMap.get field_name fields_map with
         | Some {Graphql_schema2.Field._type = f_type; _} ->
           let f_type_name = Graphql_schema2.type_name schema f_type in
-          let selection = GraphqlT (reason, Graphql.SelectionT (f_type_name, [])) in
-          rec_flow_t cx trace (selection, result)
+          let selection = Graphql.SelectionT (schema, f_type_name, []) in
+          rec_flow_t cx trace (GraphqlT (reason, selection), result)
         | None -> rec_flow_t cx trace (VoidT reason, result))
       | _ -> rec_flow_t cx trace (VoidT reason, result)
       )
@@ -4298,10 +4303,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let obj = ObjT (obj_r, { objtype with props_tmap = new_props }) in
       rec_flow_t cx trace (obj, t_out)
 
-    | GraphqlT (reason, Graphql.SelectionT (type_name, fields)),
+    | GraphqlT (reason, Graphql.SelectionT (schema, type_name, fields)),
       GraphqlUseT (_, GraphqlUse.ToObjT result) ->
 
-      let schema = Graphql_json_schema.global in
       let type_def = Graphql_schema2.type_def schema type_name in
 
       let map = fields |> List.fold_left (fun map f ->
@@ -4364,6 +4368,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, GraphqlUseT (_, use_t) ->
       let u_name = match use_t with
+        | GraphqlUse.MkSelectionT _ -> "MkSelectionT"
         | GraphqlUse.SelectT _ -> "SelectT"
         | GraphqlUse.GetT _ -> "GetT"
         | GraphqlUse.AssignT _ -> "AssignT"
@@ -7952,6 +7957,14 @@ and unify cx t1 t2 =
   | ex ->
     (* rethrow *)
     raise ex
+
+and mk_graphql_selection cx reason type_name =
+  let schema = get_builtin cx "graphql$schema" reason in
+  mk_tvar_where cx reason (fun t ->
+    let mk_sel = GraphqlUse.MkSelectionT (type_name, t) in
+    flow cx (schema, GraphqlUseT (reason, mk_sel))
+  )
+
 
 (************* end of slab **************************************************)
 
