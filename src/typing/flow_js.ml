@@ -1234,9 +1234,43 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
       prep_try_intersection cx trace reason unresolved (resolved @ [t]) u r rep
 
-    (*****************)
-    (* destructuring *)
-    (*****************)
+    (********)
+    (* eval *)
+    (********)
+
+    | EvalT (t, TypeDestructorT (reason, s), i), _ ->
+      rec_flow cx trace (eval_destructor cx reason t s i, u)
+
+    | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
+      (* When checking a lower bound against a destructed type, we need to take
+         some care. In particular, we do not want the destructed type to be
+         "open" when t is not itself open, i.e., we do not want any "extra"
+         lower bounds to be able to flow to the destructed type than what t
+         itself allows.
+
+         For example, when t is { x: number }, we want $PropertyType(t) to be
+         number, not some open tvar that is a supertype of number (since the
+         latter would accept more than number, e.g. string). Similarly, when t
+         is ?string, we want the $NonMaybeType(t) to be string. *)
+      let result = eval_destructor cx reason t s i in
+      begin match t with
+      | OpenT _ ->
+        (* TODO: If t itself is an open tvar, we can afford to be looser for
+           now. The additional looseness is not entirely justifiable (e.g., we
+           should still prevent "extra" lower bounds from flowing into the
+           destructed type that did not originate from lower bounds flowing to
+           t), and we should do more work to avoid it, but it's at least not as
+           egregious as the case when t is not open. *)
+        rec_flow cx trace (l, UseT (use_op, result))
+      | _ ->
+        (* With the same "slingshot" trick used by AnnotT, hold the lower bound
+           at bay until result itself gets concretized, and then flow the lower
+           bound to that concrete type. Note: this works for type destructors
+           since they come from annotations and other types that have the 0->1
+           property, but does not work in general because for arbitrary tvars,
+           concretization may never happen or may happen more than once. *)
+        rec_flow cx trace (result, ReposUseT (reason, use_op, l))
+      end
 
     | EvalT (t, DestructuringT (reason, s), i), _ ->
       rec_flow cx trace (eval_selector cx reason t s i, u)
@@ -4939,6 +4973,9 @@ and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
       let s_ = subst_selector cx force map s in
       if s_ == s then t else DestructuringT (reason, s_)
+  | TypeDestructorT (reason, s) ->
+      let s_ = subst_destructor cx force map s in
+      if s_ == s then t else TypeDestructorT (reason, s_)
 
 and eval_selector cx reason curr_t s i =
   let evaluated = Context.evaluated cx in
@@ -4958,6 +4995,20 @@ and eval_selector cx reason curr_t s i =
   | Some it ->
     it
 
+and eval_destructor cx reason curr_t s i =
+  let evaluated = Context.evaluated cx in
+  match IMap.get i evaluated with
+  | None ->
+    mk_tvar_where cx reason (fun tvar ->
+      Context.set_evaluated cx (IMap.add i tvar evaluated);
+      flow_opt cx (curr_t, match s with
+      | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
+      | PropertyType x -> GetPropT(reason, (reason, x), tvar)
+      )
+    )
+  | Some it ->
+    it
+
 and subst_propmap cx force map id =
   let pmap = find_props cx id in
   let pmap_ = ident_smap (subst cx ~force map) pmap in
@@ -4972,7 +5023,13 @@ and subst_selector cx force map s = match s with
   | ObjRest _
   | ArrRest _
   | Default
-  | Become -> s
+  | Become
+    -> s
+
+and subst_destructor _cx _force _map s = match s with
+  | NonMaybeType
+  | PropertyType _
+    -> s
 
 (* TODO: flesh this out *)
 and check_polarity cx polarity = function

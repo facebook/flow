@@ -1,3 +1,9 @@
+non_maybe_type.js:5
+  5:   else return 0; // this should be an error
+                   ^ number. This type is incompatible with the expected return type of
+  3: function foo(x: ?string): $NonMaybeType<?string> {
+                               ^^^^^^^^^^^^^^^^^^^^^^ string
+
 property_type.js:1
   1: type Malformed = $PropertyType<any, number>;
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected object type and string literal as arguments to $PropertyType
@@ -8,5 +14,11 @@ property_type.js:6
   6: (42: Obj_Prop_x);
           ^^^^^^^^^^ string
 
+property_type.js:10
+ 10:   else return 0;
+                   ^ number. This type is incompatible with the expected return type of
+  8: function foo(o: Obj): $PropertyType<Obj, 'x'> {
+                           ^^^^^^^^^^^^^^^^^^^^^^^ string
 
-Found 2 errors
+
+Found 4 errors

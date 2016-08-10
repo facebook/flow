@@ -743,6 +743,16 @@ and json_of_selector_impl json_cx = Hh_json.(function
     ]
 )
 
+and json_of_destructor json_cx = check_depth json_of_destructor_impl json_cx
+and json_of_destructor_impl _json_cx = Hh_json.(function
+  | NonMaybeType -> JSON_Object [
+      "non null/void", JSON_Bool true;
+    ]
+  | PropertyType x -> JSON_Object [
+      "propName", JSON_String x;
+    ]
+)
+
 and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx
 and json_of_polarity_map_impl json_cx pmap = Hh_json.(
   let lst = SMap.fold (fun name pol acc ->
@@ -771,6 +781,9 @@ and json_of_defer_use_t json_cx = check_depth json_of_defer_use_t_impl json_cx
 and json_of_defer_use_t_impl json_cx = Hh_json.(function
   | DestructuringT (_, s) -> JSON_Object [
       "selector", json_of_selector json_cx s
+    ]
+  | TypeDestructorT (_, s) -> JSON_Object [
+      "destructor", json_of_destructor json_cx s
     ]
 )
 
@@ -1290,6 +1303,10 @@ let string_of_selector = function
   | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
   | Default -> "Default"
   | Become -> "Become"
+
+let string_of_destructor = function
+  | NonMaybeType -> "NonMaybeType"
+  | PropertyType x -> spf "PropertyType %s" x
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->

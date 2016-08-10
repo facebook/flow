@@ -32,6 +32,7 @@ val string_of_scope: Context.t -> Scope.t -> string
 val string_of_reason: Context.t -> Reason.t -> string
 val string_of_file: Context.t -> string
 val string_of_selector: Type.TypeTerm.selector -> string
+val string_of_destructor: Type.TypeTerm.destructor -> string
 val string_of_default: Spider_monkey_ast.Expression.t Default.t -> string
 
 val dump_t: ?depth:int -> Context.t -> Type.t -> string

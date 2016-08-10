@@ -254,6 +254,13 @@ module rec TypeTerm : sig
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
+    (* destructors that extract parts of various kinds of types *)
+    (* TODO: in principle it should be possible to encode destructors as
+       selectors (see above), but currently we don't because some selectors are
+       programmed to do more than just destruct types---e.g., they handle
+       defaults---and these additional behaviors cannot be covered by a simple
+       implementation of destructors. *)
+    | TypeDestructorT of reason * destructor
 
   and use_op =
     | FunReturn
@@ -582,6 +589,10 @@ module rec TypeTerm : sig
   | ArrRest of int
   | Default
   | Become
+
+  and destructor =
+  | NonMaybeType
+  | PropertyType of string
 
   and prototype = t
 
@@ -1092,7 +1103,8 @@ let rec reason_of_t = function
   | DepPredT (reason, _) -> reason
 
 and reason_of_defer_use_t = function
-  | DestructuringT (reason, _) ->
+  | DestructuringT (reason, _)
+  | TypeDestructorT (reason, _) ->
       reason
 
 and reason_of_use_t = function
@@ -1324,6 +1336,7 @@ let rec mod_reason_of_t f = function
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
+  | TypeDestructorT (reason, s) -> TypeDestructorT (f reason, s)
 
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
@@ -1449,6 +1462,7 @@ end
 (* printing *)
 let string_of_defer_use_ctor = function
   | DestructuringT _ -> "DestructuringT"
+  | TypeDestructorT _ -> "TypeDestructorT"
 
 let string_of_ctor = function
   | OpenT _ -> "OpenT"

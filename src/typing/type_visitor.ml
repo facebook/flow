@@ -151,6 +151,7 @@ class ['a] t = object(self)
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
+  | TypeDestructorT (_, d) -> self#destructor cx acc d
 
   method private selector cx acc = function
   | Prop _ -> acc
@@ -159,6 +160,10 @@ class ['a] t = object(self)
   | ArrRest _ -> acc
   | Default -> acc
   | Become -> acc
+
+  method private destructor _cx acc = function
+  | NonMaybeType -> acc
+  | PropertyType _ -> acc
 
   method private use_type_ cx acc = function
   | UseT (_, t) ->

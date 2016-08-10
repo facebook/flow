@@ -255,15 +255,23 @@ let rec convert cx tparams_map ?variables_in_scope = Ast.Type.(function
       TypeT (mk_reason "type" loc, t)
     )
 
-  (* $PropertyType<T, 'x'> acts as the type of 'x' in object type 'T' *)
+  (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
   | "$PropertyType" ->
     check_type_param_arity cx loc typeParameters 2 (fun () ->
       match convert_type_params () with
       | [t; SingletonStrT (_, key)] ->
-        EvalT (t, DestructuringT
-          (mk_reason "property type" loc, Prop key), mk_id())
+        EvalT (t, TypeDestructorT
+          (mk_reason "property type" loc, PropertyType key), mk_id())
       | _ -> error_type cx loc
         "expected object type and string literal as arguments to $PropertyType"
+    )
+
+  (* $NonMaybeType<T> acts as the type T without null and void *)
+  | "$NonMaybeType" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      EvalT (t, TypeDestructorT
+        (mk_reason "non-maybe type" loc, NonMaybeType), mk_id())
     )
 
   (* $Shape<T> matches the shape of T *)
