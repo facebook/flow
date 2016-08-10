@@ -272,5 +272,30 @@ resolve_global.js:40
  39: async function baz(): Promise<number> {
                            ^^^^^^^^^^^^^^^ class type: Promise
 
+resolved_void.js:3
+  3: (Promise.resolve(): Promise<number>); // error
+      ^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
+  3: (Promise.resolve(): Promise<number>); // error
+                                 ^^^^^^ number
 
-Found 24 errors
+resolved_void.js:5
+  5: (Promise.resolve(undefined): Promise<number>); // error
+                      ^^^^^^^^^ undefined. This type is incompatible with
+union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:515
+  Member 1:
+  type application of identifier `Promise`. See lib: core.js:515
+  Error:
+    5: (Promise.resolve(undefined): Promise<number>); // error
+                        ^^^^^^^^^ undefined. This type is incompatible with
+  Promise. See lib: core.js:515
+  Member 2:
+    5: (Promise.resolve(undefined): Promise<number>); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^ type parameter `T` of call of method `resolve`
+  Error:
+    5: (Promise.resolve(undefined): Promise<number>); // error
+                        ^^^^^^^^^ undefined. This type is incompatible with
+    5: (Promise.resolve(undefined): Promise<number>); // error
+                                            ^^^^^^ number
+
+
+Found 26 errors
