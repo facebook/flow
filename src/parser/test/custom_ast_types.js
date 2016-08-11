@@ -48,3 +48,21 @@ def("AssignmentExpression")
     .field("operator", AssignmentOperator)
     .field("left", def("Pattern"))
     .field("right", def("Expression"));
+
+def("Predicate")
+    .bases("Node")
+
+def("InferredPredicate")
+    .bases("Predicate")
+    .build()
+
+def("DeclaredPredicate")
+    .bases("Predicate")
+    .build("value")
+    .field("value", def("Expression"))
+
+def("DeclareFunction")
+    .field("predicate", or(def("Predicate"), null), defaults["null"])
+
+def("Function")
+    .field("predicate", or(def("Predicate"), null), defaults["null"])

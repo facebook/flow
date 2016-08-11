@@ -223,6 +223,7 @@ end with type t = Impl.t) = struct
         "body", body;
         "async", bool fn.async;
         "generator", bool fn.generator;
+        "predicate", option predicate fn.predicate;
         "expression", bool fn.expression;
         "returnType", option type_annotation fn.returnType;
         "typeParameters", option type_parameter_declaration fn.typeParameters;
@@ -329,6 +330,7 @@ end with type t = Impl.t) = struct
           "body", body;
           "async", bool arrow.async;
           "generator", bool arrow.generator;
+          "predicate", option predicate arrow.predicate;
           "expression", bool arrow.expression;
           "returnType", option type_annotation arrow.returnType;
           "typeParameters", option type_parameter_declaration arrow.typeParameters;
@@ -526,6 +528,7 @@ end with type t = Impl.t) = struct
       "body", body;
       "async", bool _function.async;
       "generator", bool _function.generator;
+      "predicate", option predicate _function.predicate;
       "expression", bool _function.expression;
       "returnType", option type_annotation _function.returnType;
       "typeParameters", option type_parameter_declaration _function.typeParameters;
@@ -576,6 +579,7 @@ end with type t = Impl.t) = struct
   and declare_function (loc, d) = Statement.DeclareFunction.(
     node "DeclareFunction" loc [|
       "id", identifier d.id;
+      "predicate", option predicate d.predicate
     |]
   )
 
@@ -1213,5 +1217,13 @@ end with type t = Impl.t) = struct
     node _type loc [|
       "value", string value;
     |]
+  )
+
+  and predicate (loc, p) = Ast.Predicate.(
+    let _type, value = match p with
+      | Declared e -> "DeclaredPredicate", [|"value", expression e|]
+      | Inferred -> "InferredPredicate", [||]
+    in
+    node _type loc value
   )
 end

@@ -261,6 +261,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       if (esprima.async === undefined) {
         esprima.async = false;
       }
+      delete flow.predicate;
   }
 
   if (flow && flow.type) {
@@ -271,6 +272,9 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         break;
       case 'DeclareModule':
         delete flow.kind;
+        break;
+      case 'DeclareFunction':
+        delete flow.predicate;
         break;
     }
   }

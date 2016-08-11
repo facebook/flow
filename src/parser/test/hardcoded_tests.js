@@ -1347,6 +1347,7 @@ module.exports = {
               'returnType.type': 'VoidTypeAnnotation',
             },
           },
+          'predicate': null,
         }],
       },
       'declare function foo(): void;': {
@@ -1362,6 +1363,7 @@ module.exports = {
               'returnType.type': 'VoidTypeAnnotation',
             },
           },
+          'predicate': null,
         }],
       },
       'declare function foo(x: number, y: string): void;': {
@@ -1384,6 +1386,7 @@ module.exports = {
               'returnType.type': 'VoidTypeAnnotation',
             },
           },
+          'predicate': null,
         },
       },
       'declare class A {}': {
@@ -1538,6 +1541,7 @@ module.exports = {
             'params': [],
             'returnType.type': 'VoidTypeAnnotation',
           },
+          'predicate': null,
         },
       },
       'declare export function foo(): void;': {},
@@ -1597,6 +1601,7 @@ module.exports = {
             'params': [],
             'returnType.type': 'VoidTypeAnnotation',
           },
+          'predicate': null,
         },
         'body.0.default': true,
       },
@@ -1739,6 +1744,7 @@ module.exports = {
                   'returnType.type': 'StringTypeAnnotation',
                 },
               },
+              'predicate': null,
             },
             'specifiers.length': 0,
             'source': null,
@@ -4090,10 +4096,213 @@ module.exports = {
       }
     },
     'Function Predicates': {
-      'declare function f(x: mixed): boolean checks (x !== null);': {},
-      'function f7(x: mixed) checks { return x !== null }': {},
-      'var a1 = (x: mixed) checks => x !== null;': {},
-      '(x) checks => x !== null;': {},
+      'declare function f(x: mixed): boolean checks (x !== null);': {
+        'body.0': {
+          'type': 'DeclareFunction',
+          'id': {
+            'name': 'f',
+            'typeAnnotation.typeAnnotation': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [
+                {
+                  'name.name': 'x',
+                  'typeAnnotation.type': 'GenericTypeAnnotation',
+                }
+              ],
+              'returnType.type': 'BooleanTypeAnnotation'
+            }
+          },
+          'predicate':{
+            'type':'DeclaredPredicate',
+            'value':{
+              'type':'BinaryExpression',
+              'operator':'!==',
+              'left':{
+                'type':'Identifier',
+                'name':'x',
+                'typeAnnotation':null,
+                'optional':false
+              },
+              'right':{
+                'type':'Literal',
+                'value':null,
+                'raw':'null'
+              }
+            }
+          },
+        },
+      },
+      'function foo(x: mixed) checks { return x !== null }': {
+        'body.0': {
+          'type':'FunctionDeclaration',
+          'id':{
+            'type':'Identifier',
+            'name':'foo',
+            'typeAnnotation':null,
+            'optional':false
+          },
+          'params':[
+            {
+              'type':'Identifier',
+              'name':'x',
+              'typeAnnotation':{
+                'type':'TypeAnnotation',
+                'typeAnnotation':{
+                  'type':'GenericTypeAnnotation',
+                  'id':{
+                    'type':'Identifier',
+                    'name':'mixed',
+                    'typeAnnotation':null,
+                    'optional':false
+                  },
+                  'typeParameters':null
+                }
+              },
+              'optional':false
+            }
+          ],
+          'defaults':[],
+          'rest':null,
+          'body':{
+            'type':'BlockStatement',
+            'body':[
+              {
+                'type':'ReturnStatement',
+                'argument':{
+                  'type':'BinaryExpression',
+                  'operator':'!==',
+                  'left':{
+                    'type':'Identifier',
+                    'name':'x',
+                    'typeAnnotation':null,
+                    'optional':false
+                  },
+                  'right':{
+                    'type':'Literal',
+                    'value':null,
+                    'raw':'null'
+                  }
+                }
+              }
+            ]
+          },
+          'async':false,
+          'generator':false,
+          'predicate': { 'type': 'InferredPredicate' },
+          'expression':false,
+          'returnType':null,
+          'typeParameters':null
+        }
+      },
+      'var a1 = (x: mixed) checks => x !== null;': {
+        'body.0':     {
+          'type':'VariableDeclaration',
+          'declarations':[
+            {
+              'type':'VariableDeclarator',
+              'id':{
+                'type':'Identifier',
+                'name':'a1',
+                'typeAnnotation':null,
+                'optional':false
+              },
+              'init':{
+                'type':'ArrowFunctionExpression',
+                'id':null,
+                'params':[
+                  {
+                    'type':'Identifier',
+                    'name':'x',
+                    'typeAnnotation':{
+                      'type':'TypeAnnotation',
+                      'typeAnnotation':{
+                        'type':'GenericTypeAnnotation',
+                        'id':{
+                          'type':'Identifier',
+                          'name':'mixed',
+                          'typeAnnotation':null,
+                          'optional':false
+                        },
+                        'typeParameters':null
+                      }
+                    },
+                    'optional':false
+                  }
+                ],
+                'defaults':[],
+                'rest':null,
+                'body':{
+                  'type':'BinaryExpression',
+                  'operator':'!==',
+                  'left':{
+                    'type':'Identifier',
+                    'name':'x',
+                    'typeAnnotation':null,
+                    'optional':false
+                  },
+                  'right':{
+                    'type':'Literal',
+                    'value':null,
+                    'raw':'null'
+                  }
+                },
+                'async':false,
+                'generator':false,
+                'predicate':{
+                  'type':'InferredPredicate',
+                },
+                'expression':true,
+                'returnType':null,
+                'typeParameters':null
+              }
+            }
+          ],
+          'kind':'var'
+        }
+      },
+      '(x) checks => x !== null;': {
+        'body.0':     {
+          'type':'ExpressionStatement',
+          'expression':{
+            'type':'ArrowFunctionExpression',
+            'id':null,
+            'params':[
+              {
+                'type':'Identifier',
+                'name':'x',
+                'typeAnnotation':null,
+                'optional':false
+              }
+            ],
+            'defaults':[],
+            'rest':null,
+            'body':{
+              'type':'BinaryExpression',
+              'operator':'!==',
+              'left':{
+                'type':'Identifier',
+                'name':'x',
+                'typeAnnotation':null,
+                'optional':false
+              },
+              'right':{
+                'type':'Literal',
+                'value':null,
+                'raw':'null'
+              }
+            },
+            'async':false,
+            'generator':false,
+            'predicate':{
+              'type':'InferredPredicate',
+            },
+            'expression':true,
+            'returnType':null,
+            'typeParameters':null
+          }
+        }
+
+      },
       'var a3: (x: mixed) => boolean checks (x !== null);': {
         'errors.0.message': 'Unexpected identifier'
       },

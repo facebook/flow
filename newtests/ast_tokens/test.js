@@ -1213,6 +1213,7 @@ export default suite(({addFile, flowCmd}) => [
             },
             "async": true,
             "generator": false,
+            "predicate": null,
             "expression": true,
             "returnType": null,
             "typeParameters": null
