@@ -208,7 +208,8 @@ let format_reason_color
   let source = match loc.source with
   | Some LibFile filename
   | Some SourceFile filename
-  | Some JsonFile filename -> [file_clr, filename]
+  | Some JsonFile filename
+  | Some ResourceFile filename -> [file_clr, filename]
   | None | Some Builtins -> []
   in
   let loc_format =
@@ -340,7 +341,8 @@ let file_of_source source =
           end else filename in
         Some filename
     | Some Loc.SourceFile filename
-    | Some Loc.JsonFile filename ->
+    | Some Loc.JsonFile filename
+    | Some Loc.ResourceFile filename ->
         Some filename
     | Some Loc.Builtins -> None
     | None -> None
@@ -377,7 +379,8 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
       | None, Some Loc.LibFile filename -> filename,true
       | Some filename, _
       | None, Some Loc.SourceFile filename
-      | None, Some Loc.JsonFile filename -> filename, false
+      | None, Some Loc.JsonFile filename
+      | None, Some Loc.ResourceFile filename -> filename, false
       | None, Some Loc.Builtins
       | None, None -> failwith "Should only have lib and source files at this point" in
       [comment_style s] @
@@ -805,7 +808,8 @@ let string_of_loc_deprecated loc = Loc.(
     | Some Builtins -> ""
     | Some LibFile file
     | Some SourceFile file
-    | Some JsonFile file ->
+    | Some JsonFile file
+    | Some ResourceFile file ->
       let line = loc.start.line in
       let start = loc.start.column + 1 in
       let end_ = loc._end.column in

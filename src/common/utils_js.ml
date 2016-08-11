@@ -198,3 +198,9 @@ let count_calls ~counter ~default f =
     decr counter;
     f ()
   end
+
+let extension_of_filename filename =
+  try
+    let idx = String.rindex filename '.' in
+    Some (String.sub filename idx (String.length filename - idx))
+  with Not_found -> None

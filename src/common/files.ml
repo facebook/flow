@@ -26,10 +26,13 @@ let is_prefix prefix =
   in fun path ->
     path = prefix || String_utils.string_starts_with path prefix_with_sep
 
-let is_json_file path = Filename.check_suffix path ".json"
+let is_json_file filename =
+  Utils_js.extension_of_filename filename = Some ".json"
 
 let is_valid_path ~options =
-  let file_exts = Options.module_file_exts options in
+  let file_exts = SSet.union
+    (Options.module_file_exts options)
+    (Options.module_resource_exts options) in
   let is_valid_path_helper path =
     not (is_dot_file path) &&
     (SSet.exists (Filename.check_suffix path) file_exts ||
@@ -73,9 +76,9 @@ let kind_of_path path = Unix.(
     end with Unix_error (ENOENT, _, _) -> Other)
   | S_DIR -> Dir (path, false)
   | _ -> Other
-  with 
+  with
   | Unix_error (ENOENT, _, _) when Sys.win32 && String.length path >= 248 ->
-    Utils.prerr_endlinef 
+    Utils.prerr_endlinef
       "On Windows, paths must be less than 248 characters for directories \
        and 260 characters for files. This path has %d characters. Skipping %s"
       (String.length path)
@@ -307,7 +310,9 @@ let get_flowtyped_path root =
   make_path_absolute root "flow-typed"
 
 (* helper: make different kinds of Loc.filename from a path string *)
-let filename_from_string p =
-  if is_json_file p
-  then Loc.JsonFile p
-  else Loc.SourceFile p
+let filename_from_string ~options p =
+  let resource_file_exts = Options.module_resource_exts options in
+  match Utils_js.extension_of_filename p with
+  | Some ".json" -> Loc.JsonFile p
+  | Some ext when SSet.mem ext resource_file_exts -> Loc.ResourceFile p
+  | _ -> Loc.SourceFile p

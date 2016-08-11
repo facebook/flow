@@ -214,7 +214,9 @@ let typecheck_contents ~options ?verbose ?(check_syntax = false) contents filena
   | Parsing_service_js.Parse_err parse_errors ->
       timing, None, Errors.ErrorSet.union parse_errors errors, info
 
-  | Parsing_service_js.Parse_skip ->
+  | Parsing_service_js.Parse_skip
+     (Parsing_service_js.Skip_non_flow_file
+    | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
       timing, None, errors, info
 
@@ -262,7 +264,15 @@ let heap_check files = Module_js.(
 )
 
 (* helper *)
-let typecheck ~options ~timing ~workers ~make_merge_input files removed unparsed =
+let typecheck
+  ~options
+  ~timing
+  ~workers
+  ~make_merge_input
+  ~files
+  ~removed
+  ~unparsed
+  ~resource_files =
   (* TODO remove after lookup overhaul *)
   Module_js.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
@@ -279,6 +289,16 @@ let typecheck ~options ~timing ~workers ~make_merge_input files removed unparsed
   List.iter (fun (filename, docblock) ->
     Module_js.add_unparsed_info ~options filename docblock
   ) unparsed;
+
+  (* Infer resource files *)
+  let timing, () =
+    with_timer ~options "InferResourceFiles" timing (fun () ->
+    FilenameSet.iter
+      (Infer_service.infer_resource_file ~options)
+      resource_files
+  ) in
+  let inferred =
+    FilenameSet.fold (fun fn acc -> fn::acc) resource_files inferred in
 
   (* create module dependency graph, warn on dupes etc. *)
   let timing, () = with_timer ~options "CommitModules" timing (fun () ->
@@ -417,7 +437,7 @@ let recheck genv env modified =
   Flow_logger.log "Parsing";
   (* reparse modified and added files, updating modified to reflect removal of
      unchanged files *)
-  let timing, (modified, (freshparsed, freshparse_skips, freshparse_fail, freshparse_errors)) =
+  let timing, (modified, freshparse_results) =
     with_timer ~options "Parsing" timing (fun () ->
       let profile = Options.should_profile options in
       let max_header_tokens = Options.max_header_tokens options in
@@ -426,6 +446,13 @@ let recheck genv env modified =
         workers modified
     ) in
   let modified_count = FilenameSet.cardinal modified in
+  let {
+    Parsing_service_js.parse_ok = freshparsed;
+                       parse_skips = freshparse_skips;
+                       parse_fails = freshparse_fail;
+                       parse_errors = freshparse_errors;
+                       parse_resource_files = freshparse_resource_files;
+  } = freshparse_results in
 
   (* clear errors for modified files, deleted files and master *)
   let master_cx = Init_js.get_master_cx options in
@@ -502,9 +529,10 @@ let recheck genv env modified =
 
       Some (FilenameSet.elements to_merge, direct_deps)
     )
-    freshparsed
-    removed_modules
-    (List.rev_append freshparse_fail freshparse_skips)
+    ~files:freshparsed
+    ~removed:removed_modules
+    ~unparsed:(List.rev_append freshparse_fail freshparse_skips)
+    ~resource_files:freshparse_resource_files
   in
 
   FlowEventLogger.recheck
@@ -537,12 +565,19 @@ let full_check workers ~ordered_libs parse_next options =
   let max_header_tokens = Options.max_header_tokens options in
 
   Flow_logger.log "Parsing";
-  let timing, (parsed, skipped_files, error_files, errors) =
+  let timing, parse_results =
     with_timer ~options "Parsing" timing (fun () ->
       Parsing_service_js.parse
         ~types_mode ~use_strict ~profile ~max_header_tokens
         workers parse_next
     ) in
+  let {
+    Parsing_service_js.parse_ok = parsed;
+                       parse_skips = skipped_files;
+                       parse_fails = error_files;
+                       parse_errors = errors;
+                       parse_resource_files = resource_files;
+  } = parse_results in
   let error_filenames = List.map (fun (file, _) -> file) error_files in
   save_errors errors_by_file error_filenames errors;
 
@@ -578,9 +613,10 @@ let full_check workers ~ordered_libs parse_next options =
     ~make_merge_input:(fun inferred ->
       if lib_error then None else Some (inferred, FilenameSet.empty)
     )
-    parsed
-    Module_js.NameSet.empty
-    (List.rev_append error_files skipped_files)
+    ~files:parsed
+    ~removed:Module_js.NameSet.empty
+    ~unparsed:(List.rev_append error_files skipped_files)
+    ~resource_files
   in
 
   (timing, parsed)
@@ -617,7 +653,7 @@ let server_init genv =
 
   let get_next_raw = Files.make_next_files ~options ~libs in
   let get_next = fun () ->
-    get_next_raw () |> List.map Files.filename_from_string
+    get_next_raw () |> List.map (Files.filename_from_string ~options)
   in
   let (timing, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in

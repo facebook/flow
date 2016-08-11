@@ -121,7 +121,8 @@ let string_of_loc loc = Loc.(
   | Some Builtins -> ""
   | Some LibFile file
   | Some SourceFile file
-  | Some JsonFile file ->
+  | Some JsonFile file
+  | Some ResourceFile file ->
     let line = loc.start.line in
     let start = loc.start.column + 1 in
     let end_ = loc._end.column in
@@ -146,13 +147,9 @@ let strip_root_from_loc root loc = Loc.(
     then Some (LibFile (spf "[LIB] %s" (Files.relative_path root_str file)))
     else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
 
-  | Some SourceFile file ->
+  | Some (SourceFile _ | JsonFile _ | ResourceFile _ as filename) ->
     let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (SourceFile (Files.relative_path root_str file))
-
-  | Some JsonFile file ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (JsonFile (Files.relative_path root_str file))
+    Some (Loc.filename_map (Files.relative_path root_str) filename)
   in
   { loc with source }
 )
@@ -173,6 +170,7 @@ let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
     | Some LibFile _ -> JSON_String "LibFile"
     | Some SourceFile _ -> JSON_String "SourceFile"
     | Some JsonFile _ -> JSON_String "JsonFile"
+    | Some ResourceFile _ -> JSON_String "ResourceFile"
     | Some Builtins -> JSON_String "Builtins"
     | None -> JSON_Null);
     "start", JSON_Object [
@@ -320,6 +318,7 @@ let is_lib_reason r =
   | Some Builtins -> true
   | Some SourceFile _ -> false
   | Some JsonFile _ -> false
+  | Some ResourceFile _ -> false
   | None -> false)
 
 let is_blamable_reason r =

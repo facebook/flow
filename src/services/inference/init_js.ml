@@ -107,7 +107,8 @@ let load_lib_files files ~options save_errors save_suppressions =
         save_errors lib_file errors;
         exclude_syms, ((lib_file, false) :: result)
 
-      | Parsing.Parse_skip ->
+      | Parsing.Parse_skip
+          (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
         (* should never happen *)
         exclude_syms, ((lib_file, false) :: result)
 

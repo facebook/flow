@@ -142,7 +142,8 @@ let resolution_path_dependency files acc f =
   match InfoHeap.get f with
   | Some { phantom_dependents = fs; _ } when fs |> SSet.exists (fun f ->
       FilenameSet.mem (Loc.SourceFile f) files ||
-      FilenameSet.mem (Loc.JsonFile f) files
+      FilenameSet.mem (Loc.JsonFile f) files ||
+      FilenameSet.mem (Loc.ResourceFile f) files
     ) -> FilenameSet.add f acc
   | _ -> acc
 
@@ -389,7 +390,11 @@ module Node = struct
     then path_if_exists ~options path_acc path
     else (
       let path_w_index = Filename.concat path "index" in
-      let file_exts = SSet.elements (Options.module_file_exts options) in
+      (* We do not try resource file extensions here. So while you can write
+       * require('foo') to require foo.js, it should never resolve to foo.css
+       *)
+      let file_exts = Options.module_file_exts options
+        |> SSet.elements in
 
       lazy_seq ([
         lazy (path_if_exists_with_file_exts ~options path_acc path file_exts);
@@ -441,7 +446,7 @@ module Node = struct
         | Some _ as result -> result
     in
     match choose_candidate candidates with
-    | Some str -> Modulename.Filename (Files.filename_from_string str)
+    | Some str -> Modulename.Filename (Files.filename_from_string ~options str)
     | None -> Modulename.String import_str
 
   (* in node, file names are module names, as guaranteed by
@@ -460,14 +465,20 @@ end
 module Haste: MODULE_SYSTEM = struct
   let short_module_name_of = function
     | Loc.Builtins -> assert false
-    | Loc.LibFile file | Loc.SourceFile file | Loc.JsonFile file ->
+    | Loc.LibFile file
+    | Loc.SourceFile file
+    | Loc.JsonFile file
+    | Loc.ResourceFile file ->
         Filename.basename file |> Filename.chop_extension
 
   let is_mock =
     let mock_path = Str.regexp ".*/__mocks__/.*" in
     function
     | Loc.Builtins -> false
-    | Loc.LibFile file | Loc.SourceFile file | Loc.JsonFile file ->
+    | Loc.LibFile file
+    | Loc.SourceFile file
+    | Loc.JsonFile file
+    | Loc.ResourceFile file ->
         Str.string_match mock_path file 0
 
   let rec exported_module file info =
@@ -527,7 +538,8 @@ module Haste: MODULE_SYSTEM = struct
     let chosen_candidate = List.hd candidates in
 
     match resolve_import ~options cx loc ?path_acc chosen_candidate with
-    | Some name -> Modulename.Filename (Files.filename_from_string name)
+    | Some name ->
+        Modulename.Filename (Files.filename_from_string ~options name)
     | None -> Modulename.String chosen_candidate
 
   (* in haste, many files may provide the same module. here we're also
