@@ -3,14 +3,14 @@ CanvasRenderingContext2D.js:11
          ^^^^^^^^^^^^^^^^^^^^ call of method `moveTo`
  11:     ctx.moveTo('0', '1');  // error: should be numbers
                     ^^^ string. This type is incompatible with
-number. See lib: dom.js:1150
+number. See lib: dom.js:1163
 
 CanvasRenderingContext2D.js:11
  11:     ctx.moveTo('0', '1');  // error: should be numbers
          ^^^^^^^^^^^^^^^^^^^^ call of method `moveTo`
  11:     ctx.moveTo('0', '1');  // error: should be numbers
                          ^^^ string. This type is incompatible with
-number. See lib: dom.js:1150
+number. See lib: dom.js:1163
 
 Element.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
@@ -132,17 +132,17 @@ HTMLInputElement.js:7
   7:     el.setRangeText('foo', 123); // end is required
          ^^^^^^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: dom.js:1475
+  function type. See lib: dom.js:1488
   Error:
     7:     el.setRangeText('foo', 123); // end is required
                                   ^^^ number. This type is incompatible with
-  undefined. See lib: dom.js:1475
+  undefined. See lib: dom.js:1488
   Member 2:
-  function type. See lib: dom.js:1476
+  function type. See lib: dom.js:1489
   Error:
     7:     el.setRangeText('foo', 123); // end is required
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  number. See lib: dom.js:1476
+  number. See lib: dom.js:1489
 
 HTMLInputElement.js:10
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
@@ -150,17 +150,17 @@ HTMLInputElement.js:10
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
          ^^^^^^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: dom.js:1475
+  function type. See lib: dom.js:1488
   Error:
    10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                   ^^^ number. This type is incompatible with
-  undefined. See lib: dom.js:1475
+  undefined. See lib: dom.js:1488
   Member 2:
-  function type. See lib: dom.js:1476
+  function type. See lib: dom.js:1489
   Error:
    10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                             ^^^^^^^ string. This type is incompatible with
-  string enum. See lib: dom.js:1476
+  string enum. See lib: dom.js:1489
 
 URL.js:8
   8: const e: string = c.path; // not correct
@@ -186,17 +186,17 @@ path2d.js:9
   9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
           ^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: dom.js:1024
+  function type. See lib: dom.js:1037
   Error:
     9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                        ^^^^ string. This type is incompatible with
-  undefined. See lib: dom.js:1024
+  undefined. See lib: dom.js:1037
   Member 2:
-  function type. See lib: dom.js:1025
+  function type. See lib: dom.js:1038
   Error:
     9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                        ^^^^ string. This type is incompatible with
-  number. See lib: dom.js:1025
+  number. See lib: dom.js:1038
 
 registerElement.js:48
  48:     document.registerElement('custom-element', {
@@ -743,48 +743,48 @@ traversal.js:30
 traversal.js:183
 183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1810
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1823
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1810
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1823
   Error:
   183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1810
+  number literal `1`. See lib: dom.js:1823
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1811
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1824
   Error:
   183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1811
+  number literal `2`. See lib: dom.js:1824
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1812
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1825
   Error:
   183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1812
+  number literal `3`. See lib: dom.js:1825
 
 traversal.js:185
 185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1810
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1823
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1810
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1823
   Error:
   185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1810
+  number literal `1`. See lib: dom.js:1823
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1811
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1824
   Error:
   185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1811
+  number literal `2`. See lib: dom.js:1824
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1812
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1825
   Error:
   185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1812
+  number literal `3`. See lib: dom.js:1825
 
 traversal.js:186
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
@@ -1038,15 +1038,15 @@ traversal.js:186
                                                           ^^ object literal. This type is incompatible with
   union: NodeFilterCallback | object type. See lib: dom.js:638
     Member 1:
-    NodeFilterCallback. See lib: dom.js:1814
+    NodeFilterCallback. See lib: dom.js:1827
     Error:
-    function type. Callable signature not found in. See lib: dom.js:1814
+    function type. Callable signature not found in. See lib: dom.js:1827
     186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                             ^^ object literal
     Member 2:
-    object type. See lib: dom.js:1814
+    object type. See lib: dom.js:1827
     Error:
-    property `accept`. Property not found in. See lib: dom.js:1814
+    property `accept`. Property not found in. See lib: dom.js:1827
     186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                             ^^ object literal
   Member 42:
@@ -1065,48 +1065,48 @@ traversal.js:186
 traversal.js:190
 190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                               ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1810
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1823
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1810
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1823
   Error:
   190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1810
+  number literal `1`. See lib: dom.js:1823
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1811
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1824
   Error:
   190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1811
+  number literal `2`. See lib: dom.js:1824
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1812
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1825
   Error:
   190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1812
+  number literal `3`. See lib: dom.js:1825
 
 traversal.js:192
 192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                         ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1810
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1823
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1810
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1823
   Error:
   192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1810
+  number literal `1`. See lib: dom.js:1823
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1811
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1824
   Error:
   192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1811
+  number literal `2`. See lib: dom.js:1824
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1812
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1825
   Error:
   192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1812
+  number literal `3`. See lib: dom.js:1825
 
 traversal.js:193
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
@@ -1360,15 +1360,15 @@ traversal.js:193
                                                         ^^ object literal. This type is incompatible with
   union: NodeFilterCallback | object type. See lib: dom.js:646
     Member 1:
-    NodeFilterCallback. See lib: dom.js:1814
+    NodeFilterCallback. See lib: dom.js:1827
     Error:
-    function type. Callable signature not found in. See lib: dom.js:1814
+    function type. Callable signature not found in. See lib: dom.js:1827
     193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                                           ^^ object literal
     Member 2:
-    object type. See lib: dom.js:1814
+    object type. See lib: dom.js:1827
     Error:
-    property `accept`. Property not found in. See lib: dom.js:1814
+    property `accept`. Property not found in. See lib: dom.js:1827
     193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                                           ^^ object literal
   Member 42:
@@ -1378,15 +1378,15 @@ traversal.js:193
                                                         ^^ object literal. This type is incompatible with
   union: NodeFilterCallback | object type. See lib: dom.js:650
     Member 1:
-    NodeFilterCallback. See lib: dom.js:1814
+    NodeFilterCallback. See lib: dom.js:1827
     Error:
-    function type. Callable signature not found in. See lib: dom.js:1814
+    function type. Callable signature not found in. See lib: dom.js:1827
     193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                                           ^^ object literal
     Member 2:
-    object type. See lib: dom.js:1814
+    object type. See lib: dom.js:1827
     Error:
-    property `accept`. Property not found in. See lib: dom.js:1814
+    property `accept`. Property not found in. See lib: dom.js:1827
     193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                                           ^^ object literal
   Member 43:
