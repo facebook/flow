@@ -309,6 +309,12 @@ module rec TypeTerm : sig
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
 
+    (* like PredicateT, GuardT guards a subsequent flow with a predicate on an
+       incoming type. Unlike PredicateT, the subsequent flow (if any) uses
+       an arbitrary LB specified in the GuardT value, rather than the filtered
+       result of the predicate itself *)
+    | GuardT of predicate * t * t
+
     (* == *)
     | EqT of reason * t
 
@@ -972,6 +978,7 @@ let any_propagating_use_t = function
   | GetPropT _
   | MethodT _
   | PredicateT _
+  | GuardT _
   | AndT _
   | OrT _
   | ReposLowerT _
@@ -1139,7 +1146,8 @@ and reason_of_use_t = function
   | ReposUseT (reason, _, _)
       -> reason
 
-  | PredicateT (_, t) -> reason_of_t t
+  | PredicateT (_, t)
+  | GuardT (_, _, t) -> reason_of_t t
 
   | EqT (reason, _) ->
       reason
@@ -1367,6 +1375,7 @@ and mod_reason_of_use_t f = function
   | BecomeT (reason, t) -> BecomeT (f reason, t)
 
   | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
+  | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
 
   | EqT (reason, t) -> EqT (f reason, t)
 
@@ -1548,6 +1557,7 @@ let string_of_use_ctor = function
   | ReposUseT _ -> "ReposUseT"
   | BecomeT _ -> "BecomeT"
   | PredicateT _ -> "PredicateT"
+  | GuardT _ -> "GuardT"
   | EqT _ -> "EqT"
   | AndT _ -> "AndT"
   | OrT _ -> "OrT"

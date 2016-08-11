@@ -2442,7 +2442,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** predicates: prevent a predicate upper bound from prematurely decomposing
         an intersection lower bound *)
     | IntersectionT _, PredicateT (pred, tout) ->
-      predicate cx trace tout (l, pred)
+      predicate cx trace tout l pred
+
+    (* same for guards *)
+    | IntersectionT _, GuardT (pred, result, tout) ->
+      guard cx trace l pred result tout
 
     (** ObjAssignT copies multiple properties from its incoming LB.
         Here we simulate a merged object type by iterating over the
@@ -4006,7 +4010,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************)
 
     | _, PredicateT(p,t) ->
-      predicate cx trace t (l,p)
+      predicate cx trace t l p
+
+    | _, GuardT (pred, result, sink) ->
+      guard cx trace l pred result sink
 
     | StrT (_, Literal value),
       SentinelPropTestT (_, sense, SentinelStr sentinel, _)
@@ -6326,17 +6333,44 @@ and filter_optional cx ?trace reason opt_t =
     flow_opt_t cx ?trace (opt_t, OptionalT(t))
   )
 
-(*******************************************************************)
-(* predicate *)
-(*******************************************************************)
+(**********)
+(* guards *)
+(**********)
 
-and predicate cx trace t (l,p) = match (l,p) with
+and guard cx trace source pred result sink = match pred with
+
+| ExistsP ->
+  begin match filter_exists source with
+  | EmptyT _ -> ()
+  | _ -> rec_flow_t cx trace (result, sink)
+  end
+
+| NotP ExistsP ->
+  begin match filter_not_exists source with
+  | EmptyT _ -> ()
+  | _ -> rec_flow_t cx trace (result, sink)
+  end
+
+| _ ->
+  let loc = loc_of_reason (reason_of_t sink) in
+  let msg = spf "Unsupported guard predicate (%s)" (string_of_predicate pred)
+  in add_internal_error cx (loc, [msg])
+
+(**************)
+(* predicates *)
+(**************)
+
+(* t - predicate output recipient (normally a tvar)
+   l - incoming concrete LB (predicate input)
+   result - guard result in case of success
+   p - predicate *)
+and predicate cx trace t l p = match p with
 
   (************************)
   (* deconstruction of && *)
   (************************)
 
-  | (_, AndP(p1,p2)) ->
+  | AndP (p1,p2) ->
     let reason = mk_reason "and" (loc_of_predicate p1) in
     let tvar = mk_tvar cx reason in
     rec_flow cx trace (l,PredicateT(p1,tvar));
@@ -6346,7 +6380,7 @@ and predicate cx trace t (l,p) = match (l,p) with
   (* deconstruction of || *)
   (************************)
 
-  | (_, OrP(p1,p2)) ->
+  | OrP (p1, p2) ->
     rec_flow cx trace (l,PredicateT(p1,t));
     rec_flow cx trace (l,PredicateT(p2,t))
 
@@ -6355,223 +6389,245 @@ and predicate cx trace t (l,p) = match (l,p) with
   (*********************************)
 
   (* when left is evaluated, store it and evaluate right *)
-  | (_, LeftP(b, r)) ->
+  | LeftP (b, r) ->
     rec_flow cx trace (r, PredicateT(RightP(b, l), t))
-  | (_, NotP(LeftP(b, r))) ->
+  | NotP LeftP (b, r) ->
     rec_flow cx trace (r, PredicateT(NotP(RightP(b, l)), t))
 
   (* when right is evaluated, call appropriate handler *)
-  | (r, RightP(b, l)) ->
+  | RightP (b, actual_l) ->
+    let r = l in
+    let l = actual_l in
     binary_predicate cx trace true b l r t
-  | (r, NotP(RightP(b, l))) ->
+  | NotP RightP (b, actual_l) ->
+    let r = l in
+    let l = actual_l in
     binary_predicate cx trace false b l r t
 
   (***********************)
   (* typeof _ ~ "boolean" *)
   (***********************)
 
-  | (MixedT (r, Mixed_truthy), BoolP) ->
-    let r = replace_reason BoolT.desc r in
-    rec_flow_t cx trace (BoolT (r, Some true), t)
+  | BoolP ->
+    begin match l with
+    | MixedT (r, Mixed_truthy) ->
+      let r = replace_reason BoolT.desc r in
+      rec_flow_t cx trace (BoolT (r, Some true), t)
 
-  | (MixedT (r, _), BoolP) ->
-    rec_flow_t cx trace (BoolT.why r, t)
+    | MixedT (r, _) ->
+      rec_flow_t cx trace (BoolT.why r, t)
 
-  | (_, BoolP) ->
-    filter cx trace t l is_bool
+    | _ ->
+      filter cx trace t l is_bool
+    end
 
-  | (_, NotP(BoolP)) ->
+  | NotP BoolP ->
     filter cx trace t l (not_ is_bool)
 
   (***********************)
   (* typeof _ ~ "string" *)
   (***********************)
 
-  | (MixedT (r, Mixed_truthy), StrP) ->
-    let r = replace_reason StrT.desc r in
-    rec_flow_t cx trace (StrT (r, Truthy), t)
+  | StrP ->
+    begin match l with
+    | MixedT (r, Mixed_truthy) ->
+      let r = replace_reason StrT.desc r in
+      rec_flow_t cx trace (StrT (r, Truthy), t)
 
-  | (MixedT (r, _), StrP) ->
-    rec_flow_t cx trace (StrT.why r, t)
+    | MixedT (r, _) ->
+      rec_flow_t cx trace (StrT.why r, t)
 
-  | (_, StrP) ->
-    filter cx trace t l is_string
+    | _ ->
+      filter cx trace t l is_string
+    end
 
-  | (_, NotP(StrP)) ->
+  | NotP StrP ->
     filter cx trace t l (not_ is_string)
 
   (*********************)
   (* _ ~ "some string" *)
   (*********************)
 
-  | (_, SingletonStrP lit) ->
+  | SingletonStrP lit ->
     rec_flow_t cx trace (filter_string_literal lit l, t)
 
-  | (_, NotP(SingletonStrP lit)) ->
+  | NotP SingletonStrP lit ->
     rec_flow_t cx trace (filter_not_string_literal lit l, t)
 
   (*********************)
   (* _ ~ some number n *)
   (*********************)
 
-  | (_, SingletonNumP lit) ->
+  | SingletonNumP lit ->
     rec_flow_t cx trace (filter_number_literal lit l, t)
 
-  | (_, NotP(SingletonNumP lit)) ->
+  | NotP SingletonNumP lit ->
     rec_flow_t cx trace (filter_not_number_literal lit l, t)
 
   (***********************)
   (* typeof _ ~ "number" *)
   (***********************)
 
-  | (MixedT (r, Mixed_truthy), NumP) ->
-    let r = replace_reason NumT.desc r in
-    rec_flow_t cx trace (NumT (r, Truthy), t)
+  | NumP ->
+    begin match l with
+    | MixedT (r, Mixed_truthy) ->
+      let r = replace_reason NumT.desc r in
+      rec_flow_t cx trace (NumT (r, Truthy), t)
 
-  | (MixedT (r, _), NumP) ->
-    rec_flow_t cx trace (NumT.why r, t)
+    | MixedT (r, _) ->
+      rec_flow_t cx trace (NumT.why r, t)
 
-  | (_, NumP) ->
-    filter cx trace t l is_number
+    | _ ->
+      filter cx trace t l is_number
+    end
 
-  | (_, NotP(NumP)) ->
+  | NotP NumP ->
     filter cx trace t l (not_ is_number)
 
   (***********************)
   (* typeof _ ~ "function" *)
   (***********************)
 
-  | (MixedT (r, _), FunP) ->
-    rec_flow_t cx trace (AnyFunT (replace_reason "function" r), t)
+  | FunP ->
+    begin match l with
+    | MixedT (r, _) ->
+      rec_flow_t cx trace (AnyFunT (replace_reason "function" r), t)
 
-  | (_, FunP) ->
-    filter cx trace t l is_function
+    | _ ->
+      filter cx trace t l is_function
+    end
 
-  | (_, NotP(FunP)) ->
+  | NotP FunP ->
     filter cx trace t l (not_ is_function)
 
   (***********************)
   (* typeof _ ~ "object" *)
   (***********************)
 
-  | (MixedT (r, flavor), ObjP) ->
-    let reason = replace_reason "object" r in
-    let dict = Some {
-      key = StrT.why r;
-      value = MixedT (replace_reason MixedT.desc r, Mixed_everything);
-      dict_name = None;
-    } in
-    let proto = MixedT (reason, Mixed_everything) in
-    let obj = mk_object_with_proto cx reason ?dict proto in
-    let filtered_l = match flavor with
-    | Mixed_truthy
-    | Mixed_non_maybe
-    | Mixed_non_null -> obj
-    | Mixed_everything
-    | Mixed_non_void -> create_union [NullT.why r; obj]
-    in
-    rec_flow_t cx trace (filtered_l, t)
+  | ObjP ->
+    begin match l with
+    | MixedT (r, flavor) ->
+      let reason = replace_reason "object" r in
+      let dict = Some {
+        key = StrT.why r;
+        value = MixedT (replace_reason MixedT.desc r, Mixed_everything);
+        dict_name = None;
+      } in
+      let proto = MixedT (reason, Mixed_everything) in
+      let obj = mk_object_with_proto cx reason ?dict proto in
+      let filtered_l = match flavor with
+      | Mixed_truthy
+      | Mixed_non_maybe
+      | Mixed_non_null -> obj
+      | Mixed_everything
+      | Mixed_non_void -> create_union [NullT.why r; obj]
+      in
+      rec_flow_t cx trace (filtered_l, t)
 
-  | (_, ObjP) ->
-    filter cx trace t l is_object
+    | _ ->
+      filter cx trace t l is_object
+    end
 
-  | (_, NotP(ObjP)) ->
+  | NotP ObjP ->
     filter cx trace t l (not_ is_object)
 
   (*******************)
   (* Array.isArray _ *)
   (*******************)
 
-  | (MixedT (r, _), ArrP) ->
-    let filtered_l = ArrT (replace_reason "array" r, MixedT (r, Mixed_everything), []) in
-    rec_flow_t cx trace (filtered_l, t)
+  | ArrP ->
+    begin match l with
+    | MixedT (r, _) ->
+      let filtered_l = ArrT (replace_reason "array" r, MixedT (r, Mixed_everything), []) in
+      rec_flow_t cx trace (filtered_l, t)
 
-  | (_, ArrP) ->
-    filter cx trace t l is_array
+    | _ ->
+      filter cx trace t l is_array
+    end
 
-  | (_, NotP(ArrP)) ->
+  | NotP ArrP ->
     filter cx trace t l (not_ is_array)
 
   (***********************)
   (* typeof _ ~ "undefined" *)
   (***********************)
 
-  | (_, VoidP) ->
+  | VoidP ->
     rec_flow_t cx trace (filter_undefined l, t)
 
-  | (_, NotP(VoidP)) ->
+  | NotP VoidP ->
     rec_flow_t cx trace (filter_not_undefined l, t)
 
   (********)
   (* null *)
   (********)
 
-  | (_, NullP) ->
+  | NullP ->
     rec_flow_t cx trace (filter_null l, t)
 
-  | (_, NotP(NullP)) ->
+  | NotP NullP ->
     rec_flow_t cx trace (filter_not_null l, t)
 
   (*********)
   (* maybe *)
   (*********)
 
-  | (_, MaybeP) ->
+  | MaybeP ->
     rec_flow_t cx trace (filter_maybe l, t)
 
-  | (_, NotP(MaybeP)) ->
+  | NotP MaybeP ->
     rec_flow_t cx trace (filter_not_maybe l, t)
 
   (********)
   (* true *)
   (********)
 
-  | (_, SingletonBoolP true) ->
+  | SingletonBoolP true ->
     rec_flow_t cx trace (filter_true l, t)
 
-  | (_, NotP(SingletonBoolP true)) ->
+  | NotP (SingletonBoolP true) ->
     rec_flow_t cx trace (filter_not_true l, t)
 
   (*********)
   (* false *)
   (*********)
 
-  | (_, SingletonBoolP false) ->
+  | SingletonBoolP false ->
     rec_flow_t cx trace (filter_false l, t)
 
-  | (_, NotP(SingletonBoolP false)) ->
+  | NotP (SingletonBoolP false) ->
     rec_flow_t cx trace (filter_not_false l, t)
 
   (************************)
   (* truthyness *)
   (************************)
 
-  | (_, ExistsP) ->
+  | ExistsP ->
     rec_flow_t cx trace (filter_exists l, t)
 
-  | (_, NotP(ExistsP)) ->
+  | NotP ExistsP ->
     rec_flow_t cx trace (filter_not_exists l, t)
 
-  | (_, PropExistsP key) ->
+  | PropExistsP key ->
     prop_exists_test cx trace key true l t
 
-  | (_, NotP (PropExistsP key)) ->
+  | NotP (PropExistsP key) ->
     prop_exists_test cx trace key false l t
 
   (* unreachable *)
-  | (_, NotP (NotP _))
-  | (_, NotP (AndP _))
-  | (_, NotP (OrP _)) ->
+  | NotP (NotP _)
+  | NotP (AndP _)
+  | NotP (OrP _) ->
     assert_false (spf "Unexpected predicate %s" (string_of_predicate p))
 
   (********************)
   (* Latent predicate *)
   (********************)
 
-  | (_, LatentP (reason, fun_t, offset)) ->
+  | LatentP (reason, fun_t, offset) ->
       rec_flow cx trace (fun_t, CallAsPredicateT (reason, true, offset, l, t))
 
-  | (_, NotP (LatentP (reason, fun_t, offset))) ->
+  | NotP (LatentP (reason, fun_t, offset)) ->
       let neg_reason = prefix_reason "negation of " reason in
       rec_flow cx trace (fun_t,
         CallAsPredicateT (neg_reason, false, offset, l, t))
@@ -6582,18 +6638,10 @@ and prop_exists_test cx trace key sense obj result =
 and prop_exists_test_generic key cx trace result orig_obj sense = function
   | ObjT (_, { flags; props_tmap; _}) as obj ->
       begin match read_prop_opt cx props_tmap key with
-      | Some t ->
+      | Some prop_t ->
         (* prop is present on object type *)
-        (* Note: filter functions are not currently equipped to deal with
-           AnnotT, maybe others, making (at least) type aliases unrefinable.
-           Tracked by #12609525 *)
-        let filter = if sense then filter_exists else filter_not_exists in
-        begin match filter t with
-        | EmptyT _ ->
-          () (* provably unreachable, so prune *)
-        | _ ->
-          rec_flow_t cx trace (orig_obj, result)
-        end
+        let pred = if sense then ExistsP else NotP ExistsP in
+        rec_flow cx trace (prop_t, GuardT (pred, orig_obj, result))
       | None when flags.exact ->
         (* prop is absent from exact object type *)
         if sense
@@ -6675,9 +6723,9 @@ and instanceof_test cx trace result = function
       recursion; it is also used elsewhere for running similar recursive
       subclass decisions.) **)
   | (true, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
-
     predicate cx trace result
-      (ClassT(ExtendsT([], c, a)), RightP(InstanceofTest, c))
+      (ClassT (ExtendsT([], c, a)))
+      (RightP (InstanceofTest, c))
 
   (** If C is a subclass of A, then don't refine the type of x. Otherwise,
       refine the type of x to A. (In general, the type of x should be refined to
@@ -6712,9 +6760,9 @@ and instanceof_test cx trace result = function
       appropriate refinement for x should be, we need to decide whether C
       extends A, choosing either nothing or C based on the result. **)
   | (false, (InstanceT _ as c), ClassT(InstanceT _ as a)) ->
-
     predicate cx trace result
-      (ClassT(ExtendsT([], c, a)), NotP(RightP(InstanceofTest, c)))
+      (ClassT(ExtendsT([], c, a)))
+      (NotP(RightP(InstanceofTest, c)))
 
   (** If C is a subclass of A, then do nothing, since this check cannot
       succeed. Otherwise, don't refine the type of x. **)

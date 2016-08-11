@@ -377,6 +377,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | GuardT (p, r, t) -> [
+      "pred", json_of_pred json_cx p;
+      "result", _json_of_t json_cx r;
+      "sink", _json_of_t json_cx t
+    ]
+
   | EqT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
@@ -1173,6 +1179,10 @@ and dump_use_t_ (depth, tvars) cx t =
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | PredicateT (pred, arg) -> p ~reason:false
       ~extra:(spf "%s, %s" (string_of_predicate pred) (kid arg)) t
+  | GuardT (pred, result, sink) -> p ~reason:false
+      ~extra:(spf "%s, %s, %s"
+        (string_of_predicate pred) (kid result) (kid sink))
+      t
   | EqT (_, arg) -> p ~extra:(kid arg) t
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
