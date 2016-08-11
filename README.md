@@ -19,17 +19,18 @@ Flow is simple to install: all you need is the `flow` binary on your PATH and yo
 
 ### Using Homebrew
 
-Installing Flow with [Homebrew](http://brew.sh/) package manager:
+You can install Flow via [Homebrew](http://brew.sh/) package manager. To ensure you get the latest version, update Homebrew first:
+
+```
+brew update
+```
+
+Then simply type:
 
 ```
 brew install flow
 ```
 
-To ensure you get the latest version of Flow, update your Homebrew with:
-
-```
-brew update
-```
 
 ### Using OPAM
 
