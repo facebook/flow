@@ -102,6 +102,21 @@ let map_pair f g (a,b) = (f a, g b)
 let map_fst f (a,b) = (f a, b)
 let map_snd g (a,b) = (a, g b)
 
+let range_with f a b =
+  if a > b then []
+  else
+    let rec loop j acc =
+      if a <= j then loop (j-1) (f j :: acc)
+      else acc
+    in
+    loop (b-1) []
+
+let range = range_with (fun x -> x)
+
+let repeat n a = range_with (fun _ -> a) 0 n
+
+let _ = range, repeat
+
 (**
  * Useful for various places where a user might have typoed a string and the
  * set of possible intended strings is known (i.e. variable names).
