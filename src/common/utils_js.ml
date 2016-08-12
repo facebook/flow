@@ -173,3 +173,9 @@ let typo_suggestions =
       | _ -> 3
     in
     fst (List.fold_left (fold_results limit name) ([], max_int) possible_names)
+
+let truncate_string str max_len =
+  if (String.length str) <= max_len then
+    str
+  else
+    String.sub str 0 max_len
