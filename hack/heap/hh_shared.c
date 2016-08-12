@@ -486,7 +486,7 @@ static void raise_failed_anonymous_memfd_init() {
 }
 
 static void raise_less_than_minimum_available(uint64_t avail) {
-  CAMLlocal1(arg);
+  value arg;
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("less_than_minimum_available");
   arg = Val_long(avail);
