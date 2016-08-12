@@ -3,7 +3,7 @@ module Tok = Graphql_lexer.Token
 module Lex_result = Graphql_lexer.Lex_result
 module TemplateLiteral = Spider_monkey_ast.Expression.TemplateLiteral
 
-exception Unexpected_token of string
+exception Unexpected_token of (Loc.t * string)
 
 type result =
   | ResTok of Lex_result.t
@@ -17,10 +17,11 @@ type state = {
 let advance s = s.pos <- (s.pos + 1)
 
 let unexpected s =
-  let loc = match Array.get s.tokens s.pos with
-    | ResTok tok ->  Lex_result.loc tok
-    | ResExpr (loc, _) -> loc in
-  Unexpected_token ("at " ^ (Loc.to_string loc))
+  let (loc, str) = match Array.get s.tokens s.pos with
+    | ResTok tok ->
+      Lex_result.loc tok, Tok.string_of_token (Lex_result.token tok)
+    | ResExpr (loc, _) -> (loc, "expression") in
+  Unexpected_token (loc, str)
 
 module Peek = struct
   let result s = Array.get s.tokens s.pos
@@ -153,14 +154,25 @@ and parse_field s: Ast.Field.t =
     loc;
   }
 
+let string_to_tokens str loc =
+  let lexbuf = Lexing.from_string str in
+  let rec next acc =
+    match Graphql_lexer.read lexbuf loc with
+    | {Lex_result.lex_token = Tok.T_EOF; _} -> acc
+    | {Lex_result.lex_token = Tok.T_ILLEGAL; lex_loc; _} ->
+      raise (Unexpected_token (lex_loc, "illegal char"))
+    | res -> next (res :: acc)
+  in
+  next []
+
 let parse_template (literal: TemplateLiteral.t) =
   let open TemplateLiteral in
   let rec eat_string quasis expressions acc =
     match quasis with
     | (loc, { Element.value = {Element.cooked; _}; _ }) :: quasis ->
-      let tokens = Graphql_lexer.lex_str cooked loc in
+      let tokens = string_to_tokens cooked loc in
       let tokens = List.map (fun x -> ResTok x) tokens in
-      let acc = List.rev_append tokens acc in
+      let acc = List.append tokens acc in
       eat_expr quasis expressions acc
     | _ -> failwith "Quasis cannot be empty."
   and eat_expr quasis expressions acc =

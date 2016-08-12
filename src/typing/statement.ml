@@ -2871,8 +2871,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     (* List.iter (fun e -> ignore (expression cx type_params_map e)) expressions; *)
 
     (* let reason = mk_reason "GraphQL fragment" loc in *)
-    let graphql_t = graphql_expression cx literal in
-    graphql_t
+    (try graphql_expression cx literal
+    with
+    | Graphql_parser.Unexpected_token (loc, str) ->
+    FlowError.add_error cx (loc, ["Unexpected token: " ^ str]);
+    VoidT.at Loc.none)
 
   | TaggedTemplate {
       TaggedTemplate.tag;
