@@ -4723,10 +4723,16 @@ and declare_function_to_function_declaration cx id predicate =
           Ast.Type.Function.typeParameters;
           _
         })) ->
-          let params = params |> List.map (
-              fun (l, { Ast.Type.Function.Param.name; _ }) ->
-                (l, Ast.Pattern.Identifier name)
-            )
+          let params = Ast.Type.Function.( params |> List.map (
+              fun (l, { Param.name; Param.typeAnnotation; _ }) ->
+                let (loc, name_) = name in
+                let name' = (
+                  loc, {
+                    name_ with Ast.Identifier.typeAnnotation =
+                    Some (loc, typeAnnotation)
+                  }) in
+                (l, Ast.Pattern.Identifier name')
+            ))
           in
           let body = Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body = [
               (loc, Ast.Statement.Return {
