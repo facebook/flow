@@ -101,6 +101,43 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
                                            ^^^^ object type
                               `,
                             ),
+    addFile('unsealed.js').newErrors(
+                            `
+                              unsealed.js:14
+                               14: f(o); // error: o incompatible with exact type
+                                   ^^^^ function call
+                               14: f(o); // error: o incompatible with exact type
+                                     ^ object literal. This type is incompatible with
+                                4: function f(o: {p: string} | \$Exact<{}>): string {
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^ union: object type | exact type: object type
+                                Member 1:
+                                  4: function f(o: {p: string} | \$Exact<{}>): string {
+                                                   ^^^^^^^^^^^ object type
+                                Error:
+                                  4: function f(o: {p: string} | \$Exact<{}>): string {
+                                                   ^^^^^^^^^^^ property \`p\`. Property not found in
+                                 14: f(o); // error: o incompatible with exact type
+                                       ^ object literal
+                                Member 2:
+                                  4: function f(o: {p: string} | \$Exact<{}>): string {
+                                                                 ^^^^^^^^^^ exact type: object type
+                                Error:
+                                 14: f(o); // error: o incompatible with exact type
+                                       ^ object literal. Inexact type is incompatible with exact type
+                                  4: function f(o: {p: string} | \$Exact<{}>): string {
+                                                                 ^^^^^^^^^^ exact type: object type
+                            `,
+                          ),
+    addFile('unsealed2.js').newErrors(
+                             `
+                               unsealed2.js:9
+                                 9:   g(x);
+                                      ^^^^ function call
+                                15:     return x.q;
+                                               ^^^ string. This type is incompatible with the expected return type of
+                                13: function f(): number {
+                                                  ^^^^^^ number
+                             `,
+                           ),
   ]),
-
 ]);

@@ -2507,7 +2507,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (t, MakeExactT (r, Upper u))
 
     (* exact ObjT LB ~> $Exact<UB>. unify *)
-    | ObjT (_, { flags; _ }), UseT (_, ExactT (r, t)) when flags.exact ->
+    | ObjT (_, { flags; _ }), UseT (_, ExactT (r, t))
+      when flags.exact && sealed_in_op r flags.sealed ->
       rec_flow cx trace (t, MakeExactT (r, Lower l))
 
     (* inexact LB ~> $Exact<UB>. error *)
@@ -2554,7 +2555,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************************************************)
 
     | ObjT (_, { flags; _ }), TestPropT (reason_op, (_, name), tout)
-      when flags.exact ->
+      when flags.exact && sealed_in_op reason_op flags.sealed ->
       let lookup =
         let t = tvar_with_constraint cx
           (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
@@ -4666,14 +4667,15 @@ and inherited_method x = x <> "constructor" && x <> "$call"
    "blame token" that is used when looking up properties of objects in the
    prototype chain as part of that operation. *)
 and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
-  let sealed = not is_dict && match sealed with
-  | Sealed -> true
-  | UnsealedInFile source -> source <> (Loc.source (loc_of_reason reason_op))
-  in
+  let sealed = not is_dict && (sealed_in_op reason_op sealed) in
   if sealed then
     Some reason_o
   else
     None
+
+and sealed_in_op reason_op = function
+  | Sealed -> true
+  | UnsealedInFile source -> source <> (Loc.source (loc_of_reason reason_op))
 
 (* When a non-strict lookup failure happens, check whether this was the result
    of looking up an unchecked module that is not declared.
@@ -6642,7 +6644,8 @@ and prop_exists_test_generic key cx trace result orig_obj sense = function
         (* prop is present on object type *)
         let pred = if sense then ExistsP else NotP ExistsP in
         rec_flow cx trace (prop_t, GuardT (pred, orig_obj, result))
-      | None when flags.exact ->
+      | None
+        when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
         (* prop is absent from exact object type *)
         if sense
         then ()
