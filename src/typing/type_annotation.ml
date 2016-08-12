@@ -49,7 +49,7 @@ let mk_custom_fun cx loc typeParameters kind =
 (**********************************)
 
 (* converter *)
-let rec convert cx tparams_map ?variables_in_scope = Ast.Type.(function
+let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Any -> AnyT.at loc
 
@@ -155,53 +155,6 @@ let rec convert cx tparams_map ?variables_in_scope = Ast.Type.(function
     typeParameters
     ~default: []
     ~f:(List.map (convert cx tparams_map)) in
-
-  (* Turn `$StrP` appearing in the return type of a predicate
-     function to a `DepPredT (..., p)` where p encodes the respective
-     predicate *)
-  let mk_base_pred_type param_names_opt p =
-    let with_params_name name =
-      let reason = mk_reason
-        (spf "predicate %s" (string_of_predicate p)) loc in
-      let key = (name, []) in
-      DepPredT (reason, (BoolT.at loc,
-        Key_map.singleton key p,
-        Key_map.singleton key (NotP p)
-      ))
-    in
-    let with_params_names params_names n =
-      try List.nth params_names n |> with_params_name
-      with
-        | Failure _ -> error_type cx loc
-            "Predicate index is out of parameter list bounds"
-        | Invalid_argument _ -> error_type cx loc
-            "Predicate index cannot be negative"
-    in
-    let with_params_idx n =
-      match param_names_opt with
-        | Some params_names -> with_params_names params_names n
-        | None ->
-            (* HACK: this is probably a function definition so flag a
-               relevant error here instead of throwing. This should be fixed
-               when predicated become first order entities and are abstracted
-               over. *)
-            error_type cx loc
-              "This is not a valid context for this predicate type. \
-              Dependent predicate types can only be used as return types \
-              of function declarations."
-    in
-    (* TODO: the restriction on the number of arguments is temporary *)
-    check_type_param_arity cx loc typeParameters 1 (fun () ->
-      match convert_type_params () |> List.hd with
-      | SingletonNumT (_, (float,_)) ->
-          Pervasives.int_of_float float |> with_params_idx
-      | _ ->
-          let msg = spf "Base predicate parameter needs to be an \
-            integer literal" in
-          FlowError.add_error cx (loc, [msg]);
-          BoolT.at loc
-    )
-  in
 
   begin match name with
 
@@ -436,17 +389,8 @@ let rec convert cx tparams_map ?variables_in_scope = Ast.Type.(function
         (SMap.find_unsafe name tparams_map)
     )
 
-  | "$StrP" ->
-    mk_base_pred_type variables_in_scope StrP
 
-  | "$NumP" ->
-    mk_base_pred_type variables_in_scope NumP
 
-  | "$BoolP" ->
-    mk_base_pred_type variables_in_scope BoolP
-
-  | "$ArrP" ->
-    mk_base_pred_type variables_in_scope ArrP
 
   (* other applications with id as head expr *)
   | _ ->
@@ -483,8 +427,7 @@ let rec convert cx tparams_map ?variables_in_scope = Ast.Type.(function
     ) in
   let reason = mk_reason "function type" loc in
   let params_names = List.rev rev_params_names in
-  let return_t = convert cx tparams_map
-    ~variables_in_scope:params_names returnType in
+  let return_t = convert cx tparams_map returnType in
   let ft =
     FunT (
       reason,
