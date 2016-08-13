@@ -4217,11 +4217,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if is_unchecked_module_not_declared (r, reason_op)
       then rec_unify cx trace t (AnyT.why reason_op)
 
-    | GraphqlT (_, Graphql.SchemaT schema),
+    | GraphqlT (schema_reason, Graphql.SchemaT schema),
       GraphqlUseT (reason, GraphqlUse.MkSelectionT (type_name, result)) ->
 
-      let selection = Graphql.SelectionT (schema, type_name, []) in
-      rec_flow_t cx trace (GraphqlT (reason, selection), result)
+      let type_name = match type_name with
+        | "$query" -> Graphql_schema2.query_type_name schema
+        | x -> x
+      in
+      (match Graphql_schema2.type_def schema type_name with
+      | Some _ ->
+        let selection = Graphql.SelectionT (schema, type_name, []) in
+        rec_flow_t cx trace (GraphqlT (reason, selection), result)
+      | None ->
+        let msg = "GraphQL type `" ^ type_name ^ "` does not exist in" in
+        flow_err_reasons cx trace msg (reason, schema_reason);
+        rec_flow_t cx trace (EmptyT reason, result)
+      )
 
     | GraphqlT (reason, Graphql.SelectionT (schema, type_name, fields)),
       GraphqlUseT (
@@ -4229,7 +4240,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           GraphqlUse.SelectT (GraphqlT (_, Graphql.FieldT field) as fld, result)
         ) ->
 
-      let type_def = Graphql_schema2.type_def schema type_name in
+      let type_def = Graphql_schema2.type_def_unsafe schema type_name in
       let (reason_f, {GraphqlField.name = field_name; _}) = field in
 
       (match type_def with
@@ -4277,7 +4288,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           GraphqlUse.GetT (reason, field_name, result)
         )) ->
 
-      let _type = Graphql_schema2.type_def schema type_name in
+      let _type = Graphql_schema2.type_def_unsafe schema type_name in
 
       (match _type with
       | Graphql_schema2.Type.Obj (_, fields_map, _) ->
@@ -4306,7 +4317,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | GraphqlT (reason, Graphql.SelectionT (schema, type_name, fields)),
       GraphqlUseT (_, GraphqlUse.ToObjT result) ->
 
-      let type_def = Graphql_schema2.type_def schema type_name in
+      let type_def = Graphql_schema2.type_def_unsafe schema type_name in
 
       let map = fields |> List.fold_left (fun map f ->
         match f with

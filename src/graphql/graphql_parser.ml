@@ -68,22 +68,26 @@ and parse_definition s =
   | _ -> raise (unexpected s)
 
 and parse_operation_definition s: Ast.OperationDefinition.t =
-  let name =
+  let (loc, name) =
     match Peek.token s with
     | Tok.T_NAME ->
       let name = Peek.value s in
+      let loc = Peek.loc s in
       advance s;
-      name
+      (loc, name)
     | _ -> raise (unexpected s)
   in
   let selectionSet = parse_selection_set s in
   Ast.OperationDefinition.{
+    loc;
     operation = Query;
     name;
     selectionSet;
   }
 
 and parse_fragment_definition s: Ast.FragmentDefinition.t =
+  let loc = Peek.loc s in
+
   Expect.tok_and_val s Tok.T_NAME "fragment";
 
   let name = match Peek.token s, Peek.value s with
@@ -95,6 +99,7 @@ and parse_fragment_definition s: Ast.FragmentDefinition.t =
   let selectionSet = parse_selection_set s in
 
   Ast.FragmentDefinition.{
+    loc;
     name;
     typeName;
     selectionSet;

@@ -24,6 +24,7 @@ end = Document
 
 and OperationDefinition : sig
   type t = {
+    loc: Loc.t;
     operation: operationType;
     name: string;
     selectionSet: SelectionSet.t;
@@ -36,6 +37,7 @@ end = OperationDefinition
 
 and FragmentDefinition : sig
   type t = {
+    loc: Loc.t;
     name: Name.t;
     typeName: Name.t;
     selectionSet: SelectionSet.t;

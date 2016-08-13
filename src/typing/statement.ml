@@ -4814,21 +4814,23 @@ and graphql_expression cx template_literal =
   let open Graphql_ast.Document in
   match ast.definitions with
   | OperationDefinition {
-      Graphql_ast.OperationDefinition.selectionSet = selection_set;
+      Graphql_ast.OperationDefinition.loc;
+      selectionSet = selection_set;
       _;
     } :: [] ->
-    let reason = reason_of_string "operation" in
+    let reason = mk_reason "operation" loc in
     let selection = Flow.mk_graphql_selection cx reason "$query" in
     let selection = graphql_selection cx selection selection_set in
     Flow.mk_tvar_where cx reason (fun t ->
       Flow.flow cx (selection, GraphqlUseT (reason, GraphqlUse.ToObjT t))
     );
   | FragmentDefinition {
-      Graphql_ast.FragmentDefinition.typeName = (_, type_name);
+      Graphql_ast.FragmentDefinition.loc;
+      typeName = (_, type_name);
       selectionSet = selection_set;
       _;
     } :: [] ->
-    let reason = reason_of_string "fragment" in
+    let reason = mk_reason "fragment" loc in
     let selection = Flow.mk_graphql_selection cx reason type_name in
     let selection = graphql_selection cx selection selection_set in
     GraphqlT (reason, Graphql.FragT {

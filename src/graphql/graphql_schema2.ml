@@ -46,10 +46,9 @@ let query_type_name s =
   name_of_type s.Schema.query_type
 
 let type_def s type_name =
-  let type_name = match type_name with
-    | "$query" -> query_type_name s
-    | x -> x
-  in
+  SMap.get type_name s.Schema.types
+
+let type_def_unsafe s type_name =
   SMap.find_unsafe type_name s.Schema.types
 
 let rec type_name s _type =
