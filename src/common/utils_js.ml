@@ -188,3 +188,13 @@ let typo_suggestions =
       | _ -> 3
     in
     fst (List.fold_left (fold_results limit name) ([], max_int) possible_names)
+
+(* util to limit the number of calls to a (usually recursive) function *)
+let count_calls ~counter ~default f =
+  (** Count number of calls to a function f, decrementing at each call and
+      returning default when count reaches 0. **)
+  if !counter = 0 then default
+  else begin
+    decr counter;
+    f ()
+  end

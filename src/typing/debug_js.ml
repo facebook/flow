@@ -40,6 +40,7 @@ let string_of_binary_test_ctor = function
 
 type json_cx = {
   stack: ISet.t;
+  size: int ref;
   depth: int;
   cx: Context.t;
   strip_root: Path.t option;
@@ -51,7 +52,11 @@ let check_depth continuation json_cx =
   then fun _ -> Hh_json.JSON_Null
   else continuation { json_cx with depth; }
 
-let rec _json_of_t json_cx = check_depth _json_of_t_impl json_cx
+let rec _json_of_t json_cx t =
+  count_calls ~counter:json_cx.size ~default:Hh_json.JSON_Null (fun () ->
+    check_depth _json_of_t_impl json_cx t
+  )
+
 and _json_of_t_impl json_cx t = Hh_json.(
   JSON_Object ([
     "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_t t);
@@ -914,30 +919,30 @@ and json_of_tvarkeys_impl _json_cx imap = Hh_json.(
   JSON_Array (IMap.fold (fun i _ acc -> ((int_ i) :: acc)) imap [])
 )
 
-let json_of_t ?(depth=1000) ?(strip_root=None) cx t =
-  let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
+let json_of_t ?(size=5000) ?(depth=1000) ?(strip_root=None) cx t =
+  let json_cx = { cx; size = ref size; depth; stack = ISet.empty; strip_root; } in
   _json_of_t json_cx t
 
-let json_of_use_t ?(depth=1000) ?(strip_root=None) cx use_t =
-  let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
+let json_of_use_t ?(size=5000) ?(depth=1000) ?(strip_root=None) cx use_t =
+  let json_cx = { cx; size = ref size; depth; stack = ISet.empty; strip_root; } in
   _json_of_use_t json_cx use_t
 
-let jstr_of_t ?(depth=1000) ?(strip_root=None) cx t =
-  Hh_json.json_to_multiline (json_of_t ~depth ~strip_root cx t)
+let jstr_of_t ?(size=5000) ?(depth=1000) ?(strip_root=None) cx t =
+  Hh_json.json_to_multiline (json_of_t ~size ~depth ~strip_root cx t)
 
-let jstr_of_use_t ?(depth=1000) ?(strip_root=None) cx use_t =
-  Hh_json.json_to_multiline (json_of_use_t ~depth ~strip_root cx use_t)
+let jstr_of_use_t ?(size=5000) ?(depth=1000) ?(strip_root=None) cx use_t =
+  Hh_json.json_to_multiline (json_of_use_t ~size ~depth ~strip_root cx use_t)
 
-let json_of_graph ?(depth=1000) ?(strip_root=None) cx = Hh_json.(
+let json_of_graph ?(size=5000) ?(depth=1000) ?(strip_root=None) cx = Hh_json.(
   let entries = IMap.fold (fun id _ entries ->
-    let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
+    let json_cx = { cx; size = ref size; depth; stack = ISet.empty; strip_root; } in
     (spf "%d" id, json_of_node json_cx id) :: entries
   ) (Context.graph cx) [] in
   JSON_Object (List.rev entries)
 )
 
-let jstr_of_graph ?(depth=1000) ?(strip_root=None) cx =
-  Hh_json.json_to_multiline (json_of_graph ~depth ~strip_root cx)
+let jstr_of_graph ?(size=5000) ?(depth=1000) ?(strip_root=None) cx =
+  Hh_json.json_to_multiline (json_of_graph ~size ~depth ~strip_root cx)
 
 
 (* scopes *)
@@ -1005,8 +1010,8 @@ let json_of_scope = Scope.(
   in
   let json_of_refis json_cx = check_depth json_of_refis_impl json_cx in
 
-  fun ?(depth=1000) ?(strip_root=None) cx scope ->
-    let json_cx = { cx; depth; stack = ISet.empty; strip_root; } in
+  fun ?(size=5000) ?(depth=1000) ?(strip_root=None) cx scope ->
+    let json_cx = { cx; size = ref size; depth; stack = ISet.empty; strip_root; } in
     JSON_Object [
       "kind", JSON_String (string_of_kind scope.kind);
       "entries", json_of_entries json_cx scope.entries;
@@ -1014,8 +1019,8 @@ let json_of_scope = Scope.(
     ]
 )
 
-let json_of_env ?(depth=1000) cx env =
-  Hh_json.JSON_Array (List.map (json_of_scope ~depth cx) env)
+let json_of_env ?(size=5000) ?(depth=1000) cx env =
+  Hh_json.JSON_Array (List.map (json_of_scope ~size ~depth cx) env)
 
 (*****************************************************************)
 
