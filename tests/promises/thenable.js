@@ -26,3 +26,5 @@ const r7: Promise<number> = Promise.race([createThenable(1), createThenable(1)])
 async function test(val: $Thenable<number>) { // TODO
   const r: number = await val;
 }
+
+const r8: Promise<[number, string]> = Promise.all([createThenable(1), createThenable('foo')]);
