@@ -16,3 +16,4 @@
  * Note: Buck doesn't currently have a build rule to only build .mli files
  * into .cmi, so you need to compile against this file directly. *)
 val use_error_tracing: bool
+val use_test_stubbing: bool
