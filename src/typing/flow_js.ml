@@ -3702,6 +3702,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       rec_flow_t cx trace (ArrT (reason, f t, List.map f ts), tout)
 
+    | _, TupleMapT (reason, funt, tout) ->
+      let iter = get_builtin cx ~trace "$iterate" reason in
+
+      let t = mk_tvar_where cx reason (fun t ->
+        rec_flow cx trace (iter, CallT (reason, mk_functiontype [l] t))
+      ) in
+
+      rec_flow cx trace (ArrT (reason, t, []), TupleMapT (reason, funt, tout))
+
     (***********************************************)
     (* functions may have their prototypes written *)
     (***********************************************)

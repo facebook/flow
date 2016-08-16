@@ -28,3 +28,9 @@ Promise.all(0); // Error: expected array instead of number
 
 // Promise.all is a function
 (Promise.all : Function);
+
+// iterables
+
+function test(val: Iterable<Promise<number>>) {
+  const r: Promise<Array<number>> = Promise.all(val);
+}

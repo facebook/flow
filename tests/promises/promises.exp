@@ -36,13 +36,17 @@ all.js:19
 
 all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-     ^^^^^^^^^^^^^ call of method `all`. Expected array instead of possibly undefined value
+     ^^^^^^^^^^^^^ call of method `all`
+Library type error:. See lib: core.js:437
+property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: core.js:437
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ undefined (too few arguments)
 
 all.js:27
  27: Promise.all(0); // Error: expected array instead of number
-     ^^^^^^^^^^^^^^ call of method `all`. Expected array instead of
+     ^^^^^^^^^^^^^^ call of method `all`
+Library type error:. See lib: core.js:437
+property `@@iterator` of $Iterable. Property not found in. See lib: core.js:437
  27: Promise.all(0); // Error: expected array instead of number
                  ^ number
 
@@ -63,9 +67,9 @@ promise.js:30
                ^ constructor call
  30:   resolve(new Promise(function(resolve, reject) {
                ^ Promise. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `R` of constructor call. See lib: core.js:506
+union: type application of polymorphic type: class type: $Thenable | type parameter `R` of constructor call. See lib: core.js:508
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:506
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:508
   Error:
    35:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -85,9 +89,9 @@ promise.js:41
                  ^ constructor call
  41:     resolve(new Promise(function(resolve, reject) {
                  ^ Promise. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `R` of constructor call. See lib: core.js:506
+union: type application of polymorphic type: class type: $Thenable | type parameter `R` of constructor call. See lib: core.js:508
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:506
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:508
   Error:
    47:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -119,9 +123,9 @@ promise.js:121
                      ^^^^^^^^^^^^^^^^^^ call of method `resolve`
 121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:519
+union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:521
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:519
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:521
   Error:
   123:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -141,9 +145,9 @@ promise.js:127
                                      ^^^^^^^^^^^^^^^^^^ call of method `resolve`
 127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:519
+union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:521
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:519
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:521
   Error:
   129:   var b: string = num; // Error: number ~> string
                          ^^^ number. This type is incompatible with
@@ -169,9 +173,9 @@ promise.js:166
                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 166:   .then(function(num) { return Promise.resolve('asdf'); })
                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `U` of call of method `then`. See lib: core.js:511
+union: type application of polymorphic type: class type: $Thenable | type parameter `U` of call of method `then`. See lib: core.js:513
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:511
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:513
   Error:
   169:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -191,9 +195,9 @@ promise.js:174
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:519
+union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:521
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:519
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:521
   Error:
   177:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -219,9 +223,9 @@ promise.js:206
                                      ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: ?type application of polymorphic type: class type: $Thenable | type parameter `U` of call of method `catch`. See lib: core.js:516
+union: ?type application of polymorphic type: class type: $Thenable | type parameter `U` of call of method `catch`. See lib: core.js:518
   Member 1:
-  ?type application of polymorphic type: class type: $Thenable. See lib: core.js:516
+  ?type application of polymorphic type: class type: $Thenable. See lib: core.js:518
   Error:
   209:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -241,9 +245,9 @@ promise.js:214
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:519
+union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:521
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:519
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:521
   Error:
   217:     var b: number = str; // Error: string ~> number
                            ^^^ string. This type is incompatible with
@@ -279,11 +283,11 @@ resolve_void.js:3
 resolve_void.js:5
   5: (Promise.resolve(undefined): Promise<number>); // error
                       ^^^^^^^^^ undefined. This type is incompatible with
-union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:519
+union: type application of polymorphic type: class type: $Thenable | type parameter `T` of call of method `resolve`. See lib: core.js:521
   Member 1:
-  type application of polymorphic type: class type: $Thenable. See lib: core.js:519
+  type application of polymorphic type: class type: $Thenable. See lib: core.js:521
   Error:
-  property `then` of $Thenable. Property not found in possibly undefined value. See lib: core.js:519
+  property `then` of $Thenable. Property not found in possibly undefined value. See lib: core.js:521
     5: (Promise.resolve(undefined): Promise<number>); // error
                         ^^^^^^^^^ undefined
   Member 2:
