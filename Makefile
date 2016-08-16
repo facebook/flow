@@ -57,6 +57,7 @@ MODULES=\
   hack/globals\
   hack/heap\
   hack/hhi\
+  hack/injection/default_injector\
   hack/procs\
   hack/search\
   hack/socket\
@@ -65,6 +66,7 @@ MODULES=\
   hack/third-party/core\
   hack/utils\
   hack/utils/collections\
+  hack/utils/disk\
   hack/utils/hh_json\
   hack/$(INOTIFY)\
   hack/$(FSNOTIFY)
