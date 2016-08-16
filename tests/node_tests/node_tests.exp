@@ -53,19 +53,19 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-union: Buffer | string. See lib: node.js:1120
+union: Buffer | string. See lib: node.js:1143
   Member 1:
-  Buffer. See lib: node.js:1120
+  Buffer. See lib: node.js:1143
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  Buffer. See lib: node.js:1120
+  Buffer. See lib: node.js:1143
   Member 2:
-  string. See lib: node.js:1120
+  string. See lib: node.js:1143
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  string. See lib: node.js:1120
+  string. See lib: node.js:1143
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
