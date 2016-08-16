@@ -385,9 +385,26 @@ end = struct
     let log_file = Path.to_string (Options.log_file options) in
     let log_fd = open_log_file options in
     let config_file = Server_files_js.config_file root in
-    (* Avoid leaking stdout and stderr to the server *)
-    Unix.(set_close_on_exec stdout);
-    Unix.(set_close_on_exec stderr);
+    (* Daemon.spawn is creating a new process with log_fd as both the stdout
+     * and stderr. We are NOT leaking stdout and stderr. But the Windows
+     * implementation of OCaml does leak stdout and stderr. This means any process
+     * that waits for `flow start`'s stdout and stderr to close might wait
+     * forever.
+     *
+     * On Windows 10 (and 8 I think), you can just call `set_close_on_exec` on
+     * stdout and stderr and that seems to solve things. However, that call
+     * fails on Windows 7. After poking around for a few hours, I can't think
+     * of a solution other than manually implementing Unix.create_process
+     * correctly.
+     *
+     * So for now let's make Windows 7 not crash. It seems like `flow start` on
+     * Windows 7 doesn't actually leak stdio, so a no op is acceptable
+     *)
+    if Sys.win32
+    then Unix.(try
+      set_close_on_exec stdout;
+      set_close_on_exec stderr
+    with Unix_error (EINVAL, _, _) -> ());
     let {Daemon.pid; channels = (waiting_channel_ic, waiting_channel_oc)} =
       Daemon.spawn
         (log_fd, log_fd)
