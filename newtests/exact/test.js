@@ -61,46 +61,14 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
     addFile('per_prop_subtyping.js').noNewErrors(),
     addFile('prop_test.js').newErrors(
                              `
-                               prop_test.js:13
-                                13:   if (p.xxx) {     // error, prop existence test on inexact type
-                                            ^^^ property \`xxx\`. Property not found in
-                                13:   if (p.xxx) {     // error, prop existence test on inexact type
-                                          ^ object type
-
-                               prop_test.js:33
-                                33:   if (pc.first) {       // error, prop existence test on union of inexact types
-                                             ^^^^^ property \`first\`. Property not found in
-                                33:   if (pc.first) {       // error, prop existence test on union of inexact types
-                                          ^^ object type
-
-                               prop_test.js:34
-                                34:     return pc.last;     // error, last not found on Address
-                                                  ^^^^ property \`last\`. Property not found in
-                                34:     return pc.last;     // error, last not found on Address
-                                               ^^ object type
-
-                               prop_test.js:36
-                                36:   return pc.state;      // error, state not found on Person
+                               prop_test.js:29
+                                29:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
                                                 ^^^^^ property \`state\`. Property not found in
-                                36:   return pc.state;      // error, state not found on Person
-                                             ^^ object type
-
-                               prop_test.js:43
-                                43:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
-                                                ^^^^^ property \`state\`. Property not found in
-                                43:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
+                                29:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
                                              ^^ object type
                              `,
                            ),
-    addFile('prop_test2.js').newErrors(
-                              `
-                                prop_test2.js:36
-                                 36:   if (flag.default) {    // error, prop not found (BoolFlag)
-                                                ^^^^^^^ property \`default\`. Property not found in
-                                 36:   if (flag.default) {    // error, prop not found (BoolFlag)
-                                           ^^^^ object type
-                              `,
-                            ),
+    addFile('prop_test2.js').noNewErrors(),
     addFile('unsealed.js').newErrors(
                             `
                               unsealed.js:14

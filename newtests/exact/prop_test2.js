@@ -30,26 +30,11 @@ type EnumFlag = {
   default?: string,
 };
 
-type Flag = StringFlag | BoolFlag | EnumFlag;
+type Flag = $Exact<StringFlag> | $Exact<BoolFlag> | $Exact<EnumFlag>;
 
-function checkFlag_err(flag: Flag): string {
-  if (flag.default) {    // error, prop not found (BoolFlag)
-    // if we allowed an existence test on flag.default when flag's type
-    // is a tagged union of inexact object types, consider the case where
-    // flag = { type: "boolean", ..., default: 0 }.
-    // because subtyping allows the extra property, the implication that
-    // (flag.default is truthy) implies (flag.default is a string)
-    // no longer holds.
-    return flag.default;
-  }
-  return "";
-}
-
-type ExactFlag = $Exact<StringFlag> | $Exact<BoolFlag> | $Exact<EnumFlag>;
-
-function checkFlag_ok(flag: ExactFlag): string {
-  if (flag.default) {   // ok: truthiness guarantees string type
-    return flag.default;
+function checkFlag_ok(flag: Flag): string {
+  if (flag.default) {
+    return flag.argName; // ok, refined to $Exact<StringFlag> | $Exact<EnumFlag>
   }
   return "";
 }

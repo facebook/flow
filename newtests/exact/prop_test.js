@@ -9,13 +9,6 @@
 
 type Person = { first: string, last: string };
 
-function prop_test_inexact(p: Person): string {
-  if (p.xxx) {     // error, prop existence test on inexact type
-    return p.xxx;
-  }
-  return p.first;
-}
-
 function prop_test_exact(p: $Exact<Person>): string {
   if (p.xxx) {     // ok to test for prop existence on exact types
     return p.xxx;  // ok currently, but should be reachability error
@@ -28,13 +21,6 @@ function prop_test_exact(p: $Exact<Person>): string {
 //
 
 type Address = { city: string, state: string };
-
-function prop_test_inexact_union(pc: Person | Address): string {
-  if (pc.first) {       // error, prop existence test on union of inexact types
-    return pc.last;     // error, last not found on Address
-  }
-  return pc.state;      // error, state not found on Person
-}
 
 function prop_test_exact_union(pc: $Exact<Person> | $Exact<Address>): string {
   if (pc.first) {       // ok, union of exact types
