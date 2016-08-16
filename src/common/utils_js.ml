@@ -189,6 +189,7 @@ let typo_suggestions =
     in
     fst (List.fold_left (fold_results limit name) ([], max_int) possible_names)
 
+
 (* util to limit the number of calls to a (usually recursive) function *)
 let count_calls ~counter ~default f =
   (** Count number of calls to a function f, decrementing at each call and
@@ -198,3 +199,10 @@ let count_calls ~counter ~default f =
     decr counter;
     f ()
   end
+
+(* ordinal of a number *)
+let ordinal = function
+  | 1 -> "1st"
+  | 2 -> "2nd"
+  | 3 -> "3rd"
+  | n -> spf "%dth" n

@@ -3091,9 +3091,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* array types deconstruct into their parts *)
     (********************************************)
 
-    | ArrT (r1, t1, ts1), UseT (_, ArrT (_, t2, ts2)) ->
-      let lit = (desc_of_reason r1) = "array literal" in
-      array_flow cx trace lit (ts1, t1, ts2, t2)
+    | ArrT (r1, t1, ts1), UseT (_, ArrT (r2, t2, ts2)) ->
+      let lit1 = (desc_of_reason r1) = "array literal" in
+      let arr1 = (desc_of_reason r1) = "array type" in
+      let tup2 = (desc_of_reason r2) = "tuple type" in
+      array_flow cx trace lit1 arr1 r1 tup2 (ts1, t1, ts2, t2)
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -4263,6 +4265,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (Addition, _) ->
       flow_err cx trace "This type cannot be added to" l u
+
+    | _, UseT (MissingTupleElement i, _) ->
+      let msg = spf
+        "This type is incompatible with a tuple type that expects \
+a %s element of non-optional type" (ordinal i) in
+      flow_err cx trace msg l u
 
     | _ ->
       flow_err cx trace (err_msg l u) l u
@@ -7289,24 +7297,93 @@ and flow_to_mutable_child cx trace fresh t1 t2 =
   then rec_flow_t cx trace (t1, t2)
   else rec_unify cx trace t1 t2
 
-and array_flow cx trace lit = function
-  | [], e1, _, e2 ->
-    (* general element1 = general element2 *)
-    flow_to_mutable_child cx trace lit e1 e2
+(* Subtyping of arrays is complicated by tuples. Currently, there are three
+   different kinds of types, all encoded by arrays:
 
+   1. Array<T> (array type)
+   2. [T1, T2] (tuple type)
+   3. "internal" Array<X>[T1, T2] where T1 | T2 ~> X (array literal type)
+
+   We have the following rules:
+
+   (1) When checking types against Array<U>, the rules are not surprising. Array
+   literal types behave like array types in these checks.
+
+   * Array<T> ~> Array<U> checks T <~> U
+   * [T1, T2] ~> Array<U> checks T1 | T2 ~> U
+   * Array<X>[T1, T2] ~> Array<U> checks Array<X> ~> Array<U>
+
+   (2) When checking types against [T1, T2], the rules are again not
+   surprising. Array literal types behave like tuple types in these checks. We
+   consider missing tuple elements to be undefined, following common usage (and
+   consistency with missing call arguments).
+
+   * Array<T> ~> [U1, U2] checks T ~> U1, T ~> U2
+   * [T1, T2] ~> [U1, U2] checks T1 ~> U1 and T2 ~> U2
+   * [T1, T2] ~> [U1] checks T1 ~> U1
+   * [T1] ~> [U1, U2] checks T1 ~> U1 and void ~> U2
+   * Array<X>[T1, T2] ~> [U1, U2] checks [T1, T2] ~> [U1, U2]
+
+   (3) When checking types against Array<Y>[U1, U2], the rules are a bit
+   unsound. Array literal types were not designed to appear as upper bounds. In
+   particular, their summary element types are often overly precise. Checking
+   individual element types of one array literal type against the summary
+   element type of another array literal type can lead to crazy errors, so we
+   currently drop such checks.
+
+   TODO: Make these rules great again by computing more reasonable summary
+   element types for array literal types.
+
+   * Array<T> ~> Array<Y>[U1, U2] checks Array<T> ~> Array<Y>
+   * [T1, T2] ~> Array<Y>[U1, U2] checks T1 ~> U1, T2 ~> U2
+   * [T1, T2] ~> Array<Y>[U1] checks T1 ~> U1
+   * [T1] ~> Array<Y>[U1, U2] checks T1 ~> U1
+   * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
+
+*)
+and array_flow cx trace lit1 arr1 r1 tup2 ?(index=0) = function
+  (* empty array / array literal / tuple flowing to array / array literal /
+     tuple (includes several cases, analyzed below) *)
+  | [], e1, ts2, e2 ->
+    (* if upper bound is a tuple *)
+    if tup2 then
+      (* if lower bound is an empty array *)
+      if arr1 then
+        (* We allow extraction of elements at arbitrary positions from an array
+           already (even if the array could have undefined in those positions),
+           so here we just ensure that the extracted elements satisfy each
+           position of the tuple *)
+        List.iter (fun t2 ->
+          rec_flow_t cx trace (e1, t2)
+        ) ts2
+      (* otherwise, lower bound is an empty array literal / tuple *)
+      else
+        (* We flow undefined to each position of the tuple *)
+        List.iteri (fun i t2 ->
+          rec_flow cx trace
+            (VoidT r1,
+             UseT (MissingTupleElement (index+i+1), t2))
+        ) ts2
+    else
+      (* if lower bound is an empty array / array literal *)
+      if index = 0 then
+        (* general element1 = general element2 *)
+        flow_to_mutable_child cx trace lit1 e1 e2
+      (* otherwise, lower bound is an empty tuple (nothing to do) *)
+
+  (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
   | _, e1, [], e2 ->
-    (* specific element1 < general element2 *)
+    (* general element1 < general element2 *)
     rec_flow_t cx trace (e1, e2)
 
-  | [t1], _, t2 :: _, _ ->
-    (* specific element1 = specific element2 *)
-    flow_to_mutable_child cx trace lit t1 t2
-
+  (* non-empty array literal / tuple ~> non-empty array literal / tuple *)
   | t1 :: ts1, e1, t2 :: ts2, e2 ->
     (* specific element1 = specific element2 *)
-    flow_to_mutable_child cx trace lit t1 t2;
-    array_flow cx trace lit (ts1,e1, ts2,e2)
+    flow_to_mutable_child cx trace lit1 t1 t2;
+    array_flow cx trace lit1 arr1 r1 tup2 ~index:(index+1) (ts1,e1, ts2,e2)
 
+(* TODO: either ensure that array_unify is the same as array_flow both ways, or
+   document why not. *)
 (* array helper *)
 and array_unify cx trace = function
   | [], e1, [], e2 ->
@@ -7315,7 +7392,7 @@ and array_unify cx trace = function
 
   | ts1, _, [], e2
   | [], e2, ts1, _ ->
-    (* specific element1 < general element2 *)
+    (* specific element1 = general element2 *)
     List.iter (fun t1 -> rec_unify cx trace t1 e2) ts1
 
   | t1 :: ts1, e1, t2 :: ts2, e2 ->

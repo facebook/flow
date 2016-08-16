@@ -1,3 +1,23 @@
+optional.js:5
+  5: ([]: [?number, string]); // error, since second element is not marked optional
+      ^^ empty array literal. This type is incompatible with a tuple type that expects a 2nd element of non-optional type
+  5: ([]: [?number, string]); // error, since second element is not marked optional
+                    ^^^^^^ string
+
+too-few.js:5
+  5: foo([ {} ]); // error, too few elements in array passed to a tuple
+     ^^^^^^^^^^^ function call
+  5: foo([ {} ]); // error, too few elements in array passed to a tuple
+         ^^^^^^ array literal. This type is incompatible with a tuple type that expects a 2nd element of non-optional type
+  3: function foo(a: [Object, Object]) {}
+                              ^^^^^^ object type
+
+tuples.js:3
+  3: var c: [number] = []; // nope
+                       ^^ empty array literal. This type is incompatible with a tuple type that expects a 1st element of non-optional type
+  3: var c: [number] = []; // nope
+             ^^^^^^ number
+
 tuples.js:6
   6: var f: [number, string] = [123, 456];
                                      ^^^ number. This type is incompatible with
@@ -5,4 +25,4 @@ tuples.js:6
                      ^^^^^^ string
 
 
-Found 1 error
+Found 4 errors
