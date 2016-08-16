@@ -18,6 +18,9 @@ type filename =
   | LibFile of string
   | SourceFile of string
   | JsonFile of string
+  (* A resource that might get required, like .css, .jpg, etc. We don't parse
+     these, just check that they exist *)
+  | ResourceFile of string
   | Builtins
 
 type t = {
@@ -94,17 +97,19 @@ let contains loc1 loc2 =
   loc1._end.offset >= loc2._end.offset
 
 let string_of_filename = function
-  | LibFile x | SourceFile x | JsonFile x -> x
+  | LibFile x | SourceFile x | JsonFile x | ResourceFile x -> x
   | Builtins -> "(global)"
 
 let compare =
   (* builtins, then libs, then source and json files at the same priority since
-     JSON files are basically source files. *)
+     JSON files are basically source files. We don't actually read resource
+     files so they come last *)
   let order_of_filename = function
   | Builtins -> 1
   | LibFile _ -> 2
   | SourceFile _ -> 3
   | JsonFile _ -> 3
+  | ResourceFile _ -> 4
   in
   let source_cmp a b =
     match a, b with
@@ -153,17 +158,20 @@ let source_is_lib_file = function
 | Builtins -> true
 | SourceFile _ -> false
 | JsonFile _ -> false
+| ResourceFile _ -> false
 
 let filename_map f = function
   | LibFile filename -> LibFile (f filename)
   | SourceFile filename -> SourceFile (f filename)
   | JsonFile filename -> JsonFile (f filename)
+  | ResourceFile filename -> ResourceFile (f filename)
   | Builtins -> Builtins
 
 let filename_exists f = function
   | LibFile filename
   | SourceFile filename
-  | JsonFile filename -> f filename
+  | JsonFile filename
+  | ResourceFile filename -> f filename
   | Builtins -> false
 
 let check_suffix filename suffix =

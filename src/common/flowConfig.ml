@@ -56,6 +56,7 @@ module Opts = struct
     node_resolver_dirnames: string list;
     munge_underscores: bool;
     module_file_exts: SSet.t;
+    module_resource_exts: SSet.t;
     modules_are_use_strict: bool;
     suppress_comments: Str.regexp list;
     suppress_types: SSet.t;
@@ -118,9 +119,22 @@ module Opts = struct
     config
 
   let module_file_exts = SSet.empty
-        |> SSet.add ".js"
-        |> SSet.add ".jsx"
-        |> SSet.add ".json"
+    |> SSet.add ".js"
+    |> SSet.add ".jsx"
+    |> SSet.add ".json"
+
+  let module_resource_exts = SSet.empty
+    |> SSet.add ".css"
+    |> SSet.add ".jpg"
+    |> SSet.add ".png"
+    |> SSet.add ".gif"
+    |> SSet.add ".eot"
+    |> SSet.add ".svg"
+    |> SSet.add ".ttf"
+    |> SSet.add ".woff"
+    |> SSet.add ".woff2"
+    |> SSet.add ".mp4"
+    |> SSet.add ".webm"
 
   let default_options = {
     enable_const_params = false;
@@ -137,6 +151,7 @@ module Opts = struct
     node_resolver_dirnames = ["node_modules"];
     munge_underscores = false;
     module_file_exts;
+    module_resource_exts;
     modules_are_use_strict = false;
     suppress_comments = [];
     suppress_types = SSet.empty;
@@ -460,6 +475,18 @@ let parse_options config lines =
         ));
         let module_file_exts = SSet.add v opts.module_file_exts in
         {opts with module_file_exts;}
+      );
+    }
+
+    |> define_opt "module.resource_ext" {
+      _initializer = INIT_FN (fun opts -> {
+        opts with module_resource_exts = SSet.empty;
+      });
+      flags = [ALLOW_DUPLICATE];
+      optparser = optparse_string;
+      setter = (fun opts v ->
+        let module_resource_exts = SSet.add v opts.module_resource_exts in
+        {opts with module_resource_exts;}
       );
     }
 

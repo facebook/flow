@@ -1,6 +1,5 @@
 /***
  * Nonstrict prop testing and refinements on exact object types
- * @flow
  */
 
 //

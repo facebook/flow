@@ -102,6 +102,9 @@ let main strip_root ignore_flag include_flag root () =
     opt_module_file_exts = FlowConfig.(
       flowconfig.options.Opts.module_file_exts
     );
+    opt_module_resource_exts = FlowConfig.(
+      flowconfig.options.Opts.module_resource_exts
+    );
     opt_module_name_mappers = FlowConfig.(
       flowconfig.options.Opts.module_name_mappers
     );
