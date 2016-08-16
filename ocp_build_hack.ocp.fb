@@ -127,6 +127,16 @@ begin library "hh-utils"
   ]
 end
 
+begin library "hh-utils-disk"
+  sort = true
+  files = begin fb-glob "hack/utils/disk"
+  end
+  requires += [
+    "hh-utils-collections"
+    "hh-injector-default"
+  ]
+end
+
 begin library "hh-utils-relative-path"
   dirname = "hack/utils"
   sort = true
@@ -199,6 +209,7 @@ begin library "hh-utils-sys"
   requires = [
     "hh-utils-collections"
     "hh-utils-core"
+    "hh-utils-disk"
     "hh-utils-string"
     "tp-core"
   ]
@@ -232,6 +243,13 @@ begin library "hh-utils-json"
   files = begin fb-glob "hack/utils/hh_json"
   end
   requires += [ "tp-core" ]
+end
+
+begin library "hh-injector-default"
+  sort = true
+  files = begin fb-glob "hack/injection/default_injector"
+    excludes = [ "globalConfig.ml" ]
+  end
 end
 
 begin library "hh-globals"
