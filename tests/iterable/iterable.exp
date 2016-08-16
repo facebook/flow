@@ -35,7 +35,7 @@ boolean literal `true`. See lib: core.js:419
 map.js:13
  13: function mapTest4(map: Map<number, string>): Iterable<string> {
                                                            ^^^^^^ string. This type is incompatible with
-tuple type. See lib: core.js:448
+tuple type. See lib: core.js:450
 
 set.js:13
  13: function setTest4(set: Set<string>): Iterable<number> {
