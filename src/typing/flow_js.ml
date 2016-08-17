@@ -988,6 +988,8 @@ module ResolvableTypeJob = struct
             | Some t -> collect_of_type ?log_unresolved cx reason acc t
             | None -> acc
           )
+        | Graphql.RelayPropsT t ->
+          collect_of_type ?log_unresolved cx reason acc t
       )
 
     | FunProtoBindT _
@@ -4306,13 +4308,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       let props = SMap.map (fun t ->
         match t with
-        | FunT (_, _, _, { return_t; _ }) -> return_t
-        | _ -> AnyT (reason_of_t t)
+        | FunT (fun_r, _, _, { return_t; _ }) ->
+          mk_tvar_where cx fun_r (fun t ->
+            let to_obj = GraphqlUseT (fun_r, GraphqlUse.ToObjT t) in
+            rec_flow cx trace (return_t, to_obj)
+          )
+        | _ ->
+          (* TODO: should probably err or resolve tvar *)
+          AnyT (reason_of_t t)
       ) (find_props cx props_tmap) in
       let new_props = mk_propmap cx props in
 
       let obj = ObjT (obj_r, { objtype with props_tmap = new_props }) in
       rec_flow_t cx trace (obj, t_out)
+
+    | GraphqlT (_, Graphql.FragT { GraphqlFrag.selection; _ }),
+      GraphqlUseT (_, GraphqlUse.ToObjT _) ->
+
+      rec_flow cx trace (selection, u)
 
     | GraphqlT (reason, Graphql.SelectionT (schema, type_name, fields)),
       GraphqlUseT (_, GraphqlUse.ToObjT result) ->
@@ -5160,6 +5173,13 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | SingletonNumT _
   | SingletonBoolT _
   | SingletonStrT _ -> t
+
+  | GraphqlT (reason, Graphql.RelayPropsT o) ->
+    (* TODO: this is probably bad *)
+    mk_tvar_where cx reason (fun t ->
+      let o = subst cx ~force map o in
+      flow cx (o, GraphqlUseT (reason, GraphqlUse.GetRelayPropsT t))
+    )
 
   | ModuleT _
   | ExtendsT _

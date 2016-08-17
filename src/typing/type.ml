@@ -881,6 +881,7 @@ and Graphql : sig
     | FragT of GraphqlFrag.t
     | FieldT of GraphqlField.t
     | SelectionT of GraphqlSelection.t
+    | RelayPropsT of TypeTerm.t
 end = Graphql
 
 and GraphqlFrag : sig

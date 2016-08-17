@@ -4821,9 +4821,7 @@ and graphql_expression cx template_literal =
     let reason = mk_reason "operation" loc in
     let selection = Flow.mk_graphql_selection cx reason "$query" in
     let selection = graphql_selection cx selection selection_set in
-    Flow.mk_tvar_where cx reason (fun t ->
-      Flow.flow cx (selection, GraphqlUseT (reason, GraphqlUse.ToObjT t))
-    );
+    selection
   | FragmentDefinition {
       Graphql_ast.FragmentDefinition.loc;
       typeName = (_, type_name);

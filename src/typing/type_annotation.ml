@@ -343,12 +343,9 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   | "$RelayProps" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      let l = convert_type_params () |> List.hd in
+      let o = convert_type_params () |> List.hd in
       let reason = mk_reason "relay props" loc in
-      Flow_js.mk_tvar_where cx reason (fun t ->
-        let u = GraphqlUseT (reason, GraphqlUse.GetRelayPropsT t) in
-        Flow_js.flow cx (l, u)
-      )
+      GraphqlT (reason, Graphql.RelayPropsT o)
     )
 
   | "Object$Assign" ->

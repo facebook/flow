@@ -70,7 +70,7 @@ open Token
 }
 
 let white = [' ' '\t' ',']+
-let comment = '#' [^ '\n']
+let comment = '#' [^ '\n']*
 let newline = '\n'
 
 let int = ('-'? '0') | ('-'? ['1'-'9'] ['0'-'9']*)

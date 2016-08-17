@@ -379,6 +379,7 @@ let rec normalize_type_impl cx ids t = match t with
       | Graphql.SelectionT (schema, name, fields) ->
         let fields = List.map (normalize_type_impl cx ids) fields in
         Graphql.SelectionT (schema, name, fields)
+      | Graphql.RelayPropsT t -> Graphql.RelayPropsT (normalize_type_impl cx ids t)
     )
 
   | FunProtoT _

@@ -158,6 +158,7 @@ class ['a] t = object(self)
         self#type_ cx acc selection
       | Graphql.SelectionT (_, _, fields) ->
         self#list (self#type_ cx) acc fields
+      | Graphql.RelayPropsT t -> self#type_ cx acc t
     )
 
   method private defer_use_type cx acc = function
