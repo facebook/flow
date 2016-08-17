@@ -53,19 +53,19 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-union: Buffer | string. See lib: node.js:1143
+union: Buffer | string. See lib: node.js:1147
   Member 1:
-  Buffer. See lib: node.js:1143
+  Buffer. See lib: node.js:1147
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  Buffer. See lib: node.js:1143
+  Buffer. See lib: node.js:1147
   Member 2:
-  string. See lib: node.js:1143
+  string. See lib: node.js:1147
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  string. See lib: node.js:1143
+  string. See lib: node.js:1147
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -122,11 +122,11 @@ crypto/crypto.js:36
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-intersection type. See lib: node.js:717
+intersection type. See lib: node.js:721
   Case 3 may work:
-  function type. See lib: node.js:726
+  function type. See lib: node.js:730
   But if it doesn't, case 4 looks promising too:
-  function type. See lib: node.js:731
+  function type. See lib: node.js:735
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                       ^ parameter `_`
