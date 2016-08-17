@@ -479,16 +479,32 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       FlowExitStatus.(exit Server_out_of_date)
     end;
 
-    (* Die if a package.json changed *)
-    let modified_packages = SSet.filter (fun f ->
+    let is_incompatible filename_str =
+      let filename = Loc.JsonFile filename_str in
+      let filename_set = FilenameSet.singleton filename in
+      let ast =
+        let _ = Parsing_service_js.reparse_with_defaults
+          options
+          (* workers *) None
+          filename_set
+        in
+        Parsing_service_js.get_ast_unsafe filename
+      in
+      Module_js.package_incompatible filename_str ast
+    in
+
+    (* Die if a package.json changed in an incompatible way *)
+    let incompatible_packages = SSet.filter (fun f ->
       (String_utils.string_starts_with f sroot ||
         Files.is_included options f)
-      && (Filename.basename f) = "package.json" && want f
+      && (Filename.basename f) = "package.json"
+      && want f
+      && is_incompatible f
     ) updates in
-    if not (SSet.is_empty modified_packages)
+    if not (SSet.is_empty incompatible_packages)
     then begin
       Flow_logger.log "Status: Error";
-      SSet.iter (Flow_logger.log "Modified package: %s") modified_packages;
+      SSet.iter (Flow_logger.log "Modified package: %s") incompatible_packages;
       Flow_logger.log
         "Packages changed in an incompatible way. Exiting.\n%!";
       FlowExitStatus.(exit Server_out_of_date)

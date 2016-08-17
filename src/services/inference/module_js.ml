@@ -45,6 +45,9 @@ type info = {
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
+let relevant_package_keys = ["name"; "main"]
+let is_relevant_key key = List.mem key relevant_package_keys
+
 let choose_provider_and_warn_about_duplicates =
   let is_flow_ext file = Loc.check_suffix file Files.flow_ext in
 
@@ -177,6 +180,17 @@ let trim_quotes str =
   assert (String.get str (len - 1) = '"');
   String.sub str 1 (len - 2)
 
+let tokens_equal map1 map2 =
+  if SMap.cardinal map1 <> SMap.cardinal map2 then
+    false
+  else
+    let f key _ is_equal =
+      let map1_val = get_key key map1 in
+      let map2_val = get_key key map2 in
+      is_equal && map1_val = map2_val
+    in
+    SMap.fold f map1 true
+
 let get_package_keys filename ast =
   let open Ast in
   let open Expression.Object in
@@ -203,7 +217,12 @@ let get_package_keys filename ast =
         Property.key = Property.Literal(_, {Literal.raw; _;});
         value;
         _;
-      }) -> SMap.add (trim_quotes raw) value map
+      }) ->
+        let key = trim_quotes raw in
+        if is_relevant_key key then
+          SMap.add key value map
+        else
+          map
     | _ -> SMap.empty
   in
   List.fold_left extract_property SMap.empty properties
@@ -215,6 +234,15 @@ let add_package package ast =
   | Some name ->
     ReversePackageHeap.add name (Filename.dirname package)
   | None -> ()
+
+let package_incompatible package ast =
+  let new_tokens = get_package_keys package ast in
+  let old_tokens_opt = PackageHeap.get package in
+  match old_tokens_opt with
+  | None -> true
+  | Some old_tokens ->
+    let result = not (tokens_equal old_tokens new_tokens) in
+    result
 
 (* Specification of a module system. Currently this signature is sufficient to
    model both Haste and Node, but should be further generalized. *)

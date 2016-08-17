@@ -84,6 +84,8 @@ val clear_infos: FilenameSet.t -> unit
 
 val add_package: string -> Spider_monkey_ast.program -> unit
 
+val package_incompatible: string -> Spider_monkey_ast.program -> bool
+
 (***************************************************)
 
 val clear_filename_cache: unit -> unit
