@@ -217,6 +217,9 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         esprima.typeAnnotation = null;
       }
       break;
+    case 'ObjectTypeAnnotation':
+      esprima.exact = esprima.exact || false;
+      break;
     case 'ObjectTypeProperty':
     case 'ObjectTypeIndexer':
     case 'ObjectTypeCallProperty':

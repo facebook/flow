@@ -559,7 +559,7 @@ let extract_mixins _cx =
 let mk_interface cx loc reason structural self = Ast.Statement.(
   fun { Interface.
     typeParameters;
-    body = (_, { Ast.Type.Object.properties; indexers; callProperties });
+    body = (_, { Ast.Type.Object.properties; indexers; callProperties; _ });
     extends;
     mixins;
     _;

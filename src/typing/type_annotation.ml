@@ -444,7 +444,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   in
   if (tparams = []) then ft else PolyT(tparams, ft)
 
-| loc, Object { Object.properties; indexers; callProperties; } ->
+| loc, Object { Object.exact; properties; indexers; callProperties; } ->
   let props_map = List.fold_left (
     fun props_map (loc, { Object.Property.key; value; optional; _ }) ->
       (match key with
@@ -513,7 +513,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let proto = MixedT (reason_of_string reason_desc, Mixed_everything) in
   let flags = {
     sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
-    exact = not sealed;
+    exact = not sealed || exact;
     frozen = false;
   } in
   ObjT (mk_reason reason_desc loc,

@@ -177,7 +177,7 @@ module.exports = {
                   'key.name': 'numVal',
                   'value.type': 'NumberTypeAnnotation',
                 }
-              ]
+              ],
             }
           }
         }
@@ -824,6 +824,20 @@ module.exports = {
             {'type': 'StringTypeAnnotation'},
           ]
         }
+      }
+    },
+    'Exact object types': {
+      'var obj: {| x: number, y: string |}': {  // no trailing comma
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'ObjectTypeAnnotation',
+          'exact': true,
+        },
+      },
+      'var obj: {| x: number, y: string, |}': {  // trailing comma
+        'body.0.declarations.0.id.typeAnnotation.typeAnnotation': {
+          'type': 'ObjectTypeAnnotation',
+          'exact': true,
+        },
       }
     },
     'Tuples': {

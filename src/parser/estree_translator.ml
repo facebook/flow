@@ -940,6 +940,7 @@ end with type t = Impl.t) = struct
 
   and object_type (loc, o) = Type.Object.(
     node "ObjectTypeAnnotation" loc [|
+      "exact", bool o.exact;
       "properties", array_of_list object_type_property o.properties;
       "indexers", array_of_list object_type_indexer o.indexers;
       "callProperties", array_of_list object_type_call_property o.callProperties;

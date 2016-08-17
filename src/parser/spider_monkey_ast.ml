@@ -90,6 +90,7 @@ and Type : sig
       }
     end
     type t = {
+      exact: bool;
       properties: Property.t list;
       indexers: Indexer.t list;
       callProperties: CallProperty.t list;

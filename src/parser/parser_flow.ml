@@ -201,9 +201,10 @@ end = struct
           loc, Type.Exists
       | T_LESS_THAN -> _function env
       | T_LPAREN -> function_or_group env
-      | T_LCURLY ->
-          let loc, o = _object env in
-          loc, Type.Object o
+      | T_LCURLY
+      | T_LCURLYBAR ->
+        let loc, o = _object env ~allow_exact:true in
+        loc, Type.Object o
       | T_TYPEOF ->
           let start_loc = Peek.loc env in
           Expect.token env T_TYPEOF;
@@ -465,27 +466,35 @@ end = struct
           static;
         })
 
-      in let semicolon env =
+      in let semicolon exact env =
         match Peek.token env with
         | T_COMMA | T_SEMICOLON -> Eat.token env
-        | T_RCURLY -> ()
+        | T_RCURLYBAR when exact -> ()
+        | T_RCURLY when not exact -> ()
         | _ -> error_unexpected env
 
-      in let rec properties ~allow_static env (acc, indexers, callProperties) =
+      in let rec properties ~allow_static ~exact env
+        (acc, indexers, callProperties) =
         let start_loc = Peek.loc env in
         let static = allow_static && Expect.maybe env T_STATIC in
         match Peek.token env with
-        | T_EOF
-        | T_RCURLY -> List.rev acc, List.rev indexers, List.rev callProperties
+        | T_EOF ->
+          List.rev acc, List.rev indexers, List.rev callProperties
+        | T_RCURLYBAR when exact ->
+          List.rev acc, List.rev indexers, List.rev callProperties
+        | T_RCURLY when not exact ->
+          List.rev acc, List.rev indexers, List.rev callProperties
         | T_LBRACKET ->
           let indexer = indexer_property env start_loc static in
-          semicolon env;
-          properties allow_static env (acc, indexer::indexers, callProperties)
+          semicolon exact env;
+          properties allow_static exact env
+            (acc, indexer::indexers, callProperties)
         | T_LESS_THAN
         | T_LPAREN ->
           let call_prop = call_property env start_loc static in
-          semicolon env;
-          properties allow_static env (acc, indexers, call_prop::callProperties)
+          semicolon exact env;
+          properties allow_static exact env
+            (acc, indexers, call_prop::callProperties)
         | _ ->
           let static, (_, key) = match static, Peek.token env with
           | true, T_COLON ->
@@ -507,17 +516,20 @@ end = struct
           | T_LESS_THAN
           | T_LPAREN -> method_property env start_loc static key
           | _ -> property env start_loc static key in
-          semicolon env;
-          properties allow_static env (property::acc, indexers, callProperties)
+          semicolon exact env;
+          properties allow_static exact env
+            (property::acc, indexers, callProperties)
 
-      in fun ?(allow_static=false) env ->
+      in fun ?(allow_static=false) ?(allow_exact=false) env ->
+        let exact = allow_exact && Peek.token env = T_LCURLYBAR in
         let start_loc = Peek.loc env in
-        Expect.token env T_LCURLY;
+        Expect.token env (if exact then T_LCURLYBAR else T_LCURLY);
         let properties, indexers, callProperties =
-          properties ~allow_static env ([], [], []) in
+          properties ~allow_static ~exact env ([], [], []) in
         let end_loc = Peek.loc env in
-        Expect.token env T_RCURLY;
+        Expect.token env (if exact then T_RCURLYBAR else T_RCURLY);
         Loc.btwn start_loc end_loc, Type.Object.({
+          exact;
           properties;
           indexers;
           callProperties
@@ -644,7 +656,8 @@ end = struct
     let type_parameter_declaration =
       wrap (type_parameter_declaration ~allow_default:false)
     let type_parameter_instantiation = wrap type_parameter_instantiation
-    let _object ?(allow_static=false) env = wrap (_object ~allow_static) env
+    let _object ?(allow_static=false) env =
+      wrap (_object ~allow_static ~allow_exact:false) env
     let function_param_list = wrap function_param_list
     let annotation = wrap annotation
     let annotation_opt = wrap annotation_opt

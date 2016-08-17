@@ -66,3 +66,6 @@ def("DeclareFunction")
 
 def("Function")
     .field("predicate", or(def("Predicate"), null), defaults["null"])
+
+def("ObjectTypeAnnotation")
+    .field("exact", Boolean)

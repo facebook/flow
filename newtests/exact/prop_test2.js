@@ -1,26 +1,21 @@
 /***
- * more prop tests on unions of objects.
- * to see why property existence tests don't work to refine inexact types,
- * take a look at checkFlag_err() below.
+ * more prop tests on unions of objects,
+ * using {| ... |} annotation syntax
  */
 
-type StringFlag = {
+type Flag = {|
   type: "string",
   name: string,
   description: string,
   argName: string,
   aliases?: Array<string>,
   default?: string,
-};
-
-type BoolFlag = {
+|} | {|
   type: "boolean",
   name: string,
   description: string,
   aliases?: Array<string>,
-};
-
-type EnumFlag = {
+|} | {|
   type: "enum",
   name: string,
   description: string,
@@ -28,9 +23,7 @@ type EnumFlag = {
   validValues: Array<string>,
   aliases?: Array<string>,
   default?: string,
-};
-
-type Flag = $Exact<StringFlag> | $Exact<BoolFlag> | $Exact<EnumFlag>;
+|};
 
 function checkFlag_ok(flag: Flag): string {
   if (flag.default) {

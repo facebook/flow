@@ -21,6 +21,8 @@ module Token = struct
     (* Syntax *)
     | T_LCURLY
     | T_RCURLY
+    | T_LCURLYBAR
+    | T_RCURLYBAR
     | T_LPAREN
     | T_RPAREN
     | T_LBRACKET
@@ -211,6 +213,8 @@ module Token = struct
     | T_AWAIT -> "T_AWAIT"
     | T_LCURLY -> "T_LCURLY"
     | T_RCURLY -> "T_RCURLY"
+    | T_LCURLYBAR -> "T_LCURLYBAR"
+    | T_RCURLYBAR -> "T_RCURLYBAR"
     | T_LPAREN -> "T_LPAREN"
     | T_RPAREN -> "T_RPAREN"
     | T_LBRACKET -> "T_LBRACKET"
@@ -1091,6 +1095,8 @@ and type_token env = parse
   | "]"                { env, T_RBRACKET }
   | "{"                { env, T_LCURLY }
   | "}"                { env, T_RCURLY }
+  | "{|"               { env, T_LCURLYBAR }
+  | "|}"               { env, T_RCURLYBAR }
   | "("                { env, T_LPAREN }
   | ")"                { env, T_RPAREN }
   | "..."              { env, T_ELLIPSIS }
