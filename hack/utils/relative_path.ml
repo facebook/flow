@@ -86,7 +86,7 @@ let create prefix s =
   if not (string_starts_with s prefix_s)
   then begin
     Printf.eprintf "%s is not a prefix of %s" prefix_s s;
-    assert_false_log_backtrace ();
+    assert_false_log_backtrace None;
   end;
   prefix, Representation.from (
     String.sub s prefix_len (String.length s - prefix_len))

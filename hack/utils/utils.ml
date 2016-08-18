@@ -172,7 +172,9 @@ let with_context ~enter ~exit ~do_ =
  * performance doesn't matter) we do want the backtrace. "assert false" is one
  * of such conditions.
  *)
-let assert_false_log_backtrace () =
+let assert_false_log_backtrace msg =
+  Printf.eprintf "assert false with backtrace:\n";
+  Option.iter msg ~f:(Printf.eprintf "%s\n");
   Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
     (Printexc.get_callstack 100));
   assert false
