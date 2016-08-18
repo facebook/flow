@@ -2545,26 +2545,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (**************************************************************************)
     (* TestPropT is emitted for property reads in the context of branch tests.
-       Exact types are treated permissively, others strictly.
-       Position in pattern match denotes precedence: TestPropT
-       chooses a property lookup operation rather than being one itself, and
-       so needs to be evaluated prior to any wildcards that handle such.
-       On the other hand, union and intersection rules are generally of higher
-       precedence (though not always). TODO replace match ordering with
-       explicitly precedence-driven evaluation, perf permitting *)
+       Strictness can be controlled by choosing to propagate either GetPropT
+       (strict) or LookupT (nonstrict). At present we allow nonstrict tests
+       on all types. *)
     (**************************************************************************)
 
-    | ObjT (_, { flags; _ }), TestPropT (reason_op, (_, name), tout)
-      when flags.exact && sealed_in_op reason_op flags.sealed ->
+    | _, TestPropT (reason_op, (_, name), tout) ->
       let lookup =
         let t = tvar_with_constraint cx
           (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
         in
         LookupT (reason_op, None, [], name, AnyWithUpperBoundT t)
       in rec_flow cx trace (l, lookup)
-
-    | _, TestPropT (reason, prop, tout) ->
-      rec_flow cx trace (l, GetPropT (reason, prop, tout))
 
     (****************************************************)
     (* dependent function type ~> substitution provider *)

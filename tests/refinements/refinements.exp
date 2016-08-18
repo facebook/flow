@@ -70,17 +70,73 @@ bool.js:44
  44:     return x.result; // error
                 ^ object type
 
-cond_prop.js:16
- 16:       return x.result;  // error, consider x = { done: false, result: 0 }
+cond_prop.js:11
+ 11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+ 11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                             ^^^^^^^^^^^^ object type. This type is incompatible with
+  9: function getTypeASTName(typeAST: Type): string {
+                                      ^^^^ union: Name | ListType | NonNullType
+  Member 1:
+    3: type Type = Name | ListType | NonNullType;
+                   ^^^^ Name
+  Error:
+    3: type Type = Name | ListType | NonNullType;
+                   ^^^^ property `kind`. Property not found in
+   11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                               ^^^^^^^^^^^^ object type
+  Member 2:
+    3: type Type = Name | ListType | NonNullType;
+                          ^^^^^^^^ ListType
+  Error:
+    3: type Type = Name | ListType | NonNullType;
+                          ^^^^^^^^ property `kind`. Property not found in
+   11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                               ^^^^^^^^^^^^ object type
+  Member 3:
+    3: type Type = Name | ListType | NonNullType;
+                                     ^^^^^^^^^^^ NonNullType
+  Error:
+    3: type Type = Name | ListType | NonNullType;
+                                     ^^^^^^^^^^^ property `kind`. Property not found in
+   11:   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
+                               ^^^^^^^^^^^^ object type
+
+cond_prop.js:19
+ 19:     return x.result; // error
+                  ^^^^^^ property `result`. Property not found in
+ 19:     return x.result; // error
+                ^ object type
+
+cond_prop.js:24
+ 24:       return x.result; // error, consider { foo: "herp", done: "derp" }
                     ^^^^^^ property `result`. Property not found in
- 16:       return x.result;  // error, consider x = { done: false, result: 0 }
+ 24:       return x.result; // error, consider { foo: "herp", done: "derp" }
                   ^ object type
 
-cond_prop.js:21
- 21:     if (x.done) { // error: done is not declared in all members, so not testable
-               ^^^^ property `done`. Property not found in
- 21:     if (x.done) { // error: done is not declared in all members, so not testable
-             ^ object type
+cond_prop.js:26
+ 26:     return x.result; // error
+                  ^^^^^^ property `result`. Property not found in
+ 26:     return x.result; // error
+                ^ object type
+
+cond_prop.js:36
+ 36:         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
+                ^^^ property `bar`. Property not found in
+ 36:         (t.bar: string); // error, consider { baz: "x", quux: "y", foo: "boom" }
+              ^ object type
+
+cond_prop.js:46
+ 46:         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
+                ^^^ property `foo`. Property not found in
+ 46:         (t.foo: Object); // error, consider { baz: "x", quux: "y", bar: "boom" }
+              ^ object type
+
+cond_prop.js:48
+ 48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
+                ^^^^ property `quux`. Property not found in
+ 48:         (t.quux: string); // error, consider { foo: {}, bar: "" }
+              ^ object type
 
 eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
@@ -584,11 +640,6 @@ string.js:117
 115:   function(x: string): "" {
                             ^^ string literal ``
 
-super_member.js:12
- 12:     if (super.prop) {
-                   ^^^^ property `prop`. Property cannot be accessed on
-Object
-
 switch.js:8
   8:       return text; // error, should return string
                   ^^^^ number. This type is incompatible with the expected return type of
@@ -678,12 +729,6 @@ tagged_union.js:109
                ^^^^^^ property `legnth`. Property not found in
 109:     if (x.legnth === 0) {} // error, typo
              ^ Array
-
-tagged_union.js:109
-109:     if (x.legnth === 0) {} // error, typo
-               ^^^^^^ property `legnth`. Property not found in
-109:     if (x.legnth === 0) {} // error, typo
-             ^^^^^^^^ Array
 
 tagged_union.js:111
 111:     if (y.legnth === 0) {} // error, typo
@@ -886,4 +931,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 144 errors
+Found 147 errors
