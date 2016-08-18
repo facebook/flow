@@ -174,7 +174,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             let ty = Some (Type_printer.string_of_t cx t) in
             let raw_type =
               if include_raw then
-                Some (Debug_js.jstr_of_t ~depth:10 cx t)
+                Some (Debug_js.jstr_of_t ~size:50 ~depth:10 cx t)
               else
                 None
             in
