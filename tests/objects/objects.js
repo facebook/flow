@@ -11,6 +11,8 @@ x['123'] = false;     // error, boolean !~> string
 x[123] = false;       // error, boolean !~> string
 x['foo'+'bar'] = 'derp'; // ok since we can't tell
 x[123] = 'foo'; // ok
+x[123.0] = 'foo'; // ok
+x[1.23e2] = 'foo'; // ok
 (x[`foo`]: string);   // error, key doesn't exist
 
 var y : {foo: string} = {foo: 'bar'};

@@ -58,28 +58,28 @@ objects.js:11
   3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
                      ^^^^^^ string
 
-objects.js:14
- 14: (x[`foo`]: string);   // error, key doesn't exist
+objects.js:16
+ 16: (x[`foo`]: string);   // error, key doesn't exist
         ^^^^^ property `foo`. Property not found in
- 14: (x[`foo`]: string);   // error, key doesn't exist
+ 16: (x[`foo`]: string);   // error, key doesn't exist
       ^ object type
 
-objects.js:17
- 17: y['foo'] = 123; // error, number !~> string
+objects.js:19
+ 19: y['foo'] = 123; // error, number !~> string
                 ^^^ number. This type is incompatible with
- 16: var y : {foo: string} = {foo: 'bar'};
+ 18: var y : {foo: string} = {foo: 'bar'};
                    ^^^^^^ string
 
-objects.js:18
- 18: y['bar'] = 'abc'; // error, property not found
+objects.js:20
+ 20: y['bar'] = 'abc'; // error, property not found
        ^^^^^ property `bar`. Property not found in
- 18: y['bar'] = 'abc'; // error, property not found
+ 20: y['bar'] = 'abc'; // error, property not found
      ^ object type
 
-objects.js:20
- 20: (y['hasOwnProperty']: string); // error, prototype method is not a string
+objects.js:22
+ 22: (y['hasOwnProperty']: string); // error, prototype method is not a string
       ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 20: (y['hasOwnProperty']: string); // error, prototype method is not a string
+ 22: (y['hasOwnProperty']: string); // error, prototype method is not a string
                            ^^^^^^ string
 
 unaliased_assign.js:18
