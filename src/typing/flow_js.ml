@@ -3116,6 +3116,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a function value annotation becomes the prototype type *)
       rec_flow cx trace (prototype, BecomeT (reason, t))
 
+    | AnyT _, UseT (_, TypeT (reason, t)) ->
+      (* any can function as class or function type, hence ok for annotations *)
+      rec_flow cx trace (l, BecomeT (reason, t))
+
     | (TypeT(_,l), UseT (_, TypeT(_,u))) ->
       rec_unify cx trace l u
 
@@ -6127,12 +6131,12 @@ and recurse_proto cx strict proto reason_op x trace t =
 and filter cx trace t l pred =
   if (pred l) then rec_flow_t cx trace (l,t)
 
-and is_string = function StrT _ -> true | _ -> false
-and is_number = function NumT _ -> true | _ -> false
-and is_function = function AnyFunT _ | FunT _ -> true | _ -> false
-and is_object = function (AnyObjT _ | ObjT _ | ArrT _ | NullT _) -> true | _ -> false
-and is_array = function ArrT _ -> true | _ -> false
-and is_bool = function BoolT _ -> true | _ -> false
+and is_string = function AnyT _ | StrT _ -> true | _ -> false
+and is_number = function AnyT _ | NumT _ -> true | _ -> false
+and is_function = function AnyT _ | AnyFunT _ | FunT _ -> true | _ -> false
+and is_object = function AnyT _ | AnyObjT _ | ObjT _ | ArrT _ | NullT _ -> true | _ -> false
+and is_array = function AnyT _ | ArrT _ -> true | _ -> false
+and is_bool = function AnyT _ | BoolT _ -> true | _ -> false
 
 and not_ pred x = not(pred x)
 
@@ -6219,11 +6223,12 @@ and filter_maybe = function
   | MixedT (r, Mixed_non_maybe) -> EmptyT.why r
   | MixedT (r, Mixed_non_void) -> NullT r
   | MixedT (r, Mixed_non_null) -> VoidT r
-  | NullT r -> NullT r
-  | VoidT r -> VoidT r
+  | NullT _ as t -> t
+  | VoidT _ as t -> t
   | OptionalT t ->
     let reason = reason_of_t t in
     VoidT.why reason
+  | AnyT _ as t -> t
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -6242,9 +6247,10 @@ and filter_not_maybe = function
 and filter_null = function
   | OptionalT (MaybeT t)
   | MaybeT t -> NullT.why (reason_of_t t)
-  | NullT r -> NullT r
+  | NullT _ as t -> t
   | MixedT (r, Mixed_everything)
   | MixedT (r, Mixed_non_void) -> NullT.why r
+  | AnyT _ as t -> t
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -6263,12 +6269,13 @@ and filter_not_null = function
 
 and filter_undefined = function
   | MaybeT t -> VoidT.why (reason_of_t t)
-  | VoidT r -> VoidT r
+  | VoidT _ as t -> t
   | OptionalT t ->
     let reason = reason_of_t t in
     VoidT.why reason
   | MixedT (r, Mixed_everything)
   | MixedT (r, Mixed_non_null) -> VoidT.why r
+  | AnyT _ as t -> t
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -6290,6 +6297,7 @@ and filter_string_literal expected t = match t with
   | StrT (r, Truthy) when expected <> "" -> StrT (r, Literal expected)
   | StrT (r, AnyLiteral) -> StrT (r, Literal expected)
   | MixedT (r, _) -> StrT (r, Literal expected)
+  | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_string_literal expected = function
@@ -6301,6 +6309,7 @@ and filter_number_literal expected t = match t with
   | NumT (r, Truthy) when snd expected <> "0" -> NumT (r, Literal expected)
   | NumT (r, AnyLiteral) -> NumT (r, Literal expected)
   | MixedT (r, _) -> NumT (r, Literal expected)
+  | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
 and filter_not_number_literal expected = function
@@ -6311,6 +6320,7 @@ and filter_true = function
   | BoolT (r, Some true)
   | BoolT (r, None) -> BoolT (r, Some true)
   | MixedT (r, _) -> BoolT (replace_reason "boolean" r, Some true)
+  | AnyT _ as t -> t
   | t -> EmptyT (reason_of_t t)
 
 and filter_not_true = function
@@ -6322,6 +6332,7 @@ and filter_false = function
   | BoolT (r, Some false)
   | BoolT (r, None) -> BoolT (r, Some false)
   | MixedT (r, _) -> BoolT (replace_reason "boolean" r, Some false)
+  | AnyT _ as t -> t
   | t -> EmptyT (reason_of_t t)
 
 and filter_not_false = function
