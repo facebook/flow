@@ -21,7 +21,7 @@ val flow: Context.t -> (Type.t * Type.use_t) -> unit
 val flow_t: Context.t -> (Type.t * Type.t) -> unit
 
 (* given a use type, return a tvar constrained by the use type *)
-val tvar_with_constraint: Context.t -> Type.use_t -> Type.t
+val tvar_with_constraint: Context.t -> ?derivable:bool -> Type.use_t -> Type.t
 
 val unify: Context.t -> Type.t -> Type.t -> unit
 

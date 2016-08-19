@@ -2552,7 +2552,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, TestPropT (reason_op, (_, name), tout) ->
       let lookup =
-        let t = tvar_with_constraint cx
+        let t = tvar_with_constraint cx ~derivable:true
           (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
         in
         LookupT (reason_op, None, [], name, AnyWithUpperBoundT t)
@@ -7760,8 +7760,13 @@ and flow cx (lower, upper) =
 and flow_t cx (t1, t2) =
   flow cx (t1, UseT (UnknownUse, t2))
 
-and tvar_with_constraint cx u =
+and tvar_with_constraint cx ?(derivable=false) u =
   let reason = reason_of_use_t u in
+  let mk_tvar_where =
+    if derivable
+    then mk_tvar_derivable_where
+    else mk_tvar_where
+  in
   mk_tvar_where cx reason (fun tvar ->
     flow_opt cx (tvar, u)
   )
