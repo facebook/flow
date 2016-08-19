@@ -3636,7 +3636,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       rec_flow cx trace (key, ElemT(reason_op, l, tout, Read))
 
-    | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t, rw)) ->
+    | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t, rw))
+    | (NumT (reason_x, Literal (_, x)), ElemT(reason_op, (ObjT _ as o), t, rw)) ->
       let reason_x = replace_reason (spf "property `%s`" x) reason_x in
       let u = match rw with
       | Read -> GetPropT (reason_op, (reason_x, x), t)

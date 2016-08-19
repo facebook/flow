@@ -22,46 +22,64 @@ objects.js:5
   5: (x['foo'] : string);  // error, key doesn't exist
       ^ object type
 
+objects.js:6
+  6: (x[345] : string);  // error, key doesn't exist
+        ^^^ property `345`. Property not found in
+  6: (x[345] : string);  // error, key doesn't exist
+      ^ object type
+
 objects.js:7
-  7: (x.bar: boolean);     // error, string !~> boolean
-      ^^^^^ string. This type is incompatible with
-  7: (x.bar: boolean);     // error, string !~> boolean
-             ^^^^^^^ boolean
+  7: (x[123] : boolean);   // error, string !~> boolean
+      ^^^^^^ string. This type is incompatible with
+  7: (x[123] : boolean);   // error, string !~> boolean
+               ^^^^^^^ boolean
 
 objects.js:8
-  8: (x['123'] : boolean); // error, string !~> boolean
-      ^^^^^^^^ string. This type is incompatible with
-  8: (x['123'] : boolean); // error, string !~> boolean
-                 ^^^^^^^ boolean
+  8: (x.bar: boolean);     // error, string !~> boolean
+      ^^^^^ string. This type is incompatible with
+  8: (x.bar: boolean);     // error, string !~> boolean
+             ^^^^^^^ boolean
 
 objects.js:9
-  9: x['123'] = false;     // error, boolean !~> string
+  9: (x['123'] : boolean); // error, string !~> boolean
+      ^^^^^^^^ string. This type is incompatible with
+  9: (x['123'] : boolean); // error, string !~> boolean
+                 ^^^^^^^ boolean
+
+objects.js:10
+ 10: x['123'] = false;     // error, boolean !~> string
                 ^^^^^ boolean. This type is incompatible with
   3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
                      ^^^^^^ string
 
-objects.js:12
- 12: (x[`foo`]: string);   // error, key doesn't exist
+objects.js:11
+ 11: x[123] = false;       // error, boolean !~> string
+              ^^^^^ boolean. This type is incompatible with
+  3: var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                     ^^^^^^ string
+
+objects.js:14
+ 14: (x[`foo`]: string);   // error, key doesn't exist
         ^^^^^ property `foo`. Property not found in
- 12: (x[`foo`]: string);   // error, key doesn't exist
+ 14: (x[`foo`]: string);   // error, key doesn't exist
       ^ object type
 
-objects.js:15
- 15: y['foo'] = 123; // error, number !~> string
+objects.js:17
+ 17: y['foo'] = 123; // error, number !~> string
                 ^^^ number. This type is incompatible with
- 14: var y : {foo: string} = {foo: 'bar'};
+ 16: var y : {foo: string} = {foo: 'bar'};
                    ^^^^^^ string
 
-objects.js:16
- 16: y['bar'] = 'abc'; // error, property not found
+objects.js:18
+ 18: y['bar'] = 'abc'; // error, property not found
        ^^^^^ property `bar`. Property not found in
- 16: y['bar'] = 'abc'; // error, property not found
+ 18: y['bar'] = 'abc'; // error, property not found
      ^ object type
 
-objects.js:18
- 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
+objects.js:20
+ 20: (y['hasOwnProperty']: string); // error, prototype method is not a string
       ^^^^^^^^^^^^^^^^^^^ function type. This type is incompatible with
- 18: (y['hasOwnProperty']: string); // error, prototype method is not a string
+ 20: (y['hasOwnProperty']: string); // error, prototype method is not a string
                            ^^^^^^ string
 
 unaliased_assign.js:18
@@ -71,4 +89,4 @@ unaliased_assign.js:18
                     ^^^^^^ string
 
 
-Found 12 errors
+Found 15 errors
