@@ -158,7 +158,7 @@ external hh_log_level : unit -> int = "hh_log_level"
 (*****************************************************************************)
 (* The number of used slots in our hashtable *)
 (*****************************************************************************)
-external hash_used_slots : unit -> int = "hh_hash_used_slots"
+external hash_used_slots : unit -> int * int = "hh_hash_used_slots"
 
 (*****************************************************************************)
 (* The total number of slots in our hashtable *)
@@ -189,19 +189,26 @@ let init_done () =
   EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {
+  nonempty_slots : int;
   used_slots : int;
   slots : int;
 }
 
-let dep_stats () = {
-  used_slots = dep_used_slots ();
-  slots = dep_slots ();
-}
+let dep_stats () =
+  let used = dep_used_slots () in
+  {
+    nonempty_slots = used;
+    used_slots = used;
+    slots = dep_slots ();
+  }
 
-let hash_stats () = {
-  used_slots = hash_used_slots ();
-  slots = hash_slots ();
-}
+let hash_stats () =
+  let used_slots, nonempty_slots = hash_used_slots () in
+  {
+    nonempty_slots;
+    used_slots;
+    slots = hash_slots ();
+  }
 
 let collect (effort : [ `gentle | `aggressive ]) =
   let old_size = heap_size () in

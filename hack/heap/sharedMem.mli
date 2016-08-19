@@ -92,6 +92,7 @@ val heap_size : unit -> int
 (*****************************************************************************)
 
 type table_stats = {
+  nonempty_slots : int;
   used_slots : int;
   slots : int;
 }
