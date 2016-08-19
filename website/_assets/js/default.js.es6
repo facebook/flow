@@ -1,5 +1,3 @@
-//= require analytics
-
 import * as docsearch from "docsearch"
 
 docsearch({
