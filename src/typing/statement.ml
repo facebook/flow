@@ -516,6 +516,8 @@ and statement cx = Ast.Statement.(
           let r = mk_reason "catch" loc in
           let t = Flow.mk_tvar cx r in
 
+          Hashtbl.replace (Context.type_table cx) loc t;
+
           (match Env.in_lex_scope cx (fun () ->
             Scope.(Env.bind_implicit_let
               ~state:State.Initialized Entry.CatchParamBinding cx name t r);
