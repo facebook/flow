@@ -1,3 +1,30 @@
+###v0.31.0
+
+Likely to cause new Flow errors:
+- Fixed an issue where an `any` type could actually prevent errors from showing up in places that actually should surface errors
+- `Array.isArray()` now refines arrays to `Array<mixed>` instead of `Array<any>`
+
+New Features:
+- When the `munge_underscores` option is set, Flow no longer requires annotations on exported classes with munged methods. (thanks [@pvolok](https://github.com/pvolok)!)
+- Added a new "magic" type called `$PropertyType<T, 'x'>`. This utility extracts the type of the property 'x' off of the type T.
+- It is now possible to use leading-`|` and `&` on any type annotation, not just in type aliases
+
+Notable bug fixes:
+- Signficant perf improvements on checking disjoint unions
+- Fixed an issue where `flow start` would sometimes hang on Windows
+- Fixed an issue where `flow get-def` on a react element would always point to the internal react libdef (rather than the component that defines the element)
+- Error messages for builtin types are now more descriptive in more scenarios
+- Fixed the order in which destructured function params were processed. This previously caused issues with variable references within the destructuring
+- Error messages for union type errors now point to more helpful locations in some cases
+- Fixed a long-standing confusing error message blaming property accesses on the "global object" (when the global object isn't actually involved at all)
+- Improved error message when trying to import a named export from a module that only has a default export
+- Fixed an issue where `Promise.resolve(undefined)` would not always error as it should
+- Fixed an issue where async functions that return void do not properly enforce their return type
+- Fixed an issue where aliased object types may not error when an invalid property is accessed on them
+- Fix `flow coverage` when reporting coverage on empty files
+- Printed types in some circumstances (autocomplete, type-at-pos, etc) are now capped on size to prevent overflows in tools that consume them. When the size overflows the cap, `...` will be printed as an overflow placeholder
+- Various built-in libdef updates
+
 ###v0.30.0
 
 Likely to cause new Flow errors:
