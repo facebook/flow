@@ -207,6 +207,7 @@ module type S = sig
   val option_mixed : Pos.t -> unit
   val declared_covariant : Pos.t -> Pos.t -> (Pos.t * string) list -> unit
   val declared_contravariant : Pos.t -> Pos.t -> (Pos.t * string) list -> unit
+  val contravariant_this: Pos.t -> string -> string -> unit
   val wrong_extend_kind : Pos.t -> string -> Pos.t -> string -> unit
   val unsatisfied_req : Pos.t -> string -> Pos.t -> unit
   val cyclic_class_def : SSet.t -> Pos.t -> unit
