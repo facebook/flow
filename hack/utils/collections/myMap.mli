@@ -8,40 +8,6 @@
  *
  *)
 
-module type S = sig
-  type +'a t
-  type key
-
-  val empty: 'a t
-  val singleton: key -> 'a -> 'a t
-  val fold: (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-  val exists: (key -> 'a -> bool) -> 'a t -> bool
-  val for_all: (key -> 'a -> bool) -> 'a t -> bool
-  val mem: key -> 'a t -> bool
-  val add: key -> 'a -> 'a t -> 'a t
-  val get: key -> 'a t -> 'a option
-  val iter: (key -> 'a -> unit) -> 'a t -> unit
-  val remove: key -> 'a t -> 'a t
-  val map: ('a -> 'b) -> 'a t -> 'b t
-  val mapi: (key -> 'a -> 'b) -> 'a t -> 'b t
-  val find_unsafe: key -> 'a t -> 'a
-  val is_empty: 'a t -> bool
-  val union: 'a t -> 'a t -> 'a t
-  val partition: (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
-  val cardinal : 'a t -> int
-  val compare: 'a t -> 'a t -> int
-  val equal: 'a t -> 'a t -> bool
-  val filter: (key -> 'a -> bool) -> 'a t -> 'a t
-  val merge : (key -> 'a option -> 'b option -> 'c option)
-    -> 'a t -> 'b t -> 'c t
-  val choose : 'a t -> key * 'a
-  val split: key -> 'a t -> 'a t * 'a option * 'a t
-  val keys: 'a t -> key list
-  val values: 'a t -> 'a list
-  val min_binding : 'a t -> key * 'a
-
-  val map_env: ('c -> 'a -> 'c * 'b) -> 'c -> 'a t -> 'c * 'b t
-  val elements: 'a t -> (key * 'a) list
-end
-
+module type S = MyMap_sig.S
 module Make (Ord : Map.OrderedType) : S with type key = Ord.t
+
