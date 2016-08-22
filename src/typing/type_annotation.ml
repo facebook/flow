@@ -516,8 +516,11 @@ let rec convert cx tparams_map = Ast.Type.(function
     exact = not sealed || exact;
     frozen = false;
   } in
-  ObjT (mk_reason reason_desc loc,
-    Flow_js.mk_objecttype ~flags dict pmap proto)
+  let t = ObjT (mk_reason reason_desc loc,
+    Flow_js.mk_objecttype ~flags dict pmap proto) in
+  if exact
+  then ExactT (mk_reason "exact type" loc, t)
+  else t
 
 | loc, Exists ->
   (* Do not evaluate existential type variables when map is non-empty. This

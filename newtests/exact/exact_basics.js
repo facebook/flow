@@ -33,13 +33,14 @@
 // subtypes may have additional properties.
 //
 type Person = { salutation: string, last: string };
+type ExactPerson = {| salutation: string, last: string |};
 
 // object literals have exact inferred types.
 //
 var exactlyPerson = { salutation: "Mr", last: "Dobalina" };
 var subtypeOfPerson = { salutation: "Mr", first: "Bob", last: "Dobalina" };
 
-declare function takesExactlyPerson(person: $Exact<Person>): void;
+declare function takesExactlyPerson(person: ExactPerson): void;
 
 // { x, y } ~> Exact<{x, y}>
 takesExactlyPerson(exactlyPerson); // ok
@@ -51,7 +52,7 @@ takesExactlyPerson(subtypeOfPerson); // error
 // around silently unless they're explicitly exact
 //
 declare function returnsSubtypeOfPerson(): Person;
-declare function returnsExactlyPerson(): $Exact<Person>;
+declare function returnsExactlyPerson(): ExactPerson;
 
 // Exact<X> ~> Exact<X>
 takesExactlyPerson(returnsExactlyPerson());  // ok
@@ -62,9 +63,8 @@ takesExactlyPerson(returnsSubtypeOfPerson());  // error
 // exact types must match, of course
 //
 type Person2 = { salutation: string, first: string, last: string };
+type ExactPerson2 = {| salutation: string, first: string, last: string |};
 
-// (let's sample test the type alias code path)
-type ExactPerson2 = $Exact<Person2>;
 declare function returnsExactlyPerson2(): ExactPerson2;
 
 // Exact<X> ~> Exact<Y>

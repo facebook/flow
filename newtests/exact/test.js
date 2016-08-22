@@ -17,29 +17,29 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
 
     addFile('exact_basics.js').newErrors(
                                 `
-                                  exact_basics.js:48
-                                   48: takesExactlyPerson(subtypeOfPerson); // error
+                                  exact_basics.js:49
+                                   49: takesExactlyPerson(subtypeOfPerson); // error
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-                                   48: takesExactlyPerson(subtypeOfPerson); // error
+                                   49: takesExactlyPerson(subtypeOfPerson); // error
                                                           ^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-                                   42: declare function takesExactlyPerson(person: \$Exact<Person>): void;
-                                                                                          ^^^^^^ object type
+                                   36: type ExactPerson = {| salutation: string, last: string |};
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
-                                  exact_basics.js:60
-                                   60: takesExactlyPerson(returnsSubtypeOfPerson());  // error
+                                  exact_basics.js:61
+                                   61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-                                   60: takesExactlyPerson(returnsSubtypeOfPerson());  // error
+                                   61: takesExactlyPerson(returnsSubtypeOfPerson());  // error
                                                           ^^^^^^^^^^^^^^^^^^^^^^^^ object type. Inexact type is incompatible with exact type
-                                   42: declare function takesExactlyPerson(person: \$Exact<Person>): void;
-                                                                                   ^^^^^^^^^^^^^^ exact type: Person
+                                   43: declare function takesExactlyPerson(person: ExactPerson): void;
+                                                                                   ^^^^^^^^^^^ exact type: object type
 
                                   exact_basics.js:71
                                    71: takesExactlyPerson(returnsExactlyPerson2()); // error
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
                                    71: takesExactlyPerson(returnsExactlyPerson2()); // error
                                                           ^^^^^^^^^^^^^^^^^^^^^^^ property \`first\`. Property not found in
-                                   42: declare function takesExactlyPerson(person: \$Exact<Person>): void;
-                                                                                          ^^^^^^ object type
+                                   36: type ExactPerson = {| salutation: string, last: string |};
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object type
 
                                   exact_basics.js:85
                                    85: takesSubtypeOfPerson2(returnsExactlyPerson()); // error
