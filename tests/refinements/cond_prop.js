@@ -1,7 +1,7 @@
 /* @flow */
 
 type Type = Name | ListType | NonNullType;
-type Name = {kind: 'Name', value: string};
+type Name = {kind: 'Name', value: string, type: void };
 type ListType = {kind: 'ListType', type: Type};
 type NonNullType = {kind: 'NonNullType', type: Name | ListType | BadType};
 type BadType = {};

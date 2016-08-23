@@ -115,7 +115,7 @@ val fresh_context: Context.metadata -> Loc.filename -> Modulename.t -> Context.t
 val builtins: Context.t -> Type.t
 val restore_builtins: Context.t -> Type.t -> unit
 val get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
-val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> reason option -> Type.t -> unit
+val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
 val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t
 val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 val set_builtin: Context.t -> ?trace:Trace.t -> string -> Type.t -> unit

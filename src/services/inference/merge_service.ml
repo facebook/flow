@@ -32,7 +32,7 @@ let check_require (r, resolved_r, cx) =
     let m_name = Modulename.to_string resolved_r in
     let tvar = Flow_js.mk_tvar cx reason in
     Flow_js.lookup_builtin cx (Reason.internal_module_name m_name)
-      reason (Some (Reason.builtin_reason m_name)) tvar
+      reason (Type.Strict (Reason.builtin_reason m_name)) tvar
 
 let add_decl (r, resolved_r, cx) declarations =
   (r, resolved_r, cx) :: declarations

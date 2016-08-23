@@ -37,7 +37,8 @@ let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
     |> Reason.internal_module_name
   in
   let from_t = Flow_js.mk_tvar cx reason in
-  Flow_js.lookup_builtin cx m_name reason None from_t;
+  Flow_js.lookup_builtin cx m_name reason
+    (Type.NonstrictReturning (Some (Type.AnyT reason, from_t))) from_t;
 
   (* flow the declared module type to importing context *)
   let to_t = Flow_js.lookup_module cx_to m in

@@ -222,6 +222,24 @@ heap_defassign.js:73
  73:     var z: number = obj.p;      // error, (number | string) ~/~ number
                 ^^^^^^ number
 
+missing-property-cond.js:11
+ 11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
+              ^ property `x`. Property cannot be accessed on
+ 11:     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
+         ^^^^ property `p2` of unknown type
+
+missing-property-cond.js:16
+ 16:   o.p3.x; // usual error outside conditional
+         ^^ property `p3`. Property not found in
+ 16:   o.p3.x; // usual error outside conditional
+       ^ object type
+
+missing-property-cond.js:23
+ 23:     o.p4.x; // error
+              ^ property `x`. Property cannot be accessed on possibly undefined value
+ 23:     o.p4.x; // error
+         ^^^^ property `p4` does not exist
+
 mixed.js:8
   8:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
@@ -640,6 +658,12 @@ string.js:117
 115:   function(x: string): "" {
                             ^^ string literal ``
 
+super_member.js:13
+ 13:       return super.prop; // error, unknown type passed to string expected
+                  ^^^^^^^^^^ property `prop` of unknown type. This type is incompatible with the expected return type of
+ 11:   test(): string {
+               ^^^^^^ string
+
 switch.js:8
   8:       return text; // error, should return string
                   ^^^^ number. This type is incompatible with the expected return type of
@@ -931,4 +955,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 147 errors
+Found 151 errors

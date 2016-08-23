@@ -420,8 +420,14 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | LookupT (_, rstrict, _, name, t) ->
     (match rstrict with
-      | None -> []
-      | Some r -> ["strictReason", json_of_reason ~strip_root:json_cx.strip_root r]
+      | NonstrictReturning None -> []
+      | NonstrictReturning (Some (default, result)) -> [
+          "defaultType", _json_of_t json_cx default;
+          "resultType", _json_of_t json_cx result;
+        ]
+      | Strict r -> [
+          "strictReason", json_of_reason ~strip_root:json_cx.strip_root r
+        ]
     ) @ [
       "name", JSON_String name;
       "type", _json_of_t json_cx t

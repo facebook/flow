@@ -352,7 +352,7 @@ module rec TypeTerm : sig
 
         (3) strict = Some reason, so the position in reason is blamed.
     **)
-    | LookupT of reason * reason option * t list * string * t
+    | LookupT of reason * lookup_kind * t list * string * t
 
     (* operations on objects *)
     | ObjAssignT of reason * t * t * string list * bool
@@ -522,6 +522,11 @@ module rec TypeTerm : sig
   }
 
   and make_exact = Lower of t | Upper of use_t
+
+  and lookup_kind =
+  | Strict of reason
+  | NonstrictReturning of (t * t) option (* optional default type, result type
+                                            if lookup fails *)
 
   and propname = reason * name
 

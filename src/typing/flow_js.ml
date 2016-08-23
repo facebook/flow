@@ -2545,17 +2545,47 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (**************************************************************************)
     (* TestPropT is emitted for property reads in the context of branch tests.
-       Strictness can be controlled by choosing to propagate either GetPropT
-       (strict) or LookupT (nonstrict). At present we allow nonstrict tests
-       on all types. *)
+       Such tests are always non-strict, in that we don't immediately report an
+       error if the property is not found not in the object type. Instead, if
+       the property is not found, we control the result type of the read based
+       on the flags on the object type. For exact sealed object types, the
+       result type is `void`; otherwise, it is "unknown". Indeed, if the
+       property is not found in an exact sealed object type, we can be sure it
+       won't exist at run time, so the read will return undefined; but for other
+       object types, the property *might* exist at run time, and since we don't
+       know what the type of the property would be, we set things up so that the
+       result of the read cannot be used in any interesting way. *)
     (**************************************************************************)
 
     | _, TestPropT (reason_op, (_, name), tout) ->
+      let t = tvar_with_constraint cx ~derivable:true
+        (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+      in
+      let lookup_kind = NonstrictReturning (match l with
+        | ObjT (_, { flags; _ })
+            when flags.exact ->
+          if sealed_in_op reason_op flags.sealed then
+            Some (VoidT (
+              suffix_reason " does not exist" reason_op
+            ), t)
+          else
+            (* unsealed, so don't return anything on lookup failure *)
+            None
+        | _ ->
+          (* Note: a lot of other types could in principle be considered
+             "exact". For example, new instances of classes could have exact
+             types; so could `super` references (since they are statically
+             rather than dynamically bound). However, currently we don't support
+             any other exact types. Considering exact types inexact is sound, so
+             there is no problem falling back to the same conservative
+             approximation we use for inexact types in those cases. *)
+          Some (MixedT (
+            suffix_reason " of unknown type" reason_op,
+            Mixed_everything
+          ), t)
+      ) in
       let lookup =
-        let t = tvar_with_constraint cx ~derivable:true
-          (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
-        in
-        LookupT (reason_op, None, [], name, AnyWithUpperBoundT t)
+        LookupT (reason_op, lookup_kind, [], name, AnyWithUpperBoundT t)
       in rec_flow cx trace (l, lookup)
 
     (****************************************************)
@@ -2978,7 +3008,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                if present, and look up the property in the prototype *)
             dictionary cx trace (string_key s ureason) ut ldict;
             (* if l is NOT a dictionary, then do a strict lookup *)
-            let strict = if ldict = None then Some lreason else None in
+            let strict = if ldict = None then Strict lreason else NonstrictReturning None in
             rec_flow cx trace (lproto, LookupT (ureason, strict, [], s, ut))
           (* TODO: instead, consider extending inflowing type with s:t2 when it
              is not sealed *)
@@ -3015,10 +3045,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let ureason = replace_reason (spf "property `%s`" s) ureason in
           match ut with
           | OptionalT t ->
-            rec_flow cx trace (l, LookupT (ureason, None, [], s, t))
+            rec_flow cx trace (l, LookupT (ureason, NonstrictReturning None, [], s, t))
           | _ ->
             rec_flow cx trace
-              (super, LookupT (ureason, Some lreason, [], s, ut))
+              (super, LookupT (ureason, Strict lreason, [], s, ut))
       );
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -3037,7 +3067,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        UseT (_, AnyFunT reason_op) |
        CallT (reason_op, _)) ->
       let tvar = mk_tvar cx (suffix_reason " used as a function" reason) in
-      lookup_prop cx trace l reason_op (Some reason) "$call" tvar;
+      lookup_prop cx trace l reason_op (Strict reason) "$call" tvar;
       rec_flow cx trace (tvar, u)
 
     (******************************)
@@ -3216,7 +3246,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | InstanceT(_, _, super, instance),
       LookupT (_, strict, _, x, t)
       ->
-      let strict = if instance.mixins then None else strict in
+      let strict = if instance.mixins then NonstrictReturning None else strict in
       let pmap = match strict, t with
         (* t = AnyWithLowerBoundT _ means that the lookup is trying to write t,
            rather than read t. Existing places that play a role here are
@@ -3230,7 +3260,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
            inheritance chain), and for methods, we want the consistency to be
            one-way, so we use AnyWithLowerBoundT _, and we don't want methods to
            be excluded from the lookup in that case, obviously. *)
-        | Some _, AnyWithLowerBoundT _ ->
+        | Strict _, AnyWithLowerBoundT _ ->
           let fields_tmap = find_props cx instance.fields_tmap in
           fields_tmap
         | _ ->
@@ -3280,7 +3310,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fields_tmap = find_props cx instance.fields_tmap in
       let methods_tmap = find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
-      let strict = if instance.mixins then None else Some reason_c in
+      let strict = if instance.mixins then NonstrictReturning None else Strict reason_c in
       get_prop cx trace reason_prop reason_op strict super x fields tout
 
     (********************************)
@@ -3295,7 +3325,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let methods_tmap = find_props cx instance.methods_tmap in
       let methods = SMap.union fields_tmap methods_tmap in
       let funt = mk_tvar cx reason_lookup in
-      let strict = if instance.mixins then None else Some reason_c in
+      let strict = if instance.mixins then NonstrictReturning None else Strict reason_c in
       get_prop cx trace reason_prop reason_lookup strict super x methods funt;
       let callt = CallT (reason_call, funtype) in
       rec_flow cx trace (funt, callt);
@@ -3942,24 +3972,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | _ -> ()
         );
         iter_props cx instance.fields_tmap (fun x t ->
-          lookup_prop cx trace l reason None x t
+          lookup_prop cx trace l reason (NonstrictReturning None) x t
         );
         iter_props cx instance.methods_tmap (fun x t ->
           if inherited_method x then
             (* we're able to do supertype compatibility in super methods because
                they're immutable *)
-            lookup_prop cx trace l reason None x (AnyWithLowerBoundT t)
+            lookup_prop cx trace l reason (NonstrictReturning None) x (AnyWithLowerBoundT t)
         )
 
     | ObjT _, SuperT (reason, instance)
     | AnyObjT _, SuperT (reason, instance)
       ->
         iter_props cx instance.fields_tmap (fun x t ->
-          rec_flow cx trace (l, LookupT(reason,None,[],x,t))
+          rec_flow cx trace (l, LookupT(reason, NonstrictReturning None, [], x, t))
         );
         iter_props cx instance.methods_tmap (fun x t ->
           if inherited_method x then
-            rec_flow cx trace (l, LookupT(reason,None,[],x,t))
+            rec_flow cx trace (l, LookupT(reason, NonstrictReturning None, [], x, t))
         )
 
     (***********************************************************)
@@ -4165,7 +4195,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, LookupT (reason, strict, try_ts_on_failure, s, t))
 
-    | (MixedT (reason, _), LookupT (reason_op, Some strict_reason, [], x, _)) ->
+    | (MixedT (reason, _), LookupT (reason_op, Strict strict_reason, [], x, _)) ->
 
       if is_object_prototype_method x
       then
@@ -4198,14 +4228,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         flow_err_reasons cx trace msg (reason_op, strict_reason)
 
     (* LookupT is a non-strict lookup *)
-    | (MixedT (r, _), LookupT (reason_op, None, [], _, t)) ->
+    | (MixedT _, LookupT (_, NonstrictReturning t_opt, [], _, _)) ->
       (* don't fire
 
-         ...unless this failure resulted when an unchecked module was looked up
-         and not found declared, in which case consider that module's exports to
-         be `any` *)
-      if is_unchecked_module_not_declared (r, reason_op)
-      then rec_unify cx trace t (AnyT.why reason_op)
+         ...unless a default return value is given. Two examples:
+
+         1. A failure could arise when an unchecked module was looked up and
+         not found declared, in which case we consider that module's exports to
+         be `any`.
+
+         2. A failure could arise also when an object property is looked up in
+         a condition, in which case we consider the object's property to be
+         `mixed`.
+      *)
+      begin match t_opt with
+      | Some (not_found, t) -> rec_unify cx trace t not_found
+      | None -> ()
+      end
 
     | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
         flow_err_prop_not_found cx trace (reason_op, reason_strict)
@@ -4673,23 +4712,13 @@ and inherited_method x = x <> "constructor" && x <> "$call"
 and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
   let sealed = not is_dict && (sealed_in_op reason_op sealed) in
   if sealed then
-    Some reason_o
+    Strict reason_o
   else
-    None
+    NonstrictReturning None
 
 and sealed_in_op reason_op = function
   | Sealed -> true
   | UnsealedInFile source -> source <> (Loc.source (loc_of_reason reason_op))
-
-(* When a non-strict lookup failure happens, check whether this was the result
-   of looking up an unchecked module that is not declared.
-
-   NOTE: Although this check works today as intended, it is expected to be quite
-   fragile, and should be replaced by a distinct lookup mode once a planned
-   refactoring of LookupT lands in the near future.
-*)
-and is_unchecked_module_not_declared (reason_builtin, reason_import) =
-  is_builtin_reason reason_builtin && not (is_builtin_reason reason_import)
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
@@ -4705,13 +4734,13 @@ and structural_subtype cx trace lower reason_struct
         prefix_reason (spf "optional property `%s` of " s) reason_struct in
       rec_flow cx trace
         (lower,
-         LookupT (lookup_reason, None, [], s, t2))
+         LookupT (lookup_reason, NonstrictReturning None, [], s, t2))
     | _ ->
       let lookup_reason =
         prefix_reason (spf "property `%s` of " s) reason_struct in
       rec_flow cx trace
         (lower,
-         LookupT (lookup_reason, Some lower_reason, [], s, t2))
+         LookupT (lookup_reason, Strict lower_reason, [], s, t2))
   );
   methods_tmap |> SMap.iter (fun s t2 ->
     if inherited_method s then
@@ -4719,7 +4748,7 @@ and structural_subtype cx trace lower reason_struct
         prefix_reason (spf "property `%s` of " s) reason_struct in
       rec_flow cx trace
         (lower,
-         LookupT (lookup_reason, Some lower_reason, [], s, AnyWithUpperBoundT (t2)))
+         LookupT (lookup_reason, Strict lower_reason, [], s, AnyWithUpperBoundT (t2)))
   );
   rec_flow_t cx trace (lower, super)
 
@@ -6069,10 +6098,10 @@ and ensure_prop_for_write cx trace strict mapr x proto dict_t
   (* otherwise, error if strict, else unshadow/add prop *)
   | None -> (
     match strict with
-    | Some reason_o ->
+    | Strict reason_o ->
       flow_err_prop_not_found cx trace (reason_prop, reason_o);
       AnyT.t
-    | None ->
+    | NonstrictReturning _ ->
       let t =
         if has_prop cx mapr (internal_name x)
         then read_and_delete_prop cx mapr (internal_name x) |> (fun t ->
@@ -6080,7 +6109,7 @@ and ensure_prop_for_write cx trace strict mapr x proto dict_t
         )
         else intro_prop_ cx reason_op x mapr
       in
-      t |> recurse_proto cx None proto reason_prop x trace
+      t |> recurse_proto cx strict proto reason_prop x trace
     )
 
 and lookup_prop cx trace l reason strict x t =
@@ -6109,7 +6138,7 @@ and set_prop cx trace reason_op reason_c super x map tin =
   then
     rec_flow_t cx trace (tin, SMap.find_unsafe x map)
   else
-    lookup_prop cx trace super reason_op (Some reason_c) x (AnyWithLowerBoundT tin)
+    lookup_prop cx trace super reason_op (Strict reason_c) x (AnyWithLowerBoundT tin)
 
 and intro_prop cx reason_obj x mapr =
   let reason_prop = prefix_reason (spf ".%s of " x) reason_obj in

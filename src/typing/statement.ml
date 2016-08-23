@@ -4343,7 +4343,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
              it must exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here
              as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
           expression cx _object in
-
       let expr_reason = mk_reason (spf "property `%s`" prop_name) loc in
       let prop_reason = mk_reason (spf "property `%s`" prop_name) prop_loc in
       let t = match Refinement.get cx e expr_reason with
