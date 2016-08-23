@@ -145,7 +145,9 @@ let slave_main ic oc =
   | e ->
       let e_str = Printexc.to_string e in
       Printf.printf "Exception: %s\n" e_str;
-      EventLogger.worker_exception e_str;
+      EventLogger.log_if_initialized (fun () ->
+        EventLogger.worker_exception e_str
+      );
       print_endline "Potential backtrace:";
       Printexc.print_backtrace stdout;
       exit 2
