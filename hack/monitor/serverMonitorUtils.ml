@@ -14,6 +14,8 @@ type monitor_config =
     socket_file: string;
     (** This lock is held when a monitor is alive. *)
     lock_file: string;
+    (** The path to the log file *)
+    log_file: string;
   }
 
 (**

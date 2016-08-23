@@ -90,7 +90,8 @@ let sleep_and_check socket =
 (** Kill command from client is handled by server server, so the monitor
  * needs to check liveness of the server process to know whether
  * to stop itself. *)
-let update_status_ (server: ServerProcess.server_process) = match server with
+let update_status_ (server: ServerProcess.server_process) monitor_config =
+  match server with
   | Alive process ->
     let pid, proc_stat =
       Unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] process.pid in
@@ -102,7 +103,7 @@ let update_status_ (server: ServerProcess.server_process) = match server with
         let was_oom = match proc_stat with
         | Unix.WEXITED code when code = oom_code -> true
         | _ -> check_dmesg_for_oom process in
-        ServerProcessTools.check_exit_status proc_stat process;
+        ServerProcessTools.check_exit_status proc_stat process monitor_config;
         Died_unexpectedly (proc_stat, was_oom))
   | _ -> server
 
@@ -143,8 +144,10 @@ let restart_servers env =
     retries = env.retries + 1;
   }
 
-let update_status env =
-   let servers = SMap.map update_status_ env.servers in
+let update_status env monitor_config =
+   let servers = SMap.map
+    (fun server -> update_status_ server monitor_config)
+    env.servers in
    let env = { env with servers = servers } in
    let watchman_failed _ status = match status with
      | Died_unexpectedly ((Unix.WEXITED c), _)
@@ -292,9 +295,9 @@ and ack_and_handoff_client env client_fd =
     Hh_logger.log "Malformed Build ID";
     raise e
 
-let rec check_and_run_loop env
-    (lock_file: string) (socket: Unix.file_descr) =
-  let env = try check_and_run_loop_ env lock_file socket with
+let rec check_and_run_loop env monitor_config
+    (socket: Unix.file_descr) =
+  let env = try check_and_run_loop_ env monitor_config socket with
     | Unix.Unix_error (Unix.ECHILD, _, _) ->
       ignore (Hh_logger.log
         "check_and_run_loop_ threw with Unix.ECHILD. Exiting");
@@ -304,16 +307,17 @@ let rec check_and_run_loop env
         (Printexc.to_string e);
       env
     in
-    check_and_run_loop env lock_file socket
+    check_and_run_loop env monitor_config socket
 
-and check_and_run_loop_ env
-    (lock_file: string) (socket: Unix.file_descr) =
+and check_and_run_loop_ env monitor_config
+    (socket: Unix.file_descr) =
+  let lock_file = monitor_config.lock_file in
   if not (Lock.grab lock_file) then
     (Hh_logger.log "Lost lock; terminating.\n%!";
      HackEventLogger.lock_stolen lock_file;
      Exit_status.(exit Lock_stolen));
   let has_client = sleep_and_check socket in
-  let env = update_status env in
+  let env = update_status env monitor_config in
   if (not has_client) then
     env
   else
@@ -360,4 +364,4 @@ let start_monitoring ~waiting_client monitor_config monitor_starter =
     starter = monitor_starter;
     retries = 0;
   } in
-  check_and_run_loop env monitor_config.lock_file socket
+  check_and_run_loop env monitor_config socket

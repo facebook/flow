@@ -10,6 +10,7 @@
 
 open Core
 open ServerProcess
+open ServerMonitorUtils
 
 let find_oom_in_dmesg_output process lines =
   let re = Str.regexp (Printf.sprintf
@@ -26,7 +27,7 @@ let check_dmesg_for_oom process =
   let dmesg = Sys_utils.exec_read_lines ~reverse:true "dmesg" in
   find_oom_in_dmesg_output process dmesg
 
-let check_exit_status proc_stat process =
+let check_exit_status proc_stat process monitor_config  =
   match proc_stat with
   | Unix.WEXITED 0 -> ()
   | _ ->
@@ -34,4 +35,5 @@ let check_exit_status proc_stat process =
     Hh_logger.log "%s %s with exit code %d\n" process.name exit_kind exit_code;
     let is_oom = try check_dmesg_for_oom process with _ -> false in
     let time_taken = Unix.time () -. process.start_t in
-    HackEventLogger.bad_exit time_taken proc_stat ~is_oom
+    HackEventLogger.bad_exit
+      time_taken proc_stat monitor_config.log_file ~is_oom
