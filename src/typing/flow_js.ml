@@ -8151,9 +8151,18 @@ and assert_ground_id cx skip ids id =
   then (
     ids := !ids |> ISet.add id;
     match find_graph cx id with
-    | Unresolved { lower; lowertvars; _ } ->
+    | Unresolved { lower; _ } ->
         TypeMap.keys lower |> List.iter (assert_ground cx skip ids);
+
+        (* note: previously we were also recursing into lowertvars as follows:
+
         IMap.keys lowertvars |> List.iter (assert_ground_id cx skip ids);
+
+         ...but this simply retraverses concrete lower bounds already
+         collected in `lower`, without checking the ids of the lowertvars
+         themselves. Correct behavior may require that those be checked via
+         assert_ground, but for now we just avoid the redundant traversals.
+        *)
     | Resolved t ->
         assert_ground cx skip ids t
   )
