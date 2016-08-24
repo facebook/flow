@@ -34,11 +34,7 @@ let of_content ~content = {
   content;
 }
 
-let get_time t = t.time
-
 let get_content t = t.content
-
-let being_edited t = Unix.gettimeofday () -. t.time < 0.5
 
 let nth_line lines n =
   match List.nth lines n with
