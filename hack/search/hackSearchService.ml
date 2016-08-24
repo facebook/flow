@@ -19,6 +19,9 @@ type search_result_type =
   | Typedef
   | Constant
 
+type result =
+  (Pos.absolute, search_result_type) SearchUtils.term list
+
 module SS = SearchService.Make(struct
   type t = search_result_type
   let fuzzy_types = [Class Ast.Cnormal; Function; Constant; Typedef]
