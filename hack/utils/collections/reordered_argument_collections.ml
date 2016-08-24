@@ -14,8 +14,12 @@ module Reordered_argument_map (S : MyMap.S) = struct
   let filter m ~f = filter f m
   let fold m ~init ~f = fold f m init
   let get m k = get k m
+  let find_unsafe m k = find_unsafe k m
   let iter m ~f = iter f m
   let map m ~f = map f m
+  let mem m v = mem v m
+  let remove m v = remove v m
+  let exists m ~f = exists f m
 end
 
 module Reordered_argument_set (S : Set.S) = struct
@@ -25,6 +29,8 @@ module Reordered_argument_set (S : Set.S) = struct
   let fold s ~init ~f = fold f s init
   let iter s ~f = iter f s
   let mem s v = mem v s
+  let remove s v = remove v s
+  let exists s ~f = exists f s
 end
 
 module SSet = Reordered_argument_set(SSet)

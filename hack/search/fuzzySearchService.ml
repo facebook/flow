@@ -247,7 +247,7 @@ let update_term_lookup file add_terms remove_terms =
       try Hashtbl.find !term_lookup term
       with Not_found -> Relative_path.Set.empty
     in
-    Hashtbl.replace !term_lookup term (Relative_path.Set.remove file old_val);
+    Hashtbl.replace !term_lookup term (Relative_path.Set.remove old_val file);
   end remove_terms;
   SSet.iter begin fun term ->
     let old_val =
