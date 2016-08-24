@@ -18,14 +18,20 @@ type types_mode =
 type result =
   | Parse_ok of Spider_monkey_ast.program
   | Parse_err of Errors.ErrorSet.t
-  | Parse_skip
+  | Parse_skip of parse_skip_reason
+
+and parse_skip_reason =
+  | Skip_resource_file
+  | Skip_non_flow_file
 
 (* results of parse job, returned by parse and reparse *)
-type results =
-  FilenameSet.t *                 (* successfully parsed files *)
-  (filename * Docblock.t) list *  (* list of skipped files *)
-  (filename * Docblock.t) list *  (* list of failed files *)
-  Errors.ErrorSet.t list       (* parallel list of error sets *)
+type results = {
+  parse_ok: FilenameSet.t;                   (* successfully parsed files *)
+  parse_skips: (filename * Docblock.t) list; (* list of skipped files *)
+  parse_fails: (filename * Docblock.t) list; (* list of failed files *)
+  parse_errors: Errors.ErrorSet.t list;      (* parallel list of error sets *)
+  parse_resource_files: FilenameSet.t;       (* resource files *)
+}
 
 (* initial parsing pass: success/failure info is returned,
  * asts are made available via get_ast_unsafe. *)

@@ -44,6 +44,7 @@ type t = {
   opt_module: string;
   opt_module_file_exts: SSet.t;
   opt_module_name_mappers: (Str.regexp * string) list;
+  opt_module_resource_exts: SSet.t;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_node_resolver_dirnames: string list;
@@ -102,6 +103,7 @@ let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
 let module_file_exts opts = opts.opt_module_file_exts
 let module_name_mappers opts = opts.opt_module_name_mappers
+let module_resource_exts opts = opts.opt_module_resource_exts
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames

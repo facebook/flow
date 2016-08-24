@@ -1,0 +1,9 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+all=true
+module.name_mapper='^\(.*\)\.css$' -> '<PROJECT_ROOT>\cssMock.js'

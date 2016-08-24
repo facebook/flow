@@ -61,10 +61,10 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
     addFile('per_prop_subtyping.js').noNewErrors(),
     addFile('prop_test.js').newErrors(
                              `
-                               prop_test.js:29
-                                29:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
+                               prop_test.js:28
+                                28:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
                                                 ^^^^^ property \`state\`. Property not found in
-                                29:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
+                                28:   return pc.state;      // error, since (pc: \$Exact<Person>).first may be ""
                                              ^^ object type
                              `,
                            ),

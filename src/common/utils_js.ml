@@ -200,6 +200,12 @@ let count_calls ~counter ~default f =
     f ()
   end
 
+let extension_of_filename filename =
+  try
+    let idx = String.rindex filename '.' in
+    Some (String.sub filename idx (String.length filename - idx))
+  with Not_found -> None
+
 (* ordinal of a number *)
 let ordinal = function
   | 1 -> "1st"

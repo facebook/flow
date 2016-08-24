@@ -210,7 +210,8 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     | Some Loc.Builtins -> ()
     | Some Loc.LibFile fn
     | Some Loc.SourceFile fn
-    | Some Loc.JsonFile fn ->
+    | Some Loc.JsonFile fn
+    | Some Loc.ResourceFile fn ->
       lb.Lexing.lex_curr_p <- {
         lb.Lexing.lex_curr_p with Lexing.pos_fname = fn
       });

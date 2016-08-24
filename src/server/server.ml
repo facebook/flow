@@ -447,7 +447,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         (* removes excluded and lib files. the latter are already filtered *)
         want f
       then
-        let filename = Files.filename_from_string f in
+        let filename = Files.filename_from_string ~options f in
         FilenameSet.add filename acc
       else acc
     ) updates FilenameSet.empty

@@ -50,7 +50,8 @@ end with type t = Impl.t) = struct
     let source = match Loc.source location with
     | Some Loc.LibFile src
     | Some Loc.SourceFile src
-    | Some Loc.JsonFile src -> string src
+    | Some Loc.JsonFile src
+    | Some Loc.ResourceFile src -> string src
     | Some Loc.Builtins -> string "(global)"
     | None -> null
     in

@@ -58,4 +58,4 @@ val is_prefix: string -> string -> bool
 
 val get_flowtyped_path: Path.t -> Path.t
 
-val filename_from_string: string -> Loc.filename
+val filename_from_string: options: Options.t -> string -> Loc.filename
