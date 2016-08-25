@@ -1,11 +1,5 @@
 array.js:8
   8: var arrayTest4: Iterable<number> = ["hi"];
-                              ^^^^^^ number. This type is incompatible with
-  8: var arrayTest4: Iterable<number> = ["hi"];
-                                         ^^^^ string
-
-array.js:8
-  8: var arrayTest4: Iterable<number> = ["hi"];
                                          ^^^^ string. This type is incompatible with
   8: var arrayTest4: Iterable<number> = ["hi"];
                               ^^^^^^ number
@@ -43,16 +37,10 @@ set.js:13
  13: function setTest4(set: Set<string>): Iterable<number> {
                                                    ^^^^^^ number
 
-set.js:13
- 13: function setTest4(set: Set<string>): Iterable<number> {
-                                                   ^^^^^^ number. This type is incompatible with
- 13: function setTest4(set: Set<string>): Iterable<number> {
-                                ^^^^^^ string
-
 string.js:5
   5: var stringTest3: Iterable<number> = "hi"; // Error - string is a Iterable<string>
                                ^^^^^^ number. This type is incompatible with
 string. See lib: core.js:238
 
 
-Found 10 errors
+Found 8 errors

@@ -16,22 +16,6 @@ map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                       ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                    ^^^^^^ number. This type is incompatible with
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                ^^^^^ string
-
-map.js:24
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                      ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                            ^^^^^^ string. This type is incompatible with
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                                       ^^^ number
-
-map.js:24
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
-                                      ^^^^^^^^^^^^^^^^^^^^^^^ constructor call
- 24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                 ^^^^^ string. This type is incompatible with
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
                     ^^^^^^ number
@@ -111,4 +95,4 @@ weakset.js:36
 object type. See lib: core.js:486
 
 
-Found 15 errors
+Found 13 errors

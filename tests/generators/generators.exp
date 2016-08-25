@@ -20,6 +20,12 @@ class.js:24
  23:   *stmt_return_err(): Generator<void, number, void> {
                                            ^^^^^^ number
 
+class.js:28
+ 28:     var x: ?boolean = yield 0; // error: number ~> boolean
+                           ^^^^^^^ number. This type is incompatible with
+ 28:     var x: ?boolean = yield 0; // error: number ~> boolean
+                 ^^^^^^^ boolean
+
 class.js:50
  50:       var x: ?number = yield; // error: string ~> number
                             ^^^^^^ string. This type is incompatible with
@@ -41,9 +47,9 @@ class.js:101
 class.js:103
 103: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
- 28:     var x: ?boolean = yield 0;
+ 28:     var x: ?boolean = yield 0; // error: number ~> boolean
                            ^^^^^^^ number. This type is incompatible with
- 28:     var x: ?boolean = yield 0;
+ 28:     var x: ?boolean = yield 0; // error: number ~> boolean
                  ^^^^^^^ boolean
 
 class.js:103
@@ -73,6 +79,12 @@ class.js:131
 131:   (x : string) // error: number ~> string
             ^^^^^^ string
 
+class_failure.js:5
+  5:     var x: ?boolean = yield 0; // error: number ~> boolean
+                           ^^^^^^^ number. This type is incompatible with
+  5:     var x: ?boolean = yield 0; // error: number ~> boolean
+                 ^^^^^^^ boolean
+
 class_failure.js:12
  12: for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
                                              ^ number. This type is incompatible with
@@ -82,9 +94,9 @@ class_failure.js:12
 class_failure.js:14
  14: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
-  5:     var x: ?boolean = yield 0;
+  5:     var x: ?boolean = yield 0; // error: number ~> boolean
                            ^^^^^^^ number. This type is incompatible with
-  5:     var x: ?boolean = yield 0;
+  5:     var x: ?boolean = yield 0; // error: number ~> boolean
                  ^^^^^^^ boolean
 
 class_failure.js:14
@@ -199,4 +211,4 @@ throw.js:22
                             ^^^^^^ string
 
 
-Found 30 errors
+Found 32 errors
