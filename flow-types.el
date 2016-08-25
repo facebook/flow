@@ -48,7 +48,7 @@
 ;; this is used to cleanup on emacs exit
 (defvar flow-types--instances '())
 
-(defvar flow-types-mode-map
+(defvar flow-types-command-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "t") #'flow-types-type-at-pos)
     (define-key map (kbd "j") #'flow-types-jump-def)
@@ -64,10 +64,10 @@ with the flow static typechecker from facebook"
   ;; Mode line indicator
   " Flow"
   ;; keymap to be used
-  ;; TODO: This needs to be changed to have a prefix
-  :keymap flow-types-mode-map
+  ;; ;; TODO: This needs to be changed to have a prefix
+  ;; :keymap flow-types-mode-map
   :group 'flow-types
-  (local-set-key flow-types-keymap-prefix flow-types-mode-map))
+  (local-set-key flow-types-keymap-prefix flow-types-command-map))
 
 (define-globalized-minor-mode global-flow-types-mode flow-types-mode
   (lambda () (flow-types-mode 1)))
@@ -234,13 +234,28 @@ Use COMMAND as a flow command and ARGS as optional arguments, all ARGS must be s
     (switch-to-buffer-other-window "*Shell Command Output*")
     (shell-command
      (format "%s suggest %s%s"
-	     flow_binary
+	     flow-types-binary
 	     file
 	     region))
     (compilation-mode)
     (switch-to-buffer-other-window buffer))
   ;;(revert-buffer)
   )
+
+(defun column-number-at-pos (pos)
+  "column number at pos"
+  (save-excursion (goto-char pos) (current-column)))
+
+(defun string-of-region ()
+  "string of region"
+  (if (use-region-p)
+      (let ((begin (region-beginning))
+	    (end (region-end)))
+	(format ":%d:%d,%d:%d"
+		(line-number-at-pos begin)
+		(column-number-at-pos begin)
+		(line-number-at-pos end)
+		(column-number-at-pos end))) ""))
 
 
 (provide 'flow-types)
