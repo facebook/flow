@@ -87,8 +87,6 @@
 #include <caml/unixsupport.h>
 #include <caml/intext.h>
 
-#include <assert.h>
-
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -115,6 +113,17 @@
 #else
 #define Handle_val(fd) (Long_val(fd))
 #define Val_handle(fd) (Val_long(fd))
+#endif
+
+#if !defined _CUSTOM_ASSERT_FUNCTIONS_
+#define _CUSTOM_ASSERT_FUNCTIONS_
+/**
+ * Concatenate the __LINE__ and __FILE__ strings in a macro.
+ */
+#define S1(x) #x
+#define S2(x) S1(x)
+#define LOCATION __FILE__ " : " S2(__LINE__)
+#define assert(f) (f ? 0 : caml_failwith("assertion failed: " LOCATION))
 #endif
 
 /****************************************************************************
