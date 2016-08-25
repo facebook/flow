@@ -226,7 +226,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "assume", _json_of_t json_cx t2
     ]
 
-  | ModuleT (_, {exports_tmap; cjs_export;}) ->
+  | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}) ->
     let property_maps = Context.property_maps json_cx.cx in
     let tmap = IMap.find_unsafe exports_tmap property_maps in
     let cjs_export = match cjs_export with
@@ -236,6 +236,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     [
       "namedExports", json_of_tmap json_cx tmap;
       "cjsExport", cjs_export;
+      "hasEveryNamedExport", JSON_Bool has_every_named_export;
     ]
 
   | ExtendsT (_, t1, t2) -> [
@@ -528,8 +529,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "name", JSON_String name;
     ]
 
-  | CJSExtractNamedExportsT (_, module_t, t_out) -> [
-      "module", _json_of_t json_cx module_t;
+  | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes), t_out) -> [
+      "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes));
       "t_out", _json_of_t json_cx t_out;
     ]
   | ExportNamedT (_, tmap, t_out) -> [

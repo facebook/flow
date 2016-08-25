@@ -1504,11 +1504,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * exports
      *)
     | (ObjT(_, {props_tmap; proto_t; _;}),
-       CJSExtractNamedExportsT(reason, module_t, t_out)) ->
+       CJSExtractNamedExportsT(reason, (module_t_reason, exporttypes), t_out)) ->
 
       (* Copy props from the prototype *)
       let module_t = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (proto_t, CJSExtractNamedExportsT(reason, module_t, t))
+        rec_flow cx trace (
+          proto_t,
+          CJSExtractNamedExportsT(reason, (module_t_reason, exporttypes), t)
+        )
       ) in
 
       (* Copy own props *)
@@ -1523,7 +1526,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * exports
      *)
     | (InstanceT(_, _, _, {fields_tmap; methods_tmap; _;}),
-       CJSExtractNamedExportsT(reason, module_t, t_out)) ->
+       CJSExtractNamedExportsT(reason, (module_t_reason, exporttypes), t_out)) ->
+
+      let module_t = ModuleT (module_t_reason, exporttypes) in
 
       (* Copy fields *)
       let module_t = mk_tvar_where cx reason (fun t ->
@@ -1541,11 +1546,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         t_out
       ))
 
+    (* If the module is exporting any or Object, then we allow any named
+     * import
+     *)
+    | ((AnyT _ | AnyObjT _),
+        CJSExtractNamedExportsT(_, (module_t_reason, exporttypes), t_out)) ->
+      let module_t = ModuleT (
+        module_t_reason,
+        { exporttypes with has_every_named_export = true; }
+      ) in
+      rec_flow_t cx trace (module_t, t_out)
+
     (**
      * All other CommonJS export value types do not get merged into the named
      * exports tmap in any special way.
      *)
-    | (_, CJSExtractNamedExportsT(_, module_t, t_out)) ->
+    | (_, CJSExtractNamedExportsT(_, (module_t_reason, exporttypes), t_out)) ->
+      let module_t = ModuleT (module_t_reason, exporttypes) in
       rec_flow_t cx trace (module_t, t_out)
 
     (**************************************************************************)
@@ -1660,9 +1677,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some t -> SMap.add "default" t exports_tmap
           | None -> exports_tmap
         ) in
+        let has_every_named_export = exports.has_every_named_export in
         let import_t = (
           match (import_kind, SMap.get export_name exports_tmap) with
           | (ImportType, Some t) ->
+            mk_tvar_where cx reason (fun tvar ->
+              rec_flow cx trace (t, ImportTypeT(reason, export_name, tvar))
+            )
+          | (ImportType, None) when has_every_named_export ->
+            let t = AnyT.why reason in
             mk_tvar_where cx reason (fun tvar ->
               rec_flow cx trace (t, ImportTypeT(reason, export_name, tvar))
             )
@@ -1670,7 +1693,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             mk_tvar_where cx reason (fun tvar ->
               rec_flow cx trace (t, ImportTypeofT(reason, export_name, tvar))
             )
+          | (ImportTypeof, None) when has_every_named_export ->
+            let t = AnyT.why reason in
+            mk_tvar_where cx reason (fun tvar ->
+              rec_flow cx trace (t, ImportTypeofT(reason, export_name, tvar))
+            )
           | (ImportValue, Some t) ->
+            rec_flow cx trace (t, AssertImportIsValueT(reason, export_name));
+            t
+          | (ImportValue, None) when has_every_named_export ->
+            let t = AnyT.why reason in
             rec_flow cx trace (t, AssertImportIsValueT(reason, export_name));
             t
           | (_, None) ->
@@ -1703,7 +1735,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* imports are `any`-typed when they are from (1) unchecked modules or (2)
        modules with `any`-typed exports *)
-    | AnyT _,
+    | (AnyT _ | AnyObjT _),
         ( CJSRequireT(reason, t)
         | ImportModuleNsT(reason, t)
         | ImportDefaultT(reason, _, _, t)
@@ -8115,7 +8147,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | SingletonBoolT _ ->
     ()
 
-  | ModuleT (_, { exports_tmap; cjs_export }) ->
+  | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export=_; }) ->
     iter_props cx exports_tmap (fun _ -> recurse ~infer:true);
     begin match cjs_export with
     | Some t -> recurse ~infer:true t

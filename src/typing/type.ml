@@ -395,7 +395,7 @@ module rec TypeTerm : sig
     (* Module export handling *)
     | CJSExtractNamedExportsT of
         reason
-        * (* local ModuleT *) t
+        * (* local ModuleT *) (reason * exporttypes)
         * (* 't_out' to receive the resolved ModuleT *) t_out
     | ExportNamedT of reason * t SMap.t * t_out
     | ExportStarFromT of reason * t * t_out
@@ -579,6 +579,12 @@ module rec TypeTerm : sig
      * ES modules.
      *)
     cjs_export: t option;
+
+    (**
+     * Sometimes we claim the module exports any or Object, implying that it
+     * has every named export
+     *)
+    has_every_named_export: bool;
   }
 
   and import_kind =
@@ -995,6 +1001,7 @@ let any_propagating_use_t = function
   | ImportModuleNsT _
   | ImportDefaultT _
   | ImportNamedT _
+  | CJSExtractNamedExportsT _
   (* TODO: ...others *)
     -> true
   | _ -> false
@@ -1426,7 +1433,7 @@ and mod_reason_of_use_t f = function
   | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
 
-  | CJSExtractNamedExportsT (reason, t1, t2) -> CJSExtractNamedExportsT (f reason, t1, t2)
+  | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
   | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
   | ExportStarFromT (reason, target_module_t, t_out) -> ExportStarFromT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)

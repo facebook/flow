@@ -267,7 +267,7 @@ class ['a] t = object(self)
     let acc = self#props cx acc methods_tmap in
     acc
 
-  method private export_types cx acc { exports_tmap; cjs_export } =
+  method private export_types cx acc { exports_tmap; cjs_export; has_every_named_export=_; } =
     let acc = self#props cx acc exports_tmap in
     let acc = self#opt (self#type_ cx) acc cjs_export in
     acc

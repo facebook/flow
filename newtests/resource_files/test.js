@@ -22,7 +22,7 @@ export default suite(({addFile, addFiles, addCode}) => [
       ),
   ]),
 
-  test('By default, .css files export the void type', [
+  test('By default, .css files export the Object type', [
     addFile('foo.css')
       .addCode("const css = require('./foo.css');")
       .addCode("(css: string)")
@@ -30,11 +30,20 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: (css: string)
-                ^^^ undefined. This type is incompatible with
+                ^^^ Flow assumes requiring a .css file returns an Object. This type is incompatible with
             5: (css: string)
                      ^^^^^^ string
         `,
       ),
+  ]),
+
+  test('Typical use of a .css file', [
+    addFile('foo.css')
+      .addCode("import { active, hovered } from './foo.css';")
+      .addCode("(active: string);")
+      .addCode("(hovered: number);")
+        .noNewErrors()
+        .because("active and hovered have the type any"),
   ]),
 
   test('Requiring a .png file', [

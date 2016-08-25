@@ -23,6 +23,7 @@ let mk_module_t cx reason = ModuleT(
   {
     exports_tmap = Flow.mk_propmap cx SMap.empty;
     cjs_export = None;
+    has_every_named_export = false;
   }
 )
 
@@ -36,14 +37,15 @@ let mk_module_t cx reason = ModuleT(
  *     ES <-> CJS module interop semantics)
  *)
 let mk_commonjs_module_t cx reason_exports_module reason export_t =
-  let module_t = ModuleT (reason_exports_module, {
+  let exporttypes = {
     exports_tmap = Flow.mk_propmap cx SMap.empty;
     cjs_export = Some export_t;
-  }) in
+    has_every_named_export = false;
+  } in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
       export_t,
-      CJSExtractNamedExportsT(reason, module_t, t)
+      CJSExtractNamedExportsT(reason, (reason_exports_module, exporttypes), t)
     )
   )
 

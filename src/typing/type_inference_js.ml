@@ -189,9 +189,9 @@ let infer_resource_file ~metadata ~filename ~module_name =
   let reason, exports_t = match Utils.extension_of_filename filename with
   | Some ".css" ->
       let reason = Reason.mk_reason
-        "Flow assumes requiring a .css file returns undefined"
+        "Flow assumes requiring a .css file returns an Object"
         reason_loc in
-      reason, Type.VoidT.why reason
+      reason, Type.AnyObjT reason
   | Some ext ->
       let reason = Reason.mk_reason
         (Utils.spf "Flow assumes that requiring a %s file returns a string" ext)
