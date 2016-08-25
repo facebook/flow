@@ -193,12 +193,8 @@ let rec gc cx state = function
       gc cx state t1;
       gc cx state t2
 
-  | ModuleT (_, {exports_tmap; cjs_export}) ->
-      Flow_js.iter_props cx exports_tmap (fun _ -> gc cx state);
-      (match cjs_export with
-        | Some t -> gc cx state t
-        | None -> ()
-      )
+  | ModuleT (_, exporttypes) ->
+      gc_exporttypes cx state exporttypes
 
   | ExtendsT (ts, t1, t2) ->
       ts |> List.iter (gc cx state);
@@ -382,8 +378,8 @@ and gc_use cx state = function
   | CJSRequireT (_, t) ->
       gc cx state t
 
-  | CJSExtractNamedExportsT (_, t, t_out) ->
-      gc cx state t;
+  | CJSExtractNamedExportsT (_, (_, exporttypes), t_out) ->
+      gc_exporttypes cx state exporttypes;
       gc cx state t_out
 
   | ExportNamedT (_, t_smap, t_out) ->
@@ -519,6 +515,14 @@ and gc_intersection_preprocess_tool cx state = function
   | PropExistsTest (_, _, t1, t2) ->
     gc cx state t1;
     gc cx state t2
+
+and gc_exporttypes cx state
+  { exports_tmap; cjs_export; has_every_named_export } =
+  ignore has_every_named_export;
+  Flow_js.iter_props cx exports_tmap (fun _ -> gc cx state);
+  match cjs_export with
+  | Some t -> gc cx state t
+  | None -> ()
 
 (* Keep a reachable type variable around. *)
 let live cx state id =
