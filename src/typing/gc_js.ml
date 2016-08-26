@@ -206,9 +206,10 @@ let rec gc cx state = function
   | IdxWrapper (_, t) ->
      gc cx state t
 
-  | DepPredT (_, dep_preds) ->
-    gc_dep_preds cx state dep_preds
-
+  | OpenPredT (_, t, p_map, n_map) ->
+    gc cx state t;
+    gc_pred_map cx state p_map;
+    gc_pred_map cx state n_map
 
 and gc_defer_use cx state = function
   | DestructuringT (_, s) ->
@@ -416,14 +417,20 @@ and gc_use cx state = function
   | IdxUnMaybeifyT (_, t_out) ->
       gc cx state t_out
 
-  | CallAsPredicateT (_, _, _, t1, t2) ->
+  | CallLatentPredT (_, _, _, t1, t2) ->
       gc cx state t1;
       gc cx state t2
 
-  | PredSubstT (_, _, _, t1, t2) ->
+  | CallOpenPredT (_, _, _, t1, t2) ->
       gc cx state t1;
       gc cx state t2
 
+  | SubstOnPredT (_, _, t) ->
+      gc cx state t
+
+  | RefineT (_, pred, t) ->
+      gc_pred cx state pred;
+      gc cx state t
 
 and gc_id cx state id =
   let root_id, constraints = Flow_js.find_constraints cx id in (
@@ -447,6 +454,7 @@ and gc_selector cx state = function
   | ArrRest _ -> ()
   | Default -> ()
   | Become -> ()
+  | Refine _ -> ()
 
 and gc_pred cx state = function
 
@@ -478,13 +486,11 @@ and gc_pred cx state = function
   | PropExistsP _
       -> ()
 
-  | LatentP (_, t, _) ->
+  | LatentP (t, _) ->
       gc cx state t
 
-and gc_dep_preds cx state (t, pos_preds, neg_preds) =
-  gc cx state t;
-  Key_map.iter (fun _ p -> gc_pred cx state p) pos_preds;
-  Key_map.iter (fun _ p -> gc_pred cx state p) neg_preds
+and gc_pred_map cx state pred_map =
+  Key_map.iter (fun _ p -> gc_pred cx state p) pred_map
 
 and gc_make_exact cx state = function
   | Lower t -> gc cx state t
