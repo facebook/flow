@@ -1,6 +1,16 @@
 #!/bin/bash -e
 
-OPAM_DEPENDS="js_of_ocaml.2.7 ocp-build"
+OPAM_DEPENDS="ocp-build"
+# js_of_ocaml 2.7 is <  ocaml 4.03
+# js_of_ocaml 2.8 is >= ocaml 4.02
+case "$OCAML_VERSION" in
+  4.01.0)
+    OPAM_DEPENDS+=" js_of_ocaml.2.7"
+    ;;
+  *)
+    OPAM_DEPENDS+=" js_of_ocaml.2.8.1"
+    ;;
+esac
 
 TMP=${TMPDIR:-/tmp}
 
