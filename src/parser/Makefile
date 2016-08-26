@@ -46,7 +46,7 @@ js:
 	if [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; then \
 	    js_of_ocaml --opt 3 -o $(REL_DIR)/flow_parser.js _build/$(REL_DIR)/flow_parser_js.byte; \
 	else \
-	    js_of_ocaml --opt 3 -o $(REL_DIR)/flow_parser.js $(TOP)/js/caml_hexstring_of_float.js _build/$(REL_DIR)/flow_parser_js.byte; \
+	    js_of_ocaml --opt 3 -o $(REL_DIR)/flow_parser.js $(TOP)/js/optional/caml_hexstring_of_float.js _build/$(REL_DIR)/flow_parser_js.byte; \
 	fi; \
 	\
 	rm flow_parser_js.byte
