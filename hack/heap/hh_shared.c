@@ -423,7 +423,7 @@ CAMLprim value hh_hash_used_slots(void) {
       nonempty_slots++;
     }
   }
-
+  assert(nonempty_slots == *hcounter);
   value connector = caml_alloc_tuple(2);
   Field(connector, 0) = Val_long(filled_slots);
   Field(connector, 1) = Val_long(nonempty_slots);
@@ -1466,7 +1466,7 @@ static void raise_hash_table_full() {
 void hh_add(value key, value data) {
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
-
+  unsigned int init_slot = slot;
   while(1) {
     uint64_t slot_hash = hashtbl[slot].hash;
 
@@ -1510,6 +1510,10 @@ void hh_add(value key, value data) {
     }
 
     slot = (slot + 1) & (hashtbl_size - 1);
+    if (slot == init_slot) {
+      // We're never going to find a spot
+      raise_hash_table_full();
+    }
   }
 }
 
@@ -1521,7 +1525,7 @@ void hh_add(value key, value data) {
 static unsigned int find_slot(value key) {
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
-
+  unsigned int init_slot = slot;
   while(1) {
     if(hashtbl[slot].hash == hash) {
       return slot;
@@ -1530,6 +1534,10 @@ static unsigned int find_slot(value key) {
       return slot;
     }
     slot = (slot + 1) & (hashtbl_size - 1);
+
+    if (slot == init_slot) {
+      raise_hash_table_full();
+    }
   }
 }
 
@@ -1603,6 +1611,10 @@ void hh_move(value key1, value key2) {
   assert_master();
   assert(hashtbl[slot1].hash == get_hash(key1));
   assert(hashtbl[slot2].addr == NULL);
+  // We are taking up a previously empty slot. Let's increment the counter.
+  if (hashtbl[slot2].hash == 0) {
+    __sync_fetch_and_add(hcounter, 1);
+  }
   hashtbl[slot2].hash = get_hash(key2);
   hashtbl[slot2].addr = hashtbl[slot1].addr;
   hashtbl[slot1].addr = NULL;
@@ -1619,7 +1631,6 @@ void hh_remove(value key) {
   assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
   hashtbl[slot].addr = NULL;
-  __sync_fetch_and_sub(hcounter, 1);
 }
 
 /*****************************************************************************/
