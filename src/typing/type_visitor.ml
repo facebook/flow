@@ -147,7 +147,8 @@ class ['a] t = object(self)
   | IdxWrapper (_, t) ->
     self#type_ cx acc t
 
-  | DepPredT _ -> acc
+  | OpenPredT (_ , t, _, _) ->
+    self#type_ cx acc t
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
@@ -160,6 +161,11 @@ class ['a] t = object(self)
   | ArrRest _ -> acc
   | Default -> acc
   | Become -> acc
+  | Refine p -> self#predicate cx acc p
+
+  method private predicate cx acc = function
+  | LatentP (t, _) -> self#type_ cx acc t
+  | _ -> acc
 
   method private destructor _cx acc = function
   | NonMaybeType -> acc
@@ -228,8 +234,10 @@ class ['a] t = object(self)
   | IntersectionPreprocessKitT (_, _)
   | IdxUnwrap _
   | IdxUnMaybeifyT _
-  | CallAsPredicateT _
-  | PredSubstT _
+  | CallLatentPredT _
+  | CallOpenPredT _
+  | SubstOnPredT _
+  | RefineT _
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

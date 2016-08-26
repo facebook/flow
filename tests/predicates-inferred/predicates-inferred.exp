@@ -10,17 +10,13 @@ sanity-multi-params.js:12
  12:     return x.join();
                 ^ String
 
-sanity-ordering.js:14
- 14:     const key = stack.shift();
-                     ^^^^^^^^^^^^^ call of method `shift`
+sanity-ordering.js:7
   7:   (obj.page: Object);
         ^^^^^^^^ null. This type is incompatible with
   7:   (obj.page: Object);
                   ^^^^^^ object type
 
-sanity-ordering.js:14
- 14:     const key = stack.shift();
-                     ^^^^^^^^^^^^^ call of method `shift`
+sanity-ordering.js:7
   7:   (obj.page: Object);
         ^^^^^^^^ undefined. This type is incompatible with
   7:   (obj.page: Object);

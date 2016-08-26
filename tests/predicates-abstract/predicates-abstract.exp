@@ -1,0 +1,90 @@
+sanity-filter-union.js:8
+  8: type A = { kind: 'A', u: number }
+                      ^^^ string literal `A`. Expected string literal `B`, got `A` instead
+  9: type B = { kind: 'B', v: string }
+                      ^^^ string literal `B`
+
+sanity-filter-union.js:9
+  9: type B = { kind: 'B', v: string }
+                      ^^^ string literal `B`. Expected string literal `A`, got `B` instead
+  8: type A = { kind: 'A', u: number }
+                      ^^^ string literal `A`
+
+sanity-filter-union.js:14
+ 14: declare var ab: Array<A|B|C>;
+                             ^ object type. This type is incompatible with
+ 17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                         ^^^ union: A | C
+  Member 1:
+   17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                           ^ A
+  Error:
+   17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                           ^ property `u`. Property not found in
+   14: declare var ab: Array<A|B|C>;
+                               ^ object type
+  Member 2:
+   17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                             ^ C
+  Error:
+    9: type B = { kind: 'B', v: string }
+                        ^^^ string literal `B`. Expected string literal `C`, got `B` instead
+   10: type C = { kind: 'C', y: boolean }
+                        ^^^ string literal `C`
+
+sanity-filter-union.js:16
+ 16: (my_filter(ab, (x) checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                         ^ property `v`. Property not found in
+ 14: declare var ab: Array<A|B|C>;
+                           ^ object type
+
+sanity-filter.js:6
+  6: declare var a: Array<mixed>;
+                          ^^^^^ string. This type is incompatible with
+  8: (b: Array<number>);
+               ^^^^^^ number
+
+sanity-filter.js:12
+ 12: declare var c: Array<mixed>;
+                          ^^^^^ mixed. This type is incompatible with
+ 14: (d: Array<string>);
+               ^^^^^^ string
+
+sanity-filter.js:13
+ 13: const d = my_filter(c, is_string_regular);
+                            ^^^^^^^^^^^^^^^^^ function. Function is incompatible with
+  3: declare function my_filter<T, P: $Pred<1>>(v: Array<T>, cb: P): Array<$Refine<T,P,1>>;
+                                      ^^^^^^^^ abstract predicate function
+
+sanity-refine.js:4
+  4: declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
+                                                           ^^^^^^^^^^^^^^ refined type that uses predicate on parameter at position 2. This is incompatible with
+  7: var b = refine(a, is_string);   // ERROR: index out of bounds
+                       ^^^^^^^^^ function with 1 parameters
+
+sanity-refine.js:8
+  8: (b: string);
+      ^ mixed. This type is incompatible with
+  8: (b: string);
+         ^^^^^^ string
+
+sanity-refine.js:19
+ 19: var e = refine3(c, d, e, is_string_and_number);
+                              ^^^^^^^^^^^^^^^^^^^^ predicate function with 2 arguments. Predicate function is incompatible with
+ 17: declare function refine3<T, P: $Pred<3>>(u: T, v: T, w: T, cb: P): $Refine<T,P,1>;
+                                    ^^^^^^^^ predicate function with 3 arguments
+
+sanity-refine.js:28
+ 28: var e = refine(a, is_string_regular);   // ERROR: is_string_regular is not a
+                       ^^^^^^^^^^^^^^^^^ function. Function is incompatible with
+  4: declare function refine<T, P: $Pred<1>>(v: T, cb: P): $Refine<T,P,2>;
+                                   ^^^^^^^^ abstract predicate function
+
+sanity-refine.js:30
+ 30: (e: number);
+      ^ mixed. This type is incompatible with
+ 30: (e: number);
+         ^^^^^^ number
+
+
+Found 12 errors

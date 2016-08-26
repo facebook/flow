@@ -71,11 +71,12 @@ let rec normalize_type_impl cx ids t = match t with
       let params_names = ft.params_names in
       let tout = normalize_type_impl cx ids ft.return_t in
       let reason = reason_of_string "function" in
+      let is_predicate = Some ft.is_predicate in
       FunT (
         reason,
         Flow_js.dummy_static reason,
         Flow_js.dummy_prototype,
-        Flow_js.mk_functiontype tins ?params_names tout
+        Flow_js.mk_functiontype tins ?params_names ?is_predicate tout
       )
 
   (* Fake the signature of Function.prototype.apply: *)
@@ -371,7 +372,8 @@ let rec normalize_type_impl cx ids t = match t with
   | ExistsT _
   | ModuleT (_, _)
   | ExtendsT (_, _, _)
-  | DepPredT _ ->
+  | OpenPredT _
+  ->
     (** TODO **)
     failwith (spf "Unsupported type in normalize_type_impl: %s" (string_of_ctor t))
 

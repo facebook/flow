@@ -389,8 +389,44 @@ let rec convert cx tparams_map = Ast.Type.(function
         (SMap.find_unsafe name tparams_map)
     )
 
+  | "$Pred" ->
+    let fun_reason = mk_reason "abstract predicate function" loc in
+    let static_reason = mk_reason "abstract predicate static" loc in
+    let out_reason = mk_reason "open predicate" loc in
 
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      match convert_type_params () with
+      | [SingletonNumT (_, (f, _))] ->
+        let n = Pervasives.int_of_float f in
+        let key_strs =
+          Utils_js.range 0 n |>
+          List.map (fun i -> "x_" ^ Pervasives.string_of_int i) in
+        let emp = Key_map.empty in
+        let tins = Utils_js.repeat n (AnyT.at loc) in
+        let tout = OpenPredT (out_reason, MixedT.t, emp, emp) in
+        FunT (
+          fun_reason,
+          Flow_js.dummy_static static_reason,
+          AnyT (mk_reason "prototype" loc),
+          Flow_js.mk_functiontype tins ~params_names:key_strs
+            ~is_predicate:true tout
+        )
 
+      | _ -> error_type cx loc "expected number of refined variables\
+              (currently only supporting one variable)"
+    )
+
+  | "$Refine" ->
+    check_type_param_arity cx loc typeParameters 3 (fun () ->
+      match convert_type_params () with
+      | [base_t; fun_pred_t; SingletonNumT (_, (f, _))] ->
+          let idx = Pervasives.int_of_float f in
+          let reason = mk_reason "refined type" loc in
+          let pred = LatentP (fun_pred_t, idx) in
+          EvalT (base_t, DestructuringT (reason, Refine pred), mk_id())
+      | _ -> error_type cx loc
+        "expected base type and predicate type as arguments to $Refine"
+    )
 
   (* other applications with id as head expr *)
   | _ ->
@@ -438,6 +474,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         params_tlist = (List.rev rev_params_tlist);
         params_names = Some params_names;
         return_t;
+        is_predicate = false;
         closure_t = 0;
         changeset = Changeset.empty
       })

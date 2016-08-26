@@ -268,18 +268,19 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "wrappedObj", _json_of_t json_cx t
     ]
 
-  | DepPredT (_,(t, pos_preds, neg_preds)) -> [
+  | OpenPredT (_,t, pos_preds, neg_preds) -> [
       let json_key_map f map = JSON_Object (
         Key_map.elements map |>
         List.map (Utils_js.map_pair Key.string_of_key f)
       ) in
       let json_pred_key_map = json_key_map (json_of_pred json_cx) in
-      "DepPred", JSON_Object [
+      "OpenPred", JSON_Object [
         ("base_type", _json_of_t_impl json_cx t);
         ("pos_preds", json_pred_key_map pos_preds);
         ("neg_preds", json_pred_key_map neg_preds)
       ]
     ]
+
   )
 )
 
@@ -583,20 +584,35 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out
     ]
 
-  | CallAsPredicateT (_, sense, offset, l, t) -> [
+  | CallLatentPredT (_, sense, offset, l, t) -> [
       "sense", JSON_Bool sense;
       "offset", JSON_Number (spf "%d" offset);
       "t_in", _json_of_t json_cx l;
       "t_out", _json_of_t json_cx t
     ]
 
-  | PredSubstT (_,sense,key,l,t) -> [
+  | CallOpenPredT (_, sense, key, l, t) -> [
       "sense", JSON_Bool sense;
       "key", JSON_String (Key.string_of_key key);
       "t_in", _json_of_t json_cx l;
       "t_out", _json_of_t json_cx t
     ]
 
+  | SubstOnPredT (_, subst, t) -> [
+      "PredWithSubst", JSON_Object [
+        ("subst", JSON_Array (subst |> SMap.elements |>
+          List.map (fun (x,k) ->
+            JSON_Array [JSON_String x; JSON_String (Key.string_of_key k)])));
+        ("pred_t", _json_of_t_impl json_cx t)
+      ]
+    ]
+
+  | RefineT (_, p, t) -> [
+      "Refined", JSON_Object [
+        ("pred_t", json_of_pred json_cx p);
+        ("refined_t", _json_of_t_impl json_cx t)
+      ]
+    ]
   )
 )
 
@@ -704,6 +720,7 @@ and json_of_funtype_impl json_cx {
   params_tlist;
   params_names;
   return_t;
+  is_predicate;
   closure_t;
   changeset
 } = Hh_json.(
@@ -718,6 +735,7 @@ and json_of_funtype_impl json_cx {
       ]
   ) @ [
     "returnType", _json_of_t json_cx return_t;
+    "isPredicate", JSON_Bool is_predicate;
     "closureIndex", int_ closure_t;
     "changeset", json_of_changeset json_cx changeset;
   ])
@@ -758,6 +776,9 @@ and json_of_selector_impl json_cx = Hh_json.(function
     ]
   | Become -> JSON_Object [
       "become", JSON_Bool true;
+    ]
+  | Refine p -> JSON_Object [
+      "predicate", json_of_pred json_cx p
     ]
 )
 
@@ -847,7 +868,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | ArrP
       -> []
 
-  | LatentP (_,t,i) -> [
+  | LatentP (t,i) -> [
       "latent", JSON_Object [
         ("type", _json_of_t_impl json_cx t);
         ("position", JSON_Number (spf "%d" i))
@@ -1145,7 +1166,7 @@ and dump_t_ (depth, tvars) cx t =
   | CustomFunT _ -> p t
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
-  | DepPredT _ -> p t
+  | OpenPredT _ -> p t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
@@ -1236,8 +1257,11 @@ and dump_use_t_ (depth, tvars) cx t =
   | ChoiceKitUseT _
   | IdxUnwrap _
   | IdxUnMaybeifyT _
-  | CallAsPredicateT _
-  | PredSubstT _ ->
+  | CallLatentPredT _
+  | CallOpenPredT _
+  | SubstOnPredT _
+  | RefineT _
+  ->
     p t
 
 (*****************************************************)
@@ -1325,6 +1349,7 @@ let string_of_selector = function
   | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
   | Default -> "Default"
   | Become -> "Become"
+  | Refine p -> spf "Refine with %s" (string_of_predicate p)
 
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"

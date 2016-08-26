@@ -48,11 +48,12 @@ let global_this =
   MixedT (reason_of_string "global object", Mixed_everything)
 
 (* A method type is a function type with `this` specified. *)
-let mk_methodtype ?(frame=0) this tins ?params_names tout = {
+let mk_methodtype ?(frame=0) this tins ?params_names ?(is_predicate=false) tout = {
   this_t = this;
   params_tlist = tins;
   params_names;
   return_t = tout;
+  is_predicate;
   closure_t = frame;
   changeset = Changeset.empty
 }
@@ -61,11 +62,12 @@ let mk_methodtype ?(frame=0) this tins ?params_names tout = {
    a type is given to a method when it can be considered bound: in other words,
    when calling that method through any object would be fine, since the object
    would be ignored. *)
-let mk_boundfunctiontype ?(frame=0) tins ?params_names tout = {
+let mk_boundfunctiontype ?(frame=0) tins ?params_names ?(is_predicate=false) tout = {
   this_t = dummy_this;
   params_tlist = tins;
   params_names;
   return_t = tout;
+  is_predicate;
   closure_t = frame;
   changeset = Changeset.empty
 }
@@ -75,11 +77,12 @@ let mk_boundfunctiontype ?(frame=0) tins ?params_names tout = {
    causes problems when they are given to methods in which `this` is used
    non-trivially: indeed, calling them directly would cause `this` to be bound
    to the global object, which is typically unintended. *)
-let mk_functiontype ?(frame=0) tins ?params_names tout = {
+let mk_functiontype ?(frame=0) tins ?params_names ?(is_predicate=false) tout = {
   this_t = global_this;
   params_tlist = tins;
   params_names;
   return_t = tout;
+  is_predicate;
   closure_t = frame;
   changeset = Changeset.empty
 }
@@ -996,7 +999,7 @@ module ResolvableTypeJob = struct
     | SingletonNumT _
     | SingletonStrT _
     | ExistsT _
-    | DepPredT _
+    | OpenPredT _
       ->
       acc
 
@@ -1277,6 +1280,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
       rec_flow cx trace (l, UseT (use_op, eval_selector cx reason t s i))
+
+    (*****************************)
+    (* Refinement type subtyping *)
+    (*****************************)
+
+    | _, RefineT (reason, LatentP (fun_t, idx), tvar) ->
+      flow cx (fun_t, CallLatentPredT (reason, true, idx, l, tvar))
 
     (*************)
     (* Debugging *)
@@ -1864,6 +1874,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               params_tlist = [wrapped_obj];
               params_names = None;
               return_t = t;
+              is_predicate = false;
               closure_t;
               changeset
             }))
@@ -2620,49 +2631,114 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         LookupT (reason_op, lookup_kind, [], name, AnyWithUpperBoundT t)
       in rec_flow cx trace (l, lookup)
 
-    (****************************************************)
-    (* dependent function type ~> substitution provider *)
-    (****************************************************)
 
-    | DepPredT (_, (_, pos_preds, neg_preds)),
-      PredSubstT (_, sense, key, unrefined_t, fresh_t) -> begin
-         let preds = if sense then pos_preds else neg_preds in
-         match Key_map.get key preds with
-         | Some p ->
-             rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
-         | _ ->
-             rec_flow_t cx trace (unrefined_t, fresh_t)
-       end
+    (*******************************************)
+    (* Refinement based on function predicates *)
+    (*******************************************)
+
+    (** Call to predicated (latent) functions *)
+
+    (* Calls to functions appearing in predicate refinement contexts dispatch
+       to this case. Here, the return type of the function holds the predicate
+       that will refine the incoming `unrefined_t` and flow a filtered
+       (refined) version of this type into `fresh_t`.
+
+       What is important to note here is that `return_t` has no access to the
+       function's parameter names. It will simply be an `OpenPredT` containing
+       mappings from symbols (Key.t) that are (hopefully) the function's
+       parameters to predicates. In other words, it is an "open" predicate over
+       (free) variables, which *should* be the function's parameters.
+
+       The `CallLatentPredT` use contains the index of the argument under
+       refinement. By combining this information with the names of the
+       parameters in `params_names`, we can arrive to the actual name (Key.t)
+       of the parameter that gets refined, which can be used as a key into the
+       `OpenPredT` that is expected to eventually flow to `return_t`.
+       Effectively, we are substituting the actual parameter to the refining
+       call (here in the form of the index of the argument to the call) to the
+       formal parameter of the function, and this information is stored in
+       `CallOpenPredT` of the produced flow.
+
+       Problematic cases (e.g. when the refining index is out of bounds w.r.t.
+       `params_names`) raise errors, but also propagate the unrefined types
+       (as if the refinement never took place).
+    *)
+    | FunT (_, _, _, { params_names = Some pn; return_t; is_predicate = true; _ }),
+      CallLatentPredT (reason, sense, index, unrefined_t, fresh_t) ->
+      (* TODO: for the moment we only support simple keys (empty projection)
+         that exactly correspond to the function's parameters *)
+
+      let key_or_err = try
+        Utils_js.OK (List.nth pn (index-1), [])
+      with
+        | Invalid_argument _ ->
+          Utils_js.Err ("Negative refinement index.",
+            (reason_of_t l, reason_of_use_t u))
+        | Failure "nth" ->
+          let r1 = suffix_reason
+            (spf " that uses predicate on parameter at position %d" index)
+            reason in
+          let r2 = suffix_reason
+            (spf " with %d parameters" (List.length pn)) (reason_of_t l) in
+          Utils_js.Err ("This is incompatible with", (r1, r2))
+      in
+      (match key_or_err with
+      | Utils_js.OK key -> rec_flow cx trace
+          (return_t, CallOpenPredT (reason, sense, key, unrefined_t, fresh_t))
+      | Utils_js.Err (msg, rs) ->
+        flow_err_reasons cx trace msg rs;
+        rec_flow_t cx trace (unrefined_t, fresh_t))
+
 
     (* Fall through all the remaining cases *)
-    | _, PredSubstT (_, _, _, unrefined_t, fresh_t) ->
-       rec_flow_t cx trace (unrefined_t, fresh_t)
+    | _, CallLatentPredT (_,_,_,unrefined_t, fresh_t) ->
+      rec_flow_t cx trace (unrefined_t, fresh_t)
 
-    | DepPredT (_, (l, _, _)), _ ->
-      rec_flow cx trace (l, u)
+    (** Trap the return type of a predicated function *)
 
-    (*******************************)
-    (* Call to predicated function *)
-    (*******************************)
-
-    | FunT (_, _, _, { params_names = Some pn; return_t; _ }),
-      CallAsPredicateT (reason, sense, offset, unrefined_t, fresh_t) -> begin
-        try
-          (* TODO: for the moment we only support simple keys *)
-          let key = (List.nth pn offset, []) in
-          rec_flow cx trace (return_t,
-            PredSubstT (reason, sense, key, unrefined_t, fresh_t));
-        with
-          Invalid_argument _ ->
-              rec_flow_t cx trace (unrefined_t, fresh_t)
-          | _ ->
-              rec_flow_t cx trace (unrefined_t, fresh_t)
+    | OpenPredT (_, _, p_pos, p_neg),
+      CallOpenPredT (_, sense, key, unrefined_t, fresh_t) ->
+      begin
+        let preds = if sense then p_pos else p_neg in
+        match Key_map.get key preds with
+        | Some p -> rec_flow cx trace (unrefined_t, PredicateT (p, fresh_t))
+        | _ -> rec_flow_t cx trace (unrefined_t, fresh_t)
       end
 
-    (* Fall through all the remaining cases *)
-    | _, CallAsPredicateT (_,_,_,unrefined_t, fresh_t) ->
-       rec_flow_t cx trace (unrefined_t, fresh_t)
+    (* Any other flow to `CallOpenPredT` does not actually refine the
+       type in question so we just fall back to regular flow. *)
+    | _, CallOpenPredT (_, _, _, unrefined_t, fresh_t) ->
+      rec_flow_t cx trace (unrefined_t, fresh_t)
 
+    (********************************)
+    (* Function-predicate subtyping *)
+    (********************************)
+
+    (* When decomposing function subtyping for predicated functions we need to
+     * pair-up the predicates that each of the two functions established
+     * before we can check for predicate implication. The predicates encoded
+     * inside the two `OpenPredT`s refer to the formal parameters of the two
+     * functions (which are not the same). `SubstOnPredT` is a use that does
+     * this matching by carrying a substitution (`subst`) from keys from the
+     * function in the left-hand side to keys in the right-hand side.
+     *
+     * Each matched pair of predicates is subsequently checked for consistency.
+     *)
+    | OpenPredT (_, t1, _, _),
+      SubstOnPredT (_, _, OpenPredT (_, t2, p_pos_2, p_neg_2))
+      when Key_map.(is_empty p_pos_2 && is_empty p_neg_2) ->
+      rec_flow_t cx trace (t1, t2)
+
+    | OpenPredT _, UseT (_, OpenPredT _) ->
+      let loc = loc_of_reason (reason_of_use_t u) in
+      let msg = "internal error: OpenPredT ~> OpenPredT without substitution" in
+      add_internal_error cx (loc, [msg])
+
+    (*********************************************)
+    (* Using predicate functions as regular ones *)
+    (*********************************************)
+
+    | OpenPredT (_, l, _, _), _ -> rec_flow cx trace (l, u)
 
     (********************)
     (* mixin conversion *)
@@ -2826,13 +2902,57 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************)
 
     | FunT (_, _, _,
-        { this_t = o1; params_tlist = tins1; return_t = t1; _ }),
+        { this_t = o1; params_tlist = tins1; params_names = p1;
+          is_predicate = ip1; return_t = t1; _ }),
       UseT (use_op, FunT (reason, _, _,
-        { this_t = o2; params_tlist = tins2; return_t = t2; _ }))
+        { this_t = o2; params_tlist = tins2; params_names = p2;
+          is_predicate = ip2; return_t = t2; _ }))
       ->
       rec_flow cx trace (o2, UseT (use_op, o1));
       multiflow cx trace reason (tins2, tins1);
-      rec_flow cx trace (t1, UseT (use_op, t2));
+
+      (* Well-formedness adjustment: If this is predicate function subtyping,
+         make sure to apply a latent substitution on the right-hand use to
+         bridge the mismatch of the parameter naming. Otherwise, proceed with
+         the subtyping of the return types normally. In general it should
+         hold as an invariant that OpenPredTs (where free variables appear)
+         should not flow to other OpenPredTs without wrapping the latter in
+         SubstOnPredT.
+      *)
+      if ip2 then
+        if not ip1 then
+          (* Non-predicate functions are incompatible with predicate ones
+             TODO: somehow the original flow needs to be propagated as well *)
+          flow_err_reasons cx trace
+            "Function is incompatible with"
+            (reason_of_t l, reason_of_use_t u)
+        else
+          begin match p1, p2 with
+          | Some s1, Some s2 ->
+            let reason = prefix_reason "predicate of " (reason_of_t t2) in
+            if List.length s1 < List.length s2 then
+              (* Flag an error if predicate counts do not coincide
+                 TODO: somehow the original flow needs to be propagated
+                 as well *)
+              let mod_reason n = replace_reason
+                (spf "predicate function with %d arguments" n) in
+              flow_err_reasons cx trace
+                "Predicate function is incompatible with"
+                (mod_reason (List.length s1) (reason_of_t l),
+                mod_reason (List.length s2) (reason_of_use_t u))
+            else
+              (* NOTE: do not use List.combine here *)
+              let subst = Utils_js.zip s1 s2 |>
+                List.fold_left (fun m (k,v) -> SMap.add k (v,[]) m) SMap.empty
+              in
+              rec_flow cx trace (t1, SubstOnPredT (reason, subst, t2))
+          | _ ->
+            let loc = loc_of_reason (reason_of_use_t u) in
+            let msg = "internal error: FunT -> FunT no params" in
+            add_internal_error cx (loc, [msg])
+          end
+      else
+        rec_flow cx trace (t1, UseT (use_op, t2))
 
     | FunT (reason_fundef, _, _,
         { this_t = o1; params_tlist = tins1; return_t = t1;
@@ -4507,7 +4627,7 @@ and err_operation = function
   | UnaryMinusT _ -> "Expected number instead of"
   | TupleMapT _ -> "Expected array instead of"
   | ReactCreateElementT _ -> "Expected React component instead of"
-  | CallAsPredicateT _ -> "Expected (predicated) function instead of"
+  | CallLatentPredT _ -> "Expected predicated function instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
      to verify that all legit use types are listed above, we can't afford
      to throw on a use type, so mark the error instead *)
@@ -4840,7 +4960,6 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | FunProtoCallT _
   | ChoiceKitT _
   | CustomFunT _
-  | DepPredT _
     ->
     t
 
@@ -4851,6 +4970,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     params_tlist = params;
     params_names;
     return_t;
+    is_predicate;
     closure_t;
     changeset
   }) ->
@@ -4871,6 +4991,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         params_tlist = params_;
         params_names;
         return_t = return_t_;
+        is_predicate;
         closure_t;
         changeset
       })
@@ -5043,6 +5164,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ->
       failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
+  | OpenPredT (r, t, pos_map, neg_map) ->
+    let t' =  subst cx ~force map t in
+    OpenPredT (r, t', pos_map, neg_map)
+
 and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
       let s_ = subst_selector cx force map s in
@@ -5064,6 +5189,7 @@ and eval_selector cx reason curr_t s i =
       | ArrRest i -> ArrRestT(reason, i, tvar)
       | Default -> PredicateT (NotP VoidP, tvar)
       | Become -> BecomeT (reason, tvar)
+      | Refine p -> RefineT (reason, p, tvar)
       )
     )
   | Some it ->
@@ -5097,13 +5223,17 @@ and subst_selector cx force map s = match s with
   | ObjRest _
   | ArrRest _
   | Default
-  | Become
-    -> s
+  | Become -> s
+  | Refine p -> Refine (subst_predicate cx ~force map p)
 
 and subst_destructor _cx _force _map s = match s with
   | NonMaybeType
   | PropertyType _
     -> s
+
+and subst_predicate cx ?(force=true) (map: Type.t SMap.t) = function
+  | LatentP (t, i) -> LatentP (subst cx ~force map t, i)
+  | p -> p
 
 (* TODO: flesh this out *)
 and check_polarity cx polarity = function
@@ -5190,7 +5320,7 @@ and check_polarity cx polarity = function
   | ExtendsT _
   | ChoiceKitT _
   | CustomFunT _
-  | DepPredT _
+  | OpenPredT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx polarity id =
@@ -6698,13 +6828,15 @@ and predicate cx trace t l p = match p with
   (* Latent predicate *)
   (********************)
 
-  | LatentP (reason, fun_t, offset) ->
-      rec_flow cx trace (fun_t, CallAsPredicateT (reason, true, offset, l, t))
+  | LatentP (fun_t, idx) ->
+    let reason = prefix_reason "predicate call to " (reason_of_t fun_t) in
+    rec_flow cx trace (fun_t, CallLatentPredT (reason, true, idx, l, t))
 
-  | NotP (LatentP (reason, fun_t, offset)) ->
-      let neg_reason = prefix_reason "negation of " reason in
+  | NotP (LatentP (fun_t, idx)) ->
+      let neg_reason = prefix_reason "negation of predicate call to "
+        (reason_of_t fun_t) in
       rec_flow cx trace (fun_t,
-        CallAsPredicateT (neg_reason, false, offset, l, t))
+        CallLatentPredT (neg_reason, false, idx, l, t))
 
 and prop_exists_test cx trace key sense obj result =
   prop_exists_test_generic key cx trace result obj sense obj
@@ -8173,10 +8305,10 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | EvalT _
   | ExtendsT _
   | ChoiceKitT _
-  | CustomFunT _ ->
+  | CustomFunT _
+  | OpenPredT _
+  ->
     () (* TODO *)
-  | DepPredT _ ->
-    ()
 
 and assert_ground_id cx skip ids id =
   if not (ISet.mem id !ids)

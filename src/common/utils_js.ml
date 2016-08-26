@@ -90,6 +90,10 @@ let opt_map_default f def = function
   | None -> def
   | Some x -> f x
 
+let opt_default def = function
+  | None -> def
+  | Some x -> x
+
 let rec zip lst1 lst2 = match lst1,lst2 with
   | [], _ -> []
   | _, [] -> []
@@ -114,8 +118,6 @@ let range_with f a b =
 let range = range_with (fun x -> x)
 
 let repeat n a = range_with (fun _ -> a) 0 n
-
-let _ = range, repeat
 
 (**
  * Useful for various places where a user might have typoed a string and the

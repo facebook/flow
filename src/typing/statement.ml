@@ -909,10 +909,10 @@ and statement cx = Ast.Statement.(
       let t = match argument with
         | None -> VoidT.at loc
         | Some expr ->
-          (* TODO: make sure the keys in DepPredT as bound in the func params *)
           if Env.in_predicate_scope () then
             let (t, p_map, n_map, _) = predicates_of_condition cx expr in
-            DepPredT (reason, (t, p_map, n_map))
+            let pred_reason = prefix_reason "predicate of " reason in
+            OpenPredT (pred_reason, t, p_map, n_map)
           else
             expression cx expr
       in
@@ -4476,7 +4476,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
     )
 
   (* e.m(...) *)
-  (* XXX: Don't trap method calls for now *)
+  (* TODO: Don't trap method calls for now *)
   | _, Call { Call.callee = (_, Member _); _ } ->
       empty_result (expression cx e)
 
@@ -4499,12 +4499,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
         let args_with_offset = Utils_js.zipi keys arg_ts in
         let emp_pred_map = empty_result ret_t in
         List.fold_left (fun pred_map arg_info -> match arg_info with
-          | (offset, Some key, unrefined_t) ->
-              let reason = mk_reason
-                (spf "%d arg of call at predicate position" offset) loc in
-              let pred = LatentP (reason, fun_t, offset) in
+          | (idx, Some key, unrefined_t) ->
+              let pred = LatentP (fun_t, idx+1) in
               add_predicate key unrefined_t pred true pred_map
-
           | _ ->
               pred_map
         ) emp_pred_map args_with_offset

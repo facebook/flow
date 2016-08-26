@@ -215,8 +215,14 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
     | ThisClassT _ ->
         "This"
 
-    | DepPredT _ ->
-        spf "Dependent predicate"
+    | OpenPredT (_, t, m_pos, m_neg) ->
+        let l_pos = Key_map.elements m_pos in
+        let l_neg = Key_map.elements m_neg in
+        let str_of_pair (k,p) = spf "%s -> %s"
+          (Key.string_of_key k) (string_of_predicate p) in
+        spf "$OpenPred (%s) [+: %s] [-: %s]" (pp EnclosureNone cx t)
+          (l_pos |> List.map str_of_pair |> String.concat ", ")
+          (l_neg |> List.map str_of_pair |> String.concat ", ")
 
     | FunProtoT _ ->
         "function proto"

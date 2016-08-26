@@ -127,7 +127,7 @@ let generate_tests cx f x =
     return_t = Flow.subst cx map return_t;
   })
 
-let functiontype cx this_t {reason; tparams; params; return_t; _} =
+let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
   let static =
     let reason = prefix_reason "statics of " reason in
     let proto = FunProtoT reason in
@@ -142,6 +142,7 @@ let functiontype cx this_t {reason; tparams; params; return_t; _} =
     params_tlist = Func_params.tlist params;
     params_names = Some (Func_params.names params);
     return_t;
+    is_predicate = kind = Predicate;
     closure_t = Env.peek_frame ();
     changeset = Env.retrieve_closure_changeset ()
   } in

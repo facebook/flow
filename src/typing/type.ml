@@ -37,6 +37,7 @@ open Utils_js
 
 type ident = int
 type name = string
+type index = int
 
 module rec TypeTerm : sig
 
@@ -246,10 +247,15 @@ module rec TypeTerm : sig
 
     (** Predicate types **)
 
-    (* This type is expected to appear as the return type of predicate
-       functions. The second members expresses the predicates that the
-       function encodes in the form of checks. *)
-    | DepPredT of reason * dep_preds
+    (* `OpenPredT (reason, base_t, m_pos, m_neg)` wraps around a base type
+       `base_t` and encodes additional information that hold in conditional
+       contexts (in the form of logical predicates). This information is split
+       into positive and negative versions in `m_pos` and `m_neg`. The
+       predicates here are "open" in the sense that they contain free variable
+       instances, which are the keys to the two maps.
+    *)
+    | OpenPredT of reason * t * predicate Key_map.t * predicate Key_map.t
+
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
@@ -267,6 +273,7 @@ module rec TypeTerm : sig
     | FunImplicitReturn
     | Addition
     | MissingTupleElement of int
+    | TypeRefinement
     | UnknownUse
 
   and use_t =
@@ -427,29 +434,90 @@ module rec TypeTerm : sig
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
 
-    (**
-     * A use holding the types of expressions appearing in refining positions
-     * (conditionals), when refinement is due to latent predicates.
-     * Members are:
-     * - reason
-     * - sense
-     * - offset of the argument being refined
-     * - incoming type of the refined expression
-     * - fresh tvar that will hold the refined result
-     *)
-    | CallAsPredicateT of reason * bool * int * t * t
+    (* Function predicate uses *)
 
-   (**
-    * Toolkit for holding a substitution of formal parameters for actual
-    * parameters at predicate function calls.
-    * Members are:
-    * - reason
-    * - sense
-    * - key being refined
-    * - type of incoming argument
-    * - fresh tvar that will hold its refined version
-    *)
-    | PredSubstT of reason * bool * Key.t * t * t
+    (**
+     * The following two uses are used when a predicate function is called to
+     * establish a predicate over one of its arguments.
+     *)
+
+    (**
+     * The intended use for CallLatentPredT is to flow a predicated function
+     * type to it. This function will refine the unrefined argument of
+     * CallLatentPredT and use the second of the two type arguments as the
+     * out-type. Also, since we might not yet know the function's formal
+     * parameters (until the incoming flow gets concretized), we can only
+     * keep the index of the argument that gets refined as part of the use.
+     *
+     * Flowing a non-predicate function type has no refining effect.
+     *
+     * This can be thought of as the equivalent of flows to `CallT` but for
+     * predicated calls.
+     *
+     * The boolean part is the sense of the conditional check.
+     *)
+    | CallLatentPredT of reason * bool * index * t * t
+
+    (**
+     * CallOpenPredT is fired subsequently, after processing the flow
+     * described above. This flow is necessary since the return type of the
+     * predicate function (which determines the predicate it expresses)
+     * might not be readily available. So, a flow to CallOpenPredT awaits
+     * for the return_t of the function in question to be concretized,
+     * while still holding the unrefined and refined versions of the variable
+     * under refinement. In addition, since the structure (and hence the
+     * function paramenters) of the function are now known (from the above
+     * flow) we only keep the relevant key, which corresponds to the refining
+     * parameter.
+     *)
+    | CallOpenPredT of reason * bool * Key.t * t * t
+
+    (**
+     * Even for the limited use of function predicates that is currently
+     * allowed, we still have to build machinery to handle subtyping for
+     * predicated function types.
+     *
+     * Let the following be the general form of function subtyping:
+     *
+     *   (xs:Ts): R / P(xs) <: (xs': Ts'): R' / P'(xs')
+     *   \________________/    \______________________/
+     *           T                        T'
+     *
+     * where `P(xs)` and `P'(xs')` are the open predicates established by
+     * the functions in each side of the subtyping constraint. These
+     * predicates are "open", in the sense that they have free occurrences of
+     * each function's formal parameters (xs and xs', respectively).
+     *
+     * The constraint T <: T', causes the following (expected) sub-constraints:
+     *
+     *  - Ts' <: Ts
+     *  - R <: R'
+     *
+     * and (additionally) to account for the predicates expressed by the two
+     * functions a logical implication constraint:
+     *
+     *   P(xs) => [xs/xs'] P'(xs')
+     *
+     * Note in the above, that to be able to compare them, we need to first
+     * substitute occurrence of xs' in P' for xs, which is denoted with
+     * [xs/xs'].
+     *
+     * Valid flows to `SubstOnPredT (_, theta, t)` are from `OpenPredT`. This
+     * is treated as an intermediate flow that adjusts the predicates of the
+     * OpenPredT by applying a substitution `theta` to the predicates therein.
+     *
+     * NOTE: this substitution is not use at the moment since we don't yet
+     * support subtyping of predicated functions, but the scaffolding might be
+     * useful later on.
+     *)
+    | SubstOnPredT of reason * substitution * t
+
+    (**
+     * `RefineT (reason, pred, tvar)` is an instruction to refine an incoming
+     * flow using the predicate `pred`. The result will be stored in `tvar`,
+     * which is expected to be a type variable.
+     *)
+    | RefineT of reason * predicate * t
 
   and predicate =
     | AndP of predicate * predicate
@@ -482,7 +550,9 @@ module rec TypeTerm : sig
 
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
-    | LatentP of reason * t * int
+    | LatentP of t * index
+
+  and substitution = Key.t SMap.t
 
   and binary_test =
     (* e1 instanceof e2 *)
@@ -511,6 +581,7 @@ module rec TypeTerm : sig
     params_names: string list option;
     return_t: t;
     closure_t: int;
+    is_predicate: bool;
     changeset: Changeset.t
   }
 
@@ -607,6 +678,7 @@ module rec TypeTerm : sig
   | ArrRest of int
   | Default
   | Become
+  | Refine of predicate
 
   and destructor =
   | NonMaybeType
@@ -995,8 +1067,8 @@ let any_propagating_use_t = function
   | OrT _
   | ReposLowerT _
   | IntersectionPreprocessKitT _
-  | PredSubstT _
-  | CallAsPredicateT _
+  | CallOpenPredT _
+  | CallLatentPredT _
   | CJSRequireT _
   | ImportModuleNsT _
   | ImportDefaultT _
@@ -1120,7 +1192,7 @@ let rec reason_of_t = function
 
   | IdxWrapper (reason, _) -> reason
 
-  | DepPredT (reason, _) -> reason
+  | OpenPredT (reason, _, _, _) -> reason
 
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
@@ -1223,8 +1295,10 @@ and reason_of_use_t = function
   | IdxUnwrap (reason, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
 
-  | CallAsPredicateT (reason, _, _, _, _) -> reason
-  | PredSubstT (reason, _, _, _, _) -> reason
+  | CallLatentPredT (reason, _, _, _, _) -> reason
+  | CallOpenPredT (reason, _, _, _, _) -> reason
+  | SubstOnPredT (reason, _, _) -> reason
+  | RefineT (reason, _, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1353,7 +1427,7 @@ let rec mod_reason_of_t f = function
 
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
 
-  | DepPredT (reason, p) -> DepPredT (f reason, p)
+  | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
@@ -1448,10 +1522,12 @@ and mod_reason_of_use_t f = function
 
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
-  | CallAsPredicateT (reason, b, k, l, t) ->
-      CallAsPredicateT (f reason, b, k, l, t)
-  | PredSubstT (reason, sense, key, l, t) ->
-      PredSubstT (f reason, sense, key, l, t)
+  | CallLatentPredT (reason, b, k, l, t) ->
+      CallLatentPredT (f reason, b, k, l, t)
+  | CallOpenPredT (reason, sense, key, l, t) ->
+      CallOpenPredT (f reason, sense, key, l, t)
+  | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
+  | RefineT (reason, p, t) -> RefineT (f reason, p, t)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1540,13 +1616,14 @@ let string_of_ctor = function
     end
   | CustomFunT _ -> "CustomFunT"
   | IdxWrapper _ -> "IdxWrapper"
-  | DepPredT _ -> "DepPredT"
+  | OpenPredT _ -> "OpenPredT"
 
 let string_of_use_op = function
   | FunReturn -> "FunReturn"
   | FunImplicitReturn -> "FunImplicitReturn"
   | Addition -> "Addition"
   | MissingTupleElement _ -> "MissingTupleElement"
+  | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"
 
 let string_of_use_ctor = function
@@ -1620,8 +1697,10 @@ let string_of_use_ctor = function
     end
   | IdxUnwrap _ -> "IdxUnwrap"
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
-  | CallAsPredicateT _ -> "CallAsPredicateT"
-  | PredSubstT _ -> "PredSubstT"
+  | CallLatentPredT _ -> "CallLatentPredT"
+  | CallOpenPredT _ -> "CallOpenPredT"
+  | SubstOnPredT _ -> "SubstOnPredT"
+  | RefineT _ -> "RefineT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
@@ -1662,8 +1741,8 @@ let rec string_of_predicate = function
 
   | PropExistsP key -> spf "prop `%s` is truthy" key
 
-  | LatentP (r,t,i) -> spf "%s of the %d parameter of type %s"
-      (desc_of_reason r) i (string_of_ctor t)
+  | LatentP (OpenT (_, id),i) -> spf "LatentPred(TYPE_%d, %d)" id i
+  | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
 
 module Polarity = struct
   (* Subtype relation for polarities, interpreting neutral as positive &
