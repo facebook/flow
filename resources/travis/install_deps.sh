@@ -3,12 +3,17 @@
 OPAM_DEPENDS="ocp-build"
 # js_of_ocaml 2.7 is <  ocaml 4.03
 # js_of_ocaml 2.8 is >= ocaml 4.02
+# opam 1.1.1 doesn't have js_of_ocaml 2.8
 case "$OCAML_VERSION" in
   4.01.0)
     OPAM_DEPENDS+=" js_of_ocaml.2.7"
     ;;
   *)
-    OPAM_DEPENDS+=" js_of_ocaml.2.8.1"
+    if [ "OPAM_VERSION" -eq "1.1.1" ]; then
+      OPAM_DEPENDS+=" js_of_ocaml.2.7"
+    else
+      OPAM_DEPENDS+=" js_of_ocaml.2.8.1"
+    fi
     ;;
 esac
 
