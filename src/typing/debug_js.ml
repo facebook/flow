@@ -280,6 +280,10 @@ and _json_of_t_impl json_cx t = Hh_json.(
         ("neg_preds", json_pred_key_map neg_preds)
       ]
     ]
+
+  | GraphqlT _ -> [
+      "kind", JSON_String "GraphqlT";
+    ]
   )
 )
 
@@ -597,6 +601,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t
     ]
 
+  | GraphqlUseT _ -> []
   )
 )
 
@@ -1146,6 +1151,7 @@ and dump_t_ (depth, tvars) cx t =
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
   | DepPredT _ -> p t
+  | GraphqlT _ -> p t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
@@ -1237,7 +1243,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | IdxUnwrap _
   | IdxUnMaybeifyT _
   | CallAsPredicateT _
-  | PredSubstT _ ->
+  | PredSubstT _
+  | GraphqlUseT _ ->
     p t
 
 (*****************************************************)

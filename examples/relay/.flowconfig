@@ -1,0 +1,11 @@
+[ignore]
+.*schema\.json
+
+[options]
+graphql_schema=schema.json
+all=true
+
+esproposal.class_static_fields=enable
+esproposal.class_instance_fields=enable
+
+munge_underscores=true

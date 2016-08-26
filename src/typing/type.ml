@@ -251,6 +251,8 @@ module rec TypeTerm : sig
        function encodes in the form of checks. *)
     | DepPredT of reason * dep_preds
 
+    | GraphqlT of reason * Graphql.t
+
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
@@ -450,6 +452,8 @@ module rec TypeTerm : sig
     * - fresh tvar that will hold its refined version
     *)
     | PredSubstT of reason * bool * Key.t * t * t
+
+    | GraphqlUseT of reason * GraphqlUse.t
 
   and predicate =
     | AndP of predicate * predicate
@@ -882,6 +886,50 @@ and UseTypeMap : MyMap.S with type key = TypeTerm.use_t = MyMap.Make (struct
   let compare = Pervasives.compare
 end)
 
+and Graphql : sig
+  type t =
+    | SchemaT of Graphql_schema2.t
+    | FragT of GraphqlFrag.t
+    | FieldT of GraphqlField.t
+    | SelectionT of GraphqlSelection.t
+    | RelayPropsT of TypeTerm.t
+end = Graphql
+
+and GraphqlFrag : sig
+  type t = {
+    type_name: string;
+    selection: TypeTerm.t;
+  }
+end = GraphqlFrag
+
+and GraphqlField : sig
+  type t = reason * t'
+  and t' = {
+    name: string;
+    alias: string option;
+    selection: TypeTerm.t option;
+  }
+end = GraphqlField
+
+and GraphqlSelection : sig
+  (* schema, type_name, field list *)
+  type t = Graphql_schema2.t * string * TypeTerm.t list
+end = GraphqlSelection
+
+and GraphqlUse : sig
+  type t =
+    | MkSelectionT of string * TypeTerm.t
+    | SelectT of TypeTerm.t * TypeTerm.t
+    | GetT of reason * string * TypeTerm.t
+    | AssignT of TypeTerm.t * TypeTerm.t
+    | GetRelayPropsT of TypeTerm.t
+    | ToObjT of TypeTerm.t
+end = GraphqlUse
+
+and GraphqlLookup : sig
+  type t = TypeTerm.t
+end = GraphqlLookup
+
 include TypeTerm
 
 (*********************************************************)
@@ -1122,6 +1170,8 @@ let rec reason_of_t = function
 
   | DepPredT (reason, _) -> reason
 
+  | GraphqlT (reason, _) -> reason
+
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
   | TypeDestructorT (reason, _) ->
@@ -1225,6 +1275,8 @@ and reason_of_use_t = function
 
   | CallAsPredicateT (reason, _, _, _, _) -> reason
   | PredSubstT (reason, _, _, _, _) -> reason
+
+  | GraphqlUseT (reason, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1355,6 +1407,8 @@ let rec mod_reason_of_t f = function
 
   | DepPredT (reason, p) -> DepPredT (f reason, p)
 
+  | GraphqlT (reason, desc) -> GraphqlT (f reason, desc)
+
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
   | TypeDestructorT (reason, s) -> TypeDestructorT (f reason, s)
@@ -1453,6 +1507,8 @@ and mod_reason_of_use_t f = function
   | PredSubstT (reason, sense, key, l, t) ->
       PredSubstT (f reason, sense, key, l, t)
 
+  | GraphqlUseT (reason, x) -> GraphqlUseT (f reason, x)
+
 (* type comparison mod reason *)
 let reasonless_compare =
   let swap_reason t r = mod_reason_of_t (fun _ -> r) t in
@@ -1541,6 +1597,7 @@ let string_of_ctor = function
   | CustomFunT _ -> "CustomFunT"
   | IdxWrapper _ -> "IdxWrapper"
   | DepPredT _ -> "DepPredT"
+  | GraphqlT _ -> "GraphqlT"
 
 let string_of_use_op = function
   | FunReturn -> "FunReturn"
@@ -1622,6 +1679,7 @@ let string_of_use_ctor = function
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
   | CallAsPredicateT _ -> "CallAsPredicateT"
   | PredSubstT _ -> "PredSubstT"
+  | GraphqlUseT _ -> "GraphqlUseT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

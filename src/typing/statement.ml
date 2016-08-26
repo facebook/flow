@@ -2860,6 +2860,26 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     VoidT.at loc
 
   | TaggedTemplate {
+      TaggedTemplate.tag = _, Member
+        {
+          Ast.Expression.Member._object = _, Identifier (_,
+            { Ast.Identifier.name = "Relay"; _ });
+          property = Ast.Expression.Member.PropertyIdentifier (_,
+            { Ast.Identifier.name = "QL"; _ });
+          _
+        };
+      quasi = _, literal
+    } ->
+    (* List.iter (fun e -> ignore (expression cx type_params_map e)) expressions; *)
+
+    (* let reason = mk_reason "GraphQL fragment" loc in *)
+    (try graphql_expression cx literal
+    with
+    | Graphql_parser.Unexpected_token (loc, str) ->
+    FlowError.add_error cx (loc, ["Unexpected token: " ^ str]);
+    VoidT.at Loc.none)
+
+  | TaggedTemplate {
       TaggedTemplate.tag;
       (* TODO: walk quasis? *)
       quasi = _, { TemplateLiteral.quasis = _; expressions }
@@ -4760,3 +4780,60 @@ and declare_function_to_function_declaration cx id predicate =
       end
   | _ ->
       None
+
+and graphql_field cx parent field =
+  let {Graphql_ast.Field.name; selectionSet = selection_set; loc} = field in
+  let reason = mk_reason ("field `" ^ name ^ "`") loc in
+  let selection = Option.map selection_set (fun selection_set ->
+    let selection = Flow.mk_tvar_where cx reason (fun t ->
+      Flow.flow cx (parent, GraphqlUseT (reason, GraphqlUse.GetT (reason, name, t)))
+    ) in
+    graphql_selection cx selection selection_set
+  ) in
+  let alias = None in
+  GraphqlT (reason, Graphql.FieldT (reason, { GraphqlField.name; alias; selection }))
+
+and graphql_selection cx selection selection_set: Type.t =
+  let result = List.fold_left (fun prev field ->
+    let (item, loc) = match field with
+      | Graphql_ast.SelectionSet.Field f ->
+        (graphql_field cx prev f, f.Graphql_ast.Field.loc)
+      | Graphql_ast.SelectionSet.Expression ((loc, _) as expr) ->
+        expression cx expr, loc
+    in
+    let reason = mk_reason "selection set" loc in
+    Flow.mk_tvar_where cx reason (fun t ->
+      Flow.flow cx (prev, GraphqlUseT (reason, GraphqlUse.SelectT (item, t)))
+    )
+  ) selection selection_set.Graphql_ast.SelectionSet.selections in
+  result
+
+and graphql_expression cx template_literal =
+  let ast = Graphql_parser.parse_template template_literal in
+  Graphql_debug.print_document ast;
+
+  let open Graphql_ast.Document in
+  match ast.definitions with
+  | OperationDefinition {
+      Graphql_ast.OperationDefinition.loc;
+      selectionSet = selection_set;
+      _;
+    } :: [] ->
+    let reason = mk_reason "operation" loc in
+    let selection = Flow.mk_graphql_selection cx reason "$query" in
+    let selection = graphql_selection cx selection selection_set in
+    selection
+  | FragmentDefinition {
+      Graphql_ast.FragmentDefinition.loc;
+      typeName = (_, type_name);
+      selectionSet = selection_set;
+      _;
+    } :: [] ->
+    let reason = mk_reason "fragment" loc in
+    let selection = Flow.mk_graphql_selection cx reason type_name in
+    let selection = graphql_selection cx selection selection_set in
+    GraphqlT (reason, Graphql.FragT {
+      GraphqlFrag.type_name;
+      selection;
+    })
+  | _ -> failwith "Graphql document must contain only one definition."

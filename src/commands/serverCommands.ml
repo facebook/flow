@@ -264,6 +264,13 @@ module OptionParser(Config : CONFIG) = struct
     let all = all || FlowConfig.(flowconfig.options.Opts.all) in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
+    let opt_graphql_schema = FlowConfig.(
+      flowconfig.options.Opts.graphql_schema
+    ) in
+    let opt_graphql_schema = Option.map opt_graphql_schema (fun file ->
+      Files.make_path_absolute root file
+    ) in
+
     let options = { Options.
       opt_check_mode = Config.(mode = Check);
       opt_server_mode = Config.(mode = Server);
@@ -350,7 +357,9 @@ module OptionParser(Config : CONFIG) = struct
       );
       opt_max_header_tokens = FlowConfig.(
         flowconfig.options.Opts.max_header_tokens
-      )
+      );
+
+      opt_graphql_schema;
     } in
     Main.start options
 

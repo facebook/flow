@@ -976,6 +976,22 @@ module ResolvableTypeJob = struct
     | IdxWrapper (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
+    | GraphqlT (_, t) ->
+      (match t with
+        | Graphql.SchemaT _ -> acc
+        | Graphql.FragT {GraphqlFrag.selection; _} ->
+          collect_of_type ?log_unresolved cx reason acc selection
+        | Graphql.SelectionT (_, _, ts) ->
+          collect_of_types ?log_unresolved cx reason acc ts
+        | Graphql.FieldT (_, {GraphqlField.selection; _}) ->
+          (match selection with
+            | Some t -> collect_of_type ?log_unresolved cx reason acc t
+            | None -> acc
+          )
+        | Graphql.RelayPropsT t ->
+          collect_of_type ?log_unresolved cx reason acc t
+      )
+
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -4278,6 +4294,191 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | None -> ()
       end
 
+    | GraphqlT (schema_reason, Graphql.SchemaT schema),
+      GraphqlUseT (reason, GraphqlUse.MkSelectionT (type_name, result)) ->
+
+      let type_name = match type_name with
+        | "$query" -> Graphql_schema2.query_type_name schema
+        | x -> x
+      in
+      (match Graphql_schema2.type_def schema type_name with
+      | Some _ ->
+        let selection = Graphql.SelectionT (schema, type_name, []) in
+        rec_flow_t cx trace (GraphqlT (reason, selection), result)
+      | None ->
+        let msg = "GraphQL type `" ^ type_name ^ "` does not exist in" in
+        flow_err_reasons cx trace msg (reason, schema_reason);
+        rec_flow_t cx trace (EmptyT reason, result)
+      )
+
+    | GraphqlT (reason, Graphql.SelectionT (schema, type_name, fields)),
+      GraphqlUseT (
+          _,
+          GraphqlUse.SelectT (GraphqlT (_, Graphql.FieldT field) as fld, result)
+        ) ->
+
+      let type_def = Graphql_schema2.type_def_unsafe schema type_name in
+      let (reason_f, {GraphqlField.name = field_name; _}) = field in
+
+      (match type_def with
+      | Graphql_schema2.Type.Obj (_, fields_map, _) ->
+        (match SMap.get field_name fields_map with
+        | Some _ ->
+          let s = Graphql.SelectionT (schema, type_name, fld::fields) in
+          rec_flow_t cx trace (GraphqlT (reason, s), result)
+        | None ->
+          rec_flow_t cx trace (l, result);
+          flow_err_reasons cx trace "Field not found in" (reason_f, reason)
+        )
+      | _ ->
+        rec_flow_t cx trace (l, result);
+        flow_err_reasons cx trace "Cannot select field on" (reason_f, reason)
+      );
+
+    | GraphqlT (_, Graphql.SelectionT _),
+      GraphqlUseT (reason, GraphqlUse.SelectT (t, result)) ->
+
+      rec_flow cx trace (t, GraphqlUseT (reason, GraphqlUse.AssignT (l, result)))
+
+    | GraphqlT (_, Graphql.SelectionT (_, _, fields)),
+      GraphqlUseT (
+          reason,
+          GraphqlUse.AssignT (target, result)
+        ) ->
+
+      let out = List.fold_left (fun l f ->
+        mk_tvar_where cx reason (fun t ->
+          rec_flow cx trace (l, GraphqlUseT (reason, GraphqlUse.SelectT (f, t)))
+        )
+      ) target fields in
+
+      rec_flow_t cx trace (out, result)
+
+    | GraphqlT (_, Graphql.FragT {GraphqlFrag.selection; _}),
+      GraphqlUseT (_, GraphqlUse.AssignT _) ->
+
+      rec_flow cx trace (selection, u)
+
+    | (GraphqlT (_, Graphql.SelectionT (schema, type_name, _)),
+      GraphqlUseT (
+          _,
+          GraphqlUse.GetT (reason, field_name, result)
+        )) ->
+
+      let _type = Graphql_schema2.type_def_unsafe schema type_name in
+
+      (match _type with
+      | Graphql_schema2.Type.Obj (_, fields_map, _) ->
+        (match SMap.get field_name fields_map with
+        | Some {Graphql_schema2.Field._type = f_type; _} ->
+          let f_type_name = Graphql_schema2.type_name schema f_type in
+          let selection = Graphql.SelectionT (schema, f_type_name, []) in
+          rec_flow_t cx trace (GraphqlT (reason, selection), result)
+        | None -> rec_flow_t cx trace (VoidT reason, result))
+      | _ -> rec_flow_t cx trace (VoidT reason, result)
+      )
+
+    | ObjT (obj_r, ({ props_tmap; _ } as objtype)),
+      GraphqlUseT (_, GraphqlUse.GetRelayPropsT t_out) ->
+
+      let props = SMap.map (fun t ->
+        match t with
+        | FunT (fun_r, _, _, { return_t; _ }) ->
+          mk_tvar_where cx fun_r (fun t ->
+            let to_obj = GraphqlUseT (fun_r, GraphqlUse.ToObjT t) in
+            rec_flow cx trace (return_t, to_obj)
+          )
+        | _ ->
+          (* TODO: should probably err or resolve tvar *)
+          AnyT (reason_of_t t)
+      ) (find_props cx props_tmap) in
+      let new_props = mk_propmap cx props in
+
+      let obj = ObjT (obj_r, { objtype with props_tmap = new_props }) in
+      rec_flow_t cx trace (obj, t_out)
+
+    | GraphqlT (_, Graphql.FragT { GraphqlFrag.selection; _ }),
+      GraphqlUseT (_, GraphqlUse.ToObjT _) ->
+
+      rec_flow cx trace (selection, u)
+
+    | GraphqlT (reason, Graphql.SelectionT (schema, type_name, fields)),
+      GraphqlUseT (_, GraphqlUse.ToObjT result) ->
+
+      let type_def = Graphql_schema2.type_def_unsafe schema type_name in
+
+      let map = fields |> List.fold_left (fun map f ->
+        match f with
+        | GraphqlT (reason, Graphql.FieldT (_, {
+              GraphqlField.name;
+              selection;
+              _;
+            })) ->
+
+          let rec proc ?(non_null=false) t =
+            match t with
+            | Graphql_schema2.Type.Named name ->
+
+              let t = match name with
+                | "Int" -> NumT (reason, AnyLiteral)
+                | "Float" -> NumT (reason, AnyLiteral)
+                | "String" -> StrT (reason, AnyLiteral)
+                | "Boolean" -> BoolT (reason, None)
+                | "ID" -> StrT (reason, Truthy)
+                | _ ->
+                  (match selection with
+                  | Some selection ->
+                    mk_tvar_where cx reason (fun out ->
+                      rec_flow cx trace (
+                        selection, GraphqlUseT (reason, GraphqlUse.ToObjT out)
+                      )
+                    )
+                  | None -> AnyT reason
+                  )
+              in
+              if non_null then t
+              else MaybeT t
+            | Graphql_schema2.Type.List t ->
+              let item_t = mk_tvar_where cx reason (fun x ->
+                rec_flow_t cx trace ((proc t), x)
+              ) in
+              let list_t = ArrT (reason_of_string "list", item_t, []) in
+              if non_null then list_t
+              else MaybeT list_t
+            | Graphql_schema2.Type.NonNull t ->
+              proc ~non_null:true t
+          in
+
+          (match type_def with
+          | Graphql_schema2.Type.Obj (_, fields_map, _) ->
+            (match SMap.get name fields_map with
+              | Some {Graphql_schema2.Field._type; _} ->
+                SMap.add name (proc _type) map
+              | _ -> map)
+          | _ -> map)
+
+        | _ -> map
+      ) SMap.empty in
+
+      let proto = (MixedT (reason, Mixed_everything)) in
+      let obj = mk_object_with_map_proto cx reason ~sealed:true map proto in
+
+      rec_flow_t cx trace (obj, result);
+
+    | _, GraphqlUseT (_, use_t) ->
+      let u_name = match use_t with
+        | GraphqlUse.MkSelectionT _ -> "MkSelectionT"
+        | GraphqlUse.SelectT _ -> "SelectT"
+        | GraphqlUse.GetT _ -> "GetT"
+        | GraphqlUse.AssignT _ -> "AssignT"
+        | GraphqlUse.GetRelayPropsT _ -> "GetRelayPropsT"
+        | GraphqlUse.ToObjT _ -> "ToObjT"
+      in
+      print_endline ("Missed GraphqlUseT: " ^ (string_of_ctor l) ^ " ~> " ^ u_name);
+
+    | GraphqlT _, _ ->
+      print_endline ("Missed GraphqlT: " ^ (string_of_use_ctor u));
+
     | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
         flow_err_prop_not_found cx trace (reason_op, reason_strict)
 
@@ -5038,8 +5239,16 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | SingletonBoolT _
   | SingletonStrT _ -> t
 
+  | GraphqlT (reason, Graphql.RelayPropsT o) ->
+    (* TODO: this is probably bad *)
+    mk_tvar_where cx reason (fun t ->
+      let o = subst cx ~force map o in
+      flow cx (o, GraphqlUseT (reason, GraphqlUse.GetRelayPropsT t))
+    )
+
   | ModuleT _
   | ExtendsT _
+  | GraphqlT _
     ->
       failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
@@ -5191,6 +5400,7 @@ and check_polarity cx polarity = function
   | ChoiceKitT _
   | CustomFunT _
   | DepPredT _
+  | GraphqlT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx polarity id =
@@ -7856,6 +8066,14 @@ and unify cx t1 t2 =
     (* rethrow *)
     raise ex
 
+and mk_graphql_selection cx reason type_name =
+  let schema = get_builtin cx "graphql$schema" reason in
+  mk_tvar_where cx reason (fun t ->
+    let mk_sel = GraphqlUse.MkSelectionT (type_name, t) in
+    flow cx (schema, GraphqlUseT (reason, mk_sel))
+  )
+
+
 (************* end of slab **************************************************)
 
 let intersect_members cx members =
@@ -8173,7 +8391,8 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | EvalT _
   | ExtendsT _
   | ChoiceKitT _
-  | CustomFunT _ ->
+  | CustomFunT _
+  | GraphqlT _ ->
     () (* TODO *)
   | DepPredT _ ->
     ()

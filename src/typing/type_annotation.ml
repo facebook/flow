@@ -341,6 +341,13 @@ let rec convert cx tparams_map = Ast.Type.(function
       UnionT (reason, UnionRep.make [t; TaintT (mk_reason "taint" loc)])
     )
 
+  | "$RelayProps" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let o = convert_type_params () |> List.hd in
+      let reason = mk_reason "relay props" loc in
+      GraphqlT (reason, Graphql.RelayPropsT o)
+    )
+
   | "Object$Assign" ->
       mk_custom_fun cx loc typeParameters ObjectAssign
   | "Object$GetPrototypeOf" ->

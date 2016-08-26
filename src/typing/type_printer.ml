@@ -240,6 +240,9 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
     | ModuleT _ ->
         "Module"
 
+    | GraphqlT _ ->
+        "Graphql Fragment"
+
     | t ->
         fallback t
 
@@ -411,6 +414,8 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     when weak
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
+
+  | GraphqlT _ -> true
 
   | _
     ->

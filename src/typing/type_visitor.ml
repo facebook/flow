@@ -149,6 +149,18 @@ class ['a] t = object(self)
 
   | DepPredT _ -> acc
 
+  | GraphqlT (_, t) ->
+    (match t with
+      | Graphql.SchemaT _ -> acc
+      | Graphql.FieldT (_, {GraphqlField.selection; _}) ->
+        (match selection with | Some t -> self#type_ cx acc t | None -> acc)
+      | Graphql.FragT {GraphqlFrag.selection; _} ->
+        self#type_ cx acc selection
+      | Graphql.SelectionT (_, _, fields) ->
+        self#list (self#type_ cx) acc fields
+      | Graphql.RelayPropsT t -> self#type_ cx acc t
+    )
+
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
   | TypeDestructorT (_, d) -> self#destructor cx acc d
@@ -230,6 +242,7 @@ class ['a] t = object(self)
   | IdxUnMaybeifyT _
   | CallAsPredicateT _
   | PredSubstT _
+  | GraphqlUseT _
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,
