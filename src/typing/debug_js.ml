@@ -1166,7 +1166,7 @@ and dump_t_ (depth, tvars) cx t =
   | CustomFunT _ -> p t
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
-  | OpenPredT _ -> p t
+  | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t

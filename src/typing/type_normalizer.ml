@@ -368,11 +368,13 @@ let rec normalize_type_impl cx ids t = match t with
         EmptyT.t
       end
 
+  | OpenPredT (_, t, _, _) ->
+      normalize_type_impl cx ids t
+
   | FunProtoT _
   | ExistsT _
   | ModuleT (_, _)
   | ExtendsT (_, _, _)
-  | OpenPredT _
   ->
     (** TODO **)
     failwith (spf "Unsupported type in normalize_type_impl: %s" (string_of_ctor t))

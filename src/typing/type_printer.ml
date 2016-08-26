@@ -246,6 +246,9 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
     | ModuleT _ ->
         "Module"
 
+    | ChoiceKitT _ ->
+        "ChoiceKit"
+
     | t ->
         fallback t
 
@@ -417,6 +420,9 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     when weak
     ->
       is_printed_type_parsable_impl weak cx EnclosureNone t
+
+  | OpenPredT (_, t, _, _) ->
+    is_printed_type_parsable_impl weak cx EnclosureNone t
 
   | _
     ->
