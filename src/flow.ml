@@ -26,6 +26,7 @@ end = struct
     CoverageCommand.command;
     FindModuleCommand.command;
     ForceRecheckCommand.command;
+    ShadowFileCommand.command;
     GetDefCommand.command;
     GetImportersCommand.command;
     GetImportsCommand.command;

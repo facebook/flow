@@ -72,7 +72,7 @@ let style_num = function
   | NormalWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg)
   | BoldWithBG (text, bg) -> (text_num text) ^ ";" ^ (background_num bg) ^ ";1"
 
-let print_one ?(color_mode=Color_Auto) c s =
+let print_one ?(color_mode=Color_Auto) ?(out_channel=stdout) c s =
   let should_color = match color_mode with
     | Color_Always -> true
     | Color_Never -> false
@@ -84,14 +84,14 @@ let print_one ?(color_mode=Color_Auto) c s =
             Unix.isatty Unix.stdout && term <> "dumb"
       end in
   if should_color
-  then Printf.printf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
-  else Printf.printf "%s" s
+  then Printf.fprintf out_channel "\x1b[%sm%s\x1b[0m" (style_num c) (s)
+  else Printf.fprintf out_channel "%s" s
 
-let cprint ?(color_mode=Color_Auto) strs =
-  List.iter strs (fun (c, s) -> print_one ~color_mode c s)
+let cprint ?(color_mode=Color_Auto) ?(out_channel=stdout) strs =
+  List.iter strs (fun (c, s) -> print_one ~color_mode ~out_channel c s)
 
-let cprintf ?(color_mode=Color_Auto) c =
-  Printf.ksprintf (print_one ~color_mode c)
+let cprintf ?(color_mode=Color_Auto) ?(out_channel=stdout) c =
+  Printf.ksprintf (print_one ~color_mode ~out_channel c)
 
 let (spinner, spinner_used) =
   let state = ref 0 in

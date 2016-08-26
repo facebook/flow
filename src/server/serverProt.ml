@@ -40,6 +40,7 @@ type command =
 | DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | ERROR_OUT_OF_DATE
 | FIND_MODULE of string * string
+| GEN_INTERFACES of file_input list
 | GET_DEF of file_input * int * int (* filename, line, char *)
 | GET_IMPORTERS of string list
 | GET_IMPORTS of string list
@@ -77,6 +78,11 @@ type infer_type_response = (
   Loc.t * string option * string option * Reason.t list,
   Loc.t * string
 ) Utils_js.ok_or_err
+
+type gen_interface_error =
+  | GenIface_TypecheckError of string * Errors.ErrorSet.t
+  | GenIface_UnexpectedError of string * string
+type gen_interface_response = (string * string, gen_interface_error) Utils_js.ok_or_err list
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   let command = {

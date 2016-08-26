@@ -7882,6 +7882,7 @@ let intersect_members cx members =
 module Autocomplete : sig
   type member_result =
     | Success of Type.t SMap.t
+    | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
@@ -7895,13 +7896,17 @@ end = struct
 
   type member_result =
     | Success of Type.t SMap.t
+    | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t
 
   let command_result_of_member_result = function
-    | Success map ->
+    | Success map
+    | SuccessModule (map, None) ->
         OK map
+    | SuccessModule (named_exports, Some cjs_export) ->
+        OK (SMap.add "default" cjs_export named_exports)
     | FailureMaybeType ->
         Err "autocomplete on possibly null or undefined value"
     | FailureAnyType ->
@@ -7952,6 +7957,14 @@ end = struct
         let prot_members = extract_members_as_map cx proto_t in
         let members = find_props cx flds in
         Success (SMap.union prot_members members)
+    | ModuleT (_, {exports_tmap; cjs_export;}) ->
+        let named_exports = find_props cx exports_tmap in
+        let cjs_export =
+          match cjs_export with
+          | Some t -> Some (resolve_type cx t)
+          | None -> None
+        in
+        SuccessModule (named_exports, cjs_export)
     | ThisTypeAppT (c, _, ts)
     | TypeAppT (c, ts) ->
         let c = resolve_type cx c in
