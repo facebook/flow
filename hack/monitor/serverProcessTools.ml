@@ -36,4 +36,8 @@ let check_exit_status proc_stat process monitor_config  =
     let is_oom = try check_dmesg_for_oom process with _ -> false in
     let time_taken = Unix.time () -. process.start_t in
     HackEventLogger.bad_exit
-      time_taken proc_stat monitor_config.log_file ~is_oom
+      time_taken proc_stat
+      (monitor_config.server_log_file,
+      monitor_config.monitor_log_file,
+      monitor_config.load_script_log_file)
+      ~is_oom
