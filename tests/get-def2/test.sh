@@ -29,3 +29,6 @@ $FLOW get-def --strip-root react.js 9 3
 $FLOW get-def --strip-root react.js 9 9
 $FLOW get-def --strip-root react.js 11 4
 $FLOW get-def --strip-root react.js 11 12
+
+# Inheritance
+$FLOW get-def --strip-root override.js 8 19

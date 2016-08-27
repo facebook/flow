@@ -8073,7 +8073,7 @@ end = struct
         let super_t = resolve_type cx super in
         let members = SMap.union fields methods in
         let super_flds = extract_members_as_map cx super_t in
-        Success (SMap.union super_flds members)
+        Success (AugmentableSMap.augment super_flds ~with_bindings:members)
     | ObjT (_, {props_tmap = flds; proto_t = proto; _}) ->
         let proto_reason = reason_of_t proto in
         let proto_t = resolve_type cx (IntersectionT (proto_reason,
@@ -8083,7 +8083,7 @@ end = struct
         ])) in
         let prot_members = extract_members_as_map cx proto_t in
         let members = find_props cx flds in
-        Success (SMap.union prot_members members)
+        Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | ThisTypeAppT (c, _, ts)
     | TypeAppT (c, ts) ->
         let c = resolve_type cx c in
@@ -8102,14 +8102,16 @@ end = struct
         let proto_t = resolve_type cx proto in
         let members = extract_members_as_map cx static_t in
         let prot_members = extract_members_as_map cx proto_t in
-        Success (SMap.union prot_members members)
+        Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | IntersectionT (_, rep) ->
         (* Intersection type should autocomplete for every property of
            every type in the intersection *)
         let ts = InterRep.members rep in
         let ts = List.map (resolve_type cx) ts in
         let members = List.map (extract_members_as_map cx) ts in
-        Success (List.fold_left SMap.union SMap.empty members)
+        Success (List.fold_left (fun acc members ->
+          AugmentableSMap.augment acc ~with_bindings:members
+        ) SMap.empty members)
     | UnionT (_, rep) ->
         (* Union type should autocomplete for only the properties that are in
         * every type in the intersection *)

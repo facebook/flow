@@ -214,3 +214,22 @@ let ordinal = function
   | 2 -> "2nd"
   | 3 -> "3rd"
   | n -> spf "%dth" n
+
+
+(* Module implementing the recommended way to augment a map.
+
+   Without this API, we end up using the lower-level Map.union API. But
+   Map.union sometimes has unexpected results because the order of the two
+   arguments matters when there's overlap. (It's implemented as a Map.fold of
+   Map.add, which has the effect of adding the bindings in the first argument to
+   the second argument.)
+
+   Instead, Augmentable(Map).augment map ~with_bindings makes the intention
+   explicit, and is implemented by simply passing the arguments in the correct
+   order to Map.union.
+*)
+module Augmentable(M: MyMap.S) = struct
+  let augment map ~with_bindings = M.union with_bindings map
+end
+
+module AugmentableSMap = Augmentable(SMap)
