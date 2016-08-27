@@ -2718,7 +2718,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Invalid_argument _ ->
           Utils_js.Err ("Negative refinement index.",
             (reason_of_t l, reason_of_use_t u))
-        | Failure "nth" ->
+        | Failure msg when msg = "nth" ->
           let r1 = suffix_reason
             (spf " that uses predicate on parameter at position %d" index)
             reason in

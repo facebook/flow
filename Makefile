@@ -106,6 +106,14 @@ FILES_TO_COPY=\
 JS_STUBS=\
 	$(wildcard js/*.js)
 
+# We need caml_hexstring_of_float for js_of_ocaml < 2.8
+JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml --version)
+JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
+JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
+ifeq (1, $(shell [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; echo $$?))
+	JS_STUBS += js/optional/caml_hexstring_of_float.js
+endif
+
 ################################################################################
 #                                    Rules                                     #
 ################################################################################
