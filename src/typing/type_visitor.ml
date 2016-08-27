@@ -147,8 +147,11 @@ class ['a] t = object(self)
   | IdxWrapper (_, t) ->
     self#type_ cx acc t
 
-  | OpenPredT (_ , t, _, _) ->
-    self#type_ cx acc t
+  | OpenPredT (_ , t, p_map, n_map) ->
+    let acc = self#type_ cx acc t in
+    let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
+    let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in
+    acc
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
@@ -164,8 +167,26 @@ class ['a] t = object(self)
   | Refine p -> self#predicate cx acc p
 
   method private predicate cx acc = function
+  | AndP (p1, p2) -> self#list (self#predicate cx) acc [p1;p2]
+  | OrP (p1, p2) -> self#list (self#predicate cx) acc [p1;p2]
+  | NotP p -> self#predicate cx acc p
+  | LeftP (_, t) -> self#type_ cx acc t
+  | RightP (_, t) -> self#type_ cx acc t
+  | ExistsP -> acc
+  | NullP -> acc
+  | MaybeP -> acc
+  | SingletonBoolP _ -> acc
+  | SingletonStrP _ -> acc
+  | SingletonNumP _ -> acc
+  | BoolP -> acc
+  | FunP -> acc
+  | NumP -> acc
+  | ObjP -> acc
+  | StrP -> acc
+  | VoidP -> acc
+  | ArrP -> acc
+  | PropExistsP _ -> acc
   | LatentP (t, _) -> self#type_ cx acc t
-  | _ -> acc
 
   method private destructor _cx acc = function
   | NonMaybeType -> acc
