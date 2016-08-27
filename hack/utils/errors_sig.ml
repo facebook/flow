@@ -77,6 +77,7 @@ module type S = sig
   val dynamic_method_call : Pos.t -> unit
   val nullsafe_property_write_context : Pos.t -> unit
   val illegal_fun : Pos.t -> unit
+  val illegal_member_variable_class : Pos.t -> unit
   val illegal_meth_fun : Pos.t -> unit
   val illegal_inst_meth : Pos.t -> unit
   val illegal_meth_caller : Pos.t -> unit
