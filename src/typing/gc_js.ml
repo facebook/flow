@@ -383,13 +383,13 @@ and gc_use cx state = function
       gc_exporttypes cx state exporttypes;
       gc cx state t_out
 
+  | CopyNamedExportsT (_, target_module, t_out) ->
+      gc cx state target_module;
+      gc cx state t_out;
+
   | ExportNamedT (_, t_smap, t_out) ->
       List.iter (gc cx state) (SMap.values t_smap);
       gc cx state t_out
-
-  | ExportStarFromT (_, target_module, t_out) ->
-      gc cx state target_module;
-      gc cx state t_out;
 
   | TupleMapT (_, t, t_out) ->
       gc cx state t;

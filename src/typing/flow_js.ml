@@ -1398,12 +1398,35 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (PolyT(_, TypeT _), ImportTypeT(_, _, t))
       -> rec_flow_t cx trace (l, t)
 
-    (**
-     * TODO: Delete this once the legacy export-type hacks have been eliminated
-     *       in favor of the newer, first class export-type feature.
-     *
-     *       TODO(jeffmo) Task(6860853)
-     *)
+    (** TODO: This rule allows interpreting an object as a type!
+
+        It is currently used to work with modules that export named types,
+        e.g. 'react' or 'immutable'. For example, one can do
+
+        `import type React from 'react'`
+
+        followed by uses of `React` as a container of types in (say) type
+        definitions like
+
+        `type C = React.Component<any,any,any>`
+
+        Fortunately, in that case `React` is stored as a type binding in the
+        environment, so it cannot be used as a value.
+
+        However, removing this special case causes no loss of expressibility
+        (while making the model simpler). For example, in the above example we
+        can write
+
+        `import type { Component } from 'react'`
+
+        followed by (say)
+
+        `type C = Component<any,any,any>`
+
+        Overall, we should be able to (at least conceptually) desugar `import
+        type` to `import` followed by `type`.
+
+    **)
     | (ObjT _, ImportTypeT(_, "default", t)) ->
       rec_flow_t cx trace (l, t)
 
@@ -1496,18 +1519,39 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* CommonJS exports object or an ES ModuleNamespace object).              *)
     (**************************************************************************)
 
-    (* ES exports *)
+    (* In the following rules, ModuleT appears in two contexts: as imported
+       modules, and as modules to be exported.
+
+       As a module to be exported, ModuleT denotes a "growing" module. In this
+       form, its contents may change: e.g., its named exports may be
+       extended. Conversely, the rules that drive this growing phase can expect
+       to work only on ModuleT. In particular, modules that are not @flow never
+       hit growing rules: they are modeled as `any`.
+
+       On the other hand, as an imported module, ModuleT denotes a "fully
+       formed" module. The rules hit by such a module don't grow it: they just
+       take it apart and read it. The same rules could also be hit by modules
+       that are not @flow, so the rules have to deal with `any`. *)
+
+    (* util that grows a module by adding named exports from a given map *)
     | (ModuleT(_, exports), ExportNamedT(_, tmap, t_out)) ->
       SMap.iter (write_prop cx exports.exports_tmap) tmap;
       rec_flow_t cx trace (l, t_out)
 
-    (* export * from *)
-    | (ModuleT(_, source_exports), ExportStarFromT(reason, target_module_t, t_out)) ->
+    (** Copy the named exports from a source module into a target module. Used
+        to implement `export * from 'SomeModule'`, with the current module as
+        the target and the imported module as the source. *)
+    | (ModuleT(_, source_exports),
+       CopyNamedExportsT(reason, target_module_t, t_out)) ->
       let source_tmap = find_props cx source_exports.exports_tmap in
       rec_flow cx trace (
         target_module_t,
         ExportNamedT(reason, source_tmap, t_out)
       )
+
+    (* There is nothing to copy from a module exporting `any` or `Object`. *)
+    | (AnyT _ | AnyObjT _), CopyNamedExportsT(_, target_module, t) ->
+      rec_flow_t cx trace (target_module, t)
 
     (**
      * ObjT CommonJS export values have their properties turned into named

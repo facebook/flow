@@ -404,8 +404,8 @@ module rec TypeTerm : sig
         reason
         * (* local ModuleT *) (reason * exporttypes)
         * (* 't_out' to receive the resolved ModuleT *) t_out
+    | CopyNamedExportsT of reason * t * t_out
     | ExportNamedT of reason * t SMap.t * t_out
-    | ExportStarFromT of reason * t * t_out
 
     (* Map a FunT over each element in a tuple *)
     | TupleMapT of reason * t * t_out
@@ -1074,6 +1074,7 @@ let any_propagating_use_t = function
   | ImportDefaultT _
   | ImportNamedT _
   | CJSExtractNamedExportsT _
+  | CopyNamedExportsT _
   (* TODO: ...others *)
     -> true
   | _ -> false
@@ -1281,8 +1282,8 @@ and reason_of_use_t = function
   | ImportTypeofT (reason, _, _) -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | CJSExtractNamedExportsT (reason, _, _) -> reason
+  | CopyNamedExportsT (reason, _, _) -> reason
   | ExportNamedT (reason, _, _) -> reason
-  | ExportStarFromT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
   | TupleMapT (reason, _, _) -> reason
   | ReactCreateElementT (reason, _, _) -> reason
@@ -1508,8 +1509,8 @@ and mod_reason_of_use_t f = function
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
 
   | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
+  | CopyNamedExportsT (reason, target_module_t, t_out) -> CopyNamedExportsT(f reason, target_module_t, t_out)
   | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
-  | ExportStarFromT (reason, target_module_t, t_out) -> ExportStarFromT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
   | TupleMapT (reason, t, tout) -> TupleMapT (f reason, t, tout)
   | ReactCreateElementT (reason, t, tout) -> ReactCreateElementT (f reason, t, tout)
@@ -1678,8 +1679,8 @@ let string_of_use_ctor = function
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | CJSRequireT _ -> "CJSRequireT"
   | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
+  | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | ExportNamedT _ -> "ExportNamedT"
-  | ExportStarFromT _ -> "ExportStarFromT"
   | DebugPrintT _ -> "DebugPrintT"
   | TupleMapT _ -> "TupleMapT"
   | ReactCreateElementT _ -> "ReactCreateElementT"

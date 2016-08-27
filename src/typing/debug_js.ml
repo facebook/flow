@@ -534,12 +534,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes));
       "t_out", _json_of_t json_cx t_out;
     ]
-  | ExportNamedT (_, tmap, t_out) -> [
-      "tmap", json_of_tmap json_cx tmap;
+  | CopyNamedExportsT (_, target_module_t, t_out) -> [
+      "target_module_t", _json_of_t json_cx target_module_t;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | ExportStarFromT (_, target_module_t, t_out) -> [
-      "target_module_t", _json_of_t json_cx target_module_t;
+  | ExportNamedT (_, tmap, t_out) -> [
+      "tmap", json_of_tmap json_cx tmap;
       "t_out", _json_of_t json_cx t_out;
     ]
   | DebugPrintT _reason -> []
@@ -1247,8 +1247,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertImportIsValueT _
   | CJSRequireT _
   | CJSExtractNamedExportsT _
+  | CopyNamedExportsT _
   | ExportNamedT _
-  | ExportStarFromT _
   | DebugPrintT _
   | TupleMapT _
   | ReactCreateElementT _

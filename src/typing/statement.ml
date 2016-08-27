@@ -2050,7 +2050,7 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             import ~reason cx source_module_name loc,
-            ExportStarFromT(reason, exports cx, t)
+            CopyNamedExportsT(reason, exports cx, t)
           )
         )
       )
