@@ -59,3 +59,6 @@ $FLOW autocomplete --strip-root --json issue-1368.js 20 10 < issue-1368.js
 
 printf "if.js = "
 $FLOW autocomplete --strip-root --json if.js 3 7 < if.js
+
+printf "override.js = "
+$FLOW autocomplete --strip-root --json override.js 10 16 < override.js
