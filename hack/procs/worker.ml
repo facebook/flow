@@ -180,9 +180,11 @@ let unix_worker_main restore state (ic, oc) =
               Printf.printf "Worker exited (code: %d)\n" code;
               flush stdout;
 
-              (* Propagate out of memory exit codes *)
+              (* Propagate out of memory exit codes and lazy bug*)
               if code = Exit_status.(exit_code Out_of_shared_memory)
               then Exit_status.(exit Out_of_shared_memory)
+              else if code = Exit_status.(exit_code Lazy_decl_bug)
+              then Exit_status.(exit Lazy_decl_bug)
               else raise End_of_file
           | Unix.WSIGNALED x ->
               let sig_str = PrintSignal.string_of_signal x in
@@ -268,6 +270,8 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
         fst res
     | _, Unix.WEXITED i when i = Exit_status.(exit_code Out_of_shared_memory) ->
         raise SharedMem.Out_of_shared_memory
+    | _, Unix.WEXITED i when i = Exit_status.(exit_code Lazy_decl_bug) ->
+        Exit_status.(exit Lazy_decl_bug)
     | _, Unix.WEXITED i ->
         Printf.ksprintf failwith "Subprocess(%d): fail %d" slave_pid i
     | _, Unix.WSTOPPED i ->
