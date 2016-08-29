@@ -57,8 +57,6 @@ addons:
 before_install: if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
 install: bash -e resources/travis/install_deps.sh
 script: bash -e resources/travis/build.sh
-after_success: bash -e resources/travis/after_script.sh
-after_failure: bash -e resources/travis/after_script.sh
 before_deploy: bash -e resources/travis/before_deploy.sh
 
 cache:

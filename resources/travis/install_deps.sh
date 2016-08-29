@@ -44,21 +44,6 @@ case "$TRAVIS_OS_NAME" in
     brew update
     brew install aspcud awscli
     printf "travis_fold:end:brew_install\n"
-
-    printf "travis_fold:start:cache.1\nSetting up build cache\n"
-    echo -n "downloading $TRAVIS_BRANCH/$SLUG.tar.gz:"
-    curl -sSL --fail -o "$TMP/$SLUG.tar.gz" \
-      "https://s3.amazonaws.com/ci-cache.flowtype.org/$TRAVIS_BRANCH/$SLUG.tar.gz" \
-      || true
-    if [ -f "$TMP/$SLUG.tar.gz" ]; then
-      gzip -d "$TMP/$SLUG.tar.gz"
-      shasum "$TMP/$SLUG.tar" > "$TMP/$SLUG.tar.sha1"
-      tar -Pxf "$TMP/$SLUG.tar"
-      echo " done"
-    else
-      echo " no cache found"
-    fi
-    printf "travis_fold:end:cache.1\n"
     ;;
 esac
 
