@@ -123,7 +123,7 @@ let rec split_overlapping_ranges accum = Loc.(function
           in
           accum, rest
 
-        else if loc1._end.offset <= loc2._end.offset then
+        else if loc1._end.offset = loc2._end.offset then
           (* range 1 and 2 end at the same place, so split range 1 and consume
              the first part, which doesn't overlap *)
           let head_loc = { loc1 with
