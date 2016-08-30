@@ -123,7 +123,7 @@ let rec split_overlapping_ranges accum = Loc.(function
           in
           accum, rest
 
-        else if loc1._end.offset = loc2._end.offset then
+        else if loc1._end.offset <= loc2._end.offset then
           (* range 1 and 2 end at the same place, so split range 1 and consume
              the first part, which doesn't overlap *)
           let head_loc = { loc1 with
@@ -154,19 +154,21 @@ let rec split_overlapping_ranges accum = Loc.(function
 )
 
 let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
-  if debug && not json then List.iter debug_range types;
+  let covered, total = List.fold_left accum_coverage (0, 0) types in
+  let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
-  begin if color && not json then
+  if color && json then
+    prerr_endline "Error: --color and --json flags cannot be used together"
+  else if debug && json then
+    prerr_endline "Error: --debug and --json flags cannot be used together"
+  else if debug then
+    List.iter debug_range types
+  else if color then
     let types = split_overlapping_ranges [] types |> List.rev in
     let colors, _ = colorize_file content 0 [] types in
     Tty.cprint (List.rev colors);
     print_endline ""
-  end;
-
-  let covered, total = List.fold_left accum_coverage (0, 0) types in
-  let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
-
-  if json then
+  else if json then
     let uncovered_locs = types
       |> List.filter (fun (_, is_covered) -> not is_covered)
       |> List.map (fun (loc, _) -> loc)
