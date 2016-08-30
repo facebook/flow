@@ -35,6 +35,51 @@ function startWatchAndRun(suites, args) {
     format("Watching %d suites\n", suites.size),
   );
 
+  let shortcuts: Map<string, [string, () => Promise<mixed>]> = new Map();
+
+  const printShortcuts = () => {
+    process.stdout.write("\nShortcuts:\n");
+    for (const [char, [descr, _]] of shortcuts.entries()) {
+      process.stdout.write(format("%s    %s\n", char, descr));
+    }
+    process.stdout.write("> ");
+  }
+
+  const keydown = (chunk) => {
+    const char = chunk.toString()[0];
+
+    const shortcut = shortcuts.get(char);
+
+    if (shortcut) {
+      const [name, fn] = shortcut;
+      process.stdout.write(format("%s\n\n", name));
+      fn();
+    } else {
+      process.stdout.write(format("Unknown shortcut: %s\n", char));
+      printShortcuts();
+    }
+  }
+
+  const start_listening_for_shortcuts = () => {
+      if (process.stdin.setRawMode) {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.setEncoding('utf8');
+        process.stdin.on('data', keydown);
+
+        printShortcuts();
+      }
+  }
+
+  const stopListeningForShortcuts = () => {
+    if (process.stdin.setRawMode) {
+      process.stdin.setRawMode(false);
+      process.stdin.resume();
+      process.stdin.setEncoding('utf8');
+      process.stdin.removeListener('data', keydown);
+    }
+  }
+
   const run = async () => {
     if (running === true) {
       return;
@@ -55,6 +100,7 @@ function startWatchAndRun(suites, args) {
     }
 
     running = true;
+    stopListeningForShortcuts();
     const runSet = queuedSet;
     queuedSet = new Set();
 
@@ -72,9 +118,47 @@ function startWatchAndRun(suites, args) {
     }
 
     if (Object.keys(suitesToRun).length > 0) {
-      await runOnce(suitesToRun, args);
+      const [exitCode, runID] = await runOnce(suitesToRun, args);
+
+      shortcuts.set(
+        't',
+        ["rerun the tests you just ran", () => rerun(runID, false)],
+      );
+      if (exitCode) {
+        shortcuts.set(
+          'f',
+          ["rerun only the tests that just failed", () => rerun(runID, true)],
+        );
+        shortcuts.set(
+          'r',
+          ["record the tests that just failed", () => record(runID)],
+        )
+      } else {
+        shortcuts.delete('f');
+        shortcuts.delete('r');
+      }
     }
 
+    running = false;
+    start_listening_for_shortcuts();
+    run();
+  }
+
+  async function rerun(runID, failedOnly) {
+    suites = await findTestsByRun(runID, failedOnly);
+    suites.forEach(suite => queuedSet.add(suite));
+    run();
+  }
+
+  async function record(runID) {
+    running = true;
+    require('../record/recordRunner').default({
+      suites: null,
+      bin: args.bin,
+      parallelism: args.parallelism,
+      errorCheckCommand: args.errorCheckCommand,
+      rerun: runID,
+    });
     running = false;
     run();
   }
@@ -92,6 +176,12 @@ function startWatchAndRun(suites, args) {
     watcher.on('delete', callback);
   };
 
+  shortcuts.set('q', ["quit", async () => process.exit(0)]);
+  shortcuts.set('a', ["run all the tests", async () => {
+    suites.forEach(suiteName => queuedSet.add(suiteName));
+    run();
+  }])
+  start_listening_for_shortcuts();
 
   watch(
     sane(dirname(args.bin), {glob: [basename(args.bin)]}),
@@ -201,7 +291,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   }
   process.stderr.write("\n\n");
 
-  return exitCode;
+  return [exitCode, runID];
 }
 
 export default async function(args: Args): Promise<void> {
@@ -219,7 +309,7 @@ export default async function(args: Args): Promise<void> {
     for (const suiteName of suites) {
       loadedSuites[suiteName] = loadSuite(suiteName);
     }
-    const exitCode = await runOnce(loadedSuites, args);
+    const [exitCode, _] = await runOnce(loadedSuites, args);
     process.exit(exitCode);
   }
 }
