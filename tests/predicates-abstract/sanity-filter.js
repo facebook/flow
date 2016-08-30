@@ -13,7 +13,7 @@ declare var c: Array<mixed>;
 const d = my_filter(c, is_string_regular);
 (d: Array<string>);
 
-function is_string(x): boolean checks {
+function is_string(x): boolean %checks {
   return typeof x === "string";
 }
 

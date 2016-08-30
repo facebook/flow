@@ -1,3 +1,7 @@
+sanity-conditional.js:5
+  5: declare function foo(x: string): mixed %checks(x = "1");
+                                                      ^ Unexpected token =
+
 sanity-fall-through.js:12
  12:   return 1;
               ^ number. This type is incompatible with the expected return type of
@@ -59,13 +63,13 @@ sanity-parameter-mismatch.js:10
                          ^^^^^^^^^^^^^ array type
 
 sanity-pred-with-body.js:6
-  6: function pred(x: mixed): boolean checks(typeof x === "string") { // error: cannot use pred type here
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+  6: function pred(x: mixed): boolean %checks(typeof x === "string") { // error: cannot use pred type here
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
 
 sanity-return-type.js:3
-  3: declare function f2(x: mixed): string checks(Array.isArray(x));
+  3: declare function f2(x: mixed): string %checks(Array.isArray(x));
                                     ^^^^^^ string. This type is incompatible with
 boolean
 
 
-Found 9 errors
+Found 10 errors

@@ -2834,7 +2834,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason desc loc in
 
       (match predicate with
-      | Some (_, Ast.Predicate.Inferred) ->
+      | Some (_, Ast.Type.Predicate.Inferred) ->
           FlowError.add_error cx (loc, [
             "expression_ (Function _) - \
             Predicate function declarations need to declare \
@@ -4707,13 +4707,13 @@ and mk_method cx reason func this =
 and declare_function_to_function_declaration cx id predicate =
   let _, { Ast.Identifier.typeAnnotation; _ } = id in
   match predicate with
-  | Some (loc, Ast.Predicate.Inferred) ->
+  | Some (loc, Ast.Type.Predicate.Inferred) ->
       FlowError.add_error cx (loc, [
         "Predicate function declarations need to declare \
         a predicate expression."]);
       None
 
-  | Some (loc, Ast.Predicate.Declared e) -> begin
+  | Some (loc, Ast.Type.Predicate.Declared e) -> begin
       match typeAnnotation with
       | Some (_, (_, Ast.Type.Function
         { Ast.Type.Function.params;
@@ -4746,7 +4746,7 @@ and declare_function_to_function_declaration cx id predicate =
             body = body;
             async = false;
             generator = false;
-            predicate = Some (loc, Ast.Predicate.Inferred);
+            predicate = Some (loc, Ast.Type.Predicate.Inferred);
             expression = false;
             returnType = returnType;
             typeParameters;

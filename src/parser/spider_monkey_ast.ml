@@ -189,6 +189,14 @@ and Type : sig
       params: Type.t list;
     }
   end
+
+  module Predicate : sig
+    type t = Loc.t * t'
+    and t' =
+      | Declared of Expression.t
+      | Inferred
+  end
+
 end = Type
 
 and Statement : sig
@@ -358,7 +366,7 @@ and Statement : sig
   module DeclareFunction : sig
     type t = {
       id: Identifier.t;
-      predicate: Predicate.t option;
+      predicate: Type.Predicate.t option;
     }
   end
   module DeclareModule : sig
@@ -990,18 +998,11 @@ and Function : sig
     body: body;
     async: bool;
     generator: bool;
-    predicate: Predicate.t option;
+    predicate: Type.Predicate.t option;
     expression: bool;
     returnType: Type.annotation option;
     typeParameters: Type.ParameterDeclaration.t option;
   }
 end = Function
-
-and Predicate : sig
-  type t = Loc.t * t'
-  and t' =
-    | Declared of Expression.t
-    | Inferred
-end = Predicate
 
 type program = Loc.t * Statement.t list * Comment.t list

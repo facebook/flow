@@ -4110,7 +4110,7 @@ module.exports = {
       }
     },
     'Function Predicates': {
-      'declare function f(x: mixed): boolean checks (x !== null);': {
+      'declare function f(x: mixed): boolean %checks(x !== null);': {
         'body.0': {
           'type': 'DeclareFunction',
           'id': {
@@ -4146,7 +4146,7 @@ module.exports = {
           },
         },
       },
-      'function foo(x: mixed) checks { return x !== null }': {
+      'function foo(x: mixed): %checks { return x !== null }': {
         'body.0': {
           'type':'FunctionDeclaration',
           'id':{
@@ -4208,7 +4208,7 @@ module.exports = {
           'typeParameters':null
         }
       },
-      'var a1 = (x: mixed) checks => x !== null;': {
+      'var a1 = (x: mixed): %checks => x !== null;': {
         'body.0':     {
           'type':'VariableDeclaration',
           'declarations':[
@@ -4274,7 +4274,7 @@ module.exports = {
           'kind':'var'
         }
       },
-      '(x) checks => x !== null;': {
+      '(x): %checks => x !== null;': {
         'body.0':     {
           'type':'ExpressionStatement',
           'expression':{
@@ -4317,10 +4317,10 @@ module.exports = {
         }
 
       },
-      'var a3: (x: mixed) => boolean checks (x !== null);': {
-        'errors.0.message': 'Unexpected identifier'
+      'var a3: (x: mixed) => boolean %checks(x !== null);': {
+        'errors.0.message': 'Unexpected token %'
       },
-      'declare function f(x: mixed): boolean checks (var x = 1; typeof x == "string");': {
+      'declare function f(x: mixed): boolean %checks(var x = 1; typeof x == "string");': {
         'errors.0.message': 'Unexpected token var'
       }
     }

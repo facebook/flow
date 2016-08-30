@@ -60,14 +60,6 @@ let string_starts_with long short =
   with Invalid_argument _ ->
     false
 
-(* NOTE: temporary support for predicated function definitions requires
-   that the name starts with `$pred`. In later iterations we would like to
-   add support for a more compact solutions (e.g. `function?(...)`)
-*)
-let is_predicate = function
-  | Some id -> string_starts_with (name_of_id id) "$pred$"
-  | _ -> false
-
 module rec Parse : sig
   val program : env -> Ast.program
   val statement : env -> Ast.Statement.t
@@ -76,6 +68,7 @@ module rec Parse : sig
   val statement_list_with_directives : term_fn:(Token.t -> bool) -> env -> Ast.Statement.t list * bool
   val module_body : term_fn:(Token.t -> bool) -> env -> Ast.Statement.t list
   val expression : env -> Ast.Expression.t
+  val conditional : env -> Ast.Expression.t
   val assignment : env -> Ast.Expression.t
   val object_initializer : env -> Loc.t * Ast.Expression.Object.t
   val array_initializer : env -> Loc.t * Ast.Expression.Array.t
@@ -91,7 +84,6 @@ module rec Parse : sig
   val class_declaration : env -> Ast.Expression.t list -> Ast.Statement.t
   val class_expression : env -> Ast.Expression.t
   val is_assignable_lhs : Ast.Expression.t -> bool
-  val predicate : env -> Ast.Predicate.t option
 end = struct
   module Type : sig
     val _type : env -> Ast.Type.t
@@ -103,6 +95,8 @@ end = struct
     val function_param_list : env -> Type.Function.Param.t option * Type.Function.Param.t list
     val annotation : env -> Ast.Type.annotation
     val annotation_opt : env -> Ast.Type.annotation option
+    val predicate_opt : env -> Ast.Type.Predicate.t option
+    val annotation_and_predicate_opt : env -> Ast.Type.annotation option * Ast.Type.Predicate.t option
   end = struct
     type param_list_or_type =
       | ParamList of (Type.Function.Param.t option * Type.Function.Param.t list)
@@ -643,6 +637,37 @@ end = struct
       | T_COLON -> Some (annotation env)
       | _ -> None
 
+    let predicate env =
+      let checks_loc = Peek.loc env in
+      Expect.token env T_CHECKS;
+      if Peek.token env = T_LPAREN then begin
+        Expect.token env T_LPAREN;
+        Eat.push_lex_mode env Lex_mode.NORMAL;
+        let exp = Parse.conditional env in
+        Eat.pop_lex_mode env;
+        let rparen_loc = Peek.loc env in
+        Expect.token env T_RPAREN;
+        let loc = Loc.btwn checks_loc rparen_loc in
+        (loc, Ast.Type.Predicate.Declared exp)
+      end else
+        (checks_loc, Ast.Type.Predicate.Inferred)
+
+    let predicate_opt env =
+      match Peek.token env with
+      | T_CHECKS -> Some (predicate env)
+      | _ -> None
+
+    let annotation_and_predicate_opt env =
+      match Peek.token env, Peek.token ~i:1 env with
+      | T_COLON, T_CHECKS ->
+        Expect.token env T_COLON;
+        (None, predicate_opt env)
+      | T_COLON, _ ->
+         let annotation = annotation_opt env in
+         let predicate = predicate_opt env in
+         (annotation, predicate)
+      | _ -> None, None
+
     let wrap f env =
       let env = env |> with_strict true in
       Eat.push_lex_mode env Lex_mode.TYPE;
@@ -661,6 +686,8 @@ end = struct
     let function_param_list = wrap function_param_list
     let annotation = wrap annotation
     let annotation_opt = wrap annotation_opt
+    let predicate_opt = wrap predicate_opt
+    let annotation_and_predicate_opt = wrap annotation_and_predicate_opt
     let generic = wrap generic
   end
 
@@ -835,8 +862,7 @@ end = struct
           (Type.type_parameter_declaration env, Some id)
       ) in
       let params, defaults, rest = function_params env in
-      let returnType = Type.annotation_opt env in
-      let predicate = Parse.predicate env in
+      let (returnType, predicate) = Type.annotation_and_predicate_opt env in
       let _, body, strict = function_body env ~async ~generator in
       let simple = is_simple_function_params params defaults rest in
       strict_post_check env ~strict ~simple id params;
@@ -997,20 +1023,15 @@ end = struct
         | T_ARROW (* x => 123 *)
         | T_COLON -> (* (x): number => 123 *)
           raise Try.Rollback
-        | _ when Peek.is_identifier env ->
-          (* (x): number checks => 123 *)
-          if Peek.value env = "checks" then
+        (* async x => 123 -- and we've already parsed async as an identifier
+         * expression *)
+        | _ when Peek.is_identifier env -> begin match snd ret with
+          | Expression.Identifier (_, {Identifier.name = "async"; _ })
+              when not (Peek.is_line_terminator env) ->
             raise Try.Rollback
-          (* async x => 123 -- and we've already parsed async as an identifier
-           * expression *)
-          else begin match snd ret with
-            | Expression.Identifier (_, {Identifier.name = "async"; _ })
-                when not (Peek.is_line_terminator env) ->
-              raise Try.Rollback
-            | _ -> ret
-            end
+          | _ -> ret
+          end
         | _ -> ret
-
       in fun env ->
         match Peek.token env, Peek.is_identifier env with
         | T_YIELD, _ when (allow_yield env) -> yield env
@@ -1018,10 +1039,10 @@ end = struct
         | T_LESS_THAN, _
         | _, true ->
 
-          (* Ok, we don't know if this is going to be an arrow function of a
-          * regular assignment expression. Let's first try to parse it as an
-          * assignment expression. If that fails we'll try an arrow function.
-          *)
+          (* Ok, we don't know if this is going to be an arrow function or a
+           * regular assignment expression. Let's first try to parse it as an
+           * assignment expression. If that fails we'll try an arrow function.
+           *)
           (match Try.to_parse env try_assignment_but_not_arrow_function with
           | Try.ParsedSuccessfully expr -> expr
           | Try.FailedToParse ->
@@ -1493,8 +1514,7 @@ end = struct
           id, Type.type_parameter_declaration env
         end in
       let params, defaults, rest = Declaration.function_params env in
-      let returnType = Type.annotation_opt env in
-      let predicate = Parse.predicate env in
+      let returnType, predicate = Type.annotation_and_predicate_opt env in
       let end_loc, body, strict =
         Declaration.function_body env ~async ~generator in
       let simple = Declaration.is_simple_function_params params defaults rest in
@@ -1739,19 +1759,18 @@ end = struct
          * that it's an async function *)
         let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
         let typeParameters = Type.type_parameter_declaration env in
-        let params, defaults, rest, returnType =
+        let params, defaults, rest, returnType, predicate =
           (* Disallow all fancy features for identifier => body *)
           if Peek.is_identifier env && typeParameters = None
           then
             let id =
               Parse.identifier ~restricted_error:Error.StrictParamName env in
             let param = fst id, Pattern.Identifier id in
-            [param], [], None, None
+            [param], [], None, None, None
           else
             let params, defaults, rest = Declaration.function_params env in
-            params, defaults, rest, Type.annotation_opt env in
-
-        let predicate = Parse.predicate env in
+            let returnType, predicate = Type.annotation_and_predicate_opt env in
+            params, defaults, rest, returnType, predicate in
 
         (* It's hard to tell if an invalid expression was intended to be an
          * arrow function before we see the =>. If there are no params, that
@@ -1791,7 +1810,6 @@ end = struct
           body;
           async;
           generator = false; (* arrow functions cannot be generators *)
-          (* TODO: add syntax support for arrow predicates *)
           predicate;
           expression;
           returnType;
@@ -2996,6 +3014,7 @@ end = struct
       Expect.token env T_COLON;
       let returnType = Type._type env in
       let end_loc = fst returnType in
+      let predicate = Type.predicate_opt env in
       let loc = Loc.btwn start_sig_loc end_loc in
       let value = loc, Ast.Type.(Function {Function.
         params;
@@ -3011,7 +3030,6 @@ end = struct
       let end_loc = match Peek.semicolon_loc env with
       | None -> end_loc
       | Some end_loc -> end_loc in
-      let predicate = Parse.predicate env in
       Eat.semicolon env;
       let loc = Loc.btwn start_loc end_loc in
       loc, Statement.DeclareFunction.({ id; predicate })
@@ -4342,6 +4360,7 @@ end = struct
     | _ ->
         expr
 
+  and conditional = Expression.conditional
   and assignment = Expression.assignment
   and object_initializer = Object._initializer
   and object_key = Object.key
@@ -4427,23 +4446,6 @@ end = struct
 
   and pattern = Pattern.pattern
   and pattern_from_expr = Pattern.from_expr
-
-  and predicate env =
-    let checks_loc = Peek.loc env in
-    if Peek.token env = T_IDENTIFIER && Peek.value env = "checks" then (
-      Expect.token env T_IDENTIFIER;
-      if Expect.maybe env T_LPAREN then (
-        let exp = Parse.expression env in
-        let rparen_loc = Peek.loc env in
-        Expect.token env T_RPAREN;
-        let loc = Loc.btwn checks_loc rparen_loc in
-        Some (loc, Predicate.Declared exp)
-      )
-      else
-        Some (checks_loc, Predicate.Inferred)
-    )
-    else
-      None
 
 end
 

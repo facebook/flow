@@ -51,12 +51,12 @@ sanity-unbound-var.js:15
                 ^ String
 
 sanity.js:5
-  5: function check(y) checks(typeof y === "string") {
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
+  5: function check(y): %checks(typeof y === "string") {
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot declare predicate when a function body is present.
 
 sanity.js:16
- 16: function indirect_is_number(y) checks {
-                                           ^ Invalid body for predicate function. Expected a simple return statement as body.
+ 16: function indirect_is_number(y): %checks {
+                                             ^ Invalid body for predicate function. Expected a simple return statement as body.
 
 
 Found 10 errors
