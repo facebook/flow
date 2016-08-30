@@ -154,9 +154,9 @@ let rec split_overlapping_ranges accum = Loc.(function
 )
 
 let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
-  if debug then List.iter debug_range types;
+  if debug && not json then List.iter debug_range types;
 
-  begin if color then
+  begin if color && not json then
     let types = split_overlapping_ranges [] types |> List.rev in
     let colors, _ = colorize_file content 0 [] types in
     Tty.cprint (List.rev colors);
