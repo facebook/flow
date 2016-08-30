@@ -8254,7 +8254,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
 
   | ArrT (_, t, ts) ->
     recurse ~infer:true t;
-    List.iter recurse ts
+    List.iter (recurse ~infer:true) ts
 
   | ClassT t
   | TypeT (_, t) ->
