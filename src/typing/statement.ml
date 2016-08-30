@@ -923,7 +923,7 @@ and statement cx = Ast.Statement.(
            * a Promise<T> via Promise.resolve. *)
           let reason = mk_reason "async return" loc in
           Flow.get_builtin_typeapp cx reason "Promise" [
-            Flow.mk_tvar_where cx reason (fun tvar ->
+            Flow.mk_tvar_derivable_where cx reason (fun tvar ->
               let funt = Flow.get_builtin cx "$await" reason in
               let callt = Flow.mk_functiontype [t] tvar in
               let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
