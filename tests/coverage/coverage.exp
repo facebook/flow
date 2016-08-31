@@ -1,0 +1,38 @@
+// check coverage of declare module
+
+declare module foo {
+}
+
+Covered: 100.00% (1 of 1 expressions)
+
+// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+// that we implicitly assume in type-at-pos and coverage implementations. In
+// particular, when unchecked it causes a crash with coverage --color.
+
+declare module foo {
+}
+
+declare module bar {
+}
+
+// TODO
+
+Covered: 100.00% (2 of 2 expressions)
+
+// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+// that we implicitly assume in type-at-pos and coverage implementations. In
+// particular, when unchecked it causes non-termination with coverage --color.
+
+declare module foo {
+}
+
+declare module bar {
+}
+
+// TODO
+
+declare class qux {
+}
+
+Covered: 100.00% (3 of 3 expressions)
+

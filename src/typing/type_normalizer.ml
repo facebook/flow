@@ -371,9 +371,20 @@ let rec normalize_type_impl cx ids t = match t with
   | OpenPredT (_, t, _, _) ->
       normalize_type_impl cx ids t
 
+  | ModuleT (_, exporttypes) ->
+    let reason = reason_of_string "module" in
+    let exports_tmap =
+      Context.find_props cx exporttypes.exports_tmap
+      |> SMap.map (normalize_type_impl cx ids)
+      |> Context.make_property_map cx
+    in
+    let cjs_export = match exporttypes.cjs_export with
+      | None -> None
+      | Some t -> Some (normalize_type_impl cx ids t) in
+    ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
+
   | FunProtoT _
   | ExistsT _
-  | ModuleT (_, _)
   | ExtendsT (_, _, _)
   ->
     (** TODO **)
