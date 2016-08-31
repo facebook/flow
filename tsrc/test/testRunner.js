@@ -60,7 +60,7 @@ function startWatchAndRun(suites, args) {
     }
   }
 
-  const start_listening_for_shortcuts = () => {
+  const startListeningForShortcuts = () => {
       if (process.stdin.setRawMode) {
         process.stdin.setRawMode(true);
         process.stdin.resume();
@@ -140,7 +140,7 @@ function startWatchAndRun(suites, args) {
     }
 
     running = false;
-    start_listening_for_shortcuts();
+    startListeningForShortcuts();
     run();
   }
 
@@ -152,15 +152,16 @@ function startWatchAndRun(suites, args) {
 
   async function record(runID) {
     running = true;
-    require('../record/recordRunner').default({
+    stopListeningForShortcuts();
+    await require('../record/recordRunner').default({
       suites: null,
       bin: args.bin,
       parallelism: args.parallelism,
       errorCheckCommand: args.errorCheckCommand,
       rerun: runID,
     });
+    startListeningForShortcuts();
     running = false;
-    run();
   }
 
   const watch = (watcher, name, suiteNames) => {
@@ -181,7 +182,7 @@ function startWatchAndRun(suites, args) {
     suites.forEach(suiteName => queuedSet.add(suiteName));
     run();
   }])
-  start_listening_for_shortcuts();
+  startListeningForShortcuts();
 
   watch(
     sane(dirname(args.bin), {glob: [basename(args.bin)]}),
