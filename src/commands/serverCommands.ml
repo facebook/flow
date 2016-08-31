@@ -294,6 +294,7 @@ module OptionParser(Config : CONFIG) = struct
       opt_node_resolver_dirnames = FlowConfig.(
         flowconfig.options.Opts.node_resolver_dirnames
       );
+      opt_output_graphml = false;
       opt_profile = profile;
       opt_strip_root;
       opt_module;

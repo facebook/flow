@@ -142,7 +142,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         in
         begin if should_check then
           let file = Loc.SourceFile file in
-          (match Types_js.typecheck_contents ~options ?verbose ~check_syntax:true content file with
+          (match Types_js.typecheck_contents ~options ?verbose
+            ~check_syntax:true content file with
           | _, _, errors, _ -> errors)
         else
           Errors.ErrorSet.empty
@@ -473,7 +474,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
         autocomplete ~options client_logging_context fn oc
-    | ServerProt.CHECK_FILE (fn, verbose, respect_pragma) ->
+    | ServerProt.CHECK_FILE (fn, verbose, graphml, respect_pragma) ->
+        let options = { options with Options.opt_output_graphml = graphml } in
         check_file ~options fn verbose respect_pragma oc
     | ServerProt.COVERAGE (fn) ->
         coverage ~options fn oc

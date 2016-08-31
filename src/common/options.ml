@@ -48,6 +48,7 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_node_resolver_dirnames: string list;
+  opt_output_graphml: bool;
   opt_profile : bool;
   opt_quiet : bool;
   opt_root : Path.t;
@@ -107,6 +108,7 @@ let module_resource_exts opts = opts.opt_module_resource_exts
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames
+let output_graphml opts = opts.opt_output_graphml
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
 let should_ignore_fbt opts = opts.opt_ignore_fbt

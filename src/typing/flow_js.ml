@@ -118,6 +118,9 @@ let mk_tvar cx reason =
   let tvar = mk_id () in
   let graph = Context.graph cx in
   Context.add_tvar cx tvar (Constraint.new_unresolved_root ());
+  if Context.output_graphml cx then
+    (* only need to remember tvar -> reason for diagnostics *)
+    Context.add_tvar_reason cx tvar reason;
   (if Context.is_verbose cx then prerr_endlinef
     "TVAR %d (%d): %s" tvar (IMap.cardinal graph)
     (Debug_js.string_of_reason cx reason));

@@ -83,6 +83,7 @@ let stub_metadata ~root ~checked = { Context.
   max_trace_depth = 0;
   max_workers = 0;
   munge_underscores = false;
+  output_graphml = false;
   root;
   strip_root = true;
   suppress_comments = [];

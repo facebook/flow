@@ -24,6 +24,7 @@ type metadata = {
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   munge_underscores: bool;
+  output_graphml: bool;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
@@ -57,6 +58,7 @@ val evaluated: t -> Type.t IMap.t
 val file: t -> Loc.filename
 val find_props: t -> Constraint.ident -> Type.properties
 val find_module: t -> string -> Type.t
+val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
 val is_checked: t -> bool
@@ -66,6 +68,7 @@ val max_trace_depth: t -> int
 val module_exports_type: t -> module_exports_type
 val module_map: t -> Type.t SMap.t
 val module_name: t -> Modulename.t
+val output_graphml: t -> bool
 val property_maps: t -> Type.properties IMap.t
 val required: t -> SSet.t
 val require_loc: t -> Loc.t SMap.t
@@ -94,6 +97,7 @@ val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Constraint.ident -> Type.properties -> unit
 val add_require: t -> string -> Loc.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
+val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_tvar: t -> Constraint.ident -> unit

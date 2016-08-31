@@ -35,13 +35,16 @@ let spec = {
     |> strip_root_flag
     |> json_flags
     |> verbose_flags
+    |> flag "--graphml" no_arg
+        ~doc:"Output GraphML for checked content (<FILE>.graphml or contents.graphml)"
     |> flag "--respect-pragma" no_arg
         ~doc:"Respect the presence or absence of an @flow pragma"
     |> anon "filename" (optional string) ~doc:"Filename"
   )
 }
 
-let main option_values root error_flags strip_root use_json verbose respect_pragma file () =
+let main option_values root error_flags strip_root use_json verbose
+  graphml respect_pragma file () =
   let file = get_file_from_filename_or_stdin file None in
   let root = guess_root (
     match root with
@@ -56,7 +59,8 @@ let main option_values root error_flags strip_root use_json verbose respect_prag
   if not use_json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  ServerProt.cmd_to_channel oc (ServerProt.CHECK_FILE (file, verbose, respect_pragma));
+  ServerProt.cmd_to_channel oc
+    (ServerProt.CHECK_FILE (file, verbose, graphml, respect_pragma));
   let response = ServerProt.response_from_channel ic in
   let stdin_file = match file with
     | ServerProt.FileContent (None, contents) ->

@@ -158,7 +158,8 @@ let with_timer ?options timer timing f =
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents ~options ?verbose ?(check_syntax = false) contents filename =
+let typecheck_contents ~options ?verbose ?(check_syntax=false)
+  contents filename =
   let timing = Timing.create () in
 
   (* always enable types when checking an individual file *)
@@ -191,11 +192,24 @@ let typecheck_contents ~options ?verbose ?(check_syntax = false) contents filena
       (* apply overrides from the docblock *)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
 
+      (* infer *)
       let timing, cx = with_timer "Infer" timing (fun () ->
         Type_inference_js.infer_ast
           ~metadata ~filename ~module_name:(Modulename.String "-") ast
       ) in
 
+      (* write graphml of (unmerged) types, if requested *)
+      if Options.output_graphml options then begin
+        let fn = Loc.string_of_filename filename in
+        let graphml = spf "%s.graphml"
+          (if fn = "-" then "contents" else fn) in
+        let lines = Graph.format cx in
+        let oc = open_out graphml in
+        List.iter (output_string oc) lines;
+        close_out oc
+      end;
+
+      (* merge *)
       let cache = new Context_cache.context_cache in
       let timing, () = with_timer "Merge" timing (fun () ->
         Merge_service.merge_strict_context ~options cache [cx]

@@ -23,6 +23,7 @@ type metadata = {
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   munge_underscores: bool;
+  output_graphml: bool;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
@@ -45,6 +46,9 @@ type t = {
 
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
+
+  (* map from tvar ids to reasons *)
+  mutable tvar_reasons: Reason.t IMap.t;
 
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.properties IMap.t;
@@ -97,6 +101,7 @@ let metadata_of_options options = {
     Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
   munge_underscores = Options.should_munge_underscores options;
+  output_graphml = Options.output_graphml options;
   root = Options.root options;
   strip_root = Options.should_strip_root options;
   suppress_comments = Options.suppress_comments options;
@@ -119,6 +124,7 @@ let make metadata file module_name = {
   module_exports_type = CommonJSModule(None);
 
   graph = IMap.empty;
+  tvar_reasons = IMap.empty;
   envs = IMap.empty;
   property_maps = IMap.empty;
   evaluated = IMap.empty;
@@ -158,6 +164,7 @@ let evaluated cx = cx.evaluated
 let file cx = cx.file
 let find_props cx id = IMap.find_unsafe id cx.property_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
+let find_tvar_reason cx id = IMap.find_unsafe id cx.tvar_reasons
 let globals cx = cx.globals
 let graph cx = cx.graph
 let is_checked cx = cx.metadata.checked
@@ -167,6 +174,7 @@ let max_trace_depth cx = cx.metadata.max_trace_depth
 let module_exports_type cx = cx.module_exports_type
 let module_map cx = cx.modulemap
 let module_name cx = cx.module_name
+let output_graphml cx = cx.metadata.output_graphml
 let property_maps cx = cx.property_maps
 let required cx = cx.required
 let require_loc cx = cx.require_loc
@@ -212,6 +220,8 @@ let add_require cx name loc =
   cx.require_loc <- SMap.add name loc cx.require_loc
 let add_tvar cx id bounds =
   cx.graph <- IMap.add id bounds cx.graph
+let add_tvar_reason cx id reason =
+  cx.tvar_reasons <- IMap.add id reason cx.tvar_reasons
 let remove_all_errors cx =
   cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
@@ -260,4 +270,4 @@ let merge_into cx cx_other =
   set_type_graph cx (Graph_explorer.union_finished (type_graph cx_other) (type_graph cx));
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
   set_globals cx (SSet.union (globals cx_other) (globals cx));
-  set_graph cx (IMap.union (graph cx_other) (graph cx))
+  set_graph cx (IMap.union (graph cx_other) (graph cx));

@@ -115,6 +115,20 @@ let do_patch lines insertions =
   patch 1 0 lines insertions;
   String.concat "\n" (Array.to_list lines)
 
+let string_of_loc_pos loc = Loc.(
+  let line = loc.start.line in
+  let start = loc.start.column + 1 in
+  let end_ = loc._end.column in
+  if line <= 0 then
+    "0:0"
+  else if line = loc._end.line && start = end_ then
+    spf "%d:%d" line start
+  else if line != loc._end.line then
+    spf "%d:%d,%d:%d" line start loc._end.line end_
+  else
+    spf "%d:%d-%d" line start end_
+)
+
 let string_of_loc loc = Loc.(
   match loc.source with
   | None
@@ -123,17 +137,7 @@ let string_of_loc loc = Loc.(
   | Some SourceFile file
   | Some JsonFile file
   | Some ResourceFile file ->
-    let line = loc.start.line in
-    let start = loc.start.column + 1 in
-    let end_ = loc._end.column in
-    if line <= 0 then
-      spf "%s:0:0" file
-    else if line = loc._end.line && start = end_ then
-      spf "%s:%d:%d" file line start
-    else if line != loc._end.line then
-      spf "%s:%d:%d,%d:%d" file line start loc._end.line end_
-    else
-      spf "%s:%d:%d-%d" file line start end_
+    spf "%s:%s" file (string_of_loc_pos loc)
 )
 
 (* helper: strip root from positions *)
@@ -227,7 +231,13 @@ let json_of_reason ?(strip_root=None) r = Hh_json.(
 )
 
 let dump_reason r =
-  spf "%s: %S" (string_of_loc (loc_of_reason r)) r.desc
+  spf "%s: %S%s"
+    (string_of_loc (loc_of_reason r))
+    r.desc
+    begin match r.test_id with
+    | Some n -> spf " (test %d)" n
+    | None -> ""
+    end
 
 let desc_of_reason r =
   r.desc

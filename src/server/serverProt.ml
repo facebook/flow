@@ -35,6 +35,7 @@ type command =
 | CHECK_FILE of
     file_input *
     Verbose.t option *
+    bool * (* graphml *)
     bool (* respect_pragma *)
 | COVERAGE of file_input
 | DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)

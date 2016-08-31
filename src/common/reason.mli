@@ -26,6 +26,7 @@ val mk_reason: string -> Loc.t -> reason
 val diff_range: Loc.t -> int * int
 val in_range: Loc.t -> Loc.t -> bool
 
+val string_of_loc_pos: Loc.t -> string
 val string_of_loc: Loc.t -> string
 val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
 

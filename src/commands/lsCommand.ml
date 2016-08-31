@@ -114,6 +114,7 @@ let main strip_root ignore_flag include_flag root () =
     opt_node_resolver_dirnames = FlowConfig.(
       flowconfig.options.Opts.node_resolver_dirnames
     );
+    opt_output_graphml = false;
     opt_profile = false;
     opt_strip_root;
     opt_module;
