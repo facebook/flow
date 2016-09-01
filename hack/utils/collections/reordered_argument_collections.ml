@@ -20,6 +20,7 @@ module Reordered_argument_map (S : MyMap.S) = struct
   let mem m v = mem v m
   let remove m v = remove v m
   let exists m ~f = exists f m
+  let merge m1 m2 ~f = merge f m1 m2
 end
 
 module Reordered_argument_set (S : Set.S) = struct
