@@ -5,7 +5,7 @@ import { format } from 'util';
 
 import { exists, glob, readFile } from '../async';
 import Builder from './builder';
-import {testsDir} from '../constants';
+import {getTestsDir} from '../constants';
 import Suite from './Suite';
 
 import type {Tests} from './Tester';
@@ -15,14 +15,16 @@ const testSuiteRegex = /(.*)[\/\\]test.js/;
 
 async function findTestSuites(): Promise<Array<string>> {
   const testSuites = await glob(
-    format("%s/**/test.js", testsDir),
+    format("%s/**/test.js", getTestsDir()),
     {cwd: __dirname},
   );
   // On Windows, glob still uses unix dir seperators, so we need to normalize
   return testSuites.map(normalize);
 }
 
-export async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<string>> {
+export async function findTestsByName(
+  suitesOrig: ?Set<string>,
+): Promise<Set<string>> {
   let suites = null;
   if (suitesOrig != null) {
     suites = new Set();
@@ -32,15 +34,20 @@ export async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<str
       suites.add(resolve(suite));
     }
   }
+  const testsDir = getTestsDir();
   const testSuites = await findTestSuites();
 
   const result = new Set();
 
   process.stderr.write(format("Found %d suites\n", testSuites.length));
   for (const suiteFile of testSuites) {
-    const suiteName = relative(testsDir, suiteFile).replace(testSuiteRegex, "$1");
+    const suiteName =
+      relative(testsDir, suiteFile).replace(testSuiteRegex, "$1");
     const pathToDir = dirname(suiteFile);
-    if (!suites || suites.has(suiteName) || suites.has(suiteFile) || suites.has(pathToDir)) {
+    if (!suites
+        || suites.has(suiteName)
+        || suites.has(suiteFile)
+        || suites.has(pathToDir)) {
       result.add(suiteName);
     }
   }
@@ -51,7 +58,9 @@ export async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<str
 function loadSuiteByFilename(filename: string): Suite {
   delete require.cache[require.resolve(filename)]
   const {default: suite} = (require: any)(filename);
-  if (!(suite instanceof Suite)) {
+  // I don't know why, but suite instanceof Suite doesn't seem to work when
+  // using symlinks. So this is a fuzzy approximation
+  if (!(suite && suite.constructor && suite.constructor.name === Suite.name)) {
     throw new Error(format(
       "Test suite `%s` forgot to export default suite(...)",
       filename,
@@ -62,7 +71,7 @@ function loadSuiteByFilename(filename: string): Suite {
 
 export function loadSuite(suiteName: string): Suite {
   return loadSuiteByFilename(
-    resolve(testsDir, suiteName, "test.js"),
+    resolve(getTestsDir(), suiteName, "test.js"),
   );
 }
 

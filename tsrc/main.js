@@ -1,5 +1,5 @@
 /* @flow */
-
+import 'babel-polyfill';
 import colors from 'colors/safe';
 
 import {format} from 'util';
@@ -28,8 +28,6 @@ process.on('SIGINT', () => {
 });
 
 export async function run(): Promise<void> {
-  process.stderr.write("Starting tool...\n");
-
   const commandMap = await commandFinder(__dirname);
 
   const command = process.argv[2];

@@ -5,8 +5,8 @@ import colors from 'colors/safe';
 import {format} from 'util';
 import {basename, dirname, resolve} from 'path';
 
-import {testsDir} from '../constants';
-import {drain} from '../async';
+import {getTestsDir} from '../constants';
+import {drain, rimraf, symlink} from '../async';
 import Builder from './builder';
 import {findTestsByName, findTestsByRun, loadSuite} from './findTests';
 import RunQueue from './RunQueue';
@@ -190,7 +190,7 @@ function startWatchAndRun(suites, args) {
     Array.from(suites),
   );
   for (const suite of suites) {
-    const suiteDir = resolve(testsDir, suite);
+    const suiteDir = resolve(getTestsDir(), suite);
     watch(sane(suiteDir), format("the `%s` suite", suite), [suite]);
   }
 }
@@ -296,6 +296,15 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
 }
 
 export default async function(args: Args): Promise<void> {
+  if (args.buckCpTestsDir != null) {
+    const src = args.buckCpTestsDir;
+    const dest = getTestsDir();
+
+    await rimraf(dest);
+    await symlink(src, dest);
+  }
+
+
   let suites;
   if (args.rerun != null) {
     suites = await findTestsByRun(args.rerun, args.failedOnly);
@@ -310,7 +319,12 @@ export default async function(args: Args): Promise<void> {
     for (const suiteName of suites) {
       loadedSuites[suiteName] = loadSuite(suiteName);
     }
-    const [exitCode, _] = await runOnce(loadedSuites, args);
-    process.exit(exitCode);
+    if (Object.keys(loadedSuites).length > 0) {
+      const [exitCode, _] = await runOnce(loadedSuites, args);
+      process.exit(exitCode);
+    } else {
+      process.stderr.write("No suites to run\n");
+      process.exit(1);
+    }
   }
 }

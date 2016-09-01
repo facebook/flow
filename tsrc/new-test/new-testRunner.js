@@ -4,7 +4,7 @@ import {join, relative, resolve} from 'path';
 import {format} from 'util';
 
 import {exec, exists, mkdirp, readFile, unlink, writeFile} from '../async';
-import {testsDir, defaultFlowConfigName} from '../constants';
+import {getTestsDir, defaultFlowConfigName} from '../constants';
 
 import type {Args} from './new-testCommand';
 
@@ -13,7 +13,7 @@ async function newTest(bin: string, suiteName: string): Promise<void> {
     console.log("[%s]\t\t%s", suiteName, format(...args));
   }
 
-  const dest = join(testsDir, suiteName);
+  const dest = join(getTestsDir(), suiteName);
 
   const alreadyExists = await exists(dest);
 

@@ -146,6 +146,16 @@ export default class Base<T: Object> {
           this.showUsage(this.BAD_ARGS);
         }
       }
+      if (flag.type === "enum") {
+        if (flag.validValues.find(v => argv[flag.name] === v) === undefined) {
+          process.stderr.write(format(
+            "%s is not a support value for enum flag %s\n",
+            argv[flag.name],
+            flag.name,
+          ));
+          this.showUsage(this.BAD_ARGS);
+        }
+      }
     }
     return argv;
   }

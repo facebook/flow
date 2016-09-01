@@ -7,6 +7,7 @@ import {
   readdir as fs_readdir,
   readFile as fs_readFile,
   rename as fs_rename,
+  symlink as fs_symlink,
   unlink as fs_unlink,
   writeFile as fs_writeFile,
 } from 'fs';
@@ -15,6 +16,8 @@ import {format} from 'util';
 import {glob as glob_glob} from 'glob';
 import mkdirp_mkdirp from 'mkdirp';
 import rimraf_rimraf from 'rimraf';
+
+import type {ReadStream, WriteStream} from 'fs';
 
 export function exec(cmd: string, options?: Object): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -35,9 +38,18 @@ export function execManual(cmd: string, options?: Object): Promise<[?Object, Buf
 }
 
 
-export function writeFile(filename: string, data: string): Promise<void> {
+type WriteFileOptions = {
+  encoding?: string | null,
+  mode?: number,
+  flag?: string,
+};
+export function writeFile(
+  filename: string,
+  data: string,
+  options?: WriteFileOptions = {},
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    fs_writeFile(filename, data, (err) => {
+    fs_writeFile(filename, data, options, (err) => {
       if (err == null) {
         resolve();
       } else {
@@ -97,9 +109,9 @@ export function rename(old_path: string, new_path: string): Promise<void> {
   });
 }
 
-export function rimraf(path: string, options?: Object = {}): Promise<void> {
+export function rimraf(path: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    rimraf_rimraf(path, options, (err) => {
+    rimraf_rimraf(path, (err) => {
       if (err == null) {
         resolve();
       } else {
@@ -133,9 +145,16 @@ export function mkdirp(dir: string): Promise<void> {
   });
 }
 
+export type NCPFile = {
+  name: string,
+  mode: number,
+  mtime: Date,
+  atime: Date,
+};
+
 type NCPOptions = {
   filter?: RegExp | (filename: string) => boolean,
-  transform?: (read: any, write: any) => mixed,
+  transform?: (read: ReadStream, write: WriteStream, file: NCPFile) => mixed,
   clobber?: boolean,
   dereference?: boolean,
   stopOnErr?: boolean,
@@ -163,6 +182,16 @@ export function exists(path: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     fs_exists(path, resolve);
   });
+}
+
+export function symlink(
+  target: string | Buffer,
+  path: string | Buffer,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // $FlowIssue - symlink can omit the type
+    fs_symlink(target.toString(), path.toString(), resolve);
+  })
 }
 
 type GlobOptions = {

@@ -1,7 +1,9 @@
 /* @flow */
 
+import {resolve} from 'path';
 import {format} from 'util';
 
+import {defaultTestsDirName} from '../constants';
 import Base, {commonFlags} from '../command/Base';
 import findFlowBin from '../command/findFlowBin';
 
@@ -14,6 +16,7 @@ export type Args = {
   rerun: ?string,
   failedOnly: boolean,
   watch: boolean,
+  buckCpTestsDir: ?string,
 };
 
 export default class TestCommand extends Base<Args> {
@@ -32,6 +35,7 @@ export default class TestCommand extends Base<Args> {
       rerun: argv.rerun || argv["rerun-failed"],
       failedOnly: !!argv["rerun-failed"],
       watch: Boolean(argv.watch),
+      buckCpTestsDir: argv['buck-copy-tests-dir'],
     };
   }
 
@@ -83,6 +87,17 @@ SUITE
         name: "watch",
         description: "Automatically rerun tests when they change",
       },
+      {
+        type: "string",
+        name: "buck-copy-tests-dir",
+        argName: "PATH",
+        description: format(
+          "You probably don't want to use this option. " +
+          "It's basically `rm %s; cp $PATH %s`.",
+          defaultTestsDirName,
+          defaultTestsDirName,
+        ),
+      }
     ];
   }
 }

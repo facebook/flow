@@ -10,7 +10,7 @@ import {findTestsByName, findTestsByRun} from '../test/findTests';
 import parser from 'flow-parser';
 import {loadSuite} from '../test/findTests';
 import RunQueue from '../test/RunQueue';
-import {testsDir} from '../constants';
+import {getTestsDir} from '../constants';
 
 import type {Args} from './recordCommand';
 
@@ -171,7 +171,11 @@ export default async function(args: Args): Promise<void> {
             if (result.type === "fail") {
               const assertLoc = result.assertLoc;
               if (assertLoc) {
-                const filename = join(testsDir, suiteName, assertLoc.filename);
+                const filename = join(
+                  getTestsDir(),
+                  suiteName,
+                  assertLoc.filename,
+                );
                 const code = await readFile(filename);
                 const ast = parser.parse(code, {});
                 const range = assertLoc && dfsForRange(ast, assertLoc.line, assertLoc.column);

@@ -7,7 +7,7 @@ import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
 
 import {appendFile, exec, execManual, mkdirp, readdir, readFile, writeFile} from '../async';
-import {testsDir} from '../constants';
+import {getTestsDir} from '../constants';
 
 import type {SuiteResult} from './runTestSuite';
 
@@ -39,7 +39,7 @@ export class TestBuilder {
       String(testNum),
     );
     this.sourceDir = join(
-      testsDir,
+      getTestsDir(),
       suiteName
     );
     this.tmpDir = join(

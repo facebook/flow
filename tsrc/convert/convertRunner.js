@@ -6,7 +6,7 @@ import {format} from 'util';
 
 import {glob, mkdirp, ncp, readdir, readFile, rename, rimraf, unlink, writeFile} from './../async';
 import runRecord from '../record/recordRunner';
-import {testsDir, defaultFlowConfigName} from '../constants';
+import {getTestsDir, defaultFlowConfigName} from '../constants';
 
 import type {Args} from './convertCommand';
 
@@ -54,7 +54,7 @@ async function convert(
   }
 
   const suiteName = join("legacy", basename(source));
-  const dest = join(testsDir, suiteName);
+  const dest = join(getTestsDir(), suiteName);
 
   log("Removing directory `%s`", dest);
   await rimraf(dest);
@@ -157,7 +157,7 @@ async function sanityCheck(sourceToSuiteMap) {
     const expfile = join(source, suiteName.replace(/legacy[\/\\](.*)/, "$1.exp"));
     const [exp, testFileContentsBuffer] = await Promise.all([
       readFile(expfile),
-      readFile(join(testsDir, suiteName, "test.js")),
+      readFile(join(getTestsDir(), suiteName, "test.js")),
     ]);
     const testFileContents = testFileContentsBuffer.toString();
     let matches = exp.toString().match(/Found (.*) errors?/);
