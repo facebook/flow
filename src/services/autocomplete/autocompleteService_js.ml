@@ -138,6 +138,7 @@ let autocomplete_member
 
   let result_str, t = Autocomplete.(match result with
     | Success _ -> "SUCCESS", this
+    | SuccessModule _ -> "SUCCESS", this
     | FailureMaybeType -> "FAILURE_NULLABLE", this
     | FailureAnyType -> "FAILURE_NO_COVERAGE", this
     | FailureUnhandledType t -> "FAILURE_UNHANDLED_TYPE", t) in

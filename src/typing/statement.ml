@@ -1729,6 +1729,7 @@ and statement cx = Ast.Statement.(
 
   | (import_loc, ImportDeclaration import_decl) ->
     let open ImportDeclaration in
+    Context.add_import_stmt cx import_decl;
 
     let module_name = (
       match (snd import_decl.source).Ast.Literal.value with
@@ -1757,6 +1758,7 @@ and statement cx = Ast.Statement.(
           else ImportNamedT
             (get_reason, import_kind, remote_export_name, t)
         in
+        Context.add_imported_t cx local_name t;
         Flow.flow cx (module_t, import_type)
       )
     in
@@ -1844,6 +1846,7 @@ and statement cx = Ast.Statement.(
               in
               let module_ns_typeof =
                 Flow.mk_tvar_where cx bind_reason (fun t ->
+                  Context.add_imported_t cx local_name t;
                   Flow.flow cx (module_ns_t,
                     ImportTypeofT (bind_reason, "*", t))
                 )
@@ -1856,6 +1859,7 @@ and statement cx = Ast.Statement.(
               let module_ns_t =
                 import_ns cx reason module_name (fst import_decl.source)
               in
+              Context.add_imported_t cx local_name module_ns_t;
               let bind_reason = mk_reason import_reason_str (fst local) in
               (bind_reason, local_name, module_ns_t)
           )

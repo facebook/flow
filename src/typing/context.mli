@@ -8,6 +8,8 @@
  *
  *)
 
+module Ast = Spider_monkey_ast
+
 type env = Scope.t list
 
 type t
@@ -61,6 +63,8 @@ val find_module: t -> string -> Type.t
 val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
+val import_stmts: t -> Ast.Statement.ImportDeclaration.t list
+val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
@@ -93,6 +97,8 @@ val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_global: t -> string -> unit
+val add_import_stmt: t -> Ast.Statement.ImportDeclaration.t -> unit
+val add_imported_t: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Constraint.ident -> Type.properties -> unit
 val add_require: t -> string -> Loc.t -> unit

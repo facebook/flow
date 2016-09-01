@@ -25,7 +25,8 @@ let expand_path file =
     if Path.file_exists path
     then Path.to_string path
     else begin
-      FlowExitStatus.(exit ~msg:"File not found" Input_error)
+      let msg = Printf.sprintf "File not found: %s" (Path.to_string path) in
+      FlowExitStatus.(exit ~msg Input_error)
     end
 
 (* line split/transform utils *)

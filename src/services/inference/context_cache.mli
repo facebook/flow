@@ -11,11 +11,13 @@
 class context_cache : object
   method find: Loc.FilenameKey.t -> Context.t option
   method read: Loc.FilenameKey.t -> Context.t
+  method read_safe: Loc.FilenameKey.t -> Context.t option
 end
 
 class sig_context_cache : object
   method find: Loc.FilenameKey.t -> Context.t option
   method read: Loc.FilenameKey.t -> Context.t * Context.t
+  method read_safe: Loc.FilenameKey.t -> (Context.t * Context.t) option
 end
 
 val add: Context.t -> unit

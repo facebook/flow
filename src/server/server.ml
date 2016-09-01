@@ -319,6 +319,71 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc response [];
     flush oc
 
+  let gen_flow_files ~options env files oc =
+    let errors = env.ServerEnv.errorl in
+    let result =
+      if List.length errors > 0 then Utils_js.Err (
+        ServerProt.GenFlowFile_TypecheckError (Errors.ErrorSet.of_list errors)
+      ) else (
+        let cache = new Context_cache.context_cache in
+        let (flow_files, flow_file_cxs, non_flow_files, error) =
+          List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
+            if error <> None then (flow_files, cxs, non_flow_files, error) else
+            match file with
+            | ServerProt.FileContent _ ->
+              let error_msg = "This command only works with file paths." in
+              let error =
+                Some (ServerProt.GenFlowFile_UnexpectedError error_msg)
+              in
+              (flow_files, cxs, non_flow_files, error)
+            | ServerProt.FileName file_path ->
+              let src_file = Loc.SourceFile file_path in
+              (* TODO: Use InfoHeap as the definitive way to detect @flow vs
+               * non-@flow
+               *)
+              match cache#read_safe src_file with
+              | None ->
+                (flow_files, cxs, src_file::non_flow_files, error)
+              | Some cx ->
+                (src_file::flow_files, cx::cxs, non_flow_files, error)
+          ) ([], [], [], None) files
+        in
+        match error with
+        | Some e -> Utils_js.Err e
+        | None -> (
+          try
+            (if List.length flow_file_cxs > 0 then
+              try Merge_service.merge_strict_context ~options cache flow_file_cxs
+              with exn -> failwith (
+                spf "Error merging contexts: %s" (Printexc.to_string exn)
+              )
+            );
+
+            (* Non-@flow files *)
+            let result_contents = non_flow_files |> List.map (fun file ->
+              (Loc.string_of_filename file, ServerProt.GenFlowFile_NonFlowFile)
+            ) in
+
+            (* Codegen @flow files *)
+            let result_contents = List.fold_left2 (fun results file cx ->
+              let file_path = Loc.string_of_filename file in
+              try
+                let code = FlowFileGen.flow_file cx in
+                (file_path, ServerProt.GenFlowFile_FlowFile code)::results
+              with exn ->
+                failwith (spf "%s: %s" file_path (Printexc.to_string exn))
+            ) result_contents flow_files flow_file_cxs in
+
+            Utils_js.OK result_contents
+          with exn -> Utils_js.Err (
+            ServerProt.GenFlowFile_UnexpectedError (Printexc.to_string exn)
+          )
+        )
+      )
+    in
+    Marshal.to_channel oc result [];
+    flush oc
+
   let get_def ~options (file_input, line, col) oc =
     let filename = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile filename in
@@ -490,6 +555,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         flush oc;
         let updates = process_updates genv !env (Utils_js.set_of_list files) in
         env := recheck genv !env updates
+    | ServerProt.GEN_FLOW_FILES files ->
+        gen_flow_files ~options !env files oc
     | ServerProt.GET_DEF (fn, line, char) ->
         get_def ~options (fn, line, char) oc
     | ServerProt.GET_IMPORTERS module_names ->

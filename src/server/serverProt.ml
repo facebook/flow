@@ -41,6 +41,7 @@ type command =
 | DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | ERROR_OUT_OF_DATE
 | FIND_MODULE of string * string
+| GEN_FLOW_FILES of file_input list
 | GET_DEF of file_input * int * int (* filename, line, char *)
 | GET_IMPORTERS of string list
 | GET_IMPORTS of string list
@@ -78,6 +79,15 @@ type infer_type_response = (
   Loc.t * string option * string option * Reason.t list,
   Loc.t * string
 ) Utils_js.ok_or_err
+
+type gen_flow_file_error =
+  | GenFlowFile_TypecheckError of Errors.ErrorSet.t
+  | GenFlowFile_UnexpectedError of string
+type gen_flow_file_result =
+  | GenFlowFile_FlowFile of string
+  | GenFlowFile_NonFlowFile
+type gen_flow_file_response =
+  ((string * gen_flow_file_result) list, gen_flow_file_error) Utils_js.ok_or_err
 
 let cmd_to_channel (oc:out_channel) (cmd:command): unit =
   let command = {

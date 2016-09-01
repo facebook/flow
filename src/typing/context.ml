@@ -8,6 +8,8 @@
  *
  *)
 
+module Ast = Spider_monkey_ast
+
 type env = Scope.t list
 
 type metadata = {
@@ -43,6 +45,9 @@ type t = {
   mutable required: SSet.t;
   mutable require_loc: Loc.t SMap.t;
   mutable module_exports_type: module_exports_type;
+
+  mutable import_stmts: Ast.Statement.ImportDeclaration.t list;
+  mutable imported_ts: Type.t SMap.t;
 
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
@@ -123,6 +128,9 @@ let make metadata file module_name = {
   require_loc = SMap.empty;
   module_exports_type = CommonJSModule(None);
 
+  import_stmts = [];
+  imported_ts = SMap.empty;
+
   graph = IMap.empty;
   tvar_reasons = IMap.empty;
   envs = IMap.empty;
@@ -167,6 +175,8 @@ let find_module cx m = SMap.find_unsafe m cx.modulemap
 let find_tvar_reason cx id = IMap.find_unsafe id cx.tvar_reasons
 let globals cx = cx.globals
 let graph cx = cx.graph
+let import_stmts cx = cx.import_stmts
+let imported_ts cx = cx.imported_ts
 let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
@@ -211,6 +221,10 @@ let add_error_suppression cx loc =
     Errors.ErrorSuppressions.add loc cx.error_suppressions
 let add_global cx name =
   cx.globals <- SSet.add name cx.globals
+let add_import_stmt cx stmt =
+  cx.import_stmts <- stmt::cx.import_stmts
+let add_imported_t cx name t =
+  cx.imported_ts <- SMap.add name t cx.imported_ts
 let add_module cx name tvar =
   cx.modulemap <- SMap.add name tvar cx.modulemap
 let add_property_map cx id pmap =

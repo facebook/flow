@@ -33,6 +33,7 @@ begin library "flow-commands"
     "flow-server-env"
     "flow-services-autocomplete"
     "flow-services-inference"
+    "flow-services-flowFileGen"
     "flow-typing"
     "hh-find"
     "hh-heap"
@@ -228,6 +229,16 @@ begin library "flow-services-inference"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
+  ]
+end
+
+begin library "flow-services-flowFileGen"
+  sort = true
+  files = begin fb-glob "src/services/flowFileGen"
+  end
+  requires = [
+    "flow-typing"
+    "hh-utils-collections"
   ]
 end
 
