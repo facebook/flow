@@ -246,7 +246,9 @@ let pretty_num f =
   then Printf.sprintf "%.3fM" (f /. 1000000.0)
   else if f > 1000.0
   then Printf.sprintf "%.3fK" (f /. 1000.0)
-  else Printf.sprintf "%d" (int_of_float f)
+  else if f = (floor f)
+  then Printf.sprintf "%d" (int_of_float f)
+  else Printf.sprintf "%f" f
 
 let print_entry_stats ?record name =
   let record = get_record record in
