@@ -13,19 +13,19 @@ sanity-filter-union.js:9
 sanity-filter-union.js:14
  14: declare var ab: Array<A|B|C>;
                              ^ object type. This type is incompatible with
- 17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                         ^^^ union: A | C
+ 17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                           ^^^ union: A | C
   Member 1:
-   17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                           ^ A
+   17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                             ^ A
   Error:
-   17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                           ^ property `u`. Property not found in
+   17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                             ^ property `u`. Property not found in
    14: declare var ab: Array<A|B|C>;
                                ^ object type
   Member 2:
-   17: (my_filter(ab, (x) checks => x.kind !== 'A'): Array<A|C>);  // ERROR
-                                                             ^ C
+   17: (my_filter(ab, (x): %checks => x.kind !== 'A'): Array<A|C>);  // ERROR
+                                                               ^ C
   Error:
     9: type B = { kind: 'B', v: string }
                         ^^^ string literal `B`. Expected string literal `C`, got `B` instead
@@ -33,8 +33,8 @@ sanity-filter-union.js:14
                         ^^^ string literal `C`
 
 sanity-filter-union.js:16
- 16: (my_filter(ab, (x) checks => x.kind === 'A'): Array<B>);    // ERROR
-                                                         ^ property `v`. Property not found in
+ 16: (my_filter(ab, (x): %checks => x.kind === 'A'): Array<B>);    // ERROR
+                                                           ^ property `v`. Property not found in
  14: declare var ab: Array<A|B|C>;
                            ^ object type
 

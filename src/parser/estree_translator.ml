@@ -1221,7 +1221,7 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and predicate (loc, p) = Ast.Predicate.(
+  and predicate (loc, p) = Ast.Type.Predicate.(
     let _type, value = match p with
       | Declared e -> "DeclaredPredicate", [|"value", expression e|]
       | Inferred -> "InferredPredicate", [||]

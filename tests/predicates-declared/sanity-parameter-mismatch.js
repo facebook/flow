@@ -5,6 +5,6 @@
 declare function foo(
   input: mixed,
   types: string | Array<string>
-): boolean checks(typeof input === "string" || Array.isArray(input));
+): boolean %checks(typeof input === "string" || Array.isArray(input));
 
 foo(3, 3);

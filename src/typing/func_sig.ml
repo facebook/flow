@@ -30,7 +30,7 @@ let return_loc =
   | {F.body = BodyBlock (loc, _); _} -> Loc.char_before loc
 
 let function_kind {Ast.Function.async; generator; predicate; _ } =
-  Ast.Predicate.(match async, generator, predicate with
+  Ast.Type.Predicate.(match async, generator, predicate with
   | true, true, None -> Utils_js.assert_false "async && generator"
   | true, false, None -> Async
   | false, true, None -> Generator
@@ -50,7 +50,7 @@ let mk cx tparams_map ~expr reason func =
     let reason = mk_reason "return" (return_loc func) in
     Anno.mk_type_annotation cx tparams_map reason returnType
   in
-  let return_t = Ast.Predicate.(match predicate with
+  let return_t = Ast.Type.Predicate.(match predicate with
     | None ->
         return_t
     | Some (_, Inferred) ->

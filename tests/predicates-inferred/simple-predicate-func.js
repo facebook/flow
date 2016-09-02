@@ -1,14 +1,14 @@
 // @flow
 
-function is_string(y) checks {
+function is_string(y): %checks {
   return typeof y === "string";
 }
 
-function is_bool(y) checks {
+function is_bool(y): %checks {
   return typeof y === "boolean";
 }
 
-function is_number(y) checks {
+function is_number(y): %checks {
   return typeof y === "number";
 }
 
@@ -35,7 +35,7 @@ function bar(z: { f: string | Array<string>}): string {
   }
 }
 
-function is_number_or_bool(y) checks {
+function is_number_or_bool(y): %checks {
   return is_number(y) || is_bool(y);
 }
 
@@ -48,7 +48,7 @@ function baz(z: string | number): number {
 }
 
 // Feature: multi params
-function multi_param(w,x,y,z) checks {
+function multi_param(w,x,y,z): %checks {
   return typeof z === "string";
 }
 
@@ -66,7 +66,7 @@ function foo(a, b) {
   }
 }
 
-function two_strings(x,y) checks {
+function two_strings(x,y): %checks {
   return is_string(x) && is_string(y) ;
 }
 

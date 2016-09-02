@@ -84,6 +84,7 @@ module Token = struct
     | T_OF
     | T_ASYNC
     | T_AWAIT
+    | T_CHECKS
     (* Operators *)
     | T_RSHIFT3_ASSIGN
     | T_RSHIFT_ASSIGN
@@ -211,6 +212,7 @@ module Token = struct
     | T_OF -> "T_OF"
     | T_ASYNC -> "T_ASYNC"
     | T_AWAIT -> "T_AWAIT"
+    | T_CHECKS -> "T_CHECKS"
     | T_LCURLY -> "T_LCURLY"
     | T_RCURLY -> "T_RCURLY"
     | T_LCURLYBAR -> "T_LCURLYBAR"
@@ -1090,6 +1092,7 @@ and type_token env = parse
                          try env, Hashtbl.find type_keywords word
                          with Not_found -> env, T_IDENTIFIER
                        }
+  | "%checks"          { env, T_CHECKS }
   (* Syntax *)
   | "["                { env, T_LBRACKET }
   | "]"                { env, T_RBRACKET }
