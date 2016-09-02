@@ -22,9 +22,3 @@ val infer_lib_file:
   Spider_monkey_ast.Statement.t list ->
   Spider_monkey_ast.Comment.t list ->
   Context.t * string list
-
-val infer_resource_file:
-  metadata: Context.metadata ->
-  filename: Loc.filename ->
-  module_name: Modulename.t ->
-  Context.t

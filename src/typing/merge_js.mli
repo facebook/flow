@@ -9,9 +9,11 @@
 
 open Utils_js
 
-val merge_component_strict: Context.t list ->
-  Context.t list -> (Context.t * string * Modulename.t * Context.t) list ->
-  (string * Modulename.t * Context.t) list -> Context.t ->
+val merge_component_strict: Context.t list -> Context.t list ->
+  (Context.t * string * Modulename.t * Context.t) list ->
+  (string * string * Context.t) list ->
+  (string * Modulename.t * Context.t) list ->
+  Context.t ->
   unit
 
 val restore: Context.t ->
