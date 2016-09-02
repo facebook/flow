@@ -213,22 +213,20 @@ can be overridden with command line flags.
   `--temp-dir`.
 
 - `esproposal.class_static_fields` (`enable`|`ignore`|`warn`): set this to
-  `enable` to indicate that Flow should interpret static [class
+  `warn` to indicate that Flow should give a warning on use of static [class
   fields](https://github.com/jeffmo/es-class-fields-and-static-properties) per
   the pending spec. You may also set this to `ignore` to indicate that Flow
   should simply ignore the syntax (i.e. Flow will not use this syntax to
   indicate the presence of a static property on the class). The default value
-  of this option is `warn`, which gives a warning on use since this proposal is
-  still very early-stage.
+  of this option is `enable`, which allows use of this proposed syntax.
 
 - `esproposal.class_instance_fields` (`enable`|`ignore`|`warn`): set this to
-  `enable` to indicate that Flow should interpret instance [class
+  `warn` to indicate that Flow should give a warning on use of instance [class
   fields](https://github.com/jeffmo/es-class-fields-and-static-properties) per
   the pending spec. You may also set this to `ignore` to indicate that Flow
   should simply ignore the syntax (i.e. Flow will not use this syntax to
   indicate the presence of a property on instances of the class). The default
-  value of this option is `warn`, which gives a warning on use since this
-  proposal is still very early-stage.
+  value of this option is `enable`, which allows use of this proposed syntax.
 
 - `esproposal.decorators` (`ignore`|`warn`): set this to
   `ignore` to indicate that Flow should ignore decorators. The default
