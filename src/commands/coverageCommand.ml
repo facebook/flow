@@ -132,6 +132,35 @@ let rec split_overlapping_ranges accum = Loc.(function
           (head_loc, is_covered1)::accum,
           (loc2, is_covered2)::rest
 
+        else if loc1._end.offset < loc2._end.offset then
+          (* TODO: Given that at this point we also have loc1.start.offset <
+             loc2.start.offset, it means that range 1 and 2 overlap but don't
+             nest. Ideally, this case should never arise: we should be able to
+             guarantee the invariant that ranges (same as "spans" in
+             common/span.ml) are either disjoint or nest. However, some
+             combination of bugs and incompleteness in statement.ml and
+             parser_flow.ml cause this invariant to be violated. So here we are.
+
+             Split range1, range2, and the overlapping part. Consume the first
+             part of range1, which doesn't overlap. Also consume the overlapping
+             part, which we assume to be small enough (usually, 1 token) to not
+             contain any interesting nested stuff (recall that the overlap is a
+             bug, not a feature), and optimistically consider it covered if
+             range1 or range2 is covered (because the alternative is 1-token
+             islands of uncovered stuff).
+          *)
+          let head_loc = { loc1 with
+            _end = { loc1._end with offset = loc2.start.offset - 1 }
+          } in
+          let overlap_loc = { loc1 with
+            start = loc2.start
+          } in
+          let tail_loc = { loc2 with
+            start = { loc2.start with offset = loc1._end.offset + 1 }
+          } in
+          (head_loc, is_covered1)::(overlap_loc, is_covered1 || is_covered2)::accum,
+          (tail_loc, is_covered2)::rest
+
         else
           (* range 2 is in the middle of range 1, so split range 1 and consume
              the first part, which doesn't overlap, and then recurse on
