@@ -39,9 +39,12 @@ val wanted:
 
 (* given a root, make a next_files function for MultiWorker *)
 val make_next_files:
+  subdir: Path.t option ->
   options: Options.t ->
   libs: SSet.t ->
   unit -> string list
+
+val get_all: (unit -> string list) -> SSet.t
 
 (* given a base directory and a relative path, return an absolute path *)
 val normalize_path: string -> string -> string
@@ -59,3 +62,5 @@ val is_prefix: string -> string -> bool
 val get_flowtyped_path: Path.t -> Path.t
 
 val filename_from_string: options: Options.t -> string -> Loc.filename
+
+val mkdirp: string -> Unix.file_perm -> unit
