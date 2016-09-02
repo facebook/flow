@@ -228,7 +228,7 @@ let lib_module = ""
 let dir_sep = Str.regexp "[/\\\\]"
 let current_dir_name = Str.regexp_string Filename.current_dir_name
 let parent_dir_name = Str.regexp_string Filename.parent_dir_name
-let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:\\)"
+let absolute_path = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
 (* true if a file path matches an [ignore] entry in config *)
 let is_ignored options =
@@ -339,7 +339,19 @@ let filename_from_string ~options p =
 
 let mkdirp path_str perm =
   let parts = Str.split dir_sep path_str in
-  let is_absolute = Str.string_match absolute_path path_str 0 in
+  (* If path_str is absolute, then path_prefix will be something like C:\ on
+   * Windows and / on Linux *)
+  let path_prefix =
+    if Str.string_match absolute_path path_str 0
+    then Str.matched_string path_str
+    else "" in
+
+  (* On Windows, the Str.split above will mean the first part of an absolute
+   * path will be something like C:, so let's remove that *)
+  let parts = match parts with
+  | first_part::rest when first_part ^ Filename.dir_sep = path_prefix -> rest
+  | parts -> parts in
+
   ignore (List.fold_left (fun path_str part ->
     let new_path_str = Filename.concat path_str part in
     Unix.(
@@ -347,4 +359,4 @@ let mkdirp path_str perm =
       with Unix_error (EEXIST, "mkdir", _) -> ()
     );
     new_path_str
-  ) (if is_absolute then Filename.dir_sep else "") parts);
+  ) path_prefix parts);
