@@ -22,8 +22,3 @@ val apply_docblock_overrides:
  Context.metadata ->
  Docblock.t ->
  Context.metadata
-
-val infer_resource_file:
-  options: Options.t ->
-  Loc.filename ->
-  unit

@@ -33,18 +33,6 @@ let apply_docblock_overrides metadata docblock_info =
   | Some value -> { metadata with munge_underscores = not value; }
   | None -> metadata
 
-let infer_resource_file ~options filename =
-  let info = Docblock.default_info in
-  let module_name = Module_js.exported_module ~options filename info in
-  let metadata = Context.metadata_of_options options in
-  let metadata = { metadata with Context.checked = true; } in
-  let cx = Type_inference_js.infer_resource_file ~metadata ~filename ~module_name in
-
-  (* register module info *)
-  Module_js.add_module_info ~options cx;
-  Context_cache.add cx
-
-
 (* Given a filename, retrieve the parsed AST, derive a module name,
    and invoke the local (infer) pass. This will build and return a
    fresh context object for the module. *)

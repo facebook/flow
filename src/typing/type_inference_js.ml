@@ -170,39 +170,3 @@ let infer_lib_file ~metadata ~exclude_syms file statements comments =
   ));
 
   cx, SMap.keys Scope.(module_scope.entries)
-
-let infer_resource_file ~metadata ~filename ~module_name =
-  Flow_js.Cache.clear();
-
-  let cx = Flow_js.fresh_context metadata filename module_name in
-  let exported_module_name = Modulename.to_string module_name in
-
-  let reason_exports_module =
-    Reason.reason_of_string (
-      Utils.spf "exports of module `%s`" exported_module_name) in
-  let reason_loc = Loc.({ none with source = Some filename }) in
-
-  let filename = Loc.(match filename with
-  | ResourceFile filename -> filename
-  | SourceFile _
-  | LibFile _
-  | Builtins
-  | JsonFile _ -> failwith "Resource file is not a resource file?!") in
-  let reason, exports_t = match Utils.extension_of_filename filename with
-  | Some ".css" ->
-      let reason = Reason.mk_reason
-        "Flow assumes requiring a .css file returns an Object"
-        reason_loc in
-      reason, Type.AnyObjT reason
-  | Some ext ->
-      let reason = Reason.mk_reason
-        (Utils.spf "Flow assumes that requiring a %s file returns a string" ext)
-        reason_loc in
-      reason, Type.StrT.why reason
-  | None -> failwith "How did we find a resource file without an extension?!"
-  in
-
-  let module_t = ImpExp.mk_commonjs_module_t cx reason_exports_module
-    reason exports_t in
-  Flow_js.flow_t cx (module_t, ImpExp.exports cx);
-  cx

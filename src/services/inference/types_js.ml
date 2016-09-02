@@ -302,20 +302,17 @@ let typecheck
         files
     ) in
 
+  (* Resource files are treated just like unchecked files, which are already in
+     unparsed. TODO: This suggestes that we can remove ~resource_files and merge
+     them into ~unparsed upstream. *)
+  let unparsed = FilenameSet.fold
+    (fun fn acc -> (fn, Docblock.default_info)::acc)
+    resource_files unparsed in
+
   (* add tracking modules for unparsed files *)
   List.iter (fun (filename, docblock) ->
     Module_js.add_unparsed_info ~options filename docblock
   ) unparsed;
-
-  (* Infer resource files *)
-  let timing, () =
-    with_timer ~options "InferResourceFiles" timing (fun () ->
-    FilenameSet.iter
-      (Infer_service.infer_resource_file ~options)
-      resource_files
-  ) in
-  let inferred =
-    FilenameSet.fold (fun fn acc -> fn::acc) resource_files inferred in
 
   (* create module dependency graph, warn on dupes etc. *)
   let timing, () = with_timer ~options "CommitModules" timing (fun () ->

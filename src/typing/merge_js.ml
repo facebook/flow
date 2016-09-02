@@ -22,6 +22,23 @@ let explicit_impl_require_strict cx (cx_from, r, resolved_r, cx_to) =
   let to_t = Flow_js.lookup_module cx_to r in
   Flow_js.flow_t cx (from_t, to_t)
 
+(* Create the export of a resource file on the fly and connect it to its import
+   in cxs_to. This happens in some arbitrary cx, so cx_to should have already
+   been copied to cx. *)
+let explicit_res_require_strict cx (r, f, cx_to) =
+  let loc = SMap.find_unsafe r (Context.require_loc cx_to) in
+  (* Recall that a resource file is not parsed, so its export doesn't depend on
+     its contents, just its extension. So, we create the export of a resource
+     file on the fly by looking at its extension. The general alternative of
+     writing / reading these exports to / from separate contexts that live in a
+     shared heap takes more time / space (linear in the number of resource
+     files), so we avoid it. This optimization is analogous to what we do for
+     unchecked files: we create the export (`any`) on the fly instead of writing
+     / reading it to / from the context of each unchecked file. *)
+  let from_t = Import_export.mk_resource_module_t cx loc f in
+  let to_t = Flow_js.lookup_module cx_to r in
+  Flow_js.flow_t cx (from_t, to_t)
+
 (* Connect a export of a declared module to its import in cxs_to. This happens
    in some arbitrary cx, so cx_to should have already been copied to cx. *)
 let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
@@ -59,8 +76,9 @@ let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
    the component. Let master_cx be the (optimized) context of libraries.
 
    Let implementations contain the dependency edges between contexts in
-   component_cxs and dep_cxs, and declarations contain the dependency edges from
-   component_cxs to master_cx.
+   component_cxs and dep_cxs, resources contain the dependency edges between
+   contexts in component_cxs and resource files, and declarations contain the
+   dependency edges from component_cxs to master_cx.
 
    We assume that the first context in component_cxs is that of the leader (cx):
    this serves as the "host" for the merging. Let the remaining contexts in
@@ -70,12 +88,14 @@ let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
 
    2. Link the edges in implementations.
 
-   3. Link the edges in declarations.
+   3. Link the edges in resources.
 
-   4. Link the local references to libraries in master_cx and component_cxs.
+   4. Link the edges in declarations.
+
+   5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component_strict component_cxs dep_cxs
-    implementations declarations master_cx =
+    implementations resources declarations master_cx =
   let cx, other_cxs = List.hd component_cxs, List.tl component_cxs in
   Flow_js.Cache.clear();
 
@@ -84,6 +104,8 @@ let merge_component_strict component_cxs dep_cxs
   Context.merge_into cx master_cx;
 
   implementations |> List.iter (explicit_impl_require_strict cx);
+
+  resources |> List.iter (explicit_res_require_strict cx);
 
   declarations |> List.iter (explicit_decl_require_strict cx);
 

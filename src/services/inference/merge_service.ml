@@ -54,7 +54,10 @@ let add_decl (r, resolved_r, cx) declarations =
    are labeled with the requires they denote (when implementations of such
    requires are found).
 
-   (d) decls: edges between contexts in component_cxs and libraries, classified
+   (d) res: edges between contexts in component_cxs and resource files, labeled
+   with the requires they denote.
+
+   (e) decls: edges between contexts in component_cxs and libraries, classified
    by requires (when implementations of such requires are not found).
 
    The arguments (b), (c), (d) are passed to `merge_component_strict`, and
@@ -77,10 +80,13 @@ let merge_strict_context ~options cache component_cxs =
 
   let sig_cache = new Context_cache.sig_context_cache in
 
-  let orig_sig_cxs, sig_cxs, impls, decls =
-    List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, decls) req ->
+  let orig_sig_cxs, sig_cxs, impls, res, decls =
+    List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, res, decls) req ->
       let r, resolved_r, cx_to = req in
       Module_js.(match get_module_file resolved_r with
+      | Some (Loc.ResourceFile f) ->
+          orig_sig_cxs, sig_cxs,
+          impls, (r, f, cx_to) :: res, decls
       | Some file ->
           let info = get_module_info file in
           if info.checked && info.parsed then
@@ -89,7 +95,7 @@ let merge_strict_context ~options cache component_cxs =
             begin match cache#find file with
             | Some sig_cx ->
                 orig_sig_cxs, sig_cxs,
-                (impl sig_cx) :: impls, decls
+                (impl sig_cx) :: impls, res, decls
             | None ->
                 let file =
                   try LeaderHeap.find_unsafe file
@@ -99,30 +105,31 @@ let merge_strict_context ~options cache component_cxs =
                 begin match sig_cache#find file with
                 | Some sig_cx ->
                     orig_sig_cxs, sig_cxs,
-                    (impl sig_cx) :: impls, decls
+                    (impl sig_cx) :: impls, res, decls
                 | None ->
                     let orig_sig_cx, sig_cx = sig_cache#read file in
                     orig_sig_cx::orig_sig_cxs, sig_cx::sig_cxs,
-                    (impl sig_cx) :: impls,
-                    decls
+                    (impl sig_cx) :: impls, res, decls
                 end
             end
           else
             (* unchecked implementation exists *)
             (* use required name as resolved name, for lib lookups *)
             let fake_resolved = Modulename.String r in
-            orig_sig_cxs, sig_cxs, impls, (r, fake_resolved, cx_to) :: decls
+            orig_sig_cxs, sig_cxs,
+            impls, res, (r, fake_resolved, cx_to) :: decls
       | None ->
           (* implementation doesn't exist *)
-          orig_sig_cxs, sig_cxs, impls, (r, resolved_r, cx_to) :: decls
+          orig_sig_cxs, sig_cxs,
+          impls, res, (r, resolved_r, cx_to) :: decls
       )
-    ) ([], [], [], []) required
+    ) ([], [], [], [], []) required
   in
 
   let orig_master_cx, master_cx = sig_cache#read Loc.Builtins in
 
   Merge_js.merge_component_strict
-    component_cxs sig_cxs impls decls master_cx;
+    component_cxs sig_cxs impls res decls master_cx;
   Merge_js.restore cx orig_sig_cxs orig_master_cx;
 
   ()

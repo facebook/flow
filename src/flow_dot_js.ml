@@ -147,7 +147,7 @@ let check_content ~filename ~content =
     ) (Context.required cx) [] in
 
     let master_cx = get_master_cx root in
-    Merge_js.merge_component_strict [cx] [] [] decls master_cx;
+    Merge_js.merge_component_strict [cx] [] [] [] decls master_cx;
 
     Context.errors cx
   | _, parse_errors ->

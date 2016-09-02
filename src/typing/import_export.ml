@@ -49,6 +49,24 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
     )
   )
 
+let mk_resource_module_t cx loc f =
+  let reason, exports_t = match Utils_js.extension_of_filename f with
+  | Some ".css" ->
+    let reason = Reason.mk_reason
+      "Flow assumes requiring a .css file returns an Object"
+      loc in
+    reason, Type.AnyObjT reason
+  | Some ext ->
+    let reason = Reason.mk_reason
+      (Utils_js.spf "Flow assumes that requiring a %s file returns a string" ext)
+      loc in
+    reason, Type.StrT.why reason
+  | _ -> failwith "How did we find a resource file without an extension?!"
+  in
+
+  mk_commonjs_module_t cx reason reason exports_t
+
+
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
 let get_module_t cx m reason =
