@@ -42,8 +42,7 @@ let rec print_all_rec ~normalize_filename next =
     ) result;
     print_all_rec ~normalize_filename next
 
-let main strip_root ignore_flag include_flag root () =
-  let root = guess_root root in
+let get_ls_files ~subdir ~root ~strip_root ~ignore_flag ~include_flag =
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
 
   let opt_temp_dir =
@@ -159,12 +158,24 @@ let main strip_root ignore_flag include_flag root () =
 
   let _, libs = Files.init options in
 
+  (Files.make_next_files ~subdir ~options ~libs, options)
+
+let main strip_root ignore_flag include_flag root () =
+  let root = guess_root root in
+  let (next_files, options) =
+    get_ls_files
+      ~root
+      ~subdir:None
+      ~strip_root
+      ~ignore_flag
+      ~include_flag
+  in
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
   let normalize_filename filename =
-    if not opt_strip_root then filename
+    if not options.Options.opt_strip_root then filename
     else Files.relative_path root_str filename
   in
 
-  print_all_rec ~normalize_filename (Files.make_next_files ~options ~libs)
+  print_all_rec ~normalize_filename next_files
 
 let command = CommandSpec.command spec main

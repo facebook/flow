@@ -246,15 +246,35 @@ let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in
   fun path -> not (is_ignored_ path) && not (SSet.mem path lib_fileset)
 
-let make_next_files ~options ~libs =
+(**
+ * Creates a "next" function (see also: `get_all`) for finding the files in a
+ * given FlowConfig root. Also takes an optional `subdir` argument to restrict
+ * the set of files to things that sit under a given sub-directory of root. If
+ * `subdir` is none, all JS files under the root will be returned.
+ *)
+let make_next_files ~subdir ~options ~libs =
   let root = Options.root options in
   let filter = wanted ~options libs in
   let others = Path_matcher.stems (Options.includes options) in
-  let sroot = Path.to_string root in
+  let root_str= Path.to_string root in
   let realpath_filter path = is_valid_path ~options path && filter path in
-  let path_filter path =
-    (String_utils.string_starts_with path sroot || is_included options path)
-    && realpath_filter path
+  let path_filter =
+    (**
+     * This function is very hot on large codebases, so specialize it up front
+     * to minimize work.
+     *)
+    match subdir with
+    | None ->
+      (fun path ->
+        (String_utils.string_starts_with path root_str || is_included options path)
+        && realpath_filter path
+      )
+    | Some subdir ->
+      let subdir_str = Path.to_string subdir in
+      (fun path ->
+        (String_utils.string_starts_with path subdir_str)
+        && realpath_filter path
+      )
   in
   make_next_files_following_symlinks
     ~path_filter ~realpath_filter (root::others)
@@ -316,3 +336,15 @@ let filename_from_string ~options p =
   | Some ".json" -> Loc.JsonFile p
   | Some ext when SSet.mem ext resource_file_exts -> Loc.ResourceFile p
   | _ -> Loc.SourceFile p
+
+let mkdirp path_str perm =
+  let parts = Str.split dir_sep path_str in
+  let is_absolute = Str.string_match absolute_path path_str 0 in
+  ignore (List.fold_left (fun path_str part ->
+    let new_path_str = Filename.concat path_str part in
+    Unix.(
+      try mkdir new_path_str perm
+      with Unix_error (EEXIST, "mkdir", _) -> ()
+    );
+    new_path_str
+  ) (if is_absolute then Filename.dir_sep else "") parts);

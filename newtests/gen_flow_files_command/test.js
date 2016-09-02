@@ -3,7 +3,7 @@
 
 import {suite, test} from '../../tsrc/test/Tester';
 
-export default suite(({addFile, flowCmd}) => [
+export default suite(({addFile, addFiles, flowCmd}) => [
   test('named class exports', [
     addFile('named_class_exports.js'),
     flowCmd(['gen-flow-files', 'named_class_exports.js']).stdout(`
@@ -189,5 +189,93 @@ export default suite(({addFile, flowCmd}) => [
       declare export var nestedObject: {p1: {p2: number}};
       declare export var singleProp: {p1: number};
     `)
+  ]),
+
+  /**
+   * TODO: Add checks that assert that the following files actually get written
+   *       to disk.
+   */
+
+  test('single file with --out-dir', [
+    addFiles(
+      'test_project/dist/main.js',
+      'test_project/src/main.js',
+    ),
+    flowCmd([
+      'gen-flow-files',
+      '--strip-root',
+      './test_project/src/main.js',
+      '--out-dir=./test_project/dist/'
+    ]).stderr('').stdout(`
+      test_project/src/main.js -> test_project/dist/main.js.flow
+    `),
+  ]),
+
+  test('single file in nested directory with --out-dir', [
+    addFiles(
+      'test_project/dist/main.js',
+      'test_project/src/main.js',
+      'test_project/src/lib/utils.js',
+    ),
+    flowCmd([
+      'gen-flow-files',
+      '--strip-root',
+      './test_project/src/lib/utils.js',
+      '--out-dir=./test_project/dist/'
+    ]).stderr('').stdout(`
+      test_project/src/lib/utils.js -> test_project/dist/utils.js.flow
+    `),
+  ]),
+
+  test('directory without --out-dir (error)', [
+    addFiles(
+      'test_project/dist/main.js',
+      'test_project/src/main.js',
+    ),
+    flowCmd([
+      'gen-flow-files',
+      '--strip-root',
+      './test_project/src',
+    ]).stdout('').stderr(`
+      When the ${'`'}src${'`'} arg is a directory, the ${'`'}--out-dir${'`'} flag is required.
+    `)
+  ]),
+
+  test('directory with --out-dir', [
+    addFiles(
+      'test_project/dist/main.js',
+      'test_project/src/main.js',
+      'test_project/src/lib/utils.js',
+    ),
+    flowCmd([
+      'gen-flow-files',
+      '--strip-root',
+      './test_project/src',
+      '--out-dir=./test_project/dist',
+    ]).stderr('').stdout(`
+      Found 2 files, generating libdefs...
+      test_project/src/lib/utils.js -> test_project/dist/lib/utils.js.flow
+      test_project/src/main.js -> test_project/dist/main.js.flow
+    `),
+  ]),
+
+  test('directory with non-@flow files', [
+    addFiles(
+      'test_project/dist/main.js',
+      'test_project/src/main.js',
+      'test_project/src/noflow.js',
+      'test_project/src/lib/utils.js',
+      'test_project/src/lib/noflow.js',
+    ),
+    flowCmd([
+      'gen-flow-files',
+      '--strip-root',
+      './test_project/src',
+      '--out-dir=./test_project/dist',
+    ]).stderr('').stdout(`
+      Found 4 files, generating libdefs...
+      test_project/src/lib/utils.js -> test_project/dist/lib/utils.js.flow
+      test_project/src/main.js -> test_project/dist/main.js.flow
+    `),
   ]),
 ]);

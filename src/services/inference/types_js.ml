@@ -651,7 +651,7 @@ let server_init genv =
 
   let ordered_libs, libs = Files.init options in
 
-  let get_next_raw = Files.make_next_files ~options ~libs in
+  let get_next_raw = Files.make_next_files ~subdir:None ~options ~libs in
   let get_next = fun () ->
     get_next_raw () |> List.map (Files.filename_from_string ~options)
   in
