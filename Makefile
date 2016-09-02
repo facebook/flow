@@ -49,6 +49,7 @@ MODULES=\
   src/server\
   src/services/autocomplete\
   src/services/inference\
+  src/services/flowFileGen\
   src/services/port\
   src/stubs\
   src/typing\

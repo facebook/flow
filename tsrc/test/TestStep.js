@@ -3,6 +3,7 @@
 import searchStackForTestAssertion from './searchStackForTestAssertion';
 import newErrors from './assertions/newErrors';
 import noNewErrors from './assertions/noNewErrors';
+import stderr from './assertions/stderr';
 import stdout from './assertions/stdout';
 import exitCodes from './assertions/exitCodes';
 import noop from './assertions/noop';
@@ -10,7 +11,7 @@ import noop from './assertions/noop';
 import type {AssertionLocation, ErrorAssertion, ErrorAssertionResult} from './assertions/assertionTypes';
 import type {TestBuilder} from './builder';
 import type {FlowResult} from '../flowResult';
-import type {StepEnvReadable, StepEnvWriteable} from './stepEnv'
+import type {StepEnvReadable, StepEnvWriteable} from './stepEnv';
 
 type Action = (builder: TestBuilder, envWrite: StepEnvWriteable) => Promise<void>;
 
@@ -97,6 +98,11 @@ class TestStepFirstOrSecondStage extends TestStep {
     const ret = this._cloneWithAssertion(newErrors(expected, assertLoc));
     ret._needsFlowCheck = true;
     return ret;
+  }
+
+  stderr(expected: string): TestStepSecondStage {
+    const assertLoc = searchStackForTestAssertion();
+    return this._cloneWithAssertion(stderr(expected, assertLoc));
   }
 
   stdout(expected: string): TestStepSecondStage {

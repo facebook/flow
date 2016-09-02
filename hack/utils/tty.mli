@@ -35,11 +35,11 @@ type color_mode =
   | Color_Auto
 
 (*
- * Print a sequence of colorized strings to stdout, using ANSI color escapes
- * codes.
+ * Print a sequence of colorized strings to stdout/stderr, using ANSI color
+ * escapes codes.
  *)
-val cprint : ?color_mode:color_mode -> (style * string) list -> unit
-val cprintf : ?color_mode:color_mode -> style ->
+val cprint : ?color_mode:color_mode -> ?out_channel:out_channel -> (style * string) list -> unit
+val cprintf : ?color_mode:color_mode -> ?out_channel:out_channel -> style ->
   ('a, unit, string, unit) format4 -> 'a
 
 (* These two functions provide a four-state TTY-friendly spinner that

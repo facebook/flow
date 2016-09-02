@@ -72,7 +72,9 @@ let infer_ast ~metadata ~filename ~module_name ast =
 
   let _, statements, comments = ast in
 
-  let cx = Flow_js.fresh_context metadata filename module_name in
+  let cx =
+    Flow_js.fresh_context metadata filename module_name
+  in
   let checked = Context.is_checked cx in
 
   let exported_module_name = Modulename.to_string module_name in

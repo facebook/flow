@@ -66,6 +66,8 @@ val write_prop : Context.t -> int -> SMap.key -> Type.t -> unit
 
 val iter_props : Context.t -> int -> (string -> Type.t -> unit) -> unit
 
+val find_props : Context.t -> int -> Type.t SMap.t
+
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
 (* object/method types *)
@@ -133,6 +135,7 @@ val possible_types_of_type: Context.t -> Type.t -> Type.t list
 module Autocomplete : sig
   type member_result =
     | Success of Type.t SMap.t
+    | SuccessModule of Type.t SMap.t * (Type.t option)
     | FailureMaybeType
     | FailureAnyType
     | FailureUnhandledType of Type.t

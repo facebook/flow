@@ -82,6 +82,7 @@ val json_of_errors_with_context :
   Hh_json.json
 
 val print_error_color_new:
+  ?out_channel:out_channel ->
   stdin_file:stdin_file ->
   strip_root:bool ->
   one_line:bool ->
@@ -100,6 +101,7 @@ val print_error_json :
 
 (* Human readable output *)
 val print_error_summary:
+  ?out_channel:out_channel ->
   flags:Options.error_flags ->
   ?stdin_file:stdin_file ->
   strip_root: bool ->

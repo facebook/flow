@@ -193,7 +193,10 @@ let typecheck_contents ~options ?verbose ?(check_syntax = false) contents filena
 
       let timing, cx = with_timer "Infer" timing (fun () ->
         Type_inference_js.infer_ast
-          ~metadata ~filename ~module_name:(Modulename.String "-") ast
+          ~metadata
+          ~filename
+          ~module_name:(Modulename.String "-")
+          ast
       ) in
 
       let cache = new Context_cache.context_cache in

@@ -51,7 +51,7 @@ let remove_sig_batch cxs =
    graphs is not only OK, but we rely on it during merging, so it is both safe
    and necessary to cache the local copies. As a side effect, this probably
    helps performance too by avoiding redundant copying. *)
-class context_cache = object
+class context_cache = object(self)
   val cached_infer_contexts = Hashtbl.create 0
 
   (* find a context in the cache *)
@@ -69,12 +69,16 @@ class context_cache = object
     let cx = Context.copy_of_context orig_cx in
     Hashtbl.add cached_infer_contexts file cx;
     cx
+
+  method read_safe file =
+    try Some (self#read file)
+    with Key_not_found _ -> None
 end
 
 (* Similar to above, but for "signature contexts." The only differences are that
    the underlying heap is SigContextHeap instead of ContextHeap, and that `read`
    returns both the original and the copied version of a context. *)
-class sig_context_cache = object
+class sig_context_cache = object(self)
   val cached_merge_contexts = Hashtbl.create 0
 
   (* find a context in the cache *)
@@ -92,4 +96,8 @@ class sig_context_cache = object
     let cx = Context.copy_of_context orig_cx in
     Hashtbl.add cached_merge_contexts file cx;
     orig_cx, cx
+
+  method read_safe file =
+    try Some (self#read file)
+    with Key_not_found _ -> None
 end
