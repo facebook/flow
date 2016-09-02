@@ -1,3 +1,26 @@
+###v0.32.0
+
+Likely to cause new Flow errors:
+* If you check that an object `obj` has a property `foo` that Flow doesn't know about, Flow will now refine `obj.foo` to the type `mixed`. If you then try to use `obj.foo` in an unsafe way (like as a function), you might start seeing errors mentioning `` property `foo` of unknown type ``. The fix is to either fix the type of `obj` to include an optional property `foo`, or to rewrite code like `obj.foo && obj.foo(x)` to `typeof obj.foo === "function" && obj.foo(x)`
+* We've fixed the type of `Array.prototype.find` to reflect the fact that it can return `undefined`
+* We've tightened up the checking of tuple types
+
+
+New Features:
+* New syntax for exact object types: use `{|` and `|}` instead of `{` and `}`. Where `{x: string}` contains at least the property `x`, `{| x: string |}` contains ONLY the property `x`.
+* Flow now watches for `.css`, `.jpg`, `.png`, `.gif`, `.eot`, `.svg`, `.ttf`, `.woff`, `.woff2`, `.mp4` and `.webm` files (this list is not configurable at the moment). We call them resource files. If you require a resource file, you get a `string` (except for `.css` files, for which you get an `Object`). You should still be able to use `module.name_mapper` to map a resource file to a mock, if you prefer.
+* We're starting work on `flow gen-flow-files`, which consumes Flow code and outputs `.flow` files containing only the types exported. It's alpha-level and we're still iterating on it, so use at your own peril!
+
+Notable bug fixes:
+* Fixed a bug where, if a module has a CommonJS export of type `any`, then the types it exported were also given type `any`
+* v0.31.0 contained a regression where arrays and promises required more annotations than they should. This is fixed.
+* Fixed use of tagged unions with intersections and generics.
+* Jump to definition for overridden methods was jumping to the wrong method. This is now fixed.
+* `flow coverage` had a non-termination bug. This is now fixed.
+
+Misc:
+* Lots of improvements to the builtin libdefs! Thanks for all the pull requests!
+
 ###v0.31.0
 
 Likely to cause new Flow errors:
