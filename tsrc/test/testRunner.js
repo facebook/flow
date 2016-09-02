@@ -61,18 +61,18 @@ function startWatchAndRun(suites, args) {
   }
 
   const startListeningForShortcuts = () => {
-      if (process.stdin.setRawMode) {
-        process.stdin.setRawMode(true);
-        process.stdin.resume();
-        process.stdin.setEncoding('utf8');
-        process.stdin.on('data', keydown);
+    if (typeof process.stdin.setRawMode === "function") {
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+      process.stdin.setEncoding('utf8');
+      process.stdin.on('data', keydown);
 
-        printShortcuts();
-      }
+      printShortcuts();
+    }
   }
 
   const stopListeningForShortcuts = () => {
-    if (process.stdin.setRawMode) {
+    if (typeof process.stdin.setRawMode === "function") {
       process.stdin.setRawMode(false);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
