@@ -165,10 +165,15 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
     results |> List.iter (fun (file_path, result) ->
       match result with
       | GenFlowFile_FlowFile content when src_is_dir ->
-        (* File path relative to the src dir *)
-        let dest_path = Files.relative_path src file_path in
-        (* Concatenated with the output dir *)
-        let dest_path = Filename.concat out_dir dest_path in
+        let dest_path = file_path
+          (* File path relative to the src dir *)
+          |> Files.relative_path src
+          (* Make the path OS specific *)
+          |> Str.split_delim (Str.regexp "/")
+          |> String.concat Filename.dir_sep
+          (* Concatenated with the output dir *)
+          |> Filename.concat out_dir in
+
         (* Replace file extension .js -> .js.flow *)
         let dest_path = dest_path ^ ".flow" in
 

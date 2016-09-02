@@ -205,7 +205,7 @@ export default suite(({addFile, addFiles, flowCmd}) => [
       'gen-flow-files',
       '--strip-root',
       './test_project/src/main.js',
-      '--out-dir=./test_project/dist/'
+      '--out-dir=./test_project/dist'
     ]).stderr('').stdout(`
       test_project/src/main.js -> test_project/dist/main.js.flow
     `),
@@ -221,7 +221,7 @@ export default suite(({addFile, addFiles, flowCmd}) => [
       'gen-flow-files',
       '--strip-root',
       './test_project/src/lib/utils.js',
-      '--out-dir=./test_project/dist/'
+      '--out-dir=./test_project/dist'
     ]).stderr('').stdout(`
       test_project/src/lib/utils.js -> test_project/dist/utils.js.flow
     `),
