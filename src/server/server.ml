@@ -323,7 +323,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let errors = env.ServerEnv.errorl in
     let result =
       if List.length errors > 0 then Utils_js.Err (
-        ServerProt.GenFlowFile_TypecheckError (Errors.ErrorSet.of_list errors)
+        let error_set = List.fold_left (fun set err ->
+          Errors.ErrorSet.add err set
+        ) Errors.ErrorSet.empty errors in
+        ServerProt.GenFlowFile_TypecheckError error_set
       ) else (
         let cache = new Context_cache.context_cache in
         let (flow_files, flow_file_cxs, non_flow_files, error) =
