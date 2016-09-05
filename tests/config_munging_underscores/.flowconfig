@@ -6,3 +6,6 @@
 
 [options]
 munge_underscores=true
+
+[version]
+>= 0

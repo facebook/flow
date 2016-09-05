@@ -1,2 +1,5 @@
 [options]
 module.system=node
+
+[version]
+>= 0

@@ -5,3 +5,6 @@
 strip_root=true
 
 module.system=haste
+
+[version]
+>= 0

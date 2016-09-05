@@ -21,3 +21,6 @@ module.name_mapper='4Doesnt\(Exist\)' -> '\1s2'
 
 module.name_mapper='5Doesnt\(Exist\)' -> '\1s5'
 module.name_mapper='5Doesnt\(Exist\)' -> '\1s'
+
+[version]
+>= 0

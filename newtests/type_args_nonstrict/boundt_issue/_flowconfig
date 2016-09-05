@@ -7,3 +7,6 @@
 [options]
 all=true
 experimental.strict_type_args=false
+
+[version]
+>= 0

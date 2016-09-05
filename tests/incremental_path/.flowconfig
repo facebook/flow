@@ -3,3 +3,6 @@
 
 [options]
 strip_root=true
+
+[version]
+>= 0

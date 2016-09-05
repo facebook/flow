@@ -1,2 +1,5 @@
 [options]
 facebook.ignore_fbt=true
+
+[version]
+>= 0

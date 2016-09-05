@@ -8,3 +8,6 @@
 all=true
 esproposal.class_instance_fields=enable
 munge_underscores=true
+
+[version]
+>= 0

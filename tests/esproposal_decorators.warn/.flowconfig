@@ -1,2 +1,5 @@
 [options]
 esproposal.decorators=warn
+
+[version]
+>= 0

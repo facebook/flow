@@ -6,3 +6,6 @@
 declarations
 
 [options]
+
+[version]
+>= 0

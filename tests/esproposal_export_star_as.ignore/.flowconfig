@@ -1,2 +1,5 @@
 [options]
 esproposal.export_star_as=ignore
+
+[version]
+>= 0

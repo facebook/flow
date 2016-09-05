@@ -7,3 +7,6 @@ libA.js
 libB.js
 
 [options]
+
+[version]
+>= 0

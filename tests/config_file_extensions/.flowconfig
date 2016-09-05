@@ -1,2 +1,5 @@
 [options]
 module.file_ext=.js.es6
+
+[version]
+>= 0
