@@ -3,6 +3,7 @@
  * @flow
  */
 
+// $FlowFixMe
 import type T from "T";
 
 export default class {
