@@ -6622,7 +6622,7 @@ and predicate cx trace t l p = match p with
   (************************)
 
   | AndP (p1,p2) ->
-    let reason = mk_reason "and" (loc_of_predicate p1) in
+    let reason = replace_reason "and" (reason_of_t t) in
     let tvar = mk_tvar cx reason in
     rec_flow cx trace (l,PredicateT(p1,tvar));
     rec_flow cx trace (tvar,PredicateT(p2,t))

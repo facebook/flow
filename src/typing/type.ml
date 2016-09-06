@@ -1316,39 +1316,6 @@ let desc_of_t t = desc_of_reason (reason_of_t t)
 
 let loc_of_t t = loc_of_reason (reason_of_t t)
 
-let rec loc_of_predicate = function
-  | AndP (p1, _)
-  | OrP (p1, _)
-    -> loc_of_predicate p1
-
-  | NotP p
-    -> loc_of_predicate p
-
-  | LeftP (_, t)
-  | RightP (_, t)
-    -> loc_of_t t
-
-  | ExistsP
-  | NullP
-  | MaybeP
-
-  | SingletonBoolP _
-  | SingletonStrP _
-  | SingletonNumP _
-
-  | BoolP
-  | FunP
-  | NumP
-  | ObjP
-  | StrP
-  | VoidP
-
-  | ArrP
-  | PropExistsP _
-  | LatentP _
-    -> Loc.none (* TODO!!!!!!!!!!!! *)
-
-
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
 
