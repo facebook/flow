@@ -786,7 +786,7 @@ function splitAtWord(str: string, max: number): [string, string] {
       break;
     }
     maybe += str[i];
-    if (str[i].match(/[ -_\t]/)) {
+    if (str[i].match(/[- _\t]/)) {
       ret += maybe;
       maybe = "";
     }
