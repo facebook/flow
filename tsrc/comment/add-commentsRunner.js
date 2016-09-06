@@ -726,7 +726,7 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path): st
      */
     let formattedComment = formatComment(comment, lines[loc.start.line-1]);
     // Stick a { before the comment
-    formattedComment[0] = formattedComment[0].replace(/^( *)\//, '$1{\n$1  /')
+    formattedComment[0] = formattedComment[0].replace(/^( *)\//, '$1{\n$1/')
     let lineWithClosingCurly = lines[ast.loc.end.line-1];
     // Stick a } after the JSX element
     lineWithClosingCurly = format(

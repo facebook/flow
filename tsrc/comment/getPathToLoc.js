@@ -16,10 +16,10 @@ class Path {
 
   constructor(ast: Object) {
     this.nodes = [];
-    this.push("root", ast);
+    this.push("root", ast, new Set(['comments']));
   }
 
-  push(key: string, ast: Object) {
+  push(key: string, ast: Object, exclude?: Set<string>) {
     const todo = [];
     if (ast == null) {
       return false;
@@ -29,7 +29,7 @@ class Path {
       }
     } else if (ast.type != null) {
       for (const prop in ast) {
-        if (ast.hasOwnProperty(prop)) {
+        if (ast.hasOwnProperty(prop) && !(exclude && exclude.has(prop))) {
           todo.push(prop);
         }
       }
