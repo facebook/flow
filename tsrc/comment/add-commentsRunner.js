@@ -220,51 +220,13 @@ export default async function(args: Args): Promise<void> {
   let locationToErrorsMap: Map<string, Array<BlessedError>>;
   let scrollToLocationMap;
   let sort: 'count' | 'loc' = 'count';
-  const renderLocations = () => {
-    locationToErrorsMap = new Map();
-    scrollToLocationMap = new Map();
-    for (const error of errors) {
-      if (error.active) {
-        const locString = error.getStringOfLocation();
-        const errorsOfLoc = locationToErrorsMap.get(locString) || [];
-        errorsOfLoc.push(error);
-        locationToErrorsMap.set(locString, errorsOfLoc);
-      }
-    }
-    const rows = [['Selected', 'Location']];
-    const entries = Array.from(locationToErrorsMap.entries());
-    entries.sort(([aLocString, aErrorsOfLoc], [bLocString, bErrorsOfLoc]) => {
-      switch (sort) {
-        case 'loc':
-          return aLocString.localeCompare(bLocString);
-        case 'count':
-          return bErrorsOfLoc.length - aErrorsOfLoc.length;
-        default:
-          throw new Error("Unexpected sort type: "+sort);
-      }
-    });
-    entries.forEach(([locString, errorsOfLoc], scrollIndex) => {
-      scrollToLocationMap.set(scrollIndex+1, locString);
-      const numSelected = errorsOfLoc.filter(e => e.selected === selectedBox).length;
-      const selected =
-        numSelected === 0
-        ? unselectedBox
-          : numSelected === errorsOfLoc.length
-          ? selectedBox
-          : someSelected;
-      rows.push([selected, format("%s (%d)", locString, errorsOfLoc.length)]);
-    });
-
-    locations.setRows(rows);
-  }
-  renderLocations();
 
   // Shows the individual errors for a particular location
   const details = blessed.box({
     parent: outer,
     border: 'line',
     right: 0,
-    bottom: 2,
+    bottom: 3,
     width: '70%',
     height: 'shrink',
     content: 'details go here',
@@ -322,6 +284,19 @@ export default async function(args: Args): Promise<void> {
       fg: 'red',
     }
   });
+  var numberActiveText = blessed.text({
+    parent: outer,
+    align: 'center',
+    bottom: 2,
+    right: 0,
+    height: 'shrink',
+    width: 'shrink',
+    content: '0 errors selected',
+    style: {
+      bg: 'white',
+      fg: 'red',
+    }
+  })
 
   // A key to show which keys do what
   const keyText = blessed.text({
@@ -338,6 +313,50 @@ export default async function(args: Args): Promise<void> {
       fg: 'red',
     }
   });
+
+  const renderLocations = () => {
+    locationToErrorsMap = new Map();
+    scrollToLocationMap = new Map();
+    for (const error of errors) {
+      if (error.active) {
+        const locString = error.getStringOfLocation();
+        const errorsOfLoc = locationToErrorsMap.get(locString) || [];
+        errorsOfLoc.push(error);
+        locationToErrorsMap.set(locString, errorsOfLoc);
+      }
+    }
+    const rows = [['Selected', 'Location']];
+    const entries = Array.from(locationToErrorsMap.entries());
+    entries.sort(([aLocString, aErrorsOfLoc], [bLocString, bErrorsOfLoc]) => {
+      switch (sort) {
+        case 'loc':
+          return aLocString.localeCompare(bLocString);
+        case 'count':
+          return bErrorsOfLoc.length - aErrorsOfLoc.length;
+        default:
+          throw new Error("Unexpected sort type: "+sort);
+      }
+    });
+    entries.forEach(([locString, errorsOfLoc], scrollIndex) => {
+      scrollToLocationMap.set(scrollIndex+1, locString);
+      const numSelected = errorsOfLoc.filter(e => e.selected === selectedBox).length;
+      const selected =
+        numSelected === 0
+        ? unselectedBox
+          : numSelected === errorsOfLoc.length
+          ? selectedBox
+          : someSelected;
+      rows.push([selected, format("%s (%d)", locString, errorsOfLoc.length)]);
+    });
+
+    numberActiveText.setContent(format(
+      "%d errors selected",
+      errors.filter(e => e.isSelected()).length,
+    ));
+
+    locations.setRows(rows);
+  }
+  renderLocations();
 
   // We we scroll the locations update the details
   const showDetails = scroll => {
