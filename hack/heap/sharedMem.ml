@@ -124,8 +124,6 @@ let init config =
 
 external connect : handle -> is_master:bool -> unit = "hh_connect"
 
-external reset: unit -> unit = "hh_shared_reset"
-
 (*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we
  * free data (cf hh_shared.c for the underlying C implementation).

@@ -895,15 +895,6 @@ CAMLprim value hh_shared_init(
   CAMLreturn(connector);
 }
 
-void hh_shared_reset() {
-#ifndef _WIN32
-  assert(shared_mem);
-  early_counter = 1;
-  memset(shared_mem, 0, heap_init - shared_mem);
-  init_shared_globals(0);
-#endif
-}
-
 /* Must be called by every worker before any operation is performed */
 value hh_connect(value connector, value is_master) {
   CAMLparam2(connector, is_master);
