@@ -164,11 +164,18 @@ module ReversePackageHeap = SharedMem.WithCache (StringKey) (struct
   end)
 
 let get_key key tokens = Ast.(
-  match SMap.get (spf "\"%s\"" key) tokens with
+  match SMap.get key tokens with
   | Some (_, Expression.Literal { Literal.value = Literal.String name; _ }) ->
       Some name
   | _ -> None
 )
+
+let trim_quotes str =
+  let len = String.length str in
+  assert (len >= 2);
+  assert (String.get str 0 = '"');
+  assert (String.get str (len - 1) = '"');
+  String.sub str 1 (len - 2)
 
 let get_package_keys filename ast =
   let open Ast in
@@ -196,7 +203,7 @@ let get_package_keys filename ast =
         Property.key = Property.Literal(_, {Literal.raw; _;});
         value;
         _;
-      }) -> SMap.add raw value map
+      }) -> SMap.add (trim_quotes raw) value map
     | _ -> SMap.empty
   in
   List.fold_left extract_property SMap.empty properties
