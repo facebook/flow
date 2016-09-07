@@ -111,6 +111,7 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Website: [http://flowtype.org/](http://flowtype.org/)
 * irc: #flowtype on Freenode
 * Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
+* Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
 Flow is BSD-licensed. We also provide an additional patent grant.
