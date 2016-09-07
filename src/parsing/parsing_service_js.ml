@@ -325,6 +325,18 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files =
   SharedMem.collect `gentle;
   modified, results
 
+let reparse_with_defaults options workers files =
+  (* force types when --all is set, but otherwise forbid them unless the file
+     has @flow in it. *)
+  let types_mode =
+    if Options.all options then TypesAllowed else TypesForbiddenByDefault
+  in
+  let use_strict = Options.modules_are_use_strict options in
+  let profile = Options.should_profile options in
+  let max_header_tokens = Options.max_header_tokens options in
+  reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files
+
+
 let has_ast file =
   ParserHeap.mem file
 
