@@ -12,7 +12,7 @@ Flow works with:
 * Linux (64-bit)
 * Windows (64-bit)
 
-There are binary distributions for Mac OS X and many variants of Linux; you can also build it from source on almost any 64-bit Linux variant.
+There are [binary distributions](https://github.com/facebook/flow/releases) for each of these platforms and you can also build it from source on any of them as well.
 
 ## Installing Flow
 
