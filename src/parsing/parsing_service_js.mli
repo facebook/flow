@@ -54,6 +54,12 @@ val reparse:
   FilenameSet.t ->          (* filenames to reparse *)
   FilenameSet.t * results   (* modified files and job results *)
 
+val reparse_with_defaults:
+  Options.t ->
+  Worker.t list option ->
+  FilenameSet.t ->
+  FilenameSet.t * results
+
 val has_ast: filename -> bool
 
 (* after parsing, retrieves ast by filename (unsafe) *)

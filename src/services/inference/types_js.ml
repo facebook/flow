@@ -440,24 +440,12 @@ let recheck genv env modified =
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_asts deleted;
 
-  (* force types when --all is set, but otherwise forbid them unless the file
-     has @flow in it. *)
-  let types_mode = Parsing_service_js.(
-    if Options.all options then TypesAllowed else TypesForbiddenByDefault
-  ) in
-
-  let use_strict = Options.modules_are_use_strict options in
-
   Flow_logger.log "Parsing";
   (* reparse modified and added files, updating modified to reflect removal of
      unchanged files *)
   let timing, (modified, freshparse_results) =
     with_timer ~options "Parsing" timing (fun () ->
-      let profile = Options.should_profile options in
-      let max_header_tokens = Options.max_header_tokens options in
-      Parsing_service_js.reparse
-        ~types_mode ~use_strict ~profile ~max_header_tokens
-        workers modified
+      Parsing_service_js.reparse_with_defaults options workers modified
     ) in
   let modified_count = FilenameSet.cardinal modified in
   let {
