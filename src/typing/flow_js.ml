@@ -4105,7 +4105,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              (SMap.keys (find_props cx props_tmap)))
         then
           let map = SMap.add "$call" l SMap.empty in
-          let function_proto = get_builtin_type cx ~trace reason "Function" in
+          let function_proto = FunProtoT reason in
           let obj = mk_object_with_map_proto cx reason map function_proto in
           let t = mk_tvar_where cx reason (fun t ->
             rec_flow cx trace (statics, ObjAssignT (reason, obj, t, [], false))
@@ -4303,7 +4303,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Function library call *)
     (*************************)
 
-    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
+    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _ | HasPropT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Function",u)
 
     (*********************)
@@ -4394,21 +4394,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace
         (next, LookupT (reason, strict, try_ts_on_failure, s, t))
 
-    | (MixedT (reason, _), LookupT (reason_op, Strict strict_reason, [], x, _)) ->
+    | MixedT _, LookupT (reason_op, _, [], x, _)
+      when is_object_prototype_method x ->
+      (** TODO: These properties should go in Object.prototype. Currently we
+          model Object.prototype as a MixedT, as an optimization against a
+          possible deluge of shadow properties on Object.prototype, since it
+          is shared by every object. **)
+      rec_flow cx trace (get_builtin_type cx ~trace reason_op "Object", u)
 
-      if is_object_prototype_method x
-      then
-        (** TODO: These properties should go in Object.prototype. Currently we
-            model Object.prototype as a MixedT, as an optimization against a
-            possible deluge of shadow properties on Object.prototype, since it
-            is shared by every object. **)
-        rec_flow cx trace (get_builtin_type cx ~trace strict_reason "Object", u)
+    | FunProtoT _, LookupT (reason_op, _, [], x, _)
+      when is_function_prototype x ->
+      (** TODO: Ditto above comment for Function.prototype *)
+      rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
+    | (MixedT (reason, _) | FunProtoT reason),
+      LookupT (reason_op, Strict strict_reason, [], x, _) ->
       (* if we're looking something up on the global/builtin object, then tweak
          the error to say that `x` doesn't exist. We can tell this is the global
          object because that should be the only object created with
          `builtin_reason` instead of an actual location (see `Init_js.init`). *)
-      else if is_builtin_reason reason
+      if is_builtin_reason reason
       then
         let msg =
           if is_internal_module_name x
@@ -4427,7 +4432,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         flow_err_reasons cx trace msg (reason_op, strict_reason)
 
     (* LookupT is a non-strict lookup *)
-    | (MixedT _, LookupT (_, NonstrictReturning t_opt, [], _, _)) ->
+    | (MixedT _ | FunProtoT _),
+      LookupT (_, NonstrictReturning t_opt, [], _, _) ->
       (* don't fire
 
          ...unless a default return value is given. Two examples:
@@ -4610,7 +4616,7 @@ and is_function_prototype = function
   | "caller"
   | "length"
   | "name" -> true
-  | _ -> false
+  | x -> is_object_prototype_method x
 
 (* neither object prototype methods nor callable signatures should be
  * implied by an object indexer type *)
