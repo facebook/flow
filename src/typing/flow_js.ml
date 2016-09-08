@@ -7339,7 +7339,6 @@ and add_lower_edges cx trace ?(opt=false) (id1, bounds1) (id2, bounds2) =
    both of the roots are resolved, they effectively act like the corresponding
    concrete types. *)
 and goto cx trace (id1, root1) (id2, root2) =
-  replace_node cx id1 (Goto id2);
   (match root1.constraints, root2.constraints with
 
   | Unresolved bounds1, Unresolved bounds2 ->
@@ -7369,7 +7368,8 @@ and goto cx trace (id1, root1) (id2, root2) =
 
   | Resolved t1, Resolved t2 ->
     rec_unify cx trace t1 t2;
-  )
+  );
+  replace_node cx id1 (Goto id2)
 
 (* Unify two type variables. This involves finding their roots, and making one
    point to the other. Ranks are used to keep chains short. *)
