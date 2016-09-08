@@ -1,5 +1,5 @@
 /*
-  $FlowFixMe is a synonym for any, used by the Flow team to
+  FlowFixMe is a synonym for any, used by the Flow team to
   signal a needed mod to JS devs.
 
   @flow

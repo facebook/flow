@@ -153,8 +153,8 @@ module Opts = struct
     module_file_exts;
     module_resource_exts;
     modules_are_use_strict = false;
-    suppress_comments = [];
-    suppress_types = SSet.empty;
+    suppress_comments = [Str.regexp "\\(.\\|\n\\)*\\$FlowFixMe"];
+    suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
     traces = 0;
     strip_root = false;
     all = false;
@@ -596,7 +596,9 @@ let parse_options config lines =
     }
 
     |> define_opt "suppress_comment" {
-      _initializer = USE_DEFAULT;
+      _initializer = INIT_FN (fun opts ->
+        {opts with suppress_comments = [];}
+      );
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_regexp;
       setter = (fun opts v -> {
@@ -605,7 +607,9 @@ let parse_options config lines =
     }
 
     |> define_opt "suppress_type" {
-      _initializer = USE_DEFAULT;
+      _initializer = INIT_FN (fun opts ->
+        {opts with suppress_types = SSet.empty;}
+      );
       flags = [ALLOW_DUPLICATE];
       optparser = optparse_string;
       setter = (fun opts v -> {
