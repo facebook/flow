@@ -32,3 +32,7 @@ $FLOW get-def --strip-root react.js 11 12
 
 # Inheritance
 $FLOW get-def --strip-root override.js 8 19
+
+# Directly jump to required/imported modules
+$FLOW get-def --strip-root main.js 3 26
+$FLOW get-def --strip-root main.js 23 29
