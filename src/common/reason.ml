@@ -302,12 +302,13 @@ let is_method_call_reason name reason =
 *)
 let is_constant_property_reason =
   let property_prefix = "property `" in
-  let prop_start = String.length property_prefix + 1 in
+  let prop_start = String.length property_prefix in
   fun r ->
     let desc = desc_of_reason r in
     string_starts_with desc property_prefix &&
       let prop_end = String.index_from desc prop_start '`' in
-      is_not_lowercase desc prop_start prop_end
+      prop_start != prop_end &&
+      is_not_lowercase desc (prop_start+1) prop_end
 
 let is_derivable_reason r =
   r.derivable
