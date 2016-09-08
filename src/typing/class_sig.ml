@@ -15,7 +15,7 @@ type signature = {
   fields: field SMap.t;
   (* Multiple function signatures indicates an overloaded method. Note that
      function signatures are stored in reverse definition order. *)
-  methods: Func_sig.t list SMap.t;
+  methods: Func_sig.t Nel.t SMap.t;
   getters: Func_sig.t SMap.t;
   setters: Func_sig.t SMap.t;
   (* Track the order of method declarations, so they can be processed in the
@@ -94,7 +94,7 @@ let add_method_decl =
 
 let add_method name fsig = map_sig (fun s -> {
   s with
-  methods = SMap.add name [fsig] s.methods;
+  methods = SMap.add name (Nel.one fsig) s.methods;
   getters = SMap.remove name s.getters;
   setters = SMap.remove name s.setters;
   method_decls = add_method_decl name s.method_decls;
@@ -105,8 +105,8 @@ let add_method name fsig = map_sig (fun s -> {
    definitions as branches of a single overloaded method. *)
 let append_method name fsig = map_sig (fun s ->
   let methods = match SMap.get name s.methods with
-  | Some fsigs -> SMap.add name (fsig::fsigs) s.methods
-  | None -> SMap.add name [fsig] s.methods
+  | Some fsigs -> SMap.add name (Nel.cons fsig fsigs) s.methods
+  | None -> SMap.add name (Nel.one fsig) s.methods
   in
   let method_decls = (Method, name)::s.method_decls in
   {s with methods; method_decls}
@@ -148,9 +148,12 @@ let iter_methods f {methods; getters; setters; method_decls; _} =
     | (kind, name)::decls ->
       let x, methods = match kind with
       | Method ->
-        let m = SMap.find_unsafe name methods in
-        let methods = SMap.add name (List.tl m) methods in
-        List.hd m, methods
+        let hd, tl = SMap.find_unsafe name methods in
+        let methods = match tl with
+        | [] -> SMap.remove name methods
+        | hd::tl -> SMap.add name (hd, tl) methods
+        in
+        hd, methods
       | Getter ->
         SMap.find_unsafe name getters, methods
       | Setter ->
@@ -158,7 +161,7 @@ let iter_methods f {methods; getters; setters; method_decls; _} =
       in
       f x; loop methods decls
   in
-  let methods = SMap.map List.rev methods in
+  let methods = SMap.map Nel.rev methods in
   let method_decls = List.rev method_decls in
   loop methods method_decls
 
@@ -169,7 +172,7 @@ let subst_sig cx map s = {
   reason = s.reason;
   super = Flow.subst cx map s.super;
   fields = SMap.map (subst_field cx map) s.fields;
-  methods = SMap.map (List.map (Func_sig.subst cx map)) s.methods;
+  methods = SMap.map (Nel.map (Func_sig.subst cx map)) s.methods;
   getters = SMap.map (Func_sig.subst cx map) s.getters;
   setters = SMap.map (Func_sig.subst cx map) s.setters;
   method_decls = s.method_decls;
@@ -191,10 +194,9 @@ let elements cx ?constructor = with_sig (fun s ->
        to the first declared function signature. If there is a single
        function signature for this method, simply return the method type. *)
     SMap.map Type.(fun xs ->
-      match List.rev_map Func_sig.methodtype xs with
-      | [] -> EmptyT.t
-      | [t] -> t
-      | t::_ as ts -> IntersectionT (reason_of_t t, InterRep.make ts)
+      match Nel.rev_map Func_sig.methodtype xs with
+      | t, [] -> t
+      | t, ts -> IntersectionT (reason_of_t t, InterRep.make (t::ts))
     ) s.methods
   in
 
