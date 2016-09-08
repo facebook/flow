@@ -1,6 +1,6 @@
 //Provides: hh_realpath
-//Requires: js_print_stderr
 function hh_realpath(path) {
-  js_print_stderr("hh_realpath called, but does nothing: " + path);
+  // Stub implementation that does nothing. Ideally we'd avoid calling this
+  // (via `Path.make`) completely.
   return 0; // `None`
 }
