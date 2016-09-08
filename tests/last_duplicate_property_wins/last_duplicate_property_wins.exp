@@ -1,0 +1,50 @@
+test.js:18
+ 18: ((new C).foo(): boolean); // last wins
+       ^^^^^^^^^^^^ string. This type is incompatible with
+ 18: ((new C).foo(): boolean); // last wins
+                     ^^^^^^^ boolean
+
+test.js:19
+ 19: ((new C).x: boolean); // last wins
+       ^^^^^^^^ string. This type is incompatible with
+ 19: ((new C).x: boolean); // last wins
+                 ^^^^^^^ boolean
+
+test.js:20
+ 20: ((new C).bar: boolean); // last wins
+       ^^^^^^^^^^ string. This type is incompatible with
+ 20: ((new C).bar: boolean); // last wins
+                   ^^^^^^^ boolean
+
+test.js:21
+ 21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
+       ^^^^^^^^^^ number. This type is incompatible with
+ 21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
+                   ^^^^^^^ boolean
+
+test.js:38
+ 38: (o.foo(): boolean); // last wins
+      ^^^^^^^ string. This type is incompatible with
+ 38: (o.foo(): boolean); // last wins
+               ^^^^^^^ boolean
+
+test.js:39
+ 39: (o.x: boolean); // last wins
+      ^^^ string. This type is incompatible with
+ 39: (o.x: boolean); // last wins
+           ^^^^^^^ boolean
+
+test.js:40
+ 40: (o.bar: boolean); // last wins
+      ^^^^^ string. This type is incompatible with
+ 40: (o.bar: boolean); // last wins
+             ^^^^^^^ boolean
+
+test.js:41
+ 41: (o.qux(): boolean); // last wins
+      ^^^^^^^ string. This type is incompatible with
+ 41: (o.qux(): boolean); // last wins
+               ^^^^^^^ boolean
+
+
+Found 8 errors
