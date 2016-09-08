@@ -482,15 +482,32 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let is_incompatible filename_str =
       let filename = Loc.JsonFile filename_str in
       let filename_set = FilenameSet.singleton filename in
-      let ast =
+      let ast_opt =
+        (*
+         * If the file no longer exists, this will log a harmless error to
+         * stderr and the has_ast call below will return false, which will
+         * cause the server to exit.
+         *
+         * If the file has come into existence, reparse (true to its name)
+         * will not actually parse the file. Again, this will cause has_ast
+         * to return false and the server to exit.
+         *
+         * In both cases, this is desired behavior since a package.json file
+         * has changed considerably.
+         *)
         let _ = Parsing_service_js.reparse_with_defaults
           options
           (* workers *) None
           filename_set
         in
-        Parsing_service_js.get_ast_unsafe filename
+        if Parsing_service_js.has_ast filename then
+          Some (Parsing_service_js.get_ast_unsafe filename)
+        else
+          None
       in
-      Module_js.package_incompatible filename_str ast
+      match ast_opt with
+        | None -> true
+        | Some ast -> Module_js.package_incompatible filename_str ast
     in
 
     (* Die if a package.json changed in an incompatible way *)
