@@ -59,6 +59,7 @@ let make_path_absolute root path =
 type file_kind =
 | Reg of string
 | Dir of string * bool
+| StatError of string
 | Other
 
 (* Determines whether a path is a regular file, a directory, or something else
@@ -78,15 +79,15 @@ let kind_of_path path = Unix.(
   | _ -> Other
   with
   | Unix_error (ENOENT, _, _) when Sys.win32 && String.length path >= 248 ->
-    Utils.prerr_endlinef
-      "On Windows, paths must be less than 248 characters for directories \
-       and 260 characters for files. This path has %d characters. Skipping %s"
-      (String.length path)
-      path;
-    Other
+    StatError (
+      Utils_js.spf
+        "On Windows, paths must be less than 248 characters for directories \
+         and 260 characters for files. This path has %d characters. Skipping %s"
+        (String.length path)
+        path
+    )
   | Unix_error (e, _, _) ->
-    Printf.eprintf "Skipping %s: %s\n%!" path (Unix.error_message e);
-    Other
+    StatError (Utils_js.spf "Skipping %s: %s\n%!" path (Unix.error_message e))
 )
 
 let can_read path =
@@ -111,9 +112,11 @@ let max_files = 1000
    closure will return a List of up to 1000 files whose paths match
    `path_filter`, and if the path is a symlink then whose real path matches
    `realpath_filter`; it also returns an SSet of all of the symlinks that
-    point to _directories_ outside of `paths`. *)
+    point to _directories_ outside of `paths`.
+
+    If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~path_filter ~realpath_filter paths =
+    ~path_filter ~realpath_filter ~error_filter paths =
   let prefix_checkers = List.map is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -143,7 +146,10 @@ let make_next_files_and_symlinks
             process sz (acc, symlinks) files dir stack
           else
             process sz (acc, symlinks) dirfiles file (S_Dir (files, dir, stack))
-        | _ ->
+        | StatError msg ->
+          if error_filter file then prerr_endline msg;
+          process sz (acc, symlinks) files dir stack
+        | Other ->
           process sz (acc, symlinks) files dir stack
   and process_stack sz accs = function
     | S_Nil -> (accs, S_Nil)
@@ -158,10 +164,14 @@ let make_next_files_and_symlinks
    `realpath_filter` (see `make_next_files_and_symlinks`), starting from `paths`
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
-let make_next_files_following_symlinks ~path_filter ~realpath_filter paths =
+let make_next_files_following_symlinks
+  ~path_filter
+  ~realpath_filter
+  ~error_filter
+  paths =
   let paths = List.map Path.to_string paths in
   let cb = ref (make_next_files_and_symlinks
-    ~path_filter ~realpath_filter paths
+    ~path_filter ~realpath_filter ~error_filter paths
   ) in
   let symlinks = ref SSet.empty in
   let seen_symlinks = ref SSet.empty in
@@ -180,7 +190,7 @@ let make_next_files_following_symlinks ~path_filter ~realpath_filter paths =
       symlinks := SSet.empty;
       (* since we're following a symlink, use realpath_filter for both *)
       cb := make_next_files_and_symlinks
-        ~path_filter:realpath_filter ~realpath_filter paths;
+        ~path_filter:realpath_filter ~realpath_filter ~error_filter paths;
       rec_cb ()
     end
   in
@@ -213,6 +223,7 @@ let init options =
       let get_next = make_next_files_following_symlinks
         ~path_filter:filter
         ~realpath_filter:filter
+        ~error_filter:(fun _ -> true)
       in
       let exp_list = libs |> List.map (fun lib ->
         let expanded = SSet.elements (get_all (get_next [lib])) in
@@ -277,7 +288,7 @@ let make_next_files ~subdir ~options ~libs =
       )
   in
   make_next_files_following_symlinks
-    ~path_filter ~realpath_filter (root::others)
+    ~path_filter ~realpath_filter ~error_filter:filter (root::others)
 
 let is_windows_root root =
   Sys.win32 &&
