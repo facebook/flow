@@ -7,8 +7,6 @@ open Reason
 
 type field = Type.t * Ast.Expression.t option
 
-type method_kind = Method | Getter | Setter
-
 type signature = {
   reason: reason;
   super: Type.t;
@@ -18,11 +16,6 @@ type signature = {
   methods: Func_sig.t Nel.t SMap.t;
   getters: Func_sig.t SMap.t;
   setters: Func_sig.t SMap.t;
-  (* Track the order of method declarations, so they can be processed in the
-     same order. The order shouldn't necessarily matter, but does currently at
-     least due to a bug (facebook/flow/issues#1745). Note that this list is in
-     reverse order. *)
-  method_decls: (method_kind * string) list;
 }
 
 type t = {
@@ -44,7 +37,6 @@ let empty ?(structural=false) id reason tparams tparams_map super =
     methods = SMap.empty;
     getters = SMap.empty;
     setters = SMap.empty;
-    method_decls = [];
   } in
   let constructor = [] in
   let static =
@@ -82,22 +74,11 @@ let add_default_constructor reason s =
 let append_constructor fsig s =
   {s with constructor = fsig::s.constructor}
 
-(* Adding a method *overwrites* any existing methods. This implements the
-   behavior of classes, which permit duplicate definitions where latter
-   definitions overwrite former ones. *)
-let overwrite_method_decl ~shadowed_kinds kind name method_decls =
-  let not_shadowed (k, n) = not (n = name && List.mem k shadowed_kinds) in
-  (kind, name)::(List.filter not_shadowed method_decls)
-
-let add_method_decl =
-  overwrite_method_decl ~shadowed_kinds:[Getter;Setter;Method] Method
-
 let add_method name fsig = map_sig (fun s -> {
   s with
   methods = SMap.add name (Nel.one fsig) s.methods;
   getters = SMap.remove name s.getters;
   setters = SMap.remove name s.setters;
-  method_decls = add_method_decl name s.method_decls;
 })
 
 (* Appending a method builds a list of function signatures. This implements the
@@ -108,28 +89,19 @@ let append_method name fsig = map_sig (fun s ->
   | Some fsigs -> SMap.add name (Nel.cons fsig fsigs) s.methods
   | None -> SMap.add name (Nel.one fsig) s.methods
   in
-  let method_decls = (Method, name)::s.method_decls in
-  {s with methods; method_decls}
+  {s with methods}
 )
-
-let add_getter_decl =
-  overwrite_method_decl ~shadowed_kinds:[Getter;Method] Getter
 
 let add_getter name fsig = map_sig (fun s -> {
   s with
   getters = SMap.add name fsig s.getters;
   methods = SMap.remove name s.methods;
-  method_decls = add_getter_decl name s.method_decls;
 })
-
-let add_setter_decl =
-  overwrite_method_decl ~shadowed_kinds:[Setter;Method] Setter
 
 let add_setter name fsig = map_sig (fun s -> {
   s with
   setters = SMap.add name fsig s.setters;
   methods = SMap.remove name s.methods;
-  method_decls = add_setter_decl name s.method_decls;
 })
 
 let mk_method cx ~expr x reason func =
@@ -141,29 +113,10 @@ let mk_field cx x reason typeAnnotation value =
 
 let mem_constructor {constructor; _} = constructor <> []
 
-(* visits all methods, getters, and setters in declaration order *)
-let iter_methods f {methods; getters; setters; method_decls; _} =
-  let rec loop methods = function
-    | [] -> ()
-    | (kind, name)::decls ->
-      let x, methods = match kind with
-      | Method ->
-        let hd, tl = SMap.find_unsafe name methods in
-        let methods = match tl with
-        | [] -> SMap.remove name methods
-        | hd::tl -> SMap.add name (hd, tl) methods
-        in
-        hd, methods
-      | Getter ->
-        SMap.find_unsafe name getters, methods
-      | Setter ->
-        SMap.find_unsafe name setters, methods
-      in
-      f x; loop methods decls
-  in
-  let methods = SMap.map Nel.rev methods in
-  let method_decls = List.rev method_decls in
-  loop methods method_decls
+let iter_methods f s =
+  SMap.iter (fun _ -> Nel.iter (fun m -> f m)) s.methods;
+  SMap.iter (fun _ -> f) s.getters;
+  SMap.iter (fun _ -> f) s.setters
 
 let subst_field cx map (t, value) =
   Flow.subst cx map t, value
@@ -175,7 +128,6 @@ let subst_sig cx map s = {
   methods = SMap.map (Nel.map (Func_sig.subst cx map)) s.methods;
   getters = SMap.map (Func_sig.subst cx map) s.getters;
   setters = SMap.map (Func_sig.subst cx map) s.setters;
-  method_decls = s.method_decls;
 }
 
 let generate_tests cx f x =

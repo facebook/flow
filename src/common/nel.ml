@@ -8,6 +8,10 @@ let one x = (x, [])
 
 let cons x0 (x1, xs) = (x0, x1::xs)
 
+let iter f (x, xs) =
+  f x;
+  List.iter f xs
+
 let map f (x, xs) = (f x, List.map f xs)
 
 let rev (x, xs) =
