@@ -36,7 +36,6 @@ Valid values for COMMAND:
   get-imports     Get names of all modules imported by one or more given modules
   init            Initializes a directory to be used as a flow root directory
   port            Shows ported type annotations for given files
-  search          Searches a pattern
   server          Runs a Flow server in the foreground
   start           Starts a Flow server
   status          (default) Shows current Flow errors by asking the Flow server
