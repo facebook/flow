@@ -108,6 +108,9 @@ module Impl : sig
   val flow_err_prop_not_found:
     Context.t -> Trace.t -> reason * reason -> unit
 
+  val flow_err_strict_lookup_failed:
+    Context.t -> Trace.t -> string -> reason -> reason * reason -> unit
+
   val warn_or_ignore_decorators:
     Context.t -> Loc.t -> unit
 
@@ -228,6 +231,29 @@ end = struct
   (* TODO remove once error messages are indexed *)
   let flow_err_prop_not_found cx trace (r1, r2) =
     flow_err_reasons cx trace "Property not found in" (r1, r2)
+
+  let flow_err_strict_lookup_failed cx trace x lreason (r1, r2) =
+    (* if we're looking something up on the global/builtin object, then tweak
+       the error to say that `x` doesn't exist. We can tell this is the global
+       object because that should be the only object created with
+       `builtin_reason` instead of an actual location (see `Init_js.init`). *)
+    if is_builtin_reason lreason
+    then
+      let msg =
+        if is_internal_module_name x
+        then "Required module not found"
+        else "Could not resolve name"
+      in
+      add_error cx (mk_info r1 [msg])
+    else
+      let msg =
+        if x = "$call"
+        then "Callable signature not found in"
+        else if x = "$key" || x = "$value"
+        then "Indexable signature not found in"
+        else "Property not found in"
+      in
+      flow_err_reasons cx trace msg (r1, r2)
 
   let warn_or_ignore_decorators cx loc =
     match Context.esproposal_decorators cx with

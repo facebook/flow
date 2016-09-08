@@ -6,13 +6,13 @@ test.js:4
 
 test.js:7
   7: o1.qux; // error: qux not found
-        ^^^ property `qux` is a string. This type is incompatible with
+     ^^^^^^ property `qux` is a string. This type is incompatible with
   2: var o1: {[key: Key1]: number} = {
                     ^^^^ string enum
 
 test.js:14
  14: o2.qux; // error: qux not found
-        ^^^ property `qux`. Property not found in
+     ^^^^^^ property `qux`. Property not found in
  12: var o2: {[key: Key2]: number} = { foo: 0 }; // OK to leave out bar
                     ^^^^ object type
 

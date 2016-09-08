@@ -594,10 +594,44 @@ module rec TypeTerm : sig
 
   and make_exact = Lower of t | Upper of use_t
 
+  (* LookupT is a general-purpose tool for traversing prototype chains in search
+     of properties. In all cases, if the property is found somewhere along the
+     prototype chain, the property type will unify with the output tvar. Lookup
+     kinds control what happens when a property is not found.
+
+   * Strict
+     If the property is not found, emit an error. The reason should point to
+     the original lookup location.
+
+   * NonstrictReturning None
+     If the property is not found, do nothing. Note that lookups of this kind
+     will not add any constraints to the output tvar.
+
+   * NonstrictReturning (Some (default, tout))
+     If the property is not found, unify a default type with the *original*
+     tvar from the lookup.
+
+   * ShadowRead (strict, property_map_ids)
+     If the property is not found, installs shadow properties into unsealed
+     objects found along the prototype chain.
+
+     Shadow reads can be strict or non-strict, and behaves identically to
+     `Strict` and `NonstrictReturning None` respectively.
+
+     Note: Shadow reads are only ever strict in ObjT -> ObjT flows, which
+     ensures statements like `var o: { p: T } = {}` are an error. This
+     behavior is also race-y, and possibly undesirable.
+
+   * ShadowWrite property_map_ids
+     If the property is not found, install a property on a single unsealed
+     object type which originated the lookup. Also install shadow properties
+     along the prototype chain, to ensure that the entire proto chain is subtype
+     compatible. *)
   and lookup_kind =
   | Strict of reason
-  | NonstrictReturning of (t * t) option (* optional default type, result type
-                                            if lookup fails *)
+  | NonstrictReturning of (t * t) option
+  | ShadowRead of reason option * int Nel.t
+  | ShadowWrite of int Nel.t
 
   and propname = reason * name
 

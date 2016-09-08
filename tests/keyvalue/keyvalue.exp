@@ -1,14 +1,14 @@
 keyvalue.js:5
   5:     (x[""]: number);
-          ^^^^^ string. This type is incompatible with
-  5:     (x[""]: number);
-                 ^^^^^^ number
+          ^^^^^ property `` is a string. This type is incompatible with
+  4:   function(x: { [key: number]: string }) {
+                           ^^^^^^ number
 
 keyvalue.js:5
   5:     (x[""]: number);
-            ^^ property `` is a string. This type is incompatible with
-  4:   function(x: { [key: number]: string }) {
-                           ^^^^^^ number
+          ^^^^^ string. This type is incompatible with
+  5:     (x[""]: number);
+                 ^^^^^^ number
 
 
 Found 2 errors

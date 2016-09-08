@@ -298,14 +298,6 @@ let read_prop cx id x =
 let read_prop_opt cx id x =
   find_props cx id |> SMap.get x
 
-let read_and_delete_prop cx id x =
-  find_props cx id |> (fun pmap ->
-    let t = SMap.find_unsafe x pmap in
-    let pmap = SMap.remove x pmap in
-    Context.add_property_map cx id pmap;
-    t
-  )
-
 let write_prop cx id x t =
   let pmap = find_props cx id in
   let pmap = SMap.add x t pmap in
@@ -3207,7 +3199,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                if present, and look up the property in the prototype *)
             dictionary cx trace (string_key s ureason) ut ldict;
             (* if l is NOT a dictionary, then do a strict lookup *)
-            let strict = if ldict = None then Strict lreason else NonstrictReturning None in
+            let strict = match sealed_in_op ureason lflags.sealed, ldict with
+            | false, None -> ShadowRead (Some lreason, Nel.one lflds)
+            | true, None -> Strict lreason
+            | _ -> NonstrictReturning None
+            in
             rec_flow cx trace (lproto, LookupT (ureason, strict, [], s, ut))
           (* TODO: instead, consider extending inflowing type with s:t2 when it
              is not sealed *)
@@ -3445,7 +3441,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | InstanceT(_, _, super, instance),
       LookupT (_, strict, _, x, t)
       ->
-      let strict = if instance.mixins then NonstrictReturning None else strict in
+      let strict = match strict with
+      | Strict _ when instance.mixins -> NonstrictReturning None
+      | _ -> strict
+      in
       let pmap = match strict, t with
         (* t = AnyWithLowerBoundT _ means that the lookup is trying to write t,
            rather than read t. Existing places that play a role here are
@@ -3722,12 +3721,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects may have their fields looked up *)
     (*******************************************)
 
-    | (ObjT (reason_obj, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
-       LookupT(reason_op,strict,_,x,t_other))
-      ->
-      let t = ensure_prop_for_read cx strict mapr x proto dict_t
-        reason_obj reason_op trace in
-      rec_flow cx trace (t, UnifyT(t, t_other))
+    | ObjT (_, ({ flags; props_tmap; proto_t; _ } as o)),
+      LookupT (reason_op, strict, try_ts_on_failure, x, tout) ->
+      let ops = Ops.clear () in
+      (match get_obj_prop cx trace o x reason_op with
+      | Some t ->
+        rec_unify cx trace t tout
+      | None ->
+        let strict = match sealed_in_op reason_op flags.sealed, strict with
+        | false, ShadowRead (strict, ids) ->
+          ShadowRead (strict, Nel.cons props_tmap ids)
+        | false, ShadowWrite ids ->
+          ShadowWrite (Nel.cons props_tmap ids)
+        | _ -> strict
+        in
+        rec_flow cx trace (proto_t,
+          LookupT (reason_op, strict, try_ts_on_failure, x, tout)));
+      Ops.set ops
 
     | AnyObjT _, LookupT (reason_op, _, _, _, t_other) ->
       rec_unify cx trace (AnyT.why reason_op) t_other
@@ -3741,21 +3751,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
-    | ObjT (reason_o, {
-        flags;
-        props_tmap = mapr;
-        proto_t = proto;
-        dict_t }),
-      SetPropT (reason_op, (reason_prop, x), tin) ->
-      if flags.frozen then
-        flow_err cx trace "Mutation not allowed on" l u
-      else
-        let strict = mk_strict_lookup_reason
-          flags.sealed (dict_t <> None) reason_o reason_op in
-        let t = ensure_prop_for_write cx trace strict mapr x proto dict_t
-          reason_op reason_prop in
-        dictionary cx trace (string_key x reason_op) t dict_t;
-        rec_flow_t cx trace (tin, t)
+    | (ObjT (_, { flags; _ }), SetPropT _) when flags.frozen ->
+      flow_err cx trace "Mutation not allowed on" l u
+
+    | ObjT (reason_obj, o), SetPropT (reason_op, propname, tin) ->
+      let t = ensure_prop_for_write cx trace o propname reason_obj reason_op in
+      rec_flow_t cx trace (tin, t)
 
     (* Since we don't know the type of the prop, use AnyT. *)
     | (AnyObjT _, SetPropT (reason_op, _, t)) ->
@@ -3771,13 +3772,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | ObjT _, GetPropT(reason_op, (_, "constructor"), tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | ObjT (reason_o, { flags; props_tmap = mapr; proto_t = proto; dict_t }),
-      GetPropT (reason_op, (reason_prop, x), tout) ->
-      let strict = mk_strict_lookup_reason
-        flags.sealed (dict_t <> None) reason_o reason_op in
-      let t = ensure_prop_for_read cx strict mapr x proto dict_t
-        reason_o reason_prop trace in
-      (* move property type to read site *)
+    | ObjT (reason_obj, o), GetPropT (reason_op, propname, tout) ->
+      let t = ensure_prop_for_read cx trace o propname reason_obj reason_op in
       rec_flow cx trace (t, ReposLowerT (reason_op, UseT (UnknownUse, tout)))
 
     | (AnyObjT _ | AnyT _), GetPropT (reason_op, _, tout) ->
@@ -3789,18 +3785,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjT _, MethodT(_, _, (_, "constructor"), _)) -> ()
 
-    | (ObjT (reason_o, {
-      flags;
-      props_tmap = mapr;
-      proto_t = proto;
-      dict_t;
-    }),
-       MethodT(reason_call, reason_lookup, (reason_prop, x), funtype))
-      ->
-      let strict = mk_strict_lookup_reason
-        flags.sealed (dict_t <> None) reason_o reason_lookup in
-      let t = ensure_prop_for_read cx strict mapr x proto dict_t
-        reason_o reason_prop trace in
+    | ObjT (reason_obj, o),
+      MethodT (reason_call, reason_lookup, propname, funtype) ->
+      let t = ensure_prop_for_read cx trace o propname reason_obj reason_lookup in
       let callt = CallT (reason_call, funtype) in
       rec_flow cx trace (t, callt)
 
@@ -4409,27 +4396,54 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (MixedT (reason, _) | FunProtoT reason),
       LookupT (reason_op, Strict strict_reason, [], x, _) ->
-      (* if we're looking something up on the global/builtin object, then tweak
-         the error to say that `x` doesn't exist. We can tell this is the global
-         object because that should be the only object created with
-         `builtin_reason` instead of an actual location (see `Init_js.init`). *)
-      if is_builtin_reason reason
-      then
-        let msg =
-          if is_internal_module_name x
-          then "Required module not found"
-          else "Could not resolve name"
-        in
-        add_error cx (mk_info reason_op [msg])
-      else
-        let msg =
-          if x = "$call"
-          then "Callable signature not found in"
-          else if x = "$key" || x = "$value"
-          then "Indexable signature not found in"
-          else "Property not found in"
-        in
-        flow_err_reasons cx trace msg (reason_op, strict_reason)
+      flow_err_strict_lookup_failed cx trace x reason (reason_op, strict_reason)
+
+    | (MixedT (reason, _) | FunProtoT reason),
+      LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [], x, tout) ->
+      (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
+      (match strict with
+      | None -> ()
+      | Some strict_reason ->
+        flow_err_strict_lookup_failed cx trace x reason
+          (reason_op, strict_reason));
+      (* Install shadow prop (if necessary) and link up proto chain. *)
+      let t = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
+      rec_unify cx trace t tout
+
+    | (MixedT _ | FunProtoT _),
+      LookupT (_, ShadowWrite rev_proto_ids, [], x, tin) ->
+      let id, proto_ids = Nel.rev rev_proto_ids in
+      let pmap = find_props cx id in
+      (* Re-check written-to unsealed object to see if prop was added since we
+       * last looked. See comment above `find` in `find_or_intro_shadow_prop`.
+       *)
+      let existing = match SMap.get x pmap with
+      | Some _ as some_t -> some_t
+      | None ->
+        match SMap.get (internal_name x) pmap with
+        | None -> None
+        | Some t as some_t ->
+          (* unshadow *)
+          pmap
+            |> SMap.remove (internal_name x)
+            |> SMap.add x t
+            |> Context.add_property_map cx id;
+          some_t
+      in
+      (match existing with
+      | Some t ->
+        rec_unify cx trace tin t
+      | None ->
+        (* Create and link shadow properties along the prototype chain. *)
+        (match proto_ids with
+        | [] -> ()
+        | id::ids ->
+          let t_proto = find_or_intro_shadow_prop cx trace x (id, ids) in
+          rec_flow cx trace (t_proto, UnifyT (t_proto, tin)));
+        (* add prop *)
+        pmap
+          |> SMap.add x tin
+          |> Context.add_property_map cx id)
 
     (* LookupT is a non-strict lookup *)
     | (MixedT _ | FunProtoT _),
@@ -4907,19 +4921,6 @@ and flow_type_args cx trace instance instance_super =
   )
 
 and inherited_method x = x <> "constructor" && x <> "$call"
-
-(* Indicate whether property checking should be strict for a given object and an
-   operation on it. Strictness is enforced when the object is not a dictionary,
-   and it is sealed (e.g., it is a type annotation) or it and the operation
-   originate in different scopes. The enforcement is done via the returned
-   "blame token" that is used when looking up properties of objects in the
-   prototype chain as part of that operation. *)
-and mk_strict_lookup_reason sealed is_dict reason_o reason_op =
-  let sealed = not is_dict && (sealed_in_op reason_op sealed) in
-  if sealed then
-    Strict reason_o
-  else
-    NonstrictReturning None
 
 and sealed_in_op reason_op = function
   | Sealed -> true
@@ -6265,68 +6266,6 @@ and is_munged_prop_name cx name =
   && name.[0] = '_'
   && name.[1] <> '_'
 
-and ensure_prop_for_read cx strict mapr x proto dict_t
-  reason_obj reason_op trace =
-  let ops = Ops.clear () in
-  let t = match (read_prop_opt cx mapr x, dict_t) with
-  | Some t, _ -> Some t
-  | None, Some { key; value; _ } ->
-    if is_dictionary_exempt x
-    then None
-    else (
-      rec_flow_t cx trace (string_key x reason_op, key);
-      Some value
-    )
-  | None, None -> None
-  in
-  let tout = match t with
-  (* map contains property x at type t *)
-  | Some t -> t
-  (* otherwise, check for/maybe add shadow property *)
-  | None ->
-    let t =
-      match read_prop_opt cx mapr (internal_name x) with
-      | Some t -> t
-      | None -> intro_prop cx reason_obj x mapr
-    in
-    t |> recurse_proto cx strict proto reason_op x trace
-  in
-  Ops.set ops;
-  tout
-
-and ensure_prop_for_write cx trace strict mapr x proto dict_t
-    reason_op reason_prop =
-  let t = match (read_prop_opt cx mapr x, dict_t) with
-  | Some t, _ -> Some t
-  | None, Some { key; value; _ } ->
-    if is_dictionary_exempt x
-    then None
-    else (
-      rec_flow_t cx trace (string_key x reason_op, key);
-      Some value
-    )
-  | None, None -> None
-  in
-  match t with
-  (* map contains property x at type t *)
-  | Some t -> t
-  (* otherwise, error if strict, else unshadow/add prop *)
-  | None -> (
-    match strict with
-    | Strict reason_o ->
-      flow_err_prop_not_found cx trace (reason_prop, reason_o);
-      AnyT.t
-    | NonstrictReturning _ ->
-      let t =
-        if has_prop cx mapr (internal_name x)
-        then read_and_delete_prop cx mapr (internal_name x) |> (fun t ->
-          write_prop cx mapr x t; t
-        )
-        else intro_prop_ cx reason_op x mapr
-      in
-      t |> recurse_proto cx strict proto reason_prop x trace
-    )
-
 and lookup_prop cx trace l reason strict x t =
   let l =
     (* munge names beginning with single _ *)
@@ -6355,20 +6294,86 @@ and set_prop cx trace reason_op reason_c super x map tin =
   else
     lookup_prop cx trace super reason_op (Strict reason_c) x (AnyWithLowerBoundT tin)
 
-and intro_prop cx reason_obj x mapr =
-  let reason_prop = prefix_reason (spf ".%s of " x) reason_obj in
-  mk_tvar_where cx reason_prop (fun tvar ->
-    write_prop cx mapr (internal_name x) tvar
-  )
+and get_obj_prop cx trace o x reason_op =
+  match read_prop_opt cx o.props_tmap x, o.dict_t with
+  | Some _ as some_t, _ ->
+    (* Property exists on this property map *)
+    some_t
+  | None, Some { key; value; _ } when not (is_dictionary_exempt x) ->
+    (* Dictionaries match all property reads *)
+    rec_flow_t cx trace (string_key x reason_op, key);
+    Some value
+  | _ -> None
 
-and intro_prop_ cx reason_op x mapr =
-  mk_tvar_where cx reason_op (fun tvar ->
-    write_prop cx mapr x tvar
-  )
-
-and recurse_proto cx strict proto reason_op x trace t =
-  rec_flow cx trace (proto, LookupT(reason_op,strict,[],x,t));
+and ensure_prop_for_read cx trace o (reason_prop, x) reason_obj reason_op =
+  let ops = Ops.clear () in
+  let t = match get_obj_prop cx trace o x reason_op with
+  | Some t -> t
+  | None ->
+    let strict =
+      if sealed_in_op reason_op o.flags.sealed
+      then Strict reason_obj
+      else ShadowRead (None, Nel.one o.props_tmap)
+    in
+    mk_tvar_where cx reason_prop (fun t ->
+      rec_flow cx trace (o.proto_t, LookupT (reason_prop, strict, [], x, t))
+    )
+  in
+  Ops.set ops;
   t
+
+and ensure_prop_for_write cx trace o (reason_prop, x) reason_obj reason_op =
+  match get_obj_prop cx trace o x reason_op with
+  | Some t -> t
+  | None when sealed_in_op reason_op o.flags.sealed ->
+    flow_err_prop_not_found cx trace (reason_prop, reason_obj);
+    AnyT.t
+  | None ->
+    mk_tvar_where cx reason_prop (fun t ->
+      let strict = ShadowWrite (Nel.one o.props_tmap) in
+      rec_flow cx trace (o.proto_t, LookupT (reason_op, strict, [], x, t))
+    )
+
+and find_or_intro_shadow_prop cx trace x =
+  let intro_shadow_prop id =
+    let reason_prop = reason_of_string (internal_name x) in
+    mk_tvar_where cx reason_prop (fun t ->
+      write_prop cx id (internal_name x) t;
+    )
+  in
+
+  (* Given some shadow property type and a prototype chain (o.proto,
+   * o.proto.proto, ...), link all types along the prototype chain together.
+   * If there is a write to the prototype later on, we unify the property types
+   * together. If there is no write, the property types are safely independent.
+   *)
+  let rec chain_link t_inst = function
+  | [] -> ()
+  | id::ids ->
+    let t = find (id, ids) in
+    rec_flow cx trace (t, UnifyT (t, t_inst))
+
+  (* Check at each step to see if a prop was added since we looked.
+   *
+   * Imports and builtins are merged in after local inference, potentially
+   * deferring multiple shadow reads/writes on a tvar. If this shadow read
+   * follow a deferred shadow write, a property will exist. If it follows a
+   * deferred shadow read, a shadow property will exist. In either case, we
+   * don't need to create a shadow property, nor do we need to continue
+   * unifying up the proto chain, as the work is necessarily already done.
+   *)
+  and find (id, proto_ids) =
+    match read_prop_opt cx id x with
+    | Some t -> t
+    | None ->
+      match read_prop_opt cx id (internal_name x) with
+      | Some t -> t
+      | None ->
+        let t = intro_shadow_prop id in
+        chain_link t proto_ids;
+        t
+
+  in find
 
 (* other utils *)
 

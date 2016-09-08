@@ -430,6 +430,14 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       | Strict r -> [
           "strictReason", json_of_reason ~strip_root:json_cx.strip_root r
         ]
+      | ShadowRead (_, ids) -> [
+          "shadowRead", JSON_Array (Nel.to_list ids |> List.map (fun id ->
+            JSON_Number (string_of_int id)
+        ))]
+      | ShadowWrite ids -> [
+          "shadowWrite", JSON_Array (Nel.to_list ids |> List.map (fun id ->
+            JSON_Number (string_of_int id)
+        ))]
     ) @ [
       "name", JSON_String name;
       "type", _json_of_t json_cx t
@@ -1184,6 +1192,16 @@ and dump_use_t_ (depth, tvars) cx t =
   let kid t = dump_t_ (depth-1, tvars) cx t in
   let use_kid use_t = dump_use_t_ (depth-1, tvars) cx use_t in
 
+  let lookup_kind = function
+  | NonstrictReturning None -> "Nonstrict"
+  | NonstrictReturning (Some (t, _)) -> spf "Nonstrict returning %s" (kid t)
+  | Strict r -> spf "Strict %S" (dump_reason cx r)
+  | ShadowRead (_, ids) -> spf "ShadowRead [%s]"
+      (String.concat "; " (Nel.to_list ids |> List.map string_of_int))
+  | ShadowWrite ids -> spf "ShadowWrite [%s]"
+      (String.concat "; " (Nel.to_list ids |> List.map string_of_int))
+  in
+
   if depth = 0 then string_of_use_ctor t
   else match t with
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
@@ -1225,7 +1243,10 @@ and dump_use_t_ (depth, tvars) cx t =
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
-  | LookupT (_, _, _, name, ret) -> p ~extra:(spf "%S, %s" name (kid ret)) t
+  | LookupT (_, strict, _, name, ret) -> p ~extra:(spf "%S, %s, %s"
+      name
+      (lookup_kind strict)
+      (kid ret)) t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ObjAssignT _
   | ObjFreezeT _
