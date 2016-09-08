@@ -59,6 +59,8 @@ let rec normalize_type_impl cx ids t = match t with
 
   | TaintT _ -> TaintT (reason_of_string "taint")
 
+  | ExistsT _ -> ExistsT (reason_of_string "exists")
+
   | SingletonStrT (_, s) ->
     SingletonStrT (reason_of_string "string singleton", s)
   | SingletonNumT (_, n) ->
@@ -384,7 +386,6 @@ let rec normalize_type_impl cx ids t = match t with
     ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
 
   | FunProtoT _
-  | ExistsT _
   | ExtendsT (_, _, _)
   ->
     (** TODO **)
