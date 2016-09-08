@@ -206,7 +206,9 @@ can be overridden with command line flags.
 
     and suppress the error. If there is no error on the next line (the suppression is unnecessary), an "Unused suppression" error will be shown instead.
 
-    **Note:** you can specify `suppress_comment` multiple times. We recommend defining something like `$FlowFixMe` (for type errors that need to be fixed) in addition to `$FlowIssue` (to suppress errors caused by bugs in Flow).
+    If no suppression comments are specified in your config, Flow will apply one default: `// $FlowFixMe`.
+
+    **Note:** You can specify `suppress_comment` multiple times. If you do define any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased in favor of the regexps you specify. If you wish to use `$FlowFixMe` with some additional custom suppression comments, you must manually specify `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
 
 - `temp_dir` (string): Tell Flow which directory to use as a temp directory.
   Defaults to `/tmp/flow`. Can be overridden with the commandline flag
