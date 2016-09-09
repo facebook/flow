@@ -8,12 +8,17 @@ import stdout from './assertions/stdout';
 import exitCodes from './assertions/exitCodes';
 import noop from './assertions/noop';
 
-import type {AssertionLocation, ErrorAssertion, ErrorAssertionResult} from './assertions/assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  ErrorAssertionResult,
+} from './assertions/assertionTypes';
 import type {TestBuilder} from './builder';
 import type {FlowResult} from '../flowResult';
 import type {StepEnvReadable, StepEnvWriteable} from './stepEnv';
 
-type Action = (builder: TestBuilder, envWrite: StepEnvWriteable) => Promise<void>;
+type Action =
+  (builder: TestBuilder, envWrite: StepEnvWriteable) => Promise<void>;
 
 export type StepResult = {
   passed: boolean,
@@ -60,7 +65,10 @@ export class TestStep {
     this._reason = step == null ? null : step._reason;
   }
 
-  async performActions(builder: TestBuilder, env: StepEnvWriteable): Promise<void> {
+  async performActions(
+    builder: TestBuilder,
+    env: StepEnvWriteable,
+  ): Promise<void> {
     for (const action of this._actions) {
       await action(builder, env);
     }
@@ -155,6 +163,22 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     (...sources) => this._cloneWithAction(
       async (builder, env) => {
         await builder.addFiles(sources);
+        env.triggerFlowCheck();
+      }
+    );
+
+  removeFile: (filename: string) => TestStepFirstStage =
+    (filename) => this._cloneWithAction(
+      async (builder, env) => {
+        await builder.removeFile(filename);
+        env.triggerFlowCheck();
+      }
+    );
+
+  removeFiles: (...filenames: Array<string>) => TestStepFirstStage =
+    (...filenames) => this._cloneWithAction(
+      async (builder, env) => {
+        await builder.removeFiles(filenames);
         env.triggerFlowCheck();
       }
     );

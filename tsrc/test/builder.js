@@ -6,7 +6,16 @@ import {tmpdir} from 'os';
 import {basename, dirname, extname, join, sep as dir_sep} from 'path';
 import {format} from 'util';
 
-import {appendFile, exec, execManual, mkdirp, readdir, readFile, writeFile} from '../async';
+import {
+  appendFile,
+  exec,
+  execManual,
+  mkdirp,
+  readdir,
+  readFile,
+  unlink,
+  writeFile,
+} from '../async';
 import {getTestsDir} from '../constants';
 
 import type {SuiteResult} from './runTestSuite';
@@ -134,7 +143,21 @@ export class TestBuilder {
     );
   }
 
-  async flowCmd(args: Array<string>, stdinFile?: string): Promise<[number, string, string]> {
+  async removeFile(file: string): Promise<void> {
+    file = join(this.dir, file);
+    return unlink(file);
+  }
+
+  async removeFiles(files: Array<string>): Promise<void> {
+    await Promise.all(
+      files.map(file => this.removeFile(file))
+    );
+  }
+
+  async flowCmd(
+    args: Array<string>,
+    stdinFile?: string,
+  ): Promise<[number, string, string]> {
     let cmd = format(
       "%s %s %s",
       this.bin,
@@ -255,9 +278,12 @@ export default class Builder {
 
     // If something weird happens, lets make sure to stop all the flow servers
     // we started
-    process.on('exit', () => {
-      Builder.builders.forEach(builder => builder.stopFlowServerSync());
-    });
+    process.on('exit', this.cleanup);
+  }
+
+  cleanup = () => {
+    Builder.builders.forEach(builder => builder.stopFlowServerSync());
+    process.removeListener('exit', this.cleanup);
   }
 
   baseDirForSuite(suiteName: string): string {

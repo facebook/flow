@@ -206,6 +206,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   );
 
   await runQueue.go();
+  builder.cleanup();
 
   const results = runQueue.results;
   let exitCode = 0;
