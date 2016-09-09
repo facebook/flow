@@ -22,14 +22,60 @@
     title: Using the CLI
   - id: advanced-configuration
     title: Advanced Configuration
+- title: Quick Reference
+  id: quick-reference
+  headers:
+  - ref: primitives
+    title: Primitives
+  - ref: any
+    title: The <code>any</code> type
+  - ref: mixed
+    title: The <code>mixed</code> type
+  - ref: arrays
+    title: Arrays
+  - ref: objects
+    title: Objects
+  - ref: functions
+    title: Functions
+  - ref: classes
+    title: Classes
+  - ref: type-aliases
+    title: Type Aliases
+  - ref: generics
+    title: Generics
+- title: Syntax
+  id: syntax
+  headers:
+  - ref: stripping-flow-syntax
+    title: Stripping Flow syntax
+  - ref: comment-syntax
+    title: Comment syntax
+  - ref: variable-declarations
+    title: Variable declarations
+  - ref: function-declarations
+    title: Function declarations
+  - ref: class-declarations
+    title: Class declarations
+  - ref: type-aliases
+    title: Type aliases
+  - ref: object-types
+    title: Object types
+  - ref: function-types
+    title: Function types
+  - ref: array-types
+    title: Array types
+  - ref: interface-declarations
+    title: Interface declarations
+  - ref: importing-and-exporting-types
+    title: Importing and exporting types
+  - ref: destructured-bindings
+    title: Destructured bindings
+  - ref: typecasts
+    title: Typecasts
 - title: Language Reference
   items:
-  - id: quick-reference
-    title: Quick Reference
   - id: builtins
     title: Built-in Types
-  - id: syntax
-    title: Syntax
   - id: arrays
     title: Arrays and Tuples
   - id: classes

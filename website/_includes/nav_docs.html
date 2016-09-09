@@ -2,6 +2,7 @@
   {% for section in site.data.nav_docs %}
     <section>
       <h3>{{ section.title }}</h3>
+      {% if section.items %}
       <ul>
         {% for item in section.items %}
           <li>
@@ -22,6 +23,18 @@
           </li>
         {% endfor %}
       </ul>
+      {% endif %}
+      {% if section.headers %}
+      <ul>
+        {% for header in section.headers %}
+        <li>
+          <a href="/docs/{{ section.id }}.html#{{ header.ref }}">
+            {{ header.title }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
     </section>
   {% endfor %}
 </nav>
