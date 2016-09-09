@@ -77,23 +77,33 @@ let getdef_get_result ~options cx state =
       let module_t = Flow_js.resolve_type cx (
         SMap.find_unsafe name (Context.module_map cx)
       ) in
+      (* function just so we don't do the work unless it's actually needed. *)
+      let get_imported_file () =
+        let filename = Module_js.get_module_file (
+          Module_js.imported_module ~options cx require_loc name
+        ) in
+        (match filename with
+        | Some file -> Loc.({none with source = Some file;})
+        | None -> Loc.none)
+      in
       Type.(match module_t with
-      | ModuleT(_, {cjs_export = Some t; _; }) -> loc_of_t t
-
       (**
        * TODO: Specialized `import` hooks so that get-defs on named
        *       imports point to their actual remote def location.
        *)
-      | ModuleT(_, {cjs_export = None; _; })
-      | AnyT _
-        ->
-          let filename = Module_js.get_module_file (
-            Module_js.imported_module ~options cx require_loc name
-          ) in
-          (match filename with
-          | Some file -> Loc.({none with source = Some file;})
-          | None -> Loc.none)
-
+      | ModuleT(_, {cjs_export; _; }) ->
+          (* If we have a location for the cjs export, go there. Otherwise
+           * fall back to just the top of the file *)
+          let loc = match cjs_export with
+            | Some t -> loc_of_t t (* This can return Loc.none *)
+            | None -> Loc.none
+          in
+          if loc = Loc.none then
+            get_imported_file ()
+          else
+            loc
+      | AnyT _ ->
+          get_imported_file ()
       | _ -> failwith (
         spf "Internal Flow Error: Expected ModuleT for %S, but got %S!"
           name
