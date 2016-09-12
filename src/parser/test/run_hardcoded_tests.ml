@@ -62,14 +62,15 @@ end = struct
     | (_, Object { Object.properties }) ->
       JSON_Object (List.map parse_spec properties)
     | (_, Array { Array.elements }) ->
-      JSON_Object (List.mapi (fun i elem ->
+      let props = List.mapi (fun i elem ->
         let child = match elem with
         | Some (Expression e) -> parse_spec_value e
         | Some (Spread _)
         | None -> failwith "spread is not supported"
         in
         string_of_int i, child
-      ) elements)
+      ) elements in
+      JSON_Object (("length", int_ (List.length elements))::props)
     | (_, Literal { Ast.Literal.value = Ast.Literal.String name; _ }) ->
         JSON_String name
     | (_, Literal { Ast.Literal.value = Ast.Literal.Number num; _ }) ->
