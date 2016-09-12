@@ -2688,7 +2688,22 @@ module.exports = {
         '{ get 2 }',
         '({ set: s(if) { } })',
         '({ set s(.) { } })',
-        '({ set s() { } })',
+        {
+          content: '({ set s() { } })',
+          explanation: "Esprima error isn't great",
+          expected_differences: {
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: 9,
+              actual: '7-8'
+            },
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: 'Unexpected token )',
+              actual: 'Setter should have exactly one parameter'
+            }
+          }
+        },
         '({ set: s() { } })',
         '({ set: s(a, b) { } })',
         '({ get: g(d) { } })',

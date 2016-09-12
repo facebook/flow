@@ -79,6 +79,8 @@ type t =
   | WindowsFloatOfString
   | DuplicateDeclareModuleExports
   | AmbiguousDeclareModuleKind
+  | GetterArity
+  | SetterArity
 
 exception Error of (Loc.t * t) list
 
@@ -184,4 +186,6 @@ module PP =
       | AmbiguousDeclareModuleKind -> "Found both `declare module.exports` and \
           `declare export` in the same module. Modules can only have 1 since \
           they are either an ES module xor they are a CommonJS module."
+      | GetterArity -> "Getter should have zero parameters"
+      | SetterArity -> "Setter should have exactly one parameter"
   end

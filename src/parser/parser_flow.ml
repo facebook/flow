@@ -1968,26 +1968,22 @@ end = struct
       (* this is a getter or setter, it cannot be async *)
       let async = false in
       let generator = Declaration.generator env async in
-      let _, key = key env in
+      let key_loc, key = key env in
       (* It's not clear how type params on getters & setters would make sense
        * in Flow's type system. Since this is a Flow syntax extension, we might
        * as well disallow it until we need it *)
       let typeParameters = Ast.Expression.Object.Property.(match kind with
       | Get | Set -> None
       | _ -> Type.type_parameter_declaration env) in
-      Expect.token env T_LPAREN;
-      let params = Ast.Expression.Object.Property.(match kind with
-      | Get -> []
-      | Set ->
-        (* TODO: support more param pattern types here *)
-        let param = Parse.identifier_with_type env Error.StrictParamName in
-        [ (fst param, Pattern.Identifier param) ]
-      | Init -> assert false) in
-      Expect.token env T_RPAREN;
+      let params, defaults, rest = Declaration.function_params env in
+      Ast.Expression.Object.Property.(match kind, params, defaults, rest with
+      | Get, [], [], None -> ()
+      | Set, [_], [], None -> ()
+      | Get, _, _, _ -> error_at env (key_loc, Error.GetterArity)
+      | Set, _, _, _ -> error_at env (key_loc, Error.SetterArity)
+      | Init, _, _, _ -> ());
       let returnType = Type.annotation_opt env in
       let _, body, strict = Declaration.function_body env ~async ~generator in
-      let defaults = [] in
-      let rest = None in
       let simple = Declaration.is_simple_function_params params defaults rest in
       Declaration.strict_post_check env ~strict ~simple None params;
       let end_loc, expression = Function.(
