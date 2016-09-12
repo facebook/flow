@@ -1,3 +1,9 @@
+any.js:5
+  5: const val: string = dict[k] // error: number incompatible with string
+                         ^^^^^^^ number. This type is incompatible with
+  5: const val: string = dict[k] // error: number incompatible with string
+                ^^^^^^ string
+
 incompatible.js:3
   3: var x : {[key: string]: string} = {};
                     ^^^^^^ string. This type is incompatible with
@@ -101,4 +107,4 @@ test_client.js:4
                                               ^^^^^^ string. See: test.js:2
 
 
-Found 17 errors
+Found 18 errors

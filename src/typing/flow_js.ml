@@ -3867,13 +3867,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Read -> rec_flow_t cx trace (value, t)
       | Write -> rec_flow_t cx trace (t, value))
 
-    (* otherwise, string and number keys are allowed, but there's nothing else
-       to flow without knowing their literal values. *)
-    | (StrT _, ElemT(_, ObjT _, t, rw))
-    | (NumT _, ElemT(_, ObjT _, t, rw)) ->
+    (* otherwise, any, string, and number keys are allowed, but there's nothing
+       else to flow without knowing their literal values. *)
+    | (AnyT _ | StrT _ | NumT _), ElemT (_, ObjT _, t, rw) ->
       (match rw with
       | Read -> rec_flow_t cx trace (AnyT.t, t)
       | Write -> rec_flow_t cx trace (t, AnyT.t))
+
+
+    | AnyT _, ElemT(_, ArrT (_, value, _), t, rw) ->
+      (match rw with
+      | Read -> rec_flow_t cx trace (value, t)
+      | Write -> rec_flow_t cx trace (t, value))
 
     | (NumT (_, literal), ElemT(_, ArrT(_, value, ts), t, rw)) ->
       let value = match literal with
@@ -4724,6 +4729,9 @@ and ground_subtype = function
 
   (* Allow deferred unification with `any` *)
   | (_, UnifyT _) -> false
+
+  (* Allow any propagation to dictionaries *)
+  | (AnyT _, ElemT _) -> false
 
   (* Prevents Tainted<any> -> any *)
   (* NOTE: the union could be narrowed down to ensure it contains taint *)
