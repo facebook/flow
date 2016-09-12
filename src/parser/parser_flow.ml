@@ -4043,7 +4043,7 @@ end = struct
                 let open JSX.ExpressionContainer in
                 match expression_container.expression with
                 | EmptyExpression _ ->
-                    error env Error.JSXAttributeValueEmptyExpression;
+                    error_at env (loc, Error.JSXAttributeValueEmptyExpression);
                 | _ -> ()
               end;
               loc, Some (JSX.Attribute.ExpressionContainer (loc, expression_container))
