@@ -524,11 +524,26 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       FlowExitStatus.(exit Server_out_of_date)
     end;
 
-    (* Die if a lib file changed *)
     let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
-    let libs = updates |> SSet.filter (fun x ->
-      SSet.mem x all_libs || x = flow_typed_path
-    ) in
+    let is_changed_lib filename =
+      let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
+      is_lib &&
+        let file = Loc.LibFile filename in
+        let old_ast = Parsing_service_js.get_ast file in
+        let new_ast =
+          let filename_set = FilenameSet.singleton file in
+          let _ = Parsing_service_js.reparse_with_defaults
+            options
+            (* workers *) None
+            filename_set
+          in
+          Parsing_service_js.get_ast file
+        in
+        old_ast <> new_ast
+    in
+
+    (* Die if a lib file changed *)
+    let libs = updates |> SSet.filter is_changed_lib in
     if not (SSet.is_empty libs)
     then begin
       Flow_logger.log "Status: Error";
