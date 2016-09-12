@@ -217,6 +217,8 @@ endif
 
 do-test:
 	./runtests.sh bin/flow
+	bin/flow check
+	./tool test
 
 test: build-flow copy-flow-files
 	${MAKE} do-test
