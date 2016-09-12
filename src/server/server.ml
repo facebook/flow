@@ -485,12 +485,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
       let ast_opt =
         (*
          * If the file no longer exists, this will log a harmless error to
-         * stderr and the has_ast call below will return false, which will
+         * stderr and the get_ast call below will return None, which will
          * cause the server to exit.
          *
          * If the file has come into existence, reparse (true to its name)
-         * will not actually parse the file. Again, this will cause has_ast
-         * to return false and the server to exit.
+         * will not actually parse the file. Again, this will cause get_ast
+         * to return None and the server to exit.
          *
          * In both cases, this is desired behavior since a package.json file
          * has changed considerably.
@@ -500,10 +500,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           (* workers *) None
           filename_set
         in
-        if Parsing_service_js.has_ast filename then
-          Some (Parsing_service_js.get_ast_unsafe filename)
-        else
-          None
+        Parsing_service_js.get_ast filename
       in
       match ast_opt with
         | None -> true

@@ -344,6 +344,12 @@ let get_ast_unsafe file =
   let ast, _ = ParserHeap.find_unsafe file in
   ast
 
+let get_ast file =
+  if has_ast file then
+    Some (get_ast_unsafe file)
+  else
+    None
+
 let get_ast_and_info_unsafe file =
   ParserHeap.find_unsafe file
 
