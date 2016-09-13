@@ -336,10 +336,13 @@ let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
   | ([],_) | (_,[]) -> []
   | (t1::ts1,t2::ts2) -> (f (t1,t2)):: (list_map2 f ts1 ts2)
 
-let create_union ts =
-  UnionT (reason_of_string "union", UnionRep.make ts)
+let rec merge_type cx =
 
-let rec merge_type cx = function
+  let create_union ts =
+    UnionT (reason_of_string "union", UnionRep.make ts)
+  in
+
+  function
   | (NumT _, (NumT _ as t))
   | (StrT _, (StrT _ as t))
   | (BoolT _, (BoolT _ as t))
@@ -375,35 +378,65 @@ let rec merge_type cx = function
         mk_functiontype tins tout
       )
 
-  | (ObjT (_,ot1), ObjT (_,ot2)) ->
-      (* TODO: How to merge indexer names? *)
-      let dict = match ot1.dict_t, ot2.dict_t with
-        | None, None -> None
-        | Some dict, None | None, Some dict -> Some dict
-        | Some dict1, Some dict2 ->
-            Some {
-              dict_name = None;
-              key = merge_type cx (dict1.key, dict2.key);
-              value = merge_type cx (dict1.value, dict2.value);
-            }
+  | (ObjT (_,o1) as t1), (ObjT (_,o2) as t2) ->
+    let map1 = find_props cx o1.props_tmap in
+    let map2 = find_props cx o2.props_tmap in
+
+    (* Create an intermediate map of booleans indicating whether two objects can
+     * be merged, based on the properties in each map. *)
+    let merge_map = SMap.merge (fun _ p1_opt p2_opt ->
+      match p1_opt, p2_opt with
+      | None, None -> None
+      (* In general, even objects with disjoint key sets can not be merged due
+       * to width subtyping. For example, {x:T} and {y:U} is not the same as
+       * {x:T,y:U}, because {x,y} is a valid inhabitant of {x:T} and the type of
+       * y may != U. However, if either object type is exact, disjointness is
+       * sufficient. *)
+      | Some _, None | None, Some _ -> Some (o1.flags.exact || o2.flags.exact)
+      (* Objects with overlapping keysets can't be merged.
+       * TODO: covariant fields can be merged *)
+      | _ -> Some false
+    ) map1 map2 in
+
+    let merge_dict = match o1.dict_t, o2.dict_t with
+    (* If neither object has an indexer, neither will the merged object. *)
+    | None, None -> Some None
+    (* Don't merge objects with possibly incompatible indexers.
+     * TODO: covariant indexers can be merged *)
+    | _ -> None
+    in
+
+    (* Only merge objects if every property can be merged. *)
+    let should_merge = SMap.for_all (fun _ x -> x) merge_map in
+
+    (* Don't merge objects with different prototypes. *)
+    let should_merge = should_merge && o1.proto_t = o2.proto_t in
+
+    (match should_merge, merge_dict with
+    | true, Some dict ->
+      let map = SMap.merge (fun _ p1_opt p2_opt ->
+        match p1_opt, p2_opt with
+        (* Merge disjoint+exact objects. *)
+        | Some t, None
+        | None, Some t -> Some t
+        (* Shouldn't happen, per merge_map above. *)
+        | _ -> None
+      ) map1 map2 in
+      let id = Context.make_property_map cx map in
+      let sealed = match o1.flags.sealed, o2.flags.sealed with
+      | Sealed, Sealed -> Sealed
+      | UnsealedInFile s1, UnsealedInFile s2 when s1 = s2 -> UnsealedInFile s1
+      | _ -> UnsealedInFile None
       in
-      let pmap =
-        let map1 = find_props cx ot1.props_tmap in
-        let map2 = find_props cx ot2.props_tmap in
-        let map =
-          SMap.merge
-            (fun _ t1_opt t2_opt -> match (t1_opt,t2_opt) with
-              | (None,None) -> None
-              | (Some t, None) | (None, Some t) -> Some t
-              | (Some t1, Some t2) -> Some (merge_type cx (t1, t2))
-            ) map1 map2 in
-        mk_propmap cx map
-      in
-      let proto = AnyT.t in
-      ObjT (
-        reason_of_string "object",
-        mk_objecttype dict pmap proto
-      )
+      let flags = {
+        sealed;
+        exact = o1.flags.exact && o2.flags.exact;
+        frozen = o1.flags.frozen && o2.flags.frozen;
+      } in
+      let objtype = mk_objecttype ~flags dict id o1.proto_t in
+      ObjT (reason_of_string "object", objtype)
+    | _ ->
+      create_union [t1; t2])
 
   | (ArrT (_,t1,ts1), ArrT (_,t2,ts2)) ->
       ArrT (
@@ -6790,7 +6823,9 @@ and predicate cx trace t l p = match p with
       | Mixed_non_maybe
       | Mixed_non_null -> obj
       | Mixed_everything
-      | Mixed_non_void -> create_union [NullT.why r; obj]
+      | Mixed_non_void ->
+        let reason = replace_reason "union" (reason_of_t t) in
+        UnionT (reason, UnionRep.make [NullT.why r; obj])
       in
       rec_flow_t cx trace (filtered_l, t)
 
