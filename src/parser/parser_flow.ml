@@ -1086,6 +1086,7 @@ end = struct
 
     and is_lhs = Expression.(function
       | _, Member _
+      | _, MetaProperty _
       | _, Identifier _ -> true
       | _, Array _
       | _, Object _
@@ -1116,6 +1117,7 @@ end = struct
       | _, Array _
       | _, Object _
       | _, Member _
+      | _, MetaProperty _
       | _, Identifier _ -> true
       | _, Literal _
       | _, TemplateLiteral _
@@ -1417,25 +1419,45 @@ end = struct
       let start_loc = Peek.loc env in
       Expect.token env T_NEW;
 
-      let expr = match Peek.token env with
-      | T_NEW -> new_expression env
-      | _ when Peek.is_function env -> _function env
-      | _ -> primary env in
-      let callee = member (env |> with_no_call true) expr in
-      (* You can do something like
-       *   new raw`42`
-       *)
-      let callee = match Peek.token env with
-      | T_TEMPLATE_PART part -> tagged_template env callee part
-      | _ -> callee in
-      let end_loc, arguments = match Peek.token env with
-      | T_LPAREN -> arguments env
-      | _ -> fst callee, [] in
+      if in_function env && Peek.token env = T_PERIOD then begin
+        Expect.token env T_PERIOD;
+        let meta = start_loc, { Identifier.
+          name = "new";
+          typeAnnotation = None;
+          optional = false;
+        } in
+        if Peek.value env = "target" then
+          let property = Parse.identifier env in
+          let end_loc = fst property in
+          Loc.btwn start_loc end_loc, Expression.(MetaProperty MetaProperty.({
+            meta;
+            property;
+          }))
+        else begin
+          error_unexpected env;
+          Eat.token env; (* skip unknown identifier *)
+          start_loc, Expression.Identifier meta (* return `new` identifier *)
+        end
+      end else
+        let expr = match Peek.token env with
+        | T_NEW -> new_expression env
+        | _ when Peek.is_function env -> _function env
+        | _ -> primary env in
+        let callee = member (env |> with_no_call true) expr in
+        (* You can do something like
+         *   new raw`42`
+         *)
+        let callee = match Peek.token env with
+        | T_TEMPLATE_PART part -> tagged_template env callee part
+        | _ -> callee in
+        let end_loc, arguments = match Peek.token env with
+        | T_LPAREN -> arguments env
+        | _ -> fst callee, [] in
 
-      Loc.btwn start_loc end_loc, Expression.(New New.({
-        callee;
-        arguments;
-      }))
+        Loc.btwn start_loc end_loc, Expression.(New New.({
+          callee;
+          arguments;
+        }))
 
     and arguments =
       let argument env =

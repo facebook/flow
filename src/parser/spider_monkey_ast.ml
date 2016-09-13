@@ -735,6 +735,12 @@ and Expression : sig
       typeAnnotation: Type.annotation;
     }
   end
+  module MetaProperty : sig
+    type t = {
+      meta: Identifier.t;
+      property: Identifier.t;
+    }
+  end
 
   type t = Loc.t * t'
   and t' =
@@ -764,6 +770,7 @@ and Expression : sig
     | JSXElement of JSX.element
     | Class of Class.t
     | TypeCast of TypeCast.t
+    | MetaProperty of MetaProperty.t
 end = Expression
 
 and JSX : sig

@@ -2973,7 +2973,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   (* TODO *)
   | Comprehension _
   | Generator _
-  | Let _ ->
+  | Let _
+  | MetaProperty _->
     FlowError.add_error cx (loc, ["not (sup)ported"]);
     EmptyT.at loc
 )
