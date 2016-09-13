@@ -103,6 +103,7 @@ const Counter = React.createClass({
     });
   },
   decrement() {
+    // Note: Typo below is intentional
     // $ExpectError(todo: improve this error position)
     this.setState({
       valu: this.state.value - 1,
