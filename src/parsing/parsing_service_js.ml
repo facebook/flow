@@ -276,6 +276,9 @@ let merge r1 r2 =
 
 (***************************** public ********************************)
 
+let next_of_filename_set workers filenames =
+  MultiWorker.next workers (FilenameSet.elements filenames)
+
 let parse
   ~types_mode ~use_strict ~profile ~max_header_tokens
   workers next
@@ -306,7 +309,7 @@ let parse
 let reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
-  let next = MultiWorker.next workers (FilenameSet.elements files) in
+  let next = next_of_filename_set workers files in
   let results =
     parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next in
   let modified =
