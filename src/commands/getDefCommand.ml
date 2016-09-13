@@ -59,7 +59,7 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
  *)
-let main option_values root json strip_root path args () =
+let main option_values root json pretty strip_root path args () =
   let (file, line, column) = parse_args path args in
   let root = guess_root (
     match root with
@@ -76,13 +76,13 @@ let main option_values root json strip_root path args () =
   (* if strip_root has been specified, relativize path to root *)
   let loc = relativize strip_root root loc in
   (* format output *)
-  if json
+  if json || pretty
   then (
     (* TODO: this format is deprecated but can't be backwards-compatible.
        should be replaced with just `Reason.json_of_loc loc`. *)
-    let json = Hh_json.JSON_Object (Errors.deprecated_json_props_of_loc loc) in
-    let json = Hh_json.json_to_string json in
-    print_endline json;
+    let open Hh_json in
+    let json = JSON_Object (Errors.deprecated_json_props_of_loc loc) in
+    print_endline (json_to_string ~pretty json)
   ) else
     if option_values.from = "vim" || option_values.from = "emacs"
     then print_endline (Errors.string_of_loc_deprecated loc)

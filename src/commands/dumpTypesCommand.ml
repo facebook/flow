@@ -13,6 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
+open Utils_js
 
 let spec = {
   CommandSpec.
@@ -31,8 +32,6 @@ let spec = {
     |> root_flag
     |> json_flags
     |> strip_root_flag
-    |> flag "--pretty" no_arg
-        ~doc:"Pretty-print JSON output"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
     |> flag "--raw" no_arg
@@ -41,17 +40,18 @@ let spec = {
   )
 }
 
-let handle_response types json pretty strip =
+let handle_response types ~json ~pretty strip =
   if json
   then (
-    let lst = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
+    let open Hh_json in
+    let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
       let loc = strip loc in
       let json_assoc = (
-        ("type", Hh_json.JSON_String str) ::
-        ("reasons", Hh_json.JSON_Array (List.map (fun r ->
+        ("type", JSON_String str) ::
+        ("reasons", JSON_Array (List.map (fun r ->
           let r_loc = strip (Reason.loc_of_reason r) in
-          Hh_json.JSON_Object (
-            ("desc", Hh_json.JSON_String (Reason.desc_of_reason r)) ::
+          JSON_Object (
+            ("desc", JSON_String (Reason.desc_of_reason r)) ::
             ("loc", Reason.json_of_loc r_loc) ::
             (Errors.deprecated_json_props_of_loc r_loc)
           )
@@ -61,54 +61,42 @@ let handle_response types json pretty strip =
       ) in
       let json_assoc = match raw_t with
         | None -> json_assoc
-        | Some raw_t -> ("raw_type", Hh_json.JSON_String raw_t) :: json_assoc
+        | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
       in
-      Hh_json.JSON_Object json_assoc
+      JSON_Object json_assoc
     ) in
-    let json =
-      let arr = Hh_json.JSON_Array lst in
-        if pretty
-        then Hh_json.json_to_multiline arr
-        else Hh_json.json_to_string arr
-    in
-    output_string stdout (json^"\n")
+    print_endline (json_to_string ~pretty (JSON_Array types_json))
   ) else (
     let out = types
       |> List.map (fun (loc, _, str, _, _) ->
         let loc = strip loc in
-        (Utils_js.spf "%s: %s" (Reason.string_of_loc loc) str)
+        (spf "%s: %s" (Reason.string_of_loc loc) str)
       )
       |> String.concat "\n"
     in
-    output_string stdout (out^"\n")
-  );
-  flush stdout
+    print_endline out
+  )
 
-let handle_error (loc, err) json (pretty:bool) strip =
+let handle_error (loc, err) ~json ~pretty strip =
   let loc = strip loc in
   if json
   then (
-    let json = Hh_json.JSON_Object (
-      ("error", Hh_json.JSON_String err) ::
+    let open Hh_json in
+    let error_json = JSON_Object (
+      ("error", JSON_String err) ::
       ("loc", Reason.json_of_loc loc) ::
       (Errors.deprecated_json_props_of_loc loc)
     ) in
-    let json =
-      if pretty
-      then Hh_json.json_to_multiline json
-      else Hh_json.json_to_string json
-    in
-    output_string stderr (json^"\n");
+    prerr_endline (json_to_string ~pretty error_json);
     (* also output an empty array on stdout, for JSON parsers *)
-    handle_response [] true pretty strip
+    handle_response [] ~json ~pretty strip
   ) else (
     let loc = Reason.string_of_loc loc in
-    output_string stderr (Utils_js.spf "%s:\n%s\n" loc err);
-  );
-  flush stderr
+    prerr_endlinef "%s:\n%s" loc err
+  )
 
 let main option_values root json strip_root pretty path include_raw filename () =
-  let json = json || include_raw in
+  let json = json || pretty || include_raw in
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
     match root with
@@ -120,9 +108,9 @@ let main option_values root json strip_root pretty path include_raw filename () 
     (ServerProt.DUMP_TYPES (file, include_raw, if strip_root then Some root else None));
 
   match (Timeout.input_value ic : ServerProt.dump_types_response) with
-  | Utils_js.Err err ->
-      handle_error err json pretty (relativize strip_root root)
-  | Utils_js.OK resp ->
-      handle_response resp json pretty (relativize strip_root root)
+  | Err err ->
+      handle_error err ~json ~pretty (relativize strip_root root)
+  | OK resp ->
+      handle_response resp ~json ~pretty (relativize strip_root root)
 
 let command = CommandSpec.command spec main

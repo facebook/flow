@@ -36,7 +36,7 @@ let spec = {
   )
 }
 
-let main option_values root json strip_root modules () =
+let main option_values root json pretty strip_root modules () =
   let root = guess_root root in
 
   let ic, oc = connect option_values root in
@@ -53,18 +53,19 @@ let main option_values root json strip_root modules () =
     ) (Module_js.NameSet.elements importers) in
     SMap.add module_name importer_list map
   ) importers_map SMap.empty in
+  let json = json || pretty in
   if json
   then (
+    let open Hh_json in
     let json_list =
       SMap.fold (fun module_name importer_list json_list ->
         let importer_list = List.map (fun entry ->
-          Hh_json.JSON_String entry
+          JSON_String entry
         ) importer_list in
-        (module_name, Hh_json.JSON_Array importer_list) :: json_list
+        (module_name, JSON_Array importer_list) :: json_list
       ) importers_map [] in
-    let json_output = Hh_json.JSON_Object json_list in
-    output_string stdout ((Hh_json.json_to_string json_output)^"\n");
-    flush stdout
+    let json_output = JSON_Object json_list in
+    print_endline (json_to_string ~pretty json_output)
   ) else (
     List.iter (fun module_name ->
       if (SMap.mem module_name importers_map)

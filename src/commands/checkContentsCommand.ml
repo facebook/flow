@@ -43,7 +43,7 @@ let spec = {
   )
 }
 
-let main option_values root error_flags strip_root use_json verbose
+let main option_values root error_flags strip_root json pretty verbose
   graphml respect_pragma file () =
   let file = get_file_from_filename_or_stdin file None in
   let root = guess_root (
@@ -56,7 +56,10 @@ let main option_values root error_flags strip_root use_json verbose
   let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
   let ic, oc = connect option_values root in
 
-  if not use_json && (verbose <> None)
+  (* pretty implies json *)
+  let json = json || pretty in
+
+  if not json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
   ServerProt.cmd_to_channel oc
@@ -71,9 +74,9 @@ let main option_values root error_flags strip_root use_json verbose
   in
   match response with
   | ServerProt.ERRORS e ->
-      if use_json
+      if json
       then
-        Errors.print_error_json ~root ~stdin_file stdout e
+        Errors.print_error_json ~root ~pretty ~stdin_file stdout e
       else (
         Errors.print_error_summary
           ~flags:error_flags
@@ -84,8 +87,8 @@ let main option_values root error_flags strip_root use_json verbose
         FlowExitStatus.(exit Type_error)
       )
   | ServerProt.NO_ERRORS ->
-      if use_json
-      then Errors.print_error_json ~root ~stdin_file stdout []
+      if json
+      then Errors.print_error_json ~root ~pretty ~stdin_file stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

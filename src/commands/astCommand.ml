@@ -64,7 +64,11 @@ let get_file = function
 
 module Translate = Estree_translator.Translate (Hh_jsonTranslator)
 
-let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
+let token_to_json token_result =
+  let open Loc in
+  let open Hh_json in
+  let open Parser_env in
+
   let {
     token_loc=loc;
     token;
@@ -99,7 +103,6 @@ let token_to_json token_result = Loc.(Hh_json.(Parser_env.(
     ]);
     ("value", JSON_String token_value);
   ]
-)))
 
 let main include_tokens pretty file_type_opt from filename () =
   FlowEventLogger.set_from from;
@@ -128,6 +131,7 @@ let main include_tokens pretty file_type_opt from filename () =
     tokens := (token_to_json token_data)::!tokens
   )) in
 
+  let open Hh_json in
   let results =
     try
       (* Make the parser as permissive as possible.
@@ -155,20 +159,14 @@ let main include_tokens pretty file_type_opt from filename () =
           Translate.expression ocaml_ast, errors
       in
       match translated_ast with
-      | Hh_json.JSON_Object params ->
+      | JSON_Object params ->
           let errors_prop = ("errors", Translate.errors errors) in
-          let tokens_prop = ("tokens", Hh_json.JSON_Array (List.rev !tokens)) in
-          Hh_json.JSON_Object (errors_prop::tokens_prop::params)
+          let tokens_prop = ("tokens", JSON_Array (List.rev !tokens)) in
+          JSON_Object (errors_prop::tokens_prop::params)
       | _ -> assert false
     with Parse_error.Error l ->
-      Hh_json.JSON_Object ["errors", Translate.errors l]
+      JSON_Object ["errors", Translate.errors l]
   in
-
-  let json = if pretty
-    then Hh_json.json_to_multiline results
-    else Hh_json.json_to_string results
-  in
-  output_string stdout (json^"\n");
-  flush stdout
+  print_endline (json_to_string ~pretty results)
 
 let command = CommandSpec.command spec main

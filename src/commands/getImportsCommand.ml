@@ -38,7 +38,7 @@ let spec = {
 
 let extract_location req req_locs = SMap.find_unsafe req req_locs
 
-let main option_values root json strip_root modules () =
+let main option_values root json pretty strip_root modules () =
   let root = guess_root root in
 
   let ic, oc = connect option_values root in
@@ -62,33 +62,32 @@ let main option_values root json strip_root modules () =
       SMap.add module_name requirements map
     end
     requirements_map SMap.empty in
-  if json
+  if json || pretty
   then (
-    let json_non_flow =
-      SSet.fold (fun module_name json_list ->
-          (module_name, Hh_json.JSON_Object [
-                          "not_flow", Hh_json.JSON_Bool true;
-                          "requirements", Hh_json.JSON_Array []
-                          ]) :: json_list
-        ) non_flow [] in
-    let json_imports =
-      SMap.fold (fun module_name assoc json_list ->
-          let requirements =
-            List.map (fun (req, loc) ->
-              Hh_json.JSON_Object (
-                ("import", Hh_json.JSON_String req) ::
-                ("loc", Reason.json_of_loc loc) ::
-                (Errors.deprecated_json_props_of_loc loc)
-              )
-            ) assoc in
-          (module_name, Hh_json.JSON_Object [
-                          "not_flow", Hh_json.JSON_Bool false;
-                          "requirements", Hh_json.JSON_Array requirements
-                          ]) :: json_list
-        ) requirements_map [] in
-    let json_output = Hh_json.JSON_Object (List.append json_non_flow json_imports) in
-    output_string stdout ((Hh_json.json_to_string json_output)^"\n");
-    flush stdout
+    let open Hh_json in
+    let json_non_flow = SSet.fold (fun module_name acc ->
+      let json = JSON_Object [
+        "not_flow", JSON_Bool true;
+        "requirements", JSON_Array []
+      ] in
+      (module_name, json) :: acc
+    ) non_flow [] in
+    let json_imports = SMap.fold (fun module_name assoc acc ->
+      let requirements = List.map (fun (req, loc) ->
+        JSON_Object (
+          ("import", JSON_String req) ::
+          ("loc", Reason.json_of_loc loc) ::
+          (Errors.deprecated_json_props_of_loc loc)
+        )
+      ) assoc in
+      let json = JSON_Object [
+        "not_flow", JSON_Bool false;
+        "requirements", JSON_Array requirements
+      ] in
+      (module_name, json) :: acc
+    ) requirements_map [] in
+    let json = JSON_Object (List.append json_non_flow json_imports) in
+    print_endline (json_to_string ~pretty json)
   ) else (
     let print_imports module_name =
       if (SMap.mem module_name requirements_map)

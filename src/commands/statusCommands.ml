@@ -93,6 +93,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     root: Path.t;
     from: string;
     output_json: bool;
+    pretty: bool;
     error_flags: Options.error_flags;
     strip_root: bool;
   }
@@ -119,7 +120,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         else errors
       in
       begin if args.output_json then
-        Errors.print_error_json ~root:args.root stdout errors
+        Errors.print_error_json ~root:args.root ~pretty:args.pretty stdout errors
       else if args.from = "vim" || args.from = "emacs" then
         Errors.print_error_deprecated stdout errors
       else
@@ -128,7 +129,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->
       if args.output_json
-      then Errors.print_error_json ~root:args.root stdout []
+      then Errors.print_error_json ~root:args.root ~pretty:args.pretty stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
     | ServerProt.PONG ->
@@ -158,7 +159,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     end else
       FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries)
 
-  let main server_flags json error_flags strip_root version root () =
+  let main server_flags json pretty error_flags strip_root version root () =
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";
@@ -173,10 +174,13 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
     let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
 
+    let json = json || pretty in
+
     let args = {
       root;
       from = server_flags.CommandUtils.from;
       output_json = json;
+      pretty;
       error_flags;
       strip_root;
     } in

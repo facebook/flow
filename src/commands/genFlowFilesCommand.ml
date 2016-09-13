@@ -130,7 +130,7 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
   let (in_chan, out_chan) = connect option_values root in
   cmd_to_channel out_chan (GEN_FLOW_FILES filenames);
   match ((Timeout.input_value in_chan: gen_flow_file_response), out_dir) with
-  | (Utils_js.Err (GenFlowFile_TypecheckError errors), _) ->
+  | (Err (GenFlowFile_TypecheckError errors), _) ->
     let errors = Errors.to_list errors in
     Errors.print_error_summary
       ~out_channel:stderr
@@ -142,10 +142,10 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
       "\nIn order to generate a shadow file there must be no type errors!"
     in
     FlowExitStatus.exit ~msg FlowExitStatus.Type_error;
-  | (Utils_js.Err (GenFlowFile_UnexpectedError error_msg), _) ->
+  | (Err (GenFlowFile_UnexpectedError error_msg), _) ->
     let msg = spf "Error: %s" error_msg in
     FlowExitStatus.exit ~msg FlowExitStatus.Unknown_error
-  | (Utils_js.OK results, None) ->
+  | (OK results, None) ->
     (if List.length results <> 1 then (
       let msg =
         "Internal Error: Received multiple results for a single file!"
@@ -159,7 +159,7 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
       | GenFlowFile_NonFlowFile ->
         print_endline "// This file does not have an @flow at the top!"
     )
-  | (Utils_js.OK results, Some out_dir) ->
+  | (OK results, Some out_dir) ->
     let out_dir = expand_path out_dir in
     let src_stat = Unix.stat src in
     results |> List.iter (fun (file_path, result) ->

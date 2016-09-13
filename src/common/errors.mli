@@ -93,6 +93,7 @@ val print_error_color_new:
 
 val print_error_json :
   root:Path.t ->
+  ?pretty:bool ->
   ?timing:Timing.t option ->
   ?stdin_file:stdin_file ->
   out_channel ->

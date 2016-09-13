@@ -33,17 +33,17 @@ let spec = {
   )
 }
 
-let main json from _root () =
+let main json pretty from _root () =
   FlowEventLogger.set_from from;
-  if json
+  if json || pretty
   then begin
     let open Hh_json in
     let json = JSON_Object [
-      "semver",JSON_String FlowConfig.version;
+      "semver", JSON_String FlowConfig.version;
       "binary", JSON_String (Sys_utils.executable_path ());
       "build_id", JSON_String Build_id.build_id_ohai;
     ] in
-    print_endline (json_to_string json)
+    print_endline (json_to_string ~pretty json)
   end else begin
     CommandUtils.print_version ()
   end;

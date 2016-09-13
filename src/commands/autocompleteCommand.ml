@@ -81,7 +81,7 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main option_values root use_json strip_root args () =
+let main option_values root json pretty strip_root args () =
   let file = parse_args args in
   let root = guess_root (
     match root with
@@ -96,22 +96,23 @@ let main option_values root use_json strip_root args () =
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
   let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
-  if use_json
+  if json || pretty
   then (
+    let open Hh_json in
     let json = match results with
     | Err error ->
-      Hh_json.JSON_Object [
-        "error", Hh_json.JSON_String error;
-        "result", Hh_json.JSON_Array []; (* TODO: remove this? kept for BC *)
+      JSON_Object [
+        "error", JSON_String error;
+        "result", JSON_Array []; (* TODO: remove this? kept for BC *)
       ]
     | OK completions ->
       let results = List.map
         (AutocompleteService_js.autocomplete_result_to_json loc_preprocessor)
         completions
       in
-      Hh_json.JSON_Object ["result", Hh_json.JSON_Array results]
+      JSON_Object ["result", JSON_Array results]
     in
-    print_endline (Hh_json.json_to_string json)
+    print_endline (json_to_string ~pretty json)
   ) else (
     match results with
     | Err error ->

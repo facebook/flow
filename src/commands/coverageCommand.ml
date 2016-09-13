@@ -43,21 +43,21 @@ let spec = {
   )
 }
 
-let handle_error ~json (loc, err) strip =
+let handle_error ~json ~pretty (loc, err) strip =
   let loc = strip loc in
   if json
   then (
-    let json = Hh_json.JSON_Object (
-      ("error", Hh_json.JSON_String err) ::
+    let open Hh_json in
+    let json = JSON_Object (
+      ("error", JSON_String err) ::
       ("loc", Reason.json_of_loc loc) ::
       (Errors.deprecated_json_props_of_loc loc)
     ) in
-    output_string stderr ((Hh_json.json_to_string json)^"\n");
+    prerr_endline (json_to_string ~pretty json);
   ) else (
     let loc = Reason.string_of_loc loc in
-    output_string stderr (spf "%s:\n%s\n" loc err);
-  );
-  flush stderr
+    prerr_endlinef "%s:\n%s" loc err;
+  )
 
 let accum_coverage (covered, total) (_loc, is_covered) =
   if is_covered
@@ -182,7 +182,7 @@ let rec split_overlapping_ranges accum = Loc.(function
       split_overlapping_ranges accum todo
 )
 
-let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
+let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) content =
   if debug then List.iter debug_range types;
 
   begin if color then
@@ -208,13 +208,13 @@ let handle_response ~json ~color ~debug (types : (Loc.t * bool) list) content =
         "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
       ];
     ]
-    |> json_to_string
+    |> json_to_string ~pretty
     |> print_endline
   else
     Utils_js.print_endlinef
       "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
-let main option_values root json color debug strip_root path filename () =
+let main option_values root json pretty color debug strip_root path filename () =
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
     match root with
@@ -224,11 +224,14 @@ let main option_values root json color debug strip_root path filename () =
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.COVERAGE file);
 
+  (* pretty implies json *)
+  let json = json || pretty in
+
   match (Timeout.input_value ic : ServerProt.coverage_response) with
   | Err err ->
-      handle_error ~json err (relativize strip_root root)
+      handle_error ~json ~pretty err (relativize strip_root root)
   | OK resp ->
       let content = ServerProt.file_input_get_content file in
-      handle_response ~json ~color ~debug resp content
+      handle_response ~json ~pretty ~color ~debug resp content
 
 let command = CommandSpec.command spec main

@@ -13,6 +13,7 @@
 (***********************************************************************)
 
 open CommandUtils
+open Utils_js
 
 let spec = {
   CommandSpec.
@@ -56,7 +57,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t, raw_t, reasons) json strip =
+let handle_response (loc, t, raw_t, reasons) ~json ~pretty strip =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
@@ -64,31 +65,31 @@ let handle_response (loc, t, raw_t, reasons) json strip =
   let loc = strip loc in
   if json
   then (
+    let open Hh_json in
     let json_assoc = (
-        ("type", Hh_json.JSON_String ty) ::
-        ("reasons", Hh_json.JSON_Array
+        ("type", JSON_String ty) ::
+        ("reasons", JSON_Array
           (List.map (fun r ->
               let r_loc = strip (Reason.loc_of_reason r) in
-              Hh_json.JSON_Object (
-                  ("desc", Hh_json.JSON_String (Reason.desc_of_reason r)) ::
+              JSON_Object (
+                  ("desc", JSON_String (Reason.desc_of_reason r)) ::
                   ("loc", Reason.json_of_loc r_loc) ::
                   (Errors.deprecated_json_props_of_loc r_loc)
                 )
             ) reasons)) ::
         ("loc", Reason.json_of_loc loc) ::
         (Errors.deprecated_json_props_of_loc loc)
-      ) in
+    ) in
     let json_assoc = match raw_t with
       | None -> json_assoc
-      | Some raw_t -> ("raw_type", Hh_json.JSON_String raw_t) :: json_assoc
+      | Some raw_t -> ("raw_type", JSON_String raw_t) :: json_assoc
     in
-    let json = Hh_json.JSON_Object json_assoc in
-    let json = Hh_json.json_to_string json in
-    output_string stdout (json^"\n")
+    let json = JSON_Object json_assoc in
+    print_endline (json_to_string ~pretty json)
   ) else (
     let range =
       if loc = Loc.none then ""
-      else Utils_js.spf "\n%s" (range_string_of_loc loc)
+      else spf "\n%s" (range_string_of_loc loc)
     in
     let pty =
       if reasons = [] then ""
@@ -101,28 +102,27 @@ let handle_response (loc, t, raw_t, reasons) json strip =
         |> String.concat "\n"
       )
     in
-    output_string stdout (ty^range^pty^"\n")
-  );
-  flush stdout
+    print_endline (ty^range^pty)
+  )
 
-let handle_error (loc, err) json strip =
+let handle_error (loc, err) ~json ~pretty strip =
   let loc = strip loc in
   if json
   then (
-    let json = Hh_json.JSON_Object (
-      ("error", Hh_json.JSON_String err) ::
+    let open Hh_json in
+    let json = JSON_Object (
+      ("error", JSON_String err) ::
       ("loc", Reason.json_of_loc loc) ::
       (Errors.deprecated_json_props_of_loc loc)
     ) in
-    output_string stderr ((Hh_json.json_to_string json)^"\n");
+    prerr_endline (json_to_string ~pretty json)
   ) else (
     let loc = Reason.string_of_loc loc in
-    output_string stderr (Utils_js.spf "%s:\n%s\n" loc err);
-  );
-  flush stderr
+    prerr_endlinef "%s:\n%s" loc err
+  )
 
-let main option_values root json strip_root verbose path include_raw args () =
-  let json = json || include_raw in
+let main option_values root json pretty strip_root verbose path include_raw args () =
+  let json = json || pretty || include_raw in
   let (file, line, column) = parse_args path args in
   let root = guess_root (
     match root with
@@ -137,7 +137,7 @@ let main option_values root json strip_root verbose path include_raw args () =
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
   match (Timeout.input_value ic : ServerProt.infer_type_response) with
-  | Utils_js.Err err -> handle_error err json (relativize strip_root root)
-  | Utils_js.OK resp -> handle_response resp json (relativize strip_root root)
+  | Err err -> handle_error err ~json ~pretty (relativize strip_root root)
+  | OK resp -> handle_response resp ~json ~pretty (relativize strip_root root)
 
 let command = CommandSpec.command spec main

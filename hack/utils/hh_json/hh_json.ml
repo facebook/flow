@@ -373,12 +373,15 @@ and add_assoc_to_buffer (buf:Buffer.t) (k,v) =
   add_char buf ':';
   add_json_to_buffer buf v
 
-let json_to_string (json:json): string =
-  let buf = Buffer.create 1024 in (* need a better estimate! *)
-  add_json_to_buffer buf json;
-  Buffer.contents buf
+let rec json_to_string ?(pretty=false) (json:json): string =
+  if pretty
+  then json_to_multiline json
+  else
+    let buf = Buffer.create 1024 in (* need a better estimate! *)
+    add_json_to_buffer buf json;
+    Buffer.contents buf
 
-let json_to_multiline json =
+and json_to_multiline json =
   let rec loop indent json =
     let single = json_to_string json in
     if String.length single < 80 then single else

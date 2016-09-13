@@ -65,7 +65,7 @@ module Command(CommandList : COMMAND_LIST) = struct
       let commands = CommandList.commands |> List.map (fun (command) ->
         CommandSpec.name command
       ) in
-      output_string stdout ((String.concat " " commands)^"\n")
+      print_endline (String.concat " " commands)
     ) else (
       try
         let cmdstr = String.lowercase (List.nth rest 1) in
@@ -73,10 +73,9 @@ module Command(CommandList : COMMAND_LIST) = struct
           CommandSpec.name command = cmdstr
         ) in
         let completion = get_completion command current rest in
-        output_string stdout (completion^"\n")
+        print_endline completion
       with Not_found -> ()
-    );
-    flush stdout
+    )
 
   let command = CommandSpec.command spec main
 

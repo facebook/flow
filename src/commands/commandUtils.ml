@@ -111,6 +111,7 @@ let error_flags prev = CommandSpec.ArgSpec.(
 let json_flags prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--json" no_arg ~doc:"Output results in JSON format"
+  |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output (implies --json)"
 )
 
 let temp_dir_flag prev = CommandSpec.ArgSpec.(
