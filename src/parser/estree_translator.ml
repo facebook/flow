@@ -514,7 +514,13 @@ end with type t = Impl.t) = struct
     | loc, TemplateLiteral lit -> template_literal (loc, lit)
     | loc, TaggedTemplate tagged -> tagged_template (loc, tagged)
     | loc, Class c -> class_expression (loc, c)
-    | loc, JSXElement element -> jsx_element (loc, element))
+    | loc, JSXElement element -> jsx_element (loc, element)
+    | loc, MetaProperty meta_prop -> MetaProperty.(
+        node "MetaProperty" loc [|
+          "meta", identifier meta_prop.meta;
+          "property", identifier meta_prop.property;
+        |]
+      ))
 
   and function_expression (loc, _function) = Function.(
     let body = match _function.body with

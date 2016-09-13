@@ -1329,6 +1329,83 @@ module.exports = {
         ]
       }
     },
+    'ES6: new.target': {
+        'new.target': {
+          'errors': [
+            {'message': 'Unexpected token .'}
+          ],
+        },
+        'var x = function() { y = new..target; }': {
+          'errors.0': {'message': 'Unexpected token .', 'loc.start.column': 29},
+        },
+        'function x() { new.unknown_property; }': {
+          'errors.0': {
+            'message': 'Unexpected identifier',
+            'loc.start.column': 19,
+            'loc.end.column': 35,
+          },
+        },
+        'function x() { new.target }': {
+          'body.0.body.body.0.expression': {
+            'type': 'MetaProperty',
+            'meta': {'type': 'Identifier', 'name': 'new'},
+            'property': {'type': 'Identifier', 'name': 'target'},
+            'loc.start.column': 15,
+            'loc.end.column': 25,
+          },
+        },
+        'function x() { let x = new.target; }': {
+          'body.0.body.body.0.declarations.0.init': {
+            'type': 'MetaProperty',
+            'meta': {'type': 'Identifier', 'name': 'new'},
+            'property': {'type': 'Identifier', 'name': 'target'},
+            'loc.start.column': 23,
+            'loc.end.column': 33,
+          }
+        },
+        'function x() { new new.target; }': {
+          'body.0.body.body.0.expression': {
+            'type': 'NewExpression',
+            'callee': {
+              'type': 'MetaProperty',
+              'meta': {'type': 'Identifier', 'name': 'new'},
+              'property': {'type': 'Identifier', 'name': 'target'},
+              'loc.start.column': 19,
+              'loc.end.column': 29,
+            }
+          },
+        },
+        'function x() { new.target(); }': {
+          'body.0.body.body.0.expression': {
+            'type': 'CallExpression',
+            'callee': {
+              'type': 'MetaProperty',
+              'meta': {'type': 'Identifier', 'name': 'new'},
+              'property': {'type': 'Identifier', 'name': 'target'},
+              'loc.start.column': 15,
+              'loc.end.column': 25,
+            },
+            'arguments': [],
+          }
+        },
+        'function x() { new new.target()(); }': {
+          'body.0.body.body.0.expression': {
+            'type': 'CallExpression',
+            'callee': {
+              'type': 'NewExpression',
+              'callee': {
+                'type': 'MetaProperty',
+                'meta': {'type': 'Identifier', 'name': 'new'},
+                'property': {'type': 'Identifier', 'name': 'target'},
+                'loc.start.column': 19,
+                'loc.end.column': 29,
+              },
+              'arguments': [],
+            },
+            'arguments': [],
+          }
+        },
+    },
     'Declare Statements': {
       'declare var foo': {
         'body': [{
