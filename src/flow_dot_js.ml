@@ -72,12 +72,12 @@ let load_lib_files ~master_cx ~metadata files
 let stub_metadata ~root ~checked = { Context.
   checked;
   enable_const_params = false;
-  enable_unsafe_getters_and_setters = false;
-  enforce_strict_type_args = false;
-  esproposal_class_static_fields = Options.ESPROPOSAL_WARN;
-  esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
-  esproposal_decorators = Options.ESPROPOSAL_WARN;
-  esproposal_export_star_as = Options.ESPROPOSAL_WARN;
+  enable_unsafe_getters_and_setters = true;
+  enforce_strict_type_args = true;
+  esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
+  esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+  esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   facebook_ignore_fbt = false;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
