@@ -141,14 +141,16 @@
  ****************************************************************************/
 #if !defined __APPLE__ && !defined _WIN32
   // Linux version for the architecture must support syscall memfd_create
-  #if defined(__x86_64__)
-    #define SYS_memfd_create 319
-  #elif defined(__powerpc64__)
-    #define SYS_memfd_create 360
-  #elif defined(__aarch64__)
-    #define SYS_memfd_create 385
-  #else
-    #error "hh_shared.c requires a architecture that supports memfd_create"
+  #ifndef SYS_memfd_create
+    #if defined(__x86_64__)
+      #define SYS_memfd_create 319
+    #elif defined(__powerpc64__)
+      #define SYS_memfd_create 360
+    #elif defined(__aarch64__)
+      #define SYS_memfd_create 385
+    #else
+      #error "hh_shared.c requires a architecture that supports memfd_create"
+    #endif
   #endif
 
   #define MEMFD_CREATE 1
