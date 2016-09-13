@@ -69,3 +69,9 @@ def("Function")
 
 def("ObjectTypeAnnotation")
     .field("exact", Boolean)
+
+def("MetaProperty")
+    .bases("Expression")
+    .build("meta", "property")
+    .field("meta", def("Identifier"))
+    .field("property", def("Identifier"));
