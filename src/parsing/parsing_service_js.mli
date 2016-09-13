@@ -44,6 +44,16 @@ val parse:
   (unit -> filename list) ->    (* delivers buckets of filenames *)
   results                       (* job results, not asts *)
 
+(* Use default values for the various settings that parse takes. Each one can be overridden
+individually *)
+val parse_with_defaults:
+  ?types_mode: types_mode ->
+  ?use_strict: bool ->
+  Options.t ->
+  Worker.t list option ->
+  (unit -> filename list) ->
+  results
+
 (* for non-initial passes: updates asts for passed file set. *)
 val reparse:
   types_mode: types_mode ->
