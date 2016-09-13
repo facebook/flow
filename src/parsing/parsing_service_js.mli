@@ -95,3 +95,9 @@ val do_parse:
   string ->                 (* contents of the file *)
   filename ->               (* filename *)
   result
+
+(* Utility to create the `next` parameter that `parse` requires *)
+val next_of_filename_set:
+  Worker.t list option ->
+  FilenameSet.t ->
+  (unit -> filename list)
