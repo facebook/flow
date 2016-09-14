@@ -104,3 +104,5 @@
     title: Declarations
   - id: react
     title: React
+  - id: enums
+    title: Enums
