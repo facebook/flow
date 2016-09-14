@@ -384,6 +384,12 @@ module Peek = struct
     | T_IDENTIFIER -> true
     | _ -> false
 
+  let is_literal_property_name ?(i=0) env =
+    is_identifier ~i env || match token ~i env with
+    | T_STRING _
+    | T_NUMBER _ -> true
+    | _ -> false
+
   let is_function ?(i=0) env =
     token ~i env = T_FUNCTION ||
     (token ~i env = T_ASYNC && token ~i:(i+1) env = T_FUNCTION)

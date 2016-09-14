@@ -5327,6 +5327,8 @@ module.exports = {
         'foo(async () => await bar);',
         'var x = async\ny => y',
         'class A { async bar() { await foo; } }',
+        'var x = { async "foo"() { await y; } }',
+        'var x = { async 123() { await y; } }',
     ],
   }
 };
