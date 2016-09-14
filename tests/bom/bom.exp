@@ -1,0 +1,154 @@
+FormData.js:5
+  5: new FormData(''); // incorrect
+     ^^^^^^^^^^^^^^^^ constructor call
+  5: new FormData(''); // incorrect
+                  ^^ string. This type is incompatible with
+HTMLFormElement. See lib: bom.js:244
+
+FormData.js:6
+  6: new FormData(document.createElement('input')); // incorrect
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+  6: new FormData(document.createElement('input')); // incorrect
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ HTMLInputElement. This type is incompatible with
+HTMLFormElement. See lib: bom.js:244
+
+FormData.js:14
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ call of method `get`
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ null. This type is incompatible with
+ 14: const d: string = a.get('foo'); // incorrect
+              ^^^^^^ string
+
+FormData.js:14
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ call of method `get`
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ undefined. This type is incompatible with
+ 14: const d: string = a.get('foo'); // incorrect
+              ^^^^^^ string
+
+FormData.js:15
+ 15: a.get(2); // incorrect
+     ^^^^^^^^ call of method `get`
+ 15: a.get(2); // incorrect
+           ^ number. This type is incompatible with
+string. See lib: bom.js:246
+
+FormData.js:19
+ 19: a.getAll('foo').map((x: number) => x); // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
+ 19: a.getAll('foo').map((x: number) => x); // incorrect
+                             ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:247
+
+FormData.js:20
+ 20: a.getAll(23); // incorrect
+     ^^^^^^^^^^^^ call of method `getAll`
+ 20: a.getAll(23); // incorrect
+              ^^ number. This type is incompatible with
+string. See lib: bom.js:247
+
+FormData.js:24
+ 24: a.set('foo', {}); // incorrect
+     ^^^^^^^^^^^^^^^^ call of method `set`
+ 24: a.set('foo', {}); // incorrect
+                  ^^ object literal. This type is incompatible with
+string. See lib: bom.js:248
+
+FormData.js:25
+ 25: a.set(2, 'bar'); // incorrect
+     ^^^^^^^^^^^^^^^ call of method `set`
+ 25: a.set(2, 'bar'); // incorrect
+           ^ number. This type is incompatible with
+string. See lib: bom.js:248
+
+FormData.js:27
+ 27: a.set('foo', 'bar', {}); // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
+ 27: a.set('foo', 'bar', {}); // incorrect
+                         ^^ object literal. This type is incompatible with
+string. See lib: bom.js:248
+
+FormData.js:31
+ 31: a.append('foo', {}); // incorrect
+     ^^^^^^^^^^^^^^^^^^^ call of method `append`
+ 31: a.append('foo', {}); // incorrect
+                     ^^ object literal. This type is incompatible with
+string. See lib: bom.js:249
+
+FormData.js:32
+ 32: a.append(2, 'bar'); // incorrect
+     ^^^^^^^^^^^^^^^^^^ call of method `append`
+ 32: a.append(2, 'bar'); // incorrect
+              ^ number. This type is incompatible with
+string. See lib: bom.js:249
+
+FormData.js:34
+ 34: a.append('foo', 'bar', {}); // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
+ 34: a.append('foo', 'bar', {}); // incorrect
+                            ^^ object literal. This type is incompatible with
+string. See lib: bom.js:249
+
+FormData.js:38
+ 38: a.delete(3); // incorrect
+     ^^^^^^^^^^^ call of method `delete`
+ 38: a.delete(3); // incorrect
+              ^ number. This type is incompatible with
+string. See lib: bom.js:250
+
+FormData.js:42
+ 42: for (let x: number of a.keys()) {} // incorrect
+              ^^^^^^^^^ string. This type is incompatible with
+ 42: for (let x: number of a.keys()) {} // incorrect
+                 ^^^^^^ number
+
+FormData.js:46
+ 46: for (let x: number of a.values()) {} // incorrect
+              ^^^^^^^^^ string. This type is incompatible with
+ 46: for (let x: number of a.values()) {} // incorrect
+                 ^^^^^^ number
+
+FormData.js:50
+ 50: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+               ^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+FormData.js:50
+ 50: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                       ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+FormData.js:51
+ 51: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                  ^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+FormData.js:51
+ 51: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+FormData.js:52
+ 52: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+               ^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+FormData.js:52
+ 52: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                  ^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+FormData.js:52
+ 52: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                       ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+FormData.js:52
+ 52: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:253
+
+
+Found 24 errors
