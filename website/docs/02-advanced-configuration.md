@@ -112,31 +112,31 @@ can be overridden with command line flags.
 - `log.file` (string): the path to the log file (defaults to `/tmp/flow/<escaped root path>.log`)
 - `module.name_mapper` (regex -> string): specify a regular expression to match against module names, and a replacement pattern, separated by a `->`.
 
-    For example:
+  For example:
 
-    ```
-    module.name_mapper='^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
-    ```
+  ```
+  module.name_mapper='^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
+  ```
 
-    makes Flow treat `require('image!foo.jpg')` as if it were `require('ImageStub')`.
+  makes Flow treat `require('image!foo.jpg')` as if it were `require('ImageStub')`.
 
-    These are [OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp). Use `\(` and `\)` (slashes required!) to create a capturing group, which you can refer to in the replacement pattern as `\1` (up to `\9`).
+  These are [OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp). Use `\(` and `\)` (slashes required!) to create a capturing group, which you can refer to in the replacement pattern as `\1` (up to `\9`).
 
-    (**note:** you can specify `module.name_mapper` multiple times)
+  (**note:** you can specify `module.name_mapper` multiple times)
 
 - `module.name_mapper.extension` (string -> string): specify a file extension to match, and a replacement module name, separated by a `->`.
 
-    *(Note that this is just shorthand for `module.name_mapper='^\(.\*\)\.EXTENSION$' -> 'TEMPLATE'`)*
+  *(Note that this is just shorthand for `module.name_mapper='^\(.*\)\.EXTENSION$' -> 'TEMPLATE'`)*
 
-    For example:
+  For example:
 
-    ```
-    module.name_mapper.extension='css' -> '<PROJECT_ROOT>/CSSFlowStub.js.flow'
-    ```
+  ```
+  module.name_mapper.extension='css' -> '<PROJECT_ROOT>/CSSFlowStub.js.flow'
+  ```
 
-    makes Flow treat `require('foo.css')` as if it were `require(PROJECT_ROOT + '/CSSFlowStub')`.
+  makes Flow treat `require('foo.css')` as if it were `require(PROJECT_ROOT + '/CSSFlowStub')`.
 
-    (**note:** you can specify `module.name_mapper.extension` multiple times for different extensions)
+  (**note:** you can specify `module.name_mapper.extension` multiple times for different extensions)
 
 - `module.system` (`node` | `haste`): the module system to use to resolve
   `import` and `require`. [Haste](https://github.com/facebook/node-haste) is
@@ -146,14 +146,14 @@ can be overridden with command line flags.
   directories named `node_modules` for node modules. You can configure this
   behavior with this option. For example, if you do
 
-    ```
-    [options]
-    module.system.node.resolve_dirname=node_modules
-    module.system.node.resolve_dirname=custom_node_modules
-    ```
+  ```
+  [options]
+  module.system.node.resolve_dirname=node_modules
+  module.system.node.resolve_dirname=custom_node_modules
+  ```
 
-    then Flow will look in directories named `node_modules` or
-    `custom_node_modules`
+  then Flow will look in directories named `node_modules` or
+  `custom_node_modules`
 
 - `module.ignore_non_literal_requires` (boolean): set this to `true` and Flow
   will no longer complain when you use `require()` with something other than a
@@ -163,13 +163,13 @@ can be overridden with command line flags.
   `.js`, `.jsx`, and `.json`. You can override this behavior with this option.
   For example, if you do
 
-    ```
-    [options]
-    module.file_ext=.foo
-    module.file_ext=.bar
-    ```
+  ```
+  [options]
+  module.file_ext=.foo
+  module.file_ext=.bar
+  ```
 
-    then Flow will instead look for the file extensions `.foo` and `.bar`.
+  then Flow will instead look for the file extensions `.foo` and `.bar`.
 
 - `module.use_strict` (boolean): set this to `true` if you use a transpiler that
   adds `"use strict";` to the top of every module. The default value is `false`.
@@ -193,22 +193,22 @@ can be overridden with command line flags.
 
 - `suppress_comment` (regex): defines a magical comment that suppresses any Flow errors on the following line. For example:
 
-    ```
-    suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
-    ```
+  ```
+  suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+  ```
 
-    will match a comment like this:
+  will match a comment like this:
 
-    ```
-    // $FlowFixMe: suppressing this error until we can refactor
-    var x : string = 123;
-    ```
+  ```
+  // $FlowFixMe: suppressing this error until we can refactor
+  var x : string = 123;
+  ```
 
-    and suppress the error. If there is no error on the next line (the suppression is unnecessary), an "Unused suppression" error will be shown instead.
+  and suppress the error. If there is no error on the next line (the suppression is unnecessary), an "Unused suppression" error will be shown instead.
 
-    If no suppression comments are specified in your config, Flow will apply one default: `// $FlowFixMe`.
+  If no suppression comments are specified in your config, Flow will apply one default: `// $FlowFixMe`.
 
-    **Note:** You can specify `suppress_comment` multiple times. If you do define any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased in favor of the regexps you specify. If you wish to use `$FlowFixMe` with some additional custom suppression comments, you must manually specify `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
+  **Note:** You can specify `suppress_comment` multiple times. If you do define any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased in favor of the regexps you specify. If you wish to use `$FlowFixMe` with some additional custom suppression comments, you must manually specify `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
 
 - `temp_dir` (string): Tell Flow which directory to use as a temp directory.
   Defaults to `/tmp/flow`. Can be overridden with the commandline flag
