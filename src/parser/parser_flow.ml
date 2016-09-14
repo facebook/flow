@@ -2041,14 +2041,18 @@ end = struct
               (match Peek.token env with
               | T_COLON
               | T_LESS_THAN
-              | T_LPAREN -> init env start_loc key false false
+              | T_LPAREN
+              | T_COMMA
+              | T_RCURLY -> init env start_loc key false false
               | _ -> get env start_loc)
           | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
               "set"; _}) as key)) ->
               (match Peek.token env with
               | T_COLON
               | T_LESS_THAN
-              | T_LPAREN -> init env start_loc key false false
+              | T_LPAREN
+              | T_COMMA
+              | T_RCURLY -> init env start_loc key false false
               | _ -> set env start_loc)
           | async, generator, (_, key) ->
               init env start_loc key async generator
