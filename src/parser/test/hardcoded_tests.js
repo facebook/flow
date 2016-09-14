@@ -1406,6 +1406,30 @@ module.exports = {
           }
         },
     },
+    'ES6: object short notation': {
+      'let get = 123; let x = { get };': {
+        'body.1.declarations.0.init.properties.0': {
+          'key': { 'type': 'Identifier', 'name': 'get' },
+          'value': { 'type': 'Identifier', 'name': 'get' },
+        }
+      },
+      'let set = 123; let x = { set };': {
+        'body.1.declarations.0.init.properties.0': {
+          'key': { 'type': 'Identifier', 'name': 'set' },
+          'value': { 'type': 'Identifier', 'name': 'set' },
+        }
+      },
+      'let get = 123, set = 234; let x = { get, set };': {
+        'body.1.declarations.0.init.properties.0': {
+          'key': { 'type': 'Identifier', 'name': 'get' },
+          'value': { 'type': 'Identifier', 'name': 'get' },
+        },
+        'body.1.declarations.0.init.properties.1': {
+          'key': { 'type': 'Identifier', 'name': 'set' },
+          'value': { 'type': 'Identifier', 'name': 'set' },
+        }
+      },
+    },
     'Declare Statements': {
       'declare var foo': {
         'body': [{
