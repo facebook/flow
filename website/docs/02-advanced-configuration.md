@@ -126,7 +126,7 @@ can be overridden with command line flags.
 
 - `module.name_mapper.extension` (string -> string): specify a file extension to match, and a replacement module name, separated by a `->`.
 
-    *(Note that this is just shorthand for `module.name_mapper='^\(.\*\)\.EXTENSION$' -> 'TEMPLATE'`)*
+    *(Note that this is just shorthand for `module.name_mapper='^\(.*\)\.EXTENSION$' -> 'TEMPLATE'`)*
 
     For example:
 
