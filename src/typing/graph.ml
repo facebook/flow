@@ -233,6 +233,7 @@ and parts_of_use_t cx = function
 | TestPropT (_, _, out) -> ["out", Def out]
 | SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
+| GetStaticsT (_, out) -> ["out", Def out]
 | ConstructorT (_, args, out) -> ("out", Def out) :: list_parts args
 | AdderT (_, r, out) -> ["right", Def r; "out", Def out]
 | ComparatorT (_, arg) -> ["arg", Def arg]

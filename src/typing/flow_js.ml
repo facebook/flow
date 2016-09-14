@@ -3454,18 +3454,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (any, return_t)
 
     (*************************)
-    (* "statics" can be read *)
+    (* statics can be read   *)
     (*************************)
 
-    | InstanceT (_, static, _, _), GetPropT (_, (_, "statics"), t) ->
+    | InstanceT (_, static, _, _), GetStaticsT (_, t) ->
       rec_flow_t cx trace (static, t)
 
-    | MixedT (reason, _), GetPropT(_, (_, "statics"), u) ->
+    (* GetStaticsT is only ever called on the instance type of a ClassT. There
+     * is exactly one place where we create a ClassT with an ObjT instance type:
+     * $Facebookism$Mixin. This rule should only fire for that case. *)
+    | ObjT _, GetStaticsT _ ->
+      (* Mixins don't have statics at all, so we can just prune here. *)
+      ()
+
+    | MixedT (reason, _), GetStaticsT (_, t) ->
       (* MixedT not only serves as the instance type of the root class, but also
          as the statics of the root class. *)
-      rec_flow_t cx trace (
-        MixedT (prefix_reason "statics of " reason, Mixed_everything),
-        u)
+      let static_reason = prefix_reason "statics of " reason in
+      let static = MixedT (static_reason, Mixed_everything) in
+      rec_flow_t cx trace (static, t)
 
     (********************************************************)
     (* instances of classes may have their fields looked up *)
@@ -4344,9 +4351,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ClassT instance, _) when object_use u || object_like_op u ->
       let reason = prefix_reason "statics of " (reason_of_t instance) in
-      let tvar = mk_tvar cx reason in
-      rec_flow cx trace (instance, GetPropT(reason, (reason, "statics"), tvar));
-      rec_flow cx trace (tvar, ReposLowerT (reason, u))
+      let static = mk_tvar cx reason in
+      rec_flow cx trace (instance, GetStaticsT (reason, static));
+      rec_flow cx trace (static, ReposLowerT (reason, u))
 
     (***************************************************************************)
     (* classes can behave like functions, functions can be declared as classes *)
@@ -4371,7 +4378,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (use_op, ClassT instance) ->
       rec_flow cx trace (instance, UseT (use_op, prototype));
       rec_flow cx trace (instance, UseT (use_op, funtype.this_t));
-      rec_flow cx trace (instance, GetPropT(reason, (reason, "statics"), static));
+      rec_flow cx trace (instance, GetStaticsT (reason, static));
       rec_flow cx trace (ClassT instance, GetPropT(reason, (reason, "$call"), l))
 
     (************)

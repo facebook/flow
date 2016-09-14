@@ -3989,8 +3989,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       static_reason smap (MixedT (static_reason, Mixed_everything))
   in
   let super_static = Flow.mk_tvar_where cx static_reason (fun t ->
-    Flow.flow cx (super,
-      GetPropT (static_reason, (static_reason, "statics"), t));
+    Flow.flow cx (super, GetStaticsT (static_reason, t));
   ) in
   Flow.flow_t cx (super_static, override_statics);
   static := clone_object cx static_reason !static super_static;

@@ -297,6 +297,7 @@ module rec TypeTerm : sig
     | TestPropT of reason * propname * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
+    | GetStaticsT of reason * t_out
 
     (* repositioning *)
     | ReposLowerT of reason * use_t
@@ -1249,6 +1250,8 @@ and reason_of_use_t = function
   | SetElemT (reason,_,_)
   | GetElemT (reason,_,_)
 
+  | GetStaticsT (reason,_)
+
   | ConstructorT (reason,_,_)
 
   | SuperT (reason,_)
@@ -1455,6 +1458,8 @@ and mod_reason_of_use_t f = function
   | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
 
+  | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
+
   | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
 
   | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
@@ -1643,6 +1648,7 @@ let string_of_use_ctor = function
   | TestPropT _ -> "TestPropT"
   | SetElemT _ -> "SetElemT"
   | GetElemT _ -> "GetElemT"
+  | GetStaticsT _ -> "GetStaticsT"
   | ConstructorT _ -> "ConstructorT"
   | AdderT _ -> "AdderT"
   | ComparatorT _ -> "ComparatorT"

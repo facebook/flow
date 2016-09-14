@@ -353,6 +353,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "elemType", _json_of_t json_cx elemt
     ]
 
+  | GetStaticsT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | ConstructorT (_, tparams, t) -> [
       "typeParams", JSON_Array (List.map (_json_of_t json_cx) tparams);
       "type", _json_of_t json_cx t
@@ -1222,6 +1226,7 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
+  | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
   | ConstructorT _ -> p t
   | AdderT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ComparatorT (_, arg) -> p ~extra:(kid arg) t

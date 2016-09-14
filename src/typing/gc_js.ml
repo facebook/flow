@@ -268,6 +268,9 @@ and gc_use cx state = function
       gc cx state i;
       gc cx state t
 
+  | GetStaticsT(_, t) ->
+      gc cx state t
+
   | ConstructorT(_, params, t) ->
       params |> List.iter (gc cx state);
       gc cx state t
