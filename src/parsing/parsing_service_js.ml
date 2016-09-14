@@ -274,6 +274,28 @@ let merge r1 r2 =
       FilenameSet.union r1.parse_resource_files r2.parse_resource_files;
   }
 
+let opt_or_alternate opt alternate =
+  match opt with
+    | Some x -> x
+    | None -> alternate
+
+(* types_mode and use_strict aren't special, they just happen to be the ones that needed to be
+overridden *)
+let get_defaults ~types_mode ~use_strict options =
+  let types_mode = opt_or_alternate
+    types_mode
+    (* force types when --all is set, but otherwise forbid them unless the file
+       has @flow in it. *)
+    (if Options.all options then TypesAllowed else TypesForbiddenByDefault)
+  in
+  let use_strict = opt_or_alternate
+    use_strict
+    (Options.modules_are_use_strict options)
+  in
+  let profile = Options.should_profile options in
+  let max_header_tokens = Options.max_header_tokens options in
+  types_mode, use_strict, profile, max_header_tokens
+
 (***************************** public ********************************)
 
 let next_of_filename_set workers filenames =
@@ -328,17 +350,17 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files =
   SharedMem.collect `gentle;
   modified, results
 
-let reparse_with_defaults options workers files =
-  (* force types when --all is set, but otherwise forbid them unless the file
-     has @flow in it. *)
-  let types_mode =
-    if Options.all options then TypesAllowed else TypesForbiddenByDefault
+let parse_with_defaults ?types_mode ?use_strict options workers next =
+  let types_mode, use_strict, profile, max_header_tokens =
+    get_defaults ~types_mode ~use_strict options
   in
-  let use_strict = Options.modules_are_use_strict options in
-  let profile = Options.should_profile options in
-  let max_header_tokens = Options.max_header_tokens options in
-  reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files
+  parse ~types_mode ~use_strict ~profile ~max_header_tokens workers next
 
+let reparse_with_defaults options workers files =
+  let types_mode, use_strict, profile, max_header_tokens =
+    get_defaults ~types_mode:None ~use_strict:None options
+  in
+  reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files
 
 let has_ast file =
   ParserHeap.mem file
