@@ -3964,6 +3964,18 @@ module.exports = {
         'class A { [1+1]() {} }',
         'class A { get [1+1]() {} }',
         'class A { static get [1+1]() {} }',
+        {
+          content: 'class A { static() {} }',
+          explanation: 'Our version of esprima is outdated',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Unexpected token )',
+              actual: undefined,
+            },
+          },
+        },
+        'class A { static static() {} }',
     ],
 
     'Harmony: Invalid Class (strawman)': [

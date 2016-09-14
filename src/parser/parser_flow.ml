@@ -2353,7 +2353,10 @@ end = struct
       in fun env -> Ast.Expression.Object.Property.(
         let start_loc = Peek.loc env in
         let decorators = decorator_list env in
-        let static = Expect.maybe env T_STATIC in
+        let static =
+          Peek.token ~i:1 env <> T_LPAREN &&
+          Peek.token ~i:1 env <> T_LESS_THAN &&
+          Expect.maybe env T_STATIC in
         let async =
           Peek.token ~i:1 env <> T_LPAREN &&
           Peek.token ~i:1 env <> T_COLON &&
