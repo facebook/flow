@@ -5,7 +5,7 @@ id: declarations
 title: Declarations
 permalink: /docs/declarations.html
 prev: modules.html
-next: react.html
+next: utility-types.html
 ---
 */
 

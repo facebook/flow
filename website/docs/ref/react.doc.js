@@ -4,8 +4,7 @@
 id: react
 title: React
 permalink: /docs/react.html
-prev: declarations.html
-next: enums.html
+prev: utility-types.html
 ---
 */
 
