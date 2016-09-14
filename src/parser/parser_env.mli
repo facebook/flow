@@ -115,6 +115,7 @@ module Peek : sig
   val is_implicit_semicolon : env -> bool
   val semicolon_loc : ?i:int -> env -> Loc.t option
   val is_identifier : ?i:int -> env -> bool
+  val is_literal_property_name : ?i:int -> env -> bool
   val is_function : ?i:int -> env -> bool
   val is_class : ?i:int -> env -> bool
 end

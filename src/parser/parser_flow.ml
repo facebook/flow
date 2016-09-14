@@ -2034,7 +2034,8 @@ end = struct
         end else begin
           (* look for a following identifier to tell whether to parse a function
            * or not *)
-          let async = Peek.is_identifier ~i:1 env && Declaration.async env in
+          let async =
+            Peek.is_literal_property_name ~i:1 env && Declaration.async env in
           Property (match async , Declaration.generator env async, key env with
           | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
               "get"; _}) as key)) ->
