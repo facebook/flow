@@ -60,7 +60,8 @@ let old_parse_with_source source path =
   let file = Relative_path.create Relative_path.Dummy path in
   let errorl, result, _ =
     Errors.do_ begin fun () ->
-      Parser_hack.from_file file
+      (* FIXME: Don't use default tcopt *)
+      Parser_hack.from_file TypecheckerOptions.default file
     end
   in
   (Errors.is_empty errorl, stringfy_error errorl)
