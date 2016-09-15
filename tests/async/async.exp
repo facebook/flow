@@ -55,13 +55,13 @@ async_return_void.js:4
 async_return_void.js:8
   8:   return undefined;
               ^^^^^^^^^ undefined. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:519
+union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:521
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:519
+  type application of identifier `Promise`. See lib: core.js:521
   Error:
     8:   return undefined;
                 ^^^^^^^^^ undefined. This type is incompatible with
-  Promise. See lib: core.js:519
+  Promise. See lib: core.js:521
   Member 2:
     8:   return undefined;
                 ^^^^^^^^^ type parameter `T` of async return
