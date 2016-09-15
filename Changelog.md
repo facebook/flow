@@ -1,3 +1,8 @@
+###v0.32.1
+
+Notable bug fixes:
+* If Flow runs out of heap space, it now throws an exception instead of segfaulting.
+
 ###v0.32.0
 
 Likely to cause new Flow errors:
@@ -52,7 +57,7 @@ Notable bug fixes:
 
 Likely to cause new Flow errors:
 - Fixed `React.PureComponent`'s definition, so previously missed errors are now reported
-- The definition of `console` in the build-in libdef has been filled out and is no longer `any`. 
+- The definition of `console` in the build-in libdef has been filled out and is no longer `any`.
 
 New Features:
 - From now on we're going to start publishing Windows builds with each release. Please report any issues you have!
