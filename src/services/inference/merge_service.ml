@@ -184,6 +184,7 @@ let merge_strict_job ~options (merged, errsets) (components: filename list list)
       )
     with
     | SharedMem.Out_of_shared_memory
+    | SharedMem.Heap_full
     | SharedMem.Hash_table_full
     | SharedMem.Dep_table_full as exc -> raise exc
     (* A catch all suppression is probably a bad idea... *)

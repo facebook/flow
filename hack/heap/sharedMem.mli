@@ -36,6 +36,7 @@ type handle = private {
 exception Out_of_shared_memory
 exception Hash_table_full
 exception Dep_table_full
+exception Heap_full
 
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking! *)

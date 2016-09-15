@@ -389,6 +389,8 @@ static pid_t my_pid;
 
 /* Where the heap started (bottom) */
 static char* heap_init;
+/* Where the heap will end (top) */
+static char* heap_max;
 
 /* The size of the heap after initialization of the server */
 /* This should only be used by the master */
@@ -758,6 +760,7 @@ static void define_globals(char * shared_mem_init) {
 
   /* Heap */
   heap_init = mem;
+  heap_max = heap_init + heap_size;
 
 #ifdef _WIN32
   /* Reserve all memory space except the "huge" `global_size_b`. This is
@@ -1392,6 +1395,12 @@ void hh_collect(value aggressive_val) {
   latest_heap_size = used_heap_size();
 }
 
+static void raise_heap_full() {
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("heap_full");
+  caml_raise_constant(*exn);
+}
+
 /*****************************************************************************/
 /* Allocates in the shared heap.
  * The chunks are cache aligned.
@@ -1404,6 +1413,9 @@ void hh_collect(value aggressive_val) {
 static char* hh_alloc(size_t size) {
   size_t slot_size  = ALIGNED(size + sizeof(size_t));
   char* chunk       = __sync_fetch_and_add(heap, (char*)slot_size);
+  if (chunk + slot_size > heap_max) {
+    raise_heap_full();
+  }
   memfd_reserve(chunk, slot_size);
   *((size_t*)chunk) = size;
   return (chunk + sizeof(size_t));

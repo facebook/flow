@@ -74,6 +74,7 @@ let infer_job ~options (inferred, errsets, errsuppressions) files =
     with
     (* Unrecoverable exceptions *)
     | SharedMem.Out_of_shared_memory
+    | SharedMem.Heap_full
     | SharedMem.Hash_table_full
     | SharedMem.Dep_table_full as exc -> raise exc
     (* A catch all suppression is probably a bad idea... *)

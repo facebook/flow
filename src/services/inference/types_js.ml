@@ -376,6 +376,7 @@ let typecheck
     with
     (* Unrecoverable exceptions *)
     | SharedMem.Out_of_shared_memory
+    | SharedMem.Heap_full
     | SharedMem.Hash_table_full
     | SharedMem.Dep_table_full as exn -> raise exn
     (* A catch all suppression is probably a bad idea... *)
