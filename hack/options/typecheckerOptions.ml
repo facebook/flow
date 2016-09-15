@@ -29,6 +29,9 @@ type t = {
 
   (* Set of experimental features, in lowercase. *)
   tco_experimental_features : SSet.t;
+
+  (* Namespace map that allows supporting namespace aliasing *)
+  tco_auto_namespace_map : (string * string) list;
 }
 
 (* Currently there is only one experimental feature *)
@@ -42,6 +45,7 @@ let default = {
   (** Default all features for testing. Actual options are set by reading
    * from hhconfig, which defaults to empty. *)
   tco_experimental_features = experimental_all;
+  tco_auto_namespace_map = [];
 }
 
 (* Use this instead of default when you don't have access to a project .hhconfig
@@ -60,3 +64,4 @@ let allowed_attribute t name = match t.tco_user_attrs with
   | None -> true
   | Some attr_names -> SSet.mem name attr_names
 let experimental_feature_enabled t s = SSet.mem s t.tco_experimental_features
+let auto_namespace_map t = t.tco_auto_namespace_map
