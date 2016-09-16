@@ -220,16 +220,18 @@ let init options =
   let libs = if libs = []
     then []
     else
-      let get_next = make_next_files_following_symlinks
-        ~path_filter:filter
-        ~realpath_filter:filter
-        ~error_filter:(fun _ -> true)
+      let get_next lib =
+        let lib_str = Path.to_string lib in
+        let filter' path = path = lib_str || filter path in
+        make_next_files_following_symlinks
+          ~path_filter:filter'
+          ~realpath_filter:filter'
+          ~error_filter:(fun _ -> true)
+          [lib]
       in
-      let exp_list = libs |> List.map (fun lib ->
-        let expanded = SSet.elements (get_all (get_next [lib])) in
-        expanded
-      ) in
-      List.flatten exp_list
+      libs
+      |> List.map (fun lib -> SSet.elements (get_all (get_next lib)))
+      |> List.flatten
   in
   (libs, Utils_js.set_of_list libs)
 
