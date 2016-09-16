@@ -50,6 +50,7 @@ type t =
   | Hash_table_full
   | IDE_persistent_client_already_exists
   | Lazy_decl_bug
+  | Decl_heap_elems_bug
 
 exception Exit_with of t
 
@@ -95,6 +96,7 @@ let exit_code = function
   | IDE_typechecker_died -> 206
   | IDE_persistent_client_already_exists -> 207
   | Lazy_decl_bug -> 208
+  | Decl_heap_elems_bug -> 209
 
 
 let exit t =
@@ -144,6 +146,7 @@ let to_string = function
   | IDE_persistent_client_already_exists ->
     "IDE_persistent_client_already_exists"
   | Lazy_decl_bug -> "Lazy_decl_bug"
+  | Decl_heap_elems_bug -> "Decl_heap_elems_bug"
 
 
 let unpack = function
