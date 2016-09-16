@@ -37,6 +37,7 @@ type env = {
   relative_path: string;
   (* See https://facebook.github.io/watchman/docs/clockspec.html *)
   mutable clockspec: string;
+  subscribe_to_changes: bool;
 }
 
 (* Some JSON processing helpers *)
@@ -102,32 +103,69 @@ let assert_no_error obj =
 
 let clock root = J.strlist ["clock"; root]
 
-let base_query
-    ?(extra_kv=[]) ?(extra_expressions=[]) env =
+type watch_command = Subscribe | Query
+
+let request_json
+    ?(extra_kv=[]) ?(extra_expressions=[]) watchman_command env =
   let open Hh_json in
-  JSON_Array begin
-    [JSON_String "query"; JSON_String env.watch_root] @ [
-      JSON_Object (extra_kv @ [
-        "fields", J.strlist ["name"];
-        "relative_root", JSON_String env.relative_path;
-        "expression", J.pred "allof" @@ (extra_expressions @ [
-          J.strlist ["type"; "f"];
-          J.pred "not" @@ [
-            J.pred "anyof" @@ [
-              J.strlist ["dirname"; ".hg"];
-              J.strlist ["dirname"; ".git"];
-              J.strlist ["dirname"; ".svn"];
-            ]
+  let command = begin match watchman_command with
+    | Subscribe -> "subscribe"
+    | Query -> "query" end in
+  let header =
+    [JSON_String command ; JSON_String env.watch_root] @
+      begin
+        match watchman_command with
+        | Subscribe -> [JSON_String "hh_type_check_watcher"]
+        | _ -> []
+      end in
+  let directives = [
+    JSON_Object (extra_kv @ [
+      "fields", J.strlist ["name"];
+      "relative_root", JSON_String env.relative_path;
+      "expression", J.pred "allof" @@ (extra_expressions @ [
+        J.strlist ["type"; "f"];
+        J.pred "anyof" @@ [
+          J.strlist ["name"; ".hhconfig"];
+          J.pred "anyof" @@ [
+            J.strlist ["suffix"; "php"];
+            J.strlist ["suffix"; "phpt"];
+            J.strlist ["suffix"; "hh"];
+            J.strlist ["suffix"; "hhi"];
+            J.strlist ["suffix"; "xhp"];
+            (* FIXME: This is clearly wrong, but we do it to match the
+             * behavior on the server-side. We need to investigate if
+             * tracking js files is truly necessary.
+             *)
+            J.strlist ["suffix"; "js"];
+          ];
+        ];
+        J.pred "not" @@ [
+          J.pred "anyof" @@ [
+            J.strlist ["dirname"; ".hg"];
+            J.strlist ["dirname"; ".git"];
+            J.strlist ["dirname"; ".svn"];
           ]
-        ])
+        ]
       ])
-    ]
-  end
+    ])
+  ] in
+  let request = JSON_Array (header @ directives) in
+  request
 
-let query env = base_query ~extra_expressions:([Hh_json.JSON_String "exists"]) env
+let all_query env =
+  request_json
+    ~extra_expressions:([Hh_json.JSON_String "exists"])
+    Query env
 
-let since env =
-  base_query ~extra_kv:["since", Hh_json.JSON_String env.clockspec] env
+let since_query env =
+  request_json
+    ~extra_kv: ["since", Hh_json.JSON_String env.clockspec]
+    Query env
+
+let subscribe env = request_json
+                      ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
+                                 "defer", J.strlist ["hg.update"]]
+                      Subscribe env
 
 let watch_project root = J.strlist ["watch-project"; root]
 
@@ -143,21 +181,7 @@ let capability_check ?(optional=[]) required =
     ]
   end
 
-let read_with_timeout timeout ic =
-  Timeout.with_timeout ~timeout
-    ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
-    ~on_timeout:begin fun _ ->
-      EventLogger.watchman_timeout ();
-      raise Timeout
-    end
-
-let exec ?(timeout=120) (ic, oc) json =
-  let json_str = Hh_json.(json_to_string json) in
-  if debug then Printf.eprintf "Watchman query: %s\n%!" json_str;
-  output_string oc json_str;
-  output_string oc "\n";
-  flush oc;
-  let output = read_with_timeout timeout ic in
+let sanitize_watchman_response output =
   if debug then Printf.eprintf "Watchman response: %s\n%!" output;
   let response =
     try Hh_json.json_of_string output
@@ -167,6 +191,43 @@ let exec ?(timeout=120) (ic, oc) json =
   in
   assert_no_error response;
   response
+
+let read_with_timeout timeout ic =
+   Timeout.with_timeout ~timeout
+     ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
+     ~on_timeout:begin fun _ ->
+                   EventLogger.watchman_timeout ();
+                   raise Timeout
+                 end
+
+let exec ?(timeout=120) (ic, oc) json =
+  let json_str = Hh_json.(json_to_string json) in
+  if debug then Printf.eprintf "Watchman request: %s\n%!" json_str ;
+  output_string oc json_str;
+  output_string oc "\n";
+  flush oc ;
+  sanitize_watchman_response (read_with_timeout timeout ic)
+
+let poll_for_updates env =
+  (* Use the timeout mechanism to manage our polling frequency. *)
+  let timeout = 0 in
+  try
+    let output = begin
+      let in_channel, _  = env.socket in
+      Timeout.with_timeout
+        ~do_: (fun t -> Timeout.input_line ~timeout:t in_channel)
+        ~timeout
+        ~on_timeout:begin fun _ -> "" end
+    end in
+    sanitize_watchman_response output
+  with
+  | Timeout.Timeout ->
+    let clockspec = begin
+        exec env.socket (clock env.watch_root) |>
+          J.get_string_val "clock" end in
+    let timeout_str = "{\"files\":[]," ^ "\"clock\":\"" ^ clockspec ^ "\"}" in
+    Hh_json.json_of_string (timeout_str)
+  | _ as e -> raise e
 
 let extract_file_names env json =
   let files = J.get_array_val "files" json in
@@ -181,13 +242,19 @@ let extract_file_names env json =
 
 let get_all_files env =
   with_crash_record env.root "get_all_files" @@ fun () ->
-  let response = exec env.socket (query env) in
+  let response = exec env.socket (all_query env) in
   env.clockspec <- J.get_string_val "clock" response;
   extract_file_names env response
 
 let get_changes env =
   with_crash_record env.root "get_changes" @@ fun () ->
-  let response = exec env.socket (since env) in
+  let response = begin
+      if env.subscribe_to_changes then poll_for_updates env
+      else exec env.socket (since_query env)
+  end in
+  (* The subscription doesn't use the clockspec post-initialization, but it may
+   * be useful to keep this info around.
+   *)
   env.clockspec <- J.get_string_val "clock" response;
   set_of_list @@ extract_file_names env response
 
@@ -199,7 +266,7 @@ let get_sockname timeout =
   let json = Hh_json.json_of_string output in
   J.get_string_val "sockname" json
 
-let init timeout root =
+let init timeout subscribe_to_changes root =
   with_crash_record_opt root "init" @@ fun () ->
   let root_s = Path.to_string root in
   let sockname = get_sockname timeout in
@@ -208,6 +275,7 @@ let init timeout root =
   let response = exec socket (watch_project root_s) in
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
+
   let clockspec =
     exec socket (clock watch_root) |> J.get_string_val "clock" in
   let env = {
@@ -216,5 +284,7 @@ let init timeout root =
     watch_root;
     relative_path;
     clockspec;
+    subscribe_to_changes;
   } in
+  if env.subscribe_to_changes then (ignore @@ exec env.socket (subscribe env)) ;
   env
