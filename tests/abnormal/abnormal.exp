@@ -1,1 +1,14 @@
-Found 0 errors
+toplevel_break.js:3
+  3: break; // error, illegal
+     ^^^^^^ Illegal break statement
+
+toplevel_continue.js:3
+  3: continue; // error, illegal
+     ^^^^^^^^^ Illegal continue statement
+
+toplevel_return.js:3
+  3: return; // error, illegal
+     ^^^^^^ Illegal return statement
+
+
+Found 3 errors

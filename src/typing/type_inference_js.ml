@@ -38,7 +38,11 @@ let infer_core cx statements =
     statements |> Statement.toplevel_decls cx;
     statements |> Statement.toplevels cx;
   with
+  | Abnormal.Exn Abnormal.Throw ->
+    (* throw is allowed as a top-level statement *)
+    ()
   | Abnormal.Exn _ ->
+    (* should never happen *)
     let msg = "abnormal control flow" in
     FlowError.add_warning cx
       (Loc.({ none with source = Some (Context.file cx) }), [msg])
