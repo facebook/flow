@@ -1551,58 +1551,44 @@ and statement cx = Ast.Statement.(
           Scope.get_entry (internal_name "declare_module.exports") module_scope
         in
 
-        let (type_exports, cjs_module_exports) = Scope.(Entry.(
-          match (legacy_exports, declared_module_exports) with
+        let type_exports, cjs_module_exports =
+          let open Scope in
+          let open Entry in
+          match legacy_exports, declared_module_exports with
           (* TODO: Eventually drop support for legacy "declare var exports" *)
-          | (Some (Value {specific=exports; _;}), None)
-          | (_, Some (Value {specific=exports; _;})) ->
-            let type_exports = SMap.filter (fun _ ->
-              function
-              | Value _ -> false
-              | Type _ -> true
-            ) module_scope.entries in
+          | Some (Value {specific=exports; _}), None
+          | _, Some (Value {specific=exports; _}) ->
+            let type_exports = SMap.fold (fun x entry acc ->
+              match entry with
+              | Value _ -> acc
+              | Type {_type; _} -> SMap.add x _type acc
+            ) module_scope.entries SMap.empty in
             type_exports, exports
 
-          | (_, Some (Type _)) ->
+          | _, Some (Type _) ->
             assert_false (
               "Internal Error: `declare module.exports` was created as a type " ^
               "binding. This should never happen!"
             )
 
-          | (Some (Type _), None)
-          | (None, None) ->
-            let type_exports, value_exports = SMap.partition (
-              fun _ entry -> match entry with
-              | Value _ -> false
-              | Type _ -> true
-            ) module_scope.entries in
-
-            let map = SMap.map (
-              function
-              | Value { specific; _ } -> specific
-              | Type _ -> assert_false "type entry in value_exports"
-            ) value_exports in
+          | Some (Type _), None
+          | None, None ->
+            let type_exports, value_exports = SMap.fold (fun x entry (ts, vs) ->
+              match entry with
+              | Value {specific; _} -> ts, SMap.add x specific vs
+              | Type {_type; _} -> SMap.add x _type ts, vs
+            ) module_scope.entries (SMap.empty, SMap.empty) in
 
             let reason = repos_reason kind_loc reason in
             let proto = MixedT (reason, Mixed_everything) in
 
-            (type_exports, Flow.mk_object_with_map_proto cx reason map proto)
-        )) in
+            type_exports,
+            Flow.mk_object_with_map_proto cx reason value_exports proto
+        in
 
         let module_t = mk_commonjs_module_t cx reason reason cjs_module_exports in
         let module_t = Flow.mk_tvar_where cx reason (fun t ->
-          Flow.flow cx (
-            module_t,
-            ExportNamedT(
-              reason,
-              SMap.map Scope.Entry.(
-                function
-                | Type { _type; _ } -> _type
-                | _ -> assert_false "non-type entry in for_types"
-              ) type_exports,
-              t
-            )
-          )
+          Flow.flow cx (module_t, ExportNamedT (reason, type_exports, t))
         ) in
         Flow.unify cx module_t t;
       | DeclareModule.ES _ ->
