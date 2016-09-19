@@ -55,14 +55,16 @@ begin library "hh-procs"
   ]
 end
 
-begin library "hh-embedded"
+begin library "hh-win32res"
   sort = true
-  files = begin fb-glob "hack/hhi"
-  end
+  files = [
+    "hack/hhi/hhi_win32res_stubs.c"
+    "hack/hhi/hhi_win32res.mli"
+    "hack/hhi/hhi_win32res.ml"
+  ]
   requires += [
     "bigarray"
     "hh-utils"
-    "hh-find"
   ]
 end
 

@@ -94,7 +94,7 @@ begin library "flow-embedded"
   end
   requires = [
     "flow-common"
-    "hh-embedded" (* We reuse embedded part from hack. *)
+    "hh-win32res"
     "hh-find"
   ]
   if (os_type = "Win32") then {
