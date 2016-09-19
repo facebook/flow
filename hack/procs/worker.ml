@@ -144,6 +144,8 @@ let slave_main ic oc =
       Exit_status.(exit Out_of_shared_memory)
   | SharedMem.Hash_table_full ->
       Exit_status.(exit Hash_table_full)
+  | SharedMem.Heap_full ->
+      Exit_status.(exit Heap_full)
   | e ->
       let e_str = Printexc.to_string e in
       Printf.printf "Exception: %s\n" e_str;
