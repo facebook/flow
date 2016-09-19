@@ -4,13 +4,8 @@ echo "System architecture: $env:PLATFORM"
 echo "Repo build branch is: $env:APPVEYOR_REPO_BRANCH"
 echo "Build folder is: $env:APPVEYOR_BUILD_FOLDER"
 
-if (Test-Path Env:\ocpwin_cache) {
-  echo "Downloading cached ocpwin to $env:ocpwin_zip"
-  appveyor DownloadFile $env:ocpwin_cache -FileName $env:ocpwin_zip
-} else {
-  echo "Downloading $env:ocpwin_uri to $env:ocpwin_zip"
-  appveyor DownloadFile $env:ocpwin_uri -FileName $env:ocpwin_zip
-}
+echo "Downloading $env:ocpwin_uri to $env:ocpwin_zip"
+appveyor DownloadFile $env:ocpwin_uri -FileName $env:ocpwin_zip
 
 mkdir ~/AppData/Roaming/OCamlPro
 mkdir ~/AppData/Roaming/OCamlPro/OCPWin
