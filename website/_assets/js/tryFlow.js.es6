@@ -63,8 +63,12 @@ function printError(err, editor) {
       const prefix = `${filename}${msg.loc.start.line}: `;
 
       const before = msg.context.slice(0, msg.loc.start.column - 1);
-      const highlight = msg.context.slice(msg.loc.start.column - 1, msg.loc.end.column);
-      const after = msg.context.slice(msg.loc.end.column);
+      const highlight = (msg.loc.start.line === msg.loc.end.line) ?
+        msg.context.slice(msg.loc.start.column - 1, msg.loc.end.column) :
+        msg.context.slice(msg.loc.start.column - 1);
+      const after = (msg.loc.start.line === msg.loc.end.line) ?
+        msg.context.slice(msg.loc.end.column) :
+        '';
       div.appendChild(document.createTextNode(prefix + before));
       const bold = document.createElement('strong');
       bold.className = "msgHighlight";
