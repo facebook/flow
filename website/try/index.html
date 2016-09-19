@@ -10,7 +10,8 @@ layout: try
 <div class="editor">
   <div class="code" id="code">
   </div>
-  <pre class="errors" id="errors"></pre>
+  <div class="results" id="results">
+  </div>
 </div>
 
 <script>
@@ -19,7 +20,7 @@ layout: try
     function(tryFlow) {
       tryFlow.createEditor(
         document.getElementById("code"),
-        document.getElementById("errors")
+        document.getElementById("results")
       );
     }
   );

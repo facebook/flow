@@ -105,12 +105,20 @@ function printErrors(errors, editor) {
 
 function getAnnotations(text, callback, options, editor) {
   const errorsNode = options.errorsNode;
+  const jsonNode = options.jsonNode;
   flowReady.then(function() {
     var errors = flow.checkContent('-', text);
 
     if (errorsNode) {
       while (errorsNode.lastChild) errorsNode.removeChild(errorsNode.lastChild);
       errorsNode.appendChild(printErrors(errors, editor));
+    }
+
+    if (jsonNode) {
+      while (jsonNode.lastChild) jsonNode.removeChild(jsonNode.lastChild);
+      jsonNode.appendChild(
+        document.createTextNode(JSON.stringify(errors, null, 2))
+      );
     }
 
     var lint = errors.map(function(err) {
@@ -154,7 +162,13 @@ function getHashedValue(hash) {
   return null;
 }
 
-exports.createEditor = function createEditor(domNode, errorsNode) {
+function removeClass(elem, className) {
+  elem.className = elem.className.split(/\s+/).filter(function(name) {
+    return name !== className;
+  }).join(' ');
+}
+
+exports.createEditor = function createEditor(domNode, resultsNode) {
   require([
     'codemirror/addon/lint/lint',
     'codemirror/mode/javascript/javascript',
@@ -163,12 +177,47 @@ exports.createEditor = function createEditor(domNode, errorsNode) {
   ], function() {
     const location = window.location;
 
+    const errorsTabNode = document.createElement('li');
+    errorsTabNode.className = "tab errors-tab";
+    errorsTabNode.appendChild(document.createTextNode('Errors'));
+    errorsTabNode.addEventListener('click', function(evt) {
+      removeClass(resultsNode, 'show-json');
+      resultsNode.className += ' show-errors';
+      evt.kill();
+    });
+
+    const jsonTabNode = document.createElement('li');
+    jsonTabNode.className = "tab json-tab";
+    jsonTabNode.appendChild(document.createTextNode('JSON'));
+    jsonTabNode.addEventListener('click', function(evt) {
+      removeClass(resultsNode, 'show-errors');
+      resultsNode.className += ' show-json';
+      evt.kill();
+    });
+
+    const toolbarNode = document.createElement('ul');
+    toolbarNode.className = "toolbar";
+    toolbarNode.appendChild(errorsTabNode);
+    toolbarNode.appendChild(jsonTabNode);
+
+    const errorsNode = document.createElement('pre');
+    errorsNode.className = "errors";
+
+    const jsonNode = document.createElement('pre');
+    jsonNode.className = "json";
+
+    resultsNode.appendChild(toolbarNode);
+    resultsNode.appendChild(errorsNode);
+    resultsNode.appendChild(jsonNode);
+
+    resultsNode.className += " show-errors";
+
     const editor = CodeMirror(domNode, {
       value: getHashedValue(location.hash) || defaultValue,
       autofocus: true,
       lineNumbers: true,
       mode: "jsx",
-      lint: { getAnnotations, errorsNode }
+      lint: { getAnnotations, errorsNode, jsonNode }
     });
 
     editor.on('changes', () => {
