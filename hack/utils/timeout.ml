@@ -126,7 +126,7 @@ module Select_timeout = struct
     with Timeout as exn ->
       match on_timeout with
       | None -> raise exn
-      | Some ft -> ft ()
+      | Some ft -> ft (); raise Timeout
   let check_timeout t =
     if Unix.gettimeofday () > t.timeout then raise Timeout
   let get_current_timeout = function
@@ -429,7 +429,7 @@ module type S = sig
   type t
   val with_timeout:
     timeout:int ->
-    ?on_timeout:(unit -> 'a) ->
+    ?on_timeout:(unit -> unit) ->
     do_:(t -> 'a) -> 'a
   val check_timeout: t -> unit
 
@@ -449,7 +449,7 @@ module type S = sig
   val close_process_in: in_channel -> Unix.process_status
   val read_process:
     timeout:int ->
-    ?on_timeout:(unit -> 'a) ->
+    ?on_timeout:(unit -> unit) ->
     reader:(t -> in_channel -> out_channel -> 'a) ->
     string -> string array -> 'a
   val open_connection:

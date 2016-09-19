@@ -217,7 +217,7 @@ let poll_for_updates env =
       Timeout.with_timeout
         ~do_: (fun t -> Timeout.input_line ~timeout:t in_channel)
         ~timeout
-        ~on_timeout:begin fun _ -> "" end
+        ~on_timeout:begin fun _ -> () end
     end in
     sanitize_watchman_response output
   with

@@ -135,7 +135,7 @@ let connect_and_shut_down config =
   send_shutdown_rpc oc;
   try Timeout.with_timeout
     ~timeout:2
-    ~on_timeout:(fun _ -> Result.Ok ServerMonitorUtils.SHUTDOWN_UNVERIFIED)
+    ~on_timeout:(fun _ -> ())
     ~do_:begin fun _ ->
       wait_on_server_restart ic;
       Result.Ok ServerMonitorUtils.SHUTDOWN_VERIFIED
