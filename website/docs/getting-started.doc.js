@@ -127,9 +127,9 @@ console.log(str);
   [a few examples](/docs/five-simple-examples.html) that are
   [included in the Flow repo](https://github.com/facebook/flow/tree/master/examples):
 
-  1. [Hello Flow!](/docs/five-simple-examples.html#1-hello-flow)
-  2. [Adding type annotations](/docs/five-simple-examples.html#2-adding-type-annotations)
-  3. [Nullable types](/docs/five-simple-examples.html#3-nullable-types)
-  4. [Arrays](/docs/five-simple-examples.html#4-arrays)
-  5. [Dynamic code](/docs/five-simple-examples.html#5-dynamic-code)
+  1. [Hello Flow!](/docs/five-simple-examples.html#hello-flow)
+  2. [Adding type annotations](/docs/five-simple-examples.html#adding-type-annotations)
+  3. [Nullable types](/docs/five-simple-examples.html#nullable-types)
+  4. [Arrays](/docs/five-simple-examples.html#arrays)
+  5. [Dynamic code](/docs/five-simple-examples.html#dynamic-code)
 */
