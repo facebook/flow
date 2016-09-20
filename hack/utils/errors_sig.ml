@@ -283,6 +283,7 @@ module type S = sig
   val generic_at_runtime : Pos.t -> unit
   val interface_with_partial_typeconst : Pos.t -> unit
   val multiple_xhp_category : Pos.t -> unit
+  val malformed_locl_cstr : Pos.t -> unit
   val not_abstract_without_typeconst : (Pos.t * string) -> unit
   val typeconst_depends_on_external_tparam : Pos.t -> Pos.t -> string -> unit
   val typeconst_assigned_tparam : Pos.t -> string -> unit

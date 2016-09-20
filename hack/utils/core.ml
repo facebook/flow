@@ -8,8 +8,6 @@
  *
  *)
 
-exception TODODrphil of string
-
 module List = struct
   include Core_list
 
