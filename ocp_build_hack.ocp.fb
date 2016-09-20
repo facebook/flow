@@ -49,22 +49,22 @@ begin library "hh-procs"
   end
   requires += [
     "hh-stubs"
-    "hh-globals-config"
     "hh-heap"
     "tp-core"
     "hh-utils"
   ]
 end
 
-begin library "hh-embedded"
+begin library "hh-win32res"
   sort = true
-  files = begin fb-glob "hack/hhi"
-  end
-  requires += [ 
-    "bigarray" 
-    "hh-utils" 
-    "hh-find"
-    "hh-globals-config"
+  files = [
+    "hack/hhi/hhi_win32res_stubs.c"
+    "hack/hhi/hhi_win32res.mli"
+    "hack/hhi/hhi_win32res.ml"
+  ]
+  requires += [
+    "bigarray"
+    "hh-utils"
   ]
 end
 
@@ -73,10 +73,10 @@ begin library "hh-find"
   sort = true
   files = begin fb-glob "hack/find"
   end
-  requires += [ 
-    "hh-stubs" 
+  requires += [
+    "hh-stubs"
     "tp-core"
-    "hh-utils" 
+    "hh-utils"
   ]
 end
 
@@ -202,7 +202,7 @@ begin library "hh-utils-sys"
     "tty.ml"
   ]
   if not(os_type = "Win32") || (ocaml_major_version = "4" && ocaml_minor_version = "01") then {
-    files += [ 
+    files += [
       "win32_support.c"
     ]
   }
@@ -252,32 +252,6 @@ begin library "hh-injector-default"
   end
 end
 
-begin library "hh-globals"
-  sort = true
-  files = begin fb-glob "hack/globals"
-    excludes = [ "globalConfig.ml" ]
-  end
-  requires += [
-    "hh-heap"
-    "hh-utils"
-    "hh-utils-collections"
-    "hh-utils-core"
-    "hh-utils-pos"
-  ]
-end
-
-begin library "hh-globals-config"
-  sort = true
-  dirname = "hack/globals"
-  files = [
-    "globalConfig.ml"
-  ]
-  requires += [ 
-    "hh-heap"
-    "hh-utils-sys" 
-  ]
-end
-
 begin library "hh-stubs"
   sort = true
   files = begin fb-glob "hack/stubs"
@@ -298,31 +272,12 @@ begin library "hh-dfind"
   ]
 end
 
-begin library "hh-search-common"
-  sort = true
-  files = begin fb-glob "hack/search"
-    excludes = [ "hackSearchService.ml"]
-  end
-  requires += [
-    "hh-heap"
-    "hh-procs"
-    "hh-utils"
-    "hh-utils-collections"
-    "hh-utils-core"
-    "hh-utils-pos"
-    "hh-utils-relative-path"
-    "hh-utils-string"
-    "tp-core"
-  ]
-end
-
 begin library "hh-socket"
   sort = true
   files = begin fb-glob "hack/socket"
   end
-  requires += [ 
-    "hh-globals"
-    "hh-utils" 
+  requires += [
+    "hh-utils"
   ]
 end
 
@@ -330,11 +285,11 @@ begin library "hh-fsnotify-linux"
   sort = true
   if not (system = "linux" && os_type = "Unix") then enabled = false
   files = begin fb-glob "hack/third-party/inotify"
-  end 
+  end
   files += begin fb-glob "hack/fsnotify_linux"
   end
-  requires += [ 
-    "hh-utils" 
+  requires += [
+    "hh-utils"
     "tp-core"
   ]
   cclib += [ "-lelf" ]
@@ -344,10 +299,10 @@ begin library "hh-fsnotify-darwin"
   sort = true
   if not (system = "macosx" && os_type = "Unix") then enabled = false
   files = begin fb-glob "hack/fsevents"
-  end 
+  end
   files += begin fb-glob "hack/fsnotify_darwin"
   end
-  requires += [ 
+  requires += [
     "hh-utils"
     "tp-core"
     "ROOTPROJECT"
@@ -363,8 +318,8 @@ begin library "hh-fsnotify-win"
   if not (os_type = "Win32") then enabled = false
   files = begin fb-glob "hack/fsnotify_win"
   end
-  requires += [ 
-    "hh-utils" 
+  requires += [
+    "hh-utils"
     "tp-core"
   ]
 end

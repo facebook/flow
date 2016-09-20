@@ -76,9 +76,9 @@ begin library "flow-dts"
   sort = true
   files = begin fb-glob "src/dts"
   end
-  requires = [ 
+  requires = [
     "flow-common-utils"
-    "flow-parser" 
+    "flow-parser"
     "hh-utils"
     "hh-utils-collections"
   ]
@@ -92,9 +92,9 @@ begin library "flow-embedded"
   sort = true
   files = begin fb-glob "src/embedded"
   end
-  requires = [ 
+  requires = [
     "flow-common"
-    "hh-embedded" (* We reuse embedded part from hack. *)
+    "hh-win32res"
     "hh-find"
   ]
   if (os_type = "Win32") then {
@@ -126,7 +126,7 @@ end
 
 begin library "flow-parser"
   sort = true
-  files = begin fb-glob "src/parser" 
+  files = begin fb-glob "src/parser"
     excludes = [ "flow_parser_js.ml" ]
   end
 end
@@ -165,12 +165,10 @@ begin library "flow-server"
     "flow-typing"
     "hh-stubs"
     "hh-dfind"
-    "hh-globals-config"
     "hh-heap"
     "hh-procs"
     "hh-socket"
     "tp-core"
-    "hh-search-common"
     "hh-utils"
     "hh-utils-collections"
     "hh-utils-json"
@@ -302,12 +300,12 @@ end
 begin program "flow-parser-hardcoded-test"
   sort = true
   dirname = "src/parser/test"
-  files = [ 
-    "hardcoded_test_runner.ml" 
+  files = [
+    "hardcoded_test_runner.ml"
     "run_hardcoded_tests.ml"
   ]
-  requires = [ 
-    "flow-parser" 
+  requires = [
+    "flow-parser"
     "flow-common-utils"
   ]
   tests = [ "hardcoded_tests" ]
