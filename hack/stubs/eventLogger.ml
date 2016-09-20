@@ -8,7 +8,7 @@
  *
  *)
 
-let init _ _ = ()
+let init ?init_id:_ _ _ = ()
 let log_if_initialized _ = ()
 let master_exception _ = ()
 let worker_exception _ = ()
