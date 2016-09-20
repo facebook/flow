@@ -1690,9 +1690,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some(t) -> SMap.add "default" t exports_tmap
         | None -> exports_tmap
       ) in
+      let dict = if exports.has_every_named_export
+      then Some {
+        key = StrT.why reason;
+        value = AnyT.why reason;
+        dict_name = None;
+      }
+      else None in
       let proto = MixedT (reason, Mixed_everything) in
       let ns_obj = mk_object_with_map_proto cx reason
-        ~sealed:true ~frozen:true ns_obj_tmap proto
+        ~sealed:true ~frozen:true ?dict ns_obj_tmap proto
       in
       rec_flow_t cx trace (ns_obj, t)
 

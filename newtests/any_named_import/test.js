@@ -26,6 +26,23 @@ export default suite(({addFile, addFiles, addCode}) => [
       .noNewErrors()
       .because('Any should have the type any'),
   ]),
+  test('The namespace import for the any module should be any', [
+    addFile('flow-typed/lib.js')
+      .addCode('import * as Any from "any";')
+      .addCode('(Any: number);')
+      .addCode('(Any: {[key: string]: any});')
+      .addCode('(Any.foo: string)')
+      .newErrors(
+        `
+          test.js:5
+            5: (Any: number);
+                ^^^ exports of "any". This type is incompatible with
+            5: (Any: number);
+                     ^^^^^^ number
+        `,
+      )
+      .because('Any should be { [key: string]: any }'),
+  ]),
   test('You can do any named import for an Object module', [
     addFile('flow-typed/lib.js')
       .addCode('import {x, y} from "object";')
@@ -63,6 +80,23 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       )
       .because('obj should have the type Object'),
+  ]),
+  test('The namespace import for the object module should be object', [
+    addFile('flow-typed/lib.js')
+      .addCode('import * as obj from "object";')
+      .addCode('(obj: number);')
+      .addCode('(obj: {[key: string]: any});')
+      .addCode('(obj.foo: string)')
+      .newErrors(
+        `
+          test.js:5
+            5: (obj: number);
+                ^^^ exports of "object". This type is incompatible with
+            5: (obj: number);
+                     ^^^^^^ number
+        `,
+      )
+      .because('obj should be { [key: string]: any }'),
   ]),
   test('Other types still give an error', [
     addFile('flow-typed/lib.js')
