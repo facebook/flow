@@ -17,7 +17,6 @@
    future. *)
 
 open Utils_js
-open Sys_utils
 
 module Files = Files
 module Flow = Flow_js
@@ -43,16 +42,33 @@ let get_master_cx, restore_master_cx =
   let restore_master_cx cx = cx_ := Some cx in
   get_master_cx, restore_master_cx
 
-let parse_lib_file file =
+let parse_lib_file options file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
   (* lib files are always "use strict" *)
   let use_strict = true in
   try
-    let lib_content = cat file in
     let lib_file = Loc.LibFile file in
-    let info = Docblock.({ default_info with isDeclarationFile = true }) in
-    Parsing.do_parse ~types_mode ~use_strict ~info lib_content lib_file
+    let filename_set = FilenameSet.singleton lib_file in
+    let next = Parsing.next_of_filename_set (* workers *) None filename_set in
+    let results =
+      Parsing.parse_with_defaults
+        ~types_mode
+        ~use_strict
+        options
+        (* workers *) None
+        next
+    in
+    if not (FilenameSet.is_empty results.Parsing.parse_ok) then
+      Parsing.Parse_ok (Parsing.get_ast_unsafe lib_file)
+    else if List.length results.Parsing.parse_errors > 0 then
+      Parsing.Parse_err (List.hd results.Parsing.parse_errors)
+    else if List.length results.Parsing.parse_skips > 0 then
+      Parsing.Parse_skip Parsing.Skip_non_flow_file
+    else if not (FilenameSet.is_empty results.Parsing.parse_resource_files) then
+      Parsing.Parse_skip Parsing.Skip_resource_file
+    else
+      failwith "Internal error: no parse results found"
   with _ -> failwith (
     spf "Can't read library definitions file %s, exiting." file
   )
@@ -77,7 +93,7 @@ let load_lib_files files ~options save_errors save_suppressions =
     fun (exclude_syms, result) file ->
 
       let lib_file = Loc.LibFile file in
-      match parse_lib_file file with
+      match parse_lib_file options file with
       | Parsing.Parse_ok (_, statements, comments) ->
 
         let metadata = Context.({ (metadata_of_options options) with
