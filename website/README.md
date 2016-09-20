@@ -27,9 +27,20 @@ gem install bundler
 bundle install
 ```
 
-### Run Jekyll
+### Install JS dependencies
 
 ```
+npm install
+node_modules/.bin/bower install
+rm -f "_assets/gen" "static/flowlib"
+ln -sf "../bin/flow.js" "_assets/gen"
+ln -sf "../lib" "static/flowlib"
+```
+
+### Build and Run
+
+```
+(cd ..; make js)
 jekyll serve -w
 ```
 
@@ -39,4 +50,4 @@ The `-w` flag watches the filesystem for changes, so pages will rebuild on save.
 
 ## Publishing the Website
 
-On each commit, [Travis](https://travis-ci.org/facebook/flow) builds the site and then pushes the results to the [`gh-pages`](https://github.com/facebook/flow/tree/gh-pages) branch. Then [GitHub Pages](https://pages.github.com/) deploys the changes to http://flowtype.org.
+On each commit, [Travis](https://travis-ci.org/facebook/flow) builds the site and then [pushes the results to S3](https://github.com/facebook/flow/blob/master/resources/travis/deploy.sh).
