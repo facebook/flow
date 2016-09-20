@@ -1,4 +1,4 @@
-<**/*.ml*>: ocaml, warn_A, warn(-3-4-6-29-35-44-48-50-52), warn_error_A
+<**/*.ml*>: ocaml, warn_A, warn(-3-4-6-29-35-44-48-50-52)
 <*.ml*>: warn(-27)
 <client/*.ml*>: warn(-27)
 <deps/*.ml*>: warn(-27)
