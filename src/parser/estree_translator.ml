@@ -901,8 +901,8 @@ end with type t = Impl.t) = struct
     | Object o -> object_type (loc, o)
     | Array t -> array_type loc t
     | Generic g -> generic_type (loc, g)
-    | Union u -> union_type (loc, u)
-    | Intersection i -> intersection_type (loc, i)
+    | Union (t0, t1, ts) -> union_type (loc, t0::t1::ts)
+    | Intersection (t0, t1, ts) -> intersection_type (loc, t0::t1::ts)
     | Typeof t -> typeof_type (loc, t)
     | Tuple t -> tuple_type (loc, t)
     | StringLiteral s -> string_literal_type (loc, s)
@@ -1012,14 +1012,14 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and union_type (loc, tl) =
+  and union_type (loc, ts) =
     node "UnionTypeAnnotation" loc [|
-      "types", array_of_list _type tl;
+      "types", array_of_list _type ts;
     |]
 
-  and intersection_type (loc, tl) =
+  and intersection_type (loc, ts) =
     node "IntersectionTypeAnnotation" loc [|
-      "types", array_of_list _type tl;
+      "types", array_of_list _type ts;
     |]
 
   and typeof_type (loc, t) =

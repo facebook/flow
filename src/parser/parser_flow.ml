@@ -138,7 +138,9 @@ end = struct
             unions env (intersection env::acc)
         | _ ->
             let loc, acc = rev_nonempty_acc acc in
-            loc, Type.Union acc
+            match acc with
+            | t0::t1::ts -> loc, Type.Union (t0, t1, ts)
+            | _ -> assert false
       in fun env left ->
         if Peek.token env = T_BIT_OR
         then unions env [left]
@@ -157,7 +159,9 @@ end = struct
             intersections env (prefix env::acc)
         | _ ->
             let loc, acc = rev_nonempty_acc acc in
-            loc, Type.Intersection acc
+            match acc with
+            | t0::t1::ts -> loc, Type.Intersection (t0, t1, ts)
+            | _ -> assert false
       in fun env left ->
         if Peek.token env = T_BIT_AND
         then intersections env [left]

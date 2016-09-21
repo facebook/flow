@@ -150,8 +150,8 @@ and Type : sig
     | Object of Object.t
     | Array of t
     | Generic of Generic.t
-    | Union of t list
-    | Intersection of t list
+    | Union of t * t * t list
+    | Intersection of t * t * t list
     | Typeof of t
     | Tuple of t list
     | StringLiteral of StringLiteral.t

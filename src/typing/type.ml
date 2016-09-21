@@ -574,6 +574,7 @@ module rec TypeTerm : sig
     | Mixed_non_maybe
     | Mixed_non_null
     | Mixed_non_void
+    | Empty_intersection
 
   (* used by FunT and CallT *)
   and funtype = {
@@ -792,18 +793,18 @@ end = TypeTerm
 and UnionRep : sig
   type t
 
-  (** rep of empty union - synonymous with EmptyT but used to trigger
-      union-specific error messages *)
-  val empty: t
-
   (** build a rep from list of members *)
-  val make: TypeTerm.t list -> t
+  val make: TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
   (** enum base type, if any *)
   val enum_base: t -> TypeTerm.t option
 
   (** members in declaration order *)
   val members: t -> TypeTerm.t list
+
+  val cons: TypeTerm.t -> t -> t
+
+  val rev_append: t -> t -> t
 
   (** map rep r to rep r' along type mapping f *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -853,16 +854,14 @@ end = struct
   )
 
   (** union rep is:
-      - list of members in declaration order
+      - list of members in declaration order, with at least 2 elements
       - if union is an enum (set of singletons over a common base)
         then Some (base, set)
         (additional specializations probably to come)
    *)
   type t =
-    TypeTerm.t list *
+    TypeTerm.t * TypeTerm.t * TypeTerm.t list *
     (TypeTerm.t * EnumSet.t) option
-
-  let empty = [], None
 
   (* helper: add t to enum set if base matches *)
   let acc_enum (base, tset) t =
@@ -873,38 +872,44 @@ end = struct
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
-  let make tlist =
-    let enum = match tlist with
-      | [] | [_] -> None
-      | t :: ts ->
-        match base_of_t t with
-        | Some (_ as base) ->
-          ListUtils.fold_left_opt acc_enum (base, EnumSet.singleton t) ts
-        | _ -> None
-    in
-    tlist, enum
+  let make t0 t1 ts =
+    let enum = Option.bind (base_of_t t0) (fun base ->
+      ListUtils.fold_left_opt acc_enum (base, EnumSet.singleton t0) (t1::ts)
+    ) in
+    t0, t1, ts, enum
 
-  let enum_base (_, enum) =
+  let enum_base (_, _, _, enum) =
     match enum with
     | None -> None
     | Some (base, _) -> Some base
 
-  let members (tlist, _) = tlist
+  let members (t0, t1, ts, _) = t0::t1::ts
 
-  let map f rep = make (List.map f (members rep))
+  let cons t0 (t1, t2, ts, _) =
+    make t0 t1 (t2::ts)
 
-  let ident_map f ((ts, _enum) as rep) =
-    let rev_ts, changed = List.fold_left (fun (rev_ts, changed) member ->
-      let member_ = f member in
-      member_::rev_ts, changed || member_ != member
-    ) ([], false) ts in
-    if changed then make (List.rev rev_ts) else rep
+  let rev_append rep1 rep2 =
+    match List.rev_append (members rep1) (members rep2) with
+    | t0::t1::ts -> make t0 t1 ts
+    | _ -> failwith "impossible"
 
-  let quick_mem t (tlist, enum) =
+  let map f (t0, t1, ts, _)  = make (f t0) (f t1) (List.map f ts)
+
+  let ident_map f ((t0, t1, ts, _) as rep) =
+    let t0_ = f t0 in
+    let t1_ = f t1 in
+    let changed = t0_ != t0 || t1_ != t1 in
+    let rev_ts, changed = List.fold_left (fun (rev_ts, changed) t ->
+      let t_ = f t in
+      t_::rev_ts, changed || t_ != t
+    ) ([], changed) ts in
+    if changed then make t0_ t1_ (List.rev rev_ts) else rep
+
+  let quick_mem t (t0, t1, ts, enum) =
     let t = canon t in
     match enum with
     | None ->
-      if List.mem t tlist then Some true else None
+      if List.mem t (t0::t1::ts) then Some true else None
     | Some (base, tset) ->
       match base_of_t t with
       | Some tbase when tbase = base ->
@@ -924,18 +929,16 @@ end
 and InterRep : sig
   type t
 
-  (** rep of empty intersection: synonymous with MixedT, but used to
-      trigger intersection-specific error messages *)
-  val empty: t
-
   (** build rep from list of members *)
-  val make: TypeTerm.t list -> t
+  val make: TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
   (** member list in declaration order *)
   val members: t -> TypeTerm.t list
 
   (** map rep r to rep r' along type mapping f. drops history *)
   val map: (TypeTerm.t -> TypeTerm.t) -> t -> t
+
+  val append: TypeTerm.t list -> t -> t
 
   (** map rep r to rep r' along type mapping f. drops history. if nothing would
       be changed, returns the physically-identical rep. *)
@@ -946,22 +949,25 @@ end = struct
       - member list in declaration order
     *)
   type t =
-    TypeTerm.t list
+    TypeTerm.t * TypeTerm.t * TypeTerm.t list
 
-  let empty = []
+  let make t0 t1 ts = (t0, t1, ts)
 
-  let make ts = ts
+  let members (t0, t1, ts) = t0::t1::ts
 
-  let members (ts) = ts
+  let map f (t0, t1, ts) = make (f t0) (f t1) (List.map f ts)
 
-  let map f rep = make (List.map f (members rep))
+  let append ts2 (t0, t1, ts1) = make t0 t1 (ts1 @ ts2)
 
-  let ident_map f ((ts) as rep) =
+  let ident_map f ((t0, t1, ts) as rep) =
+    let t0_ = f t0 in
+    let t1_ = f t1 in
+    let changed = t0_ != t0 || t1_ != t1 in
     let rev_ts, changed = List.fold_left (fun (rev_ts, changed) member ->
       let member_ = f member in
       member_::rev_ts, changed || member_ != member
-    ) ([], false) ts in
-    if changed then make (List.rev rev_ts) else rep
+    ) ([], changed) ts in
+    if changed then make t0_ t1_ (List.rev rev_ts) else rep
 
 end
 

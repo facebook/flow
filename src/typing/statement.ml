@@ -2807,7 +2807,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
          objects, calls on functions) are often represented as unresolved tvars,
          where they could be pinned down to resolved types.
       *)
-      UnionT (reason, UnionRep.make [t1; t2])
+      UnionT (reason, UnionRep.make t1 t2 [])
 
   | Assignment { Assignment.operator; left; right } ->
       assignment cx loc (left, operator, right)
@@ -3155,12 +3155,13 @@ and binary cx loc = Ast.Expression.Binary.(function
       let reason1 = mk_reason "LHS of `in` operator" loc1 in
       let reason2 = mk_reason "RHS of `in` operator" loc2 in
       let lhs =
-        UnionT (reason1, UnionRep.make [StrT.why reason1; NumT.why reason1]) in
+        UnionT (reason1, UnionRep.make (StrT.why reason1) (NumT.why reason1) []) in
       let rhs =
-        UnionT (reason2, UnionRep.make [
-          AnyObjT reason2;
-          ArrT (reason2, AnyT reason2, []) (* approximation of "any array" *)
-        ])
+        UnionT (reason2, UnionRep.make
+          (AnyObjT reason2)
+          (ArrT (reason2, AnyT reason2, [])) (* approximation of "any array" *)
+          []
+        )
       in
       Flow.flow_t cx (t1, lhs);
       Flow.flow_t cx (t2, rhs);
@@ -3696,18 +3697,18 @@ and mk_proptype cx = Ast.Expression.(function
       };
       arguments = [Expression (_, Array { Array.elements })]
     } ->
-      let rec string_literals lits es = match (es) with
+      let rec string_literals acc = function
         | Some (Expression (_, Ast.Expression.Literal { Ast.Literal.
             value = Ast.Literal.String lit; _
           })) :: tl ->
-            string_literals (lit :: lits) tl
-        | [] -> Some lits
-        | _  -> None in
+          string_literals (lit :: acc) tl
+        | [] -> Some acc
+        | _ -> None
+      in
+      let reason = mk_reason "oneOf" vloc in
       (match string_literals [] elements with
-        | Some lits ->
-            let reason = mk_reason "oneOf" vloc in
-            Anno.mk_keys_type reason lits
-        | None -> AnyT.at vloc)
+      | Some keys -> Anno.mk_keys_type reason keys
+      | None -> AnyT reason)
 
   | vloc, Call { Call.
       callee = _, Member { Member.
@@ -3717,15 +3718,16 @@ and mk_proptype cx = Ast.Expression.(function
       };
       arguments = [Expression (_, Array { Array.elements })]
     } ->
-      let rec proptype_elements ts es = match es with
+      let rec proptype_elements acc = function
         | Some (Expression e) :: tl ->
-            proptype_elements (mk_proptype cx e :: ts) tl
-        | [] -> Some ts
-        | _ -> None in
+            proptype_elements (mk_proptype cx e :: acc) tl
+        | _ -> acc
+      in
       let reason = mk_reason "oneOfType" vloc in
       (match proptype_elements [] elements with
-        | Some ts -> UnionT (reason, UnionRep.make ts)
-        | None -> AnyT.at vloc)
+      | [] -> EmptyT reason
+      | [t] -> t
+      | t0::t1::ts -> UnionT (reason, UnionRep.make t0 t1 ts))
 
   | vloc, Call { Call.
       callee = _, Member { Member.

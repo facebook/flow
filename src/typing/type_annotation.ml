@@ -65,13 +65,18 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | _, Nullable t -> MaybeT (convert cx tparams_map t)
 
-| loc, Union ts ->
+| loc, Union (t0, t1, ts) ->
+  let t0 = convert cx tparams_map t0 in
+  let t1 = convert cx tparams_map t1 in
   let ts = List.map (convert cx tparams_map) ts in
-  UnionT (mk_reason "union type" loc, UnionRep.make ts)
+  let rep = UnionRep.make t0 t1 ts in
+  UnionT (mk_reason "union type" loc, rep)
 
-| loc, Intersection ts ->
+| loc, Intersection (t0, t1, ts) ->
+  let t0 = convert cx tparams_map t0 in
+  let t1 = convert cx tparams_map t1 in
   let ts = List.map (convert cx tparams_map) ts in
-  let rep = InterRep.make ts in
+  let rep = InterRep.make t0 t1 ts in
   IntersectionT (mk_reason "intersection type" loc, rep)
 
 | loc, Typeof x ->
@@ -91,26 +96,28 @@ let rec convert cx tparams_map = Ast.Type.(function
   let elts = List.map (convert cx tparams_map) ts in
   let reason = mk_reason "tuple type" loc in
   let element_reason = mk_reason "tuple element" loc in
-  let tx =
-    if ts = [] then Flow_js.mk_tvar cx element_reason
-    else
-      (* If a tuple should be viewed as an array, what would the element type of
-         the array be?
+  let tx = match elts with
+  | [] -> Flow_js.mk_tvar cx element_reason
+  | [t] -> t
+  | t0::t1::ts ->
+    (* If a tuple should be viewed as an array, what would the element type of
+       the array be?
 
-         Using a union here seems appealing but is wrong: setting elements
-         through arbitrary indices at the union type would be unsound, since it
-         might violate the projected types of the tuple at their corresponding
-         positions. This also shows why `mixed` doesn't work, either.
+       Using a union here seems appealing but is wrong: setting elements
+       through arbitrary indices at the union type would be unsound, since it
+       might violate the projected types of the tuple at their corresponding
+       positions. This also shows why `mixed` doesn't work, either.
 
-         On the other hand, using the empty type would prevent writes, but admit
-         unsound reads.
+       On the other hand, using the empty type would prevent writes, but admit
+       unsound reads.
 
-         The correct solution is to safely case a tuple type to a covariant
-         array interface whose element type would be a union. Until we have
-         that, we use the following closest approximation, that behaves like a
-         union as a lower bound but `any` as an upper bound.
-      *)
-      AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make elts)) in
+       The correct solution is to safely case a tuple type to a covariant
+       array interface whose element type would be a union. Until we have
+       that, we use the following closest approximation, that behaves like a
+       union as a lower bound but `any` as an upper bound.
+    *)
+    AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make t0 t1 ts))
+  in
   ArrT (reason, tx, elts)
 
 | loc, Array t ->
@@ -173,14 +180,23 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Either<...T> is the union of types ...T *)
   | "$Either" ->
-    let ts = convert_type_params () in
-    UnionT (mk_reason "union type" loc, UnionRep.make ts)
+    (match convert_type_params () with
+    | t0::t1::ts ->
+      let rep = UnionRep.make t0 t1 ts in
+      UnionT (mk_reason "union type" loc, rep)
+    | _ ->
+      let msg = "Incorrect number of type parameters (expected at least 2)" in
+      error_type cx loc msg)
 
   (* $All<...T> is the intersection of types ...T *)
   | "$All" ->
-    let ts = convert_type_params () in
-    let rep = InterRep.make ts in
-    IntersectionT (mk_reason "intersection type" loc, rep)
+    (match convert_type_params () with
+    | t0::t1::ts ->
+      let rep = InterRep.make t0 t1 ts in
+      IntersectionT (mk_reason "intersection type" loc, rep)
+    | _ ->
+      let msg = "Incorrect number of type parameters (expected at least 2)" in
+      error_type cx loc msg)
 
   (* $Tuple<...T> is the tuple of types ...T *)
   | "$Tuple" ->
@@ -337,8 +353,9 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Tainted" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
+      let taint = TaintT (mk_reason "taint" loc) in
       let reason = Reason.repos_reason loc (reason_of_t t) in
-      UnionT (reason, UnionRep.make [t; TaintT (mk_reason "taint" loc)])
+      UnionT (reason, UnionRep.make t taint [])
     )
 
   | "Object$Assign" ->
@@ -504,19 +521,17 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
   ) SMap.empty properties
   in
-  let props_map = match callProperties with
+  let props_map =
+    let fts = List.map (fun (loc, { Object.CallProperty.value = (_, ft); _}) ->
+      convert cx tparams_map (loc, Ast.Type.Function ft)
+    ) callProperties in
+    match fts with
     | [] -> props_map
-    | [loc, { Object.CallProperty.value = (_, ft); _; }] ->
-        SMap.add "$call" (
-          convert cx tparams_map (loc, Ast.Type.Function ft)) props_map
-    | fts ->
-        let fts = List.map
-          (fun (loc, { Object.CallProperty.value = (_, ft); _; }) ->
-              convert cx tparams_map (loc, Ast.Type.Function ft))
-          fts in
-        let callable_reason = mk_reason "callable object type" loc in
-        let rep = InterRep.make fts in
-        SMap.add "$call" (IntersectionT (callable_reason, rep)) props_map
+    | [t] -> SMap.add "$call" t props_map
+    | t0::t1::ts ->
+      let callable_reason = mk_reason "callable object type" loc in
+      let rep = InterRep.make t0 t1 ts in
+      SMap.add "$call" (IntersectionT (callable_reason, rep)) props_map
   in
   (* Seal an object type unless it specifies an indexer. *)
   let sealed, dict =
@@ -628,11 +643,14 @@ and mk_type_annotation cx tparams_map reason = function
 
 (* Model a set of keys as the union of their singleton types. *)
 and mk_keys_type reason = function
-| [key] ->
-  mk_singleton_string reason key
-| keys ->
-  UnionT (reason,
-    UnionRep.make (List.map (mk_singleton_string reason) keys))
+| [] -> EmptyT reason
+| [k] -> mk_singleton_string reason k
+| k0::k1::ks ->
+  let t0 = mk_singleton_string reason k0 in
+  let t1 = mk_singleton_string reason k1 in
+  let ts = List.map (mk_singleton_string reason) ks in
+  let rep = UnionRep.make t0 t1 ts in
+  UnionT (reason, rep)
 
 and mk_singleton_string reason key =
   let reason = replace_reason (spf "string literal `%s`" key) reason in

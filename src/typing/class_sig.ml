@@ -148,7 +148,7 @@ let elements cx ?constructor = with_sig (fun s ->
     SMap.map Type.(fun xs ->
       match Nel.rev_map Func_sig.methodtype xs with
       | t, [] -> t
-      | t, ts -> IntersectionT (reason_of_t t, InterRep.make (t::ts))
+      | t0, t1::ts -> IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts)
     ) s.methods
   in
 
@@ -196,9 +196,9 @@ let insttype ~static cx s =
     match ts with
     | [] -> None
     | [t] -> Some t
-    | t::_ as ts ->
+    | t0::t1::ts ->
       let open Type in
-      let t = IntersectionT (reason_of_t t, InterRep.make ts) in
+      let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
       Some t
   in
   let inited_fields, fields, methods = elements ?constructor ~static cx s in
@@ -541,7 +541,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     let super = Type.(match interface_supers with
       | [] -> AnyT.t
       | [t] -> t
-      | ts -> IntersectionT (super_reason, InterRep.make ts)
+      | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts)
     ) in
     empty ~structural id reason tparams tparams_map super
   in

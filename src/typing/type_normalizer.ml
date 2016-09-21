@@ -252,7 +252,7 @@ let rec normalize_type_impl cx ids t = match t with
       in
       IntersectionT (
         reason_of_string "intersection type",
-        InterRep.make [t1; t2]
+        InterRep.make t1 t2 []
       )
 
   | IdxWrapper (_, obj) ->
@@ -450,8 +450,9 @@ and normalize_union r rep =
   let ts = TypeSet.elements ts in
   let t =
     match ts with
+    | [] -> EmptyT r
     | [t] -> t
-    | _ -> UnionT (r, UnionRep.make ts)
+    | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
   in
   if has_void && has_null
   then MaybeT t
@@ -475,8 +476,9 @@ and normalize_intersection r rep =
   let ts = collect_intersection_members ts in
   let ts = TypeSet.elements ts in
   match ts with
+  | [] -> MixedT (r, Empty_intersection)
   | [t] -> t
-  | _ -> IntersectionT (r, InterRep.make ts)
+  | t0::t1::ts -> IntersectionT (r, InterRep.make t0 t1 ts)
 
 and collect_intersection_members ts =
   List.fold_left (fun acc x ->

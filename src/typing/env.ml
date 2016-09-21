@@ -508,11 +508,10 @@ let bind_declare_fun =
 
   let update_type seen_t new_t = match seen_t with
   | IntersectionT (reason, rep) ->
-    let seen_ts = InterRep.members rep in
-    IntersectionT (reason, InterRep.make (seen_ts @ [new_t]))
+    IntersectionT (reason, InterRep.append [new_t] rep)
   | _ ->
     let reason = replace_reason "intersection type" (reason_of_t seen_t) in
-    IntersectionT (reason, InterRep.make [seen_t; new_t])
+    IntersectionT (reason, InterRep.make seen_t new_t [])
   in
 
   fun cx name t reason ->
@@ -672,8 +671,8 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
       then uninit "uninitialized variable"
       else (* State.MaybeInitialized *)
         let desc = "possibly uninitialized variable" in
-        let ts = [uninit desc; specific] in
-        UnionT (mk_reason desc value_declare_loc, UnionRep.make ts)
+        let rep = UnionRep.make (uninit desc) specific [] in
+        UnionT (mk_reason desc value_declare_loc, rep)
     in
     specific, general
 

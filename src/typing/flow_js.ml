@@ -337,9 +337,8 @@ let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
   | (t1::ts1,t2::ts2) -> (f (t1,t2)):: (list_map2 f ts1 ts2)
 
 let rec merge_type cx =
-
-  let create_union ts =
-    UnionT (reason_of_string "union", UnionRep.make ts)
+  let create_union rep =
+    UnionT (reason_of_string "union", rep)
   in
 
   function
@@ -436,7 +435,7 @@ let rec merge_type cx =
       let objtype = mk_objecttype ~flags dict id o1.proto_t in
       ObjT (reason_of_string "object", objtype)
     | _ ->
-      create_union [t1; t2])
+      create_union (UnionRep.make t1 t2 []))
 
   | (ArrT (_,t1,ts1), ArrT (_,t2,ts2)) ->
       ArrT (
@@ -453,18 +452,17 @@ let rec merge_type cx =
       MaybeT (merge_type cx (t1, t2))
 
   | UnionT (_, rep1), UnionT (_, rep2) ->
-      let ts1, ts2 = UnionRep.members rep1, UnionRep.members rep2 in
-      create_union (List.rev_append ts1 ts2)
+      create_union (UnionRep.rev_append rep1 rep2)
 
   | (UnionT (_, rep), t)
   | (t, UnionT (_, rep)) ->
-      create_union (t :: UnionRep.members rep)
+      create_union (UnionRep.cons t rep)
 
   (* TODO: do we need to do anything special for merging Null with Void,
      Optional with other types, etc.? *)
 
   | (t1, t2) ->
-      create_union [t1; t2]
+      create_union (UnionRep.make t1 t2 [])
 
 and resolve_type cx = function
   | OpenT (_, id) ->
@@ -4769,7 +4767,8 @@ and err_value = function
   | NullT _ -> " possibly null value"
   | VoidT _ -> " possibly undefined value"
   | MaybeT _ -> " possibly null or undefined value"
-  | IntersectionT _ -> " any member of intersection type"
+  | IntersectionT _
+  | MixedT (_, Empty_intersection) -> " any member of intersection type"
   | _ -> ""
 
 and err_msg l u =
@@ -6161,11 +6160,11 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
     let l,u = match spec with
       | UnionCases (l, us) ->
         let r = mk_union_reason r us in
-        l, UseT (UnknownUse, UnionT (r, UnionRep.empty))
+        l, UseT (UnknownUse, EmptyT r)
 
       | IntersectionCases (ls, u) ->
         let r = mk_intersection_reason r ls in
-        IntersectionT (r, InterRep.empty), u
+        MixedT (r, Empty_intersection), u
     in
     flow_err cx trace (err_msg l u) ~extra l u
 
@@ -6464,7 +6463,7 @@ and recurse_into_union filter_fn (r, ts) =
   match new_ts with
   | [] -> EmptyT r
   | [t] -> t
-  | _ -> UnionT (r, UnionRep.make new_ts)
+  | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
 
 and filter_exists = function
   (* falsy things get removed *)
@@ -6520,7 +6519,7 @@ and filter_not_exists t = match t with
   (* unknown boolies become falsy *)
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make [NullT.why reason; VoidT.why reason])
+    UnionT (reason, UnionRep.make (NullT.why reason) (VoidT.why reason) [])
   | BoolT (r, None) -> BoolT (r, Some false)
   | StrT (r, AnyLiteral) -> StrT (r, Literal "")
   | NumT (r, AnyLiteral) -> NumT (r, Literal (0., "0"))
@@ -6531,9 +6530,9 @@ and filter_not_exists t = match t with
 and filter_maybe = function
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make [NullT.why reason; VoidT.why reason])
+    UnionT (reason, UnionRep.make (NullT.why reason) (VoidT.why reason) [])
   | MixedT (r, Mixed_everything) ->
-    UnionT (r, UnionRep.make [NullT.why r; VoidT.why r])
+    UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [])
   | MixedT (r, Mixed_truthy) -> EmptyT.why r
   | MixedT (r, Mixed_non_maybe) -> EmptyT.why r
   | MixedT (r, Mixed_non_void) -> NullT r
@@ -6573,7 +6572,7 @@ and filter_null = function
 and filter_not_null = function
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make [VoidT.why reason; t])
+    UnionT (reason, UnionRep.make (VoidT.why reason) t [])
   | OptionalT t -> OptionalT (filter_not_null t)
   | UnionT (r, rep) ->
     recurse_into_union filter_not_null (r, UnionRep.members rep)
@@ -6598,7 +6597,7 @@ and filter_undefined = function
 and filter_not_undefined = function
   | MaybeT t ->
     let reason = reason_of_t t in
-    UnionT (reason, UnionRep.make [NullT.why reason; t])
+    UnionT (reason, UnionRep.make (NullT.why reason) t [])
   | OptionalT t -> filter_not_undefined t
   | UnionT (r, rep) ->
     recurse_into_union filter_not_undefined (r, UnionRep.members rep)
@@ -6850,7 +6849,8 @@ and predicate cx trace t l p = match p with
       | Mixed_everything
       | Mixed_non_void ->
         let reason = replace_reason "union" (reason_of_t t) in
-        UnionT (reason, UnionRep.make [NullT.why r; obj])
+        UnionT (reason, UnionRep.make (NullT.why r) obj [])
+      | Empty_intersection -> EmptyT r
       in
       rec_flow_t cx trace (filtered_l, t)
 
@@ -8188,10 +8188,12 @@ end = struct
     | AnyObjT reason ->
         extract_members cx (get_builtin_type cx reason "Object")
     | AnyFunT reason ->
-        extract_members cx (IntersectionT (reason, InterRep.make [
-          get_builtin_type cx reason "Function";
-          get_builtin_type cx reason "Object";
-        ]))
+        let rep = InterRep.make
+          (get_builtin_type cx reason "Function")
+          (get_builtin_type cx reason "Object")
+          []
+        in
+        extract_members cx (IntersectionT (reason, rep))
     | AnnotT (source, _) ->
         let source_t = resolve_type cx source in
         extract_members cx source_t
@@ -8207,11 +8209,12 @@ end = struct
         Success (AugmentableSMap.augment super_flds ~with_bindings:members)
     | ObjT (_, {props_tmap = flds; proto_t = proto; _}) ->
         let proto_reason = reason_of_t proto in
-        let proto_t = resolve_type cx (IntersectionT (proto_reason,
-          InterRep.make [
-            proto;
-            get_builtin_type cx proto_reason "Object";
-        ])) in
+        let rep = InterRep.make
+          proto
+          (get_builtin_type cx proto_reason "Object")
+          []
+        in
+        let proto_t = resolve_type cx (IntersectionT (proto_reason, rep)) in
         let prot_members = extract_members_as_map cx proto_t in
         let members = find_props cx flds in
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)

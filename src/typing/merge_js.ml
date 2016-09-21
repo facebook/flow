@@ -205,7 +205,7 @@ module ContextOptimizer = struct
         let t = match types with
           | [] -> AnyT.t
           | [t] -> t
-          | _ -> UnionT (r, UnionRep.make types)
+          | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
         in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
