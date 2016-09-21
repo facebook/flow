@@ -8,12 +8,18 @@
  *
  *)
 
-type env
+type watchman_instance
+
+type init_settings = {
+  subscribe_to_changes: bool;
+  init_timeout: int;
+  root: Path.t;
+}
 
 val crash_marker_path: Path.t -> string
 
-val init: int -> bool -> Path.t -> env option
+val init: init_settings -> watchman_instance option
 
-val get_all_files: env -> string list
+val get_all_files: watchman_instance -> watchman_instance * string list
 
-val get_changes: env -> SSet.t
+val get_changes: watchman_instance -> watchman_instance * SSet.t
