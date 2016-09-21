@@ -92,13 +92,8 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       // "handler" property. Esprima still only supports the old spec. Flow
       // follows the new spec
       flow.handlers = flow.handler ? [ flow.handler ] : [];
+      flow.guardedHandlers = [];
       delete flow.handler;
-      break;
-    case 'CatchClause':
-      // Esprima doesn't support the guard property for catch clauses
-      if (!esprima.hasOwnProperty("guard")) {
-        esprima.guard = null;
-      }
       break;
     case 'Identifier':
       if (esprima.optional === undefined) {

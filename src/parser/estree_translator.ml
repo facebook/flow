@@ -143,7 +143,6 @@ end with type t = Impl.t) = struct
       node "TryStatement" loc [|
         "block", block _try.block;
         "handler", option catch _try.handler;
-        "guardedHandlers", array_of_list catch _try.guardedHandlers;
         "finalizer", option block _try.finalizer;
       |]
     )
@@ -559,7 +558,6 @@ end with type t = Impl.t) = struct
   and catch (loc, c) = Statement.Try.CatchClause.(
     node "CatchClause" loc [|
       "param", pattern c.param;
-      "guard", option expression c.guard;
       "body", block c.body;
     |]
   )

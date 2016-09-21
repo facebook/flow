@@ -1435,14 +1435,9 @@ end = struct
           let loc = Loc.btwn start_loc (fst body) in
           Some (loc, Ast.Statement.Try.CatchClause.({
             param;
-            (* This SpiderMonkey specific feature is not on track to be in a
-            * standard so I'm not supporting it *)
-            guard = None;
             body;
           }))
       | _ -> None in
-      (* SpiderMonkey feature, not supported in ES6 *)
-      let guardedHandlers = [] in
       let finalizer = match Peek.token env with
       | T_FINALLY ->
           Expect.token env T_FINALLY;
@@ -1460,7 +1455,6 @@ end = struct
       Loc.btwn start_loc end_loc, Statement.(Try Try.({
         block;
         handler;
-        guardedHandlers;
         finalizer;
       }));
 

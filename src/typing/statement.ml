@@ -199,17 +199,13 @@ and statement_decl cx = Ast.Statement.(
 
   | (_, Throw _) -> ()
 
-  | (_, Try { Try.block = (_, b); handler; guardedHandlers; finalizer }) ->
+  | (_, Try { Try.block = (_, b); handler; finalizer }) ->
       block_body cx b;
 
       (match handler with
         | None -> ()
         | Some (_, h) -> catch_clause cx h
       );
-
-      List.iter (fun (_, h) ->
-        catch_clause cx h
-      ) guardedHandlers;
 
       (match finalizer with
         | None -> ()
@@ -508,7 +504,7 @@ and statement cx = Ast.Statement.(
       cx name interface_t reason
   in
 
-  let catch_clause cx { Try.CatchClause.param; guard = _; body = (_, b) } =
+  let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
     Ast.Pattern.(match param with
       | loc, Identifier (_, {
           Ast.Identifier.name; typeAnnotation = None; _
@@ -1011,7 +1007,7 @@ and statement cx = Ast.Statement.(
      subsequent analysis without loss of soundness.
    *)
   (***************************************************************************)
-  | (loc, Try { Try.block = (_, b); handler; guardedHandlers; finalizer }) ->
+  | (loc, Try { Try.block = (_, b); handler; finalizer }) ->
       let reason = mk_reason "try" loc in
       let oldset = Changeset.clear () in
 
@@ -1064,8 +1060,6 @@ and statement cx = Ast.Statement.(
            is via non-throwing try *)
         try_env
       ) in
-
-      assert (guardedHandlers = []); (* remove from AST *)
 
       (* traverse finally block, save exceptions,
          and leave in place the terminal env of the non-throwing case

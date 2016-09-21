@@ -221,14 +221,12 @@ and Statement : sig
       type t = Loc.t * t'
       and t' = {
         param: Pattern.t;
-        guard: Expression.t option;
         body: Loc.t * Block.t;
       }
     end
     type t = {
       block: Loc.t * Block.t;
       handler: CatchClause.t option;
-      guardedHandlers: CatchClause.t list;
       finalizer: (Loc.t * Block.t) option;
     }
   end
