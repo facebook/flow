@@ -98,14 +98,18 @@ let mk cx type_params_map ~expr func =
 (* Ast.Type.Function.t -> Func_params.t *)
 let convert cx type_params_map func = Ast.Type.Function.(
   let add_param params (loc, {Param.name; typeAnnotation; optional; _}) =
-    let _, {Ast.Identifier.name; _} = name in
+    let name = match name with
+    | None -> "_"
+    | Some (_, {Ast.Identifier.name; _;}) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
     let t = if optional then OptionalT t else t in
     let binding = name, t, loc in
     { params with list = Simple (t, binding) :: params.list }
   in
   let add_rest params (loc, {Param.name; typeAnnotation; _}) =
-    let _, {Ast.Identifier.name; _} = name in
+    let name = match name with
+    | None -> "_"
+    | Some (_, {Ast.Identifier.name; _;}) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
     let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
     { params with list = param :: params.list }

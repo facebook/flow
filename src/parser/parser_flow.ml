@@ -269,6 +269,14 @@ end = struct
         Expect.token env T_RBRACKET;
         Loc.btwn start_loc end_loc, Type.Tuple tl
 
+    and anonymous_function_param _env typeAnnotation =
+      fst typeAnnotation, Type.Function.Param.({
+        name = None;
+        typeAnnotation;
+        optional = false;
+      })
+
+
     and function_param_with_id env name =
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeAnnotation;
@@ -276,15 +284,20 @@ end = struct
       Expect.token env T_COLON;
       let typeAnnotation = _type env in
       Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
-        name;
+        name = Some name;
         typeAnnotation;
         optional;
       })
 
     and function_param_list_without_parens =
       let param env =
-        let name, _ = Parse.identifier_or_reserved_keyword env in
-        function_param_with_id env name
+        match Peek.token ~i:1 env with
+        | T_COLON | T_PLING ->
+            let name, _ = Parse.identifier_or_reserved_keyword env in
+            function_param_with_id env name
+        | _ ->
+            let typeAnnotation = _type env in
+            anonymous_function_param env typeAnnotation
 
       in let rec param_list env acc =
         match Peek.token env with
@@ -306,10 +319,10 @@ end = struct
       in fun env -> param_list env
 
     and function_param_list env =
-        Expect.token env T_LPAREN;
-        let ret = function_param_list_without_parens env [] in
-        Expect.token env T_RPAREN;
-        ret
+      Expect.token env T_LPAREN;
+      let ret = function_param_list_without_parens env [] in
+      Expect.token env T_RPAREN;
+      ret
 
     and param_list_or_type env =
       Expect.token env T_LPAREN;
@@ -335,23 +348,30 @@ end = struct
               match Peek.token ~i:1 env with
               | T_PLING | T_COLON ->
                 (* Ok this is definitely a parameter *)
-                let name, _ = Parse.identifier_or_reserved_keyword env in
-                if not (should_parse_types env)
-                then error env Error.UnexpectedTypeAnnotation;
-                let optional = Expect.maybe env T_PLING in
-                Expect.token env T_COLON;
-                let typeAnnotation = _type env in
-                if Peek.token env <> T_RPAREN
-                then Expect.token env T_COMMA;
-                let param = Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
-                  name;
-                  typeAnnotation;
-                  optional;
-                }) in
-                ParamList (function_param_list_without_parens env [param])
+                ParamList (function_param_list_without_parens env [])
               | _ ->
                 Type (_type env)
           )
+      in
+      (* Now that we allow anonymous parameters in function types, we need to
+       * disambiguate a little bit more *)
+      let ret = match ret with
+      | ParamList _ -> ret
+      | Type t ->
+          (match Peek.token env with
+          | T_RPAREN ->
+              (* Reinterpret `(type) =>` as a ParamList *)
+              if Peek.token ~i:1 env = T_ARROW
+              then
+                let param = anonymous_function_param env t in
+                ParamList (function_param_list_without_parens env [param])
+              else Type t
+          | T_COMMA ->
+              (* Reinterpret `(type,` as a ParamList *)
+              Expect.token env T_COMMA;
+              let param = anonymous_function_param env t in
+              ParamList (function_param_list_without_parens env [param])
+          | _ -> ret)
       in
       Expect.token env T_RPAREN;
       ret

@@ -75,3 +75,10 @@ def("MetaProperty")
     .build("meta", "property")
     .field("meta", def("Identifier"))
     .field("property", def("Identifier"));
+
+def("FunctionTypeParam")
+  .bases("Node")
+  .build("typeAnnotation", "optional")
+  .field("name", or(def("Identifier"), null))
+  .field("typeAnnotation", def("Type"))
+  .field("optional", Boolean);

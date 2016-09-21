@@ -21,6 +21,10 @@ open Env.LookupMode
 let ident_name (_, ident) =
   ident.Ast.Identifier.name
 
+let optional_ident_name = function
+| None -> "_"
+| Some ident -> ident_name ident
+
 let error_type cx loc msg =
   FlowError.add_error cx (loc, [msg]);
   AnyT.at loc
@@ -447,18 +451,18 @@ let rec convert cx tparams_map = Ast.Type.(function
       | _, { Function.Param.name;
              Function.Param.typeAnnotation; optional = false; _ } ->
           (convert cx tparams_map typeAnnotation) :: tlist,
-          (ident_name name) :: pnames
+          (optional_ident_name name) :: pnames
       | _, { Function.Param.name;
              Function.Param.typeAnnotation; optional = true; _ } ->
           (OptionalT (convert cx tparams_map typeAnnotation)) :: tlist,
-          (ident_name name) :: pnames
+          (optional_ident_name name) :: pnames
     ) ([], []) params in
     match rest with
       | Some (_, { Function.Param.name;
                    Function.Param.typeAnnotation; _ }) ->
           let rest = mk_rest cx (convert cx tparams_map typeAnnotation) in
           rest :: rev_tlist,
-          (ident_name name) :: rev_pnames
+          (optional_ident_name name) :: rev_pnames
       | None -> rev_tlist, rev_pnames
     ) in
   let reason = mk_reason "function type" loc in

@@ -48,7 +48,7 @@ and Type : sig
     module Param : sig
       type t = Loc.t * t'
       and t' = {
-        name: Identifier.t;
+        name: Identifier.t option;
         typeAnnotation: Type.t;
         optional: bool;
       }
