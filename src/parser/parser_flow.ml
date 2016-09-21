@@ -2744,7 +2744,6 @@ end = struct
         Loc.btwn start_loc end_loc, Statement.(Switch Switch.({
           discriminant;
           cases;
-          lexical = false; (* TODO *)
         }))
 
     and throw env =

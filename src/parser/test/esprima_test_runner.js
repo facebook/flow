@@ -86,11 +86,6 @@ function handleSpecialObjectCompare(esprima, flow, env) {
   }
 
   switch (esprima.type) {
-    case "SwitchStatement":
-      // Esprima doesn't support let statements so it doesn't include the
-      // lexical field
-      delete flow.lexical;
-      break;
     case 'TryStatement':
       // The Mozilla spec changed over time. There used to be a "handlers"
       // property with a list of catch clauses. Now there is just a single

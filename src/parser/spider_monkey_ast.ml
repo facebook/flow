@@ -252,7 +252,6 @@ and Statement : sig
     type t = {
       discriminant: Expression.t;
       cases: Case.t list;
-      lexical: bool;
     }
   end
   module Return : sig

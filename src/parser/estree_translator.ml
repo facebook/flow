@@ -129,7 +129,6 @@ end with type t = Impl.t) = struct
       node "SwitchStatement" loc [|
         "discriminant", expression switch.discriminant;
         "cases", array_of_list case switch.cases;
-        "lexical", bool switch.lexical;
       |]
     )
   | loc, Return return ->
