@@ -1,0 +1,75 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "DebuggerStatement",
+            "range": [
+                0,
+                9
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 9
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "debugger",
+            "range": [
+                0,
+                8
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 8
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": ";",
+            "range": [
+                8,
+                9
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 8
+                },
+                "end": {
+                    "line": 1,
+                    "column": 9
+                }
+            }
+        }
+    ],
+    "range": [
+        0,
+        9
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 0
+        },
+        "end": {
+            "line": 1,
+            "column": 9
+        }
+    }
+}

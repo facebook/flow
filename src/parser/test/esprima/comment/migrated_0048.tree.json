@@ -1,0 +1,192 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "range": [
+                0,
+                45
+            ],
+            "type": "ExpressionStatement",
+            "expression": {
+                "range": [
+                    14,
+                    44
+                ],
+                "type": "ObjectExpression",
+                "properties": [
+                    {
+                        "range": [
+                            20,
+                            28
+                        ],
+                        "type": "Property",
+                        "key": {
+                            "range": [
+                                20,
+                                22
+                            ],
+                            "type": "Identifier",
+                            "name": "p1"
+                        },
+                        "computed": false,
+                        "value": {
+                            "range": [
+                                24,
+                                28
+                            ],
+                            "type": "Literal",
+                            "value": null,
+                            "raw": "null"
+                        },
+                        "kind": "init",
+                        "method": false,
+                        "shorthand": false
+                    },
+                    {
+                        "range": [
+                            34,
+                            42
+                        ],
+                        "type": "Property",
+                        "key": {
+                            "range": [
+                                34,
+                                36
+                            ],
+                            "type": "Identifier",
+                            "name": "p2"
+                        },
+                        "computed": false,
+                        "value": {
+                            "range": [
+                                38,
+                                42
+                            ],
+                            "type": "Literal",
+                            "value": null,
+                            "raw": "null"
+                        },
+                        "kind": "init",
+                        "method": false,
+                        "shorthand": false
+                    }
+                ],
+                "leadingComments": [
+                    {
+                        "type": "Block",
+                        "value": " comment ",
+                        "range": [
+                            1,
+                            14
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": " comment ",
+            "range": [
+                1,
+                14
+            ]
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Punctuator",
+            "value": "(",
+            "range": [
+                0,
+                1
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "{",
+            "range": [
+                14,
+                15
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "p1",
+            "range": [
+                20,
+                22
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ":",
+            "range": [
+                22,
+                23
+            ]
+        },
+        {
+            "type": "Null",
+            "value": "null",
+            "range": [
+                24,
+                28
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ",",
+            "range": [
+                28,
+                29
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "p2",
+            "range": [
+                34,
+                36
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ":",
+            "range": [
+                36,
+                37
+            ]
+        },
+        {
+            "type": "Null",
+            "value": "null",
+            "range": [
+                38,
+                42
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "}",
+            "range": [
+                43,
+                44
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ")",
+            "range": [
+                44,
+                45
+            ]
+        }
+    ],
+    "range": [
+        0,
+        45
+    ]
+}

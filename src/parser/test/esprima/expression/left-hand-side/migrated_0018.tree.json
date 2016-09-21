@@ -1,0 +1,383 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "ExpressionStatement",
+            "expression": {
+                "type": "CallExpression",
+                "callee": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                        "type": "MemberExpression",
+                        "computed": false,
+                        "object": {
+                            "type": "MemberExpression",
+                            "computed": false,
+                            "object": {
+                                "type": "Identifier",
+                                "name": "earth",
+                                "range": [
+                                    0,
+                                    5
+                                ],
+                                "loc": {
+                                    "start": {
+                                        "line": 1,
+                                        "column": 0
+                                    },
+                                    "end": {
+                                        "line": 1,
+                                        "column": 5
+                                    }
+                                }
+                            },
+                            "property": {
+                                "type": "Identifier",
+                                "name": "asia",
+                                "range": [
+                                    6,
+                                    10
+                                ],
+                                "loc": {
+                                    "start": {
+                                        "line": 1,
+                                        "column": 6
+                                    },
+                                    "end": {
+                                        "line": 1,
+                                        "column": 10
+                                    }
+                                }
+                            },
+                            "range": [
+                                0,
+                                10
+                            ],
+                            "loc": {
+                                "start": {
+                                    "line": 1,
+                                    "column": 0
+                                },
+                                "end": {
+                                    "line": 1,
+                                    "column": 10
+                                }
+                            }
+                        },
+                        "property": {
+                            "type": "Identifier",
+                            "name": "Indonesia",
+                            "range": [
+                                11,
+                                20
+                            ],
+                            "loc": {
+                                "start": {
+                                    "line": 1,
+                                    "column": 11
+                                },
+                                "end": {
+                                    "line": 1,
+                                    "column": 20
+                                }
+                            }
+                        },
+                        "range": [
+                            0,
+                            20
+                        ],
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 0
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 20
+                            }
+                        }
+                    },
+                    "property": {
+                        "type": "Identifier",
+                        "name": "prepareForElection",
+                        "range": [
+                            21,
+                            39
+                        ],
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 21
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 39
+                            }
+                        }
+                    },
+                    "range": [
+                        0,
+                        39
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 39
+                        }
+                    }
+                },
+                "arguments": [
+                    {
+                        "type": "Literal",
+                        "value": 2014,
+                        "raw": "2014",
+                        "range": [
+                            40,
+                            44
+                        ],
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 40
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 44
+                            }
+                        }
+                    }
+                ],
+                "range": [
+                    0,
+                    45
+                ],
+                "loc": {
+                    "start": {
+                        "line": 1,
+                        "column": 0
+                    },
+                    "end": {
+                        "line": 1,
+                        "column": 45
+                    }
+                }
+            },
+            "range": [
+                0,
+                45
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 45
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "tokens": [
+        {
+            "type": "Identifier",
+            "value": "earth",
+            "range": [
+                0,
+                5
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 5
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": ".",
+            "range": [
+                5,
+                6
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 5
+                },
+                "end": {
+                    "line": 1,
+                    "column": 6
+                }
+            }
+        },
+        {
+            "type": "Identifier",
+            "value": "asia",
+            "range": [
+                6,
+                10
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 6
+                },
+                "end": {
+                    "line": 1,
+                    "column": 10
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": ".",
+            "range": [
+                10,
+                11
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 10
+                },
+                "end": {
+                    "line": 1,
+                    "column": 11
+                }
+            }
+        },
+        {
+            "type": "Identifier",
+            "value": "Indonesia",
+            "range": [
+                11,
+                20
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 11
+                },
+                "end": {
+                    "line": 1,
+                    "column": 20
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": ".",
+            "range": [
+                20,
+                21
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 20
+                },
+                "end": {
+                    "line": 1,
+                    "column": 21
+                }
+            }
+        },
+        {
+            "type": "Identifier",
+            "value": "prepareForElection",
+            "range": [
+                21,
+                39
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 21
+                },
+                "end": {
+                    "line": 1,
+                    "column": 39
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": "(",
+            "range": [
+                39,
+                40
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 39
+                },
+                "end": {
+                    "line": 1,
+                    "column": 40
+                }
+            }
+        },
+        {
+            "type": "Numeric",
+            "value": "2014",
+            "range": [
+                40,
+                44
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 40
+                },
+                "end": {
+                    "line": 1,
+                    "column": 44
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": ")",
+            "range": [
+                44,
+                45
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 44
+                },
+                "end": {
+                    "line": 1,
+                    "column": 45
+                }
+            }
+        }
+    ],
+    "range": [
+        0,
+        45
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 0
+        },
+        "end": {
+            "line": 1,
+            "column": 45
+        }
+    }
+}

@@ -1,0 +1,72 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "ExpressionStatement",
+            "expression": {
+                "type": "Literal",
+                "value": 42,
+                "raw": "42",
+                "trailingComments": [
+                    {
+                        "type": "Block",
+                        "value": " block comment 1 ",
+                        "range": [
+                            3,
+                            24
+                        ]
+                    },
+                    {
+                        "type": "Block",
+                        "value": " block comment 2 ",
+                        "range": [
+                            25,
+                            46
+                        ]
+                    }
+                ],
+                "range": [
+                    0,
+                    2
+                ]
+            },
+            "range": [
+                0,
+                46
+            ]
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": " block comment 1 ",
+            "range": [
+                3,
+                24
+            ]
+        },
+        {
+            "type": "Block",
+            "value": " block comment 2 ",
+            "range": [
+                25,
+                46
+            ]
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Numeric",
+            "value": "42",
+            "range": [
+                0,
+                2
+            ]
+        }
+    ],
+    "range": [
+        0,
+        46
+    ]
+}

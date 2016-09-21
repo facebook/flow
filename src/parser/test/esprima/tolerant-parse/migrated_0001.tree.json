@@ -1,0 +1,214 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "VariableDeclaration",
+            "declarations": [
+                {
+                    "type": "VariableDeclarator",
+                    "id": {
+                        "type": "Identifier",
+                        "name": "foo",
+                        "range": [
+                            4,
+                            7
+                        ],
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 4
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 7
+                            }
+                        }
+                    },
+                    "init": {
+                        "type": "Literal",
+                        "value": 1,
+                        "raw": "1",
+                        "range": [
+                            10,
+                            11
+                        ],
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 10
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 11
+                            }
+                        }
+                    },
+                    "range": [
+                        4,
+                        11
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 4
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 11
+                        }
+                    }
+                }
+            ],
+            "kind": "var",
+            "range": [
+                0,
+                12
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 12
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": " ",
+            "range": [
+                13,
+                16
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 13
+                },
+                "end": {
+                    "line": 1,
+                    "column": 16
+                }
+            }
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "var",
+            "range": [
+                0,
+                3
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 3
+                }
+            }
+        },
+        {
+            "type": "Identifier",
+            "value": "foo",
+            "range": [
+                4,
+                7
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 4
+                },
+                "end": {
+                    "line": 1,
+                    "column": 7
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": "=",
+            "range": [
+                8,
+                9
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 8
+                },
+                "end": {
+                    "line": 1,
+                    "column": 9
+                }
+            }
+        },
+        {
+            "type": "Numeric",
+            "value": "1",
+            "range": [
+                10,
+                11
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 10
+                },
+                "end": {
+                    "line": 1,
+                    "column": 11
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": ";",
+            "range": [
+                11,
+                12
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 11
+                },
+                "end": {
+                    "line": 1,
+                    "column": 12
+                }
+            }
+        }
+    ],
+    "errors": [
+        {
+            "index": 16,
+            "lineNumber": 1,
+            "column": 17,
+            "message": "Error: Line 1: Unexpected token ILLEGAL"
+        }
+    ],
+    "range": [
+        0,
+        12
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 0
+        },
+        "end": {
+            "line": 1,
+            "column": 12
+        }
+    }
+}

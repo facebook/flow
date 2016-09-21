@@ -1,0 +1,6 @@
+{
+    "index": 42,
+    "lineNumber": 1,
+    "column": 43,
+    "message": "Error: Line 1: Function name may not be eval or arguments in strict mode"
+}

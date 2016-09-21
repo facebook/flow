@@ -1,0 +1,1 @@
+"use strict"; x = { set f(eval) {} }

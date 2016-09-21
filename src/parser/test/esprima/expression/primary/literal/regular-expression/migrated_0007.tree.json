@@ -1,0 +1,86 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "VariableDeclaration",
+            "declarations": [
+                {
+                    "type": "VariableDeclarator",
+                    "id": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "range": [
+                            4,
+                            5
+                        ]
+                    },
+                    "init": {
+                        "type": "Literal",
+                        "value": {},
+                        "raw": "/[x-z]/i",
+                        "regex": {
+                            "pattern": "[x-z]",
+                            "flags": "i"
+                        },
+                        "range": [
+                            8,
+                            16
+                        ]
+                    },
+                    "range": [
+                        4,
+                        16
+                    ]
+                }
+            ],
+            "kind": "var",
+            "range": [
+                0,
+                16
+            ]
+        }
+    ],
+    "sourceType": "script",
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "var",
+            "range": [
+                0,
+                3
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "x",
+            "range": [
+                4,
+                5
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "=",
+            "range": [
+                6,
+                7
+            ]
+        },
+        {
+            "type": "RegularExpression",
+            "value": "/[x-z]/i",
+            "regex": {
+                "pattern": "[x-z]",
+                "flags": "i"
+            },
+            "range": [
+                8,
+                16
+            ]
+        }
+    ],
+    "range": [
+        0,
+        16
+    ]
+}

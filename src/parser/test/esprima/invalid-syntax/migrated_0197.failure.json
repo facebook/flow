@@ -1,0 +1,6 @@
+{
+    "index": 41,
+    "lineNumber": 1,
+    "column": 42,
+    "message": "Error: Line 1: Postfix increment/decrement may not have eval or arguments operand in strict mode"
+}

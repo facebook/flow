@@ -1,0 +1,1 @@
+<rect option:square />
