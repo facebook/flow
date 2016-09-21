@@ -110,7 +110,7 @@ D.js:20
 
 E.js:2
   2: var a : { someProp: number } = function () {};
-             ^^^^^^^^^^^^^^^^^^^^ property `someProp`. Property not found in
+             ^^^^^^^^^^^^^^^^^^^^ property `someProp` of object type. Property not found in
   2: var a : { someProp: number } = function () {};
                                     ^^^^^^^^^^^^^^ function
 

@@ -4150,7 +4150,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        UseT (_, ObjT (reason_o, { props_tmap; _ }))) ->
         if not
           (quick_error_fun_as_obj cx trace reason statics reason_o
-             (SMap.keys (find_props cx props_tmap)))
+             (find_props cx props_tmap))
         then
           let map = SMap.add "$call" l SMap.empty in
           let function_proto = FunProtoT reason in
@@ -4171,10 +4171,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
         if not
           (quick_error_fun_as_obj cx trace reason statics reason_inst
-             (SMap.fold
-                (fun x _ props -> if x = "constructor" then props else x::props)
-                (find_props cx methods_tmap)
-                (SMap.keys (find_props cx fields_tmap))))
+            (SMap.filter (fun x _ -> x = "constructor")
+              (find_props cx fields_tmap)))
         then
           structural_subtype cx trace l reason_inst
             (super, fields_tmap, methods_tmap)
@@ -4710,16 +4708,20 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props =
   in
   match statics_own_props with
   | Some statics_own_props ->
-    let props_not_found = List.filter (fun x ->
-      not (x = "$call" || is_function_prototype x || SMap.mem x statics_own_props)
+    let props_not_found = SMap.filter (fun x t ->
+      let optional = match t with
+      | OptionalT _ -> true
+      |_ -> false
+      in
+      not (optional || x = "$call" || is_function_prototype x || SMap.mem x statics_own_props)
     ) props in
-    List.iter (fun x ->
+    SMap.iter (fun x _ ->
       flow_err_prop_not_found cx trace (
-        replace_reason (spf "property `%s`" x) reason_o,
+        prefix_reason (spf "property `%s` of " x) reason_o,
         reason
       )
     ) props_not_found;
-    props_not_found <> []
+    not (SMap.is_empty props_not_found)
   | None -> false
 
 (* only on use-types - guard calls with is_use t *)

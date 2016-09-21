@@ -110,7 +110,7 @@ test3.js:6
 
 test4.js:2
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
-                                   ^ property `foo`. Property not found in
+                                   ^ property `foo` of I. Property not found in
   2: (function foo(x: number) { }: I); // error, property `foo` not found function
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ function
 
@@ -124,7 +124,7 @@ test4.js:9
          ^^^^^^^^^^^^^^^ function type
   Error:
     5:   bar(i: I): void;
-                ^ property `foo`. Property not found in
+                ^ property `foo` of I. Property not found in
     9: new C().bar((x: string) => { }); // error, number ~/~> string
                    ^^^^^^^^^^^^^^^^^^ arrow function
   Member 2:
