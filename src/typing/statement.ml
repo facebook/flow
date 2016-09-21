@@ -2871,7 +2871,6 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       TemplateLiteral.quasis;
       expressions
     } ->
-      let reason = mk_reason "string" loc in
       let strt_of_quasi = function
       | (elem_loc, {
           TemplateLiteral.Element.value = {
@@ -2882,20 +2881,15 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         }) -> StrT (mk_reason "string" elem_loc, Type.Literal cooked)
       in
       begin match quasis with
-      | head::rest ->
-          let headt = strt_of_quasi head in
-          List.fold_left2 (fun acc expr elem ->
+      | head::[] ->
+          strt_of_quasi head
+      | _ ->
+          let t_out = StrT.at loc in
+          List.iter (fun expr ->
             let e = expression cx expr in
-            let tailt = strt_of_quasi elem in
-            let acc = Flow.mk_tvar_where cx reason (fun t_out ->
-              Flow.flow cx (acc, AdderT (reason, e, t_out));
-            ) in
-            Flow.mk_tvar_where cx reason (fun t_out ->
-              Flow.flow cx (acc, AdderT (reason, tailt, t_out));
-            )
-          ) headt expressions rest
-      | [] ->
-          StrT.at loc (* impossible *)
+            Flow.flow cx (e, UseT (Coercion, t_out));
+          ) expressions;
+          t_out
       end
 
   | JSXElement e ->

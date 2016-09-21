@@ -6,9 +6,45 @@ template.js:5
 
 template.js:8
   8: `foo ${{bar: 123}} baz`; // error, object can't be appended
-            ^^^^^^^^^^ object literal. This type cannot be added to
+            ^^^^^^^^^^ object literal. This type cannot be coerced to
   8: `foo ${{bar: 123}} baz`; // error, object can't be appended
      ^^^^^^^^^^^^^^^^^^^^^^^ string
 
+template.js:22
+ 22:     `foo ${x}`; // error
+                ^ boolean. This type cannot be coerced to
+ 22:     `foo ${x}`; // error
+         ^^^^^^^^^^ string
 
-Found 2 errors
+template.js:23
+ 23:     `${x} bar`; // error
+            ^ boolean. This type cannot be coerced to
+ 23:     `${x} bar`; // error
+         ^^^^^^^^^^ string
+
+template.js:24
+ 24:     `foo ${'bar'} ${x}`; // error
+                         ^ boolean. This type cannot be coerced to
+ 24:     `foo ${'bar'} ${x}`; // error
+         ^^^^^^^^^^^^^^^^^^^ string
+
+template.js:27
+ 27:     `foo ${x}`; // error
+                ^ mixed. This type cannot be coerced to
+ 27:     `foo ${x}`; // error
+         ^^^^^^^^^^ string
+
+template.js:28
+ 28:     `${x} bar`; // error
+            ^ mixed. This type cannot be coerced to
+ 28:     `${x} bar`; // error
+         ^^^^^^^^^^ string
+
+template.js:29
+ 29:     `foo ${'bar'} ${x}`; // error
+                         ^ mixed. This type cannot be coerced to
+ 29:     `foo ${'bar'} ${x}`; // error
+         ^^^^^^^^^^^^^^^^^^^ string
+
+
+Found 8 errors

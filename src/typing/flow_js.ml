@@ -4244,6 +4244,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       flow_addition cx trace reason l r u;
       Ops.pop ()
 
+    (***********************************************************)
+    (* coercion                                                *)
+    (***********************************************************)
+
+    (* string and number can be coerced to strings *)
+    | StrT _, UseT (Coercion, StrT _)
+    | NumT _, UseT (Coercion, StrT _) -> ()
+
     (**************************)
     (* relational comparisons *)
     (**************************)
@@ -4577,6 +4585,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (Addition, _) ->
       flow_err cx trace "This type cannot be added to" l u
 
+    | _, UseT (Coercion, _) ->
+      flow_err cx trace "This type cannot be coerced to" l u
+
     | _, UseT (MissingTupleElement i, _) ->
       let msg = spf
         "This type is incompatible with a tuple type that expects \
@@ -4621,9 +4632,15 @@ and flow_addition cx trace reason l r u =
   | (NumT _, StrT _) ->
     rec_flow_t cx trace (StrT.why reason, u)
 
-  | (MixedT _, _)
+  (* unreachable additions are unreachable *)
+  | EmptyT _, _
+  | _, EmptyT _ ->
+    rec_flow_t cx trace (EmptyT.why reason, u)
+
+  | (MixedT _, _) ->
+    flow_err_use_t cx trace "Cannot be added to" l r
   | (_, MixedT _) ->
-    rec_flow_t cx trace (MixedT.why reason, u)
+    flow_err_use_t cx trace "Cannot be added to" r l
 
   | ((NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _),
      (NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _)) ->

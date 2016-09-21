@@ -275,10 +275,6 @@ test28.js:11
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    15:       dataKey,
              ^^^^^^^ identifier `dataKey`
-   12:     key: `${dataKey}`,
-                ^^^^^^^^^^^^ string
-   16:       label: `${i}`,
-                    ^^^^^^ string
 
 test5.js:14
  14: fun(a1);

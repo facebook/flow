@@ -66,4 +66,14 @@ str(null + "foo"); // error
 str("foo" + undefined); // error
 str(undefined + "foo"); // error
 
-module.exports = "arith";
+let tests = [
+  function(x: mixed, y: mixed) {
+    (x + y); // error
+    (x + 0); // error
+    (0 + x); // error
+    (x + ""); // error
+    ("" + x); // error
+    (x + {}); // error
+    ({} + x); // error
+  },
+];

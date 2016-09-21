@@ -273,6 +273,7 @@ module rec TypeTerm : sig
     | FunImplicitReturn
     | Addition
     | MissingTupleElement of int
+    | Coercion
     | TypeRefinement
     | UnknownUse
 
@@ -1636,6 +1637,7 @@ let string_of_use_op = function
   | FunImplicitReturn -> "FunImplicitReturn"
   | Addition -> "Addition"
   | MissingTupleElement _ -> "MissingTupleElement"
+  | Coercion -> "Coercion"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"
 
