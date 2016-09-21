@@ -8,7 +8,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode(`
       // $FlowFixMe
       ("a": number);
-    `).noNewErrors(''),
+    `).noNewErrors(),
   ]),
 
   test('Custom suppress_comments', [
