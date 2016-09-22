@@ -55,17 +55,17 @@ async_return_void.js:4
 async_return_void.js:8
   8:   return undefined;
               ^^^^^^^^^ undefined. This type is incompatible with
-union: type application of identifier `Promise` | type application of identifier `$Thenable` | type parameter `T` of async return. See lib: core.js:530
+union: type application of identifier `Promise` | type application of identifier `$Thenable` | type parameter `T` of async return. See lib: core.js:591
   Member 1:
-  type application of identifier `Promise`. See lib: core.js:530
+  type application of identifier `Promise`. See lib: core.js:591
   Error:
     8:   return undefined;
                 ^^^^^^^^^ undefined. This type is incompatible with
-  Promise. See lib: core.js:530
+  Promise. See lib: core.js:591
   Member 2:
-  type application of identifier `$Thenable`. See lib: core.js:530
+  type application of identifier `$Thenable`. See lib: core.js:591
   Error:
-  property `then` of $Thenable. Property not found in possibly undefined value. See lib: core.js:530
+  property `then` of $Thenable. Property not found in possibly undefined value. See lib: core.js:591
     8:   return undefined;
                 ^^^^^^^^^ undefined
   Member 3:

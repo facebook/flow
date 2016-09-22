@@ -1752,7 +1752,7 @@ end = struct
       Eat.pop_lex_mode env;
       let filtered_flags = Buffer.create (String.length raw_flags) in
       String.iter (function
-        | 'g' | 'i' | 'm' | 'y' as c -> Buffer.add_char filtered_flags c
+        | 'g' | 'i' | 'm' | 'u' | 'y' as c -> Buffer.add_char filtered_flags c
         | _ -> ()) raw_flags;
       let flags = Buffer.contents filtered_flags in
       if flags <> raw_flags
