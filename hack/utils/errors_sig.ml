@@ -316,6 +316,8 @@ module type S = sig
   val unification_cycle : Pos.t -> string -> unit
   val eq_incompatible_types : Pos.t -> (Pos.t * string) list
     -> (Pos.t * string) list -> unit
+  val instanceof_always_false : Pos.t -> unit
+  val instanceof_always_true : Pos.t -> unit
 
   val to_json : Pos.absolute error_ -> Hh_json.json
   val to_string : Pos.absolute error_ -> string
