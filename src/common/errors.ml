@@ -878,7 +878,7 @@ let print_error_summary ?(out_channel=stdout) ~flags ?(stdin_file=None) ~strip_r
       (total - 50) (error_or_errors (total - 50)) total;
     Printf.fprintf
       out_channel
-      "To see all errors, re-run Flow with --show-all-errors";
+      "To see all errors, re-run Flow with --show-all-errors\n";
     flush out_channel
   ) else
     Printf.fprintf out_channel "Found %d %s\n" total (error_or_errors total)
