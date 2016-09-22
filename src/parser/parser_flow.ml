@@ -778,15 +778,17 @@ end = struct
 
     let function_params =
       let rec param env =
-        let id = Parse.pattern env Error.StrictParamName in
+        let left = Parse.pattern env Error.StrictParamName in
+        (* TODO: shouldn't Parse.pattern recognize Assignment patterns? *)
         if Peek.token env = T_ASSIGN
         then begin
           Expect.token env T_ASSIGN;
-          let default = Parse.assignment env in
-          id, Some default
+          let right = Parse.assignment env in
+          let loc = Loc.btwn (fst left) (fst right) in
+          (loc, Pattern.Assignment { Pattern.Assignment.left; right })
         end else
-          id, None
-      and param_list env (params, defaults, has_default) =
+          left
+      and param_list env acc =
         match Peek.token env with
         | T_EOF
         | T_RPAREN
@@ -798,19 +800,18 @@ end = struct
             end else None in
             if Peek.token env <> T_RPAREN
             then error env Error.ParameterAfterRestParameter;
-            List.rev params, (if has_default then List.rev defaults else []), rest
+            List.rev acc, rest
         | _ ->
-            let param, default = param env in
-            let has_default = has_default || default <> None in
+            let the_param = param env in
             if Peek.token env <> T_RPAREN
             then Expect.token env T_COMMA;
-            param_list env (param::params, default::defaults, has_default)
+            param_list env (the_param::acc)
 
       in fun env ->
         Expect.token env T_LPAREN;
-        let params, defaults, rest = param_list env ([], [], false) in
+        let params, rest = param_list env [] in
         Expect.token env T_RPAREN;
-        params, defaults, rest
+        params, rest
 
     let function_body env ~async ~generator =
       let env = enter_function env ~async ~generator in
@@ -842,8 +843,8 @@ end = struct
       | _, Pattern.Identifier _ ->  true
       | _ -> false
 
-      in fun params defaults rest ->
-        defaults = [] && rest = None && List.for_all is_simple_param params
+      in fun params rest ->
+        rest = None && List.for_all is_simple_param params
 
     let _function env =
       let start_loc = Peek.loc env in
@@ -865,10 +866,10 @@ end = struct
           in
           (Type.type_parameter_declaration env, Some id)
       ) in
-      let params, defaults, rest = function_params env in
+      let params, rest = function_params env in
       let (returnType, predicate) = Type.annotation_and_predicate_opt env in
       let _, body, strict = function_body env ~async ~generator in
-      let simple = is_simple_function_params params defaults rest in
+      let simple = is_simple_function_params params rest in
       strict_post_check env ~strict ~simple id params;
       let end_loc, expression = Ast.Function.(
         match body with
@@ -877,7 +878,6 @@ end = struct
       Loc.btwn start_loc end_loc, Statement.(FunctionDeclaration Function.({
         id;
         params;
-        defaults;
         rest;
         body;
         generator;
@@ -1532,11 +1532,11 @@ end = struct
             | _ -> Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
           id, Type.type_parameter_declaration env
         end in
-      let params, defaults, rest = Declaration.function_params env in
+      let params, rest = Declaration.function_params env in
       let returnType, predicate = Type.annotation_and_predicate_opt env in
       let end_loc, body, strict =
         Declaration.function_body env ~async ~generator in
-      let simple = Declaration.is_simple_function_params params defaults rest in
+      let simple = Declaration.is_simple_function_params params rest in
       Declaration.strict_post_check env ~strict ~simple id params;
       let expression = Function.(
         match body with
@@ -1545,7 +1545,6 @@ end = struct
       Loc.btwn start_loc end_loc, Expression.(Function Function.({
         id;
         params;
-        defaults;
         rest;
         body;
         generator;
@@ -1778,18 +1777,18 @@ end = struct
          * that it's an async function *)
         let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
         let typeParameters = Type.type_parameter_declaration env in
-        let params, defaults, rest, returnType, predicate =
+        let params, rest, returnType, predicate =
           (* Disallow all fancy features for identifier => body *)
           if Peek.is_identifier env && typeParameters = None
           then
             let id =
               Parse.identifier ~restricted_error:Error.StrictParamName env in
             let param = fst id, Pattern.Identifier id in
-            [param], [], None, None, None
+            [param], None, None, None
           else
-            let params, defaults, rest = Declaration.function_params env in
+            let params, rest = Declaration.function_params env in
             let returnType, predicate = Type.annotation_and_predicate_opt env in
-            params, defaults, rest, returnType, predicate in
+            params, rest, returnType, predicate in
 
         (* It's hard to tell if an invalid expression was intended to be an
          * arrow function before we see the =>. If there are no params, that
@@ -1813,8 +1812,7 @@ end = struct
           (Declaration.concise_function_body ~async ~generator:false)
           env
         in
-        let simple =
-          Declaration.is_simple_function_params params defaults rest in
+        let simple = Declaration.is_simple_function_params params rest in
         Declaration.strict_post_check env ~strict ~simple None params;
         let expression = Function.(
           match body with
@@ -1824,7 +1822,6 @@ end = struct
         loc, Expression.(ArrowFunction Function.({
           id = None;
           params;
-          defaults;
           rest;
           body;
           async;
@@ -1994,16 +1991,19 @@ end = struct
       let typeParameters = Ast.Expression.Object.Property.(match kind with
       | Get | Set -> None
       | _ -> Type.type_parameter_declaration env) in
-      let params, defaults, rest = Declaration.function_params env in
-      Ast.Expression.Object.Property.(match kind, params, defaults, rest with
-      | Get, [], [], None -> ()
-      | Set, [_], [], None -> ()
-      | Get, _, _, _ -> error_at env (key_loc, Error.GetterArity)
-      | Set, _, _, _ -> error_at env (key_loc, Error.SetterArity)
-      | Init, _, _, _ -> ());
+      let params, rest = Declaration.function_params env in
+      Ast.Expression.Object.Property.(match kind, params, rest with
+      | Get, [], None -> ()
+      | Set, [(_, Pattern.Assignment _)], None ->
+          (* defaults don't make sense on a setter *)
+          error_at env (key_loc, Error.SetterArity)
+      | Set, [_], None -> ()
+      | Get, _, _ -> error_at env (key_loc, Error.GetterArity)
+      | Set, _, _ -> error_at env (key_loc, Error.SetterArity)
+      | Init, _, _ -> ());
       let returnType = Type.annotation_opt env in
       let _, body, strict = Declaration.function_body env ~async ~generator in
-      let simple = Declaration.is_simple_function_params params defaults rest in
+      let simple = Declaration.is_simple_function_params params rest in
       Declaration.strict_post_check env ~strict ~simple None params;
       let end_loc, expression = Function.(
         match body with
@@ -2012,7 +2012,6 @@ end = struct
       let value = end_loc, Function.({
         id = None;
         params;
-        defaults;
         rest;
         body;
         generator;
@@ -2102,11 +2101,11 @@ end = struct
             | T_LESS_THAN
             | T_LPAREN ->
                 let typeParameters = Type.type_parameter_declaration env in
-                let params, defaults, rest = Declaration.function_params env in
+                let params, rest = Declaration.function_params env in
                 let returnType = Type.annotation_opt env in
                 let _, body, strict =
                   Declaration.function_body env ~async ~generator in
-                let simple = Declaration.is_simple_function_params params defaults rest in
+                let simple = Declaration.is_simple_function_params params rest in
                 Declaration.strict_post_check env ~strict ~simple None params;
                 let end_loc, expression = Function.(
                   match body with
@@ -2115,7 +2114,6 @@ end = struct
                 let value = end_loc, Ast.Expression.(Function Function.({
                   id = None;
                   params;
-                  defaults;
                   rest;
                   body;
                   generator;
@@ -2309,12 +2307,11 @@ end = struct
           })))
         | _ ->
           let typeParameters = Type.type_parameter_declaration env in
-          let params, defaults, rest = Declaration.function_params env in
+          let params, rest = Declaration.function_params env in
           let returnType = Type.annotation_opt env in
           let _, body, strict =
             Declaration.function_body env ~async ~generator in
-          let simple =
-            Declaration.is_simple_function_params params defaults rest in
+          let simple = Declaration.is_simple_function_params params rest in
           Declaration.strict_post_check env ~strict ~simple None params;
           let end_loc, expression = Function.(
             match body with
@@ -2323,7 +2320,6 @@ end = struct
           let value = end_loc, Function.({
             id = None;
             params;
-            defaults;
             rest;
             body;
             generator;

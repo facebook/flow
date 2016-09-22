@@ -217,7 +217,6 @@ end with type t = Impl.t) = struct
       node node_type loc [|
         "id", node_value;
         "params", array_of_list pattern fn.params;
-        "defaults", array_of_list (option expression) fn.defaults;
         "rest", option identifier fn.rest;
         "body", body;
         "async", bool fn.async;
@@ -324,7 +323,6 @@ end with type t = Impl.t) = struct
         node "ArrowFunctionExpression" loc [|
           "id", option identifier arrow.id;
           "params", array_of_list pattern arrow.params;
-          "defaults", array_of_list (option expression) arrow.defaults;
           "rest", option identifier arrow.rest;
           "body", body;
           "async", bool arrow.async;
@@ -528,7 +526,6 @@ end with type t = Impl.t) = struct
     node "FunctionExpression" loc [|
       "id", option identifier _function.id;
       "params", array_of_list pattern _function.params;
-      "defaults", array_of_list (option expression) _function.defaults;
       "rest", option identifier _function.rest;
       "body", body;
       "async", bool _function.async;

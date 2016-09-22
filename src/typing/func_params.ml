@@ -24,7 +24,7 @@ let empty = {
 
 (* Ast.Function.t -> Func_params.t *)
 let mk cx type_params_map ~expr func =
-  let add_param params pattern default = Ast.Pattern.(
+  let add_param_with_default params pattern default = Ast.Pattern.(
     match pattern with
     | loc, Identifier (_, { Ast.Identifier.name; typeAnnotation; optional }) ->
       let reason = mk_reason (Utils.spf "parameter `%s`" name) loc in
@@ -73,6 +73,13 @@ let mk cx type_params_map ~expr func =
       let param = Complex (t, List.rev !rev_bindings) in
       { list = param :: params.list; defaults = !defaults }
   ) in
+  let add_param params pattern = Ast.Pattern.(
+    match pattern with
+    | _, Assignment { Ast.Pattern.Assignment.left; right; } ->
+      add_param_with_default params left (Some right)
+    | _ ->
+      add_param_with_default params pattern None
+  ) in
   let add_rest params =
     function loc, { Ast.Identifier.name; typeAnnotation; _ } ->
       let reason = mk_reason (Utils.spf "rest parameter `%s`" name) loc in
@@ -82,13 +89,8 @@ let mk cx type_params_map ~expr func =
       let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
       { params with list =  param :: params.list }
   in
-  let {Ast.Function.params; defaults; rest; _} = func in
-  let defaults =
-    if defaults = [] && params <> []
-    then List.map (fun _ -> None) params
-    else defaults
-  in
-  let params = List.fold_left2 add_param empty params defaults in
+  let {Ast.Function.params; rest; _} = func in
+  let params = List.fold_left add_param empty params in
   let params = match rest with
   | Some ident -> add_rest params ident
   | None -> params

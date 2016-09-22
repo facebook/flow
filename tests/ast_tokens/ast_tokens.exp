@@ -412,7 +412,6 @@
             "range":[196,210],
             "id":null,
             "params":[],
-            "defaults":[],
             "rest":null,
             "body":{
               "type":"Literal",

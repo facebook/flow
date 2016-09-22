@@ -997,7 +997,6 @@ and Function : sig
   type t = {
     id: Identifier.t option;
     params: Pattern.t list;
-    defaults: Expression.t option list;
     rest: Identifier.t option;
     body: body;
     async: bool;
