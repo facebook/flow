@@ -41,6 +41,13 @@ code, pre {
     -webkit-font-smoothing: subpixel-antialiased;
 }
 
+p code {
+    background-color: #eee;
+    border: 1px solid #ccc;
+    font-size: 80%;
+    padding: 1px;
+}
+
 td {
     vertical-align: top;
 }
