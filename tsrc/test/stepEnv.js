@@ -7,6 +7,7 @@ export interface StepEnvWriteable {
   reportStderr(output: string): void;
   reportExitCode(code: number): void;
   setNewErrors(errors: FlowResult): void;
+  setServerPid(pid: ?number): void;
   triggerFlowCheck(): void;
 }
 
@@ -16,6 +17,7 @@ export interface StepEnvReadable {
   getExitCodes(): Array<number>;
   getOldErrors(): FlowResult;
   getNewErrors(): FlowResult;
+  getServerPid(): ?number;
   shouldRunFlow(): boolean;
 }
 
@@ -26,6 +28,7 @@ export function newEnv(
   let stderr = [];
   let exitCodes = [];
   let newErrors = oldErrors;
+  let serverPid = undefined;
   let shouldRunFlow = false;
 
   const envWrite = {
@@ -43,6 +46,10 @@ export function newEnv(
 
     setNewErrors(errors) {
       newErrors = errors;
+    },
+
+    setServerPid(pid) {
+      serverPid = pid;
     },
 
     triggerFlowCheck() {
@@ -69,6 +76,10 @@ export function newEnv(
 
     getNewErrors() {
       return newErrors;
+    },
+
+    getServerPid() {
+      return serverPid;
     },
 
     shouldRunFlow() {

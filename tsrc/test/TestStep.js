@@ -6,6 +6,7 @@ import noNewErrors from './assertions/noNewErrors';
 import stderr from './assertions/stderr';
 import stdout from './assertions/stdout';
 import exitCodes from './assertions/exitCodes';
+import serverRunning from './assertions/serverRunning';
 import noop from './assertions/noop';
 
 import type {
@@ -123,6 +124,11 @@ class TestStepFirstOrSecondStage extends TestStep {
     return this._cloneWithAssertion(exitCodes(expected, assertLoc));
   }
 
+  serverRunning(expected: boolean): TestStepSecondStage {
+    const assertLoc = searchStackForTestAssertion();
+    return this._cloneWithAssertion(serverRunning(expected, assertLoc));
+  }
+
   _cloneWithAssertion(assertion: ErrorAssertion) {
     const ret = new TestStepSecondStage(this);
     ret._assertions.push(assertion);
@@ -192,6 +198,17 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
           env.reportStdout(stdout);
           env.reportStderr(stderr);
           env.triggerFlowCheck();
+        }
+      );
+      ret._needsFlowServer = true;
+      return ret;
+    };
+
+  waitForServerToDie: (timeout: number) => TestStepFirstStage =
+    (timeout) => {
+      const ret = this._cloneWithAction(
+        async (builder, env) => {
+          await builder.waitForServerToDie(timeout);
         }
       );
       ret._needsFlowServer = true;

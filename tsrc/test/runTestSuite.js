@@ -128,6 +128,10 @@ export default async function(
           flowErrors = null;
         }
 
+        // expose the pid of the server to the env, so that assertions can check
+        // on the server status
+        envWrite.setServerPid(testBuilder.server);
+
         let result = step.checkAssertions(envRead);
         if (result.passed) {
           stepsPassed++;

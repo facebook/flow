@@ -213,3 +213,20 @@ export function glob(
     });
   });
 }
+
+export function isRunning(pid: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    try {
+      process.kill(pid, 0);
+      resolve(true);
+    } catch (e) {
+      resolve(e.code === 'EPERM');
+    }
+  });
+}
+
+export function sleep(timeout: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
+}
