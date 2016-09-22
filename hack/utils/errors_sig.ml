@@ -320,7 +320,7 @@ module type S = sig
   val instanceof_always_true : Pos.t -> unit
 
   val to_json : Pos.absolute error_ -> Hh_json.json
-  val to_string : Pos.absolute error_ -> string
+  val to_string : ?indent:bool -> Pos.absolute error_ -> string
   val try_ : (unit -> 'a) -> (error -> 'a) -> 'a
   val try_with_error : (unit -> 'a) -> (unit -> 'a) -> 'a
   val try_add_err : Pos.t -> string -> (unit -> 'a) -> (unit -> 'a) -> 'a
