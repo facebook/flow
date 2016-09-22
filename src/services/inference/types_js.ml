@@ -661,11 +661,11 @@ let server_init genv =
   let (timing, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in
 
-  SharedMem.init_done();
-
   let errors = get_errors () in
   if Options.is_check_mode options
   then print_errors ~timing options errors;
+
+  SharedMem.init_done();
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
