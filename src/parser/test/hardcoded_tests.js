@@ -412,10 +412,11 @@ module.exports = {
             'optional': false,
           },
           {
-            'optional': true,
+            'type': 'AssignmentPattern',
+            'left.optional': true,
+            'right.value': 123,
           },
         ],
-        'body.0.defaults.1.value': 123,
       },
       'class Foo {set fooProp(value:number){}}': {
         'body.0.body.body.0.value.params.0.typeAnnotation.typeAnnotation': {
@@ -4276,7 +4277,6 @@ module.exports = {
               'optional':false
             }
           ],
-          'defaults':[],
           'rest':null,
           'body':{
             'type':'BlockStatement',
@@ -4344,7 +4344,6 @@ module.exports = {
                     'optional':false
                   }
                 ],
-                'defaults':[],
                 'rest':null,
                 'body':{
                   'type':'BinaryExpression',
@@ -4389,7 +4388,6 @@ module.exports = {
                 'optional':false
               }
             ],
-            'defaults':[],
             'rest':null,
             'body':{
               'type':'BinaryExpression',

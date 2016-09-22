@@ -4721,7 +4721,6 @@ and declare_function_to_function_declaration cx id predicate =
           Some (Ast.Statement.FunctionDeclaration Ast.Function.({
             id = Some id;
             params = params;
-            defaults = [];
             rest = None;
             body = body;
             async = false;

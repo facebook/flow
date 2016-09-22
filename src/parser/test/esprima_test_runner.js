@@ -244,16 +244,47 @@ function handleSpecialObjectCompare(esprima, flow, env) {
     case 'FunctionDeclaration':
     case 'FunctionExpression':
     case 'ArrowFunctionExpression':
-      if (Array.isArray(esprima.defaults)) {
+      // esprima-fb uses a "defaults" array that is parallel to the "params"
+      // array. Flow and modern esprima use AssignmentPatterns within the
+      // params array.
+      if (Array.isArray(esprima.defaults) && Array.isArray(esprima.params)) {
         for (var i = 0; i < esprima.defaults.length; i++) {
-          if (esprima.defaults[i] === undefined) {
-            esprima.defaults[i] = null;
+          var left = esprima.params[i];
+          var right = esprima.defaults[i];
+          if (right !== undefined && right !== null) {
+            var newParam = {
+              type: 'AssignmentPattern',
+              left: left,
+              right: right,
+            };
+            if (left.loc && right.loc) {
+              newParam.loc = {
+                start: {
+                  line: left.loc.start.line,
+                  column: left.loc.start.column,
+                },
+                end: {
+                  line: right.loc.end.line,
+                  column: right.loc.end.column,
+                },
+              };
+              if (left.loc.source) {
+                newParam.loc.source = left.loc.source;
+              }
+            }
+            if (left.range && right.range) {
+              newParam.range = [left.range[0], right.range[1]];
+            }
+            esprima.params[i] = newParam;
           }
         }
+        delete esprima.defaults;
       }
+
       if (esprima.async === undefined) {
         esprima.async = false;
       }
+
       delete flow.predicate;
   }
 
