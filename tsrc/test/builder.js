@@ -10,9 +10,11 @@ import {
   appendFile,
   exec,
   execManual,
+  isRunning,
   mkdirp,
   readdir,
   readFile,
+  sleep,
   unlink,
   writeFile,
 } from '../async';
@@ -255,6 +257,18 @@ export class TestBuilder {
           console.log("Failed to kill server %s", server);
         }
       }
+    }
+  }
+
+  async waitForServerToDie(timeout: number): Promise<void> {
+    const pid = this.server;
+    if (pid == null) {
+      throw new Error('Cannot wait for a server that never started');
+    }
+    let remaining = timeout;
+    while (remaining > 0 && await isRunning(pid)) {
+      remaining -= 100;
+      await sleep(100);
     }
   }
 }

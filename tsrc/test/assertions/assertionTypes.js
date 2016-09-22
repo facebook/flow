@@ -8,7 +8,13 @@ export type AssertionLocation = {
   column: number
 };
 
-type AssertionMethod = 'noNewErrors' | 'newErrors' | 'stdout' | 'stderr' | 'exitCodes';
+type AssertionMethod =
+  | 'noNewErrors'
+  | 'newErrors'
+  | 'stdout'
+  | 'stderr'
+  | 'exitCodes'
+  | 'serverRunning';
 
 export type Suggestion = {
   method: AssertionMethod,
