@@ -1190,7 +1190,6 @@ export default suite(({addFile, flowCmd}) => [
                       ],
                       "id": null,
                       "params": [],
-                      "defaults": [],
                       "rest": null,
                       "body": {
                         "type": "Literal",
