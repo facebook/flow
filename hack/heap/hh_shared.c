@@ -711,6 +711,14 @@ static void define_globals(char * shared_mem_init) {
   // Beginning of the shared memory
   shared_mem = mem;
 
+  #ifdef MADV_DONTDUMP
+    // We are unlikely to get much useful information out of the shared heap in
+    // a core file. Moreover, it can be HUGE, and the extensive work done dumping
+    // it once for each CPU can mean that the user will reboot their machine
+    // before the much more useful stack gets dumped!
+    madvise(shared_mem, shared_mem_size, MADV_DONTDUMP);
+  #endif
+
   /* BEGINNING OF THE SMALL OBJECTS PAGE
    * We keep all the small objects in this page.
    * They are on different cache lines because we modify them atomically.
@@ -808,6 +816,8 @@ static void set_sizes(
   bindings_size_b = dep_size * sizeof(deptbl_bindings[0]);
   hashtbl_size    = 1ul << config_hash_table_pow;
   hashtbl_size_b  = hashtbl_size * sizeof(hashtbl[0]);
+
+  shared_mem_size = get_shared_mem_size();
 }
 
 /*****************************************************************************/
@@ -839,8 +849,6 @@ CAMLprim value hh_shared_init(
     Long_val(config_hash_table_pow_val)
   );
 
-  shared_mem_size = get_shared_mem_size();
-
   // None -> NULL
   // Some str -> String_val(str)
   char *shm_dir = NULL;
@@ -863,15 +871,6 @@ CAMLprim value hh_shared_init(
 #else
   *master_pid = getpid();
   my_pid = *master_pid;
-#endif
-
-
-#ifdef MADV_DONTDUMP
-  // We are unlikely to get much useful information out of the shared heap in
-  // a core file. Moreover, it can be HUGE, and the extensive work done dumping
-  // it once for each CPU can mean that the user will reboot their machine
-  // before the much more useful stack gets dumped!
-  madvise(shared_mem, shared_mem_size, MADV_DONTDUMP);
 #endif
 
   init_shared_globals(Long_val(Field(config_val, 6)));
@@ -915,7 +914,7 @@ value hh_connect(value connector, value is_master) {
 #else
   my_pid = getpid();
 #endif
-  char *shared_mem_init = memfd_map(get_shared_mem_size());
+  char *shared_mem_init = memfd_map(shared_mem_size);
   define_globals(shared_mem_init);
 
   if (Bool_val(is_master)) {
