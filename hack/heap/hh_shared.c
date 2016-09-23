@@ -1739,9 +1739,10 @@ void hh_save_dep_table(value out_filename) {
 /* Reads a dependency graph from a file. See hh_save_dep_table for a
  * description of the file format.
  */
-void hh_load_dep_table(value in_filename) {
+CAMLprim value hh_load_dep_table(value in_filename) {
   CAMLparam1(in_filename);
   struct timeval tv;
+  struct timeval tv2;
   gettimeofday(&tv, NULL);
 
   FILE* fp = fopen(String_val(in_filename), "rb");
@@ -1772,6 +1773,8 @@ void hh_load_dep_table(value in_filename) {
 
   fclose_no_fail(fp);
 
-  log_duration("Reading dependency file", tv);
-  CAMLreturn0;
+  tv2 = log_duration("Reading dependency file", tv);
+  int secs = tv2.tv_sec - tv.tv_sec;
+  // Reporting only seconds, ignore milli seconds
+  CAMLreturn(Val_long(secs));
 }

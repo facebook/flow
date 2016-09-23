@@ -74,7 +74,7 @@ val save_dep_table: string -> unit
 (*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
-val load_dep_table: string -> unit
+val load_dep_table: string -> int
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)

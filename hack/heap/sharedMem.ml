@@ -141,7 +141,7 @@ external save_dep_table: string -> unit = "hh_save_dep_table"
 (*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
-external load_dep_table: string -> unit = "hh_load_dep_table"
+external load_dep_table: string -> int = "hh_load_dep_table"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)
