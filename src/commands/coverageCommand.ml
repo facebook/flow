@@ -183,36 +183,42 @@ let rec split_overlapping_ranges accum = Loc.(function
 )
 
 let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) content =
-  if debug then List.iter debug_range types;
+  if color && json then
+    prerr_endline "Error: --color and --json flags cannot be used together"
+  else if debug && json then
+    prerr_endline "Error: --debug and --json flags cannot be used together"
+  else (
+    if debug then List.iter debug_range types;
 
-  begin if color then
-    let types = split_overlapping_ranges [] types |> List.rev in
-    let colors, _ = colorize_file content 0 [] types in
-    Tty.cprint (List.rev colors);
-    print_endline ""
-  end;
+    begin if color then
+      let types = split_overlapping_ranges [] types |> List.rev in
+      let colors, _ = colorize_file content 0 [] types in
+      Tty.cprint (List.rev colors);
+      print_endline ""
+    end;
 
-  let covered, total = List.fold_left accum_coverage (0, 0) types in
-  let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
+    let covered, total = List.fold_left accum_coverage (0, 0) types in
+    let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
-  if json then
-    let uncovered_locs = types
-      |> List.filter (fun (_, is_covered) -> not is_covered)
-      |> List.map (fun (loc, _) -> loc)
-    in
-    let open Hh_json in
-    JSON_Object [
-      "expressions", JSON_Object [
-        "covered_count", int_ covered;
-        "uncovered_count", int_ (total - covered);
-        "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
-      ];
-    ]
-    |> json_to_string ~pretty
-    |> print_endline
-  else
-    Utils_js.print_endlinef
-      "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
+    if json then
+      let uncovered_locs = types
+        |> List.filter (fun (_, is_covered) -> not is_covered)
+        |> List.map (fun (loc, _) -> loc)
+      in
+      let open Hh_json in
+      JSON_Object [
+        "expressions", JSON_Object [
+          "covered_count", int_ covered;
+          "uncovered_count", int_ (total - covered);
+          "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
+        ];
+      ]
+      |> json_to_string ~pretty
+      |> print_endline
+    else
+      Utils_js.print_endlinef
+        "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
+  )
 
 let main option_values root json pretty color debug strip_root path filename () =
   let file = get_file_from_filename_or_stdin path filename in
