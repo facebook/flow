@@ -20,7 +20,7 @@ type metadata = {
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
   esproposal_export_star_as: Options.esproposal_feature_mode;
-  facebook_ignore_fbt: bool;
+  facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   munge_underscores: bool;
@@ -75,7 +75,7 @@ val property_maps: t -> Type.properties IMap.t
 val required: t -> SSet.t
 val require_loc: t -> Loc.t SMap.t
 val root: t -> Path.t
-val should_ignore_fbt: t -> bool
+val facebook_fbt: t -> string option
 val should_ignore_non_literal_requires: t -> bool
 val should_munge_underscores: t -> bool
 val should_strip_root: t -> bool

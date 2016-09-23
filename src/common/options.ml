@@ -33,7 +33,7 @@ type t = {
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;
   opt_esproposal_export_star_as: esproposal_feature_mode;
-  opt_ignore_fbt: bool;
+  opt_facebook_fbt: string option;
   opt_ignore_non_literal_requires: bool;
   opt_ignores: (string * Str.regexp) list;
   opt_includes: Path_matcher.t;
@@ -111,7 +111,7 @@ let node_resolver_dirnames opts = opts.opt_node_resolver_dirnames
 let output_graphml opts = opts.opt_output_graphml
 let root opts = opts.opt_root
 let should_detach opts = opts.opt_should_detach
-let should_ignore_fbt opts = opts.opt_ignore_fbt
+let facebook_fbt opts = opts.opt_facebook_fbt
 let should_ignore_non_literal_requires opts =
   opts.opt_ignore_non_literal_requires
 let should_munge_underscores opts = opts.opt_munge_underscores

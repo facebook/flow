@@ -21,7 +21,7 @@ type metadata = {
   esproposal_class_instance_fields: Options.esproposal_feature_mode;
   esproposal_decorators: Options.esproposal_feature_mode;
   esproposal_export_star_as: Options.esproposal_feature_mode;
-  facebook_ignore_fbt: bool;
+  facebook_fbt: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   munge_underscores: bool;
@@ -101,7 +101,7 @@ let metadata_of_options options = {
     Options.esproposal_class_instance_fields options;
   esproposal_decorators = Options.esproposal_decorators options;
   esproposal_export_star_as = Options.esproposal_export_star_as options;
-  facebook_ignore_fbt = Options.should_ignore_fbt options;
+  facebook_fbt = Options.facebook_fbt options;
   ignore_non_literal_requires =
     Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
@@ -189,7 +189,7 @@ let property_maps cx = cx.property_maps
 let required cx = cx.required
 let require_loc cx = cx.require_loc
 let root cx = cx.metadata.root
-let should_ignore_fbt cx = cx.metadata.facebook_ignore_fbt
+let facebook_fbt cx = cx.metadata.facebook_fbt
 let should_ignore_non_literal_requires cx =
   cx.metadata.ignore_non_literal_requires
 let should_munge_underscores cx  = cx.metadata.munge_underscores

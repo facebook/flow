@@ -337,8 +337,8 @@ module OptionParser(Config : CONFIG) = struct
       opt_esproposal_export_star_as = FlowConfig.(
         flowconfig.options.Opts.esproposal_export_star_as
       );
-      opt_ignore_fbt = FlowConfig.(
-        flowconfig.options.Opts.facebook_ignore_fbt
+      opt_facebook_fbt = FlowConfig.(
+        flowconfig.options.Opts.facebook_fbt
       );
       opt_ignore_non_literal_requires = FlowConfig.(
         flowconfig.options.Opts.ignore_non_literal_requires

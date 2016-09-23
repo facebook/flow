@@ -150,7 +150,7 @@ let get_ls_files ~subdir ~root ~strip_root ~ignore_flag ~include_flag =
     opt_esproposal_class_instance_fields = Options.ESPROPOSAL_WARN;
     opt_esproposal_decorators = Options.ESPROPOSAL_WARN;
     opt_esproposal_export_star_as = Options.ESPROPOSAL_WARN;
-    opt_ignore_fbt = false;
+    opt_facebook_fbt = None;
     opt_ignore_non_literal_requires = false;
     opt_max_header_tokens = FlowConfig.(
       flowconfig.options.Opts.max_header_tokens

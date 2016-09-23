@@ -3413,7 +3413,7 @@ and jsx cx = Ast.JSX.(
 
 and jsx_title cx openingElement _children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
-  let facebook_ignore_fbt = Context.should_ignore_fbt cx in
+  let facebook_fbt = Context.facebook_fbt cx in
 
   let mk_props reason c =
     let map = ref SMap.empty in
@@ -3460,12 +3460,13 @@ and jsx_title cx openingElement _children = Ast.JSX.(
             reason_prop o ex_t react_ignored_attributes
   in
 
-  match name with
-  | Identifier (_, { Identifier.name })
-      when name = "fbt" && facebook_ignore_fbt ->
-    AnyT.why (mk_reason "<fbt />" eloc)
+  match (name, facebook_fbt) with
+  | (Identifier (_, { Identifier.name }), Some facebook_fbt)
+      when name = "fbt" ->
+    let fbt_reason = mk_reason "<fbt />" eloc in
+    Flow.get_builtin_type cx fbt_reason facebook_fbt
 
-  | Identifier (loc, { Identifier.name }) when name = String.capitalize name ->
+  | (Identifier (loc, { Identifier.name }), _) when name = String.capitalize name ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then AnyT.at eloc
     else
@@ -3484,7 +3485,7 @@ and jsx_title cx openingElement _children = Ast.JSX.(
         ))
       )
 
-  | Identifier (loc, { Identifier.name }) ->
+  | (Identifier (loc, { Identifier.name }), _) ->
       (**
        * For JSX intrinsics, we assume a built-in global
        * object type: $JSXIntrinsics. The keys of this object type correspond to

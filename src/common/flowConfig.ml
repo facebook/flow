@@ -49,7 +49,7 @@ module Opts = struct
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
     esproposal_export_star_as: Options.esproposal_feature_mode;
-    facebook_ignore_fbt: bool;
+    facebook_fbt: string option;
     ignore_non_literal_requires: bool;
     moduleSystem: moduleSystem;
     module_name_mappers: (Str.regexp * string) list;
@@ -144,7 +144,7 @@ module Opts = struct
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
     esproposal_export_star_as = Options.ESPROPOSAL_WARN;
-    facebook_ignore_fbt = false;
+    facebook_fbt = None;
     ignore_non_literal_requires = false;
     moduleSystem = Node;
     module_name_mappers = [];
@@ -422,12 +422,12 @@ let parse_options config lines =
       });
     }
 
-    |> define_opt "facebook.ignore_fbt" {
+    |> define_opt "facebook.fbt" {
       _initializer = USE_DEFAULT;
       flags = [];
-      optparser = optparse_boolean;
+      optparser = optparse_string;
       setter = (fun opts v -> {
-        opts with facebook_ignore_fbt = v;
+        opts with facebook_fbt = Some v;
       });
     }
 
