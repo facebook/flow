@@ -1,0 +1,6 @@
+{
+    "index": 30,
+    "lineNumber": 1,
+    "column": 31,
+    "message": "Error: Line 1: Duplicate __proto__ fields are not allowed in object literals"
+}

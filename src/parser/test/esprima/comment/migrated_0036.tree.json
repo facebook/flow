@@ -1,0 +1,12 @@
+{
+    "type": "Program",
+    "body": [],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Line",
+            "value": " foo"
+        }
+    ],
+    "tokens": []
+}

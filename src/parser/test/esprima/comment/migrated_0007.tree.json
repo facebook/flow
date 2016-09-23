@@ -1,0 +1,54 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "ExpressionStatement",
+            "expression": {
+                "type": "Literal",
+                "value": 42,
+                "raw": "42",
+                "range": [
+                    0,
+                    2
+                ]
+            },
+            "range": [
+                0,
+                21
+            ]
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": "the",
+            "range": [
+                3,
+                10
+            ]
+        },
+        {
+            "type": "Block",
+            "value": "answer",
+            "range": [
+                11,
+                21
+            ]
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Numeric",
+            "value": "42",
+            "range": [
+                0,
+                2
+            ]
+        }
+    ],
+    "range": [
+        0,
+        21
+    ]
+}

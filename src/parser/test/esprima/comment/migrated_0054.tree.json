@@ -1,0 +1,199 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "range": [
+                5,
+                39
+            ],
+            "type": "FunctionDeclaration",
+            "id": {
+                "range": [
+                    14,
+                    15
+                ],
+                "type": "Identifier",
+                "name": "a"
+            },
+            "params": [],
+            "body": {
+                "range": [
+                    18,
+                    39
+                ],
+                "type": "BlockStatement",
+                "body": [
+                    {
+                        "range": [
+                            23,
+                            38
+                        ],
+                        "type": "FunctionDeclaration",
+                        "id": {
+                            "range": [
+                                32,
+                                33
+                            ],
+                            "type": "Identifier",
+                            "name": "o"
+                        },
+                        "params": [],
+                        "body": {
+                            "range": [
+                                36,
+                                38
+                            ],
+                            "type": "BlockStatement",
+                            "body": []
+                        },
+                        "generator": false,
+                        "expression": false,
+                        "leadingComments": [
+                            {
+                                "type": "Block",
+                                "value": "",
+                                "range": [
+                                    19,
+                                    23
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "generator": false,
+            "expression": false,
+            "leadingComments": [
+                {
+                    "type": "Block",
+                    "value": "",
+                    "range": [
+                        0,
+                        4
+                    ]
+                }
+            ]
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": "",
+            "range": [
+                0,
+                4
+            ]
+        },
+        {
+            "type": "Block",
+            "value": "",
+            "range": [
+                19,
+                23
+            ]
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "function",
+            "range": [
+                5,
+                13
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "a",
+            "range": [
+                14,
+                15
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "(",
+            "range": [
+                15,
+                16
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ")",
+            "range": [
+                16,
+                17
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "{",
+            "range": [
+                18,
+                19
+            ]
+        },
+        {
+            "type": "Keyword",
+            "value": "function",
+            "range": [
+                23,
+                31
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "o",
+            "range": [
+                32,
+                33
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "(",
+            "range": [
+                33,
+                34
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ")",
+            "range": [
+                34,
+                35
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "{",
+            "range": [
+                36,
+                37
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "}",
+            "range": [
+                37,
+                38
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "}",
+            "range": [
+                38,
+                39
+            ]
+        }
+    ],
+    "range": [
+        5,
+        39
+    ]
+}

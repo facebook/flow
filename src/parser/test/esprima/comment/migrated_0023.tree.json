@@ -1,0 +1,20 @@
+{
+    "type": "Program",
+    "body": [],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Line",
+            "value": " ",
+            "range": [
+                0,
+                3
+            ]
+        }
+    ],
+    "tokens": [],
+    "range": [
+        3,
+        3
+    ]
+}

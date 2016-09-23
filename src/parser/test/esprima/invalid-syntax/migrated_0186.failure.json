@@ -1,0 +1,6 @@
+{
+    "index": 45,
+    "lineNumber": 1,
+    "column": 46,
+    "message": "Error: Line 1: Variable name may not be eval or arguments in strict mode"
+}

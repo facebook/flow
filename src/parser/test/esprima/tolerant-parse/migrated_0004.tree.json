@@ -1,0 +1,48 @@
+{
+    "type": "Program",
+    "body": [],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": " foo \n\n",
+            "range": [
+                0,
+                9
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 3,
+                    "column": 0
+                }
+            }
+        }
+    ],
+    "tokens": [],
+    "errors": [
+        {
+            "index": 9,
+            "lineNumber": 3,
+            "column": 1,
+            "message": "Error: Line 3: Unexpected token ILLEGAL"
+        }
+    ],
+    "range": [
+        9,
+        9
+    ],
+    "loc": {
+        "start": {
+            "line": 3,
+            "column": 0
+        },
+        "end": {
+            "line": 3,
+            "column": 0
+        }
+    }
+}

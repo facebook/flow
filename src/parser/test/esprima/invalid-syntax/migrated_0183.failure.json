@@ -1,0 +1,6 @@
+{
+    "index": 37,
+    "lineNumber": 1,
+    "column": 38,
+    "message": "Error: Line 1: Delete of an unqualified identifier in strict mode."
+}

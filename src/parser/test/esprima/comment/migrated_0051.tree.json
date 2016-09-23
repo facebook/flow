@@ -1,0 +1,150 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "range": [
+                0,
+                51
+            ],
+            "type": "ExpressionStatement",
+            "expression": {
+                "range": [
+                    14,
+                    50
+                ],
+                "type": "ObjectExpression",
+                "properties": [
+                    {
+                        "range": [
+                            40,
+                            48
+                        ],
+                        "type": "Property",
+                        "key": {
+                            "range": [
+                                40,
+                                42
+                            ],
+                            "type": "Identifier",
+                            "name": "p1"
+                        },
+                        "computed": false,
+                        "value": {
+                            "range": [
+                                44,
+                                48
+                            ],
+                            "type": "Literal",
+                            "value": null,
+                            "raw": "null"
+                        },
+                        "kind": "init",
+                        "method": false,
+                        "shorthand": false,
+                        "leadingComments": [
+                            {
+                                "type": "Block",
+                                "value": " comment 2 ",
+                                "range": [
+                                    20,
+                                    35
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "leadingComments": [
+                    {
+                        "type": "Block",
+                        "value": " comment ",
+                        "range": [
+                            1,
+                            14
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": " comment ",
+            "range": [
+                1,
+                14
+            ]
+        },
+        {
+            "type": "Block",
+            "value": " comment 2 ",
+            "range": [
+                20,
+                35
+            ]
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Punctuator",
+            "value": "(",
+            "range": [
+                0,
+                1
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "{",
+            "range": [
+                14,
+                15
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "p1",
+            "range": [
+                40,
+                42
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ":",
+            "range": [
+                42,
+                43
+            ]
+        },
+        {
+            "type": "Null",
+            "value": "null",
+            "range": [
+                44,
+                48
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "}",
+            "range": [
+                49,
+                50
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ")",
+            "range": [
+                50,
+                51
+            ]
+        }
+    ],
+    "range": [
+        0,
+        51
+    ]
+}

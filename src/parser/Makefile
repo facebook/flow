@@ -54,6 +54,18 @@ js:
 test-js: build-parser js
 	npm test
 
+../../_build/$(REL_DIR)/test/run_esprima_tests.native: build-parser
+	cd $(TOP); \
+	ocamlbuild \
+		-ocamlc "ocamlopt" \
+		$(NATIVE_OBJECT_FILES); \
+	ocamlbuild \
+		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
+	 	-lib unix -lib str \
+	 	-lflags "$(NATIVE_OBJECT_FILES)" \
+		$(REL_DIR)/test/run_esprima_tests.native; \
+	rm run_esprima_tests.native
+
 ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native: build-parser
 	cd $(TOP); \
 	ocamlbuild \
@@ -66,9 +78,15 @@ test-js: build-parser js
 		$(REL_DIR)/test/run_hardcoded_tests.native; \
 	rm run_hardcoded_tests.native
 
-test-ocaml: ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native
+test-esprima-ocaml: ../../_build/$(REL_DIR)/test/run_esprima_tests.native
+	cd $(TOP); \
+	_build/$(REL_DIR)/test/run_esprima_tests.native $(REL_DIR)/test/esprima/
+
+test-hardcoded-ocaml: ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native
 	cd $(TOP); \
 	_build/$(REL_DIR)/test/run_hardcoded_tests.native $(REL_DIR)/test/hardcoded_tests.js
+
+test-ocaml: test-hardcoded-ocaml
 
 test: test-js test-ocaml
 

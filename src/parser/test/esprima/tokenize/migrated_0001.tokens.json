@@ -1,0 +1,132 @@
+[
+    {
+        "type": "Keyword",
+        "value": "if",
+        "range": [
+            0,
+            2
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 0
+            },
+            "end": {
+                "line": 1,
+                "column": 2
+            }
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": "(",
+        "range": [
+            3,
+            4
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 3
+            },
+            "end": {
+                "line": 1,
+                "column": 4
+            }
+        }
+    },
+    {
+        "type": "Boolean",
+        "value": "false",
+        "range": [
+            4,
+            9
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 4
+            },
+            "end": {
+                "line": 1,
+                "column": 9
+            }
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": ")",
+        "range": [
+            9,
+            10
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 9
+            },
+            "end": {
+                "line": 1,
+                "column": 10
+            }
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": "{",
+        "range": [
+            11,
+            12
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 11
+            },
+            "end": {
+                "line": 1,
+                "column": 12
+            }
+        }
+    },
+    {
+        "type": "RegularExpression",
+        "value": "/42/",
+        "range": [
+            13,
+            17
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 13
+            },
+            "end": {
+                "line": 1,
+                "column": 17
+            }
+        },
+        "regex": {
+            "pattern": "42",
+            "flags": ""
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": "}",
+        "range": [
+            18,
+            19
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 18
+            },
+            "end": {
+                "line": 1,
+                "column": 19
+            }
+        }
+    }
+]
