@@ -126,6 +126,8 @@
 #define assert(f) (f ? 0 : caml_failwith("assertion failed: " LOCATION))
 #endif
 
+#define HASHTBL_WRITE_IN_PROGRESS ((char*)1)
+
 /****************************************************************************
  * Quoting the linux manpage: memfd_create() creates an anonymous file
  * and returns a file descriptor that refers to it. The file behaves
@@ -1371,6 +1373,10 @@ void hh_collect(value aggressive_val) {
   size_t i;
   for(i = 0; i < hashtbl_size; i++) {
     if(hashtbl[i].addr != NULL) { // Found a non empty slot
+      // No workers should be writing at the moment. If a worker died in the
+      // middle of a write, that is also very bad
+      assert(hashtbl[i].addr != HASHTBL_WRITE_IN_PROGRESS);
+
       size_t bl_size      = Get_buf_size(hashtbl[i].addr);
       size_t aligned_size = ALIGNED(bl_size);
       char* addr          = Get_buf(hashtbl[i].addr);
@@ -1451,7 +1457,12 @@ static uint64_t get_hash(value key) {
 static void write_at(unsigned int slot, value data) {
   // Try to write in a value to indicate that the data is being written.
   if(hashtbl[slot].addr == NULL &&
-     __sync_bool_compare_and_swap(&(hashtbl[slot].addr), NULL, (char*)1)) {
+     __sync_bool_compare_and_swap(
+       &(hashtbl[slot].addr),
+       NULL,
+       HASHTBL_WRITE_IN_PROGRESS
+     )
+  ) {
     hashtbl[slot].addr = hh_store_ocaml(data);
   }
 }
