@@ -260,3 +260,30 @@ compatible with `Object`, but so are functions and classes.
 (class {}: Object);
 // $ExpectError
 ([]: Object); // Flow does not treat arrays as objects (likely to change)
+
+/*
+## Exact Object Types
+As we saw, the object type `{ x: string }` ensures that an object contains at least the property `x` of type `string`.
+
+Sometimes this isn't enough and we want to also make sure that `x` is the only property of the object. For this purpose we can use `{|` and `|}` instead of `{` and `}`:
+*/
+
+type User = { name: string, age: number };
+type StrictUser = {| name: string, age: number |};
+({ name: "Foo", age: 27 }: StrictUser);
+// $ExpectError
+({ name: "Foo", age: 27, foo: false }: StrictUser); // extra property 'foo' not allowed
+({ name: "Foo", age: 27, foo: false }: User); // no problem here
+// $ExpectError
+({ name: "Foo" }: User); // 'age' is missing
+// $ExpectError
+({ name: "Foo" }: StrictUser); // 'age' is missing
+
+/*
+ Finally, it's useful to notice that `{|..|}` is syntactic sugar for the `$Exact<...>` type operator, which can be used to "add strictness" to an existing object type:
+ */
+
+type StrictUser2 = $Exact<User>;
+// $ExpectError
+({ name: "Foo", age: 27, foo: false }: StrictUser2) // extra property 'foo' not allowed
+
