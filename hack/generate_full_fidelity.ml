@@ -495,19 +495,19 @@ let schema = List.map from_list [
     "print_expression";
     "print_keyword";
     "print_expr" ];
-  [ "PrefixUnaryOperator";
-    "prefix_unary_operator";
-    "prefix_unary_operator";
+  [ "PrefixUnaryExpression";
+    "prefix_unary_expression";
+    "prefix_unary_expression";
     "prefix_unary_operator";
     "prefix_unary_operand" ];
-  [ "PostfixUnaryOperator";
-    "postfix_unary_operator";
-    "postfix_unary_operator";
+  [ "PostfixUnaryExpression";
+    "postfix_unary_expression";
+    "postfix_unary_expression";
     "postfix_unary_operand";
     "postfix_unary_operator" ];
-  [ "BinaryOperator";
-    "binary_operator";
-    "binary_operator";
+  [ "BinaryExpression";
+    "binary_expression";
+    "binary_expression";
     "binary_left_operand";
     "binary_operator";
     "binary_right_operand" ];
@@ -838,7 +838,7 @@ module GenerateFFSyntax = struct
 %s        ]) ->
         %s {
 %s        }
-  "
+"
       x.kind_name fields x.kind_name fields
 
   let to_constructor_methods x =
@@ -854,8 +854,8 @@ module GenerateFFSyntax = struct
 "
       x.type_name fields1 x.kind_name fields2
 
-  let full_fidelity_syntax_template = "
-(**
+  let full_fidelity_syntax_template =
+"(**
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
@@ -866,6 +866,12 @@ module GenerateFFSyntax = struct
  *
  *)
 (* THIS FILE IS GENERATED; DO NOT EDIT IT *)
+(**
+  To regenerate this file build hphp/hack/src:generate_full_fidelity and run
+  the binary.
+  buck build hphp/hack/src:generate_full_fidelity
+  buck-out/bin/hphp/hack/src/generate_full_fidelity/generate_full_fidelity.opt
+*)
 (**
  * This module contains the code describing the structure of a syntax tree.
  *
@@ -1087,8 +1093,7 @@ CHILDREN_NAMES
 
     let syntax_from_children kind ts =
       match kind, ts with
-SYNTAX_FROM_CHILDREN
-      | (SyntaxKind.Missing, []) -> Missing
+SYNTAX_FROM_CHILDREN      | (SyntaxKind.Missing, []) -> Missing
       | (SyntaxKind.SyntaxList, items) -> SyntaxList items
       | _ -> failwith
         \"syntax_from_children called with wrong number of children\"
@@ -1164,8 +1169,8 @@ module GenerateFFSyntaxKind = struct
   let to_to_string x =
     Printf.sprintf "  | %s -> \"%s\"\n" x.kind_name x.description
 
-  let full_fidelity_syntax_kind_template = "
-(**
+  let full_fidelity_syntax_kind_template =
+"(**
  * Copyright (c) 2016, Facebook, Inc.
  * All rights reserved.
  *
@@ -1176,6 +1181,12 @@ module GenerateFFSyntaxKind = struct
  *
  *)
 (* THIS FILE IS GENERATED; DO NOT EDIT IT *)
+(**
+  To regenerate this file build hphp/hack/src:generate_full_fidelity and run
+  the binary.
+  buck build hphp/hack/src:generate_full_fidelity
+  buck-out/bin/hphp/hack/src/generate_full_fidelity/generate_full_fidelity.opt
+*)
 type t =
 | Token
 | Missing
@@ -1187,8 +1198,7 @@ let to_string kind =
   | Missing -> \"missing\"
   | Token -> \"token\"
   | SyntaxList -> \"list\"
-TO_STRING
-"
+TO_STRING"
 
 let full_fidelity_syntax_kind =
 {
