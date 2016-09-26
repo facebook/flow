@@ -2911,12 +2911,12 @@ end = struct
           }))
 
     and expression env =
-      let expression = Parse.expression env in
-      let end_loc = match Peek.semicolon_loc env with
-      | Some loc -> loc
-      | None -> fst expression in
+      let loc, expression = with_loc Parse.expression env in
+      let loc = match Peek.semicolon_loc env with
+      | Some semicolon_loc -> Loc.btwn loc semicolon_loc
+      | None -> loc in
       Eat.semicolon env;
-      Loc.btwn (fst expression) end_loc, Statement.(Expression Expression.({
+      loc, Statement.(Expression Expression.({
         expression;
       }))
 
