@@ -250,6 +250,7 @@ module type S = sig
   val visibility_extends : string -> Pos.t -> Pos.t -> string -> unit
   val member_not_implemented : string -> Pos.t -> Pos.t -> Pos.t -> unit
   val bad_decl_override : Pos.t -> string -> Pos.t -> string -> error -> unit
+  val bad_method_override : Pos.t -> string -> error -> unit
   val bad_enum_decl : Pos.t -> error -> unit
   val missing_constructor : Pos.t -> unit
   val enum_constant_type_bad : Pos.t -> Pos.t -> string -> Pos.t list -> unit
