@@ -60,6 +60,11 @@ let dead_env_from_alive env =
     reinit_attempts = 0;
   }
 
+type 'a changes =
+  | Watchman_unavailable
+  | Watchman_pushed of 'a
+  | Watchman_synchronous of 'a
+
 type watchman_instance =
   (** Indicates a dead watchman instance (most likely due to chef upgrading,
    * reconfiguration, or a user terminating watchman) detected by,
@@ -279,29 +284,7 @@ let init { init_timeout; subscribe_to_changes; root } =
     clockspec;
   } in
   if subscribe_to_changes then (ignore @@ exec env.socket (subscribe env)) ;
-  Watchman_alive env
-
-let with_crash_record instance source ~fallback_value f =
-  match instance with
-  | Watchman_dead _ ->
-    instance, fallback_value
-  | Watchman_alive env -> begin
-    try
-      instance, with_crash_record_exn env.settings.root source (fun () -> f env)
-    with
-      | Sys_error("Broken pipe") ->
-        Hh_logger.log "Watchman Pipe broken.";
-        EventLogger.watchman_died_caught ();
-        Watchman_dead (dead_env_from_alive env), fallback_value
-      | Sys_error("Connection reset by peer") ->
-        Hh_logger.log "Watchman connection reset by peer.";
-        EventLogger.watchman_died_caught ();
-        Watchman_dead (dead_env_from_alive env), fallback_value
-      | e ->
-        let msg = Printexc.to_string e in
-        EventLogger.watchman_uncaught_failure msg;
-        Exit_status.(exit Watchman_failed)
-  end
+  env
 
 let poll_for_updates env =
   (* Use the timeout mechanism to manage our polling frequency. *)
@@ -352,35 +335,58 @@ let maybe_restart_instance instance = match instance with
         EventLogger.watchman_connection_reestablishment_failed ();
         Watchman_dead { dead_env with
           reinit_attempts = dead_env.reinit_attempts + 1 }
-      | Some (Watchman_dead _) ->
-        Hh_logger.log "Watchman subscription failed during reestablishment";
-        EventLogger.watchman_connection_reestablishment_failed ();
-        Watchman_dead { dead_env with
-          reinit_attempts = dead_env.reinit_attempts + 1 }
-      | Some (Watchman_alive env) ->
+      | Some env ->
         Hh_logger.log "Watchman connection reestablished.";
         EventLogger.watchman_connection_reestablished ();
         Watchman_alive env
     else
       instance
 
-let get_all_files instance =
+let call_on_instance instance source f =
   let instance = maybe_restart_instance instance in
-  with_crash_record instance "get_all_files" ~fallback_value:[] @@ fun env ->
+  match instance with
+  | Watchman_dead _ ->
+    instance, Watchman_unavailable
+  | Watchman_alive env -> begin
+    try
+      instance, with_crash_record_exn env.settings.root source (fun () -> f env)
+    with
+      | Sys_error("Broken pipe") ->
+        Hh_logger.log "Watchman Pipe broken.";
+        EventLogger.watchman_died_caught ();
+        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+      | Sys_error("Connection reset by peer") ->
+        Hh_logger.log "Watchman connection reset by peer.";
+        EventLogger.watchman_died_caught ();
+        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+      | e ->
+        let msg = Printexc.to_string e in
+        EventLogger.watchman_uncaught_failure msg;
+        Exit_status.(exit Watchman_failed)
+  end
+
+let get_all_files env =
+  try with_crash_record_exn env.settings.root "get_all_files"  @@ fun () ->
     let response = exec env.socket (all_query env) in
     env.clockspec <- J.get_string_val "clock" response;
-    extract_file_names env response
+    extract_file_names env response with
+    | _ ->
+      Exit_status.(exit Watchman_failed)
+
+let transform_changes_response env data =
+    env.clockspec <- J.get_string_val "clock" data;
+    set_of_list @@ extract_file_names env data
 
 let get_changes instance =
-  let instance = maybe_restart_instance instance in
-  with_crash_record instance "get_changes"
-    ~fallback_value:SSet.empty @@ fun env ->
+  call_on_instance instance "get_changes" @@ fun env ->
     let response = begin
-        if env.settings.subscribe_to_changes then poll_for_updates env
-        else exec env.socket (since_query env)
+        if env.settings.subscribe_to_changes
+        then Watchman_pushed (poll_for_updates env)
+        else Watchman_synchronous (exec env.socket (since_query env))
     end in
-    (* The subscription doesn't use the clockspec post-initialization, but it
-     * may be useful to keep this info around.
-     *)
-    env.clockspec <- J.get_string_val "clock" response;
-    set_of_list @@ extract_file_names env response
+    match response with
+    | Watchman_unavailable -> Watchman_unavailable
+    | Watchman_pushed data ->
+      Watchman_pushed (transform_changes_response env data)
+    | Watchman_synchronous data ->
+      Watchman_synchronous (transform_changes_response env data)
