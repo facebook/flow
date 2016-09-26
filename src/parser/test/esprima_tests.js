@@ -4969,7 +4969,6 @@ module.exports = {
       'declare class A { "static" foo(): number }',
       'declare class A { static : number }',
       'declare function foo();',
-      'declare function foo(x): void',
     ],
     'Declare Module': [
       'declare module A {}',
