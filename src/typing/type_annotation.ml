@@ -453,7 +453,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   end
 
-| loc, Function { Function.params; returnType; rest; typeParameters } ->
+| loc, Function { Function.params = (params, rest); returnType; typeParameters } ->
   let tparams, tparams_map =
     mk_type_param_declarations cx ~tparams_map typeParameters in
 
@@ -471,8 +471,9 @@ let rec convert cx tparams_map = Ast.Type.(function
           (ident_name name) :: pnames
     ) ([], []) params in
     match rest with
-      | Some (_, { Function.Param.name;
-                   Function.Param.typeAnnotation; _ }) ->
+      | Some (_, { Function.RestParam.argument =
+          (_, { Function.Param.name; typeAnnotation; _ })
+        }) ->
           let rest = mk_rest cx (convert cx tparams_map typeAnnotation) in
           rest :: rev_tlist,
           (ident_name name) :: rev_pnames

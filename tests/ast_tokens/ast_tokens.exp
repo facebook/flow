@@ -412,7 +412,6 @@
             "range":[196,210],
             "id":null,
             "params":[],
-            "rest":null,
             "body":{
               "type":"Literal",
               "loc":{"source":null,"start":{"line":8,"column":20},"end":{"line":8,"column":22}},

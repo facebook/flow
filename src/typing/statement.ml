@@ -4697,22 +4697,29 @@ and declare_function_to_function_declaration cx id predicate =
   | Some (loc, Ast.Type.Predicate.Declared e) -> begin
       match typeAnnotation with
       | Some (_, (_, Ast.Type.Function
-        { Ast.Type.Function.params;
+        { Ast.Type.Function.params = (params, rest);
           Ast.Type.Function.returnType;
           Ast.Type.Function.typeParameters;
-          _
         })) ->
-          let params = Ast.Type.Function.( params |> List.map (
-              fun (l, { Param.name; Param.typeAnnotation; _ }) ->
-                let (loc, name_) = name in
-                let name' = (
-                  loc, {
-                    name_ with Ast.Identifier.typeAnnotation =
-                    Some (loc, typeAnnotation)
-                  }) in
-                (l, Ast.Pattern.Identifier name')
-            ))
-          in
+          let param_type_to_param = Ast.Type.Function.(
+            fun (l, { Param.name; Param.typeAnnotation; _ }) ->
+              let (loc, name_) = name in
+              let name' = (
+                loc, {
+                  name_ with Ast.Identifier.typeAnnotation =
+                  Some (loc, typeAnnotation)
+                })
+              in
+              (l, Ast.Pattern.Identifier name')
+          ) in
+          let params = List.map param_type_to_param params in
+          let rest = Ast.Type.Function.(
+            match rest with
+            | Some (rest_loc, { RestParam.argument; }) ->
+              let argument = param_type_to_param argument in
+              Some (rest_loc, { Ast.Function.RestElement.argument; })
+            | None -> None
+          ) in
           let body = Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body = [
               (loc, Ast.Statement.Return {
                 Ast.Statement.Return.argument = Some e
@@ -4721,8 +4728,7 @@ and declare_function_to_function_declaration cx id predicate =
           let returnType = Some (loc, returnType) in
           Some (Ast.Statement.FunctionDeclaration Ast.Function.({
             id = Some id;
-            params = params;
-            rest = None;
+            params = (params, rest);
             body = body;
             async = false;
             generator = false;

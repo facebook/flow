@@ -4514,7 +4514,28 @@ module.exports = {
         'new foo(...a)',
         'new foo(a, ...b)',
         'function foo(...a){}',
-        'function foo(a, ...a){}',
+        'function foo(a, ...b){}',
+        {
+          content: 'function foo(a, ...a){}',
+          explanation: "esprima-fb doesn't catch this",
+          expected_differences: {
+            'root.errors.0.message': {
+              type: 'Wrong error message',
+              expected: undefined,
+              actual: 'Strict mode function may not have duplicate parameter names',
+            },
+            'root.errors.0.line': {
+              type: 'Wrong error line',
+              expected: undefined,
+              actual: 1,
+            },
+            'root.errors.0.column': {
+              type: 'Wrong error column',
+              expected: undefined,
+              actual: 20,
+            },
+          }
+        }
     ],
 
     // https://gist.github.com/sebmarkbage/aa849c7973cb4452c547

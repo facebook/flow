@@ -129,16 +129,19 @@ module.exports = {
         ]
       },
       'function foo(...typedRest: Array<number>){}': {
-        'body.0.rest': {
-          'name': 'typedRest',
-          'typeAnnotation.typeAnnotation': {
-            'type': 'GenericTypeAnnotation',
-            'id.name': 'Array',
-            'typeParameters.params': [
-              {
-                'type': 'NumberTypeAnnotation',
-              }
-            ],
+        'body.0.params.0': {
+          'type': 'RestElement',
+          'argument': {
+            'name': 'typedRest',
+            'typeAnnotation.typeAnnotation': {
+              'type': 'GenericTypeAnnotation',
+              'id.name': 'Array',
+              'typeParameters.params': [
+                {
+                  'type': 'NumberTypeAnnotation',
+                }
+              ],
+            }
           }
         }
       },
@@ -4277,7 +4280,6 @@ module.exports = {
               'optional':false
             }
           ],
-          'rest':null,
           'body':{
             'type':'BlockStatement',
             'body':[
@@ -4344,7 +4346,6 @@ module.exports = {
                     'optional':false
                   }
                 ],
-                'rest':null,
                 'body':{
                   'type':'BinaryExpression',
                   'operator':'!==',
@@ -4388,7 +4389,6 @@ module.exports = {
                 'optional':false
               }
             ],
-            'rest':null,
             'body':{
               'type':'BinaryExpression',
               'operator':'!==',

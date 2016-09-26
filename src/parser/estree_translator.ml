@@ -216,8 +216,7 @@ end with type t = Impl.t) = struct
 
       node node_type loc [|
         "id", node_value;
-        "params", array_of_list pattern fn.params;
-        "rest", option identifier fn.rest;
+        "params", function_params fn.params;
         "body", body;
         "async", bool fn.async;
         "generator", bool fn.generator;
@@ -322,8 +321,7 @@ end with type t = Impl.t) = struct
         in
         node "ArrowFunctionExpression" loc [|
           "id", option identifier arrow.id;
-          "params", array_of_list pattern arrow.params;
-          "rest", option identifier arrow.rest;
+          "params", function_params arrow.params;
           "body", body;
           "async", bool arrow.async;
           "generator", bool arrow.generator;
@@ -525,8 +523,7 @@ end with type t = Impl.t) = struct
     in
     node "FunctionExpression" loc [|
       "id", option identifier _function.id;
-      "params", array_of_list pattern _function.params;
-      "rest", option identifier _function.rest;
+      "params", function_params _function.params;
       "body", body;
       "async", bool _function.async;
       "generator", bool _function.generator;
@@ -741,6 +738,17 @@ end with type t = Impl.t) = struct
     | _loc, Identifier id -> identifier id
     | _loc, Expression expr -> expression expr)
 
+  and function_params = function
+    | params, Some (rest_loc, { Function.RestElement.argument }) ->
+      let rest = node "RestElement" rest_loc [|
+        "argument", pattern argument;
+      |] in
+      let rev_params = params |> List.map pattern |> List.rev in
+      let params = List.rev (rest::rev_params) in
+      array (Array.of_list params)
+    | params, None ->
+      array_of_list pattern params
+
   and array_pattern_element = Pattern.Array.(function
     | Element p -> pattern p
     | Spread (loc, { SpreadElement.argument; }) ->
@@ -923,10 +931,11 @@ end with type t = Impl.t) = struct
     |]
 
   and function_type (loc, fn) = Type.Function.(
+    let params, rest = fn.params in
     node "FunctionTypeAnnotation" loc [|
-      "params", array_of_list function_type_param fn.params;
+      "params", array_of_list function_type_param params;
       "returnType", _type fn.returnType;
-      "rest", option function_type_param fn.rest;
+      "rest", option function_type_rest rest;
       "typeParameters", option type_parameter_declaration fn.typeParameters;
     |]
   )
@@ -938,6 +947,16 @@ end with type t = Impl.t) = struct
       "optional", bool param.optional;
     |]
   )
+
+  and function_type_rest (_loc, { Type.Function.RestParam.argument }) =
+    (* TODO: add a node for the rest param itself, including the `...`,
+       like we do with RestElement on normal functions. This should be
+       coordinated with Babel, ast-types, etc. so keeping the status quo for
+       now. Here's an example: *)
+    (* node "FunctionTypeRestParam" loc [|
+      "argument", function_type_param argument;
+    |] *)
+    function_type_param argument
 
   and object_type (loc, o) = Type.Object.(
     node "ObjectTypeAnnotation" loc [|

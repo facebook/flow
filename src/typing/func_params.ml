@@ -73,27 +73,32 @@ let mk cx type_params_map ~expr func =
       let param = Complex (t, List.rev !rev_bindings) in
       { list = param :: params.list; defaults = !defaults }
   ) in
-  let add_param params pattern = Ast.Pattern.(
+  let add_rest params pattern =
     match pattern with
-    | _, Assignment { Ast.Pattern.Assignment.left; right; } ->
-      add_param_with_default params left (Some right)
-    | _ ->
-      add_param_with_default params pattern None
-  ) in
-  let add_rest params =
-    function loc, { Ast.Identifier.name; typeAnnotation; _ } ->
+    | _, Ast.Pattern.Identifier (loc, { Ast.Identifier.name; typeAnnotation; _ }) ->
       let reason = mk_reason (Utils.spf "rest parameter `%s`" name) loc in
       let t =
         Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in
       let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
       { params with list =  param :: params.list }
+    | loc, _ ->
+      error_destructuring cx loc;
+      params
   in
-  let {Ast.Function.params; rest; _} = func in
+  let add_param params pattern =
+    match pattern with
+    | _, Ast.Pattern.Assignment { Ast.Pattern.Assignment.left; right; } ->
+      add_param_with_default params left (Some right)
+    | _ ->
+      add_param_with_default params pattern None
+  in
+  let {Ast.Function.params = (params, rest); _} = func in
   let params = List.fold_left add_param empty params in
   let params = match rest with
-  | Some ident -> add_rest params ident
-  | None -> params
+    | Some (_, { Ast.Function.RestElement.argument }) ->
+      add_rest params argument
+    | None -> params
   in
   { params with list = List.rev params.list }
 
@@ -112,9 +117,10 @@ let convert cx type_params_map func = Ast.Type.Function.(
     let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
     { params with list = param :: params.list }
   in
-  let params = List.fold_left add_param empty func.params in
-  let params = match func.rest with
-  | Some ident -> add_rest params ident
+  let (params, rest) = func.params in
+  let params = List.fold_left add_param empty params in
+  let params = match rest with
+  | Some (_, { RestParam.argument }) -> add_rest params argument
   | None -> params
   in
   { params with list = List.rev params.list }

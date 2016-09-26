@@ -281,6 +281,35 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         delete esprima.defaults;
       }
 
+      // esprima-fb uses a "rest" property. Flow and modern esprima use
+      // RestElement within the params array.
+      if ('rest' in esprima) {
+        if (esprima.rest !== undefined && esprima.rest !== null) {
+          var arg = esprima.rest;
+          var rest = {
+            type: 'RestElement',
+            argument: arg,
+          };
+          if (arg.loc) {
+            rest.loc = {
+              start: {
+                line: arg.loc.start.line,
+                column: arg.loc.start.column - 3, // HACKY!
+              },
+              end: arg.loc.end,
+            };
+            if (arg.loc.source) {
+              rest.loc.source = arg.loc.source;
+            }
+          }
+          if (arg.range) {
+            rest.range = [arg.range[0] - 3, arg.range[1]]; // HACKY!
+          }
+          esprima.params.push(rest);
+        }
+        delete esprima.rest;
+      }
+
       if (esprima.async === undefined) {
         esprima.async = false;
       }
