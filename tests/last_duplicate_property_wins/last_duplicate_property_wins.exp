@@ -1,24 +1,24 @@
 test.js:18
  18: ((new C).foo(): boolean); // last wins
-       ^^^^^^^^^^^^ string. This type is incompatible with
+      ^^^^^^^^^^^^^ string. This type is incompatible with
  18: ((new C).foo(): boolean); // last wins
                      ^^^^^^^ boolean
 
 test.js:19
  19: ((new C).x: boolean); // last wins
-       ^^^^^^^^ string. This type is incompatible with
+      ^^^^^^^^^ string. This type is incompatible with
  19: ((new C).x: boolean); // last wins
                  ^^^^^^^ boolean
 
 test.js:20
  20: ((new C).bar: boolean); // last wins
-       ^^^^^^^^^^ string. This type is incompatible with
+      ^^^^^^^^^^^ string. This type is incompatible with
  20: ((new C).bar: boolean); // last wins
                    ^^^^^^^ boolean
 
 test.js:21
  21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
-       ^^^^^^^^^^ number. This type is incompatible with
+      ^^^^^^^^^^^ number. This type is incompatible with
  21: ((new C).qux: boolean); // weird outlier where last doesn't win in classes
                    ^^^^^^^ boolean
 

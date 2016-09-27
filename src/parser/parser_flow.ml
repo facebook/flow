@@ -1391,22 +1391,24 @@ end = struct
           }))
 
     and left_hand_side env =
+      let start_loc = Peek.loc env in
       let expr = match Peek.token env with
       | T_NEW -> new_expression env
       | _ when Peek.is_function env -> _function env
       | _ -> primary env in
-      let expr = member env expr in
+      let expr = member env start_loc expr in
       match Peek.token env with
-      | T_LPAREN -> call env expr
+      | T_LPAREN -> call env start_loc expr
       | T_TEMPLATE_PART part ->
-          member env (tagged_template env expr part)
+          member env start_loc (tagged_template env start_loc expr part)
       | _ -> expr
 
-    and call env left =
+    and call env start_loc left =
       match Peek.token env with
       | T_LPAREN when not (no_call env) ->
           let args_loc, arguments = arguments env in
-          call env (Loc.btwn (fst left) args_loc, Expression.(Call Call.({
+          let loc = Loc.btwn start_loc args_loc in
+          call env start_loc (loc, Expression.(Call Call.({
             callee = left;
             arguments;
           })))
@@ -1414,9 +1416,9 @@ end = struct
           Expect.token env T_LBRACKET;
           let expr = Parse.expression env in
           let last_loc = Peek.loc env in
-          let loc = Loc.btwn (fst left) last_loc in
+          let loc = Loc.btwn start_loc last_loc in
           Expect.token env T_RBRACKET;
-          call env (loc, Expression.(Member Member.({
+          call env start_loc (loc, Expression.(Member Member.({
             _object  = left;
             property = PropertyExpression expr;
             computed = true;
@@ -1424,12 +1426,13 @@ end = struct
       | T_PERIOD ->
           Expect.token env T_PERIOD;
           let id, _ = identifier_or_reserved_keyword env in
-          call env (Loc.btwn (fst left) (fst id), Expression.(Member Member.({
+          let loc = Loc.btwn start_loc (fst id) in
+          call env start_loc (loc, Expression.(Member Member.({
             _object  = left;
             property = PropertyIdentifier id;
             computed = false;
           })))
-      | T_TEMPLATE_PART part -> tagged_template env left part
+      | T_TEMPLATE_PART part -> tagged_template env start_loc left part
       | _ -> left
 
     and new_expression env =
@@ -1456,16 +1459,17 @@ end = struct
           start_loc, Expression.Identifier meta (* return `new` identifier *)
         end
       end else
+        let callee_loc = Peek.loc env in
         let expr = match Peek.token env with
         | T_NEW -> new_expression env
         | _ when Peek.is_function env -> _function env
         | _ -> primary env in
-        let callee = member (env |> with_no_call true) expr in
+        let callee = member (env |> with_no_call true) callee_loc expr in
         (* You can do something like
          *   new raw`42`
          *)
         let callee = match Peek.token env with
-        | T_TEMPLATE_PART part -> tagged_template env callee part
+        | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
         | _ -> callee in
         let end_loc, arguments = match Peek.token env with
         | T_LPAREN -> arguments env
@@ -1509,14 +1513,15 @@ end = struct
         Expect.token env T_RPAREN;
         Loc.btwn start_loc end_loc, args
 
-    and member env left =
+    and member env start_loc left =
       match Peek.token env with
       | T_LBRACKET ->
           Expect.token env T_LBRACKET;
           let expr = Parse.expression (env |> with_no_call false) in
           let last_loc = Peek.loc env in
           Expect.token env T_RBRACKET;
-          call env (Loc.btwn (fst left) last_loc, Expression.(Member Member.({
+          let loc = Loc.btwn start_loc last_loc in
+          call env start_loc (loc, Expression.(Member Member.({
             _object  = left;
             property = PropertyExpression expr;
             computed = true;
@@ -1524,7 +1529,8 @@ end = struct
       | T_PERIOD ->
           Expect.token env T_PERIOD;
           let id, _ = identifier_or_reserved_keyword env in
-          call env (Loc.btwn (fst left) (fst id), Expression.(Member Member.({
+          let loc = Loc.btwn start_loc (fst id) in
+          call env start_loc (loc, Expression.(Member Member.({
             _object  = left;
             property = PropertyIdentifier id;
             computed = false;
@@ -1696,9 +1702,9 @@ end = struct
           expressions;
         })
 
-    and tagged_template env tag part =
+    and tagged_template env start_loc tag part =
       let quasi = template_literal env part in
-      Loc.btwn (fst tag) (fst quasi), Expression.(TaggedTemplate TaggedTemplate.({
+      Loc.btwn start_loc (fst quasi), Expression.(TaggedTemplate TaggedTemplate.({
         tag;
         quasi;
       }))

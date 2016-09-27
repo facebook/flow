@@ -10,19 +10,19 @@ sanity-fall-through.js:12
 
 sanity-invalid-calls.js:10
  10:   if ((1)(s)) {
-            ^^^^^ function call. Function cannot be called on
+           ^^^^^^ function call. Function cannot be called on
  10:   if ((1)(s)) {
             ^ number
 
 sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
-            ^^^^ function type. This type cannot be added to
+           ^^^^^^^^^^^^^^^ function call. Function cannot be called on
  14:   if ((pred + 1)("s")) {
             ^^^^^^^^ string
 
 sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
-            ^^^^^^^^^^^^^^ function call. Function cannot be called on
+            ^^^^ function type. This type cannot be added to
  14:   if ((pred + 1)("s")) {
             ^^^^^^^^ string
 

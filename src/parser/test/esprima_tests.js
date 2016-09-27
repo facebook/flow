@@ -602,58 +602,8 @@ module.exports = {
             },
           }
         },
-        {
-          content: '/* header */ (function(){ var version = 1; }).call(this)',
-          explanation: "Esprima counts parens in its loc, Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.callee.loc.start.column': {
-              type: 'Wrong number',
-              expected: 13,
-              actual: 14
-            },
-            'root.body.0.expression.loc.start.column': {
-              type: 'Wrong number',
-              expected: 13,
-              actual: 14
-            },
-            'root.body.0.expression.callee.range.0': {
-              type: 'Wrong number',
-              expected: 13,
-              actual: 14
-            },
-            'root.body.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: 13,
-              actual: 14
-            },
-          }
-        },
-        {
-          content: '(function(){ var version = 1; /* sync */ }).call(this)',
-          explanation: "Esprima counts parens in its loc, Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.callee.loc.start.column': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-            'root.body.0.expression.loc.start.column': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-            'root.body.0.expression.callee.range.0': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-            'root.body.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 1
-            },
-          }
-        },
+        '/* header */ (function(){ var version = 1; }).call(this)',
+        '(function(){ var version = 1; /* sync */ }).call(this)',
         'function f() { /* infinite */ while (true) { } /* bar */ var each; }',
         /* Hmm, let's not support this crazy syntax for now, since it's not in
          * an ecma spec yet. Syntax comes from
@@ -791,49 +741,10 @@ module.exports = {
         'new function() {}',
         "new window[(['Active'].concat('Object').join('X'))]('Microsoft.XMLHTTP');",
         'this.foo.export()',
-        {
-          content: '( new foo).bar()',
-          explanation: "Esprima counts the paren in its location, Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.loc.start.column': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 2
-            },
-            'root.body.0.expression.callee.loc.start.column': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 2
-            },
-            'root.body.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 2
-            },
-            'root.body.0.expression.callee.range.0': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 2
-            },
-          }
-        },
+        '( new foo).bar()',
         'foo(bar, baz)',
-        {
-          content: '(    foo  )()',
-          explanation: "Esprima counts the paren in its location, Flow doesn't",
-          expected_differences: {
-            'root.body.0.expression.loc.start.column': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 5
-            },
-            'root.body.0.expression.range.0': {
-              type: 'Wrong number',
-              expected: 0,
-              actual: 5
-            },
-          }
-        },
+        '(    foo  )()',
+        '(    foo  )[0]',
         'universe.milkyway',
         'universe.milkyway.solarsystem',
         'universe.milkyway.solarsystem.Earth',
@@ -2552,7 +2463,8 @@ module.exports = {
         '`Hello\rworld`',
         'new raw`42`',
         '`foo ${\n  "bar"\n} baz`',
-        '`foo ${/* a */ "bar" /* b */} baz`'
+        '`foo ${/* a */ "bar" /* b */} baz`',
+        '( foo)`bar`'
     ],
 
 

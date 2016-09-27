@@ -1,18 +1,18 @@
 test.js:18
  18: ((new Foo).x: number); // error: Qux wins
-       ^^^^^^^^^^ string. This type is incompatible with
+      ^^^^^^^^^^^ string. This type is incompatible with
  18: ((new Foo).x: number); // error: Qux wins
                    ^^^^^^ number
 
 test.js:19
  19: ((new Foo).y: string); // error: Bar wins
-       ^^^^^^^^^^ number. This type is incompatible with
+      ^^^^^^^^^^^ number. This type is incompatible with
  19: ((new Foo).y: string); // error: Bar wins
                    ^^^^^^ string
 
 test.js:20
  20: ((new Foo).z: number); // error: Qux wins
-       ^^^^^^^^^^ string. This type is incompatible with
+      ^^^^^^^^^^^ string. This type is incompatible with
  20: ((new Foo).z: number); // error: Qux wins
                    ^^^^^^ number
 

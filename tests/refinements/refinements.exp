@@ -738,13 +738,13 @@ tagged_union.js:94
 
 tagged_union.js:99
  99:     if (x.kind === (null).toString()) {} // error, method on null
-                         ^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
+                        ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
  99:     if (x.kind === (null).toString()) {} // error, method on null
                          ^^^^ null
 
 tagged_union.js:100
 100:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
-                                 ^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
+                                ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
 100:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
                                  ^^^^ null
 

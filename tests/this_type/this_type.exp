@@ -126,9 +126,9 @@ import.js:21
 
 import.js:22
  22: ((new B3(): A2<number>).qux(0): string); // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `qux`
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `qux`
  22: ((new B3(): A2<number>).qux(0): string); // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  22: ((new B3(): A2<number>).qux(0): string); // error
                                      ^^^^^^ string
 
