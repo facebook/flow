@@ -1,3 +1,48 @@
+###v0.33.0
+
+Likely to cause new Flow errors:
+* Its now an error to add `mixed` to `number`
+
+New features:
+* `suppress_comment` now defaults to matching `// $FlowFixMe` if there are no suppress_comments listed in a .flowconfig
+* The Flow server no longer restarts itself when a `package.json` file is changed
+* The Flow server no longer restarts itself if a libdef file is touched, but not actually changed
+* Added support for using Iterables with `Promise.all()` (thanks @vkurchatkin!)
+
+Notable bug fixes:
+* Fixed an issue where some predicates could cause Flow to crash
+* Fixed an issue where we weren't propertly looking things up on `Function.prototype` and `Object.prototype`
+* Fixed an issue where Flow could crash when extracting coverage on empty types
+* Fixed an issue where long paths that are ignored could give a bunch of warnings on Windows
+* Fixed an issue where `flow get-def` wouldn't hop to the location of a type coming through an `import type`
+* Fixed an issue with dictionary types where using an `any`-typed variable as a computed-property lookup results in the wrong property-value type
+* Fixed some issues where Flow wouldn't allow defininition of properties or methods called "static" on classes
+* Fixed an issue where Flow wouldn't permit `throw`s at the toplevel of a module
+* Fixed an issue where adding a file to `[libs]` with an extension not listed in `module.file_exts`, it would previously be silently ignored
+* Fixed an issue where `import * as` on a `declare module.exports: any;` libdef would not result in a module with every possible named export
+* Fixed a parsing issue where `"JSX attributes must only be assigned a non-empty expression"` syntax errors sometimes point to the wrong line
+* Fixed parsing of setter methods with destructured parameters
+* Fixed a parsing issue where it wasn't possible to use `get` or `set` in object short notation
+* Fixed a parsing issue where we previously weren't allowing strings in async method names: `x = { async 123() { await y; } }`
+* Fixed an issue where the parser previously wouldn't recognize the `u` regex flag
+
+Misc:
+* Various built-in libdef improvements
+* Various significant shared memory optimizations
+* When a package.json key is read by Flow during module resolution, don't wrap it in quotes
+* Added parser (but not yet typechecker) support for `new.target`
+* Added `--pretty` flag to all commands that have a `--json` flag
+* Flow now prints an exception instead of segfaulting if there is a heap overflow
+* Only print JSON for `flow coverage` when `--json` is passed (thanks @aackerman!)
+
+Parser breaking changes:
+* Removed 'lexical' property from `SwitchStatement`
+* Removed `guardedHandlers` from `TryStatement`
+* Use `AssignmentPattern` for function param defaults to match ESTree
+* Use `RestElement` for function rest params to match ESTree
+* Fixed the location info for `ExpressionStatement`
+* Fixed the location info for `CallExpression` and `MemberExpression` 
+
 ###v0.32.1
 
 Notable bug fixes:
