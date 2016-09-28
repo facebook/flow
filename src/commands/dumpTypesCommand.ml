@@ -95,7 +95,7 @@ let handle_error (loc, err) ~json ~pretty strip =
     prerr_endlinef "%s:\n%s" loc err
   )
 
-let main option_values root json strip_root pretty path include_raw filename () =
+let main option_values root json pretty strip_root path include_raw filename () =
   let json = json || pretty || include_raw in
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
