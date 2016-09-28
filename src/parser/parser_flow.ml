@@ -3280,22 +3280,22 @@ end = struct
       | T_RCURLY ->
           List.rev specifiers, List.rev errs
       | _ ->
-          let id, err = Parse.identifier_or_reserved_keyword env in
-          let name, err, end_loc = if Peek.value env = "as"
+          let local, err = Parse.identifier_or_reserved_keyword env in
+          let exported, err, end_loc = if Peek.value env = "as"
           then begin
             Expect.contextual env "as";
             let name, _ = Parse.identifier_or_reserved_keyword env in
             (record_export env (fst name, extract_ident_name name));
             Some name, None, fst name
           end else begin
-            let loc = fst id in
-            record_export env (loc, extract_ident_name id);
+            let loc = fst local in
+            record_export env (loc, extract_ident_name local);
             None, err, loc
           end in
-          let loc = Loc.btwn (fst id) end_loc in
+          let loc = Loc.btwn (fst local) end_loc in
           let specifier = loc, {
-            Statement.ExportNamedDeclaration.Specifier.id;
-            name;
+            Statement.ExportNamedDeclaration.ExportSpecifier.local;
+            exported;
           } in
           if Peek.token env = T_COMMA
           then Expect.token env T_COMMA;

@@ -1935,20 +1935,20 @@ and export_statement cx loc
       let export_specifier specifier = (
         let (reason, local_name, remote_name) = (
           match specifier with
-          | loc, { ExportNamedDeclaration.Specifier.
-              id = (_, {Ast.Identifier.name=id; _;});
-              name = None;
+          | loc, { ExportNamedDeclaration.ExportSpecifier.
+              local = (_, {Ast.Identifier.name=id; _;});
+              exported = None;
             } ->
             let reason = mk_reason (spf "export {%s}" id) loc in
             (reason, id, id)
-          | loc, { ExportNamedDeclaration.Specifier.
-              id = (_, {Ast.Identifier.name=id; _;});
-              name = Some (_, {Ast.Identifier.name; _;});
+          | loc, { ExportNamedDeclaration.ExportSpecifier.
+              local = (_, {Ast.Identifier.name=local; _;});
+              exported = Some (_, {Ast.Identifier.name=exported; _;});
             } ->
             let reason =
-              mk_reason (spf "export {%s as %s}" id name) loc
+              mk_reason (spf "export {%s as %s}" local exported) loc
             in
-            (reason, id, name)
+            (reason, local, exported)
         ) in
 
         (**

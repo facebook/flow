@@ -1624,7 +1624,7 @@ module.exports = {
         'body.0.specifiers': [
           {
             'type': 'ExportSpecifier',
-            'id.name': 'bar',
+            'local.name': 'bar',
           },
         ],
       },
@@ -1632,10 +1632,10 @@ module.exports = {
       'declare export { bar, baz } from "foo";': {
         'body.0.specifiers': [
           {
-            'id.name': 'bar',
+            'local.name': 'bar',
           },
           {
-            'id.name': 'baz',
+            'local.name': 'baz',
           },
         ],
       },
@@ -1803,7 +1803,12 @@ module.exports = {
             'declaration': null,
             'specifiers': [{
               'type': 'ExportSpecifier',
-              'id': {
+              'local': {
+                'type': 'Identifier',
+                'name': 'a',
+                'typeAnnotation': null,
+              },
+              'exported': {
                 'type': 'Identifier',
                 'name': 'a',
                 'typeAnnotation': null,
@@ -1826,7 +1831,12 @@ module.exports = {
             'declaration': null,
             'specifiers': [{
               'type': 'ExportSpecifier',
-              'id': {
+              'local': {
+                'type': 'Identifier',
+                'name': 'a',
+                'typeAnnotation': null,
+              },
+              'exported': {
                 'type': 'Identifier',
                 'name': 'a',
                 'typeAnnotation': null,

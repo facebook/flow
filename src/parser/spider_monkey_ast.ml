@@ -386,15 +386,15 @@ and Statement : sig
     }
   end
   module ExportNamedDeclaration : sig
-    module Specifier : sig
+    module ExportSpecifier : sig
       type t = Loc.t * t'
       and t' = {
-        id: Identifier.t;
-        name: Identifier.t option;
+        local: Identifier.t;
+        exported: Identifier.t option;
       }
     end
     type specifier =
-      | ExportSpecifiers of Specifier.t list
+      | ExportSpecifiers of ExportSpecifier.t list
       | ExportBatchSpecifier of Loc.t * Identifier.t option
     type t = {
       declaration: Statement.t option;

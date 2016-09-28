@@ -1196,12 +1196,16 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and export_specifier (loc, specifier) = Statement.ExportNamedDeclaration.Specifier.(
+  and export_specifier (loc, specifier) =
+    let open Statement.ExportNamedDeclaration.ExportSpecifier in
+    let exported = match specifier.exported with
+    | Some exported -> identifier exported
+    | None -> identifier specifier.local
+    in
     node "ExportSpecifier" loc [|
-      "id", identifier specifier.id;
-      "name", option identifier specifier.name;
+      "local", identifier specifier.local;
+      "exported", exported;
     |]
-  )
 
   and import_default_specifier id =
     node "ImportDefaultSpecifier" (fst id) [|
