@@ -168,6 +168,7 @@ let merge_strict_component ~options (component: filename list) =
     let cx = List.hd component_cxs in
     let errors = Context.errors cx in
     Context.remove_all_errors cx;
+    Context.clear_intermediates cx;
     Context_cache.add_sig ~audit:Expensive.ok cx;
     file, errors
   )

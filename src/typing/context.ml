@@ -263,6 +263,11 @@ let set_type_graph cx type_graph =
 let set_tvar cx id node =
   cx.graph <- IMap.add id node cx.graph
 
+let clear_intermediates cx =
+  Hashtbl.clear cx.type_table;
+  Hashtbl.clear cx.annot_table;
+  cx.all_unresolved <- IMap.empty
+
 (* constructors *)
 let make_property_map cx pmap =
   let id = Reason.mk_id () in
