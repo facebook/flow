@@ -13,15 +13,21 @@ let () = Random.self_init ()
 let base64_alphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
+let alphanumeric_alphabet =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
 let () =
   assert (String.length base64_alphabet = 64)
 
-let short_string () =
+let short_string_with_alphabet alphabet =
   let r = ref ((Random.bits () lsl 30) lor Random.bits ()) in
   let cs = ref [] in
   while !r > 0 do
-    let c = base64_alphabet.[!r mod 64] in
+    let c = alphabet.[!r mod (String.length alphabet)] in
     cs := String.make 1 c :: !cs;
     r := !r lsr 6
   done;
   String.concat "" !cs
+
+let short_string () =
+  short_string_with_alphabet base64_alphabet

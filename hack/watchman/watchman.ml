@@ -26,6 +26,11 @@ exception Timeout
 
 let debug = false
 
+let sync_file_extension = "tmp_sync"
+
+(** TODO: support git. *)
+let vcs_tmp_dir = ".hg"
+
 let crash_marker_path root =
   let root_name = Path.slash_escaped_string_of_path root in
   Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
@@ -76,6 +81,10 @@ type watchman_instance =
    * cases too. *)
   | Watchman_dead of dead_env
   | Watchman_alive of env
+
+let get_root_path instance = match instance with
+  | Watchman_dead dead_env -> dead_env.prior_settings.root
+  | Watchman_alive env -> env.settings.root
 
 (* Some JSON processing helpers *)
 module J = struct
@@ -144,6 +153,7 @@ let request_json
             J.strlist ["suffix"; "phpt"];
             J.strlist ["suffix"; "hh"];
             J.strlist ["suffix"; "hhi"];
+            J.strlist ["suffix"; sync_file_extension];
             J.strlist ["suffix"; "xhp"];
             (* FIXME: This is clearly wrong, but we do it to match the
              * behavior on the server-side. We need to investigate if
@@ -154,7 +164,8 @@ let request_json
         ];
         J.pred "not" @@ [
           J.pred "anyof" @@ [
-            J.strlist ["dirname"; ".hg"];
+            (** We don't exclude the .hg directory, because we touch unique
+             * files there to support synchronous queries. *)
             J.strlist ["dirname"; ".git"];
             J.strlist ["dirname"; ".svn"];
           ]
@@ -377,6 +388,12 @@ let transform_changes_response env data =
     env.clockspec <- J.get_string_val "clock" data;
     set_of_list @@ extract_file_names env data
 
+let random_filepath root =
+  let root_name = Path.to_string root in
+  let dir = Filename.concat root_name vcs_tmp_dir in
+  let name = Random_id.(short_string_with_alphabet alphanumeric_alphabet) in
+  Filename.concat dir (spf ".%s.%s" name sync_file_extension)
+
 let get_changes instance =
   call_on_instance instance "get_changes" @@ fun env ->
     let response = begin
@@ -390,3 +407,78 @@ let get_changes instance =
       Watchman_pushed (transform_changes_response env data)
     | Watchman_synchronous data ->
       Watchman_synchronous (transform_changes_response env data)
+
+let rec get_changes_until_file_sync deadline syncfile instance acc_changes =
+  if Unix.time () > deadline then raise Timeout else ();
+  let instance, changes = get_changes instance in
+  match changes with
+  | Watchman_unavailable ->
+    (** We don't need to use Retry_with_backoff_exception because there is
+     * exponential backoff built into get_changes to restart the watchman
+     * instance.
+     *
+     * NB: Yes, it is a CPU-eating spin-loop until the backoff time to attempt
+     * a watchman restart arrives. This could probably be improved.
+     * Effectively since we spin-loop to kill time, this must be tail call
+     * optimized or we will blow the stack.*)
+    get_changes_until_file_sync
+      deadline syncfile instance acc_changes (** Not in 4.01 yet [@tailcall] *)
+  | Watchman_synchronous changes
+  | Watchman_pushed changes ->
+    let acc_changes = SSet.union acc_changes changes in
+    if SSet.mem syncfile changes then
+      instance, acc_changes
+    else
+      get_changes_until_file_sync deadline syncfile instance acc_changes
+
+(** Raise this exception together with a with_retries_until_deadline call to
+ * make use of its exponential backoff machinery. *)
+exception Retry_with_backoff_exception
+
+(** Call "f instance temp_file_name" with a random temporary file created
+ * before f and deleted after f. *)
+let with_random_temp_file instance f =
+  let root = get_root_path instance in
+  let temp_file = random_filepath root in
+  let ic = try Some ( open_out_gen [Open_creat; Open_excl] 555 temp_file) with
+    | _ -> None
+  in
+  match ic with
+  | None ->
+    (** Failed to create temp file. Retry with exponential backoff. *)
+    raise Retry_with_backoff_exception
+  | Some ic ->
+    let () = close_out ic in
+    let result = f instance temp_file in
+    let () = Sys.remove temp_file in
+    result
+
+(** Call f with retries if it throws Retry_with_backoff_exception,
+ * using exponential backoff between attempts.
+ *
+ * Raise Timeout if deadline arrives. *)
+let rec with_retries_until_deadline ~attempt instance deadline f =
+  if Unix.time () > deadline then raise Timeout else ();
+  let max_wait_time = 10.0 in
+  try f instance with
+    | Retry_with_backoff_exception ->
+      let () = if Unix.time () > deadline then raise Timeout else () in
+      let wait_time = min max_wait_time (2.0 ** (float_of_int attempt)) in
+      let () = ignore @@ Unix.select [] [] [] wait_time in
+      with_retries_until_deadline ~attempt:(attempt + 1) instance deadline f
+
+let get_changes_synchronously ~(timeout:int) instance =
+  (** Reading uses Timeout.with_timeout, which is not re-entrant. So
+   * we can't use that out here. *)
+  let deadline = Unix.time () +. (float_of_int timeout) in
+  with_retries_until_deadline ~attempt:0 instance deadline begin
+    (** Lambda here must take an instance to avoid capturing the one in the
+     * outer scope, which is the wrong one since it doesn't change between
+     * restart attempts. *)
+    fun instance ->
+      with_random_temp_file instance begin fun instance sync_file ->
+        let result =
+          get_changes_until_file_sync deadline sync_file instance SSet.empty in
+        result
+      end
+  end
