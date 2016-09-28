@@ -14,7 +14,6 @@ module NameSet: Set.S with type elt = Modulename.t
 module NameMap: MyMap.S with type key = Modulename.t
 
 type info = {
-  file: filename;           (* file name *)
   _module: Modulename.t;    (* module name *)
   required: NameSet.t;      (* required module names *)
   require_loc: Loc.t SMap.t;  (* statement locations *)

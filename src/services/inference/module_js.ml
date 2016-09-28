@@ -43,7 +43,6 @@ module NameMap = MyMap.Make(Modulename)
     that's probably guessable.
 **)
 type info = {
-  file: filename; (* file name *)
   _module: Modulename.t; (* module name *)
   required: NameSet.t; (* required module names *)
   require_loc: Loc.t SMap.t; (* statement locations *)
@@ -791,7 +790,6 @@ let info_of ~options cx =
       SMap.add (Modulename.to_string resolved_r) loc require_loc)
     (Context.require_loc cx) SMap.empty in
   {
-    file = Context.file cx;
     _module = Context.module_name cx;
     required;
     require_loc;
@@ -806,7 +804,7 @@ let info_of ~options cx =
    Note that we wait to choose providers until inference is complete. *)
 let add_module_info ~audit ~options cx =
   let info = info_of ~options cx in
-  add_info ~audit info.file info
+  add_info ~audit (Context.file cx) info
 
 (* We need to track files that have failed to parse. This begins with
    adding tracking records for unparsed files to InfoHeap. They never
@@ -824,7 +822,7 @@ let add_unparsed_info ~audit ~options file docblock =
     Docblock.is_flow docblock ||
     Docblock.isDeclarationFile docblock
   in
-  let info = { file; _module; checked; parsed = false;
+  let info = { _module; checked; parsed = false;
     required = NameSet.empty;
     require_loc = SMap.empty;
     resolved_modules = SMap.empty;
