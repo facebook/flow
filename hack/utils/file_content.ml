@@ -70,10 +70,28 @@ let apply_edit = fun fc {range; text} ->
     done;
     of_content (!hd ^ text ^ !tl)
 
+let print_edit b edit =
+  let range = match edit.range with
+    | None -> "None"
+    | Some range -> Printf.sprintf "%d:%d - %d:%d"
+        range.st.line range.st.column range.ed.line range.ed.column
+  in
+  Printf.bprintf b "range = %s\n text = \n%s\n" range edit.text
+
 let edit_file fc (edits: code_edit list) =
   try
-    List.fold ~init:fc ~f:apply_edit edits
-  with _ ->
-    (* TODO: If editor send an invalid edit we will just ignore it.
-     * Maybe we should send an error response to let the editor know *)
-    fc
+    Result.Ok (List.fold ~init:fc ~f:apply_edit edits)
+  with e ->
+    let b = Buffer.create 1024 in
+    Printf.bprintf b "Invalid edit: %s\n" (Printexc.to_string e);
+    Printf.bprintf b "Original content:\n%s\n" fc.content;
+    Printf.bprintf b "Edits:\n";
+    List.iter edits ~f:(print_edit b);
+    Result.Error (Buffer.contents b)
+
+let edit_file_unsafe fc edits =
+  match edit_file fc edits with
+  | Result.Ok r -> r
+  | Result.Error e ->
+      Printf.eprintf "%s" e;
+      assert false

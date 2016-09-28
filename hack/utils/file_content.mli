@@ -27,4 +27,6 @@ val of_content : content:string -> t
 
 val get_content : t -> string
 
-val edit_file : t -> code_edit list -> t
+val edit_file : t -> code_edit list -> (t, string) Result.t
+
+val edit_file_unsafe : t -> code_edit list -> t
