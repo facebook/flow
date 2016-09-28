@@ -28,6 +28,20 @@ module NameMap = MyMap.Make(Modulename)
 
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
+(** TODO [perf] Make info tighter or split it.
+    (1) file can go away
+
+    (2) required and resolved_modules have a lot of redundancy; required is the
+    value set of resolved_modules.
+
+    (3) require_loc, too? Indexed by required.
+
+    (4) checked? We know that requires and phantom dependents for unchecked
+    files are empty.
+
+    (5) parsed? We only care about the module provided by an unparsed file, but
+    that's probably guessable.
+**)
 type info = {
   file: filename; (* file name *)
   _module: Modulename.t; (* module name *)
@@ -143,18 +157,6 @@ end)
 
 let get_info = Expensive.wrap InfoHeap.get
 let add_info = Expensive.wrap InfoHeap.add
-
-(* Given a set of newly added files, decide whether the resolution of module
-   references in f "depended" (see above) on any of those files, and if so, add
-   f to acc. *)
-let resolution_path_dependency ~audit files acc f =
-  match get_info ~audit f with
-  | Some { phantom_dependents = fs; _ } when fs |> SSet.exists (fun f ->
-      FilenameSet.mem (Loc.SourceFile f) files ||
-      FilenameSet.mem (Loc.JsonFile f) files ||
-      FilenameSet.mem (Loc.ResourceFile f) files
-    ) -> FilenameSet.add f acc
-  | _ -> acc
 
 (** module systems **)
 
@@ -294,6 +296,7 @@ let case_sensitive =
   not (Sys.file_exists (String.uppercase (Sys.getcwd ())))
 
 (* map of dirs to file lists *)
+(** TODO [perf]: investigate whether this takes too much memory **)
 let files_in_dir = ref SMap.empty
 
 (* called from Types_js.typecheck, so we rebuild every time *)
@@ -535,6 +538,7 @@ module Haste: MODULE_SYSTEM = struct
             let file_without_flow_ext = Loc.chop_suffix file Files.flow_ext in
             if Parsing_service_js.has_ast file_without_flow_ext
             then
+              (** TODO [perf]: mark as expensive and investigate! **)
               let _, info =
                 Parsing_service_js.get_ast_and_info_unsafe file_without_flow_ext in
               exported_module file_without_flow_ext info
@@ -670,6 +674,7 @@ let choose_provider ~options m files errmap =
 (* map from module name to modules which import it. *)
 (* note: this is outside InfoHeap because InfoHeap gets changed concurrently
    by the infer jobs, we cannot simply build the information up there *)
+(** TODO [perf]: investigate whether this takes too much memory **)
 let reverse_imports_map = Hashtbl.create 0
 
 let reverse_imports_clear module_name =
@@ -774,6 +779,7 @@ let get_reverse_imports ~audit module_name =
       reverse_imports_get name
   | _, result -> result
 
+(* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
 let info_of ~options cx =
@@ -851,6 +857,7 @@ let add_unparsed_info ~audit ~options file docblock =
 
 (* hash table from module names to all known provider files.
    maintained and used by commit_modules and remove_files *)
+(** TODO [perf]: investigate whether this takes too much memory **)
 let all_providers = Hashtbl.create 0
 
 let add_provider f m =
@@ -912,6 +919,7 @@ let commit_modules workers ~options inferred removed =
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
       let { _module = m; _ } = get_module_info ~audit:Expensive.ok f in
+      (* [perf] using a list instead of a map *)
       (f, m) :: file_module_assoc
     ) in
   let file_module_assoc = MultiWorker.call
@@ -926,8 +934,17 @@ let commit_modules workers ~options inferred removed =
     acc |> NameSet.add m |> NameSet.add f_module
   ) removed file_module_assoc in
 
+  let module_files = MultiWorker.call
+    workers
+    ~job: (List.fold_left (fun acc m ->
+      (m, get_module_file ~audit:Expensive.ok m)::acc
+    ))
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (MultiWorker.next workers (NameSet.elements repick)) in
   (* prep for registering new mappings in NameHeap *)
-  let remove, replace, errmap = NameSet.fold (fun m (rem, rep, errmap) ->
+  let remove, replace, errmap = List.fold_left
+    (fun (rem, rep, errmap) (m, f_opt) ->
     match get_providers m with
     | ps when FilenameSet.cardinal ps = 0 ->
         if debug then prerr_endlinef
@@ -951,7 +968,7 @@ let commit_modules workers ~options inferred removed =
       let p, errmap = choose_provider
         ~options (Modulename.to_string m) ps errmap in
       (* register chosen provider in NameHeap *)
-      match get_module_file Expensive.warn m with
+      match f_opt with
       | Some f when f = p ->
           if debug then prerr_endlinef
             "unchanged provider: %S -> %s"
@@ -972,12 +989,14 @@ let commit_modules workers ~options inferred removed =
             "initial provider %S -> %s"
             (Modulename.to_string m)
             (string_of_filename p);
-          (NameSet.add m rem), ((m, p) :: rep), errmap
-  ) repick (NameSet.empty, [], FilenameMap.empty) in
+          rem, ((m, p) :: rep), errmap
+  ) (NameSet.empty, [], FilenameMap.empty) module_files in
 
   (* update NameHeap *)
-  NameHeap.remove_batch remove;
-  SharedMem.collect `gentle;
+  if not (NameSet.is_empty remove) then begin
+    NameHeap.remove_batch remove;
+    SharedMem.collect `gentle;
+  end;
   MultiWorker.call
     workers
     ~job: (fun () replace ->
@@ -1008,42 +1027,54 @@ let clear_infos files =
    removed (#1). This is the set commit_module expects as its second
    argument.
 *)
-let remove_files files =
+let rec remove_files workers files =
+  let data = MultiWorker.call workers
+    ~job: (List.fold_left (fun acc file ->
+      match get_info ~audit:Expensive.ok file with
+      | Some info ->
+        let { _module; required; _ } = info in
+        let required_opt = match get_module_file ~audit:Expensive.ok _module with
+        | Some f when f = file -> Some required
+        | _ -> None
+        in
+        FilenameMap.add file (_module, required_opt) acc
+      | None -> acc
+    ))
+    ~neutral: FilenameMap.empty
+    ~merge: FilenameMap.union
+    ~next: (MultiWorker.next workers (FilenameSet.elements files)) in
+  remove_files_with_data data files
+
+and remove_files_with_data data files =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
-  let names = FilenameSet.fold (fun file names ->
-      match get_info ~audit:Expensive.warn file with
-      | Some info ->
-          let { _module; required; _ } = info in
-          remove_provider file _module;
-          (match get_module_file ~audit:Expensive.warn _module with
-          | Some f when f = file -> (
-              (* untrack all imports from this file. we only do this for
-                 module providers to avoid inconsistencies when there are
-                 multiple providers. *)
-              reverse_imports_untrack _module required;
-              (* when we delete a module and it was never referenced we need
-                 to delete it from the reverse import heap. Otherwise, it can
-                 still be looked up by using get-imported-by and that is
-                 inconsistent. However, we only do so when we are the actual
-                 module provider. This makes sure that exsiting modules won't
-                 get erased when a duplicate is removed.
-              *)
-              match reverse_imports_get _module with
-              | Some reverse_imports ->
-                  if NameSet.is_empty reverse_imports
-                  then reverse_imports_clear _module
-              | None -> ()
-              );
-              names
-              |> NameSet.add _module
-              |> NameSet.add (Modulename.Filename file)
-          | _ ->
-              names
-        )
-      | None ->
-          names
-  ) files NameSet.empty in
+  let names = FilenameMap.fold (fun file datum names ->
+    let _module, required_opt = datum in
+    remove_provider file _module;
+    match required_opt with
+    | Some required ->
+      (* untrack all imports from this file. we only do this for
+         module providers to avoid inconsistencies when there are
+         multiple providers. *)
+      reverse_imports_untrack _module required;
+      (* when we delete a module and it was never referenced we need
+         to delete it from the reverse import heap. Otherwise, it can
+         still be looked up by using get-imported-by and that is
+         inconsistent. However, we only do so when we are the actual
+         module provider. This makes sure that exsiting modules won't
+         get erased when a duplicate is removed.
+      *)
+      begin match reverse_imports_get _module with
+      | Some reverse_imports ->
+        if NameSet.is_empty reverse_imports
+        then reverse_imports_clear _module
+      | None -> ()
+      end;
+      names
+      |> NameSet.add _module
+      |> NameSet.add (Modulename.Filename file)
+    | _ -> names
+  ) data NameSet.empty in
   (* clear any registrations that point to infos we're about to clear *)
   (* for infos, remove_batch will ignore missing entries, no need to filter *)
   NameHeap.remove_batch names;

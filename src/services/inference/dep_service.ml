@@ -33,34 +33,70 @@ open Utils_js
         perform substitution of r.export into m.g, producing m.g'
 *)
 
-(* produce a reverse dependency map for the given fileset.
-   keys are modules provided by the files in fileset.
-   value for each key is the set of files which require that
-   module directly.
+(* produce, given files in fileset:
+   (1) a map from those files to modules
+   (2) a reverse dependency map for those files:
+       the key is the module provided by a file;
+       the value is the subset of files which require that module directly
+   (3) a subset of those files that phantom depend on root_fileset
  *)
-let calc_reverse_deps workers fileset = Module_js.(
-  (* distribute requires from a list of files into reverse-dep map *)
-  let job = List.fold_left (fun rdmap f ->
-    let reqs = (get_module_info ~audit:Expensive.ok f).required in
-    NameSet.fold (fun r rdmap ->
+let calc_dep_utils workers fileset root_fileset = Module_js.(
+  (* Distribute work, looking up InfoHeap once per file. *)
+  let job = List.fold_left (fun (modules, rdmap, resolution_path_files) f ->
+    let info = get_module_info ~audit:Expensive.ok f in
+    (* Add f |-> info._module to the `modules` map. This will be used downstream
+       in dep_closure. Why do we this here rather than there? Just as an
+       optimization, since we're reading InfoHeap here any way.
+
+       TODO: explore whether we can avoid creating this map on every recheck,
+       instead maintaining the map incrementally and hopefully reusing large
+       parts of it.
+    *)
+    let modules = FilenameMap.add f info._module modules in
+    (* For every r in info.required, add f to the reverse dependency list for r,
+       stored in `rdmap`. This will be used downstream when computing
+       direct_deps, and also in dep_closure.
+
+       TODO: should generate this map once on startup, keep required_by in
+       module infos and update incrementally on recheck.
+    *)
+
+    let rdmap = NameSet.fold (fun r rdmap ->
       NameMap.add r FilenameSet.(
         match NameMap.get r rdmap with
         | None -> singleton f
         | Some files -> add f files
       ) rdmap
-    ) reqs rdmap
+    ) info.required rdmap in
+    (* If f's phantom dependents are in root_fileset, then add f to
+       `resolution_path_files`. These are considered direct dependencies (in
+       addition to others computed by direct_deps downstream). *)
+    let resolution_path_files =
+      if info.phantom_dependents |> SSet.exists (fun f ->
+        FilenameSet.mem (Loc.SourceFile f) root_fileset ||
+        FilenameSet.mem (Loc.JsonFile f) root_fileset ||
+        FilenameSet.mem (Loc.ResourceFile f) root_fileset
+      ) then FilenameSet.add f resolution_path_files
+      else resolution_path_files in
+    modules, rdmap, resolution_path_files
   ) in
-  (* merge two reverse-dependency maps *)
-  let merge = NameMap.merge (fun _ x y ->
-    match x, y with
-    | Some v, None
-    | None, Some v -> Some v
-    | Some v, Some w -> Some (FilenameSet.union v w)
-    | None, None -> None
-  ) in
+  (* merge results *)
+  let merge
+      (modules1, rdmap1, resolution_path_files1)
+      (modules2, rdmap2, resolution_path_files2) =
+    FilenameMap.union modules1 modules2,
+    NameMap.merge (fun _ x y ->
+      match x, y with
+      | Some v, None
+      | None, Some v -> Some v
+      | Some v, Some w -> Some (FilenameSet.union v w)
+      | None, None -> None
+    ) rdmap1 rdmap2,
+    FilenameSet.union resolution_path_files1 resolution_path_files2
+  in
 
   MultiWorker.call workers ~job ~merge
-    ~neutral: Module_js.NameMap.empty
+    ~neutral: Module_js.(FilenameMap.empty, NameMap.empty, FilenameSet.empty)
     ~next: (MultiWorker.next workers (FilenameSet.elements fileset))
 )
 
@@ -68,10 +104,10 @@ let calc_reverse_deps workers fileset = Module_js.(
    require them), generate the closure of the dependencies of a
    given fileset, using get_module_info to map files to modules
  *)
-let dep_closure rdmap fileset =
+let dep_closure modules rdmap fileset =
   let deps_of_module m = Module_js.NameMap.get m rdmap in
   let deps_of_file f =
-    let m = Module_js.((get_module_info ~audit:Expensive.warn f)._module) in
+    let m = FilenameMap.find_unsafe f modules in
     let f_module = Modulename.Filename f in
     (* In general, a file exports its module via two names. See Modulename for
        details. It suffices to note here that dependents of the file can use
@@ -113,38 +149,41 @@ let dep_closure rdmap fileset =
    and the subset directly dependent on them.
 *)
 let dependent_files workers unmodified_files inferred_files removed_modules =
-
-  (* get reverse dependency map for unmodified files.
-     TODO should generate this once on startup, keep required_by
-     in module infos and update incrementally on recheck *)
-  let reverse_deps = calc_reverse_deps workers unmodified_files in
+  (* Get the modules provided by unmodified files, the reverse dependency map
+     for unmodified files, and the subset of unmodified files whose resolution
+     paths may encounter newly inferred modules. *)
+  (** [shared mem access] InfoHeap.get on unmodified_files for
+      ._module, .required, .phantom_dependents **)
+  let modules,
+    reverse_deps,
+    resolution_path_files
+    = calc_dep_utils workers unmodified_files inferred_files in
 
   (* touched_modules includes removed modules and those provided by new files *)
-  let touched_modules = FilenameSet.fold Module_js.(fun file mods ->
-    let file_mods = get_module_names ~audit:Expensive.warn file in
-    (* Add all module names exported by file *)
-    List.fold_left (fun acc m -> NameSet.add m acc) mods file_mods
-  ) inferred_files removed_modules in
-
-  (* files whose resolution paths may encounter newly inferred modules *)
-  let resolution_path_files = MultiWorker.call workers
-    ~job: (List.fold_left (Module_js.resolution_path_dependency
-                             ~audit:Expensive.ok inferred_files))
-    ~neutral: FilenameSet.empty
-    ~merge: FilenameSet.union
-    ~next: (MultiWorker.next workers (FilenameSet.elements unmodified_files)) in
+  (** [shared mem access] InfoHeap.get on inferred_files for ._module **)
+  let touched_modules = Module_js.(NameSet.union removed_modules (
+    MultiWorker.call workers
+      ~job: (List.fold_left (fun mods file ->
+        let file_mods = get_module_names ~audit:Expensive.ok file in
+        (* Add all module names exported by file *)
+        List.fold_left (fun acc m -> NameSet.add m acc) mods file_mods
+      ))
+      ~neutral: NameSet.empty
+      ~merge: NameSet.union
+      ~next: (MultiWorker.next workers (FilenameSet.elements inferred_files))
+  )) in
 
   (* files that require touched modules directly, or may resolve to
      modules provided by newly inferred files *)
-  let direct_deps = Module_js.(NameSet.fold (fun m s ->
+  let direct_deps = Module_js.(NameSet.fold (fun m acc ->
     match NameMap.get m reverse_deps with
-    | Some files -> FilenameSet.union s files
-    | None -> s
-    ) touched_modules FilenameSet.empty
-  ) |> FilenameSet.union resolution_path_files in
+    | Some files -> FilenameSet.union acc files
+    | None -> acc
+    ) touched_modules resolution_path_files
+  ) in
 
   (* (transitive dependents are re-merged, directs are also re-resolved) *)
-  dep_closure reverse_deps direct_deps,
+  dep_closure modules reverse_deps direct_deps,
   direct_deps
 
 
@@ -168,22 +207,19 @@ let implementation_file ~audit r = Module_js.(
   else None
 )
 
-let calc_dependencies_job =
-  List.fold_left (fun deps file ->
-    let { Module_js.required; _ } =
-      Module_js.get_module_info ~audit:Expensive.ok file in
-    let files = Module_js.NameSet.fold (fun r files ->
-      match implementation_file ~audit:Expensive.ok r with
-      | Some f -> FilenameSet.add f files
-      | None -> files
-    ) required FilenameSet.empty in
-    FilenameMap.add file files deps
-  )
-
 let calc_dependencies workers files =
   let deps = MultiWorker.call
     workers
-    ~job: calc_dependencies_job
+    ~job: (List.fold_left (fun deps file ->
+      let { Module_js.required; _ } =
+        Module_js.get_module_info ~audit:Expensive.ok file in
+      let files = Module_js.NameSet.fold (fun r files ->
+        match implementation_file ~audit:Expensive.ok r with
+        | Some f -> FilenameSet.add f files
+        | None -> files
+      ) required FilenameSet.empty in
+      FilenameMap.add file files deps
+    ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
     ~next: (MultiWorker.next workers files) in

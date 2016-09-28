@@ -309,12 +309,21 @@ let typecheck
     (fun fn acc -> (fn, Docblock.default_info)::acc)
     resource_files unparsed in
 
+  (** TODO [correctness]: check whether these have been cleared **)
   (* add tracking modules for unparsed files *)
-  List.iter (fun (filename, docblock) ->
-    Module_js.add_unparsed_info ~audit:Expensive.warn
-      ~options filename docblock
-  ) unparsed;
+  MultiWorker.call workers
+    ~job: (fun () ->
+      List.iter (fun (filename, docblock) ->
+        Module_js.add_unparsed_info ~audit:Expensive.ok
+          ~options filename docblock
+      )
+    )
+    ~neutral: ()
+    ~merge: (fun () () -> ())
+    ~next: (MultiWorker.next workers unparsed);
 
+  (** TODO [correctness]:
+      move CommitModules after MakeMergeInput + ResolveDirectDeps **)
   (* create module dependency graph, warn on dupes etc. *)
   let timing, () = with_timer ~options "CommitModules" timing (fun () ->
     let filenames = List.fold_left (fun acc (filename, _) ->
@@ -347,16 +356,35 @@ let typecheck
        and direct_deps are dependencies of inferred, all dependencies of
        direct_deps are included in to_merge
       *)
+    (** TODO [simplification]:
+        Move ResolveDirectDeps into MakeMergeInput **)
     Flow_logger.log "Re-resolving directly dependent files";
     let timing, _ = with_timer ~options "ResolveDirectDeps" timing (fun () ->
-      Module_js.clear_infos direct_deps;
-      let cache = new Context_cache.context_cache in
-      FilenameSet.iter (fun f ->
-        let cx = cache#read ~audit:Expensive.warn f in
-        Module_js.add_module_info ~audit:Expensive.warn ~options cx
-      ) direct_deps;
-      if Options.is_debug_mode options then heap_check Expensive.warn to_merge;
+      if not (FilenameSet.is_empty direct_deps) then begin
+        (** TODO [perf] Consider oldifying **)
+        Module_js.clear_infos direct_deps;
+        SharedMem.collect `gentle;
+
+        MultiWorker.call workers
+          ~job: (fun () files ->
+            let cache = new Context_cache.context_cache in
+            List.iter (fun f ->
+              (** TODO [perf]
+                  Instead of reading the ContextHeap, could read the InfoHeap **)
+              let cx = cache#read ~audit:Expensive.ok f in
+              Module_js.add_module_info ~audit:Expensive.ok ~options cx
+            ) files
+          )
+          ~neutral: ()
+          ~merge: (fun () () -> ())
+          ~next: (MultiWorker.next workers (FilenameSet.elements direct_deps));
+      end
     ) in
+
+    (* TODO [correctness]: This seems to have rotted :( *)
+    if Options.is_debug_mode options
+    then heap_check ~audit:Expensive.warn to_merge;
+
     Flow_logger.log "Calculating dependencies";
     let timing, dependency_graph =
       with_timer ~options "CalcDeps" timing (fun () ->
@@ -441,6 +469,7 @@ let recheck genv env modified =
 
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_asts deleted;
+  SharedMem.collect `gentle;
 
   Flow_logger.log "Parsing";
   (* reparse modified and added files, updating modified to reflect removal of
@@ -484,7 +513,8 @@ let recheck genv env modified =
   (* remember deleted modules *)
   let to_clear = FilenameSet.union modified deleted in
   Context_cache.remove_batch to_clear;
-  let removed_modules = Module_js.remove_files to_clear in
+  (* clear out infos of files, and names of modules provided by those files *)
+  let removed_modules = Module_js.remove_files workers to_clear in
 
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;
@@ -529,6 +559,7 @@ let recheck genv env modified =
       (* to_merge is inferred files plus all dependents. prep for re-merge *)
       let to_merge = FilenameSet.union all_deps inferred_set in
       Merge_service.remove_batch to_merge;
+      (** TODO [perf]: Consider `aggressive **)
       SharedMem.collect `gentle;
 
       Some (FilenameSet.elements to_merge, direct_deps)

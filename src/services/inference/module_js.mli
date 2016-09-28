@@ -24,10 +24,6 @@ type info = {
   parsed: bool;             (* if false, it's a tracking record only *)
 }
 
-val resolution_path_dependency:
-  (FilenameSet.t -> FilenameSet.t -> filename ->
-   FilenameSet.t) Expensive.t
-
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 (* export and import functions for the module system *)
@@ -80,7 +76,7 @@ val add_unparsed_info:
 (* remove module info being tracked for given file set;
    returns the set of modules removed
 *)
-val remove_files: FilenameSet.t -> NameSet.t
+val remove_files: Worker.t list option -> FilenameSet.t -> NameSet.t
 val clear_infos: FilenameSet.t -> unit
 
 val add_package: string -> Spider_monkey_ast.program -> unit
