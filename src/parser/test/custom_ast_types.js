@@ -19,6 +19,27 @@ def("DeclareExportDeclaration")
     null
   ))
 
+// See https://github.com/benjamn/ast-types/issues/180
+def("ExportDefaultDeclaration")
+    .bases("Declaration")
+    .build("declaration", "exportKind")
+    .field("declaration", or(def("Declaration"), def("Expression")))
+    .field("exportKind", or("type", "value"));
+
+// See https://github.com/benjamn/ast-types/issues/180
+def("ExportNamedDeclaration")
+    .bases("Declaration")
+    .build("declaration", "specifiers", "source", "exportKind")
+    .field("declaration", or(def("Declaration"), null))
+    // TODO: this is non-standard. should be this:
+    // .field("specifiers", [def("ExportSpecifier")], defaults.emptyArray)
+    .field("specifiers", [or(
+        def("ExportSpecifier"),
+        def("ExportBatchSpecifier")
+      )], defaults.emptyArray)
+    .field("source", or(def("Literal"), null), defaults["null"])
+    .field("exportKind", or("type", "value"));
+
 var BinaryOperator = or(
     "==", "!=", "===", "!==",
     "<", "<=", ">", ">=",

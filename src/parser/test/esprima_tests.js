@@ -4209,29 +4209,249 @@ module.exports = {
     'Export': {
       'options': { sourceType: "module" },
       'tests': [
-        'export * from "foo";',
-        'export * from "foo"',
+        {
+          content: 'export * from "foo";',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export * from "foo"',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
         /* This should be supported...
         'export {} from "foo";',
         */
-        'export { bar } from "foo";',
-        'export { bar } from "foo"',
-        'export { bar, baz } from "foo";',
-        'export { bar };',
+        {
+          content: 'export { bar } from "foo";',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export { bar } from "foo"',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export { bar, baz } from "foo";',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export { bar };',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
         /* Esprima should support trailing comma
         'export { bar, }',
         */
-        'export { bar, baz };',
-        'export var x, y',
-        'export var y = 12',
-        'export let x, y',
-        'export let y = 12',
+        {
+          content: 'export { bar, baz };',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export var x, y',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export var y = 12',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export let x, y',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export let y = 12',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
         'export const x, y',
-        'export const y = 12',
-        'export function foo() {}',
-        'export class A {}',
-        'export default 1 + 1;',
-        'export default 1 + 1',
+        {
+          content: 'export const y = 12',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export function foo() {}',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export class A {}',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportNamedDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export default 1 + 1;',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportDefaultDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+            'root.body.0.specifiers': {
+              type: 'Missing property',
+            },
+            'root.body.0.source': {
+              type: 'Missing property',
+            },
+          },
+        },
+        {
+          content: 'export default 1 + 1',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportDefaultDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+            'root.body.0.specifiers': {
+              type: 'Missing property',
+            },
+            'root.body.0.source': {
+              type: 'Missing property',
+            },
+          },
+        },
         /* Esprima parses default exports wrong
         'export default function foo() {}',
         'export default function *foo() {}',
@@ -4247,7 +4467,26 @@ module.exports = {
         'export class {}',
         */
         'export function {}',
-        'export default function() {}',
+        {
+          content: 'export default function() {}',
+          explanation: 'esprima-fb is outdated',
+          expected_differences: {
+            'root.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ExportDeclaration',
+              actual: 'ExportDefaultDeclaration',
+            },
+            'root.body.0.default': {
+              type: 'Missing property',
+            },
+            'root.body.0.specifiers': {
+              type: 'Missing property',
+            },
+            'root.body.0.source': {
+              type: 'Missing property',
+            },
+          },
+        },
         /* Esprima parses default exports wrong
         'export default class A {}',
         */

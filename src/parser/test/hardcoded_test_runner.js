@@ -24,7 +24,7 @@ function new_env() {
      * subpaths so that we don't rerun the ast types recursive check for root
      * or root.foo
      */
-    ast_types_error: function() {
+    ast_types_error: function(msg) {
       var p = path[0];
       pathsWithAstTypesErrors[p] = true;
       delete astTypesErrors[p];
@@ -34,7 +34,7 @@ function new_env() {
         delete astTypesErrors[p];
       }
       var full_path = path.join(".");
-      astTypesErrors[full_path] = true;
+      astTypesErrors[full_path] = msg;
     },
 
     should_run_ast_types: function() {
@@ -56,7 +56,7 @@ function new_env() {
       var ret = [];
       for (prop in astTypesErrors) {
         if (astTypesErrors.hasOwnProperty(prop)) {
-          ret.push(prop);
+          ret.push(prop + ": " + astTypesErrors[prop]);
         }
       }
       return ret;
@@ -83,14 +83,16 @@ function check_ast(env, ast) {
       env.push_path(prop);
       check_ast(env, ast[prop]);
       env.pop_path();
-      if (ast.type && env.should_run_ast_types()) {
-        if (ast_types.namedTypes.hasOwnProperty(ast.type)) {
-          if (!ast_types.namedTypes[ast.type].check(ast, true)) {
-            env.ast_types_error();
-          }
-        } else {
-          env.ast_types_error();
+    }
+    if (ast.type && env.should_run_ast_types()) {
+      if (ast_types.namedTypes.hasOwnProperty(ast.type)) {
+        try {
+          ast_types.namedTypes[ast.type].assert(ast, true);
+        } catch (e) {
+          env.ast_types_error(e.message);
         }
+      } else {
+        env.ast_types_error('Unknown type ' + ast.type);
       }
     }
   }
@@ -170,7 +172,11 @@ function runTest(test, parse_options, test_options) {
   }
   var env = new_env();
   var flow_errors = flow_ast.errors;
-  check_ast(env, flow_ast);
+  if (!flow_errors || flow_errors.length == 0) {
+    // parse errors can lead to an invalid AST, so only validate the AST when
+    // there are no parse errors.
+    check_ast(env, flow_ast);
+  }
   compare(env, flow_ast, test.expected_ast);
 
   var diffs = env.get_diffs();

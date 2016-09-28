@@ -266,8 +266,7 @@ end with type t = Impl.t) = struct
           "typeAnnotation", type_annotation annot
         |]
     | loc, ExportNamedDeclaration export -> ExportNamedDeclaration.(
-        node "ExportDeclaration" loc [|
-          "default", bool false;
+        node "ExportNamedDeclaration" loc [|
           "declaration", option statement export.declaration;
           "specifiers", export_specifiers export.specifiers;
           "source", option literal export.source;
@@ -279,11 +278,8 @@ end with type t = Impl.t) = struct
         | Declaration stmt -> statement stmt
         | ExportDefaultDeclaration.Expression expr -> expression expr
         in
-        node "ExportDeclaration" loc [|
-          "default", bool true;
+        node "ExportDefaultDeclaration" loc [|
           "declaration", declaration;
-          "specifiers", array [||];
-          "source", null;
           "exportKind", string (export_kind export.exportKind);
         |]
       )

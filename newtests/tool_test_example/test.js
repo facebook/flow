@@ -201,7 +201,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             ],
             "body": [
               {
-                "type": "ExportDeclaration",
+                "type": "ExportDefaultDeclaration",
                 "loc": {
                   "source": null,
                   "start": {
@@ -217,7 +217,6 @@ export default suite(({addFile, addFiles, addCode}) => [
                   0,
                   19
                 ],
-                "default": true,
                 "declaration": {
                   "type": "Literal",
                   "loc": {
@@ -238,8 +237,6 @@ export default suite(({addFile, addFiles, addCode}) => [
                   "value": 123,
                   "raw": "123"
                 },
-                "specifiers": [],
-                "source": null,
                 "exportKind": "value"
               }
             ],
