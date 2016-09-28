@@ -46,7 +46,7 @@ let apply_edit = fun fc {range; text} ->
   | None -> of_content text
   | Some {st; ed} ->
     let content = get_content fc in
-    let lines = match content.[0] with
+    let lines = if content = "" then [] else match content.[0] with
     | '\n' ->
       "" :: Str.bounded_split (Str.regexp_string "\n") content (ed.line)
     | _ ->
