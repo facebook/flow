@@ -153,6 +153,11 @@ class ['a] t = object(self)
     let acc = self#list (self#predicate cx) acc (Key_map.values n_map) in
     acc
 
+  | TypeMapT (_, _, t1, t2) ->
+    let acc = self#type_ cx acc t1 in
+    let acc = self#type_ cx acc t2 in
+    acc
+
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
   | TypeDestructorT (_, d) -> self#destructor cx acc d
@@ -249,7 +254,7 @@ class ['a] t = object(self)
   | CopyNamedExportsT (_, _, _)
   | ExportNamedT (_, _, _)
   | DebugPrintT (_)
-  | TupleMapT (_, _, _)
+  | MapTypeT (_, _, _, _)
   | ReactCreateElementT _
   | SentinelPropTestT _
   | ChoiceKitUseT (_, _)

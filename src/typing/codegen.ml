@@ -188,7 +188,6 @@ let rec gen_type t env = Type.(
       |> add_str ">"
   | CustomFunT (_, ObjectAssign) -> add_str "Object$Assign" env
   | CustomFunT (_, ObjectGetPrototypeOf) -> add_str "Object$GetPrototypeOf" env
-  | CustomFunT (_, PromiseAll) -> add_str "Promise$All" env
   | CustomFunT (_, ReactCreateElement) -> add_str "React$CreateElement" env
   | CustomFunT (_, Merge) -> add_str "$Facebookism$Merge" env
   | CustomFunT (_, MergeDeepInto) -> add_str "$Facebookism$MergeDeepInto" env
@@ -292,6 +291,27 @@ let rec gen_type t env = Type.(
   | TypeT (_, t) -> gen_type t env
   | UnionT (_, union) -> gen_union_list union env
   | VoidT _ -> add_str "void" env
+
+  | TypeMapT (_, TupleMap, t1, t2) ->
+    add_str "$TupleMap<" env
+    |> gen_type t1
+    |> add_str ", "
+    |> gen_type t2
+    |> add_str ">"
+
+  | TypeMapT (_, ObjectMap, t1, t2) ->
+    add_str "$ObjMap<" env
+    |> gen_type t1
+    |> add_str ", "
+    |> gen_type t2
+    |> add_str ">"
+
+  | TypeMapT (_, ObjectMapi, t1, t2) ->
+    add_str "$ObjMapi<" env
+    |> gen_type t1
+    |> add_str ", "
+    |> gen_type t2
+    |> add_str ">"
 
   (**
    * These types can't be expressed in code well so we fail back to `mixed`.

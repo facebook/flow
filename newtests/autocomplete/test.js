@@ -2055,30 +2055,12 @@ valueOf () => Object
 
     addFile("customfun.js"),
     flowCmd(
-      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'customfun.js', '12', '2'],
+      ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'customfun.js', '11', '2'],
       'customfun.js',
     ).stdout(
        `
          {
            "result": [
-             {
-               "name": "promiseAll",
-               "type": "(promises: Array<Promise>) => Promise",
-               "func_details": {
-                 "return_type": "Promise",
-                 "params": [
-                   {
-                     "name": "promises",
-                     "type": "Array<Promise>"
-                   }
-                 ]
-               },
-               "path": "customfun.js",
-               "line": 10,
-               "endline": 10,
-               "start": 1,
-               "end": 35
-             },
              {
                "name": "objectGetPrototypeOf",
                "type": "(o: any) => any",

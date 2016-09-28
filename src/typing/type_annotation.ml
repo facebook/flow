@@ -298,6 +298,33 @@ let rec convert cx tparams_map = Ast.Type.(function
       AbstractT t
     )
 
+  | "$TupleMap" ->
+    check_type_param_arity cx loc typeParameters 2 (fun () ->
+      let t1, t2 = match convert_type_params () with
+      | [t1; t2] -> t1, t2
+      | _ -> assert false in
+      let reason = mk_reason "tuple map" loc in
+      TypeMapT (reason, TupleMap, t1, t2)
+    )
+
+  | "$ObjMap" ->
+    check_type_param_arity cx loc typeParameters 2 (fun () ->
+      let t1, t2 = match convert_type_params () with
+      | [t1; t2] -> t1, t2
+      | _ -> assert false in
+      let reason = mk_reason "object map" loc in
+      TypeMapT (reason, ObjectMap, t1, t2)
+    )
+
+  | "$ObjMapi" ->
+    check_type_param_arity cx loc typeParameters 2 (fun () ->
+      let t1, t2 = match convert_type_params () with
+      | [t1; t2] -> t1, t2
+      | _ -> assert false in
+      let reason = mk_reason "object mapi" loc in
+      TypeMapT (reason, ObjectMapi, t1, t2)
+    )
+
   | "this" ->
     if SMap.mem "this" tparams_map then
       (* We model a this type like a type parameter. The bound on a this
@@ -362,8 +389,6 @@ let rec convert cx tparams_map = Ast.Type.(function
       mk_custom_fun cx loc typeParameters ObjectAssign
   | "Object$GetPrototypeOf" ->
       mk_custom_fun cx loc typeParameters ObjectGetPrototypeOf
-  | "Promise$All" ->
-      mk_custom_fun cx loc typeParameters PromiseAll
   | "React$CreateElement" ->
       mk_custom_fun cx loc typeParameters ReactCreateElement
   | "$Facebookism$Merge" ->

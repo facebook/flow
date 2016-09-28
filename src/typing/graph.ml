@@ -118,6 +118,10 @@ let put_u u id (iset, ttbl, utbl) =
 
 type tnode = Def of Type.t | Use of Type.use_t
 
+let node_of_cont = function
+| Lower t -> Def t
+| Upper u -> Use u
+
 let list_parts = List.mapi (fun i t -> spf "#%d" i, Def t)
 let map_parts m = List.map (fun (n, t) -> n, Def t) (SMap.bindings m)
 
@@ -194,6 +198,7 @@ and parts_of_t cx = function
 | CustomFunT _ | ChoiceKitT _ -> []
 | IdxWrapper (_, inner) -> ["inner", Def inner]
 | OpenPredT (_, base, _, _) -> ["base", Def base]
+| TypeMapT (_, _, t1, t2) -> ["t", Def t1; "mapfn", Def t2]
 
 and parts_of_funtype { params_tlist; params_names; return_t; _ } =
   (* OMITTED: static, prototype, this_t *)
@@ -260,7 +265,7 @@ and parts_of_use_t cx = function
 | GetKeysT (_, out) -> ["out", Def out]
 | HasOwnPropT _ | HasPropT _ -> []
 | ElemT (_, l, t, _) -> ["l", Def l; "t", Def t]
-| MakeExactT (_, x) -> ["x", match x with Lower t -> Def t | Upper u -> Use u]
+| MakeExactT (_, k) -> ["cont", node_of_cont k]
 | ImportModuleNsT (_, out)
 | ImportDefaultT (_, _, _, out)
 | ImportNamedT (_, _, _, out)
@@ -273,7 +278,7 @@ and parts_of_use_t cx = function
 | CopyNamedExportsT (_, target, out) -> ["target", Def target; "out", Def out]
 | ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
 | DebugPrintT _ -> []
-| TupleMapT (_, t, out)
+| MapTypeT (_, _, t, k) -> ["t", Def t; "cont", node_of_cont k]
 | ReactCreateElementT (_, t, out)
 | SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
 | IntersectionPreprocessKitT (_, ipt) -> parts_of_inter_preprocess_tool ipt

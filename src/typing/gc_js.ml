@@ -211,6 +211,10 @@ let rec gc cx state = function
     gc_pred_map cx state p_map;
     gc_pred_map cx state n_map
 
+  | TypeMapT (_, _, t1, t2) ->
+    gc cx state t1;
+    gc cx state t2
+
 and gc_defer_use cx state = function
   | DestructuringT (_, s) ->
     gc_selector cx state s
@@ -368,8 +372,8 @@ and gc_use cx state = function
       gc cx state t1;
       gc cx state t2
 
-  | MakeExactT (_, make_exact) ->
-      gc_make_exact cx state make_exact
+  | MakeExactT (_, k) ->
+      gc_cont cx state k
 
   | ImportModuleNsT (_, t)
   | ImportDefaultT (_, _, _, t)
@@ -394,9 +398,9 @@ and gc_use cx state = function
       List.iter (gc cx state) (SMap.values t_smap);
       gc cx state t_out
 
-  | TupleMapT (_, t, t_out) ->
+  | MapTypeT (_, _, t, k) ->
       gc cx state t;
-      gc cx state t_out;
+      gc_cont cx state k
 
   | ReactCreateElementT (_, t, t_out) ->
       gc cx state t;
@@ -495,7 +499,7 @@ and gc_pred cx state = function
 and gc_pred_map cx state pred_map =
   Key_map.iter (fun _ p -> gc_pred cx state p) pred_map
 
-and gc_make_exact cx state = function
+and gc_cont cx state = function
   | Lower t -> gc cx state t
   | Upper u -> gc_use cx state u
 

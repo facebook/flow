@@ -1026,6 +1026,7 @@ module ResolvableTypeJob = struct
     | SingletonStrT _
     | ExistsT _
     | OpenPredT _
+    | TypeMapT _
       ->
       acc
 
@@ -2617,6 +2618,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (BoolT (reason, Some b), u)
 
     (************************************************************************)
+    (* mapping over type structures                                         *)
+    (************************************************************************)
+
+    | TypeMapT (r, kind, t1, t2), _ ->
+      rec_flow cx trace (t1, MapTypeT (r, kind, t2, Upper u))
+
+    | _, UseT (_, TypeMapT (r, kind, t1, t2)) ->
+      rec_flow cx trace (t1, MapTypeT (r, kind, t2, Lower l))
+
+    (************************************************************************)
     (* exact object types *)
     (************************************************************************)
 
@@ -3074,29 +3085,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         obj,
         GetPropT(reason_op, (reason_op, "__proto__"), return_t)
       );
-
-    | CustomFunT (_, PromiseAll),
-      CallT (reason_op, { params_tlist; return_t; _ }) ->
-      let param = match params_tlist with
-      | [] ->
-        (* e.g., Promise.all()
-         * The VoidT type leads to a use type error below, as TupleMapT
-         * expects an ArrT as its lower bound. *)
-        VoidT (replace_reason "undefined (too few arguments)" reason_op)
-      | t::_ ->
-        (* e.g., Promise.all(arr, ...)
-         * Like all functions, extra arguments are ignored. If this isn't
-         * an ArrT, we will realize a use type error in the TupleMapT flow. *)
-        t
-      in
-      (* Build an array holding the unwrapped values of the array parameter
-       * and wrap back up into a promise to return. *)
-      let t = mk_tvar_where cx reason_op (fun t ->
-        let funt = get_builtin cx ~trace "$await" reason_op in
-        rec_flow cx trace (param, TupleMapT (reason_op, funt, t))
-      ) in
-      let promise = get_builtin_typeapp cx ~trace reason_op "Promise" [t] in
-      rec_flow_t cx trace (promise, return_t)
 
     (* If you haven't heard, React is a pretty big deal. *)
 
@@ -3957,23 +3945,57 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (a, tout)
 
     (**************************************************)
-    (* function types can be mapped over a tuple      *)
+    (* function types can be mapped over a structure  *)
     (**************************************************)
 
-    | ArrT (_, t, ts), TupleMapT (reason, funt, tout) ->
+    | ArrT (_, t, ts), MapTypeT (reason, TupleMap, funt, k) ->
       let f x = mk_tvar_where cx reason (fun t ->
         rec_flow cx trace (funt, CallT (reason, mk_functiontype [x] t))
       ) in
-      rec_flow_t cx trace (ArrT (reason, f t, List.map f ts), tout)
+      let t = ArrT (reason, f t, List.map f ts) in
+      continue cx trace t k
 
-    | _, TupleMapT (reason, funt, tout) ->
+    | _, MapTypeT (reason, TupleMap, funt, k) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
-
-      let t = mk_tvar_where cx reason (fun t ->
+      let elem_t = mk_tvar_where cx reason (fun t ->
         rec_flow cx trace (iter, CallT (reason, mk_functiontype [l] t))
       ) in
+      let t = ArrT (reason, elem_t, []) in
+      rec_flow cx trace (t, MapTypeT (reason, TupleMap, funt, k))
 
-      rec_flow cx trace (ArrT (reason, t, []), TupleMapT (reason, funt, tout))
+    | ObjT (_, o), MapTypeT (reason, ObjectMap, funt, k) ->
+      let map_t t = mk_tvar_where cx reason (fun t' ->
+        let funtype = mk_functiontype [t] t' in
+        rec_flow cx trace (funt, CallT (reason, funtype))
+      ) in
+      let props_tmap =
+        find_props cx o.props_tmap
+        |> SMap.map map_t
+        |> mk_propmap cx
+      in
+      let dict_t = Option.map ~f:(fun dict ->
+        let value = map_t dict.value in
+        {dict with value}
+      ) o.dict_t in
+      let mapped_t = ObjT (reason, {o with props_tmap; dict_t}) in
+      continue cx trace mapped_t k
+
+    | ObjT (_, o), MapTypeT (reason, ObjectMapi, funt, k) ->
+      let mapi_t key t = mk_tvar_where cx reason (fun t' ->
+        let funtype = mk_functiontype [key; t] t' in
+        rec_flow cx trace (funt, CallT (reason, funtype))
+      ) in
+      let props_tmap =
+        find_props cx o.props_tmap
+        |> SMap.mapi (fun key t -> mapi_t (SingletonStrT (reason, key)) t)
+        |> mk_propmap cx
+      in
+      let dict_t = Option.map ~f:(fun dict ->
+        let value = mapi_t dict.key dict.value in
+        {dict with value}
+      ) o.dict_t in
+      let mapped_t = ObjT (reason, {o with props_tmap; dict_t}) in
+      continue cx trace mapped_t k
 
     (***********************************************)
     (* functions may have their prototypes written *)
@@ -4770,7 +4792,11 @@ and err_operation = function
   | HasOwnPropT _ -> "Property not found in"
   | HasPropT _ -> "Property not found in"
   | UnaryMinusT _ -> "Expected number instead of"
-  | TupleMapT _ -> "Expected array instead of"
+  | MapTypeT (_, kind, _, _) ->
+    (match kind with
+    | TupleMap -> "Expected Iterable instead of"
+    | ObjectMap
+    | ObjectMapi -> "Expected object instead of")
   | ReactCreateElementT _ -> "Expected React component instead of"
   | CallLatentPredT _ -> "Expected predicated function instead of"
   (* unreachable or unclassified use-types. until we have a mechanical way
@@ -5304,6 +5330,11 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let t' =  subst cx ~force map t in
     OpenPredT (r, t', pos_map, neg_map)
 
+  | TypeMapT (r, kind, t1, t2) ->
+    let t1' = subst cx ~force map t1 in
+    let t2' = subst cx ~force map t2 in
+    if t1 == t1' && t2 == t2' then t else TypeMapT (r, kind, t1', t2')
+
 and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
       let s_ = subst_selector cx force map s in
@@ -5457,6 +5488,7 @@ and check_polarity cx polarity = function
   | ChoiceKitT _
   | CustomFunT _
   | OpenPredT _
+  | TypeMapT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx polarity id =
@@ -8131,6 +8163,10 @@ and unify cx t1 t2 =
     (* rethrow *)
     raise ex
 
+and continue cx trace t = function
+  | Upper u -> rec_flow cx trace (t, u)
+  | Lower l -> rec_flow_t cx trace (l, t)
+
 (************* end of slab **************************************************)
 
 let intersect_members cx members =
@@ -8457,6 +8493,10 @@ let rec assert_ground ?(infer=false) cx skip ids t =
 
   | ExistsT _ ->
     ()
+
+  | TypeMapT (_, _, t1, t2) ->
+    recurse t1;
+    recurse t2
 
   | FunProtoT _
   | FunProtoApplyT _

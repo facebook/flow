@@ -256,6 +256,9 @@ module rec TypeTerm : sig
     *)
     | OpenPredT of reason * t * predicate Key_map.t * predicate Key_map.t
 
+    (* Map a FunT over a structure *)
+    | TypeMapT of reason * type_map * t * t
+
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
@@ -390,7 +393,7 @@ module rec TypeTerm : sig
     | ElemT of reason * t * t * rw
 
     (* exact ops *)
-    | MakeExactT of reason * make_exact
+    | MakeExactT of reason * cont
 
     (* Module import handling *)
     | CJSRequireT of reason * t
@@ -409,8 +412,8 @@ module rec TypeTerm : sig
     | CopyNamedExportsT of reason * t * t_out
     | ExportNamedT of reason * t SMap.t * t_out
 
-    (* Map a FunT over each element in a tuple *)
-    | TupleMapT of reason * t * t_out
+    (* Map a FunT over a structure *)
+    | MapTypeT of reason * type_map * t * cont
 
     (**
      * An internal-only type to evaluate JSX expression. This type exists to
@@ -595,7 +598,7 @@ module rec TypeTerm : sig
     proto_t: prototype;
   }
 
-  and make_exact = Lower of t | Upper of use_t
+  and cont = Lower of t | Upper of use_t
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
      of properties. In all cases, if the property is found somewhere along the
@@ -721,6 +724,11 @@ module rec TypeTerm : sig
   | NonMaybeType
   | PropertyType of string
 
+  and type_map =
+  | TupleMap
+  | ObjectMap
+  | ObjectMapi
+
   and prototype = t
 
   and super = t
@@ -735,7 +743,6 @@ module rec TypeTerm : sig
   (* builtins *)
   | ObjectAssign
   | ObjectGetPrototypeOf
-  | PromiseAll
 
   (* 3rd party libs *)
   | ReactCreateElement
@@ -1237,6 +1244,8 @@ let rec reason_of_t = function
 
   | OpenPredT (reason, _, _, _) -> reason
 
+  | TypeMapT (reason, _, _, _) -> reason
+
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
   | TypeDestructorT (reason, _) ->
@@ -1329,7 +1338,7 @@ and reason_of_use_t = function
   | CopyNamedExportsT (reason, _, _) -> reason
   | ExportNamedT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
-  | TupleMapT (reason, _, _) -> reason
+  | MapTypeT (reason, _, _, _) -> reason
   | ReactCreateElementT (reason, _, _) -> reason
 
   | SentinelPropTestT (_, _, _, result) -> reason_of_t result
@@ -1441,6 +1450,8 @@ let rec mod_reason_of_t f = function
 
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
 
+  | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
+
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
   | TypeDestructorT (reason, s) -> TypeDestructorT (f reason, s)
@@ -1525,7 +1536,7 @@ and mod_reason_of_use_t f = function
   | CopyNamedExportsT (reason, target_module_t, t_out) -> CopyNamedExportsT(f reason, target_module_t, t_out)
   | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
-  | TupleMapT (reason, t, tout) -> TupleMapT (f reason, t, tout)
+  | MapTypeT (reason, kind, t, k) -> MapTypeT (f reason, kind, t, k)
   | ReactCreateElementT (reason, t, tout) -> ReactCreateElementT (f reason, t, tout)
 
   | SentinelPropTestT (l, sense, sentinel, result) ->
@@ -1631,6 +1642,7 @@ let string_of_ctor = function
   | CustomFunT _ -> "CustomFunT"
   | IdxWrapper _ -> "IdxWrapper"
   | OpenPredT _ -> "OpenPredT"
+  | TypeMapT _ -> "TypeMapT"
 
 let string_of_use_op = function
   | FunReturn -> "FunReturn"
@@ -1697,7 +1709,7 @@ let string_of_use_ctor = function
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | ExportNamedT _ -> "ExportNamedT"
   | DebugPrintT _ -> "DebugPrintT"
-  | TupleMapT _ -> "TupleMapT"
+  | MapTypeT _ -> "MapTypeT"
   | ReactCreateElementT _ -> "ReactCreateElementT"
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | ChoiceKitUseT (_, tool) ->

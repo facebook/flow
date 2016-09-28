@@ -193,18 +193,6 @@ let rec normalize_type_impl cx ids t = match t with
       let param_names = Some ["obj"; "pathCallback"] in
       fake_fun param_names tins (MaybeT cb_ret)
 
-  (* Fake the signature of Promise.all:
-     (promises: Array<Promise>): Promise *)
-  | CustomFunT (_, PromiseAll) ->
-      let param_names = Some ["promises"] in
-      let promise = fake_instance "Promise" in
-      let promises = ArrT (
-        reason_of_string "promises",
-        promise,
-        []
-      ) in
-      fake_fun param_names [promises] promise
-
   (* Fake the signature of React.createElement (overloaded)
      1. Component class
        <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -384,6 +372,21 @@ let rec normalize_type_impl cx ids t = match t with
       | None -> None
       | Some t -> Some (normalize_type_impl cx ids t) in
     ModuleT (reason, { exporttypes with exports_tmap; cjs_export; })
+
+  | TypeMapT (_, TupleMap, t1, t2) ->
+      let t1 = normalize_type_impl cx ids t1 in
+      let t2 = normalize_type_impl cx ids t2 in
+      TypeMapT (reason_of_string "tuple map", TupleMap, t1, t2)
+
+  | TypeMapT (_, ObjectMap, t1, t2) ->
+      let t1 = normalize_type_impl cx ids t1 in
+      let t2 = normalize_type_impl cx ids t2 in
+      TypeMapT (reason_of_string "object map", ObjectMap, t1, t2)
+
+  | TypeMapT (_, ObjectMapi, t1, t2) ->
+      let t1 = normalize_type_impl cx ids t1 in
+      let t2 = normalize_type_impl cx ids t2 in
+      TypeMapT (reason_of_string "object mapi", ObjectMapi, t1, t2)
 
   | FunProtoT _
   | ExtendsT (_, _, _)

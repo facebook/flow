@@ -37,16 +37,16 @@ all.js:19
 all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ call of method `all`
-Library type error:. See lib: core.js:500
-property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: core.js:500
+Library type error:. See lib: core.js:579
+property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: core.js:579
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
-     ^^^^^^^^^^^^^ undefined (too few arguments)
+     ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters)
 
 all.js:27
  27: Promise.all(0); // Error: expected array instead of number
      ^^^^^^^^^^^^^^ call of method `all`
-Library type error:. See lib: core.js:500
-property `@@iterator` of $Iterable. Property not found in. See lib: core.js:500
+Library type error:. See lib: core.js:579
+property `@@iterator` of $Iterable. Property not found in. See lib: core.js:579
  27: Promise.all(0); // Error: expected array instead of number
                  ^ number
 

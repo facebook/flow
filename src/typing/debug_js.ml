@@ -38,6 +38,11 @@ let string_of_binary_test_ctor = function
   | InstanceofTest -> "InstanceofTest"
   | SentinelProp _ -> "SentinelProp"
 
+let string_of_type_map = function
+  | TupleMap -> "TupleMap"
+  | ObjectMap -> "ObjectMap"
+  | ObjectMapi -> "ObjectMapi"
+
 type json_cx = {
   stack: ISet.t;
   size: int ref;
@@ -226,6 +231,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "assume", _json_of_t json_cx t2
     ]
 
+  | TypeMapT (_, kind, t1, t2) -> [
+      "kind", JSON_String (string_of_type_map kind);
+      "type", _json_of_t json_cx t1;
+      "funType", _json_of_t json_cx t2;
+    ]
+
   | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}) ->
     let property_maps = Context.property_maps json_cx.cx in
     let tmap = IMap.find_unsafe exports_tmap property_maps in
@@ -254,7 +265,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String (match kind with
       | ObjectAssign -> "Object.assign"
       | ObjectGetPrototypeOf -> "Object.getPrototypeOf"
-      | PromiseAll -> "Promise.all"
       | ReactCreateElement -> "React.createElement"
       | Merge -> "merge"
       | MergeDeepInto -> "mergeDeepInto"
@@ -294,6 +304,17 @@ and _json_of_string_literal = Hh_json.(function
   | Literal s -> ["literal", JSON_String s]
   | Truthy -> ["refinement", JSON_String "Truthy"]
   | AnyLiteral -> []
+)
+
+and _json_of_cont json_cx = Hh_json.(function
+  | Upper u -> [
+      "cont", JSON_String "upper";
+      "type", _json_of_use_t json_cx u
+    ]
+  | Lower l -> [
+      "cont", JSON_String "lower";
+      "type", _json_of_t json_cx l
+    ]
 )
 
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
@@ -504,16 +525,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "rw", JSON_String (string_of_rw rw);
     ]
 
-  | MakeExactT (_, payload) -> begin match payload with
-    | Upper u -> [
-        "cont", JSON_String "upper";
-        "type", _json_of_use_t json_cx u
-      ]
-    | Lower l -> [
-        "cont", JSON_String "lower";
-        "type", _json_of_t json_cx l
-      ]
-    end
+  | MakeExactT (_, cont) -> _json_of_cont json_cx cont
 
   | CJSRequireT (_, export) -> [
       "export",
@@ -555,9 +567,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "t_out", _json_of_t json_cx t_out;
     ]
   | DebugPrintT _reason -> []
-  | TupleMapT (_, t, t_out) -> [
+
+  | MapTypeT (_, kind, t, cont) -> [
+      "kind", JSON_String (string_of_type_map kind);
       "t", _json_of_t json_cx t;
-      "t_out", _json_of_t json_cx t_out;
+      "cont", JSON_Object (_json_of_cont json_cx cont);
     ]
 
   | ReactCreateElementT (_, t, t_out) -> [
@@ -1179,6 +1193,10 @@ and dump_t_ (depth, tvars) cx t =
   | ChoiceKitT _ -> p t
   | IdxWrapper (_, inner_obj) -> p ~extra:(kid inner_obj) t
   | OpenPredT (_, inner_type, _, _) -> p ~extra:(kid inner_type) t
+  | TypeMapT (_, kind, t1, t2) -> p ~extra:(spf "%s, %s, %s"
+      (string_of_type_map kind)
+      (kid t1)
+      (kid t2)) t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
@@ -1276,7 +1294,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | CopyNamedExportsT _
   | ExportNamedT _
   | DebugPrintT _
-  | TupleMapT _
+  | MapTypeT _
   | ReactCreateElementT _
   | SentinelPropTestT _
   | IntersectionPreprocessKitT _
