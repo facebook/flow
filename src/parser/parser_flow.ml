@@ -2003,6 +2003,7 @@ end = struct
       let async = false in
       let generator = Declaration.generator env async in
       let key_loc, key = key env in
+      let start_loc = Peek.loc env in
       (* It's not clear how type params on getters & setters would make sense
        * in Flow's type system. Since this is a Flow syntax extension, we might
        * as well disallow it until we need it *)
@@ -2030,7 +2031,8 @@ end = struct
         match body with
         | BodyBlock (loc, _) -> loc, false
         | BodyExpression (loc, _) -> loc, true) in
-      let value = end_loc, Function.({
+      let loc = Loc.btwn start_loc end_loc in
+      let value = loc, Function.({
         id = None;
         params;
         body;
@@ -2120,6 +2122,7 @@ end = struct
                 | Computed expr -> expr), true, false
             | T_LESS_THAN
             | T_LPAREN ->
+                let start_loc = Peek.loc env in
                 let typeParameters = Type.type_parameter_declaration env in
                 let params = Declaration.function_params env in
                 let returnType = Type.annotation_opt env in
@@ -2127,11 +2130,12 @@ end = struct
                   Declaration.function_body env ~async ~generator in
                 let simple = Declaration.is_simple_function_params params in
                 Declaration.strict_post_check env ~strict ~simple None params;
-                let end_loc, expression = Function.(
-                  match body with
-                  | BodyBlock (loc, _) -> loc, false
-                  | BodyExpression (loc, _) -> loc, true) in
-                let value = end_loc, Ast.Expression.(Function Function.({
+                let end_loc, expression = match body with
+                  | Function.BodyBlock (loc, _) -> loc, false
+                  | Function.BodyExpression (loc, _) -> loc, true
+                in
+                let loc = Loc.btwn start_loc end_loc in
+                let value = loc, Ast.Expression.(Function Function.({
                   id = None;
                   params;
                   body;
@@ -2325,6 +2329,7 @@ end = struct
             static;
           })))
         | _ ->
+          let func_loc = Peek.loc env in
           let typeParameters = Type.type_parameter_declaration env in
           let params = Declaration.function_params env in
           let returnType = Type.annotation_opt env in
@@ -2336,7 +2341,8 @@ end = struct
             match body with
             | BodyBlock (loc, _) -> loc, false
             | BodyExpression (loc, _) -> loc, true) in
-          let value = end_loc, Function.({
+          let loc = Loc.btwn func_loc end_loc in
+          let value = loc, Function.({
             id = None;
             params;
             body;

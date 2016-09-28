@@ -73,7 +73,8 @@ module.exports = {
         {
           content: 'x = { get width() { return m_width } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -84,20 +85,136 @@ module.exports = {
               type: 'Wrong number',
               expected: 35,
               actual: 34
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
             },
           }
         },
-        'x = { get undef() {} }',
-        'x = { get if() {} }',
-        'x = { get true() {} }',
-        'x = { get false() {} }',
-        'x = { get null() {} }',
-        'x = { get "undef"() {} }',
-        'x = { get 10() {} }',
+        {
+          content: 'x = { get undef() {} }',
+          explanation: "Esprima-fb doesn't include the params in the FunctionExpression.",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+          }
+        },
+        {
+          content: 'x = { get if() {} }',
+          explanation: "Esprima-fb doesn't include the params in the FunctionExpression.",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+          },
+        },
+        {
+          content: 'x = { get true() {} }',
+          explanation: "Esprima-fb doesn't include the params in the FunctionExpression.",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 14,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 14,
+            },
+          },
+        },
+        {
+          content: 'x = { get false() {} }',
+          explanation: "Esprima-fb doesn't include the params in the FunctionExpression.",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+          },
+        },
+        {
+          content: 'x = { get null() {} }',
+          explanation: "Esprima-fb doesn't include the params in the FunctionExpression.",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 14,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 14,
+            },
+          },
+        },
+        {
+          content: 'x = { get "undef"() {} }',
+          explanation: "Esprima-fb doesn't include the params in the FunctionExpression.",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 17,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 17,
+            },
+          },
+        },
+        {
+          content: 'x = { get 10() {} }',
+          explanation: "Esprima-fb doesn't include the params in the FunctionExpression.",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+          },
+        },
         {
           content: 'x = { set width(w) { m_width = w } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -108,13 +225,24 @@ module.exports = {
               type: 'Wrong number',
               expected: 33,
               actual: 32
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 15,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 15,
             },
           }
         },
         {
           content: 'x = { set if(w) { m_if = w } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -125,13 +253,24 @@ module.exports = {
               type: 'Wrong number',
               expected: 27,
               actual: 26
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 12,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 12,
             },
           }
         },
         {
           content: 'x = { set true(w) { m_true = w } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -142,13 +281,24 @@ module.exports = {
               type: 'Wrong number',
               expected: 31,
               actual: 30
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 14,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 14,
             },
           }
         },
         {
           content: 'x = { set false(w) { m_false = w } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -159,13 +309,24 @@ module.exports = {
               type: 'Wrong number',
               expected: 33,
               actual: 32
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 15,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 15,
             },
           }
         },
         {
           content: 'x = { set null(w) { m_null = w } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -176,13 +337,24 @@ module.exports = {
               type: 'Wrong number',
               expected: 31,
               actual: 30
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 14,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 14,
             },
           }
         },
         {
           content: 'x = { set "null"(w) { m_null = w } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -193,13 +365,24 @@ module.exports = {
               type: 'Wrong number',
               expected: 33,
               actual: 32
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 16,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 16,
             },
           }
         },
         {
           content: 'x = { set 10(w) { m_null = w } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -210,6 +393,16 @@ module.exports = {
               type: 'Wrong number',
               expected: 29,
               actual: 28
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 12,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 12,
             },
           }
         },
@@ -220,7 +413,8 @@ module.exports = {
         {
           content: 'x = { get width() { return m_width }, set width(width) { m_width = width; } }',
           explanation: "Esprima counts the whitespace before the implicit " +
-            "semicolon in its loc. Flow doesn't.",
+            "semicolon in its loc. Flow doesn't. Esprima-fb doesn't include " +
+            "the params in the FunctionExpression.",
           expected_differences: {
             'root.body.0.expression.right.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -231,6 +425,26 @@ module.exports = {
               type: 'Wrong number',
               expected: 35,
               actual: 34
+            },
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+            'root.body.0.expression.right.properties.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 55,
+              actual: 47,
+            },
+            'root.body.0.expression.right.properties.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 55,
+              actual: 47,
             },
           }
         },
@@ -2568,11 +2782,91 @@ module.exports = {
     // ECMAScript 6th Syntax, 13.13 Method Definitions
 
     'ES6: Method Definition': [
-        'x = { method() { } }',
-        'x = { method(test) { } }',
-        'x = { \'method\'() { } }',
-        'x = { get() { } }',
-        'x = { set() { } }',
+        {
+          content: 'x = { method() { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+          },
+        },
+        {
+          content: 'x = { method(test) { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 12,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 12,
+            },
+          },
+        },
+        {
+          content: 'x = { \'method\'() { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 14,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 14,
+            },
+          },
+        },
+        {
+          content: 'x = { get() { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 9,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 9,
+            },
+          },
+        },
+        {
+          content: 'x = { set() { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 9,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 9,
+            },
+          },
+        },
     ],
 
     'Array Comprehension': [
@@ -2724,7 +3018,8 @@ module.exports = {
         {
           content: 'var x = { *test () { yield *v } };',
           explanation: "Esprima counts the implict semicolon in its loc, flow " +
-            "doesn't",
+            "doesn't. Esprima-fb doesn't include params in onExpression " +
+            "location",
           expected_differences: {
             'root.body.0.declarations.0.init.properties.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -2736,7 +3031,17 @@ module.exports = {
               expected: 30,
               actual: 29
             },
-          }
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 16,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 16,
+            },
+          },
         },
         'function* t() {}',
         {
@@ -2797,20 +3102,181 @@ module.exports = {
         'var A = class extends B {}',
         'class type {}',
         'class A extends class B extends C {} {}',
-        'class A {get() {}}',
-        'class A { static get() {}}',
-        'class A extends B {get foo() {}}',
-        'class A extends B { static get foo() {}}',
-        'class A {set a(v) {}}',
-        'class A { static set a(v) {}}',
-        'class A {set(v) {};}',
-        'class A { static set(v) {};}',
-        'class A {*gen(v) { yield v; }}',
-        'class A { static *gen(v) { yield v; }}',
+        {
+          content: 'class A {get() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+          },
+        },
+        {
+          content: 'class A { static get() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 20,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 20,
+            },
+          },
+        },
+        {
+          content: 'class A extends B {get foo() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 26,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 26,
+            },
+          },
+        },
+        {
+          content: 'class A extends B { static get foo() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 37,
+              actual: 34,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 37,
+              actual: 34,
+            },
+          },
+        },
+        {
+          content: 'class A {set a(v) {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 14,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 14,
+            },
+          },
+        },
+        {
+          content: 'class A { static set a(v) {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 26,
+              actual: 22,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 26,
+              actual: 22,
+            },
+          },
+        },
+        {
+          content: 'class A {set(v) {};}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 12,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 12,
+            },
+          },
+        },
+        {
+          content: 'class A { static set(v) {};}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 24,
+              actual: 20,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 24,
+              actual: 20,
+            },
+          },
+        },
+        {
+          content: 'class A {*gen(v) { yield v; }}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 13,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 17,
+              actual: 13,
+            },
+          },
+        },
+        {
+          content: 'class A { static *gen(v) { yield v; }}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 21,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 21,
+            },
+          },
+        },
         {
           content: '"use strict"; (class A {constructor() { super() }})',
-          explanation: "Esprima counts the parens and implicit semicolon in " +
-            "its loc, Flow doesn't",
+          explanation: "Esprima counts the implicit semicolon in its loc, " +
+            "Flow doesn't. Esprima-fb also doesn't include params in " +
+            "FunctionExpression location",
           expected_differences: {
             'root.body.1.expression.body.body.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -2822,14 +3288,67 @@ module.exports = {
               expected: 48,
               actual: 47
             },
+            'root.body.1.expression.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 38,
+              actual: 35,
+            },
+            'root.body.1.expression.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 38,
+              actual: 35,
+            },
           }
         },
-        'class A {static foo() {}}',
-        'class A {foo() {} static bar() {}}',
+        {
+          content: 'class A {static foo() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+          },
+        },
+        {
+          content: 'class A {foo() {} static bar() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 15,
+              actual: 12,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 28,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 28,
+            },
+          },
+        },
         {
           content: '"use strict"; (class A { static constructor() { super() }})',
-          explanation: "Esprima counts the parens and implicit semicolon in " +
-            "its loc, Flow doesn't",
+          explanation: "Esprima counts the implicit semicolon in its loc, " +
+            "Flow doesn't. Esprima-fb also doesn't include params in " +
+            "FunctionExpression location",
           expected_differences: {
             'root.body.1.expression.body.body.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -2841,18 +3360,268 @@ module.exports = {
               expected: 56,
               actual: 55
             },
+            'root.body.1.expression.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 46,
+              actual: 43,
+            },
+            'root.body.1.expression.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 46,
+              actual: 43,
+            },
           }
         },
-        'class A { foo() {} bar() {}}',
-        'class A { get foo() {} set foo(v) {}}',
-        'class A { static get foo() {} get foo() {}}',
-        'class A { static get foo() {} static get bar() {} }',
-        'class A { static get foo() {} static set foo(v) {} get foo() {} set foo(v) {}}',
-        'class A { set foo(v) {} get foo() {} }',
-        'class A { [x]() {} }',
-        'class A { [1+1]() {} }',
-        'class A { get [1+1]() {} }',
-        'class A { static get [1+1]() {} }',
+        {
+          content: 'class A { foo() {} bar() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 13,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 13,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 22,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 22,
+            },
+          },
+        },
+        {
+          content: 'class A { get foo() {} set foo(v) {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 17,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 17,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 34,
+              actual: 30,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 34,
+              actual: 30,
+            },
+          },
+        },
+        {
+          content: 'class A { static get foo() {} get foo() {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 24,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 24,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 40,
+              actual: 37,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 40,
+              actual: 37,
+            },
+          },
+        },
+        {
+          content: 'class A { static get foo() {} static get bar() {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 24,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 24,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 47,
+              actual: 44,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 47,
+              actual: 44,
+            },
+          },
+        },
+        {
+          content: 'class A { static get foo() {} static set foo(v) {} get foo() {} set foo(v) {}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 24,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 24,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 48,
+              actual: 44,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 48,
+              actual: 44,
+            },
+            'root.body.0.body.body.2.value.range.0': {
+              type: 'Wrong number',
+              expected: 61,
+              actual: 58,
+            },
+            'root.body.0.body.body.2.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 61,
+              actual: 58,
+            },
+            'root.body.0.body.body.3.value.range.0': {
+              type: 'Wrong number',
+              expected: 75,
+              actual: 71,
+            },
+            'root.body.0.body.body.3.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 75,
+              actual: 71,
+            },
+          },
+        },
+        {
+          content: 'class A { set foo(v) {} get foo() {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 17,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 21,
+              actual: 17,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 34,
+              actual: 31,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 34,
+              actual: 31,
+            },
+          },
+        },
+        {
+          content: 'class A { [x]() {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 13,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 16,
+              actual: 13,
+            },
+          },
+        },
+        {
+          content: 'class A { [1+1]() {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+          },
+        },
+        {
+          content: 'class A { get [1+1]() {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+          },
+        },
+        {
+          content: 'class A { static get [1+1]() {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 26,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 29,
+              actual: 26,
+            },
+          },
+        },
         {
           content: 'class A { static() {} }',
           explanation: 'Our version of esprima is outdated',
@@ -2864,7 +3633,23 @@ module.exports = {
             },
           },
         },
-        'class A { static static() {} }',
+        {
+          content: 'class A { static static() {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 26,
+              actual: 23,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 26,
+              actual: 23,
+            },
+          },
+        },
     ],
 
     'Harmony: Invalid Class (strawman)': [
@@ -2881,12 +3666,70 @@ module.exports = {
         '({["x" + "y"]: 10})',
         '({[x]: function() {}})',
         '({[x]: 10, y: 20})',
-        '({get [x]() {}, set [x](v) {}})',
-        '({[x]() {}})',
+        {
+          content: '({get [x]() {}, set [x](v) {}})',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 9,
+            },
+            'root.body.0.expression.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 12,
+              actual: 9,
+            },
+            'root.body.0.expression.properties.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 23,
+            },
+            'root.body.0.expression.properties.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 27,
+              actual: 23,
+            },
+          },
+        },
+        {
+          content: '({[x]() {}})',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 5,
+            },
+            'root.body.0.expression.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 8,
+              actual: 5,
+            },
+          },
+        },
         // These tests fail due to computed Properties
         // 'var {[x]: y} = {y}',
         // 'function f({[x]: y}) {}',
-        'var x = {*[test]() { yield *v; }}',
+        {
+          content: 'var x = {*[test]() { yield *v; }}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 16,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 16,
+            },
+          },
+        },
     ],
 
     'ES6: Default parameters': [
@@ -2894,13 +3737,61 @@ module.exports = {
         'function f({x} = {x: 10}) {}',
         'f = function({x} = {x: 10}) {}',
         '({f: function({x} = {x: 10}) {}})',
-        '({f({x} = {x: 10}) {}})',
-        '(class {f({x} = {x: 10}) {}})',
+        {
+          content: '({f({x} = {x: 10}) {}})',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 3,
+            },
+            'root.body.0.expression.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 19,
+              actual: 3,
+            },
+          },
+        },
+        {
+          content: '(class {f({x} = {x: 10}) {}})',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 9,
+            },
+            'root.body.0.expression.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 25,
+              actual: 9,
+            },
+          },
+        },
         '(({x} = {x: 10}) => {})',
         'x = function(y = 1) {}',
         'function f(a = 1) {}',
         'x = { f: function(a=1) {} }',
-        'x = { f(a=1) {} }'
+        {
+          content: 'x = { f(a=1) {} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 7,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 13,
+              actual: 7,
+            },
+          },
+        },
     ],
 
     // ECMAScript 6th Syntax, 13 - Rest parameters
@@ -3113,18 +4004,98 @@ module.exports = {
         'a = class Foo<T> { }',
         'a = class Foo<T> extends Bar<T> {}',
         'a=function<T,S>() {}',
-        'a={set fooProp(value:number){}}',
-        'class Array { concat(items:number | string) {}; }',
+        {
+          content: 'a={set fooProp(value:number){}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.expression.right.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 14,
+            },
+            'root.body.0.expression.right.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 14,
+            },
+          },
+        },
+        {
+          content: 'class Array { concat(items:number | string) {}; }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 44,
+              actual: 20,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 44,
+              actual: 20,
+            },
+          },
+        },
         'class Foo { [1 + 1]: string; }',
         'class Foo { 123:string; }',
-        'class Foo { "bar"<T>() { } }',
+        {
+          content: 'class Foo { "bar"<T>() { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 17,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 17,
+            },
+          },
+        },
         'class Foo { "prop1":string; }',
         'class Foo { [prop1]: string; }' ,
         'class Foo { prop1:string; prop2:number; }',
         'class Foo { static prop1:string; prop2:number; }',
-        'class Foo {set fooProp(value:number){}}',
+        {
+          content: 'class Foo {set fooProp(value:number){}}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 36,
+              actual: 22,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 36,
+              actual: 22,
+            },
+          },
+        },
         'class Foo<T> {}',
-        'class Foo<T> { bar<U>():number { return 42; }}',
+        {
+          content: 'class Foo<T> { bar<U>():number { return 42; }}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 18,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 31,
+              actual: 18,
+            },
+          },
+        },
         'class Foo<T> extends Bar<T> {}',
         'class Foo<T> extends mixin(Bar) {}',
         'function foo(): {} {}',
@@ -3534,15 +4505,183 @@ module.exports = {
     'Async/Await': [
         'try { foo(); } catch (async) { bar(); }',
         'try { foo(); } catch (await) { bar(); }',
-        'var x = { async() { bar(); }}',
-        'var x = { set async(v) { }, get async() { return "foo";}, }',
-        'var x = { set await(v) { }, get await() { return "foo";}, }',
+        {
+          content: 'var x = { async() { bar(); }}',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 18,
+              actual: 15,
+            },
+          },
+        },
+        {
+          content: 'var x = { set async(v) { }, get async() { return "foo";}, }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.declarations.0.init.properties.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 40,
+              actual: 37,
+            },
+            'root.body.0.declarations.0.init.properties.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 40,
+              actual: 37,
+            },
+          },
+        },
+        {
+          content: 'var x = { set await(v) { }, get await() { return "foo";}, }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.declarations.0.init.properties.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 40,
+              actual: 37,
+            },
+            'root.body.0.declarations.0.init.properties.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 40,
+              actual: 37,
+            },
+          },
+        },
         'class async { }',
-        'class async { async() { } }',
-        'class async { async async() { await foo; } }',
-        'class await { await() { } }',
-        'class A { set async(v) { } get async() { return "foo";} }',
-        'class A { set await(v) { } get await() { return "foo";} }',
+        {
+          content: 'class async { async() { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+          },
+        },
+        {
+          content: 'class async { async async() { await foo; } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 25,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 28,
+              actual: 25,
+            },
+          },
+        },
+        {
+          content: 'class await { await() { } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+          },
+        },
+        {
+          content: 'class A { set async(v) { } get async() { return "foo";} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 39,
+              actual: 36,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 39,
+              actual: 36,
+            },
+          },
+        },
+        {
+          content: 'class A { set await(v) { } get await() { return "foo";} }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 23,
+              actual: 19,
+            },
+            'root.body.0.body.body.1.value.range.0': {
+              type: 'Wrong number',
+              expected: 39,
+              actual: 36,
+            },
+            'root.body.0.body.body.1.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 39,
+              actual: 36,
+            },
+          },
+        },
         {
           content: 'y = async function() { return await bar; } ()',
           explanation: 'Babel has no problem with this, and it seems ' +
@@ -3557,7 +4696,23 @@ module.exports = {
         },
         'async function f() { return 1; }',
         'async function foo() { await 1; }',
-        'var x = { async m() { await 1; } };',
+        {
+          content: 'var x = { async m() { await 1; } };',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 17,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 20,
+              actual: 17,
+            },
+          },
+        },
         'function async() { }',
         'async function foo() { return function await() { }; }',
         {
@@ -3578,9 +4733,57 @@ module.exports = {
         'var x = async a => await a;',
         'foo(async () => await bar);',
         'var x = async\ny => y',
-        'class A { async bar() { await foo; } }',
-        'var x = { async "foo"() { await y; } }',
-        'var x = { async 123() { await y; } }',
+        {
+          content: 'class A { async bar() { await foo; } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.body.body.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+            'root.body.0.body.body.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+          },
+        },
+        {
+          content: 'var x = { async "foo"() { await y; } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 24,
+              actual: 21,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 24,
+              actual: 21,
+            },
+          },
+        },
+        {
+          content: 'var x = { async 123() { await y; } }',
+          explanation: "Esprima-fb doesn't include params in " +
+            "FunctionExpression location",
+          expected_differences: {
+            'root.body.0.declarations.0.init.properties.0.value.range.0': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+            'root.body.0.declarations.0.init.properties.0.value.loc.start.column': {
+              type: 'Wrong number',
+              expected: 22,
+              actual: 19,
+            },
+          },
+        },
     ],
   }
 };

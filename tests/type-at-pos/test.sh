@@ -23,6 +23,12 @@ $FLOW type-at-pos optional.js 14 10 --strip-root --pretty
 "$FLOW" type-at-pos react.js 2 7 --strip-root --pretty
 "$FLOW" type-at-pos trycatch.js 5 10 --strip-root --pretty
 
+# printf "function_expression.js:4:8 = "
+# "$FLOW" type-at-pos function_expressions.js 4 12 --strip-root --pretty
+printf "function_expression.js:9:5 = "
+"$FLOW" type-at-pos function_expressions.js 9 5 --strip-root --pretty
+printf "function_expression.js:9:7 = "
+"$FLOW" type-at-pos function_expressions.js 9 7 --strip-root --pretty
 printf "predicates.js - null: "
 "$FLOW" type-at-pos predicates.js 4 12 --strip-root --pretty
 printf "predicates.js - undefined: "
