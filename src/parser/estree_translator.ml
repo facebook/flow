@@ -201,31 +201,7 @@ end with type t = Impl.t) = struct
   | loc, ClassDeclaration c -> class_declaration (loc, c)
   | loc, InterfaceDeclaration i -> interface_declaration (loc, i)
   | loc, VariableDeclaration var -> variable_declaration (loc, var)
-  | loc, FunctionDeclaration fn ->  Function.(
-      (* esprima/estree hasn't come around to the idea that function decls can
-       * have optional ids :( *)
-      let (node_type, node_value) = (
-        match fn.id with
-        | Some(id) -> "FunctionDeclaration", identifier id
-        | None -> "FunctionExpression", null
-      ) in
-
-      let body =  (match fn.body with
-      | BodyBlock b -> block b
-      | BodyExpression b -> expression b) in
-
-      node node_type loc [|
-        "id", node_value;
-        "params", function_params fn.params;
-        "body", body;
-        "async", bool fn.async;
-        "generator", bool fn.generator;
-        "predicate", option predicate fn.predicate;
-        "expression", bool fn.expression;
-        "returnType", option type_annotation fn.returnType;
-        "typeParameters", option type_parameter_declaration fn.typeParameters;
-      |]
-    )
+  | loc, FunctionDeclaration fn -> function_declaration (loc, fn)
     | loc, DeclareVariable d -> declare_variable (loc, d)
     | loc, DeclareFunction d -> declare_function (loc, d)
     | loc, DeclareClass d -> declare_class (loc, d)
@@ -520,6 +496,27 @@ end with type t = Impl.t) = struct
         |]
       ))
 
+  and function_declaration (loc, fn) = Function.(
+    let body = match fn.body with
+    | BodyBlock b -> block b
+    | BodyExpression b -> expression b in
+
+    node "FunctionDeclaration" loc [|
+      (* estree hasn't come around to the idea that function decls can have
+         optional ids, but acorn, babel, espree and esprima all have, so let's
+         do it too. see https://github.com/estree/estree/issues/98 *)
+      "id", option identifier fn.id;
+      "params", function_params fn.params;
+      "body", body;
+      "async", bool fn.async;
+      "generator", bool fn.generator;
+      "predicate", option predicate fn.predicate;
+      "expression", bool fn.expression;
+      "returnType", option type_annotation fn.returnType;
+      "typeParameters", option type_parameter_declaration fn.typeParameters;
+    |]
+  )
+
   and function_expression (loc, _function) = Function.(
     let body = match _function.body with
     | BodyBlock b -> block b
@@ -620,16 +617,11 @@ end with type t = Impl.t) = struct
   )
 
   and class_declaration (loc, c) = Class.(
-    (* esprima/estree hasn't come around to the idea that class decls can have
-     * optional ids :( *)
-    let (node_type, node_value) = (
-      match c.id with
-      | Some(id) -> "ClassDeclaration", identifier id
-      | None -> "ClassExpression", null
-    ) in
-
-    node node_type loc [|
-      "id", node_value;
+    node "ClassDeclaration" loc [|
+      (* estree hasn't come around to the idea that class decls can have
+         optional ids, but acorn, babel, espree and esprima all have, so let's
+         do it too. see https://github.com/estree/estree/issues/98 *)
+      "id", option identifier c.id;
       "body", class_body c.body;
       "superClass", option expression c.superClass;
       "typeParameters", option type_parameter_declaration c.typeParameters;

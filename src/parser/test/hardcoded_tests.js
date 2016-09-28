@@ -1229,12 +1229,22 @@ module.exports = {
       },
       'export default class {}': {
         'body.0.declaration': {
-          'type': 'ClassExpression',
+          'type': 'ClassDeclaration',
         }
       },
       'export default class A {}': {
         'body.0.declaration': {
           'type': 'ClassDeclaration',
+        }
+      },
+      'export default function() {}': {
+        'body.0.declaration': {
+          'type': 'FunctionDeclaration',
+        }
+      },
+      'export default function a() {}': {
+        'body.0.declaration': {
+          'type': 'FunctionDeclaration',
         }
       },
       'export type A = number': {

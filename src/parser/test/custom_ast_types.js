@@ -19,11 +19,33 @@ def("DeclareExportDeclaration")
     null
   ))
 
+// TODO: should be named NullableClassDeclaration. estree allows a nameless
+// decl inside an `export default` (https://github.com/estree/estree/issues/98),
+// but ast-types uses the `TypeName` in `def("TypeName")` as the expected `type`
+// property, which isn't the case here. So, we incorrectly have to loosen all
+// ClassDeclarations for now.
+def("ClassDeclaration")
+    .field("id", or(def("Identifier"), null))
+
+// TODO: should be named NullableFunctionDeclaration. estree allows a nameless
+// decl inside an `export default` (https://github.com/estree/estree/issues/98),
+// but ast-types uses the `TypeName` in `def("TypeName")` as the expected `type`
+// property, which isn't the case here. So, we incorrectly have to loosen all
+// FunctionDeclarations for now.
+def("FunctionDeclaration")
+    .field("id", or(def("Identifier"), null))
+
 // See https://github.com/benjamn/ast-types/issues/180
 def("ExportDefaultDeclaration")
     .bases("Declaration")
     .build("declaration", "exportKind")
-    .field("declaration", or(def("Declaration"), def("Expression")))
+    .field("declaration", or(
+      def("ClassDeclaration"), // TODO: should be NullableClassDeclaration
+      def("FunctionDeclaration"), // TODO: should be NullableFunctionDeclaration
+      def("VariableDeclaration"),
+      def("InterfaceDeclaration"),
+      def("TypeAlias"),
+      def("Expression")))
     .field("exportKind", or("type", "value"));
 
 // See https://github.com/benjamn/ast-types/issues/180

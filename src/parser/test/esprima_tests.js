@@ -4485,6 +4485,11 @@ module.exports = {
             'root.body.0.source': {
               type: 'Missing property',
             },
+            'root.body.0.declaration.type': {
+              type: 'Wrong string',
+              expected: 'FunctionExpression',
+              actual: 'FunctionDeclaration',
+            },
           },
         },
         /* Esprima parses default exports wrong
