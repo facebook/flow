@@ -3294,7 +3294,7 @@ end = struct
           end in
           let loc = Loc.btwn (fst id) end_loc in
           let specifier = loc, {
-            Statement.ExportDeclaration.Specifier.id;
+            Statement.ExportNamedDeclaration.Specifier.id;
             name;
           } in
           if Peek.token env = T_COMMA
@@ -3308,20 +3308,21 @@ end = struct
       let env = env |> with_strict true |> with_in_export true in
       let start_loc = Peek.loc env in
       Expect.token env T_EXPORT;
-      Statement.ExportDeclaration.(match Peek.token env with
+      match Peek.token env with
       | T_DEFAULT ->
           (* export default ... *)
+          let open Statement.ExportDefaultDeclaration in
           Expect.token env T_DEFAULT;
           record_export env (Loc.btwn start_loc (Peek.loc env), "default");
           let end_loc, declaration = match Peek.token env with
           | T_FUNCTION ->
               (* export default function foo (...) { ... } *)
               let fn = Declaration._function env in
-              fst fn, Some (Declaration fn)
+              fst fn, Declaration fn
           | _ when Peek.is_class env ->
               (* export default class foo { ... } *)
               let _class = Object.class_declaration env decorators in
-              fst _class, Some (Declaration _class)
+              fst _class, Declaration _class
           | _ ->
               (* export default [assignment expression]; *)
               let expr = Parse.assignment env in
@@ -3329,17 +3330,15 @@ end = struct
               | Some loc -> loc
               | None -> fst expr in
               Eat.semicolon env;
-              end_loc, Some (Expression expr)
+              end_loc, Expression expr
             in
-          Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-            default = true;
+          Loc.btwn start_loc end_loc, Statement.ExportDefaultDeclaration {
             declaration;
-            specifiers = None;
-            source = None;
-            exportKind = ExportValue;
+            exportKind = Statement.ExportValue;
           }
       | T_TYPE when (Peek.token env ~i:1) <> T_LCURLY ->
           (* export type ... *)
+          let open Statement.ExportNamedDeclaration in
           if not (should_parse_types env)
           then error env Error.UnexpectedTypeExport;
           let type_alias = type_alias env in
@@ -3352,15 +3351,15 @@ end = struct
               )
           );
           let end_loc = fst type_alias in
-          Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-            default = false;
-            declaration = Some (Declaration type_alias);
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+            declaration = Some type_alias;
             specifiers = None;
             source = None;
-            exportKind = ExportType;
+            exportKind = Statement.ExportType;
           }
       | T_INTERFACE ->
           (* export interface I { ... } *)
+          let open Statement.ExportNamedDeclaration in
           if not (should_parse_types env)
           then error env Error.UnexpectedTypeExport;
           let interface = interface env in
@@ -3373,12 +3372,11 @@ end = struct
               )
           );
           let end_loc = fst interface in
-          Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-            default = false;
-            declaration = Some (Declaration interface);
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
+            declaration = Some interface;
             specifiers = None;
             source = None;
-            exportKind = ExportType;
+            exportKind = Statement.ExportType;
           }
       | T_LET
       | T_CONST
@@ -3391,6 +3389,7 @@ end = struct
         * cases *)
       | T_ASYNC
       | T_FUNCTION ->
+          let open Statement.ExportNamedDeclaration in
           let stmt = Parse.statement_list_item env ~decorators:decorators in
           let names = Statement.(
             match stmt with
@@ -3411,15 +3410,14 @@ end = struct
             | _ -> failwith "Internal Flow Error! Unexpected export statement declaration!"
           ) in
           List.iter (record_export env) names;
-          let declaration = Some (Declaration stmt) in
-          Loc.btwn start_loc (fst stmt), Statement.ExportDeclaration {
-            default = false;
-            declaration;
+          Loc.btwn start_loc (fst stmt), Statement.ExportNamedDeclaration {
+            declaration = Some stmt;
             specifiers = None;
             source = None;
-            exportKind = ExportValue;
+            exportKind = Statement.ExportValue;
           }
       | T_MULT ->
+          let open Statement.ExportNamedDeclaration in
           let loc = Peek.loc env in
           Expect.token env T_MULT;
           let local_name =
@@ -3443,18 +3441,18 @@ end = struct
           | None -> fst source in
           let source = Some source in
           Eat.semicolon env;
-          Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-            default = false;
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
             declaration = None;
             specifiers;
             source;
-            exportKind = ExportValue;
+            exportKind = Statement.ExportValue;
           }
       | _ ->
+          let open Statement.ExportNamedDeclaration in
           let exportKind = (
             match Peek.token env with
-            | T_TYPE -> Eat.token env; ExportType
-            | _ -> ExportValue
+            | T_TYPE -> Eat.token env; Statement.ExportType
+            | _ -> Statement.ExportValue
           ) in
           Expect.token env T_LCURLY;
           let specifiers, errs = export_specifiers_and_errs env [] [] in
@@ -3474,14 +3472,12 @@ end = struct
               | Some source -> fst source
               | None -> end_loc) in
           Eat.semicolon env;
-          Loc.btwn start_loc end_loc, Statement.ExportDeclaration {
-            default = false;
+          Loc.btwn start_loc end_loc, Statement.ExportNamedDeclaration {
             declaration = None;
             specifiers;
             source;
             exportKind;
           }
-      )
 
     and declare_export_declaration ?(allow_export_type=false) env =
       if not (should_parse_types env)
@@ -3566,7 +3562,7 @@ end = struct
               else (error env Error.UnexpectedTypeDeclaration; None)
             ) else None
           in
-          let specifiers = Statement.ExportDeclaration.(
+          let specifiers = Statement.ExportNamedDeclaration.(
             Some (ExportBatchSpecifier (loc, local_name))
           ) in
           let source = export_source env in
@@ -3609,7 +3605,7 @@ end = struct
           );
           Expect.token env T_LCURLY;
           let specifiers, errs = export_specifiers_and_errs env [] [] in
-          let specifiers = Some (Statement.ExportDeclaration.ExportSpecifiers specifiers) in
+          let specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers) in
           let end_loc = Peek.loc env in
           Expect.token env T_RCURLY;
           let source = if Peek.value env = "from"

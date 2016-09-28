@@ -265,17 +265,25 @@ end with type t = Impl.t) = struct
         node "DeclareModuleExports" loc [|
           "typeAnnotation", type_annotation annot
         |]
-    | loc, ExportDeclaration export -> ExportDeclaration.(
-        let declaration = match export.declaration with
-        | Some (Declaration stmt) -> statement stmt
-        | Some (ExportDeclaration.Expression expr) -> expression expr
-        | None -> null
-        in
+    | loc, ExportNamedDeclaration export -> ExportNamedDeclaration.(
         node "ExportDeclaration" loc [|
-          "default", bool export.default;
-          "declaration", declaration;
+          "default", bool false;
+          "declaration", option statement export.declaration;
           "specifiers", export_specifiers export.specifiers;
           "source", option literal export.source;
+          "exportKind", string (export_kind export.exportKind);
+        |]
+      )
+    | loc, ExportDefaultDeclaration export -> ExportDefaultDeclaration.(
+        let declaration = match export.declaration with
+        | Declaration stmt -> statement stmt
+        | ExportDefaultDeclaration.Expression expr -> expression expr
+        in
+        node "ExportDeclaration" loc [|
+          "default", bool true;
+          "declaration", declaration;
+          "specifiers", array [||];
+          "source", null;
           "exportKind", string (export_kind export.exportKind);
         |]
       )
@@ -590,12 +598,11 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and export_kind = Statement.ExportDeclaration.(function
-    | ExportType -> "type"
-    | ExportValue -> "value"
-  )
+  and export_kind = function
+    | Statement.ExportType -> "type"
+    | Statement.ExportValue -> "value"
 
-  and export_specifiers = Statement.ExportDeclaration.(function
+  and export_specifiers = Statement.ExportNamedDeclaration.(function
     | Some (ExportSpecifiers specifiers) ->
         array_of_list export_specifier specifiers
     | Some (ExportBatchSpecifier (loc, name)) ->
@@ -1201,7 +1208,7 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and export_specifier (loc, specifier) = Statement.ExportDeclaration.Specifier.(
+  and export_specifier (loc, specifier) = Statement.ExportNamedDeclaration.Specifier.(
     node "ExportSpecifier" loc [|
       "id", identifier specifier.id;
       "name", option identifier specifier.name;

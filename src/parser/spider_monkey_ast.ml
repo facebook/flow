@@ -385,7 +385,7 @@ and Statement : sig
       kind: module_kind;
     }
   end
-  module ExportDeclaration : sig
+  module ExportNamedDeclaration : sig
     module Specifier : sig
       type t = Loc.t * t'
       and t' = {
@@ -393,21 +393,23 @@ and Statement : sig
         name: Identifier.t option;
       }
     end
-    type declaration =
-      | Declaration of Statement.t
-      | Expression of Expression.t
     type specifier =
       | ExportSpecifiers of Specifier.t list
       | ExportBatchSpecifier of Loc.t * Identifier.t option
-    type exportKind =
-      | ExportType
-      | ExportValue
     type t = {
-      default: bool;
-      declaration: declaration option;
+      declaration: Statement.t option;
       specifiers: specifier option;
       source: (Loc.t * Literal.t) option; (* This will always be a string *)
-      exportKind: exportKind;
+      exportKind: Statement.exportKind;
+    }
+  end
+  module ExportDefaultDeclaration : sig
+    type declaration =
+      | Declaration of Statement.t
+      | Expression of Expression.t
+    type t = {
+      declaration: declaration;
+      exportKind: Statement.exportKind;
     }
   end
   module DeclareExportDeclaration : sig
@@ -430,7 +432,7 @@ and Statement : sig
     type t = {
       default: bool;
       declaration: declaration option;
-      specifiers: ExportDeclaration.specifier option;
+      specifiers: ExportNamedDeclaration.specifier option;
       source: (Loc.t * Literal.t) option; (* This will always be a string *)
     }
   end
@@ -466,6 +468,10 @@ and Statement : sig
     }
   end
 
+  type exportKind =
+    | ExportType
+    | ExportValue
+
   type t = Loc.t * t'
   and t' =
     | Empty
@@ -498,7 +504,8 @@ and Statement : sig
     | DeclareModule of DeclareModule.t
     | DeclareModuleExports of Type.annotation
     | DeclareExportDeclaration of DeclareExportDeclaration.t
-    | ExportDeclaration of ExportDeclaration.t
+    | ExportNamedDeclaration of ExportNamedDeclaration.t
+    | ExportDefaultDeclaration of ExportDefaultDeclaration.t
     | ImportDeclaration of ImportDeclaration.t
 end = Statement
 

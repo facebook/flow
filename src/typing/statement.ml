@@ -356,16 +356,16 @@ and statement_decl cx = Ast.Statement.(
 
   | (_, DeclareModuleExports _) -> ()
 
-  | (_, ExportDeclaration { ExportDeclaration.default; declaration; _ }) -> (
+  | (_, ExportNamedDeclaration { ExportNamedDeclaration.declaration; _ }) -> (
       match declaration with
-      | Some(ExportDeclaration.Declaration(stmt)) ->
-        let stmt = if default then nameify_default_export_decl stmt else stmt in
-        statement_decl cx stmt
-      | Some(ExportDeclaration.Expression(_)) -> ()
-      | None -> if not default then () else failwith (
-          "Parser Error: Default exports must always have an associated " ^
-          "declaration or expression!"
-        )
+      | Some stmt -> statement_decl cx stmt
+      | None -> ()
+    )
+  | (_, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ }) -> (
+      match declaration with
+      | ExportDefaultDeclaration.Declaration stmt ->
+        statement_decl cx (nameify_default_export_decl stmt)
+      | ExportDefaultDeclaration.Expression _ -> ()
     )
   | (_, ImportDeclaration import_decl) ->
       let open ImportDeclaration in
@@ -1596,7 +1596,6 @@ and statement cx = Ast.Statement.(
       DeclareExportDeclaration.source;
     }) ->
       let open DeclareExportDeclaration in
-      let open Ast.Statement.ExportDeclaration in
       let export_info, export_kind =
         match declaration with
         | Some (Variable (loc, v)) ->
@@ -1630,7 +1629,7 @@ and statement cx = Ast.Statement.(
             [], ExportValue
       in
 
-      export_statement cx loc default export_info specifiers source export_kind
+      export_statement cx loc ~default export_info specifiers source export_kind
 
   | (loc, DeclareModuleExports annot) ->
     let t = Anno.convert cx SMap.empty (snd annot) in
@@ -1645,33 +1644,26 @@ and statement cx = Ast.Statement.(
       set_module_exports cx reason t
     )
 
-  | (loc, ExportDeclaration {
-      ExportDeclaration.default;
-      ExportDeclaration.declaration;
-      ExportDeclaration.specifiers;
-      ExportDeclaration.source;
-      ExportDeclaration.exportKind;
+  | (loc, ExportNamedDeclaration { ExportNamedDeclaration.
+      declaration;
+      specifiers;
+      source;
+      exportKind;
     }) ->
       let export_info = match declaration with
-      | Some (ExportDeclaration.Declaration decl) ->
-          let decl = if default then nameify_default_export_decl decl
-            else decl in
+      | Some decl ->
           statement cx decl;
           (match decl with
-          | loc, FunctionDeclaration {Ast.Function.id = None; _} ->
-            if default then
-              [("function() {}", loc, internal_name "*default*", None)]
-            else failwith (
+          | _, FunctionDeclaration {Ast.Function.id = None; _} ->
+            failwith (
               "Parser Error: Immediate exports of nameless functions can " ^
               "only exist for default exports!"
             )
           | loc, FunctionDeclaration {Ast.Function.id = Some ident; _} ->
             let name = ident_name ident in
             [(spf "function %s() {}" name, loc, name, None)]
-          | loc, ClassDeclaration {Ast.Class.id = None; _} ->
-            if default then
-              [("class {}", loc, internal_name "*default*", None)]
-            else failwith (
+          | _, ClassDeclaration {Ast.Class.id = None; _} ->
+            failwith (
               "Parser Error: Immediate exports of nameless classes can " ^
               "only exist for default exports"
             )
@@ -1695,17 +1687,53 @@ and statement cx = Ast.Statement.(
             [(spf "interface %s = ..." name, loc, name, None)]
           | _ -> failwith "Parser Error: Invalid export-declaration type!")
 
-      | Some (ExportDeclaration.Expression expr) ->
-          if not default then failwith (
-            "Parser Error: Exporting an expression is only possible for " ^
-            "`export default`!"
-          );
-
-          let expr_t = expression cx expr in
-          [( "<<expression>>", fst expr, "default", Some expr_t)]
       | None -> [] in
 
-      export_statement cx loc default export_info specifiers source exportKind
+      export_statement cx loc
+        ~default:false export_info specifiers source exportKind
+
+  | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.
+      declaration;
+      exportKind;
+    }) ->
+      let export_info = match declaration with
+      | ExportDefaultDeclaration.Declaration decl ->
+          let decl = nameify_default_export_decl decl in
+          statement cx decl;
+          (match decl with
+          | loc, FunctionDeclaration {Ast.Function.id = None; _} ->
+            [("function() {}", loc, internal_name "*default*", None)]
+          | loc, FunctionDeclaration {Ast.Function.id = Some ident; _} ->
+            let name = ident_name ident in
+            [(spf "function %s() {}" name, loc, name, None)]
+          | loc, ClassDeclaration {Ast.Class.id = None; _} ->
+            [("class {}", loc, internal_name "*default*", None)]
+          | _, ClassDeclaration {Ast.Class.id = Some ident; _} ->
+            let name = ident_name ident in
+            [(spf "class %s {}" name, (fst ident), name, None)]
+          | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
+            let decl_to_bindings accum (_, decl) =
+              let id = snd decl.VariableDeclaration.Declarator.id in
+              List.rev (extract_destructured_bindings accum id)
+            in
+            let bound_names = List.fold_left decl_to_bindings [] declarations in
+            bound_names |> List.map (fun (loc, name) ->
+              (spf "var %s" name, loc, name, None)
+            )
+          | _, TypeAlias {TypeAlias.id; _} ->
+            let name = ident_name id in
+            [(spf "type %s = ..." name, loc, name, None)]
+          | _, InterfaceDeclaration {Interface.id; _} ->
+            let name = ident_name id in
+            [(spf "interface %s = ..." name, loc, name, None)]
+          | _ -> failwith "Parser Error: Invalid export-declaration type!")
+
+      | ExportDefaultDeclaration.Expression expr ->
+          let expr_t = expression cx expr in
+          [( "<<expression>>", fst expr, "default", Some expr_t)]
+      in
+
+      export_statement cx loc ~default:true export_info None None exportKind
 
   | (import_loc, ImportDeclaration import_decl) ->
     let open ImportDeclaration in
@@ -1859,10 +1887,9 @@ and statement cx = Ast.Statement.(
 
 
 and export_statement cx loc
-  default declaration_export_info specifiers source exportKind =
+  ~default declaration_export_info specifiers source exportKind =
 
   let open Ast.Statement in
-  let open ExportDeclaration in
   let (lookup_mode, export_kind_start) = (
     match exportKind with
     | ExportValue -> (ForValue, "export")
@@ -1904,19 +1931,19 @@ and export_statement cx loc
 
   (match (declaration_export_info, specifiers) with
     (* [declare] export [type] {foo, bar} [from ...]; *)
-    | ([], Some(ExportSpecifiers(specifiers))) ->
+    | ([], Some (ExportNamedDeclaration.ExportSpecifiers specifiers)) ->
       let export_specifier specifier = (
         let (reason, local_name, remote_name) = (
           match specifier with
-          | loc, {
+          | loc, { ExportNamedDeclaration.Specifier.
               id = (_, {Ast.Identifier.name=id; _;});
-              Specifier.name=None;
+              name = None;
             } ->
             let reason = mk_reason (spf "export {%s}" id) loc in
             (reason, id, id)
-          | loc, { Specifier.
-              id=(_, {Ast.Identifier.name=id; _;});
-              name=Some(_, {Ast.Identifier.name; _;})
+          | loc, { ExportNamedDeclaration.Specifier.
+              id = (_, {Ast.Identifier.name=id; _;});
+              name = Some (_, {Ast.Identifier.name; _;});
             } ->
             let reason =
               mk_reason (spf "export {%s as %s}" id name) loc
@@ -1979,7 +2006,7 @@ and export_statement cx loc
       List.iter export_specifier specifiers
 
     (* [declare] export [type] * from "source"; *)
-    | ([], Some(ExportBatchSpecifier(batch_loc, star_as_name))) ->
+    | ([], Some (ExportNamedDeclaration.ExportBatchSpecifier (batch_loc, star_as_name))) ->
       let source_module_name = (
         match source with
         | Some(_, {
