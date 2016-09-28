@@ -79,7 +79,7 @@ let getdef_get_result ~options cx state =
       ) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
-        let filename = Module_js.get_module_file (
+        let filename = Module_js.get_module_file Expensive.warn (
           Module_js.imported_module ~options cx require_loc name
         ) in
         (match filename with

@@ -41,7 +41,7 @@ open Utils_js
 let calc_reverse_deps workers fileset = Module_js.(
   (* distribute requires from a list of files into reverse-dep map *)
   let job = List.fold_left (fun rdmap f ->
-    let reqs = (get_module_info f).required in
+    let reqs = (get_module_info ~audit:Expensive.ok f).required in
     NameSet.fold (fun r rdmap ->
       NameMap.add r FilenameSet.(
         match NameMap.get r rdmap with
@@ -71,7 +71,7 @@ let calc_reverse_deps workers fileset = Module_js.(
 let dep_closure rdmap fileset =
   let deps_of_module m = Module_js.NameMap.get m rdmap in
   let deps_of_file f =
-    let m = Module_js.((get_module_info f)._module) in
+    let m = Module_js.((get_module_info ~audit:Expensive.warn f)._module) in
     let f_module = Modulename.Filename f in
     (* In general, a file exports its module via two names. See Modulename for
        details. It suffices to note here that dependents of the file can use
@@ -121,15 +121,15 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
 
   (* touched_modules includes removed modules and those provided by new files *)
   let touched_modules = FilenameSet.fold Module_js.(fun file mods ->
-    let file_mods = get_module_names file in
+    let file_mods = get_module_names ~audit:Expensive.warn file in
     (* Add all module names exported by file *)
     List.fold_left (fun acc m -> NameSet.add m acc) mods file_mods
   ) inferred_files removed_modules in
 
   (* files whose resolution paths may encounter newly inferred modules *)
   let resolution_path_files = MultiWorker.call workers
-    ~job: (List.fold_left
-      (Module_js.resolution_path_dependency inferred_files))
+    ~job: (List.fold_left (Module_js.resolution_path_dependency
+                             ~audit:Expensive.ok inferred_files))
     ~neutral: FilenameSet.empty
     ~merge: FilenameSet.union
     ~next: (MultiWorker.next workers (FilenameSet.elements unmodified_files)) in
@@ -153,8 +153,8 @@ let dependent_files workers unmodified_files inferred_files removed_modules =
    savings in init and recheck times). *)
 
 
-let checked m = Module_js.(
-  let info = m |> get_file |> get_module_info in
+let checked ~audit m = Module_js.(
+  let info = m |> get_file ~audit |> get_module_info ~audit in
   info.checked
 )
 
@@ -162,17 +162,18 @@ let checked m = Module_js.(
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file r = Module_js.(
-  if module_exists r && checked r
-  then Some (get_file r)
+let implementation_file ~audit r = Module_js.(
+  if module_exists r && checked ~audit r
+  then Some (get_file ~audit r)
   else None
 )
 
 let calc_dependencies_job =
   List.fold_left (fun deps file ->
-    let { Module_js.required; _ } = Module_js.get_module_info file in
+    let { Module_js.required; _ } =
+      Module_js.get_module_info ~audit:Expensive.ok file in
     let files = Module_js.NameSet.fold (fun r files ->
-      match implementation_file r with
+      match implementation_file ~audit:Expensive.ok r with
       | Some f -> FilenameSet.add f files
       | None -> files
     ) required FilenameSet.empty in

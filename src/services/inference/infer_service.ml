@@ -57,7 +57,7 @@ let infer_job ~options (inferred, errsets, errsuppressions) files =
         (* infer produces a context for this module *)
         let cx = infer_module ~options ~metadata file in
         (* register module info *)
-        Module_js.add_module_info ~options cx;
+        Module_js.add_module_info ~audit:Expensive.ok ~options cx;
         (* note: save and clear errors and error suppressions before storing
          * cx to shared heap *)
         let errs = Context.errors cx in
@@ -65,7 +65,7 @@ let infer_job ~options (inferred, errsets, errsuppressions) files =
         Context.remove_all_errors cx;
         Context.remove_all_error_suppressions cx;
 
-        Context_cache.add cx;
+        Context_cache.add ~audit:Expensive.ok cx;
 
         (* add filename, errorset, suppressions *)
         let cx_file = Context.file cx in

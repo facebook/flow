@@ -71,7 +71,8 @@ let merge_strict_context ~options cache component_cxs =
         try SMap.find_unsafe r require_locs
         with Not_found -> raise (Key_not_found ("require_locs", r))
       in
-      let resolved_r = Module_js.find_resolved_module ~options cx loc r in
+      let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
+        ~options cx loc r in
       check_require (r, resolved_r, cx);
       add_decl (r, resolved_r, cx)
     ) (Context.required cx) required
@@ -83,12 +84,12 @@ let merge_strict_context ~options cache component_cxs =
   let orig_sig_cxs, sig_cxs, impls, res, decls =
     List.fold_left (fun (orig_sig_cxs, sig_cxs, impls, res, decls) req ->
       let r, resolved_r, cx_to = req in
-      Module_js.(match get_module_file resolved_r with
+      Module_js.(match get_module_file Expensive.ok resolved_r with
       | Some (Loc.ResourceFile f) ->
           orig_sig_cxs, sig_cxs,
           impls, (r, f, cx_to) :: res, decls
       | Some file ->
-          let info = get_module_info file in
+          let info = get_module_info ~audit:Expensive.ok file in
           if info.checked && info.parsed then
             (* checked implementation exists *)
             let impl sig_cx = sig_cx, r, info._module, cx_to in
@@ -107,7 +108,8 @@ let merge_strict_context ~options cache component_cxs =
                     orig_sig_cxs, sig_cxs,
                     (impl sig_cx) :: impls, res, decls
                 | None ->
-                    let orig_sig_cx, sig_cx = sig_cache#read file in
+                    let orig_sig_cx, sig_cx =
+                      sig_cache#read ~audit:Expensive.ok file in
                     orig_sig_cx::orig_sig_cxs, sig_cx::sig_cxs,
                     (impl sig_cx) :: impls, res, decls
                 end
@@ -126,7 +128,8 @@ let merge_strict_context ~options cache component_cxs =
     ) ([], [], [], [], []) required
   in
 
-  let orig_master_cx, master_cx = sig_cache#read Loc.Builtins in
+  let orig_master_cx, master_cx =
+    sig_cache#read ~audit:Expensive.ok Loc.Builtins in
 
   Merge_js.merge_component_strict
     component_cxs sig_cxs impls res decls master_cx;
@@ -153,10 +156,11 @@ let merge_strict_component ~options (component: filename list) =
 
      It also follows when file is checked, other_files must be checked too!
   *)
-  let info = Module_js.get_module_info file in
+  let info = Module_js.get_module_info ~audit:Expensive.ok file in
   if info.Module_js.checked then (
     let cache = new Context_cache.context_cache in
-    let component_cxs = List.map cache#read component in
+    let component_cxs =
+      List.map (cache#read ~audit:Expensive.ok) component in
 
     merge_strict_context ~options cache component_cxs;
 
@@ -164,7 +168,7 @@ let merge_strict_component ~options (component: filename list) =
     let cx = List.hd component_cxs in
     let errors = Context.errors cx in
     Context.remove_all_errors cx;
-    Context_cache.add_sig cx;
+    Context_cache.add_sig ~audit:Expensive.ok cx;
     file, errors
   )
   else file, Errors.ErrorSet.empty
@@ -202,9 +206,9 @@ let merge_strict ~options ~workers ~save_errors dependency_graph partition =
   (* NOTE: master_cx will only be saved once per server lifetime *)
   let master_cx = Init_js.get_master_cx options in
   (* TODO: we probably don't need to save master_cx in ContextHeap *)
-  Context_cache.add master_cx;
+  Context_cache.add ~audit:Expensive.ok master_cx;
   (* store master signature context to heap *)
-  Context_cache.add_sig master_cx;
+  Context_cache.add_sig ~audit:Expensive.ok master_cx;
   (* make a map from component leaders to components *)
   let component_map =
     IMap.fold (fun _ components acc ->

@@ -254,21 +254,21 @@ let commit_modules workers ~options inferred removed =
 
 (* Sanity checks on InfoHeap and NameHeap. Since this is performance-intensive
    (although it probably doesn't need to be), it is only done under --debug. *)
-let heap_check files = Module_js.(
+let heap_check ~audit files = Module_js.(
   let ih = Hashtbl.create 0 in
   let nh = Hashtbl.create 0 in
   files |> List.iter (fun file ->
-    let m_file = get_file (Modulename.Filename file) in
+    let m_file = get_file ~audit (Modulename.Filename file) in
     if not (Loc.check_suffix m_file Files.flow_ext)
     then assert (m_file = file);
-    let info = get_module_info file in
+    let info = get_module_info ~audit file in
     Hashtbl.add ih file info;
     let m = info.Module_js._module in
-    let f = get_file m in
+    let f = get_file ~audit m in
     Hashtbl.add nh m f;
   );
   nh |> Hashtbl.iter (fun m f ->
-    let names = get_module_names f in
+    let names = get_module_names ~audit f in
     assert (List.exists (fun name -> name = m) names);
   );
   ih |> Hashtbl.iter (fun _ info ->
@@ -311,7 +311,8 @@ let typecheck
 
   (* add tracking modules for unparsed files *)
   List.iter (fun (filename, docblock) ->
-    Module_js.add_unparsed_info ~options filename docblock
+    Module_js.add_unparsed_info ~audit:Expensive.warn
+      ~options filename docblock
   ) unparsed;
 
   (* create module dependency graph, warn on dupes etc. *)
@@ -351,10 +352,10 @@ let typecheck
       Module_js.clear_infos direct_deps;
       let cache = new Context_cache.context_cache in
       FilenameSet.iter (fun f ->
-        let cx = cache#read f in
-        Module_js.add_module_info ~options cx
+        let cx = cache#read ~audit:Expensive.warn f in
+        Module_js.add_module_info ~audit:Expensive.warn ~options cx
       ) direct_deps;
-      if Options.is_debug_mode options then heap_check to_merge;
+      if Options.is_debug_mode options then heap_check Expensive.warn to_merge;
     ) in
     Flow_logger.log "Calculating dependencies";
     let timing, dependency_graph =

@@ -315,7 +315,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let cx = Context.make metadata file (Modulename.Filename file) in
     let loc = {Loc.none with Loc.source = Some file;} in
     let module_name = Module_js.imported_module ~options cx loc moduleref in
-    let response: filename option = Module_js.get_module_file module_name in
+    let response: filename option =
+      Module_js.get_module_file ~audit:Expensive.warn module_name in
     Marshal.to_channel oc response [];
     flush oc
 
@@ -344,7 +345,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
               (* TODO: Use InfoHeap as the definitive way to detect @flow vs
                * non-@flow
                *)
-              match cache#read_safe src_file with
+              match cache#read_safe ~audit:Expensive.warn src_file with
               | None ->
                 (flow_files, cxs, src_file::non_flow_files, error)
               | Some cx ->
@@ -418,7 +419,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let get_importers ~options module_names oc =
     let add_to_results map module_name_str =
       let module_name = module_name_of_string ~options module_name_str in
-      match Module_js.get_reverse_imports module_name with
+      match Module_js.get_reverse_imports ~audit:Expensive.warn
+        module_name with
       | Some references ->
           SMap.add module_name_str references map
       | None -> map
@@ -431,15 +433,18 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let get_imports ~options module_names oc =
     let add_to_results (map, non_flow) module_name_str =
       let module_name = module_name_of_string ~options module_name_str in
-      match Module_js.get_module_file module_name with
+      match Module_js.get_module_file ~audit:Expensive.warn module_name with
       | Some file ->
         (* We do not process all modules which are stored in our module
          * database. In case we do not process a module its requirements
          * are not kept track of. To avoid confusing results we notify the
          * client that these modules have not been processed.
          *)
-        let { Module_js.required = requirements; require_loc = req_locs;
-              checked; _ } = Module_js.get_module_info file in
+        let { Module_js.
+              required = requirements;
+              require_loc = req_locs;
+              checked; _ } =
+          Module_js.get_module_info ~audit:Expensive.warn file in
         if checked
         then
           (SMap.add module_name_str (requirements, req_locs) map, non_flow)

@@ -129,6 +129,9 @@ module NameHeap = SharedMem.WithCache (Modulename) (struct
   let description = "Name"
 end)
 
+let get_module_file = Expensive.wrap NameHeap.get
+let add_module_file = Expensive.wrap NameHeap.add
+
 (* map from filename to module info *)
 (* note: currently we may have many files for one module name.
    this is an issue. *)
@@ -138,11 +141,14 @@ module InfoHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   let description = "Info"
 end)
 
+let get_info = Expensive.wrap InfoHeap.get
+let add_info = Expensive.wrap InfoHeap.add
+
 (* Given a set of newly added files, decide whether the resolution of module
    references in f "depended" (see above) on any of those files, and if so, add
    f to acc. *)
-let resolution_path_dependency files acc f =
-  match InfoHeap.get f with
+let resolution_path_dependency ~audit files acc f =
+  match get_info ~audit f with
   | Some { phantom_dependents = fs; _ } when fs |> SSet.exists (fun f ->
       FilenameSet.mem (Loc.SourceFile f) files ||
       FilenameSet.mem (Loc.JsonFile f) files ||
@@ -643,15 +649,15 @@ let imported_modules ~options cx =
   set, map, !path_acc
 
 (* Look up cached resolved module. *)
-let cached_resolved_module file r =
-  match InfoHeap.get file with
+let cached_resolved_module ~audit file r =
+  match get_info ~audit file with
   | Some { resolved_modules; _ } -> SMap.get r resolved_modules
   | None -> None
 
 (* Optimized module resolution function that goes through cache. *)
-let find_resolved_module ~options cx loc r =
+let find_resolved_module ~audit ~options cx loc r =
   let context_file = Context.file cx in
-  match cached_resolved_module context_file r with
+  match cached_resolved_module ~audit context_file r with
   | Some resolved_r -> resolved_r
   | None -> imported_module ~options cx loc r
 
@@ -716,24 +722,20 @@ let reverse_imports_untrack importer_name requires =
 
 let module_exists = NameHeap.mem
 
-let get_file m =
-  match NameHeap.get m with
+let get_file ~audit m =
+  match get_module_file ~audit m with
   | Some file -> file
   | None -> failwith
       (spf "file name not found for module %s" (Modulename.to_string m))
 
-(* Gets the filename for a module without failing when it does not exist *)
-let get_module_file m =
-  NameHeap.get m
-
-let get_module_info f =
-  match InfoHeap.get f with
+let get_module_info ~audit f =
+  match get_info ~audit f with
   | Some info -> info
   | None -> failwith
       (spf "module info not found for file %s" (string_of_filename f))
 
-let get_module_names f =
-  let { _module; _ } = get_module_info f in
+let get_module_names ~audit f =
+  let { _module; _ } = get_module_info ~audit f in
   match _module with
   | Modulename.Filename file when file = f ->
     [_module]
@@ -743,10 +745,11 @@ let get_module_names f =
 let add_reverse_imports workers filenames =
   let calc_module_reqs_assoc =
     List.fold_left (fun module_reqs_assoc filename ->
-      let { _module = name; required = req; _ } = get_module_info filename in
+      let { _module = name; required = req; _ } =
+        get_module_info ~audit:Expensive.ok filename in
       (* we only add requriements from actual module providers. this avoids
          strange states when two files provide the same module. *)
-      match get_module_file name with
+      match get_module_file Expensive.ok name with
       | Some file when file = filename -> (name, req) :: module_reqs_assoc
       | _ -> module_reqs_assoc
     ) in
@@ -764,10 +767,10 @@ let add_reverse_imports workers filenames =
     reverse_imports_track name req
   ) module_reqs_assoc
 
-let get_reverse_imports module_name =
+let get_reverse_imports ~audit module_name =
   match module_name, reverse_imports_get module_name with
   | Modulename.Filename filename, None ->
-      let { _module = name; _ } = get_module_info filename in
+      let { _module = name; _ } = get_module_info ~audit filename in
       reverse_imports_get name
   | _, result -> result
 
@@ -795,9 +798,9 @@ let info_of ~options cx =
 (* during inference, we add per-file module info to the shared heap
    from worker processes.
    Note that we wait to choose providers until inference is complete. *)
-let add_module_info ~options cx =
+let add_module_info ~audit ~options cx =
   let info = info_of ~options cx in
-  InfoHeap.add info.file info
+  add_info ~audit info.file info
 
 (* We need to track files that have failed to parse. This begins with
    adding tracking records for unparsed files to InfoHeap. They never
@@ -806,7 +809,7 @@ let add_module_info ~options cx =
    the module names of unparsed files, we're able to tell whether an
    unparsed file has been required/imported.
  *)
-let add_unparsed_info ~options file docblock =
+let add_unparsed_info ~audit ~options file docblock =
   let force_check = Options.all options in
   let _module = exported_module ~options file docblock in
   let checked =
@@ -821,7 +824,7 @@ let add_unparsed_info ~options file docblock =
     resolved_modules = SMap.empty;
     phantom_dependents = SSet.empty;
   } in
-  InfoHeap.add file info
+  add_info ~audit file info
 
 (* Note that the module provided by a file is always accessible via its full
    path, so that it may be imported by specifying (a part of) that path in any
@@ -908,7 +911,7 @@ let commit_modules workers ~options inferred removed =
   (* all modules provided by newly inferred files must be repicked *)
   let calc_file_module_assoc =
     List.fold_left (fun file_module_assoc f ->
-      let { _module = m; _ } = get_module_info f in
+      let { _module = m; _ } = get_module_info ~audit:Expensive.ok f in
       (f, m) :: file_module_assoc
     ) in
   let file_module_assoc = MultiWorker.call
@@ -948,7 +951,7 @@ let commit_modules workers ~options inferred removed =
       let p, errmap = choose_provider
         ~options (Modulename.to_string m) ps errmap in
       (* register chosen provider in NameHeap *)
-      match NameHeap.get m with
+      match get_module_file Expensive.warn m with
       | Some f when f = p ->
           if debug then prerr_endlinef
             "unchanged provider: %S -> %s"
@@ -979,8 +982,8 @@ let commit_modules workers ~options inferred removed =
     workers
     ~job: (fun () replace ->
       List.iter (fun (m, p) ->
-        NameHeap.add m p;
-        NameHeap.add (Modulename.Filename p) p
+        add_module_file Expensive.ok m p;
+        add_module_file Expensive.ok (Modulename.Filename p) p
       ) replace;
     )
     ~neutral: ()
@@ -1009,11 +1012,11 @@ let remove_files files =
   (* files may or may not be registered as module providers.
      when they are, we need to clear their registrations *)
   let names = FilenameSet.fold (fun file names ->
-      match InfoHeap.get file with
+      match get_info ~audit:Expensive.warn file with
       | Some info ->
           let { _module; required; _ } = info in
           remove_provider file _module;
-          (match NameHeap.get _module with
+          (match get_module_file ~audit:Expensive.warn _module with
           | Some f when f = file -> (
               (* untrack all imports from this file. we only do this for
                  module providers to avoid inconsistencies when there are

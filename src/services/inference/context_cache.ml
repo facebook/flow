@@ -25,19 +25,25 @@ module ContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   let description = "Context"
 end)
 
+let add_context = Expensive.wrap ContextHeap.add
+let find_unsafe_context = Expensive.wrap ContextHeap.find_unsafe
+
 module SigContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
   type t = Context.t
   let prefix = Prefix.make()
   let description = "SigContext"
 end)
 
-let add cx =
-  let cx_file = Context.file cx in
-  ContextHeap.add cx_file cx
+let add_sig_context = Expensive.wrap SigContextHeap.add
+let find_unsafe_sig_context = Expensive.wrap SigContextHeap.find_unsafe
 
-let add_sig cx =
+let add ~audit cx =
   let cx_file = Context.file cx in
-  SigContextHeap.add cx_file cx
+  add_context ~audit cx_file cx
+
+let add_sig ~audit cx =
+  let cx_file = Context.file cx in
+  add_sig_context ~audit cx_file cx
 
 let remove_batch cxs =
   ContextHeap.remove_batch cxs
@@ -60,9 +66,9 @@ class context_cache = object(self)
     with _ -> None
 
   (* read a context from shared memory, copy its graph, and cache the context *)
-  method read file =
+  method read ~audit file =
     let orig_cx =
-      try ContextHeap.find_unsafe file
+      try find_unsafe_context ~audit file
       with Not_found ->
         raise (Key_not_found ("ContextHeap", (string_of_filename file)))
     in
@@ -70,8 +76,8 @@ class context_cache = object(self)
     Hashtbl.add cached_infer_contexts file cx;
     cx
 
-  method read_safe file =
-    try Some (self#read file)
+  method read_safe ~audit file =
+    try Some (self#read ~audit file)
     with Key_not_found _ -> None
 end
 
@@ -87,9 +93,9 @@ class sig_context_cache = object(self)
     with _ -> None
 
   (* read a context from shared memory, copy its graph, and cache the context *)
-  method read file =
+  method read ~audit file =
     let orig_cx =
-      try SigContextHeap.find_unsafe file
+      try find_unsafe_sig_context ~audit file
       with Not_found ->
         raise (Key_not_found ("SigContextHeap", (string_of_filename file)))
     in
@@ -97,7 +103,7 @@ class sig_context_cache = object(self)
     Hashtbl.add cached_merge_contexts file cx;
     orig_cx, cx
 
-  method read_safe file =
-    try Some (self#read file)
+  method read_safe ~audit file =
+    try Some (self#read ~audit file)
     with Key_not_found _ -> None
 end

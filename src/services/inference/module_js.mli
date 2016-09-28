@@ -24,8 +24,9 @@ type info = {
   parsed: bool;             (* if false, it's a tracking record only *)
 }
 
-val resolution_path_dependency: FilenameSet.t -> FilenameSet.t -> filename ->
-  FilenameSet.t
+val resolution_path_dependency:
+  (FilenameSet.t -> FilenameSet.t -> filename ->
+   FilenameSet.t) Expensive.t
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
@@ -38,24 +39,24 @@ val imported_module:
   Context.t -> Loc.t -> ?path_acc: SSet.t ref -> string -> Modulename.t
 
 val find_resolved_module:
-  options: Options.t ->
-  Context.t -> Loc.t -> string -> Modulename.t
+  (options: Options.t ->
+   Context.t -> Loc.t -> string -> Modulename.t) Expensive.t
 
 val module_exists: Modulename.t -> bool
 
-val get_file: Modulename.t -> filename
+val get_file: (Modulename.t -> filename) Expensive.t
 
 (* given a module name, returns either (Some filename) or None *)
-val get_module_file: Modulename.t -> filename option
+val get_module_file: (Modulename.t -> filename option) Expensive.t
 
 (* given a filename, returns module info. unsafe *)
-val get_module_info: filename -> info
+val get_module_info: (filename -> info) Expensive.t
 
 (* given a filename, returns module name *)
-val get_module_names: filename -> Modulename.t list
+val get_module_names: (filename -> Modulename.t list) Expensive.t
 
 (* given a module name, returns Some set of modules importing it or None *)
-val get_reverse_imports: Modulename.t -> NameSet.t option
+val get_reverse_imports: (Modulename.t -> NameSet.t option) Expensive.t
 
 (* commit new and removed modules, after local inference *)
 val commit_modules:
@@ -67,14 +68,14 @@ val commit_modules:
     Errors.ErrorSet.t FilenameMap.t   (* filenames to error sets *)
 
 (* add file represented by context to module info store *)
-val add_module_info: options:Options.t -> Context.t -> unit
+val add_module_info: (options:Options.t -> Context.t -> unit) Expensive.t
 
 (* add info for unparsed file to module info store *)
 val add_unparsed_info:
-  options:Options.t ->
-  filename ->
-  Docblock.t ->
-  unit
+  (options:Options.t ->
+   filename ->
+   Docblock.t ->
+   unit) Expensive.t
 
 (* remove module info being tracked for given file set;
    returns the set of modules removed

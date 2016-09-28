@@ -10,17 +10,18 @@
 
 class context_cache : object
   method find: Loc.FilenameKey.t -> Context.t option
-  method read: Loc.FilenameKey.t -> Context.t
-  method read_safe: Loc.FilenameKey.t -> Context.t option
+  method read: (Loc.FilenameKey.t -> Context.t) Expensive.t
+  method read_safe: (Loc.FilenameKey.t -> Context.t option) Expensive.t
 end
 
 class sig_context_cache : object
   method find: Loc.FilenameKey.t -> Context.t option
-  method read: Loc.FilenameKey.t -> Context.t * Context.t
-  method read_safe: Loc.FilenameKey.t -> (Context.t * Context.t) option
+  method read: (Loc.FilenameKey.t -> Context.t * Context.t) Expensive.t
+  method read_safe:
+    (Loc.FilenameKey.t -> (Context.t * Context.t) option) Expensive.t
 end
 
-val add: Context.t -> unit
-val add_sig: Context.t -> unit
+val add: (Context.t -> unit) Expensive.t
+val add_sig: (Context.t -> unit) Expensive.t
 val remove_batch: Utils_js.FilenameSet.t -> unit
 val remove_sig_batch: Utils_js.FilenameSet.t -> unit
