@@ -14,6 +14,7 @@
 (*****************************************************************************)
 
 module Periodical: sig
+  val always : float
   val one_day: float
   val one_week: float
 
@@ -29,6 +30,7 @@ module Periodical: sig
   val register_callback: seconds:float -> job:(unit -> unit) -> unit
 
 end = struct
+  let always = 0.0
   let one_day = 86400.0
   let one_week = 604800.0
 
@@ -88,6 +90,7 @@ let exit_if_unused() =
 (*****************************************************************************)
 let init () =
   let jobs = [
+    Periodical.always   , (fun () -> SharedMem.collect `aggressive);
     Periodical.one_day  , exit_if_unused;
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs
