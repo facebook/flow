@@ -176,7 +176,9 @@ let js_string env =
         buf_eat_all buf env c;
         loop env
   in
-  eat env '"';
+  (match peek env with
+  | '"' -> env.pos <- env.pos + 1
+  | _ ->  syntax_error env "expected '\"' character");
   if peek env = '"' then
     begin eat env '"'; JSON_String("") end
   else
