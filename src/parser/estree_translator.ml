@@ -221,33 +221,46 @@ end with type t = Impl.t) = struct
         |]
       )
     | loc, DeclareExportDeclaration export -> DeclareExportDeclaration.(
-        let declaration = match export.declaration with
-        | Some (Variable v) -> declare_variable v
-        | Some (Function f) -> declare_function f
-        | Some (Class c) -> declare_class c
-        | Some (DefaultType t) -> _type t
-        | Some (NamedType t) -> type_alias t
-        | Some (Interface i) -> interface_declaration i
-        | None -> null
-        in
-        node "DeclareExportDeclaration" loc [|
-          "default", bool export.default;
-          "declaration", declaration;
-          "specifiers", export_specifiers export.specifiers;
-          "source", option literal export.source;
-        |]
+        match export.specifiers with
+        | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
+          node "DeclareExportAllDeclaration" loc [|
+            "source", option literal export.source;
+          |]
+        | _ ->
+          let declaration = match export.declaration with
+          | Some (Variable v) -> declare_variable v
+          | Some (Function f) -> declare_function f
+          | Some (Class c) -> declare_class c
+          | Some (DefaultType t) -> _type t
+          | Some (NamedType t) -> type_alias t
+          | Some (Interface i) -> interface_declaration i
+          | None -> null
+          in
+          node "DeclareExportDeclaration" loc [|
+            "default", bool export.default;
+            "declaration", declaration;
+            "specifiers", export_specifiers export.specifiers;
+            "source", option literal export.source;
+          |]
       )
     | loc, DeclareModuleExports annot ->
         node "DeclareModuleExports" loc [|
           "typeAnnotation", type_annotation annot
         |]
     | loc, ExportNamedDeclaration export -> ExportNamedDeclaration.(
-        node "ExportNamedDeclaration" loc [|
-          "declaration", option statement export.declaration;
-          "specifiers", export_specifiers export.specifiers;
-          "source", option literal export.source;
-          "exportKind", string (export_kind export.exportKind);
-        |]
+        match export.specifiers with
+        | Some (ExportBatchSpecifier (_, None)) ->
+          node "ExportAllDeclaration" loc [|
+            "source", option literal export.source;
+            "exportKind", string (export_kind export.exportKind);
+          |]
+        | _ ->
+          node "ExportNamedDeclaration" loc [|
+            "declaration", option statement export.declaration;
+            "specifiers", export_specifiers export.specifiers;
+            "source", option literal export.source;
+            "exportKind", string (export_kind export.exportKind);
+          |]
       )
     | loc, ExportDefaultDeclaration export -> ExportDefaultDeclaration.(
         let declaration = match export.declaration with
@@ -598,12 +611,16 @@ end with type t = Impl.t) = struct
   and export_specifiers = Statement.ExportNamedDeclaration.(function
     | Some (ExportSpecifiers specifiers) ->
         array_of_list export_specifier specifiers
-    | Some (ExportBatchSpecifier (loc, name)) ->
+    | Some (ExportBatchSpecifier (loc, Some name)) ->
         array [|
-          node "ExportBatchSpecifier" loc [|
-            "name", option identifier name
+          node "ExportNamespaceSpecifier" loc [|
+            "exported", identifier name
           |]
         |]
+    | Some (ExportBatchSpecifier (_, None)) ->
+        (* this should've been handled by callers, since this represents an
+           ExportAllDeclaration, not a specifier. *)
+        array [||]
     | None ->
         array [||]
   )

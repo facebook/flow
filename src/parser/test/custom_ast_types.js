@@ -19,6 +19,12 @@ def("DeclareExportDeclaration")
     null
   ))
 
+def("DeclareExportAllDeclaration")
+    .bases("Declaration")
+    .build("source")
+    .field("source", def("Literal"));
+
+
 // TODO: should be named NullableClassDeclaration. estree allows a nameless
 // decl inside an `export default` (https://github.com/estree/estree/issues/98),
 // but ast-types uses the `TypeName` in `def("TypeName")` as the expected `type`
@@ -57,10 +63,23 @@ def("ExportNamedDeclaration")
     // .field("specifiers", [def("ExportSpecifier")], defaults.emptyArray)
     .field("specifiers", [or(
         def("ExportSpecifier"),
-        def("ExportBatchSpecifier")
+        def("ExportNamespaceSpecifier")
       )], defaults.emptyArray)
     .field("source", or(def("Literal"), null), defaults["null"])
     .field("exportKind", or("type", "value"));
+
+// See https://github.com/benjamn/ast-types/issues/180
+def("ExportAllDeclaration")
+    .bases("Declaration")
+    .build("source", "exportKind")
+    .field("source", def("Literal"))
+    .field("exportKind", or("type", "value"));
+
+// See https://github.com/benjamn/ast-types/issues/180
+def("ExportNamespaceSpecifier")
+    .bases("Specifier")
+    .build("exported")
+    .field("exported", def("Identifier"));
 
 var BinaryOperator = or(
     "==", "!=", "===", "!==",

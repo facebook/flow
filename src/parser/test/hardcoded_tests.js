@@ -1262,8 +1262,8 @@ module.exports = {
           "esproposal_export_star_as": true
         },
         'body.0.specifiers': [{
-          'type': 'ExportBatchSpecifier',
-          'name': {
+          'type': 'ExportNamespaceSpecifier',
+          'exported': {
             'type': 'Identifier',
             'name': 'foo'
           },
@@ -1586,30 +1586,16 @@ module.exports = {
       'declare export * from "foo";': {
         'body': [
           {
-            'type': 'DeclareExportDeclaration',
-            'specifiers': [
-              {
-                'type': 'ExportBatchSpecifier',
-              }
-            ],
+            'type': 'DeclareExportAllDeclaration',
             'source.value': "foo",
-            'declaration': null,
-            'default': false,
           },
         ],
       },
       'declare export * from "foo"': {
         'body': [
           {
-            'type': 'DeclareExportDeclaration',
-            'specifiers': [
-              {
-                'type': 'ExportBatchSpecifier',
-              }
-            ],
+            'type': 'DeclareExportAllDeclaration',
             'source.value': "foo",
-            'declaration': null,
-            'default': false,
           },
         ],
       },
@@ -1780,12 +1766,7 @@ module.exports = {
         'body.0': {
           'type': 'DeclareModule',
           'body.body.0': {
-            'type': 'DeclareExportDeclaration',
-            'declaration': null,
-            'specifiers': [{
-              'type': 'ExportBatchSpecifier',
-              'name': null,
-            }],
+            'type': 'DeclareExportAllDeclaration',
             'source': {
               'type': 'Literal',
               'value': 'bar',

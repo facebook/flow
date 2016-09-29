@@ -4216,9 +4216,15 @@ module.exports = {
             'root.body.0.type': {
               type: 'Wrong string',
               expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
+              actual: 'ExportAllDeclaration',
             },
             'root.body.0.default': {
+              type: 'Missing property',
+            },
+            'root.body.0.declaration': {
+              type: 'Missing property',
+            },
+            'root.body.0.specifiers': {
               type: 'Missing property',
             },
           },
@@ -4230,9 +4236,15 @@ module.exports = {
             'root.body.0.type': {
               type: 'Wrong string',
               expected: 'ExportDeclaration',
-              actual: 'ExportNamedDeclaration',
+              actual: 'ExportAllDeclaration',
             },
             'root.body.0.default': {
+              type: 'Missing property',
+            },
+            'root.body.0.declaration': {
+              type: 'Missing property',
+            },
+            'root.body.0.specifiers': {
               type: 'Missing property',
             },
           },
