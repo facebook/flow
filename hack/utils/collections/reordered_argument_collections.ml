@@ -32,6 +32,7 @@ module Reordered_argument_set (S : Set.S) = struct
   let mem s v = mem v s
   let remove s v = remove v s
   let exists s ~f = exists f s
+  let of_list l = List.fold_left add S.empty l
 end
 
 module SSet = Reordered_argument_set(SSet)
