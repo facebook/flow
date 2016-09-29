@@ -324,34 +324,26 @@ end) : Key with type userkey = UserKeyType.t = struct
 end
 
 (*****************************************************************************)
-(* Functor for serialized values (to make sure we don't mix strings
- * with serialized strings).
+(* Raw interface to shared memory (cf hh_shared.c for the underlying
+ * representation).
  *)
 (*****************************************************************************)
+module Raw (Key: Key) (Value:Value.Type) = struct
 
-module Serial: functor(Value:Value.Type) -> sig
-  type t
+  (* Returns the number of bytes allocated in the heap, or a negative number
+   * if no new memory was allocated *)
+  external hh_add_impl    : Key.md5 -> Value.t -> int = "hh_add"
+  external hh_mem         : Key.md5 -> bool            = "hh_mem"
+  external hh_get_size    : Key.md5 -> int             = "hh_get_size"
+  external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
+  external hh_remove      : Key.md5 -> unit            = "hh_remove"
+  external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
 
-  (* Serialize a value and log stats *)
-  val make : Value.t -> t
-
-  (* Log stats for the number of bytes given *)
-  val log_deserialize  : int -> Obj.t -> unit
-
-end = functor(Value:Value.Type) -> struct
-  type t = string
-
-  let make x =
-    let s = Marshal.to_string x [] in
-    if hh_log_level() > 0
-    then begin
-      let sharedheap = float (String.length s) in
-      Measure.sample (Value.description ^
-          " (bytes serialized into shared heap)") sharedheap;
-      Measure.sample
-        ("ALL bytes serialized into shared heap") sharedheap
-    end;
-    s
+  let log_serialize n =
+    let sharedheap = float n in
+    Measure.sample (Value.description
+      ^ " (bytes serialized into shared heap)") sharedheap;
+    Measure.sample ("ALL bytes serialized into shared heap") sharedheap
 
   let log_deserialize l r =
     let sharedheap = float l in
@@ -364,21 +356,17 @@ end = functor(Value:Value.Type) -> struct
         ^ " (bytes allocated for deserialized value)") localheap;
       Measure.sample ("ALL bytes allocated for deserialized value") localheap
     end
-end
 
-(*****************************************************************************)
-(* Raw interface to shared memory (cf hh_shared.c for the underlying
- * representation).
- *)
-(*****************************************************************************)
-module Raw (Key: Key) (SerializedValue: sig type t end) (Value:Value.Type) = struct
+  let hh_add key v =
+    let size = hh_add_impl key v in
+    if hh_log_level() > 0 && size > 0
+    then log_serialize size
 
-  external hh_add         : Key.md5 -> SerializedValue.t -> unit = "hh_add"
-  external hh_mem         : Key.md5 -> bool            = "hh_mem"
-  external hh_get_size    : Key.md5 -> int             = "hh_get_size"
-  external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
-  external hh_remove      : Key.md5 -> unit            = "hh_remove"
-  external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
+  let hh_get key =
+    let v = hh_get_and_deserialize key in
+    if hh_log_level() > 0
+    then (log_deserialize (hh_get_size key) (Obj.repr v));
+    v
 end
 
 (*****************************************************************************)
@@ -414,20 +402,15 @@ module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
 
 end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
-  module Data = Serial(Value)
-  module Raw = Raw (Key) (Data) (Value)
+  module Raw = Raw (Key) (Value)
 
-  let add key value = Raw.hh_add (Key.md5 key) (Data.make value)
+  let add key value = Raw.hh_add (Key.md5 key) value
   let mem key = Raw.hh_mem (Key.md5 key)
 
   let get key =
     let key = Key.md5 key in
     if Raw.hh_mem key
-    then
-      let v = Raw.hh_get_and_deserialize key in
-      if hh_log_level() > 0
-      then (Data.log_deserialize (Raw.hh_get_size key) (Obj.repr v));
-      Some v
+    then Some (Raw.hh_get key)
     else None
 
   let find_unsafe key =
@@ -466,17 +449,12 @@ module Old : functor (Key : Key) -> functor (Value : Value.Type) -> sig
 
 end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
 
-  module Data = Serial(Value)
-  module Raw = Raw (Key) (Data) (Value)
+  module Raw = Raw (Key) (Value)
 
   let get key =
     let key = Key.md5_old key in
     if Raw.hh_mem key
-    then
-      let v = Raw.hh_get_and_deserialize key in
-      if hh_log_level() > 0
-      then Data.log_deserialize (Raw.hh_get_size key) (Obj.repr v);
-      Some v
+    then Some (Raw.hh_get key)
     else None
 
   let mem key = Raw.hh_mem (Key.md5_old key)

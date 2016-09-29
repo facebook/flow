@@ -1432,10 +1432,17 @@ static char* hh_alloc(size_t size) {
  * allocated chunk.
  */
 /*****************************************************************************/
-static char* hh_store_ocaml(value data) {
-  size_t data_size = caml_string_length(data);
+static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
+  char* serialized_value;
+  intnat size;
+  caml_output_value_to_malloc(
+    data, Val_int(0)/*flags*/,
+    &serialized_value, &size);
+  size_t data_size = (size_t) size;
   char* addr = hh_alloc(data_size);
-  memcpy(addr, String_val(data), data_size);
+  memcpy(addr, serialized_value, data_size);
+  free(serialized_value);
+  *alloc_size = data_size;
   return addr;
 }
 
@@ -1452,9 +1459,13 @@ static uint64_t get_hash(value key) {
 /*****************************************************************************/
 /* Writes the data in one of the slots of the hashtable. There might be
  * concurrent writers, when that happens, the first writer wins.
+ *
+ * Returns the number of bytes allocated in the shared heap. If the slot
+ * was already written to, a negative value is returned to indicate no new
+ * memory was allocated.
  */
 /*****************************************************************************/
-static void write_at(unsigned int slot, value data) {
+static value write_at(unsigned int slot, value data) {
   // Try to write in a value to indicate that the data is being written.
   if(hashtbl[slot].addr == NULL &&
      __sync_bool_compare_and_swap(
@@ -1463,8 +1474,11 @@ static void write_at(unsigned int slot, value data) {
        HASHTBL_WRITE_IN_PROGRESS
      )
   ) {
-    hashtbl[slot].addr = hh_store_ocaml(data);
+    size_t alloc_size;
+    hashtbl[slot].addr = hh_store_ocaml(data, &alloc_size);
+    return Val_long(alloc_size);
   }
+  return Min_long;
 }
 
 static void raise_hash_table_full() {
@@ -1476,9 +1490,13 @@ static void raise_hash_table_full() {
 /*****************************************************************************/
 /* Adds a key value to the hashtable. This code is perf sensitive, please
  * check the perf before modifying.
+ *
+ * Returns the number of bytes allocated into the shared heap, or a negative
+ * number if nothing no new memory was allocated.
  */
 /*****************************************************************************/
-void hh_add(value key, value data) {
+value hh_add(value key, value data) {
+  CAMLparam2(key, data);
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_size - 1);
   unsigned int init_slot = slot;
@@ -1486,8 +1504,7 @@ void hh_add(value key, value data) {
     uint64_t slot_hash = hashtbl[slot].hash;
 
     if(slot_hash == hash) {
-      write_at(slot, data);
-      return;
+      CAMLreturn(write_at(slot, data));
     }
 
     if (*hcounter >= hashtbl_size) {
@@ -1501,8 +1518,7 @@ void hh_add(value key, value data) {
         uint64_t size = __sync_fetch_and_add(hcounter, 1);
         // Sanity check
         assert(size < hashtbl_size);
-        write_at(slot, data);
-        return;
+        CAMLreturn(write_at(slot, data));
       }
 
       // Grabbing it failed -- why? If someone else is trying to insert
@@ -1519,8 +1535,7 @@ void hh_add(value key, value data) {
         // no longer null. To make sure hh_mem will work, we try
         // writing the value ourselves; either we insert it ourselves or
         // we know the address is now non-NULL.
-        write_at(slot, data);
-        return;
+        CAMLreturn(write_at(slot, data));
       }
     }
 
