@@ -23,6 +23,7 @@ open Utils
 
 exception Watchman_error of string
 exception Timeout
+exception Read_payload_too_long
 
 let debug = false
 
@@ -210,12 +211,20 @@ let capability_check ?(optional=[]) required =
 (*****************************************************************************)
 
 let read_with_timeout timeout ic =
-   Timeout.with_timeout ~timeout
-     ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
-     ~on_timeout:begin fun _ ->
-                   EventLogger.watchman_timeout ();
-                   raise Timeout
-                 end
+  let fd = Timeout.descr_of_in_channel ic in
+  match Unix.select [fd] [] [] timeout with
+    | [ready_fd], _, _ when ready_fd = fd-> begin
+     let max_read_time = 20 in
+     Timeout.with_timeout ~timeout:max_read_time
+       ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
+       ~on_timeout:begin fun _ ->
+                     EventLogger.watchman_timeout ();
+                     raise Timeout
+                   end
+    end
+    | _, _, _ ->
+      EventLogger.watchman_timeout ();
+      raise Timeout
 
 let assert_no_error obj =
   (try
@@ -240,7 +249,7 @@ let sanitize_watchman_response output =
   assert_no_error response;
   response
 
-let exec ?(timeout=120) (ic, oc) json =
+let exec ?(timeout=120.0) (ic, oc) json =
   let json_str = Hh_json.(json_to_string json) in
   if debug then Printf.eprintf "Watchman request: %s\n%!" json_str ;
   output_string oc json_str;
@@ -256,7 +265,7 @@ let get_sockname timeout =
   let ic =
     Timeout.open_process_in "watchman"
     [| "watchman"; "get-sockname"; "--no-pretty" |] in
-  let output = read_with_timeout timeout ic in
+  let output = read_with_timeout (float_of_int timeout) ic in
   assert (Timeout.close_process_in ic = Unix.WEXITED 0);
   let json = Hh_json.json_of_string output in
   J.get_string_val "sockname" json
@@ -297,12 +306,29 @@ let init { init_timeout; subscribe_to_changes; root } =
   if subscribe_to_changes then (ignore @@ exec env.socket (subscribe env)) ;
   env
 
-let poll_for_updates env =
-  (* Use the timeout mechanism to manage our polling frequency. *)
-  let timeout = 0 in
+let has_input timeout (in_channel, _) =
+  let fd = Timeout.descr_of_in_channel in_channel in
+  match Unix.select [fd] [] [] timeout with
+    | [_], _, _ -> true
+    | _ -> false
+
+let no_updates_response clockspec =
+  let timeout_str = "{\"files\":[]," ^ "\"clock\":\"" ^ clockspec ^ "\"}" in
+  Hh_json.json_of_string timeout_str
+
+let poll_for_updates ?timeout env =
+  let timeout = Option.value timeout ~default:0.0 in
+  let ready = has_input timeout env.socket in
+  if not ready then
+    if timeout = 0.0 then no_updates_response env.clockspec
+    else raise Timeout
+  else
+  let timeout = 20 in
   try
     let output = begin
       let in_channel, _  = env.socket in
+      (* Use the timeout mechanism to limit maximum time to read payload (cap
+       * data size). *)
       Timeout.with_timeout
         ~do_: (fun t -> Timeout.input_line ~timeout:t in_channel)
         ~timeout
@@ -311,11 +337,8 @@ let poll_for_updates env =
     sanitize_watchman_response output
   with
   | Timeout.Timeout ->
-    let clockspec = begin
-        exec env.socket (clock env.watch_root) |>
-          J.get_string_val "clock" end in
-    let timeout_str = "{\"files\":[]," ^ "\"clock\":\"" ^ clockspec ^ "\"}" in
-    Hh_json.json_of_string (timeout_str)
+    let () = Hh_logger.log "Watchman.poll_for_updates timed out" in
+    raise Read_payload_too_long
   | _ as e ->
     raise e
 
@@ -370,6 +393,20 @@ let call_on_instance instance source f =
         Hh_logger.log "Watchman connection reset by peer.";
         EventLogger.watchman_died_caught ();
         Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+      | End_of_file ->
+        Hh_logger.log "Watchman connection End_of_file. Closing channel";
+        let ic, _ = env.socket in
+        Timeout.close_in ic;
+        EventLogger.watchman_died_caught ();
+        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+      | Read_payload_too_long ->
+        Hh_logger.log "Watchman reading payload too long. Closing channel";
+        let ic, _ = env.socket in
+        Timeout.close_in ic;
+        EventLogger.watchman_died_caught ();
+        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+      | Timeout as e ->
+        raise e
       | e ->
         let msg = Printexc.to_string e in
         EventLogger.watchman_uncaught_failure msg;
@@ -394,12 +431,16 @@ let random_filepath root =
   let name = Random_id.(short_string_with_alphabet alphanumeric_alphabet) in
   Filename.concat dir (spf ".%s.%s" name sync_file_extension)
 
-let get_changes instance =
+let get_changes ?deadline instance =
+  let timeout = Option.map deadline ~f:(fun deadline ->
+    let timeout = deadline -. (Unix.time ()) in
+    max timeout 0.0
+  ) in
   call_on_instance instance "get_changes" @@ fun env ->
     let response = begin
         if env.settings.subscribe_to_changes
-        then Watchman_pushed (poll_for_updates env)
-        else Watchman_synchronous (exec env.socket (since_query env))
+        then Watchman_pushed (poll_for_updates ?timeout env)
+        else Watchman_synchronous (exec ?timeout env.socket (since_query env))
     end in
     match response with
     | Watchman_unavailable -> Watchman_unavailable
@@ -409,18 +450,13 @@ let get_changes instance =
       Watchman_synchronous (transform_changes_response env data)
 
 let rec get_changes_until_file_sync deadline syncfile instance acc_changes =
-  if Unix.time () > deadline then raise Timeout else ();
-  let instance, changes = get_changes instance in
+  if Unix.time () >= deadline then raise Timeout else ();
+  let instance, changes = get_changes ~deadline instance in
   match changes with
   | Watchman_unavailable ->
     (** We don't need to use Retry_with_backoff_exception because there is
      * exponential backoff built into get_changes to restart the watchman
-     * instance.
-     *
-     * NB: Yes, it is a CPU-eating spin-loop until the backoff time to attempt
-     * a watchman restart arrives. This could probably be improved.
-     * Effectively since we spin-loop to kill time, this must be tail call
-     * optimized or we will blow the stack.*)
+     * instance. *)
     get_changes_until_file_sync
       deadline syncfile instance acc_changes (** Not in 4.01 yet [@tailcall] *)
   | Watchman_synchronous changes

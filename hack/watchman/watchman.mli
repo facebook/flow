@@ -34,6 +34,7 @@ val init: init_settings -> env option
 
 val get_all_files: env -> string list
 
-val get_changes: watchman_instance -> watchman_instance * SSet.t changes
+val get_changes: ?deadline:float ->
+  watchman_instance -> watchman_instance * SSet.t changes
 val get_changes_synchronously: timeout:int ->
   watchman_instance -> watchman_instance * SSet.t
