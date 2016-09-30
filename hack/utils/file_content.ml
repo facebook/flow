@@ -36,39 +36,40 @@ let of_content ~content = {
 
 let get_content t = t.content
 
-let nth_line lines n =
-  match List.nth lines n with
-  | Some s -> s
-  | None -> ""
+let get_line_lengths text limit =
+  let text = text ^ "\n" in (* sentinel to make things easier *)
+  Str.bounded_split_delim (Str.regexp_string "\n") text (limit+1) |>
+    List.map ~f:String.length
+
+let get_offset line column line_lengths =
+
+  let line = line - 1 in
+  let column = column -1 in
+
+  assert (line < (List.length line_lengths));
+  List.foldi line_lengths
+    ~init:0
+    ~f:begin fun i acc len ->
+      if i < line then acc + len + 1
+      else if i > line then acc
+      else begin
+        assert (column <= len);
+        acc + column
+      end
+    end
 
 let apply_edit = fun fc {range; text} ->
   match range with
   | None -> of_content text
   | Some {st; ed} ->
     let content = get_content fc in
-    let lines = if content = "" then [] else match content.[0] with
-    | '\n' ->
-      "" :: Str.bounded_split (Str.regexp_string "\n") content (ed.line)
-    | _ ->
-      Str.bounded_split (Str.regexp_string "\n") content (ed.line+1) in
-    let hd = ref "" in
-    let tl = ref "" in
-    for i = 0 to List.length lines - 1 do
-      let line = nth_line lines i in
-      let length = String.length line in
-      if i < st.line - 1
-        then hd := !hd ^ line ^ "\n"
-      else if i >= ed.line
-        then tl := !tl ^ line
-      else if i == st.line - 1
-        then hd := !hd ^ (String.sub line 0 (st.column - 1));
-      if i == ed.line - 1 && length - (ed.column - 1) > 0
-        then tl := (String.sub line (ed.column - 1)
-          (length - ed.column + 1)) ^ "\n" ^ !tl
-      else if i == ed.line - 1
-        then tl := "\n" ^ !tl
-    done;
-    of_content (!hd ^ text ^ !tl)
+    let line_lengths = get_line_lengths content (ed.line+1) in
+    let start_offset = get_offset st.line st.column  line_lengths in
+    let end_offset = get_offset ed.line ed.column line_lengths in
+
+    let prefix = Str.string_before content start_offset in
+    let suffix = Str.string_after content end_offset in
+    of_content ~content:(prefix ^ text ^ suffix)
 
 let print_edit b edit =
   let range = match edit.range with
