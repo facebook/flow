@@ -24,8 +24,9 @@ mkdir -p "website/static/$GEN_DIR"
 cp "bin/flow.js" "website/_assets/gen/${GEN_DIR}/flow.js"
 cp -r "lib" "website/static/${GEN_DIR}/flowlib"
 echo "version" > "website/_data/flow_dot_js_versions.csv"
-git tag -l | \
-  grep -e 'v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}' | \
+git ls-remote --tags $(git remote get-url origin) | \
+  awk '{print $2}' | cut -d/ -f3 | \
+  grep -e '^v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$' | \
   sort -s -t. -k 1,1nr -k 2,2nr -k 3,3nr | \
   head -n 5 >> "website/_data/flow_dot_js_versions.csv"
 env \
