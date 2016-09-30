@@ -1,7 +1,7 @@
 /* @flow */
 
 import colors from 'colors/safe';
-import {join} from 'path';
+import {isAbsolute, join} from 'path';
 import {format} from 'util';
 
 import {readFile, writeFile} from './../async';
@@ -173,11 +173,14 @@ export default async function(args: Args): Promise<void> {
             if (result.type === "fail") {
               const assertLoc = result.assertLoc;
               if (assertLoc) {
-                const filename = join(
-                  getTestsDir(),
-                  suiteName,
-                  assertLoc.filename,
-                );
+                let filename = assertLoc.filename;
+                if (!isAbsolute(filename)) {
+                  const filename = join(
+                    getTestsDir(),
+                    suiteName,
+                    assertLoc.filename,
+                  );
+                }
                 const code = await readFile(filename);
                 const ast = parser.parse(code, {});
                 const range = assertLoc && dfsForRange(ast, assertLoc.line, assertLoc.column);
