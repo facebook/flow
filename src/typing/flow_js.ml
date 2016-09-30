@@ -2025,15 +2025,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
 
-    | (IdxWrapper (idx_reason, obj), LookupT (reason_op, strict, try_on_fail, prop, t_out)) ->
-      let de_maybed_obj = mk_tvar_where cx idx_reason (fun t ->
-        rec_flow cx trace (obj, IdxUnMaybeifyT (idx_reason, t))
-      ) in
-      let prop_type = mk_tvar_where cx reason_op (fun t ->
-        rec_flow cx trace (de_maybed_obj, LookupT (reason_op, strict, try_on_fail, prop, t))
-      ) in
-      rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
-
     | (IdxWrapper (reason, _), UseT _) ->
       add_error cx (mk_info reason [
         "idx() callback functions may not be annotated and they may only " ^
