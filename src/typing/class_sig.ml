@@ -554,7 +554,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
 
   let iface_sig = List.fold_left (
     fun s (loc, {Ast.Type.Object.Property.
-      key; value; static; _method; optional
+      key; value; static; _method; optional; _
     }) ->
     if optional && _method
     then begin

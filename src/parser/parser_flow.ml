@@ -115,6 +115,18 @@ end = struct
       | None -> assert false in
       Loc.btwn start_loc end_loc, typeAnnotation
 
+    and variance env =
+      let loc = Peek.loc env in
+      match Peek.token env with
+       | T_PLUS ->
+           Eat.token env;
+           Some (loc, Variance.Plus)
+       | T_MINUS ->
+           Eat.token env;
+           Some (loc, Variance.Minus)
+       | _ ->
+           None
+
     and rev_nonempty_acc acc =
       let end_loc = match acc with
       | (loc, _)::_ -> loc
@@ -430,6 +442,7 @@ end = struct
           optional = false;
           static;
           _method = true;
+          variance = None;
         })
 
       in let call_property env start_loc static =
@@ -439,7 +452,7 @@ end = struct
           static;
         })
 
-      in let property env start_loc static key =
+      in let property env start_loc static variance key =
         if not (should_parse_types env)
         then error env Error.UnexpectedTypeAnnotation;
         let optional = Expect.maybe env T_PLING in
@@ -451,9 +464,10 @@ end = struct
           optional;
           static;
           _method = false;
+          variance;
         })
 
-      in let indexer_property env start_loc static =
+      in let indexer_property env start_loc static variance =
         Expect.token env T_LBRACKET;
         let id, _ = Parse.identifier_or_reserved_keyword env in
         Expect.token env T_COLON;
@@ -466,6 +480,7 @@ end = struct
           key;
           value;
           static;
+          variance;
         })
 
       in let semicolon exact env =
@@ -475,10 +490,15 @@ end = struct
         | T_RCURLY when not exact -> ()
         | _ -> error_unexpected env
 
+      in let error_unsupported_variance env = function
+      | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
+      | None -> ()
+
       in let rec properties ~allow_static ~exact env
         (acc, indexers, callProperties) =
         let start_loc = Peek.loc env in
         let static = allow_static && Expect.maybe env T_STATIC in
+        let variance = variance env in
         match Peek.token env with
         | T_EOF ->
           List.rev acc, List.rev indexers, List.rev callProperties
@@ -487,19 +507,20 @@ end = struct
         | T_RCURLY when not exact ->
           List.rev acc, List.rev indexers, List.rev callProperties
         | T_LBRACKET ->
-          let indexer = indexer_property env start_loc static in
+          let indexer = indexer_property env start_loc static variance in
           semicolon exact env;
           properties allow_static exact env
             (acc, indexer::indexers, callProperties)
         | T_LESS_THAN
         | T_LPAREN ->
+          error_unsupported_variance env variance;
           let call_prop = call_property env start_loc static in
           semicolon exact env;
           properties allow_static exact env
             (acc, indexers, call_prop::callProperties)
-        | _ ->
-          let static, (_, key) = match static, Peek.token env with
-          | true, T_COLON ->
+        | token ->
+          let static, (_, key) = match static, variance, token with
+          | true, None, T_COLON ->
               strict_error_at env (start_loc, Error.StrictReservedWord);
               let static_key =
                 start_loc, Expression.Object.Property.Identifier ( start_loc, {
@@ -516,8 +537,12 @@ end = struct
           in
           let property = match Peek.token env with
           | T_LESS_THAN
-          | T_LPAREN -> method_property env start_loc static key
-          | _ -> property env start_loc static key in
+          | T_LPAREN ->
+            error_unsupported_variance env variance;
+            method_property env start_loc static key
+          | _ ->
+            property env start_loc static variance key
+          in
           semicolon exact env;
           properties allow_static exact env
             (property::acc, indexers, callProperties)
@@ -539,10 +564,7 @@ end = struct
 
     and type_parameter_declaration =
       let rec params env ~allow_default ~require_default acc = Type.ParameterDeclaration.TypeParam.(
-        let variance = match Peek.token env with
-          | T_PLUS -> Eat.token env; Some Variance.Plus
-          | T_MINUS -> Eat.token env; Some Variance.Minus
-          | _ -> None in
+        let variance = variance env in
         let loc, id = Parse.identifier_with_type env Error.StrictParamName in
         let default, require_default = match allow_default, Peek.token env with
         | false, _ -> None, false

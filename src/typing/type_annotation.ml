@@ -726,9 +726,9 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
         Flow_js.flow_t cx (Flow_js.subst cx bounds_map t,
                            Flow_js.subst cx bounds_map bound);
         Some t in
-    let polarity = TypeParam.Variance.(match variance with
-    | Some Plus -> Positive
-    | Some Minus -> Negative
+    let polarity = Ast.Variance.(match variance with
+    | Some (_, Plus) -> Positive
+    | Some (_, Minus) -> Negative
     | None -> Neutral
     ) in
     let tparam = { reason; name; bound; polarity; default; } in

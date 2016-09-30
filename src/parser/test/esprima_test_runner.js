@@ -335,6 +335,10 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         // Esprima represents JSX children string literals as Literal nodes
         flow.type = "Literal";
         break;
+      case 'ObjectTypeProperty':
+      case 'ObjectTypeIndexer':
+        delete flow.variance;
+        break;
       case 'DeclareModule':
         delete flow.kind;
         break;

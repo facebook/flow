@@ -43,6 +43,11 @@ and Literal : sig
     | RegExp of RegExp.t
 end = Literal
 
+and Variance : sig
+  type t = Loc.t * t'
+  and t' = Plus | Minus
+end = Variance
+
 and Type : sig
   module Function : sig
     module Param : sig
@@ -74,6 +79,7 @@ and Type : sig
         optional: bool;
         static: bool;
         _method: bool;
+        variance: Variance.t option;
       }
       type t = Loc.t * t'
     end
@@ -83,6 +89,7 @@ and Type : sig
         key: Type.t;
         value: Type.t;
         static: bool;
+        variance: Variance.t option;
       }
       and t = Loc.t * t'
     end
@@ -171,9 +178,6 @@ and Type : sig
 
   module ParameterDeclaration : sig
     module TypeParam : sig
-      module Variance : sig
-        type t = Plus | Minus
-      end
       type t = Loc.t * t'
       and t' = {
         name: string;

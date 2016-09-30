@@ -902,6 +902,15 @@ end with type t = Impl.t) = struct
       |]
     )
 
+  and variance (loc, sigil) =
+    let kind = Variance.(match sigil with
+    | Plus -> string "plus"
+    | Minus -> string "minus"
+    ) in
+    node "Variance" loc [|
+      "kind", kind
+    |]
+
   and _type (loc, t) = Type.(
     match t with
     | Any -> any_type loc
@@ -991,6 +1000,7 @@ end with type t = Impl.t) = struct
       "value", _type prop.value;
       "optional", bool prop.optional;
       "static", bool prop.static;
+      "variance", option variance prop.variance;
     |]
   )
 
@@ -1000,6 +1010,7 @@ end with type t = Impl.t) = struct
       "key", _type indexer.key;
       "value", _type indexer.value;
       "static", bool indexer.static;
+      "variance", option variance indexer.variance;
     |]
   )
 
@@ -1092,10 +1103,6 @@ end with type t = Impl.t) = struct
   )
 
   and type_param (loc, tp) = Type.ParameterDeclaration.TypeParam.(
-    let variance = Variance.(function
-      | Plus -> string "plus"
-      | Minus -> string "minus"
-    ) in
     node "TypeParameter" loc [|
       "name", string tp.name;
       "bound", option type_annotation tp.bound;

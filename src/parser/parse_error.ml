@@ -17,6 +17,7 @@ type t =
   | UnexpectedIdentifier
   | UnexpectedReserved
   | UnexpectedEOS
+  | UnexpectedVariance
   | UnexpectedTypeAlias
   | UnexpectedTypeAnnotation
   | UnexpectedTypeDeclaration
@@ -101,6 +102,7 @@ module PP =
       | UnexpectedIdentifier ->  "Unexpected identifier"
       | UnexpectedReserved ->  "Unexpected reserved word"
       | UnexpectedEOS ->  "Unexpected end of input"
+      | UnexpectedVariance -> "Unexpected variance sigil"
       | UnexpectedTypeAlias -> "Type aliases are not allowed in untyped mode"
       | UnexpectedTypeAnnotation -> "Type annotations are not allowed in untyped mode"
       | UnexpectedTypeDeclaration -> "Type declarations are not allowed in untyped mode"

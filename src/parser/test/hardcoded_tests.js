@@ -555,12 +555,12 @@ module.exports = {
           {
             'type': 'TypeParameter',
             'name': 'T1',
-            'variance': 'plus',
+            'variance.kind': 'plus',
           },
           {
             'type': 'TypeParameter',
             'name': 'T2',
-            'variance': 'minus',
+            'variance.kind': 'minus',
           },
         ],
       },
@@ -4422,6 +4422,67 @@ module.exports = {
       },
       'declare function f(x: mixed): boolean %checks(var x = 1; typeof x == "string");': {
         'errors.0.message': 'Unexpected token var'
+      }
+    },
+    'Object type property variance': {
+      'type X = {p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0.variance': null
+      },
+      'type X = {+p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0.variance.kind': 'plus'
+      },
+      'type X = {-p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0.variance.kind': 'minus'
+      },
+      'type X = {m():T}': {
+        'errors.length': 0,
+        'body.0.right.properties.0.variance': null
+      },
+      'type X = {+m():T}': {
+        'errors.0': {
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+          'message': 'Unexpected variance sigil'
+        }
+      },
+      'type X = {-m():T}': {
+        'errors.0': {
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+          'message': 'Unexpected variance sigil'
+        }
+      },
+      'type X = {[k:K]:V}': {
+        'errors.length': 0,
+        'body.0.right.indexers.0.variance': null
+      },
+      'type X = {+[k:K]:V}': {
+        'errors.length': 0,
+        'body.0.right.indexers.0.variance.kind': 'plus'
+      },
+      'type X = {-[k:K]:V}': {
+        'errors.length': 0,
+        'body.0.right.indexers.0.variance.kind': 'minus'
+      },
+      'type X = {():T}': {
+        'errors.length': 0,
+      },
+      'type X = {+():T}': {
+        'errors.0': {
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+          'message': 'Unexpected variance sigil'
+        }
+      },
+      'type X = {-():T}': {
+        'errors.0': {
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+          'message': 'Unexpected variance sigil'
+        }
       }
     }
   }
