@@ -337,6 +337,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         break;
       case 'ObjectTypeProperty':
       case 'ObjectTypeIndexer':
+      case 'ClassProperty':
         delete flow.variance;
         break;
       case 'DeclareModule':

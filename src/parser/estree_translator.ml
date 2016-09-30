@@ -708,6 +708,7 @@ end with type t = Impl.t) = struct
       "typeAnnotation", option type_annotation prop.typeAnnotation;
       "computed", bool computed;
       "static", bool prop.static;
+      "variance", option variance prop.variance;
     |]
   )
 

@@ -4484,6 +4484,82 @@ module.exports = {
           'message': 'Unexpected variance sigil'
         }
       }
+    },
+    'Class property variance': {
+      'class C {p:T}': {
+        'errors.length': 0,
+        'body.0.body.body.0.variance': null
+      },
+      'class C {+p:T}': {
+        'errors.length': 0,
+        'body.0.body.body.0.variance.kind': 'plus'
+      },
+      'class C {-p:T}': {
+        'errors.length': 0,
+        'body.0.body.body.0.variance.kind': 'minus'
+      },
+      'class C {+m(){}}': {
+        'errors.0': {
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+          'message': 'Unexpected variance sigil'
+        }
+      },
+      'class C {-m() {}}': {
+        'errors.0': {
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+          'message': 'Unexpected variance sigil'
+        }
+      },
+      'class C {async +m() {}}': {
+        'errors.0': {
+          'loc.start.column': 15,
+          'loc.end.column': 16,
+          'message': 'Unexpected variance sigil'
+        },
+        'body.0.body.body.0.value.async': true
+      },
+      'class C {async -m():T {}}': {
+        'errors.0': {
+          'loc.start.column': 15,
+          'loc.end.column': 16,
+          'message': 'Unexpected variance sigil'
+        },
+        'body.0.body.body.0.value.async': true
+      },
+      'class C {*+m() {}}': {
+        'errors.0': {
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+          'message': 'Unexpected variance sigil'
+        },
+        'body.0.body.body.0.value.generator': true
+      },
+      'class C {*-m():T {}}': {
+        'errors.0': {
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+          'message': 'Unexpected variance sigil'
+        },
+        'body.0.body.body.0.value.generator': true
+      },
+      'class C {+*m() {}}': {
+        'errors.0': {
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+          'message': 'Unexpected variance sigil'
+        },
+        'body.0.body.body.0.value.generator': true
+      },
+      'class C {-*m():T {}}': {
+        'errors.0': {
+          'loc.start.column': 9,
+          'loc.end.column': 10,
+          'message': 'Unexpected variance sigil'
+        },
+        'body.0.body.body.0.value.generator': true
+      }
     }
   }
 };

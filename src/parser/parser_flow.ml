@@ -865,6 +865,25 @@ end = struct
           let expr = Parse.assignment env in
           Function.BodyExpression expr, in_strict_mode env
 
+    let variance env is_async is_generator =
+      let loc = Peek.loc env in
+      let variance = match Peek.token env with
+      | T_PLUS ->
+          Eat.token env;
+          Some (loc, Variance.Plus)
+      | T_MINUS ->
+          Eat.token env;
+          Some (loc, Variance.Minus)
+      | _ ->
+          None
+      in
+      match variance with
+      | Some (loc, _) when is_async || is_generator ->
+          error_at env (loc, Error.UnexpectedVariance);
+          None
+      | _ ->
+          variance
+
     let generator env is_async =
       match is_async, Expect.maybe env T_MULT with
       | true, true ->
@@ -2322,7 +2341,11 @@ end = struct
           decorators;
         })))
 
-      in let init env start_loc decorators key async generator static =
+      in let error_unsupported_variance env = function
+      | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
+      | None -> ()
+
+      in let init env start_loc decorators key async generator static variance =
         match Peek.token env with
         | T_COLON
         | T_ASSIGN
@@ -2349,8 +2372,10 @@ end = struct
             value;
             typeAnnotation;
             static;
+            variance;
           })))
         | _ ->
+          error_unsupported_variance env variance;
           let func_loc = Peek.loc env in
           let typeParameters = Type.type_parameter_declaration env in
           let params = Declaration.function_params env in
@@ -2408,6 +2433,11 @@ end = struct
           Peek.token ~i:1 env <> T_COLON &&
           Declaration.async env in
         let generator = Declaration.generator env async in
+        let variance = Declaration.variance env async generator in
+        let generator = match generator, variance with
+        | false, Some _ -> Declaration.generator env async
+        | _ -> generator
+        in
         match (async, generator, key env) with
         | false, false,
           (_, (Identifier (_, { Identifier.name = "get"; _ }) as key)) ->
@@ -2416,8 +2446,11 @@ end = struct
             | T_COLON
             | T_ASSIGN
             | T_SEMICOLON
-            | T_LPAREN -> init env start_loc decorators key async generator static
-            | _ -> get env start_loc decorators static )
+            | T_LPAREN ->
+              init env start_loc decorators key async generator static variance
+            | _ ->
+              error_unsupported_variance env variance;
+              get env start_loc decorators static)
         | false, false,
           (_, (Identifier (_, { Identifier.name = "set"; _ }) as key)) ->
             (match Peek.token env with
@@ -2425,10 +2458,13 @@ end = struct
             | T_COLON
             | T_ASSIGN
             | T_SEMICOLON
-            | T_LPAREN -> init env start_loc decorators key async generator static
-            | _ -> set env start_loc decorators static)
+            | T_LPAREN ->
+              init env start_loc decorators key async generator static variance
+            | _ ->
+              error_unsupported_variance env variance;
+              set env start_loc decorators static)
         | _, _, (_, key) ->
-            init env start_loc decorators key async generator static
+            init env start_loc decorators key async generator static variance
       )
 
     let class_declaration env decorators =

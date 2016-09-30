@@ -976,6 +976,7 @@ and Class : sig
       value: Expression.t option;
       typeAnnotation: Type.annotation option;
       static: bool;
+      variance: Variance.t option;
     }
   end
   module Implements : sig

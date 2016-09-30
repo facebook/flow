@@ -457,6 +457,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
         typeAnnotation;
         value;
         static;
+        _;
       }) ->
         if value <> None
         then Flow_error.warn_or_ignore_class_properties cx ~static loc;
