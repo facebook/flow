@@ -16,5 +16,11 @@ test.js:19
  19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
                                                                                 ^^^^^^ number
 
+test.js:19
+ 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                                                                ^^^^^^ number. This type is incompatible with
+ 19: var o7: { x: number; y?: string; } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                              ^^^^^^ string
 
-Found 3 errors
+
+Found 4 errors

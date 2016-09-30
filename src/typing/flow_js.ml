@@ -3195,14 +3195,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          with each other. *)
       (match ldict, udict with
         | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
-            dictionary cx trace lk lv udict;
-            dictionary cx trace uk uv ldict
+          rec_unify cx trace lk uk;
+          rec_unify cx trace lv uv
         | _ -> ());
 
       (* Properties in u must either exist in l, or match l's indexer. *)
       iter_real_props cx uflds (fun s ut ->
-        match read_prop_opt cx lflds s with
-        | Some lt ->
+        let ureason = replace_reason_const (RProperty s) ureason in
+        match read_prop_opt cx lflds s, ldict with
+        | Some lt, _ ->
           if lit then (
             (* prop from unaliased LB: check <:, then make exact *)
             rec_flow cx trace (lt, UseT (use_op, ut));
@@ -3215,42 +3216,52 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             (* prop from aliased LB must be exact *)
             rec_unify cx trace lt ut
           )
-        | None ->
+        | None, Some { key; value; _ } when not (is_dictionary_exempt s) ->
+          let ut = match ut with
+          | OptionalT ut -> ut
+          | _ -> ut
+          in
+          rec_flow_t cx trace (string_key s ureason, key);
+          flow_to_mutable_child cx trace lit value ut
+        | _ ->
           (* property doesn't exist in inflowing type *)
-          let ureason = replace_reason_const (RProperty s) ureason in
           match ut with
-          | OptionalT t when lflags.exact ->
+          | OptionalT _ when lflags.exact ->
             (* if property is marked optional or otherwise has a maybe type,
                and if inflowing type is exact (i.e., it is not an
                annotation), then we add it to the inflowing type as
-               an optional property, as well as ensuring compatibility
-               with dictionary constraints if present *)
-            dictionary cx trace (string_key s ureason) t ldict;
+               an optional property *)
             (* Band-aid to avoid side effect in speculation mode. Even in
                non-speculation mode, the side effect here is racy, so it either
                needs to be taken out or replaced with something more
                robust. Tracked by #11299251. *)
             if not (speculating ()) then write_prop cx lflds s ut;
           | _ ->
-            (* otherwise, we ensure compatibility with dictionary constraints
-               if present, and look up the property in the prototype *)
-            dictionary cx trace (string_key s ureason) ut ldict;
-            (* if l is NOT a dictionary, then do a strict lookup *)
+            (* otherwise, look up the property in the prototype *)
             let strict = match sealed_in_op ureason lflags.sealed, ldict with
             | false, None -> ShadowRead (Some lreason, Nel.one lflds)
             | true, None -> Strict lreason
             | _ -> NonstrictReturning None
             in
             rec_flow cx trace (lproto, LookupT (ureason, strict, [], s, ut))
-          (* TODO: instead, consider extending inflowing type with s:t2 when it
-             is not sealed *)
+            (* TODO: instead, consider extending inflowing type with s:t2 when
+               it is not sealed *)
       );
 
       (* Any properties in l but not u must match indexer *)
-      iter_real_props cx lflds (fun s lt ->
-        if not (has_prop cx uflds s)
-        then dictionary cx trace (string_key s lreason) lt udict
-      );
+      (match udict with
+      | None -> ()
+      | Some { key; value; _ } ->
+        iter_real_props cx lflds (fun s lt ->
+          if not (has_prop cx uflds s)
+          then (
+            let lt = match lt with
+            | OptionalT lt -> lt
+            | _ -> lt
+            in
+            rec_flow_t cx trace (string_key s lreason, key);
+            flow_to_mutable_child cx trace lit lt value
+          )));
 
       rec_flow cx trace (l, UseT (use_op, uproto))
 
@@ -7628,8 +7639,8 @@ and __unify cx t1 t2 trace =
     (* ensure the keys and values are compatible with each other. *)
     begin match ldict, udict with
     | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
-        dictionary cx trace lk lv udict;
-        dictionary cx trace uk uv ldict
+        rec_unify cx trace lk uk;
+        rec_unify cx trace lv uv
     | Some _, None ->
         let lreason = replace_reason_const RSomeProperty lreason in
         flow_err_prop_not_found cx trace (lreason, ureason)
@@ -7641,17 +7652,13 @@ and __unify cx t1 t2 trace =
 
     let lpmap, upmap = find_props cx lflds, find_props cx uflds in
     SMap.merge (fun x lt ut ->
-      if not (is_internal_name x)
+      if not (is_internal_name x || is_dictionary_exempt x)
       then (match lt, ut with
       | Some t1, Some t2 -> rec_unify cx trace t1 t2
       | Some t1, None ->
-          (* x exists in obj1 but not obj2; if obj2 is a dictionary make sure
-             t1 is allowed, otherwise error *)
-          flow_prop_to_dict cx trace x t1 udict lreason ureason
+          unify_prop_with_dict cx trace x t1 lreason ureason udict
       | None, Some t2 ->
-          (* x exists in obj2 but not obj1; if obj1 is a dictionary make sure
-             t2 is allowed, otherwise error *)
-          flow_prop_to_dict cx trace x t2 ldict ureason lreason
+          unify_prop_with_dict cx trace x t2 ureason lreason ldict
       | None, None -> ());
       None
     ) lpmap upmap |> ignore
@@ -7681,10 +7688,12 @@ and __unify cx t1 t2 trace =
 and naive_unify cx trace t1 t2 =
   rec_flow_t cx trace (t1,t2); rec_flow_t cx trace (t2,t1)
 
-and flow_prop_to_dict cx trace k v dict prop_reason dict_reason =
-  match dict with
-  | Some _ ->
-    dictionary cx trace (string_key k prop_reason) v dict
+(* If some property `x` exists in one object but not another, ensure the
+   property is compatible with a dictionary, or error if none. *)
+and unify_prop_with_dict cx trace k v prop_reason dict_reason = function
+  | Some { key; value; _ } ->
+      rec_flow_t cx trace (string_key k prop_reason, key);
+      rec_unify cx trace v value
   | None ->
     let prop_reason = replace_reason_const (RProperty k) prop_reason in
     flow_err_prop_not_found cx trace (prop_reason, dict_reason)
@@ -7865,18 +7874,6 @@ and multiflow_partial cx trace ?strict = function
     in
     rec_flow cx trace (tin, tout);
     multiflow_partial cx trace ?strict (tins,touts)
-
-and dictionary cx trace keyt valuet = function
-  | None -> ()
-  | Some { key; value; _ } ->
-      rec_flow_t cx trace (keyt, key);
-      begin match keyt with
-      | StrT (_, Literal str) ->
-        if not (is_dictionary_exempt str)
-        then rec_flow_t cx trace (valuet, value)
-      | _ ->
-        rec_flow_t cx trace (valuet, value)
-      end
 
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in

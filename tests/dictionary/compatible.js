@@ -7,14 +7,6 @@ function foo0(x: Array<{[key: string]: mixed}>): Array<{[key: string]: mixed}> {
   return x;
 }
 
-function foo1(
-  x: Array<{[key: string]: mixed}>
-): Array<{[key: string]: mixed, fooBar: string}> {
-  // even though x does not have an explicit fooBar property, it *could* have
-  // one because fooBar:string matches x's dictionary type, so we allow this.
-  return x;
-}
-
 function foo2(
   x: {[key: string]: number}
 ): {[key: string]: number, toString: () => string} {
