@@ -11,7 +11,7 @@ exports.Foo = Foo;
 
 // so you want to type Foo, by declaring it as a class
 interface IFooPrototype {
-  m(): number;
+  m: () => number;
 }
 interface IFoo extends IFooPrototype {
   x: boolean; // error, should have declared x: number instead

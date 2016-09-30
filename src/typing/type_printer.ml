@@ -55,6 +55,21 @@ let parenthesize t_str enclosure triggers =
  *)
 let rec type_printer_impl ~size override fallback enclosure cx t =
   let pp = type_printer ~size override fallback in
+
+  let rec prop x = function
+    | Field (t, polarity) -> spf "%s%s: %s"
+      (Polarity.sigil polarity)
+      (prop_name cx x t)
+      (pp EnclosureProp cx t)
+    | Get t -> spf "get %s(): %s" x (pp EnclosureRet cx t)
+    | Set t -> spf "set %s(value: %s): void" x (pp EnclosureParam cx t)
+    | GetSet (t1, t2) ->
+      String.concat ", " [
+        prop x (Get t1);
+        prop x (Set t2);
+      ]
+  in
+
   match override cx t with
   | Some s -> s
   | None ->
@@ -89,13 +104,12 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
           |> SMap.elements
           |> List.filter (fun (x,_) -> not (Reason.is_internal_name x))
           |> List.rev
-          |> List.map (fun (x,t) ->
-               (prop_name cx x t) ^ ": " ^ (pp EnclosureProp cx t))
+          |> List.map (fun (x, p) -> prop x p)
           |> String.concat ", "
         in
         let indexer =
           (match dict_t with
-          | Some { dict_name; key; value } ->
+          | Some { dict_name; key; value; dict_polarity } ->
               let indexer_prefix =
                 if props <> ""
                 then ", "
@@ -105,8 +119,9 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
                 | None -> "_"
                 | Some name -> name
               in
-              (spf "%s[%s: %s]: %s,"
+              (spf "%s%s[%s: %s]: %s,"
                 indexer_prefix
+                (Polarity.sigil dict_polarity)
                 dict_name
                 (pp EnclosureNone cx key)
                 (pp EnclosureNone cx value)
@@ -363,12 +378,13 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
         | None -> true
       in
       let prop_map = Context.find_props cx props_tmap in
-      SMap.fold (fun name t acc ->
+      SMap.fold (fun name p acc ->
           acc && (
             (* We don't print internal properties, thus we do not care whether
                their type is printable or not *)
             (Reason.is_internal_name name) ||
-            (is_printed_type_parsable_impl weak cx EnclosureNone t)
+            (p |> Type.Property.forall_t
+              (is_printed_type_parsable_impl weak cx EnclosureNone))
           )
         ) prop_map is_printable
 

@@ -90,7 +90,7 @@ function mix_with_declared_props(
 // Indeed, dict types are still Objects and have Object.prototype stuff
 function object_prototype(
   o: {[k:string]:number},
-): {[k:string]:number, toString: () => string} {
+): {[k:string]:number, +toString: () => string} {
   (o.toString(): boolean); // error: string ~> boolean
   return o; // ok
 }

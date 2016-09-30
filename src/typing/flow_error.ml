@@ -111,6 +111,16 @@ module Impl : sig
   val flow_err_strict_lookup_failed:
     Context.t -> Trace.t -> string -> reason -> reason * reason -> unit
 
+  val flow_err_prop_polarity_mismatch:
+    Context.t -> Trace.t -> string ->
+    reason * reason -> Type.polarity * Type.polarity ->
+    unit
+
+  val flow_err_prop_access:
+    Context.t -> Trace.t -> string ->
+    reason * reason -> Type.Property.t -> rw ->
+    unit
+
   val warn_or_ignore_decorators:
     Context.t -> Loc.t -> unit
 
@@ -254,6 +264,18 @@ end = struct
         else "Property not found in"
       in
       flow_err_reasons cx trace msg (r1, r2)
+
+  let flow_err_prop_polarity_mismatch cx trace x reasons (p1, p2) =
+    let msg = spf "%s property `%s` incompatible with %s use in"
+      (String.capitalize (Polarity.string p1))
+      x
+      (Polarity.string p2)
+    in
+    flow_err_reasons cx trace msg reasons
+
+  let flow_err_prop_access cx trace x reasons p rw =
+    flow_err_prop_polarity_mismatch cx trace x reasons
+      (Property.polarity p, Polarity.of_rw rw)
 
   let warn_or_ignore_decorators cx loc =
     match Context.esproposal_decorators cx with

@@ -122,6 +122,13 @@ val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 
 val clear_intermediates: t -> unit
 
+(* utils *)
+val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
+val has_prop: t -> Type.Properties.id -> string -> bool
+val get_prop: t -> Type.Properties.id -> string -> Type.Property.t option
+val set_prop: t -> Type.Properties.id -> string -> Type.Property.t -> unit
+val set_export: t -> Type.Exports.id -> string -> Type.t -> unit
+
 (* constructors *)
 val make_property_map: t -> Type.Properties.t -> Type.Properties.id
 val make_export_map: t -> Type.Exports.t -> Type.Exports.id

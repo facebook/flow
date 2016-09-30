@@ -1576,8 +1576,12 @@ and statement cx = Ast.Statement.(
           | None, None ->
             let type_exports, value_exports = SMap.fold (fun x entry (ts, vs) ->
               match entry with
-              | Value {specific; _} -> ts, SMap.add x specific vs
-              | Type {_type; _} -> SMap.add x _type ts, vs
+              | Value {specific; _} ->
+                ts,
+                SMap.add x (Property.field Neutral specific) vs
+              | Type {_type; _} ->
+                SMap.add x _type ts,
+                vs
             ) module_scope.entries (SMap.empty, SMap.empty) in
 
             let reason = repos_reason kind_loc reason in
@@ -2103,7 +2107,9 @@ and object_prop cx map = Ast.Expression.Object.(function
       let reason = mk_reason desc vloc in
       let ft = mk_function id cx reason func in
       Hashtbl.replace (Context.type_table cx) vloc ft;
-      SMap.add name ft map
+      (* TODO: Consider making shorthand methods covariant, to match the
+       * behavior of interfaces. *)
+      Properties.add_field name Neutral ft map
 
   (* name = non-function expr *)
   | Property (_, { Property.kind = Property.Init;
@@ -2113,10 +2119,9 @@ and object_prop cx map = Ast.Expression.Object.(function
           Ast.Literal.value = Ast.Literal.String name;
           _;
         });
-                   value = v;
-                   _ }) ->
+      value = v; _ }) ->
     let t = expression cx v in
-    SMap.add name t map
+    Properties.add_field name Neutral t map
 
   (* literal LHS *)
   | Property (loc, { Property.key = Property.Literal _; _ }) ->
@@ -2124,17 +2129,9 @@ and object_prop cx map = Ast.Expression.Object.(function
     FlowError.add_error cx (loc, [msg]);
     map
 
-
   (* With the enable_unsafe_getters_and_setters option set, we enable some
    * unsafe support for getters and setters. The main unsafe bit is that we
    * don't properly havok refinements when getter and setter methods are called.
-   * When used in objects, they're a little strange. Technically the getter's
-   * return type and the setter's param type don't have to be the same.
-   *
-   * To properly model this, we should keep track of which properties have
-   * getters and setters. However, for now we'll be a little overly strict
-   * and just enforce that any property that has had a getter and a setter
-   * should just let the setter's param type flow to the getter's return type.
    *)
 
   (* unsafe getter property *)
@@ -2147,13 +2144,7 @@ and object_prop cx map = Ast.Expression.Object.(function
       let reason = mk_reason RGetterFunction vloc in
       let function_type = mk_function None cx reason func in
       let return_t = extract_getter_type function_type in
-      let map, prop_t = (match SMap.get name map with
-      | Some prop_t -> map, prop_t
-      | _ ->
-        let prop_t = Flow.mk_tvar cx (mk_reason RGetterSetterProperty vloc) in
-        SMap.add name prop_t map, prop_t) in
-      Flow.unify cx prop_t return_t;
-      map
+      Properties.add_getter name return_t map
 
   (* unsafe setter property *)
   | Property (_, {
@@ -2165,13 +2156,7 @@ and object_prop cx map = Ast.Expression.Object.(function
       let reason = mk_reason RSetterFunction vloc in
       let function_type = mk_function None cx reason func in
       let param_t = extract_setter_type function_type in
-      let map, prop_t = (match SMap.get name map with
-      | Some prop_t -> map, prop_t
-      | _ ->
-        let prop_t = Flow.mk_tvar cx (mk_reason RGetterSetterProperty vloc) in
-        SMap.add name prop_t map, prop_t) in
-      Flow.unify cx prop_t param_t;
-      map
+      Properties.add_setter name param_t map
 
   | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
     let msg = "get/set properties not yet supported" in
@@ -3488,7 +3473,9 @@ and jsx_title cx openingElement _children = Ast.JSX.(
           ) in
 
           if not (react_ignore_attribute aname)
-          then map := !map |> SMap.add aname atype
+          then
+            let p = Field (atype, Neutral) in
+            map := SMap.add aname p !map
 
       | Opening.Attribute _ ->
           () (* TODO: attributes with namespaced names *)
@@ -3724,9 +3711,10 @@ and mk_proptype cx = Ast.Expression.(function
       let dict = Some {
         dict_name = None;
         key = AnyT.t;
-        value = mk_proptype cx e
+        value = mk_proptype cx e;
+        dict_polarity = Neutral;
       } in
-      let pmap = Flow.mk_propmap cx SMap.empty in
+      let pmap = Context.make_property_map cx SMap.empty in
       let proto = MixedT (locationless_reason RObjectClassName, Mixed_everything) in
       let reason = mk_reason RPropTypeObjectOf vloc in
       ObjT (reason, Flow.mk_objecttype ~flags dict pmap proto)
@@ -3781,7 +3769,8 @@ and mk_proptype cx = Ast.Expression.(function
     } ->
       let reason = mk_reason RPropTypeShape vloc in
       let amap, omap, dict = mk_proptypes cx properties in
-      let map = SMap.union amap (SMap.map (fun t -> OptionalT t) omap) in
+      let omap = Properties.map_t (fun t -> OptionalT t) omap in
+      let map = SMap.union amap omap in
       let proto = MixedT (reason, Mixed_everything) in
       Flow.mk_object_with_map_proto cx reason ?dict map proto
 
@@ -3815,8 +3804,8 @@ and mk_proptypes cx props = Ast.Expression.Object.(
           _
         });
         _ }) ->
-        let tvar = mk_proptype cx e in
-        SMap.add name tvar amap,
+        let p = Field (mk_proptype cx e, Neutral) in
+        SMap.add name p amap,
         omap,
         dict
 
@@ -3830,9 +3819,9 @@ and mk_proptypes cx props = Ast.Expression.Object.(
           });
         value = v;
         _ }) ->
-        let tvar = mk_proptype cx v in
+        let p = Field (mk_proptype cx v, Neutral) in
         amap,
-        SMap.add name tvar omap,
+        SMap.add name p omap,
         dict
 
     (* spread prop *)
@@ -3844,7 +3833,12 @@ and mk_proptypes cx props = Ast.Expression.Object.(
          be more precise here, but given that this only affects legacy React
          classes, and that reconstructing props is already fairly delicate in
          that world, it may not be worth it to spend time on this right now. *)
-      amap, omap, Some { dict_name=None; key=StrT.t; value=AnyT.t; }
+      amap, omap, Some {
+        dict_name = None;
+        key = StrT.t;
+        value = AnyT.t;
+        dict_polarity = Neutral;
+      }
 
     (* literal LHS *)
     | Property (loc, { Property.key = Property.Literal _; _ }) ->
@@ -3917,9 +3911,8 @@ and react_create_class cx loc class_props = Ast.Expression.(
         ignore (expression cx value);
         let reason = mk_reason RReactPropTypes nloc in
         let amap, omap, dict = mk_proptypes cx properties in
-        let map = SMap.fold (fun k v map ->
-          SMap.add k (OptionalT v) map
-        ) omap amap in
+        let omap = Properties.map_t (fun t -> OptionalT t) omap in
+        let map = SMap.union amap omap in
         let proto = MixedT (reason, Mixed_everything) in
         props := Flow.mk_object_with_map_proto cx reason ?dict map proto;
         fmap, mmap
@@ -3978,7 +3971,8 @@ and react_create_class cx loc class_props = Ast.Expression.(
           let desc = RFunction (function_desc ~async ~generator) in
           let reason = mk_reason desc vloc in
           let t = mk_method cx reason func this in
-          fmap, SMap.add name t mmap
+          let p = Field (t, Neutral) in
+          fmap, SMap.add name p mmap
 
       (* name = non-function expr *)
       | Property (_, { Property.kind = Property.Init;
@@ -3990,7 +3984,8 @@ and react_create_class cx loc class_props = Ast.Expression.(
           value = v;
           _ }) ->
         let t = expression cx v in
-        SMap.add name t fmap, mmap
+        let p = Field (t, Neutral) in
+        SMap.add name p fmap, mmap
 
       | _ ->
         let msg = "unsupported property specification in createClass" in
@@ -4008,10 +4003,12 @@ and react_create_class cx loc class_props = Ast.Expression.(
 
   let extract_map (from_map,to_map) name =
     match SMap.get name from_map with
-    | Some t -> SMap.remove name from_map, SMap.add name t to_map
+    | Some p -> SMap.remove name from_map, SMap.add name p to_map
     | None -> from_map, to_map
   in
-  let fmap = SMap.add "state" !state fmap in
+  let fmap =
+    let p = Field (!state, Neutral) in
+    SMap.add "state" p fmap in
   let fmap, smap =
     List.fold_left extract_map (fmap, SMap.empty)
       ["contextTypes";"childContextTypes";"displayName"]
@@ -4030,9 +4027,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
     class_id = 0;
     type_args = SMap.empty;
     arg_polarities = SMap.empty;
-    fields_tmap = Flow.mk_propmap cx fmap;
+    fields_tmap = Context.make_property_map cx fmap;
     initialized_field_names = SSet.empty;
-    methods_tmap = Flow.mk_propmap cx mmap;
+    methods_tmap = Context.make_property_map cx mmap;
     mixins = !mixins <> [];
     structural = false;
   } in
@@ -4399,7 +4396,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (* refine the object (`foo.bar` in the example) based on the prop. *)
       begin match Refinement.key _object with
       | Some name ->
-        out |> add_predicate name obj_t (PropExistsP prop_name) true
+        let predicate = PropExistsP (expr_reason, prop_name) in
+        out |> add_predicate name obj_t predicate true
       | None ->
         out
       end
@@ -4584,14 +4582,24 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
                  Expression (_, Object { Object.properties }) ]) ->
     let proto = expression cx e in
     let pmap = prop_map_of_object cx properties in
-    let map = pmap |> SMap.mapi (fun x spec ->
-      let reason = replace_reason (fun desc ->
-        RCustom (spf ".%s of %s" x (string_of_desc desc))
-      ) reason in
-      Flow.mk_tvar_where cx reason (fun tvar ->
-        Flow.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
-      )
-    ) in
+    let map = SMap.fold (fun x p acc ->
+      match Property.read_t p with
+      | None ->
+        (* Since the properties object must be a literal, and literal objects
+           can only ever contain neutral fields, this should not happen. *)
+        let msg = "Unexpected property in properties object" in
+        FlowError.add_error cx (prop_loc, [msg]);
+        acc
+      | Some spec ->
+        let reason = replace_reason (fun desc ->
+          RCustom (spf ".%s of %s" x (string_of_desc desc))
+        ) reason in
+        let t = Flow.mk_tvar_where cx reason (fun tvar ->
+          Flow.flow cx (spec, GetPropT (reason, (reason, "value"), tvar))
+        ) in
+        let p = Field (t, Neutral) in
+        SMap.add x p acc
+    ) pmap SMap.empty in
     Flow.mk_object_with_map_proto cx reason map proto
 
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
@@ -4625,13 +4633,21 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
                          Expression (_, Object { Object.properties }) ]) ->
     let o = expression cx e in
     let pmap = prop_map_of_object cx properties in
-    pmap |> SMap.iter (fun x spec ->
-      let reason = replace_reason (fun desc ->
-        RCustom (spf ".%s of %s" x (string_of_desc desc))
-      ) reason in
-      let tvar = Flow.mk_tvar cx reason in
-      Flow.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
-      Flow.flow cx (o, SetPropT (reason, (reason, x), tvar));
+    pmap |> SMap.iter (fun x p ->
+      match Property.read_t p with
+      | None ->
+        (* Since the properties object must be a literal, and literal objects
+           can only ever contain neutral fields, this should not happen. *)
+        let msg = "Unexpected property in properties object" in
+        FlowError.add_error cx (prop_loc, [msg]);
+        ()
+      | Some spec ->
+        let reason = replace_reason (fun desc ->
+          RCustom (spf ".%s of %s" x (string_of_desc desc))
+        ) reason in
+        let tvar = Flow.mk_tvar cx reason in
+        Flow.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
+        Flow.flow cx (o, SetPropT (reason, (reason, x), tvar));
     );
     o
 

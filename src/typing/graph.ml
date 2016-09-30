@@ -125,6 +125,23 @@ let node_of_cont = function
 let list_parts = List.mapi (fun i t -> spf "#%d" i, Def t)
 let map_parts m = List.map (fun (n, t) -> n, Def t) (SMap.bindings m)
 
+let prop (n, p) =
+  match p with
+  | Field (t, Neutral) -> [n, Def t]
+  | Field (t, Positive) -> ["+"^n, Def t]
+  | Field (t, Negative) -> ["-"^n, Def t]
+  | Get t -> ["get "^n, Def t]
+  | Set t -> ["set "^n, Def t]
+  | GetSet (t1, t2) -> ["get "^n, Def t1; "set "^n, Def t2]
+
+let map_props m = SMap.bindings m |> List.map prop |> List.flatten
+
+let lookup_action_parts = function
+  | RWProp (t, Read) -> [("read", Def t)]
+  | RWProp (t, Write) -> [("write", Def t)]
+  | LookupProp p -> prop ("lookup", p)
+  | SuperProp p -> prop ("super", p)
+
 let rec add_t cx t (ts, nodes, edges) =
   match t with
   | OpenT (_, id) ->
@@ -160,7 +177,7 @@ and parts_of_t cx = function
 | ExistsT _ -> []
 | ObjT (_, { props_tmap; dict_t; proto_t; _ }) ->
   ("proto", Def proto_t) ::
-  map_parts (Context.find_props cx props_tmap) @
+  map_props (Context.find_props cx props_tmap) @
   begin match dict_t with
   | None -> []
   | Some { key; value; _ } -> ["#key#", Def key; "#val#", Def value]
@@ -170,8 +187,8 @@ and parts_of_t cx = function
 | InstanceT (_, static, super,
   { type_args; fields_tmap; methods_tmap; _ }) ->
   map_parts type_args @
-  map_parts (Context.find_props cx fields_tmap) @
-  map_parts (Context.find_props cx methods_tmap) @
+  map_props (Context.find_props cx fields_tmap) @
+  map_props (Context.find_props cx methods_tmap) @
   ["static", Def static; "super", Def super]
 | TypeT (_, t) -> ["t", Def t]
 | AnnotT (sink, source) -> ["sink", Def sink; "source", Def source]
@@ -253,7 +270,7 @@ and parts_of_use_t cx = function
 | SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
 | ThisSpecializeT (_, t, out) -> ["t", Def t; "out", Def out]
 | VarianceCheckT (_, args, _) -> list_parts args
-| LookupT (_, _, nexts, _, out) -> ("out", Def out) :: list_parts nexts
+| LookupT (_, _, nexts, _, action) -> lookup_action_parts action @ list_parts nexts
 | UnifyT (x, y) -> ["x", Def x; "y", Def y]
 | ObjAssignT (_, p, t, _, _) -> ["proto", Def p; "t", Def t]
 | ObjFreezeT (_, out)

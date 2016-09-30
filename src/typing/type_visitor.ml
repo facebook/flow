@@ -278,7 +278,10 @@ class ['a] t = object(self)
 
   method props cx acc id =
     Context.find_props cx id
-    |> self#smap (self#type_ cx) acc
+    |> self#smap (self#prop cx) acc
+
+  method private prop cx acc p =
+    Property.fold_t (self#type_ cx) acc p
 
   method exports cx acc id =
     Context.find_exports cx id

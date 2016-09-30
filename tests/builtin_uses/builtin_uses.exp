@@ -1,6 +1,4 @@
-test.js:1
-  1: var o = Object.freeze({ foo: 0 });
-             ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `freeze`
+test.js:2
   2: (o.foo: string);
       ^^^^^ number. This type is incompatible with
   2: (o.foo: string);

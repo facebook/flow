@@ -52,9 +52,7 @@ class.js:103
  28:     var x: ?boolean = yield 0; // error: number ~> boolean
                  ^^^^^^^ boolean
 
-class.js:103
-103: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+class.js:107
 107:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ string. This type is incompatible with
 107:   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -97,9 +95,7 @@ class_failure.js:14
   5:     var x: ?boolean = yield 0; // error: number ~> boolean
                  ^^^^^^^ boolean
 
-class_failure.js:14
- 14: var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> boolean
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `next`
+class_failure.js:19
  19:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ string. This type is incompatible with
  19:   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -137,9 +133,7 @@ generators.js:31
  27:   var x: ?boolean = yield 0;
                ^^^^^^^ boolean
 
-generators.js:31
- 31: var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> boolean
-                           ^^^^^^^^^^^^^^^^^^^^ call of method `next`
+generators.js:35
  35:   (infer_stmt_next : boolean) // error: string ~> boolean
         ^^^^^^^^^^^^^^^ string. This type is incompatible with
  35:   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -174,33 +168,25 @@ generators.js:101
 101:   (x : string) // error: number ~> string
             ^^^^^^ string
 
-return.js:4
-  4:   var ret = gen.return(123);
-                 ^^^^^^^^^^^^^^^ call of method `return`
+return.js:5
   5:   (ret.done: false); // Error true ~> false
         ^^^^^^^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
   5:   (ret.done: false); // Error true ~> false
                   ^^^^^ boolean literal `false`
 
-return.js:4
-  4:   var ret = gen.return(123);
-                 ^^^^^^^^^^^^^^^ call of method `return`
+return.js:6
   6:   (ret.value: 456); // Error 123 ~> 456
         ^^^^^^^^^ number. Expected number literal `456`, got `123` instead
   6:   (ret.value: 456); // Error 123 ~> 456
                    ^^^ number literal `456`
 
-throw.js:9
-  9: var catch_return_value = catch_return().throw("").value;
-                              ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `throw`
+throw.js:11
  11:   (catch_return_value : string); // error: number ~> string
         ^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  11:   (catch_return_value : string); // error: number ~> string
                              ^^^^^^ string
 
-throw.js:22
- 22: var yield_return_value = yield_return().throw("").value;
-                              ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `throw`
+throw.js:24
  24:   (yield_return_value: string); // error: number ~> string
         ^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  24:   (yield_return_value: string); // error: number ~> string

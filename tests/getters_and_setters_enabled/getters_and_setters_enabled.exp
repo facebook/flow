@@ -1,39 +1,3 @@
-class.js:18
- 18:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
-                                                ^^^^^^ null. This type is incompatible with
- 19:   set propWithSubtypingGetterAndSetter(x: number) { }
-                                               ^^^^^^ number
-
-class.js:18
- 18:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
-                                                ^^^^^^ undefined. This type is incompatible with
- 19:   set propWithSubtypingGetterAndSetter(x: number) { }
-                                               ^^^^^^ number
-
-class.js:23
- 23:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; }
-                                                         ^^^^^^ null. This type is incompatible with
- 22:   set propWithSubtypingGetterAndSetterReordered(x: number) { }
-                                                        ^^^^^^ number
-
-class.js:23
- 23:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; }
-                                                         ^^^^^^ undefined. This type is incompatible with
- 22:   set propWithSubtypingGetterAndSetterReordered(x: number) { }
-                                                        ^^^^^^ number
-
-class.js:25
- 25:   get propWithMismatchingGetterAndSetter(): number { return 4; }
-                                                 ^^^^^^ number. This type is incompatible with
- 26:   set propWithMismatchingGetterAndSetter(x: string) { } // Error doesn't match getter
-                                                 ^^^^^^ string
-
-class.js:26
- 26:   set propWithMismatchingGetterAndSetter(x: string) { } // Error doesn't match getter
-                                                 ^^^^^^ string. This type is incompatible with
- 25:   get propWithMismatchingGetterAndSetter(): number { return 4; }
-                                                 ^^^^^^ number
-
 class.js:41
  41: var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
@@ -94,42 +58,6 @@ object.js:15
   5: var z: number = 123;
             ^^^^^^ number
 
-object.js:22
- 22:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // Error
-                                                ^^^^^^ null. This type is incompatible with
- 23:   set propWithSubtypingGetterAndSetter(x: number) { },
-                                               ^^^^^^ number
-
-object.js:22
- 22:   get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // Error
-                                                ^^^^^^ undefined. This type is incompatible with
- 23:   set propWithSubtypingGetterAndSetter(x: number) { },
-                                               ^^^^^^ number
-
-object.js:26
- 26:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; },
-                                                         ^^^^^^ null. This type is incompatible with
- 25:   set propWithSubtypingGetterAndSetterReordered(x: number) { }, // Error
-                                                        ^^^^^^ number
-
-object.js:26
- 26:   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; },
-                                                         ^^^^^^ undefined. This type is incompatible with
- 25:   set propWithSubtypingGetterAndSetterReordered(x: number) { }, // Error
-                                                        ^^^^^^ number
-
-object.js:28
- 28:   get exampleOfOrderOfGetterAndSetter(): A { return new A(); },
-                                              ^ A. This type is incompatible with
- 29:   set exampleOfOrderOfGetterAndSetter(x: B) {},
-                                              ^ B
-
-object.js:32
- 32:   get exampleOfOrderOfGetterAndSetterReordered(): A { return new A(); },
-                                                       ^ A. This type is incompatible with
- 31:   set exampleOfOrderOfGetterAndSetterReordered(x: B) {},
-                                                       ^ B
-
 object.js:41
  41: var testGetterWithError1: string = obj.goodGetterNoAnnotation; // Error number ~> string
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
@@ -160,9 +88,15 @@ object.js:51
  51: var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                        ^^^^^^ number
 
+object.js:56
+ 56: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
+                                               ^ C. This type is incompatible with
+ 29:   set exampleOfOrderOfGetterAndSetter(x: B) {},
+                                              ^ B
+
 object.js:60
  60:   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ B. This type is incompatible with
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A. This type is incompatible with
  59: var testExampleOrOrderOfGetterAndSetterReordered: number =
                                                        ^^^^^^ number
 
@@ -174,5 +108,29 @@ react.js:8
   8:     set b(x: number) { this.c = x; },
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ get/set properties not supported for React propTypes
 
+variance.js:21
+ 21: (class extends Base {
+      ^ class expr `<<anonymous class>>`. Covariant property `x` incompatible with invariant use in
+ 21: (class extends Base {
+                    ^^^^ Base
 
-Found 29 errors
+variance.js:26
+ 26: (class extends Base {
+      ^ class expr `<<anonymous class>>`. Contravariant property `x` incompatible with invariant use in
+ 26: (class extends Base {
+                    ^^^^ Base
+
+variance.js:37
+ 37: (class extends Base {
+      ^ class expr `<<anonymous class>>`. Contravariant property `pos` incompatible with covariant use in
+ 37: (class extends Base {
+                    ^^^^ Base
+
+variance.js:47
+ 47: (class extends Base {
+      ^ class expr `<<anonymous class>>`. Covariant property `neg` incompatible with contravariant use in
+ 47: (class extends Base {
+                    ^^^^ Base
+
+
+Found 22 errors

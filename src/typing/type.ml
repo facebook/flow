@@ -353,9 +353,11 @@ module rec TypeTerm : sig
     | VarianceCheckT of reason * t list * polarity
 
     (* operation on prototypes *)
-    (** LookupT(_, strict, try_ts_on_failure, x, tresult) looks for property x in
-        an object type, unifying its type with tresult. When x is not found, we
-        have the following cases:
+    (** LookupT(_, strict, try_ts_on_failure, x, lookup_action) looks for
+        property x in an object type and emits a constraint according to the
+        provided lookup_action.
+
+        When x is not found, we have the following cases:
 
         (1) try_ts_on_failure is not empty, and we try to look for property x in
         the next object type in that list;
@@ -364,7 +366,7 @@ module rec TypeTerm : sig
 
         (3) strict = Some reason, so the position in reason is blamed.
     **)
-    | LookupT of reason * lookup_kind * t list * string * t
+    | LookupT of reason * lookup_kind * t list * string * lookup_action
 
     (* operations on objects *)
     | ObjAssignT of reason * t * t * string list * bool
@@ -377,9 +379,8 @@ module rec TypeTerm : sig
     (* assignment rest element in array pattern *)
     | ArrRestT of reason * int * t
 
-    (* Guarded unification (bidirectional).
-       Remodel as unidirectional GuardT(l,u)? *)
-    | UnifyT of t * t
+    (* Guarded unification *)
+    | UnifyT of t * t (* bidirectional *)
 
     (* unifies with incoming concrete lower bound *)
     | BecomeT of reason * t
@@ -551,7 +552,7 @@ module rec TypeTerm : sig
     | ArrP (* Array.isArray *)
 
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP "b", tout))` *)
-    | PropExistsP of string
+    | PropExistsP of reason * string
 
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
@@ -639,6 +640,13 @@ module rec TypeTerm : sig
   | ShadowRead of reason option * Properties.id Nel.t
   | ShadowWrite of Properties.id Nel.t
 
+  and lookup_action =
+  | RWProp of t_out * rw
+  | LookupProp of Property.t
+  | SuperProp of Property.t
+
+  and rw = Read | Write
+
   and propname = reason * name
 
   and sealtype =
@@ -655,12 +663,16 @@ module rec TypeTerm : sig
     dict_name: string option;
     key: t;
     value: t;
+    dict_polarity: polarity;
   }
 
-  and polarity =
-    | Negative      (* contravariant *)
-    | Neutral       (* invariant *)
-    | Positive      (* covariant *)
+  and polarity = Negative | Neutral | Positive
+
+  and property =
+    | Field of t * polarity
+    | Get of t
+    | Set of t
+    | GetSet of t * t
 
   and insttype = {
     class_id: ident;
@@ -781,21 +793,181 @@ module rec TypeTerm : sig
   *)
   and dep_preds =
     t * predicate Key_map.t * predicate Key_map.t
-
 end = TypeTerm
 
+and Polarity : sig
+  type t = TypeTerm.polarity
+
+  val compat: t * t -> bool
+  val inv: t -> t
+  val mult: t * t -> t
+  val of_rw: TypeTerm.rw -> t
+
+  val string: t -> string
+  val sigil: t -> string
+end = struct
+  open TypeTerm
+
+  type t = polarity
+
+  (* Subtype relation for polarities, interpreting neutral as positive &
+     negative: whenever compat(p1,p2) holds, things that have polarity p1 can
+     appear in positions that have polarity p2. *)
+  let compat = function
+    | Positive, Positive
+    | Negative, Negative
+    | Neutral, _ -> true
+    | _ -> false
+
+  let inv = function
+    | Positive -> Negative
+    | Negative -> Positive
+    | Neutral -> Neutral
+
+  let mult = function
+    | Positive, Positive -> Positive
+    | Negative, Negative -> Positive
+    | Neutral, _ | _, Neutral -> Neutral
+    | _ -> Negative
+
+  let of_rw = function
+    | Read -> Positive
+    | Write -> Negative
+
+  (* printer *)
+  let string = function
+    | Positive -> "covariant"
+    | Negative -> "contravariant"
+    | Neutral -> "invariant"
+
+  let sigil = function
+    | Positive -> "+"
+    | Negative -> "-"
+    | Neutral -> ""
+end
+
+and Property : sig
+  type t = TypeTerm.property
+
+  val field: Polarity.t -> TypeTerm.t -> t
+
+  val polarity: t -> Polarity.t
+
+  val read_t: t -> TypeTerm.t option
+  val write_t: t -> TypeTerm.t option
+  val access: TypeTerm.rw -> t -> TypeTerm.t option
+
+  val iter_t: (TypeTerm.t -> unit) -> t -> unit
+  val fold_t: ('a -> TypeTerm.t -> 'a) -> 'a -> t -> 'a
+  val map_t: (TypeTerm.t -> TypeTerm.t) -> t -> t
+  val ident_map_t: (TypeTerm.t -> TypeTerm.t) -> t -> t
+  val forall_t: (TypeTerm.t -> bool) -> t -> bool
+
+  val assert_field: t -> TypeTerm.t
+end = struct
+  open TypeTerm
+
+  type t = property
+
+  let field polarity t = Field (t, polarity)
+
+  let polarity = function
+    | Field (_, polarity) -> polarity
+    | Get _ -> Positive
+    | Set _ -> Negative
+    | GetSet _ -> Neutral
+
+  let read_t = function
+    | Field (t, polarity) ->
+      if Polarity.compat (polarity, Positive)
+      then Some t
+      else None
+    | Get t -> Some t
+    | Set _ -> None
+    | GetSet (t, _) -> Some t
+
+  let write_t = function
+    | Field (t, polarity) ->
+      if Polarity.compat (polarity, Negative)
+      then Some t
+      else None
+    | Get _ -> None
+    | Set t -> Some t
+    | GetSet (_, t) -> Some t
+
+  let access = function
+    | Read -> read_t
+    | Write -> write_t
+
+  let iter_t f = function
+    | Field (t, _)
+    | Get t
+    | Set t ->
+      f t
+    | GetSet (t1, t2) ->
+      f t1;
+      f t2
+
+  let fold_t f acc = function
+    | Field (t, _)
+    | Get t
+    | Set t ->
+      f acc t
+    | GetSet (t1, t2) ->
+      f (f acc t1) t2
+
+  let map_t f = function
+    | Field (t, polarity) -> Field (f t, polarity)
+    | Get t -> Get (f t)
+    | Set t -> Set (f t)
+    | GetSet (t1, t2) -> GetSet (f t1, f t2)
+
+  let ident_map_t f p =
+    match p with
+    | Field (t, polarity) ->
+      let t_ = f t in
+      if t_ == t then p else Field (t_, polarity)
+    | Get t ->
+      let t_ = f t in
+      if t_ == t then p else Get t_
+    | Set t ->
+      let t_ = f t in
+      if t_ == t then p else Set t_
+    | GetSet (t1, t2) ->
+      let t1_ = f t1 in
+      let t2_ = f t2 in
+      if t1_ == t1 && t2_ == t2 then p else GetSet (t1_, t2_)
+
+  let forall_t f = fold_t (fun acc t -> acc && f t) true
+
+  let assert_field = function
+    | Field (t, _) -> t
+    | _ -> assert_false "Unexpected field type"
+end
+
 and Properties : sig
-  type t = TypeTerm.t SMap.t
+  type t = Property.t SMap.t
 
   type id
   module Map : MyMap.S with type key = id
   type map = t Map.t
 
+  val add_field: string -> Polarity.t -> TypeTerm.t -> t -> t
+  val add_getter: string -> TypeTerm.t -> t -> t
+  val add_setter: string -> TypeTerm.t -> t -> t
+
   val mk_id: unit -> id
   val fake_id: id
   val string_of_id: id -> string
+  val extract_named_exports: t -> Exports.t
+
+  val map_t: (TypeTerm.t -> TypeTerm.t) -> t -> t
+  val map_fields: (TypeTerm.t -> TypeTerm.t) -> t -> t
+  val mapi_fields: (string -> TypeTerm.t -> TypeTerm.t) -> t -> t
 end = struct
-  type t = TypeTerm.t SMap.t
+  open TypeTerm
+
+  type t = Property.t SMap.t
 
   type id = int
   module Map : MyMap.S with type key = id = MyMap.Make(struct
@@ -805,9 +977,45 @@ end = struct
   end)
   type map = t Map.t
 
+  let add_field x polarity t =
+    SMap.add x (Field (t, polarity))
+
+  let add_getter x get_t map =
+    let p = match SMap.get x map with
+    | Some (Set set_t) -> GetSet (get_t, set_t)
+    | _ -> Get get_t
+    in
+    SMap.add x p map
+
+  let add_setter x set_t map =
+    let p = match SMap.get x map with
+    | Some (Get get_t) -> GetSet (get_t, set_t)
+    | _ -> Set set_t
+    in
+    SMap.add x p map
+
   let mk_id = Reason.mk_id
   let fake_id = 0
   let string_of_id = string_of_int
+
+  let extract_named_exports pmap =
+    SMap.fold (fun x p tmap ->
+      match Property.read_t p with
+      | Some t -> SMap.add x t tmap
+      | None -> tmap
+    ) pmap SMap.empty
+
+  let map_t f = SMap.map (Property.map_t f)
+
+  let map_fields f = SMap.map (function
+    | Field (t, polarity) -> Field (f t, polarity)
+    | p -> p
+  )
+
+  let mapi_fields f = SMap.mapi (fun k -> function
+    | Field (t, polarity) -> Field (f k t, polarity)
+    | p -> p
+  )
 end
 
 and Exports : sig
@@ -1348,7 +1556,7 @@ and reason_of_use_t = function
   | LookupT(reason, _, _, _, _) ->
       reason
 
-  | UnifyT(_,t) ->
+  | UnifyT (_,t) ->
       reason_of_t t
 
   | ObjAssignT (reason, _, _, _, _)
@@ -1816,35 +2024,7 @@ let rec string_of_predicate = function
   (* Array.isArray *)
   | ArrP -> "array"
 
-  | PropExistsP key -> spf "prop `%s` is truthy" key
+  | PropExistsP (_, key) -> spf "prop `%s` is truthy" key
 
   | LatentP (OpenT (_, id),i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
-
-module Polarity = struct
-  (* Subtype relation for polarities, interpreting neutral as positive &
-     negative: whenever compat(p1,p2) holds, things that have polarity p1 can
-     appear in positions that have polarity p2. *)
-  let compat = function
-    | Positive, Positive
-    | Negative, Negative
-    | Neutral, _ -> true
-    | _ -> false
-
-  let inv = function
-    | Positive -> Negative
-    | Negative -> Positive
-    | Neutral -> Neutral
-
-  let mult = function
-    | Positive, Positive -> Positive
-    | Negative, Negative -> Positive
-    | Neutral, _ | _, Neutral -> Neutral
-    | _ -> Negative
-
-  (* printer *)
-  let string = function
-    | Positive -> "covariant"
-    | Negative -> "contravariant"
-    | Neutral -> "invariant"
-end

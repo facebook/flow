@@ -9,7 +9,7 @@ function foo0(x: Array<{[key: string]: mixed}>): Array<{[key: string]: mixed}> {
 
 function foo2(
   x: {[key: string]: number}
-): {[key: string]: number, toString: () => string} {
+): {[key: string]: number, +toString: () => string} {
   // x's prototype has a toString method
   return x;
 }

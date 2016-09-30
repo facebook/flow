@@ -24,9 +24,7 @@ C.js:10
   9: function f(x:boolean) { }
                   ^^^^^^^ boolean. See: A.js:9
 
-D.js:11
- 11: var i = o.fn();
-             ^^^^^^ call of method `fn`
+D.js:6
   6: function g():string { return this.i; }
                                   ^^^^^^ boolean. This type is incompatible with the expected return type of
   6: function g():string { return this.i; }
@@ -48,9 +46,7 @@ E.js:8
   4: function h(x:number) { }
                   ^^^^^^ number
 
-F.js:2
-  2: fn2({length: 'hi'});
-     ^^^^^^^^^^^^^^^^^^^ function call
+F.js:1
   1: function fn2(x) { return x.length * 4; }
                               ^^^^^^^^ string. This type is incompatible with
   1: function fn2(x) { return x.length * 4; }

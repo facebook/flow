@@ -5,7 +5,7 @@ module Utils = Utils_js
 
 open Reason
 
-type field = Type.t * Ast.Expression.t option
+type field = Type.t * Type.polarity * Ast.Expression.t option
 
 type signature = {
   reason: reason;
@@ -107,19 +107,19 @@ let add_setter name fsig = map_sig (fun s -> {
 let mk_method cx ~expr x reason func =
   Func_sig.mk cx x.tparams_map ~expr reason func
 
-let mk_field cx x reason typeAnnotation value =
+let mk_field cx ~polarity x reason typeAnnotation value =
   let t = Anno.mk_type_annotation cx x.tparams_map reason typeAnnotation in
-  (t, value)
+  (t, polarity, value)
 
 let mem_constructor {constructor; _} = constructor <> []
 
 let iter_methods f s =
-  SMap.iter (fun _ -> Nel.iter (fun m -> f m)) s.methods;
+  SMap.iter (fun _ -> Nel.iter f) s.methods;
   SMap.iter (fun _ -> f) s.getters;
   SMap.iter (fun _ -> f) s.setters
 
-let subst_field cx map (t, value) =
-  Flow.subst cx map t, value
+let subst_field cx map (t, polarity, value) =
+  Flow.subst cx map t, polarity, value
 
 let subst_sig cx map s = {
   reason = s.reason;
@@ -140,7 +140,7 @@ let generate_tests cx f x =
     instance = subst_sig cx map instance;
   })
 
-let elements cx ?constructor = with_sig (fun s ->
+let elements ?constructor = with_sig (fun s ->
   let methods =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
@@ -162,21 +162,30 @@ let elements cx ?constructor = with_sig (fun s ->
      the getter. Otherwise just use the getter type or the setter type *)
   let getters = SMap.map Func_sig.gettertype s.getters in
   let setters = SMap.map Func_sig.settertype s.setters in
-  let getters_and_setters = SMap.fold (fun name t ts ->
-    match SMap.get name ts with
-    | Some t' -> Flow.unify cx t t'; ts
-    | None -> SMap.add name t ts
-  ) setters getters in
+  let getters_and_setters = SMap.merge (fun _ getter setter ->
+    match getter, setter with
+    | Some t1, Some t2 -> Some (Type.GetSet (t1, t2))
+    | Some t, None -> Some (Type.Get t)
+    | None, Some t -> Some (Type.Set t)
+    | _ -> None
+  ) getters setters in
+
+  let fields = SMap.map (fun (t, polarity, _) ->
+    Type.Field (t, polarity)
+  ) s.fields in
 
   (* Treat getters and setters as fields *)
-  let fields = SMap.map fst s.fields in
   let fields = SMap.union getters_and_setters fields in
+
+  let methods = SMap.map (fun t ->
+    Type.Field (t, Type.Positive)
+  ) methods in
 
   (* Only un-initialized fields require annotations, so determine now
    * (syntactically) which fields have initializers *)
   let initialized_field_names =
     s.fields
-    |> SMap.filter (fun _name (_, init_expr) -> init_expr <> None)
+    |> SMap.filter (fun _ (_, _, init_expr) -> init_expr <> None)
     |> SMap.keys
     |> Utils_js.set_of_list
   in
@@ -201,14 +210,14 @@ let insttype ~static cx s =
       let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
       Some t
   in
-  let inited_fields, fields, methods = elements ?constructor ~static cx s in
+  let inited_fields, fields, methods = elements ?constructor ~static s in
   { Type.
     class_id;
     type_args = s.tparams_map;
     arg_polarities = arg_polarities s;
-    fields_tmap = Flow.mk_propmap cx fields;
+    fields_tmap = Context.make_property_map cx fields;
     initialized_field_names = inited_fields;
-    methods_tmap = Flow.mk_propmap cx methods;
+    methods_tmap = Context.make_property_map cx methods;
     mixins = false;
     structural = s.structural;
   }
@@ -405,7 +414,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
   let class_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (t, None) class_sig
+    add_field ~static:true "name" (t, Type.Neutral, None) class_sig
   in
 
   (* NOTE: We used to mine field declarations from field assignments in a
@@ -457,13 +466,15 @@ let mk cx loc reason self ~expr = Ast.Class.(
         typeAnnotation;
         value;
         static;
+        variance;
         _;
       }) ->
         if value <> None
         then Flow_error.warn_or_ignore_class_properties cx ~static loc;
 
         let reason = mk_reason (RProperty name) loc in
-        let field = mk_field cx c reason typeAnnotation value in
+        let polarity = Anno.polarity variance in
+        let field = mk_field cx ~polarity c reason typeAnnotation value in
         add_field ~static name field c
 
     (* literal LHS *)
@@ -550,18 +561,19 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
   let iface_sig =
     let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
-    add_field ~static:true "name" (t, None) iface_sig
+    add_field ~static:true "name" (t, Type.Neutral, None) iface_sig
   in
 
   let iface_sig = List.fold_left (
     fun s (loc, {Ast.Type.Object.Property.
-      key; value; static; _method; optional; _
+      key; value; static; _method; optional; variance; _
     }) ->
     if optional && _method
     then begin
       let msg = "optional methods are not supported" in
       Flow_error.add_error cx (loc, [msg])
     end;
+    let polarity = Anno.polarity variance in
     Ast.Expression.Object.(match _method, key with
     | _, Property.Literal (loc, _)
     | _, Property.Computed (loc, _) ->
@@ -584,12 +596,12 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     | false, Property.Identifier (_, {Ast.Identifier.name; _}) ->
         let t = Anno.convert cx tparams_map value in
         let t = if optional then Type.OptionalT t else t in
-        add_field ~static name (t, None) s)
+        add_field ~static name (t, polarity, None) s)
   ) iface_sig properties in
 
   let iface_sig = match indexers with
     | [] -> iface_sig
-    | (_, {Ast.Type.Object.Indexer.key; value; static; _})::rest ->
+    | (_, {Ast.Type.Object.Indexer.key; value; static; variance; _})::rest ->
       (* TODO? *)
       List.iter (fun (indexer_loc, _) ->
         let msg = "multiple indexers are not supported" in
@@ -597,9 +609,10 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       ) rest;
       let k = Anno.convert cx tparams_map key in
       let v = Anno.convert cx tparams_map value in
+      let polarity = Anno.polarity variance in
       iface_sig
-        |> add_field ~static "$key" (k, None)
-        |> add_field ~static "$value" (v, None)
+        |> add_field ~static "$key" (k, polarity, None)
+        |> add_field ~static "$value" (v, polarity, None)
   in
 
   let iface_sig = List.fold_left (
@@ -629,7 +642,7 @@ let toplevels cx ~decls ~stmts ~expr x =
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw)
   in
 
-  let field config this super name (field_t, value) =
+  let field config this super name (field_t, _, value) =
     match config, value with
     | Options.ESPROPOSAL_IGNORE, _ -> ()
     | _, None -> ()

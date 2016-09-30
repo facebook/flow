@@ -278,6 +278,29 @@ let clear_intermediates cx =
   Hashtbl.clear cx.annot_table;
   cx.all_unresolved <- IMap.empty
 
+(* utils *)
+let iter_props cx id f =
+  find_props cx id
+  |> SMap.iter f
+
+let has_prop cx id x =
+  find_props cx id
+  |> SMap.mem x
+
+let get_prop cx id x =
+  find_props cx id
+  |> SMap.get x
+
+let set_prop cx id x p =
+  find_props cx id
+  |> SMap.add x p
+  |> add_property_map cx id
+
+let set_export cx id x t =
+  find_exports cx id
+  |> SMap.add x t
+  |> add_export_map cx id
+
 (* constructors *)
 let make_property_map cx pmap =
   let id = Type.Properties.mk_id () in

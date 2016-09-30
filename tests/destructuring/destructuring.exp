@@ -60,6 +60,12 @@ defaults.js:9
 
 defaults.js:9
   9:   (q:void);
+        ^ null. This type is incompatible with
+  9:   (q:void);
+          ^^^^ undefined
+
+defaults.js:9
+  9:   (q:void);
         ^ number. This type is incompatible with
   9:   (q:void);
           ^^^^ undefined
@@ -67,14 +73,6 @@ defaults.js:9
 defaults.js:9
   9:   (q:void);
         ^ string. This type is incompatible with
-  9:   (q:void);
-          ^^^^ undefined
-
-defaults.js:14
- 14: obj_prop_fun({p:{q:null}}); // ok, provides add'l lower bound
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
-  9:   (q:void);
-        ^ null. This type is incompatible with
   9:   (q:void);
           ^^^^ undefined
 
@@ -86,6 +84,12 @@ defaults.js:23
 
 defaults.js:23
  23:   (q:void);
+        ^ null. This type is incompatible with
+ 23:   (q:void);
+          ^^^^ undefined
+
+defaults.js:23
+ 23:   (q:void);
         ^ number. This type is incompatible with
  23:   (q:void);
           ^^^^ undefined
@@ -96,13 +100,11 @@ defaults.js:23
  23:   (q:void);
           ^^^^ undefined
 
-defaults.js:28
- 28: obj_prop_var({p:{q:null}}); // ok, provides add'l lower bound
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 23:   (q:void);
-        ^ null. This type is incompatible with
- 23:   (q:void);
-          ^^^^ undefined
+defaults.js:35
+ 35:   (o.r:void);
+        ^^^ null. This type is incompatible with
+ 35:   (o.r:void);
+            ^^^^ undefined
 
 defaults.js:35
  35:   (o.r:void);
@@ -113,14 +115,6 @@ defaults.js:35
 defaults.js:35
  35:   (o.r:void);
         ^^^ string. This type is incompatible with
- 35:   (o.r:void);
-            ^^^^ undefined
-
-defaults.js:40
- 40: obj_rest({p:{q:0,r:null}});
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
- 35:   (o.r:void);
-        ^^^ null. This type is incompatible with
  35:   (o.r:void);
             ^^^^ undefined
 
@@ -262,21 +256,17 @@ destructuring.js:11
  11: [obj.x] = ['foo'];
       ^^^^^ unsupported destructuring
 
-destructuring.js:15
- 15:     b = z;
-             ^ identifier `z`. Could not resolve name
-
-destructuring.js:18
- 18: foo({p:0, z:[1,2]});
-     ^^^^^^^^^^^^^^^^^^^ function call
+destructuring.js:14
  14:     a = p;
              ^ number. This type is incompatible with
   1: declare var a:string;
                    ^^^^^^ string
 
-destructuring.js:18
- 18: foo({p:0, z:[1,2]});
-     ^^^^^^^^^^^^^^^^^^^ function call
+destructuring.js:15
+ 15:     b = z;
+             ^ identifier `z`. Could not resolve name
+
+destructuring.js:16
  16:     c = r;
              ^ number. This type is incompatible with
   3: declare var c:string;

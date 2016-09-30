@@ -54,6 +54,12 @@ object_missing.js:5
   5:     Object.doesNotExist();
          ^^^^^^ statics of Object
 
+object_prototype.js:31
+ 31: b.toString = function(): string { return 'foo'; };
+     ^^^^^^^^^^ Object. Covariant property `toString` incompatible with contravariant use in
+ 31: b.toString = function(): string { return 'foo'; };
+     ^^^^^^^^^^ assignment of property `toString`
+
 object_prototype.js:38
  38: var xToString : number = x.toString; // error
                               ^^^^^^^^^^ function type. This type is incompatible with
@@ -91,6 +97,12 @@ object_prototype.js:52
                     ^^^^ null. This type is incompatible with
 number. See lib: core.js:129
 
+object_prototype.js:68
+ 68: b.hasOwnProperty = function() { return false; };
+     ^^^^^^^^^^^^^^^^ Object. Covariant property `hasOwnProperty` incompatible with contravariant use in
+ 68: b.hasOwnProperty = function() { return false; };
+     ^^^^^^^^^^^^^^^^ assignment of property `hasOwnProperty`
+
 object_prototype.js:71
  71: var xHasOwnProperty : number = x.hasOwnProperty; // error
                                     ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
@@ -107,6 +119,12 @@ object_prototype.js:76
                                     ^^^^^^^^^^^^^^^^ function type. This type is incompatible with
  76: var yHasOwnProperty : number = y.hasOwnProperty; // error
                            ^^^^^^ number
+
+object_prototype.js:93
+ 93: b.propertyIsEnumerable = function() { return false; };
+     ^^^^^^^^^^^^^^^^^^^^^^ Object. Covariant property `propertyIsEnumerable` incompatible with contravariant use in
+ 93: b.propertyIsEnumerable = function() { return false; };
+     ^^^^^^^^^^^^^^^^^^^^^^ assignment of property `propertyIsEnumerable`
 
 object_prototype.js:96
  96: var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
@@ -125,6 +143,12 @@ object_prototype.js:102
 102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
                                  ^^^^^^ number
 
+object_prototype.js:119
+119: b.valueOf = function() { return {}; };
+     ^^^^^^^^^ Object. Covariant property `valueOf` incompatible with contravariant use in
+119: b.valueOf = function() { return {}; };
+     ^^^^^^^^^ assignment of property `valueOf`
+
 object_prototype.js:122
 122: var xValueOf : number = x.valueOf; // error
                              ^^^^^^^^^ function type. This type is incompatible with
@@ -136,6 +160,12 @@ object_prototype.js:126
                              ^^^^^^^^^ function type. This type is incompatible with
 126: var yValueOf : number = y.valueOf; // error
                     ^^^^^^ number
+
+object_prototype.js:147
+147: b.toLocaleString = function() { return 'derp'; };
+     ^^^^^^^^^^^^^^^^ Object. Covariant property `toLocaleString` incompatible with contravariant use in
+147: b.toLocaleString = function() { return 'derp'; };
+     ^^^^^^^^^^^^^^^^ assignment of property `toLocaleString`
 
 object_prototype.js:150
 150: var xToLocaleString : number = x.toLocaleString; // error
@@ -155,4 +185,4 @@ object_prototype.js:155
                            ^^^^^^ number
 
 
-Found 26 errors
+Found 31 errors

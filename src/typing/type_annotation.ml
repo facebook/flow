@@ -522,7 +522,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Object { Object.exact; properties; indexers; callProperties; } ->
   let props_map = List.fold_left (fun props_map (loc, prop) ->
-    let { Object.Property.key; value; optional; _ } = prop in
+    let { Object.Property.key; value; optional; variance; _ } = prop in
     match key with
     | Ast.Expression.Object.Property.Literal
         (_, { Ast.Literal.value = Ast.Literal.String name; _ })
@@ -530,7 +530,8 @@ let rec convert cx tparams_map = Ast.Type.(function
         (_, { Ast.Identifier.name; _ }) ->
         let t = convert cx tparams_map value in
         let t = if optional then OptionalT t else t in
-        SMap.add name t props_map
+        let p = Field (t, polarity variance) in
+        SMap.add name p props_map
     | _ ->
       let msg = "Unsupported key in object type" in
       FlowError.add_error cx (loc, [msg]);
@@ -542,17 +543,21 @@ let rec convert cx tparams_map = Ast.Type.(function
     ) callProperties in
     match fts with
     | [] -> props_map
-    | [t] -> SMap.add "$call" t props_map
+    | [t] ->
+      let p = Field (t, Positive) in
+      SMap.add "$call" p props_map
     | t0::t1::ts ->
       let callable_reason = mk_reason (RCustom "callable object type") loc in
       let rep = InterRep.make t0 t1 ts in
-      SMap.add "$call" (IntersectionT (callable_reason, rep)) props_map
+      let t = IntersectionT (callable_reason, rep) in
+      let p = Field (t, Positive) in
+      SMap.add "$call" p props_map
   in
   (* Seal an object type unless it specifies an indexer. *)
   let sealed, dict =
     match indexers with
     | [] -> true, None
-    | (_, { Object.Indexer.id; key; value; _ })::rest ->
+    | (_, { Object.Indexer.id; key; value; variance; _ })::rest ->
         let _, { Ast.Identifier.name; _ } = id in
         (* TODO: multiple indexers *)
         List.iter (fun (indexer_loc, _) ->
@@ -565,13 +570,14 @@ let rec convert cx tparams_map = Ast.Type.(function
         Some { Type.
           dict_name = Some name;
           key = keyt;
-          value = valuet
+          value = valuet;
+          dict_polarity = polarity variance;
         }
   in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
   let reason_desc = RObjectType in
-  let pmap = Flow_js.mk_propmap cx props_map in
+  let pmap = Context.make_property_map cx props_map in
   let proto = MixedT (locationless_reason reason_desc, Mixed_everything) in
   let flags = {
     sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
@@ -746,3 +752,9 @@ and extract_type_param_instantiations =
   function
   | None -> None
   | Some (_, typeParameters) -> Some typeParameters.params
+
+and polarity = Ast.Variance.(function
+  | Some (_, Plus) -> Positive
+  | Some (_, Minus) -> Negative
+  | None -> Neutral
+)

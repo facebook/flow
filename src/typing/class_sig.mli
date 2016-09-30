@@ -2,7 +2,7 @@
 
 type t
 
-type field = Type.t * Spider_monkey_ast.Expression.t option
+type field = Type.t * Type.polarity * Spider_monkey_ast.Expression.t option
 
 (** 1. Constructors **)
 

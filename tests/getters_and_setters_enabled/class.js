@@ -14,16 +14,16 @@ class Foo {
   get propWithMatchingGetterAndSetter(): number { return 4; }
   set propWithMatchingGetterAndSetter(x: number) { }
 
-  // The getter and setter must have the same type - errors
+  // The getter and setter need not have the same type - no error
   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
   set propWithSubtypingGetterAndSetter(x: number) { }
 
-  // The getter and setter must have the same type - errors
+  // The getter and setter need not have the same type - no error
   set propWithSubtypingGetterAndSetterReordered(x: number) { }
   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; }
 
   get propWithMismatchingGetterAndSetter(): number { return 4; }
-  set propWithMismatchingGetterAndSetter(x: string) { } // Error doesn't match getter
+  set propWithMismatchingGetterAndSetter(x: string) { } // doesn't match getter (OK)
 
   propOverriddenWithGetter: number;
   get propOverriddenWithGetter() { return "hello"; }

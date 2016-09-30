@@ -43,6 +43,15 @@ let string_of_type_map = function
   | ObjectMap -> "ObjectMap"
   | ObjectMapi -> "ObjectMapi"
 
+let string_of_polarity = function
+  | Negative -> "Negative"
+  | Neutral -> "Neutral"
+  | Positive -> "Positive"
+
+let string_of_rw = function
+  | Read -> "Read"
+  | Write -> "Write"
+
 type json_cx = {
   stack: ISet.t;
   size: int ref;
@@ -444,7 +453,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "polarity", json_of_polarity json_cx polarity
     ]
 
-  | LookupT (_, rstrict, _, name, t) ->
+  | LookupT (_, rstrict, _, name, action) ->
     (match rstrict with
       | NonstrictReturning None -> []
       | NonstrictReturning (Some (default, result)) -> [
@@ -464,7 +473,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         ))]
     ) @ [
       "name", JSON_String name;
-      "type", _json_of_t json_cx t
+      "action", json_of_lookup_action json_cx action
     ]
 
   | ObjAssignT (_, assignee, tvar, prop_names, flag) -> [
@@ -643,11 +652,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
 and json_of_polarity_impl _json_cx polarity =
-  Hh_json.JSON_String (match polarity with
-  | Negative -> "Negative"
-  | Neutral -> "Neutral"
-  | Positive -> "Positive"
-)
+  Hh_json.JSON_String (string_of_polarity polarity)
 
 and json_of_typeparam json_cx = check_depth json_of_typeparam_impl json_cx
 and json_of_typeparam_impl json_cx tparam = Hh_json.(
@@ -670,7 +675,7 @@ and json_of_objtype_impl json_cx objtype = Hh_json.(
     | None -> []
     | Some d -> ["dictType", json_of_dicttype json_cx d]
   ) @ [
-    "propTypes", json_of_tmap json_cx pmap;
+    "propTypes", json_of_pmap json_cx pmap;
     "prototype", _json_of_t json_cx objtype.proto_t
   ])
 )
@@ -773,8 +778,8 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
     "classId", int_ insttype.class_id;
     "typeArgs", json_of_tmap json_cx insttype.type_args;
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
-    "fieldTypes", json_of_tmap json_cx field_pmap;
-    "methodTypes", json_of_tmap json_cx method_pmap;
+    "fieldTypes", json_of_pmap json_cx field_pmap;
+    "methodTypes", json_of_pmap json_cx method_pmap;
     "mixins", JSON_Bool insttype.mixins;
     "structural", JSON_Bool insttype.structural;
   ]
@@ -839,6 +844,14 @@ and json_of_tmap_impl json_cx bindings = Hh_json.(
   JSON_Array (List.rev lst)
 )
 
+and json_of_pmap json_cx = check_depth json_of_pmap_impl json_cx
+and json_of_pmap_impl json_cx bindings = Hh_json.(
+  let lst = SMap.fold (fun name p acc ->
+    json_of_prop_binding json_cx (name, p) :: acc
+  ) bindings [] in
+  JSON_Array (List.rev lst)
+)
+
 and json_of_defer_use_t json_cx = check_depth json_of_defer_use_t_impl json_cx
 and json_of_defer_use_t_impl json_cx = Hh_json.(function
   | DestructuringT (_, s) -> JSON_Object [
@@ -848,6 +861,33 @@ and json_of_defer_use_t_impl json_cx = Hh_json.(function
       "destructor", json_of_destructor json_cx s
     ]
 )
+
+and json_of_prop_binding json_cx = check_depth json_of_prop_binding_impl json_cx
+and json_of_prop_binding_impl json_cx (name, p) = Hh_json.(
+  JSON_Object [
+    "name", JSON_String name;
+    "prop", json_of_prop json_cx p;
+  ]
+)
+
+and json_of_prop json_cx = check_depth json_of_prop_impl json_cx
+and json_of_prop_impl json_cx p = Hh_json.(
+  JSON_Object (match p with
+  | Field (t, polarity) -> [
+      "field", _json_of_t json_cx t;
+      "polarity", json_of_polarity json_cx polarity
+    ]
+  | Get t -> [
+      "getter", _json_of_t json_cx t;
+    ]
+  | Set t -> [
+      "setter", _json_of_t json_cx t;
+    ]
+  | GetSet (t1, t2) -> [
+      "getter", _json_of_t json_cx t1;
+      "setter", _json_of_t json_cx t2;
+    ]
+))
 
 and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
 and json_of_type_binding_impl json_cx (name, t) = Hh_json.(
@@ -877,7 +917,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | SingletonStrP str -> ["value", JSON_String str]
   | SingletonNumP (_,raw) -> ["value", JSON_String raw]
 
-  | PropExistsP key -> ["propName", JSON_String key]
+  | PropExistsP (_, key) -> ["propName", JSON_String key]
 
   | ExistsP
   | VoidP
@@ -968,6 +1008,26 @@ and json_of_use_tkeys_impl json_cx tmap = Hh_json.(
 and json_of_tvarkeys json_cx = check_depth json_of_tvarkeys_impl json_cx
 and json_of_tvarkeys_impl _json_cx imap = Hh_json.(
   JSON_Array (IMap.fold (fun i _ acc -> ((int_ i) :: acc)) imap [])
+)
+
+and json_of_lookup_action json_cx = check_depth json_of_lookup_action_impl json_cx
+and json_of_lookup_action_impl json_cx action = Hh_json.(
+  JSON_Object (
+    match action with
+    | RWProp (t, rw) -> [
+        "kind", JSON_String "RWProp";
+        "rw", JSON_String (string_of_rw rw);
+        "t", _json_of_t json_cx t
+      ]
+    | LookupProp p -> [
+        "kind", JSON_String "LookupProp";
+        "prop", json_of_prop json_cx p;
+      ]
+    | SuperProp p -> [
+        "kind", JSON_String "SuperProp";
+        "prop", json_of_prop json_cx p;
+      ]
+  )
 )
 
 let json_of_t ?(size=5000) ?(depth=1000) ?(strip_root=None) cx t =
@@ -1211,6 +1271,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let kid t = dump_t_ (depth-1, tvars) cx t in
   let use_kid use_t = dump_use_t_ (depth-1, tvars) cx use_t in
+  let prop p = dump_prop_ (depth-1, tvars) cx p in
 
   let lookup_kind = function
   | NonstrictReturning None -> "Nonstrict"
@@ -1220,6 +1281,13 @@ and dump_use_t_ (depth, tvars) cx t =
       (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
   | ShadowWrite ids -> spf "ShadowWrite [%s]"
       (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
+  in
+
+  let lookup_action = function
+  | RWProp (t, Read) -> spf "Read %s" (kid t)
+  | RWProp (t, Write) -> spf "Write %s" (kid t)
+  | LookupProp p -> spf "Lookup %s" (prop p)
+  | SuperProp p -> spf "Super %s" (prop p)
   in
 
   if depth = 0 then string_of_use_ctor t
@@ -1269,10 +1337,10 @@ and dump_use_t_ (depth, tvars) cx t =
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
-  | LookupT (_, strict, _, name, ret) -> p ~extra:(spf "%S, %s, %s"
+  | LookupT (_, kind, _, name, action) -> p ~extra:(spf "%S, %s, %s"
       name
-      (lookup_kind strict)
-      (kid ret)) t
+      (lookup_kind kind)
+      (lookup_action action)) t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ObjAssignT _
   | ObjFreezeT _
@@ -1310,6 +1378,21 @@ and dump_use_t_ (depth, tvars) cx t =
   | RefineT _
   ->
     p t
+
+and dump_prop ?(depth=3) cx p =
+  dump_prop_ (depth, ISet.empty) cx p
+
+and dump_prop_ (depth, tvars) cx p =
+  let kid t = dump_t_ (depth-1, tvars) cx t in
+  match p with
+  | Field (t, polarity) ->
+    spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
+  | Get t ->
+    spf "Get %s" (kid t)
+  | Set t ->
+    spf "Set %s" (kid t)
+  | GetSet (t1, t2) ->
+    spf "Get %s Set %s" (kid t1) (kid t2)
 
 (*****************************************************)
 

@@ -258,7 +258,7 @@ let rec normalize_type_impl cx ids t = match t with
       in
       let pmap =
         Context.find_props cx ot.props_tmap
-        |> SMap.map (normalize_type_impl cx ids)
+        |> Properties.map_t (normalize_type_impl cx ids)
         |> Context.make_property_map cx
       in
       let proto = AnyT.t in

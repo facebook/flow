@@ -39,7 +39,7 @@ type codegen_env = {
 let add_applied_tparams applied_tparams env = {env with applied_tparams;}
 let add_str str env = Buffer.add_string env.buf str; env
 let add_tparams tparams env = {env with tparams;}
-let find_props tmap_id env = Flow_js.find_props env.flow_cx tmap_id
+let find_props tmap_id env = Context.find_props env.flow_cx tmap_id
 let has_class_name class_id env = IMap.mem class_id env.class_names
 let next_class_name env =
   let id = env.next_class_name in
@@ -241,27 +241,24 @@ let rec gen_type t env = Type.(
     let props = SMap.elements props |> List.sort (fun (k1, _) (k2, _) ->
       Pervasives.compare k1 k2
     ) in
-    let env = gen_separated_list props ", " (fun (k, t) env ->
-      let (sep, t) =
-        match resolve_type t env with
-        | OptionalT t -> ("?: ", resolve_type t env)
-        | t -> (": ", t)
-      in
-      add_str k env |> add_str sep |> gen_type t
+    let env = gen_separated_list props ", " (fun (k, p) env ->
+      gen_prop k p env
     ) env in
 
     (* Generate potential dict entry *)
     let env =
       match dict_t with
-      | Some {dict_name; key; value;} ->
+      | Some {dict_name; key; value; dict_polarity} ->
         let key_name = (
           match dict_name with
           | Some n -> n
           | None -> "_"
         ) in
+        let sigil = Type.Polarity.sigil dict_polarity in
         let key = resolve_type key env in
         let value = resolve_type value env in
         gen_if (List.length props > 0) (add_str ", ") env
+          |> add_str sigil
           |> add_str "["
           |> add_str key_name
           |> add_str ": "
@@ -333,6 +330,41 @@ let rec gen_type t env = Type.(
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
 )
 
+and gen_prop k p env =
+  let open Type in
+
+  let gen_getter k t env =
+    add_str "get " env
+      |> add_str k
+      |> add_str "(): "
+      |> gen_type t
+  in
+
+  let gen_setter k t env =
+    add_str "set " env
+      |> add_str k
+      |> add_str "("
+      |> gen_func_param "value" t
+      |> add_str "): void"
+  in
+
+  match p with
+  | Field (t, polarity) ->
+    let sigil = Polarity.sigil polarity in
+    let (sep, t) =
+      match resolve_type t env with
+      | OptionalT t -> ("?: ", resolve_type t env)
+      | t -> (": ", t)
+    in
+    add_str sigil env
+      |> add_str k
+      |> add_str sep
+      |> gen_type t
+  | Get t -> gen_getter k t env
+  | Set t -> gen_setter k t env
+  | GetSet (t1, t2) ->
+    gen_getter k t1 env |> gen_setter k t2
+
 and gen_func_params params_names params_tlist env =
   let params =
     match params_names with
@@ -343,23 +375,27 @@ and gen_func_params params_names params_tlist env =
     | None ->
       List.mapi (fun idx t -> (spf "p%d" idx, t)) params_tlist
   in
-  gen_separated_list params ", " Type.(fun (name, t) env ->
-    match t with
-    | RestT t ->
-      add_str "..." env
-      |> add_str name
-      |> add_str ": Array<"
-      |> gen_type t
-      |> add_str ">"
-    | OptionalT t ->
-      add_str name env
-      |> add_str "?: "
-      |> gen_type t
-    | t ->
-      add_str name env
-      |> add_str ": "
-      |> gen_type t
+  gen_separated_list params ", " (fun (name, t) env ->
+    gen_func_param name t env
   ) env
+
+and gen_func_param name t env =
+  let open Type in
+  match t with
+  | RestT t ->
+    add_str "..." env
+    |> add_str name
+    |> add_str ": Array<"
+    |> gen_type t
+    |> add_str ">"
+  | OptionalT t ->
+    add_str name env
+    |> add_str "?: "
+    |> gen_type t
+  | t ->
+    add_str name env
+    |> add_str ": "
+    |> gen_type t
 
 and gen_intersection_list intersection env =
   let members = Type.InterRep.members intersection in
@@ -368,12 +404,7 @@ and gen_intersection_list intersection env =
 and gen_tparams_list = Type.(
   let gen_tparam {reason = _; name; bound; polarity; default;} env =
     let bound = resolve_type bound env in
-    let env = (
-      match polarity with
-      | Negative -> add_str "-" env
-      | Neutral -> env
-      | Positive -> add_str "+" env
-    ) in
+    let env = add_str (Polarity.sigil polarity) env in
     let env = add_str name env in
     let env = (
       match bound with

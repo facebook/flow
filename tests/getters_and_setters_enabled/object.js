@@ -18,11 +18,11 @@ var obj = {
   get propWithMatchingGetterAndSetter(): number { return 4; },
   set propWithMatchingGetterAndSetter(x: number) { },
 
-  // The getter and setter must have the same type
-  get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // Error
+  // The getter and setter need not have the same type
+  get propWithSubtypingGetterAndSetter(): ?number { return 4; }, // OK
   set propWithSubtypingGetterAndSetter(x: number) { },
 
-  set propWithSubtypingGetterAndSetterReordered(x: number) { }, // Error
+  set propWithSubtypingGetterAndSetterReordered(x: number) { }, // OK
   get propWithSubtypingGetterAndSetterReordered(): ?number { return 4; },
 
   get exampleOfOrderOfGetterAndSetter(): A { return new A(); },

@@ -6,7 +6,7 @@ A.js:13
 
 A.js:18
  18:   return { foo: "bar" }
-                     ^^^^^ string. This type is incompatible with
+                     ^^^^^ string. This type is incompatible with the expected return type of
  17: function foo3(): {[key: string]: number} {
                                       ^^^^^^ number
 
@@ -18,7 +18,7 @@ A.js:23
 
 A.js:23
  23:   return { foo: "bar" }
-                     ^^^^^ string. This type is incompatible with
+                     ^^^^^ string. This type is incompatible with the expected return type of
  22: function foo4(): {[key: number]: number} {
                                       ^^^^^^ number
 

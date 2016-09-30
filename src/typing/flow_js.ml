@@ -280,42 +280,6 @@ let havoc_call_env = Scope.(
 
 (********************************************************************)
 
-(* Since type maps use the built-in compare function to compare types,
-   we need to be careful to keep the shape of types within the boundaries
-   of that function. In particular, comparison behaves in unexpected ways
-   for references. To get around these issues, we denote references with
-   indices in types, and maintain side tables of those indices to the
-   denoted references. *)
-
-let mk_propmap cx pmap = Context.make_property_map cx pmap
-
-let find_props cx id = Context.find_props cx id
-
-let has_prop cx id x =
-  find_props cx id |> SMap.mem x
-
-let read_prop cx id x =
-  find_props cx id |> SMap.find_unsafe x
-
-(* suitable replacement for has_prop; read_prop *)
-let read_prop_opt cx id x =
-  find_props cx id |> SMap.get x
-
-let write_prop cx id x t =
-  let pmap = find_props cx id in
-  let pmap = SMap.add x t pmap in
-  Context.add_property_map cx id pmap
-
-let iter_props cx id f =
-  find_props cx id
-  |> SMap.iter f
-
-let write_export cx id x t = Context.(
-  find_exports cx id
-  |> SMap.add x t
-  |> add_export_map cx id
-)
-
 (* visit an optional evaluated type at an evaluation id *)
 let visit_eval_id cx id f =
   match IMap.get id (Context.evaluated cx) with
@@ -348,6 +312,10 @@ let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
 let rec merge_type cx =
   let create_union rep =
     UnionT (locationless_reason (RCustom "union"), rep)
+  in
+
+  let create_intersection rep =
+    IntersectionT (locationless_reason (RCustom "intersection"), rep)
   in
 
   function
@@ -387,8 +355,8 @@ let rec merge_type cx =
       )
 
   | (ObjT (_,o1) as t1), (ObjT (_,o2) as t2) ->
-    let map1 = find_props cx o1.props_tmap in
-    let map2 = find_props cx o2.props_tmap in
+    let map1 = Context.find_props cx o1.props_tmap in
+    let map2 = Context.find_props cx o2.props_tmap in
 
     (* Create an intermediate map of booleans indicating whether two objects can
      * be merged, based on the properties in each map. *)
@@ -401,16 +369,29 @@ let rec merge_type cx =
        * y may != U. However, if either object type is exact, disjointness is
        * sufficient. *)
       | Some _, None | None, Some _ -> Some (o1.flags.exact || o2.flags.exact)
-      (* Objects with overlapping keysets can't be merged.
-       * TODO: covariant fields can be merged *)
+      (* Covariant fields can be merged. *)
+      | Some (Field (_, Positive)), Some (Field (_, Positive)) -> Some true
+      (* Getters are covariant and thus can be merged. *)
+      | Some (Get _), Some (Get _) -> Some true
+      (* Anything else is can't be merged. *)
       | _ -> Some false
     ) map1 map2 in
 
     let merge_dict = match o1.dict_t, o2.dict_t with
     (* If neither object has an indexer, neither will the merged object. *)
     | None, None -> Some None
-    (* Don't merge objects with possibly incompatible indexers.
-     * TODO: covariant indexers can be merged *)
+    (* If both objects covariant indexers, we can merge them. However, if the
+     * key types are disjoint, the resulting dictionary is not useful. *)
+    | Some {key = k1; value = v1; dict_polarity = Positive; _},
+      Some {key = k2; value = v2; dict_polarity = Positive; _} ->
+      (* TODO: How to merge indexer names? *)
+      Some (Some {
+        dict_name = None;
+        key = create_intersection (InterRep.make k1 k2 []);
+        value = merge_type cx (v1, v2);
+        dict_polarity = Positive;
+      })
+    (* Don't merge objects with possibly incompatible indexers. *)
     | _ -> None
     in
 
@@ -833,7 +814,7 @@ end
 (* Iterate over properties of an object, prioritizing sentinel properties (if
    any) and ignoring shadow properties (if any). *)
 let iter_real_props cx id f =
-  find_props cx id
+  Context.find_props cx id
   |> SMap.filter (fun x _ -> not (is_internal_name x))
   |> Cache.SentinelProp.ordered_iter id f
 
@@ -945,10 +926,10 @@ module ResolvableTypeJob = struct
        bugs yet. Leaving further investigation of this point as future work. *)
 
     | ObjT (_, { props_tmap; _ }) ->
-      let props_tmap = find_props cx props_tmap in
-      let ts = SMap.fold (fun x t ts ->
+      let props_tmap = Context.find_props cx props_tmap in
+      let ts = SMap.fold (fun x p ts ->
         if is_internal_name x then ts (* avoid resolving types of shadow properties *)
-        else t::ts
+        else Property.fold_t (fun ts t -> t::ts) ts p
       ) props_tmap [] in
       collect_of_types ?log_unresolved cx reason acc ts
     | FunT (_, _, _, { params_tlist; return_t; _ }) ->
@@ -962,8 +943,12 @@ module ResolvableTypeJob = struct
       let ts = if class_id = 0 then [] else [super; static] in
       let ts = SMap.fold (fun _ t ts -> t::ts) type_args ts in
       let props_tmap = SMap.union
-        (find_props cx fields_tmap) (find_props cx methods_tmap) in
-      let ts = SMap.fold (fun _ t ts -> t::ts) props_tmap ts in
+        (Context.find_props cx fields_tmap)
+        (Context.find_props cx methods_tmap)
+      in
+      let ts = SMap.fold (fun _ p ts ->
+        Property.fold_t (fun ts t -> t::ts) ts p
+      ) props_tmap ts in
       collect_of_types ?log_unresolved cx reason acc ts
     | PolyT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
@@ -1575,7 +1560,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* util that grows a module by adding named exports from a given map *)
     | (ModuleT(_, exports), ExportNamedT(_, tmap, t_out)) ->
-      SMap.iter (write_export cx exports.exports_tmap) tmap;
+      SMap.iter (Context.set_export cx exports.exports_tmap) tmap;
       rec_flow_t cx trace (l, t_out)
 
     (** Copy the named exports from a source module into a target module. Used
@@ -1611,7 +1596,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Copy own props *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
-        find_props cx props_tmap,
+        Properties.extract_named_exports (Context.find_props cx props_tmap),
         t_out
       ))
 
@@ -1628,7 +1613,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let module_t = mk_tvar_where cx reason (fun t ->
         rec_flow cx trace (module_t, ExportNamedT(
           reason,
-          find_props cx fields_tmap,
+          Properties.extract_named_exports (Context.find_props cx fields_tmap),
           t
         ))
       ) in
@@ -1636,7 +1621,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Copy methods *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
-        find_props cx methods_tmap,
+        Properties.extract_named_exports (Context.find_props cx methods_tmap),
         t_out
       ))
 
@@ -1690,7 +1675,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (* convert ES module's named exports to an object *)
           let proto = MixedT (reason, Mixed_everything) in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
-          let props = exports_tmap in
+          let props = SMap.map (Property.field Neutral) exports_tmap in
           mk_object_with_map_proto cx reason
             ~sealed:true ~frozen:true props proto
       ) in
@@ -1699,21 +1684,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* import * as X from 'SomeModule'; *)
     | (ModuleT(_, exports), ImportModuleNsT(reason, t)) ->
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
-      let ns_obj_tmap = (
-        match exports.cjs_export with
-        | Some(t) -> SMap.add "default" t exports_tmap
-        | None -> exports_tmap
-      ) in
+      let props = SMap.map (Property.field Neutral) exports_tmap in
+      let props = match exports.cjs_export with
+      | Some t ->
+        let p = Field (t, Neutral) in
+        SMap.add "default" p props
+      | None -> props
+      in
       let dict = if exports.has_every_named_export
       then Some {
         key = StrT.why reason;
         value = AnyT.why reason;
         dict_name = None;
+        dict_polarity = Neutral;
       }
       else None in
       let proto = MixedT (reason, Mixed_everything) in
       let ns_obj = mk_object_with_map_proto cx reason
-        ~sealed:true ~frozen:true ?dict ns_obj_tmap proto
+        ~sealed:true ~frozen:true ?dict props proto
       in
       rec_flow_t cx trace (ns_obj, t)
 
@@ -2264,9 +2252,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         SentinelPropTest (sense, key, t, inter, tvar)) ->
       sentinel_prop_test_generic key cx trace tvar inter (sense, l, t)
 
-    | _, IntersectionPreprocessKitT (_,
+    | _, IntersectionPreprocessKitT (reason,
         PropExistsTest (sense, key, inter, tvar)) ->
-      prop_exists_test_generic key cx trace tvar inter sense l
+      prop_exists_test_generic reason key cx trace tvar inter sense l
 
     (***********************)
     (* Singletons and keys *)
@@ -2361,7 +2349,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT (reason_o, { props_tmap = mapr; dict_t; _; }), HasOwnPropT (reason_op, x)) ->
       (match x, dict_t with
       (* If we have a literal string and that property exists *)
-      | Literal x, _ when has_prop cx mapr x -> ()
+      | Literal x, _ when Context.has_prop cx mapr x -> ()
       (* If we have a dictionary, try that next *)
       | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
       | _ ->
@@ -2371,7 +2359,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       HasPropT (reason_op, strict, x) ->
       (match x, dict_t with
       (* If we have a literal string and that property exists *)
-      | Literal x, _ when has_prop cx mapr x -> ()
+      | Literal x, _ when Context.has_prop cx mapr x -> ()
       (* If we have a dictionary, try that next *)
       | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
       | _ ->
@@ -2383,8 +2371,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       )
 
     | (InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, Literal x)) ->
-      let fields_tmap = find_props cx instance.fields_tmap in
-      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields_tmap = Context.find_props cx instance.fields_tmap in
+      let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       (match SMap.get x fields with
       | Some _ -> ()
@@ -2395,8 +2383,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | InstanceT (reason_o, _, super, instance),
       HasPropT (reason_op, strict, Literal x) ->
-      let fields_tmap = find_props cx instance.fields_tmap in
-      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields_tmap = Context.find_props cx instance.fields_tmap in
+      let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       (match SMap.get x fields with
       | Some _ -> ()
@@ -2418,7 +2406,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       begin match flags.sealed with
       | Sealed ->
         (* flow each key of l to keys *)
-        iter_props cx mapr (fun x _ ->
+        Context.iter_props cx mapr (fun x _ ->
           let t = StrT (reason, Literal x) in
           rec_flow_t cx trace (t, keys)
         );
@@ -2427,8 +2415,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | InstanceT (reason, _, _, instance), GetKeysT (_, keys) ->
-      let fields_tmap = find_props cx instance.fields_tmap in
-      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields_tmap = Context.find_props cx instance.fields_tmap in
+      let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       fields |> SMap.iter (fun x _ ->
         let t = StrT (reason, Literal x) in
@@ -2558,10 +2546,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       *)
     | IntersectionT _,
       UseT (use_op, ObjT (r, { flags; props_tmap; proto_t; dict_t }))
-      when SMap.cardinal (find_props cx props_tmap) > 1 ->
+      when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
       iter_real_props cx props_tmap (fun prop_name prop_type ->
-        let slice = mk_propmap cx (SMap.singleton prop_name prop_type) in
-        let obj = mk_objecttype ~flags dict_t slice MixedT.t in
+        let pmap = SMap.singleton prop_name prop_type in
+        let id = Context.make_property_map cx pmap in
+        let obj = mk_objecttype ~flags dict_t id MixedT.t in
         rec_flow cx trace (l, UseT (use_op, ObjT (r, obj)))
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
@@ -2667,7 +2656,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let xl = { obj_l with flags = { obj_l.flags with exact = true } } in
       let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
       iter_real_props cx obj_l.props_tmap (fun prop_name _ ->
-        if not (has_prop cx obj_u.props_tmap prop_name)
+        if not (Context.has_prop cx obj_u.props_tmap prop_name)
         then
           let rl = replace_reason_const (RProperty prop_name) rl in
           flow_err_reasons cx trace "Property not found in" (rl, ru)
@@ -2719,7 +2708,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           Some (MixedT (r, Mixed_everything), t)
       ) in
       let lookup =
-        LookupT (reason_op, lookup_kind, [], name, AnyWithUpperBoundT t)
+        LookupT (reason_op, lookup_kind, [], name, RWProp (t, Read))
       in rec_flow cx trace (l, lookup)
 
 
@@ -3200,33 +3189,43 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | _ -> ());
 
       (* Properties in u must either exist in l, or match l's indexer. *)
-      iter_real_props cx uflds (fun s ut ->
-        let ureason = replace_reason_const (RProperty s) ureason in
-        match read_prop_opt cx lflds s, ldict with
-        | Some lt, _ ->
+      iter_real_props cx uflds (fun s up ->
+        let reason_prop = replace_reason_const (RProperty s) ureason in
+        match Context.get_prop cx lflds s, ldict with
+        | Some lp, _ ->
           if lit then (
             (* prop from unaliased LB: check <:, then make exact *)
-            rec_flow cx trace (lt, UseT (use_op, ut));
+            (match Property.read_t lp, Property.read_t up with
+            | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+            | _ -> ());
             (* Band-aid to avoid side effect in speculation mode. Even in
                non-speculation mode, the side effect here is racy, so it either
                needs to be taken out or replaced with something more
                robust. Tracked by #11299251. *)
-            if not (speculating ()) then write_prop cx lflds s ut
+            if not (speculating ()) then Context.set_prop cx lflds s up
           ) else (
-            (* prop from aliased LB must be exact *)
-            rec_unify cx trace lt ut
+            (* prop from aliased LB *)
+            rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
           )
-        | None, Some { key; value; _ } when not (is_dictionary_exempt s) ->
-          let ut = match ut with
-          | OptionalT ut -> ut
-          | _ -> ut
+        | None, Some { key; value; dict_polarity; _ } when not (is_dictionary_exempt s) ->
+          rec_flow_t cx trace (string_key s reason_prop, key);
+          let lp = Field (value, dict_polarity) in
+          let up = match up with
+          | Field (OptionalT ut, upolarity) ->
+            Field (ut, upolarity)
+          | _ -> up
           in
-          rec_flow_t cx trace (string_key s ureason, key);
-          flow_to_mutable_child cx trace lit value ut
+          if lit
+          then
+            match Property.read_t lp, Property.read_t up with
+            | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+            | _ -> ()
+          else
+            rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
         | _ ->
           (* property doesn't exist in inflowing type *)
-          match ut with
-          | OptionalT _ when lflags.exact ->
+          match up with
+          | Field (OptionalT _, _) when lflags.exact ->
             (* if property is marked optional or otherwise has a maybe type,
                and if inflowing type is exact (i.e., it is not an
                annotation), then we add it to the inflowing type as
@@ -3235,7 +3234,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                non-speculation mode, the side effect here is racy, so it either
                needs to be taken out or replaced with something more
                robust. Tracked by #11299251. *)
-            if not (speculating ()) then write_prop cx lflds s ut;
+            if not (speculating ()) then Context.set_prop cx lflds s up;
           | _ ->
             (* otherwise, look up the property in the prototype *)
             let strict = match sealed_in_op ureason lflags.sealed, ldict with
@@ -3243,24 +3242,33 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             | true, None -> Strict lreason
             | _ -> NonstrictReturning None
             in
-            rec_flow cx trace (lproto, LookupT (ureason, strict, [], s, ut))
-            (* TODO: instead, consider extending inflowing type with s:t2 when
-               it is not sealed *)
+            rec_flow cx trace (lproto,
+              LookupT (reason_prop, strict, [], s, LookupProp up))
+            (* TODO: instead, consider extending inflowing type with s:t2 when it
+               is not sealed *)
       );
 
       (* Any properties in l but not u must match indexer *)
       (match udict with
       | None -> ()
-      | Some { key; value; _ } ->
-        iter_real_props cx lflds (fun s lt ->
-          if not (has_prop cx uflds s)
+      | Some { key; value; dict_polarity; _ } ->
+        iter_real_props cx lflds (fun s lp ->
+          if not (Context.has_prop cx uflds s)
           then (
-            let lt = match lt with
-            | OptionalT lt -> lt
-            | _ -> lt
-            in
             rec_flow_t cx trace (string_key s lreason, key);
-            flow_to_mutable_child cx trace lit lt value
+            let lp = match lp with
+            | Field (OptionalT lt, lpolarity) ->
+              Field (lt, lpolarity)
+            | _ -> lp
+            in
+            let up = Field (value, dict_polarity) in
+            if lit
+            then
+              match Property.read_t lp, Property.read_t up with
+              | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+              | _ -> ()
+            else
+              rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
           )));
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -3275,23 +3283,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         proto_t = uproto; _ })) ->
 
       let lflds =
-        let fields_tmap = find_props cx lflds in
-        let methods_tmap = find_props cx lmethods in
+        let fields_tmap = Context.find_props cx lflds in
+        let methods_tmap = Context.find_props cx lmethods in
         SMap.union fields_tmap methods_tmap
       in
 
-      iter_real_props cx uflds (fun s ut ->
+      iter_real_props cx uflds (fun s up ->
         match SMap.get s lflds with
-        | Some lt ->
-          rec_unify cx trace lt ut
-        | None ->
+        | Some lp ->
+          rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
+        | _ ->
           let ureason = replace_reason_const (RProperty s) ureason in
-          match ut with
-          | OptionalT t ->
-            rec_flow cx trace (l, LookupT (ureason, NonstrictReturning None, [], s, t))
+          match up with
+          | Field (OptionalT ut, upolarity) ->
+            rec_flow cx trace (l,
+              LookupT (ureason, NonstrictReturning None, [], s,
+                LookupProp (Field (ut, upolarity))))
           | _ ->
-            rec_flow cx trace
-              (super, LookupT (ureason, Strict lreason, [], s, ut))
+            rec_flow cx trace (super,
+              LookupT (ureason, Strict lreason, [], s, LookupProp up))
       );
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -3314,7 +3324,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           RCustom (spf "%s used as a function" (string_of_desc desc))
         ) reason
       ) in
-      lookup_prop cx trace l reason_op (Strict reason) "$call" tvar;
+      lookup_prop cx trace l reason_op (Strict reason) "$call"
+        (RWProp (tvar, Read));
       rec_flow cx trace (tvar, u)
 
     (******************************)
@@ -3340,12 +3351,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (o, u)
 
     | (ObjT (reason, { props_tmap = mapr; _ }), UseT (_, ShapeT (proto))) ->
-        iter_props cx mapr (fun x t ->
-          let reason = replace_reason (fun desc ->
-            RPropertyOf (x, desc)
-          ) reason in
-          let t = filter_optional cx ~trace reason t in
-          rec_flow cx trace (proto, SetPropT (reason, (reason, x), t));
+        Context.iter_props cx mapr (fun x p ->
+          match Property.read_t p with
+          | Some t ->
+            let reason = replace_reason (fun desc ->
+              RPropertyOf (x, desc)
+            ) reason in
+            let t = filter_optional cx ~trace reason t in
+            rec_flow cx trace (proto, SetPropT (reason, (reason, x), t))
+          | None ->
+            (* TODO: ShapeT should have its own reason *)
+            let reason_op = reason_of_t proto in
+            flow_err_prop_access cx trace x (reason, reason_op) p Read
         )
 
     | (_, UseT (_, ShapeT (o))) ->
@@ -3453,7 +3470,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let sealed = UnsealedInFile (Loc.source (loc_of_reason proto_reason)) in
       let flags = { default_flags with sealed } in
       let dict = None in
-      let pmap = mk_propmap cx SMap.empty in
+      let pmap = Context.make_property_map cx SMap.empty in
       let new_obj = ObjT (reason_c, mk_objecttype ~flags dict pmap proto) in
       (** call function with this = new_obj, params = args **)
       rec_flow_t cx trace (new_obj, this);
@@ -3501,48 +3518,59 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* instances of classes may have their fields looked up *)
     (********************************************************)
 
-    | InstanceT(_, _, super, instance),
-      LookupT (_, strict, _, x, t)
-      ->
-      let strict = match strict with
-      | Strict _ when instance.mixins -> NonstrictReturning None
-      | _ -> strict
-      in
-      let pmap = match strict, t with
-        (* t = AnyWithLowerBoundT _ means that the lookup is trying to write t,
-           rather than read t. Existing places that play a role here are
-           set_prop and get_prop, which use AnyWithLowerBoundT and
-           AnyWithUpperBoundT, respectively.  The general pattern has been used
-           previously, e.g. to distinguish element writes from reads.
-
-           strict = Some _ means that we want to throw errors when x is not
-           found. Some lookups are non-strict (e.g. when we want to enforce
-           consistency between properties if they exist higher up in the
-           inheritance chain), and for methods, we want the consistency to be
-           one-way, so we use AnyWithLowerBoundT _, and we don't want methods to
-           be excluded from the lookup in that case, obviously. *)
-        | Strict _, AnyWithLowerBoundT _ ->
-          let fields_tmap = find_props cx instance.fields_tmap in
-          fields_tmap
-        | _ ->
-          let fields_tmap = find_props cx instance.fields_tmap in
-          let methods_tmap = find_props cx instance.methods_tmap in
-          SMap.union fields_tmap methods_tmap
-      in
+    | InstanceT (lreason, _, super, instance),
+      LookupT (reason_op, kind, try_ts_on_failure, x, action) ->
+      let fields_pmap = Context.find_props cx instance.fields_tmap in
+      let methods_pmap = Context.find_props cx instance.methods_tmap in
+      let pmap = SMap.union fields_pmap methods_pmap in
       (match SMap.get x pmap with
       | None ->
-        rec_flow cx trace (super, u)
-      | Some (AbstractT tx) ->
-        (* The type of the property in the super class is abstract. The type of
-           the property in this class may be abstract or not.  We want to unify
-           just the underlying types, ignoring the abstract part.  *)
-        begin match t with
-        | AbstractT t -> rec_unify cx trace t tx
-        | _ -> rec_unify cx trace t tx
-        end
-      | Some tx ->
-        rec_unify cx trace t tx
-      );
+        (* mixins=true for React.createClass components which have mixins (note:
+           this is not the same as mixins for declared classes). If there are
+           mixins, then lookup should become nonstrict, as the searched-for
+           property may be found in a mixin. *)
+        let kind = match instance.mixins, kind with
+        | true, Strict _ -> NonstrictReturning None
+        | _ -> kind
+        in
+        rec_flow cx trace (super,
+          LookupT (reason_op, kind, try_ts_on_failure, x, action))
+      | Some p ->
+        (* TODO: Replace AbstractT with abstract fields, then reuse
+           perform_lookup_action here. *)
+        (match action with
+        | RWProp (t2, rw) ->
+          (* The type of the property in the super class is abstract. The type of
+             the property in this class may be abstract or not.  We want to unify
+             just the underlying types, ignoring the abstract part.  *)
+          let p, t2 = match p, t2 with
+          | Field (AbstractT t1, polarity), AbstractT t2
+          | Field (AbstractT t1, polarity), t2 -> Field (t1, polarity), t2
+          | _ -> p, t2
+          in
+          (match rw, Property.access rw p with
+          | Read, Some t1 -> rec_flow_t cx trace (t1, t2)
+          | Write, Some t1 -> rec_flow_t cx trace (t2, t1)
+          | _, None ->
+            flow_err_prop_access cx trace x (lreason, reason_op) p rw)
+        | LookupProp up ->
+          let p, up = match p, up with
+          | Field (AbstractT t, polarity), Field (AbstractT ut, upolarity) ->
+            Field (t, polarity), Field (ut, upolarity)
+          | Field (AbstractT t, polarity), up ->
+            Field (t, polarity), up
+          | _ -> p, up
+          in
+          rec_flow_p cx trace lreason reason_op x (p, up)
+        | SuperProp lp ->
+          let p, lp = match p, lp with
+          | Field (AbstractT t, polarity), Field (AbstractT lt, lpolarity) ->
+            Field (t, polarity), Field (lt, lpolarity)
+          | Field (AbstractT t, polarity), lp ->
+            Field (t, polarity), lp
+          | _ -> p, lp
+          in
+          rec_flow_p cx trace reason_op lreason x (lp, p)))
 
     (********************************)
     (* ... and their fields written *)
@@ -3553,7 +3581,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Ops.push reason_op;
       (* methods are immutable, so we hide them from property set operations *)
       let fields = instance.fields_tmap in
-      set_prop cx trace reason_prop reason_c super x fields tin;
+      let strict = Strict reason_c in
+      set_prop cx trace reason_prop reason_op strict super x fields tin;
       Ops.pop ();
 
     (*****************************)
@@ -3568,8 +3597,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | InstanceT (reason_c, _, super, instance),
       GetPropT (reason_op, (reason_prop, x), tout) ->
-      let fields_tmap = find_props cx instance.fields_tmap in
-      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields_tmap = Context.find_props cx instance.fields_tmap in
+      let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
       let strict = if instance.mixins then NonstrictReturning None else Strict reason_c in
       get_prop cx trace reason_prop reason_op strict super x fields tout
@@ -3582,8 +3611,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       MethodT (reason_call, reason_lookup, (reason_prop, x), funtype)
       -> (* TODO: closure *)
       Ops.push reason_call;
-      let fields_tmap = find_props cx instance.fields_tmap in
-      let methods_tmap = find_props cx instance.methods_tmap in
+      let fields_tmap = Context.find_props cx instance.fields_tmap in
+      let methods_tmap = Context.find_props cx instance.methods_tmap in
       let methods = SMap.union fields_tmap methods_tmap in
       let funt = mk_tvar cx reason_lookup in
       let strict = if instance.mixins then NonstrictReturning None else Strict reason_c in
@@ -3661,32 +3690,40 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         soon as O2 is resolved. To avoid this race, we make O2 flow to
         ObjAssignT(_,O1,X,_,true); when O2 is resolved, we make the switch. **)
 
-    | (ObjT (reason_, { props_tmap = mapr; _ }),
-       ObjAssignT (reason, proto, t, props_to_skip, false)) ->
-      Ops.push reason;
-      iter_props cx mapr (fun x t ->
+    | (ObjT (lreason, { props_tmap = mapr; _ }),
+       ObjAssignT (reason_op, proto, t, props_to_skip, false)) ->
+      Ops.push reason_op;
+      Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
-          (* move the reason to the call site instead of the definition, so that
-             it is in the same scope as the Object.assign, so that strictness
-             rules apply. *)
-          let r = replace_reason (fun desc -> RPropertyOf (x, desc)) reason_ in
-          let r = repos_reason (loc_of_reason reason) r in
-          let t = filter_optional cx ~trace r t in
-          rec_flow cx trace (proto, SetPropT (r, (r, x), t));
-        );
+          match Property.read_t p with
+          | Some t ->
+            (* move the reason to the call site instead of the definition, so
+               that it is in the same scope as the Object.assign, so that
+               strictness rules apply. *)
+            let r = replace_reason (fun desc -> RPropertyOf (x, desc)) lreason in
+            let r = repos_reason (loc_of_reason reason_op) r in
+            let t = filter_optional cx ~trace r t in
+            rec_flow cx trace (proto, SetPropT (r, (r, x), t));
+          | None ->
+            flow_err_prop_access cx trace x (lreason, reason_op) p Read
+        )
       );
       Ops.pop ();
       rec_flow_t cx trace (proto, t)
 
-    | (InstanceT (_, _, _, { fields_tmap; methods_tmap; _ }),
-       ObjAssignT (reason, proto, t, props_to_skip, false)) ->
-      let fields_tmap = find_props cx fields_tmap in
-      let methods_tmap = find_props cx methods_tmap in
-      let map = SMap.union fields_tmap methods_tmap in
-      map |> SMap.iter (fun x t ->
+    | (InstanceT (lreason, _, _, { fields_tmap; methods_tmap; _ }),
+       ObjAssignT (reason_op, proto, t, props_to_skip, false)) ->
+      let fields_pmap = Context.find_props cx fields_tmap in
+      let methods_pmap = Context.find_props cx methods_tmap in
+      let pmap = SMap.union fields_pmap methods_pmap in
+      pmap |> SMap.iter (fun x p ->
         if not (List.mem x props_to_skip) then (
-          rec_flow cx trace (proto, SetPropT (reason, (reason, x), t));
-        );
+          match Property.read_t p with
+          | Some t ->
+            rec_flow cx trace (proto, SetPropT (reason_op, (reason_op, x), t))
+          | None ->
+            flow_err_prop_access cx trace x (lreason, reason_op) p Read
+        )
       );
       rec_flow_t cx trace (proto, t)
 
@@ -3715,7 +3752,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*************************)
 
     | (ObjT (_, { props_tmap = mapr; _ }), ObjRestT (reason, xs, t)) ->
-      let map = find_props cx mapr in
+      let map = Context.find_props cx mapr in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
       let proto = MixedT (reason, Mixed_everything) in
       let o = mk_object_with_map_proto cx reason map proto in
@@ -3728,7 +3765,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
 
       (* Spread fields from the instance into another object *)
-      let map = find_props cx insttype.fields_tmap in
+      let map = Context.find_props cx insttype.fields_tmap in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
       let proto = MixedT (reason, Mixed_everything) in
       let obj_inst = mk_object_with_map_proto cx reason map proto in
@@ -3760,7 +3797,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects can be copied-then-sealed *)
     (*************************************)
     | (ObjT (_, { props_tmap = mapr; _ }), ObjSealT (reason, t)) ->
-      let src_props = find_props cx mapr in
+      let src_props = Context.find_props cx mapr in
       let new_obj =
         mk_object_with_map_proto cx reason ~sealed:true src_props l
       in
@@ -3784,26 +3821,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects may have their fields looked up *)
     (*******************************************)
 
-    | ObjT (_, ({ flags; props_tmap; proto_t; _ } as o)),
-      LookupT (reason_op, strict, try_ts_on_failure, x, tout) ->
+    | ObjT (reason_obj, o),
+      LookupT (reason_op, strict, try_ts_on_failure, x, action) ->
       let ops = Ops.clear () in
       (match get_obj_prop cx trace o x reason_op with
-      | Some t ->
-        rec_unify cx trace t tout
+      | Some p ->
+        perform_lookup_action cx trace x p reason_obj reason_op action
       | None ->
-        let strict = match sealed_in_op reason_op flags.sealed, strict with
+        let strict = match sealed_in_op reason_op o.flags.sealed, strict with
         | false, ShadowRead (strict, ids) ->
-          ShadowRead (strict, Nel.cons props_tmap ids)
+          ShadowRead (strict, Nel.cons o.props_tmap ids)
         | false, ShadowWrite ids ->
-          ShadowWrite (Nel.cons props_tmap ids)
+          ShadowWrite (Nel.cons o.props_tmap ids)
         | _ -> strict
         in
-        rec_flow cx trace (proto_t,
-          LookupT (reason_op, strict, try_ts_on_failure, x, tout)));
+        rec_flow cx trace (o.proto_t,
+          LookupT (reason_op, strict, try_ts_on_failure, x, action)));
       Ops.set ops
 
-    | AnyObjT _, LookupT (reason_op, _, _, _, t_other) ->
-      rec_unify cx trace (AnyT.why reason_op) t_other
+    | AnyObjT reason_obj, LookupT (reason_op, _, _, x, action) ->
+      let p = Field (AnyT.why reason_op, Neutral) in
+      perform_lookup_action cx trace x p reason_obj reason_op action
 
     (*****************************************)
     (* ... and their fields written *)
@@ -3818,8 +3856,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       flow_err cx trace "Mutation not allowed on" l u
 
     | ObjT (reason_obj, o), SetPropT (reason_op, propname, tin) ->
-      let t = ensure_prop_for_write cx trace o propname reason_obj reason_op in
-      rec_flow_t cx trace (tin, t)
+      write_obj_prop cx trace o propname reason_obj reason_op tin
 
     (* Since we don't know the type of the prop, use AnyT. *)
     | (AnyObjT _, SetPropT (reason_op, _, t)) ->
@@ -3836,8 +3873,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | ObjT (reason_obj, o), GetPropT (reason_op, propname, tout) ->
-      let t = ensure_prop_for_read cx trace o propname reason_obj reason_op in
-      rec_flow cx trace (t, ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+      let tout = tvar_with_constraint cx
+        (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
+      in
+      read_obj_prop cx trace o propname reason_obj reason_op tout
 
     | (AnyObjT _ | AnyT _), GetPropT (reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -3850,9 +3889,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ObjT (reason_obj, o),
       MethodT (reason_call, reason_lookup, propname, funtype) ->
-      let t = ensure_prop_for_read cx trace o propname reason_obj reason_lookup in
-      let callt = CallT (reason_call, funtype) in
-      rec_flow cx trace (t, callt)
+      let t = mk_tvar_where cx reason_lookup (fun tout ->
+        read_obj_prop cx trace o propname reason_obj reason_lookup tout
+      ) in
+      rec_flow cx trace (t, CallT (reason_call, funtype))
 
     (* Since we don't know the signature of a method on AnyObjT, assume every
        parameter is an AnyT. *)
@@ -3999,9 +4039,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (funt, CallT (reason, funtype))
       ) in
       let props_tmap =
-        find_props cx o.props_tmap
-        |> SMap.map map_t
-        |> mk_propmap cx
+        Context.find_props cx o.props_tmap
+        |> Properties.map_fields map_t
+        |> Context.make_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
         let value = map_t dict.value in
@@ -4015,10 +4055,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let funtype = mk_functiontype [key; t] t' in
         rec_flow cx trace (funt, CallT (reason, funtype))
       ) in
+      let mapi_field key t = mapi_t (SingletonStrT (reason, key)) t in
       let props_tmap =
-        find_props cx o.props_tmap
-        |> SMap.mapi (fun key t -> mapi_t (SingletonStrT (reason, key)) t)
-        |> mk_propmap cx
+        Context.find_props cx o.props_tmap
+        |> Properties.mapi_fields mapi_field
+        |> Context.make_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
         let value = mapi_t dict.key dict.value in
@@ -4051,9 +4092,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (AnyFunT _, (
         GetPropT(reason_op, _, tout)
         | GetElemT(reason_op, _, tout)
-        | LookupT(reason_op, _, _, _, tout)
       )) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
+
+    | AnyFunT reason_fun, LookupT (reason_op, _, _, x, action) ->
+      let p = Field (AnyT.why reason_op, Neutral) in
+      perform_lookup_action cx trace x p reason_fun reason_op action
 
     (*****************************************)
     (* ... and their fields/elements written *)
@@ -4201,9 +4245,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        UseT (_, ObjT (reason_o, { props_tmap; _ }))) ->
         if not
           (quick_error_fun_as_obj cx trace reason statics reason_o
-             (find_props cx props_tmap))
+             (Context.find_props cx props_tmap))
         then
-          let map = SMap.add "$call" l SMap.empty in
+          let callp = Field (l, Positive) in
+          let map = SMap.add "$call" callp SMap.empty in
           let function_proto = FunProtoT reason in
           let obj = mk_object_with_map_proto cx reason map function_proto in
           let t = mk_tvar_where cx reason (fun t ->
@@ -4223,7 +4268,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not
           (quick_error_fun_as_obj cx trace reason statics reason_inst
             (SMap.filter (fun x _ -> x = "constructor")
-              (find_props cx fields_tmap)))
+              (Context.find_props cx fields_tmap)))
         then
           structural_subtype cx trace l reason_inst
             (super, fields_tmap, methods_tmap)
@@ -4257,8 +4302,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (InstanceT (_,_,_,instance_super),
        SuperT (reason,instance))
       ->
-        iter_props cx instance_super.fields_tmap (fun x -> function
-          | AbstractT t when not (has_prop cx instance.fields_tmap x) ->
+        Context.iter_props cx instance_super.fields_tmap (fun x p ->
+          match p with
+          | Field (AbstractT t, _)
+            when not (Context.has_prop cx instance.fields_tmap x) ->
             (* when abstract fields are not implemented, make them void *)
             let reason = reason_of_t t in
             let desc_void = RMissingAbstract (desc_of_reason reason) in
@@ -4266,25 +4313,27 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             rec_unify cx trace (VoidT reason_void) t
           | _ -> ()
         );
-        iter_props cx instance.fields_tmap (fun x t ->
-          lookup_prop cx trace l reason (NonstrictReturning None) x t
+        Context.iter_props cx instance.fields_tmap (fun x p ->
+          lookup_prop cx trace l reason (NonstrictReturning None) x (SuperProp p)
         );
-        iter_props cx instance.methods_tmap (fun x t ->
+        Context.iter_props cx instance.methods_tmap (fun x p ->
           if inherited_method x then
-            (* we're able to do supertype compatibility in super methods because
-               they're immutable *)
-            lookup_prop cx trace l reason (NonstrictReturning None) x (AnyWithLowerBoundT t)
+            lookup_prop cx trace l reason (NonstrictReturning None) x (SuperProp p)
         )
 
     | ObjT _, SuperT (reason, instance)
     | AnyObjT _, SuperT (reason, instance)
       ->
-        iter_props cx instance.fields_tmap (fun x t ->
-          rec_flow cx trace (l, LookupT(reason, NonstrictReturning None, [], x, t))
+        Context.iter_props cx instance.fields_tmap (fun x p ->
+          rec_flow cx trace (l,
+            LookupT (reason, NonstrictReturning None, [], x,
+              SuperProp p))
         );
-        iter_props cx instance.methods_tmap (fun x t ->
+        Context.iter_props cx instance.methods_tmap (fun x p ->
           if inherited_method x then
-            rec_flow cx trace (l, LookupT(reason, NonstrictReturning None, [], x, t))
+            rec_flow cx trace (l,
+              LookupT (reason, NonstrictReturning None, [], x,
+                SuperProp p))
         )
 
     (***********************************************************)
@@ -4518,51 +4567,55 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       flow_err_strict_lookup_failed cx trace x reason (reason_op, strict_reason)
 
     | (MixedT (reason, _) | FunProtoT reason),
-      LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [], x, tout) ->
+      LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [], x, action) ->
+
       (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
       (match strict with
       | None -> ()
       | Some strict_reason ->
         flow_err_strict_lookup_failed cx trace x reason
           (reason_op, strict_reason));
-      (* Install shadow prop (if necessary) and link up proto chain. *)
-      let t = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
-      rec_unify cx trace t tout
 
-    | (MixedT _ | FunProtoT _),
-      LookupT (_, ShadowWrite rev_proto_ids, [], x, tin) ->
+      (* Install shadow prop (if necessary) and link up proto chain. *)
+      let p = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
+      perform_lookup_action cx trace x p reason reason_op action
+
+    | (MixedT (reason, _) | FunProtoT reason),
+      LookupT (reason_op, ShadowWrite rev_proto_ids, [], x, action) ->
       let id, proto_ids = Nel.rev rev_proto_ids in
-      let pmap = find_props cx id in
+      let pmap = Context.find_props cx id in
       (* Re-check written-to unsealed object to see if prop was added since we
        * last looked. See comment above `find` in `find_or_intro_shadow_prop`.
        *)
-      let existing = match SMap.get x pmap with
-      | Some _ as some_t -> some_t
+      let p = match SMap.get x pmap with
+      | Some p -> p
       | None ->
         match SMap.get (internal_name x) pmap with
-        | None -> None
-        | Some t as some_t ->
+        | Some p ->
           (* unshadow *)
           pmap
             |> SMap.remove (internal_name x)
-            |> SMap.add x t
+            |> SMap.add x p
             |> Context.add_property_map cx id;
-          some_t
+          p
+        | None ->
+          (* Create prop and link shadow props along the proto chain. *)
+          let reason_prop = locationless_reason (RShadowProperty x) in
+          let t = mk_tvar cx reason_prop in
+          (match proto_ids with
+          | [] -> ()
+          | id::ids ->
+            let p_proto = find_or_intro_shadow_prop cx trace x (id, ids) in
+            let t_proto = Property.assert_field p_proto in
+            rec_flow cx trace (t_proto, UnifyT (t_proto, t)));
+          (* Add prop *)
+          let p = Field (t, Neutral) in
+          pmap
+            |> SMap.add x p
+            |> Context.add_property_map cx id;
+          p
       in
-      (match existing with
-      | Some t ->
-        rec_unify cx trace tin t
-      | None ->
-        (* Create and link shadow properties along the prototype chain. *)
-        (match proto_ids with
-        | [] -> ()
-        | id::ids ->
-          let t_proto = find_or_intro_shadow_prop cx trace x (id, ids) in
-          rec_flow cx trace (t_proto, UnifyT (t_proto, tin)));
-        (* add prop *)
-        pmap
-          |> SMap.add x tin
-          |> Context.add_property_map cx id)
+      perform_lookup_action cx trace x p reason reason_op action
 
     (* LookupT is a non-strict lookup *)
     | (MixedT _ | FunProtoT _),
@@ -4768,16 +4821,16 @@ and is_dictionary_exempt = function
 (* common case checking a function as an object *)
 and quick_error_fun_as_obj cx trace reason statics reason_o props =
   let statics_own_props = match statics with
-    | ObjT (_, { props_tmap; _ }) -> Some (find_props cx props_tmap)
+    | ObjT (_, { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
     | AnyFunT _
     | MixedT _ -> Some SMap.empty
     | _ -> None
   in
   match statics_own_props with
   | Some statics_own_props ->
-    let props_not_found = SMap.filter (fun x t ->
-      let optional = match t with
-      | OptionalT _ -> true
+    let props_not_found = SMap.filter (fun x p ->
+      let optional = match p with
+      | Field (OptionalT _, _) -> true
       |_ -> false
       in
       not (optional || x = "$call" || is_function_prototype x || SMap.mem x statics_own_props)
@@ -5051,11 +5104,11 @@ and flow_type_args cx trace instance instance_super =
        OTOH arg_polarities only holds polarities of declared params.
        it'll take some upstream refactoring to handle variance to in-scope
        type params - meanwhile, we fall back to neutral (invariant) *)
-    match SMap.get x pmap with
+    (match SMap.get x pmap with
     | Some Negative -> rec_flow_t cx trace (t2, t1)
     | Some Positive -> rec_flow_t cx trace (t1, t2)
     | Some Neutral
-    | None -> rec_unify cx trace t1 t2
+    | None -> rec_unify cx trace t1 t2)
   )
 
 and inherited_method x = x <> "constructor" && x <> "$call"
@@ -5067,35 +5120,33 @@ and sealed_in_op reason_op = function
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
 and structural_subtype cx trace lower reason_struct
-  (super, fields_tmap, methods_tmap) =
-  let lower_reason = reason_of_t lower in
-  let fields_tmap = find_props cx fields_tmap in
-  let methods_tmap = find_props cx methods_tmap in
-  fields_tmap |> SMap.iter (fun s t2 ->
-    match t2 with
-    | OptionalT t2 ->
+  (super, fields_pmap, methods_pmap) =
+  let lreason = reason_of_t lower in
+  let fields_pmap = Context.find_props cx fields_pmap in
+  let methods_pmap = Context.find_props cx methods_pmap in
+  fields_pmap |> SMap.iter (fun s p ->
+    match p with
+    | Field (OptionalT t, polarity) ->
       let lookup_reason = replace_reason (fun desc ->
         ROptional (RPropertyOf (s, desc))
       ) reason_struct in
-      rec_flow cx trace
-        (lower,
-         LookupT (lookup_reason, NonstrictReturning None, [], s, t2))
+      rec_flow cx trace (lower,
+        LookupT (lookup_reason, NonstrictReturning None, [], s,
+          LookupProp (Field (t, polarity))))
     | _ ->
       let lookup_reason = replace_reason (fun desc ->
         RPropertyOf (s, desc)
       ) reason_struct in
-      rec_flow cx trace
-        (lower,
-         LookupT (lookup_reason, Strict lower_reason, [], s, t2))
+      rec_flow cx trace (lower,
+        LookupT (lookup_reason, Strict lreason, [], s, LookupProp p))
   );
-  methods_tmap |> SMap.iter (fun s t2 ->
+  methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
       let lookup_reason = replace_reason (fun desc ->
         RPropertyOf (s, desc)
       ) reason_struct in
-      rec_flow cx trace
-        (lower,
-         LookupT (lookup_reason, Strict lower_reason, [], s, AnyWithUpperBoundT (t2)))
+      rec_flow cx trace (lower,
+        LookupT (lookup_reason, Strict lreason, [], s, LookupProp p))
   );
   rec_flow_t cx trace (lower, super)
 
@@ -5104,14 +5155,14 @@ and structural_subtype cx trace lower reason_struct
 (* substitutions *)
 (*****************)
 
-and ident_map (f: 'a -> 'a) (lst: 'a list) : 'a list =
+and ident_map: 'a. ('a -> 'a) -> 'a list -> 'a list = fun f lst ->
   let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
     let item_ = f item in
     item_::lst_, changed || item_ != item
   ) ([], false) lst in
   if changed then List.rev rev_lst else lst
 
-and ident_smap (f: 'a -> 'a) (map: 'a SMap.t): 'a SMap.t =
+and ident_smap: 'a. ('a -> 'a) -> 'a SMap.t -> 'a SMap.t = fun f map ->
   let map_, changed = SMap.fold (fun key item (map_, changed) ->
     let item_ = f item in
     SMap.add key item_ map_, changed || item_ != item
@@ -5410,10 +5461,10 @@ and eval_destructor cx reason curr_t s i =
     it
 
 and subst_propmap cx force map id =
-  let pmap = find_props cx id in
-  let pmap_ = ident_smap (subst cx ~force map) pmap in
+  let pmap = Context.find_props cx id in
+  let pmap_ = ident_smap (Property.ident_map_t (subst cx ~force map)) pmap in
   if pmap_ == pmap then id
-  else mk_propmap cx pmap_
+  else Context.make_property_map cx pmap_
 
 and subst_selector cx force map s = match s with
   | Elem key ->
@@ -5476,8 +5527,8 @@ and check_polarity cx polarity = function
     -> check_polarity cx Neutral t
 
   | InstanceT (_, _, _, instance) ->
-    check_polarity_propmap cx Neutral instance.fields_tmap;
-    check_polarity_propmap cx polarity instance.methods_tmap
+    check_polarity_propmap cx instance.fields_tmap;
+    check_polarity_propmap cx instance.methods_tmap
 
   | FunT (_, _, _, func) ->
     List.iter (check_polarity cx (Polarity.inv polarity)) func.params_tlist;
@@ -5487,7 +5538,7 @@ and check_polarity cx polarity = function
     check_polarity cx Neutral t
 
   | ObjT (_, obj) ->
-    check_polarity_propmap cx Neutral obj.props_tmap
+    check_polarity_propmap cx obj.props_tmap
 
   | IdxWrapper (_, obj) -> check_polarity cx polarity obj
 
@@ -5524,9 +5575,17 @@ and check_polarity cx polarity = function
   | TypeMapT _
     -> () (* TODO *)
 
-and check_polarity_propmap cx polarity id =
-  let pmap = find_props cx id in
-  SMap.iter (fun _ -> check_polarity cx polarity) pmap
+and check_polarity_propmap cx id =
+  let pmap = Context.find_props cx id in
+  SMap.iter (fun _ -> check_polarity_prop cx) pmap
+
+and check_polarity_prop cx = function
+  | Field (t, polarity) -> check_polarity cx polarity t
+  | Get t -> check_polarity cx Positive t
+  | Set t -> check_polarity cx Negative t
+  | GetSet (t1, t2) ->
+    check_polarity cx Positive t1;
+    check_polarity cx Negative t2
 
 and check_polarity_typeparam cx polarity tp =
   check_polarity cx polarity tp.bound
@@ -5695,7 +5754,7 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   | Some frozen -> { flags with frozen }
   | None -> flags
   in
-  let pmap = mk_propmap cx map in
+  let pmap = Context.make_property_map cx map in
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
 and mk_object cx reason =
@@ -6335,10 +6394,11 @@ and guess_and_record_sentinel_prop cx ts =
     | AnnotT (OpenT (_, id), _) ->
       let constraints = find_graph cx id in
       begin match constraints with
-      | Resolved (ObjT (_, { props_tmap; _ })) -> find_props cx props_tmap
+      | Resolved (ObjT (_, { props_tmap; _ })) ->
+        Context.find_props cx props_tmap
       | _ -> SMap.empty
       end
-    | ObjT (_, { props_tmap; _ }) -> find_props cx props_tmap
+    | ObjT (_, { props_tmap; _ }) -> Context.find_props cx props_tmap
     | _ -> SMap.empty in
 
   let is_singleton_type = function
@@ -6357,8 +6417,12 @@ and guess_and_record_sentinel_prop cx ts =
     SMap.filter (fun s _ -> SMap.mem s map) acc
   ) (List.hd prop_maps) (List.tl prop_maps) in
 
-  (* Keep only those that have singleton types *)
-  let acc = SMap.filter (fun _ -> is_singleton_type) acc in
+  (* Keep only fields that have singleton types *)
+  let acc = SMap.filter (fun _ p ->
+    match p with
+    | Field (t, _) -> is_singleton_type t
+    | _ -> false
+  ) acc in
 
   if not (SMap.is_empty acc) then
     (* Record the guessed sentinel properties for each object *)
@@ -6415,80 +6479,90 @@ and is_munged_prop_name cx name =
   && name.[0] = '_'
   && name.[1] <> '_'
 
-and lookup_prop cx trace l reason strict x t =
+and lookup_prop cx trace l reason strict x action =
   let l =
     (* munge names beginning with single _ *)
     if is_munged_prop_name cx x
     then MixedT (reason_of_t l, Mixed_everything)
     else l
   in
-  rec_flow cx trace (l, LookupT (reason, strict, [], x, t))
+  rec_flow cx trace (l, LookupT (reason, strict, [], x, action))
 
 and get_prop cx trace reason_prop reason_op strict super x map tout =
   let ops = Ops.clear () in
   let u = ReposLowerT (reason_op, UseT (UnknownUse, tout)) in
   begin match SMap.get x map with
-  | Some p -> rec_flow cx trace (p, u)
+  | Some p ->
+    (match Property.read_t p with
+    | Some t ->
+      rec_flow cx trace (t, u)
+    | None ->
+      flow_err_prop_access cx trace x (reason_op, reason_op) p Read)
   | None ->
-    let t = tvar_with_constraint cx u in
-    lookup_prop cx trace super reason_prop strict x (AnyWithUpperBoundT t)
+    let tout = tvar_with_constraint cx u in
+    lookup_prop cx trace super reason_prop strict x (RWProp (tout, Read))
   end;
   Ops.set ops
 
-and set_prop cx trace reason_op reason_c super x map tin =
-  let map = find_props cx map in
-  if SMap.mem x map
-  then
-    rec_flow_t cx trace (tin, SMap.find_unsafe x map)
-  else
-    lookup_prop cx trace super reason_op (Strict reason_c) x (AnyWithLowerBoundT tin)
+and set_prop cx trace reason_prop reason_op strict super x id tin =
+  let pmap = Context.find_props cx id in
+  match SMap.get x pmap with
+  | Some p ->
+    (match Property.write_t p with
+    | Some t ->
+      rec_flow_t cx trace (tin, t)
+    | None ->
+      flow_err_prop_access cx trace x (reason_prop, reason_op) p Write)
+  | None ->
+    lookup_prop cx trace super reason_prop strict x (RWProp (tin, Write))
 
 and get_obj_prop cx trace o x reason_op =
-  match read_prop_opt cx o.props_tmap x, o.dict_t with
-  | Some _ as some_t, _ ->
+  match Context.get_prop cx o.props_tmap x, o.dict_t with
+  | Some _ as some_p, _ ->
     (* Property exists on this property map *)
-    some_t
-  | None, Some { key; value; _ } when not (is_dictionary_exempt x) ->
+    some_p
+  | None, Some { key; value; dict_polarity; _ }
+    when not (is_dictionary_exempt x) ->
     (* Dictionaries match all property reads *)
     rec_flow_t cx trace (string_key x reason_op, key);
-    Some value
+    Some (Field (value, dict_polarity))
   | _ -> None
 
-and ensure_prop_for_read cx trace o (reason_prop, x) reason_obj reason_op =
+and read_obj_prop cx trace o (reason_prop, x) reason_obj reason_op tout =
   let ops = Ops.clear () in
-  let t = match get_obj_prop cx trace o x reason_op with
-  | Some t -> t
+  (match get_obj_prop cx trace o x reason_op with
+  | Some p ->
+    let up = Field (tout, Positive) in
+    rec_flow_p cx trace reason_obj reason_op x (p, up)
   | None ->
     let strict =
       if sealed_in_op reason_op o.flags.sealed
       then Strict reason_obj
       else ShadowRead (None, Nel.one o.props_tmap)
     in
-    mk_tvar_where cx reason_prop (fun t ->
-      rec_flow cx trace (o.proto_t, LookupT (reason_prop, strict, [], x, t))
-    )
-  in
-  Ops.set ops;
-  t
+    rec_flow cx trace (o.proto_t,
+      LookupT (reason_prop, strict, [], x, RWProp (tout, Read))));
+  Ops.set ops
 
-and ensure_prop_for_write cx trace o (reason_prop, x) reason_obj reason_op =
+and write_obj_prop cx trace o (reason_prop, x) reason_obj reason_op tin =
   match get_obj_prop cx trace o x reason_op with
-  | Some t -> t
+  | Some p ->
+    let up = Field (tin, Negative) in
+    rec_flow_p cx trace reason_obj reason_op x (p, up)
   | None when sealed_in_op reason_op o.flags.sealed ->
-    flow_err_prop_not_found cx trace (reason_prop, reason_obj);
-    AnyT.t
+    flow_err_prop_not_found cx trace (reason_prop, reason_obj)
   | None ->
-    mk_tvar_where cx reason_prop (fun t ->
-      let strict = ShadowWrite (Nel.one o.props_tmap) in
-      rec_flow cx trace (o.proto_t, LookupT (reason_op, strict, [], x, t))
-    )
+    let strict = ShadowWrite (Nel.one o.props_tmap) in
+    rec_flow cx trace (o.proto_t,
+      LookupT (reason_op, strict, [], x, RWProp (tin, Write)))
 
 and find_or_intro_shadow_prop cx trace x =
   let intro_shadow_prop id =
     let reason_prop = locationless_reason (RShadowProperty x) in
-    mk_tvar_where cx reason_prop (fun t ->
-      write_prop cx id (internal_name x) t;
-    )
+    let t = mk_tvar cx reason_prop in
+    let p = Field (t, Neutral) in
+    Context.set_prop cx id (internal_name x) p;
+    t, p
   in
 
   (* Given some shadow property type and a prototype chain (o.proto,
@@ -6496,11 +6570,11 @@ and find_or_intro_shadow_prop cx trace x =
    * If there is a write to the prototype later on, we unify the property types
    * together. If there is no write, the property types are safely independent.
    *)
-  let rec chain_link t_inst = function
+  let rec chain_link t = function
   | [] -> ()
   | id::ids ->
-    let t = find (id, ids) in
-    rec_flow cx trace (t, UnifyT (t, t_inst))
+    let t_proto = Property.assert_field (find (id, ids)) in
+    rec_flow cx trace (t_proto, UnifyT (t_proto, t))
 
   (* Check at each step to see if a prop was added since we looked.
    *
@@ -6512,15 +6586,15 @@ and find_or_intro_shadow_prop cx trace x =
    * unifying up the proto chain, as the work is necessarily already done.
    *)
   and find (id, proto_ids) =
-    match read_prop_opt cx id x with
-    | Some t -> t
+    match Context.get_prop cx id x with
+    | Some p -> p
     | None ->
-      match read_prop_opt cx id (internal_name x) with
-      | Some t -> t
+      match Context.get_prop cx id (internal_name x) with
+      | Some p -> p
       | None ->
-        let t = intro_shadow_prop id in
+        let t, p = intro_shadow_prop id in
         chain_link t proto_ids;
-        t
+        p
 
   in find
 
@@ -6924,6 +6998,7 @@ and predicate cx trace t l p = match p with
         key = StrT.why r;
         value = MixedT (replace_reason_const MixedT.desc r, Mixed_everything);
         dict_name = None;
+        dict_polarity = Neutral;
       } in
       let proto = MixedT (reason, Mixed_everything) in
       let obj = mk_object_with_proto cx reason ?dict proto in
@@ -7027,11 +7102,11 @@ and predicate cx trace t l p = match p with
   | NotP ExistsP ->
     rec_flow_t cx trace (filter_not_exists l, t)
 
-  | PropExistsP key ->
-    prop_exists_test cx trace key true l t
+  | PropExistsP (reason, key) ->
+    prop_exists_test cx trace reason key true l t
 
-  | NotP (PropExistsP key) ->
-    prop_exists_test cx trace key false l t
+  | NotP (PropExistsP (reason, key)) ->
+    prop_exists_test cx trace reason key false l t
 
   (* unreachable *)
   | NotP (NotP _)
@@ -7056,34 +7131,37 @@ and predicate cx trace t l p = match p with
       rec_flow cx trace (fun_t,
         CallLatentPredT (neg_reason, false, idx, l, t))
 
-and prop_exists_test cx trace key sense obj result =
-  prop_exists_test_generic key cx trace result obj sense obj
+and prop_exists_test cx trace reason key sense obj result =
+  prop_exists_test_generic reason key cx trace result obj sense obj
 
-and prop_exists_test_generic key cx trace result orig_obj sense = function
-  | ObjT (_, { flags; props_tmap; _}) as obj ->
-      begin match read_prop_opt cx props_tmap key with
-      | Some prop_t ->
+and prop_exists_test_generic reason key cx trace result orig_obj sense = function
+  | ObjT (lreason, { flags; props_tmap; _}) as obj ->
+    (match Context.get_prop cx props_tmap key with
+    | Some p ->
+      (match Property.read_t p with
+      | Some t ->
         (* prop is present on object type *)
         let pred = if sense then ExistsP else NotP ExistsP in
-        rec_flow cx trace (prop_t, GuardT (pred, orig_obj, result))
-      | None
-        when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
-        (* prop is absent from exact object type *)
-        if sense
-        then ()
-        else rec_flow_t cx trace (orig_obj, result)
+        rec_flow cx trace (t, GuardT (pred, orig_obj, result))
       | None ->
-        (* prop is absent from inexact object type *)
-        (* TODO: possibly unsound to filter out orig_obj here, but if we don't,
-           case elimination based on prop existence checking doesn't work for
-           (disjoint unions of) intersections of objects, where the prop appears
-           in a different branch of the intersection. It is easy to avoid this
-           unsoundness with slightly more work, but will wait until a
-           refactoring of property lookup lands to revisit. Tracked by
-           #11301092. *)
-        if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
+        (* prop cannot be read *)
+        flow_err_prop_access cx trace key (lreason, reason) p Read)
+    | None when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
+      (* prop is absent from exact object type *)
+      if sense
+      then ()
+      else rec_flow_t cx trace (orig_obj, result)
+    | None ->
+      (* prop is absent from inexact object type *)
+      (* TODO: possibly unsound to filter out orig_obj here, but if we don't,
+         case elimination based on prop existence checking doesn't work for
+         (disjoint unions of) intersections of objects, where the prop appears
+         in a different branch of the intersection. It is easy to avoid this
+         unsoundness with slightly more work, but will wait until a
+         refactoring of property lookup lands to revisit. Tracked by
+         #11301092. *)
+      if orig_obj = obj then rec_flow_t cx trace (orig_obj, result))
 
-      end
   | IntersectionT (_, rep) ->
     (* For an intersection of object types, try the test for each object type in
        turn, while recording the original intersection so that we end up with
@@ -7091,12 +7169,10 @@ and prop_exists_test_generic key cx trace result orig_obj sense = function
        IntersectionPreprocessKit for more details. *)
     let reason = reason_of_t result in
     InterRep.members rep |> List.iter (fun obj ->
-      rec_flow cx trace (
-        obj,
+      rec_flow cx trace (obj,
         intersection_preprocess_kit reason
-          (PropExistsTest(sense, key, orig_obj, result))
-      )
-    )
+          (PropExistsTest(sense, key, orig_obj, result))))
+
   | _ ->
     rec_flow_t cx trace (orig_obj, result)
 
@@ -7245,10 +7321,16 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       result. **)
 
   let flow_sentinel sense props_tmap obj sentinel =
-    match read_prop_opt cx props_tmap key with
-    | Some t ->
+    match Context.get_prop cx props_tmap key with
+    | Some p ->
+      (match Property.read_t p with
+      | Some t ->
         let test = SentinelPropTestT (orig_obj, sense, sentinel, result) in
         rec_flow cx trace (t, test)
+      | None ->
+        let reason_obj = reason_of_t obj in
+        let reason = reason_of_t result in
+        flow_err_prop_access cx trace key (reason_obj, reason) p Read)
     | None ->
       (* TODO: possibly unsound to filter out orig_obj here, but if we
          don't, case elimination based on sentinel prop checking doesn't
@@ -7650,15 +7732,17 @@ and __unify cx t1 t2 trace =
     | None, None -> ()
     end;
 
-    let lpmap, upmap = find_props cx lflds, find_props cx uflds in
-    SMap.merge (fun x lt ut ->
+    let lpmap = Context.find_props cx lflds in
+    let upmap = Context.find_props cx uflds in
+    SMap.merge (fun x lp up ->
       if not (is_internal_name x || is_dictionary_exempt x)
-      then (match lt, ut with
-      | Some t1, Some t2 -> rec_unify cx trace t1 t2
-      | Some t1, None ->
-          unify_prop_with_dict cx trace x t1 lreason ureason udict
-      | None, Some t2 ->
-          unify_prop_with_dict cx trace x t2 ureason lreason ldict
+      then (match lp, up with
+      | Some p1, Some p2 ->
+          unify_props cx trace x lreason ureason p1 p2
+      | Some p1, None ->
+          unify_prop_with_dict cx trace x p1 lreason ureason udict
+      | None, Some p2 ->
+          unify_prop_with_dict cx trace x p2 ureason lreason ldict
       | None, None -> ());
       None
     ) lpmap upmap |> ignore
@@ -7681,22 +7765,50 @@ and __unify cx t1 t2 trace =
     naive_unify cx trace t1 t2
   )
 
+and unify_props cx trace x r1 r2 p1 p2 =
+  (* If both sides are neutral fields, we can just unify once *)
+  match p1, p2 with
+  | Field (t1, Neutral),
+    Field (t2, Neutral) ->
+    rec_unify cx trace t1 t2;
+  | _ ->
+    (* Otherwise, unify read/write sides separately. *)
+    (match Property.read_t p1, Property.read_t p2 with
+    | Some t1, Some t2 ->
+        rec_unify cx trace t1 t2;
+    | _ -> ());
+    (match Property.write_t p1, Property.write_t p2 with
+    | Some t1, Some t2 ->
+        rec_unify cx trace t1 t2;
+    | _ -> ());
+    (* Error if polarity is not compatible both ways. *)
+    let polarity1 = Property.polarity p1 in
+    let polarity2 = Property.polarity p2 in
+    if not (
+      Polarity.compat (polarity1, polarity2) &&
+      Polarity.compat (polarity2, polarity1)
+    ) then
+      flow_err_prop_polarity_mismatch cx trace x (r1, r2)
+        (polarity1, polarity2)
+
+(* If some property `x` exists in one object but not another, ensure the
+   property is compatible with a dictionary, or error if none. *)
+and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
+  let prop_reason = replace_reason_const (RProperty x) prop_reason in
+  match dict with
+  | Some { key; value; dict_polarity; _ } ->
+    rec_flow_t cx trace (string_key x prop_reason, key);
+    let p2 = Field (value, dict_polarity) in
+    unify_props cx trace x prop_reason dict_reason p p2
+  | None ->
+    flow_err_prop_not_found cx trace (prop_reason, dict_reason)
+
 (* TODO: Unification between concrete types is still implemented as
    bidirectional flows. This means that the destructuring work is duplicated,
    and we're missing some opportunities for nested unification. *)
 
 and naive_unify cx trace t1 t2 =
   rec_flow_t cx trace (t1,t2); rec_flow_t cx trace (t2,t1)
-
-(* If some property `x` exists in one object but not another, ensure the
-   property is compatible with a dictionary, or error if none. *)
-and unify_prop_with_dict cx trace k v prop_reason dict_reason = function
-  | Some { key; value; _ } ->
-      rec_flow_t cx trace (string_key k prop_reason, key);
-      rec_unify cx trace v value
-  | None ->
-    let prop_reason = replace_reason_const (RProperty k) prop_reason in
-    flow_err_prop_not_found cx trace (prop_reason, dict_reason)
 
 (* mutable sites on parent values (i.e. object properties,
    array elements) must be typed invariantly when a value
@@ -7875,6 +7987,17 @@ and multiflow_partial cx trace ?strict = function
     rec_flow cx trace (tin, tout);
     multiflow_partial cx trace ?strict (tins,touts)
 
+and perform_lookup_action cx trace x p lreason ureason = function
+  | LookupProp up ->
+    rec_flow_p cx trace lreason ureason x (p, up)
+  | SuperProp lp ->
+    rec_flow_p cx trace ureason lreason x (lp, p)
+  | RWProp (tout, rw) ->
+    match rw, Property.access rw p with
+    | Read, Some t -> rec_flow_t cx trace (t, tout)
+    | Write, Some t -> rec_flow_t cx trace (tout, t)
+    | _, None -> flow_err_prop_access cx trace x (lreason, ureason) p rw
+
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in
   StrT (key_reason, Literal s)
@@ -7887,7 +8010,8 @@ and get_builtin cx ?trace x reason =
   )
 
 and lookup_builtin cx ?trace x reason strict builtin =
-  flow_opt cx ?trace (builtins cx, LookupT(reason,strict,[],x,builtin))
+  flow_opt cx ?trace (builtins cx,
+    LookupT(reason, strict, [], x, RWProp (builtin, Read)))
 
 and get_builtin_typeapp cx ?trace reason x ts =
   TypeAppT(get_builtin cx ?trace x reason, ts)
@@ -8120,6 +8244,30 @@ and rec_flow cx trace (t1, t2) =
 and rec_flow_t cx trace (t1, t2) =
   rec_flow cx trace (t1, UseT (UnknownUse, t2))
 
+and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason x = function
+  (* unification cases *)
+  | Field (lt, Neutral),
+    Field (ut, Neutral) ->
+    rec_unify cx trace lt ut
+  (* directional cases *)
+  | lp, up ->
+    (match Property.read_t lp, Property.read_t up with
+    | Some lt, Some ut ->
+      rec_flow cx trace (lt, UseT (use_op, ut))
+    | None, Some _ ->
+      flow_err_prop_polarity_mismatch cx trace x
+        (lreason, ureason)
+        (Property.polarity lp, Property.polarity up)
+    | _ -> ());
+    (match Property.write_t lp, Property.write_t up with
+    | Some lt, Some ut ->
+      rec_flow cx trace (ut, UseT (use_op, lt))
+    | None, Some _ ->
+      flow_err_prop_polarity_mismatch cx trace x
+        (lreason, ureason)
+        (Property.polarity lp, Property.polarity up)
+    | _ -> ())
+
 (* Ideally this function would not be required: either we call `flow` from
    outside without a trace (see below), or we call one of the functions above
    with a trace. However, there are some functions that need to call __flow,
@@ -8254,7 +8402,7 @@ end = struct
     SMap.filter (fun key _ ->
       (* Filter out keys that start with "$" *)
       not (String.length key >= 1 && key.[0] = '$')
-    ) (find_props cx fields)
+    ) (Context.find_props cx fields)
 
   (* TODO: Think of a better place to put this *)
   let rec extract_members cx this_t =
@@ -8279,10 +8427,21 @@ end = struct
                 {fields_tmap = fields;
                 methods_tmap = methods;
                 _}) ->
-        let fields = find_props cx fields in
-        let methods = find_props cx methods in
+        let members = SMap.fold (fun x p acc ->
+          (* TODO: It isn't currently possible to return two types for a given
+           * property in autocomplete, so for now we just return the getter
+           * type. *)
+          let t = match p with
+          | Field (t, _) | Get t | Set t | GetSet (t, _) -> t
+          in
+          SMap.add x t acc
+        ) (find_props cx fields) SMap.empty in
+        let members = SMap.fold (fun x p acc ->
+          match Property.read_t p with
+          | Some t -> SMap.add x t acc
+          | None -> acc
+        ) (find_props cx methods) members in
         let super_t = resolve_type cx super in
-        let members = SMap.union fields methods in
         let super_flds = extract_members_as_map cx super_t in
         Success (AugmentableSMap.augment super_flds ~with_bindings:members)
     | ObjT (_, {props_tmap = flds; proto_t = proto; _}) ->
@@ -8294,7 +8453,11 @@ end = struct
         in
         let proto_t = resolve_type cx (IntersectionT (proto_reason, rep)) in
         let prot_members = extract_members_as_map cx proto_t in
-        let members = find_props cx flds in
+        let members = SMap.fold (fun x p acc ->
+          match Property.read_t p with
+          | Some t -> SMap.add x t acc
+          | None -> acc
+        ) (find_props cx flds) SMap.empty in
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}) ->
         let named_exports = Context.find_exports cx exports_tmap in
@@ -8424,7 +8587,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
 
   | ObjT (_, { props_tmap = id; proto_t; _ }) ->
     unify_opt cx proto_t AnyT.t;
-    iter_props cx id (fun _ -> recurse ~infer:true)
+    Context.iter_props cx id (fun _ -> Property.iter_t (recurse ~infer:true))
 
   | IdxWrapper (_, obj) -> assert_ground ~infer cx skip ids obj
 
@@ -8450,8 +8613,10 @@ let rec assert_ground ?(infer=false) cx skip ids t =
 
       recurse ~infer t
     in
-    iter_props cx instance.fields_tmap (process_element ~is_field:true);
-    iter_props cx instance.methods_tmap process_element;
+    Context.iter_props cx instance.fields_tmap
+      (fun x -> Property.iter_t (process_element ~is_field:true x));
+    Context.iter_props cx instance.methods_tmap
+      (fun x -> Property.iter_t (process_element x));
     unify_opt cx static AnyT.t;
     recurse super
 

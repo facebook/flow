@@ -54,20 +54,6 @@ val check_polarity: Context.t -> Type.polarity -> Type.t -> unit
 
 val eval_selector: Context.t -> reason -> Type.t -> Type.TypeTerm.selector -> int -> Type.t
 
-(* property maps *)
-
-val mk_propmap : Context.t -> Type.t SMap.t -> Type.Properties.id
-
-val has_prop : Context.t -> Type.Properties.id -> SMap.key -> bool
-
-val read_prop : Context.t -> Type.Properties.id -> SMap.key -> Type.t
-
-val write_prop : Context.t -> Type.Properties.id -> SMap.key -> Type.t -> unit
-
-val iter_props : Context.t -> Type.Properties.id -> (string -> Type.t -> unit) -> unit
-
-val find_props : Context.t -> Type.Properties.id -> Type.t SMap.t
-
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
 (* object/method types *)
@@ -94,7 +80,7 @@ val mk_object_with_proto : Context.t -> reason ->
 val mk_object_with_map_proto : Context.t -> reason ->
   ?sealed:bool ->
   ?frozen:bool ->
-  ?dict:Type.dicttype -> (Type.t SMap.t) -> Type.t -> Type.t
+  ?dict:Type.dicttype -> Type.Properties.t -> Type.t -> Type.t
 
 val mk_object: Context.t -> reason -> Type.t
 

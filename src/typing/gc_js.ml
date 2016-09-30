@@ -91,7 +91,8 @@ let rec gc cx state = function
 
   | ObjT(_, objtype) ->
       let id = objtype.props_tmap in
-      Flow_js.iter_props cx id (fun _ -> gc cx state);
+      Context.iter_props cx id (fun _ ->
+        Property.iter_t (gc cx state));
       (match objtype.dict_t with
         | None -> ()
         | Some { key; value; _ } ->
@@ -109,8 +110,10 @@ let rec gc cx state = function
 
   | InstanceT(_, static, super, instance) ->
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
-      Flow_js.iter_props cx instance.fields_tmap (fun _ -> gc cx state);
-      Flow_js.iter_props cx instance.methods_tmap (fun _ -> gc cx state);
+      Context.iter_props cx instance.fields_tmap (fun _ ->
+        Property.iter_t (gc cx state));
+      Context.iter_props cx instance.methods_tmap (fun _ ->
+        Property.iter_t (gc cx state));
       gc cx state static;
       gc cx state super
 
@@ -281,8 +284,10 @@ and gc_use cx state = function
 
   | SuperT(_, instance) ->
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
-      Flow_js.iter_props cx instance.fields_tmap (fun _ -> gc cx state);
-      Flow_js.iter_props cx instance.methods_tmap (fun _ -> gc cx state)
+      Context.iter_props cx instance.fields_tmap (fun _ ->
+        Property.iter_t (gc cx state));
+      Context.iter_props cx instance.methods_tmap (fun _ ->
+        Property.iter_t (gc cx state))
 
   | MixinT (_, t) ->
       gc cx state t
@@ -328,9 +333,14 @@ and gc_use cx state = function
   | VarianceCheckT (_, ts, _) ->
       List.iter (gc cx state) ts
 
-  | LookupT (_, _, ts, _, t) ->
+  | LookupT (_, _, ts, _, action) ->
       ts |> List.iter (gc cx state);
-      gc cx state t
+      (match action with
+      | RWProp (t, _) ->
+        gc cx state t
+      | LookupProp p
+      | SuperProp p ->
+        Property.iter_t (gc cx state) p)
 
   | ObjAssignT (_, t1, t2, _, _) ->
       gc cx state t1;
