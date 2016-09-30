@@ -485,27 +485,21 @@ let rec convert cx tparams_map = Ast.Type.(function
     mk_type_param_declarations cx ~tparams_map typeParameters in
 
   let rev_params_tlist, rev_params_names =
-    (let rev_tlist, rev_pnames =
-      List.fold_left (fun (tlist, pnames) param ->
-      match param with
-      | _, { Function.Param.name;
-             Function.Param.typeAnnotation; optional = false; _ } ->
-          (convert cx tparams_map typeAnnotation) :: tlist,
-          (ident_name name) :: pnames
-      | _, { Function.Param.name;
-             Function.Param.typeAnnotation; optional = true; _ } ->
-          (OptionalT (convert cx tparams_map typeAnnotation)) :: tlist,
-          (ident_name name) :: pnames
+    let rev_tlist, rev_pnames =
+      List.fold_left (fun (tlist, pnames) (_, param) ->
+        let { Function.Param.name; typeAnnotation; optional } = param in
+        let t = convert cx tparams_map typeAnnotation in
+        let t = if optional then OptionalT t else t in
+        (t :: tlist, ident_name name :: pnames)
     ) ([], []) params in
     match rest with
-      | Some (_, { Function.RestParam.argument =
-          (_, { Function.Param.name; typeAnnotation; _ })
-        }) ->
-          let rest = mk_rest cx (convert cx tparams_map typeAnnotation) in
-          rest :: rev_tlist,
-          (ident_name name) :: rev_pnames
-      | None -> rev_tlist, rev_pnames
-    ) in
+      | Some (_, { Function.RestParam.argument = (_, param) }) ->
+        let { Function.Param.name; typeAnnotation; _ } = param in
+        let rest = mk_rest cx (convert cx tparams_map typeAnnotation) in
+        (rest :: rev_tlist, (ident_name name) :: rev_pnames)
+      | None ->
+        rev_tlist, rev_pnames
+    in
   let reason = mk_reason RFunctionType loc in
   let params_names = List.rev rev_params_names in
   let return_t = convert cx tparams_map returnType in
@@ -527,30 +521,23 @@ let rec convert cx tparams_map = Ast.Type.(function
   if (tparams = []) then ft else PolyT(tparams, ft)
 
 | loc, Object { Object.exact; properties; indexers; callProperties; } ->
-  let props_map = List.fold_left (
-    fun props_map (loc, { Object.Property.key; value; optional; _ }) ->
-      (match key with
-        | Ast.Expression.Object.Property.Literal
-            (_, { Ast.Literal.value = Ast.Literal.String name; _ })
-        | Ast.Expression.Object.Property.Identifier
-            (_, { Ast.Identifier.name; _ }) ->
-            let t = convert cx tparams_map value in
-            if optional
-            then
-              (* wrap types of optional properties, just like we do for
-                 optional parameters *)
-              SMap.add name (OptionalT t) props_map
-            else
-              SMap.add name t props_map
-        | _ ->
-          let msg = "Unsupported key in object type" in
-          FlowError.add_error cx (loc, [msg]);
-          props_map
-    )
-  ) SMap.empty properties
-  in
+  let props_map = List.fold_left (fun props_map (loc, prop) ->
+    let { Object.Property.key; value; optional; _ } = prop in
+    match key with
+    | Ast.Expression.Object.Property.Literal
+        (_, { Ast.Literal.value = Ast.Literal.String name; _ })
+    | Ast.Expression.Object.Property.Identifier
+        (_, { Ast.Identifier.name; _ }) ->
+        let t = convert cx tparams_map value in
+        let t = if optional then OptionalT t else t in
+        SMap.add name t props_map
+    | _ ->
+      let msg = "Unsupported key in object type" in
+      FlowError.add_error cx (loc, [msg]);
+      props_map
+  ) SMap.empty properties in
   let props_map =
-    let fts = List.map (fun (loc, { Object.CallProperty.value = (_, ft); _}) ->
+    let fts = List.map (fun (loc, { Object.CallProperty.value = (_, ft); _ }) ->
       convert cx tparams_map (loc, Ast.Type.Function ft)
     ) callProperties in
     match fts with
@@ -564,19 +551,14 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* Seal an object type unless it specifies an indexer. *)
   let sealed, dict =
     match indexers with
-    | [] ->
-        true,
-        None
-    | (
-        _,
-        { Object.Indexer.id = (_, { Ast.Identifier.name; _ }); key; value; _;}
-      )::rest ->
-        (* TODO *)
+    | [] -> true, None
+    | (_, { Object.Indexer.id; key; value; _ })::rest ->
+        let _, { Ast.Identifier.name; _ } = id in
+        (* TODO: multiple indexers *)
         List.iter (fun (indexer_loc, _) ->
           let msg = "multiple indexers are not supported" in
           FlowError.add_error cx (indexer_loc, [msg]);
         ) rest;
-
         let keyt = convert cx tparams_map key in
         let valuet = convert cx tparams_map value in
         false,
