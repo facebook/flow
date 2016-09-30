@@ -1,11 +1,5 @@
 issue-598.js:7
   7: function bar(y: F<number>): F<string> { return y; }
-                       ^^^^^^ number. This type is incompatible with
-  7: function bar(y: F<number>): F<string> { return y; }
-                                   ^^^^^^ string
-
-issue-598.js:7
-  7: function bar(y: F<number>): F<string> { return y; }
                                    ^^^^^^ string. This type is incompatible with
   7: function bar(y: F<number>): F<string> { return y; }
                        ^^^^^^ number
@@ -53,4 +47,4 @@ test3.js:12
                        ^^^^^^^ object type
 
 
-Found 9 errors
+Found 8 errors

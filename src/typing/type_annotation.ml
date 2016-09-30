@@ -522,7 +522,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Object { Object.exact; properties; indexers; callProperties; } ->
   let props_map = List.fold_left (fun props_map (loc, prop) ->
-    let { Object.Property.key; value; optional; variance; _ } = prop in
+    let { Object.Property.key; value; optional; variance; _method; _ } = prop in
     match key with
     | Ast.Expression.Object.Property.Literal
         (_, { Ast.Literal.value = Ast.Literal.String name; _ })
@@ -530,7 +530,8 @@ let rec convert cx tparams_map = Ast.Type.(function
         (_, { Ast.Identifier.name; _ }) ->
         let t = convert cx tparams_map value in
         let t = if optional then OptionalT t else t in
-        let p = Field (t, polarity variance) in
+        let polarity = if _method then Positive else polarity variance in
+        let p = Field (t, polarity) in
         SMap.add name p props_map
     | _ ->
       let msg = "Unsupported key in object type" in

@@ -555,7 +555,7 @@
   "end":10
 }
 function_expression.js:9:5 = {
-  "type":"{bar: () => void}",
+  "type":"{+bar: () => void}",
   "reasons":[],
   "loc":{
     "source":"function_expressions.js",

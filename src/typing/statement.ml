@@ -2097,19 +2097,20 @@ and export_statement cx loc
 
 and object_prop cx map = Ast.Expression.Object.(function
   (* name = function expr *)
-  | Property (_, { Property.kind = Property.Init;
-                     key = Property.Identifier (_, {
-                       Ast.Identifier.name; _ });
-                     value = (vloc, Ast.Expression.Function func);
-                     _ }) ->
-      let {Ast.Function.id; async; generator; _} = func in
-      let desc = RFunction (function_desc ~async ~generator) in
-      let reason = mk_reason desc vloc in
-      let ft = mk_function id cx reason func in
-      Hashtbl.replace (Context.type_table cx) vloc ft;
-      (* TODO: Consider making shorthand methods covariant, to match the
-       * behavior of interfaces. *)
-      Properties.add_field name Neutral ft map
+  | Property (_, { Property.
+      kind = Property.Init;
+      key = Property.Identifier (_, { Ast.Identifier.name; _ });
+      value = (vloc, Ast.Expression.Function func);
+      _method;
+      _
+    }) ->
+    let {Ast.Function.id; async; generator; _} = func in
+    let desc = RFunction (function_desc ~async ~generator) in
+    let reason = mk_reason desc vloc in
+    let ft = mk_function id cx reason func in
+    Hashtbl.replace (Context.type_table cx) vloc ft;
+    let polarity = if _method then Positive else Neutral in
+    Properties.add_field name polarity ft map
 
   (* name = non-function expr *)
   | Property (_, { Property.kind = Property.Init;
