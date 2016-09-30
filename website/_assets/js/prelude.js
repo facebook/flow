@@ -1,4 +1,5 @@
 //= require requirejs
+//= link_tree ../gen
 
 require.config({
   baseUrl: '/assets',

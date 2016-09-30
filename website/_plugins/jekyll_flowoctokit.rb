@@ -1,14 +1,25 @@
 require 'octokit'
+require 'ostruct'
 
 module Jekyll
   class FlowGitHubGenerator < Jekyll::Generator
     def self.releases(repo)
       @releases ||= Hash.new do |hash, key|
         access_token = ENV['DOC_BOT_TOKEN']
-        authed = access_token.nil? ? "" : " (with auth)"
-        Jekyll.logger.info "GitHub Query:", "releases for #{key}#{authed}"
-        client = Octokit::Client.new(:access_token => access_token)
-        hash[key] = client.releases(key)
+        if access_token.nil?
+          Jekyll.logger.info "GitHub Query:", "using fake releases for #{key} (no DOC_BOT_TOKEN)"
+          hash[key] = [OpenStruct.new(
+            :name => 'v0.0.0',
+            :tag_name => 'v0.0.0',
+            :published_at => DateTime.now,
+            :html_url => "https://github.com/#{repo}/releases",
+            :draft => false,
+          )]
+        else
+          Jekyll.logger.info "GitHub Query:", "releases for #{key}"
+          client = Octokit::Client.new(:access_token => access_token)
+          hash[key] = client.releases(key)
+        end
       end
       @releases[repo]
     end
