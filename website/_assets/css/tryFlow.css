@@ -46,6 +46,7 @@
 }
 
 .editor .results .toolbar {
+  position: relative;
   background: #fff;
   border-bottom: 1px solid #ddd;
   list-style: none;
@@ -70,6 +71,13 @@
   background: #f7f7f7;
   border-bottom: 1px solid #f7f7f7;
   margin-bottom: -1px;
+}
+
+.editor .results .toolbar .version {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  line-height: 36px;
 }
 
 .editor .results .errors,

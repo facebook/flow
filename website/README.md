@@ -33,15 +33,16 @@ bundle install
 npm install
 node_modules/.bin/bower install
 rm -f "_assets/gen" "static/flowlib"
-ln -sf "../bin/flow.js" "_assets/gen"
-ln -sf "../lib" "static/flowlib"
+mkdir -p "_assets/gen"
+ln -sf "../../../bin/flow.js" "_assets/gen/flow.js"
+ln -sf "../../lib" "static/flowlib"
 ```
 
 ### Build and Run
 
 ```
 (cd ..; make js)
-jekyll serve -w
+bundle exec jekyll serve -w
 ```
 
 This will fire up a web server at http://localhost:8000 by default. To access it from other machines, add `--host ::` (all interfaces, including IPv6).

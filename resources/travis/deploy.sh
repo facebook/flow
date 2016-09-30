@@ -17,10 +17,17 @@ bundle install
 printf "travis_fold:end:installing_jekyll\n"
 
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
+GEN_DIR=$([[ "$TRAVIS_TAG" = "" ]] && echo "master" || echo "$TRAVIS_TAG")
 mkdir -p "$PAGES_CHECKOUT"
-mkdir -p "website/_assets/gen"
-cp "bin/flow.js" "website/_assets/gen/flow.js"
-cp -r "lib" "website/static/flowlib"
+mkdir -p "website/_assets/gen/${GEN_DIR}"
+mkdir -p "website/static/$GEN_DIR"
+cp "bin/flow.js" "website/_assets/gen/${GEN_DIR}/flow.js"
+cp -r "lib" "website/static/${GEN_DIR}/flowlib"
+echo "version" > "website/_data/flow_dot_js_versions.csv"
+git tag -l | \
+  grep -e 'v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}' | \
+  sort -s -t. -k 1,1nr -k 2,2nr -k 3,3nr | \
+  head -n 5 >> "website/_data/flow_dot_js_versions.csv"
 env \
   PATH="${TRAVIS_BUILD_DIR}/bin:$PATH" \
   bundle exec jekyll build -s website/ -d "$PAGES_CHECKOUT" --verbose

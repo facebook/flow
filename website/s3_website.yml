@@ -13,6 +13,12 @@ cloudfront_wildcard_invalidation: true
 redirects:
   docs/about-flow.html: about/
 
+ignore_on_server:
+  - assets/v.*
+  - assets/master
+  - static/v.*
+  - static/master
+
 # Below are examples of all the available configurations.
 # See README for more detailed info on each of them.
 

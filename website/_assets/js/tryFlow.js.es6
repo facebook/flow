@@ -4,11 +4,9 @@
 //= require codemirror/mode/xml/xml
 //= require codemirror/mode/jsx/jsx
 //= require lz-string
-//= depend_on flow.js
 
 import CodeMirror from "codemirror/lib/codemirror"
 import LZString from "lz-string"
-import flow from "flow"
 
 function get(url) {
   return new Promise(function(resolve, reject) {
@@ -28,24 +26,6 @@ function get(url) {
     req.send();
   });
 }
-
-var libs = [
-  '/static/flowlib/core.js',
-  '/static/flowlib/bom.js',
-  '/static/flowlib/cssom.js',
-  '/static/flowlib/dom.js',
-  '/static/flowlib/node.js',
-  '/static/flowlib/react.js',
-];
-
-var flowReady = Promise.all(libs.map(get)).then(function(contents) {
-  contents.forEach(function(nameAndContent) {
-    flow.registerFile(nameAndContent[0], nameAndContent[1]);
-  });
-  return libs;
-}).then(function(libs) {
-  flow.setLibs(libs);
-});
 
 function printError(err, editor) {
   const clickHandler = (msg) => {
@@ -107,19 +87,24 @@ function printErrors(errors, editor) {
   }, document.createElement('ul'));
 }
 
+function removeChildren(node) {
+  while (node.lastChild) node.removeChild(node.lastChild);
+}
+
 function getAnnotations(text, callback, options, editor) {
   const errorsNode = options.errorsNode;
   const jsonNode = options.jsonNode;
-  flowReady.then(function() {
+  const flowReady = editor.getOption('flow');
+  flowReady.then(function(flow) {
     var errors = flow.checkContent('-', text);
 
     if (errorsNode) {
-      while (errorsNode.lastChild) errorsNode.removeChild(errorsNode.lastChild);
+      removeChildren(errorsNode);
       errorsNode.appendChild(printErrors(errors, editor));
     }
 
     if (jsonNode) {
-      while (jsonNode.lastChild) jsonNode.removeChild(jsonNode.lastChild);
+      removeChildren(jsonNode);
       jsonNode.appendChild(
         document.createTextNode(JSON.stringify(errors, null, 2))
       );
@@ -172,14 +157,44 @@ function removeClass(elem, className) {
   }).join(' ');
 }
 
-exports.createEditor = function createEditor(domNode, resultsNode) {
+function initFlow(flow, version) {
+  const libs = [
+    `/static/${version}/flowlib/core.js`,
+    `/static/${version}/flowlib/bom.js`,
+    `/static/${version}/flowlib/cssom.js`,
+    `/static/${version}/flowlib/dom.js`,
+    `/static/${version}/flowlib/node.js`,
+    `/static/${version}/flowlib/react.js`,
+  ];
+
+  return Promise.all(libs.map(get)).then(function(contents) {
+    contents.forEach(function(nameAndContent) {
+      flow.registerFile(nameAndContent[0], nameAndContent[1]);
+    });
+    return libs;
+  }).then(function(libs) {
+    flow.setLibs(libs);
+    return flow;
+  });
+}
+
+exports.createEditor = function createEditor(
+  flowModule,
+  domNode,
+  resultsNode,
+  flowVersions
+) {
   require([
+    flowModule,
     'codemirror/addon/lint/lint',
     'codemirror/mode/javascript/javascript',
     'codemirror/mode/xml/xml',
     'codemirror/mode/jsx/jsx'
-  ], function() {
+  ], function(flow) {
     const location = window.location;
+
+    const flowVersion = flowModule.split('/')[0];
+    const flowReady = initFlow(flow, flowVersion);
 
     const errorsTabNode = document.createElement('li');
     errorsTabNode.className = "tab errors-tab";
@@ -199,10 +214,25 @@ exports.createEditor = function createEditor(domNode, resultsNode) {
       evt.kill();
     });
 
+    const versionSelector = document.createElement('select');
+    flowVersions.forEach(
+      function(version) {
+        const option = document.createElement('option');
+        option.value = version;
+        option.text = version;
+        option.selected = version == flowVersion;
+        versionSelector.add(option, null);
+      }
+    );
+    const versionTabNode = document.createElement('li');
+    versionTabNode.className = "version";
+    versionTabNode.appendChild(versionSelector);
+
     const toolbarNode = document.createElement('ul');
     toolbarNode.className = "toolbar";
     toolbarNode.appendChild(errorsTabNode);
     toolbarNode.appendChild(jsonTabNode);
+    toolbarNode.appendChild(versionTabNode);
 
     const errorsNode = document.createElement('pre');
     errorsNode.className = "errors";
@@ -216,11 +246,16 @@ exports.createEditor = function createEditor(domNode, resultsNode) {
 
     resultsNode.className += " show-errors";
 
+    CodeMirror.defineOption('flow', null, function(editor) {
+      editor.performLint();
+    });
+
     const editor = CodeMirror(domNode, {
       value: getHashedValue(location.hash) || defaultValue,
       autofocus: true,
       lineNumbers: true,
       mode: "jsx",
+      flow: flowReady,
       lint: { getAnnotations, errorsNode, jsonNode }
     });
 
@@ -228,6 +263,14 @@ exports.createEditor = function createEditor(domNode, resultsNode) {
       const value = editor.getValue();
       const encoded = LZString.compressToEncodedURIComponent(value);
       location.hash = `#0${encoded}`;
+    });
+
+    versionTabNode.addEventListener('change', function(evt) {
+      const version = evt.target.value;
+      require([`${version}/flow`], function(flow) {
+        const flowReady = initFlow(flow, version);
+        editor.setOption('flow', flowReady);
+      });
     });
   });
 }
