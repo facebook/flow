@@ -4,6 +4,7 @@ import colors from 'colors/safe';
 
 import {format} from 'util';
 import {basename, dirname, resolve} from 'path';
+import {spawn} from 'child_process';
 
 import {getTestsDir} from '../constants';
 import {drain, rimraf, symlink} from '../async';
@@ -153,13 +154,20 @@ function startWatchAndRun(suites, args) {
   async function record(runID) {
     running = true;
     stopListeningForShortcuts();
-    await require('../record/recordRunner').default({
-      suites: null,
-      bin: args.bin,
-      parallelism: args.parallelism,
-      errorCheckCommand: args.errorCheckCommand,
-      rerun: runID,
-    });
+
+    const child = spawn(
+      process.argv[0],
+      [process.argv[1], "record", "--rerun-failed", runID],
+      {stdio: 'inherit'},
+    );
+    const code = await new Promise((resolve, reject) => {
+      child.on('close', resolve);
+    })
+
+    if (code === 0) {
+      shortcuts.delete('f');
+      shortcuts.delete('r');
+    }
     startListeningForShortcuts();
     running = false;
   }
