@@ -8,6 +8,10 @@
 import CodeMirror from "codemirror/lib/codemirror"
 import LZString from "lz-string"
 
+CodeMirror.defineOption('flow', null, function(editor) {
+  editor.performLint();
+});
+
 function get(url) {
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
@@ -157,25 +161,30 @@ function removeClass(elem, className) {
   }).join(' ');
 }
 
-function initFlow(flow, version) {
-  const libs = [
-    `/static/${version}/flowlib/core.js`,
-    `/static/${version}/flowlib/bom.js`,
-    `/static/${version}/flowlib/cssom.js`,
-    `/static/${version}/flowlib/dom.js`,
-    `/static/${version}/flowlib/node.js`,
-    `/static/${version}/flowlib/react.js`,
-  ];
+const versionCache = {};
 
-  return Promise.all(libs.map(get)).then(function(contents) {
-    contents.forEach(function(nameAndContent) {
-      flow.registerFile(nameAndContent[0], nameAndContent[1]);
+function initFlow(flow, version) {
+  if (!(version in versionCache)) {
+    const libs = [
+      `/static/${version}/flowlib/core.js`,
+      `/static/${version}/flowlib/bom.js`,
+      `/static/${version}/flowlib/cssom.js`,
+      `/static/${version}/flowlib/dom.js`,
+      `/static/${version}/flowlib/node.js`,
+      `/static/${version}/flowlib/react.js`,
+    ];
+
+    versionCache[version] = Promise.all(libs.map(get)).then(function(contents) {
+      contents.forEach(function(nameAndContent) {
+        flow.registerFile(nameAndContent[0], nameAndContent[1]);
+      });
+      return libs;
+    }).then(function(libs) {
+      flow.setLibs(libs);
+      return flow;
     });
-    return libs;
-  }).then(function(libs) {
-    flow.setLibs(libs);
-    return flow;
-  });
+  }
+  return versionCache[version];
 }
 
 exports.createEditor = function createEditor(
@@ -194,7 +203,10 @@ exports.createEditor = function createEditor(
     const location = window.location;
 
     const flowVersion = flowModule.split('/')[0];
-    const flowReady = initFlow(flow, flowVersion);
+    const flowReady = initFlow(flow, flowVersion).then(function(flow) {
+      removeClass(resultsNode, 'show-loading');
+      return flow;
+    });
 
     const errorsTabNode = document.createElement('li');
     errorsTabNode.className = "tab errors-tab";
@@ -246,10 +258,6 @@ exports.createEditor = function createEditor(
 
     resultsNode.className += " show-errors";
 
-    CodeMirror.defineOption('flow', null, function(editor) {
-      editor.performLint();
-    });
-
     const editor = CodeMirror(domNode, {
       value: getHashedValue(location.hash) || defaultValue,
       autofocus: true,
@@ -267,8 +275,12 @@ exports.createEditor = function createEditor(
 
     versionTabNode.addEventListener('change', function(evt) {
       const version = evt.target.value;
+      resultsNode.className += ' show-loading';
       require([`${version}/flow`], function(flow) {
-        const flowReady = initFlow(flow, version);
+        const flowReady = initFlow(flow, version).then(function(flow) {
+          removeClass(resultsNode, 'show-loading');
+          return flow;
+        });
         editor.setOption('flow', flowReady);
       });
     });
