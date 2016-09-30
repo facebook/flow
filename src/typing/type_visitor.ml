@@ -277,8 +277,11 @@ class ['a] t = object(self)
     acc
 
   method props cx acc id =
-    Context.property_maps cx
-    |> IMap.find_unsafe id
+    Context.find_props cx id
+    |> self#smap (self#type_ cx) acc
+
+  method exports cx acc id =
+    Context.find_exports cx id
     |> self#smap (self#type_ cx) acc
 
   method private eval_id cx acc id =
@@ -303,7 +306,7 @@ class ['a] t = object(self)
     acc
 
   method private export_types cx acc { exports_tmap; cjs_export; has_every_named_export=_; } =
-    let acc = self#props cx acc exports_tmap in
+    let acc = self#exports cx acc exports_tmap in
     let acc = self#opt (self#type_ cx) acc cjs_export in
     acc
 

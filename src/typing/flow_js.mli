@@ -56,17 +56,17 @@ val eval_selector: Context.t -> reason -> Type.t -> Type.TypeTerm.selector -> in
 
 (* property maps *)
 
-val mk_propmap : Context.t -> Type.t SMap.t -> int
+val mk_propmap : Context.t -> Type.t SMap.t -> Type.Properties.id
 
-val has_prop : Context.t -> int -> SMap.key -> bool
+val has_prop : Context.t -> Type.Properties.id -> SMap.key -> bool
 
-val read_prop : Context.t -> int -> SMap.key -> Type.t
+val read_prop : Context.t -> Type.Properties.id -> SMap.key -> Type.t
 
-val write_prop : Context.t -> int -> SMap.key -> Type.t -> unit
+val write_prop : Context.t -> Type.Properties.id -> SMap.key -> Type.t -> unit
 
-val iter_props : Context.t -> int -> (string -> Type.t -> unit) -> unit
+val iter_props : Context.t -> Type.Properties.id -> (string -> Type.t -> unit) -> unit
 
-val find_props : Context.t -> int -> Type.t SMap.t
+val find_props : Context.t -> Type.Properties.id -> Type.t SMap.t
 
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
@@ -86,7 +86,7 @@ val dummy_static : reason -> Type.t
 val dummy_prototype : Type.t
 
 val mk_objecttype : ?flags:Type.flags ->
-  Type.dicttype option -> int -> Type.t -> Type.objtype
+  Type.dicttype option -> Type.Properties.id -> Type.t -> Type.objtype
 
 val mk_object_with_proto : Context.t -> reason ->
   ?dict:Type.dicttype ->

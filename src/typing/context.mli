@@ -56,7 +56,8 @@ val esproposal_decorators: t -> Options.esproposal_feature_mode
 val esproposal_export_star_as: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> Loc.filename
-val find_props: t -> Constraint.ident -> Type.properties
+val find_props: t -> Type.Properties.id -> Type.Properties.t
+val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_module: t -> string -> Type.t
 val find_tvar_reason: t -> Constraint.ident -> Reason.t
 val globals: t -> SSet.t
@@ -71,7 +72,8 @@ val module_exports_type: t -> module_exports_type
 val module_map: t -> Type.t SMap.t
 val module_name: t -> Modulename.t
 val output_graphml: t -> bool
-val property_maps: t -> Type.properties IMap.t
+val property_maps: t -> Type.Properties.map
+val export_maps: t -> Type.Exports.map
 val required: t -> SSet.t
 val require_loc: t -> Loc.t SMap.t
 val root: t -> Path.t
@@ -98,7 +100,8 @@ val add_global: t -> string -> unit
 val add_import_stmt: t -> Spider_monkey_ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
-val add_property_map: t -> Constraint.ident -> Type.properties -> unit
+val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
+val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_require: t -> string -> Loc.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
@@ -113,10 +116,12 @@ val set_all_unresolved: t  -> Type.TypeSet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
 val set_module_exports_type: t -> module_exports_type -> unit
-val set_property_maps: t -> Type.properties IMap.t -> unit
+val set_property_maps: t -> Type.Properties.map -> unit
+val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
 
 val clear_intermediates: t -> unit
 
 (* constructors *)
-val make_property_map: t -> Type.properties -> Constraint.ident
+val make_property_map: t -> Type.Properties.t -> Type.Properties.id
+val make_export_map: t -> Type.Exports.t -> Type.Exports.id

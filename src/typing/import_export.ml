@@ -21,7 +21,7 @@ open Type
 let mk_module_t cx reason = ModuleT(
   reason,
   {
-    exports_tmap = Flow.mk_propmap cx SMap.empty;
+    exports_tmap = Context.make_export_map cx SMap.empty;
     cjs_export = None;
     has_every_named_export = false;
   }
@@ -38,7 +38,7 @@ let mk_module_t cx reason = ModuleT(
  *)
 let mk_commonjs_module_t cx reason_exports_module reason export_t =
   let exporttypes = {
-    exports_tmap = Flow.mk_propmap cx SMap.empty;
+    exports_tmap = Context.make_export_map cx SMap.empty;
     cjs_export = Some export_t;
     has_every_named_export = false;
   } in

@@ -532,7 +532,8 @@ and gc_intersection_preprocess_tool cx state = function
 and gc_exporttypes cx state
   { exports_tmap; cjs_export; has_every_named_export } =
   ignore has_every_named_export;
-  Flow_js.iter_props cx exports_tmap (fun _ -> gc cx state);
+  Context.find_exports cx exports_tmap
+    |> SMap.iter (fun _ -> gc cx state);
   match cjs_export with
   | Some t -> gc cx state t
   | None -> ()

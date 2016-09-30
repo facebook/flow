@@ -238,8 +238,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export;}) ->
-    let property_maps = Context.property_maps json_cx.cx in
-    let tmap = IMap.find_unsafe exports_tmap property_maps in
+    let tmap = Context.find_exports json_cx.cx exports_tmap in
     let cjs_export = match cjs_export with
     | Some(t) -> _json_of_t json_cx t
     | None -> JSON_Null
@@ -457,11 +456,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         ]
       | ShadowRead (_, ids) -> [
           "shadowRead", JSON_Array (Nel.to_list ids |> List.map (fun id ->
-            JSON_Number (string_of_int id)
+            JSON_Number (Properties.string_of_id id)
         ))]
       | ShadowWrite ids -> [
           "shadowWrite", JSON_Array (Nel.to_list ids |> List.map (fun id ->
-            JSON_Number (string_of_int id)
+            JSON_Number (Properties.string_of_id id)
         ))]
     ) @ [
       "name", JSON_String name;
@@ -664,15 +663,14 @@ and json_of_typeparam_impl json_cx tparam = Hh_json.(
 
 and json_of_objtype json_cx = check_depth json_of_objtype_impl json_cx
 and json_of_objtype_impl json_cx objtype = Hh_json.(
-  let property_maps = Context.property_maps json_cx.cx in
-  let tmap = IMap.find_unsafe objtype.props_tmap property_maps in
+  let pmap = Context.find_props json_cx.cx objtype.props_tmap in
   JSON_Object ([
     "flags", json_of_flags json_cx objtype.flags;
   ] @ (match objtype.dict_t with
     | None -> []
     | Some d -> ["dictType", json_of_dicttype json_cx d]
   ) @ [
-    "propTypes", json_of_tmap json_cx tmap;
+    "propTypes", json_of_tmap json_cx pmap;
     "prototype", _json_of_t json_cx objtype.proto_t
   ])
 )
@@ -769,15 +767,14 @@ and json_of_funtype_impl json_cx {
 
 and json_of_insttype json_cx = check_depth json_of_insttype_impl json_cx
 and json_of_insttype_impl json_cx insttype = Hh_json.(
-  let property_maps = Context.property_maps json_cx.cx in
-  let field_tmap = IMap.find_unsafe insttype.fields_tmap property_maps in
-  let method_tmap = IMap.find_unsafe insttype.methods_tmap property_maps in
+  let field_pmap = Context.find_props json_cx.cx insttype.fields_tmap in
+  let method_pmap = Context.find_props json_cx.cx insttype.methods_tmap in
   JSON_Object [
     "classId", int_ insttype.class_id;
     "typeArgs", json_of_tmap json_cx insttype.type_args;
     "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
-    "fieldTypes", json_of_tmap json_cx field_tmap;
-    "methodTypes", json_of_tmap json_cx method_tmap;
+    "fieldTypes", json_of_tmap json_cx field_pmap;
+    "methodTypes", json_of_tmap json_cx method_pmap;
     "mixins", JSON_Bool insttype.mixins;
     "structural", JSON_Bool insttype.structural;
   ]
@@ -1151,7 +1148,8 @@ and dump_t_ (depth, tvars) cx t =
   | ThisClassT _ -> p t
   | BoundT param -> p ~extra:param.name t
   | ExistsT _ -> p t
-  | ObjT (_, { props_tmap; _ }) -> p ~extra:(spf "%d" props_tmap) t
+  | ObjT (_, { props_tmap; _ }) -> p t
+      ~extra:(Properties.string_of_id props_tmap)
   | ArrT (_, elem, tup) -> p ~extra:(spf "%s, %s" (kid elem)
       (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
@@ -1219,9 +1217,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | NonstrictReturning (Some (t, _)) -> spf "Nonstrict returning %s" (kid t)
   | Strict r -> spf "Strict %S" (dump_reason cx r)
   | ShadowRead (_, ids) -> spf "ShadowRead [%s]"
-      (String.concat "; " (Nel.to_list ids |> List.map string_of_int))
+      (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
   | ShadowWrite ids -> spf "ShadowWrite [%s]"
-      (String.concat "; " (Nel.to_list ids |> List.map string_of_int))
+      (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
   in
 
   if depth = 0 then string_of_use_ctor t

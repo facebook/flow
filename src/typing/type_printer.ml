@@ -85,8 +85,7 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
 
     | ObjT (_, {props_tmap = flds; dict_t; _}) ->
         let props =
-          Context.property_maps cx
-          |> IMap.find_unsafe flds
+          Context.find_props cx flds
           |> SMap.elements
           |> List.filter (fun (x,_) -> not (Reason.is_internal_name x))
           |> List.rev
@@ -363,7 +362,7 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
             (is_printed_type_parsable_impl weak cx EnclosureNone value)
         | None -> true
       in
-      let prop_map = IMap.find_unsafe props_tmap (Context.property_maps cx) in
+      let prop_map = Context.find_props cx props_tmap in
       SMap.fold (fun name t acc ->
           acc && (
             (* We don't print internal properties, thus we do not care whether

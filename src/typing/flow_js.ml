@@ -310,6 +310,12 @@ let iter_props cx id f =
   find_props cx id
   |> SMap.iter f
 
+let write_export cx id x t = Context.(
+  find_exports cx id
+  |> SMap.add x t
+  |> add_export_map cx id
+)
+
 (* visit an optional evaluated type at an evaluation id *)
 let visit_eval_id cx id f =
   match IMap.get id (Context.evaluated cx) with
@@ -776,17 +782,17 @@ module Cache = struct
      populated before checking against a union of object types, and are used
      while checking against each object type in the union. *)
   module SentinelProp = struct
-    let cache = ref IMap.empty
+    let cache = ref Properties.Map.empty
 
     let add id more_keys =
-      match IMap.get id !cache with
+      match Properties.Map.get id !cache with
       | Some keys ->
-        cache := IMap.add id (SSet.union keys more_keys) !cache
+        cache := Properties.Map.add id (SSet.union keys more_keys) !cache
       | None ->
-        cache := IMap.add id more_keys !cache
+        cache := Properties.Map.add id more_keys !cache
 
     let ordered_iter id f map =
-      let map = match IMap.get id !cache with
+      let map = match Properties.Map.get id !cache with
         | Some keys ->
           SSet.fold (fun s map ->
             match SMap.get s map with
@@ -802,7 +808,7 @@ module Cache = struct
     FlowConstraint.cache := TypePairSet.empty;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
-    SentinelProp.cache := IMap.empty
+    SentinelProp.cache := Properties.Map.empty
 
   let stats_poly_instantiation () =
     Hashtbl.stats PolyInstantiation.cache
@@ -1569,7 +1575,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* util that grows a module by adding named exports from a given map *)
     | (ModuleT(_, exports), ExportNamedT(_, tmap, t_out)) ->
-      SMap.iter (write_prop cx exports.exports_tmap) tmap;
+      SMap.iter (write_export cx exports.exports_tmap) tmap;
       rec_flow_t cx trace (l, t_out)
 
     (** Copy the named exports from a source module into a target module. Used
@@ -1577,7 +1583,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         the target and the imported module as the source. *)
     | (ModuleT(_, source_exports),
        CopyNamedExportsT(reason, target_module_t, t_out)) ->
-      let source_tmap = find_props cx source_exports.exports_tmap in
+      let source_tmap = Context.find_exports cx source_exports.exports_tmap in
       rec_flow cx trace (
         target_module_t,
         ExportNamedT(reason, source_tmap, t_out)
@@ -1681,16 +1687,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              we create below for non-CommonJS exports *)
           reposition ~trace cx reason t
         | None ->
+          (* convert ES module's named exports to an object *)
           let proto = MixedT (reason, Mixed_everything) in
-          let props_smap = find_props cx exports.exports_tmap in
+          let exports_tmap = Context.find_exports cx exports.exports_tmap in
+          let props = exports_tmap in
           mk_object_with_map_proto cx reason
-            ~sealed:true ~frozen:true props_smap proto
+            ~sealed:true ~frozen:true props proto
       ) in
       rec_flow_t cx trace (cjs_exports, t)
 
     (* import * as X from 'SomeModule'; *)
     | (ModuleT(_, exports), ImportModuleNsT(reason, t)) ->
-      let exports_tmap = find_props cx exports.exports_tmap in
+      let exports_tmap = Context.find_exports cx exports.exports_tmap in
       let ns_obj_tmap = (
         match exports.cjs_export with
         | Some(t) -> SMap.add "default" t exports_tmap
@@ -1714,7 +1722,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let export_t = match exports.cjs_export with
         | Some t -> t
         | None ->
-            let exports_tmap = find_props cx exports.exports_tmap in
+            let exports_tmap = Context.find_exports cx exports.exports_tmap in
             match SMap.get "default" exports_tmap with
               | Some t -> t
               | None ->
@@ -1767,7 +1775,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * object
          *)
         let exports_tmap = (
-          let exports_tmap = find_props cx exports.exports_tmap in
+          let exports_tmap = Context.find_exports cx exports.exports_tmap in
           match exports.cjs_export with
           | Some t -> SMap.add "default" t exports_tmap
           | None -> exports_tmap
@@ -8301,7 +8309,7 @@ end = struct
         let members = find_props cx flds in
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}) ->
-        let named_exports = find_props cx exports_tmap in
+        let named_exports = Context.find_exports cx exports_tmap in
         let cjs_export =
           match cjs_export with
           | Some t -> Some (resolve_type cx t)
@@ -8506,7 +8514,8 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     ()
 
   | ModuleT (_, { exports_tmap; cjs_export; has_every_named_export=_; }) ->
-    iter_props cx exports_tmap (fun _ -> recurse ~infer:true);
+    Context.find_exports cx exports_tmap
+      |> SMap.iter (fun _ -> recurse ~infer:true);
     begin match cjs_export with
     | Some t -> recurse ~infer:true t
     | None -> ()

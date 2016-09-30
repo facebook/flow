@@ -184,13 +184,15 @@ module ContextOptimizer = struct
 
   type quotient = {
     reduced_graph : node IMap.t;
-    reduced_property_maps : Type.t SMap.t IMap.t;
+    reduced_property_maps : Properties.map;
+    reduced_export_maps : Exports.map;
     reduced_envs : Context.env IMap.t
   }
 
   let empty = {
     reduced_graph = IMap.empty;
-    reduced_property_maps = IMap.empty;
+    reduced_property_maps = Properties.Map.empty;
+    reduced_export_maps = Exports.Map.empty;
     reduced_envs = IMap.empty;
   }
 
@@ -213,11 +215,21 @@ module ContextOptimizer = struct
 
     method! props cx quotient id =
       let { reduced_property_maps; _ } = quotient in
-      if (IMap.mem id reduced_property_maps) then quotient
+      if (Properties.Map.mem id reduced_property_maps) then quotient
       else
-        let pmap = IMap.find_unsafe id (Context.property_maps cx) in
-        let reduced_property_maps = IMap.add id pmap reduced_property_maps in
+        let pmap = Context.find_props cx id in
+        let reduced_property_maps =
+          Properties.Map.add id pmap reduced_property_maps in
         super#props cx { quotient with reduced_property_maps } id
+
+    method! exports cx quotient id =
+      let { reduced_export_maps; _ } = quotient in
+      if (Exports.Map.mem id reduced_export_maps) then quotient
+      else
+        let pmap = Context.find_exports cx id in
+        let reduced_export_maps =
+          Exports.Map.add id pmap reduced_export_maps in
+        super#exports cx { quotient with reduced_export_maps } id
 
     method! fun_type cx quotient funtype =
       let id = funtype.closure_t in
@@ -250,6 +262,7 @@ module ContextOptimizer = struct
     let quotient = reduce_context cx exports in
     Context.set_graph cx quotient.reduced_graph;
     Context.set_property_maps cx quotient.reduced_property_maps;
+    Context.set_export_maps cx quotient.reduced_export_maps;
     Context.set_envs cx quotient.reduced_envs;
     Context.set_type_graph cx (
       Graph_explorer.new_graph

@@ -208,7 +208,7 @@ and parts_of_funtype { params_tlist; params_names; return_t; _ } =
   | None -> list_parts params_tlist
 
 and parts_of_exporttypes cx { exports_tmap; cjs_export; _ } =
-  map_parts (Context.find_props cx exports_tmap) @
+  map_parts (Context.find_exports cx exports_tmap) @
   match cjs_export with
   | Some t -> ["cjs_export", Def t]
   | None -> []

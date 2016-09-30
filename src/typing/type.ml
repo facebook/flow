@@ -594,7 +594,7 @@ module rec TypeTerm : sig
   and objtype = {
     flags: flags;
     dict_t: dicttype option;
-    props_tmap: int;
+    props_tmap: Properties.id;
     proto_t: prototype;
   }
 
@@ -636,8 +636,8 @@ module rec TypeTerm : sig
   and lookup_kind =
   | Strict of reason
   | NonstrictReturning of (t * t) option
-  | ShadowRead of reason option * int Nel.t
-  | ShadowWrite of int Nel.t
+  | ShadowRead of reason option * Properties.id Nel.t
+  | ShadowWrite of Properties.id Nel.t
 
   and propname = reason * name
 
@@ -666,9 +666,9 @@ module rec TypeTerm : sig
     class_id: ident;
     type_args: t SMap.t;
     arg_polarities: polarity SMap.t;
-    fields_tmap: int;
+    fields_tmap: Properties.id;
     initialized_field_names: SSet.t;
-    methods_tmap: int;
+    methods_tmap: Properties.id;
     mixins: bool;
     structural: bool;
   }
@@ -682,7 +682,7 @@ module rec TypeTerm : sig
      * type is an object (that object's properties become named exports) or if
      * it has any "type" exports via `export type ...`.
      *)
-    exports_tmap: int;
+    exports_tmap: Exports.id;
 
     (**
      * This stores the CommonJS export type when applicable and is used as the
@@ -735,8 +735,6 @@ module rec TypeTerm : sig
 
   and static = t
 
-  and properties = t SMap.t
-
   and t_out = t
 
   and custom_fun_kind =
@@ -785,6 +783,56 @@ module rec TypeTerm : sig
     t * predicate Key_map.t * predicate Key_map.t
 
 end = TypeTerm
+
+and Properties : sig
+  type t = TypeTerm.t SMap.t
+
+  type id
+  module Map : MyMap.S with type key = id
+  type map = t Map.t
+
+  val mk_id: unit -> id
+  val fake_id: id
+  val string_of_id: id -> string
+end = struct
+  type t = TypeTerm.t SMap.t
+
+  type id = int
+  module Map : MyMap.S with type key = id = MyMap.Make(struct
+    type key = id
+    type t = key
+    let compare = Pervasives.compare
+  end)
+  type map = t Map.t
+
+  let mk_id = Reason.mk_id
+  let fake_id = 0
+  let string_of_id = string_of_int
+end
+
+and Exports : sig
+  type t = TypeTerm.t SMap.t
+
+  type id
+  module Map : MyMap.S with type key = id
+  type map = t Map.t
+
+  val mk_id: unit -> id
+  val string_of_id: id -> string
+end = struct
+  type t = TypeTerm.t SMap.t
+
+  type id = int
+  module Map : MyMap.S with type key = id = MyMap.Make(struct
+    type key = id
+    type t = key
+    let compare = Pervasives.compare
+  end)
+  type map = t Map.t
+
+  let mk_id = Reason.mk_id
+  let string_of_id = string_of_int
+end
 
 (* We encapsulate UnionT's internal structure
    so we can use specialized representations for

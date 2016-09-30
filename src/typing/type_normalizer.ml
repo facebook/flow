@@ -27,9 +27,9 @@ let fake_instance name =
     class_id = 0;
     type_args = SMap.empty;
     arg_polarities = SMap.empty;
-    fields_tmap = 0;
+    fields_tmap = Properties.fake_id;
     initialized_field_names = SSet.empty;
-    methods_tmap = 0;
+    methods_tmap = Properties.fake_id;
     mixins = false;
     structural = false;
   } in
@@ -364,9 +364,9 @@ let rec normalize_type_impl cx ids t = match t with
   | ModuleT (_, exporttypes) ->
     let reason = locationless_reason (RCustom "module") in
     let exports_tmap =
-      Context.find_props cx exporttypes.exports_tmap
+      Context.find_exports cx exporttypes.exports_tmap
       |> SMap.map (normalize_type_impl cx ids)
-      |> Context.make_property_map cx
+      |> Context.make_export_map cx
     in
     let cjs_export = match exporttypes.cjs_export with
       | None -> None

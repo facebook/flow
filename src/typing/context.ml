@@ -56,7 +56,10 @@ type t = {
   mutable tvar_reasons: Reason.t IMap.t;
 
   (* obj types point to mutable property maps *)
-  mutable property_maps: Type.properties IMap.t;
+  mutable property_maps: Type.Properties.map;
+
+  (* modules point to mutable export maps *)
+  mutable export_maps: Type.Exports.map;
 
   (* map from evaluation ids to types *)
   mutable evaluated: Type.t IMap.t;
@@ -134,7 +137,8 @@ let make metadata file module_name = {
   graph = IMap.empty;
   tvar_reasons = IMap.empty;
   envs = IMap.empty;
-  property_maps = IMap.empty;
+  property_maps = Type.Properties.Map.empty;
+  export_maps = Type.Exports.Map.empty;
   evaluated = IMap.empty;
   type_graph = Graph_explorer.new_graph ISet.empty;
   all_unresolved = IMap.empty;
@@ -170,7 +174,8 @@ let esproposal_decorators cx = cx.metadata.esproposal_decorators
 let esproposal_export_star_as cx = cx.metadata.esproposal_export_star_as
 let evaluated cx = cx.evaluated
 let file cx = cx.file
-let find_props cx id = IMap.find_unsafe id cx.property_maps
+let find_props cx id = Type.Properties.Map.find_unsafe id cx.property_maps
+let find_exports cx id = Type.Exports.Map.find_unsafe id cx.export_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
 let find_tvar_reason cx id = IMap.find_unsafe id cx.tvar_reasons
 let globals cx = cx.globals
@@ -186,6 +191,7 @@ let module_map cx = cx.modulemap
 let module_name cx = cx.module_name
 let output_graphml cx = cx.metadata.output_graphml
 let property_maps cx = cx.property_maps
+let export_maps cx = cx.export_maps
 let required cx = cx.required
 let require_loc cx = cx.require_loc
 let root cx = cx.metadata.root
@@ -228,7 +234,9 @@ let add_imported_t cx name t =
 let add_module cx name tvar =
   cx.modulemap <- SMap.add name tvar cx.modulemap
 let add_property_map cx id pmap =
-  cx.property_maps <- IMap.add id pmap cx.property_maps
+  cx.property_maps <- Type.Properties.Map.add id pmap cx.property_maps
+let add_export_map cx id tmap =
+  cx.export_maps <- Type.Exports.Map.add id tmap cx.export_maps
 let add_require cx name loc =
   cx.required <- SSet.add name cx.required;
   cx.require_loc <- SMap.add name loc cx.require_loc
@@ -258,6 +266,8 @@ let set_module_exports_type cx module_exports_type =
   cx.module_exports_type <- module_exports_type
 let set_property_maps cx property_maps =
   cx.property_maps <- property_maps
+let set_export_maps cx export_maps =
+  cx.export_maps <- export_maps
 let set_type_graph cx type_graph =
   cx.type_graph <- type_graph
 let set_tvar cx id node =
@@ -270,8 +280,13 @@ let clear_intermediates cx =
 
 (* constructors *)
 let make_property_map cx pmap =
-  let id = Reason.mk_id () in
+  let id = Type.Properties.mk_id () in
   add_property_map cx id pmap;
+  id
+
+let make_export_map cx tmap =
+  let id = Type.Exports.mk_id () in
+  add_export_map cx id tmap;
   id
 
 (* Copy context from cx_other to cx *)
@@ -284,7 +299,10 @@ let merge_into cx cx_other =
      So do union N M as long as N may override M for overlapping keys.
   *)
   set_envs cx (IMap.union (envs cx_other) (envs cx));
-  set_property_maps cx (IMap.union (property_maps cx_other) (property_maps cx));
+  set_property_maps cx (
+    Type.Properties.Map.union (property_maps cx_other) (property_maps cx));
+  set_export_maps cx (
+    Type.Exports.Map.union (export_maps cx_other) (export_maps cx));
   set_evaluated cx (IMap.union (evaluated cx_other) (evaluated cx));
   set_type_graph cx (Graph_explorer.union_finished (type_graph cx_other) (type_graph cx));
   set_all_unresolved cx (IMap.union (all_unresolved cx_other) (all_unresolved cx));
