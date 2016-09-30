@@ -198,7 +198,7 @@ let schema = List.map from_list [
     "modifiers";
     "keyword";
     "name";
-    "type_parameter_list";
+    "type_parameters";
     "extends";
     "extends_list";
     "implements";
@@ -216,7 +216,7 @@ let schema = List.map from_list [
     "trait_use";
     "trait_use";
     "keyword";
-    "name_list";
+    "names";
     "semicolon" ];
   [ "RequireClause";
     "require_clause";
@@ -233,7 +233,7 @@ let schema = List.map from_list [
     "abstract";
     "keyword";
     "type_specifier";
-    "declarator_list";
+    "declarators";
     "semicolon" ];
   [ "ConstantDeclarator";
     "constant_declarator";
@@ -262,7 +262,7 @@ let schema = List.map from_list [
   [ "ParameterDeclaration";
     "parameter_declaration";
     "parameter_declaration";
-    "param"; (* TODO: Consider "parameter" *)
+    "parameter";
     "attribute";
     "visibility";
     "type";
@@ -271,9 +271,9 @@ let schema = List.map from_list [
   [ "AttributeSpecification";
     "attribute_specification";
     "attribute_specification";
-    "attribute_spec"; (* TODO: Consider "attribute_specification" *)
+    "attribute_specification";
     "left_double_angle";
-    "attribute_list";
+    "attributes";
     "right_double_angle" ];
   [ "Attribute";
     "attribute";
@@ -305,8 +305,8 @@ let schema = List.map from_list [
   [ "ExpressionStatement";
     "expression_statement";
     "expression_statement";
-    "expr_statement"; (* TODO: Consider "expression_statement" *)
-    "expr"; (* TODO: should be "expression" *)
+    "expression_statement";
+    "expression";
     "semicolon" ];
   [ "WhileStatement";
     "while_statement";
@@ -360,22 +360,22 @@ let schema = List.map from_list [
     "type";
     "variable";
     "right_paren";
-    "compound_statement" ];
+    "body" ];
   [ "FinallyClause";
     "finally_clause";
     "finally_clause";
     "finally";
     "keyword";
-    "compound_statement" ]; (* TODO: Consider "body" *)
+    "body" ];
   [ "DoStatement";
     "do_statement";
     "do_statement";
     "do";
     "keyword";
-    "statement";
-    "while_keyword";
+    "body";
+    "while";
     "left_paren";
-    "condition_expr"; (* TODO: Consider "expression" *)
+    "condition";
     "right_paren";
     "semicolon" ];
   [ "ForStatement";
@@ -384,64 +384,64 @@ let schema = List.map from_list [
     "for";
     "keyword";
     "left_paren";
-    "initializer_expr"; (* TODO: Consider "expression" *)
+    "initializer";
     "first_semicolon";
-    "control_expr"; (* TODO: Consider "expression" *)
+    "control";
     "second_semicolon";
-    "end_of_loop_expr"; (* TODO: Consider "expression" *)
+    "end_of_loop";
     "right_paren";
-    "statement" ];
+    "body" ];
   [ "ForeachStatement";
     "foreach_statement";
     "foreach_statement";
     "foreach";
     "keyword";
     "left_paren";
-    "collection_name";
-    "await_opt"; (* TODO: remove opt *)
+    "collection";
+    "await";
     "as";
-    "key_opt"; (* TODO: remove opt *)
-    "key_arrow_opt"; (* TODO: remove opt *)
+    "key";
+    "arrow";
     "value";
     "right_paren";
-    "statement" ];
+    "body" ];
   [ "SwitchStatement";
     "switch_statement";
     "switch_statement";
     "switch";
     "keyword";
     "left_paren";
-    "expr"; (* TODO: "expression" *)
+    "expression";
     "right_paren";
-    "compound_statement" ]; (* TODO: "body" *)
+    "body" ];
   [ "CaseStatement";
     "case_statement";
     "case_statement";
     "case";
     "keyword";
-    "expr"; (* TODO: "expression" *)
+    "expression";
     "colon";
-    "stmt" ]; (* TODO: "statement" *)
+    "statement" ];
   [ "DefaultStatement";
     "default_statement";
     "default_statement";
     "default";
     "keyword";
     "colon";
-    "stmt" ];(* TODO: "statement" *)
+    "statement" ];
   [ "ReturnStatement";
     "return_statement";
     "return_statement";
     "return";
     "keyword";
-    "expr";  (* TODO: "expression" *)
+    "expression";
     "semicolon" ];
   [ "ThrowStatement";
     "throw_statement";
     "throw_statement";
     "throw";
     "keyword";
-    "expr"; (* TODO "expression" *)
+    "expression";
     "semicolon" ];
   [ "BreakStatement";
     "break_statement";
@@ -475,7 +475,7 @@ let schema = List.map from_list [
     "echo_statement";
     "echo";
     "keyword";
-    "expression_list";
+    "expressions";
     "semicolon" ];
   [ "SimpleInitializer";
     "simple_initializer";
@@ -490,7 +490,7 @@ let schema = List.map from_list [
     "async";
     "function";
     "left_paren";
-    "parameter_list";
+    "parameters";
     "right_paren";
     "colon";
     "type";
@@ -517,7 +517,7 @@ let schema = List.map from_list [
     "lambda_signature";
     "lambda";
     "left_paren";
-    "parameter_list";
+    "parameters";
     "right_paren";
     "colon";
     "type" ];
@@ -561,7 +561,7 @@ let schema = List.map from_list [
     "print_expression";
     "print";
     "keyword";
-    "expr" ]; (* TODO "expression " *)
+    "expression" ];
   [ "PrefixUnaryExpression";
     "prefix_unary_expression";
     "prefix_unary_expression";
@@ -602,20 +602,20 @@ let schema = List.map from_list [
     "function_call_expression";
     "function_call";
     "receiver";
-    "lparen"; (* TODO: left_paren *)
+    "left_paren";
     "arguments";
-    "rparen" ]; (* TODO: right_paren *)
+    "right_paren" ];
   [ "ParenthesizedExpression";
     "parenthesized_expression";
     "parenthesized_expression";
-    "paren_expr"; (* TODO: paren_expression *)
+    "parenthesized_expression";
     "left_paren";
     "expression";
     "right_paren" ];
   [ "BracedExpression";
     "braced_expression";
     "braced_expression";
-    "braced_expr"; (* TODO: braced_expression *)
+    "braced_expression";
     "left_brace";
     "expression";
     "right_brace" ];
@@ -633,7 +633,7 @@ let schema = List.map from_list [
     "collection_literal";
     "name";
     "left_brace";
-    "initialization_list";
+    "initializers";
     "right_brace" ];
   [ "ObjectCreationExpression";
     "object_creation_expression";
@@ -641,9 +641,9 @@ let schema = List.map from_list [
     "object_creation";
     "new";
     "class";
-    "lparen"; (* TODO: left_paren *)
+    "left_paren";
     "arguments";
-    "rparen" ]; (* TODO: right_paren *)
+    "right_paren" ];
   [ "ArrayCreationExpression";
     "array_creation_expression";
     "array_creation_expression";
@@ -671,9 +671,9 @@ let schema = List.map from_list [
     "subscript_expression";
     "subscript";
     "receiver";
-    "left"; (* TODO: left_bracket *)
+    "left_bracket";
     "index";
-    "right" ]; (* TODO: right_bracket *)
+    "right_bracket" ];
   [ "AwaitableCreationExpression";
     "awaitable_creation_expression";
     "awaitable_creation_expression";
@@ -692,7 +692,7 @@ let schema = List.map from_list [
     "xhp_category_declaration";
     "xhp_category";
     "keyword";
-    "list";
+    "categories";
     "semicolon" ];
   [ "XHPEnumType";
     "xhp_enum_type";
@@ -713,7 +713,7 @@ let schema = List.map from_list [
     "xhp_class_attribute_declaration";
     "xhp_attribute";
     "keyword";
-    "list";
+    "attributes";
     "semicolon" ];
   [ "XHPClassAttribute";
     "xhp_class_attribute";
@@ -729,7 +729,7 @@ let schema = List.map from_list [
     "xhp_attribute";
     "name";
     "equal";
-    "expr" ]; (* TODO "expression" *)
+    "expression" ];
   [ "XHPOpen";
     "xhp_open";
     "xhp_open";
@@ -770,9 +770,9 @@ let schema = List.map from_list [
     "type_parameter";
     "type_parameter";
     "type";
-    "variance_opt"; (* TODO: remove opt *)
+    "variance";
     "name";
-    "constraint_list_opt" ]; (* TODO: remove opt *)
+    "constraints" ];
   [ "TypeConstraint";
     "type_constraint";
     "type_constraint";
@@ -805,7 +805,7 @@ let schema = List.map from_list [
     "classname_type_specifier";
     "classname_type_specifier";
     "classname";
-    "classname"; (* TODO keyword *)
+    "keyword";
     "left_angle";
     "type";
     "right_angle" ];
