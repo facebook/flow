@@ -145,7 +145,7 @@ let init ~options lib_files
 
   Flow.Cache.clear();
   let master_cx = get_master_cx options in
-  let reason = Reason.builtin_reason "module" in
+  let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
   Merge_js.ContextOptimizer.sig_context [master_cx];

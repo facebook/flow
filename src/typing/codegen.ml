@@ -99,7 +99,7 @@ let gen_if conditional gen_fn env =
 let gen_builtin_class_type t env = Type.(
   (* AVERT YOUR EYES *)
   let reason = reason_of_t t in
-  let builtin_name = Reason.desc_of_reason reason in
+  let builtin_name = Reason.(string_of_desc (desc_of_reason reason)) in
 
   (**
    * Assert that the builtin name we found does match with the class_id we're

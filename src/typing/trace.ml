@@ -141,9 +141,15 @@ let max_pos_len_and_depth ~prep_path limit trace =
 let pretty_r ~prep_path margin r prefix suffix =
   let len = pos_len ~prep_path r in
   let ind = if margin > len then spaces (margin - len) else "" in
-  if prefix = "" && suffix = ""
-  then prefix_reason ind r
-  else wrap_reason (ind ^ (spf "%s[" prefix)) (spf "]%s" suffix) r
+  replace_reason (fun desc ->
+    let desc_str = string_of_desc desc in
+    let custom =
+      if prefix = "" && suffix = ""
+      then spf "%s%s" ind desc_str
+      else spf "%s%s%s" (ind ^ spf "%s[" prefix) desc_str (spf "]%s" suffix)
+    in
+    RCustom custom
+  ) r
 
 
 (* prettyprint a trace. what we print:
@@ -191,7 +197,8 @@ let reasons_of_trace ~prep_path ?(level=0) trace =
   in
 
   let print_path i (steps: step list) =
-    (reason_of_string (spf "* path %d:" (i + 1))) ::
+    let desc = RCustom (spf "* path %d:" (i + 1)) in
+    (locationless_reason desc) ::
     List.concat (List.mapi (print_step steps) steps)
   in
 

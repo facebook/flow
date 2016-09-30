@@ -41,7 +41,7 @@ let empty ?(structural=false) id reason tparams tparams_map super =
   let constructor = [] in
   let static =
     let super = Type.ClassT super in
-    let reason = prefix_reason "statics of " reason in
+    let reason = replace_reason (fun desc -> RStatics desc) reason in
     empty_sig reason super
   in
   let instance = empty_sig reason super in
@@ -227,7 +227,7 @@ let add_this self cx reason tparams tparams_map =
   in
   let this_tp = { Type.
     name = "this";
-    reason = replace_reason thistype_desc reason;
+    reason = replace_reason_const RThisType reason;
     bound = rec_instance_type;
     polarity = Type.Positive;
     default = None;
@@ -297,7 +297,7 @@ let mk_super cx tparams_map c targs = Type.(
 
 let mk_interface_super cx structural reason tparams_map = Type.(function
   | (None, None) ->
-      MixedT (reason_of_string "Object", Mixed_everything)
+      MixedT (locationless_reason RObjectClassName, Mixed_everything)
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some id, targs) ->
@@ -313,7 +313,7 @@ let mk_interface_super cx structural reason tparams_map = Type.(function
 
 let mk_extends cx tparams_map ~expr = Type.(function
   | (None, None) ->
-      MixedT (reason_of_string "Object", Mixed_everything)
+      MixedT (locationless_reason RObjectClassName, Mixed_everything)
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some e, targs) ->
@@ -323,7 +323,7 @@ let mk_extends cx tparams_map ~expr = Type.(function
 
 let mk_mixins cx reason tparams_map = Type.(function
   | (None, None) ->
-      MixedT (reason_of_string "Object", Mixed_everything)
+      MixedT (locationless_reason RObjectClassName, Mixed_everything)
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some id, targs) ->
@@ -397,13 +397,13 @@ let mk cx loc reason self ~expr = Ast.Class.(
       (* TODO: Does this distinction matter for the type checker? *)
       class_sig
     else
-      let reason = replace_reason "default constructor" reason in
+      let reason = replace_reason_const RConstructor reason in
       add_default_constructor reason class_sig
   in
 
   (* All classes have a static "name" property. *)
   let class_sig =
-    let reason = prefix_reason "`name` property of" reason in
+    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
     add_field ~static:true "name" (t, None) class_sig
   in
@@ -434,16 +434,16 @@ let mk cx loc reason self ~expr = Ast.Class.(
 
       let method_desc, add = match kind with
       | Method.Constructor ->
-          "constructor",
+          RConstructor,
           add_constructor
       | Method.Method ->
-          Utils.spf "method `%s`" name,
+          RProperty name,
           add_method ~static name
       | Method.Get ->
-          Utils.spf "getter for `%s`" name,
+          RProperty name,
           add_getter ~static name
       | Method.Set ->
-          Utils.spf "setter for `%s`" name,
+          RProperty name,
           add_setter ~static name
       in
       let reason = mk_reason method_desc loc in
@@ -461,7 +461,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
         if value <> None
         then Flow_error.warn_or_ignore_class_properties cx ~static loc;
 
-        let reason = mk_reason (Utils.spf "class property `%s`" name) loc in
+        let reason = mk_reason (RProperty name) loc in
         let field = mk_field cx c reason typeAnnotation value in
         add_field ~static name field c
 
@@ -531,7 +531,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     let id = Flow.mk_nominal cx in
     let extends = extract_extends cx structural extends in
     let mixins = extract_mixins cx mixins in
-    let super_reason = prefix_reason "super of " reason in
+    let super_reason = replace_reason (fun desc -> RSuper desc) reason in
     (* mixins override extends *)
     let interface_supers =
       List.map (mk_mixins cx super_reason tparams_map) mixins @
@@ -547,7 +547,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
   in
 
   let iface_sig =
-    let reason = prefix_reason "`name` property of" reason in
+    let reason = replace_reason (fun desc -> RNameProperty desc) reason in
     let t = Type.StrT.why reason in
     add_field ~static:true "name" (t, None) iface_sig
   in
@@ -610,7 +610,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
   if mem_constructor iface_sig
   then iface_sig
   else
-    let reason = mk_reason "constructor" loc in
+    let reason = mk_reason RConstructor loc in
     add_default_constructor reason iface_sig
 )
 
@@ -634,8 +634,7 @@ let toplevels cx ~decls ~stmts ~expr x =
     | _, None -> ()
     | _, Some ((loc, _) as expr) ->
       let init =
-        let desc = Utils.spf "field initializer for `%s`" name in
-        let reason = mk_reason desc loc in
+        let reason = mk_reason (RFieldInitializer name) loc in
         Func_sig.field_initializer x.tparams_map reason expr field_t
       in
       method_ this super init
@@ -671,8 +670,7 @@ let toplevels cx ~decls ~stmts ~expr x =
         if derived_ctor then
           let open Type in
           let specific =
-            let msg = "uninitialized this (expected super constructor call)" in
-            VoidT (replace_reason msg (reason_of_t this))
+            VoidT (replace_reason_const RUninitializedThis (reason_of_t this))
           in
           Scope.Entry.new_var ~loc:(loc_of_t t) ~specific (OptionalT t)
         else

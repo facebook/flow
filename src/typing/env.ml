@@ -327,7 +327,7 @@ let cache_global cx name reason global_scope =
     if List.mem name global_any
     then AnyT.t
     else (if List.mem name global_lexicals
-    then MixedT (reason_of_string "global object", Mixed_everything)
+    then MixedT (locationless_reason (RCustom "global object"), Mixed_everything)
     else Flow_js.get_builtin cx name reason)
   in
   let loc = loc_of_reason reason in
@@ -510,7 +510,7 @@ let bind_declare_fun =
   | IntersectionT (reason, rep) ->
     IntersectionT (reason, InterRep.append [new_t] rep)
   | _ ->
-    let reason = replace_reason "intersection type" (reason_of_t seen_t) in
+    let reason = replace_reason_const RIntersectionType (reason_of_t seen_t) in
     IntersectionT (reason, InterRep.make seen_t new_t [])
   in
 
@@ -668,9 +668,9 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
     ->
     let uninit desc = VoidT.make (mk_reason desc value_declare_loc) in
     let specific = if state = State.Declared
-      then uninit "uninitialized variable"
+      then uninit (RCustom "uninitialized variable")
       else (* State.MaybeInitialized *)
-        let desc = "possibly uninitialized variable" in
+        let desc = (RCustom "possibly uninitialized variable") in
         let rep = UnionRep.make (uninit desc) specific [] in
         UnionT (mk_reason desc value_declare_loc, rep)
     in
@@ -916,7 +916,7 @@ let merge_env =
     then general0
     (* general case *)
     else
-      let reason = replace_reason name reason in
+      let reason = replace_reason_const (RCustom name) reason in
       let tvar = create_union cx reason specific1 specific2 in
       Flow_js.flow_t cx (tvar, general0);
       tvar
@@ -1011,7 +1011,7 @@ let merge_env =
     (* refi was introduced in both children *)
     | None, Some child1, Some child2 ->
       let name = Key.string_of_key key in
-      let reason = replace_reason name reason in
+      let reason = replace_reason_const (RCustom name) reason in
       let refined = create_union cx reason child1.refined child2.refined in
       let original = create_union cx reason child1.original child2.original in
       let refi_loc = loc_of_reason reason in
@@ -1129,7 +1129,7 @@ let widen_env =
     if specific = general
     then None
     else
-      let reason = replace_reason name reason in
+      let reason = replace_reason_const (RCustom name) reason in
       let tvar = Flow_js.mk_tvar cx reason in
       Flow_js.flow_t cx (specific, tvar);
       Flow_js.flow_t cx (tvar, general);
@@ -1264,12 +1264,12 @@ let refine_with_preds cx reason preds orig_types =
       let refi_reason =
         let pred_str = string_of_predicate pred in
         let rstr = spf "identifier %s when %s" name pred_str in
-        replace_reason rstr reason
+        replace_reason_const (RCustom rstr) reason
       in
       Entry.(match find_entry cx name reason with
       | _, Value v ->
         let orig_type =
-          let get_reason = replace_reason (spf "identifier %s" name) reason in
+          let get_reason = replace_reason_const (RIdentifier name) reason in
           get_var cx name get_reason
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
@@ -1291,7 +1291,7 @@ let refine_with_preds cx reason preds orig_types =
         let pred_str = string_of_predicate pred in
         let rstr = spf "expression %s when %s"
           (Key.string_of_key key) pred_str in
-        replace_reason rstr reason
+        replace_reason_const (RCustom rstr) reason
       in
       let orig_type = Key_map.find_unsafe key orig_types in
       let refi_type = mk_refi_type orig_type pred refi_reason in

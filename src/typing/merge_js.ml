@@ -43,7 +43,7 @@ let explicit_res_require_strict cx (r, f, cx_to) =
    in some arbitrary cx, so cx_to should have already been copied to cx. *)
 let explicit_decl_require_strict cx (m, resolved_m, cx_to) =
   let loc = SMap.find_unsafe m (Context.require_loc cx_to) in
-  let reason = Reason.mk_reason m loc in
+  let reason = Reason.(mk_reason (RCustom m) loc) in
 
   (* lookup module declaration from builtin context *)
   (* TODO: cache in modulemap *)

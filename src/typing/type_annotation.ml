@@ -40,7 +40,7 @@ let check_type_param_arity cx loc params n f =
 
 let mk_custom_fun cx loc typeParameters kind =
   check_type_param_arity cx loc typeParameters 0 (fun () ->
-    let reason = mk_reason "function type" loc in
+    let reason = mk_reason RFunctionType loc in
     CustomFunT (reason, kind)
   )
 
@@ -70,14 +70,14 @@ let rec convert cx tparams_map = Ast.Type.(function
   let t1 = convert cx tparams_map t1 in
   let ts = List.map (convert cx tparams_map) ts in
   let rep = UnionRep.make t0 t1 ts in
-  UnionT (mk_reason "union type" loc, rep)
+  UnionT (mk_reason RUnionType loc, rep)
 
 | loc, Intersection (t0, t1, ts) ->
   let t0 = convert cx tparams_map t0 in
   let t1 = convert cx tparams_map t1 in
   let ts = List.map (convert cx tparams_map) ts in
   let rep = InterRep.make t0 t1 ts in
-  IntersectionT (mk_reason "intersection type" loc, rep)
+  IntersectionT (mk_reason RIntersectionType loc, rep)
 
 | loc, Typeof x ->
   begin match x with
@@ -94,8 +94,8 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Tuple ts ->
   let elts = List.map (convert cx tparams_map) ts in
-  let reason = mk_reason "tuple type" loc in
-  let element_reason = mk_reason "tuple element" loc in
+  let reason = mk_reason RTupleType loc in
+  let element_reason = mk_reason RTupleElement loc in
   let tx = match elts with
   | [] -> Flow_js.mk_tvar cx element_reason
   | [t] -> t
@@ -121,20 +121,20 @@ let rec convert cx tparams_map = Ast.Type.(function
   ArrT (reason, tx, elts)
 
 | loc, Array t ->
-  let r = mk_reason "array type" loc in
+  let r = mk_reason RArrayType loc in
   let t = convert cx tparams_map t in
   ArrT (r, t, [])
 
 | loc, StringLiteral { StringLiteral.value; _ }  ->
-  let reason = mk_reason "string literal type" loc in
+  let reason = mk_reason (RStringLit value) loc in
   mk_singleton_string reason value
 
 | loc, NumberLiteral { NumberLiteral.value; raw; _ }  ->
-  let reason = mk_reason "number literal type" loc in
+  let reason = mk_reason (RNumberLit raw) loc in
   mk_singleton_number reason value raw
 
 | loc, BooleanLiteral { BooleanLiteral.value; _ }  ->
-  let reason = mk_reason "boolean literal type" loc in
+  let reason = mk_reason (RBooleanLit value) loc in
   mk_singleton_boolean reason value
 
 (* TODO *)
@@ -143,7 +143,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   let m = convert_qualification cx "type-annotation" qualification in
   let _, { Ast.Identifier.name; _ } = id in
-  let reason = mk_reason name loc in
+  let reason = mk_reason (RCustom name) loc in
   let t = Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (m, GetPropT (reason, (reason, name), t));
   ) in
@@ -175,7 +175,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "Array" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      ArrT (mk_reason "array type" loc, t, [])
+      ArrT (mk_reason RArrayType loc, t, [])
     )
 
   (* $Either<...T> is the union of types ...T *)
@@ -183,7 +183,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     (match convert_type_params () with
     | t0::t1::ts ->
       let rep = UnionRep.make t0 t1 ts in
-      UnionT (mk_reason "union type" loc, rep)
+      UnionT (mk_reason RUnionType loc, rep)
     | _ ->
       let msg = "Incorrect number of type parameters (expected at least 2)" in
       error_type cx loc msg)
@@ -193,7 +193,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     (match convert_type_params () with
     | t0::t1::ts ->
       let rep = InterRep.make t0 t1 ts in
-      IntersectionT (mk_reason "intersection type" loc, rep)
+      IntersectionT (mk_reason RIntersectionType loc, rep)
     | _ ->
       let msg = "Incorrect number of type parameters (expected at least 2)" in
       error_type cx loc msg)
@@ -201,7 +201,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* $Tuple<...T> is the tuple of types ...T *)
   | "$Tuple" ->
     let ts = convert_type_params () in
-    ArrT (mk_reason "tuple type" loc, AnyT.t, ts)
+    ArrT (mk_reason RTupleType loc, AnyT.t, ts)
 
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->
@@ -221,7 +221,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Type" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      TypeT (mk_reason "type" loc, t)
+      TypeT (mk_reason (RCustom "type") loc, t)
     )
 
   (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
@@ -230,7 +230,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match convert_type_params () with
       | [t; SingletonStrT (_, key)] ->
         EvalT (t, TypeDestructorT
-          (mk_reason "property type" loc, PropertyType key), mk_id())
+          (mk_reason (RCustom "property type") loc, PropertyType key), mk_id())
       | _ -> error_type cx loc
         "expected object type and string literal as arguments to $PropertyType"
     )
@@ -240,7 +240,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
       EvalT (t, TypeDestructorT
-        (mk_reason "non-maybe type" loc, NonMaybeType), mk_id())
+        (mk_reason (RCustom "non-maybe type") loc, NonMaybeType), mk_id())
     )
 
   (* $Shape<T> matches the shape of T *)
@@ -264,13 +264,14 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Keys" | "$Enum"->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      KeysT (mk_reason "key set" loc, t)
+      KeysT (mk_reason RKeySet loc, t)
     )
 
   | "$Exact" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = List.hd (convert_type_params ()) in
-      ExactT (mk_reason "exact type" loc, t)
+      let desc = RExactType (desc_of_t t) in
+      ExactT (mk_reason desc loc, t)
     )
 
   (* $Exports<'M'> is the type of the exports of module 'M' *)
@@ -279,7 +280,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       match typeParameters with
       | Some ((_, StringLiteral { StringLiteral.value; _ })::_) ->
-          let reason = (mk_reason (spf "exports of module `%s`" value) loc) in
+          let desc = RCustom (spf "exports of module `%s`" value) in
+          let reason = mk_reason desc loc in
           let remote_module_t =
             Env.get_var_declared_type cx (internal_module_name value) reason
           in
@@ -303,7 +305,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
-      let reason = mk_reason "tuple map" loc in
+      let reason = mk_reason RTupleMap loc in
       TypeMapT (reason, TupleMap, t1, t2)
     )
 
@@ -312,7 +314,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
-      let reason = mk_reason "object map" loc in
+      let reason = mk_reason RObjectMap loc in
       TypeMapT (reason, ObjectMap, t1, t2)
     )
 
@@ -321,7 +323,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t1, t2 = match convert_type_params () with
       | [t1; t2] -> t1, t2
       | _ -> assert false in
-      let reason = mk_reason "object mapi" loc in
+      let reason = mk_reason RObjectMapi loc in
       TypeMapT (reason, ObjectMapi, t1, t2)
     )
 
@@ -332,7 +334,7 @@ let rec convert cx tparams_map = Ast.Type.(function
          environment. Currently, we only support this types in a class
          environment: a this type in class C is bounded by C. *)
       check_type_param_arity cx loc typeParameters 0 (fun () ->
-        let reason = mk_reason thistype_desc loc in
+        let reason = mk_reason RThisType loc in
         Flow_js.reposition cx reason (SMap.find_unsafe "this" tparams_map)
       )
     else (
@@ -349,38 +351,38 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   | "Function" | "function" ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      let reason = mk_reason "function type" loc in
+      let reason = mk_reason RFunctionType loc in
       AnyFunT reason
     )
 
   | "Object" ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      let reason = mk_reason "object type" loc in
+      let reason = mk_reason RObjectType loc in
       AnyObjT reason
     )
 
   | "Function$Prototype$Apply" ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      let reason = mk_reason "function type" loc in
+      let reason = mk_reason RFunctionType loc in
       FunProtoApplyT reason
     )
 
   | "Function$Prototype$Bind" ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      let reason = mk_reason "function type" loc in
+      let reason = mk_reason RFunctionType loc in
       FunProtoBindT reason
     )
 
   | "Function$Prototype$Call" ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      let reason = mk_reason "function type" loc in
+      let reason = mk_reason RFunctionType loc in
       FunProtoCallT reason
     )
 
   | "$Tainted" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      let taint = TaintT (mk_reason "taint" loc) in
+      let taint = TaintT (mk_reason (RCustom "taint") loc) in
       let reason = Reason.repos_reason loc (reason_of_t t) in
       UnionT (reason, UnionRep.make t taint [])
     )
@@ -427,14 +429,14 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* in-scope type vars *)
   | _ when SMap.mem name tparams_map ->
     check_type_param_arity cx loc typeParameters 0 (fun () ->
-      Flow_js.reposition cx (mk_reason name loc)
+      Flow_js.reposition cx (mk_reason (RCustom name) loc)
         (SMap.find_unsafe name tparams_map)
     )
 
   | "$Pred" ->
-    let fun_reason = mk_reason "abstract predicate function" loc in
-    let static_reason = mk_reason "abstract predicate static" loc in
-    let out_reason = mk_reason "open predicate" loc in
+    let fun_reason = mk_reason (RCustom "abstract predicate function") loc in
+    let static_reason = mk_reason (RCustom "abstract predicate static") loc in
+    let out_reason = mk_reason (RCustom "open predicate") loc in
 
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       match convert_type_params () with
@@ -449,7 +451,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         FunT (
           fun_reason,
           Flow_js.dummy_static static_reason,
-          AnyT (mk_reason "prototype" loc),
+          AnyT (mk_reason RPrototype loc),
           Flow_js.mk_functiontype tins ~params_names:key_strs
             ~is_predicate:true tout
         )
@@ -463,7 +465,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match convert_type_params () with
       | [base_t; fun_pred_t; SingletonNumT (_, (f, _))] ->
           let idx = Pervasives.int_of_float f in
-          let reason = mk_reason "refined type" loc in
+          let reason = mk_reason (RCustom "refined type") loc in
           let pred = LatentP (fun_pred_t, idx) in
           EvalT (base_t, DestructuringT (reason, Refine pred), mk_id())
       | _ -> error_type cx loc
@@ -472,7 +474,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* other applications with id as head expr *)
   | _ ->
-    let reason = mk_reason name loc in
+    let reason = mk_reason (RCustom name) loc in
     let c = type_identifier cx name loc in
     mk_nominal_type cx reason tparams_map (c, typeParameters)
 
@@ -504,16 +506,16 @@ let rec convert cx tparams_map = Ast.Type.(function
           (ident_name name) :: rev_pnames
       | None -> rev_tlist, rev_pnames
     ) in
-  let reason = mk_reason "function type" loc in
+  let reason = mk_reason RFunctionType loc in
   let params_names = List.rev rev_params_names in
   let return_t = convert cx tparams_map returnType in
   let ft =
     FunT (
       reason,
       Flow_js.dummy_static reason,
-      AnyT (mk_reason "prototype" loc),
+      AnyT (mk_reason RPrototype loc),
       {
-        this_t = Flow_js.mk_tvar cx (mk_reason "this" loc);
+        this_t = Flow_js.mk_tvar cx (mk_reason RThis loc);
         params_tlist = (List.rev rev_params_tlist);
         params_names = Some params_names;
         return_t;
@@ -555,7 +557,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     | [] -> props_map
     | [t] -> SMap.add "$call" t props_map
     | t0::t1::ts ->
-      let callable_reason = mk_reason "callable object type" loc in
+      let callable_reason = mk_reason (RCustom "callable object type") loc in
       let rep = InterRep.make t0 t1 ts in
       SMap.add "$call" (IntersectionT (callable_reason, rep)) props_map
   in
@@ -586,9 +588,9 @@ let rec convert cx tparams_map = Ast.Type.(function
   in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
-  let reason_desc = "object type" in
+  let reason_desc = RObjectType in
   let pmap = Flow_js.mk_propmap cx props_map in
-  let proto = MixedT (reason_of_string reason_desc, Mixed_everything) in
+  let proto = MixedT (locationless_reason reason_desc, Mixed_everything) in
   let flags = {
     sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
     exact = not sealed || exact;
@@ -597,7 +599,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let t = ObjT (mk_reason reason_desc loc,
     Flow_js.mk_objecttype ~flags dict pmap proto) in
   if exact
-  then ExactT (mk_reason "exact type" loc, t)
+  then ExactT (mk_reason (RExactType reason_desc) loc, t)
   else t
 
 | loc, Exists ->
@@ -605,7 +607,7 @@ let rec convert cx tparams_map = Ast.Type.(function
      ensures that existential type variables under a polymorphic type remain
      unevaluated until the polymorphic type is applied. *)
   let force = SMap.is_empty tparams_map in
-  let reason = derivable_reason (mk_reason existential_desc loc) in
+  let reason = derivable_reason (mk_reason RExistential loc) in
   if force then Flow_js.mk_tvar cx reason
   else ExistsT reason
 )
@@ -615,14 +617,16 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
   | Qualified (loc, { qualification; id; }) ->
     let m = convert_qualification ~lookup_mode cx reason_prefix qualification in
     let _, { Ast.Identifier.name; _ } = id in
-    let reason = mk_reason (spf "%s '<<object>>.%s')" reason_prefix name) loc in
+    let desc = RCustom (spf "%s '<<object>>.%s')" reason_prefix name) in
+    let reason = mk_reason desc loc in
     Flow_js.mk_tvar_where cx reason (fun t ->
       Flow_js.flow cx (m, GetPropT (reason, (reason, name), t));
     )
 
   | Unqualified (id) ->
     let loc, { Ast.Identifier.name; _ } = id in
-    let reason = mk_reason (spf "%s `%s`" reason_prefix name) loc in
+    let desc = RCustom (spf "%s `%s`" reason_prefix name) in
+    let reason = mk_reason desc loc in
     Env.get_var ~lookup_mode cx name reason
 )
 
@@ -636,7 +640,9 @@ and mk_rest cx = function
   | AnyT _ as t -> RestT t
   | OpenT _ as t ->
       (* unify t with Array<e>, return (RestT e) *)
-      let reason = prefix_reason "element of " (reason_of_t t) in
+      let reason = replace_reason (fun desc ->
+        RCustom (spf "element of %s" (string_of_desc desc))
+      ) (reason_of_t t) in
       let tvar = Flow_js.mk_tvar cx reason in
       let arrt = ArrT(reason, tvar, []) in
       Flow_js.unify cx t arrt;
@@ -679,15 +685,15 @@ and mk_keys_type reason = function
   UnionT (reason, rep)
 
 and mk_singleton_string reason key =
-  let reason = replace_reason (spf "string literal `%s`" key) reason in
+  let reason = replace_reason_const (RStringLit key) reason in
   SingletonStrT (reason, key)
 
 and mk_singleton_number reason num raw =
-  let reason = replace_reason (spf "number literal `%.16g`" num) reason in
+  let reason = replace_reason_const (RNumberLit raw) reason in
   SingletonNumT (reason, (num, raw))
 
 and mk_singleton_boolean reason b =
-  let reason = replace_reason (spf "boolean literal `%b`" b) reason in
+  let reason = replace_reason_const (RBooleanLit b) reason in
   SingletonBoolT (reason, b)
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of
@@ -707,7 +713,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) typeParameters =
   let open Ast.Type.ParameterDeclaration in
   let add_type_param (tparams, tparams_map, bounds_map) = function
   | loc, { TypeParam.name; bound; variance; default; } ->
-    let reason = mk_reason name loc in
+    let reason = mk_reason (RCustom name) loc in
     let bound = match bound with
     | None -> MixedT (reason, Mixed_everything)
     | Some (_, u) ->
@@ -742,7 +748,7 @@ and type_identifier cx name loc =
     if name = "undefined"
     then VoidT.at loc
     else (
-      let reason = mk_reason (spf "identifier `%s`" name) loc in
+      let reason = mk_reason (RIdentifier name) loc in
       let t = Env.var_ref ~lookup_mode:ForType cx name reason in
       t
     )

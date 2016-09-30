@@ -16,15 +16,15 @@ main.js:12
 
 main.js:19
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element: `div`
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `div`
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
                           ^^^^^^^^^^^^^^^^^^^^^ property `doesntmatch`. Property not found in
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of JSX Intrinsic: `div`
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `div`
 
 main.js:19
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element: `div`
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `div`
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;
                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `not_a_real_attr`. Property not found in
  19: var d: React.Element<{doesntmatch: string}> = <div not_a_real_attr="asdf" />;

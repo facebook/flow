@@ -852,8 +852,8 @@ end = struct
 
   (* given a type, return corresponding enum base type if any *)
   let base_of_t = TypeTerm.(
-    let str = Some (StrT (reason_of_string "string enum", AnyLiteral)) in
-    let num = Some (NumT (reason_of_string "number enum", AnyLiteral)) in
+    let str = Some (StrT (locationless_reason RStringEnum, AnyLiteral)) in
+    let num = Some (NumT (locationless_reason RNumberEnum, AnyLiteral)) in
     fun t ->
       match t with
       | SingletonStrT _ -> str
@@ -1015,64 +1015,62 @@ let open_tvar tvar =
   | _ -> assert false
 
 module type PrimitiveType = sig
-  val desc: string
+  val desc: reason_desc
   val make: reason -> t
 end
 
 module type PrimitiveT = sig
-  val desc: string
+  val desc: reason_desc
   val t: t
   val at: Loc.t -> t
   val why: reason -> t
-  val tag: string -> t
 end
 
 module Primitive (P: PrimitiveType) = struct
   let desc = P.desc
-  let t = P.make (reason_of_string desc)
+  let t = P.make (locationless_reason desc)
   let at tok = P.make (mk_reason desc tok)
-  let why reason = P.make (replace_reason desc reason)
-  let tag s = P.make (reason_of_string (desc ^ " (" ^ s ^ ")"))
+  let why reason = P.make (replace_reason_const desc reason)
   let make = P.make
 end
 
 module NumT = Primitive (struct
-  let desc = "number"
+  let desc = RNumber
   let make r = NumT (r, AnyLiteral)
 end)
 
 module StrT = Primitive (struct
-  let desc = "string"
+  let desc = RString
   let make r = StrT (r, AnyLiteral)
 end)
 
 module BoolT = Primitive (struct
-  let desc = "boolean"
+  let desc = RBoolean
   let make r = BoolT (r, None)
 end)
 
 module MixedT = Primitive (struct
-  let desc = "mixed"
+  let desc = RMixed
   let make r = MixedT (r, Mixed_everything)
 end)
 
 module EmptyT = Primitive (struct
-  let desc = ""
+  let desc = REmpty
   let make r = EmptyT r
 end)
 
 module AnyT = Primitive (struct
-  let desc = "any"
+  let desc = RAny
   let make r = AnyT r
 end)
 
 module VoidT = Primitive (struct
-  let desc = "undefined"
+  let desc = RVoid
   let make r = VoidT r
 end)
 
 module NullT = Primitive (struct
-  let desc = "null"
+  let desc = RNull
   let make r = NullT r
 end)
 
@@ -1155,25 +1153,24 @@ let rec reason_of_t = function
       reason
 
   | PolyT (_,t) ->
-      prefix_reason "polymorphic type: " (reason_of_t t)
+      replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
   | ThisClassT t ->
-      prefix_reason "class type: " (reason_of_t t)
+      replace_reason (fun desc -> RClassType desc) (reason_of_t t)
   | BoundT typeparam ->
       typeparam.reason
   | ExistsT reason ->
       reason
 
   | ExactT (reason, t) ->
-    let t_reason = reason_of_t t in
-    let desc = spf "exact type: %s" (desc_of_reason t_reason) in
-    replace_reason desc reason
+      let desc = desc_of_reason (reason_of_t t) in
+      replace_reason_const (RExactType desc) reason
 
   | ObjT (reason,_)
   | ArrT (reason,_,_)
       -> reason
 
   | ClassT t ->
-      prefix_reason "class type: " (reason_of_t t)
+      replace_reason (fun desc -> RClassType desc) (reason_of_t t)
 
   | InstanceT (reason,_,_,_)
   | TypeT (reason,_)
@@ -1183,25 +1180,25 @@ let rec reason_of_t = function
       reason_of_t assume_t
 
   | OptionalT t ->
-      prefix_reason "optional " (reason_of_t t)
+      replace_reason (fun desc -> ROptional desc) (reason_of_t t)
 
   | RestT t ->
-      prefix_reason "rest array of " (reason_of_t t)
+      replace_reason (fun desc -> RRestArray desc) (reason_of_t t)
 
   | AbstractT t ->
-      prefix_reason "abstract " (reason_of_t t)
+      replace_reason (fun desc -> RAbstract desc) (reason_of_t t)
 
   | EvalT (_, defer_use_t, _) ->
       reason_of_defer_use_t defer_use_t
 
-  | TypeAppT(t,_)
-      -> prefix_reason "type application of " (reason_of_t t)
+  | TypeAppT(t,_) ->
+      replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
 
-  | ThisTypeAppT(t,_,_)
-      -> prefix_reason "this instantiation of " (reason_of_t t)
+  | ThisTypeAppT(t,_,_) ->
+      replace_reason (fun desc -> RThisTypeApp desc) (reason_of_t t)
 
   | MaybeT t ->
-      prefix_reason "?" (reason_of_t t)
+      replace_reason (fun desc -> RMaybe desc) (reason_of_t t)
 
   | TaintT (r) ->
       r
@@ -1238,7 +1235,7 @@ let rec reason_of_t = function
   | CustomFunT (reason, _) -> reason
 
   | ExtendsT (_,_,t) ->
-      prefix_reason "extends " (reason_of_t t)
+      replace_reason (fun desc -> RExtends desc) (reason_of_t t)
 
   | IdxWrapper (reason, _) -> reason
 
@@ -1570,15 +1567,19 @@ let reasonless_compare =
 module DescFormat = struct
   (* InstanceT reasons have desc = name *)
   let instance_reason name loc =
-    mk_reason name loc
+    mk_reason (RCustom name) loc
+
   let name_of_instance_reason r =
-    desc_of_reason r
+    string_of_desc (desc_of_reason r)
 
   (* TypeT reasons have desc = type `name` *)
   let type_reason name loc =
-    mk_reason (spf "type `%s`" name) loc
+    mk_reason (RType name) loc
+
   let name_of_type_reason r =
-    Str.global_replace (Str.regexp "type `\\(.*\\)`") "\\1" (desc_of_reason r)
+    match desc_of_reason r with
+    | RType name -> name
+    | _ -> failwith "not a type reason"
 
 end
 
@@ -1743,10 +1744,10 @@ let rec string_of_predicate = function
   | NotP p -> "not " ^ (string_of_predicate p)
   | LeftP (b, t) ->
       spf "left operand of %s with right operand = %s"
-        (string_of_binary_test b) (desc_of_t t)
+        (string_of_binary_test b) (string_of_desc (desc_of_t t))
   | RightP (b, t) ->
       spf "right operand of %s with left operand = %s"
-        (string_of_binary_test b) (desc_of_t t)
+        (string_of_binary_test b) (string_of_desc (desc_of_t t))
   | ExistsP -> "truthy"
   | NullP -> "null"
   | MaybeP -> "null or undefined"

@@ -27,7 +27,7 @@ let mk cx type_params_map ~expr func =
   let add_param_with_default params pattern default = Ast.Pattern.(
     match pattern with
     | loc, Identifier (_, { Ast.Identifier.name; typeAnnotation; optional }) ->
-      let reason = mk_reason (Utils.spf "parameter `%s`" name) loc in
+      let reason = mk_reason (RParameter name) loc in
       let t = Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in (match default with
       | None ->
@@ -46,7 +46,7 @@ let mk cx type_params_map ~expr func =
         { list = Simple (OptionalT t, binding) :: params.list;
           defaults = SMap.add name (Default.Expr expr) params.defaults })
     | loc, _ ->
-      let reason = mk_reason "destructuring" loc in
+      let reason = mk_reason RDestructuring loc in
       let typeAnnotation = type_of_pattern pattern in
       let t = typeAnnotation
         |> Anno.mk_type_annotation cx type_params_map reason in
@@ -76,7 +76,7 @@ let mk cx type_params_map ~expr func =
   let add_rest params pattern =
     match pattern with
     | _, Ast.Pattern.Identifier (loc, { Ast.Identifier.name; typeAnnotation; _ }) ->
-      let reason = mk_reason (Utils.spf "rest parameter `%s`" name) loc in
+      let reason = mk_reason (RRestParameter name) loc in
       let t =
         Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in

@@ -208,7 +208,7 @@ let autocomplete_jsx
   ac_name
   ac_loc
   parse_result = Flow_js.(
-    let reason = Reason.mk_reason ac_name ac_loc in
+    let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = mk_tvar_where cx reason (fun tvar ->
       flow cx (

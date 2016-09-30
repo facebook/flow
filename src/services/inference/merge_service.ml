@@ -27,12 +27,12 @@ let check_require (r, resolved_r, cx) =
       try SMap.find_unsafe r (Context.require_loc cx)
       with Not_found -> raise (Key_not_found ("Context.require_loc", r))
     in
-    let reason = Reason.mk_reason r loc in
+    let reason = Reason.mk_reason (Reason.RCustom r) loc in
 
     let m_name = Modulename.to_string resolved_r in
     let tvar = Flow_js.mk_tvar cx reason in
     Flow_js.lookup_builtin cx (Reason.internal_module_name m_name)
-      reason (Type.Strict (Reason.builtin_reason m_name)) tvar
+      reason (Type.Strict (Reason.builtin_reason (Reason.RCustom m_name))) tvar
 
 let add_decl (r, resolved_r, cx) declarations =
   (r, resolved_r, cx) :: declarations

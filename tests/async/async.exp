@@ -6,9 +6,24 @@ async.js:12
 
 async.js:31
  31:   return await p; // error, number != bool
+              ^^^^^^^ await
+ 31:   return await p; // error, number != bool
               ^^^^^^^ number. This type is incompatible with
- 30: async function f4(p: Promise<number>): Promise<bool> {
-                                                    ^^^^ boolean
+union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:584
+  Member 1:
+  type application of identifier `Promise`. See lib: core.js:584
+  Error:
+   31:   return await p; // error, number != bool
+                ^^^^^^^ number. This type is incompatible with
+  Promise. See lib: core.js:584
+  Member 2:
+   31:   return await p; // error, number != bool
+                ^^^^^^^ type parameter `T` of async return
+  Error:
+   31:   return await p; // error, number != bool
+                ^^^^^^^ number. This type is incompatible with
+   30: async function f4(p: Promise<number>): Promise<bool> {
+                                                      ^^^^ boolean
 
 async.js:45
  45:   static async m(a): void { await a; } // error, void != Promise<void>
@@ -55,21 +70,8 @@ async_return_void.js:4
 async_return_void.js:8
   8:   return undefined;
               ^^^^^^^^^ undefined. This type is incompatible with
-union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:584
-  Member 1:
-  type application of identifier `Promise`. See lib: core.js:584
-  Error:
-    8:   return undefined;
-                ^^^^^^^^^ undefined. This type is incompatible with
-  Promise. See lib: core.js:584
-  Member 2:
-    8:   return undefined;
-                ^^^^^^^^^ type parameter `T` of async return
-  Error:
-    8:   return undefined;
-                ^^^^^^^^^ undefined. This type is incompatible with
-    7: async function foo2(): Promise<string> {
-                                      ^^^^^^ string
+  7: async function foo2(): Promise<string> {
+                                    ^^^^^^ string
 
 async_return_void.js:13
  13:   return bar();

@@ -49,9 +49,9 @@ test10.js:38
                                                         ^^^^^^^^^^^^^^^^^^^^^ function type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    38: check_fun((x) => x);
-                  ^ parameter `x`
-   38: check_fun((x) => x);
                         ^ return
+   38: check_fun((x) => x);
+                  ^ parameter `x`
 
 test10.js:50
  50: check_obj({ x: id("") });
@@ -289,9 +289,9 @@ test5.js:14
                                                   ^^^^^^^^^^^^^^^^^^^^^ function type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    13: function a1(x) { return x; }
-                   ^ parameter `x`
-   13: function a1(x) { return x; }
                      ^ return
+   13: function a1(x) { return x; }
+                   ^ parameter `x`
 
 test5.js:25
  25: arr(a2);

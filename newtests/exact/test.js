@@ -53,7 +53,7 @@ type ArityError = $Exact<number, number>; // error, 2 params expected 1
                                    94: takesPersonPred(returnsExactlyPersonPred()); // error
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
                                    94: takesPersonPred(returnsExactlyPersonPred()); // error
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type. Unsupported exact type
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ exact type: PersonPred. Unsupported exact type
                                    91: declare function returnsExactlyPersonPred(): \$Exact<PersonPred>;
                                                                                            ^^^^^^^^^^ function type
                                 `,

@@ -47,7 +47,7 @@ let mk cx tparams_map ~expr reason func =
   in
   let params = Func_params.mk cx tparams_map ~expr func in
   let return_t =
-    let reason = mk_reason "return" (return_loc func) in
+    let reason = mk_reason RReturn (return_loc func) in
     Anno.mk_type_annotation cx tparams_map reason returnType
   in
   let return_t = Ast.Type.Predicate.(match predicate with
@@ -72,7 +72,7 @@ let empty_body =
 
 let convert cx tparams_map loc func =
   let {Ast.Type.Function.typeParameters; returnType; _} = func in
-  let reason = mk_reason "function type" loc in
+  let reason = mk_reason RFunctionType loc in
   let kind = Ordinary in
   let tparams, tparams_map =
     Anno.mk_type_param_declarations cx ~tparams_map typeParameters
@@ -129,12 +129,12 @@ let generate_tests cx f x =
 
 let functiontype cx this_t {reason; kind; tparams; params; return_t; _} =
   let static =
-    let reason = prefix_reason "statics of " reason in
+    let reason = replace_reason (fun desc -> RStatics desc) reason in
     let proto = FunProtoT reason in
     Flow.mk_object_with_proto cx reason proto
   in
   let prototype =
-    let reason = replace_reason "prototype" reason in
+    let reason = replace_reason_const RPrototype reason in
     Flow.mk_object cx reason
   in
   let funtype = { Type.
@@ -193,7 +193,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
       | BodyBlock (loc, _)
       | BodyExpression (loc, _) -> loc
     ) in
-    mk_reason "function body" loc
+    mk_reason RFunctionBody loc
   in
 
   let env =  Env.peek_env () in
@@ -228,7 +228,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
   params |> Func_params.iter Scope.(fun (name, t, loc) ->
-    let reason = mk_reason (Utils_js.spf "param `%s`" name) loc in
+    let reason = mk_reason (RParameter name) loc in
     (* add default value as lower bound, if provided *)
     Func_params.with_default name (fun default ->
       let default_t = Flow.mk_default cx reason default ~expr in
@@ -250,11 +250,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   let yield_t, next_t =
     if kind = Generator then
-      Flow.mk_tvar cx (prefix_reason "yield of " reason),
-      Flow.mk_tvar cx (prefix_reason "next of " reason)
+      Flow.mk_tvar cx (replace_reason_const (RCustom "yield") reason),
+      Flow.mk_tvar cx (replace_reason_const (RCustom "next") reason)
     else
-      MixedT (replace_reason "no yield" reason, Mixed_everything),
-      MixedT (replace_reason "no next" reason, Mixed_everything)
+      MixedT (replace_reason_const (RCustom "no yield") reason, Mixed_everything),
+      MixedT (replace_reason_const (RCustom "no next") reason, Mixed_everything)
   in
 
   let yield, next, return = Scope.(
@@ -316,11 +316,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
     | Ordinary ->
       FunImplicitReturn, VoidT.at loc
     | Async ->
-      let reason = mk_reason "Promise<void>" loc in
+      let reason = mk_reason (RCustom "Promise<void>") loc in
       let promise = Flow.get_builtin cx "Promise" reason in
       FunImplicitReturn, TypeAppT (promise, [VoidT.at loc])
     | Generator ->
-      let reason = mk_reason "return Generator<Yield,void,Next>" loc in
+      let reason = mk_reason (RCustom "Generator<Yield,void,Next>") loc in
       let return_t = VoidT.at loc in
       FunImplicitReturn,
       Flow.get_builtin_typeapp cx reason "Generator" [yield_t; return_t; next_t]

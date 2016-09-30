@@ -284,7 +284,7 @@ let string_of_t_ =
     | EmptyT _
     | MixedT _
     | AnyT _
-    | NullT _ -> Some (desc_of_reason (reason_of_t t))
+    | NullT _ -> Some (string_of_desc (desc_of_reason (reason_of_t t)))
     | _ -> None
   in
   let fallback t =

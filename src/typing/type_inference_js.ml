@@ -83,8 +83,11 @@ let infer_ast ~metadata ~filename ~module_name ast =
 
   let exported_module_name = Modulename.to_string module_name in
   let reason_exports_module =
-    Reason.reason_of_string (
-      Utils.spf "exports of module `%s`" exported_module_name) in
+    let desc = Reason.RCustom (
+      Utils.spf "exports of module `%s`" exported_module_name
+    ) in
+    Reason.locationless_reason desc
+  in
 
   let local_exports_var = Flow_js.mk_tvar cx reason_exports_module in
 
@@ -99,7 +102,9 @@ let infer_ast ~metadata ~filename ~module_name ast =
       (Entry.new_var
         ~loc:(Reason.loc_of_reason reason_exports_module)
         ~specific:(Type.EmptyT (
-          Reason.replace_reason "undefined exports" reason_exports_module))
+          Reason.replace_reason_const
+            (Reason.RCustom "undefined exports")
+            reason_exports_module))
         (Type.AnyT reason_exports_module))
       scope;
 
@@ -108,7 +113,7 @@ let infer_ast ~metadata ~filename ~module_name ast =
 
   Env.init_env cx module_scope;
 
-  let reason = Reason.mk_reason "exports" Loc.({
+  let reason = Reason.mk_reason (Reason.RCustom "exports") Loc.({
     none with source = Some filename
   }) in
 
@@ -129,7 +134,7 @@ let infer_ast ~metadata ~filename ~module_name ast =
       (* CommonJS with a clobbered module.exports *)
       | CommonJSModule(Some(loc)) ->
         let module_exports_t = ImpExp.get_module_exports cx reason in
-        let reason = Reason.mk_reason "exports" loc in
+        let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
         ImpExp.mk_commonjs_module_t cx reason_exports_module
           reason module_exports_t
 

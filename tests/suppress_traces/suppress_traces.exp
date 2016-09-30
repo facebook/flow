@@ -26,7 +26,7 @@ traces.js:12:10,12: ~> UseT(UnknownUse, OpenT) [identifier `bar`] (from path 5)
 traces.js:12:10,14: ~> CallT [function call]
 * path 5:
 traces.js:9:1,36:   FunT [function]
-traces.js:9:1,36:   ~> UseT(UnknownUse, OpenT) [function bar]
+traces.js:9:1,36:   ~> UseT(UnknownUse, OpenT) [function]
 traces.js:12:10,12: ~> ReposLowerT [identifier `bar`]
 * path 6:
 traces.js:15:17,19: FunT [function]

@@ -16,7 +16,7 @@ main.js:12
 
 main.js:15
  15: <div id={42} />; // Error: (`id` prop) number ~> string
-     ^^^^^^^^^^^^^^^ React element: `div`
+     ^^^^^^^^^^^^^^^ React element `div`
  15: <div id={42} />; // Error: (`id` prop) number ~> string
               ^^ number. This type is incompatible with
   5:   div: $JSXIntrinsic<{id: string}>,
@@ -24,7 +24,7 @@ main.js:15
 
 main.js:17
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                          ^^^^^^^^^^^^^^^^^ React element: `div`
+                                          ^^^^^^^^^^^^^^^^^ React element `div`
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
                                ^^^^^^ number. This type is incompatible with
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
@@ -32,7 +32,7 @@ main.js:17
 
 main.js:17
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
-                                          ^^^^^^^^^^^^^^^^^ React element: `div`
+                                          ^^^^^^^^^^^^^^^^^ React element `div`
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>
                                                   ^^^^^^ string. This type is incompatible with
  17: var d: React.Element<{id: number}> = <div id="asdf" />; // Error: Props<{id:string}> ~> Props<{id:number}>

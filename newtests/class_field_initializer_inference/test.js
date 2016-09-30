@@ -7,9 +7,11 @@ export default suite(({addFile, addFiles, addCode}) => [
   test('Uninitialized instance fields require annotation', [
     addCode('export class Foo { a; }')
       .newErrors(
-        `test.js:3\n` +
-        `  3: export class Foo { a; }\n` +
-        `                        ^^ class property \`a\`. Missing annotation\n`,
+        `
+          test.js:3
+            3: export class Foo { a; }
+                                  ^^ property \`a\`. Missing annotation
+        `,
       )
   ]),
 

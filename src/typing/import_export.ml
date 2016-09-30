@@ -52,14 +52,14 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
 let mk_resource_module_t cx loc f =
   let reason, exports_t = match Utils_js.extension_of_filename f with
   | Some ".css" ->
-    let reason = Reason.mk_reason
-      "Flow assumes requiring a .css file returns an Object"
-      loc in
+    let desc_str = "Flow assumes requiring a .css file returns an Object" in
+    let reason = Reason.mk_reason (RCustom desc_str) loc in
     reason, Type.AnyObjT reason
   | Some ext ->
-    let reason = Reason.mk_reason
-      (Utils_js.spf "Flow assumes that requiring a %s file returns a string" ext)
-      loc in
+    let desc_str =
+      Utils_js.spf "Flow assumes that requiring a %s file returns a string" ext
+    in
+    let reason = Reason.mk_reason (RCustom desc_str) loc in
     reason, Type.StrT.why reason
   | _ -> failwith "How did we find a resource file without an extension?!"
   in
@@ -83,10 +83,11 @@ let require cx ?(internal=false) m_name loc =
   Context.add_require cx m_name loc;
   if not internal
   then Type_inference_hooks_js.dispatch_require_hook cx m_name loc;
-  let reason = mk_reason (spf "CommonJS exports of \"%s\"" m_name) loc in
+  let desc = RCustom (spf "CommonJS exports of \"%s\"" m_name) in
+  let reason = mk_reason desc loc in
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      get_module_t cx m_name (mk_reason m_name loc),
+      get_module_t cx m_name (mk_reason (RCustom m_name) loc),
       CJSRequireT(reason, t)
     )
   )
@@ -97,7 +98,7 @@ let import ?reason cx m_name loc =
   let reason =
     match reason with
     | Some r -> r
-    | None -> mk_reason m_name loc
+    | None -> mk_reason (RCustom m_name) loc
   in
   get_module_t cx m_name reason
 
@@ -106,7 +107,7 @@ let import_ns cx reason module_name loc =
   Type_inference_hooks_js.dispatch_import_hook cx module_name loc;
   Flow.mk_tvar_where cx reason (fun t ->
     Flow.flow cx (
-      get_module_t cx module_name (mk_reason module_name loc),
+      get_module_t cx module_name (mk_reason (RCustom module_name) loc),
       ImportModuleNsT(reason, t)
     )
   )
@@ -114,7 +115,7 @@ let import_ns cx reason module_name loc =
 let exports cx =
   let m = Modulename.to_string (Context.module_name cx) in
   let loc = Loc.({ none with source = Some (Context.file cx) }) in
-  get_module_t cx m (Reason.mk_reason "exports" loc)
+  get_module_t cx m (Reason.mk_reason (RCustom "exports") loc)
 
 let set_module_t cx reason f =
   match Context.declare_module_t cx with

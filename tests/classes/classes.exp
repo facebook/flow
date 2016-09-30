@@ -6,13 +6,13 @@ A.js:2
 
 B.js:6
   6: (b.foo: number); // error, number !~> function
-      ^^^^^ method `foo`. This type is incompatible with
+      ^^^^^ property `foo`. This type is incompatible with
   6: (b.foo: number); // error, number !~> function
              ^^^^^^ number
 
 C.js:8
   8: (c.foo: number); // error, number !~> function
-      ^^^^^ method `foo`. This type is incompatible with
+      ^^^^^ property `foo`. This type is incompatible with
   8: (c.foo: number); // error, number !~> function
              ^^^^^^ number
 

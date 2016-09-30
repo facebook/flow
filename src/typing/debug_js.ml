@@ -1235,13 +1235,18 @@ and dump_use_t_ (depth, tvars) cx t =
   | CallT (_,{params_tlist;return_t;_}) -> p ~extra:(spf "[%s] (%s)"
       (String.concat "; " (List.map kid params_tlist))
       (kid return_t)) t
-  | MethodT (_, _, (r, name), _) -> p
-      ~extra:(spf "(%S, %S)" (desc_of_reason r) name) t
-  | SetPropT (_, (r, name), ptype) -> p
-      ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t
+  | MethodT (_, _, (r, name), _) -> p ~extra:(spf "(%S, %S)"
+      (string_of_desc (desc_of_reason r))
+      name) t
+  | SetPropT (_, (r, name), ptype) -> p ~extra:(spf "(%S, %S), %s"
+      (string_of_desc (desc_of_reason r))
+      name
+      (kid ptype)) t
   | GetPropT (_, (r, name), ptype)
-  | TestPropT (_, (r, name), ptype) -> p
-      ~extra:(spf "(%S, %S), %s" (desc_of_reason r) name (kid ptype)) t
+  | TestPropT (_, (r, name), ptype) -> p ~extra:(spf "(%S, %S), %s"
+      (string_of_desc (desc_of_reason r))
+      name
+      (kid ptype)) t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetStaticsT (_, arg) -> p ~extra:(kid arg) t

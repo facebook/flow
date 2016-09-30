@@ -137,7 +137,7 @@ end = struct
       Speculation.defer_if_relevant cx branch action
 
   let mk_info reason extra_msgs =
-    loc_of_reason reason, desc_of_reason reason :: extra_msgs
+    loc_of_reason reason, string_of_desc (desc_of_reason reason) :: extra_msgs
 
   let info_of_reason r =
     mk_info r []

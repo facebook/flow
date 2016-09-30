@@ -22,7 +22,7 @@ boolean.js:21
 
 boolean.js:23
  23:     return !x;
-                ^^ boolean value `true`. Expected boolean literal `false`, got `true` instead
+                ^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
  19: function bar(x: MyOwnBooleanLOL): false {
                                        ^^^^^ boolean literal `false`
 

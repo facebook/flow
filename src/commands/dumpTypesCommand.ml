@@ -44,19 +44,20 @@ let handle_response types ~json ~pretty strip =
   if json
   then (
     let open Hh_json in
+    let open Reason in
     let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
       let loc = strip loc in
       let json_assoc = (
         ("type", JSON_String str) ::
         ("reasons", JSON_Array (List.map (fun r ->
-          let r_loc = strip (Reason.loc_of_reason r) in
+          let r_loc = strip (loc_of_reason r) in
           JSON_Object (
-            ("desc", JSON_String (Reason.desc_of_reason r)) ::
-            ("loc", Reason.json_of_loc r_loc) ::
+            ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
+            ("loc", json_of_loc r_loc) ::
             (Errors.deprecated_json_props_of_loc r_loc)
           )
         ) reasons)) ::
-        ("loc", Reason.json_of_loc loc) ::
+        ("loc", json_of_loc loc) ::
         (Errors.deprecated_json_props_of_loc loc)
       ) in
       let json_assoc = match raw_t with
