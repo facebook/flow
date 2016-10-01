@@ -342,7 +342,7 @@ let rec string_of_desc = function
   | RString -> "string"
   | RBoolean -> "boolean"
   | RMixed -> "mixed"
-  | REmpty -> ""
+  | REmpty -> "empty"
   | RAny -> "any"
   | RVoid -> "undefined"
   | RNull -> "null"
