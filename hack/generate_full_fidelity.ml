@@ -199,9 +199,9 @@ let schema = List.map from_list [
     "keyword";
     "name";
     "type_parameters";
-    "extends";
+    "extends_keyword";
     "extends_list";
-    "implements";
+    "implements_keyword";
     "implements_list";
     "body" ];
   [ "ClassishBody";
@@ -267,7 +267,7 @@ let schema = List.map from_list [
     "visibility";
     "type";
     "name";
-    "default" ];
+    "default_value" ];
   [ "AttributeSpecification";
     "attribute_specification";
     "attribute_specification";
@@ -373,7 +373,7 @@ let schema = List.map from_list [
     "do";
     "keyword";
     "body";
-    "while";
+    "while_keyword";
     "left_paren";
     "condition";
     "right_paren";
@@ -461,7 +461,7 @@ let schema = List.map from_list [
     "function_static_statement";
     "function_static_statement";
     "static";
-    "static"; (* Consider "keyword" *)
+    "static_keyword";
     "declarations";
     "semicolon" ];
   [ "StaticDeclarator";
@@ -487,8 +487,8 @@ let schema = List.map from_list [
     "anonymous_function";
     "anonymous_function";
     "anonymous";
-    "async";
-    "function";
+    "async_keyword";
+    "function_keyword";
     "left_paren";
     "parameters";
     "right_paren";
@@ -603,7 +603,7 @@ let schema = List.map from_list [
     "function_call";
     "receiver";
     "left_paren";
-    "arguments";
+    "argument_list";
     "right_paren" ];
   [ "ParenthesizedExpression";
     "parenthesized_expression";
@@ -639,10 +639,10 @@ let schema = List.map from_list [
     "object_creation_expression";
     "object_creation_expression";
     "object_creation";
-    "new";
-    "class";
+    "new_keyword";
+    "type";
     "left_paren";
-    "arguments";
+    "argument_list";
     "right_paren" ];
   [ "ArrayCreationExpression";
     "array_creation_expression";
@@ -794,7 +794,7 @@ let schema = List.map from_list [
     "closure_type_specifier";
     "closure";
     "outer_left_paren";
-    "function";
+    "function_keyword";
     "inner_left_paren";
     "parameter_types";
     "inner_right_paren";
@@ -844,7 +844,7 @@ let schema = List.map from_list [
     "generic_type_specifier";
     "generic";
     "class_type";
-    "arguments" ];
+    "argument_list" ];
   [ "NullableTypeSpecifier";
     "nullable_type_specifier";
     "nullable_type_specifier";
