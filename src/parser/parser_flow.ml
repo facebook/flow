@@ -758,7 +758,7 @@ end = struct
       and array_element check_env = Pattern.Array.(function
         | None -> check_env
         | Some (Element p) -> pattern check_env p
-        | Some (Spread (_, { SpreadElement.argument; })) ->
+        | Some (RestElement (_, { RestElement.argument; })) ->
             pattern check_env argument)
 
       and identifier (env, param_names) (loc, { Identifier.name; _ } as id) =
@@ -3316,10 +3316,10 @@ end = struct
               -> fold acc pattern
           ) acc properties
         | (_, Array {Array.elements; _;}) ->
-          List.fold_left (fun acc elem ->
+          List.fold_left Array.(fun acc elem ->
             match elem with
-            | Some (Array.Element pattern)
-            | Some (Array.Spread (_, {Array.SpreadElement.argument = pattern;}))
+            | Some (Element pattern)
+            | Some (RestElement (_, {RestElement.argument = pattern;}))
               -> fold acc pattern
             | None -> acc
           ) acc elements
@@ -3863,7 +3863,7 @@ end = struct
         | None -> None
         | Some (Spread (loc, spread)) ->
             let argument = Parse.pattern_from_expr env (spread.SpreadElement.argument) in
-            Some Pattern.(Array.Spread (loc, { Array.SpreadElement.argument; }))
+            Some Pattern.Array.(RestElement (loc, { RestElement.argument; }))
         | Some (Expression (loc, expr)) ->
             Some Pattern.Array.(Element (Parse.pattern_from_expr env (loc, expr)))
       )
@@ -3981,7 +3981,7 @@ end = struct
           Expect.token env T_ELLIPSIS;
           let argument = pattern env restricted_error in
           let loc = Loc.btwn start_loc (fst argument) in
-          let element = Pattern.Array.(Spread (loc, SpreadElement.({
+          let element = Pattern.Array.(RestElement (loc, RestElement.({
             argument;
           }))) in
           elements env ((Some element)::acc)

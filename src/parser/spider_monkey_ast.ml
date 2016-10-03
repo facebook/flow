@@ -917,7 +917,7 @@ and Pattern : sig
     }
   end
   module Array : sig
-    module SpreadElement : sig
+    module RestElement : sig
       type t = Loc.t * t'
       and t' = {
         argument: Pattern.t;
@@ -925,7 +925,7 @@ and Pattern : sig
     end
     type element =
       | Element of Pattern.t
-      | Spread of SpreadElement.t
+      | RestElement of RestElement.t
     type t = {
       elements: element option list;
       typeAnnotation: Type.annotation option;

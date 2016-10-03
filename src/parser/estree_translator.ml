@@ -764,8 +764,8 @@ end with type t = Impl.t) = struct
 
   and array_pattern_element = Pattern.Array.(function
     | Element p -> pattern p
-    | Spread (loc, { SpreadElement.argument; }) ->
-        node "SpreadElementPattern" loc [|
+    | RestElement (loc, { RestElement.argument; }) ->
+        node "RestElement" loc [|
           "argument", pattern argument;
         |]
   )

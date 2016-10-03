@@ -52,11 +52,11 @@ and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
     failwith "Unsupported: Destructuring object spread properties"
 )
 
-and extract_arr_elem_pattern_bindings accum = Ast.Pattern.(function
-  | Some (Array.Element (_, pattern)) ->
+and extract_arr_elem_pattern_bindings accum = Ast.Pattern.Array.(function
+  | Some (Element (_, pattern)) ->
     extract_destructured_bindings accum pattern
 
-  | Some (Array.Spread (_, {Array.SpreadElement.argument = (_, pattern)})) ->
+  | Some (RestElement (_, {RestElement.argument = (_, pattern)})) ->
     extract_destructured_bindings accum pattern
 
   | None -> accum
@@ -112,7 +112,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             ) in
             let default = Option.map default (Default.elem key reason) in
             recurse ~parent_pattern_t tvar init default p
-        | Some (Spread (loc, { SpreadElement.argument = p })) ->
+        | Some (RestElement (loc, { RestElement.argument = p })) ->
             let reason = mk_reason (RCustom "rest of array pattern") loc in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id())

@@ -200,7 +200,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       // Esprima has the wrong node type for spread elements in an array pattern
       for (var i = 0; i < esprima.elements.length; i++) {
         if (esprima.elements[i] && esprima.elements[i].type == "SpreadElement") {
-          esprima.elements[i].type = "SpreadElementPattern";
+          esprima.elements[i].type = "RestElement";
         }
       }
       if (!esprima.hasOwnProperty('typeAnnotation')) {
