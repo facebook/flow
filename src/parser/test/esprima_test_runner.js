@@ -117,21 +117,11 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       esprima.loc = flow.loc;
       break;
     case 'ObjectPattern':
-      // ObjectPattern should contain a list of PropertyPattern nodes, not
-      // Property nodes. These nodes are clearly just patterns and don't
-      // contain a lot of fields that don't make sense in a pattern
       for (var i = 0; i < esprima.properties.length; i++) {
         var prop = esprima.properties[i];
         switch (prop.type) {
           case 'SpreadProperty':
-            prop.type = 'SpreadPropertyPattern';
-            break;
-          case 'Property':
-            prop.type = 'PropertyPattern';
-            prop.pattern = prop.value;
-            delete prop.value;
-            delete prop.kind;
-            delete prop.method;
+            prop.type = 'RestProperty';
             break;
         }
       }

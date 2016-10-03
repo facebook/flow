@@ -806,15 +806,17 @@ end with type t = Impl.t) = struct
       | Literal lit -> literal lit, false
       | Identifier id -> identifier id, false
       | Computed expr -> expression expr, true) in
-      node "PropertyPattern" loc [|
+      node "Property" loc [|
         "key", key;
-        "pattern", pattern prop.pattern;
-        "computed", bool computed;
+        "value", pattern prop.pattern;
+        "kind", string "init";
+        "method", bool false;
         "shorthand", bool prop.shorthand;
+        "computed", bool computed;
       |]
     )
-    | SpreadProperty (loc, prop) -> SpreadProperty.(
-      node "SpreadPropertyPattern" loc [|
+    | RestProperty (loc, prop) -> RestProperty.(
+      node "RestProperty" loc [|
         "argument", pattern prop.argument;
       |]
     )

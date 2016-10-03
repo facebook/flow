@@ -48,7 +48,7 @@ and extract_obj_prop_pattern_bindings accum = Ast.Pattern.(function
     let (_, rhs_pattern) = prop.Object.Property.pattern in
     extract_destructured_bindings accum rhs_pattern
 
-  | Object.SpreadProperty _ ->
+  | Object.RestProperty _ ->
     failwith "Unsupported: Destructuring object spread properties"
 )
 
@@ -190,7 +190,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
               error_destructuring cx loc
             end
 
-        | SpreadProperty (loc, { SpreadProperty.argument = p }) ->
+        | RestProperty (loc, { RestProperty.argument = p }) ->
             let reason = mk_reason (RCustom "object pattern spread property") loc in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ObjRest !xs), mk_id())

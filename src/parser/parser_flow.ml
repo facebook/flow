@@ -746,7 +746,7 @@ end = struct
             | Identifier id -> identifier_no_dupe_check check_env id
             | _ -> check_env in
             pattern check_env property.pattern)
-        | SpreadProperty (_, { SpreadProperty.argument; }) ->
+        | RestProperty (_, { RestProperty.argument; }) ->
             pattern check_env argument)
 
       and _array check_env arr =
@@ -3312,7 +3312,7 @@ end = struct
           List.fold_left (fun acc prop ->
             match prop with
             | Object.Property (_, {Object.Property.pattern; _;})
-            | Object.SpreadProperty (_, {Object.SpreadProperty.argument = pattern;})
+            | Object.RestProperty (_, {Object.RestProperty.argument = pattern;})
               -> fold acc pattern
           ) acc properties
         | (_, Array {Array.elements; _;}) ->
@@ -3846,7 +3846,7 @@ end = struct
           })))
         | SpreadProperty (loc, { SpreadProperty.argument; }) ->
             let argument = Parse.pattern_from_expr env argument in
-            Pattern.(Object.SpreadProperty (loc, Object.SpreadProperty.({
+            Pattern.Object.(RestProperty (loc, RestProperty.({
               argument;
             }))))
 
@@ -3893,7 +3893,7 @@ end = struct
         then begin
           let argument = pattern env restricted_error in
           let loc = Loc.btwn start_loc (fst argument) in
-          Some Pattern.Object.(SpreadProperty (loc, SpreadProperty.({
+          Some Pattern.Object.(RestProperty (loc, RestProperty.({
             argument
           })))
         end else begin

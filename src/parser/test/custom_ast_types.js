@@ -156,3 +156,13 @@ def("MetaProperty")
     .build("meta", "property")
     .field("meta", def("Identifier"))
     .field("property", def("Identifier"));
+
+// https://github.com/benjamn/ast-types/pull/162
+def("ObjectPattern")
+  .bases("Pattern")
+  .build("properties")
+  .field("properties", [or(def("RestProperty"), def("Property"))]);
+def("RestProperty")
+  .bases("Node")
+  .build("argument")
+  .field("argument", def("Expression"));

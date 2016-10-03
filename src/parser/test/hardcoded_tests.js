@@ -4054,12 +4054,12 @@ module.exports = {
     'Destructuring with default values': {
       'let {x=y} = {}': {
         'body.0.declarations.0.id.properties': [{
-          'type': 'PropertyPattern',
+          'type': 'Property',
           'key': {
             'type': 'Identifier',
             'name': 'x',
           },
-          'pattern': {
+          'value': {
             'type': 'AssignmentPattern',
             'left': {
               'type': 'Identifier',
@@ -4070,18 +4070,20 @@ module.exports = {
               'name': 'y',
             }
           },
-          'shorthand': true
+          'shorthand': true,
+          'kind': 'init',
+          'method': false,
         }]
       },
       'let {x:y=z} = {}': {
         'errors.length': 0,
         'body.0.declarations.0.id.properties': [{
-          'type': 'PropertyPattern',
+          'type': 'Property',
           'key': {
             'type': 'Identifier',
             'name': 'x',
           },
-          'pattern': {
+          'value': {
             'type': 'AssignmentPattern',
             'left': {
               'type': 'Identifier',
@@ -4092,28 +4094,30 @@ module.exports = {
               'name': 'z',
             }
           },
-          'shorthand': false
+          'shorthand': false,
+          'kind': 'init',
+          'method': false,
         }]
       },
       'let {p:{q=0,...o}={r:0}} = {p:{r:""}}': {
         'errors.length': 0,
         'body.0.declarations.0.id.properties': [{
-          'type': 'PropertyPattern',
+          'type': 'Property',
           'key': {
             'type': 'Identifier',
             'name': 'p'
           },
-          'pattern': {
+          'value': {
             'type': 'AssignmentPattern',
             'left': {
               'type': 'ObjectPattern',
               'properties': [{
-                'type': 'PropertyPattern',
+                'type': 'Property',
                 'key': {
                   'type': 'Identifier',
                   'name': 'q'
                 },
-                'pattern': {
+                'value': {
                   'type': 'AssignmentPattern',
                   'left': {
                     'type': 'Identifier',
@@ -4125,9 +4129,11 @@ module.exports = {
                     'raw': '0'
                   }
                 },
-                'shorthand':true
+                'shorthand':true,
+                'kind': 'init',
+                'method': false,
               }, {
-                'type': 'SpreadPropertyPattern',
+                'type': 'RestProperty',
                 'argument': {
                   'type': 'Identifier',
                   'name': 'o'
@@ -4136,7 +4142,9 @@ module.exports = {
             },
             'right': {'type': 'ObjectExpression'}
           },
-          'shorthand':false
+          'shorthand':false,
+          'kind': 'init',
+          'method': false,
         }]
       },
       'let [x=y] = []': {

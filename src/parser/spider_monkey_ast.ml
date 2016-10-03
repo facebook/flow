@@ -902,7 +902,7 @@ and Pattern : sig
         shorthand: bool;
       }
     end
-    module SpreadProperty : sig
+    module RestProperty : sig
       type t = Loc.t * t'
       and t' = {
         argument: Pattern.t;
@@ -910,7 +910,7 @@ and Pattern : sig
     end
     type property =
       | Property of Property.t
-      | SpreadProperty of SpreadProperty.t
+      | RestProperty of RestProperty.t
     type t = {
       properties: property list;
       typeAnnotation: Type.annotation option;
