@@ -1237,12 +1237,12 @@ end with type t = Impl.t) = struct
 
   and import_default_specifier id =
     node "ImportDefaultSpecifier" (fst id) [|
-      "id", identifier id;
+      "local", identifier id;
     |]
 
   and import_namespace_specifier (loc, id) =
     node "ImportNamespaceSpecifier" loc [|
-      "id", identifier id;
+      "local", identifier id;
     |]
 
   and import_named_specifier local_id remote_id =
@@ -1251,9 +1251,13 @@ end with type t = Impl.t) = struct
       | Some local_id -> Loc.btwn (fst remote_id) (fst local_id)
       | None -> fst remote_id
     in
+    let local_id = match local_id with
+    | Some id -> id
+    | None -> remote_id
+    in
     node "ImportSpecifier" span_loc [|
-      "id", identifier remote_id;
-      "name", option identifier local_id;
+      "imported", identifier remote_id;
+      "local", identifier local_id;
     |]
 
   and comment_list comments = array_of_list comment comments

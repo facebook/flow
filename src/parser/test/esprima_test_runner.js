@@ -213,6 +213,23 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       esprima.returnType = null;
       esprima.typeParameters = null;
       break;
+    case 'ImportSpecifier':
+      if (esprima.id != null) {
+        esprima.imported = esprima.id;
+        delete esprima.id;
+      }
+      if (esprima.name != null) {
+        esprima.local = esprima.name;
+      } else {
+        esprima.local = esprima.imported;
+      }
+      delete esprima.name;
+      break;
+    case 'ImportDefaultSpecifier':
+    case 'ImportNamespaceSpecifier':
+      esprima.local = esprima.id;
+      delete esprima.id;
+      break;
     case 'ExportSpecifier':
       if (esprima.id != null) {
         esprima.local = esprima.id;
