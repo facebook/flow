@@ -59,6 +59,7 @@ type reason_desc =
   | RConstructorCall
   | RReturn
   | RRegExp
+  | RSuper
   | RNoSuper
   | RDummyPrototype
   | RDummyThis
@@ -95,7 +96,7 @@ type reason_desc =
   | RThisTypeApp of reason_desc
   | RExtends of reason_desc
   | RStatics of reason_desc
-  | RSuper of reason_desc
+  | RSuperOf of reason_desc
   | RFrozen of reason_desc
   | RBound of reason_desc
   | RTypeOf of reason_desc

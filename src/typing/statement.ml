@@ -2377,6 +2377,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | This ->
       this_ cx (mk_reason RThis loc)
 
+  | Super ->
+      identifier cx "super" loc
+
   | Unary u ->
       unary cx loc u
 
@@ -2436,8 +2439,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Flow.get_builtin cx "ReactGraphQLMixin" reason
 
   | Member {
-      Member._object = _, Identifier (_,
-        { Ast.Identifier.name = "super"; _ });
+      Member._object = super_loc, Super;
       property = Member.PropertyIdentifier (ploc,
         { Ast.Identifier.name; _ });
       _
@@ -2448,8 +2450,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | None ->
         let prop_reason = mk_reason (RProperty name) ploc in
 
-        (* TODO: shouldn't this be `mk_reason "super" super_loc`? *)
-        let super = super_ cx expr_reason in
+        let super = super_ cx (mk_reason RSuper super_loc) in
 
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
         then AnyT.at ploc
@@ -2698,8 +2699,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = callee_loc, Member {
-        Member._object = _, Identifier (super_loc,
-          { Ast.Identifier.name = "super"; _ });
+        Member._object = super_loc, Super;
         property = Member.PropertyIdentifier (ploc,
           { Ast.Identifier.name; _ });
         _
@@ -2709,7 +2709,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason = mk_reason (RCustom (spf "super.%s(...)" name)) loc in
       let reason_lookup = mk_reason (RProperty name) callee_loc in
       let reason_prop = mk_reason (RProperty name) ploc in
-      let super = super_ cx (mk_reason (RCustom "super") super_loc) in
+      let super = super_ cx (mk_reason RSuper super_loc) in
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
@@ -2735,12 +2735,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       method_call cx loc prop_loc (callee, ot, name) argts
 
   | Call {
-      Call.callee = _, Identifier (ploc, { Ast.Identifier.name = "super"; _ });
+      Call.callee = ploc, Super;
       arguments
     } ->
       let argts = List.map (expression_or_spread cx) arguments in
       let reason = mk_reason (RCustom "super(...)") loc in
-      let super_reason = mk_reason (RCustom "super") ploc in
+      let super_reason = mk_reason RSuper ploc in
 
       (* switch back env entries for this and super from undefined *)
       define_internal cx reason "this";
@@ -3296,8 +3296,7 @@ and assignment cx loc = Ast.Expression.(function
 
         (* super.name = e *)
         | lhs_loc, Ast.Pattern.Expression (_, Member {
-            Member._object = _, Identifier (_,
-              { Ast.Identifier.name = "super"; _ });
+            Member._object = _, Super;
             property = Member.PropertyIdentifier (ploc,
               { Ast.Identifier.name; _ });
             _
@@ -3996,7 +3995,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
     ) (SMap.empty, SMap.empty) class_props in
 
   let type_args = [!default; !props; !state] in
-  let super_reason = replace_reason (fun desc -> RSuper desc) reason_component in
+  let super_reason = replace_reason (fun desc -> RSuperOf desc) reason_component in
   let super =
     Flow.get_builtin_typeapp cx super_reason
       "LegacyReactComponent" type_args
@@ -4369,7 +4368,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       }
     ->
       let obj_t = match _object with
-      | _, Identifier ( super_loc, { Ast.Identifier.name = "super"; _ }) ->
+      | super_loc, Super ->
           super_ cx (mk_reason (RProperty prop_name) super_loc)
       | _ ->
           (* use `expression` instead of `condition` because `_object` is the

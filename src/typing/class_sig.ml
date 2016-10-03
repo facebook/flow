@@ -543,7 +543,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     let id = Flow.mk_nominal cx in
     let extends = extract_extends cx structural extends in
     let mixins = extract_mixins cx mixins in
-    let super_reason = replace_reason (fun desc -> RSuper desc) reason in
+    let super_reason = replace_reason (fun desc -> RSuperOf desc) reason in
     (* mixins override extends *)
     let interface_supers =
       List.map (mk_mixins cx super_reason tparams_map) mixins @

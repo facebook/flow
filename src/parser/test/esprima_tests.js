@@ -3276,7 +3276,7 @@ module.exports = {
           content: '"use strict"; (class A {constructor() { super() }})',
           explanation: "Esprima counts the implicit semicolon in its loc, " +
             "Flow doesn't. Esprima-fb also doesn't include params in " +
-            "FunctionExpression location",
+            "FunctionExpression location. It also mishandles `super`",
           expected_differences: {
             'root.body.1.expression.body.body.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -3297,6 +3297,20 @@ module.exports = {
               type: 'Wrong number',
               expected: 38,
               actual: 35,
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.type': {
+              type: 'Wrong string',
+              expected: 'Identifier',
+              actual: 'Super',
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.name': {
+              type: 'Missing property'
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.typeAnnotation': {
+              type: 'Missing property'
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.optional': {
+              type: 'Missing property'
             },
           }
         },
@@ -3348,7 +3362,7 @@ module.exports = {
           content: '"use strict"; (class A { static constructor() { super() }})',
           explanation: "Esprima counts the implicit semicolon in its loc, " +
             "Flow doesn't. Esprima-fb also doesn't include params in " +
-            "FunctionExpression location",
+            "FunctionExpression location. It also mishandles `super`",
           expected_differences: {
             'root.body.1.expression.body.body.0.value.body.body.0.loc.end.column': {
               type: 'Wrong number',
@@ -3369,6 +3383,20 @@ module.exports = {
               type: 'Wrong number',
               expected: 46,
               actual: 43,
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.type': {
+              type: 'Wrong string',
+              expected: 'Identifier',
+              actual: 'Super',
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.name': {
+              type: 'Missing property'
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.typeAnnotation': {
+              type: 'Missing property'
+            },
+            'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.optional': {
+              type: 'Missing property'
             },
           }
         },

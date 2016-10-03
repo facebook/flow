@@ -166,3 +166,8 @@ def("RestProperty")
   .bases("Node")
   .build("argument")
   .field("argument", def("Expression"));
+
+// https://github.com/benjamn/ast-types/issues/183
+def("Super")
+  .bases("Expression")
+  .build();

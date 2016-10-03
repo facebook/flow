@@ -1152,6 +1152,7 @@ end = struct
       | _, TemplateLiteral _
       | _, TaggedTemplate _
       | _, This
+      | _, Super
       | _, Class _
       | _, Function _
       | _, New _
@@ -1181,6 +1182,7 @@ end = struct
       | _, TemplateLiteral _
       | _, TaggedTemplate _
       | _, This
+      | _, Super
       | _, Class _
       | _, Function _
       | _, New _
@@ -1674,11 +1676,7 @@ end = struct
       | T_SUPER ->
           let loc = Peek.loc env in
           Expect.token env T_SUPER;
-          let id = loc, {
-            Identifier.name = "super";
-            typeAnnotation = None;
-            optional = false; } in
-          loc, Expression.Identifier id
+          loc, Expression.Super
       | _ when Peek.is_identifier env ->
           let id = Parse.identifier env in
           fst id, Expression.Identifier id

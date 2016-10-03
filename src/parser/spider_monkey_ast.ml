@@ -757,6 +757,7 @@ and Expression : sig
   type t = Loc.t * t'
   and t' =
     | This
+    | Super
     | Array of Array.t
     | Object of Object.t
     | Function of Function.t

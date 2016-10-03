@@ -108,6 +108,7 @@ type reason_desc =
   | RConstructorCall
   | RReturn
   | RRegExp
+  | RSuper
   | RNoSuper
   | RDummyPrototype
   | RDummyThis
@@ -144,7 +145,7 @@ type reason_desc =
   | RThisTypeApp of reason_desc
   | RExtends of reason_desc
   | RStatics of reason_desc
-  | RSuper of reason_desc
+  | RSuperOf of reason_desc
   | RFrozen of reason_desc
   | RBound of reason_desc
   | RTypeOf of reason_desc
@@ -394,6 +395,7 @@ let rec string_of_desc = function
   | RConstructorCall -> "constructor call"
   | RReturn -> "return"
   | RRegExp -> "regexp"
+  | RSuper -> "`super` pseudo-expression"
   | RNoSuper -> "empty super object"
   | RDummyPrototype -> "empty prototype object"
   | RDummyThis -> "bound `this` in method"
@@ -431,7 +433,7 @@ let rec string_of_desc = function
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)
   | RStatics d -> spf "statics of %s" (string_of_desc d)
-  | RSuper d -> spf "super of %s" (string_of_desc d)
+  | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
   | RTypeOf d -> spf "typeof %s" (string_of_desc d)

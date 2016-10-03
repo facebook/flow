@@ -25,12 +25,12 @@ let rec key = Ast.Expression.(function
   (* treat this as a property chain, in terms of refinement lifetime *)
   Some (Reason.internal_name "this", [])
 
-| _, Identifier (_, { Ast.Identifier.name; _ }) when name != "undefined" -> (
-  (* ditto super *)
-  match name with
-  | "super" -> Some (Reason.internal_name "super", [])
-  | _ -> Some (name, [])
-  )
+| _, Super ->
+  (* treat this as a property chain, in terms of refinement lifetime *)
+  Some (Reason.internal_name "super", [])
+
+| _, Identifier (_, { Ast.Identifier.name; _ }) when name != "undefined" ->
+  Some (name, [])
 
 | _, Member { Member._object;
   (* foo.bar.baz -> Chain [Id baz; Id bar; Id foo] *)
