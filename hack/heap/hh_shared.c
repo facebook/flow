@@ -106,6 +106,8 @@
 #include <unistd.h>
 #endif
 
+#include <lz4.h>
+
 // Ideally these would live in a handle.h file but our internal build system
 // can't support that at the moment. These are shared with handle_stubs.c
 #ifdef _WIN32
@@ -213,8 +215,9 @@ typedef struct {
   // Size of data in the heap
   uint32_t size : 31;
   storage_kind kind : 1;
-  // Unused bits used for padding to 64 bits
-  uint32_t padding;
+  // Size of the data stored in the heap after decompression.
+  // If the data was not compressed this will be 0
+  uint32_t uncompressed_size;
 } hh_header_t;
 
 /* Size of where we allocate shared objects. */
@@ -1472,9 +1475,25 @@ static char* hh_store_ocaml(value data, /*out*/size_t *alloc_size) {
   assert(size < 0x80000000);
   hh_header_t header = { size, kind, 0 };
 
-  char* addr = hh_alloc(header);
-  memcpy(addr, value, header.size);
+  size_t max_compression_size = LZ4_compressBound(header.size);
+  char* compressed_data = malloc(max_compression_size);
+  size_t compressed_size = LZ4_compress_default(
+    value,
+    compressed_data,
+    header.size,
+    max_compression_size);
 
+  if (compressed_size != 0 && compressed_size < header.size) {
+    header.uncompressed_size = header.size;
+    header.size = compressed_size;
+  }
+
+  char* addr = hh_alloc(header);
+  memcpy(addr,
+         header.uncompressed_size ? compressed_data : value,
+         header.size);
+
+  free(compressed_data);
   // We temporarily allocate memory using malloc to serialize the Ocaml object.
   // When we have finished copying the serialized data into our heap we need
   // to free the memory we allocated to avoid a leak.
@@ -1648,11 +1667,28 @@ CAMLprim value hh_get_and_deserialize(value key) {
   hh_header_t header =
     *(hh_header_t*)(hashtbl[slot].addr - sizeof(hh_header_t));
 
+  char* data = hashtbl[slot].addr;
+  size_t size = header.size;
+  if (header.uncompressed_size) {
+    data = malloc(header.uncompressed_size);
+    size_t uncompressed_size = LZ4_decompress_safe(
+      hashtbl[slot].addr,
+      data,
+      header.size,
+      header.uncompressed_size);
+    assert(uncompressed_size == header.uncompressed_size);
+    size = uncompressed_size;
+  }
+
   if (header.kind == KIND_STRING) {
-    result = caml_alloc_string(header.size);
-    memcpy(String_val(result), hashtbl[slot].addr, header.size);
+    result = caml_alloc_string(size);
+    memcpy(String_val(result), data, size);
   } else {
-    result = caml_input_value_from_block(hashtbl[slot].addr, header.size);
+    result = caml_input_value_from_block(data, size);
+  }
+
+  if (header.uncompressed_size) {
+    free(data);
   }
 
   CAMLreturn(result);
