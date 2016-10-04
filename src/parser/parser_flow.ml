@@ -2199,56 +2199,19 @@ end = struct
           }
         )
 
-      and check_property env prop_map prop = Ast.Expression.Object.(
-        match prop with
-        | Property (prop_loc, ({ Property.key = Property.Literal _ | Property.Identifier _; _ } as prop)) ->
-            Property.(
-              let key = match prop.key with
-              | Literal (_, { Literal.value = Literal.String s; _; } ) -> s
-              | Literal (_, { Literal.value = Literal.Boolean b; _; } ) -> string_of_bool b
-              | Literal (_, { Literal.value = Literal.Null; _; } ) -> "null"
-              | Literal (_, { Literal.value = Literal.Number f; _; } ) -> string_of_float f
-              | Literal (_, { Literal.value = Literal.RegExp _; _; } ) ->
-                  failwith "RegExp cannot be property key"
-              | Identifier (_, { Identifier.name; _ }) -> name
-              | Computed _ -> assert false in
-              let prev_kinds =
-                try SMap.find key prop_map
-                with Not_found -> SSet.empty in
-              let kind_string = match prop.kind with
-              | Init -> "Init"
-              | Get -> "Get"
-              | Set -> "Set" in
-              (match kind_string with
-              | "Init" when SSet.mem "Init" prev_kinds ->
-                  strict_error_at env (prop_loc, Error.StrictDuplicateProperty)
-              | "Init" when SSet.mem "Set" prev_kinds || SSet.mem "Get" prev_kinds ->
-                  error_at env (prop_loc, Error.AccessorDataProperty)
-              | "Get"
-              | "Set" when SSet.mem "Init" prev_kinds ->
-                  error_at env (prop_loc, Error.AccessorDataProperty)
-              | ("Get" | "Set") as kind when SSet.mem kind prev_kinds ->
-                  error_at env (prop_loc, Error.AccessorGetSet)
-              | _ -> ());
-              let kinds = SSet.add kind_string prev_kinds in
-              SMap.add key kinds prop_map)
-        | _ -> prop_map
-      )
-
-      and properties env (prop_map, acc) =
+      and properties env acc =
         match Peek.token env with
         | T_EOF
         | T_RCURLY -> List.rev acc
         | _ ->
             let prop = property env in
-            let prop_map = check_property env prop_map prop in
             if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
-            properties env (prop_map, prop::acc)
+            properties env (prop::acc)
 
       in fun env ->
         let start_loc = Peek.loc env in
         Expect.token env T_LCURLY;
-        let props = properties env (SMap.empty, []) in
+        let props = properties env [] in
         let end_loc = Peek.loc env in
         Expect.token env T_RCURLY;
         Loc.btwn start_loc end_loc, Ast.Expression.Object.({

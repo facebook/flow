@@ -2039,12 +2039,72 @@ module.exports = {
         '({ set: s() { } })',
         '({ set: s(a, b) { } })',
         '({ get: g(d) { } })',
-        '({ get i() { }, i: 42 })',
-        '({ i: 42, get i() { } })',
-        '({ set i(x) { }, i: 42 })',
-        '({ i: 42, set i(x) { } })',
-        '({ get i() { }, get i() { } })',
-        '({ set i(x) { }, set i(x) { } })',
+        {
+          content: '({ get i() { }, i: 42 })',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Object literal may not have data and accessor property with the same name',
+              actual: undefined,
+            }
+          }
+        },
+        {
+          content: '({ i: 42, get i() { } })',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Object literal may not have data and accessor property with the same name',
+              actual: undefined,
+            }
+          }
+        },
+        {
+          content: '({ set i(x) { }, i: 42 })',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Object literal may not have data and accessor property with the same name',
+              actual: undefined,
+            }
+          }
+        },
+        {
+          content: '({ i: 42, set i(x) { } })',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Object literal may not have data and accessor property with the same name',
+              actual: undefined,
+            }
+          }
+        },
+        {
+          content: '({ get i() { }, get i() { } })',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Object literal may not have multiple get/set accessors with the same name',
+              actual: undefined,
+            }
+          }
+        },
+        {
+          content: '({ set i(x) { }, set i(x) { } })',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Object literal may not have multiple get/set accessors with the same name',
+              actual: undefined,
+            }
+          }
+        },
         '((a)) => 42',
         '(a, (b)) => 42',
         {
@@ -2374,8 +2434,28 @@ module.exports = {
         },
         '(function () { \'use strict\'; delete i; }())',
         '(function () { \'use strict\'; with (i); }())',
-        'function hello() {\'use strict\'; ({ i: 42, i: 42 }) }',
-        'function hello() {\'use strict\'; ({ hasOwnProperty: 42, hasOwnProperty: 42 }) }',
+        {
+          content: 'function hello() {\'use strict\'; ({ i: 42, i: 42 }) }',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Duplicate data property in object literal not allowed in strict mode',
+              actual: undefined,
+            }
+          }
+        },
+        {
+          content: 'function hello() {\'use strict\'; ({ hasOwnProperty: 42, hasOwnProperty: 42 }) }',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Duplicate data property in object literal not allowed in strict mode',
+              actual: undefined,
+            }
+          }
+        },
         'function hello() {\'use strict\'; var eval = 10; }',
         'function hello() {\'use strict\'; var arguments = 10; }',
         'function hello() {\'use strict\'; try { } catch (eval) { } }',
@@ -2511,8 +2591,28 @@ module.exports = {
           }
         },
         '"use strict"; function t(__proto__, __proto__) { }',
-        '"use strict"; x = { __proto__: 42, __proto__: 43 }',
-        '"use strict"; x = { get __proto__() { }, __proto__: 43 }',
+        {
+          content: '"use strict"; x = { __proto__: 42, __proto__: 43 }',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Duplicate data property in object literal not allowed in strict mode',
+              actual: undefined,
+            }
+          }
+        },
+        {
+          content: '"use strict"; x = { get __proto__() { }, __proto__: 43 }',
+          explanation: 'Esprima-fb is wrong, ES6 allows duplicates',
+          expected_differences: {
+            'root.errors': {
+              type: 'Flow found no error',
+              expected: 'Line 1: Object literal may not have data and accessor property with the same name',
+              actual: undefined,
+            }
+          }
+        },
         'var',
         'let',
         'const',
