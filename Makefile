@@ -52,6 +52,7 @@ MODULES=\
   src/services/flowFileGen\
   src/services/port\
   src/stubs\
+  src/third-party/lz4\
   src/typing\
   hack/dfind\
   hack/find\
@@ -85,7 +86,8 @@ NATIVE_C_FILES=\
   hack/utils/priorities.c\
   hack/utils/win32_support.c\
   hack/hhi/hhi_win32res_stubs.c\
-  src/embedded/flowlib_elf.c
+  src/embedded/flowlib_elf.c\
+  $(wildcard src/third-party/lz4/*.c)
 
 OCAML_LIBRARIES=\
   unix\
@@ -119,9 +121,11 @@ endif
 #                                    Rules                                     #
 ################################################################################
 
-ALL_HEADER_FILES=$(addprefix _build/,$(shell find hack -name '*.h'))
+NATIVE_C_DIRS=$(patsubst %/,%,$(sort $(dir $(NATIVE_C_FILES))))
+ALL_HEADER_FILES=$(addprefix _build/,$(shell find $(NATIVE_C_DIRS) -name '*.h'))
 NATIVE_OBJECT_FILES=$(patsubst %.c,%.o,$(NATIVE_C_FILES))
 NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
+BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 
@@ -131,7 +135,8 @@ CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
 LIB_OPTS=$(foreach lib,$(OCAML_LIBRARIES),-lib $(lib))
 NATIVE_LIB_OPTS=$(foreach lib, $(NATIVE_LIBRARIES),-cclib -l -cclib $(lib))
-EXTRA_INCLUDE_OPTS=$(foreach dir, $(EXTRA_INCLUDE_PATHS),-ccopt -I -ccopt $(dir))
+ALL_INCLUDE_PATHS=$(sort $(realpath $(BUILT_C_DIRS))) $(EXTRA_INCLUDE_PATHS)
+EXTRA_INCLUDE_OPTS=$(foreach dir, $(ALL_INCLUDE_PATHS),-ccopt -I -ccopt $(dir))
 EXTRA_LIB_OPTS=$(foreach dir, $(EXTRA_LIB_PATHS),-cclib -L -cclib $(dir))
 FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(framework))
 
