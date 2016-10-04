@@ -2,7 +2,7 @@
 id: nullable-types
 title: Maybe Types
 permalink: /docs/nullable-types.html
-prev: functions.html
+prev: variance.html
 next: destructuring.html
 ---
 

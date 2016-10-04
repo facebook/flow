@@ -94,6 +94,56 @@ optObj.b * 10 // error: undefined is incompatible with number
 One way to avoid errors is to dynamically check that an optional property exists
 before using it. See [nullable types](http://flowtype.org/docs/nullable-types.html#_) for details.
 
+## Property Variance
+
+By default, objects are invariant with respect to their property types.
+*/
+
+function invariance(o: {p: ?number}) {
+  let p = o.p;
+  o.p = null;
+  return p;
+}
+var subtype_p: {p: number} = {p: 0};
+// $ExpectError
+invariance(subtype_p);
+
+/*
+However, properties can be annotated as covariant:
+*/
+
+function covariance(o: {+p: ?number}) {}
+covariance(subtype_p);
+
+/*
+Covariant properties can not be written:
+*/
+
+function covariance_err(o: {+p: ?number}) {
+  // $ExpectError
+  o.p = null;
+}
+
+/*
+Or contravariant:
+*/
+
+function contravariance(o: {-p: number}) {
+  o.p = 0;
+}
+var supertype_p: {p: ?number} = {p: null};
+contravariance(supertype_p);
+
+/*
+Covariant properties can not be read from:
+*/
+
+function contravariance_err(o: {-p: number}) {
+  // $ExpectError
+  return o.p;
+}
+
+/*
 ## Constructor Functions and Prototype Objects
 
 Another way of creating objects in JavaScript is by using `new` on

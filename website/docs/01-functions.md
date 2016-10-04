@@ -3,7 +3,7 @@ id: functions
 title: Functions
 permalink: /docs/functions.html
 prev: objects.html
-next: nullable-types.html
+next: variance.html
 ---
 
 Functions are ubiquitous in JavaScript. As expected, Flow propagates types through function calls.
