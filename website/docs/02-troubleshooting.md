@@ -90,7 +90,7 @@ foo();
 
 Some operations only make sense when they're performed on a particular set of values. (They may still work on other values, but may have unintended consequences).
 
-For example, multiplication (`*`) should be performed only on numbers even though it may happen to work when you pass strings (though usually they're usually converted to `NaN`).
+For example, multiplication (`*`) should be performed only on numbers even though it may happen to work when you pass strings (though usually they're converted to `NaN`).
 
 Iteration using `for-in` should be performed only on objects even though it may still work on arrays (the keys are converted to strings and other, often unexpected, properties are also included).
 
