@@ -23,6 +23,9 @@ open Utils
 
 exception Watchman_error of string
 exception Timeout
+
+(** Throw this exception when we know there is something to read from
+ * the watchman channel, but reading took too long. *)
 exception Read_payload_too_long
 
 let debug = false
@@ -376,6 +379,19 @@ let maybe_restart_instance instance = match instance with
     else
       instance
 
+let close_channel_on_instance env =
+  let ic, _ = env.socket in
+  Timeout.close_in ic;
+  EventLogger.watchman_died_caught ();
+  Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+
+(** Calls f on the instance, maybe restarting it if its dead and maybe
+ * reverting it to a dead state if things go south. For example, if watchman
+ * shuts the connection on us, or shuts down, or crashes, we revert to a dead
+ * instance, upon which a restart will be attempted down the road.
+ * Alternatively, we also proactively revert to a dead instance if it appears
+ * to be unresponsive (Timeout), and if reading the payload from it is
+ * taking too long. *)
 let call_on_instance instance source f =
   let instance = maybe_restart_instance instance in
   match instance with
@@ -395,18 +411,13 @@ let call_on_instance instance source f =
         Watchman_dead (dead_env_from_alive env), Watchman_unavailable
       | End_of_file ->
         Hh_logger.log "Watchman connection End_of_file. Closing channel";
-        let ic, _ = env.socket in
-        Timeout.close_in ic;
-        EventLogger.watchman_died_caught ();
-        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+        close_channel_on_instance env
       | Read_payload_too_long ->
         Hh_logger.log "Watchman reading payload too long. Closing channel";
-        let ic, _ = env.socket in
-        Timeout.close_in ic;
-        EventLogger.watchman_died_caught ();
-        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
-      | Timeout as e ->
-        raise e
+        close_channel_on_instance env
+      | Timeout ->
+        Hh_logger.log "Watchman reading Timeout. Closing channel";
+        close_channel_on_instance env
       | e ->
         let msg = Printexc.to_string e in
         EventLogger.watchman_uncaught_failure msg;
