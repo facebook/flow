@@ -33,7 +33,7 @@ $> babel --watch=./src --out-dir=./build
 
 This will run in the background, pick up any changes to files in `src/`, and create their pure JavaScript version in `build/`.
 
-For more detailed documentation on the `babel` CLI utility, check out it's own [docs](https://babeljs.io/docs/usage/cli/).
+For more detailed documentation on the `babel` CLI utility, check out its [docs](https://babeljs.io/docs/usage/cli/).
 
 ## flow-remove-types Quick Start
 
@@ -57,4 +57,4 @@ Or run the code directly by substituting `flow-node` for `node`.
 $> flow-node main.js
 ```
 
-For more detailed documentation on `flow-remove-types`, check out it's own [docs](https://github.com/leebyron/flow-remove-types).
+For more detailed documentation on `flow-remove-types`, check out its [docs](https://github.com/leebyron/flow-remove-types).
