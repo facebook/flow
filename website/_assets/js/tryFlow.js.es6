@@ -135,7 +135,8 @@ function getAnnotations(text, callback, options, editor) {
 }
 getAnnotations.async = true;
 
-const defaultValue = `/* @flow */
+const lastEditorValue = localStorage.getItem('tryFlowLastContent');
+const defaultValue = (lastEditorValue && getHashedValue(lastEditorValue)) || `/* @flow */
 
 function foo(x: ?number): string {
   if (x) {
@@ -271,6 +272,7 @@ exports.createEditor = function createEditor(
       const value = editor.getValue();
       const encoded = LZString.compressToEncodedURIComponent(value);
       history.replaceState(undefined, undefined, `#0${encoded}`);
+      localStorage.setItem('tryFlowLastContent', location.hash);
     });
 
     versionTabNode.addEventListener('change', function(evt) {
