@@ -310,3 +310,41 @@ compatible with `Object`, but so are functions and classes.
 (class {}: Object);
 // $ExpectError
 ([]: Object); // Flow does not treat arrays as objects (likely to change)
+
+/*
+  ## Exact Object Types
+  As we saw, the object type `{ x: string }` ensures that an object contains
+  *at least* the property `x` of type `string`. However, `{ x: string }` may
+  have other properties in addition to `x`.
+
+  Sometimes we want to also make sure that `x` is the only property of the
+  object. For this purpose there are exact object types, which use `{|` and `|}`
+  instead of `{` and `}`:
+*/
+
+type User = { name: string, age: number };
+type StrictUser = {| name: string, age: number |};
+
+// Regular object types allow extra properties
+({ name: "Foo", age: 27, foo: false }: User);
+// Exact object types disallow extra properties
+// $ExpectError
+({ name: "Foo", age: 27, foo: false }: StrictUser);
+
+// Otherwise, they behave similarly
+({ name: "Foo", age: 27 }: User);
+({ name: "Foo", age: 27 }: StrictUser);
+// $ExpectError
+({ name: "Foo" }: User);
+// $ExpectError
+({ name: "Foo" }: StrictUser); // Error: 'age' is missing
+
+/*
+ Exact object types are a very useful tool for helping Flow to refine unions of
+ object types and notice typos on property names and refinements. Because
+ `{ name: string }` only means "an object with *at least* a `name` property",
+ Flow can't be sure that objects of that type don't also have *other*
+ properties. For this reason, Flow won't error if it sees an access of a
+ property called, say, `nname` because there's no guarantee that the object
+ doesn't actually have a `nname` property on it!
+*/
