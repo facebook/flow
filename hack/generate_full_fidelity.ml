@@ -878,7 +878,7 @@ let schema = List.map from_list [
     "left_paren";
     "types";
     "right_paren" ];
-  [ "Error";
+  [ "ErrorSyntax";
     "error";
     "error";
     "error";
@@ -891,7 +891,7 @@ let schema = List.map from_list [
     "separator" ]]
 
 let variable_text_tokens = [
-  [ "Error"; "error" ];
+  [ "ErrorToken"; "error_token" ];
   [ "Name"; "name" ];
   [ "QualifiedName"; "qualified_name" ];
   [ "Variable"; "variable" ];
