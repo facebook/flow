@@ -154,6 +154,7 @@ type reason_desc =
   | RPredicateCall of reason_desc
   | RPredicateCallNeg of reason_desc
   | RIncompatibleInstantiation of string
+  | RSpreadOf of reason_desc
 
   | RReactElement of string option
   | RReactClass
@@ -443,6 +444,7 @@ let rec string_of_desc = function
   | RPredicateCallNeg d ->
     spf "negation of predicate call to %s" (string_of_desc d)
   | RIncompatibleInstantiation x -> spf "some incompatible instantiation of `%s`" x
+  | RSpreadOf d -> spf "spread of %s" (string_of_desc d)
 
   | RReactElement x ->
     (match x with

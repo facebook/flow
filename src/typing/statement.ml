@@ -3492,7 +3492,7 @@ and jsx_title cx openingElement _children = Ast.JSX.(
       | None -> o
       | Some ex_t ->
           let reason_prop = replace_reason (fun desc ->
-            RCustom (spf "spread of %s" (string_of_desc desc))
+            RSpreadOf desc
           ) (reason_of_t ex_t) in
           clone_object_with_excludes cx
             reason_prop o ex_t react_ignored_attributes
