@@ -8,6 +8,18 @@
  *
  *)
 
+type init_settings = {
+  scuba_table_name : string;
+  (** File descriptors for the logger daemon's stdout and stderr. *)
+  log_out : Unix.file_descr;
+  log_err : Unix.file_descr;
+}
+
+type init_mode =
+  (** Sends everything to /dev/null. *)
+  | Event_logger_fake
+  | Event_logger_real of init_settings
+
 let init ?init_id:_ _ _ = ()
 let log_if_initialized _ = ()
 let master_exception _ = ()
