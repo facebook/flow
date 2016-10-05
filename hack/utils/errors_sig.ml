@@ -33,6 +33,7 @@ module type S = sig
   val missing_field : Pos.t -> Pos.t -> string -> unit
   val generic_class_var : Pos.t -> unit
   val explain_constraint : Pos.t -> Pos.t -> string -> error -> unit
+  val explain_where_constraint : Pos.t -> Pos.t -> error -> unit
   val explain_type_constant : (Pos.t * string) list -> error -> unit
   val unexpected_arrow : Pos.t -> string -> unit
   val missing_arrow : Pos.t -> string -> unit
@@ -284,7 +285,6 @@ module type S = sig
   val generic_at_runtime : Pos.t -> unit
   val interface_with_partial_typeconst : Pos.t -> unit
   val multiple_xhp_category : Pos.t -> unit
-  val malformed_locl_cstr : Pos.t -> unit
   val not_abstract_without_typeconst : (Pos.t * string) -> unit
   val typeconst_depends_on_external_tparam : Pos.t -> Pos.t -> string -> unit
   val typeconst_assigned_tparam : Pos.t -> string -> unit
