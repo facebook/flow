@@ -115,7 +115,7 @@ Found 1 error
 
 ### Module Boundaries
 
-Flow requires annotations at the boundaries of modules. This allows Flow to analyze modules in isolation which improves the performance of checking types across module boundaries. Coincidentally we've found that this helps to improve the self-documenting nature of module interfaces as well
+Flow requires annotations at the boundaries of modules. This allows Flow to analyze modules in isolation which improves the performance of checking types across module boundaries. We've found that this helps to improve the self-documenting nature of module interfaces as well.
 
 ```js +line_numbers
 /**
