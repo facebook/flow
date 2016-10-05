@@ -270,7 +270,7 @@ exports.createEditor = function createEditor(
     editor.on('changes', () => {
       const value = editor.getValue();
       const encoded = LZString.compressToEncodedURIComponent(value);
-      location.hash = `#0${encoded}`;
+      history.replaceState(undefined, undefined, `#0${encoded}`);
     });
 
     versionTabNode.addEventListener('change', function(evt) {
