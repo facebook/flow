@@ -106,6 +106,8 @@ type reason_desc =
   | RPredicateCallNeg of reason_desc
   | RIncompatibleInstantiation of string
   | RSpreadOf of reason_desc
+  | RObjectPatternRestProp
+  | RArrayPatternRestProp
 
   | RReactElement of string option
   | RReactClass

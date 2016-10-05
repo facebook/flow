@@ -113,7 +113,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             let default = Option.map default (Default.elem key reason) in
             recurse ~parent_pattern_t tvar init default p
         | Some (RestElement (loc, { RestElement.argument = p })) ->
-            let reason = mk_reason (RCustom "rest of array pattern") loc in
+            let reason = mk_reason RArrayPatternRestProp loc in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id())
             in
@@ -191,7 +191,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             end
 
         | RestProperty (loc, { RestProperty.argument = p }) ->
-            let reason = mk_reason (RCustom "object pattern spread property") loc in
+            let reason = mk_reason RObjectPatternRestProp loc in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ObjRest !xs), mk_id())
             in

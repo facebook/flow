@@ -162,7 +162,7 @@ defaults.js:61
 
 defaults.js:62
  62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
-                            ^^^^ object pattern spread property. Expected object instead of
+                            ^^^^ rest of object pattern. Expected object instead of
  62: function obj_rest_err({...o}=0) {} // error: expected object instead of number
                                   ^ number
 
@@ -296,7 +296,7 @@ destructuring.js:25
  23:     var o:{x: string; y: number;} = z;
                ^^^^^^^^^^^^^^^^^^^^^^^ property `x`. Property not found in
  23:     var o:{x: string; y: number;} = z;
-                                         ^ object pattern spread property
+                                         ^ rest of object pattern
 
 destructuring.js:28
  28: var extend: {x:number; y:string; z: boolean} = {x:0, ...spread};

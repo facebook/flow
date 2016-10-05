@@ -3175,6 +3175,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let lit = match ldesc with
       | RObjectLit
       | RSpreadOf _
+      | RObjectPatternRestProp
       | RFunction _
       | RArrowFunction _
       | RReactElementProps _ -> true
