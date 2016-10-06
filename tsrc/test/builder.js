@@ -123,10 +123,12 @@ export class TestBuilder {
   }
 
   async addCode(code: string): Promise<void> {
-    await appendFile(this.getFileName(), "\n"+code+"\n");
+    const filename = this.getFileName();
+    await appendFile(filename, "\n"+code+"\n");
+    await this.forceRecheck([filename]);
   }
 
-  async addFile(source: string, dest: string): Promise<void> {
+  async addFileImpl(source: string, dest: string): Promise<string> {
     source = join(this.sourceDir, source);
     dest = join(this.dir, dest);
     const contents_buffer = await readFile(source);
@@ -137,23 +139,37 @@ export class TestBuilder {
     }
     await mkdirp(dirname(dest));
     await writeFile(dest, contents);
+    return dest;
+  }
+
+  async addFile(source: string, dest: string): Promise<void> {
+    const filename = await this.addFileImpl(source, dest);
+    await this.forceRecheck([filename]);
   }
 
   async addFiles(sources: Array<string>): Promise<void> {
-    await Promise.all(
-      sources.map(source => this.addFile(source, source))
+    const filenames = await Promise.all(
+      sources.map(source => this.addFileImpl(source, source))
     );
+    await this.forceRecheck(filenames);
+  }
+
+  async removeFileImpl(file: string): Promise<string> {
+    file = join(this.dir, file);
+    await unlink(file);
+    return file;
   }
 
   async removeFile(file: string): Promise<void> {
-    file = join(this.dir, file);
-    return unlink(file);
+    const filename = await this.removeFileImpl(file);
+    await this.forceRecheck([filename]);
   }
 
   async removeFiles(files: Array<string>): Promise<void> {
-    await Promise.all(
-      files.map(file => this.removeFile(file))
+    const filenames = await Promise.all(
+      files.map(file => this.removeFileImpl(file))
     );
+    await this.forceRecheck(filenames);
   }
 
   async flowCmd(
@@ -269,6 +285,23 @@ export class TestBuilder {
     while (remaining > 0 && await isRunning(pid)) {
       remaining -= 100;
       await sleep(100);
+    }
+  }
+
+  async forceRecheck(files: Array<string>): Promise<void> {
+    if (this.server && await isRunning(this.server)) {
+      const [err, stdout, stderr] = await execManual(format(
+        "%s force-recheck --temp-dir %s %s",
+        this.bin,
+        this.tmpDir,
+        files.map(s => `'${s}'`).join(" "),
+      ));
+
+      if (err) {
+        throw new Error(
+          format('flow force-recheck failed!', err, stdout, stderr, files),
+        );
+      }
     }
   }
 }
