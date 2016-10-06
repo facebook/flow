@@ -163,50 +163,50 @@ function removeClass(elem, className) {
 }
 
 const versionCache = {};
-
-function initFlow(flow, version) {
-  if (!(version in versionCache)) {
-    const libs = [
-      `/static/${version}/flowlib/core.js`,
-      `/static/${version}/flowlib/bom.js`,
-      `/static/${version}/flowlib/cssom.js`,
-      `/static/${version}/flowlib/dom.js`,
-      `/static/${version}/flowlib/node.js`,
-      `/static/${version}/flowlib/react.js`,
-    ];
-
-    versionCache[version] = Promise.all(libs.map(get)).then(function(contents) {
+function initFlow(version) {
+  if (version in versionCache) {
+    return Promise.resolve(versionCache[version]);
+  }
+  const libs = [
+    `/static/${version}/flowlib/core.js`,
+    `/static/${version}/flowlib/bom.js`,
+    `/static/${version}/flowlib/cssom.js`,
+    `/static/${version}/flowlib/dom.js`,
+    `/static/${version}/flowlib/node.js`,
+    `/static/${version}/flowlib/react.js`,
+  ];
+  const flow = new Promise(function(resolve) {
+    require([`${version}/flow`], resolve);
+  });
+  return Promise.all([flow, ...libs.map(get)])
+    .then(function([flow, ...contents]) {
       contents.forEach(function(nameAndContent) {
         flow.registerFile(nameAndContent[0], nameAndContent[1]);
       });
-      return libs;
-    }).then(function(libs) {
       flow.setLibs(libs);
+      versionCache[version] = flow;
       return flow;
     });
-  }
-  return versionCache[version];
 }
 
 exports.createEditor = function createEditor(
-  flowModule,
+  flowVersion,
   domNode,
   resultsNode,
   flowVersions
 ) {
+  const flowReady = initFlow(flowVersion);
+
   require([
-    flowModule,
     'codemirror/addon/lint/lint',
     'codemirror/mode/javascript/javascript',
     'codemirror/mode/xml/xml',
     'codemirror/mode/jsx/jsx'
-  ], function(flow) {
+  ], function() {
     const location = window.location;
 
-    const flowVersion = flowModule.split('/')[0];
-    const flowReady = initFlow(flow, flowVersion).then(function(flow) {
+    flowReady.then(function() {
       removeClass(resultsNode, 'show-loading');
-      return flow;
     });
 
     const errorsTabNode = document.createElement('li');
@@ -278,13 +278,11 @@ exports.createEditor = function createEditor(
     versionTabNode.addEventListener('change', function(evt) {
       const version = evt.target.value;
       resultsNode.className += ' show-loading';
-      require([`${version}/flow`], function(flow) {
-        const flowReady = initFlow(flow, version).then(function(flow) {
-          removeClass(resultsNode, 'show-loading');
-          return flow;
-        });
-        editor.setOption('flow', flowReady);
+      const flowReady = initFlow(version);
+      flowReady.then(function() {
+        removeClass(resultsNode, 'show-loading');
       });
+      editor.setOption('flow', flowReady);
     });
   });
 }

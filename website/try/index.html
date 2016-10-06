@@ -26,7 +26,7 @@ layout: try
   require(['{{ site.flow.version }}/flow'], function() {}); // preload flow
   require(['{% asset_name 'tryFlow.js' %}'], function(tryFlow) {
     tryFlow.createEditor(
-      '{{ site.flow.version }}/flow',
+      '{{ site.flow.version }}',
       document.getElementById("code"),
       document.getElementById("results"),
       ["{{ site.flow.versions | join: '", "' }}"]
