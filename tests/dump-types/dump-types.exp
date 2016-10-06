@@ -225,7 +225,7 @@
     "end":18
   },
   {
-    "type":"(x: ) => ",
+    "type":"(x: empty) => empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -240,7 +240,7 @@
     "end":20
   },
   {
-    "type":"",
+    "type":"empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -255,7 +255,7 @@
     "end":22
   },
   {
-    "type":"",
+    "type":"empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -555,7 +555,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -569,7 +569,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -583,7 +583,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -597,7 +597,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -754,7 +754,7 @@
         "end":34
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -1838,8 +1838,8 @@
     "end":18
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"function\"\n  },\n  \"kind\":\"FunT\",\n  \"static\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"statics of function\"\n    },\n    \"kind\":\"AnyFunT\"\n  },\n  \"prototype\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"empty prototype object\"\n    },\n    \"kind\":\"MixedT\"\n  },\n  \"funType\":{\n    \"thisType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"global object\"\n      },\n      \"kind\":\"MixedT\"\n    },\n    \"paramTypes\":[\n      {\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"\"\n        },\n        \"kind\":\"EmptyT\"\n      }\n    ],\n    \"paramNames\":[\"x\"],\n    \"returnType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"\"\n      },\n      \"kind\":\"EmptyT\"\n    },\n    \"isPredicate\":false,\n    \"closureIndex\":0,\n    \"changeset\":{\"vars\":[],\"refis\":[]}\n  }\n}",
-    "type":"(x: ) => ",
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"function\"\n  },\n  \"kind\":\"FunT\",\n  \"static\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"statics of function\"\n    },\n    \"kind\":\"AnyFunT\"\n  },\n  \"prototype\":{\n    \"reason\":{\n      \"pos\":{\n        \"source\":null,\n        \"type\":null,\n        \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n        \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n      },\n      \"desc\":\"empty prototype object\"\n    },\n    \"kind\":\"MixedT\"\n  },\n  \"funType\":{\n    \"thisType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"global object\"\n      },\n      \"kind\":\"MixedT\"\n    },\n    \"paramTypes\":[\n      {\n        \"reason\":{\n          \"pos\":{\n            \"source\":null,\n            \"type\":null,\n            \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n            \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n          },\n          \"desc\":\"empty\"\n        },\n        \"kind\":\"EmptyT\"\n      }\n    ],\n    \"paramNames\":[\"x\"],\n    \"returnType\":{\n      \"reason\":{\n        \"pos\":{\n          \"source\":null,\n          \"type\":null,\n          \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n          \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n        },\n        \"desc\":\"empty\"\n      },\n      \"kind\":\"EmptyT\"\n    },\n    \"isPredicate\":false,\n    \"closureIndex\":0,\n    \"changeset\":{\"vars\":[],\"refis\":[]}\n  }\n}",
+    "type":"(x: empty) => empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1854,8 +1854,8 @@
     "end":20
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"\"\n  },\n  \"kind\":\"EmptyT\"\n}",
-    "type":"",
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1870,8 +1870,8 @@
     "end":22
   },
   {
-    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"\"\n  },\n  \"kind\":\"EmptyT\"\n}",
-    "type":"",
+    "raw_type":"{\n  \"reason\":{\n    \"pos\":{\n      \"source\":null,\n      \"type\":null,\n      \"start\":{\"line\":0,\"column\":1,\"offset\":0},\n      \"end\":{\"line\":0,\"column\":0,\"offset\":0}\n    },\n    \"desc\":\"empty\"\n  },\n  \"kind\":\"EmptyT\"\n}",
+    "type":"empty",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -2173,7 +2173,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -2187,7 +2187,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -2201,7 +2201,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -2215,7 +2215,7 @@
         "end":50
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",
@@ -2374,7 +2374,7 @@
         "end":34
       },
       {
-        "desc":"",
+        "desc":"empty",
         "loc":{
           "source":"test.js",
           "type":"SourceFile",

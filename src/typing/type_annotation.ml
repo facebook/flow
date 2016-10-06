@@ -55,6 +55,8 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Mixed -> MixedT.at loc
 
+| loc, Empty -> EmptyT.at loc
+
 | loc, Void -> VoidT.at loc
 
 | loc, Null -> NullT.at loc

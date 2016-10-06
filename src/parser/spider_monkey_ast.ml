@@ -152,6 +152,7 @@ and Type : sig
   and t' =
     | Any
     | Mixed
+    | Empty
     | Void
     | Null
     | Number

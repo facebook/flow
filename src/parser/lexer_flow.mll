@@ -136,6 +136,7 @@ module Token = struct
     (* Type primitives *)
     | T_ANY_TYPE
     | T_MIXED_TYPE
+    | T_EMPTY_TYPE
     | T_BOOLEAN_TYPE
     | T_NUMBER_TYPE
     | T_NUMBER_SINGLETON_TYPE of number_type * float
@@ -277,6 +278,7 @@ module Token = struct
     (* Type primitives *)
     | T_ANY_TYPE -> "T_ANY_TYPE"
     | T_MIXED_TYPE -> "T_MIXED_TYPE"
+    | T_EMPTY_TYPE -> "T_EMPTY_TYPE"
     | T_BOOLEAN_TYPE -> "T_BOOLEAN_TYPE"
     | T_NUMBER_TYPE -> "T_NUMBER_TYPE"
     | T_NUMBER_SINGLETON_TYPE _ -> "T_NUMBER_SINGLETON_TYPE"
@@ -728,6 +730,7 @@ end
       "typeof",  T_TYPEOF;
       "any",     T_ANY_TYPE;
       "mixed",   T_MIXED_TYPE;
+      "empty",   T_EMPTY_TYPE;
       "bool",    T_BOOLEAN_TYPE;
       "boolean", T_BOOLEAN_TYPE;
       "true",    T_TRUE;
