@@ -168,7 +168,7 @@ main.js:13
 Found 1 error
 ```
 
-If we fix the typeo in our code and run Flow again, we'll see that the Flow 
+If we fix the typo in our code and run Flow again, we'll see that the Flow 
 error goes away:
 
 ```bash
