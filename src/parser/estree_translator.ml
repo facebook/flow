@@ -918,6 +918,7 @@ end with type t = Impl.t) = struct
   and _type (loc, t) = Type.(
     match t with
     | Any -> any_type loc
+    | Mixed -> mixed_type loc
     | Void -> void_type loc
     | Null -> null_type loc
     | Number -> number_type loc
@@ -939,6 +940,8 @@ end with type t = Impl.t) = struct
   )
 
   and any_type loc = node "AnyTypeAnnotation" loc [||]
+
+  and mixed_type loc = node "MixedTypeAnnotation" loc [||]
 
   and void_type loc = node "VoidTypeAnnotation" loc [||]
 

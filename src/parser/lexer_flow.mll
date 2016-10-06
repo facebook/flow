@@ -135,6 +135,7 @@ module Token = struct
     | T_JSX_TEXT of (Loc.t * string * string) (* loc, value, raw *)
     (* Type primitives *)
     | T_ANY_TYPE
+    | T_MIXED_TYPE
     | T_BOOLEAN_TYPE
     | T_NUMBER_TYPE
     | T_NUMBER_SINGLETON_TYPE of number_type * float
@@ -275,6 +276,7 @@ module Token = struct
     | T_JSX_TEXT _ -> "T_JSX_TEXT"
     (* Type primitives *)
     | T_ANY_TYPE -> "T_ANY_TYPE"
+    | T_MIXED_TYPE -> "T_MIXED_TYPE"
     | T_BOOLEAN_TYPE -> "T_BOOLEAN_TYPE"
     | T_NUMBER_TYPE -> "T_NUMBER_TYPE"
     | T_NUMBER_SINGLETON_TYPE _ -> "T_NUMBER_SINGLETON_TYPE"
@@ -725,6 +727,7 @@ end
       "static",  T_STATIC;
       "typeof",  T_TYPEOF;
       "any",     T_ANY_TYPE;
+      "mixed",   T_MIXED_TYPE;
       "bool",    T_BOOLEAN_TYPE;
       "boolean", T_BOOLEAN_TYPE;
       "true",    T_TRUE;

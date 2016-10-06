@@ -4234,7 +4234,7 @@ module.exports = {
               'params': [
                 {
                   'name.name': 'x',
-                  'typeAnnotation.type': 'GenericTypeAnnotation',
+                  'typeAnnotation.type': 'MixedTypeAnnotation',
                 }
               ],
               'returnType.type': 'BooleanTypeAnnotation'
@@ -4276,14 +4276,7 @@ module.exports = {
               'typeAnnotation':{
                 'type':'TypeAnnotation',
                 'typeAnnotation':{
-                  'type':'GenericTypeAnnotation',
-                  'id':{
-                    'type':'Identifier',
-                    'name':'mixed',
-                    'typeAnnotation':null,
-                    'optional':false
-                  },
-                  'typeParameters':null
+                  'type':'MixedTypeAnnotation',
                 }
               },
               'optional':false
@@ -4342,14 +4335,7 @@ module.exports = {
                     'typeAnnotation':{
                       'type':'TypeAnnotation',
                       'typeAnnotation':{
-                        'type':'GenericTypeAnnotation',
-                        'id':{
-                          'type':'Identifier',
-                          'name':'mixed',
-                          'typeAnnotation':null,
-                          'optional':false
-                        },
-                        'typeParameters':null
+                        'type':'MixedTypeAnnotation',
                       }
                     },
                     'optional':false

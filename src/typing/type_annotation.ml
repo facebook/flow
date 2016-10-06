@@ -53,6 +53,8 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Any -> AnyT.at loc
 
+| loc, Mixed -> MixedT.at loc
+
 | loc, Void -> VoidT.at loc
 
 | loc, Null -> NullT.at loc
@@ -164,12 +166,6 @@ let rec convert cx tparams_map = Ast.Type.(function
     ~f:(List.map (convert cx tparams_map)) in
 
   begin match name with
-
-  (* TODO Type.Mixed *)
-  | "mixed" ->
-    check_type_param_arity cx loc typeParameters 0 (fun () ->
-      MixedT.at loc
-    )
 
   (* Array<T> *)
   | "Array" ->

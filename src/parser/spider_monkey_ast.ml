@@ -151,6 +151,7 @@ and Type : sig
    * should never be declared nullable, but that check can happen later *)
   and t' =
     | Any
+    | Mixed
     | Void
     | Null
     | Number
