@@ -291,13 +291,15 @@ export class TestBuilder {
   async forceRecheck(files: Array<string>): Promise<void> {
     if (this.server && await isRunning(this.server)) {
       const [err, stdout, stderr] = await execManual(format(
-        "%s force-recheck --temp-dir %s %s",
+        "%s force-recheck --no-auto-start --temp-dir %s %s",
         this.bin,
         this.tmpDir,
-        files.map(s => `'${s}'`).join(" "),
+        files.map(s => `"${s}"`).join(" "),
       ));
 
-      if (err) {
+      // No server running (6) is ok - the file change might have killed the
+      // server and we raced it here
+      if (err && err.code !== 6) {
         throw new Error(
           format('flow force-recheck failed!', err, stdout, stderr, files),
         );
