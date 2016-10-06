@@ -215,14 +215,15 @@ let capability_check ?(optional=[]) required =
 
 let read_with_timeout timeout ic =
   let fd = Timeout.descr_of_in_channel ic in
+  let deadline = Unix.gettimeofday () +. timeout in
   match Unix.select [fd] [] [] timeout with
-    | [ready_fd], _, _ when ready_fd = fd-> begin
-     let max_read_time = 20 in
-     Timeout.with_timeout ~timeout:max_read_time
+    | [ready_fd], _, _ when ready_fd = fd -> begin
+     Timeout.with_timeout
+       ~timeout:(max 1 (int_of_float (deadline -. Unix.gettimeofday ())))
        ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
        ~on_timeout:begin fun _ ->
                      EventLogger.watchman_timeout ();
-                     raise Timeout
+                     raise Read_payload_too_long
                    end
     end
     | _, _, _ ->
