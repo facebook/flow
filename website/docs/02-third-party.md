@@ -112,9 +112,10 @@ var pizzas = [
 ];
 
 function vegetarianPizzas() {
-  return _.ffind(pizas, {vegetarian: true});
+  return _.ffind(pizzas, {vegetarian: true});
 }
 ```
+
 
 Running `flow` will produce no errors:
 
