@@ -404,10 +404,21 @@ let call_on_instance instance source f =
     with
       | Sys_error("Broken pipe") ->
         Hh_logger.log "Watchman Pipe broken.";
-        EventLogger.watchman_died_caught ();
-        Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+        close_channel_on_instance env
       | Sys_error("Connection reset by peer") ->
         Hh_logger.log "Watchman connection reset by peer.";
+        close_channel_on_instance env
+      | Sys_error("Bad file descriptor") ->
+        (** This happens when watchman is tearing itself down after we
+         * retrieved a sock address and connected to the sock address. That's
+         * because Unix.open_connection (via Timeout.open_connection) doesn't
+         * error even when the sock adddress is no longer valid and actually -
+         * it returns a channel that will error at some later time when you
+         * actually try to do anything with it (write to it, or even get the
+         * file descriptor of it). I'm pretty sure we don't need to close the
+         * channel when that happens since we never had a useable channel
+         * to start with. *)
+        Hh_logger.log "Watchman bad file descriptor.";
         EventLogger.watchman_died_caught ();
         Watchman_dead (dead_env_from_alive env), Watchman_unavailable
       | End_of_file ->
