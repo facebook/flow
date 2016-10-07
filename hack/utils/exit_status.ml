@@ -32,6 +32,7 @@ type t =
   | Dfind_died
   | Dfind_unresponsive
   | EventLogger_Timeout
+  | EventLogger_restart_out_of_retries
   | EventLogger_broken_pipe
   | CantRunAI
   | Watchman_failed
@@ -83,6 +84,7 @@ let exit_code = function
   | Dfind_died -> 99
   | Dfind_unresponsive -> 100
   | EventLogger_Timeout -> 101
+  | EventLogger_restart_out_of_retries -> 108
   | CantRunAI -> 102
   | Watchman_failed -> 103
   | Hhconfig_deleted -> 104
@@ -130,6 +132,7 @@ let to_string = function
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
   | EventLogger_Timeout -> "EventLogger_Timeout"
+  | EventLogger_restart_out_of_retries -> "EventLogger_restart_out_of_retries"
   | EventLogger_broken_pipe -> "EventLogger_broken_pipe"
   | CantRunAI -> "CantRunAI"
   | Watchman_failed -> "Watchman_failed"
