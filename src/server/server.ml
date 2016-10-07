@@ -25,12 +25,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     ignore (Init_js.get_master_cx options)
 
   let init genv =
+    (* Encapsulate merge_strict_context for dumper *)
+    let merge_component options cx =
+      let cache = new Context_cache.context_cache in
+      Merge_service.merge_strict_context ~options cache [cx] in
     (* write binary path and version to server log *)
     Flow_logger.log "executable=%s" (Sys_utils.executable_path ());
     Flow_logger.log "version=%s" FlowConfig.version;
-    (* start the server *)
+    (* start the server and pipe its result into the dumper *)
     Types_js.server_init genv
-    |> Dumper.init genv
+    |> Dumper.init merge_component genv
 
   let run_once_and_exit env =
     match env.ServerEnv.errorl with

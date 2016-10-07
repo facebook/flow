@@ -8,4 +8,4 @@
  *
  *)
 
-let init _genv result = result
+let init _merge _genv result = result
