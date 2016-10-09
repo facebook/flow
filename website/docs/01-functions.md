@@ -82,7 +82,7 @@ function takesANumber(x: number) {}
 takesANumber() // Error: undefined passed to x, which expects a number
 ```
 
-However if the missing parameter accepts values of type `void` then there will
+However, if the missing parameter accepts values of type `void` then there will
 be no error.
 
 ```js +line_numbers
