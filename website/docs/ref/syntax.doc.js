@@ -39,8 +39,8 @@ next: arrays.html
   To use Flow syntax with Babel 6.x, you need to include the
   [`transform-flow-strip-types` plugin][transform-flow-strip-types].
 
-  Another option is to use the [React preset][preset-es2015] which includes Flow
-  support in addition to React-specific plugins.
+  Another option is to use the [React preset][preset-es2015] which has Flow
+  support (including [`transform-flow-strip-types`][transform-flow-strip-types]) already built-in in addition to React-specific plugins.
 
   [transform-flow-strip-types]: https://babeljs.io/docs/plugins/transform-flow-strip-types/
   [preset-es2015]: https://babeljs.io/docs/plugins/preset-react/
