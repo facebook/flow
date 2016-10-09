@@ -36,7 +36,7 @@ next: arrays.html
   Babel 6.x introduced a plugin architecture, which makes it easier to customize
   to your particular flavor of JavaScript.
 
-  To use Flow syntax with with Babel 6.x, you need to include the
+  To use Flow syntax with Babel 6.x, you need to include the
   [`transform-flow-strip-types` plugin][transform-flow-strip-types].
 
   Another option is to use the [React preset][preset-es2015] which includes Flow
