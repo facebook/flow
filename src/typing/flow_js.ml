@@ -4789,6 +4789,7 @@ and flow_eq cx trace reason l r =
   | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
 
 and is_object_prototype_method = function
+  | "isPrototypeOf"
   | "hasOwnProperty"
   | "propertyIsEnumerable"
   | "toLocaleString"
