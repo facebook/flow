@@ -22,7 +22,7 @@ const ReactDOM = require("react-dom");
 
   React provides a few different ways to define components:
 
-  * [the `React.createClass` factory](#the-react-createclass-factory),
+  * [the `React.createClass` factory](#the-reactcreateclass-factory),
   * [`React.Component` subclasses](#defining-components-as-reactcomponent-subclasses),
   * and [stateless functional components](#stateless-functional-components)
 
