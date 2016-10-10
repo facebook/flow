@@ -7,6 +7,8 @@ show_help() {
   echo "        path to Flow binary"
   echo "    TEST_FILTER"
   echo "        optional regular expression to choose test directories to run"
+  echo "    -r"
+  echo "        re-record failing tests to update expected output"
   echo "    -h"
   echo "        display this help and exit"
   echo "    -v"
@@ -16,9 +18,13 @@ show_help() {
 export IN_FLOW_TEST=1
 
 OPTIND=1
+record=0
 verbose=0
-while getopts "h?v" opt; do
+while getopts "rh?v" opt; do
   case "$opt" in
+  r)
+    record=1
+    ;;
   h|\?)
     show_help
     exit 0
@@ -51,6 +57,7 @@ if [ -t 1 ]; then
   COLOR_RED_BOLD="\x1b[31;1m"
   COLOR_GREEN_BOLD="\x1b[32;1m"
   COLOR_YELLOW_BOLD="\x1b[33;1m"
+  COLOR_MAGENTA_BOLD="\x1b[35;1m"
   COLOR_WHITE_ON_RED_BOLD="\x1b[37;41;1m"
 else
   COLOR_RESET=""
@@ -59,6 +66,7 @@ else
   COLOR_RED_BOLD=""
   COLOR_GREEN_BOLD=""
   COLOR_YELLOW_BOLD=""
+  COLOR_MAGENTA_BOLD=""
   COLOR_WHITE_ON_RED_BOLD=""
 fi
 print_failure() {
@@ -66,8 +74,13 @@ print_failure() {
     name=${dir%*/}
     name=${name##*/}
 
-    printf "%b[✗] FAIL:%b %s%b\n" \
-      "$COLOR_RED_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+    if [[ "$record" -eq 1 ]]; then
+      printf "%b[✗] UPDATED:%b %s%b\n" \
+        "$COLOR_MAGENTA_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+    else
+      printf "%b[✗] FAILED:%b  %s%b\n" \
+        "$COLOR_RED_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
+    fi
 
     diff_file="${dir}${name}.diff"
     err_file="${dir}${name}.err"
@@ -82,6 +95,12 @@ print_failure() {
         cat "$diff_file"
       fi
     fi
+
+    if [[ "$record" -eq 1 ]]; then
+      mv "${dir}${name}.out" "${dir}${name}.exp"
+      rm "$err_file"
+      rm "$diff_file"
+    fi
 }
 print_skip() {
     name=$1
@@ -89,7 +108,7 @@ print_skip() {
     name=${name##*/}
     verbose=$2
     if [[ "$verbose" -eq 1 ]]; then
-      printf "%b[-] SKIP:%b %s%b\n" \
+      printf "%b[-] SKIPPED:%b %s%b\n" \
         "$COLOR_YELLOW_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
     else
       printf "          %*s\r" ${#name} " "
@@ -99,7 +118,7 @@ print_success() {
     name=$1
     name=${name%*/}
     name=${name##*/}
-    printf "%b[✓] PASS:%b %s%b\n" \
+    printf "%b[✓] PASSED:%b  %s%b\n" \
       "$COLOR_GREEN_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
 }
 print_run() {
@@ -107,7 +126,7 @@ print_run() {
       name=$1
       name=${name%*/}
       name=${name##*/}
-      printf "%b[ ] RUN:%b  %s%b\r" \
+      printf "%b[ ] RUNNING:%b %s%b\r" \
         "$COLOR_DEFAULT_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
     fi
 }
