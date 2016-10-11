@@ -906,14 +906,11 @@ end with type t = Impl.t) = struct
       |]
     )
 
-  and variance (loc, sigil) =
-    let kind = Variance.(match sigil with
+  and variance (_, sigil) = Variance.(
+    match sigil with
     | Plus -> string "plus"
     | Minus -> string "minus"
-    ) in
-    node "Variance" loc [|
-      "kind", kind
-    |]
+  )
 
   and _type (loc, t) = Type.(
     match t with

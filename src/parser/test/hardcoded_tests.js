@@ -555,12 +555,12 @@ module.exports = {
           {
             'type': 'TypeParameter',
             'name': 'T1',
-            'variance.kind': 'plus',
+            'variance': 'plus',
           },
           {
             'type': 'TypeParameter',
             'name': 'T2',
-            'variance.kind': 'minus',
+            'variance': 'minus',
           },
         ],
       },
@@ -4425,11 +4425,11 @@ module.exports = {
       },
       'type X = {+p:T}': {
         'errors.length': 0,
-        'body.0.right.properties.0.variance.kind': 'plus'
+        'body.0.right.properties.0.variance': 'plus'
       },
       'type X = {-p:T}': {
         'errors.length': 0,
-        'body.0.right.properties.0.variance.kind': 'minus'
+        'body.0.right.properties.0.variance': 'minus'
       },
       'type X = {m():T}': {
         'errors.length': 0,
@@ -4455,11 +4455,11 @@ module.exports = {
       },
       'type X = {+[k:K]:V}': {
         'errors.length': 0,
-        'body.0.right.indexers.0.variance.kind': 'plus'
+        'body.0.right.indexers.0.variance': 'plus'
       },
       'type X = {-[k:K]:V}': {
         'errors.length': 0,
-        'body.0.right.indexers.0.variance.kind': 'minus'
+        'body.0.right.indexers.0.variance': 'minus'
       },
       'type X = {():T}': {
         'errors.length': 0,
@@ -4486,11 +4486,11 @@ module.exports = {
       },
       'class C {+p:T}': {
         'errors.length': 0,
-        'body.0.body.body.0.variance.kind': 'plus'
+        'body.0.body.body.0.variance': 'plus'
       },
       'class C {-p:T}': {
         'errors.length': 0,
-        'body.0.body.body.0.variance.kind': 'minus'
+        'body.0.body.body.0.variance': 'minus'
       },
       'class C {+m(){}}': {
         'errors.0': {
