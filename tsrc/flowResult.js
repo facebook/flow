@@ -6,6 +6,7 @@ export type FlowResult = {
   passed: boolean,
   errors: Array<FlowError>,
   flowVersion: string,
+  timing?: FlowTiming,
 };
 export type FlowError = {
   kind: string,
@@ -36,6 +37,14 @@ type FlowPos = {
   line: number,
   column: number,
   offset: number,
+}
+type FlowTiming = {
+  results: {
+    [key: string]: {
+      start_wall_age: number,
+      wall_duration: number,
+    }
+  }
 }
 
 export const noErrors: FlowResult = {

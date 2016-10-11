@@ -59,7 +59,7 @@ ${validCommands}
   static async validCommands(): Promise<string> {
     const commandMap = await commandFinder(__dirname);
     const maxLength = Math.max(
-      14,
+      16,
       ...Array.from(commandMap.keys()).map(k => k.length)
     );
 
