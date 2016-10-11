@@ -79,6 +79,8 @@ type reason_desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RJSXFunctionCall of string
+  | RJSXIdentifier of string * string
   | RAnyObject
   | RAnyFunction
   | RUnknownString
@@ -368,6 +370,9 @@ let rec string_of_desc = function
   | RFunctionType -> "function type"
   | RFunctionBody -> "function body"
   | RFunctionCall -> "function call"
+  | RJSXFunctionCall raw_jsx -> spf "JSX desugared to `%s(...)`" raw_jsx
+  | RJSXIdentifier (raw_jsx, name) ->
+      spf "JSX desugared to `%s(...)`. identifier %s" raw_jsx name
   | RAnyObject -> "any object"
   | RAnyFunction -> "any function"
   | RUnknownString -> "some string with unknown value"
