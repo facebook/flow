@@ -33,4 +33,7 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
         env, add x y acc
     ) m (env, empty)
 
+  let choose x =
+    try Some (choose x) with Not_found -> None
+
 end
