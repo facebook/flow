@@ -110,8 +110,8 @@ print_skip() {
     if [[ "$verbose" -eq 1 ]]; then
       printf "%b[-] SKIPPED:%b %s%b\n" \
         "$COLOR_YELLOW_BOLD" "$COLOR_DEFAULT" "$name" "$COLOR_RESET"
-    else
-      printf "          %*s\r" ${#name} " "
+    elif [[ -t 1 ]]; then
+      printf "             %*s\r" ${#name} " "
     fi
 }
 print_success() {
