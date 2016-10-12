@@ -123,7 +123,10 @@ let tarjan state =
     (* choose a node, compute its strongly connected component *)
     (** NOTE: this choice is non-deterministic, so any computations that depend
         on the visit order, such as heights, are in general non-repeatable. **)
-    let m, rs = FilenameMap.choose state.not_yet_visited in
+    let m, rs =
+       match FilenameMap.choose state.not_yet_visited with
+       | Some (m, rs) -> m, rs
+       | None -> failwith "choose should always work on a non empty file map" in
     strongconnect state m rs |> ignore
   done
 
