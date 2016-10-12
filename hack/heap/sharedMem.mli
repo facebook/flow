@@ -151,6 +151,11 @@ module type NoCache = sig
   val oldify_batch: KeySet.t -> unit
   (* Reverse operation of oldify *)
   val revive_batch: KeySet.t -> unit
+
+  val shelve_batch     : KeySet.t -> unit
+  val get_shelved: key -> t option
+  val unshelve_batch   : KeySet.t -> unit
+  val remove_shelved_batch : KeySet.t -> unit
 end
 
 module type WithCache = sig

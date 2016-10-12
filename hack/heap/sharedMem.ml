@@ -277,18 +277,27 @@ module type Key = sig
   (* The type of old keys that get stored in the C hashtable *)
   type old
 
+  (* The type of temporary keys that get stored in the C hashtable *)
+  type tmp
+
   (* The md5 of an old or a new key *)
   type md5
 
   (* Creation/conversion primitives *)
   val make     : Prefix.t -> userkey -> t
   val make_old : Prefix.t -> userkey -> old
+  val make_tmp : Prefix.t -> userkey -> tmp
+
   val to_old   : t -> old
-  val to_new   : old -> t
+  val to_tmp   : t -> tmp
+
+  val new_from_old : old -> t
+  val new_from_tmp : tmp -> t
 
   (* Md5 primitives *)
   val md5     : t -> md5
   val md5_old : old -> md5
+  val md5_tmp : tmp -> md5
 
 end
 
@@ -300,6 +309,7 @@ end) : Key with type userkey = UserKeyType.t = struct
   type userkey = UserKeyType.t
   type t       = string
   type old     = string
+  type tmp     = string
   type md5     = string
 
   (* The prefix we use for old keys. The prefix guarantees that we never
@@ -307,19 +317,29 @@ end) : Key with type userkey = UserKeyType.t = struct
    * "old_", it always starts with a number (cf Prefix.make()).
    *)
   let old_prefix = "old_"
+  (* Similar to old_prefix, but used for temporarily shelving data in heap *)
+  let tmp_prefix = "tmp_"
 
   let make prefix x = Prefix.make_key prefix (UserKeyType.to_string x)
   let make_old prefix x =
     old_prefix^Prefix.make_key prefix (UserKeyType.to_string x)
+  let make_tmp prefix x =
+    tmp_prefix^Prefix.make_key prefix (UserKeyType.to_string x)
 
   let to_old x = old_prefix^x
+  let to_tmp x = tmp_prefix^x
 
-  let to_new x =
+  let new_from_old x =
     let module S = String in
     S.sub x (S.length old_prefix) (S.length x - S.length old_prefix)
 
+  let new_from_tmp x =
+    let module S = String in
+    S.sub x (S.length tmp_prefix) (S.length x - S.length tmp_prefix)
+
   let md5 = Digest.string
   let md5_old = Digest.string
+  let md5_tmp = Digest.string
 
 end
 
@@ -400,6 +420,9 @@ module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
    *)
   val oldify      : Key.t -> unit
 
+  (* Same as oldify, but uses a different (logical) area of the heap *)
+  val shelve      : Key.t -> unit
+
 end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
   module Raw = Raw (Key) (Value)
@@ -433,6 +456,13 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
       let old_key = Key.to_old key in
       Raw.hh_move (Key.md5 key) (Key.md5_old old_key)
     else ()
+
+  let shelve key =
+    if mem key
+    then
+      let tmp_key = Key.to_tmp key in
+      Raw.hh_move (Key.md5 key) (Key.md5_tmp tmp_key)
+    else ()
 end
 
 (* Same as new, but for old values *)
@@ -441,10 +471,7 @@ module Old : functor (Key : Key) -> functor (Value : Value.Type) -> sig
   val get         : Key.old -> Value.t option
   val remove      : Key.old -> unit
   val mem         : Key.old -> bool
-
-  (* Takes an old value and moves it back to a "new" one
-   * (useful for auto-complete).
-   *)
+  (* Takes an old value and moves it back to a "new" one *)
   val revive      : Key.old -> unit
 
 end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
@@ -464,14 +491,51 @@ end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
     then Raw.hh_remove (Key.md5_old key)
 
   let revive key =
+  if mem key
+  then
+    let new_key = Key.new_from_old key in
+    let new_key = Key.md5 new_key in
+    let old_key = Key.md5_old key in
+    if Raw.hh_mem new_key
+    then Raw.hh_remove new_key;
+    Raw.hh_move old_key new_key
+end
+
+(* Same as new, but for temporary values *)
+module Tmp : functor (Key : Key) -> functor (Value : Value.Type) -> sig
+
+  val get         : Key.tmp -> Value.t option
+  val remove      : Key.tmp -> unit
+  val mem         : Key.tmp -> bool
+
+  (* Takes a temporary value and moves it back to a "new" one *)
+  val unshelve      : Key.tmp -> unit
+
+end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
+
+  module Raw = Raw (Key) (Value)
+
+  let get key =
+    let key = Key.md5_tmp key in
+    if Raw.hh_mem key
+    then Some (Raw.hh_get key)
+    else None
+
+  let mem key = Raw.hh_mem (Key.md5_tmp key)
+
+  let remove key =
+    if mem key
+    then Raw.hh_remove (Key.md5_tmp key)
+
+  let unshelve key =
     if mem key
     then
-      let new_key = Key.to_new key in
+      let new_key = Key.new_from_tmp key in
       let new_key = Key.md5 new_key in
-      let old_key = Key.md5_old key in
+      let tmp_key = Key.md5_tmp key in
       if Raw.hh_mem new_key
       then Raw.hh_remove new_key;
-      Raw.hh_move old_key new_key
+      Raw.hh_move tmp_key new_key
 end
 
 (*****************************************************************************)
@@ -495,6 +559,10 @@ module type NoCache = sig
   val mem              : key -> bool
   val oldify_batch     : KeySet.t -> unit
   val revive_batch     : KeySet.t -> unit
+  val shelve_batch     : KeySet.t -> unit
+  val get_shelved      : key -> t option
+  val unshelve_batch   : KeySet.t -> unit
+  val remove_shelved_batch : KeySet.t -> unit
 end
 
 module type WithCache = sig
@@ -521,6 +589,7 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
   module Key = KeyFunctor (UserKeyType)
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
+  module Tmp = Tmp (Key) (Value)
   module KeySet = Set.Make (UserKeyType)
   module KeyMap = MyMap.Make (UserKeyType)
 
@@ -587,6 +656,37 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
       Old.remove key
     end xs
 
+  let shelve_batch xs =
+    KeySet.iter begin fun str_key ->
+      let key = Key.make Value.prefix str_key in
+      if New.mem key
+      then
+        New.shelve key
+      else
+        let key = Key.make_tmp Value.prefix str_key in
+        Tmp.remove key
+    end xs
+
+  let get_shelved x =
+    let key = Key.make_tmp Value.prefix x in
+    Tmp.get key
+
+  let unshelve_batch xs =
+    KeySet.iter begin fun str_key ->
+      let tmp_key = Key.make_tmp Value.prefix str_key in
+      if Tmp.mem tmp_key
+      then
+        Tmp.unshelve tmp_key
+      else
+        let key = Key.make Value.prefix str_key in
+        New.remove key
+    end xs
+
+  let remove_shelved_batch xs =
+    KeySet.iter begin fun str_key ->
+      let key = Key.make_tmp Value.prefix str_key in
+      Tmp.remove key
+    end xs
 end
 
 (*****************************************************************************)
@@ -822,6 +922,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
   module Key = Cache.Key
   module New = New (Key) (Value)
   module Old = Old (Key) (Value)
+  module Tmp = Tmp (Key) (Value)
   module KeySet = Set.Make (UserKeyType)
   module KeyMap = MyMap.Make (UserKeyType)
 
@@ -854,6 +955,7 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
   (* We don't cache old objects, they are not accessed often enough. *)
   let get_old = Direct.get_old
   let get_old_batch = Direct.get_old_batch
+  let get_shelved = Direct.get_shelved
 
   let find_unsafe x =
     match get x with
@@ -899,4 +1001,20 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
   let remove_old x = Old.remove (Key.make_old Value.prefix x)
   let remove_old_batch = KeySet.iter remove_old
 
+  let shelve_batch keys =
+    Direct.shelve_batch keys;
+    KeySet.iter begin fun key ->
+      let key = Key.make Value.prefix key in
+      Cache.removeWithKey key
+    end keys
+
+  let unshelve_batch keys =
+    Direct.unshelve_batch keys;
+    KeySet.iter begin fun x ->
+      let x = Key.make Value.prefix x in
+      Cache.removeWithKey x
+    end keys
+
+  let remove_shelved x = Tmp.remove (Key.make_tmp Value.prefix x)
+  let remove_shelved_batch = KeySet.iter remove_shelved
 end
