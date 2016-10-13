@@ -20,8 +20,6 @@ test.js:9
 
 test.js:13
  13: <Z />; // error, expected React component
-     ^^^^^ React element `Z`
- 13: <Z />; // error, expected React component
      ^^^^^ React element `Z`. Expected React component instead of
  12: var Z = 0;
              ^ number

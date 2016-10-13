@@ -24,10 +24,11 @@ B.js:7
 
 B.js:10
  10: var bad_: number = f(); // Calling the function is fine
-                        ^^^ function call
+                        ^^^ function call. This function call's `this` type is incompatible with
  13: var bad: number = Bad.foo();
-                       ^^^ object literal. This type is incompatible with. See: A.js:13
-global object
+                       ^^^ object literal. See: A.js:13
+  The call's `this` type is:
+  global object
 
 B.js:10
  10: var bad_: number = f(); // Calling the function is fine

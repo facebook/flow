@@ -221,12 +221,14 @@ end = struct
         |> List.map info_of_reason
     in
     (* NOTE: We include the operation's reason in the error message, unless it
-       overlaps *both* endpoints, or r1's origin. *)
+       overlaps *both* endpoints, exactly matches r1, or overlaps r1's origin *)
     let op_info = match Ops.peek () with
-      | Some r when not (reasons_overlap r r1 && reasons_overlap r r2) -> begin
-          match origin_r1 with
-          | Some or1 when reasons_overlap r or1 -> None
-          | _ -> Some (info_of_reason r)
+      | Some r ->
+        if r = r1 then None
+        else if reasons_overlap r r1 && reasons_overlap r r2 then None
+        else begin match origin_r1 with
+        | Some or1 when reasons_overlap r or1 -> None
+        | _ -> Some (info_of_reason r)
         end
       | _ -> None
     in

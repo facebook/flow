@@ -272,6 +272,7 @@ module rec TypeTerm : sig
     | TypeDestructorT of reason * destructor
 
   and use_op =
+    | FunCallThis of reason
     | FunReturn
     | FunImplicitReturn
     | Addition
@@ -1902,6 +1903,7 @@ let string_of_ctor = function
   | TypeMapT _ -> "TypeMapT"
 
 let string_of_use_op = function
+  | FunCallThis _ -> "FunCallThis"
   | FunReturn -> "FunReturn"
   | FunImplicitReturn -> "FunImplicitReturn"
   | Addition -> "Addition"

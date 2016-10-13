@@ -3050,7 +3050,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           closure_t = call_scope_id; _})
       ->
       Ops.push reason_callsite;
-      rec_flow_t cx trace (o2, o1);
+      rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
       multiflow cx trace reason_callsite (tins2, tins1);
       (* relocate the function's return type at the call site TODO remove? *)
       let t1 = reposition ~trace cx reason_callsite t1 in
@@ -4680,6 +4680,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, GetPropT (_, (reason_prop, _), _))
     | (_, SetPropT (_, (reason_prop, _), _)) ->
       flow_err_reasons cx trace (err_msg l u) (reason_prop, reason_of_t l)
+
+    | _, UseT (FunCallThis reason_call, u) ->
+      let msg = "This function call's `this` type is incompatible with" in
+      let extra = (Errors.InfoLeaf ([
+        Loc.none, ["The call's `this` type is:"];
+        info_of_reason (reason_of_t l);
+      ]))::[] in
+      flow_err_reasons cx trace msg ~extra (reason_call, reason_of_t u)
 
     | _, UseT (FunReturn, _) ->
       let msg = "This type is incompatible with the expected return type of" in
