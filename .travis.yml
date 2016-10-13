@@ -10,6 +10,8 @@ env:
   - secure: huLKjE7xlxl7HaCLIIVyDaZN9ZsWrR4RcxW+JNUH1F9lM5mbRjAPayawSKRzHViu7u6uUNkjMOJs3lRlWdj8ezH2vnJNm9oNvCOYuSFmBIBELVlXcfbqpX9ZffbJeFiUZ2dOwrDEhm3+WIg6Wr3QbUtVdlMfNvljOJ3CQQc9Yc4=
   # CLOUDFRONT_ID
   - secure: Jr+6c6pF5H0lP4Kt6evlf/xYD/Qjoms3HK7lw1kg8lzwoEXPD3MezgkpOktU8ZBllGolc+ou23h+3hgJwvqi7ANmjzfxyVDdpB7Kiw4y2pEm6tAXYzmatSDb401u7+2sb2H/aSe8yikNrVrizvqaJrDOGeptCBjXQF+a2lNeMC0=
+  # NPM_TOKEN
+  - secure: hzJKtjqujadYb7QiMhCLCieNtTp77aMRaqxorJq2+CT+dMcIh1S/S9jxXsfl4OzidnIv2QHussHo5gOdS3U4JzRsHEgQ5+4HRkpxif1UijVqb4FXgaaS3PuBylV2xtMAlVjOUW+HqSCVxbokhrqWkeTKEozfk18+E8TnuOqhKjU=
 
 # NOTE: We set the compiler to a bogus "no-op" bash command (":") to work around
 # a Travis caching limitation: the cache slug only depends on the compiler name,
@@ -82,6 +84,18 @@ deploy:
   on:
     tags: true
     condition:
+    - $OCAML_VERSION = 4.02.1
+    - $OPAM_VERSION = 1.2.0
+
+# Deploy the parser to npm
+- provider: script
+  repo: facebook/flow
+  script: bash -e resources/travis/deploy_npm.sh
+  skip_cleanup: true
+  on:
+    tags: true
+    condition:
+    - $TRAVIS_OS_NAME = linux
     - $OCAML_VERSION = 4.02.1
     - $OPAM_VERSION = 1.2.0
 
