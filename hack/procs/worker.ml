@@ -32,6 +32,8 @@ open Core
  *
  *****************************************************************************)
 
+exception Worker_exited_abnormally of int
+
 (* Should we 'prespawn' the worker ? *)
 let use_prespawned = not Sys.win32
 
@@ -54,8 +56,7 @@ let max_workers = 1000
 type request = Request of (serializer -> unit)
 and serializer = { send: 'a. 'a -> unit }
 and void (* an empty type *)
-
-
+type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
 
 (*****************************************************************************
  * Everything we need to know about a worker.
@@ -66,6 +67,17 @@ type t = {
 
   id: int; (* Simple id for the worker. This is not the worker pid: on
               Windows, we spawn a new worker for each job. *)
+
+  (** The call wrapper will wrap any workload sent to the worker (via "call"
+   * below) before invoking the workload.
+   *
+   * That is, when calling the worker with workload `f x`, it will be wrapped
+   * as `wrap (f x)`.
+   *
+   * This allows universal handling of workload at the time we create the actual
+   * workers. For example, this can be useful to handle exceptions uniformly
+   * across workers regardless what workload is called on them. *)
+  call_wrapper: call_wrapper option;
 
   (* Sanity check: is the worker still available ? *)
   mutable killed: bool;
@@ -220,15 +232,17 @@ let register_entry_point ~restore =
 let workers = ref []
 
 (* Build one worker. *)
-let make_one spawn id =
+let make_one ?call_wrapper spawn id =
   if id >= max_workers then failwith "Too many workers";
 
   let prespawned = if not use_prespawned then None else Some (spawn ()) in
-  let worker = { id; busy = false; killed = false; prespawned; spawn } in
+  let worker = { call_wrapper; id; busy = false; killed = false; prespawned; spawn } in
   workers := worker :: !workers;
   worker
 
-let make ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
+(** Make a few workers. When workload is given to a worker (via "call" below),
+ * the workload is wrapped in the calL_wrapper. *)
+let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let spawn log_fd =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     let handle =
@@ -241,7 +255,7 @@ let make ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   in
   let made_workers = ref [] in
   for n = 1 to nbr_procs do
-    made_workers := make_one spawn n :: !made_workers
+    made_workers := make_one ?call_wrapper spawn n :: !made_workers
   done;
   !made_workers
 
@@ -270,7 +284,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
         raise SharedMem.Out_of_shared_memory
     | _, Unix.WEXITED i ->
         Printf.eprintf "Subprocess(%d): fail %d" slave_pid i;
-        Pervasives.exit i
+        raise (Worker_exited_abnormally i)
     | _, Unix.WSTOPPED i ->
         Printf.ksprintf failwith "Subprocess(%d): stopped %d" slave_pid i
     | _, Unix.WSIGNALED i ->
@@ -279,10 +293,16 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
   let infd = Daemon.descr_of_in_channel inc in
   let slave = { result; slave_pid; infd; worker = w; } in
   w.busy <- true;
+  let request = match w.call_wrapper with
+    | Some { wrap } ->
+      (Request (fun { send } -> send (wrap f x)))
+    | None -> (Request (fun { send } -> send (f x)))
+
+  in
   (* Send the job to the slave. *)
   Daemon.to_channel outc
     ~flush:true ~flags:[Marshal.Closures]
-    (Request (fun { send } -> send (f x)));
+    request;
   (* And returned the 'handle'. *)
   ref (Processing slave)
 

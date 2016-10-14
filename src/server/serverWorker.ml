@@ -34,6 +34,7 @@ let gc_control = Gc.get ()
 
 let make options heap_handle =
   Worker.make
+    ?call_wrapper:None
     ~saved_state: (save options)
     ~entry
     ~nbr_procs: (Options.max_workers options)
