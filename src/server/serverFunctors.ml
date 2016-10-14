@@ -422,7 +422,7 @@ end = struct
         "log_file", JSON_String log_file;
       ]) in
       print_string json
-    end else begin
+    end else if not (Options.is_quiet options) then begin
       Printf.eprintf
         "Spawned %s (pid=%d)\n" (Program.name) pretty_pid;
       Printf.eprintf

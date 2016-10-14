@@ -24,6 +24,7 @@ type env = {
   shm_log_level : int option;
   log_file : string;
   ignore_version : bool;
+  quiet : bool;
 }
 
 (* During initialization, we can provide the client with some clue as to what
@@ -93,9 +94,10 @@ let start_flow_server env =
     shm_log_level;
     ignore_version;
     root;
+    quiet;
     _;
   } = env in
-  Utils_js.prerr_endlinef
+  if not quiet then Utils_js.prerr_endlinef
     "Launching Flow server for %s"
     (Path.to_string root);
   let exe = Sys.argv.(0) in
@@ -107,7 +109,9 @@ let start_flow_server env =
   |> arg_map "--sharedmemory-dirs" ~f:(String.concat ",") shm_dirs
   |> arg "--temp-dir" (Some tmp_dir)
   |> arg "--from" FlowEventLogger.((get_context ()).from)
-  |> flag "--ignore-version" ignore_version in
+  |> flag "--ignore-version" ignore_version
+  |> flag "--quiet" quiet
+  in
   try
     let server_pid =
       Unix.(create_process exe
@@ -191,12 +195,12 @@ let rec connect env retries start_time tail_env =
         let retries =
           if start_flow_server env
           then begin
-            Printf.eprintf
+            if not env.quiet then Printf.eprintf
               "Started a new flow server: %s%!"
               (Tty.spinner());
             retries
           end else begin
-            Printf.eprintf
+            if not env.quiet then Printf.eprintf
               "Failed to start a new flow server (%d %s remaining): %s%!"
               retries.retries_remaining
               (if retries.retries_remaining = 1 then "retry" else "retries")
@@ -211,7 +215,7 @@ let rec connect env retries start_time tail_env =
         FlowExitStatus.(exit ~msg No_server_running)
       end
   | Result.Error CCS.Server_busy ->
-      Printf.eprintf
+      if not env.quiet then Printf.eprintf
         "The flow server is not responding (%d %s remaining): %s %s%!"
         retries.retries_remaining
         (if retries.retries_remaining = 1 then "retry" else "retries")
@@ -225,7 +229,8 @@ let rec connect env retries start_time tail_env =
       then
         let start_time = Unix.time () in
         begin
-          Utils_js.prerr_endlinef "%s\nGoing to launch a new one.\n%!" msg;
+          if not env.quiet then
+            Utils_js.prerr_endlinef "%s\nGoing to launch a new one.\n%!" msg;
           (* Don't decrement retries -- the server is definitely not running,
            * so the next time round will hit Server_missing above, *but*
            * before that will actually start the server -- we need to make
@@ -240,7 +245,8 @@ let rec connect env retries start_time tail_env =
   | Result.Error CCS.Server_initializing ->
       let msg = "flow is still initializing; this can take some time." in
       if env.retry_if_init then begin
-        Printf.eprintf "%s %s %s%!" msg tail_msg (Tty.spinner());
+        if not env.quiet then Printf.eprintf
+          "%s %s %s%!" msg tail_msg (Tty.spinner());
         rate_limit retries;
         connect env retries start_time tail_env
       end else begin
@@ -249,7 +255,8 @@ let rec connect env retries start_time tail_env =
       end
   | Result.Error CCS.Server_rechecking ->
       let msg = "flow is rechecking; this should not take long" in
-      Printf.eprintf "%s %s %s%!" msg tail_msg (Tty.spinner());
+      if not env.quiet then Printf.eprintf
+        "%s %s %s%!" msg tail_msg (Tty.spinner());
       rate_limit retries;
       connect env retries start_time tail_env
 
