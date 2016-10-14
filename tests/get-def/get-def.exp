@@ -1,1 +1,13 @@
 {"path":"library.js","line":5,"endline":7,"start":17,"end":3}
+default import points to default export = {"path":"helpers/exports_default.js","line":5,"endline":5,"start":16,"end":16}
+local reference points to default import = {"path":"imports.js","line":3,"endline":3,"start":8,"end":12}
+named import points to named export = {"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
+aliased named import points to named export (as) = {"path":"helpers/exports_named.js","line":4,"endline":4,"start":14,"end":16}
+aliased named import points to named export (remote name) = {"path":"helpers/exports_named.js","line":4,"endline":4,"start":14,"end":16}
+aliased named import points to named export (local name) = {"path":"helpers/exports_named.js","line":4,"endline":4,"start":14,"end":16}
+local reference points to named import = {"path":"imports.js","line":6,"endline":6,"start":9,"end":11}
+local reference points to aliased named import = {"path":"imports.js","line":6,"endline":6,"start":14,"end":23}
+namespaced import points to imported file (as) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
+namespaced import points to imported file (remote name) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
+namespaced import points to imported file (local name) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
+local reference points to namespaced import = {"path":"imports.js","line":10,"endline":10,"start":13,"end":18}

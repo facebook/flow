@@ -1792,7 +1792,7 @@ and statement cx = Ast.Statement.(
             spf "Named import from module `%s`" module_name
           in
 
-          let (local_name, import_reason, bind_reason) = (
+          let (loc, local_name, import_reason, bind_reason) = (
             match local with
             | Some local ->
               let local_name = ident_name local in
@@ -1806,7 +1806,7 @@ and statement cx = Ast.Statement.(
               in
               let bind_loc = Loc.btwn (fst remote) (fst local) in
               let bind_reason = mk_reason (RCustom bind_reason_str) bind_loc in
-              (local_name, import_reason, bind_reason)
+              (bind_loc, local_name, import_reason, bind_reason)
             | None ->
               let import_reason = mk_reason (RCustom import_reason_str) (fst remote) in
               let bind_reason_str =
@@ -1816,33 +1816,40 @@ and statement cx = Ast.Statement.(
                   module_name
               in
               let bind_reason = mk_reason (RCustom bind_reason_str) (fst remote) in
-              (remote_name, import_reason, bind_reason)
+              (fst remote, remote_name, import_reason, bind_reason)
           ) in
           let imported_t =
-            get_imported_t import_reason remote_name local_name
+            if Type_inference_hooks_js.dispatch_member_hook cx remote_name loc module_t
+            then AnyT.why import_reason
+            else get_imported_t import_reason remote_name local_name
           in
           (bind_reason, local_name, imported_t)
 
         | ImportDefaultSpecifier local ->
           let local_name = ident_name local in
+          let loc = fst local in
 
           let import_reason_str =
             spf "Default import from `%s`" module_name
           in
-          let import_reason = mk_reason (RCustom import_reason_str) (fst local) in
+          let import_reason = mk_reason (RCustom import_reason_str) loc in
 
           let bind_reason_str =
             spf "%s %s from %S" import_str local_name module_name
           in
-          let bind_reason = mk_reason (RCustom bind_reason_str) (fst local) in
+          let bind_reason = mk_reason (RCustom bind_reason_str) loc in
 
           let imported_t =
-            get_imported_t import_reason "default" local_name
+            if Type_inference_hooks_js.dispatch_member_hook cx "default" loc module_t
+            then AnyT.why import_reason
+            else get_imported_t import_reason "default" local_name
           in
           (bind_reason, local_name, imported_t)
 
-        | ImportNamespaceSpecifier (_, local) ->
+        | ImportNamespaceSpecifier (ns_loc, local) ->
           let local_name = ident_name local in
+
+          Type_inference_hooks_js.dispatch_import_hook cx module_name ns_loc;
 
           let import_reason_str = spf "%s * as %s" import_str local_name in
           let import_reason = mk_reason (RCustom import_reason_str) import_loc in

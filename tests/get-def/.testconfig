@@ -1,1 +1,1 @@
-cmd: get-def example.js 12 10 --strip-root --json
+shell: test.sh
