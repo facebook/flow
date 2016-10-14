@@ -103,6 +103,7 @@ let update_status_ (server: ServerProcess.server_process) monitor_config =
         let was_oom = match proc_stat with
         | Unix.WEXITED code when code = oom_code -> true
         | _ -> check_dmesg_for_oom process in
+        monitor_config.on_server_exit monitor_config;
         ServerProcessTools.check_exit_status proc_stat process monitor_config;
         Died_unexpectedly (proc_stat, was_oom))
   | _ -> server

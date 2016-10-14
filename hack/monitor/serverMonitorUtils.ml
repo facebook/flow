@@ -20,6 +20,8 @@ type monitor_config =
     monitor_log_file: string;
     (** The path to the load script log file *)
     load_script_log_file: string;
+    (** Callback to run when server exits *)
+    on_server_exit: monitor_config -> unit;
   }
 
 (**
