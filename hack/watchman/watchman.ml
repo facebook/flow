@@ -30,6 +30,9 @@ exception Read_payload_too_long
 
 let debug = false
 
+(** This number is totally arbitrary. Just need some cap. *)
+let max_reinit_attempts = 8
+
 let sync_file_extension = "tmp_sync"
 
 (** TODO: support git. *)
@@ -364,7 +367,10 @@ let within_backoff_time attempts time =
 let maybe_restart_instance instance = match instance with
   | Watchman_alive _ -> instance
   | Watchman_dead dead_env ->
-    if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then
+    if dead_env.reinit_attempts >= max_reinit_attempts then
+      let () = Hh_logger.log "Ran out of watchman reinit attempts. Exiting." in
+      Exit_status.(exit Watchman_failed)
+    else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then
       let () =
         Hh_logger.log "Attemping to reestablish watchman subscription" in
       match init dead_env.prior_settings with
@@ -429,6 +435,9 @@ let call_on_instance instance source f =
         close_channel_on_instance env
       | Timeout ->
         Hh_logger.log "Watchman reading Timeout. Closing channel";
+        close_channel_on_instance env
+      | Watchman_error msg ->
+        Hh_logger.log "Watchman error: %s. Closing channel" msg;
         close_channel_on_instance env
       | e ->
         let msg = Printexc.to_string e in
