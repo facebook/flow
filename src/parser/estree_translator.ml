@@ -945,7 +945,7 @@ end with type t = Impl.t) = struct
 
   and void_type loc = node "VoidTypeAnnotation" loc [||]
 
-  and null_type loc = node "NullTypeAnnotation" loc [||]
+  and null_type loc = node "NullLiteralTypeAnnotation" loc [||]
 
   and number_type loc = node "NumberTypeAnnotation" loc [||]
 
