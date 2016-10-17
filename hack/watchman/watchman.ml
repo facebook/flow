@@ -35,9 +35,6 @@ let max_reinit_attempts = 8
 
 let sync_file_extension = "tmp_sync"
 
-(** TODO: support git. *)
-let vcs_tmp_dir = ".hg"
-
 let crash_marker_path root =
   let root_name = Path.slash_escaped_string_of_path root in
   Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
@@ -46,6 +43,7 @@ type init_settings = {
   subscribe_to_changes: bool;
   (** Seconds used for init timeout - will be reused for reinitialization. *)
   init_timeout: int;
+  sync_directory: string;
   root: Path.t;
 }
 
@@ -92,6 +90,10 @@ type watchman_instance =
 let get_root_path instance = match instance with
   | Watchman_dead dead_env -> dead_env.prior_settings.root
   | Watchman_alive env -> env.settings.root
+
+let get_sync_dir instance = match instance with
+  | Watchman_dead dead_env -> dead_env.prior_settings.sync_directory
+  | Watchman_alive env -> env.settings.sync_directory
 
 (* Some JSON processing helpers *)
 module J = struct
@@ -268,6 +270,8 @@ let exec ?(timeout=120.0) (ic, oc) json =
 (* Initialization, reinitialization, and crash-tracking. *)
 (*****************************************************************************)
 
+exception Watchman_sync_directory_error
+
 let get_sockname timeout =
   let ic =
     Timeout.open_process_in "watchman"
@@ -276,6 +280,22 @@ let get_sockname timeout =
   assert (Timeout.close_process_in ic = Unix.WEXITED 0);
   let json = Hh_json.json_of_string output in
   J.get_string_val "sockname" json
+
+let assert_sync_dir_exists path =
+  let stats = try Unix.stat path with
+    | Unix.Unix_error (Unix.ENOENT, _, _) ->
+      Hh_logger.log "Watchman sync directory doesn't exist: %s" path;
+      raise Watchman_sync_directory_error
+  in
+  let () = if stats.Unix.st_kind <> Unix.S_DIR then begin
+    Hh_logger.log "Watchman sync directory is not a directory: %s" path;
+    raise Watchman_sync_directory_error
+  end
+  else () in
+  try Unix.access path [Unix.R_OK; Unix.W_OK] with
+  | Unix.Unix_error (Unix.EACCES, _, _) ->
+    Hh_logger.log "Dont have read-write access to watchman sync directory: %s" path;
+    raise Watchman_sync_directory_error
 
 let with_crash_record_exn root source f =
   try f ()
@@ -287,10 +307,11 @@ let with_crash_record_exn root source f =
 let with_crash_record_opt root source f =
   Option.try_with (fun () -> with_crash_record_exn root source f)
 
-let init { init_timeout; subscribe_to_changes; root } =
+let init { init_timeout; subscribe_to_changes; sync_directory; root } =
   with_crash_record_opt root "init" @@ fun () ->
   let root_s = Path.to_string root in
   let sockname = get_sockname init_timeout in
+  assert_sync_dir_exists (Filename.concat root_s sync_directory);
   let socket = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
   ignore @@ exec socket (capability_check ["relative_root"]);
   let response = exec socket (watch_project root_s) in
@@ -303,6 +324,7 @@ let init { init_timeout; subscribe_to_changes; root } =
     settings = {
       init_timeout;
       subscribe_to_changes;
+      sync_directory;
       root;
     };
     socket;
@@ -457,9 +479,9 @@ let transform_changes_response env data =
     env.clockspec <- J.get_string_val "clock" data;
     set_of_list @@ extract_file_names env data
 
-let random_filepath root =
+let random_filepath root sync_dir =
   let root_name = Path.to_string root in
-  let dir = Filename.concat root_name vcs_tmp_dir in
+  let dir = Filename.concat root_name sync_dir in
   let name = Random_id.(short_string_with_alphabet alphanumeric_alphabet) in
   Filename.concat dir (spf ".%s.%s" name sync_file_extension)
 
@@ -507,16 +529,21 @@ exception Retry_with_backoff_exception
  * before f and deleted after f. *)
 let with_random_temp_file instance f =
   let root = get_root_path instance in
-  let temp_file = random_filepath root in
-  let ic = try Some ( open_out_gen [Open_creat; Open_excl] 555 temp_file) with
-    | _ -> None
+  let temp_file = random_filepath root (get_sync_dir instance) in
+  let fd = try Some (
+    Unix.openfile temp_file [Unix.O_CREAT; Unix.O_EXCL] 555)
+    with
+    | e ->
+      let () = Hh_logger.log "Creating watchman sync file failed: %s"
+        (Printexc.to_string e) in
+      None
   in
-  match ic with
+  match fd with
   | None ->
     (** Failed to create temp file. Retry with exponential backoff. *)
     raise Retry_with_backoff_exception
-  | Some ic ->
-    let () = close_out ic in
+  | Some fd ->
+    let () = Unix.close fd in
     let result = f instance temp_file in
     let () = Sys.remove temp_file in
     result

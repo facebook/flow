@@ -20,6 +20,7 @@ type watchman_instance =
 type init_settings = {
   subscribe_to_changes: bool;
   init_timeout: int;
+  sync_directory: string;
   root: Path.t;
 }
 

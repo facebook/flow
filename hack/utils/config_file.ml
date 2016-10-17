@@ -39,6 +39,9 @@ let parse fn =
 
 module Getters = struct
 
+  let string_opt key config =
+    SMap.get key config
+
   let string_ key ~default config =
     Option.value (SMap.get key config) ~default
 
