@@ -33,6 +33,7 @@ open Core
  *****************************************************************************)
 
 exception Worker_exited_abnormally of int
+exception Worker_oomed
 
 (* Should we 'prespawn' the worker ? *)
 let use_prespawned = not Sys.win32
@@ -313,6 +314,10 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
  *
  **************************************************************************)
 
+let is_oom_failure msg =
+  (String_utils.string_starts_with msg "Subprocess") &&
+  (String_utils.is_substring "signaled -7" msg)
+
 let get_result d =
   match !d with
   | Cached x -> x
@@ -323,7 +328,10 @@ let get_result d =
         s.worker.busy <- false;
         d := Cached res;
         res
-      with exn ->
+      with
+      | Failure (msg) when is_oom_failure msg ->
+        raise Worker_oomed
+      | exn ->
         s.worker.busy <- false;
         d := Failed exn;
         raise exn

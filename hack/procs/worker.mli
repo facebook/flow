@@ -19,6 +19,8 @@
 (*****************************************************************************)
 
 exception Worker_exited_abnormally of int
+(* Worker killed by Out Of Memory. *)
+exception Worker_oomed
 
 (* The type of a worker visible to the outside world *)
 type t
