@@ -18,7 +18,7 @@ First, install the Babel CLI:
 $> npm install -g babel-cli
 ```
 
-Next, install the Flow transform and add a `.babelrc` file to the root your project to tell Babel to strip Flow annotations:
+Next, install the Flow transform and add a `.babelrc` file to the root of your project to tell Babel to strip Flow annotations:
 
 ```bash
 $> cd /path/to/my/project
