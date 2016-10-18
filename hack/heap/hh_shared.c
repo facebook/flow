@@ -125,7 +125,7 @@
 #define S1(x) #x
 #define S2(x) S1(x)
 #define LOCATION __FILE__ " : " S2(__LINE__)
-#define assert(f) (f ? 0 : caml_failwith("assertion failed: " LOCATION))
+#define assert(f) (f ? 0 : raise_assertion_failure(LOCATION))
 #endif
 
 #define HASHTBL_WRITE_IN_PROGRESS ((char*)1)
@@ -418,6 +418,10 @@ static size_t latest_heap_size = 0;
 
 static size_t used_heap_size(void) {
   return *heap - heap_init;
+}
+
+void raise_assertion_failure(char * msg) {
+  caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
 }
 
 /* Expose so we can display diagnostics */
