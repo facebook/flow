@@ -351,16 +351,22 @@ end
  * representation).
  *)
 (*****************************************************************************)
-module Raw (Key: Key) (Value:Value.Type) = struct
+module Raw (Key: Key) (Value:Value.Type): sig
+  val add    : Key.md5 -> Value.t -> unit
+  val mem    : Key.md5 -> bool
+  val get    : Key.md5 -> Value.t
+  val remove : Key.md5 -> unit
+  val move   : Key.md5 -> Key.md5 -> unit
+end = struct
 
   (* Returns the number of bytes allocated in the heap, or a negative number
    * if no new memory was allocated *)
-  external hh_add_impl    : Key.md5 -> Value.t -> int = "hh_add"
-  external hh_mem         : Key.md5 -> bool            = "hh_mem"
+  external hh_add    : Key.md5 -> Value.t -> int = "hh_add"
+  external mem         : Key.md5 -> bool            = "hh_mem"
   external hh_get_size    : Key.md5 -> int             = "hh_get_size"
   external hh_get_and_deserialize: Key.md5 -> Value.t = "hh_get_and_deserialize"
-  external hh_remove      : Key.md5 -> unit            = "hh_remove"
-  external hh_move        : Key.md5 -> Key.md5 -> unit = "hh_move"
+  external remove      : Key.md5 -> unit            = "hh_remove"
+  external move        : Key.md5 -> Key.md5 -> unit = "hh_move"
 
   let log_serialize n =
     let sharedheap = float n in
@@ -380,12 +386,12 @@ module Raw (Key: Key) (Value:Value.Type) = struct
       Measure.sample ("ALL bytes allocated for deserialized value") localheap
     end
 
-  let hh_add key v =
-    let size = hh_add_impl key v in
+  let add key v =
+    let size = hh_add key v in
     if hh_log_level() > 0 && size > 0
     then log_serialize size
 
-  let hh_get key =
+  let get key =
     let v = hh_get_and_deserialize key in
     if hh_log_level() > 0
     then (log_deserialize (hh_get_size key) (Obj.repr v));
@@ -425,18 +431,19 @@ module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
 
   (* Same as oldify, but uses a different (logical) area of the heap *)
   val shelve      : Key.t -> unit
+  module Raw: module type of Raw (Key) (Value)
 
 end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
   module Raw = Raw (Key) (Value)
 
-  let add key value = Raw.hh_add (Key.md5 key) value
-  let mem key = Raw.hh_mem (Key.md5 key)
+  let add key value = Raw.add (Key.md5 key) value
+  let mem key = Raw.mem (Key.md5 key)
 
   let get key =
     let key = Key.md5 key in
-    if Raw.hh_mem key
-    then Some (Raw.hh_get key)
+    if Raw.mem key
+    then Some (Raw.get key)
     else None
 
   let find_unsafe key =
@@ -446,10 +453,10 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
   let remove key =
     let key = Key.md5 key in
-    if Raw.hh_mem key
+    if Raw.mem key
     then begin
-      Raw.hh_remove key;
-      assert (not (Raw.hh_mem key));
+      Raw.remove key;
+      assert (not (Raw.mem key));
     end
     else ()
 
@@ -457,19 +464,20 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
     if mem key
     then
       let old_key = Key.to_old key in
-      Raw.hh_move (Key.md5 key) (Key.md5_old old_key)
+      Raw.move (Key.md5 key) (Key.md5_old old_key)
     else ()
 
   let shelve key =
     if mem key
     then
       let tmp_key = Key.to_tmp key in
-      Raw.hh_move (Key.md5 key) (Key.md5_tmp tmp_key)
+      Raw.move (Key.md5 key) (Key.md5_tmp tmp_key)
     else ()
 end
 
 (* Same as new, but for old values *)
-module Old : functor (Key : Key) -> functor (Value : Value.Type) -> sig
+module Old : functor (Key : Key) -> functor (Value : Value.Type) ->
+  functor (Raw : module type of Raw (Key) (Value)) -> sig
 
   val get         : Key.old -> Value.t option
   val remove      : Key.old -> unit
@@ -477,21 +485,20 @@ module Old : functor (Key : Key) -> functor (Value : Value.Type) -> sig
   (* Takes an old value and moves it back to a "new" one *)
   val revive      : Key.old -> unit
 
-end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
-
-  module Raw = Raw (Key) (Value)
+end = functor (Key : Key) -> functor (Value: Value.Type) ->
+  functor (Raw : module type of Raw (Key) (Value)) -> struct
 
   let get key =
     let key = Key.md5_old key in
-    if Raw.hh_mem key
-    then Some (Raw.hh_get key)
+    if Raw.mem key
+    then Some (Raw.get key)
     else None
 
-  let mem key = Raw.hh_mem (Key.md5_old key)
+  let mem key = Raw.mem (Key.md5_old key)
 
   let remove key =
     if mem key
-    then Raw.hh_remove (Key.md5_old key)
+    then Raw.remove (Key.md5_old key)
 
   let revive key =
   if mem key
@@ -499,13 +506,14 @@ end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
     let new_key = Key.new_from_old key in
     let new_key = Key.md5 new_key in
     let old_key = Key.md5_old key in
-    if Raw.hh_mem new_key
-    then Raw.hh_remove new_key;
-    Raw.hh_move old_key new_key
+    if Raw.mem new_key
+    then Raw.remove new_key;
+    Raw.move old_key new_key
 end
 
 (* Same as new, but for temporary values *)
-module Tmp : functor (Key : Key) -> functor (Value : Value.Type) -> sig
+module Tmp : functor (Key : Key) -> functor (Value : Value.Type) ->
+  functor (Raw : module type of Raw (Key) (Value)) -> sig
 
   val get         : Key.tmp -> Value.t option
   val remove      : Key.tmp -> unit
@@ -514,21 +522,20 @@ module Tmp : functor (Key : Key) -> functor (Value : Value.Type) -> sig
   (* Takes a temporary value and moves it back to a "new" one *)
   val unshelve      : Key.tmp -> unit
 
-end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
-
-  module Raw = Raw (Key) (Value)
+end = functor (Key : Key) -> functor (Value: Value.Type) ->
+  functor (Raw : module type of Raw (Key) (Value)) -> struct
 
   let get key =
     let key = Key.md5_tmp key in
-    if Raw.hh_mem key
-    then Some (Raw.hh_get key)
+    if Raw.mem key
+    then Some (Raw.get key)
     else None
 
-  let mem key = Raw.hh_mem (Key.md5_tmp key)
+  let mem key = Raw.mem (Key.md5_tmp key)
 
   let remove key =
     if mem key
-    then Raw.hh_remove (Key.md5_tmp key)
+    then Raw.remove (Key.md5_tmp key)
 
   let unshelve key =
     if mem key
@@ -536,9 +543,9 @@ end = functor (Key : Key) -> functor (Value: Value.Type) -> struct
       let new_key = Key.new_from_tmp key in
       let new_key = Key.md5 new_key in
       let tmp_key = Key.md5_tmp key in
-      if Raw.hh_mem new_key
-      then Raw.hh_remove new_key;
-      Raw.hh_move tmp_key new_key
+      if Raw.mem new_key
+      then Raw.remove new_key;
+      Raw.move tmp_key new_key
 end
 
 (*****************************************************************************)
@@ -591,8 +598,8 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   module Key = KeyFunctor (UserKeyType)
   module New = New (Key) (Value)
-  module Old = Old (Key) (Value)
-  module Tmp = Tmp (Key) (Value)
+  module Tmp = Tmp (Key) (Value) (New.Raw)
+  module Old = Old (Key) (Value) (New.Raw)
   module KeySet = Set.Make (UserKeyType)
   module KeyMap = MyMap.Make (UserKeyType)
 
@@ -725,7 +732,7 @@ end
 (* Cache keeping the objects the most frequently used. *)
 (*****************************************************************************)
 
-module FreqCache (Key : Key) (Config:ConfigType) :
+module FreqCache (Key : sig type t end) (Config:ConfigType) :
   CacheType with type key := Key.t and type value := Config.value = struct
 
   type value = Config.value
@@ -797,7 +804,7 @@ end
 (* An ordered cache keeps the most recently used objects *)
 (*****************************************************************************)
 
-module OrderedCache (Key : Key) (Config:ConfigType):
+module OrderedCache (Key : sig type t end) (Config:ConfigType):
   CacheType with type key := Key.t and type value := Config.value = struct
 
   let (cache: (Key.t, Config.value) Hashtbl.t) =
@@ -858,18 +865,16 @@ module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
     let capacity = 1000
   end
 
-  module Key = KeyFunctor (UserKeyType)
-
   (* Young values cache *)
-  module L1 = OrderedCache (Key) (ConfValue)
+  module L1 = OrderedCache (UserKeyType) (ConfValue)
   (* Frequent values cache *)
-  module L2 = FreqCache (Key) (ConfValue)
+  module L2 = FreqCache (UserKeyType) (ConfValue)
 
-  let addWithKey x y =
+  let add x y =
     L1.add x y;
     L2.add x y
 
-  let getWithKey x =
+  let get x =
     match L1.get x with
     | None ->
       (match L2.get x with
@@ -882,21 +887,9 @@ module LocalCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
       L2.add x v;
       result
 
-  let removeWithKey x =
+  let remove x =
     L1.remove x;
     L2.remove x
-
-  let add x y =
-    let x = Key.make Value.prefix x in
-    addWithKey x y
-
-  let get x =
-    let x = Key.make Value.prefix x in
-    getWithKey x
-
-  let remove x =
-    let x = Key.make Value.prefix x in
-    removeWithKey x
 
   let clear () =
     L1.clear();
@@ -918,38 +911,32 @@ end
 (*****************************************************************************)
 module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
-  type key = UserKeyType.t
-  type t = Value.t
-
-  module Cache = LocalCache (UserKeyType) (Value)
-  module Key = Cache.Key
-  module New = New (Key) (Value)
-  module Old = Old (Key) (Value)
-  module Tmp = Tmp (Key) (Value)
-  module KeySet = Set.Make (UserKeyType)
-  module KeyMap = MyMap.Make (UserKeyType)
-
   module Direct = NoCache (UserKeyType) (Value)
 
+  type key = Direct.key
+  type t = Direct.t
+
+  module KeySet = Direct.KeySet
+  module KeyMap = Direct.KeyMap
+
+  module Cache = LocalCache (UserKeyType) (Value)
+
   let add x y =
-    let x = Key.make Value.prefix x in
-    Cache.addWithKey x y;
-    New.add x y
+    Direct.add x y;
+    Cache.add x y
 
   let write_through x y =
     (* Note that we do not need to do any cache invalidation here because
-     * New.add is a no-op if the key already exists. *)
-    let x = Key.make Value.prefix x in
-    New.add x y
+     * Direct.add is a no-op if the key already exists. *)
+    Direct.add x y
 
   let get x =
-    let x = Key.make Value.prefix x in
-    match Cache.getWithKey x with
+    match Cache.get x with
     | None ->
-      (match New.get x with
+      (match Direct.get x with
        | None -> None
        | Some v as result ->
-         Cache.addWithKey x v;
+         Cache.add x v;
          result
       )
     | Some v as result ->
@@ -970,11 +957,6 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     | None -> false
     | Some _ -> true
 
-  let remove x =
-    let x = Key.make Value.prefix x in
-    Cache.removeWithKey x;
-    New.remove x
-
   let get_batch keys =
     KeySet.fold begin fun key acc ->
       KeyMap.add key (get key) acc
@@ -982,42 +964,34 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
   let oldify_batch keys =
     Direct.oldify_batch keys;
-    KeySet.iter begin fun key ->
-      let key = Key.make Value.prefix key in
-      Cache.removeWithKey key
-    end keys
+    KeySet.iter Cache.remove keys
 
   let revive_batch keys =
     Direct.revive_batch keys;
-    KeySet.iter begin fun x ->
-      let x = Key.make Value.prefix x in
-      Cache.removeWithKey x
-    end keys
+    KeySet.iter Cache.remove keys
 
-  let remove_batch xs = KeySet.iter remove xs
+  let remove_batch xs =
+    Direct.remove_batch xs;
+    KeySet.iter Cache.remove xs
 
   let () =
     invalidate_callback_list := begin fun () ->
       Cache.clear()
     end :: !invalidate_callback_list
 
-  let remove_old x = Old.remove (Key.make_old Value.prefix x)
-  let remove_old_batch = KeySet.iter remove_old
+  let remove_old_batch = Direct.remove_old_batch
 
   let shelve_batch keys =
     Direct.shelve_batch keys;
     KeySet.iter begin fun key ->
-      let key = Key.make Value.prefix key in
-      Cache.removeWithKey key
+      Cache.remove key
     end keys
 
   let unshelve_batch keys =
     Direct.unshelve_batch keys;
     KeySet.iter begin fun x ->
-      let x = Key.make Value.prefix x in
-      Cache.removeWithKey x
+      Cache.remove x
     end keys
 
-  let remove_shelved x = Tmp.remove (Key.make_tmp Value.prefix x)
-  let remove_shelved_batch = KeySet.iter remove_shelved
+  let remove_shelved_batch = Direct.remove_shelved_batch
 end
