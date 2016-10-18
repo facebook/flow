@@ -2739,7 +2739,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       (* method call *)
       let ot = expression cx _object in
       let argts = List.map (expression_or_spread cx) arguments in
-      method_call cx loc prop_loc (callee, ot, name) argts
+      let reason = mk_reason (RMethodCall name) loc in
+      method_call cx reason prop_loc (callee, ot, name) argts
 
   | Call {
       Call.callee = ploc, Super;
@@ -3039,8 +3040,7 @@ and func_call cx reason func_t argts =
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
-and method_call cx loc prop_loc (expr, obj_t, name) argts =
-  let reason = mk_reason (RMethodCall name) loc in
+and method_call cx reason prop_loc (expr, obj_t, name) argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   (match Refinement.get cx expr reason with
   | Some f ->
@@ -3452,7 +3452,7 @@ and jsx cx = Ast.JSX.(
   jsx_title cx openingElement (List.map (jsx_body cx) children)
 )
 
-and jsx_title cx openingElement _children = Ast.JSX.(
+and jsx_title cx openingElement children = Ast.JSX.(
   let eloc, { Opening.name; attributes; _ } = openingElement in
   let facebook_fbt = Context.facebook_fbt cx in
 
@@ -3514,21 +3514,47 @@ and jsx_title cx openingElement _children = Ast.JSX.(
   | (Identifier (loc, { Identifier.name }), _) when name = String.capitalize name ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then AnyT.at eloc
-    else
+    else begin
       let reason = mk_reason (RReactElement (Some name)) eloc in
       let c = Env.get_var cx name reason in
       let o = mk_props reason c name in
-      (* TODO: children *)
-      let react = require cx ~internal:true "react" eloc in
-      Flow.mk_tvar_where cx reason (fun tvar ->
-        let reason_createElement = mk_reason (RProperty "createElement") eloc in
-        Flow.flow cx (react, MethodT(
-          reason,
-          reason_createElement,
-          (reason_createElement, "createElement"),
-          Flow.mk_methodtype react [c;o] tvar
-        ))
-      )
+      match Context.jsx cx with
+      | None ->
+          (* TODO: children *)
+          let react = require cx ~internal:true "react" eloc in
+          Flow.mk_tvar_where cx reason (fun tvar ->
+            let reason_createElement =
+              mk_reason (RProperty "createElement") eloc in
+            Flow.flow cx (react, MethodT(
+              reason,
+              reason_createElement,
+              (reason_createElement, "createElement"),
+              Flow.mk_methodtype react [c;o] tvar
+            ))
+          )
+      | Some (raw_jsx_expr, jsx_expr) ->
+          let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) eloc in
+
+          (* A JSX element with no attributes should pass in null as the second
+           * arg *)
+          let o = match attributes with
+          | [] -> NullT.at eloc
+          | _ -> o in
+          let argts = [c;o] @ children in
+          Ast.Expression.(match jsx_expr with
+          | _, Member {
+            Member._object;
+            property = Member.PropertyIdentifier (prop_loc,
+              { Ast.Identifier.name; _ });
+              _;
+            } ->
+              let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
+              method_call cx reason prop_loc (jsx_expr, ot, name) argts
+          | _ ->
+              let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
+              func_call cx reason f argts
+          )
+    end
 
   | (Identifier (loc, { Identifier.name }), _) ->
       (**
@@ -3596,6 +3622,30 @@ and jsx_title cx openingElement _children = Ast.JSX.(
   | _ ->
       (* TODO? covers namespaced names, member expressions as element names *)
       AnyT.at eloc
+)
+
+(* The @jsx pragma specifies a left hand side expression EXPR such that
+ *
+ * <Foo />
+ *
+ * is transformed into
+ *
+ * EXPR(Foo, props, child1, child2, etc)
+ *
+ * This means we need to process EXPR. However, EXPR is not inline in the code,
+ * it's up in a comment at the top of the file. This means if we run into an
+ * error, we're going to point at the comment at the top.
+ *
+ * We can cover almost all the cases by just explicitly handling identifiers,
+ * since the common error is that the identifier is not in scope.
+ *)
+and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
+  | _, Identifier (_, { Ast.Identifier.name; _ }) ->
+      let reason = mk_reason (RJSXIdentifier(raw_jsx_expr, name)) loc in
+      Env.var_ref ~lookup_mode:ForValue cx name reason
+  | expr ->
+      (* Oh well, we tried *)
+      expression cx expr
 )
 
 and jsx_body cx = Ast.JSX.(function
@@ -4668,12 +4718,14 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
       Flow.flow cx (arg_t, ObjFreezeT (reason_arg, tvar));
     ) in
 
-    method_call cx loc prop_loc (expr, obj_t, m) [arg_t]
+    let reason = mk_reason (RMethodCall m) loc in
+    method_call cx reason prop_loc (expr, obj_t, m) [arg_t]
 
   (* TODO *)
   | (_, args) ->
     let argts = List.map (expression_or_spread cx) args in
-    method_call cx loc prop_loc (expr, obj_t, m) argts
+    let reason = mk_reason (RMethodCall m) loc in
+    method_call cx reason prop_loc (expr, obj_t, m) argts
 
 and extract_setter_type = function
   | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t

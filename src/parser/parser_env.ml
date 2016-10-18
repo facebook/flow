@@ -189,6 +189,7 @@ type env = {
   no_in             : bool;
   no_call           : bool;
   no_let            : bool;
+  no_new            : bool;
   allow_yield       : bool;
   allow_await       : bool;
   error_callback    : (env -> Error.t -> unit) option;
@@ -237,6 +238,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     no_in             = false;
     no_call           = false;
     no_let            = false;
+    no_new            = false;
     allow_yield       = true;
     allow_await       = false;
     error_callback    = None;
@@ -262,6 +264,7 @@ let allow_await env = env.allow_await
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
+let no_new env = env.no_new
 let errors env = !(env.errors)
 let parse_options env = env.parse_options
 let source env = env.source
@@ -294,6 +297,7 @@ let with_allow_await allow_await env = { env with allow_await }
 let with_no_let no_let env = { env with no_let }
 let with_in_loop in_loop env = { env with in_loop }
 let with_no_in no_in env = { env with no_in }
+let with_no_new no_new env = { env with no_new }
 let with_in_switch in_switch env = { env with in_switch }
 let with_in_export in_export env = { env with in_export }
 let with_no_call no_call env = { env with no_call }

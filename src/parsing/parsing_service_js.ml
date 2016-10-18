@@ -138,6 +138,14 @@ let string_of_docblock_error = function
     "Unexpected @flow declaration. Only one per file is allowed."
   | Docblock.MultipleProvidesModuleAttributes ->
     "Unexpected @providesModule declaration. Only one per file is allowed."
+  | Docblock.MultipleJSXAttributes ->
+    "Unexpected @jsx declaration. Only one per file is allowed."
+  | Docblock.InvalidJSXAttribute first_error ->
+    "Invalid @jsx declaration. Should have form `@jsx LeftHandSideExpression` "^
+    "with no spaces."^
+    (match first_error with
+    | None -> ""
+    | Some first_error -> spf " Parse error: %s" first_error)
 
 let get_docblock
   ~max_tokens file content

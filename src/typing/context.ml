@@ -33,6 +33,7 @@ type metadata = {
   verbose: Verbose.t option;
   weak: bool;
   max_workers: int;
+  jsx: (string * Spider_monkey_ast.Expression.t) option;
 }
 
 (* TODO this has a bunch of stuff in it that should be localized *)
@@ -117,6 +118,7 @@ let metadata_of_options options = {
   verbose = Options.verbose options;
   weak = Options.weak_by_default options;
   max_workers = Options.max_workers options;
+  jsx = None;
 }
 
 (* create a new context structure.
@@ -206,6 +208,7 @@ let type_graph cx = cx.type_graph
 let type_table cx = cx.type_table
 let verbose cx = cx.metadata.verbose
 let max_workers cx = cx.metadata.max_workers
+let jsx cx = cx.metadata.jsx
 
 let pid_prefix cx =
   if max_workers cx > 0
