@@ -34,6 +34,7 @@ open Core
 
 exception Worker_exited_abnormally of int
 exception Worker_oomed
+exception Worker_busy
 
 (* Should we 'prespawn' the worker ? *)
 let use_prespawned = not Sys.win32
@@ -267,7 +268,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
 
 let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
   if w.killed then Printf.ksprintf failwith "killed worker (%d)" w.id;
-  if w.busy then Printf.ksprintf failwith "busy worker (%d)" w.id;
+  if w.busy then raise Worker_busy;
   (* Spawn the slave, if not prespawned. *)
   let { Daemon.pid = slave_pid; channels = (inc, outc) } as h =
     match w.prespawned with

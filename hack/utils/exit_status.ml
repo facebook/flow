@@ -28,6 +28,7 @@ type t =
   | Lost_parent_monitor
   | Interrupted
   | Worker_oomed
+  | Worker_busy
   | Socket_error
   | Missing_hhi
   | Dfind_died
@@ -84,6 +85,7 @@ let exit_code = function
   | Heap_full -> 17
   | Interrupted -> -6
   | Worker_oomed -> 30
+  | Worker_busy -> 31
   | Missing_hhi -> 97
   | Socket_error -> 98
   | Dfind_died -> 99
@@ -134,6 +136,7 @@ let to_string = function
   | Lost_parent_monitor -> "Lost_parent_monitor"
   | Interrupted -> "Interrupted"
   | Worker_oomed -> "Worker_oomed"
+  | Worker_busy -> "Worker_busy"
   | Socket_error -> "Socket_error"
   | Missing_hhi -> "Missing_hhi"
   | Dfind_died -> "Dfind_died"
