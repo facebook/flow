@@ -9,8 +9,7 @@ _site/
 bin
 npm-debug.log
 /node_modules/
-*.diff
-*.err
+/tests/*/*.err
 *.swp
 *.swo
 flow.odocl
