@@ -1,0 +1,152 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "ExpressionStatement",
+            "expression": {
+                "type": "Literal",
+                "value": 42,
+                "raw": "42",
+                "range": [
+                    37,
+                    39
+                ],
+                "loc": {
+                    "start": {
+                        "line": 4,
+                        "column": 0
+                    },
+                    "end": {
+                        "line": 4,
+                        "column": 2
+                    }
+                }
+            },
+            "leadingComments": [
+                {
+                    "type": "Line",
+                    "value": " Hello, world!",
+                    "range": [
+                        0,
+                        16
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 16
+                        }
+                    }
+                },
+                {
+                    "type": "Line",
+                    "value": "   Another hello",
+                    "range": [
+                        18,
+                        36
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 3,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 3,
+                            "column": 18
+                        }
+                    }
+                }
+            ],
+            "range": [
+                37,
+                39
+            ],
+            "loc": {
+                "start": {
+                    "line": 4,
+                    "column": 0
+                },
+                "end": {
+                    "line": 4,
+                    "column": 2
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Line",
+            "value": " Hello, world!",
+            "range": [
+                0,
+                16
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 16
+                }
+            }
+        },
+        {
+            "type": "Line",
+            "value": "   Another hello",
+            "range": [
+                18,
+                36
+            ],
+            "loc": {
+                "start": {
+                    "line": 3,
+                    "column": 0
+                },
+                "end": {
+                    "line": 3,
+                    "column": 18
+                }
+            }
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Numeric",
+            "value": "42",
+            "range": [
+                37,
+                39
+            ],
+            "loc": {
+                "start": {
+                    "line": 4,
+                    "column": 0
+                },
+                "end": {
+                    "line": 4,
+                    "column": 2
+                }
+            }
+        }
+    ],
+    "range": [
+        37,
+        39
+    ],
+    "loc": {
+        "start": {
+            "line": 4,
+            "column": 0
+        },
+        "end": {
+            "line": 4,
+            "column": 2
+        }
+    }
+}

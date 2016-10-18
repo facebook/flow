@@ -1,0 +1,1 @@
+(function(){ var version = 1; /* sync */ }).call(this)

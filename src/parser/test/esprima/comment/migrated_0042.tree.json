@@ -1,0 +1,58 @@
+{
+    "type": "Program",
+    "body": [],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": " block comment ",
+            "range": [
+                0,
+                19
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 19
+                }
+            }
+        },
+        {
+            "type": "Line",
+            "value": " comment",
+            "range": [
+                19,
+                30
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 19
+                },
+                "end": {
+                    "line": 1,
+                    "column": 30
+                }
+            }
+        }
+    ],
+    "tokens": [],
+    "range": [
+        30,
+        30
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 30
+        },
+        "end": {
+            "line": 1,
+            "column": 30
+        }
+    }
+}

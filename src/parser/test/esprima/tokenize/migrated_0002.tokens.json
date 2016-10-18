@@ -1,0 +1,96 @@
+[
+    {
+        "type": "Keyword",
+        "value": "with",
+        "range": [
+            0,
+            4
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 0
+            },
+            "end": {
+                "line": 1,
+                "column": 4
+            }
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": "(",
+        "range": [
+            5,
+            6
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 5
+            },
+            "end": {
+                "line": 1,
+                "column": 6
+            }
+        }
+    },
+    {
+        "type": "Boolean",
+        "value": "false",
+        "range": [
+            6,
+            11
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 6
+            },
+            "end": {
+                "line": 1,
+                "column": 11
+            }
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": ")",
+        "range": [
+            11,
+            12
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 11
+            },
+            "end": {
+                "line": 1,
+                "column": 12
+            }
+        }
+    },
+    {
+        "type": "RegularExpression",
+        "value": "/42/",
+        "range": [
+            13,
+            17
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 13
+            },
+            "end": {
+                "line": 1,
+                "column": 17
+            }
+        },
+        "regex": {
+            "pattern": "42",
+            "flags": ""
+        }
+    }
+]

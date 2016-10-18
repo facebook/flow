@@ -1,0 +1,116 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "ExpressionStatement",
+            "expression": {
+                "type": "Literal",
+                "value": 42,
+                "raw": "42",
+                "range": [
+                    17,
+                    19
+                ],
+                "loc": {
+                    "start": {
+                        "line": 2,
+                        "column": 0
+                    },
+                    "end": {
+                        "line": 2,
+                        "column": 2
+                    }
+                }
+            },
+            "leadingComments": [
+                {
+                    "type": "Line",
+                    "value": " Hello, world!",
+                    "range": [
+                        0,
+                        16
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 16
+                        }
+                    }
+                }
+            ],
+            "range": [
+                17,
+                19
+            ],
+            "loc": {
+                "start": {
+                    "line": 2,
+                    "column": 0
+                },
+                "end": {
+                    "line": 2,
+                    "column": 2
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Line",
+            "value": " Hello, world!",
+            "range": [
+                0,
+                16
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 16
+                }
+            }
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Numeric",
+            "value": "42",
+            "range": [
+                17,
+                19
+            ],
+            "loc": {
+                "start": {
+                    "line": 2,
+                    "column": 0
+                },
+                "end": {
+                    "line": 2,
+                    "column": 2
+                }
+            }
+        }
+    ],
+    "range": [
+        17,
+        19
+    ],
+    "loc": {
+        "start": {
+            "line": 2,
+            "column": 0
+        },
+        "end": {
+            "line": 2,
+            "column": 2
+        }
+    }
+}

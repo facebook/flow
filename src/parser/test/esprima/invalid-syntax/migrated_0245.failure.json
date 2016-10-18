@@ -1,0 +1,6 @@
+{
+    "index": 44,
+    "lineNumber": 1,
+    "column": 45,
+    "message": "Error: Line 1: Strict mode function may not have duplicate parameter names"
+}

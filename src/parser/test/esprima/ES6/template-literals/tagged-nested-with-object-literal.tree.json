@@ -1,0 +1,444 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "range": [
+                0,
+                44
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 44
+                }
+            },
+            "type": "ExpressionStatement",
+            "expression": {
+                "range": [
+                    0,
+                    44
+                ],
+                "loc": {
+                    "start": {
+                        "line": 1,
+                        "column": 0
+                    },
+                    "end": {
+                        "line": 1,
+                        "column": 44
+                    }
+                },
+                "type": "TaggedTemplateExpression",
+                "tag": {
+                    "range": [
+                        0,
+                        3
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 3
+                        }
+                    },
+                    "type": "Identifier",
+                    "name": "raw"
+                },
+                "quasi": {
+                    "range": [
+                        3,
+                        44
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 3
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 44
+                        }
+                    },
+                    "type": "TemplateLiteral",
+                    "quasis": [
+                        {
+                            "range": [
+                                3,
+                                12
+                            ],
+                            "loc": {
+                                "start": {
+                                    "line": 1,
+                                    "column": 3
+                                },
+                                "end": {
+                                    "line": 1,
+                                    "column": 12
+                                }
+                            },
+                            "type": "TemplateElement",
+                            "value": {
+                                "raw": "token ",
+                                "cooked": "token "
+                            },
+                            "tail": false
+                        },
+                        {
+                            "range": [
+                                42,
+                                44
+                            ],
+                            "loc": {
+                                "start": {
+                                    "line": 1,
+                                    "column": 42
+                                },
+                                "end": {
+                                    "line": 1,
+                                    "column": 44
+                                }
+                            },
+                            "type": "TemplateElement",
+                            "value": {
+                                "raw": "",
+                                "cooked": ""
+                            },
+                            "tail": true
+                        }
+                    ],
+                    "expressions": [
+                        {
+                            "range": [
+                                12,
+                                42
+                            ],
+                            "loc": {
+                                "start": {
+                                    "line": 1,
+                                    "column": 12
+                                },
+                                "end": {
+                                    "line": 1,
+                                    "column": 42
+                                }
+                            },
+                            "type": "TemplateLiteral",
+                            "quasis": [
+                                {
+                                    "range": [
+                                        12,
+                                        22
+                                    ],
+                                    "loc": {
+                                        "start": {
+                                            "line": 1,
+                                            "column": 12
+                                        },
+                                        "end": {
+                                            "line": 1,
+                                            "column": 22
+                                        }
+                                    },
+                                    "type": "TemplateElement",
+                                    "value": {
+                                        "raw": "nested ",
+                                        "cooked": "nested "
+                                    },
+                                    "tail": false
+                                },
+                                {
+                                    "range": [
+                                        35,
+                                        42
+                                    ],
+                                    "loc": {
+                                        "start": {
+                                            "line": 1,
+                                            "column": 35
+                                        },
+                                        "end": {
+                                            "line": 1,
+                                            "column": 42
+                                        }
+                                    },
+                                    "type": "TemplateElement",
+                                    "value": {
+                                        "raw": " blah",
+                                        "cooked": " blah"
+                                    },
+                                    "tail": true
+                                }
+                            ],
+                            "expressions": [
+                                {
+                                    "range": [
+                                        22,
+                                        35
+                                    ],
+                                    "loc": {
+                                        "start": {
+                                            "line": 1,
+                                            "column": 22
+                                        },
+                                        "end": {
+                                            "line": 1,
+                                            "column": 35
+                                        }
+                                    },
+                                    "type": "BinaryExpression",
+                                    "operator": "+",
+                                    "left": {
+                                        "range": [
+                                            22,
+                                            30
+                                        ],
+                                        "loc": {
+                                            "start": {
+                                                "line": 1,
+                                                "column": 22
+                                            },
+                                            "end": {
+                                                "line": 1,
+                                                "column": 30
+                                            }
+                                        },
+                                        "type": "TemplateLiteral",
+                                        "quasis": [
+                                            {
+                                                "range": [
+                                                    22,
+                                                    30
+                                                ],
+                                                "loc": {
+                                                    "start": {
+                                                        "line": 1,
+                                                        "column": 22
+                                                    },
+                                                    "end": {
+                                                        "line": 1,
+                                                        "column": 30
+                                                    }
+                                                },
+                                                "type": "TemplateElement",
+                                                "value": {
+                                                    "raw": "deeply",
+                                                    "cooked": "deeply"
+                                                },
+                                                "tail": true
+                                            }
+                                        ],
+                                        "expressions": []
+                                    },
+                                    "right": {
+                                        "range": [
+                                            33,
+                                            35
+                                        ],
+                                        "loc": {
+                                            "start": {
+                                                "line": 1,
+                                                "column": 33
+                                            },
+                                            "end": {
+                                                "line": 1,
+                                                "column": 35
+                                            }
+                                        },
+                                        "type": "ObjectExpression",
+                                        "properties": []
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "tokens": [
+        {
+            "type": "Identifier",
+            "value": "raw",
+            "range": [
+                0,
+                3
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 3
+                }
+            }
+        },
+        {
+            "type": "Template",
+            "value": "`token ${",
+            "range": [
+                3,
+                12
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 3
+                },
+                "end": {
+                    "line": 1,
+                    "column": 12
+                }
+            }
+        },
+        {
+            "type": "Template",
+            "value": "`nested ${",
+            "range": [
+                12,
+                22
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 12
+                },
+                "end": {
+                    "line": 1,
+                    "column": 22
+                }
+            }
+        },
+        {
+            "type": "Template",
+            "value": "`deeply`",
+            "range": [
+                22,
+                30
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 22
+                },
+                "end": {
+                    "line": 1,
+                    "column": 30
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": "+",
+            "range": [
+                31,
+                32
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 31
+                },
+                "end": {
+                    "line": 1,
+                    "column": 32
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": "{",
+            "range": [
+                33,
+                34
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 33
+                },
+                "end": {
+                    "line": 1,
+                    "column": 34
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": "}",
+            "range": [
+                34,
+                35
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 34
+                },
+                "end": {
+                    "line": 1,
+                    "column": 35
+                }
+            }
+        },
+        {
+            "type": "Template",
+            "value": "} blah`",
+            "range": [
+                35,
+                42
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 35
+                },
+                "end": {
+                    "line": 1,
+                    "column": 42
+                }
+            }
+        },
+        {
+            "type": "Template",
+            "value": "}`",
+            "range": [
+                42,
+                44
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 42
+                },
+                "end": {
+                    "line": 1,
+                    "column": 44
+                }
+            }
+        }
+    ],
+    "range": [
+        0,
+        44
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 0
+        },
+        "end": {
+            "line": 1,
+            "column": 44
+        }
+    }
+}

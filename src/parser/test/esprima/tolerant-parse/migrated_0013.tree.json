@@ -1,0 +1,66 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "ReturnStatement",
+            "argument": null,
+            "range": [
+                0,
+                6
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 6
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "return",
+            "range": [
+                0,
+                6
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 6
+                }
+            }
+        }
+    ],
+    "errors": [
+        {
+            "index": 6,
+            "lineNumber": 1,
+            "column": 7,
+            "message": "Error: Line 1: Illegal return statement"
+        }
+    ],
+    "range": [
+        0,
+        6
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 0
+        },
+        "end": {
+            "line": 1,
+            "column": 6
+        }
+    }
+}

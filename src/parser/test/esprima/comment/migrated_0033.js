@@ -1,0 +1,1 @@
+/* header */ (function(){ var version = 1; }).call(this)

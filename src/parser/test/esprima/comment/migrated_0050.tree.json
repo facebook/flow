@@ -1,0 +1,180 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "range": [
+                26,
+                85
+            ],
+            "type": "VariableDeclaration",
+            "declarations": [
+                {
+                    "range": [
+                        30,
+                        35
+                    ],
+                    "type": "VariableDeclarator",
+                    "id": {
+                        "range": [
+                            30,
+                            31
+                        ],
+                        "type": "Identifier",
+                        "name": "a"
+                    },
+                    "init": {
+                        "range": [
+                            34,
+                            35
+                        ],
+                        "type": "Literal",
+                        "value": 5,
+                        "raw": "5"
+                    }
+                },
+                {
+                    "range": [
+                        79,
+                        84
+                    ],
+                    "type": "VariableDeclarator",
+                    "id": {
+                        "range": [
+                            79,
+                            80
+                        ],
+                        "type": "Identifier",
+                        "name": "b"
+                    },
+                    "init": {
+                        "range": [
+                            83,
+                            84
+                        ],
+                        "type": "Literal",
+                        "value": 6,
+                        "raw": "6"
+                    },
+                    "leadingComments": [
+                        {
+                            "type": "Block",
+                            "value": "*\n     * @type {number}\n     ",
+                            "range": [
+                                41,
+                                74
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "kind": "var",
+            "leadingComments": [
+                {
+                    "type": "Block",
+                    "value": "*\n * @type {number}\n ",
+                    "range": [
+                        0,
+                        25
+                    ]
+                }
+            ]
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": "*\n * @type {number}\n ",
+            "range": [
+                0,
+                25
+            ]
+        },
+        {
+            "type": "Block",
+            "value": "*\n     * @type {number}\n     ",
+            "range": [
+                41,
+                74
+            ]
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "var",
+            "range": [
+                26,
+                29
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "a",
+            "range": [
+                30,
+                31
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "=",
+            "range": [
+                32,
+                33
+            ]
+        },
+        {
+            "type": "Numeric",
+            "value": "5",
+            "range": [
+                34,
+                35
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ",",
+            "range": [
+                35,
+                36
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "b",
+            "range": [
+                79,
+                80
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "=",
+            "range": [
+                81,
+                82
+            ]
+        },
+        {
+            "type": "Numeric",
+            "value": "6",
+            "range": [
+                83,
+                84
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ";",
+            "range": [
+                84,
+                85
+            ]
+        }
+    ],
+    "range": [
+        26,
+        85
+    ]
+}

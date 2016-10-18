@@ -1,0 +1,194 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "VariableDeclaration",
+            "declarations": [
+                {
+                    "type": "VariableDeclarator",
+                    "id": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "range": [
+                            4,
+                            5
+                        ],
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 4
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 5
+                            }
+                        }
+                    },
+                    "init": {
+                        "type": "Literal",
+                        "value": null,
+                        "raw": "/[\\u{61}-b][\\u0061-b][a-\\u{62}][a-\\u0062]\\u{1ffff}/u",
+                        "regex": {
+                            "pattern": "[\\u{61}-b][\\u0061-b][a-\\u{62}][a-\\u0062]\\u{1ffff}",
+                            "flags": "u"
+                        },
+                        "range": [
+                            8,
+                            60
+                        ],
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 8
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 60
+                            }
+                        }
+                    },
+                    "range": [
+                        4,
+                        60
+                    ],
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 4
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 60
+                        }
+                    }
+                }
+            ],
+            "kind": "var",
+            "range": [
+                0,
+                61
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 61
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "var",
+            "range": [
+                0,
+                3
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 3
+                }
+            }
+        },
+        {
+            "type": "Identifier",
+            "value": "x",
+            "range": [
+                4,
+                5
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 4
+                },
+                "end": {
+                    "line": 1,
+                    "column": 5
+                }
+            }
+        },
+        {
+            "type": "Punctuator",
+            "value": "=",
+            "range": [
+                6,
+                7
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 6
+                },
+                "end": {
+                    "line": 1,
+                    "column": 7
+                }
+            }
+        },
+        {
+            "type": "RegularExpression",
+            "value": "/[\\u{61}-b][\\u0061-b][a-\\u{62}][a-\\u0062]\\u{1ffff}/u",
+            "regex": {
+                "pattern": "[\\u{61}-b][\\u0061-b][a-\\u{62}][a-\\u0062]\\u{1ffff}",
+                "flags": "u"
+            },
+            "range": [
+                8,
+                60
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 8
+                },
+                "end": {
+                    "line": 1,
+                    "column": 60
+                }
+            }
+        },
+        {
+            "range": [
+                60,
+                61
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 60
+                },
+                "end": {
+                    "line": 1,
+                    "column": 61
+                }
+            },
+            "type": "Punctuator",
+            "value": ";"
+        }
+    ],
+    "range": [
+        0,
+        61
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 0
+        },
+        "end": {
+            "line": 1,
+            "column": 61
+        }
+    }
+}

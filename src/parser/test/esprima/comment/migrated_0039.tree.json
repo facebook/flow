@@ -1,0 +1,40 @@
+{
+    "type": "Program",
+    "body": [],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Line",
+            "value": " comment",
+            "range": [
+                0,
+                12
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 12
+                }
+            }
+        }
+    ],
+    "tokens": [],
+    "range": [
+        12,
+        12
+    ],
+    "loc": {
+        "start": {
+            "line": 1,
+            "column": 12
+        },
+        "end": {
+            "line": 1,
+            "column": 12
+        }
+    }
+}

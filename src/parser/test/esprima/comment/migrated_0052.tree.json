@@ -1,0 +1,106 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "range": [
+                5,
+                20
+            ],
+            "type": "FunctionDeclaration",
+            "id": {
+                "range": [
+                    14,
+                    15
+                ],
+                "type": "Identifier",
+                "name": "a"
+            },
+            "params": [],
+            "body": {
+                "range": [
+                    18,
+                    20
+                ],
+                "type": "BlockStatement",
+                "body": []
+            },
+            "generator": false,
+            "expression": false,
+            "leadingComments": [
+                {
+                    "type": "Block",
+                    "value": "",
+                    "range": [
+                        0,
+                        4
+                    ]
+                }
+            ]
+        }
+    ],
+    "sourceType": "script",
+    "comments": [
+        {
+            "type": "Block",
+            "value": "",
+            "range": [
+                0,
+                4
+            ]
+        }
+    ],
+    "tokens": [
+        {
+            "type": "Keyword",
+            "value": "function",
+            "range": [
+                5,
+                13
+            ]
+        },
+        {
+            "type": "Identifier",
+            "value": "a",
+            "range": [
+                14,
+                15
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "(",
+            "range": [
+                15,
+                16
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": ")",
+            "range": [
+                16,
+                17
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "{",
+            "range": [
+                18,
+                19
+            ]
+        },
+        {
+            "type": "Punctuator",
+            "value": "}",
+            "range": [
+                19,
+                20
+            ]
+        }
+    ],
+    "range": [
+        5,
+        20
+    ]
+}

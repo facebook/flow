@@ -1,0 +1,78 @@
+[
+    {
+        "type": "Identifier",
+        "value": "tokenize",
+        "range": [
+            0,
+            8
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 0
+            },
+            "end": {
+                "line": 1,
+                "column": 8
+            }
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": "(",
+        "range": [
+            8,
+            9
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 8
+            },
+            "end": {
+                "line": 1,
+                "column": 9
+            }
+        }
+    },
+    {
+        "type": "RegularExpression",
+        "value": "/42/",
+        "range": [
+            9,
+            13
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 9
+            },
+            "end": {
+                "line": 1,
+                "column": 13
+            }
+        },
+        "regex": {
+            "pattern": "42",
+            "flags": ""
+        }
+    },
+    {
+        "type": "Punctuator",
+        "value": ")",
+        "range": [
+            13,
+            14
+        ],
+        "loc": {
+            "start": {
+                "line": 1,
+                "column": 13
+            },
+            "end": {
+                "line": 1,
+                "column": 14
+            }
+        }
+    }
+]

@@ -1,0 +1,6 @@
+{
+    "index": 15,
+    "lineNumber": 1,
+    "column": 16,
+    "message": "Error: Line 1: Assignment to eval or arguments is not allowed in strict mode"
+}

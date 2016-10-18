@@ -1,0 +1,76 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "ExpressionStatement",
+            "expression": {
+                "type": "Literal",
+                "value": 42,
+                "raw": "42",
+                "range": [
+                    5,
+                    7
+                ],
+                "loc": {
+                    "start": {
+                        "line": 2,
+                        "column": 4
+                    },
+                    "end": {
+                        "line": 2,
+                        "column": 6
+                    }
+                }
+            },
+            "range": [
+                5,
+                7
+            ],
+            "loc": {
+                "start": {
+                    "line": 2,
+                    "column": 4
+                },
+                "end": {
+                    "line": 2,
+                    "column": 6
+                }
+            }
+        }
+    ],
+    "sourceType": "script",
+    "tokens": [
+        {
+            "type": "Numeric",
+            "value": "42",
+            "range": [
+                5,
+                7
+            ],
+            "loc": {
+                "start": {
+                    "line": 2,
+                    "column": 4
+                },
+                "end": {
+                    "line": 2,
+                    "column": 6
+                }
+            }
+        }
+    ],
+    "range": [
+        5,
+        7
+    ],
+    "loc": {
+        "start": {
+            "line": 2,
+            "column": 4
+        },
+        "end": {
+            "line": 2,
+            "column": 6
+        }
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "index": 28,
+    "lineNumber": 1,
+    "column": 29,
+    "message": "Error: Line 1: Strict mode code may not include a with statement"
+}
