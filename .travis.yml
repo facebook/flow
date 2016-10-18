@@ -75,8 +75,8 @@ deploy:
 # upload releases to github, from both Mac and Linux
 - provider: releases
   api_key:
-    # facebook-github-bot-0
-    secure: DhwkQ1L8uJEeY48KWMrIuhuBOpYwAfUCiPoG5IAgAgd/t4kAfw89g6a0XWxZ538L3+7C56T3syIvc02LmSiFBv2UzDyjRBASDRHrYGn4RQp6s6YJ2DuVqoIXKG6Ax3hhnGYJ4qbsiOd5v8MBwWUQ5zIb7nDEBEFE8kdrBDi6V2k=
+    # flow-bot
+    secure: "l3R6GrPhrqUIXlAcknFA7rKllPmVsY/1cOGtctxFQ6++oC3xd+XawIMVAR78ZtUoirZ+/3KYdY6o3SoGMb6olgnSerR/CXktP4DXuUK6XlHGRxqSRCclWra3DnJutlaiafnurhIruRMIvXeTYiO2Q1MU/nyQVKZtOhJJHEBg0Mc="
   repo: facebook/flow
   skip_cleanup: true
   file_glob: true
