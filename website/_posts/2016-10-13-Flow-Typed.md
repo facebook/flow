@@ -42,7 +42,7 @@ The `flow-typed install` command reads your project's package.json file, queries
 
 Note that it's necessary to run this command *after* running `yarn` or `npm install`. This is because this command will also generate stub libdefs for you if one of your dependencies doesn't have types.
 
-Once libdefs have been installed, **we recommend that you check them in to your project's repo**. Libdefs in the flow-typed repository may be improved over time (fixing a bug, more precise types, etc). If this happens for a libdef that you depend on, you'll want to have control over when that update is applied to your project. Periodically you can run `flow-typed update` to to download any libdef updates, verify that your project still typechecks, and the commit the updates.
+Once libdefs have been installed, **we recommend that you check them in to your project's repo**. Libdefs in the flow-typed repository may be improved over time (fixing a bug, more precise types, etc). If this happens for a libdef that you depend on, you'll want to have control over when that update is applied to your project. Periodically you can run `flow-typed update` to download any libdef updates, verify that your project still typechecks, and the commit the updates.
 
 ## Why Not Just Use Npm To Distribute Libdefs?
 
