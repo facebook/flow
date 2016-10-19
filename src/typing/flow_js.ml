@@ -3581,8 +3581,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | InstanceT (reason_c, _, super, instance),
       SetPropT (reason_op, (reason_prop, x), tin) ->
       Ops.push reason_op;
-      (* methods are immutable, so we hide them from property set operations *)
-      let fields = instance.fields_tmap in
+      let fields_tmap = Context.find_props cx instance.fields_tmap in
+      let methods_tmap = Context.find_props cx instance.methods_tmap in
+      let fields = SMap.union fields_tmap methods_tmap in
       let strict = Strict reason_c in
       set_prop cx trace reason_prop reason_op strict super x fields tin;
       Ops.pop ();
@@ -6520,8 +6521,7 @@ and get_prop cx trace reason_prop reason_op strict super x map tout =
   end;
   Ops.set ops
 
-and set_prop cx trace reason_prop reason_op strict super x id tin =
-  let pmap = Context.find_props cx id in
+and set_prop cx trace reason_prop reason_op strict super x pmap tin =
   match SMap.get x pmap with
   | Some p ->
     (match Property.write_t p with

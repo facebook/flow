@@ -1,8 +1,8 @@
 test.js:9
   9: a.foo = function(): C { return new C(); }
-       ^^^ property `foo`. Property not found in
+       ^^^ property `foo`. Covariant property `foo` incompatible with contravariant use in
   9: a.foo = function(): C { return new C(); }
-     ^ A
+     ^^^^^ assignment of property `foo`
 
 
 Found 1 error
