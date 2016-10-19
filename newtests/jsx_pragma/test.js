@@ -272,5 +272,34 @@ export default suite(({addFile, addFiles, addCode}) => [
                      ^^^^^^^^^^^^^^ JSX element \`Bar\`. Could not resolve name
         `,
       ),
-  ])
+  ]),
+  test('Exact prop type without spread should work', [
+    addCode(`
+      // @jsx Foo
+      function Foo(elem: number, props: {| x: string |}) {}
+      const Bar = 123;
+
+      <Bar x="hi" />;
+    `).noNewErrors(),
+  ]),
+  test('Exact prop type with spread still doesnt work', [
+    addCode(`
+      // @jsx Foo
+      function Foo(elem: number, props: {| x: string |}) {}
+      const Bar = 123;
+
+      const props = {x: "hi"};
+      <Bar {...props} />;
+    `).newErrors(
+        `
+          test.js:9
+            9:       <Bar {...props} />;
+                     ^^^^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
+            9:       <Bar {...props} />;
+                              ^^^^^ spread of object literal. Inexact type is incompatible with exact type
+            5:       function Foo(elem: number, props: {| x: string |}) {}
+                                                       ^^^^^^^^^^^^^^^ exact type: object type
+        `,
+      ),
+  ]),
 ]);
