@@ -118,3 +118,15 @@ function *generic_next<N>(): Generator<void,N,N> {
   if (n == null) throw new Error();
   return n;
 }
+
+function *multiple_return(b) {
+  if (b) {
+    return 0;
+  } else {
+    return "foo";
+  }
+}
+let multiple_return_result = multiple_return().next();
+if (multiple_return_result.done) {
+  (multiple_return_result.value: void); // error: number|string ~> void
+}

@@ -936,7 +936,9 @@ and statement cx = Ast.Statement.(
           let reason = mk_reason (RCustom "generator return") loc in
           Flow.get_builtin_typeapp cx reason "Generator" [
             Env.get_var cx (internal_name "yield") reason;
-            t;
+            Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+              Flow.flow_t cx (t, tvar)
+            );
             Env.get_var cx (internal_name "next") reason
           ]
         else t

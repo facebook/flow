@@ -1203,8 +1203,10 @@ and dump_t_ (depth, tvars) cx t =
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
-  | FunProtoCallT _
-  | PolyT _ -> p t
+  | FunProtoCallT _ -> p t
+  | PolyT (tps,c) -> p ~extra:(spf "%s [%s]"
+      (kid c)
+      (String.concat "; " (List.map (fun tp -> tp.name) tps))) t
   | ThisClassT _ -> p t
   | BoundT param -> p ~extra:param.name t
   | ExistsT _ -> p t

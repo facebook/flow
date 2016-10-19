@@ -168,6 +168,18 @@ generators.js:101
 101:   (x : string) // error: number ~> string
             ^^^^^^ string
 
+generators.js:131
+131:   (multiple_return_result.value: void); // error: number|string ~> void
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+131:   (multiple_return_result.value: void); // error: number|string ~> void
+                                      ^^^^ undefined
+
+generators.js:131
+131:   (multiple_return_result.value: void); // error: number|string ~> void
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+131:   (multiple_return_result.value: void); // error: number|string ~> void
+                                      ^^^^ undefined
+
 return.js:5
   5:   (ret.value: void); // error: string | number ~> void
         ^^^^^^^^^ number. This type is incompatible with
