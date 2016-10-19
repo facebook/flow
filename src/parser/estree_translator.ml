@@ -970,7 +970,7 @@ end with type t = Impl.t) = struct
 
   and function_type_param (loc, param) = Type.Function.Param.(
     node "FunctionTypeParam" loc [|
-      "name", identifier param.name;
+      "name", option identifier param.name;
       "typeAnnotation", _type param.typeAnnotation;
       "optional", bool param.optional;
     |]

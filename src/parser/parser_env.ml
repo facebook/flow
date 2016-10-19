@@ -176,30 +176,31 @@ let default_parse_options = {
 }
 
 type env = {
-  errors            : (Loc.t * Error.t) list ref;
-  comments          : Comment.t list ref;
-  labels            : SSet.t;
-  exports           : SSet.t ref;
-  last_loc          : Loc.t option ref;
-  in_strict_mode    : bool;
-  in_export         : bool;
-  in_loop           : bool;
-  in_switch         : bool;
-  in_function       : bool;
-  no_in             : bool;
-  no_call           : bool;
-  no_let            : bool;
-  allow_yield       : bool;
-  allow_await       : bool;
-  error_callback    : (env -> Error.t -> unit) option;
-  lex_mode_stack    : Lex_mode.t list ref;
+  errors                : (Loc.t * Error.t) list ref;
+  comments              : Comment.t list ref;
+  labels                : SSet.t;
+  exports               : SSet.t ref;
+  last_loc              : Loc.t option ref;
+  in_strict_mode        : bool;
+  in_export             : bool;
+  in_loop               : bool;
+  in_switch             : bool;
+  in_function           : bool;
+  no_in                 : bool;
+  no_call               : bool;
+  no_let                : bool;
+  no_anon_function_type : bool;
+  allow_yield           : bool;
+  allow_await           : bool;
+  error_callback        : (env -> Error.t -> unit) option;
+  lex_mode_stack        : Lex_mode.t list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
-  lex_env           : Lex_env.t ref;
+  lex_env               : Lex_env.t ref;
   (* This needs to be cleared whenever we advance. *)
-  lookahead         : Lookahead.t ref;
-  token_sink        : (token_sink_result -> unit) option ref;
-  parse_options     : parse_options;
-  source            : Loc.filename option;
+  lookahead             : Lookahead.t ref;
+  token_sink            : (token_sink_result -> unit) option ref;
+  parse_options         : parse_options;
+  source               : Loc.filename option;
 }
 
 (* constructor *)
@@ -224,26 +225,27 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
   let enable_types_in_comments = parse_options.types in
   let lex_env = Lex_env.new_lex_env source lb ~enable_types_in_comments in
   {
-    errors            = ref [];
-    comments          = ref [];
-    labels            = SSet.empty;
-    exports           = ref SSet.empty;
-    last_loc          = ref None;
-    in_strict_mode    = parse_options.use_strict;
-    in_export         = false;
-    in_loop           = false;
-    in_switch         = false;
-    in_function       = false;
-    no_in             = false;
-    no_call           = false;
-    no_let            = false;
-    allow_yield       = true;
-    allow_await       = false;
-    error_callback    = None;
-    lex_mode_stack    = ref [Lex_mode.NORMAL];
-    lex_env           = ref lex_env;
-    lookahead         = ref (Lookahead.create lex_env Lex_mode.NORMAL);
-    token_sink        = ref token_sink;
+    errors = ref [];
+    comments = ref [];
+    labels = SSet.empty;
+    exports = ref SSet.empty;
+    last_loc = ref None;
+    in_strict_mode = parse_options.use_strict;
+    in_export = false;
+    in_loop = false;
+    in_switch = false;
+    in_function = false;
+    no_in = false;
+    no_call = false;
+    no_let = false;
+    no_anon_function_type = false;
+    allow_yield = true;
+    allow_await = false;
+    error_callback = None;
+    lex_mode_stack = ref [Lex_mode.NORMAL];
+    lex_env = ref lex_env;
+    lookahead = ref (Lookahead.create lex_env Lex_mode.NORMAL);
+    token_sink = ref token_sink;
     parse_options;
     source;
   }
@@ -262,6 +264,7 @@ let allow_await env = env.allow_await
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
+let no_anon_function_type env = env.no_anon_function_type
 let errors env = !(env.errors)
 let parse_options env = env.parse_options
 let source env = env.source
@@ -294,6 +297,8 @@ let with_allow_await allow_await env = { env with allow_await }
 let with_no_let no_let env = { env with no_let }
 let with_in_loop in_loop env = { env with in_loop }
 let with_no_in no_in env = { env with no_in }
+let with_no_anon_function_type no_anon_function_type env =
+  { env with no_anon_function_type }
 let with_in_switch in_switch env = { env with in_switch }
 let with_in_export in_export env = { env with in_export }
 let with_no_call no_call env = { env with no_call }

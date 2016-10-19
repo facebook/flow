@@ -1518,6 +1518,29 @@ module.exports = {
           'predicate': null,
         },
       },
+      // Function argument types are now optional
+      'declare function foo(x: number, string): void': {
+        'body.0': {
+          'type': 'DeclareFunction',
+          'id': {
+            'name': 'foo',
+            'typeAnnotation.typeAnnotation': {
+              'type': 'FunctionTypeAnnotation',
+              'params': [
+                {
+                  'name.name': 'x',
+                  'typeAnnotation.type': 'NumberTypeAnnotation',
+                },
+                {
+                  'typeAnnotation.type': 'StringTypeAnnotation',
+                },
+              ],
+              'returnType.type': 'VoidTypeAnnotation',
+            },
+          },
+          'predicate': null,
+        },
+      },
       'declare class A {}': {
         'body.0': {
           'type': 'DeclareClass',
@@ -1662,6 +1685,8 @@ module.exports = {
       'declare export function foo(): void;': {},
       'declare export function foo<T>(): void;': {},
       'declare export function foo(x: number, y: string): void;': {},
+      // Function argument types are now optional
+      'declare export function foo(x: number, string): void': {},
 
       // Class export
       'declare export class A {}': {
@@ -2018,15 +2043,6 @@ module.exports = {
           },
         }
       },
-      // You must provide types for each function parameter
-      'declare export function foo(x): void': {
-        'errors': {
-          '0': {
-            'message': 'Unexpected token )',
-            'loc.start.column': 29,
-          },
-        },
-      },
       'declare export class A { static : number }': {
         'body.0.declaration.body.properties.0.static': false,
         'errors': [
@@ -2071,15 +2087,6 @@ module.exports = {
             'loc.start.column': 22,
           },
         }
-      },
-      // You must provide types for each function parameter
-      'declare function foo(x): void': {
-        'errors': {
-          '0': {
-            'message': 'Unexpected token )',
-            'loc.start.column': 22,
-          },
-        },
       },
       'declare class A { static : number }': {
         'body.0.body.properties.0.static': false,
@@ -4554,6 +4561,149 @@ module.exports = {
         },
         'body.0.body.body.0.value.generator': true
       }
-    }
+    },
+    'Function Types with Anonymous Parameters': {
+      'type A = (string) => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name': null,
+            'typeAnnotation.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      'type A = (string,) => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name': null,
+            'typeAnnotation.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      'type A = (Array<string>) => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name': null,
+            'typeAnnotation.type': 'GenericTypeAnnotation',
+            'typeAnnotation.typeParameters.params.0.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      'type A = (Array<string>,) => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name': null,
+            'typeAnnotation.type': 'GenericTypeAnnotation',
+            'typeAnnotation.typeParameters.params.0.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      'type A = (x: string, number) => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name.name': 'x',
+            'typeAnnotation.type': 'StringTypeAnnotation',
+          },
+          'params.1': {
+            'name': null,
+            'typeAnnotation.type': 'NumberTypeAnnotation',
+          },
+        }
+      },
+      'type A = (...Array<string>) => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'rest': {
+            'name': null,
+            'typeAnnotation.type': 'GenericTypeAnnotation',
+            'typeAnnotation.typeParameters.params.0.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      'type A = (Array<string>, ...Array<string>) => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name': null,
+            'typeAnnotation.type': 'GenericTypeAnnotation',
+            'typeAnnotation.typeParameters.params.0.type': 'StringTypeAnnotation',
+          },
+          'rest': {
+            'name': null,
+            'typeAnnotation.type': 'GenericTypeAnnotation',
+            'typeAnnotation.typeParameters.params.0.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      // Non-anonymous function types are allowed as arrow function return types
+      'var f = (x): (x: number) => 123 => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'FunctionTypeAnnotation',
+          'body.value': 123,
+        }
+      },
+      // Anonymous function types are disallowed as arrow function return types
+      // So the `=>` clearly belongs to the arrow function
+      'var f = (): (number) => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'NumberTypeAnnotation',
+          'body.value': 123,
+        }
+      },
+      'var f = (): string | (number) => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation': {
+            'type': 'UnionTypeAnnotation',
+            'types.1.type': 'NumberTypeAnnotation',
+          },
+          'body.value': 123,
+        }
+      },
+      // You can write anonymous function types as arrow function return types
+      // if you wrap them in parens
+      'var f = (x): ((number) => 123) => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'FunctionTypeAnnotation',
+          'body.value': 123,
+        }
+      },
+    },
+    'Invalid Function Types with Anonymous Parameters': {
+      // Anonymous function types are disallowed as arrow function return types
+      'var f = (x): (number) => 123 => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'NumberTypeAnnotation',
+        },
+        'errors.0': {
+          'loc.start.column': 29,
+          'loc.end.column': 31,
+          'message': 'Unexpected token =>'
+        },
+      },
+      'var f = (x): string | (number) => 123 => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'UnionTypeAnnotation',
+        },
+        'errors.0': {
+          'loc.start.column': 38,
+          'loc.end.column': 40,
+          'message': 'Unexpected token =>'
+        },
+      },
+      'var f = (x): ?(number) => 123 => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'NullableTypeAnnotation',
+        },
+        'errors.0': {
+          'loc.start.column': 30,
+          'loc.end.column': 32,
+          'message': 'Unexpected token =>'
+        },
+      },
+    },
   }
 };

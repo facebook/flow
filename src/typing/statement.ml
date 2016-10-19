@@ -4787,7 +4787,18 @@ and declare_function_to_function_declaration cx id predicate =
         })) ->
           let param_type_to_param = Ast.Type.Function.(
             fun (l, { Param.name; Param.typeAnnotation; _ }) ->
-              let (loc, name_) = name in
+              let (loc, name_) = match name with
+              | Some name -> name
+              | None ->
+                  FlowError.add_error cx (loc, [
+                    "Predicate function declarations cannot use anonymous \
+                    function parameters."]);
+                  (fst typeAnnotation, {
+                    Ast.Identifier.name = "_";
+                                   typeAnnotation = None;
+                                   optional = false;
+                    })
+              in
               let name' = (
                 loc, {
                   name_ with Ast.Identifier.typeAnnotation =

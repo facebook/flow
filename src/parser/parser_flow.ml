@@ -287,6 +287,14 @@ end = struct
         Expect.token env T_RBRACKET;
         Loc.btwn start_loc end_loc, Type.Tuple tl
 
+    and anonymous_function_param _env typeAnnotation =
+      fst typeAnnotation, Type.Function.Param.({
+        name = None;
+        typeAnnotation;
+        optional = false;
+      })
+
+
     and function_param_with_id env name =
       if not (should_parse_types env)
       then error env Error.UnexpectedTypeAnnotation;
@@ -294,15 +302,20 @@ end = struct
       Expect.token env T_COLON;
       let typeAnnotation = _type env in
       Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
-        name;
+        name = Some name;
         typeAnnotation;
         optional;
       })
 
     and function_param_list_without_parens =
       let param env =
-        let name, _ = Parse.identifier_or_reserved_keyword env in
-        function_param_with_id env name
+        match Peek.token ~i:1 env with
+        | T_COLON | T_PLING ->
+            let name, _ = Parse.identifier_or_reserved_keyword env in
+            function_param_with_id env name
+        | _ ->
+            let typeAnnotation = _type env in
+            anonymous_function_param env typeAnnotation
 
       in let rec param_list env acc =
         match Peek.token env with
@@ -331,53 +344,62 @@ end = struct
       in fun env -> param_list env
 
     and function_param_list env =
-        Expect.token env T_LPAREN;
-        let ret = function_param_list_without_parens env [] in
-        Expect.token env T_RPAREN;
-        ret
+      Expect.token env T_LPAREN;
+      let ret = function_param_list_without_parens env [] in
+      Expect.token env T_RPAREN;
+      ret
 
     and param_list_or_type env =
       Expect.token env T_LPAREN;
-      let ret = match Peek.token env with
-      | T_EOF
-      | T_ELLIPSIS ->
-          (* (... is definitely the beginning of a param list *)
-          ParamList (function_param_list_without_parens env [])
-      | T_RPAREN ->
-          (* () or is definitely a param list *)
-          ParamList ([], None)
-      | T_IDENTIFIER ->
-          (* This could be a function parameter or a generic type *)
-          function_param_or_generic_type env
-      | token ->
-          (match primitive token with
-          | None ->
-              (* All params start with an identifier or `...` *)
-              Type (_type env)
-          | Some _ ->
-              (* Don't know if this is (number) or (number: number). The first
-               * is a type, the second is a param. *)
-              match Peek.token ~i:1 env with
-              | T_PLING | T_COLON ->
-                (* Ok this is definitely a parameter *)
-                let name, _ = Parse.identifier_or_reserved_keyword env in
-                if not (should_parse_types env)
-                then error env Error.UnexpectedTypeAnnotation;
-                let optional = Expect.maybe env T_PLING in
-                Expect.token env T_COLON;
-                let typeAnnotation = _type env in
-                if Peek.token env <> T_RPAREN
-                then Expect.token env T_COMMA;
-                let param = Loc.btwn (fst name) (fst typeAnnotation), Type.Function.Param.({
-                  name;
-                  typeAnnotation;
-                  optional;
-                }) in
-                ParamList (function_param_list_without_parens env [param])
-              | _ ->
+      let ret =
+        let env = with_no_anon_function_type false env in
+        match Peek.token env with
+        | T_EOF
+        | T_ELLIPSIS ->
+            (* (... is definitely the beginning of a param list *)
+            ParamList (function_param_list_without_parens env [])
+        | T_RPAREN ->
+            (* () or is definitely a param list *)
+            ParamList ([], None)
+        | T_IDENTIFIER ->
+            (* This could be a function parameter or a generic type *)
+            function_param_or_generic_type env
+        | token ->
+            (match primitive token with
+            | None ->
+                (* All params start with an identifier or `...` *)
                 Type (_type env)
-          )
+            | Some _ ->
+                (* Don't know if this is (number) or (number: number). The first
+                 * is a type, the second is a param. *)
+                match Peek.token ~i:1 env with
+                | T_PLING | T_COLON ->
+                  (* Ok this is definitely a parameter *)
+                  ParamList (function_param_list_without_parens env [])
+                | _ ->
+                  Type (_type env)
+            )
       in
+      (* Now that we allow anonymous parameters in function types, we need to
+       * disambiguate a little bit more *)
+      let ret = match ret with
+      | ParamList _ -> ret
+      | Type _ when no_anon_function_type env -> ret
+      | Type t ->
+          (match Peek.token env with
+          | T_RPAREN ->
+              (* Reinterpret `(type) =>` as a ParamList *)
+              if Peek.token ~i:1 env = T_ARROW
+              then
+                let param = anonymous_function_param env t in
+                ParamList (function_param_list_without_parens env [param])
+              else Type t
+          | T_COMMA ->
+              (* Reinterpret `(type,` as a ParamList *)
+              Expect.token env T_COMMA;
+              let param = anonymous_function_param env t in
+              ParamList (function_param_list_without_parens env [param])
+          | _ -> ret) in
       Expect.token env T_RPAREN;
       ret
 
@@ -685,6 +707,7 @@ end = struct
         (checks_loc, Ast.Type.Predicate.Inferred)
 
     let predicate_opt env =
+      let env = with_no_anon_function_type false env in
       match Peek.token env with
       | T_CHECKS -> Some (predicate env)
       | _ -> None
@@ -1846,7 +1869,13 @@ end = struct
             ([param], None), None, None
           else
             let params = Declaration.function_params env in
-            let returnType, predicate = Type.annotation_and_predicate_opt env in
+            (* There's an ambiguity if you use a function type as the return
+             * type for an arrow function. So we disallow anonymous function
+             * types in arrow function return types unless the function type is
+             * enclosed in parens *)
+            let returnType, predicate = env
+              |> with_no_anon_function_type true
+              |> Type.annotation_and_predicate_opt in
             params, returnType, predicate in
 
         (* It's hard to tell if an invalid expression was intended to be an

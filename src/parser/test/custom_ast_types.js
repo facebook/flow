@@ -166,3 +166,10 @@ def("RestProperty")
 def("Super")
   .bases("Expression")
   .build();
+
+def("FunctionTypeParam")
+  .bases("Node")
+  .build("typeAnnotation", "optional")
+  .field("name", or(def("Identifier"), null))
+  .field("typeAnnotation", def("Type"))
+  .field("optional", Boolean);
