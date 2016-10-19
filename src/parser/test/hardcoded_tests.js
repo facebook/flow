@@ -4705,5 +4705,173 @@ module.exports = {
         },
       },
     },
+    'Function Types with Anonymous Parameters and no Parens': {
+      'type A = string => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name': null,
+            'typeAnnotation.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      'type A = Array<string> => void': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params.0': {
+            'name': null,
+            'typeAnnotation.type': 'GenericTypeAnnotation',
+            'typeAnnotation.typeParameters.params.0.type': 'StringTypeAnnotation',
+          },
+        }
+      },
+      // Anonymous function types are disallowed as arrow function return types
+      // So the `=>` clearly belongs to the arrow function
+      'var f = (): number => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'NumberTypeAnnotation',
+          'body.value': 123,
+        }
+      },
+      'var f = (): string | number => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation': {
+            'type': 'UnionTypeAnnotation',
+            'types.1.type': 'NumberTypeAnnotation',
+          },
+          'body.value': 123,
+        }
+      },
+      // You can write anonymous function types as arrow function return types
+      // if you wrap them in parens
+      'var f = (x): (number => 123) => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'FunctionTypeAnnotation',
+          'body.value': 123,
+        }
+      },
+      // string | (number => boolean)
+      'type A = string | number => boolean;': {
+        'body.0.right': {
+          'type': 'UnionTypeAnnotation',
+          'types.1': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [
+              {
+                'name': null,
+                'typeAnnotation.type': 'NumberTypeAnnotation',
+              }
+            ]
+          },
+        },
+      },
+      // string & (number => boolean)
+      'type A = string & number => boolean;': {
+        'body.0.right': {
+          'type': 'IntersectionTypeAnnotation',
+          'types.1': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [
+              {
+                'name': null,
+                'typeAnnotation.type': 'NumberTypeAnnotation',
+              }
+            ]
+          },
+        },
+      },
+      // (?number) => boolean
+      'type A = ?number => boolean;': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params': [
+            {
+              'name': null,
+              'typeAnnotation.type': 'NullableTypeAnnotation',
+            }
+          ]
+        },
+      },
+      // (number[]) => boolean
+      'type A = number[] => boolean;': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params': [
+            {
+              'name': null,
+              'typeAnnotation.type': 'ArrayTypeAnnotation',
+            }
+          ]
+        },
+      },
+      'type A = (string => boolean) => number': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params': [
+            {
+              'name': null,
+              'typeAnnotation.type': 'FunctionTypeAnnotation',
+            }
+          ]
+        },
+      },
+      // string => (boolean | number)
+      'type A = string => boolean | number;': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params': [
+            {
+              'name': null,
+              'typeAnnotation.type': 'StringTypeAnnotation',
+            }
+          ]
+        }
+      },
+      // Becomes string => (boolean => number)
+      'type A = string => boolean => number;': {
+        'body.0.right': {
+          'type': 'FunctionTypeAnnotation',
+          'params': [
+            {
+              'name': null,
+              'typeAnnotation.type': 'StringTypeAnnotation',
+            }
+          ],
+          'returnType': {
+            'type': 'FunctionTypeAnnotation',
+            'params': [
+              {
+                'name': null,
+                'typeAnnotation.type': 'BooleanTypeAnnotation',
+              }
+            ],
+            'returnType.type': 'NumberTypeAnnotation',
+          }
+        }
+      },
+    },
+    'Invalid Function Types with Anonymous Parameters and no Parens': {
+      // Anonymous function types are disallowed as arrow function return types
+      'var f = (x): number => 123 => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'NumberTypeAnnotation',
+        },
+        'errors.0': {
+          'loc.start.column': 27,
+          'loc.end.column': 29,
+          'message': 'Unexpected token =>'
+        },
+      },
+      'var f = (x): string | number => 123 => 123;': {
+        'body.0.declarations.0.init': {
+          'returnType.typeAnnotation.type': 'UnionTypeAnnotation',
+        },
+        'errors.0': {
+          'loc.start.column': 36,
+          'loc.end.column': 38,
+          'message': 'Unexpected token =>'
+        },
+      },
+    },
   }
 };

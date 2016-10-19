@@ -160,7 +160,7 @@ end = struct
 
     and intersection env =
       let _ = Expect.maybe env T_BIT_AND in
-      let left = prefix env in
+      let left = anon_function_without_parens env in
       intersection_with env left
 
     and intersection_with =
@@ -168,7 +168,7 @@ end = struct
         match Peek.token env with
         | T_BIT_AND ->
             Expect.token env T_BIT_AND;
-            intersections env (prefix env::acc)
+            intersections env (anon_function_without_parens env::acc)
         | _ ->
             let loc, acc = rev_nonempty_acc acc in
             match acc with
@@ -178,6 +178,21 @@ end = struct
         if Peek.token env = T_BIT_AND
         then intersections env [left]
         else left
+
+
+    and anon_function_without_parens env =
+      let param = prefix env in
+      anon_function_without_parens_with env param
+
+    and anon_function_without_parens_with env param =
+      match Peek.token env with
+      | T_ARROW when not (no_anon_function_type env)->
+        let start_loc, typeParameters, params =
+          let param = anonymous_function_param env param in
+          fst param, None, ([param], None)
+        in
+        function_with_params env start_loc typeParameters params
+      | _ -> param
 
     and prefix env =
       match Peek.token env with
@@ -412,29 +427,27 @@ end = struct
           ignore (Expect.maybe env T_COMMA);
           ParamList (function_param_list_without_parens env [param])
       | _ ->
-          Type (union_with env
-                  (intersection_with env
-                    (postfix_with env (generic_type_with_identifier env id)))
-                )
+          Type (
+            generic_type_with_identifier env id
+            |> postfix_with env
+            |> anon_function_without_parens_with env
+            |> intersection_with env
+            |> union_with env
+          )
 
     and function_or_group env =
       let start_loc = Peek.loc env in
       match param_list_or_type env with
-      | ParamList params ->
-        Expect.token env T_ARROW;
-        let returnType = _type env in
-        let end_loc = fst returnType in
-        Loc.btwn start_loc end_loc, Type.(Function Function.({
-          params;
-          returnType;
-          typeParameters = None;
-        }))
+      | ParamList params -> function_with_params env start_loc None params
       | Type _type -> _type
 
     and _function env =
       let start_loc = Peek.loc env in
       let typeParameters = type_parameter_declaration ~allow_default:false env in
       let params = function_param_list env in
+      function_with_params env start_loc typeParameters params
+
+    and function_with_params env start_loc typeParameters params =
       Expect.token env T_ARROW;
       let returnType = _type env in
       let end_loc = fst returnType in
