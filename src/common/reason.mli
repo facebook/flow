@@ -30,6 +30,10 @@ type reason_desc =
   | RFunctionType
   | RFunctionBody
   | RFunctionCall
+  | RJSXFunctionCall of string
+  | RJSXIdentifier of string * string
+  | RJSXElementProps of string
+  | RJSXElement of string option
   | RAnyObject
   | RAnyFunction
   | RUnknownString

@@ -90,6 +90,7 @@ let stub_metadata ~root ~checked = { Context.
   suppress_types = SSet.empty;
   verbose = None;
   weak = false;
+  jsx = None;
 }
 
 let get_master_cx =

@@ -3178,7 +3178,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | RObjectPatternRestProp
       | RFunction _
       | RArrowFunction _
-      | RReactElementProps _ -> true
+      | RReactElementProps _
+      | RJSXElementProps _ -> true
       | _ -> lflags.frozen
       in
 

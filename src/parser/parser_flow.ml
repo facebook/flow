@@ -70,6 +70,7 @@ module rec Parse : sig
   val expression : env -> Ast.Expression.t
   val conditional : env -> Ast.Expression.t
   val assignment : env -> Ast.Expression.t
+  val left_hand_side : env -> Ast.Expression.t
   val object_initializer : env -> Loc.t * Ast.Expression.Object.t
   val array_initializer : env -> Loc.t * Ast.Expression.Array.t
   val identifier : ?restricted_error:Error.t -> env -> Ast.Identifier.t
@@ -1478,8 +1479,10 @@ end = struct
 
     and left_hand_side env =
       let start_loc = Peek.loc env in
+      let allow_new = not (no_new env) in
+      let env = with_no_new false env in
       let expr = match Peek.token env with
-      | T_NEW -> new_expression env
+      | T_NEW when allow_new -> new_expression env
       | _ when Peek.is_function env -> _function env
       | _ -> primary env in
       let expr = member env start_loc expr in
@@ -4461,6 +4464,7 @@ end = struct
 
   and conditional = Expression.conditional
   and assignment = Expression.assignment
+  and left_hand_side = Expression.left_hand_side
   and object_initializer = Object._initializer
   and object_key = Object.key
   and class_declaration = Object.class_declaration
@@ -4591,3 +4595,13 @@ let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content file
   | _ ->
     error_unexpected env;
     raise (Error.Error (errors env))
+
+let jsx_pragma_expression =
+  let left_hand_side env =
+    let ast = Parse.left_hand_side (with_no_new true env) in
+    Expect.token env T_EOF;
+    ast
+
+  in fun content filename ->
+    let env = init_env ~token_sink:None ~parse_options:None filename content in
+    do_parse env left_hand_side true

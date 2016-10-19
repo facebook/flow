@@ -66,6 +66,7 @@ val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
 val no_anon_function_type : env -> bool
+val no_new : env -> bool
 val errors : env -> (Loc.t * Parse_error.t) list
 val parse_options : env -> parse_options
 val source : env -> Loc.filename option
@@ -93,6 +94,7 @@ val with_no_let : bool -> env -> env
 val with_in_loop : bool -> env -> env
 val with_no_in : bool -> env -> env
 val with_no_anon_function_type : bool -> env -> env
+val with_no_new : bool -> env -> env
 val with_in_switch : bool -> env -> env
 val with_in_export : bool -> env -> env
 val with_no_call : bool -> env -> env

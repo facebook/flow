@@ -18,59 +18,124 @@ type t = {
   preventMunge: bool option;
   providesModule: string option;
   isDeclarationFile: bool;
+  jsx: (string * Spider_monkey_ast.Expression.t) option;
 }
 
 type error = Loc.t * error_kind
 and error_kind =
   | MultipleFlowAttributes
   | MultipleProvidesModuleAttributes
+  | MultipleJSXAttributes
+  | InvalidJSXAttribute of string option
 
 let default_info = {
   flow = None;
   preventMunge = None;
   providesModule = None;
   isDeclarationFile = false;
+  jsx = None;
 }
 
 (* Avoid lexing unbounded in perverse cases *)
 let max_tokens = 10
 
 let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
-  let words_rx = Str.regexp "[ \t\r\n\\*/]+" in
-
   (* walks a list of words, returns a list of errors and the extracted info.
      if @flow or @providesModule is found more than once, the first one is used
      and an error is returned. *)
-  let rec parse_attributes (errors, info) loc = function
-    | "@flow" :: "weak" :: xs ->
+  let rec parse_attributes (errors, info) = function
+    | (loc, "@flow") :: (_, "weak") :: xs ->
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
           else errors, { info with flow = Some OptInWeak } in
-        parse_attributes acc loc xs
-    | "@flow" :: xs ->
+        parse_attributes acc xs
+    | (loc, "@flow") :: xs ->
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
           else errors, { info with flow = Some OptIn } in
-        parse_attributes acc loc xs
-    | "@noflow" :: xs ->
+        parse_attributes acc xs
+    | (loc, "@noflow") :: xs ->
         let acc =
           if info.flow <> None then (loc, MultipleFlowAttributes)::errors, info
           else errors, { info with flow = Some OptOut } in
-        parse_attributes acc loc xs
-    | "@providesModule" :: m :: xs ->
+        parse_attributes acc xs
+    | (loc, "@providesModule") :: (_, m) :: xs ->
         let acc =
           if info.providesModule <> None then
             (loc, MultipleProvidesModuleAttributes)::errors, info
           else
             errors, { info with providesModule = Some m }
         in
-        parse_attributes acc loc xs
-    | "@preventMunge" :: xs ->
+        parse_attributes acc xs
+    | (_, "@preventMunge") :: xs ->
         (* dupes are ok since they can only be truthy *)
-        parse_attributes (errors, { info with preventMunge = Some true }) loc xs
+        let preventMunge = Some true in
+        parse_attributes (errors, { info with preventMunge }) xs
+    | [jsx_loc, "@jsx"] -> (jsx_loc, InvalidJSXAttribute None)::errors, info
+    | (jsx_loc, "@jsx") :: (expr_loc, expr) :: xs ->
+        let acc =
+          if info.jsx <> None
+          then (jsx_loc, MultipleJSXAttributes)::errors, info
+          else begin
+            (* The point of the padding is to make the parsed code line up
+             * with the comment in the original source *)
+            let padding = (String.make Loc.(expr_loc.start.line - 1) '\n') ^
+              (String.make Loc.(expr_loc.start.column) ' ') in
+            try
+              let (jsx_expr, _) = Parser_flow.jsx_pragma_expression
+                (padding ^ expr)
+                expr_loc.Loc.source in
+              errors, { info with jsx = Some (expr, jsx_expr) }
+            with
+            | Parse_error.Error [] ->
+                (expr_loc, InvalidJSXAttribute None)::errors, info
+            | Parse_error.Error ((_, e)::_) ->
+                let first_error = Some (Parse_error.PP.error e) in
+                (expr_loc, InvalidJSXAttribute first_error)::errors, info
+          end in
+        parse_attributes acc xs
+
     | _ :: xs ->
-        parse_attributes (errors, info) loc xs
+        parse_attributes (errors, info) xs
     | [] -> (errors, info)
+  in
+
+  let attributes_rx = Str.regexp "[ \t\r\n\\*/]+" in
+  let lines_rx = Str.regexp "\\(\r\n\\|\n\\|\r\\)" in
+  let calc_end start s =
+    Str.full_split lines_rx s
+    |> List.fold_left Loc.(fun _end elem ->
+      match elem with
+      | Str.Delim delim ->
+          let line_incr = if "delim" = "\r" then 0 else 1 in
+          let column = 0 in
+          let line = _end.line + line_incr in
+          let offset = _end.offset + (String.length delim) in
+          { column; line; offset; }
+      | Str.Text text ->
+          let length = String.length text in
+          let column = _end.column + length in
+          let offset = _end.offset + length in
+          { _end with column; offset; }
+    ) start in
+  let split loc s =
+    (* Need to add 2 characters for the start of the comment *)
+    let start = Loc.({ loc.start with
+      column = loc.start.column + 2;
+      offset = loc.start.offset + 2;
+    }) in
+    Str.full_split attributes_rx s
+    |> List.fold_left (fun (start, attributes) elem ->
+      match elem with
+      | Str.Delim s ->
+          (calc_end start s, attributes)
+      | Str.Text s ->
+          let _end = calc_end start s in
+          (_end, Loc.({loc with start; _end; }, s)::attributes)
+    ) (start, [])
+    |> snd
+    |> List.rev
+
   in
 
   let string_of_comment = function
@@ -124,7 +189,7 @@ let extract : max_tokens:int -> Loc.filename -> string -> error list * t =
     match get_first_comment_contents env with
       | Some comments ->
           List.fold_left (fun acc (loc, s) ->
-            parse_attributes acc loc (Str.split words_rx s)
+            parse_attributes acc (split loc s)
           ) ([], info) comments
       | None -> [], info
 
@@ -133,6 +198,7 @@ let flow info = info.flow
 let preventMunge info = info.preventMunge
 let providesModule info = info.providesModule
 let isDeclarationFile info = info.isDeclarationFile
+let jsx info = info.jsx
 
 let is_flow info = match info.flow with
   | Some OptIn

@@ -6,19 +6,19 @@ license_with_flow.js:4
 
 multiple_flows_1.js:2
   2: /* @flow */
-     ^^^^^^^^^^^ Unexpected @flow declaration. Only one per file is allowed.
+        ^^^^^ Unexpected @flow declaration. Only one per file is allowed.
 
-multiple_flows_2.js:1
-  1: /**
-     ^ Unexpected @flow declaration. Only one per file is allowed.
+multiple_flows_2.js:3
+  3:  * @noflow
+        ^^^^^^^ Unexpected @flow declaration. Only one per file is allowed.
 
-multiple_providesModule_1.js:1
-  1: /**
-     ^ Unexpected @providesModule declaration. Only one per file is allowed.
+multiple_providesModule_1.js:3
+  3:  * @providesModule Bar
+        ^^^^^^^^^^^^^^^ Unexpected @providesModule declaration. Only one per file is allowed.
 
-multiple_providesModule_2.js:5
-  5: /**
-     ^ Unexpected @providesModule declaration. Only one per file is allowed.
+multiple_providesModule_2.js:6
+  6:  * @providesModule Bar
+        ^^^^^^^^^^^^^^^ Unexpected @providesModule declaration. Only one per file is allowed.
 
 use_strict_with_flow.js:4
   4: ("": void); // error

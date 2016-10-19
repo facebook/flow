@@ -16,6 +16,8 @@ let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
 let apply_docblock_overrides metadata docblock_info =
   let open Context in
 
+  let metadata = { metadata with jsx = Docblock.jsx docblock_info } in
+
   let metadata = match Docblock.flow docblock_info with
   | None -> metadata
   | Some Docblock.OptIn -> { metadata with checked = true; }
