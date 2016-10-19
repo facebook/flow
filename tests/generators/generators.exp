@@ -169,16 +169,28 @@ generators.js:101
             ^^^^^^ string
 
 return.js:5
-  5:   (ret.done: false); // Error true ~> false
-        ^^^^^^^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
-  5:   (ret.done: false); // Error true ~> false
-                  ^^^^^ boolean literal `false`
+  5:   (ret.value: void); // error: string | number ~> void
+        ^^^^^^^^^ number. This type is incompatible with
+  5:   (ret.value: void); // error: string | number ~> void
+                   ^^^^ undefined
 
-return.js:6
-  6:   (ret.value: 456); // Error 123 ~> 456
-        ^^^^^^^^^ number. Expected number literal `456`, got `123` instead
-  6:   (ret.value: 456); // Error 123 ~> 456
-                   ^^^ number literal `456`
+return.js:5
+  5:   (ret.value: void); // error: string | number ~> void
+        ^^^^^^^^^ string. This type is incompatible with
+  5:   (ret.value: void); // error: string | number ~> void
+                   ^^^^ undefined
+
+return.js:20
+ 20:   (refuse_return_result.value: string); // error: number | void ~> string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 20:   (refuse_return_result.value: string); // error: number | void ~> string
+                                    ^^^^^^ string
+
+return.js:20
+ 20:   (refuse_return_result.value: string); // error: number | void ~> string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with
+ 20:   (refuse_return_result.value: string); // error: number | void ~> string
+                                    ^^^^^^ string
 
 throw.js:11
  11:   (catch_return_value : string); // error: number ~> string
@@ -193,4 +205,4 @@ throw.js:24
                             ^^^^^^ string
 
 
-Found 32 errors
+Found 34 errors
