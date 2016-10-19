@@ -1,0 +1,20 @@
+{
+  'body': {
+    '0': {
+      'expression': {
+        'body': {
+          'body': {
+            '0': {
+              'range': { '1': 16 },
+              'loc': { 'end': { 'column': 16 }},
+              'body': {
+                'range': { '1': 16 },
+                'loc': { 'end': { 'column': 16 }},
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  'body': {
+    '0': {
+      'cases': {
+        '1': {
+          'range': { '1': 54 },
+          'loc': { 'end': { 'column': 54 }},
+          'consequent': {
+            '0': {
+              'range': { '1': 54 },
+              'loc': { 'end': { 'column': 54 }},
+            }
+          }
+        }
+      }
+    }
+  }
+}

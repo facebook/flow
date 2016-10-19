@@ -1,0 +1,17 @@
+{
+  "body": {
+    "0": {
+      "expression": {
+        "left": {
+          "properties": {
+            "2": {
+              "value": {
+                "operator": undefined
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

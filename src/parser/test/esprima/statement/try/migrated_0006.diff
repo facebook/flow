@@ -1,0 +1,24 @@
+{
+  'body': {
+    '0': {
+      'handler': {
+        'body': {
+          'body': {
+            '0': {
+              'range': { '1': 36 },
+              'loc': { 'end': { 'column': 36 }}
+            }
+          }
+        }
+      },
+      'finalizer': {
+        'body': {
+          '0': {
+            'range': { '1': 63 },
+            'loc': { 'end': { 'column': 63 }}
+          }
+        }
+      }
+    }
+  }
+}

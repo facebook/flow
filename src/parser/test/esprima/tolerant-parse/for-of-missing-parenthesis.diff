@@ -1,0 +1,13 @@
+{
+  "errors": {
+    "0": {
+      "lineNumber": undefined,
+      "index": undefined,
+      "column": undefined,
+      "loc": {
+        "start": { "line": 3, "column": 0 },
+        "end": { "line": 3, "column": 0 }
+      }
+    }
+  }
+}

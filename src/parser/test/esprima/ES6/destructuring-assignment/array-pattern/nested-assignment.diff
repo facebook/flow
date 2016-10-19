@@ -1,0 +1,18 @@
+{
+  "body": {
+    "0": {
+      "expression": {
+        "left": {
+          "elements": {
+            "1": {
+              "operator": undefined
+            },
+            "2": {
+              "operator": undefined
+            }
+          }
+        }
+      }
+    }
+  }
+}
