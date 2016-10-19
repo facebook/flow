@@ -5549,7 +5549,12 @@ and check_polarity cx polarity = function
     check_polarity cx Neutral t
 
   | ObjT (_, obj) ->
-    check_polarity_propmap cx obj.props_tmap
+    check_polarity_propmap cx obj.props_tmap;
+    (match obj.dict_t with
+    | Some { key; value; dict_polarity; _ } ->
+      check_polarity cx dict_polarity key;
+      check_polarity cx dict_polarity value
+    | None -> ())
 
   | IdxWrapper (_, obj) -> check_polarity cx polarity obj
 

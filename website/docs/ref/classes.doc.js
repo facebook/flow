@@ -228,7 +228,7 @@ var mapOfA: ReadWriteMap<string, A> = mapOfB;
 */
 
 class ReadOnlyMap<K, +V> {
-  store: { [k:K]: V };
+  store: { +[k:K]: V };
   constructor(store) { this.store = store; }
   get(k: K): ?V { return this.store[k]; }
 }

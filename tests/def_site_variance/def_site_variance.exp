@@ -18,5 +18,37 @@ test.js:13
  10:   v1: Variance<A,B>,
                       ^ B
 
+test.js:18
+ 18:   inv1: Out; // error
+             ^^^ Out. invariant position (expected `Out` to occur only covariantly)
 
-Found 4 errors
+test.js:19
+ 19:   inv2: In; // error
+             ^^ In. invariant position (expected `In` to occur only contravariantly)
+
+test.js:20
+ 20:   -co1: Out; // error
+             ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
+
+test.js:23
+ 23:   +con2: In; // error
+              ^^ In. covariant position (expected `In` to occur only contravariantly)
+
+test.js:25
+ 25:   inv_dict1: {[k:string]: Out}; // error
+                               ^^^ Out. invariant position (expected `Out` to occur only covariantly)
+
+test.js:26
+ 26:   inv_dict2: {[k:string]: In}; // error
+                               ^^ In. invariant position (expected `In` to occur only contravariantly)
+
+test.js:28
+ 28:   co_dict2: {+[k:string]: In}; // error
+                               ^^ In. covariant position (expected `In` to occur only contravariantly)
+
+test.js:29
+ 29:   con_dict1: {-[k:string]: Out}; // error
+                                ^^^ Out. contravariant position (expected `Out` to occur only covariantly)
+
+
+Found 12 errors
