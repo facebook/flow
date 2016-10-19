@@ -85,7 +85,7 @@ and Type : sig
     end
     module Indexer: sig
       type t' = {
-        id: Identifier.t;
+        id: Identifier.t option;
         key: Type.t;
         value: Type.t;
         static: bool;

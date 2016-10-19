@@ -4873,5 +4873,25 @@ module.exports = {
         },
       },
     },
+    'Optional indexer name': {
+      'type A = { [string]: number };': {
+        'body.0.right.indexers': [
+          {
+            'id': null,
+            'key.type': 'StringTypeAnnotation',
+            'value.type': 'NumberTypeAnnotation',
+          }
+        ]
+      },
+      'type A = { [string | boolean]: number };': {
+        'body.0.right.indexers': [
+          {
+            'id': null,
+            'key.type': 'UnionTypeAnnotation',
+            'value.type': 'NumberTypeAnnotation',
+          }
+        ]
+      },
+    },
   }
 };

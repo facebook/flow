@@ -506,8 +506,13 @@ end = struct
 
       in let indexer_property env start_loc static variance =
         Expect.token env T_LBRACKET;
-        let id, _ = Parse.identifier_or_reserved_keyword env in
-        Expect.token env T_COLON;
+        let id =
+          if Peek.token ~i:1 env = T_COLON
+          then begin
+            let id, _ = Parse.identifier_or_reserved_keyword env in
+            Expect.token env T_COLON;
+            Some id
+          end else None in
         let key = _type env in
         Expect.token env T_RBRACKET;
         Expect.token env T_COLON;

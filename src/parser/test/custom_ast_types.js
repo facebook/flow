@@ -173,3 +173,10 @@ def("FunctionTypeParam")
   .field("name", or(def("Identifier"), null))
   .field("typeAnnotation", def("Type"))
   .field("optional", Boolean);
+
+def("ObjectTypeIndexer")
+  .bases("Node")
+  .build("id", "key", "value")
+  .field("id", or(def("Identifier"), null))
+  .field("key", def("Type"))
+  .field("value", def("Type"));

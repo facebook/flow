@@ -561,7 +561,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     match indexers with
     | [] -> true, None
     | (_, { Object.Indexer.id; key; value; variance; _ })::rest ->
-        let _, { Ast.Identifier.name; _ } = id in
+        let dict_name = match id with
+        | Some (_, { Ast.Identifier.name; _; }) -> Some name
+        | None -> None in
         (* TODO: multiple indexers *)
         List.iter (fun (indexer_loc, _) ->
           let msg = "multiple indexers are not supported" in
@@ -571,7 +573,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         let valuet = convert cx tparams_map value in
         false,
         Some { Type.
-          dict_name = Some name;
+          dict_name;
           key = keyt;
           value = valuet;
           dict_polarity = polarity variance;

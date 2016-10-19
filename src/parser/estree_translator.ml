@@ -1013,7 +1013,7 @@ end with type t = Impl.t) = struct
 
   and object_type_indexer (loc, indexer) = Type.Object.Indexer.(
     node "ObjectTypeIndexer" loc [|
-      "id", identifier indexer.id;
+      "id", option identifier indexer.id;
       "key", _type indexer.key;
       "value", _type indexer.value;
       "static", bool indexer.static;
