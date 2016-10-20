@@ -1609,11 +1609,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       let module_t = ModuleT (module_t_reason, exporttypes) in
 
+      let extract_named_exports id =
+        Context.find_props cx id
+        |> SMap.filter (fun x _ -> not (is_munged_prop_name cx x))
+        |> Properties.extract_named_exports
+      in
+
       (* Copy fields *)
       let module_t = mk_tvar_where cx reason (fun t ->
         rec_flow cx trace (module_t, ExportNamedT(
           reason,
-          Properties.extract_named_exports (Context.find_props cx fields_tmap),
+          extract_named_exports fields_tmap,
           t
         ))
       ) in
@@ -1621,7 +1627,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Copy methods *)
       rec_flow cx trace (module_t, ExportNamedT(
         reason,
-        Properties.extract_named_exports (Context.find_props cx methods_tmap),
+        extract_named_exports methods_tmap,
         t_out
       ))
 
