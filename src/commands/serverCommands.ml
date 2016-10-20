@@ -62,6 +62,7 @@ module OptionParser(Config : CONFIG) = struct
     |> shm_hash_table_pow_flag
     |> shm_log_level_flag
     |> from_flag
+    |> quiet_flag
     |> anon "root" (optional string) ~doc:"Root directory"
   )
 
@@ -73,8 +74,6 @@ module OptionParser(Config : CONFIG) = struct
           ~doc:"Output errors in JSON format"
       |> flag "--profile" no_arg
           ~doc:"Output profiling information"
-      |> flag "--quiet" no_arg
-          ~doc:"Suppress info messages to stdout (included in --json)"
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> common_args
@@ -84,7 +83,6 @@ module OptionParser(Config : CONFIG) = struct
       |> dummy Options.default_error_flags (* error_flags *)
       |> dummy false (* json *)
       |> dummy false (* profile *)
-      |> dummy false (* quiet *)
       |> dummy None  (* log-file *)
       |> dummy false (* wait *)
       |> common_args
@@ -95,7 +93,6 @@ module OptionParser(Config : CONFIG) = struct
       |> flag "--json" no_arg
           ~doc:"Respond in JSON format"
       |> dummy false (* profile *)
-      |> dummy false (* quiet *)
       |> flag "--log-file" string
           ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.log)"
       |> flag "--wait" no_arg
@@ -168,7 +165,6 @@ module OptionParser(Config : CONFIG) = struct
       error_flags
       json
       profile
-      quiet
       log_file
       wait
       debug
@@ -190,6 +186,7 @@ module OptionParser(Config : CONFIG) = struct
       shm_hash_table_pow
       shm_log_level
       from
+      quiet
       root
       () =
 

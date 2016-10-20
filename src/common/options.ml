@@ -97,6 +97,7 @@ let includes opts = opts.opt_includes
 let is_check_mode opts = opts.opt_check_mode
 let is_debug_mode opts = opts.opt_debug
 let is_server_mode opts = opts.opt_server_mode
+let is_quiet opts = opts.opt_quiet
 let lib_paths opts = opts.opt_libs
 let log_file opts = opts.opt_log_file
 let max_header_tokens opts = opts.opt_max_header_tokens
