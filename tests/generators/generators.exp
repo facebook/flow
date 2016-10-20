@@ -1,7 +1,3 @@
-async.js:4
-  4: async function *unsupported() {}
-                     ^^^^^^^^^^^ A function may not be both async and a generator
-
 class.js:4
   4:     yield ""; // error: string ~> number
                ^^ string. This type is incompatible with
@@ -217,4 +213,4 @@ throw.js:24
                             ^^^^^^ string
 
 
-Found 36 errors
+Found 35 errors

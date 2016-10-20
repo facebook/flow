@@ -62,7 +62,7 @@ let summarize cx t = match t with
 
 let function_desc ~async ~generator =
   match async, generator with
-  | true, true -> assert_false "async && generator"
+  | true, true -> RAsyncGenerator
   | true, false -> RAsync
   | false, true -> RGenerator
   | false, false -> RNormal
@@ -916,32 +916,41 @@ and statement cx = Ast.Statement.(
           else
             expression cx expr
       in
-      let t =
-        if Env.in_async_scope () then
-          (* Convert the return expression's type T to Promise<T>. If the
-           * expression type is itself a Promise<T>, ensure we still return
-           * a Promise<T> via Promise.resolve. *)
-          let reason = mk_reason (RCustom "async return") loc in
-          Flow.get_builtin_typeapp cx reason "Promise" [
-            Flow.mk_tvar_derivable_where cx reason (fun tvar ->
-              let funt = Flow.get_builtin cx "$await" reason in
-              let callt = Flow.mk_functiontype [t] tvar in
-              let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
-              Flow.flow cx (funt, CallT (reason, callt))
-            )
-          ]
-        else if Env.in_generator_scope () then
-          (* Convert the return expression's type R to Generator<Y,R,N>, where
-           * Y and R are internals, installed earlier. *)
-          let reason = mk_reason (RCustom "generator return") loc in
-          Flow.get_builtin_typeapp cx reason "Generator" [
-            Env.get_var cx (internal_name "yield") reason;
-            Flow.mk_tvar_derivable_where cx reason (fun tvar ->
-              Flow.flow_t cx (t, tvar)
-            );
-            Env.get_var cx (internal_name "next") reason
-          ]
-        else t
+      let t = match Env.var_scope_kind () with
+      | Scope.Async ->
+        (* Convert the return expression's type T to Promise<T>. If the
+         * expression type is itself a Promise<T>, ensure we still return
+         * a Promise<T> via Promise.resolve. *)
+        let reason = mk_reason (RCustom "async return") loc in
+        Flow.get_builtin_typeapp cx reason "Promise" [
+          Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+            let funt = Flow.get_builtin cx "$await" reason in
+            let callt = Flow.mk_functiontype [t] tvar in
+            let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
+            Flow.flow cx (funt, CallT (reason, callt))
+          )
+        ]
+      | Scope.Generator ->
+        (* Convert the return expression's type R to Generator<Y,R,N>, where
+         * Y and R are internals, installed earlier. *)
+        let reason = mk_reason (RCustom "generator return") loc in
+        Flow.get_builtin_typeapp cx reason "Generator" [
+          Env.get_var cx (internal_name "yield") reason;
+          Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+            Flow.flow_t cx (t, tvar)
+          );
+          Env.get_var cx (internal_name "next") reason
+        ]
+      | Scope.AsyncGenerator ->
+        let reason = mk_reason (RCustom "async generator return") loc in
+        Flow.get_builtin_typeapp cx reason "AsyncGenerator" [
+          Env.get_var cx (internal_name "yield") reason;
+          Flow.mk_tvar_derivable_where cx reason (fun tvar ->
+            Flow.flow_t cx (t, tvar)
+          );
+          Env.get_var cx (internal_name "next") reason
+        ]
+      | _ -> t
       in
       Flow.flow cx (t, UseT (FunReturn, ret));
       Env.reset_current_activation reason;
@@ -1379,18 +1388,24 @@ and statement cx = Ast.Statement.(
         then Env.havoc_vars newset
       )
 
-  | (loc, ForOf { ForOf.left; right; body; }) ->
+  | (loc, ForOf { ForOf.left; right; body; async; }) ->
       let reason = mk_reason (RCustom "for-of") loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
       let t = expression cx right in
 
       let element_tvar = Flow.mk_tvar cx reason in
-      let o = Flow.get_builtin_typeapp
-        cx
-        (mk_reason (RCustom "iteration expected on Iterable") loc)
-        "$Iterable"
-        [element_tvar; AnyT.at loc; AnyT.at loc] in
+      let o =
+        let targs = [element_tvar; AnyT.at loc; AnyT.at loc] in
+        if async then
+          Flow.get_builtin_typeapp cx
+            (mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
+            "$AsyncIterable" targs
+        else
+          Flow.get_builtin_typeapp cx
+            (mk_reason (RCustom "iteration expected on Iterable") loc)
+            "$Iterable" targs
+      in
 
       Flow.flow_t cx (t, o); (* null/undefined are NOT allowed *)
 
@@ -2979,10 +2994,17 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let ret = Flow.mk_tvar cx ret_reason in
 
       (* widen yield with the element type of the delegated-to iterable *)
-      let iterable = Flow.get_builtin_typeapp cx
-        (mk_reason (RCustom "iteration expected on Iterable") loc)
-        "$Iterable"
-        [yield; ret; next] in
+      let iterable =
+        let targs = [yield; ret; next] in
+        if Env.in_async_scope () then
+          Flow.get_builtin_typeapp cx
+            (mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
+            "$AsyncIterable" targs
+        else
+          Flow.get_builtin_typeapp cx
+            (mk_reason (RCustom "iteration expected on Iterable") loc)
+            "$Iterable" targs
+      in
       Flow.flow_t cx (t, iterable);
 
       ret

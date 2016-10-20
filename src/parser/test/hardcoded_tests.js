@@ -3253,50 +3253,92 @@ module.exports = {
       "import async from 'foo'": {},
       "import await from 'foo'": {},
     },
-    'Invalid Async Generators': {
+    'Async Generators': {
       'async function *foo() {}' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+        'errors': [],
+        'body.0': {
+          'type': 'FunctionDeclaration',
+          'async': true,
+          'generator': true,
         },
       },
-      'async function *ft<T>(a: T): void {}' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+      'async function *ft<T>(a: T) {}' : {
+        'errors': [],
+        'body.0': {
+          'type': 'FunctionDeclaration',
+          'async': true,
+          'generator': true,
         },
       },
       'class C { async *m() {} }' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+        'errors': [],
+        'body.0.body.body.0': {
+          'type': 'MethodDefinition',
+          'value': {
+            'type': 'FunctionExpression',
+            'async': true,
+            'generator': true,
+          },
         },
       },
-      'class C { async *mt<T>(a: T): void {} }' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+      'class C { async *mt<T>(a: T) {} }' : {
+        'errors': [],
+        'body.0.body.body.0': {
+          'type': 'MethodDefinition',
+          'value': {
+            'type': 'FunctionExpression',
+            'async': true,
+            'generator': true,
+          },
         },
       },
-      'class C { static async *m(a): void {} }' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+      'class C { static async *m(a) {} }' : {
+        'errors': [],
+        'body.0.body.body.0': {
+          'type': 'MethodDefinition',
+          'value': {
+            'type': 'FunctionExpression',
+            'async': true,
+            'generator': true,
+          },
         },
       },
-      'class C { static async *mt<T>(a: T): void {} }' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+      'class C { static async *mt<T>(a: T) {} }' : {
+        'errors': [],
+        'body.0.body.body.0': {
+          'type': 'MethodDefinition',
+          'value': {
+            'type': 'FunctionExpression',
+            'async': true,
+            'generator': true,
+          },
         },
       },
       'var e = async function *() {};' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+        'errors': [],
+        'body.0.declarations.0.init': {
+          'type': 'FunctionExpression',
+          'async': true,
+          'generator': true,
         },
       },
-      'var et = async function*<T> (a: T): void {};' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+      'var et = async function*<T> (a: T) {};' : {
+        'errors': [],
+        'body.0.declarations.0.init': {
+          'type': 'FunctionExpression',
+          'async': true,
+          'generator': true,
         },
       },
       'var n = new async function*() {};' : {
-        'errors': {
-          '0.message': 'A function may not be both async and a generator',
+        'errors': [],
+        'body.0.declarations.0.init': {
+          'type': 'NewExpression',
+          'callee': {
+            'type': 'FunctionExpression',
+            'async': true,
+            'generator': true,
+          },
         },
       },
     },
@@ -4893,5 +4935,37 @@ module.exports = {
         ]
       },
     },
+    'For await loops': {
+      'for await (let x of e) {}': {
+        'errors.0': {
+          'loc.start.column': 4,
+          'loc.end.column': 9,
+          'message': 'Unexpected token await'
+        }
+      },
+      'async () => { for await (let x of e) {} }': {
+        'errors': [],
+        'body.0.expression.body.body.0': {
+          'type': 'ForAwaitStatement',
+          'left.type': 'VariableDeclaration',
+          'right.type': 'Identifier',
+          'body.type': 'BlockStatement',
+        }
+      },
+      'async () => { for await (let x in e) {} }': {
+        'errors.0': {
+          'loc.start.column': 31,
+          'loc.end.column': 33,
+          'message': 'Unexpected token in'
+        }
+      },
+      'async () => { for await (let i = 0; i < e; i++) {} }': {
+        'errors.0': {
+          'loc.start.column': 25,
+          'loc.end.column': 34,
+          'message': 'Invalid left-hand side in for-of'
+        }
+      }
+    }
   }
 };

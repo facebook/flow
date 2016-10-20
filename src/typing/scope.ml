@@ -192,6 +192,7 @@ type var_scope_kind =
   | Ordinary        (* function or module *)
   | Async           (* async function *)
   | Generator       (* generator function *)
+  | AsyncGenerator  (* async generator function *)
   | Module          (* module scope *)
   | Global          (* global scope *)
   | Predicate       (* predicate function *)
@@ -200,6 +201,7 @@ let string_of_var_scope_kind = function
 | Ordinary -> "Ordinary"
 | Async -> "Async"
 | Generator -> "Generator"
+| AsyncGenerator -> "AsyncGenerator"
 | Module -> "Module"
 | Global -> "Global"
 | Predicate -> "Predicate"

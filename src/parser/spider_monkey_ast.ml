@@ -347,6 +347,7 @@ and Statement : sig
       left: left;
       right: Expression.t;
       body: Statement.t;
+      async: bool;
     }
   end
   module Let : sig

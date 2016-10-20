@@ -180,3 +180,13 @@ def("ObjectTypeIndexer")
   .field("id", or(def("Identifier"), null))
   .field("key", def("Type"))
   .field("value", def("Type"));
+
+// https://github.com/benjamn/ast-types/issues/186
+def("ForAwaitStatement")
+  .bases("Statement")
+  .build("left", "right", "body")
+  .field("left", or(
+    def("VariableDeclaration"),
+    def("Expression")))
+  .field("right", def("Expression"))
+  .field("body", def("Statement"));

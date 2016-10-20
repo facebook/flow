@@ -136,6 +136,12 @@ let iter_local_scopes f =
 let clone_env scopes =
   List.map Scope.clone scopes
 
+let var_scope_kind () =
+  let scope = peek_var_scope () in
+  match scope.kind with
+  | VarScope k -> k
+  | _ -> assert_false "peek_var_scope returns a VarScope"
+
 (* true iff scope is var scope with the given kind *)
 let is_func_kind k scope =
   match scope.kind with
@@ -143,10 +149,14 @@ let is_func_kind k scope =
   | _ -> false
 
 let in_async_scope () =
-  is_func_kind Async (peek_var_scope ())
+  match var_scope_kind () with
+  | Async | AsyncGenerator -> true
+  | _ -> false
 
 let in_generator_scope () =
-  is_func_kind Generator (peek_var_scope ())
+  match var_scope_kind () with
+  | Generator | AsyncGenerator -> true
+  | _ -> false
 
 let in_predicate_scope () =
   is_func_kind Predicate (peek_var_scope ())

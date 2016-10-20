@@ -182,10 +182,15 @@ end with type t = Impl.t) = struct
       |]
     )
   | loc, ForOf forof -> ForOf.(
+      let type_ =
+        if forof.async
+        then "ForAwaitStatement"
+        else "ForOfStatement"
+      in
       let left = (match forof.left with
       | LeftDeclaration left -> variable_declaration left
       | LeftExpression left -> expression left) in
-      node "ForOfStatement" loc [|
+      node type_ loc [|
         "left", left;
         "right", expression forof.right;
         "body", statement forof.body;

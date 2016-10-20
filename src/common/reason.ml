@@ -185,6 +185,7 @@ type reason_desc =
 and reason_desc_function =
   | RAsync
   | RGenerator
+  | RAsyncGenerator
   | RNormal
 
 type reason = {
@@ -343,6 +344,7 @@ let loc_of_reason r = r.loc
 let function_desc_prefix = function
   | RAsync -> "async "
   | RGenerator -> "generator "
+  | RAsyncGenerator -> "async generator "
   | RNormal -> ""
 
 let rec string_of_desc = function

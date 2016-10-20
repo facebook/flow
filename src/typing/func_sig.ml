@@ -9,6 +9,7 @@ type kind =
   | Ordinary
   | Async
   | Generator
+  | AsyncGenerator
   | FieldInit of Ast.Expression.t
   | Predicate
 
@@ -31,7 +32,7 @@ let return_loc =
 
 let function_kind {Ast.Function.async; generator; predicate; _ } =
   Ast.Type.Predicate.(match async, generator, predicate with
-  | true, true, None -> Utils_js.assert_false "async && generator"
+  | true, true, None -> AsyncGenerator
   | true, false, None -> Async
   | false, true, None -> Generator
   | false, false, None -> Ordinary
@@ -211,6 +212,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
       | Predicate -> Scope.Predicate
       | Async -> Scope.Async
       | Generator -> Scope.Generator
+      | AsyncGenerator -> Scope.AsyncGenerator
     in
     Scope.fresh ~var_scope_kind ()
   in
@@ -249,7 +251,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   );
 
   let yield_t, next_t =
-    if kind = Generator then
+    if kind = Generator || kind = AsyncGenerator then
       Flow.mk_tvar cx (replace_reason_const (RCustom "yield") reason),
       Flow.mk_tvar cx (replace_reason_const (RCustom "next") reason)
     else
@@ -324,6 +326,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
       let return_t = VoidT.at loc in
       FunImplicitReturn,
       Flow.get_builtin_typeapp cx reason "Generator" [yield_t; return_t; next_t]
+    | AsyncGenerator ->
+      let reason = mk_reason (RCustom "AsyncGenerator<Yield,void,Next>") loc in
+      let return_t = VoidT.at loc in
+      FunImplicitReturn,
+      Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; return_t; next_t]
     | FieldInit e ->
       let return_t = expr cx e in
       UnknownUse, return_t

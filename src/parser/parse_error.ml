@@ -65,7 +65,6 @@ type t =
   | StrictFunctionStatement
   | AdjacentJSXElements
   | ParameterAfterRestParameter
-  | AsyncGenerator
   | DeclareAsync
   | DeclareExportLet
   | DeclareExportConst
@@ -156,7 +155,6 @@ module PP =
           "elements must be wrapped in an enclosing parent tag"
       | ParameterAfterRestParameter ->
           "Rest parameter must be final parameter of an argument list"
-      | AsyncGenerator -> "A function may not be both async and a generator"
       | DeclareAsync -> "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
       | DeclareExportLet -> "`declare export let` is not supported. Use \
           `declare export var` instead."

@@ -136,6 +136,7 @@ type reason_desc =
 and reason_desc_function =
   | RAsync
   | RGenerator
+  | RAsyncGenerator
   | RNormal
 
 type reason

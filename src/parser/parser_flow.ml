@@ -928,12 +928,7 @@ end = struct
       | _ ->
           variance
 
-    let generator env is_async =
-      match is_async, Expect.maybe env T_MULT with
-      | true, true ->
-          error env Error.AsyncGenerator;
-          true
-      | _, result -> result
+    let generator env = Expect.maybe env T_MULT
 
     let async env = Expect.maybe env T_ASYNC
 
@@ -949,7 +944,7 @@ end = struct
       let start_loc = Peek.loc env in
       let async = async env in
       Expect.token env T_FUNCTION;
-      let generator = generator env async in
+      let generator = generator env in
       let (typeParameters, id) = (
         match in_export env, Peek.token env with
         | true, T_LPAREN -> (None, None)
@@ -1630,7 +1625,7 @@ end = struct
       let start_loc = Peek.loc env in
       let async = Declaration.async env in
       Expect.token env T_FUNCTION;
-      let generator = Declaration.generator env async in
+      let generator = Declaration.generator env in
       let id, typeParameters =
         if Peek.token env = T_LPAREN
         then None, None
@@ -2092,7 +2087,7 @@ end = struct
     let _method env kind =
       (* this is a getter or setter, it cannot be async *)
       let async = false in
-      let generator = Declaration.generator env async in
+      let generator = Declaration.generator env in
       let key_loc, key = key env in
       let start_loc = Peek.loc env in
       (* It's not clear how type params on getters & setters would make sense
@@ -2152,7 +2147,7 @@ end = struct
            * or not *)
           let async =
             Peek.is_literal_property_name ~i:1 env && Declaration.async env in
-          Property (match async , Declaration.generator env async, key env with
+          Property (match async , Declaration.generator env, key env with
           | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
               "get"; _}) as key)) ->
               (match Peek.token env with
@@ -2445,10 +2440,10 @@ end = struct
           Peek.token ~i:1 env <> T_LPAREN &&
           Peek.token ~i:1 env <> T_COLON &&
           Declaration.async env in
-        let generator = Declaration.generator env async in
+        let generator = Declaration.generator env in
         let variance = Declaration.variance env async generator in
         let generator = match generator, variance with
-        | false, Some _ -> Declaration.generator env async
+        | false, Some _ -> Declaration.generator env
         | _ -> generator
         in
         match (async, generator, key env) with
@@ -2673,6 +2668,7 @@ end = struct
       fun env ->
         let start_loc = Peek.loc env in
         Expect.token env T_FOR;
+        let async = allow_await env && Expect.maybe env T_AWAIT in
         Expect.token env T_LPAREN;
 
         let init, errs =
@@ -2693,6 +2689,24 @@ end = struct
         in
 
         match Peek.token env with
+        (* If `async` is true, this must be a for-await-of loop. *)
+        | t when t = T_OF || async ->
+            assert_can_be_forin_or_forof env Error.InvalidLHSInForOf init;
+            let left = Statement.(match init with
+            | Some (For.InitDeclaration decl) -> ForOf.LeftDeclaration decl
+            | Some (For.InitExpression expr) -> ForOf.LeftExpression expr
+            | None -> assert false) in
+            (* This is a for of loop *)
+            Expect.token env T_OF;
+            let right = Parse.assignment env in
+            Expect.token env T_RPAREN;
+            let body = Parse.statement (env |> with_in_loop true) in
+            Loc.btwn start_loc (fst body), Statement.(ForOf ForOf.({
+              left;
+              right;
+              body;
+              async;
+            }))
         | T_IN ->
             assert_can_be_forin_or_forof env Error.InvalidLHSInForIn init;
             let left = Statement.(match init with
@@ -2709,22 +2723,6 @@ end = struct
               right;
               body;
               each = false;
-            }))
-        | T_OF ->
-            assert_can_be_forin_or_forof env Error.InvalidLHSInForOf init;
-            let left = Statement.(match init with
-            | Some (For.InitDeclaration decl) -> ForOf.LeftDeclaration decl
-            | Some (For.InitExpression expr) -> ForOf.LeftExpression expr
-            | None -> assert false) in
-            (* This is a for of loop *)
-            Expect.token env T_OF;
-            let right = Parse.assignment env in
-            Expect.token env T_RPAREN;
-            let body = Parse.statement (env |> with_in_loop true) in
-            Loc.btwn start_loc (fst body), Statement.(ForOf ForOf.({
-              left;
-              right;
-              body;
             }))
         | _ ->
             (* This is a for loop *)
