@@ -2957,8 +2957,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       | Some expr -> expression cx expr
       | None -> VoidT.at loc in
       Flow.flow_t cx (t, yield);
-      let next = Env.get_var cx (internal_name "next") reason in
-      OptionalT next
+      Env.get_var cx (internal_name "next") reason
 
   | Yield { Yield.argument; delegate = true } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in

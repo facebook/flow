@@ -24,7 +24,7 @@ function *stmt_return_err(): Generator<void, number, void> {
 }
 
 function *infer_stmt() {
-  var x: ?boolean = yield 0;
+  var x: boolean = yield 0;
   return "";
 }
 for (var x of infer_stmt()) { (x : string) } // error: number ~> string
@@ -37,8 +37,7 @@ if (typeof infer_stmt_next === "undefined") {
 
 function *widen_next() {
   var x = yield 0;
-  if (x == null) {
-  } else if (typeof x === "number") {
+  if (typeof x === "number") {
   } else if (typeof x === "boolean") {
   } else {
     (x : string) // ok, sherlock
@@ -63,7 +62,7 @@ for (var x of widen_yield()) {
 
 function *delegate_next_generator() {
   function *inner() {
-    var x: ?number = yield; // error: string ~> number
+    var x: number = yield; // error: string ~> number
   }
   yield *inner();
 }
@@ -114,9 +113,7 @@ function *generic_return<R>(r: R): Generator<void,R,void> {
 }
 
 function *generic_next<N>(): Generator<void,N,N> {
-  var n = yield undefined;
-  if (n == null) throw new Error();
-  return n;
+  return yield undefined;
 }
 
 function *multiple_return(b) {

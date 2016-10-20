@@ -25,14 +25,13 @@ class GeneratorExamples {
   }
 
   *infer_stmt() {
-    var x: ?boolean = yield 0; // error: number ~> boolean
+    var x: boolean = yield 0; // error: number ~> boolean
     return "";
   }
 
   *widen_next() {
     var x = yield 0;
-    if (x == null) {
-    } else if (typeof x === "number") {
+    if (typeof x === "number") {
     } else if (typeof x === "boolean") {
     } else {
       (x : string) // ok, sherlock
@@ -47,7 +46,7 @@ class GeneratorExamples {
 
   *delegate_next_generator() {
     function *inner() {
-      var x: ?number = yield; // error: string ~> number
+      var x: number = yield; // error: string ~> number
     }
     yield *inner();
   }
@@ -90,9 +89,7 @@ class GeneratorExamples {
   }
 
   *generic_next<N>(): Generator<void,N,N> {
-    var n = yield undefined;
-    if (n == null) throw new Error();
-    return n;
+    return yield undefined;
   }
 }
 

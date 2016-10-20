@@ -2,7 +2,7 @@
 
 class GeneratorExamples<X> {
   *infer_stmt() {
-    var x: ?boolean = yield 0; // error: number ~> boolean
+    var x: boolean = yield 0; // error: number ~> boolean
     return "";
   }
 }
