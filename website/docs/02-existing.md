@@ -19,7 +19,7 @@ It is typically a much larger effort, and requires much more programmer annotati
 
 ## Weak mode
 
-Flow has a special mode, known as *weak mode*, to get started with complex library code without having to pay the full cost up front. The difference between weak mode and regular mode is how Flow deals with missing type annotations. In regular mode Flow will infer types for all missing annotations, and produce errors whenever it detects a mismatch. In weak mode, Flow will do much less type inference. It will still infer types within functions, but will otherwise treat unannotated variables as having the [`any`](base-types.html#any) type - meaning no typechecking happens on them.
+Flow has a special mode, known as *weak mode*, to get started with complex library code without having to pay the full cost up front. The difference between weak mode and regular mode is how Flow deals with missing type annotations. In regular mode Flow will infer types for all missing annotations, and produce errors whenever it detects a mismatch. In weak mode, Flow will do much less type inference. It will still infer types within functions, but will otherwise treat unannotated variables as having the [`any`](quick-reference.html#any) type - meaning no typechecking happens on them.
 
 A good first step towards typechecking existing library code is to use weak mode, rather than regular mode. Simply change the header declaration in the file you want to typecheck:
 

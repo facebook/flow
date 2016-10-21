@@ -82,4 +82,4 @@ Read more about testing existing libraries or code in the [Running Flow on exist
 
 As Flow starts to typecheck your files you may run into type errors. Check out the [Troubleshooting](troubleshooting.html) section for common errors and how to resolve them. Your goal is to get the number of errors down to zero as fast as possible so you can continue on with your development.
 
-In some cases, errors may be due to inherent imprecision of the analysis - which means Flow won't always get it right and could give errors that are false positives. In those cases you can either try to refactor your code to help Flow understand it, or you can use the [`any`](base-types.html#any) type to tell Flow about values that should not be checked.
+In some cases, errors may be due to inherent imprecision of the analysis - which means Flow won't always get it right and could give errors that are false positives. In those cases you can either try to refactor your code to help Flow understand it, or you can use the [`any`](quick-reference.html#any) type to tell Flow about values that should not be checked.
