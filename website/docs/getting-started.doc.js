@@ -75,9 +75,9 @@ console.log(str);
   > flow 2> /dev/null
 
   index.js:3
-    3: let str: number = 'hello world!';
+    3: var str: number = 'hello world!';
                          ^^^^^^^^^^^^^^ string. This type is incompatible with
-    3: let str: number = 'hello world!';
+    3: var str: number = 'hello world!';
                 ^^^^^^ number
 
 
