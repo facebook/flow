@@ -109,12 +109,12 @@ let parse_json_file ~fail content file =
   let loc_none = Loc.none in
   let module_exports = loc_none, Expression.(Member { Member.
     _object = loc_none, Identifier (loc_none, { Identifier.
-      name = "module";
+      name = (loc_none, "module");
       typeAnnotation = None;
       optional = false;
     });
     property = Member.PropertyIdentifier (loc_none, { Identifier.
-      name = "exports";
+      name = (loc_none, "exports");
       typeAnnotation = None;
       optional = false;
     });

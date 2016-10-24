@@ -39,8 +39,7 @@ module TypeExSet = Set.Make(struct
   let compare = reasonless_compare
 end)
 
-let ident_name (_, ident) =
-  ident.Ast.Identifier.name
+let ident_name (_, { Ast.Identifier.name = (_, name); _ }) = name
 
 let summarize cx t = match t with
   | OpenT _ ->
@@ -104,9 +103,9 @@ let rec variable_decl cx entry = Ast.Statement.(
   let str_of_kind = Scope.Entry.string_of_value_kind value_kind in
 
   let declarator = Ast.(function
-    | (loc, Pattern.Identifier (_, { Identifier.name; _ })) ->
+    | (loc, Pattern.Identifier (_, { Identifier.name = (id_loc, name); _ })) ->
       let desc = RCustom (spf "%s `%s`" str_of_kind name) in
-      let r = mk_reason desc loc in
+      let r = mk_reason desc id_loc in
       (* A variable declaration may have a type annotation, but trying to
          resolve the type annotation now may lead to errors, since in general it
          may contain types that will be declared later in this scope. So for
@@ -185,7 +184,7 @@ and statement_decl cx = Ast.Statement.(
       (* TODO disallow or push vars into env? *)
       ()
   | (_, TypeAlias { TypeAlias.id; _ } ) ->
-      let name_loc, { Ast.Identifier.name; _ } = id in
+      let name_loc, { Ast.Identifier.name = (_, name); _ } = id in
       let r = DescFormat.type_reason name name_loc in
       let tvar = Flow.mk_tvar cx r in
       Env.bind_type cx name tvar r
@@ -258,7 +257,7 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
       (match id with
-      | Some (_, {Ast.Identifier.name; _}) ->
+      | Some (_, {Ast.Identifier.name = (_, name); _}) ->
         let desc = RFunction (function_desc ~async ~generator) in
         let r = mk_reason desc loc in
         let tvar = Flow.mk_tvar cx r in
@@ -270,15 +269,18 @@ and statement_decl cx = Ast.Statement.(
         )
       )
 
-  | (loc, DeclareVariable { DeclareVariable.id; }) ->
-      let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
+  | (loc, DeclareVariable { DeclareVariable.id = (_, { Ast.Identifier.
+      name = (_, name);
+      typeAnnotation;
+      _;
+    }); }) ->
       let r = mk_reason (RCustom (spf "declare %s" name)) loc in
       let t = Anno.mk_type_annotation cx SMap.empty r typeAnnotation in
       Hashtbl.replace (Context.type_table cx) loc t;
       Env.bind_declare_var cx name t r
 
   | (loc, DeclareFunction { DeclareFunction.id; DeclareFunction.predicate}) ->
-      let _, { Ast.Identifier.name; typeAnnotation; _; } = id in
+      let _, { Ast.Identifier.name = (_, name); typeAnnotation; _; } = id in
       (match declare_function_to_function_declaration cx id predicate with
       | None ->
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
@@ -295,7 +297,7 @@ and statement_decl cx = Ast.Statement.(
   | (_, ClassDeclaration { Ast.Class.id; _ }) -> (
       match id with
       | Some id ->
-        let name_loc, { Ast.Identifier.name; _ } = id in
+        let name_loc, { Ast.Identifier.name = (_, name); _ } = id in
         let r = mk_reason (RCustom (spf "class `%s`" name)) name_loc in
         let tvar = Flow.mk_tvar cx r in
         Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar r
@@ -307,7 +309,7 @@ and statement_decl cx = Ast.Statement.(
       let is_interface = match stmt with
       | (_, InterfaceDeclaration _) -> true
       | _ -> false in
-      let _, { Ast.Identifier.name; _ } = id in
+      let _, { Ast.Identifier.name = (_, name); _ } = id in
       let r = mk_reason (RCustom (spf "class `%s`" name)) loc in
       let tvar = Flow.mk_tvar cx r in
       (* interface is a type alias, declare class is a var *)
@@ -317,12 +319,11 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, DeclareModule { DeclareModule.id; _ }) ->
       let name = match id with
-      | DeclareModule.Identifier (_, id) ->
-        id.Ast.Identifier.name
+      | DeclareModule.Identifier (_, { Ast.Identifier.name = (_, name); _ })
       | DeclareModule.Literal (_, {
-          Ast.Literal.value = Ast.Literal.String str; _;
+          Ast.Literal.value = Ast.Literal.String name; _;
         }) ->
-        str
+        name
       | _ ->
         (* The only literals that we should see as module names are strings *)
         assert false in
@@ -489,7 +490,7 @@ and statement cx = Ast.Statement.(
   in
 
   let interface cx loc structural i =
-    let {Interface.id = (_, {Ast.Identifier.name; _}); _} = i in
+    let {Interface.id = (_, {Ast.Identifier.name = (_, name); _}); _} = i in
     let reason = DescFormat.instance_reason name loc in
     let self = Flow.mk_tvar cx reason in
     let iface_sig =
@@ -509,7 +510,7 @@ and statement cx = Ast.Statement.(
   let catch_clause cx { Try.CatchClause.param; body = (_, b) } =
     Ast.Pattern.(match param with
       | loc, Identifier (_, {
-          Ast.Identifier.name; typeAnnotation = None; _
+          Ast.Identifier.name = (_, name); typeAnnotation = None; _
         }) ->
           let r = mk_reason (RCustom "catch") loc in
           let t = Flow.mk_tvar cx r in
@@ -632,7 +633,7 @@ and statement cx = Ast.Statement.(
       | _ -> ()
       end
 
-  | (_, Labeled { Labeled.label = _, { Ast.Identifier.name; _ }; body }) ->
+  | (_, Labeled { Labeled.label = _, { Ast.Identifier.name = (_, name); _ }; body }) ->
       (match body with
       | (loc, While _)
       | (loc, DoWhile _)
@@ -685,7 +686,7 @@ and statement cx = Ast.Statement.(
       (* save environment at unlabeled breaks, prior to activation clearing *)
       let label_opt, env = match label with
         | None -> None, Env.(clone_env (peek_env ()))
-        | Some (_, { Ast.Identifier.name; _ }) -> Some name, []
+        | Some (_, { Ast.Identifier.name = (_, name); _ }) -> Some name, []
       in
       Env.reset_current_activation (mk_reason (RCustom "break") loc);
       Abnormal.save_and_throw (Abnormal.Break label_opt) ~env
@@ -693,7 +694,7 @@ and statement cx = Ast.Statement.(
   | (loc, Continue { Continue.label }) ->
       let label_opt = match label with
         | None -> None
-        | Some (_, { Ast.Identifier.name; _ }) -> Some name
+        | Some (_, { Ast.Identifier.name = (_, name); _ }) -> Some name
       in
       Env.reset_current_activation (mk_reason (RCustom "continue") loc);
       Abnormal.save_and_throw (Abnormal.Continue label_opt)
@@ -703,7 +704,7 @@ and statement cx = Ast.Statement.(
       ()
 
   | (loc, TypeAlias { TypeAlias.id; typeParameters; right; } ) ->
-      let name_loc, { Ast.Identifier.name; _ } = id in
+      let name_loc, { Ast.Identifier.name = (_, name); _ } = id in
       let r = DescFormat.type_reason name name_loc in
       let typeparams, typeparams_map =
         Anno.mk_type_param_declarations cx typeParameters in
@@ -1489,7 +1490,7 @@ and statement cx = Ast.Statement.(
       in
       Hashtbl.replace (Context.type_table cx) type_table_loc fn_type;
       (match id with
-      | Some(_, {Ast.Identifier.name; _ }) ->
+      | Some(_, {Ast.Identifier.name = (_, name); _ }) ->
         Env.init_fun cx name fn_type reason
       | None -> ())
 
@@ -1627,15 +1628,15 @@ and statement cx = Ast.Statement.(
       let export_info, export_kind =
         match declaration with
         | Some (Variable (loc, v)) ->
-            let { DeclareVariable.id = (_, { Ast.Identifier.name; _; }) } = v in
+            let { DeclareVariable.id = (_, { Ast.Identifier.name = (_, name); _; }) } = v in
             statement cx (loc, DeclareVariable v);
             [(spf "var %s" name, loc, name, None)], ExportValue
         | Some (Function (loc, f)) ->
-            let { DeclareFunction.id = (_, { Ast.Identifier.name; _; }); _ } = f in
+            let { DeclareFunction.id = (_, { Ast.Identifier.name = (_, name); _; }); _ } = f in
             statement cx (loc, DeclareFunction f);
             [(spf "function %s() {}" name, loc, name, None)], ExportValue
         | Some (Class (loc, c)) ->
-            let { Interface.id = (name_loc, { Ast.Identifier.name; _; }); _; }
+            let { Interface.id = (name_loc, { Ast.Identifier.name = (_, name); _; }); _; }
               = c in
             statement cx (loc, DeclareClass c);
             [(spf "class %s {}" name, name_loc, name, None)], ExportValue
@@ -1644,13 +1645,13 @@ and statement cx = Ast.Statement.(
             [( "<<type>>", loc, "default", Some _type)], ExportValue
         | Some (NamedType (talias_loc, ({
             TypeAlias.
-            id = (name_loc, {Ast.Identifier.name; _;});
+            id = (name_loc, {Ast.Identifier.name = (_, name); _;});
             _;
           } as talias))) ->
             statement cx (talias_loc, TypeAlias talias);
             [(spf "type %s = ..." name, name_loc, name, None)], ExportType
         | Some (Interface (loc, i)) ->
-            let {Interface.id = (name_loc, {Ast.Identifier.name; _;}); _;} = i in
+            let {Interface.id = (name_loc, {Ast.Identifier.name = (_, name); _;}); _;} = i in
             statement cx (loc, InterfaceDeclaration i);
             [(spf "interface %s {}" name, name_loc, name, None)], ExportType
         | None ->
@@ -1971,14 +1972,14 @@ and export_statement cx loc
         let (reason, local_name, remote_name) = (
           match specifier with
           | loc, { ExportNamedDeclaration.ExportSpecifier.
-              local = (_, {Ast.Identifier.name=id; _;});
+              local = (_, {Ast.Identifier.name = (_, id); _;});
               exported = None;
             } ->
             let reason = mk_reason (RCustom (spf "export {%s}" id)) loc in
             (reason, id, id)
           | loc, { ExportNamedDeclaration.ExportSpecifier.
-              local = (_, {Ast.Identifier.name=local; _;});
-              exported = Some (_, {Ast.Identifier.name=exported; _;});
+              local = (_, {Ast.Identifier.name = (_, local); _;});
+              exported = Some (_, {Ast.Identifier.name = (_, exported); _;});
             } ->
             let reason =
               mk_reason (RCustom (spf "export {%s as %s}" local exported)) loc
@@ -2059,7 +2060,7 @@ and export_statement cx loc
       let parse_export_star_as = Context.esproposal_export_star_as cx in
       (match star_as_name with
       | Some ident ->
-        let (_, {Ast.Identifier.name; _;}) = ident in
+        let (_, {Ast.Identifier.name = (_, name); _;}) = ident in
         let reason =
           mk_reason
             (RCustom (spf "export * as %s from %S" name source_module_name))
@@ -2123,7 +2124,7 @@ and object_prop cx map = Ast.Expression.Object.(function
   (* name = function expr *)
   | Property (_, { Property.
       kind = Property.Init;
-      key = Property.Identifier (_, { Ast.Identifier.name; _ });
+      key = Property.Identifier (_, { Ast.Identifier.name = (_, name); _ });
       value = (vloc, Ast.Expression.Function func);
       _method;
       _
@@ -2139,7 +2140,7 @@ and object_prop cx map = Ast.Expression.Object.(function
   (* name = non-function expr *)
   | Property (_, { Property.kind = Property.Init;
       key =
-        Property.Identifier (_, { Ast.Identifier.name; _ }) |
+        Property.Identifier (_, { Ast.Identifier.name = (_, name); _ }) |
         Property.Literal (_, {
           Ast.Literal.value = Ast.Literal.String name;
           _;
@@ -2162,7 +2163,7 @@ and object_prop cx map = Ast.Expression.Object.(function
   (* unsafe getter property *)
   | Property (_, {
       Property.kind = Property.Get;
-      key = Property.Identifier (_, { Ast.Identifier.name; _ });
+      key = Property.Identifier (_, { Ast.Identifier.name = (_, name); _ });
       value = (vloc, Ast.Expression.Function func);
       _ })
     when Context.enable_unsafe_getters_and_setters cx ->
@@ -2174,7 +2175,7 @@ and object_prop cx map = Ast.Expression.Object.(function
   (* unsafe setter property *)
   | Property (_, {
     Property.kind = Property.Set;
-      key = Property.Identifier (_, { Ast.Identifier.name; _ });
+      key = Property.Identifier (_, { Ast.Identifier.name = (_, name); _ });
       value = (vloc, Ast.Expression.Function func);
       _ })
     when Context.enable_unsafe_getters_and_setters cx ->
@@ -2278,15 +2279,15 @@ and variable cx kind
   let { VariableDeclaration.Declarator.id; init } = vdecl in
   match id with
     | (loc, Ast.Pattern.Identifier (_, { Ast.Identifier.
-          name; typeAnnotation; optional
+          name = (id_loc, name); typeAnnotation; optional
         })) ->
         (* simple lvalue *)
-        let reason =
-          let desc = RCustom (spf "%s `%s`" str_of_kind name) in
-          mk_reason desc loc
-        in
+        let desc = RCustom (spf "%s `%s`" str_of_kind name) in
+        let reason = mk_reason desc id_loc in
         (* make annotation, unify with declared type created in variable_decl *)
-        let t = Anno.mk_type_annotation cx SMap.empty reason typeAnnotation in
+        let t =
+          let anno_reason = mk_reason desc loc in
+          Anno.mk_type_annotation cx SMap.empty anno_reason typeAnnotation in
         Env.unify_declared_type cx name t;
         let has_anno = not (typeAnnotation = None) in
         (match init with
@@ -2396,7 +2397,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | Ast.Expression.Literal lit ->
       literal cx loc lit
 
-  | Identifier (_, { Ast.Identifier.name; _ }) -> identifier cx name loc
+  | Identifier (_, { Ast.Identifier.name = (_, name); _ }) ->
+      identifier cx name loc
 
   | This ->
       this_ cx (mk_reason RThis loc)
@@ -2444,19 +2446,21 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Member {
       Member._object = _, Identifier (_,
-        { Ast.Identifier.name = "module"; _ });
+        { Ast.Identifier.name = (_, "module"); _ });
       property = Member.PropertyIdentifier (_,
-        { Ast.Identifier.name = "exports"; _ });
+        { Ast.Identifier.name = (_, "exports"); _ });
       _
     } ->
       let reason = mk_reason (RCustom "module.exports") loc in
       get_module_exports cx reason
 
   | Member {
-      Member._object = _, Identifier (_,
-        { Ast.Identifier.name = "ReactGraphQL" | "ReactGraphQLLegacy"; _ });
-      property = Member.PropertyIdentifier (_,
-        { Ast.Identifier.name = "Mixin"; _ });
+      Member._object = _, Identifier (_, { Ast.Identifier.
+        name = (_, "ReactGraphQL") | (_, "ReactGraphQLLegacy"); _
+      });
+      property = Member.PropertyIdentifier (_, { Ast.Identifier.
+        name = (_, "Mixin"); _
+      });
       _
     } ->
       let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
@@ -2465,7 +2469,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | Member {
       Member._object = super_loc, Super;
       property = Member.PropertyIdentifier (ploc,
-        { Ast.Identifier.name; _ });
+        { Ast.Identifier.name = (_, name); _ });
       _
     } ->
       let expr_reason = mk_reason (RProperty name) loc in
@@ -2489,7 +2493,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Member {
       Member._object;
-      property = Member.PropertyIdentifier (ploc, { Ast.Identifier.name; _ });
+      property = Member.PropertyIdentifier (ploc, { Ast.Identifier.
+        name = (_, name); _
+      });
       _
     } -> (
       let expr_reason = mk_reason (RProperty name) loc in
@@ -2577,7 +2583,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = _, Identifier (_, {
-        Ast.Identifier.name = "require";
+        Ast.Identifier.name = (_, "require");
         _
       });
       arguments
@@ -2601,7 +2607,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = _, Identifier (_, {
-        Ast.Identifier.name = "requireLazy";
+        Ast.Identifier.name = (_, "requireLazy");
         _
       });
       arguments
@@ -2654,7 +2660,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     )
 
   | New {
-      New.callee = _, Identifier (_, { Ast.Identifier.name = "Function"; _ });
+      New.callee = _, Identifier (_, { Ast.Identifier.
+        name = (_, "Function"); _
+      });
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2672,7 +2680,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     )
 
   | New {
-      New.callee = _, Identifier (_, { Ast.Identifier.name = "Array"; _ });
+      New.callee = _, Identifier (_, { Ast.Identifier.
+        name = (_, "Array"); _
+      });
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2699,9 +2709,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | Call {
       Call.callee = (_, Member {
         Member._object = (_, Identifier (_,
-          { Ast.Identifier.name = "Object"; _ }) as obj);
+          { Ast.Identifier.name = (_, "Object"); _ }) as obj);
         property = Member.PropertyIdentifier (prop_loc,
-          { Ast.Identifier.name; _ });
+          { Ast.Identifier.name = (_, name); _ });
         _
       } as expr);
       arguments
@@ -2712,9 +2722,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   | Call {
       Call.callee = _, Member {
         Member._object = _, Identifier (_,
-          { Ast.Identifier.name = "React"; _ });
+          { Ast.Identifier.name = (_, "React"); _ });
         property = Member.PropertyIdentifier (_,
-          { Ast.Identifier.name = "createClass"; _ });
+          { Ast.Identifier.name = (_, "createClass"); _ });
         _
       };
       arguments = [ Expression (_, Object { Object.properties = class_props }) ]
@@ -2725,7 +2735,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Call.callee = callee_loc, Member {
         Member._object = super_loc, Super;
         property = Member.PropertyIdentifier (ploc,
-          { Ast.Identifier.name; _ });
+          { Ast.Identifier.name = (_, name); _ });
         _
       };
       arguments
@@ -2748,7 +2758,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       Call.callee = (_, Member {
         Member._object;
         property = Member.PropertyIdentifier (prop_loc,
-          { Ast.Identifier.name; _ });
+          { Ast.Identifier.name = (_, name); _ });
         _
       }) as callee;
       arguments
@@ -2784,7 +2794,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = (_, Identifier (_,
-        { Ast.Identifier.name = "invariant"; _ })) as callee;
+        { Ast.Identifier.name = (_, "invariant"); _ })) as callee;
       arguments
     } ->
       (* TODO: require *)
@@ -2890,7 +2900,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | TaggedTemplate {
       TaggedTemplate.tag = _, Identifier (_,
-        { Ast.Identifier.name = "query"; _ });
+        { Ast.Identifier.name = (_, "query"); _ });
       (* TODO: walk quasis? *)
       quasi = _, { TemplateLiteral.quasis = _; expressions }
     } ->
@@ -3178,7 +3188,9 @@ and update cx loc expr = Ast.Expression.Update.(
   let reason = mk_reason (RCustom "update") loc in
   let result_t = NumT.why reason in
   (match expr.argument with
-  | _, Ast.Expression.Identifier (id_loc, { Ast.Identifier.name; _ }) ->
+  | _, Ast.Expression.Identifier (id_loc, { Ast.Identifier.
+      name = (_, name); _
+    }) ->
     let lhs_t = identifier cx name id_loc in
     Flow.flow_t cx (lhs_t, result_t);
      (* enforce state-based guards for binding update, e.g., const *)
@@ -3289,7 +3301,7 @@ and assignment_lhs cx = Ast.Pattern.(function
       error_destructuring cx loc;
       AnyT.at loc
 
-  | _, Identifier (loc, { Ast.Identifier.name; _ }) ->
+  | _, Identifier (loc, { Ast.Identifier.name = (_, name); _ }) ->
       identifier cx name loc
 
   | _, Expression ((_, Ast.Expression.Member _) as m) ->
@@ -3315,9 +3327,9 @@ and assignment cx loc = Ast.Expression.(function
         (* module.exports = e *)
         | lhs_loc, Ast.Pattern.Expression (_, Member {
             Member._object = _, Ast.Expression.Identifier (_,
-              { Ast.Identifier.name = "module"; _ });
+              { Ast.Identifier.name = (_, "module"); _ });
             property = Member.PropertyIdentifier (_,
-              { Ast.Identifier.name = "exports"; _ });
+              { Ast.Identifier.name = (_, "exports"); _ });
             _
           }) ->
             let reason = mk_reason (RCustom "assignment of module.exports") lhs_loc in
@@ -3328,7 +3340,7 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression (_, Member {
             Member._object = _, Super;
             property = Member.PropertyIdentifier (ploc,
-              { Ast.Identifier.name; _ });
+              { Ast.Identifier.name = (_, name); _ });
             _
           }) ->
             let reason =
@@ -3341,7 +3353,7 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
             Member._object;
             property = Member.PropertyIdentifier (ploc,
-              { Ast.Identifier.name; _ });
+              { Ast.Identifier.name = (_, name); _ });
             _
           }) as expr) ->
             let o = expression cx _object in
@@ -3414,7 +3426,9 @@ and assignment cx loc = Ast.Expression.(function
       Flow.flow cx (rhs_t, AdderT (reason, lhs_t, result_t));
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
-      | _, Ast.Pattern.Identifier (id_loc, { Ast.Identifier.name; _ }) ->
+      | _, Ast.Pattern.Identifier (id_loc, { Ast.Identifier.
+          name = (_, name); _
+        }) ->
         let id_reason = mk_reason (RCustom name) id_loc in
         ignore Env.(set_var cx name result_t id_reason)
       | _ -> ()
@@ -3443,7 +3457,9 @@ and assignment cx loc = Ast.Expression.(function
       Flow.flow_t cx (rhs_t, result_t);
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
-      | _, Ast.Pattern.Identifier (id_loc, { Ast.Identifier.name; _ }) ->
+      | _, Ast.Pattern.Identifier (id_loc, { Ast.Identifier.
+          name = (_, name); _
+        }) ->
         let id_reason = mk_reason (RCustom name) id_loc in
         ignore Env.(set_var cx name result_t id_reason)
       | _ -> ()
@@ -3641,7 +3657,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
       | _, Member {
         Member._object;
         property = Member.PropertyIdentifier (prop_loc,
-          { Ast.Identifier.name; _ });
+          { Ast.Identifier.name = (_, name); _ });
           _;
         } ->
           let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
@@ -3667,7 +3683,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
  * since the common error is that the identifier is not in scope.
  *)
 and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(function
-  | _, Identifier (_, { Ast.Identifier.name; _ }) ->
+  | _, Identifier (_, { Ast.Identifier.name = (_, name); _ }) ->
       let reason = mk_reason (RJSXIdentifier(raw_jsx_expr, name)) loc in
       Env.var_ref ~lookup_mode:ForValue cx name reason
   | expr ->
@@ -3696,7 +3712,7 @@ and jsx_body cx = Ast.JSX.(function
 and mk_proptype cx = Ast.Expression.(function
   | _, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "isRequired"; _ });
+        (_, {Ast.Identifier.name = (_, "isRequired"); _ });
       _object = e;
       _
     } ->
@@ -3704,56 +3720,56 @@ and mk_proptype cx = Ast.Expression.(function
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "number"; _ });
+        (_, {Ast.Identifier.name = (_, "number"); _ });
       _
     } ->
       NumT.at vloc
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "string"; _ });
+        (_, {Ast.Identifier.name = (_, "string"); _ });
       _
     } ->
       StrT.at vloc
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "bool"; _ });
+        (_, {Ast.Identifier.name = (_, "bool"); _ });
       _
     } ->
       BoolT.at vloc
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "array"; _ });
+        (_, {Ast.Identifier.name = (_, "array"); _ });
       _
     } ->
       ArrT (mk_reason RPropTypeArray vloc, AnyT.at vloc, [])
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "func"; _ });
+        (_, {Ast.Identifier.name = (_, "func"); _ });
       _
     } ->
       AnyFunT (mk_reason RPropTypeFunc vloc)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "object"; _ });
+        (_, {Ast.Identifier.name = (_, "object"); _ });
       _
     } ->
       AnyObjT (mk_reason RPropTypeObject vloc)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "node"; _ });
+        (_, {Ast.Identifier.name = (_, "node"); _ });
       _
     } ->
       AnyT.at vloc (* TODO *)
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "element"; _ });
+        (_, {Ast.Identifier.name = (_, "element"); _ });
       _
     } ->
       AnyT.at vloc (* TODO *)
@@ -3761,7 +3777,7 @@ and mk_proptype cx = Ast.Expression.(function
   | vloc, Call { Call.
       callee = _, Member { Member.
          property = Member.PropertyIdentifier
-          (_, {Ast.Identifier.name = "arrayOf"; _ });
+          (_, {Ast.Identifier.name = (_, "arrayOf"); _ });
          _
       };
       arguments = [Expression e];
@@ -3771,7 +3787,7 @@ and mk_proptype cx = Ast.Expression.(function
   | vloc, Call { Call.
       callee = _, Member { Member.
          property = Member.PropertyIdentifier
-          (_, {Ast.Identifier.name = "instanceOf"; _ });
+          (_, {Ast.Identifier.name = (_, "instanceOf"); _ });
          _
       };
       arguments = [Expression e];
@@ -3782,7 +3798,7 @@ and mk_proptype cx = Ast.Expression.(function
   | vloc, Call { Call.
       callee = _, Member { Member.
          property = Member.PropertyIdentifier
-          (_, {Ast.Identifier.name = "objectOf"; _ });
+          (_, {Ast.Identifier.name = (_, "objectOf"); _ });
          _
       };
       arguments = [Expression e];
@@ -3806,7 +3822,7 @@ and mk_proptype cx = Ast.Expression.(function
   | vloc, Call { Call.
       callee = _, Member { Member.
          property = Member.PropertyIdentifier
-          (_, {Ast.Identifier.name = "oneOf"; _ });
+          (_, {Ast.Identifier.name = (_, "oneOf"); _ });
          _
       };
       arguments = [Expression (_, Array { Array.elements })]
@@ -3827,7 +3843,7 @@ and mk_proptype cx = Ast.Expression.(function
   | vloc, Call { Call.
       callee = _, Member { Member.
          property = Member.PropertyIdentifier
-          (_, {Ast.Identifier.name = "oneOfType"; _ });
+          (_, {Ast.Identifier.name = (_, "oneOfType"); _ });
          _
       };
       arguments = [Expression (_, Array { Array.elements })]
@@ -3846,7 +3862,7 @@ and mk_proptype cx = Ast.Expression.(function
   | vloc, Call { Call.
       callee = _, Member { Member.
          property = Member.PropertyIdentifier
-          (_, {Ast.Identifier.name = "shape"; _ });
+          (_, {Ast.Identifier.name = (_, "shape"); _ });
          _
       };
       arguments = [Expression (_, Object { Object.properties })];
@@ -3863,7 +3879,7 @@ and mk_proptype cx = Ast.Expression.(function
       not been set up or even worked out yet. **)
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
-        (_, {Ast.Identifier.name = "Fbt"; _ });
+        (_, {Ast.Identifier.name = (_, "Fbt"); _ });
       _
     } ->
       (* We assume that there is a Fbt type defined in the global scope. *)
@@ -3879,11 +3895,11 @@ and mk_proptypes cx props = Ast.Expression.Object.(
     | Property (_, { Property.
         kind = Property.Init;
         key = Property.Identifier (_, {
-          Ast.Identifier.name; _ });
+          Ast.Identifier.name = (_, name); _ });
         value = (_, Ast.Expression.Member {
           Ast.Expression.Member.
           property = Ast.Expression.Member.PropertyIdentifier (_, {
-            Ast.Identifier.name = "isRequired"; _ });
+            Ast.Identifier.name = (_, "isRequired"); _ });
           _object = e;
           _
         });
@@ -3896,7 +3912,7 @@ and mk_proptypes cx props = Ast.Expression.Object.(
     (* other prop *)
     | Property (_, { Property.kind = Property.Init;
         key =
-          Property.Identifier (_, { Ast.Identifier.name; _ }) |
+          Property.Identifier (_, { Ast.Identifier.name = (_, name); _ }) |
           Property.Literal (_, {
             Ast.Literal.value = Ast.Literal.String name;
             _;
@@ -3969,7 +3985,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       (* mixins *)
       | Property (_, { Property.kind = Property.Init;
           key =
-            Property.Identifier (_, { Ast.Identifier.name = "mixins"; _ });
+            Property.Identifier (_, { Ast.Identifier.name = (_, "mixins"); _ });
           value = aloc, Array { Array.elements };
           _ }) ->
         mixins := List.map (array_element cx aloc) elements;
@@ -3978,7 +3994,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       (* statics *)
       | Property (_, { Property.kind = Property.Init;
             key = Property.Identifier (nloc, {
-            Ast.Identifier.name = "statics"; _ });
+            Ast.Identifier.name = (_, "statics"); _ });
           value = _, Object { Object.properties };
           _ }) ->
         let reason = mk_reason RReactStatics nloc in
@@ -3989,7 +4005,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       (* propTypes *)
       | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (nloc, {
-            Ast.Identifier.name = "propTypes"; _ });
+            Ast.Identifier.name = (_, "propTypes"); _ });
           value = _, Object { Object.properties } as value;
           _ }) ->
         ignore (expression cx value);
@@ -4004,7 +4020,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       (* getDefaultProps *)
       | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
-            Ast.Identifier.name = "getDefaultProps"; _ });
+            Ast.Identifier.name = (_, "getDefaultProps"); _ });
           value = (vloc, Ast.Expression.Function func);
           _
         }) ->
@@ -4024,7 +4040,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       (* getInitialState *)
       | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
-            Ast.Identifier.name = "getInitialState"; _ });
+            Ast.Identifier.name = (_, "getInitialState"); _ });
           value = (vloc, Ast.Expression.Function func);
           _
         }) ->
@@ -4047,7 +4063,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       (* name = function expr *)
       | Property (_, { Property.kind = Property.Init;
           key = Property.Identifier (_, {
-            Ast.Identifier.name; _ });
+            Ast.Identifier.name = (_, name); _ });
           value = (vloc, Ast.Expression.Function func);
           _
         }) ->
@@ -4061,7 +4077,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
       (* name = non-function expr *)
       | Property (_, { Property.kind = Property.Init;
           key =
-            Property.Identifier (_, { Ast.Identifier.name; _ }) |
+            Property.Identifier (_, { Ast.Identifier.name = (_, name); _ }) |
             Property.Literal (_, {
               Ast.Literal.value = Ast.Literal.String name; _;
             });
@@ -4226,7 +4242,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (expr_loc, Member {
         Member._object;
         property = Member.PropertyIdentifier (prop_loc,
-          { Identifier.name = prop_name; _ });
+          { Identifier.name = (_, prop_name); _ });
         _
       }) ->
 
@@ -4391,8 +4407,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
         null_test loc ~sense ~strict expr null_t
 
     (* expr op undefined *)
-    | (_, Identifier (_, { Identifier.name = "undefined"; _ }) as void), expr
-    | expr, (_, Identifier (_, { Identifier.name = "undefined"; _ }) as void)
+    | (_, Identifier (_, { Identifier.name = (_, "undefined"); _ }) as void), expr
+    | expr, (_, Identifier (_, { Identifier.name = (_, "undefined"); _ }) as void)
       ->
         let void_t = expression cx void in
         undef_test loc ~sense ~strict expr void_t
@@ -4447,7 +4463,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
   | loc, Member {
       Member._object;
       property = Member.PropertyIdentifier (prop_loc,
-        { Identifier.name = prop_name; _ });
+        { Identifier.name = (_, prop_name); _ });
         _
       }
     ->
@@ -4519,9 +4535,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
   | _, Call {
       Call.callee = callee_loc, Member {
         Member._object = (_, Identifier (_,
-          { Identifier.name = "Array"; _ }) as o);
+          { Identifier.name = (_, "Array"); _ }) as o);
         property = Member.PropertyIdentifier (prop_loc,
-          { Identifier.name = "isArray"; _ });
+          { Identifier.name = (_, "isArray"); _ });
         _ };
       arguments = [Expression arg]
     } -> (
@@ -4764,7 +4780,7 @@ and extract_getter_type = function
 
 and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   match id with
-  | Some(name_loc, {Ast.Identifier.name; _;}) -> (name_loc, name)
+  | Some(name_loc, {Ast.Identifier.name = (_, name); _;}) -> (name_loc, name)
   | None -> (class_loc, "<<anonymous class>>")
 )
 
@@ -4869,14 +4885,15 @@ and declare_function_to_function_declaration cx id predicate =
               let (loc, name_) = match name with
               | Some name -> name
               | None ->
+                  let name_loc = fst typeAnnotation in
                   FlowError.add_error cx (loc, [
                     "Predicate function declarations cannot use anonymous \
                     function parameters."]);
-                  (fst typeAnnotation, {
-                    Ast.Identifier.name = "_";
-                                   typeAnnotation = None;
-                                   optional = false;
-                    })
+                  (name_loc, { Ast.Identifier.
+                    name = (name_loc, "_");
+                    typeAnnotation = None;
+                    optional = false;
+                  })
               in
               let name' = (
                 loc, {

@@ -567,7 +567,7 @@ end = struct
               strict_error_at env (start_loc, Error.StrictReservedWord);
               let static_key =
                 start_loc, Expression.Object.Property.Identifier ( start_loc, {
-                  Identifier.name = "static";
+                  Identifier.name = (start_loc, "static");
                   optional = false;
                   typeAnnotation = None;
                 }) in
@@ -608,7 +608,8 @@ end = struct
     and type_parameter_declaration =
       let rec params env ~allow_default ~require_default acc = Type.ParameterDeclaration.TypeParam.(
         let variance = variance env in
-        let loc, id = Parse.identifier_with_type env Error.StrictParamName in
+        let loc, { Identifier.name = (_, name); typeAnnotation = bound; _ } =
+          Parse.identifier_with_type env Error.StrictParamName in
         let default, require_default = match allow_default, Peek.token env with
         | false, _ -> None, false
         | true, T_ASSIGN ->
@@ -619,8 +620,8 @@ end = struct
             then error_at env (loc, Error.MissingTypeParamDefault);
             None, require_default in
         let param = loc, {
-          name = id.Identifier.name;
-          bound = id.Identifier.typeAnnotation;
+          name;
+          bound;
           variance;
           default;
         } in
@@ -805,14 +806,14 @@ end = struct
         | Some (RestElement (_, { RestElement.argument; })) ->
             pattern check_env argument)
 
-      and identifier (env, param_names) (loc, { Identifier.name; _ } as id) =
+      and identifier (env, param_names) (loc, { Identifier.name = (_, name); _ } as id) =
         if SSet.mem name param_names
         then error_at env (loc, Error.StrictParamDupe);
         let env, param_names =
           identifier_no_dupe_check (env, param_names) id in
         env, SSet.add name param_names
 
-      and identifier_no_dupe_check (env, param_names) (loc, { Identifier.name; _ }) =
+      and identifier_no_dupe_check (env, param_names) (loc, { Identifier.name = (_, name); _ }) =
         if is_restricted name
         then strict_error_at env (loc, Error.StrictParamName);
         if is_future_reserved name || is_strict_reserved name
@@ -838,7 +839,7 @@ end = struct
           then env |> with_strict (not (Parser_env.in_strict_mode env))
           else env in
         (match id with
-        | Some (loc, { Identifier.name; _ }) ->
+        | Some (loc, { Identifier.name = (_, name); _ }) ->
             if is_restricted name
             then strict_error_at env (loc, Error.StrictFunctionName);
             if is_future_reserved name || is_strict_reserved name
@@ -1089,7 +1090,7 @@ end = struct
           then error_at env (fst expr, Error.InvalidLHSInAssignment);
 
           (match expr with
-          | loc, Expression.Identifier (_, { Identifier.name = name; _ })
+          | loc, Expression.Identifier (_, { Identifier.name = (_, name); _ })
             when is_restricted name ->
               strict_error_at env (loc, Error.StrictLHSAssignment)
           | _ -> ());
@@ -1123,7 +1124,7 @@ end = struct
         (* async x => 123 -- and we've already parsed async as an identifier
          * expression *)
         | _ when Peek.is_identifier env -> begin match snd ret with
-          | Expression.Identifier (_, {Identifier.name = "async"; _ })
+          | Expression.Identifier (_, {Identifier.name = (_, "async"); _ })
               when not (Peek.is_line_terminator env) ->
             raise Try.Rollback
           | _ -> ret
@@ -1421,7 +1422,7 @@ end = struct
               if not (is_lhs argument)
               then error_at env (fst argument, Error.InvalidLHSInAssignment);
               (match argument with
-              | _, Expression.Identifier (_, { Identifier.name; _ })
+              | _, Expression.Identifier (_, { Identifier.name = (_, name); _ })
                 when is_restricted name ->
                   strict_error env Error.StrictLHSPrefix
               | _ -> ());
@@ -1460,7 +1461,7 @@ end = struct
           if not (is_lhs argument)
           then error_at env (fst argument, Error.InvalidLHSInAssignment);
           (match argument with
-          | _, Expression.Identifier (_, { Identifier.name; _ })
+          | _, Expression.Identifier (_, { Identifier.name = (_, name); _ })
             when is_restricted name ->
               strict_error env Error.StrictLHSPostfix
           | _ -> ());
@@ -1526,7 +1527,7 @@ end = struct
       if in_function env && Peek.token env = T_PERIOD then begin
         Expect.token env T_PERIOD;
         let meta = start_loc, { Identifier.
-          name = "new";
+          name = (start_loc, "new");
           typeAnnotation = None;
           optional = false;
         } in
@@ -2031,7 +2032,7 @@ end = struct
         in
         Eat.token env;
         (lex_loc, Identifier.({
-          name = lex_value;
+          name = (lex_loc, lex_value);
           typeAnnotation = None;
           optional = false;
         })), err
@@ -2149,7 +2150,7 @@ end = struct
             Peek.is_literal_property_name ~i:1 env && Declaration.async env in
           Property (match async , Declaration.generator env, key env with
           | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
-              "get"; _}) as key)) ->
+              (_, "get"); _}) as key)) ->
               (match Peek.token env with
               | T_COLON
               | T_LESS_THAN
@@ -2158,7 +2159,7 @@ end = struct
               | T_RCURLY -> init env start_loc key false false
               | _ -> get env start_loc)
           | false, false, (_, (Property.Identifier (_, { Ast.Identifier.name =
-              "set"; _}) as key)) ->
+              (_, "set"); _}) as key)) ->
               (match Peek.token env with
               | T_COLON
               | T_LESS_THAN
@@ -2411,7 +2412,7 @@ end = struct
           }) in
           let kind = Ast.(match key with
             | Expression.Object.Property.Identifier (_, {
-                Identifier.name = "constructor";
+                Identifier.name = (_, "constructor");
                 _;
               })
             | Expression.Object.Property.Literal (_, {
@@ -2448,7 +2449,7 @@ end = struct
         in
         match (async, generator, key env) with
         | false, false,
-          (_, (Identifier (_, { Identifier.name = "get"; _ }) as key)) ->
+          (_, (Identifier (_, { Identifier.name = (_, "get"); _ }) as key)) ->
             (match Peek.token env with
             | T_LESS_THAN
             | T_COLON
@@ -2460,7 +2461,7 @@ end = struct
               error_unsupported_variance env variance;
               get env start_loc decorators static)
         | false, false,
-          (_, (Identifier (_, { Identifier.name = "set"; _ }) as key)) ->
+          (_, (Identifier (_, { Identifier.name = (_, "set"); _ }) as key)) ->
             (match Peek.token env with
             | T_LESS_THAN
             | T_COLON
@@ -2563,8 +2564,8 @@ end = struct
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
         then None
         else begin
-          let label = Parse.identifier env in
-          let name = (snd label).Identifier.name in
+          let (_, { Identifier.name = (_, name); _ }) as label =
+            Parse.identifier env in
           if not (SSet.mem name (labels env))
           then error env (Error.UnknownLabel name);
           Some label
@@ -2590,7 +2591,8 @@ end = struct
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
         then None
         else begin
-          let (_, { Identifier.name; _ }) as label = Parse.identifier env in
+          let (_, { Identifier.name = (_, name); _ }) as label =
+            Parse.identifier env in
           if not (SSet.mem name (labels env))
           then error env (Error.UnknownLabel name);
           Some label
@@ -2972,7 +2974,7 @@ end = struct
       let expr = Parse.expression env in
       match (expr, Peek.token env) with
       | ((loc, Ast.Expression.Identifier label), T_COLON) ->
-          let { Identifier.name; _ } = snd label in
+          let { Identifier.name = (_, name); _ } = snd label in
           Expect.token env T_COLON;
           if SSet.mem name (labels env)
           then error_at env (loc, Error.Redeclaration ("Label", name));
@@ -3335,13 +3337,14 @@ end = struct
             | None -> acc
           ) acc elements
         | (_, Assignment {Assignment.left;_;}) -> fold acc left
-        | (_, Identifier (loc, {Identifier.name; _;})) -> (loc, name)::acc
+        | (_, Identifier (loc, {Identifier.name = (_, name); _;})) ->
+          (loc, name)::acc
         | (_, Expression _) ->
           failwith "Parser error: No such thing as an expression pattern!"
       ) in
       List.fold_left fold
 
-    and extract_ident_name (_, {Identifier.name; _;}) = name
+    and extract_ident_name (_, {Identifier.name = (_, name); _;}) = name
 
     and export_specifiers_and_errs env specifiers errs =
       match Peek.token env with
@@ -4499,7 +4502,7 @@ end = struct
     | Some err when is_restricted name -> strict_error_at env (loc, err)
     | _ -> ());
     loc, Identifier.({
-      name;
+      name = (loc, name);
       typeAnnotation = None;
       optional = false;
     })

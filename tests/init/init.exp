@@ -164,7 +164,7 @@ let.js:84
  84:       let y:number = x; // error, skipped declaration
                           ^ x. let referenced before declaration, or after skipped declaration
  82:       let x:number;
-               ^^^^^^^^ let x
+               ^ let x
 
 let.js:94
  94:   var y:number = x; // error

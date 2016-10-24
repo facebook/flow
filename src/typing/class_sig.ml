@@ -428,7 +428,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
     (* instance and static methods *)
     | Body.Method (loc, {
         Method.key = Ast.Expression.Object.Property.Identifier (_,
-          { Ast.Identifier.name; _ });
+          { Ast.Identifier.name = (_, name); _ });
         value = (_, func);
         kind;
         static;
@@ -462,7 +462,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
     (* fields *)
     | Body.Property (loc, {
         Property.key = Ast.Expression.Object.Property.Identifier
-          (_, { Ast.Identifier.name; _ });
+          (_, { Ast.Identifier.name = (_, name); _ });
         typeAnnotation;
         value;
         static;
@@ -580,7 +580,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
         let msg = "illegal name" in
         Flow_error.add_error cx (loc, [msg]);
         s
-    | true, Property.Identifier (_, {Ast.Identifier.name; _}) ->
+    | true, Property.Identifier (_, {Ast.Identifier.name = (_, name); _}) ->
         (match value with
         | _, Ast.Type.Function func ->
           let fsig = Func_sig.convert cx tparams_map loc func in
@@ -593,7 +593,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
           let msg = "internal error: expected function type" in
           Flow_error.add_internal_error cx (loc, [msg]);
           s)
-    | false, Property.Identifier (_, {Ast.Identifier.name; _}) ->
+    | false, Property.Identifier (_, {Ast.Identifier.name = (_, name); _}) ->
         let t = Anno.convert cx tparams_map value in
         let t = if optional then Type.OptionalT t else t in
         add_field ~static name (t, polarity, None) s)

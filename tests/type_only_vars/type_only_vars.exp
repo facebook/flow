@@ -1,24 +1,24 @@
 bad_shadowing.js:13
  13: var A: string = "Hello";
-         ^^^^^^^^^ A. name is already bound
+         ^ A. name is already bound
   5: import typeof A from "./A.js";
                    ^ type A
 
 bad_shadowing.js:14
  14: var Foo: string = "Goodbye";
-         ^^^^^^^^^^^ Foo. name is already bound
+         ^^^ Foo. name is already bound
   6: import type {Foo, Bar as Baz} from "./A.js";
                   ^^^ type Foo
 
 bad_shadowing.js:15
  15: var Baz: string = "Go away please";
-         ^^^^^^^^^^^ Baz. name is already bound
+         ^^^ Baz. name is already bound
   6: import type {Foo, Bar as Baz} from "./A.js";
                        ^^^^^^^^^^ type Baz
 
 bad_shadowing.js:18
  18: var duck: string = "quack";
-         ^^^^^^^^^^^^ duck. name is already bound
+         ^^^^ duck. name is already bound
   8: type duck = {
           ^^^^ type duck
 

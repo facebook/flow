@@ -554,13 +554,16 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and identifier (loc, id) = Identifier.(
+  and identifier (loc, { Identifier.
+    name = (_, name);
+    typeAnnotation;
+    optional;
+  }) =
     node "Identifier" loc [|
-      "name", string id.name;
-      "typeAnnotation", option type_annotation id.typeAnnotation;
-      "optional", bool id.optional;
+      "name", string name;
+      "typeAnnotation", option type_annotation typeAnnotation;
+      "optional", bool optional;
     |]
-  )
 
   and case (loc, c) = Statement.Switch.Case.(
     node "SwitchCase" loc [|

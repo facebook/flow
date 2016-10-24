@@ -184,7 +184,7 @@ let concat_fold f acc items =
 
 let meta_params params map cmap =
   concat_fold Ast.Pattern.(fun cmap -> function
-    | nloc, Identifier (_, { Ast.Identifier.name; _ }) -> (
+    | nloc, Identifier (_, { Ast.Identifier.name = (_, name); _ }) -> (
         match SMap.get name map with
           | Some t -> cmap, [insert_after nloc t]
           | None ->

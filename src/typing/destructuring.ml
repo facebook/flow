@@ -24,8 +24,7 @@ open Type
  *)
 let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
   match pattern with
-  | Identifier (loc, n) ->
-    let name = n.Ast.Identifier.name in
+  | Identifier (loc, { Ast.Identifier.name = (_, name); _ }) ->
     (loc, name)::accum
 
   | Object n ->
@@ -129,9 +128,12 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       properties |> List.iter (function
         | Property (loc, prop) ->
             begin match prop with
-            | { Property.key =
-                  Property.Identifier (loc, { Ast.Identifier.name; _ });
-                pattern = p; _; }
+            | { Property.
+                key = Property.Identifier (loc, { Ast.Identifier.
+                  name = (_, name); _;
+                });
+                pattern = p; _;
+              }
             | { Property.key =
                   Property.Literal (loc, { Ast.Literal.
                     value = Ast.Literal.String name; _ });
@@ -143,7 +145,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   loc, Ast.Expression.(Member Member.({
                     _object = init;
                     property = PropertyIdentifier (loc, {
-                      Ast.Identifier.name;
+                      Ast.Identifier.name = (loc, name);
                       typeAnnotation = None;
                       optional = false
                     });
@@ -200,7 +202,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       )
     )
 
-  | loc, Identifier (_, { Ast.Identifier.name; _ }) ->
+  | loc, Identifier (_, { Ast.Identifier.name = (_, name); _ }) ->
       Type_inference_hooks_js.dispatch_lval_hook cx name loc (
         match (parent_pattern_t, init) with
         (**

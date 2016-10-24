@@ -175,7 +175,7 @@ let nameify_default_export_decl decl = Ast.Statement.(
       loc, FunctionDeclaration {
         func_decl with
           id = Some (loc, {
-            Ast.Identifier.name = internal_name "*default*";
+            Ast.Identifier.name = (loc, internal_name "*default*");
             typeAnnotation = None;
             optional = false;
           });
@@ -187,7 +187,7 @@ let nameify_default_export_decl decl = Ast.Statement.(
       loc, ClassDeclaration {
         class_decl with
           id = Some (loc, {
-            Ast.Identifier.name = internal_name "*default*";
+            Ast.Identifier.name = (loc, internal_name "*default*");
             typeAnnotation = None;
             optional = false;
           });

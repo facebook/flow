@@ -16,7 +16,7 @@
 module rec Identifier : sig
   type t = Loc.t * t'
   and t' = {
-    name: string;
+    name: Loc.t * string;
     typeAnnotation: Type.annotation option;
     optional: bool;
   }
