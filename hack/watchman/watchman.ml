@@ -372,7 +372,11 @@ let poll_for_updates ?timeout env =
     raise e
 
 let extract_file_names env json =
-  let files = J.get_array_val "files" json in
+  let files = try J.get_array_val "files" json with
+    (** When an hg.update happens, it shows up in the watchman subscription
+     * as a notification with no files key present. *)
+    | Not_found -> []
+  in
   let files = List.map files begin fun json ->
     let s = Hh_json.get_string_exn json in
     let abs =
