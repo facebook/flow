@@ -157,6 +157,27 @@ module type NoCache = sig
   val get_shelved: key -> t option
   val unshelve_batch   : KeySet.t -> unit
   val remove_shelved_batch : KeySet.t -> unit
+
+  (**
+   * When a new local change set is pushed, changes will not be reflected in
+   * the shared memory until the local changes are popped off.
+   **)
+  module LocalChanges : sig
+    (** Push a new local change environment **)
+    val push_stack : unit -> unit
+    (** Pop off the last local change environment **)
+    val pop_stack : unit -> unit
+    (** Reverts any changes associated with the set of keys **)
+    val revert_batch : KeySet.t -> unit
+    (**
+     * Applies the current changes associated with the set of keys to the
+     * previous environment. If there are no other active local changes
+     * this will perform the actions on shared memory.
+     **)
+    val commit_batch : KeySet.t -> unit
+    val revert_all : unit -> unit
+    val commit_all : unit -> unit
+  end
 end
 
 module type WithCache = sig
