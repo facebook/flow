@@ -350,13 +350,6 @@ and Statement : sig
       async: bool;
     }
   end
-  module Let : sig
-    type assignment = { id: Pattern.t; init: Expression.t option; }
-    type t = {
-      head: assignment list;
-      body: Statement.t;
-    }
-  end
   module Interface : sig
     type t = {
       id: Identifier.t;
@@ -499,7 +492,6 @@ and Statement : sig
     | For of For.t
     | ForIn of ForIn.t
     | ForOf of ForOf.t
-    | Let of Let.t
     | Debugger
     | FunctionDeclaration of Function.t
     | VariableDeclaration of VariableDeclaration.t
@@ -738,12 +730,6 @@ and Expression : sig
       filter: Expression.t option;
     }
   end
-  module Let : sig
-    type t = {
-      head: Statement.Let.assignment list;
-      body: Expression.t;
-    }
-  end
   module TypeCast : sig
     type t = {
       expression: Expression.t;
@@ -778,7 +764,6 @@ and Expression : sig
     | Yield of Yield.t
     | Comprehension of Comprehension.t
     | Generator of Generator.t
-    | Let of Let.t
     | Identifier of Identifier.t
     | Literal of Literal.t
     | TemplateLiteral of TemplateLiteral.t
