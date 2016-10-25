@@ -70,10 +70,16 @@ let dead_env_from_alive env =
     reinit_attempts = 0;
   }
 
-type 'a changes =
+type pushed_changes =
+  (** State name and metadata. *)
+  | State_enter of string * Hh_json.json option
+  | State_leave of string * Hh_json.json option
+  | Files_changed of SSet.t
+
+type changes =
   | Watchman_unavailable
-  | Watchman_pushed of 'a
-  | Watchman_synchronous of 'a
+  | Watchman_pushed of pushed_changes
+  | Watchman_synchronous of SSet.t
 
 type watchman_instance =
   (** Indicates a dead watchman instance (most likely due to chef upgrading,
@@ -479,9 +485,27 @@ let get_all_files env =
     | _ ->
       Exit_status.(exit Watchman_failed)
 
-let transform_changes_response env data =
-    env.clockspec <- J.get_string_val "clock" data;
-    set_of_list @@ extract_file_names env data
+let transform_synchronous_response env data =
+  env.clockspec <- J.get_string_val "clock" data;
+  set_of_list @@ extract_file_names env data
+
+let make_state_change_response state name data =
+  let metadata = J.try_get_val "metadata" data in
+  match state with
+  | `Enter ->
+    State_enter (name, metadata)
+  | `Leave ->
+    State_leave (name, metadata)
+
+let transform_asynchronous_response env data =
+  env.clockspec <- J.get_string_val "clock" data;
+  try make_state_change_response `Enter
+    (J.get_string_val "state-enter" data) data with
+  | Not_found ->
+  try make_state_change_response `Leave
+    (J.get_string_val "state-leave" data) data with
+  | Not_found ->
+    Files_changed (set_of_list @@ extract_file_names env data)
 
 let random_filepath root sync_dir =
   let root_name = Path.to_string root in
@@ -495,17 +519,13 @@ let get_changes ?deadline instance =
     max timeout 0.0
   ) in
   call_on_instance instance "get_changes" @@ fun env ->
-    let response = begin
-        if env.settings.subscribe_to_changes
-        then Watchman_pushed (poll_for_updates ?timeout env)
-        else Watchman_synchronous (exec ?timeout env.socket (since_query env))
-    end in
-    match response with
-    | Watchman_unavailable -> Watchman_unavailable
-    | Watchman_pushed data ->
-      Watchman_pushed (transform_changes_response env data)
-    | Watchman_synchronous data ->
-      Watchman_synchronous (transform_changes_response env data)
+    if env.settings.subscribe_to_changes
+    then
+      Watchman_pushed (transform_asynchronous_response
+        env (poll_for_updates ?timeout env))
+    else
+      Watchman_synchronous (transform_synchronous_response
+        env (exec ?timeout env.socket (since_query env)))
 
 let rec get_changes_until_file_sync deadline syncfile instance acc_changes =
   if Unix.time () >= deadline then raise Timeout else ();
@@ -518,12 +538,16 @@ let rec get_changes_until_file_sync deadline syncfile instance acc_changes =
     get_changes_until_file_sync
       deadline syncfile instance acc_changes (** Not in 4.01 yet [@tailcall] *)
   | Watchman_synchronous changes
-  | Watchman_pushed changes ->
+  | Watchman_pushed (Files_changed changes) ->
     let acc_changes = SSet.union acc_changes changes in
     if SSet.mem syncfile changes then
       instance, acc_changes
     else
       get_changes_until_file_sync deadline syncfile instance acc_changes
+  | Watchman_pushed (State_enter _)
+  | Watchman_pushed (State_leave _) ->
+    (** TODO: Add these enter and exit events to the synchronous response. *)
+    get_changes_until_file_sync deadline syncfile instance acc_changes
 
 (** Raise this exception together with a with_retries_until_deadline call to
  * make use of its exponential backoff machinery. *)
@@ -581,3 +605,27 @@ let get_changes_synchronously ~(timeout:int) instance =
         result
       end
   end
+
+module type Testing_sig = sig
+  val test_env : env
+  val transform_asynchronous_response : env -> Hh_json.json -> pushed_changes
+end
+
+module Testing = struct
+  let test_settings = {
+    subscribe_to_changes = true;
+    init_timeout = 0;
+    sync_directory = "";
+    root = Path.dummy_path;
+  }
+
+  let test_env = {
+    settings = test_settings;
+    socket = (Timeout.open_in "/dev/null", open_out "/dev/null");
+    watch_root = "";
+    relative_path = "";
+    clockspec = "";
+  }
+
+  let transform_asynchronous_response env json = transform_asynchronous_response env json
+end
