@@ -156,7 +156,6 @@ module type NoCache = sig
   val shelve_batch     : KeySet.t -> unit
   val get_shelved: key -> t option
   val unshelve_batch   : KeySet.t -> unit
-  val remove_shelved_batch : KeySet.t -> unit
 
   (**
    * When a new local change set is pushed, changes will not be reflected in

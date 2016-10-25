@@ -756,7 +756,6 @@ module type NoCache = sig
   val shelve_batch     : KeySet.t -> unit
   val get_shelved      : key -> t option
   val unshelve_batch   : KeySet.t -> unit
-  val remove_shelved_batch : KeySet.t -> unit
 
   module LocalChanges : sig
     val push_stack : unit -> unit
@@ -883,12 +882,6 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
       else
         let key = Key.make Value.prefix str_key in
         New.remove key
-    end xs
-
-  let remove_shelved_batch xs =
-    KeySet.iter begin fun str_key ->
-      let key = Key.make_tmp Value.prefix str_key in
-      Tmp.remove key
     end xs
 
   module LocalChanges = struct
@@ -1200,8 +1193,6 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
     KeySet.iter begin fun x ->
       Cache.remove x
     end keys
-
-  let remove_shelved_batch = Direct.remove_shelved_batch
 
   module LocalChanges = struct
 
