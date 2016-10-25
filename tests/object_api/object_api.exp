@@ -88,14 +88,14 @@ object_prototype.js:51
      ^^^^^^^^^^^^^^^^^^^^^ call of method `toString`
  51: (123).toString('foo'); // error
                     ^^^^^ string. This type is incompatible with
-number. See lib: core.js:130
+number. See lib: core.js:131
 
 object_prototype.js:52
  52: (123).toString(null); // error
      ^^^^^^^^^^^^^^^^^^^^ call of method `toString`
  52: (123).toString(null); // error
                     ^^^^ null. This type is incompatible with
-number. See lib: core.js:130
+number. See lib: core.js:131
 
 object_prototype.js:68
  68: b.hasOwnProperty = function() { return false; };
@@ -176,7 +176,7 @@ object_prototype.js:150
 object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-string. See lib: core.js:409
+string. See lib: core.js:411
 
 object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error
