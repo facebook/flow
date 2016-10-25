@@ -1209,7 +1209,6 @@ end = struct
       | _, ArrowFunction _
       | _, Yield _
       | _, JSXElement _
-      | _, Let _
       | _, TypeCast _ -> false)
 
     and is_assignable_lhs = Expression.(function
@@ -1239,7 +1238,6 @@ end = struct
       | _, ArrowFunction _
       | _, Yield _
       | _, JSXElement _
-      | _, Let _
       | _, TypeCast _ -> false)
 
 
@@ -2902,43 +2900,20 @@ end = struct
     and _let env =
       let start_loc = Peek.loc env in
       Expect.token env T_LET;
-      if Peek.token env = T_LPAREN
-      then begin
-        (* Let statement *)
-        Expect.token env T_LPAREN;
-        let end_loc, declarations, errs =
-          Declaration.variable_declaration_list (env |> with_no_let true) in
-        let head = List.map
-          (fun (_, {Ast.Statement.VariableDeclaration.Declarator.id; init;}) ->
-            Statement.Let.({ id; init; }))
-          declarations in
-        Expect.token env T_RPAREN;
-        let body = Parse.statement env in
-        let end_loc = match Peek.semicolon_loc env with
-        | None -> end_loc
-        | Some end_loc -> end_loc in
-        Eat.semicolon env;
-        errs |> List.iter (error_at env);
-        Loc.btwn start_loc end_loc, Statement.(Let Let.({
-          head;
-          body;
-        }))
-      end else begin
-        (* Let declaration *)
-        let end_loc, declarations, errs =
-          Declaration.variable_declaration_list (env |> with_no_let true) in
-        let declaration =
-          Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
-            declarations;
-            kind = Let;
-          })) in
-        let end_loc = match Peek.semicolon_loc env with
-        | None -> end_loc
-        | Some end_loc -> end_loc in
-        Eat.semicolon env;
-        errs |> List.iter (error_at env);
-        Loc.btwn start_loc end_loc, declaration
-      end
+      (* Let declaration *)
+      let end_loc, declarations, errs =
+        Declaration.variable_declaration_list (env |> with_no_let true) in
+      let declaration =
+        Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
+          declarations;
+          kind = Let;
+        })) in
+      let end_loc = match Peek.semicolon_loc env with
+      | None -> end_loc
+      | Some end_loc -> end_loc in
+      Eat.semicolon env;
+      errs |> List.iter (error_at env);
+      Loc.btwn start_loc end_loc, declaration
 
     and _while env =
       let start_loc = Peek.loc env in

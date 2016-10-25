@@ -196,12 +196,6 @@ end with type t = Impl.t) = struct
         "body", statement forof.body;
       |]
     )
-  | loc, Let _let -> Let.(
-      node "LetStatement" loc [|
-        "head", array_of_list let_assignment _let.head;
-        "body", statement _let.body;
-      |]
-    )
   | loc, Debugger -> node "DebuggerStatement" loc [||]
   | loc, ClassDeclaration c -> class_declaration (loc, c)
   | loc, InterfaceDeclaration i -> interface_declaration (loc, i)
@@ -496,12 +490,6 @@ end with type t = Impl.t) = struct
           "filter", option expression gen.filter;
         |]
       )
-    | loc, Let _let -> Let.(
-        node "LetExpression" loc [|
-          "head", array_of_list let_assignment _let.head;
-          "body", expression _let.body;
-        |]
-      )
     | _loc, Identifier id -> identifier id
     | loc, Literal lit -> literal (loc, lit)
     | loc, TemplateLiteral lit -> template_literal (loc, lit)
@@ -583,13 +571,6 @@ end with type t = Impl.t) = struct
     node "BlockStatement" loc [|
       "body", statement_list b.Statement.Block.body;
     |]
-
-  and let_assignment assignment = Statement.Let.(
-    obj [|
-      "id", pattern assignment.id;
-      "init", option expression assignment.init;
-    |]
-  )
 
   and declare_variable (loc, d) = Statement.DeclareVariable.(
     node "DeclareVariable" loc [|

@@ -249,10 +249,6 @@ and statement_decl cx = Ast.Statement.(
         statement_decl cx body
       )
 
-  | (_, Let _) ->
-      (* TODO *)
-      ()
-
   | (_, Debugger) -> ()
 
   | (loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
@@ -1456,10 +1452,6 @@ and statement cx = Ast.Statement.(
         if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
         then Env.havoc_vars newset
       )
-
-  | (_, Let _) ->
-      (* TODO *)
-      ()
 
   | (_, Debugger) ->
       ()
@@ -3022,7 +3014,6 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
   (* TODO *)
   | Comprehension _
   | Generator _
-  | Let _
   | MetaProperty _->
     FlowError.add_error cx (loc, ["not (sup)ported"]);
     EmptyT.at loc
