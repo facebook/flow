@@ -108,16 +108,8 @@ let parse_json_file ~fail content file =
   let open Parser_flow.Ast in
   let loc_none = Loc.none in
   let module_exports = loc_none, Expression.(Member { Member.
-    _object = loc_none, Identifier (loc_none, { Identifier.
-      name = (loc_none, "module");
-      typeAnnotation = None;
-      optional = false;
-    });
-    property = Member.PropertyIdentifier (loc_none, { Identifier.
-      name = (loc_none, "exports");
-      typeAnnotation = None;
-      optional = false;
-    });
+    _object = loc_none, Identifier (loc_none, "module");
+    property = Member.PropertyIdentifier (loc_none, "exports");
     computed = false;
   }) in
   let loc = fst expr in

@@ -426,8 +426,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
   List.fold_left (fun c -> function
     (* instance and static methods *)
     | Body.Method (loc, {
-        Method.key = Ast.Expression.Object.Property.Identifier (_,
-          { Ast.Identifier.name = (_, name); _ });
+        Method.key = Ast.Expression.Object.Property.Identifier (_, name);
         value = (_, func);
         kind;
         static;
@@ -460,8 +459,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
 
     (* fields *)
     | Body.Property (loc, {
-        Property.key = Ast.Expression.Object.Property.Identifier
-          (_, { Ast.Identifier.name = (_, name); _ });
+        Property.key = Ast.Expression.Object.Property.Identifier (_, name);
         typeAnnotation;
         value;
         static;
@@ -576,7 +574,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     | _, Property.Computed (loc, _) ->
         Flow_error.(add_output cx (EIllegalName loc));
         s
-    | true, Property.Identifier (_, {Ast.Identifier.name = (_, name); _}) ->
+    | true, Property.Identifier (_, name) ->
         (match value with
         | _, Ast.Type.Function func ->
           let fsig = Func_sig.convert cx tparams_map loc func in
@@ -588,7 +586,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
         | _ ->
           Flow_error.(add_output cx (EInternal (loc, MethodNotAFunction)));
           s)
-    | false, Property.Identifier (_, {Ast.Identifier.name = (_, name); _}) ->
+    | false, Property.Identifier (_, name) ->
         let t = Anno.convert cx tparams_map value in
         let t = if optional then Type.OptionalT t else t in
         add_field ~static name (t, polarity, None) s)

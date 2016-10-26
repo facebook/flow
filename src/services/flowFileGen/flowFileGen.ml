@@ -54,9 +54,9 @@ let gen_imports env =
         match spec with
         | ImportNamedSpecifier s ->
           (s::named, default, ns)
-        | ImportDefaultSpecifier (_, {Identifier.name = (_, name); _;}) ->
+        | ImportDefaultSpecifier (_, name) ->
           (named, Some name, ns)
-        | ImportNamespaceSpecifier (_, (_, {Identifier.name = (_, name); _;})) ->
+        | ImportNamespaceSpecifier (_, (_, name)) ->
           (named, default, Some name)
       ) ([], None, None) specifiers
     in
@@ -96,9 +96,9 @@ let gen_imports env =
       let env = Codegen.add_str "{" env in
       let env =
         Codegen.gen_separated_list named ", " (fun {local; remote} env ->
-          let (_, {Identifier.name = (_, remote); _;}) = remote in
+          let (_, remote) = remote in
           match local with
-          | Some (_, {Identifier.name = (_, local); _;}) when local <> remote ->
+          | Some (_, local) when local <> remote ->
             Codegen.add_str remote env
               |> Codegen.add_str " as "
               |> Codegen.add_str local

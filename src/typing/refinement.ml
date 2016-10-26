@@ -29,13 +29,13 @@ let rec key = Ast.Expression.(function
   (* treat this as a property chain, in terms of refinement lifetime *)
   Some (Reason.internal_name "super", [])
 
-| _, Identifier (_, { Ast.Identifier.name = (_, name); _ }) when name != "undefined" ->
+| _, Identifier (_, name) when name != "undefined" ->
   Some (name, [])
 
 | _, Member { Member._object;
   (* foo.bar.baz -> Chain [Id baz; Id bar; Id foo] *)
    property = (
-    Member.PropertyIdentifier (_, { Ast.Identifier.name = (_, name); _ })
+    Member.PropertyIdentifier (_, name)
     | Member.PropertyExpression (_, Ast.Expression.Literal {
         Ast.Literal.value = Ast.Literal.String name;
         _;
