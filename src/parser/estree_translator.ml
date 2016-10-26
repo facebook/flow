@@ -542,13 +542,18 @@ end with type t = Impl.t) = struct
     |]
   )
 
-  and identifier (loc, { Identifier.
-    name = (_, name);
-    typeAnnotation;
-    optional;
-  }) =
+  and identifier (loc, name) =
     node "Identifier" loc [|
       "name", string name;
+      "typeAnnotation", null;
+      "optional", bool false;
+    |]
+
+  and pattern_identifier loc {
+    Pattern.Identifier.name; typeAnnotation; optional;
+  } =
+    node "Identifier" loc [|
+      "name", string (snd name);
       "typeAnnotation", option type_annotation typeAnnotation;
       "optional", bool optional;
     |]
@@ -573,14 +578,26 @@ end with type t = Impl.t) = struct
     |]
 
   and declare_variable (loc, d) = Statement.DeclareVariable.(
+    let id_loc = Loc.btwn (fst d.id) (match d.typeAnnotation with
+      | Some typeAnnotation -> fst typeAnnotation
+      | None -> fst d.id) in
     node "DeclareVariable" loc [|
-      "id", identifier d.id;
+      "id", pattern_identifier id_loc {
+        Pattern.Identifier.name = d.id;
+                           typeAnnotation = d.typeAnnotation;
+                           optional = false;
+      };
     |]
   )
 
   and declare_function (loc, d) = Statement.DeclareFunction.(
+    let id_loc = Loc.btwn (fst d.id) (fst d.typeAnnotation) in
     node "DeclareFunction" loc [|
-      "id", identifier d.id;
+      "id", pattern_identifier id_loc {
+        Pattern.Identifier.name = d.id;
+                           typeAnnotation = Some d.typeAnnotation;
+                           optional = false;
+      };
       "predicate", option predicate d.predicate
     |]
   )
@@ -738,7 +755,8 @@ end with type t = Impl.t) = struct
           "left", pattern left;
           "right", expression right
         |]
-    | _loc, Identifier id -> identifier id
+    | loc, Identifier pattern_id ->
+        pattern_identifier loc pattern_id
     | _loc, Expression expr -> expression expr)
 
   and function_params = function

@@ -14,12 +14,7 @@
  *)
 
 module rec Identifier : sig
-  type t = Loc.t * t'
-  and t' = {
-    name: Loc.t * string;
-    typeAnnotation: Type.annotation option;
-    optional: bool;
-  }
+  type t = Loc.t * string
 end = Identifier
 
 and Literal : sig
@@ -362,11 +357,13 @@ and Statement : sig
   module DeclareVariable : sig
     type t = {
       id: Identifier.t;
+      typeAnnotation: Type.annotation option;
     }
   end
   module DeclareFunction : sig
     type t = {
       id: Identifier.t;
+      typeAnnotation: Type.annotation;
       predicate: Type.Predicate.t option;
     }
   end
@@ -924,6 +921,13 @@ and Pattern : sig
     type t = {
       left: Pattern.t;
       right: Expression.t;
+    }
+  end
+  module Identifier : sig
+    type t = {
+      name: Identifier.t;
+      typeAnnotation: Type.annotation option;
+      optional: bool;
     }
   end
   type t = Loc.t * t'
