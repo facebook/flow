@@ -25,7 +25,7 @@ let optional_ident_name = function
 | Some ident -> ident_name ident
 
 let error_type cx loc msg =
-  FlowError.add_error cx (loc, [msg]);
+  FlowError.add_output cx msg;
   AnyT.at loc
 
 let is_suppress_type cx type_name =
@@ -38,8 +38,7 @@ let check_type_param_arity cx loc params n f =
   if num_params = n
   then f ()
   else
-    let msg = spf "Incorrect number of type parameters (expected %n)" n in
-    error_type cx loc msg
+    error_type cx loc (FlowError.ETypeParamArity (loc, n))
 
 let mk_custom_fun cx loc typeParameters kind =
   check_type_param_arity cx loc typeParameters 0 (fun () ->
@@ -96,7 +95,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         "typeof-annotation" qualification in
       Flow_js.mk_typeof_annotation cx valtype
   | _ ->
-    error_type cx loc "Unexpected typeof expression"
+    error_type cx loc (FlowError.EUnexpectedTypeof loc)
   end
 
 | loc, Tuple ts ->
@@ -186,8 +185,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let rep = UnionRep.make t0 t1 ts in
       UnionT (mk_reason RUnionType loc, rep)
     | _ ->
-      let msg = "Incorrect number of type parameters (expected at least 2)" in
-      error_type cx loc msg)
+      error_type cx loc (FlowError.ETypeParamMinArity (loc, 2)))
 
   (* $All<...T> is the intersection of types ...T *)
   | "$All" ->
@@ -196,8 +194,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let rep = InterRep.make t0 t1 ts in
       IntersectionT (mk_reason RIntersectionType loc, rep)
     | _ ->
-      let msg = "Incorrect number of type parameters (expected at least 2)" in
-      error_type cx loc msg)
+      error_type cx loc (FlowError.ETypeParamMinArity (loc, 2)))
 
   (* $Tuple<...T> is the tuple of types ...T *)
   | "$Tuple" ->
@@ -232,8 +229,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       | [t; SingletonStrT (_, key)] ->
         EvalT (t, TypeDestructorT
           (mk_reason (RCustom "property type") loc, PropertyType key), mk_id())
-      | _ -> error_type cx loc
-        "expected object type and string literal as arguments to $PropertyType"
+      | _ ->
+        error_type cx loc (FlowError.EPropertyTypeAnnot loc)
     )
 
   (* $NonMaybeType<T> acts as the type T without null and void *)
@@ -290,9 +287,7 @@ let rec convert cx tparams_map = Ast.Type.(function
             Flow_js.flow cx (remote_module_t, CJSRequireT(reason, t))
           )
       | _ ->
-          let msg = "$Exports requires a string literal" in
-          FlowError.add_error cx (loc, [msg]);
-          AnyT.t
+          error_type cx loc (FlowError.EExportsAnnot loc)
     )
 
   | "$Abstract" ->
@@ -339,7 +334,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         Flow_js.reposition cx reason (SMap.find_unsafe "this" tparams_map)
       )
     else (
-      FlowError.add_warning cx (loc, ["Unexpected use of `this` type"]);
+      FlowError.(add_output cx (EUnexpectedThisType loc));
       AnyT.t
     )
 
@@ -457,8 +452,8 @@ let rec convert cx tparams_map = Ast.Type.(function
             ~is_predicate:true tout
         )
 
-      | _ -> error_type cx loc "expected number of refined variables\
-              (currently only supporting one variable)"
+      | _ ->
+        error_type cx loc (FlowError.EPredAnnot loc)
     )
 
   | "$Refine" ->
@@ -469,8 +464,8 @@ let rec convert cx tparams_map = Ast.Type.(function
           let reason = mk_reason (RCustom "refined type") loc in
           let pred = LatentP (fun_pred_t, idx) in
           EvalT (base_t, DestructuringT (reason, Refine pred), mk_id())
-      | _ -> error_type cx loc
-        "expected base type and predicate type as arguments to $Refine"
+      | _ ->
+        error_type cx loc (FlowError.ERefineAnnot loc)
     )
 
   (* other applications with id as head expr *)
@@ -535,8 +530,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         let p = Field (t, polarity) in
         SMap.add name p props_map
     | _ ->
-      let msg = "Unsupported key in object type" in
-      FlowError.add_error cx (loc, [msg]);
+      FlowError.(add_output cx (EUnsupportedKeyInObjectType loc));
       props_map
   ) SMap.empty properties in
   let props_map =
@@ -565,8 +559,8 @@ let rec convert cx tparams_map = Ast.Type.(function
         | None -> None in
         (* TODO: multiple indexers *)
         List.iter (fun (indexer_loc, _) ->
-          let msg = "multiple indexers are not supported" in
-          FlowError.add_error cx (indexer_loc, [msg]);
+          FlowError.(add_output cx
+            (EUnsupportedSyntax (indexer_loc, MultipleIndexers)))
         ) rest;
         let keyt = convert cx tparams_map key in
         let valuet = convert cx tparams_map value in
@@ -641,9 +635,7 @@ and mk_rest cx = function
       RestT tvar
   | t ->
       let r = reason_of_t t in
-      let msg =
-        "rest parameter should have an explicit array type (or type `any`)" in
-      FlowError.(add_warning cx (mk_info r [msg]));
+      FlowError.(add_output cx (EInvalidRestParam r));
       RestT (AnyT.why r)
 
 and mk_type cx tparams_map reason = function

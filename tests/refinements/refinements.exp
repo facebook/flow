@@ -140,19 +140,19 @@ cond_prop.js:48
 
 eq.js:5
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
-             ^ string. Cannot be compared to
+             ^ string. This type cannot be compared to
   5:     if (x == y) {} // error, string & number are not comparable (unsafe casting)
                   ^ number
 
 eq.js:19
  19:     if (x.y == 123) {} // error
-             ^^^ string literal `bar`. Cannot be compared to
+             ^^^ string literal `bar`. This type cannot be compared to
  19:     if (x.y == 123) {} // error
                     ^^^ number
 
 eq.js:19
  19:     if (x.y == 123) {} // error
-             ^^^ string literal `foo`. Cannot be compared to
+             ^^^ string literal `foo`. This type cannot be compared to
  19:     if (x.y == 123) {} // error
                     ^^^ number
 

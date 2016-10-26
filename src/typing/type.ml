@@ -2030,3 +2030,17 @@ let rec string_of_predicate = function
 
   | LatentP (OpenT (_, id),i) -> spf "LatentPred(TYPE_%d, %d)" id i
   | LatentP (t,i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
+
+let literal_eq x = function
+  | Literal y -> x = y
+  | Truthy -> false
+  | AnyLiteral -> false
+
+let number_literal_eq (x, _) = function
+  | Literal (y, _) -> x = y
+  | Truthy -> false
+  | AnyLiteral -> false
+
+let boolean_literal_eq x = function
+  | Some y -> x = y
+  | None -> false

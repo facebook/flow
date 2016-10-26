@@ -153,11 +153,7 @@ let mark_exports_type cx reason new_exports_type = Context.(
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      let msg =
-        "Unable to determine module type (CommonJS vs ES) if both an export " ^
-        "statement and module.exports are used in the same module!"
-      in
-      FlowError.(add_warning cx (mk_info reason [msg]))
+      FlowError.(add_output cx (EIndeterminateModuleType reason))
   | _ -> ()
   );
   Context.set_module_exports_type cx new_exports_type
@@ -201,13 +197,7 @@ let warn_or_ignore_export_star_as cx name =
   if name = None then () else
   match Context.esproposal_export_star_as cx, name with
   | Options.ESPROPOSAL_WARN, Some(loc, _) ->
-    FlowError.add_warning cx (loc, [
-      "Experimental `export * as` usage";
-      "`export * as` is an active early stage feature proposal that may " ^
-        "change. You may opt-in to using it anyway by putting " ^
-        "`esproposal.export_star_as=enable` into the [options] section " ^
-        "of your .flowconfig"
-    ])
+    FlowError.(add_output cx (EExperimentalExportStarAs loc))
   | _ -> ()
 
 (* Module exports are treated differently than `exports`. The latter is a

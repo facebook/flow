@@ -1,12 +1,12 @@
 equals.js:7
   7: (1 == ""); // error
-      ^ number. Cannot be compared to
+      ^ number. This type cannot be compared to
   7: (1 == ""); // error
            ^^ string
 
 equals.js:8
   8: ("" == 1); // error
-      ^^ string. Cannot be compared to
+      ^^ string. This type cannot be compared to
   8: ("" == 1); // error
             ^ number
 

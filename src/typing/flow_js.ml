@@ -25,7 +25,9 @@ open Utils_js
 open Reason
 open Constraint
 open Type
-open Flow_error
+
+module FlowError = Flow_error
+module Ops = FlowError.Ops
 
 (* The following functions are used as constructors for function types and
    object types, which unfortunately have many fields, not all of which are
@@ -1044,6 +1046,13 @@ end
 
 (*********************************************************************)
 
+exception SpeculativeError of FlowError.error_message
+
+let add_output cx trace msg =
+  if Speculation.speculating ()
+  then raise (SpeculativeError msg)
+  else FlowError.add_output cx ~trace msg
+
 (********************)
 (* subtype relation *)
 (********************)
@@ -1128,7 +1137,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        is, then when speculation is complete, the action either fires or is
        discarded depending on whether the case that created the action is
        selected or not. *)
-    if not (defer_action cx (Speculation.Action.Flow (l, u))) then
+    if not Speculation.(defer_action cx (Action.Flow (l, u))) then
 
     match (l,u) with
 
@@ -1318,8 +1327,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*************)
 
     | (_, DebugPrintT (reason)) ->
-      let msg = (spf "!!! DebugPrintT: %s" (Debug_js.jstr_of_t cx l)) in
-      add_error cx (mk_info reason [msg]);
+      add_output cx trace (FlowError.EDebugPrint (reason, l))
 
     (************)
     (* tainting *)
@@ -1456,17 +1464,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (l, t)
 
     | (_, ImportTypeT(reason, export_name, _)) ->
-      let msg_export =
-        if export_name = "default" then "default" else spf "`%s`" export_name
-      in
-      add_error cx (mk_info reason [
-        spf
-          ("The %s export is a value, but not a type. `import type` only " ^^
-           "works on type exports like type aliases, interfaces, and " ^^
-           "classes. If you intended to import the type *of* a value, " ^^
-           "please use `import typeof` instead.")
-          msg_export
-      ])
+      add_output cx trace (FlowError.EImportValueAsType (reason, export_name))
 
     (************************************************************************)
     (* `import typeof` creates a properly-parameterized type alias for the  *)
@@ -1477,17 +1475,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, typeof_t)), t)
 
     | ((TypeT _ | PolyT(_, TypeT _)), ImportTypeofT(reason, export_name, _)) ->
-      let msg_export =
-        if export_name = "default" then "default" else spf "`%s`" export_name
-      in
-      add_error cx (mk_info reason [
-        spf
-          ("The %s export is a type, but not a value. `import typeof` only " ^^
-           "works on value exports like classes, vars, lets, etc. If you " ^^
-           "intended to import a type alias or interface, please use " ^^
-           "`import type` instead.")
-          msg_export
-      ])
+      add_output cx trace (FlowError.EImportTypeAsTypeof (reason, export_name))
 
     | (_, ImportTypeofT(reason, _, t)) ->
       let typeof_t = mk_typeof_annotation cx ~trace l in
@@ -1720,7 +1708,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             match SMap.get "default" exports_tmap with
               | Some t -> t
               | None ->
-                let msg = "This module has no default export." in
                 (**
                  * A common error while using `import` syntax is to forget or
                  * misunderstand the difference between `import foo from ...`
@@ -1735,13 +1722,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                  * that up as a possible "did you mean?" suggestion.
                  *)
                 let known_exports = SMap.keys exports_tmap in
-                let suggestions = typo_suggestions known_exports local_name in
-                let msg = if List.length suggestions = 0 then msg else msg ^ (
-                  spf " Did you mean `import {%s} from \"%s\"`?"
-                    (List.hd suggestions)
-                    module_name
-                ) in
-                add_error cx (mk_info reason [msg]);
+                let suggestion = typo_suggestion known_exports local_name in
+                add_output cx trace
+                  (FlowError.ENoDefaultExport (reason, module_name, suggestion));
                 AnyT.t
       in
 
@@ -1807,25 +1790,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let has_default_export = SMap.get "default" exports_tmap <> None in
 
             let msg =
-              if (num_exports = 1 && has_default_export)
-              then (
-                spf
-                  ("This module only has a default export. Did you mean " ^^
-                  "`import %s from ...`?")
-                  export_name
-              ) else (
-                let msg =
-                  spf "This module has no named export called `%s`." export_name
-                in
-
+              if num_exports = 1 && has_default_export
+              then
+                FlowError.EOnlyDefaultExport (reason, export_name)
+              else
                 let known_exports = SMap.keys exports_tmap in
-                let suggestions = typo_suggestions known_exports export_name in
-                if List.length suggestions = 0 then msg else (
-                  msg ^ (spf " Did you mean `%s`?" (List.hd suggestions))
-                )
-              )
+                let suggestion = typo_suggestion known_exports export_name in
+                FlowError.ENoNamedExport (reason, export_name, suggestion)
             in
-            add_error cx (mk_info reason [msg]);
+            add_output cx trace msg;
             AnyT.why reason
         ) in
         rec_flow_t cx trace (import_t, t)
@@ -1841,12 +1814,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason, t)
 
     | ((PolyT (_, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
-      add_error cx (mk_info reason [
-        spf
-          ("`%s` is a type, but not a value. In order to import it, please " ^^
-           "use `import type`.")
-          name
-      ])
+      add_output cx trace (FlowError.EImportTypeAsValue (reason, name))
 
     | (_, AssertImportIsValueT(_, _)) -> ()
 
@@ -1971,9 +1939,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ) in
           rec_flow_t cx trace (MaybeT unwrapped_t, return_t)
         | _ ->
-          add_error cx (
-            mk_info reason_op ["idx() function takes exactly two params!"]
-          )
+          (* Why is idx strict about arity? No other functions are. *)
+          add_output cx trace (FlowError.EIdxArity reason_op)
       )
 
     (* Unwrap idx() callback param *)
@@ -2020,15 +1987,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (IdxWrapper (idx_reason, prop_type), t_out)
 
     | (IdxWrapper (reason, _), UseT _) ->
-      add_error cx (mk_info reason [
-        "idx() callback functions may not be annotated and they may only " ^
-        "access properties on the callback parameter!"
-      ])
+      add_output cx trace (FlowError.EIdxUse1 reason)
 
     | (IdxWrapper (reason, _), _) ->
-      add_error cx (mk_info reason [
-        "idx() callbacks may only access properties on the callback parameter!"
-      ])
+      add_output cx trace (FlowError.EIdxUse2 reason)
 
     (***************)
     (* maybe types *)
@@ -2285,51 +2247,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         necessity we allow all string types to flow to StrT (whereas only
         exactly matching string literal types may flow to SingletonStrT).  **)
 
-    (*********************************)
-    (* string singleton upper bounds *)
-    (*********************************)
+    | StrT (_, actual), UseT (_, SingletonStrT (_, expected)) ->
+      if literal_eq expected actual
+      then ()
+      else
+        let reasons = FlowError.ordered_reasons l u in
+        add_output cx trace
+          (FlowError.EExpectedStringLit (reasons, expected, actual))
 
-    | (StrT (_, Literal x), UseT (_, SingletonStrT (_, key))) ->
-        if x <> key then
-          let msg = spf "Expected string literal `%s`, got `%s` instead" key x in
-          flow_err cx trace msg l u
+    | NumT (_, actual), UseT (_, SingletonNumT (_, expected)) ->
+      if number_literal_eq expected actual
+      then ()
+      else
+        let reasons = FlowError.ordered_reasons l u in
+        add_output cx trace
+          (FlowError.EExpectedNumberLit (reasons, expected, actual))
 
-    | (StrT (_, (Truthy | AnyLiteral)), UseT (_, SingletonStrT (_, key))) ->
-      flow_err cx trace (spf "Expected string literal `%s`" key) l u
-
-    (*********************************)
-    (* number singleton upper bounds *)
-    (*********************************)
-
-    (** Similar to SingletonStrT, SingletonNumT models a type annotation that
-        looks like a single number literal. This contrasts with
-        `NumT(_, Some num)`, which starts out representing `num` but allows any
-        number, whereas `SingletonNumT` accepts only exactly that value. **)
-    | (NumT (_, Literal (x, _)), UseT (_, SingletonNumT (_, (y, _)))) ->
-        (* this equality check is ok for now because we don't do arithmetic *)
-        if x <> y then
-          let msg = spf "Expected number literal `%.16g`, got `%.16g` instead" y x in
-          flow_err cx trace msg l u
-
-    | (NumT (_, (Truthy | AnyLiteral)), UseT (_, SingletonNumT (_, (y, _)))) ->
-      flow_err cx trace (spf "Expected number literal `%.16g`" y) l u
-
-    (**********************************)
-    (* boolean singleton upper bounds *)
-    (**********************************)
-
-    (** Similar to SingletonStrT, SingletonBoolT models a type annotation that
-        looks like a specific boolean literal (either true or false, but not
-        both). This contrasts with `BoolT(_, Some b)`, which starts out
-        representing `b` but allows any boolean, whereas `SingletonBoolT`
-        accepts only exactly that value. **)
-    | (BoolT (_, Some x), UseT (_, SingletonBoolT (_, y))) ->
-        if x <> y then
-          let msg = spf "Expected boolean literal `%b`, got `%b` instead" y x in
-          flow_err cx trace msg l u
-
-    | (BoolT (_, None), UseT (_, SingletonBoolT (_, y))) ->
-      flow_err cx trace (spf "Expected boolean literal `%b`" y) l u
+    | BoolT (_, actual), UseT (_, SingletonBoolT (_, expected)) ->
+      if boolean_literal_eq expected actual
+      then ()
+      else
+        let reasons = FlowError.ordered_reasons l u in
+        add_output cx trace
+          (FlowError.EExpectedBooleanLit (reasons, expected, actual))
 
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
@@ -2358,8 +2298,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Literal x, _ when Context.has_prop cx mapr x -> ()
       (* If we have a dictionary, try that next *)
       | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
-      | _ ->
-          flow_err_prop_not_found cx trace (reason_op, reason_o))
+      | _ -> add_output cx trace (FlowError.EPropNotFound (reason_op, reason_o)))
 
     | ObjT (reason_o, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
       HasPropT (reason_op, strict, x) ->
@@ -2382,10 +2321,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let fields = SMap.union fields_tmap methods_tmap in
       (match SMap.get x fields with
       | Some _ -> ()
-      | None -> flow_err_prop_not_found cx trace (reason_op, reason_o)
-      )
+      | None -> add_output cx trace (FlowError.EPropNotFound (reason_op, reason_o)))
+
     | (InstanceT (reason_o, _, _, _), HasOwnPropT(reason_op, _)) ->
-        flow_err_reasons cx trace "Expected string literal" (reason_op, reason_o)
+        let msg = "Expected string literal" in
+        add_output cx trace (FlowError.ECustom ((reason_op, reason_o), msg))
 
     | InstanceT (reason_o, _, super, instance),
       HasPropT (reason_op, strict, Literal x) ->
@@ -2399,10 +2339,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some r -> Some r
           | None -> Some reason_o
           in
-          rec_flow cx trace (super, HasPropT (reason_op, strict, Literal x))
-      )
+          rec_flow cx trace (super, HasPropT (reason_op, strict, Literal x)))
+
     | (InstanceT (reason_o, _, _, _), HasPropT(reason_op, _, _)) ->
-        flow_err_reasons cx trace "Expected string literal" (reason_op, reason_o)
+        let msg = "Expected string literal" in
+        add_output cx trace (FlowError.ECustom ((reason_op, reason_o), msg))
 
     (* AnyObjT has every prop *)
     | AnyObjT _, HasOwnPropT _
@@ -2645,9 +2586,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* inexact LB ~> $Exact<UB>. error *)
     | _, UseT (_, ExactT _) ->
-      flow_err cx trace
-        "Inexact type is incompatible with exact type"
-        l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.EIncompatibleWithExact reasons)
 
     (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
 
@@ -2665,15 +2605,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not (Context.has_prop cx obj_u.props_tmap prop_name)
         then
           let rl = replace_reason_const (RProperty prop_name) rl in
-          flow_err_reasons cx trace "Property not found in" (rl, ru)
+          add_output cx trace (FlowError.EPropNotFound (rl, ru))
       );
       rec_flow_t cx trace (ObjT (rl, xl), ObjT (ru, xu))
 
     (* unsupported kind *)
     | _, MakeExactT _ ->
-      flow_err cx trace
-        "Unsupported exact type"
-        l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.EUnsupportedExact reasons)
 
     (**************************************************************************)
     (* TestPropT is emitted for property reads in the context of branch tests.
@@ -2776,8 +2715,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match key_or_err with
       | Utils_js.OK key -> rec_flow cx trace
           (return_t, CallOpenPredT (reason, sense, key, unrefined_t, fresh_t))
-      | Utils_js.Err (msg, rs) ->
-        flow_err_reasons cx trace msg rs;
+      | Utils_js.Err (msg, reasons) ->
+        add_output cx trace (FlowError.ECustom (reasons, msg));
         rec_flow_t cx trace (unrefined_t, fresh_t))
 
 
@@ -2822,8 +2761,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | OpenPredT _, UseT (_, OpenPredT _) ->
       let loc = loc_of_reason (reason_of_use_t u) in
-      let msg = "internal error: OpenPredT ~> OpenPredT without substitution" in
-      add_internal_error cx (loc, [msg])
+      add_output cx trace FlowError.(EInternal (loc, OpenPredWithoutSubst))
 
     (*********************************************)
     (* Using predicate functions as regular ones *)
@@ -2961,8 +2899,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       begin match u with
       | UseT (_, TypeT _) ->
         if Context.enforce_strict_type_args cx then
-          let msg = missing_type_args_msg ids in
-          add_error cx (mk_info reason_op [msg])
+          add_output cx trace (FlowError.EMissingTypeArgs (reason_op, ids))
         else
           let inst = instantiate_poly_default_args
             cx trace ~reason_op ~reason_tapp (ids, t) in
@@ -3014,9 +2951,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not ip1 then
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
-          flow_err_reasons cx trace
-            "Function is incompatible with"
-            (reason_of_t l, reason_of_use_t u)
+          add_output cx trace (FlowError.ECustom (
+            (reason_of_t l, reason_of_use_t u),
+            "Function is incompatible with"))
         else
           begin match p1, p2 with
           | Some s1, Some s2 ->
@@ -3030,10 +2967,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               let mod_reason n = replace_reason (fun _ ->
                 RCustom (spf "predicate function with %d arguments" n)
               ) in
-              flow_err_reasons cx trace
-                "Predicate function is incompatible with"
+              add_output cx trace (FlowError.ECustom (
                 (mod_reason (List.length s1) (reason_of_t l),
-                mod_reason (List.length s2) (reason_of_use_t u))
+                 mod_reason (List.length s2) (reason_of_use_t u)),
+                "Predicate function is incompatible with"))
             else
               (* NOTE: do not use List.combine here *)
               let subst = Utils_js.zip s1 s2 |>
@@ -3042,8 +2979,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               rec_flow cx trace (t1, SubstOnPredT (reason, subst, t2))
           | _ ->
             let loc = loc_of_reason (reason_of_use_t u) in
-            let msg = "internal error: FunT -> FunT no params" in
-            add_internal_error cx (loc, [msg])
+            add_output cx trace
+              FlowError.(EInternal (loc, PredFunWithoutParamNames))
           end
       else
         rec_flow cx trace (t1, UseT (use_op, t2))
@@ -3125,7 +3062,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | AnyFunT _ -> ()
       | AnyObjT _ -> ()
       | _ ->
-        flow_err cx trace (err_msg l u) l u
+        add_output cx trace (FlowError.EIncompatible (l, u))
       );
       rec_flow_t cx trace (
         get_builtin_typeapp cx ~trace elem_reason "React$Element" [config],
@@ -3211,7 +3148,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                non-speculation mode, the side effect here is racy, so it either
                needs to be taken out or replaced with something more
                robust. Tracked by #11299251. *)
-            if not (speculating ()) then Context.set_prop cx lflds s up
+            if not (Speculation.speculating ()) then Context.set_prop cx lflds s up
           ) else (
             (* prop from aliased LB *)
             rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
@@ -3243,7 +3180,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                non-speculation mode, the side effect here is racy, so it either
                needs to be taken out or replaced with something more
                robust. Tracked by #11299251. *)
-            if not (speculating ()) then Context.set_prop cx lflds s up;
+            if not (Speculation.speculating ()) then Context.set_prop cx lflds s up;
           | _ ->
             (* otherwise, look up the property in the prototype *)
             let strict = match sealed_in_op ureason lflags.sealed, ldict with
@@ -3371,7 +3308,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | None ->
             (* TODO: ShapeT should have its own reason *)
             let reason_op = reason_of_t proto in
-            flow_err_prop_access cx trace x (reason, reason_op) p Read
+            add_output cx trace
+              (FlowError.EPropAccess ((reason, reason_op), x, p, Read))
         )
 
     | (_, UseT (_, ShapeT (o))) ->
@@ -3430,9 +3368,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* non-class/function values used in annotations are errors *)
     | _, UseT (_, TypeT _) ->
-      flow_err cx trace
-        "Ineligible value used in/as type annotation (did you forget 'typeof'?)"
-        l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.EValueUsedAsType reasons)
 
     | (ClassT(l), UseT (use_op, ClassT(u))) ->
       rec_flow cx trace (l, UseT (use_op, u))
@@ -3561,7 +3498,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Read, Some t1 -> rec_flow_t cx trace (t1, t2)
           | Write, Some t1 -> rec_flow_t cx trace (t2, t1)
           | _, None ->
-            flow_err_prop_access cx trace x (lreason, reason_op) p rw)
+            add_output cx trace
+              (FlowError.EPropAccess ((lreason, reason_op), x, p, rw)))
         | LookupProp up ->
           let p, up = match p, up with
           | Field (AbstractT t, polarity), Field (AbstractT ut, upolarity) ->
@@ -3715,7 +3653,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t = filter_optional cx ~trace r t in
             rec_flow cx trace (proto, SetPropT (r, (r, x), t));
           | None ->
-            flow_err_prop_access cx trace x (lreason, reason_op) p Read
+            add_output cx trace
+              (FlowError.EPropAccess ((lreason, reason_op), x, p, Read))
         )
       );
       Ops.pop ();
@@ -3732,7 +3671,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Some t ->
             rec_flow cx trace (proto, SetPropT (reason_op, (reason_op, x), t))
           | None ->
-            flow_err_prop_access cx trace x (lreason, reason_op) p Read
+            add_output cx trace
+              (FlowError.EPropAccess ((lreason, reason_op), x, p, Read))
         )
       );
       rec_flow_t cx trace (proto, t)
@@ -3858,12 +3798,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************************************)
 
     | (ObjT (_, {flags; _}), SetPropT(_, (_, "constructor"), _)) ->
-      if flags.frozen then flow_err cx trace "Mutation not allowed on" l u
+      if flags.frozen
+      then
+        let reasons = FlowError.ordered_reasons l u in
+        add_output cx trace (FlowError.EMutationNotAllowed reasons)
 
     (** o.x = ... has the additional effect of o[_] = ... **)
 
     | (ObjT (_, { flags; _ }), SetPropT _) when flags.frozen ->
-      flow_err cx trace "Mutation not allowed on" l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.EMutationNotAllowed reasons)
 
     | ObjT (reason_obj, o), SetPropT (reason_op, propname, tin) ->
       write_obj_prop cx trace o propname reason_obj reason_op tin
@@ -4574,7 +4518,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (MixedT (reason, _) | FunProtoT reason),
       LookupT (reason_op, Strict strict_reason, [], x, _) ->
-      flow_err_strict_lookup_failed cx trace x reason (reason_op, strict_reason)
+      add_output cx trace
+        (FlowError.EStrictLookupFailed ((reason_op, strict_reason), reason, x))
 
     | (MixedT (reason, _) | FunProtoT reason),
       LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [], x, action) ->
@@ -4583,8 +4528,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (match strict with
       | None -> ()
       | Some strict_reason ->
-        flow_err_strict_lookup_failed cx trace x reason
-          (reason_op, strict_reason));
+        add_output cx trace
+          (FlowError.EStrictLookupFailed ((reason_op, strict_reason), reason, x)));
 
       (* Install shadow prop (if necessary) and link up proto chain. *)
       let p = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
@@ -4648,7 +4593,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
-        flow_err_prop_not_found cx trace (reason_op, reason_strict)
+        add_output cx trace (FlowError.EPropNotFound (reason_op, reason_strict))
 
     (* SuperT only involves non-strict lookups *)
     | (MixedT _, SuperT _) -> ()
@@ -4674,7 +4619,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (MixedT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
-      flow_err_reasons cx trace msg (reason_of_t t, reason_of_t tc)
+      add_output cx trace (FlowError.ECustom ((reason_of_t t, reason_of_t tc), msg))
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -4682,45 +4627,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
 
-    (* when unexpected types flow into a GetPropT/SetPropT (e.g. void or other
-       non-object-ish things), then use `reason_prop`, which represents the
-       reason for the prop itself, not the lookup action. *)
     | (_, GetPropT (_, (reason_prop, _), _))
     | (_, SetPropT (_, (reason_prop, _), _)) ->
-      flow_err_reasons cx trace (err_msg l u) (reason_prop, reason_of_t l)
+      add_output cx trace (FlowError.EIncompatibleProp (l, u, reason_prop))
 
     | _, UseT (FunCallThis reason_call, u) ->
-      let msg = "This function call's `this` type is incompatible with" in
-      let extra = (Errors.InfoLeaf ([
-        Loc.none, ["The call's `this` type is:"];
-        info_of_reason (reason_of_t l);
-      ]))::[] in
-      flow_err_reasons cx trace msg ~extra (reason_call, reason_of_t u)
+      add_output cx trace
+        (FlowError.EFunCallThis (reason_of_t l, reason_of_t u, reason_call))
 
     | _, UseT (FunReturn, _) ->
-      let msg = "This type is incompatible with the expected return type of" in
-      flow_err cx trace msg l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.EFunReturn reasons)
 
     | _, UseT (FunImplicitReturn, u) ->
-      let msg = spf
-        "This type is incompatible with an implicitly-returned %s."
-        (string_of_desc (desc_of_t l)) in
-      add_error cx (mk_info (reason_of_t u) [msg])
+      add_output cx trace
+        (FlowError.EFunImplicitReturn (reason_of_t l, reason_of_t u))
 
     | _, UseT (Addition, _) ->
-      flow_err cx trace "This type cannot be added to" l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.EAddition reasons)
 
     | _, UseT (Coercion, _) ->
-      flow_err cx trace "This type cannot be coerced to" l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.ECoercion reasons)
 
     | _, UseT (MissingTupleElement i, _) ->
-      let msg = spf
-        "This type is incompatible with a tuple type that expects \
-a %s element of non-optional type" (ordinal i) in
-      flow_err cx trace msg l u
+      let reasons = FlowError.ordered_reasons l u in
+      add_output cx trace (FlowError.EMissingTupleElement (reasons, i))
 
     | _ ->
-      flow_err cx trace (err_msg l u) l u
+      add_output cx trace (FlowError.EIncompatible (l, u))
   )
 
 (* some types need to be resolved before proceeding further *)
@@ -4763,9 +4699,11 @@ and flow_addition cx trace reason l r u =
     rec_flow_t cx trace (EmptyT.why reason, u)
 
   | (MixedT _, _) ->
-    flow_err_use_t cx trace "Cannot be added to" l r
+    let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
+    add_output cx trace (FlowError.EAddition reasons)
   | (_, MixedT _) ->
-    flow_err_use_t cx trace "Cannot be added to" r l
+    let reasons = FlowError.ordered_reasons r (UseT (UnknownUse, l)) in
+    add_output cx trace (FlowError.EAddition reasons)
 
   | ((NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _),
      (NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _)) ->
@@ -4789,7 +4727,9 @@ and flow_comparator cx trace reason l r =
   else match (l, r) with
   | (StrT _, StrT _) -> ()
   | (_, _) when numeric l && numeric r -> ()
-  | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
+  | (_, _) ->
+    let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
+    add_output cx trace (FlowError.EComparison reasons)
 
 (**
  * == equality
@@ -4802,7 +4742,9 @@ and flow_eq cx trace reason l r =
   if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
   else match (l, r) with
   | (_, _) when equatable (l, r) -> ()
-  | (_, _) -> flow_err_use_t cx trace "Cannot be compared to" l r
+  | (_, _) ->
+    let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
+    add_output cx trace (FlowError.EComparison reasons)
 
 and is_object_prototype_method = function
   | "isPrototypeOf"
@@ -4855,71 +4797,11 @@ and quick_error_fun_as_obj cx trace reason statics reason_o props =
       not (optional || x = "$call" || is_function_prototype x || SMap.mem x statics_own_props)
     ) props in
     SMap.iter (fun x _ ->
-      flow_err_prop_not_found cx trace (
-        replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o,
-        reason
-      )
+      let reason_prop = replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
+      add_output cx trace (FlowError.EPropNotFound (reason_prop, reason))
     ) props_not_found;
     not (SMap.is_empty props_not_found)
   | None -> false
-
-(* only on use-types - guard calls with is_use t *)
-and err_operation = function
-  | UseT (_, t) ->
-    failwith (spf "err_operation called on def type %s" (string_of_ctor t))
-
-  | GetPropT _ -> "Property cannot be accessed on"
-  | SetPropT _ -> "Property cannot be assigned on"
-  | MethodT _ -> "Method cannot be called on"
-  | CallT _ -> "Function cannot be called on"
-  | ApplyT _ -> "Expected array of arguments instead of"
-  | ConstructorT _ -> "Constructor cannot be called on"
-  | GetElemT _ -> "Computed property/element cannot be accessed on"
-  | SetElemT _ -> "Computed property/element cannot be assigned on"
-  | ElemT (_, ObjT _, _, Read) -> "Computed property cannot be accessed with"
-  | ElemT (_, ArrT _, _, Read) -> "Element cannot be accessed with"
-  | ElemT (_, ObjT _, _, Write) -> "Computed property cannot be assigned with"
-  | ElemT (_, ArrT _, _, Write) -> "Element cannot be assigned with"
-  | ObjAssignT _ -> "Expected object instead of"
-  | ObjRestT _ -> "Expected object instead of"
-  | ObjSealT _ -> "Expected object instead of"
-  | ArrRestT _ -> "Expected array instead of"
-  | SuperT _ -> "Cannot inherit"
-  | MixinT _ -> "Expected class instead of"
-  | SpecializeT _ -> "Expected polymorphic type instead of"
-  | ThisSpecializeT _ -> "Expected class instead of"
-  | VarianceCheckT _ -> "Expected polymorphic type instead of"
-  | LookupT _ -> "Property not found in"
-  | GetKeysT _ -> "Expected object instead of"
-  | HasOwnPropT _ -> "Property not found in"
-  | HasPropT _ -> "Property not found in"
-  | UnaryMinusT _ -> "Expected number instead of"
-  | MapTypeT (_, kind, _, _) ->
-    (match kind with
-    | TupleMap -> "Expected Iterable instead of"
-    | ObjectMap
-    | ObjectMapi -> "Expected object instead of")
-  | ReactCreateElementT _ -> "Expected React component instead of"
-  | CallLatentPredT _ -> "Expected predicated function instead of"
-  (* unreachable or unclassified use-types. until we have a mechanical way
-     to verify that all legit use types are listed above, we can't afford
-     to throw on a use type, so mark the error instead *)
-  | t ->
-    (spf "Type is incompatible with (unclassified use type: %s)"
-      (string_of_use_ctor t))
-
-and err_value = function
-  | NullT _ -> " possibly null value"
-  | VoidT _ -> " possibly undefined value"
-  | MaybeT _ -> " possibly null or undefined value"
-  | IntersectionT _
-  | MixedT (_, Empty_intersection) -> " any member of intersection type"
-  | _ -> ""
-
-and err_msg l u =
-  if is_use u
-  then spf "%s%s" (err_operation u) (err_value l)
-  else "This type is incompatible with"
 
 and ground_subtype = function
   (* tvars are not considered ground, so they're not part of this relation *)
@@ -5629,26 +5511,11 @@ and variance_check cx polarity = function
     variance_check cx polarity (tps, ts)
 
 and polarity_mismatch cx polarity tp =
-  let msg = spf
-    "%s position (expected `%s` to occur only %sly)"
-    (Polarity.string polarity)
-    tp.name
-    (Polarity.string tp.polarity) in
-  add_error cx (mk_info tp.reason [msg])
+  FlowError.(add_output cx (EPolarityMismatch (tp, polarity)))
 
 and poly_minimum_arity xs =
   List.filter (fun typeparam -> typeparam.default = None) xs
   |> List.length
-
-(* Missing type arguments error message for given poly type *)
-and missing_type_args_msg params =
-  let min = poly_minimum_arity params in
-  let max = List.length params in
-  let arity, args = if min = max
-    then spf "%d" max, if max = 1 then "argument" else "arguments"
-    else spf "%d-%d" min max, "arguments" in
-  spf "Application of polymorphic type needs \
-    <list of %s %s>. (Can use `*` for inferrable ones)" arity args
 
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs
@@ -5667,13 +5534,8 @@ and instantiate_poly_with_targs
     let loc = Loc.btwn (loc_of_reason x1.reason) (loc_of_reason xN.reason) in
     mk_reason (RCustom "See type parameters of definition here") loc in
   if List.length ts > maximum_arity
-  then begin
-    let msg = spf "Too many type arguments. Expected at most %d" maximum_arity in
-    add_extended_error cx [
-      mk_info reason_tapp [msg];
-      mk_info reason_arity [];
-    ]
-  end;
+  then add_output cx trace
+    (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
   let map, _ = List.fold_left
     (fun (map, ts) typeparam ->
       let t, ts = match typeparam, ts with
@@ -5682,11 +5544,8 @@ and instantiate_poly_with_targs
           subst cx map default, []
       | {default=None; _;}, [] ->
           (* fewer arguments than params but no default *)
-          let msg = spf "Too few type arguments. Expected at least %d" minimum_arity in
-          add_extended_error cx [
-            mk_info reason_tapp [msg];
-            mk_info reason_arity [];
-          ];
+          add_output cx trace
+            (FlowError.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
           AnyT reason_op, []
       | _, t::ts ->
           t, ts in
@@ -6170,9 +6029,9 @@ and speculative_match cx trace branch l u =
   let ops = Ops.get () in
   let typeapp_stack = TypeAppExpansion.get () in
   let cache = !Cache.FlowConstraint.cache in
-  set_speculative branch;
+  Speculation.set_speculative branch;
   let restore () =
-    restore_speculative ();
+    Speculation.restore_speculative ();
     Cache.FlowConstraint.cache := cache;
     TypeAppExpansion.set typeapp_stack;
     Ops.set ops
@@ -6283,7 +6142,7 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
              short-cut *)
           else begin
             let prev_case_id = prev_case.case_id in
-            let cases = choices_of_spec spec in
+            let cases: Type.t list = choices_of_spec spec in
             blame_unresolved cx trace prev_case_id case_id cases case_r r ts
           end
         end
@@ -6301,29 +6160,17 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
   | Speculation.ConditionalMatch case ->
     (* best choice that survived, congrats! fire deferred actions  *)
     fire_actions cx trace case.actions
-  | Speculation.NoMatch errs ->
+  | Speculation.NoMatch msgs ->
     (* everything failed; make a really detailed error message listing out the
        error found for each alternative *)
     let ts = choices_of_spec spec in
-    let errs = List.rev errs in
-    assert (List.length ts = List.length errs);
-    let extra = List.(combine ts errs) |> List.mapi (
-      fun i (t, err) ->
-        let header_infos = [
-          Loc.none, [spf "Member %d:" (i + 1)];
-          info_of_reason (reason_of_t t);
-          Loc.none, ["Error:"];
-        ] in
-        let error_infos, error_extra = Errors.(
-          infos_of_error err, extra_of_error err
-        ) in
-        let info_list = header_infos @ error_infos in
-        let info_tree = match error_extra with
-          | [] -> Errors.InfoLeaf (info_list)
-          | _ -> Errors.InfoNode (info_list, error_extra)
-        in
-        info_tree
-    ) in
+    let msgs = List.rev msgs in
+    assert (List.length ts = List.length msgs);
+    let extra = List.mapi (fun i t ->
+      let reason = reason_of_t t in
+      let msg = List.nth msgs i in
+      reason, msg
+    ) ts in
     let l,u = match spec with
       | UnionCases (l, us) ->
         let r = mk_union_reason r us in
@@ -6333,7 +6180,8 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
         let r = mk_intersection_reason r ls in
         MixedT (r, Empty_intersection), u
     in
-    flow_err cx trace (err_msg l u) ~extra l u
+    add_output cx trace
+      (FlowError.ESpeculationFailed (l, u, extra))
 
   in loop (Speculation.NoMatch []) trials
 )
@@ -6353,36 +6201,18 @@ and speculative_matches cx trace r speculation_id spec = Speculation.Case.(
    during a trial.
 *)
 and blame_unresolved cx trace prev_i i cases case_r r ts =
-  let infos = ts |> List.map (fun t ->
+  let rs = ts |> List.map (fun t ->
     rec_unify cx trace t AnyT.t;
-    info_of_reason (reason_of_t t)
+    reason_of_t t
   ) in
   let prev_case = reason_of_t (List.nth cases prev_i) in
   let case = reason_of_t (List.nth cases i) in
-  let extra = [
-    Errors.InfoLeaf [
-      Loc.none, [spf "Case %d may work:" (prev_i + 1)];
-      info_of_reason prev_case;
-    ];
-    Errors.InfoLeaf [
-      Loc.none, [spf "But if it doesn't, case %d looks promising too:" (i + 1)];
-      info_of_reason case;
-    ];
-    Errors.InfoLeaf (
-      (Loc.none,
-       [spf "Please provide additional annotation(s) to determine whether case %d works \
-(or consider merging it with case %d):"
-           (prev_i + 1)
-           (i + 1)
-       ])::
-        infos
-    )
-  ] in
-  add_extended_error cx ~extra [
-    (mk_info case_r
-       ["Could not decide which case to select"]);
-    (info_of_reason r)
-  ]
+  add_output cx trace (FlowError.ESpeculationAmbiguous (
+    (case_r, r),
+    (prev_i, prev_case),
+    (i, case),
+    rs
+  ))
 
 and trials_of_spec = function
   | UnionCases (l, us) ->
@@ -6521,7 +6351,8 @@ and get_prop cx trace reason_prop reason_op strict super x map tout =
     | Some t ->
       rec_flow cx trace (t, u)
     | None ->
-      flow_err_prop_access cx trace x (reason_op, reason_op) p Read)
+      add_output cx trace
+        (FlowError.EPropAccess ((reason_op, reason_op), x, p, Read)))
   | None ->
     let tout = tvar_with_constraint cx u in
     lookup_prop cx trace super reason_prop strict x (RWProp (tout, Read))
@@ -6535,7 +6366,8 @@ and set_prop cx trace reason_prop reason_op strict super x pmap tin =
     | Some t ->
       rec_flow_t cx trace (tin, t)
     | None ->
-      flow_err_prop_access cx trace x (reason_prop, reason_op) p Write)
+      add_output cx trace
+        (FlowError.EPropAccess ((reason_prop, reason_op), x, p, Write)))
   | None ->
     lookup_prop cx trace super reason_prop strict x (RWProp (tin, Write))
 
@@ -6573,7 +6405,7 @@ and write_obj_prop cx trace o (reason_prop, x) reason_obj reason_op tin =
     let up = Field (tin, Negative) in
     rec_flow_p cx trace reason_obj reason_op x (p, up)
   | None when sealed_in_op reason_op o.flags.sealed ->
-    flow_err_prop_not_found cx trace (reason_prop, reason_obj)
+    add_output cx trace (FlowError.EPropNotFound (reason_prop, reason_obj))
   | None ->
     let strict = ShadowWrite (Nel.one o.props_tmap) in
     rec_flow cx trace (o.proto_t,
@@ -6861,8 +6693,9 @@ and guard cx trace source pred result sink = match pred with
 
 | _ ->
   let loc = loc_of_reason (reason_of_t sink) in
-  let msg = spf "Unsupported guard predicate (%s)" (string_of_predicate pred)
-  in add_internal_error cx (loc, [msg])
+  let pred_str = string_of_predicate pred in
+  add_output cx trace
+    FlowError.(EInternal (loc, UnsupportedGuardPredicate pred_str))
 
 (**************)
 (* predicates *)
@@ -7168,7 +7001,8 @@ and prop_exists_test_generic reason key cx trace result orig_obj sense = functio
         rec_flow cx trace (t, GuardT (pred, orig_obj, result))
       | None ->
         (* prop cannot be read *)
-        flow_err_prop_access cx trace key (lreason, reason) p Read)
+        add_output cx trace
+          (FlowError.EPropAccess ((lreason, reason), key, p, Read)))
     | None when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
       (* prop is absent from exact object type *)
       if sense
@@ -7353,7 +7187,8 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       | None ->
         let reason_obj = reason_of_t obj in
         let reason = reason_of_t result in
-        flow_err_prop_access cx trace key (reason_obj, reason) p Read)
+        add_output cx trace
+          (FlowError.EPropAccess ((reason_obj, reason), key, p, Read)))
     | None ->
       (* TODO: possibly unsound to filter out orig_obj here, but if we
          don't, case elimination based on sentinel prop checking doesn't
@@ -7710,7 +7545,7 @@ and __unify cx t1 t2 trace =
      is, then when speculation is complete, the action either fires or is
      discarded depending on whether the case that created the action is
      selected or not. *)
-  if not (defer_action cx (Speculation.Action.Unify (t1, t2))) then
+  if not Speculation.(defer_action cx (Action.Unify (t1, t2))) then
 
   match t1, t2 with
 
@@ -7748,10 +7583,10 @@ and __unify cx t1 t2 trace =
         rec_unify cx trace lv uv
     | Some _, None ->
         let lreason = replace_reason_const RSomeProperty lreason in
-        flow_err_prop_not_found cx trace (lreason, ureason)
+        add_output cx trace (FlowError.EPropNotFound (lreason, ureason))
     | None, Some _ ->
         let ureason = replace_reason_const RSomeProperty ureason in
-        flow_err_prop_not_found cx trace (ureason, lreason)
+        add_output cx trace (FlowError.EPropNotFound (ureason, lreason))
     | None, None -> ()
     end;
 
@@ -7811,8 +7646,8 @@ and unify_props cx trace x r1 r2 p1 p2 =
       Polarity.compat (polarity1, polarity2) &&
       Polarity.compat (polarity2, polarity1)
     ) then
-      flow_err_prop_polarity_mismatch cx trace x (r1, r2)
-        (polarity1, polarity2)
+      add_output cx trace
+        (FlowError.EPropPolarityMismatch ((r1, r2), x, (polarity1, polarity2)))
 
 (* If some property `x` exists in one object but not another, ensure the
    property is compatible with a dictionary, or error if none. *)
@@ -7824,7 +7659,7 @@ and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
     let p2 = Field (value, dict_polarity) in
     unify_props cx trace x prop_reason dict_reason p p2
   | None ->
-    flow_err_prop_not_found cx trace (prop_reason, dict_reason)
+    add_output cx trace (FlowError.EPropNotFound (prop_reason, dict_reason))
 
 (* TODO: Unification between concrete types is still implemented as
    bidirectional flows. This means that the destructuring work is duplicated,
@@ -8019,7 +7854,9 @@ and perform_lookup_action cx trace x p lreason ureason = function
     match rw, Property.access rw p with
     | Read, Some t -> rec_flow_t cx trace (t, tout)
     | Write, Some t -> rec_flow_t cx trace (tout, t)
-    | _, None -> flow_err_prop_access cx trace x (lreason, ureason) p rw
+    | _, None ->
+      add_output cx trace
+        (FlowError.EPropAccess ((lreason, ureason), x, p, rw))
 
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in
@@ -8278,17 +8115,17 @@ and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason x = function
     | Some lt, Some ut ->
       rec_flow cx trace (lt, UseT (use_op, ut))
     | None, Some _ ->
-      flow_err_prop_polarity_mismatch cx trace x
-        (lreason, ureason)
-        (Property.polarity lp, Property.polarity up)
+      add_output cx trace (FlowError.EPropPolarityMismatch (
+        (lreason, ureason), x,
+        (Property.polarity lp, Property.polarity up)))
     | _ -> ());
     (match Property.write_t lp, Property.write_t up with
     | Some lt, Some ut ->
       rec_flow cx trace (ut, UseT (use_op, lt))
     | None, Some _ ->
-      flow_err_prop_polarity_mismatch cx trace x
-        (lreason, ureason)
-        (Property.polarity lp, Property.polarity up)
+      add_output cx trace (FlowError.EPropPolarityMismatch (
+        (lreason, ureason), x,
+        (Property.polarity lp, Property.polarity up)))
     | _ -> ())
 
 (* Ideally this function would not be required: either we call `flow` from
@@ -8315,8 +8152,8 @@ and flow cx (lower, upper) =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let msg = "*** Recursion limit exceeded ***" in
-    flow_err cx trace msg lower upper
+    let reasons = FlowError.ordered_reasons lower upper in
+    add_output cx trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
     raise ex
@@ -8353,8 +8190,8 @@ and unify cx t1 t2 =
   with
   | RecursionCheck.LimitExceeded trace ->
     (* log and continue *)
-    let msg = "*** Recursion limit exceeded ***" in
-    flow_err cx trace msg t1 (UseT (UnknownUse, t2))
+    let reasons = FlowError.ordered_reasons t1 (UseT (UnknownUse, t2)) in
+    add_output cx trace (FlowError.ERecursionLimit reasons)
   | ex ->
     (* rethrow *)
     raise ex
@@ -8584,7 +8421,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
 
   | OpenT (reason_open, id) ->
     unify_opt cx (OpenT (reason_open, id)) AnyT.t;
-    add_error cx (mk_info reason_open ["Missing annotation"])
+    FlowError.(add_output cx (EMissingAnnotation reason_open))
 
   | NumT _
   | StrT _

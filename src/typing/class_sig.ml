@@ -375,9 +375,8 @@ let mk cx loc reason self ~expr = Ast.Class.(
   warn_or_ignore_decorators cx classDecorators;
 
   (* TODO *)
-  if implements <> [] then
-    let msg = "implements not supported" in
-    Flow_error.add_error cx (loc, [msg])
+  if implements <> []
+  then Flow_error.(add_output cx (EUnsupportedSyntax (loc, Implements)))
   else ();
 
   let tparams, tparams_map =
@@ -486,8 +485,8 @@ let mk cx loc reason self ~expr = Ast.Class.(
         Property.key = Ast.Expression.Object.Property.Literal _;
         _
       }) ->
-        let msg = "literal properties not yet supported" in
-        Flow_error.add_error cx (loc, [msg]);
+        Flow_error.(add_output cx
+          (EUnsupportedSyntax (loc, ClassPropertyLiteral)));
         c
 
     (* computed LHS *)
@@ -499,8 +498,8 @@ let mk cx loc reason self ~expr = Ast.Class.(
         Property.key = Ast.Expression.Object.Property.Computed _;
         _
       }) ->
-        let msg = "computed property keys not supported" in
-        Flow_error.add_error cx (loc, [msg]);
+        Flow_error.(add_output cx
+          (EUnsupportedSyntax (loc, ClassPropertyComputed)));
         c
   ) class_sig elements
 )
@@ -512,10 +511,11 @@ let rec extract_extends cx structural = function
   | (loc, {Ast.Type.Generic.id; typeParameters})::others ->
       if structural
       then (Some id, typeParameters)::(extract_extends cx structural others)
-      else
-        let msg = "A class cannot extend multiple classes!" in
-        Flow_error.add_error cx (loc, [msg]);
+      else (
+        Flow_error.(add_output cx
+          (EUnsupportedSyntax (loc, ClassExtendsMultiple)));
         []
+      )
 
 let extract_mixins _cx =
   List.map (fun (_, {Ast.Type.Generic.id; typeParameters}) ->
@@ -569,16 +569,12 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       key; value; static; _method; optional; variance; _
     }) ->
     if optional && _method
-    then begin
-      let msg = "optional methods are not supported" in
-      Flow_error.add_error cx (loc, [msg])
-    end;
+    then Flow_error.(add_output cx (EInternal (loc, OptionalMethod)));
     let polarity = Anno.polarity variance in
     Ast.Expression.Object.(match _method, key with
     | _, Property.Literal (loc, _)
     | _, Property.Computed (loc, _) ->
-        let msg = "illegal name" in
-        Flow_error.add_error cx (loc, [msg]);
+        Flow_error.(add_output cx (EIllegalName loc));
         s
     | true, Property.Identifier (_, {Ast.Identifier.name = (_, name); _}) ->
         (match value with
@@ -590,8 +586,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
           in
           append_method fsig s
         | _ ->
-          let msg = "internal error: expected function type" in
-          Flow_error.add_internal_error cx (loc, [msg]);
+          Flow_error.(add_output cx (EInternal (loc, MethodNotAFunction)));
           s)
     | false, Property.Identifier (_, {Ast.Identifier.name = (_, name); _}) ->
         let t = Anno.convert cx tparams_map value in
@@ -604,8 +599,8 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     | (_, {Ast.Type.Object.Indexer.key; value; static; variance; _})::rest ->
       (* TODO? *)
       List.iter (fun (indexer_loc, _) ->
-        let msg = "multiple indexers are not supported" in
-        Flow_error.add_error cx (indexer_loc, [msg]);
+        Flow_error.(add_output cx
+          (EUnsupportedSyntax (indexer_loc, MultipleIndexers)))
       ) rest;
       let k = Anno.convert cx tparams_map key in
       let v = Anno.convert cx tparams_map value in

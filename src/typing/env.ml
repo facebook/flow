@@ -408,13 +408,11 @@ let find_refi_in_var_scope key =
 (* helpers *)
 
 let binding_error msg cx name entry reason =
-  FlowError.add_extended_error cx [
-    loc_of_reason reason, [name; msg];
-    Entry.loc entry, [spf "%s %s" (Entry.string_of_kind entry) name]
-  ]
+  FlowError.(add_output cx
+    (EBindingError (msg, reason, name, entry)))
 
 let already_bound_error =
-  binding_error "name is already bound"
+  binding_error FlowError.ENameAlreadyBound
 
 (* initialization of entries happens during a preliminary pass through a
    scoped region of the AST (dynamic for hoisted things, lexical for
@@ -693,9 +691,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
 (* emit tdz error for value entry *)
 let tdz_error cx name reason v = Entry.(
   (* second clause of error message is due to switch scopes *)
-  let msg = spf "%s referenced before declaration, \
-                  or after skipped declaration"
-    (string_of_value_kind v.Entry.kind) in
+  let msg = FlowError.EReferencedBeforeDeclaration in
   binding_error msg cx name (Value v) reason
 )
 
@@ -712,7 +708,7 @@ let read_entry ~lookup_mode ~specific cx name reason =
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
-    let msg = "type referenced from value position" in
+    let msg = FlowError.ETypeInValuePosition in
     binding_error msg cx name entry reason;
     AnyT.at (Entry.loc entry)
 
@@ -821,20 +817,17 @@ let update_var op cx name specific reason =
     } in
     Scope.add_entry name update scope;
     Some change
-  | Value ({ Entry.kind = Const ConstVarBinding; _ } as v) ->
-    let msg = spf "%s cannot be reassigned"
-      Entry.(string_of_value_kind (kind_of_value v)) in
+  | Value { Entry.kind = Const ConstVarBinding; _ } ->
+    let msg = FlowError.EConstReassigned in
     binding_error msg cx name entry reason;
     None
-  | Value ({ Entry.kind = Const ConstParamBinding; _ } as v) ->
+  | Value { Entry.kind = Const ConstParamBinding; _ } ->
     (* TODO: remove extra info when surface syntax is added *)
-    let msg = spf "%s cannot be reassigned \
-      (see experimental.const_params=true in .flowconfig)"
-      Entry.(string_of_value_kind (kind_of_value v)) in
+    let msg = FlowError.EConstParamReassigned in
     binding_error msg cx name entry reason;
     None
   | Type _ ->
-    let msg = "type alias referenced from value position" in
+    let msg = FlowError.ETypeAliasInValuePosition in
     binding_error msg cx name entry reason;
     None
   )

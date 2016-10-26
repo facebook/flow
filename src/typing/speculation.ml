@@ -143,35 +143,69 @@ type branch = {
   case: Case.t;
 }
 
-(* Decide, for a flow or unify action encountered during a speculative match,
-   whether that action should be deferred. Only a relevant action is deferred. A
-   relevant action is not benign, and it must involve a tvar that was marked
-   unresolved during full type resolution of the lower/upper bound of the
-   union/intersection type being processed.
-
-   As a side effect, whenever we decide to defer an action, we record the
-   deferred action and the unresolved tvars involved in it in the current case.
-*)
-let defer_if_relevant cx branch action =
-  let { ignore; speculation_id; case } = branch in
-  let action_types = Action.types action in
-  let all_unresolved =
-    IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
-  let relevant_action_types =
-    List.filter (fun t -> Type.TypeSet.mem t all_unresolved) action_types in
-  let defer = relevant_action_types <> [] in
-  if defer then Case.(
-    let is_benign = List.exists (ignore_type ignore) action_types in
-    if not is_benign
-    then case.unresolved <-
-      List.fold_left (fun unresolved t -> Type.TypeSet.add t unresolved)
-        case.unresolved relevant_action_types;
-    case.actions <- case.actions @ [is_benign, action]
-  );
-  defer
-
 (* The state maintained by speculative_matches when trying each case of a
    union/intersection in turn. *)
 type match_state =
-| NoMatch of Errors.error list
+| NoMatch of Flow_error.error_message list
 | ConditionalMatch of Case.t
+
+module State : sig
+  (* Maintain a stack of speculative branches. See Speculation for the contents
+     of the "branch" data structure.
+
+     When speculating (i.e., when this stack is non-empty), some things are
+     handled differently:
+
+     (1) flow and unify actions on unresolved tvars are deferred
+     (2) any errors cause short-cutting
+  *)
+  val set_speculative: branch -> unit
+  val restore_speculative: unit -> unit
+  val speculating: unit -> bool
+
+  (* decide whether an action should be deferred.
+     when speculating, actions that involve unresolved tvars are deferred. *)
+  val defer_action: Context.t -> Action.t -> bool
+end = struct
+  let speculations = ref []
+  let set_speculative branch =
+    speculations := branch::!speculations
+  let restore_speculative () =
+    speculations := List.tl !speculations
+  let speculating () = !speculations <> []
+
+  (* Decide, for a flow or unify action encountered during a speculative match,
+     whether that action should be deferred. Only a relevant action is deferred.
+     A relevant action is not benign, and it must involve a tvar that was marked
+     unresolved during full type resolution of the lower/upper bound of the
+     union/intersection type being processed.
+
+     As a side effect, whenever we decide to defer an action, we record the
+     deferred action and the unresolved tvars involved in it in the current
+     case.
+  *)
+  let defer_if_relevant cx branch action =
+    let { ignore; speculation_id; case } = branch in
+    let action_types = Action.types action in
+    let all_unresolved =
+      IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
+    let relevant_action_types =
+      List.filter (fun t -> Type.TypeSet.mem t all_unresolved) action_types in
+    let defer = relevant_action_types <> [] in
+    if defer then Case.(
+      let is_benign = List.exists (ignore_type ignore) action_types in
+      if not is_benign
+      then case.unresolved <-
+        List.fold_left (fun unresolved t -> Type.TypeSet.add t unresolved)
+          case.unresolved relevant_action_types;
+      case.actions <- case.actions @ [is_benign, action]
+    );
+    defer
+
+  let defer_action cx action =
+    speculating() &&
+      let branch = List.hd !speculations in
+      defer_if_relevant cx branch action
+end
+
+include State

@@ -396,22 +396,12 @@ module Node = struct
               (Files.relative_path project_root_str package)
           in
           if is_included || is_contained_in_root then (
-            spf
-              ("Internal Error! Package %S was not found in the PackageHeap! " ^^
-               "Please report this error to the Flow team.")
-              package_relative_to_root
+            FlowError.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
           ) else (
-            spf
-              ("This modules resolves to %S, which is outside both your " ^^
-               "root directory and all of the entries in the [include] " ^^
-               "section of your .flowconfig. You should either add this " ^^
-               "directory to the [include] section of your .flowconfig, " ^^
-               "move your .flowconfig file higher in the project directory " ^^
-               "tree, or move this package under your Flow root directory.")
-              package_relative_to_root
+            FlowError.EModuleOutsideRoot (loc, package_relative_to_root)
           )
         in
-        FlowError.add_error cx (loc, [msg]);
+        FlowError.add_output cx msg;
         SMap.empty
       in
       let dir = Filename.dirname package in

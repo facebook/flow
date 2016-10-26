@@ -185,6 +185,10 @@ let typo_suggestions =
     in
     fst (List.fold_left (fold_results limit name) ([], max_int) possible_names)
 
+let typo_suggestion possible_names name =
+  let suggestions = typo_suggestions possible_names name in
+  try Some (List.hd suggestions)
+  with _ -> None
 
 (* util to limit the number of calls to a (usually recursive) function *)
 let count_calls ~counter ~default f =
