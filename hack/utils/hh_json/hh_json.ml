@@ -8,7 +8,6 @@
  *
  *)
 
-
 (**
  * Hh_json parsing and pretty printing library.
  *)
@@ -459,6 +458,91 @@ let get_string_exn = function
   | JSON_String s -> s
   | _ -> assert false
 
+let get_number_exn = function
+  | JSON_Number s -> s
+  | _ -> assert false
+
 let get_bool_exn = function
   | JSON_Bool b -> b
   | _ -> assert false
+
+type json_type =
+  | Object_t
+  | Array_t
+  | String_t
+  | Number_t
+  | Bool_t
+
+module type Access = sig
+  type keytrace = string list
+
+  type access_failure =
+    | Not_an_object of keytrace
+    | Missing_key_error of string * keytrace
+    | Wrong_type_error of keytrace * json_type
+
+  type 'a m = (('a * keytrace), access_failure) Result.t
+
+  val return : 'a -> 'a m
+
+  val (>>=) : 'a m -> (('a * keytrace) -> 'b m) -> 'b m
+  val get_obj : string -> json * keytrace -> json m
+  val get_bool : string -> json * keytrace -> bool m
+  val get_string : string -> json * keytrace -> string m
+  val get_number : string -> json * keytrace -> string m
+  val get_array: string -> json * keytrace -> (json list) m
+end
+
+module Access = struct
+  type keytrace = string list
+
+  type access_failure =
+    | Not_an_object of keytrace
+    | Missing_key_error of string * keytrace
+    | Wrong_type_error of keytrace * json_type
+
+  type 'a m = (('a * keytrace), access_failure) Result.t
+
+  let return v = Result.Ok (v, [])
+
+  let (>>=) m f = Result.bind m f
+
+  let catch_type_error exp f (v, keytrace) =
+    try Result.Ok (f v, keytrace) with
+      | Assert_failure _ ->
+        Result.Error (Wrong_type_error (keytrace, exp))
+
+  let get_val k (v, keytrace) =
+    try begin
+      let obj = get_object_exn v in
+      let candidate = List.fold_left obj ~init:None ~f:(fun opt (key, json) ->
+        if opt <> None then opt
+        else if key = k then (Some json)
+        else None
+      ) in
+      match candidate with
+      | None -> Result.Error (Missing_key_error (k, keytrace))
+      | Some obj ->
+        Result.Ok (obj, k :: keytrace)
+    end with
+    | Assert_failure _ ->
+      Result.Error (Not_an_object (keytrace))
+
+  let make_object_json v =
+    JSON_Object (get_object_exn v)
+
+  let get_obj k (v, keytrace) =
+    get_val k (v, keytrace) >>= catch_type_error Object_t make_object_json
+
+  let get_bool k (v, keytrace) =
+    get_val k (v, keytrace) >>= catch_type_error Bool_t get_bool_exn
+
+  let get_string k (v, keytrace) =
+    get_val k (v, keytrace) >>= catch_type_error String_t get_string_exn
+
+  let get_number k (v, keytrace) =
+    get_val k (v, keytrace) >>= catch_type_error Number_t get_number_exn
+
+  let get_array k (v, keytrace) =
+    get_val k (v, keytrace) >>= catch_type_error Array_t get_array_exn
+end
