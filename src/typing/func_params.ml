@@ -26,11 +26,11 @@ let empty = {
 let mk cx type_params_map ~expr func =
   let add_param_with_default params pattern default = Ast.Pattern.(
     match pattern with
-    | loc, Identifier (_, { Ast.Identifier.
+    | loc, Identifier { Ast.Pattern.Identifier.
         name = (_, name);
         typeAnnotation;
         optional;
-      }) ->
+      } ->
       let reason = mk_reason (RParameter name) loc in
       let t = Anno.mk_type_annotation cx type_params_map reason typeAnnotation
       in (match default with
@@ -79,11 +79,11 @@ let mk cx type_params_map ~expr func =
   ) in
   let add_rest params pattern =
     match pattern with
-    | _, Ast.Pattern.Identifier (loc, { Ast.Identifier.
+    | loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
         name = (_, name);
         typeAnnotation;
         _;
-      }) ->
+      } ->
       let reason = mk_reason (RRestParameter name) loc in
       let t =
         Anno.mk_type_annotation cx type_params_map reason typeAnnotation
@@ -115,7 +115,7 @@ let convert cx type_params_map func = Ast.Type.Function.(
   let add_param params (loc, {Param.name; typeAnnotation; optional; _}) =
     let name = match name with
     | None -> "_"
-    | Some (_, {Ast.Identifier.name = (_, name); _;}) -> name in
+    | Some (_, name) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
     let t = if optional then OptionalT t else t in
     let binding = name, t, loc in
@@ -124,7 +124,7 @@ let convert cx type_params_map func = Ast.Type.Function.(
   let add_rest params (loc, {Param.name; typeAnnotation; _}) =
     let name = match name with
     | None -> "_"
-    | Some (_, {Ast.Identifier.name = (_, name); _;}) -> name in
+    | Some (_, name) -> name in
     let t = Anno.convert cx type_params_map typeAnnotation in
     let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
     { params with list = param :: params.list }

@@ -18,7 +18,7 @@ open Env.LookupMode
 
 (* AST helpers *)
 
-let ident_name (_, { Ast.Identifier.name = (_, name); _; }) = name
+let ident_name (_, name) = name
 
 let optional_ident_name = function
 | None -> "_"
@@ -148,7 +148,7 @@ let rec convert cx tparams_map = Ast.Type.(function
        { Generic.Identifier.qualification; id; }); typeParameters } ->
 
   let m = convert_qualification cx "type-annotation" qualification in
-  let _, { Ast.Identifier.name = (_, name); _ } = id in
+  let _, name = id in
   let reason = mk_reason (RCustom name) loc in
   let t = Flow_js.mk_tvar_where cx reason (fun t ->
     Flow_js.flow cx (m, GetPropT (reason, (reason, name), t));
@@ -161,7 +161,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     Generic.id = Generic.Identifier.Unqualified (id);
     typeParameters
   } ->
-  let _, { Ast.Identifier.name = (_, name); _ } = id in
+  let _, name = id in
   let typeParameters = extract_type_param_instantiations typeParameters in
 
   let convert_type_params () = Option.value_map
@@ -522,8 +522,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     match key with
     | Ast.Expression.Object.Property.Literal
         (_, { Ast.Literal.value = Ast.Literal.String name; _ })
-    | Ast.Expression.Object.Property.Identifier
-        (_, { Ast.Identifier.name = (_, name); _ }) ->
+    | Ast.Expression.Object.Property.Identifier (_, name) ->
         let t = convert cx tparams_map value in
         let t = if optional then OptionalT t else t in
         let polarity = if _method then Positive else polarity variance in
@@ -555,7 +554,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     | [] -> true, None
     | (_, { Object.Indexer.id; key; value; variance; _ })::rest ->
         let dict_name = match id with
-        | Some (_, { Ast.Identifier.name = (_, name); _; }) -> Some name
+        | Some (_, name) -> Some name
         | None -> None in
         (* TODO: multiple indexers *)
         List.iter (fun (indexer_loc, _) ->
@@ -609,8 +608,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
       Flow_js.flow cx (m, GetPropT (reason, (reason, name), t));
     )
 
-  | Unqualified (id) ->
-    let loc, { Ast.Identifier.name = (_, name); _ } = id in
+  | Unqualified (loc, name) ->
     let desc = RCustom (spf "%s `%s`" reason_prefix name) in
     let reason = mk_reason desc loc in
     Env.get_var ~lookup_mode cx name reason

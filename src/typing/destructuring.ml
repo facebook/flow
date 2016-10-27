@@ -24,8 +24,8 @@ open Type
  *)
 let rec extract_destructured_bindings accum pattern = Ast.Pattern.(
   match pattern with
-  | Identifier (loc, { Ast.Identifier.name = (_, name); _ }) ->
-    (loc, name)::accum
+  | Identifier { Identifier.name; _ } ->
+    name::accum
 
   | Object n ->
     let props = n.Object.properties in
@@ -130,9 +130,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         | Property (loc, prop) ->
             begin match prop with
             | { Property.
-                key = Property.Identifier (loc, { Ast.Identifier.
-                  name = (_, name); _;
-                });
+                key = Property.Identifier (loc, name);
                 pattern = p; _;
               }
             | { Property.key =
@@ -145,11 +143,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({
                     _object = init;
-                    property = PropertyIdentifier (loc, {
-                      Ast.Identifier.name = (loc, name);
-                      typeAnnotation = None;
-                      optional = false
-                    });
+                    property = PropertyIdentifier (loc, name);
                     computed = false;
                   }))
                 ) in
@@ -203,7 +197,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       )
     )
 
-  | loc, Identifier (_, { Ast.Identifier.name = (_, name); _ }) ->
+  | loc, Identifier { Identifier.name = (_, name); _ } ->
       Type_inference_hooks_js.dispatch_lval_hook cx name loc (
         match (parent_pattern_t, init) with
         (**
@@ -250,7 +244,7 @@ let type_of_pattern = Ast.Pattern.(function
 
   | _, Object { Object.typeAnnotation; _; } -> typeAnnotation
 
-  | _, Identifier (_, { Ast.Identifier.typeAnnotation; _; }) -> typeAnnotation
+  | _, Identifier { Identifier.typeAnnotation; _; } -> typeAnnotation
 
   | _, _ -> None
 )
