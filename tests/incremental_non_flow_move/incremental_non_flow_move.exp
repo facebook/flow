@@ -1,0 +1,15 @@
+
+Initial status:
+No errors!
+
+Delete non-@flow file foo.js:
+
+test.js:5:1,14: Foo
+Required module not found
+
+Found 1 error
+
+Restore non-@flow file foo.js:
+No errors!
+
+Done!

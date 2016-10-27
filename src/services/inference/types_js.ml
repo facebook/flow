@@ -527,8 +527,13 @@ let recheck genv env modified =
     ~timing
     ~workers
     ~make_merge_input:(fun inferred ->
+      (* Add non-@flow files to the list of inferred files, so that their
+         dependencies are also considered for rechecking. *)
+      let modified_files = List.fold_left
+        (fun modified_files (f, _) -> FilenameSet.add f modified_files)
+        (FilenameSet.of_list inferred) freshparse_skips in
+
       (* need to merge the closure of inferred files and their deps *)
-      let inferred_set = FilenameSet.of_list inferred in
 
       (* direct_deps are unmodified files which directly depend on
          inferred files or removed modules. all_deps are direct_deps
@@ -536,7 +541,7 @@ let recheck genv env modified =
       let all_deps, direct_deps = Dep_service.dependent_files
         workers
         unmodified_parsed
-        inferred_set
+        modified_files
         removed_modules
       in
 
@@ -557,7 +562,7 @@ let recheck genv env modified =
       ) all_deps;
 
       (* to_merge is inferred files plus all dependents. prep for re-merge *)
-      let to_merge = FilenameSet.union all_deps inferred_set in
+      let to_merge = FilenameSet.union all_deps modified_files in
       Merge_service.remove_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
       SharedMem.collect `gentle;
