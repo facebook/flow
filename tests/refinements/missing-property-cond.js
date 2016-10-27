@@ -32,3 +32,16 @@ function foo5() {
     o.p = function() { }
   }
 }
+
+function foo6(o: mixed) {
+  if (o.bar) {} // error, any lookup on mixed is unsafe
+}
+
+function foo7(o: mixed) {
+  if (typeof o.bar === 'string') {} // error
+}
+
+function foo8(o: { p: mixed }) {
+  if (o.p && o.p.q) {} // this is ok because o.p is truthy, so o.p.q is safe
+  if (o.p && o.p.q && o.p.q.r) {}
+}

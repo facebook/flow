@@ -576,7 +576,7 @@ let rec convert cx tparams_map = Ast.Type.(function
      and use the root proto reason to build an error. *)
   let reason_desc = RObjectType in
   let pmap = Context.make_property_map cx props_map in
-  let proto = MixedT (locationless_reason reason_desc, Mixed_everything) in
+  let proto = ObjProtoT (locationless_reason reason_desc) in
   let flags = {
     sealed = if sealed then Sealed else UnsealedInFile (Loc.source loc);
     exact = not sealed || exact;

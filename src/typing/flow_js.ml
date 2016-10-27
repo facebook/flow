@@ -41,8 +41,7 @@ let dummy_static reason =
   AnyFunT (replace_reason (fun desc -> RStatics desc) reason)
 
 let dummy_prototype =
-  let reason = locationless_reason RDummyPrototype in
-  MixedT (reason, Mixed_everything)
+  ObjProtoT (locationless_reason RDummyPrototype)
 
 let dummy_this =
   let reason = locationless_reason RDummyThis in
@@ -50,7 +49,7 @@ let dummy_this =
 
 let global_this =
   let reason = locationless_reason (RCustom "global object") in
-  MixedT (reason, Mixed_everything)
+  ObjProtoT reason
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype ?(frame=0) this tins ?params_names ?(is_predicate=false) tout = {
@@ -327,6 +326,7 @@ let rec merge_type cx =
   | (NullT _, (NullT _ as t))
   | (VoidT _, (VoidT _ as t))
   | (TaintT _, ((TaintT _) as t))
+  | (ObjProtoT _, (ObjProtoT _ as t))
       -> t
 
   | (AnyT _, t) | (t, AnyT _) -> t
@@ -1009,6 +1009,7 @@ module ResolvableTypeJob = struct
     | FunProtoCallT _
     | FunProtoApplyT _
     | FunProtoT _
+    | ObjProtoT _
     | CustomFunT (_, _)
     | BoolT _
     | NumT _
@@ -1667,7 +1668,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           reposition ~trace cx reason t
         | None ->
           (* convert ES module's named exports to an object *)
-          let proto = MixedT (reason, Mixed_everything) in
+          let proto = ObjProtoT reason in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
           let props = SMap.map (Property.field Neutral) exports_tmap in
           mk_object_with_map_proto cx reason
@@ -1693,7 +1694,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         dict_polarity = Neutral;
       }
       else None in
-      let proto = MixedT (reason, Mixed_everything) in
+      let proto = ObjProtoT reason in
       let ns_obj = mk_object_with_map_proto cx reason
         ~sealed:true ~frozen:true ?dict props proto
       in
@@ -2497,7 +2498,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter_real_props cx props_tmap (fun prop_name prop_type ->
         let pmap = SMap.singleton prop_name prop_type in
         let id = Context.make_property_map cx pmap in
-        let obj = mk_objecttype ~flags dict_t id MixedT.t in
+        let obj = mk_objecttype ~flags dict_t id ObjProtoT.t in
         rec_flow cx trace (l, UseT (use_op, ObjT (r, obj)))
       );
       rec_flow cx trace (l, UseT (use_op, proto_t))
@@ -2628,7 +2629,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        result of the read cannot be used in any interesting way. *)
     (**************************************************************************)
 
-    | _, TestPropT (reason_op, (_, name), tout) ->
+    | _, TestPropT (reason_op, (reason_prop, name), tout) ->
       let t = tvar_with_constraint cx ~derivable:true
         (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
       in
@@ -2653,7 +2654,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           Some (MixedT (r, Mixed_everything), t)
       ) in
       let lookup =
-        LookupT (reason_op, lookup_kind, [], name, RWProp (t, Read))
+        LookupT (reason_prop, lookup_kind, [], name, RWProp (t, Read))
       in rec_flow cx trace (l, lookup)
 
 
@@ -2777,16 +2778,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        and "erasing" its static and super *)
 
     | ThisClassT (InstanceT (_, _, _, instance)), MixinT (r, tvar) ->
-      let static = MixedT (r, Mixed_everything) in
-      let super = MixedT (r, Mixed_everything) in
+      let static = ObjProtoT r in
+      let super = ObjProtoT r in
       rec_flow cx trace (
         ThisClassT (InstanceT (r, static, super, instance)),
         UseT (UnknownUse, tvar)
       )
 
     | PolyT (xs, ThisClassT (InstanceT (_, _, _, instance))), MixinT (r, tvar) ->
-      let static = MixedT (r, Mixed_everything) in
-      let super = MixedT (r, Mixed_everything) in
+      let static = ObjProtoT r in
+      let super = ObjProtoT r in
       rec_flow cx trace (
         PolyT (xs, ThisClassT (InstanceT (r, static, super, instance))),
         UseT (UnknownUse, tvar)
@@ -3451,13 +3452,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Mixins don't have statics at all, so we can just prune here. *)
       ()
 
-    | MixedT (reason, _), GetStaticsT (_, t) ->
-      (* MixedT not only serves as the instance type of the root class, but also
-         as the statics of the root class. *)
+    | ObjProtoT reason, GetStaticsT (_, t) ->
+      (* ObjProtoT not only serves as the instance type of the root class, but
+         also as the statics of the root class. *)
       let static_reason = replace_reason (fun desc ->
         RStatics desc
       ) reason in
-      let static = MixedT (static_reason, Mixed_everything) in
+      let static = ObjProtoT static_reason in
       rec_flow_t cx trace (static, t)
 
     (********************************************************)
@@ -3684,7 +3685,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyObjT _, ObjAssignT (reason, _, t, _, false) ->
       rec_flow_t cx trace (AnyObjT reason, t)
 
-    | (MixedT _, ObjAssignT (_, proto, t, _, false)) ->
+    | (ObjProtoT _, ObjAssignT (_, proto, t, _, false)) ->
       rec_flow_t cx trace (proto, t)
 
     (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
@@ -3704,7 +3705,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT (_, { props_tmap = mapr; _ }), ObjRestT (reason, xs, t)) ->
       let map = Context.find_props cx mapr in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
-      let proto = MixedT (reason, Mixed_everything) in
+      let proto = ObjProtoT reason in
       let o = mk_object_with_map_proto cx reason map proto in
       rec_flow_t cx trace (o, t)
 
@@ -3717,7 +3718,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Spread fields from the instance into another object *)
       let map = Context.find_props cx insttype.fields_tmap in
       let map = List.fold_left (fun map x -> SMap.remove x map) map xs in
-      let proto = MixedT (reason, Mixed_everything) in
+      let proto = ObjProtoT reason in
       let obj_inst = mk_object_with_map_proto cx reason map proto in
 
       (* ObjAssign the inst-generated obj into the super-generated obj *)
@@ -3734,7 +3735,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (AnyFunT _ | AnyObjT _), ObjRestT (reason, _, t) ->
       rec_flow_t cx trace (AnyObjT reason, t)
 
-    | (MixedT _, ObjRestT (reason, _, t)) ->
+    | (ObjProtoT _, ObjRestT (reason, _, t)) ->
       let obj = mk_object_with_proto cx reason l in
       rec_flow_t cx trace (obj, t)
 
@@ -4496,17 +4497,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         does not.
      *)
 
-    | (MixedT _,
+    | (ObjProtoT _,
        LookupT (reason, strict, next::try_ts_on_failure, s, t)) ->
       (* When s is not found, we always try to look it up in the next element in
          the list try_ts_on_failure. *)
       rec_flow cx trace
         (next, LookupT (reason, strict, try_ts_on_failure, s, t))
 
-    | MixedT _, LookupT (reason_op, _, [], x, _)
+    | ObjProtoT _, LookupT (reason_op, _, [], x, _)
       when is_object_prototype_method x ->
       (** TODO: These properties should go in Object.prototype. Currently we
-          model Object.prototype as a MixedT, as an optimization against a
+          model Object.prototype as a ObjProtoT, as an optimization against a
           possible deluge of shadow properties on Object.prototype, since it
           is shared by every object. **)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Object", u)
@@ -4516,12 +4517,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
-    | (MixedT (reason, _) | FunProtoT reason),
+    | (ObjProtoT reason | FunProtoT reason),
       LookupT (reason_op, Strict strict_reason, [], x, _) ->
       add_output cx trace
         (FlowError.EStrictLookupFailed ((reason_op, strict_reason), reason, x))
 
-    | (MixedT (reason, _) | FunProtoT reason),
+    | (ObjProtoT reason | FunProtoT reason),
       LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [], x, action) ->
 
       (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
@@ -4535,7 +4536,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let p = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
       perform_lookup_action cx trace x p reason reason_op action
 
-    | (MixedT (reason, _) | FunProtoT reason),
+    | (ObjProtoT reason | FunProtoT reason),
       LookupT (reason_op, ShadowWrite rev_proto_ids, [], x, action) ->
       let id, proto_ids = Nel.rev rev_proto_ids in
       let pmap = Context.find_props cx id in
@@ -4573,7 +4574,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       perform_lookup_action cx trace x p reason reason_op action
 
     (* LookupT is a non-strict lookup *)
-    | (MixedT _ | FunProtoT _),
+    | (ObjProtoT _ | FunProtoT _ | MixedT (_, Mixed_truthy)),
       LookupT (_, NonstrictReturning t_opt, [], _, _) ->
       (* don't fire
 
@@ -4592,22 +4593,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | None -> ()
       end
 
-    | (MixedT _, HasPropT (reason_op, Some reason_strict, _)) ->
+    | (ObjProtoT _, HasPropT (reason_op, Some reason_strict, _)) ->
         add_output cx trace (FlowError.EPropNotFound (reason_op, reason_strict))
 
     (* SuperT only involves non-strict lookups *)
-    | (MixedT _, SuperT _) -> ()
+    | (ObjProtoT _, SuperT _) -> ()
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
-    | (MixedT _, UseT (use_op, ExtendsT (next::try_ts_on_failure, l, u))) ->
+    | (ObjProtoT _, UseT (use_op, ExtendsT (next::try_ts_on_failure, l, u))) ->
       (* When seaching for a nominal superclass fails, we always try to look it
          up in the next element in the list try_ts_on_failure. *)
       rec_flow cx trace
         (next, UseT (use_op, ExtendsT (try_ts_on_failure, l, u)))
 
-    | (MixedT _, UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
+    | (ObjProtoT _, UseT (_, ExtendsT ([], l, InstanceT (reason_inst, _, super, {
          fields_tmap;
          methods_tmap;
          structural = true;
@@ -4617,7 +4618,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       structural_subtype cx trace l reason_inst
         (super, fields_tmap, methods_tmap)
 
-    | (MixedT _, UseT (_, ExtendsT ([], t, tc))) ->
+    | (ObjProtoT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
       add_output cx trace (FlowError.ECustom ((reason_of_t t, reason_of_t tc), msg))
 
@@ -4828,7 +4829,8 @@ and ground_subtype = function
   | (VoidT _, UseT (_, VoidT _))
   | (EmptyT _, _)
   | (_, UseT (_, MixedT _))
-  | (_, UseT (_, FunProtoT _)) (* MixedT is used for object protos, this is for funcs *)
+  | (_, UseT (_, ObjProtoT _))
+  | (_, UseT (_, FunProtoT _))
     -> true
 
   | (AnyT _, u) -> not (any_propagating_use_t u)
@@ -5101,6 +5103,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
   | MixedT _
   | TaintT _
   | AnyT _
+  | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
@@ -5469,6 +5472,7 @@ and check_polarity cx polarity = function
   | ShapeT _
   | DiffT _
   | KeysT _
+  | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
@@ -5641,7 +5645,7 @@ and mk_object_with_map_proto cx reason ?(sealed=false) ?frozen ?dict map proto =
   ObjT (reason, mk_objecttype ~flags dict pmap proto)
 
 and mk_object cx reason =
-  mk_object_with_proto cx reason (MixedT (reason, Mixed_everything))
+  mk_object_with_proto cx reason (ObjProtoT reason)
 
 
 (* Object assignment patterns. In the `Object.assign` model (chain_objects), an
@@ -6337,7 +6341,7 @@ and lookup_prop cx trace l reason strict x action =
   let l =
     (* munge names beginning with single _ *)
     if is_munged_prop_name cx x
-    then MixedT (reason_of_t l, Mixed_everything)
+    then ObjProtoT (reason_of_t l)
     else l
   in
   rec_flow cx trace (l, LookupT (reason, strict, [], x, action))
@@ -6856,7 +6860,7 @@ and predicate cx trace t l p = match p with
         dict_name = None;
         dict_polarity = Neutral;
       } in
-      let proto = MixedT (reason, Mixed_everything) in
+      let proto = ObjProtoT reason in
       let obj = mk_object_with_proto cx reason ?dict proto in
       let filtered_l = match flavor with
       | Mixed_truthy
@@ -7099,7 +7103,7 @@ and instanceof_test cx trace result = function
       let pred = LeftP(InstanceofTest, right) in
       rec_flow cx trace (super_c, PredicateT(pred, result))
 
-  | (true, MixedT _, ClassT(ExtendsT (_, _, a)))
+  | (true, ObjProtoT _, ClassT(ExtendsT (_, _, a)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (a, result)
@@ -7133,7 +7137,7 @@ and instanceof_test cx trace result = function
     else rec_flow cx trace
       (super_c, PredicateT(NotP(LeftP(InstanceofTest, right)), result))
 
-  | (false, MixedT _, ClassT(ExtendsT(_, c, _)))
+  | (false, ObjProtoT _, ClassT(ExtendsT(_, c, _)))
     ->
     (** We hit the root class, so C is not a subclass of A **)
     rec_flow_t cx trace (c, result)
@@ -8549,6 +8553,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     recurse t1;
     recurse t2
 
+  | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _

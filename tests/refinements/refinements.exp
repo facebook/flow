@@ -240,6 +240,18 @@ missing-property-cond.js:23
  23:     o.p4.x; // error
          ^^^^ property `p4` does not exist
 
+missing-property-cond.js:37
+ 37:   if (o.bar) {} // error, any lookup on mixed is unsafe
+             ^^^ property `bar`. Property not found in
+ 37:   if (o.bar) {} // error, any lookup on mixed is unsafe
+           ^ mixed
+
+missing-property-cond.js:41
+ 41:   if (typeof o.bar === 'string') {} // error
+                    ^^^ property `bar`. Property not found in
+ 41:   if (typeof o.bar === 'string') {} // error
+                  ^ mixed
+
 mixed.js:8
   8:     takesString(x); // error
          ^^^^^^^^^^^^^^ function call
@@ -955,4 +967,4 @@ void.js:85
            ^^^^^^^^^^^^^ number
 
 
-Found 151 errors
+Found 153 errors

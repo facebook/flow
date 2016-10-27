@@ -72,6 +72,7 @@ module rec TypeTerm : sig
     | FunProtoCallT of reason   (* Function.prototype.call *)
 
     | ObjT of reason * objtype
+    | ObjProtoT of reason       (* Object.prototype *)
     | ArrT of reason * t * t list
 
     (* type of a class *)
@@ -1331,6 +1332,11 @@ module NullT = Primitive (struct
   let make r = NullT r
 end)
 
+module ObjProtoT = Primitive (struct
+  let desc = RDummyPrototype
+  let make r = ObjProtoT r
+end)
+
 (* lift an operation on Type.t to an operation on Type.use_t *)
 let lift_to_use f = function
   | UseT (_, t) -> f t
@@ -1423,6 +1429,7 @@ let rec reason_of_t = function
       replace_reason_const (RExactType desc) reason
 
   | ObjT (reason,_)
+  | ObjProtoT reason
   | ArrT (reason,_,_)
       -> reason
 
@@ -1647,6 +1654,7 @@ let rec mod_reason_of_t f = function
     BoundT { reason = f reason; name; bound; polarity; default; }
   | ExistsT reason -> ExistsT (f reason)
   | ObjT (reason, ot) -> ObjT (f reason, ot)
+  | ObjProtoT reason -> ObjProtoT (f reason)
   | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
 
   | ClassT t -> ClassT (mod_reason_of_t f t)
@@ -1866,6 +1874,7 @@ let string_of_ctor = function
   | ExistsT _ -> "ExistsT"
   | ExactT _ -> "ExactT"
   | ObjT _ -> "ObjT"
+  | ObjProtoT _ -> "ObjProtoT"
   | ArrT _ -> "ArrT"
   | ClassT _ -> "ClassT"
   | InstanceT _ -> "InstanceT"

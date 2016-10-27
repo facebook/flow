@@ -244,9 +244,9 @@ class unexported_class_visitor = object(self)
 
         let env =
           match resolve_type extends env with
-          | MixedT _ -> env
+          | ObjProtoT _ -> env
           | ClassT t when (
-              match resolve_type t env with | MixedT _ -> true | _ -> false
+              match resolve_type t env with | ObjProtoT _ -> true | _ -> false
             ) -> env
           | ThisTypeAppT (extends, _, ts) ->
             add_str " extends " env
@@ -352,7 +352,7 @@ let gen_named_exports =
         let env = gen_tparams_list env in
         let env = (
           match Codegen.resolve_type super env with
-          | MixedT _ -> env
+          | ObjProtoT _ -> env
           | (ThisTypeAppT _) as t -> add_str " extends " env |> gen_type t
           | _ -> failwith (
             spf "Unexpected super type for class: %s" (string_of_ctor super)

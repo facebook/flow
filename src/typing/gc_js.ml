@@ -75,6 +75,7 @@ let rec gc cx state = function
   | NullT _
   | VoidT _
   | TaintT _
+  | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _

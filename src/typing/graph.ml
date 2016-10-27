@@ -170,6 +170,7 @@ and parts_of_t cx = function
 | NumT _ | StrT _ | BoolT  _ -> []
 | FunT (_, _, _, funtype) -> parts_of_funtype funtype
 | EmptyT _ | MixedT _ | AnyT _ | NullT _ | VoidT _ -> []
+| ObjProtoT _ -> []
 | FunProtoT _ | FunProtoApplyT _ | FunProtoBindT _ | FunProtoCallT _ -> []
 | PolyT (_, t) -> ["t", Def t]
 | ThisClassT t -> ["this", Def t]

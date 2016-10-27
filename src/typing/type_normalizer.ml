@@ -35,8 +35,8 @@ let fake_instance name =
   } in
   InstanceT (
     locationless_reason (RCustom name),
-    MixedT (locationless_reason (RCustom "dummy static"), Mixed_everything),
-    MixedT (locationless_reason (RCustom "dummy super"), Mixed_everything),
+    ObjProtoT (locationless_reason (RCustom "dummy static")),
+    ObjProtoT (locationless_reason (RCustom "dummy super")),
     insttype
   )
 
@@ -387,6 +387,8 @@ let rec normalize_type_impl cx ids t = match t with
       let t1 = normalize_type_impl cx ids t1 in
       let t2 = normalize_type_impl cx ids t2 in
       TypeMapT (locationless_reason RObjectMapi, ObjectMapi, t1, t2)
+
+  | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 
   | FunProtoT _
   | ExtendsT (_, _, _)

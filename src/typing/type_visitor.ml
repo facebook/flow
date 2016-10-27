@@ -33,6 +33,7 @@ class ['a] t = object(self)
   | NullT _
   | VoidT _
   | TaintT _
+  | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _

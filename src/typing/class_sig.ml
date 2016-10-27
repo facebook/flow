@@ -277,7 +277,7 @@ let classtype cx ?(check_polarity=true) x =
   } = x in
   let open Type in
   let sinsttype, insttype = mutually (insttype cx x) in
-  let static = InstanceT (sreason, MixedT.t, ssuper, sinsttype) in
+  let static = InstanceT (sreason, ObjProtoT.t, ssuper, sinsttype) in
   let this = InstanceT (reason, static, super, insttype) in
   (if check_polarity then Flow.check_polarity cx Positive this);
   let t = if structural then ClassT this else ThisClassT this in
@@ -306,7 +306,7 @@ let mk_super cx tparams_map c targs = Type.(
 
 let mk_interface_super cx structural reason tparams_map = Type.(function
   | (None, None) ->
-      MixedT (locationless_reason RObjectClassName, Mixed_everything)
+      ObjProtoT (locationless_reason RObjectClassName)
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some id, targs) ->
@@ -322,7 +322,7 @@ let mk_interface_super cx structural reason tparams_map = Type.(function
 
 let mk_extends cx tparams_map ~expr = Type.(function
   | (None, None) ->
-      MixedT (locationless_reason RObjectClassName, Mixed_everything)
+      ObjProtoT (locationless_reason RObjectClassName)
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some e, targs) ->
@@ -332,7 +332,7 @@ let mk_extends cx tparams_map ~expr = Type.(function
 
 let mk_mixins cx reason tparams_map = Type.(function
   | (None, None) ->
-      MixedT (locationless_reason RObjectClassName, Mixed_everything)
+      ObjProtoT (locationless_reason RObjectClassName)
   | (None, _) ->
       assert false (* type args with no head expr *)
   | (Some id, targs) ->
@@ -671,8 +671,8 @@ let toplevels cx ~decls ~stmts ~expr x =
          locals, e.g., so it cannot be used in general to track definite
          assignments. *)
       let derived_ctor = Type.(match s.super with
-        | ClassT (MixedT _) -> false
-        | MixedT _ -> false
+        | ClassT (ObjProtoT _) -> false
+        | ObjProtoT _ -> false
         | _ -> true
       ) in
       let new_entry t =

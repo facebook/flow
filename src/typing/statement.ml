@@ -1577,7 +1577,7 @@ and statement cx = Ast.Statement.(
             ) module_scope.entries (SMap.empty, SMap.empty) in
 
             let reason = repos_reason kind_loc reason in
-            let proto = MixedT (reason, Mixed_everything) in
+            let proto = ObjProtoT reason in
 
             type_exports,
             Flow.mk_object_with_map_proto cx reason value_exports proto
@@ -2172,7 +2172,7 @@ and object_ cx reason ?(allow_sealed=true) props =
   Ast.Expression.Object.(
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
-  let proto = MixedT (reason, Mixed_everything) in
+  let proto = ObjProtoT reason in
   (* Return an object with specified sealing. *)
   let mk_object ?(sealed=false) map =
     Flow.mk_object_with_map_proto cx reason ~sealed map proto
@@ -2628,7 +2628,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         Flow.flow_t cx (t, StrT.at loc)
       ) argts;
       let reason = mk_reason (RCustom "new Function(..)") loc in
-      let proto = MixedT (reason, Mixed_everything) in
+      let proto = ObjProtoT reason in
       FunT (
         reason,
         Flow.dummy_static reason,
@@ -3500,7 +3500,7 @@ and jsx_title cx openingElement children = Ast.JSX.(
       (if is_react then RReactElementProps name else RJSXElementProps name)
       reason in
     let o = Flow.mk_object_with_map_proto cx reason_props ~sealed:(!spread=None)
-      !map (MixedT (reason_props, Mixed_everything))
+      !map (ObjProtoT reason_props)
     in
     match !spread with
       | None -> o
@@ -3779,7 +3779,7 @@ and mk_proptype cx = Ast.Expression.(function
         dict_polarity = Neutral;
       } in
       let pmap = Context.make_property_map cx SMap.empty in
-      let proto = MixedT (locationless_reason RObjectClassName, Mixed_everything) in
+      let proto = ObjProtoT (locationless_reason RObjectClassName) in
       let reason = mk_reason RPropTypeObjectOf vloc in
       ObjT (reason, Flow.mk_objecttype ~flags dict pmap proto)
 
@@ -3835,7 +3835,7 @@ and mk_proptype cx = Ast.Expression.(function
       let amap, omap, dict = mk_proptypes cx properties in
       let omap = Properties.map_t (fun t -> OptionalT t) omap in
       let map = SMap.union amap omap in
-      let proto = MixedT (reason, Mixed_everything) in
+      let proto = ObjProtoT reason in
       Flow.mk_object_with_map_proto cx reason ?dict map proto
 
   (* Support for FB-specific ReactPropTypes validators. *)
@@ -3976,7 +3976,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
         let amap, omap, dict = mk_proptypes cx properties in
         let omap = Properties.map_t (fun t -> OptionalT t) omap in
         let map = SMap.union amap omap in
-        let proto = MixedT (reason, Mixed_everything) in
+        let proto = ObjProtoT reason in
         props := Flow.mk_object_with_map_proto cx reason ?dict map proto;
         fmap, mmap
 
@@ -4078,7 +4078,7 @@ and react_create_class cx loc class_props = Ast.Expression.(
   in
   let override_statics =
     Flow.mk_object_with_map_proto cx
-      static_reason smap (MixedT (static_reason, Mixed_everything))
+      static_reason smap (ObjProtoT static_reason)
   in
   let super_static = Flow.mk_tvar_where cx static_reason (fun t ->
     Flow.flow cx (super, GetStaticsT (static_reason, t));
@@ -4794,10 +4794,7 @@ and define_internal cx reason x =
 and mk_function id cx reason func =
   let this = Flow.mk_tvar cx (replace_reason_const RThis reason) in
   (* Normally, functions do not have access to super. *)
-  let super = MixedT (
-    replace_reason_const RNoSuper reason,
-    Mixed_everything
-  ) in
+  let super = ObjProtoT (replace_reason_const RNoSuper reason) in
   let func_sig = function_decl id cx reason func this super in
   Func_sig.functiontype cx this func_sig
 
@@ -4816,7 +4813,7 @@ and mk_arrow cx reason func =
 (* This function is around for the sole purpose of modeling some method-like
    behaviors of non-ES6 React classes. It is otherwise deprecated. *)
 and mk_method cx reason func this =
-  let super = MixedT (reason, Mixed_everything) in
+  let super = ObjProtoT reason in
   let id = None in
   let func_sig = function_decl id cx reason func this super in
   Func_sig.methodtype_DEPRECATED func_sig

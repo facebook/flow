@@ -337,7 +337,7 @@ let cache_global cx name reason global_scope =
     if List.mem name global_any
     then AnyT.t
     else (if List.mem name global_lexicals
-    then MixedT (locationless_reason (RCustom "global object"), Mixed_everything)
+    then ObjProtoT (locationless_reason (RCustom "global object"))
     else Flow_js.get_builtin cx name reason)
   in
   let loc = loc_of_reason reason in
