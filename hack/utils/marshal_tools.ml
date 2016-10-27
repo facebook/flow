@@ -93,7 +93,10 @@ let rec read_payload fd buffer offset to_read =
 let from_fd_with_preamble fd =
   let preamble = String.create expected_preamble_size in
   let bytes_read = Unix.read fd preamble 0 expected_preamble_size in
-  if (bytes_read <> expected_preamble_size) then
+  if (bytes_read = 0)
+  (** Unix manpage for read says 0 bytes read indicates end of file. *)
+  then raise End_of_file
+  else if (bytes_read <> expected_preamble_size) then
     (Printf.eprintf "Error, only read %d bytes for preamble.\n" bytes_read;
     raise Reading_Preamble_Exception);
   let payload_size = parse_preamble preamble in
