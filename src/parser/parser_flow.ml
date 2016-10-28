@@ -2347,7 +2347,7 @@ end = struct
       | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
       | None -> ()
 
-      in let init env start_loc decorators key async generator static variance =
+      in let rec init env start_loc decorators key async generator static variance =
         match Peek.token env with
         | T_COLON
         | T_ASSIGN
@@ -2376,6 +2376,11 @@ end = struct
             static;
             variance;
           })))
+        | T_PLING ->
+          (* TODO: add support for optional class properties *)
+          error_unexpected env;
+          Eat.token env;
+          init env start_loc decorators key async generator static variance
         | _ ->
           error_unsupported_variance env variance;
           let func_loc = Peek.loc env in

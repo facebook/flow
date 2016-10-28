@@ -3706,6 +3706,20 @@ module.exports = {
           'kind': 'method',
         }],
       },
+      'class X {x?:T} {}': {
+        'errors': [{
+          'loc.start.column': 10,
+          'loc.end.column': 11,
+          'message': 'Unexpected token ?',
+        }]
+      },
+      'class X {+x?:T} {}': {
+        'errors': [{
+          'loc.start.column': 11,
+          'loc.end.column': 12,
+          'message': 'Unexpected token ?',
+        }]
+      },
     },
     'Comments': {
       // Regression test: "/*" should be allowed inside block comments
