@@ -4,8 +4,8 @@
 id: syntax
 title: Syntax
 permalink: /docs/syntax.html
-prev: builtins.html
-next: arrays.html
+prev: quick-reference.html
+next: builtins.html
 ---
 */
 /*
