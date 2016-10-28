@@ -1,0 +1,15 @@
+scalar Int
+scalar Float
+scalar String
+scalar Boolean
+scalar ID
+
+type User {
+  id: ID!
+  name: String
+  friends: [User]!
+}
+
+type Query {
+  me: User
+}

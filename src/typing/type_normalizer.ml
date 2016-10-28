@@ -390,6 +390,8 @@ let rec normalize_type_impl cx ids t = match t with
 
   | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 
+  | GraphqlSchemaT _ -> t
+
   | FunProtoT _
   | ExtendsT (_, _, _)
   ->

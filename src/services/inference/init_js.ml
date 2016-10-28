@@ -148,6 +148,22 @@ let init ~options lib_files
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
+
+  (match options.Options.opt_graphql_schema with
+  | Some schema_path ->
+    Flow_logger.log "Parsing GraphQL schema";
+    (try
+      let src = (Sys_utils.cat_no_fail (Path.to_string schema_path)) in
+      let lexbuf = Lexing.from_string src in
+      let ast = Graphql_parser.doc Graphql_lexer.token lexbuf in
+      let schema = Graphql_conv.schema_from_ast ast in
+      let reason = Reason.builtin_reason Reason.RGraphqlSchema in
+      let schema_t = Type.GraphqlSchemaT (reason, schema) in
+      Flow.set_builtin master_cx "graphql$schema" schema_t
+    with
+      | _ -> Flow_logger.log "[ERROR]")
+  | None -> ());
+
   Merge_js.ContextOptimizer.sig_context [master_cx];
 
   result
