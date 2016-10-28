@@ -5,7 +5,7 @@ id: quick-reference
 title: Quick Reference
 permalink: /docs/quick-reference.html
 prev: advanced-configuration.html
-next: builtins.html
+next: syntax.html
 ---
 */
 /*

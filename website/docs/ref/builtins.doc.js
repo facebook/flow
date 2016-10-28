@@ -4,8 +4,8 @@
 id: builtins
 title: Built-in Types
 permalink: /docs/builtins.html
-prev: quick-reference.html
-next: syntax.html
+prev: syntax.html
+next: arrays.html
 ---
 */
 
@@ -240,7 +240,7 @@ unsafe.foo.bar.baz;
   ## mixed
 
   Like `any`, `mixed` is a supertype of all types. Unlike `any`, however,
-  `mixed` is not a subtype of all types. This means `mixed` is like a safe 
+  `mixed` is not a subtype of all types. This means `mixed` is like a safe
   but somewhat annoying version of `any`. It should be preferred over `any`
   whenever possible.
 */
