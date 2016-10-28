@@ -3519,7 +3519,10 @@ and jsx_title cx openingElement children = Ast.JSX.(
     let reason_props = replace_reason_const
       (if is_react then RReactElementProps name else RJSXElementProps name)
       reason in
-    let o = Flow.mk_object_with_map_proto cx reason_props ~sealed:(!spread=None)
+    (* TODO: put children in the props for react, so that we can seal props for
+     * react *)
+    let sealed = !spread=None && not is_react in
+    let o = Flow.mk_object_with_map_proto cx reason_props ~sealed
       !map (MixedT (reason_props, Mixed_everything))
     in
     match !spread with
