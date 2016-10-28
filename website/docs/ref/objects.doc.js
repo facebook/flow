@@ -135,7 +135,7 @@ var supertype_p: {p: ?number} = {p: null};
 contravariance(supertype_p);
 
 /*
-Covariant properties can not be read from:
+Contravariant properties can not be read from:
 */
 
 function contravariance_err(o: {-p: number}) {
