@@ -1179,6 +1179,23 @@ and dump_t_ (depth, tvars) cx t =
           ) upper [])))
   in
 
+  let defer_use =
+    let string_of_selector = function
+    | Prop name -> spf "Prop `%s`" name
+    | Elem _ -> "Elem"
+    | ObjRest _ -> "ObjRest"
+    | ArrRest i -> spf "ArrRest at index %d" i
+    | Default -> "Default"
+    | Become -> "Become"
+    | Refine _ -> "Refine"
+    in
+    function
+    | DestructuringT (_, selector) ->
+      spf "DestructuringT of %s" (string_of_selector selector)
+    | TypeDestructorT _ ->
+      "TypeDestructorT"
+  in
+
   if depth = 0 then string_of_ctor t
   else match t with
   | OpenT (_, id) -> p ~extra:(tvar id) t
@@ -1225,7 +1242,7 @@ and dump_t_ (depth, tvars) cx t =
   | RestT arg
   | AbstractT arg -> p ~reason:false ~extra:(kid arg) t
   | EvalT (_, expr, id) -> p
-      ~extra:(spf "%s, %d" (string_of_defer_use_ctor expr) id) t
+      ~extra:(spf "%s, %d" (defer_use expr) id) t
   | TypeAppT (base, args) -> p ~reason:false ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (List.map kid args))) t
   | ThisTypeAppT (base, this, args) -> p ~reason:false

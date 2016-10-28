@@ -1883,7 +1883,7 @@ let string_of_ctor = function
   | OptionalT _ -> "OptionalT"
   | RestT _ -> "RestT"
   | AbstractT _ -> "AbstractT"
-  | EvalT (_, defer_use_t, _) -> string_of_defer_use_ctor defer_use_t
+  | EvalT _ -> "EvalT"
   | TypeAppT _ -> "TypeAppT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
   | MaybeT _ -> "MaybeT"
