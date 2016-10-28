@@ -1311,10 +1311,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | EvalT (t, DestructuringT (reason, s), i), _ ->
-      rec_flow cx trace (eval_selector cx reason t s i, u)
+      rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
 
     | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
-      rec_flow cx trace (l, UseT (use_op, eval_selector cx reason t s i))
+      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
 
     (*****************************)
     (* Refinement type subtyping *)
@@ -5331,13 +5331,13 @@ and subst_defer_use_t cx ~force map t = match t with
       let s_ = subst_destructor cx force map s in
       if s_ == s then t else TypeDestructorT (reason, s_)
 
-and eval_selector cx reason curr_t s i =
+and eval_selector cx ?trace reason curr_t s i =
   let evaluated = Context.evaluated cx in
   match IMap.get i evaluated with
   | None ->
     mk_tvar_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
-      flow_opt cx (curr_t, match s with
+      flow_opt cx ?trace (curr_t, match s with
       | Prop x -> GetPropT(reason, (reason, x), tvar)
       | Elem key -> GetElemT(reason, key, tvar)
       | ObjRest xs -> ObjRestT(reason, xs, tvar)
