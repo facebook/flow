@@ -188,6 +188,11 @@ and parts_of_t cx = function
 | FunProtoCallT _ -> []
 | FunProtoT _ -> []
 | FunT (_, _, _, funtype) -> parts_of_funtype funtype
+| GraphqlFieldT _ -> []
+| GraphqlFragT _ -> []
+| GraphqlOpT _ -> []
+| GraphqlSchemaT _ -> []
+| GraphqlSelectionT _ -> []
 | IdxWrapper (_, inner) -> ["inner", Def inner]
 | InstanceT (_, static, super,
   { type_args; fields_tmap; methods_tmap; _ }) ->
@@ -288,6 +293,11 @@ and parts_of_use_t cx = function
 | GetKeysT (_, out) -> ["out", Def out]
 | GetPropT (_, _, out) -> ["out", Def out]
 | GetStaticsT (_, out) -> ["out", Def out]
+| GraphqlMkFragT (_, _, _, t) -> ["t", Def t]
+| GraphqlMkInlineFragT (_, _, _, t) -> ["t", Def t]
+| GraphqlMkOpT (_, _, _, t) -> ["t", Def t]
+| GraphqlSelectT (_, _, t) -> ["t", Def t]
+| GraphqlSpreadT _ -> []
 | GuardT (_, t, out) -> ["iftrue", Def t; "out", Def out]
 | HasOwnPropT _ | HasPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]

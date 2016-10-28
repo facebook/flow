@@ -1,0 +1,20 @@
+scalar Int
+scalar Float
+scalar String
+scalar Boolean
+scalar ID
+
+interface Node {
+  id: ID!
+}
+
+type User implements Node {
+  id: ID!
+  name: String
+  friends: [User]!
+}
+
+type Query {
+  me: User
+  version: String
+}

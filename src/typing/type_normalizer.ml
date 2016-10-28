@@ -394,6 +394,12 @@ let rec normalize_type_impl cx ids t = match t with
   | ReposUpperT (_, t) ->
       normalize_type_impl cx ids t
 
+  | GraphqlSchemaT _ -> t
+  | GraphqlOpT _ -> t
+  | GraphqlFragT _ -> t
+  | GraphqlSelectionT _ -> t
+  | GraphqlFieldT _ -> t
+
   | FunProtoT _
   | ExtendsT (_, _, _)
   ->

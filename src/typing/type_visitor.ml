@@ -163,6 +163,12 @@ class ['a] t = object(self)
   | ReposUpperT (_, t) ->
     self#type_ cx acc t
 
+  | GraphqlSchemaT _ -> acc
+  | GraphqlOpT _ -> acc
+  | GraphqlFragT _ -> acc
+  | GraphqlSelectionT _ -> acc
+  | GraphqlFieldT _ -> acc
+
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
   | TypeDestructorT (_, d) -> self#destructor cx acc d
@@ -235,6 +241,11 @@ class ['a] t = object(self)
   | GetKeysT (_, _)
   | GetPropT (_, _, _)
   | GetStaticsT (_, _)
+  | GraphqlMkFragT _
+  | GraphqlMkInlineFragT _
+  | GraphqlMkOpT _
+  | GraphqlSelectT _
+  | GraphqlSpreadT _
   | GuardT (_, _, _)
   | HasOwnPropT (_, _)
   | HasPropT (_, _, _)

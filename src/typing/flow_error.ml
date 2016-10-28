@@ -106,6 +106,11 @@ type error_message =
   | EObjectComputedPropertyAccess of (reason * reason)
   | EObjectComputedPropertyAssign of (reason * reason)
   | EInvalidLHSInAssignment of Loc.t
+  | EGraphqlParse of Loc.t
+  | EGraphqlTypeNotFound of reason * string
+  | EGraphqlFieldNotFound of reason * string
+  | EGraphqlNonObjSelect of reason * string
+  | EGraphqlSubType of reason * string * string
 
 and binding_error =
   | ENameAlreadyBound
@@ -942,6 +947,25 @@ end = struct
     | EInvalidLHSInAssignment loc ->
         let msg = "Invalid left-hand side in assignment expression" in
         mk_error [loc, [msg]]
+
+    | EGraphqlParse loc ->
+        mk_error [loc, ["GraphQL syntax error"]]
+
+    | EGraphqlTypeNotFound (reason, name) ->
+        mk_error [mk_info reason [spf "Type `%s` not found in schema" name]]
+
+    | EGraphqlFieldNotFound (reason, type_name) ->
+        mk_error [mk_info reason [spf "Field not found in type `%s`" type_name]]
+
+    | EGraphqlNonObjSelect (reason, type_name) ->
+        mk_error [mk_info reason [
+          spf "Cannot select on non-object type `%s`" type_name
+        ]]
+
+    | EGraphqlSubType (reason, sub, sup) ->
+        mk_error [mk_info reason [
+          spf "`%s` is not a subtype of `%s`" sub sup
+        ]]
 
   let add_output cx ?trace msg =
     let error = error_of_msg cx ?trace msg in
