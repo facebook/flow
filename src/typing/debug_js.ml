@@ -1181,17 +1181,17 @@ and dump_t_ (depth, tvars) cx t =
 
   let defer_use =
     let string_of_selector = function
-    | Prop name -> spf "Prop `%s`" name
-    | Elem _ -> "Elem"
-    | ObjRest _ -> "ObjRest"
-    | ArrRest i -> spf "ArrRest at index %d" i
-    | Default -> "Default"
-    | Become -> "Become"
-    | Refine _ -> "Refine"
+    | Prop name -> spf "prop `%s`" name
+    | Elem _ -> "elem"
+    | ObjRest _ -> "obj rest"
+    | ArrRest i -> spf "arr rest at index %d" i
+    | Default -> "default"
+    | Become -> "become"
+    | Refine _ -> "refine"
     in
-    function
+    fun expr t -> match expr with
     | DestructuringT (_, selector) ->
-      spf "DestructuringT of %s" (string_of_selector selector)
+      spf "Destructure %s on %s" (string_of_selector selector) t
     | TypeDestructorT _ ->
       "TypeDestructorT"
   in
@@ -1241,8 +1241,8 @@ and dump_t_ (depth, tvars) cx t =
   | OptionalT arg
   | RestT arg
   | AbstractT arg -> p ~reason:false ~extra:(kid arg) t
-  | EvalT (_, expr, id) -> p
-      ~extra:(spf "%s, %d" (defer_use expr) id) t
+  | EvalT (arg, expr, id) -> p
+      ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | TypeAppT (base, args) -> p ~reason:false ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (List.map kid args))) t
   | ThisTypeAppT (base, this, args) -> p ~reason:false
