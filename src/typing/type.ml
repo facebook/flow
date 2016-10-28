@@ -260,6 +260,8 @@ module rec TypeTerm : sig
     (* Map a FunT over a structure *)
     | TypeMapT of reason * type_map * t * t
 
+    | GraphqlSchemaT of reason * Graphql_schema.t
+
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
@@ -1507,6 +1509,8 @@ let rec reason_of_t = function
 
   | TypeMapT (reason, _, _, _) -> reason
 
+  | GraphqlSchemaT (reason, _) -> reason
+
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
   | TypeDestructorT (reason, _) ->
@@ -1714,6 +1718,8 @@ let rec mod_reason_of_t f = function
 
   | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
 
+  | GraphqlSchemaT (reason, schema) -> GraphqlSchemaT (reason, schema)
+
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
   | TypeDestructorT (reason, s) -> TypeDestructorT (f reason, s)
@@ -1910,6 +1916,7 @@ let string_of_ctor = function
   | IdxWrapper _ -> "IdxWrapper"
   | OpenPredT _ -> "OpenPredT"
   | TypeMapT _ -> "TypeMapT"
+  | GraphqlSchemaT _ -> "GraphqlSchemaT"
 
 let string_of_use_op = function
   | FunCallThis _ -> "FunCallThis"

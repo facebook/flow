@@ -217,6 +217,7 @@ and parts_of_t cx = function
 | IdxWrapper (_, inner) -> ["inner", Def inner]
 | OpenPredT (_, base, _, _) -> ["base", Def base]
 | TypeMapT (_, _, t1, t2) -> ["t", Def t1; "mapfn", Def t2]
+| GraphqlSchemaT _ -> []
 
 and parts_of_funtype { params_tlist; params_names; return_t; _ } =
   (* OMITTED: static, prototype, this_t *)

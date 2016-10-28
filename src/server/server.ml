@@ -476,6 +476,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let options = genv.ServerEnv.options in
     let root = Options.root options in
     let config_path = Server_files_js.config_file root in
+    let graphql_schema = Options.graphql_schema options in
     let sroot = Path.to_string root in
     let want = Files.wanted ~options all_libs in
 
@@ -487,6 +488,18 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
         config_path;
       FlowExitStatus.(exit Server_out_of_date)
     end;
+
+    (* Die if graphql schema changed *)
+    Option.iter graphql_schema (fun schema_path ->
+      let schema_path = Path.to_string schema_path in
+      if SSet.mem schema_path updates then begin
+        Flow_logger.log "Status: Error";
+        Flow_logger.log
+          "%s changed in an incompatible way. Exiting.\n%!"
+          schema_path;
+        FlowExitStatus.(exit Server_out_of_date)
+      end
+    );
 
     let is_incompatible filename_str =
       let filename = Loc.JsonFile filename_str in

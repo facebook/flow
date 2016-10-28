@@ -1028,6 +1028,7 @@ module ResolvableTypeJob = struct
     | ExistsT _
     | OpenPredT _
     | TypeMapT _
+    | GraphqlSchemaT _
       ->
       acc
 
@@ -5323,6 +5324,8 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let t2' = subst cx ~force map t2 in
     if t1 == t1' && t2 == t2' then t else TypeMapT (r, kind, t1', t2')
 
+  | GraphqlSchemaT _ -> t
+
 and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
       let s_ = subst_selector cx force map s in
@@ -5483,6 +5486,7 @@ and check_polarity cx polarity = function
   | CustomFunT _
   | OpenPredT _
   | TypeMapT _
+  | GraphqlSchemaT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx id =
@@ -8552,6 +8556,8 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   | TypeMapT (_, _, t1, t2) ->
     recurse t1;
     recurse t2
+
+  | GraphqlSchemaT _ -> ()
 
   | ObjProtoT _
   | FunProtoT _

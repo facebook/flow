@@ -133,6 +133,8 @@ type reason_desc =
   | RPropTypeShape
   | RPropTypeFbt
 
+  | RGraphqlSchema
+
 and reason_desc_function =
   | RAsync
   | RGenerator
