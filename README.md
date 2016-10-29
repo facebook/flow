@@ -98,7 +98,7 @@ For example, on Ubuntu 14.04 and similar systems:
 sudo apt-get install ocaml libelf-dev
 ```
 
-On OSX, using the [brew package manager](http://brew.sh/):
+On OS X, using the [brew package manager](http://brew.sh/):
 
 ```
 brew install ocaml ocamlbuild libelf opam
