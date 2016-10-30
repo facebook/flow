@@ -12,7 +12,6 @@
 
 module Ast = Spider_monkey_ast
 module Flow = Flow_js
-module FlowError = Flow_error
 
 open Utils_js
 open Reason
@@ -153,7 +152,7 @@ let mark_exports_type cx reason new_exports_type = Context.(
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      FlowError.(add_output cx (EIndeterminateModuleType reason))
+      Flow_error.(add_output cx (EIndeterminateModuleType reason))
   | _ -> ()
   );
   Context.set_module_exports_type cx new_exports_type
@@ -189,7 +188,7 @@ let warn_or_ignore_export_star_as cx name =
   if name = None then () else
   match Context.esproposal_export_star_as cx, name with
   | Options.ESPROPOSAL_WARN, Some(loc, _) ->
-    FlowError.(add_output cx (EExperimentalExportStarAs loc))
+    Flow_error.(add_output cx (EExperimentalExportStarAs loc))
   | _ -> ()
 
 (* Module exports are treated differently than `exports`. The latter is a

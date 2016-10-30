@@ -11,7 +11,6 @@
 (* AST handling for destructuring exprs *)
 
 module Ast = Spider_monkey_ast
-module FlowError = Flow_error
 
 open Utils_js
 open Reason
@@ -63,7 +62,7 @@ and extract_arr_elem_pattern_bindings accum = Ast.Pattern.Array.(function
 
 let error_destructuring cx loc =
   (* TODO: be more specific about which syntax is unsupported *)
-  FlowError.(add_output cx (EUnsupportedSyntax (loc, Destructuring)))
+  Flow_error.(add_output cx (EUnsupportedSyntax (loc, Destructuring)))
 
 (* Destructuring visitor for tree-shaped patterns, parameteric over an action f
    to perform at the leaves. A type for the pattern is passed, which is taken
