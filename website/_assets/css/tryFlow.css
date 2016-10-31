@@ -67,7 +67,8 @@
   padding: 7px 15px;
 }
 .editor .results.show-errors .toolbar .tab.errors-tab,
-.editor .results.show-json .toolbar .tab.json-tab {
+.editor .results.show-json .toolbar .tab.json-tab,
+.editor .results.show-ast .toolbar .tab.ast-tab {
   background: #f7f7f7;
   border-bottom: 1px solid #f7f7f7;
   margin-bottom: -1px;
@@ -81,7 +82,8 @@
 }
 
 .editor .results .errors,
-.editor .results .json {
+.editor .results .json,
+.editor .results .ast {
   display: none;
   padding: 7px 10px;
 }
@@ -91,6 +93,7 @@
 
 .editor .results.show-errors .errors,
 .editor .results.show-json .json,
+.editor .results.show-ast .ast,
 .editor .results.show-loading .loading {
   display: block;
 }

@@ -98,13 +98,3 @@ let parse content options =
     Js.Unsafe.set e "name" ((Js.string "Parse Error"));
     ignore (throw e);
     Js.Unsafe.obj [||]
-
-let exports =
-  if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")
-  then Js.Unsafe.js_expr "exports"
-  else begin
-    let exports = Js.Unsafe.obj [||] in
-    Js.Unsafe.set Js.Unsafe.global "flow" exports;
-    exports
-  end
-let () = Js.Unsafe.set exports "parse" (Js.wrap_callback parse)

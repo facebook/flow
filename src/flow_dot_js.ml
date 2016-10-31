@@ -253,4 +253,6 @@ let () = Js.Unsafe.set exports
 let () = Js.Unsafe.set exports
   "flowVersion" (Js.string FlowConfig.version)
 let () = Js.Unsafe.set exports
+  "parse" (Js.wrap_callback Flow_parser_js.parse)
+let () = Js.Unsafe.set exports
   "typeAtPos" (Js.wrap_callback type_at_pos)

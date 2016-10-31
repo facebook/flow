@@ -98,6 +98,7 @@ function removeChildren(node) {
 function getAnnotations(text, callback, options, editor) {
   const errorsNode = options.errorsNode;
   const jsonNode = options.jsonNode;
+  const astNode = options.astNode;
   const flowReady = editor.getOption('flow');
   flowReady.then(function(flow) {
     var errors = flow.checkContent('-', text);
@@ -111,6 +112,14 @@ function getAnnotations(text, callback, options, editor) {
       removeChildren(jsonNode);
       jsonNode.appendChild(
         document.createTextNode(JSON.stringify(errors, null, 2))
+      );
+    }
+
+    if (astNode) {
+      let ast = flow.parse(text, {});
+      removeChildren(astNode);
+      astNode.appendChild(
+        document.createTextNode(JSON.stringify(ast, null, 2))
       );
     }
 
@@ -214,8 +223,9 @@ exports.createEditor = function createEditor(
     errorsTabNode.appendChild(document.createTextNode('Errors'));
     errorsTabNode.addEventListener('click', function(evt) {
       removeClass(resultsNode, 'show-json');
+      removeClass(resultsNode, 'show-ast');
       resultsNode.className += ' show-errors';
-      evt.kill();
+      evt.preventDefault();
     });
 
     const jsonTabNode = document.createElement('li');
@@ -223,8 +233,19 @@ exports.createEditor = function createEditor(
     jsonTabNode.appendChild(document.createTextNode('JSON'));
     jsonTabNode.addEventListener('click', function(evt) {
       removeClass(resultsNode, 'show-errors');
+      removeClass(resultsNode, 'show-ast');
       resultsNode.className += ' show-json';
-      evt.kill();
+      evt.preventDefault();
+    });
+
+    const astTabNode = document.createElement('li');
+    astTabNode.className = "tab ast-tab";
+    astTabNode.appendChild(document.createTextNode('AST'));
+    astTabNode.addEventListener('click', function(evt) {
+      removeClass(resultsNode, 'show-errors');
+      removeClass(resultsNode, 'show-json');
+      resultsNode.className += ' show-ast';
+      evt.preventDefault();
     });
 
     const versionSelector = document.createElement('select');
@@ -245,6 +266,7 @@ exports.createEditor = function createEditor(
     toolbarNode.className = "toolbar";
     toolbarNode.appendChild(errorsTabNode);
     toolbarNode.appendChild(jsonTabNode);
+    toolbarNode.appendChild(astTabNode);
     toolbarNode.appendChild(versionTabNode);
 
     const errorsNode = document.createElement('pre');
@@ -253,9 +275,13 @@ exports.createEditor = function createEditor(
     const jsonNode = document.createElement('pre');
     jsonNode.className = "json";
 
+    const astNode = document.createElement('pre');
+    astNode.className = "ast";
+
     resultsNode.appendChild(toolbarNode);
     resultsNode.appendChild(errorsNode);
     resultsNode.appendChild(jsonNode);
+    resultsNode.appendChild(astNode);
 
     resultsNode.className += " show-errors";
 
@@ -265,7 +291,7 @@ exports.createEditor = function createEditor(
       lineNumbers: true,
       mode: "jsx",
       flow: flowReady,
-      lint: { getAnnotations, errorsNode, jsonNode }
+      lint: { getAnnotations, errorsNode, jsonNode, astNode }
     });
 
     editor.on('changes', () => {
