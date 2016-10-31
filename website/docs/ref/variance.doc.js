@@ -140,7 +140,7 @@ function h(o: {p: T1}): void {
 }
 
 /*
-What kinds of objects can we pass into `f`, then? If we try to pass in an object
+What kinds of objects can we pass into `h`, then? If we try to pass in an object
 with a subtype property, we get an error:
 */
 
@@ -149,7 +149,7 @@ var o1: {p: T2} = {p: new T2};
 h(o1);
 
 /*
-Flow has correctly identified an error here. If the body of `f` writes `T1`
+Flow has correctly identified an error here. If the body of `h` writes `T1`
 into `o.p`, then `o1.p` would no longer have type `T2`.
 
 If we try to pass an object with a supertype property, we again get an error:
@@ -160,7 +160,7 @@ var o2: {p: T0} = {p: new T0};
 h(o2);
 
 /*
-Again, Flow correctly identifies an error, because if `f` tried to read `p` from
+Again, Flow correctly identifies an error, because if `h` tried to read `p` from
 `o`, it would find a T0.
 */
 
