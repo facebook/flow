@@ -136,6 +136,30 @@ heap.js:172
 172:     (x.y : string); // error
                 ^^^^^^ string
 
+heap.js:188
+188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
+          ^ string. Expected string literal `b`
+188:     (x: 'b'); // error (but only once, string !~> 'b'; 'a' is irrelevant)
+             ^^^ string literal `b`
+
+heap.js:192
+192:     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
+                      ^^^ property `bar`. Property not found in
+192:     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
+                    ^ mixed
+
+heap.js:193
+193:     (x: string & number);
+          ^ mixed. This type is incompatible with
+193:     (x: string & number);
+             ^^^^^^ string
+
+heap.js:193
+193:     (x: string & number);
+          ^ mixed. This type is incompatible with
+193:     (x: string & number);
+                      ^^^^^^ number
+
 lex.js:6
   6:   (x : string); // error: number ~> string
         ^ number. This type is incompatible with
@@ -215,4 +239,4 @@ switch.js:49
                                  ^^^^^^ number
 
 
-Found 36 errors
+Found 40 errors

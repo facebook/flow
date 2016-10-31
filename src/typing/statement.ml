@@ -596,8 +596,19 @@ and statement cx = Ast.Statement.(
       | None, Some Abnormal.Throw ->
         then_env
 
-      | _ ->
+      | None, Some _
+      | Some _, None
+      | Some _, Some _ ->
         Env.merge_env cx reason (start_env, then_env, else_env) newset;
+        start_env
+
+      | None, None ->
+        (* if neither branch has abnormal flow, then refinements that happen in
+           the branches should be forgotten since the original type covers
+           all of the options. *)
+        Env.merge_env cx reason
+          (start_env, then_env, else_env)
+          (Changeset.exclude_refines newset);
         start_env
       in
       Env.update_env cx reason end_env;

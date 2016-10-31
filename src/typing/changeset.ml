@@ -74,8 +74,7 @@ let include_ops ops (vars, refis) =
 
 let include_reads = include_ops [Read]
 let include_writes = include_ops [Write]
-let include_refines = include_ops [Refine]
-let include_type_updates = include_ops [Write; Refine]
+let exclude_refines = include_ops [Read; Write]
 
 let iter ?ops f_vars f_refis changeset =
   let vars, refis = match ops with
