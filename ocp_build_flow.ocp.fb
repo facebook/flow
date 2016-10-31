@@ -127,7 +127,10 @@ end
 begin library "flow-parser"
   sort = true
   files = begin fb-glob "src/parser"
-    excludes = [ "flow_parser_js.ml" ]
+    excludes = [
+      "flow_parser_js.ml"
+      "flow_parser_dot_js.ml"
+    ]
   end
 end
 
