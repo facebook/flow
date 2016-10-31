@@ -807,7 +807,12 @@ let update_var op cx name specific reason =
   | Value ({ Entry.kind = Let _ | Var; _ } as v) ->
     let change = scope.id, name, op in
     Changeset.change_var change;
-    Flow_js.flow_t cx (specific, Entry.general_of_value v);
+    let use_op = match op with
+    | Changeset.Write -> UnknownUse
+    | Changeset.Refine -> Internal Refinement
+    | Changeset.Read -> UnknownUse (* this is impossible *)
+    in
+    Flow_js.flow cx (specific, UseT (use_op, Entry.general_of_value v));
     (* add updated entry *)
     let update = Entry.Value {
       v with Entry.
@@ -845,7 +850,8 @@ let refine_const cx name specific reason =
   | Value ({ Entry.kind = Const _; _ } as v) ->
     let change = scope.id, name, Changeset.Refine in
     Changeset.change_var change;
-    Flow_js.flow_t cx (specific, Entry.general_of_value v);
+    let general = Entry.general_of_value v in
+    Flow_js.flow cx (specific, UseT (Internal Refinement, general));
     let update = Value {
       v with value_state = State.Initialized; specific
     } in
@@ -902,8 +908,8 @@ let merge_env =
 
   let create_union cx reason l1 l2 =
     Flow_js.mk_tvar_where cx reason (fun tvar ->
-      Flow_js.flow_t cx (l1, tvar);
-      Flow_js.flow_t cx (l2, tvar);
+      Flow_js.flow cx (l1, UseT (Internal MergeEnv, tvar));
+      Flow_js.flow cx (l2, UseT (Internal MergeEnv, tvar));
     )
   in
 
@@ -921,7 +927,7 @@ let merge_env =
     else
       let reason = replace_reason_const (RCustom name) reason in
       let tvar = create_union cx reason specific1 specific2 in
-      Flow_js.flow_t cx (tvar, general0);
+      Flow_js.flow cx (tvar, UseT (Internal MergeEnv, general0));
       tvar
   in
 
@@ -1059,7 +1065,7 @@ let copy_env =
     (* for values, flow env2's specific type into env1's specific type *)
     | Some Value v1, Some Value v2 ->
       (* flow child2's specific type to child1 in place *)
-      Flow_js.flow_t cx (v2.specific, v1.specific);
+      Flow_js.flow cx (v2.specific, UseT (Internal CopyEnv, v1.specific));
       (* udpate state *)
       if v1.value_state < State.Initialized
         && v2.value_state >= State.MaybeInitialized
@@ -1106,7 +1112,7 @@ let copy_env =
     match get scope0, get scope1 with
     (* flow child refi's type back to parent *)
     | Some { refined = t1; _ }, Some { refined = t2; _ } ->
-      Flow_js.flow_t cx (t2, t1)
+      Flow_js.flow cx (t2, UseT (Internal CopyEnv, t1))
     (* uneven cases imply refi was added after splitting: remove *)
     | _ ->
       ()
@@ -1134,8 +1140,8 @@ let widen_env =
     else
       let reason = replace_reason_const (RCustom name) reason in
       let tvar = Flow_js.mk_tvar cx reason in
-      Flow_js.flow_t cx (specific, tvar);
-      Flow_js.flow_t cx (tvar, general);
+      Flow_js.flow cx (specific, UseT (Internal WidenEnv, tvar));
+      Flow_js.flow cx (tvar, UseT (Internal WidenEnv, general));
       Some tvar
   in
 

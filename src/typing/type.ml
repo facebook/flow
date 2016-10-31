@@ -272,13 +272,20 @@ module rec TypeTerm : sig
        implementation of destructors. *)
     | TypeDestructorT of reason * destructor
 
+  and internal_use_op =
+    | CopyEnv
+    | MergeEnv
+    | Refinement
+    | WidenEnv
+
   and use_op =
-    | FunCallThis of reason
-    | FunReturn
-    | FunImplicitReturn
     | Addition
-    | MissingTupleElement of int
     | Coercion
+    | FunCallThis of reason
+    | FunImplicitReturn
+    | FunReturn
+    | Internal of internal_use_op
+    | MissingTupleElement of int
     | TypeRefinement
     | UnknownUse
 
@@ -1911,13 +1918,20 @@ let string_of_ctor = function
   | OpenPredT _ -> "OpenPredT"
   | TypeMapT _ -> "TypeMapT"
 
+let string_of_internal_use_op = function
+  | CopyEnv -> "CopyEnv"
+  | MergeEnv -> "MergeEnv"
+  | Refinement -> "Refinement"
+  | WidenEnv -> "WidenEnv"
+
 let string_of_use_op = function
-  | FunCallThis _ -> "FunCallThis"
-  | FunReturn -> "FunReturn"
-  | FunImplicitReturn -> "FunImplicitReturn"
   | Addition -> "Addition"
-  | MissingTupleElement _ -> "MissingTupleElement"
   | Coercion -> "Coercion"
+  | FunCallThis _ -> "FunCallThis"
+  | FunImplicitReturn -> "FunImplicitReturn"
+  | FunReturn -> "FunReturn"
+  | Internal op -> spf "Internal %s" (string_of_internal_use_op op)
+  | MissingTupleElement _ -> "MissingTupleElement"
   | TypeRefinement -> "TypeRefinement"
   | UnknownUse -> "UnknownUse"
 
