@@ -101,6 +101,12 @@
   padding: 0;
 }
 
+.editor .errors li + li {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: solid #eee 1px;
+}
+
 .editor .errors .msgHighlight,
 .editor .errors .msgType {
   cursor: pointer;
