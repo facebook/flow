@@ -1908,7 +1908,7 @@ CAMLprim value hh_load_dep_table(value in_filename) {
 // Expects the database to be open
 static void create_sqlite_header(sqlite3 *db) {
   // Create Header
-  char *sql = "CREATE TABLE HEADER(" \
+  const char *sql = "CREATE TABLE HEADER(" \
                "MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
                "BUILDINFO TEXT NOT NULL);";
 
@@ -1930,7 +1930,7 @@ static void create_sqlite_header(sqlite3 *db) {
 // Expects the database to be open
 static void verify_sqlite_header(sqlite3 *db) {
   sqlite3_stmt *select_stmt = NULL;
-  char *sql = "SELECT * FROM HEADER;";
+  const char *sql = "SELECT * FROM HEADER;";
   assert(sqlite3_prepare_v2(db, sql, -1, &select_stmt, NULL) == SQLITE_OK);
 
   if (sqlite3_step(select_stmt) == SQLITE_ROW) {
@@ -1983,7 +1983,7 @@ CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
   create_sqlite_header(db_out);
 
   // Create Dep able
-  char *sql = "CREATE TABLE DEPTABLE(" \
+  const char *sql = "CREATE TABLE DEPTABLE(" \
                "KEY_VERTEX INT PRIMARY KEY NOT NULL," \
                "VALUE_VERTEX BLOB NOT NULL);";
 
@@ -2098,10 +2098,10 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   }
 
   uint32_t *values;
-  size_t size, count;
+  size_t size, count, i;
 
   sqlite3_stmt *select_stmt = NULL;
-  char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
+  const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
   assert(sqlite3_prepare_v2(db, sql, -1, &select_stmt, NULL) == SQLITE_OK);
   assert(sqlite3_bind_int(select_stmt, 1, key) == SQLITE_OK);
 
@@ -2114,7 +2114,7 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
     assert(size % sizeof(uint32_t) == 0);
     count = size / sizeof(uint32_t);
 
-    for (int i = 0; i < count; i++) {
+    for (i = 0; i < count; i++) {
       cell = caml_alloc_tuple(2);
       Field(cell, 0) = Val_long(values[i]);
       Field(cell, 1) = result;
