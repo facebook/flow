@@ -76,7 +76,7 @@ test-js: build-parser js
 ../../_build/$(REL_DIR)/test/run_hardcoded_tests.native: build-parser
 	cd $(TOP); \
 	ocamlbuild \
-		-ocamlc "ocamlopt -DNO_SQLITE3" \
+		-ocamlc "ocamlopt -ccopt -DNO_SQLITE3" \
 		$(NATIVE_OBJECT_FILES); \
 	ocamlbuild \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
