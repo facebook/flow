@@ -2127,15 +2127,18 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
 
 #else
 CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
+  CAMLparam0();
   CAMLreturn(Val_long(0));
 }
 
 CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
+  CAMLparam0();
   CAMLreturn(Val_long(0));
 }
 
 CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   // Empty list
+  CAMLparam0();
   CAMLreturn(Val_int(0));
 }
 #endif
