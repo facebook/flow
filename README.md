@@ -120,7 +120,7 @@ Flow can also compile its parser to JavaScript. [Read how here](src/parser/READM
 
 While Flow is written in OCaml, its parser is available as a compiled-to-JavaScript module published to npm, named [flow-parser](https://www.npmjs.com/package/flow-parser). **Most end users of Flow
 will not need to use this parser directly** (and should install [flow-bin](https://www.npmjs.org/package/flow-bin) from npm above), but JavaScript packages which make use of parsing
-Flow-typed JavaScript can use this to generate Flow's syntax tree with inferred types attached.
+Flow-typed JavaScript can use this to generate Flow's syntax tree with annotated types attached.
 
 ## Running the tests
 
