@@ -24,13 +24,17 @@ begin library "lz4"
   files = begin fb-glob "src/third-party/lz4" end
 end
 
+hh_shared_flags = [
+  "-I"; "src/third-party/lz4";
+  "-D"; "NO_SQLITE3";
+]
 begin library "hh-heap"
   sort = true
   files = begin fb-glob "hack/heap"
      excludes = [ "hh_shared.c" ]
   end
   files += [
-    "hack/heap/hh_shared.c" (ccopt = ["-I"; "src/third-party/lz4"])
+    "hack/heap/hh_shared.c" (ccopt = hh_shared_flags)
   ]
   requires += [
     "hh-stubs"
