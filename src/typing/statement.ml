@@ -345,7 +345,7 @@ and statement_decl cx = Ast.Statement.(
       | Some stmt -> statement_decl cx stmt
       | None -> ()
     )
-  | (_, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ }) -> (
+  | _, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ } -> (
       match declaration with
       | ExportDefaultDeclaration.Declaration stmt ->
         statement_decl cx (nameify_default_export_decl stmt)
@@ -450,8 +450,8 @@ and toplevels cx stmts =
         match stmt with
         (* function declarations are hoisted, so not unreachable *)
         | (_, FunctionDeclaration _ ) -> statement cx stmt;
-        (* variable declarations are hoisted, but associated assignments are not,
-           so skip variable declarations with no assignments.
+        (* variable declarations are hoisted, but associated assignments are
+           not, so skip variable declarations with no assignments.
            Note: this does not seem like a practice anyone would use *)
         | (_, VariableDeclaration d) -> VariableDeclaration.(d.declarations |>
             List.iter Declarator.(function
@@ -955,8 +955,9 @@ and statement cx = Ast.Statement.(
 
   (***************************************************************************)
   (* Try-catch-finally statements have a lot of control flow possibilities. (To
-     simplify matters, a missing catch block is considered to to be a catch block
-     that throws, and a missing finally block is considered to be an empty block.)
+     simplify matters, a missing catch block is considered to to be a catch
+     block that throws, and a missing finally block is considered to be an empty
+     block.)
 
      A try block may either
 
@@ -1388,9 +1389,9 @@ and statement cx = Ast.Statement.(
       let o =
         let targs = [element_tvar; AnyT.at loc; AnyT.at loc] in
         if async then
-          Flow.get_builtin_typeapp cx
-            (mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
-            "$AsyncIterable" targs
+          let reason = mk_reason
+            (RCustom "async iteration expected on AsyncIterable") loc in
+          Flow.get_builtin_typeapp cx reason "$AsyncIterable" targs
         else
           Flow.get_builtin_typeapp cx
             (mk_reason (RCustom "iteration expected on Iterable") loc)
@@ -1519,7 +1520,10 @@ and statement cx = Ast.Statement.(
   | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
     let name = match id with
     | DeclareModule.Identifier ident -> ident_name ident
-    | DeclareModule.Literal (_, { Ast.Literal.value = Ast.Literal.String str; _; }) ->
+    | DeclareModule.Literal (_, { Ast.Literal.
+        value = Ast.Literal.String str;
+        _;
+      }) ->
         str
     | _ ->
         (* The only literals that we should see as module names are strings *)
@@ -1550,9 +1554,9 @@ and statement cx = Ast.Statement.(
       | DeclareModule.CommonJS kind_loc ->
         (**
          * TODO(jeffmo): `declare var exports` is deprecated (in favor of
-         *               `declare module.exports`). v0.25 retains support for it as
-         *               a transitionary grace period, but this will be removed as
-         *               early as v0.26.
+         * `declare module.exports`). v0.25 retains support for it as
+         * a transitionary grace period, but this will be removed as
+         * early as v0.26.
          *)
         let legacy_exports = Scope.get_entry "exports" module_scope in
         let declared_module_exports =
@@ -1575,8 +1579,8 @@ and statement cx = Ast.Statement.(
 
           | _, Some (Type _) ->
             assert_false (
-              "Internal Error: `declare module.exports` was created as a type " ^
-              "binding. This should never happen!"
+              "Internal Error: `declare module.exports` was created as a " ^
+              "type binding. This should never happen!"
             )
 
           | Some (Type _), None
@@ -1598,7 +1602,8 @@ and statement cx = Ast.Statement.(
             Flow.mk_object_with_map_proto cx reason value_exports proto
         in
 
-        let module_t = mk_commonjs_module_t cx reason reason cjs_module_exports in
+        let module_t =
+          mk_commonjs_module_t cx reason reason cjs_module_exports in
         let module_t = Flow.mk_tvar_where cx reason (fun t ->
           Flow.flow cx (module_t, ExportNamedT (reason, type_exports, t))
         ) in
@@ -1761,8 +1766,8 @@ and statement cx = Ast.Statement.(
       match (snd import_decl.source).Ast.Literal.value with
       | Ast.Literal.String value -> value
       | _ -> failwith (
-          "Internal Parser Error: Invalid import source type! Must be a string " ^
-          "literal."
+          "Internal Parser Error: Invalid import source type! Must be a " ^
+          "string literal."
         )
     ) in
 
@@ -1803,7 +1808,8 @@ and statement cx = Ast.Statement.(
             match local with
             | Some local ->
               let local_name = ident_name local in
-              let import_reason = mk_reason (RCustom import_reason_str) (fst remote) in
+              let import_reason =
+                mk_reason (RCustom import_reason_str) (fst remote) in
               let bind_reason_str =
                 spf "%s { %s as %s } from %S"
                   import_str
@@ -1815,18 +1821,21 @@ and statement cx = Ast.Statement.(
               let bind_reason = mk_reason (RCustom bind_reason_str) bind_loc in
               (bind_loc, local_name, import_reason, bind_reason)
             | None ->
-              let import_reason = mk_reason (RCustom import_reason_str) (fst remote) in
+              let import_reason =
+                mk_reason (RCustom import_reason_str) (fst remote) in
               let bind_reason_str =
                 spf "%s { %s } from %S"
                   import_str
                   remote_name
                   module_name
               in
-              let bind_reason = mk_reason (RCustom bind_reason_str) (fst remote) in
+              let bind_reason =
+                mk_reason (RCustom bind_reason_str) (fst remote) in
               (fst remote, remote_name, import_reason, bind_reason)
           ) in
           let imported_t =
-            if Type_inference_hooks_js.dispatch_member_hook cx remote_name loc module_t
+            if Type_inference_hooks_js.dispatch_member_hook
+              cx remote_name loc module_t
             then AnyT.why import_reason
             else get_imported_t import_reason remote_name local_name
           in
@@ -1847,7 +1856,8 @@ and statement cx = Ast.Statement.(
           let bind_reason = mk_reason (RCustom bind_reason_str) loc in
 
           let imported_t =
-            if Type_inference_hooks_js.dispatch_member_hook cx "default" loc module_t
+            if Type_inference_hooks_js.dispatch_member_hook
+              cx "default" loc module_t
             then AnyT.why import_reason
             else get_imported_t import_reason "default" local_name
           in
@@ -1859,7 +1869,8 @@ and statement cx = Ast.Statement.(
           Type_inference_hooks_js.dispatch_import_hook cx module_name ns_loc;
 
           let import_reason_str = spf "%s * as %s" import_str local_name in
-          let import_reason = mk_reason (RCustom import_reason_str) import_loc in
+          let import_reason =
+            mk_reason (RCustom import_reason_str) import_loc in
 
           (match import_kind with
             | Type.ImportType ->
@@ -1887,7 +1898,8 @@ and statement cx = Ast.Statement.(
                 import_ns cx reason module_name (fst import_decl.source)
               in
               Context.add_imported_t cx local_name module_ns_t;
-              let bind_reason = mk_reason (RCustom import_reason_str) (fst local) in
+              let bind_reason =
+                mk_reason (RCustom import_reason_str) (fst local) in
               (bind_reason, local_name, module_ns_t)
           )
       ) in
@@ -2025,7 +2037,10 @@ and export_statement cx loc
       List.iter export_specifier specifiers
 
     (* [declare] export [type] * from "source"; *)
-    | ([], Some (ExportNamedDeclaration.ExportBatchSpecifier (batch_loc, star_as_name))) ->
+    | [],
+      Some (ExportNamedDeclaration.ExportBatchSpecifier
+        (batch_loc, star_as_name)
+      ) ->
       let source_module_name = (
         match source with
         | Some(_, {
@@ -2060,9 +2075,9 @@ and export_statement cx loc
               then "ignore"
               else "warn"
             in
-            mk_reason
-              (RCustom (spf "flowconfig: esproposal.export_star_as=%s" config_value))
-              batch_loc
+            let reason =
+              spf "flowconfig: esproposal.export_star_as=%s" config_value in
+            mk_reason (RCustom reason) batch_loc
           )
         in
         set_module_t cx reason (fun t ->
@@ -2327,14 +2342,14 @@ and variable cx kind
           )
         in
         init_var cx pattern_name ~has_anno t reason;
-        destructuring cx ~expr:expression t init None id ~f:(fun loc name default t ->
+        destructuring cx ~expr:expression ~f:(fun loc name default t ->
           let reason = mk_reason (RCustom (spf "%s %s" str_of_kind name)) loc in
           Option.iter default (fun d ->
             let default_t = Flow.mk_default cx reason d ~expr:expression in
             Flow.flow_t cx (default_t, t)
           );
           init_var cx name ~has_anno t reason
-        )
+        ) t init None id
 )
 
 and array_element cx undef_loc el = Ast.Expression.(
@@ -2415,7 +2430,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       property = Member.PropertyExpression index;
       _
     } ->
-      let reason = mk_reason (RCustom "access of computed property/element") loc in
+      let reason =
+        mk_reason (RCustom "access of computed property/element") loc in
       (match Refinement.get cx (loc, e) reason with
       | Some t -> t
       | None ->
@@ -2538,7 +2554,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
              example, the following code would work even with unions:
 
              declare var o: { x: number; }
-             var a = ["hey", o.x]; // no error, but is an error is o.x is replaced by 42
+             // no error, but is an error if o.x is replaced by 42
+             var a = ["hey", o.x];
              declare var i: number;
              a[i] = false;
 
@@ -2644,9 +2661,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       (match argts with
       | [argt] ->
         let reason = mk_reason (RCustom "new Array(..)") loc in
-        let length_reason = replace_reason_const (RCustom "array length") reason in
+        let length_reason =
+          replace_reason_const (RCustom "array length") reason in
         Flow.flow_t cx (argt, NumT (length_reason, AnyLiteral));
-        let element_reason = replace_reason_const (RCustom "array element") reason in
+        let element_reason =
+          replace_reason_const (RCustom "array element") reason in
         let t = Flow.mk_tvar cx element_reason in
         ArrT (reason, t, [])
       | _ ->
@@ -2955,9 +2974,10 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let iterable =
         let targs = [yield; ret; next] in
         if Env.in_async_scope () then
-          Flow.get_builtin_typeapp cx
-            (mk_reason (RCustom "async iteration expected on AsyncIterable") loc)
-            "$AsyncIterable" targs
+          let reason =
+            mk_reason (RCustom "async iteration expected on AsyncIterable") loc
+          in
+          Flow.get_builtin_typeapp cx reason "$AsyncIterable" targs
         else
           Flow.get_builtin_typeapp cx
             (mk_reason (RCustom "iteration expected on Iterable") loc)
@@ -2969,15 +2989,18 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   (* TODO *)
   | Comprehension _ ->
-    Flow_error.(add_output cx (EUnsupportedSyntax (loc, ComprehensionExpression)));
+    Flow_error.(add_output cx
+      (EUnsupportedSyntax (loc, ComprehensionExpression)));
     EmptyT.at loc
 
   | Generator _ ->
-    Flow_error.(add_output cx (EUnsupportedSyntax (loc, GeneratorExpression)));
+    Flow_error.(add_output cx
+      (EUnsupportedSyntax (loc, GeneratorExpression)));
     EmptyT.at loc
 
   | MetaProperty _->
-    Flow_error.(add_output cx (EUnsupportedSyntax (loc, MetaPropertyExpression)));
+    Flow_error.(add_output cx
+      (EUnsupportedSyntax (loc, MetaPropertyExpression)));
     EmptyT.at loc
 )
 
@@ -3170,7 +3193,8 @@ and binary cx loc = Ast.Expression.Binary.(function
       let reason1 = mk_reason (RCustom "LHS of `in` operator") loc1 in
       let reason2 = mk_reason (RCustom "RHS of `in` operator") loc2 in
       let lhs =
-        UnionT (reason1, UnionRep.make (StrT.why reason1) (NumT.why reason1) []) in
+        UnionT (reason1, UnionRep.make (StrT.why reason1) (NumT.why reason1) [])
+      in
       let rhs =
         UnionT (reason2, UnionRep.make
           (AnyObjT reason2)
@@ -3281,7 +3305,8 @@ and assignment cx loc = Ast.Expression.(function
             property = Member.PropertyIdentifier (_, "exports");
             _
           }) ->
-            let reason = mk_reason (RCustom "assignment of module.exports") lhs_loc in
+            let reason =
+              mk_reason (RCustom "assignment of module.exports") lhs_loc in
             mark_exports_type cx reason (Context.CommonJSModule(Some(lhs_loc)));
             set_module_exports cx reason t
 
@@ -3508,7 +3533,8 @@ and jsx_title cx openingElement children = Ast.JSX.(
     let fbt_reason = mk_reason (RCustom "<fbt />") eloc in
     Flow.get_builtin_type cx fbt_reason facebook_fbt
 
-  | (Identifier (loc, { Identifier.name }), _) when name = String.capitalize name ->
+  | Identifier (loc, { Identifier.name }), _
+      when name = String.capitalize name ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then AnyT.at eloc
     else begin
@@ -3560,7 +3586,8 @@ and jsx_title cx openingElement children = Ast.JSX.(
        if is_react
        then Flow.mk_tvar_where cx component_t_reason (fun t ->
         let prop_t =
-          if Type_inference_hooks_js.dispatch_member_hook cx name loc jsx_intrinsics
+          if Type_inference_hooks_js.dispatch_member_hook
+            cx name loc jsx_intrinsics
           then AnyT.at eloc
           else get_prop
             ~is_cond:false
@@ -3649,7 +3676,8 @@ and jsx_body cx = Ast.JSX.(function
       let { expression = ex } = ec in
       match ex with
         | Expression (loc, e) -> expression cx (loc, e)
-        | EmptyExpression loc -> EmptyT (mk_reason (RCustom "empty jsx body") loc)
+        | EmptyExpression loc ->
+          EmptyT (mk_reason (RCustom "empty jsx body") loc)
     )
   | loc, Text _ -> StrT.at loc (* TODO: create StrT (..., Literal ...)) *)
 )
@@ -3918,12 +3946,14 @@ and react_create_class cx loc class_props = Ast.Expression.(
   let mixins = ref [] in
   let static_reason = replace_reason_const RReactStatics reason_class in
   let static = ref (Flow.mk_object cx static_reason) in
-  let default_reason = replace_reason_const RReactDefaultProps reason_component in
+  let default_reason =
+    replace_reason_const RReactDefaultProps reason_component in
   let default = ref (Flow.mk_object cx default_reason) in
   let reason_state = replace_reason_const RReactState reason_component in
   let state = ref (Flow.mk_object cx reason_state) in
 
-  let props_reason = replace_reason_const RReactComponentProps reason_component in
+  let props_reason =
+    replace_reason_const RReactComponentProps reason_component in
   (* TODO - this probably should be the empty object AND we should enforce it *)
   let props = ref (AnyObjT props_reason) in
 
@@ -4038,7 +4068,8 @@ and react_create_class cx loc class_props = Ast.Expression.(
     ) (SMap.empty, SMap.empty) class_props in
 
   let type_args = [!default; !props; !state] in
-  let super_reason = replace_reason (fun desc -> RSuperOf desc) reason_component in
+  let super_reason =
+    replace_reason (fun desc -> RSuperOf desc) reason_component in
   let super =
     Flow.get_builtin_typeapp cx super_reason
       "LegacyReactComponent" type_args

@@ -45,9 +45,11 @@ module rec TypeTerm : sig
     (* open type variable *)
     (* A type variable (tvar) is an OpenT(reason, id) where id is an int index
        into a context's graph: a context's graph is a map from tvar ids to nodes
-       (see below). *)
-    (** Note: ids are globally unique. tvars are "owned" by a single context, but
-        that context and its tvars may later be merged into other contexts. **)
+       (see below).
+
+       Note: ids are globally unique. tvars are "owned" by a single context,
+       but that context and its tvars may later be merged into other contexts.
+     *)
     | OpenT of reason * ident
 
     (*************)
@@ -87,30 +89,30 @@ module rec TypeTerm : sig
     | AbstractT of t
 
     (* type expression whose evaluation is deferred *)
-    (* Usually a type expression is evaluated by splitting it into a def type and
-       a use type, and flowing the former to the latter: the def type is the
+    (* Usually a type expression is evaluated by splitting it into a def type
+       and a use type, and flowing the former to the latter: the def type is the
        "main" argument, and the use type contains the type operation, other
        arguments, and a tvar to hold the result. However, sometimes a type
        expression may need to be kept in explicit form, with the type operation
        and other arguments split out into a "deferred" use type `defer_use_t`,
-       whose evaluation state is tracked in the context by an identifier id: When
-       defer_use_t is evaluated, id points to a tvar containing the result of
-       evaluation. The explicit form simplifies other tasks, like substitution,
-       but otherwise works in much the same way as usual. **)
+       whose evaluation state is tracked in the context by an identifier id:
+       When defer_use_t is evaluated, id points to a tvar containing the result
+       of evaluation. The explicit form simplifies other tasks, like
+       substitution, but otherwise works in much the same way as usual. *)
     | EvalT of t * defer_use_t * int
 
-    (** A polymorphic type is like a type-level "function" that, when applied to
-        lists of type arguments, generates types. Just like a function, a
-        polymorphic type has a list of type parameters, represented as bound type
-        variables. We say that type parameters are "universally quantified" (or
-        "universal"): every substitution of type arguments for type parameters
-        generates a type. Dually, we have "existentially quantified" (or
-        "existential") type variables: such a type variable denotes some, possibly
-        unknown, type. Universal type parameters may specify subtype constraints
-        ("bounds"), which must be satisfied by any types they may be substituted
-        by. Evaluation of existential types, which involves generating fresh type
-        variables, never happens under polymorphic types; it is forced only when
-        polymorphic types are applied. **)
+    (* A polymorphic type is like a type-level "function" that, when applied to
+       lists of type arguments, generates types. Just like a function, a
+       polymorphic type has a list of type parameters, represented as bound
+       type variables. We say that type parameters are "universally quantified"
+       (or "universal"): every substitution of type arguments for type
+       parameters generates a type. Dually, we have "existentially quantified"
+       (or "existential") type variables: such a type variable denotes some,
+       possibly unknown, type. Universal type parameters may specify subtype
+       constraints ("bounds"), which must be satisfied by any types they may be
+       substituted by. Evaluation of existential types, which involves
+       generating fresh type variables, never happens under polymorphic types;
+       it is forced only when polymorphic types are applied. *)
 
     (* polymorphic type *)
     | PolyT of typeparam list * t
@@ -229,8 +231,8 @@ module rec TypeTerm : sig
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of reason * exporttypes
 
-    (** Here's to the crazy ones. The misfits. The rebels. The troublemakers. The
-        round pegs in the square holes. **)
+    (** Here's to the crazy ones. The misfits. The rebels. The troublemakers.
+        The round pegs in the square holes. **)
 
     (* util for deciding subclassing relations *)
     | ExtendsT of t list * t * t
@@ -238,8 +240,8 @@ module rec TypeTerm : sig
     (* toolkit for making choices *)
     | ChoiceKitT of reason * choice_tool
 
-    (* Sigil representing functions that the type system is not expressive enough
-       to annotate, so we customize their behavior internally. *)
+    (* Sigil representing functions that the type system is not expressive
+       enough to annotate, so we customize their behavior internally. *)
     | CustomFunT of reason * custom_fun_kind
 
     (* Internal-only type that wraps object types for the CustomFunT(Idx)
@@ -323,7 +325,8 @@ module rec TypeTerm : sig
 
     (* overloaded +, could be subsumed by general overloading *)
     | AdderT of reason * t * t
-    (* overloaded relational operator, could be subsumed by general overloading *)
+    (* overloaded relational operator, could be subsumed by general
+       overloading *)
     | ComparatorT of reason * t
     (* unary minus operator on numbers, allows negative number literals *)
     | UnaryMinusT of reason * t
@@ -346,11 +349,11 @@ module rec TypeTerm : sig
     | NotT of reason * t
 
     (* operation on polymorphic types *)
-    (** SpecializeT(_, _, cache, targs, tresult) instantiates a polymorphic type with
-        type arguments targs, and flows the result into tresult. If cache is set,
-        it looks up a cache of existing instantiations for the type parameters of
-        the polymorphic type, unifying the type arguments with those
-        instantiations if such exist.
+    (** SpecializeT(_, _, cache, targs, tresult) instantiates a polymorphic type
+        with type arguments targs, and flows the result into tresult. If cache
+        is set, it looks up a cache of existing instantiations for the type
+        parameters of the polymorphic type, unifying the type arguments with
+        those instantiations if such exist.
 
         The first reason is the reason why we're specializing. The second
         reason points to the type application itself
@@ -382,7 +385,7 @@ module rec TypeTerm : sig
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
-    (** test that something is object-like, returning a default type otherwise **)
+    (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
 
     (* assignment rest element in array pattern *)
