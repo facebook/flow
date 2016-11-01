@@ -167,15 +167,42 @@ and add_parts cx id parts state =
 
 and parts_of_t cx = function
 | OpenT _ -> assert false
-| NumT _ | StrT _ | BoolT  _ -> []
-| FunT (_, _, _, funtype) -> parts_of_funtype funtype
-| EmptyT _ | MixedT _ | AnyT _ | NullT _ | VoidT _ -> []
-| ObjProtoT _ -> []
-| FunProtoT _ | FunProtoApplyT _ | FunProtoBindT _ | FunProtoCallT _ -> []
-| PolyT (_, t) -> ["t", Def t]
-| ThisClassT t -> ["this", Def t]
-| BoundT _
+| AbstractT t -> ["t", Def t]
+| AnnotT (sink, source) -> ["sink", Def sink; "source", Def source]
+| AnyObjT _ | AnyFunT _ -> []
+| AnyT _ -> []
+| AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
+| ArrT (_, elem, tup) -> ("elem", Def elem) :: list_parts tup
+| BoolT  _ -> []
+| BoundT _ -> []
+| ClassT t -> ["class", Def t]
+| CustomFunT _ | ChoiceKitT _ -> []
+| DiffT (l, r) -> ["left", Def l; "right", Def r]
+| EmptyT _ -> []
+| EvalT (t, _, _) -> ["t", Def t]
+| ExactT (_, t) -> ["t", Def t]
 | ExistsT _ -> []
+| ExtendsT (nexts, l, u) -> ("l", Def l) :: ("u", Def u) :: list_parts nexts
+| FunProtoApplyT _ -> []
+| FunProtoBindT _ -> []
+| FunProtoCallT _ -> []
+| FunProtoT _ -> []
+| FunT (_, _, _, funtype) -> parts_of_funtype funtype
+| IdxWrapper (_, inner) -> ["inner", Def inner]
+| InstanceT (_, static, super,
+  { type_args; fields_tmap; methods_tmap; _ }) ->
+  map_parts type_args @
+  map_props (Context.find_props cx fields_tmap) @
+  map_props (Context.find_props cx methods_tmap) @
+  ["static", Def static; "super", Def super]
+| IntersectionT (_, rep) -> list_parts (InterRep.members rep)
+| KeysT (_, t) -> ["t", Def t]
+| MaybeT t -> ["t", Def t]
+| MixedT _ -> []
+| ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
+| NullT _ -> []
+| NumT _ -> []
+| ObjProtoT _ -> []
 | ObjT (_, { props_tmap; dict_t; proto_t; _ }) ->
   ("proto", Def proto_t) ::
   map_props (Context.find_props cx props_tmap) @
@@ -183,40 +210,24 @@ and parts_of_t cx = function
   | None -> []
   | Some { key; value; _ } -> ["#key#", Def key; "#val#", Def value]
   end
-| ArrT (_, elem, tup) -> ("elem", Def elem) :: list_parts tup
-| ClassT t -> ["class", Def t]
-| InstanceT (_, static, super,
-  { type_args; fields_tmap; methods_tmap; _ }) ->
-  map_parts type_args @
-  map_props (Context.find_props cx fields_tmap) @
-  map_props (Context.find_props cx methods_tmap) @
-  ["static", Def static; "super", Def super]
-| TypeT (_, t) -> ["t", Def t]
-| AnnotT (sink, source) -> ["sink", Def sink; "source", Def source]
+| OpenPredT (_, base, _, _) -> ["base", Def base]
 | OptionalT t
+| PolyT (_, t) -> ["t", Def t]
 | RestT t
-| AbstractT t
-| EvalT (t, _, _) -> ["t", Def t]
-| TypeAppT (t, args) -> ("t", Def t) :: list_parts args
+| ShapeT t -> ["t", Def t]
+| SingletonBoolT _ -> []
+| SingletonNumT _ -> []
+| SingletonStrT _ -> []
+| StrT _ -> []
+| TaintT _ -> []
+| ThisClassT t -> ["this", Def t]
 | ThisTypeAppT (t, this, args) ->
   ("t", Def t) :: ("this", Def this) :: list_parts args
-| ExactT (_, t)
-| MaybeT t -> ["t", Def t]
-| TaintT _ -> []
-| IntersectionT (_, rep) -> list_parts (InterRep.members rep)
-| UnionT (_, rep) -> list_parts (UnionRep.members rep)
-| AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
-| AnyObjT _ | AnyFunT _ -> []
-| ShapeT t -> ["t", Def t]
-| DiffT (l, r) -> ["left", Def l; "right", Def r]
-| KeysT (_, t) -> ["t", Def t]
-| SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ -> []
-| ModuleT (_, exporttypes) -> parts_of_exporttypes cx exporttypes
-| ExtendsT (nexts, l, u) -> ("l", Def l) :: ("u", Def u) :: list_parts nexts
-| CustomFunT _ | ChoiceKitT _ -> []
-| IdxWrapper (_, inner) -> ["inner", Def inner]
-| OpenPredT (_, base, _, _) -> ["base", Def base]
+| TypeAppT (t, args) -> ("t", Def t) :: list_parts args
 | TypeMapT (_, _, t1, t2) -> ["t", Def t1; "mapfn", Def t2]
+| TypeT (_, t) -> ["t", Def t]
+| UnionT (_, rep) -> list_parts (UnionRep.members rep)
+| VoidT _ -> []
 
 and parts_of_funtype { params_tlist; params_names; return_t; _ } =
   (* OMITTED: static, prototype, this_t *)
@@ -242,71 +253,72 @@ and add_use_t cx u (ts, nodes, edges) =
       (ts, nodes, edges)
 
 and parts_of_use_t cx = function
-| UseT (_, t)
-| BecomeT (_, t)
-| SummarizeT (_, t) -> ["t", Def t]
-| SuperT _ -> []
-| MixinT (_, t) -> ["t", Def t]
-| ApplyT (_, f, funtype) -> ("f", Def f) :: parts_of_funtype funtype
-| BindT (_, funtype)
-| CallT (_, funtype)
-| MethodT (_, _, _, funtype) -> parts_of_funtype funtype
-| SetPropT (_, _, t) -> ["t", Def t]
-| GetPropT (_, _, out)
-| TestPropT (_, _, out) -> ["out", Def out]
-| SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
-| GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
-| GetStaticsT (_, out) -> ["out", Def out]
-| ConstructorT (_, args, out) -> ("out", Def out) :: list_parts args
+| UseT (_, t) -> ["t", Def t]
 | AdderT (_, r, out) -> ["right", Def r; "out", Def out]
+| AndT (_, r, out) -> ["right", Def r; "out", Def out]
+| ApplyT (_, f, funtype) -> ("f", Def f) :: parts_of_funtype funtype
+| ArrRestT (_, _, out) -> ["out", Def out]
+| AssertImportIsValueT _ -> []
+| BecomeT (_, t) -> ["t", Def t]
+| BindT (_, funtype) -> parts_of_funtype funtype
+| CallLatentPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
+| CallOpenPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
+| CallT (_, funtype) -> parts_of_funtype funtype
+| ChoiceKitUseT _-> []
+| CJSExtractNamedExportsT (_, (_, exporttypes), out) ->
+    ("out", Def out) :: parts_of_exporttypes cx exporttypes
+| CJSRequireT (_, out) -> ["out", Def out]
 | ComparatorT (_, arg) -> ["arg", Def arg]
-| ReposLowerT (_, u) -> ["upper", Use u]
-| ReposUseT (_, _, l) ->  ["lower", Def l]
-| PredicateT (_, out) -> ["out", Def out]
-| GuardT (_, t, out) -> ["iftrue", Def t; "out", Def out]
+| ConstructorT (_, args, out) -> ("out", Def out) :: list_parts args
+| CopyNamedExportsT (_, target, out) -> ["target", Def target; "out", Def out]
+| DebugPrintT _ -> []
+| ElemT (_, l, t, _) -> ["l", Def l; "t", Def t]
 | EqT (_, arg) -> ["arg", Def arg]
-| AndT (_, r, out)
-| OrT (_, r, out) -> ["right", Def r; "out", Def out]
+| ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
+| GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
+| GetKeysT (_, out) -> ["out", Def out]
+| GetPropT (_, _, out) -> ["out", Def out]
+| GetStaticsT (_, out) -> ["out", Def out]
+| GuardT (_, t, out) -> ["iftrue", Def t; "out", Def out]
+| HasOwnPropT _ | HasPropT _ -> []
+| IdxUnMaybeifyT (_, out) -> ["out", Def out]
+| IdxUnwrap (_, out) -> ["out", Def out]
+| ImportDefaultT (_, _, _, out) -> ["out", Def out]
+| ImportModuleNsT (_, out) -> ["out", Def out]
+| ImportNamedT (_, _, _, out) -> ["out", Def out]
+| ImportTypeofT (_, _, out) -> ["out", Def out]
+| ImportTypeT (_, _, out) -> ["out", Def out]
+| IntersectionPreprocessKitT (_, ipt) -> parts_of_inter_preprocess_tool ipt
+| LookupT (_, _, nexts, _, action) ->
+    lookup_action_parts action @ list_parts nexts
+| MakeExactT (_, k) -> ["cont", node_of_cont k]
+| MapTypeT (_, _, t, k) -> ["t", Def t; "cont", node_of_cont k]
+| MethodT (_, _, _, funtype) -> parts_of_funtype funtype
+| MixinT (_, t) -> ["t", Def t]
 | NotT (_, out) -> ["out", Def out]
-| SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
-| ThisSpecializeT (_, t, out) -> ["t", Def t; "out", Def out]
-| VarianceCheckT (_, args, _) -> list_parts args
-| LookupT (_, _, nexts, _, action) -> lookup_action_parts action @ list_parts nexts
-| UnifyT (x, y) -> ["x", Def x; "y", Def y]
 | ObjAssignT (_, p, t, _, _) -> ["proto", Def p; "t", Def t]
-| ObjFreezeT (_, out)
-| ObjRestT (_, _, out)
+| ObjFreezeT (_, out) -> ["out", Def out]
+| ObjRestT (_, _, out) -> ["out", Def out]
 | ObjSealT (_, out) -> ["out", Def out]
 | ObjTestT (_, d, t) -> ["default", Def d; "out", Def t]
-| ArrRestT (_, _, out) -> ["out", Def out]
-| UnaryMinusT (_, out)
-| GetKeysT (_, out) -> ["out", Def out]
-| HasOwnPropT _ | HasPropT _ -> []
-| ElemT (_, l, t, _) -> ["l", Def l; "t", Def t]
-| MakeExactT (_, k) -> ["cont", node_of_cont k]
-| ImportModuleNsT (_, out)
-| ImportDefaultT (_, _, _, out)
-| ImportNamedT (_, _, _, out)
-| ImportTypeT (_, _, out)
-| ImportTypeofT (_, _, out) -> ["out", Def out]
-| AssertImportIsValueT _ -> []
-| CJSRequireT (_, out) -> ["out", Def out]
-| CJSExtractNamedExportsT (_, (_, exporttypes), out) ->
-  ("out", Def out) :: parts_of_exporttypes cx exporttypes
-| CopyNamedExportsT (_, target, out) -> ["target", Def target; "out", Def out]
-| ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
-| DebugPrintT _ -> []
-| MapTypeT (_, _, t, k) -> ["t", Def t; "cont", node_of_cont k]
-| ReactCreateElementT (_, t, out)
-| SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
-| IntersectionPreprocessKitT (_, ipt) -> parts_of_inter_preprocess_tool ipt
-| ChoiceKitUseT _-> []
-| IdxUnwrap (_, out)
-| IdxUnMaybeifyT (_, out) -> ["out", Def out]
-| CallLatentPredT (_, _, _, t, out)
-| CallOpenPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
-| SubstOnPredT (_, _, t)
+| OrT (_, r, out) -> ["right", Def r; "out", Def out]
+| PredicateT (_, out) -> ["out", Def out]
+| ReactCreateElementT (_, t, out) -> ["t", Def t; "out", Def out]
 | RefineT (_, _, t) -> ["t", Def t]
+| ReposLowerT (_, u) -> ["upper", Use u]
+| ReposUseT (_, _, l) ->  ["lower", Def l]
+| SentinelPropTestT (t, _, _, out) -> ["t", Def t; "out", Def out]
+| SetElemT (_, ix, t) -> ["ix", Def ix; "t", Def t]
+| SetPropT (_, _, t) -> ["t", Def t]
+| SpecializeT (_, _, _, args, out) -> ("out", Def out) :: list_parts args
+| SubstOnPredT (_, _, t) -> ["t", Def t]
+| SummarizeT (_, t) -> ["t", Def t]
+| SuperT _ -> []
+| TestPropT (_, _, out) -> ["out", Def out]
+| ThisSpecializeT (_, t, out) -> ["t", Def t; "out", Def out]
+| UnaryMinusT (_, out) -> ["out", Def out]
+| UnifyT (x, y) -> ["x", Def x; "y", Def y]
+| VarianceCheckT (_, args, _) -> list_parts args
 
 and parts_of_inter_preprocess_tool = function
 | ConcretizeTypes (unresolved, resolved, it, u) ->

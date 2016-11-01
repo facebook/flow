@@ -66,30 +66,63 @@ let rec gc cx state = function
 
   (** def types **)
 
-  | NumT _
-  | StrT _
-  | BoolT _
-  | EmptyT _
-  | MixedT _
-  | AnyT _
-  | NullT _
-  | VoidT _
-  | TaintT _
-  | ObjProtoT _
-  | FunProtoT _
-  | FunProtoApplyT _
-  | FunProtoBindT _
-  | FunProtoCallT _
-  | CustomFunT _
-      -> ()
-
+  | AbstractT t -> gc cx state t
+  | AnnotT (t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+  | AnyFunT _ -> ()
+  | AnyObjT _ -> ()
+  | AnyT _ -> ()
+  | AnyWithLowerBoundT (t) -> gc cx state t
+  | AnyWithUpperBoundT (t) -> gc cx state t
+  | ArrT(_, t, ts) ->
+      gc cx state t;
+      ts |> List.iter (gc cx state);
+  | BoolT _ -> ()
+  | BoundT typeparam -> gc_typeparam cx state typeparam
+  | ChoiceKitT _ -> ()
+  | ClassT(t) -> gc cx state t
+  | CustomFunT _ -> ()
+  | DiffT (t1, t2) ->
+      gc cx state t1;
+      gc cx state t2;
+  | EmptyT _ -> ()
+  | EvalT (t, defer_use_t, id) ->
+      gc cx state t;
+      gc_defer_use cx state defer_use_t;
+      Flow_js.visit_eval_id cx id (gc cx state)
+  | ExactT (_, t) -> gc cx state t
+  | ExistsT _ -> ()
+  | ExtendsT (ts, t1, t2) ->
+      ts |> List.iter (gc cx state);
+      gc cx state t1;
+      gc cx state t2
+  | FunProtoApplyT _ -> ()
+  | FunProtoBindT _ -> ()
+  | FunProtoCallT _ -> ()
+  | FunProtoT _ -> ()
   | FunT(_, static, prototype, funtype) ->
       gc cx state funtype.this_t;
       funtype.params_tlist |> List.iter (gc cx state);
       gc cx state funtype.return_t;
       gc cx state prototype;
-      gc cx state static
-
+      gc cx state static  | MixedT _ -> ()
+  | IdxWrapper (_, t) -> gc cx state t
+  | InstanceT(_, static, super, instance) ->
+      instance.type_args |> SMap.iter (fun _ -> gc cx state);
+      Context.iter_props cx instance.fields_tmap (fun _ ->
+        Property.iter_t (gc cx state));
+      Context.iter_props cx instance.methods_tmap (fun _ ->
+        Property.iter_t (gc cx state));
+      gc cx state static;
+      gc cx state super
+  | IntersectionT (_, rep) -> InterRep.members rep |> List.iter (gc cx state)
+  | KeysT (_, t) -> gc cx state t
+  | MaybeT t -> gc cx state t
+  | ModuleT (_, exporttypes) -> gc_exporttypes cx state exporttypes
+  | NullT _ -> ()
+  | NumT _ -> ()
+  | ObjProtoT _ -> ()
   | ObjT(_, objtype) ->
       let id = objtype.props_tmap in
       Context.iter_props cx id (fun _ ->
@@ -101,123 +134,36 @@ let rec gc cx state = function
           gc cx state value;
       );
       gc cx state objtype.proto_t
-
-  | ArrT(_, t, ts) ->
+  | OpenPredT (_, t, p_map, n_map) ->
       gc cx state t;
-      ts |> List.iter (gc cx state);
-
-  | ClassT(t) ->
-      gc cx state t
-
-  | InstanceT(_, static, super, instance) ->
-      instance.type_args |> SMap.iter (fun _ -> gc cx state);
-      Context.iter_props cx instance.fields_tmap (fun _ ->
-        Property.iter_t (gc cx state));
-      Context.iter_props cx instance.methods_tmap (fun _ ->
-        Property.iter_t (gc cx state));
-      gc cx state static;
-      gc cx state super
-
-  | OptionalT t ->
-      gc cx state t
-
-  | RestT t ->
-      gc cx state t
-
-  | AbstractT t ->
-      gc cx state t
-
-  | EvalT (t, defer_use_t, id) ->
-      gc cx state t;
-      gc_defer_use cx state defer_use_t;
-      Flow_js.visit_eval_id cx id (gc cx state)
-
+      gc_pred_map cx state p_map;
+      gc_pred_map cx state n_map
+  | OptionalT t -> gc cx state t
   | PolyT (typeparams, t) ->
       typeparams |> List.iter (gc_typeparam cx state);
       gc cx state t
-
-  | TypeAppT (t, ts) ->
-      gc cx state t;
-      ts |> List.iter (gc cx state)
-
-  | ThisClassT t ->
-      gc cx state t
-
+  | ShapeT t -> gc cx state t
+  | SingletonBoolT _ -> ()
+  | SingletonNumT _ -> ()
+  | SingletonStrT _ -> ()
+  | StrT _ -> ()
+  | RestT t -> gc cx state t
+  | TaintT _ -> ()
+  | ThisClassT t -> gc cx state t
   | ThisTypeAppT (t, this, ts) ->
       gc cx state t;
       gc cx state this;
       List.iter (gc cx state) ts
-
-  | BoundT typeparam ->
-      gc_typeparam cx state typeparam
-
-  | ExistsT _ -> ()
-
-  | ExactT (_, t) ->
-      gc cx state t
-
-  | MaybeT t ->
-      gc cx state t
-
-  | IntersectionT (_, rep) ->
-      InterRep.members rep |> List.iter (gc cx state)
-
-  | UnionT (_, rep) ->
-      UnionRep.members rep |> List.iter (gc cx state)
-
-  | AnyWithLowerBoundT (t) ->
-      gc cx state t
-
-  | AnyWithUpperBoundT (t) ->
-      gc cx state t
-
-  | AnyObjT _
-  | AnyFunT _
-      -> ()
-
-  | ShapeT t ->
-      gc cx state t
-
-  | DiffT (t1, t2) ->
-      gc cx state t1;
-      gc cx state t2;
-
-  | KeysT (_, t) ->
-      gc cx state t
-
-  | SingletonStrT _
-  | SingletonNumT _
-  | SingletonBoolT _
-      -> ()
-
-  | TypeT (_, t) ->
-      gc cx state t
-
-  | AnnotT (t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | ModuleT (_, exporttypes) ->
-      gc_exporttypes cx state exporttypes
-
-  | ExtendsT (ts, t1, t2) ->
-      ts |> List.iter (gc cx state);
-      gc cx state t1;
-      gc cx state t2
-
-  | ChoiceKitT _ -> ()
-
-  | IdxWrapper (_, t) ->
-     gc cx state t
-
-  | OpenPredT (_, t, p_map, n_map) ->
-    gc cx state t;
-    gc_pred_map cx state p_map;
-    gc_pred_map cx state n_map
-
+  | TypeAppT (t, ts) ->
+      gc cx state t;
+      ts |> List.iter (gc cx state)
   | TypeMapT (_, _, t1, t2) ->
-    gc cx state t1;
-    gc cx state t2
+      gc cx state t1;
+      gc cx state t2
+  | TypeT (_, t) -> gc cx state t
+  | UnionT (_, rep) -> UnionRep.members rep |> List.iter (gc cx state)
+  | VoidT _ -> ()
+
 
 and gc_defer_use cx state = function
   | DestructuringT (_, s) ->
@@ -226,6 +172,12 @@ and gc_defer_use cx state = function
   | TypeDestructorT _ ->
     ()
 
+and gc_funtype cx state funtype =
+  gc cx state funtype.this_t;
+  funtype.params_tlist |> List.iter (gc cx state);
+  gc cx state funtype.return_t
+
+
 and gc_use cx state = function
 
   | UseT (_, t) ->
@@ -233,107 +185,54 @@ and gc_use cx state = function
 
   (** use types **)
 
-  | SummarizeT (_, t) ->
-      gc cx state t
-
-  | BindT(_, funtype)
-  | CallT(_, funtype) ->
-      gc cx state funtype.this_t;
-      funtype.params_tlist |> List.iter (gc cx state);
-      gc cx state funtype.return_t
-
-  | ApplyT(_, l, funtype) ->
-      gc cx state l;
-      gc cx state funtype.this_t;
-      funtype.params_tlist |> List.iter (gc cx state);
-      gc cx state funtype.return_t
-
-  | MethodT(_, _, _, funtype) ->
-      gc cx state funtype.this_t;
-      funtype.params_tlist |> List.iter (gc cx state);
-      gc cx state funtype.return_t
-
-  | ReposLowerT (_, u) ->
-      gc_use cx state u
-
-  | ReposUseT (_, _, t) ->
-      gc cx state t
-
-  | SetPropT(_, _, t) ->
-      gc cx state t
-
-  | GetPropT(_, _, t) ->
-      gc cx state t
-
-  | TestPropT(_, _, t) ->
-      gc cx state t
-
-  | SetElemT(_, i, t) ->
-      gc cx state i;
-      gc cx state t
-
-  | GetElemT(_, i, t) ->
-      gc cx state i;
-      gc cx state t
-
-  | GetStaticsT(_, t) ->
-      gc cx state t
-
+  | AdderT(_, t1, t2) -> gc cx state t1; gc cx state t2
+  | AndT (_, t1, t2) -> gc cx state t1; gc cx state t2
+  | ApplyT(_, l, funtype) -> gc cx state l; gc_funtype cx state funtype
+  | ArrRestT (_, _, t) -> gc cx state t
+  | AssertImportIsValueT _ -> ()
+  | BecomeT (_, t) -> gc cx state t
+  | BindT(_, funtype) -> gc_funtype cx state funtype
+  | CallLatentPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
+  | CallOpenPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
+  | CallT(_, funtype) -> gc_funtype cx state funtype
+  | ChoiceKitUseT (_, choice_use_tool) ->
+      gc_choice_use_tool cx state choice_use_tool
+  | CJSExtractNamedExportsT (_, (_, exporttypes), t_out) ->
+      gc_exporttypes cx state exporttypes;
+      gc cx state t_out
+  | CJSRequireT (_, t) -> gc cx state t
+  | ComparatorT(_, t) -> gc cx state t
   | ConstructorT(_, params, t) ->
       params |> List.iter (gc cx state);
       gc cx state t
-
-  | SuperT(_, instance) ->
-      instance.type_args |> SMap.iter (fun _ -> gc cx state);
-      Context.iter_props cx instance.fields_tmap (fun _ ->
-        Property.iter_t (gc cx state));
-      Context.iter_props cx instance.methods_tmap (fun _ ->
-        Property.iter_t (gc cx state))
-
-  | MixinT (_, t) ->
-      gc cx state t
-
-  | AdderT(_, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | ComparatorT(_, t) ->
-      gc cx state t
-
-  | PredicateT (pred, t) ->
-      gc_pred cx state pred;
-      gc cx state t
-
+  | CopyNamedExportsT (_, target_module, t_out) ->
+      gc cx state target_module;
+      gc cx state t_out;
+  | DebugPrintT _ -> ()
+  | ElemT (_, t1, t2, _) -> gc cx state t1; gc cx state t2
+  | EqT (_, t) -> gc cx state t
+  | ExportNamedT (_, t_smap, t_out) ->
+      List.iter (gc cx state) (SMap.values t_smap);
+      gc cx state t_out
+  | GetElemT(_, i, t) -> gc cx state i; gc cx state t
+  | GetKeysT (_, t) -> gc cx state t
+  | GetPropT(_, _, t) -> gc cx state t
+  | GetStaticsT(_, t) -> gc cx state t
   | GuardT (pred, t1, t2) ->
       gc_pred cx state pred;
       gc cx state t1;
       gc cx state t2
-
-  | EqT (_, t) ->
-      gc cx state t
-
-  | AndT (_, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | OrT (_, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | NotT (_, t) ->
-      gc cx state t
-
-  | SpecializeT (_, _, _, ts, t) ->
-      ts |> List.iter (gc cx state);
-      gc cx state t
-
-  | ThisSpecializeT (_, this, t) ->
-      gc cx state this;
-      gc cx state t
-
-  | VarianceCheckT (_, ts, _) ->
-      List.iter (gc cx state) ts
-
+  | HasOwnPropT _ -> ()
+  | HasPropT _ -> ()
+  | IdxUnMaybeifyT (_, t_out) -> gc cx state t_out
+  | IdxUnwrap (_, t_out) -> gc cx state t_out
+  | ImportDefaultT (_, _, _, t) -> gc cx state t
+  | ImportModuleNsT (_, t) -> gc cx state t
+  | ImportNamedT (_, _, _, t) -> gc cx state t
+  | ImportTypeofT (_, _, t) -> gc cx state t
+  | ImportTypeT (_, _, t) -> gc cx state t
+  | IntersectionPreprocessKitT (_, intersection_preprocess_tool) ->
+      gc_intersection_preprocess_tool cx state intersection_preprocess_tool
   | LookupT (_, _, ts, _, action) ->
       ts |> List.iter (gc cx state);
       (match action with
@@ -342,113 +241,40 @@ and gc_use cx state = function
       | LookupProp p
       | SuperProp p ->
         Property.iter_t (gc cx state) p)
+  | MakeExactT (_, k) -> gc_cont cx state k
+  | MapTypeT (_, _, t, k) -> gc cx state t; gc_cont cx state k
+  | MethodT(_, _, _, funtype) -> gc_funtype cx state funtype
+  | MixinT (_, t) -> gc cx state t
+  | NotT (_, t) -> gc cx state t
+  | ObjAssignT (_, t1, t2, _, _) -> gc cx state t1; gc cx state t2
+  | ObjFreezeT (_, t) -> gc cx state t
+  | ObjRestT (_, _, t) -> gc cx state t
+  | ObjSealT (_, t) -> gc cx state t
+  | ObjTestT (_, t1, t2) -> gc cx state t1; gc cx state t2
+  | OrT (_, t1, t2) -> gc cx state t1; gc cx state t2
+  | PredicateT (pred, t) -> gc_pred cx state pred; gc cx state t
+  | ReactCreateElementT (_, t, t_out) -> gc cx state t; gc cx state t_out
+  | RefineT (_, pred, t) -> gc_pred cx state pred; gc cx state t
+  | ReposLowerT (_, u) -> gc_use cx state u
+  | ReposUseT (_, _, t) -> gc cx state t
+  | SentinelPropTestT (t, _, _, t_out) -> gc cx state t; gc cx state t_out
+  | SetElemT(_, i, t) -> gc cx state i; gc cx state t
+  | SetPropT(_, _, t) -> gc cx state t
+  | SpecializeT (_, _, _, ts, t) -> List.iter (gc cx state) ts; gc cx state t
+  | SubstOnPredT (_, _, t) -> gc cx state t
+  | SummarizeT (_, t) -> gc cx state t
+  | SuperT(_, instance) ->
+      instance.type_args |> SMap.iter (fun _ -> gc cx state);
+      Context.iter_props cx instance.fields_tmap (fun _ ->
+        Property.iter_t (gc cx state));
+      Context.iter_props cx instance.methods_tmap (fun _ ->
+        Property.iter_t (gc cx state))
+  | TestPropT(_, _, t) -> gc cx state t
+  | ThisSpecializeT (_, this, t) -> gc cx state this; gc cx state t
+  | UnaryMinusT (_, t) -> gc cx state t
+  | UnifyT (t1, t2) -> gc cx state t1; gc cx state t2
+  | VarianceCheckT (_, ts, _) -> List.iter (gc cx state) ts
 
-  | ObjAssignT (_, t1, t2, _, _) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | ObjFreezeT (_, t) ->
-      gc cx state t
-
-  | ObjRestT (_, _, t) ->
-      gc cx state t
-
-  | ObjSealT (_, t) ->
-      gc cx state t
-
-  | ObjTestT (_, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | ArrRestT (_, _, t) ->
-      gc cx state t
-
-  | UnaryMinusT (_, t) ->
-      gc cx state t
-
-  | UnifyT (t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | BecomeT (_, t) ->
-      gc cx state t
-
-  | GetKeysT (_, t) ->
-      gc cx state t
-
-  | HasOwnPropT _ -> ()
-  | HasPropT _ -> ()
-
-  | ElemT (_, t1, t2, _) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | MakeExactT (_, k) ->
-      gc_cont cx state k
-
-  | ImportModuleNsT (_, t)
-  | ImportDefaultT (_, _, _, t)
-  | ImportNamedT (_, _, _, t)
-  | ImportTypeT (_, _, t)
-  | ImportTypeofT (_, _, t) ->
-      gc cx state t
-  | AssertImportIsValueT _ -> ()
-
-  | CJSRequireT (_, t) ->
-      gc cx state t
-
-  | CJSExtractNamedExportsT (_, (_, exporttypes), t_out) ->
-      gc_exporttypes cx state exporttypes;
-      gc cx state t_out
-
-  | CopyNamedExportsT (_, target_module, t_out) ->
-      gc cx state target_module;
-      gc cx state t_out;
-
-  | ExportNamedT (_, t_smap, t_out) ->
-      List.iter (gc cx state) (SMap.values t_smap);
-      gc cx state t_out
-
-  | MapTypeT (_, _, t, k) ->
-      gc cx state t;
-      gc_cont cx state k
-
-  | ReactCreateElementT (_, t, t_out) ->
-      gc cx state t;
-      gc cx state t_out
-
-  | ChoiceKitUseT (_, choice_use_tool) ->
-      gc_choice_use_tool cx state choice_use_tool
-
-  | IntersectionPreprocessKitT (_, intersection_preprocess_tool) ->
-      gc_intersection_preprocess_tool cx state intersection_preprocess_tool
-
-  | DebugPrintT _ -> ()
-
-  | SentinelPropTestT (t, _, _, t_out) ->
-      gc cx state t;
-      gc cx state t_out
-
-  | IdxUnwrap (_, t_out) ->
-      gc cx state t_out
-
-  | IdxUnMaybeifyT (_, t_out) ->
-      gc cx state t_out
-
-  | CallLatentPredT (_, _, _, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | CallOpenPredT (_, _, _, t1, t2) ->
-      gc cx state t1;
-      gc cx state t2
-
-  | SubstOnPredT (_, _, t) ->
-      gc cx state t
-
-  | RefineT (_, pred, t) ->
-      gc_pred cx state pred;
-      gc cx state t
 
 and gc_id cx state id =
   let root_id, constraints = Flow_js.find_constraints cx id in (
