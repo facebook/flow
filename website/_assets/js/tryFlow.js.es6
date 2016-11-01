@@ -116,11 +116,21 @@ function getAnnotations(text, callback, options, editor) {
     }
 
     if (astNode) {
-      let ast = flow.parse(text, {});
-      removeChildren(astNode);
-      astNode.appendChild(
-        document.createTextNode(JSON.stringify(ast, null, 2))
-      );
+      if (flow.parse) {
+        let ast = flow.parse(text, {});
+        removeChildren(astNode);
+        astNode.appendChild(
+          document.createTextNode(JSON.stringify(ast, null, 2))
+        );
+      } else if (!astNode.data.disabled) {
+        astNode.data.disabled = true;
+        removeChildren(astNode);
+        astNode.appendChild(
+          document.createTextNode(
+            "AST output is not supported in this version of Flow."
+          )
+        );
+      }
     }
 
     var lint = errors.map(function(err) {
