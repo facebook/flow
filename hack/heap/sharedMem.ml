@@ -139,12 +139,14 @@ external hh_collect: bool -> unit = "hh_collect"
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
 (*****************************************************************************)
-external save_dep_table: string -> unit = "hh_save_dep_table"
+external save_dep_table: string -> int = "hh_save_dep_table"
+external save_dep_table_sqlite: string -> int = "hh_save_dep_table_sqlite"
 
 (*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
 external load_dep_table: string -> int = "hh_load_dep_table"
+external load_dep_table_sqlite: string -> int = "hh_load_dep_table_sqlite"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)

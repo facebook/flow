@@ -108,6 +108,10 @@
 
 #include <lz4.h>
 
+#ifndef NO_SQLITE3
+#include <sqlite3.h>
+#endif
+
 // Ideally these would live in a handle.h file but our internal build system
 // can't support that at the moment. These are shared with handle_stubs.c
 #ifdef _WIN32
@@ -1804,11 +1808,10 @@ static void fread_header(FILE* fp) {
  *   - Each key is 4 bytes, with tag bit set to TAG_KEY.
  *   - Each val is 4 bytes, with tag bit set to TAG_VAL.
  */
-void hh_save_dep_table(value out_filename) {
+CAMLprim value hh_save_dep_table(value out_filename) {
   CAMLparam1(out_filename);
-
-  // Measure write time.
   struct timeval tv;
+  struct timeval tv2;
   gettimeofday(&tv, NULL);
 
   FILE* fp = fopen(String_val(out_filename), "wb");
@@ -1842,9 +1845,10 @@ void hh_save_dep_table(value out_filename) {
 
   fclose_no_fail(fp);
 
-  log_duration("Writing dependency file", tv);
-
-  CAMLreturn0;
+  tv2 = log_duration("Writing dependency file without sqlite", tv);
+  int secs = tv2.tv_sec - tv.tv_sec;
+  // Reporting only seconds, ignore milli seconds
+  CAMLreturn(Val_long(secs));
 }
 
 /* Reads a dependency graph from a file. See hh_save_dep_table for a
@@ -1889,3 +1893,142 @@ CAMLprim value hh_load_dep_table(value in_filename) {
   // Reporting only seconds, ignore milli seconds
   CAMLreturn(Val_long(secs));
 }
+
+
+/*****************************************************************************/
+/* Saved State with SQLite */
+/*****************************************************************************/
+
+#ifndef NO_SQLITE3
+
+size_t deptbl_entry_count_for_slot(size_t slot) {
+  assert(slot < dep_size);
+
+  size_t count = 0;
+  deptbl_entry_t slotval = deptbl[slot];
+
+  if (slotval.raw != 0 && slotval.s.key.tag == TAG_KEY) {
+    while (slotval.s.next.tag == TAG_NEXT) {
+      assert(slotval.s.next.num < dep_size);
+      slotval = deptbl[slotval.s.next.num];
+      count++;
+    }
+
+    // The final "next" in the list is always a value, not a next pointer.
+    count++;
+  }
+
+  return count;
+}
+
+/*
+ * Assumption: When we save the dependency table, we do a fresh load
+ * aka there is saved state
+ */
+CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
+  CAMLparam1(out_filename);
+
+  // This can only happen in the master
+  assert_master();
+
+  struct timeval tv;
+  struct timeval tv2;
+  gettimeofday(&tv, NULL);
+
+  sqlite3 *db_out;
+  assert(sqlite3_open(String_val(out_filename), &db_out) == SQLITE_OK);
+
+  // Create Dep able
+  char *sql = "CREATE TABLE DEPTABLE(" \
+               "KEY_VERTEX INT PRIMARY KEY NOT NULL," \
+               "VALUE_VERTEX BLOB NOT NULL);";
+
+  assert(sqlite3_exec(db_out, sql, NULL, 0, NULL)
+      == SQLITE_OK);
+  // Hand-off the data to the OS for writing and continue,
+  // don't wait for it to complete
+  assert(sqlite3_exec(db_out, "PRAGMA synchronous = OFF", NULL, 0, NULL)
+      == SQLITE_OK);
+  // Store the rollback journal in memory
+  assert(sqlite3_exec(db_out, "PRAGMA journal_mode = MEMORY", NULL, 0, NULL)
+      == SQLITE_OK);
+  // Use one transaction for all the insertions
+  assert(sqlite3_exec(db_out, "BEGIN TRANSACTION", NULL, 0, NULL)
+      == SQLITE_OK);
+
+  // Create entries on the table
+  size_t slot;
+  size_t count;
+  size_t prev_count = 0;
+  uint32_t *values = NULL;
+  size_t iter;
+  sqlite3_stmt *insert_stmt = NULL;
+  sql = "INSERT INTO DEPTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
+  assert(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL) == SQLITE_OK);
+  for (slot = 0; slot < dep_size; ++slot) {
+    count = deptbl_entry_count_for_slot(slot);
+    if (count == 0) {
+      continue;
+    }
+    if (count > prev_count) {
+      // No need to allocate new space if can just re use the old one
+      values = realloc(values, count * sizeof(uint32_t));
+      prev_count = count;
+    }
+    assert(values != NULL);
+    iter = 0;
+
+    deptbl_entry_t slotval = deptbl[slot];
+
+    if (slotval.raw != 0 && slotval.s.key.tag == TAG_KEY) {
+      // This is the head of a linked list aka KEY VERTEX
+      assert(sqlite3_bind_int(insert_stmt, 1, slotval.s.key.num) == SQLITE_OK);
+
+      // Then combine each value to VALUE VERTEX
+      while (slotval.s.next.tag == TAG_NEXT) {
+        assert(slotval.s.next.num < dep_size);
+        slotval = deptbl[slotval.s.next.num];
+        values[iter] = slotval.s.key.num;
+        iter++;
+      }
+
+      // The final "next" in the list is always a value, not a next pointer.
+      values[iter] = slotval.s.next.num;
+      iter++;
+      assert(sqlite3_bind_blob(insert_stmt, 2, values,
+                               iter * sizeof(uint32_t), SQLITE_TRANSIENT)
+          == SQLITE_OK);
+      assert(sqlite3_step(insert_stmt) == SQLITE_DONE);
+      assert(sqlite3_clear_bindings(insert_stmt) == SQLITE_OK);
+      assert(sqlite3_reset(insert_stmt) == SQLITE_OK);
+    }
+  }
+
+  if (values != NULL) {
+    free(values);
+  }
+
+  assert(sqlite3_finalize(insert_stmt) == SQLITE_OK);
+  assert(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL) == SQLITE_OK);
+
+  assert(sqlite3_close(db_out) == SQLITE_OK);
+  tv2 = log_duration("Writing dependency file with sqlite", tv);
+  int secs = tv2.tv_sec - tv.tv_sec;
+  // Reporting only seconds, ignore milli seconds
+  CAMLreturn(Val_long(secs));
+}
+
+CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
+  CAMLparam1(in_filename);
+  CAMLreturn(Val_long(0));
+}
+
+#else
+CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
+  CAMLreturn(Val_long(0));
+}
+
+CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
+  CAMLreturn(Val_long(0));
+}
+#endif
