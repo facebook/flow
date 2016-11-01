@@ -159,6 +159,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx acc t2 in
     acc
 
+  | GraphqlSchemaT _ -> acc
+
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
   | TypeDestructorT (_, d) -> self#destructor cx acc d

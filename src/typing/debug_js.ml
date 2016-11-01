@@ -300,6 +300,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       ]
     ]
 
+  | GraphqlSchemaT _ -> []
+
   )
 )
 
@@ -1276,6 +1278,7 @@ and dump_t_ (depth, tvars) cx t =
       (string_of_type_map kind)
       (kid t1)
       (kid t2)) t
+  | GraphqlSchemaT _ -> p t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t

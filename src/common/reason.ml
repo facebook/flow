@@ -182,6 +182,8 @@ type reason_desc =
   | RPropTypeShape
   | RPropTypeFbt
 
+  | RGraphqlSchema
+
 and reason_desc_function =
   | RAsync
   | RGenerator
@@ -486,6 +488,8 @@ let rec string_of_desc = function
   | RPropTypeOneOfType -> "oneOfType"
   | RPropTypeShape -> "shape"
   | RPropTypeFbt -> "Fbd"
+
+  | RGraphqlSchema -> "Graphql schema"
 
 let string_of_reason r =
   let spos = string_of_loc (loc_of_reason r) in
