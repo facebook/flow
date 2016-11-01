@@ -408,6 +408,11 @@ static char** heap;
 static pid_t* master_pid;
 static pid_t my_pid;
 
+#ifndef NO_SQLITE3
+// SQLite DB pointer
+static sqlite3 *db;
+#endif
+
 /* Where the heap started (bottom) */
 static char* heap_init;
 /* Where the heap will end (top) */
@@ -1901,6 +1906,43 @@ CAMLprim value hh_load_dep_table(value in_filename) {
 
 #ifndef NO_SQLITE3
 
+// Expects the database to be open
+static void create_sqlite_header(sqlite3 *db) {
+  // Create Header
+  char *sql = "CREATE TABLE HEADER(" \
+               "MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
+               "BUILDINFO TEXT NOT NULL);";
+
+  assert(sqlite3_exec(db, sql, NULL, 0, NULL) == SQLITE_OK);
+
+  // Insert magic constant and build info
+  sqlite3_stmt *insert_stmt = NULL;
+  sql = "INSERT INTO HEADER (MAGIC_CONSTANT, BUILDINFO) VALUES (?,?)";
+  assert(sqlite3_prepare_v2(db, sql, -1, &insert_stmt, NULL) == SQLITE_OK);
+  assert(sqlite3_bind_int64(insert_stmt, 1, MAGIC_CONSTANT) == SQLITE_OK);
+  assert(sqlite3_bind_text(insert_stmt, 2,
+        BuildInfo_kRevision, -1,
+        SQLITE_TRANSIENT)
+      == SQLITE_OK);
+  assert(sqlite3_step(insert_stmt) == SQLITE_DONE);
+  assert(sqlite3_finalize(insert_stmt) == SQLITE_OK);
+}
+
+// Expects the database to be open
+static void verify_sqlite_header(sqlite3 *db) {
+  sqlite3_stmt *select_stmt = NULL;
+  char *sql = "SELECT * FROM HEADER;";
+  assert(sqlite3_prepare_v2(db, sql, -1, &select_stmt, NULL) == SQLITE_OK);
+
+  if (sqlite3_step(select_stmt) == SQLITE_ROW) {
+      // Columns are 0 indexed
+      assert(sqlite3_column_int64(select_stmt, 0) == MAGIC_CONSTANT);
+      assert(strcmp((char *)sqlite3_column_text(select_stmt, 1),
+                    BuildInfo_kRevision) == 0);
+  }
+  assert(sqlite3_finalize(select_stmt) == SQLITE_OK);
+}
+
 size_t deptbl_entry_count_for_slot(size_t slot) {
   assert(slot < dep_size);
 
@@ -1937,6 +1979,9 @@ CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
 
   sqlite3 *db_out;
   assert(sqlite3_open(String_val(out_filename), &db_out) == SQLITE_OK);
+
+  // Create header for verification while we read from the db
+  create_sqlite_header(db_out);
 
   // Create Dep able
   char *sql = "CREATE TABLE DEPTABLE(" \
@@ -2020,7 +2065,19 @@ CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
 
 CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
   CAMLparam1(in_filename);
-  CAMLreturn(Val_long(0));
+  struct timeval tv;
+  struct timeval tv2;
+  gettimeofday(&tv, NULL);
+
+  assert(sqlite3_open(String_val(in_filename), &db) == SQLITE_OK);
+
+  // Verify the header
+  create_sqlite_header(db);
+
+  tv2 = log_duration("Reading the dependency file with sqlite", tv);
+  int secs = tv2.tv_sec - tv.tv_sec;
+  // Reporting only seconds, ignore milli seconds
+  CAMLreturn(Val_long(secs));
 }
 
 #else
