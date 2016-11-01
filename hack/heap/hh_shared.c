@@ -410,7 +410,7 @@ static pid_t my_pid;
 
 #ifndef NO_SQLITE3
 // SQLite DB pointer
-static sqlite3 *db;
+static sqlite3 *db = NULL;
 #endif
 
 /* Where the heap started (bottom) */
@@ -1899,7 +1899,6 @@ CAMLprim value hh_load_dep_table(value in_filename) {
   CAMLreturn(Val_long(secs));
 }
 
-
 /*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
@@ -2072,12 +2071,58 @@ CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
   assert(sqlite3_open(String_val(in_filename), &db) == SQLITE_OK);
 
   // Verify the header
-  create_sqlite_header(db);
+  verify_sqlite_header(db);
 
   tv2 = log_duration("Reading the dependency file with sqlite", tv);
   int secs = tv2.tv_sec - tv.tv_sec;
   // Reporting only seconds, ignore milli seconds
   CAMLreturn(Val_long(secs));
+}
+
+/* Given a key, returns the list of values bound to it from the sql db. */
+CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
+  CAMLparam1(ocaml_key);
+  CAMLlocal2(result, cell);
+
+  // The caller is required to pass a 32-bit node ID.
+  const uint64_t key64 = Long_val(ocaml_key);
+  const uint32_t key = (uint32_t)key64;
+  assert((key & 0x7FFFFFFF) == key64);
+
+  result = Val_int(0); // The empty list
+
+  // Make sure db connection is made
+  // If not then return empty list
+  if(db == NULL) {
+    CAMLreturn(result);
+  }
+
+  uint32_t *values;
+  size_t size, count;
+
+  sqlite3_stmt *select_stmt = NULL;
+  char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
+  assert(sqlite3_prepare_v2(db, sql, -1, &select_stmt, NULL) == SQLITE_OK);
+  assert(sqlite3_bind_int(select_stmt, 1, key) == SQLITE_OK);
+
+  if (sqlite3_step(select_stmt) == SQLITE_ROW) {
+    // Means we found it in the table
+    // Columns are 0 indexed
+    values = (uint32_t *) sqlite3_column_blob(select_stmt, 0);
+    size = (size_t) sqlite3_column_bytes(select_stmt, 0);
+    // Make sure we don't have malformed output
+    assert(size % sizeof(uint32_t) == 0);
+    count = size / sizeof(uint32_t);
+
+    for (int i = 0; i < count; i++) {
+      cell = caml_alloc_tuple(2);
+      Field(cell, 0) = Val_long(values[i]);
+      Field(cell, 1) = result;
+      result = cell;
+    }
+  }
+  assert(sqlite3_finalize(select_stmt) == SQLITE_OK);
+  CAMLreturn(result);
 }
 
 #else
@@ -2087,5 +2132,10 @@ CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
 
 CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
   CAMLreturn(Val_long(0));
+}
+
+CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
+  // Empty list
+  CAMLreturn(Val_int(0));
 }
 #endif
