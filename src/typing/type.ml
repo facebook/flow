@@ -1402,117 +1402,63 @@ let any_propagating_use_t = function
    type means to the programmer. *)
 
 let rec reason_of_t = function
-  (* note: keep in order of decls in Constraint *)
-
-  | OpenT (reason,_)
-
-  | NumT (reason, _)
-  | StrT (reason, _)
-  | BoolT (reason, _)
-  | EmptyT reason
-  | MixedT (reason, _)
-  | AnyT reason
-  | NullT reason
-  | VoidT reason
-
-  | FunT (reason,_,_,_)
-  | FunProtoT reason
-  | FunProtoApplyT reason
-  | FunProtoBindT reason
-  | FunProtoCallT reason ->
-      reason
-
-  | PolyT (_,t) ->
-      replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
-  | ThisClassT t ->
-      replace_reason (fun desc -> RClassType desc) (reason_of_t t)
-  | BoundT typeparam ->
-      typeparam.reason
-  | ExistsT reason ->
-      reason
-
+  | OpenT (reason,_) -> reason
+  | AbstractT t -> replace_reason (fun desc -> RAbstract desc) (reason_of_t t)
+  | AnnotT (_, assume_t) -> reason_of_t assume_t
+  | AnyFunT reason -> reason
+  | AnyObjT reason -> reason
+  | AnyT reason -> reason
+  | AnyWithLowerBoundT (t) -> reason_of_t t
+  | AnyWithUpperBoundT (t) -> reason_of_t t
+  | ArrT (reason,_,_) -> reason
+  | BoolT (reason, _) -> reason
+  | BoundT typeparam -> typeparam.reason
+  | ChoiceKitT (reason, _) -> reason
+  | ClassT t -> replace_reason (fun desc -> RClassType desc) (reason_of_t t)
+  | CustomFunT (reason, _) -> reason
+  | DiffT (t, _) -> reason_of_t t
+  | EmptyT reason -> reason
+  | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
   | ExactT (reason, t) ->
       let desc = desc_of_reason (reason_of_t t) in
       replace_reason_const (RExactType desc) reason
-
-  | ObjT (reason,_)
-  | ObjProtoT reason
-  | ArrT (reason,_,_)
-      -> reason
-
-  | ClassT t ->
-      replace_reason (fun desc -> RClassType desc) (reason_of_t t)
-
-  | InstanceT (reason,_,_,_)
-  | TypeT (reason,_)
-      -> reason
-
-  | AnnotT (_, assume_t) ->
-      reason_of_t assume_t
-
-  | OptionalT t ->
-      replace_reason (fun desc -> ROptional desc) (reason_of_t t)
-
-  | RestT t ->
-      replace_reason (fun desc -> RRestArray desc) (reason_of_t t)
-
-  | AbstractT t ->
-      replace_reason (fun desc -> RAbstract desc) (reason_of_t t)
-
-  | EvalT (_, defer_use_t, _) ->
-      reason_of_defer_use_t defer_use_t
-
-  | TypeAppT(t,_) ->
-      replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
-
-  | ThisTypeAppT(t,_,_) ->
-      replace_reason (fun desc -> RThisTypeApp desc) (reason_of_t t)
-
-  | MaybeT t ->
-      replace_reason (fun desc -> RMaybe desc) (reason_of_t t)
-
-  | TaintT (r) ->
-      r
-
-  | IntersectionT (reason, _) ->
-      reason
-
-  | UnionT (reason, _) ->
-      reason
-
-  | AnyWithLowerBoundT (t)
-  | AnyWithUpperBoundT (t)
-      -> reason_of_t t
-
-  | AnyObjT reason ->
-      reason
-  | AnyFunT reason ->
-      reason
-
-  | ShapeT (t)
-      -> reason_of_t t
-  | DiffT (t, _)
-      -> reason_of_t t
-
-  | KeysT (reason, _)
-  | SingletonStrT (reason, _)
-  | SingletonNumT (reason, _)
-  | SingletonBoolT (reason, _) -> reason
-
-  | ModuleT (reason, _) -> reason
-
-  | ChoiceKitT (reason, _) -> reason
-
-  | CustomFunT (reason, _) -> reason
-
+  | ExistsT reason -> reason
   | ExtendsT (_,_,t) ->
       replace_reason (fun desc -> RExtends desc) (reason_of_t t)
-
+  | FunProtoApplyT reason -> reason
+  | FunProtoBindT reason -> reason
+  | FunProtoCallT reason -> reason
+  | FunProtoT reason -> reason
+  | FunT (reason,_,_,_) -> reason
   | IdxWrapper (reason, _) -> reason
-
+  | InstanceT (reason,_,_,_) -> reason
+  | IntersectionT (reason, _) -> reason
+  | KeysT (reason, _) -> reason
+  | MaybeT t -> replace_reason (fun desc -> RMaybe desc) (reason_of_t t)
+  | MixedT (reason, _) -> reason
+  | ModuleT (reason, _) -> reason
+  | NullT reason -> reason
+  | NumT (reason, _) -> reason
+  | ObjProtoT reason -> reason
+  | ObjT (reason,_) -> reason
   | OpenPredT (reason, _, _, _) -> reason
-
+  | OptionalT t -> replace_reason (fun desc -> ROptional desc) (reason_of_t t)
+  | PolyT (_,t) -> replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
+  | RestT t -> replace_reason (fun desc -> RRestArray desc) (reason_of_t t)
+  | ShapeT (t) -> reason_of_t t
+  | SingletonBoolT (reason, _) -> reason
+  | SingletonNumT (reason, _) -> reason
+  | SingletonStrT (reason, _) -> reason
+  | StrT (reason, _) -> reason
+  | TaintT (r) -> r
+  | ThisClassT t -> replace_reason (fun desc -> RClassType desc) (reason_of_t t)
+  | ThisTypeAppT(t,_,_) ->
+      replace_reason (fun desc -> RThisTypeApp desc) (reason_of_t t)
+  | TypeAppT(t,_) -> replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
   | TypeMapT (reason, _, _, _) -> reason
+  | TypeT (reason,_) -> reason
+  | UnionT (reason, _) -> reason
+  | VoidT reason -> reason
 
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
@@ -1521,106 +1467,70 @@ and reason_of_defer_use_t = function
 
 and reason_of_use_t = function
   | UseT (_, t) -> reason_of_t t
-
-  | BindT (reason, _)
-  | ApplyT (reason, _, _)
-  | CallT (reason, _)
-
-  | MethodT (reason,_,_,_)
-  | SetPropT (reason,_,_)
-  | GetPropT (reason,_,_)
-  | TestPropT (reason, _, _)
-
-  | SetElemT (reason,_,_)
-  | GetElemT (reason,_,_)
-
-  | GetStaticsT (reason,_)
-
-  | ConstructorT (reason,_,_)
-
-  | SuperT (reason,_)
-  | MixinT (reason, _)
-
-  | AdderT (reason,_,_)
-  | ComparatorT (reason,_)
-  | UnaryMinusT (reason, _)
-
-  | AndT (reason, _, _)
-  | OrT (reason, _, _)
-  | NotT (reason, _)
-  | BecomeT (reason, _)
-  | ReposLowerT (reason, _)
-  | ReposUseT (reason, _, _)
-      -> reason
-
-  | PredicateT (_, t)
-  | GuardT (_, _, t) -> reason_of_t t
-
-  | EqT (reason, _) ->
-      reason
-
-  | SpecializeT(reason,_,_,_,_)
-      -> reason
-
-  | ThisSpecializeT(reason,_,_)
-      -> reason
-
-  | VarianceCheckT(reason,_,_)
-      -> reason
-
-  | LookupT(reason, _, _, _, _) ->
-      reason
-
-  | UnifyT (_,t) ->
-      reason_of_t t
-
-  | ObjAssignT (reason, _, _, _, _)
-  | ObjFreezeT (reason, _)
-  | ObjRestT (reason, _, _)
-  | ObjSealT (reason, _)
-  | ObjTestT (reason, _, _)
-    ->
-      reason
-
-  | ArrRestT (reason, _, _) ->
-      reason
-
-  | GetKeysT (reason, _) -> reason
-  | HasOwnPropT (reason, _) -> reason
-  | HasPropT (reason, _, _) -> reason
-
-  | ElemT (reason, _, _, _) -> reason
-
-  | MakeExactT (reason, _) -> reason
-
-  | SummarizeT (reason, _) -> reason
-
-  | CJSRequireT (reason, _) -> reason
-  | ImportModuleNsT (reason, _) -> reason
-  | ImportDefaultT (reason, _, _, _) -> reason
-  | ImportNamedT (reason, _, _, _) -> reason
-  | ImportTypeT (reason, _, _) -> reason
-  | ImportTypeofT (reason, _, _) -> reason
+  | AdderT (reason,_,_) -> reason
+  | AndT (reason, _, _) -> reason
+  | ApplyT (reason, _, _) -> reason
+  | ArrRestT (reason, _, _) -> reason
   | AssertImportIsValueT (reason, _) -> reason
-  | CJSExtractNamedExportsT (reason, _, _) -> reason
-  | CopyNamedExportsT (reason, _, _) -> reason
-  | ExportNamedT (reason, _, _) -> reason
-  | DebugPrintT reason -> reason
-  | MapTypeT (reason, _, _, _) -> reason
-  | ReactCreateElementT (reason, _, _) -> reason
-
-  | SentinelPropTestT (_, _, _, result) -> reason_of_t result
-
-  | ChoiceKitUseT (reason, _) -> reason
-  | IntersectionPreprocessKitT (reason, _) -> reason
-
-  | IdxUnwrap (reason, _) -> reason
-  | IdxUnMaybeifyT (reason, _) -> reason
-
+  | BecomeT (reason, _) -> reason
+  | BindT (reason, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
-  | SubstOnPredT (reason, _, _) -> reason
+  | CallT (reason, _) -> reason
+  | ChoiceKitUseT (reason, _) -> reason
+  | CJSExtractNamedExportsT (reason, _, _) -> reason
+  | CJSRequireT (reason, _) -> reason
+  | ComparatorT (reason,_) -> reason
+  | ConstructorT (reason,_,_) -> reason
+  | CopyNamedExportsT (reason, _, _) -> reason
+  | DebugPrintT reason -> reason
+  | ElemT (reason, _, _, _) -> reason
+  | EqT (reason, _) -> reason
+  | ExportNamedT (reason, _, _) -> reason
+  | GetElemT (reason,_,_) -> reason
+  | GetKeysT (reason, _) -> reason
+  | GetPropT (reason,_,_) -> reason
+  | GetStaticsT (reason,_) -> reason
+  | GuardT (_, _, t) -> reason_of_t t
+  | HasOwnPropT (reason, _) -> reason
+  | HasPropT (reason, _, _) -> reason
+  | IdxUnMaybeifyT (reason, _) -> reason
+  | IdxUnwrap (reason, _) -> reason
+  | ImportDefaultT (reason, _, _, _) -> reason
+  | ImportModuleNsT (reason, _) -> reason
+  | ImportNamedT (reason, _, _, _) -> reason
+  | ImportTypeofT (reason, _, _) -> reason
+  | ImportTypeT (reason, _, _) -> reason
+  | IntersectionPreprocessKitT (reason, _) -> reason
+  | LookupT(reason, _, _, _, _) -> reason
+  | MakeExactT (reason, _) -> reason
+  | MapTypeT (reason, _, _, _) -> reason
+  | MethodT (reason,_,_,_) -> reason
+  | MixinT (reason, _) -> reason
+  | NotT (reason, _) -> reason
+  | ObjAssignT (reason, _, _, _, _) -> reason
+  | ObjFreezeT (reason, _) -> reason
+  | ObjRestT (reason, _, _) -> reason
+  | ObjSealT (reason, _) -> reason
+  | ObjTestT (reason, _, _) -> reason
+  | OrT (reason, _, _) -> reason
+  | PredicateT (_, t) -> reason_of_t t
+  | ReactCreateElementT (reason, _, _) -> reason
   | RefineT (reason, _, _) -> reason
+  | ReposLowerT (reason, _) -> reason
+  | ReposUseT (reason, _, _) -> reason
+  | SentinelPropTestT (_, _, _, result) -> reason_of_t result
+  | SetElemT (reason,_,_) -> reason
+  | SetPropT (reason,_,_) -> reason
+  | SpecializeT(reason,_,_,_,_) -> reason
+  | SubstOnPredT (reason, _, _) -> reason
+  | SummarizeT (reason, _) -> reason
+  | SuperT (reason,_) -> reason
+  | TestPropT (reason, _, _) -> reason
+  | ThisSpecializeT(reason,_,_) -> reason
+  | UnaryMinusT (reason, _) -> reason
+  | UnifyT (_,t) -> reason_of_t t
+  | VarianceCheckT(reason,_,_) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1639,87 +1549,62 @@ let loc_of_t t = loc_of_reason (reason_of_t t)
 
 (* TODO make a type visitor *)
 let rec mod_reason_of_t f = function
-
   | OpenT (reason, t) -> OpenT (f reason, t)
-  | NumT (reason, t) -> NumT (f reason, t)
-  | StrT (reason, t) -> StrT (f reason, t)
-  | BoolT (reason, t) -> BoolT (f reason, t)
-  | EmptyT reason -> EmptyT (f reason)
-  | MixedT (reason, t) -> MixedT (f reason, t)
+  | AbstractT t -> AbstractT (mod_reason_of_t f t)
+  | AnnotT (assert_t, assume_t) ->
+      AnnotT (mod_reason_of_t f assert_t, mod_reason_of_t f assume_t)
+  | AnyFunT reason -> AnyFunT (f reason)
+  | AnyObjT reason -> AnyObjT (f reason)
   | AnyT reason -> AnyT (f reason)
-  | NullT reason -> NullT (f reason)
-  | VoidT reason -> VoidT (f reason)
-
-  | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
-  | FunProtoT (reason) -> FunProtoT (f reason)
+  | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
+  | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
+  | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
+  | BoolT (reason, t) -> BoolT (f reason, t)
+  | BoundT { reason; name; bound; polarity; default; } ->
+      BoundT { reason = f reason; name; bound; polarity; default; }
+  | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
+  | ClassT t -> ClassT (mod_reason_of_t f t)
+  | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
+  | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
+  | EmptyT reason -> EmptyT (f reason)
+  | EvalT (t, defer_use_t, id) ->
+      EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
+  | ExactT (reason, t) -> ExactT (f reason, t)
+  | ExistsT reason -> ExistsT (f reason)
+  | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
   | FunProtoApplyT (reason) -> FunProtoApplyT (f reason)
   | FunProtoBindT (reason) -> FunProtoBindT (f reason)
   | FunProtoCallT (reason) -> FunProtoCallT (f reason)
-  | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
-  | ThisClassT t -> ThisClassT (mod_reason_of_t f t)
-  | BoundT { reason; name; bound; polarity; default; } ->
-    BoundT { reason = f reason; name; bound; polarity; default; }
-  | ExistsT reason -> ExistsT (f reason)
-  | ObjT (reason, ot) -> ObjT (f reason, ot)
-  | ObjProtoT reason -> ObjProtoT (f reason)
-  | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
-
-  | ClassT t -> ClassT (mod_reason_of_t f t)
-  | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
-
-  | TypeT (reason, t) -> TypeT (f reason, t)
-  | AnnotT (assert_t, assume_t) ->
-      AnnotT (mod_reason_of_t f assert_t, mod_reason_of_t f assume_t)
-
-  | OptionalT t -> OptionalT (mod_reason_of_t f t)
-
-  | RestT t -> RestT (mod_reason_of_t f t)
-
-  | AbstractT t -> AbstractT (mod_reason_of_t f t)
-
-  | EvalT (t, defer_use_t, id) -> EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
-
-  | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
-
-  | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
-
-  | ExactT (reason, t) -> ExactT (f reason, t)
-
-  | MaybeT t -> MaybeT (mod_reason_of_t f t)
-
-  | TaintT (r) -> TaintT (f r)
-
-  | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
-
-  | UnionT (reason, ts) -> UnionT (f reason, ts)
-
-  | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
-  | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
-
-  | AnyObjT reason -> AnyObjT (f reason)
-  | AnyFunT reason -> AnyFunT (f reason)
-
-  | ShapeT t -> ShapeT (mod_reason_of_t f t)
-  | DiffT (t1, t2) -> DiffT (mod_reason_of_t f t1, t2)
-
-  | KeysT (reason, t) -> KeysT (f reason, t)
-  | SingletonStrT (reason, t) -> SingletonStrT (f reason, t)
-  | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
-  | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
-
-  | ModuleT (reason, exports) -> ModuleT (f reason, exports)
-
-  | ExtendsT (ts, t, tc) -> ExtendsT (ts, t, mod_reason_of_t f tc)
-
-  | ChoiceKitT (reason, tool) -> ChoiceKitT (f reason, tool)
-
-  | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
-
+  | FunProtoT (reason) -> FunProtoT (f reason)
+  | FunT (reason, s, p, ft) -> FunT (f reason, s, p, ft)
   | IdxWrapper (reason, t) -> IdxWrapper (f reason, t)
-
+  | InstanceT (reason, st, su, inst) -> InstanceT (f reason, st, su, inst)
+  | IntersectionT (reason, ts) -> IntersectionT (f reason, ts)
+  | KeysT (reason, t) -> KeysT (f reason, t)
+  | MaybeT t -> MaybeT (mod_reason_of_t f t)
+  | MixedT (reason, t) -> MixedT (f reason, t)
+  | ModuleT (reason, exports) -> ModuleT (f reason, exports)
+  | NullT reason -> NullT (f reason)
+  | NumT (reason, t) -> NumT (f reason, t)
+  | ObjProtoT reason -> ObjProtoT (f reason)
+  | ObjT (reason, ot) -> ObjT (f reason, ot)
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
-
+  | OptionalT t -> OptionalT (mod_reason_of_t f t)
+  | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
+  | RestT t -> RestT (mod_reason_of_t f t)
+  | ShapeT t -> ShapeT (mod_reason_of_t f t)
+  | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
+  | SingletonNumT (reason, t) -> SingletonNumT (f reason, t)
+  | SingletonStrT (reason, t) -> SingletonStrT (f reason, t)
+  | StrT (reason, t) -> StrT (f reason, t)
+  | TaintT (r) -> TaintT (f r)
+  | ThisClassT t -> ThisClassT (mod_reason_of_t f t)
+  | ThisTypeAppT (t, this, ts) -> ThisTypeAppT (mod_reason_of_t f t, this, ts)
+  | TypeAppT (t, ts) -> TypeAppT (mod_reason_of_t f t, ts)
   | TypeMapT (reason, kind, t1, t2) -> TypeMapT (f reason, kind, t1, t2)
+  | TypeT (reason, t) -> TypeT (f reason, t)
+  | UnionT (reason, ts) -> UnionT (f reason, ts)
+  | VoidT reason -> VoidT (f reason)
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
@@ -1727,101 +1612,82 @@ and mod_reason_of_defer_use_t f = function
 
 and mod_reason_of_use_t f = function
   | UseT (_, t) -> UseT (UnknownUse, mod_reason_of_t f t)
-
-  | SuperT (reason, inst) -> SuperT (f reason, inst)
-  | MixinT (reason, inst) -> MixinT (f reason, inst)
-
-  | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
-  | BindT (reason, ft) -> BindT (f reason, ft)
-  | CallT (reason, ft) -> CallT (f reason, ft)
-
-  | MethodT (reason, lookup, name, ft) -> MethodT(f reason, lookup, name, ft)
-  | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
-  | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
-  | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
-  | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
-  | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
-
-  | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
-  | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
-
-  | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
-
-  | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
-
   | AdderT (reason, rt, lt) -> AdderT (f reason, rt, lt)
-  | ComparatorT (reason, t) -> ComparatorT (f reason, t)
-  | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
-
-  | BecomeT (reason, t) -> BecomeT (f reason, t)
-
-  | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
-  | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
-
-  | EqT (reason, t) -> EqT (f reason, t)
-
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
-  | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
-  | NotT (reason, t) -> NotT (f reason, t)
-
-  | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
-      SpecializeT (f reason_op, reason_tapp, cache, ts, t)
-
-  | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
-
-  | VarianceCheckT(reason, ts, polarity) -> VarianceCheckT (f reason, ts, polarity)
-
+  | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
+  | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
+  | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
+  | BecomeT (reason, t) -> BecomeT (f reason, t)
+  | BindT (reason, ft) -> BindT (f reason, ft)
+  | CallLatentPredT (reason, b, k, l, t) ->
+      CallLatentPredT (f reason, b, k, l, t)
+  | CallOpenPredT (reason, sense, key, l, t) ->
+      CallOpenPredT (f reason, sense, key, l, t)
+  | CallT (reason, ft) -> CallT (f reason, ft)
+  | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
+  | CJSExtractNamedExportsT (reason, exports, t2) ->
+      CJSExtractNamedExportsT (f reason, exports, t2)
+  | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
+  | ComparatorT (reason, t) -> ComparatorT (f reason, t)
+  | ConstructorT (reason, ts, t) -> ConstructorT (f reason, ts, t)
+  | CopyNamedExportsT (reason, target_module_t, t_out) ->
+      CopyNamedExportsT(f reason, target_module_t, t_out)
+  | DebugPrintT reason -> DebugPrintT (f reason)
+  | ElemT (reason, t, t2, rw) -> ElemT (f reason, t, t2, rw)
+  | EqT (reason, t) -> EqT (f reason, t)
+  | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
+  | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
+  | GetKeysT (reason, t) -> GetKeysT (f reason, t)
+  | GetPropT (reason, n, t) -> GetPropT (f reason, n, t)
+  | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
+  | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
+  | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
+  | HasPropT (reason, strict, prop) -> HasPropT (f reason, strict, prop)
+  | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
+  | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
+  | ImportDefaultT (reason, import_kind, name, t) ->
+      ImportDefaultT (f reason, import_kind, name, t)
+  | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
+  | ImportNamedT (reason, import_kind, name, t) ->
+      ImportNamedT (f reason, import_kind, name, t)
+  | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
+  | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
+  | IntersectionPreprocessKitT (reason, tool) ->
+      IntersectionPreprocessKitT (f reason, tool)
   | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
-
-  | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
-
+  | MakeExactT (reason, t) -> MakeExactT (f reason, t)
+  | MapTypeT (reason, kind, t, k) -> MapTypeT (f reason, kind, t, k)
+  | MethodT (reason, lookup, name, ft) -> MethodT(f reason, lookup, name, ft)
+  | MixinT (reason, inst) -> MixinT (f reason, inst)
+  | NotT (reason, t) -> NotT (f reason, t)
   | ObjAssignT (reason, t, t2, filter, resolve) ->
       ObjAssignT (f reason, t, t2, filter, resolve)
   | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
   | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
   | ObjSealT (reason, t) -> ObjSealT (f reason, t)
   | ObjTestT (reason, t1, t2) -> ObjTestT (f reason, t1, t2)
-
-  | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
-  | GetKeysT (reason, t) -> GetKeysT (f reason, t)
-  | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
-  | HasPropT (reason, strict, prop) -> HasPropT (f reason, strict, prop)
-
-  | ElemT (reason, t, t2, rw) -> ElemT (f reason, t, t2, rw)
-
-  | MakeExactT (reason, t) -> MakeExactT (f reason, t)
-
-  | SummarizeT (reason, t) -> SummarizeT (f reason, t)
-
-  | CJSRequireT (reason, t) -> CJSRequireT (f reason, t)
-  | ImportModuleNsT (reason, t) -> ImportModuleNsT (f reason, t)
-  | ImportDefaultT (reason, import_kind, name, t) -> ImportDefaultT (f reason, import_kind, name, t)
-  | ImportNamedT (reason, import_kind, name, t) -> ImportNamedT (f reason, import_kind, name, t)
-  | ImportTypeT (reason, name, t) -> ImportTypeT (f reason, name, t)
-  | ImportTypeofT (reason, name, t) -> ImportTypeofT (f reason, name, t)
-  | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
-
-  | CJSExtractNamedExportsT (reason, exports, t2) -> CJSExtractNamedExportsT (f reason, exports, t2)
-  | CopyNamedExportsT (reason, target_module_t, t_out) -> CopyNamedExportsT(f reason, target_module_t, t_out)
-  | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
-  | DebugPrintT reason -> DebugPrintT (f reason)
-  | MapTypeT (reason, kind, t, k) -> MapTypeT (f reason, kind, t, k)
-  | ReactCreateElementT (reason, t, tout) -> ReactCreateElementT (f reason, t, tout)
-
+  | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
+  | PredicateT (pred, t) -> PredicateT (pred, mod_reason_of_t f t)
+  | ReactCreateElementT (reason, t, tout) ->
+      ReactCreateElementT (f reason, t, tout)
+  | RefineT (reason, p, t) -> RefineT (f reason, p, t)
+  | ReposLowerT (reason, t) -> ReposLowerT (f reason, t)
+  | ReposUseT (reason, use_op, t) -> ReposUseT (f reason, use_op, t)
   | SentinelPropTestT (l, sense, sentinel, result) ->
       SentinelPropTestT (l, sense, sentinel, mod_reason_of_t f result)
-
-  | ChoiceKitUseT (reason, tool) -> ChoiceKitUseT (f reason, tool)
-  | IntersectionPreprocessKitT (reason, tool) -> IntersectionPreprocessKitT (f reason, tool)
-
-  | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
-  | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
-  | CallLatentPredT (reason, b, k, l, t) ->
-      CallLatentPredT (f reason, b, k, l, t)
-  | CallOpenPredT (reason, sense, key, l, t) ->
-      CallOpenPredT (f reason, sense, key, l, t)
+  | SetElemT (reason, it, et) -> SetElemT (f reason, it, et)
+  | SetPropT (reason, n, t) -> SetPropT (f reason, n, t)
+  | SpecializeT(reason_op, reason_tapp, cache, ts, t) ->
+      SpecializeT (f reason_op, reason_tapp, cache, ts, t)
   | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
-  | RefineT (reason, p, t) -> RefineT (f reason, p, t)
+  | SummarizeT (reason, t) -> SummarizeT (f reason, t)
+  | SuperT (reason, inst) -> SuperT (f reason, inst)
+  | TestPropT (reason, n, t) -> TestPropT (f reason, n, t)
+  | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
+  | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
+  | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
+  | VarianceCheckT(reason, ts, polarity) ->
+      VarianceCheckT (f reason, ts, polarity)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1862,61 +1728,61 @@ let string_of_defer_use_ctor = function
 
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
-  | NumT _ -> "NumT"
-  | StrT _ -> "StrT"
-  | BoolT _ -> "BoolT"
-  | EmptyT _ -> "EmptyT"
-  | MixedT _ -> "MixedT"
-  | AnyT _ -> "AnyT"
-  | NullT _ -> "NullT"
-  | VoidT _ -> "VoidT"
-  | FunT _ -> "FunT"
-  | FunProtoT _ -> "FunProtoT"
-  | FunProtoApplyT _ -> "FunProtoApplyT"
-  | FunProtoBindT _ -> "FunProtoBindT"
-  | FunProtoCallT _ -> "FunProtoCallT"
-  | PolyT _ -> "PolyT"
-  | ThisClassT _ -> "ThisClassT"
-  | BoundT _ -> "BoundT"
-  | ExistsT _ -> "ExistsT"
-  | ExactT _ -> "ExactT"
-  | ObjT _ -> "ObjT"
-  | ObjProtoT _ -> "ObjProtoT"
-  | ArrT _ -> "ArrT"
-  | ClassT _ -> "ClassT"
-  | InstanceT _ -> "InstanceT"
-  | TypeT _ -> "TypeT"
-  | AnnotT _ -> "AnnotT"
-  | OptionalT _ -> "OptionalT"
-  | RestT _ -> "RestT"
   | AbstractT _ -> "AbstractT"
-  | EvalT _ -> "EvalT"
-  | TypeAppT _ -> "TypeAppT"
-  | ThisTypeAppT _ -> "ThisTypeAppT"
-  | MaybeT _ -> "MaybeT"
-  | TaintT _ -> "TaintT"
-  | IntersectionT _ -> "IntersectionT"
-  | UnionT _ -> "UnionT"
+  | AnnotT _ -> "AnnotT"
+  | AnyFunT _ -> "AnyFunT"
+  | AnyObjT _ -> "AnyObjT"
+  | AnyT _ -> "AnyT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"
-  | AnyObjT _ -> "AnyObjT"
-  | AnyFunT _ -> "AnyFunT"
-  | ShapeT _ -> "ShapeT"
-  | DiffT _ -> "DiffT"
-  | KeysT _ -> "KeysT"
-  | SingletonStrT _ -> "SingletonStrT"
-  | SingletonNumT _ -> "SingletonNumT"
-  | SingletonBoolT _ -> "SingletonBoolT"
-  | ModuleT _ -> "ModuleT"
-  | ExtendsT _ -> "ExtendsT"
+  | ArrT _ -> "ArrT"
+  | BoolT _ -> "BoolT"
+  | BoundT _ -> "BoundT"
   | ChoiceKitT (_, tool) ->
     spf "ChoiceKitT %s" begin match tool with
     | Trigger -> "Trigger"
     end
+  | ClassT _ -> "ClassT"
   | CustomFunT _ -> "CustomFunT"
+  | DiffT _ -> "DiffT"
+  | EmptyT _ -> "EmptyT"
+  | EvalT _ -> "EvalT"
+  | ExactT _ -> "ExactT"
+  | ExistsT _ -> "ExistsT"
+  | ExtendsT _ -> "ExtendsT"
+  | FunProtoApplyT _ -> "FunProtoApplyT"
+  | FunProtoBindT _ -> "FunProtoBindT"
+  | FunProtoCallT _ -> "FunProtoCallT"
+  | FunProtoT _ -> "FunProtoT"
+  | FunT _ -> "FunT"
   | IdxWrapper _ -> "IdxWrapper"
+  | InstanceT _ -> "InstanceT"
+  | IntersectionT _ -> "IntersectionT"
+  | KeysT _ -> "KeysT"
+  | MaybeT _ -> "MaybeT"
+  | MixedT _ -> "MixedT"
+  | ModuleT _ -> "ModuleT"
+  | NullT _ -> "NullT"
+  | NumT _ -> "NumT"
+  | ObjProtoT _ -> "ObjProtoT"
+  | ObjT _ -> "ObjT"
   | OpenPredT _ -> "OpenPredT"
+  | OptionalT _ -> "OptionalT"
+  | PolyT _ -> "PolyT"
+  | RestT _ -> "RestT"
+  | ShapeT _ -> "ShapeT"
+  | SingletonBoolT _ -> "SingletonBoolT"
+  | SingletonNumT _ -> "SingletonNumT"
+  | SingletonStrT _ -> "SingletonStrT"
+  | StrT _ -> "StrT"
+  | TaintT _ -> "TaintT"
+  | ThisClassT _ -> "ThisClassT"
+  | ThisTypeAppT _ -> "ThisTypeAppT"
+  | TypeAppT _ -> "TypeAppT"
   | TypeMapT _ -> "TypeMapT"
+  | TypeT _ -> "TypeT"
+  | UnionT _ -> "UnionT"
+  | VoidT _ -> "VoidT"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"
@@ -1938,79 +1804,79 @@ let string_of_use_op = function
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)
 
-  | SummarizeT _ -> "SummarizeT"
-  | SuperT _ -> "SuperT"
-  | MixinT _ -> "MixinT"
-  | ApplyT _ -> "ApplyT"
-  | BindT _ -> "BindT"
-  | CallT _ -> "CallT"
-  | MethodT _ -> "MethodT"
-  | SetPropT _ -> "SetPropT"
-  | GetPropT _ -> "GetPropT"
-  | TestPropT _ -> "TestPropT"
-  | SetElemT _ -> "SetElemT"
-  | GetElemT _ -> "GetElemT"
-  | GetStaticsT _ -> "GetStaticsT"
-  | ConstructorT _ -> "ConstructorT"
   | AdderT _ -> "AdderT"
-  | ComparatorT _ -> "ComparatorT"
-  | ReposLowerT _ -> "ReposLowerT"
-  | ReposUseT _ -> "ReposUseT"
-  | BecomeT _ -> "BecomeT"
-  | PredicateT _ -> "PredicateT"
-  | GuardT _ -> "GuardT"
-  | EqT _ -> "EqT"
   | AndT _ -> "AndT"
-  | OrT _ -> "OrT"
-  | NotT _ -> "NotT"
-  | SpecializeT _ -> "SpecializeT"
-  | ThisSpecializeT _ -> "ThisSpecializeT"
-  | VarianceCheckT _ -> "VarianceCheckT"
-  | LookupT _ -> "LookupT"
-  | UnifyT _ -> "UnifyT"
-  | ObjAssignT _ -> "ObjAssignT"
-  | ObjFreezeT _ -> "ObjFreezeT"
-  | ObjRestT _ -> "ObjRestT"
-  | ObjSealT _ -> "ObjSealT"
-  | ObjTestT _ -> "ObjTestT"
+  | ApplyT _ -> "ApplyT"
   | ArrRestT _ -> "ArrRestT"
-  | UnaryMinusT _ -> "UnaryMinusT"
-  | GetKeysT _ -> "GetKeysT"
-  | HasOwnPropT _ -> "HasOwnPropT"
-  | HasPropT _ -> "HasPropT"
-  | ElemT _ -> "ElemT"
-  | MakeExactT _ -> "MakeExactT"
-  | ImportModuleNsT _ -> "ImportModuleNsT"
-  | ImportDefaultT _ -> "ImportDefaultT"
-  | ImportNamedT _ -> "ImportNamedT"
-  | ImportTypeT _ -> "ImportTypeT"
-  | ImportTypeofT _ -> "ImportTypeofT"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
-  | CJSRequireT _ -> "CJSRequireT"
-  | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
-  | CopyNamedExportsT _ -> "CopyNamedExportsT"
-  | ExportNamedT _ -> "ExportNamedT"
-  | DebugPrintT _ -> "DebugPrintT"
-  | MapTypeT _ -> "MapTypeT"
-  | ReactCreateElementT _ -> "ReactCreateElementT"
-  | SentinelPropTestT _ -> "SentinelPropTestT"
+  | BecomeT _ -> "BecomeT"
+  | BindT _ -> "BindT"
+  | CallLatentPredT _ -> "CallLatentPredT"
+  | CallOpenPredT _ -> "CallOpenPredT"
+  | CallT _ -> "CallT"
   | ChoiceKitUseT (_, tool) ->
     spf "ChoiceKitUseT %s" begin match tool with
     | FullyResolveType _ -> "FullyResolveType"
     | TryFlow _ -> "TryFlow"
     end
+  | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
+  | CJSRequireT _ -> "CJSRequireT"
+  | ComparatorT _ -> "ComparatorT"
+  | ConstructorT _ -> "ConstructorT"
+  | CopyNamedExportsT _ -> "CopyNamedExportsT"
+  | DebugPrintT _ -> "DebugPrintT"
+  | ElemT _ -> "ElemT"
+  | EqT _ -> "EqT"
+  | ExportNamedT _ -> "ExportNamedT"
+  | GetElemT _ -> "GetElemT"
+  | GetKeysT _ -> "GetKeysT"
+  | GetPropT _ -> "GetPropT"
+  | GetStaticsT _ -> "GetStaticsT"
+  | GuardT _ -> "GuardT"
+  | HasOwnPropT _ -> "HasOwnPropT"
+  | HasPropT _ -> "HasPropT"
+  | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
+  | IdxUnwrap _ -> "IdxUnwrap"
+  | ImportDefaultT _ -> "ImportDefaultT"
+  | ImportModuleNsT _ -> "ImportModuleNsT"
+  | ImportNamedT _ -> "ImportNamedT"
+  | ImportTypeofT _ -> "ImportTypeofT"
+  | ImportTypeT _ -> "ImportTypeT"
   | IntersectionPreprocessKitT (_, tool) ->
     spf "IntersectionPreprocessKitT %s" begin match tool with
     | ConcretizeTypes _ -> "ConcretizeTypes"
     | SentinelPropTest _ -> "SentinelPropTest"
     | PropExistsTest _ -> "PropExistsTest"
     end
-  | IdxUnwrap _ -> "IdxUnwrap"
-  | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
-  | CallLatentPredT _ -> "CallLatentPredT"
-  | CallOpenPredT _ -> "CallOpenPredT"
-  | SubstOnPredT _ -> "SubstOnPredT"
+  | LookupT _ -> "LookupT"
+  | MakeExactT _ -> "MakeExactT"
+  | MapTypeT _ -> "MapTypeT"
+  | MethodT _ -> "MethodT"
+  | MixinT _ -> "MixinT"
+  | NotT _ -> "NotT"
+  | ObjAssignT _ -> "ObjAssignT"
+  | ObjFreezeT _ -> "ObjFreezeT"
+  | ObjRestT _ -> "ObjRestT"
+  | ObjSealT _ -> "ObjSealT"
+  | ObjTestT _ -> "ObjTestT"
+  | OrT _ -> "OrT"
+  | PredicateT _ -> "PredicateT"
+  | ReactCreateElementT _ -> "ReactCreateElementT"
   | RefineT _ -> "RefineT"
+  | ReposLowerT _ -> "ReposLowerT"
+  | ReposUseT _ -> "ReposUseT"
+  | SentinelPropTestT _ -> "SentinelPropTestT"
+  | SetElemT _ -> "SetElemT"
+  | SetPropT _ -> "SetPropT"
+  | SpecializeT _ -> "SpecializeT"
+  | SubstOnPredT _ -> "SubstOnPredT"
+  | SummarizeT _ -> "SummarizeT"
+  | SuperT _ -> "SuperT"
+  | TestPropT _ -> "TestPropT"
+  | ThisSpecializeT _ -> "ThisSpecializeT"
+  | UnaryMinusT _ -> "UnaryMinusT"
+  | UnifyT _ -> "UnifyT"
+  | VarianceCheckT _ -> "VarianceCheckT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
