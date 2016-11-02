@@ -14,7 +14,6 @@ _site/
 _assets/third-party-bower
 
 # Flow build artifacts are copied here:
-_assets/gen
-static/flowlib
+/_assets/gen
 /static/master
 /_data/flow_dot_js_versions.csv
