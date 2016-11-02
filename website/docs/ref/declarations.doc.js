@@ -202,9 +202,9 @@ export function isLeapYear(year: number): bool {
   declare types for modules: the ".js.flow" style.
 
   The exported types of a module may be declared in a _declaration file_ with
-  the `.js.flow` extension, colocated with the corresponding _implementation
+  the `.js.flow` extension, collocated with the corresponding _implementation
   file_ with the `.js` extension. A declaration file for a module shadows a
-  colocated implementation file for that module when typechecking other code
+  collocated implementation file for that module when typechecking other code
   that may depend on that module.
 
   For example, looking back at the file `src/LookBeforeYouLeap.js`, suppose it
