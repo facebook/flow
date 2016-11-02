@@ -122,8 +122,8 @@ function getAnnotations(text, callback, options, editor) {
         astNode.appendChild(
           document.createTextNode(JSON.stringify(ast, null, 2))
         );
-      } else if (!astNode.data.disabled) {
-        astNode.data.disabled = true;
+      } else if (!astNode.dataset.disabled) {
+        astNode.dataset.disabled = true;
         removeChildren(astNode);
         astNode.appendChild(
           document.createTextNode(
