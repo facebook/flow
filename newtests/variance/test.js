@@ -193,7 +193,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:23
            23: ({p: new A}: RWB);
-                        ^ A. This type is incompatible with
+                    ^^^^^ A. This type is incompatible with
            10:     type RWB = {p: B}
                                   ^ B
         `,
@@ -249,7 +249,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:23
            23: ({p: new A}: ROB);
-                        ^ A. This type is incompatible with
+                    ^^^^^ A. This type is incompatible with
            11:     type ROB = {+p: B}
                                    ^ B
         `,

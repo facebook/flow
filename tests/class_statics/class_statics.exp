@@ -64,7 +64,7 @@ test.js:26
  26:     return new this(); // error B ~> number
                 ^^^^^^^^^^ constructor call
  26:     return new this(); // error B ~> number
-                    ^^^^ B. This type is incompatible with the expected return type of
+                ^^^^^^^^^^ B. This type is incompatible with the expected return type of
  25:   static badCreate(): number {
                            ^^^^^^ number
 
@@ -84,7 +84,7 @@ test.js:42
 
 test.js:47
  47: (new A: typeof A);
-          ^ A. This type is incompatible with
+      ^^^^^ A. This type is incompatible with
   1: class A {
            ^ class type: A
 

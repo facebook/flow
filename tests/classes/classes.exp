@@ -20,7 +20,7 @@ D.js:3
   3: new E().x
              ^ property `x`. Property not found in
   3: new E().x
-         ^ E
+     ^^^^^^^ E
 
 class_shapes.js:4
   4:   a: string;    // exists in TestClass

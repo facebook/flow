@@ -2115,10 +2115,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         )
       )
 
-    | (_, ObjTestT(_, default, u)) ->
+    | (_, ObjTestT(reason_op, default, u)) ->
+      let u = ReposLowerT(reason_op, UseT (UnknownUse, u)) in
       if object_like l
-      then rec_flow_t cx trace (l, u)
-      else rec_flow_t cx trace (default, u)
+      then rec_flow cx trace (l, u)
+      else rec_flow cx trace (default, u)
 
     (*****************************)
     (* upper and lower any types *)
@@ -3419,7 +3420,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         replace_reason_const RConstructorReturn (reason_of_t this) in
       Ops.push reason_op;
       (* call this.constructor(args) *)
-      let ret = mk_tvar_where cx reason_o (fun t ->
+      let ret = mk_tvar_where cx reason_op (fun t ->
         let funtype = mk_methodtype this args t in
         rec_flow cx trace (
           this,
@@ -3427,7 +3428,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         );
       ) in
       (* return this *)
-      rec_flow cx trace (ret, ObjTestT(reason_o, this, t));
+      rec_flow cx trace (ret, ObjTestT(reason_op, this, t));
       Ops.pop ();
 
     (****************************************************************)

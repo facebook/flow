@@ -84,7 +84,7 @@ es6modules.js:63
  63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
                            ^^^^^^^^^^^ property `doesntExist`. Property not found in
  63: new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
-         ^^^^^^^^^^^^^^^ Test
+     ^^^^^^^^^^^^^^^^^^^^^ Test
 
 es6modules.js:65
  65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string

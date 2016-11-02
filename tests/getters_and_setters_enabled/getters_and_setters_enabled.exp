@@ -90,7 +90,7 @@ object.js:51
 
 object.js:56
  56: obj.exampleOfOrderOfGetterAndSetter = new C(); // Error C ~> B
-                                               ^ C. This type is incompatible with
+                                           ^^^^^^^ C. This type is incompatible with
  29:   set exampleOfOrderOfGetterAndSetter(x: B) {},
                                               ^ B
 
