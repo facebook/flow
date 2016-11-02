@@ -18,19 +18,13 @@ sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
            ^^^^^^^^^^^^^^^ function call. Function cannot be called on
  14:   if ((pred + 1)("s")) {
-            ^^^^^^^^ string
+            ^^^^^^^^ number
 
 sanity-invalid-calls.js:14
  14:   if ((pred + 1)("s")) {
             ^^^^ function type. This type cannot be added to
  14:   if ((pred + 1)("s")) {
-            ^^^^^^^^ string
-
-sanity-invalid-calls.js:14
- 14:   if ((pred + 1)("s")) {
-                   ^ number. This type cannot be added to
- 14:   if ((pred + 1)("s")) {
-            ^^^^^^^^ string
+                   ^ number
 
 sanity-is-string-bug.js:13
  13:     return x.join();    // error: both string and Array<string> can flow to x
@@ -72,4 +66,4 @@ sanity-return-type.js:3
 boolean
 
 
-Found 10 errors
+Found 9 errors

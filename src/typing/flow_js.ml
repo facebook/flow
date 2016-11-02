@@ -4714,7 +4714,7 @@ and needs_resolution = function
 (**
  * Addition
  *
- * Given l + r:
+ * According to the spec, given l + r:
  *  - if l or r is a string, or a Date, or an object whose
  *    valueOf() returns an object, returns a string.
  *  - otherwise, returns a number
@@ -4725,6 +4725,13 @@ and needs_resolution = function
  * easily enumerate those things, this implementation inverts the check:
  * anything that is a number, boolean, null or undefined is treated as a
  * number; everything else is a string.
+ *
+ * However, if l or r is a number and the other side is invalid, then we assume
+ * you were going for a number; generate an error on the invalid side; and flow
+ * `number` out as the result of the addition, even though at runtime it will be
+ * a string. Fixing the error will make the result type correct. The alternative
+ * is that we would error on both l and r, saying neither is compatible with
+ * `string`.
  *
  * We are less permissive than the spec when it comes to string coersion:
  * only numbers can be coerced, to allow things like `num + '%'`.
@@ -4752,9 +4759,25 @@ and flow_addition cx trace reason l r u =
     let reasons = FlowError.ordered_reasons r (UseT (UnknownUse, l)) in
     add_output cx trace (FlowError.EAddition reasons)
 
-  | ((NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _),
-     (NumT _ | SingletonNumT _ | BoolT _ | SingletonBoolT _ | NullT _ | VoidT _)) ->
+  | (NumT _ | BoolT _ | NullT _ | VoidT _),
+    (NumT _ | BoolT _ | NullT _ | VoidT _) ->
     rec_flow_t cx trace (NumT.why reason, u)
+
+  | StrT _, _ ->
+    rec_flow cx trace (r, UseT (Addition, l));
+    rec_flow cx trace (StrT.why reason, UseT (UnknownUse, u));
+
+  | _, StrT _ ->
+    rec_flow cx trace (l, UseT (Addition, r));
+    rec_flow cx trace (StrT.why reason, UseT (UnknownUse, u));
+
+  | NumT _, _ ->
+    rec_flow cx trace (r, UseT (Addition, l));
+    rec_flow cx trace (NumT.why reason, UseT (UnknownUse, u));
+
+  | _, NumT _ ->
+    rec_flow cx trace (l, UseT (Addition, r));
+    rec_flow cx trace (NumT.why reason, UseT (UnknownUse, u));
 
   | (_, _) ->
     let fake_str = StrT.why reason in

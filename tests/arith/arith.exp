@@ -18,105 +18,109 @@ Arith.js:16
  16:   str(z+y); // error
            ^ object literal. This type cannot be added to
  16:   str(z+y); // error
-           ^^^ string
+             ^ string
 
-Arith.js:22
- 22:   num(x+z);
-       ^^^^^^^^ function call
- 22:   num(x+z);
-           ^^^ string. This type is incompatible with
-  4: function num(x:number) { }
-                    ^^^^^^ number
-
-Arith.js:22
- 22:   num(x+z);
-           ^ number. This type cannot be added to
- 22:   num(x+z);
-           ^^^ string
-
-Arith.js:22
- 22:   num(x+z);
-             ^ object literal. This type cannot be added to
- 22:   num(x+z);
-           ^^^ string
-
-Arith.js:62
- 62: str("foo" + true); // error
+Arith.js:56
+ 56: str("foo" + true); // error
                  ^^^^ boolean. This type cannot be added to
- 62: str("foo" + true); // error
-         ^^^^^^^^^^^^ string
+ 56: str("foo" + true); // error
+         ^^^^^ string
 
-Arith.js:63
- 63: str(true + "foo"); // error
+Arith.js:57
+ 57: str(true + "foo"); // error
          ^^^^ boolean. This type cannot be added to
- 63: str(true + "foo"); // error
-         ^^^^^^^^^^^^ string
+ 57: str(true + "foo"); // error
+                ^^^^^ string
 
-Arith.js:64
- 64: str("foo" + null); // error
+Arith.js:58
+ 58: str("foo" + null); // error
                  ^^^^ null. This type cannot be added to
- 64: str("foo" + null); // error
-         ^^^^^^^^^^^^ string
+ 58: str("foo" + null); // error
+         ^^^^^ string
+
+Arith.js:59
+ 59: str(null + "foo"); // error
+         ^^^^ null. This type cannot be added to
+ 59: str(null + "foo"); // error
+                ^^^^^ string
+
+Arith.js:60
+ 60: str("foo" + undefined); // error
+                 ^^^^^^^^^ undefined. This type cannot be added to
+ 60: str("foo" + undefined); // error
+         ^^^^^ string
+
+Arith.js:61
+ 61: str(undefined + "foo"); // error
+         ^^^^^^^^^ undefined. This type cannot be added to
+ 61: str(undefined + "foo"); // error
+                     ^^^^^ string
 
 Arith.js:65
- 65: str(null + "foo"); // error
-         ^^^^ null. This type cannot be added to
- 65: str(null + "foo"); // error
-         ^^^^^^^^^^^^ string
-
-Arith.js:66
- 66: str("foo" + undefined); // error
-                 ^^^^^^^^^ undefined. This type cannot be added to
- 66: str("foo" + undefined); // error
-         ^^^^^^^^^^^^^^^^^ string
-
-Arith.js:67
- 67: str(undefined + "foo"); // error
-         ^^^^^^^^^ undefined. This type cannot be added to
- 67: str(undefined + "foo"); // error
-         ^^^^^^^^^^^^^^^^^ string
-
-Arith.js:71
- 71:     (x + y); // error
+ 65:     (x + y); // error
           ^ mixed. This type cannot be added to
- 71:     (x + y); // error
+ 65:     (x + y); // error
               ^ mixed
 
-Arith.js:72
- 72:     (x + 0); // error
+Arith.js:66
+ 66:     (x + 0); // error
           ^ mixed. This type cannot be added to
- 72:     (x + 0); // error
+ 66:     (x + 0); // error
               ^ number
 
-Arith.js:73
- 73:     (0 + x); // error
+Arith.js:67
+ 67:     (0 + x); // error
               ^ mixed. This type cannot be added to
- 73:     (0 + x); // error
+ 67:     (0 + x); // error
           ^ number
 
-Arith.js:74
- 74:     (x + ""); // error
+Arith.js:68
+ 68:     (x + ""); // error
           ^ mixed. This type cannot be added to
- 74:     (x + ""); // error
+ 68:     (x + ""); // error
               ^^ string
 
-Arith.js:75
- 75:     ("" + x); // error
+Arith.js:69
+ 69:     ("" + x); // error
                ^ mixed. This type cannot be added to
- 75:     ("" + x); // error
+ 69:     ("" + x); // error
           ^^ string
 
-Arith.js:76
- 76:     (x + {}); // error
+Arith.js:70
+ 70:     (x + {}); // error
           ^ mixed. This type cannot be added to
- 76:     (x + {}); // error
+ 70:     (x + {}); // error
               ^^ object literal
 
-Arith.js:77
- 77:     ({} + x); // error
+Arith.js:71
+ 71:     ({} + x); // error
                ^ mixed. This type cannot be added to
- 77:     ({} + x); // error
+ 71:     ({} + x); // error
           ^^ object literal
+
+Arith.js:78
+ 78:     ((1 + {}): number); // error: object !~> number
+               ^^ object literal. This type cannot be added to
+ 78:     ((1 + {}): number); // error: object !~> number
+           ^ number
+
+Arith.js:79
+ 79:     (({} + 1): number); // error: object !~> number
+           ^^ object literal. This type cannot be added to
+ 79:     (({} + 1): number); // error: object !~> number
+                ^ number
+
+Arith.js:80
+ 80:     (("1" + {}): string); // error: object !~> string
+                 ^^ object literal. This type cannot be added to
+ 80:     (("1" + {}): string); // error: object !~> string
+           ^^^ string
+
+Arith.js:81
+ 81:     (({} + "1"): string); // error: object !~> string
+           ^^ object literal. This type cannot be added to
+ 81:     (({} + "1"): string); // error: object !~> string
+                ^^^ string
 
 exponent.js:7
   7: y **= 2; // error
@@ -275,4 +279,4 @@ relational.js:20
       ^^^^^^^^^ undefined
 
 
-Found 45 errors
+Found 46 errors
