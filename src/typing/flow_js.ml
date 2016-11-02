@@ -4407,6 +4407,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, AssertBinaryInRHST _ ->
       add_output cx trace (FlowError.EBinaryInRHS (reason_of_t l))
 
+    (******************)
+    (* `for...in` RHS *)
+    (******************)
+
+    (* objects are allowed. arrays _could_ be, but are not because it's
+       generally safer to use a for or for...of loop instead. *)
+    | _, AssertForInRHST _ when object_like l -> ()
+    | (AnyObjT _ | ObjProtoT _), AssertForInRHST _ -> ()
+
+    (* null/undefined are allowed *)
+    | (NullT _ | VoidT _), AssertForInRHST _ -> ()
+
+    | _, AssertForInRHST _ ->
+      add_output cx trace (FlowError.EForInRHS (reason_of_t l))
+
     (**************************************)
     (* types may be refined by predicates *)
     (**************************************)

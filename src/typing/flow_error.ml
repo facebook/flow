@@ -101,6 +101,7 @@ type error_message =
   | EBinaryInLHS of reason
   | EBinaryInRHS of reason
   | EArithmeticOperand of reason
+  | EForInRHS of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -864,6 +865,12 @@ end = struct
         let msg =
           "The right-hand side of an `in` expression must be an \
            object or array." in
+        mk_error [mk_info reason [msg]]
+
+    | EForInRHS reason ->
+        let msg =
+          "The right-hand side of a `for...in` statement must be an \
+           object, null or undefined." in
         mk_error [mk_info reason [msg]]
 
   let add_output cx ?trace msg =

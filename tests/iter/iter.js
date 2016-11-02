@@ -30,3 +30,8 @@ for (var x in undefined) {
 for (var x in null) {
     foo(x); // unreachable
 }
+
+for (var y in this) {
+    // regression test to make sure `in this` doesn't fatal. it's currently
+    // allowed, even though we can't actually enumerate all the keys on `this`.
+}

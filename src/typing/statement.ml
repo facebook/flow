@@ -1329,12 +1329,8 @@ and statement cx = Ast.Statement.(
       let reason = mk_reason (RCustom "for-in") loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
-      let t = expression cx right in
-      let o =
-        let desc = RCustom "iteration expected on object" in
-        Flow.mk_object cx (mk_reason desc loc)
-      in
-      Flow.flow_t cx (t, MaybeT o); (* null/undefined are allowed *)
+
+      Flow.flow cx (expression cx right, AssertForInRHST reason);
 
       Env.in_lex_scope cx (fun () ->
 

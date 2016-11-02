@@ -341,6 +341,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | AssertArithmeticOperandT _ -> []
   | AssertBinaryInLHST _ -> []
   | AssertBinaryInRHST _ -> []
+  | AssertForInRHST _ -> []
 
   | BecomeT (_, t) -> [
       "result", _json_of_t json_cx t
@@ -1358,6 +1359,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertArithmeticOperandT _ -> p t
   | AssertBinaryInLHST _ -> p t
   | AssertBinaryInRHST _ -> p t
+  | AssertForInRHST _ -> p t
   | AssertImportIsValueT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t

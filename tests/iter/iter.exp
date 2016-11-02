@@ -1,8 +1,6 @@
 iter.js:7
   7: for (var k in a) {
-                   ^ array literal. This type is incompatible with
-  7: for (var k in a) {
-     ^ iteration expected on object
+                   ^ array literal. The right-hand side of a `for...in` statement must be an object, null or undefined.
 
 iter.js:8
   8:     foo(a[k]);
@@ -12,9 +10,7 @@ iter.js:8
 
 iter.js:22
  22: for (var n in (d = a)) {
-                        ^ array literal. This type is incompatible with
- 22: for (var n in (d = a)) {
-     ^ iteration expected on object
+                        ^ array literal. The right-hand side of a `for...in` statement must be an object, null or undefined.
 
 iter.js:23
  23:     foo(d[n]);

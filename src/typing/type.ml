@@ -334,6 +334,7 @@ module rec TypeTerm : sig
     | AssertArithmeticOperandT of reason
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
+    | AssertForInRHST of reason
 
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
@@ -1481,6 +1482,7 @@ and reason_of_use_t = function
   | AssertArithmeticOperandT reason -> reason
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
+  | AssertForInRHST reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
   | BindT (reason, _) -> reason
@@ -1629,6 +1631,7 @@ and mod_reason_of_use_t f = function
   | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
+  | AssertForInRHST reason -> AssertForInRHST (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
   | BindT (reason, ft) -> BindT (f reason, ft)
@@ -1824,6 +1827,7 @@ let string_of_use_ctor = function
   | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
   | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
+  | AssertForInRHST _ -> "AssertForInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"

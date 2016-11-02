@@ -209,6 +209,7 @@ class ['a] t = object(self)
   | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
+  | AssertForInRHST _
   | AssertImportIsValueT (_, _)
   | BecomeT (_, _)
   | BindT (_, _)

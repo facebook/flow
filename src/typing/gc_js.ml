@@ -192,6 +192,7 @@ and gc_use cx state = function
   | AssertArithmeticOperandT _ -> ()
   | AssertBinaryInLHST _ -> ()
   | AssertBinaryInRHST _ -> ()
+  | AssertForInRHST _ -> ()
   | AssertImportIsValueT _ -> ()
   | BecomeT (_, t) -> gc cx state t
   | BindT(_, funtype) -> gc_funtype cx state funtype

@@ -261,6 +261,7 @@ and parts_of_use_t cx = function
 | AssertArithmeticOperandT _ -> []
 | AssertBinaryInLHST _ -> []
 | AssertBinaryInRHST _ -> []
+| AssertForInRHST _ -> []
 | AssertImportIsValueT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
 | BindT (_, funtype) -> parts_of_funtype funtype
