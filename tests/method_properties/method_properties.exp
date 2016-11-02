@@ -1,8 +1,8 @@
 test.js:5
   5:   qux() { this.constructor.x; }
                                 ^ property `x`. Property not found in
-  1: class C {
-           ^ statics of C
+  5:   qux() { this.constructor.x; }
+               ^^^^ statics of C
 
 test.js:7
   7: C.x;

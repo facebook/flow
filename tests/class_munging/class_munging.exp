@@ -1,8 +1,8 @@
 with_munging.js:13
  13:     (this._method(): string); // error
                ^^^^^^^ property `_method`. Property not found in
- 11: class Bar extends Foo {
-           ^^^ Bar
+ 13:     (this._method(): string); // error
+          ^^^^ Bar
 
 
 Found 1 error

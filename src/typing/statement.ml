@@ -2383,11 +2383,11 @@ and expression ?(is_cond=false) cx (loc, e) =
 and this_ cx r = Ast.Expression.(
   match Refinement.get cx (loc_of_reason r, This) r with
   | Some t -> t
-  | None -> Env.get_var cx (internal_name "this") r
+  | None -> Env.var_ref cx (internal_name "this") r
 )
 
 and super_ cx reason =
-  Env.get_var cx (internal_name "super") reason
+  Env.var_ref cx (internal_name "super") reason
 
 and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 

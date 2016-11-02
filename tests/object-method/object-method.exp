@@ -1,27 +1,28 @@
 test2.js:4
   4:   return this.p;
                    ^ property `p`. Property not found in
- 17: b.f(); // error, property `p` not found
-     ^ object literal
+  4:   return this.p;
+              ^^^^ object literal
 
 test3.js:4
   4:   this.m();
             ^ property `m`. Property not found in
-  9:   ({ f }).f(); // passing container object as `this`
-        ^^^^^ object literal
+  4:   this.m();
+       ^^^^ object literal
 
 test3.js:4
   4:   this.m();
             ^ property `m`. Property not found in
- 15:   o.f(); // passing o as `this`
-       ^ object type
+  4:   this.m();
+       ^^^^ object type
 
 test3.js:12
  12: bar(foo); // error, since `this` is used non-trivially in `foo`
      ^^^^^^^^ function call
   4:   this.m();
        ^^^^^^^^ call of method `m`. Method cannot be called on
-global object
+  4:   this.m();
+       ^^^^ global object
 
 
 Found 4 errors

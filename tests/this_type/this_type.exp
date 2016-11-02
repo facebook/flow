@@ -1,10 +1,8 @@
 class_expr.js:6
   6:     this.x = 123; // error: property not found (must be declared)
-         ^^^^^^ assignment of property `x`
-  6:     this.x = 123; // error: property not found (must be declared)
               ^ property `x`. Property not found in
-  4: const Thing = class Thing {
-                   ^ class expr `Thing`
+  6:     this.x = 123; // error: property not found (must be declared)
+         ^^^^ class expr `Thing`
 
 contra.js:4
   4:   next: this; // error (see below for exploit): `this` should only appear in

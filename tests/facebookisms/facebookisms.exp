@@ -25,8 +25,8 @@ test.js:6
 test.js:7
   7:     this.y = "";
               ^ property `y`. Property not found in
-  4: class Foo extends mixin(Bar) {
-           ^^^ Foo
+  7:     this.y = "";
+         ^^^^ Foo
 
 
 Found 6 errors

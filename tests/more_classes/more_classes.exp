@@ -9,8 +9,8 @@ Bar.js:15
 Foo.js:10
  10:     this.x = x;
               ^ property `x`. Property cannot be assigned on possibly undefined value
-  7: class Foo extends Qux {
-           ^^^ uninitialized this (expected super constructor call)
+ 10:     this.x = x;
+         ^^^^ uninitialized this (expected super constructor call)
 
 Foo.js:13
  13:   foo(y:string,z):number {

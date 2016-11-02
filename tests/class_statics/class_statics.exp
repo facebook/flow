@@ -63,8 +63,8 @@ test.js:19
 test.js:26
  26:     return new this(); // error B ~> number
                 ^^^^^^^^^^ constructor call
-  9: class B extends A {
-           ^ B. This type is incompatible with the expected return type of
+ 26:     return new this(); // error B ~> number
+                    ^^^^ B. This type is incompatible with the expected return type of
  25:   static badCreate(): number {
                            ^^^^^^ number
 
@@ -91,8 +91,8 @@ test.js:47
 test.js:53
  53:     this.bar(); // error
               ^^^ property `bar`. Property not found in
- 50: class E {
-           ^ statics of E
+ 53:     this.bar(); // error
+         ^^^^ statics of E
 
 test.js:54
  54:     return this.x; // error

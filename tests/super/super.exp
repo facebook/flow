@@ -1,14 +1,14 @@
 constructor.js:15
  15:     this.y; // error (no super call)
               ^ property `y`. Property cannot be accessed on possibly undefined value
- 12: class D extends A {
-           ^ uninitialized this (expected super constructor call)
+ 15:     this.y; // error (no super call)
+         ^^^^ uninitialized this (expected super constructor call)
 
 constructor.js:16
  16:     this.x; // error (no super call)
               ^ property `x`. Property cannot be accessed on possibly undefined value
- 12: class D extends A {
-           ^ uninitialized this (expected super constructor call)
+ 16:     this.x; // error (no super call)
+         ^^^^ uninitialized this (expected super constructor call)
 
 constructor.js:36
  36:     leak(this); // error (no super call yet)
@@ -29,8 +29,8 @@ constructor.js:36
 constructor.js:45
  45:     super.x; // error (no super call)
                ^ property `x`. Property cannot be accessed on possibly undefined value
- 43: class G extends A {
-           ^ uninitialized this (expected super constructor call)
+ 45:     super.x; // error (no super call)
+         ^^^^^ uninitialized this (expected super constructor call)
 
 constructor.js:69
  69:     super(this); // error (no super call yet)
@@ -43,8 +43,8 @@ constructor.js:69
 constructor.js:83
  83:     super(() => this.foo()); // error (no super call yet)
                      ^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
- 81: class J extends J_ {
-           ^ uninitialized this (expected super constructor call)
+ 83:     super(() => this.foo()); // error (no super call yet)
+                     ^^^^ uninitialized this (expected super constructor call)
 
 super.js:10
  10:     super(x);
@@ -63,8 +63,8 @@ super.js:14
 super.js:15
  15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
                 ^^^^^^^^^^^ property `doesntExist`. Property not found in
-  8: class B extends A {
-                     ^ statics of A
+ 15:     (super.doesntExist()); // error, A doesn't have a doesntExist method
+          ^^^^^ statics of A
 
 super.js:19
  19:     super.f(0);

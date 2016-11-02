@@ -17,12 +17,14 @@ This.js:36
                 ^^^^ function call
  29:   return this.x
                    ^ property `x`. Property cannot be accessed on
-global object
+ 29:   return this.x
+              ^^^^ global object
 
 This.js:41
  41:   return this.x
                    ^ property `x`. Property cannot be accessed on
-global object
+ 41:   return this.x
+              ^^^^ global object
 
 This.js:49
  49:     return a2()
@@ -43,7 +45,14 @@ This.js:56
                 ^^^^ function call
  48:     var a2 = () => { return this.x };
                                       ^ property `x`. Property cannot be accessed on
-global object
+ 48:     var a2 = () => { return this.x };
+                                 ^^^^ global object
+
+This.js:58
+ 58: (this: void);
+      ^^^^ global object. This type is incompatible with
+ 58: (this: void);
+            ^^^^ undefined
 
 arrows.js:16
  16: (j: D); // error, since return type of bar is C, not the type of `this`
@@ -60,4 +69,4 @@ arrows.js:24
               ^^^^^^ number
 
 
-Found 9 errors
+Found 10 errors

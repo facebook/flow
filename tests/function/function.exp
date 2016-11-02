@@ -1,20 +1,8 @@
 apply.js:2
   2:   return this.length; // expect []/"" this
                    ^^^^^^ property `length`. Property not found in
-  9: test.apply(0, ["", 0]); // error: lookup `length` on Number
-                ^ Number
-
-apply.js:2
   2:   return this.length; // expect []/"" this
-                   ^^^^^^ property `length`. Property not found in
- 32: (test.call.apply(test, [0, 123, 'foo']): void);
-                             ^ Number
-
-apply.js:2
-  2:   return this.length; // expect []/"" this
-                   ^^^^^^ property `length`. Property not found in
- 37: (test.bind.apply(test, [0, 123]): (b: number) => number);
-                             ^ Number
+              ^^^^ Number
 
 apply.js:12
  12: test.apply("", [""]); // error: string ~> number
@@ -105,14 +93,8 @@ bind.js:7
 call.js:4
   4:   return this.length; // expect []/"" this
                    ^^^^^^ property `length`. Property not found in
- 11: test.call(0, "", 0); // error: lookup `length` on Number
-               ^ Number
-
-call.js:4
   4:   return this.length; // expect []/"" this
-                   ^^^^^^ property `length`. Property not found in
- 30: (test.apply.call(test, 0, [0, 'foo']): number);
-                            ^ Number
+              ^^^^ Number
 
 call.js:14
  14: test.call("", ""); // error: string ~> number
@@ -271,4 +253,4 @@ rest.js:17
                                             ^ T. rest parameter should have an explicit array type (or type `any`)
 
 
-Found 40 errors
+Found 37 errors
