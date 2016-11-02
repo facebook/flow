@@ -96,42 +96,11 @@ function removeChildren(node) {
 }
 
 function getAnnotations(text, callback, options, editor) {
-  const errorsNode = options.errorsNode;
-  const jsonNode = options.jsonNode;
-  const astNode = options.astNode;
-  const flowReady = editor.getOption('flow');
-  flowReady.then(function(flow) {
+  const flow = editor.getOption('flow');
+  Promise.resolve(flow).then(flow => {
     var errors = flow.checkContent('-', text);
 
-    if (errorsNode) {
-      removeChildren(errorsNode);
-      errorsNode.appendChild(printErrors(errors, editor));
-    }
-
-    if (jsonNode) {
-      removeChildren(jsonNode);
-      jsonNode.appendChild(
-        document.createTextNode(JSON.stringify(errors, null, 2))
-      );
-    }
-
-    if (astNode) {
-      if (flow.parse) {
-        let ast = flow.parse(text, {});
-        removeChildren(astNode);
-        astNode.appendChild(
-          document.createTextNode(JSON.stringify(ast, null, 2))
-        );
-      } else if (!astNode.dataset.disabled) {
-        astNode.dataset.disabled = true;
-        removeChildren(astNode);
-        astNode.appendChild(
-          document.createTextNode(
-            "AST output is not supported in this version of Flow."
-          )
-        );
-      }
-    }
+    CodeMirror.signal(editor, 'flowErrors', errors);
 
     var lint = errors.map(function(err) {
       var messages = err.message;
@@ -301,7 +270,7 @@ exports.createEditor = function createEditor(
       lineNumbers: true,
       mode: "jsx",
       flow: flowReady,
-      lint: { getAnnotations, errorsNode, jsonNode, astNode }
+      lint: getAnnotations
     });
 
     editor.on('changes', () => {
@@ -309,6 +278,41 @@ exports.createEditor = function createEditor(
       const encoded = LZString.compressToEncodedURIComponent(value);
       history.replaceState(undefined, undefined, `#0${encoded}`);
       localStorage.setItem('tryFlowLastContent', location.hash);
+    });
+
+    editor.on('flowErrors', errors => {
+      if (errorsNode) {
+        removeChildren(errorsNode);
+        errorsNode.appendChild(printErrors(errors, editor));
+      }
+
+      if (jsonNode) {
+        removeChildren(jsonNode);
+        jsonNode.appendChild(
+          document.createTextNode(JSON.stringify(errors, null, 2))
+        );
+      }
+
+      if (astNode) {
+        flowReady.then(flow => {
+          if (flow.parse) {
+            let ast = flow.parse(editor.getValue(), {});
+            removeChildren(astNode);
+            astNode.appendChild(
+              document.createTextNode(JSON.stringify(ast, null, 2))
+            );
+            astNode.dataset.disabled = "false";
+          } else if (astNode.dataset.disabled !== "true") {
+            astNode.dataset.disabled = "true";
+            removeChildren(astNode);
+            astNode.appendChild(
+              document.createTextNode(
+                "AST output is not supported in this version of Flow."
+              )
+            );
+          }
+        });
+      }
     });
 
     versionTabNode.addEventListener('change', function(evt) {
