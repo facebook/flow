@@ -19,35 +19,22 @@ gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB8
 \curl -sSL https://get.rvm.io | bash -s stable --ruby=2.2
 ```
 
-### Install Jekyll and its dependencies
+### Serve the Site
 
 ```
 # from this directory (website/)
-gem install bundler
-bundle install
+make serve
 ```
 
-### Install JS dependencies
+This will fire up a web server at http://localhost:4000 by default. To access it from other machines, add `--host ::` (all interfaces, including IPv6).
+
+To automatically rebuild the site by watching the filesystem for changes, run:
 
 ```
-npm install
-node_modules/.bin/bower install
-rm -f "_assets/gen" "static/flowlib"
-mkdir -p "_assets/gen"
-ln -sf "../../../bin/flow.js" "_assets/gen/flow.js"
-ln -sf "../../lib" "static/flowlib"
+make watch
 ```
 
-### Build and Run
-
-```
-(cd ..; make js)
-bundle exec jekyll serve -w
-```
-
-This will fire up a web server at http://localhost:8000 by default. To access it from other machines, add `--host ::` (all interfaces, including IPv6).
-
-The `-w` flag watches the filesystem for changes, so pages will rebuild on save. It takes a few seconds, but just refresh the page to see changes.
+It takes a few seconds, but just refresh the page to see changes.
 
 ## Publishing the Website
 

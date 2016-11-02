@@ -6,15 +6,19 @@ set +x
 PAGES_CHECKOUT="$HOME/flowtype.org"
 export BUNDLE_GEMFILE="${TRAVIS_BUILD_DIR}/website/Gemfile"
 
+CACHE_ROOT="$HOME/.flow_cache"
+BOWER_CACHE="$CACHE_ROOT/.bower"
+mkdir -p "$BOWER_CACHE"
+
 printf "travis_fold:start:installing_ruby\nInstalling Ruby\n"
 source "$HOME/.rvm/scripts/rvm"
 rvm use 2.2 --install --binary
 gem install --no-rdoc --no-ri bundler
 printf "travis_fold:end:installing_ruby\n"
 
-printf "travis_fold:start:installing_jekyll\nInstalling Jekyll\n"
-bundle install
-printf "travis_fold:end:installing_jekyll\n"
+printf "travis_fold:start:website_deps\nInstalling website deps\n"
+(cd website && BOWER_CACHE="$BOWER_CACHE" make deps)
+printf "travis_fold:end:website_deps\n"
 
 printf "travis_fold:start:jekyll_build\nBuilding Jekyll site\n"
 GEN_DIR=$([[ "$TRAVIS_TAG" = "" ]] && echo "master" || echo "$TRAVIS_TAG")
