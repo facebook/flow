@@ -331,6 +331,9 @@ module rec TypeTerm : sig
     (* unary minus operator on numbers, allows negative number literals *)
     | UnaryMinusT of reason * t
 
+    | AssertBinaryInLHST of reason
+    | AssertBinaryInRHST of reason
+
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
 
@@ -1474,6 +1477,8 @@ and reason_of_use_t = function
   | AndT (reason, _, _) -> reason
   | ApplyT (reason, _, _) -> reason
   | ArrRestT (reason, _, _) -> reason
+  | AssertBinaryInLHST reason -> reason
+  | AssertBinaryInRHST reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
   | BindT (reason, _) -> reason
@@ -1619,6 +1624,8 @@ and mod_reason_of_use_t f = function
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
   | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
+  | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
+  | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
   | BindT (reason, ft) -> BindT (f reason, ft)
@@ -1811,6 +1818,8 @@ let string_of_use_ctor = function
   | AndT _ -> "AndT"
   | ApplyT _ -> "ApplyT"
   | ArrRestT _ -> "ArrRestT"
+  | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
+  | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"

@@ -4381,6 +4381,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (num, t_out)
 
+    (************************)
+    (* binary `in` operator *)
+    (************************)
+
+    (* the left-hand side of a `(x in y)` expression is a string or number
+       TODO: also, symbols *)
+    | StrT _, AssertBinaryInLHST _ -> ()
+    | NumT _, AssertBinaryInLHST _ -> ()
+    | _, AssertBinaryInLHST _ ->
+      add_output cx trace (FlowError.EBinaryInLHS (reason_of_t l))
+
+    (* the right-hand side of a `(x in y)` expression must be object-like *)
+    | ArrT _, AssertBinaryInRHST _ -> ()
+    | _, AssertBinaryInRHST _ when object_like l -> ()
+    | _, AssertBinaryInRHST _ ->
+      add_output cx trace (FlowError.EBinaryInRHS (reason_of_t l))
+
     (**************************************)
     (* types may be refined by predicates *)
     (**************************************)

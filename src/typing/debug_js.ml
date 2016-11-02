@@ -338,6 +338,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
+  | AssertBinaryInLHST _ -> []
+  | AssertBinaryInRHST _ -> []
+
   | BecomeT (_, t) -> [
       "result", _json_of_t json_cx t
     ]
@@ -1351,6 +1354,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | AndT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | ApplyT (_, f, _) -> p ~extra:(kid f) t
   | ArrRestT _ -> p t
+  | AssertBinaryInLHST _ -> p t
+  | AssertBinaryInRHST _ -> p t
   | AssertImportIsValueT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t

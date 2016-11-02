@@ -189,6 +189,8 @@ and gc_use cx state = function
   | AndT (_, t1, t2) -> gc cx state t1; gc cx state t2
   | ApplyT(_, l, funtype) -> gc cx state l; gc_funtype cx state funtype
   | ArrRestT (_, _, t) -> gc cx state t
+  | AssertBinaryInLHST _ -> ()
+  | AssertBinaryInRHST _ -> ()
   | AssertImportIsValueT _ -> ()
   | BecomeT (_, t) -> gc cx state t
   | BindT(_, funtype) -> gc_funtype cx state funtype

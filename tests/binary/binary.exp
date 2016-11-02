@@ -1,244 +1,46 @@
 in.js:27
  27:     ('foo' in 123); // error
-                   ^^^ number. This type is incompatible with
- 27:     ('foo' in 123); // error
-                   ^^^ union: RHS of `in` operator(s)
-  Member 1:
-   27:     ('foo' in 123); // error
-                     ^^^ RHS of `in` operator
-  Error:
-   27:     ('foo' in 123); // error
-                     ^^^ number. This type is incompatible with
-   27:     ('foo' in 123); // error
-                     ^^^ RHS of `in` operator
-  Member 2:
-   27:     ('foo' in 123); // error
-                     ^^^ RHS of `in` operator
-  Error:
-   27:     ('foo' in 123); // error
-                     ^^^ number. This type is incompatible with
-   27:     ('foo' in 123); // error
-                     ^^^ RHS of `in` operator
+                   ^^^ number. The right-hand side of an `in` expression must be an object or array.
 
 in.js:28
  28:     ('foo' in 'bar'); // error
-                   ^^^^^ string. This type is incompatible with
- 28:     ('foo' in 'bar'); // error
-                   ^^^^^ union: RHS of `in` operator(s)
-  Member 1:
-   28:     ('foo' in 'bar'); // error
-                     ^^^^^ RHS of `in` operator
-  Error:
-   28:     ('foo' in 'bar'); // error
-                     ^^^^^ string. This type is incompatible with
-   28:     ('foo' in 'bar'); // error
-                     ^^^^^ RHS of `in` operator
-  Member 2:
-   28:     ('foo' in 'bar'); // error
-                     ^^^^^ RHS of `in` operator
-  Error:
-   28:     ('foo' in 'bar'); // error
-                     ^^^^^ string. This type is incompatible with
-   28:     ('foo' in 'bar'); // error
-                     ^^^^^ RHS of `in` operator
+                   ^^^^^ string. The right-hand side of an `in` expression must be an object or array.
 
 in.js:29
  29:     ('foo' in void 0); // error
-                   ^^^^^^ undefined. This type is incompatible with
- 29:     ('foo' in void 0); // error
-                   ^^^^^^ union: RHS of `in` operator(s)
-  Member 1:
-   29:     ('foo' in void 0); // error
-                     ^^^^^^ RHS of `in` operator
-  Error:
-   29:     ('foo' in void 0); // error
-                     ^^^^^^ undefined. This type is incompatible with
-   29:     ('foo' in void 0); // error
-                     ^^^^^^ RHS of `in` operator
-  Member 2:
-   29:     ('foo' in void 0); // error
-                     ^^^^^^ RHS of `in` operator
-  Error:
-   29:     ('foo' in void 0); // error
-                     ^^^^^^ undefined. This type is incompatible with
-   29:     ('foo' in void 0); // error
-                     ^^^^^^ RHS of `in` operator
+                   ^^^^^^ undefined. The right-hand side of an `in` expression must be an object or array.
 
 in.js:30
  30:     ('foo' in null); // error
-                   ^^^^ null. This type is incompatible with
- 30:     ('foo' in null); // error
-                   ^^^^ union: RHS of `in` operator(s)
-  Member 1:
-   30:     ('foo' in null); // error
-                     ^^^^ RHS of `in` operator
-  Error:
-   30:     ('foo' in null); // error
-                     ^^^^ null. This type is incompatible with
-   30:     ('foo' in null); // error
-                     ^^^^ RHS of `in` operator
-  Member 2:
-   30:     ('foo' in null); // error
-                     ^^^^ RHS of `in` operator
-  Error:
-   30:     ('foo' in null); // error
-                     ^^^^ null. This type is incompatible with
-   30:     ('foo' in null); // error
-                     ^^^^ RHS of `in` operator
+                   ^^^^ null. The right-hand side of an `in` expression must be an object or array.
 
 in.js:35
  35:     (null in {}); // error
-          ^^^^ null. This type is incompatible with
- 35:     (null in {}); // error
-          ^^^^ union: string | number
-  Member 1:
-   35:     (null in {}); // error
-            ^^^^ string
-  Error:
-   35:     (null in {}); // error
-            ^^^^ null. This type is incompatible with
-   35:     (null in {}); // error
-            ^^^^ string
-  Member 2:
-   35:     (null in {}); // error
-            ^^^^ number
-  Error:
-   35:     (null in {}); // error
-            ^^^^ null. This type is incompatible with
-   35:     (null in {}); // error
-            ^^^^ number
+          ^^^^ null. The left-hand side of an `in` expression must be a string or number.
 
 in.js:36
  36:     (void 0 in {}); // error
-          ^^^^^^ undefined. This type is incompatible with
- 36:     (void 0 in {}); // error
-          ^^^^^^ union: string | number
-  Member 1:
-   36:     (void 0 in {}); // error
-            ^^^^^^ string
-  Error:
-   36:     (void 0 in {}); // error
-            ^^^^^^ undefined. This type is incompatible with
-   36:     (void 0 in {}); // error
-            ^^^^^^ string
-  Member 2:
-   36:     (void 0 in {}); // error
-            ^^^^^^ number
-  Error:
-   36:     (void 0 in {}); // error
-            ^^^^^^ undefined. This type is incompatible with
-   36:     (void 0 in {}); // error
-            ^^^^^^ number
+          ^^^^^^ undefined. The left-hand side of an `in` expression must be a string or number.
 
 in.js:37
  37:     ({} in {}); // error
-          ^^ object literal. This type is incompatible with
- 37:     ({} in {}); // error
-          ^^ union: string | number
-  Member 1:
-   37:     ({} in {}); // error
-            ^^ string
-  Error:
-   37:     ({} in {}); // error
-            ^^ object literal. This type is incompatible with
-   37:     ({} in {}); // error
-            ^^ string
-  Member 2:
-   37:     ({} in {}); // error
-            ^^ number
-  Error:
-   37:     ({} in {}); // error
-            ^^ object literal. This type is incompatible with
-   37:     ({} in {}); // error
-            ^^ number
+          ^^ object literal. The left-hand side of an `in` expression must be a string or number.
 
 in.js:38
  38:     ([] in {}); // error
-          ^^ empty array literal. This type is incompatible with
- 38:     ([] in {}); // error
-          ^^ union: string | number
-  Member 1:
-   38:     ([] in {}); // error
-            ^^ string
-  Error:
-   38:     ([] in {}); // error
-            ^^ empty array literal. This type is incompatible with
-   38:     ([] in {}); // error
-            ^^ string
-  Member 2:
-   38:     ([] in {}); // error
-            ^^ number
-  Error:
-   38:     ([] in {}); // error
-            ^^ empty array literal. This type is incompatible with
-   38:     ([] in {}); // error
-            ^^ number
+          ^^ empty array literal. The left-hand side of an `in` expression must be a string or number.
 
 in.js:39
  39:     (false in []); // error
-          ^^^^^ boolean. This type is incompatible with
- 39:     (false in []); // error
-          ^^^^^ union: string | number
-  Member 1:
-   39:     (false in []); // error
-            ^^^^^ string
-  Error:
-   39:     (false in []); // error
-            ^^^^^ boolean. This type is incompatible with
-   39:     (false in []); // error
-            ^^^^^ string
-  Member 2:
-   39:     (false in []); // error
-            ^^^^^ number
-  Error:
-   39:     (false in []); // error
-            ^^^^^ boolean. This type is incompatible with
-   39:     (false in []); // error
-            ^^^^^ number
+          ^^^^^ boolean. The left-hand side of an `in` expression must be a string or number.
 
 in.js:44
  44:     if ('foo' in 123) {} // error
-                      ^^^ number. This type is incompatible with
- 44:     if ('foo' in 123) {} // error
-                      ^^^ union: RHS of `in` operator(s)
-  Member 1:
-   44:     if ('foo' in 123) {} // error
-                        ^^^ RHS of `in` operator
-  Error:
-   44:     if ('foo' in 123) {} // error
-                        ^^^ number. This type is incompatible with
-   44:     if ('foo' in 123) {} // error
-                        ^^^ RHS of `in` operator
-  Member 2:
-   44:     if ('foo' in 123) {} // error
-                        ^^^ RHS of `in` operator
-  Error:
-   44:     if ('foo' in 123) {} // error
-                        ^^^ number. This type is incompatible with
-   44:     if ('foo' in 123) {} // error
-                        ^^^ RHS of `in` operator
+                      ^^^ number. The right-hand side of an `in` expression must be an object or array.
 
 in.js:45
  45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-             ^^^^^^ boolean literal `false`. This type is incompatible with
- 45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-             ^^^^^^ union: string | number
-  Member 1:
-   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ string
-  Error:
-   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ boolean literal `false`. This type is incompatible with
-   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ string
-  Member 2:
-   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ number
-  Error:
-   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ boolean literal `false`. This type is incompatible with
-   45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
-               ^^^^^^ number
+             ^^^^^^ boolean literal `false`. The left-hand side of an `in` expression must be a string or number.
 
 
 Found 11 errors

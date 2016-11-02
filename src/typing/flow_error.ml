@@ -98,6 +98,8 @@ type error_message =
   | EIndeterminateModuleType of reason
   | EUnreachable of Loc.t
   | EInvalidTypeof of Loc.t * string
+  | EBinaryInLHS of reason
+  | EBinaryInRHS of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -845,6 +847,19 @@ end = struct
           spf "string literal `%s`" typename;
           "This value is not a valid `typeof` return value"
         ]]
+
+    | EBinaryInLHS reason ->
+        (* TODO: or symbol *)
+        let msg =
+          "The left-hand side of an `in` expression must be a \
+           string or number." in
+        mk_error [mk_info reason [msg]]
+
+    | EBinaryInRHS reason ->
+        let msg =
+          "The right-hand side of an `in` expression must be an \
+           object or array." in
+        mk_error [mk_info reason [msg]]
 
   let add_output cx ?trace msg =
     let error = error_of_msg cx ?trace msg in

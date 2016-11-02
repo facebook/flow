@@ -3190,20 +3190,10 @@ and binary cx loc = Ast.Expression.Binary.(function
   | { operator = In; left = (loc1, _) as left; right = (loc2, _) as right } ->
       let t1 = expression cx left in
       let t2 = expression cx right in
-      let reason1 = mk_reason (RCustom "LHS of `in` operator") loc1 in
-      let reason2 = mk_reason (RCustom "RHS of `in` operator") loc2 in
-      let lhs =
-        UnionT (reason1, UnionRep.make (StrT.why reason1) (NumT.why reason1) [])
-      in
-      let rhs =
-        UnionT (reason2, UnionRep.make
-          (AnyObjT reason2)
-          (ArrT (reason2, AnyT reason2, [])) (* approximation of "any array" *)
-          []
-        )
-      in
-      Flow.flow_t cx (t1, lhs);
-      Flow.flow_t cx (t2, rhs);
+      let reason_lhs = mk_reason (RCustom "LHS of `in` operator") loc1 in
+      let reason_rhs = mk_reason (RCustom "RHS of `in` operator") loc2 in
+      Flow.flow cx (t1, AssertBinaryInLHST reason_lhs);
+      Flow.flow cx (t2, AssertBinaryInRHST reason_rhs);
       BoolT.at loc
 
   | { operator = StrictEqual; left; right }
