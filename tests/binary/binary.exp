@@ -42,5 +42,9 @@ in.js:45
  45:     if (!'foo' in {}) {} // error, !'foo' is a boolean
              ^^^^^^ boolean literal `false`. The left-hand side of an `in` expression must be a string or number.
 
+in.js:52
+ 52:     ('foo' in y); // error
+                   ^ mixed. The right-hand side of an `in` expression must be an object or array.
 
-Found 11 errors
+
+Found 12 errors

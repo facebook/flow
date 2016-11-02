@@ -1852,7 +1852,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, AnyObjT _)) when object_like l -> ()
     | (AnyObjT _, UseT (_, u)) when object_like u -> ()
-    | (AnyObjT _, UseT (_, AnyObjT _)) -> ()
 
     | (_, UseT (_, AnyFunT _)) when function_like l -> ()
 
@@ -1864,7 +1863,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, UseT (_, u)) when function_like u -> ()
     | (AnyFunT _, UseT (_, u)) when object_like u -> ()
-    | AnyFunT _, UseT (_, (TypeT _ | AnyFunT _ | AnyObjT _)) -> ()
+    | AnyFunT _, UseT (_, (TypeT _ | AnyFunT _)) -> ()
 
     (**
      * Handling for the idx() custom function.
@@ -4965,7 +4964,7 @@ and numeric = function
   | _ -> false
 
 and object_like = function
-  | ObjT _ | InstanceT _ -> true
+  | AnyObjT _ | ObjT _ | InstanceT _ -> true
   | t -> function_like t
 
 and object_use = function
@@ -4981,6 +4980,7 @@ and object_like_op = function
   | UseT (_, AnyObjT _) -> true
   | _ -> false
 
+(* TODO: why is AnyFunT missing? *)
 and function_like = function
   | ClassT _
   | CustomFunT _
