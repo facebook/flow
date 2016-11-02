@@ -3,8 +3,8 @@ A.js:12
               ^^^^^^^^^^^^^^^^^^^^^^^ 2DoesntExist. Required module not found
 
 A.js:13
- 13: import {numVal} from '3DoesntExist'; // Error
-                          ^^^^^^^^^^^^^^ 3DoesntExist. Required module not found
+ 13: import {numVal as numVal2} from '3DoesntExist'; // Error
+                                     ^^^^^^^^^^^^^^ 3DoesntExist. Required module not found
 
 
 Found 2 errors

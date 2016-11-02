@@ -498,6 +498,10 @@ let bind_const ?(state=State.Undeclared) cx name t r =
   let loc = loc_of_reason r in
   bind_entry cx name (Entry.new_const t ~loc ~state) r
 
+let bind_import cx name t r =
+  let loc = loc_of_reason r in
+  bind_entry cx name (Entry.new_import t ~loc) r
+
 (* bind implicit const entry *)
 let bind_implicit_const ?(state=State.Undeclared) kind cx name t r =
   let loc = loc_of_reason r in
@@ -824,6 +828,10 @@ let update_var op cx name specific reason =
     Some change
   | Value { Entry.kind = Const ConstVarBinding; _ } ->
     let msg = FlowError.EConstReassigned in
+    binding_error msg cx name entry reason;
+    None
+  | Value { Entry.kind = Const ConstImportBinding; _; } ->
+    let msg = FlowError.EImportReassigned in
     binding_error msg cx name entry reason;
     None
   | Value { Entry.kind = Const ConstParamBinding; _ } ->

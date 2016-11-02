@@ -69,6 +69,8 @@ val bind_implicit_const: ?state:State.t -> Entry.const_binding_kind ->
 val bind_const: ?state:State.t -> Context.t -> string -> Type.t ->
   reason -> unit
 
+val bind_import: Context.t -> string -> Type.t -> reason -> unit
+
 val bind_type: ?state:State.t -> Context.t -> string -> Type.t ->
   reason -> unit
 

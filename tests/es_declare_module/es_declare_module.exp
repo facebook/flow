@@ -71,7 +71,7 @@ es_declare_module.js:39
               ^^ number
 
 es_declare_module.js:41
- 41: import {exports} from "ES"; // Error: Not an export
+ 41: import {exports as nope} from "ES"; // Error: Not an export
              ^^^^^^^ Named import from module `ES`. This module has no named export called `exports`.
 
 

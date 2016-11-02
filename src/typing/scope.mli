@@ -17,10 +17,13 @@ module State :
 module Entry :
   sig
     type value_kind =
-        Const of const_binding_kind
+      | Const of const_binding_kind
       | Let of let_binding_kind
       | Var
-    and const_binding_kind = ConstVarBinding | ConstParamBinding
+    and const_binding_kind =
+      | ConstImportBinding
+      | ConstParamBinding
+      | ConstVarBinding
     and let_binding_kind =
         LetVarBinding
       | ClassNameBinding
@@ -45,6 +48,8 @@ module Entry :
     val new_value : value_kind -> State.t -> Type.t -> Type.t -> Loc.t -> t
     val new_const :
       loc:Loc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> t
+    val new_import :
+      loc:Loc.t -> Type.t -> t
     val new_let :
       loc:Loc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.t -> t
     val new_var :

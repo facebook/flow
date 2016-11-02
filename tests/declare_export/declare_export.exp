@@ -19,8 +19,8 @@ es6modules.js:21
                           ^^^^^ ./D. Required module not found
 
 es6modules.js:27
- 27: import {doesntExist} from "CommonJS_Clobbering_Lit"; // Error: Not an exported binding
-             ^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Lit`. This module has no named export called `doesntExist`.
+ 27: import {doesntExist1} from "CommonJS_Clobbering_Lit"; // Error: Not an exported binding
+             ^^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Lit`. This module has no named export called `doesntExist1`.
 
 es6modules.js:31
  31: var c2: string = numberValue1; // Error: number ~> string
@@ -65,8 +65,8 @@ es6modules.js:47
              ^^^^^^ string
 
 es6modules.js:53
- 53: import {doesntExist} from "CommonJS_Clobbering_Class"; // Error: Not an exported binding
-             ^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module only has a default export. Did you mean `import doesntExist from ...`?
+ 53: import {doesntExist2} from "CommonJS_Clobbering_Class"; // Error: Not an exported binding
+             ^^^^^^^^^^^^ Named import from module `CommonJS_Clobbering_Class`. This module only has a default export. Did you mean `import doesntExist2 from ...`?
 
 es6modules.js:59
  59: import {staticNumber1, baseProp, childProp} from "CommonJS_Clobbering_Class"; // Error
@@ -123,8 +123,8 @@ es6modules.js:73
              ^^^^^^ string
 
 es6modules.js:79
- 79: import {doesntExist} from "CommonJS_Named"; // Error: Not an exported binding
-             ^^^^^^^^^^^ Named import from module `CommonJS_Named`. This module has no named export called `doesntExist`.
+ 79: import {doesntExist3} from "CommonJS_Named"; // Error: Not an exported binding
+             ^^^^^^^^^^^^ Named import from module `CommonJS_Named`. This module has no named export called `doesntExist3`.
 
 es6modules.js:83
  83: var j2: string = numberValue2; // Error: number ~> string
@@ -163,8 +163,8 @@ es6modules.js:97
              ^^^^^^ string
 
 es6modules.js:103
-103: import {doesntExist} from "ES6_Default_AnonFunction1"; // Error: Not an exported binding
-             ^^^^^^^^^^^ Named import from module `ES6_Default_AnonFunction1`. This module only has a default export. Did you mean `import doesntExist from ...`?
+103: import {doesntExist4} from "ES6_Default_AnonFunction1"; // Error: Not an exported binding
+             ^^^^^^^^^^^^ Named import from module `ES6_Default_AnonFunction1`. This module only has a default export. Did you mean `import doesntExist4 from ...`?
 
 es6modules.js:107
 107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
@@ -191,13 +191,13 @@ es6modules.js:119
              ^^^^^^ string
 
 es6modules.js:125
-125: import doesntExist from "ES6_Named1"; // Error: Not an exported binding
-            ^^^^^^^^^^^ Default import from `ES6_Named1`. This module has no default export.
+125: import doesntExist5 from "ES6_Named1"; // Error: Not an exported binding
+            ^^^^^^^^^^^^ Default import from `ES6_Named1`. This module has no default export.
 
 es6modules.js:129
-129: var r2: string = specifierNumber1; // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^ number. This type is incompatible with
-129: var r2: string = specifierNumber1; // Error: number ~> string
+129: var r2: string = specifierNumber1_1; // Error: number ~> string
+                      ^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+129: var r2: string = specifierNumber1_1; // Error: number ~> string
              ^^^^^^ string
 
 es6modules.js:133

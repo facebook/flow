@@ -108,6 +108,7 @@ and binding_error =
   | ETypeAliasInValuePosition
   | EConstReassigned
   | EConstParamReassigned
+  | EImportReassigned
 
 and internal_error =
   | PackageHeapNotFound of string
@@ -760,7 +761,8 @@ end = struct
               "type referenced from value position"
           | ETypeAliasInValuePosition ->
               "type alias referenced from value position"
-          | EConstReassigned ->
+          | EConstReassigned
+          | EImportReassigned ->
               spf "%s cannot be reassigned" (Scope.Entry.string_of_kind entry)
           | EConstParamReassigned ->
               spf
