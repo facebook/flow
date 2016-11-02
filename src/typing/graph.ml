@@ -258,6 +258,7 @@ and parts_of_use_t cx = function
 | AndT (_, r, out) -> ["right", Def r; "out", Def out]
 | ApplyT (_, f, funtype) -> ("f", Def f) :: parts_of_funtype funtype
 | ArrRestT (_, _, out) -> ["out", Def out]
+| AssertArithmeticOperandT _ -> []
 | AssertBinaryInLHST _ -> []
 | AssertBinaryInRHST _ -> []
 | AssertImportIsValueT _ -> []

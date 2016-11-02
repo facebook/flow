@@ -48,9 +48,7 @@ E.js:8
 
 F.js:1
   1: function fn2(x) { return x.length * 4; }
-                              ^^^^^^^^ string. This type is incompatible with
-  1: function fn2(x) { return x.length * 4; }
-                              ^^^^^^^^^^^^ number
+                              ^^^^^^^^ string. The operand of an arithmetic operation must be a number.
 
 F.js:5
   5:   return x.length;

@@ -36,9 +36,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: var boom = myNum * myStr;
-                                  ^^^^^ string. This type is incompatible with
-            9: var boom = myNum * myStr;
-                          ^^^^^^^^^^^^^ number
+                                  ^^^^^ string. The operand of an arithmetic operation must be a number.
         `,
       )
   ]),

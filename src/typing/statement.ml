@@ -3162,17 +3162,15 @@ and unary cx loc = Ast.Expression.Unary.(function
 (* numeric pre/post inc/dec *)
 and update cx loc expr = Ast.Expression.Update.(
   let reason = mk_reason (RCustom "update") loc in
-  let result_t = NumT.why reason in
+  let result_t = NumT.at loc in
   (match expr.argument with
   | _, Ast.Expression.Identifier (id_loc, name) ->
-    let lhs_t = identifier cx name id_loc in
-    Flow.flow_t cx (lhs_t, result_t);
-     (* enforce state-based guards for binding update, e.g., const *)
-     let id_reason = mk_reason (RCustom name) id_loc in
-     ignore Env.(set_var cx name result_t id_reason)
+    Flow.flow cx (identifier cx name id_loc, AssertArithmeticOperandT reason);
+    (* enforce state-based guards for binding update, e.g., const *)
+    let id_reason = mk_reason (RCustom name) id_loc in
+    ignore (Env.set_var cx name result_t id_reason)
   | expr ->
-    let lhs_t = expression cx expr in
-    Flow.flow_t cx (lhs_t, result_t)
+    Flow.flow cx (expression cx expr, AssertArithmeticOperandT reason)
   );
   result_t
 )
@@ -3224,10 +3222,10 @@ and binary cx loc = Ast.Expression.Binary.(function
   | { operator = BitOr; left; right }
   | { operator = Xor; left; right }
   | { operator = BitAnd; left; right } ->
-      let t = NumT.at loc in
-      Flow.flow_t cx (expression cx left, t);
-      Flow.flow_t cx (expression cx right, t);
-      t
+      let reason = mk_reason (RCustom "arithmetic operation") loc in
+      Flow.flow cx (expression cx left, AssertArithmeticOperandT reason);
+      Flow.flow cx (expression cx right, AssertArithmeticOperandT reason);
+      NumT.at loc
 
   | { operator = Plus; left; right } ->
       let reason = mk_reason (RCustom "+") loc in
@@ -3412,12 +3410,11 @@ and assignment cx loc = Ast.Expression.(function
     ->
       (* lhs (numop)= rhs *)
       let reason = mk_reason (RCustom "(numop)=") loc in
-      let result_t = NumT.why reason in
       let lhs_t = assignment_lhs cx lhs in
       let rhs_t = expression cx rhs in
       (* lhs = lhs (numop) rhs *)
-      Flow.flow_t cx (lhs_t, result_t);
-      Flow.flow_t cx (rhs_t, result_t);
+      Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
+      Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
@@ -3425,7 +3422,7 @@ and assignment cx loc = Ast.Expression.(function
         _;
       } ->
         let id_reason = mk_reason (RCustom name) id_loc in
-        ignore Env.(set_var cx name result_t id_reason)
+        ignore Env.(set_var cx name (NumT.at loc) id_reason)
       | _ -> ()
       );
       lhs_t

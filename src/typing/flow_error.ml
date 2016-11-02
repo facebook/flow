@@ -100,6 +100,7 @@ type error_message =
   | EInvalidTypeof of Loc.t * string
   | EBinaryInLHS of reason
   | EBinaryInRHS of reason
+  | EArithmeticOperand of reason
 
 and binding_error =
   | ENameAlreadyBound
@@ -847,6 +848,10 @@ end = struct
           spf "string literal `%s`" typename;
           "This value is not a valid `typeof` return value"
         ]]
+
+    | EArithmeticOperand reason ->
+        let msg = "The operand of an arithmetic operation must be a number." in
+        mk_error [mk_info reason [msg]]
 
     | EBinaryInLHS reason ->
         (* TODO: or symbol *)

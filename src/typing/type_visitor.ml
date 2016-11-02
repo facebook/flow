@@ -206,6 +206,7 @@ class ['a] t = object(self)
   | AndT (_, _, _)
   | ApplyT (_, _, _)
   | ArrRestT (_, _, _)
+  | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertImportIsValueT (_, _)

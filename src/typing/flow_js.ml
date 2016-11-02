@@ -4341,6 +4341,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       flow_addition cx trace reason l r u;
       Ops.pop ()
 
+    (*********************************************************)
+    (* arithmetic/bitwise/update operations besides addition *)
+    (*********************************************************)
+
+    | _, AssertArithmeticOperandT _ when numeric l -> ()
+    | _, AssertArithmeticOperandT _ ->
+      add_output cx trace (FlowError.EArithmeticOperand (reason_of_t l))
+
     (***********************************************************)
     (* coercion                                                *)
     (***********************************************************)

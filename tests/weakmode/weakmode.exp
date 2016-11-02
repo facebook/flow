@@ -1,8 +1,6 @@
 should_fail_without_weak.js:9
   9:   return returns_a_string() * 10;
-              ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  9:   return returns_a_string() * 10;
-              ^^^^^^^^^^^^^^^^^^^^^^^ number
+              ^^^^^^^^^^^^^^^^^^ string. The operand of an arithmetic operation must be a number.
 
 
 Found 1 error

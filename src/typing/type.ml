@@ -331,6 +331,7 @@ module rec TypeTerm : sig
     (* unary minus operator on numbers, allows negative number literals *)
     | UnaryMinusT of reason * t
 
+    | AssertArithmeticOperandT of reason
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
 
@@ -1477,6 +1478,7 @@ and reason_of_use_t = function
   | AndT (reason, _, _) -> reason
   | ApplyT (reason, _, _) -> reason
   | ArrRestT (reason, _, _) -> reason
+  | AssertArithmeticOperandT reason -> reason
   | AssertBinaryInLHST reason -> reason
   | AssertBinaryInRHST reason -> reason
   | AssertImportIsValueT (reason, _) -> reason
@@ -1624,6 +1626,7 @@ and mod_reason_of_use_t f = function
   | AndT (reason, t1, t2) -> AndT (f reason, t1, t2)
   | ApplyT (reason, l, ft) -> ApplyT (f reason, l, ft)
   | ArrRestT (reason, i, t) -> ArrRestT (f reason, i, t)
+  | AssertArithmeticOperandT reason -> AssertArithmeticOperandT (f reason)
   | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
   | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
@@ -1818,6 +1821,7 @@ let string_of_use_ctor = function
   | AndT _ -> "AndT"
   | ApplyT _ -> "ApplyT"
   | ArrRestT _ -> "ArrRestT"
+  | AssertArithmeticOperandT _ -> "AssertArithmeticOperandT"
   | AssertBinaryInLHST _ -> "AssertBinaryInLHST"
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"

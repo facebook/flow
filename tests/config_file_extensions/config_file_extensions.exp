@@ -1,10 +1,6 @@
-test.js.es6:9
-  9: foo('Hello, world!');
-     ^^^^^^^^^^^^^^^^^^^^ function call
+test.js.es6:6
   6:   return x * 10;
-              ^ string. This type is incompatible with
-  6:   return x * 10;
-              ^^^^^^ number
+              ^ string. The operand of an arithmetic operation must be a number.
 
 
 Found 1 error

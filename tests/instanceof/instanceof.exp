@@ -24,9 +24,7 @@ instanceof.js:51
 
 instanceof.js:83
  83:     x++; // error
-         ^ array type. This type is incompatible with
- 83:     x++; // error
-         ^^^ number
+         ^ array type. The operand of an arithmetic operation must be a number.
 
 instanceof.js:85
  85:     x[0] = 123; // error

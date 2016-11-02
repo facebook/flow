@@ -190,9 +190,7 @@ test17.js:7
 
 test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^ string. This type is incompatible with
- 14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^^^^^^^^^^^^^^ number
+                              ^^^ string. The operand of an arithmetic operation must be a number.
 
 test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
@@ -308,21 +306,13 @@ test5.js:25
    24: var a2 = [];
                 ^^ unknown element type of empty array
 
-test9.js:16
- 16: foo((x): number => square(x))
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+test9.js:12
  12:   return x * x;
-              ^ null. This type is incompatible with
- 12:   return x * x;
-              ^^^^^ number
+              ^ null. The operand of an arithmetic operation must be a number.
 
-test9.js:16
- 16: foo((x): number => square(x))
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function call
+test9.js:12
  12:   return x * x;
-                  ^ null. This type is incompatible with
- 12:   return x * x;
-              ^^^^^ number
+                  ^ null. The operand of an arithmetic operation must be a number.
 
 
 Found 23 errors

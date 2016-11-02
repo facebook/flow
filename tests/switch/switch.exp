@@ -1,14 +1,10 @@
 switch.js:28
  28:         x = x*x;
-                 ^ string. This type is incompatible with
- 28:         x = x*x;
-                 ^^^ number
+                 ^ string. The operand of an arithmetic operation must be a number.
 
 switch.js:28
  28:         x = x*x;
-                   ^ string. This type is incompatible with
- 28:         x = x*x;
-                 ^^^ number
+                   ^ string. The operand of an arithmetic operation must be a number.
 
 switch_default_fallthrough.js:16
  16:     (a : string); // error, string | number ~/> string

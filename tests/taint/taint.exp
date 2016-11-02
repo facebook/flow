@@ -148,9 +148,7 @@ taint4.js:12
 
 use-types.js:7
   7:   var should_fail : number = x * 42;
-                                  ^ taint. This type is incompatible with
-  7:   var should_fail : number = x * 42;
-                                  ^^^^^^ number
+                                  ^ taint. The operand of an arithmetic operation must be a number.
 
 use-types.js:11
  11:   var ok : number = x.f;

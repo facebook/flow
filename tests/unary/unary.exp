@@ -5,46 +5,74 @@ unary.js:8
                ^ string
 
 unary.js:12
- 12:   y++; // error, we don't allow coercion here
-       ^ string. This type is incompatible with
- 12:   y++; // error, we don't allow coercion here
-       ^^^ number
-
-unary.js:12
- 12:   y++; // error, we don't allow coercion here
-       ^^^ number. This type is incompatible with
- 11: function x2(y: string) {
-                    ^^^^^^ string
-
-unary.js:13
- 13:   y--; // error, we don't allow coercion here
-       ^^^ number. This type is incompatible with
- 11: function x2(y: string) {
-                    ^^^^^^ string
-
-unary.js:14
- 14:   ++y; // error, we don't allow coercion here
-       ^^^ number. This type is incompatible with
- 11: function x2(y: string) {
-                    ^^^^^^ string
-
-unary.js:15
- 15:   --y; // error, we don't allow coercion here
-       ^^^ number. This type is incompatible with
- 11: function x2(y: string) {
-                    ^^^^^^ string
-
-unary.js:19
- 19:   return ~y;  // error, we don't allow coercion here
+ 12:   return ~y;  // error, we don't allow coercion here
                ^ string. This type is incompatible with
- 19:   return ~y;  // error, we don't allow coercion here
+ 12:   return ~y;  // error, we don't allow coercion here
               ^^ number
 
-unary.js:26
- 26: (-1: void); // error, number ~> void
+unary.js:19
+ 19: (-1: void); // error, number ~> void
       ^^ number. This type is incompatible with
- 26: (-1: void); // error, number ~> void
+ 19: (-1: void); // error, number ~> void
           ^^^^ undefined
 
+update.js:12
+ 12:     y++; // error, we don't allow coercion here
+         ^ string. The operand of an arithmetic operation must be a number.
 
-Found 8 errors
+update.js:12
+ 12:     y++; // error, we don't allow coercion here
+         ^^^ number. This type is incompatible with
+ 11:   function(y: string) {
+                   ^^^^^^ string
+
+update.js:14
+ 14:     y++; // error, but you still can't write a number to a string
+         ^^^ number. This type is incompatible with
+ 11:   function(y: string) {
+                   ^^^^^^ string
+
+update.js:18
+ 18:     y--; // error, we don't allow coercion here
+         ^ string. The operand of an arithmetic operation must be a number.
+
+update.js:18
+ 18:     y--; // error, we don't allow coercion here
+         ^^^ number. This type is incompatible with
+ 17:   function(y: string) {
+                   ^^^^^^ string
+
+update.js:22
+ 22:     ++y; // error, we don't allow coercion here
+         ^^^ number. This type is incompatible with
+ 21:   function(y: string) {
+                   ^^^^^^ string
+
+update.js:22
+ 22:     ++y; // error, we don't allow coercion here
+           ^ string. The operand of an arithmetic operation must be a number.
+
+update.js:26
+ 26:     --y; // error, we don't allow coercion here
+         ^^^ number. This type is incompatible with
+ 25:   function(y: string) {
+                   ^^^^^^ string
+
+update.js:26
+ 26:     --y; // error, we don't allow coercion here
+           ^ string. The operand of an arithmetic operation must be a number.
+
+update.js:31
+ 31:     y++; // error, can't update const
+         ^ y. const cannot be reassigned
+ 30:     const y = 123;
+               ^ const y
+
+update.js:32
+ 32:     y--; // error, can't update const
+         ^ y. const cannot be reassigned
+ 30:     const y = 123;
+               ^ const y
+
+
+Found 14 errors

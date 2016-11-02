@@ -8,13 +8,6 @@ function x1(y: string): number {
   return -y; // error, we don't allow coercion here
 }
 
-function x2(y: string) {
-  y++; // error, we don't allow coercion here
-  y--; // error, we don't allow coercion here
-  ++y; // error, we don't allow coercion here
-  --y; // error, we don't allow coercion here
-}
-
 function x3(y: string) {
   return ~y;  // error, we don't allow coercion here
 }

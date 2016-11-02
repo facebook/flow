@@ -124,9 +124,7 @@ Arith.js:81
 
 exponent.js:7
   7: y **= 2; // error
-     ^ string. This type is incompatible with
-  7: y **= 2; // error
-     ^^^^^^^ number
+     ^ string. The operand of an arithmetic operation must be a number.
 
 exponent.js:7
   7: y **= 2; // error
@@ -166,21 +164,15 @@ generic.js:7
 
 mult.js:5
   5: num(null * 1);
-         ^^^^ null. This type is incompatible with
-  5: num(null * 1);
-         ^^^^^^^^ number
+         ^^^^ null. The operand of an arithmetic operation must be a number.
 
 mult.js:6
   6: num(1 * null);
-             ^^^^ null. This type is incompatible with
-  6: num(1 * null);
-         ^^^^^^^^ number
+             ^^^^ null. The operand of an arithmetic operation must be a number.
 
 mult.js:12
  12: y *= 2; // error
-     ^ string. This type is incompatible with
- 12: y *= 2; // error
-     ^^^^^^ number
+     ^ string. The operand of an arithmetic operation must be a number.
 
 mult.js:12
  12: y *= 2; // error

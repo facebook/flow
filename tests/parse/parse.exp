@@ -12,9 +12,7 @@ fail.js:1
 
 no_parse_error.js:6
   6: var y = 5 / x;
-                 ^ string. This type is incompatible with
-  6: var y = 5 / x;
-             ^^^^^ number
+                 ^ string. The operand of an arithmetic operation must be a number.
 
 
 Found 4 errors
