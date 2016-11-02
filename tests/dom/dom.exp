@@ -3,128 +3,128 @@ CanvasRenderingContext2D.js:11
          ^^^^^^^^^^^^^^^^^^^^ call of method `moveTo`
  11:     ctx.moveTo('0', '1');  // error: should be numbers
                     ^^^ string. This type is incompatible with
-number. See lib: dom.js:1200
+number. See lib: dom.js:1214
 
 CanvasRenderingContext2D.js:11
  11:     ctx.moveTo('0', '1');  // error: should be numbers
          ^^^^^^^^^^^^^^^^^^^^ call of method `moveTo`
  11:     ctx.moveTo('0', '1');  // error: should be numbers
                          ^^^ string. This type is incompatible with
-number. See lib: dom.js:1200
+number. See lib: dom.js:1214
 
 Element.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  14:     element.scrollIntoView({ behavior: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-union: boolean | object type. See lib: dom.js:870
+union: boolean | object type. See lib: dom.js:884
   Member 1:
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Error:
    14:     element.scrollIntoView({ behavior: 'invalid' });
                                   ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Member 2:
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
   Error:
    14:     element.scrollIntoView({ behavior: 'invalid' });
                                               ^^^^^^^^^ string. This type is incompatible with
-  string enum. See lib: dom.js:870
+  string enum. See lib: dom.js:884
 
 Element.js:15
  15:     element.scrollIntoView({ block: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  15:     element.scrollIntoView({ block: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-union: boolean | object type. See lib: dom.js:870
+union: boolean | object type. See lib: dom.js:884
   Member 1:
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Error:
    15:     element.scrollIntoView({ block: 'invalid' });
                                   ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Member 2:
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
   Error:
    15:     element.scrollIntoView({ block: 'invalid' });
                                            ^^^^^^^^^ string. This type is incompatible with
-  string enum. See lib: dom.js:870
+  string enum. See lib: dom.js:884
 
 Element.js:16
  16:     element.scrollIntoView(1);
          ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  16:     element.scrollIntoView(1);
                                 ^ number. This type is incompatible with
-union: boolean | object type. See lib: dom.js:870
+union: boolean | object type. See lib: dom.js:884
   Member 1:
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Error:
    16:     element.scrollIntoView(1);
                                   ^ number. This type is incompatible with
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Member 2:
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
   Error:
    16:     element.scrollIntoView(1);
                                   ^ number. This type is incompatible with
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
 
 HTMLElement.js:14
  14:     element.scrollIntoView({ behavior: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  14:     element.scrollIntoView({ behavior: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-union: boolean | object type. See lib: dom.js:870
+union: boolean | object type. See lib: dom.js:884
   Member 1:
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Error:
    14:     element.scrollIntoView({ behavior: 'invalid' });
                                   ^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Member 2:
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
   Error:
    14:     element.scrollIntoView({ behavior: 'invalid' });
                                               ^^^^^^^^^ string. This type is incompatible with
-  string enum. See lib: dom.js:870
+  string enum. See lib: dom.js:884
 
 HTMLElement.js:15
  15:     element.scrollIntoView({ block: 'invalid' });
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  15:     element.scrollIntoView({ block: 'invalid' });
                                 ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-union: boolean | object type. See lib: dom.js:870
+union: boolean | object type. See lib: dom.js:884
   Member 1:
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Error:
    15:     element.scrollIntoView({ block: 'invalid' });
                                   ^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Member 2:
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
   Error:
    15:     element.scrollIntoView({ block: 'invalid' });
                                            ^^^^^^^^^ string. This type is incompatible with
-  string enum. See lib: dom.js:870
+  string enum. See lib: dom.js:884
 
 HTMLElement.js:16
  16:     element.scrollIntoView(1);
          ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `scrollIntoView`
  16:     element.scrollIntoView(1);
                                 ^ number. This type is incompatible with
-union: boolean | object type. See lib: dom.js:870
+union: boolean | object type. See lib: dom.js:884
   Member 1:
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Error:
    16:     element.scrollIntoView(1);
                                   ^ number. This type is incompatible with
-  boolean. See lib: dom.js:870
+  boolean. See lib: dom.js:884
   Member 2:
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
   Error:
    16:     element.scrollIntoView(1);
                                   ^ number. This type is incompatible with
-  object type. See lib: dom.js:870
+  object type. See lib: dom.js:884
 
 HTMLInputElement.js:7
   7:     el.setRangeText('foo', 123); // end is required
@@ -132,17 +132,17 @@ HTMLInputElement.js:7
   7:     el.setRangeText('foo', 123); // end is required
          ^^^^^^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: dom.js:1547
+  function type. See lib: dom.js:1561
   Error:
     7:     el.setRangeText('foo', 123); // end is required
                                   ^^^ number. This type is incompatible with
-  undefined. See lib: dom.js:1547
+  undefined. See lib: dom.js:1561
   Member 2:
-  function type. See lib: dom.js:1548
+  function type. See lib: dom.js:1562
   Error:
     7:     el.setRangeText('foo', 123); // end is required
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  number. See lib: dom.js:1548
+  number. See lib: dom.js:1562
 
 HTMLInputElement.js:10
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
@@ -150,17 +150,17 @@ HTMLInputElement.js:10
  10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
          ^^^^^^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: dom.js:1547
+  function type. See lib: dom.js:1561
   Error:
    10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                   ^^^ number. This type is incompatible with
-  undefined. See lib: dom.js:1547
+  undefined. See lib: dom.js:1561
   Member 2:
-  function type. See lib: dom.js:1548
+  function type. See lib: dom.js:1562
   Error:
    10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                             ^^^^^^^ string. This type is incompatible with
-  string enum. See lib: dom.js:1548
+  string enum. See lib: dom.js:1562
 
 URL.js:8
   8: const e: string = c.path; // not correct
@@ -186,31 +186,31 @@ path2d.js:9
   9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
           ^^^^^^^^^^ intersection
   Member 1:
-  function type. See lib: dom.js:1074
+  function type. See lib: dom.js:1088
   Error:
     9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                        ^^^^ string. This type is incompatible with
-  undefined. See lib: dom.js:1074
+  undefined. See lib: dom.js:1088
   Member 2:
-  function type. See lib: dom.js:1075
+  function type. See lib: dom.js:1089
   Error:
     9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                        ^^^^ string. This type is incompatible with
-  number. See lib: dom.js:1075
+  number. See lib: dom.js:1089
 
 registerElement.js:48
  48:     document.registerElement('custom-element', {
          ^ call of method `registerElement`
  52:           oldVal: string, // Error: This might be null
                        ^^^^^^ string. This type is incompatible with
-null. See lib: dom.js:397
+null. See lib: dom.js:411
 
 registerElement.js:48
  48:     document.registerElement('custom-element', {
          ^ call of method `registerElement`
  53:           newVal: string, // Error: This might be null
                        ^^^^^^ string. This type is incompatible with
-null. See lib: dom.js:412
+null. See lib: dom.js:426
 
 traversal.js:26
  26:     document.createNodeIterator({}); // invalid
@@ -218,263 +218,263 @@ traversal.js:26
  26:     document.createNodeIterator({}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See lib: dom.js:582
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Attr. See lib: dom.js:582
-  Member 2:
-  polymorphic type: function type. See lib: dom.js:590
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:590
-  Member 3:
-  polymorphic type: function type. See lib: dom.js:591
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:591
-  Member 4:
-  polymorphic type: function type. See lib: dom.js:592
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:592
-  Member 5:
-  polymorphic type: function type. See lib: dom.js:593
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:593
-  Member 6:
-  polymorphic type: function type. See lib: dom.js:594
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:594
-  Member 7:
-  polymorphic type: function type. See lib: dom.js:595
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:595
-  Member 8:
   polymorphic type: function type. See lib: dom.js:596
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:596
-  Member 9:
-  polymorphic type: function type. See lib: dom.js:597
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:597
-  Member 10:
-  polymorphic type: function type. See lib: dom.js:598
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:598
-  Member 11:
-  polymorphic type: function type. See lib: dom.js:599
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:599
-  Member 12:
-  polymorphic type: function type. See lib: dom.js:600
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:600
-  Member 13:
-  polymorphic type: function type. See lib: dom.js:601
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:601
-  Member 14:
-  polymorphic type: function type. See lib: dom.js:602
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:602
-  Member 15:
-  polymorphic type: function type. See lib: dom.js:603
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:603
-  Member 16:
+  Attr. See lib: dom.js:596
+  Member 2:
   polymorphic type: function type. See lib: dom.js:604
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:604
-  Member 17:
+  Member 3:
   polymorphic type: function type. See lib: dom.js:605
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:605
-  Member 18:
+  Member 4:
   polymorphic type: function type. See lib: dom.js:606
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:606
-  Member 19:
+  Member 5:
   polymorphic type: function type. See lib: dom.js:607
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:607
-  Member 20:
+  Member 6:
   polymorphic type: function type. See lib: dom.js:608
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:608
-  Member 21:
+  Member 7:
   polymorphic type: function type. See lib: dom.js:609
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:609
-  Member 22:
+  Member 8:
   polymorphic type: function type. See lib: dom.js:610
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:610
-  Member 23:
+  Member 9:
   polymorphic type: function type. See lib: dom.js:611
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:611
-  Member 24:
+  Member 10:
   polymorphic type: function type. See lib: dom.js:612
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:612
-  Member 25:
+  Member 11:
   polymorphic type: function type. See lib: dom.js:613
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:613
+  Member 12:
+  polymorphic type: function type. See lib: dom.js:614
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:614
+  Member 13:
+  polymorphic type: function type. See lib: dom.js:615
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:615
+  Member 14:
+  polymorphic type: function type. See lib: dom.js:616
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:616
+  Member 15:
+  polymorphic type: function type. See lib: dom.js:617
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:617
+  Member 16:
+  polymorphic type: function type. See lib: dom.js:618
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:618
+  Member 17:
+  polymorphic type: function type. See lib: dom.js:619
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:619
+  Member 18:
+  polymorphic type: function type. See lib: dom.js:620
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:620
+  Member 19:
+  polymorphic type: function type. See lib: dom.js:621
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:621
+  Member 20:
+  polymorphic type: function type. See lib: dom.js:622
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:622
+  Member 21:
+  polymorphic type: function type. See lib: dom.js:623
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:623
+  Member 22:
+  polymorphic type: function type. See lib: dom.js:624
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:624
+  Member 23:
+  polymorphic type: function type. See lib: dom.js:625
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:625
+  Member 24:
+  polymorphic type: function type. See lib: dom.js:626
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:626
+  Member 25:
+  polymorphic type: function type. See lib: dom.js:627
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:627
   Member 26:
-  polymorphic type: function type. See lib: dom.js:641
+  polymorphic type: function type. See lib: dom.js:655
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:641
+  DocumentFragment. See lib: dom.js:655
   Member 27:
-  polymorphic type: function type. See lib: dom.js:642
+  polymorphic type: function type. See lib: dom.js:656
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:642
+  DocumentFragment. See lib: dom.js:656
   Member 28:
-  polymorphic type: function type. See lib: dom.js:643
+  polymorphic type: function type. See lib: dom.js:657
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:643
+  DocumentFragment. See lib: dom.js:657
   Member 29:
-  polymorphic type: function type. See lib: dom.js:644
+  polymorphic type: function type. See lib: dom.js:658
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:644
+  DocumentFragment. See lib: dom.js:658
   Member 30:
-  polymorphic type: function type. See lib: dom.js:645
+  polymorphic type: function type. See lib: dom.js:659
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:645
+  DocumentFragment. See lib: dom.js:659
   Member 31:
-  polymorphic type: function type. See lib: dom.js:646
+  polymorphic type: function type. See lib: dom.js:660
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:646
+  DocumentFragment. See lib: dom.js:660
   Member 32:
-  polymorphic type: function type. See lib: dom.js:647
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:647
-  Member 33:
-  polymorphic type: function type. See lib: dom.js:648
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:648
-  Member 34:
   polymorphic type: function type. See lib: dom.js:661
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:661
-  Member 35:
+  DocumentFragment. See lib: dom.js:661
+  Member 33:
   polymorphic type: function type. See lib: dom.js:662
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:662
+  DocumentFragment. See lib: dom.js:662
+  Member 34:
+  polymorphic type: function type. See lib: dom.js:675
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:675
+  Member 35:
+  polymorphic type: function type. See lib: dom.js:676
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:676
   Member 36:
-  polymorphic type: function type. See lib: dom.js:663
+  polymorphic type: function type. See lib: dom.js:677
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:663
+  Node. See lib: dom.js:677
   Member 37:
-  polymorphic type: function type. See lib: dom.js:664
+  polymorphic type: function type. See lib: dom.js:678
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:664
+  Node. See lib: dom.js:678
   Member 38:
-  polymorphic type: function type. See lib: dom.js:665
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:665
-  Member 39:
-  polymorphic type: function type. See lib: dom.js:666
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:666
-  Member 40:
-  polymorphic type: function type. See lib: dom.js:667
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:667
-  Member 41:
-  polymorphic type: function type. See lib: dom.js:668
-  Error:
-   26:     document.createNodeIterator({}); // invalid
-                                       ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:668
-  Member 42:
   polymorphic type: function type. See lib: dom.js:679
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:679
-  Member 43:
-  polymorphic type: function type. See lib: dom.js:683
+  Node. See lib: dom.js:679
+  Member 39:
+  polymorphic type: function type. See lib: dom.js:680
   Error:
    26:     document.createNodeIterator({}); // invalid
                                        ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:683
+  Node. See lib: dom.js:680
+  Member 40:
+  polymorphic type: function type. See lib: dom.js:681
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:681
+  Member 41:
+  polymorphic type: function type. See lib: dom.js:682
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:682
+  Member 42:
+  polymorphic type: function type. See lib: dom.js:693
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:693
+  Member 43:
+  polymorphic type: function type. See lib: dom.js:697
+  Error:
+   26:     document.createNodeIterator({}); // invalid
+                                       ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:697
 
 traversal.js:30
  30:     document.createTreeWalker({}); // invalid
@@ -482,309 +482,309 @@ traversal.js:30
  30:     document.createTreeWalker({}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See lib: dom.js:583
+  polymorphic type: function type. See lib: dom.js:597
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  Attr. See lib: dom.js:583
+  Attr. See lib: dom.js:597
   Member 2:
-  polymorphic type: function type. See lib: dom.js:614
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:614
-  Member 3:
-  polymorphic type: function type. See lib: dom.js:615
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:615
-  Member 4:
-  polymorphic type: function type. See lib: dom.js:616
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:616
-  Member 5:
-  polymorphic type: function type. See lib: dom.js:617
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:617
-  Member 6:
-  polymorphic type: function type. See lib: dom.js:618
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:618
-  Member 7:
-  polymorphic type: function type. See lib: dom.js:619
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:619
-  Member 8:
-  polymorphic type: function type. See lib: dom.js:620
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:620
-  Member 9:
-  polymorphic type: function type. See lib: dom.js:621
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:621
-  Member 10:
-  polymorphic type: function type. See lib: dom.js:622
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:622
-  Member 11:
-  polymorphic type: function type. See lib: dom.js:623
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:623
-  Member 12:
-  polymorphic type: function type. See lib: dom.js:624
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:624
-  Member 13:
-  polymorphic type: function type. See lib: dom.js:625
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:625
-  Member 14:
-  polymorphic type: function type. See lib: dom.js:626
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:626
-  Member 15:
-  polymorphic type: function type. See lib: dom.js:627
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Document. See lib: dom.js:627
-  Member 16:
   polymorphic type: function type. See lib: dom.js:628
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:628
-  Member 17:
+  Member 3:
   polymorphic type: function type. See lib: dom.js:629
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:629
-  Member 18:
+  Member 4:
   polymorphic type: function type. See lib: dom.js:630
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:630
-  Member 19:
+  Member 5:
   polymorphic type: function type. See lib: dom.js:631
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:631
-  Member 20:
+  Member 6:
   polymorphic type: function type. See lib: dom.js:632
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:632
-  Member 21:
+  Member 7:
   polymorphic type: function type. See lib: dom.js:633
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:633
-  Member 22:
+  Member 8:
   polymorphic type: function type. See lib: dom.js:634
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:634
-  Member 23:
+  Member 9:
   polymorphic type: function type. See lib: dom.js:635
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:635
-  Member 24:
+  Member 10:
   polymorphic type: function type. See lib: dom.js:636
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:636
-  Member 25:
+  Member 11:
   polymorphic type: function type. See lib: dom.js:637
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Document. See lib: dom.js:637
-  Member 26:
+  Member 12:
+  polymorphic type: function type. See lib: dom.js:638
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:638
+  Member 13:
+  polymorphic type: function type. See lib: dom.js:639
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:639
+  Member 14:
+  polymorphic type: function type. See lib: dom.js:640
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:640
+  Member 15:
+  polymorphic type: function type. See lib: dom.js:641
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:641
+  Member 16:
+  polymorphic type: function type. See lib: dom.js:642
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:642
+  Member 17:
+  polymorphic type: function type. See lib: dom.js:643
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:643
+  Member 18:
+  polymorphic type: function type. See lib: dom.js:644
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:644
+  Member 19:
+  polymorphic type: function type. See lib: dom.js:645
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:645
+  Member 20:
+  polymorphic type: function type. See lib: dom.js:646
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:646
+  Member 21:
+  polymorphic type: function type. See lib: dom.js:647
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:647
+  Member 22:
+  polymorphic type: function type. See lib: dom.js:648
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Document. See lib: dom.js:648
+  Member 23:
   polymorphic type: function type. See lib: dom.js:649
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:649
-  Member 27:
+  Document. See lib: dom.js:649
+  Member 24:
   polymorphic type: function type. See lib: dom.js:650
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:650
-  Member 28:
+  Document. See lib: dom.js:650
+  Member 25:
   polymorphic type: function type. See lib: dom.js:651
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:651
+  Document. See lib: dom.js:651
+  Member 26:
+  polymorphic type: function type. See lib: dom.js:663
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  DocumentFragment. See lib: dom.js:663
+  Member 27:
+  polymorphic type: function type. See lib: dom.js:664
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  DocumentFragment. See lib: dom.js:664
+  Member 28:
+  polymorphic type: function type. See lib: dom.js:665
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  DocumentFragment. See lib: dom.js:665
   Member 29:
-  polymorphic type: function type. See lib: dom.js:652
+  polymorphic type: function type. See lib: dom.js:666
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:652
+  DocumentFragment. See lib: dom.js:666
   Member 30:
-  polymorphic type: function type. See lib: dom.js:653
+  polymorphic type: function type. See lib: dom.js:667
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:653
+  DocumentFragment. See lib: dom.js:667
   Member 31:
-  polymorphic type: function type. See lib: dom.js:654
+  polymorphic type: function type. See lib: dom.js:668
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:654
+  DocumentFragment. See lib: dom.js:668
   Member 32:
-  polymorphic type: function type. See lib: dom.js:655
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:655
-  Member 33:
-  polymorphic type: function type. See lib: dom.js:656
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  DocumentFragment. See lib: dom.js:656
-  Member 34:
   polymorphic type: function type. See lib: dom.js:669
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:669
-  Member 35:
+  DocumentFragment. See lib: dom.js:669
+  Member 33:
   polymorphic type: function type. See lib: dom.js:670
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:670
-  Member 36:
-  polymorphic type: function type. See lib: dom.js:671
+  DocumentFragment. See lib: dom.js:670
+  Member 34:
+  polymorphic type: function type. See lib: dom.js:683
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:671
-  Member 37:
-  polymorphic type: function type. See lib: dom.js:672
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:672
-  Member 38:
-  polymorphic type: function type. See lib: dom.js:673
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:673
-  Member 39:
-  polymorphic type: function type. See lib: dom.js:674
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:674
-  Member 40:
-  polymorphic type: function type. See lib: dom.js:675
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:675
-  Member 41:
-  polymorphic type: function type. See lib: dom.js:676
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:676
-  Member 42:
-  polymorphic type: function type. See lib: dom.js:680
-  Error:
-   30:     document.createTreeWalker({}); // invalid
-                                     ^^ object literal. This type is incompatible with
-  Node. See lib: dom.js:680
-  Member 43:
+  Node. See lib: dom.js:683
+  Member 35:
   polymorphic type: function type. See lib: dom.js:684
   Error:
    30:     document.createTreeWalker({}); // invalid
                                      ^^ object literal. This type is incompatible with
   Node. See lib: dom.js:684
+  Member 36:
+  polymorphic type: function type. See lib: dom.js:685
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:685
+  Member 37:
+  polymorphic type: function type. See lib: dom.js:686
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:686
+  Member 38:
+  polymorphic type: function type. See lib: dom.js:687
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:687
+  Member 39:
+  polymorphic type: function type. See lib: dom.js:688
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:688
+  Member 40:
+  polymorphic type: function type. See lib: dom.js:689
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:689
+  Member 41:
+  polymorphic type: function type. See lib: dom.js:690
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:690
+  Member 42:
+  polymorphic type: function type. See lib: dom.js:694
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:694
+  Member 43:
+  polymorphic type: function type. See lib: dom.js:698
+  Error:
+   30:     document.createTreeWalker({}); // invalid
+                                     ^^ object literal. This type is incompatible with
+  Node. See lib: dom.js:698
 
 traversal.js:183
 183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1888
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1902
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1888
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1902
   Error:
   183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1888
+  number literal `1`. See lib: dom.js:1902
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1889
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1903
   Error:
   183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1889
+  number literal `2`. See lib: dom.js:1903
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1890
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1904
   Error:
   183:     document.createNodeIterator(document.body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1890
+  number literal `3`. See lib: dom.js:1904
 
 traversal.js:185
 185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1888
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1902
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1888
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1902
   Error:
   185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1888
+  number literal `1`. See lib: dom.js:1902
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1889
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1903
   Error:
   185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1889
+  number literal `2`. See lib: dom.js:1903
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1890
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1904
   Error:
   185:     document.createNodeIterator(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                             ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1890
+  number literal `3`. See lib: dom.js:1904
 
 traversal.js:186
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
@@ -792,321 +792,321 @@ traversal.js:186
 186:     document.createNodeIterator(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See lib: dom.js:582
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Attr. See lib: dom.js:582
-  Member 2:
-  polymorphic type: function type. See lib: dom.js:590
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:590
-  Member 3:
-  polymorphic type: function type. See lib: dom.js:591
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:591
-  Member 4:
-  polymorphic type: function type. See lib: dom.js:592
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:592
-  Member 5:
-  polymorphic type: function type. See lib: dom.js:593
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:593
-  Member 6:
-  polymorphic type: function type. See lib: dom.js:594
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:594
-  Member 7:
-  polymorphic type: function type. See lib: dom.js:595
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:595
-  Member 8:
   polymorphic type: function type. See lib: dom.js:596
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:596
-  Member 9:
-  polymorphic type: function type. See lib: dom.js:597
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:597
-  Member 10:
-  polymorphic type: function type. See lib: dom.js:598
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:598
-  Member 11:
-  polymorphic type: function type. See lib: dom.js:599
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:599
-  Member 12:
-  polymorphic type: function type. See lib: dom.js:600
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:600
-  Member 13:
-  polymorphic type: function type. See lib: dom.js:601
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:601
-  Member 14:
-  polymorphic type: function type. See lib: dom.js:602
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:602
-  Member 15:
-  polymorphic type: function type. See lib: dom.js:603
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:603
-  Member 16:
+  Attr. See lib: dom.js:596
+  Member 2:
   polymorphic type: function type. See lib: dom.js:604
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:604
-  Member 17:
+  Member 3:
   polymorphic type: function type. See lib: dom.js:605
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:605
-  Member 18:
+  Member 4:
   polymorphic type: function type. See lib: dom.js:606
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:606
-  Member 19:
+  Member 5:
   polymorphic type: function type. See lib: dom.js:607
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:607
-  Member 20:
+  Member 6:
   polymorphic type: function type. See lib: dom.js:608
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:608
-  Member 21:
+  Member 7:
   polymorphic type: function type. See lib: dom.js:609
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:609
-  Member 22:
+  Member 8:
   polymorphic type: function type. See lib: dom.js:610
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:610
-  Member 23:
+  Member 9:
   polymorphic type: function type. See lib: dom.js:611
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:611
-  Member 24:
+  Member 10:
   polymorphic type: function type. See lib: dom.js:612
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:612
-  Member 25:
+  Member 11:
   polymorphic type: function type. See lib: dom.js:613
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:613
+  Member 12:
+  polymorphic type: function type. See lib: dom.js:614
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:614
+  Member 13:
+  polymorphic type: function type. See lib: dom.js:615
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:615
+  Member 14:
+  polymorphic type: function type. See lib: dom.js:616
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:616
+  Member 15:
+  polymorphic type: function type. See lib: dom.js:617
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:617
+  Member 16:
+  polymorphic type: function type. See lib: dom.js:618
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:618
+  Member 17:
+  polymorphic type: function type. See lib: dom.js:619
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:619
+  Member 18:
+  polymorphic type: function type. See lib: dom.js:620
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:620
+  Member 19:
+  polymorphic type: function type. See lib: dom.js:621
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:621
+  Member 20:
+  polymorphic type: function type. See lib: dom.js:622
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:622
+  Member 21:
+  polymorphic type: function type. See lib: dom.js:623
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:623
+  Member 22:
+  polymorphic type: function type. See lib: dom.js:624
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:624
+  Member 23:
+  polymorphic type: function type. See lib: dom.js:625
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:625
+  Member 24:
+  polymorphic type: function type. See lib: dom.js:626
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:626
+  Member 25:
+  polymorphic type: function type. See lib: dom.js:627
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:627
   Member 26:
-  polymorphic type: function type. See lib: dom.js:641
+  polymorphic type: function type. See lib: dom.js:655
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:641
+  DocumentFragment. See lib: dom.js:655
   Member 27:
-  polymorphic type: function type. See lib: dom.js:642
+  polymorphic type: function type. See lib: dom.js:656
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:642
+  DocumentFragment. See lib: dom.js:656
   Member 28:
-  polymorphic type: function type. See lib: dom.js:643
+  polymorphic type: function type. See lib: dom.js:657
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:643
+  DocumentFragment. See lib: dom.js:657
   Member 29:
-  polymorphic type: function type. See lib: dom.js:644
+  polymorphic type: function type. See lib: dom.js:658
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:644
+  DocumentFragment. See lib: dom.js:658
   Member 30:
-  polymorphic type: function type. See lib: dom.js:645
+  polymorphic type: function type. See lib: dom.js:659
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:645
+  DocumentFragment. See lib: dom.js:659
   Member 31:
-  polymorphic type: function type. See lib: dom.js:646
+  polymorphic type: function type. See lib: dom.js:660
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:646
+  DocumentFragment. See lib: dom.js:660
   Member 32:
-  polymorphic type: function type. See lib: dom.js:647
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:647
-  Member 33:
-  polymorphic type: function type. See lib: dom.js:648
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:648
-  Member 34:
   polymorphic type: function type. See lib: dom.js:661
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                      ^^ number. Expected number literal `1`, got `-1` instead
-  number literal `1`. See lib: dom.js:661
-  Member 35:
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  DocumentFragment. See lib: dom.js:661
+  Member 33:
   polymorphic type: function type. See lib: dom.js:662
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                       ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  DocumentFragment. See lib: dom.js:662
+  Member 34:
+  polymorphic type: function type. See lib: dom.js:675
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                                      ^^ number. Expected number literal `1`, got `-1` instead
+  number literal `1`. See lib: dom.js:675
+  Member 35:
+  polymorphic type: function type. See lib: dom.js:676
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                       ^^ number. Expected number literal `4`, got `-1` instead
-  number literal `4`. See lib: dom.js:662
+  number literal `4`. See lib: dom.js:676
   Member 36:
-  polymorphic type: function type. See lib: dom.js:663
+  polymorphic type: function type. See lib: dom.js:677
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                       ^^ number. Expected number literal `5`, got `-1` instead
-  number literal `5`. See lib: dom.js:663
+  number literal `5`. See lib: dom.js:677
   Member 37:
-  polymorphic type: function type. See lib: dom.js:664
+  polymorphic type: function type. See lib: dom.js:678
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                       ^^ number. Expected number literal `128`, got `-1` instead
-  number literal `128`. See lib: dom.js:664
+  number literal `128`. See lib: dom.js:678
   Member 38:
-  polymorphic type: function type. See lib: dom.js:665
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                      ^^ number. Expected number literal `129`, got `-1` instead
-  number literal `129`. See lib: dom.js:665
-  Member 39:
-  polymorphic type: function type. See lib: dom.js:666
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                      ^^ number. Expected number literal `132`, got `-1` instead
-  number literal `132`. See lib: dom.js:666
-  Member 40:
-  polymorphic type: function type. See lib: dom.js:667
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                      ^^ number. Expected number literal `133`, got `-1` instead
-  number literal `133`. See lib: dom.js:667
-  Member 41:
-  polymorphic type: function type. See lib: dom.js:668
-  Error:
-  186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                          ^^ object literal. This type is incompatible with
-  union: NodeFilterCallback | object type. See lib: dom.js:668
-    Member 1:
-    NodeFilterCallback. See lib: dom.js:1892
-    Error:
-    function type. Callable signature not found in. See lib: dom.js:1892
-    186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                            ^^ object literal
-    Member 2:
-    object type. See lib: dom.js:1892
-    Error:
-    property `accept`. Property not found in. See lib: dom.js:1892
-    186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                            ^^ object literal
-  Member 42:
   polymorphic type: function type. See lib: dom.js:679
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                                      ^^ number. Expected number literal `129`, got `-1` instead
+  number literal `129`. See lib: dom.js:679
+  Member 39:
+  polymorphic type: function type. See lib: dom.js:680
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                                      ^^ number. Expected number literal `132`, got `-1` instead
+  number literal `132`. See lib: dom.js:680
+  Member 40:
+  polymorphic type: function type. See lib: dom.js:681
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                                      ^^ number. Expected number literal `133`, got `-1` instead
+  number literal `133`. See lib: dom.js:681
+  Member 41:
+  polymorphic type: function type. See lib: dom.js:682
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                                          ^^ object literal. This type is incompatible with
+  union: NodeFilterCallback | object type. See lib: dom.js:682
+    Member 1:
+    NodeFilterCallback. See lib: dom.js:1906
+    Error:
+    function type. Callable signature not found in. See lib: dom.js:1906
+    186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                                            ^^ object literal
+    Member 2:
+    object type. See lib: dom.js:1906
+    Error:
+    property `accept`. Property not found in. See lib: dom.js:1906
+    186:     document.createNodeIterator(document.body, -1, {}); // invalid
+                                                            ^^ object literal
+  Member 42:
+  polymorphic type: function type. See lib: dom.js:693
+  Error:
+  186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                        ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:679
+  Document. See lib: dom.js:693
   Member 43:
-  polymorphic type: function type. See lib: dom.js:683
+  polymorphic type: function type. See lib: dom.js:697
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
                                                       ^^ number. This type is incompatible with
-  undefined. See lib: dom.js:683
+  undefined. See lib: dom.js:697
 
 traversal.js:190
 190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                               ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1888
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1902
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1888
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1902
   Error:
   190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1888
+  number literal `1`. See lib: dom.js:1902
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1889
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1903
   Error:
   190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1889
+  number literal `2`. See lib: dom.js:1903
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1890
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1904
   Error:
   190:     document.createTreeWalker(document.body, -1, node => 'accept'); // invalid
                                                                 ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1890
+  number literal `3`. See lib: dom.js:1904
 
 traversal.js:192
 192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                         ^^^^^^^^ string. This type is incompatible with
-union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1888
+union: typeof typeof-annotation '<<object>>.FILTER_ACCEPT') | typeof typeof-annotation '<<object>>.FILTER_REJECT') | typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1902
   Member 1:
-  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1888
+  typeof typeof-annotation '<<object>>.FILTER_ACCEPT'). See lib: dom.js:1902
   Error:
   192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-  number literal `1`. See lib: dom.js:1888
+  number literal `1`. See lib: dom.js:1902
   Member 2:
-  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1889
+  typeof typeof-annotation '<<object>>.FILTER_REJECT'). See lib: dom.js:1903
   Error:
   192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-  number literal `2`. See lib: dom.js:1889
+  number literal `2`. See lib: dom.js:1903
   Member 3:
-  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1890
+  typeof typeof-annotation '<<object>>.FILTER_SKIP'). See lib: dom.js:1904
   Error:
   192:     document.createTreeWalker(document.body, -1, { accept: node => 'accept' }); // invalid
                                                                           ^^^^^^^^ string. This type is incompatible with
-  number literal `3`. See lib: dom.js:1890
+  number literal `3`. See lib: dom.js:1904
 
 traversal.js:193
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
@@ -1114,287 +1114,287 @@ traversal.js:193
 193:     document.createTreeWalker(document.body, -1, {}); // invalid
          ^^^^^^^^^^^^^^^^^^^^^^^^^ intersection
   Member 1:
-  polymorphic type: function type. See lib: dom.js:583
+  polymorphic type: function type. See lib: dom.js:597
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Attr. See lib: dom.js:583
+  Attr. See lib: dom.js:597
   Member 2:
-  polymorphic type: function type. See lib: dom.js:614
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:614
-  Member 3:
-  polymorphic type: function type. See lib: dom.js:615
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:615
-  Member 4:
-  polymorphic type: function type. See lib: dom.js:616
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:616
-  Member 5:
-  polymorphic type: function type. See lib: dom.js:617
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:617
-  Member 6:
-  polymorphic type: function type. See lib: dom.js:618
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:618
-  Member 7:
-  polymorphic type: function type. See lib: dom.js:619
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:619
-  Member 8:
-  polymorphic type: function type. See lib: dom.js:620
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:620
-  Member 9:
-  polymorphic type: function type. See lib: dom.js:621
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:621
-  Member 10:
-  polymorphic type: function type. See lib: dom.js:622
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:622
-  Member 11:
-  polymorphic type: function type. See lib: dom.js:623
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:623
-  Member 12:
-  polymorphic type: function type. See lib: dom.js:624
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:624
-  Member 13:
-  polymorphic type: function type. See lib: dom.js:625
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:625
-  Member 14:
-  polymorphic type: function type. See lib: dom.js:626
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:626
-  Member 15:
-  polymorphic type: function type. See lib: dom.js:627
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  Document. See lib: dom.js:627
-  Member 16:
   polymorphic type: function type. See lib: dom.js:628
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:628
-  Member 17:
+  Member 3:
   polymorphic type: function type. See lib: dom.js:629
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:629
-  Member 18:
+  Member 4:
   polymorphic type: function type. See lib: dom.js:630
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:630
-  Member 19:
+  Member 5:
   polymorphic type: function type. See lib: dom.js:631
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:631
-  Member 20:
+  Member 6:
   polymorphic type: function type. See lib: dom.js:632
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:632
-  Member 21:
+  Member 7:
   polymorphic type: function type. See lib: dom.js:633
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:633
-  Member 22:
+  Member 8:
   polymorphic type: function type. See lib: dom.js:634
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:634
-  Member 23:
+  Member 9:
   polymorphic type: function type. See lib: dom.js:635
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:635
-  Member 24:
+  Member 10:
   polymorphic type: function type. See lib: dom.js:636
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:636
-  Member 25:
+  Member 11:
   polymorphic type: function type. See lib: dom.js:637
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
   Document. See lib: dom.js:637
-  Member 26:
+  Member 12:
+  polymorphic type: function type. See lib: dom.js:638
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:638
+  Member 13:
+  polymorphic type: function type. See lib: dom.js:639
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:639
+  Member 14:
+  polymorphic type: function type. See lib: dom.js:640
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:640
+  Member 15:
+  polymorphic type: function type. See lib: dom.js:641
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:641
+  Member 16:
+  polymorphic type: function type. See lib: dom.js:642
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:642
+  Member 17:
+  polymorphic type: function type. See lib: dom.js:643
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:643
+  Member 18:
+  polymorphic type: function type. See lib: dom.js:644
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:644
+  Member 19:
+  polymorphic type: function type. See lib: dom.js:645
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:645
+  Member 20:
+  polymorphic type: function type. See lib: dom.js:646
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:646
+  Member 21:
+  polymorphic type: function type. See lib: dom.js:647
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:647
+  Member 22:
+  polymorphic type: function type. See lib: dom.js:648
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  Document. See lib: dom.js:648
+  Member 23:
   polymorphic type: function type. See lib: dom.js:649
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:649
-  Member 27:
+  Document. See lib: dom.js:649
+  Member 24:
   polymorphic type: function type. See lib: dom.js:650
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:650
-  Member 28:
+  Document. See lib: dom.js:650
+  Member 25:
   polymorphic type: function type. See lib: dom.js:651
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:651
+  Document. See lib: dom.js:651
+  Member 26:
+  polymorphic type: function type. See lib: dom.js:663
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  DocumentFragment. See lib: dom.js:663
+  Member 27:
+  polymorphic type: function type. See lib: dom.js:664
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  DocumentFragment. See lib: dom.js:664
+  Member 28:
+  polymorphic type: function type. See lib: dom.js:665
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  DocumentFragment. See lib: dom.js:665
   Member 29:
-  polymorphic type: function type. See lib: dom.js:652
+  polymorphic type: function type. See lib: dom.js:666
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:652
+  DocumentFragment. See lib: dom.js:666
   Member 30:
-  polymorphic type: function type. See lib: dom.js:653
+  polymorphic type: function type. See lib: dom.js:667
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:653
+  DocumentFragment. See lib: dom.js:667
   Member 31:
-  polymorphic type: function type. See lib: dom.js:654
+  polymorphic type: function type. See lib: dom.js:668
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                      ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:654
+  DocumentFragment. See lib: dom.js:668
   Member 32:
-  polymorphic type: function type. See lib: dom.js:655
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:655
-  Member 33:
-  polymorphic type: function type. See lib: dom.js:656
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
-  DocumentFragment. See lib: dom.js:656
-  Member 34:
   polymorphic type: function type. See lib: dom.js:669
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. Expected number literal `1`, got `-1` instead
-  number literal `1`. See lib: dom.js:669
-  Member 35:
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  DocumentFragment. See lib: dom.js:669
+  Member 33:
   polymorphic type: function type. See lib: dom.js:670
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. Expected number literal `4`, got `-1` instead
-  number literal `4`. See lib: dom.js:670
-  Member 36:
-  polymorphic type: function type. See lib: dom.js:671
+                                     ^^^^^^^^^^^^^ HTMLElement. This type is incompatible with
+  DocumentFragment. See lib: dom.js:670
+  Member 34:
+  polymorphic type: function type. See lib: dom.js:683
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. Expected number literal `5`, got `-1` instead
-  number literal `5`. See lib: dom.js:671
-  Member 37:
-  polymorphic type: function type. See lib: dom.js:672
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. Expected number literal `128`, got `-1` instead
-  number literal `128`. See lib: dom.js:672
-  Member 38:
-  polymorphic type: function type. See lib: dom.js:673
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. Expected number literal `129`, got `-1` instead
-  number literal `129`. See lib: dom.js:673
-  Member 39:
-  polymorphic type: function type. See lib: dom.js:674
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. Expected number literal `132`, got `-1` instead
-  number literal `132`. See lib: dom.js:674
-  Member 40:
-  polymorphic type: function type. See lib: dom.js:675
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. Expected number literal `133`, got `-1` instead
-  number literal `133`. See lib: dom.js:675
-  Member 41:
-  polymorphic type: function type. See lib: dom.js:676
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                        ^^ object literal. This type is incompatible with
-  union: NodeFilterCallback | object type. See lib: dom.js:676
-    Member 1:
-    NodeFilterCallback. See lib: dom.js:1892
-    Error:
-    function type. Callable signature not found in. See lib: dom.js:1892
-    193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                          ^^ object literal
-    Member 2:
-    object type. See lib: dom.js:1892
-    Error:
-    property `accept`. Property not found in. See lib: dom.js:1892
-    193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                          ^^ object literal
-  Member 42:
-  polymorphic type: function type. See lib: dom.js:680
-  Error:
-  193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                        ^^ object literal. This type is incompatible with
-  union: NodeFilterCallback | object type. See lib: dom.js:680
-    Member 1:
-    NodeFilterCallback. See lib: dom.js:1892
-    Error:
-    function type. Callable signature not found in. See lib: dom.js:1892
-    193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                          ^^ object literal
-    Member 2:
-    object type. See lib: dom.js:1892
-    Error:
-    property `accept`. Property not found in. See lib: dom.js:1892
-    193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                          ^^ object literal
-  Member 43:
+                                                    ^^ number. Expected number literal `1`, got `-1` instead
+  number literal `1`. See lib: dom.js:683
+  Member 35:
   polymorphic type: function type. See lib: dom.js:684
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                    ^^ number. Expected number literal `4`, got `-1` instead
+  number literal `4`. See lib: dom.js:684
+  Member 36:
+  polymorphic type: function type. See lib: dom.js:685
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                    ^^ number. Expected number literal `5`, got `-1` instead
+  number literal `5`. See lib: dom.js:685
+  Member 37:
+  polymorphic type: function type. See lib: dom.js:686
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                    ^^ number. Expected number literal `128`, got `-1` instead
+  number literal `128`. See lib: dom.js:686
+  Member 38:
+  polymorphic type: function type. See lib: dom.js:687
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                    ^^ number. Expected number literal `129`, got `-1` instead
+  number literal `129`. See lib: dom.js:687
+  Member 39:
+  polymorphic type: function type. See lib: dom.js:688
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                    ^^ number. Expected number literal `132`, got `-1` instead
+  number literal `132`. See lib: dom.js:688
+  Member 40:
+  polymorphic type: function type. See lib: dom.js:689
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                    ^^ number. Expected number literal `133`, got `-1` instead
+  number literal `133`. See lib: dom.js:689
+  Member 41:
+  polymorphic type: function type. See lib: dom.js:690
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                        ^^ object literal. This type is incompatible with
+  union: NodeFilterCallback | object type. See lib: dom.js:690
+    Member 1:
+    NodeFilterCallback. See lib: dom.js:1906
+    Error:
+    function type. Callable signature not found in. See lib: dom.js:1906
+    193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                          ^^ object literal
+    Member 2:
+    object type. See lib: dom.js:1906
+    Error:
+    property `accept`. Property not found in. See lib: dom.js:1906
+    193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                          ^^ object literal
+  Member 42:
+  polymorphic type: function type. See lib: dom.js:694
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                        ^^ object literal. This type is incompatible with
+  union: NodeFilterCallback | object type. See lib: dom.js:694
+    Member 1:
+    NodeFilterCallback. See lib: dom.js:1906
+    Error:
+    function type. Callable signature not found in. See lib: dom.js:1906
+    193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                          ^^ object literal
+    Member 2:
+    object type. See lib: dom.js:1906
+    Error:
+    property `accept`. Property not found in. See lib: dom.js:1906
+    193:     document.createTreeWalker(document.body, -1, {}); // invalid
+                                                          ^^ object literal
+  Member 43:
+  polymorphic type: function type. See lib: dom.js:698
+  Error:
+  193:     document.createTreeWalker(document.body, -1, {}); // invalid
                                                     ^^ number. This type is incompatible with
-  undefined. See lib: dom.js:684
+  undefined. See lib: dom.js:698
 
 
 Found 24 errors
