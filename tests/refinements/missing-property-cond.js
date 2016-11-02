@@ -39,6 +39,9 @@ function foo6(o: mixed) {
 
 function foo7(o: mixed) {
   if (typeof o.bar === 'string') {} // error
+  if (o && typeof o.bar === 'string') {} // ok
+  if (o != null && typeof o.bar === 'string') {} // ok
+  if (o !== null && o !== undefined && typeof o.bar === 'string') {} // ok
 }
 
 function foo8(o: { p: mixed }) {

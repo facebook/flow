@@ -4655,7 +4655,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       perform_lookup_action cx trace x p reason reason_op action
 
     (* LookupT is a non-strict lookup *)
-    | (ObjProtoT _ | FunProtoT _ | MixedT (_, Mixed_truthy)),
+    | (ObjProtoT _ |
+       FunProtoT _ |
+       MixedT (_, Mixed_truthy) |
+       MixedT (_, Mixed_non_maybe)),
       LookupT (_, NonstrictReturning t_opt, [], _, _) ->
       (* don't fire
 

@@ -1234,6 +1234,15 @@ and dump_t_ (depth, tvars) cx t =
       "TypeDestructorT"
   in
 
+  let string_of_mixed_flavor = function
+    | Mixed_everything -> "Mixed_everything"
+    | Mixed_truthy -> "Mixed_truthy"
+    | Mixed_non_maybe -> "Mixed_non_maybe"
+    | Mixed_non_null -> "Mixed_non_null"
+    | Mixed_non_void -> "Mixed_non_void"
+    | Empty_intersection -> "Empty_intersection"
+  in
+
   if depth = 0 then string_of_ctor t
   else match t with
   | OpenT (_, id) -> p ~extra:(tvar id) t
@@ -1251,8 +1260,8 @@ and dump_t_ (depth, tvars) cx t =
   | FunT (_,_,_,{params_tlist;return_t;_}) -> p ~extra:(spf "[%s] (%s)"
       (String.concat "; " (List.map kid params_tlist))
       (kid return_t)) t
+  | MixedT (_, flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
   | EmptyT _
-  | MixedT _
   | AnyT _
   | NullT _
   | VoidT _
