@@ -7661,6 +7661,17 @@ and ok_unify = function
   | _ -> true
 
 and __unify cx t1 t2 trace =
+  begin match Context.verbose cx with
+  | Some { Verbose.indent; depth } ->
+    let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
+    let pid = Context.pid_prefix cx in
+    prerr_endlinef
+      "\n%s%s%s =\n%s%s%s"
+      indent pid (Debug_js.dump_t ~depth cx t1)
+      indent pid (Debug_js.dump_t ~depth cx t2)
+  | None -> ()
+  end;
+
   if t1 = t2 then () else (
 
   (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
