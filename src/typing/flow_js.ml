@@ -1235,7 +1235,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        speculative_matches for details). *)
 
     | t, ChoiceKitUseT (reason, FullyResolveType id) ->
-      fully_resolve_type cx reason id t
+      fully_resolve_type cx trace reason id t
 
     | ChoiceKitT (_, Trigger), ChoiceKitUseT (reason, TryFlow (i, spec)) ->
       speculative_matches cx trace reason i spec
@@ -2454,7 +2454,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* Try the branches of the union in turn, with the goal of selecting the
            correct branch. This process is reused for intersections as well. See
            comments on try_union and try_intersection. *)
-        try_union cx l r rep
+        try_union cx trace l r rep
     )
 
     (* maybe and optional types are just special union types *)
@@ -5880,7 +5880,7 @@ and chain_objects cx ?trace reason this those =
     unique identifier, called the speculation_id. This identifier keeps track of
     unresolved tvars encountered when trying to fully resolve types. **)
 
-and try_union cx l reason rep =
+and try_union cx trace l reason rep =
   let ts = UnionRep.members rep in
   let speculation_id = mk_id() in
   Speculation.init_speculation cx speculation_id;
@@ -5892,11 +5892,11 @@ and try_union cx l reason rep =
   let imap = ResolvableTypeJob.collect_of_type
     ~log_unresolved:speculation_id cx reason imap l in
   (* fully resolve the collected types *)
-  resolve_bindings_init cx reason (bindings_of_jobs cx imap) @@
+  resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap) @@
   (* ...and then begin the choice-making process *)
-    try_flow_continuation cx reason speculation_id (UnionCases(l, ts))
+    try_flow_continuation cx trace reason speculation_id (UnionCases(l, ts))
 
-and try_intersection cx u reason rep =
+and try_intersection cx trace u reason rep =
   let ts = InterRep.members rep in
   let speculation_id = mk_id() in
   Speculation.init_speculation cx speculation_id;
@@ -5908,9 +5908,9 @@ and try_intersection cx u reason rep =
   let imap = ResolvableTypeJob.collect_of_use
     ~log_unresolved:speculation_id cx reason imap u in
   (* fully resolve the collected types *)
-  resolve_bindings_init cx reason (bindings_of_jobs cx imap) @@
+  resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap) @@
   (* ...and then begin the choice-making process *)
-    try_flow_continuation cx reason speculation_id (IntersectionCases(ts, u))
+    try_flow_continuation cx trace reason speculation_id (IntersectionCases(ts, u))
 
 (* Preprocessing for intersection types.
 
@@ -5946,7 +5946,7 @@ and try_intersection cx u reason rep =
     appears on that tvar. **)
 and prep_try_intersection cx trace reason unresolved resolved u r rep =
   match unresolved with
-  | [] -> try_intersection cx (replace_parts resolved u) r rep
+  | [] -> try_intersection cx trace (replace_parts resolved u) r rep
   | tvar::unresolved ->
     rec_flow cx trace (tvar, intersection_preprocess_kit reason
       (ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
@@ -6007,7 +6007,7 @@ and replace_parts replace = function
    reflected in the use (or not) of OpenUnresolved (see below).
 *)
 
-and bindings_of_jobs cx jobs =
+and bindings_of_jobs cx trace jobs =
   IMap.fold ResolvableTypeJob.(fun id job bindings -> match job with
   | OpenResolved -> bindings
   | Binding t -> (id, t)::bindings
@@ -6016,16 +6016,16 @@ and bindings_of_jobs cx jobs =
     | Some speculation_id ->
       Speculation.add_unresolved_to_speculation cx speculation_id t
     | None ->
-      unify_opt cx t AnyT.t
+      rec_unify cx trace t AnyT.t
     end;
     bindings
   ) jobs []
 
 (* Entry point into full type resolution. Create an identifier for the goal
    tvar, and call the general full type resolution function below. *)
-and resolve_bindings_init cx reason bindings done_tvar =
+and resolve_bindings_init cx trace reason bindings done_tvar =
   let id = create_goal cx done_tvar in
-  resolve_bindings cx reason id bindings
+  resolve_bindings cx trace reason id bindings
 
 and create_goal cx tvar =
   let i = mk_id () in
@@ -6068,20 +6068,20 @@ and create_goal cx tvar =
    recursive loop).
 *)
 
-and resolve_bindings cx reason id bindings =
+and resolve_bindings cx trace reason id bindings =
   let bindings = filter_bindings cx bindings in
   let fully_resolve_ids = connect_id_to_bindings cx id bindings in
   ISet.iter (fun id ->
     match IMap.get id (Context.evaluated cx) with
     | None -> ()
-    | Some tvar -> trigger cx reason tvar
+    | Some tvar -> trigger cx trace reason tvar
   ) fully_resolve_ids;
-  List.iter (resolve_binding cx reason) bindings
+  List.iter (resolve_binding cx trace reason) bindings
 
-and fully_resolve_type cx reason id t =
+and fully_resolve_type cx trace reason id t =
   if is_unexplored_source cx id then
     let imap = ResolvableTypeJob.collect_of_type cx reason IMap.empty t in
-    resolve_bindings cx reason id (bindings_of_jobs cx imap)
+    resolve_bindings cx trace reason id (bindings_of_jobs cx trace imap)
 
 and filter_bindings cx =
   List.filter (fun (id, _) -> is_unfinished_target cx id)
@@ -6125,15 +6125,15 @@ and intersection_preprocess_kit reason k =
 
 (** utils for emitting toolkit constraints **)
 
-and trigger cx reason done_tvar =
-  flow cx (choice_kit reason Trigger, UseT (UnknownUse, done_tvar))
+and trigger cx trace reason done_tvar =
+  rec_flow cx trace (choice_kit reason Trigger, UseT (UnknownUse, done_tvar))
 
-and try_flow_continuation cx reason speculation_id spec =
-  tvar_with_constraint cx
+and try_flow_continuation cx trace reason speculation_id spec =
+  tvar_with_constraint cx ~trace
     (choice_kit_use reason (TryFlow (speculation_id, spec)))
 
-and resolve_binding cx reason (id, t) =
-  flow cx (
+and resolve_binding cx trace reason (id, t) =
+  rec_flow cx trace (
     t,
     choice_kit_use reason (FullyResolveType id)
   )
