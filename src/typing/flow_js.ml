@@ -2303,7 +2303,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (o1, GetKeysT (reason1,
         match u with
         | UseT (_, t) -> t
-        | _ -> tvar_with_constraint cx u))
+        | _ -> tvar_with_constraint cx ~trace u))
 
     (* helpers *)
 
@@ -2647,7 +2647,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************************************************************)
 
     | _, TestPropT (reason_op, (reason_prop, name), tout) ->
-      let t = tvar_with_constraint cx ~derivable:true
+      let t = tvar_with_constraint cx ~trace ~derivable:true
         (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
       in
       let lookup_kind = NonstrictReturning (match l with
@@ -3866,7 +3866,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | ObjT (reason_obj, o), GetPropT (reason_op, propname, tout) ->
-      let tout = tvar_with_constraint cx
+      let tout = tvar_with_constraint cx ~trace
         (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
       in
       read_obj_prop cx trace o propname reason_obj reason_op tout
@@ -4522,7 +4522,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        with the latter. *)
     | (ClassT _, (UseT (_, FunT (reason, _, _, _)) | CallT (reason, _))) ->
       rec_flow cx trace (l,
-        GetPropT(reason, (reason, "$call"), tvar_with_constraint cx u))
+        GetPropT(reason, (reason, "$call"), tvar_with_constraint cx ~trace u))
 
     (* For a function type to be used as a class type, the following must hold:
        - the class's instance type must be a subtype of the function's prototype
@@ -6477,7 +6477,7 @@ and get_prop cx trace reason_prop reason_op strict super x map tout =
       add_output cx trace
         (FlowError.EPropAccess ((reason_op, reason_op), x, p, Read)))
   | None ->
-    let tout = tvar_with_constraint cx u in
+    let tout = tvar_with_constraint cx ~trace u in
     lookup_prop cx trace super reason_prop strict x (RWProp (tout, Read))
   end;
   Ops.set ops
@@ -8309,7 +8309,7 @@ and flow cx (lower, upper) =
 and flow_t cx (t1, t2) =
   flow cx (t1, UseT (UnknownUse, t2))
 
-and tvar_with_constraint cx ?(derivable=false) u =
+and tvar_with_constraint cx ?trace ?(derivable=false) u =
   let reason = reason_of_use_t u in
   let mk_tvar_where =
     if derivable
@@ -8317,7 +8317,7 @@ and tvar_with_constraint cx ?(derivable=false) u =
     else mk_tvar_where
   in
   mk_tvar_where cx reason (fun tvar ->
-    flow_opt cx (tvar, u)
+    flow_opt cx ?trace (tvar, u)
   )
 
 (* Wrapper functions around __unify that manage traces. Use these functions for
