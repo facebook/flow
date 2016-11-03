@@ -8134,7 +8134,7 @@ and reposition cx ?trace reason t =
              open -> open, concrete -> concrete). The unification below thus
              results in resolving `tvar` to `t'`, so we end up with a resolved
              tvar whenever we started with one. *)
-          unify_opt cx tvar t';
+          unify_opt cx ?trace tvar t';
         ))
     | _ ->
       (* Try to re-use an already created repositioning tvar.
@@ -8327,8 +8327,14 @@ and rec_unify cx trace t1 t2 =
   let max = Context.max_trace_depth cx in
   __unify cx t1 t2 (Trace.rec_trace ~max t1 (UseT (UnknownUse, t2)) trace)
 
-and unify_opt cx t1 t2 =
-  __unify cx t1 t2 (Trace.unit_trace t1 (UseT (UnknownUse, t2)))
+and unify_opt cx ?trace t1 t2 =
+  let trace = match trace with
+  | None -> Trace.unit_trace t1 (UseT (UnknownUse, t2))
+  | Some trace ->
+    let max = Context.max_trace_depth cx in
+    Trace.rec_trace ~max t1 (UseT (UnknownUse, t2)) trace
+  in
+  __unify cx t1 t2 trace
 
 (* Externally visible function for unification. *)
 (* Calls internal entry point and traps runaway recursion. *)
