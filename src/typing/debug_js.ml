@@ -1358,6 +1358,13 @@ and dump_use_t_ (depth, tvars) cx t =
   | SuperProp p -> spf "Super %s" (prop p)
   in
 
+  let try_flow = function
+    | UnionCases (t, ts) ->
+        spf "(%s, [%s])" (kid t) (String.concat "; " (List.map kid ts))
+    | IntersectionCases (ts, use_t) ->
+        spf "([%s], %s)" (String.concat "; " (List.map kid ts)) (use_kid use_t)
+  in
+
   if depth = 0 then string_of_use_ctor t
   else match t with
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
@@ -1377,6 +1384,8 @@ and dump_use_t_ (depth, tvars) cx t =
       (kid return_t)) t
   | CallLatentPredT _ -> p t
   | CallOpenPredT _ -> p t
+  | ChoiceKitUseT (_, TryFlow (_, spec)) ->
+      p ~extra:(try_flow spec) t
   | ChoiceKitUseT _ -> p t
   | CJSExtractNamedExportsT _ -> p t
   | CJSRequireT _ -> p t
@@ -1451,7 +1460,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
-
 
 and dump_prop ?(depth=3) cx p =
   dump_prop_ (depth, ISet.empty) cx p
