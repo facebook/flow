@@ -38,4 +38,4 @@ import type {T as T2} from "ES";
 (42: T2);
 ('asdf': T2); // Error: string ~> number
 
-import {exports} from "ES"; // Error: Not an export
+import {exports as nope} from "ES"; // Error: Not an export

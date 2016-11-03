@@ -407,7 +407,7 @@ and statement_decl cx = Ast.Statement.(
         let state = Scope.State.Initialized in
         if isType
         then Env.bind_type ~state cx local_name tvar reason
-        else Env.bind_var ~state cx local_name tvar reason
+        else Env.bind_import cx local_name tvar reason
       )
 )
 

@@ -60,7 +60,7 @@ export default suite(({addFile, addFiles, addCode}) => [
 
     // Directories are automatically created when you add files to them
     addFile('B.js', 'some/dir/E.js')
-      .addCode('import D from "./some/dir/E"')
+      .addCode('import E from "./some/dir/E"')
       .noNewErrors(),
   ]),
 

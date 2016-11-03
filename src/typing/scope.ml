@@ -52,8 +52,9 @@ module Entry = struct
     | Var
 
   and const_binding_kind =
-    | ConstVarBinding
+    | ConstImportBinding
     | ConstParamBinding
+    | ConstVarBinding
 
   and let_binding_kind =
     | LetVarBinding
@@ -63,8 +64,9 @@ module Entry = struct
     | ParamBinding
 
   let string_of_value_kind = function
-  | Const ConstVarBinding -> "const"
+  | Const ConstImportBinding -> "import"
   | Const ConstParamBinding -> "const param"
+  | Const ConstVarBinding -> "const"
   | Let LetVarBinding -> "let"
   | Let ClassNameBinding -> "class"
   | Let CatchParamBinding -> "catch"
@@ -109,6 +111,9 @@ module Entry = struct
 
   let new_const ~loc ?(state=State.Undeclared) ?(kind=ConstVarBinding) t =
     new_value (Const kind) state t t loc
+
+  let new_import ~loc t =
+    new_value (Const ConstImportBinding) State.Initialized t t loc
 
   let new_let ~loc ?(state=State.Undeclared) ?(kind=LetVarBinding) t =
     new_value (Let kind) state t t loc
