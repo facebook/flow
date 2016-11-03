@@ -19,10 +19,9 @@ function linear_pre_init() {
   let w:number = x;   // ok
 }
 
-// self-references in let bindings are ok, mod type errors
+// self-references in let bindings are not ok
 function self_init() {
-  let x:?number = x;  // ok
-  let y:number = y; // error, uninitialized ~/> number
+  let x = x;  // 'x' not initialized!
 }
 
 // use of let after partial init (non-exhaustive if) gives undefined
@@ -145,4 +144,14 @@ function switch_post_init2(i): number {
       throw new Error('Invalid state');
   }
   return bar; // ok, definitely initialized
+}
+
+// reference of a let-binding is permitted in a sub-closure within the init expr
+function sub_closure_init_reference() {
+  let x = function() { return x; };
+  const y = function() { return y; };
+
+  // var-bindings can reference each other cyclically since they do not incur a
+  // TDZ (...even though this is weird...)
+  var z = z;
 }

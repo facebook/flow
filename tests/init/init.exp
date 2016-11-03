@@ -142,46 +142,46 @@ let.js:17
  17:   let z:number = x;   // error
              ^^^^^^ number
 
-let.js:25
- 25:   let y:number = y; // error, uninitialized ~/> number
-                      ^ uninitialized variable. This type is incompatible with
- 25:   let y:number = y; // error, uninitialized ~/> number
-             ^^^^^^ number
+let.js:24
+ 24:   let x = x;  // 'x' not initialized!
+               ^ x. let referenced before declaration, or after skipped declaration
+ 24:   let x = x;  // 'x' not initialized!
+           ^ let x
 
-let.js:34
- 34:   var y:number = x; // error, possibly uninitialized
+let.js:33
+ 33:   var y:number = x; // error, possibly uninitialized
                       ^ possibly uninitialized variable. This type is incompatible with
- 34:   var y:number = x; // error, possibly uninitialized
+ 33:   var y:number = x; // error, possibly uninitialized
              ^^^^^^ number
 
-let.js:59
- 59:   var y:number = x; // error, possibly uninitialized
+let.js:58
+ 58:   var y:number = x; // error, possibly uninitialized
                       ^ possibly uninitialized variable. This type is incompatible with
- 59:   var y:number = x; // error, possibly uninitialized
+ 58:   var y:number = x; // error, possibly uninitialized
              ^^^^^^ number
 
-let.js:84
- 84:       let y:number = x; // error, skipped declaration
+let.js:83
+ 83:       let y:number = x; // error, skipped declaration
                           ^ x. let referenced before declaration, or after skipped declaration
- 82:       let x:number;
+ 81:       let x:number;
                ^ let x
 
-let.js:94
- 94:   var y:number = x; // error
+let.js:93
+ 93:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
- 94:   var y:number = x; // error
+ 93:   var y:number = x; // error
              ^^^^^^ number
 
-let.js:112
-112:   var y:number = x; // error
+let.js:111
+111:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
-112:   var y:number = x; // error
+111:   var y:number = x; // error
              ^^^^^^ number
 
-let.js:121
-121:   var y:number = x; // error
+let.js:120
+120:   var y:number = x; // error
                       ^ possibly uninitialized variable. This type is incompatible with
-121:   var y:number = x; // error
+120:   var y:number = x; // error
              ^^^^^^ number
 
 

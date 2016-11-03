@@ -2285,12 +2285,16 @@ and variable cx kind
         let has_anno = not (typeAnnotation = None) in
         (match init with
           | Some ((rhs_loc, _) as expr) ->
-            declare_var cx name reason; (* prepare for self-refs *)
             let rhs_reason =
               let desc = RCustom (spf "assignment of var `%s`" name) in
               mk_reason desc rhs_loc
             in
             let rhs = expression cx expr in
+            (**
+             * Const and let variables are not declared during evaluation of
+             * their initializer expressions.
+             *)
+            declare_var cx name reason;
             let hook_loc = Ast.Expression.(
               match expr with
               (**
