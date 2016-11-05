@@ -7,6 +7,7 @@ export type FlowResult = {
   errors: Array<FlowError>,
   flowVersion: string,
   timing?: FlowTiming,
+  memory?: FlowMemory,
 };
 export type FlowError = {
   kind: string,
@@ -45,6 +46,9 @@ type FlowTiming = {
       wall_duration: number,
     }
   }
+}
+type FlowMemory = {
+  [key: string]: number;
 }
 
 export const noErrors: FlowResult = {
