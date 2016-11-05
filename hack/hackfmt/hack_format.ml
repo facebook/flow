@@ -131,6 +131,8 @@ let split ?space:(space=false) () =
   builder#split space
 
 let handle_trivia trivia_list =
+  ()
+  (*
   List.iter trivia_list ~f:(fun t ->
     match Trivia.kind t with
       | TriviaKind.SingleLineComment ->
@@ -147,6 +149,7 @@ let handle_trivia trivia_list =
         split ()
       | _ -> ()
   )
+  *)
 
 let token x =
   handle_trivia (EditableToken.leading x);
@@ -319,6 +322,22 @@ let rec transform node =
       t semi;
     ) ();
     builder#end_chunks ();
+    ()
+  | ScopeResolutionExpression x ->
+    let (qual, operator, name) = get_scope_resolution_expression_children x in
+    t qual;
+    t operator;
+    t name;
+    ()
+  | MemberSelectionExpression x ->
+    let (obj, operator, name) = get_member_selection_expression_children x in
+    t obj;
+    split ();
+    tl_with ~nest ~f:(fun () ->
+      t operator;
+      t name;
+    ) ();
+    ()
   | BinaryExpression x ->
     builder#start_span ();
     (* TODO: nested binary expressions split by precedence *)
@@ -341,6 +360,41 @@ let rec transform node =
       t x.function_call_right_paren
     ) ();
     builder#end_span ()
+  | ObjectCreationExpression x ->
+    let (kw, obj_type, left_p, arg_list, right_p) =
+      get_object_creation_expression_children x
+    in
+    t kw;
+    add_space ();
+    t obj_type;
+    transform_argish left_p arg_list right_p;
+    ()
+  | ParenthesizedExpression x ->
+    let (left_p, expr, right_p) = get_parenthesized_expression_children x in
+    t left_p;
+    split ();
+    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      t_with ~nest expr;
+      split ();
+      t right_p
+    ) ();
+    ()
+  | GenericTypeSpecifier x ->
+    let (class_type, type_args) = get_generic_type_specifier_children x in
+    t class_type;
+    t type_args;
+    ()
+  | TypeArguments x ->
+    let (left_a, type_list, right_a) = get_type_arguments_children x in
+    t left_a;
+    split ();
+    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      tl_with ~nest ~f:(fun () ->
+        handle_possible_list ~after_each:after_each_argument type_list
+      ) ();
+      t right_a;
+    ) ();
+    ()
   | _ ->
     Printf.printf "%s not supported - exiting \n"
       (SyntaxKind.to_string (kind node));
@@ -424,13 +478,25 @@ and transform_function_declaration_header ~span_started x =
   builder#end_span ();
 
   tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
-    tl_with ~span:true ~f:(fun () ->
+    tl_with ~nest:true ~f:(fun () ->
       handle_possible_list ~after_each:after_each_argument params
     ) ();
     transform rightp;
     transform colon;
     add_space ();
     transform ret_type;
+  ) ();
+  ()
+
+and transform_argish left_p arg_list right_p =
+  transform left_p;
+  split ();
+  tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~nest:true ~f:(fun () ->
+      handle_possible_list ~after_each:after_each_argument arg_list
+    ) ();
+    split ();
+    transform right_p
   ) ();
   ()
 
