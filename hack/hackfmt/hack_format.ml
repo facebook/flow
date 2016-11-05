@@ -33,7 +33,7 @@ let builder = object
     chunks <- match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
         {hd with Chunk.text = hd.Chunk.text ^ s} :: tl
-      | _ -> [Chunk.make s] @ chunks
+      | _ -> [Chunk.make s (List.hd rules)] @ chunks
 
   method split () =
     chunks <- match chunks with
@@ -41,7 +41,7 @@ let builder = object
         (Chunk.finalize hd (List.hd rules)) :: tl
       | [] -> chunks (* TODO: error here *)
 
-  method start_rule ?rule:(rule=Rule.Simple) () =
+  method start_rule ?rule:(rule=Rule.simple_rule ()) () =
     (* TODO: handle rules containing this rule callback
     rules <- List.map rules ~f(fun r ->
     *)
@@ -61,7 +61,7 @@ let builder = object
     let span = Span.make os.open_span_cost in
     let r_chunks = List.rev chunks in
     chunks <- List.rev_mapi r_chunks ~f:(fun n x ->
-      if n < os.open_span_start then
+      if n <= os.open_span_start then
         x
       else
         (* TODO: handle required hard splits *)
@@ -79,7 +79,6 @@ let builder = object
         (List.length c.Chunk.spans)
         (Rule.to_string c.Chunk.rule)
         c.Chunk.text
-
     )
 
 end
@@ -141,10 +140,10 @@ let rec transform node =
     t x.function_call_receiver;
     t x.function_call_left_paren;
     split ();
-    builder#start_rule ~rule:Rule.Argument ();
+    builder#start_rule ~rule:(Rule.argument_rule ()) ();
     t x.function_call_argument_list;
-    builder#end_rule ();
     t x.function_call_right_paren;
+    builder#end_rule ();
     builder#end_span ()
   | _ ->
     Printf.printf "%s not supported - exiting \n"
@@ -157,3 +156,4 @@ let run node =
   transform node;
   split ();
   builder#__debug ();
+  List.rev (builder#_end ())
