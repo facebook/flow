@@ -139,4 +139,4 @@ let to_string id =
     | Always -> "Always"
     | Argument -> "Argument"
   in
-  kind
+  (string_of_int id) ^ " - " ^ kind

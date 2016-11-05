@@ -160,8 +160,17 @@ let space () =
 let pending_space () =
   builder#add_pending_whitespace " "
 
+let start_argument_rule () =
+  builder#start_rule ~rule:(Rule.argument_rule()) ()
+
+let end_rule () =
+  builder#end_rule ()
+
 let rec transform node =
   let t = transform in
+  let _span = true in
+  let nest = true in
+
   let () = match syntax node with
   | Missing -> ()
   | Token x ->
@@ -170,10 +179,12 @@ let rec transform node =
   | Script x ->
     (* TODO script_header*)
     t x.script_declarations
+  | SimpleTypeSpecifier {simple_type_specifier} -> t simple_type_specifier
   | LiteralExpression x -> t x.literal_expression
-  | VariableExpression x -> t x.variable_expression
   | QualifiedNameExpression x ->
     t x.qualified_name_expression
+  | VariableExpression x -> t x.variable_expression
+  | PipeVariableExpression x -> t x.pipe_variable_expression
   | ListItem x ->
     t x.list_item;
     t x.list_separator
@@ -182,12 +193,11 @@ let rec transform node =
     space ();
     t x.if_left_paren;
     split ();
-    builder#nest ();
-    t x.if_condition;
+    start_argument_rule ();
+    t_with ~nest x.if_condition;
     split ();
-    builder#unnest ();
     t x.if_right_paren;
-    builder#end_rule ();
+    end_rule ();
     handle_possible_compound_statement x.if_statement;
     handle_possible_list x.if_elseif_clauses;
     t x.if_else_clause;
@@ -198,10 +208,8 @@ let rec transform node =
     space ();
     t x.elseif_left_paren;
     split ();
-    builder#nest ();
-    t x.elseif_condition;
+    t_with ~nest x.elseif_condition;
     split ();
-    builder#unnest ();
     t x.elseif_right_paren;
     handle_possible_compound_statement x.elseif_statement;
     ()
@@ -213,33 +221,36 @@ let rec transform node =
     t x.expression_statement_expression;
     t x.expression_statement_semicolon;
     builder#end_chunks()
+  | WhileStatement x ->
+    t x.while_keyword;
+    space ();
+    t x.while_left_paren;
+    split ();
+    start_argument_rule ();
+    t_with ~nest x.while_condition;
+    split ();
+    t x.while_right_paren;
+    end_rule ();
+    handle_possible_compound_statement x.while_body;
+    builder#end_chunks ();
+    ()
   | BinaryExpression x ->
     builder#start_span ();
-    (* nest_expression? *)
-    builder#start_rule (); (* lazy? *)
-
     (* TODO: nested binary expressions split by precedence *)
     t x.binary_left_operand;
     space ();
     t x.binary_operator;
-    builder#end_rule ();
     split ~space:true ();
-    builder#nest ();
-    builder#start_rule ();
-    t x.binary_right_operand;
-    builder#unnest ();
-    builder#end_span ();
-    builder#end_rule ()
+    t_with ~nest ~rule:(Rule.simple_rule ()) x.binary_right_operand;
+    builder#end_span ()
   | FunctionCallExpression x ->
     builder#start_span ();
     t x.function_call_receiver;
     t x.function_call_left_paren;
     split ();
-    builder#nest ();
     builder#start_rule ~rule:(Rule.argument_rule ()) ();
-    handle_possible_list ~after_each:after_each_argument
+    t_with ~nest ~f:(handle_possible_list ~after_each:after_each_argument)
       x.function_call_argument_list;
-    builder#unnest ();
     t x.function_call_right_paren;
     builder#end_rule ();
     builder#end_span ()
@@ -248,6 +259,18 @@ let rec transform node =
       (SyntaxKind.to_string (kind node));
     exit 1
   in
+  ()
+
+and t_with ?(nest=false) ?(rule= -1) ?(span=false) ?(f=transform) node =
+  if rule <> -1 then builder#start_rule ~rule ();
+  if nest then builder#nest ();
+  if span then builder#start_span ();
+
+  f node;
+
+  if nest then builder#unnest ();
+  if rule <> -1 then builder#end_rule ();
+  if span then builder#end_span ();
   ()
 
 and after_each_argument is_last =
@@ -259,16 +282,14 @@ and handle_possible_compound_statement node =
       space ();
       transform x.compound_left_brace;
       builder#end_chunks ();
-      builder#nest ();
-      transform x.compound_statements;
-      builder#unnest ();
+      t_with ~nest:true x.compound_statements;
       transform x.compound_right_brace;
       pending_space ();
+      ()
     | _ ->
       builder#end_chunks ();
-      builder#nest ();
-      transform node;
-      builder#unnest ()
+      t_with ~nest:true node;
+      ()
 
 and handle_possible_list ?after_each:(after_each=(fun is_last -> ())) node =
   match syntax node with
