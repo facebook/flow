@@ -62,6 +62,7 @@ let make chunks rvm =
         let cost = cost + Chunk.get_span_split_cost c in
         len, cost, overflow
       else
+        let len = if c.Chunk.space_if_not_split then len + 1 else len in
         len, cost, overflow
       in
 

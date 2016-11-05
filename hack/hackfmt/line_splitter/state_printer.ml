@@ -20,6 +20,8 @@ let print_state state =
       let indent = Nesting.get_indent
         c.Chunk.nesting state.Solve_state.nesting_set in
       Buffer.add_string b (String.make indent ' ')
+    end else begin
+      if c.Chunk.space_if_not_split then Buffer.add_string b " "
     end;
     Buffer.add_string b c.Chunk.text;
     ()

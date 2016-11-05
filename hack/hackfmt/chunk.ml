@@ -14,6 +14,7 @@ type t = {
   text: string;
   spans: Span.t list;
   is_appendable: bool;
+  space_if_not_split: bool;
   rule: int;
   nesting: Nesting.t
 }
@@ -23,6 +24,7 @@ let default_chunk = {
   text = "";
   spans = [];
   is_appendable = true;
+  space_if_not_split = false;
   rule = -1;
   nesting = {Nesting.id = -1; amount = 0; parent = None; };
 }
@@ -34,7 +36,7 @@ let make text rule nesting =
   in
   {c with text; nesting;}
 
-let finalize chunk rule =
+let finalize chunk rule space =
   let rule = match rule with
     | Some r when (Rule.get_kind r) = Rule.Always -> r
     | _ when chunk.rule <> -1 -> chunk.rule
@@ -44,6 +46,7 @@ let finalize chunk rule =
   {chunk with
     is_appendable = false;
     rule;
+    space_if_not_split = space;
   }
 
 let get_span_split_cost chunk =

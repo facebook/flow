@@ -33,11 +33,15 @@ let builder = object (this)
   val mutable chunks = [];
 
   val mutable next_split_hard = false;
+  val mutable space_if_not_split = false;
+
+  val mutable pending_whitespace = "";
 
   method add_string s =
-    chunks <- match chunks with
+    chunks <- (match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
-        {hd with Chunk.text = hd.Chunk.text ^ s} :: tl
+        let text = hd.Chunk.text ^ pending_whitespace ^ s in
+        {hd with Chunk.text = text} :: tl
       | _ -> begin
           let hard_split = next_split_hard in
           next_split_hard <- false;
@@ -45,22 +49,30 @@ let builder = object (this)
           let cs = [Chunk.make s (List.hd rules) nesting] @ chunks in
           if hard_split then this#end_rule ();
           cs
-
       end
-
-  method split () =
-    chunks <- (match chunks with
-      | hd :: tl ->
-        (Chunk.finalize hd (List.hd rules)) :: tl
-      | [] -> raise (Failure "No chunks to split")
     );
+    pending_whitespace <- ""
 
-    this#__debug (List.rev chunks);
+  method add_pending_whitespace s =
+    pending_whitespace <- pending_whitespace ^ s
+
+  method split space =
+    chunks <- (match chunks with
+      | hd :: tl when hd.Chunk.is_appendable ->
+        let chunk = (Chunk.finalize hd (List.hd rules) space_if_not_split) in
+        space_if_not_split <- space;
+        chunk :: tl
+      | [] -> raise (Failure "No chunks to split")
+      | _ -> chunks
+    )
 
   method hard_split () =
-    this#split ();
+    this#split false;
     next_split_hard <- true;
     ()
+
+  method end_chunks () =
+    this#hard_split ()
 
   method nest ?amount:(amount=2) () =
     nesting <- (Nesting.make (Some nesting) 2);
@@ -97,9 +109,10 @@ let builder = object (this)
         (* TODO: handle required hard splits *)
         {x with Chunk.spans = span :: x.Chunk.spans}
     );
+    ()
 
   method _end () =
-    this#split ();
+    this#split false;
     List.rev chunks
 
   method __debug chunks =
@@ -115,23 +128,23 @@ let builder = object (this)
 end
 
 let split ?space:(space=false) () =
-  builder#split ()
+  builder#split space
 
 let handle_trivia trivia_list =
   List.iter trivia_list ~f:(fun t ->
     match Trivia.kind t with
       | TriviaKind.SingleLineComment ->
-        builder#split ();
+        split ();
         builder#start_rule ();
         builder#add_string (Trivia.text t);
         builder#end_rule ();
-        builder#hard_split ();
+        builder#hard_split ()
       | TriviaKind.DelimitedComment ->
-        builder#split ();
+        split ();
         builder#start_rule ();
         builder#add_string (Trivia.text t);
         builder#end_rule ();
-        builder#split ();
+        split ()
       | _ -> ()
   )
 
@@ -140,6 +153,12 @@ let token x =
   builder#add_string (EditableToken.text x);
   handle_trivia (EditableToken.trailing x);
   ()
+
+let space () =
+  builder#add_string " "
+
+let pending_space () =
+  builder#add_pending_whitespace " "
 
 let rec transform node =
   let t = transform in
@@ -155,21 +174,45 @@ let rec transform node =
   | VariableExpression x -> t x.variable_expression
   | QualifiedNameExpression x ->
     t x.qualified_name_expression
-  | SyntaxList x ->
-    List.iter x ~f:(fun item ->
-      t item;
-      (* TODO:
-         should every syntax list have a split after each item?
-         should every syntax list split have a space if no newline?
-       *)
-      split ~space:true ()
-    )
   | ListItem x ->
     t x.list_item;
     t x.list_separator
+  | IfStatement x ->
+    t x.if_keyword;
+    space ();
+    t x.if_left_paren;
+    split ();
+    builder#nest ();
+    t x.if_condition;
+    split ();
+    builder#unnest ();
+    t x.if_right_paren;
+    builder#end_rule ();
+    handle_possible_compound_statement x.if_statement;
+    handle_possible_list x.if_elseif_clauses;
+    t x.if_else_clause;
+    builder#end_chunks ();
+    ()
+  | ElseifClause x ->
+    t x.elseif_keyword;
+    space ();
+    t x.elseif_left_paren;
+    split ();
+    builder#nest ();
+    t x.elseif_condition;
+    split ();
+    builder#unnest ();
+    t x.elseif_right_paren;
+    handle_possible_compound_statement x.elseif_statement;
+    ()
+  | ElseClause x ->
+    t x.else_keyword;
+    handle_possible_compound_statement x.else_statement;
+    ()
   | ExpressionStatement x ->
     t x.expression_statement_expression;
     t x.expression_statement_semicolon;
+    builder#end_chunks()
   | BinaryExpression x ->
     builder#start_span ();
     (* nest_expression? *)
@@ -177,17 +220,16 @@ let rec transform node =
 
     (* TODO: nested binary expressions split by precedence *)
     t x.binary_left_operand;
-
-    (* TODO: figure out binary spacing *)
+    space ();
     t x.binary_operator;
     builder#end_rule ();
-    split ();
+    split ~space:true ();
     builder#nest ();
     builder#start_rule ();
     t x.binary_right_operand;
     builder#unnest ();
     builder#end_span ();
-    builder#end_rule ();
+    builder#end_rule ()
   | FunctionCallExpression x ->
     builder#start_span ();
     t x.function_call_receiver;
@@ -195,7 +237,8 @@ let rec transform node =
     split ();
     builder#nest ();
     builder#start_rule ~rule:(Rule.argument_rule ()) ();
-    t x.function_call_argument_list;
+    handle_possible_list ~after_each:after_each_argument
+      x.function_call_argument_list;
     builder#unnest ();
     t x.function_call_right_paren;
     builder#end_rule ();
@@ -206,6 +249,42 @@ let rec transform node =
     exit 1
   in
   ()
+
+and after_each_argument is_last =
+  split ~space:(not is_last) ();
+
+and handle_possible_compound_statement node =
+  match syntax node with
+    | CompoundStatement x ->
+      space ();
+      transform x.compound_left_brace;
+      builder#end_chunks ();
+      builder#nest ();
+      transform x.compound_statements;
+      builder#unnest ();
+      transform x.compound_right_brace;
+      pending_space ();
+    | _ ->
+      builder#end_chunks ();
+      builder#nest ();
+      transform node;
+      builder#unnest ()
+
+and handle_possible_list ?after_each:(after_each=(fun is_last -> ())) node =
+  match syntax node with
+    | SyntaxList x ->
+      let rec aux l = (
+        match l with
+          | hd :: tl ->
+            transform hd;
+            after_each (List.is_empty tl);
+            aux tl
+          | [] -> ()
+      ) in
+      aux x
+    | _ ->
+      transform node;
+      after_each true
 
 let run node =
   transform node;
