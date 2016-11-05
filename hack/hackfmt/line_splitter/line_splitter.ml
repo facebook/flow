@@ -12,53 +12,26 @@ open Core
 
 let expand_state state =
   Printf.printf "%s\n" (Solve_state.__debug state);
+  let rule_ids = List.map state.Solve_state.chunks ~f:(
+    fun c -> c.Chunk.rule
+  ) in
+  let rule_id_set = (ISet.of_list rule_ids) in
 
-  let chunks = state.Solve_state.chunks in
-  let rules = (List.map chunks ~f:(fun c -> c.Chunk.rule)) in
-  let rules = RuleSet.elements (RuleSet.of_list rules) in
+  let next_rvms = ISet.fold (fun rule_id acc ->
+    if IMap.mem rule_id state.Solve_state.rvm then
+      acc
+    else
+      List.fold_left (Rule.get_possible_values rule_id) ~init:acc ~f:(
+        fun acc v -> IMap.add rule_id v state.Solve_state.rvm :: acc
+      )
+  ) rule_id_set [] in
 
-  let rec get_next_rule_states states processed remaining =
-    let bind_values r =
-      let rec bind_value acc r v =
-        if v >= 0 then
-          bind_value ({r with Rule.value = Some v;} :: acc) r (v - 1)
-        else
-          acc
-      in
-      match r.Rule.value with
-        | None -> bind_value [] r r.Rule.max_value
-        | Some _ -> []
-    in
-    match remaining with
-      | [] -> states;
-      | hd :: tl ->
-        let new_rule_states = bind_values hd in
-        let pro = List.rev processed in
-        let states = List.map new_rule_states ~f:(fun s ->
-          pro @ (s :: tl)
-        ) @ states in
-        get_next_rule_states states (hd :: processed) tl
-  in
-
-  let next_rule_states = get_next_rule_states [] [] rules in
-  (* for each chunk update it with a new rule *)
-  let get_next_states rules =
-    let rules_map = List.fold_left rules ~init:IMap.empty ~f:(fun map r ->
-      IMap.add r.Rule.id r map
-    ) in
-    let chunks = List.map chunks ~f:(
-      fun c -> {c with Chunk.rule = IMap.find c.Chunk.rule.Rule.id rules_map}
-    ) in
-    Solve_state.make chunks
-  in
-
-  let next_states = List.map next_rule_states ~f:get_next_states in
-  List.iter next_states ~f:(fun s ->
-    State_queue.add s
+  List.iter next_rvms ~f:(fun rvm ->
+    State_queue.add (Solve_state.make state.Solve_state.chunks rvm)
   );
   ()
 
-let solve () =
+let solve chunks =
   let rec aux acc =
     if State_queue.is_empty () then
       acc

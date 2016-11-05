@@ -14,15 +14,18 @@ let _LINE_WIDTH = 16
 
 type t = {
   chunks: Chunk.t list;
-  rules: Rule.t list;
+  rvm: int IMap.t;
+  nesting_set: ISet.t;
   cost: int;
   overflow: int;
 }
 
-let make chunks =
-  let rules = (List.map chunks ~f:(fun c -> c.Chunk.rule)) in
-  let rules = RuleSet.elements (RuleSet.of_list rules) in
+let has_split_before_chunk c rvm =
+  let rule_id = c.Chunk.rule in
+  let value = IMap.get rule_id rvm in
+  Rule.is_split rule_id value
 
+let make chunks rvm =
   let len = 0 in
   let cost = 0 in
   let overflow = 0 in
@@ -35,12 +38,27 @@ let make chunks =
       0
   in
 
+  let nesting_set, _ =
+    List.fold_left chunks ~init:(ISet.empty, ISet.empty)
+      (* We only care about the first occurance of each nesting id *)
+      ~f:(fun (nset, idset) c ->
+        let nid = Chunk.get_nesting_id c in
+        if ISet.mem nid idset then
+          nset, idset
+        else
+        if has_split_before_chunk c rvm then
+          ISet.add nid nset, ISet.add nid idset
+        else
+          nset, ISet.add nid idset
+      )
+  in
+
   (* keep track of current length, cost of this state, total overflow chars *)
   let (len, cost, overflow)  =
     List.fold_left chunks ~init:acc ~f:(fun (len, cost, overflow) c ->
-      let len, cost, overflow = if Chunk.has_split_before c then
+      let len, cost, overflow = if has_split_before_chunk c rvm then
         let overflow = overflow + (get_overflow len) in
-        let len = 0 in (* get_block_indent *)
+        let len = Nesting.get_indent c.Chunk.nesting nesting_set in
         let cost = cost + Chunk.get_span_split_cost c in
         len, cost, overflow
       else
@@ -56,15 +74,15 @@ let make chunks =
 
   (* add to cost the cost of all rules that are split *)
   let cost = cost + (
-    List.fold_left rules ~init:0 ~f:(fun acc r ->
-      if (Rule.is_split r) then
-        acc + (Rule.get_cost r)
+    IMap.fold (fun r_id v acc ->
+      if (Rule.is_split r_id (Some v)) then
+        acc + (Rule.get_cost r_id)
       else
         acc
-    )
+    ) rvm 0
   ) in
 
-  { chunks; rules; cost; overflow; }
+  { chunks; rvm; cost; overflow; nesting_set; }
 
 let compare s1 s2 =
   if s1.overflow < s2.overflow then -1
@@ -76,6 +94,7 @@ let compare s1 s2 =
   else 1
 
 let __debug s =
-  let rule_strings = List.map s.rules ~f:Rule.to_string in
+  (* TODO: make a new rule strings string *)
+  let rule_strings = [] in
   let rule_str = "[" ^ (String.concat "," rule_strings) ^ "]" in
   (string_of_int s.overflow) ^ "," ^ (string_of_int s.cost) ^ " " ^ rule_str

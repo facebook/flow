@@ -9,58 +9,63 @@
  *)
 
 type kind =
-  | N
   | Simple
   | Argument
 
 type t = {
+  id: int;
   kind: kind;
-  value: int option;
-  max_value: int;
-  id: int; (* need some way to compare rules for equivalency *)
+  dependents: int list;
 }
 
 let _nextid = ref 0
-let get_id () =
+let _get_next_id () =
   let id = !_nextid in
   _nextid := !_nextid + 1;
   id
 
-let __debug_value r =
-  match r.value with
-    | None -> "none"
-    | Some d -> string_of_int d
+let rule_map = ref IMap.empty
 
-let to_string r =
-  let kind = match r.kind with
-    | N -> "N"
-    | Simple -> "Simple"
-    | Argument -> "Argument"
-  in
-  kind ^ " " ^ (__debug_value r)
-
-let null_rule () =
-  { kind = N; value = None; max_value = 0; id = -1; }
+let new_rule kind =
+  let r = { id = _get_next_id (); kind; dependents = [] } in
+  rule_map := IMap.add r.id r !rule_map;
+  r.id
 
 let simple_rule () =
-  { kind = Simple; value = None; max_value = 1; id = get_id (); }
+  new_rule Simple
 
 let argument_rule () =
-  { kind = Argument; value = None; max_value = 1; id = get_id (); }
+  new_rule Argument
 
-let is_split r =
-  match r.value with
+let is_split _id v =
+  match v with
     | None
     | Some 0 -> false
     | _ -> true
 
-let get_cost r =
+let get_cost id =
+  let r = IMap.find_unsafe id !rule_map in
   match r.kind with
-    | N -> 0
     | Simple -> 1
     | Argument -> 1
+
+let get_possible_values _id =
+  [0; 1]
+
+let cares_about_children r =
+  match r.kind with
+    | Simple -> false
+    | Argument -> true
 
 let compare r1 r2 =
   if r1.id < r2.id then -1
   else if r1.id = r2.id then 0
   else 1
+
+let to_string id =
+  let r = IMap.find_unsafe id !rule_map in
+  let kind = match r.kind with
+    | Simple -> "Simple"
+    | Argument -> "Argument"
+  in
+  kind

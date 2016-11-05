@@ -23,8 +23,9 @@ let open_span start cost = {
   open_span_cost = cost;
 }
 
-let builder = object
-  val mutable open_spans = Stack.create ();
+let builder = object (this)
+  val open_spans = Stack.create ();
+  val mutable nesting = Nesting.make None 0;
   val mutable rules = [];
 
   val mutable chunks = [];
@@ -33,18 +34,27 @@ let builder = object
     chunks <- match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
         {hd with Chunk.text = hd.Chunk.text ^ s} :: tl
-      | _ -> [Chunk.make s (List.hd rules)] @ chunks
+      | _ -> [Chunk.make s (List.hd rules) nesting] @ chunks
 
   method split () =
     chunks <- match chunks with
       | hd :: tl ->
         (Chunk.finalize hd (List.hd rules)) :: tl
-      | [] -> chunks (* TODO: error here *)
+      | [] -> raise (Failure "No chunks to split")
+
+  method nest ?amount:(amount=2) () =
+    nesting <- (Nesting.make (Some nesting) 2);
+    ()
+
+  method unnest () =
+    nesting <- begin match nesting.Nesting.parent with
+      | Some p -> p
+      | None -> raise (Failure "unnested too far")
+    end;
+    ()
 
   method start_rule ?rule:(rule=Rule.simple_rule ()) () =
-    (* TODO: handle rules containing this rule callback
-    rules <- List.map rules ~f(fun r ->
-    *)
+    (* TODO: handle rule dependencies *)
     rules <- rule :: rules
 
   method end_rule () =
@@ -69,6 +79,11 @@ let builder = object
     );
 
   method _end () =
+    chunks <- begin match chunks with
+      | hd :: tl ->
+        (Chunk.finalize hd (List.hd rules)) :: tl
+      | [] -> chunks
+    end;
     chunks
 
   method __debug () =
@@ -83,13 +98,12 @@ let builder = object
 
 end
 
-
 let split ?space:(space=false) () =
   builder#split ()
 
-
 let token x =
-  builder#add_string (EditableToken.text x)
+  builder#add_string (EditableToken.text x);
+  ()
 
 let rec transform node =
   let t = transform in
@@ -131,8 +145,9 @@ let rec transform node =
     (* TODO: figure out binary spacing *)
     t x.binary_operator;
     split ();
-
+    builder#nest ();
     t x.binary_right_operand;
+    builder#unnest ();
     builder#end_span ();
     builder#end_rule ();
   | FunctionCallExpression x ->
@@ -140,8 +155,10 @@ let rec transform node =
     t x.function_call_receiver;
     t x.function_call_left_paren;
     split ();
+    builder#nest ();
     builder#start_rule ~rule:(Rule.argument_rule ()) ();
     t x.function_call_argument_list;
+    builder#unnest ();
     t x.function_call_right_paren;
     builder#end_rule ();
     builder#end_span ()

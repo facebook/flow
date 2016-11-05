@@ -14,38 +14,41 @@ type t = {
   text: string;
   spans: Span.t list;
   is_appendable: bool;
-  rule: Rule.t;
+  rule: int;
+  nesting: Nesting.t
 }
 
-let default_rule = {
+
+let default_chunk = {
   text = "";
   spans = [];
   is_appendable = true;
-  rule = Rule.null_rule ();
+  rule = -1;
+  nesting = {Nesting.id = -1; amount = 0; parent = None; };
 }
 
-let make text rule =
+let make text rule nesting =
   let c = match rule with
-    | None -> default_rule
-    | Some r -> {default_rule with rule = r}
+    | None -> default_chunk
+    | Some r -> {default_chunk with rule = r}
   in
-  {c with text = text}
+  {c with text; nesting;}
 
 let finalize chunk rule =
   let rule = match rule with
-    | _ when chunk.rule <> (Rule.null_rule ()) -> chunk.rule
-    | None -> Rule.simple_rule ()
+    | _ when chunk.rule <> -1 -> chunk.rule
+    | None -> (Rule.simple_rule ())
     | Some r -> r
   in
   {chunk with
     is_appendable = false;
-    rule = rule;
+    rule;
   }
-
-let has_split_before chunk =
-  Rule.is_split chunk.rule
 
 let get_span_split_cost chunk =
   List.fold_left chunk.spans ~init:0 ~f:(fun acc s ->
     acc + s.Span.cost
   )
+
+let get_nesting_id chunk =
+  chunk.nesting.Nesting.id
