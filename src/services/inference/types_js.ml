@@ -136,15 +136,15 @@ let collate_errors =
       |> FilenameMap.fold collate !errors_by_file
       |> FilenameMap.fold collate !merge_errors
 
-let with_timer ?options timer timing f =
-  let timing = Timing.start_timer ~timer timing in
+let with_timer ?options timer profiling f =
+  let profiling = Profiling_js.start_timer ~timer profiling in
   let ret = f () in
-  let timing = Timing.stop_timer ~timer timing in
+  let profiling = Profiling_js.stop_timer ~timer profiling in
 
   (* If we're profiling then output timing information to stderr *)
   (match options with
   | Some options when Options.should_profile options ->
-      (match Timing.get_finished_timer ~timer timing with
+      (match Profiling_js.get_finished_timer ~timer profiling with
       | Some (start_wall_age, wall_duration) ->
           prerr_endlinef
             "TimingEvent `%s`: start_wall_age: %f; wall_duration: %f"
@@ -154,20 +154,20 @@ let with_timer ?options timer timing f =
       | _ -> ());
   | _ -> ());
 
-  (timing, ret)
+  (profiling, ret)
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
 let typecheck_contents ~options ?verbose ?(check_syntax=false)
   contents filename =
-  let timing = Timing.create () in
+  let profiling = Profiling_js.empty in
 
   (* always enable types when checking an individual file *)
   let types_mode = Parsing_service_js.TypesAllowed in
   let use_strict = Options.modules_are_use_strict options in
   let max_tokens = Options.max_header_tokens options in
-  let timing, (errors, parse_result, info) =
-    with_timer "Parsing" timing (fun () ->
+  let profiling, (errors, parse_result, info) =
+    with_timer "Parsing" profiling (fun () ->
       let docblock_errors, info =
         Parsing_service_js.get_docblock ~max_tokens filename contents in
       let parse_result = Parsing_service_js.do_parse
@@ -193,7 +193,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
       let metadata = Infer_service.apply_docblock_overrides metadata info in
 
       (* infer *)
-      let timing, cx = with_timer "Infer" timing (fun () ->
+      let profiling, cx = with_timer "Infer" profiling (fun () ->
         Type_inference_js.infer_ast
           ~metadata
           ~filename
@@ -214,7 +214,7 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
 
       (* merge *)
       let cache = new Context_cache.context_cache in
-      let timing, () = with_timer "Merge" timing (fun () ->
+      let profiling, () = with_timer "Merge" profiling (fun () ->
         Merge_service.merge_strict_context ~options cache [cx]
       ) in
 
@@ -226,16 +226,16 @@ let typecheck_contents ~options ?verbose ?(check_syntax=false)
         else errors
       ) (Context.errors cx) errors in
 
-      timing, Some cx, errors, info
+      profiling, Some cx, errors, info
 
   | Parsing_service_js.Parse_err parse_errors ->
-      timing, None, Errors.ErrorSet.union parse_errors errors, info
+      profiling, None, Errors.ErrorSet.union parse_errors errors, info
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
     | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
-      timing, None, errors, info
+      profiling, None, errors, info
 
 (* commit newly inferred and removed modules, collect errors. *)
 let commit_modules workers ~options inferred removed =
@@ -283,7 +283,7 @@ let heap_check ~audit files = Module_js.(
 (* helper *)
 let typecheck
   ~options
-  ~timing
+  ~profiling
   ~workers
   ~make_merge_input
   ~files
@@ -294,8 +294,8 @@ let typecheck
   Module_js.clear_filename_cache ();
   (* local inference populates context heap, module info heap *)
   Flow_logger.log "Running local inference";
-  let timing, inferred =
-    with_timer ~options "Infer" timing (fun () ->
+  let profiling, inferred =
+    with_timer ~options "Infer" profiling (fun () ->
       Infer_service.infer ~options ~workers
         ~save_errors:(save_errors errors_by_file)
         ~save_suppressions:(save_suppressions error_suppressions)
@@ -325,7 +325,7 @@ let typecheck
   (** TODO [correctness]:
       move CommitModules after MakeMergeInput + ResolveDirectDeps **)
   (* create module dependency graph, warn on dupes etc. *)
-  let timing, () = with_timer ~options "CommitModules" timing (fun () ->
+  let profiling, () = with_timer ~options "CommitModules" profiling (fun () ->
     let filenames = List.fold_left (fun acc (filename, _) ->
       filename::acc
     ) inferred unparsed in
@@ -333,9 +333,10 @@ let typecheck
   ) in
 
   (* call supplied function to calculate closure of modules to merge *)
-  let timing, merge_input = with_timer ~options "MakeMergeInput" timing (fun () ->
-    make_merge_input inferred
-  ) in
+  let profiling, merge_input =
+    with_timer ~options "MakeMergeInput" profiling (fun () ->
+      make_merge_input inferred
+    ) in
 
   match merge_input with
   | Some (to_merge, direct_deps) ->
@@ -359,49 +360,51 @@ let typecheck
     (** TODO [simplification]:
         Move ResolveDirectDeps into MakeMergeInput **)
     Flow_logger.log "Re-resolving directly dependent files";
-    let timing, _ = with_timer ~options "ResolveDirectDeps" timing (fun () ->
-      if not (FilenameSet.is_empty direct_deps) then begin
-        (** TODO [perf] Consider oldifying **)
-        Module_js.clear_infos direct_deps;
-        SharedMem.collect `gentle;
+    let profiling, _ =
+      with_timer ~options "ResolveDirectDeps" profiling (fun () ->
+        if not (FilenameSet.is_empty direct_deps) then begin
+          (** TODO [perf] Consider oldifying **)
+          Module_js.clear_infos direct_deps;
+          SharedMem.collect `gentle;
 
-        MultiWorker.call workers
-          ~job: (fun () files ->
-            let cache = new Context_cache.context_cache in
-            List.iter (fun f ->
-              (** TODO [perf]
-                  Instead of reading the ContextHeap, could read the InfoHeap **)
-              let cx = cache#read ~audit:Expensive.ok f in
-              Module_js.add_module_info ~audit:Expensive.ok ~options cx
-            ) files
-          )
-          ~neutral: ()
-          ~merge: (fun () () -> ())
-          ~next: (MultiWorker.next workers (FilenameSet.elements direct_deps));
-      end
-    ) in
+          MultiWorker.call workers
+            ~job: (fun () files ->
+              let cache = new Context_cache.context_cache in
+              List.iter (fun f ->
+                (** TODO [perf]
+                    Instead of reading the ContextHeap, could read the InfoHeap
+                  **)
+                let cx = cache#read ~audit:Expensive.ok f in
+                Module_js.add_module_info ~audit:Expensive.ok ~options cx
+              ) files
+            )
+            ~neutral: ()
+            ~merge: (fun () () -> ())
+            ~next:(MultiWorker.next workers (FilenameSet.elements direct_deps));
+        end
+      ) in
 
     (* TODO [correctness]: This seems to have rotted :( *)
     if Options.is_debug_mode options
     then heap_check ~audit:Expensive.warn to_merge;
 
     Flow_logger.log "Calculating dependencies";
-    let timing, dependency_graph =
-      with_timer ~options "CalcDeps" timing (fun () ->
+    let profiling, dependency_graph =
+      with_timer ~options "CalcDeps" profiling (fun () ->
         Dep_service.calc_dependencies workers to_merge
       ) in
     let partition = Sort_js.topsort dependency_graph in
     if Options.should_profile options then Sort_js.log partition;
-    let timing = try
+    let profiling = try
       Flow_logger.log "Merging";
-      let timing, () = with_timer ~options "Merge" timing (fun () ->
+      let profiling, () = with_timer ~options "Merge" profiling (fun () ->
         Merge_service.merge_strict
           ~options ~workers ~save_errors:(save_errors merge_errors)
           dependency_graph partition
       ) in
       if Options.should_profile options then Gc.print_stat stderr;
       Flow_logger.log "Done";
-      timing
+      profiling
     with
     (* Unrecoverable exceptions *)
     | SharedMem.Out_of_shared_memory
@@ -411,15 +414,15 @@ let typecheck
     (* A catch all suppression is probably a bad idea... *)
     | exc ->
         prerr_endline (Printexc.to_string exc);
-        timing in
+        profiling in
     (* collate errors by origin *)
     collate_errors ();
-    timing
+    profiling
 
   | None ->
     (* collate errors by origin *)
     collate_errors ();
-    timing
+    profiling
 
 
 (* We maintain the following invariant across rechecks: The set of
@@ -441,7 +444,7 @@ let recheck genv env modified =
     else modified
   ) modified modified in
 
-  let timing = Timing.create () in
+  let profiling = Profiling_js.empty in
 
   (* track deleted files, remove from modified set *)
   let deleted = FilenameSet.filter (fun f ->
@@ -474,8 +477,8 @@ let recheck genv env modified =
   Flow_logger.log "Parsing";
   (* reparse modified and added files, updating modified to reflect removal of
      unchanged files *)
-  let timing, (modified, freshparse_results) =
-    with_timer ~options "Parsing" timing (fun () ->
+  let profiling, (modified, freshparse_results) =
+    with_timer ~options "Parsing" profiling (fun () ->
       Parsing_service_js.reparse_with_defaults options workers modified
     ) in
   let modified_count = FilenameSet.cardinal modified in
@@ -522,9 +525,9 @@ let recheck genv env modified =
   let dependent_file_count = ref 0 in
 
   (* recheck *)
-  let timing = typecheck
+  let profiling = typecheck
     ~options
-    ~timing
+    ~profiling
     ~workers
     ~make_merge_input:(fun inferred ->
       (* Add non-@flow files to the list of inferred files, so that their
@@ -579,7 +582,7 @@ let recheck genv env modified =
     ~modified_count
     ~deleted_count
     ~dependent_file_count:!dependent_file_count
-    ~timing;
+    ~profiling;
 
   let parsed = FilenameSet.union freshparsed unmodified_parsed in
 
@@ -591,7 +594,7 @@ let recheck genv env modified =
 
 (* full typecheck *)
 let full_check workers ~ordered_libs parse_next options =
-  let timing = Timing.create () in
+  let profiling = Profiling_js.empty in
 
   (* force types when --all is set, but otherwise forbid them unless the file
      has @flow in it. *)
@@ -605,8 +608,8 @@ let full_check workers ~ordered_libs parse_next options =
   let max_header_tokens = Options.max_header_tokens options in
 
   Flow_logger.log "Parsing";
-  let timing, parse_results =
-    with_timer ~options "Parsing" timing (fun () ->
+  let profiling, parse_results =
+    with_timer ~options "Parsing" profiling (fun () ->
       Parsing_service_js.parse
         ~types_mode ~use_strict ~profile ~max_header_tokens
         workers parse_next
@@ -622,7 +625,7 @@ let full_check workers ~ordered_libs parse_next options =
   save_errors errors_by_file error_filenames errors;
 
   Flow_logger.log "Building package heap";
-  let timing, () = with_timer ~options "PackageHeap" timing (fun () ->
+  let profiling, () = with_timer ~options "PackageHeap" profiling (fun () ->
     FilenameSet.iter (fun filename ->
       match filename with
       | Loc.JsonFile str when Filename.basename str = "package.json" ->
@@ -635,7 +638,7 @@ let full_check workers ~ordered_libs parse_next options =
   (* load library code *)
   (* if anything errors, we'll infer but not merge client code *)
   Flow_logger.log "Loading libraries";
-  let timing, lib_error = with_timer ~options "InitLibs" timing (fun () ->
+  let profiling, lib_error = with_timer ~options "InitLibs" profiling (fun () ->
     let lib_files = Init_js.init
       ~options
       ordered_libs
@@ -646,9 +649,9 @@ let full_check workers ~ordered_libs parse_next options =
   ) in
 
   (* typecheck client files *)
-  let timing = typecheck
+  let profiling = typecheck
     ~options
-    ~timing
+    ~profiling
     ~workers
     ~make_merge_input:(fun inferred ->
       if lib_error then None else Some (inferred, FilenameSet.empty)
@@ -659,10 +662,10 @@ let full_check workers ~ordered_libs parse_next options =
     ~resource_files
   in
 
-  (timing, parsed)
+  (profiling, parsed)
 
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ~timing options errors =
+let print_errors ~profiling options errors =
   let strip_root = Options.should_strip_root options in
   let root = Options.root options in
 
@@ -673,11 +676,11 @@ let print_errors ~timing options errors =
 
   if Options.should_output_json options
   then begin
-    let timing =
+    let profiling =
       if options.Options.opt_profile
-      then Some timing
+      then Some profiling
       else None in
-    Errors.print_error_json ~root ~timing stdout errors
+    Errors.print_error_json ~root ~profiling stdout errors
   end else
     Errors.print_error_summary
       ~flags:(Options.error_flags options)
@@ -695,19 +698,40 @@ let server_init genv =
   let get_next = fun () ->
     get_next_raw () |> List.map (Files.filename_from_string ~options)
   in
-  let (timing, parsed) =
+  let (profiling, parsed) =
     full_check genv.ServerEnv.workers ~ordered_libs get_next options in
+
+  let profiling = SharedMem.(
+    let dep_stats = dep_stats () in
+    let hash_stats = hash_stats () in
+    let heap_size = heap_size () in
+    let memory_metrics = [
+      "heap.size", heap_size;
+      "dep_table.nonempty_slots", dep_stats.nonempty_slots;
+      "dep_table.used_slots", dep_stats.used_slots;
+      "dep_table.slots", dep_stats.slots;
+      "hash_table.nonempty_slots", hash_stats.nonempty_slots;
+      "hash_table.used_slots", hash_stats.used_slots;
+      "hash_table.slots", hash_stats.slots;
+    ] in
+    List.fold_left (fun profiling (metric, value) ->
+      Profiling_js.sample_memory
+        ~metric:("init_done." ^ metric)
+        ~value:(float_of_int value)
+         profiling
+    ) profiling memory_metrics
+  ) in
 
   let errors = get_errors () in
   if Options.is_check_mode options
-  then print_errors ~timing options errors;
+  then print_errors ~profiling options errors;
 
   SharedMem.init_done();
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
      `errorl` contains the current set of errors. *)
-  timing, { ServerEnv.
+  profiling, { ServerEnv.
     files = parsed;
     libs;
     errorl = errors;

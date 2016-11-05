@@ -787,16 +787,17 @@ let json_of_errors errors =
 let json_of_errors_with_context ~root ~stdin_file errors =
   Hh_json.JSON_Array (List.map (json_of_error_with_context ~root ~stdin_file) errors)
 
-let print_error_json ~root ?(pretty=false) ?(timing=None) ?(stdin_file=None) oc el =
+let print_error_json
+  ~root ?(pretty=false) ?(profiling=None) ?(stdin_file=None) oc el =
   let open Hh_json in
   let props = [
     "flowVersion", JSON_String FlowConfig.version;
     "errors", json_of_errors_with_context ~root ~stdin_file el;
     "passed", JSON_Bool (el = []);
   ] in
-  let props = match timing with
+  let props = match profiling with
   | None -> props
-  | Some timing -> props @ [ "timing", Timing.to_json timing; ] in
+  | Some profiling -> props @ Profiling_js.to_json_properties profiling in
   let res = JSON_Object props in
   output_string oc (json_to_string ~pretty res);
   flush oc

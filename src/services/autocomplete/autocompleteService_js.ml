@@ -113,7 +113,7 @@ let autocomplete_filter_members members =
   ) members
 
 let autocomplete_member
-  timing
+  profiling
   client_logging_context
   cx
   this
@@ -150,7 +150,7 @@ let autocomplete_member
     ~client_context:client_logging_context
     ~result_str
     ~json_data
-    ~timing;
+    ~profiling;
 
   match Autocomplete.command_result_of_member_result result with
   | Err error -> Err error
@@ -201,7 +201,7 @@ let autocomplete_id cx env =
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
 let autocomplete_jsx
-  timing
+  profiling
   client_logging_context
   cx
   cls
@@ -216,18 +216,27 @@ let autocomplete_jsx
         Type.GetPropT (reason, (reason, "props"), tvar))
     ) in
     autocomplete_member
-      timing client_logging_context cx props_object ac_name ac_loc parse_result
+      profiling
+      client_logging_context
+      cx
+      props_object
+      ac_name
+      ac_loc
+      parse_result
   )
 
-let autocomplete_get_results timing client_logging_context cx state parse_result =
+let autocomplete_get_results
+  profiling client_logging_context cx state parse_result =
   (* FIXME: See #5375467 *)
   Type_normalizer.suggested_type_cache := IMap.empty;
   match !state with
   | Some { ac_type = Acid (env); _; } ->
       autocomplete_id cx env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-      autocomplete_member timing client_logging_context cx this ac_name ac_loc
+      autocomplete_member
+        profiling client_logging_context cx this ac_name ac_loc
   parse_result
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
-      autocomplete_jsx timing client_logging_context cx cls ac_name ac_loc parse_result
+      autocomplete_jsx
+        profiling client_logging_context cx cls ac_name ac_loc parse_result
   | None -> OK []
