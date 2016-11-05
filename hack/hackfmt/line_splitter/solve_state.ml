@@ -10,7 +10,7 @@
 
 open Core
 
-let _LINE_WIDTH = 16
+let _LINE_WIDTH = 20
 
 type t = {
   chunks: Chunk.t list;
@@ -95,6 +95,9 @@ let compare s1 s2 =
 
 let __debug s =
   (* TODO: make a new rule strings string *)
-  let rule_strings = [] in
-  let rule_str = "[" ^ (String.concat "," rule_strings) ^ "]" in
+  let rule_strings = IMap.fold (fun k v acc ->
+    (string_of_int k ^ ": " ^ string_of_int v) :: acc
+  ) s.rvm [] in
+  let rule_count = string_of_int (Rule.get_rule_count ()) in
+  let rule_str = rule_count ^ " [" ^ (String.concat "," rule_strings) ^ "]" in
   (string_of_int s.overflow) ^ "," ^ (string_of_int s.cost) ^ " " ^ rule_str

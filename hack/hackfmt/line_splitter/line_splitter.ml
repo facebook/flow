@@ -11,7 +11,6 @@
 open Core
 
 let expand_state state =
-  Printf.printf "%s\n" (Solve_state.__debug state);
   let rule_ids = List.map state.Solve_state.chunks ~f:(
     fun c -> c.Chunk.rule
   ) in
@@ -22,7 +21,12 @@ let expand_state state =
       acc
     else
       List.fold_left (Rule.get_possible_values rule_id) ~init:acc ~f:(
-        fun acc v -> IMap.add rule_id v state.Solve_state.rvm :: acc
+        fun acc v ->
+          let next_rmv = IMap.add rule_id v state.Solve_state.rvm in
+          if Rule.is_rule_value_map_valid next_rmv then
+            next_rmv :: acc
+          else
+            acc
       )
   ) rule_id_set [] in
 
@@ -45,7 +49,7 @@ let solve chunks =
     if best.Solve_state.overflow = 0 then
       best
     else begin
-      expand_state best;
+      expand_state state;
       aux best;
     end
   in

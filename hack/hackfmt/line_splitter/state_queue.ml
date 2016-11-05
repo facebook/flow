@@ -17,7 +17,8 @@ let add state =
   (*TODO: make this faster *)
   queue := List.sort q ~cmp:Solve_state.compare
 
-let is_empty () = (List.length !queue) = 0
+let is_empty () =
+  (List.length !queue) = 0
 
 let peek () =
   match !queue with

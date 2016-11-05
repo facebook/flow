@@ -36,6 +36,7 @@ let make text rule nesting =
 
 let finalize chunk rule =
   let rule = match rule with
+    | Some r when (Rule.get_kind r) = Rule.Always -> r
     | _ when chunk.rule <> -1 -> chunk.rule
     | None -> (Rule.simple_rule ())
     | Some r -> r

@@ -10,6 +10,8 @@
 
 module SyntaxKind = Full_fidelity_syntax_kind
 module Syntax = Full_fidelity_editable_syntax
+module TriviaKind = Full_fidelity_trivia_kind
+module Trivia = Full_fidelity_editable_trivia
 open Syntax
 open Core
 
@@ -30,17 +32,35 @@ let builder = object (this)
 
   val mutable chunks = [];
 
+  val mutable next_split_hard = false;
+
   method add_string s =
     chunks <- match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
         {hd with Chunk.text = hd.Chunk.text ^ s} :: tl
-      | _ -> [Chunk.make s (List.hd rules) nesting] @ chunks
+      | _ -> begin
+          let hard_split = next_split_hard in
+          next_split_hard <- false;
+          if hard_split then this#start_rule ~rule:(Rule.always_rule ()) ();
+          let cs = [Chunk.make s (List.hd rules) nesting] @ chunks in
+          if hard_split then this#end_rule ();
+          cs
+
+      end
 
   method split () =
-    chunks <- match chunks with
+    chunks <- (match chunks with
       | hd :: tl ->
         (Chunk.finalize hd (List.hd rules)) :: tl
       | [] -> raise (Failure "No chunks to split")
+    );
+
+    this#__debug (List.rev chunks);
+
+  method hard_split () =
+    this#split ();
+    next_split_hard <- true;
+    ()
 
   method nest ?amount:(amount=2) () =
     nesting <- (Nesting.make (Some nesting) 2);
@@ -54,7 +74,7 @@ let builder = object (this)
     ()
 
   method start_rule ?rule:(rule=Rule.simple_rule ()) () =
-    (* TODO: handle rule dependencies *)
+    Rule.mark_dependencies rules rule;
     rules <- rule :: rules
 
   method end_rule () =
@@ -79,15 +99,11 @@ let builder = object (this)
     );
 
   method _end () =
-    chunks <- begin match chunks with
-      | hd :: tl ->
-        (Chunk.finalize hd (List.hd rules)) :: tl
-      | [] -> chunks
-    end;
-    chunks
+    this#split ();
+    List.rev chunks
 
-  method __debug () =
-    let d_chunks = List.rev chunks in
+  method __debug chunks =
+    let d_chunks = chunks in
     List.iter d_chunks ~f:(fun c ->
       Printf.printf
         "Span count:%d\t Rule:%s\t Text:%s\n"
@@ -101,8 +117,28 @@ end
 let split ?space:(space=false) () =
   builder#split ()
 
+let handle_trivia trivia_list =
+  List.iter trivia_list ~f:(fun t ->
+    match Trivia.kind t with
+      | TriviaKind.SingleLineComment ->
+        builder#split ();
+        builder#start_rule ();
+        builder#add_string (Trivia.text t);
+        builder#end_rule ();
+        builder#hard_split ();
+      | TriviaKind.DelimitedComment ->
+        builder#split ();
+        builder#start_rule ();
+        builder#add_string (Trivia.text t);
+        builder#end_rule ();
+        builder#split ();
+      | _ -> ()
+  )
+
 let token x =
+  handle_trivia (EditableToken.leading x);
   builder#add_string (EditableToken.text x);
+  handle_trivia (EditableToken.trailing x);
   ()
 
 let rec transform node =
@@ -144,8 +180,10 @@ let rec transform node =
 
     (* TODO: figure out binary spacing *)
     t x.binary_operator;
+    builder#end_rule ();
     split ();
     builder#nest ();
+    builder#start_rule ();
     t x.binary_right_operand;
     builder#unnest ();
     builder#end_span ();
@@ -172,5 +210,6 @@ let rec transform node =
 let run node =
   transform node;
   split ();
-  builder#__debug ();
-  List.rev (builder#_end ())
+  let chunks = builder#_end () in
+  builder#__debug chunks;
+  chunks
