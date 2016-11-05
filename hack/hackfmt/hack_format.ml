@@ -154,7 +154,7 @@ let token x =
   handle_trivia (EditableToken.trailing x);
   ()
 
-let space () =
+let add_space () =
   builder#add_string " "
 
 let pending_space () =
@@ -168,8 +168,9 @@ let end_rule () =
 
 let rec transform node =
   let t = transform in
-  let _span = true in
+  let span = true in
   let nest = true in
+  let space = true in
 
   let () = match syntax node with
   | Missing -> ()
@@ -185,12 +186,87 @@ let rec transform node =
     t x.qualified_name_expression
   | VariableExpression x -> t x.variable_expression
   | PipeVariableExpression x -> t x.pipe_variable_expression
+  | FunctionDeclarationHeader x ->
+    transform_function_declaration_header ~span_started:false x;
+    ()
+  | MethodishDeclaration x ->
+    let (attr, modifiers, func_decl, body, semi) =
+      get_methodish_declaration_children x
+    in
+    t attr;
+    builder#start_span ();
+    handle_possible_list ~after_each:(fun _ -> add_space ()) modifiers;
+    (match syntax func_decl with
+      | FunctionDeclarationHeader x ->
+        transform_function_declaration_header ~span_started:true x
+      | _ ->
+        raise (Failure
+          "invalid parse tree provided, expecting a function declaration header"
+        )
+    );
+    handle_possible_compound_statement body;
+    t semi;
+    builder#end_chunks ();
+    ()
+  | ClassishDeclaration x ->
+    let (attr, modifiers, kw, name, type_params, extends_kw, extends,
+      impl_kw, impls, body) = get_classish_declaration_children x
+    in
+    t attr;
+    tl_with ~span ~f:(fun () ->
+      handle_possible_list ~after_each:(fun _ -> add_space ()) modifiers;
+      t kw;
+      split ~space ();
+      t_with ~nest name;
+    ) ();
+
+    if not (is_missing extends_kw) then begin
+      split ~space ();
+      tl_with ~nest ~f:(fun () ->
+        t extends_kw;
+        tl_with ~nest ~f:(fun () ->
+          handle_possible_list ~before_each:(split ~space) extends
+        ) ();
+      ) ();
+      ()
+    end;
+
+    if not (is_missing impl_kw) then begin
+      split ~space ();
+      tl_with ~nest ~f:(fun () ->
+        t impl_kw;
+        tl_with ~nest ~f:(fun () ->
+          handle_possible_list ~before_each:(split ~space) impls
+        ) ();
+      ) ();
+      ()
+    end;
+    t body;
+    ()
+  | ClassishBody x ->
+    let (leftp, body, rightp) = get_classish_body_children x in
+    add_space ();
+    t leftp;
+    builder#end_chunks ();
+    tl_with ~nest ~f:(fun () ->
+      handle_possible_list body
+    ) ();
+    t rightp;
+    builder#end_chunks ();
+    ()
+  | TraitUse x ->
+    let (kw, elements, semi) = get_trait_use_children x in
+    t kw;
+    handle_possible_list ~before_each:(split ~space) elements;
+    t semi;
+    builder#end_chunks();
+    ()
   | ListItem x ->
     t x.list_item;
     t x.list_separator
   | IfStatement x ->
     t x.if_keyword;
-    space ();
+    add_space ();
     t x.if_left_paren;
     split ();
     start_argument_rule ();
@@ -205,7 +281,7 @@ let rec transform node =
     ()
   | ElseifClause x ->
     t x.elseif_keyword;
-    space ();
+    add_space ();
     t x.elseif_left_paren;
     split ();
     t_with ~nest x.elseif_condition;
@@ -223,7 +299,7 @@ let rec transform node =
     builder#end_chunks()
   | WhileStatement x ->
     t x.while_keyword;
-    space ();
+    add_space ();
     t x.while_left_paren;
     split ();
     start_argument_rule ();
@@ -234,11 +310,20 @@ let rec transform node =
     handle_possible_compound_statement x.while_body;
     builder#end_chunks ();
     ()
+  | ReturnStatement x ->
+    let (kw, expr, semi) = get_return_statement_children x in
+    t kw;
+    split ~space ();
+    tl_with ~nest ~f:(fun () ->
+      t expr;
+      t semi;
+    ) ();
+    builder#end_chunks ();
   | BinaryExpression x ->
     builder#start_span ();
     (* TODO: nested binary expressions split by precedence *)
     t x.binary_left_operand;
-    space ();
+    add_space ();
     t x.binary_operator;
     split ~space:true ();
     t_with ~nest ~rule:(Rule.simple_rule ()) x.binary_right_operand;
@@ -248,17 +333,31 @@ let rec transform node =
     t x.function_call_receiver;
     t x.function_call_left_paren;
     split ();
-    builder#start_rule ~rule:(Rule.argument_rule ()) ();
-    t_with ~nest ~f:(handle_possible_list ~after_each:after_each_argument)
-      x.function_call_argument_list;
-    t x.function_call_right_paren;
-    builder#end_rule ();
+    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      tl_with ~nest ~f:(fun () ->
+        handle_possible_list ~after_each:after_each_argument
+          x.function_call_argument_list
+      ) ();
+      t x.function_call_right_paren
+    ) ();
     builder#end_span ()
   | _ ->
     Printf.printf "%s not supported - exiting \n"
       (SyntaxKind.to_string (kind node));
     exit 1
   in
+  ()
+
+and tl_with ?(nest=false) ?(rule= -1) ?(span=false) ~f () =
+  if rule <> -1 then builder#start_rule ~rule ();
+  if nest then builder#nest ();
+  if span then builder#start_span ();
+
+  f ();
+
+  if nest then builder#unnest ();
+  if rule <> -1 then builder#end_rule ();
+  if span then builder#end_span ();
   ()
 
 and t_with ?(nest=false) ?(rule= -1) ?(span=false) ?(f=transform) node =
@@ -279,7 +378,7 @@ and after_each_argument is_last =
 and handle_possible_compound_statement node =
   match syntax node with
     | CompoundStatement x ->
-      space ();
+      add_space ();
       transform x.compound_left_brace;
       builder#end_chunks ();
       t_with ~nest:true x.compound_statements;
@@ -291,21 +390,49 @@ and handle_possible_compound_statement node =
       t_with ~nest:true node;
       ()
 
-and handle_possible_list ?after_each:(after_each=(fun is_last -> ())) node =
+and handle_possible_list
+    ?(before_each=(fun () -> ())) ?(after_each=(fun is_last -> ())) node =
+  let rec aux l = (
+    match l with
+      | hd :: tl ->
+        before_each ();
+        transform hd;
+        after_each (List.is_empty tl);
+        aux tl
+      | [] -> ()
+  ) in
   match syntax node with
-    | SyntaxList x ->
-      let rec aux l = (
-        match l with
-          | hd :: tl ->
-            transform hd;
-            after_each (List.is_empty tl);
-            aux tl
-          | [] -> ()
-      ) in
-      aux x
-    | _ ->
-      transform node;
-      after_each true
+    | SyntaxList x -> aux x
+    | _ -> aux [node]
+
+and transform_function_declaration_header ~span_started x =
+  let (async, kw, amp, name, type_params, leftp, params, rightp, colon,
+    ret_type) = get_function_declaration_header_children x
+  in
+
+  if not span_started then builder#start_span ();
+
+  transform async;
+  if not (is_missing async) then add_space ();
+  transform kw;
+  add_space ();
+  transform amp;
+  transform name;
+  transform type_params;
+  transform leftp;
+  split ();
+  builder#end_span ();
+
+  tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~span:true ~f:(fun () ->
+      handle_possible_list ~after_each:after_each_argument params
+    ) ();
+    transform rightp;
+    transform colon;
+    add_space ();
+    transform ret_type;
+  ) ();
+  ()
 
 let run node =
   transform node;

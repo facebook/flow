@@ -36,7 +36,9 @@ let expand_state state =
   ()
 
 let solve chunks =
+  let count = ref 0 in
   let rec aux acc =
+    count := !count + 1;
     if State_queue.is_empty () then
       acc
     else
@@ -46,7 +48,7 @@ let solve chunks =
       if Solve_state.compare state acc < 0 then state
       else acc
     in
-    if best.Solve_state.overflow = 0 then
+    if best.Solve_state.overflow = 0 || !count > 50 then
       best
     else begin
       expand_state state;

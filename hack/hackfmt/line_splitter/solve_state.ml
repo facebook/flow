@@ -10,7 +10,7 @@
 
 open Core
 
-let _LINE_WIDTH = 20
+let _LINE_WIDTH = 80
 
 type t = {
   chunks: Chunk.t list;
