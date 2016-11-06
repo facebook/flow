@@ -27,6 +27,8 @@ let parse_and_print filename =
   let init_state = Solve_state.make chunks (Rule.get_initial_rvm ()) in
   State_queue.add init_state;
   let result = Line_splitter.solve chunks in
+  Printf.printf "%s\n" (Rule.dependency_map_to_string ());
+  Printf.printf "%b\n" (Rule.is_rule_value_map_valid result.Solve_state.rvm);
   Printf.printf "%s\n" (Solve_state.__debug result);
   Printf.printf "Formatting result:\n%s\n" (State_printer.print_state result);
   ()

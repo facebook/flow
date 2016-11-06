@@ -94,6 +94,9 @@ let builder = object (this)
       | hd :: tl -> tl
       | [] -> [] (*TODO: error *)
 
+  method has_rule_kind kind =
+    List.exists rules ~f:(fun id -> Rule.get_kind id = kind)
+
   method start_span () =
     let os = open_span (List.length chunks) 1 in
     Stack.push os open_spans
@@ -339,6 +342,7 @@ let rec transform node =
     t async;
     if not (is_missing async) then add_space ();
     t signature;
+    add_space ();
     t arrow;
     handle_lambda_body body;
     ()
@@ -440,10 +444,15 @@ let rec transform node =
   | XHPOpen x ->
     let (name, attrs, right_a) = get_xhp_open_children x in
     t name;
-    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
-      handle_possible_list ~before_each:(split ~space) attrs;
-      t right_a
-    ) ();
+    if not (is_missing attrs) then begin
+      split ~space ();
+      tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+        handle_possible_list ~after_each:(fun is_last ->
+          if not is_last then split ~space (); ()
+        ) attrs;
+      ) ();
+    end;
+    handle_xhp_open_right_angle_token right_a;
     ()
   | XHPAttribute x ->
     let (name, eq, expr) = get_xhp_attribute_children x in
@@ -456,14 +465,25 @@ let rec transform node =
     ()
   | XHPExpression x ->
     let (op, body, close) = get_xhp_expression_children x in
-    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
-      t op;
+
+    let handle_body_close = (fun () ->
       tl_with ~nest ~f:(fun () ->
         handle_possible_list ~before_each:(fun _ -> split ()) body
       ) ();
       if not (is_missing close) then split ();
-      t close
-    ) ();
+      t close;
+      ()
+    ) in
+
+    if builder#has_rule_kind Rule.XHPExpression then begin
+      t op;
+      tl_with ~rule:(Rule.xhp_expression_rule ()) ~f:(handle_body_close) ();
+    end else begin
+      tl_with ~rule:(Rule.xhp_expression_rule ()) ~f:(fun () ->
+        t op;
+        handle_body_close ();
+      ) ();
+    end;
     ()
   | XHPClose x ->
     let (left_a, name, right_a) = get_xhp_close_children x in
@@ -576,6 +596,13 @@ and handle_possible_list
     | Missing -> ()
     | SyntaxList x -> aux x
     | _ -> aux [node]
+
+and handle_xhp_open_right_angle_token t =
+  match syntax t with
+    | Token token ->
+      if EditableToken.text token = "/>" then add_space ();
+      transform t
+    | _ -> raise (Failure "expected xhp_open right_angle token")
 
 and transform_function_declaration_header ~span_started x =
   let (async, kw, amp, name, type_params, leftp, params, rightp, colon,

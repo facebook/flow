@@ -14,6 +14,7 @@ type kind =
   | Simple
   | Always
   | Argument
+  | XHPExpression
 
 type t = {
   id: int;
@@ -39,7 +40,7 @@ let get_rule_count () =
 let constrain_rules rvm rule_list =
   List.fold_left rule_list ~init:rvm ~f:(fun rvm rule_id ->
     match get_kind rule_id with
-      | Argument -> IMap.add rule_id 1 rvm
+      | Argument | XHPExpression -> IMap.add rule_id 1 rvm
       | _ -> raise (Failure "unsupported rule type")
   )
 
@@ -59,6 +60,8 @@ let is_dependency_satisfied par_kind par_val child_val =
   match par_kind, par_val, child_val with
     | Argument, None, 1 -> false
     | Argument, Some 0, 1 -> false
+    | XHPExpression, None, 1 -> false
+    | XHPExpression, Some 0, 1 -> false
     | _ -> true
 
 let is_rule_value_map_valid rvm =
@@ -92,6 +95,9 @@ let always_rule () =
 let argument_rule () =
   new_rule Argument
 
+let xhp_expression_rule () =
+  new_rule XHPExpression
+
 let is_split _id v =
   match v with
     | None
@@ -104,6 +110,7 @@ let get_cost id =
     | Simple -> 1
     | Always -> 0
     | Argument -> 1
+    | XHPExpression -> 1
 
 let get_possible_values _id =
   [0; 1]
@@ -113,6 +120,7 @@ let cares_about_children r =
     | Simple -> false
     | Always -> false
     | Argument -> true
+    | XHPExpression -> true
 
 let mark_dependencies rule_ids child =
   List.iter rule_ids ~f:(fun id ->
@@ -135,5 +143,15 @@ let to_string id =
     | Simple -> "Simple"
     | Always -> "Always"
     | Argument -> "Argument"
+    | XHPExpression -> "XHPExpression"
   in
   (string_of_int id) ^ " - " ^ kind
+
+let dependency_map_to_string () =
+  let kv_list = IMap.elements !dependency_map in
+  let str_list = List.map kv_list ~f:(fun (k, v_list) ->
+    let vs = List.map v_list ~f:string_of_int in
+    let v_strs = "[" ^ String.concat ", " vs ^ "]" in
+    string_of_int k ^ ": "  ^ v_strs
+  ) in
+  "{" ^ String.concat ", " str_list ^ "}"
