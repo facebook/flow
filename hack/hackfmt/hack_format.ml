@@ -618,9 +618,9 @@ and transform_argish left_p arg_list right_p =
   ) ();
   ()
 
-let run node =
+let run ?(debug=false) node =
   transform node;
   split ();
   let chunks = builder#_end () in
-  builder#__debug chunks;
+  if debug then builder#__debug chunks;
   chunks

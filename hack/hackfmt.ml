@@ -23,7 +23,7 @@ let parse_and_print filename =
   Printf.printf "%s\n" (SourceText.get_text source_text);
   Printf.printf "%s\n" str;
   let editable = Full_fidelity_editable_syntax.from_tree syntax_tree in
-  let chunks = Hack_format.run editable in
+  let chunks = Hack_format.run ~debug:true editable in
   let init_state = Solve_state.make chunks (Rule.get_initial_rvm ()) in
   State_queue.add init_state;
   let result = Line_splitter.solve chunks in
