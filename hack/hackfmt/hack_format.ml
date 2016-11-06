@@ -334,6 +334,14 @@ let rec transform node =
     ) ();
     builder#end_chunks ();
     ()
+  | LambdaExpression x ->
+    let (async, signature, arrow, body) = get_lambda_expression_children x in
+    t async;
+    if not (is_missing async) then add_space ();
+    t signature;
+    t arrow;
+    handle_lambda_body body;
+    ()
   | ScopeResolutionExpression x ->
     let (qual, operator, name) = get_scope_resolution_expression_children x in
     t qual;
@@ -448,8 +456,8 @@ let rec transform node =
     ()
   | XHPExpression x ->
     let (op, body, close) = get_xhp_expression_children x in
-    t op;
     tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      t op;
       tl_with ~nest ~f:(fun () ->
         handle_possible_list ~before_each:(fun _ -> split ()) body
       ) ();
@@ -520,22 +528,38 @@ and after_each_argument is_last =
 and after_each_literal is_last =
   split ~space:true ();
 
+and handle_lambda_body node =
+  match syntax node with
+    | CompoundStatement x ->
+      handle_compound_statement x;
+    | _ ->
+      split ~space:true ();
+      tl_with ~rule:(Rule.simple_rule ()) ~nest:true ~f:(fun () ->
+        transform node;
+      ) ();
+      ()
+
 and handle_possible_compound_statement node =
   match syntax node with
     | CompoundStatement x ->
-      add_space ();
-      transform x.compound_left_brace;
-      builder#end_chunks ();
-      tl_with ~nest:true ~f:(fun () ->
-        handle_possible_list x.compound_statements;
-      ) ();
-      transform x.compound_right_brace;
+      handle_compound_statement x;
       pending_space ();
       ()
     | _ ->
       builder#end_chunks ();
       t_with ~nest:true node;
       ()
+
+and handle_compound_statement cs =
+  let (left_b, statements, right_b) = get_compound_statement_children cs in
+  add_space ();
+  transform left_b;
+  builder#end_chunks ();
+  tl_with ~nest:true ~f:(fun () ->
+    handle_possible_list statements;
+  ) ();
+  transform right_b;
+  ()
 
 and handle_possible_list
     ?(before_each=(fun () -> ())) ?(after_each=(fun is_last -> ())) node =
