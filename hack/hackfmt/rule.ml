@@ -127,10 +127,7 @@ let mark_dependencies rule_ids child =
     ()
   )
 
-let compare r1 r2 =
-  if r1.id < r2.id then -1
-  else if r1.id = r2.id then 0
-  else 1
+let compare r1 r2 = Pervasives.compare r1.id r2.id
 
 let to_string id =
   let r = IMap.find_unsafe id !rule_map in

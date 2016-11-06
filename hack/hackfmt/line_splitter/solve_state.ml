@@ -31,12 +31,7 @@ let make chunks rvm =
   let overflow = 0 in
   let acc = len, cost, overflow in
 
-  let get_overflow len =
-    if len > _LINE_WIDTH then
-      len - _LINE_WIDTH
-    else
-      0
-  in
+  let get_overflow len = max (len - _LINE_WIDTH) 0 in
 
   let nesting_set, _ =
     List.fold_left chunks ~init:(ISet.empty, ISet.empty)
@@ -86,13 +81,11 @@ let make chunks rvm =
   { chunks; rvm; cost; overflow; nesting_set; }
 
 let compare s1 s2 =
-  if s1.overflow < s2.overflow then -1
-  else if s1.overflow = s2.overflow then begin
-    if s1.cost < s2.cost then -1
-    else if s1.cost = s2.cost then 0
-    else 1
-  end
-  else 1
+  let cmp = Pervasives.compare s1.overflow s2.overflow in
+  if cmp <> 0 then
+    cmp
+  else
+    Pervasives.compare s1.cost s2.cost
 
 let __debug s =
   (* TODO: make a new rule strings string *)

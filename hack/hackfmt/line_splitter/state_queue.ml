@@ -23,11 +23,11 @@ let is_empty () =
 let peek () =
   match !queue with
     | hd :: tl -> hd
-    | [] -> raise (Failure "queue is empty\n")
+    | [] -> raise (Failure "Queue is empty when calling peek\n")
 
 let get_next () =
   match !queue with
     | hd :: tl ->
       queue := tl;
       hd
-    | [] -> raise (Failure "queue is empty\n")
+    | [] -> raise (Failure "Queue is empty when calling get_next\n")
