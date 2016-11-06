@@ -264,6 +264,17 @@ let rec transform node =
     t semi;
     builder#end_chunks();
     ()
+  | ParameterDeclaration x ->
+    let (attr, visibility, param_type, name, default) =
+      get_parameter_declaration_children x
+    in
+    t attr;
+    t visibility;
+    t param_type;
+    if not (is_missing param_type) then add_space ();
+    (* TODO: span and split, figure out attr and vis rules *)
+    t name;
+    t default;
   | ListItem x ->
     t x.list_item;
     t x.list_separator
@@ -338,6 +349,12 @@ let rec transform node =
       t name;
     ) ();
     ()
+  | PrefixUnaryExpression x ->
+    let (operator, operand) = get_prefix_unary_expression_children x in
+    t operator;
+    (* TODO: remove space for some unary expressions *)
+    add_space ();
+    t operand;
   | BinaryExpression x ->
     builder#start_span ();
     (* TODO: nested binary expressions split by precedence *)
@@ -360,6 +377,21 @@ let rec transform node =
       t x.function_call_right_paren
     ) ();
     builder#end_span ()
+  | CollectionLiteralExpression x ->
+    let (name, left_b, initializers, right_b) =
+      get_collection_literal_expression_children x
+    in
+    t name;
+    add_space ();
+    t left_b;
+    split ~space ();
+    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      tl_with ~nest ~f:(fun () ->
+        handle_possible_list ~after_each:after_each_literal initializers
+      ) ();
+      t right_b;
+    ) ();
+    ()
   | ObjectCreationExpression x ->
     let (kw, obj_type, left_p, arg_list, right_p) =
       get_object_creation_expression_children x
@@ -368,6 +400,13 @@ let rec transform node =
     add_space ();
     t obj_type;
     transform_argish left_p arg_list right_p;
+    ()
+  | ArrayIntrinsicExpression x ->
+    let (kw, left_p, members, right_p) =
+      get_array_intrinsic_expression_children x
+    in
+    t kw;
+    transform_argish left_p members right_p;
     ()
   | ParenthesizedExpression x ->
     let (left_p, expr, right_p) = get_parenthesized_expression_children x in
@@ -379,10 +418,59 @@ let rec transform node =
       t right_p
     ) ();
     ()
+  | BracedExpression x ->
+    (* TODO: revisit this *)
+    let (left_b, expr, right_b) = get_braced_expression_children x in
+    t left_b;
+    split ();
+    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      t_with ~nest expr;
+      split ();
+      t right_b
+    ) ();
+    ()
+  | XHPOpen x ->
+    let (name, attrs, right_a) = get_xhp_open_children x in
+    t name;
+    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      handle_possible_list ~before_each:(split ~space) attrs;
+      t right_a
+    ) ();
+    ()
+  | XHPAttribute x ->
+    let (name, eq, expr) = get_xhp_attribute_children x in
+    tl_with ~span ~f:(fun () ->
+      t name;
+      t eq;
+      split ();
+      t_with ~nest expr
+    ) ();
+    ()
+  | XHPExpression x ->
+    let (op, body, close) = get_xhp_expression_children x in
+    t op;
+    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      tl_with ~nest ~f:(fun () ->
+        handle_possible_list ~before_each:(fun _ -> split ()) body
+      ) ();
+      if not (is_missing close) then split ();
+      t close
+    ) ();
+    ()
+  | XHPClose x ->
+    let (left_a, name, right_a) = get_xhp_close_children x in
+    t left_a;
+    t name;
+    t right_a;
   | GenericTypeSpecifier x ->
     let (class_type, type_args) = get_generic_type_specifier_children x in
     t class_type;
     t type_args;
+    ()
+  | NullableTypeSpecifier x ->
+    let (question, ntype) = get_nullable_type_specifier_children x in
+    t question;
+    t ntype;
     ()
   | TypeArguments x ->
     let (left_a, type_list, right_a) = get_type_arguments_children x in
@@ -429,13 +517,18 @@ and t_with ?(nest=false) ?(rule= -1) ?(span=false) ?(f=transform) node =
 and after_each_argument is_last =
   split ~space:(not is_last) ();
 
+and after_each_literal is_last =
+  split ~space:true ();
+
 and handle_possible_compound_statement node =
   match syntax node with
     | CompoundStatement x ->
       add_space ();
       transform x.compound_left_brace;
       builder#end_chunks ();
-      t_with ~nest:true x.compound_statements;
+      tl_with ~nest:true ~f:(fun () ->
+        handle_possible_list x.compound_statements;
+      ) ();
       transform x.compound_right_brace;
       pending_space ();
       ()
@@ -456,6 +549,7 @@ and handle_possible_list
       | [] -> ()
   ) in
   match syntax node with
+    | Missing -> ()
     | SyntaxList x -> aux x
     | _ -> aux [node]
 
