@@ -1366,7 +1366,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, u_def))
 
     | (u_def, ReposUseT (reason, use_op, l)) ->
-      rec_flow cx trace (l, UseT (use_op, reposition cx reason u_def))
+      rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u_def))
 
     (***************)
     (* annotations *)
@@ -2185,7 +2185,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, t_out))
 
     | TypeAppT _, ReposLowerT (reason_op, u) ->
-        rec_flow cx trace (reposition cx reason_op l, u)
+        rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
     | (TypeAppT(c,ts), MethodT _) ->
         let reason_op = reason_of_use_t u in
@@ -2539,7 +2539,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         match but has to appear here to preempt the (IntersectionT, _) in
         between so that we reposition the entire intersection. *)
     | IntersectionT _, ReposLowerT (reason_op, u) ->
-      rec_flow cx trace (reposition cx reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
     (** All other pairs with an intersection lower bound come here. Before
         further processing, we ensure that the upper bound is concretized. See
@@ -2865,7 +2865,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* get this out of the way too, as above, except that repositioning does
        make sense *)
     | (ThisClassT _, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
     (* When do we consider a polymorphic type <X:U> T to be a subtype of another
        polymorphic type <X:U'> T'? This is the subject of a long line of
@@ -4563,7 +4563,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        where that lower bound was used; the lower bound's location (which is
        being overwritten) is where it was defined. *)
     | (_, ReposLowerT (reason_op, u)) ->
-      rec_flow cx trace (reposition cx reason_op l, u)
+      rec_flow cx trace (reposition cx ~trace reason_op l, u)
 
     (***************)
     (* unsupported *)
