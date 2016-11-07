@@ -1,0 +1,442 @@
+FormData.js:5
+  5: new FormData(''); // incorrect
+     ^^^^^^^^^^^^^^^^ constructor call
+  5: new FormData(''); // incorrect
+                  ^^ string. This type is incompatible with
+HTMLFormElement. See lib: bom.js:246
+
+FormData.js:6
+  6: new FormData(document.createElement('input')); // incorrect
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `createElement`
+  6: new FormData(document.createElement('input')); // incorrect
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ HTMLInputElement. This type is incompatible with
+HTMLFormElement. See lib: bom.js:246
+
+FormData.js:14
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ call of method `get`
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ File. This type is incompatible with
+ 14: const d: string = a.get('foo'); // incorrect
+              ^^^^^^ string
+
+FormData.js:14
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ call of method `get`
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ null. This type is incompatible with
+ 14: const d: string = a.get('foo'); // incorrect
+              ^^^^^^ string
+
+FormData.js:14
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ call of method `get`
+ 14: const d: string = a.get('foo'); // incorrect
+                       ^^^^^^^^^^^^ undefined. This type is incompatible with
+ 14: const d: string = a.get('foo'); // incorrect
+              ^^^^^^ string
+
+FormData.js:15
+ 15: const e: Blob = a.get('foo'); // incorrect
+                     ^^^^^^^^^^^^ call of method `get`
+ 15: const e: Blob = a.get('foo'); // incorrect
+                     ^^^^^^^^^^^^ null. This type is incompatible with
+ 15: const e: Blob = a.get('foo'); // incorrect
+              ^^^^ Blob
+
+FormData.js:15
+ 15: const e: Blob = a.get('foo'); // incorrect
+                     ^^^^^^^^^^^^ call of method `get`
+ 15: const e: Blob = a.get('foo'); // incorrect
+                     ^^^^^^^^^^^^ string. This type is incompatible with
+ 15: const e: Blob = a.get('foo'); // incorrect
+              ^^^^ Blob
+
+FormData.js:15
+ 15: const e: Blob = a.get('foo'); // incorrect
+                     ^^^^^^^^^^^^ call of method `get`
+ 15: const e: Blob = a.get('foo'); // incorrect
+                     ^^^^^^^^^^^^ undefined. This type is incompatible with
+ 15: const e: Blob = a.get('foo'); // incorrect
+              ^^^^ Blob
+
+FormData.js:17
+ 17: a.get(2); // incorrect
+     ^^^^^^^^ call of method `get`
+ 17: a.get(2); // incorrect
+           ^ number. This type is incompatible with
+string. See lib: bom.js:249
+
+FormData.js:21
+ 21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                               ^^^^^^^^^^^^^^^ call of method `getAll`
+ 21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                     ^^^^^^ number. This type is incompatible with
+union: string | File. See lib: bom.js:250
+  Member 1:
+  string. See lib: bom.js:243
+  Error:
+   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                       ^^^^^^ number. This type is incompatible with
+  string. See lib: bom.js:243
+  Member 2:
+  File. See lib: bom.js:243
+  Error:
+   21: const a2: Array<string | File | number> = a.getAll('foo'); // incorrect
+                                       ^^^^^^ number. This type is incompatible with
+  File. See lib: bom.js:243
+
+FormData.js:22
+ 22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                             ^^^^^^^^^^^^^^^ call of method `getAll`
+ 22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                              ^^^^ Blob. This type is incompatible with
+union: string | File. See lib: bom.js:250
+  Member 1:
+  string. See lib: bom.js:243
+  Error:
+   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                ^^^^ Blob. This type is incompatible with
+  string. See lib: bom.js:243
+  Member 2:
+  File. See lib: bom.js:243
+  Error:
+   22: const a3: Array<string | Blob | File> = a.getAll('foo'); // incorrect
+                                ^^^^ Blob. This type is incompatible with
+  File. See lib: bom.js:243
+
+FormData.js:23
+ 23: a.getAll(23); // incorrect
+     ^^^^^^^^^^^^ call of method `getAll`
+ 23: a.getAll(23); // incorrect
+              ^^ number. This type is incompatible with
+string. See lib: bom.js:250
+
+FormData.js:27
+ 27: a.set('foo', {}); // incorrect
+     ^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
+ 27: a.set('foo', {}); // incorrect
+     ^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:252
+  Error:
+   27: a.set('foo', {}); // incorrect
+                    ^^ object literal. This type is incompatible with
+  string. See lib: bom.js:252
+  Member 2:
+  function type. See lib: bom.js:253
+  Error:
+   27: a.set('foo', {}); // incorrect
+                    ^^ object literal. This type is incompatible with
+  Blob. See lib: bom.js:253
+  Member 3:
+  function type. See lib: bom.js:254
+  Error:
+   27: a.set('foo', {}); // incorrect
+                    ^^ object literal. This type is incompatible with
+  File. See lib: bom.js:254
+
+FormData.js:28
+ 28: a.set(2, 'bar'); // incorrect
+     ^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
+ 28: a.set(2, 'bar'); // incorrect
+     ^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:252
+  Error:
+   28: a.set(2, 'bar'); // incorrect
+             ^ number. This type is incompatible with
+  string. See lib: bom.js:252
+  Member 2:
+  function type. See lib: bom.js:253
+  Error:
+   28: a.set(2, 'bar'); // incorrect
+             ^ number. This type is incompatible with
+  string. See lib: bom.js:253
+  Member 3:
+  function type. See lib: bom.js:254
+  Error:
+   28: a.set(2, 'bar'); // incorrect
+             ^ number. This type is incompatible with
+  string. See lib: bom.js:254
+
+FormData.js:32
+ 32: a.set('bar', new File([], 'q'), 2) // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
+ 32: a.set('bar', new File([], 'q'), 2) // incorrect
+     ^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:252
+  Error:
+   32: a.set('bar', new File([], 'q'), 2) // incorrect
+                        ^^^^ File. This type is incompatible with
+  string. See lib: bom.js:252
+  Member 2:
+  function type. See lib: bom.js:253
+  Error:
+   32: a.set('bar', new File([], 'q'), 2) // incorrect
+                                       ^ number. This type is incompatible with
+  string. See lib: bom.js:253
+  Member 3:
+  function type. See lib: bom.js:254
+  Error:
+   32: a.set('bar', new File([], 'q'), 2) // incorrect
+                                       ^ number. This type is incompatible with
+  string. See lib: bom.js:254
+
+FormData.js:35
+ 35: a.set('bar', new Blob, 2) // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`. Function cannot be called on any member of intersection type
+ 35: a.set('bar', new Blob, 2) // incorrect
+     ^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:252
+  Error:
+   35: a.set('bar', new Blob, 2) // incorrect
+                        ^^^^ Blob. This type is incompatible with
+  string. See lib: bom.js:252
+  Member 2:
+  function type. See lib: bom.js:253
+  Error:
+   35: a.set('bar', new Blob, 2) // incorrect
+                              ^ number. This type is incompatible with
+  string. See lib: bom.js:253
+  Member 3:
+  function type. See lib: bom.js:254
+  Error:
+   35: a.set('bar', new Blob, 2) // incorrect
+                        ^^^^ Blob. This type is incompatible with
+  File. See lib: bom.js:254
+
+FormData.js:39
+ 39: a.append('foo', {}); // incorrect
+     ^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
+ 39: a.append('foo', {}); // incorrect
+     ^^^^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:256
+  Error:
+   39: a.append('foo', {}); // incorrect
+                       ^^ object literal. This type is incompatible with
+  string. See lib: bom.js:256
+  Member 2:
+  function type. See lib: bom.js:257
+  Error:
+   39: a.append('foo', {}); // incorrect
+                       ^^ object literal. This type is incompatible with
+  Blob. See lib: bom.js:257
+  Member 3:
+  function type. See lib: bom.js:258
+  Error:
+   39: a.append('foo', {}); // incorrect
+                       ^^ object literal. This type is incompatible with
+  File. See lib: bom.js:258
+
+FormData.js:40
+ 40: a.append(2, 'bar'); // incorrect
+     ^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
+ 40: a.append(2, 'bar'); // incorrect
+     ^^^^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:256
+  Error:
+   40: a.append(2, 'bar'); // incorrect
+                ^ number. This type is incompatible with
+  string. See lib: bom.js:256
+  Member 2:
+  function type. See lib: bom.js:257
+  Error:
+   40: a.append(2, 'bar'); // incorrect
+                ^ number. This type is incompatible with
+  string. See lib: bom.js:257
+  Member 3:
+  function type. See lib: bom.js:258
+  Error:
+   40: a.append(2, 'bar'); // incorrect
+                ^ number. This type is incompatible with
+  string. See lib: bom.js:258
+
+FormData.js:45
+ 45: a.append('bar', new File([], 'q'), 2) // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
+ 45: a.append('bar', new File([], 'q'), 2) // incorrect
+     ^^^^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:256
+  Error:
+   45: a.append('bar', new File([], 'q'), 2) // incorrect
+                           ^^^^ File. This type is incompatible with
+  string. See lib: bom.js:256
+  Member 2:
+  function type. See lib: bom.js:257
+  Error:
+   45: a.append('bar', new File([], 'q'), 2) // incorrect
+                                          ^ number. This type is incompatible with
+  string. See lib: bom.js:257
+  Member 3:
+  function type. See lib: bom.js:258
+  Error:
+   45: a.append('bar', new File([], 'q'), 2) // incorrect
+                                          ^ number. This type is incompatible with
+  string. See lib: bom.js:258
+
+FormData.js:48
+ 48: a.append('bar', new Blob, 2) // incorrect
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`. Function cannot be called on any member of intersection type
+ 48: a.append('bar', new Blob, 2) // incorrect
+     ^^^^^^^^ intersection
+  Member 1:
+  function type. See lib: bom.js:256
+  Error:
+   48: a.append('bar', new Blob, 2) // incorrect
+                           ^^^^ Blob. This type is incompatible with
+  string. See lib: bom.js:256
+  Member 2:
+  function type. See lib: bom.js:257
+  Error:
+   48: a.append('bar', new Blob, 2) // incorrect
+                                 ^ number. This type is incompatible with
+  string. See lib: bom.js:257
+  Member 3:
+  function type. See lib: bom.js:258
+  Error:
+   48: a.append('bar', new Blob, 2) // incorrect
+                           ^^^^ Blob. This type is incompatible with
+  File. See lib: bom.js:258
+
+FormData.js:52
+ 52: a.delete(3); // incorrect
+     ^^^^^^^^^^^ call of method `delete`
+ 52: a.delete(3); // incorrect
+              ^ number. This type is incompatible with
+string. See lib: bom.js:260
+
+FormData.js:56
+ 56: for (let x: number of a.keys()) {} // incorrect
+              ^^^^^^^^^ string. This type is incompatible with
+ 56: for (let x: number of a.keys()) {} // incorrect
+                 ^^^^^^ number
+
+FormData.js:64
+ 64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                               ^^^^ Blob. This type is incompatible with
+union: string | File. See lib: bom.js:264
+  Member 1:
+  string. See lib: bom.js:243
+  Error:
+   64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                 ^^^^ Blob. This type is incompatible with
+  string. See lib: bom.js:243
+  Member 2:
+  File. See lib: bom.js:243
+  Error:
+   64: for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
+                                                 ^^^^ Blob. This type is incompatible with
+  File. See lib: bom.js:243
+
+FormData.js:65
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+               ^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:65
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                  ^ string. This type is incompatible with
+File. See lib: bom.js:264
+
+FormData.js:65
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                       ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:65
+ 65: for (let [x, y]: [number, string] of a.entries()) {} // incorrect
+                               ^^^^^^ string. This type is incompatible with
+File. See lib: bom.js:264
+
+FormData.js:66
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                  ^ number. This type is incompatible with
+File. See lib: bom.js:264
+
+FormData.js:66
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                  ^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:66
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+File. See lib: bom.js:264
+
+FormData.js:66
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:66
+ 66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+union: string | File. See lib: bom.js:264
+  Member 1:
+  string. See lib: bom.js:243
+  Error:
+   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ number. This type is incompatible with
+  string. See lib: bom.js:243
+  Member 2:
+  File. See lib: bom.js:243
+  Error:
+   66: for (let [x, y]: [string, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ number. This type is incompatible with
+  File. See lib: bom.js:243
+
+FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+               ^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                  ^ number. This type is incompatible with
+File. See lib: bom.js:264
+
+FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                  ^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                       ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+File. See lib: bom.js:264
+
+FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+string. See lib: bom.js:264
+
+FormData.js:67
+ 67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                               ^^^^^^ number. This type is incompatible with
+union: string | File. See lib: bom.js:264
+  Member 1:
+  string. See lib: bom.js:243
+  Error:
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ number. This type is incompatible with
+  string. See lib: bom.js:243
+  Member 2:
+  File. See lib: bom.js:243
+  Error:
+   67: for (let [x, y]: [number, number] of a.entries()) {} // incorrect
+                                 ^^^^^^ number. This type is incompatible with
+  File. See lib: bom.js:243
+
+
+Found 39 errors
