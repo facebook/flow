@@ -54,7 +54,8 @@ val get_changes_synchronously: timeout:int ->
  * alternative would involve verbose mutuaully-recursive modules.*)
 module type Testing_sig = sig
   val test_env : env
-  val transform_asynchronous_response : env -> Hh_json.json -> pushed_changes
+  val transform_asynchronous_get_changes_response :
+    env -> Hh_json.json -> env * pushed_changes
 end
 
 module Testing : Testing_sig

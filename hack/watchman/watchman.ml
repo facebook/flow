@@ -52,6 +52,7 @@ type dead_env = {
   prior_settings : init_settings;
   reinit_attempts: int;
   dead_since: float;
+  prior_clockspec : string;
 }
 
 type env = {
@@ -59,7 +60,12 @@ type env = {
   socket: Timeout.in_channel * out_channel;
   watch_root: string;
   relative_path: string;
-  (* See https://facebook.github.io/watchman/docs/clockspec.html *)
+  (* See https://facebook.github.io/watchman/docs/clockspec.html
+   *
+   * This is also used to reliably detect a crashed watchman. Watchman has a
+   * facility to detect watchman process crashes between two "since" queries
+   *
+   * See also assert_no_fresh_instance *)
   mutable clockspec: string;
 }
 
@@ -68,6 +74,12 @@ let dead_env_from_alive env =
     prior_settings = env.settings;
     dead_since = Unix.time ();
     reinit_attempts = 0;
+    (** When we start a new watchman connection, we continue to use the prior
+     * clockspec. If the same watchman server is still alive, then all is good.
+     * If not, the clockspec allows us to detect whether a new watchman
+     * server had to be started. See also "is_fresh_instance" on watchman's
+     * "since" response. *)
+    prior_clockspec = env.clockspec;
   }
 
 type pushed_changes =
@@ -83,8 +95,8 @@ type changes =
 
 type watchman_instance =
   (** Indicates a dead watchman instance (most likely due to chef upgrading,
-   * reconfiguration, or a user terminating watchman) detected by,
-   * for example, a pipe error.
+   * reconfiguration, or a user terminating watchman, or a timeout reading
+   * from the connection) detected by, for example, a pipe error or a timeout.
    *
    * TODO: Currently fallback to a Watchman_dead is only handled in calls
    * wrapped by the with_crash_record. Pipe errors elsewhere (for example
@@ -198,12 +210,15 @@ let all_query env =
 
 let since_query env =
   request_json
-    ~extra_kv: ["since", Hh_json.JSON_String env.clockspec]
+    ~extra_kv: ["since", Hh_json.JSON_String env.clockspec;
+                "empty_on_fresh_instance", Hh_json.JSON_Bool true]
     Query env
 
 let subscribe env = request_json
                       ~extra_kv:["since", Hh_json.JSON_String env.clockspec ;
-                                 "defer", J.strlist ["hg.update"]]
+                                 "defer", J.strlist ["hg.update"] ;
+                                 "empty_on_fresh_instance",
+                                 Hh_json.JSON_Bool true]
                       Subscribe env
 
 let watch_project root = J.strlist ["watch-project"; root]
@@ -240,6 +255,24 @@ let read_with_timeout timeout ic =
     | _, _, _ ->
       EventLogger.watchman_timeout ();
       raise Timeout
+
+(** We filter all responses from get_changes through this. This is to detect
+ * Watchman server crashes.
+ *
+ * See also Watchman docs on "since" query parameter. *)
+let assert_no_fresh_instance obj =
+  let open Hh_json.Access in
+  let _ = (return obj)
+    >>= get_bool "is_fresh_instance"
+    >>= (fun (is_fresh, trace) ->
+     if is_fresh then begin
+       Hh_logger.log "Watchman server is fresh instance. Exiting.";
+       Exit_status.(exit Watchman_fresh_instance)
+     end
+     else
+       Result.Ok ((), trace)
+    ) in
+  ()
 
 let assert_no_error obj =
   (try
@@ -313,7 +346,8 @@ let with_crash_record_exn root source f =
 let with_crash_record_opt root source f =
   Option.try_with (fun () -> with_crash_record_exn root source f)
 
-let init { init_timeout; subscribe_to_changes; sync_directory; root } =
+let re_init ?prior_clockspec
+  { init_timeout; subscribe_to_changes; sync_directory; root } =
   with_crash_record_opt root "init" @@ fun () ->
   let root_s = Path.to_string root in
   let sockname = get_sockname init_timeout in
@@ -324,8 +358,10 @@ let init { init_timeout; subscribe_to_changes; sync_directory; root } =
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
 
-  let clockspec =
-    exec socket (clock watch_root) |> J.get_string_val "clock" in
+  let clockspec = match prior_clockspec with
+    | Some s -> s
+    | None -> exec socket (clock watch_root) |> J.get_string_val "clock"
+  in
   let env = {
     settings = {
       init_timeout;
@@ -340,6 +376,8 @@ let init { init_timeout; subscribe_to_changes; sync_directory; root } =
   } in
   if subscribe_to_changes then (ignore @@ exec env.socket (subscribe env)) ;
   env
+
+let init settings = re_init settings
 
 let has_input timeout (in_channel, _) =
   let fd = Timeout.descr_of_in_channel in_channel in
@@ -405,7 +443,8 @@ let maybe_restart_instance instance = match instance with
     else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then
       let () =
         Hh_logger.log "Attemping to reestablish watchman subscription" in
-      match init dead_env.prior_settings with
+      match re_init ~prior_clockspec:dead_env.prior_clockspec
+        dead_env.prior_settings with
       | None ->
         Hh_logger.log "Reestablishing watchman subscription failed.";
         EventLogger.watchman_connection_reestablishment_failed ();
@@ -438,7 +477,9 @@ let call_on_instance instance source f =
     instance, Watchman_unavailable
   | Watchman_alive env -> begin
     try
-      instance, with_crash_record_exn env.settings.root source (fun () -> f env)
+      let env, result = with_crash_record_exn
+        env.settings.root source (fun () -> f env) in
+      Watchman_alive env, result
     with
       | Sys_error("Broken pipe") ->
         Hh_logger.log "Watchman Pipe broken.";
@@ -485,9 +526,10 @@ let get_all_files env =
     | _ ->
       Exit_status.(exit Watchman_failed)
 
-let transform_synchronous_response env data =
+let transform_synchronous_get_changes_response env data =
   env.clockspec <- J.get_string_val "clock" data;
-  set_of_list @@ extract_file_names env data
+  assert_no_fresh_instance data;
+  env, set_of_list @@ extract_file_names env data
 
 let make_state_change_response state name data =
   let metadata = J.try_get_val "metadata" data in
@@ -497,15 +539,16 @@ let make_state_change_response state name data =
   | `Leave ->
     State_leave (name, metadata)
 
-let transform_asynchronous_response env data =
+let transform_asynchronous_get_changes_response env data =
   env.clockspec <- J.get_string_val "clock" data;
-  try make_state_change_response `Enter
+  assert_no_fresh_instance data;
+  try env, make_state_change_response `Enter
     (J.get_string_val "state-enter" data) data with
   | Not_found ->
-  try make_state_change_response `Leave
+  try env, make_state_change_response `Leave
     (J.get_string_val "state-leave" data) data with
   | Not_found ->
-    Files_changed (set_of_list @@ extract_file_names env data)
+    env, Files_changed (set_of_list @@ extract_file_names env data)
 
 let random_filepath root sync_dir =
   let root_name = Path.to_string root in
@@ -521,11 +564,13 @@ let get_changes ?deadline instance =
   call_on_instance instance "get_changes" @@ fun env ->
     if env.settings.subscribe_to_changes
     then
-      Watchman_pushed (transform_asynchronous_response
-        env (poll_for_updates ?timeout env))
+      let env, result = transform_asynchronous_get_changes_response
+        env (poll_for_updates ?timeout env) in
+      env, Watchman_pushed result
     else
-      Watchman_synchronous (transform_synchronous_response
-        env (exec ?timeout env.socket (since_query env)))
+      let env, result = transform_synchronous_get_changes_response
+        env (exec ?timeout env.socket (since_query env)) in
+      env, Watchman_synchronous result
 
 let rec get_changes_until_file_sync deadline syncfile instance acc_changes =
   if Unix.time () >= deadline then raise Timeout else ();
@@ -608,7 +653,8 @@ let get_changes_synchronously ~(timeout:int) instance =
 
 module type Testing_sig = sig
   val test_env : env
-  val transform_asynchronous_response : env -> Hh_json.json -> pushed_changes
+  val transform_asynchronous_get_changes_response :
+    env -> Hh_json.json -> env * pushed_changes
 end
 
 module Testing = struct
@@ -627,5 +673,6 @@ module Testing = struct
     clockspec = "";
   }
 
-  let transform_asynchronous_response env json = transform_asynchronous_response env json
+  let transform_asynchronous_get_changes_response env json =
+    transform_asynchronous_get_changes_response env json
 end
