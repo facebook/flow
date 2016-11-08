@@ -5232,7 +5232,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ->
     t
 
-  | IdxWrapper (reason, obj_t) -> IdxWrapper (reason, subst cx ~force map obj_t)
+  | IdxWrapper (reason, obj_t) ->
+    let obj_t' = subst cx ~force map obj_t in
+    if obj_t == obj_t' then t else IdxWrapper (reason, obj_t')
 
   | FunT (reason, static, proto, {
     this_t = this;
@@ -5433,9 +5435,9 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     ->
       failwith (spf "Unhandled type ctor: %s" (string_of_ctor t)) (* TODO *)
 
-  | OpenPredT (r, t, pos_map, neg_map) ->
-    let t' =  subst cx ~force map t in
-    OpenPredT (r, t', pos_map, neg_map)
+  | OpenPredT (r, arg, pos_map, neg_map) ->
+    let arg' = subst cx ~force map arg in
+    if arg == arg' then t else OpenPredT (r, arg', pos_map, neg_map)
 
   | TypeMapT (r, kind, t1, t2) ->
     let t1' = subst cx ~force map t1 in
@@ -5498,15 +5500,19 @@ and subst_selector cx force map s = match s with
   | ArrRest _
   | Default
   | Become -> s
-  | Refine p -> Refine (subst_predicate cx ~force map p)
+  | Refine p ->
+    let p' = subst_predicate cx ~force map p in
+    if p == p' then s else Refine p'
 
 and subst_destructor _cx _force _map s = match s with
   | NonMaybeType
   | PropertyType _
     -> s
 
-and subst_predicate cx ?(force=true) (map: Type.t SMap.t) = function
-  | LatentP (t, i) -> LatentP (subst cx ~force map t, i)
+and subst_predicate cx ?(force=true) (map: Type.t SMap.t) p = match p with
+  | LatentP (t, i) ->
+    let t' = subst cx ~force map t in
+    if t == t' then p else LatentP (t', i)
   | p -> p
 
 (* TODO: flesh this out *)
