@@ -30,7 +30,7 @@ artifacts:
 
 deploy:
   provider: GitHub
-  # facebook-github-bot-0
+  # flow-bot
   auth_token:
     secure: f1YgYz9csZ8QokY6+aXF10toZtXlFxicbm7uTcylqq+ILoRE6y5GUaf1TfoUalx5
   artifact: bin\*.zip
