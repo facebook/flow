@@ -1,5 +1,14 @@
 open Recorder_types
 
+module DE = Debug_event
+
+(** Recorder handles the stream of debug events from hack to
+ * create a valid recording. It does things like ignoring events
+ * until a valid recording can begin, catting the actual contents
+ * of files from disk, attempting to detect when a recording goes bad,
+ * and identifying and summarizing version control checkout changes
+ * (to avoid catting file contents between checkouts). *)
+
 let file_extension = "hrec"
 
 (** Do something with the events when flushing the buffer. *)
@@ -63,23 +72,39 @@ let flush_recording env =
   flush_to_transcriber env.start_env.settings.transcriber
     (List.rev env.rev_buffered_recording)
 
-let with_event event env =
-  { env with rev_buffered_recording = event :: env.rev_buffered_recording; }
+let fetch_file_contents _ =
+  (** TODO: Get the contents from disk *)
+  "Lorem ipsum...\n"
 
-let init_active_from_fresh_vcs_state start_env state_name =
-  Active {
+let convert_event debug_event = match debug_event with
+  | DE.Fresh_vcs_state s -> Fresh_vcs_state s
+  | DE.Typecheck -> Typecheck
+  | DE.Disk_files_modified files ->
+    let contents = SMap.from_keys files fetch_file_contents in
+    Disk_files_modified contents
+  | DE.Stop_recording ->
+    Stop_recording
+
+let with_event event env =
+  { env with rev_buffered_recording =
+    (convert_event event) :: env.rev_buffered_recording; }
+
+let init_env_from_fresh_vcs_state start_env state_name =
+  {
     start_env = start_env;
-    rev_buffered_recording = [Fresh_vcs_state state_name]; }
+    rev_buffered_recording = [Fresh_vcs_state state_name];
+  }
 
 let add_event event instance = match instance, event with
-  | Pending_start start_env, Fresh_vcs_state state_name ->
-    init_active_from_fresh_vcs_state start_env state_name
+  | Pending_start start_env, DE.Fresh_vcs_state state_name ->
+    let env = init_env_from_fresh_vcs_state start_env state_name in
+    Active env
   | Pending_start _, _ ->
     (** Ignore while we're waiting for a fresh VCS state. *)
     instance
   | Switched_off, _ ->
     instance
-  | Active env, Stop_recording ->
+  | Active env, DE.Stop_recording ->
     let () = flush_recording env in
     Switched_off
   | Active env, _ ->

@@ -21,4 +21,5 @@ module type S = sig
   val elements: 'a t -> (key * 'a) list
   val map_env: ('c -> 'a -> 'c * 'b) -> 'c -> 'a t -> 'c * 'b t
   val choose: 'a t -> (key * 'a) option
+  val from_keys: key list -> (key -> 'a) -> 'a t
 end
