@@ -8537,8 +8537,39 @@ end = struct
     | SingletonBoolT (reason, _)
     | BoolT (reason, _) ->
         extract_members cx (get_builtin_type cx reason "Boolean")
-    | _ ->
-        (* TODO: What types could come up here which we need to handle? *)
+
+    | AbstractT _
+    | AnyWithLowerBoundT _
+    | AnyWithUpperBoundT _
+    | ArrT (_, _, _)
+    | BoundT _
+    | ChoiceKitT (_, _)
+    | ClassT _
+    | CustomFunT (_, _)
+    | DiffT (_, _)
+    | EmptyT _
+    | EvalT (_, _, _)
+    | ExactT (_, _)
+    | ExistsT _
+    | ExtendsT (_, _, _)
+    | FunProtoApplyT _
+    | FunProtoBindT _
+    | FunProtoCallT _
+    | FunProtoT _
+    | IdxWrapper (_, _)
+    | KeysT (_, _)
+    | MixedT _
+    | ObjProtoT _
+    | OpenPredT (_, _, _, _)
+    | OpenT _
+    | OptionalT _
+    | RestT _
+    | ShapeT _
+    | TaintT _
+    | ThisClassT _
+    | TypeMapT (_, _, _, _)
+    | TypeT (_, _)
+      ->
         FailureUnhandledType this_t
 
   and extract_members_as_map cx this_t =
