@@ -108,13 +108,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let results =
       try
         let path = Loc.SourceFile path in
-        let timing, cx, parse_result =
+        let profiling, cx, parse_result =
           match Types_js.typecheck_contents ~options content path with
-          | timing, Some cx, _, parse_result -> timing, cx, parse_result
+          | profiling, Some cx, _, parse_result -> profiling, cx, parse_result
           | _  -> failwith "Couldn't parse file"
         in
         AutocompleteService_js.autocomplete_get_results
-          timing
+          profiling
           command_context
           cx
           state

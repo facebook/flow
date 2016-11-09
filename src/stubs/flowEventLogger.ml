@@ -30,7 +30,7 @@ let set_root _ = ()
 
 let status_response _ = ()
 let init_server _ = ()
-let init_done ~timing:_ = ()
+let init_done ~profiling:_ = ()
 let init_flow_command ~version:_ = ()
 let killed _ = ()
 let lock_lost _ = ()
@@ -40,10 +40,10 @@ let autocomplete_member_result
     ~client_context:_
     ~result_str:_
     ~json_data:_
-    ~timing:_ = ()
+    ~profiling:_ = ()
 let exit _ _ = ()
 let recheck
     ~modified_count:_
     ~deleted_count:_
     ~dependent_file_count:_
-    ~timing:_ = ()
+    ~profiling:_ = ()

@@ -15,7 +15,7 @@ val recheck: ServerEnv.genv -> ServerEnv.env -> FilenameSet.t -> ServerEnv.env
 
 (* hh_server initial (full) check *)
 val server_init:
-  ServerEnv.genv -> Timing.t * ServerEnv.env
+  ServerEnv.genv -> Profiling_js.t * ServerEnv.env
 
 val typecheck_contents:
   options: Options.t ->
@@ -23,7 +23,7 @@ val typecheck_contents:
   ?check_syntax: bool ->
   string ->               (* contents *)
   filename ->             (* fake file-/module name *)
-  Timing.t *
+  Profiling_js.t *
     Context.t option *
     Errors.ErrorSet.t *
     Docblock.t

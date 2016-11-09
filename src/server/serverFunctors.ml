@@ -18,7 +18,7 @@ exception State_not_found
 
 module type SERVER_PROGRAM = sig
   val preinit : Options.t -> unit
-  val init : genv -> (Timing.t * env)
+  val init : genv -> (Profiling_js.t * env)
   val run_once_and_exit : env -> unit
   (* filter and relativize updated file paths *)
   val process_updates : genv -> env -> SSet.t -> FilenameSet.t
@@ -202,8 +202,8 @@ end = struct
     done
 
   let create_program_init genv = fun () ->
-    let timing, env = Program.init genv in
-    FlowEventLogger.init_done ~timing;
+    let profiling, env = Program.init genv in
+    FlowEventLogger.init_done ~profiling;
     env
 
   let open_log_file options =
