@@ -32,7 +32,7 @@ deploy:
   provider: GitHub
   # facebook-github-bot-0
   auth_token:
-    secure: 7w+yFWgdWo0nKEj2HtEodyqEUDU1VvmJH+sa/bBCTdS6g69w+7GtM7o1fq3PvqHU
+    secure: f1YgYz9csZ8QokY6+aXF10toZtXlFxicbm7uTcylqq+ILoRE6y5GUaf1TfoUalx5
   artifact: bin\*.zip
   on:
     appveyor_repo_tag: true
