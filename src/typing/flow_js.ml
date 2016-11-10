@@ -503,9 +503,18 @@ and resolve_type cx = function
    missing annotations from early (during the "infer" phase) to late (during
    the "merge" phase). *)
 
-let rec assume_ground cx ids = function
+let rec assume_ground cx ?(depth=1) ids t =
+  begin match Context.verbose cx with
+  | Some { Verbose.depth = verbose_depth; indent; } ->
+    let pid = Context.pid_prefix cx in
+    let indent = String.make ((depth - 1) * indent) ' ' in
+    prerr_endlinef "\n%s%sassume_ground: %s"
+      indent pid (Debug_js.dump_use_t cx ~depth:verbose_depth t)
+  | None -> ()
+  end;
+  begin match t with
   | UseT (_, OpenT(_,id)) ->
-    assume_ground_id cx ids id
+    assume_ground_id ~depth:(depth + 1) cx ids id
 
   (** The subset of operations to crawl. The type variables denoting the
       results of these operations would be ignored by the is_required check in
@@ -516,7 +525,7 @@ let rec assume_ground cx ids = function
      kept in sync as module system conventions evolve. *)
 
   | ReposLowerT (_, use_t) ->
-    assume_ground cx ids use_t
+    assume_ground cx ~depth:(depth + 1) ids use_t
 
   | ImportModuleNsT (_, t)
   | CJSRequireT (_, t)
@@ -530,21 +539,28 @@ let rec assume_ground cx ids = function
   | CallT (_, { return_t = t; _ })
   | MethodT (_, _, _, { return_t = t; _ })
   | ConstructorT (_, _, t) ->
-    assume_ground cx ids (UseT (UnknownUse, t))
+    assume_ground cx ~depth:(depth + 1) ids (UseT (UnknownUse, t))
 
   | _ -> ()
+  end;
+  if Context.is_verbose cx then
+    let pid = Context.pid_prefix cx in
+    if depth = 1 then
+      prerr_endlinef "\n%sAssumed ground: %s"
+        pid
+        (!ids |> ISet.elements |> List.map string_of_int |> String.concat ", ")
 
-and assume_ground_id cx ids id =
+and assume_ground_id cx ~depth ids id =
   if not (ISet.mem id !ids) then (
     ids := !ids |> ISet.add id;
     let constraints = find_graph cx id in
     match constraints with
     | Unresolved { upper; uppertvars; _ } ->
       upper |> UseTypeMap.iter (fun t _ ->
-        assume_ground cx ids t
+        assume_ground cx ~depth ids t
       );
       uppertvars |> IMap.iter (fun id _ ->
-        assume_ground_id cx ids id
+        assume_ground_id cx ~depth ids id
       )
     | Resolved _ ->
       ()
@@ -8593,8 +8609,16 @@ end
    superclass.
 *)
 (* need to consider only "def" types *)
-let rec assert_ground ?(infer=false) cx skip ids t =
-  let recurse ?infer = assert_ground ?infer cx skip ids in
+let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
+  begin match Context.verbose cx with
+  | Some { Verbose.depth = verbose_depth; indent; } ->
+    let pid = Context.pid_prefix cx in
+    let indent = String.make ((depth - 1) * indent) ' ' in
+    prerr_endlinef "\n%s%sassert_ground: %s"
+      indent pid (Debug_js.dump_t cx ~depth:verbose_depth t)
+  | None -> ()
+  end;
+  let recurse ?infer = assert_ground ?infer ~depth:(depth + 1) cx skip ids in
   match t with
   | BoundT _ ->
     ()
@@ -8611,7 +8635,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
      when this function is called recursively on those types, infer will be
      false. *)
   | OpenT (_, id) when infer ->
-    assert_ground_id cx skip ids id
+    assert_ground_id cx ~depth:(depth + 1) skip ids id
 
   | OpenT (reason_open, id) ->
     unify_opt cx (OpenT (reason_open, id)) AnyT.t;
@@ -8643,7 +8667,7 @@ let rec assert_ground ?(infer=false) cx skip ids t =
     unify_opt cx proto_t AnyT.t;
     Context.iter_props cx id (fun _ -> Property.iter_t (recurse ~infer:true))
 
-  | IdxWrapper (_, obj) -> assert_ground ~infer cx skip ids obj
+  | IdxWrapper (_, obj) -> recurse ~infer obj
 
   | ArrT (_, t, ts) ->
     recurse ~infer:true t;
@@ -8757,13 +8781,13 @@ let rec assert_ground ?(infer=false) cx skip ids t =
   ->
     () (* TODO *)
 
-and assert_ground_id cx skip ids id =
+and assert_ground_id cx ?(depth=1) skip ids id =
   if not (ISet.mem id !ids)
   then (
     ids := !ids |> ISet.add id;
     match find_graph cx id with
     | Unresolved { lower; _ } ->
-        TypeMap.keys lower |> List.iter (assert_ground cx skip ids);
+        TypeMap.keys lower |> List.iter (assert_ground cx ~depth skip ids);
 
         (* note: previously we were also recursing into lowertvars as follows:
 
@@ -8775,7 +8799,7 @@ and assert_ground_id cx skip ids id =
          assert_ground, but for now we just avoid the redundant traversals.
         *)
     | Resolved t ->
-        assert_ground cx skip ids t
+        assert_ground cx ~depth skip ids t
   )
 
 let enforce_strict cx id =
