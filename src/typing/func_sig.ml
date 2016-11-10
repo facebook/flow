@@ -186,15 +186,12 @@ let methodtype_DEPRECATED {reason; params; return_t; _} =
     Flow.mk_functiontype params_tlist ~params_names return_t ~frame
   )
 
-let gettertype x =
-  match methodtype x with
-  | FunT (_, _, _, { Type.return_t; _; }) -> return_t
-  | _ -> failwith "Getter property with unexpected type"
+let gettertype ({return_t; _}: t) = return_t
 
-let settertype x =
-  match methodtype x with
-  | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
-  | _ ->  failwith "Setter property with unexpected type"
+let settertype {params; _} =
+  match Func_params.tlist params with
+  | [param_t] -> param_t
+  | _ -> failwith "Setter property with unexpected type"
 
 let toplevels id cx this super ~decls ~stmts ~expr
   {kind; tparams_map; params; body; return_t; _} =
