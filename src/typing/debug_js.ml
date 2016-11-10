@@ -1257,9 +1257,11 @@ and dump_t_ (depth, tvars) cx t =
   | BoolT (_, c) -> p ~extra:(match c with
     | Some b -> spf "%B" b
     | None -> "") t
-  | FunT (_,_,_,{params_tlist;return_t;_}) -> p ~extra:(spf "[%s] (%s)"
-      (String.concat "; " (List.map kid params_tlist))
-      (kid return_t)) t
+  | FunT (_,_,_,{params_tlist;return_t;this_t;_}) -> p
+      ~extra:(spf "<this: %s>(%s) => %s"
+        (kid this_t)
+        (String.concat "; " (List.map kid params_tlist))
+        (kid return_t)) t
   | MixedT (_, flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
   | EmptyT _
   | AnyT _
@@ -1379,9 +1381,11 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertImportIsValueT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
-  | CallT (_,{params_tlist;return_t;_}) -> p ~extra:(spf "[%s] (%s)"
-      (String.concat "; " (List.map kid params_tlist))
-      (kid return_t)) t
+  | CallT (_,{params_tlist;return_t;this_t;_}) -> p
+      ~extra:(spf "<this: %s>(%s) => %s"
+        (kid this_t)
+        (String.concat "; " (List.map kid params_tlist))
+        (kid return_t)) t
   | CallLatentPredT _ -> p t
   | CallOpenPredT _ -> p t
   | ChoiceKitUseT (_, TryFlow (_, spec)) ->
