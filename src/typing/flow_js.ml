@@ -53,7 +53,7 @@ let global_this =
 
 (* A method type is a function type with `this` specified. *)
 let mk_methodtype
-    ?(frame=0) this tins ?params_names ?(is_predicate=false) tout = {
+    this tins ?(frame=0) ?params_names ?(is_predicate=false) tout = {
   this_t = this;
   params_tlist = tins;
   params_names;
@@ -67,31 +67,14 @@ let mk_methodtype
    a type is given to a method when it can be considered bound: in other words,
    when calling that method through any object would be fine, since the object
    would be ignored. *)
-let mk_boundfunctiontype
-    ?(frame=0) tins ?params_names ?(is_predicate=false) tout = {
-  this_t = dummy_this;
-  params_tlist = tins;
-  params_names;
-  return_t = tout;
-  is_predicate;
-  closure_t = frame;
-  changeset = Changeset.empty
-}
+let mk_boundfunctiontype = mk_methodtype dummy_this
 
 (* A function type has `this` = `mixed`. Such a type can be given to functions
    that are meant to be called directly. On the other hand, it deliberately
    causes problems when they are given to methods in which `this` is used
    non-trivially: indeed, calling them directly would cause `this` to be bound
    to the global object, which is typically unintended. *)
-let mk_functiontype ?(frame=0) tins ?params_names ?(is_predicate=false) tout = {
-  this_t = global_this;
-  params_tlist = tins;
-  params_names;
-  return_t = tout;
-  is_predicate;
-  closure_t = frame;
-  changeset = Changeset.empty
-}
+let mk_functiontype = mk_methodtype global_this
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without
