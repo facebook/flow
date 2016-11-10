@@ -104,5 +104,7 @@
     title: Modules
   - id: declarations
     title: Declarations
+  - id: utility-types
+    title: Utility Types
   - id: react
     title: React
