@@ -1,3 +1,26 @@
+###v0.35.0
+
+Likely to cause new Flow errors:
+* Flow now knows that calling `addEventListener()` with `'click' and 'dblclick'` will pass a `MouseEvent` to the listener. This means you might need to update `foo.addEventListener('click', (e) => bar())` to `foo.addEventListener('click', (e: MouseEvent) => bar())`.
+
+New Features:
+* Better error messages in a bunch of situations
+* flowtype.org/try now has an AST tab that shows the parsed AST of the example
+
+Notable bug fixes:
+* Bindings that come from imports are now treated as const
+* Found and fixed a few situations where Flow was emitting redundant errors
+* Some if statement refinements were sticking around after the if statement in some situations when they should not have.
+
+Misc:
+* Various libdef fixes and improvements
+* Various docs fixes and improvements
+* If `foo` has the typed `mixed`, we now allow `foo.bar` if you check that `foo` is not `null` or `undefined`.
+
+Parser:
+* Better error message if you try to make a class property optional (currently unsupported)
+* Dropped support for `let` statements, which never made it into the spec (thanks [@andreypopp](https://github.com/andreypopp))
+
 ###v0.34.0
 
 Likely to cause new Flow errors:
@@ -81,7 +104,7 @@ Parser breaking changes:
 * Use `AssignmentPattern` for function param defaults to match ESTree
 * Use `RestElement` for function rest params to match ESTree
 * Fixed the location info for `ExpressionStatement`
-* Fixed the location info for `CallExpression` and `MemberExpression` 
+* Fixed the location info for `CallExpression` and `MemberExpression`
 
 ###v0.32.1
 
