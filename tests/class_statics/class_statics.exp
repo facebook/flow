@@ -85,8 +85,8 @@ test.js:42
 test.js:47
  47: (new A: typeof A);
       ^^^^^ A. This type is incompatible with
-  1: class A {
-           ^ class type: A
+ 47: (new A: typeof A);
+             ^^^^^^^^ class type: A
 
 test.js:53
  53:     this.bar(); // error

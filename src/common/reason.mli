@@ -103,7 +103,6 @@ type reason_desc =
   | RSuperOf of reason_desc
   | RFrozen of reason_desc
   | RBound of reason_desc
-  | RTypeOf of reason_desc
   | RVarianceCheck of reason_desc
   | RPredicateOf of reason_desc
   | RPredicateCall of reason_desc

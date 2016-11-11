@@ -93,7 +93,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     }) ->
       let valtype = convert_qualification ~lookup_mode:ForTypeof cx
         "typeof-annotation" qualification in
-      Flow_js.mk_typeof_annotation cx valtype
+      let reason = repos_reason loc (reason_of_t valtype) in
+      Flow_js.mk_typeof_annotation cx reason valtype
   | _ ->
     error_type cx loc (FlowError.EUnexpectedTypeof loc)
   end

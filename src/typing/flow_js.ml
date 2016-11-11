@@ -1476,14 +1476,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (************************************************************************)
     | PolyT(typeparams, ((ClassT _ | FunT _) as lower_t)),
       ImportTypeofT(reason, _, t) ->
-      let typeof_t = mk_typeof_annotation cx ~trace lower_t in
+      let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
       rec_flow_t cx trace (PolyT(typeparams, TypeT(reason, typeof_t)), t)
 
     | ((TypeT _ | PolyT(_, TypeT _)), ImportTypeofT(reason, export_name, _)) ->
       add_output cx trace (FlowError.EImportTypeAsTypeof (reason, export_name))
 
     | (_, ImportTypeofT(reason, _, t)) ->
-      let typeof_t = mk_typeof_annotation cx ~trace l in
+      let typeof_t = mk_typeof_annotation cx ~trace reason l in
       rec_flow_t cx trace (TypeT(reason, typeof_t), t)
 
     (**************************************************************************)
@@ -8144,7 +8144,7 @@ and become cx ?trace r t = match t with
       flow_opt cx ?trace (t, BecomeT (r, tvar)))
   | _ ->
     (* optimization: if t is already concrete, become t immediately :) *)
-    t
+    reposition cx ?trace r t
 
 (* set the position of the given def type from a reason *)
 and reposition cx ?trace reason t =
@@ -8214,9 +8214,8 @@ and reposition cx ?trace reason t =
 
 (* given the type of a value v, return the type term
    representing the `typeof v` annotation expression *)
-and mk_typeof_annotation cx ?trace valtype =
-  let r = replace_reason (fun desc -> RTypeOf desc) (reason_of_t valtype) in
-  become cx ?trace r valtype
+and mk_typeof_annotation cx ?trace reason t =
+  become cx ?trace reason t
 
 and get_builtin_type cx ?trace reason x =
   let t = get_builtin cx ?trace x reason in

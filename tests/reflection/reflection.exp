@@ -1,14 +1,14 @@
 type.js:2
   2: var b: typeof a = "...";
                        ^^^^^ string. This type is incompatible with
-  1: declare var a: number;
-                    ^^^^^^ number
+  2: var b: typeof a = "...";
+            ^^^^^^^^ number
 
 type.js:3
   3: var c: typeof a = "...";
                        ^^^^^ string. This type is incompatible with
-  1: declare var a: number;
-                    ^^^^^^ number
+  3: var c: typeof a = "...";
+            ^^^^^^^^ number
 
 type.js:6
   6: var x:T = "...";

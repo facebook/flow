@@ -152,7 +152,6 @@ type reason_desc =
   | RSuperOf of reason_desc
   | RFrozen of reason_desc
   | RBound of reason_desc
-  | RTypeOf of reason_desc
   | RVarianceCheck of reason_desc
   | RPredicateOf of reason_desc
   | RPredicateCall of reason_desc
@@ -453,7 +452,6 @@ let rec string_of_desc = function
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
   | RBound d -> spf "bound %s" (string_of_desc d)
-  | RTypeOf d -> spf "typeof %s" (string_of_desc d)
   | RVarianceCheck d -> spf "variance check: %s" (string_of_desc d)
   | RPredicateOf d -> spf "predicate of %s" (string_of_desc d)
   | RPredicateCall d -> spf "predicate call to %s" (string_of_desc d)
