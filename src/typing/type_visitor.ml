@@ -270,6 +270,7 @@ class ['a] t = object(self)
   | UnaryMinusT (_, _)
   | UnifyT (_, _)
   | VarianceCheckT (_, _, _)
+  | TypeAppVarianceCheckT (_, _, _)
     -> self#__TODO__ cx acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,

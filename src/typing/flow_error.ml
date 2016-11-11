@@ -228,6 +228,7 @@ end = struct
         | ObjectMapi -> "Expected object instead of")
       | ReactCreateElementT _ -> "Expected React component instead of"
       | CallLatentPredT _ -> "Expected predicated function instead of"
+      | TypeAppVarianceCheckT _ -> "Expected polymorphic type instead of"
       (* unreachable or unclassified use-types. until we have a mechanical way
          to verify that all legit use types are listed above, we can't afford
          to throw on a use type, so mark the error instead *)

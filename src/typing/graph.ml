@@ -323,6 +323,7 @@ and parts_of_use_t cx = function
 | UnaryMinusT (_, out) -> ["out", Def out]
 | UnifyT (x, y) -> ["x", Def x; "y", Def y]
 | VarianceCheckT (_, args, _) -> list_parts args
+| TypeAppVarianceCheckT _ -> []
 
 and parts_of_inter_preprocess_tool = function
 | ConcretizeTypes (unresolved, resolved, it, u) ->

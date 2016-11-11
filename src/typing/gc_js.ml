@@ -278,6 +278,11 @@ and gc_use cx state = function
   | UnaryMinusT (_, t) -> gc cx state t
   | UnifyT (t1, t2) -> gc cx state t1; gc cx state t2
   | VarianceCheckT (_, ts, _) -> List.iter (gc cx state) ts
+  | TypeAppVarianceCheckT (_, _, targs) ->
+    List.iter (fun (t1, t2) ->
+      gc cx state t1;
+      gc cx state t2
+    ) targs
 
 
 and gc_id cx state id =

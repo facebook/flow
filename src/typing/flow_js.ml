@@ -708,8 +708,6 @@ end = struct
   let set _stack = stack := _stack
 end
 
-(**
-  *)
 module Cache = struct
 
   type type_pair = TypeTerm.t * TypeTerm.use_t
@@ -2193,6 +2191,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ~trace ~reason_op ~reason_tapp ~cache:true c ts in
         rec_flow cx trace (t, u)
 
+    | (TypeAppT (c1, ts1), UseT (_, TypeAppT (c2, ts2)))
+      when c1 = c2 && List.length ts1 = List.length ts2 ->
+      let reason_op = reason_of_t l in
+      let reason_tapp = reason_of_use_t u in
+      let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
+      rec_flow cx trace (c1,
+        TypeAppVarianceCheckT (reason_op, reason_tapp, targs))
+
     | (TypeAppT(c,ts), _) ->
         if TypeAppExpansion.push_unless_loop cx (c, ts) then (
           let reason_op = reason_of_use_t u in
@@ -2511,8 +2517,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT _,
       UseT (use_op, ObjT (r, { flags; props_tmap; proto_t; dict_t }))
       when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
-      iter_real_props cx props_tmap (fun prop_name prop_type ->
-        let pmap = SMap.singleton prop_name prop_type in
+      iter_real_props cx props_tmap (fun x p ->
+        let pmap = SMap.singleton x p in
         let id = Context.make_property_map cx pmap in
         let obj = mk_objecttype ~flags dict_t id ObjProtoT.t in
         rec_flow cx trace (l, UseT (use_op, ObjT (r, obj)))
@@ -2840,6 +2846,33 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | PolyT (tps, _), VarianceCheckT(_, ts, polarity) ->
       variance_check cx polarity (tps, ts)
+
+    | PolyT (tparams, _), TypeAppVarianceCheckT (_, reason_tapp, targs) ->
+      let minimum_arity = poly_minimum_arity tparams in
+      let maximum_arity = List.length tparams in
+      let reason_arity =
+        let tp1, tpN = List.hd tparams, List.hd (List.rev tparams) in
+        let loc = Loc.btwn (loc_of_reason tp1.reason) (loc_of_reason tpN.reason) in
+        mk_reason (RCustom "See type parameters of definition here") loc in
+      if List.length targs > maximum_arity
+      then add_output cx trace
+        (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
+      let unused_targs = List.fold_left (fun targs { default; polarity; _ } ->
+        match default, targs with
+        | None, [] ->
+          (* fewer arguments than params but no default *)
+          add_output cx trace (FlowError.ETooFewTypeArgs
+            (reason_tapp, reason_arity, minimum_arity));
+          []
+        | _, [] -> []
+        | _, (t1, t2)::targs ->
+          (match polarity with
+          | Positive -> rec_flow_t cx trace (t1, t2)
+          | Negative -> rec_flow_t cx trace (t2, t1)
+          | Neutral -> rec_unify cx trace t1 t2);
+          targs
+      ) targs tparams in
+      assert (unused_targs = [])
 
     (* empty targs specialization of non-polymorphic classes is a no-op *)
     | (ClassT _ | ThisClassT _), SpecializeT(_,_,_,[],tvar) ->

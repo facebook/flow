@@ -459,6 +459,15 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "polarity", json_of_polarity json_cx polarity
     ]
 
+  | TypeAppVarianceCheckT (_, _, targs) -> [
+      "typeArgs", JSON_Array (List.map (fun (t1, t2) ->
+        JSON_Object [
+          "t1", _json_of_t json_cx t1;
+          "t2", _json_of_t json_cx t2;
+        ]
+      ) targs)
+    ]
+
   | LookupT (_, rstrict, _, name, action) ->
     (match rstrict with
       | NonstrictReturning None -> []
@@ -1285,8 +1294,8 @@ and dump_t_ (depth, tvars) cx t =
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
   | InstanceT (_, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t
-  | AnnotT (sink, source) -> p ~reason:false
-      ~extra:(spf "%s, %s" (kid sink) (kid source)) t
+  | AnnotT (_, source) -> p ~reason:false
+      ~extra:(spf "%s" (kid source)) t
   | OptionalT arg
   | RestT arg
   | AbstractT arg -> p ~reason:false ~extra:(kid arg) t
@@ -1464,6 +1473,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
+  | TypeAppVarianceCheckT _ -> p t
 
 and dump_prop ?(depth=3) cx p =
   dump_prop_ (depth, ISet.empty) cx p

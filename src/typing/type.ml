@@ -369,6 +369,8 @@ module rec TypeTerm : sig
     (* variance check on polymorphic types *)
     | VarianceCheckT of reason * t list * polarity
 
+    | TypeAppVarianceCheckT of reason * reason * (t * t) list
+
     (* operation on prototypes *)
     (** LookupT(_, strict, try_ts_on_failure, x, lookup_action) looks for
         property x in an object type and emits a constraint according to the
@@ -1543,6 +1545,7 @@ and reason_of_use_t = function
   | UnaryMinusT (reason, _) -> reason
   | UnifyT (_,t) -> reason_of_t t
   | VarianceCheckT(reason,_,_) -> reason
+  | TypeAppVarianceCheckT (reason, _, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1704,6 +1707,8 @@ and mod_reason_of_use_t f = function
   | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)
   | VarianceCheckT(reason, ts, polarity) ->
       VarianceCheckT (f reason, ts, polarity)
+  | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
+      TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1897,6 +1902,7 @@ let string_of_use_ctor = function
   | UnaryMinusT _ -> "UnaryMinusT"
   | UnifyT _ -> "UnifyT"
   | VarianceCheckT _ -> "VarianceCheckT"
+  | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
