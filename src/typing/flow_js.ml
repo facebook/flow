@@ -4489,14 +4489,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Array library call *)
     (**********************)
 
-    | (ArrT (reason, t, _), HasPropT _) ->
-      let arrt = get_builtin_typeapp cx ~trace reason "Array" [t] in
-      rec_flow cx trace (arrt, u)
-
-    | (ArrT (_, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
-      let reason = reason_of_use_t u in
-      let arrt = get_builtin_typeapp cx ~trace reason "Array" [t] in
-      rec_flow cx trace (arrt, u)
+    | (ArrT (reason, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
+      rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
 
     (***********************)
     (* String library call *)
