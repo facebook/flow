@@ -1,4 +1,4 @@
-//= require codemirror.css
+//= require codemirror/lib/codemirror.css
 //= require codemirror/addon/lint/lint.css
 
 #try.content {

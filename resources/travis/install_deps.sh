@@ -36,15 +36,6 @@ SLUG="ocaml-${OCAML_VERSION}_opam-${OPAM_VERSION}_${PLATFORM}-${ARCH}"
 CACHE_ROOT="$HOME/.flow_cache"
 mkdir -p "$CACHE_ROOT"
 
-case "$TRAVIS_OS_NAME" in
-  osx)
-    printf "travis_fold:start:brew_install\nInstalling brew\n"
-    brew update
-    brew install aspcud awscli
-    printf "travis_fold:end:brew_install\n"
-    ;;
-esac
-
 printf "travis_fold:start:opam_installer\nInstalling ocaml %s and opam %s\n" \
   "$OCAML_VERSION" "$OPAM_VERSION"
 
@@ -93,6 +84,15 @@ echo "Installing dependencies..."
 printf "travis_fold:end:opam_installer\n"
 
 printf "travis_fold:start:npm_install\nInstalling npm dependencies\n"
+  case "$TRAVIS_OS_NAME" in
+    osx)
+      # OS X has a modern version of node already
+      ;;
+    *)
+      source $HOME/.nvm/nvm.sh
+      nvm use 6
+  esac
+
   printf "Using npm version $(npm --version)\n"
 
   printf "travis_fold:start:npm_install_tool\nRunning npm install for tool\n"

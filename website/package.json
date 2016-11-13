@@ -2,7 +2,9 @@
   "name": "flowtype.org",
   "version": "0.0.0",
   "license": "BSD-3-Clause",
-  "devDependencies": {
-    "bower": "^1.7.7"
+  "dependencies": {
+    "jquery": "^3.0.0",
+    "requirejs": "^2.2.0",
+    "codemirror": "^5.13.2"
   }
 }

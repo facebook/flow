@@ -47,7 +47,6 @@ exclude:
   - Gemfile.lock
   - vendor
   - s3_website.yml
-  - bower.json
   - package.json
   - node_modules
   - .asset-cache
@@ -58,5 +57,5 @@ assets:
     - _assets/js
     - _assets/images
     - _assets/third-party
-    - _assets/third-party-bower
     - _assets/gen
+    - node_modules

@@ -1,0 +1,9 @@
+{
+  "name": "flow-travis-resources",
+  "description": "Stuff used by Travis to build Flow",
+  "license": "BSD-3-Clause",
+  "repository": "facebook/flow",
+  "dependencies": {
+    "yarn": "^0.16.1"
+  }
+}
