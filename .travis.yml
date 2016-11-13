@@ -56,7 +56,7 @@ addons:
     - libelf-dev
     - aspcud
 
-before_install: if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
+before_install: bash -e resources/travis/before_install.sh
 install: bash -e resources/travis/install_deps.sh
 script: bash -e resources/travis/build.sh
 before_deploy: bash -e resources/travis/before_deploy.sh
@@ -64,8 +64,9 @@ before_deploy: bash -e resources/travis/before_deploy.sh
 cache:
   directories:
   - $HOME/.flow_cache
+  - $HOME/.yarn-cache
   - node_modules
-  - website/node_modules
+  - resources/travis/node_modules
   - src/parser/node_modules
 
 before_cache:
