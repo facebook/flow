@@ -4734,13 +4734,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (ObjProtoT _, UseT (_, ExtendsT ([], t, tc))) ->
       let msg = "This type is incompatible with" in
-      let r1 = reason_of_t t in
-      let r2 = reason_of_t tc in
-      let reasons =
-        if (is_blamable_reason r2 && not (is_blamable_reason r1))
-        then r2, r1
-        else r1, r2
-      in
+      let reasons = Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
       add_output cx trace (FlowError.ECustom (reasons, msg))
 
     (* Special cases of FunT *)
