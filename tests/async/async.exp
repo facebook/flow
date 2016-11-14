@@ -6,8 +6,6 @@ async.js:12
 
 async.js:31
  31:   return await p; // error, number != bool
-              ^^^^^^^ await
- 31:   return await p; // error, number != bool
               ^^^^^^^ number. This type is incompatible with
 union: type application of identifier `Promise` | type parameter `T` of async return. See lib: core.js:606
   Member 1:
@@ -29,9 +27,7 @@ async.js:45
  45:   static async m(a): void { await a; } // error, void != Promise<void>
                           ^^^^ undefined. This type is incompatible with an implicitly-returned Promise.
 
-async2.js:11
- 11:     var a = await foo();
-                 ^^^^^^^^^^^ await
+async2.js:13
  13:     var c: string = a; // Error: number ~> string
                          ^ number. This type is incompatible with
  13:     var c: string = a; // Error: number ~> string
@@ -53,9 +49,7 @@ async2.js:57
  57:   : Promise<number> { // error, number != void
                  ^^^^^^ number
 
-async3.js:23
- 23:   var a = await bar();
-               ^^^^^^^^^^^ await
+async3.js:31
  31:   var c: string = a;
                        ^ number. This type is incompatible with
  31:   var c: string = a;

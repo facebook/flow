@@ -3053,9 +3053,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Ops.push reason_callsite;
       rec_flow cx trace (o2, UseT (FunCallThis reason_callsite, o1));
       multiflow cx trace reason_callsite (tins2, tins1);
-      (* relocate the function's return type at the call site TODO remove? *)
-      let t1 = reposition ~trace cx reason_callsite t1 in
-      rec_flow_t cx trace (t1, t2);
+      Ops.pop ();
+
+      (* flow return type of function to the tvar holding the return type of the
+         call. clears the op stack because the result of the call is not the
+         call itself. *)
+      let ops = Ops.clear () in
+      rec_flow_t cx trace (reposition cx ~trace reason_callsite t1, t2);
+      Ops.set ops;
 
       (if Context.is_verbose cx then
         prerr_endlinef "%shavoc_call_env fundef %s callsite %s"
@@ -3063,8 +3068,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (Debug_js.string_of_reason cx reason_fundef)
           (Debug_js.string_of_reason cx reason_callsite));
       havoc_call_env cx func_scope_id call_scope_id changeset;
-
-      Ops.pop ()
 
     | (AnyFunT reason_fundef | AnyT reason_fundef),
       CallT (reason_op, { this_t; params_tlist; return_t; _}) ->

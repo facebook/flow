@@ -1,22 +1,16 @@
-array.js:2
-  2: var b = a.map (function (x) { return 0; });
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
+array.js:3
   3: var c: string = b[0]; // error: number !~> string
                      ^^^^ number. This type is incompatible with
   3: var c: string = b[0]; // error: number !~> string
             ^^^^^^ string
 
-array.js:7
-  7:     array = array.map (function () { return "..."; });
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
+array.js:8
   8:     var x:number = array[0]; // error: string !~> number
                         ^^^^^^^^ string. This type is incompatible with
   8:     var x:number = array[0]; // error: string !~> number
                ^^^^^^ number
 
 array.js:15
- 15:     var x:number = foo1.get(); // error: string !~> number
-                        ^^^^^^^^^^ call of method `get`
  15:     var x:number = foo1.get(); // error: string !~> number
                         ^^^^^^^^^^ string. This type is incompatible with
  15:     var x:number = foo1.get(); // error: string !~> number

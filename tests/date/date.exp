@@ -1,7 +1,5 @@
 date.js:2
   2: var x:string = d.getTime();
-                    ^^^^^^^^^^^ call of method `getTime`
-  2: var x:string = d.getTime();
                     ^^^^^^^^^^^ number. This type is incompatible with
   2: var x:string = d.getTime();
            ^^^^^^ string

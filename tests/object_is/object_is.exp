@@ -1,7 +1,5 @@
 object_is.js:20
  20: var b: string = Object.is('a', 'a');
-                     ^^^^^^^^^^^^^^^^^^^ call of method `is`
- 20: var b: string = Object.is('a', 'a');
                      ^^^^^^^^^^^^^^^^^^^ boolean. This type is incompatible with
  20: var b: string = Object.is('a', 'a');
             ^^^^^^ string

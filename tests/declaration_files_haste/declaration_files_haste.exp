@@ -4,15 +4,11 @@ foo/bar/nested_test.js:9
 
 foo/bar/nested_test.js:11
  11: (docblock.fun(): string);
-      ^^^^^^^^^^^^^^ call of method `fun`
- 11: (docblock.fun(): string);
       ^^^^^^^^^^^^^^ number. This type is incompatible with
  11: (docblock.fun(): string);
                       ^^^^^^ string
 
 foo/bar/nested_test.js:12
- 12: (min.fun(): string);
-      ^^^^^^^^^ call of method `fun`
  12: (min.fun(): string);
       ^^^^^^^^^ number. This type is incompatible with
  12: (min.fun(): string);
@@ -20,15 +16,11 @@ foo/bar/nested_test.js:12
 
 foo/bar/nested_test.js:13
  13: (corge.fun(): string);
-      ^^^^^^^^^^^ call of method `fun`
- 13: (corge.fun(): string);
       ^^^^^^^^^^^ number. This type is incompatible with
  13: (corge.fun(): string);
                    ^^^^^^ string
 
 test.js:4
-  4: (Implicit.fun(): string);
-      ^^^^^^^^^^^^^^ call of method `fun`
   4: (Implicit.fun(): string);
       ^^^^^^^^^^^^^^ number. This type is incompatible with
   4: (Implicit.fun(): string);
@@ -36,15 +28,11 @@ test.js:4
 
 test.js:7
   7: (ExplicitSameName.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^^ call of method `fun`
-  7: (ExplicitSameName.fun(): string);
       ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
   7: (ExplicitSameName.fun(): string);
                               ^^^^^^ string
 
 test.js:10
- 10: (ExplicitDifferentName.fun(): string);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `fun`
  10: (ExplicitDifferentName.fun(): string);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  10: (ExplicitDifferentName.fun(): string);

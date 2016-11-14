@@ -104,8 +104,6 @@ import.js:14
 
 import.js:18
  18: (new B3().qux(0): string); // error
-      ^^^^^^^^^^^^^^^ call of method `qux`
- 18: (new B3().qux(0): string); // error
       ^^^^^^^^^^^^^^^ number. This type is incompatible with
  18: (new B3().qux(0): string); // error
                        ^^^^^^ string
@@ -124,8 +122,6 @@ import.js:21
 
 import.js:22
  22: ((new B3(): A2<number>).qux(0): string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `qux`
- 22: ((new B3(): A2<number>).qux(0): string); // error
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  22: ((new B3(): A2<number>).qux(0): string); // error
                                      ^^^^^^ string
@@ -135,8 +131,6 @@ interface.js:1
                              ^^^^ Unexpected use of `this` type
 
 self.js:4
-  4:   bar(): this { return new A().foo(); } // same as returning : A, so error
-                            ^^^^^^^^^^^^^ call of method `foo`
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error
                             ^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
   4:   bar(): this { return new A().foo(); } // same as returning : A, so error

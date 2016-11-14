@@ -6,8 +6,6 @@ This.js:29
 
 This.js:33
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
-                         ^^^^^^^^^^^^^^^^^ function call
- 33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                          ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  33: var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                 ^^^^^^ string
@@ -33,8 +31,6 @@ This.js:49
                      ^^^^^^ number
 
 This.js:53
- 53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
-                         ^^^^^^^^^^^^^^^^^ function call
  53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
                          ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  53: var f2_2 : string = f2.bind({x: 0})();   // error, number -> string

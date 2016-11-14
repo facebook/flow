@@ -1,7 +1,5 @@
 typecheck.js:4
   4:   return bar();
-              ^^^^^ function call
-  4:   return bar();
               ^^^^^ number. This type is incompatible with the expected return type of
   3: function test1(): string {
                        ^^^^^^ string

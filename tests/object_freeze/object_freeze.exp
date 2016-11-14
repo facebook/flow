@@ -1,6 +1,4 @@
-object_freeze.js:3
-  3: var foo = Object.freeze({bar: '12345'});
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `freeze`
+object_freeze.js:4
   4: foo.bar = '23456'; // error
      ^^^^^^^ assignment of property `bar`. Mutation not allowed on
   4: foo.bar = '23456'; // error
@@ -12,36 +10,16 @@ object_freeze.js:6
   6: Object.assign(foo, {bar: '12345'}); // error
                    ^^^ frozen object literal
 
-object_freeze.js:9
-  9: var bliffl = Object.freeze({bar: '12345', ...baz});
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `freeze`
+object_freeze.js:10
  10: bliffl.bar = '23456'; // error
      ^^^^^^^^^^ assignment of property `bar`. Mutation not allowed on
  10: bliffl.bar = '23456'; // error
      ^^^^^^ frozen object literal
 
-object_freeze.js:9
-  9: var bliffl = Object.freeze({bar: '12345', ...baz});
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `freeze`
+object_freeze.js:11
  11: bliffl.baz = 3456; // error
      ^^^^^^^^^^ assignment of property `baz`. Mutation not allowed on
  11: bliffl.baz = 3456; // error
-     ^^^^^^ frozen object literal
-
-object_freeze.js:9
-  9: var bliffl = Object.freeze({bar: '12345', ...baz});
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `freeze`
- 13: bliffl.constructor = baz; // error
-     ^^^^^^^^^^^^^^^^^^ assignment of property `constructor`. Mutation not allowed on
- 13: bliffl.constructor = baz; // error
-     ^^^^^^ frozen object literal
-
-object_freeze.js:9
-  9: var bliffl = Object.freeze({bar: '12345', ...baz});
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `freeze`
- 14: bliffl.toString = function() {}; // error
-     ^^^^^^^^^^^^^^^ assignment of property `toString`. Mutation not allowed on
- 14: bliffl.toString = function() {}; // error
      ^^^^^^ frozen object literal
 
 object_freeze.js:12
@@ -50,9 +28,19 @@ object_freeze.js:12
  12: bliffl.corge; // error
      ^^^^^^ frozen object literal
 
+object_freeze.js:13
+ 13: bliffl.constructor = baz; // error
+     ^^^^^^^^^^^^^^^^^^ assignment of property `constructor`. Mutation not allowed on
+ 13: bliffl.constructor = baz; // error
+     ^^^^^^ frozen object literal
+
+object_freeze.js:14
+ 14: bliffl.toString = function() {}; // error
+     ^^^^^^^^^^^^^^^ assignment of property `toString`. Mutation not allowed on
+ 14: bliffl.toString = function() {}; // error
+     ^^^^^^ frozen object literal
+
 object_freeze.js:20
- 20: var xx : { x: number } = Object.freeze({ x: "error" })
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `freeze`
  20: var xx : { x: number } = Object.freeze({ x: "error" })
                                                  ^^^^^^^ string. This type is incompatible with
  20: var xx : { x: number } = Object.freeze({ x: "error" })

@@ -62,8 +62,6 @@ test.js:19
 
 test.js:26
  26:     return new this(); // error B ~> number
-                ^^^^^^^^^^ constructor call
- 26:     return new this(); // error B ~> number
                 ^^^^^^^^^^ B. This type is incompatible with the expected return type of
  25:   static badCreate(): number {
                            ^^^^^^ number

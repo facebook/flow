@@ -1,3 +1,9 @@
+array_lib.js:4
+  4: var a = [0];
+              ^ number. This type is incompatible with
+ 10: var e:Array<string> = a.reverse();
+                 ^^^^^^ string
+
 array_lib.js:5
   5: var b = a.map(function (x) { foo(x); return "" + x; });
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
@@ -6,9 +12,7 @@ array_lib.js:5
   2: function foo(x:string) { }
                     ^^^^^^ string
 
-array_lib.js:5
-  5: var b = a.map(function (x) { foo(x); return "" + x; });
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
+array_lib.js:8
   8: var d: number = b[0];
                      ^^^^ string. This type is incompatible with
   8: var d: number = b[0];
@@ -16,23 +20,11 @@ array_lib.js:5
 
 array_lib.js:10
  10: var e:Array<string> = a.reverse();
-                           ^^^^^^^^^^^ call of method `reverse`
-  4: var a = [0];
-              ^ number. This type is incompatible with
- 10: var e:Array<string> = a.reverse();
-                 ^^^^^^ string
-
-array_lib.js:10
- 10: var e:Array<string> = a.reverse();
-                           ^^^^^^^^^^^ call of method `reverse`
- 10: var e:Array<string> = a.reverse();
                  ^^^^^^ string. This type is incompatible with
   4: var a = [0];
               ^ number
 
 array_lib.js:21
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                      ^^^ string. This type is incompatible with
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
@@ -40,15 +32,11 @@ array_lib.js:21
 
 array_lib.js:21
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                           ^^^ string. This type is incompatible with
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                   ^^^^^^ number
 
 array_lib.js:21
- 21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                            ^^^^^^^^^^^^^^^^^^^^^^^ call of method `concat`
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                                                ^^^ string. This type is incompatible with
  21: var n: Array<number> = h.concat('a', 'b', 'c'); // Error

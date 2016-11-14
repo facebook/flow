@@ -1,7 +1,5 @@
 test2.js:7
   7: var y: I.B = new C();
-                  ^^^^^^^ constructor call
-  7: var y: I.B = new C();
                   ^^^^^^^ C. This type is incompatible with
   7: var y: I.B = new C();
             ^^^ B

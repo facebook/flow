@@ -48,8 +48,6 @@ import_type.js:47
 
 import_type.js:56
  56: var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
-                      ^^^^^^^^^^^^^^^ function call
- 56: var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
                       ^^^^^^^^^^^^^^^ object type. This type is incompatible with
  56: var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
              ^^^^^^ number

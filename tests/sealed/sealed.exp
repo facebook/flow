@@ -6,15 +6,13 @@ proto.js:3
 
 proto.js:7
   7: var y:number = o.m();
-                    ^^^^^ string. This type is incompatible with
+                    ^^^^^ boolean. This type is incompatible with
   7: var y:number = o.m();
            ^^^^^^ number
 
 proto.js:7
   7: var y:number = o.m();
-                    ^^^^^ call of method `m`
-  7: var y:number = o.m();
-                    ^^^^^ boolean. This type is incompatible with
+                    ^^^^^ string. This type is incompatible with
   7: var y:number = o.m();
            ^^^^^^ number
 

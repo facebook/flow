@@ -174,15 +174,11 @@ test16.js:14
 
 test17.js:7
   7: ([].concat([0,1])[1]: string)
-      ^^^^^^^^^^^^^^^^ call of method `concat`
-  7: ([].concat([0,1])[1]: string)
                  ^ number. This type is incompatible with
   7: ([].concat([0,1])[1]: string)
                            ^^^^^^ string
 
 test17.js:7
-  7: ([].concat([0,1])[1]: string)
-      ^^^^^^^^^^^^^^^^ call of method `concat`
   7: ([].concat([0,1])[1]: string)
                    ^ number. This type is incompatible with
   7: ([].concat([0,1])[1]: string)

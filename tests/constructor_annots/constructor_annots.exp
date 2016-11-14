@@ -26,8 +26,6 @@ test.js:3
 
 test.js:4
   4: var z: string = new Foo().m();
-                     ^^^^^^^^^^^^^ call of method `m`
-  4: var z: string = new Foo().m();
                      ^^^^^^^^^^^^^ number. This type is incompatible with
   4: var z: string = new Foo().m();
             ^^^^^^ string
@@ -45,8 +43,6 @@ test.js:8
              ^^^^^^ string
 
 test.js:9
-  9: var z2: string = new Foo2().m();
-                      ^^^^^^^^^^^^^^ call of method `m`
   9: var z2: string = new Foo2().m();
                       ^^^^^^^^^^^^^^ number. This type is incompatible with
   9: var z2: string = new Foo2().m();

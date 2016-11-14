@@ -24,8 +24,6 @@ test.js:5
 
 test.js:7
   7: N.z = Q(N.z);
-           ^^^^^^ function call
-  7: N.z = Q(N.z);
            ^^^^^^ string. This type is incompatible with
   7:     declare var z: number;
                         ^^^^^^ number. See lib: lib/lib.js:7

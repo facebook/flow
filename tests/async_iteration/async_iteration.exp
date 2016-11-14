@@ -16,9 +16,7 @@ delegate_yield.js:25
  25:   var x: void = yield *inner(); // error: number ~> void
               ^^^^ undefined
 
-generator.js:14
- 14:       yield await file.readLine();
-                 ^^^^^^^^^^^^^^^^^^^^^ await
+generator.js:23
  23:     (line: void); // error: string ~> void
           ^^^^ string. This type is incompatible with
  23:     (line: void); // error: string ~> void

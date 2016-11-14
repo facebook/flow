@@ -18,15 +18,11 @@ child_process/execSync.js:8
 
 crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ call of method `read`
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ Buffer. This type is incompatible with
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                          ^^^^^^ number
 
 crypto/crypto.js:12
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ call of method `read`
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ null. This type is incompatible with
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
@@ -34,15 +30,11 @@ crypto/crypto.js:12
 
 crypto/crypto.js:12
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ call of method `read`
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ string. This type is incompatible with
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                          ^^^^^^ number
 
 crypto/crypto.js:12
- 12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
-            ^^^^^^^^^^^ call of method `read`
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer
             ^^^^^^^^^^^ undefined. This type is incompatible with
  12:       (hmac.read(): number); // 4 errors: null, void, string, Buffer

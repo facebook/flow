@@ -1,13 +1,9 @@
 fetch.js:12
  12: const b: Promise<string> = fetch(myRequest); // incorrect
-                                ^^^^^^^^^^^^^^^^ function call
- 12: const b: Promise<string> = fetch(myRequest); // incorrect
                       ^^^^^^ string. This type is incompatible with
 Response. See lib: bom.js:815
 
 fetch.js:25
- 25: const d: Promise<Blob> = fetch('image.png'); // incorrect
-                              ^^^^^^^^^^^^^^^^^^ function call
  25: const d: Promise<Blob> = fetch('image.png'); // incorrect
                       ^^^^ Blob. This type is incompatible with
 Response. See lib: bom.js:815
@@ -99,8 +95,6 @@ headers.js:15
               ^^^^^^^ Headers
 
 headers.js:18
- 18: const h: number = e.get('Content-Type'); // not correct
-                       ^^^^^^^^^^^^^^^^^^^^^ call of method `get`
  18: const h: number = e.get('Content-Type'); // not correct
                        ^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
  18: const h: number = e.get('Content-Type'); // not correct
@@ -475,8 +469,6 @@ urlsearchparams.js:15
               ^^^^^^^^^^^^^^^ URLSearchParams
 
 urlsearchparams.js:18
- 18: const h: number = e.get('key1'); // not correct
-                       ^^^^^^^^^^^^^ call of method `get`
  18: const h: number = e.get('key1'); // not correct
                        ^^^^^^^^^^^^^ string. This type is incompatible with
  18: const h: number = e.get('key1'); // not correct

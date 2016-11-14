@@ -30,15 +30,11 @@ map.js:24
 
 map.js:29
  29:     (x.get('foo'): boolean); // error, string | void
-          ^^^^^^^^^^^^ call of method `get`
- 29:     (x.get('foo'): boolean); // error, string | void
           ^^^^^^^^^^^^ number. This type is incompatible with
  29:     (x.get('foo'): boolean); // error, string | void
                         ^^^^^^^ boolean
 
 map.js:29
- 29:     (x.get('foo'): boolean); // error, string | void
-          ^^^^^^^^^^^^ call of method `get`
  29:     (x.get('foo'): boolean); // error, string | void
           ^^^^^^^^^^^^ undefined. This type is incompatible with
  29:     (x.get('foo'): boolean); // error, string | void

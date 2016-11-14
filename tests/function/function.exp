@@ -52,8 +52,6 @@ apply.js:25
 
 apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 32: (test.call.apply(test, [0, 123, 'foo']): void);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  32: (test.call.apply(test, [0, 123, 'foo']): void);
                                               ^^^^ undefined

@@ -120,8 +120,6 @@ promise.js:117
 
 promise.js:121
 121: Promise.resolve(Promise.resolve(0)).then(function(num) {
-                     ^^^^^^^^^^^^^^^^^^ call of method `resolve`
-121: Promise.resolve(Promise.resolve(0)).then(function(num) {
                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
 union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:599
   Member 1:
@@ -141,8 +139,6 @@ union: type application of identifier `Promise` | type parameter `T` of call of 
                 ^^^^^^ number
 
 promise.js:127
-127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
-                                     ^^^^^^^^^^^^^^^^^^ call of method `resolve`
 127: Promise.resolve(Promise.resolve(Promise.resolve(0))).then(function(num) {
                                      ^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
 union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:599
@@ -170,8 +166,6 @@ promise.js:161
 
 promise.js:166
 166:   .then(function(num) { return Promise.resolve('asdf'); })
-                                    ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
-166:   .then(function(num) { return Promise.resolve('asdf'); })
                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
 union: type application of identifier `Promise` | type parameter `U` of call of method `then`. See lib: core.js:591
   Member 1:
@@ -191,8 +185,6 @@ union: type application of identifier `Promise` | type parameter `U` of call of 
                   ^^^^^^ string
 
 promise.js:174
-174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 174:   .then(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                     ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
 union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:599
@@ -220,8 +212,6 @@ promise.js:201
 
 promise.js:206
 206:   .catch(function(num) { return Promise.resolve('asdf'); })
-                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
-206:   .catch(function(num) { return Promise.resolve('asdf'); })
                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
 union: ?type application of identifier `Promise` | type parameter `U` of call of method `catch`. See lib: core.js:596
   Member 1:
@@ -241,8 +231,6 @@ union: ?type application of identifier `Promise` | type parameter `U` of call of
                   ^^^^^^ string
 
 promise.js:214
-214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
-                                                     ^^^^^^^^^^^^^^^^^^^^^^^ call of method `resolve`
 214:   .catch(function(num) { return Promise.resolve(Promise.resolve('asdf')); })
                                                      ^^^^^^^^^^^^^^^^^^^^^^^ Promise. This type is incompatible with
 union: type application of identifier `Promise` | type parameter `T` of call of method `resolve`. See lib: core.js:599

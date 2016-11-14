@@ -24,8 +24,6 @@ dictionary.js:66
 
 dictionary.js:94
  94:   (o.toString(): boolean); // error: string ~> boolean
-        ^^^^^^^^^^^^ call of method `toString`
- 94:   (o.toString(): boolean); // error: string ~> boolean
         ^^^^^^^^^^^^ string. This type is incompatible with
  94:   (o.toString(): boolean); // error: string ~> boolean
                       ^^^^^^^ boolean

@@ -22,17 +22,13 @@ sanity-ordering.js:7
   7:   (obj.page: Object);
                   ^^^^^^ object type
 
-sanity-ordering.js:14
- 14:     const key = stack.shift();
-                     ^^^^^^^^^^^^^ call of method `shift`
+sanity-ordering.js:15
  15:     head = head[key] || create && (head[key] = {});
                 ^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
  15:     head = head[key] || create && (head[key] = {});
                 ^^^^ undefined (too few arguments, expected default/rest parameters)
 
-sanity-ordering.js:14
- 14:     const key = stack.shift();
-                     ^^^^^^^^^^^^^ call of method `shift`
+sanity-ordering.js:15
  15:     head = head[key] || create && (head[key] = {});
                                         ^^^^^^^^^ assignment of computed property/element. Computed property/element cannot be assigned on possibly undefined value
  15:     head = head[key] || create && (head[key] = {});

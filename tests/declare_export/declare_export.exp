@@ -88,15 +88,11 @@ es6modules.js:63
 
 es6modules.js:65
  65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `staticNumber2`
- 65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  65: var h2: string = CJS_Clobb_Class.staticNumber2(); // Error: number ~> string
              ^^^^^^ string
 
 es6modules.js:67
- 67: var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `instNumber1`
  67: var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  67: var h4: string = new CJS_Clobb_Class().instNumber1(); // Error: number ~> string
@@ -115,8 +111,6 @@ es6modules.js:71
                       ^^^^^^^^^^^^^^^^^^ exports of "CommonJS_Clobbering_Class"
 
 es6modules.js:73
- 73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `instNumber2`
  73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
  73: var i3: string = new CJS_Clobb_Class_NS.default().instNumber2(); // Error: number ~> string
@@ -168,23 +162,17 @@ es6modules.js:103
 
 es6modules.js:107
 107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^^^^ function call
-107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
                       ^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 107: var n2: string = ES6_Def_AnonFunc1(); // Error: number ~> string
              ^^^^^^ string
 
 es6modules.js:111
 111: var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^^^^^ function call
-111: var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
                       ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 111: var o2: string = ES6_Def_NamedFunc1(); // Error: number ~> string
              ^^^^^^ string
 
 es6modules.js:119
-119: var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANum`
 119: var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 119: var q2: string = new ES6_Def_NamedClass1().givesANum(); // Error: number ~> string
@@ -226,15 +214,11 @@ es6modules.js:143
 
 es6modules.js:147
 147: var v2: string = givesANumber(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^ function call
-147: var v2: string = givesANumber(); // Error: number ~> string
                       ^^^^^^^^^^^^^^ number. This type is incompatible with
 147: var v2: string = givesANumber(); // Error: number ~> string
              ^^^^^^ string
 
 es6modules.js:151
-151: var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANumber`
 151: var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 151: var w2: string = new NumberGenerator().givesANumber(); // Error: number ~> string
@@ -278,23 +262,17 @@ es6modules.js:183
 
 es6modules.js:187
 187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
-                       ^^^^^^^^^^^^^^^^^^^ function call
-187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
                        ^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 187: var ad2: string = ES6_Def_AnonFunc2(); // Error: number ~> string
               ^^^^^^ string
 
 es6modules.js:191
 191: var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
-                       ^^^^^^^^^^^^^^^^^^^^ function call
-191: var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
                        ^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 191: var ae2: string = ES6_Def_NamedFunc2(); // Error: number ~> string
               ^^^^^^ string
 
 es6modules.js:199
-199: var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANum`
 199: var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 199: var ag2: string = new ES6_Def_NamedClass2().givesANum(); // Error: number ~> string
@@ -326,15 +304,11 @@ es6modules.js:218
 
 es6modules.js:222
 222: var ak2: string = givesANumber2(); // Error: number ~> string
-                       ^^^^^^^^^^^^^^^ function call
-222: var ak2: string = givesANumber2(); // Error: number ~> string
                        ^^^^^^^^^^^^^^^ number. This type is incompatible with
 222: var ak2: string = givesANumber2(); // Error: number ~> string
               ^^^^^^ string
 
 es6modules.js:226
-226: var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `givesANumber`
 226: var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
 226: var al2: string = new NumberGenerator2().givesANumber(); // Error: number ~> string

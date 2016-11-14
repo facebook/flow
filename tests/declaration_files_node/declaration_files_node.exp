@@ -1,14 +1,10 @@
 test_absolute.js:5
   5: (B1.fun(): string); // Error number ~> string
-      ^^^^^^^^ call of method `fun`
-  5: (B1.fun(): string); // Error number ~> string
       ^^^^^^^^ number. This type is incompatible with
   5: (B1.fun(): string); // Error number ~> string
                 ^^^^^^ string
 
 test_absolute.js:9
-  9: (B2.fun(): string); // Error number ~> string
-      ^^^^^^^^ call of method `fun`
   9: (B2.fun(): string); // Error number ~> string
       ^^^^^^^^ number. This type is incompatible with
   9: (B2.fun(): string); // Error number ~> string
@@ -16,15 +12,11 @@ test_absolute.js:9
 
 test_absolute.js:12
  12: (C.fun(): string); // Error number ~> string
-      ^^^^^^^ call of method `fun`
- 12: (C.fun(): string); // Error number ~> string
       ^^^^^^^ number. This type is incompatible with
  12: (C.fun(): string); // Error number ~> string
                ^^^^^^ string
 
 test_absolute.js:15
- 15: (D.fun(): string); // Error number ~> string
-      ^^^^^^^ call of method `fun`
  15: (D.fun(): string); // Error number ~> string
       ^^^^^^^ number. This type is incompatible with
  15: (D.fun(): string); // Error number ~> string
@@ -32,15 +24,11 @@ test_absolute.js:15
 
 test_absolute.js:18
  18: (E.fun(): string); // Error number ~> string
-      ^^^^^^^ call of method `fun`
- 18: (E.fun(): string); // Error number ~> string
       ^^^^^^^ number. This type is incompatible with
  18: (E.fun(): string); // Error number ~> string
                ^^^^^^ string
 
 test_absolute.js:21
- 21: (F.fun(): string); // Error number ~> string
-      ^^^^^^^ call of method `fun`
  21: (F.fun(): string); // Error number ~> string
       ^^^^^^^ number. This type is incompatible with
  21: (F.fun(): string); // Error number ~> string
@@ -48,15 +36,11 @@ test_absolute.js:21
 
 test_relative.js:5
   5: (A1.fun(): string); // Error number ~> string
-      ^^^^^^^^ call of method `fun`
-  5: (A1.fun(): string); // Error number ~> string
       ^^^^^^^^ number. This type is incompatible with
   5: (A1.fun(): string); // Error number ~> string
                 ^^^^^^ string
 
 test_relative.js:9
-  9: (A2.fun(): string); // Error number ~> string
-      ^^^^^^^^ call of method `fun`
   9: (A2.fun(): string); // Error number ~> string
       ^^^^^^^^ number. This type is incompatible with
   9: (A2.fun(): string); // Error number ~> string
