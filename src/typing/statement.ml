@@ -1187,7 +1187,15 @@ and statement cx = Ast.Statement.(
 
       (* if we broke out of the loop, havoc vars changed by loop body *)
       if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
-      then Env.havoc_vars newset
+      then Env.havoc_vars newset;
+
+      Ast.(
+        match test with
+        | (_, Ast.Expression.Literal { Literal.value = Literal.Boolean true; _; }) ->
+          if Abnormal.swap_saved Abnormal.Return save_break <> None
+          then Abnormal.throw_control_flow_exception Abnormal.Return
+        | _ -> ()
+      );
 
   (***************************************************************************)
   (* Refinements for `do-while` are derived by the following Hoare logic rule:
