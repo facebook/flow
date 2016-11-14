@@ -19,7 +19,7 @@ open Utils_js
    must be copied, otherwise bad things will happen. (The cost of copying
    context graphs is presumably a lot less than deserializing contexts, so the
    optimization makes sense. *)
-module ContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
+module ContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
   type t = Context.t
   let prefix = Prefix.make()
   let description = "Context"
@@ -28,7 +28,7 @@ end)
 let add_context = Expensive.wrap ContextHeap.add
 let find_unsafe_context = Expensive.wrap ContextHeap.find_unsafe
 
-module SigContextHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
+module SigContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
   type t = Context.t
   let prefix = Prefix.make()
   let description = "SigContext"

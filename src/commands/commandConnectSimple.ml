@@ -11,11 +11,12 @@
 module Server_files = Server_files_js
 
 type error =
-  | Server_missing
-  | Server_initializing
-  | Server_rechecking
-  | Server_busy
   | Build_id_mismatch
+  | Server_busy
+  | Server_gcollecting
+  | Server_initializing
+  | Server_missing
+  | Server_rechecking
 
 exception ConnectTimeout
 
@@ -123,9 +124,16 @@ let connect_once ~tmp_dir root =
       Result.Ok (ic, oc)
   with
   | _ ->
-    if not (server_exists ~tmp_dir root) then Result.Error Server_missing
+    if not (server_exists ~tmp_dir root)
+    then Result.Error Server_missing
+
     else if not (Lock.check (Server_files.init_file ~tmp_dir root))
     then Result.Error Server_initializing
+
+    else if not (Lock.check (Server_files.gc_file ~tmp_dir root))
+    then Result.Error Server_gcollecting
+
     else if not (Lock.check (Server_files.recheck_file ~tmp_dir root))
     then Result.Error Server_rechecking
+
     else Result.Error Server_busy

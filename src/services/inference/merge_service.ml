@@ -10,7 +10,7 @@
 
 open Utils_js
 
-module LeaderHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
+module LeaderHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
   type t = filename
   let prefix = Prefix.make()
   let description = "Leader"
@@ -188,10 +188,10 @@ let merge_strict_job ~options (merged, errsets) (components: filename list list)
         file :: merged, errors :: errsets
       )
     with
-    | SharedMem.Out_of_shared_memory
-    | SharedMem.Heap_full
-    | SharedMem.Hash_table_full
-    | SharedMem.Dep_table_full as exc -> raise exc
+    | SharedMem_js.Out_of_shared_memory
+    | SharedMem_js.Heap_full
+    | SharedMem_js.Hash_table_full
+    | SharedMem_js.Dep_table_full as exc -> raise exc
     (* A catch all suppression is probably a bad idea... *)
     | exc ->
       let file = List.hd component in

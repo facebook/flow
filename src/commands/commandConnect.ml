@@ -140,6 +140,7 @@ let reset_retries_if_necessary retries = function
   | Result.Ok _
   | Result.Error CCS.Build_id_mismatch
   | Result.Error CCS.Server_rechecking
+  | Result.Error CCS.Server_gcollecting
   | Result.Error CCS.Server_initializing ->
       { retries with
         retries_remaining = retries.original_retries;
@@ -255,6 +256,12 @@ let rec connect env retries start_time tail_env =
       end
   | Result.Error CCS.Server_rechecking ->
       let msg = "flow is rechecking; this should not take long" in
+      if not env.quiet then Printf.eprintf
+        "%s %s %s%!" msg tail_msg (Tty.spinner());
+      rate_limit retries;
+      connect env retries start_time tail_env
+  | Result.Error CCS.Server_gcollecting ->
+      let msg = "flow is cleaning up some unused memory; this should not take long" in
       if not env.quiet then Printf.eprintf
         "%s %s %s%!" msg tail_msg (Tty.spinner());
       rate_limit retries;

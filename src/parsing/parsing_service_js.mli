@@ -60,6 +60,7 @@ val reparse:
   use_strict: bool ->
   profile: bool ->
   max_header_tokens: int ->
+  options: Options.t ->
   Worker.t list option ->   (* Some=parallel, None=serial *)
   FilenameSet.t ->          (* filenames to reparse *)
   FilenameSet.t * results   (* modified files and job results *)

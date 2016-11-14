@@ -89,7 +89,7 @@ end = struct
     Flow_logger.log "Initializing Server (This might take some time)";
     grab_init_lock ~tmp_dir root;
     wakeup_client waiting_channel Starting;
-    ServerPeriodical.init ();
+    ServerPeriodical.init options;
     let env = init_fun () in
     release_init_lock ~tmp_dir root;
     wakeup_client waiting_channel Ready;
@@ -263,7 +263,7 @@ end = struct
     end;
     FlowEventLogger.init_server root;
     Program.preinit options;
-    let handle = SharedMem.init { SharedMem.
+    let handle = SharedMem_js.init { SharedMem_js.
       global_size = shm_global_size;
       heap_size = shm_heap_size;
       dep_table_pow;

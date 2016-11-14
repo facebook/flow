@@ -24,6 +24,7 @@ let config_file root =
 
 let init_file    = file_of_root "init"
 let recheck_file = file_of_root "recheck"
+let gc_file      = file_of_root "gc"
 let lock_file    = file_of_root "lock"
 let pids_file    = file_of_root "pids"
 let socket_file  = file_of_root "sock"

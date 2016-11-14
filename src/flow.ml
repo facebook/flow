@@ -102,7 +102,7 @@ let _ =
     Daemon.check_entry_point (); (* this call might not return *)
     FlowShell.main ()
   with
-  | SharedMem.Out_of_shared_memory ->
+  | SharedMem_js.Out_of_shared_memory ->
       FlowExitStatus.(exit Out_of_shared_memory)
   | e ->
       let msg = Utils.spf "Unhandled exception: %s" (Printexc.to_string e) in

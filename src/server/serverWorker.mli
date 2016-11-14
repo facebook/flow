@@ -8,4 +8,4 @@
  *
  *)
 
-val make : Options.t -> SharedMem.handle -> Worker.t list
+val make : Options.t -> SharedMem_js.handle -> Worker.t list

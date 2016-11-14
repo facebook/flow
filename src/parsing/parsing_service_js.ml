@@ -41,7 +41,7 @@ let empty_result = {
 (**************************** internal *********************************)
 
 (* shared heap for parsed ASTs by filename *)
-module ParserHeap = SharedMem.WithCache (Loc.FilenameKey) (struct
+module ParserHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
     type t = (Spider_monkey_ast.program * Docblock.t)
     let prefix = Prefix.make()
     let description = "Parser"
@@ -328,7 +328,7 @@ let parse
 
   results
 
-let reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files =
+let reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files =
   (* save old parsing info for files *)
   ParserHeap.oldify_batch files;
   let next = next_of_filename_set workers files in
@@ -347,7 +347,7 @@ let reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files =
   let unchanged = FilenameSet.diff files modified in
   (* restore old parsing info for unchanged files *)
   ParserHeap.revive_batch unchanged;
-  SharedMem.collect `gentle;
+  SharedMem_js.collect options `gentle;
   modified, results
 
 let parse_with_defaults ?types_mode ?use_strict options workers next =
@@ -360,7 +360,7 @@ let reparse_with_defaults options workers files =
   let types_mode, use_strict, profile, max_header_tokens =
     get_defaults ~types_mode:None ~use_strict:None options
   in
-  reparse ~types_mode ~use_strict ~profile ~max_header_tokens workers files
+  reparse ~types_mode ~use_strict ~profile ~max_header_tokens ~options workers files
 
 let has_ast file =
   ParserHeap.mem file

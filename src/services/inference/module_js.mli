@@ -75,7 +75,8 @@ val add_unparsed_info:
 (* remove module info being tracked for given file set;
    returns the set of modules removed
 *)
-val remove_files: Worker.t list option -> FilenameSet.t -> NameSet.t
+val remove_files:
+  Options.t -> Worker.t list option -> FilenameSet.t -> NameSet.t
 val clear_infos: FilenameSet.t -> unit
 
 val add_package: string -> Spider_monkey_ast.program -> unit

@@ -88,9 +88,9 @@ let exit_if_unused() =
 (*****************************************************************************)
 (* The registered jobs *)
 (*****************************************************************************)
-let init () =
+let init options =
   let jobs = [
-    Periodical.always   , (fun () -> SharedMem.collect `aggressive);
+    Periodical.always   , (fun () -> SharedMem_js.collect options `aggressive);
     Periodical.one_day  , exit_if_unused;
   ] in
   List.iter (fun (period, cb) -> Periodical.register_callback period cb) jobs

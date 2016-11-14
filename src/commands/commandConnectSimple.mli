@@ -9,11 +9,12 @@
  *)
 
 type error =
-  | Server_missing
-  | Server_initializing
-  | Server_rechecking
-  | Server_busy
   | Build_id_mismatch
+  | Server_busy
+  | Server_gcollecting
+  | Server_initializing
+  | Server_missing
+  | Server_rechecking
 
 val server_exists : tmp_dir:string -> Path.t -> bool
 

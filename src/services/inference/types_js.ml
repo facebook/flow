@@ -365,7 +365,7 @@ let typecheck
         if not (FilenameSet.is_empty direct_deps) then begin
           (** TODO [perf] Consider oldifying **)
           Module_js.clear_infos direct_deps;
-          SharedMem.collect `gentle;
+          SharedMem_js.collect options `gentle;
 
           MultiWorker.call workers
             ~job: (fun () files ->
@@ -407,10 +407,10 @@ let typecheck
       profiling
     with
     (* Unrecoverable exceptions *)
-    | SharedMem.Out_of_shared_memory
-    | SharedMem.Heap_full
-    | SharedMem.Hash_table_full
-    | SharedMem.Dep_table_full as exn -> raise exn
+    | SharedMem_js.Out_of_shared_memory
+    | SharedMem_js.Heap_full
+    | SharedMem_js.Hash_table_full
+    | SharedMem_js.Dep_table_full as exn -> raise exn
     (* A catch all suppression is probably a bad idea... *)
     | exc ->
         prerr_endline (Printexc.to_string exc);
@@ -472,7 +472,7 @@ let recheck genv env modified =
 
   (* clear errors, asts for deleted files *)
   Parsing_service_js.remove_asts deleted;
-  SharedMem.collect `gentle;
+  SharedMem_js.collect options `gentle;
 
   Flow_logger.log "Parsing";
   (* reparse modified and added files, updating modified to reflect removal of
@@ -517,7 +517,7 @@ let recheck genv env modified =
   let to_clear = FilenameSet.union modified deleted in
   Context_cache.remove_batch to_clear;
   (* clear out infos of files, and names of modules provided by those files *)
-  let removed_modules = Module_js.remove_files workers to_clear in
+  let removed_modules = Module_js.remove_files options workers to_clear in
 
   (* TODO elsewhere or delete *)
   Context.remove_all_errors master_cx;
@@ -568,7 +568,7 @@ let recheck genv env modified =
       let to_merge = FilenameSet.union all_deps modified_files in
       Merge_service.remove_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
-      SharedMem.collect `gentle;
+      SharedMem_js.collect genv.ServerEnv.options `gentle;
 
       Some (FilenameSet.elements to_merge, direct_deps)
     )
@@ -721,7 +721,7 @@ let server_init genv =
   if Options.is_check_mode options
   then print_errors ~profiling options errors;
 
-  SharedMem.init_done();
+  SharedMem_js.init_done();
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and

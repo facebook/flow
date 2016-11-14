@@ -126,6 +126,7 @@ let main temp_dir from quiet root () =
           "Successfully killed server for %s" root_s
     | Result.Error Server_initializing
     | Result.Error Server_rechecking
+    | Result.Error Server_gcollecting
     | Result.Error Server_busy ->
         begin try
           if not quiet then prerr_endlinef
