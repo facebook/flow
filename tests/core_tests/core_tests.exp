@@ -3,14 +3,16 @@ map.js:23
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
                           ^^^^^ string. This type is incompatible with
-tuple type. See lib: core.js:536
+536:     constructor(iterable: ?Iterable<[K, V]>): void;
+                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:536
 
 map.js:23
  23:     let x = new Map(['foo', 123]); // error
                  ^^^^^^^^^^^^^^^^^^^^^ constructor call
  23:     let x = new Map(['foo', 123]); // error
                                  ^^^ number. This type is incompatible with
-tuple type. See lib: core.js:536
+536:     constructor(iterable: ?Iterable<[K, V]>): void;
+                                         ^^^^^^ tuple type. See lib: <BUILTINS>/core.js:536
 
 map.js:24
  24:     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -53,42 +55,48 @@ regexp.js:26
          ^^^^^^^^^^^^^^^^^^ function call
  26:     RegExp('foo', 'z'); // error
                        ^^^ string. This type is incompatible with
-string enum. See lib: core.js:350
+350:     static (pattern: string | RegExp, flags?: RegExp$flags): RegExp;
+                                                   ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:350
 
 regexp.js:27
  27:     new RegExp('foo', 'z'); // error
          ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  27:     new RegExp('foo', 'z'); // error
                            ^^^ string. This type is incompatible with
-string enum. See lib: core.js:352
+352:     constructor(pattern: string | RegExp, flags?: RegExp$flags): RegExp;
+                                                       ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/core.js:352
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                             ^ number. This type is incompatible with
-object type. See lib: core.js:573
+573: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:573
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                ^ number. This type is incompatible with
-object type. See lib: core.js:573
+573: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:573
 
 weakset.js:19
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  19: let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
                                   ^ number. This type is incompatible with
-object type. See lib: core.js:573
+573: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:573
 
 weakset.js:36
  36: let ws5 = new WeakSet(numbers()); // error, must be objects
                ^^^^^^^^^^^^^^^^^^^^^^ constructor call
  29: function* numbers(): Iterable<number> {
                                    ^^^^^^ number. This type is incompatible with
-object type. See lib: core.js:573
+573: declare class WeakSet<T: Object> {
+                              ^^^^^^ object type. See lib: <BUILTINS>/core.js:573
 
 
 Found 13 errors

@@ -72,11 +72,13 @@ let main option_values root error_flags strip_root json pretty verbose
         Some (Path.make path, contents)
     | _ -> None
   in
+  let print_json =
+    Errors.print_error_json ~strip_root ~root ~pretty ~stdin_file in
   match response with
   | ServerProt.ERRORS e ->
       if json
       then
-        Errors.print_error_json ~root ~pretty ~stdin_file stdout e
+        print_json stdout e
       else (
         Errors.print_error_summary
           ~flags:error_flags
@@ -88,7 +90,7 @@ let main option_values root error_flags strip_root json pretty verbose
       )
   | ServerProt.NO_ERRORS ->
       if json
-      then Errors.print_error_json ~root ~pretty ~stdin_file stdout []
+      then print_json stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

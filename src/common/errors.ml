@@ -244,7 +244,10 @@ let print_reason_color ?(out_channel=stdout) ~first ~one_line ~color (message: m
   (if first then Printf.printf "\n");
   Tty.cprint ~color_mode:color ~out_channel to_print
 
-let print_error_color_old ?(out_channel=stdout) ~one_line ~color (e : error) =
+let print_error_color_old
+    ?(out_channel=stdout) ~one_line ~color ~strip_root ~root
+    (e : error) =
+  let e = if strip_root then strip_root_from_error root e else e in
   let { kind; messages; op; trace; extra } = e in
   let messages = prepend_kind_message messages kind in
   let messages = prepend_op_reason messages op in
@@ -357,13 +360,25 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
   let see_another_file ~is_lib filename =
     if filename = main_file
     then [(default_style "")]
-    else [
-      comment_style (Printf.sprintf ". See%s: " (if is_lib then " lib" else ""));
-      comment_file_style (Printf.sprintf
-        "%s:%d"
-        (relative_path ~strip_root ~root filename)
-        l0)
-    ] in
+    else
+      let prefix = Printf.sprintf ". See%s: " (if is_lib then " lib" else "") in
+      let filename =
+        if is_lib then
+          let sep = Filename.dir_sep in
+          let root_str = Printf.sprintf "%s%s" (Path.to_string root) sep in
+          if String_utils.string_starts_with filename root_str then
+            relative_path ~strip_root ~root filename
+          else if strip_root then
+            Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
+          else
+            filename
+        else relative_path ~strip_root ~root filename
+      in
+      [
+        comment_style prefix;
+        comment_file_style (Printf.sprintf "%s:%d" filename l0)
+      ]
+  in
 
   let code_line = read_line_in_file ~root (l0 - 1) filename stdin_file in
 
@@ -788,8 +803,12 @@ let json_of_errors_with_context ~root ~stdin_file errors =
   Hh_json.JSON_Array (List.map (json_of_error_with_context ~root ~stdin_file) errors)
 
 let print_error_json
-  ~root ?(pretty=false) ?(profiling=None) ?(stdin_file=None) oc el =
+    ~strip_root ~root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
+    oc el =
   let open Hh_json in
+
+  let el = if strip_root then strip_root_from_errors root el else el in
+
   let props = [
     "flowVersion", JSON_String FlowConfig.version;
     "errors", json_of_errors_with_context ~root ~stdin_file el;
@@ -843,7 +862,8 @@ let print_error_deprecated =
     );
     Buffer.contents buf
   in
-  fun oc el ->
+  fun ~strip_root ~root oc el ->
+    let el = if strip_root then strip_root_from_errors root el else el in
     let sl = List.map to_string el in
     let sl = ListUtils.uniq (List.sort String.compare sl) in
     List.iter begin fun s ->
@@ -859,7 +879,7 @@ let print_error_summary ?(out_channel=stdout) ~flags ?(stdin_file=None) ~strip_r
   let one_line = flags.Options.one_line in
   let color = flags.Options.color in
   let print_error_color = if flags.Options.old_output_format
-    then print_error_color_old
+    then print_error_color_old ~strip_root ~root
     else print_error_color_new ~stdin_file ~strip_root ~root
   in
   let print_error_if_not_truncated curr e =

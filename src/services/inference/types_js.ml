@@ -669,18 +669,13 @@ let print_errors ~profiling options errors =
   let strip_root = Options.should_strip_root options in
   let root = Options.root options in
 
-  let errors =
-    if strip_root then Errors.strip_root_from_errors root errors
-    else errors
-  in
-
   if Options.should_output_json options
   then begin
     let profiling =
       if options.Options.opt_profile
       then Some profiling
       else None in
-    Errors.print_error_json ~root ~profiling stdout errors
+    Errors.print_error_json ~strip_root ~root ~profiling stdout errors
   end else
     Errors.print_error_summary
       ~flags:(Options.error_flags options)

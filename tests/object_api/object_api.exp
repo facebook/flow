@@ -69,7 +69,8 @@ object_prototype.js:38
 object_prototype.js:39
  39: var xToString2 : () => number = x.toString; // error
                             ^^^^^^ number. This type is incompatible with
-string. See lib: core.js:57
+ 57:     toString(): string;
+                     ^^^^^^ string. See lib: <BUILTINS>/core.js:57
 
 object_prototype.js:43
  43: var yToString : number = y.toString; // error
@@ -88,14 +89,16 @@ object_prototype.js:51
      ^^^^^^^^^^^^^^^^^^^^^ call of method `toString`
  51: (123).toString('foo'); // error
                     ^^^^^ string. This type is incompatible with
-number. See lib: core.js:131
+131:     toString(radix?: number): string;
+                          ^^^^^^ number. See lib: <BUILTINS>/core.js:131
 
 object_prototype.js:52
  52: (123).toString(null); // error
      ^^^^^^^^^^^^^^^^^^^^ call of method `toString`
  52: (123).toString(null); // error
                     ^^^^ null. This type is incompatible with
-number. See lib: core.js:131
+131:     toString(radix?: number): string;
+                          ^^^^^^ number. See lib: <BUILTINS>/core.js:131
 
 object_prototype.js:68
  68: b.hasOwnProperty = function() { return false; };
@@ -112,7 +115,8 @@ object_prototype.js:71
 object_prototype.js:72
  72: var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
                                               ^^^^^^ number. This type is incompatible with
-boolean. See lib: core.js:53
+ 53:     hasOwnProperty(prop: any): boolean;
+                                    ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:53
 
 object_prototype.js:76
  76: var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -135,7 +139,8 @@ object_prototype.js:96
 object_prototype.js:97
  97: var xPropertyIsEnumerable2 : (prop: string) => number =
                                                     ^^^^^^ number. This type is incompatible with
-boolean. See lib: core.js:55
+ 55:     propertyIsEnumerable(prop: any): boolean;
+                                          ^^^^^^^ boolean. See lib: <BUILTINS>/core.js:55
 
 object_prototype.js:102
 102: var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -176,7 +181,8 @@ object_prototype.js:150
 object_prototype.js:151
 151: var xToLocaleString2 : () => number = x.toLocaleString; // error
                                   ^^^^^^ number. This type is incompatible with
-string. See lib: core.js:411
+411:     toLocaleString(): string;
+                           ^^^^^^ string. See lib: <BUILTINS>/core.js:411
 
 object_prototype.js:155
 155: var yToLocaleString : number = y.toLocaleString; // error
