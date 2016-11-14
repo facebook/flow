@@ -115,7 +115,7 @@ export default suite(({addFile, addFiles, addCode}) => [
           8:       <Bar />;
                    ^^^^^^^ JSX desugared to \`Foo(...)\`
           5:       const Bar = 123;
-                               ^^^ number. This type is incompatible with
+                               ^^^ number. This type is incompatible with the expected param type of
           6:       function Foo(x: string) {}
                                    ^^^^^^ string
 
@@ -123,7 +123,7 @@ export default suite(({addFile, addFiles, addCode}) => [
          12:         <Bar />;
                      ^^^^^^^ JSX desugared to \`Foo(...)\`
           5:       const Bar = 123;
-                               ^^^ number. This type is incompatible with
+                               ^^^ number. This type is incompatible with the expected param type of
          11:         const Foo = (y: boolean) => {};
                                      ^^^^^^^ boolean
       `,
@@ -142,7 +142,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             8:       <Bar x={123} />;
                      ^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
             8:       <Bar x={123} />;
-                             ^^^ number. This type is incompatible with
+                             ^^^ number. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: { x: string }) {}
                                                             ^^^^^^ string
         `,
@@ -161,7 +161,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             8:       <Bar />;
                      ^^^^^^^ JSX desugared to \`Foo(...)\`
             8:       <Bar />;
-                     ^^^^^^^ null. This type is incompatible with
+                     ^^^^^^^ null. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: { x: string }) {}
                                                        ^^^^^^^^^^^^^ object type
         `,
@@ -180,13 +180,13 @@ export default suite(({addFile, addFiles, addCode}) => [
             8:       <Bar>{true}{/regex/}</Bar>
                      ^^^^^ JSX desugared to \`Foo(...)\`
             8:       <Bar>{true}{/regex/}</Bar>
-                           ^^^^ boolean. This type is incompatible with
+                           ^^^^ boolean. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
                                                                      ^^^^^^ number
 
           test.js:8
             8:       <Bar>{true}{/regex/}</Bar>
-                                 ^^^^^^^ RegExp. This type is incompatible with
+                                 ^^^^^^^ RegExp. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: null, child1: number, child2: string) {}
                                                                                      ^^^^^^ string
         `,
@@ -205,7 +205,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             7:       <Bar key="hi" ref="bye" />;
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
             7:       <Bar key="hi" ref="bye" />;
-                              ^^^^ string. This type is incompatible with
+                              ^^^^ string. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
                                                              ^^^^^^^ boolean
 
@@ -213,7 +213,7 @@ export default suite(({addFile, addFiles, addCode}) => [
             7:       <Bar key="hi" ref="bye" />;
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ JSX desugared to \`Foo(...)\`
             7:       <Bar key="hi" ref="bye" />;
-                                       ^^^^^ string. This type is incompatible with
+                                       ^^^^^ string. This type is incompatible with the expected param type of
             5:       function Foo(elem: number, props: {key: boolean, ref: number}) {}
                                                                            ^^^^^^ number
         `,

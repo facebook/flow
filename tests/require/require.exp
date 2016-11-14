@@ -1,12 +1,12 @@
 require.js:9
   9: takesAString(A.numberValue);
-                  ^^^^^^^^^^^^^ number. This type is incompatible with
+                  ^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
   4: function takesAString(str: string): void {}
                                 ^^^^^^ string
 
 require.js:14
  14: takesAString(B.numberValue);
-                  ^^^^^^^^^^^^^ number. This type is incompatible with
+                  ^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
   4: function takesAString(str: string): void {}
                                 ^^^^^^ string
 

@@ -6,9 +6,7 @@ primitives.js:6
 
 primitives.js:12
  12: icall(0); // error, number ~> string
-     ^^^^^^^^ function call
- 12: icall(0); // error, number ~> string
-           ^ number. This type is incompatible with
+           ^ number. This type is incompatible with the expected param type of
   9:   (x: string): void;
            ^^^^^^ string
 

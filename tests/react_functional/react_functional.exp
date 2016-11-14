@@ -10,7 +10,7 @@ test.js:5
   5: <F foo={0} />; // error: number ~> string
      ^^^^^^^^^^^^^ React element `F`
   5: <F foo={0} />; // error: number ~> string
-             ^ number. This type is incompatible with
+             ^ number. This type is incompatible with the expected param type of
   3: function F(props: { foo: string }) {}
                               ^^^^^^ string
 

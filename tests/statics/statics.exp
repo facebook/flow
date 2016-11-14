@@ -6,17 +6,13 @@ class_statics.js:6
 
 class_statics.js:6
   6: C.g = function(x:string) { C.f(x); };
-                                ^^^^^^ call of method `f`
-  6: C.g = function(x:string) { C.f(x); };
-                                    ^ string. This type is incompatible with
+                                    ^ string. This type is incompatible with the expected param type of
   2:   static f(x:number) { }
                   ^^^^^^ number
 
 class_statics.js:7
   7: C.g(0);
-     ^^^^^^ call of method `g`
-  7: C.g(0);
-         ^ number. This type is incompatible with
+         ^ number. This type is incompatible with the expected param type of
   6: C.g = function(x:string) { C.f(x); };
                       ^^^^^^ string
 

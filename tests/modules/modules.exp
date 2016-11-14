@@ -1,16 +1,12 @@
 cli2.js:5
   5: f("...");
-     ^^^^^^^^ function call
-  5: f("...");
-       ^^^^^ string. This type is incompatible with
+       ^^^^^ string. This type is incompatible with the expected param type of
   7: function f(x:number):number { g(x); return x; }
                   ^^^^^^ number. See: lib.js:7
 
 lib.js:7
   7: function f(x:number):number { g(x); return x; }
-                                   ^^^^ function call
-  7: function f(x:number):number { g(x); return x; }
-                                     ^ number. This type is incompatible with
+                                     ^ number. This type is incompatible with the expected param type of
   3: function g(x:string) { }
                   ^^^^^^ string
 

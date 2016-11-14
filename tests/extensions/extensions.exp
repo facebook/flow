@@ -1,8 +1,6 @@
 foo.js:2
   2: imp(1337);
-     ^^^^^^^^^ function call
-  2: imp(1337);
-         ^^^^ number. This type is incompatible with
+         ^^^^ number. This type is incompatible with the expected param type of
   1: module.exports = function (p: string) {}
                                    ^^^^^^ string. See: bar.jsx:1
 

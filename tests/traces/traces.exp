@@ -1,8 +1,6 @@
-Traces.js:4
-  4: f0(0);
-     ^^^^^ function call
+Traces.js:3
   3: function f0(x) { g0(x) }
-                         ^ number. This type is incompatible with
+                         ^ number. This type is incompatible with the expected param type of
   2: function g0(y:string) { }
                    ^^^^^^ string
 Trace:
@@ -10,7 +8,7 @@ Trace:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
   2: function g0(y:string) { }
-                   ^^^^^^ ~> UseT(UnknownUse, StrT) [string] (from path 2)
+                   ^^^^^^ ~> UseT(FunCallParam, StrT) [string] (from path 2)
 * path 2:
   3: function f0(x) { g0(x) }
                          ^ NumT [number]
@@ -22,15 +20,13 @@ Trace:
   4: f0(0);
         ^   NumT [number]
   3: function f0(x) { g0(x) }
-                 ^ ~> UseT(UnknownUse, OpenT) [parameter `x`] (from [not shown])
+                 ^ ~> UseT(FunCallParam, OpenT) [parameter `x`] (from [not shown])
   3: function f0(x) { g0(x) }
                          ^ ~> ReposLowerT [identifier `x`]
 
-Traces.js:9
-  9: f1("hey", 0);
-     ^^^^^^^^^^^^ function call
+Traces.js:8
   8: function f1(x, y) { g1(x, y) }
-                               ^ number. This type is incompatible with
+                               ^ number. This type is incompatible with the expected param type of
   7: function g1(a:string, b:string) { }
                              ^^^^^^ string
 Trace:
@@ -38,7 +34,7 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
   7: function g1(a:string, b:string) { }
-                             ^^^^^^ ~> UseT(UnknownUse, StrT) [string] (from path 2)
+                             ^^^^^^ ~> UseT(FunCallParam, StrT) [string] (from path 2)
 * path 2:
   8: function f1(x, y) { g1(x, y) }
                                ^ NumT [number]
@@ -50,7 +46,7 @@ Trace:
   9: f1("hey", 0);
                ^ NumT [number]
   8: function f1(x, y) { g1(x, y) }
-                    ^ ~> UseT(UnknownUse, OpenT) [parameter `y`] (from [not shown])
+                    ^ ~> UseT(FunCallParam, OpenT) [parameter `y`] (from [not shown])
   8: function f1(x, y) { g1(x, y) }
                                ^ ~> ReposLowerT [identifier `y`]
 

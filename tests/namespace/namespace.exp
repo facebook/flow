@@ -6,7 +6,7 @@ client.js:3
 
 namespace.js:2
   2: type T = (x:number) => void;
-                 ^^^^^^ number. This type is incompatible with
+                 ^^^^^^ number. This type is incompatible with the expected param type of
   3: var f: T = function(x:string): void { }
                            ^^^^^^ string
 

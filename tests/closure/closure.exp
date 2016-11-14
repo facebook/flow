@@ -1,32 +1,24 @@
 Closure.js:20
  20: takes_string(global_x); // error
-     ^^^^^^^^^^^^^^^^^^^^^^ function call
- 20: takes_string(global_x); // error
-                  ^^^^^^^^ number. This type is incompatible with
+                  ^^^^^^^^ number. This type is incompatible with the expected param type of
   6: function takes_string(_:string) { }
                              ^^^^^^ string
 
 Closure.js:38
  38:   takes_string(local_x); // error
-       ^^^^^^^^^^^^^^^^^^^^^ function call
- 38:   takes_string(local_x); // error
-                    ^^^^^^^ number. This type is incompatible with
+                    ^^^^^^^ number. This type is incompatible with the expected param type of
   6: function takes_string(_:string) { }
                              ^^^^^^ string
 
 Closure.js:57
  57: takes_string(global_y); // error
-     ^^^^^^^^^^^^^^^^^^^^^^ function call
- 57: takes_string(global_y); // error
-                  ^^^^^^^^ number. This type is incompatible with
+                  ^^^^^^^^ number. This type is incompatible with the expected param type of
   6: function takes_string(_:string) { }
                              ^^^^^^ string
 
 Closure.js:77
  77:   takes_string(local_y); // error
-       ^^^^^^^^^^^^^^^^^^^^^ function call
- 77:   takes_string(local_y); // error
-                    ^^^^^^^ number. This type is incompatible with
+                    ^^^^^^^ number. This type is incompatible with the expected param type of
   6: function takes_string(_:string) { }
                              ^^^^^^ string
 

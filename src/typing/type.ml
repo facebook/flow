@@ -283,6 +283,7 @@ module rec TypeTerm : sig
   and use_op =
     | Addition
     | Coercion
+    | FunCallParam
     | FunCallThis of reason
     | FunImplicitReturn
     | FunReturn
@@ -1814,6 +1815,7 @@ let string_of_internal_use_op = function
 let string_of_use_op = function
   | Addition -> "Addition"
   | Coercion -> "Coercion"
+  | FunCallParam -> "FunCallParam"
   | FunCallThis _ -> "FunCallThis"
   | FunImplicitReturn -> "FunImplicitReturn"
   | FunReturn -> "FunReturn"

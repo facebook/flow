@@ -16,7 +16,7 @@ child_process/execSync.js:8
                                   ^ function type. See lib: <BUILTINS>/node.js:226
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
-                                 ^^^^^ string. This type is incompatible with
+                                 ^^^^^ string. This type is incompatible with the expected param type of
   149:   timeout?: number;
                    ^^^^^^ number. See lib: <BUILTINS>/node.js:149
 
@@ -78,7 +78,7 @@ crypto/crypto.js:26
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:380
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
-                       ^^^^^ string. This type is incompatible with
+                       ^^^^^ string. This type is incompatible with the expected param type of
   380:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
                       ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:380
   Member 2:
@@ -86,7 +86,7 @@ crypto/crypto.js:26
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:381
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
-                              ^^^^^^^ string. This type is incompatible with
+                              ^^^^^^^ string. This type is incompatible with the expected param type of
   381:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/node.js:381
 
@@ -100,7 +100,7 @@ crypto/crypto.js:28
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:380
   Error:
    28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
-                            ^^^^^^ string. This type is incompatible with
+                            ^^^^^^ string. This type is incompatible with the expected param type of
   380:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
                                                ^^^^ undefined. See lib: <BUILTINS>/node.js:380
   Member 2:
@@ -108,7 +108,7 @@ crypto/crypto.js:28
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:381
   Error:
    21:   function(buf: Buffer) {
-                       ^^^^^^ Buffer. This type is incompatible with
+                       ^^^^^^ Buffer. This type is incompatible with the expected param type of
   381:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
                       ^^^^^^ string. See lib: <BUILTINS>/node.js:381
 

@@ -60,7 +60,7 @@ arrows.js:24
  24:       super.foo(""); // find super method, error due to incorrect arg
            ^^^^^^^^^^^^^ super.foo(...)
  24:       super.foo(""); // find super method, error due to incorrect arg
-                     ^^ string. This type is incompatible with
+                     ^^ string. This type is incompatible with the expected param type of
  19:   foo(x: number) { }
               ^^^^^^ number
 

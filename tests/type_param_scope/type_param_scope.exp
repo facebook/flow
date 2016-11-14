@@ -1,24 +1,18 @@
 class.js:4
   4:     this.b(a); // error: A ~> incompatible instance of T
-         ^^^^^^^^^ call of method `b`
-  4:     this.b(a); // error: A ~> incompatible instance of T
-                ^ A. This type is incompatible with
+                ^ A. This type is incompatible with the expected param type of
   1: class C<T> {
            ^ some incompatible instantiation of `T`
 
 default_params.js:6
   6:     h(c); // err, T ~> U
-         ^^^^ function call
-  6:     h(c); // err, T ~> U
-           ^ T. This type is incompatible with
+           ^ T. This type is incompatible with the expected param type of
   3:     function h(d:U = b) {}
                       ^ some incompatible instantiation of `U`
 
 default_params.js:10
  10:   g(0,0); // error: number ~> T
-       ^^^^^^ function call
- 10:   g(0,0); // error: number ~> T
-           ^ number. This type is incompatible with
+           ^ number. This type is incompatible with the expected param type of
   2:   function g<U>(b:U, c:T = a) {
                             ^ some incompatible instantiation of `T`
 

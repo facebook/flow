@@ -250,9 +250,7 @@ missing-property-cond.js:41
 
 mixed.js:8
   8:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
-  8:     takesString(x); // error
-                     ^ number. This type is incompatible with
+                     ^ number. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
@@ -264,9 +262,7 @@ mixed.js:9
 
 mixed.js:21
  21:     takesNumber(x); // error
-         ^^^^^^^^^^^^^^ function call
- 21:     takesNumber(x); // error
-                     ^ string. This type is incompatible with
+                     ^ string. This type is incompatible with the expected param type of
   3: function takesNumber(x: number) {}
                              ^^^^^^ number
 
@@ -278,9 +274,7 @@ mixed.js:22
 
 mixed.js:34
  34:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 34:     takesString(x); // error
-                     ^ boolean. This type is incompatible with
+                     ^ boolean. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
@@ -292,81 +286,61 @@ mixed.js:35
 
 mixed.js:47
  47:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 47:     takesString(x); // error
-                     ^ function. This type is incompatible with
+                     ^ function. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:53
  53:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 53:     takesString(x); // error
-                     ^ null. This type is incompatible with
+                     ^ null. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:53
  53:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 53:     takesString(x); // error
-                     ^ object. This type is incompatible with
+                     ^ object. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:59
  59:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 59:     takesString(x); // error
-                     ^ array. This type is incompatible with
+                     ^ array. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:65
  65:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 65:     takesString(x); // error
-                     ^ undefined. This type is incompatible with
+                     ^ undefined. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:71
  71:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 71:     takesString(x); // error
-                     ^ null. This type is incompatible with
+                     ^ null. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:77
  77:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 77:     takesString(x); // error
-                     ^ null. This type is incompatible with
+                     ^ null. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:77
  77:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 77:     takesString(x); // error
-                     ^ undefined. This type is incompatible with
+                     ^ undefined. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:83
  83:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 83:     takesString(x); // error
-                     ^ boolean. This type is incompatible with
+                     ^ boolean. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:89
  89:     takesString(x); // error
-         ^^^^^^^^^^^^^^ function call
- 89:     takesString(x); // error
-                     ^ boolean. This type is incompatible with
+                     ^ boolean. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
@@ -378,9 +352,7 @@ mixed.js:97
 
 mixed.js:119
 119:     takesString(x[0]); // error
-         ^^^^^^^^^^^^^^^^^ function call
-119:     takesString(x[0]); // error
-                     ^^^^ mixed. This type is incompatible with
+                     ^^^^ mixed. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 

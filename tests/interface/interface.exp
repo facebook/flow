@@ -132,7 +132,7 @@ test4.js:9
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
     6:   bar(f: (x: number) => void): void;
-                    ^^^^^^ number. This type is incompatible with
+                    ^^^^^^ number. This type is incompatible with the expected param type of
     9: new C().bar((x: string) => { }); // error, number ~/~> string
                        ^^^^^^ string
 

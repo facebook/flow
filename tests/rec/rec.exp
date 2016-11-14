@@ -1,6 +1,6 @@
 issue-598.js:7
   7: function bar(y: F<number>): F<string> { return y; }
-                                   ^^^^^^ string. This type is incompatible with
+                                   ^^^^^^ string. This type is incompatible with the expected param type of
   7: function bar(y: F<number>): F<string> { return y; }
                        ^^^^^^ number
 

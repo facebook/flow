@@ -398,9 +398,7 @@ tdz.js:80
 
 tdz.js:96
  96: f(a); // error: undefined ~/> number
-     ^^^^ function call
- 96: f(a); // error: undefined ~/> number
-       ^ uninitialized variable. This type is incompatible with
+       ^ uninitialized variable. This type is incompatible with the expected param type of
  94: function f(n: number) { return n; }
                    ^^^^^^ number
 

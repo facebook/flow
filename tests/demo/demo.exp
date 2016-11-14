@@ -12,9 +12,7 @@
 
 2/A.js:10
  10:     return callback(this.getX());
-                ^^^^^^^^^^^^^^^^^^^^^ function call
- 10:     return callback(this.getX());
-                         ^^^^^^^^^^^ number. This type is incompatible with
+                         ^^^^^^^^^^^ number. This type is incompatible with the expected param type of
  14: function callback(x: string) { return x.length; }
                           ^^^^^^ string
 

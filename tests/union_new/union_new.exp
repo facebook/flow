@@ -1,8 +1,6 @@
 issue-1462-i.js:21
  21:   print(val.foo);  // <--- foo could be an array
-       ^^^^^^^^^^^^^^ function call
- 21:   print(val.foo);  // <--- foo could be an array
-             ^^^^^^^ array type. This type is incompatible with
+             ^^^^^^^ array type. This type is incompatible with the expected param type of
  16: function print(x: number) {
                        ^^^^^^ number
 
@@ -190,7 +188,7 @@ test20.js:14
 
 test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+                              ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
  14: [""].reduce((acc,str) => acc * str.length);
       ^^ string
 
@@ -243,7 +241,7 @@ test26.js:20
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    20: new Record().set('foo', "42");
-                               ^^^^ string. This type is incompatible with
+                               ^^^^ string. This type is incompatible with the expected param type of
    16:   set(x: 'foo', y: number): void;
                           ^^^^^^ number
   Member 2:

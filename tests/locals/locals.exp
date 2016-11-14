@@ -110,17 +110,13 @@ locals.js:12
 
 locals.js:14
  14:     foo(x);
-         ^^^^^^ function call
- 14:     foo(x);
-             ^ number. This type is incompatible with
+             ^ number. This type is incompatible with the expected param type of
   6: function foo(p: bool) {}
                      ^^^^ boolean
 
 locals.js:14
  14:     foo(x);
-         ^^^^^^ function call
- 14:     foo(x);
-             ^ string. This type is incompatible with
+             ^ string. This type is incompatible with the expected param type of
   6: function foo(p: bool) {}
                      ^^^^ boolean
 

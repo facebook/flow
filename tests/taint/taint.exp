@@ -128,9 +128,7 @@ globals.js:5
 
 taint2.js:8
   8:     fakeDocument.location.assign(tainted);
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `assign`
-  8:     fakeDocument.location.assign(tainted);
-                                      ^^^^^^^ taint. This type is incompatible with
+                                      ^^^^^^^ taint. This type is incompatible with the expected param type of
   2:   assign(url: string): void;
                    ^^^^^^ string. See lib: lib.js:2
 
@@ -158,9 +156,7 @@ use-types.js:11
 
 use-types.js:15
  15:   return o.f(t);
-              ^^^^^^ call of method `f`
- 15:   return o.f(t);
-                  ^ taint. This type is incompatible with
+                  ^ taint. This type is incompatible with the expected param type of
  14: function foo2 (o : {f (y:number):number}, t: $Tainted<number>) {
                               ^^^^^^ number
 

@@ -34,7 +34,7 @@ poly.js:18
 
 test.js:2
   2:   foo<X>(x: X): X { return x; }
-           ^ X. This type is incompatible with
+           ^ X. This type is incompatible with the expected param type of
   8:   foo(x: number): number { return x; } // error (specialization, see below)
               ^^^^^^ number
 

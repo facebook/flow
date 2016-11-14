@@ -306,17 +306,13 @@ destructuring.js:28
 
 destructuring.js:31
  31: qux({a:""});
-     ^^^^^^^^^^^ function call
- 31: qux({a:""});
-            ^^ string. This type is incompatible with
+            ^^ string. This type is incompatible with the expected param type of
  30: function qux(_: {a:number}) { }
                         ^^^^^^ number
 
 destructuring.js:33
  33: corge({b:0});
-     ^^^^^^^^^^^^ function call
- 33: corge({b:0});
-              ^ number. This type is incompatible with
+              ^ number. This type is incompatible with the expected param type of
  32: function corge({b}: {b:string}) { }
                             ^^^^^^ string
 

@@ -50,7 +50,7 @@ super.js:10
  10:     super(x);
          ^^^^^^^^ super(...)
  10:     super(x);
-               ^ string. This type is incompatible with
+               ^ string. This type is incompatible with the expected param type of
   3:   constructor(x:number) { }
                      ^^^^^^ number
 
@@ -70,7 +70,7 @@ super.js:19
  19:     super.f(0);
          ^^^^^^^^^^ super.f(...)
  19:     super.f(0);
-                 ^ number. This type is incompatible with
+                 ^ number. This type is incompatible with the expected param type of
   5:   f(x:string) { }
            ^^^^^^ string
 

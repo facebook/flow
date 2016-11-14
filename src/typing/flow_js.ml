@@ -4755,6 +4755,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reasons = FlowError.ordered_reasons l u in
       add_output cx trace (FlowError.ECoercion reasons)
 
+    | _, UseT (FunCallParam, u) ->
+      add_output cx trace
+        (FlowError.EFunCallParam (reason_of_t l, reason_of_t u))
+
     | _, UseT (FunCallThis reason_call, u) ->
       add_output cx trace
         (FlowError.EFunCallThis (reason_of_t l, reason_of_t u, reason_call))
@@ -8020,7 +8024,7 @@ and multiflow_partial cx trace ?strict = function
        instead, let it flow through transparently, so that we point at the
        place that constrained the type arg. this is pretty hacky. *)
     let tout =
-      let u = UseT (UnknownUse, tout) in
+      let u = UseT (FunCallParam, tout) in
       match desc_of_t tin with
       | RTypeParam _ -> u
       | _ -> ReposLowerT (reason_of_t tin, u)

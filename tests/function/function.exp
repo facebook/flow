@@ -14,33 +14,25 @@ apply.js:12
 
 apply.js:15
  15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
-     ^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 15: test.apply("", ["", ""]); // error: string ~> number (2nd arg)
-                         ^^ string. This type is incompatible with
+                         ^^ string. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
 apply.js:16
  16: test.apply("", [0, 0]); // error: number ~> string (1st arg)
-     ^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 16: test.apply("", [0, 0]); // error: number ~> string (1st arg)
-                     ^ number. This type is incompatible with
+                     ^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
-apply.js:19
- 19: function f(args) { test.apply("", args) }
-                        ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+apply.js:21
  21: f(["", ""]); // error: string ~> number (2nd arg)
-            ^^ string. This type is incompatible with
+            ^^ string. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
-apply.js:19
- 19: function f(args) { test.apply("", args) }
-                        ^^^^^^^^^^^^^^^^^^^^ call of method `apply`
+apply.js:22
  22: f([0, 0]); // error: number ~> string (1st arg)
-        ^ number. This type is incompatible with
+        ^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
@@ -58,33 +50,25 @@ apply.js:32
 
 apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 32: (test.call.apply(test, [0, 123, 'foo']): void);
-                                ^^^ number. This type is incompatible with
+                                ^^^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
 apply.js:32
  32: (test.call.apply(test, [0, 123, 'foo']): void);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 32: (test.call.apply(test, [0, 123, 'foo']): void);
-                                     ^^^^^ string. This type is incompatible with
+                                     ^^^^^ string. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
 apply.js:37
  37: (test.bind.apply(test, [0, 123]): (b: number) => number);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `apply`
- 37: (test.bind.apply(test, [0, 123]): (b: number) => number);
-                                ^^^ number. This type is incompatible with
+                                ^^^ number. This type is incompatible with the expected param type of
   1: function test(a: string, b: number): number {
                       ^^^^^^ string
 
 bind.js:7
   7:     y(123); // error, number !~> string
-         ^^^^^^ function call
-  7:     y(123); // error, number !~> string
-           ^^^ number. This type is incompatible with
+           ^^^ number. This type is incompatible with the expected param type of
   4:   function(x: (a: string, b: string) => void) {
                                   ^^^^^^ string
 
@@ -104,49 +88,37 @@ call.js:14
 
 call.js:17
  17: test.call("", "", ""); // error: string ~> number (2nd arg)
-     ^^^^^^^^^^^^^^^^^^^^^ call of method `call`
- 17: test.call("", "", ""); // error: string ~> number (2nd arg)
-                       ^^ string. This type is incompatible with
+                       ^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
 call.js:18
  18: test.call("", 0, 0); // error: number ~> string (1st arg)
-     ^^^^^^^^^^^^^^^^^^^ call of method `call`
- 18: test.call("", 0, 0); // error: number ~> string (1st arg)
-                   ^ number. This type is incompatible with
+                   ^ number. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                       ^^^^^^ string
 
 call.js:21
  21: function f(args) { test.call("", args[0], args[1]) }
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
- 21: function f(args) { test.call("", args[0], args[1]) }
-                                      ^^^^^^^ number. This type is incompatible with
+                                      ^^^^^^^ number. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                       ^^^^^^ string
 
 call.js:21
  21: function f(args) { test.call("", args[0], args[1]) }
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
- 21: function f(args) { test.call("", args[0], args[1]) }
-                                               ^^^^^^^ string. This type is incompatible with
+                                               ^^^^^^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
 
 call.js:30
  30: (test.apply.call(test, 0, [0, 'foo']): number);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
- 30: (test.apply.call(test, 0, [0, 'foo']): number);
-                                ^ number. This type is incompatible with
+                                ^ number. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                       ^^^^^^ string
 
 call.js:30
  30: (test.apply.call(test, 0, [0, 'foo']): number);
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `call`
- 30: (test.apply.call(test, 0, [0, 'foo']): number);
-                                   ^^^^^ string. This type is incompatible with
+                                   ^^^^^ string. This type is incompatible with the expected param type of
   3: function test(a: string, b: number): number {
                                  ^^^^^^ number
 

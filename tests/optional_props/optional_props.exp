@@ -12,9 +12,7 @@ test.js:8
 
 test.js:12
  12: bar({foo: ""});
-     ^^^^^^^^^^^^^^ function call
- 12: bar({foo: ""});
-               ^^ string. This type is incompatible with
+               ^^ string. This type is incompatible with the expected param type of
  10: function bar(config: { foo?: number }) {}
                                   ^^^^^^ number
 

@@ -6,9 +6,7 @@ A.js:13
 
 A.js:14
  14: f(A.x); // A.x is now a string, by def assign
-     ^^^^^^ function call
- 14: f(A.x); // A.x is now a string, by def assign
-       ^^^ string. This type is incompatible with
+       ^^^ string. This type is incompatible with the expected param type of
   9: function f(x:boolean) { }
                   ^^^^^^^ boolean
 
@@ -20,7 +18,7 @@ C.js:9
 
 C.js:10
  10:   f(o.s);
-         ^^^ number. This type is incompatible with
+         ^^^ number. This type is incompatible with the expected param type of
   9: function f(x:boolean) { }
                   ^^^^^^^ boolean. See: A.js:9
 
@@ -32,17 +30,13 @@ D.js:6
 
 D.js:12
  12: f(i);
-     ^^^^ function call
- 12: f(i);
-       ^ string. This type is incompatible with
+       ^ string. This type is incompatible with the expected param type of
   9: function f(x:boolean) { }
                   ^^^^^^^ boolean. See: A.js:9
 
 E.js:8
   8: o.fn(false);
-     ^^^^^^^^^^^ call of method `fn`
-  8: o.fn(false);
-          ^^^^^ boolean. This type is incompatible with
+          ^^^^^ boolean. This type is incompatible with the expected param type of
   4: function h(x:number) { }
                   ^^^^^^ number
 

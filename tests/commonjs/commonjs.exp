@@ -1,8 +1,6 @@
 Rel.js:4
   4: f(0);
-     ^^^^ function call
-  4: f(0);
-       ^ number. This type is incompatible with
+       ^ number. This type is incompatible with the expected param type of
   2: function f(x:string) { }
                   ^^^^^^ string. See: Abs.js:2
 

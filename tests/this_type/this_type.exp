@@ -178,7 +178,7 @@ test.js:42
 
 test.js:42
  42:   grault(that: Base2) { }
-                    ^^^^^ Base2. This type is incompatible with
+                    ^^^^^ Base2. This type is incompatible with the expected param type of
  56:   grault(that: this) { } // error, too
                     ^^^^ some incompatible instantiation of `this`
 

@@ -1,6 +1,6 @@
 A.js:2
   2:   foo(x:number):void { }
-             ^^^^^^ number. This type is incompatible with
+             ^^^^^^ number. This type is incompatible with the expected param type of
   4:   foo(x:string):void { }
              ^^^^^^ string. See: C.js:4
 

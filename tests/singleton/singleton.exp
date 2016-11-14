@@ -60,9 +60,7 @@ number.js:8
 
 number.js:19
  19: bar(3); // error
-     ^^^^^^ function call
- 19: bar(3); // error
-         ^ number. This type is incompatible with
+         ^ number. This type is incompatible with the expected param type of
  13: function bar(num: Foo): number {
                        ^^^ number enum
 

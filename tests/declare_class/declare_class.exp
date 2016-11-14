@@ -16,9 +16,7 @@ declare_class.js:6
 
 declare_class.js:7
   7: C.foo("");
-     ^^^^^^^^^ call of method `foo`
-  7: C.foo("");
-           ^^ string. This type is incompatible with
+           ^^ string. This type is incompatible with the expected param type of
   3:     static foo(x: number): void;
                        ^^^^^^ number
 

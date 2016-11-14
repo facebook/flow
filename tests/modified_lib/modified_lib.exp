@@ -1,9 +1,7 @@
 first status, after recheck
 test.js:5
   5: bar(5);
-     ^^^^^^ function call
-  5: bar(5);
-         ^ number. This type is incompatible with
+         ^ number. This type is incompatible with the expected param type of
   2:   declare function bar(str: string): number;
                                  ^^^^^^ string. See lib: lib/lib.js:2
 
@@ -12,9 +10,7 @@ Found 1 error
 second status, after touch
 test.js:5
   5: bar(5);
-     ^^^^^^ function call
-  5: bar(5);
-         ^ number. This type is incompatible with
+         ^ number. This type is incompatible with the expected param type of
   2:   declare function bar(str: string): number;
                                  ^^^^^^ string. See lib: lib/lib.js:2
 

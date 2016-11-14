@@ -6,9 +6,7 @@ array_lib.js:4
 
 array_lib.js:5
   5: var b = a.map(function (x) { foo(x); return "" + x; });
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `map`
-  5: var b = a.map(function (x) { foo(x); return "" + x; });
-                                      ^ number. This type is incompatible with
+                                      ^ number. This type is incompatible with the expected param type of
   2: function foo(x:string) { }
                     ^^^^^^ string
 
@@ -48,7 +46,7 @@ array_lib.js:46
 
 array_lib.js:46
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                 ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+                                 ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
  46:   [""].reduce((acc, str) => acc * str.length); // error, string ~> number
         ^^ string
 
@@ -58,7 +56,7 @@ array_lib.js:47
 
 array_lib.js:47
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                      ^^^^^^^^^^^^^^^^ number. This type is incompatible with
+                                      ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
  47:   [""].reduceRight((acc, str) => acc * str.length); // error, string ~> number
         ^^ string
 

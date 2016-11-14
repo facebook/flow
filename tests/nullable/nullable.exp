@@ -6,33 +6,25 @@ nullable.js:1
 
 nullable.js:11
  11: if (x != null) corge(x); // x: ?string | null
-                    ^^^^^^^^ function call
- 11: if (x != null) corge(x); // x: ?string | null
-                          ^ string. This type is incompatible with
+                          ^ string. This type is incompatible with the expected param type of
   7: function corge(x:number) { }
                       ^^^^^^ number
 
 nullable.js:15
  15:   grault(); qux(x);
-                 ^^^^^^ function call
- 15:   grault(); qux(x);
-                     ^ null. This type is incompatible with
+                     ^ null. This type is incompatible with the expected param type of
   5: function qux(x:string) { }
                     ^^^^^^ string
 
 nullable.js:15
  15:   grault(); qux(x);
-                 ^^^^^^ function call
- 15:   grault(); qux(x);
-                     ^ undefined. This type is incompatible with
+                     ^ undefined. This type is incompatible with the expected param type of
   5: function qux(x:string) { }
                     ^^^^^^ string
 
 simple_nullable.js:4
   4: bar('hmm');
-     ^^^^^^^^^^ function call
-  4: bar('hmm');
-         ^^^^^ string. This type is incompatible with
+         ^^^^^ string. This type is incompatible with the expected param type of
   2: function bar(x:?number) {}
                      ^^^^^^ number
 

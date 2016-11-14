@@ -76,9 +76,7 @@ headers.js:10
 
 headers.js:10
  10: e.append({'Content-Type', 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
- 10: e.append({'Content-Type', 'image/jpeg'}); // not correct
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 710:     append(name: string, value: string): void;
                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:710
 
@@ -100,9 +98,7 @@ headers.js:13
 
 headers.js:13
  13: e.set({'Content-Type', 'image/jpeg'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
- 13: e.set({'Content-Type', 'image/jpeg'}); // not correct
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 717:     set(name: string, value: string): void;
                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:717
 
@@ -361,19 +357,15 @@ request.js:30
   702: type HeadersInit = Headers | {[key: string]: string};
                                     ^^^^^^^^^^^^^^^^^^^^^^^ object type. See lib: <BUILTINS>/bom.js:702
 
-request.js:37
- 37: const k: Request = new Request('http://example.org', {
-                        ^ constructor call
+request.js:38
  38:   method: 'CONNECT',
-               ^^^^^^^^^ string. This type is incompatible with
+               ^^^^^^^^^ string. This type is incompatible with the expected param type of
 752:     method?: ?MethodType;
                    ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:752
 
 request.js:49
  49: h.text().then((t: Buffer) => t); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `then`
- 49: h.text().then((t: Buffer) => t); // incorrect
-                       ^^^^^^ Buffer. This type is incompatible with
+                       ^^^^^^ Buffer. This type is incompatible with an argument type of
 812:     text(): Promise<string>;
                          ^^^^^^ string. See lib: <BUILTINS>/bom.js:812
 
@@ -385,11 +377,9 @@ request.js:51
 808:     arrayBuffer(): Promise<ArrayBuffer>;
                                 ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:808
 
-response.js:10
- 10: const e: Response = new Response("responsebody", {
-                         ^ constructor call
+response.js:11
  11:     status: "404"
-                 ^^^^^ string. This type is incompatible with
+                 ^^^^^ string. This type is incompatible with the expected param type of
 760:     status?: ?number;
                    ^^^^^^ number. See lib: <BUILTINS>/bom.js:760
 
@@ -459,9 +449,7 @@ response.js:33
 
 response.js:44
  44: h.text().then((t: Buffer) => t); // incorrect
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `then`
- 44: h.text().then((t: Buffer) => t); // incorrect
-                       ^^^^^^ Buffer. This type is incompatible with
+                       ^^^^^^ Buffer. This type is incompatible with an argument type of
 786:     text(): Promise<string>;
                          ^^^^^^ string. See lib: <BUILTINS>/bom.js:786
 
@@ -539,9 +527,7 @@ urlsearchparams.js:10
 
 urlsearchparams.js:10
  10: e.append({'key1', 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `append`
- 10: e.append({'key1', 'value1'}); // not correct
-              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+              ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 724:     append(name: string, value: string): void;
                       ^^^^^^ string. See lib: <BUILTINS>/bom.js:724
 
@@ -563,9 +549,7 @@ urlsearchparams.js:13
 
 urlsearchparams.js:13
  13: e.set({'key1', 'value1'}); // not correct
-     ^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `set`
- 13: e.set({'key1', 'value1'}); // not correct
-           ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with
+           ^^^^^^^^^^^^^^^^^^ object literal. This type is incompatible with the expected param type of
 731:     set(name: string, value: string): void;
                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:731
 

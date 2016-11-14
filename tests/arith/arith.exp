@@ -1,16 +1,12 @@
 Arith.js:13
  13:   num(x+y); // error
-       ^^^^^^^^ function call
- 13:   num(x+y); // error
-           ^^^ string. This type is incompatible with
+           ^^^ string. This type is incompatible with the expected param type of
   4: function num(x:number) { }
                     ^^^^^^ number
 
 Arith.js:15
  15:   str(x+x); // error
-       ^^^^^^^^ function call
- 15:   str(x+x); // error
-           ^^^ number. This type is incompatible with
+           ^^^ number. This type is incompatible with the expected param type of
   6: function str(x:string) { }
                     ^^^^^^ string
 

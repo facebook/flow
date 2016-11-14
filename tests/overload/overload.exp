@@ -74,7 +74,7 @@ overload.js:24
            ^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    24: a.foo(true); // error, function cannot be called on intersection type
-             ^^^^ boolean. This type is incompatible with
+             ^^^^ boolean. This type is incompatible with the expected param type of
    13:     foo(x:number): number;
                  ^^^^^^ number
   Member 2:
@@ -82,7 +82,7 @@ overload.js:24
            ^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    24: a.foo(true); // error, function cannot be called on intersection type
-             ^^^^ boolean. This type is incompatible with
+             ^^^^ boolean. This type is incompatible with the expected param type of
    14:     foo(x:string): string;
                  ^^^^^^ string
 
@@ -96,7 +96,7 @@ overload.js:28
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                  ^^^^ boolean. This type is incompatible with
+                  ^^^^ boolean. This type is incompatible with the expected param type of
    16:     bar(x: { a: number }): number;
                        ^^^^^^ number
   Member 2:
@@ -104,7 +104,7 @@ overload.js:28
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type
   Error:
    28: a.bar({ a: true }); // error, function cannot be called on intersection type
-                  ^^^^ boolean. This type is incompatible with
+                  ^^^^ boolean. This type is incompatible with the expected param type of
    17:     bar(x: { a: string }): string;
                        ^^^^^^ string
 

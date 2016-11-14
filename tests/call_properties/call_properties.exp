@@ -6,9 +6,7 @@ A.js:8
 
 A.js:13
  13:   return f("hello");
-              ^^^^^^^^^^ function call
- 13:   return f("hello");
-                ^^^^^^^ string. This type is incompatible with
+                ^^^^^^^ string. This type is incompatible with the expected param type of
  12: function c(f: { (x: number): number }): number {
                          ^^^^^^ number
 
@@ -40,7 +38,7 @@ B.js:5
 
 B.js:8
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                  ^^^^^^ string. This type is incompatible with
+                  ^^^^^^ string. This type is incompatible with the expected param type of
   8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
                                                    ^^^^^^ number
 
@@ -58,7 +56,7 @@ C.js:7
 
 C.js:12
  12: function c(x: { (z: number): string }): (z: string) => string {
-                                                 ^^^^^^ string. This type is incompatible with
+                                                 ^^^^^^ string. This type is incompatible with the expected param type of
  12: function c(x: { (z: number): string }): (z: string) => string {
                          ^^^^^^ number
 

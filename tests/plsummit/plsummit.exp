@@ -6,9 +6,7 @@ generics.js:4
 
 import_class.js:3
   3: var c = new C("");
-             ^^^^^^^^^ constructor call
-  3: var c = new C("");
-                   ^^ string. This type is incompatible with
+                   ^^ string. This type is incompatible with the expected param type of
   3:     constructor(x: number) { this.x = x; }
                         ^^^^^^ number. See: export_class.js:3
 

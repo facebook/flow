@@ -1,16 +1,12 @@
 CanvasRenderingContext2D.js:11
  11:     ctx.moveTo('0', '1');  // error: should be numbers
-         ^^^^^^^^^^^^^^^^^^^^ call of method `moveTo`
- 11:     ctx.moveTo('0', '1');  // error: should be numbers
-                    ^^^ string. This type is incompatible with
+                    ^^^ string. This type is incompatible with the expected param type of
 1214:   moveTo(x: number, y: number): void;
                   ^^^^^^ number. See lib: <BUILTINS>/dom.js:1214
 
 CanvasRenderingContext2D.js:11
  11:     ctx.moveTo('0', '1');  // error: should be numbers
-         ^^^^^^^^^^^^^^^^^^^^ call of method `moveTo`
- 11:     ctx.moveTo('0', '1');  // error: should be numbers
-                         ^^^ string. This type is incompatible with
+                         ^^^ string. This type is incompatible with the expected param type of
 1214:   moveTo(x: number, y: number): void;
                              ^^^^^^ number. See lib: <BUILTINS>/dom.js:1214
 
@@ -168,7 +164,7 @@ HTMLInputElement.js:7
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:1561
   Error:
     7:     el.setRangeText('foo', 123); // end is required
-                                  ^^^ number. This type is incompatible with
+                                  ^^^ number. This type is incompatible with the expected param type of
   1561:   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                     ^^^^ undefined. See lib: <BUILTINS>/dom.js:1561
   Member 2:
@@ -190,7 +186,7 @@ HTMLInputElement.js:10
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:1561
   Error:
    10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
-                                  ^^^ number. This type is incompatible with
+                                  ^^^ number. This type is incompatible with the expected param type of
   1561:   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                     ^^^^ undefined. See lib: <BUILTINS>/dom.js:1561
   Member 2:
@@ -198,7 +194,7 @@ HTMLInputElement.js:10
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:1562
   Error:
    10:     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
-                                            ^^^^^^^ string. This type is incompatible with
+                                            ^^^^^^^ string. This type is incompatible with the expected param type of
   1562:   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                      ^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/dom.js:1562
 
@@ -230,7 +226,7 @@ path2d.js:9
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:1088
   Error:
     9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-                                       ^^^^ string. This type is incompatible with
+                                       ^^^^ string. This type is incompatible with the expected param type of
   1088:   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number, _: void, _: void): void;
                                                                                    ^^^^ undefined. See lib: <BUILTINS>/dom.js:1088
   Member 2:
@@ -238,23 +234,19 @@ path2d.js:9
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/dom.js:1089
   Error:
     9:     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
-                                       ^^^^ string. This type is incompatible with
+                                       ^^^^ string. This type is incompatible with the expected param type of
   1089:   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                           ^^^^^^ number. See lib: <BUILTINS>/dom.js:1089
 
-registerElement.js:48
- 48:     document.registerElement('custom-element', {
-         ^ call of method `registerElement`
+registerElement.js:52
  52:           oldVal: string, // Error: This might be null
-                       ^^^^^^ string. This type is incompatible with
+                       ^^^^^^ string. This type is incompatible with an argument type of
 411:       oldAttributeValue: null,
                               ^^^^ null. See lib: <BUILTINS>/dom.js:411
 
-registerElement.js:48
- 48:     document.registerElement('custom-element', {
-         ^ call of method `registerElement`
+registerElement.js:53
  53:           newVal: string, // Error: This might be null
-                       ^^^^^^ string. This type is incompatible with
+                       ^^^^^^ string. This type is incompatible with an argument type of
 426:       newAttributeValue: null,
                               ^^^^ null. See lib: <BUILTINS>/dom.js:426
 
@@ -1380,7 +1372,7 @@ traversal.js:186
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:697
   Error:
   186:     document.createNodeIterator(document.body, -1, {}); // invalid
-                                                      ^^ number. This type is incompatible with
+                                                      ^^ number. This type is incompatible with the expected param type of
   697:   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: void): NodeIterator<RootNodeT, Node>;
                                                                           ^^^^ undefined. See lib: <BUILTINS>/dom.js:697
 
@@ -1822,7 +1814,7 @@ traversal.js:193
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ polymorphic type: function type. See lib: <BUILTINS>/dom.js:698
   Error:
   193:     document.createTreeWalker(document.body, -1, {}); // invalid
-                                                    ^^ number. This type is incompatible with
+                                                    ^^ number. This type is incompatible with the expected param type of
   698:   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: void): TreeWalker<RootNodeT, Node>;
                                                                         ^^^^ undefined. See lib: <BUILTINS>/dom.js:698
 

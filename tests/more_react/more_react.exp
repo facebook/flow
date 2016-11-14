@@ -12,7 +12,7 @@ API.react.js:5
 
 App.react.js:36
  36:         {foo(z,x)} // error, since z: number
-                  ^ number. This type is incompatible with
+                  ^ number. This type is incompatible with the expected param type of
  10: function foo(p:string,q:string):string { return p+q; }
                     ^^^^^^ string
 

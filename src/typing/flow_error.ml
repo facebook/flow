@@ -56,6 +56,7 @@ type error_message =
   | EPropPolarityMismatch of (reason * reason) * string * (Type.polarity * Type.polarity)
   | EPolarityMismatch of Type.typeparam * Type.polarity
   | EStrictLookupFailed of (reason * reason) * reason * string
+  | EFunCallParam of (reason * reason)
   | EFunCallThis of reason * reason * reason
   | EFunReturn of (reason * reason)
   | EFunImplicitReturn of (reason * reason)
@@ -262,7 +263,7 @@ end = struct
       xs |> filter (fun typeparam -> typeparam.default = None) |> length
     ) in
 
-    let typecheck_error msg ?extra (r1, r2) =
+    let typecheck_error msg ?(suppress_op=false) ?extra (r1, r2) =
       let origin_r1 = origin_of_reason r1 in
       let origin_infos = opt_map_default (fun r -> [mk_info r []]) [] origin_r1 in
       (* make core info from reasons, message, and optional extra infos *)
@@ -298,7 +299,8 @@ end = struct
       in
       (* NOTE: We include the operation's reason in the error message, unless it
          overlaps *both* endpoints, exactly matches r1, or overlaps r1's origin *)
-      let op_info = match Ops.peek () with
+      let op_info = if suppress_op then None else
+        match Ops.peek () with
         | Some r ->
           if r = r1 then None
           else if reasons_overlap r r1 && reasons_overlap r r2 then None
@@ -480,6 +482,42 @@ end = struct
           else "Property not found in"
         in
         typecheck_error msg reasons
+
+    | EFunCallParam (lreason, ureason) ->
+        (* Special case: if the lower bound is from a libdef, then flip
+           the message and the reasons, so we point at something in user code.
+
+           For example, consider a libdef like:
+
+             declare function foo(): Promise<string>
+
+           and user code like:
+
+             let callback = (x: number) => ...;
+             foo().then(callback)
+
+           The user's `callback` gets "called" with a `string` arg. `lreason` is
+           the `string` from `Promise<string>` in the libdef, and `ureason` is
+           `number` inside `callback`. *)
+        let r1, r2, msg = if is_lib_reason lreason then
+          ureason, lreason, "This type is incompatible with an argument type of"
+        else
+          lreason, ureason,
+            "This type is incompatible with the expected param type of"
+        in
+        (* Ops telling us that we're in the middle of a function call are
+           redundant when we already know that an arg didn't match a param. *)
+        let suppress_op = match Ops.peek () with
+        | Some r ->
+          begin match desc_of_reason r with
+          | RFunctionCall
+          | RConstructorCall
+          | RMethodCall _ -> true
+          | _ -> false
+          end
+        | None -> false
+        in
+        typecheck_error ~suppress_op msg (r1, r2)
 
     | EFunCallThis (lreason, ureason, reason_call) ->
         let msg = "This function call's `this` type is incompatible with" in
