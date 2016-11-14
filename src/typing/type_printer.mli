@@ -35,7 +35,6 @@ type enclosure_t =
 val type_printer:
   ?size:int ->
   (Context.t -> Type.t -> string option) ->
-  (Type.t -> string) ->
   enclosure_t ->
   Context.t ->
   Type.t ->

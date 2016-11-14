@@ -50,11 +50,11 @@ let parenthesize t_str enclosure triggers =
 (* general-purpose type printer. not the cleanest visitor in the world,
    but reasonably general. override gets a chance to print the incoming
    type first. if it passes, the bulk of printable types are formatted
-   in a reasonable way. fallback is sent the rest. enclosure drives
-   delimiter choice. see e.g. string_of_t for callers.
+   in a reasonable way. enclosure drives delimiter choice. see e.g.
+   string_of_t for callers.
  *)
-let rec type_printer_impl ~size override fallback enclosure cx t =
-  let pp = type_printer ~size override fallback in
+let rec type_printer_impl ~size override enclosure cx t =
+  let pp = type_printer ~size override in
 
   let rec prop x = function
     | Field (t, polarity) -> spf "%s%s: %s"
@@ -74,6 +74,18 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
   | Some s -> s
   | None ->
     match t with
+    | OpenT (_, id) ->
+        spf "TYPE_%d" id
+
+    | NumT _
+    | StrT _
+    | BoolT _
+    | EmptyT _
+    | MixedT _
+    | AnyT _
+    | NullT _ ->
+        string_of_desc (desc_of_reason (reason_of_t t))
+
     | BoundT typeparam -> typeparam.name
 
     | SingletonStrT (_, s) -> spf "'%s'" s
@@ -146,7 +158,7 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
     | TypeAppT (c,ts) ->
         let type_s =
           spf "%s<%s>"
-            (instance_of_poly_type_printer ~size override fallback EnclosureAppT cx c)
+            (instance_of_poly_type_printer ~size override EnclosureAppT cx c)
             (ts
               |> List.map (pp EnclosureNone cx)
               |> String.concat ", "
@@ -238,6 +250,11 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
           (l_pos |> List.map str_of_pair |> String.concat ", ")
           (l_neg |> List.map str_of_pair |> String.concat ", ")
 
+    | ExistsT _ ->
+        "*"
+
+    (* TODO: Fix these *)
+
     | FunProtoT _ ->
         "function proto"
 
@@ -250,7 +267,6 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
     | FunProtoApplyT _ ->
         "FunctionProtoApply"
 
-    (* TODO: Fix these *)
     | EvalT _ ->
         "Eval"
 
@@ -263,49 +279,42 @@ let rec type_printer_impl ~size override fallback enclosure cx t =
     | ChoiceKitT _ ->
         "ChoiceKit"
 
-    | t ->
-        fallback t
+    | FunProtoCallT _
+    | ObjProtoT _
+    | AbstractT _
+    | ExactT (_, _)
+    | DiffT (_, _)
+    | ExtendsT (_, _, _)
+    | TypeMapT (_, _, _, _) ->
+        assert_false (spf "Missing printer for %s" (string_of_ctor t))
 
-and instance_of_poly_type_printer ~size override fallback enclosure cx = function
+and instance_of_poly_type_printer ~size override enclosure cx = function
   | PolyT (_, ThisClassT t)
   | PolyT (_, ClassT t)
-    -> type_printer ~size override fallback enclosure cx t
+    -> type_printer ~size override enclosure cx t
 
   | PolyT (_, TypeT (reason, _))
     -> DescFormat.name_of_type_reason reason
 
   (* NOTE: t = FunT is legit, others probably mean upstream errors *)
   | PolyT (_, t)
-    -> type_printer ~size override fallback enclosure cx t
+    -> type_printer ~size override enclosure cx t
 
   (* since we're called with args that aren't statically guaranteed
      to be `PolyT`s, fall back here instead of blowing up *)
   | t
-    -> type_printer ~size override fallback enclosure cx t
+    -> type_printer ~size override enclosure cx t
 
-and type_printer ~size override fallback enclosure cx t =
+and type_printer ~size override enclosure cx t =
   count_calls ~counter:size ~default:"..." (fun () ->
-    type_printer_impl ~size override fallback enclosure cx t
+    type_printer_impl ~size override enclosure cx t
   )
 
 (* pretty printer *)
 let string_of_t_ =
-  let override _cx t = match t with
-    | OpenT (_, id) -> Some (spf "TYPE_%d" id)
-    | NumT _
-    | StrT _
-    | BoolT _
-    | EmptyT _
-    | MixedT _
-    | AnyT _
-    | NullT _ -> Some (string_of_desc (desc_of_reason (reason_of_t t)))
-    | _ -> None
-  in
-  let fallback t =
-    assert_false (spf "Missing printer for %s" (string_of_ctor t))
-  in
+  let override _cx _t = None in
   fun ?(size=5000) enclosure cx t ->
-    type_printer ~size:(ref size) override fallback enclosure cx t
+    type_printer ~size:(ref size) override enclosure cx t
 
 let string_of_t ?size cx t =
   string_of_t_ ?size EnclosureNone cx t
@@ -314,8 +323,8 @@ let string_of_param_t =
   string_of_t_ EnclosureParam
 
 (* for debugging *)
-let type_printer ?(size=5000) override fallback enclosure cx t =
-  type_printer ~size:(ref size) override fallback enclosure cx t
+let type_printer ?(size=5000) override enclosure cx t =
+  type_printer ~size:(ref size) override enclosure cx t
 
 let rec is_printed_type_parsable_impl weak cx enclosure = function
   (* Base cases *)
