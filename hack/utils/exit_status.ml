@@ -31,6 +31,7 @@ type t =
   | Worker_busy
   (** An uncaught Not_found exception in the worker. *)
   | Worker_not_found_exception
+  | Worker_failed_to_send_job
   | Socket_error
   | Missing_hhi
   | Dfind_died
@@ -94,6 +95,7 @@ let exit_code = function
   | Worker_oomed -> 30
   | Worker_busy -> 31
   | Worker_not_found_exception -> 32
+  | Worker_failed_to_send_job -> 33
   | Missing_hhi -> 97
   | Socket_error -> 98
   | Dfind_died -> 99
@@ -147,6 +149,7 @@ let to_string = function
   | Worker_oomed -> "Worker_oomed"
   | Worker_busy -> "Worker_busy"
   | Worker_not_found_exception -> "Worker_not_found_exception"
+  | Worker_failed_to_send_job -> "Worker_failed_to_send_job"
   | Socket_error -> "Socket_error"
   | Missing_hhi -> "Missing_hhi"
   | Dfind_died -> "Dfind_died"

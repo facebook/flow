@@ -25,6 +25,12 @@ exception Worker_oomed
  * We should never be doing that, and this is an assertion error. *)
 exception Worker_busy
 
+type send_job_failure =
+  | Worker_already_exited of Unix.process_status
+  | Other_send_job_failure of exn
+
+exception Worker_failed_to_send_job of send_job_failure
+
 (* The type of a worker visible to the outside world *)
 type t
 

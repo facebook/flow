@@ -36,6 +36,12 @@ exception Worker_exited_abnormally of int
 exception Worker_oomed
 exception Worker_busy
 
+type send_job_failure =
+  | Worker_already_exited of Unix.process_status
+  | Other_send_job_failure of exn
+
+exception Worker_failed_to_send_job of send_job_failure
+
 (* Should we 'prespawn' the worker ? *)
 let use_prespawned = not Sys.win32
 
@@ -302,9 +308,17 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b handle =
 
   in
   (* Send the job to the slave. *)
-  Daemon.to_channel outc
+  let () = try Daemon.to_channel outc
     ~flush:true ~flags:[Marshal.Closures]
-    request;
+    request with
+    | e -> begin
+      match Unix.waitpid [Unix.WNOHANG] slave_pid with
+      | 0, _ ->
+        raise (Worker_failed_to_send_job (Other_send_job_failure e))
+      | _, status ->
+        raise (Worker_failed_to_send_job (Worker_already_exited status))
+    end
+  in
   (* And returned the 'handle'. *)
   ref (Processing slave)
 
