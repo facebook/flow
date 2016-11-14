@@ -1,0 +1,5 @@
+name="parser_flow"
+version="0.35.0"
+description="flow parser ocamlfind package"
+archive(byte)="parser_flow.cma"
+archive(native)="parser_flow.cmxa"

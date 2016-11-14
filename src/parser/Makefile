@@ -110,3 +110,11 @@ npm-publish:
 	-npm publish
 	mv README.md README-npm.md
 	mv README-backup.md README.md
+
+ocamlfind-install:
+	ocamlbuild parser_flow.cma parser_flow.cmxa
+	ocamlfind install flow_parser META \
+		_build/parser_flow.a \
+		_build/parser_flow.cma \
+		_build/parser_flow.cmxa \
+		_build/*.cmi
