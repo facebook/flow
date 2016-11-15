@@ -94,6 +94,7 @@ begin library "flow-embedded"
   end
   requires = [
     "flow-common"
+    "flow-shmem"
     "hh-win32res"
     "hh-find"
   ]
@@ -142,7 +143,7 @@ begin library "flow-parsing"
     "flow-common"
     "flow-common-utils"
     "flow-parser"
-    "flow-server"
+    "flow-shmem"
     "hh-procs"
     "hh-heap"
     "hh-utils"
@@ -150,19 +151,51 @@ begin library "flow-parsing"
   ]
 end
 
+begin library "flow-server-files"
+  sort = true
+  files = [
+    "src/server/server_files_js.mli"
+    "src/server/server_files_js.ml"
+  ]
+  requires = [
+    "flow-common"
+    "hh-utils-sys"
+  ]
+end
+
+begin library "flow-shmem"
+  sort = true
+  files = [
+    "src/server/sharedMem_js.ml"
+  ]
+  requires = [
+    "flow-server-files"
+    "flow-common"
+    "hh-heap"
+    "hh-utils-sys"
+    "hh-utils-collections"
+  ]
+end
+
 begin library "flow-server"
   sort = true
   files = begin fb-glob "src/server"
-    excludes = [ "serverEnv.ml" ]
+    excludes = [ 
+      "serverEnv.ml" 
+      "server_files_js.ml" 
+      "server_files_js.mli"  
+      "sharedMem_js.ml"
+    ]
   end
   requires = [
     "flow-common"
     "flow-common-utils"
     "flow-embedded"
-    "flow-heap"
+    "flow-shmem"
     "flow-stubs"
     "flow-parser"
     "flow-parsing"
+    "flow-server-files"
     "flow-services-autocomplete"
     "flow-services-flowFileGen"
     "flow-services-inference"
@@ -170,7 +203,6 @@ begin library "flow-server"
     "flow-typing"
     "hh-stubs"
     "hh-dfind"
-    "hh-heap"
     "hh-procs"
     "hh-socket"
     "tp-core"
@@ -226,8 +258,9 @@ begin library "flow-services-inference"
     "flow-stubs"
     "flow-parser"
     "flow-parsing"
-    "flow-server"
     "flow-server-env"
+    "flow-server-files"
+    "flow-shmem"
     "flow-typing"
     "hh-heap"
     "hh-procs"
