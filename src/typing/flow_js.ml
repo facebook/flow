@@ -4009,27 +4009,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyObjT _, CallElemT (reason_call, reason_lookup, _, ft) ->
       rec_flow cx trace (AnyT.why reason_lookup, CallT (reason_call, ft))
 
-    | ArrT (_, _, []), SetElemT (reason_op, key, tin) ->
-      let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT (reason_op, l, WriteElem tin));
-      rec_flow_t cx trace (key, num)
-
     | ArrT _, SetElemT (reason_op, key, tin) ->
       rec_flow cx trace (key, ElemT (reason_op, l, WriteElem tin))
 
-    | ArrT (_, _, []), GetElemT (reason_op, key, tout) ->
-      let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT (reason_op, l, ReadElem tout));
-      rec_flow_t cx trace (key, num)
-
     | ArrT _, GetElemT (reason_op, key, tout) ->
       rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
-
-    | ArrT (_, _, []), CallElemT (reason_call, reason_lookup, key, ft) ->
-      let num = NumT.why reason_lookup in
-      let action = CallElem (reason_call, ft) in
-      rec_flow cx trace (num, ElemT (reason_lookup, l, action));
-      rec_flow_t cx trace (key, num)
 
     | ArrT _, CallElemT (reason_call, reason_lookup, key, ft) ->
       let action = CallElem (reason_call, ft) in
