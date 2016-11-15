@@ -2708,7 +2708,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       };
       arguments
     } ->
-      let reason = mk_reason (RCustom (spf "super.%s(...)" name)) loc in
+      let reason = mk_reason (RMethodCall (Some name)) loc in
       let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
       let reason_prop = mk_reason (RProperty (Some name)) ploc in
       let super = super_ cx (mk_reason RSuper super_loc) in
@@ -2752,7 +2752,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } ->
       let argts = List.map (expression_or_spread cx) arguments in
-      let reason = mk_reason (RCustom "super(...)") loc in
+      let reason = mk_reason RFunctionCall loc in
       let super_reason = mk_reason RSuper ploc in
 
       (* switch back env entries for this and super from undefined *)

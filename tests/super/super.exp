@@ -34,7 +34,7 @@ constructor.js:45
 
 constructor.js:69
  69:     super(this); // error (no super call yet)
-         ^^^^^^^^^^^ super(...)
+         ^^^^^^^^^^^ function call
  63:     leaked_this.foo()
          ^^^^^^^^^^^^^^^^^ call of method `foo`. Method cannot be called on possibly undefined value
  63:     leaked_this.foo()
@@ -47,8 +47,6 @@ constructor.js:83
                      ^^^^ uninitialized this (expected super constructor call)
 
 super.js:10
- 10:     super(x);
-         ^^^^^^^^ super(...)
  10:     super(x);
                ^ string. This type is incompatible with the expected param type of
   3:   constructor(x:number) { }
@@ -67,8 +65,6 @@ super.js:15
           ^^^^^ statics of A
 
 super.js:19
- 19:     super.f(0);
-         ^^^^^^^^^^ super.f(...)
  19:     super.f(0);
                  ^ number. This type is incompatible with the expected param type of
   5:   f(x:string) { }
