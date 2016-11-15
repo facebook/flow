@@ -60,10 +60,6 @@ and extract_arr_elem_pattern_bindings accum = Ast.Pattern.Array.(function
   | None -> accum
 )
 
-let error_destructuring cx loc =
-  (* TODO: be more specific about which syntax is unsupported *)
-  Flow_error.(add_output cx (EUnsupportedSyntax (loc, Destructuring)))
-
 (* Destructuring visitor for tree-shaped patterns, parameteric over an action f
    to perform at the leaves. A type for the pattern is passed, which is taken
    apart as the visitor goes deeper. *)
@@ -182,8 +178,9 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 ) in
                 let default = Option.map default (Default.elem key_t reason) in
                 recurse ~parent_pattern_t tvar init default p
-            | _ ->
-              error_destructuring cx loc
+            | { Property.key = Property.Literal _; _ } ->
+                Flow_error.(add_output cx (EUnsupportedSyntax
+                  (loc, DestructuringObjectPropertyLiteralNonString)))
             end
 
         | RestProperty (loc, { RestProperty.argument = p }) ->
@@ -232,7 +229,9 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       in
       recurse ?parent_pattern_t tvar init default left
 
-  | loc, _ -> error_destructuring cx loc
+  | loc, Expression _ ->
+      Flow_error.(add_output cx (EUnsupportedSyntax
+        (loc, DestructuringExpressionPattern)))
 
   in fun t init default pattern -> recurse t init default pattern
 )

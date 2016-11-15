@@ -250,11 +250,11 @@ destructuring.js:4
 
 destructuring.js:10
  10: ({n: obj.x} = {n:3});
-          ^^^^^ unsupported destructuring
+          ^^^^^ unsupported expression pattern in destructuring
 
 destructuring.js:11
  11: [obj.x] = ['foo'];
-      ^^^^^ unsupported destructuring
+      ^^^^^ unsupported expression pattern in destructuring
 
 destructuring.js:14
  14:     a = p;

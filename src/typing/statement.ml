@@ -3269,7 +3269,7 @@ and logical cx loc = Ast.Expression.Logical.(function
 and assignment_lhs cx = Ast.Pattern.(function
   | loc, Object _
   | loc, Array _ ->
-      error_destructuring cx loc;
+      Flow_error.(add_output cx (EInvalidLHSInAssignment loc));
       AnyT.at loc
 
   | _, Identifier { Ast.Pattern.Identifier.name = (loc, name); _; } ->

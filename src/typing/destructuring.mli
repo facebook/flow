@@ -24,7 +24,6 @@ val destructuring :
   Spider_monkey_ast.Expression.t option ->
   Spider_monkey_ast.Expression.t Default.t option ->
   Spider_monkey_ast.Pattern.t -> unit
-val error_destructuring : Context.t -> Loc.t -> unit
 val type_of_pattern :
   'a * Spider_monkey_ast.Pattern.t' ->
   Spider_monkey_ast.Type.annotation option

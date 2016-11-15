@@ -105,6 +105,7 @@ type error_message =
   | EForInRHS of reason
   | EObjectComputedPropertyAccess of (reason * reason)
   | EObjectComputedPropertyAssign of (reason * reason)
+  | EInvalidLHSInAssignment of Loc.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -133,6 +134,7 @@ and internal_error =
   | PropRefComputedLiteral
   | ShadowReadComputed
   | ShadowWriteComputed
+  | RestArgumentNotIdentifierPattern
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -153,7 +155,8 @@ and unsupported_syntax =
   | RequireLazyDynamicArgument
   | CatchParameterAnnotation
   | CatchParameterDeclaration
-  | Destructuring
+  | DestructuringObjectPropertyLiteralNonString
+  | DestructuringExpressionPattern
   | PredicateDeclarationForImplementation
   | PredicateDeclarationWithoutExpression
   | PredicateDeclarationAnonymousParameters
@@ -737,6 +740,8 @@ end = struct
             "unexpected shadow read on computed property"
         | ShadowWriteComputed ->
             "unexpected shadow write on computed property"
+        | RestArgumentNotIdentifierPattern ->
+            "unexpected rest argument, expected an identifier pattern"
         in
         mk_error ~kind:InternalError [loc, [spf "Internal error: %s" msg]]
 
@@ -778,8 +783,10 @@ end = struct
               "type annotations for catch params not yet supported"
           | CatchParameterDeclaration ->
               "unsupported catch parameter declaration"
-          | Destructuring ->
-              "unsupported destructuring"
+          | DestructuringObjectPropertyLiteralNonString ->
+              "unsupported non-string literal object property in destructuring"
+          | DestructuringExpressionPattern ->
+              "unsupported expression pattern in destructuring"
           | PredicateDeclarationForImplementation ->
               "Cannot declare predicate when a function body is present."
           | PredicateDeclarationWithoutExpression ->
@@ -938,6 +945,9 @@ end = struct
     | EObjectComputedPropertyAssign reasons ->
         typecheck_error "Computed property cannot be assigned with" reasons
 
+    | EInvalidLHSInAssignment loc ->
+        let msg = "Invalid left-hand side in assignment expression" in
+        mk_error [loc, [msg]]
 
   let add_output cx ?trace msg =
     let error = error_of_msg cx ?trace msg in
