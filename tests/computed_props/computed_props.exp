@@ -28,5 +28,17 @@ test6.js:2
   2: (o.hello: 'nothing'); // oops
                ^^^^^^^^^ string literal `nothing`
 
+test7.js:2
+  2: var x: string = obj['m'](); // error, number ~> string
+                     ^^^^^^^^^^ number. This type is incompatible with
+  2: var x: string = obj['m'](); // error, number ~> string
+            ^^^^^^ string
 
-Found 5 errors
+test7.js:5
+  5: var y: string = arr[0](); // error: number ~> string
+                     ^^^^^^^^ number. This type is incompatible with
+  5: var y: string = arr[0](); // error: number ~> string
+            ^^^^^^ string
+
+
+Found 7 errors

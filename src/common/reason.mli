@@ -72,13 +72,13 @@ type reason_desc =
   | RObjectMapi
   | RType of string
   | RTypeParam of string * reason_desc
-  | RMethodCall of string
+  | RMethodCall of string option
   | RParameter of string
   | RRestParameter of string
   | RIdentifier of string
   | RIdentifierAssignment of string
   | RPropertyAssignment of string
-  | RProperty of string
+  | RProperty of string option
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string

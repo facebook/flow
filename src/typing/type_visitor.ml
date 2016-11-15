@@ -213,6 +213,7 @@ class ['a] t = object(self)
   | AssertImportIsValueT (_, _)
   | BecomeT (_, _)
   | BindT (_, _)
+  | CallElemT _
   | CallLatentPredT _
   | CallOpenPredT _
   | CallT (_, _)
@@ -223,7 +224,7 @@ class ['a] t = object(self)
   | ConstructorT (_, _, _)
   | CopyNamedExportsT (_, _, _)
   | DebugPrintT (_)
-  | ElemT (_, _, _, _)
+  | ElemT (_, _, _)
   | EqT (_, _)
   | ExportNamedT (_, _, _)
   | GetElemT (_, _, _)

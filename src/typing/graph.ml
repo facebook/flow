@@ -265,6 +265,7 @@ and parts_of_use_t cx = function
 | AssertImportIsValueT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
 | BindT (_, funtype) -> parts_of_funtype funtype
+| CallElemT (_, _, ix, ft) -> ("ix", Def ix) :: parts_of_funtype ft
 | CallLatentPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | CallOpenPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | CallT (_, funtype) -> parts_of_funtype funtype
@@ -276,7 +277,9 @@ and parts_of_use_t cx = function
 | ConstructorT (_, args, out) -> ("out", Def out) :: list_parts args
 | CopyNamedExportsT (_, target, out) -> ["target", Def target; "out", Def out]
 | DebugPrintT _ -> []
-| ElemT (_, l, t, _) -> ["l", Def l; "t", Def t]
+| ElemT (_, l, ReadElem t) -> ["l", Def l; "read", Def t]
+| ElemT (_, l, WriteElem t) -> ["l", Def l; "write", Def t]
+| ElemT (_, l, CallElem (_, ft)) -> ("l", Def l) :: parts_of_funtype ft
 | EqT (_, arg) -> ["arg", Def arg]
 | ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]

@@ -2464,11 +2464,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       property = Member.PropertyIdentifier (ploc, name);
       _
     } ->
-      let expr_reason = mk_reason (RProperty name) loc in
+      let expr_reason = mk_reason (RProperty (Some name)) loc in
       (match Refinement.get cx (loc, e) expr_reason with
       | Some t -> t
       | None ->
-        let prop_reason = mk_reason (RProperty name) ploc in
+        let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
         let super = super_ cx (mk_reason RSuper super_loc) in
 
@@ -2488,11 +2488,11 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       property = Member.PropertyIdentifier (ploc, name);
       _
     } -> (
-      let expr_reason = mk_reason (RProperty name) loc in
+      let expr_reason = mk_reason (RProperty (Some name)) loc in
       match Refinement.get cx (loc, e) expr_reason with
       | Some t -> t
       | None ->
-        let prop_reason = mk_reason (RProperty name) ploc in
+        let prop_reason = mk_reason (RProperty (Some name)) ploc in
         let tobj = expression cx _object in
         if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
         then AnyT.at ploc
@@ -2709,8 +2709,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       arguments
     } ->
       let reason = mk_reason (RCustom (spf "super.%s(...)" name)) loc in
-      let reason_lookup = mk_reason (RProperty name) callee_loc in
-      let reason_prop = mk_reason (RProperty name) ploc in
+      let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
+      let reason_prop = mk_reason (RProperty (Some name)) ploc in
       let super = super_ cx (mk_reason RSuper super_loc) in
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
@@ -2722,19 +2722,30 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         )
       )
 
-  | Call {
-      Call.callee = (_, Member {
-        Member._object;
-        property = Member.PropertyIdentifier (prop_loc, name);
-        _
+  | Call { Call.
+      callee = (lookup_loc, Member { Member.
+        _object;
+        property; _
       }) as callee;
       arguments
     } ->
       (* method call *)
       let ot = expression cx _object in
       let argts = List.map (expression_or_spread cx) arguments in
-      let reason = mk_reason (RMethodCall name) loc in
-      method_call cx reason prop_loc (callee, ot, name) argts
+      (match property with
+      | Member.PropertyIdentifier (prop_loc, name) ->
+        let reason_call = mk_reason (RMethodCall (Some name)) loc in
+        method_call cx reason_call prop_loc (callee, ot, name) argts
+      | Member.PropertyExpression expr ->
+        let reason_call = mk_reason (RMethodCall None) loc in
+        let reason_lookup = mk_reason (RProperty None) lookup_loc in
+        Flow.mk_tvar_where cx reason_call (fun t ->
+          let elem_t = expression cx expr in
+          let frame = Env.peek_frame () in
+          let funtype = Flow.mk_methodtype ot argts t ~frame in
+          Flow.flow cx (ot,
+            CallElemT (reason_call, reason_lookup, elem_t, funtype))
+        ))
 
   | Call {
       Call.callee = ploc, Super;
@@ -3069,8 +3080,8 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
       Flow.mk_tvar_where cx reason (fun t ->
         let frame = Env.peek_frame () in
         let expr_loc, _ = expr in
-        let reason_expr = mk_reason (RProperty name) expr_loc in
-        let reason_prop = mk_reason (RProperty name) prop_loc in
+        let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
+        let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
         let app = Flow.mk_methodtype obj_t argts t ~frame in
         let propref = Named (reason_prop, name) in
         Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
@@ -3303,7 +3314,7 @@ and assignment cx loc = Ast.Expression.(function
           }) ->
             let reason =
               mk_reason (RPropertyAssignment name) lhs_loc in
-            let prop_reason = mk_reason (RProperty name) ploc in
+            let prop_reason = mk_reason (RProperty (Some name)) ploc in
             let super = super_ cx reason in
             Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), t))
 
@@ -3318,7 +3329,7 @@ and assignment cx loc = Ast.Expression.(function
             if not (Type_inference_hooks_js.dispatch_member_hook cx name ploc o)
             then (
               let reason = mk_reason (RPropertyAssignment name) lhs_loc in
-              let prop_reason = mk_reason (RProperty name) ploc in
+              let prop_reason = mk_reason (RProperty (Some name)) ploc in
 
               (* flow type to object property itself *)
               Flow.flow cx (o, SetPropT (reason, Named (prop_reason, name), t));
@@ -3599,7 +3610,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
       let react = require cx ~internal:true "react" eloc in
       Flow.mk_tvar_where cx reason (fun tvar ->
         let reason_createElement =
-          mk_reason (RProperty "createElement") eloc in
+          mk_reason (RProperty (Some "createElement")) eloc in
         Flow.flow cx (react, MethodT (
           reason,
           reason_createElement,
@@ -4209,11 +4220,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
          `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
       let obj_t = expression cx _object in
 
-      let prop_reason = mk_reason (RProperty prop_name) prop_loc in
+      let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       Flow.flow cx (obj_t,
         HasPropT (prop_reason, None, TypeTerm.Literal prop_name));
 
-      let expr_reason = mk_reason (RProperty prop_name) expr_loc in
+      let expr_reason = mk_reason (RProperty (Some prop_name)) expr_loc in
       let prop_t = match Refinement.get cx expr expr_reason with
       | Some t -> t
       | None ->
@@ -4422,15 +4433,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
     ->
       let obj_t = match _object with
       | super_loc, Super ->
-          super_ cx (mk_reason (RProperty prop_name) super_loc)
+          super_ cx (mk_reason (RProperty (Some prop_name)) super_loc)
       | _ ->
           (* use `expression` instead of `condition` because `_object` is the
              object in a member expression; if it itself is a member expression,
              it must exist (so ~is_cond:false). e.g. `foo.bar.baz` shows up here
              as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
           expression cx _object in
-      let expr_reason = mk_reason (RProperty prop_name) loc in
-      let prop_reason = mk_reason (RProperty prop_name) prop_loc in
+      let expr_reason = mk_reason (RProperty (Some prop_name)) loc in
+      let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       let t = match Refinement.get cx e expr_reason with
       | Some t -> t
       | None ->
@@ -4501,7 +4512,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let obj_t = expression cx o in
       let reason = mk_reason (RCustom "Array.isArray") callee_loc in
       let fn_t = Flow.mk_tvar_where cx reason (fun t ->
-        let prop_reason = mk_reason (RProperty "isArray") prop_loc in
+        let prop_reason = mk_reason (RProperty (Some "isArray")) prop_loc in
         Flow.flow cx (obj_t, GetPropT (reason, Named (prop_reason, "isArray"), t))
       ) in
       Hashtbl.replace (Context.type_table cx) prop_loc fn_t;
@@ -4676,7 +4687,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let _ = expression cx key in
     let spec = expression cx config in
     let tvar = Flow.mk_tvar cx reason in
-    let prop_reason = mk_reason (RProperty x) ploc in
+    let prop_reason = mk_reason (RProperty (Some x)) ploc in
     Flow.flow cx (spec, GetPropT (reason, Named (reason, "value"), tvar));
     Flow.flow cx (o, SetPropT (reason, Named (prop_reason, x), tvar));
     o
@@ -4712,13 +4723,13 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
       Flow.flow cx (arg_t, ObjFreezeT (reason_arg, tvar));
     ) in
 
-    let reason = mk_reason (RMethodCall m) loc in
+    let reason = mk_reason (RMethodCall (Some m)) loc in
     method_call cx reason prop_loc (expr, obj_t, m) [arg_t]
 
   (* TODO *)
   | (_, args) ->
     let argts = List.map (expression_or_spread cx) args in
-    let reason = mk_reason (RMethodCall m) loc in
+    let reason = mk_reason (RMethodCall (Some m)) loc in
     method_call cx reason prop_loc (expr, obj_t, m) argts
 
 and extract_setter_type = function

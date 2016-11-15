@@ -361,8 +361,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
-  | MethodT (_, _, name, funtype) -> [
-      "propRef", json_of_propref json_cx name;
+  | MethodT (_, _, propref, funtype) -> [
+      "propRef", json_of_propref json_cx propref;
       "funType", json_of_funtype json_cx funtype
     ]
 
@@ -386,6 +386,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | GetElemT (_, indext, elemt) -> [
       "indexType", _json_of_t json_cx indext;
       "elemType", _json_of_t json_cx elemt
+    ]
+
+  | CallElemT (_, _, indext, funtype) -> [
+      "indexType", _json_of_t json_cx indext;
+      "funType", json_of_funtype json_cx funtype
     ]
 
   | GetStaticsT (_, t) -> [
@@ -544,10 +549,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "key", JSON_Object (_json_of_string_literal key)
     ]
 
-  | ElemT (_, base, elem, rw) -> [
+  | ElemT (_, base, action) -> [
       "baseType", _json_of_t json_cx base;
-      "elemType", _json_of_t json_cx elem;
-      "rw", JSON_String (string_of_rw rw);
+      match action with
+      | ReadElem t -> "readElem", _json_of_t json_cx t
+      | WriteElem t -> "writeElem", _json_of_t json_cx t
+      | CallElem (_, funtype) -> "callElem", json_of_funtype json_cx funtype
     ]
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
@@ -1398,6 +1405,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertImportIsValueT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
+  | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
   | CallT (_,{params_tlist;return_t;this_t;_}) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)

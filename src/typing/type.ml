@@ -313,6 +313,7 @@ module rec TypeTerm : sig
     | TestPropT of reason * propref * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
+    | CallElemT of (* call *) reason * (* lookup *) reason * t * funtype
     | GetStaticsT of reason * t_out
 
     (* repositioning *)
@@ -411,7 +412,7 @@ module rec TypeTerm : sig
     | HasPropT of reason * reason option * string literal
 
     (* Element access *)
-    | ElemT of reason * t * t * rw
+    | ElemT of reason * t * elem_action
 
     (* exact ops *)
     | MakeExactT of reason * cont
@@ -666,6 +667,11 @@ module rec TypeTerm : sig
   | SuperProp of Property.t
 
   and rw = Read | Write
+
+  and elem_action =
+    | ReadElem of t
+    | WriteElem of t
+    | CallElem of reason (* call *) * funtype
 
   and propref =
     | Named of reason * name
@@ -1491,6 +1497,7 @@ and reason_of_use_t = function
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
   | BindT (reason, _) -> reason
+  | CallElemT (reason, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
   | CallT (reason, _) -> reason
@@ -1501,7 +1508,7 @@ and reason_of_use_t = function
   | ConstructorT (reason,_,_) -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | DebugPrintT reason -> reason
-  | ElemT (reason, _, _, _) -> reason
+  | ElemT (reason, _, _) -> reason
   | EqT (reason, _) -> reason
   | ExportNamedT (reason, _, _) -> reason
   | GetElemT (reason,_,_) -> reason
@@ -1641,6 +1648,8 @@ and mod_reason_of_use_t f = function
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
   | BindT (reason, ft) -> BindT (f reason, ft)
+  | CallElemT (reason_call, reason_lookup, t, ft) ->
+      CallElemT (f reason_call, reason_lookup, t, ft)
   | CallLatentPredT (reason, b, k, l, t) ->
       CallLatentPredT (f reason, b, k, l, t)
   | CallOpenPredT (reason, sense, key, l, t) ->
@@ -1655,7 +1664,7 @@ and mod_reason_of_use_t f = function
   | CopyNamedExportsT (reason, target_module_t, t_out) ->
       CopyNamedExportsT(f reason, target_module_t, t_out)
   | DebugPrintT reason -> DebugPrintT (f reason)
-  | ElemT (reason, t, t2, rw) -> ElemT (f reason, t, t2, rw)
+  | ElemT (reason, t, action) -> ElemT (f reason, t, action)
   | EqT (reason, t) -> EqT (f reason, t)
   | ExportNamedT (reason, tmap, t_out) -> ExportNamedT(f reason, tmap, t_out)
   | GetElemT (reason, it, et) -> GetElemT (f reason, it, et)
@@ -1679,7 +1688,8 @@ and mod_reason_of_use_t f = function
   | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
   | MakeExactT (reason, t) -> MakeExactT (f reason, t)
   | MapTypeT (reason, kind, t, k) -> MapTypeT (f reason, kind, t, k)
-  | MethodT (reason, lookup, name, ft) -> MethodT(f reason, lookup, name, ft)
+  | MethodT (reason_call, reason_lookup, name, ft) ->
+      MethodT (f reason_call, reason_lookup, name, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | NotT (reason, t) -> NotT (f reason, t)
   | ObjAssignT (reason, t, t2, filter, resolve) ->
@@ -1840,6 +1850,7 @@ let string_of_use_ctor = function
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"
+  | CallElemT _ -> "CallElemT"
   | CallLatentPredT _ -> "CallLatentPredT"
   | CallOpenPredT _ -> "CallOpenPredT"
   | CallT _ -> "CallT"

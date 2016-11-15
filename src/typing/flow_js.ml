@@ -2296,7 +2296,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (StrT (reason_s, literal), UseT (_, KeysT (reason_op, o))) ->
       let reason_next = match literal with
-      | Literal x -> replace_reason_const (RProperty x) reason_s
+      | Literal x -> replace_reason_const (RProperty (Some x)) reason_s
       | _ -> replace_reason_const RUnknownString reason_s in
       (* check that o has key x *)
       let u = HasOwnPropT(reason_next, literal) in
@@ -2627,7 +2627,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       iter_real_props cx obj_l.props_tmap (fun prop_name _ ->
         if not (Context.has_prop cx obj_u.props_tmap prop_name)
         then
-          let rl = replace_reason_const (RProperty prop_name) rl in
+          let rl = replace_reason_const (RProperty (Some prop_name)) rl in
           add_output cx trace (FlowError.EPropNotFound (rl, ru))
       );
       rec_flow_t cx trace (ObjT (rl, xl), ObjT (ru, xu))
@@ -3200,7 +3200,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       (* Properties in u must either exist in l, or match l's indexer. *)
       iter_real_props cx uflds (fun s up ->
-        let reason_prop = replace_reason_const (RProperty s) ureason in
+        let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
         let propref = Named (reason_prop, s) in
         match Context.get_prop cx lflds s, ldict with
         | Some lp, _ ->
@@ -3282,7 +3282,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
               | _ -> ()
             else
-              let reason_prop = replace_reason_const (RProperty s) lreason in
+              let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
               let propref = Named (reason_prop, s) in
               rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
           )));
@@ -3305,7 +3305,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
 
       iter_real_props cx uflds (fun s up ->
-        let reason_prop = replace_reason_const (RProperty s) ureason in
+        let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
         let propref = Named (reason_prop, s) in
         match SMap.get s lflds with
         | Some lp ->
@@ -3988,61 +3988,76 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects/arrays may have their properties/elements written and read *)
     (**********************************************************************)
 
-    | (ObjT _, SetElemT(reason_op,key,tin))
-      ->
-      rec_flow cx trace (key, ElemT(reason_op, l, tin, Write))
+    | ObjT _, SetElemT (reason_op, key, tin) ->
+      rec_flow cx trace (key, ElemT (reason_op, l, WriteElem tin))
 
-    | (ObjT _, GetElemT(reason_op,key,tout))
-      ->
-      rec_flow cx trace (key, ElemT(reason_op, l, tout, Read))
+    | ObjT _, GetElemT (reason_op, key, tout) ->
+      rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
+
+    | ObjT _, CallElemT (reason_call, reason_lookup, key, ft) ->
+      let action = CallElem (reason_call, ft) in
+      rec_flow cx trace (key, ElemT (reason_lookup, l, action))
 
     (* Since we don't know the type of the element, flow it to `AnyT`. This
        could go through `ElemT` like `ObjT` does, but this is a shortcut. *)
-    | (AnyObjT _, SetElemT (reason_op, _, t)) ->
+    | AnyObjT _, SetElemT (reason_op, _, t) ->
       rec_flow_t cx trace (t, AnyT.why reason_op)
 
-    | (AnyObjT _, GetElemT (reason_op, _, tout)) ->
+    | AnyObjT _, GetElemT (reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | (ArrT (_, _, []), SetElemT(reason_op, key,tin))
-      ->
+    | AnyObjT _, CallElemT (reason_call, reason_lookup, _, ft) ->
+      rec_flow cx trace (AnyT.why reason_lookup, CallT (reason_call, ft))
+
+    | ArrT (_, _, []), SetElemT (reason_op, key, tin) ->
       let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT(reason_op, l, tin, Write));
+      rec_flow cx trace (num, ElemT (reason_op, l, WriteElem tin));
       rec_flow_t cx trace (key, num)
 
-    | (ArrT _, SetElemT(reason_op, key,tin))
-      ->
-      rec_flow cx trace (key, ElemT(reason_op, l, tin, Write))
+    | ArrT _, SetElemT (reason_op, key, tin) ->
+      rec_flow cx trace (key, ElemT (reason_op, l, WriteElem tin))
 
-    | (ArrT (_, _, []), GetElemT(reason_op, key,tout))
-      ->
+    | ArrT (_, _, []), GetElemT (reason_op, key, tout) ->
       let num = NumT.why reason_op in
-      rec_flow cx trace (num, ElemT(reason_op, l, tout, Read));
+      rec_flow cx trace (num, ElemT (reason_op, l, ReadElem tout));
       rec_flow_t cx trace (key, num)
 
-    | (ArrT _, GetElemT(reason_op, key,tout))
-      ->
-      rec_flow cx trace (key, ElemT(reason_op, l, tout, Read))
+    | ArrT _, GetElemT (reason_op, key, tout) ->
+      rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
 
-    | (_, ElemT (reason_op, (ObjT _ as o), t, rw)) ->
+    | ArrT (_, _, []), CallElemT (reason_call, reason_lookup, key, ft) ->
+      let num = NumT.why reason_lookup in
+      let action = CallElem (reason_call, ft) in
+      rec_flow cx trace (num, ElemT (reason_lookup, l, action));
+      rec_flow_t cx trace (key, num)
+
+    | ArrT _, CallElemT (reason_call, reason_lookup, key, ft) ->
+      let action = CallElem (reason_call, ft) in
+      rec_flow cx trace (key, ElemT (reason_lookup, l, action));
+
+    | (_, ElemT (reason_op, (ObjT _ as o), action)) ->
       let propref = match l with
       | StrT (reason_x, Literal x) ->
-          let reason_prop = replace_reason_const (RProperty x) reason_x in
+          let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
           Named (reason_prop, x)
       | _ -> Computed l
       in
-      let u = match rw with
-      | Read -> GetPropT (reason_op, propref, t)
-      | Write -> SetPropT (reason_op, propref, t)
+      let u = match action with
+      | ReadElem t -> GetPropT (reason_op, propref, t)
+      | WriteElem t -> SetPropT (reason_op, propref, t)
+      | CallElem (reason_call, ft) ->
+        MethodT (reason_call, reason_op, propref, ft)
       in
       rec_flow cx trace (o, u)
 
-    | AnyT _, ElemT(_, ArrT (_, value, _), t, rw) ->
-      (match rw with
-      | Read -> rec_flow_t cx trace (value, t)
-      | Write -> rec_flow_t cx trace (t, value))
+    | AnyT _, ElemT (_, ArrT (_, value, _), action) ->
+      (match action with
+      | ReadElem t -> rec_flow_t cx trace (value, t)
+      | WriteElem t -> rec_flow_t cx trace (t, value)
+      | CallElem (reason_call, ft) ->
+        rec_flow cx trace (value, CallT (reason_call, ft)))
 
-    | (NumT (_, literal), ElemT(_, ArrT(_, value, ts), t, rw)) ->
+    | NumT (_, literal), ElemT (_, ArrT (_, value, ts), action) ->
       let value = match literal with
       | Literal (float_value, _) ->
           begin try
@@ -4054,9 +4069,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           end
       | _ -> value
       in
-      (match rw with
-      | Read -> rec_flow_t cx trace (value, t)
-      | Write -> rec_flow_t cx trace (t, value))
+      (match action with
+      | ReadElem t -> rec_flow_t cx trace (value, t)
+      | WriteElem t -> rec_flow_t cx trace (t, value)
+      | CallElem (reason_call, ft) ->
+        rec_flow cx trace (value, CallT (reason_call, ft)))
 
     | (ArrT _, GetPropT(reason_op, Named (_, "constructor"), tout)) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -4374,12 +4391,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         );
         let strict = NonstrictReturning None in
         Context.iter_props cx instance.fields_tmap (fun x p ->
-          let reason_prop = replace_reason_const (RProperty x) reason in
+          let reason_prop = replace_reason_const (RProperty (Some x)) reason in
           lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
         );
         Context.iter_props cx instance.methods_tmap (fun x p ->
           if inherited_method x then
-            let reason_prop = replace_reason_const (RProperty x) reason in
+            let reason_prop = replace_reason_const (RProperty (Some x)) reason in
             lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
         )
 
@@ -4387,14 +4404,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyObjT _, SuperT (reason, instance)
       ->
         Context.iter_props cx instance.fields_tmap (fun x p ->
-          let reason_prop = replace_reason_const (RProperty x) reason in
+          let reason_prop = replace_reason_const (RProperty (Some x)) reason in
           let propref = Named (reason_prop, x) in
           rec_flow cx trace (l,
             LookupT (reason, NonstrictReturning None, [], propref,
               SuperProp p))
         );
         Context.iter_props cx instance.methods_tmap (fun x p ->
-          let reason_prop = replace_reason_const (RProperty x) reason in
+          let reason_prop = replace_reason_const (RProperty (Some x)) reason in
           let propref = Named (reason_prop, x) in
           if inherited_method x then
             rec_flow cx trace (l,
@@ -7955,7 +7972,7 @@ and unify_props cx trace x r1 r2 p1 p2 =
 (* If some property `x` exists in one object but not another, ensure the
    property is compatible with a dictionary, or error if none. *)
 and unify_prop_with_dict cx trace x p prop_reason dict_reason dict =
-  let prop_reason = replace_reason_const (RProperty x) prop_reason in
+  let prop_reason = replace_reason_const (RProperty (Some x)) prop_reason in
   match dict with
   | Some { key; value; dict_polarity; _ } ->
     rec_flow_t cx trace (string_key x prop_reason, key);

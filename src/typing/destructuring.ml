@@ -137,7 +137,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                     value = Ast.Literal.String name; _ });
                 pattern = p; _; }
               ->
-                let reason = mk_reason (RProperty name) loc in
+                let reason = mk_reason (RProperty (Some name)) loc in
                 xs := name :: !xs;
                 let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({

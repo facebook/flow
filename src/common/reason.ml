@@ -121,13 +121,13 @@ type reason_desc =
   | RObjectMapi
   | RType of string
   | RTypeParam of string * reason_desc
-  | RMethodCall of string
+  | RMethodCall of string option
   | RParameter of string
   | RRestParameter of string
   | RIdentifier of string
   | RIdentifierAssignment of string
   | RPropertyAssignment of string
-  | RProperty of string
+  | RProperty of string option
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string
@@ -422,10 +422,12 @@ let rec string_of_desc = function
   | RTypeParam (x,d) -> spf "type parameter `%s` of %s" x (string_of_desc d)
   | RIdentifier x -> spf "identifier `%s`" x
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
-  | RMethodCall x -> spf "call of method `%s`" x
+  | RMethodCall (Some x) -> spf "call of method `%s`" x
+  | RMethodCall None -> "call of computed property"
   | RParameter x -> spf "parameter `%s`" x
   | RRestParameter x -> spf "rest parameter `%s`" x
-  | RProperty x -> spf "property `%s`" x
+  | RProperty (Some x) -> spf "property `%s`" x
+  | RProperty None -> "computed property"
   | RPropertyAssignment x -> spf "assignment of property `%s`" x
   | RShadowProperty x -> spf ".%s" x
   | RPropertyOf (x, d) -> spf "property `%s` of %s" x (string_of_desc d)
@@ -563,7 +565,7 @@ let is_instantiable_reason r =
 *)
 let is_constant_property_reason r =
   match desc_of_reason r with
-  | RProperty x
+  | RProperty (Some x)
   | RPropertyOf (x,_)
   | RPropertyIsAString x ->
     let len = String.length x in
@@ -574,7 +576,7 @@ let is_constant_property_reason r =
 
 let is_method_call_reason x r =
   match desc_of_reason r with
-  | RMethodCall y -> x = y
+  | RMethodCall (Some y) -> x = y
   | _ -> false
 
 let is_derivable_reason r =

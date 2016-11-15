@@ -101,10 +101,8 @@ let rec gc cx state = function
   | FunProtoBindT _ -> ()
   | FunProtoCallT _ -> ()
   | FunProtoT _ -> ()
-  | FunT(_, static, prototype, funtype) ->
-      gc cx state funtype.this_t;
-      funtype.params_tlist |> List.iter (gc cx state);
-      gc cx state funtype.return_t;
+  | FunT(_, static, prototype, ft) ->
+      gc_funtype cx state ft;
       gc cx state prototype;
       gc cx state static  | MixedT _ -> ()
   | IdxWrapper (_, t) -> gc cx state t
@@ -198,6 +196,7 @@ and gc_use cx state = function
   | BindT(_, funtype) -> gc_funtype cx state funtype
   | CallLatentPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
   | CallOpenPredT (_, _, _, t1, t2) -> gc cx state t1; gc cx state t2
+  | CallElemT (_, _, i, ft) -> gc cx state i; gc_funtype cx state ft
   | CallT(_, funtype) -> gc_funtype cx state funtype
   | ChoiceKitUseT (_, choice_use_tool) ->
       gc_choice_use_tool cx state choice_use_tool
@@ -213,7 +212,9 @@ and gc_use cx state = function
       gc cx state target_module;
       gc cx state t_out;
   | DebugPrintT _ -> ()
-  | ElemT (_, t1, t2, _) -> gc cx state t1; gc cx state t2
+  | ElemT (_, t1, action) ->
+      gc cx state t1;
+      gc_elem_action cx state action
   | EqT (_, t) -> gc cx state t
   | ExportNamedT (_, t_smap, t_out) ->
       List.iter (gc cx state) (SMap.values t_smap);
@@ -383,6 +384,10 @@ and gc_exporttypes cx state
   match cjs_export with
   | Some t -> gc cx state t
   | None -> ()
+
+and gc_elem_action cx state = function
+  | ReadElem t | WriteElem t -> gc cx state t
+  | CallElem (_, ft) -> gc_funtype cx state ft
 
 (* Keep a reachable type variable around. *)
 let live cx state id =

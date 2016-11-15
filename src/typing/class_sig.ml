@@ -453,13 +453,13 @@ let mk cx loc reason self ~expr = Ast.Class.(
           RConstructor,
           add_constructor
       | Method.Method ->
-          RProperty name,
+          RProperty (Some name),
           add_method ~static name
       | Method.Get ->
-          RProperty name,
+          RProperty (Some name),
           add_getter ~static name
       | Method.Set ->
-          RProperty name,
+          RProperty (Some name),
           add_setter ~static name
       in
       let reason = mk_reason method_desc loc in
@@ -478,7 +478,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
         if value <> None
         then Flow_error.warn_or_ignore_class_properties cx ~static loc;
 
-        let reason = mk_reason (RProperty name) loc in
+        let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
         let field = mk_field cx ~polarity c reason typeAnnotation value in
         add_field ~static name field c
