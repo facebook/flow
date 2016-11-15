@@ -3988,38 +3988,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects/arrays may have their properties/elements written and read *)
     (**********************************************************************)
 
-    | ObjT _, SetElemT (reason_op, key, tin) ->
+    | (ObjT _ | AnyObjT _ | ArrT _), SetElemT (reason_op, key, tin) ->
       rec_flow cx trace (key, ElemT (reason_op, l, WriteElem tin))
 
-    | ObjT _, GetElemT (reason_op, key, tout) ->
+    | (ObjT _ | AnyObjT _ | ArrT _), GetElemT (reason_op, key, tout) ->
       rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
 
-    | ObjT _, CallElemT (reason_call, reason_lookup, key, ft) ->
+    | (ObjT _ | AnyObjT _ | ArrT _),
+      CallElemT (reason_call, reason_lookup, key, ft) ->
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (reason_lookup, l, action))
 
-    (* Since we don't know the type of the element, flow it to `AnyT`. This
-       could go through `ElemT` like `ObjT` does, but this is a shortcut. *)
-    | AnyObjT _, SetElemT (reason_op, _, t) ->
-      rec_flow_t cx trace (t, AnyT.why reason_op)
-
-    | AnyObjT _, GetElemT (reason_op, _, tout) ->
-      rec_flow_t cx trace (AnyT.why reason_op, tout)
-
-    | AnyObjT _, CallElemT (reason_call, reason_lookup, _, ft) ->
-      rec_flow cx trace (AnyT.why reason_lookup, CallT (reason_call, ft))
-
-    | ArrT _, SetElemT (reason_op, key, tin) ->
-      rec_flow cx trace (key, ElemT (reason_op, l, WriteElem tin))
-
-    | ArrT _, GetElemT (reason_op, key, tout) ->
-      rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
-
-    | ArrT _, CallElemT (reason_call, reason_lookup, key, ft) ->
-      let action = CallElem (reason_call, ft) in
-      rec_flow cx trace (key, ElemT (reason_lookup, l, action));
-
-    | (_, ElemT (reason_op, (ObjT _ as o), action)) ->
+    | _, ElemT (reason_op, (ObjT _ as o), action) ->
       let propref = match l with
       | StrT (reason_x, Literal x) ->
           let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
@@ -4034,12 +4014,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (o, u)
 
+    | _, ElemT (reason_op, AnyObjT _, action) ->
+      let value = AnyT.why reason_op in
+      perform_elem_action cx trace value action
+
     | AnyT _, ElemT (_, ArrT (_, value, _), action) ->
-      (match action with
-      | ReadElem t -> rec_flow_t cx trace (value, t)
-      | WriteElem t -> rec_flow_t cx trace (t, value)
-      | CallElem (reason_call, ft) ->
-        rec_flow cx trace (value, CallT (reason_call, ft)))
+      perform_elem_action cx trace value action
 
     | l, ElemT (_, ArrT (_, value, ts), action) when numeric l ->
       let value = match l with
@@ -4053,11 +4033,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           end
       | _ -> value
       in
-      (match action with
-      | ReadElem t -> rec_flow_t cx trace (value, t)
-      | WriteElem t -> rec_flow_t cx trace (t, value)
-      | CallElem (reason_call, ft) ->
-        rec_flow cx trace (value, CallT (reason_call, ft)))
+      perform_elem_action cx trace value action
 
     | (ArrT _, GetPropT(reason_op, Named (_, "constructor"), tout)) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -8162,6 +8138,12 @@ and perform_lookup_action cx trace propref p lreason ureason = function
       let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
       add_output cx trace
         (FlowError.EPropAccess ((lreason, ureason), x, p, rw))
+
+and perform_elem_action cx trace value = function
+  | ReadElem t -> rec_flow_t cx trace (value, t)
+  | WriteElem t -> rec_flow_t cx trace (t, value)
+  | CallElem (reason_call, ft) ->
+    rec_flow cx trace (value, CallT (reason_call, ft))
 
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in
