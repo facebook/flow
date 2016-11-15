@@ -4,5 +4,13 @@ Arrays.js:10
   4: function foo(x:string) { }
                     ^^^^^^ string
 
+numeric_elem.js:2
+  2: var day = new Date;
+               ^^^^^^^^ constructor call
+  6: arr[day] = 0;
+                ^ number. This type is incompatible with
+  7: (arr[day]: string); // error: number ~> string
+                ^^^^^^ string
 
-Found 1 error
+
+Found 2 errors

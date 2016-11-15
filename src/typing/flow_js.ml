@@ -4041,9 +4041,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | CallElem (reason_call, ft) ->
         rec_flow cx trace (value, CallT (reason_call, ft)))
 
-    | NumT (_, literal), ElemT (_, ArrT (_, value, ts), action) ->
-      let value = match literal with
-      | Literal (float_value, _) ->
+    | l, ElemT (_, ArrT (_, value, ts), action) when numeric l ->
+      let value = match l with
+      | NumT (_, Literal (float_value, _)) ->
           begin try
             float_value
             |> int_of_float
