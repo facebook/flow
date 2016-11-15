@@ -2004,7 +2004,7 @@ and export_statement cx loc
           match source_module_tvar with
           | Some(tvar) ->
             Flow.mk_tvar_where cx reason (fun t ->
-              Flow.flow cx (tvar, GetPropT(reason, (reason, local_name), t))
+              Flow.flow cx (tvar, GetPropT (reason, Named (reason, local_name), t))
             )
           | None ->
             Env.var_ref ~lookup_mode cx local_name reason
@@ -2477,7 +2477,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         else (
           Flow.mk_tvar_where cx expr_reason (fun tvar ->
             Flow.flow cx (
-              super, GetPropT(expr_reason, (prop_reason, name), tvar)
+              super, GetPropT (expr_reason, Named (prop_reason, name), tvar)
             )
           )
         )
@@ -2718,7 +2718,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let funtype = Flow.mk_methodtype super argts t in
         Flow.flow cx (
           super,
-          MethodT (reason, reason_lookup, (reason_prop, name), funtype)
+          MethodT (reason, reason_lookup, Named (reason_prop, name), funtype)
         )
       )
 
@@ -2752,9 +2752,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let super = super_ cx super_reason in
       Flow.mk_tvar_where cx reason (fun t ->
         let funtype = Flow.mk_methodtype this argts t in
-        Flow.flow cx (super,
-          MethodT(reason, super_reason, (super_reason, "constructor"), funtype))
-      )
+        let propref = Named (super_reason, "constructor") in
+        Flow.flow cx (super, MethodT(reason, super_reason, propref, funtype)))
 
   (******************************************)
   (* See ~/www/static_upstream/core/ *)
@@ -3073,10 +3072,8 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
         let reason_expr = mk_reason (RProperty name) expr_loc in
         let reason_prop = mk_reason (RProperty name) prop_loc in
         let app = Flow.mk_methodtype obj_t argts t ~frame in
-        Flow.flow cx (
-          obj_t,
-          MethodT(reason, reason_expr, (reason_prop, name), app)
-        )
+        let propref = Named (reason_prop, name) in
+        Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
       )
   )
 
@@ -3308,7 +3305,7 @@ and assignment cx loc = Ast.Expression.(function
               mk_reason (RPropertyAssignment name) lhs_loc in
             let prop_reason = mk_reason (RProperty name) ploc in
             let super = super_ cx reason in
-            Flow.flow cx (super, SetPropT(reason, (prop_reason, name), t))
+            Flow.flow cx (super, SetPropT (reason, Named (prop_reason, name), t))
 
         (* _object.name = e *)
         | lhs_loc, Ast.Pattern.Expression ((_, Member {
@@ -3324,7 +3321,7 @@ and assignment cx loc = Ast.Expression.(function
               let prop_reason = mk_reason (RProperty name) ploc in
 
               (* flow type to object property itself *)
-              Flow.flow cx (o, SetPropT (reason, (prop_reason, name), t));
+              Flow.flow cx (o, SetPropT (reason, Named (prop_reason, name), t));
 
               (* types involved in the assignment are computed
                  in pre-havoc environment. it's the assignment itself
@@ -3603,10 +3600,10 @@ and jsx_desugar cx name component_t props attributes children eloc =
       Flow.mk_tvar_where cx reason (fun tvar ->
         let reason_createElement =
           mk_reason (RProperty "createElement") eloc in
-        Flow.flow cx (react, MethodT(
+        Flow.flow cx (react, MethodT (
           reason,
           reason_createElement,
-          (reason_createElement, "createElement"),
+          Named (reason_createElement, "createElement"),
           Flow.mk_methodtype react [component_t;props] tvar
         ))
       )
@@ -4505,7 +4502,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let reason = mk_reason (RCustom "Array.isArray") callee_loc in
       let fn_t = Flow.mk_tvar_where cx reason (fun t ->
         let prop_reason = mk_reason (RProperty "isArray") prop_loc in
-        Flow.flow cx (obj_t, GetPropT (reason, (prop_reason, "isArray"), t))
+        Flow.flow cx (obj_t, GetPropT (reason, Named (prop_reason, "isArray"), t))
       ) in
       Hashtbl.replace (Context.type_table cx) prop_loc fn_t;
 
@@ -4618,8 +4615,8 @@ and get_prop ~is_cond cx reason tobj (prop_reason, name) =
   Flow.mk_tvar_where cx reason (fun t ->
     let get_prop_u =
       if is_cond
-      then TestPropT (reason, (prop_reason, name), t)
-      else GetPropT (reason, (prop_reason, name), t)
+      then TestPropT (reason, Named (prop_reason, name), t)
+      else GetPropT (reason, Named (prop_reason, name), t)
     in
     Flow.flow cx (tobj, get_prop_u)
   )
@@ -4650,7 +4647,7 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
           RCustom (spf ".%s of %s" x (string_of_desc desc))
         ) reason in
         let t = Flow.mk_tvar_where cx reason (fun tvar ->
-          Flow.flow cx (spec, GetPropT (reason, (reason, "value"), tvar))
+          Flow.flow cx (spec, GetPropT (reason, Named (reason, "value"), tvar))
         ) in
         let p = Field (t, Neutral) in
         SMap.add x p acc
@@ -4680,8 +4677,8 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     let spec = expression cx config in
     let tvar = Flow.mk_tvar cx reason in
     let prop_reason = mk_reason (RProperty x) ploc in
-    Flow.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
-    Flow.flow cx (o, SetPropT (reason, (prop_reason, x), tvar));
+    Flow.flow cx (spec, GetPropT (reason, Named (reason, "value"), tvar));
+    Flow.flow cx (o, SetPropT (reason, Named (prop_reason, x), tvar));
     o
 
   | ("defineProperties", [ Expression e;
@@ -4700,8 +4697,8 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
           RCustom (spf ".%s of %s" x (string_of_desc desc))
         ) reason in
         let tvar = Flow.mk_tvar cx reason in
-        Flow.flow cx (spec, GetPropT(reason, (reason, "value"), tvar));
-        Flow.flow cx (o, SetPropT (reason, (reason, x), tvar));
+        Flow.flow cx (spec, GetPropT (reason, Named (reason, "value"), tvar));
+        Flow.flow cx (o, SetPropT (reason, Named (reason, x), tvar));
     );
     o
 

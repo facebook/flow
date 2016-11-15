@@ -52,10 +52,10 @@ type error_message =
   | EExpectedNumberLit of (reason * reason) * Type.number_literal * Type.number_literal Type.literal
   | EExpectedBooleanLit of (reason * reason) * bool * bool option
   | EPropNotFound of (reason * reason)
-  | EPropAccess of (reason * reason) * string * Type.property * Type.rw
-  | EPropPolarityMismatch of (reason * reason) * string * (Type.polarity * Type.polarity)
+  | EPropAccess of (reason * reason) * string option * Type.property * Type.rw
+  | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity)
   | EPolarityMismatch of Type.typeparam * Type.polarity
-  | EStrictLookupFailed of (reason * reason) * reason * string
+  | EStrictLookupFailed of (reason * reason) * reason * string option
   | EFunCallParam of (reason * reason)
   | EFunCallThis of reason * reason * reason
   | EFunReturn of (reason * reason)
@@ -103,6 +103,8 @@ type error_message =
   | EBinaryInRHS of reason
   | EArithmeticOperand of reason
   | EForInRHS of reason
+  | EObjectComputedPropertyAccess of (reason * reason)
+  | EObjectComputedPropertyAssign of (reason * reason)
 
 and binding_error =
   | ENameAlreadyBound
@@ -126,6 +128,11 @@ and internal_error =
   | PropertyDescriptorPropertyCannotBeRead
   | ForInLHS
   | ForOfLHS
+  | InstanceLookupComputed
+  | PropRefComputedOpen
+  | PropRefComputedLiteral
+  | ShadowReadComputed
+  | ShadowWriteComputed
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -204,10 +211,8 @@ end = struct
       | ConstructorT _ -> "Constructor cannot be called on"
       | GetElemT _ -> "Computed property/element cannot be accessed on"
       | SetElemT _ -> "Computed property/element cannot be assigned on"
-      | ElemT (_, ObjT _, _, Read) -> "Computed property cannot be accessed with"
-      | ElemT (_, ArrT _, _, Read) -> "Element cannot be accessed with"
-      | ElemT (_, ObjT _, _, Write) -> "Computed property cannot be assigned with"
-      | ElemT (_, ArrT _, _, Write) -> "Element cannot be assigned with"
+      | ElemT (_, _, _, Read) -> "Element cannot be accessed with"
+      | ElemT (_, _, _, Write) -> "Element cannot be assigned with"
       | ObjAssignT _ -> "Expected object instead of"
       | ObjRestT _ -> "Expected object instead of"
       | ObjSealT _ -> "Expected object instead of"
@@ -317,9 +322,13 @@ end = struct
     in
 
     let prop_polarity_error reasons x p1 p2 =
-      let msg = spf "%s property `%s` incompatible with %s use in"
+      let prop_name = match x with
+      | Some x -> spf "property `%s`" x
+      | None -> "computed property"
+      in
+      let msg = spf "%s %s incompatible with %s use in"
         (String.capitalize (Polarity.string p1))
-        x
+        prop_name
         (Polarity.string p2)
       in
       typecheck_error msg reasons
@@ -467,19 +476,16 @@ end = struct
          `builtin_reason` instead of an actual location (see `Init_js.init`). *)
       if is_builtin_reason lreason
       then
-        let msg =
-          if is_internal_module_name x
-          then "Required module not found"
-          else "Could not resolve name"
+        let msg = match x with
+        | Some x when is_internal_module_name x -> "Required module not found"
+        | _ -> "Could not resolve name"
         in
         mk_error [mk_info (fst reasons) [msg]]
       else
-        let msg =
-          if x = "$call"
-          then "Callable signature not found in"
-          else if x = "$key" || x = "$value"
-          then "Indexable signature not found in"
-          else "Property not found in"
+        let msg = match x with
+        | Some "$call" -> "Callable signature not found in"
+        | Some "$key" | Some "$value" -> "Indexable signature not found in"
+        | _ -> "Property not found in"
         in
         typecheck_error msg reasons
 
@@ -719,6 +725,16 @@ end = struct
             "unexpected LHS in for...in"
         | ForOfLHS ->
             "unexpected LHS in for...of"
+        | InstanceLookupComputed ->
+            "unexpected computed property lookup on InstanceT"
+        | PropRefComputedOpen ->
+            "unexpected open computed property element type"
+        | PropRefComputedLiteral ->
+            "unexpected literal computed proprety element type"
+        | ShadowReadComputed ->
+            "unexpected shadow read on computed property"
+        | ShadowWriteComputed ->
+            "unexpected shadow write on computed property"
         in
         mk_error ~kind:InternalError [loc, [spf "Internal error: %s" msg]]
 
@@ -913,6 +929,13 @@ end = struct
           "The right-hand side of a `for...in` statement must be an \
            object, null or undefined." in
         mk_error [mk_info reason [msg]]
+
+    | EObjectComputedPropertyAccess reasons ->
+        typecheck_error "Computed property cannot be accessed with" reasons
+
+    | EObjectComputedPropertyAssign reasons ->
+        typecheck_error "Computed property cannot be assigned with" reasons
+
 
   let add_output cx ?trace msg =
     let error = error_of_msg cx ?trace msg in

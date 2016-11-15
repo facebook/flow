@@ -82,8 +82,8 @@ type reason_desc =
   | RShadowProperty of string
   | RPropertyOf of string * reason_desc
   | RPropertyIsAString of string
-  | RMissingProperty of string
-  | RUnknownProperty of string
+  | RMissingProperty of string option
+  | RUnknownProperty of string option
   | RSomeProperty
   | RNameProperty of reason_desc
   | RMissingAbstract of reason_desc

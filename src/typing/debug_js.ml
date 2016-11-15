@@ -362,7 +362,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | MethodT (_, _, name, funtype) -> [
-      "name", json_of_propname json_cx name;
+      "propRef", json_of_propref json_cx name;
       "funType", json_of_funtype json_cx funtype
     ]
 
@@ -378,7 +378,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | SetPropT (_, name, t)
   | GetPropT (_, name, t)
   | TestPropT (_, name, t) -> [
-      "propName", json_of_propname json_cx name;
+      "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
     ]
 
@@ -468,7 +468,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) targs)
     ]
 
-  | LookupT (_, rstrict, _, name, action) ->
+  | LookupT (_, rstrict, _, propref, action) ->
     (match rstrict with
       | NonstrictReturning None -> []
       | NonstrictReturning (Some (default, result)) -> [
@@ -487,7 +487,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
             JSON_Number (Properties.string_of_id id)
         ))]
     ) @ [
-      "name", JSON_String name;
+      "propref", json_of_propref json_cx propref;
       "action", json_of_lookup_action json_cx action
     ]
 
@@ -848,12 +848,15 @@ and json_of_polarity_map_impl json_cx pmap = Hh_json.(
   JSON_Array (List.rev lst)
 )
 
-and json_of_propname json_cx = check_depth json_of_propname_impl json_cx
-and json_of_propname_impl _json_cx (reason, literal) = Hh_json.(
-  JSON_Object [
-    "reason", json_of_reason ~strip_root:_json_cx.strip_root reason;
-    "literal", JSON_String literal;
-  ]
+and json_of_propref json_cx = check_depth json_of_propref_impl json_cx
+and json_of_propref_impl json_cx = Hh_json.(function
+  | Named (r, x) -> JSON_Object [
+      "reason", json_of_reason ~strip_root:json_cx.strip_root r;
+      "name", JSON_String x;
+    ]
+  | Computed t -> JSON_Object [
+      "elem", _json_of_t json_cx t
+    ]
 )
 
 and json_of_tmap json_cx = check_depth json_of_tmap_impl json_cx
@@ -1352,6 +1355,11 @@ and dump_use_t_ (depth, tvars) cx t =
   let use_kid use_t = dump_use_t_ (depth-1, tvars) cx use_t in
   let prop p = dump_prop_ (depth-1, tvars) cx p in
 
+  let propref = function
+    | Named (r, x) -> spf "%S %s" (dump_reason cx r) x
+    | Computed t -> kid t
+  in
+
   let lookup_kind = function
   | NonstrictReturning None -> "Nonstrict"
   | NonstrictReturning (Some (t, _)) -> spf "Nonstrict returning %s" (kid t)
@@ -1411,9 +1419,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | ExportNamedT _ -> p t
   | GetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
-  | GetPropT (_, (r, name), ptype) -> p ~extra:(spf "(%S, %S), %s"
-      (string_of_desc (desc_of_reason r))
-      name
+  | GetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+      (propref prop)
       (kid ptype)) t
   | GetStaticsT (_, arg) -> p ~extra:(kid arg) t
   | GuardT (pred, result, sink) -> p ~reason:false
@@ -1430,15 +1437,13 @@ and dump_use_t_ (depth, tvars) cx t =
   | ImportTypeofT _ -> p t
   | ImportTypeT _ -> p t
   | IntersectionPreprocessKitT _ -> p t
-  | LookupT (_, kind, _, name, action) -> p ~extra:(spf "%S, %s, %s"
-      name
+  | LookupT (_, kind, _, prop, action) -> p ~extra:(spf "%S, %s, %s"
+      (propref prop)
       (lookup_kind kind)
       (lookup_action action)) t
   | MakeExactT _ -> p t
   | MapTypeT _ -> p t
-  | MethodT (_, _, (r, name), _) -> p ~extra:(spf "(%S, %S)"
-      (string_of_desc (desc_of_reason r))
-      name) t
+  | MethodT (_, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | ObjAssignT _ -> p t
@@ -1458,15 +1463,13 @@ and dump_use_t_ (depth, tvars) cx t =
   | SummarizeT (_, arg) -> p ~extra:(kid arg) t
   | SuperT _ -> p t
   | SetElemT (_, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
-  | SetPropT (_, (r, name), ptype) -> p ~extra:(spf "(%S, %S), %s"
-      (string_of_desc (desc_of_reason r))
-      name
+  | SetPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+      (propref prop)
       (kid ptype)) t
   | SpecializeT (_, _, b, args, ret) -> p ~extra:(spf "%b, [%s], %s"
       b (String.concat "; " (List.map kid args)) (kid ret)) t
-  | TestPropT (_, (r, name), ptype) -> p ~extra:(spf "(%S, %S), %s"
-      (string_of_desc (desc_of_reason r))
-      name
+  | TestPropT (_, prop, ptype) -> p ~extra:(spf "(%s), %s"
+      (propref prop)
       (kid ptype)) t
   | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | UnaryMinusT _ -> p t

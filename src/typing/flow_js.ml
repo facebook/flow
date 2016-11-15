@@ -1852,10 +1852,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, AnyFunT _)) when function_like l -> ()
 
-    | AnyFunT reason, GetPropT (_, (_, x), _)
-    | AnyFunT reason, SetPropT (_, (_, x), _)
-    | AnyFunT reason, LookupT (_, _, _, x, _)
-    | AnyFunT reason, MethodT (_, _, (_, x), _)
+    | AnyFunT reason, GetPropT (_, Named (_, x), _)
+    | AnyFunT reason, SetPropT (_, Named (_, x), _)
+    | AnyFunT reason, LookupT (_, _, _, Named (_, x), _)
+    | AnyFunT reason, MethodT (_, _, Named (_, x), _)
     | AnyFunT reason, HasPropT (_, _, Literal x) when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, UseT (_, u)) when function_like u -> ()
@@ -2651,7 +2651,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        result of the read cannot be used in any interesting way. *)
     (**************************************************************************)
 
-    | _, TestPropT (reason_op, (reason_prop, name), tout) ->
+    | _, TestPropT (reason_op, propref, tout) ->
       let t = tvar_with_constraint cx ~trace ~derivable:true
         (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
       in
@@ -2659,6 +2659,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | ObjT (_, { flags; _ })
             when flags.exact ->
           if sealed_in_op reason_op flags.sealed then
+            let name = name_of_propref propref in
             let r = replace_reason_const (RMissingProperty name) reason_op in
             Some (VoidT r, t)
           else
@@ -2672,11 +2673,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
              any other exact types. Considering exact types inexact is sound, so
              there is no problem falling back to the same conservative
              approximation we use for inexact types in those cases. *)
+          let name = name_of_propref propref in
           let r = replace_reason_const (RUnknownProperty name) reason_op in
           Some (MixedT (r, Mixed_everything), t)
       ) in
       let lookup =
-        LookupT (reason_prop, lookup_kind, [], name, RWProp (t, Read))
+        LookupT (reason_op, lookup_kind, [], propref, RWProp (t, Read))
       in rec_flow cx trace (l, lookup)
 
 
@@ -3087,7 +3089,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallT (reason_op, { params_tlist = obj::_; return_t; _ }) ->
       rec_flow cx trace (
         obj,
-        GetPropT(reason_op, (reason_op, "__proto__"), return_t)
+        GetPropT(reason_op, Named (reason_op, "__proto__"), return_t)
       );
 
     (* If you haven't heard, React is a pretty big deal. *)
@@ -3199,6 +3201,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Properties in u must either exist in l, or match l's indexer. *)
       iter_real_props cx uflds (fun s up ->
         let reason_prop = replace_reason_const (RProperty s) ureason in
+        let propref = Named (reason_prop, s) in
         match Context.get_prop cx lflds s, ldict with
         | Some lp, _ ->
           if lit then (
@@ -3214,7 +3217,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               Context.set_prop cx lflds s up
           ) else (
             (* prop from aliased LB *)
-            rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
+            rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
           )
         | None, Some { key; value; dict_polarity; _ }
             when not (is_dictionary_exempt s) ->
@@ -3231,7 +3234,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
             | _ -> ()
           else
-            rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
+            rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
           (* property doesn't exist in inflowing type *)
           match up with
@@ -3254,9 +3257,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             | _ -> NonstrictReturning None
             in
             rec_flow cx trace (lproto,
-              LookupT (reason_prop, strict, [], s, LookupProp up))
-            (* TODO: instead, consider extending inflowing type with s:t2 when
-               it is not sealed *)
+              LookupT (ureason, strict, [], propref, LookupProp up))
+            (* TODO: instead, consider extending inflowing type with s:t2 when it
+               is not sealed *)
       );
 
       (* Any properties in l but not u must match indexer *)
@@ -3279,7 +3282,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
               | _ -> ()
             else
-              rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
+              let reason_prop = replace_reason_const (RProperty s) lreason in
+              let propref = Named (reason_prop, s) in
+              rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
           )));
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -3300,19 +3305,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
 
       iter_real_props cx uflds (fun s up ->
+        let reason_prop = replace_reason_const (RProperty s) ureason in
+        let propref = Named (reason_prop, s) in
         match SMap.get s lflds with
         | Some lp ->
-          rec_flow_p cx trace ~use_op lreason ureason s (lp, up)
+          rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
         | _ ->
-          let ureason = replace_reason_const (RProperty s) ureason in
           match up with
           | Field (OptionalT ut, upolarity) ->
             rec_flow cx trace (l,
-              LookupT (ureason, NonstrictReturning None, [], s,
+              LookupT (reason_prop, NonstrictReturning None, [], propref,
                 LookupProp (Field (ut, upolarity))))
           | _ ->
             rec_flow cx trace (super,
-              LookupT (ureason, Strict lreason, [], s, LookupProp up))
+              LookupT (reason_prop, Strict lreason, [], propref,
+                LookupProp up))
       );
 
       rec_flow cx trace (l, UseT (use_op, uproto))
@@ -3335,7 +3342,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           RCustom (spf "%s used as a function" (string_of_desc desc))
         ) reason
       ) in
-      lookup_prop cx trace l reason_op (Strict reason) "$call"
+      lookup_prop cx trace l reason_op reason_op (Strict reason) "$call"
         (RWProp (tvar, Read));
       rec_flow cx trace (tvar, u)
 
@@ -3362,19 +3369,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (o, u)
 
     | (ObjT (reason, { props_tmap = mapr; _ }), UseT (_, ShapeT (proto))) ->
+        (* TODO: ShapeT should have its own reason *)
+        let reason_op = reason_of_t proto in
         Context.iter_props cx mapr (fun x p ->
           match Property.read_t p with
           | Some t ->
-            let reason = replace_reason (fun desc ->
+            let reason_prop = replace_reason (fun desc ->
               RPropertyOf (x, desc)
             ) reason in
-            let t = filter_optional cx ~trace reason t in
-            rec_flow cx trace (proto, SetPropT (reason, (reason, x), t))
+            let propref = Named (reason_prop, x) in
+            let t = filter_optional cx ~trace reason_prop t in
+            rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
           | None ->
-            (* TODO: ShapeT should have its own reason *)
-            let reason_op = reason_of_t proto in
             add_output cx trace
-              (FlowError.EPropAccess ((reason, reason_op), x, p, Read))
+              (FlowError.EPropAccess ((reason, reason_op), Some x, p, Read))
         )
 
     | (_, UseT (_, ShapeT (o))) ->
@@ -3456,9 +3464,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* call this.constructor(args) *)
       let ret = mk_tvar_where cx reason_op (fun t ->
         let funtype = mk_methodtype this args t in
+        let propref = Named (reason_o, "constructor") in
         rec_flow cx trace (
           this,
-          MethodT (reason_op, reason_o, (reason_o, "constructor"), funtype)
+          MethodT (reason_op, reason_o, propref, funtype)
         );
       ) in
       (* return this *)
@@ -3531,7 +3540,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********************************************************)
 
     | InstanceT (lreason, _, super, instance),
-      LookupT (reason_op, kind, try_ts_on_failure, x, action) ->
+      LookupT (reason_op, kind, try_ts_on_failure, (Named (_, x) as propref), action) ->
       let fields_pmap = Context.find_props cx instance.fields_tmap in
       let methods_pmap = Context.find_props cx instance.methods_tmap in
       let pmap = SMap.union fields_pmap methods_pmap in
@@ -3546,7 +3555,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | _ -> kind
         in
         rec_flow cx trace (super,
-          LookupT (reason_op, kind, try_ts_on_failure, x, action))
+          LookupT (reason_op, kind, try_ts_on_failure, propref, action))
       | Some p ->
         (* TODO: Replace AbstractT with abstract fields, then reuse
            perform_lookup_action here. *)
@@ -3565,7 +3574,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | Write, Some t1 -> rec_flow_t cx trace (t2, t1)
           | _, None ->
             add_output cx trace
-              (FlowError.EPropAccess ((lreason, reason_op), x, p, rw)))
+              (FlowError.EPropAccess ((lreason, reason_op), Some x, p, rw)))
         | LookupProp up ->
           let p, up = match p, up with
           | Field (AbstractT t, polarity), Field (AbstractT ut, upolarity) ->
@@ -3574,7 +3583,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             Field (t, polarity), up
           | _ -> p, up
           in
-          rec_flow_p cx trace lreason reason_op x (p, up)
+          rec_flow_p cx trace lreason reason_op propref (p, up)
         | SuperProp lp ->
           let p, lp = match p, lp with
           | Field (AbstractT t, polarity), Field (AbstractT lt, lpolarity) ->
@@ -3583,14 +3592,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             Field (t, polarity), lp
           | _ -> p, lp
           in
-          rec_flow_p cx trace reason_op lreason x (lp, p)))
+          rec_flow_p cx trace reason_op lreason propref (lp, p)))
+
+    | InstanceT _, LookupT (reason_op, _, _, Computed _, _) ->
+      (* Instances don't have proper dictionary support. All computed accesses
+         are converted to named property access to `$key` and `$value` during
+         element resolution in ElemT. *)
+      let loc = loc_of_reason reason_op in
+      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (********************************)
     (* ... and their fields written *)
     (********************************)
 
     | InstanceT (reason_c, _, super, instance),
-      SetPropT (reason_op, (reason_prop, x), tin) ->
+      SetPropT (reason_op, Named (reason_prop, x), tin) ->
       Ops.push reason_op;
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
@@ -3599,18 +3615,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       set_prop cx trace reason_prop reason_op strict super x fields tin;
       Ops.pop ();
 
+    | InstanceT _, SetPropT (reason_op, Computed _, _) ->
+      (* Instances don't have proper dictionary support. All computed accesses
+         are converted to named property access to `$key` and `$value` during
+         element resolution in ElemT. *)
+      let loc = loc_of_reason reason_op in
+      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
+
     (*****************************)
     (* ... and their fields read *)
     (*****************************)
 
-    | InstanceT (_, _, super, _), GetPropT (_, (_, "__proto__"), t) ->
+    | InstanceT (_, _, super, _), GetPropT (_, Named (_, "__proto__"), t) ->
       rec_flow_t cx trace (super, t)
 
-    | InstanceT _ as instance, GetPropT (_, (_, "constructor"), t) ->
+    | InstanceT _ as instance, GetPropT (_, Named (_, "constructor"), t) ->
       rec_flow_t cx trace (ClassT instance, t)
 
     | InstanceT (reason_c, _, super, instance),
-      GetPropT (reason_op, (reason_prop, x), tout) ->
+      GetPropT (reason_op, Named (reason_prop, x), tout) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let fields = SMap.union fields_tmap methods_tmap in
@@ -3620,12 +3643,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       get_prop cx trace reason_prop reason_op strict super x fields tout
 
+    | InstanceT _, GetPropT (reason_op, Computed _, _) ->
+      (* Instances don't have proper dictionary support. All computed accesses
+         are converted to named property access to `$key` and `$value` during
+         element resolution in ElemT. *)
+      let loc = loc_of_reason reason_op in
+      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
+
     (********************************)
     (* ... and their methods called *)
     (********************************)
 
     | InstanceT (reason_c, _, super, instance),
-      MethodT (reason_call, reason_lookup, (reason_prop, x), funtype)
+      MethodT (reason_call, reason_lookup, Named (reason_prop, x), funtype)
       -> (* TODO: closure *)
       Ops.push reason_call;
       let fields_tmap = Context.find_props cx instance.fields_tmap in
@@ -3640,6 +3670,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let callt = CallT (reason_call, funtype) in
       rec_flow cx trace (funt, callt);
       Ops.pop ();
+
+    | InstanceT _, MethodT (reason_call, _, Computed _, _) ->
+      (* Instances don't have proper dictionary support. All computed accesses
+         are converted to named property access to `$key` and `$value` during
+         element resolution in ElemT. *)
+      let loc = loc_of_reason reason_call in
+      add_output cx trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (** In traditional type systems, object types are not extensible.  E.g., an
         object {x: 0, y: ""} has type {x: number; y: string}. While it is
@@ -3715,20 +3752,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Ops.push reason_op;
       Context.iter_props cx mapr (fun x p ->
         if not (List.mem x props_to_skip) then (
+          (* move the reason to the call site instead of the definition, so
+             that it is in the same scope as the Object.assign, so that
+             strictness rules apply. *)
+          let reason_prop =
+            lreason
+            |> replace_reason (fun desc -> RPropertyOf (x, desc))
+            |> repos_reason (loc_of_reason reason_op)
+          in
           match Property.read_t p with
           | Some t ->
-            (* move the reason to the call site instead of the definition, so
-               that it is in the same scope as the Object.assign, so that
-               strictness rules apply. *)
-            let r =
-              let f = fun desc -> RPropertyOf (x, desc) in
-              replace_reason f lreason in
-            let r = repos_reason (loc_of_reason reason_op) r in
-            let t = filter_optional cx ~trace r t in
-            rec_flow cx trace (proto, SetPropT (r, (r, x), t));
+            let propref = Named (reason_prop, x) in
+            let t = filter_optional cx ~trace reason_prop t in
+            rec_flow cx trace (proto, SetPropT (reason_prop, propref, t));
           | None ->
             add_output cx trace
-              (FlowError.EPropAccess ((lreason, reason_op), x, p, Read))
+              (FlowError.EPropAccess ((lreason, reason_op), Some x, p, Read))
         )
       );
       Ops.pop ();
@@ -3743,10 +3782,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         if not (List.mem x props_to_skip) then (
           match Property.read_t p with
           | Some t ->
-            rec_flow cx trace (proto, SetPropT (reason_op, (reason_op, x), t))
+            let propref = Named (reason_op, x) in
+            rec_flow cx trace (proto, SetPropT (reason_op, propref, t))
           | None ->
             add_output cx trace
-              (FlowError.EPropAccess ((lreason, reason_op), x, p, Read))
+              (FlowError.EPropAccess ((lreason, reason_op), Some x, p, Read))
         )
       );
       rec_flow_t cx trace (proto, t)
@@ -3846,11 +3886,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*******************************************)
 
     | ObjT (reason_obj, o),
-      LookupT (reason_op, strict, try_ts_on_failure, x, action) ->
+      LookupT (reason_op, strict, try_ts_on_failure, propref, action) ->
       let ops = Ops.clear () in
-      (match get_obj_prop cx trace o x reason_op with
+      (match get_obj_prop cx trace o propref reason_op with
       | Some p ->
-        perform_lookup_action cx trace x p reason_obj reason_op action
+        perform_lookup_action cx trace propref p reason_obj reason_op action
       | None ->
         let strict = match sealed_in_op reason_op o.flags.sealed, strict with
         | false, ShadowRead (strict, ids) ->
@@ -3860,18 +3900,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | _ -> strict
         in
         rec_flow cx trace (o.proto_t,
-          LookupT (reason_op, strict, try_ts_on_failure, x, action)));
+          LookupT (reason_op, strict, try_ts_on_failure, propref, action)));
       Ops.set ops
 
-    | AnyObjT reason_obj, LookupT (reason_op, _, _, x, action) ->
+    | AnyObjT reason_obj, LookupT (reason_op, _, _, propref, action) ->
       let p = Field (AnyT.why reason_op, Neutral) in
-      perform_lookup_action cx trace x p reason_obj reason_op action
+      perform_lookup_action cx trace propref p reason_obj reason_op action
 
     (*****************************************)
     (* ... and their fields written *)
     (*****************************************)
 
-    | (ObjT (_, {flags; _}), SetPropT(_, (_, "constructor"), _)) ->
+    | (ObjT (_, {flags; _}), SetPropT(_, Named (_, "constructor"), _)) ->
       if flags.frozen
       then
         let reasons = FlowError.ordered_reasons l u in
@@ -3883,8 +3923,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reasons = FlowError.ordered_reasons l u in
       add_output cx trace (FlowError.EMutationNotAllowed reasons)
 
-    | ObjT (reason_obj, o), SetPropT (reason_op, propname, tin) ->
-      write_obj_prop cx trace o propname reason_obj reason_op tin
+    | ObjT (reason_obj, o), SetPropT (reason_op, propref, tin) ->
+      write_obj_prop cx trace o propref reason_obj reason_op tin
 
     (* Since we don't know the type of the prop, use AnyT. *)
     | (AnyObjT _, SetPropT (reason_op, _, t)) ->
@@ -3894,17 +3934,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their fields read *)
     (*****************************)
 
-    | ObjT (_, {proto_t = proto; _}), GetPropT (_, (_, "__proto__"), t) ->
+    | ObjT (_, {proto_t = proto; _}), GetPropT (_, Named (_, "__proto__"), t) ->
       rec_flow_t cx trace (proto,t)
 
-    | ObjT _, GetPropT(reason_op, (_, "constructor"), tout) ->
+    | ObjT _, GetPropT (reason_op, Named (_, "constructor"), tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | ObjT (reason_obj, o), GetPropT (reason_op, propname, tout) ->
-      let tout = tvar_with_constraint cx ~trace
+    | ObjT (reason_obj, o), GetPropT (reason_op, propref, tout) ->
+      let tout = tvar_with_constraint ~trace cx
         (ReposLowerT (reason_op, UseT (UnknownUse, tout)))
       in
-      read_obj_prop cx trace o propname reason_obj reason_op tout
+      read_obj_prop cx trace o propref reason_obj reason_op tout
 
     | (AnyObjT _ | AnyT _), GetPropT (reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -3913,12 +3953,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their methods called *)
     (********************************)
 
-    | (ObjT _, MethodT(_, _, (_, "constructor"), _)) -> ()
+    | ObjT _, MethodT(_, _, Named (_, "constructor"), _) -> ()
 
     | ObjT (reason_obj, o),
-      MethodT (reason_call, reason_lookup, propname, funtype) ->
+      MethodT (reason_call, reason_lookup, propref, funtype) ->
       let t = mk_tvar_where cx reason_lookup (fun tout ->
-        read_obj_prop cx trace o propname reason_obj reason_lookup tout
+        read_obj_prop cx trace o propref reason_obj reason_lookup tout
       ) in
       rec_flow cx trace (t, CallT (reason_call, funtype))
 
@@ -3984,28 +4024,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       rec_flow cx trace (key, ElemT(reason_op, l, tout, Read))
 
-    | (StrT (reason_x, Literal x), ElemT(reason_op, (ObjT _ as o), t, rw)) ->
-      let reason_x = replace_reason_const (RProperty x) reason_x in
+    | (_, ElemT (reason_op, (ObjT _ as o), t, rw)) ->
+      let propref = match l with
+      | StrT (reason_x, Literal x) ->
+          let reason_prop = replace_reason_const (RProperty x) reason_x in
+          Named (reason_prop, x)
+      | _ -> Computed l
+      in
       let u = match rw with
-      | Read -> GetPropT (reason_op, (reason_x, x), t)
-      | Write -> SetPropT (reason_op, (reason_x, x), t)
+      | Read -> GetPropT (reason_op, propref, t)
+      | Write -> SetPropT (reason_op, propref, t)
       in
       rec_flow cx trace (o, u)
-
-    (* if the object is a dictionary, verify it *)
-    | (_, ElemT(_, ObjT(_, {dict_t = Some { key; value; _ }; _}), t, rw)) ->
-      rec_flow_t cx trace (l, key);
-      (match rw with
-      | Read -> rec_flow_t cx trace (value, t)
-      | Write -> rec_flow_t cx trace (t, value))
-
-    (* otherwise, any, string, and number keys are allowed, but there's nothing
-       else to flow without knowing their literal values. *)
-    | (AnyT _ | StrT _ | NumT _), ElemT (_, ObjT _, t, rw) ->
-      (match rw with
-      | Read -> rec_flow_t cx trace (AnyT.t, t)
-      | Write -> rec_flow_t cx trace (t, AnyT.t))
-
 
     | AnyT _, ElemT(_, ArrT (_, value, _), t, rw) ->
       (match rw with
@@ -4028,11 +4058,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Read -> rec_flow_t cx trace (value, t)
       | Write -> rec_flow_t cx trace (t, value))
 
-    | (ArrT _, GetPropT(reason_op, (_, "constructor"), tout)) ->
+    | (ArrT _, GetPropT(reason_op, Named (_, "constructor"), tout)) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
-    | (ArrT _, SetPropT(_, (_, "constructor"), _))
-    | (ArrT _, MethodT(_, _, (_, "constructor"), _)) ->
+    | (ArrT _, SetPropT(_, Named (_, "constructor"), _))
+    | (ArrT _, MethodT(_, _, Named (_, "constructor"), _)) ->
       ()
 
     (**************************************************)
@@ -4101,17 +4131,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* functions may have their prototypes written *)
     (***********************************************)
 
-    | (FunT (_, _, t, _), SetPropT(reason_op, (_, "prototype"), tin)) ->
+    | (FunT (_, _, t, _), SetPropT(reason_op, Named (_, "prototype"), tin)) ->
       rec_flow cx trace (tin, ObjAssignT(reason_op, t, AnyT.t, [], false))
 
     (*********************************)
     (* ... and their prototypes read *)
     (*********************************)
 
-    | (FunT (_, _, t, _), GetPropT(_, (_, "prototype"), tout)) ->
+    | (FunT (_, _, t, _), GetPropT(_, Named (_, "prototype"), tout)) ->
       rec_flow_t cx trace (t,tout)
 
-    | (ClassT (instance), GetPropT(_, (_, "prototype"), tout)) ->
+    | (ClassT (instance), GetPropT(_, Named (_, "prototype"), tout)) ->
       rec_flow_t cx trace (instance, tout)
 
     (**************************************)
@@ -4344,25 +4374,31 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         );
         let strict = NonstrictReturning None in
         Context.iter_props cx instance.fields_tmap (fun x p ->
-          lookup_prop cx trace l reason strict x (SuperProp p)
+          let reason_prop = replace_reason_const (RProperty x) reason in
+          lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
         );
         Context.iter_props cx instance.methods_tmap (fun x p ->
           if inherited_method x then
-            lookup_prop cx trace l reason strict x (SuperProp p)
+            let reason_prop = replace_reason_const (RProperty x) reason in
+            lookup_prop cx trace l reason_prop reason strict x (SuperProp p)
         )
 
     | ObjT _, SuperT (reason, instance)
     | AnyObjT _, SuperT (reason, instance)
       ->
         Context.iter_props cx instance.fields_tmap (fun x p ->
+          let reason_prop = replace_reason_const (RProperty x) reason in
+          let propref = Named (reason_prop, x) in
           rec_flow cx trace (l,
-            LookupT (reason, NonstrictReturning None, [], x,
+            LookupT (reason, NonstrictReturning None, [], propref,
               SuperProp p))
         );
         Context.iter_props cx instance.methods_tmap (fun x p ->
+          let reason_prop = replace_reason_const (RProperty x) reason in
+          let propref = Named (reason_prop, x) in
           if inherited_method x then
             rec_flow cx trace (l,
-              LookupT (reason, NonstrictReturning None, [], x,
+              LookupT (reason, NonstrictReturning None, [], propref,
                 SuperProp p))
         )
 
@@ -4550,8 +4586,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        the presence of a $call property in the former (as a static) compatible
        with the latter. *)
     | (ClassT _, (UseT (_, FunT (reason, _, _, _)) | CallT (reason, _))) ->
+      let propref = Named (reason, "$call") in
       rec_flow cx trace (l,
-        GetPropT(reason, (reason, "$call"), tvar_with_constraint cx ~trace u))
+        GetPropT (reason, propref, tvar_with_constraint ~trace cx u))
 
     (* For a function type to be used as a class type, the following must hold:
        - the class's instance type must be a subtype of the function's prototype
@@ -4566,22 +4603,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (instance, UseT (use_op, prototype));
       rec_flow cx trace (instance, UseT (use_op, funtype.this_t));
       rec_flow cx trace (instance, GetStaticsT (reason, static));
-      rec_flow cx trace
-        (ClassT instance, GetPropT(reason, (reason, "$call"), l))
+      rec_flow cx trace (ClassT instance,
+        GetPropT (reason, Named (reason, "$call"), l))
 
     (************)
     (* indexing *)
     (************)
 
-    | (InstanceT _, GetElemT (reason, i, t))
-      ->
-      rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
-      rec_flow cx trace (l, GetPropT(reason, (reason, "$value"), t))
+    | (InstanceT _, GetElemT (reason, i, t)) ->
+      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
+      rec_flow cx trace (l, GetPropT (reason, Named (reason, "$value"), t))
 
-    | (InstanceT _, SetElemT (reason, i, t))
-      ->
-      rec_flow cx trace (l, SetPropT(reason, (reason, "$key"), i));
-      rec_flow cx trace (l, SetPropT(reason, (reason, "$value"), t))
+    | (InstanceT _, SetElemT (reason, i, t)) ->
+      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
+      rec_flow cx trace (l, SetPropT (reason, Named (reason, "$value"), t))
 
     (*************************)
     (* repositioning, part 2 *)
@@ -4608,13 +4643,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
 
     | (ObjProtoT _,
-       LookupT (reason, strict, next::try_ts_on_failure, s, t)) ->
+       LookupT (reason, strict, next::try_ts_on_failure, propref, t)) ->
       (* When s is not found, we always try to look it up in the next element in
          the list try_ts_on_failure. *)
       rec_flow cx trace
-        (next, LookupT (reason, strict, try_ts_on_failure, s, t))
+        (next, LookupT (reason, strict, try_ts_on_failure, propref, t))
 
-    | ObjProtoT _, LookupT (reason_op, _, [], x, _)
+    | ObjProtoT _, LookupT (reason_op, _, [], Named (_, x), _)
       when is_object_prototype_method x ->
       (** TODO: These properties should go in Object.prototype. Currently we
           model Object.prototype as a ObjProtoT, as an optimization against a
@@ -4622,32 +4657,50 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           is shared by every object. **)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Object", u)
 
-    | FunProtoT _, LookupT (reason_op, _, [], x, _)
+    | FunProtoT _, LookupT (reason_op, _, [], Named (_, x), _)
       when is_function_prototype x ->
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
 
     | (ObjProtoT reason | FunProtoT reason),
-      LookupT (reason_op, Strict strict_reason, [], x, _) ->
-      add_output cx trace
-        (FlowError.EStrictLookupFailed ((reason_op, strict_reason), reason, x))
+      LookupT (_, Strict strict_reason, [], Named (reason_prop, x), _) ->
+      add_output cx trace (FlowError.EStrictLookupFailed
+        ((reason_prop, strict_reason), reason, Some x))
 
-    | (ObjProtoT reason | FunProtoT reason),
-      LookupT (reason_op, ShadowRead (strict, rev_proto_ids), [], x, action) ->
+    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+        Strict strict_reason, [], (Computed elem_t as propref), action) ->
+      (match elem_t with
+      | OpenT _ ->
+        let loc = loc_of_t elem_t in
+        add_output cx trace FlowError.(EInternal (loc, PropRefComputedOpen))
+      | StrT (_, Literal _) ->
+        let loc = loc_of_t elem_t in
+        add_output cx trace FlowError.(EInternal (loc, PropRefComputedLiteral))
+      | AnyT _ | StrT _ | NumT _ ->
+        (* any, string, and number keys are allowed, but there's nothing else to
+           flow without knowing their literal values. *)
+        let p = Field (AnyT.why reason_op, Neutral) in
+        perform_lookup_action cx trace propref p reason reason_op action
+      | _ ->
+        let reason_prop = reason_of_t elem_t in
+        add_output cx trace (FlowError.EStrictLookupFailed
+          ((reason_prop, strict_reason), reason, None)))
 
+    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+        ShadowRead (strict, rev_proto_ids), [], (Named (reason_prop, x) as propref), action) ->
       (* Emit error if this is a strict read. See `lookup_kinds` in types.ml. *)
       (match strict with
       | None -> ()
       | Some strict_reason ->
         add_output cx trace (FlowError.EStrictLookupFailed
-          ((reason_op, strict_reason), reason, x)));
+          ((reason_prop, strict_reason), reason, Some x)));
 
       (* Install shadow prop (if necessary) and link up proto chain. *)
       let p = find_or_intro_shadow_prop cx trace x (Nel.rev rev_proto_ids) in
-      perform_lookup_action cx trace x p reason reason_op action
+      perform_lookup_action cx trace propref p reason reason_op action
 
-    | (ObjProtoT reason | FunProtoT reason),
-      LookupT (reason_op, ShadowWrite rev_proto_ids, [], x, action) ->
+    | (ObjProtoT reason | FunProtoT reason), LookupT (reason_op,
+        ShadowWrite rev_proto_ids, [], (Named (_, x) as propref), action) ->
       let id, proto_ids = Nel.rev rev_proto_ids in
       let pmap = Context.find_props cx id in
       (* Re-check written-to unsealed object to see if prop was added since we
@@ -4681,7 +4734,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             |> Context.add_property_map cx id;
           p
       in
-      perform_lookup_action cx trace x p reason reason_op action
+      perform_lookup_action cx trace propref p reason reason_op action
+
+    | (ObjProtoT _ | FunProtoT _),
+      LookupT (_, ShadowRead _, [], Computed elem_t, _) ->
+      let loc = loc_of_t elem_t in
+      add_output cx trace FlowError.(EInternal (loc, ShadowReadComputed))
+
+    | (ObjProtoT _ | FunProtoT _),
+      LookupT (_, ShadowWrite _, [], Computed elem_t, _) ->
+      let loc = loc_of_t elem_t in
+      add_output cx trace FlowError.(EInternal (loc, ShadowWriteComputed))
 
     (* LookupT is a non-strict lookup *)
     | (ObjProtoT _ |
@@ -4743,8 +4806,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | FunProtoCallT reason, _ ->
       rec_flow cx trace (FunProtoT reason, u)
 
-    | (_, GetPropT (_, (reason_prop, _), _))
-    | (_, SetPropT (_, (reason_prop, _), _)) ->
+    | (_, GetPropT (_, propref, _))
+    | (_, SetPropT (_, propref, _))
+    | (_, LookupT (_, _, _, propref, _)) ->
+      let reason_prop = reason_of_propref propref in
       add_output cx trace (FlowError.EIncompatibleProp (l, u, reason_prop))
 
     | _, UseT (Addition, _) ->
@@ -5182,26 +5247,29 @@ and structural_subtype cx trace lower reason_struct
   fields_pmap |> SMap.iter (fun s p ->
     match p with
     | Field (OptionalT t, polarity) ->
-      let lookup_reason = replace_reason (fun desc ->
+      let reason_prop = replace_reason (fun desc ->
         ROptional (RPropertyOf (s, desc))
       ) reason_struct in
+      let propref = Named (reason_prop, s) in
       rec_flow cx trace (lower,
-        LookupT (lookup_reason, NonstrictReturning None, [], s,
+        LookupT (reason_prop, NonstrictReturning None, [], propref,
           LookupProp (Field (t, polarity))))
     | _ ->
-      let lookup_reason = replace_reason (fun desc ->
+      let reason_prop = replace_reason (fun desc ->
         RPropertyOf (s, desc)
       ) reason_struct in
+      let propref = Named (reason_prop, s) in
       rec_flow cx trace (lower,
-        LookupT (lookup_reason, Strict lreason, [], s, LookupProp p))
+        LookupT (reason_prop, Strict lreason, [], propref, LookupProp p))
   );
   methods_pmap |> SMap.iter (fun s p ->
     if inherited_method s then
-      let lookup_reason = replace_reason (fun desc ->
+      let reason_prop = replace_reason (fun desc ->
         RPropertyOf (s, desc)
       ) reason_struct in
+      let propref = Named (reason_prop, s) in
       rec_flow cx trace (lower,
-        LookupT (lookup_reason, Strict lreason, [], s, LookupProp p))
+        LookupT (reason_prop, Strict lreason, [], propref, LookupProp p))
   );
   rec_flow_t cx trace (lower, super)
 
@@ -5492,7 +5560,7 @@ and eval_selector cx ?trace reason curr_t s i =
     mk_tvar_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
       flow_opt cx ?trace (curr_t, match s with
-      | Prop x -> GetPropT(reason, (reason, x), tvar)
+      | Prop x -> GetPropT(reason, Named (reason, x), tvar)
       | Elem key -> GetElemT(reason, key, tvar)
       | ObjRest xs -> ObjRestT(reason, xs, tvar)
       | ArrRest i -> ArrRestT(reason, i, tvar)
@@ -5512,7 +5580,7 @@ and eval_destructor cx reason curr_t s i =
       Context.set_evaluated cx (IMap.add i tvar evaluated);
       flow_opt cx (curr_t, match s with
       | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
-      | PropertyType x -> GetPropT(reason, (reason, x), tvar)
+      | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
       )
     )
   | Some it ->
@@ -6495,14 +6563,15 @@ and is_munged_prop_name cx name =
   && name.[0] = '_'
   && name.[1] <> '_'
 
-and lookup_prop cx trace l reason strict x action =
+and lookup_prop cx trace l reason_prop reason_op strict x action =
   let l =
     (* munge names beginning with single _ *)
     if is_munged_prop_name cx x
     then ObjProtoT (reason_of_t l)
     else l
   in
-  rec_flow cx trace (l, LookupT (reason, strict, [], x, action))
+  let propref = Named (reason_prop, x) in
+  rec_flow cx trace (l, LookupT (reason_op, strict, [], propref, action))
 
 and get_prop cx trace reason_prop reason_op strict super x map tout =
   let ops = Ops.clear () in
@@ -6514,10 +6583,11 @@ and get_prop cx trace reason_prop reason_op strict super x map tout =
       rec_flow cx trace (t, u)
     | None ->
       add_output cx trace
-        (FlowError.EPropAccess ((reason_op, reason_op), x, p, Read)))
+        (FlowError.EPropAccess ((reason_op, reason_op), Some x, p, Read)))
   | None ->
     let tout = tvar_with_constraint cx ~trace u in
-    lookup_prop cx trace super reason_prop strict x (RWProp (tout, Read))
+    lookup_prop cx trace super reason_prop reason_op strict x
+      (RWProp (tout, Read))
   end;
   Ops.set ops
 
@@ -6529,49 +6599,95 @@ and set_prop cx trace reason_prop reason_op strict super x pmap tin =
       rec_flow_t cx trace (tin, t)
     | None ->
       add_output cx trace
-        (FlowError.EPropAccess ((reason_prop, reason_op), x, p, Write)))
+        (FlowError.EPropAccess ((reason_prop, reason_op), Some x, p, Write)))
   | None ->
-    lookup_prop cx trace super reason_prop strict x (RWProp (tin, Write))
+    lookup_prop cx trace super reason_prop reason_op strict x
+      (RWProp (tin, Write))
 
-and get_obj_prop cx trace o x reason_op =
-  match Context.get_prop cx o.props_tmap x, o.dict_t with
-  | Some _ as some_p, _ ->
+and get_obj_prop cx trace o propref reason_op =
+  let named_prop = match propref with
+  | Named (_, x) -> Context.get_prop cx o.props_tmap x
+  | Computed _ -> None
+  in
+  match propref, named_prop, o.dict_t with
+  | _, Some _, _ ->
     (* Property exists on this property map *)
-    some_p
-  | None, Some { key; value; dict_polarity; _ }
+    named_prop
+  | Named (_, x), None, Some { key; value; dict_polarity; _ }
     when not (is_dictionary_exempt x) ->
     (* Dictionaries match all property reads *)
     rec_flow_t cx trace (string_key x reason_op, key);
     Some (Field (value, dict_polarity))
+  | Computed k, None, Some { key; value; dict_polarity; _ } ->
+    rec_flow_t cx trace (k, key);
+    Some (Field (value, dict_polarity))
   | _ -> None
 
-and read_obj_prop cx trace o (reason_prop, x) reason_obj reason_op tout =
+and read_obj_prop cx trace o propref reason_obj reason_op tout =
   let ops = Ops.clear () in
-  (match get_obj_prop cx trace o x reason_op with
+  (match get_obj_prop cx trace o propref reason_op with
   | Some p ->
     let up = Field (tout, Positive) in
-    rec_flow_p cx trace reason_obj reason_op x (p, up)
+    rec_flow_p cx trace reason_obj reason_op propref (p, up)
   | None ->
-    let strict =
-      if sealed_in_op reason_op o.flags.sealed
-      then Strict reason_obj
-      else ShadowRead (None, Nel.one o.props_tmap)
-    in
-    rec_flow cx trace (o.proto_t,
-      LookupT (reason_prop, strict, [], x, RWProp (tout, Read))));
+    match propref with
+    | Named _ ->
+      let strict =
+        if sealed_in_op reason_op o.flags.sealed
+        then Strict reason_obj
+        else ShadowRead (None, Nel.one o.props_tmap)
+      in
+      rec_flow cx trace (o.proto_t,
+        LookupT (reason_op, strict, [], propref, RWProp (tout, Read)))
+    | Computed elem_t ->
+      match elem_t with
+      | OpenT _ ->
+        let loc = loc_of_t elem_t in
+        add_output cx trace FlowError.(EInternal (loc, PropRefComputedOpen))
+      | StrT (_, Literal _) ->
+        let loc = loc_of_t elem_t in
+        add_output cx trace FlowError.(EInternal (loc, PropRefComputedLiteral))
+      | AnyT _ | StrT _ | NumT _ ->
+        (* any, string, and number keys are allowed, but there's nothing else to
+           flow without knowing their literal values. *)
+        rec_flow_t cx trace (AnyT.why reason_op, tout)
+      | _ ->
+        let reason_prop = reason_of_t elem_t in
+        add_output cx trace (FlowError.EObjectComputedPropertyAccess
+          (reason_op, reason_prop)));
   Ops.set ops
 
-and write_obj_prop cx trace o (reason_prop, x) reason_obj reason_op tin =
-  match get_obj_prop cx trace o x reason_op with
+and write_obj_prop cx trace o propref reason_obj reason_op tin =
+  match get_obj_prop cx trace o propref reason_op with
   | Some p ->
     let up = Field (tin, Negative) in
-    rec_flow_p cx trace reason_obj reason_op x (p, up)
-  | None when sealed_in_op reason_op o.flags.sealed ->
-    add_output cx trace (FlowError.EPropNotFound (reason_prop, reason_obj))
+    rec_flow_p cx trace reason_obj reason_op propref (p, up)
   | None ->
-    let strict = ShadowWrite (Nel.one o.props_tmap) in
-    rec_flow cx trace (o.proto_t,
-      LookupT (reason_op, strict, [], x, RWProp (tin, Write)))
+    match propref with
+    | Named (reason_prop, _) ->
+      if sealed_in_op reason_op o.flags.sealed
+      then
+        add_output cx trace (FlowError.EPropNotFound (reason_prop, reason_obj))
+      else
+        let strict = ShadowWrite (Nel.one o.props_tmap) in
+        rec_flow cx trace (o.proto_t,
+          LookupT (reason_op, strict, [], propref, RWProp (tin, Write)))
+    | Computed elem_t ->
+      match elem_t with
+      | OpenT _ ->
+        let loc = loc_of_t elem_t in
+        add_output cx trace FlowError.(EInternal (loc, PropRefComputedOpen))
+      | StrT (_, Literal _) ->
+        let loc = loc_of_t elem_t in
+        add_output cx trace FlowError.(EInternal (loc, PropRefComputedLiteral))
+      | AnyT _ | StrT _ | NumT _ ->
+        (* any, string, and number keys are allowed, but there's nothing else to
+           flow without knowing their literal values. *)
+        rec_flow_t cx trace (tin, AnyT.why reason_op)
+      | _ ->
+        let reason_prop = reason_of_t elem_t in
+        add_output cx trace (FlowError.EObjectComputedPropertyAssign
+          (reason_op, reason_prop));
 
 and find_or_intro_shadow_prop cx trace x =
   let intro_shadow_prop id =
@@ -7171,7 +7287,7 @@ and prop_exists_test_generic
       | None ->
         (* prop cannot be read *)
         add_output cx trace
-          (FlowError.EPropAccess ((lreason, reason), key, p, Read)))
+          (FlowError.EPropAccess ((lreason, reason), Some key, p, Read)))
     | None when flags.exact && sealed_in_op (reason_of_t result) flags.sealed ->
       (* prop is absent from exact object type *)
       if sense
@@ -7357,7 +7473,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         let reason_obj = reason_of_t obj in
         let reason = reason_of_t result in
         add_output cx trace
-          (FlowError.EPropAccess ((reason_obj, reason), key, p, Read)))
+          (FlowError.EPropAccess ((reason_obj, reason), Some key, p, Read)))
     | None ->
       (* TODO: possibly unsound to filter out orig_obj here, but if we
          don't, case elimination based on sentinel prop checking doesn't
@@ -7834,7 +7950,7 @@ and unify_props cx trace x r1 r2 p1 p2 =
       Polarity.compat (polarity2, polarity1)
     ) then
       add_output cx trace
-        (FlowError.EPropPolarityMismatch ((r1, r2), x, (polarity1, polarity2)))
+        (FlowError.EPropPolarityMismatch ((r1, r2), Some x, (polarity1, polarity2)))
 
 (* If some property `x` exists in one object but not another, ensure the
    property is compatible with a dictionary, or error if none. *)
@@ -8032,16 +8148,17 @@ and multiflow_partial cx trace ?strict = function
     rec_flow cx trace (tin, tout);
     multiflow_partial cx trace ?strict (tins,touts)
 
-and perform_lookup_action cx trace x p lreason ureason = function
+and perform_lookup_action cx trace propref p lreason ureason = function
   | LookupProp up ->
-    rec_flow_p cx trace lreason ureason x (p, up)
+    rec_flow_p cx trace lreason ureason propref (p, up)
   | SuperProp lp ->
-    rec_flow_p cx trace ureason lreason x (lp, p)
+    rec_flow_p cx trace ureason lreason propref (lp, p)
   | RWProp (tout, rw) ->
     match rw, Property.access rw p with
     | Read, Some t -> rec_flow_t cx trace (t, tout)
     | Write, Some t -> rec_flow_t cx trace (tout, t)
     | _, None ->
+      let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
       add_output cx trace
         (FlowError.EPropAccess ((lreason, ureason), x, p, rw))
 
@@ -8053,12 +8170,14 @@ and string_key s reason =
 
 and get_builtin cx ?trace x reason =
   mk_tvar_where cx reason (fun builtin ->
-    flow_opt cx ?trace (builtins cx, GetPropT(reason, (reason, x), builtin))
+    let propref = Named (reason, x) in
+    flow_opt cx ?trace (builtins cx, GetPropT (reason, propref, builtin))
   )
 
 and lookup_builtin cx ?trace x reason strict builtin =
+  let propref = Named (reason, x) in
   flow_opt cx ?trace (builtins cx,
-    LookupT(reason, strict, [], x, RWProp (builtin, Read)))
+    LookupT (reason, strict, [], propref, RWProp (builtin, Read)))
 
 and get_builtin_typeapp cx ?trace reason x ts =
   TypeAppT(get_builtin cx ?trace x reason, ts)
@@ -8266,7 +8385,8 @@ and resolve_builtin_class cx ?trace = function
 
 and set_builtin cx ?trace x t =
   let reason = builtin_reason (RCustom x) in
-  flow_opt cx ?trace (builtins cx, SetPropT(reason, (reason, x), t))
+  let propref = Named (reason, x) in
+  flow_opt cx ?trace (builtins cx, SetPropT (reason, propref, t))
 
 (* Wrapper functions around __flow that manage traces. Use these functions for
    all recursive calls in the implementation of __flow. *)
@@ -8290,13 +8410,14 @@ and rec_flow cx trace (t1, t2) =
 and rec_flow_t cx trace (t1, t2) =
   rec_flow cx trace (t1, UseT (UnknownUse, t2))
 
-and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason x = function
+and rec_flow_p cx trace ?(use_op=UnknownUse) lreason ureason propref = function
   (* unification cases *)
   | Field (lt, Neutral),
     Field (ut, Neutral) ->
     rec_unify cx trace lt ut
   (* directional cases *)
   | lp, up ->
+    let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
     (match Property.read_t lp, Property.read_t up with
     | Some lt, Some ut ->
       rec_flow cx trace (lt, UseT (use_op, ut))

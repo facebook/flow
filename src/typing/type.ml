@@ -307,10 +307,10 @@ module rec TypeTerm : sig
     | ApplyT of reason * t * funtype
     | BindT of reason * funtype
     | CallT of reason * funtype
-    | MethodT of (* call *) reason * (* lookup *) reason * propname * funtype
-    | SetPropT of reason * propname * t
-    | GetPropT of reason * propname * t
-    | TestPropT of reason * propname * t
+    | MethodT of (* call *) reason * (* lookup *) reason * propref * funtype
+    | SetPropT of reason * propref * t
+    | GetPropT of reason * propref * t
+    | TestPropT of reason * propref * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
     | GetStaticsT of reason * t_out
@@ -386,7 +386,7 @@ module rec TypeTerm : sig
 
         (3) strict = Some reason, so the position in reason is blamed.
     **)
-    | LookupT of reason * lookup_kind * t list * string * lookup_action
+    | LookupT of reason * lookup_kind * t list * propref * lookup_action
 
     (* operations on objects *)
     | ObjAssignT of reason * t * t * string list * bool
@@ -667,7 +667,9 @@ module rec TypeTerm : sig
 
   and rw = Read | Write
 
-  and propname = reason * name
+  and propref =
+    | Named of reason * name
+    | Computed of t
 
   and sealtype =
     | UnsealedInFile of Loc.filename option
@@ -1961,3 +1963,11 @@ let number_literal_eq (x, _) = function
 let boolean_literal_eq x = function
   | Some y -> x = y
   | None -> false
+
+let name_of_propref = function
+  | Named (_, x) -> Some x
+  | Computed _ -> None
+
+let reason_of_propref = function
+  | Named (r, _) -> r
+  | Computed t -> reason_of_t t
