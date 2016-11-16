@@ -32,7 +32,7 @@ let builder = object (this)
 
   val mutable chunks = [];
 
-  val mutable next_split_hard = false;
+  val mutable next_split_rule = None;
   val mutable space_if_not_split = false;
 
   val mutable pending_whitespace = "";
@@ -43,12 +43,14 @@ let builder = object (this)
         let text = hd.Chunk.text ^ pending_whitespace ^ s in
         {hd with Chunk.text = text} :: tl
       | _ -> begin
-          let hard_split = next_split_hard in
-          next_split_hard <- false;
-          if hard_split then this#start_rule ~rule:(Rule.always_rule ()) ();
-          let cs = [Chunk.make s (List.hd rules) nesting] @ chunks in
-          if hard_split then this#end_rule ();
-          cs
+          match next_split_rule with
+            | None -> [Chunk.make s (List.hd rules) nesting] @ chunks
+            | Some id ->
+              this#start_rule ~rule:id ();
+              let cs = [Chunk.make s (List.hd rules) nesting] @ chunks in
+              this#end_rule ();
+              next_split_rule <- None;
+              cs
       end
     );
     pending_whitespace <- ""
@@ -66,9 +68,19 @@ let builder = object (this)
       | _ -> chunks
     )
 
+  method simple_space_split () =
+    this#split true;
+    next_split_rule <- Some (Rule.simple_rule ());
+    ()
+
+  method simple_split () =
+    this#split false;
+    next_split_rule <- Some (Rule.simple_rule ());
+    ()
+
   method hard_split () =
     this#split false;
-    next_split_hard <- true;
+    next_split_rule <- Some (Rule.always_rule ());
     ()
 
   method end_chunks () =
@@ -279,6 +291,25 @@ let rec transform node =
     t semi;
     builder#end_chunks ();
     ()
+  | ConstDeclaration x ->
+    let (abstr, kw, const_type, declarators, semi) =
+      get_const_declaration_children x in
+    t abstr;
+    if not (is_missing abstr) then add_space ();
+    t kw;
+    if not (is_missing const_type) then add_space ();
+    t const_type;
+    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      handle_possible_list ~before_each:(split ~space) declarators;
+    ) ();
+    t semi;
+    builder#end_chunks ();
+    ()
+  | ConstantDeclarator x ->
+    let (name, const_initializer) = get_constant_declarator_children x in
+    t name;
+    t const_initializer;
+    ()
   | DecoratedExpression x ->
     let (decorator, expr) = get_decorated_expression_children x in
     t decorator;
@@ -380,6 +411,12 @@ let rec transform node =
     ) ();
     builder#end_chunks ();
     ()
+  | SimpleInitializer x ->
+    let (eq_kw, value) = get_simple_initializer_children x in
+    add_space ();
+    t eq_kw;
+    split ~space ();
+    t_with ~nest value;
   | LambdaExpression x ->
     let (async, signature, arrow, body) = get_lambda_expression_children x in
     t async;
@@ -395,8 +432,6 @@ let rec transform node =
     t operator;
     t name;
     ()
-  | MemberSelectionExpression x ->
-    handle_member_selection_chaining x true
   | PrefixUnaryExpression x ->
     let (operator, operand) = get_prefix_unary_expression_children x in
     t operator;
@@ -413,18 +448,7 @@ let rec transform node =
     t_with ~nest ~rule:(Rule.simple_rule ()) x.binary_right_operand;
     builder#end_span ()
   | FunctionCallExpression x ->
-    builder#start_span ();
-    t x.function_call_receiver;
-    t x.function_call_left_paren;
-    split ();
-    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
-      tl_with ~nest ~f:(fun () ->
-        handle_possible_list ~after_each:after_each_argument
-          x.function_call_argument_list
-      ) ();
-      t x.function_call_right_paren
-    ) ();
-    builder#end_span ()
+    handle_function_call_expression x
   | CollectionLiteralExpression x ->
     let (name, left_b, initializers, right_b) =
       get_collection_literal_expression_children x
@@ -432,14 +456,19 @@ let rec transform node =
     t name;
     add_space ();
     t left_b;
-    split ~space ();
-    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
-      tl_with ~nest ~f:(fun () ->
-        handle_possible_list ~after_each:after_each_literal initializers
-      ) ();
+    if is_missing initializers then begin
       t right_b;
-    ) ();
-    ()
+      ()
+    end else begin
+      split ~space ();
+      tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+        tl_with ~nest ~f:(fun () ->
+          handle_possible_list ~after_each:after_each_literal initializers
+        ) ();
+        t right_b;
+      ) ();
+      ()
+    end
   | ObjectCreationExpression x ->
     let (kw, obj_type, left_p, arg_list, right_p) =
       get_object_creation_expression_children x
@@ -477,6 +506,13 @@ let rec transform node =
       t right_b
     ) ();
     ()
+  | ElementInitializer x ->
+    let (key, arrow, value) = get_element_initializer_children x in
+    t key;
+    add_space ();
+    t arrow;
+    builder#simple_space_split ();
+    t_with ~nest value;
   | XHPOpen x ->
     let (name, attrs, right_a) = get_xhp_open_children x in
     t name;
@@ -649,45 +685,64 @@ and handle_xhp_open_right_angle_token t =
       transform t
     | _ -> raise (Failure "expected xhp_open right_angle token")
 
-and handle_member_selection_chaining mse_node first =
-  let handle_chaining fcall_node =
-    match syntax fcall_node with
-    | FunctionCallExpression x ->
-      let (receiver, lp, args, rp) = get_function_call_expression_children x in
-      let () = match syntax receiver with
-        | MemberSelectionExpression mse ->
-          handle_member_selection_chaining mse false;
-        | _ -> transform receiver;
-      in
+and handle_function_call_expression fce =
+  let (receiver, lp, args, rp) = get_function_call_expression_children fce in
+  let () = match syntax receiver with
+    | MemberSelectionExpression mse ->
+      handle_possible_method_chaining mse (Some (lp, args, rp))
+    | _ ->
+      transform receiver;
       transform_argish lp args rp;
-      ()
-    | _ -> raise (Failure "wut")
   in
-  let (obj, arrow, member) = get_member_selection_expression_children mse_node in
-  let transform_rest nest () =
-    tl_with ~nest ~f:(fun () ->
-      transform arrow;
-      transform member;
-    ) ();
-    ()
+  ()
+
+and handle_possible_method_chaining mse argish =
+  let (obj, arrow1, member1) = get_member_selection_expression_children mse in
+  let rec handle_chaining obj =
+    match syntax obj with
+      | FunctionCallExpression x ->
+        let (receiver, lp, args, rp) =
+          get_function_call_expression_children x in
+        (match syntax receiver with
+          | MemberSelectionExpression mse ->
+            let (obj, arrow, member) = get_member_selection_expression_children mse in
+            let (obj, l) = handle_chaining obj in
+            obj, l @ [(arrow, member, Some (lp, args, rp))]
+          | _ -> obj, []
+        )
+      | _ -> obj, []
   in
-  let t_rest = if is_function_call_expression obj then begin
-    handle_chaining obj;
-    split ();
-    transform_rest false
-  end else begin
-    transform obj;
-    split ();
-    (* TODO: not always a rule *)
-    builder#start_rule ~rule:(Rule.argument_rule ()) ();
-    builder#nest ();
-    transform_rest false
-  end in
-  t_rest ();
-  if first then begin
-    builder#end_rule ();
-    builder#unnest ();
-  end;
+
+  let (obj, l) = handle_chaining obj in
+  let l = l @ [(arrow1, member1, argish)] in
+  transform obj;
+
+  let transform_chain (arrow, member, argish) =
+    transform arrow;
+    transform member;
+    match argish with
+      | Some (lp, args, rp) -> transform_argish lp args rp
+      | None -> ()
+    ;
+  in
+  let () = match l with
+    | hd :: [] ->
+      builder#simple_split ();
+      builder#nest ();
+      transform_chain hd
+    | hd :: tl ->
+      List.iteri l ~f:(fun n chain ->
+        split ();
+        if n = 0 then begin
+          builder#nest ();
+          builder#start_rule ~rule:(Rule.argument_rule ()) ();
+        end;
+        transform_chain chain
+      );
+      builder#end_rule ()
+    | _ -> raise (Failure "Expected a chain of at least length 1")
+  in
+  builder#unnest ();
   ()
 
 and handle_switch_body sb =
@@ -765,6 +820,7 @@ and transform_function_declaration_header ~span_started x =
 and transform_argish left_p arg_list right_p =
   transform left_p;
   split ();
+  builder#start_span ();
   tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
     tl_with ~nest:true ~f:(fun () ->
       handle_possible_list ~after_each:after_each_argument arg_list
@@ -772,6 +828,7 @@ and transform_argish left_p arg_list right_p =
     split ();
     transform right_p
   ) ();
+  builder#end_span ();
   ()
 
 let run ?(debug=false) node =
