@@ -671,14 +671,7 @@ let rec transform node =
     t operand;
     t operator;
   | BinaryExpression x ->
-    builder#start_span ();
-    (* TODO: nested binary expressions split by precedence *)
-    t x.binary_left_operand;
-    add_space ();
-    t x.binary_operator;
-    split ~space:true ();
-    t_with ~nest ~rule:(Some Rule.Simple) x.binary_right_operand;
-    builder#end_span ()
+    transform_binary_expression ~is_nested:false x
   | InstanceofExpression x ->
     let (left, kw, right) = get_instanceof_expression_children x in
     t left;
@@ -1125,6 +1118,62 @@ and transform_keyword_expression_statement kw expr semi =
     transform semi;
   ) ();
   builder#end_chunks ();
+  ()
+
+and transform_binary_expression ~is_nested expr =
+  let get_operator_type op =
+    match syntax op with
+      | Token t -> Full_fidelity_operator.trailing_from_token
+        (EditableToken.kind t)
+      | _ -> raise (Failure "Operator should always be a token")
+  in
+
+  let (left, operator, right) = get_binary_expression_children expr in
+  let operator_t = get_operator_type operator in
+
+  if Full_fidelity_operator.(
+    is_assignment operator_t ||
+    is_comparison operator_t
+  ) then begin
+    transform left;
+    add_space ();
+    transform operator;
+    builder#simple_space_split ();
+    t_with ~nest:true right;
+  end else
+  let precedence = Full_fidelity_operator.precedence operator_t in
+
+  let rec flatten_expression expr =
+    match syntax expr with
+      | BinaryExpression x ->
+        let (left, operator, right) = get_binary_expression_children x in
+        let operator_t = get_operator_type operator in
+        let op_precedence = Full_fidelity_operator.precedence operator_t in
+        if (op_precedence = precedence) then
+          (flatten_expression left) @ (operator :: flatten_expression right)
+        else [expr]
+      | _ -> [expr]
+  in
+
+  let transform_operand operand =
+    match syntax operand with
+      | BinaryExpression x -> transform_binary_expression ~is_nested:true x
+      | _ -> transform operand
+  in
+
+  let l = flatten_expression (make_binary_expression left operator right) in
+  (match l with
+    | hd :: tl ->
+      transform_operand hd;
+      tl_with ~rule:(Some Rule.Argument) ~nest:is_nested ~f:(fun () ->
+        List.iteri tl ~f:(fun i x ->
+          if (i mod 2) = 0 then begin add_space (); transform x end
+          else begin split ~space:true (); transform_operand x end
+        );
+        ()
+      ) ();
+    | _ -> raise (Failure "Expected non empty list of binary expression pieces")
+  );
   ()
 
 let debug_chunk_groups chunk_groups =
