@@ -98,6 +98,11 @@ let builder = object (this)
     ()
 
   method start_rule ?rule:(rule=Rule.simple_rule ()) () =
+    (* Override next_split_rule unless it's an Always rule *)
+    next_split_rule <- (match next_split_rule with
+      | Some id when Rule.get_kind id <> Rule.Always -> None
+      | _ -> next_split_rule
+    );
     Rule.mark_dependencies rules rule;
     rules <- rule :: rules
 
@@ -403,13 +408,11 @@ let rec transform node =
     raise (Failure "DefaultStatement should be handled by handle_switch_body")
   | ReturnStatement x ->
     let (kw, expr, semi) = get_return_statement_children x in
-    t kw;
-    split ~space ();
-    tl_with ~nest ~f:(fun () ->
-      t expr;
-      t semi;
-    ) ();
-    builder#end_chunks ();
+    transform_keyword_expression_statement kw expr semi;
+    ()
+  | ThrowStatement x ->
+    let (kw, expr, semi) = get_throw_statement_children x in
+    transform_keyword_expression_statement kw expr semi;
     ()
   | SimpleInitializer x ->
     let (eq_kw, value) = get_simple_initializer_children x in
@@ -425,6 +428,11 @@ let rec transform node =
     add_space ();
     t arrow;
     handle_lambda_body body;
+    ()
+  | LambdaSignature x ->
+    let (lp, params, rp, colon, ret_type) = get_lambda_signature_children x in
+    transform_argish_with_return_type ~in_span:false lp params rp colon
+      ret_type;
     ()
   | CastExpression x ->
     let (lp, cast_type, rp, op) = get_cast_expression_children x in
@@ -464,16 +472,26 @@ let rec transform node =
     split ~space:true ();
     t_with ~nest ~rule:(Rule.simple_rule ()) x.binary_right_operand;
     builder#end_span ()
+  | InstanceofExpression x ->
+    let (left, kw, right) = get_instanceof_expression_children x in
+    t left;
+    add_space ();
+    t kw;
+    builder#simple_space_split ();
+    t_with ~nest right;
+    ()
   | ConditionalExpression x ->
     let (test_expr, q_kw, true_expr, c_kw, false_expr) =
       get_conditional_expression_children x in
     t test_expr;
     tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
-      split ~space ();
+      builder#simple_space_split ();
       t q_kw;
-      add_space ();
-      t true_expr;
-      split ~space ();
+      if not (is_missing true_expr) then begin
+        add_space ();
+        t true_expr;
+        builder#simple_space_split ();
+      end;
       t c_kw;
       add_space ();
       t false_expr;
@@ -611,6 +629,14 @@ let rec transform node =
     t kw;
     transform_argish left_a vec_type right_a;
     ()
+  | MapTypeSpecifier x ->
+    let (kw, la, key, comma_kw, v, ra) = get_map_type_specifier_children x in
+    t kw;
+    let key_list_item = make_list_item key comma_kw in
+    let val_list_item = make_list_item v (make_missing ()) in
+    let args = make_list [key_list_item; val_list_item] in
+    transform_argish la args ra;
+    ()
   | GenericTypeSpecifier x ->
     let (class_type, type_args) = get_generic_type_specifier_children x in
     t class_type;
@@ -620,6 +646,11 @@ let rec transform node =
     let (question, ntype) = get_nullable_type_specifier_children x in
     t question;
     t ntype;
+    ()
+  | SoftTypeSpecifier x ->
+    let (at, stype) = get_soft_type_specifier_children x in
+    t at;
+    t stype;
     ()
   | TypeArguments x ->
     let (left_a, type_list, right_a) = get_type_arguments_children x in
@@ -845,17 +876,22 @@ and transform_function_declaration_header ~span_started x =
   transform amp;
   transform name;
   transform type_params;
-  transform leftp;
+  transform_argish_with_return_type ~in_span:true leftp params rightp colon
+    ret_type;
+
+and transform_argish_with_return_type ~in_span left_p params right_p colon
+    ret_type =
+  transform left_p;
   split ();
-  builder#end_span ();
+  if in_span then builder#end_span ();
 
   tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
     tl_with ~nest:true ~f:(fun () ->
       handle_possible_list ~after_each:after_each_argument params
     ) ();
-    transform rightp;
+    transform right_p;
     transform colon;
-    add_space ();
+    if not (is_missing colon) then add_space ();
     transform ret_type;
   ) ();
   ()
@@ -872,6 +908,16 @@ and transform_argish left_p arg_list right_p =
     transform right_p
   ) ();
   builder#end_span ();
+  ()
+
+and transform_keyword_expression_statement kw expr semi =
+  transform kw;
+  builder#simple_space_split ();
+  tl_with ~nest:true ~f:(fun () ->
+    transform expr;
+    transform semi;
+  ) ();
+  builder#end_chunks ();
   ()
 
 let run ?(debug=false) node =
