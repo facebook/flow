@@ -200,6 +200,7 @@ let rec transform node =
       get_methodish_declaration_children x
     in
     t attr;
+    if not (is_missing attr) then builder#end_chunks ();
     builder#start_span ();
     handle_possible_list ~after_each:(fun _ -> add_space ()) modifiers;
     (match syntax func_decl with
@@ -210,7 +211,7 @@ let rec transform node =
           "invalid parse tree provided, expecting a function declaration header"
         )
     );
-    handle_possible_compound_statement body;
+    if not (is_missing body) then handle_possible_compound_statement body;
     t semi;
     builder#end_chunks ();
     ()
@@ -219,6 +220,7 @@ let rec transform node =
       impl_kw, impls, body) = get_classish_declaration_children x
     in
     t attr;
+    if not (is_missing attr) then builder#end_chunks ();
     tl_with ~span ~f:(fun () ->
       handle_possible_list ~after_each:(fun _ -> add_space ()) modifiers;
       t kw;
@@ -267,6 +269,21 @@ let rec transform node =
     t semi;
     builder#end_chunks();
     ()
+  | RequireClause x ->
+    let (kw, kind, name, semi) = get_require_clause_children x in
+    t kw;
+    add_space ();
+    t kind;
+    split ~space ();
+    t name;
+    t semi;
+    builder#end_chunks ();
+    ()
+  | DecoratedExpression x ->
+    let (decorator, expr) = get_decorated_expression_children x in
+    t decorator;
+    t expr;
+    ()
   | ParameterDeclaration x ->
     let (attr, visibility, param_type, name, default) =
       get_parameter_declaration_children x
@@ -278,9 +295,32 @@ let rec transform node =
     (* TODO: span and split, figure out attr and vis rules *)
     t name;
     t default;
-  | ListItem x ->
-    t x.list_item;
-    t x.list_separator
+  | AttributeSpecification x ->
+    let (left_da, attrs, right_da) = get_attribute_specification_children x in
+    transform_argish left_da attrs right_da;
+    ()
+  | Attribute x ->
+    let (name, left_p, values, right_p) = get_attribute_children x in
+    t name;
+    transform_argish left_p values right_p;
+    ()
+  | ExpressionStatement x ->
+    t x.expression_statement_expression;
+    t x.expression_statement_semicolon;
+    builder#end_chunks()
+  | WhileStatement x ->
+    t x.while_keyword;
+    add_space ();
+    t x.while_left_paren;
+    split ();
+    start_argument_rule ();
+    t_with ~nest x.while_condition;
+    split ();
+    t x.while_right_paren;
+    end_rule ();
+    handle_possible_compound_statement x.while_body;
+    builder#end_chunks ();
+    ()
   | IfStatement x ->
     t x.if_keyword;
     add_space ();
@@ -310,23 +350,26 @@ let rec transform node =
     t x.else_keyword;
     handle_possible_compound_statement x.else_statement;
     ()
-  | ExpressionStatement x ->
-    t x.expression_statement_expression;
-    t x.expression_statement_semicolon;
-    builder#end_chunks()
-  | WhileStatement x ->
-    t x.while_keyword;
+  | SwitchStatement x ->
+    let (kw, left_p, expr, right_p, body) = get_switch_statement_children x in
+    t kw;
     add_space ();
-    t x.while_left_paren;
+    t left_p;
     split ();
-    start_argument_rule ();
-    t_with ~nest x.while_condition;
-    split ();
-    t x.while_right_paren;
-    end_rule ();
-    handle_possible_compound_statement x.while_body;
+    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      tl_with ~nest ~f:(fun () -> t expr) ();
+      t right_p;
+    ) ();
+    let () = match syntax body with
+      | CompoundStatement cs -> handle_switch_body cs
+      | _ -> raise (Failure "Switch body must be a compound statement")
+    in
     builder#end_chunks ();
     ()
+  | CaseStatement x ->
+    raise (Failure "CaseStatement should be handled by handle_switch_body")
+  | DefaultStatement x ->
+    raise (Failure "DefaultStatement should be handled by handle_switch_body")
   | ReturnStatement x ->
     let (kw, expr, semi) = get_return_statement_children x in
     t kw;
@@ -483,6 +526,12 @@ let rec transform node =
     t left_a;
     t name;
     t right_a;
+  | VectorTypeSpecifier x ->
+    let (kw, left_a, vec_type, right_a) =
+      get_vector_type_specifier_children x in
+    t kw;
+    transform_argish left_a vec_type right_a;
+    ()
   | GenericTypeSpecifier x ->
     let (class_type, type_args) = get_generic_type_specifier_children x in
     t class_type;
@@ -504,6 +553,9 @@ let rec transform node =
       t right_a;
     ) ();
     ()
+  | ListItem x ->
+    t x.list_item;
+    t x.list_separator
   | _ ->
     Printf.printf "%s not supported - exiting \n"
       (SyntaxKind.to_string (kind node));
@@ -611,9 +663,7 @@ and handle_member_selection_chaining mse_node first =
       ()
     | _ -> raise (Failure "wut")
   in
-
   let (obj, arrow, member) = get_member_selection_expression_children mse_node in
-
   let transform_rest nest () =
     tl_with ~nest ~f:(fun () ->
       transform arrow;
@@ -621,7 +671,6 @@ and handle_member_selection_chaining mse_node first =
     ) ();
     ()
   in
-
   let t_rest = if is_function_call_expression obj then begin
     handle_chaining obj;
     split ();
@@ -635,13 +684,54 @@ and handle_member_selection_chaining mse_node first =
     transform_rest false
   end in
   t_rest ();
-
   if first then begin
     builder#end_rule ();
     builder#unnest ();
   end;
   ()
 
+and handle_switch_body sb =
+  let (left_b, statements, right_b) = get_compound_statement_children sb in
+  add_space ();
+  transform left_b;
+  builder#end_chunks ();
+  tl_with ~nest:true ~f:(fun () ->
+    let statement_list = match syntax statements with
+      | Missing -> raise (Failure "Cannot have a missing statement list")
+      | SyntaxList x -> x
+      | _ -> [statements]
+    in
+
+    let handle_stmt stmt = match syntax stmt with
+      | CaseStatement x ->
+        let (kw, expr, colon, child_statement) =
+          get_case_statement_children x in
+        transform kw;
+        split ~space:true ();
+        transform expr;
+        transform colon;
+        builder#end_chunks ();
+        [child_statement]
+      | DefaultStatement x ->
+        let (kw, colon, child_statement) =
+          get_default_statement_children x in
+        transform kw;
+        transform colon;
+        builder#end_chunks ();
+        [child_statement]
+      | _ ->
+        t_with ~nest:true stmt;
+        []
+    in
+
+    let rec iter_stmt stmt_list = match stmt_list with
+      | [] -> ()
+      | hd :: tl -> iter_stmt ((handle_stmt hd) @ tl)
+    in
+    iter_stmt statement_list
+  ) ();
+  transform right_b;
+  ()
 
 and transform_function_declaration_header ~span_started x =
   let (async, kw, amp, name, type_params, leftp, params, rightp, colon,
