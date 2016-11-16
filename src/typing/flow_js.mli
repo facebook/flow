@@ -52,9 +52,6 @@ val check_polarity: Context.t -> Type.polarity -> Type.t -> unit
 
 (* selectors *)
 
-val eval_selector: Context.t -> ?trace:Trace.t ->
-  reason -> Type.t -> Type.TypeTerm.selector -> int -> Type.t
-
 val visit_eval_id : Context.t -> int -> (Type.t -> unit) -> unit
 
 (* object/method types *)

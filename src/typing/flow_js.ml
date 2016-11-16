@@ -1279,7 +1279,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********)
 
     | EvalT (t, TypeDestructorT (reason, s), i), _ ->
-      rec_flow cx trace (eval_destructor cx reason t s i, u)
+      rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
 
     | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
       (* When checking a lower bound against a destructed type, we need to take
@@ -1292,7 +1292,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          number, not some open tvar that is a supertype of number (since the
          latter would accept more than number, e.g. string). Similarly, when t
          is ?string, we want the $NonMaybeType(t) to be string. *)
-      let result = eval_destructor cx reason t s i in
+      let result = eval_destructor cx ~trace reason t s i in
       begin match t with
       | OpenT _ ->
         (* TODO: If t itself is an open tvar, we can afford to be looser for
@@ -5549,13 +5549,13 @@ and eval_selector cx ?trace reason curr_t s i =
   | Some it ->
     it
 
-and eval_destructor cx reason curr_t s i =
+and eval_destructor cx ~trace reason curr_t s i =
   let evaluated = Context.evaluated cx in
   match IMap.get i evaluated with
   | None ->
     mk_tvar_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
-      flow_opt cx (curr_t, match s with
+      rec_flow cx trace (curr_t, match s with
       | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
       | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
       )
