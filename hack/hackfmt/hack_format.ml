@@ -415,7 +415,7 @@ let rec transform node =
     let (eq_kw, value) = get_simple_initializer_children x in
     add_space ();
     t eq_kw;
-    split ~space ();
+    builder#simple_space_split ();
     t_with ~nest value;
   | LambdaExpression x ->
     let (async, signature, arrow, body) = get_lambda_expression_children x in
@@ -426,10 +426,27 @@ let rec transform node =
     t arrow;
     handle_lambda_body body;
     ()
+  | CastExpression x ->
+    let (lp, cast_type, rp, op) = get_cast_expression_children x in
+    tl_with ~span ~f:(fun () ->
+      t lp;
+      t cast_type;
+      t rp;
+      builder#simple_space_split ();
+      t_with ~nest op;
+    ) ();
+    ()
   | ScopeResolutionExpression x ->
     let (qual, operator, name) = get_scope_resolution_expression_children x in
     t qual;
     t operator;
+    t name;
+    ()
+  | MemberSelectionExpression x ->
+    let (obj, op, name) = get_member_selection_expression_children x in
+    t obj;
+    builder#simple_split ();
+    t op;
     t name;
     ()
   | PrefixUnaryExpression x ->
@@ -447,6 +464,21 @@ let rec transform node =
     split ~space:true ();
     t_with ~nest ~rule:(Rule.simple_rule ()) x.binary_right_operand;
     builder#end_span ()
+  | ConditionalExpression x ->
+    let (test_expr, q_kw, true_expr, c_kw, false_expr) =
+      get_conditional_expression_children x in
+    t test_expr;
+    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      split ~space ();
+      t q_kw;
+      add_space ();
+      t true_expr;
+      split ~space ();
+      t c_kw;
+      add_space ();
+      t false_expr;
+    ) ();
+    ()
   | FunctionCallExpression x ->
     handle_function_call_expression x
   | CollectionLiteralExpression x ->
@@ -506,6 +538,11 @@ let rec transform node =
       t right_b
     ) ();
     ()
+  | ListExpression x ->
+    let (kw, lp, members, rp) = get_list_expression_children x in
+    t kw;
+    transform_argish lp members rp;
+    ()
   | ElementInitializer x ->
     let (key, arrow, value) = get_element_initializer_children x in
     t key;
@@ -513,6 +550,12 @@ let rec transform node =
     t arrow;
     builder#simple_space_split ();
     t_with ~nest value;
+  | SubscriptExpression x ->
+    (* TODO: revisit this *)
+    let (receiver, lb, expr, rb) = get_subscript_expression_children x in
+    t receiver;
+    transform_argish lb expr rb;
+    ()
   | XHPOpen x ->
     let (name, attrs, right_a) = get_xhp_open_children x in
     t name;
