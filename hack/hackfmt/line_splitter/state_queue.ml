@@ -10,24 +10,28 @@
 
 open Core
 
-let queue : Solve_state.t list ref = ref []
+type t = {
+  queue: Solve_state.t list;
+}
 
-let add state =
-  let q = state :: !queue in
-  (*TODO: make this faster *)
-  queue := List.sort q ~cmp:Solve_state.compare
+let make q =
+  {queue = q;}
 
-let is_empty () =
-  (List.length !queue) = 0
+let add t state =
+  (* TODO: make this faster, currently O(n*log(n))
+    could be O(log(n) as a priority queue *)
+  { queue = (List.sort (state :: t.queue) ~cmp:Solve_state.compare); }
 
-let peek () =
-  match !queue with
+let is_empty t =
+  (List.length t.queue) = 0
+
+let peek t =
+  match t.queue with
     | hd :: tl -> hd
     | [] -> raise (Failure "Queue is empty when calling peek\n")
 
-let get_next () =
-  match !queue with
+let get_next t =
+  match t.queue with
     | hd :: tl ->
-      queue := tl;
-      hd
+      {queue = tl}, hd
     | [] -> raise (Failure "Queue is empty when calling get_next\n")

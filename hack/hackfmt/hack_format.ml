@@ -37,6 +37,10 @@ let builder = object (this)
 
   val mutable pending_whitespace = "";
 
+  val mutable chunk_groups = [];
+  val mutable rule_alloc = Rule_allocator.make ();
+  val mutable block_indent = 0;
+
   method add_string s =
     chunks <- (match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
@@ -45,8 +49,8 @@ let builder = object (this)
       | _ -> begin
           match next_split_rule with
             | None -> [Chunk.make s (List.hd rules) nesting] @ chunks
-            | Some id ->
-              this#start_rule ~rule:id ();
+            | Some rule_type ->
+              this#start_rule ~rule_type:rule_type ();
               let cs = [Chunk.make s (List.hd rules) nesting] @ chunks in
               this#end_rule ();
               next_split_rule <- None;
@@ -61,30 +65,37 @@ let builder = object (this)
   method split space =
     chunks <- (match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
-        let chunk = (Chunk.finalize hd (List.hd rules) space_if_not_split) in
+        let rule = match hd.Chunk.rule, List.hd rules with
+          | -1, None -> this#add_rule Rule.Simple
+          | -1, Some r -> r
+          | r, _ -> r
+        in
+        let chunk = (Chunk.finalize hd rule space_if_not_split) in
         space_if_not_split <- space;
         chunk :: tl
       | [] -> raise (Failure "No chunks to split")
       | _ -> chunks
     )
 
+  method add_rule rule_kind =
+    let ra, rule = Rule_allocator.make_rule rule_alloc rule_kind in
+    rule_alloc <- ra;
+    rule.Rule.id
+
   method simple_space_split () =
     this#split true;
-    next_split_rule <- Some (Rule.simple_rule ());
+    next_split_rule <- Some Rule.Simple;
     ()
 
   method simple_split () =
     this#split false;
-    next_split_rule <- Some (Rule.simple_rule ());
+    next_split_rule <- Some Rule.Simple;
     ()
 
   method hard_split () =
     this#split false;
-    next_split_rule <- Some (Rule.always_rule ());
+    next_split_rule <- Some Rule.Always;
     ()
-
-  method end_chunks () =
-    this#hard_split ()
 
   method nest ?amount:(amount=2) () =
     nesting <- (Nesting.make (Some nesting) 2);
@@ -97,13 +108,14 @@ let builder = object (this)
     end;
     ()
 
-  method start_rule ?rule:(rule=Rule.simple_rule ()) () =
+  method start_rule ?(rule_type=Rule.Simple) () =
     (* Override next_split_rule unless it's an Always rule *)
     next_split_rule <- (match next_split_rule with
-      | Some id when Rule.get_kind id <> Rule.Always -> None
+      | Some kind when kind <> Rule.Always -> None
       | _ -> next_split_rule
     );
-    Rule.mark_dependencies rules rule;
+    let rule = this#add_rule rule_type in
+    rule_alloc <- Rule_allocator.mark_dependencies rule_alloc rules rule;
     rules <- rule :: rules
 
   method end_rule () =
@@ -112,7 +124,9 @@ let builder = object (this)
       | [] -> [] (*TODO: error *)
 
   method has_rule_kind kind =
-    List.exists rules ~f:(fun id -> Rule.get_kind id = kind)
+    List.exists rules ~f:(
+      fun id -> (Rule_allocator.get_kind rule_alloc id) = kind
+    )
 
   method start_span () =
     let os = open_span (List.length chunks) 1 in
@@ -131,9 +145,30 @@ let builder = object (this)
     );
     ()
 
+  method start_block_nest () =
+    block_indent <- block_indent + 2;
+  method end_block_nest () =
+    block_indent <- block_indent - 2;
+
+  method end_chunks () =
+    this#hard_split ();
+
+    chunk_groups <- {
+      Chunk_group.chunks = (List.rev chunks);
+      ra = rule_alloc;
+      bi = block_indent
+    } :: chunk_groups;
+    chunks <- [];
+    rule_alloc <- Rule_allocator.make ();
+    (* TODO:
+      assert rule_stack is empty
+      assert no nesting
+    *)
+
   method _end () =
-    this#split false;
-    List.rev chunks
+    (*TODO: warn if not empty? *)
+    if not (List.is_empty chunks) then this#end_chunks ();
+    List.rev chunk_groups
 
   method __debug chunks =
     let d_chunks = chunks in
@@ -141,7 +176,7 @@ let builder = object (this)
       Printf.printf
         "Span count:%d\t Rule:%s\t Text:%s\n"
         (List.length c.Chunk.spans)
-        (Rule.to_string c.Chunk.rule)
+        "Todo" (*TODO: refactor (Rule.to_string c.Chunk.rule) *)
         c.Chunk.text
     )
 
@@ -184,7 +219,7 @@ let pending_space () =
   builder#add_pending_whitespace " "
 
 let start_argument_rule () =
-  builder#start_rule ~rule:(Rule.argument_rule()) ()
+  builder#start_rule ~rule_type:(Rule.Argument) ()
 
 let end_rule () =
   builder#end_rule ()
@@ -214,7 +249,7 @@ let rec transform node =
       get_property_declaration_children x in
     handle_possible_list ~after_each:(fun _ -> add_space ()) modifiers;
     t prop_type;
-    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
       handle_possible_list ~before_each:(split ~space) declarators;
     ) ();
     t semi;
@@ -306,7 +341,7 @@ let rec transform node =
   | TraitUse x ->
     let (kw, elements, semi) = get_trait_use_children x in
     t kw;
-    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
       handle_possible_list ~before_each:(split ~space) elements;
     ) ();
     t semi;
@@ -330,7 +365,7 @@ let rec transform node =
     t kw;
     if not (is_missing const_type) then add_space ();
     t const_type;
-    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
       handle_possible_list ~before_each:(split ~space) declarators;
     ) ();
     t semi;
@@ -439,7 +474,7 @@ let rec transform node =
     add_space ();
     t left_p;
     split ();
-    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
       tl_with ~nest ~f:(fun () -> t expr) ();
       t right_p;
     ) ();
@@ -465,7 +500,7 @@ let rec transform node =
     let (static_kw, declarators, semi) =
       get_function_static_statement_children x in
     t static_kw;
-    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
       handle_possible_list ~before_each:(split ~space) declarators;
     ) ();
     t semi;
@@ -542,7 +577,7 @@ let rec transform node =
     add_space ();
     t x.binary_operator;
     split ~space:true ();
-    t_with ~nest ~rule:(Rule.simple_rule ()) x.binary_right_operand;
+    t_with ~nest ~rule:(Some Rule.Simple) x.binary_right_operand;
     builder#end_span ()
   | InstanceofExpression x ->
     let (left, kw, right) = get_instanceof_expression_children x in
@@ -556,7 +591,7 @@ let rec transform node =
     let (test_expr, q_kw, true_expr, c_kw, false_expr) =
       get_conditional_expression_children x in
     t test_expr;
-    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
       builder#simple_space_split ();
       t q_kw;
       if not (is_missing true_expr) then begin
@@ -583,7 +618,7 @@ let rec transform node =
       ()
     end else begin
       split ~space ();
-      tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
         tl_with ~nest ~f:(fun () ->
           handle_possible_list ~after_each:after_each_literal initializers
         ) ();
@@ -611,7 +646,7 @@ let rec transform node =
     let (left_p, expr, right_p) = get_parenthesized_expression_children x in
     t left_p;
     split ();
-    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
       t_with ~nest expr;
       split ();
       t right_p
@@ -622,7 +657,7 @@ let rec transform node =
     let (left_b, expr, right_b) = get_braced_expression_children x in
     t left_b;
     split ();
-    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
       t_with ~nest expr;
       split ();
       t right_b
@@ -651,7 +686,7 @@ let rec transform node =
     t name;
     if not (is_missing attrs) then begin
       split ~space ();
-      tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
         handle_possible_list ~after_each:(fun is_last ->
           if not is_last then split ~space (); ()
         ) attrs;
@@ -682,9 +717,9 @@ let rec transform node =
 
     if builder#has_rule_kind Rule.XHPExpression then begin
       t op;
-      tl_with ~rule:(Rule.xhp_expression_rule ()) ~f:(handle_body_close) ();
+      tl_with ~rule:(Some Rule.XHPExpression) ~f:(handle_body_close) ();
     end else begin
-      tl_with ~rule:(Rule.xhp_expression_rule ()) ~f:(fun () ->
+      tl_with ~rule:(Some Rule.XHPExpression) ~f:(fun () ->
         t op;
         handle_body_close ();
       ) ();
@@ -728,7 +763,7 @@ let rec transform node =
     let (left_a, type_list, right_a) = get_type_arguments_children x in
     t left_a;
     split ();
-    tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
       tl_with ~nest ~f:(fun () ->
         handle_possible_list ~after_each:after_each_argument type_list
       ) ();
@@ -745,28 +780,20 @@ let rec transform node =
   in
   ()
 
-and tl_with ?(nest=false) ?(rule= -1) ?(span=false) ~f () =
-  if rule <> -1 then builder#start_rule ~rule ();
+and tl_with ?(nest=false) ?(rule=None) ?(span=false) ~f () =
+  Option.iter rule ~f:(fun rule_type -> builder#start_rule ~rule_type ());
   if nest then builder#nest ();
   if span then builder#start_span ();
 
   f ();
 
   if nest then builder#unnest ();
-  if rule <> -1 then builder#end_rule ();
   if span then builder#end_span ();
+  Option.iter rule (fun _ -> builder#end_rule ());
   ()
 
-and t_with ?(nest=false) ?(rule= -1) ?(span=false) ?(f=transform) node =
-  if rule <> -1 then builder#start_rule ~rule ();
-  if nest then builder#nest ();
-  if span then builder#start_span ();
-
-  f node;
-
-  if nest then builder#unnest ();
-  if rule <> -1 then builder#end_rule ();
-  if span then builder#end_span ();
+and t_with ?(nest=false) ?(rule=None) ?(span=false) ?(f=transform) node =
+  tl_with ~nest ~rule ~span ~f:(fun () -> f node) ();
   ()
 
 and after_each_argument is_last =
@@ -781,7 +808,7 @@ and handle_lambda_body node =
       handle_compound_statement x;
     | _ ->
       split ~space:true ();
-      tl_with ~rule:(Rule.simple_rule ()) ~nest:true ~f:(fun () ->
+      tl_with ~rule:(Some Rule.Simple) ~nest:true ~f:(fun () ->
         transform node;
       ) ();
       ()
@@ -794,7 +821,9 @@ and handle_possible_compound_statement node =
       ()
     | _ ->
       builder#end_chunks ();
-      t_with ~nest:true node;
+      builder#start_block_nest ();
+      t_with node;
+      builder#end_block_nest ();
       ()
 
 and handle_compound_statement cs =
@@ -802,9 +831,11 @@ and handle_compound_statement cs =
   add_space ();
   transform left_b;
   builder#end_chunks ();
-  tl_with ~nest:true ~f:(fun () ->
+  builder#start_block_nest ();
+  tl_with ~f:(fun () ->
     handle_possible_list statements;
   ) ();
+  builder#end_block_nest ();
   transform right_b;
   ()
 
@@ -881,7 +912,7 @@ and handle_possible_method_chaining mse argish =
         split ();
         if n = 0 then begin
           builder#nest ();
-          builder#start_rule ~rule:(Rule.argument_rule ()) ();
+          builder#start_rule ~rule_type:(Rule.Argument) ();
         end;
         transform_chain chain
       );
@@ -896,7 +927,8 @@ and handle_switch_body sb =
   add_space ();
   transform left_b;
   builder#end_chunks ();
-  tl_with ~nest:true ~f:(fun () ->
+  builder#start_block_nest ();
+  tl_with ~f:(fun () ->
     let statement_list = match syntax statements with
       | Missing -> raise (Failure "Cannot have a missing statement list")
       | SyntaxList x -> x
@@ -921,7 +953,9 @@ and handle_switch_body sb =
         builder#end_chunks ();
         [child_statement]
       | _ ->
+        builder#start_block_nest ();
         t_with ~nest:true stmt;
+        builder#end_block_nest ();
         []
     in
 
@@ -931,6 +965,7 @@ and handle_switch_body sb =
     in
     iter_stmt statement_list
   ) ();
+  builder#end_block_nest ();
   transform right_b;
   ()
 
@@ -957,7 +992,7 @@ and transform_argish_with_return_type ~in_span left_p params right_p colon
   split ();
   if in_span then builder#end_span ();
 
-  tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+  tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
     tl_with ~nest:true ~f:(fun () ->
       handle_possible_list ~after_each:after_each_argument params
     ) ();
@@ -972,7 +1007,7 @@ and transform_argish left_p arg_list right_p =
   transform left_p;
   split ();
   builder#start_span ();
-  tl_with ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+  tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
     tl_with ~nest:true ~f:(fun () ->
       handle_possible_list ~after_each:after_each_argument arg_list
     ) ();
@@ -992,9 +1027,34 @@ and transform_keyword_expression_statement kw expr semi =
   builder#end_chunks ();
   ()
 
+let validate_chunk_groups chunk_groups =
+  let _ = List.fold_left chunk_groups ~init:ISet.empty ~f:(
+    fun seen_rules chunks ->
+      let rules = List.map chunks (fun c -> c.Chunk.rule) in
+      let rule_set = ISet.of_list rules in
+      if ISet.cardinal (ISet.inter rule_set seen_rules) <> 0 then
+        raise (Failure "Invalid chunk groups, rule exists in two groups");
+      ISet.union rule_set seen_rules
+  ) in
+  ()
+
 let run ?(debug=false) node =
   transform node;
-  split ();
-  let chunks = builder#_end () in
-  if debug then builder#__debug chunks;
-  chunks
+  (* split (); *)
+  let chunk_groups = builder#_end () in
+  if debug then begin
+    Printf.printf "%d\n" (List.length chunk_groups);
+    List.iteri chunk_groups ~f:(fun i cg ->
+      Printf.printf "%d\n" i;
+      Printf.printf "Chunk count:%d\n" (List.length cg.Chunk_group.chunks);
+      List.iteri cg.Chunk_group.chunks ~f:(fun i c ->
+        Printf.printf "\t%d - %s\n" i (Chunk.to_string c);
+      );
+      Printf.printf "Rule count %d\n"
+        (IMap.cardinal cg.Chunk_group.ra.Rule_allocator.rule_map);
+      IMap.iter (fun k v ->
+        Printf.printf "\t%d - %s\n" k (Rule.to_string v);
+      ) cg.Chunk_group.ra.Rule_allocator.rule_map;
+    );
+  end;
+  chunk_groups

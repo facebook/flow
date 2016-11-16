@@ -19,7 +19,6 @@ type t = {
   nesting: Nesting.t
 }
 
-
 let default_chunk = {
   text = "";
   spans = [];
@@ -38,10 +37,9 @@ let make text rule nesting =
 
 let finalize chunk rule space =
   let rule = match rule with
-    | Some r when (Rule.get_kind r) = Rule.Always -> r
+    (* TODO: refactor: | r when (Rule.get_kind r) = Rule.Always -> r *)
     | _ when chunk.rule <> -1 -> chunk.rule
-    | None -> (Rule.simple_rule ())
-    | Some r -> r
+    | r -> r
   in
   {chunk with
     is_appendable = false;
@@ -56,3 +54,6 @@ let get_span_split_cost chunk =
 
 let get_nesting_id chunk =
   chunk.nesting.Nesting.id
+
+let to_string chunk =
+  Printf.sprintf "rule_id:%d\t text:%s" chunk.rule chunk.text

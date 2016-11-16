@@ -14,6 +14,8 @@ let _LINE_WIDTH = 80
 
 type t = {
   chunks: Chunk.t list;
+  ra: Rule_allocator.t;
+  bi: int;
   rvm: int IMap.t;
   nesting_set: ISet.t;
   cost: int;
@@ -25,7 +27,7 @@ let has_split_before_chunk c rvm =
   let value = IMap.get rule_id rvm in
   Rule.is_split rule_id value
 
-let make chunks rvm =
+let make chunks rvm ra bi =
   let len = 0 in
   let cost = 0 in
   let overflow = 0 in
@@ -54,6 +56,7 @@ let make chunks rvm =
       let len, cost, overflow = if has_split_before_chunk c rvm then
         let overflow = overflow + (get_overflow len) in
         let len = Nesting.get_indent c.Chunk.nesting nesting_set in
+        let len = len + bi in
         let cost = cost + Chunk.get_span_split_cost c in
         len, cost, overflow
       else
@@ -72,13 +75,13 @@ let make chunks rvm =
   let cost = cost + (
     IMap.fold (fun r_id v acc ->
       if (Rule.is_split r_id (Some v)) then
-        acc + (Rule.get_cost r_id)
+        acc + (Rule.get_cost (Rule_allocator.get_kind ra r_id))
       else
         acc
     ) rvm 0
   ) in
 
-  { chunks; rvm; cost; overflow; nesting_set; }
+  { chunks; ra; bi; rvm; cost; overflow; nesting_set; }
 
 let compare s1 s2 =
   let cmp = Pervasives.compare s1.overflow s2.overflow in
@@ -92,6 +95,6 @@ let __debug s =
   let rule_strings = IMap.fold (fun k v acc ->
     (string_of_int k ^ ": " ^ string_of_int v) :: acc
   ) s.rvm [] in
-  let rule_count = string_of_int (Rule.get_rule_count ()) in
+  let rule_count = string_of_int (Rule_allocator.get_rule_count s.ra) in
   let rule_str = rule_count ^ " [" ^ (String.concat "," rule_strings) ^ "]" in
   (string_of_int s.overflow) ^ "," ^ (string_of_int s.cost) ^ " " ^ rule_str
