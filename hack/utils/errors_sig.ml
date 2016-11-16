@@ -331,8 +331,8 @@ module type S = sig
   type t
 
   val do_ : (unit -> 'a) -> t * 'a * error_flags
-  val run_in_decl_mode : (unit -> 'a) -> 'a
-  val get_lazy_decl_flag : error_flags -> bool
+  val run_in_decl_mode : Relative_path.t -> (unit -> 'a) -> 'a
+  val get_lazy_decl_flag : error_flags -> Relative_path.t option
   val ignore_ : (unit -> 'a) -> 'a
   val try_when :
     (unit -> 'a) -> when_:(unit -> bool) -> do_:(error -> unit) -> 'a
