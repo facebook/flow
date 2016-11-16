@@ -97,9 +97,9 @@ let schema_from_ast doc =
         failwith "Schema definition can not contain operation/fragment definitions"
   ) doc.Ast.Document.definitions;
 
-  Schema.{
+  Schema.({
     query_name = (match !query with Some x -> x | None -> "Query");
     mutation_name = !mutation;
     subscription_name = !subscription;
     type_map = !type_map;
-  }
+  })
