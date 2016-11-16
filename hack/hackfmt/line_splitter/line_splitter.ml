@@ -11,7 +11,12 @@
 open Core
 
 let expand_state state_queue state =
-  let rule_ids = List.map state.Solve_state.chunks ~f:(
+  (**
+    TODO: remove this rule_ids logic,
+    should be in the rule_map of the chunk_group
+  *)
+  let chunks = state.Solve_state.chunk_group.Chunk_group.chunks in
+  let rule_ids = List.map chunks ~f:(
     fun c -> c.Chunk.rule
   ) in
   let rule_id_set = (ISet.of_list rule_ids) in
@@ -23,7 +28,8 @@ let expand_state state_queue state =
       List.fold_left (Rule.get_possible_values rule_id) ~init:acc ~f:(
         fun acc v ->
           let next_rmv = IMap.add rule_id v state.Solve_state.rvm in
-          if Rule_allocator.is_rule_value_map_valid state.Solve_state.ra next_rmv then
+          if Chunk_group.is_rule_value_map_valid
+              state.Solve_state.chunk_group next_rmv then
             next_rmv :: acc
           else
             acc
@@ -31,11 +37,11 @@ let expand_state state_queue state =
   ) rule_id_set [] in
 
   List.fold_left next_rvms ~init:state_queue ~f:(fun q rvm ->
-    let st = (Solve_state.make state.Solve_state.chunks rvm state.Solve_state.ra state.Solve_state.bi) in
+    let st = Solve_state.make state.Solve_state.chunk_group rvm in
     State_queue.add q st
   )
 
-let solve queue =
+let find_best_state queue =
   let count = ref 0 in
   let rec aux acc queue =
   count := !count + 1;
@@ -56,3 +62,15 @@ let solve queue =
     end
   in
   aux (State_queue.peek queue) queue
+
+let solve chunk_groups =
+  let best_states = List.map chunk_groups ~f:(fun chunk_group ->
+    let rvm = Chunk_group.get_initial_rvm chunk_group in
+    let init_state = Solve_state.make chunk_group rvm in
+    let state_queue = State_queue.make [init_state] in
+    find_best_state state_queue
+  ) in
+  let strings = List.map best_states ~f:(fun ss ->
+    Printf.sprintf "%s" (State_printer.print_state ss)
+  ) in
+  String.concat "" strings ^ "\n"

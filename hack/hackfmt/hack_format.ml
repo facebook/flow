@@ -73,7 +73,6 @@ let builder = object (this)
         let chunk = (Chunk.finalize hd rule space_if_not_split) in
         space_if_not_split <- space;
         chunk :: tl
-      | [] -> raise (Failure "No chunks to split")
       | _ -> chunks
     )
 
@@ -124,8 +123,8 @@ let builder = object (this)
       | [] -> [] (*TODO: error *)
 
   method has_rule_kind kind =
-    List.exists rules ~f:(
-      fun id -> (Rule_allocator.get_kind rule_alloc id) = kind
+    List.exists rules ~f:(fun id ->
+      (Rule_allocator.get_rule_kind rule_alloc id) = kind
     )
 
   method start_span () =
@@ -145,25 +144,36 @@ let builder = object (this)
     );
     ()
 
+
+  (*
+    TODO: find a better way to represt the rules empty case
+    for end chunks and block nesting
+  *)
   method start_block_nest () =
-    block_indent <- block_indent + 2;
+    if List.is_empty rules then
+      block_indent <- block_indent + 2
+    else
+      this#nest ()
   method end_block_nest () =
-    block_indent <- block_indent - 2;
+    if List.is_empty rules then
+      block_indent <- block_indent - 2
+    else
+      this#unnest ()
 
   method end_chunks () =
     this#hard_split ();
-
-    chunk_groups <- {
-      Chunk_group.chunks = (List.rev chunks);
-      ra = rule_alloc;
-      bi = block_indent
-    } :: chunk_groups;
-    chunks <- [];
-    rule_alloc <- Rule_allocator.make ();
-    (* TODO:
-      assert rule_stack is empty
-      assert no nesting
-    *)
+    if List.is_empty rules then begin
+      chunk_groups <- {
+        Chunk_group.chunks = (List.rev chunks);
+        rule_map = rule_alloc.Rule_allocator.rule_map;
+        rule_dependency_map = rule_alloc.Rule_allocator.dependency_map;
+        block_indentation = block_indent;
+      } :: chunk_groups;
+      chunks <- [];
+      rule_alloc <- Rule_allocator.make ();
+      ()
+    end;
+    ()
 
   method _end () =
     (*TODO: warn if not empty? *)
@@ -440,18 +450,20 @@ let rec transform node =
     builder#end_chunks ();
     ()
   | IfStatement x ->
-    t x.if_keyword;
+    let (kw, left_p, condition, right_p, if_body, elseif_clauses, else_clause) =
+      get_if_statement_children x in
+    t kw;
     add_space ();
-    t x.if_left_paren;
+    t left_p;
     split ();
     start_argument_rule ();
-    t_with ~nest x.if_condition;
+    t_with ~nest condition;
     split ();
-    t x.if_right_paren;
+    t right_p;
     end_rule ();
-    handle_possible_compound_statement x.if_statement;
-    handle_possible_list x.if_elseif_clauses;
-    t x.if_else_clause;
+    handle_possible_compound_statement if_body;
+    handle_possible_list elseif_clauses;
+    t else_clause;
     builder#end_chunks ();
     ()
   | ElseifClause x ->
@@ -467,6 +479,75 @@ let rec transform node =
   | ElseClause x ->
     t x.else_keyword;
     handle_possible_compound_statement x.else_statement;
+    ()
+  | TryStatement x ->
+    (* TODO: revisit *)
+    let (kw, body, catch_clauses, finally_clause) =
+      get_try_statement_children x in
+    t kw;
+    handle_possible_compound_statement body;
+    handle_possible_list catch_clauses;
+    t finally_clause;
+  | CatchClause x ->
+    let (kw, left_p, ex_type, var, right_p, body) =
+      get_catch_clause_children x in
+    (* TODO refactor for if statement consistentacy *)
+    t kw;
+    add_space ();
+    t left_p;
+    split ();
+    tl_with ~nest ~f:(fun () ->
+      t ex_type;
+      add_space ();
+      t var;
+      split ();
+    ) ();
+    t right_p;
+    handle_possible_compound_statement body;
+    ();
+  | ForStatement x ->
+    let (kw, left_p, init, semi1, control, semi2, after_iter, right_p, body) =
+      get_for_statement_children x in
+    t kw;
+    add_space ();
+    t left_p;
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+      split ();
+      tl_with ~nest ~f:(fun () ->
+        t init;
+        t semi1;
+        split ~space ();
+        t control;
+        t semi2;
+        split ~space ();
+        t after_iter;
+      ) ();
+      split ();
+      t right_p;
+    ) ();
+    handle_possible_compound_statement body;
+    ()
+  | ForeachStatement x ->
+    (* TODO: revisit this *)
+    let (kw, left_p, collection, await_kw, as_kw, key, arrow, value, right_p,
+      body) = get_foreach_statement_children x in
+    t kw;
+    add_space ();
+    t left_p;
+    t collection;
+    if not (is_missing await_kw) then add_space ();
+    t await_kw;
+    add_space ();
+    t as_kw;
+    add_space ();
+    t key;
+    add_space ();
+    t arrow;
+    split ~space ();
+    t value;
+    split ();
+    t right_p;
+    handle_possible_compound_statement body;
     ()
   | SwitchStatement x ->
     let (kw, left_p, expr, right_p, body) = get_switch_statement_children x in
@@ -496,6 +577,11 @@ let rec transform node =
     let (kw, expr, semi) = get_throw_statement_children x in
     transform_keyword_expression_statement kw expr semi;
     ()
+  | BreakStatement x ->
+    let (kw, expr, semi) = get_break_statement_children x in
+    (* TODO: revisit *)
+    transform_keyword_expression_statement kw expr semi;
+    ()
   | FunctionStaticStatement x ->
     let (static_kw, declarators, semi) =
       get_function_static_statement_children x in
@@ -520,12 +606,22 @@ let rec transform node =
     let (async_kw, fun_kw, lp, params, rp, colon, ret_type, use, body) =
       get_anonymous_function_children x in
     t async_kw;
-    add_space ();
+    if not (is_missing async_kw) then add_space ();
     t fun_kw;
     transform_argish_with_return_type ~in_span:false lp params rp colon
       ret_type;
     t use;
     handle_possible_compound_statement body;
+    builder#end_chunks ();
+    ()
+  | AnonymousFunctionUseClause x ->
+    (* TODO: Revisit *)
+    let (kw, left_p, vars, right_p) =
+      get_anonymous_function_use_clause_children x in
+    add_space ();
+    t kw;
+    add_space ();
+    transform_argish left_p vars right_p;
     ()
   | LambdaExpression x ->
     let (async, signature, arrow, body) = get_lambda_expression_children x in
@@ -570,6 +666,10 @@ let rec transform node =
     (* TODO: remove space for some unary expressions *)
     add_space ();
     t operand;
+  | PostfixUnaryExpression x ->
+    let (operand, operator) = get_postfix_unary_expression_children x in
+    t operand;
+    t operator;
   | BinaryExpression x ->
     builder#start_span ();
     (* TODO: nested binary expressions split by precedence *)
@@ -1027,34 +1127,27 @@ and transform_keyword_expression_statement kw expr semi =
   builder#end_chunks ();
   ()
 
-let validate_chunk_groups chunk_groups =
-  let _ = List.fold_left chunk_groups ~init:ISet.empty ~f:(
-    fun seen_rules chunks ->
-      let rules = List.map chunks (fun c -> c.Chunk.rule) in
-      let rule_set = ISet.of_list rules in
-      if ISet.cardinal (ISet.inter rule_set seen_rules) <> 0 then
-        raise (Failure "Invalid chunk groups, rule exists in two groups");
-      ISet.union rule_set seen_rules
-  ) in
+let debug_chunk_groups chunk_groups =
+  Printf.printf "%d\n" (List.length chunk_groups);
+  List.iteri chunk_groups ~f:(fun i cg ->
+    Printf.printf "%d\n" i;
+    Printf.printf "Indentation: %d\n" cg.Chunk_group.block_indentation;
+    Printf.printf "Chunk count:%d\n" (List.length cg.Chunk_group.chunks);
+    List.iteri cg.Chunk_group.chunks ~f:(fun i c ->
+      Printf.printf "\t%d - %s - Nesting:%d\n"
+        i (Chunk.to_string c) (Chunk.get_nesting_id c);
+    );
+    Printf.printf "Rule count %d\n"
+      (IMap.cardinal cg.Chunk_group.rule_map);
+    IMap.iter (fun k v ->
+      Printf.printf "\t%d - %s\n" k (Rule.to_string v);
+    ) cg.Chunk_group.rule_map;
+  );
   ()
 
 let run ?(debug=false) node =
   transform node;
   (* split (); *)
   let chunk_groups = builder#_end () in
-  if debug then begin
-    Printf.printf "%d\n" (List.length chunk_groups);
-    List.iteri chunk_groups ~f:(fun i cg ->
-      Printf.printf "%d\n" i;
-      Printf.printf "Chunk count:%d\n" (List.length cg.Chunk_group.chunks);
-      List.iteri cg.Chunk_group.chunks ~f:(fun i c ->
-        Printf.printf "\t%d - %s\n" i (Chunk.to_string c);
-      );
-      Printf.printf "Rule count %d\n"
-        (IMap.cardinal cg.Chunk_group.ra.Rule_allocator.rule_map);
-      IMap.iter (fun k v ->
-        Printf.printf "\t%d - %s\n" k (Rule.to_string v);
-      ) cg.Chunk_group.ra.Rule_allocator.rule_map;
-    );
-  end;
+  if debug then debug_chunk_groups chunk_groups;
   chunk_groups
