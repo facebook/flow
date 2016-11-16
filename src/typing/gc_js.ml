@@ -105,6 +105,12 @@ let rec gc cx state = function
       gc_funtype cx state ft;
       gc cx state prototype;
       gc cx state static  | MixedT _ -> ()
+  | GraphqlSchemaT _
+  | GraphqlOpT _
+  | GraphqlFragT _
+  | GraphqlSelectionT _
+  | GraphqlFieldT _
+      -> () (* TODO *)
   | IdxWrapper (_, t) -> gc cx state t
   | InstanceT(_, static, super, instance) ->
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
@@ -225,6 +231,12 @@ and gc_use cx state = function
   | GetKeysT (_, t) -> gc cx state t
   | GetPropT(_, _, t) -> gc cx state t
   | GetStaticsT(_, t) -> gc cx state t
+  | GraphqlMkOpT _
+  | GraphqlMkFragT _
+  | GraphqlMkInlineFragT _
+  | GraphqlSelectT _
+  | GraphqlSpreadT _
+      -> () (* TODO *)
   | GuardT (pred, t1, t2) ->
       gc_pred cx state pred;
       gc cx state t1;

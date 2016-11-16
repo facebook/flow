@@ -56,7 +56,7 @@ let process_list str =
     !excludes_ref
   with Not_found -> !excludes_ref
 
-let extensions = [".ml"; ".mll"; ".c"]
+let extensions = [".ml"; ".mll"; ".mly"; ".c"]
 let filter excludes filename =
   List.exists (fun ext -> Filename.check_suffix filename ext) extensions &&
     not (SSet.mem filename excludes)
