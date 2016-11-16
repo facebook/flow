@@ -14,16 +14,10 @@ type t = {
   parent: t option;
 }
 
-let _nextid = ref 0
-let get_id () =
-  let id = !_nextid in
-  _nextid := !_nextid + 1;
-  id
-
-let make nesting amount = {
-  id = get_id ();
+let make ~id amount parent = {
+  id;
   amount;
-  parent = nesting;
+  parent;
 }
 
 let get_indent nesting nesting_set =

@@ -27,7 +27,6 @@ let open_span start cost = {
 
 let builder = object (this)
   val open_spans = Stack.create ();
-  val mutable nesting = Nesting.make None 0;
   val mutable rules = [];
 
   val mutable chunks = [];
@@ -39,6 +38,7 @@ let builder = object (this)
 
   val mutable chunk_groups = [];
   val mutable rule_alloc = Rule_allocator.make ();
+  val mutable nesting_alloc = Nesting_allocator.make ();
   val mutable block_indent = 0;
 
   method add_string s =
@@ -47,6 +47,7 @@ let builder = object (this)
         let text = hd.Chunk.text ^ pending_whitespace ^ s in
         {hd with Chunk.text = text} :: tl
       | _ -> begin
+          let nesting = nesting_alloc.Nesting_allocator.current_nesting in
           match next_split_rule with
             | None -> Chunk.make s (List.hd rules) nesting :: chunks
             | Some rule_type ->
@@ -98,14 +99,11 @@ let builder = object (this)
     ()
 
   method nest ?amount:(amount=2) () =
-    nesting <- (Nesting.make (Some nesting) 2);
+    nesting_alloc <- Nesting_allocator.nest nesting_alloc amount;
     ()
 
   method unnest () =
-    nesting <- begin match nesting.Nesting.parent with
-      | Some p -> p
-      | None -> raise (Failure "unnested too far")
-    end;
+    nesting_alloc <- Nesting_allocator.unnest nesting_alloc;
     ()
 
   method start_rule ?(rule_type=Rule.Simple) () =
@@ -172,6 +170,7 @@ let builder = object (this)
       } :: chunk_groups;
       chunks <- [];
       rule_alloc <- Rule_allocator.make ();
+      nesting_alloc <- Nesting_allocator.make ();
       ()
     end;
     ()
