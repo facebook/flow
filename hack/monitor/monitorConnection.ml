@@ -134,7 +134,7 @@ let connect_and_shut_down config =
   verify_cstate ic cstate >>= fun () ->
   send_shutdown_rpc oc;
   try Timeout.with_timeout
-    ~timeout:2
+    ~timeout:3
     ~on_timeout:(fun _ -> ())
     ~do_:begin fun _ ->
       wait_on_server_restart ic;
