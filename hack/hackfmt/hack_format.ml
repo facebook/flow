@@ -353,14 +353,7 @@ let rec transform node =
     t name;
     ()
   | MemberSelectionExpression x ->
-    let (obj, operator, name) = get_member_selection_expression_children x in
-    t obj;
-    split ();
-    tl_with ~nest ~f:(fun () ->
-      t operator;
-      t name;
-    ) ();
-    ()
+    handle_member_selection_chaining x true
   | PrefixUnaryExpression x ->
     let (operator, operand) = get_prefix_unary_expression_children x in
     t operator;
@@ -603,6 +596,52 @@ and handle_xhp_open_right_angle_token t =
       if EditableToken.text token = "/>" then add_space ();
       transform t
     | _ -> raise (Failure "expected xhp_open right_angle token")
+
+and handle_member_selection_chaining mse_node first =
+  let handle_chaining fcall_node =
+    match syntax fcall_node with
+    | FunctionCallExpression x ->
+      let (receiver, lp, args, rp) = get_function_call_expression_children x in
+      let () = match syntax receiver with
+        | MemberSelectionExpression mse ->
+          handle_member_selection_chaining mse false;
+        | _ -> transform receiver;
+      in
+      transform_argish lp args rp;
+      ()
+    | _ -> raise (Failure "wut")
+  in
+
+  let (obj, arrow, member) = get_member_selection_expression_children mse_node in
+
+  let transform_rest nest () =
+    tl_with ~nest ~f:(fun () ->
+      transform arrow;
+      transform member;
+    ) ();
+    ()
+  in
+
+  let t_rest = if is_function_call_expression obj then begin
+    handle_chaining obj;
+    split ();
+    transform_rest false
+  end else begin
+    transform obj;
+    split ();
+    (* TODO: not always a rule *)
+    builder#start_rule ~rule:(Rule.argument_rule ()) ();
+    builder#nest ();
+    transform_rest false
+  end in
+  t_rest ();
+
+  if first then begin
+    builder#end_rule ();
+    builder#unnest ();
+  end;
+  ()
+
 
 and transform_function_declaration_header ~span_started x =
   let (async, kw, amp, name, type_params, leftp, params, rightp, colon,
