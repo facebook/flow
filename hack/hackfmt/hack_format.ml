@@ -202,13 +202,37 @@ let rec transform node =
     ()
   | Script x ->
     (* TODO script_header*)
-    t x.script_declarations
+    handle_possible_list  x.script_declarations;
   | SimpleTypeSpecifier {simple_type_specifier} -> t simple_type_specifier
   | LiteralExpression x -> t x.literal_expression
   | QualifiedNameExpression x ->
     t x.qualified_name_expression
   | VariableExpression x -> t x.variable_expression
   | PipeVariableExpression x -> t x.pipe_variable_expression
+  | PropertyDeclaration x ->
+    let (modifiers, prop_type, declarators, semi) =
+      get_property_declaration_children x in
+    handle_possible_list ~after_each:(fun _ -> add_space ()) modifiers;
+    t prop_type;
+    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      handle_possible_list ~before_each:(split ~space) declarators;
+    ) ();
+    t semi;
+    builder#end_chunks ();
+    ()
+  | PropertyDeclarator x ->
+    let (name, prop_initializer) = get_property_declarator_children x in
+    t name;
+    t prop_initializer;
+    ()
+  | FunctionDeclaration x ->
+    let (attr, header, body) = get_function_declaration_children x in
+    t attr;
+    if not (is_missing attr) then builder#end_chunks ();
+    t header;
+    handle_possible_compound_statement body;
+    builder#end_chunks ();
+    ()
   | FunctionDeclarationHeader x ->
     transform_function_declaration_header ~span_started:false x;
     ()
@@ -282,7 +306,9 @@ let rec transform node =
   | TraitUse x ->
     let (kw, elements, semi) = get_trait_use_children x in
     t kw;
-    handle_possible_list ~before_each:(split ~space) elements;
+    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      handle_possible_list ~before_each:(split ~space) elements;
+    ) ();
     t semi;
     builder#end_chunks();
     ()
@@ -314,6 +340,27 @@ let rec transform node =
     let (name, const_initializer) = get_constant_declarator_children x in
     t name;
     t const_initializer;
+    ()
+  | TypeConstDeclaration x ->
+    let (abs, kw, type_kw, name, type_constraint, eq, type_spec, semi) =
+      get_type_const_declaration_children x in
+    t abs;
+    if not (is_missing abs) then add_space ();
+    t kw;
+    add_space ();
+    t type_kw;
+    add_space ();
+    t name;
+    builder#simple_space_split ();
+    tl_with ~nest ~f:(fun () ->
+      t type_constraint;
+      if not (is_missing type_constraint) then add_space ();
+      t eq;
+      builder#simple_space_split ();
+      t type_spec;
+      t semi;
+      builder#end_chunks ();
+    ) ();
     ()
   | DecoratedExpression x ->
     let (decorator, expr) = get_decorated_expression_children x in
@@ -414,12 +461,37 @@ let rec transform node =
     let (kw, expr, semi) = get_throw_statement_children x in
     transform_keyword_expression_statement kw expr semi;
     ()
+  | FunctionStaticStatement x ->
+    let (static_kw, declarators, semi) =
+      get_function_static_statement_children x in
+    t static_kw;
+    tl_with ~nest ~rule:(Rule.argument_rule ()) ~f:(fun () ->
+      handle_possible_list ~before_each:(split ~space) declarators;
+    ) ();
+    t semi;
+    builder#end_chunks ();
+    ()
+  | StaticDeclarator x ->
+    let (name, static_initializer) = get_static_declarator_children x in
+    t name;
+    t static_initializer;
   | SimpleInitializer x ->
     let (eq_kw, value) = get_simple_initializer_children x in
     add_space ();
     t eq_kw;
     builder#simple_space_split ();
     t_with ~nest value;
+  | AnonymousFunction x ->
+    let (async_kw, fun_kw, lp, params, rp, colon, ret_type, use, body) =
+      get_anonymous_function_children x in
+    t async_kw;
+    add_space ();
+    t fun_kw;
+    transform_argish_with_return_type ~in_span:false lp params rp colon
+      ret_type;
+    t use;
+    handle_possible_compound_statement body;
+    ()
   | LambdaExpression x ->
     let (async, signature, arrow, body) = get_lambda_expression_children x in
     t async;
