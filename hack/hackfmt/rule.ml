@@ -19,6 +19,8 @@ type t = {
   kind: kind;
 }
 
+let null_rule_id = -1
+
 let is_split _rule v =
   match v with
     | None

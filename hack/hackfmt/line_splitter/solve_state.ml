@@ -82,6 +82,9 @@ let make chunk_group rvm =
 
   { chunk_group; rvm; cost; overflow; nesting_set; }
 
+let is_rule_bound t rule_id =
+  IMap.mem rule_id t.rvm
+
 let pick_best_state s1 s2 =
   let cmp = Pervasives.compare (s1.overflow, s1.cost) (s2.overflow, s2.cost) in
   if cmp < 0 then s1 else s2
@@ -89,11 +92,11 @@ let pick_best_state s1 s2 =
 let compare s1 s2 =
   Pervasives.compare (s1.cost, s1.overflow) (s2.cost, s2.overflow)
 
-let __debug s =
+let __debug t =
   (* TODO: make a new rule strings string *)
-  let rule_strings = IMap.fold (fun k v acc ->
-    (string_of_int k ^ ": " ^ string_of_int v) :: acc
-  ) s.rvm [] in
-  let rule_count = string_of_int (Chunk_group.get_rule_count s.chunk_group) in
+  let rule_strings = List.map (IMap.bindings t.rvm) (fun (k, v) ->
+    string_of_int k ^ ": " ^ string_of_int v
+  ) in
+  let rule_count = string_of_int (Chunk_group.get_rule_count t.chunk_group) in
   let rule_str = rule_count ^ " [" ^ (String.concat "," rule_strings) ^ "]" in
-  (string_of_int s.overflow) ^ "," ^ (string_of_int s.cost) ^ " " ^ rule_str
+  (string_of_int t.overflow) ^ "," ^ (string_of_int t.cost) ^ " " ^ rule_str

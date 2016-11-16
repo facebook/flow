@@ -11,30 +11,20 @@
 open Core
 
 let expand_state state_queue state =
-  (**
-    TODO: remove this rule_ids logic,
-    should be in the rule_map of the chunk_group
-  *)
-  let chunks = state.Solve_state.chunk_group.Chunk_group.chunks in
-  let rule_ids = List.map chunks ~f:(
-    fun c -> c.Chunk.rule
-  ) in
-  let rule_id_set = (ISet.of_list rule_ids) in
+  let chunk_group = state.Solve_state.chunk_group in
+  let rule_ids = Chunk_group.get_rules chunk_group in
 
-  let next_rvms = ISet.fold (fun rule_id acc ->
-    if IMap.mem rule_id state.Solve_state.rvm then
-      acc
+  let next_rvms = List.map rule_ids ~f:(fun rule_id ->
+    if Solve_state.is_rule_bound state rule_id then []
     else
-      List.fold_left (Rule.get_possible_values rule_id) ~init:acc ~f:(
-        fun acc v ->
-          let next_rmv = IMap.add rule_id v state.Solve_state.rvm in
-          if Chunk_group.is_rule_value_map_valid
-              state.Solve_state.chunk_group next_rmv then
-            next_rmv :: acc
-          else
-            acc
-      )
-  ) rule_id_set [] in
+    List.filter_map (Rule.get_possible_values rule_id) ~f:(fun v ->
+      let next_rvm = IMap.add rule_id v state.Solve_state.rvm in
+      if Chunk_group.is_rule_value_map_valid chunk_group next_rvm
+      then Some next_rvm
+      else None
+    )
+  ) in
+  let next_rvms = List.concat next_rvms in
 
   List.fold_left next_rvms ~init:state_queue ~f:(fun q rvm ->
     let st = Solve_state.make state.Solve_state.chunk_group rvm in

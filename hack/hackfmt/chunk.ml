@@ -24,7 +24,7 @@ let default_chunk = {
   spans = [];
   is_appendable = true;
   space_if_not_split = false;
-  rule = -1;
+  rule = Rule.null_rule_id;
   nesting = {Nesting.id = -1; amount = 0; parent = None; };
 }
 
@@ -38,7 +38,7 @@ let make text rule nesting =
 let finalize chunk rule space =
   let rule = match rule with
     (* TODO: refactor: | r when (Rule.get_kind r) = Rule.Always -> r *)
-    | _ when chunk.rule <> -1 -> chunk.rule
+    | _ when chunk.rule <> Rule.null_rule_id -> chunk.rule
     | r -> r
   in
   {chunk with

@@ -48,10 +48,10 @@ let builder = object (this)
         {hd with Chunk.text = text} :: tl
       | _ -> begin
           match next_split_rule with
-            | None -> [Chunk.make s (List.hd rules) nesting] @ chunks
+            | None -> Chunk.make s (List.hd rules) nesting :: chunks
             | Some rule_type ->
               this#start_rule ~rule_type:rule_type ();
-              let cs = [Chunk.make s (List.hd rules) nesting] @ chunks in
+              let cs = Chunk.make s (List.hd rules) nesting :: chunks in
               this#end_rule ();
               next_split_rule <- None;
               cs
@@ -65,10 +65,11 @@ let builder = object (this)
   method split space =
     chunks <- (match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
-        let rule = match hd.Chunk.rule, List.hd rules with
-          | -1, None -> this#add_rule Rule.Simple
-          | -1, Some r -> r
-          | r, _ -> r
+        let rule_id = hd.Chunk.rule in
+        let rule = match List.hd rules with
+          | None when rule_id = Rule.null_rule_id -> this#add_rule Rule.Simple
+          | Some r when rule_id = Rule.null_rule_id -> r
+          | _ -> rule_id
         in
         let chunk = (Chunk.finalize hd rule space_if_not_split) in
         space_if_not_split <- space;
@@ -228,12 +229,6 @@ let add_space () =
 let pending_space () =
   builder#add_pending_whitespace " "
 
-let start_argument_rule () =
-  builder#start_rule ~rule_type:(Rule.Argument) ()
-
-let end_rule () =
-  builder#end_rule ()
-
 let rec transform node =
   let t = transform in
   let span = true in
@@ -338,14 +333,14 @@ let rec transform node =
     t body;
     ()
   | ClassishBody x ->
-    let (leftp, body, rightp) = get_classish_body_children x in
+    let (leftb, body, rightb) = get_classish_body_children x in
     add_space ();
-    t leftp;
+    t leftb;
     builder#end_chunks ();
     tl_with ~nest ~f:(fun () ->
       handle_possible_list body
     ) ();
-    t rightp;
+    t rightb;
     builder#end_chunks ();
     ()
   | TraitUse x ->
@@ -441,11 +436,11 @@ let rec transform node =
     add_space ();
     t x.while_left_paren;
     split ();
-    start_argument_rule ();
-    t_with ~nest x.while_condition;
-    split ();
-    t x.while_right_paren;
-    end_rule ();
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+      t_with ~nest x.while_condition;
+      split ();
+      t x.while_right_paren;
+    ) ();
     handle_possible_compound_statement x.while_body;
     builder#end_chunks ();
     ()
@@ -456,11 +451,11 @@ let rec transform node =
     add_space ();
     t left_p;
     split ();
-    start_argument_rule ();
-    t_with ~nest condition;
-    split ();
-    t right_p;
-    end_rule ();
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+      t_with ~nest condition;
+      split ();
+      t right_p;
+    ) ();
     handle_possible_compound_statement if_body;
     handle_possible_list elseif_clauses;
     t else_clause;
@@ -471,9 +466,11 @@ let rec transform node =
     add_space ();
     t x.elseif_left_paren;
     split ();
-    t_with ~nest x.elseif_condition;
-    split ();
-    t x.elseif_right_paren;
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+      t_with ~nest x.elseif_condition;
+      split ();
+      t x.elseif_right_paren;
+    ) ();
     handle_possible_compound_statement x.elseif_statement;
     ()
   | ElseClause x ->
