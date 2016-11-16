@@ -50,10 +50,7 @@ let find_best_state queue =
     else
 
     let queue, state = State_queue.get_next queue in
-    let best =
-      if Solve_state.compare state acc < 0 then state
-      else acc
-    in
+    let best = Solve_state.pick_best_state state acc in
     if best.Solve_state.overflow = 0 || !count > 50 then
       best
     else begin

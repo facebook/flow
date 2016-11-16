@@ -82,12 +82,12 @@ let make chunk_group rvm =
 
   { chunk_group; rvm; cost; overflow; nesting_set; }
 
+let pick_best_state s1 s2 =
+  let cmp = Pervasives.compare (s1.overflow, s1.cost) (s2.overflow, s2.cost) in
+  if cmp < 0 then s1 else s2
+
 let compare s1 s2 =
-  let cmp = Pervasives.compare s1.overflow s2.overflow in
-  if cmp <> 0 then
-    cmp
-  else
-    Pervasives.compare s1.cost s2.cost
+  Pervasives.compare (s1.cost, s1.overflow) (s2.cost, s2.overflow)
 
 let __debug s =
   (* TODO: make a new rule strings string *)

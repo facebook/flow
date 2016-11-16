@@ -33,7 +33,7 @@ let get_cost kind =
     | XHPExpression -> 1
 
 let get_possible_values _id =
-  [0; 1]
+  [1]
 
 let cares_about_children kind =
   match kind with
