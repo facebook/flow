@@ -131,6 +131,9 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       then print_json stdout []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
+    | ServerProt.NOT_COVERED ->
+      let msg = "Why on earth did the server respond with NOT_COVERED?" in
+      FlowExitStatus.(exit ~msg Unknown_error)
     | ServerProt.PONG ->
       let msg = "Why on earth did the server respond with a pong?" in
       FlowExitStatus.(exit ~msg Unknown_error)

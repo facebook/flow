@@ -39,6 +39,9 @@ let spec = {
         ~doc:"Print paths without the root"
     |> flag "--path" (optional string)
         ~doc:"Specify (fake) path to file when reading data from stdin"
+    |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
+    |> flag "--all" no_arg
+        ~doc:"Ignore absence of @flow pragma"
     |> anon "file" (optional string) ~doc:"[FILE]"
   )
 }
@@ -220,15 +223,28 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
         "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
   )
 
-let main option_values root json pretty color debug strip_root path filename () =
+let main
+    option_values root json pretty color debug strip_root path respect_pragma
+    all filename () =
   let file = get_file_from_filename_or_stdin path filename in
   let root = guess_root (
     match root with
     | Some root -> Some root
     | None -> ServerProt.path_of_input file
   ) in
+
+  if not json && all && respect_pragma then prerr_endline
+    "Warning: --all and --respect-pragma cannot be used together. --all wins.";
+
+  (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a
+     transition, --all defaults to enabled. To maintain the current behavior
+     going forward, callers should add --all, which currently is a no-op.
+     Once we flip the default, --respect-pragma will have no effect and will
+     be removed. *)
+  let all = all || not respect_pragma in
+
   let ic, oc = connect option_values root in
-  ServerProt.cmd_to_channel oc (ServerProt.COVERAGE file);
+  ServerProt.cmd_to_channel oc (ServerProt.COVERAGE (file, all));
 
   (* pretty implies json *)
   let json = json || pretty in

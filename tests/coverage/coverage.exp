@@ -36,3 +36,12 @@ declare class qux {
 
 Covered: 100.00% (3 of 3 expressions)
 
+Covered: 100.00% (4 of 4 expressions)
+
+Covered: 100.00% (4 of 4 expressions)
+
+Covered: 0.00% (0 of 4 expressions)
+
+Warning: --force and --respect-pragma cannot be used together. --force wins.
+Covered: 100.00% (4 of 4 expressions)
+

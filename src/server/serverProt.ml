@@ -36,8 +36,8 @@ type command =
     file_input *
     Verbose.t option *
     bool * (* graphml *)
-    bool (* respect_pragma *)
-| COVERAGE of file_input
+    bool (* force *)
+| COVERAGE of file_input * bool (* force *)
 | DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | ERROR_OUT_OF_DATE
 | FIND_MODULE of string * string
@@ -116,14 +116,17 @@ type response =
 | DIRECTORY_MISMATCH of directory_mismatch
 | ERRORS of Errors.error list
 | NO_ERRORS
-| PONG
+| PONG (* CAREFUL! changing the order of this constructor will make clients
+          error when checking the server's version across an upgrade. *)
 | SERVER_DYING
 | SERVER_OUT_OF_DATE
+| NOT_COVERED
 
 let response_to_string = function
   | DIRECTORY_MISMATCH _ -> "Directory Mismatch"
   | ERRORS _ -> "Some Errors"
   | NO_ERRORS -> "No Errors"
+  | NOT_COVERED -> "No Errors (Not @flow)"
   | PONG -> "Pong"
   | SERVER_DYING -> "Server Dying"
   | SERVER_OUT_OF_DATE -> "Server Out of Date"

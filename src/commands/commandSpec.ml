@@ -301,6 +301,7 @@ let usage_string spec =
     max acc (String.length a)
   ) 0 in
   let flag_usage = flags
+    |> List.filter (fun (_, meta) -> meta.ArgSpec.doc <> "")
     |> List.map (fun (name, meta) ->
           Utils_js.spf "  %-*s  %s" col_width name meta.ArgSpec.doc
        )

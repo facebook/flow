@@ -127,13 +127,13 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc (results : ServerProt.autocomplete_response) [];
     flush oc
 
-  let check_file ~options file_input verbose respect_pragma oc =
+  let check_file ~options ~force ~verbose file_input oc =
     let file = ServerProt.file_input_get_filename file_input in
-    let errors = match file_input with
+    match file_input with
     | ServerProt.FileName _ -> failwith "Not implemented"
     | ServerProt.FileContent (_, content) ->
         let should_check =
-          if not respect_pragma then
+          if force then
             true
           else
             let (_, docblock) =
@@ -144,16 +144,16 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
             in
             Docblock.is_flow docblock
         in
-        begin if should_check then
+        if should_check then
           let file = Loc.SourceFile file in
-          (match Types_js.typecheck_contents ~options ?verbose
-            ~check_syntax:true content file with
-          | _, _, errors, _ -> errors)
+          let checked = Types_js.typecheck_contents
+            ~options ?verbose ~check_syntax:true content file in
+          let errors = match checked with
+          | _, _, errors, _ -> errors
+          in
+          send_errorl (Errors.to_list errors) oc
         else
-          Errors.ErrorSet.empty
-        end
-    in
-    send_errorl (Errors.to_list errors) oc
+          ServerProt.response_to_channel oc ServerProt.NOT_COVERED
 
   let mk_loc file line col =
     {
@@ -228,16 +228,28 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     Marshal.to_channel oc (resp : ServerProt.dump_types_response) [];
     flush oc
 
-  let coverage ~options file_input oc =
+  let coverage ~options ~force file_input oc =
     let file = ServerProt.file_input_get_filename file_input in
     let file = Loc.SourceFile file in
     let resp =
     (try
-       let content = ServerProt.file_input_get_content file_input in
-       let cx = match Types_js.typecheck_contents ~options content file with
-       | _, Some cx, _, _ -> cx
-       | _  -> failwith "Couldn't parse file" in
-      OK (Query_types.covered_types cx)
+      let content = ServerProt.file_input_get_content file_input in
+      let should_check =
+        if force then
+          true
+        else
+          let (_, docblock) =
+            Parsing_service_js.get_docblock Docblock.max_tokens file content in
+          Docblock.is_flow docblock
+      in
+      let cx = match Types_js.typecheck_contents ~options content file with
+      | _, Some cx, _, _ -> cx
+      | _  -> failwith "Couldn't parse file" in
+      let types = Query_types.covered_types cx in
+      if should_check then
+        OK types
+      else
+        OK (types |> List.map (fun (loc, _) -> (loc, false)))
     with exn ->
       let loc = mk_loc file 0 0 in
       let err = (loc, Printexc.to_string exn) in
@@ -596,11 +608,11 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     begin match command with
     | ServerProt.AUTOCOMPLETE fn ->
         autocomplete ~options client_logging_context fn oc
-    | ServerProt.CHECK_FILE (fn, verbose, graphml, respect_pragma) ->
+    | ServerProt.CHECK_FILE (fn, verbose, graphml, force) ->
         let options = { options with Options.opt_output_graphml = graphml } in
-        check_file ~options fn verbose respect_pragma oc
-    | ServerProt.COVERAGE (fn) ->
-        coverage ~options fn oc
+        check_file ~options ~force ~verbose fn oc
+    | ServerProt.COVERAGE (fn, force) ->
+        coverage ~options ~force fn oc
     | ServerProt.DUMP_TYPES (fn, format, strip_root) ->
         dump_types ~options fn format strip_root oc
     | ServerProt.ERROR_OUT_OF_DATE ->

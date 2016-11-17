@@ -5,3 +5,39 @@ syntax_error.js:4
 
 
 Found 1 error
+
+
+not_flow.js
+
+not_flow.js:1
+  1: 1 * 'foo';
+         ^^^^^ string. The operand of an arithmetic operation must be a number.
+
+
+Found 1 error
+
+
+not_flow.js with --force
+
+not_flow.js:1
+  1: 1 * 'foo';
+         ^^^^^ string. The operand of an arithmetic operation must be a number.
+
+
+Found 1 error
+
+
+not_flow.js with --respect-pragma
+
+File is not @flow!
+
+
+not_flow.js with --respect-pragma and --force
+
+Warning: --force and --respect-pragma cannot be used together. --force wins.
+not_flow.js:1
+  1: 1 * 'foo';
+         ^^^^^ string. The operand of an arithmetic operation must be a number.
+
+
+Found 1 error
