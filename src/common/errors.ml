@@ -97,6 +97,7 @@ let message_of_string s =
 
 let internal_error_prefix = "Internal error (see logs): "
 
+(* for old error format. DEPRECATED *)
 let prepend_kind_message messages kind =
   match kind, messages with
   | _, BlameM ({Loc.source = Some Loc.LibFile _; _} as loc, _) :: _ ->
@@ -350,6 +351,16 @@ let file_of_source source =
     | Some Loc.Builtins -> None
     | None -> None
 
+let relative_lib_path ~strip_root ~root filename =
+  let sep = Filename.dir_sep in
+  let root_str = Printf.sprintf "%s%s" (Path.to_string root) sep in
+  if String_utils.string_starts_with filename root_str then
+    relative_path ~strip_root ~root filename
+  else if strip_root then
+    Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
+  else
+    filename
+
 let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
   let l0 = loc.start.line in
   let l1 = loc._end.line in
@@ -362,16 +373,8 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
     then [(default_style "")]
     else
       let prefix = Printf.sprintf ". See%s: " (if is_lib then " lib" else "") in
-      let filename =
-        if is_lib then
-          let sep = Filename.dir_sep in
-          let root_str = Printf.sprintf "%s%s" (Path.to_string root) sep in
-          if String_utils.string_starts_with filename root_str then
-            relative_path ~strip_root ~root filename
-          else if strip_root then
-            Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
-          else
-            filename
+      let filename = if is_lib
+        then relative_lib_path ~strip_root ~root filename
         else relative_path ~strip_root ~root filename
       in
       [
@@ -489,14 +492,32 @@ let file_of_error err =
   let loc = loc_of_error err in
   file_of_source loc.Loc.source
 
-let print_error_header ~strip_root ~root message =
+let print_error_header ~strip_root ~root ~kind message =
   let loc, _ = to_pp message in
-  let filename = file_of_source loc.Loc.source in
-  let relfilename = match filename with
-  | Some fn -> relative_path ~strip_root ~root fn
-  | None -> "[No file]" in
-  [
-    file_location_style (Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line));
+  let prefix, relfilename = match loc.Loc.source with
+    | Some Loc.LibFile filename ->
+      let header = match kind with
+      | ParseError -> "Library parse error:"
+      | InferError -> "Library type error:"
+      (* TODO: we don't publicly distinguish warnings vs errors right now *)
+      | InferWarning -> "Library type error:"
+      | InternalError -> internal_error_prefix
+      (* TODO: is this possible? What happens when there are two `declare
+         module`s with the same name? *)
+      | DuplicateProviderError -> "Library duplicate provider error:"
+      in
+      [comment_file_style (header^"\n")],
+      relative_lib_path ~strip_root ~root filename
+    | Some Loc.SourceFile filename
+    | Some Loc.JsonFile filename
+    | Some Loc.ResourceFile filename ->
+        [], relative_path ~strip_root ~root filename
+    | Some Loc.Builtins -> [], "[No file]"
+    | None -> [], "[No file]"
+  in
+  let file_loc = Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line) in
+  prefix @ [
+    file_location_style file_loc;
     default_style "\n"
   ]
 
@@ -530,11 +551,10 @@ let remove_newlines (color, text) =
 let get_pretty_printed_error_new ~stdin_file:stdin_file ~strip_root ~one_line ~root
   (error : error) =
   let { kind; messages; op; trace; extra } = error in
-  let messages = prepend_kind_message messages kind in
   let messages = prepend_op_reason messages op in
   let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
-  let header = print_error_header ~strip_root ~root (List.hd messages) in
+  let header = print_error_header ~strip_root ~root ~kind (List.hd messages) in
   let main_file = match file_of_error error with
     | Some filename -> filename
     | None -> "[No file]" in

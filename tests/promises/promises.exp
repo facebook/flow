@@ -38,8 +38,6 @@ all.js:24
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ call of method `all`
 601:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                            ^^^^^^^^^^^^^^ Library type error:. See lib: <BUILTINS>/core.js:601
-601:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                             ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in possibly undefined value. See lib: <BUILTINS>/core.js:601
  24: Promise.all(); // Error: expected array instead of undefined (too few arguments)
      ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters)
@@ -47,8 +45,6 @@ all.js:24
 all.js:27
  27: Promise.all(0); // Error: expected array instead of number
      ^^^^^^^^^^^^^^ call of method `all`
-601:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
-                            ^^^^^^^^^^^^^^ Library type error:. See lib: <BUILTINS>/core.js:601
 601:     static all<Elem, T:Iterable<Elem>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                             ^^^^^^^^^^^^^^ property `@@iterator` of $Iterable. Property not found in. See lib: <BUILTINS>/core.js:601
  27: Promise.all(0); // Error: expected array instead of number

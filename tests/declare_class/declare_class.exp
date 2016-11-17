@@ -1,5 +1,5 @@
-lib/test.js:0
 Library type error:
+lib/test.js:0
 inconsistent use of library definitions
   8:   foo(): string;
               ^^^^^^ string. This type is incompatible with
