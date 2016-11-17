@@ -3657,7 +3657,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | InstanceT (reason_c, _, super, instance),
       MethodT (reason_call, reason_lookup, Named (reason_prop, x), funtype)
       -> (* TODO: closure *)
-      Ops.push reason_call;
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let methods = SMap.union fields_tmap methods_tmap in
@@ -3667,9 +3666,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         else Strict reason_c
       in
       get_prop cx trace reason_prop reason_lookup strict super x methods funt;
-      let callt = CallT (reason_call, funtype) in
-      rec_flow cx trace (funt, callt);
-      Ops.pop ();
+
+      (* suppress ops while calling the function. if `funt` is a `FunT`, then
+         `CallT` will set its own ops during the call. if `funt` is something
+         else, then something like `VoidT ~> CallT` doesn't need the op either
+         because we want to point at the call and undefined thing. *)
+      let ops = Ops.clear () in
+      rec_flow cx trace (funt, CallT (reason_call, funtype));
+      Ops.set ops
 
     | InstanceT _, MethodT (reason_call, _, Computed _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses

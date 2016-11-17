@@ -114,15 +114,11 @@ crypto/crypto.js:28
 
 crypto/crypto.js:35
  35:     (hmac.digest('hex'): void); // 1 error
-          ^^^^^^^^^^^^^^^^^^ call of method `digest`
- 35:     (hmac.digest('hex'): void); // 1 error
           ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
  35:     (hmac.digest('hex'): void); // 1 error
                               ^^^^ undefined
 
 crypto/crypto.js:36
- 36:     (hmac.digest(): void); // 1 error
-          ^^^^^^^^^^^^^ call of method `digest`
  36:     (hmac.digest(): void); // 1 error
           ^^^^^^^^^^^^^ Buffer. This type is incompatible with
  36:     (hmac.digest(): void); // 1 error

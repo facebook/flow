@@ -10,5 +10,17 @@ test.js:7
   7: C.x;
      ^ statics of C
 
+test.js:13
+ 13: (foo.bar(): string); // error, could be undefined
+      ^^^^^^^^^ call of method `bar`. Function cannot be called on possibly undefined value
+ 13: (foo.bar(): string); // error, could be undefined
+      ^^^^^^^ undefined
 
-Found 2 errors
+test.js:16
+ 16:   (x.bar(): string); // error. caused by `f(foo)`; annotate x to track it down.
+        ^^^^^^^ call of method `bar`. Function cannot be called on possibly undefined value
+ 16:   (x.bar(): string); // error. caused by `f(foo)`; annotate x to track it down.
+        ^^^^^ undefined
+
+
+Found 4 errors
