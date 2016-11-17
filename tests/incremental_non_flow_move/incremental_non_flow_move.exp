@@ -3,9 +3,10 @@ Initial status:
 No errors!
 
 Delete non-@flow file foo.js:
+test.js:5
+  5: require('Foo');
+     ^^^^^^^^^^^^^^ Foo. Required module not found
 
-test.js:5:1,14: Foo
-Required module not found
 
 Found 1 error
 

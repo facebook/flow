@@ -1,493 +1,727 @@
 ======Start off with the .js files but without the .flow file======
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:5:2,9: Implementation
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:9:2,9: Implementation
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:12:2,8: Implementation
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:15:2,8: Implementation
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:18:2,8: Implementation
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:21:2,8: Implementation
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:25:2,9: Implementation
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:29:2,9: Implementation
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:32:2,8: Implementation
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:35:2,8: Implementation
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:38:2,8: Implementation
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:41:2,8: Implementation
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Implementation. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
 
-test_relative.js:3:2,6: Implementation
-This type is incompatible with
-test_relative.js:3:9,15: boolean
-
-Found 13 errors
-
-test_absolute.js:5:2,9: Definition
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
-
-test_absolute.js:9:2,9: Definition
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
-
-test_absolute.js:12:2,8: Definition
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
-
-test_absolute.js:15:2,8: Definition
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
-
-test_absolute.js:18:2,8: Definition
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
-
-test_absolute.js:21:2,8: Definition
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
-
-test_absolute.js:25:2,9: Definition
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
-
-test_absolute.js:29:2,9: Definition
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
-
-test_absolute.js:32:2,8: Definition
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
-
-test_absolute.js:35:2,8: Definition
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
-
-test_absolute.js:38:2,8: Definition
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
-
-test_absolute.js:41:2,8: Definition
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
-
-test_relative.js:3:2,6: Definition
-This type is incompatible with
-test_relative.js:3:9,15: boolean
 
 Found 13 errors
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:5:2,9: Implementation
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:9:2,9: Implementation
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:12:2,8: Implementation
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:15:2,8: Implementation
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:18:2,8: Implementation
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:21:2,8: Implementation
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:25:2,9: Implementation
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:29:2,9: Implementation
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:32:2,8: Implementation
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:35:2,8: Implementation
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:38:2,8: Implementation
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:41:2,8: Implementation
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Definition. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
 
-test_relative.js:3:2,6: Implementation
-This type is incompatible with
-test_relative.js:3:9,15: boolean
+
+Found 13 errors
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Implementation. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
+
 
 Found 13 errors
 
 
 ======Start off with the .js files and the .flow file======
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:5:2,9: Definition
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:9:2,9: Definition
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:12:2,8: Definition
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:15:2,8: Definition
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:18:2,8: Definition
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:21:2,8: Definition
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:25:2,9: Definition
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:29:2,9: Definition
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:32:2,8: Definition
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:35:2,8: Definition
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:38:2,8: Definition
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:41:2,8: Definition
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Definition. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
 
-test_relative.js:3:2,6: Definition
-This type is incompatible with
-test_relative.js:3:9,15: boolean
-
-Found 13 errors
-
-test_absolute.js:5:2,9: Implementation
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
-
-test_absolute.js:9:2,9: Implementation
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
-
-test_absolute.js:12:2,8: Implementation
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
-
-test_absolute.js:15:2,8: Implementation
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
-
-test_absolute.js:18:2,8: Implementation
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
-
-test_absolute.js:21:2,8: Implementation
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
-
-test_absolute.js:25:2,9: Implementation
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
-
-test_absolute.js:29:2,9: Implementation
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
-
-test_absolute.js:32:2,8: Implementation
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
-
-test_absolute.js:35:2,8: Implementation
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
-
-test_absolute.js:38:2,8: Implementation
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
-
-test_absolute.js:41:2,8: Implementation
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
-
-test_relative.js:3:2,6: Implementation
-This type is incompatible with
-test_relative.js:3:9,15: boolean
 
 Found 13 errors
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:5:2,9: Definition
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:9:2,9: Definition
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:12:2,8: Definition
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:15:2,8: Definition
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:18:2,8: Definition
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:21:2,8: Definition
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:25:2,9: Definition
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Implementation. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:29:2,9: Definition
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:32:2,8: Definition
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:35:2,8: Definition
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:38:2,8: Definition
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Implementation. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:41:2,8: Definition
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Implementation. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
 
-test_relative.js:3:2,6: Definition
-This type is incompatible with
-test_relative.js:3:9,15: boolean
+
+Found 13 errors
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Definition. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
+
 
 Found 13 errors
 
 
 ======Start off without the .js files and with the .flow file======
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:5:2,9: Definition
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:9:2,9: Definition
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:12:2,8: Definition
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:15:2,8: Definition
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:18:2,8: Definition
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:21:2,8: Definition
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:25:2,9: Definition
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:29:2,9: Definition
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:32:2,8: Definition
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:35:2,8: Definition
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:38:2,8: Definition
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:41:2,8: Definition
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Definition. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
 
-test_relative.js:3:2,6: Definition
-This type is incompatible with
-test_relative.js:3:9,15: boolean
-
-Found 13 errors
-
-test_absolute.js:5:2,9: Definition
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
-
-test_absolute.js:9:2,9: Definition
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
-
-test_absolute.js:12:2,8: Definition
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
-
-test_absolute.js:15:2,8: Definition
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
-
-test_absolute.js:18:2,8: Definition
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
-
-test_absolute.js:21:2,8: Definition
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
-
-test_absolute.js:25:2,9: Definition
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
-
-test_absolute.js:29:2,9: Definition
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
-
-test_absolute.js:32:2,8: Definition
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
-
-test_absolute.js:35:2,8: Definition
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
-
-test_absolute.js:38:2,8: Definition
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
-
-test_absolute.js:41:2,8: Definition
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
-
-test_relative.js:3:2,6: Definition
-This type is incompatible with
-test_relative.js:3:9,15: boolean
 
 Found 13 errors
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:5:2,9: Definition
-This type is incompatible with
-test_absolute.js:5:12,18: boolean
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:9:2,9: Definition
-This type is incompatible with
-test_absolute.js:9:12,18: boolean
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:12:2,8: Definition
-This type is incompatible with
-test_absolute.js:12:11,17: boolean
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:15:2,8: Definition
-This type is incompatible with
-test_absolute.js:15:11,17: boolean
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:18:2,8: Definition
-This type is incompatible with
-test_absolute.js:18:11,17: boolean
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:21:2,8: Definition
-This type is incompatible with
-test_absolute.js:21:11,17: boolean
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:25:2,9: Definition
-This type is incompatible with
-test_absolute.js:25:12,18: boolean
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
 
-test_absolute.js:29:2,9: Definition
-This type is incompatible with
-test_absolute.js:29:12,18: boolean
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:32:2,8: Definition
-This type is incompatible with
-test_absolute.js:32:11,17: boolean
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:35:2,8: Definition
-This type is incompatible with
-test_absolute.js:35:11,17: boolean
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:38:2,8: Definition
-This type is incompatible with
-test_absolute.js:38:11,17: boolean
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
 
-test_absolute.js:41:2,8: Definition
-This type is incompatible with
-test_absolute.js:41:11,17: boolean
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Definition. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
 
-test_relative.js:3:2,6: Definition
-This type is incompatible with
-test_relative.js:3:9,15: boolean
+
+Found 13 errors
+test_absolute.js:5
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  5: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:9
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+  9: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:12
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 12: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:15
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 15: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:18
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 18: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:21
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 21: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:25
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 25: (B1.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:29
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^ Definition. This type is incompatible with
+ 29: (B2.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+                ^^^^^^^ boolean
+
+test_absolute.js:32
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 32: (C.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:35
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 35: (D.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:38
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 38: (E.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_absolute.js:41
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^ Definition. This type is incompatible with
+ 41: (F.fun(): boolean); // Error either Implementation ~> boolean or Declaration ~> boolean
+               ^^^^^^^ boolean
+
+test_relative.js:3
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+      ^^^^^ Definition. This type is incompatible with
+  3: (foo(): boolean); // Error: either Implementation ~> boolean or Definition ~> boolean
+             ^^^^^^^ boolean
+
 
 Found 13 errors

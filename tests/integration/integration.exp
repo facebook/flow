@@ -1,5 +1,6 @@
+foo.js:2
+  2: require('./bar');
+     ^^^^^^^^^^^^^^^^ ./bar. Required module not found
 
-foo.js:2:1,16: ./bar
-Required module not found
 
 Found 1 error

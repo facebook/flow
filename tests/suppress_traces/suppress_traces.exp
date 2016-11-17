@@ -1,35 +1,57 @@
+traces.js:8
+  8: // $FlowFixMe - Error unused suppression
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-traces.js:8:1,40: Error suppressing comment
-Unused suppression
-
-traces.js:15:17,25: number
-This type is incompatible with
-traces.js:15:8,13: string
+traces.js:15
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ number. This type is incompatible with
+ 15: var a: string = foo('hi'); // error number ~> string
+            ^^^^^^ string
 Trace:
 * path 1:
-traces.js:15:17,25: NumT [number]
-traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [assignment of var `a`] (from path 2)
-traces.js:15:5,5:   ~> UseT(UnknownUse, OpenT) [var `a`]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ NumT [number]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [assignment of var `a`] (from path 2)
+ 15: var a: string = foo('hi'); // error number ~> string
+         ^   ~> UseT(UnknownUse, OpenT) [var `a`]
 * path 2:
-traces.js:15:17,25: NumT [number]
-traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [function call] (from path 3)
-traces.js:15:17,25: ~> UseT(UnknownUse, OpenT) [function call] (from path 6)
-traces.js:15:17,25: ~> ReposLowerT [assignment of var `a`]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ NumT [number]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 3)
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 6)
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> ReposLowerT [assignment of var `a`]
 * path 3:
-traces.js:12:10,14: NumT [number]
-traces.js:12:10,14: ~> UseT(UnknownUse, OpenT) [function call] (from path 4)
-traces.js:11:24,24: ~> UseT(FunReturn, OpenT) [return]
-traces.js:15:17,25: ~> ReposLowerT [function call] (from path 6)
+ 12:   return bar();
+              ^^^^^ NumT [number]
+ 12:   return bar();
+              ^^^^^ ~> UseT(UnknownUse, OpenT) [function call] (from path 4)
+ 11: function foo(x: string) {
+                            ^ ~> UseT(FunReturn, OpenT) [return]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> ReposLowerT [function call] (from path 6)
 * path 4:
-traces.js:12:10,12: FunT [function]
-traces.js:12:10,12: ~> UseT(UnknownUse, OpenT) [identifier `bar`] (from path 5)
-traces.js:12:10,14: ~> CallT [function call]
+ 12:   return bar();
+              ^^^ FunT [function]
+ 12:   return bar();
+              ^^^ ~> UseT(UnknownUse, OpenT) [identifier `bar`] (from path 5)
+ 12:   return bar();
+              ^^^^^ ~> CallT [function call]
 * path 5:
-traces.js:9:1,36:   FunT [function]
-traces.js:9:1,36:   ~> UseT(UnknownUse, OpenT) [function]
-traces.js:12:10,12: ~> ReposLowerT [identifier `bar`]
+  9: function bar(): number { return 5; }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   FunT [function]
+  9: function bar(): number { return 5; }
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   ~> UseT(UnknownUse, OpenT) [function]
+ 12:   return bar();
+              ^^^ ~> ReposLowerT [identifier `bar`]
 * path 6:
-traces.js:15:17,19: FunT [function]
-traces.js:15:17,25: ~> CallT [function call]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^ FunT [function]
+ 15: var a: string = foo('hi'); // error number ~> string
+                     ^^^^^^^^^ ~> CallT [function call]
+
 
 Found 2 errors

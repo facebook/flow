@@ -1,8 +1,9 @@
 
 Initial status:
+test.js:4
+  4: var data = require('./data');
+                ^^^^^^^^^^^^^^^^^ ./data. Required module not found
 
-test.js:4:12,28: ./data
-Required module not found
 
 Found 1 error
 
@@ -10,17 +11,20 @@ Create data.json:
 No errors!
 
 Modify data.json:
+test.js:5
+  5: var x: number = data.x;
+                     ^^^^^^ string. This type is incompatible with
+  5: var x: number = data.x;
+            ^^^^^^ number
 
-test.js:5:17,22: string
-This type is incompatible with
-test.js:5:8,13: number
 
 Found 1 error
 
 Delete data.json:
+test.js:4
+  4: var data = require('./data');
+                ^^^^^^^^^^^^^^^^^ ./data. Required module not found
 
-test.js:4:12,28: ./data
-Required module not found
 
 Found 1 error
 

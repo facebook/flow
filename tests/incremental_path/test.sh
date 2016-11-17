@@ -1,10 +1,10 @@
 FLOW=$1
 mkdir tmp
-$FLOW status . --old-output-format
+$FLOW status .
 mv dir/node_modules tmp/
 $FLOW force-recheck dir/node_modules/*.js
-$FLOW status . --old-output-format
+$FLOW status .
 mv tmp/node_modules dir/
 $FLOW force-recheck dir/node_modules/*.js
-$FLOW status . --old-output-format
+$FLOW status .
 rmdir tmp

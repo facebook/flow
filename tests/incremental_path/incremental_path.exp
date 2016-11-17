@@ -1,18 +1,24 @@
+dir/a.js:2
+  2: (require('b'): boolean);
+      ^^^^^^^^^^^^ number. This type is incompatible with
+  2: (require('b'): boolean);
+                    ^^^^^^^ boolean
 
-dir/a.js:2:2,13: number
-This type is incompatible with
-dir/a.js:2:16,22: boolean
-
-Found 1 error
-
-dir/a.js:2:2,13: string
-This type is incompatible with
-dir/a.js:2:16,22: boolean
 
 Found 1 error
+dir/a.js:2
+  2: (require('b'): boolean);
+      ^^^^^^^^^^^^ string. This type is incompatible with
+  2: (require('b'): boolean);
+                    ^^^^^^^ boolean
 
-dir/a.js:2:2,13: number
-This type is incompatible with
-dir/a.js:2:16,22: boolean
+
+Found 1 error
+dir/a.js:2
+  2: (require('b'): boolean);
+      ^^^^^^^^^^^^ number. This type is incompatible with
+  2: (require('b'): boolean);
+                    ^^^^^^^ boolean
+
 
 Found 1 error
