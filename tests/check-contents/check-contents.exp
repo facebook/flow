@@ -17,7 +17,7 @@ not_flow.js:1
 Found 1 error
 
 
-not_flow.js with --force
+not_flow.js with --all
 
 not_flow.js:1
   1: 1 * 'foo';
@@ -32,9 +32,9 @@ not_flow.js with --respect-pragma
 File is not @flow!
 
 
-not_flow.js with --respect-pragma and --force
+not_flow.js with --respect-pragma and --all
 
-Warning: --force and --respect-pragma cannot be used together. --force wins.
+Warning: --all and --respect-pragma cannot be used together. --all wins.
 not_flow.js:1
   1: 1 * 'foo';
          ^^^^^ string. The operand of an arithmetic operation must be a number.

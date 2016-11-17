@@ -42,6 +42,6 @@ Covered: 100.00% (4 of 4 expressions)
 
 Covered: 0.00% (0 of 4 expressions)
 
-Warning: --force and --respect-pragma cannot be used together. --force wins.
+Warning: --all and --respect-pragma cannot be used together. --all wins.
 Covered: 100.00% (4 of 4 expressions)
 
