@@ -1,6 +1,6 @@
 objmap.js:10
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
-      ^^^^^ object mapi. Expected string literal `BAR`, got `FOO` instead
+      ^^^^^ string literal `FOO`. Expected string literal `BAR`, got `FOO` instead
  10: (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
               ^^^^^ string literal `BAR`
 

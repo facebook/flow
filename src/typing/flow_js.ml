@@ -4054,11 +4054,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types can be mapped over a structure  *)
     (**************************************************)
 
-    | ArrT (_, t, ts), MapTypeT (reason, TupleMap, funt, k) ->
-      let f x = mk_tvar_where cx reason (fun t ->
-        rec_flow cx trace (funt, CallT (reason, mk_functiontype [x] t))
+    | ArrT (_, t, ts), MapTypeT (reason_op, TupleMap, funt, k) ->
+      let f x = mk_tvar_where cx reason_op (fun t ->
+        rec_flow cx trace (funt, CallT (reason_op, mk_functiontype [x] t))
       ) in
-      let t = ArrT (reason, f t, List.map f ts) in
+      let t =
+        let reason = replace_reason_const RArrayType reason_op in
+        ArrT (reason, f t, List.map f ts)
+      in
       continue cx trace t k
 
     | _, MapTypeT (reason, TupleMap, funt, k) ->
@@ -4069,10 +4072,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let t = ArrT (reason, elem_t, []) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap, funt, k))
 
-    | ObjT (_, o), MapTypeT (reason, ObjectMap, funt, k) ->
-      let map_t t = mk_tvar_where cx reason (fun t' ->
+    | ObjT (_, o), MapTypeT (reason_op, ObjectMap, funt, k) ->
+      let map_t t = mk_tvar_where cx reason_op (fun t' ->
         let funtype = mk_functiontype [t] t' in
-        rec_flow cx trace (funt, CallT (reason, funtype))
+        rec_flow cx trace (funt, CallT (reason_op, funtype))
       ) in
       let props_tmap =
         Context.find_props cx o.props_tmap
@@ -4083,15 +4086,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let value = map_t dict.value in
         {dict with value}
       ) o.dict_t in
-      let mapped_t = ObjT (reason, {o with props_tmap; dict_t}) in
+      let mapped_t =
+        let reason = replace_reason_const RObjectType reason_op in
+        ObjT (reason, {o with props_tmap; dict_t})
+      in
       continue cx trace mapped_t k
 
-    | ObjT (_, o), MapTypeT (reason, ObjectMapi, funt, k) ->
-      let mapi_t key t = mk_tvar_where cx reason (fun t' ->
+    | ObjT (_, o), MapTypeT (reason_op, ObjectMapi, funt, k) ->
+      let mapi_t key t = mk_tvar_where cx reason_op (fun t' ->
         let funtype = mk_functiontype [key; t] t' in
-        rec_flow cx trace (funt, CallT (reason, funtype))
+        rec_flow cx trace (funt, CallT (reason_op, funtype))
       ) in
-      let mapi_field key t = mapi_t (SingletonStrT (reason, key)) t in
+      let mapi_field key t =
+        let reason = replace_reason_const (RStringLit key) reason_op in
+        mapi_t (SingletonStrT (reason, key)) t
+      in
       let props_tmap =
         Context.find_props cx o.props_tmap
         |> Properties.mapi_fields mapi_field
@@ -4101,7 +4110,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let value = mapi_t dict.key dict.value in
         {dict with value}
       ) o.dict_t in
-      let mapped_t = ObjT (reason, {o with props_tmap; dict_t}) in
+      let mapped_t =
+        let reason = replace_reason_const RObjectType reason_op in
+        ObjT (reason, {o with props_tmap; dict_t})
+      in
       continue cx trace mapped_t k
 
     (***********************************************)
