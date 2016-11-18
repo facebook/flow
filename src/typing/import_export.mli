@@ -12,15 +12,15 @@ val mk_module_t : Context.t -> Reason.t -> Type.t
 val mk_commonjs_module_t :
   Context.t -> Reason.t -> Reason.t -> Type.t -> Type.t
 val mk_resource_module_t : Context.t -> Loc.t -> string -> Type.t
-val get_module_t : Context.t -> SMap.key -> Reason.t -> Type.t
 val require : Context.t -> ?internal:bool -> SMap.key -> Loc.t -> Type.t
 val import :
   ?reason:Reason.t -> Context.t -> SMap.key -> Loc.t -> Type.t
 val import_ns : Context.t -> Reason.t -> SMap.key -> Loc.t -> Type.t
-val exports : Context.t -> Type.t
+val module_t_of_cx : Context.t -> Type.t
+val module_t_of_name : Context.t -> SMap.key -> Reason.t -> Type.t
 val set_module_t : Context.t -> Reason.t -> (Type.t -> unit) -> unit
-val mark_exports_type :
-  Context.t -> Reason.t -> Context.module_exports_type -> unit
+val set_module_kind :
+  Context.t -> Reason.t -> Context.module_kind -> unit
 val nameify_default_export_decl :
   Loc.t * Spider_monkey_ast.Statement.t' ->
   Loc.t * Spider_monkey_ast.Statement.t'

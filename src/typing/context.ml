@@ -45,7 +45,7 @@ type t = {
   (* required modules, and map to their locations *)
   mutable required: SSet.t;
   mutable require_loc: Loc.t SMap.t;
-  mutable module_exports_type: module_exports_type;
+  mutable module_kind: module_kind;
 
   mutable import_stmts: Ast.Statement.ImportDeclaration.t list;
   mutable imported_ts: Type.t SMap.t;
@@ -88,7 +88,7 @@ type t = {
   mutable declare_module_t: Type.t option;
 }
 
-and module_exports_type =
+and module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
@@ -131,7 +131,7 @@ let make metadata file module_name = {
 
   required = SSet.empty;
   require_loc = SMap.empty;
-  module_exports_type = CommonJSModule(None);
+  module_kind = CommonJSModule(None);
 
   import_stmts = [];
   imported_ts = SMap.empty;
@@ -188,7 +188,7 @@ let is_checked cx = cx.metadata.checked
 let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
 let max_trace_depth cx = cx.metadata.max_trace_depth
-let module_exports_type cx = cx.module_exports_type
+let module_kind cx = cx.module_kind
 let module_map cx = cx.modulemap
 let module_name cx = cx.module_name
 let output_graphml cx = cx.metadata.output_graphml
@@ -265,8 +265,8 @@ let set_globals cx globals =
   cx.globals <- globals
 let set_graph cx graph =
   cx.graph <- graph
-let set_module_exports_type cx module_exports_type =
-  cx.module_exports_type <- module_exports_type
+let set_module_kind cx module_kind =
+  cx.module_kind <- module_kind
 let set_property_maps cx property_maps =
   cx.property_maps <- property_maps
 let set_export_maps cx export_maps =
