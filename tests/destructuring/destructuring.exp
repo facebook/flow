@@ -372,6 +372,12 @@ destructuring_param.js:5
   5: function g(a, { a }) {
                      ^ Strict mode function may not have duplicate parameter names
 
+eager.js:2
+  2: ({x} = null); // error, property `x` can not be accessed on `null`
+       ^ property `x`. Property cannot be accessed on possibly null value
+  2: ({x} = null); // error, property `x` can not be accessed on `null`
+            ^^^^ null
+
 poly.js:15
  15: function rest_antipattern<T>(...t: T) {} // nonsense
                                         ^ T. rest parameter should have an explicit array type (or type `any`)
@@ -389,4 +395,4 @@ unannotated.js:8
        ^ object literal
 
 
-Found 64 errors
+Found 65 errors

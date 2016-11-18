@@ -1144,6 +1144,51 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     match (l,u) with
 
+    (********)
+    (* eval *)
+    (********)
+
+    | EvalT (t, TypeDestructorT (reason, s), i), _ ->
+      rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
+
+    | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
+      (* When checking a lower bound against a destructed type, we need to take
+         some care. In particular, we do not want the destructed type to be
+         "open" when t is not itself open, i.e., we do not want any "extra"
+         lower bounds to be able to flow to the destructed type than what t
+         itself allows.
+
+         For example, when t is { x: number }, we want $PropertyType(t) to be
+         number, not some open tvar that is a supertype of number (since the
+         latter would accept more than number, e.g. string). Similarly, when t
+         is ?string, we want the $NonMaybeType(t) to be string. *)
+      let result = eval_destructor cx ~trace reason t s i in
+      begin match t with
+      | OpenT _ ->
+        (* TODO: If t itself is an open tvar, we can afford to be looser for
+           now. The additional looseness is not entirely justifiable (e.g., we
+           should still prevent "extra" lower bounds from flowing into the
+           destructed type that did not originate from lower bounds flowing to
+           t), and we should do more work to avoid it, but it's at least not as
+           egregious as the case when t is not open. *)
+        rec_flow cx trace (l, UseT (use_op, result))
+      | _ ->
+        (* With the same "slingshot" trick used by AnnotT, hold the lower bound
+           at bay until result itself gets concretized, and then flow the lower
+           bound to that concrete type. Note: this works for type destructors
+           since they come from annotations and other types that have the 0->1
+           property, but does not work in general because for arbitrary tvars,
+           concretization may never happen or may happen more than once. *)
+        rec_flow cx trace (result, ReposUseT (reason, use_op, l))
+      end
+
+    | EvalT (t, DestructuringT (reason, s), i), _ ->
+      rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
+
+    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
+      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
+
+
     (******************)
     (* process X ~> Y *)
     (******************)
@@ -1273,50 +1318,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | t, IntersectionPreprocessKitT (reason,
         ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
       prep_try_intersection cx trace reason unresolved (resolved @ [t]) u r rep
-
-    (********)
-    (* eval *)
-    (********)
-
-    | EvalT (t, TypeDestructorT (reason, s), i), _ ->
-      rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
-
-    | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
-      (* When checking a lower bound against a destructed type, we need to take
-         some care. In particular, we do not want the destructed type to be
-         "open" when t is not itself open, i.e., we do not want any "extra"
-         lower bounds to be able to flow to the destructed type than what t
-         itself allows.
-
-         For example, when t is { x: number }, we want $PropertyType(t) to be
-         number, not some open tvar that is a supertype of number (since the
-         latter would accept more than number, e.g. string). Similarly, when t
-         is ?string, we want the $NonMaybeType(t) to be string. *)
-      let result = eval_destructor cx ~trace reason t s i in
-      begin match t with
-      | OpenT _ ->
-        (* TODO: If t itself is an open tvar, we can afford to be looser for
-           now. The additional looseness is not entirely justifiable (e.g., we
-           should still prevent "extra" lower bounds from flowing into the
-           destructed type that did not originate from lower bounds flowing to
-           t), and we should do more work to avoid it, but it's at least not as
-           egregious as the case when t is not open. *)
-        rec_flow cx trace (l, UseT (use_op, result))
-      | _ ->
-        (* With the same "slingshot" trick used by AnnotT, hold the lower bound
-           at bay until result itself gets concretized, and then flow the lower
-           bound to that concrete type. Note: this works for type destructors
-           since they come from annotations and other types that have the 0->1
-           property, but does not work in general because for arbitrary tvars,
-           concretization may never happen or may happen more than once. *)
-        rec_flow cx trace (result, ReposUseT (reason, use_op, l))
-      end
-
-    | EvalT (t, DestructuringT (reason, s), i), _ ->
-      rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
-
-    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
-      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
 
     (*****************************)
     (* Refinement type subtyping *)
