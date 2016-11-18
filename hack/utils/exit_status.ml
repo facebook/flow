@@ -46,6 +46,7 @@ type t =
    * deleted and do an incremental check.
    *)
   | Watchman_fresh_instance
+  | File_heap_stale
   | Hhconfig_deleted
   | Hhconfig_changed
   | Server_shutting_down
@@ -120,6 +121,7 @@ let exit_code = function
   | Lazy_decl_bug -> 208
   | Decl_heap_elems_bug -> 209
   | Parser_heap_build_error -> 210
+  | File_heap_stale -> 211
 
 
 let exit t =
@@ -179,6 +181,7 @@ let to_string = function
   | Decl_heap_elems_bug -> "Decl_heap_elems_bug"
   | Parser_heap_build_error -> "Parser_heap_build_error"
   | Heap_full -> "Heap_full"
+  | File_heap_stale -> "File_heap_stale"
 
 
 let unpack = function
