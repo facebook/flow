@@ -4,6 +4,12 @@ non_maybe_type.js:5
   3: function foo(x: ?string): $NonMaybeType<?string> {
                                ^^^^^^^^^^^^^^^^^^^^^^ string
 
+non_maybe_type.js:10
+ 10: (0: $NonMaybeType<null>); // error
+      ^ number. This type is incompatible with
+ 10: (0: $NonMaybeType<null>); // error
+         ^^^^^^^^^^^^^^^^^^^ empty
+
 property_type.js:1
   1: type Malformed = $PropertyType<any, number>;
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected object type and string literal as arguments to $PropertyType
@@ -65,4 +71,4 @@ union.js:4
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 
-Found 6 errors
+Found 7 errors

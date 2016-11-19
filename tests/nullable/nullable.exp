@@ -1,3 +1,9 @@
+maybe.js:5
+  5: ((123: ?(?number)): ?string); // error (only num ~> string)
+               ^^^^^^ number. This type is incompatible with
+  5: ((123: ?(?number)): ?string); // error (only num ~> string)
+                          ^^^^^^ string
+
 nullable.js:1
   1: function foo():string { return null; }
                                     ^^^^ null. This type is incompatible with the expected return type of
@@ -29,4 +35,4 @@ simple_nullable.js:4
                      ^^^^^^ number
 
 
-Found 5 errors
+Found 6 errors

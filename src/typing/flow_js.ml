@@ -2008,12 +2008,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** The type maybe(T) is the same as null | undefined | UseT *)
 
-    | ((NullT _ | VoidT _), UseT (_, MaybeT _)) -> ()
+    | (NullT r | VoidT r), UseT (use_op, MaybeT tout) ->
+      rec_flow cx trace (EmptyT.why r, UseT (use_op, tout))
 
     | MaybeT _, ReposLowerT (reason_op, u) ->
       (* Don't split the maybe type into its constituent members. Instead,
          reposition the entire maybe type. *)
       rec_flow cx trace (reposition cx ~trace reason_op l, u)
+
+    | MaybeT t1, UseT (_, MaybeT _) ->
+      rec_flow cx trace (t1, u)
 
     | (MaybeT(t), _) ->
       let reason = reason_of_t t in
