@@ -1246,11 +1246,15 @@ and dump_t_ (depth, tvars) cx t =
     | Become -> "become"
     | Refine _ -> "refine"
     in
+    let string_of_destructor = function
+    | NonMaybeType -> "non-maybe type"
+    | PropertyType x -> spf "property type `%s`" x
+    in
     fun expr t -> match expr with
     | DestructuringT (_, selector) ->
       spf "Destructure %s on %s" (string_of_selector selector) t
-    | TypeDestructorT _ ->
-      "TypeDestructorT"
+    | TypeDestructorT (_, destructor) ->
+      spf "TypeDestruct %s on %s" (string_of_destructor destructor) t
   in
 
   let string_of_mixed_flavor = function

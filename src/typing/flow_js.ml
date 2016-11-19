@@ -5572,10 +5572,21 @@ and eval_destructor cx ~trace reason curr_t s i =
   | None ->
     mk_tvar_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
-      rec_flow cx trace (curr_t, match s with
-      | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
-      | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
-      )
+      match curr_t with
+      (* If we are destructuring a union, evaluating the destructor on the union
+         itself may have the effect of splitting the union into separate lower
+         bounds, which prevents the speculative match process from working.
+         Instead, we preserve the union by pushing down the destructor onto the
+         branches of the unions. *)
+      | UnionT (r, rep) ->
+        rec_flow_t cx trace (UnionT (r, rep |> UnionRep.map (fun t ->
+          EvalT (t, TypeDestructorT (reason, s), mk_id ())
+        )), tvar)
+      | _ ->
+        rec_flow cx trace (curr_t, match s with
+        | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
+        | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
+        )
     )
   | Some it ->
     it
