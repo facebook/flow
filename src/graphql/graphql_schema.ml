@@ -67,25 +67,33 @@ let get_field s type_name field_name =
   | _ -> failwith "Cannot get field type name of non object"
 
 let get_field_type s type_name field_name =
-  Option.map (get_field s type_name field_name) (fun f -> f.Field.type_)
-
-let is_obj_type s type_name = Type.(
-  match type_def s type_name with
-  | Obj _
-  | Interface _
-  | InputObj _
-    -> true
-  | Scalar _
-  | Union _
-  | Enum _
-    -> false
-)
+  if field_name = "__typename" then Some (Type.NonNull (Type.Named "String"))
+  else Option.map (get_field s type_name field_name) (fun f -> f.Field.type_)
 
 let obj_field_types s type_name =
   match type_def s type_name with
   | Type.Obj (_, fields, _) ->
     SMap.fold (fun name field acc -> (name, field.Field.type_) :: acc) fields []
   | _ -> []
+
+let get_possible_types s type_name = Type.(
+  match type_def s type_name with
+  | Union (_, types) -> types
+  | Interface _ ->
+    SMap.fold (fun _ t acc ->
+      match t with
+      | Obj (n, _, interfaces) when List.mem type_name interfaces -> n :: acc
+      | _ -> acc
+    ) s.type_map []
+  | _ -> [type_name]
+)
+
+let rec do_types_overlap s a b = Type.(
+  if a = b then true
+  else match type_def s b with
+    | Interface _ | Union _ -> List.exists (do_types_overlap s a) (get_possible_types s b)
+    | _ -> List.mem b (get_possible_types s a)
+)
 
 let rec is_subtype_name s sub sup =
   if sub = sup then true

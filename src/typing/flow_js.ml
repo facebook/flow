@@ -4859,60 +4859,82 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       let tname = Option.value ~default:s_on type_cond in
       graphql_mk_selection cx trace reason s_schema tname sel_in;
-      let frag = GraphqlFragT (reason, { Graphql.
-        frag_schema = s_schema;
-        frag_type = tname;
-        frag_selection = sel_out;
-      }) in
-      rec_flow_t cx trace (frag, result)
+      if Graphql_schema.type_exists s_schema tname then begin
+        let frag = GraphqlFragT (reason, { Graphql.
+          frag_schema = s_schema;
+          frag_type = tname;
+          frag_selection = sel_out;
+        }) in
+        rec_flow_t cx trace (frag, result)
+      end
 
     | GraphqlSelectionT (s_reason, selection),
       GraphqlSelectT (reason, (Graphql.SelectField (fname, sub)), out)
       ->
-      let {Graphql.s_schema; s_on; _} = selection in
-      begin match Graphql_schema.get_field_type s_schema s_on fname with
-      | Some ftype ->
-        (* Create a field type for type-at-pos *)
-        let field = GraphqlFieldT (reason, ftype) in
-        Hashtbl.replace (Context.type_table cx) (loc_of_reason reason) field;
-        (* Selection on the current field *)
-        let subsel = match sub with
-          | Some (in_, out) ->
-            let type_name = Graphql_schema.type_name s_schema ftype in
-            let reason = reason_of_t in_ in
-            if Graphql_schema.is_obj_type s_schema type_name then begin
-              let selection = GraphqlSelectionT (reason, { Graphql.
-                s_schema;
-                s_on = type_name;
-                s_selections = [];
-              }) in
-              rec_flow_t cx trace (selection, in_);
-              Some out
-            end else begin
-              add_output cx trace FlowError.(
-                EGraphqlNonObjSelect (reason, type_name)
-              );
-              None
-            end
-          | None -> None
-        in
-        (* Add field to the selection *)
-        let s_field = { Graphql.
-          sf_name = fname;
-          sf_type = ftype;
-          sf_selection = subsel;
-        } in
-        let selection = GraphqlSelectionT (
-          s_reason,
-          {
-            selection with
-            Graphql.s_selections = s_field :: selection.Graphql.s_selections
-          }
+      let { Graphql.s_schema = schema; s_on; _ } = selection in
+      let get_field_selection ftype =
+        let type_name = Graphql_schema.type_name schema ftype in
+        let need_sel = Graphql_schema.Type.(
+          match Graphql_schema.type_def schema type_name with
+          | Obj _ | Interface _ | Union _ -> true
+          | _ -> false
         ) in
-        rec_flow_t cx trace (selection, out)
-      | None ->
-        add_output cx trace FlowError.(EGraphqlFieldNotFound (reason, s_on));
+        match sub with
+        (* obj { ... } *)
+        | Some (in_, out) when need_sel ->
+          let selection = GraphqlSelectionT (s_reason, { Graphql.
+            s_schema = schema;
+            s_on = type_name;
+            s_selections = [];
+          }) in
+          rec_flow_t cx trace (selection, in_);
+          Some out
+        (* scalar { ... } *)
+        | Some (in_, _) ->
+          add_output cx trace FlowError.(
+            EGraphqlNonObjSelect (reason_of_t in_, type_name)
+          );
+          None
+        (* obj *)
+        | None when need_sel ->
+          add_output cx trace FlowError.(
+            EGraphqlObjNeedSelect (reason, type_name)
+          );
+          None
+        (* scalar *)
+        | None -> None
+      in
+      begin match Graphql_schema.type_def schema s_on with
+      | Graphql_schema.Type.Union _ when fname <> "__typename" ->
+        add_output cx trace FlowError.(
+          EGraphqlUnionSelect (reason, s_on)
+        );
         rec_flow_t cx trace (l, out)
+      | _ ->
+        begin match Graphql_schema.get_field_type schema s_on fname with
+        | Some ftype ->
+          let sf_selection = get_field_selection ftype in
+          (* Create a field type for type-at-pos *)
+          let field = GraphqlFieldT (reason, ftype) in
+          Hashtbl.replace (Context.type_table cx) (loc_of_reason reason) field;
+          (* Add field to the selection *)
+          let s_field = { Graphql.
+            sf_name = fname;
+            sf_type = ftype;
+            sf_selection;
+          } in
+          let selection = GraphqlSelectionT (
+            s_reason,
+            {
+              selection with
+              Graphql.s_selections = s_field :: selection.Graphql.s_selections
+            }
+          ) in
+          rec_flow_t cx trace (selection, out)
+        | None ->
+          add_output cx trace FlowError.(EGraphqlFieldNotFound (reason, s_on));
+          rec_flow_t cx trace (l, out)
+        end
       end
 
     | GraphqlSelectionT _,
@@ -4924,9 +4946,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | GraphqlFragT (_, {Graphql.frag_type; frag_schema = schema; _}),
       GraphqlSpreadT (reason, GraphqlSelectionT (_, {Graphql.s_on; _}))
       ->
-      (* TODO: check subtype *)
-      if not (Graphql_schema.is_subtype_name schema s_on frag_type) then
-        add_output cx trace (FlowError.EGraphqlSubType (reason, s_on, frag_type))
+      if not (Graphql_schema.do_types_overlap schema s_on frag_type) then
+        add_output cx trace
+          (FlowError.EGraphqlIncompatibleSpread (reason, s_on, frag_type))
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _

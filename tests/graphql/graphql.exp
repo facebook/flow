@@ -1,1 +1,46 @@
-Found 0 errors
+fields-on-correct-type.js:43
+ 43:   fragment unknownSelection on UnknownType {
+       ^ GraphQL fragment. Type `UnknownType` not found in schema
+
+fields-on-correct-type.js:62
+ 62:     meowVolume # field not defined
+         ^^^^^^^^^^ GraphQL field `meowVolume`. Field not found in type `Dog`
+
+fields-on-correct-type.js:69
+ 69:     unknown_field { # error only here
+         ^^^^^^^^^^^^^ GraphQL field `unknown_field`. Field not found in type `Dog`
+
+fields-on-correct-type.js:79
+ 79:       unknown_field # field not defined
+           ^^^^^^^^^^^^^ GraphQL field `unknown_field`. Field not found in type `Pet`
+
+fields-on-correct-type.js:88
+ 88:       meowVolume # field not defined
+           ^^^^^^^^^^ GraphQL field `meowVolume`. Field not found in type `Dog`
+
+fields-on-correct-type.js:96
+ 96:     volume : mooVolume # field not defined
+                  ^^^^^^^^^ GraphQL field `mooVolume`. Field not found in type `Dog`
+
+fields-on-correct-type.js:103
+103:     barkVolume : kawVolume # field not defined
+                      ^^^^^^^^^ GraphQL field `kawVolume`. Field not found in type `Dog`
+
+fields-on-correct-type.js:110
+110:     tailLength # field not defined
+         ^^^^^^^^^^ GraphQL field `tailLength`. Field not found in type `Pet`
+
+fields-on-correct-type.js:117
+117:     nickname # field not defined
+         ^^^^^^^^ GraphQL field `nickname`. Field not found in type `Pet`
+
+fields-on-correct-type.js:131
+131:     directField # direct selection on union
+         ^^^^^^^^^^^ GraphQL field `directField`. Selection on union `CatOrDog` can only contain fragment spreads
+
+fields-on-correct-type.js:138
+138:     name # direct selection on union
+         ^^^^ GraphQL field `name`. Selection on union `CatOrDog` can only contain fragment spreads
+
+
+Found 11 errors
