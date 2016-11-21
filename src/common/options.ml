@@ -12,7 +12,6 @@ type error_flags = {
   color: Tty.color_mode;
   one_line: bool;
   show_all_errors: bool;
-  old_output_format: bool;
 }
 
 type esproposal_feature_mode =
@@ -76,7 +75,6 @@ let default_error_flags = {
   color = Tty.Color_Auto;
   one_line = false;
   show_all_errors = false;
-  old_output_format = false;
 }
 
 let all opts = opts.opt_all

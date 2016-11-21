@@ -80,16 +80,6 @@ val json_of_errors_with_context :
   error list ->
   Hh_json.json
 
-val print_error_color_new:
-  ?out_channel:out_channel ->
-  stdin_file:stdin_file ->
-  strip_root:bool ->
-  one_line:bool ->
-  color:Tty.color_mode ->
-  root: Path.t ->
-  error ->
-  unit
-
 val print_error_json :
   strip_root: bool ->
   root:Path.t ->
@@ -116,6 +106,3 @@ val print_error_deprecated:
   strip_root: bool ->
   root: Path.t ->
   out_channel -> error list -> unit
-
-(* only used to get indentation info for trace formatting - TODO fumigate *)
-val format_info: info -> string

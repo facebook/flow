@@ -14,7 +14,7 @@ Trace:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [assignment of var `a`] (from path 2)
  15: var a: string = foo('hi'); // error number ~> string
-         ^   ~> UseT(UnknownUse, OpenT) [var `a`]
+         ^ ~> UseT(UnknownUse, OpenT) [var `a`]
 * path 2:
  15: var a: string = foo('hi'); // error number ~> string
                      ^^^^^^^^^ NumT [number]
@@ -42,9 +42,9 @@ Trace:
               ^^^^^ ~> CallT [function call]
 * path 5:
   9: function bar(): number { return 5; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   FunT [function]
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FunT [function]
   9: function bar(): number { return 5; }
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   ~> UseT(UnknownUse, OpenT) [function]
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ~> UseT(UnknownUse, OpenT) [function]
  12:   return bar();
               ^^^ ~> ReposLowerT [identifier `bar`]
 * path 6:

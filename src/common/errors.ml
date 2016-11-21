@@ -97,27 +97,6 @@ let message_of_string s =
 
 let internal_error_prefix = "Internal error (see logs): "
 
-(* for old error format. DEPRECATED *)
-let prepend_kind_message messages kind =
-  match kind, messages with
-  | _, BlameM ({Loc.source = Some Loc.LibFile _; _} as loc, _) :: _ ->
-      let header = match kind with
-      | ParseError -> "Library parse error:"
-      | InferError -> "Library type error:"
-      (* TODO: we don't publicly distinguish warnings vs errors right now *)
-      | InferWarning -> "Library type error:"
-      | InternalError -> internal_error_prefix
-      (* TODO: is this possible? What happens when there are two `declare
-         module`s with the same name? *)
-      | DuplicateProviderError -> "Library duplicate provider error:"
-      in
-      BlameM (loc, header) :: messages
-  | InternalError, BlameM (loc, msg) :: messages ->
-      BlameM (loc, internal_error_prefix^msg) :: messages
-  | InternalError, CommentM msg :: messages ->
-      CommentM (internal_error_prefix^msg) :: messages
-  | _ -> messages
-
 let prepend_op_reason messages = function
   | Some message -> message :: (message_of_string "Error:") :: messages
   | None -> messages
@@ -127,25 +106,6 @@ let append_trace_reasons message_list trace_reasons =
   | [] -> message_list
   | _ ->
     message_list @ (BlameM (Loc.none, "Trace:") :: trace_reasons)
-
-(* note: this is used only in old output format, which is deprecated
-   except for error diffs. indenting would be hard (locs are printed
-   hard left in the old format), so we leave the tree flat. If there
-   are any use cases for humans reading the old format, will need to
- revisit. *)
-let messages_of_extra extra =
-  let rec messages_of_info_tree tree =
-    let infos, kids = match tree with
-      | InfoLeaf infos -> infos, []
-      | InfoNode (infos, kids) -> infos, kids
-    in
-    infos_to_messages infos @
-    List.concat (List.map messages_of_info_tree kids)
-  in
-  List.concat (List.map messages_of_info_tree extra)
-
-let append_extra_info messages extra =
-  messages @ messages_of_extra extra
 
 let rec strip_root_from_info_tree root tree =
   let strip_root_from_infos root =
@@ -191,71 +151,6 @@ let strip_root_from_errors root errors =
   ) ae;
   Array.to_list ae
 
-let format_reason_color
-  ?(first=false)
-  ?(one_line=false)
-  (message: message)
-= Loc.(
-  let loc, s = to_pp message in
-  let l0, c0 = loc.start.line, loc.start.column + 1 in
-  let l1, c1 = loc._end.line, loc._end.column in
-  let err_clr  = if first then Tty.Normal Tty.Red else Tty.Normal Tty.Green in
-  let file_clr = if first then Tty.Bold Tty.Blue else Tty.Bold Tty.Magenta in
-  let line_clr = Tty.Normal Tty.Yellow in
-  let col_clr  = Tty.Normal Tty.Cyan in
-
-  let s = if one_line then Str.global_replace (Str.regexp "\n") "\\n" s else s in
-
-  let source = match loc.source with
-  | Some LibFile filename
-  | Some SourceFile filename
-  | Some JsonFile filename
-  | Some ResourceFile filename -> [file_clr, filename]
-  | None | Some Builtins -> []
-  in
-  let loc_format =
-    source @
-      (if l0 > 0 && c0 > 0 && l1 > 0 && c1 > 0 then [
-        (Tty.Normal Tty.Default, ":");
-        (line_clr,           string_of_int l0);
-        (Tty.Normal Tty.Default, ":");
-        (col_clr,            string_of_int c0);
-        (Tty.Normal Tty.Default, ",")
-       ] @ (if l0 < l1 then [
-        (line_clr,           string_of_int l1);
-        (Tty.Normal Tty.Default, ":")
-       ] else []) @ [
-        (col_clr,            string_of_int c1)
-      ] else []) in
-  let s_format = [
-    (err_clr,            s);
-    (Tty.Normal Tty.Default, if one_line then "\\n" else "\n");
-  ] in
-  if loc_format = [] then s_format
-  else loc_format @ ((Tty.Normal Tty.Default, ": ")::s_format)
-)
-
-let format_info info =
-  let msg = info_to_message info in
-  let formatted = format_reason_color msg in
-  String.concat "" (List.map snd formatted)
-
-let print_reason_color ?(out_channel=stdout) ~first ~one_line ~color (message: message) =
-  let to_print = format_reason_color ~first ~one_line message in
-  (if first then Printf.printf "\n");
-  Tty.cprint ~color_mode:color ~out_channel to_print
-
-let print_error_color_old
-    ?(out_channel=stdout) ~one_line ~color ~strip_root ~root
-    (e : error) =
-  let e = if strip_root then strip_root_from_error root e else e in
-  let { kind; messages; op; trace; extra } = e in
-  let messages = prepend_kind_message messages kind in
-  let messages = prepend_op_reason messages op in
-  let messages = append_extra_info messages extra in
-  let messages = append_trace_reasons messages trace in
-  print_reason_color ~out_channel ~first:true ~one_line ~color (List.hd messages);
-  List.iter (print_reason_color ~out_channel ~first:false ~one_line ~color) (List.tl messages)
 
 let file_location_style text = (Tty.Underline Tty.Default, text)
 let default_style text = (Tty.Normal Tty.Default, text)
@@ -548,7 +443,7 @@ let merge_comments_into_blames messages =
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-let get_pretty_printed_error_new ~stdin_file:stdin_file ~strip_root ~one_line ~root
+let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line ~root
   (error : error) =
   let { kind; messages; op; trace; extra } = error in
   let messages = prepend_op_reason messages op in
@@ -569,9 +464,16 @@ let get_pretty_printed_error_new ~stdin_file:stdin_file ~strip_root ~one_line ~r
     else to_print in
   (to_print @ [default_style "\n"])
 
-let print_error_color_new ?(out_channel=stdout) ~stdin_file:stdin_file ~strip_root ~one_line ~color ~root (error : error) =
+let print_error_color
+    ?(out_channel=stdout)
+    ~stdin_file:stdin_file
+    ~strip_root
+    ~one_line
+    ~color
+    ~root
+    (error : error) =
   let to_print =
-    get_pretty_printed_error_new ~stdin_file ~strip_root ~one_line ~root error in
+    get_pretty_printed_error ~stdin_file ~strip_root ~one_line ~root error in
   Tty.cprint ~out_channel ~color_mode:color to_print
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
@@ -898,13 +800,9 @@ let print_error_summary ?(out_channel=stdout) ~flags ?(stdin_file=None) ~strip_r
   let truncate = not (flags.Options.show_all_errors) in
   let one_line = flags.Options.one_line in
   let color = flags.Options.color in
-  let print_error_color = if flags.Options.old_output_format
-    then print_error_color_old ~strip_root ~root
-    else print_error_color_new ~stdin_file ~strip_root ~root
-  in
   let print_error_if_not_truncated curr e =
-    if not(truncate) || curr < 50
-    then print_error_color ~one_line ~color ~out_channel e;
+    if not(truncate) || curr < 50 then print_error_color
+      ~stdin_file ~strip_root ~root ~one_line ~color ~out_channel e;
 
     curr + 1
   in
