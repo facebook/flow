@@ -69,10 +69,21 @@ let mk_resource_module_t cx loc f =
 (* given a module name, return associated tvar if already
  * present in module map, or create and add *)
 let module_t_of_name cx m reason =
-  match SMap.get m (Context.module_map cx) with
-  | Some t -> t
+  match Context.declare_module_t cx with
+  (**
+   * TODO: Imports within `declare module`s can only reference other
+   *       `declare module`s (for now). This won't fly forever so at some point
+   *       we'll need to move `declare module` storage into the modulemap just
+   *       like normal modules and merge them as such.
+   *)
+  | Some _ ->
+    Env.get_var_declared_type cx (internal_module_name m) reason
   | None ->
-    Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
+    (match SMap.get m (Context.module_map cx) with
+      | Some t -> t
+      | None ->
+        Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
+    )
 
 let require cx ?(internal=false) m_name loc =
   Context.add_require cx m_name loc;

@@ -1817,7 +1817,6 @@ end = struct
             let elem = Expression.(Spread (loc, SpreadElement.({
               argument;
             }))) in
-            if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
             elements env ((Some elem)::acc)
         | _ ->
             let elem = Expression.Expression (assignment env) in
@@ -3251,9 +3250,16 @@ end = struct
         | T_INTERFACE ->
             Expect.token env T_DECLARE;
             interface env
-        | T_TYPE ->
-            Expect.token env T_DECLARE;
-            type_alias env;
+        | T_TYPE -> (
+            match Peek.token env with
+            | T_IMPORT when in_module ->
+              import_declaration env
+            | _ ->
+              Expect.token env T_DECLARE;
+              type_alias env;
+          )
+        | T_TYPEOF when (Peek.token env) = T_IMPORT ->
+          import_declaration env
         | T_FUNCTION ->
             Expect.token env T_DECLARE;
             declare_function_statement env start_loc
@@ -3273,11 +3279,17 @@ end = struct
             if in_module || Peek.token env = T_PERIOD
             then declare_module_exports env start_loc
             else declare_module env start_loc
-        | _ when in_module ->
-            (* Oh boy, found some bad stuff in a declare module. Let's just
-              * pretend it's a declare var (arbitrary choice) *)
-            Expect.token env T_DECLARE;
-            declare_var_statement env start_loc
+        | _ when in_module -> (
+            match Peek.token env with
+            | T_IMPORT ->
+              error env Error.InvalidNonTypeImportInDeclareModule;
+              Parse.statement env
+            | _ ->
+              (* Oh boy, found some bad stuff in a declare module. Let's just
+                * pretend it's a declare var (arbitrary choice) *)
+              Expect.token env T_DECLARE;
+              declare_var_statement env start_loc
+          )
         | _ ->
             Parse.statement env
       )
