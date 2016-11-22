@@ -1,9 +1,3 @@
-scalar Int
-scalar Float
-scalar String
-scalar Boolean
-scalar ID
-
 interface Node {
   id: ID!
 }

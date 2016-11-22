@@ -40,9 +40,9 @@ let schema_from_ast doc =
 
   let add_type name type_ = type_map := SMap.add name type_ !type_map in
 
-  List.iter (fun stmt ->
+  let consume_def def =
     let module Def = Ast.Definition in
-    match stmt with
+    match def with
     | Def.ScalarType scalar ->
         let (_, name) = scalar.Ast.ScalarTypeDef.name in
         add_type name (Schema.Type.Scalar name)
@@ -95,10 +95,34 @@ let schema_from_ast doc =
     | Def.Operation _
     | Def.Fragment _ ->
         failwith "Schema definition can not contain operation/fragment definitions"
-  ) doc.Ast.Document.definitions;
+  in
+
+  let builtins_ast = Graphql_builtins.get_ast () in
+  List.iter consume_def builtins_ast.Ast.Document.definitions;
+
+  List.iter consume_def doc.Ast.Document.definitions;
+
+  let query_name = match !query with Some x -> x | None -> "Query" in
+  Schema.Type.(
+    match SMap.get query_name !type_map with
+    | Some (Obj (name, fields, interfaces)) ->
+      let add_field name type_ args fields =
+        SMap.add name {Schema.Field.name; args; type_} fields
+      in
+      let fields =
+        add_field "__schema" (NonNull (Named "__Schema")) SMap.empty fields
+      in
+      let type_args = SMap.add "name" { Schema.InputVal.
+        name = "name";
+        type_ = NonNull (Named "String");
+      } SMap.empty in
+      let fields = add_field "__type" (Named "__Type") type_args fields in
+      type_map := SMap.add name (Obj (name, fields, interfaces)) !type_map
+    | _ -> ()
+  );
 
   Schema.({
-    query_name = (match !query with Some x -> x | None -> "Query");
+    query_name;
     mutation_name = !mutation;
     subscription_name = !subscription;
     type_map = !type_map;
