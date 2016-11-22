@@ -678,9 +678,14 @@ let print_errors ~profiling options errors =
       if options.Options.opt_profile
       then Some profiling
       else None in
-    Errors.print_error_json ~strip_root ~profiling stdout errors
+    Errors.Json_output.print_errors
+      ~out_channel:stdout
+      ~strip_root
+      ~profiling
+      errors
   end else
-    Errors.print_error_summary
+    Errors.Cli_output.print_errors
+      ~out_channel:stdout
       ~flags:(Options.error_flags options)
       ~strip_root
       errors

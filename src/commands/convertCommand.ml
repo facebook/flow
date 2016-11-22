@@ -45,7 +45,8 @@ let convert_file error_flags outpath file =
     let flow_errors = List.map (fun e ->
       Errors.parse_error_to_flow_error e
     ) errors in
-    Errors.print_error_summary
+    Errors.Cli_output.print_errors
+      ~out_channel:stdout
       ~flags:error_flags
       ~strip_root:None
       flow_errors;

@@ -85,7 +85,7 @@ let main option_values root json pretty strip_root path args () =
     print_endline (json_to_string ~pretty json)
   ) else
     if option_values.from = "vim" || option_values.from = "emacs"
-    then print_endline (Errors.string_of_loc_deprecated ~strip_root loc)
+    then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
     else print_endline (range_string_of_loc ~strip_root loc)
 
 let command = CommandSpec.command spec main

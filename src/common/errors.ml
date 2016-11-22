@@ -208,112 +208,6 @@ let file_of_source source =
     | Some Loc.Builtins -> None
     | None -> None
 
-let print_file_at_location ~strip_root stdin_file main_file loc s = Loc.(
-  let l0 = loc.start.line in
-  let l1 = loc._end.line in
-  let c0 = loc.start.column in
-  let c1 = loc._end.column in
-  let filename = file_of_source loc.source in
-
-  let see_another_file ~is_lib filename =
-    if filename = main_file
-    then [(default_style "")]
-    else
-      let prefix = Printf.sprintf ". See%s: " (if is_lib then " lib" else "") in
-      let filename = if is_lib
-        then relative_lib_path ~strip_root filename
-        else relative_path ~strip_root filename
-      in
-      [
-        comment_style prefix;
-        comment_file_style (Printf.sprintf "%s:%d" filename l0)
-      ]
-  in
-
-  let code_line = read_line_in_file (l0 - 1) filename stdin_file in
-
-  match code_line, filename with
-  | _, None ->
-    [
-      comment_style s;
-      default_style "\n";
-    ]
-  | None, _ ->
-      let original_filename, is_lib = match filename, loc.source with
-      | Some filename, Some Loc.LibFile _
-      | None, Some Loc.LibFile filename -> filename,true
-      | Some filename, _
-      | None, Some Loc.SourceFile filename
-      | None, Some Loc.JsonFile filename
-      | None, Some Loc.ResourceFile filename -> filename, false
-      | None, Some Loc.Builtins
-      | None, None -> failwith "Should only have lib and source files at this point" in
-      [comment_style s] @
-      (see_another_file ~is_lib original_filename) @
-      [default_style "\n"];
-  | Some code_line, Some filename ->
-      let is_lib = match loc.source with
-      | Some Loc.LibFile _ -> true
-      | _ -> false in
-      let line_number_text = Printf.sprintf "%3d: " l0 in
-      let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
-        then highlight_error_in_line code_line c0 c1
-        else [source_fragment_style code_line]
-      in
-      let padding =
-        let line_num = String.make (String.length line_number_text) ' ' in
-        let spaces =
-          if String.length code_line <= c0 then ""
-          else
-            let prefix = String.sub code_line 0 c0 in
-            Str.global_replace (Str.regexp "[^\t ]") " " prefix
-        in
-        line_num ^ spaces
-      in
-      let underline_size = if l1 == l0
-        then max 1 (c1 - c0)
-        else 1
-      in
-      let underline = String.make underline_size '^' in
-      line_number_style line_number_text ::
-      highlighted_line @
-      [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
-      (see_another_file ~is_lib filename) @
-      [default_style "\n"]
-)
-
-let print_message_nice ~strip_root stdin_file main_file message =
-  let loc, s = to_pp message in
-  print_file_at_location ~strip_root stdin_file main_file loc s
-
-let print_extra_info =
-  let nonterm_newline = Str.regexp "\n\\(.\\)" in
-  let rec f ~strip_root stdin_file main_file indent tree =
-    let infos, kids = match tree with
-      | InfoLeaf infos -> infos, []
-      | InfoNode (infos, kids) -> infos, kids
-    in
-    let lines = List.map (fun (loc, strs) ->
-      let msg = String.concat ". " strs in
-      let lines =
-        print_file_at_location ~strip_root stdin_file main_file loc msg in
-      match lines with
-      | [] -> []
-      | (style, str) :: lines ->
-        let nonterm_newline_plus_indent = Utils.spf "\n%s\\1" indent in
-        (style, indent ^ str) :: (List.map (
-          fun (style, s) ->
-            style,
-            Str.global_replace nonterm_newline nonterm_newline_plus_indent s
-          ) lines
-        )
-    ) infos in
-    lines @ List.concat (
-      List.map (f ~strip_root stdin_file main_file ("  " ^ indent)) kids
-    )
-  in fun ~strip_root stdin_file main_file tree ->
-    List.concat (f ~strip_root stdin_file main_file "  " tree)
-
 let loc_of_error (err: error) =
   let { messages; op; _ } = err in
   let messages = prepend_op_reason messages op in
@@ -340,93 +234,6 @@ let file_of_error err =
   let loc = loc_of_error err in
   file_of_source loc.Loc.source
 
-let print_error_header ~strip_root ~kind message =
-  let loc, _ = to_pp message in
-  let prefix, relfilename = match loc.Loc.source with
-    | Some Loc.LibFile filename ->
-      let header = match kind with
-      | ParseError -> "Library parse error:"
-      | InferError -> "Library type error:"
-      (* TODO: we don't publicly distinguish warnings vs errors right now *)
-      | InferWarning -> "Library type error:"
-      | InternalError -> internal_error_prefix
-      (* TODO: is this possible? What happens when there are two `declare
-         module`s with the same name? *)
-      | DuplicateProviderError -> "Library duplicate provider error:"
-      in
-      [comment_file_style (header^"\n")],
-      relative_lib_path ~strip_root filename
-    | Some Loc.SourceFile filename
-    | Some Loc.JsonFile filename
-    | Some Loc.ResourceFile filename ->
-        [], relative_path ~strip_root filename
-    | Some Loc.Builtins -> [], "[No file]"
-    | None -> [], "[No file]"
-  in
-  let file_loc = Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line) in
-  prefix @ [
-    file_location_style file_loc;
-    default_style "\n"
-  ]
-
-let append_comment blame comment =
-  match blame with
-  | BlameM(loc, s) ->
-    (match comment with
-    | "Error:" -> BlameM(loc, s) (* Almost everywhere we have "Error:" that hurts readability *)
-    | comment ->
-      let combined_comment = if String.length s > 0
-        then s ^ ". " ^ comment
-        else comment
-      in
-      BlameM(loc, combined_comment))
-  | CommentM(_) -> failwith "should not be comment"
-
-let maybe_combine_message_text messages message =
-  match message with
-    | BlameM (_, _) -> message :: messages
-    | CommentM s ->
-      match messages with
-      | x :: xs -> append_comment x s :: xs
-      | _ -> failwith "can't append comment to nonexistent blame"
-
-let merge_comments_into_blames messages =
-  List.fold_left maybe_combine_message_text [] messages |> List.rev
-
-let remove_newlines (color, text) =
-  (color, Str.global_replace (Str.regexp "\n") "\\n" text)
-
-let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
-  (error : error) =
-  let { kind; messages; op; trace; extra } = error in
-  let messages = prepend_op_reason messages op in
-  let messages = append_trace_reasons messages trace in
-  let messages = merge_comments_into_blames messages in
-  let header = print_error_header ~strip_root ~kind (List.hd messages) in
-  let main_file = match file_of_error error with
-    | Some filename -> filename
-    | None -> "[No file]" in
-  let formatted_messages = List.concat (List.map (
-    print_message_nice ~strip_root stdin_file main_file
-  ) messages) in
-  let formatted_extra = List.concat (List.map (
-    print_extra_info ~strip_root stdin_file main_file
-  ) extra) in
-  let to_print = header @ formatted_messages @ formatted_extra in
-  let to_print = if one_line then List.map remove_newlines to_print
-    else to_print in
-  (to_print @ [default_style "\n"])
-
-let print_error_color
-    ?(out_channel=stdout)
-    ~stdin_file:stdin_file
-    ~strip_root
-    ~one_line
-    ~color
-    (error : error) =
-  let to_print =
-    get_pretty_printed_error ~stdin_file ~strip_root ~one_line error in
-  Tty.cprint ~out_channel ~color_mode:color to_print
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc ~strip_root loc = Loc.(
@@ -579,125 +386,358 @@ let parse_error_to_flow_error (loc, err) = {
 
 let to_list errors = ErrorSet.elements errors
 
-(******* Error output functionality working on Hack's error *******)
+(* Human readable output *)
+module Cli_output = struct
+  let print_file_at_location ~strip_root stdin_file main_file loc s = Loc.(
+    let l0 = loc.start.line in
+    let l1 = loc._end.line in
+    let c0 = loc.start.column in
+    let c1 = loc._end.column in
+    let filename = file_of_source loc.source in
 
-let unwrap_message = function
+    let see_another_file ~is_lib filename =
+      if filename = main_file
+      then [(default_style "")]
+      else
+        let prefix = Printf.sprintf ". See%s: "
+          (if is_lib then " lib" else "") in
+        let filename = if is_lib
+          then relative_lib_path ~strip_root filename
+          else relative_path ~strip_root filename
+        in
+        [
+          comment_style prefix;
+          comment_file_style (Printf.sprintf "%s:%d" filename l0)
+        ]
+    in
+
+    let code_line = read_line_in_file (l0 - 1) filename stdin_file in
+
+    match code_line, filename with
+    | _, None ->
+      [
+        comment_style s;
+        default_style "\n";
+      ]
+    | None, _ ->
+        let original_filename, is_lib = match filename, loc.source with
+        | Some filename, Some Loc.LibFile _
+        | None, Some Loc.LibFile filename -> filename,true
+        | Some filename, _
+        | None, Some Loc.SourceFile filename
+        | None, Some Loc.JsonFile filename
+        | None, Some Loc.ResourceFile filename -> filename, false
+        | None, Some Loc.Builtins
+        | None, None ->
+          failwith "Should only have lib and source files at this point" in
+        [comment_style s] @
+        (see_another_file ~is_lib original_filename) @
+        [default_style "\n"];
+    | Some code_line, Some filename ->
+        let is_lib = match loc.source with
+        | Some Loc.LibFile _ -> true
+        | _ -> false in
+        let line_number_text = Printf.sprintf "%3d: " l0 in
+        let highlighted_line = if (l1 == l0) && (String.length code_line) >= c1
+          then highlight_error_in_line code_line c0 c1
+          else [source_fragment_style code_line]
+        in
+        let padding =
+          let line_num = String.make (String.length line_number_text) ' ' in
+          let spaces =
+            if String.length code_line <= c0 then ""
+            else
+              let prefix = String.sub code_line 0 c0 in
+              Str.global_replace (Str.regexp "[^\t ]") " " prefix
+          in
+          line_num ^ spaces
+        in
+        let underline_size = if l1 == l0
+          then max 1 (c1 - c0)
+          else 1
+        in
+        let underline = String.make underline_size '^' in
+        line_number_style line_number_text ::
+        highlighted_line @
+        [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)] @
+        (see_another_file ~is_lib filename) @
+        [default_style "\n"]
+  )
+
+  let print_message_nice ~strip_root stdin_file main_file message =
+    let loc, s = to_pp message in
+    print_file_at_location ~strip_root stdin_file main_file loc s
+
+  let print_extra_info =
+    let nonterm_newline = Str.regexp "\n\\(.\\)" in
+    let rec f ~strip_root stdin_file main_file indent tree =
+      let infos, kids = match tree with
+        | InfoLeaf infos -> infos, []
+        | InfoNode (infos, kids) -> infos, kids
+      in
+      let lines = List.map (fun (loc, strs) ->
+        let msg = String.concat ". " strs in
+        let lines =
+          print_file_at_location ~strip_root stdin_file main_file loc msg in
+        match lines with
+        | [] -> []
+        | (style, str) :: lines ->
+          let nonterm_newline_plus_indent = Utils.spf "\n%s\\1" indent in
+          (style, indent ^ str) :: (List.map (
+            fun (style, s) ->
+              style,
+              Str.global_replace nonterm_newline nonterm_newline_plus_indent s
+            ) lines
+          )
+      ) infos in
+      lines @ List.concat (
+        List.map (f ~strip_root stdin_file main_file ("  " ^ indent)) kids
+      )
+    in fun ~strip_root stdin_file main_file tree ->
+      List.concat (f ~strip_root stdin_file main_file "  " tree)
+
+  let print_error_header ~strip_root ~kind message =
+    let loc, _ = to_pp message in
+    let prefix, relfilename = match loc.Loc.source with
+      | Some Loc.LibFile filename ->
+        let header = match kind with
+        | ParseError -> "Library parse error:"
+        | InferError -> "Library type error:"
+        (* TODO: we don't publicly distinguish warnings vs errors right now *)
+        | InferWarning -> "Library type error:"
+        | InternalError -> internal_error_prefix
+        (* TODO: is this possible? What happens when there are two `declare
+           module`s with the same name? *)
+        | DuplicateProviderError -> "Library duplicate provider error:"
+        in
+        [comment_file_style (header^"\n")],
+        relative_lib_path ~strip_root filename
+      | Some Loc.SourceFile filename
+      | Some Loc.JsonFile filename
+      | Some Loc.ResourceFile filename ->
+          [], relative_path ~strip_root filename
+      | Some Loc.Builtins -> [], "[No file]"
+      | None -> [], "[No file]"
+    in
+    let file_loc = Printf.sprintf "%s:%d" relfilename Loc.(loc.start.line) in
+    prefix @ [
+      file_location_style file_loc;
+      default_style "\n"
+    ]
+
+  let append_comment blame comment =
+    match blame with
+    | BlameM(loc, s) ->
+      (match comment with
+      (* Almost everywhere we have "Error:" that hurts readability *)
+      | "Error:" -> BlameM(loc, s)
+      | comment ->
+        let combined_comment = if String.length s > 0
+          then s ^ ". " ^ comment
+          else comment
+        in
+        BlameM(loc, combined_comment))
+    | CommentM(_) -> failwith "should not be comment"
+
+  let maybe_combine_message_text messages message =
+    match message with
+      | BlameM (_, _) -> message :: messages
+      | CommentM s ->
+        match messages with
+        | x :: xs -> append_comment x s :: xs
+        | _ -> failwith "can't append comment to nonexistent blame"
+
+  let merge_comments_into_blames messages =
+    List.fold_left maybe_combine_message_text [] messages |> List.rev
+
+  let remove_newlines (color, text) =
+    (color, Str.global_replace (Str.regexp "\n") "\\n" text)
+
+  let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
+    (error : error) =
+    let { kind; messages; op; trace; extra } = error in
+    let messages = prepend_op_reason messages op in
+    let messages = append_trace_reasons messages trace in
+    let messages = merge_comments_into_blames messages in
+    let header = print_error_header ~strip_root ~kind (List.hd messages) in
+    let main_file = match file_of_error error with
+      | Some filename -> filename
+      | None -> "[No file]" in
+    let formatted_messages = List.concat (List.map (
+      print_message_nice ~strip_root stdin_file main_file
+    ) messages) in
+    let formatted_extra = List.concat (List.map (
+      print_extra_info ~strip_root stdin_file main_file
+    ) extra) in
+    let to_print = header @ formatted_messages @ formatted_extra in
+    let to_print = if one_line then List.map remove_newlines to_print
+      else to_print in
+    (to_print @ [default_style "\n"])
+
+  let print_error_color
+      ?(out_channel=stdout)
+      ~stdin_file:stdin_file
+      ~strip_root
+      ~one_line
+      ~color
+      (error : error) =
+    let to_print =
+      get_pretty_printed_error ~stdin_file ~strip_root ~one_line error in
+    Tty.cprint ~out_channel ~color_mode:color to_print
+
+  let print_errors ~out_channel ~flags ?(stdin_file=None) ~strip_root errors =
+    let error_or_errors n = if n != 1 then "errors" else "error" in
+    let truncate = not (flags.Options.show_all_errors) in
+    let one_line = flags.Options.one_line in
+    let color = flags.Options.color in
+    let print_error_if_not_truncated curr e =
+      if not(truncate) || curr < 50 then print_error_color
+        ~stdin_file ~strip_root ~one_line ~color ~out_channel e;
+
+      curr + 1
+    in
+    let total =
+      List.fold_left print_error_if_not_truncated 0 errors
+    in
+    if total > 0 then print_newline ();
+    if truncate && total > 50 then (
+      Printf.fprintf
+        out_channel
+        "... %d more %s (only 50 out of %d errors displayed)\n"
+        (total - 50) (error_or_errors (total - 50)) total;
+      Printf.fprintf
+        out_channel
+        "To see all errors, re-run Flow with --show-all-errors\n";
+      flush out_channel
+    ) else
+      Printf.fprintf out_channel "Found %d %s\n" total (error_or_errors total)
+end
+
+(* JSON output *)
+module Json_output = struct
+  let unwrap_message = function
   | BlameM (loc, str) when loc <> Loc.none -> str, Some loc
   | BlameM (_, str) | CommentM str -> str, None
 
-let json_of_message_props ~strip_root message =
-  let open Hh_json in
-  let desc, loc = unwrap_message message in
-  let type_ = match message with
-  | BlameM _ -> "Blame"
-  | CommentM _ -> "Comment" in
-  ("descr", JSON_String desc) ::
-  ("type", JSON_String type_) ::
-  match loc with
-  | None -> deprecated_json_props_of_loc ~strip_root Loc.none
-  | Some loc ->
-    ("loc", Reason.json_of_loc ~strip_root loc) ::
-    deprecated_json_props_of_loc ~strip_root loc
+  let json_of_message_props ~strip_root message =
+    let open Hh_json in
+    let desc, loc = unwrap_message message in
+    let type_ = match message with
+    | BlameM _ -> "Blame"
+    | CommentM _ -> "Comment" in
+    ("descr", JSON_String desc) ::
+    ("type", JSON_String type_) ::
+    match loc with
+    | None -> deprecated_json_props_of_loc ~strip_root Loc.none
+    | Some loc ->
+      ("loc", Reason.json_of_loc ~strip_root loc) ::
+      deprecated_json_props_of_loc ~strip_root loc
 
-let json_of_message ~strip_root message =
-  Hh_json.JSON_Object (json_of_message_props ~strip_root message)
+  let json_of_message ~strip_root message =
+    Hh_json.JSON_Object (json_of_message_props ~strip_root message)
 
-let json_of_message_with_context ~strip_root ~stdin_file message =
-  let open Hh_json in
-  let _, loc = unwrap_message message in
-  let code_line = match loc with
-  | None -> None
-  | Some loc ->
-      let open Loc in
-      let filename = file_of_source loc.source in
-      let line = loc.start.line - 1 in
-      read_line_in_file line filename stdin_file in
-  let context = ("context", match code_line with
-  | None -> JSON_Null
-  | Some context -> JSON_String context) in
-  Hh_json.JSON_Object (context :: (json_of_message_props ~strip_root message))
+  let json_of_message_with_context ~strip_root ~stdin_file message =
+    let open Hh_json in
+    let _, loc = unwrap_message message in
+    let code_line = match loc with
+    | None -> None
+    | Some loc ->
+        let open Loc in
+        let filename = file_of_source loc.source in
+        let line = loc.start.line - 1 in
+        read_line_in_file line filename stdin_file in
+    let context = ("context", match code_line with
+    | None -> JSON_Null
+    | Some context -> JSON_String context) in
+    Hh_json.JSON_Object (context :: (json_of_message_props ~strip_root message))
 
-let json_of_infos ~json_of_message infos =
-  let open Hh_json in
-  JSON_Array (List.map json_of_message (infos_to_messages infos))
+  let json_of_infos ~json_of_message infos =
+    let open Hh_json in
+    JSON_Array (List.map json_of_message (infos_to_messages infos))
 
-let rec json_of_info_tree ~json_of_message tree =
-  let open Hh_json in
-  let infos, kids = match tree with
-    | InfoLeaf infos -> infos, None
-    | InfoNode (infos, kids) -> infos, Some kids
-  in
-  JSON_Object (
-    ("message", json_of_infos ~json_of_message infos) ::
-    match kids with
-    | None -> []
-    | Some kids ->
-      ["children", JSON_Array (List.map (json_of_info_tree ~json_of_message) kids)]
-  )
+  let rec json_of_info_tree ~json_of_message tree =
+    let open Hh_json in
+    let infos, kids = match tree with
+      | InfoLeaf infos -> infos, None
+      | InfoNode (infos, kids) -> infos, Some kids
+    in
+    JSON_Object (
+      ("message", json_of_infos ~json_of_message infos) ::
+      match kids with
+      | None -> []
+      | Some kids ->
+        let kids = List.map (json_of_info_tree ~json_of_message) kids in
+        ["children", JSON_Array kids]
+    )
 
-let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
-  let open Hh_json in
-  let kind_str, severity_str = match kind with
-    | ParseError -> "parse", "error"
-    | InferError -> "infer", "error"
-    | InferWarning -> "infer", "warning"
-    | InternalError -> "internal", "error"
-    | DuplicateProviderError -> "duplicate provider", "error"
-  in
-  let props = [
-    "kind", JSON_String kind_str;
-    "level", JSON_String severity_str;
-    "message", JSON_Array (List.map json_of_message messages);
-  ] in
-  (* add trace if present *)
-  let props = match trace with [] -> props | _ ->
-    ("trace", JSON_Array (List.map json_of_message trace)) :: props
-  in
-  (* add op if present *)
-  let props = match op with None -> props | Some op ->
-    let op_loc, op_desc = to_pp op in
-    ("operation", json_of_message (BlameM (op_loc, op_desc))):: props
-  in
-  (* add extra if present *)
-  if extra = []
-  then props
-  else ("extra", JSON_Array (List.map (json_of_info_tree ~json_of_message) extra)) :: props
+  let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
+    let open Hh_json in
+    let kind_str, severity_str = match kind with
+      | ParseError -> "parse", "error"
+      | InferError -> "infer", "error"
+      | InferWarning -> "infer", "warning"
+      | InternalError -> "internal", "error"
+      | DuplicateProviderError -> "duplicate provider", "error"
+    in
+    let props = [
+      "kind", JSON_String kind_str;
+      "level", JSON_String severity_str;
+      "message", JSON_Array (List.map json_of_message messages);
+    ] in
+    (* add trace if present *)
+    let props = match trace with [] -> props | _ ->
+      ("trace", JSON_Array (List.map json_of_message trace)) :: props
+    in
+    (* add op if present *)
+    let props = match op with None -> props | Some op ->
+      let op_loc, op_desc = to_pp op in
+      ("operation", json_of_message (BlameM (op_loc, op_desc))):: props
+    in
+    (* add extra if present *)
+    if extra = [] then props
+    else
+      let extra = List.map (json_of_info_tree ~json_of_message) extra in
+      ("extra", JSON_Array extra) :: props
 
-let json_of_error ~strip_root error =
-  let json_of_message = json_of_message ~strip_root in
-  Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
+  let json_of_error ~strip_root error =
+    let json_of_message = json_of_message ~strip_root in
+    Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
-let json_of_error_with_context ~strip_root ~stdin_file error =
-  let json_of_message = json_of_message_with_context ~strip_root ~stdin_file in
-  Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
+  let json_of_error_with_context ~strip_root ~stdin_file error =
+    let json_of_message =
+      json_of_message_with_context ~strip_root ~stdin_file in
+    Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
-let json_of_errors ~strip_root errors =
-  Hh_json.JSON_Array (List.map (json_of_error ~strip_root) errors)
+  let json_of_errors ~strip_root errors =
+    Hh_json.JSON_Array (List.map (json_of_error ~strip_root) errors)
 
-let json_of_errors_with_context ~strip_root ~stdin_file errors =
-  let f = json_of_error_with_context ~strip_root ~stdin_file in
-  Hh_json.JSON_Array (List.map f errors)
+  let json_of_errors_with_context ~strip_root ~stdin_file errors =
+    let f = json_of_error_with_context ~strip_root ~stdin_file in
+    Hh_json.JSON_Array (List.map f errors)
 
-let print_error_json
-    ~strip_root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
-    oc el =
-  let open Hh_json in
+  let print_errors
+      ~out_channel
+      ~strip_root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
+      el =
+    let open Hh_json in
 
-  let props = [
-    "flowVersion", JSON_String FlowConfig.version;
-    "errors", json_of_errors_with_context ~strip_root ~stdin_file el;
-    "passed", JSON_Bool (el = []);
-  ] in
-  let props = match profiling with
-  | None -> props
-  | Some profiling -> props @ Profiling_js.to_json_properties profiling in
-  let res = JSON_Object props in
-  output_string oc (json_to_string ~pretty res);
-  flush oc
+    let props = [
+      "flowVersion", JSON_String FlowConfig.version;
+      "errors", json_of_errors_with_context ~strip_root ~stdin_file el;
+      "passed", JSON_Bool (el = []);
+    ] in
+    let props = match profiling with
+    | None -> props
+    | Some profiling -> props @ Profiling_js.to_json_properties profiling in
+    let res = JSON_Object props in
+    output_string out_channel (json_to_string ~pretty res);
+    flush out_channel
+end
 
 (* for vim and emacs plugins *)
-let string_of_loc_deprecated ~strip_root loc = Loc.(
-  match loc.source with
+module Vim_emacs_output = struct
+  let string_of_loc ~strip_root loc = Loc.(
+    match loc.source with
     | None
     | Some Builtins -> ""
     | Some file ->
@@ -705,68 +745,42 @@ let string_of_loc_deprecated ~strip_root loc = Loc.(
       let line = loc.start.line in
       let start = loc.start.column + 1 in
       let end_ = loc._end.column in
+      let spf = Utils_js.spf in
       if line <= 0 then
-        Utils_js.spf "File \"%s\", line 0" file
+        spf "File \"%s\", line 0" file
       else if line = loc._end.line && start - end_ = 1 then
-        Utils_js.spf "File \"%s\", line %d, character %d" file line start
+        spf "File \"%s\", line %d, character %d" file line start
       else
-        Utils_js.spf "File \"%s\", line %d, characters %d-%d" file line start end_
-)
+        spf "File \"%s\", line %d, characters %d-%d" file line start end_
+  )
 
-let print_error_deprecated =
-  let endline s = if s = "" then "" else s ^ "\n" in
-  let to_pp_string ~strip_root message =
-    let loc, msg = to_pp message in
-    let loc_str = string_of_loc_deprecated ~strip_root loc in
-    Printf.sprintf "%s%s" (endline loc_str) (endline msg)
-  in
-  let to_string ~strip_root (error : error) : string =
-    let {messages; trace; _} = error in
-    let messages = append_trace_reasons messages trace in
-    let buf = Buffer.create 50 in
-    (match messages with
-    | [] -> assert false
-    | message1 :: rest_of_error ->
-        Buffer.add_string buf (to_pp_string ~strip_root message1);
-        List.iter begin fun message ->
-          Buffer.add_string buf (to_pp_string ~strip_root message)
-        end rest_of_error
-    );
-    Buffer.contents buf
-  in
-  fun ~strip_root oc el ->
-    let sl = List.map (to_string ~strip_root) el in
-    let sl = ListUtils.uniq (List.sort String.compare sl) in
-    List.iter begin fun s ->
-      output_string oc s;
-      output_string oc "\n";
-    end sl;
-    flush oc
-
-(* Human readable output *)
-let print_error_summary ?(out_channel=stdout) ~flags ?(stdin_file=None) ~strip_root errors =
-  let error_or_errors n = if n != 1 then "errors" else "error" in
-  let truncate = not (flags.Options.show_all_errors) in
-  let one_line = flags.Options.one_line in
-  let color = flags.Options.color in
-  let print_error_if_not_truncated curr e =
-    if not(truncate) || curr < 50 then print_error_color
-      ~stdin_file ~strip_root ~one_line ~color ~out_channel e;
-
-    curr + 1
-  in
-  let total =
-    List.fold_left print_error_if_not_truncated 0 errors
-  in
-  if total > 0 then print_newline ();
-  if truncate && total > 50 then (
-    Printf.fprintf
-      out_channel
-      "... %d more %s (only 50 out of %d errors displayed)\n"
-      (total - 50) (error_or_errors (total - 50)) total;
-    Printf.fprintf
-      out_channel
-      "To see all errors, re-run Flow with --show-all-errors\n";
-    flush out_channel
-  ) else
-    Printf.fprintf out_channel "Found %d %s\n" total (error_or_errors total)
+  let print_errors =
+    let endline s = if s = "" then "" else s ^ "\n" in
+    let to_pp_string ~strip_root message =
+      let loc, msg = to_pp message in
+      let loc_str = string_of_loc ~strip_root loc in
+      Printf.sprintf "%s%s" (endline loc_str) (endline msg)
+    in
+    let to_string ~strip_root (error : error) : string =
+      let {messages; trace; _} = error in
+      let messages = append_trace_reasons messages trace in
+      let buf = Buffer.create 50 in
+      (match messages with
+      | [] -> assert false
+      | message1 :: rest_of_error ->
+          Buffer.add_string buf (to_pp_string ~strip_root message1);
+          List.iter begin fun message ->
+            Buffer.add_string buf (to_pp_string ~strip_root message)
+          end rest_of_error
+      );
+      Buffer.contents buf
+    in
+    fun ~strip_root oc el ->
+      let sl = List.map (to_string ~strip_root) el in
+      let sl = ListUtils.uniq (List.sort String.compare sl) in
+      List.iter begin fun s ->
+        output_string oc s;
+        output_string oc "\n";
+      end sl;
+      flush oc
+end

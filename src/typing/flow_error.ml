@@ -956,8 +956,10 @@ end = struct
         let strip_root = if Context.should_strip_root cx
           then Some (Context.root cx)
           else None in
-        assert_false (spf "add_output: no source for error: %s"
-        (Hh_json.json_to_multiline (json_of_errors ~strip_root [error])))
+        let json = Json_output.json_of_errors ~strip_root [error] in
+        assert_false (
+          spf "add_output: no source for error: %s"
+          (Hh_json.json_to_multiline json))
     );
 
     Context.add_error cx error
