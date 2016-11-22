@@ -157,7 +157,7 @@ val in_range: Loc.t -> Loc.t -> bool
 val string_of_desc: reason_desc -> string
 
 val string_of_loc_pos: Loc.t -> string
-val string_of_loc: Loc.t -> string
+val string_of_loc: ?strip_root:Path.t option -> Loc.t -> string
 val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
 
 val locationless_reason: reason_desc -> reason
@@ -187,9 +187,9 @@ val is_lib_reason: reason -> bool
 val is_blamable_reason: reason -> bool
 val reasons_overlap: reason -> reason -> bool
 
-val string_of_reason: reason -> string
+val string_of_reason: ?strip_root:Path.t option -> reason -> string
 val json_of_reason: ?strip_root:Path.t option -> reason -> Hh_json.json
-val dump_reason: reason -> string
+val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
 val loc_of_reason: reason -> Loc.t
@@ -209,5 +209,5 @@ val update_origin_of_reason: reason option -> reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
 
-val strip_root: Path.t -> reason -> reason
 val strip_root_from_loc: Path.t -> Loc.t -> Loc.t
+val strip_root_from_source: Path.t -> Loc.filename option -> Loc.filename option

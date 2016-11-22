@@ -1195,9 +1195,11 @@ let json_of_env ?(size=5000) ?(depth=1000) cx env =
 
 (* debug printer *)
 
-let dump_reason cx reason = if Context.should_strip_root cx
-  then dump_reason (strip_root (Context.root cx) reason)
-  else dump_reason reason
+let dump_reason cx reason =
+  let strip_root = if Context.should_strip_root cx
+    then Some (Context.root cx)
+    else None in
+  Reason.dump_reason ~strip_root reason
 
 let rec dump_t ?(depth=3) cx t =
   dump_t_ (depth, ISet.empty) cx t
@@ -1569,9 +1571,11 @@ let string_of_scope cx scope = Scope.(
     (string_of_scope_refis cx scope.refis)
 )
 
-let string_of_reason cx reason = if Context.should_strip_root cx
-  then string_of_reason (strip_root (Context.root cx) reason)
-  else string_of_reason reason
+let string_of_reason cx reason =
+  let strip_root = if Context.should_strip_root cx
+    then Some (Context.root cx)
+    else None in
+  Reason.string_of_reason ~strip_root reason
 
 let string_of_file cx =
   let filename = Loc.string_of_filename (Context.file cx) in
