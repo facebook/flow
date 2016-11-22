@@ -5,6 +5,7 @@ import newErrors from './assertions/newErrors';
 import noNewErrors from './assertions/noNewErrors';
 import stderr from './assertions/stderr';
 import stdout from './assertions/stdout';
+import sortedStdout from './assertions/sortedStdout';
 import exitCodes from './assertions/exitCodes';
 import serverRunning from './assertions/serverRunning';
 import noop from './assertions/noop';
@@ -119,6 +120,11 @@ class TestStepFirstOrSecondStage extends TestStep {
     return this._cloneWithAssertion(stdout(expected, assertLoc));
   }
 
+  sortedStdout(expected: string): TestStepSecondStage {
+    const assertLoc = searchStackForTestAssertion();
+    return this._cloneWithAssertion(sortedStdout(expected, assertLoc));
+  }
+
   exitCodes(expected: Array<number>): TestStepSecondStage {
     const assertLoc = searchStackForTestAssertion();
     return this._cloneWithAssertion(exitCodes(expected, assertLoc));
@@ -200,7 +206,18 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
           env.triggerFlowCheck();
         }
       );
-      ret._needsFlowServer = true;
+      // Certain flow configs don't need a flow server to exist
+      switch (args[0]) {
+        case 'ast':
+        case 'init':
+        case 'ls':
+        case 'start':
+        case 'stop':
+        case 'version':
+          break;
+        default:
+          ret._needsFlowServer = true;
+      }
       return ret;
     };
 
