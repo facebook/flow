@@ -154,7 +154,7 @@ let get_ls_files ~subdir ~root ~strip_root ~ignore_flag ~include_flag =
     opt_ignore_non_literal_requires = false;
     opt_max_header_tokens = FlowConfig.(
       flowconfig.options.Opts.max_header_tokens
-    )
+    );
   } in
 
   let _, libs = Files.init options in

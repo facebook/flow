@@ -1816,12 +1816,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* imports are `any`-typed when they are from (1) unchecked modules or (2)
        modules with `any`-typed exports *)
-    | (AnyT _ | AnyObjT _),
-        ( CJSRequireT(reason, t)
+    | (AnyObjT _, (
+        CJSRequireT(reason, t)
         | ImportModuleNsT(reason, t)
         | ImportDefaultT(reason, _, _, t)
         | ImportNamedT(reason, _, _, t)
-        ) ->
+      )) ->
+      rec_flow_t cx trace (AnyT.why reason, t)
+
+    | (AnyT _, (CJSRequireT(reason, t) | ImportModuleNsT(reason, t))) ->
+      rec_flow_t cx trace (AnyT.why reason, t)
+
+    | (AnyT _, ImportDefaultT(reason, import_kind, (_, module_name), t)) ->
+      if import_kind = ImportType then add_error cx (mk_info reason [
+        spf (
+          "Importing a type from an untyped module is not safe! Did you " ^^
+          "mean to add `// @flow` to the top of `%s`?"
+        ) module_name
+      ]);
+      rec_flow_t cx trace (AnyT.why reason, t)
+
+    | (AnyT _, ImportNamedT(reason, import_kind, export_name, t)) ->
+      if import_kind = ImportType then add_error cx (mk_info reason [
+        spf (
+          "Importing a type from an untyped module is not safe! Did you " ^^
+          "mean to add `// @flow` to the top of the module that exports " ^^
+          "`%s`?"
+        ) export_name
+      ]);
       rec_flow_t cx trace (AnyT.why reason, t)
 
     | ((PolyT (_, TypeT _) | TypeT _), AssertImportIsValueT(reason, name)) ->
