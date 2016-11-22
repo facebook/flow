@@ -243,18 +243,27 @@ let do_patch lines insertions =
   patch 1 0 lines insertions;
   String.concat "\n" (Array.to_list lines)
 
-let strip_root_from_source root = Loc.(function
-  | None -> None
-  | Some Builtins -> Some Builtins
-  | Some LibFile file ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    if string_starts_with file root_str
-    then Some (LibFile (spf "[LIB] %s" (Files.relative_path root_str file)))
-    else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
-
-  | Some (SourceFile _ | JsonFile _ | ResourceFile _ as filename) ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (Loc.filename_map (Files.relative_path root_str) filename)
+let string_of_source ?(strip_root=None) = Loc.(function
+  | Builtins -> "(builtins)"
+  | LibFile file ->
+    begin match strip_root with
+    | Some root ->
+      let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+      if string_starts_with file root_str
+      then spf "[LIB] %s" (Files.relative_path root_str file)
+      else spf "[LIB] %s" (Filename.basename file)
+    | None -> file
+    end
+  | SourceFile file
+  | JsonFile file
+  | ResourceFile file ->
+    begin match strip_root with
+    | Some root ->
+      let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+      Files.relative_path root_str file
+    | None ->
+      file
+    end
 )
 
 let string_of_loc_pos loc = Loc.(
@@ -272,30 +281,18 @@ let string_of_loc_pos loc = Loc.(
 )
 
 let string_of_loc ?(strip_root=None) loc = Loc.(
-  let source = match strip_root with
-  | Some root -> strip_root_from_source root loc.source
-  | None -> loc.source
-  in
-  match source with
+  match loc.source with
   | None
   | Some Builtins -> ""
-  | Some LibFile file
-  | Some SourceFile file
-  | Some JsonFile file
-  | Some ResourceFile file ->
-    spf "%s:%s" file (string_of_loc_pos loc)
+  | Some file ->
+    spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
 )
 
 let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
   JSON_Object [
     "source", (
-      let source =
-        match strip_root with
-        | Some root -> strip_root_from_source root loc.source
-        | None -> loc.source
-      in
-      match source with
-      | Some x -> JSON_String (string_of_filename x)
+      match loc.source with
+      | Some x -> JSON_String (string_of_source ~strip_root x)
       | None -> JSON_Null
     );
     "type", (match loc.source with

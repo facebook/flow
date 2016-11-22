@@ -443,12 +443,8 @@ let get_file_from_filename_or_stdin path = function
       ServerProt.FileContent (filename, contents)
 
 let range_string_of_loc ~strip_root loc = Loc.(
-  let source = match strip_root with
-  | Some root -> Reason.strip_root_from_source root loc.source
-  | None -> loc.source
-  in
-  let file = match source with
-  | Some file -> string_of_filename file
+  let file = match loc.source with
+  | Some file -> Reason.string_of_source ~strip_root file
   | None -> ""
   in
   let l0, c0 = loc.start.line, loc.start.column + 1 in

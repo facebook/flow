@@ -187,6 +187,7 @@ val is_lib_reason: reason -> bool
 val is_blamable_reason: reason -> bool
 val reasons_overlap: reason -> reason -> bool
 
+val string_of_source: ?strip_root:Path.t option -> Loc.filename -> string
 val string_of_reason: ?strip_root:Path.t option -> reason -> string
 val json_of_reason: ?strip_root:Path.t option -> reason -> Hh_json.json
 val dump_reason: ?strip_root:Path.t option -> reason -> string
@@ -208,5 +209,3 @@ val repos_reason: Loc.t -> reason -> reason
 val update_origin_of_reason: reason option -> reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
-
-val strip_root_from_source: Path.t -> Loc.filename option -> Loc.filename option

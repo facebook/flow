@@ -430,12 +430,8 @@ let print_error_color
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
 let deprecated_json_props_of_loc ~strip_root loc = Loc.(
-  let source = match strip_root with
-  | Some root -> Reason.strip_root_from_source root loc.source
-  | None -> loc.source
-  in
-  let file = match source with
-  | Some x -> Hh_json.JSON_String (string_of_filename x)
+  let file = match loc.source with
+  | Some x -> Hh_json.JSON_String (Reason.string_of_source ~strip_root x)
   | None -> Hh_json.JSON_String "" (* TODO: return Hh_json.JSON_Null *)
   in
   [ "path", file;
@@ -701,17 +697,11 @@ let print_error_json
 
 (* for vim and emacs plugins *)
 let string_of_loc_deprecated ~strip_root loc = Loc.(
-  let source = match strip_root with
-  | Some root -> Reason.strip_root_from_source root loc.source
-  | None -> loc.source
-  in
-  match source with
+  match loc.source with
     | None
     | Some Builtins -> ""
-    | Some LibFile file
-    | Some SourceFile file
-    | Some JsonFile file
-    | Some ResourceFile file ->
+    | Some file ->
+      let file = Reason.string_of_source ~strip_root file in
       let line = loc.start.line in
       let start = loc.start.column + 1 in
       let end_ = loc._end.column in
