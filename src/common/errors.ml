@@ -507,7 +507,6 @@ module ErrorSet = Set.Make(Error)
  *)
 module ErrorSuppressions = struct
   open Span
-  module Ast = Spider_monkey_ast
 
   type error_suppressions = Loc.t SpanMap.t
   type t = {
