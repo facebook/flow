@@ -58,6 +58,14 @@ fragments-on-composite-types.js:66
  66:     ... on String {
          ^ GraphQL inline fragment. Fragment cannot condition on non composite type `String`
 
+possible-fragment-spreads.js:76
+ 76:     ... on Dog { barkVolume } # error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^ GraphQL inline fragment. Fragment cannot be spread here as objects of type `Cat` can never be of type `Dog`
+
+possible-fragment-spreads.js:131
+131:     ...on Intelligent { iq } # error
+         ^^^^^^^^^^^^^^^^^^^^^^^^ GraphQL inline fragment. Fragment cannot be spread here as objects of type `Pet` can never be of type `Intelligent`
+
 scalar-leafs.js:13
  13:     human # error
          ^^^^^ GraphQL field `human`. Field of object type `Human` requires selection
@@ -87,4 +95,4 @@ scalar-leafs.js:62
                                                              ^^^^^^^^^^^^^ Selection set. Cannot select on non-object type `Boolean`
 
 
-Found 22 errors
+Found 24 errors
