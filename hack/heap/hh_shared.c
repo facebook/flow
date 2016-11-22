@@ -735,6 +735,10 @@ static void memfd_reserve(char *mem, size_t sz) {
 
 #endif
 
+// DON'T WRITE TO THE SHARED MEMORY IN THIS FUNCTION!!!  This function just
+// calculates where the memory is and sets local globals. The shared memory
+// might not be ready for writing yet! If you want to initialize a bit of
+// shared memory, check out init_shared_globals
 static void define_globals(char * shared_mem_init) {
   size_t page_size = getpagesize();
   char *mem = shared_mem_init;
@@ -785,7 +789,6 @@ static void define_globals(char * shared_mem_init) {
    * page_size - it should be since page_size is quite big for a string
    */
   db_filename = (char*)mem;
-  memset(mem, 0, page_size);
   mem += page_size;
   /* END OF THE SMALL OBJECTS PAGE */
 
@@ -837,6 +840,10 @@ static void init_shared_globals(size_t config_log_level) {
   *log_level = config_log_level;
   // Initialize top heap pointers
   *heap = heap_init;
+
+  // Zero out this shared memory for a string
+  size_t page_size = getpagesize();
+  memset(db_filename, 0, page_size);
 }
 
 static void set_sizes(
