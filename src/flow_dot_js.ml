@@ -159,7 +159,7 @@ let check_content ~filename ~content =
   let strip_root = Some root in
   errors
   |> Errors.ErrorSet.elements
-  |> Errors.json_of_errors_with_context ~strip_root ~root ~stdin_file
+  |> Errors.json_of_errors_with_context ~strip_root ~stdin_file
   |> js_of_json
 
 let check filename =
