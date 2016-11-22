@@ -21,7 +21,6 @@
 
 open Utils_js
 open String_utils
-module Ast = Spider_monkey_ast
 
 let mk_id () = Ident.make ""
 
