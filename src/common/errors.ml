@@ -122,17 +122,27 @@ let is_short_lib filename =
   let len = String.length lib_prefix in
   String.length filename > len && String.sub filename 0 len = lib_prefix
 
-let relative_path ~strip_root ~root filename =
+let relative_path ~strip_root filename =
   if is_short_lib filename || Filename.is_relative filename
   then filename
-  else if strip_root
-  then Files.relative_path (Path.to_string root) filename
-  else begin
+  else match strip_root with
+  | Some root -> Files.relative_path (Path.to_string root) filename
+  | None ->
     let relname = Files.relative_path (Sys.getcwd ()) filename in
     if String.length relname < String.length filename
       then relname
       else filename
-  end
+
+let relative_lib_path ~strip_root filename =
+  let sep = Filename.dir_sep in
+  match strip_root with
+  | Some root ->
+    let root_str = Printf.sprintf "%s%s" (Path.to_string root) sep in
+    if String_utils.string_starts_with filename root_str then
+      relative_path ~strip_root filename
+    else
+      Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
+  | None -> relative_path ~strip_root filename
 
 let highlight_error_in_line line c0 c1 =
   let prefix = String.sub line 0 c0 in
@@ -162,21 +172,17 @@ let nth_line ~n content =
   in
   loop ~n ~pos:0 content
 
-let normalize_filename ~root filename =
-  if Filename.is_relative filename
-  then Path.to_string (Path.concat root filename)
-  else filename
-
-let read_line_in_file ~root line filename stdin_file =
+let read_line_in_file line filename stdin_file =
   match filename with
   | None ->
       None
   | Some filename ->
-      let filename = normalize_filename ~root filename in
+      if Filename.is_relative filename then
+        failwith (Utils_js.spf "Expected absolute location, got %s" filename);
       try begin
         let content = match stdin_file with
         | Some (stdin_filename, content)
-          when normalize_filename ~root (Path.to_string stdin_filename) = filename ->
+          when Path.to_string stdin_filename = filename ->
             content
         | _ ->
             Sys_utils.cat filename
@@ -202,17 +208,7 @@ let file_of_source source =
     | Some Loc.Builtins -> None
     | None -> None
 
-let relative_lib_path ~strip_root ~root filename =
-  let sep = Filename.dir_sep in
-  let root_str = Printf.sprintf "%s%s" (Path.to_string root) sep in
-  if String_utils.string_starts_with filename root_str then
-    relative_path ~strip_root ~root filename
-  else if strip_root then
-    Printf.sprintf "<BUILTINS>%s%s" sep (Filename.basename filename)
-  else
-    filename
-
-let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
+let print_file_at_location ~strip_root stdin_file main_file loc s = Loc.(
   let l0 = loc.start.line in
   let l1 = loc._end.line in
   let c0 = loc.start.column in
@@ -225,8 +221,8 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
     else
       let prefix = Printf.sprintf ". See%s: " (if is_lib then " lib" else "") in
       let filename = if is_lib
-        then relative_lib_path ~strip_root ~root filename
-        else relative_path ~strip_root ~root filename
+        then relative_lib_path ~strip_root filename
+        else relative_path ~strip_root filename
       in
       [
         comment_style prefix;
@@ -234,7 +230,7 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
       ]
   in
 
-  let code_line = read_line_in_file ~root (l0 - 1) filename stdin_file in
+  let code_line = read_line_in_file (l0 - 1) filename stdin_file in
 
   match code_line, filename with
   | _, None ->
@@ -286,20 +282,21 @@ let print_file_at_location ~strip_root ~root stdin_file main_file loc s = Loc.(
       [default_style "\n"]
 )
 
-let print_message_nice ~strip_root ~root stdin_file main_file message =
+let print_message_nice ~strip_root stdin_file main_file message =
   let loc, s = to_pp message in
-  print_file_at_location ~strip_root ~root stdin_file main_file loc s
+  print_file_at_location ~strip_root stdin_file main_file loc s
 
 let print_extra_info =
   let nonterm_newline = Str.regexp "\n\\(.\\)" in
-  let rec f ~strip_root ~root stdin_file main_file indent tree =
+  let rec f ~strip_root stdin_file main_file indent tree =
     let infos, kids = match tree with
       | InfoLeaf infos -> infos, []
       | InfoNode (infos, kids) -> infos, kids
     in
     let lines = List.map (fun (loc, strs) ->
       let msg = String.concat ". " strs in
-      let lines = print_file_at_location ~strip_root ~root stdin_file main_file loc msg in
+      let lines =
+        print_file_at_location ~strip_root stdin_file main_file loc msg in
       match lines with
       | [] -> []
       | (style, str) :: lines ->
@@ -312,10 +309,10 @@ let print_extra_info =
         )
     ) infos in
     lines @ List.concat (
-      List.map (f ~strip_root ~root stdin_file main_file ("  " ^ indent)) kids
+      List.map (f ~strip_root stdin_file main_file ("  " ^ indent)) kids
     )
-  in fun ~strip_root ~root stdin_file main_file tree ->
-    List.concat (f ~strip_root ~root stdin_file main_file "  " tree)
+  in fun ~strip_root stdin_file main_file tree ->
+    List.concat (f ~strip_root stdin_file main_file "  " tree)
 
 let loc_of_error (err: error) =
   let { messages; op; _ } = err in
@@ -343,7 +340,7 @@ let file_of_error err =
   let loc = loc_of_error err in
   file_of_source loc.Loc.source
 
-let print_error_header ~strip_root ~root ~kind message =
+let print_error_header ~strip_root ~kind message =
   let loc, _ = to_pp message in
   let prefix, relfilename = match loc.Loc.source with
     | Some Loc.LibFile filename ->
@@ -358,11 +355,11 @@ let print_error_header ~strip_root ~root ~kind message =
       | DuplicateProviderError -> "Library duplicate provider error:"
       in
       [comment_file_style (header^"\n")],
-      relative_lib_path ~strip_root ~root filename
+      relative_lib_path ~strip_root filename
     | Some Loc.SourceFile filename
     | Some Loc.JsonFile filename
     | Some Loc.ResourceFile filename ->
-        [], relative_path ~strip_root ~root filename
+        [], relative_path ~strip_root filename
     | Some Loc.Builtins -> [], "[No file]"
     | None -> [], "[No file]"
   in
@@ -399,21 +396,21 @@ let merge_comments_into_blames messages =
 let remove_newlines (color, text) =
   (color, Str.global_replace (Str.regexp "\n") "\\n" text)
 
-let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line ~root
+let get_pretty_printed_error ~stdin_file:stdin_file ~strip_root ~one_line
   (error : error) =
   let { kind; messages; op; trace; extra } = error in
   let messages = prepend_op_reason messages op in
   let messages = append_trace_reasons messages trace in
   let messages = merge_comments_into_blames messages in
-  let header = print_error_header ~strip_root ~root ~kind (List.hd messages) in
+  let header = print_error_header ~strip_root ~kind (List.hd messages) in
   let main_file = match file_of_error error with
     | Some filename -> filename
     | None -> "[No file]" in
   let formatted_messages = List.concat (List.map (
-    print_message_nice ~strip_root ~root stdin_file main_file
+    print_message_nice ~strip_root stdin_file main_file
   ) messages) in
   let formatted_extra = List.concat (List.map (
-    print_extra_info ~strip_root ~root stdin_file main_file
+    print_extra_info ~strip_root stdin_file main_file
   ) extra) in
   let to_print = header @ formatted_messages @ formatted_extra in
   let to_print = if one_line then List.map remove_newlines to_print
@@ -426,10 +423,9 @@ let print_error_color
     ~strip_root
     ~one_line
     ~color
-    ~root
     (error : error) =
   let to_print =
-    get_pretty_printed_error ~stdin_file ~strip_root ~one_line ~root error in
+    get_pretty_printed_error ~stdin_file ~strip_root ~one_line error in
   Tty.cprint ~out_channel ~color_mode:color to_print
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
@@ -610,17 +606,16 @@ let json_of_message_props ~strip_root message =
 let json_of_message ~strip_root message =
   Hh_json.JSON_Object (json_of_message_props ~strip_root message)
 
-let json_of_message_with_context ~strip_root ~root ~stdin_file message =
+let json_of_message_with_context ~strip_root ~stdin_file message =
   let open Hh_json in
   let _, loc = unwrap_message message in
   let code_line = match loc with
   | None -> None
   | Some loc ->
       let open Loc in
-      (* TODO: since filename isn't stripped anymore, ~root is unnecessary *)
       let filename = file_of_source loc.source in
       let line = loc.start.line - 1 in
-      read_line_in_file ~root line filename stdin_file in
+      read_line_in_file line filename stdin_file in
   let context = ("context", match code_line with
   | None -> JSON_Null
   | Some context -> JSON_String context) in
@@ -676,29 +671,25 @@ let json_of_error ~strip_root error =
   let json_of_message = json_of_message ~strip_root in
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
-let json_of_error_with_context ~strip_root ~root ~stdin_file error =
-  let json_of_message =
-    json_of_message_with_context ~strip_root ~root ~stdin_file in
+let json_of_error_with_context ~strip_root ~stdin_file error =
+  let json_of_message = json_of_message_with_context ~strip_root ~stdin_file in
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
 let json_of_errors ~strip_root errors =
   Hh_json.JSON_Array (List.map (json_of_error ~strip_root) errors)
 
-(* TODO: can get rid of `~root` once `errors` is never stripped *)
-let json_of_errors_with_context ~strip_root ~root ~stdin_file errors =
-  let f = json_of_error_with_context ~strip_root ~root ~stdin_file in
+let json_of_errors_with_context ~strip_root ~stdin_file errors =
+  let f = json_of_error_with_context ~strip_root ~stdin_file in
   Hh_json.JSON_Array (List.map f errors)
 
 let print_error_json
-    ~strip_root ~root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
+    ~strip_root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
     oc el =
   let open Hh_json in
 
-  let strip_root = if strip_root then Some root else None in
-
   let props = [
     "flowVersion", JSON_String FlowConfig.version;
-    "errors", json_of_errors_with_context ~strip_root ~root ~stdin_file el;
+    "errors", json_of_errors_with_context ~strip_root ~stdin_file el;
     "passed", JSON_Bool (el = []);
   ] in
   let props = match profiling with
@@ -763,14 +754,14 @@ let print_error_deprecated =
     flush oc
 
 (* Human readable output *)
-let print_error_summary ?(out_channel=stdout) ~flags ?(stdin_file=None) ~strip_root ~root errors =
+let print_error_summary ?(out_channel=stdout) ~flags ?(stdin_file=None) ~strip_root errors =
   let error_or_errors n = if n != 1 then "errors" else "error" in
   let truncate = not (flags.Options.show_all_errors) in
   let one_line = flags.Options.one_line in
   let color = flags.Options.color in
   let print_error_if_not_truncated curr e =
     if not(truncate) || curr < 50 then print_error_color
-      ~stdin_file ~strip_root ~root ~one_line ~color ~out_channel e;
+      ~stdin_file ~strip_root ~one_line ~color ~out_channel e;
 
     curr + 1
   in

@@ -104,9 +104,9 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let ic, oc = CommandUtils.connect server_flags args.root in
     ServerProt.cmd_to_channel oc (ServerProt.STATUS args.root);
     let response = ServerProt.response_from_channel ic in
-    let strip_root = args.strip_root in
+    let strip_root = if args.strip_root then Some args.root else None in
     let print_json =
-      Errors.print_error_json ~strip_root ~root:args.root ~pretty:args.pretty
+      Errors.print_error_json ~strip_root ~pretty:args.pretty
     in
     match response with
     | ServerProt.DIRECTORY_MISMATCH d ->
@@ -121,10 +121,9 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       begin if args.output_json then
         print_json stdout errors
       else if args.from = "vim" || args.from = "emacs" then
-        let strip_root = if strip_root then Some args.root else None in
         Errors.print_error_deprecated ~strip_root stdout errors
       else
-        Errors.print_error_summary ~strip_root ~flags:error_flags ~root:args.root errors
+        Errors.print_error_summary ~strip_root ~flags:error_flags errors
       end;
       FlowExitStatus.(exit Type_error)
     | ServerProt.NO_ERRORS ->

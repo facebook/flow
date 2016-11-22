@@ -79,14 +79,12 @@ val json_of_errors :
   Hh_json.json
 val json_of_errors_with_context :
   strip_root: Path.t option ->
-  root: Path.t ->
   stdin_file: stdin_file ->
   error list ->
   Hh_json.json
 
 val print_error_json :
-  strip_root: bool ->
-  root:Path.t ->
+  strip_root: Path.t option ->
   ?pretty:bool ->
   ?profiling:Profiling_js.t option ->
   ?stdin_file:stdin_file ->
@@ -99,8 +97,7 @@ val print_error_summary:
   ?out_channel:out_channel ->
   flags:Options.error_flags ->
   ?stdin_file:stdin_file ->
-  strip_root: bool ->
-  root: Path.t ->
+  strip_root: Path.t option ->
   error list ->
   unit
 
