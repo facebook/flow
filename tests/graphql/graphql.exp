@@ -1,5 +1,5 @@
 fields-on-correct-type.js:43
- 43:   fragment unknownSelection on UnknownType {
+ 43:   fragment unknownSelection on UnknownType { # only error for unknown type
        ^ GraphQL fragment. Type `UnknownType` not found in schema
 
 fields-on-correct-type.js:62
@@ -42,5 +42,21 @@ fields-on-correct-type.js:138
 138:     name # direct selection on union
          ^^^^ GraphQL field `name`. Selection on union `CatOrDog` can only contain fragment spreads
 
+fragments-on-composite-types.js:44
+ 44:   fragment scalarFragment on Boolean { # error
+       ^ GraphQL fragment. Fragment cannot condition on non composite type `Boolean`
 
-Found 11 errors
+fragments-on-composite-types.js:51
+ 51:   fragment scalarFragment on FurColor { # error
+       ^ GraphQL fragment. Fragment cannot condition on non composite type `FurColor`
+
+fragments-on-composite-types.js:58
+ 58:   fragment inputFragment on ComplexInput { # error
+       ^ GraphQL fragment. Fragment cannot condition on non composite type `ComplexInput`
+
+fragments-on-composite-types.js:66
+ 66:     ... on String {
+         ^ GraphQL inline fragment. Fragment cannot condition on non composite type `String`
+
+
+Found 15 errors

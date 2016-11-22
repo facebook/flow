@@ -4846,27 +4846,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | GraphqlSchemaT (_, schema),
       GraphqlMkFragT (reason, type_name, (sel_in, sel_out), out)
       ->
-      graphql_mk_selection cx trace reason schema type_name sel_in;
-      let frag = { Graphql.
-        frag_schema = schema;
-        frag_type = type_name;
-        frag_selection = sel_out;
-      } in
-      rec_flow_t cx trace (GraphqlFragT (reason, frag), out)
+      if graphql_validate_frag cx trace reason schema type_name then (
+        graphql_mk_selection cx trace reason schema type_name sel_in;
+        let frag = { Graphql.
+          frag_schema = schema;
+          frag_type = type_name;
+          frag_selection = sel_out;
+        } in
+        rec_flow_t cx trace (GraphqlFragT (reason, frag), out)
+      )
 
     | GraphqlSelectionT (_, {Graphql.s_schema; s_on; _}),
       GraphqlMkInlineFragT (reason, type_cond, (sel_in, sel_out), result)
       ->
-      let tname = Option.value ~default:s_on type_cond in
-      graphql_mk_selection cx trace reason s_schema tname sel_in;
-      if Graphql_schema.type_exists s_schema tname then begin
+      let type_name = Option.value ~default:s_on type_cond in
+      if graphql_validate_frag cx trace reason s_schema type_name then (
+        graphql_mk_selection cx trace reason s_schema type_name sel_in;
         let frag = GraphqlFragT (reason, { Graphql.
           frag_schema = s_schema;
-          frag_type = tname;
+          frag_type = type_name;
           frag_selection = sel_out;
         }) in
         rec_flow_t cx trace (frag, result)
-      end
+      )
 
     | GraphqlSelectionT (s_reason, selection),
       GraphqlSelectT (reason, (Graphql.SelectField (fname, sub)), out)
@@ -8703,16 +8705,26 @@ and continue cx trace t = function
   | Lower l -> rec_flow_t cx trace (l, t)
 
 and graphql_mk_selection cx trace reason schema type_name out =
-  if Graphql_schema.type_exists schema type_name then begin
-    let s = { Graphql.
-      s_schema = schema;
-      s_on = type_name;
-      s_selections = [];
-    } in
-    rec_flow_t cx trace (GraphqlSelectionT (reason, s), out)
-  end else begin
-    add_output cx trace (FlowError.EGraphqlTypeNotFound (reason, type_name))
-  end
+  let s = { Graphql.
+    s_schema = schema;
+    s_on = type_name;
+    s_selections = [];
+  } in
+  rec_flow_t cx trace (GraphqlSelectionT (reason, s), out)
+
+and graphql_validate_frag cx trace reason schema type_name =
+  let module Schema = Graphql_schema in
+  if not (Schema.type_exists schema type_name) then (
+    add_output cx trace (FlowError.EGraphqlTypeNotFound (reason, type_name));
+    false
+  ) else
+    match Schema.type_def schema type_name with
+    | Schema.Type.Obj _ | Schema.Type.Interface _ | Schema.Type.Union _ ->
+      true
+    | _ ->
+      add_output cx trace
+        (FlowError.EGraphqlFragOnNonComposite (reason, type_name));
+      false
 
 (************* end of slab **************************************************)
 
