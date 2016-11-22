@@ -107,50 +107,6 @@ let append_trace_reasons message_list trace_reasons =
   | _ ->
     message_list @ (BlameM (Loc.none, "Trace:") :: trace_reasons)
 
-let rec strip_root_from_info_tree root tree =
-  let strip_root_from_infos root =
-    List.map (function (loc, strs) ->
-      Reason.strip_root_from_loc root loc, strs
-    )
-  in
-  match tree with
-  | InfoLeaf infos ->
-    InfoLeaf (strip_root_from_infos root infos)
-  | InfoNode (infos, kids) ->
-    InfoNode (
-      strip_root_from_infos root infos,
-      List.map (strip_root_from_info_tree root) kids
-    )
-
-let strip_root_from_extra root extra =
-  List.map (strip_root_from_info_tree root) extra
-
-let strip_root_from_message root = function
-  | BlameM (loc, s) -> BlameM (Reason.strip_root_from_loc root loc, s)
-  | CommentM s -> CommentM s
-
-let strip_root_from_reason_list root messages =
-  List.map (strip_root_from_message root) messages
-
-let strip_root_from_error root error =
-  let { messages; trace; op; extra; _ } = error in
-  let messages = strip_root_from_reason_list root messages in
-  let trace = strip_root_from_reason_list root trace in
-  let op = match op with
-  | Some op -> Some (strip_root_from_message root op)
-  | None -> None
-  in
-  let extra = strip_root_from_extra root extra in
-  { error with messages; trace; op; extra }
-
-let strip_root_from_errors root errors =
-  (* TODO verify this is still worth doing, otherwise just List.map it *)
-  let ae = Array.of_list errors in
-  Array.iteri (fun i error ->
-    ae.(i) <- strip_root_from_error root error
-  ) ae;
-  Array.to_list ae
-
 
 let file_location_style text = (Tty.Underline Tty.Default, text)
 let default_style text = (Tty.Normal Tty.Default, text)
@@ -633,7 +589,7 @@ let unwrap_message = function
   | BlameM (loc, str) when loc <> Loc.none -> str, Some loc
   | BlameM (_, str) | CommentM str -> str, None
 
-let json_of_message_props message =
+let json_of_message_props ~strip_root message =
   let open Hh_json in
   let desc, loc = unwrap_message message in
   let type_ = match message with
@@ -644,26 +600,31 @@ let json_of_message_props message =
   match loc with
   | None -> deprecated_json_props_of_loc Loc.none
   | Some loc ->
+    let loc = match strip_root with
+    | Some root -> Reason.strip_root_from_loc root loc
+    | None -> loc
+    in
     ("loc", Reason.json_of_loc loc) ::
     deprecated_json_props_of_loc loc
 
-let json_of_message message =
-  Hh_json.JSON_Object (json_of_message_props message)
+let json_of_message ~strip_root message =
+  Hh_json.JSON_Object (json_of_message_props ~strip_root message)
 
-let json_of_message_with_context ~root ~stdin_file message =
+let json_of_message_with_context ~strip_root ~root ~stdin_file message =
   let open Hh_json in
   let _, loc = unwrap_message message in
   let code_line = match loc with
   | None -> None
   | Some loc ->
       let open Loc in
+      (* TODO: since filename isn't stripped anymore, ~root is unnecessary *)
       let filename = file_of_source loc.source in
       let line = loc.start.line - 1 in
       read_line_in_file ~root line filename stdin_file in
   let context = ("context", match code_line with
   | None -> JSON_Null
   | Some context -> JSON_String context) in
-  Hh_json.JSON_Object (context :: (json_of_message_props message))
+  Hh_json.JSON_Object (context :: (json_of_message_props ~strip_root message))
 
 let json_of_infos ~json_of_message infos =
   let open Hh_json in
@@ -711,29 +672,33 @@ let json_of_error_props ~json_of_message { kind; messages; op; trace; extra } =
   then props
   else ("extra", JSON_Array (List.map (json_of_info_tree ~json_of_message) extra)) :: props
 
-let json_of_error error =
+let json_of_error ~strip_root error =
+  let json_of_message = json_of_message ~strip_root in
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
-let json_of_error_with_context ~root ~stdin_file error =
-  let json_of_message = json_of_message_with_context ~root ~stdin_file in
+let json_of_error_with_context ~strip_root ~root ~stdin_file error =
+  let json_of_message =
+    json_of_message_with_context ~strip_root ~root ~stdin_file in
   Hh_json.JSON_Object (json_of_error_props ~json_of_message error)
 
-let json_of_errors errors =
-  Hh_json.JSON_Array (List.map json_of_error errors)
+let json_of_errors ~strip_root errors =
+  Hh_json.JSON_Array (List.map (json_of_error ~strip_root) errors)
 
-let json_of_errors_with_context ~root ~stdin_file errors =
-  Hh_json.JSON_Array (List.map (json_of_error_with_context ~root ~stdin_file) errors)
+(* TODO: can get rid of `~root` once `errors` is never stripped *)
+let json_of_errors_with_context ~strip_root ~root ~stdin_file errors =
+  let f = json_of_error_with_context ~strip_root ~root ~stdin_file in
+  Hh_json.JSON_Array (List.map f errors)
 
 let print_error_json
     ~strip_root ~root ?(pretty=false) ?(profiling=None) ?(stdin_file=None)
     oc el =
   let open Hh_json in
 
-  let el = if strip_root then strip_root_from_errors root el else el in
+  let strip_root = if strip_root then Some root else None in
 
   let props = [
     "flowVersion", JSON_String FlowConfig.version;
-    "errors", json_of_errors_with_context ~root ~stdin_file el;
+    "errors", json_of_errors_with_context ~strip_root ~root ~stdin_file el;
     "passed", JSON_Bool (el = []);
   ] in
   let props = match profiling with
@@ -765,28 +730,31 @@ let string_of_loc_deprecated loc = Loc.(
 
 let print_error_deprecated =
   let endline s = if s = "" then "" else s ^ "\n" in
-  let to_pp_string message =
+  let to_pp_string ~strip_root message =
     let loc, msg = to_pp message in
+    let loc = match strip_root with
+    | Some root -> Reason.strip_root_from_loc root loc
+    | None -> loc
+    in
     let loc_str = string_of_loc_deprecated loc in
     Printf.sprintf "%s%s" (endline loc_str) (endline msg)
   in
-  let to_string (error : error) : string =
+  let to_string ~strip_root (error : error) : string =
     let {messages; trace; _} = error in
     let messages = append_trace_reasons messages trace in
     let buf = Buffer.create 50 in
     (match messages with
     | [] -> assert false
     | message1 :: rest_of_error ->
-        Buffer.add_string buf (to_pp_string message1);
+        Buffer.add_string buf (to_pp_string ~strip_root message1);
         List.iter begin fun message ->
-          Buffer.add_string buf (to_pp_string message)
+          Buffer.add_string buf (to_pp_string ~strip_root message)
         end rest_of_error
     );
     Buffer.contents buf
   in
-  fun ~strip_root ~root oc el ->
-    let el = if strip_root then strip_root_from_errors root el else el in
-    let sl = List.map to_string el in
+  fun ~strip_root oc el ->
+    let sl = List.map (to_string ~strip_root) el in
     let sl = ListUtils.uniq (List.sort String.compare sl) in
     List.iter begin fun s ->
       output_string oc s;

@@ -73,8 +73,12 @@ end
 type stdin_file = (Path.t * string) option
 
 val deprecated_json_props_of_loc : Loc.t -> (string * Hh_json.json) list
-val json_of_errors : error list -> Hh_json.json
+val json_of_errors :
+  strip_root: Path.t option ->
+  error list ->
+  Hh_json.json
 val json_of_errors_with_context :
+  strip_root: Path.t option ->
   root: Path.t ->
   stdin_file: stdin_file ->
   error list ->
@@ -103,6 +107,5 @@ val print_error_summary:
 (* used by getDef for emacs/vim output - TODO remove or undeprecate *)
 val string_of_loc_deprecated: Loc.t -> string
 val print_error_deprecated:
-  strip_root: bool ->
-  root: Path.t ->
+  strip_root: Path.t option ->
   out_channel -> error list -> unit

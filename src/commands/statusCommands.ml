@@ -121,7 +121,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       begin if args.output_json then
         print_json stdout errors
       else if args.from = "vim" || args.from = "emacs" then
-        Errors.print_error_deprecated ~strip_root ~root:args.root stdout errors
+        let strip_root = if strip_root then Some args.root else None in
+        Errors.print_error_deprecated ~strip_root stdout errors
       else
         Errors.print_error_summary ~strip_root ~flags:error_flags ~root:args.root errors
       end;

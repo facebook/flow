@@ -156,9 +156,10 @@ let check_content ~filename ~content =
       Errors.(ErrorSet.add (parse_error_to_flow_error err) acc)
     ) Errors.ErrorSet.empty parse_errors
   in
+  let strip_root = Some root in
   errors
   |> Errors.ErrorSet.elements
-  |> Errors.json_of_errors_with_context ~root ~stdin_file
+  |> Errors.json_of_errors_with_context ~strip_root ~root ~stdin_file
   |> js_of_json
 
 let check filename =

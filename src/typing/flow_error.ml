@@ -952,9 +952,12 @@ end = struct
 
     (* catch no-loc errors early, before they get into error map *)
     Errors.(
-      if Loc.source (loc_of_error error) = None
-      then assert_false (spf "add_output: no source for error: %s"
-        (Hh_json.json_to_multiline (json_of_errors [error])))
+      if Loc.source (loc_of_error error) = None then
+        let strip_root = if Context.should_strip_root cx
+          then Some (Context.root cx)
+          else None in
+        assert_false (spf "add_output: no source for error: %s"
+        (Hh_json.json_to_multiline (json_of_errors ~strip_root [error])))
     );
 
     Context.add_error cx error

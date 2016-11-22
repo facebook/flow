@@ -1,0 +1,14 @@
+from emacs:
+File "test.js", line 3, characters 2-4
+number
+This type is incompatible with
+File "test.js", line 3, characters 7-12
+string
+
+from vim:
+File "test.js", line 3, characters 2-4
+number
+This type is incompatible with
+File "test.js", line 3, characters 7-12
+string
+
