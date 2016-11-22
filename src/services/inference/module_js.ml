@@ -19,7 +19,6 @@
 open Utils_js
 
 module Ast = Spider_monkey_ast
-module Flow = Flow_js
 module ErrorSet = Errors.ErrorSet
 module FlowError = Flow_error
 

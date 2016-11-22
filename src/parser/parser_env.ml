@@ -14,7 +14,6 @@ module Lex_result = Lexer_flow.Lex_result
 open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
-module SMap = Map.Make(String)
 
 module Lex_mode = struct
   type t =
