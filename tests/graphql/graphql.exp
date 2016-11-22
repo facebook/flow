@@ -58,5 +58,33 @@ fragments-on-composite-types.js:66
  66:     ... on String {
          ^ GraphQL inline fragment. Fragment cannot condition on non composite type `String`
 
+scalar-leafs.js:13
+ 13:     human # error
+         ^^^^^ GraphQL field `human`. Field of object type `Human` requires selection
 
-Found 15 errors
+scalar-leafs.js:20
+ 20:     human { pets } # error
+                 ^^^^ GraphQL field `pets`. Field of object type `Pet` requires selection
+
+scalar-leafs.js:34
+ 34:     barks { sinceWhen } # error
+               ^^^^^^^^^^^^^ Selection set. Cannot select on non-object type `Boolean`
+
+scalar-leafs.js:41
+ 41:     furColor { inHexdec } # error
+                  ^^^^^^^^^^^^ Selection set. Cannot select on non-object type `FurColor`
+
+scalar-leafs.js:48
+ 48:     doesKnowCommand(dogCommand: SIT) { sinceWhen } # error
+                                          ^^^^^^^^^^^^^ Selection set. Cannot select on non-object type `Boolean`
+
+scalar-leafs.js:55
+ 55:     name @include(if: true) { isAlsoHumanName } # error
+                                 ^^^^^^^^^^^^^^^^^^^ Selection set. Cannot select on non-object type `String`
+
+scalar-leafs.js:62
+ 62:     doesKnowCommand(dogCommand: SIT) @include(if: true) { sinceWhen } # error
+                                                             ^^^^^^^^^^^^^ Selection set. Cannot select on non-object type `Boolean`
+
+
+Found 22 errors
