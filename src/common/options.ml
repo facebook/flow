@@ -19,6 +19,10 @@ type esproposal_feature_mode =
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
 
+type module_system =
+  | Node
+  | Haste
+
 type t = {
   opt_all : bool;
   opt_check_mode: bool;
@@ -40,7 +44,7 @@ type t = {
   opt_libs: Path.t list;
   opt_log_file: Path.t;
   opt_max_workers: int;
-  opt_module: string;
+  opt_module: module_system;
   opt_module_file_exts: SSet.t;
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_module_resource_exts: SSet.t;

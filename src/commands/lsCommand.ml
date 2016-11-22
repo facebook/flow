@@ -69,8 +69,8 @@ let get_ls_files ~subdir ~root ~strip_root ~ignore_flag ~include_flag =
   in
 
   let opt_module = FlowConfig.(match flowconfig.options.Opts.moduleSystem with
-  | Opts.Node -> "node"
-  | Opts.Haste -> "haste") in
+  | Opts.Node -> Options.Node
+  | Opts.Haste -> Options.Haste) in
 
   let opt_ignores = ignores_of_arg
     root
