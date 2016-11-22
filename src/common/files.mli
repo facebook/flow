@@ -39,6 +39,7 @@ val wanted:
 
 (* given a root, make a next_files function for MultiWorker *)
 val make_next_files:
+  all: bool ->
   subdir: Path.t option ->
   options: Options.t ->
   libs: SSet.t ->

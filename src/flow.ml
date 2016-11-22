@@ -20,25 +20,25 @@ end = struct
   let commands = [
     AstCommand.command;
     AutocompleteCommand.command;
-    ServerCommands.CheckCommand.command;
     CheckContentsCommand.command;
+    ConfigCommands.Init.command;
     ConvertCommand.command;
     CoverageCommand.command;
+    DumpTypesCommand.command;
     FindModuleCommand.command;
     ForceRecheckCommand.command;
     GenFlowFilesCommand.command;
     GetDefCommand.command;
     GetImportersCommand.command;
     GetImportsCommand.command;
-    ConfigCommands.Init.command;
     LsCommand.command;
     PortCommand.command;
+    ServerCommands.CheckCommand.command;
     ServerCommands.ServerCommand.command;
     ServerCommands.StartCommand.command;
     StopCommand.command;
     SuggestCommand.command;
     TypeAtPosCommand.command;
-    DumpTypesCommand.command;
     VersionCommand.command;
   ]
 

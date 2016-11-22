@@ -261,14 +261,22 @@ let wanted ~options lib_fileset =
 
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
- * given FlowConfig root. Also takes an optional `subdir` argument to restrict
- * the set of files to things that sit under a given sub-directory of root. If
- * `subdir` is none, all JS files under the root will be returned.
+ * given FlowConfig root. This means all the files under the root and all the
+ * included files, minus the ignored files and the libs.
+ *
+ * If `all` is true, ignored files and libs are also returned.
+ * If subdir is set, then we return the subset of files under subdir
  *)
-let make_next_files ~subdir ~options ~libs =
+let make_next_files ~all ~subdir ~options ~libs =
   let root = Options.root options in
-  let filter = wanted ~options libs in
+  let filter = if all then fun _ -> true else wanted ~options libs in
   let others = Path_matcher.stems (Options.includes options) in
+
+  (* The directories from which we start our search *)
+  let starting_points = match subdir with
+  | None -> root::others
+  | Some subdir -> [subdir] in
+
   let root_str= Path.to_string root in
   let realpath_filter path = is_valid_path ~options path && filter path in
   let path_filter =
@@ -279,18 +287,24 @@ let make_next_files ~subdir ~options ~libs =
     match subdir with
     | None ->
       (fun path ->
-        (String_utils.string_starts_with path root_str || is_included options path)
+        (String_utils.string_starts_with path root_str
+          || is_included options path)
         && realpath_filter path
       )
     | Some subdir ->
+      (* The subdir might contain symlinks outside of the subdir. To prevent
+       * these files from being returned, we modify the path filter to check
+       * that the realpath starts with the subdir *)
       let subdir_str = Path.to_string subdir in
       (fun path ->
-        (String_utils.string_starts_with path subdir_str)
+        String_utils.string_starts_with path subdir_str
+        && (String_utils.string_starts_with path root_str
+            || is_included options path)
         && realpath_filter path
       )
   in
   make_next_files_following_symlinks
-    ~path_filter ~realpath_filter ~error_filter:filter (root::others)
+    ~path_filter ~realpath_filter ~error_filter:filter starting_points
 
 let is_windows_root root =
   Sys.win32 &&

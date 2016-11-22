@@ -13,6 +13,7 @@ type AssertionMethod =
   | 'newErrors'
   | 'stdout'
   | 'stderr'
+  | 'sortedStdout'
   | 'exitCodes'
   | 'serverRunning';
 
