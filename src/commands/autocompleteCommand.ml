@@ -90,9 +90,7 @@ let main option_values root json pretty strip_root args () =
   ) in
   let flowconfig = FlowConfig.get (Server_files_js.config_file root) in
   let strip_root = strip_root || FlowConfig.(flowconfig.options.Opts.strip_root) in
-  let loc_preprocessor = if strip_root
-    then Reason.strip_root_from_loc root
-    else fun loc -> loc in
+  let strip_root = if strip_root then Some root else None in
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc (ServerProt.AUTOCOMPLETE file);
   let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
@@ -107,7 +105,7 @@ let main option_values root json pretty strip_root args () =
       ]
     | OK completions ->
       let results = List.map
-        (AutocompleteService_js.autocomplete_result_to_json loc_preprocessor)
+        (AutocompleteService_js.autocomplete_result_to_json ~strip_root)
         completions
       in
       JSON_Object ["result", JSON_Array results]

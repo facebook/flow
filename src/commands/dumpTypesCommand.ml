@@ -40,25 +40,24 @@ let spec = {
   )
 }
 
-let handle_response types ~json ~pretty strip =
+let handle_response types ~json ~pretty ~strip_root =
   if json
   then (
     let open Hh_json in
     let open Reason in
     let types_json = types |> List.map (fun (loc, _ctor, str, raw_t, reasons) ->
-      let loc = strip loc in
       let json_assoc = (
         ("type", JSON_String str) ::
         ("reasons", JSON_Array (List.map (fun r ->
-          let r_loc = strip (loc_of_reason r) in
+          let r_loc = loc_of_reason r in
           JSON_Object (
             ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
-            ("loc", json_of_loc r_loc) ::
-            (Errors.deprecated_json_props_of_loc r_loc)
+            ("loc", json_of_loc ~strip_root r_loc) ::
+            (Errors.deprecated_json_props_of_loc ~strip_root r_loc)
           )
         ) reasons)) ::
-        ("loc", json_of_loc loc) ::
-        (Errors.deprecated_json_props_of_loc loc)
+        ("loc", json_of_loc ~strip_root loc) ::
+        (Errors.deprecated_json_props_of_loc ~strip_root loc)
       ) in
       let json_assoc = match raw_t with
         | None -> json_assoc
@@ -70,29 +69,27 @@ let handle_response types ~json ~pretty strip =
   ) else (
     let out = types
       |> List.map (fun (loc, _, str, _, _) ->
-        let loc = strip loc in
-        (spf "%s: %s" (Reason.string_of_loc loc) str)
+        (spf "%s: %s" (Reason.string_of_loc ~strip_root loc) str)
       )
       |> String.concat "\n"
     in
     print_endline out
   )
 
-let handle_error (loc, err) ~json ~pretty strip =
-  let loc = strip loc in
+let handle_error (loc, err) ~json ~pretty ~strip_root =
   if json
   then (
     let open Hh_json in
     let error_json = JSON_Object (
       ("error", JSON_String err) ::
-      ("loc", Reason.json_of_loc loc) ::
-      (Errors.deprecated_json_props_of_loc loc)
+      ("loc", Reason.json_of_loc ~strip_root loc) ::
+      (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     prerr_endline (json_to_string ~pretty error_json);
     (* also output an empty array on stdout, for JSON parsers *)
-    handle_response [] ~json ~pretty strip
+    handle_response [] ~json ~pretty ~strip_root
   ) else (
-    let loc = Reason.string_of_loc loc in
+    let loc = Reason.string_of_loc ~strip_root loc in
     prerr_endlinef "%s:\n%s" loc err
   )
 
@@ -104,14 +101,17 @@ let main option_values root json pretty strip_root path include_raw filename () 
     | Some root -> Some root
     | None -> ServerProt.path_of_input file
   ) in
+
+  let strip_root = if strip_root then Some root else None in
+
   let ic, oc = connect option_values root in
   ServerProt.cmd_to_channel oc
-    (ServerProt.DUMP_TYPES (file, include_raw, if strip_root then Some root else None));
+    (ServerProt.DUMP_TYPES (file, include_raw, strip_root));
 
   match (Timeout.input_value ic : ServerProt.dump_types_response) with
   | Err err ->
-      handle_error err ~json ~pretty (relativize strip_root root)
+      handle_error err ~json ~pretty ~strip_root
   | OK resp ->
-      handle_response resp ~json ~pretty (relativize strip_root root)
+      handle_response resp ~json ~pretty ~strip_root
 
 let command = CommandSpec.command spec main

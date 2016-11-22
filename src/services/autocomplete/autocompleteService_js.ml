@@ -31,7 +31,7 @@ type complete_autocomplete_result = {
     func_details : func_details_result option;
   }
 
-let autocomplete_result_to_json loc_preprocessor result =
+let autocomplete_result_to_json ~strip_root result =
   let func_param_to_json param =
     Hh_json.JSON_Object [
       "name", Hh_json.JSON_String param.param_name;
@@ -46,14 +46,13 @@ let autocomplete_result_to_json loc_preprocessor result =
            ]
      | None -> Hh_json.JSON_Null
   in
-  let loc = loc_preprocessor result.res_loc in
   let name = result.res_name in
   let ty = result.res_ty in
   Hh_json.JSON_Object (
     ("name", Hh_json.JSON_String name) ::
     ("type", Hh_json.JSON_String ty) ::
     ("func_details", func_details_to_json result.func_details) ::
-    (Errors.deprecated_json_props_of_loc loc)
+    (Errors.deprecated_json_props_of_loc ~strip_root result.res_loc)
   )
 
 let print_type cx type_ =
@@ -131,7 +130,9 @@ let autocomplete_member
 
   let json_data_list = [
     "ac_name", JSON_String ac_name;
-    "ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ac_loc);
+    "ac_loc",
+      (* don't need to strip root for logging *)
+      JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc);
     "loc", Reason.json_of_loc ac_loc;
     "docblock", Docblock.json_of_docblock docblock;
   ] in

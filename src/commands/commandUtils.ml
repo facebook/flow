@@ -249,11 +249,6 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
   |> libs_flag
 )
 
-(* relativize a loc's source path to a given root whenever strip_root is set *)
-let relativize strip_root root loc =
-  if not strip_root then loc
-  else Reason.strip_root_from_loc root loc
-
 type command_params = {
   from               : string;
   retries            : int;
@@ -447,8 +442,12 @@ let get_file_from_filename_or_stdin path = function
       ) in
       ServerProt.FileContent (filename, contents)
 
-let range_string_of_loc loc = Loc.(
-  let file = match loc.source with
+let range_string_of_loc ~strip_root loc = Loc.(
+  let source = match strip_root with
+  | Some root -> Reason.strip_root_from_source root loc.source
+  | None -> loc.source
+  in
+  let file = match source with
   | Some file -> string_of_filename file
   | None -> ""
   in

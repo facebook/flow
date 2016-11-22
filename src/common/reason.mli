@@ -209,5 +209,4 @@ val update_origin_of_reason: reason option -> reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string
 
-val strip_root_from_loc: Path.t -> Loc.t -> Loc.t
 val strip_root_from_source: Path.t -> Loc.filename option -> Loc.filename option

@@ -56,12 +56,13 @@ let main option_values root json pretty strip_root modules () =
             if strip_root then Files.relative_path (Path.to_string root) f
             else f
         in
-        let loc = relativize strip_root root loc in
         (req, loc)::assoc
       ) requires [] in
       SMap.add module_name requirements map
     end
     requirements_map SMap.empty in
+
+  let strip_root = if strip_root then Some root else None in
   if json || pretty
   then (
     let open Hh_json in
@@ -76,8 +77,8 @@ let main option_values root json pretty strip_root modules () =
       let requirements = List.map (fun (req, loc) ->
         JSON_Object (
           ("import", JSON_String req) ::
-          ("loc", Reason.json_of_loc loc) ::
-          (Errors.deprecated_json_props_of_loc loc)
+          ("loc", Reason.json_of_loc ~strip_root loc) ::
+          (Errors.deprecated_json_props_of_loc ~strip_root loc)
         )
       ) assoc in
       let json = JSON_Object [
@@ -95,7 +96,8 @@ let main option_values root json pretty strip_root modules () =
         let requirements = SMap.find_unsafe module_name requirements_map in
         Printf.printf "Imports for module '%s':\n" module_name;
         List.iter (fun (req, loc) ->
-          Printf.printf "\t%s@%s\n" req (range_string_of_loc loc)
+          let loc_str = range_string_of_loc ~strip_root loc in
+          Printf.printf "\t%s@%s\n" req loc_str
         ) requirements
       end else if (SSet.mem module_name non_flow)
       then

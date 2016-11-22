@@ -286,12 +286,6 @@ let string_of_loc ?(strip_root=None) loc = Loc.(
     spf "%s:%s" file (string_of_loc_pos loc)
 )
 
-(* helper: strip root from positions *)
-let strip_root_from_loc root loc = Loc.(
-  let source = strip_root_from_source root loc.source in
-  { loc with source }
-)
-
 let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
   JSON_Object [
     "source", (

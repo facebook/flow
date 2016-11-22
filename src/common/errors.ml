@@ -429,8 +429,12 @@ let print_error_color
   Tty.cprint ~out_channel ~color_mode:color to_print
 
 (* TODO: deprecate this in favor of Reason.json_of_loc *)
-let deprecated_json_props_of_loc loc = Loc.(
-  let file = match loc.source with
+let deprecated_json_props_of_loc ~strip_root loc = Loc.(
+  let source = match strip_root with
+  | Some root -> Reason.strip_root_from_source root loc.source
+  | None -> loc.source
+  in
+  let file = match source with
   | Some x -> Hh_json.JSON_String (string_of_filename x)
   | None -> Hh_json.JSON_String "" (* TODO: return Hh_json.JSON_Null *)
   in
@@ -594,14 +598,10 @@ let json_of_message_props ~strip_root message =
   ("descr", JSON_String desc) ::
   ("type", JSON_String type_) ::
   match loc with
-  | None -> deprecated_json_props_of_loc Loc.none
+  | None -> deprecated_json_props_of_loc ~strip_root Loc.none
   | Some loc ->
-    let loc = match strip_root with
-    | Some root -> Reason.strip_root_from_loc root loc
-    | None -> loc
-    in
-    ("loc", Reason.json_of_loc loc) ::
-    deprecated_json_props_of_loc loc
+    ("loc", Reason.json_of_loc ~strip_root loc) ::
+    deprecated_json_props_of_loc ~strip_root loc
 
 let json_of_message ~strip_root message =
   Hh_json.JSON_Object (json_of_message_props ~strip_root message)
@@ -700,8 +700,12 @@ let print_error_json
   flush oc
 
 (* for vim and emacs plugins *)
-let string_of_loc_deprecated loc = Loc.(
-  match loc.source with
+let string_of_loc_deprecated ~strip_root loc = Loc.(
+  let source = match strip_root with
+  | Some root -> Reason.strip_root_from_source root loc.source
+  | None -> loc.source
+  in
+  match source with
     | None
     | Some Builtins -> ""
     | Some LibFile file
@@ -723,11 +727,7 @@ let print_error_deprecated =
   let endline s = if s = "" then "" else s ^ "\n" in
   let to_pp_string ~strip_root message =
     let loc, msg = to_pp message in
-    let loc = match strip_root with
-    | Some root -> Reason.strip_root_from_loc root loc
-    | None -> loc
-    in
-    let loc_str = string_of_loc_deprecated loc in
+    let loc_str = string_of_loc_deprecated ~strip_root loc in
     Printf.sprintf "%s%s" (endline loc_str) (endline msg)
   in
   let to_string ~strip_root (error : error) : string =
