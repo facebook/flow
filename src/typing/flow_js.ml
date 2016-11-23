@@ -3198,9 +3198,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* If both are dictionaries, ensure the keys and values are compatible
          with each other. *)
       (match ldict, udict with
-        | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
-          rec_unify cx trace lk uk;
-          rec_unify cx trace lv uv
+        | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
+          Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
+          rec_flow_p cx trace ~use_op lreason ureason (Computed uk)
+            (Field (lk, lpolarity), Field (uk, upolarity));
+          rec_flow_p cx trace ~use_op lreason ureason (Computed uv)
+            (Field (lv, lpolarity), Field (uv, upolarity))
         | _ -> ());
 
       (* Properties in u must either exist in l, or match l's indexer. *)
