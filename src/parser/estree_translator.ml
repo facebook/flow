@@ -452,12 +452,14 @@ end with type t = Impl.t) = struct
     | loc, New _new -> New.(
         node "NewExpression" loc [|
           "callee", expression _new.callee;
+          "typeParameters", option type_parameter_instantiation _new.typeParameters;
           "arguments", array_of_list expression_or_spread _new.arguments;
         |]
       )
     | loc, Call call -> Call.(
         node "CallExpression" loc [|
           "callee", expression call.callee;
+          "typeParameters", option type_parameter_instantiation call.typeParameters;
           "arguments", array_of_list expression_or_spread call.arguments;
         |]
       )

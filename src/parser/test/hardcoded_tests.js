@@ -5001,6 +5001,62 @@ module.exports = {
           'message': 'Invalid left-hand side in for-of'
         }
       }
+    },
+    'Typeapp expressions': {
+      'f<T>()': {
+        'errors': [],
+        'body.0.expression': {
+          'type': 'CallExpression',
+          'loc.start.column': 0,
+          'loc.end.column': 6,
+          'callee': {
+            'type': 'Identifier',
+            'loc.start.column': 0,
+            'loc.end.column': 1,
+          },
+          'typeParameters': {
+            'type': 'TypeParameterInstantiation',
+            'loc.start.column': 1,
+            'loc.end.column': 4,
+          }
+        }
+      },
+      'new C<T>()': {
+        'errors': [],
+        'body.0.expression': {
+          'type': 'NewExpression',
+          'loc.start.column': 0,
+          'loc.end.column': 10,
+          'callee': {
+            'type': 'Identifier',
+            'loc.start.column': 4,
+            'loc.end.column': 5,
+          },
+          'typeParameters': {
+            'type': 'TypeParameterInstantiation',
+            'loc.start.column': 5,
+            'loc.end.column': 8,
+          }
+        }
+      },
+      'new C<T>': {
+        'errors': [],
+        'body.0.expression': {
+          'type': 'NewExpression',
+          'loc.start.column': 0,
+          'loc.end.column': 8,
+          'callee': {
+            'type': 'Identifier',
+            'loc.start.column': 4,
+            'loc.end.column': 5,
+          },
+          'typeParameters': {
+            'type': 'TypeParameterInstantiation',
+            'loc.start.column': 5,
+            'loc.end.column': 8,
+          }
+        }
+      }
     }
   }
 };

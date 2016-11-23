@@ -307,13 +307,13 @@ module rec TypeTerm : sig
     | ApplyT of reason * t * funtype
     | BindT of reason * funtype
     | CallT of reason * funtype
-    | MethodT of (* call *) reason * (* lookup *) reason * propref * funtype
+    | MethodT of (* call *) reason * (* lookup *) reason * propref * t list option * funtype
     | SetPropT of reason * propref * t
     | GetPropT of reason * propref * t
     | TestPropT of reason * propref * t
     | SetElemT of reason * t * t
     | GetElemT of reason * t * t
-    | CallElemT of (* call *) reason * (* lookup *) reason * t * funtype
+    | CallElemT of (* call *) reason * (* lookup *) reason * t * t list option * funtype
     | GetStaticsT of reason * t_out
 
     (* repositioning *)
@@ -671,7 +671,7 @@ module rec TypeTerm : sig
   and elem_action =
     | ReadElem of t
     | WriteElem of t
-    | CallElem of reason (* call *) * funtype
+    | CallElem of reason (* call *) * t list option * funtype
 
   and propref =
     | Named of reason * name
@@ -1497,7 +1497,7 @@ and reason_of_use_t = function
   | AssertImportIsValueT (reason, _) -> reason
   | BecomeT (reason, _) -> reason
   | BindT (reason, _) -> reason
-  | CallElemT (reason, _, _, _) -> reason
+  | CallElemT (reason, _, _, _, _) -> reason
   | CallLatentPredT (reason, _, _, _, _) -> reason
   | CallOpenPredT (reason, _, _, _, _) -> reason
   | CallT (reason, _) -> reason
@@ -1529,7 +1529,7 @@ and reason_of_use_t = function
   | LookupT(reason, _, _, _, _) -> reason
   | MakeExactT (reason, _) -> reason
   | MapTypeT (reason, _, _, _) -> reason
-  | MethodT (reason,_,_,_) -> reason
+  | MethodT (reason, _, _, _, _) -> reason
   | MixinT (reason, _) -> reason
   | NotT (reason, _) -> reason
   | ObjAssignT (reason, _, _, _, _) -> reason
@@ -1648,8 +1648,8 @@ and mod_reason_of_use_t f = function
   | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
   | BecomeT (reason, t) -> BecomeT (f reason, t)
   | BindT (reason, ft) -> BindT (f reason, ft)
-  | CallElemT (reason_call, reason_lookup, t, ft) ->
-      CallElemT (f reason_call, reason_lookup, t, ft)
+  | CallElemT (reason_call, reason_lookup, t, targs, ft) ->
+      CallElemT (f reason_call, reason_lookup, t, targs, ft)
   | CallLatentPredT (reason, b, k, l, t) ->
       CallLatentPredT (f reason, b, k, l, t)
   | CallOpenPredT (reason, sense, key, l, t) ->
@@ -1688,8 +1688,8 @@ and mod_reason_of_use_t f = function
   | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
   | MakeExactT (reason, t) -> MakeExactT (f reason, t)
   | MapTypeT (reason, kind, t, k) -> MapTypeT (f reason, kind, t, k)
-  | MethodT (reason_call, reason_lookup, name, ft) ->
-      MethodT (f reason_call, reason_lookup, name, ft)
+  | MethodT (reason_call, reason_lookup, propref, targs, ft) ->
+      MethodT (f reason_call, reason_lookup, propref, targs, ft)
   | MixinT (reason, inst) -> MixinT (f reason, inst)
   | NotT (reason, t) -> NotT (f reason, t)
   | ObjAssignT (reason, t, t2, filter, resolve) ->

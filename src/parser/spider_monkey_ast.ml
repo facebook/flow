@@ -682,12 +682,14 @@ and Expression : sig
   module New : sig
     type t = {
       callee: Expression.t;
+      typeParameters: Type.ParameterInstantiation.t option;
       arguments: expression_or_spread list;
     }
   end
   module Call : sig
     type t = {
       callee: Expression.t;
+      typeParameters: Type.ParameterInstantiation.t option;
       arguments: expression_or_spread list;
     }
   end

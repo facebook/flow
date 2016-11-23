@@ -361,8 +361,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "funType", json_of_funtype json_cx funtype
     ]
 
-  | MethodT (_, _, propref, funtype) -> [
+  | MethodT (_, _, propref, targs, funtype) -> [
       "propRef", json_of_propref json_cx propref;
+      "typeArgs", (match targs with
+        | None -> JSON_Null
+        | Some ts -> JSON_Array (List.map (_json_of_t json_cx) ts));
       "funType", json_of_funtype json_cx funtype
     ]
 
@@ -388,8 +391,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "elemType", _json_of_t json_cx elemt
     ]
 
-  | CallElemT (_, _, indext, funtype) -> [
+  | CallElemT (_, _, indext, targs, funtype) -> [
       "indexType", _json_of_t json_cx indext;
+      "typeArgs", (match targs with
+        | None -> JSON_Null
+        | Some ts -> JSON_Array (List.map (_json_of_t json_cx) ts));
       "funType", json_of_funtype json_cx funtype
     ]
 
@@ -554,7 +560,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       match action with
       | ReadElem t -> "readElem", _json_of_t json_cx t
       | WriteElem t -> "writeElem", _json_of_t json_cx t
-      | CallElem (_, funtype) -> "callElem", json_of_funtype json_cx funtype
+      | CallElem (_, _, funtype) -> "callElem", json_of_funtype json_cx funtype
     ]
 
   | MakeExactT (_, cont) -> _json_of_cont json_cx cont
@@ -1411,7 +1417,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertImportIsValueT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
-  | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t
+  | CallElemT (_, _, ix, _, _) -> p ~extra:(kid ix) t
   | CallT (_,{params_tlist;return_t;this_t;_}) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)
@@ -1457,7 +1463,7 @@ and dump_use_t_ (depth, tvars) cx t =
       (lookup_action action)) t
   | MakeExactT _ -> p t
   | MapTypeT _ -> p t
-  | MethodT (_, _, prop, _) -> p ~extra:(spf "(%s)" (propref prop)) t
+  | MethodT (_, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | ObjAssignT _ -> p t

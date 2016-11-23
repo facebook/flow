@@ -61,7 +61,7 @@ val in_loop : env -> bool
 val in_switch : env -> bool
 val in_function : env -> bool
 val allow_yield : env -> bool
-val allow_await: env -> bool
+val allow_await : env -> bool
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
