@@ -87,7 +87,7 @@ NATIVE_C_FILES=\
   hack/utils/win32_support.c\
   hack/hhi/hhi_win32res_stubs.c\
   src/embedded/flowlib_elf.c\
-  $(wildcard src/third-party/lz4/*.c)
+  $(sort $(wildcard src/third-party/lz4/*.c))
 
 OCAML_LIBRARIES=\
   unix\
