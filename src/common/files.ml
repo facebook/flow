@@ -253,7 +253,8 @@ let is_ignored options =
     List.exists (fun rx -> Str.string_match rx path 0) list
 
 (* true if a file path matches an [include] path in config *)
-let is_included options f = Path_matcher.matches (Options.includes options) f
+let is_included options f =
+  Path_matcher.matches (Options.includes options) f
 
 let wanted ~options lib_fileset =
   let is_ignored_ = is_ignored options in

@@ -111,9 +111,9 @@ export class TestBuilder {
     } else {
       await exec(
         format(
-          "%s init --options 'all=true;temp_dir=%s' %s",
+          '%s init --options "all=true;temp_dir=%s" %s',
           this.bin,
-          this.tmpDir,
+          this.normalizeForFlowconfig(this.tmpDir),
           this.dir,
         ),
         {cwd: __dirname},
