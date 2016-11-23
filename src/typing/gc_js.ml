@@ -105,12 +105,16 @@ let rec gc cx state = function
       gc_funtype cx state ft;
       gc cx state prototype;
       gc cx state static  | MixedT _ -> ()
-  | GraphqlSchemaT _
-  | GraphqlOpT _
-  | GraphqlFragT _
-  | GraphqlSelectionT _
-  | GraphqlFieldT _
-      -> () (* TODO *)
+  | GraphqlSchemaT _ -> ()
+  | GraphqlOpT (_, { Graphql.op_schema = _; op_type = _; op_selection }) ->
+      gc cx state op_selection
+  | GraphqlFragT (_, { Graphql.frag_schema = _; frag_type = _; frag_selection })
+      -> gc cx state frag_selection
+  | GraphqlSelectionT (_, { Graphql.s_schema = _; s_on = _; s_selections }) ->
+      List.iter (fun { Graphql.sf_name = _; sf_type = _; sf_selection } ->
+        Option.iter sf_selection (gc cx state)
+      ) s_selections
+  | GraphqlFieldT _ -> ()
   | IdxWrapper (_, t) -> gc cx state t
   | InstanceT(_, static, super, instance) ->
       instance.type_args |> SMap.iter (fun _ -> gc cx state);
@@ -231,12 +235,21 @@ and gc_use cx state = function
   | GetKeysT (_, t) -> gc cx state t
   | GetPropT(_, _, t) -> gc cx state t
   | GetStaticsT(_, t) -> gc cx state t
-  | GraphqlMkOpT _
-  | GraphqlMkFragT _
-  | GraphqlMkInlineFragT _
-  | GraphqlSelectT _
-  | GraphqlSpreadT _
-      -> () (* TODO *)
+  | GraphqlMkOpT (_, _, (in_, out), t)
+  | GraphqlMkFragT (_, _, (in_, out), t)
+  | GraphqlMkInlineFragT (_, _, (in_, out), t)
+    ->
+      gc cx state in_;
+      gc cx state out;
+      gc cx state t
+  | GraphqlSelectT (_, st, t) ->
+      (match st with
+      | Graphql.SelectField (_, f) ->
+          Option.iter f (fun (in_, out) -> gc cx state in_; gc cx state out)
+      | Graphql.SelectFrag t -> gc cx state t
+      );
+      gc cx state t
+  | GraphqlSpreadT (_, t) -> gc cx state t
   | GuardT (pred, t1, t2) ->
       gc_pred cx state pred;
       gc cx state t1;
