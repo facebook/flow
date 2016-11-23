@@ -1,3 +1,28 @@
+###v0.36.0
+
+Likely to cause new Flow errors:
+* We've been working on improving error messages, which often involves moving the errors closer to where the error is likely triggered. If you use error suppressing comments, some of your comments now appear unused, since the error moved.
+
+New Features:
+* Lots of small improvements to error messages
+* `flow ls --all` will output libs and ignored files too
+* `flow ls --explain` will explain why Flow cares or doesn't care about a file
+* `flow ls dirA/ dirB file.js` will only list files under `dirA/`, files under `dirB/`, and `file.js`
+
+Notable bug fixes:
+* Calling a method through computed properties (`obj['method']()`) is now supported
+* The client no longer consumes retries and waits patiently when the server is busy garbage collecting
+* Errors in lib files with `--strip-root` set now show context again
+
+Misc:
+* Currently `flow coverage` and `flow check-contents` default to treating all input as if it has the `@flow` pragma. We will change this in a future version. To make this transition easier, both commands now have the flags `--all` and `--respect-pragma`, where `--all` is the current behavior and `--respect-pragma` is the future behavior.
+* Better error messages for unsupported destructuring.
+* Builtin libdef improvements
+* Fixed a TDZ issue which would allow `let x = x;`
+
+Parser:
+* Fixed a bug where `[...rest, 123]` was incorrectly parsed
+
 ###v0.35.0
 
 Likely to cause new Flow errors:
