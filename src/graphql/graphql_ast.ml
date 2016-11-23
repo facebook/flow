@@ -15,16 +15,19 @@ and Definition : sig
     | UnionType of UnionTypeDef.t
     | EnumType of EnumTypeDef.t
     | InputObjectType of InputObjectTypeDef.t
+    | TypeExtension of TypeExtensionDef.t
+    | Directive of DirectiveDef.t
     | Schema of SchemaDef.t
 end = Definition
 
 and OperationDef : sig
   type t = {
-    operation: OperationType.op;
+    operation: OperationType.t;
     name: Name.t option;
     selectionSet: SelectionSet.t;
     variableDefs: VariableDef.t list option;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = OperationDef
 
@@ -65,6 +68,7 @@ and ObjectTypeDef : sig
     fields: FieldDef.t list;
     interfaces: Name.t list;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = ObjectTypeDef
 
@@ -74,6 +78,7 @@ and FieldDef : sig
     type_: Type.t;
     args: InputValueDef.t list;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = FieldDef
 
@@ -92,6 +97,7 @@ and InterfaceTypeDef : sig
     name: Name.t;
     fields: FieldDef.t list;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = InterfaceTypeDef
 
@@ -100,6 +106,7 @@ and UnionTypeDef : sig
     name: Name.t;
     types: Name.t list;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = UnionTypeDef
 
@@ -108,6 +115,7 @@ and EnumTypeDef : sig
     name: Name.t;
     values: EnumValueDef.t list;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = EnumTypeDef
 
@@ -124,6 +132,7 @@ and InputObjectTypeDef : sig
     name: Name.t;
     fields: InputValueDef.t list;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = InputObjectTypeDef
 
@@ -134,6 +143,7 @@ and Value : sig
     | FloatValue of Loc.t * string
     | StringValue of Loc.t * string
     | BooleanValue of Loc.t * bool
+    | NullValue of Loc.t
     | EnumValue of Loc.t * string
     | ListValue of Loc.t * Value.t list
     | ObjectValue of ObjectValue.t
@@ -164,19 +174,41 @@ end = Directive
 
 and SchemaDef : sig
   type t = {
-    operationTypes: OperationType.t list;
+    operationTypes: OperationTypeDef.t list;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = SchemaDef
 
-and OperationType : sig
-  type op = Query | Mutation | Subscription
-
+and OperationTypeDef : sig
   type t = {
-    operation: op;
+    operation: OperationType.t;
     type_: Name.t;
+    loc: Loc.t;
   }
+end = OperationTypeDef
+
+and OperationType : sig
+  type t' = Query | Mutation | Subscription
+
+  type t = Loc.t option * t'
 end = OperationType
+
+and TypeExtensionDef : sig
+  type t = {
+    definition: ObjectTypeDef.t;
+    loc: Loc.t;
+  }
+end = TypeExtensionDef
+
+and DirectiveDef : sig
+  type t = {
+    name: Name.t;
+    arguments: InputValueDef.t list;
+    locations: Name.t list;
+    loc: Loc.t;
+  }
+end = DirectiveDef
 
 and Name : sig
   type t = Loc.t * string
@@ -211,6 +243,7 @@ and Field : sig
     args: Argument.t list option;
     selectionSet: SelectionSet.t option;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = Field
 
@@ -226,6 +259,7 @@ and FragmentSpread : sig
   type t = {
     name: Name.t;
     directives: Directive.t list option;
+    loc: Loc.t;
   }
 end = FragmentSpread
 

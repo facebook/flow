@@ -25,7 +25,9 @@ let symbol_loc () =
 %token <string> FLOAT
 %token <string> STRING
 
+%token DIRECTIVE
 %token ENUM
+%token EXTEND
 %token FALSE
 %token FRAGMENT
 %token IMPLEMENTS
@@ -65,11 +67,12 @@ definitions:
 definition:
   | selection_set {
       Definition.Operation { OperationDef.
-        operation = OperationType.Query;
+        operation = (None, OperationType.Query);
         name = None;
         directives = None;
         selectionSet = $1;
         variableDefs = None;
+        loc = symbol_loc ();
       }
     }
   | operation_type name_opt var_defs directives_opt selection_set {
@@ -79,6 +82,7 @@ definition:
         directives = $4;
         selectionSet = $5;
         variableDefs = $3;
+        loc = symbol_loc ();
       }
     }
   | FRAGMENT fragment_name_opt ON name directives_opt selection_set {
@@ -97,19 +101,13 @@ definition:
         loc = symbol_loc ();
       }
     }
-  | TYPE name interfaces directives_opt LCURLY field_defs RCURLY {
-      Definition.ObjectType {
-        ObjectTypeDef.name = $2;
-        fields = $6;
-        interfaces = $3;
-        directives = $4;
-      }
-    }
+  | object_type_def { Definition.ObjectType $1 }
   | INTERFACE name directives_opt LCURLY field_defs RCURLY {
       Definition.InterfaceType {
         InterfaceTypeDef.name = $2;
         fields = $5;
         directives = $3;
+        loc = symbol_loc ();
       }
     }
   | UNION name directives_opt EQUAL union_types {
@@ -117,6 +115,7 @@ definition:
         UnionTypeDef.name = $2;
         types = $5;
         directives = $3;
+        loc = symbol_loc ();
       }
     }
   | ENUM name directives_opt LCURLY enum_values RCURLY {
@@ -124,6 +123,7 @@ definition:
         EnumTypeDef.name = $2;
         values = $5;
         directives = $3;
+        loc = symbol_loc ();
       }
     }
   | INPUT name directives_opt LCURLY input_value_defs RCURLY {
@@ -131,14 +131,45 @@ definition:
         InputObjectTypeDef.name = $2;
         fields = $5;
         directives = $3;
+        loc = symbol_loc ();
+      }
+    }
+  | EXTEND object_type_def {
+      Definition.TypeExtension { TypeExtensionDef.
+        definition = $2;
+        loc = symbol_loc ();
+      }
+    }
+  | DIRECTIVE AT name arg_defs ON directive_locations {
+      Definition.Directive { DirectiveDef.
+        name = $3;
+        arguments = $4;
+        locations = $6;
+        loc = symbol_loc ();
       }
     }
   | SCHEMA directives_opt LCURLY operation_types RCURLY {
       Definition.Schema { SchemaDef.
         operationTypes = $4;
         directives = $2;
+        loc = symbol_loc ();
       }
     }
+
+object_type_def:
+  | TYPE name interfaces directives_opt LCURLY field_defs RCURLY {
+      {
+        ObjectTypeDef.name = $2;
+        fields = $6;
+        interfaces = $3;
+        directives = $4;
+        loc = symbol_loc ();
+      }
+    }
+
+directive_locations:
+  | name { [$1] }
+  | name PIPE directive_locations { $1 :: $3 }
 
 var_defs:
   | { None }
@@ -183,12 +214,14 @@ selection:
         args = $2;
         selectionSet = $4;
         directives = $3;
+        loc = symbol_loc ();
       }
     }
   | ELLIPSIS fragment_name directives_opt {
       Selection.FragmentSpread {
         FragmentSpread.name = $2;
         directives = $3;
+        loc = symbol_loc ();
       }
     }
   | ELLIPSIS type_condition_opt directives_opt selection_set {
@@ -237,6 +270,7 @@ field_def:
         type_ = $4;
         args = $2;
         directives = $5;
+        loc = symbol_loc ();
       }
     }
 
@@ -288,7 +322,9 @@ name_:
 
 enum_value_str:
   | NAME { $1 }
+  | DIRECTIVE { "directive" }
   | ENUM { "enum" }
+  | EXTEND { "extend" }
   | FRAGMENT { "fragment" }
   | IMPLEMENTS { "implements" }
   | INPUT { "input" }
@@ -306,7 +342,9 @@ fragment_name: fragment_name_ { (symbol_loc (), $1) }
 
 fragment_name_:
   | NAME { $1 }
+  | DIRECTIVE { "directive" }
   | ENUM { "enum" }
+  | EXTEND { "extend" }
   | FALSE { "false" }
   | FRAGMENT { "fragment" }
   | IMPLEMENTS { "implements" }
@@ -335,11 +373,12 @@ var:
 
 value:
   | var { Value.Variable $1 }
-  | INT { Value.IntValue (symbol_loc(), $1) }
-  | FLOAT { Value.FloatValue (symbol_loc(), $1) }
-  | STRING { Value.StringValue (symbol_loc(), $1) }
-  | TRUE { Value.BooleanValue (symbol_loc(), true) }
-  | FALSE { Value.BooleanValue (symbol_loc(), false) }
+  | INT { Value.IntValue (symbol_loc (), $1) }
+  | FLOAT { Value.FloatValue (symbol_loc (), $1) }
+  | STRING { Value.StringValue (symbol_loc (), $1) }
+  | TRUE { Value.BooleanValue (symbol_loc (), true) }
+  | FALSE { Value.BooleanValue (symbol_loc (), false) }
+  | NULL { Value.NullValue (symbol_loc ()) }
   | enum_value_str { Value.EnumValue (symbol_loc (), $1) }
   | LBRACKET list_values RBRACKET { Value.ListValue (symbol_loc (), $2) }
   | LCURLY object_fields RCURLY {
@@ -405,14 +444,17 @@ directive:
 operation_types:
   | { [] }
   | operation_type COLON name operation_types {
-      let node = {
-        OperationType.operation = $1;
+      let node = { OperationTypeDef.
+        operation = $1;
         type_ = $3;
+        loc = symbol_loc ();
       } in
       node :: $4
     }
 
-operation_type:
+operation_type: operation_type_ { Some (symbol_loc ()), $1 }
+
+operation_type_:
   | QUERY { OperationType.Query }
   | MUTATION { OperationType.Mutation }
   | SUBSCRIPTION { OperationType.Subscription }

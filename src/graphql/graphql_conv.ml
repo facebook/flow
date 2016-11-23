@@ -51,6 +51,7 @@ let schema_from_ast doc =
         fields;
         interfaces;
         directives = _;
+        loc = _;
       } ->
         let interfaces = names_to_strings interfaces in
         add_type name (Schema.Type.Obj (name, conv_fields fields, interfaces))
@@ -58,12 +59,14 @@ let schema_from_ast doc =
         Ast.InterfaceTypeDef.name = (_, name);
         fields;
         directives = _;
+        loc = _;
       } ->
         add_type name (Schema.Type.Interface (name, conv_fields fields))
     | Def.UnionType {
         Ast.UnionTypeDef.name = (_, name);
         types;
         directives = _;
+        loc = _;
       } ->
         let types = names_to_strings types in
         add_type name (Schema.Type.Union (name, types))
@@ -71,6 +74,7 @@ let schema_from_ast doc =
         Ast.EnumTypeDef.name = (_, name);
         values;
         directives = _;
+        loc = _;
       } ->
         let values = List.map (fun v -> v.Ast.EnumValueDef.name) values in
         let values = names_to_strings values in
@@ -79,17 +83,20 @@ let schema_from_ast doc =
         Ast.InputObjectTypeDef.name = (_, name);
         fields;
         directives = _;
+        loc = _;
       } ->
         add_type name (Schema.Type.InputObj (name, conv_input_vals fields))
+    | Def.TypeExtension _ -> () (* TODO *)
+    | Def.Directive _ -> () (* TODO *)
     | Def.Schema obj ->
         List.iter (fun t ->
           let typeRef =
-            match t.Ast.OperationType.operation with
-            | Ast.OperationType.Query -> query
-            | Ast.OperationType.Mutation -> mutation
-            | Ast.OperationType.Subscription -> subscription
+            match t.Ast.OperationTypeDef.operation with
+            | _, Ast.OperationType.Query -> query
+            | _, Ast.OperationType.Mutation -> mutation
+            | _, Ast.OperationType.Subscription -> subscription
           in
-          let (_, type_) = t.Ast.OperationType.type_ in
+          let (_, type_) = t.Ast.OperationTypeDef.type_ in
           typeRef := Some type_
         ) obj.Ast.SchemaDef.operationTypes
     | Def.Operation _

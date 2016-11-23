@@ -2,41 +2,41 @@ schema {
   query: QueryRoot
 }
 
-# directive @onQuery on QUERY
-#
-# directive @onMutation on MUTATION
-#
-# directive @onSubscription on SUBSCRIPTION
-#
-# directive @onField on FIELD
-#
-# directive @onFragmentDefinition on FRAGMENT_DEFINITION
-#
-# directive @onFragmentSpread on FRAGMENT_SPREAD
-#
-# directive @onInlineFragment on INLINE_FRAGMENT
-#
-# directive @onSchema on SCHEMA
-#
-# directive @onScalar on SCALAR
-#
-# directive @onObject on OBJECT
-#
-# directive @onFieldDefinition on FIELD_DEFINITION
-#
-# directive @onArgumentDefinition on ARGUMENT_DEFINITION
-#
-# directive @onInterface on INTERFACE
-#
-# directive @onUnion on UNION
-#
-# directive @onEnum on ENUM
-#
-# directive @onEnumValue on ENUM_VALUE
-#
-# directive @onInputObject on INPUT_OBJECT
-#
-# directive @onInputFieldDefinition on INPUT_FIELD_DEFINITION
+directive @onQuery on QUERY
+
+directive @onMutation on MUTATION
+
+directive @onSubscription on SUBSCRIPTION
+
+directive @onField on FIELD
+
+directive @onFragmentDefinition on FRAGMENT_DEFINITION
+
+directive @onFragmentSpread on FRAGMENT_SPREAD
+
+directive @onInlineFragment on INLINE_FRAGMENT
+
+directive @onSchema on SCHEMA
+
+directive @onScalar on SCALAR
+
+directive @onObject on OBJECT
+
+directive @onFieldDefinition on FIELD_DEFINITION
+
+directive @onArgumentDefinition on ARGUMENT_DEFINITION
+
+directive @onInterface on INTERFACE
+
+directive @onUnion on UNION
+
+directive @onEnum on ENUM
+
+directive @onEnumValue on ENUM_VALUE
+
+directive @onInputObject on INPUT_OBJECT
+
+directive @onInputFieldDefinition on INPUT_FIELD_DEFINITION
 
 type Alien implements Being, Intelligent {
   iq: Int

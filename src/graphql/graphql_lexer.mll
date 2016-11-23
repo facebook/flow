@@ -26,7 +26,9 @@ rule token = parse
   | float { FLOAT (lexeme lexbuf) }
   | '"' { read_string (Buffer.create 17) lexbuf }
 
+  | "directive" { DIRECTIVE }
   | "enum" { ENUM }
+  | "extend" { EXTEND }
   | "false" { FALSE }
   | "fragment" { FRAGMENT }
   | "implements" { IMPLEMENTS }
