@@ -1007,6 +1007,10 @@ module ResolvableTypeJob = struct
     | IdxWrapper (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
+    | ReposT (_, t)
+    | ReposUpperT (_, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -1349,6 +1353,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*************************)
     (* repositioning, part 1 *)
     (*************************)
+
+    (* if a ReposT is used as a lower bound, `reposition` can reposition it *)
+    | ReposT (reason, l), _ ->
+      rec_flow cx trace (reposition cx ~trace reason l, u)
+
+    (* if a ReposT is used as an upper bound, wrap the now-concrete lower bound
+       in a `ReposUpperT`, which will repos `u` when `u` becomes concrete. *)
+    | _, UseT (use_op, ReposT (reason, u)) ->
+      rec_flow cx trace (ReposUpperT (reason, l), UseT (use_op, u))
+
+    | ReposUpperT (reason, l), UseT (use_op, u) ->
+      (* since this guarantees that `u` is not an OpenT, it's safe to use
+         `reposition` on the upper bound here. *)
+      rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u))
 
     (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
@@ -5306,7 +5324,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     | Some param_t ->
       (* opportunistically reposition This substitutions; in general
          repositioning may lead to non-termination *)
-      if typeparam.name = "this" then reposition cx typeparam.reason param_t
+      if typeparam.name = "this" then ReposT (typeparam.reason, param_t)
       else param_t
     end
 
@@ -5546,6 +5564,15 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let t2' = subst cx ~force map t2 in
     if t1 == t1' && t2 == t2' then t else TypeMapT (r, kind, t1', t2')
 
+  | ReposT (r, repos_t) ->
+    let repos_t' = subst cx ~force map repos_t in
+    if repos_t == repos_t' then t else ReposT (r, repos_t')
+
+  | ReposUpperT (r, repos_t) ->
+    let repos_t' = subst cx ~force map repos_t in
+    if repos_t == repos_t' then t else ReposUpperT (r, repos_t')
+
+
 and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
       let s_ = subst_selector cx force map s in
@@ -5660,6 +5687,8 @@ and check_polarity cx polarity = function
   | MaybeT t
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t
+  | ReposT (_, t)
+  | ReposUpperT (_, t)
     -> check_polarity cx polarity t
 
   | ClassT t
@@ -8709,6 +8738,10 @@ end = struct
     | BoolT (reason, _) ->
         extract_members cx (get_builtin_type cx reason "Boolean")
 
+    | ReposT (_, t)
+    | ReposUpperT (_, t) ->
+        extract_members cx t
+
     | AbstractT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
@@ -8921,6 +8954,10 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | TypeMapT (_, _, t1, t2) ->
     recurse t1;
     recurse t2
+
+  | ReposT (_, t)
+  | ReposUpperT (_, t) ->
+    recurse ~infer:true t
 
   | ObjProtoT _
   | FunProtoT _

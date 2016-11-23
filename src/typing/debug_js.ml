@@ -300,6 +300,11 @@ and _json_of_t_impl json_cx t = Hh_json.(
       ]
     ]
 
+  | ReposT (_, t)
+  | ReposUpperT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   )
 )
 
@@ -1350,6 +1355,8 @@ and dump_t_ (depth, tvars) cx t =
       (string_of_type_map kind)
       (kid t1)
       (kid t2)) t
+  | ReposT (_, arg)
+  | ReposUpperT (_, arg) -> p ~extra:(kid arg) t
 
 and dump_use_t ?(depth=3) cx t =
   dump_use_t_ (depth, ISet.empty) cx t
