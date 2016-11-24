@@ -20,7 +20,7 @@ To report a bug, please create a [GitHub issue](https://github.com/facebook/flow
 
 ## Gitter
 
-You could also find us at our Gitter channel [#flow](https://gitter.im/facebook/flow)
+You can also find a bunch of Flow users hanging out in the [#flow](https://gitter.im/facebook/flow) Gitter channel
 
 ## IRC
 
