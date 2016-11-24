@@ -395,9 +395,29 @@ let rec normalize_type_impl cx ids t = match t with
       normalize_type_impl cx ids t
 
   | GraphqlSchemaT _ -> t
-  | GraphqlOpT _ -> t
-  | GraphqlFragT _ -> t
-  | GraphqlSelectionT _ -> t
+  | GraphqlOpT (_, { Graphql.op_schema; op_type; op_selection }) ->
+    let op_selection = normalize_type_impl cx ids op_selection in
+    GraphqlOpT (
+      locationless_reason (RCustom ("GraphQL operation")),
+      { Graphql.op_schema; op_type; op_selection }
+    )
+  | GraphqlFragT (_, { Graphql.frag_schema; frag_type; frag_selection }) ->
+    let frag_selection = normalize_type_impl cx ids frag_selection in
+    GraphqlFragT (
+      locationless_reason (RCustom ("Graphql fragment")),
+      { Graphql.frag_schema; frag_type; frag_selection }
+    )
+  | GraphqlSelectionT (_, { Graphql.s_schema; s_on; s_selections }) ->
+    let s_selections = List.map (fun sf ->
+        { sf with
+          Graphql.sf_selection =
+            Option.map ~f:(normalize_type_impl cx ids) sf.Graphql.sf_selection;
+        }
+      ) s_selections in
+    GraphqlSelectionT (
+      locationless_reason (RCustom ("Graphql selection")),
+      { Graphql.s_schema; s_on; s_selections }
+    )
   | GraphqlFieldT _ -> t
 
   | FunProtoT _
