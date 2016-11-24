@@ -81,6 +81,11 @@ let parse_options jsopts = Parser_env.(
 )
 
 let parse content options =
+  let options =
+    if options = Js.undefined
+    then Js.Unsafe.obj [||]
+    else options
+  in
   let content = Js.to_string content in
   let parse_options = Some (parse_options options) in
   try
