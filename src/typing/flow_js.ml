@@ -6854,6 +6854,8 @@ and filter_not_exists t = match t with
 
   | ClassT t -> EmptyT (reason_of_t t)
 
+  | ClassT t -> UndefT (reason_of_t t)
+
   (* unknown boolies become falsy *)
   | MaybeT t ->
     let reason = reason_of_t t in
