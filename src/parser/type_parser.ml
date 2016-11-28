@@ -15,7 +15,7 @@ module Ast = Spider_monkey_ast
 open Ast
 module Error = Parse_error
 
-module Type (Parse: Parser_common.PARSER) : sig
+module type TYPE = sig
   val _type : env -> Ast.Type.t
   val type_parameter_declaration : env -> Ast.Type.ParameterDeclaration.t option
   val type_parameter_declaration_with_defaults : env -> Ast.Type.ParameterDeclaration.t option
@@ -27,7 +27,9 @@ module Type (Parse: Parser_common.PARSER) : sig
   val annotation_opt : env -> Ast.Type.annotation option
   val predicate_opt : env -> Ast.Type.Predicate.t option
   val annotation_and_predicate_opt : env -> Ast.Type.annotation option * Ast.Type.Predicate.t option
-end = struct
+end
+
+module Type (Parse: Parser_common.PARSER) : TYPE = struct
   type param_list_or_type =
     | ParamList of (Type.Function.Param.t list * Type.Function.RestParam.t option)
     | Type of Type.t
