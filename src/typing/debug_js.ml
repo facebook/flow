@@ -1220,28 +1220,7 @@ and dump_t_ (depth, tvars) cx t =
   in
 
   let kid = dump_t_ (depth-1, tvars) cx in
-
-  let tvar id =
-    if ISet.mem id tvars then spf "%d, ^" id else
-    let stack = ISet.add id tvars in
-    let open Constraint in
-    match IMap.find_unsafe id (Context.graph cx) with
-    | Goto g -> spf "%d, Goto %d" id g
-    | Root { constraints = Resolved t; _ } ->
-      spf "%d, Resolved %s" id (dump_t_ (depth-1, stack) cx t)
-    | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
-      if lower = TypeMap.empty && upper = UseTypeMap.empty
-      then spf "%d" id
-      else spf "%d, [%s], [%s]" id
-        (String.concat "; " (List.rev (TypeMap.fold
-          (fun t _ acc ->
-            dump_t_ (depth-1, stack) cx t :: acc
-          ) lower [])))
-        (String.concat "; " (List.rev (UseTypeMap.fold
-          (fun use_t _ acc ->
-            dump_use_t_ (depth-1, stack) cx use_t :: acc
-          ) upper [])))
-  in
+  let tvar id = dump_tvar_ (depth-1, tvars) cx id in
 
   let defer_use =
     let string_of_selector = function
@@ -1373,6 +1352,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let kid t = dump_t_ (depth-1, tvars) cx t in
   let use_kid use_t = dump_use_t_ (depth-1, tvars) cx use_t in
+  let tvar id = dump_tvar_ (depth-1, tvars) cx id in
   let prop p = dump_prop_ (depth-1, tvars) cx p in
 
   let propref = function
@@ -1428,7 +1408,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | CallOpenPredT _ -> p t
   | ChoiceKitUseT (_, TryFlow (_, spec)) ->
       p ~extra:(try_flow spec) t
-  | ChoiceKitUseT _ -> p t
+  | ChoiceKitUseT (_, FullyResolveType id) -> p ~extra:(tvar id) t
   | CJSExtractNamedExportsT _ -> p t
   | CJSRequireT _ -> p t
   | ComparatorT (_, arg) -> p ~extra:(kid arg) t
@@ -1479,7 +1459,16 @@ and dump_use_t_ (depth, tvars) cx t =
   | RefineT _ -> p t
   | ReposLowerT (_, arg) -> p ~extra:(use_kid arg) t
   | ReposUseT (_, _, arg) -> p ~extra:(kid arg) t
-  | SentinelPropTestT _ -> p t
+  | SentinelPropTestT (l, sense, sentinel, result) -> p ~reason:false
+      ~extra:(spf "%s, %b, %s, %s"
+        (kid l)
+        sense
+        (match sentinel with
+        | SentinelStr x -> spf "string %s" x
+        | SentinelNum (_,x) -> spf "number %s" x
+        | SentinelBool x -> spf "boolean %b" x)
+        (kid result))
+      t
   | SubstOnPredT _ -> p t
   | SummarizeT (_, arg) -> p ~extra:(kid arg) t
   | SuperT _ -> p t
@@ -1498,6 +1487,30 @@ and dump_use_t_ (depth, tvars) cx t =
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
   | TypeAppVarianceCheckT _ -> p t
+
+and dump_tvar ?(depth=3) cx id =
+  dump_tvar_ (depth, ISet.empty) cx id
+
+and dump_tvar_ (depth, tvars) cx id =
+  if ISet.mem id tvars then spf "%d, ^" id else
+  let stack = ISet.add id tvars in
+  let open Constraint in
+  match IMap.find_unsafe id (Context.graph cx) with
+  | Goto g -> spf "%d, Goto %d" id g
+  | Root { constraints = Resolved t; _ } ->
+    spf "%d, Resolved %s" id (dump_t_ (depth-1, stack) cx t)
+  | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
+    if lower = TypeMap.empty && upper = UseTypeMap.empty
+    then spf "%d" id
+    else spf "%d, [%s], [%s]" id
+      (String.concat "; " (List.rev (TypeMap.fold
+        (fun t _ acc ->
+          dump_t_ (depth-1, stack) cx t :: acc
+        ) lower [])))
+      (String.concat "; " (List.rev (UseTypeMap.fold
+        (fun use_t _ acc ->
+          dump_use_t_ (depth-1, stack) cx use_t :: acc
+        ) upper [])))
 
 and dump_prop ?(depth=3) cx p =
   dump_prop_ (depth, ISet.empty) cx p
