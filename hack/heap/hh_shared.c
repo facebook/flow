@@ -2123,9 +2123,11 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   // If not the master process, then try to connect
   // Otherwise return empty list
   if(db == NULL) {
-    if (my_pid != *master_pid && db_filename != NULL) {
+    if (my_pid != *master_pid && db_filename != NULL && *db_filename != '\0') {
       assert(sqlite3_open(db_filename, &db) == SQLITE_OK);
-    } else {
+    }
+    // If db is still NULL, then we must quit
+    if (db == NULL) {
       CAMLreturn(result);
     }
   }
