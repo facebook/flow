@@ -2886,13 +2886,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
     VoidT.at loc
 
   | TaggedTemplate {
-      TaggedTemplate.tag = _, (Member { Member.
-          _object = (_, Identifier (_, "Relay"));
-          property = Member.PropertyIdentifier (_, "QL");
-          computed = false;
-        } | Identifier (_, "gql"));
+      TaggedTemplate.tag;
       quasi = _, { TemplateLiteral.quasis; expressions = exprs }
-    } ->
+    } when graphql_is_tagged cx tag ->
     let (loc, _) = List.hd quasis in
     let module Elem = TemplateLiteral.Element in
     let quasis = List.map (fun (loc, elem) ->
@@ -5019,4 +5015,24 @@ and graphql_select cx selection selection_set =
 
 and graphql_get_schema cx =
   let reason = mk_reason (RCustom "GraphQL schema") Loc.none in
-  Flow.get_builtin cx "graphql$schema" reason
+  match Context.graphql_config cx with
+  | Some config ->
+    GraphqlSchemaT (reason, config.Graphql_config.schema)
+  | None -> EmptyT.why reason
+
+and graphql_is_tagged cx expr = Ast.Expression.(
+  let rec check (_, expr) tag = match expr, tag with
+    | Identifier (_, id1), id2 :: [] ->
+      id1 = id2
+    | Member {
+        Member._object; property = Member.PropertyIdentifier (_, id1); _
+      },
+      id2 :: tag_rest
+      ->
+      if id1 = id2 then check _object tag_rest else false
+    | _ -> false
+  in
+  match Context.graphql_config cx with
+  | Some inst -> check expr (Graphql_config.tag inst)
+  | None -> false
+)

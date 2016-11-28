@@ -1,6 +1,6 @@
 // @flow
 
-const query = Relay.QL`
+const query = gql`
   query {
     me {
       id
@@ -8,7 +8,7 @@ const query = Relay.QL`
   }
 `;
 
-const frag = Relay.QL`
+const frag = gql`
   fragment on Query {
     me {
       abcd

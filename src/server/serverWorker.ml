@@ -15,12 +15,14 @@ let save options =
   let config = FlowConfig.get config_file in
   Flow_js.builtins master_cx,
   master_cx,
-  (config_file, config)
+  (config_file, config),
+  Graphql_config.get ()
 
-let restore (b, cx, fc) =
+let restore (b, cx, fc, gc) =
   Flow_js.restore_builtins cx b;
   Init_js.restore_master_cx cx;
-  FlowConfig.restore fc
+  FlowConfig.restore fc;
+  Graphql_config.restore gc
 
 (* As for [Daemon.register_entry_point], this should stay
    at toplevel, in order to be executed before

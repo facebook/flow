@@ -149,39 +149,26 @@ let init ~options lib_files
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
 
-  let no_schema _ = Type.EmptyT.at Loc.none in
-  let schema_t = match options.Options.opt_graphql_schema with
-    | Some schema_path ->
-      Flow_logger.log "Parsing GraphQL schema";
-      (try
-        let path = Path.to_string schema_path in
-        let src = Sys_utils.cat_no_fail path in
-        let ast = Graphql_parse.parse_file src path in
-        let schema = Graphql_conv.schema_from_ast ast in
-        let errors = Graphql_validation.validate_schema schema in
-        if errors = [] then begin
-          let reason = Reason.builtin_reason (Reason.RCustom "GraphQL schema") in
-          Type.GraphqlSchemaT (reason, schema)
-        end else begin
-          List.iter (Flow_logger.log "[SCHEMA ERROR] %s") errors;
-          no_schema ()
-        end
-      with
-        | Graphql_parse.SyntaxError loc ->
-          let error = Errors.mk_error [loc, ["Syntax error"]] in
-          Errors.Cli_output.print_errors
-            ~out_channel:stdout
-            ~flags:(Options.error_flags options)
-            ~strip_root:(Some (Options.root options))
-            [error];
-          no_schema ()
-        | _ ->
-          Flow_logger.log "[ERROR]";
-          no_schema ())
-    | None -> no_schema ()
-  in
-  Flow.set_builtin master_cx "graphql$schema" schema_t;
-
   Merge_js.ContextOptimizer.sig_context [master_cx];
 
   result
+
+let init_graphql options =
+  match Options.graphql_config options with
+  | Some config_path ->
+    Flow_logger.log "Loading GraphQL config";
+    (try
+      Graphql_config.init
+        (Path.to_string (Options.root options))
+        (Path.to_string config_path)
+    with
+      | Graphql_parse.SyntaxError loc ->
+        let error = Errors.mk_error [loc, ["Syntax error"]] in
+        Errors.Cli_output.print_errors
+          ~out_channel:stdout
+          ~flags:(Options.error_flags options)
+          ~strip_root:(Some (Options.root options))
+          [error];
+      | _ ->
+        Flow_logger.log "[ERROR]")
+  | None -> ()

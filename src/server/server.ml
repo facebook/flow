@@ -22,7 +22,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
   let preinit options =
     (* Do some initialization before creating workers, so that each worker is
      * forked with this information already available. *)
-    ignore (Init_js.get_master_cx options)
+    ignore (Init_js.get_master_cx options);
+    Init_js.init_graphql options
 
   let init genv =
     (* Encapsulate merge_strict_context for dumper *)
@@ -489,7 +490,7 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let options = genv.ServerEnv.options in
     let root = Options.root options in
     let config_path = Server_files_js.config_file root in
-    let graphql_schema = Options.graphql_schema options in
+    let graphql_config = Options.graphql_config options in
     let sroot = Path.to_string root in
     let want = Files.wanted ~options all_libs in
 
@@ -503,15 +504,19 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     end;
 
     (* Die if graphql schema changed *)
-    Option.iter graphql_schema (fun schema_path ->
-      let schema_path = Path.to_string schema_path in
-      if SSet.mem schema_path updates then begin
+    Option.iter graphql_config (fun config_path ->
+      let changed path =
         Flow_logger.log "Status: Error";
-        Flow_logger.log
-          "%s changed in an incompatible way. Exiting.\n%!"
-          schema_path;
+        Flow_logger.log "%s changed in an incompatible way. Exiting.\n%!" path;
         FlowExitStatus.(exit Server_out_of_date)
-      end
+      in
+      (* Check graphqlrc *)
+      let config_path = Path.to_string config_path in
+      if SSet.mem config_path updates then changed config_path;
+      (* Check schema files *)
+      List.iter (fun path ->
+        if SSet.mem path updates then changed path
+      ) (Graphql_config.get_schema_paths ())
     );
 
     let is_incompatible filename_str =

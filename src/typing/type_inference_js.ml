@@ -77,6 +77,10 @@ let infer_ast ~metadata ~filename ~module_name ast =
   let cx =
     Flow_js.fresh_context metadata filename module_name
   in
+  let graphql_config =
+    Graphql_config.get_inst (Loc.string_of_filename filename)
+  in
+  Context.set_graphql_config cx graphql_config;
   let checked = Context.is_checked cx in
 
   let exported_module_name = Modulename.to_string module_name in

@@ -217,7 +217,7 @@ let make_options ~root ~strip_root ~ignore_flag ~include_flag =
     opt_max_header_tokens = FlowConfig.(
       flowconfig.options.Opts.max_header_tokens
     );
-    opt_graphql_schema = None;
+    opt_graphql_config = None;
   }
 
 (* Directories will return a closure that returns every file under that

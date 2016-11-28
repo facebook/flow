@@ -1,2 +1,2 @@
 [options]
-graphql_schema=schema.graphql
+graphql_config=graphqlrc.json

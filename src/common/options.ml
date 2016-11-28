@@ -73,7 +73,7 @@ type t = {
   opt_shm_hash_table_pow: int;
   opt_shm_log_level: int;
   opt_max_header_tokens: int;
-  opt_graphql_schema: Path.t option;
+  opt_graphql_config: Path.t option;
 }
 
 let default_error_flags = {
@@ -135,4 +135,4 @@ let shm_hash_table_pow opts = opts.opt_shm_hash_table_pow
 let shm_log_level opts = opts.opt_shm_log_level
 let verbose opts = opts.opt_verbose
 let weak_by_default opts = opts.opt_weak
-let graphql_schema opts = opts.opt_graphql_schema
+let graphql_config opts = opts.opt_graphql_config

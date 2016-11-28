@@ -90,6 +90,7 @@ val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> (string * Spider_monkey_ast.Expression.t) option
 val pid_prefix: t -> string
+val graphql_config: t -> Graphql_config.inst option
 
 val copy_of_context: t -> t
 val merge_into: t -> t -> unit
@@ -121,6 +122,7 @@ val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit
+val set_graphql_config: t -> Graphql_config.inst option -> unit
 
 val clear_intermediates: t -> unit
 
