@@ -29,3 +29,14 @@ module type PARSER = sig
   val class_expression : env -> Expression.t
   val is_assignable_lhs : Expression.t -> bool
 end
+
+let with_loc fn env =
+  let start_loc = Peek.loc env in
+  let result = fn env in
+  let end_loc = match last_loc env with
+  | Some loc -> loc
+  | None ->
+      error env (Error.Assertion "did not consume any tokens");
+      Peek.loc env
+  in
+  Loc.btwn start_loc end_loc, result

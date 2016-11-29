@@ -16,9 +16,27 @@ open Ast
 module Error = Parse_error
 module SSet = Set.Make(String)
 
+module type DECLARATION = sig
+  val async: env -> bool
+  val generator: env -> bool
+  val variance: env -> bool -> bool -> Variance.t option
+  val function_params: env -> Pattern.t list * Function.RestElement.t option
+  val function_body: env -> async:bool -> generator:bool -> Loc.t * Function.body * bool
+  val is_simple_function_params: Pattern.t list * Function.RestElement.t option -> bool
+  val strict_post_check: env -> strict:bool -> simple:bool -> Identifier.t option -> Pattern.t list * Function.RestElement.t option -> unit
+  val concise_function_body: env -> async:bool -> generator:bool -> Function.body * bool
+  val variable: env -> Statement.t * (Loc.t * Error.t) list
+  val variable_declaration_list: env -> Loc.t * Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
+  val _let: env -> (Loc.t * Statement.VariableDeclaration.t) * (Loc.t * Error.t) list
+  val const: env -> (Loc.t * Statement.VariableDeclaration.t) * (Loc.t * Error.t) list
+  val var: env -> (Loc.t * Statement.VariableDeclaration.t) * (Loc.t * Error.t) list
+  val _function: env -> Statement.t
+end
+
 module Declaration
   (Parse: Parser_common.PARSER)
   (Type: Type_parser.TYPE)
+: DECLARATION
 = struct
   let check_param =
     let rec pattern ((env, _) as check_env) (loc, p) = Pattern.(match p with
