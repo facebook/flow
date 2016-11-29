@@ -51,7 +51,7 @@ let builder = object (this)
           match next_split_rule with
             | None -> Chunk.make s (List.hd rules) nesting :: chunks
             | Some rule_type ->
-              this#start_rule ~rule_type:rule_type ();
+              this#start_rule ~rule_type ();
               let cs = Chunk.make s (List.hd rules) nesting :: chunks in
               this#end_rule ();
               next_split_rule <- None;
@@ -67,12 +67,12 @@ let builder = object (this)
     chunks <- (match chunks with
       | hd :: tl when hd.Chunk.is_appendable ->
         let rule_id = hd.Chunk.rule in
-        let rule = match List.hd rules with
-          | None when rule_id = Rule.null_rule_id -> this#add_rule Rule.Simple
-          | Some r when rule_id = Rule.null_rule_id -> r
+        let rule = match rules with
+          | [] when rule_id = Rule.null_rule_id -> this#add_rule Rule.Simple
+          | hd :: _ when rule_id = Rule.null_rule_id -> hd
           | _ -> rule_id
         in
-        let chunk = (Chunk.finalize hd rule space_if_not_split) in
+        let chunk = Chunk.finalize hd rule rule_alloc space_if_not_split in
         space_if_not_split <- space;
         chunk :: tl
       | _ -> chunks
@@ -149,15 +149,14 @@ let builder = object (this)
     for end chunks and block nesting
   *)
   method start_block_nest () =
-    if List.is_empty rules then
-      block_indent <- block_indent + 2
-    else
-      this#nest ()
+    if List.is_empty rules
+    then block_indent <- block_indent + 2
+    else this#nest ()
+
   method end_block_nest () =
-    if List.is_empty rules then
-      block_indent <- block_indent - 2
-    else
-      this#unnest ()
+    if List.is_empty rules
+    then block_indent <- block_indent - 2
+    else this#unnest ()
 
   method end_chunks () =
     this#hard_split ();
@@ -336,9 +335,9 @@ let rec transform node =
     add_space ();
     t leftb;
     builder#end_chunks ();
-    tl_with ~nest ~f:(fun () ->
-      handle_possible_list body
-    ) ();
+    builder#start_block_nest ();
+    handle_possible_list body;
+    builder#end_block_nest ();
     t rightb;
     builder#end_chunks ();
     ()
@@ -398,8 +397,8 @@ let rec transform node =
       builder#simple_space_split ();
       t type_spec;
       t semi;
-      builder#end_chunks ();
     ) ();
+    builder#end_chunks ();
     ()
   | DecoratedExpression x ->
     let (decorator, expr) = get_decorated_expression_children x in
@@ -562,9 +561,11 @@ let rec transform node =
     builder#end_chunks ();
     ()
   | CaseStatement x ->
-    raise (Failure "CaseStatement should be handled by handle_switch_body")
+    raise (Failure ("Malformed parse tree: " ^
+      "a case statement should only appear inside a switch statement"))
   | DefaultStatement x ->
-    raise (Failure "DefaultStatement should be handled by handle_switch_body")
+    raise (Failure ("Malformed parse tree: " ^
+      "a default statement should only appear inside a switch statement"))
   | ReturnStatement x ->
     let (kw, expr, semi) = get_return_statement_children x in
     transform_keyword_expression_statement kw expr semi;
@@ -826,12 +827,13 @@ let rec transform node =
     transform_argish left_a vec_type right_a;
     ()
   | MapTypeSpecifier x ->
-    let (kw, la, key, comma_kw, v, ra) = get_map_type_specifier_children x in
+    let (kw, left_a, key, comma_kw, value, right_a) =
+      get_map_type_specifier_children x in
     t kw;
     let key_list_item = make_list_item key comma_kw in
-    let val_list_item = make_list_item v (make_missing ()) in
+    let val_list_item = make_list_item value (make_missing ()) in
     let args = make_list [key_list_item; val_list_item] in
-    transform_argish la args ra;
+    transform_argish left_a args right_a;
     ()
   | GenericTypeSpecifier x ->
     let (class_type, type_args) = get_generic_type_specifier_children x in
@@ -876,9 +878,9 @@ and tl_with ?(nest=false) ?(rule=None) ?(span=false) ~f () =
 
   f ();
 
-  if nest then builder#unnest ();
   if span then builder#end_span ();
-  Option.iter rule (fun _ -> builder#end_rule ());
+  if nest then builder#unnest ();
+  Option.iter rule ~f:(fun _ -> builder#end_rule ());
   ()
 
 and t_with ?(nest=false) ?(rule=None) ?(span=false) ?(f=transform) node =
@@ -897,9 +899,7 @@ and handle_lambda_body node =
       handle_compound_statement x;
     | _ ->
       split ~space:true ();
-      tl_with ~rule:(Some Rule.Simple) ~nest:true ~f:(fun () ->
-        transform node;
-      ) ();
+      t_with ~rule:(Some Rule.Simple) ~nest:true node;
       ()
 
 and handle_possible_compound_statement node =
@@ -953,14 +953,12 @@ and handle_xhp_open_right_angle_token t =
 
 and handle_function_call_expression fce =
   let (receiver, lp, args, rp) = get_function_call_expression_children fce in
-  let () = match syntax receiver with
+  match syntax receiver with
     | MemberSelectionExpression mse ->
       handle_possible_method_chaining mse (Some (lp, args, rp))
     | _ ->
       transform receiver;
-      transform_argish lp args rp;
-  in
-  ()
+      transform_argish lp args rp
 
 and handle_possible_method_chaining mse argish =
   let (obj, arrow1, member1) = get_member_selection_expression_children mse in
@@ -971,7 +969,8 @@ and handle_possible_method_chaining mse argish =
           get_function_call_expression_children x in
         (match syntax receiver with
           | MemberSelectionExpression mse ->
-            let (obj, arrow, member) = get_member_selection_expression_children mse in
+            let (obj, arrow, member) =
+              get_member_selection_expression_children mse in
             let (obj, l) = handle_chaining obj in
             obj, l @ [(arrow, member, Some (lp, args, rp))]
           | _ -> obj, []
@@ -979,36 +978,27 @@ and handle_possible_method_chaining mse argish =
       | _ -> obj, []
   in
 
-  let (obj, l) = handle_chaining obj in
-  let l = l @ [(arrow1, member1, argish)] in
+  let (obj, chain_list) = handle_chaining obj in
+  let chain_list = chain_list @ [(arrow1, member1, argish)] in
   transform obj;
 
   let transform_chain (arrow, member, argish) =
     transform arrow;
     transform member;
-    match argish with
-      | Some (lp, args, rp) -> transform_argish lp args rp
-      | None -> ()
-    ;
+    Option.iter ~f:(fun (lp, args, rp) -> transform_argish lp args rp) argish;
   in
-  let () = match l with
+  (match chain_list with
     | hd :: [] ->
       builder#simple_split ();
-      builder#nest ();
-      transform_chain hd
+      tl_with ~nest:true ~f:(fun () -> transform_chain hd) ();
     | hd :: tl ->
-      List.iteri l ~f:(fun n chain ->
-        split ();
-        if n = 0 then begin
-          builder#nest ();
-          builder#start_rule ~rule_type:(Rule.Argument) ();
-        end;
-        transform_chain chain
-      );
-      builder#end_rule ()
+      split ();
+      tl_with ~nest:true ~rule:(Some Rule.Argument) ~f:(fun () ->
+        transform_chain hd;
+        List.iter tl ~f:(fun x -> split (); transform_chain x);
+      ) ();
     | _ -> raise (Failure "Expected a chain of at least length 1")
-  in
-  builder#unnest ();
+  );
   ()
 
 and handle_switch_body sb =
@@ -1043,14 +1033,14 @@ and handle_switch_body sb =
         [child_statement]
       | _ ->
         builder#start_block_nest ();
-        t_with ~nest:true stmt;
+        t_with stmt;
         builder#end_block_nest ();
         []
     in
 
     let rec iter_stmt stmt_list = match stmt_list with
       | [] -> ()
-      | hd :: tl -> iter_stmt ((handle_stmt hd) @ tl)
+      | hd :: tl -> iter_stmt (handle_stmt hd @ tl)
     in
     iter_stmt statement_list
   ) ();
@@ -1095,15 +1085,13 @@ and transform_argish_with_return_type ~in_span left_p params right_p colon
 and transform_argish left_p arg_list right_p =
   transform left_p;
   split ();
-  builder#start_span ();
-  tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+  tl_with ~span:true ~rule:(Some Rule.Argument) ~f:(fun () ->
     tl_with ~nest:true ~f:(fun () ->
       handle_possible_list ~after_each:after_each_argument arg_list
     ) ();
     split ();
     transform right_p
   ) ();
-  builder#end_span ();
   ()
 
 and transform_keyword_expression_statement kw expr semi =
@@ -1136,41 +1124,41 @@ and transform_binary_expression ~is_nested expr =
     transform operator;
     builder#simple_space_split ();
     t_with ~nest:true right;
-  end else
-  let precedence = Full_fidelity_operator.precedence operator_t in
+  end else begin
+    let precedence = Full_fidelity_operator.precedence operator_t in
 
-  let rec flatten_expression expr =
-    match syntax expr with
-      | BinaryExpression x ->
-        let (left, operator, right) = get_binary_expression_children x in
-        let operator_t = get_operator_type operator in
-        let op_precedence = Full_fidelity_operator.precedence operator_t in
-        if (op_precedence = precedence) then
-          (flatten_expression left) @ (operator :: flatten_expression right)
-        else [expr]
-      | _ -> [expr]
-  in
+    let rec flatten_expression expr =
+      match syntax expr with
+        | BinaryExpression x ->
+          let (left, operator, right) = get_binary_expression_children x in
+          let operator_t = get_operator_type operator in
+          let op_precedence = Full_fidelity_operator.precedence operator_t in
+          if (op_precedence = precedence) then
+            (flatten_expression left) @ (operator :: flatten_expression right)
+          else [expr]
+        | _ -> [expr]
+    in
 
-  let transform_operand operand =
-    match syntax operand with
-      | BinaryExpression x -> transform_binary_expression ~is_nested:true x
-      | _ -> transform operand
-  in
+    let transform_operand operand =
+      match syntax operand with
+        | BinaryExpression x -> transform_binary_expression ~is_nested:true x
+        | _ -> transform operand
+    in
 
-  let l = flatten_expression (make_binary_expression left operator right) in
-  (match l with
-    | hd :: tl ->
-      transform_operand hd;
-      tl_with ~rule:(Some Rule.Argument) ~nest:is_nested ~f:(fun () ->
-        List.iteri tl ~f:(fun i x ->
-          if (i mod 2) = 0 then begin add_space (); transform x end
-          else begin split ~space:true (); transform_operand x end
-        );
-        ()
-      ) ();
-    | _ -> raise (Failure "Expected non empty list of binary expression pieces")
-  );
-  ()
+    let binary_expresion_syntax_list =
+      flatten_expression (make_binary_expression left operator right) in
+    match binary_expresion_syntax_list with
+      | hd :: tl ->
+        transform_operand hd;
+        tl_with ~rule:(Some Rule.Argument) ~nest:is_nested ~f:(fun () ->
+          List.iteri tl ~f:(fun i x ->
+            if (i mod 2) = 0 then begin add_space (); transform x end
+            else begin split ~space:true (); transform_operand x end
+          )
+        ) ()
+      | _ ->
+        raise (Failure "Expected non empty list of binary expression pieces")
+  end
 
 let debug_chunk_groups chunk_groups =
   Printf.printf "%d\n" (List.length chunk_groups);

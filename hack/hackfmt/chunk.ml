@@ -35,11 +35,11 @@ let make text rule nesting =
   in
   {c with text; nesting;}
 
-let finalize chunk rule space =
-  let rule = match rule with
-    (* TODO: refactor: | r when (Rule.get_kind r) = Rule.Always -> r *)
-    | _ when chunk.rule <> Rule.null_rule_id -> chunk.rule
-    | r -> r
+let finalize chunk rule ra space =
+  let rule = if Rule_allocator.get_rule_kind ra rule = Rule.Always
+    || chunk.rule = Rule.null_rule_id
+    then rule
+    else chunk.rule
   in
   {chunk with
     is_appendable = false;

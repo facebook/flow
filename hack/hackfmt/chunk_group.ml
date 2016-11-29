@@ -29,53 +29,41 @@ let get_rule_kind t id =
   r.Rule.kind
 
 let constrain_rules t rvm rule_list =
-  List.fold_left rule_list ~init:rvm ~f:(fun rvm rule_id ->
-    if Rule.cares_about_children (get_rule_kind t rule_id)
-    then IMap.add rule_id 1 rvm
-    else rvm
-  )
+  let aux rule_id = Rule.cares_about_children (get_rule_kind t rule_id) in
+  let rules_that_care = List.filter rule_list ~f:aux in
+  List.fold rules_that_care ~init:rvm ~f:(fun acc k -> IMap.add k 1 acc)
 
-let get_initial_rvm t =
-  IMap.fold (fun rule_id r acc ->
-    match r.Rule.kind with
-      | Rule.Always ->
-        let acc = IMap.add rule_id 1 acc in
-        if IMap.mem rule_id t.rule_dependency_map then
-          constrain_rules t acc (IMap.find_unsafe rule_id t.rule_dependency_map)
-        else acc
-      | _ -> acc
-  ) t.rule_map IMap.empty
+let get_initial_rule_value_map t =
+  let is_always_rule _k v = v.Rule.kind = Rule.Always in
+  let always_rules = IMap.filter is_always_rule t.rule_map in
+  let get_dependencies rule_id =
+    try IMap.find_unsafe rule_id t.rule_dependency_map with Not_found -> [] in
+  let constrain k _v acc = constrain_rules t acc (get_dependencies k) in
+  let init_map = IMap.map (fun k -> 1) always_rules in
+  IMap.fold constrain always_rules init_map
 
-let is_dependency_satisfied par_kind par_val child_val =
-  match par_kind, par_val, child_val with
-    | Rule.Argument, None, 1 -> false
-    | Rule.Argument, Some 0, 1 -> false
-    | Rule.XHPExpression, None, 1 -> false
-    | Rule.XHPExpression, Some 0, 1 -> false
-    | _ -> true
+let is_dependency_satisfied parent_kind parent_val child_val =
+  child_val <> 1 ||
+  Option.value ~default:0 parent_val <> 0 ||
+  (parent_kind <> Rule.Argument && parent_kind <> Rule.XHPExpression)
 
 let is_rule_value_map_valid t rvm =
-  let is_valid = IMap.fold (fun rule_id v is_valid ->
-    if not (IMap.mem rule_id t.rule_dependency_map)
-    then is_valid
-    else
-      let parent_list = IMap.find_unsafe rule_id t.rule_dependency_map in
-      List.fold_left parent_list ~init:is_valid ~f:(fun is_valid par_id ->
-        if not is_valid
-        then is_valid
-        else
-          let par_rule = IMap.find_unsafe par_id t.rule_map in
-          let par_value = IMap.get par_id rvm in
-          is_dependency_satisfied par_rule.Rule.kind par_value v
-      )
-  ) rvm true in
-  is_valid
+  let valid_map = IMap.mapi (fun rule_id v ->
+    let parent_list = try IMap.find_unsafe rule_id t.rule_dependency_map
+      with Not_found -> []
+    in
+    List.for_all parent_list ~f:(fun parent_id ->
+      let parent_rule = IMap.find_unsafe parent_id t.rule_map in
+      let parent_value = IMap.get parent_id rvm in
+      is_dependency_satisfied parent_rule.Rule.kind parent_value v
+    )
+  ) rvm in
+  List.for_all ~f:(fun x -> x) @@ List.map ~f:snd @@ IMap.bindings valid_map
 
 let dependency_map_to_string t =
-  let kv_list = IMap.elements t.rule_dependency_map in
-  let str_list = List.map kv_list ~f:(fun (k, v_list) ->
+  let get_map_values map = List.map ~f:snd @@ IMap.bindings @@ map in
+  let str_list = get_map_values @@ IMap.mapi (fun k v_list ->
     let values = List.map v_list ~f:string_of_int in
-    let v_strs = "[" ^ String.concat ", " values ^ "]" in
-    string_of_int k ^ ": "  ^ v_strs
-  ) in
+    string_of_int k ^ ": [" ^ String.concat ", " values ^ "]"
+  ) t in
   "{" ^ String.concat ", " str_list ^ "}"
