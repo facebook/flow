@@ -16,11 +16,22 @@ open Ast
 module Error = Parse_error
 open Parser_common
 
+module type EXPRESSION = sig
+  val array_initializer: env -> Loc.t * Expression.Array.t
+  val assignment: env -> Expression.t
+  val conditional: env -> Expression.t
+  val identifier_or_reserved_keyword: env -> Identifier.t * (Loc.t * Parse_error.t) option
+  val is_assignable_lhs: Expression.t -> bool
+  val left_hand_side: env -> Expression.t
+  val number: env -> number_type -> float
+  val sequence: env -> Expression.t list -> Expression.t
+end
+
 module Expression
   (Parse: PARSER)
   (Type: Type_parser.TYPE)
   (Declaration: Declaration_parser.DECLARATION)
-= struct
+: EXPRESSION = struct
   type op_precedence = Left_assoc of int | Right_assoc of int
   let is_tighter a b =
     let a_prec = match a with Left_assoc x -> x | Right_assoc x -> x - 1 in
