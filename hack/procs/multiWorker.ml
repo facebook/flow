@@ -10,12 +10,10 @@
 
 open Core
 
-type 'a bucket =
-  | Job of 'a list
+type 'a bucket = 'a Bucket.bucket =
+  | Job of 'a
   | Wait
-
-type 'a nextlist_dynamic =
-  unit -> 'a bucket
+  | Done
 
 let single_threaded_call_dynamic job merge neutral next =
   let x = ref (next()) in
@@ -25,7 +23,7 @@ let single_threaded_call_dynamic job merge neutral next =
    * mode.
    *)
   let _ = Marshal.to_string job [Marshal.Closures] in
-  while !x <> Job [] do
+  while !x <> Done do
     match !x with
     | Wait ->
         (* this state should never be reached in single threaded mode, since
@@ -35,15 +33,16 @@ let single_threaded_call_dynamic job merge neutral next =
         let res = job neutral l in
         acc := merge !acc res;
         x := next()
+    | Done -> ()
   done;
   !acc
 
 let multi_threaded_call_dynamic
   (type a) (type b)
-  workers (job: b -> a list -> b)
+  workers (job: b -> a -> b)
   (merge: b -> b -> b)
   (neutral: b)
-  (next: a nextlist_dynamic) =
+  (next: a Bucket.nextbucket_dynamic) =
   let rec dispatch workers handles acc =
     (* 'worker' represents available workers. *)
     (* 'handles' represents pendings jobs. *)
@@ -57,7 +56,7 @@ let multi_threaded_call_dynamic
         (* At least one worker is available... *)
         match next () with
         | Wait -> collect (worker :: workers) handles acc
-        | Job [] ->
+        | Done ->
             (* ... but no more job to be distributed, let's collect results. *)
             dispatch [] handles acc
         | Job bucket ->
@@ -90,7 +89,8 @@ type 'a nextlist =
   unit -> 'a list
 
 let call workers ~job ~merge ~neutral ~next =
-  let next = fun () -> Job (next ()) in
+  let next () = match next() with [] -> Done | wl -> Job wl
+  in
   call_dynamic workers ~job ~merge ~neutral ~next
 
 let next ?max_size workers =

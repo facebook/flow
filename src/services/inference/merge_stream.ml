@@ -108,7 +108,10 @@ let make dependency_graph leader_map component_map =
       in
       let n = min bucket_size jobs in
       let result = take n |> List.map component in
-      MultiWorker.Job result
+      if result <> [] then
+        MultiWorker.Job result
+      else
+        MultiWorker.Done
 
 (* We know when files are done by having jobs return the files they processed,
    and trapping the function that joins results. ;), yeah. *)

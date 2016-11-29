@@ -18,7 +18,13 @@
  * hurts *)
 (****************************************************************************)
 
-type 'a t = unit -> 'a list
+type 'a bucket =
+  | Job of 'a
+  | Wait
+  | Done
+
+type 'a nextbucket_dynamic =
+  unit -> 'a bucket
 
 let make_ bucket_size jobs =
   let i = ref 0 in
@@ -36,3 +42,10 @@ let make ~num_workers ?(max_size=500) jobs =
     else max_size
   in
   make_ bucket_size jobs
+
+let make_bucket ~num_workers ?(max_size=500) jobs =
+  let make_list = make ~num_workers ~max_size jobs
+  in
+  fun () -> match make_list () with
+      [] -> Done
+    | wl -> Job wl
