@@ -63,8 +63,8 @@ let rec read_and_record (d_in: Debug_port.in_port) =
     let () = Globals.recorder := Recorder.add_event event !Globals.recorder in
     read_and_record d_in
 
-let eprint_events = Recorder.Transcribe_to_consumer (fun events ->
-  List.iter (fun e -> Printf.eprintf "%s\n" (Recorder_types.to_string e)) events
+let oprint_events = Recorder.Transcribe_to_consumer (fun events ->
+  List.iter (fun e -> Printf.printf "%s\n" (Recorder_types.to_string e)) events
   )
 
 let stop_recording () =
@@ -91,7 +91,7 @@ let () =
     let () = Printf.eprintf "Server started with debug port attached.\n" in
     let () = Printf.eprintf "Starting recording.\n" in
     let () = Globals.recorder := (Recorder.start {
-      Recorder.transcriber = eprint_events }) in
+      Recorder.transcriber = oprint_events }) in
     let code = read_and_record d_in in
     Exit_status.exit code
   | _ ->

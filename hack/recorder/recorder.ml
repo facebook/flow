@@ -76,11 +76,24 @@ let fetch_file_contents _ =
   (** TODO: Get the contents from disk *)
   "Lorem ipsum...\n"
 
+let files_with_contents files =
+  let files = Relative_path.Set.elements files in
+  Relative_path.Map.from_keys files fetch_file_contents
+
 let convert_event debug_event = match debug_event with
+  | DE.Loaded_saved_state { DE.filename;
+    dirty_files; changed_while_parsing; build_targets; } ->
+    let dirty_files = files_with_contents dirty_files in
+    let changed_while_parsing = files_with_contents changed_while_parsing in
+    let build_targets = files_with_contents build_targets in
+    Loaded_saved_state { filename;
+      dirty_files;
+      changed_while_parsing;
+      build_targets; }
   | DE.Fresh_vcs_state s -> Fresh_vcs_state s
   | DE.Typecheck -> Typecheck
   | DE.Disk_files_modified files ->
-    let contents = SMap.from_keys files fetch_file_contents in
+    let contents = Relative_path.Map.from_keys files fetch_file_contents in
     Disk_files_modified contents
   | DE.Stop_recording ->
     Stop_recording
@@ -89,15 +102,19 @@ let with_event event env =
   { env with rev_buffered_recording =
     (convert_event event) :: env.rev_buffered_recording; }
 
-let init_env_from_fresh_vcs_state start_env state_name =
+let init_env start_env saved_state_info =
+  let load_saved_state_event =
+    convert_event (DE.Loaded_saved_state saved_state_info) in
   {
     start_env = start_env;
-    rev_buffered_recording = [Fresh_vcs_state state_name];
+    rev_buffered_recording = [
+      load_saved_state_event;
+    ];
   }
 
 let add_event event instance = match instance, event with
-  | Pending_start start_env, DE.Fresh_vcs_state state_name ->
-    let env = init_env_from_fresh_vcs_state start_env state_name in
+  | Pending_start start_env, DE.Loaded_saved_state state ->
+    let env = init_env start_env state in
     Active env
   | Pending_start _, _ ->
     (** Ignore while we're waiting for a fresh VCS state. *)
