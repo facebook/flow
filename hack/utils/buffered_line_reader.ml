@@ -18,51 +18,106 @@
  * buffer contains something as well as doing a Unix select to know for real if
  * there is content coming.
  *
- * The "has_pending_line" method below does exactly that.
+ * The "has_buffered_content" method below does exactly that.
  *)
 
 open Core
 
+(** Our Unix systems only allow reading 64KB chunks at a time.
+ * Trying to read more than 64KB results in only 64KB being read. *)
+let chunk_size = 65536
+
 type t = {
   fd: Unix.file_descr;
-  pending_whole_lines : string Queue.t;
+  (** read_message is recursively called, prepending chunks to this reversed
+   * list until a newline is found. This means only the first element in this
+   * list may contain a (or more than one) newline (but doesn't necessarily).
+   *)
+  buffered_chunks_rev: string list ref;
 }
 
-let rec read_message ?line_part:(line_part="") r =
-  let b = String.create 1024 in
+let set_buffer_rev r b =
+  r.buffered_chunks_rev := b
 
-  let bytes_read = Unix.read r.fd b 0 1024 in
+(** A non-throwing version of String.index. *)
+let index s c =
+  try begin
+    let i = String.index s c in
+    `First_appearance i
+  end
+  with
+  | Not_found -> `No_appearance
+
+let merge_chunks last_chunk chunks_rev =
+  let chunks_rev = last_chunk :: chunks_rev in
+  let chunks = List.rev chunks_rev in
+  String.concat "" chunks
+
+(** Recursively read a chunk from the file descriptor until we see a newline
+ * character. This will build up the buffer if no newlines are read and will
+ * consume the entirety of the buffer when a newline is encountered (resetting
+ * the buffer with the remainder of the read chunk beyond that first newline,
+ * which will be consumed on the next read_message call.).*)
+let rec read_message r =
+  let b = String.create chunk_size in
+
+  let bytes_read = Unix.read r.fd b 0 chunk_size in
   assert (bytes_read > 0);
+  let b = String.sub b 0 bytes_read in
 
-  let last_line_complete = String.get b (bytes_read - 1) = '\n' in
-  let s = line_part ^ (String.sub b 0 bytes_read) in
+  match index b '\n' with
+  | `No_appearance ->
+    let () = r.buffered_chunks_rev := b :: !(r.buffered_chunks_rev) in
+    read_message r
+  | `First_appearance i ->
+    let tail = String.sub b 0 i in
+    let result = merge_chunks tail !(r.buffered_chunks_rev) in
+    let () = if (i + 1) < bytes_read
+    then
+      (** We read some bytes beyond the first newline character. *)
+      let length = bytes_read - (i + 1) in
+      (** We skip the newline character. *)
+      let remainder = String.sub b (i + 1) length in
+      set_buffer_rev r [remainder]
+    else
+      (** We didn't read any bytes beyond the first newline character. *)
+      set_buffer_rev r []
+    in
+    result
 
-  let lines = Str.split (Str.regexp "\n") s in
-  let lines_read = List.length lines in
+let get_next_line ?approx_size r =
+  match List.hd !(r.buffered_chunks_rev) with
+  | None -> read_message r
+  | Some remainder -> begin
+    match index remainder '\n' with
+    | `No_appearance ->
+      read_message r
+    | `First_appearance i ->
+      let result = String.sub remainder 0 i in
+      let () = if (i + 1) < (String.length remainder)
+      then
+        (** There are some bytes left beyond the first newline character. *)
+        let length = (String.length remainder) - (i + 1) in
+        let remainder = String.sub remainder (i + 1) length in
+        set_buffer_rev r [remainder]
+      else
+        (** No bytes beyond the firstt newline character. *)
+        set_buffer_rev r []
+      in
+      result
+  end
 
-  let last_line_part = ref "" in
-
-  List.iteri lines ~f:begin fun i line ->
-    if last_line_complete || i < lines_read - 1 then
-      Queue.push line r.pending_whole_lines
-    else last_line_part := line
-  end;
-
-  if last_line_complete
-    then Queue.take r.pending_whole_lines
-    else read_message ~line_part:!last_line_part r
-
-let get_next_line r =
-  if Queue.is_empty r.pending_whole_lines
-    then read_message r
-    else Queue.take r.pending_whole_lines
-
-let has_pending_line r =
-  not @@ Queue.is_empty r.pending_whole_lines
+let has_buffered_content r =
+  not @@ List.is_empty !(r.buffered_chunks_rev)
 
 let create fd = {
   fd = fd;
-  pending_whole_lines = Queue.create ();
+  buffered_chunks_rev = ref [];
+  }
+
+let null_reader = {
+  fd = Unix.openfile "/dev/null" [Unix.O_RDONLY] 0o440;
+  buffered_chunks_rev = ref [];
   }
 
 let get_fd r = r.fd

@@ -57,7 +57,7 @@ type dead_env = {
 
 type env = {
   settings : init_settings;
-  socket: Timeout.in_channel * out_channel;
+  socket: Buffered_line_reader.t * out_channel;
   watch_root: string;
   relative_path: string;
   (* See https://facebook.github.io/watchman/docs/clockspec.html
@@ -239,22 +239,31 @@ let capability_check ?(optional=[]) required =
 (* Handling requests and responses. *)
 (*****************************************************************************)
 
-let read_with_timeout timeout ic =
-  let fd = Timeout.descr_of_in_channel ic in
-  let deadline = Unix.gettimeofday () +. timeout in
-  match Unix.select [fd] [] [] timeout with
-    | [ready_fd], _, _ when ready_fd = fd -> begin
-     Timeout.with_timeout
-       ~timeout:(max 1 (int_of_float (deadline -. Unix.gettimeofday ())))
-       ~do_:(fun t -> Timeout.input_line ~timeout:t ic)
-       ~on_timeout:begin fun _ ->
-                     EventLogger.watchman_timeout ();
-                     raise Read_payload_too_long
-                   end
-    end
-    | _, _, _ ->
-      EventLogger.watchman_timeout ();
-      raise Timeout
+let has_input timeout reader =
+  if Buffered_line_reader.has_buffered_content reader
+  then true
+  else
+    match Unix.select [Buffered_line_reader.get_fd reader] [] [] timeout with
+    | [], _, _ -> false
+    | _ -> true
+
+let read_with_timeout timeout reader =
+  let start_t = Unix.time () in
+  if not (has_input timeout reader)
+  then
+    raise Timeout
+  else
+    let remaining = start_t +. timeout -. Unix.time () in
+    let timeout = int_of_float remaining in
+    let timeout = max timeout 10 in
+    try Timeout.with_timeout
+      ~do_: (fun _ -> Buffered_line_reader.get_next_line reader)
+      ~timeout
+      ~on_timeout:(fun _ -> ())
+    with
+    | Timeout.Timeout ->
+      let () = EventLogger.watchman_timeout () in
+      raise Read_payload_too_long
 
 (** We filter all responses from get_changes through this. This is to detect
  * Watchman server crashes.
@@ -297,13 +306,13 @@ let sanitize_watchman_response output =
   assert_no_error response;
   response
 
-let exec ?(timeout=120.0) (ic, oc) json =
+let exec ?(timeout=120.0) (reader, oc) json =
   let json_str = Hh_json.(json_to_string json) in
   if debug then Printf.eprintf "Watchman request: %s\n%!" json_str ;
   output_string oc json_str;
   output_string oc "\n";
   flush oc ;
-  sanitize_watchman_response (read_with_timeout timeout ic)
+  sanitize_watchman_response (read_with_timeout timeout reader)
 
 (*****************************************************************************)
 (* Initialization, reinitialization, and crash-tracking. *)
@@ -315,7 +324,8 @@ let get_sockname timeout =
   let ic =
     Timeout.open_process_in "watchman"
     [| "watchman"; "get-sockname"; "--no-pretty" |] in
-  let output = read_with_timeout (float_of_int timeout) ic in
+  let reader = Buffered_line_reader.create @@ Timeout.descr_of_in_channel ic in
+  let output = read_with_timeout (float_of_int timeout) reader in
   assert (Timeout.close_process_in ic = Unix.WEXITED 0);
   let json = Hh_json.json_of_string output in
   J.get_string_val "sockname" json
@@ -352,15 +362,17 @@ let re_init ?prior_clockspec
   let root_s = Path.to_string root in
   let sockname = get_sockname init_timeout in
   assert_sync_dir_exists (Filename.concat root_s sync_directory);
-  let socket = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
-  ignore @@ exec socket (capability_check ["relative_root"]);
-  let response = exec socket (watch_project root_s) in
+  let (tic, oc) = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
+  let reader = Buffered_line_reader.create
+    @@ Timeout.descr_of_in_channel @@ tic in
+  ignore @@ exec (reader, oc) (capability_check ["relative_root"]);
+  let response = exec (reader, oc) (watch_project root_s) in
   let watch_root = J.get_string_val "watch" response in
   let relative_path = J.get_string_val "relative_path" ~default:"" response in
 
   let clockspec = match prior_clockspec with
     | Some s -> s
-    | None -> exec socket (clock watch_root) |> J.get_string_val "clock"
+    | None -> exec (reader, oc) (clock watch_root) |> J.get_string_val "clock"
   in
   let env = {
     settings = {
@@ -369,7 +381,7 @@ let re_init ?prior_clockspec
       sync_directory;
       root;
     };
-    socket;
+    socket = (reader, oc);
     watch_root;
     relative_path;
     clockspec;
@@ -379,41 +391,31 @@ let re_init ?prior_clockspec
 
 let init settings = re_init settings
 
-let has_input timeout (in_channel, _) =
-  let fd = Timeout.descr_of_in_channel in_channel in
-  match Unix.select [fd] [] [] timeout with
-    | [_], _, _ -> true
-    | _ -> false
-
 let no_updates_response clockspec =
   let timeout_str = "{\"files\":[]," ^ "\"clock\":\"" ^ clockspec ^ "\"}" in
   Hh_json.json_of_string timeout_str
 
 let poll_for_updates ?timeout env =
   let timeout = Option.value timeout ~default:0.0 in
-  let ready = has_input timeout env.socket in
+  let ready = has_input timeout @@ fst env.socket in
   if not ready then
     if timeout = 0.0 then no_updates_response env.clockspec
     else raise Timeout
   else
-  let timeout = 20 in
-  try
-    let output = begin
-      let in_channel, _  = env.socket in
-      (* Use the timeout mechanism to limit maximum time to read payload (cap
-       * data size). *)
-      Timeout.with_timeout
-        ~do_: (fun t -> Timeout.input_line ~timeout:t in_channel)
-        ~timeout
-        ~on_timeout:begin fun _ -> () end
-    end in
+    (* Use the timeout mechanism to limit maximum time to read payload (cap
+     * data size) so we don't freeze if watchman sends an inordinate amount of
+     * data, or if it is malformed (i.e. doesn't end in a newline). *)
+    let timeout = 40 in
+    let output = try Timeout.with_timeout
+      ~do_: (fun _ -> Buffered_line_reader.get_next_line @@ fst env.socket)
+      ~timeout
+      ~on_timeout:begin fun _ -> () end
+    with
+      | Timeout.Timeout ->
+        let () = Hh_logger.log "Watchman.poll_for_updates timed out" in
+        raise Read_payload_too_long
+    in
     sanitize_watchman_response output
-  with
-  | Timeout.Timeout ->
-    let () = Hh_logger.log "Watchman.poll_for_updates timed out" in
-    raise Read_payload_too_long
-  | _ as e ->
-    raise e
 
 let extract_file_names env json =
   let files = try J.get_array_val "files" json with
@@ -458,8 +460,8 @@ let maybe_restart_instance instance = match instance with
       instance
 
 let close_channel_on_instance env =
-  let ic, _ = env.socket in
-  Timeout.close_in ic;
+  let reader, _ = env.socket in
+  Unix.close @@ Buffered_line_reader.get_fd reader;
   EventLogger.watchman_died_caught ();
   Watchman_dead (dead_env_from_alive env), Watchman_unavailable
 
@@ -518,6 +520,8 @@ let call_on_instance instance source f =
         Exit_status.(exit Watchman_failed)
   end
 
+(** This is a large >50MB payload, which could longer than 2 minutes for
+ * Watchman to generate and push down the channel. *)
 let get_all_files env =
   try with_crash_record_exn env.settings.root "get_all_files"  @@ fun () ->
     let response = exec env.socket (all_query env) in
@@ -667,7 +671,7 @@ module Testing = struct
 
   let test_env = {
     settings = test_settings;
-    socket = (Timeout.open_in "/dev/null", open_out "/dev/null");
+    socket = (Buffered_line_reader.null_reader, open_out "/dev/null");
     watch_root = "";
     relative_path = "";
     clockspec = "";
