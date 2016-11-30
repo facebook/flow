@@ -1005,6 +1005,10 @@ void assert_master() {
   assert(my_pid == *master_pid);
 }
 
+void assert_not_master() {
+  assert(my_pid != *master_pid);
+}
+
 /*****************************************************************************/
 
 /*****************************************************************************/
@@ -1991,6 +1995,7 @@ CAMLprim value hh_save_dep_table_sqlite(value out_filename) {
   gettimeofday(&tv, NULL);
 
   sqlite3 *db_out;
+  // sqlite3_open creates the db
   assert(sqlite3_open(String_val(out_filename), &db_out) == SQLITE_OK);
 
   // Create header for verification while we read from the db
@@ -2112,25 +2117,31 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   CAMLparam1(ocaml_key);
   CAMLlocal2(result, cell);
 
+  result = Val_int(0); // The empty list
+
+  // Make sure db connection is made
+  if(db == NULL) {
+    assert(db_filename != NULL);
+    // First lets figure out whether we are in sql mode or not
+    if (*db_filename == '\0') {
+      // This means we are not in sql, return empty list
+      CAMLreturn(result);
+    } else {
+      // We are in sql, hence we shouldn't be in the master process,
+      // since we are not connected yet, soo.. try to connect
+      assert_not_master();
+      // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
+      assert(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL)
+        == SQLITE_OK);
+    }
+    // By now, we either set the db or returned an empty list (not sql case)
+    assert(db != NULL);
+  }
+
   // The caller is required to pass a 32-bit node ID.
   const uint64_t key64 = Long_val(ocaml_key);
   const uint32_t key = (uint32_t)key64;
   assert((key & 0x7FFFFFFF) == key64);
-
-  result = Val_int(0); // The empty list
-
-  // Make sure db connection is made
-  // If not the master process, then try to connect
-  // Otherwise return empty list
-  if(db == NULL) {
-    if (my_pid != *master_pid && db_filename != NULL && *db_filename != '\0') {
-      assert(sqlite3_open(db_filename, &db) == SQLITE_OK);
-    }
-    // If db is still NULL, then we must quit
-    if (db == NULL) {
-      CAMLreturn(result);
-    }
-  }
 
   uint32_t *values;
   size_t size, count, i;
