@@ -1,6 +1,9 @@
 type out_port
 type in_port
 
+(** Can't read from this port anymore. *)
+exception Port_closed
+
 (** Optionally write the event to the optional port (does nothing if None). On
  * failure (e.g. pipe broken) returns None.
  *
@@ -18,3 +21,6 @@ val create : unit -> in_port * out_port
  * commandline arg when forking the server process. *)
 val handle_of_out : out_port -> Handle.handle
 val out_port_of_handle : Handle.handle -> out_port
+
+val in_port_of_in_channel : Debug_event.event Daemon.in_channel -> in_port
+val out_port_of_out_channel : Debug_event.event Daemon.out_channel -> out_port
