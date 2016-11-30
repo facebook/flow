@@ -131,8 +131,8 @@ module type NoCache = sig
    *)
   val add: key -> t -> unit
 
-  (* Safe for concurrent reads, but not if interleaved with any operation
-   * mutating the table (add, remove etc ..).
+  (* Safe for concurrent reads. Safe for interleaved reads and mutations,
+   * provided the code runs on Intel architectures.
    *)
   val get: key -> t option
   val get_old: key -> t option
