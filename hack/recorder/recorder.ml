@@ -11,21 +11,9 @@ module DE = Debug_event
 
 let file_extension = "hrec"
 
-(** Do something with the events when flushing the buffer. *)
-type transcriber =
-  (** The unix path of the file to transcribe to. *)
-  | Transcribe_to_file of string
-  (** Call this consumer when transcribing the events. *)
-  | Transcribe_to_consumer : ((event list) -> unit) -> transcriber
-
-type init_settings = {
-  transcriber: transcriber;
-}
-
 type start_env = {
   (** Unix.timeofday of when recording was switched on. *)
   start_time : float;
-  settings : init_settings;
 }
 
 type env = {
@@ -45,32 +33,22 @@ type instance =
    * state. We truly want the VCS to move to a fresh SHA. *)
   | Pending_start of start_env
   | Active of env
+  | Finished of event list
 
-let describe_transcriber transcriber = match transcriber with
-  | Transcribe_to_file path -> path
-  | Transcribe_to_consumer _ -> "Transcribe_to_consumer"
+let is_finished instance = match instance with
+  | Finished _ -> true
+  | _ -> false
 
-let flush_to_transcriber transcriber events = match transcriber with
-  | Transcribe_to_file _ ->
-    (** TODO *)
-    ()
-  | Transcribe_to_consumer f ->
-    f events
+let get_events instance = match instance with
+  | Finished events -> events
+  | Switched_off | Pending_start _ -> []
+  | Active env -> List.rev env.rev_buffered_recording
 
-let log_start init_settings =
-  Hh_logger.log "Starting recorder with transcriber: %s"
-    (describe_transcriber init_settings.transcriber)
-
-let start init_settings =
+let start () =
   let start = Unix.gettimeofday () in
-  let () = log_start init_settings in
-  Pending_start ({ start_time = start; settings = init_settings; })
+  Pending_start ({ start_time = start; })
 
 let default_instance = Switched_off
-
-let flush_recording env =
-  flush_to_transcriber env.start_env.settings.transcriber
-    (List.rev env.rev_buffered_recording)
 
 let fetch_file_contents _ =
   (** TODO: Get the contents from disk *)
@@ -116,14 +94,15 @@ let add_event event instance = match instance, event with
   | Pending_start start_env, DE.Loaded_saved_state state ->
     let env = init_env start_env state in
     Active env
+  | Finished _, _ ->
+    instance
   | Pending_start _, _ ->
     (** Ignore while we're waiting for a fresh VCS state. *)
     instance
   | Switched_off, _ ->
     instance
   | Active env, DE.Stop_recording ->
-    let () = flush_recording env in
-    Switched_off
+    Finished (List.rev env.rev_buffered_recording)
   | Active env, _ ->
     let env = with_event event env in
     Active env

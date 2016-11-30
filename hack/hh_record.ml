@@ -53,24 +53,29 @@ module Args = struct
 
 end
 
-let rec read_and_record (d_in: Debug_port.in_port) =
-  let event = Debug_port.read d_in in
-  match event with
-  | Debug_event.Stop_recording ->
-    let () = Globals.recorder := Recorder.add_event event !Globals.recorder in
-    Exit_status.(exit No_error)
-  | _ ->
-    let () = Globals.recorder := Recorder.add_event event !Globals.recorder in
-    read_and_record d_in
-
-let oprint_events = Recorder.Transcribe_to_consumer (fun events ->
+let oprint_events events =
   List.iter (fun e -> Printf.printf "%s\n" (Recorder_types.to_string e)) events
-  )
+
+let print_and_exit recorder =
+  let events = Recorder.get_events recorder in
+  oprint_events events;
+  exit 0
+
+let rec read_and_record recorder (d_in: Debug_port.in_port) =
+  let event = Debug_port.read d_in in
+  let () = recorder := Recorder.add_event event !recorder in
+  if Recorder.is_finished !recorder
+  then
+    print_and_exit !recorder
+  else
+    read_and_record recorder d_in
 
 let stop_recording () =
-  Globals.recorder := (Recorder.add_event DE.Stop_recording !Globals.recorder)
+  Globals.recorder := (Recorder.add_event DE.Stop_recording !Globals.recorder);
+  print_and_exit !Globals.recorder
 
 let () =
+  let () = Globals.recorder := Recorder.start () in
   (** Stop the recording when we get a Unix interrupt signal. *)
   Sys_utils.set_signal Sys.sigint (Sys.Signal_handle (fun _ ->
     let () = stop_recording () in
@@ -90,9 +95,6 @@ let () =
   | Exit_status.No_error ->
     let () = Printf.eprintf "Server started with debug port attached.\n" in
     let () = Printf.eprintf "Starting recording.\n" in
-    let () = Globals.recorder := (Recorder.start {
-      Recorder.transcriber = oprint_events }) in
-    let code = read_and_record d_in in
-    Exit_status.exit code
+    read_and_record Globals.recorder d_in
   | _ ->
     Exit_status.(exit e)
