@@ -1,14 +1,14 @@
 fetch.js:12
  12: const b: Promise<string> = fetch(myRequest); // incorrect
                       ^^^^^^ string. This type is incompatible with
-850: declare function fetch(input: string | Request, init?: RequestOptions): Promise<Response>;
-                                                                                     ^^^^^^^^ Response. See lib: <BUILTINS>/bom.js:850
+851: declare function fetch(input: string | Request, init?: RequestOptions): Promise<Response>;
+                                                                                     ^^^^^^^^ Response. See lib: <BUILTINS>/bom.js:851
 
 fetch.js:25
  25: const d: Promise<Blob> = fetch('image.png'); // incorrect
                       ^^^^ Blob. This type is incompatible with
-850: declare function fetch(input: string | Request, init?: RequestOptions): Promise<Response>;
-                                                                                     ^^^^^^^^ Response. See lib: <BUILTINS>/bom.js:850
+851: declare function fetch(input: string | Request, init?: RequestOptions): Promise<Response>;
+                                                                                     ^^^^^^^^ Response. See lib: <BUILTINS>/bom.js:851
 
 headers.js:3
   3: const a = new Headers("'Content-Type': 'image/jpeg'"); // not correct
@@ -119,24 +119,24 @@ request.js:2
                         ^^^^^^^^^^^^^ constructor call
   2: const a: Request = new Request(); // incorrect
                         ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-825:     constructor(input: string | Request, init?: RequestOptions): void;
-                            ^^^^^^^^^^^^^^^^ union: string | Request. See lib: <BUILTINS>/bom.js:825
+826:     constructor(input: string | Request, init?: RequestOptions): void;
+                            ^^^^^^^^^^^^^^^^ union: string | Request. See lib: <BUILTINS>/bom.js:826
   Member 1:
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:826
   Error:
     2: const a: Request = new Request(); // incorrect
                           ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:826
   Member 2:
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:826
   Error:
     2: const a: Request = new Request(); // incorrect
                           ^^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:826
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -144,8 +144,8 @@ request.js:6
 inconsistent use of library definitions
 783:     cache?: ?CacheType;
                   ^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:783
-830:     cache: CacheType;
-                ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:830
+831:     cache: CacheType;
+                ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:831
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -153,8 +153,8 @@ request.js:6
 inconsistent use of library definitions
 783:     cache?: ?CacheType;
                   ^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:783
-830:     cache: CacheType;
-                ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:830
+831:     cache: CacheType;
+                ^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:831
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -162,8 +162,8 @@ request.js:6
 inconsistent use of library definitions
 784:     credentials?: ?CredentialsType;
                         ^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:784
-831:     credentials: CredentialsType;
-                      ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:831
+832:     credentials: CredentialsType;
+                      ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:832
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -171,8 +171,8 @@ request.js:6
 inconsistent use of library definitions
 784:     credentials?: ?CredentialsType;
                         ^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:784
-831:     credentials: CredentialsType;
-                      ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:831
+832:     credentials: CredentialsType;
+                      ^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:832
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -180,8 +180,8 @@ request.js:6
 inconsistent use of library definitions
 785:     headers?: ?HeadersInit;
                     ^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:785
-832:     headers: Headers;
-                  ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:832
+833:     headers: Headers;
+                  ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:833
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -189,8 +189,8 @@ request.js:6
 inconsistent use of library definitions
 785:     headers?: ?HeadersInit;
                     ^^^^^^^^^^^ object type. This type is incompatible with. See lib: <BUILTINS>/bom.js:785
-832:     headers: Headers;
-                  ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:832
+833:     headers: Headers;
+                  ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:833
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -198,8 +198,8 @@ request.js:6
 inconsistent use of library definitions
 785:     headers?: ?HeadersInit;
                     ^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:785
-832:     headers: Headers;
-                  ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:832
+833:     headers: Headers;
+                  ^^^^^^^ Headers. See lib: <BUILTINS>/bom.js:833
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -207,8 +207,8 @@ request.js:6
 inconsistent use of library definitions
 786:     integrity?: ?string;
                       ^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:786
-833:     integrity: string;
-                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:833
+834:     integrity: string;
+                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:834
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -216,8 +216,8 @@ request.js:6
 inconsistent use of library definitions
 786:     integrity?: ?string;
                       ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:786
-833:     integrity: string;
-                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:833
+834:     integrity: string;
+                    ^^^^^^ string. See lib: <BUILTINS>/bom.js:834
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -225,8 +225,8 @@ request.js:6
 inconsistent use of library definitions
 787:     method?: ?MethodType;
                    ^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:787
-834:     method: MethodType;
-                 ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:834
+835:     method: MethodType;
+                 ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:835
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -234,8 +234,8 @@ request.js:6
 inconsistent use of library definitions
 787:     method?: ?MethodType;
                    ^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:787
-834:     method: MethodType;
-                 ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:834
+835:     method: MethodType;
+                 ^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:835
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -243,8 +243,8 @@ request.js:6
 inconsistent use of library definitions
 788:     mode?: ?ModeType;
                  ^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:788
-835:     mode: ModeType;
-               ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:835
+836:     mode: ModeType;
+               ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:836
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -252,8 +252,8 @@ request.js:6
 inconsistent use of library definitions
 788:     mode?: ?ModeType;
                  ^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:788
-835:     mode: ModeType;
-               ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:835
+836:     mode: ModeType;
+               ^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:836
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -261,8 +261,8 @@ request.js:6
 inconsistent use of library definitions
 789:     redirect?: ?RedirectType;
                      ^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:789
-836:     redirect: RedirectType;
-                   ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:836
+837:     redirect: RedirectType;
+                   ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:837
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -270,8 +270,8 @@ request.js:6
 inconsistent use of library definitions
 789:     redirect?: ?RedirectType;
                      ^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:789
-836:     redirect: RedirectType;
-                   ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:836
+837:     redirect: RedirectType;
+                   ^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:837
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -279,8 +279,8 @@ request.js:6
 inconsistent use of library definitions
 790:     referrer?: ?string;
                      ^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:790
-837:     referrer: string;
-                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:837
+838:     referrer: string;
+                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:838
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -288,8 +288,8 @@ request.js:6
 inconsistent use of library definitions
 790:     referrer?: ?string;
                      ^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:790
-837:     referrer: string;
-                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:837
+838:     referrer: string;
+                   ^^^^^^ string. See lib: <BUILTINS>/bom.js:838
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -297,8 +297,8 @@ request.js:6
 inconsistent use of library definitions
 791:     referrerPolicy?: ?ReferrerPolicyType;
                            ^^^^^^^^^^^^^^^^^^ null. This type is incompatible with. See lib: <BUILTINS>/bom.js:791
-838:     referrerPolicy: ReferrerPolicyType;
-                         ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:838
+839:     referrerPolicy: ReferrerPolicyType;
+                         ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:839
 
 request.js:6
   6: const e: Request = new Request(b, c); // incorrect
@@ -306,32 +306,32 @@ request.js:6
 inconsistent use of library definitions
 791:     referrerPolicy?: ?ReferrerPolicyType;
                            ^^^^^^^^^^^^^^^^^^ undefined. This type is incompatible with. See lib: <BUILTINS>/bom.js:791
-838:     referrerPolicy: ReferrerPolicyType;
-                         ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:838
+839:     referrerPolicy: ReferrerPolicyType;
+                         ^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/bom.js:839
 
 request.js:8
   8: const f: Request = new Request({}) // incorrect
                         ^^^^^^^^^^^^^^^ constructor call
   8: const f: Request = new Request({}) // incorrect
                                     ^^ object literal. This type is incompatible with
-825:     constructor(input: string | Request, init?: RequestOptions): void;
-                            ^^^^^^^^^^^^^^^^ union: string | Request. See lib: <BUILTINS>/bom.js:825
+826:     constructor(input: string | Request, init?: RequestOptions): void;
+                            ^^^^^^^^^^^^^^^^ union: string | Request. See lib: <BUILTINS>/bom.js:826
   Member 1:
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:826
   Error:
     8: const f: Request = new Request({}) // incorrect
                                       ^^ object literal. This type is incompatible with
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                              ^^^^^^ string. See lib: <BUILTINS>/bom.js:826
   Member 2:
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:826
   Error:
     8: const f: Request = new Request({}) // incorrect
                                       ^^ object literal. This type is incompatible with
-  825:     constructor(input: string | Request, init?: RequestOptions): void;
-                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:825
+  826:     constructor(input: string | Request, init?: RequestOptions): void;
+                                       ^^^^^^^ Request. See lib: <BUILTINS>/bom.js:826
 
 request.js:30
  30: const j: Request = new Request('http://example.org', {
@@ -366,16 +366,16 @@ request.js:38
 request.js:49
  49: h.text().then((t: Buffer) => t); // incorrect
                        ^^^^^^ Buffer. This type is incompatible with an argument type of
-847:     text(): Promise<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:847
+848:     text(): Promise<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:848
 
 request.js:51
  51: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `then`
  51: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                ^^^^^^ Buffer. This type is incompatible with
-843:     arrayBuffer(): Promise<ArrayBuffer>;
-                                ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:843
+844:     arrayBuffer(): Promise<ArrayBuffer>;
+                                ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:844
 
 response.js:11
  11:     status: "404"
@@ -450,16 +450,16 @@ response.js:33
 response.js:44
  44: h.text().then((t: Buffer) => t); // incorrect
                        ^^^^^^ Buffer. This type is incompatible with an argument type of
-821:     text(): Promise<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:821
+822:     text(): Promise<string>;
+                         ^^^^^^ string. See lib: <BUILTINS>/bom.js:822
 
 response.js:46
  46: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call of method `then`
  46: h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
                                ^^^^^^ Buffer. This type is incompatible with
-817:     arrayBuffer(): Promise<ArrayBuffer>;
-                                ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:817
+818:     arrayBuffer(): Promise<ArrayBuffer>;
+                                ^^^^^^^^^^^ ArrayBuffer. See lib: <BUILTINS>/bom.js:818
 
 urlsearchparams.js:4
   4: const b = new URLSearchParams(['key1', 'value1']); // not correct
