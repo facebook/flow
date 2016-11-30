@@ -1,6 +1,7 @@
 /* @flow */
 
 import type {FlowLoc} from '../flowResult';
+import invariant from 'invariant';
 
 type PathNode = {
   ast: Object,
@@ -48,6 +49,7 @@ class Path {
         continue;
       }
       const prop = last.todo.pop();
+      invariant(prop !== undefined, 'We just did a length check');
       const ast = last.ast[prop];
       if (this.push(prop, ast)) {
         return ast;
