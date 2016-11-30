@@ -1107,24 +1107,55 @@ let expect_proper_def t =
 let expect_proper_def_use t =
   lift_to_use expect_proper_def t
 
+let print_if_verbose_lazy cx trace
+    ?(delim = "")
+    ?(indent = 0)
+    (lines: string Lazy.t list) =
+  match Context.verbose cx with
+  | Some { Verbose.indent = num_spaces; _ } ->
+    let indent = indent + Trace.trace_depth trace - 1 in
+    let prefix = String.make (indent * num_spaces) ' ' in
+    let pid = Context.pid_prefix cx in
+    let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
+    let lines = List.map add_prefix lines in
+    prerr_endline (String.concat delim lines)
+  | None ->
+    ()
+
+let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines: string list) =
+  match Context.verbose cx with
+  | Some _ ->
+    let lines = List.map (fun line -> lazy line) lines in
+    print_if_verbose_lazy cx trace ~delim ~indent lines
+  | None ->
+    ()
+
+let print_types_if_verbose cx trace
+    ?(note: string option)
+    ((l: Type.t), (u: Type.use_t)) =
+  let delim = match note with Some x -> spf " ~> %s" x | None -> " ~>" in
+  match Context.verbose cx with
+  | Some { Verbose.depth; _ } ->
+    print_if_verbose cx trace ~delim [
+      Debug_js.dump_t ~depth cx l;
+      Debug_js.dump_use_t ~depth cx u;
+    ]
+  | None ->
+    ()
+
 (********************** start of slab **********************************)
 
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
-  begin match Context.verbose cx with
-  | Some { Verbose.indent; depth } ->
-    let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
-    let pid = Context.pid_prefix cx in
-    prerr_endlinef
-      "\n%s%s%s ~>\n%s%s%s"
-      indent pid (Debug_js.dump_t ~depth cx l)
-      indent pid (Debug_js.dump_use_t ~depth cx u)
-  | None -> ()
-  end;
+  if ground_subtype (l, u) then
+    print_types_if_verbose cx trace (l, u)
+  else if Cache.FlowConstraint.get cx (l, u) then
+    print_types_if_verbose cx trace ~note:"(cached)" (l, u)
+  else (
+    print_types_if_verbose cx trace (l, u);
 
-  if not (ground_subtype (l, u) || Cache.FlowConstraint.get cx (l, u)) then (
     (* limit recursion depth *)
     RecursionCheck.check trace;
 
@@ -1144,9 +1175,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        is, then when speculation is complete, the action either fires or is
        discarded depending on whether the case that created the action is
        selected or not. *)
-    if not Speculation.(defer_action cx (Action.Flow (l, u))) then
+    if Speculation.(defer_action cx (Action.Flow (l, u))) then
+      print_if_verbose cx trace ~indent:1 ["deferred during speculation"]
 
-    match (l,u) with
+    else match (l,u) with
 
     (********)
     (* eval *)
@@ -8615,8 +8647,10 @@ end = struct
         Err "autocomplete on possibly null or undefined value"
     | FailureAnyType ->
         Err "not enough type information to autocomplete"
-    | FailureUnhandledType _ ->
-        Err "autocomplete on unexpected type of value (please file a task!)"
+    | FailureUnhandledType t ->
+        Err (spf
+          "autocomplete on unexpected type of value %s (please file a task!)"
+          (string_of_ctor t))
 
   let find_props cx fields =
     SMap.filter (fun key _ ->
