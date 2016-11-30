@@ -520,7 +520,7 @@ let rec assume_ground cx ?(depth=1) ids t =
 
   | GetPropT (_, _, t)
   | CallT (_, { return_t = t; _ })
-  | MethodT (_, _, _, { return_t = t; _ })
+  | MethodT (_, _, _, _, { return_t = t; _ })
   | ConstructorT (_, _, t) ->
     assume_ground cx ~depth:(depth + 1) ids (UseT (UnknownUse, t))
 
@@ -1874,7 +1874,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyFunT reason, GetPropT (_, Named (_, x), _)
     | AnyFunT reason, SetPropT (_, Named (_, x), _)
     | AnyFunT reason, LookupT (_, _, _, Named (_, x), _)
-    | AnyFunT reason, MethodT (_, _, Named (_, x), _)
+    | AnyFunT reason, MethodT (_, _, Named (_, x), _, _)
     | AnyFunT reason, HasPropT (_, _, Literal x) when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, UseT (_, u)) when function_like u -> ()
@@ -3493,7 +3493,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let propref = Named (reason_o, "constructor") in
         rec_flow cx trace (
           this,
-          MethodT (reason_op, reason_o, propref, funtype)
+          MethodT (reason_op, reason_o, propref, None, funtype)
         );
       ) in
       (* return this *)
@@ -3533,7 +3533,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Since we don't know the signature of a method on AnyFunT, assume every
        parameter is an AnyT. *)
-    | (AnyFunT _, MethodT (reason_op, _, _, { params_tlist; return_t; _})) ->
+    | (AnyFunT _, MethodT (reason_op, _, _, _, { params_tlist; return_t; _})) ->
       let any = AnyT.why reason_op in
       List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
       rec_flow_t cx trace (any, return_t)
@@ -3681,27 +3681,35 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (********************************)
 
     | InstanceT (reason_c, _, super, instance),
-      MethodT (reason_call, reason_lookup, Named (reason_prop, x), funtype)
+      MethodT (rcall, rlookup, Named (reason_prop, x), targs, funtype)
       -> (* TODO: closure *)
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
       let methods = SMap.union fields_tmap methods_tmap in
-      let funt = mk_tvar cx reason_lookup in
-      let strict =
-        if instance.mixins then NonstrictReturning None
-        else Strict reason_c
+      let f = mk_tvar_where cx rlookup (fun tout ->
+        let strict =
+          if instance.mixins then NonstrictReturning None
+          else Strict reason_c
+        in
+        get_prop cx trace reason_prop rlookup strict super x methods tout;
+      ) in
+      let f = match targs with
+      | Some ts ->
+        mk_tvar_where cx rlookup (fun tout ->
+          rec_flow cx trace (f, SpecializeT (rcall, rlookup, false, ts, tout))
+        )
+      | None -> f
       in
-      get_prop cx trace reason_prop reason_lookup strict super x methods funt;
 
-      (* suppress ops while calling the function. if `funt` is a `FunT`, then
-         `CallT` will set its own ops during the call. if `funt` is something
+      (* suppress ops while calling the function. if `f` is a `FunT`, then
+         `CallT` will set its own ops during the call. if `f` is something
          else, then something like `VoidT ~> CallT` doesn't need the op either
          because we want to point at the call and undefined thing. *)
       let ops = Ops.clear () in
-      rec_flow cx trace (funt, CallT (reason_call, funtype));
+      rec_flow cx trace (f, CallT (rcall, funtype));
       Ops.set ops
 
-    | InstanceT _, MethodT (reason_call, _, Computed _, _) ->
+    | InstanceT _, MethodT (reason_call, _, Computed _, _, _) ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
@@ -3983,19 +3991,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* ... and their methods called *)
     (********************************)
 
-    | ObjT _, MethodT(_, _, Named (_, "constructor"), _) -> ()
+    | ObjT _, MethodT(_, _, Named (_, "constructor"), _, _) -> ()
 
     | ObjT (reason_obj, o),
-      MethodT (reason_call, reason_lookup, propref, funtype) ->
-      let t = mk_tvar_where cx reason_lookup (fun tout ->
-        read_obj_prop cx trace o propref reason_obj reason_lookup tout
+      MethodT (rcall, rlookup, propref, targs, funtype) ->
+      let f = mk_tvar_where cx rlookup (fun tout ->
+        read_obj_prop cx trace o propref reason_obj rlookup tout
       ) in
-      rec_flow cx trace (t, CallT (reason_call, funtype))
+      let f = match targs with
+      | Some ts ->
+        mk_tvar_where cx rlookup (fun tout ->
+          rec_flow cx trace (f, SpecializeT (rcall, rlookup, false, ts, tout))
+        )
+      | None -> f
+      in
+      rec_flow cx trace (f, CallT (rcall, funtype))
 
     (* Since we don't know the signature of a method on AnyObjT, assume every
        parameter is an AnyT. *)
     | (AnyObjT _ | AnyT _),
-      MethodT (reason_op, _, _, { params_tlist; return_t; _}) ->
+      MethodT (reason_op, _, _, _, { params_tlist; return_t; _}) ->
       let any = AnyT.why reason_op in
       List.iter (fun t -> rec_flow_t cx trace (t, any)) params_tlist;
       rec_flow_t cx trace (any, return_t)
@@ -4025,9 +4040,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (key, ElemT (reason_op, l, ReadElem tout))
 
     | (ObjT _ | AnyObjT _ | ArrT _),
-      CallElemT (reason_call, reason_lookup, key, ft) ->
-      let action = CallElem (reason_call, ft) in
-      rec_flow cx trace (key, ElemT (reason_lookup, l, action))
+      CallElemT (rcall, rlookup, key, targs, funtype) ->
+      let action = CallElem (rcall, targs, funtype) in
+      rec_flow cx trace (key, ElemT (rlookup, l, action))
 
     | _, ElemT (reason_op, (ObjT _ as o), action) ->
       let propref = match l with
@@ -4039,19 +4054,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let u = match action with
       | ReadElem t -> GetPropT (reason_op, propref, t)
       | WriteElem t -> SetPropT (reason_op, propref, t)
-      | CallElem (reason_call, ft) ->
-        MethodT (reason_call, reason_op, propref, ft)
+      | CallElem (reason_call, targs, funtype) ->
+        MethodT (reason_call, reason_op, propref, targs, funtype)
       in
       rec_flow cx trace (o, u)
 
-    | _, ElemT (reason_op, AnyObjT _, action) ->
-      let value = AnyT.why reason_op in
-      perform_elem_action cx trace value action
+    | _, ElemT (rlookup, AnyObjT _, action) ->
+      let value = AnyT.why rlookup in
+      perform_elem_action cx trace rlookup value action
 
-    | AnyT _, ElemT (_, ArrT (_, value, _), action) ->
-      perform_elem_action cx trace value action
+    | AnyT _, ElemT (rlookup, ArrT (_, value, _), action) ->
+      perform_elem_action cx trace rlookup value action
 
-    | l, ElemT (_, ArrT (_, value, ts), action) when numeric l ->
+    | l, ElemT (rlookup, ArrT (_, value, ts), action) when numeric l ->
       let value = match l with
       | NumT (_, Literal (float_value, _)) ->
           begin try
@@ -4063,13 +4078,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           end
       | _ -> value
       in
-      perform_elem_action cx trace value action
+      perform_elem_action cx trace rlookup value action
 
     | (ArrT _, GetPropT(reason_op, Named (_, "constructor"), tout)) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
 
     | (ArrT _, SetPropT(_, Named (_, "constructor"), _))
-    | (ArrT _, MethodT(_, _, Named (_, "constructor"), _)) ->
+    | (ArrT _, MethodT(_, _, Named (_, "constructor"), _, _)) ->
       ()
 
     (**************************************************)
@@ -8203,11 +8218,18 @@ and perform_lookup_action cx trace propref p lreason ureason = function
       add_output cx trace
         (FlowError.EPropAccess ((lreason, ureason), x, p, rw))
 
-and perform_elem_action cx trace value = function
+and perform_elem_action cx trace rlookup value = function
   | ReadElem t -> rec_flow_t cx trace (value, t)
   | WriteElem t -> rec_flow_t cx trace (t, value)
-  | CallElem (reason_call, ft) ->
-    rec_flow cx trace (value, CallT (reason_call, ft))
+  | CallElem (rcall, targs, ft) ->
+    let value = match targs with
+    | Some ts ->
+      mk_tvar_where cx rlookup (fun tout ->
+        rec_flow cx trace (value, SpecializeT (rcall, rlookup, false, ts, tout))
+      )
+    | None -> value
+    in
+    rec_flow cx trace (value, CallT (rcall, ft))
 
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in

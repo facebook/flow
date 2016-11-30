@@ -267,7 +267,7 @@ and parts_of_use_t cx = function
 | AssertImportIsValueT _ -> []
 | BecomeT (_, t) -> ["t", Def t]
 | BindT (_, funtype) -> parts_of_funtype funtype
-| CallElemT (_, _, ix, ft) -> ("ix", Def ix) :: parts_of_funtype ft
+| CallElemT (_, _, ix, _, ft) -> ("ix", Def ix) :: parts_of_funtype ft
 | CallLatentPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | CallOpenPredT (_, _, _, t, out) -> ["t", Def t; "out", Def out]
 | CallT (_, funtype) -> parts_of_funtype funtype
@@ -281,7 +281,7 @@ and parts_of_use_t cx = function
 | DebugPrintT _ -> []
 | ElemT (_, l, ReadElem t) -> ["l", Def l; "read", Def t]
 | ElemT (_, l, WriteElem t) -> ["l", Def l; "write", Def t]
-| ElemT (_, l, CallElem (_, ft)) -> ("l", Def l) :: parts_of_funtype ft
+| ElemT (_, l, CallElem (_, _, ft)) -> ("l", Def l) :: parts_of_funtype ft
 | EqT (_, arg) -> ["arg", Def arg]
 | ExportNamedT (_, map, out) -> ("out", Def out) :: map_parts map
 | GetElemT (_, ix, out) -> ["ix", Def ix; "out", Def out]
@@ -302,7 +302,7 @@ and parts_of_use_t cx = function
     lookup_action_parts action @ list_parts nexts
 | MakeExactT (_, k) -> ["cont", node_of_cont k]
 | MapTypeT (_, _, t, k) -> ["t", Def t; "cont", node_of_cont k]
-| MethodT (_, _, _, funtype) -> parts_of_funtype funtype
+| MethodT (_, _, _, _, funtype) -> parts_of_funtype funtype
 | MixinT (_, t) -> ["t", Def t]
 | NotT (_, out) -> ["out", Def out]
 | ObjAssignT (_, p, t, _, _) -> ["proto", Def p; "t", Def t]

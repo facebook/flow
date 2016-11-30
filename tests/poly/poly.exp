@@ -44,5 +44,113 @@ test.js:8
   8:   foo(x: number): number { return x; } // error (specialization, see below)
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ some incompatible instantiation of `X`
 
+typeapp_call.js:12
+ 12: (cond(test, 0, ""): void); // errors: number|string ~> void
+      ^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 12: (cond(test, 0, ""): void); // errors: number|string ~> void
+                         ^^^^ undefined
 
-Found 7 errors
+typeapp_call.js:12
+ 12: (cond(test, 0, ""): void); // errors: number|string ~> void
+      ^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 12: (cond(test, 0, ""): void); // errors: number|string ~> void
+                         ^^^^ undefined
+
+typeapp_call.js:15
+ 15: (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+      ^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 15: (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+                                 ^^^^ undefined
+
+typeapp_call.js:15
+ 15: (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+                            ^^ string. This type is incompatible with the expected param type of
+ 15: (cond<number>(test, 0, ""): void); // error: string ~> number, number ~> void
+           ^^^^^^ number
+
+typeapp_call.js:19
+ 19: f<number>(); // error: expected polymorphic type
+     ^^^^^^^^^^^ function call. Expected polymorphic type instead of
+ 19: f<number>(); // error: expected polymorphic type
+     ^ function
+
+typeapp_call.js:23
+ 23: (o1.m<string>(0): void); // error: number ~> string, string ~> void
+      ^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 23: (o1.m<string>(0): void); // error: number ~> string, string ~> void
+                       ^^^^ undefined
+
+typeapp_call.js:23
+ 23: (o1.m<string>(0): void); // error: number ~> string, string ~> void
+                   ^ number. This type is incompatible with the expected param type of
+ 23: (o1.m<string>(0): void); // error: number ~> string, string ~> void
+           ^^^^^^ string
+
+typeapp_call.js:27
+ 27: (o2.m<string>(0): void); // error: number ~> string, string ~> void
+      ^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 27: (o2.m<string>(0): void); // error: number ~> string, string ~> void
+                       ^^^^ undefined
+
+typeapp_call.js:27
+ 27: (o2.m<string>(0): void); // error: number ~> string, string ~> void
+                   ^ number. This type is incompatible with the expected param type of
+ 27: (o2.m<string>(0): void); // error: number ~> string, string ~> void
+           ^^^^^^ string
+
+typeapp_call.js:32
+ 32: (o3.m<string>(0): void); // error: number ~> string, string ~> void
+      ^^^^^^^^^^^^^^^ string. This type is incompatible with
+ 32: (o3.m<string>(0): void); // error: number ~> string, string ~> void
+                       ^^^^ undefined
+
+typeapp_call.js:32
+ 32: (o3.m<string>(0): void); // error: number ~> string, string ~> void
+                   ^ number. This type is incompatible with the expected param type of
+ 32: (o3.m<string>(0): void); // error: number ~> string, string ~> void
+           ^^^^^^ string
+
+typeapp_call.js:45
+ 45:     return super.m<string>(x); // error: number ~> string, string ~> void
+                ^^^^^^^^^^^^^^^^^^ string. This type is incompatible with the expected return type of
+ 44:   foo(x: number): void {
+                       ^^^^ undefined
+
+typeapp_call.js:45
+ 45:     return super.m<string>(x); // error: number ~> string, string ~> void
+                                ^ number. This type is incompatible with the expected param type of
+ 45:     return super.m<string>(x); // error: number ~> string, string ~> void
+                        ^^^^^^ string
+
+typeapp_call.js:51
+ 51: if (pred<string>(0)) {} // number ~> string
+                      ^ number. This type is incompatible with the expected param type of
+ 51: if (pred<string>(0)) {} // number ~> string
+              ^^^^^^ string
+
+typeapp_new.js:10
+ 10: (c1.x: void); // error: number|string ~> void
+      ^^^^ number. This type is incompatible with
+ 10: (c1.x: void); // error: number|string ~> void
+            ^^^^ undefined
+
+typeapp_new.js:10
+ 10: (c1.x: void); // error: number|string ~> void
+      ^^^^ string. This type is incompatible with
+ 10: (c1.x: void); // error: number|string ~> void
+            ^^^^ undefined
+
+typeapp_new.js:13
+ 13: c2.m1(0); // error: number ~> string
+           ^ number. This type is incompatible with the expected param type of
+ 12: var c2 = new C<string>;
+                    ^^^^^^ string
+
+typeapp_new.js:15
+ 15: (c2.x: void); // error: string ~> void
+      ^^^^ string. This type is incompatible with
+ 15: (c2.x: void); // error: string ~> void
+            ^^^^ undefined
+
+
+Found 25 errors

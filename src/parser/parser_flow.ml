@@ -1482,42 +1482,63 @@ end = struct
       | _ -> primary env in
       let expr = member env start_loc expr in
       match Peek.token env with
+      | T_LESS_THAN
       | T_LPAREN -> call env start_loc expr
       | T_TEMPLATE_PART part ->
           member env start_loc (tagged_template env start_loc expr part)
       | _ -> expr
 
-    and call env start_loc left =
-      match Peek.token env with
-      | T_LPAREN when not (no_call env) ->
-          let args_loc, arguments = arguments env in
-          let loc = Loc.btwn start_loc args_loc in
-          call env start_loc (loc, Expression.(Call Call.({
-            callee = left;
-            arguments;
-          })))
-      | T_LBRACKET ->
-          Expect.token env T_LBRACKET;
-          let expr = Parse.expression env in
-          let last_loc = Peek.loc env in
-          let loc = Loc.btwn start_loc last_loc in
-          Expect.token env T_RBRACKET;
-          call env start_loc (loc, Expression.(Member Member.({
-            _object  = left;
-            property = PropertyExpression expr;
-            computed = true;
-          })))
-      | T_PERIOD ->
-          Expect.token env T_PERIOD;
-          let id, _ = identifier_or_reserved_keyword env in
-          let loc = Loc.btwn start_loc (fst id) in
-          call env start_loc (loc, Expression.(Member Member.({
-            _object  = left;
-            property = PropertyIdentifier id;
-            computed = false;
-          })))
-      | T_TEMPLATE_PART part -> tagged_template env start_loc left part
-      | _ -> left
+    and call env start_loc =
+      let rec call_helper allow_type_app typeParameters left env =
+        match typeParameters, Peek.token env with
+        | _, T_LPAREN when not (no_call env) ->
+            let args_loc, arguments = arguments env in
+            let loc = Loc.btwn start_loc args_loc in
+            let left = loc, Expression.(Call Call.({
+              callee = left;
+              typeParameters;
+              arguments;
+            })) in
+            call env start_loc left
+        | Some _, _ ->
+            raise Try.Rollback
+        | _, T_LESS_THAN when allow_type_app && not (no_call env) ->
+            let error_callback _ _ = raise Try.Rollback in
+            let typeParameters = env
+              |> with_error_callback error_callback
+              |> Type.type_parameter_instantiation
+            in
+            call_helper false typeParameters left env
+        | _, T_LBRACKET ->
+            Expect.token env T_LBRACKET;
+            let expr = Parse.expression env in
+            let last_loc = Peek.loc env in
+            let loc = Loc.btwn start_loc last_loc in
+            Expect.token env T_RBRACKET;
+            let left = loc, Expression.(Member Member.({
+              _object  = left;
+              property = PropertyExpression expr;
+              computed = true;
+            })) in
+            call_helper allow_type_app typeParameters left env
+        | _, T_PERIOD ->
+            Expect.token env T_PERIOD;
+            let id, _ = identifier_or_reserved_keyword env in
+            let loc = Loc.btwn start_loc (fst id) in
+            let left = loc, Expression.(Member Member.({
+              _object  = left;
+              property = PropertyIdentifier id;
+              computed = false;
+            })) in
+            call_helper allow_type_app typeParameters left env
+        | _, T_TEMPLATE_PART part ->
+            tagged_template env start_loc left part
+        | _ -> left
+      in
+      fun left ->
+        match Try.to_parse env (call_helper true None left) with
+        | Try.ParsedSuccessfully expr -> expr
+        | Try.FailedToParse -> call_helper false None left env
 
     and new_expression env =
       let start_loc = Peek.loc env in
@@ -1545,18 +1566,26 @@ end = struct
         | _ when Peek.is_function env -> _function env
         | _ -> primary env in
         let callee = member (env |> with_no_call true) callee_loc expr in
-        (* You can do something like
-         *   new raw`42`
-         *)
-        let callee = match Peek.token env with
-        | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
+        let typeParameters =
+          let error_callback _ _ = raise Try.Rollback in
+          let env = env |> with_error_callback error_callback in
+          match Try.to_parse env Type.type_parameter_instantiation with
+          | Try.ParsedSuccessfully typeParameters -> typeParameters
+          | Try.FailedToParse -> None
+        in
+        let callee = match callee, Peek.token env with
+        | _, T_TEMPLATE_PART part ->
+            (* You can construct a tagged template expression: new raw`42` *)
+            tagged_template env callee_loc callee part
         | _ -> callee in
-        let end_loc, arguments = match Peek.token env with
-        | T_LPAREN -> arguments env
-        | _ -> fst callee, [] in
-
+        let end_loc, arguments = match Peek.token env, typeParameters with
+        | T_LPAREN, _ -> arguments env
+        | _, Some (targs_loc, _) -> targs_loc, []
+        | _ -> fst callee, []
+        in
         Loc.btwn start_loc end_loc, Expression.(New New.({
           callee;
+          typeParameters;
           arguments;
         }))
 
@@ -2264,8 +2293,10 @@ end = struct
         if Peek.token env = T_EXTENDS
         then begin
           Expect.token env T_EXTENDS;
-          let superClass =
-            Expression.left_hand_side (env |> with_allow_yield false) in
+          let superClass = env
+            |> with_allow_yield false
+            |> Expression.left_hand_side
+          in
           let superTypeParameters = Type.type_parameter_instantiation env in
           Some superClass, superTypeParameters
         end else None, None in

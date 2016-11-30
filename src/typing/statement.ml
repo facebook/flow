@@ -2574,6 +2574,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = _, Identifier (_, "require");
+      typeParameters = None;
       arguments
     } when not (Env.local_scope_entry_exists "require") -> (
       match arguments with
@@ -2593,6 +2594,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Call {
       Call.callee = _, Identifier (_, "requireLazy");
+      typeParameters = None;
       arguments
     } -> (
       match arguments with
@@ -2637,6 +2639,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | New {
       New.callee = _, Identifier (_, "Function");
+      typeParameters = None;
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2655,6 +2658,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | New {
       New.callee = _, Identifier (_, "Array");
+      typeParameters = None;
       arguments
     } -> (
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2674,10 +2678,20 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       )
     )
 
-  | New { New.callee; arguments } ->
-      let class_ = expression cx callee in
+  | New { New.callee; typeParameters; arguments } ->
+      let rcall = mk_reason RConstructorCall loc in
+      let c = expression cx callee in
+      let c = match Anno.extract_type_param_instantiations typeParameters with
+      | Some tparams ->
+          let ts = List.map (Anno.convert cx SMap.empty) tparams in
+          let reason = reason_of_t c in
+          Flow.mk_tvar_where cx reason (fun tvar ->
+            Flow.flow cx (c, SpecializeT (rcall, reason, false, ts, tvar))
+          )
+      | None -> c
+      in
       let argts = List.map (expression_or_spread cx) arguments in
-      new_call cx loc class_ argts
+      new_call cx rcall c argts
 
   | Call {
       Call.callee = (_, Member {
@@ -2685,6 +2699,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         property = Member.PropertyIdentifier (prop_loc, name);
         _
       } as expr);
+      typeParameters = None;
       arguments
     } ->
       let obj_t = expression cx obj in
@@ -2696,6 +2711,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         property = Member.PropertyIdentifier (_, "createClass");
         _
       };
+      typeParameters = None;
       arguments = [ Expression (_, Object { Object.properties = class_props }) ]
     } ->
       react_create_class cx loc class_props
@@ -2706,6 +2722,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         property = Member.PropertyIdentifier (ploc, name);
         _
       };
+      typeParameters;
       arguments
     } ->
       let reason = mk_reason (RMethodCall (Some name)) loc in
@@ -2715,10 +2732,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let argts = List.map (expression_or_spread cx) arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
       Flow.mk_tvar_where cx reason (fun t ->
+        let targs = Option.map
+          (Anno.extract_type_param_instantiations typeParameters)
+          (List.map (Anno.convert cx SMap.empty))
+        in
         let funtype = Flow.mk_methodtype super argts t in
         Flow.flow cx (
           super,
-          MethodT (reason, reason_lookup, Named (reason_prop, name), funtype)
+          MethodT (reason, reason_lookup, Named (reason_prop, name), targs, funtype)
         )
       )
 
@@ -2727,15 +2748,20 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         _object;
         property; _
       }) as callee;
+      typeParameters;
       arguments
     } ->
       (* method call *)
       let ot = expression cx _object in
+      let targs = Option.map
+        (Anno.extract_type_param_instantiations typeParameters)
+        (List.map (Anno.convert cx SMap.empty))
+      in
       let argts = List.map (expression_or_spread cx) arguments in
       (match property with
       | Member.PropertyIdentifier (prop_loc, name) ->
         let reason_call = mk_reason (RMethodCall (Some name)) loc in
-        method_call cx reason_call prop_loc (callee, ot, name) argts
+        method_call cx reason_call prop_loc (callee, ot, name) targs argts
       | Member.PropertyExpression expr ->
         let reason_call = mk_reason (RMethodCall None) loc in
         let reason_lookup = mk_reason (RProperty None) lookup_loc in
@@ -2744,11 +2770,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           let frame = Env.peek_frame () in
           let funtype = Flow.mk_methodtype ot argts t ~frame in
           Flow.flow cx (ot,
-            CallElemT (reason_call, reason_lookup, elem_t, funtype))
+            CallElemT (reason_call, reason_lookup, elem_t, targs, funtype))
         ))
 
   | Call {
       Call.callee = ploc, Super;
+      typeParameters;
       arguments
     } ->
       let argts = List.map (expression_or_spread cx) arguments in
@@ -2762,15 +2789,21 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let this = this_ cx reason in
       let super = super_ cx super_reason in
       Flow.mk_tvar_where cx reason (fun t ->
+        let targs = Option.map
+          (Anno.extract_type_param_instantiations typeParameters)
+          (List.map (Anno.convert cx SMap.empty))
+        in
         let funtype = Flow.mk_methodtype this argts t in
         let propref = Named (super_reason, "constructor") in
-        Flow.flow cx (super, MethodT(reason, super_reason, propref, funtype)))
+        Flow.flow cx (super,
+          MethodT (reason, super_reason, propref, targs, funtype)))
 
   (******************************************)
   (* See ~/www/static_upstream/core/ *)
 
   | Call {
       Call.callee = (_, Identifier (_, "invariant")) as callee;
+      typeParameters = None;
       arguments
     } ->
       (* TODO: require *)
@@ -2799,12 +2832,20 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       );
       VoidT.at loc
 
-  | Call { Call.callee; arguments } ->
+  | Call { Call.callee; typeParameters; arguments } ->
+      let rcall = mk_reason RFunctionCall loc in
       let f = expression cx callee in
-      let reason = mk_reason RFunctionCall loc in
-      let argts =
-        List.map (expression_or_spread cx) arguments in
-      func_call cx reason f argts
+      let f = match Anno.extract_type_param_instantiations typeParameters with
+      | Some tparams ->
+          let ts = List.map (Anno.convert cx SMap.empty) tparams in
+          let reason = reason_of_t f in
+          Flow.mk_tvar_where cx reason (fun tvar ->
+            Flow.flow cx (f, SpecializeT (rcall, reason, false, ts, tvar))
+          )
+      | None -> f
+      in
+      let argts = List.map (expression_or_spread cx) arguments in
+      func_call cx rcall f argts
 
   | Conditional { Conditional.test; consequent; alternate } ->
       let reason = mk_reason RConditional loc in
@@ -3019,9 +3060,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
    the inferred types for the call receiver and the passed arguments, and
    potenially the keys that correspond to the supplied arguments.
 *)
-and predicated_call_expression cx (loc, callee, arguments) =
+and predicated_call_expression cx (loc, callee, typeParameters, arguments) =
   let (f, argks, argts, t) =
-    predicated_call_expression_ cx loc callee arguments in
+    predicated_call_expression_ cx loc callee typeParameters arguments in
   Hashtbl.replace (Context.type_table cx) loc t;
   (f, argks, argts, t)
 
@@ -3031,12 +3072,21 @@ and predicated_call_expression cx (loc, callee, arguments) =
    - the arguments types
    - the returned type
 *)
-and predicated_call_expression_ cx loc callee arguments =
+and predicated_call_expression_ cx loc callee typeParameters arguments =
+  let rcall = mk_reason RFunctionCall loc in
   let f = expression cx callee in
-  let reason = mk_reason RFunctionCall loc in
+  let f = match Anno.extract_type_param_instantiations typeParameters with
+  | Some tparams ->
+      let ts = List.map (Anno.convert cx SMap.empty) tparams in
+      let reason = reason_of_t f in
+      Flow.mk_tvar_where cx reason (fun tvar ->
+        Flow.flow cx (f, SpecializeT (rcall, reason, false, ts, tvar))
+      )
+  | None -> f
+  in
   let argts = List.map (expression cx) arguments in
   let argks = List.map Refinement.key arguments in
-  let t = func_call cx reason f argts in
+  let t = func_call cx rcall f argts in
   (f, argks, argts, t)
 
 (* We assume that constructor functions return void
@@ -3045,10 +3095,9 @@ and predicated_call_expression_ cx loc callee arguments =
    If construction functions return non-void values (e.g., functions),
    then those values are returned by constructions.
 *)
-and new_call cx tok class_ argts =
-  let reason = mk_reason RConstructorCall tok in
+and new_call cx reason c argts =
   Flow.mk_tvar_where cx reason (fun t ->
-    Flow.flow cx (class_, ConstructorT (reason, argts, t));
+    Flow.flow cx (c, ConstructorT (reason, argts, t));
   )
 
 and func_call cx reason func_t argts =
@@ -3059,7 +3108,7 @@ and func_call cx reason func_t argts =
     Flow.flow cx (func_t, CallT(reason, app))
   )
 
-and method_call cx reason prop_loc (expr, obj_t, name) argts =
+and method_call cx reason prop_loc (expr, obj_t, name) targs argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   (match Refinement.get cx expr reason with
   | Some f ->
@@ -3084,7 +3133,7 @@ and method_call cx reason prop_loc (expr, obj_t, name) argts =
         let reason_prop = mk_reason (RProperty (Some name)) prop_loc in
         let app = Flow.mk_methodtype obj_t argts t ~frame in
         let propref = Named (reason_prop, name) in
-        Flow.flow cx (obj_t, MethodT(reason, reason_expr, propref, app))
+        Flow.flow cx (obj_t, MethodT (reason, reason_expr, propref, targs, app))
       )
   )
 
@@ -3615,6 +3664,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
           reason,
           reason_createElement,
           Named (reason_createElement, "createElement"),
+          None,
           Flow.mk_methodtype react [component_t;props] tvar
         ))
       )
@@ -3634,7 +3684,7 @@ and jsx_desugar cx name component_t props attributes children eloc =
           _;
         } ->
           let ot = jsx_pragma_expression cx raw_jsx_expr eloc _object in
-          method_call cx reason prop_loc (jsx_expr, ot, name) argts
+          method_call cx reason prop_loc (jsx_expr, ot, name) None argts
       | _ ->
           let f = jsx_pragma_expression cx raw_jsx_expr eloc jsx_expr in
           func_call cx reason f argts
@@ -3754,6 +3804,7 @@ and mk_proptype cx = Ast.Expression.(function
           (_, "arrayOf");
          _
       };
+      typeParameters = None;
       arguments = [Expression e];
     } ->
       ArrT (mk_reason RPropTypeArrayOf vloc, mk_proptype cx e, [])
@@ -3764,6 +3815,7 @@ and mk_proptype cx = Ast.Expression.(function
           (_, "instanceOf");
          _
       };
+      typeParameters = None;
       arguments = [Expression e];
     } ->
       Flow.mk_instance cx ~for_type:false (mk_reason RPropTypeInstanceOf vloc)
@@ -3775,6 +3827,7 @@ and mk_proptype cx = Ast.Expression.(function
           (_, "objectOf");
          _
       };
+      typeParameters = None;
       arguments = [Expression e];
     } ->
       let flags = {
@@ -3799,6 +3852,7 @@ and mk_proptype cx = Ast.Expression.(function
           (_, "oneOf");
          _
       };
+      typeParameters = None;
       arguments = [Expression (_, Array { Array.elements })]
     } ->
       let rec string_literals acc = function
@@ -3820,6 +3874,7 @@ and mk_proptype cx = Ast.Expression.(function
           (_, "oneOfType");
          _
       };
+      typeParameters = None;
       arguments = [Expression (_, Array { Array.elements })]
     } ->
       let rec proptype_elements acc = function
@@ -3839,6 +3894,7 @@ and mk_proptype cx = Ast.Expression.(function
           (_, "shape");
          _
       };
+      typeParameters = None;
       arguments = [Expression (_, Object { Object.properties })];
     } ->
       let reason = mk_reason RPropTypeShape vloc in
@@ -4502,6 +4558,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         Member._object = (_, Identifier (_, "Array") as o);
         property = Member.PropertyIdentifier (prop_loc, "isArray");
         _ };
+      typeParameters = None;
       arguments = [Expression arg]
     } -> (
       (* get Array.isArray in order to populate the type tables, but we don't
@@ -4581,7 +4638,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
   (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this
      predicated when it is resolved. *)
-  | loc, Call { Call.callee = c; arguments }
+  | loc, Call { Call.callee = c; typeParameters; arguments }
     ->
       let is_spread = function | Spread _ -> true | _ -> false in
       if List.exists is_spread arguments then
@@ -4592,7 +4649,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
           | _ -> Utils_js.assert_false "No spreads should reach here"
         ) in
         let fun_t, keys, arg_ts, ret_t =
-          predicated_call_expression cx (loc, c, exp_args) in
+          predicated_call_expression cx (loc, c, typeParameters, exp_args) in
         let args_with_offset = Utils_js.zipi keys arg_ts in
         let emp_pred_map = empty_result ret_t in
         List.fold_left (fun pred_map arg_info -> match arg_info with
@@ -4724,13 +4781,13 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
     ) in
 
     let reason = mk_reason (RMethodCall (Some m)) loc in
-    method_call cx reason prop_loc (expr, obj_t, m) [arg_t]
+    method_call cx reason prop_loc (expr, obj_t, m) None [arg_t]
 
   (* TODO *)
   | (_, args) ->
     let argts = List.map (expression_or_spread cx) args in
     let reason = mk_reason (RMethodCall (Some m)) loc in
-    method_call cx reason prop_loc (expr, obj_t, m) argts
+    method_call cx reason prop_loc (expr, obj_t, m) None argts
 
 and extract_setter_type = function
   | FunT (_, _, _, { params_tlist = [param_t]; _; }) -> param_t
