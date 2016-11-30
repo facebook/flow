@@ -311,6 +311,7 @@ let rec merge_type cx =
   | (NullT _, (NullT _ as t))
   | (VoidT _, (VoidT _ as t))
   | (TaintT _, ((TaintT _) as t))
+  | (AnyObjT _, (AnyObjT _ as t))
   | (ObjProtoT _, (ObjProtoT _ as t))
       -> t
 
