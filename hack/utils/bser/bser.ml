@@ -71,8 +71,15 @@ let parse_int ic =
   let tag = input_char ic in
   parse_int_value tag ic
 
-let expect_string _ic _acc _callbacks =
-  failwith "expect_string not implemented"
+let parse_string_value ic =
+  let size = parse_int ic in
+  if size < 0 then
+    raise (ParseStateException __LOC__);
+  really_input_string ic size
+
+let expect_string ic acc callbacks =
+  let value = parse_string_value ic in
+  callbacks.string_value acc value
 
 let expect_int_value tag ic acc callbacks =
   let value = parse_int_value tag ic in
@@ -120,8 +127,26 @@ and expect_array ic acc callbacks =
   let acc = inner acc size in
   callbacks.array_end acc
 
-and expect_object _ic _acc _callbacks =
-  failwith "expect_object not implemented"
+and expect_object ic acc callbacks =
+  let fieldcount = parse_int ic in
+  if fieldcount < 0 then
+    raise (ParseStateException __LOC__);
+  let acc = callbacks.object_start acc fieldcount in
+  let rec inner acc i =
+    if i = 0 then
+      acc
+    else begin
+      if (input_char ic) <> '\x02' then
+          raise (ParseException __LOC__);
+      let fieldname = parse_string_value ic in
+      let acc = callbacks.field_start acc fieldname in
+      let acc = expect_toplevel ic acc callbacks in
+      let acc = callbacks.field_end acc in
+      inner acc (i - 1)
+    end
+  in
+  let acc = inner acc fieldcount in
+  callbacks.object_end acc
 
 and expect_template _ic _acc _callbacks =
   failwith "expect_template not implemented"
@@ -147,6 +172,8 @@ let throws_visitor = {
 type json_state =
   | Js_value of Hh_json.json
   | Js_buildingArray of Hh_json.json list
+  | Js_buildingObject of (string * Hh_json.json) list
+  | Js_buildingField of string
 
 type json_acc = json_state list
 
@@ -166,9 +193,34 @@ let json_callbacks = {
         (Js_buildingArray (x :: elts)) :: rest
     | _ -> raise (ParseStateException __LOC__));
 
- integer_value =
+  integer_value =
     (fun acc i ->
-     (Js_value (Hh_json.JSON_Number (string_of_int i))) :: acc)
+     (Js_value (Hh_json.JSON_Number (string_of_int i))) :: acc);
+
+  string_value =
+    (fun acc w ->
+     (Js_value (Hh_json.JSON_String w)) :: acc);
+
+  object_start =
+    (fun acc _size ->
+     (Js_buildingObject []) :: acc);
+
+  object_end = (function
+    | (Js_buildingObject elts) :: rest ->
+       (* note: no order fixup of name value pairs here *)
+       (Js_value (Hh_json.JSON_Object elts)) :: rest
+    | _ -> raise (ParseStateException __LOC__));
+
+  field_start =
+    (fun acc name -> match acc with
+      | (Js_buildingObject _) :: _ -> (Js_buildingField name) :: acc
+      | _ -> raise (ParseStateException __LOC__));
+
+  field_end = (function
+    | (Js_value x) :: (Js_buildingField f) :: (Js_buildingObject elts) :: xs ->
+       (Js_buildingObject ((f, x) :: elts)) :: xs
+    | _ -> raise (ParseStateException __LOC__));
+
 }
 
 
