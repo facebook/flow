@@ -4709,7 +4709,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           is shared by every object. **)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Object", u)
 
-    | FunProtoT _, LookupT (reason_op, _, [], Named (_, x), _)
+    | FunProtoT _, LookupT (reason_op, _, _, Named (_, x), _)
       when is_function_prototype x ->
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
@@ -4825,7 +4825,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx trace (FlowError.EPropNotFound (reason_op, reason_strict))
 
     (* SuperT only involves non-strict lookups *)
-    | (ObjProtoT _, SuperT _) -> ()
+    | (ObjProtoT _, SuperT _)
+    | (FunProtoT _, SuperT _) -> ()
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)

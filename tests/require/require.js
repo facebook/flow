@@ -28,3 +28,6 @@ E.stringValue; // Error: The E exports obj has no 'stringValue' property
 // guaranteed static extraction
 var a = './E';
 require(a); // Error: Param must be string literal
+
+// require.call is allowed but circumverts Flow's static analysis
+require.call(null, "DoesNotExist");
