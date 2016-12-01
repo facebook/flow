@@ -730,6 +730,27 @@ let rec transform node =
     t kw;
     transform_argish left_p members right_p;
     ()
+  | DictionaryIntrinsicExpression x ->
+    let (kw, left_p, members, right_p) =
+      get_dictionary_intrinsic_expression_children x
+    in
+    t kw;
+    transform_argish left_p members right_p;
+    ()
+  | KeysetIntrinsicExpression x ->
+    let (kw, left_p, members, right_p) =
+      get_keyset_intrinsic_expression_children x
+    in
+    t kw;
+    transform_argish left_p members right_p;
+    ()
+  | VectorIntrinsicExpression x ->
+    let (kw, left_p, members, right_p) =
+      get_vector_intrinsic_expression_children x
+    in
+    t kw;
+    transform_argish left_p members right_p;
+    ()
   | ParenthesizedExpression x ->
     let (left_p, expr, right_p) = get_parenthesized_expression_children x in
     t left_p;
