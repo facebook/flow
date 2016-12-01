@@ -8,8 +8,8 @@
  *
  *)
 
-exception ParseException of string
-exception ParseStateException of string
+exception ParseException of int
+exception ParseStateException of int
 exception CallbackNotImplementedException
 
 
@@ -52,7 +52,7 @@ let parse_int_value tag ic =
     | '\x04' -> 2
     | '\x05' -> 4
     | '\x06' -> 8
-    | _ -> raise (ParseException __LOC__)
+    | _ -> raise (ParseException (pos_in ic))
   in
 
   let rec inner acc i =
@@ -74,7 +74,7 @@ let parse_int ic =
 let parse_string_value ic =
   let size = parse_int ic in
   if size < 0 then
-    raise (ParseStateException __LOC__);
+    raise (ParseStateException (pos_in ic));
   really_input_string ic size
 
 let expect_string ic acc callbacks =
@@ -109,12 +109,12 @@ let rec expect_toplevel ic acc callbacks =
   | '\x09' -> callbacks.boolean_value acc false
   | '\x0a' -> callbacks.null_value acc
   | '\x0b' -> expect_template ic acc callbacks
-  | _ -> raise (ParseException __LOC__)
+  | _ -> raise (ParseException (pos_in ic))
 
 and expect_array ic acc callbacks =
   let size = parse_int ic in
   if size < 0 then
-    raise (ParseStateException __LOC__);
+    raise (ParseStateException (pos_in ic));
   let acc = callbacks.array_start acc size in
   let rec inner acc i =
     if i = 0 then
@@ -130,14 +130,14 @@ and expect_array ic acc callbacks =
 and expect_object ic acc callbacks =
   let fieldcount = parse_int ic in
   if fieldcount < 0 then
-    raise (ParseStateException __LOC__);
+    raise (ParseStateException (pos_in ic));
   let acc = callbacks.object_start acc fieldcount in
   let rec inner acc i =
     if i = 0 then
       acc
     else begin
       if (input_char ic) <> '\x02' then
-          raise (ParseException __LOC__);
+          raise (ParseException (pos_in ic));
       let fieldname = parse_string_value ic in
       let acc = callbacks.field_start acc fieldname in
       let acc = expect_toplevel ic acc callbacks in
@@ -186,12 +186,12 @@ let json_callbacks = {
   array_end = (function
     | (Js_buildingArray elts) :: rest ->
         Js_value (Hh_json.JSON_Array (List.rev elts)) :: rest
-    | _ -> raise (ParseStateException __LOC__));
+    | _ -> raise (ParseStateException (-1)));
 
   array_item_end = (function
     | (Js_value x) :: (Js_buildingArray elts) :: rest ->
         (Js_buildingArray (x :: elts)) :: rest
-    | _ -> raise (ParseStateException __LOC__));
+    | _ -> raise (ParseStateException (-1)));
 
   integer_value =
     (fun acc i ->
@@ -209,17 +209,17 @@ let json_callbacks = {
     | (Js_buildingObject elts) :: rest ->
        (* note: no order fixup of name value pairs here *)
        (Js_value (Hh_json.JSON_Object elts)) :: rest
-    | _ -> raise (ParseStateException __LOC__));
+    | _ -> raise (ParseStateException (-1)));
 
   field_start =
     (fun acc name -> match acc with
       | (Js_buildingObject _) :: _ -> (Js_buildingField name) :: acc
-      | _ -> raise (ParseStateException __LOC__));
+      | _ -> raise (ParseStateException (-1)));
 
   field_end = (function
     | (Js_value x) :: (Js_buildingField f) :: (Js_buildingObject elts) :: xs ->
        (Js_buildingObject ((f, x) :: elts)) :: xs
-    | _ -> raise (ParseStateException __LOC__));
+    | _ -> raise (ParseStateException (-1)));
 
 }
 
@@ -227,13 +227,13 @@ let json_callbacks = {
 let json_of_bser_file path : Hh_json.json =
   let ic = Sys_utils.open_in_bin_no_fail path in
   if (input_char ic) <> '\x00' then
-    raise (ParseException "zero");
+    raise (ParseException (pos_in ic));
   if (input_char ic) <> '\x01' then
-    raise (ParseException "one");
+    raise (ParseException (pos_in ic));
   let output = expect_toplevel ic [] json_callbacks in
   match output with
   | (Js_value x) :: [] -> x
-  | _ -> raise (ParseStateException __LOC__)
+  | _ -> raise (ParseStateException (pos_in ic))
 
 
 let json_to_channel oc _json : unit =
