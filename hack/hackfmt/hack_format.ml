@@ -545,7 +545,8 @@ let rec transform node =
     handle_possible_compound_statement body;
     ()
   | SwitchStatement x ->
-    let (kw, left_p, expr, right_p, body) = get_switch_statement_children x in
+    let (kw, left_p, expr, right_p, left_b, sections, right_b) =
+      get_switch_statement_children x in
     t kw;
     add_space ();
     t left_p;
@@ -554,18 +555,15 @@ let rec transform node =
       tl_with ~nest ~f:(fun () -> t expr) ();
       t right_p;
     ) ();
-    let () = match syntax body with
-      | CompoundStatement cs -> handle_switch_body cs
-      | _ -> raise (Failure "Switch body must be a compound statement")
-    in
+    let () = handle_switch_body left_b sections right_b in
     builder#end_chunks ();
     ()
-  | CaseStatement x ->
-    raise (Failure ("Malformed parse tree: " ^
-      "a case statement should only appear inside a switch statement"))
-  | DefaultStatement x ->
-    raise (Failure ("Malformed parse tree: " ^
-      "a default statement should only appear inside a switch statement"))
+  | SwitchSection x ->
+    raise (Failure "SwitchSection should be handled by handle_switch_body")
+  | CaseLabel x ->
+    raise (Failure "CaseLabel should be handled by handle_switch_body")
+  | DefaultLabel x ->
+    raise (Failure "DefaultLabel should be handled by handle_switch_body")
   | ReturnStatement x ->
     let (kw, expr, semi) = get_return_statement_children x in
     transform_keyword_expression_statement kw expr semi;
@@ -1001,48 +999,50 @@ and handle_possible_method_chaining mse argish =
   );
   ()
 
-and handle_switch_body sb =
-  let (left_b, statements, right_b) = get_compound_statement_children sb in
+and handle_switch_body left_b sections right_b =
   add_space ();
   transform left_b;
   builder#end_chunks ();
   builder#start_block_nest ();
   tl_with ~f:(fun () ->
-    let statement_list = match syntax statements with
-      | Missing -> raise (Failure "Cannot have a missing statement list")
-      | SyntaxList x -> x
-      | _ -> [statements]
-    in
-
-    let handle_stmt stmt = match syntax stmt with
-      | CaseStatement x ->
-        let (kw, expr, colon, child_statement) =
-          get_case_statement_children x in
+    let handle_label label =
+      match syntax label with
+      | CaseLabel x ->
+        let (kw, expr, colon) = get_case_label_children x in
         transform kw;
         split ~space:true ();
         transform expr;
         transform colon;
         builder#end_chunks ();
-        [child_statement]
-      | DefaultStatement x ->
-        let (kw, colon, child_statement) =
-          get_default_statement_children x in
+        ()
+      | DefaultLabel x ->
+        let (kw, colon) = get_default_label_children x in
         transform kw;
         transform colon;
         builder#end_chunks ();
-        [child_statement]
-      | _ ->
-        builder#start_block_nest ();
-        t_with stmt;
-        builder#end_block_nest ();
-        []
+        ()
+      | _ -> ()
     in
 
-    let rec iter_stmt stmt_list = match stmt_list with
-      | [] -> ()
-      | hd :: tl -> iter_stmt (handle_stmt hd @ tl)
+    let handle_statement statement =
+      builder#start_block_nest ();
+      t_with ~nest:true statement;
+      builder#end_block_nest ();
+      ()
     in
-    iter_stmt statement_list
+
+    let handle_section section =
+      match syntax section with
+      | SwitchSection s ->
+        List.iter
+          (syntax_node_to_list s.switch_section_labels) ~f:handle_label;
+        List.iter
+          (syntax_node_to_list s.switch_section_statements) ~f:handle_statement;
+        ()
+      | _ -> ()
+    in
+
+    List.iter (syntax_node_to_list sections) ~f:handle_section
   ) ();
   builder#end_block_nest ();
   transform right_b;
