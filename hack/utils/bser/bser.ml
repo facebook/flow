@@ -221,6 +221,14 @@ let json_callbacks = {
        (Js_buildingObject ((f, x) :: elts)) :: xs
     | _ -> raise (ParseStateException (-1)));
 
+  boolean_value =
+    (fun acc b ->
+     (Js_value (Hh_json.JSON_Bool b)) :: acc);
+
+  null_value =
+    (fun acc ->
+     (Js_value (Hh_json.JSON_Null)) :: acc);
+
 }
 
 
