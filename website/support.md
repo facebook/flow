@@ -18,6 +18,10 @@ The [flowtype](http://stackoverflow.com/questions/tagged/flowtype) tag on Stack 
 
 To report a bug, please create a [GitHub issue](https://github.com/facebook/flow/issues). This is also a good place to ask questions, but it's harder to find answers once an issue has been closed.
 
+## Gitter
+
+You can also find a bunch of Flow users hanging out in the [#flow](https://gitter.im/facebook/flow) Gitter channel
+
 ## IRC
 
 Many developers and users idle on Freenode.net's IRC network in the [#flowtype](irc://chat.freenode.net/flowtype) channel.
