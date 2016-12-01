@@ -14,7 +14,7 @@ next: react.html
 */
 
 /*
-## `Keys<T>`
+## `$Keys<T>`
 In Flow you can [use union types similar to enums](builtins.html#literal-types):
 */
 
@@ -70,8 +70,26 @@ In the example above, the type of `Country` is equivalent to `type Country = 'US
 
 /*
 ## `$Diff<A, B>`
-Work in progress
+As the name hints, `$Diff<A, B>` is the type representing the set difference of `A` and `B`, i.e. `A \ B`, where `A` and `B` are both [Object Types](objects.html). Here's an example:
+*/
+type Props = { name: string, age: number };
+type DefaultProps = { age: number };
+type RequiredProps = $Diff<Props, DefaultProps>;
 
+function setProps(props: RequiredProps) {
+  // ...
+}
+
+setProps({ name: 'foo' });
+setProps({ name: 'foo', age: 42, baz: false }); // you can pass extra props too
+// $ExpectError
+setProps({ age: 42 }); // error, name is required
+/*
+
+As you may have noticed, the example is not a random one. `$Diff` is exactly what the React definition file uses to define the type of the props accepted by a React Component.
+*/
+
+/*
 ## `Class<T>`
 Work in progress
 
