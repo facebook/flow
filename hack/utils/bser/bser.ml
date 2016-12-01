@@ -14,8 +14,12 @@ exception CallbackNotImplementedException
 
 
 type 'a callbacks_type = {
-  template_start : 'a -> string list -> int -> 'a;
+  template_start : 'a -> string array -> int -> 'a;
   template_end : 'a -> 'a;
+  template_object_start : 'a -> 'a;
+  template_object_end : 'a -> 'a;
+  template_field_start : 'a -> int -> 'a;
+  template_field_end : 'a -> 'a;
   array_start : 'a -> int -> 'a;
   array_end : 'a -> 'a;
   array_item_end : 'a -> 'a;
@@ -109,6 +113,7 @@ let rec expect_toplevel ic acc callbacks =
   | '\x09' -> callbacks.boolean_value acc false
   | '\x0a' -> callbacks.null_value acc
   | '\x0b' -> expect_template ic acc callbacks
+  | '\x0c' -> acc
   | _ -> raise (ParseException (pos_in ic))
 
 and expect_array ic acc callbacks =
@@ -148,13 +153,62 @@ and expect_object ic acc callbacks =
   let acc = inner acc fieldcount in
   callbacks.object_end acc
 
-and expect_template _ic _acc _callbacks =
-  failwith "expect_template not implemented"
+and expect_template ic acc callbacks =
+  if (input_char ic) <> '\x00' then
+    raise (ParseException (pos_in ic));
+  let fieldcount = parse_int ic in
+  if fieldcount < 0 then
+    raise (ParseStateException (pos_in ic));
+
+  let rec fieldnames_inner acc i =
+    if i = 0 then
+      acc
+    else begin
+      let tag = input_char ic in
+      if tag <> '\x02' then
+        raise (ParseException (pos_in ic));
+      let fieldname = parse_string_value ic in
+      fieldnames_inner (fieldname :: acc) (i - 1)
+    end
+  in
+  let field_array = fieldnames_inner [] fieldcount
+   |> Array.of_list in
+
+  let rowcount = parse_int ic in
+  if rowcount < 0 then
+    raise (ParseStateException (pos_in ic));
+
+  let acc = callbacks.template_start acc field_array rowcount in
+
+  let rec object_inner acc i =
+    if i = 0 then
+      acc
+    else
+      let acc = callbacks.template_field_start acc (i - 1) in
+      let acc = expect_toplevel ic acc callbacks in
+      let acc = callbacks.template_field_end acc in
+      object_inner acc (i - 1)
+  in
+  let rec row_inner acc i =
+    if i = 0 then
+      acc
+    else
+      let acc = callbacks.template_object_start acc in
+      let acc = object_inner acc fieldcount in
+      let acc = callbacks.template_object_end acc in
+      row_inner acc (i - 1)
+  in
+  let acc = row_inner acc rowcount in
+  callbacks.template_end acc
 
 
 let throws_visitor = {
   template_start = (fun _ _ _ -> raise CallbackNotImplementedException);
   template_end = (fun _ -> raise CallbackNotImplementedException);
+  template_object_start = (fun _ -> raise CallbackNotImplementedException);
+  template_object_end = (fun _ -> raise CallbackNotImplementedException);
+  template_field_start = (fun _ _ -> raise CallbackNotImplementedException);
+  template_field_end = (fun _ -> raise CallbackNotImplementedException);
   array_start = (fun _ _ -> raise CallbackNotImplementedException);
   array_end = (fun _ -> raise CallbackNotImplementedException);
   array_item_end = (fun _ -> raise CallbackNotImplementedException);
@@ -174,11 +228,12 @@ type json_state =
   | Js_buildingArray of Hh_json.json list
   | Js_buildingObject of (string * Hh_json.json) list
   | Js_buildingField of string
+  | Js_buildingTemplate of (string array) * (Hh_json.json list)
+
 
 type json_acc = json_state list
 
 let json_callbacks = {
-  throws_visitor with
   array_start =
     (fun acc _size ->
       (Js_buildingArray []) :: acc);
@@ -228,6 +283,40 @@ let json_callbacks = {
   null_value =
     (fun acc ->
      (Js_value (Hh_json.JSON_Null)) :: acc);
+
+  template_start =
+    (fun acc fields _size ->
+     (Js_buildingTemplate (fields, [])) :: acc);
+
+  template_end = (function
+    | (Js_buildingTemplate (_, elts)) :: rest ->
+       Js_value (Hh_json.JSON_Array (List.rev elts)) :: rest
+    | _ -> raise (ParseStateException (-1)));
+
+  template_object_start =
+    (fun acc -> match acc with
+      | (Js_buildingTemplate _ ) :: _ -> (Js_buildingObject []) :: acc
+      | _ ->  raise (ParseStateException (-1)));
+
+  template_object_end =
+    (fun acc -> match acc with
+      | (Js_buildingObject fields) ::
+          (Js_buildingTemplate (names, elts)) :: rest ->
+         Js_buildingTemplate (names, (Hh_json.JSON_Object fields) :: elts) :: rest
+      | _ -> raise (ParseStateException (-1)));
+
+  template_field_start =
+    (fun acc i -> match acc with
+      | (Js_buildingObject _fields) :: (Js_buildingTemplate (names, _)) :: _ ->
+         (Js_buildingField (names.(i))) :: acc
+      | _ -> raise (ParseStateException (-1)));
+
+  template_field_end = (function
+    | (Js_value x) :: (Js_buildingField f) :: (Js_buildingObject elts) :: xs ->
+       (Js_buildingObject ((f, x) :: elts)) :: xs
+    | (Js_buildingField _f) :: tail ->
+       tail
+    | _ -> raise (ParseStateException (-1)));
 
 }
 
