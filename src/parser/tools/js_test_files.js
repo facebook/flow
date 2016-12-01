@@ -4,7 +4,7 @@ var colors = require("colors");
 var util = require("util");
 var fs = require("fs");
 var parseArgs = require("minimist");
-var ast_types = require("ast-types");
+var ast_types = require("./../test/esprima_ast_types.js");
 
 var argv = parseArgs(
   process.argv.slice(2),
@@ -30,11 +30,21 @@ function success(e) {
   }
 }
 
+var total_parse_time = 0;
+var options = {
+  esproposal_class_instance_fields: true,
+  esproposal_class_static_fields: true,
+  types: true,
+};
+
 function parse_file(filename, data) {
   var result;
   try {
     process.stdout.write(filename + " : ... ");
-    var ast = flow.parse(data, {});
+    var start_time = +new Date;
+    var ast = flow.parse(data, options);
+    var parse_time = (+new Date - start_time)/1000;
+    total_parse_time += parse_time;
     if (ast.errors.length > 0) {
       result = error("Parse errors!", ast.errors);
       return;
@@ -51,17 +61,18 @@ function parse_file(filename, data) {
     }
     result = error("Flow exploded", data);
   } finally {
+    var time_string = "[" + parse_time + "]";
     if (result.passed) {
       pass_count++;
-      console.log("\rPASSED".green, filename);
+      console.log("\rPASSED".green, time_string, filename);
     } else {
       fail_count++;
       if (argv.verbose) {
         var data = util.inspect(result.data, {depth: null});
-        console.log("\rFAILED".red, filename);
+        console.log("\rFAILED".red, time_string, filename);
         console.log("\t", result.error, "\n\t", data);
       } else {
-        console.log("\rFAILED".red, filename, result.error);
+        console.log("\rFAILED".red, time_string, filename, result.error);
         if (argv.firstError && result.data && result.data.length > 0) {
           console.log("\t", result.data[0]);
         }
@@ -69,6 +80,7 @@ function parse_file(filename, data) {
     }
     if (pass_count + fail_count == argv._.length) {
       console.log("%d/%d passed", pass_count, pass_count + fail_count);
+      console.log("Total parsing time: %d", total_parse_time);
     }
   }
 }
