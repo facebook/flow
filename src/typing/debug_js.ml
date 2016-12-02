@@ -306,6 +306,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | GraphqlSchemaT _
+  | GraphqlDataT _
   | GraphqlOpT _
   | GraphqlFragT _
   | GraphqlSelectionT _
@@ -689,6 +690,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | GraphqlMkInlineFragT _ -> []
   | GraphqlSelectT _ -> []
   | GraphqlSpreadT _ -> []
+  | GraphqlToDataT _ -> []
   )
 )
 
@@ -1371,6 +1373,7 @@ and dump_t_ (depth, tvars) cx t =
   | ReposT (_, arg)
   | ReposUpperT (_, arg) -> p ~extra:(kid arg) t
   | GraphqlSchemaT _
+  | GraphqlDataT _
   | GraphqlOpT _
   | GraphqlFragT _
   | GraphqlSelectionT _
@@ -1468,6 +1471,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | GraphqlMkOpT _ -> p t
   | GraphqlSelectT _ -> p t
   | GraphqlSpreadT _ -> p t
+  | GraphqlToDataT _ -> p t
   | GuardT (pred, result, sink) -> p ~reason:false
       ~extra:(spf "%s, %s, %s"
         (string_of_predicate pred) (kid result) (kid sink))

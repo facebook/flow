@@ -1,6 +1,8 @@
 %{
 open Parsing
+module FlowType = Type
 open Graphql_ast
+module Type = FlowType
 
 let symbol_loc () =
   let source = Graphql_parsing.curr_source () in
@@ -302,9 +304,9 @@ default_value_opt:
   | EQUAL value { Some $2 }
 
 type_ref:
-  | name { Type.Named $1 }
-  | LBRACKET type_ref RBRACKET { Type.List (symbol_loc (), $2) }
-  | type_ref BANG { Type.NonNull (symbol_loc (), $1) }
+  | name { Graphql_ast.Type.Named $1 }
+  | LBRACKET type_ref RBRACKET { Graphql_ast.Type.List (symbol_loc (), $2) }
+  | type_ref BANG { Graphql_ast.Type.NonNull (symbol_loc (), $1) }
 
 interfaces:
   | { [] }

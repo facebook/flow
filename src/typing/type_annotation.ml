@@ -469,6 +469,13 @@ let rec convert cx tparams_map = Ast.Type.(function
         error_type cx loc (FlowError.ERefineAnnot loc)
     )
 
+  | "$GraphqlData" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      let reason = mk_reason (RCustom "graphql data") loc in
+      GraphqlDataT (reason, t)
+    )
+
   (* other applications with id as head expr *)
   | _ ->
     let reason = mk_reason (RCustom name) loc in

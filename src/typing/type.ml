@@ -266,6 +266,7 @@ module rec TypeTerm : sig
     | ReposUpperT of reason * t
 
     | GraphqlSchemaT of reason * Graphql_schema.t
+    | GraphqlDataT of reason * t
     | GraphqlOpT of reason * Graphql.op
     | GraphqlFragT of reason * Graphql.frag
     | GraphqlSelectionT of reason * Graphql.selection
@@ -558,7 +559,8 @@ module rec TypeTerm : sig
     | GraphqlMkFragT of reason * string * (t * t) * t
     | GraphqlMkInlineFragT of reason * string option * (t * t) * t
     | GraphqlSelectT of Graphql.select
-    | GraphqlSpreadT of reason * t (* (reason, selection) *)
+    | GraphqlSpreadT of reason * t * t (* (reason, selection, result) *)
+    | GraphqlToDataT of reason * t
 
   and predicate =
     | AndP of predicate * predicate
@@ -1300,7 +1302,7 @@ and Graphql : sig
   and selection = {
     s_schema: Graphql_schema.t;
     s_on: string;
-    s_selections: selection_field list;
+    s_selections: selection_field SMap.t;
   }
 
   type frag = {
@@ -1536,6 +1538,7 @@ let rec reason_of_t = function
   | VoidT reason -> reason
 
   | GraphqlSchemaT (reason, _) -> reason
+  | GraphqlDataT (reason, _) -> reason
   | GraphqlOpT (reason, _) -> reason
   | GraphqlFragT (reason, _) -> reason
   | GraphqlSelectionT (reason, _) -> reason
@@ -1623,7 +1626,8 @@ and reason_of_use_t = function
   | GraphqlMkFragT (reason, _, _, _) -> reason
   | GraphqlMkInlineFragT (reason, _, _, _) -> reason
   | GraphqlSelectT (reason, _, _) -> reason
-  | GraphqlSpreadT (reason, _) -> reason
+  | GraphqlSpreadT (reason, _, _) -> reason
+  | GraphqlToDataT (reason, _) -> reason
 
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
@@ -1702,6 +1706,7 @@ let rec mod_reason_of_t f = function
   | VoidT reason -> VoidT (f reason)
 
   | GraphqlSchemaT (reason, schema) -> GraphqlSchemaT (f reason, schema)
+  | GraphqlDataT (reason, t) -> GraphqlDataT (f reason, t)
   | GraphqlOpT (reason, op) -> GraphqlOpT (f reason, op)
   | GraphqlFragT (reason, frag) -> GraphqlFragT (f reason, frag)
   | GraphqlSelectionT (reason, s) -> GraphqlSelectionT (f reason, s)
@@ -1803,7 +1808,8 @@ and mod_reason_of_use_t f = function
   | GraphqlMkFragT (reason, tr, n, t) -> GraphqlMkFragT (f reason, tr, n, t)
   | GraphqlMkInlineFragT (reason, n, st, t) -> GraphqlMkInlineFragT (f reason, n, st, t)
   | GraphqlSelectT (reason, s, t) -> GraphqlSelectT (f reason, s, t)
-  | GraphqlSpreadT (reason, s) -> GraphqlSpreadT (f reason, s)
+  | GraphqlSpreadT (reason, s, t) -> GraphqlSpreadT (f reason, s, t)
+  | GraphqlToDataT (reason, t) -> GraphqlToDataT (f reason, t)
 
 (* type comparison mod reason *)
 let reasonless_compare =
@@ -1875,6 +1881,7 @@ let string_of_ctor = function
   | GraphqlFragT _ -> "GraphqlFragT"
   | GraphqlOpT _ -> "GraphqlOpT"
   | GraphqlSchemaT _ -> "GraphqlSchemaT"
+  | GraphqlDataT _ -> "GraphqlDataT"
   | GraphqlSelectionT _ -> "GraphqlSelectionT"
   | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"
@@ -1966,6 +1973,7 @@ let string_of_use_ctor = function
   | GraphqlMkOpT _ -> "GraphqlMkOpT"
   | GraphqlSelectT _ -> "GraphqlSelectT"
   | GraphqlSpreadT _ -> "GraphqlSpreadT"
+  | GraphqlToDataT _ -> "GraphqlToDataT"
   | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | HasPropT _ -> "HasPropT"

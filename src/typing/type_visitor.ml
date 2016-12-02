@@ -164,14 +164,16 @@ class ['a] t = object(self)
     self#type_ cx acc t
 
   | GraphqlSchemaT _ -> acc
+  | GraphqlDataT (_, t) ->
+    self#type_ cx acc t
   | GraphqlOpT (_, { Graphql.op_selection; _ }) ->
     self#type_ cx acc op_selection
   | GraphqlFragT (_, { Graphql.frag_selection; _ }) ->
     self#type_ cx acc frag_selection
   | GraphqlSelectionT (_, { Graphql.s_selections; _ }) ->
-    List.fold_left (fun acc { Graphql.sf_selection; _ } ->
-        Option.value_map sf_selection ~default:acc ~f:(self#type_ cx acc)
-      ) acc s_selections
+    SMap.fold (fun _ { Graphql.sf_selection; _ } acc ->
+      Option.value_map sf_selection ~default:acc ~f:(self#type_ cx acc)
+    ) s_selections acc
   | GraphqlFieldT _ -> acc
 
   method private defer_use_type cx acc = function
@@ -251,6 +253,7 @@ class ['a] t = object(self)
   | GraphqlMkOpT _
   | GraphqlSelectT _
   | GraphqlSpreadT _
+  | GraphqlToDataT _
   | GuardT (_, _, _)
   | HasOwnPropT (_, _)
   | HasPropT (_, _, _)

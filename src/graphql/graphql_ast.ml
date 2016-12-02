@@ -1,3 +1,5 @@
+module FlowType = Type
+
 module rec Document : sig
   type t = {
     definitions: Definition.t list;
@@ -233,7 +235,7 @@ and Selection : sig
     | Field of Field.t
     | FragmentSpread of FragmentSpread.t
     | InlineFragment of InlineFragment.t
-    | JS of Type.t
+    | JS of FlowType.t
 end = Selection
 
 and Field : sig

@@ -395,6 +395,7 @@ let rec normalize_type_impl cx ids t = match t with
       normalize_type_impl cx ids t
 
   | GraphqlSchemaT _ -> t
+  | GraphqlDataT (r, t) -> GraphqlDataT (r, normalize_type_impl cx ids t)
   | GraphqlOpT (_, { Graphql.op_schema; op_type; op_selection }) ->
     let op_selection = normalize_type_impl cx ids op_selection in
     GraphqlOpT (
@@ -408,7 +409,7 @@ let rec normalize_type_impl cx ids t = match t with
       { Graphql.frag_schema; frag_type; frag_selection }
     )
   | GraphqlSelectionT (_, { Graphql.s_schema; s_on; s_selections }) ->
-    let s_selections = List.map (fun sf ->
+    let s_selections = SMap.map (fun sf ->
         { sf with
           Graphql.sf_selection =
             Option.map ~f:(normalize_type_impl cx ids) sf.Graphql.sf_selection;

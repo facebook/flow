@@ -331,6 +331,7 @@ let rec gen_type t env = Type.(
   | ModuleT _
   | TaintT _
   | GraphqlSchemaT _
+  | GraphqlDataT _
   | GraphqlOpT _
   | GraphqlFragT _
   | GraphqlSelectionT _
