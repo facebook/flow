@@ -4,16 +4,16 @@ child_process/execSync.js:8
   8: (execSync('ls', {timeout: '250'})); // error, no signatures match
       ^^^^^^^^ intersection
   Member 1:
-  260:   declare function execSync(
-                                  ^ function type. See lib: <BUILTINS>/node.js:260
+  261:   declare function execSync(
+                                  ^ function type. See lib: <BUILTINS>/node.js:261
   Error:
-  262:     options: {encoding: buffer$NonBufferEncoding} & child_process$execSyncOpts
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `encoding`. Property not found in. See lib: <BUILTINS>/node.js:262
+  263:     options: {encoding: buffer$NonBufferEncoding} & child_process$execSyncOpts
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `encoding`. Property not found in. See lib: <BUILTINS>/node.js:263
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                        ^^^^^^^^^^^^^^^^ object literal
   Member 2:
-  265:   declare function execSync(
-                                  ^ function type. See lib: <BUILTINS>/node.js:265
+  266:   declare function execSync(
+                                  ^ function type. See lib: <BUILTINS>/node.js:266
   Error:
     8: (execSync('ls', {timeout: '250'})); // error, no signatures match
                                  ^^^^^ string. This type is incompatible with the expected param type of
@@ -49,24 +49,24 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-1216:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1216
+1217:     chunk: Buffer | string,
+                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1217
   Member 1:
-  1216:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1216
+  1217:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1217
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1216:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1216
+  1217:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1217
   Member 2:
-  1216:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1216
+  1217:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1217
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1216:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1216
+  1217:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1217
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -74,21 +74,21 @@ crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
          ^^^^^^^^^^^ intersection
   Member 1:
-  435:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:435
+  436:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:436
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
                        ^^^^^ string. This type is incompatible with the expected param type of
-  435:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-                      ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:435
+  436:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+                      ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:436
   Member 2:
-  436:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:436
+  437:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:437
   Error:
    26:     hmac.update('foo', 'bogus'); // 1 error
                               ^^^^^^^ string. This type is incompatible with the expected param type of
-  436:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/node.js:436
+  437:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ string enum. See lib: <BUILTINS>/node.js:437
 
 crypto/crypto.js:28
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
@@ -96,21 +96,21 @@ crypto/crypto.js:28
  28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
          ^^^^^^^^^^^ intersection
   Member 1:
-  435:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:435
+  436:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:436
   Error:
    28:     hmac.update(buf, 'utf8'); // 1 error: no encoding when passing a buffer
                             ^^^^^^ string. This type is incompatible with the expected param type of
-  435:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
-                                               ^^^^ undefined. See lib: <BUILTINS>/node.js:435
+  436:   update(data: Buffer, input_encoding?: void): crypto$Hmac;
+                                               ^^^^ undefined. See lib: <BUILTINS>/node.js:436
   Member 2:
-  436:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:436
+  437:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function type. See lib: <BUILTINS>/node.js:437
   Error:
    21:   function(buf: Buffer) {
                        ^^^^^^ Buffer. This type is incompatible with the expected param type of
-  436:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
-                      ^^^^^^ string. See lib: <BUILTINS>/node.js:436
+  437:   update(data: string, input_encoding?: 'utf8' | 'ascii' | 'binary'): crypto$Hmac;
+                      ^^^^^^ string. See lib: <BUILTINS>/node.js:437
 
 crypto/crypto.js:35
  35:     (hmac.digest('hex'): void); // 1 error
@@ -127,14 +127,14 @@ crypto/crypto.js:36
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-789:   declare function readFile(
-                                ^ intersection type. See lib: <BUILTINS>/node.js:789
+790:   declare function readFile(
+                                ^ intersection type. See lib: <BUILTINS>/node.js:790
   Case 3 may work:
-  798:   declare function readFile(
-                                  ^ function type. See lib: <BUILTINS>/node.js:798
+  799:   declare function readFile(
+                                  ^ function type. See lib: <BUILTINS>/node.js:799
   But if it doesn't, case 4 looks promising too:
-  803:   declare function readFile(
-                                  ^ function type. See lib: <BUILTINS>/node.js:803
+  804:   declare function readFile(
+                                  ^ function type. See lib: <BUILTINS>/node.js:804
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                       ^ parameter `_`
