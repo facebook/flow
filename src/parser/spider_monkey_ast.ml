@@ -443,25 +443,21 @@ and Statement : sig
     }
   end
   module ImportDeclaration : sig
-    module NamedSpecifier : sig
-      type t = Loc.t * t'
-      and t' = {
-        id: Identifier.t;
-        name: Identifier.t option;
-      }
-    end
-    type named_specifier = {
-      local: Identifier.t option;
-      remote: Identifier.t;
-    }
-    type specifier =
-      | ImportNamedSpecifier of named_specifier
-      | ImportDefaultSpecifier of Identifier.t
-      | ImportNamespaceSpecifier of (Loc.t * Identifier.t)
     type importKind =
       | ImportType
       | ImportTypeof
       | ImportValue
+
+    type specifier =
+      | ImportNamedSpecifier of named_specifier
+      | ImportDefaultSpecifier of Identifier.t
+      | ImportNamespaceSpecifier of (Loc.t * Identifier.t)
+    and named_specifier = {
+      kind: importKind option;
+      local: Identifier.t option;
+      remote: Identifier.t;
+    }
+
     type t = {
       importKind: importKind;
       source: (Loc.t * Literal.t); (* Always a string literal *)

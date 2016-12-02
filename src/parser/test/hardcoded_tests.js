@@ -5083,5 +5083,138 @@ module.exports = {
         ]
       },
     },
+    'import type shorthand': {
+      'import {type} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'type',
+            'local.name': 'type',
+            'importKind': null,
+          }]
+        }
+      },
+      'import {type t} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 't',
+            'importKind': 'type',
+          }]
+        }
+      },
+      'import {type as} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'as',
+            'local.name': 'as',
+            'importKind': 'type',
+          }]
+        }
+      },
+      'import {type t as u} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 'u',
+            'importKind': 'type',
+          }]
+        }
+      },
+
+      'import {typeof t} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 't',
+            'importKind': 'typeof',
+          }]
+        }
+      },
+      'import {typeof as} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'as',
+            'local.name': 'as',
+            'importKind': 'typeof',
+          }]
+        }
+      },
+      'import {typeof t as u} from "foo";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 't',
+            'local.name': 'u',
+            'importKind': 'typeof',
+          }]
+        }
+      },
+
+      'import {type t as} from "foo";': {
+        'errors.0.message': 'Unexpected token }'
+      },
+      'import {typeof} from "foo";': {
+        'errors.0.message': 'Unexpected token typeof'
+      },
+      'import type {type t} from "foo";': {
+        'errors.0.message': 'The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements'
+      },
+      'import typeof {typeof t} from "foo";': {
+        'errors.0.message': 'The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements'
+      },
+    },
+    'import statements': {
+      'import {x,} from "MyModule";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [{
+            'type': 'ImportSpecifier',
+            'imported.name': 'x',
+            'local.name': 'x',
+          }]
+        }
+      },
+      'import defexp, {x,} from "MyModule";': {
+        'body.0': {
+          'type': 'ImportDeclaration',
+          'importKind': 'value',
+          'specifiers': [
+            {
+              'type': 'ImportDefaultSpecifier',
+              'local.name': 'defexp',
+            },
+            {
+              'type': 'ImportSpecifier',
+              'imported.name': 'x',
+              'local.name': 'x',
+            }
+          ]
+        }
+      },
+      'import {a nopeNeedsAPrecedingComma} from "MyModule";': {
+        'errors.0.message': 'Missing comma between import specifiers'
+      },
+    },
   }
 };
