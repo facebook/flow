@@ -63,6 +63,7 @@ module Opts = struct
     traces: int;
     strip_root: bool;
     all: bool;
+    weak: bool;
     log_file: Path.t option;
     max_header_tokens: int;
     max_workers: int;
@@ -158,6 +159,7 @@ module Opts = struct
     traces = 0;
     strip_root = false;
     all = false;
+    weak = false;
     log_file = None;
     max_header_tokens = 10;
     max_workers = Sys_utils.nbr_procs;
@@ -323,6 +325,8 @@ end = struct
       then opt o "module.system" (module_system options.moduleSystem);
       if options.all <> default_options.all
       then opt o "all" (string_of_bool options.all);
+      if options.weak <> default_options.weak
+      then opt o "weak" (string_of_bool options.weak);
       if options.temp_dir <> default_options.temp_dir
       then opt o "temp_dir" options.temp_dir
     )
@@ -592,6 +596,15 @@ let parse_options config lines =
       optparser = optparse_boolean;
       setter = (fun opts v ->
         {opts with all = v;}
+      );
+    }
+
+    |> define_opt "weak" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with weak = v;}
       );
     }
 

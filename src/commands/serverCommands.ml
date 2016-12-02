@@ -259,6 +259,7 @@ module OptionParser(Config : CONFIG) = struct
     | None -> FlowConfig.(flowconfig.options.Opts.max_workers)
     in
     let all = all || FlowConfig.(flowconfig.options.Opts.all) in
+    let weak = weak || FlowConfig.(flowconfig.options.Opts.weak) in
     let opt_max_workers = min opt_max_workers Sys_utils.nbr_procs in
 
     let options = { Options.

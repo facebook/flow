@@ -32,6 +32,7 @@ module Opts : sig
     traces: int;
     strip_root: bool;
     all: bool;
+    weak: bool;
     log_file: Path.t option;
     max_header_tokens: int;
     max_workers: int;
