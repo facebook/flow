@@ -62,7 +62,11 @@ let print_and_exit recorder =
   exit 0
 
 let rec read_and_record recorder (d_in: Debug_port.in_port) =
-  let event = Debug_port.read d_in in
+  let event = try Debug_port.read d_in with
+    | Debug_port.Port_closed ->
+      let () = Printf.eprintf "Port closed\n%!" in
+      print_and_exit !recorder
+  in
   let () = recorder := Recorder.add_event event !recorder in
   if Recorder.is_finished !recorder
   then
@@ -74,7 +78,15 @@ let stop_recording () =
   Globals.recorder := (Recorder.add_event DE.Stop_recording !Globals.recorder);
   print_and_exit !Globals.recorder
 
+(** Create a pipe. The child out end of the pipe should be closed in the parent
+ * process *after* forking. This is an unfortunately imperative style. *)
+let create_pipe () =
+    let parent_in, child_out = Unix.pipe () in
+    Unix.set_close_on_exec parent_in;
+    parent_in, child_out
+
 let () =
+  Daemon.check_entry_point (); (* this call might not return *)
   let () = Globals.recorder := Recorder.start () in
   (** Stop the recording when we get a Unix interrupt signal. *)
   Sys_utils.set_signal Sys.sigint (Sys.Signal_handle (fun _ ->
@@ -82,19 +94,20 @@ let () =
     raise Exit_status.(Exit_with Interrupted)));
   let args = Args.parse () in
   HackEventLogger.client_init @@ Args.root args;
-  let d_in, d_out = Debug_port.create () in
+  let parent_in, child_out = create_pipe () in
   let start_env = {
     ClientStart.root = args.Args.root;
     ai_mode = None;
     no_load = false;
     silent = false;
-    debug_port = (Some d_out);
+    debug_port = (Some child_out);
   } in
   let e = ClientStart.main start_env in
   match e with
   | Exit_status.No_error ->
-    let () = Printf.eprintf "Server started with debug port attached.\n" in
-    let () = Printf.eprintf "Starting recording.\n" in
-    read_and_record Globals.recorder d_in
+    let () = Printf.eprintf "Server started with debug port attached.\n%!" in
+    let () = Printf.eprintf "Starting recording.\n%!" in
+    let () = Unix.close child_out in
+    read_and_record Globals.recorder (Debug_port.in_port_of_fd parent_in)
   | _ ->
     Exit_status.(exit e)

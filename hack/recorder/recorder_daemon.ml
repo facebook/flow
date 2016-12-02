@@ -1,22 +1,22 @@
-let oprint_events events =
-  List.iter (fun e -> Printf.printf "%s\n" (Recorder_types.to_string e)) events
+let marshal_events events =
+  List.iter (fun e -> Marshal.to_channel stdout e []) events
 
-let print_and_exit recorder =
+let clean_exit recorder =
   let events = Recorder.get_events recorder in
-  oprint_events events;
+  marshal_events events;
   exit 0
 
 let rec read_and_record recorder d_in =
   let event = try Debug_port.read d_in with
     | Debug_port.Port_closed ->
       Hh_logger.log "Port closed abruptly. Flushing recording and exiting";
-      print_and_exit recorder
+      clean_exit recorder
   in
   let recorder = Recorder.add_event event recorder in
   if Recorder.is_finished recorder
   then begin
     Hh_logger.log "Recording finished. Flushing recording and exiting";
-    print_and_exit recorder
+    clean_exit recorder
   end else
     read_and_record recorder d_in
 

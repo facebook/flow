@@ -15,12 +15,7 @@ val write_opt : Debug_event.event -> out_port option -> out_port option
  * exceptions that it may throw. *)
 val read : in_port -> Debug_event.event
 
-val create : unit -> in_port * out_port
-
-(** Get the handle of the out port. Use this to get the handle to pass as
- * commandline arg when forking the server process. *)
-val handle_of_out : out_port -> Handle.handle
 val out_port_of_handle : Handle.handle -> out_port
-
+val in_port_of_fd : Unix.file_descr -> in_port
 val in_port_of_in_channel : Debug_event.event Daemon.in_channel -> in_port
 val out_port_of_out_channel : Debug_event.event Daemon.out_channel -> out_port
