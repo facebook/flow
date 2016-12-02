@@ -57,12 +57,11 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t, raw_t, reasons) ~json ~pretty strip =
+let handle_response (loc, t, raw_t, reasons) ~json ~pretty ~strip_root =
   let ty = match t with
     | None -> "(unknown)"
     | Some str -> str
   in
-  let loc = strip loc in
   if json
   then (
     let open Hh_json in
@@ -71,15 +70,15 @@ let handle_response (loc, t, raw_t, reasons) ~json ~pretty strip =
         ("type", JSON_String ty) ::
         ("reasons", JSON_Array
           (List.map (fun r ->
-              let r_loc = strip (loc_of_reason r) in
+              let r_loc = loc_of_reason r in
               JSON_Object (
                   ("desc", JSON_String (string_of_desc (desc_of_reason r))) ::
-                  ("loc", json_of_loc r_loc) ::
-                  (Errors.deprecated_json_props_of_loc r_loc)
+                  ("loc", json_of_loc ~strip_root r_loc) ::
+                  (Errors.deprecated_json_props_of_loc ~strip_root r_loc)
                 )
             ) reasons)) ::
-        ("loc", json_of_loc loc) ::
-        (Errors.deprecated_json_props_of_loc loc)
+        ("loc", json_of_loc ~strip_root loc) ::
+        (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     let json_assoc = match raw_t with
       | None -> json_assoc
@@ -90,35 +89,31 @@ let handle_response (loc, t, raw_t, reasons) ~json ~pretty strip =
   ) else (
     let range =
       if loc = Loc.none then ""
-      else spf "\n%s" (range_string_of_loc loc)
+      else spf "\n%s" (range_string_of_loc ~strip_root loc)
     in
     let pty =
       if reasons = [] then ""
       else "\n\nSee the following locations:\n" ^ (
         reasons
-        |> List.map (fun r ->
-             Reason.repos_reason (strip (Reason.loc_of_reason r)) r
-           )
-        |> List.map Reason.string_of_reason
+        |> List.map (Reason.string_of_reason ~strip_root)
         |> String.concat "\n"
       )
     in
     print_endline (ty^range^pty)
   )
 
-let handle_error (loc, err) ~json ~pretty strip =
-  let loc = strip loc in
+let handle_error (loc, err) ~json ~pretty ~strip_root =
   if json
   then (
     let open Hh_json in
     let json = JSON_Object (
       ("error", JSON_String err) ::
-      ("loc", Reason.json_of_loc loc) ::
-      (Errors.deprecated_json_props_of_loc loc)
+      ("loc", Reason.json_of_loc ~strip_root loc) ::
+      (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     prerr_endline (json_to_string ~pretty json)
   ) else (
-    let loc = Reason.string_of_loc loc in
+    let loc = Reason.string_of_loc ~strip_root loc in
     prerr_endlinef "%s:\n%s" loc err
   )
 
@@ -130,6 +125,7 @@ let main option_values root json pretty strip_root verbose path include_raw args
     | Some root -> Some root
     | None -> ServerProt.path_of_input file
   ) in
+  let strip_root = if strip_root then Some root else None in
 
   if not json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
@@ -138,7 +134,7 @@ let main option_values root json pretty strip_root verbose path include_raw args
   ServerProt.cmd_to_channel oc
     (ServerProt.INFER_TYPE (file, line, column, verbose, include_raw));
   match (Timeout.input_value ic : ServerProt.infer_type_response) with
-  | Err err -> handle_error err ~json ~pretty (relativize strip_root root)
-  | OK resp -> handle_response resp ~json ~pretty (relativize strip_root root)
+  | Err err -> handle_error err ~json ~pretty ~strip_root
+  | OK resp -> handle_response resp ~json ~pretty ~strip_root
 
 let command = CommandSpec.command spec main

@@ -130,11 +130,11 @@ let main option_values root error_flags strip_root ignore_flag include_flag src 
   match ((Timeout.input_value in_chan: gen_flow_file_response), out_dir) with
   | (Err (GenFlowFile_TypecheckError errors), _) ->
     let errors = Errors.to_list errors in
-    Errors.print_error_summary
+    let strip_root = if strip_root then Some root else None in
+    Errors.Cli_output.print_errors
       ~out_channel:stderr
       ~flags:error_flags
       ~strip_root
-      ~root
       errors;
     let msg =
       "\nIn order to generate a shadow file there must be no type errors!"

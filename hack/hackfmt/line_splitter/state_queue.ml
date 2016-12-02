@@ -23,12 +23,7 @@ let add t state =
   { queue = (List.sort (state :: t.queue) ~cmp:Solve_state.compare); }
 
 let is_empty t =
-  (List.length t.queue) = 0
-
-let peek t =
-  match t.queue with
-    | hd :: tl -> hd
-    | [] -> raise (Failure "Queue is empty when calling peek\n")
+  List.length t.queue = 0
 
 let get_next t =
   match t.queue with

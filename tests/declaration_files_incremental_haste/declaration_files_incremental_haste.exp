@@ -1,239 +1,345 @@
 ======Start off with the .js files but without the .flow file======
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-foo/bar/nested_test.js:7:2,15: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Implementation. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
 
-foo/bar/nested_test.js:8:2,10: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Implementation. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
 
-foo/bar/nested_test.js:9:2,12: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
+test.js:4
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-test.js:4:2,15: Implementation
-This type is incompatible with
-test.js:4:18,24: boolean
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
 
-test.js:7:2,23: Implementation
-This type is incompatible with
-test.js:7:26,32: boolean
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
 
-test.js:10:2,28: Implementation
-This type is incompatible with
-test.js:10:31,37: boolean
-
-Found 6 errors
-
-foo/bar/nested_test.js:7:2,15: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
-
-foo/bar/nested_test.js:8:2,10: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
-
-foo/bar/nested_test.js:9:2,12: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
-
-test.js:4:2,15: Declaration
-This type is incompatible with
-test.js:4:18,24: boolean
-
-test.js:7:2,23: Declaration
-This type is incompatible with
-test.js:7:26,32: boolean
-
-test.js:10:2,28: Declaration
-This type is incompatible with
-test.js:10:31,37: boolean
 
 Found 6 errors
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-foo/bar/nested_test.js:7:2,15: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Declaration. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
 
-foo/bar/nested_test.js:8:2,10: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Declaration. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
 
-foo/bar/nested_test.js:9:2,12: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
+test.js:4
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-test.js:4:2,15: Implementation
-This type is incompatible with
-test.js:4:18,24: boolean
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
 
-test.js:7:2,23: Implementation
-This type is incompatible with
-test.js:7:26,32: boolean
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
 
-test.js:10:2,28: Implementation
-This type is incompatible with
-test.js:10:31,37: boolean
+
+Found 6 errors
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
+
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Implementation. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
+
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Implementation. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
+
+test.js:4
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
+
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
+
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
+
 
 Found 6 errors
 
 
 ======Start off with the .js files and the .flow file======
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-foo/bar/nested_test.js:7:2,15: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Declaration. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
 
-foo/bar/nested_test.js:8:2,10: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Declaration. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
 
-foo/bar/nested_test.js:9:2,12: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
+test.js:4
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-test.js:4:2,15: Declaration
-This type is incompatible with
-test.js:4:18,24: boolean
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
 
-test.js:7:2,23: Declaration
-This type is incompatible with
-test.js:7:26,32: boolean
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
 
-test.js:10:2,28: Declaration
-This type is incompatible with
-test.js:10:31,37: boolean
-
-Found 6 errors
-
-foo/bar/nested_test.js:7:2,15: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
-
-foo/bar/nested_test.js:8:2,10: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
-
-foo/bar/nested_test.js:9:2,12: Implementation
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
-
-test.js:4:2,15: Implementation
-This type is incompatible with
-test.js:4:18,24: boolean
-
-test.js:7:2,23: Implementation
-This type is incompatible with
-test.js:7:26,32: boolean
-
-test.js:10:2,28: Implementation
-This type is incompatible with
-test.js:10:31,37: boolean
 
 Found 6 errors
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-foo/bar/nested_test.js:7:2,15: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Implementation. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
 
-foo/bar/nested_test.js:8:2,10: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Implementation. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
 
-foo/bar/nested_test.js:9:2,12: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
+test.js:4
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-test.js:4:2,15: Declaration
-This type is incompatible with
-test.js:4:18,24: boolean
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
 
-test.js:7:2,23: Declaration
-This type is incompatible with
-test.js:7:26,32: boolean
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Implementation. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
 
-test.js:10:2,28: Declaration
-This type is incompatible with
-test.js:10:31,37: boolean
+
+Found 6 errors
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
+
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Declaration. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
+
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Declaration. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
+
+test.js:4
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
+
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
+
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
+
 
 Found 6 errors
 
 
 ======Start off without the .js files and with the .flow file======
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-foo/bar/nested_test.js:7:2,15: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Declaration. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
 
-foo/bar/nested_test.js:8:2,10: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Declaration. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
 
-foo/bar/nested_test.js:9:2,12: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
+test.js:3
+  3: var Implicit = require('ImplicitProvidesModule');
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ImplicitProvidesModule. Required module not found
 
-test.js:3:16,48: ImplicitProvidesModule
-Required module not found
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
 
-test.js:7:2,23: Declaration
-This type is incompatible with
-test.js:7:26,32: boolean
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
 
-test.js:10:2,28: Declaration
-This type is incompatible with
-test.js:10:31,37: boolean
-
-Found 6 errors
-
-foo/bar/nested_test.js:7:2,15: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
-
-foo/bar/nested_test.js:8:2,10: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
-
-foo/bar/nested_test.js:9:2,12: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
-
-test.js:4:2,15: Declaration
-This type is incompatible with
-test.js:4:18,24: boolean
-
-test.js:7:2,23: Declaration
-This type is incompatible with
-test.js:7:26,32: boolean
-
-test.js:10:2,28: Declaration
-This type is incompatible with
-test.js:10:31,37: boolean
 
 Found 6 errors
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-foo/bar/nested_test.js:7:2,15: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:7:18,24: boolean
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Declaration. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
 
-foo/bar/nested_test.js:8:2,10: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:8:13,19: boolean
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Declaration. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
 
-foo/bar/nested_test.js:9:2,12: Declaration
-This type is incompatible with
-foo/bar/nested_test.js:9:15,21: boolean
+test.js:4
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  4: (Implicit.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
 
-test.js:3:16,48: ImplicitProvidesModule
-Required module not found
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
 
-test.js:7:2,23: Declaration
-This type is incompatible with
-test.js:7:26,32: boolean
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
 
-test.js:10:2,28: Declaration
-This type is incompatible with
-test.js:10:31,37: boolean
+
+Found 6 errors
+foo/bar/nested_test.js:7
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (docblock.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                      ^^^^^^^ boolean
+
+foo/bar/nested_test.js:8
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^ Declaration. This type is incompatible with
+  8: (min.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                 ^^^^^^^ boolean
+
+foo/bar/nested_test.js:9
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^ Declaration. This type is incompatible with
+  9: (corge.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                   ^^^^^^^ boolean
+
+test.js:3
+  3: var Implicit = require('ImplicitProvidesModule');
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ImplicitProvidesModule. Required module not found
+
+test.js:7
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+  7: (ExplicitSameName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                              ^^^^^^^ boolean
+
+test.js:10
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Declaration. This type is incompatible with
+ 10: (ExplicitDifferentName.fun(): boolean); // Error: Either Implementation ~> boolean or Declaration ~> boolean
+                                   ^^^^^^^ boolean
+
 
 Found 6 errors

@@ -390,6 +390,10 @@ let rec normalize_type_impl cx ids t = match t with
 
   | ObjProtoT _ -> ObjProtoT (locationless_reason RDummyPrototype)
 
+  | ReposT (_, t)
+  | ReposUpperT (_, t) ->
+      normalize_type_impl cx ids t
+
   | FunProtoT _
   | ExtendsT (_, _, _)
   ->

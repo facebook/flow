@@ -66,6 +66,7 @@ let main option_values root json pretty strip_root path args () =
     | Some root -> Some root
     | None -> ServerProt.path_of_input file
   ) in
+  let strip_root = if strip_root then Some root else None in
   (* connect to server *)
   let ic, oc = connect option_values root in
   (* dispatch command *)
@@ -73,19 +74,18 @@ let main option_values root json pretty strip_root path args () =
     (ServerProt.GET_DEF (file, line, column));
   (* command result will be a position structure with full file path *)
   let loc:Loc.t = Timeout.input_value ic in
-  (* if strip_root has been specified, relativize path to root *)
-  let loc = relativize strip_root root loc in
   (* format output *)
   if json || pretty
   then (
     (* TODO: this format is deprecated but can't be backwards-compatible.
        should be replaced with just `Reason.json_of_loc loc`. *)
     let open Hh_json in
-    let json = JSON_Object (Errors.deprecated_json_props_of_loc loc) in
+    let json =
+      JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
     print_endline (json_to_string ~pretty json)
   ) else
     if option_values.from = "vim" || option_values.from = "emacs"
-    then print_endline (Errors.string_of_loc_deprecated loc)
-    else print_endline (range_string_of_loc loc)
+    then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
+    else print_endline (range_string_of_loc ~strip_root loc)
 
 let command = CommandSpec.command spec main

@@ -1,1 +1,1 @@
-cmd: check --old-output-format --strip-root
+cmd: check --strip-root

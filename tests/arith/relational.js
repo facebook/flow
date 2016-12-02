@@ -21,3 +21,10 @@ var x = (null : ?number);
 (NaN < 1);
 (1 < NaN);
 (NaN < NaN);
+
+let tests = [
+  function(x: any, y: number, z: string) {
+    (x > y);
+    (x > z);
+  },
+];

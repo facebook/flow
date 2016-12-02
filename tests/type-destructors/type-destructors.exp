@@ -4,6 +4,12 @@ non_maybe_type.js:5
   3: function foo(x: ?string): $NonMaybeType<?string> {
                                ^^^^^^^^^^^^^^^^^^^^^^ string
 
+non_maybe_type.js:10
+ 10: (0: $NonMaybeType<null>); // error
+      ^ number. This type is incompatible with
+ 10: (0: $NonMaybeType<null>); // error
+         ^^^^^^^^^^^^^^^^^^^ empty
+
 property_type.js:1
   1: type Malformed = $PropertyType<any, number>;
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected object type and string literal as arguments to $PropertyType
@@ -20,5 +26,49 @@ property_type.js:10
   8: function foo(o: Obj): $PropertyType<Obj, 'x'> {
                            ^^^^^^^^^^^^^^^^^^^^^^^ string
 
+union.js:2
+  2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+                                            ^^^^ boolean. This type is incompatible with
+  2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: non-maybe type(s)
+  Member 1:
+    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+  Error:
+    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+                                              ^^^^ boolean. This type is incompatible with
+    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+  Member 2:
+    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ non-maybe type
+  Error:
+    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+                                              ^^^^ boolean. This type is incompatible with
+    2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
-Found 4 errors
+union.js:4
+  4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+                                                        ^^^^ boolean. This type is incompatible with
+  4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ union: property type(s)
+  Member 1:
+    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property type
+  Error:
+    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+                                                          ^^^^ boolean. This type is incompatible with
+    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
+  Member 2:
+    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property type
+  Error:
+    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+                                                          ^^^^ boolean. This type is incompatible with
+    4: var x3: $PropertyType<{p:number}|{p:string},'p'> = true; // err, boolean ~> number|string
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
+
+
+Found 7 errors

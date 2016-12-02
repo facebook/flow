@@ -213,6 +213,8 @@ and parts_of_t cx = function
 | OpenPredT (_, base, _, _) -> ["base", Def base]
 | OptionalT t
 | PolyT (_, t) -> ["t", Def t]
+| ReposT (_, t) -> ["t", Def t]
+| ReposUpperT (_, t) -> ["t", Def t]
 | RestT t
 | ShapeT t -> ["t", Def t]
 | SingletonBoolT _ -> []

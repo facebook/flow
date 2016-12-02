@@ -10,3 +10,12 @@ interface ICall {
 }
 declare var icall: ICall;
 icall(0); // error, number ~> string
+icall.call(null, 0); // error, number ~> string
+
+type Callable = {
+  (x: string): void;
+}
+
+declare var callable: Callable;
+callable(0); // error, number ~> string
+callable.call(null, 0); // error, number ~> string

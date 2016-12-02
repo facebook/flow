@@ -27,20 +27,15 @@ val call :
   next:'a nextlist ->
   'b
 
-(* Variant of the above for dynamic workloads. The protocol for a next function
-   is to return either None (indicating that workers should wait until more
-   elements are added to the workload) or Some list of elements. It will be
-   called repeatedly until it returns Some empty list.  *)
-type 'a bucket =
-  | Job of 'a list
+(* See definition in Bucket *)
+type 'a bucket = 'a Bucket.bucket =
+  | Job of 'a
   | Wait
-
-type 'a nextlist_dynamic =
-  unit -> 'a bucket
+  | Done
 
 val call_dynamic :
   Worker.t list option ->
-  job:('b -> 'a list -> 'b) ->
+  job:('b -> 'a -> 'b) ->
   merge:('b -> 'b -> 'b) -> neutral:'b ->
-  next:'a nextlist_dynamic ->
+  next:'a Bucket.nextbucket_dynamic ->
   'b

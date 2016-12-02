@@ -145,6 +145,8 @@ let rec gc cx state = function
   | SingletonNumT _ -> ()
   | SingletonStrT _ -> ()
   | StrT _ -> ()
+  | ReposT (_, t) -> gc cx state t
+  | ReposUpperT (_, t) -> gc cx state t
   | RestT t -> gc cx state t
   | TaintT _ -> ()
   | ThisClassT t -> gc cx state t

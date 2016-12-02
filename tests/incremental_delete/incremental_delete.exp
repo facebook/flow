@@ -1,184 +1,237 @@
 
 Initial status:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+c.js:3
+  3: var c: string = b;
+                     ^ number. This type is incompatible with
+  3: var c: string = b;
+            ^^^^^^ string
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 4 errors
 
 Delete c.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 3 errors
 
 Delete b.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 2 errors
 
 Restore b.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 3 errors
 
 Restore c.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+c.js:3
+  3: var c: string = b;
+                     ^ number. This type is incompatible with
+  3: var c: string = b;
+            ^^^^^^ string
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 4 errors
 
 Delete d.json:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+c.js:3
+  3: var c: string = b;
+                     ^ number. This type is incompatible with
+  3: var c: string = b;
+            ^^^^^^ string
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 4 errors
 
 Delete unchecked.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+c.js:3
+  3: var c: string = b;
+                     ^ number. This type is incompatible with
+  3: var c: string = b;
+            ^^^^^^ string
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
+requires_unchecked.js:5
+  5: var unchecked = require('Unchecked');
+                     ^^^^^^^^^^^^^^^^^^^^ Unchecked. Required module not found
 
-requires_unchecked.js:5:17,36: Unchecked
-Required module not found
 
 Found 5 errors
 
 Restore unchecked.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+c.js:3
+  3: var c: string = b;
+                     ^ number. This type is incompatible with
+  3: var c: string = b;
+            ^^^^^^ string
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 4 errors
 
 Delete dupe2.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+c.js:3
+  3: var c: string = b;
+                     ^ number. This type is incompatible with
+  3: var c: string = b;
+            ^^^^^^ string
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
 
 Found 3 errors
 
 Restore dupe2.js:
+a.js:2
+  2: var a: string = 0;
+                     ^ number. This type is incompatible with
+  2: var a: string = 0;
+            ^^^^^^ string
 
-a.js:2:17,17: number
-This type is incompatible with
-a.js:2:8,13: string
+b.js:3
+  3: var b: number = a;
+                     ^ string. This type is incompatible with
+  3: var b: number = a;
+            ^^^^^^ number
 
-b.js:3:17,17: string
-This type is incompatible with
-b.js:3:8,13: number
+c.js:3
+  3: var c: string = b;
+                     ^ number. This type is incompatible with
+  3: var c: string = b;
+            ^^^^^^ string
 
-c.js:3:17,17: number
-This type is incompatible with
-c.js:3:8,13: string
+dupe2.js:0
+Dupe. Duplicate module provider
+current provider. See: dupe1.js:0
 
-dupe2.js: Dupe
-Duplicate module provider
-dupe1.js: current provider
 
 Found 4 errors
 

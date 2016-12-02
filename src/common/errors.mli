@@ -72,50 +72,48 @@ end
 
 type stdin_file = (Path.t * string) option
 
-val deprecated_json_props_of_loc : Loc.t -> (string * Hh_json.json) list
-val json_of_errors : error list -> Hh_json.json
-val json_of_errors_with_context :
-  root: Path.t ->
-  stdin_file: stdin_file ->
-  error list ->
-  Hh_json.json
-
-val print_error_color_new:
-  ?out_channel:out_channel ->
-  stdin_file:stdin_file ->
-  strip_root:bool ->
-  one_line:bool ->
-  color:Tty.color_mode ->
-  root: Path.t ->
-  error ->
-  unit
-
-val print_error_json :
-  strip_root: bool ->
-  root:Path.t ->
-  ?pretty:bool ->
-  ?profiling:Profiling_js.t option ->
-  ?stdin_file:stdin_file ->
-  out_channel ->
-  error list ->
-  unit
+val deprecated_json_props_of_loc :
+  strip_root: Path.t option ->
+  Loc.t ->
+  (string * Hh_json.json) list
 
 (* Human readable output *)
-val print_error_summary:
-  ?out_channel:out_channel ->
-  flags:Options.error_flags ->
-  ?stdin_file:stdin_file ->
-  strip_root: bool ->
-  root: Path.t ->
-  error list ->
-  unit
+module Cli_output : sig
+  val print_errors:
+    out_channel:out_channel ->
+    flags:Options.error_flags ->
+    ?stdin_file:stdin_file ->
+    strip_root: Path.t option ->
+    error list ->
+    unit
+end
 
-(* used by getDef for emacs/vim output - TODO remove or undeprecate *)
-val string_of_loc_deprecated: Loc.t -> string
-val print_error_deprecated:
-  strip_root: bool ->
-  root: Path.t ->
-  out_channel -> error list -> unit
+module Json_output : sig
+  val json_of_errors :
+    strip_root: Path.t option ->
+    error list ->
+    Hh_json.json
+  val json_of_errors_with_context :
+    strip_root: Path.t option ->
+    stdin_file: stdin_file ->
+    error list ->
+    Hh_json.json
 
-(* only used to get indentation info for trace formatting - TODO fumigate *)
-val format_info: info -> string
+  val print_errors:
+    out_channel:out_channel ->
+    strip_root: Path.t option ->
+    ?pretty:bool ->
+    ?profiling:Profiling_js.t option ->
+    ?stdin_file:stdin_file ->
+    error list ->
+    unit
+end
+
+module Vim_emacs_output : sig
+  val string_of_loc:
+    strip_root: Path.t option ->
+    Loc.t -> string
+  val print_errors:
+    strip_root: Path.t option ->
+    out_channel -> error list -> unit
+end

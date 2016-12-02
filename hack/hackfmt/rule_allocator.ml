@@ -12,7 +12,7 @@
 
  type t = {
    rule_map: Rule.t IMap.t;
-   dependency_map: (int list) IMap.t;
+   dependency_map: int list IMap.t;
    next_id: int;
  }
 

@@ -298,13 +298,7 @@ end = struct
          downstream for obscure reasons, and then to messages *)
         let max_trace_depth = Context.max_trace_depth cx in
         if max_trace_depth = 0 then [] else
-          let strip_root = Context.should_strip_root cx in
-          let root = Context.root cx in
-          let prep_path r =
-            if not strip_root then r
-            else Reason.strip_root root r
-          in
-          Trace.reasons_of_trace ~prep_path ~level:max_trace_depth trace
+          Trace.reasons_of_trace ~level:max_trace_depth trace
           |> List.map info_of_reason
       in
       (* NOTE: We include the operation's reason in the error message, unless it
@@ -958,9 +952,14 @@ end = struct
 
     (* catch no-loc errors early, before they get into error map *)
     Errors.(
-      if Loc.source (loc_of_error error) = None
-      then assert_false (spf "add_output: no source for error: %s"
-        (Hh_json.json_to_multiline (json_of_errors [error])))
+      if Loc.source (loc_of_error error) = None then
+        let strip_root = if Context.should_strip_root cx
+          then Some (Context.root cx)
+          else None in
+        let json = Json_output.json_of_errors ~strip_root [error] in
+        assert_false (
+          spf "add_output: no source for error: %s"
+          (Hh_json.json_to_multiline json))
     );
 
     Context.add_error cx error

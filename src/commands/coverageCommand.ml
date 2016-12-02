@@ -46,19 +46,18 @@ let spec = {
   )
 }
 
-let handle_error ~json ~pretty (loc, err) strip =
-  let loc = strip loc in
+let handle_error ~json ~pretty ~strip_root (loc, err) =
   if json
   then (
     let open Hh_json in
     let json = JSON_Object (
       ("error", JSON_String err) ::
-      ("loc", Reason.json_of_loc loc) ::
-      (Errors.deprecated_json_props_of_loc loc)
+      ("loc", Reason.json_of_loc ~strip_root loc) ::
+      (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     prerr_endline (json_to_string ~pretty json);
   ) else (
-    let loc = Reason.string_of_loc loc in
+    let loc = Reason.string_of_loc ~strip_root loc in
     prerr_endlinef "%s:\n%s" loc err;
   )
 
@@ -251,7 +250,8 @@ let main
 
   match (Timeout.input_value ic : ServerProt.coverage_response) with
   | Err err ->
-      handle_error ~json ~pretty err (relativize strip_root root)
+      let strip_root = if strip_root then Some root else None in
+      handle_error ~json ~pretty ~strip_root err
   | OK resp ->
       let content = ServerProt.file_input_get_content file in
       handle_response ~json ~pretty ~color ~debug resp content

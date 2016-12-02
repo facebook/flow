@@ -666,8 +666,11 @@ let full_check workers ~ordered_libs parse_next options =
 
 (* helper - print errors. used in check-and-die runs *)
 let print_errors ~profiling options errors =
-  let strip_root = Options.should_strip_root options in
-  let root = Options.root options in
+  let strip_root =
+    if Options.should_strip_root options
+    then Some (Options.root options)
+    else None
+  in
 
   if Options.should_output_json options
   then begin
@@ -675,12 +678,16 @@ let print_errors ~profiling options errors =
       if options.Options.opt_profile
       then Some profiling
       else None in
-    Errors.print_error_json ~strip_root ~root ~profiling stdout errors
+    Errors.Json_output.print_errors
+      ~out_channel:stdout
+      ~strip_root
+      ~profiling
+      errors
   end else
-    Errors.print_error_summary
+    Errors.Cli_output.print_errors
+      ~out_channel:stdout
       ~flags:(Options.error_flags options)
       ~strip_root
-      ~root
       errors
 
 (* initialize flow server state, including full check *)

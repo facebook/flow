@@ -19,7 +19,6 @@
 open Utils_js
 
 module Ast = Spider_monkey_ast
-module Flow = Flow_js
 module ErrorSet = Errors.ErrorSet
 module FlowError = Flow_error
 
@@ -600,12 +599,6 @@ end
 (* Switch between module systems, based on environment. We could eventually use
    functors, but that seems like overkill at this point. *)
 
-let module_system_table =
-  let table = Hashtbl.create 2 in
-  Hashtbl.add table "node" (module Node: MODULE_SYSTEM);
-  Hashtbl.add table "haste" (module Haste: MODULE_SYSTEM);
-  table
-
 let module_system = ref None
 
 (* TODO: is it premature optimization to memoize this? how bad is doing the
@@ -614,8 +607,11 @@ let get_module_system opts =
   match !module_system with
   | Some system -> system
   | None ->
-    let module_system_name = Options.module_system opts in
-    let system = Hashtbl.find module_system_table module_system_name in
+    let module M = (val (match Options.module_system opts with
+    | Options.Node -> (module Node: MODULE_SYSTEM)
+    | Options.Haste -> (module Haste: MODULE_SYSTEM)
+    )) in
+    let system = (module M : MODULE_SYSTEM) in
     module_system := Some system;
     system
 

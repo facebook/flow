@@ -37,5 +37,6 @@ val string_of_default: Spider_monkey_ast.Expression.t Default.t -> string
 
 val dump_t: ?depth:int -> Context.t -> Type.t -> string
 val dump_use_t: ?depth:int -> Context.t -> Type.use_t -> string
+val dump_tvar: ?depth:int -> Context.t -> Constraint.ident -> string
 val dump_prop: ?depth:int -> Context.t -> Type.Property.t -> string
 val dump_reason: Context.t -> Reason.t -> string

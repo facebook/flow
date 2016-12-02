@@ -6,19 +6,31 @@ export default suite(({addFile, addFiles, addCode}) => [
   test('X ~> A', [
     // literal A
     addCode('({p: new A}: RWA);').noNewErrors(),
+    addCode('({p: new A}: dRWA);').noNewErrors(),
 
     // A
     addCode('(rwA: RWA);').noNewErrors(),
+    addCode('(drwA: dRWA);').noNewErrors(),
 
     // +A
     addCode('(roA: RWA);')
       .newErrors(
         `
-          test.js:27
-           27: (roA: RWA);
+          test.js:50
+           50: (roA: RWA);
                 ^^^ object type. Covariant property \`p\` incompatible with invariant use in
-           27: (roA: RWA);
+           50: (roA: RWA);
                      ^^^ object type
+        `,
+      ),
+    addCode('(droA: dRWA);')
+      .newErrors(
+        `
+          test.js:52
+           52: (droA: dRWA);
+                ^^^^ object type. Covariant computed property incompatible with invariant use in
+           52: (droA: dRWA);
+                      ^^^^ object type
         `,
       ),
 
@@ -26,26 +38,48 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woA: RWA);')
       .newErrors(
         `
-          test.js:29
-           29: (woA: RWA);
+          test.js:54
+           54: (woA: RWA);
                 ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
-           29: (woA: RWA);
+           54: (woA: RWA);
                      ^^^ object type
         `,
       ),
+    addCode('(dwoA: dRWA);')
+      .newErrors(
+        `
+          test.js:56
+           56: (dwoA: dRWA);
+                ^^^^ object type. Contravariant computed property incompatible with invariant use in
+           56: (dwoA: dRWA);
+                      ^^^^ object type
+        `,
+      ),
+
 
     // literal B
     addCode('({p: new B}: RWA);').noNewErrors(),
+    addCode('({p: new B}: dRWA);').noNewErrors(),
 
     // B
     addCode('(rwB: RWA);')
       .newErrors(
         `
-          test.js:7
-            7:     type RWA = {p: A}
+          test.js:9
+            9:     type RWA = {p: A}
                                   ^ A. This type is incompatible with
-           10:     type RWB = {p: B}
+           12:     type RWB = {p: B}
                                   ^ B
+        `,
+      ),
+    addCode('(drwB: dRWA);')
+      .newErrors(
+        `
+          test.js:26
+           26:     type dRWA = {[string]: A};
+                                          ^ A. This type is incompatible with
+           29:     type dRWB = {[string]: B};
+                                          ^ B
         `,
       ),
 
@@ -53,11 +87,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roB: RWA);')
       .newErrors(
         `
-          test.js:35
-           35: (roB: RWA);
+          test.js:66
+           66: (roB: RWA);
                 ^^^ object type. Covariant property \`p\` incompatible with invariant use in
-           35: (roB: RWA);
+           66: (roB: RWA);
                      ^^^ object type
+        `,
+      ),
+    addCode('(droB: dRWA);')
+      .newErrors(
+        `
+          test.js:68
+           68: (droB: dRWA);
+                ^^^^ object type. Covariant computed property incompatible with invariant use in
+           68: (droB: dRWA);
+                      ^^^^ object type
         `,
       ),
 
@@ -65,17 +109,33 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woB: RWA);')
       .newErrors(
         `
-          test.js:7
-            7:     type RWA = {p: A}
+          test.js:9
+            9:     type RWA = {p: A}
                                   ^ A. This type is incompatible with
-           12:     type WOB = {-p: B}
+           14:     type WOB = {-p: B}
                                    ^ B
 
-          test.js:37
-           37: (woB: RWA);
+          test.js:70
+           70: (woB: RWA);
                 ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
-           37: (woB: RWA);
+           70: (woB: RWA);
                      ^^^ object type
+        `,
+      ),
+    addCode('(dwoB: dRWA);')
+      .newErrors(
+        `
+          test.js:26
+           26:     type dRWA = {[string]: A};
+                                          ^ A. This type is incompatible with
+           31:     type dWOB = {-[string]: B};
+                                           ^ B
+
+          test.js:72
+           72: (dwoB: dRWA);
+                ^^^^ object type. Contravariant computed property incompatible with invariant use in
+           72: (dwoB: dRWA);
+                      ^^^^ object type
         `,
       ),
   ]),
@@ -83,43 +143,69 @@ export default suite(({addFile, addFiles, addCode}) => [
   test('X ~> +A', [
     // literal A
     addCode('({p: new A}: ROA);').noNewErrors(),
+    addCode('({p: new A}: dROA);').noNewErrors(),
 
     // A
     addCode('(rwA: ROA);').noNewErrors(),
+    addCode('(drwA: dROA);').noNewErrors(),
 
     // +A
     addCode('(roA: ROA);').noNewErrors(),
+    addCode('(droA: dROA);').noNewErrors(),
 
     // -A
     addCode('(woA: ROA);')
       .newErrors(
         `
-          test.js:29
-           29: (woA: ROA);
+          test.js:54
+           54: (woA: ROA);
                 ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-           29: (woA: ROA);
+           54: (woA: ROA);
                      ^^^ object type
+        `,
+      ),
+    addCode('(dwoA: dROA);')
+      .newErrors(
+        `
+          test.js:56
+           56: (dwoA: dROA);
+                ^^^^ object type. Contravariant computed property incompatible with covariant use in
+           56: (dwoA: dROA);
+                      ^^^^ object type
         `,
       ),
 
     // literal B
     addCode('({p: new B}: ROA);').noNewErrors(),
+    addCode('({p: new B}: dROA);').noNewErrors(),
 
     // B
     addCode('(rwB: ROA);').noNewErrors(),
+    addCode('(drwB: dROA);').noNewErrors(),
 
     // +B
     addCode('(roB: ROA);').noNewErrors(),
+    addCode('(droB: dROA);').noNewErrors(),
 
     // -B
     addCode('(woB: ROA);')
       .newErrors(
         `
-          test.js:37
-           37: (woB: ROA);
+          test.js:70
+           70: (woB: ROA);
                 ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-           37: (woB: ROA);
+           70: (woB: ROA);
                      ^^^ object type
+        `,
+      ),
+    addCode('(dwoB: dROA);')
+      .newErrors(
+        `
+          test.js:72
+           72: (dwoB: dROA);
+                ^^^^ object type. Contravariant computed property incompatible with covariant use in
+           72: (dwoB: dROA);
+                      ^^^^ object type
         `,
       ),
   ]),
@@ -127,37 +213,61 @@ export default suite(({addFile, addFiles, addCode}) => [
   test('X ~> -A', [
     // literal A
     addCode('({p: new A}: WOA);').noNewErrors(),
+    addCode('({p: new A}: dWOA);').noNewErrors(),
 
     // A
     addCode('(rwA: WOA);').noNewErrors(),
+    addCode('(rwA: dWOA);').noNewErrors(),
 
     // +A
     addCode('(roA: WOA);')
       .newErrors(
         `
-          test.js:27
-           27: (roA: WOA);
+          test.js:50
+           50: (roA: WOA);
                 ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
-           27: (roA: WOA);
+           50: (roA: WOA);
                      ^^^ object type
+        `,
+      ),
+    addCode('(droA: dWOA);')
+      .newErrors(
+        `
+          test.js:52
+           52: (droA: dWOA);
+                ^^^^ object type. Covariant computed property incompatible with contravariant use in
+           52: (droA: dWOA);
+                      ^^^^ object type
         `,
       ),
 
     // -A
     addCode('(woA: WOA);').noNewErrors(),
+    addCode('(dwoA: dWOA);').noNewErrors(),
 
     // literal B
     addCode('({p: new B}: WOA);').noNewErrors(),
+    addCode('({p: new B}: dWOA);').noNewErrors(),
 
     // B
     addCode('(rwB: WOA);')
       .newErrors(
         `
-          test.js:9
-            9:       type WOA = {-p: A}
-                                     ^ A. This type is incompatible with
-           10:       type RWB = {p: B}
-                                    ^ B
+          test.js:11
+           11:     type WOA = {-p: A}
+                                   ^ A. This type is incompatible with
+           12:     type RWB = {p: B}
+                                  ^ B
+        `,
+      ),
+    addCode('(drwB: dWOA);')
+      .newErrors(
+        `
+          test.js:28
+           28:     type dWOA = {-[string]: A};
+                                           ^ A. This type is incompatible with
+           29:     type dRWB = {[string]: B};
+                                          ^ B
         `,
       ),
 
@@ -165,11 +275,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roB: WOA);')
       .newErrors(
         `
-          test.js:35
-           35: (roB: WOA);
+          test.js:66
+           66: (roB: WOA);
                 ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
-           35: (roB: WOA);
+           66: (roB: WOA);
                      ^^^ object type
+        `,
+      ),
+    addCode('(droB: dWOA);')
+      .newErrors(
+        `
+          test.js:68
+           68: (droB: dWOA);
+                ^^^^ object type. Covariant computed property incompatible with contravariant use in
+           68: (droB: dWOA);
+                      ^^^^ object type
         `,
       ),
 
@@ -177,11 +297,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woB: WOA);')
       .newErrors(
         `
-          test.js:9
-            9:       type WOA = {-p: A}
-                                     ^ A. This type is incompatible with
-           12:       type WOB = {-p: B}
-                                     ^ B
+          test.js:11
+           11:     type WOA = {-p: A}
+                                   ^ A. This type is incompatible with
+           14:     type WOB = {-p: B}
+                                   ^ B
+        `,
+      ),
+    addCode('(dwoB: dWOA);')
+      .newErrors(
+        `
+          test.js:28
+           28:     type dWOA = {-[string]: A};
+                                           ^ A. This type is incompatible with
+           31:     type dWOB = {-[string]: B};
+                                           ^ B
         `,
       ),
   ]),
@@ -191,11 +321,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('({p: new A}: RWB);')
       .newErrors(
         `
-          test.js:23
-           23: ({p: new A}: RWB);
+          test.js:42
+           42: ({p: new A}: RWB);
                     ^^^^^ A. This type is incompatible with
-           10:     type RWB = {p: B}
+           12:     type RWB = {p: B}
                                   ^ B
+        `,
+      ),
+    addCode('({p: new A}: dRWB);')
+      .newErrors(
+        `
+          test.js:44
+           44: ({p: new A}: dRWB);
+                    ^^^^^ A. This type is incompatible with
+           29:     type dRWB = {[string]: B};
+                                          ^ B
         `,
       ),
 
@@ -203,11 +343,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwA: RWB);')
       .newErrors(
         `
-          test.js:7
-            7:       type RWA = {p: A}
-                                    ^ A. This type is incompatible with
-           10:       type RWB = {p: B}
-                                    ^ B
+          test.js:9
+            9:     type RWA = {p: A}
+                                  ^ A. This type is incompatible with
+           12:     type RWB = {p: B}
+                                  ^ B
+        `,
+      ),
+    addCode('(drwA: dRWB);')
+      .newErrors(
+        `
+          test.js:26
+           26:     type dRWA = {[string]: A};
+                                          ^ A. This type is incompatible with
+           29:     type dRWB = {[string]: B};
+                                          ^ B
         `,
       ),
 
@@ -215,17 +365,33 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roA: RWB);')
       .newErrors(
         `
-          test.js:8
-            8:     type ROA = {+p: A}
+          test.js:10
+           10:     type ROA = {+p: A}
                                    ^ A. This type is incompatible with
-           10:     type RWB = {p: B}
+           12:     type RWB = {p: B}
                                   ^ B
 
-          test.js:27
-           27: (roA: RWB);
+          test.js:50
+           50: (roA: RWB);
                 ^^^ object type. Covariant property \`p\` incompatible with invariant use in
-           27: (roA: RWB);
+           50: (roA: RWB);
                      ^^^ object type
+        `,
+      ),
+    addCode('(droA: dRWB);')
+      .newErrors(
+        `
+          test.js:27
+           27:     type dROA = {+[string]: A};
+                                           ^ A. This type is incompatible with
+           29:     type dRWB = {[string]: B};
+                                          ^ B
+
+          test.js:52
+           52: (droA: dRWB);
+                ^^^^ object type. Covariant computed property incompatible with invariant use in
+           52: (droA: dRWB);
+                      ^^^^ object type
         `,
       ),
 
@@ -233,11 +399,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woA: RWB);')
       .newErrors(
         `
-          test.js:29
-           29: (woA: RWB);
+          test.js:54
+           54: (woA: RWB);
                 ^^^ object type. Contravariant property \`p\` incompatible with invariant use in
-           29: (woA: RWB);
+           54: (woA: RWB);
                      ^^^ object type
+        `,
+      ),
+    addCode('(dwoA: dRWB);')
+      .newErrors(
+        `
+          test.js:56
+           56: (dwoA: dRWB);
+                ^^^^ object type. Contravariant computed property incompatible with invariant use in
+           56: (dwoA: dRWB);
+                      ^^^^ object type
         `,
       ),
   ]),
@@ -247,11 +423,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('({p: new A}: ROB);')
       .newErrors(
         `
-          test.js:23
-           23: ({p: new A}: ROB);
+          test.js:42
+           42: ({p: new A}: ROB);
                     ^^^^^ A. This type is incompatible with
-           11:     type ROB = {+p: B}
+           13:     type ROB = {+p: B}
                                    ^ B
+        `,
+      ),
+    addCode('({p: new A}: dROB);')
+      .newErrors(
+        `
+          test.js:44
+           44: ({p: new A}: dROB);
+                    ^^^^^ A. This type is incompatible with
+           30:     type dROB = {+[string]: B};
+                                           ^ B
         `,
       ),
 
@@ -259,11 +445,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwA: ROB);')
       .newErrors(
         `
-          test.js:7
-            7:       type RWA = {p: A}
-                                    ^ A. This type is incompatible with
-           11:       type ROB = {+p: B}
-                                     ^ B
+          test.js:9
+            9:     type RWA = {p: A}
+                                  ^ A. This type is incompatible with
+           13:     type ROB = {+p: B}
+                                   ^ B
+        `,
+      ),
+    addCode('(drwA: dROB);')
+      .newErrors(
+        `
+          test.js:26
+           26:     type dRWA = {[string]: A};
+                                          ^ A. This type is incompatible with
+           30:     type dROB = {+[string]: B};
+                                           ^ B
         `,
       ),
 
@@ -271,11 +467,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roA: ROB);')
       .newErrors(
         `
-          test.js:8
-            8:       type ROA = {+p: A}
-                                     ^ A. This type is incompatible with
-           11:       type ROB = {+p: B}
-                                     ^ B
+          test.js:10
+           10:     type ROA = {+p: A}
+                                   ^ A. This type is incompatible with
+           13:     type ROB = {+p: B}
+                                   ^ B
+        `,
+      ),
+    addCode('(droA: dROB);')
+      .newErrors(
+        `
+          test.js:27
+           27:     type dROA = {+[string]: A};
+                                           ^ A. This type is incompatible with
+           30:     type dROB = {+[string]: B};
+                                           ^ B
         `,
       ),
 
@@ -283,11 +489,21 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woA: ROB);')
       .newErrors(
         `
-          test.js:29
-           29: (woA: ROB);
+          test.js:54
+           54: (woA: ROB);
                 ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-           29: (woA: ROB);
+           54: (woA: ROB);
                      ^^^ object type
+        `,
+      ),
+    addCode('(dwoA: dROB);')
+      .newErrors(
+        `
+          test.js:56
+           56: (dwoA: dROB);
+                ^^^^ object type. Contravariant computed property incompatible with covariant use in
+           56: (dwoA: dROB);
+                      ^^^^ object type
         `,
       ),
   ]),
@@ -295,24 +511,37 @@ export default suite(({addFile, addFiles, addCode}) => [
   test('X ~> -B', [
     // literal A
     addCode('({p: new A}: WOB);').noNewErrors(),
+    addCode('({p: new A}: dWOB);').noNewErrors(),
 
     // A
     addCode('(rwA: WOB);').noNewErrors(),
+    addCode('(drwA: dWOB);').noNewErrors(),
 
     // +A
     addCode('(roA: WOB);')
       .newErrors(
         `
-          test.js:27
-           27: (roA: WOB);
+          test.js:50
+           50: (roA: WOB);
                 ^^^ object type. Covariant property \`p\` incompatible with contravariant use in
-           27: (roA: WOB);
+           50: (roA: WOB);
                      ^^^ object type
+        `,
+      ),
+    addCode('(droA: dWOB);')
+      .newErrors(
+        `
+          test.js:52
+           52: (droA: dWOB);
+                ^^^^ object type. Covariant computed property incompatible with contravariant use in
+           52: (droA: dWOB);
+                      ^^^^ object type
         `,
       ),
 
     // -A
     addCode('(woA: WOB);').noNewErrors(),
+    addCode('(dwoA: dWOB);').noNewErrors(),
   ]),
 
   test('unification', [
@@ -325,10 +554,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(([roA]: Array<{+p:A}>): Array<{p:A}>);')
       .newErrors(
         `
-          test.js:25
-           25: (([roA]: Array<{+p:A}>): Array<{p:A}>);
+          test.js:44
+           44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
                               ^^^^^^ object type. Covariant property \`p\` incompatible with invariant use in
-           25: (([roA]: Array<{+p:A}>): Array<{p:A}>);
+           44: (([roA]: Array<{+p:A}>): Array<{p:A}>);
                                               ^^^^^ object type
         `,
       ),
@@ -336,10 +565,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(([woA]: Array<{-p:A}>): Array<{p:A}>);')
       .newErrors(
         `
-          test.js:27
-           27: (([woA]: Array<{-p:A}>): Array<{p:A}>);
+          test.js:46
+           46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
                               ^^^^^^ object type. Contravariant property \`p\` incompatible with invariant use in
-           27: (([woA]: Array<{-p:A}>): Array<{p:A}>);
+           46: (([woA]: Array<{-p:A}>): Array<{p:A}>);
                                               ^^^^^ object type
         `,
       ),
@@ -347,10 +576,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(([rwA]: Array<{p:A}>): Array<{+p:A}>);')
       .newErrors(
         `
-          test.js:29
-           29: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
+          test.js:48
+           48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
                               ^^^^^ object type. Invariant property \`p\` incompatible with covariant use in
-           29: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
+           48: (([rwA]: Array<{p:A}>): Array<{+p:A}>);
                                              ^^^^^^ object type
         `,
       ),
@@ -361,10 +590,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(([woA]: Array<{-p:A}>): Array<{+p:A}>);')
       .newErrors(
         `
-          test.js:33
-           33: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
+          test.js:52
+           52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
                               ^^^^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-           33: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
+           52: (([woA]: Array<{-p:A}>): Array<{+p:A}>);
                                               ^^^^^^ object type
         `,
       ),
@@ -372,10 +601,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(([rwA]: Array<{p:A}>): Array<{-p:A}>);')
       .newErrors(
         `
-          test.js:35
-           35: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
+          test.js:54
+           54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
                               ^^^^^ object type. Invariant property \`p\` incompatible with contravariant use in
-           35: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
+           54: (([rwA]: Array<{p:A}>): Array<{-p:A}>);
                                              ^^^^^^ object type
         `,
       ),
@@ -383,10 +612,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(([roA]: Array<{+p:A}>): Array<{-p:A}>);')
       .newErrors(
         `
-          test.js:37
-           37: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
+          test.js:56
+           56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
                               ^^^^^^ object type. Covariant property \`p\` incompatible with contravariant use in
-           37: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
+           56: (([roA]: Array<{+p:A}>): Array<{-p:A}>);
                                               ^^^^^^ object type
         `,
       ),
@@ -406,10 +635,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woA: $Shape<RWA>);').
       newErrors(
        `
-         test.js:27
-          27: (woA: \$Shape<RWA>);
+         test.js:46
+          46: (woA: \$Shape<RWA>);
                ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-          27: (woA: \$Shape<RWA>);
+          46: (woA: \$Shape<RWA>);
                            ^^^ RWA
        `,
      ),
@@ -424,10 +653,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woB: $Shape<RWA>);').
       newErrors(
        `
-         test.js:33
-          33: (woB: \$Shape<RWA>);
+         test.js:52
+          52: (woB: \$Shape<RWA>);
                ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-          33: (woB: \$Shape<RWA>);
+          52: (woB: \$Shape<RWA>);
                            ^^^ RWA
        `,
      ),
@@ -436,10 +665,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(rwA: $Shape<RWB>);').
       newErrors(
        `
-         test.js:7
-           7:     type RWA = {p: A}
+         test.js:9
+           9:     type RWA = {p: A}
                                  ^ A. This type is incompatible with
-          10:     type RWB = {p: B}
+          12:     type RWB = {p: B}
                                  ^ B
        `,
      ),
@@ -448,10 +677,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(roA: $Shape<RWB>);').
       newErrors(
        `
-         test.js:8
-           8:     type ROA = {+p: A}
+         test.js:10
+          10:     type ROA = {+p: A}
                                   ^ A. This type is incompatible with
-          10:     type RWB = {p: B}
+          12:     type RWB = {p: B}
                                  ^ B
        `,
      ),
@@ -460,10 +689,10 @@ export default suite(({addFile, addFiles, addCode}) => [
     addCode('(woA: $Shape<RWB>);').
       newErrors(
        `
-         test.js:39
-          39: (woA: \$Shape<RWB>);
+         test.js:58
+          58: (woA: \$Shape<RWB>);
                ^^^ object type. Contravariant property \`p\` incompatible with covariant use in
-          39: (woA: \$Shape<RWB>);
+          58: (woA: \$Shape<RWB>);
                            ^^^ RWB
        `,
      ),
@@ -473,6 +702,8 @@ export default suite(({addFile, addFiles, addCode}) => [
   addCode(`
     class A {}
     class B extends A {};
+
+    // named properties
 
     type RWA = {p: A}
     type ROA = {+p: A}
@@ -488,5 +719,22 @@ export default suite(({addFile, addFiles, addCode}) => [
     declare var rwB: RWB;
     declare var roB: ROB;
     declare var woB: WOB;
+
+    // dictionaries
+
+    type dRWA = {[string]: A};
+    type dROA = {+[string]: A};
+    type dWOA = {-[string]: A};
+    type dRWB = {[string]: B};
+    type dROB = {+[string]: B};
+    type dWOB = {-[string]: B};
+
+    declare var drwA: dRWA;
+    declare var droA: dROA;
+    declare var dwoA: dWOA;
+
+    declare var drwB: dRWB;
+    declare var droB: dROB;
+    declare var dwoB: dWOB;
   `),
 ]);

@@ -1,12 +1,16 @@
+test.js:12
+ 12: var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
+ 12: var b: boolean = buffer.INSPECT_MAX_BYTES; // error, number ~/> boolean
+            ^^^^^^^ boolean
 
-test.js:12:18,41: number
-This type is incompatible with
-test.js:12:8,14: boolean
+test.js:22
+ 22: var buffer2 = require("./buffer");
+                   ^^^^^^^^^^^^^^^^^^^ ./buffer. Required module not found
 
-test.js:22:15,33: ./buffer
-Required module not found
+test.js:25
+ 25: var buffer3 = require("./buffer.js");
+                   ^^^^^^^^^^^^^^^^^^^^^^ ./buffer.js. Required module not found
 
-test.js:25:15,36: ./buffer.js
-Required module not found
 
 Found 3 errors

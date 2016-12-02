@@ -3,10 +3,10 @@ Initial status:
 No errors!
 
 Copy A.js to B.js:
+B.js:0
+A. Duplicate module provider
+current provider. See: A.js:0
 
-B.js: A
-Duplicate module provider
-A.js: current provider
 
 Found 1 error
 

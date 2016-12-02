@@ -557,6 +557,14 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       List.map (mk_interface_super cx structural super_reason tparams_map)
         extends
     in
+
+    let callable = List.exists
+      (fun (_, cp) -> not cp.Ast.Type.Object.CallProperty.static)
+      callProperties in
+
+    let interface_supers = if callable
+      then Type.FunProtoT (locationless_reason RObjectClassName) :: interface_supers
+      else interface_supers in
     let super = Type.(match interface_supers with
       | [] -> AnyT.t
       | [t] -> t

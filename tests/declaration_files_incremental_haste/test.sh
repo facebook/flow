@@ -26,39 +26,39 @@ use_files() {
 }
 
 printf "======Start off with the .js files but without the .flow file======\n"
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 use_files "$DECL_FILES"
 "$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 ignore_files "$DECL_FILES"
 "$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 
 printf "\n\n======Start off with the .js files and the .flow file======\n"
 "$FLOW" stop .
 use_files "$DECL_FILES"
 "$FLOW" start . --all --wait
 
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 ignore_files "$DECL_FILES"
 "$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 use_files "$DECL_FILES"
 "$FLOW" force-recheck $DECL_FILES
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 
 printf "\n\n======Start off without the .js files and with the .flow file======\n"
 "$FLOW" stop .
 ignore_files "$IMPL_FILES"
 "$FLOW" start . --all --wait
 
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 use_files "$IMPL_FILES"
 "$FLOW" force-recheck $IMPL_FILES
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 ignore_files "$IMPL_FILES"
 "$FLOW" force-recheck $IMPL_FILES
-"$FLOW" status --old-output-format .
+"$FLOW" status .
 
 # reset
 use_files "$IMPL_FILES"

@@ -12,13 +12,16 @@ type error_flags = {
   color: Tty.color_mode;
   one_line: bool;
   show_all_errors: bool;
-  old_output_format: bool;
 }
 
 type esproposal_feature_mode =
   | ESPROPOSAL_ENABLE
   | ESPROPOSAL_IGNORE
   | ESPROPOSAL_WARN
+
+type module_system =
+  | Node
+  | Haste
 
 type t = {
   opt_all : bool;
@@ -41,7 +44,7 @@ type t = {
   opt_libs: Path.t list;
   opt_log_file: Path.t;
   opt_max_workers: int;
-  opt_module: string;
+  opt_module: module_system;
   opt_module_file_exts: SSet.t;
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_module_resource_exts: SSet.t;
@@ -76,7 +79,6 @@ let default_error_flags = {
   color = Tty.Color_Auto;
   one_line = false;
   show_all_errors = false;
-  old_output_format = false;
 }
 
 let all opts = opts.opt_all

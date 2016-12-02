@@ -81,6 +81,7 @@ type t =
   | AmbiguousDeclareModuleKind
   | GetterArity
   | SetterArity
+  | InvalidNonTypeImportInDeclareModule
 
 exception Error of (Loc.t * t) list
 
@@ -188,4 +189,7 @@ module PP =
           they are either an ES module xor they are a CommonJS module."
       | GetterArity -> "Getter should have zero parameters"
       | SetterArity -> "Setter should have exactly one parameter"
+      | InvalidNonTypeImportInDeclareModule ->
+          "Imports within a `declare module` body must always be " ^
+          "`import type` or `import typeof`!"
   end

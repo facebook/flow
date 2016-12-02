@@ -1,52 +1,76 @@
+a.js:6
+  6: (require('./b'): void);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  6: (require('./b'): void);
+                      ^^^^ undefined
 
-a.js:6:2,15: string
-This type is incompatible with
-a.js:6:18,21: undefined
+a.js:7
+  7: (require('C'): void);
+      ^^^^^^^^^^^^ string. This type is incompatible with
+  7: (require('C'): void);
+                    ^^^^ undefined
 
-a.js:7:2,13: string
-This type is incompatible with
-a.js:7:16,19: undefined
+b.js:6
+  6: (require('A'): void);
+      ^^^^^^^^^^^^ string. This type is incompatible with
+  6: (require('A'): void);
+                    ^^^^ undefined
 
-b.js:6:2,13: string
-This type is incompatible with
-b.js:6:16,19: undefined
+b.js:7
+  7: (require('D'): void);
+      ^^^^^^^^^^^^ string. This type is incompatible with
+  7: (require('D'): void);
+                    ^^^^ undefined
 
-b.js:7:2,13: string
-This type is incompatible with
-b.js:7:16,19: undefined
+c.js:7
+  7: (require('./b'): void);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  7: (require('./b'): void);
+                      ^^^^ undefined
 
-c.js:7:2,15: string
-This type is incompatible with
-c.js:7:18,21: undefined
+d.js:6
+  6: (require('./b'): void);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  6: (require('./b'): void);
+                      ^^^^ undefined
 
-d.js:6:2,15: string
-This type is incompatible with
-d.js:6:18,21: undefined
 
 Found 6 errors
+a.js:6
+  6: (require('./b'): void);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  6: (require('./b'): void);
+                      ^^^^ undefined
 
-a.js:6:2,15: string
-This type is incompatible with
-a.js:6:18,21: undefined
+a.js:7
+  7: (require('C'): void);
+      ^^^^^^^^^^^^ string. This type is incompatible with
+  7: (require('C'): void);
+                    ^^^^ undefined
 
-a.js:7:2,13: string
-This type is incompatible with
-a.js:7:16,19: undefined
+b.js:6
+  6: (require('A'): void);
+      ^^^^^^^^^^^^ string. This type is incompatible with
+  6: (require('A'): void);
+                    ^^^^ undefined
 
-b.js:6:2,13: string
-This type is incompatible with
-b.js:6:16,19: undefined
+b.js:7
+  7: (require('D'): void);
+      ^^^^^^^^^^^^ string. This type is incompatible with
+  7: (require('D'): void);
+                    ^^^^ undefined
 
-b.js:7:2,13: string
-This type is incompatible with
-b.js:7:16,19: undefined
+c.js:7
+  7: (require('./b'): void);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  7: (require('./b'): void);
+                      ^^^^ undefined
 
-c.js:7:2,15: string
-This type is incompatible with
-c.js:7:18,21: undefined
+d.js:6
+  6: (require('./b'): void);
+      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  6: (require('./b'): void);
+                      ^^^^ undefined
 
-d.js:6:2,15: string
-This type is incompatible with
-d.js:6:18,21: undefined
 
 Found 6 errors

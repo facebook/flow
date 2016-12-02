@@ -274,6 +274,8 @@ let rec gen_type t env = Type.(
   | OptionalT t -> add_str "void | " env |> gen_type t
   | OpenT _ -> gen_type (resolve_type t env) env
   | PolyT (tparams, t) -> gen_type t (add_tparams tparams env)
+  | ReposT (_, t) -> gen_type t env
+  | ReposUpperT (_, t) -> gen_type t env
   | RestT rest -> gen_type rest env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
   | SingletonBoolT (_, v) -> add_str (spf "%b" v) env

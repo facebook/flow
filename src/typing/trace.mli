@@ -18,7 +18,6 @@ val rec_trace: max: int -> Type.t -> Type.use_t -> t -> t
 val concat_trace: t list -> t
 
 val reasons_of_trace:
-  prep_path: (Reason.reason -> Reason.reason) ->
   ?level:int ->
   t ->
   Reason.reason list

@@ -2,10 +2,12 @@ After start:
 No errors!
 
 After introducing an error:
+test.js:3
+  3: (123: string); // error
+      ^^^ number. This type is incompatible with
+  3: (123: string); // error
+           ^^^^^^ string
 
-test.js:3:2,4: number
-This type is incompatible with
-test.js:3:7,12: string
 
 Found 1 error
 
@@ -13,9 +15,10 @@ After suppressing the error:
 No errors!
 
 After fixing the error, leaving the suppression:
+test.js:3
+  3: // $FlowIssue
+     ^^^^^^^^^^^^^ Error suppressing comment. Unused suppression
 
-test.js:3:1,13: Error suppressing comment
-Unused suppression
 
 Found 1 error
 

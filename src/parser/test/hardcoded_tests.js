@@ -2769,7 +2769,23 @@ module.exports = {
           'type': 'Literal',
           'value': './a/b.js',
         }
-      }
+      },
+      'declare module "M" { import type T from "TM"; }': {
+        'body.0.body.body.0': {
+          'type': 'ImportDeclaration',
+          'specifiers': [{
+            'type': 'ImportDefaultSpecifier',
+            'local': {
+              'type': 'Identifier',
+              'name': 'T',
+            }
+          }],
+          'source': {
+            'type': 'Literal',
+            'value': 'TM',
+          },
+        }
+      },
     },
     'Invalid Declare Module': {
       'declare Module A {}': {
@@ -2797,6 +2813,11 @@ module.exports = {
           '0.message': 'Found both `declare module.exports` and `declare export` in the same module. Modules can only have 1 since they are either an ES module xor they are a CommonJS module.'
         }
       },
+      'declare module "M" { import T from "TM"; }': {
+        'errors': {
+          '0.message': 'Imports within a `declare module` body must always be `import type` or `import typeof`!'
+        }
+      }
     },
     'Call Properties': {
       'var a : { (): number }': {
@@ -4980,33 +5001,6 @@ module.exports = {
           'message': 'Invalid left-hand side in for-of'
         }
       }
-    },
-    'Array literal spreads': {
-      '[1, ...rest]': {
-        'body.0.expression.elements': [
-          { 'value': 1 },
-          { 'type': 'SpreadElement' },
-        ]
-      },
-      '[1, ...rest,]': {
-        'body.0.expression.elements': [
-          { 'value': 1 },
-          { 'type': 'SpreadElement' },
-        ]
-      },
-      '[...rest, 1]': {
-        'body.0.expression.elements': [
-          { 'type': 'SpreadElement' },
-          { 'value': 1 }
-        ]
-      },
-      '[...rest, ,1]': {
-        'body.0.expression.elements': [
-          { 'type': 'SpreadElement' },
-          null,
-          { 'value': 1 }
-        ]
-      },
     }
   }
 };

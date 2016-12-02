@@ -241,6 +241,10 @@ let rec type_printer_impl ~size override enclosure cx t =
     | ThisClassT _ ->
         "This"
 
+    | ReposT (_, t)
+    | ReposUpperT (_, t) ->
+        pp enclosure cx t
+
     | OpenPredT (_, t, m_pos, m_neg) ->
         let l_pos = Key_map.elements m_pos in
         let l_neg = Key_map.elements m_neg in

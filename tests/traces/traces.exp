@@ -18,7 +18,7 @@ Trace:
                          ^ ~> ReposLowerT [identifier `x`] (from [not shown])
 * path 3:
   4: f0(0);
-        ^   NumT [number]
+        ^ NumT [number]
   3: function f0(x) { g0(x) }
                  ^ ~> UseT(FunCallParam, OpenT) [parameter `x`] (from [not shown])
   3: function f0(x) { g0(x) }

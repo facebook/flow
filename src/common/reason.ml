@@ -21,7 +21,6 @@
 
 open Utils_js
 open String_utils
-module Ast = Spider_monkey_ast
 
 let mk_id () = Ident.make ""
 
@@ -243,6 +242,29 @@ let do_patch lines insertions =
   patch 1 0 lines insertions;
   String.concat "\n" (Array.to_list lines)
 
+let string_of_source ?(strip_root=None) = Loc.(function
+  | Builtins -> "(builtins)"
+  | LibFile file ->
+    begin match strip_root with
+    | Some root ->
+      let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+      if string_starts_with file root_str
+      then spf "[LIB] %s" (Files.relative_path root_str file)
+      else spf "[LIB] %s" (Filename.basename file)
+    | None -> file
+    end
+  | SourceFile file
+  | JsonFile file
+  | ResourceFile file ->
+    begin match strip_root with
+    | Some root ->
+      let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
+      Files.relative_path root_str file
+    | None ->
+      file
+    end
+)
+
 let string_of_loc_pos loc = Loc.(
   let line = loc.start.line in
   let start = loc.start.column + 1 in
@@ -257,45 +279,19 @@ let string_of_loc_pos loc = Loc.(
     spf "%d:%d-%d" line start end_
 )
 
-let string_of_loc loc = Loc.(
+let string_of_loc ?(strip_root=None) loc = Loc.(
   match loc.source with
   | None
   | Some Builtins -> ""
-  | Some LibFile file
-  | Some SourceFile file
-  | Some JsonFile file
-  | Some ResourceFile file ->
-    spf "%s:%s" file (string_of_loc_pos loc)
-)
-
-(* helper: strip root from positions *)
-let strip_root_from_loc root loc = Loc.(
-  let source = match loc.source with
-  | None -> None
-  | Some Builtins -> Some Builtins
-  | Some LibFile file ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    if string_starts_with file root_str
-    then Some (LibFile (spf "[LIB] %s" (Files.relative_path root_str file)))
-    else Some (LibFile (spf "[LIB] %s" (Filename.basename file)))
-
-  | Some (SourceFile _ | JsonFile _ | ResourceFile _ as filename) ->
-    let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
-    Some (Loc.filename_map (Files.relative_path root_str) filename)
-  in
-  { loc with source }
+  | Some file ->
+    spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
 )
 
 let json_of_loc ?(strip_root=None) loc = Hh_json.(Loc.(
   JSON_Object [
     "source", (
-      let loc =
-        match strip_root with
-        | Some root -> strip_root_from_loc root loc
-        | None -> loc
-      in
       match loc.source with
-      | Some x -> JSON_String (string_of_filename x)
+      | Some x -> JSON_String (string_of_source ~strip_root x)
       | None -> JSON_Null
     );
     "type", (match loc.source with
@@ -489,8 +485,8 @@ let rec string_of_desc = function
   | RPropTypeShape -> "shape"
   | RPropTypeFbt -> "Fbd"
 
-let string_of_reason r =
-  let spos = string_of_loc (loc_of_reason r) in
+let string_of_reason ?(strip_root=None) r =
+  let spos = string_of_loc ~strip_root (loc_of_reason r) in
   let desc = string_of_desc r.desc in
   if spos = ""
   then desc
@@ -507,9 +503,9 @@ let json_of_reason ?(strip_root=None) r = Hh_json.(
   ]
 )
 
-let dump_reason r =
+let dump_reason ?(strip_root=None) r =
   spf "%s: %S%s"
-    (string_of_loc (loc_of_reason r))
+    (string_of_loc ~strip_root (loc_of_reason r))
     (string_of_desc r.desc)
     begin match r.test_id with
     | Some n -> spf " (test %d)" n
@@ -623,7 +619,3 @@ let repos_reason loc reason =
 
 let update_origin_of_reason origin reason =
   { reason with origin = origin }
-
-let strip_root root reason =
-  let loc = strip_root_from_loc root (loc_of_reason reason) in
-  repos_reason loc reason

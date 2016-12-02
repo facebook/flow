@@ -37,6 +37,7 @@ exception Out_of_shared_memory
 exception Hash_table_full
 exception Dep_table_full
 exception Heap_full
+exception Sql_assertion_failure
 exception C_assertion_failure of string
 
 (*****************************************************************************)
@@ -131,8 +132,8 @@ module type NoCache = sig
    *)
   val add: key -> t -> unit
 
-  (* Safe for concurrent reads, but not if interleaved with any operation
-   * mutating the table (add, remove etc ..).
+  (* Safe for concurrent reads. Safe for interleaved reads and mutations,
+   * provided the code runs on Intel architectures.
    *)
   val get: key -> t option
   val get_old: key -> t option

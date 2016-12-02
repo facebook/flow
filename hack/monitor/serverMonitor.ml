@@ -162,6 +162,10 @@ let update_status env monitor_config =
      | Died_unexpectedly ((Unix.WEXITED c), _)
         when c = Exit_status.(exit_code Hhconfig_changed) -> true
      | _ -> false in
+   let file_heap_stale _ status = match status with
+     | Died_unexpectedly ((Unix.WEXITED c), _)
+        when c = Exit_status.(exit_code File_heap_stale) -> true
+     | _ -> false in
    let max_watchman_retries = 3 in
    if (SMap.exists watchman_failed servers
      || SMap.exists watchman_fresh_instance servers)
@@ -173,7 +177,11 @@ let update_status env monitor_config =
    else if SMap.exists config_changed servers then begin
      Hh_logger.log "hh_server died from hh config change. Restarting";
      restart_servers env
-   end
+   end else if SMap.exists file_heap_stale servers then begin
+     Hh_logger.log
+      "Several large rebases caused FileHeap to be stale. Restarting";
+     restart_servers env
+  end
    else
      { env with servers = servers }
 

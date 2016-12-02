@@ -40,6 +40,9 @@ let descr_of_in_channel : 'a in_channel -> Unix.file_descr =
 let descr_of_out_channel : 'a out_channel -> Unix.file_descr =
   Unix.descr_of_out_channel
 
+let cast_in ic = ic
+let cast_out oc = oc
+
 (* We cannot fork() on Windows, so in order to emulate this in a
  * cross-platform way, we use create_process() and set the HH_SERVER_DAEMON
  * environment variable to indicate which function the child should

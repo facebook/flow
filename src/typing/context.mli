@@ -34,7 +34,7 @@ type metadata = {
   max_workers: int;
   jsx: (string * Spider_monkey_ast.Expression.t) option;
 }
-type module_exports_type =
+type module_kind =
   | CommonJSModule of Loc.t option
   | ESModule
 
@@ -69,7 +69,7 @@ val is_checked: t -> bool
 val is_verbose: t -> bool
 val is_weak: t -> bool
 val max_trace_depth: t -> int
-val module_exports_type: t -> module_exports_type
+val module_kind: t -> module_kind
 val module_map: t -> Type.t SMap.t
 val module_name: t -> Modulename.t
 val output_graphml: t -> bool
@@ -117,7 +117,7 @@ val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> Type.TypeSet.t IMap.t -> unit
 val set_globals: t -> SSet.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
-val set_module_exports_type: t -> module_exports_type -> unit
+val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_tvar: t -> Constraint.ident -> Constraint.node -> unit

@@ -1,6 +1,8 @@
+no_at_flow.js:1
+  1: var x: number = "not a number"; // Error: string ~> number
+                     ^^^^^^^^^^^^^^ string. This type is incompatible with
+  1: var x: number = "not a number"; // Error: string ~> number
+            ^^^^^^ number
 
-no_at_flow.js:1:17,30: string
-This type is incompatible with
-no_at_flow.js:1:8,13: number
 
 Found 1 error

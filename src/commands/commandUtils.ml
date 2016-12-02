@@ -85,7 +85,7 @@ let sleep seconds =
         then timeout_go_boom ()
         else Unix.sleep seconds
 
-let collect_error_flags main color one_line show_all_errors old_output_format =
+let collect_error_flags main color one_line show_all_errors =
   let color = match color with
   | Some "never" -> Tty.Color_Never
   | Some "always" -> Tty.Color_Always
@@ -93,7 +93,7 @@ let collect_error_flags main color one_line show_all_errors old_output_format =
   | None -> Tty.Color_Auto
   | _ -> assert false (* the enum type enforces this *)
   in
-  main { Options.color; one_line; show_all_errors; old_output_format; }
+  main { Options.color; one_line; show_all_errors; }
 
 let error_flags prev = CommandSpec.ArgSpec.(
   prev
@@ -104,8 +104,6 @@ let error_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Escapes newlines so that each error prints on one line"
   |> flag "--show-all-errors" no_arg
       ~doc:"Print all errors (the default is to truncate after 50 errors)"
-  |> flag "--old-output-format" no_arg
-      ~doc:"Use old output format (absolute file names, line and column numbers)"
 )
 
 let json_flags prev = CommandSpec.ArgSpec.(
@@ -250,11 +248,6 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
   |> include_flag
   |> libs_flag
 )
-
-(* relativize a loc's source path to a given root whenever strip_root is set *)
-let relativize strip_root root loc =
-  if not strip_root then loc
-  else Reason.strip_root_from_loc root loc
 
 type command_params = {
   from               : string;
@@ -449,9 +442,9 @@ let get_file_from_filename_or_stdin path = function
       ) in
       ServerProt.FileContent (filename, contents)
 
-let range_string_of_loc loc = Loc.(
+let range_string_of_loc ~strip_root loc = Loc.(
   let file = match loc.source with
-  | Some file -> string_of_filename file
+  | Some file -> Reason.string_of_source ~strip_root file
   | None -> ""
   in
   let l0, c0 = loc.start.line, loc.start.column + 1 in

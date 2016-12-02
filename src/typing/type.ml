@@ -262,6 +262,8 @@ module rec TypeTerm : sig
     (* Map a FunT over a structure *)
     | TypeMapT of reason * type_map * t * t
 
+    | ReposT of reason * t
+    | ReposUpperT of reason * t
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
@@ -1394,6 +1396,7 @@ let is_any = function
 
 (* Use types trapped for any propagation *)
 let any_propagating_use_t = function
+  | AdderT _
   | CallT _
   | GetPropT _
   | MethodT _
@@ -1411,8 +1414,14 @@ let any_propagating_use_t = function
   | ImportNamedT _
   | CJSExtractNamedExportsT _
   | CopyNamedExportsT _
-  (* TODO: ...others *)
     -> true
+
+  (* These types have no t_out, so can't propagate anything *)
+  | AssertArithmeticOperandT _
+  | ComparatorT _
+    -> false
+
+  (* TODO: remove wildcard, decide which should be true *)
   | _ -> false
 
 (* Usually types carry enough information about the "reason" for their
@@ -1463,6 +1472,8 @@ let rec reason_of_t = function
   | OpenPredT (reason, _, _, _) -> reason
   | OptionalT t -> replace_reason (fun desc -> ROptional desc) (reason_of_t t)
   | PolyT (_,t) -> replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
+  | ReposT (r, t) -> repos_reason (loc_of_reason r) (reason_of_t t)
+  | ReposUpperT (_, t) -> reason_of_t t
   | RestT t -> replace_reason (fun desc -> RRestArray desc) (reason_of_t t)
   | ShapeT (t) -> reason_of_t t
   | SingletonBoolT (reason, _) -> reason
@@ -1616,6 +1627,8 @@ let rec mod_reason_of_t f = function
   | OpenPredT (reason, t, p, n) -> OpenPredT (f reason, t, p, n)
   | OptionalT t -> OptionalT (mod_reason_of_t f t)
   | PolyT (plist, t) -> PolyT (plist, mod_reason_of_t f t)
+  | ReposT (reason, t) -> ReposT (f reason, t)
+  | ReposUpperT (reason, t) -> ReposUpperT (reason, mod_reason_of_t f t)
   | RestT t -> RestT (mod_reason_of_t f t)
   | ShapeT t -> ShapeT (mod_reason_of_t f t)
   | SingletonBoolT (reason, t) -> SingletonBoolT (f reason, t)
@@ -1803,6 +1816,8 @@ let string_of_ctor = function
   | OpenPredT _ -> "OpenPredT"
   | OptionalT _ -> "OptionalT"
   | PolyT _ -> "PolyT"
+  | ReposT _ -> "ReposT"
+  | ReposUpperT _ -> "ReposUpperT"
   | RestT _ -> "RestT"
   | ShapeT _ -> "ShapeT"
   | SingletonBoolT _ -> "SingletonBoolT"

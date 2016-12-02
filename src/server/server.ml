@@ -84,7 +84,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     let errors = env.ServerEnv.errorl in
     (* TODO: check status.directory *)
     status_log errors;
-    FlowEventLogger.status_response (Errors.json_of_errors errors);
+    FlowEventLogger.status_response
+      (Errors.Json_output.json_of_errors ~strip_root:None errors);
     send_errorl errors oc
 
   let die_nicely genv oc =

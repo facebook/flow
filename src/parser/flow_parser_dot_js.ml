@@ -16,4 +16,4 @@ let exports =
     Js.Unsafe.set Js.Unsafe.global "flow" exports;
     exports
   end
-let () = Js.Unsafe.set exports "parse" (Js.wrap_callback Flow_parser_js.parse)
+let () = Js.Unsafe.set exports "parse" (Js.Unsafe.callback Flow_parser_js.parse)

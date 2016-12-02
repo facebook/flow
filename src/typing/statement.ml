@@ -1531,8 +1531,8 @@ and statement cx = Ast.Statement.(
 
     let module_scope = Scope.fresh () in
     Env.push_var_scope cx module_scope;
-    let outer_module_exports_kind = Context.module_exports_type cx in
-    Context.set_module_exports_type cx (
+    let outer_module_exports_kind = Context.module_kind cx in
+    Context.set_module_kind cx (
       match kind with
       | DeclareModule.CommonJS loc -> Context.CommonJSModule (Some loc)
       | DeclareModule.ES _ -> Context.ESModule
@@ -1543,7 +1543,7 @@ and statement cx = Ast.Statement.(
     toplevels cx elements;
 
     Context.set_declare_module_t cx None;
-    Context.set_module_exports_type cx outer_module_exports_kind;
+    Context.set_module_kind cx outer_module_exports_kind;
     Env.pop_var_scope ();
 
     (match kind with
@@ -1659,7 +1659,7 @@ and statement cx = Ast.Statement.(
       Env.bind_declare_var cx name t reason
     ) else (
       let reason = mk_reason (RCustom "declare module.exports") loc in
-      mark_exports_type cx reason (Context.CommonJSModule(Some loc));
+      set_module_kind cx reason (Context.CommonJSModule(Some loc));
       set_module_exports cx reason t
     )
 
@@ -1945,12 +1945,12 @@ and export_statement cx loc
       *       user given CommonJS<->ESModule interop.
       *)
     (if lookup_mode != ForType then
-      mark_exports_type cx reason Context.ESModule);
+      set_module_kind cx reason Context.ESModule);
 
     let local_name = if default then "default" else local_name in
     set_module_t cx reason (fun t ->
       Flow.flow cx (
-        exports cx,
+        module_t_of_cx cx,
         ExportNamedT(reason, SMap.singleton local_name local_tvar, t)
       )
     )
@@ -2021,11 +2021,11 @@ and export_statement cx loc
           *       effect to the user given CommonJS<->ESModule interop.
           *)
         (if lookup_mode != ForType
-        then mark_exports_type cx reason Context.ESModule);
+        then set_module_kind cx reason Context.ESModule);
 
         set_module_t cx reason (fun t ->
           Flow.flow cx (
-            exports cx,
+            module_t_of_cx cx,
             ExportNamedT(reason, SMap.singleton remote_name local_tvar, t)
           )
         )
@@ -2060,7 +2060,7 @@ and export_statement cx loc
             (RCustom (spf "export * as %s from %S" name source_module_name))
             loc
         in
-        mark_exports_type cx reason Context.ESModule;
+        set_module_kind cx reason Context.ESModule;
 
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE
@@ -2078,7 +2078,7 @@ and export_statement cx loc
         in
         set_module_t cx reason (fun t ->
           Flow.flow cx (
-            exports cx,
+            module_t_of_cx cx,
             ExportNamedT(reason, SMap.singleton name remote_namespace_t, t)
           )
         )
@@ -2086,12 +2086,12 @@ and export_statement cx loc
         let reason =
           mk_reason (RCustom (spf "export * from %S" source_module_name)) loc
         in
-        mark_exports_type cx reason Context.ESModule;
+        set_module_kind cx reason Context.ESModule;
 
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             import ~reason cx source_module_name loc,
-            CopyNamedExportsT(reason, exports cx, t)
+            CopyNamedExportsT(reason, module_t_of_cx cx, t)
           )
         )
       )
@@ -3303,7 +3303,7 @@ and assignment cx loc = Ast.Expression.(function
           }) ->
             let reason =
               mk_reason (RCustom "assignment of module.exports") lhs_loc in
-            mark_exports_type cx reason (Context.CommonJSModule(Some(lhs_loc)));
+            set_module_kind cx reason (Context.CommonJSModule(Some(lhs_loc)));
             set_module_exports cx reason t
 
         (* super.name = e *)

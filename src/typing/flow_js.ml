@@ -311,6 +311,7 @@ let rec merge_type cx =
   | (NullT _, (NullT _ as t))
   | (VoidT _, (VoidT _ as t))
   | (TaintT _, ((TaintT _) as t))
+  | (AnyObjT _, (AnyObjT _ as t))
   | (ObjProtoT _, (ObjProtoT _ as t))
       -> t
 
@@ -1007,6 +1008,10 @@ module ResolvableTypeJob = struct
     | IdxWrapper (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
+    | ReposT (_, t)
+    | ReposUpperT (_, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -1103,24 +1108,55 @@ let expect_proper_def t =
 let expect_proper_def_use t =
   lift_to_use expect_proper_def t
 
+let print_if_verbose_lazy cx trace
+    ?(delim = "")
+    ?(indent = 0)
+    (lines: string Lazy.t list) =
+  match Context.verbose cx with
+  | Some { Verbose.indent = num_spaces; _ } ->
+    let indent = indent + Trace.trace_depth trace - 1 in
+    let prefix = String.make (indent * num_spaces) ' ' in
+    let pid = Context.pid_prefix cx in
+    let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
+    let lines = List.map add_prefix lines in
+    prerr_endline (String.concat delim lines)
+  | None ->
+    ()
+
+let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines: string list) =
+  match Context.verbose cx with
+  | Some _ ->
+    let lines = List.map (fun line -> lazy line) lines in
+    print_if_verbose_lazy cx trace ~delim ~indent lines
+  | None ->
+    ()
+
+let print_types_if_verbose cx trace
+    ?(note: string option)
+    ((l: Type.t), (u: Type.use_t)) =
+  let delim = match note with Some x -> spf " ~> %s" x | None -> " ~>" in
+  match Context.verbose cx with
+  | Some { Verbose.depth; _ } ->
+    print_if_verbose cx trace ~delim [
+      Debug_js.dump_t ~depth cx l;
+      Debug_js.dump_use_t ~depth cx u;
+    ]
+  | None ->
+    ()
+
 (********************** start of slab **********************************)
 
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
 let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
-  begin match Context.verbose cx with
-  | Some { Verbose.indent; depth } ->
-    let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
-    let pid = Context.pid_prefix cx in
-    prerr_endlinef
-      "\n%s%s%s ~>\n%s%s%s"
-      indent pid (Debug_js.dump_t ~depth cx l)
-      indent pid (Debug_js.dump_use_t ~depth cx u)
-  | None -> ()
-  end;
+  if ground_subtype (l, u) then
+    print_types_if_verbose cx trace (l, u)
+  else if Cache.FlowConstraint.get cx (l, u) then
+    print_types_if_verbose cx trace ~note:"(cached)" (l, u)
+  else (
+    print_types_if_verbose cx trace (l, u);
 
-  if not (ground_subtype (l, u) || Cache.FlowConstraint.get cx (l, u)) then (
     (* limit recursion depth *)
     RecursionCheck.check trace;
 
@@ -1140,9 +1176,55 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        is, then when speculation is complete, the action either fires or is
        discarded depending on whether the case that created the action is
        selected or not. *)
-    if not Speculation.(defer_action cx (Action.Flow (l, u))) then
+    if Speculation.(defer_action cx (Action.Flow (l, u))) then
+      print_if_verbose cx trace ~indent:1 ["deferred during speculation"]
 
-    match (l,u) with
+    else match (l,u) with
+
+    (********)
+    (* eval *)
+    (********)
+
+    | EvalT (t, TypeDestructorT (reason, s), i), _ ->
+      rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
+
+    | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
+      (* When checking a lower bound against a destructed type, we need to take
+         some care. In particular, we do not want the destructed type to be
+         "open" when t is not itself open, i.e., we do not want any "extra"
+         lower bounds to be able to flow to the destructed type than what t
+         itself allows.
+
+         For example, when t is { x: number }, we want $PropertyType(t) to be
+         number, not some open tvar that is a supertype of number (since the
+         latter would accept more than number, e.g. string). Similarly, when t
+         is ?string, we want the $NonMaybeType(t) to be string. *)
+      let result = eval_destructor cx ~trace reason t s i in
+      begin match t with
+      | OpenT _ ->
+        (* TODO: If t itself is an open tvar, we can afford to be looser for
+           now. The additional looseness is not entirely justifiable (e.g., we
+           should still prevent "extra" lower bounds from flowing into the
+           destructed type that did not originate from lower bounds flowing to
+           t), and we should do more work to avoid it, but it's at least not as
+           egregious as the case when t is not open. *)
+        rec_flow cx trace (l, UseT (use_op, result))
+      | _ ->
+        (* With the same "slingshot" trick used by AnnotT, hold the lower bound
+           at bay until result itself gets concretized, and then flow the lower
+           bound to that concrete type. Note: this works for type destructors
+           since they come from annotations and other types that have the 0->1
+           property, but does not work in general because for arbitrary tvars,
+           concretization may never happen or may happen more than once. *)
+        rec_flow cx trace (result, ReposUseT (reason, use_op, l))
+      end
+
+    | EvalT (t, DestructuringT (reason, s), i), _ ->
+      rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
+
+    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
+      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
+
 
     (******************)
     (* process X ~> Y *)
@@ -1274,50 +1356,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) ->
       prep_try_intersection cx trace reason unresolved (resolved @ [t]) u r rep
 
-    (********)
-    (* eval *)
-    (********)
-
-    | EvalT (t, TypeDestructorT (reason, s), i), _ ->
-      rec_flow cx trace (eval_destructor cx ~trace reason t s i, u)
-
-    | _, UseT (use_op, EvalT (t, TypeDestructorT (reason, s), i)) ->
-      (* When checking a lower bound against a destructed type, we need to take
-         some care. In particular, we do not want the destructed type to be
-         "open" when t is not itself open, i.e., we do not want any "extra"
-         lower bounds to be able to flow to the destructed type than what t
-         itself allows.
-
-         For example, when t is { x: number }, we want $PropertyType(t) to be
-         number, not some open tvar that is a supertype of number (since the
-         latter would accept more than number, e.g. string). Similarly, when t
-         is ?string, we want the $NonMaybeType(t) to be string. *)
-      let result = eval_destructor cx ~trace reason t s i in
-      begin match t with
-      | OpenT _ ->
-        (* TODO: If t itself is an open tvar, we can afford to be looser for
-           now. The additional looseness is not entirely justifiable (e.g., we
-           should still prevent "extra" lower bounds from flowing into the
-           destructed type that did not originate from lower bounds flowing to
-           t), and we should do more work to avoid it, but it's at least not as
-           egregious as the case when t is not open. *)
-        rec_flow cx trace (l, UseT (use_op, result))
-      | _ ->
-        (* With the same "slingshot" trick used by AnnotT, hold the lower bound
-           at bay until result itself gets concretized, and then flow the lower
-           bound to that concrete type. Note: this works for type destructors
-           since they come from annotations and other types that have the 0->1
-           property, but does not work in general because for arbitrary tvars,
-           concretization may never happen or may happen more than once. *)
-        rec_flow cx trace (result, ReposUseT (reason, use_op, l))
-      end
-
-    | EvalT (t, DestructuringT (reason, s), i), _ ->
-      rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
-
-    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
-      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
-
     (*****************************)
     (* Refinement type subtyping *)
     (*****************************)
@@ -1348,6 +1386,20 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*************************)
     (* repositioning, part 1 *)
     (*************************)
+
+    (* if a ReposT is used as a lower bound, `reposition` can reposition it *)
+    | ReposT (reason, l), _ ->
+      rec_flow cx trace (reposition cx ~trace reason l, u)
+
+    (* if a ReposT is used as an upper bound, wrap the now-concrete lower bound
+       in a `ReposUpperT`, which will repos `u` when `u` becomes concrete. *)
+    | _, UseT (use_op, ReposT (reason, u)) ->
+      rec_flow cx trace (ReposUpperT (reason, l), UseT (use_op, u))
+
+    | ReposUpperT (reason, l), UseT (use_op, u) ->
+      (* since this guarantees that `u` is not an OpenT, it's safe to use
+         `reposition` on the upper bound here. *)
+      rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u))
 
     (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
@@ -2007,12 +2059,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** The type maybe(T) is the same as null | undefined | UseT *)
 
-    | ((NullT _ | VoidT _), UseT (_, MaybeT _)) -> ()
+    | (NullT r | VoidT r), UseT (use_op, MaybeT tout) ->
+      rec_flow cx trace (EmptyT.why r, UseT (use_op, tout))
 
     | MaybeT _, ReposLowerT (reason_op, u) ->
       (* Don't split the maybe type into its constituent members. Instead,
          reposition the entire maybe type. *)
       rec_flow cx trace (reposition cx ~trace reason_op l, u)
+
+    | MaybeT t1, UseT (_, MaybeT _) ->
+      rec_flow cx trace (t1, u)
 
     | (MaybeT(t), _) ->
       let reason = reason_of_t t in
@@ -3193,9 +3249,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* If both are dictionaries, ensure the keys and values are compatible
          with each other. *)
       (match ldict, udict with
-        | Some {key = lk; value = lv; _}, Some {key = uk; value = uv; _} ->
-          rec_unify cx trace lk uk;
-          rec_unify cx trace lv uv
+        | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
+          Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
+          rec_flow_p cx trace ~use_op lreason ureason (Computed uk)
+            (Field (lk, lpolarity), Field (uk, upolarity));
+          rec_flow_p cx trace ~use_op lreason ureason (Computed uv)
+            (Field (lv, lpolarity), Field (uv, upolarity))
         | _ -> ());
 
       (* Properties in u must either exist in l, or match l's indexer. *)
@@ -4650,7 +4709,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           is shared by every object. **)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Object", u)
 
-    | FunProtoT _, LookupT (reason_op, _, [], Named (_, x), _)
+    | FunProtoT _, LookupT (reason_op, _, _, Named (_, x), _)
       when is_function_prototype x ->
       (** TODO: Ditto above comment for Function.prototype *)
       rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
@@ -4766,7 +4825,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx trace (FlowError.EPropNotFound (reason_op, reason_strict))
 
     (* SuperT only involves non-strict lookups *)
-    | (ObjProtoT _, SuperT _) -> ()
+    | (ObjProtoT _, SuperT _)
+    | (FunProtoT _, SuperT _) -> ()
 
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
@@ -4905,6 +4965,10 @@ and flow_addition cx trace reason l r u =
     rec_flow cx trace (l, UseT (Addition, r));
     rec_flow cx trace (StrT.why reason, UseT (UnknownUse, u));
 
+  | (AnyT _, _)
+  | (_, AnyT _) ->
+    rec_flow_t cx trace (AnyT.why reason, u)
+
   | NumT _, _ ->
     rec_flow cx trace (r, UseT (Addition, l));
     rec_flow cx trace (NumT.why reason, UseT (UnknownUse, u));
@@ -4944,9 +5008,8 @@ and flow_comparator cx trace reason l r =
  **)
 and flow_eq cx trace reason l r =
   if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
-  else match (l, r) with
-  | (_, _) when equatable (l, r) -> ()
-  | (_, _) ->
+  else if equatable (l, r) then ()
+  else
     let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
     add_output cx trace (FlowError.EComparison reasons)
 
@@ -5298,7 +5361,7 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     | Some param_t ->
       (* opportunistically reposition This substitutions; in general
          repositioning may lead to non-termination *)
-      if typeparam.name = "this" then reposition cx typeparam.reason param_t
+      if typeparam.name = "this" then ReposT (typeparam.reason, param_t)
       else param_t
     end
 
@@ -5538,6 +5601,15 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let t2' = subst cx ~force map t2 in
     if t1 == t1' && t2 == t2' then t else TypeMapT (r, kind, t1', t2')
 
+  | ReposT (r, repos_t) ->
+    let repos_t' = subst cx ~force map repos_t in
+    if repos_t == repos_t' then t else ReposT (r, repos_t')
+
+  | ReposUpperT (r, repos_t) ->
+    let repos_t' = subst cx ~force map repos_t in
+    if repos_t == repos_t' then t else ReposUpperT (r, repos_t')
+
+
 and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
       let s_ = subst_selector cx force map s in
@@ -5571,10 +5643,21 @@ and eval_destructor cx ~trace reason curr_t s i =
   | None ->
     mk_tvar_where cx reason (fun tvar ->
       Context.set_evaluated cx (IMap.add i tvar evaluated);
-      rec_flow cx trace (curr_t, match s with
-      | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
-      | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
-      )
+      match curr_t with
+      (* If we are destructuring a union, evaluating the destructor on the union
+         itself may have the effect of splitting the union into separate lower
+         bounds, which prevents the speculative match process from working.
+         Instead, we preserve the union by pushing down the destructor onto the
+         branches of the unions. *)
+      | UnionT (r, rep) ->
+        rec_flow_t cx trace (UnionT (r, rep |> UnionRep.map (fun t ->
+          EvalT (t, TypeDestructorT (reason, s), mk_id ())
+        )), tvar)
+      | _ ->
+        rec_flow cx trace (curr_t, match s with
+        | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
+        | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
+        )
     )
   | Some it ->
     it
@@ -5641,6 +5724,8 @@ and check_polarity cx polarity = function
   | MaybeT t
   | AnyWithLowerBoundT t
   | AnyWithUpperBoundT t
+  | ReposT (_, t)
+  | ReposUpperT (_, t)
     -> check_polarity cx polarity t
 
   | ClassT t
@@ -8567,8 +8652,10 @@ end = struct
         Err "autocomplete on possibly null or undefined value"
     | FailureAnyType ->
         Err "not enough type information to autocomplete"
-    | FailureUnhandledType _ ->
-        Err "autocomplete on unexpected type of value (please file a task!)"
+    | FailureUnhandledType t ->
+        Err (spf
+          "autocomplete on unexpected type of value %s (please file a task!)"
+          (string_of_ctor t))
 
   let find_props cx fields =
     SMap.filter (fun key _ ->
@@ -8689,6 +8776,10 @@ end = struct
     | SingletonBoolT (reason, _)
     | BoolT (reason, _) ->
         extract_members cx (get_builtin_type cx reason "Boolean")
+
+    | ReposT (_, t)
+    | ReposUpperT (_, t) ->
+        extract_members cx t
 
     | AbstractT _
     | AnyWithLowerBoundT _
@@ -8902,6 +8993,10 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | TypeMapT (_, _, t1, t2) ->
     recurse t1;
     recurse t2
+
+  | ReposT (_, t)
+  | ReposUpperT (_, t) ->
+    recurse ~infer:true t
 
   | ObjProtoT _
   | FunProtoT _

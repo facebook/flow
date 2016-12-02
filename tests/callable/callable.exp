@@ -10,5 +10,23 @@ primitives.js:12
   9:   (x: string): void;
            ^^^^^^ string
 
+primitives.js:13
+ 13: icall.call(null, 0); // error, number ~> string
+                      ^ number. This type is incompatible with the expected param type of
+  9:   (x: string): void;
+           ^^^^^^ string
 
-Found 2 errors
+primitives.js:20
+ 20: callable(0); // error, number ~> string
+              ^ number. This type is incompatible with the expected param type of
+ 16:   (x: string): void;
+           ^^^^^^ string
+
+primitives.js:21
+ 21: callable.call(null, 0); // error, number ~> string
+                         ^ number. This type is incompatible with the expected param type of
+ 16:   (x: string): void;
+           ^^^^^^ string
+
+
+Found 5 errors

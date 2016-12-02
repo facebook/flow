@@ -82,30 +82,31 @@ let main option_values root error_flags strip_root json pretty verbose
         Some (Path.make path, contents)
     | _ -> None
   in
-  let print_json =
-    Errors.print_error_json ~strip_root ~root ~pretty ~stdin_file in
+  let strip_root = if strip_root then Some root else None in
+  let print_json = Errors.Json_output.print_errors
+    ~out_channel:stdout ~strip_root ~pretty ~stdin_file in
   match response with
   | ServerProt.ERRORS e ->
       if json
       then
-        print_json stdout e
+        print_json e
       else (
-        Errors.print_error_summary
+        Errors.Cli_output.print_errors
+          ~out_channel:stdout
           ~flags:error_flags
           ~stdin_file
           ~strip_root
-          ~root
           e;
         FlowExitStatus.(exit Type_error)
       )
   | ServerProt.NO_ERRORS ->
       if json
-      then print_json stdout []
+      then print_json []
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | ServerProt.NOT_COVERED ->
       if json
-      then print_json stdout []
+      then print_json []
       else Printf.printf "File is not @flow!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->
