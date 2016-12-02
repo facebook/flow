@@ -37,6 +37,7 @@ exception Out_of_shared_memory
 exception Hash_table_full
 exception Dep_table_full
 exception Heap_full
+exception Sql_assertion_failure
 exception C_assertion_failure of string
 
 (*****************************************************************************)

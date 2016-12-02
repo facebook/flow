@@ -166,6 +166,8 @@ let slave_main ic oc =
       Exit_status.(exit Hash_table_full)
   | SharedMem.Heap_full ->
       Exit_status.(exit Heap_full)
+  | SharedMem.Sql_assertion_failure ->
+      Exit_status.(exit Sql_assertion_failure)
   | e ->
       let e_str = Printexc.to_string e in
       Printf.printf "Exception: %s\n" e_str;
