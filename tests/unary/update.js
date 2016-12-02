@@ -30,5 +30,9 @@ let tests = [
     const y = 123;
     y++; // error, can't update const
     y--; // error, can't update const
-  }
+  },
+
+  function(y: any) {
+    y++; // ok
+  },
 ];

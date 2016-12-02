@@ -1396,6 +1396,7 @@ let is_any = function
 
 (* Use types trapped for any propagation *)
 let any_propagating_use_t = function
+  | AdderT _
   | CallT _
   | GetPropT _
   | MethodT _
@@ -1413,8 +1414,14 @@ let any_propagating_use_t = function
   | ImportNamedT _
   | CJSExtractNamedExportsT _
   | CopyNamedExportsT _
-  (* TODO: ...others *)
     -> true
+
+  (* These types have no t_out, so can't propagate anything *)
+  | AssertArithmeticOperandT _
+  | ComparatorT _
+    -> false
+
+  (* TODO: remove wildcard, decide which should be true *)
   | _ -> false
 
 (* Usually types carry enough information about the "reason" for their

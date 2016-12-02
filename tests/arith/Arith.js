@@ -79,5 +79,13 @@ let tests = [
     (({} + 1): number); // error: object !~> number
     (("1" + {}): string); // error: object !~> string
     (({} + "1"): string); // error: object !~> string
-  }
+  },
+
+  function(x: any, y: number, z: string) {
+    (x + y: string); // ok
+    (y + x: string); // ok
+
+    (x + z: empty); // error, string ~> empty
+    (z + x: empty); // error, string ~> empty
+  },
 ];

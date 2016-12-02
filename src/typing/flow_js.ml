@@ -4965,6 +4965,10 @@ and flow_addition cx trace reason l r u =
     rec_flow cx trace (l, UseT (Addition, r));
     rec_flow cx trace (StrT.why reason, UseT (UnknownUse, u));
 
+  | (AnyT _, _)
+  | (_, AnyT _) ->
+    rec_flow_t cx trace (AnyT.why reason, u)
+
   | NumT _, _ ->
     rec_flow cx trace (r, UseT (Addition, l));
     rec_flow cx trace (NumT.why reason, UseT (UnknownUse, u));
@@ -5004,9 +5008,8 @@ and flow_comparator cx trace reason l r =
  **)
 and flow_eq cx trace reason l r =
   if needs_resolution r then rec_flow cx trace (r, EqT(reason, l))
-  else match (l, r) with
-  | (_, _) when equatable (l, r) -> ()
-  | (_, _) ->
+  else if equatable (l, r) then ()
+  else
     let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
     add_output cx trace (FlowError.EComparison reasons)
 

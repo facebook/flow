@@ -118,6 +118,18 @@ Arith.js:81
  81:     (({} + "1"): string); // error: object !~> string
                 ^^^ string
 
+Arith.js:88
+ 88:     (x + z: empty); // error, string ~> empty
+          ^^^^^ string. This type is incompatible with
+ 88:     (x + z: empty); // error, string ~> empty
+                 ^^^^^ empty
+
+Arith.js:89
+ 89:     (z + x: empty); // error, string ~> empty
+          ^^^^^ string. This type is incompatible with
+ 89:     (z + x: empty); // error, string ~> empty
+                 ^^^^^ empty
+
 exponent.js:7
   7: y **= 2; // error
      ^ string. The operand of an arithmetic operation must be a number.
@@ -267,4 +279,4 @@ relational.js:20
       ^^^^^^^^^ undefined
 
 
-Found 46 errors
+Found 48 errors
