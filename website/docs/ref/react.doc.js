@@ -295,3 +295,74 @@ const AsyncGreeter = loadAsync(Greeter, new Promise((resolve, reject) => {
 }));
 
 <AsyncGreeter />;
+
+/*
+  Another common use for HOCs is to wrap a React component in a HOC that takes
+  fewer or different properties. In this example, we will demonstrate how to
+  write a HOC that wraps a component to create a component that expects a
+  subset of the required properties
+*/
+
+/* First, here is a simple React component that has 3 required properties */
+type TimelyProps = {
+  date: Date,
+  name: string,
+  excited: boolean
+};
+class Timely extends React.Component<void, TimelyProps, void> {
+  render() {
+    const hours = this.props.date.getHours();
+    const timeOfDay =
+      hours > 17 ? 'Evening' : hours > 12 ? 'Afternoon' : 'Morning';
+
+    return (
+      <div>
+        Good {timeOfDay} {this.props.name} {this.props.excited ? '!' : ''}
+      </div>
+    );
+  }
+}
+
+/*
+  Using `Timely` will error if you omit any of the 3 properties or if they have
+  the wrong type
+*/
+
+// $ExpectError
+<Timely />; // Missing all the required props
+// $ExpectError
+<Timely name='John' />; // Missing date and excited
+// $ExpectError
+<Timely name='John' excited={true} />; // Missing date
+<Timely date={new Date()} name='John' excited={true} /> // Ok!
+
+/*
+  Now let's say we wanted to wrap Timely in a component that automatically
+  provides the date
+*/
+declare function injectDate<Props, C: React.Component<*, Props, *>>(
+  Komponent: Class<C>
+): Class<React.Component<void, $Diff<Props, {date: Date}>, void>>;
+
+const Timeless = injectDate(Timely);
+
+/*
+  The name and excited properties are still required, but now you can omit
+  date, since it's automatically provided!
+*/
+
+// $ExpectError
+<Timeless />; // props not satisfied.
+// $ExpectError
+<Timeless excited={true} />; // props not satisfied.
+// $ExpectError
+<Timeless name='Sally' />; // props not satisfied.
+// $ExpectError
+<Timeless name={1234} excited={true} />; // name must be a string
+<Timeless name='Sally' excited={true} />; // This works!
+
+// $ExpectError
+<Timeless
+  name='Sally'
+  excited={true}
+  date={1234} /> // date must still be a Date object
