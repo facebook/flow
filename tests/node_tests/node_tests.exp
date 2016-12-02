@@ -49,24 +49,24 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-1217:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1217
+1221:     chunk: Buffer | string,
+                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1221
   Member 1:
-  1217:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1217
+  1221:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1221
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1217:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1217
+  1221:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1221
   Member 2:
-  1217:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1217
+  1221:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1221
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1217:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1217
+  1221:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1221
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -127,14 +127,14 @@ crypto/crypto.js:36
 fs/fs.js:13
  13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
      ^ call of method `readFile`. Could not decide which case to select
-790:   declare function readFile(
-                                ^ intersection type. See lib: <BUILTINS>/node.js:790
+794:   declare function readFile(
+                                ^ intersection type. See lib: <BUILTINS>/node.js:794
   Case 3 may work:
-  799:   declare function readFile(
-                                  ^ function type. See lib: <BUILTINS>/node.js:799
+  803:   declare function readFile(
+                                  ^ function type. See lib: <BUILTINS>/node.js:803
   But if it doesn't, case 4 looks promising too:
-  804:   declare function readFile(
-                                  ^ function type. See lib: <BUILTINS>/node.js:804
+  808:   declare function readFile(
+                                  ^ function type. See lib: <BUILTINS>/node.js:808
   Please provide additional annotation(s) to determine whether case 3 works (or consider merging it with case 4):
    13: fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                       ^ parameter `_`
