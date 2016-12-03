@@ -47,8 +47,8 @@ classes.js:40
      ^^^^^^^^^^^^^^^^ assignment of property `defaultProps`
  40: Foo.defaultProps = 0;
                         ^ number. This type is incompatible with
- 10:   static defaultProps: DefaultProps;
-                            ^^^^^^^^^^^^ object type
+ 40: Foo.defaultProps = 0;
+     ^^^^^^^^^^^^^^^^ object type
 
 classes.js:41
  41: var foo: $jsx<number> = <Foo/>;

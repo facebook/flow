@@ -123,8 +123,8 @@ globals.js:5
          ^^^^^^^^^^^^^^^^^^^^^ assignment of property `location`
   5:     fakeDocument.location = x; // error
                                  ^ taint. This type is incompatible with
-  6:   location: FakeLocation;
-                 ^^^^^^^^^^^^ FakeLocation. See lib: lib.js:6
+  5:     fakeDocument.location = x; // error
+         ^^^^^^^^^^^^^^^^^^^^^ FakeLocation
 
 taint2.js:8
   8:     fakeDocument.location.assign(tainted);

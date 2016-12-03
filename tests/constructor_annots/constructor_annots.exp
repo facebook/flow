@@ -3,8 +3,8 @@ constructors.js:3
        ^^^^^^ assignment of property `x`
   3:   this.x = 0; // constructs objects with property x
                 ^ number. This type is incompatible with
- 17:   x: boolean; // error, should have declared x: number instead
-          ^^^^^^^ boolean
+  3:   this.x = 0; // constructs objects with property x
+       ^^^^^^ boolean
 
 constructors.js:5
   5: Foo.y = 0; // has static property y

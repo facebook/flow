@@ -3,8 +3,8 @@ Bar.js:15
          ^^^^^^^^^^^ assignment of property `w`
  15:     new Qux().w = "?";
                        ^^^ string. This type is incompatible with
-  5:   w:number;
-         ^^^^^^ number. See: Qux.js:5
+ 15:     new Qux().w = "?";
+         ^^^^^^^^^^^ number
 
 Foo.js:10
  10:     this.x = x;

@@ -11,8 +11,8 @@ declare_class.js:6
      ^^^ assignment of property `x`
   6: C.x = "";
            ^^ string. This type is incompatible with
-  2:     static x: number;
-                   ^^^^^^ number
+  6: C.x = "";
+     ^^^ number
 
 declare_class.js:7
   7: C.foo("");

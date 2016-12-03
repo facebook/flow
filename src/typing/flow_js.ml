@@ -1401,6 +1401,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          `reposition` on the upper bound here. *)
       rec_flow cx trace (l, UseT (use_op, reposition cx ~trace reason u))
 
+    | ReposUpperT (_, l), _ ->
+      rec_flow cx trace (l, u)
+
     (* Waits for a def type to become concrete, repositions it as an upper UseT
        using the stored reason. This can be used to store a reason as it flows
        through a tvar. *)
@@ -6674,7 +6677,7 @@ and set_prop cx trace reason_prop reason_op strict super x pmap tin =
   | Some p ->
     (match Property.write_t p with
     | Some t ->
-      rec_flow_t cx trace (tin, t)
+      rec_flow_t cx trace (tin, ReposT (reason_op, t))
     | None ->
       add_output cx trace
         (FlowError.EPropAccess ((reason_prop, reason_op), Some x, p, Write)))

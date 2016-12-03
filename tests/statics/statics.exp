@@ -27,8 +27,8 @@ class_statics.js:10
      ^^^ assignment of property `x`
  10: C.x = 0;
            ^ number. This type is incompatible with
-  3:   static x:string;
-                ^^^^^^ string
+ 10: C.x = 0;
+     ^^^ string
 
 funstatics.js:5
   5: var x:string = new C().f();

@@ -27,8 +27,8 @@ test.js:13
          ^^^ assignment of property `x`
  13:     B.x = 0; // error
                ^ number. This type is incompatible with
- 10:   static x: string; // error?
-                 ^^^^^^ string
+ 13:     B.x = 0; // error
+         ^^^ string
 
 test.js:15
  15:     B.foo(0); // error

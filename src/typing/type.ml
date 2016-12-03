@@ -1472,8 +1472,8 @@ let rec reason_of_t = function
   | OpenPredT (reason, _, _, _) -> reason
   | OptionalT t -> replace_reason (fun desc -> ROptional desc) (reason_of_t t)
   | PolyT (_,t) -> replace_reason (fun desc -> RPolyType desc) (reason_of_t t)
-  | ReposT (r, t) -> repos_reason (loc_of_reason r) (reason_of_t t)
-  | ReposUpperT (_, t) -> reason_of_t t
+  | ReposT (reason, _) -> reason
+  | ReposUpperT (reason, _) -> reason
   | RestT t -> replace_reason (fun desc -> RRestArray desc) (reason_of_t t)
   | ShapeT (t) -> reason_of_t t
   | SingletonBoolT (reason, _) -> reason

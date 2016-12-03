@@ -23,8 +23,8 @@ class.js:50
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `goodSetterWithAnnotation`
  50: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                     ^^^^^^^ string. This type is incompatible with
- 12:   set goodSetterWithAnnotation(x: number) { z = x; }
-                                       ^^^^^^ number
+ 50: foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number
 
 class.js:52
  52: var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -49,8 +49,8 @@ class.js:55
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ assignment of property `propOverriddenWithSetter`
  55: foo.propOverriddenWithSetter = 123; // Error number ~> string
                                     ^^^ number. This type is incompatible with
- 32:   set propOverriddenWithSetter(x: string) { }
-                                       ^^^^^^ string
+ 55: foo.propOverriddenWithSetter = 123; // Error number ~> string
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string
 
 object.js:15
  15:   set goodSetterNoAnnotation(x) { z = x; },

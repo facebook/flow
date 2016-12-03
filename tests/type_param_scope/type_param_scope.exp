@@ -51,8 +51,8 @@ method_shadow.js:51
              ^^^^^^ assignment of property `x`
  51:         this.x = x; // err, m's T != H's T
                       ^ T. This type is incompatible with
- 48: class H<T> {
-           ^ some incompatible instantiation of `T`
+ 51:         this.x = x; // err, m's T != H's T
+             ^^^^^^ some incompatible instantiation of `T`
 
 
 Found 6 errors
