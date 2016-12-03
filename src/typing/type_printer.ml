@@ -289,16 +289,15 @@ let rec type_printer_impl ~size override enclosure cx t =
     | GraphqlFragT (_, {Graphql.frag_type; _}) ->
         spf "GraphQL fragment on `%s`" frag_type
 
-    | GraphqlFieldT (_, t) ->
+    | GraphqlFieldT (_, {Graphql.sf_type; _}) ->
         let rec print t = Graphql_schema.(
           match t with
           | Type.Named name -> name
           | Type.List t -> "[" ^ (print t) ^ "]"
           | Type.NonNull t -> (print t) ^ "!"
         ) in
-        "GraphQL: " ^ (print t)
+        "GraphQL: " ^ (print sf_type)
 
-    | GraphqlSchemaT _
     | GraphqlDataT _
     | GraphqlSelectionT _
 

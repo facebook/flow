@@ -46,15 +46,15 @@ gql`
 `;
 
 // reports errors when type is known again
-// gql`
-//   fragment typeKnownAgain on Pet {
-//     unknown_pet_field {
-//       ... on Cat {
-//         unknown_cat_field
-//       }
-//     }
-//   }
-// `;
+gql`
+  fragment typeKnownAgain on Pet {
+    unknown_pet_field { # field not defined
+      ... on Cat {
+        unknown_cat_field # field not defined
+      }
+    }
+  }
+`;
 
 // Field not defined on fragment
 gql`

@@ -35,6 +35,12 @@ type t = {
   type_map: Type.def SMap.t;
 }
 
+let typename_field = { Field.
+  name = "__typename";
+  args = SMap.empty;
+  type_ = Type.NonNull (Type.Named "String");
+}
+
 let rec name_of_type f = match f with
   | Type.Named name -> name
   | Type.List f
@@ -62,13 +68,20 @@ let rec print_type s type_ =
 
 let get_field s type_name field_name =
   match type_def s type_name with
+  | Type.Obj _ | Type.Interface _ | Type.Union _
+    when field_name = "__typename"
+    -> Some typename_field
   | Type.Obj (_, fmap, _) -> SMap.get field_name fmap
   | Type.Interface (_, fmap) -> SMap.get field_name fmap
   | _ -> failwith "Cannot get field type name of non object"
 
 let get_field_type s type_name field_name =
-  if field_name = "__typename" then Some (Type.NonNull (Type.Named "String"))
-  else Option.map (get_field s type_name field_name) (fun f -> f.Field.type_)
+  Option.map (get_field s type_name field_name) (fun f -> f.Field.type_)
+
+let find_field_type s type_name field_name =
+  match get_field s type_name field_name with
+  | Some t -> t.Field.type_
+  | None -> failwith "Field not found"
 
 let obj_field_types s type_name =
   match type_def s type_name with

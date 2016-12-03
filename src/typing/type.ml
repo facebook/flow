@@ -265,7 +265,6 @@ module rec TypeTerm : sig
     | ReposT of reason * t
     | ReposUpperT of reason * t
 
-    | GraphqlSchemaT of reason * Graphql_schema.t
     | GraphqlDataT of reason * t
     | GraphqlOpT of reason * Graphql.op
     | GraphqlFragT of reason * Graphql.frag
@@ -555,9 +554,6 @@ module rec TypeTerm : sig
      *)
     | RefineT of reason * predicate * t
 
-    | GraphqlMkOpT of reason * Graphql.operation_type * (t * t) * t
-    | GraphqlMkFragT of reason * string * (t * t) * t
-    | GraphqlMkInlineFragT of reason * string option * (t * t) * t
     | GraphqlSelectT of Graphql.select
     | GraphqlSpreadT of reason * t * t (* (reason, selection, result) *)
     | GraphqlToDataT of reason * t
@@ -1291,9 +1287,9 @@ and Graphql : sig
     op_selection: TypeTerm.t;
   }
 
-  type field = Graphql_schema.Type.t
-
-  type selection_field = {
+  type field = {
+    sf_schema: Graphql_schema.t;
+    sf_alias: string; (* alias or name *)
     sf_name: string;
     sf_type: Graphql_schema.Type.t;
     sf_selection: TypeTerm.t option;
@@ -1302,7 +1298,7 @@ and Graphql : sig
   and selection = {
     s_schema: Graphql_schema.t;
     s_on: string;
-    s_selections: selection_field SMap.t;
+    s_selections: field SMap.t;
   }
 
   type frag = {
@@ -1313,7 +1309,7 @@ and Graphql : sig
 
   type select_type =
     (* (name, empty_selection, filled_selection) *)
-    | SelectField of string * (TypeTerm.t * TypeTerm.t) option
+    | SelectField of TypeTerm.t
     | SelectFrag of TypeTerm.t
 
   type select = reason * select_type * TypeTerm.t
@@ -1537,7 +1533,6 @@ let rec reason_of_t = function
   | UnionT (reason, _) -> reason
   | VoidT reason -> reason
 
-  | GraphqlSchemaT (reason, _) -> reason
   | GraphqlDataT (reason, _) -> reason
   | GraphqlOpT (reason, _) -> reason
   | GraphqlFragT (reason, _) -> reason
@@ -1622,9 +1617,6 @@ and reason_of_use_t = function
   | VarianceCheckT(reason,_,_) -> reason
   | TypeAppVarianceCheckT (reason, _, _) -> reason
 
-  | GraphqlMkOpT (reason, _, _, _) -> reason
-  | GraphqlMkFragT (reason, _, _, _) -> reason
-  | GraphqlMkInlineFragT (reason, _, _, _) -> reason
   | GraphqlSelectT (reason, _, _) -> reason
   | GraphqlSpreadT (reason, _, _) -> reason
   | GraphqlToDataT (reason, _) -> reason
@@ -1705,7 +1697,6 @@ let rec mod_reason_of_t f = function
   | UnionT (reason, ts) -> UnionT (f reason, ts)
   | VoidT reason -> VoidT (f reason)
 
-  | GraphqlSchemaT (reason, schema) -> GraphqlSchemaT (f reason, schema)
   | GraphqlDataT (reason, t) -> GraphqlDataT (f reason, t)
   | GraphqlOpT (reason, op) -> GraphqlOpT (f reason, op)
   | GraphqlFragT (reason, frag) -> GraphqlFragT (f reason, frag)
@@ -1804,9 +1795,6 @@ and mod_reason_of_use_t f = function
   | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
 
-  | GraphqlMkOpT (reason, o, s, t) -> GraphqlMkOpT (f reason, o, s, t)
-  | GraphqlMkFragT (reason, tr, n, t) -> GraphqlMkFragT (f reason, tr, n, t)
-  | GraphqlMkInlineFragT (reason, n, st, t) -> GraphqlMkInlineFragT (f reason, n, st, t)
   | GraphqlSelectT (reason, s, t) -> GraphqlSelectT (f reason, s, t)
   | GraphqlSpreadT (reason, s, t) -> GraphqlSpreadT (f reason, s, t)
   | GraphqlToDataT (reason, t) -> GraphqlToDataT (f reason, t)
@@ -1880,7 +1868,6 @@ let string_of_ctor = function
   | GraphqlFieldT _ -> "GraphqlFieldT"
   | GraphqlFragT _ -> "GraphqlFragT"
   | GraphqlOpT _ -> "GraphqlOpT"
-  | GraphqlSchemaT _ -> "GraphqlSchemaT"
   | GraphqlDataT _ -> "GraphqlDataT"
   | GraphqlSelectionT _ -> "GraphqlSelectionT"
   | IdxWrapper _ -> "IdxWrapper"
@@ -1968,9 +1955,6 @@ let string_of_use_ctor = function
   | GetKeysT _ -> "GetKeysT"
   | GetPropT _ -> "GetPropT"
   | GetStaticsT _ -> "GetStaticsT"
-  | GraphqlMkFragT _ -> "GraphqlMkFragT"
-  | GraphqlMkInlineFragT _ -> "GraphqlMkInlineFragT"
-  | GraphqlMkOpT _ -> "GraphqlMkOpT"
   | GraphqlSelectT _ -> "GraphqlSelectT"
   | GraphqlSpreadT _ -> "GraphqlSpreadT"
   | GraphqlToDataT _ -> "GraphqlToDataT"

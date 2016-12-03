@@ -163,7 +163,6 @@ class ['a] t = object(self)
   | ReposUpperT (_, t) ->
     self#type_ cx acc t
 
-  | GraphqlSchemaT _ -> acc
   | GraphqlDataT (_, t) ->
     self#type_ cx acc t
   | GraphqlOpT (_, { Graphql.op_selection; _ }) ->
@@ -248,9 +247,6 @@ class ['a] t = object(self)
   | GetKeysT (_, _)
   | GetPropT (_, _, _)
   | GetStaticsT (_, _)
-  | GraphqlMkFragT _
-  | GraphqlMkInlineFragT _
-  | GraphqlMkOpT _
   | GraphqlSelectT _
   | GraphqlSpreadT _
   | GraphqlToDataT _

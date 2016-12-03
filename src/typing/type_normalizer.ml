@@ -394,7 +394,6 @@ let rec normalize_type_impl cx ids t = match t with
   | ReposUpperT (_, t) ->
       normalize_type_impl cx ids t
 
-  | GraphqlSchemaT _ -> t
   | GraphqlDataT (r, t) -> GraphqlDataT (r, normalize_type_impl cx ids t)
   | GraphqlOpT (_, { Graphql.op_schema; op_type; op_selection }) ->
     let op_selection = normalize_type_impl cx ids op_selection in

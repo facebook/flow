@@ -4904,32 +4904,40 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
       None
 
 and graphql_doc cx doc =
+  let schema =
+    match Context.graphql_config cx with
+    | Some inst -> inst.Graphql_config.schema
+    | None -> failwith "impossible"
+  in
   match doc.Graphql_ast.Document.definitions with
   | [] -> VoidT.at Loc.none
   | def :: rest ->
-    List.iter (fun d -> ignore (graphql_definition cx d)) rest;
-    graphql_definition cx def
+    List.iter (fun d -> ignore (graphql_definition cx schema d)) rest;
+    graphql_definition cx schema def
 
-and graphql_definition cx def =
+and graphql_definition cx schema def =
   match def with
   | Graphql_ast.Definition.Fragment { Graphql_ast.FragmentDef.
-      typeCondition = (_, type_name);
+      typeCondition = (type_loc, type_name);
       selectionSet;
       loc;
       _
     } ->
-    (* TODO *)
-    let reason = mk_reason (RCustom "GraphQL fragment") loc in
-    let sel_in = Flow.mk_tvar cx reason in
-    let sel_out = graphql_select cx sel_in selectionSet in
-    Flow.mk_tvar_where cx reason (fun t ->
-      Flow.flow cx (graphql_get_schema cx, GraphqlMkFragT (
-        reason, type_name, (sel_in, sel_out), t
-      ))
-    )
+    let reason = mk_reason
+        (RCustom (spf "fragment on `%s`" type_name)) loc in
+    if Graphql_flow.check_frag_type cx schema type_name type_loc then
+      let frag = { Graphql.
+        frag_schema = schema;
+        frag_type = type_name;
+        frag_selection = graphql_mk_selection cx schema type_name selectionSet;
+      } in
+      GraphqlFragT (reason, frag)
+    else
+      EmptyT.why reason
   | Graphql_ast.Definition.Operation { Graphql_ast.OperationDef.
-      operation = (_, operation);
+      operation = (op_loc, operation);
       selectionSet;
+      loc;
       _;
     } ->
     let op_type = Graphql_ast.OperationType.(match operation with
@@ -4937,23 +4945,46 @@ and graphql_definition cx def =
       | Mutation -> Graphql.Mutation
       | Subscription -> Graphql.Subscription
     ) in
-    let reason_sel = mk_reason (RCustom "GraphQL selection") Loc.none in
-    let sel_in = Flow.mk_tvar cx reason_sel in
-    let sel_out = graphql_select cx sel_in selectionSet in
-    Flow.mk_tvar_where cx reason_sel (fun t ->
-      Flow.flow cx (
-        graphql_get_schema cx,
-        GraphqlMkOpT (reason_sel, op_type, (sel_in, sel_out), t)
-      )
+    let (type_name, op_name) = Graphql.(
+      match op_type with
+      | Query -> Some schema.Graphql_schema.query_name, "query"
+      | Mutation -> schema.Graphql_schema.mutation_name, "mutation"
+      | Subscription -> schema.Graphql_schema.subscription_name, "subscription"
+    ) in
+    let reason = mk_reason (RCustom (spf "GraphQL `%s`" op_name)) loc in
+    (match type_name with
+    | Some type_name ->
+      let operation = { Graphql.
+        op_schema = schema;
+        op_type;
+        op_selection = graphql_mk_selection cx schema type_name selectionSet;
+      } in
+      GraphqlOpT (reason, operation)
+    | None ->
+      let loc = Option.value op_loc ~default:Loc.none in
+      Flow_error.(add_output cx (EGraphqlUndefOp (loc, op_name)));
+      EmptyT.why reason
     )
   | _ ->
     (* TODO: Report an error *)
     VoidT.at Loc.none
 
-and graphql_select cx selection selection_set =
+and graphql_mk_selection cx schema type_name selection_set =
+  let {Graphql_ast.SelectionSet.selections; loc} = selection_set in
+  let reason = mk_reason (RCustom (spf "selection on `%s`" type_name)) loc in
+  let selection = { Graphql.
+    s_schema = schema;
+    s_on = type_name;
+    s_selections = SMap.empty;
+  } in
+  graphql_select
+    cx schema (GraphqlSelectionT (reason, selection)) type_name selections
+
+and graphql_select cx schema selection type_name selections =
   List.fold_left (fun selection item ->
     match item with
     | Graphql_ast.Selection.Field { Graphql_ast.Field.
+        alias;
         name = (floc, fname);
         selectionSet;
         _
@@ -4962,20 +4993,30 @@ and graphql_select cx selection selection_set =
       then selection
       else begin
         (* TODO *)
-        let reason = mk_reason (RCustom (spf "GraphQL field `%s`" fname)) floc in
-        let sub = match selectionSet with
-          | Some selection_set ->
-            (* TODO *)
-            let loc = selection_set.Graphql_ast.SelectionSet.loc in
-            let reason = mk_reason (RCustom "Selection set") loc in
-            let empty = Flow.mk_tvar cx reason in
-            let filled = graphql_select cx empty selection_set in
-            Some (empty, filled)
-          | None -> None
-        in
-        Flow.mk_tvar_where cx (reason_of_t selection) (fun t ->
-          let field = Graphql.SelectField (fname, sub) in
-          Flow.flow cx (selection, GraphqlSelectT (reason, field, t))
+        let reason = mk_reason (RCustom (spf "field `%s`" fname)) floc in
+        if Graphql_flow.check_field cx schema type_name fname floc then (
+          let field_type =
+            Graphql_schema.find_field_type schema type_name fname in
+          let field_selection = graphql_field_selection
+              cx schema
+              (Graphql_schema.name_of_type field_type)
+              floc selectionSet in
+          let field = {
+            Graphql.sf_schema = schema;
+            sf_alias = Option.value_map alias ~default:fname ~f:(fun (_, x) -> x);
+            sf_name = fname;
+            sf_type = field_type;
+            sf_selection = field_selection;
+          } in
+          let field = GraphqlFieldT (reason, field) in
+          Hashtbl.replace (Context.type_table cx) floc field;
+          Flow.mk_tvar_where cx (reason_of_t selection) (fun t ->
+            let field = Graphql.SelectField field in
+            Flow.flow cx (selection, GraphqlSelectT (reason, field, t))
+          )
+        ) else (
+          Option.iter ~f:(graphql_skim_selection_set cx schema) selectionSet;
+          selection
         )
       end
     | Graphql_ast.Selection.InlineFragment { Graphql_ast.InlineFragment.
@@ -4985,23 +5026,20 @@ and graphql_select cx selection selection_set =
         _;
       }
       ->
-      let reason_frag =
-        mk_reason (RCustom "GraphQL inline fragment") frag_loc in
-      let sel_in = Flow.mk_tvar cx reason_frag  in
-      let sel_out = Flow.mk_tvar cx reason_frag  in
-      let frag_type = Option.map typeCondition (fun (_, name) -> name) in
-      let frag = Flow.mk_tvar_where cx reason_frag (fun t ->
-        let frag = Flow.flow cx (
-          selection,
-          GraphqlMkInlineFragT (reason_frag, frag_type, (sel_in, sel_out), t)
-        ) in
-        Flow.flow_t cx (graphql_select cx sel_in selectionSet, sel_out);
-        frag
-      ) in
-      Flow.mk_tvar_where cx (reason_of_t selection) (fun t ->
-        let frag = Graphql.SelectFrag frag in
-        Flow.flow cx (selection, GraphqlSelectT (reason_frag, frag, t))
-      )
+      let (frag_type_loc, frag_type) =
+        Option.value typeCondition ~default:(Loc.none, type_name) in
+      if Graphql_flow.check_frag_type cx schema frag_type frag_type_loc then
+        let reason = mk_reason (RCustom "inline fragment") frag_loc in
+        let frag = { Graphql.
+          frag_schema = schema;
+          frag_type;
+          frag_selection = graphql_mk_selection cx schema frag_type selectionSet;
+        } in
+        Flow.mk_tvar_where cx (reason_of_t selection) (fun t ->
+          let frag = Graphql.SelectFrag (GraphqlFragT (reason, frag)) in
+          Flow.flow cx (selection, GraphqlSelectT (reason, frag, t))
+        )
+      else selection
     | Graphql_ast.Selection.FragmentSpread { Graphql_ast.FragmentSpread.
         name = (_loc, _name);
         _;
@@ -5011,14 +5049,41 @@ and graphql_select cx selection selection_set =
         Flow.flow_t cx (selection, t)
       )
     | Graphql_ast.Selection.JS _ -> selection
-  ) selection selection_set.Graphql_ast.SelectionSet.selections
+  ) selection selections
 
-and graphql_get_schema cx =
-  let reason = mk_reason (RCustom "GraphQL schema") Loc.none in
-  match Context.graphql_config cx with
-  | Some config ->
-    GraphqlSchemaT (reason, config.Graphql_config.schema)
-  | None -> EmptyT.why reason
+and graphql_skim_selection_set cx schema selection_set =
+  List.iter (fun item ->
+    match item with
+    | Graphql_ast.Selection.InlineFragment {
+        Graphql_ast.InlineFragment.typeCondition = Some (type_loc, type_name);
+        selectionSet;
+        _;
+      } ->
+      if Graphql_flow.check_frag_type cx schema type_name type_loc
+      then graphql_mk_selection cx schema type_name selectionSet |> ignore
+    | _ -> ()
+  ) selection_set.Graphql_ast.SelectionSet.selections
+
+and graphql_field_selection cx schema type_name loc selection_set =
+  let need_selection = Graphql_schema.Type.(
+    match Graphql_schema.type_def schema type_name with
+    | Obj _ | Interface _ | Union _ -> true
+    | _ -> false
+  ) in
+  match selection_set with
+  (* obj { ... } *)
+  | Some selection_set when need_selection ->
+    Some (graphql_mk_selection cx schema type_name selection_set)
+  (* scalar { ... } *)
+  | Some {Graphql_ast.SelectionSet.loc; _} ->
+    Flow_error.(add_output cx (EGraphqlNonObjSelect (loc, type_name)));
+    None
+  (* obj *)
+  | None when need_selection ->
+    Flow_error.(add_output cx (EGraphqlObjNeedSelect (loc, type_name)));
+    None
+  (* scalar *)
+  | None -> None
 
 and graphql_is_tagged cx expr = Ast.Expression.(
   let rec check (_, expr) tag = match expr, tag with

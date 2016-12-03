@@ -107,13 +107,14 @@ type error_message =
   | EObjectComputedPropertyAssign of (reason * reason)
   | EInvalidLHSInAssignment of Loc.t
   | EGraphqlParse of Loc.t
-  | EGraphqlTypeNotFound of reason * string
-  | EGraphqlFieldNotFound of reason * string
-  | EGraphqlNonObjSelect of reason * string
-  | EGraphqlObjNeedSelect of reason * string
-  | EGraphqlUnionSelect of reason * string
+  | EGraphqlTypeNotFound of Loc.t * string
+  | EGraphqlFieldNotFound of Loc.t * string
+  | EGraphqlNonObjSelect of Loc.t * string
+  | EGraphqlObjNeedSelect of Loc.t * string
+  | EGraphqlUnionSelect of Loc.t * string
   | EGraphqlIncompatibleSpread of reason * string * string
-  | EGraphqlFragOnNonComposite of reason * string
+  | EGraphqlFragOnNonComposite of Loc.t * string
+  | EGraphqlUndefOp of Loc.t * string
 
 and binding_error =
   | ENameAlreadyBound
@@ -954,24 +955,22 @@ end = struct
     | EGraphqlParse loc ->
         mk_error [loc, ["GraphQL syntax error"]]
 
-    | EGraphqlTypeNotFound (reason, name) ->
-        mk_error [mk_info reason [spf "Type `%s` not found in schema" name]]
+    | EGraphqlTypeNotFound (loc, name) ->
+        mk_error [loc, [spf "Type `%s` not found in schema" name]]
 
-    | EGraphqlFieldNotFound (reason, type_name) ->
-        mk_error [mk_info reason [spf "Field not found in type `%s`" type_name]]
+    | EGraphqlFieldNotFound (loc, type_name) ->
+        mk_error [loc, [spf "Field not found in type `%s`" type_name]]
 
-    | EGraphqlNonObjSelect (reason, type_name) ->
-        mk_error [mk_info reason [
-          spf "Cannot select on non-object type `%s`" type_name
-        ]]
+    | EGraphqlNonObjSelect (loc, type_name) ->
+        mk_error [loc, [spf "Cannot select on non-object type `%s`" type_name]]
 
-    | EGraphqlObjNeedSelect (reason, type_name) ->
-        mk_error [mk_info reason [
+    | EGraphqlObjNeedSelect (loc, type_name) ->
+        mk_error [loc, [
           spf "Field of object type `%s` requires selection" type_name
         ]]
 
-    | EGraphqlUnionSelect (reason, union_name) ->
-        mk_error [mk_info reason [
+    | EGraphqlUnionSelect (loc, union_name) ->
+        mk_error [loc, [
           spf "Selection on union `%s` can only contain fragment spreads"
             union_name
         ]]
@@ -985,10 +984,13 @@ end = struct
             frag
         ]]
 
-    | EGraphqlFragOnNonComposite (reason, type_name) ->
-        mk_error [mk_info reason [
+    | EGraphqlFragOnNonComposite (loc, type_name) ->
+        mk_error [loc, [
           spf "Fragment cannot condition on non composite type `%s`" type_name
         ]]
+
+    | EGraphqlUndefOp (loc, op_name) ->
+        mk_error [loc, [spf "Schema is not configured for %ss" op_name]]
 
   let add_output cx ?trace msg =
     let error = error_of_msg cx ?trace msg in
