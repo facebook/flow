@@ -1921,6 +1921,14 @@ CAMLprim value hh_load_dep_table(value in_filename) {
 /* Saved State with SQLite */
 /*****************************************************************************/
 
+// Safe to call outside of sql
+void hh_cleanup_sqlite() {
+  CAMLparam0();
+  size_t page_size = getpagesize();
+  memset(db_filename, 0, page_size);
+  CAMLreturn0;
+}
+
 #ifndef NO_SQLITE3
 
 static void assert_sql(int b)
