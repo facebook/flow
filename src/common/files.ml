@@ -340,7 +340,14 @@ and construct_path = List.fold_left Filename.concat
 
 (* helper: make relative path from root to file *)
 let relative_path =
-  let split_path = Str.split dir_sep in
+  let split_path =
+    let rec f acc rest =
+      let dir = Filename.dirname rest in
+      if rest = dir then acc
+      else f ((Filename.basename rest)::acc) dir
+    in
+    fun path -> f [] path
+  in
   let rec make_relative = function
     | (dir1::root, dir2::file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) ->
