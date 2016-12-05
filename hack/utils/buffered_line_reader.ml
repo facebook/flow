@@ -29,15 +29,12 @@ let chunk_size = 65536
 
 type t = {
   fd: Unix.file_descr;
-  (** read_message is recursively called, prepending chunks to this reversed
-   * list until a newline is found. This means only the first element in this
-   * list may contain a (or more than one) newline (but doesn't necessarily).
-   *)
-  buffered_chunks_rev: string list ref;
+  (** The bytes left after the last newline that haven't been consumed yet. *)
+  unconsumed_buffer: string option ref;
 }
 
-let set_buffer_rev r b =
-  r.buffered_chunks_rev := b
+let set_buffer r b =
+  r.unconsumed_buffer := b
 
 (** A non-throwing version of String.index. *)
 let index s c =
@@ -54,11 +51,11 @@ let merge_chunks last_chunk chunks_rev =
   String.concat "" chunks
 
 (** Recursively read a chunk from the file descriptor until we see a newline
- * character. This will build up the buffer if no newlines are read and will
- * consume the entirety of the buffer when a newline is encountered (resetting
- * the buffer with the remainder of the read chunk beyond that first newline,
- * which will be consumed on the next read_message call.).*)
-let rec read_message r =
+ * character, building up the chunks accumulator along the way.
+ * Any remaining bytes not consumed (bytes past the newline) are placed in the
+ * reader's unconsumed_buffer which will be consumed on the next
+ * get_next_line call .*)
+let rec read_message chunks r =
   let b = String.create chunk_size in
 
   let bytes_read = Unix.read r.fd b 0 chunk_size in
@@ -67,31 +64,31 @@ let rec read_message r =
 
   match index b '\n' with
   | `No_appearance ->
-    let () = r.buffered_chunks_rev := b :: !(r.buffered_chunks_rev) in
-    read_message r
+    read_message (b :: chunks) r
   | `First_appearance i ->
     let tail = String.sub b 0 i in
-    let result = merge_chunks tail !(r.buffered_chunks_rev) in
+    let result = merge_chunks tail chunks in
     let () = if (i + 1) < bytes_read
     then
       (** We read some bytes beyond the first newline character. *)
       let length = bytes_read - (i + 1) in
       (** We skip the newline character. *)
       let remainder = String.sub b (i + 1) length in
-      set_buffer_rev r [remainder]
+      set_buffer r (Some remainder)
     else
       (** We didn't read any bytes beyond the first newline character. *)
-      set_buffer_rev r []
+      set_buffer r None
     in
     result
 
 let get_next_line ?approx_size r =
-  match List.hd !(r.buffered_chunks_rev) with
-  | None -> read_message r
+  match !(r.unconsumed_buffer) with
+  | None -> read_message [] r
   | Some remainder -> begin
     match index remainder '\n' with
     | `No_appearance ->
-      read_message r
+      let () = set_buffer r None in
+      read_message [remainder] r
     | `First_appearance i ->
       let result = String.sub remainder 0 i in
       let () = if (i + 1) < (String.length remainder)
@@ -99,25 +96,24 @@ let get_next_line ?approx_size r =
         (** There are some bytes left beyond the first newline character. *)
         let length = (String.length remainder) - (i + 1) in
         let remainder = String.sub remainder (i + 1) length in
-        set_buffer_rev r [remainder]
+        set_buffer r (Some remainder)
       else
         (** No bytes beyond the firstt newline character. *)
-        set_buffer_rev r []
+        set_buffer r None
       in
       result
   end
 
-let has_buffered_content r =
-  not @@ List.is_empty !(r.buffered_chunks_rev)
+let has_buffered_content r = !(r.unconsumed_buffer) <> None
 
 let create fd = {
   fd = fd;
-  buffered_chunks_rev = ref [];
+  unconsumed_buffer = ref None;
   }
 
 let null_reader = {
   fd = Unix.openfile "/dev/null" [Unix.O_RDONLY] 0o440;
-  buffered_chunks_rev = ref [];
+  unconsumed_buffer = ref None;
   }
 
 let get_fd r = r.fd
