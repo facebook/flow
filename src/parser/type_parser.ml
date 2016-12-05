@@ -21,7 +21,7 @@ module type TYPE = sig
   val type_parameter_declaration_with_defaults : env -> Ast.Type.ParameterDeclaration.t option
   val type_parameter_instantiation : env -> Ast.Type.ParameterInstantiation.t option
   val generic : env -> Loc.t * Ast.Type.Generic.t
-  val _object : ?allow_static:bool -> env -> Loc.t * Type.Object.t
+  val _object : allow_static:bool -> env -> Loc.t * Type.Object.t
   val function_param_list : env -> Type.Function.Param.t list * Type.Function.RestParam.t option
   val annotation : env -> Ast.Type.annotation
   val annotation_opt : env -> Ast.Type.annotation option
@@ -160,7 +160,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_LPAREN -> function_or_group env
     | T_LCURLY
     | T_LCURLYBAR ->
-      let loc, o = _object env ~allow_exact:true in
+      let loc, o = _object env ~allow_static:false ~allow_exact:true in
       loc, Type.Object o
     | T_TYPEOF ->
         let start_loc = Peek.loc env in
@@ -520,7 +520,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         properties allow_static exact env
           (property::acc, indexers, callProperties)
 
-    in fun ?(allow_static=false) ?(allow_exact=false) env ->
+    in fun ~allow_static ~allow_exact env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in
       let start_loc = Peek.loc env in
       Expect.token env (if exact then T_LCURLYBAR else T_LCURLY);
@@ -689,7 +689,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
   let type_parameter_declaration =
     wrap (type_parameter_declaration ~allow_default:false)
   let type_parameter_instantiation = wrap type_parameter_instantiation
-  let _object ?(allow_static=false) env =
+  let _object ~allow_static env =
     wrap (_object ~allow_static ~allow_exact:false) env
   let function_param_list = wrap function_param_list
   let annotation = wrap annotation
