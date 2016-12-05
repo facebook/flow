@@ -196,12 +196,13 @@ module Jekyll
     end
 
     def get_error_json(content)
-      cmd = "#{flow_exe} check-contents --json --root #{self.class.tempdir}"
-      response = Open3.popen3(cmd) {|stdin, stdout|
-        stdin.puts(content)
-        stdin.close
-        JSON.parse(stdout.gets)
-      }
+      cmd = "#{flow_exe} check-contents --json --quiet --root #{self.class.tempdir}"
+      out, err, status = Open3.capture3(cmd, :stdin_data => content)
+      if status.exited? and [0, 2].include?(status.exitstatus)
+        response = JSON.parse(out)
+      else
+        raise "check-contents failed (exit #{status.exitstatus}): #{err}"
+      end
 
       errors_json = response['errors']
 
