@@ -122,6 +122,8 @@ let mk_field cx ~polarity x reason typeAnnotation value =
 
 let mem_constructor {constructor; _} = constructor <> []
 
+let mem_field x = with_sig (fun s -> SMap.mem x s.fields)
+
 let iter_methods f s =
   SMap.iter (fun _ -> Nel.iter f) s.methods;
   SMap.iter (fun _ -> f) s.getters;
@@ -532,7 +534,7 @@ let extract_mixins _cx =
 let mk_interface cx loc reason structural self = Ast.Statement.(
   fun { Interface.
     typeParameters;
-    body = (_, { Ast.Type.Object.properties; indexers; callProperties; _ });
+    body = (_, { Ast.Type.Object.properties; _ });
     extends;
     mixins;
     _;
@@ -558,9 +560,10 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
         extends
     in
 
-    let callable = List.exists
-      (fun (_, cp) -> not cp.Ast.Type.Object.CallProperty.static)
-      callProperties in
+    let callable = List.exists Ast.Type.Object.(function
+      | CallProperty (_, { CallProperty.static; _ }) -> not static
+      | _ -> false
+    ) properties in
 
     let interface_supers = if callable
       then Type.FunProtoT (locationless_reason RObjectClassName) :: interface_supers
@@ -579,64 +582,49 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     add_field ~static:true "name" (t, Type.Neutral, None) iface_sig
   in
 
-  let reject_spread_properties f acc = Ast.Type.Object.(function
-    | Property (loc, p) -> f acc (loc, p)
-    | SpreadProperty (loc, _) ->
-      Flow_error.(add_output cx (EInternal (loc, InterfaceTypeSpread)));
-      acc
-  ) in
-
-  let iface_sig = List.fold_left (reject_spread_properties (
-    fun s (loc, {Ast.Type.Object.Property.
-      key; value; static; _method; optional; variance; _
-    }) ->
-    if optional && _method
-    then Flow_error.(add_output cx (EInternal (loc, OptionalMethod)));
-    let polarity = Anno.polarity variance in
-    Ast.Expression.Object.(match _method, key with
-    | _, Property.Literal (loc, _)
-    | _, Property.Computed (loc, _) ->
-        Flow_error.(add_output cx (EIllegalName loc));
-        s
-    | true, Property.Identifier (_, name) ->
-        (match value with
-        | _, Ast.Type.Function func ->
-          let fsig = Func_sig.convert cx tparams_map loc func in
-          let append_method = match static, name with
-          | false, "constructor" -> append_constructor
-          | _ -> append_method ~static name
-          in
-          append_method fsig s
-        | _ ->
-          Flow_error.(add_output cx (EInternal (loc, MethodNotAFunction)));
-          s)
-    | false, Property.Identifier (_, name) ->
-        let t = Anno.convert cx tparams_map value in
-        let t = if optional then Type.OptionalT t else t in
-        add_field ~static name (t, polarity, None) s)
-  )) iface_sig properties in
-
-  let iface_sig = match indexers with
-    | [] -> iface_sig
-    | (_, {Ast.Type.Object.Indexer.key; value; static; variance; _})::rest ->
-      (* TODO? *)
-      List.iter (fun (indexer_loc, _) ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (indexer_loc, MultipleIndexers)))
-      ) rest;
+  let iface_sig = List.fold_left Ast.Type.Object.(fun x -> function
+    | CallProperty (loc, { CallProperty.value = (_, func); static }) ->
+      let fsig = Func_sig.convert cx tparams_map loc func in
+      append_method ~static "$call" fsig x
+    | Indexer (loc, { Indexer.static; _ }) when mem_field ~static "$key" x ->
+      Flow_error.(add_output cx (EUnsupportedSyntax (loc, MultipleIndexers)));
+      x
+    | Indexer (_, { Indexer.key; value; static; variance; _ }) ->
       let k = Anno.convert cx tparams_map key in
       let v = Anno.convert cx tparams_map value in
       let polarity = Anno.polarity variance in
-      iface_sig
+      x
         |> add_field ~static "$key" (k, polarity, None)
         |> add_field ~static "$value" (v, polarity, None)
-  in
-
-  let iface_sig = List.fold_left (
-    fun s (loc, {Ast.Type.Object.CallProperty.value = (_, func); static}) ->
-    let fsig = Func_sig.convert cx tparams_map loc func in
-    append_method ~static "$call" fsig s
-  ) iface_sig callProperties in
+    | Property (loc, { Property.key; value; static; _method; optional; variance; _ }) ->
+      if optional && _method
+      then Flow_error.(add_output cx (EInternal (loc, OptionalMethod)));
+      let polarity = Anno.polarity variance in
+      Ast.Expression.Object.(match _method, key with
+      | _, Property.Literal (loc, _)
+      | _, Property.Computed (loc, _) ->
+          Flow_error.(add_output cx (EIllegalName loc));
+          x
+      | true, Property.Identifier (_, name) ->
+          (match value with
+          | _, Ast.Type.Function func ->
+            let fsig = Func_sig.convert cx tparams_map loc func in
+            let append_method = match static, name with
+            | false, "constructor" -> append_constructor
+            | _ -> append_method ~static name
+            in
+            append_method fsig x
+          | _ ->
+            Flow_error.(add_output cx (EInternal (loc, MethodNotAFunction)));
+            x)
+      | false, Property.Identifier (_, name) ->
+          let t = Anno.convert cx tparams_map value in
+          let t = if optional then Type.OptionalT t else t in
+          add_field ~static name (t, polarity, None) x)
+    | SpreadProperty (loc, _) ->
+      Flow_error.(add_output cx (EInternal (loc, InterfaceTypeSpread)));
+      x
+  ) iface_sig properties in
 
   if mem_constructor iface_sig
   then iface_sig

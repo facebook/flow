@@ -417,10 +417,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
     in let call_property env start_loc static =
       let value = methodish env (Peek.loc env) in
-      Loc.btwn start_loc (fst value), Type.Object.CallProperty.({
+      Type.Object.(CallProperty (Loc.btwn start_loc (fst value), CallProperty.({
         value;
         static;
-      })
+      })))
 
     in let property env start_loc static variance key =
       if not (should_parse_types env)
@@ -450,13 +450,13 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       Expect.token env T_RBRACKET;
       Expect.token env T_COLON;
       let value = _type env in
-      Loc.btwn start_loc (fst value), Type.Object.Indexer.({
+      Type.Object.(Indexer (Loc.btwn start_loc (fst value), Indexer.({
         id;
         key;
         value;
         static;
         variance;
-      })
+      })))
 
     in let semicolon exact env =
       match Peek.token env with
@@ -469,31 +469,28 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
-    in let rec properties ~allow_static ~allow_spread ~exact env
-      (acc, indexers, callProperties) =
+    in let rec properties ~allow_static ~allow_spread ~exact env acc =
       assert (not (allow_static && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
       let static = allow_static && Expect.maybe env T_STATIC in
       let variance = variance env in
       match Peek.token env with
       | T_EOF ->
-        List.rev acc, List.rev indexers, List.rev callProperties
+        List.rev acc
       | T_RCURLYBAR when exact ->
-        List.rev acc, List.rev indexers, List.rev callProperties
+        List.rev acc
       | T_RCURLY when not exact ->
-        List.rev acc, List.rev indexers, List.rev callProperties
+        List.rev acc
       | T_LBRACKET ->
         let indexer = indexer_property env start_loc static variance in
         semicolon exact env;
-        properties ~allow_static ~allow_spread ~exact env
-          (acc, indexer::indexers, callProperties)
+        properties ~allow_static ~allow_spread ~exact env (indexer::acc)
       | T_LESS_THAN
       | T_LPAREN ->
         error_unsupported_variance env variance;
         let call_prop = call_property env start_loc static in
         semicolon exact env;
-        properties ~allow_static ~allow_spread ~exact env
-          (acc, indexers, call_prop::callProperties)
+        properties ~allow_static ~allow_spread ~exact env (call_prop::acc)
       | T_ELLIPSIS when allow_spread ->
         Eat.token env;
         let (arg_loc, _) as argument = generic env in
@@ -502,8 +499,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           argument;
         })) in
         semicolon exact env;
-        properties ~allow_static ~allow_spread ~exact env
-          (property::acc, indexers, callProperties)
+        properties ~allow_static ~allow_spread ~exact env (property::acc)
       | token ->
         let static, (_, key) = match static, variance, token with
         | true, None, T_COLON ->
@@ -529,22 +525,18 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           property env start_loc static variance key
         in
         semicolon exact env;
-        properties ~allow_static ~allow_spread ~exact env
-          (property::acc, indexers, callProperties)
+        properties ~allow_static ~allow_spread ~exact env (property::acc)
 
     in fun ~allow_static ~allow_exact ~allow_spread env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in
       let start_loc = Peek.loc env in
       Expect.token env (if exact then T_LCURLYBAR else T_LCURLY);
-      let properties, indexers, callProperties =
-        properties ~allow_static ~exact ~allow_spread env ([], [], []) in
+      let properties = properties ~allow_static ~exact ~allow_spread env [] in
       let end_loc = Peek.loc env in
       Expect.token env (if exact then T_RCURLYBAR else T_RCURLY);
       Loc.btwn start_loc end_loc, Type.Object.({
         exact;
         properties;
-        indexers;
-        callProperties
       })
 
   and type_parameter_declaration =

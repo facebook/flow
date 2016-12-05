@@ -994,15 +994,25 @@ end with type t = Impl.t) = struct
     function_type_param argument
 
   and object_type (loc, o) = Type.Object.(
-    let property = function
-      | Property p -> object_type_property p
-      | SpreadProperty p -> object_type_spread_property p
-    in
+    let props, ixs, calls = List.fold_left (fun (props, ixs, calls) -> function
+      | Property p ->
+        let prop = object_type_property p in
+        prop::props, ixs, calls
+      | SpreadProperty p ->
+        let prop = object_type_spread_property p in
+        prop::props, ixs, calls
+      | Indexer i ->
+        let ix = object_type_indexer i in
+        props, ix::ixs, calls
+      | CallProperty c ->
+        let call = object_type_call_property c in
+        props, ixs, call::calls
+    ) ([], [], []) o.properties in
     node "ObjectTypeAnnotation" loc [|
       "exact", bool o.exact;
-      "properties", array_of_list property o.properties;
-      "indexers", array_of_list object_type_indexer o.indexers;
-      "callProperties", array_of_list object_type_call_property o.callProperties;
+      "properties", array (Array.of_list (List.rev props));
+      "indexers", array (Array.of_list (List.rev ixs));
+      "callProperties", array (Array.of_list (List.rev calls));
     |]
   )
 

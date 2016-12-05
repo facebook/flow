@@ -517,7 +517,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   in
   if (tparams = []) then ft else PolyT(tparams, ft)
 
-| loc, Object { Object.exact; properties; indexers; callProperties; } ->
+| loc, Object { Object.exact; properties } ->
   let property loc prop props =
     let { Object.Property.key; value; optional; variance; _method; _ } = prop in
     match key with
@@ -532,19 +532,29 @@ let rec convert cx tparams_map = Ast.Type.(function
       FlowError.(add_output cx (EUnsupportedKeyInObjectType loc));
       props
   in
-  let spread_property loc _prop props =
-    FlowError.(add_output cx (EUnsupportedSyntax (loc, ObjectTypeSpread)));
-    props
-  in
-  let props_map = List.fold_left (fun props -> function
-    | Object.Property (loc, prop) -> property loc prop props
-    | Object.SpreadProperty (loc, prop) -> spread_property loc prop props
-  ) SMap.empty properties in
-  let props_map =
-    let fts = List.map (fun (loc, { Object.CallProperty.value = (_, ft); _ }) ->
-      convert cx tparams_map (loc, Ast.Type.Function ft)
-    ) callProperties in
-    match fts with
+  let call_props, dict, props_map = List.fold_left (
+    fun (calls, dict, props) -> function
+    | Object.CallProperty (loc, { Object.CallProperty.value = (_, ft); _ }) ->
+      let t = convert cx tparams_map (loc, Ast.Type.Function ft) in
+      t::calls, dict, props
+    | Object.Indexer (loc, _) when dict <> None ->
+      FlowError.(add_output cx (EUnsupportedSyntax (loc, MultipleIndexers)));
+      calls, dict, props
+    | Object.Indexer (_, { Object.Indexer.id; key; value; variance; _ }) ->
+      let dict = Some { Type.
+        dict_name = Option.map id snd;
+        key = convert cx tparams_map key;
+        value = convert cx tparams_map value;
+        dict_polarity = polarity variance;
+      } in
+      calls, dict, props
+    | Object.Property (loc, prop) ->
+      calls, dict, property loc prop props
+    | Object.SpreadProperty (loc, _) ->
+      FlowError.(add_output cx (EUnsupportedSyntax (loc, ObjectTypeSpread)));
+      calls, dict, props
+  ) ([], None, SMap.empty) properties in
+  let props_map = match List.rev call_props with
     | [] -> props_map
     | [t] ->
       let p = Field (t, Positive) in
@@ -557,35 +567,15 @@ let rec convert cx tparams_map = Ast.Type.(function
       SMap.add "$call" p props_map
   in
   (* Seal an object type unless it specifies an indexer. *)
-  let sealed, dict =
-    match indexers with
-    | [] -> true, None
-    | (_, { Object.Indexer.id; key; value; variance; _ })::rest ->
-        let dict_name = match id with
-        | Some (_, name) -> Some name
-        | None -> None in
-        (* TODO: multiple indexers *)
-        List.iter (fun (indexer_loc, _) ->
-          FlowError.(add_output cx
-            (EUnsupportedSyntax (indexer_loc, MultipleIndexers)))
-        ) rest;
-        let keyt = convert cx tparams_map key in
-        let valuet = convert cx tparams_map value in
-        false,
-        Some { Type.
-          dict_name;
-          key = keyt;
-          value = valuet;
-          dict_polarity = polarity variance;
-        }
-  in
+  let sealed = dict = None in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
      and use the root proto reason to build an error. *)
   let reason_desc = RObjectType in
   let pmap = Context.make_property_map cx props_map in
-  let callable = List.exists
-    (fun (_, cp) -> not cp.Ast.Type.Object.CallProperty.static)
-    callProperties in
+  let callable = List.exists (function
+    | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
+    | _ -> false
+  ) properties in
   let proto = if callable
     then FunProtoT (locationless_reason reason_desc)
     else ObjProtoT (locationless_reason reason_desc) in

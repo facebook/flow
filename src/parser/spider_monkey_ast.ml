@@ -121,11 +121,11 @@ and Type : sig
     type property =
       | Property of Property.t
       | SpreadProperty of SpreadProperty.t
+      | Indexer of Indexer.t
+      | CallProperty of CallProperty.t
     type t = {
       exact: bool;
       properties: property list;
-      indexers: Indexer.t list;
-      callProperties: CallProperty.t list;
     }
   end
 
