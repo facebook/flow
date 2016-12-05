@@ -5001,6 +5001,60 @@ module.exports = {
           'message': 'Invalid left-hand side in for-of'
         }
       }
-    }
+    },
+    'Object type spread': {
+      'type T = {...O}': {
+        'errors': [],
+        'body.0.right.properties': [{
+          'type': 'ObjectTypeSpreadProperty',
+          'argument': {
+            'type': 'GenericTypeAnnotation',
+            'id.name': 'O',
+          },
+        }],
+      },
+      'type T = {...O,}': {
+        'errors.length': 0,
+        'body.0.right.properties.length': 1,
+      },
+      'type T = {p:T, ...O}': {
+        'errors.length': 0,
+        'body.0.right.properties': [{
+          'type': 'ObjectTypeProperty',
+          'key.name': 'p',
+        }, {
+          'type': 'ObjectTypeSpreadProperty',
+          'argument.id.name': 'O',
+        }],
+      },
+      'type T = {...O, p:T}': {
+        'errors.length': 0,
+        'body.0.right.properties': [{
+          'type': 'ObjectTypeSpreadProperty',
+          'argument.id.name': 'O',
+        }, {
+          'type': 'ObjectTypeProperty',
+          'key.name': 'p',
+        }],
+      },
+      'type T = {...O1, ...O2}': {
+        'errors.length': 0,
+        'body.0.right.properties': [{
+          'type': 'ObjectTypeSpreadProperty',
+          'argument.id.name': 'O1',
+        }, {
+          'type': 'ObjectTypeSpreadProperty',
+          'argument.id.name': 'O2',
+        }],
+      },
+    },
+    'Invalid instance spread': {
+      'interface I {...O}': {
+        'errors.0.message': 'Unexpected token ...',
+      },
+      'declare class C {...O}': {
+        'errors.0.message': 'Unexpected token ...',
+      },
+    },
   }
 };

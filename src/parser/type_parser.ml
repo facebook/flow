@@ -160,7 +160,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_LPAREN -> function_or_group env
     | T_LCURLY
     | T_LCURLYBAR ->
-      let loc, o = _object env ~allow_static:false ~allow_exact:true in
+      let loc, o = _object env
+        ~allow_static:false ~allow_exact:true ~allow_spread:true in
       loc, Type.Object o
     | T_TYPEOF ->
         let start_loc = Peek.loc env in
@@ -468,8 +469,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
-    in let rec properties ~allow_static ~exact env
+    in let rec properties ~allow_static ~allow_spread ~exact env
       (acc, indexers, callProperties) =
+      assert (not (allow_static && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
       let static = allow_static && Expect.maybe env T_STATIC in
       let variance = variance env in
@@ -483,15 +485,25 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_LBRACKET ->
         let indexer = indexer_property env start_loc static variance in
         semicolon exact env;
-        properties allow_static exact env
+        properties ~allow_static ~allow_spread ~exact env
           (acc, indexer::indexers, callProperties)
       | T_LESS_THAN
       | T_LPAREN ->
         error_unsupported_variance env variance;
         let call_prop = call_property env start_loc static in
         semicolon exact env;
-        properties allow_static exact env
+        properties ~allow_static ~allow_spread ~exact env
           (acc, indexers, call_prop::callProperties)
+      | T_ELLIPSIS when allow_spread ->
+        Eat.token env;
+        let (arg_loc, _) as argument = generic env in
+        let loc = Loc.btwn start_loc arg_loc in
+        let property = Type.Object.(SpreadProperty (loc, { SpreadProperty.
+          argument;
+        })) in
+        semicolon exact env;
+        properties ~allow_static ~allow_spread ~exact env
+          (property::acc, indexers, callProperties)
       | token ->
         let static, (_, key) = match static, variance, token with
         | true, None, T_COLON ->
@@ -517,15 +529,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           property env start_loc static variance key
         in
         semicolon exact env;
-        properties allow_static exact env
+        properties ~allow_static ~allow_spread ~exact env
           (property::acc, indexers, callProperties)
 
-    in fun ~allow_static ~allow_exact env ->
+    in fun ~allow_static ~allow_exact ~allow_spread env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in
       let start_loc = Peek.loc env in
       Expect.token env (if exact then T_LCURLYBAR else T_LCURLY);
       let properties, indexers, callProperties =
-        properties ~allow_static ~exact env ([], [], []) in
+        properties ~allow_static ~exact ~allow_spread env ([], [], []) in
       let end_loc = Peek.loc env in
       Expect.token env (if exact then T_RCURLYBAR else T_RCURLY);
       Loc.btwn start_loc end_loc, Type.Object.({
@@ -690,7 +702,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     wrap (type_parameter_declaration ~allow_default:false)
   let type_parameter_instantiation = wrap type_parameter_instantiation
   let _object ~allow_static env =
-    wrap (_object ~allow_static ~allow_exact:false) env
+    wrap (_object ~allow_static ~allow_exact:false ~allow_spread:false) env
   let function_param_list = wrap function_param_list
   let annotation = wrap annotation
   let annotation_opt = wrap annotation_opt

@@ -145,6 +145,9 @@ def("Function")
 
 def("ObjectTypeAnnotation")
     .field("exact", Boolean)
+    .field("properties", [or(
+      def("ObjectTypeProperty"),
+      def("ObjectTypeSpreadProperty"))]);
 
 def("MetaProperty")
     .bases("Expression")
@@ -180,6 +183,11 @@ def("ObjectTypeIndexer")
   .field("id", or(def("Identifier"), null))
   .field("key", def("Type"))
   .field("value", def("Type"));
+
+def("ObjectTypeSpreadProperty")
+  .bases("Node")
+  .build("argument")
+  .field("argument", def("GenericTypeAnnotation"));
 
 // https://github.com/benjamn/ast-types/issues/186
 def("ForAwaitStatement")
