@@ -405,14 +405,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     in let method_property env start_loc static key =
       let value = methodish env start_loc in
       let value = fst value, Type.Function (snd value) in
-      fst value, Type.Object.Property.({
+      Type.Object.(Property (fst value, Property.({
         key;
         value;
         optional = false;
         static;
         _method = true;
         variance = None;
-      })
+      })))
 
     in let call_property env start_loc static =
       let value = methodish env (Peek.loc env) in
@@ -427,14 +427,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let optional = Expect.maybe env T_PLING in
       Expect.token env T_COLON;
       let value = _type env in
-      Loc.btwn start_loc (fst value), Type.Object.Property.({
+      Type.Object.(Property (Loc.btwn start_loc (fst value), Property.({
         key;
         value;
         optional;
         static;
         _method = false;
         variance;
-      })
+      })))
 
     in let indexer_property env start_loc static variance =
       Expect.token env T_LBRACKET;

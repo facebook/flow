@@ -994,9 +994,13 @@ end with type t = Impl.t) = struct
     function_type_param argument
 
   and object_type (loc, o) = Type.Object.(
+    let property = function
+      | Property p -> object_type_property p
+      | SpreadProperty p -> object_type_spread_property p
+    in
     node "ObjectTypeAnnotation" loc [|
       "exact", bool o.exact;
-      "properties", array_of_list object_type_property o.properties;
+      "properties", array_of_list property o.properties;
       "indexers", array_of_list object_type_indexer o.indexers;
       "callProperties", array_of_list object_type_call_property o.callProperties;
     |]
@@ -1015,6 +1019,12 @@ end with type t = Impl.t) = struct
       "optional", bool prop.optional;
       "static", bool prop.static;
       "variance", option variance prop.variance;
+    |]
+  )
+
+  and object_type_spread_property (loc, prop) = Type.Object.SpreadProperty.(
+    node "ObjectTypeSpreadProperty" loc [|
+      "argument", generic_type prop.argument;
     |]
   )
 

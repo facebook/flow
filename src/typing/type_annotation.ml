@@ -518,7 +518,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   if (tparams = []) then ft else PolyT(tparams, ft)
 
 | loc, Object { Object.exact; properties; indexers; callProperties; } ->
-  let props_map = List.fold_left (fun props_map (loc, prop) ->
+  let property loc prop props =
     let { Object.Property.key; value; optional; variance; _method; _ } = prop in
     match key with
     | Ast.Expression.Object.Property.Literal
@@ -527,11 +527,18 @@ let rec convert cx tparams_map = Ast.Type.(function
         let t = convert cx tparams_map value in
         let t = if optional then OptionalT t else t in
         let polarity = if _method then Positive else polarity variance in
-        let p = Field (t, polarity) in
-        SMap.add name p props_map
+        SMap.add name (Field (t, polarity)) props
     | _ ->
       FlowError.(add_output cx (EUnsupportedKeyInObjectType loc));
-      props_map
+      props
+  in
+  let spread_property loc _prop props =
+    FlowError.(add_output cx (EUnsupportedSyntax (loc, ObjectTypeSpread)));
+    props
+  in
+  let props_map = List.fold_left (fun props -> function
+    | Object.Property (loc, prop) -> property loc prop props
+    | Object.SpreadProperty (loc, prop) -> spread_property loc prop props
   ) SMap.empty properties in
   let props_map =
     let fts = List.map (fun (loc, { Object.CallProperty.value = (_, ft); _ }) ->

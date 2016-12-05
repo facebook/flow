@@ -579,7 +579,14 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
     add_field ~static:true "name" (t, Type.Neutral, None) iface_sig
   in
 
-  let iface_sig = List.fold_left (
+  let reject_spread_properties f acc = Ast.Type.Object.(function
+    | Property (loc, p) -> f acc (loc, p)
+    | SpreadProperty (loc, _) ->
+      Flow_error.(add_output cx (EInternal (loc, InterfaceTypeSpread)));
+      acc
+  ) in
+
+  let iface_sig = List.fold_left (reject_spread_properties (
     fun s (loc, {Ast.Type.Object.Property.
       key; value; static; _method; optional; variance; _
     }) ->
@@ -607,7 +614,7 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
         let t = Anno.convert cx tparams_map value in
         let t = if optional then Type.OptionalT t else t in
         add_field ~static name (t, polarity, None) s)
-  ) iface_sig properties in
+  )) iface_sig properties in
 
   let iface_sig = match indexers with
     | [] -> iface_sig

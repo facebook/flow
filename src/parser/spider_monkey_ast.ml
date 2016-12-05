@@ -66,6 +66,23 @@ and Type : sig
     }
   end
 
+  module Generic : sig
+    module Identifier : sig
+      type t =
+      | Unqualified of Identifier.t
+      | Qualified of qualified
+      and qualified = Loc.t * qualified'
+      and qualified' = {
+        qualification: t;
+        id: Identifier.t
+      }
+    end
+    type t = {
+      id: Identifier.t;
+      typeParameters: Type.ParameterInstantiation.t option;
+    }
+  end
+
   module Object : sig
     module Property : sig
       type t' = {
@@ -77,6 +94,12 @@ and Type : sig
         variance: Variance.t option;
       }
       type t = Loc.t * t'
+    end
+    module SpreadProperty : sig
+      type t = Loc.t * t'
+      and t' = {
+        argument: Loc.t * Generic.t;
+      }
     end
     module Indexer: sig
       type t' = {
@@ -95,28 +118,14 @@ and Type : sig
         static: bool;
       }
     end
+    type property =
+      | Property of Property.t
+      | SpreadProperty of SpreadProperty.t
     type t = {
       exact: bool;
-      properties: Property.t list;
+      properties: property list;
       indexers: Indexer.t list;
       callProperties: CallProperty.t list;
-    }
-  end
-
-  module Generic : sig
-    module Identifier : sig
-      type t =
-      | Unqualified of Identifier.t
-      | Qualified of qualified
-      and qualified = Loc.t * qualified'
-      and qualified' = {
-        qualification: t;
-        id: Identifier.t
-      }
-    end
-    type t = {
-      id: Identifier.t;
-      typeParameters: Type.ParameterInstantiation.t option;
     }
   end
 

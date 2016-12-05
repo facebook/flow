@@ -135,6 +135,7 @@ and internal_error =
   | ShadowReadComputed
   | ShadowWriteComputed
   | RestArgumentNotIdentifierPattern
+  | InterfaceTypeSpread
 
 and unsupported_syntax =
   | ComprehensionExpression
@@ -163,6 +164,7 @@ and unsupported_syntax =
   | PredicateInvalidBody
   | PredicateVoidReturn
   | MultipleIndexers
+  | ObjectTypeSpread (* TODO *)
 
 (** error services for typecheck pipeline -
     API for building and adding errors to context during
@@ -736,6 +738,8 @@ end = struct
             "unexpected shadow write on computed property"
         | RestArgumentNotIdentifierPattern ->
             "unexpected rest argument, expected an identifier pattern"
+        | InterfaceTypeSpread ->
+            "unexpected spread property in interface"
         in
         mk_error ~kind:InternalError [loc, [spf "Internal error: %s" msg]]
 
@@ -796,6 +800,8 @@ end = struct
               "Predicate functions need to return non-void."
           | MultipleIndexers ->
               "multiple indexers are not supported"
+          | ObjectTypeSpread ->
+              "object type spread is not supported"
         in
         mk_error [loc, [msg]]
 
