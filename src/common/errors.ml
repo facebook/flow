@@ -177,15 +177,15 @@ let read_line_in_file line filename stdin_file =
   | None ->
       None
   | Some filename ->
-      if Filename.is_relative filename then
-        failwith (Utils_js.spf "Expected absolute location, got %s" filename);
       try begin
         let content = match stdin_file with
         | Some (stdin_filename, content)
           when Path.to_string stdin_filename = filename ->
             content
         | _ ->
-            Sys_utils.cat filename
+          if Filename.is_relative filename then failwith
+            (Utils_js.spf "Expected absolute location, got %s" filename);
+          Sys_utils.cat filename
         in
         try Some (nth_line ~n:line content)
         with Invalid_argument _ -> None

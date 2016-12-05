@@ -5,6 +5,13 @@ syntax_error.js:4
 
 
 Found 1 error
+syntax_error.js (no filename)
+-:4
+  4: 
+     ^ Unexpected end of input
+
+
+Found 1 error
 
 
 not_flow.js
