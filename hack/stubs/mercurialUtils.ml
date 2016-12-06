@@ -8,4 +8,4 @@
  *
  *)
 
- let wait_until_stable_repository _ = ()
+ let wait_until_stable_repository _ = true
