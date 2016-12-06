@@ -2579,6 +2579,14 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       match arguments with
       | [ Expression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String module_name; _;
+        }) ]
+      | [ Expression (_, TemplateLiteral {
+          TemplateLiteral.quasis = [_, {
+            TemplateLiteral.Element.value = {
+              TemplateLiteral.Element.cooked = module_name; _
+            }; _
+          }];
+          expressions = [];
         }) ] ->
         require cx module_name loc
       | _ ->

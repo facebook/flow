@@ -28,5 +28,9 @@ require.js:30
  30: require(a); // Error: Param must be string literal
      ^^^^^^^^^^ The parameter passed to require() must be a literal string.
 
+require.js:32
+ 32: require(`${'./E'}`); // error: but only if they have no expressions
+     ^^^^^^^^^^^^^^^^^^^ The parameter passed to require() must be a literal string.
 
-Found 6 errors
+
+Found 7 errors
