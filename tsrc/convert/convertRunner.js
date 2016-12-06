@@ -217,7 +217,8 @@ export default async function(args: Args): Promise<void> {
     const converted: Array<?string> = await Promise.all(
       dirs.map(convert.bind(null, sourceToSuiteMap))
     );
-    const suites = new Set(converted.filter(suiteName => suiteName != null));
+    const suites = new Set();
+    converted.forEach(suiteName => suiteName != null && suites.add(suiteName));
 
     await runRecord({
       suites,
