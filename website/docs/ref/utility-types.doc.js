@@ -65,7 +65,7 @@ const italy: Country = 'IT';
 const nope: Country = 'nope'; // 'nope' is not a Country
 
 /*
-In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'Canada' | 'Italy' | 'Other'`, but Flow was able to extract it from the keys of `countries`.
+In the example above, the type of `Country` is equivalent to `type Country = 'US' | 'IT' | 'FR'`, but Flow was able to extract it from the keys of `countries`.
 */
 
 /*
