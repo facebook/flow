@@ -45,10 +45,13 @@ let start_daemon output_fn log_link =
   let log_fd = new_file_from_link log_link in
   let out_fd = new_file_from_link output_fn in
   Hh_logger.log
-    "About to spawn recorder daemon. Output will go to %s. Logs to %s\n%!"
+    "About to spawn recorder daemon. Output will go to %s. Logs to %s.\n"
     output_fn log_link;
   Daemon.spawn
-    ~channel_mode:`socket
+    (** This doesn't work in `socket mode. The recorder daemon doesn't
+     * see EOF when the serve exits, and just ends up waiting forever. No
+     * idea why. *)
+    ~channel_mode:`pipe
     (out_fd, log_fd)
     entry
     ()

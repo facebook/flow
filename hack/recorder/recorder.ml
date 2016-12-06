@@ -59,15 +59,18 @@ let files_with_contents files =
   Relative_path.Map.from_keys files fetch_file_contents
 
 let convert_event debug_event = match debug_event with
-  | DE.Loaded_saved_state { DE.filename;
-    dirty_files; changed_while_parsing; build_targets; } ->
+  | DE.Loaded_saved_state (
+    { DE.filename; dirty_files; changed_while_parsing; build_targets; },
+    global_state) ->
     let dirty_files = files_with_contents dirty_files in
     let changed_while_parsing = files_with_contents changed_while_parsing in
     let build_targets = files_with_contents build_targets in
-    Loaded_saved_state { filename;
+    Loaded_saved_state (
+      { filename;
       dirty_files;
       changed_while_parsing;
-      build_targets; }
+      build_targets; },
+      global_state)
   | DE.Fresh_vcs_state s -> Fresh_vcs_state s
   | DE.Typecheck -> Typecheck
   | DE.Disk_files_modified files ->
@@ -80,9 +83,9 @@ let with_event event env =
   { env with rev_buffered_recording =
     (convert_event event) :: env.rev_buffered_recording; }
 
-let init_env start_env saved_state_info =
+let init_env start_env (info, global_state) =
   let load_saved_state_event =
-    convert_event (DE.Loaded_saved_state saved_state_info) in
+    convert_event (DE.Loaded_saved_state (info, global_state)) in
   {
     start_env = start_env;
     rev_buffered_recording = [
@@ -91,8 +94,8 @@ let init_env start_env saved_state_info =
   }
 
 let add_event event instance = match instance, event with
-  | Pending_start start_env, DE.Loaded_saved_state state ->
-    let env = init_env start_env state in
+  | Pending_start start_env, DE.Loaded_saved_state (info, global_state) ->
+    let env = init_env start_env (info, global_state) in
     Active env
   | Finished _, _ ->
     instance

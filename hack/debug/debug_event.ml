@@ -11,7 +11,7 @@ type saved_state_info = {
 
 (** The debug port on the server emits a sequence of significant events. *)
 type event =
-  | Loaded_saved_state of saved_state_info
+  | Loaded_saved_state of saved_state_info * ServerGlobalState.t
   (** The state name of the fresh VCS state. *)
   | Fresh_vcs_state of string
   (** Run a typecheck.
@@ -21,3 +21,10 @@ type event =
   (** List of files whose disk contents have changed. *)
   | Disk_files_modified of Relative_path.S.t list
   | Stop_recording
+
+let to_string e = match e with
+  | Loaded_saved_state _ -> "Loaded_saved_state"
+  | Fresh_vcs_state _ -> "Fresh_vcs_state"
+  | Typecheck -> "Typecheck"
+  | Disk_files_modified _ -> "Disk_files_modified"
+  | Stop_recording -> "Stop_recording"

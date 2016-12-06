@@ -9,7 +9,7 @@ type saved_state_info = {
 (** A recording is a sequence of these events. They are derived from the events
  * emitted from the debug port.*)
 type event =
-  | Loaded_saved_state of saved_state_info
+  | Loaded_saved_state of saved_state_info * ServerGlobalState.t
   (** The state name of the fresh VCS state. *)
   | Fresh_vcs_state of string
   | Typecheck
@@ -18,7 +18,7 @@ type event =
   | Stop_recording
 
 let to_string e = match e with
-  | Loaded_saved_state { filename; dirty_files; _ } ->
+  | Loaded_saved_state ({ filename; dirty_files; _ }, _) ->
     Printf.sprintf "(Loaded_saved_state %s with %d dirtied files)"
       filename (Relative_path.Map.cardinal dirty_files)
   | Fresh_vcs_state s ->
