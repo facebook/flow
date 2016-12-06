@@ -5659,7 +5659,7 @@ and eval_destructor cx ~trace reason curr_t s i =
       | _ ->
         rec_flow cx trace (curr_t, match s with
         | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
-        | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
+        | PropertyType x -> GetElemT(reason, x, tvar)
         )
     )
   | Some it ->
@@ -5684,10 +5684,9 @@ and subst_selector cx force map s = match s with
     let p' = subst_predicate cx ~force map p in
     if p == p' then s else Refine p'
 
-and subst_destructor _cx _force _map s = match s with
-  | NonMaybeType
-  | PropertyType _
-    -> s
+and subst_destructor cx force map s = match s with
+  | NonMaybeType -> s
+  | PropertyType t -> PropertyType (subst cx ~force map t)
 
 and subst_predicate cx ?(force=true) (map: Type.t SMap.t) p = match p with
   | LatentP (t, i) ->

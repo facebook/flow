@@ -10,10 +10,6 @@ non_maybe_type.js:10
  10: (0: $NonMaybeType<null>); // error
          ^^^^^^^^^^^^^^^^^^^ empty
 
-property_type.js:1
-  1: type Malformed = $PropertyType<any, number>;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected object type and string literal as arguments to $PropertyType
-
 property_type.js:6
   6: (42: Obj_Prop_x);
       ^^ number. This type is incompatible with
@@ -25,6 +21,12 @@ property_type.js:10
                    ^ number. This type is incompatible with the expected return type of
   8: function foo(o: Obj): $PropertyType<Obj, 'x'> {
                            ^^^^^^^^^^^^^^^^^^^^^^^ string
+
+property_type.js:15
+ 15: (get({a: 'A'}, 'a'): 'B');
+      ^^^^^^^^^^^^^^^^^^ string. Expected string literal `B`, got `A` instead
+ 15: (get({a: 'A'}, 'a'): 'B');
+                          ^^^ string literal `B`
 
 union.js:2
   2: var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string

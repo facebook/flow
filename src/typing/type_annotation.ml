@@ -227,11 +227,10 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$PropertyType" ->
     check_type_param_arity cx loc typeParameters 2 (fun () ->
       match convert_type_params () with
-      | [t; SingletonStrT (_, key)] ->
+      | [t; key] ->
         EvalT (t, TypeDestructorT
           (mk_reason (RCustom "property type") loc, PropertyType key), mk_id())
-      | _ ->
-        error_type cx loc (FlowError.EPropertyTypeAnnot loc)
+      | _ -> assert false
     )
 
   (* $NonMaybeType<T> acts as the type T without null and void *)
