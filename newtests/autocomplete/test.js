@@ -2453,5 +2453,164 @@ export default suite(({addFile, flowCmd}) => [
   ]
 }`,
 ).exitCodes([0]),
+
+  addFile("exact.js"),
+  flowCmd(
+    ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'exact.js', '7', '5'],
+    'exact.js',
+  ).stdout(
+     `
+       {
+         "result": [
+           {
+             "name": "hasOwnProperty",
+             "type": "(prop: any) => boolean",
+             "func_details": {
+               "return_type": "boolean",
+               "params": [
+                 {
+                   "name": "prop",
+                   "type": "any"
+                 }
+               ]
+             },
+             "path": "[LIB] core.js",
+             "line": 53,
+             "endline": 53,
+             "start": 5,
+             "end": 38
+           },
+           {
+             "name": "isPrototypeOf",
+             "type": "(o: any) => boolean",
+             "func_details": {
+               "return_type": "boolean",
+               "params": [
+                 {
+                   "name": "o",
+                   "type": "any"
+                 }
+               ]
+             },
+             "path": "[LIB] core.js",
+             "line": 54,
+             "endline": 54,
+             "start": 5,
+             "end": 34
+           },
+           {
+             "name": "num",
+             "type": "number",
+             "func_details": null,
+             "path": "exact.js",
+             "line": 5,
+             "endline": 5,
+             "start": 26,
+             "end": 31
+           },
+           {
+             "name": "propertyIsEnumerable",
+             "type": "(prop: any) => boolean",
+             "func_details": {
+               "return_type": "boolean",
+               "params": [
+                 {
+                   "name": "prop",
+                   "type": "any"
+                 }
+               ]
+             },
+             "path": "[LIB] core.js",
+             "line": 55,
+             "endline": 55,
+             "start": 5,
+             "end": 44
+           },
+           {
+             "name": "str",
+             "type": "string",
+             "func_details": null,
+             "path": "exact.js",
+             "line": 5,
+             "endline": 5,
+             "start": 39,
+             "end": 44
+           },
+           {
+             "name": "toLocaleString",
+             "type": "() => string",
+             "func_details": {
+               "return_type": "string",
+               "params": []
+             },
+             "path": "[LIB] core.js",
+             "line": 56,
+             "endline": 56,
+             "start": 5,
+             "end": 28
+           },
+           {
+             "name": "toString",
+             "type": "() => string",
+             "func_details": {
+               "return_type": "string",
+               "params": []
+             },
+             "path": "[LIB] core.js",
+             "line": 57,
+             "endline": 57,
+             "start": 5,
+             "end": 22
+           },
+           {
+             "name": "valueOf",
+             "type": "() => Object",
+             "func_details": {
+               "return_type": "Object",
+               "params": []
+             },
+             "path": "[LIB] core.js",
+             "line": 58,
+             "endline": 58,
+             "start": 5,
+             "end": 21
+           }
+         ]
+       }
+     `,
+   ).exitCodes([0]),
+
+   addFile("exact.js"),
+   flowCmd(
+     ['autocomplete', '--strip-root', '--json', '--no-auto-start', 'exact.js', '6', '1'],
+     'exact.js',
+   ).stdout(
+      `
+        {
+          "result": [
+            {
+              "name": "obj",
+              "type": "{|num: number, str: string|}",
+              "func_details": null,
+              "path": "exact.js",
+              "line": 5,
+              "endline": 5,
+              "start": 1,
+              "end": 48
+            },
+            {
+              "name": "exports",
+              "type": "{}",
+              "func_details": null,
+              "path": "",
+              "line": 0,
+              "endline": 0,
+              "start": 1,
+              "end": 0
+            }
+          ]
+        }
+      `,
+    ).exitCodes([0]),
   ]),
 ]);
