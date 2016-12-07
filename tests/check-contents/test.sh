@@ -3,6 +3,9 @@ FLOW=$1
 printf "syntax_error.js\n"
 $FLOW check-contents --strip-root syntax_error.js < syntax_error.js
 
+printf "syntax_error.js (no filename)\n"
+$FLOW check-contents --strip-root < syntax_error.js
+
 printf "\n\nnot_flow.js\n\n"
 $FLOW check-contents --strip-root not_flow.js < not_flow.js
 
