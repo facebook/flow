@@ -113,7 +113,7 @@ JS_STUBS=\
 JSOO_VERSION=$(shell which js_of_ocaml 2> /dev/null > /dev/null && js_of_ocaml --version)
 JSOO_MAJOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 1)
 JSOO_MINOR=$(shell echo $(JSOO_VERSION) | cut -d. -f 2)
-ifeq (1, $(shell [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; echo $$?))
+ifeq (1, $(shell [[ -z "$(JSOO_VERSION)" ]] || [ $(JSOO_MAJOR) -gt 2 ] || [ $(JSOO_MAJOR) -eq 2 -a $(JSOO_MINOR) -gt 7 ]; echo $$?))
 	JS_STUBS += js/optional/caml_hexstring_of_float.js
 endif
 
@@ -142,7 +142,6 @@ FRAMEWORK_OPTS=$(foreach framework, $(FRAMEWORKS),-cclib -framework -cclib $(fra
 
 BYTECODE_LINKER_FLAGS=$(NATIVE_OBJECT_FILES) $(NATIVE_LIB_OPTS) $(EXTRA_LIB_OPTS) $(FRAMEWORK_OPTS)
 LINKER_FLAGS=$(BYTECODE_LINKER_FLAGS) $(SECTCREATE)
-
 
 all: $(FLOWLIB) build-flow copy-flow-files
 all-ocp: build-flow-with-ocp copy-flow-files-ocp
