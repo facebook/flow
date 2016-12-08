@@ -4869,13 +4869,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_prop = reason_of_propref propref in
       add_output cx trace (FlowError.EIncompatibleProp (l, u, reason_prop))
 
-    | _, UseT (Addition, _) ->
-      let reasons = FlowError.ordered_reasons l u in
-      add_output cx trace (FlowError.EAddition reasons)
+    | _, UseT (Addition, u) ->
+      add_output cx trace (FlowError.EAddition (reason_of_t l, reason_of_t u))
 
-    | _, UseT (Coercion, _) ->
-      let reasons = FlowError.ordered_reasons l u in
-      add_output cx trace (FlowError.ECoercion reasons)
+    | _, UseT (Coercion, u) ->
+      add_output cx trace (FlowError.ECoercion (reason_of_t l, reason_of_t u))
 
     | _, UseT (FunCallParam, u) ->
       add_output cx trace
@@ -4889,15 +4887,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx trace
         (FlowError.EFunImplicitReturn (reason_of_t l, reason_of_t u))
 
-    | _, UseT (FunReturn, _) ->
-      let reasons = FlowError.ordered_reasons l u in
-      add_output cx trace (FlowError.EFunReturn reasons)
+    | _, UseT (FunReturn, u) ->
+      add_output cx trace (FlowError.EFunReturn (reason_of_t l, reason_of_t u))
 
     | _, UseT (Internal _, _) ->
       ()
 
-    | _, UseT (MissingTupleElement i, _) ->
-      let reasons = FlowError.ordered_reasons l u in
+    | _, UseT (MissingTupleElement i, u) ->
+      let reasons = reason_of_t l, reason_of_t u in
       add_output cx trace (FlowError.EMissingTupleElement (reasons, i))
 
     | _ ->
