@@ -24,12 +24,6 @@ overload.js:7
 
 overload.js:7
   7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  7: var x1: number = "".match(0)[0];
-             ^^^^^^ number
-
-overload.js:7
-  7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^ null
@@ -40,10 +34,10 @@ overload.js:7
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^ undefined
 
-overload.js:8
-  8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  8: var x2: number = "".match(/pattern/)[0];
+overload.js:7
+  7: var x1: number = "".match(0)[0];
+                      ^^^^^^^^^^^^^^ string. This type is incompatible with
+  7: var x1: number = "".match(0)[0];
              ^^^^^^ number
 
 overload.js:8
@@ -57,6 +51,12 @@ overload.js:8
                       ^^^^^^^^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
   8: var x2: number = "".match(/pattern/)[0];
                       ^^^^^^^^^^^^^^^^^^^ undefined
+
+overload.js:8
+  8: var x2: number = "".match(/pattern/)[0];
+                      ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
+  8: var x2: number = "".match(/pattern/)[0];
+             ^^^^^^ number
 
 overload.js:10
  10: var x4: number = "".split(/pattern/)[0];

@@ -251,17 +251,6 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
 (* first reason's position, then second reason's position, etc.; if all
    positions match then first message, then second message, etc. *)
 let compare =
-  let seq k1 k2 () =
-    match k1 () with
-    | 0 -> k2 ()
-    | i -> i
-  in
-  let loc_cmp x1 x2 () =
-    Loc.compare x1 x2
-  in
-  let string_cmp x1 x2 () =
-    String.compare x1 x2
-  in
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
        errors. then both infer warnings and errors at the same priority. *)
@@ -272,33 +261,70 @@ let compare =
     | InferError -> 4
     | InferWarning -> 4
     in
-    fun k1 k2 () -> (order_of_kind k1) - (order_of_kind k2)
+    fun k1 k2 -> (order_of_kind k1) - (order_of_kind k2)
   in
-  let rec compare_message_lists k = function
-    | [], [] -> k ()
+  let compare_message msg1 msg2 =
+    match msg1, msg2 with
+    | CommentM _, BlameM _ -> -1
+    | BlameM _, CommentM _ -> 1
+    | CommentM m1, CommentM m2 -> String.compare m1 m2
+    | BlameM (loc1, m1), BlameM (loc2, m2) ->
+        let k = Loc.compare loc1 loc2 in
+        if k = 0 then String.compare m1 m2 else k
+  in
+  let rec compare_lists f list1 list2 =
+    match list1, list2 with
+    | [], [] -> 0
     | [], _ -> -1
     | _, [] -> 1
-    | CommentM(_)::_, BlameM(_)::_ -> -1
-    | BlameM(_)::_, CommentM(_)::_ -> 1
-
-    | CommentM(m1)::rest1, CommentM(m2)::rest2 ->
-        compare_message_lists (seq k (string_cmp m1 m2)) (rest1, rest2)
-
-    | BlameM(loc1, m1)::rest1, BlameM(loc2, m2)::rest2 ->
-        seq (loc_cmp loc1 loc2) (fun () ->
-          compare_message_lists (seq k (string_cmp m1 m2)) (rest1, rest2)
-        ) ()
-  in fun err1 err2 ->
-    let {kind = k1; messages = ml1; op = op1; _} = err1 in
-    let {kind = k2; messages = ml2; op = op2; _} = err2 in
+    | hd1::tl1, hd2::tl2 ->
+        let k = f hd1 hd2 in
+        if k = 0 then compare_lists f tl1 tl2 else k
+  in
+  let compare_info (loc1, msgs1) (loc2, msgs2) =
+    let k = Loc.compare loc1 loc2 in
+    if k = 0 then compare_lists String.compare msgs1 msgs2 else k
+  in
+  let rec compare_info_tree tree1 tree2 =
+    match tree1, tree2 with
+    | InfoLeaf k1, InfoLeaf k2 -> compare_lists compare_info k1 k2
+    | InfoLeaf k1, InfoNode (k2, _) ->
+        let k = compare_lists compare_info k1 k2 in
+        if k = 0 then -1 else k
+    | InfoNode (k1, _), InfoLeaf k2 ->
+        let k = compare_lists compare_info k1 k2 in
+        if k = 0 then 1 else k
+    | InfoNode (k1, rest1), InfoNode (k2, rest2) ->
+        let k = compare_lists compare_info k1 k2 in
+        if k = 0 then compare_lists compare_info_tree rest1 rest2 else k
+  in
+  fun err1 err2 ->
+    let {
+      kind = k1;
+      messages = ml1;
+      op = op1;
+      extra = extra1;
+      trace = _;
+    } = err1 in
+    let {
+      kind = k2;
+      messages = ml2;
+      op = op2;
+      extra = extra2;
+      trace = _;
+    } = err2 in
     let loc1, loc2 = loc_of_error err1, loc_of_error err2 in
-    seq (loc_cmp loc1 loc2) (
-      seq (kind_cmp k1 k2) (fun () ->
+    let k = Loc.compare loc1 loc2 in
+    if k = 0 then
+      let k = kind_cmp k1 k2 in
+      if k = 0 then
         let ml1 = match op1 with Some op -> op :: ml1 | None -> ml1 in
         let ml2 = match op2 with Some op -> op :: ml2 | None -> ml2 in
-        compare_message_lists (fun () -> 0) (ml1, ml2)
-      )
-    ) ()
+        let k = compare_lists compare_message ml1 ml2 in
+        if k = 0 then compare_lists compare_info_tree extra1 extra2
+        else k
+      else k
+    else k
 
 module Error = struct
   type t = error

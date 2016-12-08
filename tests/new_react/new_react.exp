@@ -198,22 +198,6 @@ props.js:16
 
 props.js:20
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                 ^^^^^ boolean. This type is incompatible with
- 10:         return {x: '', y: 0}
-                        ^^ string
-
-props.js:20
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
-                                           ^^^^^ boolean. This type is incompatible with
- 10:         return {x: '', y: 0}
-                               ^ number
-
-props.js:20
- 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ React element `TestProps`
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                      ^^^^^ boolean. This type is incompatible with
@@ -227,6 +211,22 @@ props.js:20
          ^^^^^^^^^ property `w`. Property not found in
  20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+
+props.js:20
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                 ^^^^^ boolean. This type is incompatible with
+ 10:         return {x: '', y: 0}
+                        ^^ string
+
+props.js:20
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ props of React element `TestProps`
+ 20: var element = <TestProps x={false} y={false} z={false} />; // 3 errors
+                                           ^^^^^ boolean. This type is incompatible with
+ 10:         return {x: '', y: 0}
+                               ^ number
 
 props2.js:14
  14:         var s: string = this.state.bar;
