@@ -399,6 +399,9 @@ module ErrorSuppressions = struct
 
   let cardinal { suppressions; unused } =
     SpanMap.cardinal suppressions + SpanMap.cardinal unused
+
+  let is_empty { suppressions; unused; } =
+    SpanMap.is_empty suppressions && SpanMap.is_empty unused
 end
 
 let parse_error_to_flow_error (loc, err) = {

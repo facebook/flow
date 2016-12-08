@@ -930,7 +930,7 @@ let commit_modules workers ~options inferred removed =
   let remove, replace, errmap = List.fold_left
     (fun (rem, rep, errmap) (m, f_opt) ->
     match get_providers m with
-    | ps when FilenameSet.cardinal ps = 0 ->
+    | ps when FilenameSet.is_empty ps ->
         if debug then prerr_endlinef
           "no remaining providers: %S"
           (Modulename.to_string m);

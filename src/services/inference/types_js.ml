@@ -42,7 +42,7 @@ let clear_errors ?(debug=false) (files: filename list) =
 (* helper - save an error set into a global error map.
    clear mapping if errorset is empty *)
 let save_errset mapref file errset =
-  if Errors.ErrorSet.cardinal errset > 0 then
+  if not (Errors.ErrorSet.is_empty errset) then
     mapref :=
       let errset = match FilenameMap.get file !mapref with
       | Some prev_errset ->
@@ -74,7 +74,7 @@ let save_errormap mapref errmap =
    save the latter into the former. *)
 let save_suppressions mapref files errsups = Errors.(
   List.iter2 (fun file errsup ->
-    mapref := if ErrorSuppressions.cardinal errsup = 0
+    mapref := if ErrorSuppressions.is_empty errsup
       then FilenameMap.remove file !mapref
       else FilenameMap.add file errsup !mapref
   ) files errsups

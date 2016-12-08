@@ -61,6 +61,7 @@ module ErrorSuppressions : sig
   type t
 
   val empty : t
+  val is_empty : t -> bool
   val add : Loc.t -> t -> t
   val union : t -> t -> t
   val check : error -> t -> (bool * t)

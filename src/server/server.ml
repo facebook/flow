@@ -49,9 +49,10 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
     FlowExitStatus.(exit Server_out_of_date)
 
   let status_log errors =
-    if List.length errors = 0
-    then Flow_logger.log "Status: OK"
-    else Flow_logger.log "Status: Error";
+    begin match errors with
+    | [] -> Flow_logger.log "Status: OK"
+    | _ -> Flow_logger.log "Status: Error"
+    end;
     flush stdout
 
   let send_errorl el oc =
@@ -339,13 +340,8 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
 
   let gen_flow_files ~options env files oc =
     let errors = env.ServerEnv.errorl in
-    let result =
-      if List.length errors > 0 then Utils_js.Err (
-        let error_set = List.fold_left (fun set err ->
-          Errors.ErrorSet.add err set
-        ) Errors.ErrorSet.empty errors in
-        ServerProt.GenFlowFile_TypecheckError error_set
-      ) else (
+    let result = match errors with
+      | [] ->
         let cache = new Context_cache.context_cache in
         let (flow_files, flow_file_cxs, non_flow_files, error) =
           List.fold_left (fun (flow_files, cxs, non_flow_files, error) file ->
@@ -369,16 +365,18 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
                 (src_file::flow_files, cx::cxs, non_flow_files, error)
           ) ([], [], [], None) files
         in
-        match error with
+        begin match error with
         | Some e -> Utils_js.Err e
-        | None -> (
+        | None ->
           try
-            (if List.length flow_file_cxs > 0 then
+            begin match flow_file_cxs with
+            | [] -> ()
+            | _ ->
               try Merge_service.merge_strict_context ~options cache flow_file_cxs
               with exn -> failwith (
                 spf "Error merging contexts: %s" (Printexc.to_string exn)
               )
-            );
+            end;
 
             (* Non-@flow files *)
             let result_contents = non_flow_files |> List.map (fun file ->
@@ -399,8 +397,12 @@ module FlowProgram : Server.SERVER_PROGRAM = struct
           with exn -> Utils_js.Err (
             ServerProt.GenFlowFile_UnexpectedError (Printexc.to_string exn)
           )
-        )
-      )
+        end
+      | _ ->
+        let error_set = List.fold_left (fun set err ->
+          Errors.ErrorSet.add err set
+        ) Errors.ErrorSet.empty errors in
+        Utils_js.Err (ServerProt.GenFlowFile_TypecheckError error_set)
     in
     Marshal.to_channel oc result [];
     flush oc
