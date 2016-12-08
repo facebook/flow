@@ -119,7 +119,7 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 }
 (makeParamStore(ParamStore, 1): ParamStore<number>);
 // $ExpectError
-(makeParamStore(ParamStore, 1): ParamStore<boolean>);
+(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 
 /*
 ## `$Supertype<T>`
@@ -144,10 +144,10 @@ type Person = {
   parent: Person
 };
 
-const newName: $PropertyType<Person, 'name'> = 'Charlie';
-const newAge: $PropertyType<Person, 'age'> = 21;
+const newName: $PropertyType<Person, 'name'> = 'Michael Jackson';
+const newAge: $PropertyType<Person, 'age'> = 50;
 // $ExpectError
-const newParent: $PropertyType<Person, 'parent'> = 'Mike';
+const newParent: $PropertyType<Person, 'parent'> = 'Joe Jackson';
 
 /*
 This can be especially useful for referring to the type of React props, or, even the entire `props` type itself.
@@ -169,6 +169,7 @@ const someProps: $PropertyType<Tooltip, 'props'> = {
 // $ExpectError
 const otherProps: $PropertyType<Tooltip, 'props'> = {
   text: 'foo'
+  // Missing the `onMouseOver` definition
 };
 
 /*
@@ -177,7 +178,7 @@ You can even nest lookups:
 type PositionHandler = $PropertyType<$PropertyType<Tooltip, 'props'>, 'onMouseOver'>;
 const handler: PositionHandler = (data: {x: number, y: number}) => undefined;
 // $ExpectError
-const handler2: PositionHandler = (data: string) => undefined;
+const handler2: PositionHandler = (data: string) => undefined; // wrong parameter types
 
 /*
 You can use this in combination with `Class<T>` to get static props:
@@ -205,7 +206,7 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): * {
 }
 (makeParamStore(ParamStore, 1): ParamStore<number>);
 // $ExpectError
-(makeParamStore(ParamStore, 1): ParamStore<boolean>);
+(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 
 /*
 The `*` can be thought of as an "auto" instruction to Flow, telling it to fill in the type from context.
@@ -216,7 +217,7 @@ The existential operator is also useful for automatically filling in types witho
 */
 
 class DataStore {
-  data: *; // If this weren't defined, you'd get an error just trying to assign `data`
+  data: *; // If this property weren't defined, you'd get an error just trying to assign `data`
   constructor() {
     this.data = {
       name: 'DataStore',
@@ -231,3 +232,16 @@ class DataStore {
     this.data.isOffline = 'SomeStore'; // oops, wrong key!
   }
 }
+
+/*
+## `$Exact<T>`
+`$Exact<{name: string}>` is a synonym for `{| name: string |}` as in the [Object documentation](objects.html#exact-object-types).
+*/
+
+type ExactUser = $Exact<{name: string}>;
+type ExactUserShorthand = {| name: string |};
+
+const user2 = {name: 'John Wilkes Booth'};
+// These will both be satisified because they are equivalent
+(user2: ExactUser);
+(user2: ExactUserShorthand);
