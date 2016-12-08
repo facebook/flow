@@ -2431,23 +2431,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyObjT _, HasOwnPropT _
     | AnyObjT _, HasPropT _ -> ()
 
-    | ObjT (reason, { flags; props_tmap = mapr; _ }), GetKeysT (_, keys) ->
+    | ObjT (_, { flags; props_tmap = mapr; _ }), GetKeysT (reason_op, keys) ->
       begin match flags.sealed with
       | Sealed ->
         (* flow each key of l to keys *)
         Context.iter_props cx mapr (fun x _ ->
+          let reason = replace_reason_const (RStringLit x) reason_op in
           let t = StrT (reason, Literal x) in
           rec_flow_t cx trace (t, keys)
         );
       | _ ->
-        rec_flow_t cx trace (StrT.why reason, keys)
+        rec_flow_t cx trace (StrT.why reason_op, keys)
       end
 
-    | InstanceT (reason, _, _, instance), GetKeysT (_, keys) ->
+    | InstanceT (_, _, _, instance), GetKeysT (reason_op, keys) ->
+      (* methods are not enumerable, so only walk fields *)
       let fields_tmap = Context.find_props cx instance.fields_tmap in
-      let methods_tmap = Context.find_props cx instance.methods_tmap in
-      let fields = SMap.union fields_tmap methods_tmap in
-      fields |> SMap.iter (fun x _ ->
+      fields_tmap |> SMap.iter (fun x _ ->
+        let reason = replace_reason_const (RStringLit x) reason_op in
         let t = StrT (reason, Literal x) in
         rec_flow_t cx trace (t, keys)
       )
