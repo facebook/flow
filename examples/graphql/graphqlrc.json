@@ -1,0 +1,12 @@
+[
+  {
+    "regex": ".*/main\\.js",
+    "schema": "schema.graphql",
+    "tag": "Relay.QL"
+  },
+  {
+    "regex": ".*/main2\\.js",
+    "schema": "schema2.graphql",
+    "tag": "gql"
+  }
+]

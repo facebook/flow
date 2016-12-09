@@ -1,3 +1,2 @@
 [options]
 graphql_config=graphqlrc.json
-module.system=haste

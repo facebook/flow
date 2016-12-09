@@ -265,6 +265,12 @@ module rec TypeTerm : sig
     | ReposT of reason * t
     | ReposUpperT of reason * t
 
+    | GraphqlDataT of reason * t
+    | GraphqlOpT of reason * Graphql.op
+    | GraphqlFragT of reason * Graphql.frag
+    | GraphqlSelectionT of reason * Graphql.selection
+    | GraphqlFieldT of reason * Graphql.field
+
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
@@ -547,6 +553,10 @@ module rec TypeTerm : sig
      * which is expected to be a type variable.
      *)
     | RefineT of reason * predicate * t
+
+    | GraphqlSelectT of Graphql.select
+    | GraphqlSpreadT of reason * t * t (* (reason, selection, result) *)
+    | GraphqlToDataT of reason * t
 
   and predicate =
     | AndP of predicate * predicate
@@ -1265,6 +1275,46 @@ end = struct
 
 end
 
+and Graphql : sig
+  type operation_type =
+    | Query
+    | Mutation
+    | Subscription
+
+  type op = {
+    op_schema: Graphql_schema.t;
+    op_type: operation_type;
+    op_selection: TypeTerm.t;
+  }
+
+  type field = {
+    sf_schema: Graphql_schema.t;
+    sf_alias: string; (* alias or name *)
+    sf_name: string;
+    sf_type: Graphql_schema.Type.t;
+    sf_selection: TypeTerm.t option;
+  }
+
+  and selection = {
+    s_schema: Graphql_schema.t;
+    s_on: string;
+    s_selections: field SMap.t;
+  }
+
+  type frag = {
+    frag_schema: Graphql_schema.t;
+    frag_type: string;
+    frag_selection: TypeTerm.t;
+  }
+
+  type select_type =
+    (* (name, empty_selection, filled_selection) *)
+    | SelectField of TypeTerm.t
+    | SelectFrag of TypeTerm.t
+
+  type select = reason * select_type * TypeTerm.t
+end = Graphql
+
 (* The typechecking algorithm often needs to maintain sets of types, or more
    generally, maps of types (for logging we need to associate some provenanced
    information to types).
@@ -1490,6 +1540,12 @@ let rec reason_of_t = function
   | UnionT (reason, _) -> reason
   | VoidT reason -> reason
 
+  | GraphqlDataT (reason, _) -> reason
+  | GraphqlOpT (reason, _) -> reason
+  | GraphqlFragT (reason, _) -> reason
+  | GraphqlSelectionT (reason, _) -> reason
+  | GraphqlFieldT (reason, _) -> reason
+
 and reason_of_defer_use_t = function
   | DestructuringT (reason, _)
   | TypeDestructorT (reason, _) ->
@@ -1568,6 +1624,10 @@ and reason_of_use_t = function
   | VarianceCheckT(reason,_,_) -> reason
   | TypeAppVarianceCheckT (reason, _, _) -> reason
 
+  | GraphqlSelectT (reason, _, _) -> reason
+  | GraphqlSpreadT (reason, _, _) -> reason
+  | GraphqlToDataT (reason, _) -> reason
+
 (* helper: we want the tvar id as well *)
 (* NOTE: uncalled for now, because ids are nondetermistic
    due to parallelism, which messes up test diffs. Should
@@ -1643,6 +1703,12 @@ let rec mod_reason_of_t f = function
   | TypeT (reason, t) -> TypeT (f reason, t)
   | UnionT (reason, ts) -> UnionT (f reason, ts)
   | VoidT reason -> VoidT (f reason)
+
+  | GraphqlDataT (reason, t) -> GraphqlDataT (f reason, t)
+  | GraphqlOpT (reason, op) -> GraphqlOpT (f reason, op)
+  | GraphqlFragT (reason, frag) -> GraphqlFragT (f reason, frag)
+  | GraphqlSelectionT (reason, s) -> GraphqlSelectionT (f reason, s)
+  | GraphqlFieldT (reason, field) -> GraphqlFieldT (f reason, field)
 
 and mod_reason_of_defer_use_t f = function
   | DestructuringT (reason, s) -> DestructuringT (f reason, s)
@@ -1736,6 +1802,10 @@ and mod_reason_of_use_t f = function
   | TypeAppVarianceCheckT (reason_op, reason_tapp, targs) ->
       TypeAppVarianceCheckT (f reason_op, reason_tapp, targs)
 
+  | GraphqlSelectT (reason, s, t) -> GraphqlSelectT (f reason, s, t)
+  | GraphqlSpreadT (reason, s, t) -> GraphqlSpreadT (f reason, s, t)
+  | GraphqlToDataT (reason, t) -> GraphqlToDataT (f reason, t)
+
 (* type comparison mod reason *)
 let reasonless_compare =
   let swap_reason t r = mod_reason_of_t (fun _ -> r) t in
@@ -1802,6 +1872,11 @@ let string_of_ctor = function
   | FunProtoCallT _ -> "FunProtoCallT"
   | FunProtoT _ -> "FunProtoT"
   | FunT _ -> "FunT"
+  | GraphqlFieldT _ -> "GraphqlFieldT"
+  | GraphqlFragT _ -> "GraphqlFragT"
+  | GraphqlOpT _ -> "GraphqlOpT"
+  | GraphqlDataT _ -> "GraphqlDataT"
+  | GraphqlSelectionT _ -> "GraphqlSelectionT"
   | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"
   | IntersectionT _ -> "IntersectionT"
@@ -1887,6 +1962,9 @@ let string_of_use_ctor = function
   | GetKeysT _ -> "GetKeysT"
   | GetPropT _ -> "GetPropT"
   | GetStaticsT _ -> "GetStaticsT"
+  | GraphqlSelectT _ -> "GraphqlSelectT"
+  | GraphqlSpreadT _ -> "GraphqlSpreadT"
+  | GraphqlToDataT _ -> "GraphqlToDataT"
   | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
   | HasPropT _ -> "HasPropT"

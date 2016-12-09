@@ -1,0 +1,14 @@
+interface Node {
+  id: ID!
+}
+
+type User implements Node {
+  id: ID!
+  name: String
+  friends: [User]!
+}
+
+type Query {
+  me: User
+  ext: Int
+}

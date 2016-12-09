@@ -12,6 +12,7 @@ type autocomplete_type =
 | Acid of Scope.Entry.t SMap.t
 | Acmem of Type.t
 | Acjsx of Type.t
+| Acgql of Type.t
 
 type autocomplete_state = {
   ac_name: string;
@@ -62,11 +63,24 @@ let autocomplete_jsx state _cx ac_name ac_loc class_t =
   ) else
     false
 
+let autocomplete_graphql_field state _cx ac_name ac_loc selection_t =
+  if is_autocomplete ac_name
+  then (
+    state := Some ({
+      ac_name;
+      ac_loc;
+      ac_type = Acgql (selection_t);
+    });
+    true
+  ) else
+    false
+
 let autocomplete_set_hooks () =
   let state = ref None in
   Type_inference_hooks_js.set_id_hook (autocomplete_id state);
   Type_inference_hooks_js.set_member_hook (autocomplete_member state);
   Type_inference_hooks_js.set_jsx_hook (autocomplete_jsx state);
+  Type_inference_hooks_js.set_graphql_field_hook (autocomplete_graphql_field state);
   state
 
 let autocomplete_unset_hooks () =

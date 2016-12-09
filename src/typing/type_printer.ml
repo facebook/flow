@@ -283,6 +283,24 @@ let rec type_printer_impl ~size override enclosure cx t =
     | ChoiceKitT _ ->
         "ChoiceKit"
 
+    | GraphqlOpT _ ->
+        "GraphQL query"
+
+    | GraphqlFragT (_, {Graphql.frag_type; _}) ->
+        spf "GraphQL fragment on `%s`" frag_type
+
+    | GraphqlFieldT (_, {Graphql.sf_type; _}) ->
+        let rec print t = Graphql_schema.(
+          match t with
+          | Type.Named name -> name
+          | Type.List t -> "[" ^ (print t) ^ "]"
+          | Type.NonNull t -> (print t) ^ "!"
+        ) in
+        "GraphQL: " ^ (print sf_type)
+
+    | GraphqlDataT _
+    | GraphqlSelectionT _
+
     | FunProtoCallT _
     | ObjProtoT _
     | AbstractT _
@@ -451,6 +469,10 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
 
   | OpenPredT (_, t, _, _) ->
     is_printed_type_parsable_impl weak cx EnclosureNone t
+
+  | GraphqlOpT _ -> true
+  | GraphqlFragT _ -> true
+  | GraphqlFieldT _ -> true
 
   | _
     ->

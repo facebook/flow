@@ -1012,6 +1012,9 @@ module ResolvableTypeJob = struct
     | ReposUpperT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
+    | GraphqlDataT (_, t) ->
+      collect_of_type ?log_unresolved cx reason acc t
+
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -1035,6 +1038,10 @@ module ResolvableTypeJob = struct
     | ExistsT _
     | OpenPredT _
     | TypeMapT _
+    | GraphqlOpT _
+    | GraphqlFragT _
+    | GraphqlSelectionT _
+    | GraphqlFieldT _
       ->
       acc
 
@@ -4674,6 +4681,42 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$value"), t))
 
+    | GraphqlDataT (r, data), _ ->
+      let t = mk_tvar cx r in
+      rec_flow cx trace (data, GraphqlToDataT (r, t));
+      rec_flow cx trace (t, u)
+
+    | GraphqlFragT (_, {Graphql.frag_selection; _}), GraphqlToDataT _ ->
+      rec_flow cx trace (frag_selection, u)
+
+    | GraphqlSelectionT (r, {Graphql.s_selections; s_schema = schema; _}),
+      GraphqlToDataT (_, out)
+      ->
+      let props = SMap.map (fun field ->
+        let type_ = field.Graphql.sf_type in
+        let reason_val = mk_reason (RCustom "obj val") (loc_of_reason r) in
+        let value = match field.Graphql.sf_selection with
+          | Some s ->
+            mk_tvar_where cx reason_val (fun t ->
+              rec_flow cx trace (s, GraphqlToDataT (r, t))
+            )
+          | None ->
+            (* TODO *)
+            (match Graphql_schema.type_name schema type_ with
+              | "Boolean" -> BoolT.why reason_val
+              | "String" -> StrT.why reason_val
+              | "Int" -> NumT.why reason_val
+              | "Float" -> NumT.why reason_val
+              | "ID" -> StrT.why reason_val
+              | _ -> VoidT.why reason_val
+            )
+        in
+        Property.field Neutral value
+      ) s_selections in
+      let obj =
+        mk_object_with_map_proto cx r props ~sealed:true (ObjProtoT r) in
+      rec_flow_t cx trace (obj, out)
+
     (*************************)
     (* repositioning, part 2 *)
     (*************************)
@@ -4856,6 +4899,48 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let msg = "This type is incompatible with" in
       let reasons = Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
       add_output cx trace (FlowError.ECustom (reasons, msg))
+
+    | GraphqlSelectionT (reason, selection),
+      GraphqlSelectT (_, (Graphql.SelectField (GraphqlFieldT (_, field))), out)
+      ->
+      let { Graphql.s_selections; _ } = selection in
+      let ctx = (cx, rec_flow cx trace, mk_tvar cx) in
+      let fields = Graphql_flow.add_field ctx s_selections field in
+      let selection = GraphqlSelectionT (
+        reason,
+        {
+          selection with
+          Graphql.s_selections = fields;
+        }
+      ) in
+      rec_flow_t cx trace (selection, out)
+
+    | GraphqlSelectionT _,
+      GraphqlSelectT (reason, (Graphql.SelectFrag frag), out)
+      ->
+      rec_flow cx trace (frag, GraphqlSpreadT (reason, l, out));
+
+    | GraphqlFragT (_, frag),
+      GraphqlSpreadT (reason, (GraphqlSelectionT (_, s) as st), out)
+      ->
+      let {Graphql.frag_type; frag_schema = schema; frag_selection; _} = frag in
+      let {Graphql.s_on; _} = s in
+      if not (Graphql_schema.do_types_overlap schema s_on frag_type) then (
+        add_output cx trace
+          (FlowError.EGraphqlIncompatibleSpread (reason, s_on, frag_type));
+        rec_flow_t cx trace (st, out)
+      ) else (
+        rec_flow cx trace (frag_selection, u)
+      )
+
+    | GraphqlSelectionT (_, {Graphql.s_selections = adds; _}),
+      GraphqlSpreadT (_, GraphqlSelectionT (r, s), out)
+      ->
+      let {Graphql.s_selections = curr; _} = s in
+      let ctx = (cx, rec_flow cx trace, mk_tvar cx) in
+      let selections = Graphql_flow.merge_fields ctx curr adds in
+      let new_s = {s with Graphql.s_selections = selections} in
+      rec_flow_t cx trace (GraphqlSelectionT (r, new_s), out)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
@@ -5610,6 +5695,14 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let repos_t' = subst cx ~force map repos_t in
     if repos_t == repos_t' then t else ReposUpperT (r, repos_t')
 
+  | GraphqlDataT (reason, js_t) ->
+    let js_t_ = subst cx ~force map js_t in
+    if js_t_ == js_t then t else GraphqlDataT (reason, js_t_)
+  | GraphqlOpT _
+  | GraphqlFragT _
+  | GraphqlSelectionT _
+  | GraphqlFieldT _
+      -> t
 
 and subst_defer_use_t cx ~force map t = match t with
   | DestructuringT (reason, s) ->
@@ -5788,6 +5881,11 @@ and check_polarity cx polarity = function
   | CustomFunT _
   | OpenPredT _
   | TypeMapT _
+  | GraphqlDataT _
+  | GraphqlOpT _
+  | GraphqlFragT _
+  | GraphqlSelectionT _
+  | GraphqlFieldT _
     -> () (* TODO *)
 
 and check_polarity_propmap cx id =
@@ -8800,6 +8898,11 @@ end = struct
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoT _
+    | GraphqlFieldT _
+    | GraphqlFragT _
+    | GraphqlDataT _
+    | GraphqlOpT _
+    | GraphqlSelectionT _
     | IdxWrapper (_, _)
     | KeysT (_, _)
     | MixedT _
@@ -8998,6 +9101,13 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | ReposT (_, t)
   | ReposUpperT (_, t) ->
     recurse ~infer:true t
+
+  | GraphqlDataT (_, t) -> recurse t
+  | GraphqlOpT _
+  | GraphqlFragT _
+  | GraphqlSelectionT _
+  | GraphqlFieldT _
+      -> ()
 
   | ObjProtoT _
   | FunProtoT _

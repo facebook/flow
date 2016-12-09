@@ -148,6 +148,27 @@ let init ~options lib_files
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
+
   Merge_js.ContextOptimizer.sig_context [master_cx];
 
   result
+
+let init_graphql options =
+  match Options.graphql_config options with
+  | Some config_path ->
+    Flow_logger.log "Loading GraphQL config";
+    (try
+      Graphql_config.init
+        (Path.to_string (Options.root options))
+        (Path.to_string config_path)
+    with
+      | Graphql_parse.SyntaxError loc ->
+        let error = Errors.mk_error [loc, ["Syntax error"]] in
+        Errors.Cli_output.print_errors
+          ~out_channel:stdout
+          ~flags:(Options.error_flags options)
+          ~strip_root:(Some (Options.root options))
+          [error];
+      | _ ->
+        Flow_logger.log "[ERROR]")
+  | None -> ()

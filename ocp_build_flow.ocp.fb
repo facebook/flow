@@ -308,6 +308,8 @@ begin library "flow-typing"
       "statement.ml"
     ]
   end
+  files += begin fb-glob "src/graphql"
+  end
   files += [
     "src/typing/flow_error.ml" (comp += [ "-w" "-3" ])
     "src/typing/statement.ml" (comp += [ "-w" "-3" ])

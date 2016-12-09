@@ -330,6 +330,11 @@ let rec gen_type t env = Type.(
   | IdxWrapper _
   | ModuleT _
   | TaintT _
+  | GraphqlDataT _
+  | GraphqlOpT _
+  | GraphqlFragT _
+  | GraphqlSelectionT _
+  | GraphqlFieldT _
     -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
 )
 

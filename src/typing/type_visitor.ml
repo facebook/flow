@@ -163,6 +163,18 @@ class ['a] t = object(self)
   | ReposUpperT (_, t) ->
     self#type_ cx acc t
 
+  | GraphqlDataT (_, t) ->
+    self#type_ cx acc t
+  | GraphqlOpT (_, { Graphql.op_selection; _ }) ->
+    self#type_ cx acc op_selection
+  | GraphqlFragT (_, { Graphql.frag_selection; _ }) ->
+    self#type_ cx acc frag_selection
+  | GraphqlSelectionT (_, { Graphql.s_selections; _ }) ->
+    SMap.fold (fun _ { Graphql.sf_selection; _ } acc ->
+      Option.value_map sf_selection ~default:acc ~f:(self#type_ cx acc)
+    ) s_selections acc
+  | GraphqlFieldT _ -> acc
+
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
   | TypeDestructorT (_, d) -> self#destructor cx acc d
@@ -235,6 +247,9 @@ class ['a] t = object(self)
   | GetKeysT (_, _)
   | GetPropT (_, _, _)
   | GetStaticsT (_, _)
+  | GraphqlSelectT _
+  | GraphqlSpreadT _
+  | GraphqlToDataT _
   | GuardT (_, _, _)
   | HasOwnPropT (_, _)
   | HasPropT (_, _, _)

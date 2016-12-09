@@ -22,6 +22,8 @@ let import_nop _ _ _ = ()
 
 let jsx_nop _ _ _ _ = false
 
+let graphql_field_nop _ _ _ _ = false
+
 (* This type represents the possible definition-points for an lvalue. *)
 type rhs_def =
   (**
@@ -96,6 +98,11 @@ type hook_state_t = {
       (Context.t ->
        string -> Loc.t -> Type.t ->
        bool);
+
+  graphql_field_hook:
+      (Context.t ->
+       string -> Loc.t -> Type.t ->
+       bool);
 }
 
 let nop_hook_state = {
@@ -106,6 +113,7 @@ let nop_hook_state = {
   require_hook = require_nop;
   import_hook = import_nop;
   jsx_hook = jsx_nop;
+  graphql_field_hook = graphql_field_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -131,6 +139,9 @@ let set_import_hook hook =
 let set_jsx_hook hook =
   hook_state := { !hook_state with jsx_hook = hook }
 
+let set_graphql_field_hook hook =
+  hook_state := { !hook_state with graphql_field_hook = hook }
+
 let reset_hooks () =
   hook_state := nop_hook_state
 
@@ -154,3 +165,6 @@ let dispatch_import_hook cx name loc =
 
 let dispatch_jsx_hook cx name loc this_t =
   !hook_state.jsx_hook cx name loc this_t
+
+let dispatch_graphql_field_hook cx name loc selection =
+  !hook_state.graphql_field_hook cx name loc selection

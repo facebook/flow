@@ -226,6 +226,23 @@ let autocomplete_jsx
       parse_result
   )
 
+let autocomplete_graphql_field cx selection loc = Type.(
+  match Type_normalizer.normalize_type cx selection with
+  | GraphqlSelectionT (_, {Graphql.s_schema = s; s_on = type_name; _}) ->
+    let fields = Graphql_schema.obj_field_types s type_name in
+    let fields = List.sort (fun (a, _) (b, _) -> compare a b) fields in
+    let result = List.map (fun (name, type_) ->
+      {
+        res_loc = loc;
+        res_name = name;
+        res_ty = Graphql_schema.print_type s type_;
+        func_details = None
+      }
+    ) fields in
+    OK result
+  | _ -> OK []
+)
+
 let autocomplete_get_results
   profiling client_logging_context cx state parse_result =
   (* FIXME: See #5375467 *)
@@ -240,4 +257,6 @@ let autocomplete_get_results
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
       autocomplete_jsx
         profiling client_logging_context cx cls ac_name ac_loc parse_result
+  | Some { ac_name = _; ac_loc; ac_type = Acgql (selection); } ->
+      autocomplete_graphql_field cx selection ac_loc
   | None -> OK []

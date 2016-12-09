@@ -45,6 +45,7 @@ module Opts : sig
     shm_hash_table_pow: int;
     shm_log_level: int;
     version: string option;
+    graphql_config: string option;
   }
   val default_options : t
 end
