@@ -105,7 +105,6 @@ let rec gc cx state = function
       gc_funtype cx state ft;
       gc cx state prototype;
       gc cx state static  | MixedT _ -> ()
-  | GraphqlDataT (_, t) -> gc cx state t
   | GraphqlOpT (_, { Graphql.op_schema = _; op_type = _; op_selection }) ->
       gc cx state op_selection
   | GraphqlFragT (_, { Graphql.frag_schema = _; frag_type = _; frag_selection })
@@ -245,6 +244,7 @@ and gc_use cx state = function
       gc cx state t;
       gc cx state out
   | GraphqlToDataT (_, t) -> gc cx state t
+  | GraphqlToVarsT (_, t) -> gc cx state t
   | GuardT (pred, t1, t2) ->
       gc_pred cx state pred;
       gc cx state t1;

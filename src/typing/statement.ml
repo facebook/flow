@@ -4934,12 +4934,13 @@ and graphql_definition cx schema def =
       GraphqlFragT (reason, frag)
     else
       EmptyT.why reason
-  | Graphql_ast.Definition.Operation { Graphql_ast.OperationDef.
+  | Graphql_ast.Definition.Operation op_def ->
+    let { Graphql_ast.OperationDef.
       operation = (op_loc, operation);
       selectionSet;
       loc;
       _;
-    } ->
+    } = op_def in
     let op_type = Graphql_ast.OperationType.(match operation with
       | Query -> Graphql.Query
       | Mutation -> Graphql.Mutation
@@ -4954,10 +4955,24 @@ and graphql_definition cx schema def =
     let reason = mk_reason (RCustom (spf "GraphQL `%s`" op_name)) loc in
     (match type_name with
     | Some type_name ->
+      (* Let's just hardcode Relay behavior for now. If operation contains only
+         one field with no args and no selections, we do the following:
+         - use args of this field as operation variables
+         - do not require selection for this field even if it's object type
+       *)
+      let (vars, top_op) =
+        match graphql_field_if_relay_op op_def with
+        | Some field_name ->
+          (match Graphql_schema.get_field schema type_name field_name with
+           | Some field -> (field.Graphql_schema.Field.args, true)
+           | None -> (SMap.empty, false))
+        | None -> (SMap.empty, false)
+      in
       let operation = { Graphql.
         op_schema = schema;
         op_type;
-        op_selection = graphql_mk_selection cx schema type_name selectionSet;
+        op_vars = vars;
+        op_selection = graphql_mk_selection cx schema ~top_op type_name selectionSet;
       } in
       GraphqlOpT (reason, operation)
     | None ->
@@ -4969,7 +4984,26 @@ and graphql_definition cx schema def =
     (* TODO: Report an error *)
     VoidT.at Loc.none
 
-and graphql_mk_selection cx schema type_name selection_set =
+and graphql_field_if_relay_op op = Graphql_ast.(match op with
+  | {
+      OperationDef.selectionSet = {
+        SelectionSet.selections = [
+          Selection.Field {
+            Field.args = None;
+            name = (_, name);
+            selectionSet = None;
+            _
+          }
+        ];
+        _
+      };
+      _
+    } -> Some name
+  | _ -> None
+)
+
+and graphql_mk_selection
+    cx schema ?top_op:(top_op=false) type_name selection_set =
   let {Graphql_ast.SelectionSet.selections; loc} = selection_set in
   let reason = mk_reason (RCustom (spf "selection on `%s`" type_name)) loc in
   let selection = { Graphql.
@@ -4977,10 +5011,11 @@ and graphql_mk_selection cx schema type_name selection_set =
     s_on = type_name;
     s_selections = SMap.empty;
   } in
-  graphql_select
+  graphql_select ~top_op
     cx schema (GraphqlSelectionT (reason, selection)) type_name selections
 
-and graphql_select cx schema selection type_name selections =
+and graphql_select
+    cx schema ?top_op:(top_op=false) selection type_name selections =
   List.fold_left (fun selection item ->
     match item with
     | Graphql_ast.Selection.Field { Graphql_ast.Field.
@@ -4997,7 +5032,7 @@ and graphql_select cx schema selection type_name selections =
         if Graphql_flow.check_field cx schema type_name fname floc then (
           let field_type =
             Graphql_schema.find_field_type schema type_name fname in
-          let field_selection = graphql_field_selection
+          let field_selection = graphql_field_selection ~top_op
               cx schema
               (Graphql_schema.name_of_type field_type)
               floc selectionSet in
@@ -5064,7 +5099,7 @@ and graphql_skim_selection_set cx schema selection_set =
     | _ -> ()
   ) selection_set.Graphql_ast.SelectionSet.selections
 
-and graphql_field_selection cx schema type_name loc selection_set =
+and graphql_field_selection cx schema ~top_op type_name loc selection_set =
   let need_selection = Graphql_schema.Type.(
     match Graphql_schema.type_def schema type_name with
     | Obj _ | Interface _ | Union _ -> true
@@ -5079,7 +5114,7 @@ and graphql_field_selection cx schema type_name loc selection_set =
     Flow_error.(add_output cx (EGraphqlNonObjSelect (loc, type_name)));
     None
   (* obj *)
-  | None when need_selection ->
+  | None when (need_selection && (not top_op)) ->
     Flow_error.(add_output cx (EGraphqlObjNeedSelect (loc, type_name)));
     None
   (* scalar *)

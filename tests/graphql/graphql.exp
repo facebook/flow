@@ -78,28 +78,28 @@ scalar-leafs.js:13
  13:     human # error
          ^^^^^ Field of object type `Human` requires selection
 
-scalar-leafs.js:20
- 20:     human { pets } # error
+scalar-leafs.js:23
+ 23:     human { pets } # error
                  ^^^^ Field of object type `Pet` requires selection
 
-scalar-leafs.js:34
- 34:     barks { sinceWhen } # error
+scalar-leafs.js:37
+ 37:     barks { sinceWhen } # error
                ^^^^^^^^^^^^^ Cannot select on non-object type `Boolean`
 
-scalar-leafs.js:41
- 41:     furColor { inHexdec } # error
+scalar-leafs.js:44
+ 44:     furColor { inHexdec } # error
                   ^^^^^^^^^^^^ Cannot select on non-object type `FurColor`
 
-scalar-leafs.js:48
- 48:     doesKnowCommand(dogCommand: SIT) { sinceWhen } # error
+scalar-leafs.js:51
+ 51:     doesKnowCommand(dogCommand: SIT) { sinceWhen } # error
                                           ^^^^^^^^^^^^^ Cannot select on non-object type `Boolean`
 
-scalar-leafs.js:55
- 55:     name @include(if: true) { isAlsoHumanName } # error
+scalar-leafs.js:58
+ 58:     name @include(if: true) { isAlsoHumanName } # error
                                  ^^^^^^^^^^^^^^^^^^^ Cannot select on non-object type `String`
 
-scalar-leafs.js:62
- 62:     doesKnowCommand(dogCommand: SIT) @include(if: true) { sinceWhen } # error
+scalar-leafs.js:65
+ 65:     doesKnowCommand(dogCommand: SIT) @include(if: true) { sinceWhen } # error
                                                              ^^^^^^^^^^^^^ Cannot select on non-object type `Boolean`
 
 

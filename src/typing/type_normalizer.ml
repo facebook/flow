@@ -394,12 +394,11 @@ let rec normalize_type_impl cx ids t = match t with
   | ReposUpperT (_, t) ->
       normalize_type_impl cx ids t
 
-  | GraphqlDataT (r, t) -> GraphqlDataT (r, normalize_type_impl cx ids t)
-  | GraphqlOpT (_, { Graphql.op_schema; op_type; op_selection }) ->
+  | GraphqlOpT (_, { Graphql.op_schema; op_type; op_vars; op_selection }) ->
     let op_selection = normalize_type_impl cx ids op_selection in
     GraphqlOpT (
       locationless_reason (RCustom ("GraphQL operation")),
-      { Graphql.op_schema; op_type; op_selection }
+      { Graphql.op_schema; op_type; op_vars; op_selection }
     )
   | GraphqlFragT (_, { Graphql.frag_schema; frag_type; frag_selection }) ->
     let frag_selection = normalize_type_impl cx ids frag_selection in

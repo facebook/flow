@@ -1,0 +1,23 @@
+type Query {
+  version: String
+}
+
+type Story {
+  id: ID!
+  text: String!
+  tags: [String!]
+}
+
+input MessageInput {
+  text: String!
+  tags: [String!]
+}
+
+type Mutation {
+  likeStory(storyID: ID!, inc: Int!): String
+  postMessage(msg: MessageInput!): ID!
+}
+
+schema {
+  mutation: Mutation
+}

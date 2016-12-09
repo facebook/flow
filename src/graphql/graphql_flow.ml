@@ -28,6 +28,43 @@ let check_field cx schema parent_type name loc =
       false
     )
 
+(**************)
+(* Converting *)
+(**************)
+
+let rec conv_val_ ?non_null:(non_null=true) mk_obj schema reason value =
+  let module T = Graphql_schema.Type in
+  let wrap v = if non_null then MaybeT v else v in
+  match value with
+  | T.Named name ->
+    let value = match Graphql_schema.type_def schema name with
+      | T.Scalar scalar -> (match scalar with
+          | "ID" -> StrT.why reason
+          | "String" -> StrT.why reason
+          | "Boolean" -> BoolT.why reason
+          | "Float"
+          | "Int" -> NumT.why reason
+          | _ ->
+            (* TODO: resolve as type `Graphql_<scalar name>` *)
+            VoidT.why reason
+        )
+      | T.InputObj (_, vars) -> conv_values_map mk_obj schema reason vars
+      | _ -> MixedT.why reason
+    in
+    wrap value
+  | T.List t ->
+    let t = conv_val_ mk_obj schema reason t in
+    wrap (ArrT (reason, t, []))
+  | T.NonNull t -> conv_val_ ~non_null:false mk_obj schema reason t
+  
+
+and conv_values_map mk_obj schema reason vars =
+  let props = SMap.map (fun iv ->
+    let t = conv_val_ mk_obj schema reason iv.Graphql_schema.InputVal.type_ in
+    Property.field Neutral t
+  ) vars in
+  mk_obj reason props
+
 (***********)
 (* Merging *)
 (***********)

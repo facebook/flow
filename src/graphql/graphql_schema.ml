@@ -1,3 +1,5 @@
+open Utils_js
+
 module rec Type: sig
   type def =
     | Scalar of string
@@ -78,10 +80,13 @@ let get_field s type_name field_name =
 let get_field_type s type_name field_name =
   Option.map (get_field s type_name field_name) (fun f -> f.Field.type_)
 
-let find_field_type s type_name field_name =
+let find_field s type_name field_name =
   match get_field s type_name field_name with
-  | Some t -> t.Field.type_
-  | None -> failwith "Field not found"
+  | Some f -> f
+  | None -> failwith (spf "Field `%s` not found" field_name)
+
+let find_field_type s type_name field_name =
+  (find_field s type_name field_name).Field.type_
 
 let obj_field_types s type_name =
   match type_def s type_name with

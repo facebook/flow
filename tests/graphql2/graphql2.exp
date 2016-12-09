@@ -1,0 +1,48 @@
+data.js:11
+ 11: (story.tags: Array<string>); // `tags` is maybe type
+      ^^^^^^^^^^ null. This type is incompatible with
+ 11: (story.tags: Array<string>); // `tags` is maybe type
+                  ^^^^^^^^^^^^^ array type
+
+data.js:11
+ 11: (story.tags: Array<string>); // `tags` is maybe type
+      ^^^^^^^^^^ undefined. This type is incompatible with
+ 11: (story.tags: Array<string>); // `tags` is maybe type
+                  ^^^^^^^^^^^^^ array type
+
+data.js:12
+ 12: story.text; // exists in schema but not fetched
+           ^^^^ property `text`. Property not found in
+ 12: story.text; // exists in schema but not fetched
+     ^^^^^ selection on `Story`
+
+data.js:13
+ 13: story.bad; // field not found
+           ^^^ property `bad`. Property not found in
+ 13: story.bad; // field not found
+     ^^^^^ selection on `Story`
+
+variables.js:5
+  5: ({storyID: 123, inc: 1}: $GraphqlVars<typeof likeStory>); // number ~> string
+                ^^^ number. This type is incompatible with
+  5: ({storyID: 123, inc: 1}: $GraphqlVars<typeof likeStory>); // number ~> string
+                                           ^^^^^^^^^^^^^^^^ string
+
+variables.js:6
+  6: ({storyID: '123'}: $GraphqlVars<typeof likeStory>); // prop `inc` not found
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ property `inc`. Property not found in
+  6: ({storyID: '123'}: $GraphqlVars<typeof likeStory>); // prop `inc` not found
+      ^^^^^^^^^^^^^^^^ object literal
+
+variables.js:14
+ 14: ({msg: {text: 'hi'}}: $GraphqlVars<typeof postMsg>); // prop `tags` not found
+                                        ^^^^^^^^^^^^^^ property `tags`. Property not found in
+ 14: ({msg: {text: 'hi'}}: $GraphqlVars<typeof postMsg>); // prop `tags` not found
+            ^^^^^^^^^^^^ object literal
+
+variables.js:16
+ 16: gql`mutation {bad}`; // undefined mutation
+                   ^^^ Field not found in type `Mutation`
+
+
+Found 8 errors

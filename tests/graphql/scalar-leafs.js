@@ -11,6 +11,9 @@ gql`
 gql`
   query directQueryOnObjectWithoutSubFields {
     human # error
+    # Currently flow allows one-field-queries with no selection for Relay.
+    # So we select one more field here to trigger validation.
+    __typename
   }
 `;
 

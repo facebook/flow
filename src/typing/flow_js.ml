@@ -1011,9 +1011,6 @@ module ResolvableTypeJob = struct
     | ReposUpperT (_, t) ->
       collect_of_type ?log_unresolved cx reason acc t
 
-    | GraphqlDataT (_, t) ->
-      collect_of_type ?log_unresolved cx reason acc t
-
     | FunProtoBindT _
     | FunProtoCallT _
     | FunProtoApplyT _
@@ -4644,17 +4641,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$value"), t))
 
-    | GraphqlDataT (r, data), _ ->
-      let t = mk_tvar cx r in
-      rec_flow cx trace (data, GraphqlToDataT (r, t));
-      rec_flow cx trace (t, u)
-
     | GraphqlFragT (_, {Graphql.frag_selection; _}), GraphqlToDataT _ ->
       rec_flow cx trace (frag_selection, u)
 
-    | GraphqlSelectionT (r, {Graphql.s_selections; s_schema = schema; _}),
+    | GraphqlSelectionT (r, {Graphql.s_selections; _}),
       GraphqlToDataT (_, out)
       ->
+      let rec conv_type_ref ?non_null:(non_null=false) r t =
+        let wrap t = if non_null then t else MaybeT t in
+        match t with
+        | Graphql_schema.Type.Named name ->
+          let t = match name with
+            | "Boolean" -> BoolT.why r
+            | "String" -> StrT.why r
+            | "Int" -> NumT.why r
+            | "Float" -> NumT.why r
+            | "ID" -> StrT.why r
+            | _ -> VoidT.why r
+          in
+          wrap t
+        | Graphql_schema.Type.List t ->
+          wrap (ArrT (r, conv_type_ref r t, []))
+        | Graphql_schema.Type.NonNull t -> conv_type_ref ~non_null:true r t
+      in
       let props = SMap.map (fun field ->
         let type_ = field.Graphql.sf_type in
         let reason_val = mk_reason (RCustom "obj val") (loc_of_reason r) in
@@ -4663,22 +4672,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             mk_tvar_where cx reason_val (fun t ->
               rec_flow cx trace (s, GraphqlToDataT (r, t))
             )
-          | None ->
-            (* TODO *)
-            (match Graphql_schema.type_name schema type_ with
-              | "Boolean" -> BoolT.why reason_val
-              | "String" -> StrT.why reason_val
-              | "Int" -> NumT.why reason_val
-              | "Float" -> NumT.why reason_val
-              | "ID" -> StrT.why reason_val
-              | _ -> VoidT.why reason_val
-            )
+          | None -> conv_type_ref reason_val type_
         in
         Property.field Neutral value
       ) s_selections in
       let obj =
         mk_object_with_map_proto cx r props ~sealed:true (ObjProtoT r) in
       rec_flow_t cx trace (obj, out)
+
+    | GraphqlOpT (r, {Graphql.op_schema = schema; op_vars; _}),
+      GraphqlToVarsT (_, out)
+      ->
+      let mk_obj reason props =
+        mk_object_with_map_proto
+          cx reason ~sealed:true props (ObjProtoT reason)
+      in
+      rec_flow_t cx trace (
+        Graphql_flow.conv_values_map mk_obj schema r op_vars,
+        out
+      )
 
     (*************************)
     (* repositioning, part 2 *)
@@ -5657,9 +5669,6 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let repos_t' = subst cx ~force map repos_t in
     if repos_t == repos_t' then t else ReposUpperT (r, repos_t')
 
-  | GraphqlDataT (reason, js_t) ->
-    let js_t_ = subst cx ~force map js_t in
-    if js_t_ == js_t then t else GraphqlDataT (reason, js_t_)
   | GraphqlOpT _
   | GraphqlFragT _
   | GraphqlSelectionT _
@@ -5713,6 +5722,8 @@ and eval_destructor cx ~trace reason curr_t s i =
         rec_flow cx trace (curr_t, match s with
         | NonMaybeType -> UseT (UnknownUse, MaybeT (tvar))
         | PropertyType x -> GetPropT(reason, Named (reason, x), tvar)
+        | GraphqlData -> GraphqlToDataT (reason, tvar)
+        | GraphqlVars -> GraphqlToVarsT (reason, tvar)
         )
     )
   | Some it ->
@@ -5740,6 +5751,8 @@ and subst_selector cx force map s = match s with
 and subst_destructor _cx _force _map s = match s with
   | NonMaybeType
   | PropertyType _
+  | GraphqlData
+  | GraphqlVars
     -> s
 
 and subst_predicate cx ?(force=true) (map: Type.t SMap.t) p = match p with
@@ -5843,7 +5856,6 @@ and check_polarity cx polarity = function
   | CustomFunT _
   | OpenPredT _
   | TypeMapT _
-  | GraphqlDataT _
   | GraphqlOpT _
   | GraphqlFragT _
   | GraphqlSelectionT _
@@ -8860,7 +8872,6 @@ end = struct
     | FunProtoT _
     | GraphqlFieldT _
     | GraphqlFragT _
-    | GraphqlDataT _
     | GraphqlOpT _
     | GraphqlSelectionT _
     | IdxWrapper (_, _)
@@ -9062,7 +9073,6 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
   | ReposUpperT (_, t) ->
     recurse ~infer:true t
 
-  | GraphqlDataT (_, t) -> recurse t
   | GraphqlOpT _
   | GraphqlFragT _
   | GraphqlSelectionT _

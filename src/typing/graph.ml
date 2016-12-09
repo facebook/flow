@@ -191,7 +191,6 @@ and parts_of_t cx = function
 | GraphqlFieldT _ -> []
 | GraphqlFragT _ -> []
 | GraphqlOpT _ -> []
-| GraphqlDataT _ -> []
 | GraphqlSelectionT _ -> []
 | IdxWrapper (_, inner) -> ["inner", Def inner]
 | InstanceT (_, static, super,
@@ -295,7 +294,8 @@ and parts_of_use_t cx = function
 | GetStaticsT (_, out) -> ["out", Def out]
 | GraphqlSelectT (_, _, t) -> ["t", Def t]
 | GraphqlSpreadT _ -> []
-| GraphqlToDataT _ -> []
+| GraphqlToDataT (_, out) -> ["out", Def out]
+| GraphqlToVarsT (_, out) -> ["out", Def out]
 | GuardT (_, t, out) -> ["iftrue", Def t; "out", Def out]
 | HasOwnPropT _ | HasPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]

@@ -472,8 +472,15 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$GraphqlData" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
       let t = convert_type_params () |> List.hd in
-      let reason = mk_reason (RCustom "graphql data") loc in
-      GraphqlDataT (reason, t)
+      EvalT (t, TypeDestructorT
+        (mk_reason (RCustom "graphql data") loc, GraphqlData), mk_id())
+    )
+
+  | "$GraphqlVars" ->
+    check_type_param_arity cx loc typeParameters 1 (fun () ->
+      let t = convert_type_params () |> List.hd in
+      EvalT (t, TypeDestructorT
+        (mk_reason (RCustom "graphql vars") loc, GraphqlVars), mk_id())
     )
 
   (* other applications with id as head expr *)
