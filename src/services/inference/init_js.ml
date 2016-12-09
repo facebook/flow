@@ -148,6 +148,6 @@ let init ~options lib_files
   let reason = Reason.builtin_reason (Reason.RCustom "module") in
   let builtin_module = Flow.mk_object master_cx reason in
   Flow.flow_t master_cx (builtin_module, Flow.builtins master_cx);
-  Merge_js.ContextOptimizer.sig_context [master_cx];
+  Merge_js.ContextOptimizer.sig_context [master_cx] |> ignore;
 
   result

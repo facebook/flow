@@ -32,8 +32,8 @@ open Utils_js
    that goes to zero, we prepare to exit!
 
    The underlying worker management scheme needs to know when to wait for more
-   work vs. when it can safely exit. We signal the former by returning a `None`
-   bucket, and the latter by returning a `Some []` bucket.
+   work vs. when it can safely exit. We signal the former by returning a `Wait`
+   bucket, and the latter by returning a `Job []` bucket.
 *)
 let max_bucket_size = 500 (* hard-coded, as in Bucket *)
 
@@ -44,6 +44,8 @@ let blocked = ref 0
 
 (* For each leader, maps other leaders that are dependent on it. *)
 let dependents = ref FilenameMap.empty
+
+let to_recheck: bool FilenameMap.t ref = ref FilenameMap.empty
 
 (* stream of files available to schedule *)
 let stream = ref []
@@ -57,17 +59,24 @@ let rec take n =
       stream := rest;
       x::(take (n-1))
 
-let rev_append_pair (x1, y1) (x2, y2) =
-  (List.rev_append x1 x2, List.rev_append y1 y2)
+type element =
+| Skip of filename
+| Component of filename list
+
+let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
+  List.rev_append x1 x2, List.rev_append y1 y2, List.rev_append z1 z2
 
 (* leader_map is a map from files to leaders *)
 (* component_map is a map from leaders to components *)
 (* dependency_graph is a map from files to dependencies *)
-let make dependency_graph leader_map component_map =
+let make dependency_graph leader_map component_map recheck_map =
+  to_recheck := recheck_map;
   (* TODO: clear or replace state *)
   let procs = Sys_utils.nbr_procs in
   let leader f = FilenameMap.find_unsafe f leader_map in
-  let component f = FilenameMap.find_unsafe f component_map in
+  let component (f, diff) =
+    if diff then Component (FilenameMap.find_unsafe f component_map)
+    else Skip f in
 
   let dependency_dag = FilenameMap.fold (fun f fs dependency_dag ->
     let leader_f = leader f in
@@ -89,7 +98,7 @@ let make dependency_graph leader_map component_map =
     Hashtbl.add blocking leader_f n;
     if n = 0
     then (* leader_f isn't blocked, add to stream *)
-      stream := leader_f::!stream
+      stream := (leader_f, true)::!stream
     else (* one more blocked *)
       incr blocked
   ) dependency_dag;
@@ -116,19 +125,29 @@ let make dependency_graph leader_map component_map =
 (* We know when files are done by having jobs return the files they processed,
    and trapping the function that joins results. ;), yeah. *)
 let join =
-  let push (leader_fs: filename list) =
-    List.iter (fun leader_f ->
+  let push leader_fs_diffs =
+    List.iter (fun (leader_f, diff) ->
       FilenameSet.iter (fun dep_leader_f ->
         let n = (Hashtbl.find blocking dep_leader_f) - 1 in
         (* dep_leader blocked on one less *)
         Hashtbl.replace blocking dep_leader_f n;
+        (* dep_leader should be rechecked if diff *)
+        let recheck = diff || FilenameMap.find_unsafe dep_leader_f !to_recheck in
+        to_recheck := FilenameMap.add dep_leader_f recheck !to_recheck;
+        (* no more waiting, yay! *)
         if n = 0 then
           (* one less blocked; add dep_leader_f to stream *)
-          (decr blocked; stream := dep_leader_f::!stream)
+          (decr blocked; stream := (dep_leader_f, recheck)::!stream)
       ) (FilenameMap.find_unsafe leader_f !dependents)
-    ) leader_fs
+    ) leader_fs_diffs
   in
   fun res acc ->
-    let leader_fs, _ = res in
-    push leader_fs;
-    rev_append_pair res acc
+    let merged, _, unchanged = res in
+    let changed = List.filter (fun f -> not (List.mem f unchanged)) merged in
+    Context_cache.revive_sig_batch (FilenameSet.of_list unchanged);
+    Context_cache.remove_old_sig_batch (FilenameSet.of_list changed);
+    push (List.rev_append
+      (List.rev_map (fun leader_f -> (leader_f, true)) changed)
+      (List.rev_map (fun leader_f -> (leader_f, false)) unchanged)
+    );
+    rev_append_triple res acc

@@ -1627,3 +1627,7 @@ let string_of_default = Default.fold
     spf "Selector (%s) (%s)" str (string_of_selector sel))
   ~cons:(fun str default ->
     spf "Cons (%s) (%s)" str default)
+
+let string_of_errors errors =
+  Errors.(Hh_json.json_to_string ~pretty:true
+    (Json_output.json_of_errors ~strip_root:None (to_list errors)))

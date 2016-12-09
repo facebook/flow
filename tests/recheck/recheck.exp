@@ -1,0 +1,208 @@
+a1.js:3
+  3: function foo(x: number): string { return 5; }
+                                              ^ number. This type is incompatible with the expected return type of
+  3: function foo(x: number): string { return 5; }
+                              ^^^^^^ string
+
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): string { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+
+Found 2 errors
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+a3.js:5
+  5: (five + five: string);
+      ^^^^^^^^^^^ +
+  5: (five + five: string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+  5: (five + five: string);
+                   ^^^^^^ string
+
+
+Found 2 errors
+a1.js:5
+  5: foo("");
+         ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number
+
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+a3.js:5
+  5: (five + five: string);
+      ^^^^^^^^^^^ +
+  5: (five + five: string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+  5: (five + five: string);
+                   ^^^^^^ string
+
+
+Found 3 errors
+a1.js:5
+  5: foo("");
+         ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number
+
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+a3.js:5
+  5: (five + five: string);
+      ^^^^^^^^^^^ +
+  5: (five + five: string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+  5: (five + five: string);
+                   ^^^^^^ string
+
+b3.js:5
+  5: (new D: C);
+      ^^^^^ constructor call
+  5: (new D: C);
+      ^^^^^ D. This type is incompatible with
+  5: (new D: C);
+             ^ C
+
+
+Found 4 errors
+a1.js:5
+  5: foo("");
+         ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number
+
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+a3.js:5
+  5: (five + five: string);
+      ^^^^^^^^^^^ +
+  5: (five + five: string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+  5: (five + five: string);
+                   ^^^^^^ string
+
+
+Found 3 errors
+a1.js:5
+  5: foo("");
+         ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number
+
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+a3.js:5
+  5: (five + five: string);
+      ^^^^^^^^^^^ +
+  5: (five + five: string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+  5: (five + five: string);
+                   ^^^^^^ string
+
+c2.js:6
+  6:   foo({ y: 0 });
+       ^^^^^^^^^^^^^ function call
+  3: export function foo(props: { x: number }) { }
+                                ^^^^^^^^^^^^^ property `x`. Property not found in. See: c1.js:3
+  6:   foo({ y: 0 });
+           ^^^^^^^^ object literal
+
+c3.js:5
+  5: bar({ x: 0 });
+     ^^^^^^^^^^^^^ function call
+  5: export function bar(props: { y: number }) {
+                                ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
+  5: bar({ x: 0 });
+         ^^^^^^^^ object literal
+
+
+Found 5 errors
+a1.js:5
+  5: foo("");
+         ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number
+
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+a3.js:5
+  5: (five + five: string);
+      ^^^^^^^^^^^ +
+  5: (five + five: string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+  5: (five + five: string);
+                   ^^^^^^ string
+
+c3.js:5
+  5: bar({ x: 0 });
+     ^^^^^^^^^^^^^ function call
+  5: export function bar(props: { y: number }) {
+                                ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
+  5: bar({ x: 0 });
+         ^^^^^^^^ object literal
+
+
+Found 4 errors
+a1.js:5
+  5: foo("");
+         ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number
+
+a2.js:5
+  5: module.exports = foo("");
+                          ^^ string. This type is incompatible with the expected param type of
+  3: function foo(x: number): number { return 5; }
+                     ^^^^^^ number. See: a1.js:3
+
+a3.js:5
+  5: (five + five: string);
+      ^^^^^^^^^^^ +
+  5: (five + five: string);
+      ^^^^^^^^^^^ number. This type is incompatible with
+  5: (five + five: string);
+                   ^^^^^^ string
+
+c3.js:5
+  5: bar({ x: 0 });
+     ^^^^^^^^^^^^^ function call
+  5: export function bar(props: { y: number }) {
+                                ^^^^^^^^^^^^^ property `y`. Property not found in. See: c2.js:5
+  5: bar({ x: 0 });
+         ^^^^^^^^ object literal
+
+d2.js:4
+  4: export var y: A = x;
+                       ^ B. This type is incompatible with
+  4: export var y: A = x;
+                   ^ A
+
+
+Found 5 errors
