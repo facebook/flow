@@ -138,7 +138,11 @@ let merge_strict_context ~options cache component_cxs =
   ()
 
 (* Entry point for merging a component *)
-let merge_strict_component ~options (component: filename list) =
+let merge_strict_component ~options = function
+  | Merge_stream.Skip file ->
+    (* skip rechecking this file (because none of its dependencies changed) *)
+    file, Errors.ErrorSet.empty, None
+  | Merge_stream.Component component ->
   (* A component may have several files: there's always at least one, and
      multiple files indicate a cycle. *)
 
@@ -164,18 +168,26 @@ let merge_strict_component ~options (component: filename list) =
 
     merge_strict_context ~options cache component_cxs;
 
-    Merge_js.ContextOptimizer.sig_context component_cxs;
+    let md5 = Merge_js.ContextOptimizer.sig_context component_cxs in
     let cx = List.hd component_cxs in
     let errors = Context.errors cx in
     Context.remove_all_errors cx;
     Context.clear_intermediates cx;
-    Context_cache.add_sig ~audit:Expensive.ok cx;
-    file, errors
-  )
-  else file, Errors.ErrorSet.empty
 
-let merge_strict_job ~options (merged, errsets) (components: filename list list) =
-  List.fold_left (fun (merged, errsets) (component: filename list) ->
+    let diff = Context_cache.add_sig_on_diff ~audit:Expensive.ok cx md5 in
+    (* prerr_endlinef "Rechecked %s, diff = %b" *)
+    (*   (string_of_filename file) *)
+    (*   diff; *)
+    file, errors, Some diff
+  )
+  else file, Errors.ErrorSet.empty, Some true
+
+let merge_strict_job ~options (merged, errsets, unchanged) elements =
+  List.fold_left (fun (merged, errsets, unchanged) element ->
+    let component = Merge_stream.(match element with
+      | Component component -> component
+      | Skip file -> [file]
+    ) in
     let files = component
     |> List.map string_of_filename
     |> String.concat "\n\t"
@@ -184,8 +196,16 @@ let merge_strict_job ~options (merged, errsets) (components: filename list list)
       (fun t -> spf "[%d] perf: merged %s in %f" (Unix.getpid()) files t)
       (fun () ->
         (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-        let file, errors = merge_strict_component ~options component in
-        file :: merged, errors :: errsets
+        let file, errors, diff = merge_strict_component ~options element in
+        match diff with
+        | Some diff ->
+          (* file was rechecked; diff says whether its signature was changed *)
+          file :: merged, errors :: errsets,
+          if diff then unchanged else file :: unchanged
+        | None ->
+          (* file was skipped, so its signature is definitely unchanged *)
+          merged, errsets,
+          file :: unchanged
       )
     with
     | SharedMem_js.Out_of_shared_memory
@@ -200,10 +220,11 @@ let merge_strict_job ~options (merged, errsets) (components: filename list list)
         (Errors.internal_error file msg) in
       prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
         (Unix.getpid()) (List.length component) (fmt_file_exc files exc);
-      List.hd component :: merged, errorset::errsets
-  ) (merged, errsets) components
+      file :: merged, errorset::errsets, unchanged
+  ) (merged, errsets, unchanged) elements
 
-let merge_strict ~options ~workers ~save_errors dependency_graph partition =
+let merge_strict ~options ~workers ~save_errors
+    dependency_graph partition recheck_map =
   (* NOTE: master_cx will only be saved once per server lifetime *)
   let master_cx = Init_js.get_master_cx options in
   (* TODO: we probably don't need to save master_cx in ContextHeap *)
@@ -232,21 +253,21 @@ let merge_strict ~options ~workers ~save_errors dependency_graph partition =
     (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
       (* returns parallel lists of filenames and errorsets *)
-      let (files, errsets) = MultiWorker.call_dynamic
+      let files, errsets, _ = MultiWorker.call_dynamic
         workers
         ~job: (merge_strict_job ~options)
-        ~neutral: ([], [])
+        ~neutral: ([], [], [])
         ~merge: Merge_stream.join
-        ~next: (Merge_stream.make dependency_graph leader_map component_map) in
-      (* collect master context errors *)
-      let (files, errsets) = (
-        Context.file master_cx :: files,
-        Context.errors master_cx :: errsets
-      ) in
+        ~next: (Merge_stream.make
+                  dependency_graph leader_map component_map recheck_map) in
       (* save *)
-      save_errors files errsets;
+      save_errors files errsets
     )
 
 let remove_batch to_merge =
   LeaderHeap.remove_batch to_merge;
-  Context_cache.remove_sig_batch to_merge;
+  Context_cache.remove_sig_batch to_merge
+
+let oldify_batch to_merge =
+  LeaderHeap.remove_batch to_merge;
+  Context_cache.oldify_sig_batch to_merge

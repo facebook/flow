@@ -186,7 +186,8 @@ module ContextOptimizer = struct
     reduced_graph : node IMap.t;
     reduced_property_maps : Properties.map;
     reduced_export_maps : Exports.map;
-    reduced_envs : Context.env IMap.t
+    reduced_envs : Context.env IMap.t;
+    sig_hash : SigHash.t;
   }
 
   let empty = {
@@ -194,10 +195,14 @@ module ContextOptimizer = struct
     reduced_property_maps = Properties.Map.empty;
     reduced_export_maps = Exports.Map.empty;
     reduced_envs = IMap.empty;
+    sig_hash = SigHash.empty;
   }
 
-  class context_optimizer = object
+  class context_optimizer = object(self)
     inherit [quotient] Type_visitor.t as super
+
+    val mutable next_stable_id = 0
+    val mutable stable_ids = IMap.empty
 
     method! tvar cx quotient r id =
       let { reduced_graph; _ } = quotient in
@@ -211,16 +216,17 @@ module ContextOptimizer = struct
         in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
-        super#type_ cx { quotient with reduced_graph } t
+        self#type_ cx { quotient with reduced_graph } t
 
     method! props cx quotient id =
-      let { reduced_property_maps; _ } = quotient in
+      let { reduced_property_maps; sig_hash; _ } = quotient in
       if (Properties.Map.mem id reduced_property_maps) then quotient
       else
         let pmap = Context.find_props cx id in
+        let sig_hash = SigHash.add_pmap pmap sig_hash in
         let reduced_property_maps =
           Properties.Map.add id pmap reduced_property_maps in
-        super#props cx { quotient with reduced_property_maps } id
+        super#props cx { quotient with reduced_property_maps; sig_hash } id
 
     method! exports cx quotient id =
       let { reduced_export_maps; _ } = quotient in
@@ -240,6 +246,23 @@ module ContextOptimizer = struct
         let reduced_envs = IMap.add id closure reduced_envs in
         super#fun_type cx { quotient with reduced_envs } funtype
 
+    method! type_ cx quotient t = match t with
+    | OpenT _ -> super#type_ cx quotient t
+    | InstanceT (_, _, _, { class_id; _ }) ->
+      let { sig_hash; _ } = quotient in
+      let id = match IMap.get class_id stable_ids with
+        | None ->
+          let id = next_stable_id in
+          next_stable_id <- next_stable_id + 1;
+          stable_ids <- IMap.add class_id id stable_ids;
+          id
+        | Some id -> id in
+      let sig_hash = SigHash.add id sig_hash in
+      super#type_ cx { quotient with sig_hash } t
+    | _ ->
+      let { sig_hash; _ } = quotient in
+      let sig_hash = SigHash.add_type t sig_hash in
+      super#type_ cx { quotient with sig_hash } t
   end
 
   (* walk a context from a list of exports *)
@@ -271,6 +294,7 @@ module ContextOptimizer = struct
     other_cxs |> List.iter (fun other_cx ->
       let other_m = context_module other_cx in
       Context.add_module cx other_m (export other_cx)
-    )
+    );
+    quotient.sig_hash
 
 end

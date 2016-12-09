@@ -66,6 +66,13 @@ let filter_duplicate_provider mapref file =
 let save_errors mapref files errsets =
   List.iter2 (save_errset mapref) files errsets
 
+let save_new_errors mapref =
+  List.iter2 (fun file errors ->
+    if Errors.ErrorSet.cardinal errors > 0
+    then mapref := FilenameMap.add file errors !mapref
+    else mapref := FilenameMap.remove file !mapref
+  )
+
 let save_errormap mapref errmap =
   FilenameMap.iter (save_errset mapref) errmap
 
@@ -339,7 +346,7 @@ let typecheck
     ) in
 
   match merge_input with
-  | Some (to_merge, direct_deps) ->
+  | Some (to_merge, direct_deps, inferred) ->
     (* to_merge is the union of inferred (newly inferred files) and the
        transitive closure of all dependents. direct_deps is the subset of
        to_merge which depend on inferred files directly, or whose import
@@ -356,7 +363,16 @@ let typecheck
        - since to_merge is the transitive closure of dependencies of inferred,
        and direct_deps are dependencies of inferred, all dependencies of
        direct_deps are included in to_merge
-      *)
+    *)
+
+    (* Definitely recheck inferred and direct_deps. As merging proceeds, other
+       files in to_merge may or may not be rechecked. *)
+    let recheck_map = to_merge |> List.fold_left (
+      let roots = FilenameSet.union inferred direct_deps in
+      fun recheck_map file ->
+        FilenameMap.add file (FilenameSet.mem file roots) recheck_map
+    ) FilenameMap.empty in
+
     (** TODO [simplification]:
         Move ResolveDirectDeps into MakeMergeInput **)
     Flow_logger.log "Re-resolving directly dependent files";
@@ -399,9 +415,11 @@ let typecheck
       Flow_logger.log "Merging";
       let profiling, () = with_timer ~options "Merge" profiling (fun () ->
         Merge_service.merge_strict
-          ~options ~workers ~save_errors:(save_errors merge_errors)
-          dependency_graph partition
+          ~options ~workers ~save_errors:(save_new_errors merge_errors)
+          dependency_graph partition recheck_map
       ) in
+      let master_cx = Init_js.get_master_cx options in
+      save_errset merge_errors (Context.file master_cx) (Context.errors master_cx);
       if Options.should_profile options then Gc.print_stat stderr;
       Flow_logger.log "Done";
       profiling
@@ -559,18 +577,15 @@ let recheck genv env modified =
       ) all_deps 1 in
       Flow_logger.log "Merge prep";
 
-      (* clear merge errors for unmodified dependents *)
-      FilenameSet.iter (fun file ->
-        merge_errors := FilenameMap.remove file !merge_errors;
-      ) all_deps;
+      (* merge errors for unmodified dependents will be cleared lazily *)
 
       (* to_merge is inferred files plus all dependents. prep for re-merge *)
       let to_merge = FilenameSet.union all_deps modified_files in
-      Merge_service.remove_batch to_merge;
+      Merge_service.oldify_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect genv.ServerEnv.options `gentle;
 
-      Some (FilenameSet.elements to_merge, direct_deps)
+      Some (FilenameSet.elements to_merge, direct_deps, modified_files)
     )
     ~files:freshparsed
     ~removed:removed_modules
@@ -654,7 +669,11 @@ let full_check workers ~ordered_libs parse_next options =
     ~profiling
     ~workers
     ~make_merge_input:(fun inferred ->
-      if lib_error then None else Some (inferred, FilenameSet.empty)
+      if lib_error then None
+      (* TODO: the third entry should ideally be inferred to seed linking work,
+         but it doesn't matter since the initial stream always contains the
+         first entry. *)
+      else Some (inferred, FilenameSet.empty, FilenameSet.empty)
     )
     ~files:parsed
     ~removed:Module_js.NameSet.empty

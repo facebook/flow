@@ -1,0 +1,159 @@
+(**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "flow" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
+(* Hash of signatures.
+
+   Signature are just "resolved" types that serve to describe module
+   exports. See Merge_js for how signatures are created from graphs. In
+   particular, a signature can have cycles, and is thus represented as a system
+   of equations from names to things: tvar ids point to types, propmap ids point
+   to propmaps, etc., and types can in turn contain these names.
+
+   When a file changes, we need to determine whether its signature has
+   meaningfully changed in order to decide whether to recheck its dependents,
+   (since the only way changes can meaningfully propagate to dependents is
+   through the signature). How do we do this?
+
+   The "structure" of a signature is captured by traversing it in some
+   deterministic order, ignoring the specific names. Signatures are considered
+   similar when their structures are equal. Note that this is a semantic, rather
+   than a syntactic, notion: similar signatures may have different names in
+   their representations. It is important to ignore such differences, since
+   rechecking a file will trivially generate new names, even though nothing has
+   changed meaningfully.
+
+   Finally, these structures may be huge, so we instead compare their digests,
+   tolerating improbable collisions (cf. SharedMem).
+*)
+type hash =
+  | NumH
+  | StrH
+  | BoolH
+  | EmptyH
+  | MixedH
+  | AnyH
+  | NullH
+  | VoidH
+  | FunH
+  | FunProtoH
+  | FunProtoApplyH
+  | FunProtoBindH
+  | FunProtoCallH
+  | ObjH
+  | ObjProtoH
+  | ArrH
+  | ClassH
+  | OptionalH
+  | RestH
+  | AbstractH
+  | EvalH
+  | PolyH
+  | TypeAppH
+  | ThisClassH
+  | ThisTypeAppH
+  | BoundH
+  | ExistsH
+  | ExactH
+  | MaybeH
+  | TaintH
+  | IntersectionH
+  | UnionH
+  | AnyWithLowerBoundH
+  | AnyWithUpperBoundH
+  | AnyObjH
+  | AnyFunH
+  | ShapeH
+  | DiffH
+  | KeysH
+  | SingletonStrH
+  | SingletonNumH
+  | SingletonBoolH
+  | TypeH
+  | AnnotH
+  | ModuleH
+  | ExtendsH
+  | ChoiceKitH
+  | CustomFunH
+  | IdxWrapperH
+  | OpenPredH
+  | TypeMapH
+  | ReposH
+  | ReposUpperH
+
+let hash_of_ctor = Type.(function
+  | OpenT _ -> failwith "undefined hash of OpenT"
+  | InstanceT _ -> failwith "undefined hash of InstanceT"
+
+  | AbstractT _ -> AbstractH
+  | AnnotT _ -> AnnotH
+  | AnyFunT _ -> AnyFunH
+  | AnyObjT _ -> AnyObjH
+  | AnyT _ -> AnyH
+  | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
+  | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
+  | ArrT _ -> ArrH
+  | BoolT _ -> BoolH
+  | BoundT _ -> BoundH
+  | ChoiceKitT _ -> ChoiceKitH
+  | ClassT _ -> ClassH
+  | CustomFunT _ -> CustomFunH
+  | DiffT _ -> DiffH
+  | EmptyT _ -> EmptyH
+  | EvalT _ -> EvalH
+  | ExactT _ -> ExactH
+  | ExistsT _ -> ExistsH
+  | ExtendsT _ -> ExtendsH
+  | FunProtoApplyT _ -> FunProtoApplyH
+  | FunProtoBindT _ -> FunProtoBindH
+  | FunProtoCallT _ -> FunProtoCallH
+  | FunProtoT _ -> FunProtoH
+  | FunT _ -> FunH
+  | IdxWrapper _ -> IdxWrapperH
+  | IntersectionT _ -> IntersectionH
+  | KeysT _ -> KeysH
+  | MaybeT _ -> MaybeH
+  | MixedT _ -> MixedH
+  | ModuleT _ -> ModuleH
+  | NullT _ -> NullH
+  | NumT _ -> NumH
+  | ObjProtoT _ -> ObjProtoH
+  | ObjT _ -> ObjH
+  | OpenPredT _ -> OpenPredH
+  | OptionalT _ -> OptionalH
+  | PolyT _ -> PolyH
+  | ReposT _ -> ReposH
+  | ReposUpperT _ -> ReposUpperH
+  | RestT _ -> RestH
+  | ShapeT _ -> ShapeH
+  | SingletonBoolT _ -> SingletonBoolH
+  | SingletonNumT _ -> SingletonNumH
+  | SingletonStrT _ -> SingletonStrH
+  | StrT _ -> StrH
+  | TaintT _ -> TaintH
+  | ThisClassT _ -> ThisClassH
+  | ThisTypeAppT _ -> ThisTypeAppH
+  | TypeAppT _ -> TypeAppH
+  | TypeMapT _ -> TypeMapH
+  | TypeT _ -> TypeH
+  | UnionT _ -> UnionH
+  | VoidT _ -> VoidH
+)
+
+type t = Digest.t
+let empty = Digest.string ""
+
+let add x t =
+  Digest.string (Marshal.to_string (x, t) [])
+
+let add_type type_ =
+  add (hash_of_ctor type_)
+
+let add_pmap pmap =
+  add (SMap.keys pmap)

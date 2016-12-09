@@ -27,5 +27,5 @@ val merge_lib_file:
   unit
 
 module ContextOptimizer: sig
-  val sig_context : Context.t list -> unit
+  val sig_context : Context.t list -> SigHash.t
 end

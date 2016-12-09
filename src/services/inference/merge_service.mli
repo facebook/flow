@@ -21,8 +21,13 @@ val merge_strict:
   save_errors: (filename list -> Errors.ErrorSet.t list -> unit) ->
   FilenameSet.t FilenameMap.t ->
   filename list list IMap.t ->
+  bool FilenameMap.t ->
   unit
 
 val remove_batch:
+  FilenameSet.t ->
+  unit
+
+val oldify_batch:
   FilenameSet.t ->
   unit

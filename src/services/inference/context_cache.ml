@@ -34,6 +34,12 @@ module SigContextHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
   let description = "SigContext"
 end)
 
+module SigHashHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
+  type t = SigHash.t
+  let prefix = Prefix.make()
+  let description = "SigHash"
+end)
+
 let add_sig_context = Expensive.wrap SigContextHeap.add
 let find_unsafe_sig_context = Expensive.wrap SigContextHeap.find_unsafe
 
@@ -45,11 +51,37 @@ let add_sig ~audit cx =
   let cx_file = Context.file cx in
   add_sig_context ~audit cx_file cx
 
-let remove_batch cxs =
-  ContextHeap.remove_batch cxs
+(* Add a sig only if it has not changed meaningfully, and return the result of
+   that check. *)
+let add_sig_on_diff ~audit cx md5 =
+  let cx_file = Context.file cx in
+  let diff = match SigHashHeap.get_old cx_file with
+    | Some md5_old -> Loc.check_suffix cx_file Files.flow_ext || md5 <> md5_old
+    | None -> true in
+  if diff then begin
+    add_sig_context ~audit cx_file cx;
+    SigHashHeap.add cx_file md5;
+  end;
+  diff
 
-let remove_sig_batch cxs =
-  SigContextHeap.remove_batch cxs
+let remove_batch files =
+  ContextHeap.remove_batch files
+
+let remove_sig_batch files =
+  SigContextHeap.remove_batch files;
+  SigHashHeap.remove_batch files
+
+let oldify_sig_batch files =
+  SigContextHeap.oldify_batch files;
+  SigHashHeap.oldify_batch files
+
+let remove_old_sig_batch files =
+  SigContextHeap.remove_old_batch files;
+  SigHashHeap.remove_old_batch files
+
+let revive_sig_batch files =
+  SigContextHeap.revive_batch files;
+  SigHashHeap.revive_batch files
 
 (* We already cache contexts in the shared memory for performance, but context
    graphs need to be copied because they have mutable bounds. We maintain an

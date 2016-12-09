@@ -23,5 +23,9 @@ end
 
 val add: (Context.t -> unit) Expensive.t
 val add_sig: (Context.t -> unit) Expensive.t
+val add_sig_on_diff: (Context.t -> SigHash.t -> bool) Expensive.t
 val remove_batch: Utils_js.FilenameSet.t -> unit
 val remove_sig_batch: Utils_js.FilenameSet.t -> unit
+val oldify_sig_batch: Utils_js.FilenameSet.t -> unit
+val revive_sig_batch: Utils_js.FilenameSet.t -> unit
+val remove_old_sig_batch: Utils_js.FilenameSet.t -> unit
