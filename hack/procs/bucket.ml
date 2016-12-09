@@ -47,5 +47,17 @@ let make_bucket ~num_workers ?(max_size=500) jobs =
   let make_list = make ~num_workers ~max_size jobs
   in
   fun () -> match make_list () with
-      [] -> Done
+    | [] -> Done
     | wl -> Job wl
+
+type 'a of_n = { work: 'a; bucket: int; total: int }
+
+let make_n_buckets ~buckets ~split =
+  let next_bucket = ref 0 in
+  fun () ->
+    let current = !next_bucket in
+    incr next_bucket;
+    if (current < buckets) then
+      Job { work = split ~bucket:current; bucket = current; total = buckets }
+    else
+      Done

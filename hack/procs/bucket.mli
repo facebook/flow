@@ -22,5 +22,10 @@ type 'a nextbucket_dynamic =
 val make_bucket : num_workers:int -> ?max_size:int -> 'a list ->
   'a list nextbucket_dynamic
 
+type 'a of_n = { work: 'a; bucket: int; total: int }
+
+val make_n_buckets : buckets:int -> split:(bucket:int -> 'a) ->
+  'a of_n nextbucket_dynamic
+
 (* Specialized version to split into lists only. *)
 val make : num_workers:int -> ?max_size:int -> 'a list -> (unit -> 'a list)
