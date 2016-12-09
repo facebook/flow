@@ -4463,9 +4463,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***********************************************************)
 
     | (l, AdderT (reason, r, u)) ->
-      Ops.push reason;
-      flow_addition cx trace reason l r u;
-      Ops.pop ()
+      flow_addition cx trace reason l r u
 
     (*********************************************************)
     (* arithmetic/bitwise/update operations besides addition *)
@@ -4935,8 +4933,11 @@ and needs_resolution = function
  *
  **)
 and flow_addition cx trace reason l r u =
-  if needs_resolution r then rec_flow cx trace (r, AdderT (reason, l, u))
-  else match (l, r) with
+  if needs_resolution r then rec_flow cx trace (r, AdderT (reason, l, u)) else
+  (* disable ops because the left and right sides should already be
+     repositioned. *)
+  let ops = Ops.clear () in
+  begin match (l, r) with
   | (StrT _, StrT _)
   | (StrT _, NumT _)
   | (NumT _, StrT _) ->
@@ -4983,6 +4984,8 @@ and flow_addition cx trace reason l r u =
     rec_flow cx trace (l, UseT (Addition, fake_str));
     rec_flow cx trace (r, UseT (Addition, fake_str));
     rec_flow cx trace (fake_str, UseT (Addition, u));
+  end;
+  Ops.set ops
 
 (**
  * relational comparisons like <, >, <=, >=
