@@ -31,17 +31,17 @@ let single_threaded_call_dynamic job merge neutral next =
         failwith "stuck!"
     | Job l ->
         let res = job neutral l in
-        acc := merge !acc res;
+        acc := merge res !acc;
         x := next()
     | Done -> ()
   done;
   !acc
 
 let multi_threaded_call_dynamic
-  (type a) (type b)
-  workers (job: b -> a -> b)
-  (merge: b -> b -> b)
-  (neutral: b)
+  (type a) (type b) (type c)
+  workers (job: c -> a -> b)
+  (merge: b -> c -> c)
+  (neutral: c)
   (next: a Bucket.nextbucket_dynamic) =
   let rec dispatch workers handles acc =
     (* 'worker' represents available workers. *)

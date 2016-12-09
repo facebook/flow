@@ -35,7 +35,7 @@ type 'a bucket = 'a Bucket.bucket =
 
 val call_dynamic :
   Worker.t list option ->
-  job:('b -> 'a -> 'b) ->
-  merge:('b -> 'b -> 'b) -> neutral:'b ->
+  job:('c -> 'a -> 'b) ->
+  merge:('b -> 'c -> 'c) -> neutral:'c ->
   next:'a Bucket.nextbucket_dynamic ->
-  'b
+  'c
