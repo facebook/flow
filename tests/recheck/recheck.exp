@@ -20,8 +20,6 @@ a2.js:5
 
 a3.js:5
   5: (five + five: string);
-      ^^^^^^^^^^^ +
-  5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
                    ^^^^^^ string
@@ -42,8 +40,6 @@ a2.js:5
 
 a3.js:5
   5: (five + five: string);
-      ^^^^^^^^^^^ +
-  5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
                    ^^^^^^ string
@@ -63,8 +59,6 @@ a2.js:5
                      ^^^^^^ number. See: a1.js:3
 
 a3.js:5
-  5: (five + five: string);
-      ^^^^^^^^^^^ +
   5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
@@ -94,8 +88,6 @@ a2.js:5
 
 a3.js:5
   5: (five + five: string);
-      ^^^^^^^^^^^ +
-  5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
                    ^^^^^^ string
@@ -115,8 +107,6 @@ a2.js:5
                      ^^^^^^ number. See: a1.js:3
 
 a3.js:5
-  5: (five + five: string);
-      ^^^^^^^^^^^ +
   5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
@@ -154,8 +144,6 @@ a2.js:5
 
 a3.js:5
   5: (five + five: string);
-      ^^^^^^^^^^^ +
-  5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
                    ^^^^^^ string
@@ -183,8 +171,6 @@ a2.js:5
                      ^^^^^^ number. See: a1.js:3
 
 a3.js:5
-  5: (five + five: string);
-      ^^^^^^^^^^^ +
   5: (five + five: string);
       ^^^^^^^^^^^ number. This type is incompatible with
   5: (five + five: string);
