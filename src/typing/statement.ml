@@ -4938,6 +4938,7 @@ and graphql_definition cx schema def =
     let { Graphql_ast.OperationDef.
       operation = (op_loc, operation);
       selectionSet;
+      variableDefs;
       loc;
       _;
     } = op_def in
@@ -4961,12 +4962,20 @@ and graphql_definition cx schema def =
          - do not require selection for this field even if it's object type
        *)
       let (vars, top_op) =
-        match graphql_field_if_relay_op op_def with
-        | Some field_name ->
-          (match Graphql_schema.get_field schema type_name field_name with
-           | Some field -> (field.Graphql_schema.Field.args, true)
-           | None -> (SMap.empty, false))
-        | None -> (SMap.empty, false)
+        match variableDefs with
+        | Some var_defs -> graphql_vars_decl cx schema var_defs
+        | None ->
+          (match graphql_field_if_relay_op op_def with
+           | Some field_name ->
+             (match Graphql_schema.get_field schema type_name field_name with
+              | Some {Graphql_schema.Field.args; _} ->
+                let vars =
+                  SMap.map (fun a -> a.Graphql_schema.InputVal.type_) args in
+                (vars, true)
+              | None -> (SMap.empty, false)
+             )
+           | None -> (SMap.empty, false)
+          )
       in
       let operation = { Graphql.
         op_schema = schema;
@@ -5001,6 +5010,50 @@ and graphql_field_if_relay_op op = Graphql_ast.(match op with
     } -> Some name
   | _ -> None
 )
+
+and graphql_vars_decl cx schema var_defs =
+  let rec conv t =
+    match t with
+    | Graphql_ast.Type.Named (loc, name) ->
+      if Graphql_schema.type_exists schema name
+      then match Graphql_schema.type_def schema name with
+        | Graphql_schema.Type.Scalar _
+        | Graphql_schema.Type.Enum _
+        | Graphql_schema.Type.InputObj _
+          -> Some (Graphql_schema.Type.Named name)
+        | _ ->
+          Flow_error.(add_output cx (EGraphqlNotInputType (loc, name)));
+          None
+      else (
+        Flow_error.(add_output cx (EGraphqlTypeNotFound (loc, name)));
+        None
+      )
+    | Graphql_ast.Type.List (_, t) ->
+      Option.map ~f:(fun t -> Graphql_schema.Type.List t) (conv t)
+    | Graphql_ast.Type.NonNull (loc, Graphql_ast.Type.NonNull _) ->
+      (* `Type!!` *)
+      Flow_error.(add_output cx (EGraphqlDoubleNonNull loc));
+      None
+    | Graphql_ast.Type.NonNull (_, t) ->
+      Option.map ~f:(fun t -> Graphql_schema.Type.NonNull t) (conv t)
+  in
+  let vars =
+    List.fold_left (fun vars var_def ->
+      let {
+        Graphql_ast.VariableDef.variable = (loc, (_, name));
+        type_;
+        _;
+      } = var_def in
+      match conv type_ with
+      | Some t ->
+        if SMap.mem name vars then (
+          Flow_error.(add_output cx (EGraphqlVarRedef (loc, name)));
+          vars
+        ) else SMap.add name t vars
+      | None -> vars
+    ) SMap.empty var_defs
+  in
+  (vars, false)
 
 and graphql_mk_selection
     cx schema ?top_op:(top_op=false) type_name selection_set =

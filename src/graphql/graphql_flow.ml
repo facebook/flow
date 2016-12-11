@@ -48,7 +48,9 @@ let rec conv_val_ ?non_null:(non_null=true) mk_obj schema reason value =
             (* TODO: resolve as type `Graphql_<scalar name>` *)
             VoidT.why reason
         )
-      | T.InputObj (_, vars) -> conv_values_map mk_obj schema reason vars
+      | T.InputObj (_, vars) ->
+        let vars = SMap.map (fun iv -> iv.Graphql_schema.InputVal.type_) vars in
+        conv_values_map mk_obj schema reason vars
       | _ -> MixedT.why reason
     in
     wrap value
@@ -59,8 +61,8 @@ let rec conv_val_ ?non_null:(non_null=true) mk_obj schema reason value =
   
 
 and conv_values_map mk_obj schema reason vars =
-  let props = SMap.map (fun iv ->
-    let t = conv_val_ mk_obj schema reason iv.Graphql_schema.InputVal.type_ in
+  let props = SMap.map (fun type_ ->
+    let t = conv_val_ mk_obj schema reason type_ in
     Property.field Neutral t
   ) vars in
   mk_obj reason props

@@ -66,6 +66,18 @@ fragments-on-composite-types.js:66
  66:     ... on String {
                 ^^^^^^ Fragment cannot condition on non composite type `String`
 
+known-type-names.js:17
+ 17:   query Foo($var: JumbledUpLetters) { # error
+                       ^^^^^^^^^^^^^^^^ Type `JumbledUpLetters` not found in schema
+
+known-type-names.js:20
+ 20:       pets { ... on Badger { name }, ...PetFields } # error
+                         ^^^^^^ Type `Badger` not found in schema
+
+known-type-names.js:23
+ 23:   fragment PetFields on Peettt { # error
+                             ^^^^^^ Type `Peettt` not found in schema
+
 possible-fragment-spreads.js:76
  76:     ... on Dog { barkVolume } # error
          ^^^^^^^^^^^^^^^^^^^^^^^^^ inline fragment. Fragment cannot be spread here as objects of type `Cat` can never be of type `Dog`
@@ -102,5 +114,33 @@ scalar-leafs.js:65
  65:     doesKnowCommand(dogCommand: SIT) @include(if: true) { sinceWhen } # error
                                                              ^^^^^^^^^^^^^ Cannot select on non-object type `Boolean`
 
+unique-variable-names.js:11
+ 11:   query A($x: Int, $x: Int, $x: String) { __typename } # 2 errors
+                        ^^ There can be only one variable named `x`
 
-Found 26 errors
+unique-variable-names.js:11
+ 11:   query A($x: Int, $x: Int, $x: String) { __typename } # 2 errors
+                                 ^^ There can be only one variable named `x`
+
+unique-variable-names.js:12
+ 12:   query B($x: String, $x: Int) { __typename } # error
+                           ^^ There can be only one variable named `x`
+
+unique-variable-names.js:13
+ 13:   query C($x: Int, $x: Int) { __typename } # error
+                        ^^ There can be only one variable named `x`
+
+variables-are-input-types.js:12
+ 12:   query Foo($a: Dog, $b: [[CatOrDog!]]!, $c: Pet) { # 3 errors
+                     ^^^ Type `Dog` is not a correct input type
+
+variables-are-input-types.js:12
+ 12:   query Foo($a: Dog, $b: [[CatOrDog!]]!, $c: Pet) { # 3 errors
+                                ^^^^^^^^ Type `CatOrDog` is not a correct input type
+
+variables-are-input-types.js:12
+ 12:   query Foo($a: Dog, $b: [[CatOrDog!]]!, $c: Pet) { # 3 errors
+                                                  ^^^ Type `Pet` is not a correct input type
+
+
+Found 36 errors

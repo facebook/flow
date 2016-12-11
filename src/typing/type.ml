@@ -1286,7 +1286,7 @@ and Graphql : sig
   type op = {
     op_schema: Graphql_schema.t;
     op_type: operation_type;
-    op_vars: Graphql_schema.InputVal.t SMap.t;
+    op_vars: Graphql_schema.Type.t SMap.t;
     op_selection: TypeTerm.t;
   }
 

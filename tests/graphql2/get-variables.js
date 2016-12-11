@@ -14,3 +14,15 @@ const postMsg = gql`mutation {postMessage}`;
 ({msg: {text: 'hi'}}: $GraphqlVars<typeof postMsg>); // prop `tags` not found
 
 gql`mutation {bad}`; // undefined mutation
+
+const query = gql`
+  query($id: ID!, $msg: MessageInput) { __typename }
+`;
+declare var queryInfered: $GraphqlVars<typeof query>;
+declare var queryDeclared: {|
+  id: string,
+  msg: ?{text: string, tags: ?Array<string>},
+|};
+(queryDeclared: typeof queryInfered);
+(queryInfered: typeof queryDeclared);
+(queryInfered.id: number); // string ~> number
