@@ -42,6 +42,7 @@ module Opts = struct
   type moduleSystem = Node | Haste
 
   type t = {
+    emoji: bool;
     enable_const_params: bool;
     enable_unsafe_getters_and_setters: bool;
     enforce_strict_type_args: bool;
@@ -138,6 +139,7 @@ module Opts = struct
     |> SSet.add ".webm"
 
   let default_options = {
+    emoji = false;
     enable_const_params = false;
     enable_unsafe_getters_and_setters = false;
     enforce_strict_type_args = true;
@@ -390,6 +392,15 @@ let parse_ignores config lines =
 let parse_options config lines =
   let open Opts in
   let options = parse config.options lines
+    |> define_opt "emoji" {
+      _initializer = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_boolean;
+      setter = (fun opts v ->
+        {opts with emoji = v;}
+      );
+    }
+
     |> define_opt "esproposal.class_instance_fields" {
       _initializer = USE_DEFAULT;
       flags = [];
