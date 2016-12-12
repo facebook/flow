@@ -1,3 +1,24 @@
+###v0.37.0
+
+Likely to cause new Flow errors:
+* There are some error-position improvements in this release, which means that if you use `// $FlowFixMe` (or any kind of `suppress_comment`), there's a chance the error may have moved out from under the suppression comment to a different location that's more indicative of the error position.
+
+New Features:
+* LOTS of built-in libdef updates.
+* It's now possible to use `import type`/`import typeof` inside the body of a `declare module` to import types between libdefs.
+
+Notable bug fixes:
+* Fixed an issue where dictionary types couldn't flow into a covariant-compatible version of themselves.
+* Fixed an issue where previously `any + number` would yield `number`. Now it correctly yields `any`.
+* Don't try to read from the filesystem at all when using `flow check-contents` where input is provided via stdin.
+
+Misc:
+* The `--old-output-format` CLI flag is now gone.
+* Performance optimization that allows us to skip re-checking any recursive dependencies of a changed file when the file's types haven't changed
+* Improved error positions on property assignment type errors.
+* The `parse()` function in the `flow-parser` NPM module now takes either 1 or 2 arguments. Previously it would require both arguments in order to work.
+* Things typed as "callable objects" now inherit from Function.prototype rather than Object.prototype.
+
 ###v0.36.0
 
 Likely to cause new Flow errors:
