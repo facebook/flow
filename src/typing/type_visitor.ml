@@ -131,10 +131,8 @@ class ['a] t = object(self)
 
   | TypeT (_, t) -> self#type_ cx acc t
 
-  | AnnotT (t1, t2) ->
-    let acc = self#type_ cx acc t1 in
-    let acc = self#type_ cx acc t2 in
-    acc
+  | AnnotT t ->
+    self#type_ cx acc t
 
   | ModuleT (_, exporttypes) ->
     self#export_types cx acc exporttypes

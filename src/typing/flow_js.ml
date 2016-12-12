@@ -897,7 +897,7 @@ module ResolvableTypeJob = struct
         else IMap.add id (OpenUnresolved (log_unresolved, tvar)) acc
       end
 
-    | AnnotT (_, source) ->
+    | AnnotT source ->
       let _, id = open_tvar source in
       if IMap.mem id acc then acc
       else IMap.add id (Binding source) acc
@@ -1349,7 +1349,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (VoidT.why lreason, u);
       rec_flow cx trace (t, u);
 
-    | AnnotT (_, source_t), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
+    | AnnotT source_t, IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       rec_flow cx trace (source_t, u)
 
     | t, IntersectionPreprocessKitT (reason,
@@ -1427,14 +1427,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
 
-    | _, UseT (use_op, AnnotT (_, source_t)) ->
+    | _, UseT (use_op, AnnotT source_t) ->
       let reason = reason_of_t source_t in
       rec_flow cx trace (source_t, ReposUseT (reason, use_op, l))
 
     (* The source component of an annotation flows out of the annotated
        site to downstream uses. *)
 
-    | AnnotT (_, source_t), u ->
+    | AnnotT source_t, u ->
       let reason = reason_of_t source_t in
       rec_flow cx trace (reposition ~trace cx reason source_t, u)
 
@@ -5487,11 +5487,10 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
     let type_t_ = subst cx ~force map type_t in
     if type_t_ == type_t then t else TypeT (reason, type_t_)
 
-  | AnnotT (sink_t, source_t) ->
-    let sink_t_ = subst cx ~force map sink_t in
+  | AnnotT source_t ->
     let source_t_ = subst cx ~force map source_t in
-    if sink_t_ == sink_t && source_t_ == source_t then t
-    else AnnotT (sink_t_, source_t_)
+    if source_t_ == source_t then t
+    else AnnotT source_t_
 
   | InstanceT (reason, static, super, instance) ->
     let static_ = subst cx ~force map static in
@@ -6557,7 +6556,7 @@ and optimize_spec cx = function
 and guess_and_record_sentinel_prop cx ts =
 
   let props_of_object = function
-    | AnnotT (OpenT (_, id), _) ->
+    | AnnotT (OpenT (_, id)) ->
       let constraints = find_graph cx id in
       begin match constraints with
       | Resolved (ObjT (_, { props_tmap; _ })) ->
@@ -6568,7 +6567,7 @@ and guess_and_record_sentinel_prop cx ts =
     | _ -> SMap.empty in
 
   let is_singleton_type = function
-    | AnnotT (OpenT (_, id), _) ->
+    | AnnotT (OpenT (_, id)) ->
       let constraints = find_graph cx id in
       begin match constraints with
       | Resolved (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _) -> true
@@ -6594,7 +6593,7 @@ and guess_and_record_sentinel_prop cx ts =
     (* Record the guessed sentinel properties for each object *)
     let keys = SMap.fold (fun s _ keys -> SSet.add s keys) acc SSet.empty in
     List.iter (function
-      | AnnotT (OpenT (_, id), _) ->
+      | AnnotT (OpenT (_, id)) ->
         let constraints = find_graph cx id in
         begin match constraints with
         | Resolved (ObjT (_, { props_tmap; _ })) ->
@@ -8281,50 +8280,11 @@ and mk_typeapp_instance cx ?trace ~reason_op ~reason_tapp ?(cache=false) c ts =
    processing an extends). *)
 and mk_instance cx ?trace instance_reason ?(for_type=true) c =
   if for_type then
-    (* Make an annotation. Part of this operation is similar to making
-       a runtime value type (see below), except that for annotations,
-       we must ensure that values flowing into the annotated site do
-       not interact with downstream uses of it. *)
-
-    (* mental picture:
-
-      (incoming values)
-                  |
-                  | <:
-                  v
-      AnnotT (  sink_t (tvar),
-                  ^
-                  |
-                  | =: (deferred unification, see note)
-                  |
-                  |   (type from annotation expression)
-                  |      /
-                  |     / <:
-                  v    v
-                source_t (tvar) )
-                  |
-                  | <:
-                  v
-                ( downstream sites )
-
-      Note: source and sink are not unified until the
-      type derived from the annotation expression has
-      become concrete. Because the annotation expr type
-      is the unique LB of source, this has the effect
-      of constraining inflows to sink correctly, without
-      forwarding them on to source (and thus onward to
-      sites which the annotation is intended to protect).
-     *)
-
-    let source_t = mk_tvar_where cx instance_reason (fun t ->
+    (* Make an annotation. *)
+    AnnotT (mk_tvar_where cx instance_reason (fun t ->
       (* this part is similar to making a runtime value *)
       flow_opt_t cx ?trace (c, TypeT(instance_reason,t))
-    ) in
-    (* TODO: Actually, sink_t is redundant now with ReposUseT, so we can remove
-       it. Basically ReposUseT takes care of capturing lower bounds and flowing
-       them to the resolved annotation when it is ready. *)
-    let sink_t = source_t in
-    AnnotT (sink_t, source_t)
+    ))
   else
     mk_tvar_derivable_where cx instance_reason (fun t ->
       flow_opt_t cx ?trace (c, ClassT(t))
@@ -8683,7 +8643,7 @@ end = struct
           []
         in
         extract_members cx (IntersectionT (reason, rep))
-    | AnnotT (source, _) ->
+    | AnnotT source ->
         let source_t = resolve_type cx source in
         extract_members cx source_t
     | InstanceT (_, _, super,

@@ -167,12 +167,12 @@ module rec TypeTerm : sig
     | TypeT of reason * t
 
     (* annotations *)
-    (**
-        A type that annotates a storage location performs two functions:
+    (** A type that annotates a storage location performs two functions:
+
         * it constrains the types of values stored into the location
-        * it masks the actual type of values retrieved from the location,
-        giving instead a pro forma type which all such values are
-        considered as having.
+
+        * it masks the actual type of values retrieved from the location, giving
+        instead a pro forma type which all such values are considered as having.
 
         In the former role, the annotated type behaves as an upper bound
         interacting with inflowing lower bounds - these interactions may
@@ -198,35 +198,16 @@ module rec TypeTerm : sig
         type information about incoming values - failing to perform the
         second of the two roles noted above.
 
-        Using a single type variable would allow exactly this propagation:
-        it's essentially what type variables do.
+        We accomplish the insulation by wrapping a tvar with AnnotT, and using a
+        "slingshot" trick to grab lowers bounds, wait for the wrapped tvar to
+        resolve to a type, then release the lower bounds to the resolved
+        type. Meanwhile, the tvar itself flows to its upper bounds as usual.
 
-        To accomplish the desired insulation we represent an annotation with
-        a pair of type variables: a "sink" that collects lower bounds flowing
-        into the annotation, and a "source" that collects downstream uses of
-        the annotated location as upper bounds.
-
-        The source tvar is linked to the unresolved definition's tvar.
-        When that definition is resolved, the concrete type will flow
-        into the annotation's source tvar as a lower bound.
-        At that point two things will happen:
-
-        * the source tvar will (as usual) evaluate the concrete definition
-        against its accumulated upper bounds - this checks downstream use
-        sites for compatibility with the annotated type.
-
-        * a UnifyT edge, put in place at the time the AnnotT was built,
-        will trigger a unification of the source and sink tvars. Critically,
-        this will cause the concrete definition type to appear in the sink
-        as an upper bound, prompting the check of all inflowing lower bounds
-        against it.
-
-        Of course, inflowing lower bounds and downstream upper bounds may
-        continue to accumulate following this unification. As they do,
-        they'll be checked against their respective sides of the bonded pair
-        as usual.
-    **)
-    | AnnotT of t * t
+        Note on usage: AnnotT can be used as a general wrapper for tvars as long
+        as the wrapped tvars are 0->1. If instead the possible types of a
+        wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
+        upper bounds, and would flow lower bounds to T1 & T2. **)
+    | AnnotT of t
 
     (* Stores exports (and potentially other metadata) for a module *)
     | ModuleT of reason * exporttypes
@@ -1432,7 +1413,7 @@ let any_propagating_use_t = function
 let rec reason_of_t = function
   | OpenT (reason,_) -> reason
   | AbstractT t -> replace_reason (fun desc -> RAbstract desc) (reason_of_t t)
-  | AnnotT (_, assume_t) -> reason_of_t assume_t
+  | AnnotT assume_t -> reason_of_t assume_t
   | AnyFunT reason -> reason
   | AnyObjT reason -> reason
   | AnyT reason -> reason
@@ -1587,8 +1568,8 @@ let loc_of_t t = loc_of_reason (reason_of_t t)
 let rec mod_reason_of_t f = function
   | OpenT (reason, t) -> OpenT (f reason, t)
   | AbstractT t -> AbstractT (mod_reason_of_t f t)
-  | AnnotT (assert_t, assume_t) ->
-      AnnotT (mod_reason_of_t f assert_t, mod_reason_of_t f assume_t)
+  | AnnotT assume_t ->
+      AnnotT (mod_reason_of_t f assume_t)
   | AnyFunT reason -> AnyFunT (f reason)
   | AnyObjT reason -> AnyObjT (f reason)
   | AnyT reason -> AnyT (f reason)

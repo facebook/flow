@@ -236,9 +236,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "result", _json_of_t json_cx t
     ]
 
-  | AnnotT (t1, t2) -> [
-      "assert", _json_of_t json_cx t1;
-      "assume", _json_of_t json_cx t2
+  | AnnotT t -> [
+      "assume", _json_of_t json_cx t
     ]
 
   | TypeMapT (_, kind, t1, t2) -> [
@@ -1294,7 +1293,7 @@ and dump_t_ (depth, tvars) cx t =
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
   | InstanceT (_, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t
-  | AnnotT (_, source) -> p ~reason:false
+  | AnnotT source -> p ~reason:false
       ~extra:(spf "%s" (kid source)) t
   | OptionalT arg
   | RestT arg

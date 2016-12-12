@@ -338,8 +338,8 @@ let rec normalize_type_impl cx ids t = match t with
   | DiffT (t1, t2) ->
       DiffT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
 
-  | AnnotT (t1, t2) ->
-      AnnotT (normalize_type_impl cx ids t1, normalize_type_impl cx ids t2)
+  | AnnotT t ->
+      AnnotT (normalize_type_impl cx ids t)
 
   | KeysT (_, t) ->
       KeysT (locationless_reason RKeySet, normalize_type_impl cx ids t)

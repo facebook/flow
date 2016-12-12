@@ -168,7 +168,7 @@ and add_parts cx id parts state =
 and parts_of_t cx = function
 | OpenT _ -> assert false
 | AbstractT t -> ["t", Def t]
-| AnnotT (sink, source) -> ["sink", Def sink; "source", Def source]
+| AnnotT source -> ["source", Def source]
 | AnyObjT _ | AnyFunT _ -> []
 | AnyT _ -> []
 | AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
