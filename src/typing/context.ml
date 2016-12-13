@@ -84,6 +84,7 @@ type t = {
 
   type_table: (Loc.t, Type.t) Hashtbl.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
+  refs_table: (Loc.t, Loc.t) Hashtbl.t;
 
   mutable declare_module_t: Type.t option;
 }
@@ -153,6 +154,7 @@ let make metadata file module_name = {
 
   type_table = Hashtbl.create 0;
   annot_table = Hashtbl.create 0;
+  refs_table = Hashtbl.create 0;
 
   declare_module_t = None;
 }
@@ -193,6 +195,7 @@ let module_map cx = cx.modulemap
 let module_name cx = cx.module_name
 let output_graphml cx = cx.metadata.output_graphml
 let property_maps cx = cx.property_maps
+let refs_table cx = cx.refs_table
 let export_maps cx = cx.export_maps
 let required cx = cx.required
 let require_loc cx = cx.require_loc

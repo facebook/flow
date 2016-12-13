@@ -214,7 +214,7 @@ let warn_or_ignore_export_star_as cx name =
    final value is (initial object or otherwise) is checked against the type
    declared for exports or any other use of exports. *)
 let get_module_exports cx reason =
-  Env.get_var cx (internal_name "exports") reason
+  Env.get_internal_var cx "exports" reason
 
 let set_module_exports cx reason t =
-  ignore Env.(set_var cx (internal_name "exports") t reason)
+  ignore Env.(set_internal_var cx "exports" t reason)

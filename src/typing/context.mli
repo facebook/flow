@@ -74,6 +74,7 @@ val module_map: t -> Type.t SMap.t
 val module_name: t -> Modulename.t
 val output_graphml: t -> bool
 val property_maps: t -> Type.Properties.map
+val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
 val required: t -> SSet.t
 val require_loc: t -> Loc.t SMap.t

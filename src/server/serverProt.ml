@@ -41,6 +41,7 @@ type command =
 | DUMP_TYPES of file_input * bool (* filename, include raw *) * (Path.t option) (* strip_root *)
 | ERROR_OUT_OF_DATE
 | FIND_MODULE of string * string
+| FIND_REFS of file_input * int * int (* filename, line, char *)
 | GEN_FLOW_FILES of file_input list
 | GET_DEF of file_input * int * int (* filename, line, char *)
 | GET_IMPORTERS of string list

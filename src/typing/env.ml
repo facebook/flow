@@ -441,6 +441,8 @@ let bind_entry cx name entry reason =
         | LexScope, Value { Entry.kind = Let _; _ }
         | LexScope, Value { Entry.kind = Const _; _ }
         | VarScope _, _ ->
+          let loc = loc entry in
+          Type_inference_hooks_js.dispatch_ref_hook cx loc loc;
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
         | _ -> loop scopes)
@@ -707,8 +709,10 @@ let allow_forward_ref = Scope.Entry.(function
 )
 
 (* helper - does semantic checking and returns entry type *)
-let read_entry ~lookup_mode ~specific cx name reason =
+let read_entry ~track_ref ~lookup_mode ~specific cx name reason =
   let scope, entry = find_entry cx name reason in
+  if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
+    (Entry.loc entry) (loc_of_reason reason);
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
@@ -755,16 +759,23 @@ let get_env_refi key =
 let get_current_env_refi key =
   get_env_refi key !scopes
 
-(* get var's specific type *)
+(* get var's specific type (and track the reference) *)
 let get_var ?(lookup_mode=ForValue) =
-  read_entry ~lookup_mode ~specific:true
+  read_entry ~track_ref:true ~lookup_mode ~specific:true
+
+(* query var's specific type *)
+let query_var ~track_ref ?(lookup_mode=ForValue) =
+  read_entry ~track_ref ~lookup_mode ~specific:true
+
+let get_internal_var cx name reason =
+  query_var ~track_ref:false cx (internal_name name) reason
 
 (* get var's general type - for annotated vars, this is the
    annotated type, and for others it's the union of all
    types assigned to the var throughout its lifetime.
  *)
 let get_var_declared_type ?(lookup_mode=ForValue) =
-  read_entry ~lookup_mode ~specific:false
+  read_entry ~track_ref:false ~lookup_mode ~specific:false
 
 (* Unify declared type with another type. This is useful for allowing forward
    references in declared types to other types declared later in scope. *)
@@ -789,7 +800,7 @@ let is_global_var _cx name =
 
 (* get var type, with location of given reason used in type's reason *)
 let var_ref ?(lookup_mode=ForValue) cx name reason =
-  let t = get_var ~lookup_mode cx name reason in
+  let t = query_var ~track_ref:true ~lookup_mode cx name reason in
   Flow_js.reposition cx reason t
 
 (* get refinement entry *)
@@ -799,8 +810,10 @@ let get_refinement cx key reason =
   | _ -> None
 
 (* helper: update let or var entry *)
-let update_var op cx name specific reason =
+let update_var ?(track_ref=false) op cx name specific reason =
   let scope, entry = find_entry cx name reason in
+  if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
+    (Entry.loc entry) (loc_of_reason reason);
   let value_assign_loc = loc_of_reason reason in
   Entry.(match entry with
   | Value ({
@@ -846,7 +859,10 @@ let update_var op cx name specific reason =
   )
 
 (* update var by direct assignment *)
-let set_var = update_var Changeset.Write
+let set_var = update_var ~track_ref:true Changeset.Write
+
+let set_internal_var cx name t reason =
+  update_var ~track_ref:false Changeset.Write cx (internal_name name) t reason
 
 (* update var by refinement test *)
 let refine_var = update_var Changeset.Refine
@@ -1267,7 +1283,7 @@ let refine_expr = add_heap_refinement Changeset.Refine
    returns changeset containing all refinements added to env.
    note: orig_types maps names to unrefined types. this param is
    only necessary for fresh pseudovars like heap refinements -
-   others can be obtained via get_var.
+   others can be obtained via query_var.
  *)
 let refine_with_preds cx reason preds orig_types =
   let mk_refi_type orig_type pred refi_reason =
@@ -1287,7 +1303,7 @@ let refine_with_preds cx reason preds orig_types =
       | _, Value v ->
         let orig_type =
           let get_reason = replace_reason_const (RIdentifier name) reason in
-          get_var cx name get_reason
+          query_var ~track_ref:false cx name get_reason
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
         let refine = match Entry.kind_of_value v with

@@ -110,6 +110,7 @@ let rec variable_decl cx entry = Ast.Statement.(
       bind cx pattern_name t r;
       let expr _ _ = EmptyT.t in (* don't eval computed property keys *)
       destructuring cx ~expr t None None p ~f:(fun loc name _default t ->
+        let r = repos_reason loc r in
         let t = match typeAnnotation with
         | None -> t
         | Some _ ->
@@ -892,9 +893,7 @@ and statement cx = Ast.Statement.(
 
   | (loc, Return { Return.argument }) ->
       let reason = mk_reason (RCustom "return") loc in
-      let ret =
-        Env.get_var cx (internal_name "return") reason
-      in
+      let ret = Env.get_internal_var cx "return" reason in
       let t = match argument with
         | None -> VoidT.at loc
         | Some expr ->
@@ -926,20 +925,20 @@ and statement cx = Ast.Statement.(
          * Y and R are internals, installed earlier. *)
         let reason = mk_reason (RCustom "generator return") loc in
         Flow.get_builtin_typeapp cx reason "Generator" [
-          Env.get_var cx (internal_name "yield") reason;
+          Env.get_internal_var cx "yield" reason;
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
-          Env.get_var cx (internal_name "next") reason
+          Env.get_internal_var cx "next" reason
         ]
       | Scope.AsyncGenerator ->
         let reason = mk_reason (RCustom "async generator return") loc in
         Flow.get_builtin_typeapp cx reason "AsyncGenerator" [
-          Env.get_var cx (internal_name "yield") reason;
+          Env.get_internal_var cx "yield" reason;
           Flow.mk_tvar_derivable_where cx reason (fun tvar ->
             Flow.flow_t cx (t, tvar)
           );
-          Env.get_var cx (internal_name "next") reason
+          Env.get_internal_var cx "next" reason
         ]
       | _ -> t
       in
@@ -2962,12 +2961,12 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   | Yield { Yield.argument; delegate = false } ->
       let reason = mk_reason (RCustom "yield") loc in
-      let yield = Env.get_var cx (internal_name "yield") reason in
+      let yield = Env.get_internal_var cx "yield" reason in
       let t = match argument with
       | Some expr -> expression cx expr
       | None -> VoidT.at loc in
       Flow.flow_t cx (t, yield);
-      Env.get_var cx (internal_name "next") reason
+      Env.get_internal_var cx "next" reason
 
   | Yield { Yield.argument; delegate = true } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
@@ -2977,8 +2976,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let yield_reason = replace_reason (fun desc -> RCustom (
         spf "yield of parent generator in %s" (string_of_desc desc)
       )) reason in
-      let next = Env.get_var cx (internal_name "next") next_reason in
-      let yield = Env.get_var cx (internal_name "yield") yield_reason in
+      let next = Env.get_internal_var cx "next" next_reason in
+      let yield = Env.get_internal_var cx "yield" yield_reason in
       let t = match argument with
       | Some expr -> expression cx expr
       | None -> assert_false "delegate yield without argument" in

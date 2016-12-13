@@ -22,6 +22,8 @@ let import_nop _ _ _ = ()
 
 let jsx_nop _ _ _ _ = false
 
+let ref_nop _ _ _ = ()
+
 (* This type represents the possible definition-points for an lvalue. *)
 type rhs_def =
   (**
@@ -96,6 +98,12 @@ type hook_state_t = {
       (Context.t ->
        string -> Loc.t -> Type.t ->
        bool);
+
+  ref_hook:
+      (Context.t ->
+       Loc.t ->
+       Loc.t ->
+       unit);
 }
 
 let nop_hook_state = {
@@ -106,6 +114,7 @@ let nop_hook_state = {
   require_hook = require_nop;
   import_hook = import_nop;
   jsx_hook = jsx_nop;
+  ref_hook = ref_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -131,6 +140,9 @@ let set_import_hook hook =
 let set_jsx_hook hook =
   hook_state := { !hook_state with jsx_hook = hook }
 
+let set_ref_hook hook =
+  hook_state := { !hook_state with ref_hook = hook }
+
 let reset_hooks () =
   hook_state := nop_hook_state
 
@@ -154,3 +166,6 @@ let dispatch_import_hook cx name loc =
 
 let dispatch_jsx_hook cx name loc this_t =
   !hook_state.jsx_hook cx name loc this_t
+
+let dispatch_ref_hook cx loc =
+    !hook_state.ref_hook cx loc

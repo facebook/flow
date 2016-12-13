@@ -117,6 +117,12 @@ val get_var:
   reason ->
   Type.t
 
+val get_internal_var:
+  Context.t ->
+  string ->
+  reason ->
+  Type.t
+
 val get_var_declared_type:
   ?lookup_mode:LookupMode.t ->
   Context.t ->
@@ -139,6 +145,9 @@ val var_ref:
   Type.t
 
 val set_var: Context.t -> string -> Type.t -> reason ->
+  Changeset.EntryRef.t option
+
+val set_internal_var: Context.t -> string -> Type.t -> reason ->
   Changeset.EntryRef.t option
 
 val set_expr: Key.t -> reason -> Type.t -> Type.t ->

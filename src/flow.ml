@@ -26,6 +26,7 @@ end = struct
     CoverageCommand.command;
     DumpTypesCommand.command;
     FindModuleCommand.command;
+    FindRefsCommand.command;
     ForceRecheckCommand.command;
     GenFlowFilesCommand.command;
     GetDefCommand.command;
