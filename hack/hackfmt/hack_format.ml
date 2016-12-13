@@ -83,6 +83,27 @@ let builder = object (this)
     rule_alloc <- ra;
     rule.Rule.id
 
+  (* TODO: after unit tests, make this idempotency a property of method split *)
+  method simple_space_split_if_unsplit () =
+    match chunks with
+      | hd :: _ when hd.Chunk.is_appendable -> this#simple_space_split ()
+      | _ -> ()
+
+  (* TODO: is this the right whitespace strategy? *)
+  method add_always_empty_chunk () =
+    let nesting = nesting_alloc.Nesting_allocator.current_nesting in
+    let create_empty_chunk () =
+      let rule = this#add_rule Rule.Always in
+      let chunk = Chunk.make "" (Some rule) nesting in
+      Chunk.finalize chunk rule rule_alloc false
+    in
+    (chunks <- match chunks with
+      | [] -> create_empty_chunk () :: chunks
+      | hd :: _ when not hd.Chunk.is_appendable ->
+        create_empty_chunk () :: chunks
+      (* TODO: this is probably wrong, figure out what this means *)
+      | _ -> chunks)
+
   method simple_space_split () =
     this#split true;
     next_split_rule <- Some Rule.Simple;
@@ -143,7 +164,6 @@ let builder = object (this)
     );
     ()
 
-
   (*
     TODO: find a better way to represt the rules empty case
     for end chunks and block nesting
@@ -194,31 +214,57 @@ end
 let split ?space:(space=false) () =
   builder#split space
 
-let handle_trivia trivia_list =
-  ()
-  (*
-  List.iter trivia_list ~f:(fun t ->
-    match Trivia.kind t with
+let handle_trivia ~is_leading trivia_list =
+  (* We don't care about spaces *)
+  let trivia_list = List.filter trivia_list ~f:(
+    fun x -> Trivia.kind x <> TriviaKind.WhiteSpace
+  ) in
+
+  let consume_new_lines tlist =
+    let (nls, tl) = List.split_while tlist ~f:(
+      fun x -> Trivia.kind x = TriviaKind.EndOfLine
+    ) in
+    (match List.length nls with
+      | 0 ->
+        (* TODO: Reconsider this, might be weird if we have to split here *)
+        builder#simple_space_split ()
+      | 1 -> builder#hard_split ()
+      | _ ->
+        builder#hard_split ();
+        builder#add_always_empty_chunk ()
+    );
+    tl
+  in
+
+  let handle_item hd tl =
+    match Trivia.kind hd with
+      | TriviaKind.EndOfLine ->
+        if is_leading then builder#add_always_empty_chunk ();
+        tl
       | TriviaKind.SingleLineComment ->
-        split ();
-        builder#start_rule ();
-        builder#add_string (Trivia.text t);
-        builder#end_rule ();
-        builder#hard_split ()
+        builder#simple_space_split_if_unsplit ();
+        builder#add_string @@ Trivia.text hd;
+        consume_new_lines tl
       | TriviaKind.DelimitedComment ->
-        split ();
-        builder#start_rule ();
-        builder#add_string (Trivia.text t);
-        builder#end_rule ();
-        split ()
-      | _ -> ()
-  )
-  *)
+        builder#simple_space_split_if_unsplit ();
+        builder#add_string @@ Trivia.text hd;
+        consume_new_lines tl
+      | _ -> tl (* TODO: error - this shouldn't exist after filtering *)
+  in
+
+  let rec aux tlist =
+    match tlist with
+      | [] -> ()
+      | hd :: tl ->
+        let tl = handle_item hd tl in
+        aux tl
+  in
+  aux trivia_list
 
 let token x =
-  handle_trivia (EditableToken.leading x);
+  handle_trivia ~is_leading:true (EditableToken.leading x);
   builder#add_string (EditableToken.text x);
-  handle_trivia (EditableToken.trailing x);
+  handle_trivia ~is_leading:false (EditableToken.trailing x);
   ()
 
 let add_space () =
@@ -239,8 +285,15 @@ let rec transform node =
     token x;
     ()
   | Script x ->
-    (* TODO script_header*)
-    handle_possible_list  x.script_declarations;
+    let (header, declarations) = get_script_children x in
+    t header;
+    handle_possible_list declarations;
+  | ScriptHeader x ->
+    let (lt, q, lang_kw) = get_script_header_children x in
+    t lt;
+    t q;
+    t lang_kw;
+    builder#end_chunks ();
   | SimpleTypeSpecifier {simple_type_specifier} -> t simple_type_specifier
   | LiteralExpression x -> t x.literal_expression
   | QualifiedNameExpression x ->
@@ -331,14 +384,13 @@ let rec transform node =
     t body;
     ()
   | ClassishBody x ->
-    let (leftb, body, rightb) = get_classish_body_children x in
+    let (left_b, body, right_b) = get_classish_body_children x in
     add_space ();
-    t leftb;
+    t left_b;
     builder#end_chunks ();
     builder#start_block_nest ();
     handle_possible_list body;
-    builder#end_block_nest ();
-    t rightb;
+    transform_and_unnest_closing_brace right_b;
     builder#end_chunks ();
     ()
   | TraitUse x ->
@@ -396,8 +448,8 @@ let rec transform node =
       t eq;
       builder#simple_space_split ();
       t type_spec;
-      t semi;
     ) ();
+    t semi;
     builder#end_chunks ();
     ()
   | DecoratedExpression x ->
@@ -483,6 +535,7 @@ let rec transform node =
     handle_possible_compound_statement body;
     handle_possible_list catch_clauses;
     t finally_clause;
+    builder#end_chunks ();
   | CatchClause x ->
     let (kw, left_p, ex_type, var, right_p, body) =
       get_catch_clause_children x in
@@ -521,6 +574,7 @@ let rec transform node =
       t right_p;
     ) ();
     handle_possible_compound_statement body;
+    builder#end_chunks ();
     ()
   | ForeachStatement x ->
     (* TODO: revisit this *)
@@ -543,6 +597,7 @@ let rec transform node =
     split ();
     t right_p;
     handle_possible_compound_statement body;
+    builder#end_chunks ();
     ()
   | SwitchStatement x ->
     let (kw, left_p, expr, right_p, left_b, sections, right_b) =
@@ -890,6 +945,27 @@ let rec transform node =
   in
   ()
 
+and transform_and_unnest_closing_brace right_b =
+  let token = match syntax right_b with
+    | Token x -> x
+    | _ -> raise (Failure "expecting node to be a right closing brace")
+  in
+
+  let rev_leading_trivia = List.rev @@ EditableToken.leading token in
+  let (rev_after_last_newline, rev_rest_including_last_newline) =
+    List.split_while rev_leading_trivia ~f:(
+      fun t -> Trivia.kind t <> TriviaKind.EndOfLine
+    )
+  in
+
+  handle_trivia ~is_leading:true @@ List.rev rev_rest_including_last_newline;
+  builder#end_chunks();
+  builder#end_block_nest ();
+  handle_trivia ~is_leading:true @@ List.rev rev_after_last_newline;
+  builder#add_string (EditableToken.text token);
+  handle_trivia ~is_leading:false (EditableToken.trailing token);
+  ()
+
 and tl_with ?(nest=false) ?(rule=None) ?(span=false) ~f () =
   Option.iter rule ~f:(fun rule_type -> builder#start_rule ~rule_type ());
   if nest then builder#nest ();
@@ -943,8 +1019,7 @@ and handle_compound_statement cs =
   tl_with ~f:(fun () ->
     handle_possible_list statements;
   ) ();
-  builder#end_block_nest ();
-  transform right_b;
+  transform_and_unnest_closing_brace right_b;
   ()
 
 and handle_possible_list
@@ -1047,7 +1122,7 @@ and handle_switch_body left_b sections right_b =
 
     let handle_statement statement =
       builder#start_block_nest ();
-      t_with ~nest:true statement;
+      transform statement;
       builder#end_block_nest ();
       ()
     in
@@ -1065,8 +1140,7 @@ and handle_switch_body left_b sections right_b =
 
     List.iter (syntax_node_to_list sections) ~f:handle_section
   ) ();
-  builder#end_block_nest ();
-  transform right_b;
+  transform_and_unnest_closing_brace right_b;
   ()
 
 and transform_function_declaration_header ~span_started x =
