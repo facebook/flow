@@ -139,7 +139,15 @@ and 'a slave = {
  *****************************************************************************)
 
 let slave_main ic oc =
+  let start_user_time = ref 0.0 in
+  let start_system_time = ref 0.0 in
   let send_result data =
+    let tm = Unix.times () in
+    let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
+    let end_system_time = tm.Unix.tms_stime +. tm.Unix.tms_cstime in
+    Measure.sample "worker_user_time" (end_user_time -. !start_user_time);
+    Measure.sample "worker_system_time" (end_system_time -. !start_system_time);
+
     let stats = Measure.serialize (Measure.pop_global ()) in
     let s = Marshal.to_string (data,stats) [Marshal.Closures] in
     let len = String.length s in
@@ -154,7 +162,11 @@ let slave_main ic oc =
     Daemon.output_string oc s;
     Daemon.flush oc in
   try
+    Measure.push_global ();
     let Request do_process = Daemon.from_channel ic in
+    let tm = Unix.times () in
+    start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
+    start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
     do_process { send = send_result };
     exit 0
   with

@@ -26,6 +26,8 @@ val time: ?record:record -> string -> (unit -> 'a) -> 'a
 
 val merge: ?record:record -> from:record -> unit
 
+val get_sum: ?record:record -> string -> float option
+
 val print_entry_stats: ?record:record -> string -> unit
 val print_stats: ?record:record -> unit -> unit
 val print_entry_distribution: ?record:record -> string -> unit

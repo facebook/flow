@@ -239,6 +239,12 @@ let time (type a) ?record name (f: unit -> a) : a =
   sample ~record name (end_time -. start_time);
   ret
 
+let get_sum ?record name =
+  let record = get_record record in
+  match SMap.get name !record with
+  | None -> None
+  | Some { count; mean; _; } -> Some (float_of_int count *. mean)
+
 let pretty_num f =
   if f > 1000000000.0
   then Printf.sprintf "%.3fG" (f /. 1000000000.0)
