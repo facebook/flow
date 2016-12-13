@@ -782,6 +782,7 @@ module Expression
           let elem = Expression.(Spread (loc, SpreadElement.({
             argument;
           }))) in
+          if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
           elements env ((Some elem)::acc)
       | _ ->
           let elem = Expression.Expression (assignment env) in

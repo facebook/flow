@@ -5056,5 +5056,32 @@ module.exports = {
         'errors.0.message': 'Unexpected token ...',
       },
     },
+    'Array literal spreads': {
+      '[1, ...rest]': {
+        'body.0.expression.elements': [
+          { 'value': 1 },
+          { 'type': 'SpreadElement' },
+        ]
+      },
+      '[1, ...rest,]': {
+        'body.0.expression.elements': [
+          { 'value': 1 },
+          { 'type': 'SpreadElement' },
+        ]
+      },
+      '[...rest, 1]': {
+        'body.0.expression.elements': [
+          { 'type': 'SpreadElement' },
+          { 'value': 1 }
+        ]
+      },
+      '[...rest, ,1]': {
+        'body.0.expression.elements': [
+          { 'type': 'SpreadElement' },
+          null,
+          { 'value': 1 }
+        ]
+      },
+    },
   }
 };
