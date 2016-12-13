@@ -67,6 +67,7 @@ type t =
   | Parser_heap_build_error
   | Heap_full
   | Sql_assertion_failure
+  | Local_type_env_stale
 
 exception Exit_with of t
 
@@ -124,6 +125,7 @@ let exit_code = function
   | Parser_heap_build_error ->      210
   | File_heap_stale ->              211
   | Sql_assertion_failure ->        212
+  | Local_type_env_stale ->         213
 
 
 let exit t =
@@ -185,6 +187,7 @@ let to_string = function
   | Heap_full -> "Heap_full"
   | File_heap_stale -> "File_heap_stale"
   | Sql_assertion_failure -> "Sql_assertion_failure"
+  | Local_type_env_stale -> "Local_type_env_stale"
 
 
 let unpack = function
