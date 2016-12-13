@@ -38,15 +38,11 @@ let rec conv_val_ ?non_null:(non_null=true) mk_obj schema reason value =
   match value with
   | T.Named name ->
     let value = match Graphql_schema.type_def schema name with
-      | T.Scalar scalar -> (match scalar with
-          | "ID" -> StrT.why reason
-          | "String" -> StrT.why reason
-          | "Boolean" -> BoolT.why reason
-          | "Float"
-          | "Int" -> NumT.why reason
-          | _ ->
-            (* TODO: resolve as type `Graphql_<scalar name>` *)
-            VoidT.why reason
+      | T.Scalar (_, kind) -> (match kind with
+          | T.Str -> StrT.why reason
+          | T.Bool -> BoolT.why reason
+          | T.Float
+          | T.Int -> NumT.why reason
         )
       | T.InputObj (_, vars) ->
         let vars = SMap.map (fun iv -> iv.Graphql_schema.InputVal.type_) vars in

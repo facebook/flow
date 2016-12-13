@@ -24,7 +24,12 @@ rule token = parse
 
   | int { INT (lexeme lexbuf) }
   | float { FLOAT (lexeme lexbuf) }
-  | '"' { read_string (Buffer.create 17) lexbuf }
+  | '"' {
+      let str_start = lexbuf.lex_start_p in
+      let str = read_string (Buffer.create 17) lexbuf in
+      lexbuf.lex_start_p <- str_start;
+      STRING str
+    }
 
   | "directive" { DIRECTIVE }
   | "enum" { ENUM }
@@ -63,7 +68,7 @@ rule token = parse
   | eof { EOF }
 
 and read_string buf = parse
-  | '"' { STRING (Buffer.contents buf) }
+  | '"' { Buffer.contents buf }
   | '\\' '"' { Buffer.add_char buf '"'; read_string buf lexbuf }
   | '\\' '\\' { Buffer.add_char buf '\\'; read_string buf lexbuf }
   | '\\' '/' { Buffer.add_char buf '/'; read_string buf lexbuf }

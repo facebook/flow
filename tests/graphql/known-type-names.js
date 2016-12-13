@@ -3,7 +3,7 @@
 // known type names are valid
 gql`
   query Foo($var: String, $required: [String!]!) {
-    human(id: 4) {
+    human {
       pets { ... on Pet { name }, ...PetFields, ... { name } }
     }
   }
@@ -15,7 +15,7 @@ gql`
 // unknown type names are invalid
 gql`
   query Foo($var: JumbledUpLetters) { # error
-    human(id: 4) {
+    human {
       name
       pets { ... on Badger { name }, ...PetFields } # error
     }

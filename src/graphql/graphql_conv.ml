@@ -32,7 +32,7 @@ let conv_fields fields =
     SMap.add name field map
   ) SMap.empty fields
 
-let schema_from_ast doc =
+let schema_from_ast scalar_kinds doc =
   let query = ref None in
   let mutation = ref None in
   let subscription = ref None in
@@ -45,7 +45,9 @@ let schema_from_ast doc =
     match def with
     | Def.ScalarType scalar ->
         let (_, name) = scalar.Ast.ScalarTypeDef.name in
-        add_type name (Schema.Type.Scalar name)
+        let kind =
+          Option.value (SMap.get name scalar_kinds) ~default:Schema.Type.Str in
+        add_type name (Schema.Type.Scalar (name, kind))
     | Def.ObjectType {
         Ast.ObjectTypeDef.name = (_, name);
         fields;

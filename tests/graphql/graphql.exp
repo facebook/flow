@@ -1,3 +1,151 @@
+arguments-of-correct-type.js:58
+ 58:       idArgField(idArg: 1) # ID is a string
+                             ^ This value expected to be of type `ID`
+
+arguments-of-correct-type.js:98
+ 98:       stringArgField(stringArg: 1) # error
+                                     ^ This value expected to be of type `String`
+
+arguments-of-correct-type.js:107
+107:       stringArgField(stringArg: 1.0) # error
+                                     ^^^ This value expected to be of type `String`
+
+arguments-of-correct-type.js:116
+116:          stringArgField(stringArg: true) # error
+                                        ^^^^ This value expected to be of type `String`
+
+arguments-of-correct-type.js:125
+125:       stringArgField(stringArg: BAR) # error
+                                     ^^^ This value expected to be of type `String`
+
+arguments-of-correct-type.js:138
+138:       intArgField(intArg: "3") # error
+                               ^^^ This value expected to be of type `Int`
+
+arguments-of-correct-type.js:147
+147:       intArgField(intArg: 829384293849283498239482938) # error
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ This is not a valid int32 value
+
+arguments-of-correct-type.js:156
+156:       intArgField(intArg: FOO) # error
+                               ^^^ This value expected to be of type `Int`
+
+arguments-of-correct-type.js:165
+165:       intArgField(intArg: 3.0) # error
+                               ^^^ This value expected to be of type `Int`
+
+arguments-of-correct-type.js:174
+174:       intArgField(intArg: 3.333) # error
+                               ^^^^^ This value expected to be of type `Int`
+
+arguments-of-correct-type.js:187
+187:       floatArgField(floatArg: "3.333") # error
+                                   ^^^^^^^ This value expected to be of type `Float`
+
+arguments-of-correct-type.js:196
+196:       floatArgField(floatArg: true) # error
+                                   ^^^^ This value expected to be of type `Float`
+
+arguments-of-correct-type.js:205
+205:       floatArgField(floatArg: FOO) # error
+                                   ^^^ This value expected to be of type `Float`
+
+arguments-of-correct-type.js:219
+219:       booleanArgField(booleanArg: 2) # error
+                                       ^ This value expected to be of type `Boolean`
+
+arguments-of-correct-type.js:228
+228:       booleanArgField(booleanArg: 1.0) # error
+                                       ^^^ This value expected to be of type `Boolean`
+
+arguments-of-correct-type.js:237
+237:       booleanArgField(booleanArg: "true") # error
+                                       ^^^^^^ This value expected to be of type `Boolean`
+
+arguments-of-correct-type.js:246
+246:       booleanArgField(booleanArg: TRUE) # error
+                                       ^^^^ This value expected to be of type `Boolean`
+
+arguments-of-correct-type.js:260
+260:       idArgField(idArg: 1.0) # error
+                             ^^^ This value expected to be of type `ID`
+
+arguments-of-correct-type.js:269
+269:       idArgField(idArg: true) # error
+                             ^^^^ This value expected to be of type `ID`
+
+arguments-of-correct-type.js:278
+278:       idArgField(idArg: SOMETHING) # error
+                             ^^^^^^^^^ This value expected to be of type `ID`
+
+arguments-of-correct-type.js:292
+292:       doesKnowCommand(dogCommand: 2) # error
+                                       ^ This value expected to be of type `DogCommand`
+
+arguments-of-correct-type.js:301
+301:       doesKnowCommand(dogCommand: 1.0) # error
+                                       ^^^ This value expected to be of type `DogCommand`
+
+arguments-of-correct-type.js:310
+310:       doesKnowCommand(dogCommand: "SIT") # error
+                                       ^^^^^ This value expected to be of type `DogCommand`
+
+arguments-of-correct-type.js:319
+319:       doesKnowCommand(dogCommand: true) # error
+                                       ^^^^ This value expected to be of type `DogCommand`
+
+arguments-of-correct-type.js:328
+328:       doesKnowCommand(dogCommand: JUGGLE) # error
+                                       ^^^^^^ This value expected to be of enum type `DogCommand`
+
+arguments-of-correct-type.js:337
+337:       doesKnowCommand(dogCommand: sit) # error
+                                       ^^^ This value expected to be of enum type `DogCommand`
+
+arguments-of-correct-type.js:391
+391:       stringListArgField(stringListArg: ["one", 2]) # expected String, found Int
+                                                     ^ This value expected to be of type `String`
+
+arguments-of-correct-type.js:400
+400:       stringListArgField(stringListArg: 1) # expected String, found Int
+                                             ^ This value expected to be of type `String`
+
+arguments-of-correct-type.js:510
+510:       multipleReqs(req2: "two", req1: "one")
+                              ^^^^^ This value expected to be of type `Int`
+
+arguments-of-correct-type.js:510
+510:       multipleReqs(req2: "two", req1: "one")
+                                           ^^^^^ This value expected to be of type `Int`
+
+arguments-of-correct-type.js:519
+519:       multipleReqs(req1: "one") # missing 'req2', bad value for 'req1'
+           ^^^^^^^^^^^^ Missings required argument `req2`
+
+arguments-of-correct-type.js:519
+519:       multipleReqs(req1: "one") # missing 'req2', bad value for 'req1'
+                              ^^^^^ This value expected to be of type `Int`
+
+arguments-of-correct-type.js:528
+528:       multipleReqs(req1: null) # missing 'req2', bad value for 'req1'
+           ^^^^^^^^^^^^ Missings required argument `req2`
+
+arguments-of-correct-type.js:528
+528:       multipleReqs(req1: null) # missing 'req2', bad value for 'req1'
+                              ^^^^ can't be null
+
+arguments-of-correct-type.js:613
+613:       complexArgField(complexArg: { intField: 4 }) # expected Bool, found null
+                                       ^^^^^^^^^^^^^^^ Missing required field `requiredField` in object of type `ComplexInput`
+
+arguments-of-correct-type.js:623
+623:         stringListField: ["one", 2], # expected string, found '2'
+                                      ^ This value expected to be of type `String`
+
+arguments-of-correct-type.js:636
+636:         unknownField: "value" # unknown field
+             ^^^^^^^^^^^^ Field `unknownField` is not found in `ComplexInput`
+
 fields-on-correct-type.js:43
  43:   fragment unknownSelection on UnknownType { # only error for unknown type
                                     ^^^^^^^^^^^ Type `UnknownType` not found in schema
@@ -66,6 +214,30 @@ fragments-on-composite-types.js:66
  66:     ... on String {
                 ^^^^^^ Fragment cannot condition on non composite type `String`
 
+known-argument-names.js:20
+ 20:     unknownField(unknownArg: SIT) # unknown field
+         ^^^^^^^^^^^^ Field not found in type `Dog`
+
+known-argument-names.js:71
+ 71:     doesKnowCommand(unknown: true) # error
+                         ^^^^^^^ Field does not have argument `unknown`
+
+known-argument-names.js:78
+ 78:     doesKnowCommand(whoknows: 1, dogCommand: SIT, unknown: true) # 2 errors
+                         ^^^^^^^^ Field does not have argument `whoknows`
+
+known-argument-names.js:78
+ 78:     doesKnowCommand(whoknows: 1, dogCommand: SIT, unknown: true) # 2 errors
+                                                       ^^^^^^^ Field does not have argument `unknown`
+
+known-argument-names.js:86
+ 86:       doesKnowCommand(unknown: true) # error
+                           ^^^^^^^ Field does not have argument `unknown`
+
+known-argument-names.js:91
+ 91:           doesKnowCommand(unknown: true) # error
+                               ^^^^^^^ Field does not have argument `unknown`
+
 known-type-names.js:17
  17:   query Foo($var: JumbledUpLetters) { # error
                        ^^^^^^^^^^^^^^^^ Type `JumbledUpLetters` not found in schema
@@ -85,6 +257,26 @@ possible-fragment-spreads.js:76
 possible-fragment-spreads.js:131
 131:     ...on Intelligent { iq } # error
          ^^^^^^^^^^^^^^^^^^^^^^^^ inline fragment. Fragment cannot be spread here as objects of type `Pet` can never be of type `Intelligent`
+
+provided-non-null-arguments.js:106
+106:       multipleReqs(req2: 2) # missing 'req1'
+           ^^^^^^^^^^^^ Missings required argument `req1`
+
+provided-non-null-arguments.js:115
+115:       multipleReqs # missing 'req1' and 'req2'
+           ^^^^^^^^^^^^ Missings required argument `req1`
+
+provided-non-null-arguments.js:115
+115:       multipleReqs # missing 'req1' and 'req2'
+           ^^^^^^^^^^^^ Missings required argument `req2`
+
+provided-non-null-arguments.js:124
+124:       multipleReqs(req1: "one") # missing 'req2', bad value for 'req1'
+           ^^^^^^^^^^^^ Missings required argument `req2`
+
+provided-non-null-arguments.js:124
+124:       multipleReqs(req1: "one") # missing 'req2', bad value for 'req1'
+                              ^^^^^ This value expected to be of type `Int`
 
 scalar-leafs.js:13
  13:     human # error
@@ -143,4 +335,4 @@ variables-are-input-types.js:12
                                                   ^^^ Type `Pet` is not a correct input type
 
 
-Found 36 errors
+Found 84 errors

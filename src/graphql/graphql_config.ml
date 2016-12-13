@@ -25,6 +25,15 @@ let obj_find json key =
   | Some v -> v
   | None -> failwith (spf "Required key `%s` not not found" key)
 
+let add_builtin_scalar_kinds kinds = Graphql_schema.Type.(
+  kinds
+  |> SMap.add "ID" Str
+  |> SMap.add "String" Str
+  |> SMap.add "Int" Int
+  |> SMap.add "Float" Float
+  |> SMap.add "Boolean" Bool
+)
+
 let load_instance root inst_config =
   let regex =
     obj_get inst_config "regex"
@@ -42,9 +51,10 @@ let load_instance root inst_config =
     |> Files.normalize_path root
   in
   let schema_src = Sys_utils.cat schema_path in
+  let scalar_kinds = add_builtin_scalar_kinds SMap.empty in
   let schema =
     Graphql_parse.parse_file schema_src schema_path
-    |> Graphql_conv.schema_from_ast
+    |> Graphql_conv.schema_from_ast scalar_kinds
   in
   let errors = Graphql_validation.validate_schema schema in
   if errors <> [] then begin

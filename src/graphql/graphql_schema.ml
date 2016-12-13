@@ -1,8 +1,14 @@
 open Utils_js
 
 module rec Type: sig
+  type scalar_kind =
+    | Str
+    | Int
+    | Float
+    | Bool
+
   type def =
-    | Scalar of string
+    | Scalar of string * scalar_kind
     | Obj of string * Field.t SMap.t * string list
     | Interface of string * Field.t SMap.t
     | Union of string * string list
@@ -88,6 +94,13 @@ let find_field s type_name field_name =
 let find_field_type s type_name field_name =
   (find_field s type_name field_name).Field.type_
 
+let get_arg_type _s field arg_name =
+  let args = field.Field.args in
+  if SMap.mem arg_name args then
+    let arg = SMap.find arg_name args in
+    Some arg.InputVal.type_
+  else None
+
 let obj_field_types s type_name =
   match type_def s type_name with
   | Type.Obj (_, fields, _) ->
@@ -120,3 +133,18 @@ let rec is_subtype_name s sub sup =
     | Union (_, types) -> List.exists (is_subtype_name s sup) types
     | _ -> false
   )
+
+let can_convert_to input result = Type.(
+  match input, result with
+  | Str, Str -> true
+  | Int, Int -> true
+  | Int, Float -> true
+  | Float, Float -> true
+  | Bool, Bool -> true
+  | _ -> false
+)
+
+let rec string_of_type_ref = function
+  | Type.Named n -> n
+  | Type.List t -> "[" ^ (string_of_type_ref t) ^ "]"
+  | Type.NonNull t -> (string_of_type_ref t) ^ "!"

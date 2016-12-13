@@ -4926,10 +4926,13 @@ and graphql_definition cx schema def =
     let reason = mk_reason
         (RCustom (spf "fragment on `%s`" type_name)) loc in
     if Graphql_flow.check_frag_type cx schema type_name type_loc then
+      let gcx = Graphql_statement.mk_context ~infer_vars:true () in
+      let selection =
+        graphql_mk_selection cx gcx schema type_name selectionSet in
       let frag = { Graphql.
         frag_schema = schema;
         frag_type = type_name;
-        frag_selection = graphql_mk_selection cx schema type_name selectionSet;
+        frag_selection = selection;
       } in
       GraphqlFragT (reason, frag)
     else
@@ -4961,9 +4964,11 @@ and graphql_definition cx schema def =
          - use args of this field as operation variables
          - do not require selection for this field even if it's object type
        *)
-      let (vars, top_op) =
+      let (gcx, top_op) =
         match variableDefs with
-        | Some var_defs -> graphql_vars_decl cx schema var_defs
+        | Some var_defs ->
+          let vars = graphql_vars_decl cx schema var_defs in
+          (Graphql_statement.mk_context ~vars (), false)
         | None ->
           (match graphql_field_if_relay_op op_def with
            | Some field_name ->
@@ -4971,17 +4976,22 @@ and graphql_definition cx schema def =
               | Some {Graphql_schema.Field.args; _} ->
                 let vars =
                   SMap.map (fun a -> a.Graphql_schema.InputVal.type_) args in
-                (vars, true)
-              | None -> (SMap.empty, false)
+                (Graphql_statement.mk_context ~vars (), true)
+              | None ->
+                (Graphql_statement.mk_context (), false)
              )
-           | None -> (SMap.empty, false)
+           | None ->
+             (Graphql_statement.mk_context (), false)
           )
       in
+      let selection =
+        graphql_mk_selection cx gcx schema ~top_op type_name selectionSet in
+      let vars = gcx.Graphql_statement.vars in
       let operation = { Graphql.
         op_schema = schema;
         op_type;
         op_vars = vars;
-        op_selection = graphql_mk_selection cx schema ~top_op type_name selectionSet;
+        op_selection = selection;
       } in
       GraphqlOpT (reason, operation)
     | None ->
@@ -4998,8 +5008,7 @@ and graphql_field_if_relay_op op = Graphql_ast.(match op with
       OperationDef.selectionSet = {
         SelectionSet.selections = [
           Selection.Field {
-            Field.args = None;
-            name = (_, name);
+            Field.name = (_, name);
             selectionSet = None;
             _
           }
@@ -5053,10 +5062,10 @@ and graphql_vars_decl cx schema var_defs =
       | None -> vars
     ) SMap.empty var_defs
   in
-  (vars, false)
+  vars
 
 and graphql_mk_selection
-    cx schema ?top_op:(top_op=false) type_name selection_set =
+    cx gcx schema ?top_op:(top_op=false) type_name selection_set =
   let {Graphql_ast.SelectionSet.selections; loc} = selection_set in
   let reason = mk_reason (RCustom (spf "selection on `%s`" type_name)) loc in
   let selection = { Graphql.
@@ -5065,15 +5074,16 @@ and graphql_mk_selection
     s_selections = SMap.empty;
   } in
   graphql_select ~top_op
-    cx schema (GraphqlSelectionT (reason, selection)) type_name selections
+    cx gcx schema (GraphqlSelectionT (reason, selection)) type_name selections
 
 and graphql_select
-    cx schema ?top_op:(top_op=false) selection type_name selections =
+    cx gcx schema ?top_op:(top_op=false) selection type_name selections =
   List.fold_left (fun selection item ->
     match item with
     | Graphql_ast.Selection.Field { Graphql_ast.Field.
         alias;
         name = (floc, fname);
+        args;
         selectionSet;
         _
       } ->
@@ -5085,8 +5095,13 @@ and graphql_select
         if Graphql_flow.check_field cx schema type_name fname floc then (
           let field_type =
             Graphql_schema.find_field_type schema type_name fname in
+          let _fields_args =
+            let args = Option.value args ~default:[] in
+            graphql_field_args cx gcx schema
+              (Graphql_schema.find_field schema type_name fname) floc args
+          in
           let field_selection = graphql_field_selection ~top_op
-              cx schema
+              cx gcx schema
               (Graphql_schema.name_of_type field_type)
               floc selectionSet in
           let field = {
@@ -5103,7 +5118,7 @@ and graphql_select
             Flow.flow cx (selection, GraphqlSelectT (reason, field, t))
           )
         ) else (
-          Option.iter ~f:(graphql_skim_selection_set cx schema) selectionSet;
+          Option.iter ~f:(graphql_skim_selection_set cx gcx schema) selectionSet;
           selection
         )
       end
@@ -5121,7 +5136,7 @@ and graphql_select
         let frag = { Graphql.
           frag_schema = schema;
           frag_type;
-          frag_selection = graphql_mk_selection cx schema frag_type selectionSet;
+          frag_selection = graphql_mk_selection cx gcx schema frag_type selectionSet;
         } in
         Flow.mk_tvar_where cx (reason_of_t selection) (fun t ->
           let frag = Graphql.SelectFrag (GraphqlFragT (reason, frag)) in
@@ -5139,7 +5154,7 @@ and graphql_select
     | Graphql_ast.Selection.JS _ -> selection
   ) selection selections
 
-and graphql_skim_selection_set cx schema selection_set =
+and graphql_skim_selection_set cx gcx schema selection_set =
   List.iter (fun item ->
     match item with
     | Graphql_ast.Selection.InlineFragment {
@@ -5148,11 +5163,11 @@ and graphql_skim_selection_set cx schema selection_set =
         _;
       } ->
       if Graphql_flow.check_frag_type cx schema type_name type_loc
-      then graphql_mk_selection cx schema type_name selectionSet |> ignore
+      then graphql_mk_selection cx gcx schema type_name selectionSet |> ignore
     | _ -> ()
   ) selection_set.Graphql_ast.SelectionSet.selections
 
-and graphql_field_selection cx schema ~top_op type_name loc selection_set =
+and graphql_field_selection cx gcx schema ~top_op type_name loc selection_set =
   let need_selection = Graphql_schema.Type.(
     match Graphql_schema.type_def schema type_name with
     | Obj _ | Interface _ | Union _ -> true
@@ -5161,7 +5176,7 @@ and graphql_field_selection cx schema ~top_op type_name loc selection_set =
   match selection_set with
   (* obj { ... } *)
   | Some selection_set when need_selection ->
-    Some (graphql_mk_selection cx schema type_name selection_set)
+    Some (graphql_mk_selection cx gcx schema type_name selection_set)
   (* scalar { ... } *)
   | Some {Graphql_ast.SelectionSet.loc; _} ->
     Flow_error.(add_output cx (EGraphqlNonObjSelect (loc, type_name)));
@@ -5172,6 +5187,139 @@ and graphql_field_selection cx schema ~top_op type_name loc selection_set =
     None
   (* scalar *)
   | None -> None
+
+and graphql_field_args cx gcx schema field field_loc args =
+  let args_map = List.fold_left (fun map arg ->
+    let {Graphql_ast.Argument.name = (_, name); _} = arg in
+    SMap.add name arg map
+  ) SMap.empty args in
+  SMap.iter (fun _ {Graphql_schema.InputVal.name; type_} ->
+    match type_ with
+    | Graphql_schema.Type.NonNull _ when not (SMap.mem name args_map) ->
+      graphql_err cx field_loc (spf "Missings required argument `%s`" name)
+    | _ -> ()
+  ) field.Graphql_schema.Field.args;
+  List.fold_left (fun map {Graphql_ast.Argument.name = (loc, name); value; _} ->
+    match Graphql_schema.get_arg_type schema field name with
+    | Some arg_type ->
+      graphql_value cx gcx schema arg_type value;
+      map
+    | None ->
+      graphql_err cx loc (spf "Field does not have argument `%s`" name);
+      map
+  ) SMap.empty args
+
+and graphql_value cx gcx schema type_ value =
+  let open Graphql_ast.Value in
+  let module Ast = Graphql_ast in
+  let type_name = Graphql_schema.type_name schema type_ in
+  let check_scalar loc input =
+    let err () =
+      graphql_err cx loc
+        (spf "This value expected to be of type `%s`" type_name)
+    in
+    match Graphql_schema.type_def schema type_name with
+    | Graphql_schema.Type.Scalar (_, kind) ->
+      if not (Graphql_schema.can_convert_to input kind) then err ()
+    | _ -> err ()
+  in
+  match value with
+  | Variable (loc, (_, name)) -> graphql_var cx gcx loc name type_
+  | IntValue (loc, str) ->
+    begin
+      try
+        Int32.of_string str |> Int32.to_int |> ignore;
+        check_scalar loc Graphql_schema.Type.Int
+      with _ -> graphql_err cx loc "This is not a valid int32 value"
+    end
+  | FloatValue (loc, _) -> check_scalar loc Graphql_schema.Type.Float
+  | StringValue (loc, _) -> check_scalar loc Graphql_schema.Type.Str
+  | BooleanValue (loc, _) -> check_scalar loc Graphql_schema.Type.Bool
+  | NullValue loc ->
+    begin match type_ with
+    | Graphql_schema.Type.NonNull _ -> graphql_err cx loc "can't be null"
+    | _ -> ()
+    end
+  | EnumValue (loc, value) ->
+    begin match Graphql_schema.type_def schema type_name with
+    | Graphql_schema.Type.Enum (_, values) ->
+      if not (List.exists ((=) value) values) then
+        graphql_err cx loc
+          (spf "This value expected to be of enum type `%s`" type_name)
+    | _ ->
+      graphql_err cx loc
+        (spf "This value expected to be of type `%s`" type_name)
+    end
+  | ListValue (loc, items) ->
+    let rec check_list = (function
+      | Graphql_schema.Type.Named _ ->
+        graphql_err cx loc
+          (spf "This value expected to be of type `%s`, found list instead"
+             type_name)
+      | Graphql_schema.Type.List t ->
+        List.iter (graphql_value cx gcx schema t) items
+      | Graphql_schema.Type.NonNull t -> check_list t
+    ) in
+    check_list type_
+  | ObjectValue {Ast.ObjectValue.fields; loc} ->
+    begin match Graphql_schema.type_def schema type_name with
+    | Graphql_schema.Type.InputObj (_, field_defs) ->
+      let fields_map = List.fold_left (fun map field ->
+        let {Ast.ObjectField.name = (_, name); value; _} = field in
+        SMap.add name value map
+      ) SMap.empty fields in
+      SMap.iter (fun field_name field_type ->
+        let missing =
+          match field_type.Graphql_schema.InputVal.type_ with
+          | Graphql_schema.Type.NonNull _ ->
+            not (SMap.mem field_name fields_map)
+          | _ -> false
+        in
+        if missing then
+          graphql_err cx loc
+            (spf "Missing required field `%s` in object of type `%s`"
+               field_name type_name)
+      ) field_defs;
+      List.iter (fun {Graphql_ast.ObjectField.name = (loc, name); value; _} ->
+        match SMap.get name field_defs with
+        | Some {Graphql_schema.InputVal.type_ = field_type; _} ->
+          graphql_value cx gcx schema field_type value
+        | None ->
+          graphql_err cx loc
+            (spf "Field `%s` is not found in `%s`" name type_name)
+      ) fields
+    | _ -> graphql_err cx loc "This value expected to be an input object"
+    end
+
+and graphql_var cx gcx loc name type_ =
+  let {Graphql_statement.vars; infer_vars} = gcx in
+  if SMap.mem name vars
+  then graphql_vars_compatible cx loc (SMap.find name vars) type_
+  else if infer_vars then (
+    let new_vars = SMap.add name type_ vars in
+    gcx.Graphql_statement.vars <- new_vars
+  ) else (graphql_err cx loc (spf "Variable `%s` in not declared" name))
+
+and graphql_vars_compatible cx loc t1 t2 =
+  let module T = Graphql_schema.Type in
+  let rec check t1 t2 =
+    match t1, t2 with
+    | T.Named n1, T.Named n2 -> n1 = n2
+    | T.List t1, T.List t2 -> check t1 t2
+    | T.NonNull t1, T.NonNull t2 -> check t1 t2
+    | _, _ -> false
+  in
+  let valid = check t1 t2 in
+  if not valid then (
+    let t_exp = Graphql_schema.string_of_type_ref t1 in
+    let t_real = Graphql_schema.string_of_type_ref t2 in
+    graphql_err cx loc
+      (spf "Expected variable of type `%s`, but got `%s`" t_exp t_real);
+  );
+  ()
+
+and graphql_err cx loc msg =
+  Flow_error.(add_output cx (EGraphqlCustom (loc, msg)))
 
 and graphql_is_tagged cx expr = Ast.Expression.(
   let rec check (_, expr) tag = match expr, tag with

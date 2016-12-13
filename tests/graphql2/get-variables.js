@@ -1,11 +1,11 @@
 // @flow
 
-const likeStory = gql`mutation {likeStory}`;
+const likeStory = gql`mutation {likeStory(storyID: $storyID, inc: $inc)}`;
 ({storyID: '', inc: 1}: $GraphqlVars<typeof likeStory>);
 ({storyID: 123, inc: 1}: $GraphqlVars<typeof likeStory>); // number ~> string
 ({storyID: '123'}: $GraphqlVars<typeof likeStory>); // prop `inc` not found
 
-const postMsg = gql`mutation {postMessage}`;
+const postMsg = gql`mutation {postMessage(msg: $msg)}`;
 // list type
 ({msg: {text: '', tags: ['']}}: $GraphqlVars<typeof postMsg>);
 // nullable
