@@ -3226,131 +3226,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* ObjT -> ObjT *)
 
-    | ObjT (lreason, {
-        props_tmap = lflds;
-        proto_t = lproto;
-        flags = lflags;
-        dict_t = ldict; _ }),
-      UseT (use_op, ObjT (ureason, {
-        props_tmap = uflds;
-        proto_t = uproto;
-        dict_t = udict; _ })) ->
+    | ObjT (lreason, ({ props_tmap = lflds; _ } as l_obj)),
+      UseT (use_op, ObjT (ureason, ({ props_tmap = uflds; _ } as u_obj))) ->
 
-      (* if inflowing type is literal (thus guaranteed to be
-         unaliased), propertywise subtyping is sound *)
-      let ldesc = desc_of_reason lreason in
-      let lit = match ldesc with
-      | RObjectLit
-      | RSpreadOf _
-      | RObjectPatternRestProp
-      | RFunction _
-      | RArrowFunction _
-      | RReactElementProps _
-      | RJSXElementProps _ -> true
-      | _ -> lflags.frozen
-      in
-
-      (* If both are dictionaries, ensure the keys and values are compatible
-         with each other. *)
-      (match ldict, udict with
-        | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
-          Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
-          rec_flow_p cx trace ~use_op lreason ureason (Computed uk)
-            (Field (lk, lpolarity), Field (uk, upolarity));
-          rec_flow_p cx trace ~use_op lreason ureason (Computed uv)
-            (Field (lv, lpolarity), Field (uv, upolarity))
-        | _ -> ());
-
-      (* Properties in u must either exist in l, or match l's indexer. *)
-      iter_real_props cx uflds (fun s up ->
-        let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
-        let propref = Named (reason_prop, s) in
-        match Context.get_prop cx lflds s, ldict with
-        | Some lp, _ ->
-          if lit then (
-            (* prop from unaliased LB: check <:, then make exact *)
-            (match Property.read_t lp, Property.read_t up with
-            | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
-            | _ -> ());
-            (* Band-aid to avoid side effect in speculation mode. Even in
-               non-speculation mode, the side effect here is racy, so it either
-               needs to be taken out or replaced with something more
-               robust. Tracked by #11299251. *)
-            if not (Speculation.speculating ()) then
-              Context.set_prop cx lflds s up
-          ) else (
-            (* prop from aliased LB *)
-            rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
-          )
-        | None, Some { key; value; dict_polarity; _ }
-            when not (is_dictionary_exempt s) ->
-          rec_flow_t cx trace (string_key s reason_prop, key);
-          let lp = Field (value, dict_polarity) in
-          let up = match up with
-          | Field (OptionalT ut, upolarity) ->
-            Field (ut, upolarity)
-          | _ -> up
-          in
-          if lit
-          then
-            match Property.read_t lp, Property.read_t up with
-            | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
-            | _ -> ()
-          else
-            rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
-        | _ ->
-          (* property doesn't exist in inflowing type *)
-          match up with
-          | Field (OptionalT _, _) when lflags.exact ->
-            (* if property is marked optional or otherwise has a maybe type,
-               and if inflowing type is exact (i.e., it is not an
-               annotation), then we add it to the inflowing type as
-               an optional property *)
-            (* Band-aid to avoid side effect in speculation mode. Even in
-               non-speculation mode, the side effect here is racy, so it either
-               needs to be taken out or replaced with something more
-               robust. Tracked by #11299251. *)
-            if not (Speculation.speculating ()) then
-              Context.set_prop cx lflds s up;
-          | _ ->
-            (* otherwise, look up the property in the prototype *)
-            let strict = match sealed_in_op ureason lflags.sealed, ldict with
-            | false, None -> ShadowRead (Some lreason, Nel.one lflds)
-            | true, None -> Strict lreason
-            | _ -> NonstrictReturning None
-            in
-            rec_flow cx trace (lproto,
-              LookupT (ureason, strict, [], propref, LookupProp up))
-            (* TODO: instead, consider extending inflowing type with s:t2 when it
-               is not sealed *)
-      );
-
-      (* Any properties in l but not u must match indexer *)
-      (match udict with
-      | None -> ()
-      | Some { key; value; dict_polarity; _ } ->
-        iter_real_props cx lflds (fun s lp ->
-          if not (Context.has_prop cx uflds s)
-          then (
-            rec_flow_t cx trace (string_key s lreason, key);
-            let lp = match lp with
-            | Field (OptionalT lt, lpolarity) ->
-              Field (lt, lpolarity)
-            | _ -> lp
-            in
-            let up = Field (value, dict_polarity) in
-            if lit
-            then
-              match Property.read_t lp, Property.read_t up with
-              | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
-              | _ -> ()
-            else
-              let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
-              let propref = Named (reason_prop, s) in
-              rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
-          )));
-
-      rec_flow cx trace (l, UseT (use_op, uproto))
+      if lflds = uflds then ()
+      else flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj)
 
     (* InstanceT -> ObjT *)
 
@@ -5016,6 +4896,137 @@ and flow_eq cx trace reason l r =
   else
     let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
     add_output cx trace (FlowError.EComparison reasons)
+
+
+and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
+  let {
+    flags = lflags;
+    dict_t = ldict;
+    props_tmap = lflds;
+    proto_t = lproto;
+  } = l_obj in
+  let {
+    flags = _;
+    dict_t = udict;
+    props_tmap = uflds;
+    proto_t = uproto;
+  } = u_obj in
+
+  (* if inflowing type is literal (thus guaranteed to be
+     unaliased), propertywise subtyping is sound *)
+  let ldesc = desc_of_reason lreason in
+  let lit = match ldesc with
+  | RObjectLit
+  | RSpreadOf _
+  | RObjectPatternRestProp
+  | RFunction _
+  | RArrowFunction _
+  | RReactElementProps _
+  | RJSXElementProps _ -> true
+  | _ -> lflags.frozen
+  in
+
+  (* If both are dictionaries, ensure the keys and values are compatible
+     with each other. *)
+  (match ldict, udict with
+    | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
+      Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
+      rec_flow_p cx trace ~use_op lreason ureason (Computed uk)
+        (Field (lk, lpolarity), Field (uk, upolarity));
+      rec_flow_p cx trace ~use_op lreason ureason (Computed uv)
+        (Field (lv, lpolarity), Field (uv, upolarity))
+    | _ -> ());
+
+  (* Properties in u must either exist in l, or match l's indexer. *)
+  iter_real_props cx uflds (fun s up ->
+    let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
+    let propref = Named (reason_prop, s) in
+    match Context.get_prop cx lflds s, ldict with
+    | Some lp, _ ->
+      if lit then (
+        (* prop from unaliased LB: check <:, then make exact *)
+        (match Property.read_t lp, Property.read_t up with
+        | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+        | _ -> ());
+        (* Band-aid to avoid side effect in speculation mode. Even in
+           non-speculation mode, the side effect here is racy, so it either
+           needs to be taken out or replaced with something more
+           robust. Tracked by #11299251. *)
+        if not (Speculation.speculating ()) then
+          Context.set_prop cx lflds s up
+      ) else (
+        (* prop from aliased LB *)
+        rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
+      )
+    | None, Some { key; value; dict_polarity; _ }
+        when not (is_dictionary_exempt s) ->
+      rec_flow_t cx trace (string_key s reason_prop, key);
+      let lp = Field (value, dict_polarity) in
+      let up = match up with
+      | Field (OptionalT ut, upolarity) ->
+        Field (ut, upolarity)
+      | _ -> up
+      in
+      if lit
+      then
+        match Property.read_t lp, Property.read_t up with
+        | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+        | _ -> ()
+      else
+        rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
+    | _ ->
+      (* property doesn't exist in inflowing type *)
+      match up with
+      | Field (OptionalT _, _) when lflags.exact ->
+        (* if property is marked optional or otherwise has a maybe type,
+           and if inflowing type is exact (i.e., it is not an
+           annotation), then we add it to the inflowing type as
+           an optional property *)
+        (* Band-aid to avoid side effect in speculation mode. Even in
+           non-speculation mode, the side effect here is racy, so it either
+           needs to be taken out or replaced with something more
+           robust. Tracked by #11299251. *)
+        if not (Speculation.speculating ()) then
+          Context.set_prop cx lflds s up;
+      | _ ->
+        (* otherwise, look up the property in the prototype *)
+        let strict = match sealed_in_op ureason lflags.sealed, ldict with
+        | false, None -> ShadowRead (Some lreason, Nel.one lflds)
+        | true, None -> Strict lreason
+        | _ -> NonstrictReturning None
+        in
+        rec_flow cx trace (lproto,
+          LookupT (ureason, strict, [], propref, LookupProp up))
+        (* TODO: instead, consider extending inflowing type with s:t2 when it
+           is not sealed *)
+  );
+
+  (* Any properties in l but not u must match indexer *)
+  (match udict with
+  | None -> ()
+  | Some { key; value; dict_polarity; _ } ->
+    iter_real_props cx lflds (fun s lp ->
+      if not (Context.has_prop cx uflds s)
+      then (
+        rec_flow_t cx trace (string_key s lreason, key);
+        let lp = match lp with
+        | Field (OptionalT lt, lpolarity) ->
+          Field (lt, lpolarity)
+        | _ -> lp
+        in
+        let up = Field (value, dict_polarity) in
+        if lit
+        then
+          match Property.read_t lp, Property.read_t up with
+          | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+          | _ -> ()
+        else
+          let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
+          let propref = Named (reason_prop, s) in
+          rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
+      )));
+
+  rec_flow cx trace (ObjT (lreason, l_obj), UseT (use_op, uproto))
 
 and is_object_prototype_method = function
   | "isPrototypeOf"
