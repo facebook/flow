@@ -33,3 +33,11 @@ class StaticDefaultProps extends React.Component {
         foo: 3
     }
 }
+
+class LaterDefaultProps extends React.Component {
+    static defaultProps: DefaultProps
+}
+
+LaterDefaultProps.defaultProps = {
+    foo: 3
+}
