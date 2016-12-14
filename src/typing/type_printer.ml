@@ -70,6 +70,42 @@ let rec type_printer_impl ~size override enclosure cx t =
       ]
   in
 
+  let string_of_obj flds dict_t ~exact =
+    let props =
+      Context.find_props cx flds
+      |> SMap.elements
+      |> List.filter (fun (x,_) -> not (Reason.is_internal_name x))
+      |> List.rev
+      |> List.map (fun (x, p) -> prop x p)
+      |> String.concat ", "
+    in
+    let indexer =
+      (match dict_t with
+      | Some { dict_name; key; value; dict_polarity } ->
+          let indexer_prefix =
+            if props <> ""
+            then ", "
+            else ""
+          in
+          let dict_name = match dict_name with
+            | None -> "_"
+            | Some name -> name
+          in
+          (spf "%s%s[%s: %s]: %s,"
+            indexer_prefix
+            (Polarity.sigil dict_polarity)
+            dict_name
+            (pp EnclosureNone cx key)
+            (pp EnclosureNone cx value)
+          )
+      | None -> "")
+    in
+    if exact then
+      spf "{|%s%s|}" props indexer
+    else
+      spf "{%s%s}" props indexer
+  in
+
   match override cx t with
   | Some s -> s
   | None ->
@@ -111,36 +147,13 @@ let rec type_printer_impl ~size override enclosure cx t =
         parenthesize type_s enclosure [EnclosureUnion; EnclosureIntersect]
 
     | ObjT (_, {props_tmap = flds; dict_t; _}) ->
-        let props =
-          Context.find_props cx flds
-          |> SMap.elements
-          |> List.filter (fun (x,_) -> not (Reason.is_internal_name x))
-          |> List.rev
-          |> List.map (fun (x, p) -> prop x p)
-          |> String.concat ", "
-        in
-        let indexer =
-          (match dict_t with
-          | Some { dict_name; key; value; dict_polarity } ->
-              let indexer_prefix =
-                if props <> ""
-                then ", "
-                else ""
-              in
-              let dict_name = match dict_name with
-                | None -> "_"
-                | Some name -> name
-              in
-              (spf "%s%s[%s: %s]: %s,"
-                indexer_prefix
-                (Polarity.sigil dict_polarity)
-                dict_name
-                (pp EnclosureNone cx key)
-                (pp EnclosureNone cx value)
-              )
-          | None -> "")
-        in
-        spf "{%s%s}" props indexer
+        string_of_obj flds dict_t ~exact:false
+
+    | ExactT (_, ObjT (_, {props_tmap = flds; dict_t; _})) ->
+        string_of_obj flds dict_t ~exact:true
+
+    | ExactT (_, t) ->
+        spf "$Exact<%s>" (pp EnclosureNone cx t)
 
     | ArrT (_, t, ts) ->
         begin match ts with
@@ -286,7 +299,6 @@ let rec type_printer_impl ~size override enclosure cx t =
     | FunProtoCallT _
     | ObjProtoT _
     | AbstractT _
-    | ExactT (_, _)
     | DiffT (_, _)
     | ExtendsT (_, _, _)
     | TypeMapT (_, _, _, _) ->
@@ -400,6 +412,10 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
               (is_printed_type_parsable_impl weak cx EnclosureNone))
           )
         ) prop_map is_printable
+
+  | ExactT (_, t)
+    ->
+      is_printed_type_parsable_impl weak cx EnclosureNone t
 
   | InstanceT _
     ->

@@ -8690,6 +8690,9 @@ end = struct
           | None -> acc
         ) (find_props cx flds) SMap.empty in
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
+    | ExactT (_, t) ->
+        let t = resolve_type cx t in
+        extract_members cx t
     | ModuleT (_, {exports_tmap; cjs_export; has_every_named_export = _;}) ->
         let named_exports = Context.find_exports cx exports_tmap in
         let cjs_export =
@@ -8764,7 +8767,6 @@ end = struct
     | DiffT (_, _)
     | EmptyT _
     | EvalT (_, _, _)
-    | ExactT (_, _)
     | ExistsT _
     | ExtendsT (_, _, _)
     | FunProtoApplyT _
