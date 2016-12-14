@@ -1,3 +1,10 @@
+###v0.37.1
+
+Notable bug fixes:
+* Fixed an issue in /try where Flow was using an ocaml regex API that couldn't compile to JS
+* Fixed an issue where a changed "literal" type in a module signature wouldn't cause the Flow server to recheck
+* Fixed an issue where an update of a module in a cycle may not properly recheck all of its dependencies in the Flow server
+
 ###v0.37.0
 
 Likely to cause new Flow errors:
