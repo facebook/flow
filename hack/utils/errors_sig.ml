@@ -135,7 +135,8 @@ module type S = sig
   val parent_abstract_call : string -> Pos.t -> Pos.t -> unit
   val self_abstract_call : string -> Pos.t -> Pos.t -> unit
   val classname_abstract_call : string -> string -> Pos.t -> Pos.t -> unit
-  val isset_empty_in_strict : Pos.t -> string -> unit
+  val empty_in_strict : Pos.t -> unit
+  val isset_in_strict : Pos.t -> unit
   val unset_nonidx_in_strict : Pos.t -> (Pos.t * string) list -> unit
   val unpacking_disallowed_builtin_function : Pos.t -> string -> unit
   val array_get_arity : Pos.t -> string -> Pos.t -> unit
