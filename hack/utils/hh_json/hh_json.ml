@@ -473,6 +473,13 @@ type json_type =
   | Number_t
   | Bool_t
 
+let json_type_to_string = function
+  | Object_t -> "Object"
+  | Array_t -> "Array"
+  | String_t -> "String"
+  | Number_t -> "Number"
+  | Bool_t -> "Bool"
+
 module type Access = sig
   type keytrace = string list
 
@@ -482,6 +489,8 @@ module type Access = sig
     | Wrong_type_error of keytrace * json_type
 
   type 'a m = (('a * keytrace), access_failure) Result.t
+
+  val access_failure_to_string : access_failure -> string
 
   val return : 'a -> 'a m
 
@@ -502,6 +511,20 @@ module Access = struct
     | Wrong_type_error of keytrace * json_type
 
   type 'a m = (('a * keytrace), access_failure) Result.t
+
+  let keytrace_to_string x =
+    if x = [] then "" else
+    let res = List.map x (fun x -> "[" ^ x ^ "]")  |> String.concat " " in
+    " (at field " ^ res ^ ")"
+
+  let access_failure_to_string = function
+    | Not_an_object x ->
+      Printf.sprintf "Value is not an object %s" (keytrace_to_string x)
+    | Missing_key_error (x, y) ->
+      Printf.sprintf "Missing key: %s%s" x (keytrace_to_string y)
+    | Wrong_type_error (x, y) ->
+      Printf.sprintf "Value expected to be %s%s"
+        (json_type_to_string y) (keytrace_to_string x)
 
   let return v = Result.Ok (v, [])
 
