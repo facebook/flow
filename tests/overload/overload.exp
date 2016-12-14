@@ -3,24 +3,24 @@ overload.js:7
                       ^^^^^^^^^^^ call of method `match`
   7: var x1: number = "".match(0)[0];
                                ^ number. This type is incompatible with
-253:     match(regexp: string | RegExp): ?Array<string>;
-                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:253
+257:     match(regexp: string | RegExp): ?$RegExpMatchResult;
+                       ^^^^^^^^^^^^^^^ union: string | RegExp. See lib: <BUILTINS>/core.js:257
   Member 1:
-  253:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:253
+  257:     match(regexp: string | RegExp): ?$RegExpMatchResult;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:257
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  253:     match(regexp: string | RegExp): ?Array<string>;
-                         ^^^^^^ string. See lib: <BUILTINS>/core.js:253
+  257:     match(regexp: string | RegExp): ?$RegExpMatchResult;
+                         ^^^^^^ string. See lib: <BUILTINS>/core.js:257
   Member 2:
-  253:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:253
+  257:     match(regexp: string | RegExp): ?$RegExpMatchResult;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:257
   Error:
     7: var x1: number = "".match(0)[0];
                                  ^ number. This type is incompatible with
-  253:     match(regexp: string | RegExp): ?Array<string>;
-                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:253
+  257:     match(regexp: string | RegExp): ?$RegExpMatchResult;
+                                  ^^^^^^ RegExp. See lib: <BUILTINS>/core.js:257
 
 overload.js:7
   7: var x1: number = "".match(0)[0];
@@ -34,12 +34,6 @@ overload.js:7
   7: var x1: number = "".match(0)[0];
                       ^^^^^^^^^^^ undefined
 
-overload.js:7
-  7: var x1: number = "".match(0)[0];
-                      ^^^^^^^^^^^^^^ string. This type is incompatible with
-  7: var x1: number = "".match(0)[0];
-             ^^^^^^ number
-
 overload.js:8
   8: var x2: number = "".match(/pattern/)[0];
                       ^^^^^^^^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly null value
@@ -51,12 +45,6 @@ overload.js:8
                       ^^^^^^^^^^^^^^^^^^^^^^ access of computed property/element. Computed property/element cannot be accessed on possibly undefined value
   8: var x2: number = "".match(/pattern/)[0];
                       ^^^^^^^^^^^^^^^^^^^ undefined
-
-overload.js:8
-  8: var x2: number = "".match(/pattern/)[0];
-                      ^^^^^^^^^^^^^^^^^^^^^^ string. This type is incompatible with
-  8: var x2: number = "".match(/pattern/)[0];
-             ^^^^^^ number
 
 overload.js:10
  10: var x4: number = "".split(/pattern/)[0];
@@ -169,4 +157,4 @@ test2.js:7
                        ^^^^^^ number
 
 
-Found 12 errors
+Found 10 errors
