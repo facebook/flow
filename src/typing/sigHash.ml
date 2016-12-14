@@ -33,11 +33,11 @@
    tolerating improbable collisions (cf. SharedMem).
 *)
 type hash =
-  | NumH
-  | StrH
-  | BoolH
+  | NumH of Type.number_literal Type.literal
+  | StrH of string Type.literal
+  | BoolH of bool option
   | EmptyH
-  | MixedH
+  | MixedH of Type.mixed_flavor
   | AnyH
   | NullH
   | VoidH
@@ -72,9 +72,9 @@ type hash =
   | ShapeH
   | DiffH
   | KeysH
-  | SingletonStrH
-  | SingletonNumH
-  | SingletonBoolH
+  | SingletonStrH of string
+  | SingletonNumH of Type.number_literal
+  | SingletonBoolH of bool
   | TypeH
   | AnnotH
   | ModuleH
@@ -99,7 +99,7 @@ let hash_of_ctor = Type.(function
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
   | ArrT _ -> ArrH
-  | BoolT _ -> BoolH
+  | BoolT (_, b) -> BoolH b
   | BoundT _ -> BoundH
   | ChoiceKitT _ -> ChoiceKitH
   | ClassT _ -> ClassH
@@ -119,10 +119,10 @@ let hash_of_ctor = Type.(function
   | IntersectionT _ -> IntersectionH
   | KeysT _ -> KeysH
   | MaybeT _ -> MaybeH
-  | MixedT _ -> MixedH
+  | MixedT (_, m) -> MixedH m
   | ModuleT _ -> ModuleH
   | NullT _ -> NullH
-  | NumT _ -> NumH
+  | NumT (_, n) -> NumH n
   | ObjProtoT _ -> ObjProtoH
   | ObjT _ -> ObjH
   | OpenPredT _ -> OpenPredH
@@ -132,10 +132,10 @@ let hash_of_ctor = Type.(function
   | ReposUpperT _ -> ReposUpperH
   | RestT _ -> RestH
   | ShapeT _ -> ShapeH
-  | SingletonBoolT _ -> SingletonBoolH
-  | SingletonNumT _ -> SingletonNumH
-  | SingletonStrT _ -> SingletonStrH
-  | StrT _ -> StrH
+  | SingletonBoolT (_, b) -> SingletonBoolH b
+  | SingletonNumT (_, n) -> SingletonNumH n
+  | SingletonStrT (_, s) -> SingletonStrH s
+  | StrT (_, s) -> StrH s
   | TaintT _ -> TaintH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
