@@ -61,7 +61,7 @@ type t =
   | Out_of_shared_memory
   | Shared_mem_assertion_failure
   | Hash_table_full
-  | IDE_persistent_client_already_exists
+  | IDE_new_client_connected
   | Lazy_decl_bug
   | Decl_heap_elems_bug
   | Parser_heap_build_error
@@ -119,7 +119,7 @@ let exit_code = function
   | Nfs_root ->                     204
   | IDE_init_failure ->             205
   | IDE_typechecker_died ->         206
-  | IDE_persistent_client_already_exists -> 207
+  | IDE_new_client_connected ->     207
   | Lazy_decl_bug ->                208
   | Decl_heap_elems_bug ->          209
   | Parser_heap_build_error ->      210
@@ -179,8 +179,7 @@ let to_string = function
   | Shared_mem_assertion_failure -> "Shared_mem_assertion_failure"
   | Out_of_shared_memory -> "Out_of_shared_memory"
   | Hash_table_full -> "Hash_table_full"
-  | IDE_persistent_client_already_exists ->
-    "IDE_persistent_client_already_exists"
+  | IDE_new_client_connected -> "IDE_new_client_connected"
   | Lazy_decl_bug -> "Lazy_decl_bug"
   | Decl_heap_elems_bug -> "Decl_heap_elems_bug"
   | Parser_heap_build_error -> "Parser_heap_build_error"
