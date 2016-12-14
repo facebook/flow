@@ -7,16 +7,16 @@ async.js:12
 async.js:31
  31:   return await p; // error, number != bool
               ^^^^^^^ number. This type is incompatible with
-608: declare function $await<T>(p: Promise<T> | T): T;
-                                   ^^^^^^^^^^^^^^ union: type application of identifier `Promise` | type parameter `T` of async return. See lib: <BUILTINS>/core.js:608
+617: declare function $await<T>(p: Promise<T> | T): T;
+                                   ^^^^^^^^^^^^^^ union: type application of identifier `Promise` | type parameter `T` of async return. See lib: <BUILTINS>/core.js:617
   Member 1:
-  608: declare function $await<T>(p: Promise<T> | T): T;
-                                     ^^^^^^^^^^ type application of identifier `Promise`. See lib: <BUILTINS>/core.js:608
+  617: declare function $await<T>(p: Promise<T> | T): T;
+                                     ^^^^^^^^^^ type application of identifier `Promise`. See lib: <BUILTINS>/core.js:617
   Error:
    31:   return await p; // error, number != bool
                 ^^^^^^^ number. This type is incompatible with
-  608: declare function $await<T>(p: Promise<T> | T): T;
-                                     ^^^^^^^^^^ Promise. See lib: <BUILTINS>/core.js:608
+  617: declare function $await<T>(p: Promise<T> | T): T;
+                                     ^^^^^^^^^^ Promise. See lib: <BUILTINS>/core.js:617
   Member 2:
    31:   return await p; // error, number != bool
                 ^^^^^^^ type parameter `T` of async return
