@@ -4828,12 +4828,9 @@ and flow_addition cx trace reason l r u =
   | _, EmptyT _ ->
     rec_flow_t cx trace (EmptyT.why reason, u)
 
-  | (MixedT _, _) ->
-    let reasons = FlowError.ordered_reasons l (UseT (UnknownUse, r)) in
-    add_output cx trace (FlowError.EAddition reasons)
-  | (_, MixedT _) ->
-    let reasons = FlowError.ordered_reasons r (UseT (UnknownUse, l)) in
-    add_output cx trace (FlowError.EAddition reasons)
+  | (MixedT (reason, _), _)
+  | (_, MixedT (reason, _)) ->
+    add_output cx trace (FlowError.EAdditionMixed reason)
 
   | (NumT _ | BoolT _ | NullT _ | VoidT _),
     (NumT _ | BoolT _ | NullT _ | VoidT _) ->

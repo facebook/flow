@@ -61,6 +61,7 @@ type error_message =
   | EFunReturn of (reason * reason)
   | EFunImplicitReturn of (reason * reason)
   | EAddition of (reason * reason)
+  | EAdditionMixed of reason
   | ECoercion of (reason * reason)
   | EComparison of (reason * reason)
   | EMissingTupleElement of (reason * reason) * int
@@ -546,6 +547,11 @@ end = struct
 
     | EAddition reasons ->
         typecheck_error "This type cannot be added to" reasons
+
+    | EAdditionMixed reason ->
+        mk_error [mk_info reason [
+          "This type cannot be used in an addition because it is unknown \
+           whether it behaves like a string or a number."]]
 
     | ECoercion reasons ->
         typecheck_error "This type cannot be coerced to" reasons
