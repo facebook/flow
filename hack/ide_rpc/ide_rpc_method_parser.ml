@@ -1,0 +1,23 @@
+(**
+ * Copyright (c) 2016, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
+open Ide_rpc_protocol_parser_types
+open Ide_parser_utils
+
+let not_implemented ~method_name:_ ~params:_ = not_implemented
+
+(* Delegate to the right parsing module based on protocol and version *)
+let get_parse_fun version protocol =
+  match version, protocol with
+  | _, Nuclide_rpc -> not_implemented
+  | V0, JSON_RPC2 -> not_implemented
+
+let parse ~version ~protocol ~method_name ~params =
+  (get_parse_fun version protocol) ~method_name ~params
