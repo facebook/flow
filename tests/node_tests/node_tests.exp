@@ -49,24 +49,24 @@ crypto/crypto.js:16
          ^^^^^^^^^^^^^^^ call of method `write`
  16:     hmac.write(123); // 2 errors: not a string or a Buffer
                     ^^^ number. This type is incompatible with
-1226:     chunk: Buffer | string,
-                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1226
+1244:     chunk: Buffer | string,
+                 ^^^^^^^^^^^^^^^ union: Buffer | string. See lib: <BUILTINS>/node.js:1244
   Member 1:
-  1226:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1226
+  1244:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1244
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1226:     chunk: Buffer | string,
-                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1226
+  1244:     chunk: Buffer | string,
+                   ^^^^^^ Buffer. See lib: <BUILTINS>/node.js:1244
   Member 2:
-  1226:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1226
+  1244:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1244
   Error:
    16:     hmac.write(123); // 2 errors: not a string or a Buffer
                       ^^^ number. This type is incompatible with
-  1226:     chunk: Buffer | string,
-                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1226
+  1244:     chunk: Buffer | string,
+                            ^^^^^^ string. See lib: <BUILTINS>/node.js:1244
 
 crypto/crypto.js:26
  26:     hmac.update('foo', 'bogus'); // 1 error
@@ -251,5 +251,23 @@ json_file/test.js:22
  22: (require('./json_null'): void); // error, should be null
                               ^^^^ undefined
 
+os/userInfo.js:7
+  7: (u1.username: Buffer); // error
+      ^^^^^^^^^^^ string. This type is incompatible with
+  7: (u1.username: Buffer); // error
+                   ^^^^^^ Buffer
 
-Found 30 errors
+os/userInfo.js:11
+ 11: (u2.username: Buffer); // error
+      ^^^^^^^^^^^ string. This type is incompatible with
+ 11: (u2.username: Buffer); // error
+                   ^^^^^^ Buffer
+
+os/userInfo.js:14
+ 14: (u3.username: string); // error
+      ^^^^^^^^^^^ Buffer. This type is incompatible with
+ 14: (u3.username: string); // error
+                   ^^^^^^ string
+
+
+Found 33 errors
