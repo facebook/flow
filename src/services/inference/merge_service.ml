@@ -175,9 +175,6 @@ let merge_strict_component ~options = function
     Context.clear_intermediates cx;
 
     let diff = Context_cache.add_sig_on_diff ~audit:Expensive.ok cx md5 in
-    (* prerr_endlinef "Rechecked %s, diff = %b" *)
-    (*   (string_of_filename file) *)
-    (*   diff; *)
     file, errors, Some diff
   )
   else file, Errors.ErrorSet.empty, Some true
@@ -249,6 +246,10 @@ let merge_strict ~options ~workers ~save_errors
   in
   (* store leaders to a heap; used when rechecking *)
   leader_map |> FilenameMap.iter LeaderHeap.add;
+  (* lift recheck map from files to leaders *)
+  let recheck_leader_map = FilenameMap.map (
+    List.exists (fun f -> FilenameMap.find_unsafe f recheck_map)
+  ) component_map in
   Profile_utils.logtime ~options
     (fun t -> spf "merged (strict) in %f" t)
     (fun () ->
@@ -259,7 +260,7 @@ let merge_strict ~options ~workers ~save_errors
         ~neutral: ([], [], [])
         ~merge: Merge_stream.join
         ~next: (Merge_stream.make
-                  dependency_graph leader_map component_map recheck_map) in
+                  dependency_graph leader_map component_map recheck_leader_map) in
       (* save *)
       save_errors files errsets
     )

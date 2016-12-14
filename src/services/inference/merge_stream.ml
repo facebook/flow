@@ -45,6 +45,7 @@ let blocked = ref 0
 (* For each leader, maps other leaders that are dependent on it. *)
 let dependents = ref FilenameMap.empty
 
+(* For each leader, specifies whether to recheck its component *)
 let to_recheck: bool FilenameMap.t ref = ref FilenameMap.empty
 
 (* stream of files available to schedule *)
@@ -69,8 +70,8 @@ let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
 (* leader_map is a map from files to leaders *)
 (* component_map is a map from leaders to components *)
 (* dependency_graph is a map from files to dependencies *)
-let make dependency_graph leader_map component_map recheck_map =
-  to_recheck := recheck_map;
+let make dependency_graph leader_map component_map recheck_leader_map =
+  to_recheck := recheck_leader_map;
   (* TODO: clear or replace state *)
   let procs = Sys_utils.nbr_procs in
   let leader f = FilenameMap.find_unsafe f leader_map in
