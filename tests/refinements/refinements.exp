@@ -334,13 +334,13 @@ mixed.js:77
 
 mixed.js:83
  83:     takesString(x); // error
-                     ^ boolean. This type is incompatible with the expected param type of
+                     ^ boolean literal `true`. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
 mixed.js:89
  89:     takesString(x); // error
-                     ^ boolean. This type is incompatible with the expected param type of
+                     ^ boolean literal `false`. This type is incompatible with the expected param type of
   4: function takesString(x: string) {}
                              ^^^^^^ string
 
@@ -426,7 +426,7 @@ null.js:7
 
 number.js:8
   8:       (x: void); // error
-            ^ number. This type is incompatible with
+            ^ number literal `0`. This type is incompatible with
   8:       (x: void); // error
                ^^^^ undefined
 
@@ -468,7 +468,7 @@ number.js:63
 
 number.js:97
  97:       return s; // error
-                  ^ number. This type is incompatible with the expected return type of
+                  ^ number literal `3`. This type is incompatible with the expected return type of
  93:   function(s: number): ?Mode {
                              ^^^^ number enum
 
@@ -564,7 +564,7 @@ refinements.js:54
 
 string.js:8
   8:       (x: void); // error
-            ^ string. This type is incompatible with
+            ^ string literal `foo`. This type is incompatible with
   8:       (x: void); // error
                ^^^^ undefined
 
@@ -606,7 +606,7 @@ string.js:63
 
 string.js:98
  98:       return s; // error
-                  ^ string. This type is incompatible with the expected return type of
+                  ^ string literal `d`. This type is incompatible with the expected return type of
  94:   function(s: string): ?Mode {
                              ^^^^ string enum
 
@@ -682,7 +682,7 @@ tagged_union.js:72
 
 tagged_union.js:89
  89:       (x.kindTypo: string); // typos can't be used, though
-            ^^^^^^^^^^ property `kindTypo` of unknown type. This type is incompatible with
+            ^^^^^^^^^^ number literal `1`. This type is incompatible with
  89:       (x.kindTypo: string); // typos can't be used, though
                         ^^^^^^ string
 
@@ -706,27 +706,63 @@ tagged_union.js:102
 
 tagged_union.js:113
 113:       (x.legnth: string); // error: number literal 0 !~> string
-            ^^^^^^^^ property `legnth` of unknown type. This type is incompatible with
+            ^^^^^^^^ number literal `0`. This type is incompatible with
 113:       (x.legnth: string); // error: number literal 0 !~> string
                       ^^^^^^ string
 
 tagged_union.js:118
 118:       (y.legnth: string); // error: number literal 0 !~> string
-            ^^^^^^^^ property `legnth` of unknown type. This type is incompatible with
+            ^^^^^^^^ number literal `0`. This type is incompatible with
 118:       (y.legnth: string); // error: number literal 0 !~> string
                       ^^^^^^ string
 
 tagged_union.js:123
 123:       (z.toStirng: string); // error: number literal 0 !~> string
-            ^^^^^^^^^^ property `toStirng` of unknown type. This type is incompatible with
+            ^^^^^^^^^^ number literal `0`. This type is incompatible with
 123:       (z.toStirng: string); // error: number literal 0 !~> string
                         ^^^^^^ string
 
 tagged_union.js:128
 128:       (q.valeuOf: string); // error: number literal 0 !~> string
-            ^^^^^^^^^ property `valeuOf` of unknown type. This type is incompatible with
+            ^^^^^^^^^ number literal `0`. This type is incompatible with
 128:       (q.valeuOf: string); // error: number literal 0 !~> string
                        ^^^^^^ string
+
+tagged_union.js:146
+146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
+            ^^^^^ string literal `str`. Expected string literal `not str`, got `str` instead
+146:       (x.str: 'not str'); // error: 'str' !~> 'not str'
+                   ^^^^^^^^^ string literal `not str`
+
+tagged_union.js:149
+149:       (x.num: 456); // error: 123 !~> 456
+            ^^^^^ number literal `123`. Expected number literal `456`, got `123` instead
+149:       (x.num: 456); // error: 123 !~> 456
+                   ^^^ number literal `456`
+
+tagged_union.js:152
+152:       (x.bool: false); // error: true !~> false
+            ^^^^^^ boolean literal `true`. Expected boolean literal `false`, got `true` instead
+152:       (x.bool: false); // error: true !~> false
+                    ^^^^^ boolean literal `false`
+
+tagged_union.js:156
+156:       (x.badStr: empty); // error: 'bad' !~> empty
+            ^^^^^^^^ string literal `bad`. This type is incompatible with
+156:       (x.badStr: empty); // error: 'bad' !~> empty
+                      ^^^^^ empty
+
+tagged_union.js:159
+159:       (x.badNum: empty); // error: 123 !~> empty
+            ^^^^^^^^ number literal `123`. This type is incompatible with
+159:       (x.badNum: empty); // error: 123 !~> empty
+                      ^^^^^ empty
+
+tagged_union.js:162
+162:       (x.badBool: empty); // error: true !~> empty
+            ^^^^^^^^^ boolean literal `true`. This type is incompatible with
+162:       (x.badBool: empty); // error: true !~> empty
+                       ^^^^^ empty
 
 typeof.js:5
   5:     x[0]; // error for boolean, not number
@@ -808,7 +844,7 @@ union.js:7
   7:     x[0]; // error on boolean
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on
   7:     x[0]; // error on boolean
-         ^ boolean
+         ^ boolean literal `true`
 
 union.js:13
  13:     x[0]; // error on number
@@ -863,4 +899,4 @@ void.js:85
            ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 149 errors
+Found 155 errors

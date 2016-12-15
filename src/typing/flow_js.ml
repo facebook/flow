@@ -6955,11 +6955,16 @@ and filter_not_undefined = function
   | MixedT (r, Mixed_non_null) -> MixedT (r, Mixed_non_maybe)
   | t -> t
 
-and filter_string_literal expected t = match t with
+and filter_string_literal expected t =
+  let lit_reason = replace_reason_const (RStringLit expected) in
+  match t with
   | StrT (_, Literal actual) when actual = expected -> t
-  | StrT (r, Truthy) when expected <> "" -> StrT (r, Literal expected)
-  | StrT (r, AnyLiteral) -> StrT (r, Literal expected)
-  | MixedT (r, _) -> StrT (r, Literal expected)
+  | StrT (r, Truthy) when expected <> "" ->
+    StrT (lit_reason r, Literal expected)
+  | StrT (r, AnyLiteral) ->
+    StrT (lit_reason r, Literal expected)
+  | MixedT (r, _) ->
+    StrT (lit_reason r, Literal expected)
   | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
@@ -6967,11 +6972,16 @@ and filter_not_string_literal expected = function
   | StrT (r, Literal actual) when actual = expected -> EmptyT r
   | t -> t
 
-and filter_number_literal expected t = match t with
+and filter_number_literal expected t =
+  let lit_reason = replace_reason_const (RNumberLit (snd expected)) in
+  match t with
   | NumT (_, Literal actual) when snd actual = snd expected -> t
-  | NumT (r, Truthy) when snd expected <> "0" -> NumT (r, Literal expected)
-  | NumT (r, AnyLiteral) -> NumT (r, Literal expected)
-  | MixedT (r, _) -> NumT (r, Literal expected)
+  | NumT (r, Truthy) when snd expected <> "0" ->
+    NumT (lit_reason r, Literal expected)
+  | NumT (r, AnyLiteral) ->
+    NumT (lit_reason r, Literal expected)
+  | MixedT (r, _) ->
+    NumT (lit_reason r, Literal expected)
   | AnyT _ as t -> t
   | _ -> EmptyT (reason_of_t t)
 
@@ -6979,28 +6989,36 @@ and filter_not_number_literal expected = function
   | NumT (r, Literal actual) when snd actual = snd expected -> EmptyT r
   | t -> t
 
-and filter_true = function
+and filter_true t =
+  let lit_reason = replace_reason_const (RBooleanLit true) in
+  match t with
   | BoolT (r, Some true)
-  | BoolT (r, None) -> BoolT (r, Some true)
-  | MixedT (r, _) -> BoolT (replace_reason_const RBoolean r, Some true)
+  | BoolT (r, None) -> BoolT (lit_reason r, Some true)
+  | MixedT (r, _) -> BoolT (lit_reason r, Some true)
   | AnyT _ as t -> t
   | t -> EmptyT (reason_of_t t)
 
-and filter_not_true = function
+and filter_not_true t =
+  let lit_reason = replace_reason_const (RBooleanLit false) in
+  match t with
   | BoolT (r, Some true) -> EmptyT r
-  | BoolT (r, None) -> BoolT (r, Some false)
+  | BoolT (r, None) -> BoolT (lit_reason r, Some false)
   | t -> t
 
-and filter_false = function
+and filter_false t =
+  let lit_reason = replace_reason_const (RBooleanLit false) in
+  match t with
   | BoolT (r, Some false)
-  | BoolT (r, None) -> BoolT (r, Some false)
-  | MixedT (r, _) -> BoolT (replace_reason_const RBoolean r, Some false)
+  | BoolT (r, None) -> BoolT (lit_reason r, Some false)
+  | MixedT (r, _) -> BoolT (lit_reason r, Some false)
   | AnyT _ as t -> t
   | t -> EmptyT (reason_of_t t)
 
-and filter_not_false = function
+and filter_not_false t =
+  let lit_reason = replace_reason_const (RBooleanLit true) in
+  match t with
   | BoolT (r, Some false) -> EmptyT r
-  | BoolT (r, None) -> BoolT (r, Some true)
+  | BoolT (r, None) -> BoolT (lit_reason r, Some true)
   | t -> t
 
 (* filter out undefined from a type *)
