@@ -116,7 +116,7 @@ end
 module Translate = Estree_translator.Translate (Hh_jsonTranslator)
 
 module RunEsprimaTests : sig
-  val main : string array -> unit
+  val main : unit -> unit
 end = struct
   open Hh_json
   open String_utils
@@ -142,10 +142,15 @@ end = struct
     | Tokens of string
     | Failure of string
 
+  type case_diff =
+    | Diff of string (* json of diffs to apply *)
+    | Todo of string (* reason *)
+    | Same
+
   type case = {
     source: string option;
     expected: case_expectation option;
-    diff: string option;
+    diff: case_diff;
     skipped: string list;
   }
 
@@ -156,13 +161,13 @@ end = struct
 
   type case_result =
     | Case_ok
-    | Case_skipped
+    | Case_skipped of string option (* reason *)
     | Case_error of string list
 
   let empty_case = {
     source = None;
     expected = None;
-    diff = None;
+    diff = Same;
     skipped = [];
   }
 
@@ -215,7 +220,12 @@ end = struct
           | "diff" ->
             let case = find_case case_name test.cases in
             let source = Sys_utils.cat file in
-            let case = { case with diff = Some source; } in
+            let case = { case with diff = Diff source; } in
+            SMap.add case_name case test.cases
+          | "skip" ->
+            let case = find_case case_name test.cases in
+            let skip = Sys_utils.cat file |> String.trim in
+            let case = { case with diff = Todo skip; } in
             SMap.add case_name case test.cases
           | _ -> test.cases
           in
@@ -493,8 +503,9 @@ end = struct
   let run_case case : case_result =
     match case.source with
     | None ->
-      if List.length case.skipped = 0 then Case_error ["No source"]
-      else Case_skipped
+      if List.length case.skipped = 0 && case.diff = Same
+      then Case_error ["No source"]
+      else Case_skipped None
     | Some content ->
       let (ast, errors) = Parser_flow.program_file
         ~fail:false content (Some (Loc.SourceFile "42.js")) in
@@ -507,11 +518,18 @@ end = struct
           JSON_Object params
       | _ -> assert false
       in
-      begin match case.expected with
-      | Some (Module _) -> (* TODO *) Case_skipped
-      | Some (Tree tree) ->
+      let diff, todo =
+        match case.diff with
+        | Diff str -> Some str, None
+        | Todo str -> None, Some str
+        | Same -> None, None
+      in
+      begin match todo, case.expected with
+      | Some reason, _ -> Case_skipped (Some reason)
+      | None, Some (Module _) -> (* TODO *) Case_skipped None
+      | None, Some (Tree tree) ->
           let expected = fst (Parser_flow.json_file ~fail:true tree None) in
-          let expected = match case.diff with
+          let expected = match diff with
           | Some str ->
             let diffs = fst (Parser_flow.json_file ~fail:true str None) in
             begin match apply_diff diffs expected with
@@ -524,9 +542,9 @@ end = struct
           let errors = test_tree [] actual expected [] in
           if List.length errors = 0 then Case_ok
           else Case_error errors
-      | Some (Tokens _) -> (* TODO *) Case_skipped
-      | Some (Failure _) -> (* TODO *) Case_skipped
-      | None -> Case_error ["Nothing to do"]
+      | None, Some (Tokens _) -> (* TODO *) Case_skipped None
+      | None, Some (Failure _) -> (* TODO *) Case_skipped None
+      | None, None -> Case_error ["Nothing to do"]
       end
 
   type test_results = {
@@ -538,7 +556,6 @@ end = struct
   type suite_results = {
     ok_tests: int;
     ok_cases: int;
-    skipped_tests: int;
     skipped_cases: int;
     failed_tests: int;
     failed_cases: int;
@@ -547,7 +564,6 @@ end = struct
   let empty_suite_results = {
     ok_tests = 0;
     ok_cases = 0;
-    skipped_tests = 0;
     skipped_cases = 0;
     failed_tests = 0;
     failed_cases = 0;
@@ -560,30 +576,51 @@ end = struct
       failed_cases = suite.failed_cases + test.failed;
     }
 
-  let main argv =
-    let path = match Array.to_list argv with
-    | _cmd::path::[] -> path
-    | _ -> prerr_endline "Invalid usage"; exit 1
+  type verbose_mode =
+    | Quiet
+    | Verbose
+    | Normal
+
+  let main () =
+    let verbose_ref = ref Normal in
+    let path_ref = ref None in
+    let speclist = [
+      "-q", Arg.Unit (fun () -> verbose_ref := Quiet), "Enables quiet mode";
+      "-v", Arg.Unit (fun () -> verbose_ref := Verbose), "Enables verbose mode";
+    ] in
+    let usage_msg = "Runs flow parser on esprima tests. Options available:" in
+    Arg.parse speclist (fun anon -> path_ref := Some anon) usage_msg;
+    let path = match !path_ref with
+    | Some path -> path
+    | None -> prerr_endline "Invalid usage"; exit 1
     in
+    let quiet = !verbose_ref = Quiet in
+    let verbose = !verbose_ref = Verbose in
     let tests = tests_of_path path in
     let results = List.fold_left (fun results { test_name; cases; } ->
-      print [C.Bold C.White, spf "=== %s ===\n" test_name];
+      if not quiet then print [C.Bold C.White, spf "=== %s ===\n" test_name];
       let test_results = SMap.fold (fun key case results ->
         (* print [C.Normal C.Default, spf "[ ] %s\r" key]; *)
         match run_case case with
         | Case_ok ->
-          (* print [
+          if verbose then print [
             C.Normal C.Green, "[\xE2\x9C\x93] PASS";
             C.Normal C.Default, spf ": %s\n" key
-          ]; *)
+          ];
           { results with ok = results.ok + 1 }
-        | Case_skipped ->
-          (* print [
-            C.Normal C.Yellow, "[-] SKIP";
-            C.Normal C.Default, spf ": %s\n" key
-          ]; *)
+        | Case_skipped reason ->
+          begin match reason with
+          | Some ""
+          | None -> ()
+          | Some reason ->
+              if not quiet then print [
+                C.Normal C.Yellow, "[-] SKIP";
+                C.Normal C.Default, spf ": %s - %s\n" key reason
+              ]
+          end;
           { results with skipped = results.skipped + 1 }
         | Case_error errs ->
+          if quiet then print [C.Bold C.White, spf "=== %s ===\n" test_name];
           print [
             C.Normal C.Red, "[\xE2\x9C\x97] FAIL";
             C.Normal C.Default, spf ": %s\n" key
@@ -591,15 +628,11 @@ end = struct
           List.iter (fun err ->
             print [C.Normal C.Default, spf "    %s\n" err];
           ) errs;
+          flush stdout;
           { results with failed = results.failed + 1 }
       ) cases { ok = 0; skipped = 0; failed = 0; } in
-      print_endline "";
+      if not quiet then print_endline "";
       let results = add_results results test_results in
-      let results = if test_results.skipped > 0 then
-        { results with skipped_tests = results.skipped_tests + 1; }
-      else
-        results
-      in
       if test_results.failed > 0 then
         { results with failed_tests = results.failed_tests + 1; }
       else
@@ -607,22 +640,24 @@ end = struct
     ) empty_suite_results tests in
 
     if results.failed_tests = 0 then
-      print [
-        C.Bold C.Default, spf "Passed: %d (%d cases), Failed: %d (%d cases), Skipped: %d (%d cases)\n"
+      let _ = print [
+        C.Bold C.Default, spf "Passed: %d (%d cases), Failed: %d (%d cases), Skipped: %d cases\n"
           results.ok_tests results.ok_cases
           results.failed_tests results.failed_cases
-          results.skipped_tests results.skipped_cases
-      ]
+          results.skipped_cases
+      ] in
+      exit 0
     else
-      print [
+      let _ = print [
         C.Bold C.Default, spf "Passed: %d (%d cases), "
           results.ok_tests results.ok_cases;
         C.BoldWithBG (C.White, C.Red), spf "Failed: %d (%d cases)"
           results.failed_tests results.failed_cases;
         C.Bold C.Default, spf ", Skipped: %d cases\n"
           results.skipped_cases;
-      ]
+      ] in
+      exit 1
 
 end
 
-let _ = RunEsprimaTests.main (Sys.argv)
+let _ = RunEsprimaTests.main ()
