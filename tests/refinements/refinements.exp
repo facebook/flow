@@ -718,6 +718,12 @@ tagged_union.js:100
 
 tagged_union.js:109
 109:     if (x.legnth === 0) {} // error, typo
+             ^^^^^^^^ property `legnth` is a string. This type is incompatible with
+228:     [key: number]: T;
+               ^^^^^^ number. See lib: <BUILTINS>/core.js:228
+
+tagged_union.js:109
+109:     if (x.legnth === 0) {} // error, typo
                ^^^^^^ property `legnth`. Property not found in
 109:     if (x.legnth === 0) {} // error, typo
              ^ Array
@@ -887,4 +893,4 @@ void.js:85
            ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 153 errors
+Found 154 errors

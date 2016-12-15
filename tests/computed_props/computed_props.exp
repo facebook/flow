@@ -1,3 +1,63 @@
+instance.js:8
+  8:   [index: number]: () => string;
+                              ^^^^^^ string. This type is incompatible with
+ 35: (sub[num]: () => bool);
+                      ^^^^ boolean
+
+instance.js:26
+ 26: (sub['x']: string); // string ~> number
+      ^^^^^^^^ number. This type is incompatible with
+ 26: (sub['x']: string); // string ~> number
+                ^^^^^^ string
+
+instance.js:29
+ 29: (sub['meth'](): string); // string ~> number
+      ^^^^^^^^^^^^^ number. This type is incompatible with
+ 29: (sub['meth'](): string); // string ~> number
+                     ^^^^^^ string
+
+instance.js:36
+ 36: (sub[num](): bool); // string ~> bool
+      ^^^^^^^^^^ string. This type is incompatible with
+ 36: (sub[num](): bool); // string ~> bool
+                  ^^^^ boolean
+
+instance.js:39
+ 39: (sub.a: () => string); // key: string ~> number
+      ^^^^^ property `a` is a string. This type is incompatible with
+  8:   [index: number]: () => string;
+               ^^^^^^ number
+
+instance.js:40
+ 40: (sub['a']: () => string); // key: string ~> number
+      ^^^^^^^^ property `a` is a string. This type is incompatible with
+  8:   [index: number]: () => string;
+               ^^^^^^ number
+
+instance.js:41
+ 41: (sub[true](): () => bool); // key: bool ~> number, value: bool ~> string
+      ^^^^^^^^^^^ string. This type is incompatible with
+ 41: (sub[true](): () => bool); // key: bool ~> number, value: bool ~> string
+                   ^^^^^^^^^^ function type
+
+instance.js:41
+ 41: (sub[true](): () => bool); // key: bool ~> number, value: bool ~> string
+          ^^^^ boolean. This type is incompatible with
+  8:   [index: number]: () => string;
+               ^^^^^^ number
+
+instance.js:46
+ 46: (map[num](): bool); // bool ~> string
+      ^^^^^^^^^^ string. This type is incompatible with
+ 46: (map[num](): bool); // bool ~> string
+                  ^^^^ boolean
+
+instance.js:50
+ 50: map[0] = () => 1; // number ~> string
+                    ^ number. This type is incompatible with
+  8:   [index: number]: () => string;
+                              ^^^^^^ string
+
 test.js:19
  19: (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ string. Expected string literal `ffffff`, got `ff0000` instead
@@ -41,4 +101,4 @@ test7.js:5
             ^^^^^^ string
 
 
-Found 7 errors
+Found 17 errors

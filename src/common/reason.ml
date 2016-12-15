@@ -67,6 +67,7 @@ type reason_desc =
   | RObjectLit
   | RObjectType
   | RObjectClassName
+  | RObjectIndexer
   | RArray
   | RArrayLit
   | REmptyArrayLit
@@ -358,6 +359,7 @@ let rec string_of_desc = function
   | RObjectLit -> "object literal"
   | RObjectType -> "object type"
   | RObjectClassName -> "Object"
+  | RObjectIndexer -> "object indexer"
   | RArray -> "array"
   | RArrayLit -> "array literal"
   | REmptyArrayLit -> "empty array literal"
