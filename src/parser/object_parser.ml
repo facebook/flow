@@ -85,9 +85,6 @@ module Object
     let params = Declaration.function_params env in
     Ast.Expression.Object.Property.(match kind, params with
     | Get, ([], None) -> ()
-    | Set, ([(_, Pattern.Assignment _)], None) ->
-        (* defaults don't make sense on a setter *)
-        error_at env (key_loc, Error.SetterArity)
     | Set, (_, Some _rest) ->
         (* rest params don't make sense on a setter *)
         error_at env (key_loc, Error.SetterArity)
