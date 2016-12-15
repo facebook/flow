@@ -161,5 +161,72 @@ let tests = [
     if (x.badBool === true) {
       (x.badBool: empty); // error: true !~> empty
     }
+  },
+
+  // type mismatch
+  function(x: { foo: 123, y: string } | { foo: 'foo', z: string }) {
+    if (x.foo === 123) {
+      (x.y: string);
+      x.z; // error
+    } else {
+      (x.z: string);
+      x.y; // error
+    }
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      (x.y: string);
+      x.z; // error
+    }
+  },
+
+  // type mismatch, but one is not a literal
+  function(x: { foo: number, y: string } | { foo: 'foo', z: string }) {
+    if (x.foo === 123) {
+      (x.y: string); // ok, because 123 !== 'foo'
+      x.z; // error
+    } else {
+      x.y; // error: x.foo could be a string
+      x.z; // error: could still be either case (if foo was a different number)
+    }
+
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      (x.y: string);
+      x.z; // error
+    }
+  },
+
+  // type mismatch, neither is a literal
+  function(x: { foo: number, y: string } | { foo: string, z: string }) {
+    if (x.foo === 123) {
+      (x.y: string); // ok, because 123 !== string
+      x.z; // error
+    } else {
+      x.y; // error: x.foo could be a string
+      x.z; // error: could still be either case (if foo was a different number)
+    }
+
+    if (x.foo === 'foo') {
+      (x.z: string);
+      x.y; // error
+    } else {
+      x.y; // error: x.foo could be a different string
+      x.z; // error: x.foo could be a number
+    }
+  },
+
+  // type mismatch, neither is a literal, test is not a literal either
+  function(
+    x: { foo: number, y: string } | { foo: string, z: string },
+    num: number
+  ) {
+    if (x.foo === num) {
+      x.y; // error: flow isn't smart enough to figure this out yet
+      x.z; // error
+    }
   }
 ];

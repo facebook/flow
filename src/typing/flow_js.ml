@@ -4402,23 +4402,42 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, GuardT (pred, result, sink) ->
       guard cx trace l pred result sink
 
-    | StrT (_, Literal value),
-      SentinelPropTestT (_, sense, SentinelStr sentinel, _)
-      when (value = sentinel) != sense ->
-        (* provably unreachable, so prune *)
-        ()
+    | StrT (_, lit),
+      SentinelPropTestT (l, sense, SentinelStr sentinel, result) ->
+        begin match lit with
+        | Literal value when (value = sentinel) != sense ->
+            () (* provably unreachable, so prune *)
+        | _ ->
+            rec_flow_t cx trace (l, result)
+        end
 
-    | NumT (_, Literal (value, _)),
-      SentinelPropTestT (_, sense, SentinelNum (sentinel, _), _)
-      when (value = sentinel) != sense ->
-        (* provably unreachable, so prune *)
-        ()
+    | NumT (_, lit),
+      SentinelPropTestT (l, sense, SentinelNum (sentinel, _), result) ->
+        begin match lit with
+        | Literal (value, _) when (value = sentinel) != sense ->
+            () (* provably unreachable, so prune *)
+        | _ ->
+            rec_flow_t cx trace (l, result)
+        end
 
-    | BoolT (_, Some value),
-      SentinelPropTestT (_, sense, SentinelBool sentinel, _)
-      when (value = sentinel) != sense ->
-        (* provably unreachable, so prune *)
-        ()
+    | BoolT (_, lit),
+      SentinelPropTestT (l, sense, SentinelBool sentinel, result) ->
+        begin match lit with
+        | Some value when (value = sentinel) != sense ->
+            () (* provably unreachable, so prune *)
+        | _ ->
+            rec_flow_t cx trace (l, result)
+        end
+
+    | (StrT _ | NumT _ | BoolT _),
+      SentinelPropTestT (l, sense, _, result) ->
+        (* types don't match (would've been matched above) *)
+        (* we don't prune other types like objects or instances, even though
+           a test like `if (ObjT === StrT)` seems obviously unreachable, but
+           we have to be wary of toString and valueOf on objects/instances. *)
+        if sense
+        then () (* provably unreachable, so prune *)
+        else rec_flow_t cx trace (l, result)
 
     | _, SentinelPropTestT (l, _, _, result) ->
         (* property exists, but is not something we can use for refinement *)
@@ -7554,41 +7573,42 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
          lands to revisit. Tracked by #11301092. *)
       if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
   in
-  function
-  (* obj.key ===/!== string value *)
-  | (sense, (ObjT (_, { props_tmap; _}) as obj), StrT (_, Literal value)) ->
-      flow_sentinel sense props_tmap obj (SentinelStr value)
+  let sentinel_of_literal = function
+    | StrT (_, Literal value) -> Some (SentinelStr value)
+    | NumT (_, Literal value) -> Some (SentinelNum value)
+    | BoolT (_, Some value) -> Some (SentinelBool value)
+    | _ -> None
+  in
+  fun (sense, obj, t) -> match sentinel_of_literal t with
+  | Some s ->
+      begin match obj with
+      (* obj.key ===/!== literal value *)
+      | ObjT (_, { props_tmap; _}) ->
+        flow_sentinel sense props_tmap obj s
 
-  (* instance.key ===/!== string value *)
-  | (sense, (InstanceT (_, _, _, { fields_tmap; _}) as obj),
-      StrT (_, Literal value)) ->
-      flow_sentinel sense fields_tmap obj (SentinelStr value)
+      (* instance.key ===/!== literal value *)
+      | InstanceT (_, _, _, { fields_tmap; _}) ->
+        flow_sentinel sense fields_tmap obj s
 
-  (* obj.key ===/!== number value *)
-  | (sense, (ObjT (_, { props_tmap; _}) as obj), NumT (_, Literal value)) ->
-      flow_sentinel sense props_tmap obj (SentinelNum value)
-
-  (* obj.key ===/!== boolean value *)
-  | (sense, (ObjT (_, { props_tmap; _}) as obj), BoolT (_, Some value)) ->
-      flow_sentinel sense props_tmap obj (SentinelBool value)
-
-  | sense, IntersectionT (_, rep),
-     (StrT (_, Literal _) | NumT (_, Literal (_, _)) | BoolT (_, Some _) as t)
-    ->
-    (* For an intersection of object types, try the test for each object type in
-       turn, while recording the original intersection so that we end up with
-       the right refinement. See the comment on the implementation of
-       IntersectionPreprocessKit for more details. *)
-    let reason = reason_of_t result in
-    InterRep.members rep |> List.iter (fun obj ->
-      rec_flow cx trace (
-        obj,
-        intersection_preprocess_kit reason
-          (SentinelPropTest(sense, key, t, orig_obj, result))
-      )
-    )
-
-  | _ -> (* not enough info to refine *)
+      | IntersectionT (_, rep) ->
+        (* For an intersection of object types, try the test for each object
+           type in turn, while recording the original intersection so that we
+           end up with the right refinement. See the comment on the
+           implementation of IntersectionPreprocessKit for more details. *)
+        let reason = reason_of_t result in
+        InterRep.members rep |> List.iter (fun obj ->
+          rec_flow cx trace (
+            obj,
+            intersection_preprocess_kit reason
+              (SentinelPropTest(sense, key, t, orig_obj, result))
+          )
+        )
+      | _ ->
+        (* not enough info to refine *)
+        rec_flow_t cx trace (orig_obj, result)
+      end
+  | None ->
+    (* not enough info to refine *)
     rec_flow_t cx trace (orig_obj, result)
 
 (*******************************************************************)

@@ -764,6 +764,108 @@ tagged_union.js:162
 162:       (x.badBool: empty); // error: true !~> empty
                        ^^^^^ empty
 
+tagged_union.js:170
+170:       x.z; // error
+             ^ property `z`. Property not found in
+170:       x.z; // error
+           ^ object type
+
+tagged_union.js:173
+173:       x.y; // error
+             ^ property `y`. Property not found in
+173:       x.y; // error
+           ^ object type
+
+tagged_union.js:177
+177:       x.y; // error
+             ^ property `y`. Property not found in
+177:       x.y; // error
+           ^ object type
+
+tagged_union.js:180
+180:       x.z; // error
+             ^ property `z`. Property not found in
+180:       x.z; // error
+           ^ object type
+
+tagged_union.js:188
+188:       x.z; // error
+             ^ property `z`. Property not found in
+188:       x.z; // error
+           ^ object type
+
+tagged_union.js:190
+190:       x.y; // error: x.foo could be a string
+             ^ property `y`. Property not found in
+190:       x.y; // error: x.foo could be a string
+           ^ object type
+
+tagged_union.js:191
+191:       x.z; // error: could still be either case (if foo was a different number)
+             ^ property `z`. Property not found in
+191:       x.z; // error: could still be either case (if foo was a different number)
+           ^ object type
+
+tagged_union.js:196
+196:       x.y; // error
+             ^ property `y`. Property not found in
+196:       x.y; // error
+           ^ object type
+
+tagged_union.js:199
+199:       x.z; // error
+             ^ property `z`. Property not found in
+199:       x.z; // error
+           ^ object type
+
+tagged_union.js:207
+207:       x.z; // error
+             ^ property `z`. Property not found in
+207:       x.z; // error
+           ^ object type
+
+tagged_union.js:209
+209:       x.y; // error: x.foo could be a string
+             ^ property `y`. Property not found in
+209:       x.y; // error: x.foo could be a string
+           ^ object type
+
+tagged_union.js:210
+210:       x.z; // error: could still be either case (if foo was a different number)
+             ^ property `z`. Property not found in
+210:       x.z; // error: could still be either case (if foo was a different number)
+           ^ object type
+
+tagged_union.js:215
+215:       x.y; // error
+             ^ property `y`. Property not found in
+215:       x.y; // error
+           ^ object type
+
+tagged_union.js:217
+217:       x.y; // error: x.foo could be a different string
+             ^ property `y`. Property not found in
+217:       x.y; // error: x.foo could be a different string
+           ^ object type
+
+tagged_union.js:218
+218:       x.z; // error: x.foo could be a number
+             ^ property `z`. Property not found in
+218:       x.z; // error: x.foo could be a number
+           ^ object type
+
+tagged_union.js:228
+228:       x.y; // error: flow isn't smart enough to figure this out yet
+             ^ property `y`. Property not found in
+228:       x.y; // error: flow isn't smart enough to figure this out yet
+           ^ object type
+
+tagged_union.js:229
+229:       x.z; // error
+             ^ property `z`. Property not found in
+229:       x.z; // error
+           ^ object type
+
 typeof.js:5
   5:     x[0]; // error for boolean, not number
          ^^^^ access of computed property/element. Computed property/element cannot be accessed on
@@ -899,4 +1001,4 @@ void.js:85
            ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 155 errors
+Found 172 errors
