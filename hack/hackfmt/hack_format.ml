@@ -8,6 +8,7 @@
  *
  *)
 
+module SourceText = Full_fidelity_source_text
 module SyntaxKind = Full_fidelity_syntax_kind
 module Syntax = Full_fidelity_editable_syntax
 module TriviaKind = Full_fidelity_trivia_kind
@@ -40,6 +41,22 @@ let builder = object (this)
   val mutable rule_alloc = Rule_allocator.make ();
   val mutable nesting_alloc = Nesting_allocator.make ();
   val mutable block_indent = 0;
+
+  (* TODO: Make builder into an instantiable class instead of
+   * having this reset method
+   *)
+  method reset () =
+    Stack.clear open_spans;
+    rules <- [];
+    chunks <- [];
+    next_split_rule <- None;
+    space_if_not_split <- false;
+    pending_whitespace <- "";
+    chunk_groups <- [];
+    rule_alloc <- Rule_allocator.make ();
+    nesting_alloc <- Nesting_allocator.make ();
+    block_indent <- 0;
+    ()
 
   method add_string s =
     chunks <- (match chunks with
@@ -1273,9 +1290,16 @@ let debug_chunk_groups chunk_groups =
   );
   ()
 
-let run ?(debug=false) node =
+let format_node ?(debug=false) node =
+  builder#reset ();
   transform node;
   (* split (); *)
   let chunk_groups = builder#_end () in
   if debug then debug_chunk_groups chunk_groups;
   chunk_groups
+
+let format_content content =
+  let source_text = SourceText.make content in
+  let syntax_tree = SyntaxTree.make source_text in
+  let editable = Full_fidelity_editable_syntax.from_tree syntax_tree in
+  format_node editable
