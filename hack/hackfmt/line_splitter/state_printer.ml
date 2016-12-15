@@ -21,7 +21,7 @@ let print_state state =
       Buffer.add_string b newline;
       let indent = Nesting.get_indent c.Chunk.nesting nesting_set in
       let indent = indent + block_indentation in
-      Buffer.add_string b (String.make indent ' ')
+      if c.Chunk.text <> "" then Buffer.add_string b (String.make indent ' ');
     end else if c.Chunk.space_if_not_split then Buffer.add_string b " ";
     Buffer.add_string b c.Chunk.text;
     ()
