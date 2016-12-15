@@ -392,7 +392,6 @@ module rec TypeTerm : sig
     (* Keys *)
     | GetKeysT of reason * t
     | HasOwnPropT of reason * string literal
-    | HasPropT of reason * reason option * string literal
 
     (* Element access *)
     | ElemT of reason * t * elem_action
@@ -1509,7 +1508,6 @@ and reason_of_use_t = function
   | GetStaticsT (reason,_) -> reason
   | GuardT (_, _, t) -> reason_of_t t
   | HasOwnPropT (reason, _) -> reason
-  | HasPropT (reason, _, _) -> reason
   | IdxUnMaybeifyT (reason, _) -> reason
   | IdxUnwrap (reason, _) -> reason
   | ImportDefaultT (reason, _, _, _) -> reason
@@ -1667,7 +1665,6 @@ and mod_reason_of_use_t f = function
   | GetStaticsT (reason, t) -> GetStaticsT (f reason, t)
   | GuardT (pred, result, t) -> GuardT (pred, result, mod_reason_of_t f t)
   | HasOwnPropT (reason, prop) -> HasOwnPropT (f reason, prop)
-  | HasPropT (reason, strict, prop) -> HasPropT (f reason, strict, prop)
   | IdxUnMaybeifyT (reason, t_out) -> IdxUnMaybeifyT (f reason, t_out)
   | IdxUnwrap (reason, t_out) -> IdxUnwrap (f reason, t_out)
   | ImportDefaultT (reason, import_kind, name, t) ->
@@ -1870,7 +1867,6 @@ let string_of_use_ctor = function
   | GetStaticsT _ -> "GetStaticsT"
   | GuardT _ -> "GuardT"
   | HasOwnPropT _ -> "HasOwnPropT"
-  | HasPropT _ -> "HasPropT"
   | IdxUnMaybeifyT _ -> "IdxUnMaybeifyT"
   | IdxUnwrap _ -> "IdxUnwrap"
   | ImportDefaultT _ -> "ImportDefaultT"

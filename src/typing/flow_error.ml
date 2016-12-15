@@ -233,7 +233,6 @@ end = struct
       | LookupT _ -> "Property not found in"
       | GetKeysT _ -> "Expected object instead of"
       | HasOwnPropT _ -> "Property not found in"
-      | HasPropT _ -> "Property not found in"
       | UnaryMinusT _ -> "Expected number instead of"
       | MapTypeT (_, kind, _, _) ->
         (match kind with

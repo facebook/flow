@@ -235,7 +235,6 @@ class ['a] t = object(self)
   | GetStaticsT (_, _)
   | GuardT (_, _, _)
   | HasOwnPropT (_, _)
-  | HasPropT (_, _, _)
   | IdxUnMaybeifyT _
   | IdxUnwrap _
   | ImportDefaultT (_, _, _, _)

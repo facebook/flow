@@ -466,12 +466,6 @@ number.js:63
  59:   function(x: { foo: number }): 0 {
                                      ^ number literal `0`
 
-number.js:77
- 77:     if (str === obj.bar) { // error, no such property
-                         ^^^ property `bar`. Property not found in
- 77:     if (str === obj.bar) { // error, no such property
-                     ^^^ object type
-
 number.js:97
  97:       return s; // error
                   ^ number. This type is incompatible with the expected return type of
@@ -610,12 +604,6 @@ string.js:63
  59:   function(x: { foo: string }): 'foo' {
                                      ^^^^^ string literal `foo`
 
-string.js:77
- 77:     if (str === obj.bar) { // error, no such property
-                         ^^^ property `bar`. Property not found in
- 77:     if (str === obj.bar) { // error, no such property
-                     ^^^ object type
-
 string.js:98
  98:       return s; // error
                   ^ string. This type is incompatible with the expected return type of
@@ -692,65 +680,53 @@ tagged_union.js:72
  72:   default: return x.A; // error, x: C and property A not found in type C
                        ^ object type
 
-tagged_union.js:88
- 88:     if (x.kindTypo === 1) {} // error, kindTypo doesn't exist on A
-               ^^^^^^^^ property `kindTypo`. Property not found in
- 88:     if (x.kindTypo === 1) {} // error, kindTypo doesn't exist on A
-             ^ object type
+tagged_union.js:89
+ 89:       (x.kindTypo: string); // typos can't be used, though
+            ^^^^^^^^^^ property `kindTypo` of unknown type. This type is incompatible with
+ 89:       (x.kindTypo: string); // typos can't be used, though
+                        ^^^^^^ string
 
-tagged_union.js:94
- 94:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
+tagged_union.js:96
+ 96:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
                ^^^^^^^ property `fooTypo`. Property not found in
- 94:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
+ 96:     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
              ^ object type
 
-tagged_union.js:99
- 99:     if (x.kind === (null).toString()) {} // error, method on null
+tagged_union.js:101
+101:     if (x.kind === (null).toString()) {} // error, method on null
                         ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
- 99:     if (x.kind === (null).toString()) {} // error, method on null
+101:     if (x.kind === (null).toString()) {} // error, method on null
                          ^^^^ null
 
-tagged_union.js:100
-100:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
+tagged_union.js:102
+102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
                                 ^^^^^^^^^^^^^^^^^ call of method `toString`. Method cannot be called on possibly null value
-100:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
+102:     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
                                  ^^^^ null
 
-tagged_union.js:109
-109:     if (x.legnth === 0) {} // error, typo
-               ^^^^^^ property `legnth`. Property not found in
-109:     if (x.legnth === 0) {} // error, typo
-             ^ Array
-
-tagged_union.js:111
-111:     if (y.legnth === 0) {} // error, typo
-               ^^^^^^ property `legnth`. Property not found in
-111:     if (y.legnth === 0) {} // error, typo
-             ^ String
-
 tagged_union.js:113
-113:     if (z.toStirng === 0) {} // error, typo
-               ^^^^^^^^ property `toStirng`. Property not found in
-113:     if (z.toStirng === 0) {} // error, typo
-             ^ Number
-
-tagged_union.js:115
-115:     if (q.valeuOf === 0) {} // error, typo
-               ^^^^^^^ property `valeuOf`. Property not found in
-115:     if (q.valeuOf === 0) {} // error, typo
-             ^ Boolean
+113:       (x.legnth: string); // error: number literal 0 !~> string
+            ^^^^^^^^ property `legnth` of unknown type. This type is incompatible with
+113:       (x.legnth: string); // error: number literal 0 !~> string
+                      ^^^^^^ string
 
 tagged_union.js:118
-118:     if (s.calll === 0) {} // error, typo
-               ^^^^^ property `calll`. Property not found in
-118:     if (s.calll === 0) {} // error, typo
-             ^ function type
+118:       (y.legnth: string); // error: number literal 0 !~> string
+            ^^^^^^^^ property `legnth` of unknown type. This type is incompatible with
+118:       (y.legnth: string); // error: number literal 0 !~> string
+                      ^^^^^^ string
 
-tagged_union.js:120
-120:     if (t.calll === 0) {} // error, typo
-               ^^^^^ property `calll`. Property not found in
-120:     if (t.calll === 0) {} // error, typo
-             ^ statics of function type
+tagged_union.js:123
+123:       (z.toStirng: string); // error: number literal 0 !~> string
+            ^^^^^^^^^^ property `toStirng` of unknown type. This type is incompatible with
+123:       (z.toStirng: string); // error: number literal 0 !~> string
+                        ^^^^^^ string
+
+tagged_union.js:128
+128:       (q.valeuOf: string); // error: number literal 0 !~> string
+            ^^^^^^^^^ property `valeuOf` of unknown type. This type is incompatible with
+128:       (q.valeuOf: string); // error: number literal 0 !~> string
+                       ^^^^^^ string
 
 typeof.js:5
   5:     x[0]; // error for boolean, not number
@@ -887,4 +863,4 @@ void.js:85
            ^^^^^^ undefined. The operand of an arithmetic operation must be a number.
 
 
-Found 153 errors
+Found 149 errors

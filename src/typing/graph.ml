@@ -289,7 +289,7 @@ and parts_of_use_t cx = function
 | GetPropT (_, _, out) -> ["out", Def out]
 | GetStaticsT (_, out) -> ["out", Def out]
 | GuardT (_, t, out) -> ["iftrue", Def t; "out", Def out]
-| HasOwnPropT _ | HasPropT _ -> []
+| HasOwnPropT _ -> []
 | IdxUnMaybeifyT (_, out) -> ["out", Def out]
 | IdxUnwrap (_, out) -> ["out", Def out]
 | ImportDefaultT (_, _, _, out) -> ["out", Def out]

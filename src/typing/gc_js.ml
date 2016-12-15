@@ -228,7 +228,6 @@ and gc_use cx state = function
       gc cx state t1;
       gc cx state t2
   | HasOwnPropT _ -> ()
-  | HasPropT _ -> ()
   | IdxUnMaybeifyT (_, t_out) -> gc cx state t_out
   | IdxUnwrap (_, t_out) -> gc cx state t_out
   | ImportDefaultT (_, _, _, t) -> gc cx state t

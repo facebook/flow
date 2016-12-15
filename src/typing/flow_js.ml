@@ -1911,7 +1911,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyFunT reason, SetPropT (_, Named (_, x), _)
     | AnyFunT reason, LookupT (_, _, _, Named (_, x), _)
     | AnyFunT reason, MethodT (_, _, Named (_, x), _)
-    | AnyFunT reason, HasPropT (_, _, Literal x) when is_function_prototype x ->
+        when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
     | (AnyFunT _, UseT (_, u)) when function_like u -> ()
     | (AnyFunT _, UseT (_, u)) when object_like u -> ()
@@ -2381,21 +2381,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | _ ->
         add_output cx trace (FlowError.EPropNotFound (reason_op, reason_o)))
 
-    | ObjT (reason_o, { props_tmap = mapr; proto_t = proto; dict_t; _ }),
-      HasPropT (reason_op, strict, x) ->
-      (match x, dict_t with
-      (* If we have a literal string and that property exists *)
-      | Literal x, _ when Context.has_prop cx mapr x -> ()
-      (* If we have a dictionary, try that next *)
-      | _, Some { key; _ } -> rec_flow_t cx trace (StrT (reason_op, x), key)
-      | _ ->
-        let strict = match strict with
-        | Some r -> Some r
-        | None -> Some reason_o
-        in
-        rec_flow cx trace (proto, HasPropT (reason_op, strict, x))
-      )
-
     | InstanceT (reason_o, _, _, instance), HasOwnPropT(reason_op, Literal x) ->
       let fields_tmap = Context.find_props cx instance.fields_tmap in
       let methods_tmap = Context.find_props cx instance.methods_tmap in
@@ -2409,27 +2394,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let msg = "Expected string literal" in
         add_output cx trace (FlowError.ECustom ((reason_op, reason_o), msg))
 
-    | InstanceT (reason_o, _, super, instance),
-      HasPropT (reason_op, strict, Literal x) ->
-      let fields_tmap = Context.find_props cx instance.fields_tmap in
-      let methods_tmap = Context.find_props cx instance.methods_tmap in
-      let fields = SMap.union fields_tmap methods_tmap in
-      (match SMap.get x fields with
-      | Some _ -> ()
-      | None ->
-          let strict = match strict with
-          | Some r -> Some r
-          | None -> Some reason_o
-          in
-          rec_flow cx trace (super, HasPropT (reason_op, strict, Literal x)))
-
-    | (InstanceT (reason_o, _, _, _), HasPropT(reason_op, _, _)) ->
-        let msg = "Expected string literal" in
-        add_output cx trace (FlowError.ECustom ((reason_op, reason_o), msg))
-
     (* AnyObjT has every prop *)
-    | AnyObjT _, HasOwnPropT _
-    | AnyObjT _, HasPropT _ -> ()
+    | AnyObjT _, HasOwnPropT _ -> ()
 
     | ObjT (_, { flags; props_tmap = mapr; _ }), GetKeysT (reason_op, keys) ->
       begin match flags.sealed with
@@ -4462,35 +4428,35 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Array library call *)
     (**********************)
 
-    | (ArrT (reason, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
+    | (ArrT (reason, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
 
     (***********************)
     (* String library call *)
     (***********************)
 
-    | (StrT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
+    | (StrT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "String",u)
 
     (***********************)
     (* Number library call *)
     (***********************)
 
-    | (NumT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
+    | (NumT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Number",u)
 
     (***********************)
     (* Boolean library call *)
     (***********************)
 
-    | (BoolT (reason, _), (GetPropT _ | MethodT _ | LookupT _ | HasPropT _)) ->
+    | (BoolT (reason, _), (GetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean",u)
 
     (*************************)
     (* Function library call *)
     (*************************)
 
-    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _ | HasPropT _)) ->
+    | (FunProtoT reason, (GetPropT _ | SetPropT _ | MethodT _)) ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Function",u)
 
     (*********************)
@@ -4702,9 +4668,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Some (not_found, t) -> rec_unify cx trace t not_found
       | None -> ()
       end
-
-    | (ObjProtoT _, HasPropT (reason_op, Some reason_strict, _)) ->
-        add_output cx trace (FlowError.EPropNotFound (reason_op, reason_strict))
 
     (* SuperT only involves non-strict lookups *)
     | (ObjProtoT _, SuperT _)
@@ -5143,7 +5106,7 @@ and object_use = function
 and object_like_op = function
   | SetPropT _ | GetPropT _ | MethodT _ | LookupT _
   | SuperT _
-  | GetKeysT _ | HasOwnPropT _ | HasPropT _
+  | GetKeysT _ | HasOwnPropT _
   | ObjAssignT _ | ObjRestT _
   | SetElemT _ | GetElemT _
   | UseT (_, AnyObjT _) -> true

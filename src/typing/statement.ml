@@ -4228,9 +4228,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let obj_t = expression cx _object in
 
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-      Flow.flow cx (obj_t,
-        HasPropT (prop_reason, None, TypeTerm.Literal prop_name));
-
       let expr_reason = mk_reason (RProperty (Some prop_name)) expr_loc in
       let prop_t = match Refinement.get cx expr expr_reason with
       | Some t -> t

@@ -543,16 +543,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "key", JSON_Object (_json_of_string_literal key)
     ]
 
-  | HasPropT (_, strict, key) ->
-    (match strict with
-      | None -> []
-      | Some r -> [
-          "strictReason", json_of_reason ~strip_root:json_cx.strip_root r
-        ]
-    ) @ [
-      "key", JSON_Object (_json_of_string_literal key)
-    ]
-
   | ElemT (_, base, action) -> [
       "baseType", _json_of_t json_cx base;
       match action with
@@ -1428,7 +1418,6 @@ and dump_use_t_ (depth, tvars) cx t =
         (string_of_predicate pred) (kid result) (kid sink))
       t
   | HasOwnPropT _ -> p t
-  | HasPropT _ -> p t
   | IdxUnMaybeifyT _ -> p t
   | IdxUnwrap _ -> p t
   | ImportDefaultT _ -> p t
