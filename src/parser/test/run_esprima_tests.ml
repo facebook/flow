@@ -573,7 +573,7 @@ end = struct
         match run_case case with
         | Case_ok ->
           (* print [
-            C.Normal C.Green, "[✓] PASS";
+            C.Normal C.Green, "[\xE2\x9C\x93] PASS";
             C.Normal C.Default, spf ": %s\n" key
           ]; *)
           { results with ok = results.ok + 1 }
@@ -585,7 +585,7 @@ end = struct
           { results with skipped = results.skipped + 1 }
         | Case_error errs ->
           print [
-            C.Normal C.Red, "[✗] FAIL";
+            C.Normal C.Red, "[\xE2\x9C\x97] FAIL";
             C.Normal C.Default, spf ": %s\n" key
           ];
           List.iter (fun err ->
