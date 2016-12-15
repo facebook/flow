@@ -395,9 +395,9 @@ module Object
           returnType;
           typeParameters;
         }) in
-        let kind = Ast.(match key with
-          | Expression.Object.Property.Identifier (_, "constructor")
-          | Expression.Object.Property.Literal (_, {
+        let kind = Ast.(match static, key with
+          | false, Expression.Object.Property.Identifier (_, "constructor")
+          | false, Expression.Object.Property.Literal (_, {
               Literal.value = Literal.String "constructor";
               _;
             }) ->

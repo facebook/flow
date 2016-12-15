@@ -3498,6 +3498,11 @@ module.exports = {
             'root.body.1.expression.body.body.0.value.body.body.0.expression.callee.optional': {
               type: 'Missing property'
             },
+            'root.body.1.expression.body.body.0.kind': {
+              type: 'Wrong string',
+              expected: 'constructor',
+              actual: 'method',
+            }
           }
         },
         {
