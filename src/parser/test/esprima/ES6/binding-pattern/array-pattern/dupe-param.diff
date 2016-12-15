@@ -1,0 +1,31 @@
+{
+  "errors": {
+    "0": {
+      "lineNumber": undefined,
+      "index": undefined,
+      "column": undefined,
+      "loc": {
+        "start": { "line": 2, "column": 14 },
+        "end": { "line": 2, "column": 15 }
+      }
+    },
+    "1": {
+      "lineNumber": undefined,
+      "index": undefined,
+      "column": undefined,
+      "loc": {
+        "start": { "line": 3, "column": 17 },
+        "end": { "line": 3, "column": 18 }
+      }
+    },
+    "2": {
+      "lineNumber": undefined,
+      "index": undefined,
+      "column": undefined,
+      "loc": {
+        "start": { "line": 4, "column": 19 },
+        "end": { "line": 4, "column": 20 }
+      }
+    }
+  }
+}
