@@ -77,8 +77,8 @@ let builder = object (this)
     );
     pending_whitespace <- ""
 
-  method add_pending_whitespace s =
-    pending_whitespace <- pending_whitespace ^ s
+  method set_pending_whitespace s =
+    pending_whitespace <- s
 
   method split space =
     chunks <- (match chunks with
@@ -288,7 +288,7 @@ let add_space () =
   builder#add_string " "
 
 let pending_space () =
-  builder#add_pending_whitespace " "
+  builder#set_pending_whitespace " "
 
 let rec transform node =
   let t = transform in
@@ -301,22 +301,77 @@ let rec transform node =
   | Token x ->
     token x;
     ()
-  | Script x ->
-    let (header, declarations) = get_script_children x in
-    t header;
-    handle_possible_list declarations;
+  | SyntaxList _ ->
+    raise (Failure "Error: SyntaxList should never be handled directly");
   | ScriptHeader x ->
     let (lt, q, lang_kw) = get_script_header_children x in
     t lt;
     t q;
     t lang_kw;
     builder#end_chunks ();
-  | SimpleTypeSpecifier {simple_type_specifier} -> t simple_type_specifier
-  | LiteralExpression x -> t x.literal_expression
-  | QualifiedNameExpression x ->
-    t x.qualified_name_expression
-  | VariableExpression x -> t x.variable_expression
-  | PipeVariableExpression x -> t x.pipe_variable_expression
+  | Script x ->
+    let (header, declarations) = get_script_children x in
+    t header;
+    handle_possible_list declarations;
+  | ScriptFooter x -> t @@ get_script_footer_children x
+  | SimpleTypeSpecifier x -> t @@ get_simple_type_specifier_children x
+  | LiteralExpression x ->
+    (* Double quoted string literals can create a list *)
+    handle_possible_list @@ get_literal_expression_children x
+  | VariableExpression x -> t @@ get_variable_expression_children x
+  | QualifiedNameExpression x -> t @@ get_qualified_name_expression_children x
+  | PipeVariableExpression x -> t @@ get_pipe_variable_expression_children x
+  | EnumDeclaration x ->
+    let (attr, kw, name, colon_kw, base, enum_type, left_b, enumerators,
+      right_b) = get_enum_declaration_children x in
+    t attr;
+    (* TODO: create a "when_present" abstraction to replace this pattern *)
+    if not (is_missing attr) then builder#end_chunks ();
+    t kw;
+    pending_space ();
+    t name;
+    t colon_kw;
+    builder#simple_space_split ();
+    tl_with ~nest ~f:(fun () ->
+      pending_space ();
+      t base;
+      pending_space ();
+      t enum_type;
+      pending_space ();
+      t left_b;
+    ) ();
+    builder#end_chunks ();
+    builder#start_block_nest ();
+    handle_possible_list enumerators;
+    transform_and_unnest_closing_brace right_b;
+    builder#end_chunks ();
+  | Enumerator x ->
+    let (name, eq_kw, value, semi) = get_enumerator_children x in
+    t name;
+    pending_space ();
+    t eq_kw;
+    builder#simple_space_split ();
+    t_with ~nest value;
+    t semi;
+    builder#end_chunks ();
+  | AliasDeclaration x ->
+    (* TODO: revisit this for long names *)
+    let (attr, kw, name, generic, type_constraint, eq_kw, alias_type, semi) =
+      get_alias_declaration_children x in
+    t attr;
+    if not (is_missing attr) then builder#end_chunks ();
+    t kw;
+    pending_space ();
+    t name;
+    t generic;
+    pending_space ();
+    t type_constraint;
+    pending_space ();
+    t eq_kw;
+    builder#simple_space_split ();
+    t_with ~nest alias_type;
+    t semi;
+    builder#end_chunks ();
   | PropertyDeclaration x ->
     let (modifiers, prop_type, declarators, semi) =
       get_property_declaration_children x in
@@ -333,6 +388,14 @@ let rec transform node =
     t name;
     t prop_initializer;
     ()
+  | NamespaceDeclaration _
+  | NamespaceBody _
+  | NamespaceUseDeclaration _
+  | NamespaceGroupUseDeclaration _
+  | NamespaceUseClause _ ->
+    let error = Printf.sprintf "%s not supported - exiting \n"
+      (SyntaxKind.to_string (kind node)) in
+    raise (Failure error);
   | FunctionDeclaration x ->
     let (attr, header, body) = get_function_declaration_children x in
     t attr;
@@ -374,12 +437,15 @@ let rec transform node =
       handle_possible_list ~after_each:(fun _ -> add_space ()) modifiers;
       t kw;
       split ~space ();
-      t_with ~nest name;
+      tl_with ~nest ~f:(fun () ->
+        t name;
+        t type_params;
+      ) ();
     ) ();
 
     if not (is_missing extends_kw) then begin
       split ~space ();
-      tl_with ~nest ~f:(fun () ->
+      tl_with ~span ~nest ~f:(fun () ->
         t extends_kw;
         tl_with ~nest ~f:(fun () ->
           handle_possible_list ~before_each:(split ~space) extends
@@ -390,7 +456,7 @@ let rec transform node =
 
     if not (is_missing impl_kw) then begin
       split ~space ();
-      tl_with ~nest ~f:(fun () ->
+      tl_with ~span ~nest ~f:(fun () ->
         t impl_kw;
         tl_with ~nest ~f:(fun () ->
           handle_possible_list ~before_each:(split ~space) impls
@@ -452,19 +518,19 @@ let rec transform node =
     let (abs, kw, type_kw, name, type_constraint, eq, type_spec, semi) =
       get_type_const_declaration_children x in
     t abs;
-    if not (is_missing abs) then add_space ();
+    pending_space ();
     t kw;
-    add_space ();
+    pending_space ();
     t type_kw;
-    add_space ();
+    pending_space ();
     t name;
     builder#simple_space_split ();
     tl_with ~nest ~f:(fun () ->
       t type_constraint;
-      if not (is_missing type_constraint) then add_space ();
+      pending_space ();
       t eq;
       builder#simple_space_split ();
-      t type_spec;
+      t_with ~nest type_spec;
     ) ();
     t semi;
     builder#end_chunks ();
@@ -494,10 +560,27 @@ let rec transform node =
     t name;
     transform_argish left_p values right_p;
     ()
+  | InclusionExpression x ->
+    let (kw, expr) = get_inclusion_expression_children x in
+    t kw;
+    builder#simple_space_split ();
+    t expr;
+  | InclusionDirective x ->
+    let (expr, semi) = get_inclusion_directive_children x in
+    t expr;
+    t semi;
+    builder#end_chunks ()
+  | CompoundStatement x ->
+    handle_possible_compound_statement node;
   | ExpressionStatement x ->
     t x.expression_statement_expression;
     t x.expression_statement_semicolon;
     builder#end_chunks()
+  | UnsetStatement x ->
+    let (kw, left_p, args, right_p, semi) = get_unset_statement_children x in
+    t kw;
+    transform_argish left_p args right_p;
+    t semi;
   | WhileStatement x ->
     t x.while_keyword;
     add_space ();
@@ -516,28 +599,17 @@ let rec transform node =
       get_if_statement_children x in
     t kw;
     add_space ();
-    t left_p;
-    split ();
-    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
-      t_with ~nest condition;
-      split ();
-      t right_p;
-    ) ();
+    transform_condition left_p condition right_p;
     handle_possible_compound_statement if_body;
     handle_possible_list elseif_clauses;
     t else_clause;
     builder#end_chunks ();
     ()
   | ElseifClause x ->
-    t x.elseif_keyword;
-    add_space ();
-    t x.elseif_left_paren;
-    split ();
-    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
-      t_with ~nest x.elseif_condition;
-      split ();
-      t x.elseif_right_paren;
-    ) ();
+    let (kw, left_p, condition, right_p, body) = get_elseif_clause_children x in
+    t kw;
+    pending_space ();
+    transform_condition left_p condition right_p;
     handle_possible_compound_statement x.elseif_statement;
     ()
   | ElseClause x ->
@@ -556,20 +628,35 @@ let rec transform node =
   | CatchClause x ->
     let (kw, left_p, ex_type, var, right_p, body) =
       get_catch_clause_children x in
-    (* TODO refactor for if statement consistentacy *)
     t kw;
-    add_space ();
+    pending_space ();
     t left_p;
     split ();
     tl_with ~nest ~f:(fun () ->
       t ex_type;
-      add_space ();
+      pending_space ();
       t var;
       split ();
     ) ();
     t right_p;
     handle_possible_compound_statement body;
     ();
+  | FinallyClause x ->
+    let (kw, body) = get_finally_clause_children x in
+    t kw;
+    pending_space ();
+    handle_possible_compound_statement body;
+  | DoStatement x ->
+    let (do_kw, body, while_kw, left_p, cond, right_p, semi) =
+      get_do_statement_children x in
+    t do_kw;
+    pending_space ();
+    handle_possible_compound_statement body;
+    t while_kw;
+    pending_space ();
+    transform_condition left_p cond right_p;
+    t semi;
+    builder#end_chunks ();
   | ForStatement x ->
     let (kw, left_p, init, semi1, control, semi2, after_iter, right_p, body) =
       get_for_statement_children x in
@@ -594,20 +681,19 @@ let rec transform node =
     builder#end_chunks ();
     ()
   | ForeachStatement x ->
-    (* TODO: revisit this *)
     let (kw, left_p, collection, await_kw, as_kw, key, arrow, value, right_p,
       body) = get_foreach_statement_children x in
     t kw;
-    add_space ();
+    pending_space ();
     t left_p;
     t collection;
-    if not (is_missing await_kw) then add_space ();
+    pending_space ();
     t await_kw;
-    add_space ();
+    pending_space ();
     t as_kw;
-    add_space ();
+    pending_space ();
     t key;
-    add_space ();
+    pending_space ();
     t arrow;
     split ~space ();
     t value;
@@ -646,26 +732,28 @@ let rec transform node =
     ()
   | BreakStatement x ->
     let (kw, expr, semi) = get_break_statement_children x in
-    (* TODO: revisit *)
     transform_keyword_expression_statement kw expr semi;
     ()
+  | ContinueStatement x ->
+    let (kw, level, semi) = get_continue_statement_children x in
+    transform_keyword_expression_statement kw level semi;
   | FunctionStaticStatement x ->
     let (static_kw, declarators, semi) =
       get_function_static_statement_children x in
-    t static_kw;
-    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
-      handle_possible_list ~before_each:(split ~space) declarators;
-    ) ();
-    t semi;
-    builder#end_chunks ();
-    ()
+    transform_keyword_expr_list_statement static_kw declarators semi;
   | StaticDeclarator x ->
     let (name, static_initializer) = get_static_declarator_children x in
     t name;
     t static_initializer;
+  | EchoStatement x ->
+    let (kw, expr_list, semi) = get_echo_statement_children x in
+    transform_keyword_expr_list_statement kw expr_list semi;
+  | GlobalStatement x ->
+    let (kw, var_list, semi) = get_global_statement_children x in
+    transform_keyword_expr_list_statement kw var_list semi;
   | SimpleInitializer x ->
     let (eq_kw, value) = get_simple_initializer_children x in
-    add_space ();
+    pending_space ();
     t eq_kw;
     builder#simple_space_split ();
     t_with ~nest value;
@@ -727,6 +815,23 @@ let rec transform node =
     t op;
     t name;
     ()
+  | SafeMemberSelectionExpression x ->
+    (* TODO: unify code with member_selection_expression, and fix chaining *)
+    let (obj, op, name) = get_safe_member_selection_expression_children x in
+    t obj;
+    builder#simple_split ();
+    t op;
+    t name;
+  | YieldExpression x ->
+    let (kw, operand) = get_yield_expression_children x in
+    t kw;
+    builder#simple_space_split ();
+    t_with ~nest operand;
+  | PrintExpression x ->
+    let (kw, expr) = get_print_expression_children x in
+    t kw;
+    builder#simple_space_split ();
+    t_with ~nest expr;
   | PrefixUnaryExpression x ->
     let (operator, operand) = get_prefix_unary_expression_children x in
     t operator;
@@ -766,6 +871,36 @@ let rec transform node =
     ()
   | FunctionCallExpression x ->
     handle_function_call_expression x
+  | ParenthesizedExpression x ->
+    let (left_p, expr, right_p) = get_parenthesized_expression_children x in
+    t left_p;
+    split ();
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+      tl_with ~nest ~f:(fun () ->
+        (* TODO t14945172: remove this
+          This is required due to the xhp children declaration split, th
+        *)
+        handle_possible_list ~after_each:after_each_argument expr;
+      ) ();
+      t right_p
+    ) ();
+    ()
+  | BracedExpression x ->
+    (* TODO: revisit this *)
+    let (left_b, expr, right_b) = get_braced_expression_children x in
+    t left_b;
+    split ();
+    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+      t_with ~nest expr;
+      split ();
+      t right_b
+    ) ();
+    ()
+  | ListExpression x ->
+    let (kw, lp, members, rp) = get_list_expression_children x in
+    t kw;
+    transform_argish lp members rp;
+    ()
   | CollectionLiteralExpression x ->
     let (name, left_b, initializers, right_b) =
       get_collection_literal_expression_children x
@@ -795,6 +930,9 @@ let rec transform node =
     t obj_type;
     transform_argish left_p arg_list right_p;
     ()
+  | ArrayCreationExpression x ->
+    let (left_b, members, right_b) = get_array_creation_expression_children x in
+    transform_argish left_b members right_b;
   | ArrayIntrinsicExpression x ->
     let (kw, left_p, members, right_p) =
       get_array_intrinsic_expression_children x
@@ -823,44 +961,73 @@ let rec transform node =
     t kw;
     transform_argish left_p members right_p;
     ()
-  | ParenthesizedExpression x ->
-    let (left_p, expr, right_p) = get_parenthesized_expression_children x in
-    t left_p;
-    split ();
-    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
-      t_with ~nest expr;
-      split ();
-      t right_p
-    ) ();
-    ()
-  | BracedExpression x ->
-    (* TODO: revisit this *)
-    let (left_b, expr, right_b) = get_braced_expression_children x in
-    t left_b;
-    split ();
-    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
-      t_with ~nest expr;
-      split ();
-      t right_b
-    ) ();
-    ()
-  | ListExpression x ->
-    let (kw, lp, members, rp) = get_list_expression_children x in
-    t kw;
-    transform_argish lp members rp;
-    ()
   | ElementInitializer x ->
     let (key, arrow, value) = get_element_initializer_children x in
-    t key;
-    add_space ();
-    t arrow;
-    builder#simple_space_split ();
-    t_with ~nest value;
+    transform_mapish_entry key arrow value;
   | SubscriptExpression x ->
-    (* TODO: revisit this *)
     let (receiver, lb, expr, rb) = get_subscript_expression_children x in
     t receiver;
     transform_argish lb expr rb;
+    ()
+  | AwaitableCreationExpression x ->
+    let (kw, body) = get_awaitable_creation_expression_children x in
+    t kw;
+    pending_space ();
+    (* TODO: rethink possible one line bodies *)
+    (* TODO: correctly handle spacing after the closing brace *)
+    handle_possible_compound_statement body;
+  | XHPChildrenDeclaration x ->
+    let (kw, expr, semi) = get_xhp_children_declaration_children x in
+    t kw;
+    pending_space ();
+    t expr;
+    t semi;
+    builder#end_chunks();
+  | XHPCategoryDeclaration x ->
+    let (kw, categories, semi) = get_xhp_category_declaration_children x in
+    t kw;
+    (* TODO: Eliminate code duplication *)
+    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
+      handle_possible_list ~before_each:(split ~space) categories;
+    ) ();
+    t semi;
+    builder#end_chunks();
+  | XHPEnumType x ->
+    let (kw, left_b, values, right_b) = get_xhp_enum_type_children x in
+    t kw;
+    pending_space ();
+    transform_argish left_b values right_b;
+  | XHPRequired x ->
+    let (at, kw) = get_xhp_required_children x in
+    t at;
+    t kw;
+  | XHPClassAttributeDeclaration x ->
+    let (kw, xhp_attributes, semi) =
+      get_xhp_class_attribute_declaration_children x in
+    t kw;
+    tl_with ~nest ~rule:(Some Rule.Argument) ~f:(fun () ->
+      handle_possible_list ~before_each:(split ~space) xhp_attributes;
+    ) ();
+    t semi;
+    builder#end_chunks();
+  | XHPClassAttribute x ->
+    (* TODO: figure out nesting here *)
+    let (attr_type, name, init, req) = get_xhp_class_attribute_children x in
+    t attr_type;
+    pending_space ();
+    t name;
+    if not (is_missing init) then pending_space ();
+    t init;
+    if not (is_missing req) then pending_space ();
+    t req;
+  | XHPAttribute x ->
+    let (name, eq, expr) = get_xhp_attribute_children x in
+    tl_with ~span ~f:(fun () ->
+      t name;
+      t eq;
+      split ();
+      t_with ~nest expr
+    ) ();
     ()
   | XHPOpen x ->
     let (name, attrs, right_a) = get_xhp_open_children x in
@@ -874,15 +1041,6 @@ let rec transform node =
       ) ();
     end;
     handle_xhp_open_right_angle_token right_a;
-    ()
-  | XHPAttribute x ->
-    let (name, eq, expr) = get_xhp_attribute_children x in
-    tl_with ~span ~f:(fun () ->
-      t name;
-      t eq;
-      split ();
-      t_with ~nest expr
-    ) ();
     ()
   | XHPExpression x ->
     let (op, body, close) = get_xhp_expression_children x in
@@ -911,12 +1069,28 @@ let rec transform node =
     t left_a;
     t name;
     t right_a;
+  | TypeConstant x ->
+    let (left_type, separator, right_type) = get_type_constant_children x in
+    t left_type;
+    t separator;
+    t right_type;
   | VectorTypeSpecifier x ->
     let (kw, left_a, vec_type, right_a) =
       get_vector_type_specifier_children x in
     t kw;
     transform_argish left_a vec_type right_a;
     ()
+  | TypeParameter x ->
+    let (variance, name, constraints) = get_type_parameter_children x in
+    t variance;
+    t name;
+    pending_space ();
+    handle_possible_list constraints;
+  | TypeConstraint x ->
+    let (kw, constraint_type) = get_type_constraint_children x in
+    t kw;
+    pending_space ();
+    t constraint_type;
   | MapTypeSpecifier x ->
     let (kw, left_a, key, comma_kw, value, right_a) =
       get_map_type_specifier_children x in
@@ -925,7 +1099,38 @@ let rec transform node =
     let val_list_item = make_list_item value (make_missing ()) in
     let args = make_list [key_list_item; val_list_item] in
     transform_argish left_a args right_a;
-    ()
+  | ClosureTypeSpecifier x ->
+    let (outer_left_p, kw, inner_left_p, param_types, inner_right_p, colon,
+      ret_type, outer_right_p) = get_closure_type_specifier_children x in
+    t outer_left_p;
+    t kw;
+    transform_argish_with_return_type ~in_span:false
+      inner_left_p param_types inner_right_p colon ret_type;
+    t outer_right_p;
+  | ClassnameTypeSpecifier x ->
+    let (kw, left_a, class_type, right_a) =
+      get_classname_type_specifier_children x in
+    t kw;
+    transform_argish left_a class_type right_a;
+  | FieldSpecifier x ->
+    let (name, arrow_kw, field_type) = get_field_specifier_children x in
+    transform_mapish_entry name arrow_kw field_type;
+  | FieldInitializer x ->
+    let (name, arrow_kw, value) = get_field_initializer_children x in
+    transform_mapish_entry name arrow_kw value;
+  | ShapeTypeSpecifier x ->
+    let (shape_kw, left_p, type_fields, right_p) =
+      get_shape_type_specifier_children x in
+    t shape_kw;
+    transform_argish left_p type_fields right_p;
+  | ShapeExpression x ->
+    let (shape_kw, left_p, fields, right_p) = get_shape_expression_children x in
+    t shape_kw;
+    transform_argish left_p fields right_p;
+  | TupleExpression x ->
+    let (kw, left_p, items, right_p) = get_tuple_expression_children x in
+    t kw;
+    transform_argish left_p items right_p;
   | GenericTypeSpecifier x ->
     let (class_type, type_args) = get_generic_type_specifier_children x in
     t class_type;
@@ -943,22 +1148,18 @@ let rec transform node =
     ()
   | TypeArguments x ->
     let (left_a, type_list, right_a) = get_type_arguments_children x in
-    t left_a;
-    split ();
-    tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
-      tl_with ~nest ~f:(fun () ->
-        handle_possible_list ~after_each:after_each_argument type_list
-      ) ();
-      t right_a;
-    ) ();
-    ()
+    transform_argish left_a type_list right_a;
+  | TypeParameters x ->
+    let (left_a, param_list, right_a) = get_type_parameters_children x in
+    transform_argish left_a param_list right_a;
+  | TupleTypeSpecifier x ->
+    let (left_p, types, right_p) = get_tuple_type_specifier_children x in
+    transform_argish left_p types right_p;
+  | ErrorSyntax _ ->
+    raise (Failure "Error: Cannot format a syntax tree with an error node");
   | ListItem x ->
     t x.list_item;
     t x.list_separator
-  | _ ->
-    Printf.printf "%s not supported - exiting \n"
-      (SyntaxKind.to_string (kind node));
-    exit 1
   in
   ()
 
@@ -968,6 +1169,7 @@ and transform_and_unnest_closing_brace right_b =
     | _ -> raise (Failure "expecting node to be a right closing brace")
   in
 
+  (* TODO: change this to split and recompose *)
   let rev_leading_trivia = List.rev @@ EditableToken.leading token in
   let (rev_after_last_newline, rev_rest_including_last_newline) =
     List.split_while rev_leading_trivia ~f:(
@@ -1029,7 +1231,7 @@ and handle_possible_compound_statement node =
 
 and handle_compound_statement cs =
   let (left_b, statements, right_b) = get_compound_statement_children cs in
-  add_space ();
+  pending_space ();
   transform left_b;
   builder#end_chunks ();
   builder#start_block_nest ();
@@ -1206,15 +1408,41 @@ and transform_argish left_p arg_list right_p =
   ) ();
   ()
 
+and transform_mapish_entry key arrow value =
+  transform key;
+  pending_space ();
+  transform arrow;
+  builder#simple_space_split ();
+  t_with ~nest:true value;
+
 and transform_keyword_expression_statement kw expr semi =
   transform kw;
-  builder#simple_space_split ();
-  tl_with ~nest:true ~f:(fun () ->
-    transform expr;
-    transform semi;
-  ) ();
+  if not (is_missing expr) then begin
+    builder#simple_space_split ();
+    tl_with ~nest:true ~f:(fun () ->
+      transform expr;
+    ) ();
+  end;
+  transform semi;
   builder#end_chunks ();
   ()
+
+and transform_keyword_expr_list_statement kw expr_list semi =
+  transform kw;
+  tl_with ~nest:true ~rule:(Some Rule.Argument) ~f:(fun () ->
+    handle_possible_list ~before_each:(split ~space:true) expr_list;
+  ) ();
+  transform semi;
+  builder#end_chunks ();
+
+and transform_condition left_p condition right_p =
+  transform left_p;
+  split ();
+  tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
+    t_with ~nest:true condition;
+    split ();
+    transform right_p;
+  ) ()
 
 and transform_binary_expression ~is_nested expr =
   let get_operator_type op =
