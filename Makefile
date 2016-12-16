@@ -103,6 +103,15 @@ OCP_BUILD_FILES=\
   ocp_build_flow.ocp\
   ocp_build_hack.ocp
 
+WATCH_FILES=\
+  'Makefile'\
+  'src/**/*.ml'\
+  'src/**/*.mli'\
+  'src/**/*.mll'\
+  'src/**/*.mly'\
+  'hack/**/*.ml'\
+  'hack/**/*.mli'
+
 FILES_TO_COPY=\
   $(wildcard lib/*.js)
 
@@ -171,6 +180,15 @@ build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	ocamlbuild -lflags -custom -no-links $(INCLUDE_OPTS) $(LIB_OPTS) -lflags "$(LINKER_FLAGS)" src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow
+
+fast-build: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
+	[ -d _obuild ] || ocp-build init
+	ocp-build make flow -njobs 8 -byte flow
+	rm -f $(OCP_BUILD_FILES)
+	cp _obuild/flow/flow.byte bin/flow
+
+watchman: fast-build
+	watchman-make -p $(WATCH_FILES) -t fast-build
 
 %.h: $(subst _build/,,$@)
 	mkdir -p $(dir $@)
