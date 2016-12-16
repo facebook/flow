@@ -269,12 +269,15 @@ module ContextOptimizer = struct
     | OpenT _ -> super#type_ cx quotient t
     | InstanceT (_, _, _, { class_id; _ }) ->
       let { sig_hash; _ } = quotient in
-      let id = match IMap.get class_id stable_nominal_ids with
+      let id =
+        if Context.mem_nominal_id cx class_id
+        then match IMap.get class_id stable_nominal_ids with
         | None ->
           let id = self#fresh_stable_id in
           stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
           id
-        | Some id -> id in
+        | Some id -> id
+        else class_id in
       let sig_hash = SigHash.add id sig_hash in
       super#type_ cx { quotient with sig_hash } t
     | _ ->

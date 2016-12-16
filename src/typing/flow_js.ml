@@ -5257,6 +5257,7 @@ and generate_tests =
 
 and mk_nominal cx =
   let nominal = mk_id () in
+  Context.add_nominal_id cx nominal;
   (if Context.is_verbose cx then prerr_endlinef
       "NOM %d %s" nominal (Debug_js.string_of_file cx));
   nominal
