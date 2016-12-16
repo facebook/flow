@@ -140,7 +140,12 @@ let merge_strict_context ~options cache component_cxs =
 (* Entry point for merging a component *)
 let merge_strict_component ~options = function
   | Merge_stream.Skip file ->
-    (* skip rechecking this file (because none of its dependencies changed) *)
+    (* Skip rechecking this file (because none of its dependencies changed). We
+       are going to reuse the existing signature for the file, so we must be
+       careful that such a signature actually exists! This holds because a
+       skipped file cannot be a direct dependency, so its dependencies cannot
+       change, which in particular means that it belongs to, and leads, the same
+       component. *)
     file, Errors.ErrorSet.empty, None
   | Merge_stream.Component component ->
   (* A component may have several files: there's always at least one, and
