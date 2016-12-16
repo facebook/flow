@@ -129,3 +129,35 @@ e2.js:6
 Found 1 error
 No errors!
 No errors!
+
+Test f:
+f1.js:4
+  4: type S = { x: string };
+                   ^^^^^^ string. This type is incompatible with
+  4: (c: { x: number });
+              ^^^^^^ number. See: f2.js:4
+
+f2.js:4
+  4: (c: { x: number });
+              ^^^^^^ number. This type is incompatible with
+  4: type S = { x: string };
+                   ^^^^^^ string. See: f1.js:4
+
+
+Found 2 errors
+No errors!
+No errors!
+f1.js:4
+  4: type S = { x: string };
+                   ^^^^^^ string. This type is incompatible with
+  4: (c: { x: number });
+              ^^^^^^ number. See: f2.js:4
+
+f2.js:4
+  4: (c: { x: number });
+              ^^^^^^ number. This type is incompatible with
+  4: type S = { x: string };
+                   ^^^^^^ string. See: f1.js:4
+
+
+Found 2 errors

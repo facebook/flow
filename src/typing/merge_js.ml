@@ -202,11 +202,22 @@ module ContextOptimizer = struct
     inherit [quotient] Type_visitor.t as super
 
     val mutable next_stable_id = 0
-    val mutable stable_ids = IMap.empty
+    method fresh_stable_id =
+      let stable_id = next_stable_id in
+      next_stable_id <- next_stable_id + 1;
+      stable_id
+
+    val mutable stable_tvar_ids = IMap.empty
+    val mutable stable_propmap_ids = Properties.Map.empty
+    val mutable stable_nominal_ids = IMap.empty
 
     method! tvar cx quotient r id =
-      let { reduced_graph; _ } = quotient in
-      if (IMap.mem id reduced_graph) then quotient
+      let { reduced_graph; sig_hash; _ } = quotient in
+      if (IMap.mem id reduced_graph)
+      then
+        let stable_id = IMap.find_unsafe id stable_tvar_ids in
+        let sig_hash = SigHash.add stable_id sig_hash in
+        { quotient with sig_hash }
       else
         let types = Flow_js.possible_types cx id in
         let t = match types with
@@ -216,16 +227,24 @@ module ContextOptimizer = struct
         in
         let node = Root { rank = 0; constraints = Resolved t } in
         let reduced_graph = IMap.add id node reduced_graph in
+        let stable_id = self#fresh_stable_id in
+        stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids;
         self#type_ cx { quotient with reduced_graph } t
 
     method! props cx quotient id =
       let { reduced_property_maps; sig_hash; _ } = quotient in
-      if (Properties.Map.mem id reduced_property_maps) then quotient
+      if (Properties.Map.mem id reduced_property_maps)
+      then
+        let stable_id = Properties.Map.find_unsafe id stable_propmap_ids in
+        let sig_hash = SigHash.add stable_id sig_hash in
+        { quotient with sig_hash }
       else
         let pmap = Context.find_props cx id in
         let sig_hash = SigHash.add_pmap pmap sig_hash in
         let reduced_property_maps =
           Properties.Map.add id pmap reduced_property_maps in
+        let stable_id = self#fresh_stable_id in
+        stable_propmap_ids <- Properties.Map.add id stable_id stable_propmap_ids;
         super#props cx { quotient with reduced_property_maps; sig_hash } id
 
     method! exports cx quotient id =
@@ -250,11 +269,10 @@ module ContextOptimizer = struct
     | OpenT _ -> super#type_ cx quotient t
     | InstanceT (_, _, _, { class_id; _ }) ->
       let { sig_hash; _ } = quotient in
-      let id = match IMap.get class_id stable_ids with
+      let id = match IMap.get class_id stable_nominal_ids with
         | None ->
-          let id = next_stable_id in
-          next_stable_id <- next_stable_id + 1;
-          stable_ids <- IMap.add class_id id stable_ids;
+          let id = self#fresh_stable_id in
+          stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
           id
         | Some id -> id in
       let sig_hash = SigHash.add id sig_hash in
