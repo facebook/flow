@@ -23,11 +23,15 @@
  *)
 let () =
   let out_file = Sys.argv.(1) in
-  let rev =
-    try read_process_output "git" [|"git"; "rev-parse"; "HEAD"|]
-    with Failure _ ->
-      try read_process_output "hg" [|"hg"; "id"; "-i"|]
-      with Failure _ -> ""
+  let rev = if (Array.length Sys.argv) > 2 && Sys.argv.(2) = "random"
+    then begin
+      Random.self_init ();
+      Random.bits () |> string_of_int
+    end else
+      try read_process_output "git" [|"git"; "rev-parse"; "HEAD"|]
+      with Failure _ ->
+        try read_process_output "hg" [|"hg"; "id"; "-i"|]
+        with Failure _ -> ""
   in
   let time =
     try read_process_output "git" [|"git"; "log"; "-1"; "--pretty=tformat:%ct"|]
