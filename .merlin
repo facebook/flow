@@ -1,4 +1,4 @@
 S hack/**
 S src/**
 
-B _build/**
+B _obuild/*
