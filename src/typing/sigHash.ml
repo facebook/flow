@@ -155,5 +155,8 @@ let add x t =
 let add_type type_ =
   add (hash_of_ctor type_)
 
-let add_pmap pmap =
+let add_props_map pmap =
   add (SMap.keys pmap)
+
+let add_exports_map tmap =
+  add (SMap.keys tmap)

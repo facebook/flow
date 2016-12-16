@@ -69,5 +69,11 @@ $FLOW force-recheck g1.js
 $FLOW status .
 rm g*.js
 
+printf "\nTest h:\n"
+cp tmp1h/h1.js ./
+$FLOW force-recheck h1.js
+$FLOW status .
+rm h*.js
+
 mv tmp/*.js ./
 rmdir tmp

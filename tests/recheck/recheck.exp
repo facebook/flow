@@ -164,3 +164,11 @@ Found 2 errors
 
 Test g:
 No errors!
+
+Test h:
+h2.js:3
+  3: import type { Foo } from './h1';
+                   ^^^ Named import from module `./h1`. This module has no named export called `Foo`.
+
+
+Found 1 error
