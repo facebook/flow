@@ -183,7 +183,7 @@ build-flow-debug: $(BUILT_OBJECT_FILES) $(FLOWLIB)
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow
 
-fast-build: $(OCP_BUILD_FILES) hack/utils/get_build_id.gen.c
+fast-build: $(OCP_BUILD_FILES) random-build-id
 	[ -d _obuild ] || ocp-build init
 	ocp-build make flow -njobs 8 -byte flow
 	rm -f $(OCP_BUILD_FILES)
@@ -206,6 +206,10 @@ $(BUILT_OBJECT_FILES): %.o: %.c $(ALL_HEADER_FILES)
 
 hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
 	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
+
+random-build-id: FORCE scripts/utils.ml scripts/gen_build_id.ml
+	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml\
+	  hack/utils/get_build_id.gen.c random
 
 _build/hack/utils/get_build_id.gen.c: FORCE scripts/utils.ml scripts/gen_build_id.ml
 	ocaml -I scripts -w -3 unix.cma scripts/gen_build_id.ml $@
