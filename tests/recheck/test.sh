@@ -48,5 +48,20 @@ $FLOW force-recheck e1.js e2.js
 $FLOW status .
 rm e*.js
 
+printf "\nTest f:\n"
+cp tmp1f/f1.js ./
+$FLOW force-recheck f1.js
+$FLOW status .
+cp tmp2f/f1.js ./
+$FLOW force-recheck f1.js
+$FLOW status .
+cp tmp3f/f1.js ./
+$FLOW force-recheck f1.js
+$FLOW status .
+cp tmp4f/f1.js ./
+$FLOW force-recheck f1.js
+$FLOW status .
+rm f*.js
+
 mv tmp/*.js ./
 rmdir tmp
