@@ -56,6 +56,15 @@ type t = {
   (* map from tvar ids to reasons *)
   mutable tvar_reasons: Reason.t IMap.t;
 
+  (* set of "nominal" ids (created by Flow_js.mk_nominal_id) *)
+  (** Nominal ids are used to identify classes and to check nominal subtyping
+      between classes. They are different from other "structural" ids, used to
+      identify type variables and property maps, where subtyping cares about the
+      underlying types rather than the ids themselves. We track nominal ids in
+      the context to help decide when the types exported by a module have
+      meaningfully changed: see Merge_js.ContextOptimizer. **)
+  mutable nominal_ids: ISet.t;
+
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.Properties.map;
 
@@ -138,6 +147,7 @@ let make metadata file module_name = {
 
   graph = IMap.empty;
   tvar_reasons = IMap.empty;
+  nominal_ids = ISet.empty;
   envs = IMap.empty;
   property_maps = Type.Properties.Map.empty;
   export_maps = Type.Exports.Map.empty;
@@ -180,6 +190,7 @@ let find_props cx id = Type.Properties.Map.find_unsafe id cx.property_maps
 let find_exports cx id = Type.Exports.Map.find_unsafe id cx.export_maps
 let find_module cx m = SMap.find_unsafe m cx.modulemap
 let find_tvar_reason cx id = IMap.find_unsafe id cx.tvar_reasons
+let mem_nominal_id cx id = ISet.mem id cx.nominal_ids
 let globals cx = cx.globals
 let graph cx = cx.graph
 let import_stmts cx = cx.import_stmts
@@ -247,6 +258,8 @@ let add_tvar cx id bounds =
   cx.graph <- IMap.add id bounds cx.graph
 let add_tvar_reason cx id reason =
   cx.tvar_reasons <- IMap.add id reason cx.tvar_reasons
+let add_nominal_id cx id =
+  cx.nominal_ids <- ISet.add id cx.nominal_ids
 let remove_all_errors cx =
   cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =

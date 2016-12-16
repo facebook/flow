@@ -61,6 +61,7 @@ val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_module: t -> string -> Type.t
 val find_tvar_reason: t -> Constraint.ident -> Reason.t
+val mem_nominal_id: t -> Constraint.ident -> bool
 val globals: t -> SSet.t
 val graph: t -> Constraint.node IMap.t
 val import_stmts: t -> Spider_monkey_ast.Statement.ImportDeclaration.t list
@@ -107,6 +108,7 @@ val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_require: t -> string -> Loc.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_tvar_reason: t -> Constraint.ident -> Reason.t -> unit
+val add_nominal_id: t -> Constraint.ident -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_tvar: t -> Constraint.ident -> unit
