@@ -414,6 +414,7 @@ static char *db_filename = NULL;
 #ifndef NO_SQLITE3
 // SQLite DB pointer
 static sqlite3 *db = NULL;
+static sqlite3_stmt *get_dep_select_stmt = NULL;
 #endif
 
 /* Where the heap started (bottom) */
@@ -1988,7 +1989,9 @@ CAMLprim value hh_load_dep_table_sqlite(value in_filename) {
   memcpy(db_filename, filename, filename_len);
   db_filename[filename_len] = '\0';
 
-  assert_sql(sqlite3_open(filename, &db), SQLITE_OK);
+  // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
+  assert_sql(sqlite3_open_v2(db_filename, &db, SQLITE_OPEN_READONLY, NULL),
+    SQLITE_OK);
 
   // Verify the header
   verify_sqlite_header(db);
@@ -2033,16 +2036,23 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   uint32_t *values;
   size_t size, count, i;
 
-  sqlite3_stmt *select_stmt = NULL;
-  const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
-  assert_sql(sqlite3_prepare_v2(db, sql, -1, &select_stmt, NULL), SQLITE_OK);
-  assert_sql(sqlite3_bind_int(select_stmt, 1, key), SQLITE_OK);
+  if (get_dep_select_stmt == NULL) {
+    const char *sql = "SELECT VALUE_VERTEX FROM DEPTABLE WHERE KEY_VERTEX=?;";
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &get_dep_select_stmt, NULL),
+      SQLITE_OK);
+    assert(get_dep_select_stmt != NULL);
+  }
 
-  if (sqlite3_step(select_stmt) == SQLITE_ROW) {
+  assert_sql(sqlite3_bind_int(get_dep_select_stmt, 1, key), SQLITE_OK);
+
+  int err_num = sqlite3_step(get_dep_select_stmt);
+  // err_num is SQLITE_ROW if there is a row to look at,
+  // SQLITE_DONE if no results
+  if (err_num == SQLITE_ROW) {
     // Means we found it in the table
     // Columns are 0 indexed
-    values = (uint32_t *) sqlite3_column_blob(select_stmt, 0);
-    size = (size_t) sqlite3_column_bytes(select_stmt, 0);
+    values = (uint32_t *) sqlite3_column_blob(get_dep_select_stmt, 0);
+    size = (size_t) sqlite3_column_bytes(get_dep_select_stmt, 0);
     // Make sure we don't have malformed output
     assert(size % sizeof(uint32_t) == 0);
     count = size / sizeof(uint32_t);
@@ -2053,8 +2063,13 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
       Field(cell, 1) = result;
       result = cell;
     }
+  } else if (err_num != SQLITE_DONE) {
+    // Something went wrong in sqlite3_step, lets crash
+    assert_sql(err_num, SQLITE_ROW);
   }
-  assert_sql(sqlite3_finalize(select_stmt), SQLITE_OK);
+
+  assert_sql(sqlite3_clear_bindings(get_dep_select_stmt), SQLITE_OK);
+  assert_sql(sqlite3_reset(get_dep_select_stmt), SQLITE_OK);
   CAMLreturn(result);
 }
 
