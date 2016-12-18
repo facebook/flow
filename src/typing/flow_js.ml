@@ -4664,21 +4664,39 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           wrap (ArrT (r, conv_type_ref r t, []))
         | Graphql_schema.Type.NonNull t -> conv_type_ref ~non_null:true r t
       in
-      let props = SMap.map (fun field ->
-        let type_ = field.Graphql.sf_type in
+      let get_props type_name selections = SMap.map (fun field ->
         let reason_val = mk_reason (RCustom "obj val") (loc_of_reason r) in
-        let value = match field.Graphql.sf_selection with
-          | Some s ->
-            mk_tvar_where cx reason_val (fun t ->
-              rec_flow cx trace (s, GraphqlToDataT (r, t))
-            )
-          | None -> conv_type_ref reason_val type_
+        let value =
+          if field.Graphql.sf_name = "__typename" then
+            SingletonStrT (reason_val, type_name)
+          else (
+            let type_ = field.Graphql.sf_type in
+            match field.Graphql.sf_selection with
+            | Some s ->
+              mk_tvar_where cx reason_val (fun t ->
+                rec_flow cx trace (s, GraphqlToDataT (r, t))
+              )
+            | None -> conv_type_ref reason_val type_
+          )
         in
         Property.field Neutral value
-      ) s_selections in
-      let obj =
-        mk_object_with_map_proto cx r props ~sealed:true (ObjProtoT r) in
-      rec_flow_t cx trace (obj, out)
+      ) selections in
+      let objs =
+        SMap.fold (fun type_name map acc ->
+          let props = get_props type_name map in
+          let obj =
+            mk_object_with_map_proto cx r props ~sealed:true (ObjProtoT r) in
+          obj :: acc
+        ) s_selections []
+      in
+      let union = match objs with
+        | [] -> mk_object cx r
+        | [obj] -> obj
+        | o1 :: o2 :: rest ->
+          let rep = UnionRep.make o1 o2 rest in
+          UnionT (r, rep)
+      in
+      rec_flow_t cx trace (union, out)
 
     | GraphqlOpT (r, {Graphql.op_schema = schema; op_vars; _}),
       GraphqlToVarsT (_, out)
@@ -4879,12 +4897,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       let { Graphql.s_selections; _ } = selection in
       let ctx = (cx, rec_flow cx trace, mk_tvar cx) in
-      let fields = Graphql_flow.add_field ctx s_selections field in
+      let selections = SMap.map (fun props ->
+        Graphql_flow.add_field ctx props field
+      ) s_selections in
       let selection = GraphqlSelectionT (
         reason,
         {
           selection with
-          Graphql.s_selections = fields;
+          Graphql.s_selections = selections;
         }
       ) in
       rec_flow_t cx trace (selection, out)
@@ -4912,7 +4932,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ->
       let {Graphql.s_selections = curr; _} = s in
       let ctx = (cx, rec_flow cx trace, mk_tvar cx) in
-      let selections = Graphql_flow.merge_fields ctx curr adds in
+      let selections = SMap.mapi (fun type_name props ->
+        if SMap.mem type_name adds then
+          Graphql_flow.merge_fields ctx props (SMap.find type_name adds)
+        else
+          props
+      ) curr in
       let new_s = {s with Graphql.s_selections = selections} in
       rec_flow_t cx trace (GraphqlSelectionT (r, new_s), out)
 

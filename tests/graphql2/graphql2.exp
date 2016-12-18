@@ -22,6 +22,18 @@ get-data.js:13
  13: story.bad; // field not found
      ^^^^^ selection on `Story`
 
+get-data.js:31
+ 31:     union.date; // error: `date` is from `Event`
+               ^^^^ property `date`. Property not found in
+ 31:     union.date; // error: `date` is from `Event`
+         ^^^^^ selection on `StoryOrEvent`
+
+get-data.js:35
+ 35:     union.text; // error: `text` is from `Story`
+               ^^^^ property `text`. Property not found in
+ 35:     union.text; // error: `text` is from `Story`
+         ^^^^^ selection on `StoryOrEvent`
+
 get-variables.js:5
   5: ({storyID: 123, inc: 1}: $GraphqlVars<typeof likeStory>); // number ~> string
                 ^^^ number. This type is incompatible with
@@ -55,4 +67,4 @@ var-definitions.js:5
                   ^^^^ This type is already non-null
 
 
-Found 10 errors
+Found 12 errors

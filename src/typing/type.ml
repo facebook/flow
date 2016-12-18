@@ -1278,14 +1278,9 @@ end = struct
 end
 
 and Graphql : sig
-  type operation_type =
-    | Query
-    | Mutation
-    | Subscription
-
   type op = {
     op_schema: Graphql_schema.t;
-    op_type: operation_type;
+    op_type: Graphql_schema.operation;
     op_vars: Graphql_schema.Type.t SMap.t;
     op_selection: TypeTerm.t;
   }
@@ -1301,7 +1296,7 @@ and Graphql : sig
   and selection = {
     s_schema: Graphql_schema.t;
     s_on: string;
-    s_selections: field SMap.t;
+    s_selections: field SMap.t SMap.t; (* type name => field => type *)
   }
 
   type frag = {

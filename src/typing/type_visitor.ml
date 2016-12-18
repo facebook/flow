@@ -168,9 +168,10 @@ class ['a] t = object(self)
   | GraphqlFragT (_, { Graphql.frag_selection; _ }) ->
     self#type_ cx acc frag_selection
   | GraphqlSelectionT (_, { Graphql.s_selections; _ }) ->
-    SMap.fold (fun _ { Graphql.sf_selection; _ } acc ->
+    let fold_fn _ { Graphql.sf_selection; _ } acc =
       Option.value_map sf_selection ~default:acc ~f:(self#type_ cx acc)
-    ) s_selections acc
+    in
+    SMap.fold (fun _ -> SMap.fold fold_fn) s_selections acc
   | GraphqlFieldT _ -> acc
 
   method private defer_use_type cx acc = function

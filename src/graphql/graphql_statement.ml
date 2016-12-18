@@ -57,11 +57,11 @@ and do_definition cx schema def =
       _;
     } = op_def in
     let op_type = Ast.OperationType.(match operation with
-      | Query -> Graphql.Query
-      | Mutation -> Graphql.Mutation
-      | Subscription -> Graphql.Subscription
+      | Query -> Schema.Query
+      | Mutation -> Schema.Mutation
+      | Subscription -> Schema.Subscription
     ) in
-    let (type_name, op_name) = Graphql.(
+    let (type_name, op_name) = Schema.(
       match op_type with
       | Query -> Some schema.Schema.query_name, "query"
       | Mutation -> schema.Schema.mutation_name, "mutation"
@@ -179,10 +179,14 @@ and mk_selection
     cx gcx schema ?top_op:(top_op=false) type_name selection_set =
   let {Ast.SelectionSet.selections; loc} = selection_set in
   let reason = mk_reason (RCustom (spf "selection on `%s`" type_name)) loc in
+  let s_selections = SMap.from_keys
+    (Schema.get_possible_types schema type_name)
+    (fun _ -> SMap.empty)
+  in
   let selection = { Graphql.
     s_schema = schema;
     s_on = type_name;
-    s_selections = SMap.empty;
+    s_selections;
   } in
   select ~top_op
     cx gcx schema (GraphqlSelectionT (reason, selection)) type_name selections

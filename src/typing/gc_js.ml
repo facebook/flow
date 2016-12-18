@@ -110,9 +110,10 @@ let rec gc cx state = function
   | GraphqlFragT (_, { Graphql.frag_schema = _; frag_type = _; frag_selection })
       -> gc cx state frag_selection
   | GraphqlSelectionT (_, { Graphql.s_schema = _; s_on = _; s_selections }) ->
-      SMap.iter (fun _ { Graphql.sf_selection; _ } ->
+      let iter_fn _ { Graphql.sf_selection; _ } =
         Option.iter sf_selection (gc cx state)
-      ) s_selections
+      in
+      SMap.iter (fun _ -> SMap.iter iter_fn) s_selections
   | GraphqlFieldT _ -> ()
   | IdxWrapper (_, t) -> gc cx state t
   | InstanceT(_, static, super, instance) ->

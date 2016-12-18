@@ -407,12 +407,13 @@ let rec normalize_type_impl cx ids t = match t with
       { Graphql.frag_schema; frag_type; frag_selection }
     )
   | GraphqlSelectionT (_, { Graphql.s_schema; s_on; s_selections }) ->
-    let s_selections = SMap.map (fun sf ->
-        { sf with
-          Graphql.sf_selection =
-            Option.map ~f:(normalize_type_impl cx ids) sf.Graphql.sf_selection;
-        }
-      ) s_selections in
+    let map sf =
+      { sf with
+        Graphql.sf_selection =
+          Option.map ~f:(normalize_type_impl cx ids) sf.Graphql.sf_selection;
+      }
+    in
+    let s_selections = SMap.map (SMap.map map) s_selections in
     GraphqlSelectionT (
       locationless_reason (RCustom ("Graphql selection")),
       { Graphql.s_schema; s_on; s_selections }

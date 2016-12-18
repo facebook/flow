@@ -36,6 +36,11 @@ and InputVal: sig
   }
 end = InputVal
 
+type operation =
+  | Query
+  | Mutation
+  | Subscription
+
 type t = {
   query_name: string;
   mutation_name: string option;
