@@ -1,3 +1,8 @@
+###v0.37.2
+
+Notable bug fixes:
+* Fix more issues in the server with rechecking changed files
+
 ###v0.37.1
 
 Notable bug fixes:
