@@ -581,7 +581,7 @@ let recheck genv env modified =
 
       (* to_merge is inferred files plus all dependents. prep for re-merge *)
       let to_merge = FilenameSet.union all_deps modified_files in
-      Merge_service.oldify_batch to_merge;
+      Context_cache.oldify_merge_batch to_merge;
       (** TODO [perf]: Consider `aggressive **)
       SharedMem_js.collect genv.ServerEnv.options `gentle;
 

@@ -23,11 +23,3 @@ val merge_strict:
   filename list list IMap.t ->
   bool FilenameMap.t ->
   unit
-
-val remove_batch:
-  FilenameSet.t ->
-  unit
-
-val oldify_batch:
-  FilenameSet.t ->
-  unit

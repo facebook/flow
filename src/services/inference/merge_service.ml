@@ -10,12 +10,6 @@
 
 open Utils_js
 
-module LeaderHeap = SharedMem_js.WithCache (Loc.FilenameKey) (struct
-  type t = filename
-  let prefix = Prefix.make()
-  let description = "Leader"
-end)
-
 (* Warn on a missing required module resolved_r referenced as r in context cx.
 
    TODO maybe make this suppressable
@@ -98,11 +92,7 @@ let merge_strict_context ~options cache component_cxs =
                 orig_sig_cxs, sig_cxs,
                 (impl sig_cx) :: impls, res, decls
             | None ->
-                let file =
-                  try LeaderHeap.find_unsafe file
-                  with Not_found ->
-                    raise (Key_not_found ("LeaderHeap", (string_of_filename file)))
-                in
+                let file = Context_cache.find_leader file in
                 begin match sig_cache#find file with
                 | Some sig_cx ->
                     orig_sig_cxs, sig_cxs,
@@ -144,8 +134,8 @@ let merge_strict_component ~options = function
        are going to reuse the existing signature for the file, so we must be
        careful that such a signature actually exists! This holds because a
        skipped file cannot be a direct dependency, so its dependencies cannot
-       change, which in particular means that it belongs to, and leads, the same
-       component. *)
+       change, which in particular means that it belongs to the same component,
+       although possibly with a different leader that has the signature. *)
     file, Errors.ErrorSet.empty, None
   | Merge_stream.Component component ->
   (* A component may have several files: there's always at least one, and
@@ -179,7 +169,8 @@ let merge_strict_component ~options = function
     Context.remove_all_errors cx;
     Context.clear_intermediates cx;
 
-    let diff = Context_cache.add_sig_on_diff ~audit:Expensive.ok cx md5 in
+    let diff = Context_cache.add_merge_on_diff ~audit:Expensive.ok
+      component_cxs md5 in
     file, errors, Some diff
   )
   else file, Errors.ErrorSet.empty, Some true
@@ -249,8 +240,6 @@ let merge_strict ~options ~workers ~save_errors
       ) acc component
     ) component_map FilenameMap.empty
   in
-  (* store leaders to a heap; used when rechecking *)
-  leader_map |> FilenameMap.iter LeaderHeap.add;
   (* lift recheck map from files to leaders *)
   let recheck_leader_map = FilenameMap.map (
     List.exists (fun f -> FilenameMap.find_unsafe f recheck_map)
@@ -269,11 +258,3 @@ let merge_strict ~options ~workers ~save_errors
       (* save *)
       save_errors files errsets
     )
-
-let remove_batch to_merge =
-  LeaderHeap.remove_batch to_merge;
-  Context_cache.remove_sig_batch to_merge
-
-let oldify_batch to_merge =
-  LeaderHeap.remove_batch to_merge;
-  Context_cache.oldify_sig_batch to_merge
