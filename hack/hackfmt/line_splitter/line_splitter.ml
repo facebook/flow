@@ -55,4 +55,4 @@ let solve chunk_groups =
   let strings = List.map best_states ~f:(fun ss ->
     Printf.sprintf "%s" (State_printer.print_state ss)
   ) in
-  String.concat "" strings ^ "\n"
+  String.concat "\n" strings ^ "\n"

@@ -15,16 +15,21 @@ module SourceText = Full_fidelity_source_text
 let usage = Printf.sprintf
   "Usage: %s [--range s e] [filename or read from stdin]\n" Sys.argv.(0)
 
-let parse_and_print (source_text, debug) =
+let parse_and_print (source_text, start_char, end_char, debug) =
   let syntax_tree = SyntaxTree.make source_text in
 
   if debug then begin
+    let s = String.sub
+      source_text.SourceText.text start_char (end_char - start_char) in
+    Printf.printf "Subrange passed:\n%s\n" s;
     let str = Debug.dump_full_fidelity syntax_tree in
     Printf.printf "%s\n" (SourceText.get_text source_text);
     Printf.printf "%s\n" str;
   end;
   let editable = Full_fidelity_editable_syntax.from_tree syntax_tree in
-  let chunk_groups = Hack_format.format_node ~debug editable in
+
+  let chunk_groups = Hack_format.format_node
+    ~debug editable start_char end_char in
   let formatted_string = Line_splitter.solve chunk_groups in
   Printf.printf "%s" formatted_string;
   ()
@@ -55,7 +60,7 @@ let parse_options () =
         Arg.Int (fun x -> start_char := Some x);
         Arg.Int (fun x -> end_char := Some x);
       ]),
-      "<start end> Range of character positions to be formatted";
+      "<start end> Range of character positions to be formatted, (1 indexed)";
   ] in
   Arg.parse options (fun fn -> filename := Some fn) usage;
   let source_text = match !filename with
@@ -64,6 +69,12 @@ let parse_options () =
     | None ->
       SourceText.make @@ read_stdin ()
   in
-  source_text, !debug
+
+  (* TODO: verify that start_c and end_c fall on line boundries *)
+  let start_c = Option.value_map !start_char ~default:0 ~f:(fun i -> i - 1) in
+  let end_c = Option.value_map !end_char
+    ~default:(SourceText.length source_text) ~f:(fun i -> i - 1) in
+
+  source_text, start_c, end_c, !debug
 
 let () = parse_and_print @@ parse_options ()

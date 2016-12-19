@@ -42,10 +42,15 @@ let builder = object (this)
   val mutable nesting_alloc = Nesting_allocator.make ();
   val mutable block_indent = 0;
 
+  val mutable in_range = Chunk_group.No;
+  val mutable start_char = 0;
+  val mutable end_char = max_int;
+  val mutable seen_chars = 0;
+
   (* TODO: Make builder into an instantiable class instead of
    * having this reset method
    *)
-  method reset () =
+  method reset start_c end_c =
     Stack.clear open_spans;
     rules <- [];
     chunks <- [];
@@ -56,6 +61,11 @@ let builder = object (this)
     rule_alloc <- Rule_allocator.make ();
     nesting_alloc <- Nesting_allocator.make ();
     block_indent <- 0;
+
+    in_range <- Chunk_group.No;
+    start_char <- start_c;
+    end_char <- end_c;
+    seen_chars <- 0;
     ()
 
   method add_string s =
@@ -104,6 +114,11 @@ let builder = object (this)
   method simple_space_split_if_unsplit () =
     match chunks with
       | hd :: _ when hd.Chunk.is_appendable -> this#simple_space_split ()
+      | _ -> ()
+
+  method simple_split_if_unsplit () =
+    match chunks with
+      | hd :: _ when hd.Chunk.is_appendable -> this#simple_split ()
       | _ -> ()
 
   (* TODO: is this the right whitespace strategy? *)
@@ -197,24 +212,40 @@ let builder = object (this)
 
   method end_chunks () =
     this#hard_split ();
-    if List.is_empty rules then begin
-      chunk_groups <- {
-        Chunk_group.chunks = (List.rev chunks);
-        rule_map = rule_alloc.Rule_allocator.rule_map;
-        rule_dependency_map = rule_alloc.Rule_allocator.dependency_map;
-        block_indentation = block_indent;
-      } :: chunk_groups;
-      chunks <- [];
-      rule_alloc <- Rule_allocator.make ();
-      nesting_alloc <- Nesting_allocator.make ();
-      ()
-    end;
-    ()
+    if List.is_empty rules && not @@ List.is_empty chunks
+      then this#push_chunk_group ()
+
+  method push_chunk_group () =
+    let print_range = Chunk_group.(match in_range with
+      | StartAt n when n = List.length chunks -> No
+      | EndAt n when n = List.length chunks -> All
+      | _ -> in_range
+    ) in
+
+    chunk_groups <- Chunk_group.({
+      chunks = (List.rev chunks);
+      rule_map = rule_alloc.Rule_allocator.rule_map;
+      rule_dependency_map = rule_alloc.Rule_allocator.dependency_map;
+      block_indentation = block_indent;
+      print_range;
+    }) :: chunk_groups;
+
+    in_range <- Chunk_group.(match in_range with
+      | StartAt _ -> All
+      | All -> All
+      | Range _ -> No
+      | EndAt _ -> No
+      | No -> No
+    );
+    chunks <- [];
+    rule_alloc <- Rule_allocator.make ();
+    nesting_alloc <- Nesting_allocator.make ()
 
   method _end () =
     (*TODO: warn if not empty? *)
     if not (List.is_empty chunks) then this#end_chunks ();
-    List.rev chunk_groups
+    List.rev_filter
+      chunk_groups ~f:(fun cg -> Chunk_group.(cg.print_range <> No))
 
   method __debug chunks =
     let d_chunks = chunks in
@@ -226,63 +257,143 @@ let builder = object (this)
         c.Chunk.text
     )
 
+  (* TODO: move the partial formatting logic to it's own module somehow *)
+  method advance n =
+    seen_chars <- seen_chars + n;
+
+  (* TODO: make this idempotent *)
+  method check_range () =
+    in_range <-
+      if seen_chars <> start_char
+      then in_range
+      else begin match chunks with
+        | [] -> Chunk_group.All
+        | hd :: _ ->
+          next_split_rule <- Some Rule.Always;
+          this#simple_split_if_unsplit ();
+          Chunk_group.StartAt (List.length chunks)
+      end;
+    in_range <-
+      if seen_chars <> end_char
+      then in_range
+      else begin
+        if List.is_empty chunks
+        then Chunk_group.No
+        else begin
+          let end_at = List.length chunks in
+          match in_range with
+            | Chunk_group.StartAt start_at ->
+              Chunk_group.Range (start_at, end_at)
+            | Chunk_group.Range _ -> in_range
+            | _ -> Chunk_group.EndAt end_at
+        end;
+      end
+
+  method closing_brace_token x =
+    (* TODO: change this to split and recompose *)
+    let is_not_end_of_line t = Trivia.kind t <> TriviaKind.EndOfLine in
+    let rev_leading_trivia = List.rev @@ EditableToken.leading x in
+    let (rev_after_last_newline, rev_rest_including_last_newline) =
+      List.split_while rev_leading_trivia ~f:is_not_end_of_line in
+
+    this#handle_trivia ~is_leading:true @@
+      this#break_out_delimited @@ List.rev rev_rest_including_last_newline;
+    this#end_chunks();
+    this#end_block_nest ();
+    this#handle_trivia ~is_leading:true @@
+      this#break_out_delimited @@ List.rev rev_after_last_newline;
+    this#handle_token x;
+    this#handle_trivia ~is_leading:false @@
+      this#break_out_delimited (EditableToken.trailing x);
+    ()
+
+  (* TODO: Handle (aka remove) excess whitespace inside of an ast node *)
+  method handle_trivia ~is_leading trivia_list =
+    if not (List.is_empty trivia_list) then begin
+      let handle_newlines ~is_trivia newlines =
+        match newlines with
+          | 0 when is_trivia -> this#simple_space_split_if_unsplit ()
+          | 0 -> ()
+          | 1 -> this#hard_split ()
+          | _ ->
+            this#hard_split ();
+            this#add_always_empty_chunk ()
+      in
+
+      this#check_range ();
+      let newlines, only_whitespace  = List.fold trivia_list ~init:(0, true)
+        ~f:(fun (newlines, only_whitespace) t ->
+          this#advance (Trivia.width t);
+          (match Trivia.kind t with
+            | TriviaKind.WhiteSpace -> newlines, only_whitespace
+            | TriviaKind.EndOfLine ->
+              if only_whitespace && is_leading then
+                this#add_always_empty_chunk ();
+              this#check_range ();
+              newlines + 1, false
+            | TriviaKind.SingleLineComment
+            | TriviaKind.DelimitedComment ->
+              handle_newlines ~is_trivia:true newlines;
+              this#add_string @@ Trivia.text t;
+              0, false
+        )
+      ) in
+      if is_leading
+        then handle_newlines ~is_trivia:(not only_whitespace) newlines;
+    end;
+
+  method handle_token t =
+    this#check_range ();
+    this#add_string (EditableToken.text t);
+    this#advance (EditableToken.width t);
+
+  method token x =
+    this#handle_trivia
+      ~is_leading:true (this#break_out_delimited @@ EditableToken.leading x);
+    this#handle_token x;
+    this#handle_trivia
+      ~is_leading:false (this#break_out_delimited @@ EditableToken.trailing x);
+    ()
+
+  method break_out_delimited trivia =
+    let new_line_regex = Str.regexp "\n" in
+    List.concat_map trivia ~f:(fun triv ->
+      match Trivia.kind triv with
+        | TriviaKind.DelimitedComment ->
+          let delimited_lines =
+            Str.split new_line_regex @@ Trivia.text triv in
+          let map_tail str =
+            let prefix_space_count str =
+              let len = String.length str in
+              let rec aux i =
+                if i = len || str.[i] <> ' '
+                then 0
+                else 1 + (aux (i + 1))
+              in
+              aux 0
+            in
+            let start_index = min block_indent (prefix_space_count str) in
+            let len = String.length str - start_index in
+            let dc = Trivia.make_delimited_comment @@
+              String.sub str start_index len in
+            let spacer dc = if 0 = start_index then dc else
+              Trivia.make_whitespace (String.make start_index ' ') :: dc
+            in
+            Trivia.make_eol "\n" :: spacer [dc]
+          in
+
+          Trivia.make_delimited_comment (List.hd_exn delimited_lines) ::
+            List.concat_map (List.tl_exn delimited_lines) ~f:map_tail
+        | _ ->
+          [triv]
+    )
+
 end
 
 let split ?space:(space=false) () =
   builder#split space
 
-let handle_trivia ~is_leading trivia_list =
-  (* We don't care about spaces *)
-  let trivia_list = List.filter trivia_list ~f:(
-    fun x -> Trivia.kind x <> TriviaKind.WhiteSpace
-  ) in
-
-  let consume_new_lines tlist =
-    let (nls, tl) = List.split_while tlist ~f:(
-      fun x -> Trivia.kind x = TriviaKind.EndOfLine
-    ) in
-    (match List.length nls with
-      | 0 ->
-        (* TODO: Reconsider this, might be weird if we have to split here *)
-        builder#simple_space_split ()
-      | 1 -> builder#hard_split ()
-      | _ ->
-        builder#hard_split ();
-        builder#add_always_empty_chunk ()
-    );
-    tl
-  in
-
-  let handle_item hd tl =
-    match Trivia.kind hd with
-      | TriviaKind.EndOfLine ->
-        if is_leading then builder#add_always_empty_chunk ();
-        tl
-      | TriviaKind.SingleLineComment ->
-        builder#simple_space_split_if_unsplit ();
-        builder#add_string @@ Trivia.text hd;
-        consume_new_lines tl
-      | TriviaKind.DelimitedComment ->
-        builder#simple_space_split_if_unsplit ();
-        builder#add_string @@ Trivia.text hd;
-        consume_new_lines tl
-      | _ -> tl (* TODO: error - this shouldn't exist after filtering *)
-  in
-
-  let rec aux tlist =
-    match tlist with
-      | [] -> ()
-      | hd :: tl ->
-        let tl = handle_item hd tl in
-        aux tl
-  in
-  aux trivia_list
-
-let token x =
-  handle_trivia ~is_leading:true (EditableToken.leading x);
-  builder#add_string (EditableToken.text x);
-  handle_trivia ~is_leading:false (EditableToken.trailing x);
-  ()
+let token = builder#token
 
 let add_space () =
   builder#add_string " "
@@ -1169,20 +1280,7 @@ and transform_and_unnest_closing_brace right_b =
     | _ -> raise (Failure "expecting node to be a right closing brace")
   in
 
-  (* TODO: change this to split and recompose *)
-  let rev_leading_trivia = List.rev @@ EditableToken.leading token in
-  let (rev_after_last_newline, rev_rest_including_last_newline) =
-    List.split_while rev_leading_trivia ~f:(
-      fun t -> Trivia.kind t <> TriviaKind.EndOfLine
-    )
-  in
-
-  handle_trivia ~is_leading:true @@ List.rev rev_rest_including_last_newline;
-  builder#end_chunks();
-  builder#end_block_nest ();
-  handle_trivia ~is_leading:true @@ List.rev rev_after_last_newline;
-  builder#add_string (EditableToken.text token);
-  handle_trivia ~is_leading:false (EditableToken.trailing token);
+  builder#closing_brace_token token;
   ()
 
 and tl_with ?(nest=false) ?(rule=None) ?(span=false) ~f () =
@@ -1501,14 +1599,26 @@ and transform_binary_expression ~is_nested expr =
   end
 
 let debug_chunk_groups chunk_groups =
+  let get_range cg =
+    let chunks = cg.Chunk_group.chunks in
+    let a, b, c = Chunk_group.(match cg.print_range with
+      | No -> "No", -1, -1
+      | All -> "All", 0, List.length chunks
+      | Range (s, e) ->  "Range", s, e
+      | StartAt s -> "StartAt", s, List.length chunks
+      | EndAt e -> "EndAt", 0, e
+    ) in
+    Printf.sprintf "%s %d %d" a b c
+  in
   Printf.printf "%d\n" (List.length chunk_groups);
   List.iteri chunk_groups ~f:(fun i cg ->
     Printf.printf "%d\n" i;
     Printf.printf "Indentation: %d\n" cg.Chunk_group.block_indentation;
     Printf.printf "Chunk count:%d\n" (List.length cg.Chunk_group.chunks);
+    Printf.printf "%s\n" @@ get_range cg;
     List.iteri cg.Chunk_group.chunks ~f:(fun i c ->
       Printf.printf "\t%d - %s - Nesting:%d\n"
-        i (Chunk.to_string c) (Chunk.get_nesting_id c);
+        i (Chunk.to_string c) (Chunk.get_nesting_id c)
     );
     Printf.printf "Rule count %d\n"
       (IMap.cardinal cg.Chunk_group.rule_map);
@@ -1518,8 +1628,8 @@ let debug_chunk_groups chunk_groups =
   );
   ()
 
-let format_node ?(debug=false) node =
-  builder#reset ();
+let format_node ?(debug=false) node start_char end_char =
+  builder#reset start_char end_char;
   transform node;
   (* split (); *)
   let chunk_groups = builder#_end () in

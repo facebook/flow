@@ -8,13 +8,21 @@
  *
  *)
 
- open Core
+open Core
+
+type print_range =
+  | No
+  | All
+  | Range of int * int
+  | StartAt of int
+  | EndAt of int
 
 type t = {
   chunks: Chunk.t list;
   rule_map: Rule.t IMap.t;
   rule_dependency_map: (int list) IMap.t;
   block_indentation: int;
+  print_range: print_range;
 }
 
 let get_rule_count t =
@@ -27,6 +35,14 @@ let get_rules t =
 let get_rule_kind t id =
   let r = IMap.find_unsafe id t.rule_map in
   r.Rule.kind
+
+let get_print_range_indicies t =
+  match t.print_range with
+    | No -> -1, -1
+    | All -> 0, List.length t.chunks
+    | Range (s, e) ->  s, e
+    | StartAt s -> s, List.length t.chunks
+    | EndAt e -> 0, e
 
 let constrain_rules t rvm rule_list =
   let aux rule_id = Rule.cares_about_children (get_rule_kind t rule_id) in
