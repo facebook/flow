@@ -73,9 +73,8 @@ let rec gc cx state = function
   | AnyT _ -> ()
   | AnyWithLowerBoundT (t) -> gc cx state t
   | AnyWithUpperBoundT (t) -> gc cx state t
-  | ArrT(_, t, ts) ->
-      gc cx state t;
-      ts |> List.iter (gc cx state);
+  | ArrT(_, arraytype) ->
+      gc_arraytype cx state arraytype
   | BoolT _ -> ()
   | BoundT typeparam -> gc_typeparam cx state typeparam
   | ChoiceKitT _ -> ()
@@ -284,6 +283,14 @@ and gc_use cx state = function
       gc cx state t2
     ) targs
 
+
+and gc_arraytype cx state = function
+| ArrayAT (elemt, None) ->
+    gc cx state elemt;
+| ArrayAT (elemt, Some tuple_types)
+| TupleAT (elemt, tuple_types) ->
+    gc cx state elemt;
+  List.iter (gc cx state) tuple_types;
 
 and gc_id cx state id =
   let root_id, constraints = Flow_js.find_constraints cx id in (

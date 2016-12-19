@@ -100,10 +100,10 @@ let rec convert cx tparams_map = Ast.Type.(function
   end
 
 | loc, Tuple ts ->
-  let elts = List.map (convert cx tparams_map) ts in
+  let tuple_types = List.map (convert cx tparams_map) ts in
   let reason = mk_reason RTupleType loc in
   let element_reason = mk_reason RTupleElement loc in
-  let tx = match elts with
+  let elemt = match tuple_types with
   | [] -> Flow_js.mk_tvar cx element_reason
   | [t] -> t
   | t0::t1::ts ->
@@ -125,12 +125,12 @@ let rec convert cx tparams_map = Ast.Type.(function
     *)
     AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make t0 t1 ts))
   in
-  ArrT (reason, tx, elts)
+  ArrT (reason, TupleAT (elemt, tuple_types))
 
 | loc, Array t ->
   let r = mk_reason RArrayType loc in
-  let t = convert cx tparams_map t in
-  ArrT (r, t, [])
+  let elemt = convert cx tparams_map t in
+  ArrT (r, ArrayAT (elemt, None))
 
 | loc, StringLiteral { StringLiteral.value; _ }  ->
   let reason = mk_reason (RStringLit value) loc in
@@ -175,8 +175,8 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* Array<T> *)
   | "Array" ->
     check_type_param_arity cx loc typeParameters 1 (fun () ->
-      let t = convert_type_params () |> List.hd in
-      ArrT (mk_reason RArrayType loc, t, [])
+      let elemt = convert_type_params () |> List.hd in
+      ArrT (mk_reason RArrayType loc, ArrayAT (elemt, None))
     )
 
   (* $Either<...T> is the union of types ...T *)
@@ -199,8 +199,10 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Tuple<...T> is the tuple of types ...T *)
   | "$Tuple" ->
-    let ts = convert_type_params () in
-    ArrT (mk_reason RTupleType loc, AnyT.t, ts)
+    (* TODO - get a better elemt *)
+    let tuple_types = convert_type_params () in
+    let elemt = AnyT.t in
+    ArrT (mk_reason RTupleType loc, TupleAT (elemt, tuple_types))
 
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->
@@ -623,7 +625,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     at all to allow general types to appear as annotations of a rest parameter,
     we can make our lives simpler by disallowing them. **)
 and mk_rest cx = function
-  | ArrT (_, t, []) -> RestT t
+  | ArrT (_, ArrayAT (elemt, None)) -> RestT elemt
   | AnyT _ as t -> RestT t
   | OpenT _ as t ->
       (* unify t with Array<e>, return (RestT e) *)
@@ -631,7 +633,7 @@ and mk_rest cx = function
         RCustom (spf "element of %s" (string_of_desc desc))
       ) (reason_of_t t) in
       let tvar = Flow_js.mk_tvar cx reason in
-      let arrt = ArrT(reason, tvar, []) in
+      let arrt = ArrT(reason, ArrayAT (tvar, None)) in
       Flow_js.unify cx t arrt;
       RestT tvar
   | t ->

@@ -172,7 +172,7 @@ and parts_of_t cx = function
 | AnyObjT _ | AnyFunT _ -> []
 | AnyT _ -> []
 | AnyWithLowerBoundT t | AnyWithUpperBoundT t -> ["t", Def t]
-| ArrT (_, elem, tup) -> ("elem", Def elem) :: list_parts tup
+| ArrT (_, arrtype) -> parts_of_arrtype arrtype
 | BoolT  _ -> []
 | BoundT _ -> []
 | ClassT t -> ["class", Def t]
@@ -329,6 +329,12 @@ and parts_of_use_t cx = function
 | UnifyT (x, y) -> ["x", Def x; "y", Def y]
 | VarianceCheckT (_, args, _) -> list_parts args
 | TypeAppVarianceCheckT _ -> []
+
+and parts_of_arrtype = function
+| ArrayAT (elemt, None) -> [("elem"), Def elemt]
+| ArrayAT (elemt, Some tuple_types)
+| TupleAT (elemt, tuple_types) ->
+  ("elem", Def elemt)::(list_parts tuple_types)
 
 and parts_of_inter_preprocess_tool = function
 | ConcretizeTypes (unresolved, resolved, it, u) ->

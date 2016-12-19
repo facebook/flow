@@ -2368,7 +2368,7 @@ and array_element_spread cx (loc, e) =
   let arr = expression cx (loc, e) in
   let reason = mk_reason (RCustom "spread operand") loc in
   Flow.mk_tvar_where cx reason (fun tvar ->
-    Flow.flow_t cx (arr, ArrT (reason, tvar, []));
+    Flow.flow_t cx (arr, ArrT (reason, ArrayAT(tvar, None)));
   )
 
 and spread cx (loc, e) =
@@ -2513,7 +2513,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         in
         let elemt = Flow.mk_tvar cx element_reason in
         let reason = replace_reason_const REmptyArrayLit reason in
-        ArrT (reason, elemt, [])
+        ArrT (reason, ArrayAT (elemt, Some []))
     | elems ->
         (* tup is true if no spreads *)
         (* tset is set of distinct (mod reason) elem types *)
@@ -2568,7 +2568,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
               Flow_js.flow cx (t, UseT (UnknownUse, tvar)))
           )
         in
-        ArrT (reason, elemt, List.rev tlist)
+        ArrT (reason, ArrayAT(elemt, Some (List.rev tlist)))
     )
 
   | Call {
@@ -2674,7 +2674,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let element_reason =
           replace_reason_const (RCustom "array element") reason in
         let t = Flow.mk_tvar cx element_reason in
-        ArrT (reason, t, [])
+        (* TODO - tuple_types could be undefined x N if given a literal *)
+        ArrT (reason, ArrayAT (t, None))
       | _ ->
         Flow_error.(add_output cx (EUseArrayLiteral loc));
         EmptyT.at loc
@@ -2903,7 +2904,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
       let reason_array = replace_reason_const RArray reason in
       let ret = Flow.mk_tvar cx reason in
       let ft = Flow.mk_functiontype
-        [ ArrT (reason_array, StrT.why reason, []);
+        [ ArrT (reason_array, ArrayAT (StrT.why reason, None));
           RestT (AnyT.why reason) ]
         ret
       in
@@ -3725,7 +3726,10 @@ and mk_proptype cx = Ast.Expression.(function
         (_, "array");
       _
     } ->
-      ArrT (mk_reason RPropTypeArray vloc, AnyT.at vloc, [])
+      ArrT (
+        mk_reason RPropTypeArray vloc,
+        ArrayAT (AnyT.at vloc, None)
+      )
 
   | vloc, Member { Member.
       property = Member.PropertyIdentifier
@@ -3763,7 +3767,10 @@ and mk_proptype cx = Ast.Expression.(function
       };
       arguments = [Expression e];
     } ->
-      ArrT (mk_reason RPropTypeArrayOf vloc, mk_proptype cx e, [])
+      ArrT (
+        mk_reason RPropTypeArrayOf vloc,
+        ArrayAT (mk_proptype cx e, None)
+      )
 
   | vloc, Call { Call.
       callee = _, Member { Member.
@@ -4672,14 +4679,17 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
   | (("getOwnPropertyNames" | "keys"), [ Expression e ]) ->
     let arr_reason = mk_reason RArrayType loc in
     let o = expression cx e in
-    ArrT (arr_reason,
-      Flow.mk_tvar_where cx arr_reason (fun tvar ->
-        let keys_reason = replace_reason (fun desc ->
-          RCustom (spf "element of %s" (string_of_desc desc))
-        ) reason in
-        Flow.flow cx (o, GetKeysT (keys_reason, tvar));
-      ),
-      []
+    ArrT (
+      arr_reason,
+      ArrayAT (
+        Flow.mk_tvar_where cx arr_reason (fun tvar ->
+          let keys_reason = replace_reason (fun desc ->
+            RCustom (spf "element of %s" (string_of_desc desc))
+          ) reason in
+          Flow.flow cx (o, GetKeysT (keys_reason, tvar));
+        ),
+        None
+      )
     )
 
   | ("defineProperty", [ Expression e;

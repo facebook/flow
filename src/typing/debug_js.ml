@@ -122,9 +122,18 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", json_of_objtype json_cx objtype
     ]
 
-  | ArrT (_, elemt, tuplet) -> [
+  | ArrT (_, ArrayAT (elemt, tuple_types)) -> [
+      "kind", JSON_String "Array";
       "elemType", _json_of_t json_cx elemt;
-      "tupleType", JSON_Array (List.map (_json_of_t json_cx) tuplet)
+      "tupleType", match tuple_types with
+      | Some tuplet -> JSON_Array (List.map (_json_of_t json_cx) tuplet)
+      | None -> JSON_Null
+    ]
+
+  | ArrT (_, TupleAT (elemt, tuple_types)) -> [
+      "kind", JSON_String "Tuple";
+      "elemType", _json_of_t json_cx elemt;
+      "tupleType", JSON_Array (List.map (_json_of_t json_cx) tuple_types);
     ]
 
   | ClassT t -> [
@@ -1278,8 +1287,12 @@ and dump_t_ (depth, tvars) cx t =
   | ExistsT _ -> p t
   | ObjT (_, { props_tmap; _ }) -> p t
       ~extra:(Properties.string_of_id props_tmap)
-  | ArrT (_, elem, tup) -> p ~extra:(spf "%s, %s" (kid elem)
-      (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
+  | ArrT (_, ArrayAT (elemt, None)) -> p ~extra:(spf "Array %s" (kid elemt)) t
+  | ArrT (_, ArrayAT (elemt, Some tup)) -> p
+      ~extra:(spf "Array %s, %s" (kid elemt)
+        (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
+  | ArrT (_, TupleAT (_, tup)) -> p
+      ~extra:(spf "Tuple [%s]" (String.concat ", " (List.map kid tup))) t
   | ClassT inst -> p ~reason:false ~extra:(kid inst) t
   | InstanceT (_, _, _, { class_id; _ }) -> p ~extra:(spf "#%d" class_id) t
   | TypeT (_, arg) -> p ~extra:(kid arg) t

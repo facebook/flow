@@ -157,25 +157,20 @@ let rec gen_type t env = Type.(
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
     -> add_str "any" env
-  | ArrT (_, tparam, ts) ->
-    (match ts with
-    | [] ->
+  | ArrT (_, arrtype) ->
+    (match arrtype with
+    | ArrayAT (elemt, None) ->
       add_str "Array<" env
-        |> gen_type tparam
+        |> gen_type elemt
         |> add_str ">"
-    | _ ->
-      let t_count = List.length ts in
-      let env = add_str "[" env in
-      let (env, _) = List.fold_left (fun (env, idx) t ->
-        let env = gen_type t env in
-        let idx = idx + 1 in
-        let env =
-          if idx < t_count then add_str ", " env else env
-        in
-        (env, idx)
-      ) (env, 0) ts in
-      add_str "]" env
+    | ArrayAT (_, Some tuple_types)
+    | TupleAT (_, tuple_types) ->
+      env
+      |> add_str "["
+      |> gen_separated_list tuple_types ", " gen_type
+      |> add_str "]"
     )
+
   | BoolT (_, Some _) ->
     (* TODO: Consider polarity and print the literal type when appropriate *)
     add_str "boolean" env

@@ -415,12 +415,25 @@ let rec merge_type cx =
     | _ ->
       create_union (UnionRep.make t1 t2 []))
 
-  | (ArrT (_,t1,ts1), ArrT (_,t2,ts2)) ->
-      ArrT (
-        locationless_reason (RCustom "array"),
-        merge_type cx (t1, t2),
-        list_map2 (merge_type cx) ts1 ts2
-      )
+  | (ArrT (_, ArrayAT (t1, ts1)),
+     ArrT (_, ArrayAT (t2, ts2))) ->
+     let tuple_types = match ts1, ts2 with
+     | None, _
+     | _, None -> None
+     | Some ts1, Some ts2 -> Some (list_map2 (merge_type cx) ts1 ts2) in
+
+     ArrT (
+       locationless_reason (RCustom "array"),
+       ArrayAT( merge_type cx (t1, t2), tuple_types)
+     )
+
+  | (ArrT (_, TupleAT (t1, ts1))),
+     ArrT (_, TupleAT(t2, ts2)) when List.length ts1 = List.length ts2 ->
+
+     ArrT (
+       locationless_reason (RCustom "tuple"),
+       TupleAT (merge_type cx (t1, t2), list_map2 (merge_type cx) ts1 ts2)
+     )
 
   | (MaybeT t1, MaybeT t2) ->
       MaybeT (merge_type cx (t1, t2))
@@ -940,9 +953,12 @@ module ResolvableTypeJob = struct
     | FunT (_, _, _, { params_tlist; return_t; _ }) ->
       let ts = return_t :: params_tlist in
       collect_of_types ?log_unresolved cx reason acc ts
-    | ArrT (_, elem_t, ts) ->
-      let ts = elem_t::ts in
+    | ArrT (_, ArrayAT (elemt, tuple_types)) ->
+      let ts = Option.value ~default:[] tuple_types in
+      let ts = elemt::ts in
       collect_of_types ?log_unresolved cx reason acc ts
+    | ArrT (_, TupleAT (elemt, tuple_types)) ->
+      collect_of_types ?log_unresolved cx reason acc (elemt::tuple_types)
     | InstanceT (_, static, super,
                  { class_id; type_args; fields_tmap; methods_tmap; _ }) ->
       let ts = if class_id = 0 then [] else [super; static] in
@@ -3308,11 +3324,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* array types deconstruct into their parts *)
     (********************************************)
 
-    | ArrT (r1, t1, ts1), UseT (_, ArrT (r2, t2, ts2)) ->
+    (* Arrays can flow to arrays *)
+    | ArrT (r1, ArrayAT (t1, ts1)),
+      UseT (_, ArrT (_, ArrayAT (t2, ts2))) ->
       let lit1 = (desc_of_reason r1) = RArrayLit in
-      let arr1 = (desc_of_reason r1) = RArrayType in
-      let tup2 = (desc_of_reason r2) = RTupleType in
-      array_flow cx trace lit1 arr1 r1 tup2 (ts1, t1, ts2, t2)
+      let ts1 = Option.value ~default:[] ts1 in
+      let ts2 = Option.value ~default:[] ts2 in
+      array_flow cx trace lit1 r1 (ts1, t1, ts2, t2)
+
+    (* Tuples can flow to tuples with the same arity *)
+    | ArrT (r1, TupleAT (_, ts1)),
+      UseT (_, ArrT (r2, TupleAT (_, ts2))) ->
+      let fresh = (desc_of_reason r1) = RArrayLit in
+      let l1 = List.length ts1 in
+      let l2 = List.length ts2 in
+      if l1 <> l2
+      then
+        add_output cx trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
+      else
+        List.iter2 (fun l u -> flow_to_mutable_child cx trace fresh l u) ts1 ts2
+
+    (* Arrays with known elements can flow to tuples *)
+    | ArrT (r1, ArrayAT (t1, ts1)),
+      UseT (_, ArrT (r2, TupleAT _)) ->
+      begin match ts1 with
+      | None -> add_output cx trace (FlowError.ENonLitArrayToTuple (r1, r2))
+      | Some ts1 ->
+          rec_flow cx trace (ArrT (r1, TupleAT (t1, ts1)), u)
+      end
 
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
@@ -3931,22 +3970,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let value = AnyT.why reason_op in
       perform_elem_action cx trace value action
 
-    | AnyT _, ElemT (_, ArrT (_, value, _), action) ->
+    | AnyT _,
+      ElemT (_, ArrT (_, (ArrayAT (value, _) | TupleAT (value, _))), action) ->
       perform_elem_action cx trace value action
 
-    | l, ElemT (_, ArrT (_, value, ts), action) when numeric l ->
+    | l, ElemT (reason, ArrT (reason_tup, arrtype), action) when numeric l ->
+      let value, ts, is_tuple = begin match arrtype with
+      | ArrayAT(value, ts) -> value, ts, false
+      | TupleAT(value, ts) -> value, Some ts, true
+      end in
       let value = match l with
       | NumT (_, Literal (float_value, _)) ->
-          begin try
-            float_value
-            |> int_of_float
-            |> List.nth ts
-          with _ ->
-            value
+          begin match ts with
+          | None -> value
+          | Some ts ->
+              let index = int_of_float float_value in
+              begin try List.nth ts index
+              with _ ->
+                if is_tuple then begin
+                  let reasons = (reason, reason_tup) in
+                  add_output
+                    cx
+                    trace
+                    (FlowError.ETupleOutOfBounds (reasons, List.length ts, index));
+                end;
+                value
+              end
           end
       | _ -> value
       in
       perform_elem_action cx trace value action
+
 
     | (ArrT _, GetPropT(reason_op, Named (_, "constructor"), tout)) ->
       rec_flow_t cx trace (AnyT.why reason_op, tout)
@@ -3959,30 +4013,39 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* array pattern can consume the rest of an array *)
     (**************************************************)
 
-    | (ArrT (_, t, ts), ArrRestT (reason, i, tout)) ->
-      let a = ArrT (reason, t, Core_list.drop ts i) in
+    | (ArrT (_, arrtype), ArrRestT (reason, i, tout)) ->
+      let arrtype = match arrtype with
+      | ArrayAT (_, None) -> arrtype
+      | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Core_list.drop ts i))
+      | TupleAT (elemt, ts) -> TupleAT (elemt, Core_list.drop ts i) in
+      let a = ArrT (reason, arrtype) in
       rec_flow_t cx trace (a, tout)
 
     (**************************************************)
     (* function types can be mapped over a structure  *)
     (**************************************************)
 
-    | ArrT (_, t, ts), MapTypeT (reason_op, TupleMap, funt, k) ->
+    | ArrT (_, arrtype), MapTypeT (reason_op, TupleMap, funt, k) ->
       let f x = mk_tvar_where cx reason_op (fun t ->
         rec_flow cx trace (funt, CallT (reason_op, mk_functiontype [x] t))
       ) in
+
+      let arrtype = match arrtype with
+      | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(List.map f) ts)
+      | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts) in
+
       let t =
         let reason = replace_reason_const RArrayType reason_op in
-        ArrT (reason, f t, List.map f ts)
+        ArrT (reason, arrtype)
       in
       continue cx trace t k
 
     | _, MapTypeT (reason, TupleMap, funt, k) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
-      let elem_t = mk_tvar_where cx reason (fun t ->
+      let elemt = mk_tvar_where cx reason (fun t ->
         rec_flow cx trace (iter, CallT (reason, mk_functiontype [l] t))
       ) in
-      let t = ArrT (reason, elem_t, []) in
+      let t = ArrT (reason, ArrayAT (elemt, None)) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap, funt, k))
 
     | ObjT (_, o), MapTypeT (reason_op, ObjectMap, funt, k) ->
@@ -4118,9 +4181,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     (* ... then calls the function *)
-    | (ArrT (_, t, ts),
+    | (ArrT (_, arrtype),
        ApplyT (r, func, ({params_tlist=this_t::_; _} as funtype))) ->
-      let funtype = { funtype with this_t; params_tlist = ts @ [RestT t] } in
+      let params_tlist = match arrtype with
+      | ArrayAT (t, ts) -> (Option.value ~default:[] ts) @ [RestT t]
+      | TupleAT (_, ts) -> ts in
+      let funtype = { funtype with this_t; params_tlist; } in
       rec_flow cx trace (func, CallT (r, funtype))
 
     | (NullT _ | VoidT _),
@@ -4447,8 +4513,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Array library call *)
     (**********************)
 
-    | (ArrT (reason, t, _), (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
+    | (ArrT (reason, ArrayAT(t, _)),
+        (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
       rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
+
+    | (ArrT (reason, TupleAT(t, _)),
+       (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)) ->
+      rec_flow
+        cx trace (get_builtin_typeapp cx ~trace reason "Array$Tuple" [t], u)
 
     (***********************)
     (* String library call *)
@@ -4752,10 +4824,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (Internal _, _) ->
       ()
-
-    | _, UseT (MissingTupleElement i, u) ->
-      let reasons = reason_of_t l, reason_of_t u in
-      add_output cx trace (FlowError.EMissingTupleElement (reasons, i))
 
     | _ ->
       add_output cx trace (FlowError.EIncompatible (l, u))
@@ -5464,11 +5532,19 @@ and subst cx ?(force=true) (map: Type.t SMap.t) t =
         proto_t = proto_t_;
       })
 
-  | ArrT (reason, arr_t, ts) ->
-    let arr_t_ = subst cx ~force map arr_t in
-    let ts_ = ident_map (subst cx ~force map) ts in
-    if arr_t_ == arr_t && ts_ == ts then t
-    else ArrT (reason, arr_t_, ts_)
+  | ArrT (reason, ArrayAT (elemt, tuple_types)) ->
+    let elemt_ = subst cx ~force map elemt in
+    let tuple_types_ =
+      Option.map ~f:(ident_map (subst cx ~force map)) tuple_types in
+    if elemt_ = elemt && tuple_types_ = tuple_types
+    then t
+    else ArrT (reason, ArrayAT (elemt_, tuple_types_))
+  | ArrT (reason, TupleAT (elemt, tuple_types)) ->
+    let elemt_ = subst cx ~force map elemt in
+    let tuple_types_ = ident_map (subst cx ~force map) tuple_types in
+    if elemt_ = elemt && tuple_types_ = tuple_types
+    then t
+    else ArrT (reason, TupleAT (elemt_, tuple_types_))
 
   | ClassT cls ->
     let cls_ = subst cx ~force map cls in
@@ -5736,8 +5812,11 @@ and check_polarity cx polarity = function
     List.iter (check_polarity cx (Polarity.inv polarity)) func.params_tlist;
     check_polarity cx polarity func.return_t
 
-  | ArrT (_, t, _) ->
-    check_polarity cx Neutral t
+  | ArrT (_, ArrayAT (elemt, _)) ->
+    check_polarity cx Neutral elemt
+
+  | ArrT (_, TupleAT (_, tuple_types)) ->
+    List.iter (check_polarity cx Neutral) tuple_types
 
   | ObjT (_, obj) ->
     check_polarity_propmap cx obj.props_tmap;
@@ -6872,7 +6951,7 @@ and filter_not_exists t = match t with
   | BoolT (r, Some _)
   | SingletonStrT (r, _)
   | StrT (r, (Literal _ | Truthy))
-  | ArrT (r, _, _)
+  | ArrT (r, _)
   | ObjT (r, _)
   | InstanceT (r, _, _, _)
   | AnyObjT r
@@ -7260,8 +7339,7 @@ and predicate cx trace t l p = match p with
     | MixedT (r, _) ->
       let filtered_l = ArrT (
         replace_reason_const RArray r,
-        MixedT (r, Mixed_everything),
-        []
+        ArrayAT (MixedT (r, Mixed_everything), None)
       ) in
       rec_flow_t cx trace (filtered_l, t)
 
@@ -7423,13 +7501,17 @@ and instanceof_test cx trace result = function
       it at this stage instead of simply converting (ArrT, InstanceofP c)
       to (InstanceT(Array), InstanceofP c) because this allows c to be resolved
       first. *)
-  | (true, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
+  | (true,
+    (ArrT (reason, (ArrayAT (elemt, _) | TupleAT (elemt, _))) as arr),
+    ClassT(InstanceT _ as a)) ->
 
     let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
     rec_flow cx trace (arrt, PredicateT(LeftP(InstanceofTest, right), result))
 
-  | (false, (ArrT (reason, elemt, _) as arr), ClassT(InstanceT _ as a)) ->
+  | (false,
+    (ArrT (reason, (ArrayAT (elemt, _) | TupleAT (elemt, _))) as arr),
+    ClassT(InstanceT _ as a)) ->
 
     let right = ClassT(ExtendsT([], arr, a)) in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
@@ -7963,8 +8045,20 @@ and __unify cx t1 t2 trace =
         ~reason_op:r ~reason_tapp:r (params2, t2) args2 in
     rec_unify cx trace inst1 inst2
 
-  | ArrT (_, t1, ts1), ArrT (_, t2, ts2) ->
+  | ArrT (_, ArrayAT(t1, ts1)),
+    ArrT (_, ArrayAT(t2, ts2)) ->
+    let ts1 = Option.value ~default:[] ts1 in
+    let ts2 = Option.value ~default:[] ts2 in
     array_unify cx trace (ts1, t1, ts2, t2)
+
+  | ArrT (r1, TupleAT (_, ts1)),
+    ArrT (r2, TupleAT (_, ts2)) ->
+    let l1 = List.length ts1 in
+    let l2 = List.length ts2 in
+    if List.length ts1 <> List.length ts2
+    then
+      add_output cx trace (FlowError.ETupleArityMismatch ((r1, r2), l1, l2))
+    else List.iter2 (rec_unify cx trace) ts1 ts2
 
   | ObjT (lreason, { props_tmap = lflds; dict_t = ldict; _ }),
     ObjT (ureason, { props_tmap = uflds; dict_t = udict; _ }) ->
@@ -8117,35 +8211,15 @@ and flow_to_mutable_child cx trace fresh t1 t2 =
    * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
 
 *)
-and array_flow cx trace lit1 arr1 r1 tup2 ?(index=0) = function
+and array_flow cx trace lit1 r1 ?(index=0) = function
   (* empty array / array literal / tuple flowing to array / array literal /
      tuple (includes several cases, analyzed below) *)
-  | [], e1, ts2, e2 ->
-    (* if upper bound is a tuple *)
-    if tup2 then
-      (* if lower bound is an empty array *)
-      if arr1 then
-        (* We allow extraction of elements at arbitrary positions from an array
-           already (even if the array could have undefined in those positions),
-           so here we just ensure that the extracted elements satisfy each
-           position of the tuple *)
-        List.iter (fun t2 ->
-          rec_flow_t cx trace (e1, t2)
-        ) ts2
-      (* otherwise, lower bound is an empty array literal / tuple *)
-      else
-        (* We flow undefined to each position of the tuple *)
-        List.iteri (fun i t2 ->
-          rec_flow cx trace
-            (VoidT r1,
-             UseT (MissingTupleElement (index+i+1), t2))
-        ) ts2
-    else
-      (* if lower bound is an empty array / array literal *)
-      if index = 0 then
-        (* general element1 = general element2 *)
-        flow_to_mutable_child cx trace lit1 e1 e2
-      (* otherwise, lower bound is an empty tuple (nothing to do) *)
+  | [], e1, _, e2 ->
+    (* if lower bound is an empty array / array literal *)
+    if index = 0 then
+      (* general element1 = general element2 *)
+      flow_to_mutable_child cx trace lit1 e1 e2
+    (* otherwise, lower bound is an empty tuple (nothing to do) *)
 
   (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
   | _, e1, [], e2 ->
@@ -8156,7 +8230,7 @@ and array_flow cx trace lit1 arr1 r1 tup2 ?(index=0) = function
   | t1 :: ts1, e1, t2 :: ts2, e2 ->
     (* specific element1 = specific element2 *)
     flow_to_mutable_child cx trace lit1 t1 t2;
-    array_flow cx trace lit1 arr1 r1 tup2 ~index:(index+1) (ts1,e1, ts2,e2)
+    array_flow cx trace lit1 r1 ~index:(index+1) (ts1,e1, ts2,e2)
 
 (* TODO: either ensure that array_unify is the same as array_flow both ways, or
    document why not. *)
@@ -8433,10 +8507,12 @@ and resolve_builtin_class cx ?trace = function
   | StrT (reason, _) ->
     let string_t = get_builtin_type cx ?trace reason "String" in
     resolve_type cx string_t
-  | ArrT (reason, t, _) ->
-    let array_t = get_builtin cx ?trace "Array" reason in
-    let array_t = resolve_type cx array_t in
-    let array_t = instantiate_poly_t cx array_t [t] in
+  | ArrT (reason, arrtype) ->
+    let builtin, elemt = match arrtype with
+    | ArrayAT (elemt, _) -> get_builtin cx ?trace "Array" reason, elemt
+    | TupleAT (elemt, _) -> get_builtin cx ?trace "Array$Tuple" reason, elemt in
+    let array_t = resolve_type cx builtin in
+    let array_t = instantiate_poly_t cx array_t [elemt] in
     instantiate_type array_t
   | t ->
     t
@@ -8761,7 +8837,7 @@ end = struct
     | AbstractT _
     | AnyWithLowerBoundT _
     | AnyWithUpperBoundT _
-    | ArrT (_, _, _)
+    | ArrT (_, _)
     | BoundT _
     | ChoiceKitT (_, _)
     | ClassT _
@@ -8872,9 +8948,13 @@ let rec assert_ground ?(infer=false) ?(depth=1) cx skip ids t =
 
   | IdxWrapper (_, obj) -> recurse ~infer obj
 
-  | ArrT (_, t, ts) ->
-    recurse ~infer:true t;
-    List.iter (recurse ~infer:true) ts
+  | ArrT (_, arrtype) ->
+    let elemt, tuple_types = match arrtype with
+    | ArrayAT (elemt, None) -> elemt, []
+    | ArrayAT (elemt, Some tuple_types)
+    | TupleAT (elemt, tuple_types) -> elemt, tuple_types in
+    recurse ~infer:true elemt;
+    List.iter (recurse ~infer:true) tuple_types
 
   | ClassT t
   | TypeT (_, t) ->

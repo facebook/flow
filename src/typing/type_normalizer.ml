@@ -267,10 +267,25 @@ let rec normalize_type_impl cx ids t = match t with
         Flow_js.mk_objecttype dict pmap proto
       )
 
-  | ArrT (_, t, ts) ->
-      ArrT (locationless_reason RArray,
-            normalize_type_impl cx ids t,
-            ts |> List.map (normalize_type_impl cx ids))
+  | ArrT (_, ArrayAT (elemt, tuple_types)) ->
+      ArrT (
+        locationless_reason RArray,
+        ArrayAT (
+          normalize_type_impl cx ids elemt,
+          Option.map
+            ~f:(List.map (normalize_type_impl cx ids))
+            tuple_types
+        )
+      )
+
+  | ArrT (_, TupleAT (elemt, tuple_types)) ->
+      ArrT (
+        locationless_reason RTupleType,
+        TupleAT (
+          normalize_type_impl cx ids elemt,
+          List.map (normalize_type_impl cx ids) tuple_types
+        )
+      )
 
   | ExactT (reason, t) ->
     ExactT (reason, normalize_type_impl cx ids t)

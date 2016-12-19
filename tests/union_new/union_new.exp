@@ -253,21 +253,6 @@ test26.js:20
    17:   set(x: 'bar', y: string): void;
                 ^^^^^ string literal `bar`
 
-test28.js:11
- 11:   columns.push({
-                    ^ object literal. Could not decide which case to select
-  5: const BASE_COLUMNS = [
-                          ^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type). See: test28-helper.js:5
-  Case 1 may work:
-   56:   {
-         ^ object literal. See: test28-helper.js:56
-  But if it doesn't, case 2 looks promising too:
-   48:   {
-         ^ object literal. See: test28-helper.js:48
-  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
-   15:       dataKey,
-             ^^^^^^^ identifier `dataKey`
-
 test5.js:14
  14: fun(a1);
          ^^ function. Could not decide which case to select
@@ -309,4 +294,4 @@ test9.js:12
                   ^ null. The operand of an arithmetic operation must be a number.
 
 
-Found 23 errors
+Found 22 errors

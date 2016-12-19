@@ -52,11 +52,12 @@ class ['a] t = object(self)
     let acc = self#props cx acc props_tmap in
     let acc = self#type_ cx acc proto_t in
     acc
-
-  | ArrT (_, t, ts) ->
-    let acc = self#type_ cx acc t in
-    let acc = self#list (self#type_ cx) acc ts in
-    acc
+  | ArrT (_, ArrayAT (elemt, None)) ->
+    self#type_ cx acc elemt
+  | ArrT (_, ArrayAT (elemt, Some tuple_types))
+  | ArrT (_, TupleAT (elemt, tuple_types)) ->
+    let acc = self#type_ cx acc elemt in
+    self#list (self#type_ cx) acc tuple_types
 
   | ClassT t -> self#type_ cx acc t
 

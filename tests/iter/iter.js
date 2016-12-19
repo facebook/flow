@@ -5,7 +5,7 @@ for (var i=0;i<3;i++) {
     foo(a[i]);
 }
 for (var k in a) {
-    foo(a[k]);
+    foo(a[k]); // k is a string, which shouldn't be used for array access
 }
 
 var b = (null : ?{[key: string]: string});
@@ -20,7 +20,7 @@ for (var m in (c = b)) {
 
 var d;
 for (var n in (d = a)) {
-    foo(d[n]);
+    foo(d[n]); // d is a string, which shouldn't be used for array access
 }
 
 for (var x in undefined) {

@@ -155,15 +155,14 @@ let rec type_printer_impl ~size override enclosure cx t =
     | ExactT (_, t) ->
         spf "$Exact<%s>" (pp EnclosureNone cx t)
 
-    | ArrT (_, t, ts) ->
-        begin match ts with
-        | [] -> spf "Array<%s>" (pp EnclosureNone cx t)
-        | _ ->
-          ts
-          |> List.map (pp EnclosureNone cx)
-          |> String.concat ", "
-          |> spf "[%s]"
-        end
+    | ArrT (_, ArrayAT (t, None)) ->
+        spf "Array<%s>" (pp EnclosureNone cx t)
+    | ArrT (_, ArrayAT (_, Some ts))
+    | ArrT (_, TupleAT (_, ts)) ->
+        ts
+        |> List.map (pp EnclosureNone cx)
+        |> String.concat ", "
+        |> spf "[%s]"
 
     | InstanceT (reason, _, _, _) ->
         DescFormat.name_of_instance_reason reason
@@ -372,11 +371,12 @@ let rec is_printed_type_parsable_impl weak cx enclosure = function
     ->
       true
 
-  | ArrT (_, t, ts)
+  | ArrT (_, ArrayAT (t, None))
     ->
-      (match ts with
-      | [] -> is_printed_type_parsable_impl weak cx EnclosureNone t
-      | ts -> is_printed_type_list_parsable weak cx EnclosureNone ts)
+      is_printed_type_parsable_impl weak cx EnclosureNone t
+  | ArrT (_, (ArrayAT (_, Some ts) | TupleAT (_, ts)))
+    ->
+      is_printed_type_list_parsable weak cx EnclosureNone ts
 
   | RestT t
     when (enclosure == EnclosureParam)

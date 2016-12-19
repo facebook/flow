@@ -65,42 +65,139 @@ When an array is exported, its element type must be specified. This effectively 
 
 ## Tuples
 
-Given types `T0`, `T1`, ..., `Tn`, a tuple type `[T0, T1, ..., Tn]` is an
-array. That array has a general type `Array<T0 | T1 | ... | Tn>`, but Flow also
-understands that accessing the element at index `n` will evaluate to the
-specific type `Tn`.
+Tuples types represent fixed length JavaScript arrays with known types for each
+element. So while the type `Array<number>` represents a JavaScript array with unknown
+length where each element has the type `number`, the type `[number, string]` represents
+a JavaScript array of length 2 where the first element is a `number` and the
+second element is a `string`.
 
-Note that a tuple type of length `n` doesn't guarantee inhabitant arrays never
-grow beyond length `n`. Thus, `var xs: [number, string] = [0, "", 0]` is a
-valid assignment. Flow will ensure that the values at indices < `n` are of the
-correct specific type, but values >= `n` can still exist as long as they are
-consistent with the general element type of the array.
+More generally, given types `T0`, `T1`, ..., `Tn`, the tuple type
+`[T0, T1, ..., Tn]` represents an array of length `n + 1`, where the element at
+index `k` has the type `Tk`, assuming `0 <= k <= n`.
 
 ### Syntax
 
-Tuples are arrays, so they are declared like arrays
+Tuples are arrays, so they are declared like array literals
 
 ```js +line_numbers
 [<type1>, <type2>, <type3>, ...]
 ```
 
-The elements of a tuple are accessed by their indices, where the exact type
-for that particular index will be returned.
-
 ### Example
 
 ```js +line_numbers
 /* @flow */
-var tup = ["1", 1, true, "positive"];
-var b = tup[1] * tup[3];
+function mult_first_and_third(tup: [string, number, boolean, number]): number {
+  return tup[1] * tup[3];
+}
+mult_first_and_third(["1", 1, true, "positive"])
 ```
 
 ```
-/tmp/flow/tup.js:2:26,35: string
-This type is incompatible with
-  /tmp/flow/tup.js:3:9,23: number
+5: mult_first_and_third(["1", 1, true, "positive"])
+                                       ^ string. This type is incompatible with
+2: function mult_first_and_third(tup: [string, number, boolean, number]): number {
+                                                                ^ number
 
 Found 1 errors
 ```
+{: .cli-error}
 
-We declared a tuple with four (4) elements and tried to multiply a `number` with a `string`, and Flow caught it.
+### Arity
+
+The arity (i.e. length) of a tuple is strictly enforced, so that Flow can be
+relatively confident that a tuple of length `N` is actually an array with length
+`N`. This has a few consequences.
+
+An `Array<T>` type cannot flow to a tuple, since we don't know the array's
+length
+
+```js +line_numbers
+function array_to_tuple(arr: Array<number>): [number, number] {
+  return arr;
+}
+```
+
+```text
+2:   return arr;
+            ^ array type. Only tuples and array literals with known elements can flow to
+1: function array_to_tuple(arr: Array<number>): [number, number] {
+                                                ^ tuple type
+
+Found 1 errors
+```
+{: .cli-error}
+
+You cannot use `Array.prototype` methods that mutate the tuple
+
+```js +line_numbers
+function mutate_tuple(tup: [number]): void {
+  const str = tup.join(', '); // OK
+  tup.push(123); // Error
+}
+```
+
+```text
+3:   tup.push(123); // Error
+         ^ property `push`. Property not found in
+3:   tup.push(123); // Error
+     ^ Array$Tuple
+
+Found 1 errors
+```
+{: .cli-error}
+
+A tuple type cannot flow to an `Array<T>` type, since then you could mutate the
+tuple in an unsafe way.
+
+```js +line_numbers
+function tuple_to_array(tup: [number]): Array<number> {
+  return tup;
+}
+```
+
+```text
+2:   return tup;
+            ^ tuple type. This type is incompatible with the expected return type of
+1: function tuple_to_array(tup: [number]): Array<number> {
+                                           ^ array type
+
+Found 1 errors
+```
+{: .cli-error}
+
+A tuple type cannot flow to a longer tuple type.
+
+```js +line_numbers
+function short_to_long(tup: [number]): [number, void] {
+  return tup;
+}
+```
+
+```text
+2:   return tup;
+            ^ tuple type. Tuple arity mismatch. This tuple has 1 elements and cannot flow to the 2 elements of
+1: function short_to_long(tup: [number]): [number, void] {
+                                          ^ tuple type
+
+Found 1 errors
+```
+{: .cli-error}
+
+A tuple type cannot flow to a shorter tuple type.
+
+```js +line_numbers
+function long_to_short(tup: [number, number]): [number] {
+  return tup;
+}
+```
+
+```text
+2:   return tup;
+            ^ tuple type. Tuple arity mismatch. This tuple has 2 elements and cannot flow to the 1 elements of
+1: function long_to_short(tup: [number, number]): [number] {
+                                                  ^ tuple type
+
+Found 1 errors
+```
+{: .cli-error}

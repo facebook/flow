@@ -3,9 +3,9 @@ iter.js:7
                    ^ array literal. The right-hand side of a `for...in` statement must be an object, null or undefined.
 
 iter.js:8
-  8:     foo(a[k]);
+  8:     foo(a[k]); // k is a string, which shouldn't be used for array access
              ^^^^ access of computed property/element. Element cannot be accessed with
-  8:     foo(a[k]);
+  8:     foo(a[k]); // k is a string, which shouldn't be used for array access
                ^ string
 
 iter.js:22
@@ -13,9 +13,9 @@ iter.js:22
                         ^ array literal. The right-hand side of a `for...in` statement must be an object, null or undefined.
 
 iter.js:23
- 23:     foo(d[n]);
+ 23:     foo(d[n]); // d is a string, which shouldn't be used for array access
              ^^^^ access of computed property/element. Element cannot be accessed with
- 23:     foo(d[n]);
+ 23:     foo(d[n]); // d is a string, which shouldn't be used for array access
                ^ string
 
 

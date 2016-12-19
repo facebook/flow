@@ -244,7 +244,7 @@ var optional_array_of_num: ?number[] = null;
 var array_of_optional_num: Array<?number> = [null, 0];
 
 /*
-  Tuple types describe arrays holding heterogeneous values.
+  Tuple types describe arrays of known length holding heterogeneous values.
 */
 
 var tuple_of_str_and_num: [string, number] = ["Hi", 42];

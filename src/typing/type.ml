@@ -75,7 +75,7 @@ module rec TypeTerm : sig
 
     | ObjT of reason * objtype
     | ObjProtoT of reason       (* Object.prototype *)
-    | ArrT of reason * t * t list
+    | ArrT of reason * arrtype
 
     (* type of a class *)
     | ClassT of t
@@ -594,6 +594,14 @@ module rec TypeTerm : sig
     is_predicate: bool;
     changeset: Changeset.t
   }
+
+  and arrtype =
+  | ArrayAT of t * t list option
+  (* TupleAT of elemt * tuple_types. Why do tuples carry around elemt? Well, so
+   * that they don't need to recompute their general type when you do
+   * myTuple[expr]
+   *)
+  | TupleAT of t * t list
 
   and objtype = {
     flags: flags;
@@ -1418,7 +1426,7 @@ let rec reason_of_t = function
   | AnyT reason -> reason
   | AnyWithLowerBoundT (t) -> reason_of_t t
   | AnyWithUpperBoundT (t) -> reason_of_t t
-  | ArrT (reason,_,_) -> reason
+  | ArrT (reason,_) -> reason
   | BoolT (reason, _) -> reason
   | BoundT typeparam -> typeparam.reason
   | ChoiceKitT (reason, _) -> reason
@@ -1573,7 +1581,7 @@ let rec mod_reason_of_t f = function
   | AnyT reason -> AnyT (f reason)
   | AnyWithLowerBoundT t -> AnyWithLowerBoundT (mod_reason_of_t f t)
   | AnyWithUpperBoundT t -> AnyWithUpperBoundT (mod_reason_of_t f t)
-  | ArrT (reason, t, ts) -> ArrT (f reason, t, ts)
+  | ArrT (reason, at) -> ArrT (f reason, at)
   | BoolT (reason, t) -> BoolT (f reason, t)
   | BoundT { reason; name; bound; polarity; default; } ->
       BoundT { reason = f reason; name; bound; polarity; default; }

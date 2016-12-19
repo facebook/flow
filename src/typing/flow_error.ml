@@ -64,7 +64,9 @@ type error_message =
   | EAdditionMixed of reason
   | ECoercion of (reason * reason)
   | EComparison of (reason * reason)
-  | EMissingTupleElement of (reason * reason) * int
+  | ETupleArityMismatch of (reason * reason) * int * int
+  | ENonLitArrayToTuple of (reason * reason)
+  | ETupleOutOfBounds of (reason * reason) * int * int
   | ESpeculationFailed of Type.t * Type.use_t * (reason * error_message) list
   | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
   | EIncompatibleWithExact of (reason * reason)
@@ -558,12 +560,25 @@ end = struct
     | EComparison reasons ->
         typecheck_error "This type cannot be compared to" reasons
 
-    | EMissingTupleElement (reasons, i) ->
+    | ETupleArityMismatch (reasons, l1, l2) ->
         let msg = spf
-          "This type is incompatible with a tuple type that expects \
-           a %s element of non-optional type"
-          (ordinal i)
-        in
+          "Tuple arity mismatch. This tuple has %d elements and cannot flow to \
+          the %d elements of"
+          l1
+          l2 in
+        typecheck_error msg reasons
+
+    | ENonLitArrayToTuple reasons ->
+        let msg =
+          "Only tuples and array literals with known elements can flow to" in
+        typecheck_error msg reasons
+
+    | ETupleOutOfBounds (reasons, length, index) ->
+        let msg = spf
+          "Out of bound access. This tuple has %d elements and you tried to \
+          access index %d of"
+          length
+          index in
         typecheck_error msg reasons
 
     | ESpeculationFailed (l, u, branches) ->
