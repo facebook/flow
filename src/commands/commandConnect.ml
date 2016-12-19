@@ -60,24 +60,25 @@ let is_valid_line s =
 
 let msg_of_tail env tail_env =
   let line = Tail.last_line tail_env in
+  let use_emoji = env.emoji && Utils_js.can_emoji in
   if matches_re parsing_re line then
     Printf.sprintf "[%sparsing]"
-      (if env.emoji then (* Ghost *) "\xf0\x9f\x91\xbb  " else "")
+      (if use_emoji then (* Ghost *) "\xf0\x9f\x91\xbb  " else "")
   else if matches_re infer_re line then
     Printf.sprintf "[%slocal inference]"
-      (if env.emoji then (* Turtle *) "\xf0\x9f\x90\xa2  " else "")
+      (if use_emoji then (* Turtle *) "\xf0\x9f\x90\xa2  " else "")
   else if matches_re calc_deps_re line then
     Printf.sprintf "[%scalculating dependencies]"
-      (if env.emoji then (* Taco *) "\xf0\x9f\x8c\xae  " else "")
+      (if use_emoji then (* Taco *) "\xf0\x9f\x8c\xae  " else "")
   else if matches_re merging_re line then
     Printf.sprintf "[%smerging inference]"
-      (if env.emoji then (* Snail *) "\xf0\x9f\x90\x8c  " else "")
+      (if use_emoji then (* Snail *) "\xf0\x9f\x90\x8c  " else "")
   else if matches_re server_ready_re line then
     Printf.sprintf "[%sserver is ready]"
-      (if env.emoji then (* Unicorn Face *) "\xf0\x9f\xa6\x84  " else "")
+      (if use_emoji then (* Unicorn Face *) "\xf0\x9f\xa6\x84  " else "")
   else
     Printf.sprintf "[%sprocessing]"
-      (if env.emoji then (* Panda Face *) "\xf0\x9f\x90\xbc  " else "")
+      (if use_emoji then (* Panda Face *) "\xf0\x9f\x90\xbc  " else "")
 
 let arg name value arr = match value with
 | None -> arr
