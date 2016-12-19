@@ -61,6 +61,7 @@ let convert_event debug_event = match debug_event with
       global_state)
   | DE.Fresh_vcs_state s -> Fresh_vcs_state s
   | DE.Typecheck -> Typecheck
+  | DE.HandleServerCommand cmd -> HandleServerCommand cmd
   | DE.Disk_files_modified files ->
     let contents = Relative_path.Map.from_keys files fetch_file_contents in
     Disk_files_modified contents

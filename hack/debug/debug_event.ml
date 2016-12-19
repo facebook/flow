@@ -18,6 +18,7 @@ type event =
    * TODO: This needs a lot more stuff in it, but is not yet implemented.
    * Useful as an event for now for unit testing. *)
   | Typecheck
+  | HandleServerCommand : 'a ServerCommandTypes.command -> event
   (** List of files whose disk contents have changed. *)
   | Disk_files_modified of Relative_path.S.t list
   | Stop_recording
@@ -26,5 +27,8 @@ let to_string e = match e with
   | Loaded_saved_state _ -> "Loaded_saved_state"
   | Fresh_vcs_state _ -> "Fresh_vcs_state"
   | Typecheck -> "Typecheck"
+  | HandleServerCommand cmd ->
+    Printf.sprintf "(HandleServerCommand %s)"
+      (ServerCommandTypesUtils.debug_describe_cmd cmd)
   | Disk_files_modified _ -> "Disk_files_modified"
   | Stop_recording -> "Stop_recording"

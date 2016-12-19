@@ -13,6 +13,7 @@ type event =
   (** The state name of the fresh VCS state. *)
   | Fresh_vcs_state of string
   | Typecheck
+  | HandleServerCommand : 'a ServerCommandTypes.command -> event
   (** Files whose disk contents have changed and their new contents. *)
   | Disk_files_modified of string Relative_path.Map.t
   | Stop_recording
@@ -24,6 +25,9 @@ let to_string e = match e with
   | Fresh_vcs_state s ->
     Printf.sprintf "(Fresh_vcs_state %s)" s
   | Typecheck -> "Typecheck"
+  | HandleServerCommand cmd ->
+    Printf.sprintf "(HandleServerCommand %s)"
+      (ServerCommandTypesUtils.debug_describe_cmd cmd)
   | Disk_files_modified files ->
     Printf.sprintf "Files_modified: [%s ]"
     (List.fold_left (
