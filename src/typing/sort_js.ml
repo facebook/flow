@@ -137,10 +137,7 @@ let tarjan state =
    each partition, by height. *)
 let partition heights components =
   FilenameMap.fold (fun m c map ->
-    (* Although the same graph always returns the same components, how a
-       component is split between m and c is non-deterministic. We can restore
-       determinism by sorting. *)
-    let mc = List.sort Pervasives.compare (m::c) in
+    let mc = m::c in
     let height = FilenameMap.find_unsafe m heights in
     match IMap.get height map with
     | None -> IMap.add height [mc] map

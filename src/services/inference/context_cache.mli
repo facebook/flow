@@ -14,6 +14,9 @@ class context_cache : object
   method read_safe: (Loc.FilenameKey.t -> Context.t option) Expensive.t
 end
 
+val add: (Context.t -> unit) Expensive.t
+val remove_batch: Utils_js.FilenameSet.t -> unit
+
 class sig_context_cache : object
   method find: Loc.FilenameKey.t -> Context.t option
   method read: (Loc.FilenameKey.t -> Context.t * Context.t) Expensive.t
@@ -21,11 +24,11 @@ class sig_context_cache : object
     (Loc.FilenameKey.t -> (Context.t * Context.t) option) Expensive.t
 end
 
-val add: (Context.t -> unit) Expensive.t
 val add_sig: (Context.t -> unit) Expensive.t
-val add_sig_on_diff: (Context.t -> SigHash.t -> bool) Expensive.t
-val remove_batch: Utils_js.FilenameSet.t -> unit
-val remove_sig_batch: Utils_js.FilenameSet.t -> unit
-val oldify_sig_batch: Utils_js.FilenameSet.t -> unit
-val revive_sig_batch: Utils_js.FilenameSet.t -> unit
-val remove_old_sig_batch: Utils_js.FilenameSet.t -> unit
+
+val find_leader: Loc.FilenameKey.t -> Loc.FilenameKey.t
+
+val add_merge_on_diff: (Context.t list -> SigHash.t -> bool) Expensive.t
+val oldify_merge_batch: Utils_js.FilenameSet.t -> unit
+val revive_merge_batch: Utils_js.FilenameSet.t -> unit
+val remove_old_merge_batch: Utils_js.FilenameSet.t -> unit

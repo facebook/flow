@@ -45,6 +45,9 @@ let blocked = ref 0
 (* For each leader, maps other leaders that are dependent on it. *)
 let dependents = ref FilenameMap.empty
 
+(* For each leader, maps the files in its component *)
+let components = ref FilenameMap.empty
+
 (* For each leader, specifies whether to recheck its component *)
 let to_recheck: bool FilenameMap.t ref = ref FilenameMap.empty
 
@@ -67,18 +70,18 @@ type element =
 let rev_append_triple (x1, y1, z1) (x2, y2, z2) =
   List.rev_append x1 x2, List.rev_append y1 y2, List.rev_append z1 z2
 
+let component (f, diff) =
+  if diff then Component (FilenameMap.find_unsafe f !components)
+  else Skip f
+
 (* leader_map is a map from files to leaders *)
 (* component_map is a map from leaders to components *)
 (* dependency_graph is a map from files to dependencies *)
 let make dependency_graph leader_map component_map recheck_leader_map =
+  components := component_map;
   to_recheck := recheck_leader_map;
-  (* TODO: clear or replace state *)
-  let procs = Sys_utils.nbr_procs in
-  let leader f = FilenameMap.find_unsafe f leader_map in
-  let component (f, diff) =
-    if diff then Component (FilenameMap.find_unsafe f component_map)
-    else Skip f in
 
+  let leader f = FilenameMap.find_unsafe f leader_map in
   let dependency_dag = FilenameMap.fold (fun f fs dependency_dag ->
     let leader_f = leader f in
     let dep_leader_fs = match FilenameMap.get leader_f dependency_dag with
@@ -107,6 +110,7 @@ let make dependency_graph leader_map component_map recheck_leader_map =
   (* TODO: remember reverse dependencies to quickly calculate remerge sets *)
   dependents := Sort_js.reverse dependency_dag;
 
+  let procs = Sys_utils.nbr_procs in
   fun () ->
     let jobs = List.length !stream in
     if jobs = 0 && !blocked <> 0 then MultiWorker.Wait
@@ -145,8 +149,14 @@ let join =
   fun res acc ->
     let merged, _, unchanged = res in
     let changed = List.filter (fun f -> not (List.mem f unchanged)) merged in
-    Context_cache.revive_sig_batch (FilenameSet.of_list unchanged);
-    Context_cache.remove_old_sig_batch (FilenameSet.of_list changed);
+    List.iter (fun leader_f ->
+      let fs = FilenameMap.find_unsafe leader_f !components in
+      Context_cache.revive_merge_batch (FilenameSet.of_list fs);
+    ) unchanged;
+    List.iter (fun leader_f ->
+      let fs = FilenameMap.find_unsafe leader_f !components in
+      Context_cache.remove_old_merge_batch (FilenameSet.of_list fs);
+    ) changed;
     push (List.rev_append
       (List.rev_map (fun leader_f -> (leader_f, true)) changed)
       (List.rev_map (fun leader_f -> (leader_f, false)) unchanged)
