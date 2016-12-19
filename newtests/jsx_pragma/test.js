@@ -302,4 +302,80 @@ export default suite(({addFile, addFiles, addCode}) => [
         `,
       ),
   ]),
+  test('Whitespace trimming', [
+    addCode(`
+      // @jsx Foo
+      function Foo(
+        elem: number,
+        props: null,
+        child1: 'hello',
+        child2: boolean,
+        child3: 'bye',
+        ...rest: Array<void>
+      ) {}
+      const Bar = 123;
+      <Bar>
+
+        hi
+        {true}
+        bye
+        there
+
+      </Bar>;
+    `).newErrors(
+        `
+          test.js:14
+           14:       <Bar>
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           16:         hi
+                       ^^ JSX text. Expected string literal \`hello\`, got \`hi\` instead
+            8:         child1: 'hello',
+                               ^^^^^^^ string literal \`hello\`
+
+          test.js:14
+           14:       <Bar>
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           18:         bye
+                       ^ JSX text. Expected string literal \`bye\`, got \`bye there\` instead
+           10:         child3: 'bye',
+                               ^^^^^ string literal \`bye\`
+        `,
+      ),
+  ]),
+  test('Empty JSXText children are stripped out', [
+    addCode(`
+      // @jsx Foo
+      function Foo(
+        elem: number,
+        props: null,
+        child1: string,
+        child2: boolean,
+        ...rest: Array<void>
+      ) {}
+      const Bar = 123;
+
+      <Bar> {true}
+      {''} </Bar>;
+    `)
+      .newErrors(
+        `
+          test.js:14
+           14:       <Bar> {true}
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           14:       <Bar> {true}
+                            ^^^^ boolean. This type is incompatible with the expected param type of
+            8:         child1: string,
+                               ^^^^^^ string
+
+          test.js:14
+           14:       <Bar> {true}
+                     ^^^^^ JSX desugared to \`Foo(...)\`
+           15:       {''} </Bar>;
+                      ^^ string. This type is incompatible with the expected param type of
+            9:         child2: boolean,
+                               ^^^^^^^ boolean
+        `,
+      )
+      .because('JSXText children with only whitespace or newlines are ignored'),
+  ])
 ]);
