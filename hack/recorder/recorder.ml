@@ -1,3 +1,13 @@
+(**
+ * Copyright (c) 2016, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the "hack" directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ *)
+
 open Recorder_types
 
 module DE = Debug_event
@@ -32,19 +42,58 @@ let get_events instance = match instance with
   | Switched_off -> []
   | Active env -> List.rev env.rev_buffered_recording
 
-let start () =
+let start init_env =
   let start = Unix.gettimeofday () in
-  Active ({ start_time = start; rev_buffered_recording = []; })
+  let buffer = [Start_recording init_env] in
+  Active ({ start_time = start; rev_buffered_recording = buffer; })
 
 let default_instance = Switched_off
 
-let fetch_file_contents _ =
-  (** TODO: Get the contents from disk *)
-  "Lorem ipsum...\n"
+(** Use fixed buffer to minimize heap allocations. *)
+let chunk_size = 65536
+let read_buffer = String.create chunk_size
+
+exception File_read_error
+
+let rec fetch_file_contents_batched acc fd =
+  let bytes_read = Unix.read fd read_buffer 0 chunk_size in
+  if bytes_read = 0 then
+    acc
+  else if bytes_read < 0 then
+    raise File_read_error
+  else
+    let b = String.sub read_buffer 0 bytes_read in
+    fetch_file_contents_batched (b :: acc) fd
+
+let with_opened_file path f =
+  let fd = Unix.openfile path [Unix.O_RDONLY] 0o440 in
+  let f () = f fd in
+  let finally () = Unix.close fd in
+  Utils.try_finally ~f ~finally
+
+let fetch_file_contents path =
+  let path = Relative_path.to_absolute path in
+  let buffers_rev = with_opened_file path @@ fetch_file_contents_batched [] in
+  String.concat "" @@ List.rev buffers_rev
+
+let fetch_file_contents_opt path =
+  try Some (fetch_file_contents path) with
+  | Unix.Unix_error(Unix.ENOENT, _, _) -> None
 
 let files_with_contents files =
   let files = Relative_path.Set.elements files in
   Relative_path.Map.from_keys files fetch_file_contents
+
+(** Like files_with_contents but skips over non-existent files. *)
+let files_with_contents_opt files =
+  let files = Relative_path.Set.elements files in
+  let contents = Relative_path.Map.from_keys files @@ fetch_file_contents_opt in
+  Relative_path.Map.fold contents ~init:Relative_path.Map.empty
+    ~f:(fun key data acc ->
+      match data with
+      | None -> acc
+      | Some data -> Relative_path.Map.add acc ~key ~data
+    )
 
 let convert_event debug_event = match debug_event with
   | DE.Loaded_saved_state (
@@ -52,7 +101,9 @@ let convert_event debug_event = match debug_event with
     global_state) ->
     let dirty_files = files_with_contents dirty_files in
     let changed_while_parsing = files_with_contents changed_while_parsing in
-    let build_targets = files_with_contents build_targets in
+    (** TODO: Some build target files might not exist. Skip them.
+     * Improve this. *)
+    let build_targets = files_with_contents_opt build_targets in
     Loaded_saved_state (
       { filename;
       dirty_files;

@@ -5,10 +5,17 @@ type saved_state_info = {
   build_targets : string Relative_path.Map.t;
 }
 
+(** We need these paths to be restored in all the process that handle
+ * Relative_path.t - the recorder daemon, the turntable, etc. *)
+type init_env = {
+  root_path : Path.t;
+  hhi_path : Path.t;
+}
 
 (** A recording is a sequence of these events. They are derived from the events
  * emitted from the debug port.*)
 type event =
+  | Start_recording of init_env
   | Loaded_saved_state of saved_state_info * ServerGlobalState.t
   (** The state name of the fresh VCS state. *)
   | Fresh_vcs_state of string
@@ -19,6 +26,7 @@ type event =
   | Stop_recording
 
 let to_string e = match e with
+  | Start_recording _ -> "Start_recording"
   | Loaded_saved_state ({ filename; dirty_files; _ }, _) ->
     Printf.sprintf "(Loaded_saved_state %s with %d dirtied files)"
       filename (Relative_path.Map.cardinal dirty_files)

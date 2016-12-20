@@ -159,6 +159,11 @@ let fold_fun_list acc fl =
 
 let compose f g x = f (g x)
 
+let try_finally ~f ~(finally: unit -> unit) =
+  let res = try f () with e -> finally (); raise e in
+  finally ();
+  res
+
 let with_context ~enter ~exit ~do_ =
   enter ();
   let result = try do_ () with e ->
