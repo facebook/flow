@@ -25,6 +25,12 @@ let has_split_before_chunk c rvm =
   let value = IMap.get rule_id rvm in
   Rule.is_split rule_id value
 
+let has_comma_after_chunk c rvm =
+  Option.value_map c.Chunk.comma_rule ~default:false ~f:(fun rule_id ->
+    let value = IMap.get rule_id rvm in
+    Rule.is_split rule_id value
+  )
+
 let make chunk_group rvm =
   let { Chunk_group.chunks; block_indentation; _ } = chunk_group in
   let len = 0 in
@@ -64,6 +70,7 @@ let make chunk_group rvm =
       in
 
       let len = len + (String.length c.Chunk.text) in
+      let len = if has_comma_after_chunk c rvm then len + 1 else len in
       len, cost, overflow
     ) in
 

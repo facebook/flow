@@ -34,6 +34,7 @@ let builder = object (this)
 
   val mutable next_split_rule = None;
   val mutable space_if_not_split = false;
+  val mutable pending_comma = None;
 
   val mutable pending_whitespace = "";
 
@@ -56,6 +57,7 @@ let builder = object (this)
     chunks <- [];
     next_split_rule <- None;
     space_if_not_split <- false;
+    pending_comma <- None;
     pending_whitespace <- "";
     chunk_groups <- [];
     rule_alloc <- Rule_allocator.make ();
@@ -87,6 +89,13 @@ let builder = object (this)
     );
     pending_whitespace <- ""
 
+  method set_pending_comma () =
+    chunks <- (match chunks with
+      | hd :: tl when not hd.Chunk.is_appendable ->
+        {hd with Chunk.comma_rule = Some (List.hd_exn rules)} :: tl;
+      | _ -> pending_comma <- Some (List.hd_exn rules); chunks;
+    );
+
   method set_pending_whitespace s =
     pending_whitespace <- s
 
@@ -99,8 +108,10 @@ let builder = object (this)
           | hd :: _ when rule_id = Rule.null_rule_id -> hd
           | _ -> rule_id
         in
-        let chunk = Chunk.finalize hd rule rule_alloc space_if_not_split in
+        let chunk = Chunk.finalize hd rule rule_alloc
+          space_if_not_split pending_comma in
         space_if_not_split <- space;
+        pending_comma <- None;
         chunk :: tl
       | _ -> chunks
     )
@@ -127,7 +138,7 @@ let builder = object (this)
     let create_empty_chunk () =
       let rule = this#add_rule Rule.Always in
       let chunk = Chunk.make "" (Some rule) nesting in
-      Chunk.finalize chunk rule rule_alloc false
+      Chunk.finalize chunk rule rule_alloc false None
     in
     (chunks <- match chunks with
       | [] -> create_empty_chunk () :: chunks
@@ -351,6 +362,15 @@ let builder = object (this)
     this#handle_trivia
       ~is_leading:true (this#break_out_delimited @@ EditableToken.leading x);
     this#handle_token x;
+    this#handle_trivia
+      ~is_leading:false (this#break_out_delimited @@ EditableToken.trailing x);
+    ()
+
+  method token_trivia_only x =
+    this#handle_trivia
+      ~is_leading:true (this#break_out_delimited @@ EditableToken.leading x);
+    this#check_range ();
+    this#advance (EditableToken.width x);
     this#handle_trivia
       ~is_leading:false (this#break_out_delimited @@ EditableToken.trailing x);
     ()
@@ -1340,13 +1360,20 @@ and handle_compound_statement cs =
   ()
 
 and handle_possible_list
-    ?(before_each=(fun () -> ())) ?(after_each=(fun is_last -> ())) node =
+    ?(before_each=(fun () -> ()))
+    ?(after_each=(fun is_last -> ()))
+    ?(handle_last=transform)
+    node =
   let rec aux l = (
     match l with
+      | hd :: [] ->
+        before_each ();
+        handle_last hd;
+        after_each true;
       | hd :: tl ->
         before_each ();
         transform hd;
-        after_each (List.is_empty tl);
+        after_each false;
         aux tl
       | [] -> ()
   ) in
@@ -1485,7 +1512,8 @@ and transform_argish_with_return_type ~in_span left_p params right_p colon
 
   tl_with ~rule:(Some Rule.Argument) ~f:(fun () ->
     tl_with ~nest:true ~f:(fun () ->
-      handle_possible_list ~after_each:after_each_argument params
+      handle_possible_list
+        ~after_each:after_each_argument ~handle_last:transform_last_arg params
     ) ();
     transform right_p;
     transform colon;
@@ -1499,12 +1527,29 @@ and transform_argish left_p arg_list right_p =
   split ();
   tl_with ~span:true ~rule:(Some Rule.Argument) ~f:(fun () ->
     tl_with ~nest:true ~f:(fun () ->
-      handle_possible_list ~after_each:after_each_argument arg_list
+      handle_possible_list
+        ~after_each:after_each_argument ~handle_last:transform_last_arg arg_list
     ) ();
     split ();
     transform right_p
   ) ();
   ()
+
+and transform_last_arg node =
+  match syntax node with
+    | ListItem x ->
+      let (item, separator) = get_list_item_children x in
+      transform item;
+      builder#set_pending_comma ();
+      (match syntax separator with
+        | Token x -> builder#token_trivia_only x;
+        | Missing -> ();
+        | _ -> raise (Failure "Expected separator to be a token");
+      );
+    | _ ->
+      (* TODO: handle case where last arg has trivia but no comma) *)
+      transform node;
+      builder#set_pending_comma ();
 
 and transform_mapish_entry key arrow value =
   transform key;
@@ -1617,8 +1662,9 @@ let debug_chunk_groups chunk_groups =
     Printf.printf "Chunk count:%d\n" (List.length cg.Chunk_group.chunks);
     Printf.printf "%s\n" @@ get_range cg;
     List.iteri cg.Chunk_group.chunks ~f:(fun i c ->
-      Printf.printf "\t%d - %s - Nesting:%d\n"
+      Printf.printf "\t%d - %s - Nesting:%d Pending:%d\n"
         i (Chunk.to_string c) (Chunk.get_nesting_id c)
+        (Option.value ~default:(-1) c.Chunk.comma_rule)
     );
     Printf.printf "Rule count %d\n"
       (IMap.cardinal cg.Chunk_group.rule_map);

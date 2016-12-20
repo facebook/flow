@@ -15,6 +15,7 @@ type t = {
   spans: Span.t list;
   is_appendable: bool;
   space_if_not_split: bool;
+  comma_rule: int option;
   rule: int;
   nesting: Nesting.t
 }
@@ -24,6 +25,7 @@ let default_chunk = {
   spans = [];
   is_appendable = true;
   space_if_not_split = false;
+  comma_rule = None;
   rule = Rule.null_rule_id;
   nesting = {Nesting.id = -1; amount = 0; parent = None; };
 }
@@ -35,7 +37,7 @@ let make text rule nesting =
   in
   {c with text; nesting;}
 
-let finalize chunk rule ra space =
+let finalize chunk rule ra space comma =
   let rule = if Rule_allocator.get_rule_kind ra rule = Rule.Always
     || chunk.rule = Rule.null_rule_id
     then rule
@@ -45,6 +47,7 @@ let finalize chunk rule ra space =
     is_appendable = false;
     rule;
     space_if_not_split = space;
+    comma_rule = comma;
   }
 
 let get_span_split_cost chunk =

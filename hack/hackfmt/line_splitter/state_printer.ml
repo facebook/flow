@@ -26,6 +26,7 @@ let print_state state =
         if c.Chunk.text <> "" then Buffer.add_string b (String.make indent ' ');
       end else if c.Chunk.space_if_not_split then Buffer.add_string b " ";
       Buffer.add_string b c.Chunk.text;
+      if Solve_state.has_comma_after_chunk c rvm then Buffer.add_string b ",";
     end
   );
   Buffer.contents b
