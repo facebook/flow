@@ -9,12 +9,11 @@ module Schema = Graphql_schema
 type context = {
   mutable vars: Schema.Type.t SMap.t;
   infer_vars: bool;
+  relay_op: bool;
 }
 
-let rec mk_context ?vars:(vars=SMap.empty) ?infer_vars:(infer_vars=false) () =
-  { vars; infer_vars }
 
-and doc cx doc =
+let rec doc cx doc =
   let schema =
     match Context.graphql_config cx with
     | Some inst -> inst.Graphql_config.schema
@@ -37,7 +36,7 @@ and do_definition cx schema def =
     let reason = mk_reason
         (RCustom (spf "fragment on `%s`" type_name)) loc in
     if Graphql_flow.check_frag_type cx schema type_name type_loc then
-      let gcx = mk_context ~infer_vars:true () in
+      let gcx = {vars = SMap.empty; infer_vars = true; relay_op = false} in
       let selection =
         mk_selection cx gcx schema type_name selectionSet in
       let frag = { Graphql.
@@ -75,28 +74,13 @@ and do_definition cx schema def =
          - use args of this field as operation variables
          - do not require selection for this field even if it's object type
        *)
-      let (gcx, top_op) =
-        match variableDefs with
-        | Some var_defs ->
-          let vars = do_vars_decl cx schema var_defs in
-          (mk_context ~vars (), false)
-        | None ->
-          (match get_field_if_relay_op op_def with
-           | Some field_name ->
-             (match Schema.get_field schema type_name field_name with
-              | Some {Schema.Field.args; _} ->
-                let vars =
-                  SMap.map (fun a -> a.Schema.InputVal.type_) args in
-                (mk_context ~vars (), true)
-              | None ->
-                (mk_context (), false)
-             )
-           | None ->
-             (mk_context (), false)
-          )
+      let relay_op = is_relay_op op_def in
+      let (vars, infer_vars) = match variableDefs with
+        | Some var_defs -> (do_vars_decl cx schema var_defs, false)
+        | None -> (SMap.empty, true)
       in
-      let selection =
-        mk_selection cx gcx schema ~top_op type_name selectionSet in
+      let gcx = {vars; infer_vars; relay_op} in
+      let selection = mk_selection cx gcx schema type_name selectionSet in
       let vars = gcx.vars in
       let operation = { Graphql.
         op_schema = schema;
@@ -114,21 +98,12 @@ and do_definition cx schema def =
     (* TODO: Report an error *)
     VoidT.at Loc.none
 
-and get_field_if_relay_op op = Ast.(match op with
-  | {
-      OperationDef.selectionSet = {
-        SelectionSet.selections = [
-          Selection.Field {
-            Field.name = (_, name);
-            selectionSet = None;
-            _
-          }
-        ];
-        _
-      };
-      _
-    } -> Some name
-  | _ -> None
+and is_relay_op op = Ast.(
+  let check_field = function
+    | Selection.Field {Field.selectionSet = None; _} -> true
+    | _ -> false
+  in
+  List.for_all check_field op.OperationDef.selectionSet.SelectionSet.selections
 )
 
 and do_vars_decl cx schema var_defs =
@@ -175,8 +150,7 @@ and do_vars_decl cx schema var_defs =
   in
   vars
 
-and mk_selection
-    cx gcx schema ?top_op:(top_op=false) type_name selection_set =
+and mk_selection cx gcx schema type_name selection_set =
   let {Ast.SelectionSet.selections; loc} = selection_set in
   let reason = mk_reason (RCustom (spf "selection on `%s`" type_name)) loc in
   let s_selections = SMap.from_keys
@@ -188,11 +162,10 @@ and mk_selection
     s_on = type_name;
     s_selections;
   } in
-  select ~top_op
+  select
     cx gcx schema (GraphqlSelectionT (reason, selection)) type_name selections
 
-and select
-    cx gcx schema ?top_op:(top_op=false) selection type_name selections =
+and select cx gcx schema selection type_name selections =
   List.fold_left (fun selection item ->
     match item with
     | Ast.Selection.Field { Ast.Field.
@@ -215,7 +188,7 @@ and select
             do_field_args cx gcx schema
               (Schema.find_field schema type_name fname) floc args
           in
-          let field_selection = do_field_selection ~top_op
+          let field_selection = do_field_selection
               cx gcx schema
               (Schema.name_of_type field_type)
               floc selectionSet in
@@ -282,7 +255,7 @@ and skim_selection_set cx gcx schema selection_set =
     | _ -> ()
   ) selection_set.Ast.SelectionSet.selections
 
-and do_field_selection cx gcx schema ~top_op type_name loc selection_set =
+and do_field_selection cx gcx schema type_name loc selection_set =
   let need_selection = Schema.Type.(
     match Schema.type_def schema type_name with
     | Obj _ | Interface _ | Union _ -> true
@@ -297,7 +270,7 @@ and do_field_selection cx gcx schema ~top_op type_name loc selection_set =
     Flow_error.(add_output cx (EGraphqlNonObjSelect (loc, type_name)));
     None
   (* obj *)
-  | None when (need_selection && (not top_op)) ->
+  | None when (need_selection && (not gcx.relay_op)) ->
     Flow_error.(add_output cx (EGraphqlObjNeedSelect (loc, type_name)));
     None
   (* scalar *)
@@ -407,11 +380,10 @@ and do_value cx gcx schema type_ value =
     end
 
 and do_var cx gcx loc name type_ =
-  let {vars; infer_vars} = gcx in
-  if SMap.mem name vars
-  then vars_compatible cx loc (SMap.find name vars) type_
-  else if infer_vars then (
-    let new_vars = SMap.add name type_ vars in
+  if SMap.mem name gcx.vars
+  then vars_compatible cx loc (SMap.find name gcx.vars) type_
+  else if gcx.infer_vars then (
+    let new_vars = SMap.add name type_ gcx.vars in
     gcx.vars <- new_vars
   ) else (err cx loc (spf "Variable `%s` in not declared" name))
 
