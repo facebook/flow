@@ -67,7 +67,8 @@ let rec playback recording conn =
   let open Recorder_types in
   let () = match x with
   | Loaded_saved_state _ ->
-    not_yet_supported "Loaded_saved_state"
+    (** TODO *)
+    playback recording conn
   | Fresh_vcs_state _ ->
     not_yet_supported "Fresh_vcs_state"
   | Typecheck ->
@@ -79,7 +80,6 @@ let rec playback recording conn =
   | Stop_recording ->
     not_yet_supported "Stop_recording"
   in
-  let () = Printf.eprintf "Played back an event\n%!" in
   playback recording conn
 
 let rec sleep_and_wait () =
