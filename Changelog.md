@@ -1,3 +1,8 @@
+###v0.37.4
+
+Notable bug fixes:
+* 1 more server recheck fix... Fourth time's a charm!
+
 ###v0.37.3
 
 Notable bug fixes:
