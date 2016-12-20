@@ -240,7 +240,7 @@ module ContextOptimizer = struct
         { quotient with sig_hash }
       else
         let pmap = Context.find_props cx id in
-        let sig_hash = SigHash.add_pmap pmap sig_hash in
+        let sig_hash = SigHash.add_props_map pmap sig_hash in
         let reduced_property_maps =
           Properties.Map.add id pmap reduced_property_maps in
         let stable_id = self#fresh_stable_id in
@@ -248,13 +248,14 @@ module ContextOptimizer = struct
         super#props cx { quotient with reduced_property_maps; sig_hash } id
 
     method! exports cx quotient id =
-      let { reduced_export_maps; _ } = quotient in
+      let { reduced_export_maps; sig_hash; _ } = quotient in
       if (Exports.Map.mem id reduced_export_maps) then quotient
       else
-        let pmap = Context.find_exports cx id in
+        let tmap = Context.find_exports cx id in
+        let sig_hash = SigHash.add_exports_map tmap sig_hash in
         let reduced_export_maps =
-          Exports.Map.add id pmap reduced_export_maps in
-        super#exports cx { quotient with reduced_export_maps } id
+          Exports.Map.add id tmap reduced_export_maps in
+        super#exports cx { quotient with reduced_export_maps; sig_hash } id
 
     method! fun_type cx quotient funtype =
       let id = funtype.closure_t in
