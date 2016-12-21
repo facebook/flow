@@ -197,9 +197,9 @@ class ['a] t = object(self)
   | PropExistsP _ -> acc
   | LatentP (t, _) -> self#type_ cx acc t
 
-  method private destructor _cx acc = function
+  method private destructor cx acc = function
   | NonMaybeType -> acc
-  | PropertyType _ -> acc
+  | PropertyType t -> self#type_ cx acc t
 
   method private use_type_ cx acc = function
   | UseT (_, t) ->

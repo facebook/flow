@@ -80,7 +80,6 @@ type error_message =
   | ETypeParamMinArity of Loc.t * int
   | ETooManyTypeArgs of reason * reason * int
   | ETooFewTypeArgs of reason * reason * int
-  | EPropertyTypeAnnot of Loc.t
   | EExportsAnnot of Loc.t
   | EUnsupportedKeyInObjectType of Loc.t
   | EPredAnnot of Loc.t
@@ -687,13 +686,6 @@ end = struct
           mk_info reason_tapp [msg];
           mk_info reason_arity [];
         ]
-
-    | EPropertyTypeAnnot loc ->
-        let msg =
-          "expected object type and string literal as arguments to \
-           $PropertyType"
-        in
-        mk_error [loc, [msg]]
 
     | EExportsAnnot loc ->
         mk_error [loc, ["$Exports requires a string literal"]]
