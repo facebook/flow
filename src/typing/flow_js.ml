@@ -724,16 +724,25 @@ end
 
 module Cache = struct
 
-  type type_pair = TypeTerm.t * TypeTerm.use_t
-  module TypePairSet : Set.S with type elt = type_pair =
-  Set.Make (struct
-    type t = type_pair
-    let compare = Pervasives.compare
-  end)
+  module FlowSet = struct
+    let empty = TypeMap.empty
+
+    let add_not_found l us setr =
+      setr := TypeMap.add l us !setr; false
+    let cache (l, u) setr =
+      match TypeMap.get l !setr with
+      | None -> add_not_found l (UseTypeSet.singleton u) setr
+      | Some us ->
+        if UseTypeSet.mem u us then true
+        else add_not_found l (UseTypeSet.add u us) setr
+
+    let fold f =
+      TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
+  end
 
   (* Cache that remembers pairs of types that are passed to __flow. *)
   module FlowConstraint = struct
-    let cache = ref TypePairSet.empty
+    let cache = ref FlowSet.empty
 
     (* attempt to read LB/UB pair from cache, add if absent *)
     let get cx (l, u) = match l, u with
@@ -741,16 +750,12 @@ module Cache = struct
          corresponding typing rules are already sufficiently robust. *)
       | OpenT _, _ | _, UseT (_, OpenT _) -> false
       | _ ->
-        if TypePairSet.mem (l, u) !cache then begin
-          if Context.is_verbose cx then
-            prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
-              (Context.pid_prefix cx)
-              (string_of_ctor l) (string_of_use_ctor u);
-          true
-        end else begin
-          cache := TypePairSet.add (l, u) !cache;
-          false
-        end
+        let found = FlowSet.cache (l, u) cache in
+        if found && Context.is_verbose cx then
+          prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
+            (Context.pid_prefix cx)
+            (string_of_ctor l) (string_of_use_ctor u);
+        found
   end
 
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
@@ -802,7 +807,7 @@ module Cache = struct
   end
 
   let clear () =
-    FlowConstraint.cache := TypePairSet.empty;
+    FlowConstraint.cache := FlowSet.empty;
     Hashtbl.clear PolyInstantiation.cache;
     repos_cache := Repos_cache.empty;
     SentinelProp.cache := Properties.Map.empty
@@ -814,7 +819,7 @@ module Cache = struct
   (* Summarize flow constraints in cache as ctor/reason pairs, and return counts
      for each group. *)
   let summarize_flow_constraint () =
-    let group_counts = TypePairSet.fold (fun (l,u) map ->
+    let group_counts = FlowSet.fold (fun (l,u) map ->
       let key = spf "[%s] %s => [%s] %s"
         (string_of_ctor l) (string_of_reason (reason_of_t l))
         (string_of_use_ctor u) (string_of_reason (reason_of_use_t u)) in
