@@ -1081,7 +1081,16 @@ let add_output cx ?trace msg =
   if Speculation.speculating ()
   then raise (SpeculativeError msg)
   else begin
-    let error = FlowError.error_of_msg cx ?trace msg in
+    let trace_reasons = match trace with
+    | None -> []
+    | Some trace ->
+      (* format a trace into list of (reason, desc) pairs used
+       downstream for obscure reasons, and then to messages *)
+      let max_trace_depth = Context.max_trace_depth cx in
+      if max_trace_depth = 0 then [] else
+        Trace.reasons_of_trace ~level:max_trace_depth trace
+    in
+    let error = FlowError.error_of_msg cx ~trace_reasons msg in
     if Context.is_verbose cx
     then prerr_endlinef "\nadd_output cx.file %S loc %s"
       (string_of_filename (Context.file cx))

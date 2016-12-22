@@ -183,7 +183,7 @@ let ordered_reasons l u =
   then ru, rl
   else rl, ru
 
-let rec error_of_msg cx ?trace =
+let rec error_of_msg cx ~trace_reasons =
   let open Errors in
 
   let mk_info reason extras =
@@ -191,6 +191,8 @@ let rec error_of_msg cx ?trace =
   in
 
   let info_of_reason r = mk_info r [] in
+
+  let trace_infos = List.map info_of_reason trace_reasons in
 
   (* only on use-types - guard calls with is_use t *)
   let err_operation = function
@@ -280,17 +282,6 @@ let rec error_of_msg cx ?trace =
         [loc, ["inconsistent use of library definitions"]]
       else []
     in
-    (* trace info *)
-    let trace_infos = match trace with
-    | None -> []
-    | Some trace ->
-      (* format a trace into list of (reason, desc) pairs used
-       downstream for obscure reasons, and then to messages *)
-      let max_trace_depth = Context.max_trace_depth cx in
-      if max_trace_depth = 0 then [] else
-        Trace.reasons_of_trace ~level:max_trace_depth trace
-        |> List.map info_of_reason
-    in
     (* NOTE: We include the operation's reason in the error message, unless it
        overlaps *both* endpoints, exactly matches r1, or overlaps r1's origin *)
     let op_info = if suppress_op then None else
@@ -335,10 +326,10 @@ let rec error_of_msg cx ?trace =
       typecheck_error (err_msg l u) reasons
 
   | EDebugPrint (r, t) ->
-      mk_error [mk_info r [Debug_js.jstr_of_t cx t]]
+      mk_error ~trace_infos [mk_info r [Debug_js.jstr_of_t cx t]]
 
   | EImportValueAsType (r, export_name) ->
-      mk_error [mk_info r [spf
+      mk_error ~trace_infos [mk_info r [spf
         "The %s export is a value, but not a type. `import type` only works \
          on type exports like type aliases, interfaces, and classes. If you \
          intended to import the type *of* a value, please use `import \
@@ -346,7 +337,7 @@ let rec error_of_msg cx ?trace =
         (msg_export export_name)]]
 
   | EImportTypeAsTypeof (r, export_name) ->
-      mk_error [mk_info r [spf
+      mk_error ~trace_infos [mk_info r [spf
         "The %s export is a type, but not a value. `import typeof` only \
          works on value exports like classes, vars, lets, etc. If you \
          intended to import a type alias or interface, please use `import \
@@ -354,13 +345,13 @@ let rec error_of_msg cx ?trace =
         (msg_export export_name)]]
 
   | EImportTypeAsValue (r, export_name) ->
-      mk_error [mk_info r [spf
+      mk_error ~trace_infos [mk_info r [spf
         "`%s` is a type, but not a value. In order to import it, please use \
          `import type`."
         export_name]]
 
   | EImportTypeofNamespace (r, local_name, module_name) ->
-      mk_error [mk_info r [spf
+      mk_error ~trace_infos [mk_info r [spf
         "This is invalid syntax. Maybe you meant: `import type \
          %s from %S`?"
         local_name
@@ -373,10 +364,10 @@ let rec error_of_msg cx ?trace =
       | Some x ->
         msg ^ (spf " Did you mean `import {%s} from \"%s\"`?" x module_name)
       in
-      mk_error [mk_info r [msg]]
+      mk_error ~trace_infos [mk_info r [msg]]
 
   | EOnlyDefaultExport (r, export_name) ->
-      mk_error [mk_info r [spf
+      mk_error ~trace_infos [mk_info r [spf
         "This module only has a default export. Did you mean \
          `import %s from ...`?"
         export_name]]
@@ -388,7 +379,7 @@ let rec error_of_msg cx ?trace =
       | None -> msg
       | Some x -> msg ^ (spf " Did you mean `%s`?" x)
       in
-      mk_error [mk_info r [msg]]
+      mk_error ~trace_infos [mk_info r [msg]]
 
   | EMissingTypeArgs (r, params) ->
       let min = poly_minimum_arity params in
@@ -397,7 +388,7 @@ let rec error_of_msg cx ?trace =
         then spf "%d" max, if max = 1 then "argument" else "arguments"
         else spf "%d-%d" min max, "arguments"
       in
-      mk_error [mk_info r [spf
+      mk_error ~trace_infos [mk_info r [spf
         "Application of polymorphic type needs \
          <list of %s %s>. (Can use `*` for inferrable ones)"
         arity args]]
@@ -452,7 +443,7 @@ let rec error_of_msg cx ?trace =
       prop_polarity_error reasons x p1 p2
 
   | EPolarityMismatch (tp, p) ->
-      mk_error [mk_info tp.reason [spf
+      mk_error ~trace_infos [mk_info tp.reason [spf
         "%s position (expected `%s` to occur only %sly)"
         (Polarity.string p)
         tp.name
@@ -469,7 +460,7 @@ let rec error_of_msg cx ?trace =
       | Some x when is_internal_module_name x -> "Required module not found"
       | _ -> "Could not resolve name"
       in
-      mk_error [mk_info (fst reasons) [msg]]
+      mk_error ~trace_infos [mk_info (fst reasons) [msg]]
     else
       let msg = match x with
       | Some "$call" -> "Callable signature not found in"
@@ -528,7 +519,7 @@ let rec error_of_msg cx ?trace =
         reasons
 
   | EFunImplicitReturn (lreason, ureason) ->
-      mk_error [mk_info ureason [spf
+      mk_error ~trace_infos [mk_info ureason [spf
         "This type is incompatible with an implicitly-returned %s."
         (string_of_desc (desc_of_reason lreason))]]
 
@@ -536,7 +527,7 @@ let rec error_of_msg cx ?trace =
       typecheck_error "This type cannot be added to" reasons
 
   | EAdditionMixed reason ->
-      mk_error [mk_info reason [
+      mk_error ~trace_infos [mk_info reason [
         "This type cannot be used in an addition because it is unknown \
          whether it behaves like a string or a number."]]
 
@@ -571,7 +562,7 @@ let rec error_of_msg cx ?trace =
       let reasons = ordered_reasons l u in
       let msg = err_msg l u in
       let extra = List.mapi (fun i (r, msg) ->
-        let err = error_of_msg cx ?trace msg in
+        let err = error_of_msg cx ~trace_reasons:[] msg in
         let header_infos = [
           Loc.none, [spf "Member %d:" (i + 1)];
           info_of_reason r;
@@ -610,7 +601,7 @@ let rec error_of_msg cx ?trace =
           )::infos
         )
       ] in
-      mk_error ~extra [
+      mk_error ~trace_infos ~extra [
         (mk_info case_r ["Could not decide which case to select"]);
         (info_of_reason r)
       ]
@@ -622,44 +613,46 @@ let rec error_of_msg cx ?trace =
       typecheck_error "Unsupported exact type" reasons
 
   | EIdxArity reason ->
-      mk_error [mk_info reason ["idx() function takes exactly two params!"]]
+      mk_error ~trace_infos [mk_info reason [
+        "idx() function takes exactly two params!"
+      ]]
 
   | EIdxUse1 reason ->
-      mk_error [mk_info reason [
+      mk_error ~trace_infos [mk_info reason [
         "idx() callback functions may not be annotated and they may only \
          access properties on the callback parameter!"
       ]]
 
   | EIdxUse2 reason ->
-      mk_error [mk_info reason [
+      mk_error ~trace_infos [mk_info reason [
         "idx() callbacks may only access properties on the callback \
          parameter!"
       ]]
 
   | EUnexpectedThisType loc ->
-      mk_error [loc, ["Unexpected use of `this` type"]]
+      mk_error ~trace_infos [loc, ["Unexpected use of `this` type"]]
 
   | EInvalidRestParam reason ->
-      mk_error ~kind:InferWarning [mk_info reason [
+      mk_error ~trace_infos ~kind:InferWarning [mk_info reason [
         "rest parameter should have an explicit array type (or type `any`)"
       ]]
 
   | ETypeParamArity (loc, n) ->
       let msg = spf "Incorrect number of type parameters (expected %n)" n in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]
 
   | ETypeParamMinArity (loc, n) ->
       let msg = spf
         "Incorrect number of type parameters (expected at least %n)" n
       in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]
 
   | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
       let msg = spf
         "Too many type arguments. Expected at most %d"
         maximum_arity
       in
-      mk_error [
+      mk_error ~trace_infos [
         mk_info reason_tapp [msg];
         mk_info reason_arity [];
       ]
@@ -669,7 +662,7 @@ let rec error_of_msg cx ?trace =
         "Too few type arguments. Expected at least %d"
         minimum_arity
       in
-      mk_error [
+      mk_error ~trace_infos [
         mk_info reason_tapp [msg];
         mk_info reason_arity [];
       ]
@@ -679,29 +672,31 @@ let rec error_of_msg cx ?trace =
         "expected object type and string literal as arguments to \
          $PropertyType"
       in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]
 
   | EExportsAnnot loc ->
-      mk_error [loc, ["$Exports requires a string literal"]]
+      mk_error ~trace_infos [loc, ["$Exports requires a string literal"]]
 
   | EUnsupportedKeyInObjectType loc ->
-      mk_error [loc, ["Unsupported key in object type"]]
+      mk_error ~trace_infos [loc, ["Unsupported key in object type"]]
 
   | EPredAnnot loc ->
       let msg =
         "expected number of refined variables (currently only supporting \
          one variable)"
       in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]
 
   | ERefineAnnot loc ->
       let msg =
         "expected base type and predicate type as arguments to $Refine"
       in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]
 
   | EUnexpectedTypeof loc ->
-      mk_error ~kind:InferWarning [loc, ["Unexpected typeof expression"]]
+      mk_error ~trace_infos ~kind:InferWarning [loc, [
+        "Unexpected typeof expression"
+      ]]
 
   | ECustom (reasons, msg) ->
       typecheck_error msg reasons
@@ -747,7 +742,9 @@ let rec error_of_msg cx ?trace =
       | InterfaceTypeSpread ->
           "unexpected spread property in interface"
       in
-      mk_error ~kind:InternalError [loc, [spf "Internal error: %s" msg]]
+      mk_error ~trace_infos ~kind:InternalError [loc, [
+        spf "Internal error: %s" msg
+      ]]
 
   | EUnsupportedSyntax (loc, unsupported_syntax) ->
       let msg = match unsupported_syntax with
@@ -809,16 +806,18 @@ let rec error_of_msg cx ?trace =
         | ObjectTypeSpread ->
             "object type spread is not supported"
       in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]
 
   | EIllegalName loc ->
-      mk_error [loc, ["illegal name"]]
+      mk_error ~trace_infos [loc, ["illegal name"]]
 
   | EUseArrayLiteral loc ->
-      mk_error [loc, ["Use array literal instead of new Array(..)"]]
+      mk_error ~trace_infos [loc, [
+        "Use array literal instead of new Array(..)"
+      ]]
 
   | EMissingAnnotation reason ->
-      mk_error [mk_info reason ["Missing annotation"]]
+      mk_error ~trace_infos [mk_info reason ["Missing annotation"]]
 
   | EBindingError (binding_error, reason, x, entry) ->
       let msg =
@@ -842,7 +841,7 @@ let rec error_of_msg cx ?trace =
                (see experimental.const_params=true in .flowconfig)"
               (Scope.Entry.string_of_kind entry)
       in
-      mk_error [
+      mk_error ~trace_infos [
         loc_of_reason reason, [x; msg];
         Scope.Entry.loc entry, [
           spf "%s %s" (Scope.Entry.string_of_kind entry) x
@@ -862,10 +861,10 @@ let rec error_of_msg cx ?trace =
          root directory."
         package_relative_to_root
       in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]
 
   | EExperimentalDecorators loc ->
-      mk_error ~kind:InferWarning [loc, [
+      mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Experimental decorator usage";
         "Decorators are an early stage proposal that may change. \
          Additionally, Flow does not account for the type implications \
@@ -878,7 +877,7 @@ let rec error_of_msg cx ?trace =
         then "class static field", "class_static_fields"
         else "class instance field", "class_instance_fields"
       in
-      mk_error ~kind:InferWarning [loc, [
+      mk_error ~trace_infos ~kind:InferWarning [loc, [
         spf "Experimental %s usage" config_name;
         spf
           "%ss are an active early stage feature proposal that may change. \
@@ -890,7 +889,7 @@ let rec error_of_msg cx ?trace =
       ]]
 
   | EUnsafeGetSet loc ->
-      mk_error ~kind:InferWarning [loc, [
+      mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Potentially unsafe get/set usage";
         "Getters and setters with side effects are potentially unsafe and \
          disabled by default. You may opt-in to using them anyway by putting \
@@ -899,7 +898,7 @@ let rec error_of_msg cx ?trace =
       ]]
 
   | EExperimentalExportStarAs loc ->
-      mk_error ~kind:InferWarning [loc, [
+      mk_error ~trace_infos ~kind:InferWarning [loc, [
         "Experimental `export * as` usage";
         "`export * as` is an active early stage feature proposal that may \
          change. You may opt-in to using it anyway by putting \
@@ -908,42 +907,42 @@ let rec error_of_msg cx ?trace =
       ]]
 
   | EIndeterminateModuleType reason ->
-      mk_error ~kind:InferWarning [mk_info reason [
+      mk_error ~trace_infos ~kind:InferWarning [mk_info reason [
         "Unable to determine module type (CommonJS vs ES) if both an export \
          statement and module.exports are used in the same module!"
       ]]
 
   | EUnreachable loc ->
-      mk_error ~kind:InferWarning [loc, ["unreachable code"]]
+      mk_error ~trace_infos ~kind:InferWarning [loc, ["unreachable code"]]
 
   | EInvalidTypeof (loc, typename) ->
-      mk_error ~kind:InferWarning [loc, [
+      mk_error ~trace_infos ~kind:InferWarning [loc, [
         spf "string literal `%s`" typename;
         "This value is not a valid `typeof` return value"
       ]]
 
   | EArithmeticOperand reason ->
       let msg = "The operand of an arithmetic operation must be a number." in
-      mk_error [mk_info reason [msg]]
+      mk_error ~trace_infos [mk_info reason [msg]]
 
   | EBinaryInLHS reason ->
       (* TODO: or symbol *)
       let msg =
         "The left-hand side of an `in` expression must be a \
          string or number." in
-      mk_error [mk_info reason [msg]]
+      mk_error ~trace_infos [mk_info reason [msg]]
 
   | EBinaryInRHS reason ->
       let msg =
         "The right-hand side of an `in` expression must be an \
          object or array." in
-      mk_error [mk_info reason [msg]]
+      mk_error ~trace_infos [mk_info reason [msg]]
 
   | EForInRHS reason ->
       let msg =
         "The right-hand side of a `for...in` statement must be an \
          object, null or undefined." in
-      mk_error [mk_info reason [msg]]
+      mk_error ~trace_infos [mk_info reason [msg]]
 
   | EObjectComputedPropertyAccess reasons ->
       typecheck_error "Computed property cannot be accessed with" reasons
@@ -953,4 +952,4 @@ let rec error_of_msg cx ?trace =
 
   | EInvalidLHSInAssignment loc ->
       let msg = "Invalid left-hand side in assignment expression" in
-      mk_error [loc, [msg]]
+      mk_error ~trace_infos [loc, [msg]]

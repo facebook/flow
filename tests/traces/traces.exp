@@ -53,14 +53,74 @@ Trace:
 Traces.js:14
  14: f2(function(x) { return x * x });
                              ^ string. The operand of an arithmetic operation must be a number.
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                             ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                             ^ ~> UseT(UnknownUse, OpenT) [identifier `x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> UseT(FunCallParam, OpenT) [parameter `x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                             ^ ~> ReposLowerT [identifier `x`]
+* path 3:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 Traces.js:14
  14: f2(function(x) { return x * x });
                                  ^ string. The operand of an arithmetic operation must be a number.
+Trace:
+* path 1:
+ 14: f2(function(x) { return x * x });
+                                 ^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> UseT(UnknownUse, OpenT) [identifier `x`] (from path 2)
+ 14: f2(function(x) { return x * x });
+                             ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 14: f2(function(x) { return x * x });
+                 ^ ~> UseT(FunCallParam, OpenT) [parameter `x`] (from path 3)
+ 14: f2(function(x) { return x * x });
+                                 ^ ~> ReposLowerT [identifier `x`]
+* path 3:
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 12: function g2(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 Traces.js:19
  19: function double(n) { return n * 2 }
                                  ^ string. The operand of an arithmetic operation must be a number.
+Trace:
+* path 1:
+ 19: function double(n) { return n * 2 }
+                                 ^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> UseT(UnknownUse, OpenT) [identifier `n`] (from path 2)
+ 19: function double(n) { return n * 2 }
+                                 ^^^^^ ~> AssertArithmeticOperandT [arithmetic operation]
+* path 2:
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 19: function double(n) { return n * 2 }
+                     ^ ~> UseT(FunCallParam, OpenT) [parameter `n`] (from path 3)
+ 19: function double(n) { return n * 2 }
+                                 ^ ~> ReposLowerT [identifier `n`]
+* path 3:
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ StrT [string]
+ 17: function g3(ylam: (s:string) => number) { }
+                          ^^^^^^ ~> ReposLowerT [string] (from [not shown])
 
 Traces2.js:17
  17:     return <B bar="hey"/>;
