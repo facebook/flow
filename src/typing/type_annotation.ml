@@ -25,7 +25,7 @@ let optional_ident_name = function
 | Some ident -> ident_name ident
 
 let error_type cx loc msg =
-  FlowError.add_output cx msg;
+  Flow_js.add_output cx msg;
   AnyT.at loc
 
 let is_suppress_type cx type_name =
@@ -337,7 +337,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         Flow_js.reposition cx reason (SMap.find_unsafe "this" tparams_map)
       )
     else (
-      FlowError.(add_output cx (EUnexpectedThisType loc));
+      Flow_js.add_output cx (FlowError.EUnexpectedThisType loc);
       AnyT.t
     )
 
@@ -531,7 +531,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         let polarity = if _method then Positive else polarity variance in
         SMap.add name (Field (t, polarity)) props
     | _ ->
-      FlowError.(add_output cx (EUnsupportedKeyInObjectType loc));
+      Flow_js.add_output cx (FlowError.EUnsupportedKeyInObjectType loc);
       props
   in
   let call_props, dict, props_map = List.fold_left (
@@ -540,7 +540,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       let t = convert cx tparams_map (loc, Ast.Type.Function ft) in
       t::calls, dict, props
     | Object.Indexer (loc, _) when dict <> None ->
-      FlowError.(add_output cx (EUnsupportedSyntax (loc, MultipleIndexers)));
+      Flow_js.add_output cx
+        FlowError.(EUnsupportedSyntax (loc, MultipleIndexers));
       calls, dict, props
     | Object.Indexer (_, { Object.Indexer.id; key; value; variance; _ }) ->
       let dict = Some { Type.
@@ -553,7 +554,8 @@ let rec convert cx tparams_map = Ast.Type.(function
     | Object.Property (loc, prop) ->
       calls, dict, property loc prop props
     | Object.SpreadProperty (loc, _) ->
-      FlowError.(add_output cx (EUnsupportedSyntax (loc, ObjectTypeSpread)));
+      Flow_js.add_output cx
+        FlowError.(EUnsupportedSyntax (loc, ObjectTypeSpread));
       calls, dict, props
   ) ([], None, SMap.empty) properties in
   let props_map = match List.rev call_props with
@@ -638,7 +640,7 @@ and mk_rest cx = function
       RestT tvar
   | t ->
       let r = reason_of_t t in
-      FlowError.(add_output cx (EInvalidRestParam r));
+      Flow_js.add_output cx (FlowError.EInvalidRestParam r);
       RestT (AnyT.why r)
 
 and mk_type cx tparams_map reason = function

@@ -48,7 +48,8 @@ val subst: Context.t -> ?force:bool -> (Type.t SMap.t) -> Type.t -> Type.t
 val generate_tests: Context.t -> reason -> Type.typeparam list -> (Type.t SMap.t -> unit)
   -> unit
 
-val check_polarity: Context.t -> Type.polarity -> Type.t -> unit
+val check_polarity:
+  Context.t -> ?trace:Trace.t -> Type.polarity -> Type.t -> unit
 
 (* selectors *)
 
@@ -101,6 +102,7 @@ val lookup_module: Context.t -> string -> Type.t
 
 (* contexts *)
 val fresh_context: Context.metadata -> Loc.filename -> Modulename.t -> Context.t
+val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
 
 (* builtins *)
 

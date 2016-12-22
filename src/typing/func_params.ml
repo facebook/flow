@@ -90,8 +90,8 @@ let mk cx type_params_map ~expr func =
       let param = Rest (Anno.mk_rest cx t, (name, t, loc)) in
       { params with list =  param :: params.list }
     | loc, _ ->
-      Flow_error.(add_output cx
-        (EInternal (loc, RestArgumentNotIdentifierPattern)));
+      Flow_js.add_output cx
+        Flow_error.(EInternal (loc, RestArgumentNotIdentifierPattern));
       params
   in
   let add_param params pattern =

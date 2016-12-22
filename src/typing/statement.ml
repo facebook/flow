@@ -438,9 +438,8 @@ and toplevels cx stmts =
     let uc = !n+1 in
     if uc < List.length stmts
     then (
-      let warn_unreachable loc = Flow_error.(
-        add_output cx (EUnreachable loc)
-      ) in
+      let warn_unreachable loc =
+        Flow_js.add_output cx (Flow_error.EUnreachable loc) in
       let rec drop n lst = match (n, lst) with
         | (_, []) -> []
         | (0, l) -> l
@@ -513,12 +512,12 @@ and statement cx = Ast.Statement.(
           )
 
       | loc, Identifier _ ->
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, CatchParameterAnnotation)))
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation))
 
       | loc, _ ->
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, CatchParameterDeclaration)))
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration))
     )
   in
 
@@ -827,7 +826,8 @@ and statement cx = Ast.Statement.(
         (* if we break to end, add effects to terminal state *)
         if breaks_to_end then begin match break_opt with
           | None ->
-            Flow_error.(add_output cx (EInternal (loc, BreakEnvMissingForCase)))
+            Flow_js.add_output cx
+              Flow_error.(EInternal (loc, BreakEnvMissingForCase))
           | Some break_env ->
             update_switch_state (break_env, case_writes, test_refis, reason)
         end;
@@ -1357,7 +1357,7 @@ and statement cx = Ast.Statement.(
               ignore Env.(set_var cx name (StrT.at loc) reason)
 
           | _ ->
-              Flow_error.(add_output cx (EInternal (loc, ForInLHS)))
+              Flow_js.add_output cx Flow_error.(EInternal (loc, ForInLHS))
         );
 
         ignore (Abnormal.catch_control_flow_exception
@@ -1424,7 +1424,7 @@ and statement cx = Ast.Statement.(
               ignore Env.(set_var cx name element_tvar reason)
 
           | _ ->
-              Flow_error.(add_output cx (EInternal (loc, ForOfLHS)))
+              Flow_js.add_output cx Flow_error.(EInternal (loc, ForOfLHS))
         );
 
         ignore (Abnormal.catch_control_flow_exception
@@ -1869,8 +1869,8 @@ and statement cx = Ast.Statement.(
 
           (match import_kind with
             | Type.ImportType ->
-              Flow_error.(add_output cx (EImportTypeofNamespace
-                (import_reason, local_name, module_name)));
+              Flow_js.add_output cx Flow_error.(EImportTypeofNamespace
+                (import_reason, local_name, module_name));
               (import_reason, local_name, AnyT.why import_reason)
             | Type.ImportTypeof ->
               let bind_reason = repos_reason (fst local) import_reason in
@@ -2144,8 +2144,8 @@ and object_prop cx map = Ast.Expression.Object.(function
 
   (* literal LHS *)
   | Property (loc, { Property.key = Property.Literal _; _ }) ->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
     map
 
   (* With the enable_unsafe_getters_and_setters option set, we enable some
@@ -2178,7 +2178,8 @@ and object_prop cx map = Ast.Expression.Object.(function
       Properties.add_setter name param_t map
 
   | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
-    Flow_error.(add_output cx (EUnsupportedSyntax (loc, ObjectPropertyGetSet)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
     map
 
   (* computed LHS *)
@@ -2593,8 +2594,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
           Context.should_ignore_non_literal_requires cx in
         if not ignore_non_literals
         then
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, RequireDynamicArgument)));
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
         AnyT.at loc
     )
 
@@ -2623,8 +2624,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
               let module_tvar = require cx module_name loc in
               module_tvar::tvars
           | _ ->
-              Flow_error.(add_output cx
-                (EUnsupportedSyntax (loc, RequireLazyDynamicArgument)));
+              Flow_js.add_output cx Flow_error.(
+                EUnsupportedSyntax (loc, RequireLazyDynamicArgument)
+              );
               tvars
         ) in
         let module_tvars = List.fold_left element_to_module_tvar [] elements in
@@ -2637,8 +2639,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         NullT.at loc
 
       | _ ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, RequireLazyDynamicArgument)));
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
         AnyT.at loc
     )
 
@@ -2677,7 +2679,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         (* TODO - tuple_types could be undefined x N if given a literal *)
         ArrT (reason, ArrayAT (t, None))
       | _ ->
-        Flow_error.(add_output cx (EUseArrayLiteral loc));
+        Flow_js.add_output cx (Flow_error.EUseArrayLiteral loc);
         EmptyT.at loc
       )
     )
@@ -2802,8 +2804,8 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         let _ = Env.refine_with_preds cx reason preds xtypes in
         ()
       | (Spread _)::_ ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, InvariantSpreadArgument)))
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument))
       );
       VoidT.at loc
 
@@ -2872,8 +2874,9 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
       (match predicate with
       | Some (_, Ast.Type.Predicate.Inferred) ->
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)))
+          Flow_js.add_output cx Flow_error.(
+            EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)
+          )
       | _ -> ());
 
       mk_function id cx reason func
@@ -3007,18 +3010,18 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
 
   (* TODO *)
   | Comprehension _ ->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, ComprehensionExpression)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, ComprehensionExpression));
     EmptyT.at loc
 
   | Generator _ ->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, GeneratorExpression)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, GeneratorExpression));
     EmptyT.at loc
 
   | MetaProperty _->
-    Flow_error.(add_output cx
-      (EUnsupportedSyntax (loc, MetaPropertyExpression)));
+    Flow_js.add_output cx
+      Flow_error.(EUnsupportedSyntax (loc, MetaPropertyExpression));
     EmptyT.at loc
 )
 
@@ -3277,7 +3280,7 @@ and logical cx loc = Ast.Expression.Logical.(function
 and assignment_lhs cx = Ast.Pattern.(function
   | loc, Object _
   | loc, Array _ ->
-      Flow_error.(add_output cx (EInvalidLHSInAssignment loc));
+      Flow_js.add_output cx (Flow_error.EInvalidLHSInAssignment loc);
       AnyT.at loc
 
   | _, Identifier { Ast.Pattern.Identifier.name = (loc, name); _; } ->
@@ -3928,20 +3931,21 @@ and mk_proptypes cx props = Ast.Expression.Object.(
 
     (* literal LHS *)
     | Property (loc, { Property.key = Property.Literal _; _ }) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, ReactPropTypesPropertyLiteralNonString)));
+      Flow_js.add_output cx Flow_error.(
+        EUnsupportedSyntax (loc, ReactPropTypesPropertyLiteralNonString)
+      );
       amap, omap, dict
 
     (* get/set kind *)
     | Property (loc, { Property.kind = Property.Get | Property.Set; _ }) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, ReactPropTypesPropertyGetSet)));
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ReactPropTypesPropertyGetSet));
       amap, omap, dict
 
     (* computed LHS *)
     | Property (loc, { Property.key = Property.Computed _; _ }) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, ReactPropTypesPropertyComputed)));
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, ReactPropTypesPropertyComputed));
       amap, omap, dict
 
   ) (SMap.empty, SMap.empty, None) props
@@ -4070,8 +4074,9 @@ and react_create_class cx loc class_props = Ast.Expression.(
         SMap.add name p fmap, mmap
 
       | _ ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, ReactCreateClassPropertyNonInit)));
+        Flow_js.add_output cx Flow_error.(
+          EUnsupportedSyntax (loc, ReactCreateClassPropertyNonInit)
+        );
         fmap, mmap
 
     ) (SMap.empty, SMap.empty) class_props in
@@ -4288,7 +4293,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         begin match pred with
         | Some pred -> result BoolT.t name t pred sense
         | None ->
-          Flow_error.(add_output cx (EInvalidTypeof (str_loc, typename)));
+          Flow_js.add_output cx Flow_error.(EInvalidTypeof (str_loc, typename));
           empty_result (BoolT.at loc)
         end
     | None, _ -> empty_result (BoolT.at loc)
@@ -4661,8 +4666,9 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
       | None ->
         (* Since the properties object must be a literal, and literal objects
            can only ever contain neutral fields, this should not happen. *)
-        Flow_error.(add_output cx
-          (EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)));
+        Flow_js.add_output cx Flow_error.(
+          EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
+        );
         acc
       | Some spec ->
         let reason = replace_reason (fun desc ->
@@ -4715,8 +4721,9 @@ and static_method_call_Object cx loc prop_loc expr obj_t m args_ =
       | None ->
         (* Since the properties object must be a literal, and literal objects
            can only ever contain neutral fields, this should not happen. *)
-        Flow_error.(add_output cx
-          (EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)));
+        Flow_js.add_output cx Flow_error.(
+          EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
+        );
       | Some spec ->
         let reason = replace_reason (fun desc ->
           RCustom (spf ".%s of %s" x (string_of_desc desc))
@@ -4840,8 +4847,9 @@ and mk_method cx reason func this =
 and declare_function_to_function_declaration cx id typeAnnotation predicate =
   match predicate with
   | Some (loc, Ast.Type.Predicate.Inferred) ->
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)));
+      Flow_js.add_output cx Flow_error.(
+        EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)
+      );
       None
 
   | Some (loc, Ast.Type.Predicate.Declared e) -> begin
@@ -4857,8 +4865,8 @@ and declare_function_to_function_declaration cx id typeAnnotation predicate =
               | Some name -> name
               | None ->
                   let name_loc = fst typeAnnotation in
-                  Flow_error.(add_output cx (EUnsupportedSyntax
-                    (loc, PredicateDeclarationAnonymousParameters)));
+                  Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+                    (loc, PredicateDeclarationAnonymousParameters));
                   (name_loc, "_")
               in
               let name' = ({ Ast.Pattern.Identifier.

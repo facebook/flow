@@ -400,7 +400,7 @@ module Node = struct
             FlowError.EModuleOutsideRoot (loc, package_relative_to_root)
           )
         in
-        FlowError.add_output cx msg;
+        Flow_js.add_output cx msg;
         SMap.empty
       in
       let dir = Filename.dirname package in

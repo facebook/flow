@@ -44,10 +44,10 @@ let infer_core cx statements =
   | Abnormal.Exn _ ->
     (* should never happen *)
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    FlowError.(add_output cx (EInternal (loc, AbnormalControlFlow)))
+    Flow_js.add_output cx FlowError.(EInternal (loc, AbnormalControlFlow))
   | exc ->
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    FlowError.(add_output cx (EInternal (loc, UncaughtException exc)))
+    Flow_js.add_output cx FlowError.(EInternal (loc, UncaughtException exc))
 
 (* There's a .flowconfig option to specify suppress_comments regexes. Any
  * comments that match those regexes will suppress any errors on the next line

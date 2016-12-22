@@ -357,6 +357,35 @@ let mk_mixins cx reason tparams_map = Type.(function
       mk_super cx tparams_map props_bag targs
 )
 
+let warn_or_ignore_decorators cx = function
+| [] -> ()
+| (start_loc, _)::ds ->
+  let loc = List.fold_left (fun start_loc (end_loc, _) ->
+    Loc.btwn start_loc end_loc
+  ) start_loc ds in
+  match Context.esproposal_decorators cx with
+  | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN ->
+    Flow_js.add_output cx (Flow_error.EExperimentalDecorators loc)
+
+let warn_or_ignore_class_properties cx ~static loc =
+  let config_setting =
+    if static
+    then Context.esproposal_class_static_fields cx
+    else Context.esproposal_class_instance_fields cx
+  in
+  match config_setting with
+  | Options.ESPROPOSAL_ENABLE
+  | Options.ESPROPOSAL_IGNORE -> ()
+  | Options.ESPROPOSAL_WARN ->
+    Flow_js.add_output cx
+      (Flow_error.EExperimentalClassProperties (loc, static))
+
+let warn_unsafe_getters_setters cx loc =
+  if not (Context.enable_unsafe_getters_and_setters cx)
+  then Flow_js.add_output cx (Flow_error.EUnsafeGetSet loc)
+
 (* Process a class definition, returning a (polymorphic) class type. A class
    type is a wrapper around an instance type, which contains types of instance
    members, a pointer to the super instance type, and a container for types of
@@ -364,15 +393,6 @@ let mk_mixins cx reason tparams_map = Type.(function
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
 let mk cx loc reason self ~expr = Ast.Class.(
-  let warn_or_ignore_decorators cx = function
-  | [] -> ()
-  | (start_loc, _)::ds ->
-    let loc = List.fold_left (fun start_loc (end_loc, _) ->
-      Loc.btwn start_loc end_loc
-    ) start_loc ds in
-    Flow_error.warn_or_ignore_decorators cx loc
-  in
-
   fun {
     body = (_, { Body.body = elements });
     superClass;
@@ -387,7 +407,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
 
   (* TODO *)
   if implements <> []
-  then Flow_error.(add_output cx (EUnsupportedSyntax (loc, Implements)))
+  then Flow_js.add_output cx Flow_error.(EUnsupportedSyntax (loc, Implements))
   else ();
 
   let tparams, tparams_map =
@@ -447,7 +467,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
       warn_or_ignore_decorators cx decorators;
 
       Ast.Class.Method.(match kind with
-      | Get | Set -> Flow_error.warn_unsafe_getters_setters cx loc
+      | Get | Set -> warn_unsafe_getters_setters cx loc
       | _ -> ());
 
       let method_desc, add = match kind with
@@ -478,7 +498,7 @@ let mk cx loc reason self ~expr = Ast.Class.(
         _;
       }) ->
         if value <> None
-        then Flow_error.warn_or_ignore_class_properties cx ~static loc;
+        then warn_or_ignore_class_properties cx ~static loc;
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
@@ -494,8 +514,8 @@ let mk cx loc reason self ~expr = Ast.Class.(
         Property.key = Ast.Expression.Object.Property.Literal _;
         _
       }) ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, ClassPropertyLiteral)));
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
         c
 
     (* computed LHS *)
@@ -507,8 +527,8 @@ let mk cx loc reason self ~expr = Ast.Class.(
         Property.key = Ast.Expression.Object.Property.Computed _;
         _
       }) ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, ClassPropertyComputed)));
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, ClassPropertyComputed));
         c
   ) class_sig elements
 )
@@ -521,8 +541,8 @@ let rec extract_extends cx structural = function
       if structural
       then (Some id, typeParameters)::(extract_extends cx structural others)
       else (
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, ClassExtendsMultiple)));
+        Flow_js.add_output cx
+          Flow_error.(EUnsupportedSyntax (loc, ClassExtendsMultiple));
         []
       )
 
@@ -587,7 +607,8 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
       let fsig = Func_sig.convert cx tparams_map loc func in
       append_method ~static "$call" fsig x
     | Indexer (loc, { Indexer.static; _ }) when mem_field ~static "$key" x ->
-      Flow_error.(add_output cx (EUnsupportedSyntax (loc, MultipleIndexers)));
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, MultipleIndexers));
       x
     | Indexer (_, { Indexer.key; value; static; variance; _ }) ->
       let k = Anno.convert cx tparams_map key in
@@ -598,12 +619,12 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
         |> add_field ~static "$value" (v, polarity, None)
     | Property (loc, { Property.key; value; static; _method; optional; variance; _ }) ->
       if optional && _method
-      then Flow_error.(add_output cx (EInternal (loc, OptionalMethod)));
+      then Flow_js.add_output cx Flow_error.(EInternal (loc, OptionalMethod));
       let polarity = Anno.polarity variance in
       Ast.Expression.Object.(match _method, key with
       | _, Property.Literal (loc, _)
       | _, Property.Computed (loc, _) ->
-          Flow_error.(add_output cx (EIllegalName loc));
+          Flow_js.add_output cx (Flow_error.EIllegalName loc);
           x
       | true, Property.Identifier (_, name) ->
           (match value with
@@ -615,14 +636,15 @@ let mk_interface cx loc reason structural self = Ast.Statement.(
             in
             append_method fsig x
           | _ ->
-            Flow_error.(add_output cx (EInternal (loc, MethodNotAFunction)));
+            Flow_js.add_output cx
+              Flow_error.(EInternal (loc, MethodNotAFunction));
             x)
       | false, Property.Identifier (_, name) ->
           let t = Anno.convert cx tparams_map value in
           let t = if optional then Type.OptionalT t else t in
           add_field ~static name (t, polarity, None) x)
     | SpreadProperty (loc, _) ->
-      Flow_error.(add_output cx (EInternal (loc, InterfaceTypeSpread)));
+      Flow_js.add_output cx Flow_error.(EInternal (loc, InterfaceTypeSpread));
       x
   ) iface_sig properties in
 

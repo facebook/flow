@@ -179,8 +179,8 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 let default = Option.map default (Default.elem key_t reason) in
                 recurse ~parent_pattern_t tvar init default p
             | { Property.key = Property.Literal _; _ } ->
-                Flow_error.(add_output cx (EUnsupportedSyntax
-                  (loc, DestructuringObjectPropertyLiteralNonString)))
+                Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+                  (loc, DestructuringObjectPropertyLiteralNonString))
             end
 
         | RestProperty (loc, { RestProperty.argument = p }) ->
@@ -230,8 +230,8 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       recurse ?parent_pattern_t tvar init default left
 
   | loc, Expression _ ->
-      Flow_error.(add_output cx (EUnsupportedSyntax
-        (loc, DestructuringExpressionPattern)))
+      Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+        (loc, DestructuringExpressionPattern))
 
   in fun t init default pattern -> recurse t init default pattern
 )

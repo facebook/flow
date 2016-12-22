@@ -70,8 +70,9 @@ let mk cx tparams_map ~expr reason func =
         Flow.flow_t cx (fresh_t, return_t);
         fresh_t
     | Some (loc, Declared _) ->
-        Flow_error.(add_output cx
-          (EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)));
+        Flow_js.add_output cx Flow_error.(
+          EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
+        );
         Anno.mk_type_annotation cx tparams_map reason None
   ) in
   {reason; kind; tparams; tparams_map; params; body; return_t}
@@ -299,8 +300,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
         | [(_, Return { Return.argument = Some _})] -> ()
         | _ ->
           let loc = loc_of_reason reason in
-          Flow_error.(add_output cx
-            (EUnsupportedSyntax (loc, PredicateInvalidBody)))
+          Flow_js.add_output cx
+            Flow_error.(EUnsupportedSyntax (loc, PredicateInvalidBody))
       end
     | _ -> ()
   );
@@ -342,8 +343,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
       UnknownUse, return_t
     | Predicate ->
       let loc = loc_of_reason reason in
-      Flow_error.(add_output cx
-        (EUnsupportedSyntax (loc, PredicateVoidReturn)));
+      Flow_js.add_output cx
+        Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
       FunImplicitReturn, VoidT.at loc
     in
     Flow.flow cx (void_t, UseT (use_op, return_t))

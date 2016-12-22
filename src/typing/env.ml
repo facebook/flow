@@ -408,8 +408,7 @@ let find_refi_in_var_scope key =
 (* helpers *)
 
 let binding_error msg cx name entry reason =
-  FlowError.(add_output cx
-    (EBindingError (msg, reason, name, entry)))
+  Flow_js.add_output cx (FlowError.EBindingError (msg, reason, name, entry))
 
 let already_bound_error =
   binding_error FlowError.ENameAlreadyBound
