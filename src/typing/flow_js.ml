@@ -3330,7 +3330,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ObjT (reason, { props_tmap = mapr; _ }), UseT (_, ShapeT (proto))) ->
         (* TODO: ShapeT should have its own reason *)
         let reason_op = reason_of_t proto in
-        Context.iter_props cx mapr (fun x p ->
+        iter_real_props cx mapr (fun x p ->
           match Property.read_t p with
           | Some t ->
             let reason_prop = replace_reason (fun desc ->
