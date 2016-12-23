@@ -32,7 +32,7 @@ test1.js:57
                              ^^ A6
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    57: inst([new B6]);
-             ^^^^^^ constructor call
+            ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
 test10.js:38
  38: check_fun((x) => x);
@@ -66,6 +66,21 @@ test10.js:50
    50: check_obj({ x: id("") });
                       ^^^^^^ function call
 
+test10.js:59
+ 59: check_arr([""]);
+               ^^^^ array literal. Could not decide which case to select
+ 56: function check_arr(_: number[] | string[]) { }
+                           ^^^^^^^^^^^^^^^^^^^ union type
+  Case 1 may work:
+   56: function check_arr(_: number[] | string[]) { }
+                             ^^^^^^^^ array type
+  But if it doesn't, case 2 looks promising too:
+   56: function check_arr(_: number[] | string[]) { }
+                                        ^^^^^^^^ array type
+  Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
+   59: check_arr([""]);
+                 ^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
+
 test10.js:62
  62: check_arr([id("")]);
                ^^^^^^^^ array literal. Could not decide which case to select
@@ -79,7 +94,7 @@ test10.js:62
                                         ^^^^^^^^ array type
   Please provide additional annotation(s) to determine whether case 1 works (or consider merging it with case 2):
    62: check_arr([id("")]);
-                  ^^^^^^ function call
+                 ^^^^^^^^ inferred union of array element types (alternatively, provide an annotation to summarize the array element type)
 
 test11.js:12
  12: length({ kind: "cons" }); // missing `next`
@@ -188,9 +203,9 @@ test20.js:14
 
 test20.js:14
  14: [""].reduce((acc,str) => acc * str.length);
-                              ^^^^^^^^^^^^^^^^ number. This type is incompatible with the expected param type of
+                                        ^^^^^^ property `length`. Property not found in
  14: [""].reduce((acc,str) => acc * str.length);
-      ^^ string
+                                    ^^^ Number
 
 test21.js:11
  11: ({ type: bar(), x: str() }: T);

@@ -2530,9 +2530,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
         ) (true, TypeExSet.empty, []) elems
         in
         (* composite elem type is an upper bound of all element types *)
-        let elemt = match TypeExSet.elements tset with
-        | [t] -> t
-        | list ->
+        let elemt =
           let element_reason =
             let desc = RCustom ("inferred union of array element types \
 (alternatively, provide an annotation to summarize the array element type)") in
@@ -2565,7 +2563,7 @@ and expression_ ~is_cond cx loc e = Ast.Expression.(match e with
              tvar instead of a union here doesn't conflict with those plans.
           *)
           Flow_js.mk_tvar_where cx element_reason (fun tvar ->
-            list |> List.iter (fun t ->
+            TypeExSet.elements tset |> List.iter (fun t ->
               Flow_js.flow cx (t, UseT (UnknownUse, tvar)))
           )
         in
