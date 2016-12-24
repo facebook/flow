@@ -275,8 +275,8 @@ end with type t = Impl.t) = struct
         let specifiers = import.specifiers |> List.map (function
           | ImportDefaultSpecifier id ->
               import_default_specifier id
-          | ImportNamedSpecifier {local; remote;} ->
-              import_named_specifier local remote
+          | ImportNamedSpecifier {local; remote; kind;} ->
+              import_named_specifier local remote kind
           | ImportNamespaceSpecifier id ->
               import_namespace_specifier id
         ) in
@@ -1275,7 +1275,7 @@ end with type t = Impl.t) = struct
       "local", identifier id;
     |]
 
-  and import_named_specifier local_id remote_id =
+  and import_named_specifier local_id remote_id kind =
     let span_loc =
       match local_id with
       | Some local_id -> Loc.btwn (fst remote_id) (fst local_id)
@@ -1288,6 +1288,12 @@ end with type t = Impl.t) = struct
     node "ImportSpecifier" span_loc [|
       "imported", identifier remote_id;
       "local", identifier local_id;
+      "importKind", (
+        match kind with
+        | Some Statement.ImportDeclaration.ImportType -> string "type"
+        | Some Statement.ImportDeclaration.ImportTypeof -> string "typeof"
+        | Some Statement.ImportDeclaration.ImportValue | None -> null
+      );
     |]
 
   and comment_list comments = array_of_list comment comments

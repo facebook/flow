@@ -1215,27 +1215,64 @@ module Statement
           error_unexpected env;
           ret
 
-    in let rec specifier_list env acc =
+    in let rec specifier_list ?(preceding_comma=true) env is_type_import acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY -> List.rev acc
       | _ ->
-          let remote, err = Parse.identifier_or_reserved_keyword env in
-          let specifier =
-            if Peek.value env = "as" then begin
-              Expect.contextual env "as";
+        if not preceding_comma then error_at env (
+          Peek.loc env, Error.ImportSpecifierMissingComma
+        );
+        let remote, err = Parse.identifier_or_reserved_keyword env in
+        let (starts_w_type, type_kind) =
+          let v = snd remote in
+          if v = "type" then true, Some ImportType
+          else if v = "typeof" then true, Some ImportTypeof
+          else false, None
+        in
+        let specifier =
+          if Peek.value env = "as" then (
+            let as_ident = Parse.identifier env in
+            if starts_w_type && not (Peek.is_identifier env) then (
+              (* `import {type as ,` or `import {type as }` *)
+              (if is_type_import then error_at env (
+                fst remote,
+                Error.ImportTypeShorthandOnlyInPureImport
+              ));
+              ImportNamedSpecifier {
+                local = None;
+                remote = as_ident;
+                kind = type_kind;
+              }
+            ) else (
+              (* `import {type as foo` *)
               let local = Some (Parse.identifier env) in
-              ImportNamedSpecifier { local; remote; }
-            end else begin
-              (match err with Some err -> error_at env err | None -> ());
-              ImportNamedSpecifier { local = None; remote; }
-            end
-          in
-          if Peek.token env = T_COMMA
-          then Expect.token env T_COMMA;
-          specifier_list env (specifier::acc)
+              ImportNamedSpecifier {local; remote; kind = None; }
+            )
+          ) else if starts_w_type && Peek.is_identifier env then (
+            (* `import {type foo` *)
+            (if is_type_import then error_at env (
+              fst remote,
+              Error.ImportTypeShorthandOnlyInPureImport
+            ));
+            let remote, err = Parse.identifier_or_reserved_keyword env in
+            (match err with Some err -> error_at env err | None -> ());
+            let local =
+              if Peek.value env = "as" then (
+                Expect.contextual env "as";
+                Some (Parse.identifier env)
+              ) else None
+            in
+            ImportNamedSpecifier { local; remote; kind = type_kind; }
+          ) else (
+            (match err with Some err -> error_at env err | None -> ());
+            ImportNamedSpecifier { local = None; remote; kind = None; }
+          )
+        in
+        let preceding_comma = Expect.maybe env T_COMMA in
+        specifier_list ~preceding_comma env is_type_import (specifier::acc)
 
-    in let named_or_namespace_specifier env =
+    in let named_or_namespace_specifier env is_type_import =
       let start_loc = Peek.loc env in
       match Peek.token env with
       | T_MULT ->
@@ -1245,7 +1282,7 @@ module Statement
           [ImportNamespaceSpecifier (Loc.btwn start_loc (fst id), id)]
       | _ ->
           Expect.token env T_LCURLY;
-          let specifiers = specifier_list env [] in
+          let specifiers = specifier_list env is_type_import [] in
           Expect.token env T_RCURLY;
           specifiers
 
@@ -1268,6 +1305,7 @@ module Statement
           ImportTypeof, None
         | _ -> ImportValue, None
       in
+      let is_type_import = importKind <> ImportValue in
       match Peek.token env, Peek.is_identifier env with
       (* import "ModuleName"; *)
       | T_STRING (str_loc, value, raw, octal), _
@@ -1302,7 +1340,7 @@ module Statement
             match Peek.token env with
             | T_COMMA -> (* `import Foo, ...` *)
                 Expect.token env T_COMMA;
-                named_or_namespace_specifier env
+                named_or_namespace_specifier env is_type_import
             | _ -> []
           ) in
 
@@ -1320,7 +1358,7 @@ module Statement
 
       (* `import [type] { ... } ...` or `import [typeof] * as ...` *)
       | _ ->
-          let specifiers = named_or_namespace_specifier env in
+          let specifiers = named_or_namespace_specifier env is_type_import in
           let source = source env in
           let end_loc = match Peek.semicolon_loc env with
           | Some loc -> loc

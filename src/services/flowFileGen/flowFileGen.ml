@@ -95,10 +95,16 @@ let gen_imports env =
     let env = if List.length named = 0 then env else (
       let env = Codegen.add_str "{" env in
       let env =
-        Codegen.gen_separated_list named ", " (fun {local; remote} env ->
+        Codegen.gen_separated_list named ", " (fun {local; remote; kind;} env ->
           let (_, remote) = remote in
           match local with
           | Some (_, local) when local <> remote ->
+            let env =
+              match kind with
+              | Some ImportType -> Codegen.add_str "type " env
+              | Some ImportTypeof -> Codegen.add_str "typeof " env
+              | Some ImportValue | None -> env
+            in
             Codegen.add_str remote env
               |> Codegen.add_str " as "
               |> Codegen.add_str local
