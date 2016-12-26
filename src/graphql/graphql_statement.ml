@@ -6,6 +6,8 @@ module Ast = Graphql_ast
 module Flow = Flow_js
 module Schema = Graphql_schema
 
+let flow = Flow.gql
+
 type context = {
   mutable vars: Schema.Type.t SMap.t;
   infer_vars: bool;
@@ -35,7 +37,7 @@ and do_definition cx schema def =
     } ->
     let reason = mk_reason
         (RCustom (spf "fragment on `%s`" type_name)) loc in
-    if Graphql_flow.check_frag_type cx schema type_name type_loc then
+    if Graphql_flow.check_frag_type flow cx schema type_name type_loc then
       let gcx = {vars = SMap.empty; infer_vars = true; relay_op = false} in
       let selection =
         mk_selection cx gcx schema type_name selectionSet in
@@ -180,7 +182,7 @@ and select cx gcx schema selection type_name selections =
       else begin
         (* TODO *)
         let reason = mk_reason (RCustom (spf "field `%s`" fname)) floc in
-        if Graphql_flow.check_field cx schema type_name fname floc then (
+        if Graphql_flow.check_field flow cx schema type_name fname floc then (
           let field_type =
             Schema.find_field_type schema type_name fname in
           let _fields_args =
@@ -219,7 +221,8 @@ and select cx gcx schema selection type_name selections =
       ->
       let (frag_type_loc, frag_type) =
         Option.value typeCondition ~default:(Loc.none, type_name) in
-      if Graphql_flow.check_frag_type cx schema frag_type frag_type_loc then
+      if Graphql_flow.check_frag_type flow cx schema frag_type frag_type_loc
+      then
         let reason = mk_reason (RCustom "inline fragment") frag_loc in
         let frag = { Graphql.
           frag_schema = schema;
@@ -250,7 +253,7 @@ and skim_selection_set cx gcx schema selection_set =
         selectionSet;
         _;
       } ->
-      if Graphql_flow.check_frag_type cx schema type_name type_loc
+      if Graphql_flow.check_frag_type flow cx schema type_name type_loc
       then mk_selection cx gcx schema type_name selectionSet |> ignore
     | _ -> ()
   ) selection_set.Ast.SelectionSet.selections
