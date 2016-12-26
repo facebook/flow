@@ -10,3 +10,5 @@ explicit_lib.js
 [options]
 all=true
 strip_root=true
+no_flowlib=true
+

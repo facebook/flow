@@ -242,7 +242,9 @@ module OptionParser(Config : CONFIG) = struct
       shm_log_level
       ~default:FlowConfig.(flowconfig.options.Opts.shm_log_level) in
     let opt_default_lib_dir =
-      if no_flowlib then None else Some (default_lib_dir opt_temp_dir) in
+      if no_flowlib || FlowConfig.(flowconfig.options.Opts.no_flowlib)
+      then None
+      else Some (default_lib_dir opt_temp_dir) in
     let opt_log_file = match log_file with
       | Some s ->
           let dirname = Path.make (Filename.dirname s) in
