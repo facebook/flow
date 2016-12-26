@@ -4641,6 +4641,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$key"), i));
       rec_flow cx trace (l, SetPropT (reason, Named (reason, "$value"), t))
 
+    (***********)
+    (* GraphQL *)
+    (***********)
+
     | GraphqlFragT (_, {Graphql.frag_selection; _}), GraphqlToDataT _ ->
       rec_flow cx trace (frag_selection, u)
 
@@ -4709,6 +4713,54 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         Graphql_flow.conv_values_map mk_obj schema r op_vars,
         out
       )
+
+    | GraphqlSelectionT (reason, selection),
+      GraphqlSelectT (_, (Graphql.SelectField (GraphqlFieldT (_, field))), out)
+      ->
+      let { Graphql.s_selections; _ } = selection in
+      let selections = SMap.map (fun props ->
+        Graphql_flow.add_field gql cx ~trace props field
+      ) s_selections in
+      let selection = GraphqlSelectionT (
+        reason,
+        {
+          selection with
+          Graphql.s_selections = selections;
+        }
+      ) in
+      rec_flow_t cx trace (selection, out)
+
+    | GraphqlSelectionT _,
+      GraphqlSelectT (reason, (Graphql.SelectFrag frag), out)
+      ->
+      rec_flow cx trace (frag, GraphqlSpreadT (reason, l, out));
+
+    | GraphqlFragT (_, frag),
+      GraphqlSpreadT (reason, (GraphqlSelectionT (_, s) as st), out)
+      ->
+      let {Graphql.frag_type; frag_schema = schema; frag_selection; _} = frag in
+      let {Graphql.s_on; _} = s in
+      if not (Graphql_schema.do_types_overlap schema s_on frag_type) then (
+        add_output cx trace
+          (FlowError.EGraphqlIncompatibleSpread (reason, s_on, frag_type));
+        rec_flow_t cx trace (st, out)
+      ) else (
+        rec_flow cx trace (frag_selection, u)
+      )
+
+    | GraphqlSelectionT (_, {Graphql.s_selections = adds; _}),
+      GraphqlSpreadT (_, GraphqlSelectionT (r, s), out)
+      ->
+      let {Graphql.s_selections = curr; _} = s in
+      let selections = SMap.mapi (fun type_name props ->
+        if SMap.mem type_name adds then
+          Graphql_flow.merge_fields
+            gql cx ~trace props (SMap.find type_name adds)
+        else
+          props
+      ) curr in
+      let new_s = {s with Graphql.s_selections = selections} in
+      rec_flow_t cx trace (GraphqlSelectionT (r, new_s), out)
 
     (*************************)
     (* repositioning, part 2 *)
@@ -4891,54 +4943,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let msg = "This type is incompatible with" in
       let reasons = Flow_error.ordered_reasons t (UseT (UnknownUse, tc)) in
       add_output cx trace (FlowError.ECustom (reasons, msg))
-
-    | GraphqlSelectionT (reason, selection),
-      GraphqlSelectT (_, (Graphql.SelectField (GraphqlFieldT (_, field))), out)
-      ->
-      let { Graphql.s_selections; _ } = selection in
-      let selections = SMap.map (fun props ->
-        Graphql_flow.add_field gql cx ~trace props field
-      ) s_selections in
-      let selection = GraphqlSelectionT (
-        reason,
-        {
-          selection with
-          Graphql.s_selections = selections;
-        }
-      ) in
-      rec_flow_t cx trace (selection, out)
-
-    | GraphqlSelectionT _,
-      GraphqlSelectT (reason, (Graphql.SelectFrag frag), out)
-      ->
-      rec_flow cx trace (frag, GraphqlSpreadT (reason, l, out));
-
-    | GraphqlFragT (_, frag),
-      GraphqlSpreadT (reason, (GraphqlSelectionT (_, s) as st), out)
-      ->
-      let {Graphql.frag_type; frag_schema = schema; frag_selection; _} = frag in
-      let {Graphql.s_on; _} = s in
-      if not (Graphql_schema.do_types_overlap schema s_on frag_type) then (
-        add_output cx trace
-          (FlowError.EGraphqlIncompatibleSpread (reason, s_on, frag_type));
-        rec_flow_t cx trace (st, out)
-      ) else (
-        rec_flow cx trace (frag_selection, u)
-      )
-
-    | GraphqlSelectionT (_, {Graphql.s_selections = adds; _}),
-      GraphqlSpreadT (_, GraphqlSelectionT (r, s), out)
-      ->
-      let {Graphql.s_selections = curr; _} = s in
-      let selections = SMap.mapi (fun type_name props ->
-        if SMap.mem type_name adds then
-          Graphql_flow.merge_fields
-            gql cx ~trace props (SMap.find type_name adds)
-        else
-          props
-      ) curr in
-      let new_s = {s with Graphql.s_selections = selections} in
-      rec_flow_t cx trace (GraphqlSelectionT (r, new_s), out)
 
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
