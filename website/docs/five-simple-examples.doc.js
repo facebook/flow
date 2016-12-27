@@ -335,7 +335,7 @@ var res = foo('Hello') + foo(42);
   These simple examples just scratch the surface. You're now ready to start a
   new project with Flow and use the [offline transform tool](/docs/running.html#using-the-offline-transform-tool)
   to compile type annotations before publishing. Or you could incrementally
-  [try Flow using flow on some existing code](/docs/existing.html). You may also
+  [try using Flow on some existing code](/docs/existing.html). You may also
   want to check out our much bigger [React example](/docs/react.html) to
   see Flow in more representative use cases.
 */
