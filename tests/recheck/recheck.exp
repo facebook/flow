@@ -172,3 +172,23 @@ h2.js:3
 
 
 Found 1 error
+
+Test i:
+i2.js:5
+  5: foo.p = 0;
+     ^^^ object type. Covariant property `p` incompatible with contravariant use in
+  5: foo.p = 0;
+     ^^^^^ assignment of property `p`
+
+
+Found 1 error
+
+Test j:
+j2.js:5
+  5: foo.p = 0;
+     ^^^ object type. Covariant property `p` incompatible with contravariant use in
+  5: foo.p = 0;
+     ^^^^^ assignment of property `p`
+
+
+Found 1 error
